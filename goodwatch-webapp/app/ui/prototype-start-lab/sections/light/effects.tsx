@@ -3,8 +3,13 @@
 // (noise, bloom and contrast images on canvases) and then only fades (opacity) or moves (transform), so it stays at
 // 60 fps; nothing animates a blur or a filter.
 // Round 13: dust motes in the lamp light, a light sweep, drifting fog, a lamp flicker, sepia and moonlight (EFFECTS).
+// Round 14: e's picture and film effects (halation, chroma, crt, vhs, teal, xpro, bleach, pop, leak, shafts, flare,
+// lightning, rain, scratches, redrim; EFFECTS_E), and `force` (the `?fx=` explorer) turns effects on regardless of mood.
 import { type CSSProperties, useEffect, useRef, useState } from "react"
-import { CINEMA, EFFECTS, type Effect } from "./tables"
+import { CINEMA, EFFECTS, type Effect, FX_SOLO } from "./tables"
+
+/** Round 14: an effects table (c's EFFECTS or e's EFFECTS_E). */
+export type EffectTable = Record<string, Partial<Record<Effect, number>>>
 
 /** Where the scene image sits in the stage (px), its slots (normalized quads), and the band the room shows in. */
 export type LightGeo = {
@@ -19,6 +24,8 @@ export type LightGeo = {
 	/** The scene's focus (the seat and the dog), normalized [x, y, w, h]: the window sits over it. */
 	focus: [number, number, number, number]
 }
+
+const GRAY_HEX = "#808080"
 
 const CSS = `.lf{position:absolute;pointer-events:none;transition:opacity .6s ease-out}
 .lf-bar{position:absolute;left:0;right:0;pointer-events:none;background:#010205;transition:transform .65s cubic-bezier(.2,.8,.2,1)}
@@ -37,7 +44,119 @@ const CSS = `.lf{position:absolute;pointer-events:none;transition:opacity .6s ea
 .lf-fog.lf-far{animation-duration:110s;animation-direction:reverse}
 @keyframes lf-flicker{0%,100%{opacity:1}9%{opacity:.86}14%{opacity:.97}31%{opacity:.9}38%{opacity:1}57%{opacity:.84}63%{opacity:.95}82%{opacity:.9}}
 .lf-flicker{position:absolute;inset:0;animation:lf-flicker 3.6s ease-in-out infinite;will-change:opacity}
-@media (prefers-reduced-motion:reduce){.lf,.lf-bar{transition:none}.lf-grain,.lf-roll,.lf-dust,.lf-sweep,.lf-fog,.lf-flicker{animation:none}}`
+@keyframes lf-breathe{0%,100%{opacity:.72}50%{opacity:1}}
+.lf-breathe{position:absolute;inset:0;animation:lf-breathe 8s ease-in-out infinite;will-change:opacity}
+@keyframes lf-leak{0%,100%{opacity:.2;transform:translateX(-5%)}35%{opacity:1;transform:translateX(0)}55%{opacity:.65;transform:translateX(1.5%)}75%{opacity:.95;transform:translateX(-1%)}}
+.lf-leak{position:absolute;inset:0;animation:lf-leak 11s ease-in-out infinite;will-change:opacity,transform}
+@keyframes lf-bolt{0%,70%{opacity:0}71%{opacity:.85}72.5%{opacity:.08}74%{opacity:1}78%,100%{opacity:0}}
+.lf-bolt{position:absolute;inset:0;opacity:0;animation:lf-bolt 13s linear infinite;will-change:opacity}
+@keyframes lf-flare{0%,100%{opacity:.7;transform:scaleX(.88)}50%{opacity:1;transform:scaleX(1.06)}}
+.lf-flare{position:absolute;animation:lf-flare 5s ease-in-out infinite;will-change:opacity,transform}
+@keyframes lf-fall{from{transform:translateY(-512px)}to{transform:translateY(0)}}
+.lf-rain{position:absolute;left:0;top:0;width:100%;height:calc(100% + 512px);background-size:256px 512px;animation:lf-fall .55s linear infinite;will-change:transform}
+.lf-rain.lf-slow{animation-duration:16s}
+@keyframes lf-track{0%{transform:translateY(0)}55%{transform:translateY(calc(var(--lf-h) * -.16))}56%{transform:translateY(calc(var(--lf-h) * -.03))}80%{transform:translateY(calc(var(--lf-h) * -.09))}81%,100%{transform:translateY(0)}}
+.lf-track{position:absolute;left:0;right:0;animation:lf-track 9s ease-in-out infinite;will-change:transform;overflow:hidden}
+@keyframes lf-jump{0%{transform:translateX(0)}17%{transform:translateX(13%)}34%{transform:translateX(-9%)}51%{transform:translateX(21%)}68%{transform:translateX(4%)}85%{transform:translateX(-15%)}100%{transform:translateX(0)}}
+.lf-scr{position:absolute;top:0;bottom:0;left:-25%;width:150%;animation:lf-jump 1.3s steps(1,end) infinite;will-change:transform}
+.lf-grain.lf-specks{background-size:320px 320px;animation-duration:1.9s}
+@media (prefers-reduced-motion:reduce){.lf,.lf-bar{transition:none}.lf-grain,.lf-roll,.lf-dust,.lf-sweep,.lf-fog,.lf-flicker,.lf-breathe,.lf-leak,.lf-bolt,.lf-flare,.lf-rain,.lf-track,.lf-scr{animation:none}}`
+
+/** Round 14: a seeded random (park-miller), so tiles look the same on every load. */
+const seeded = (seed: number) => {
+	let r = seed
+	return () => {
+		r = (r * 16807) % 2147483647
+		return r / 2147483647
+	}
+}
+
+/** Round 14: a tile drawn once per id (rain streaks, drops, film specks), as a data URL. */
+const tileUrls = new Map<string, string>()
+function useTile(id: string, w: number, h: number, paint: (ctx: CanvasRenderingContext2D, rnd: () => number) => void) {
+	const [url, setUrl] = useState(tileUrls.get(id) ?? null)
+	useEffect(() => {
+		const have = tileUrls.get(id)
+		if (have) return setUrl(have)
+		const c = document.createElement("canvas")
+		c.width = w
+		c.height = h
+		const ctx = c.getContext("2d")
+		if (!ctx) return
+		paint(ctx, seeded(id.length * 7919 + w))
+		const u = c.toDataURL("image/png")
+		tileUrls.set(id, u)
+		setUrl(u)
+	}, [id])
+	return url
+}
+
+/** Rain outside: thin slanted streaks (each also drawn where it wraps). */
+function paintStreaks(ctx: CanvasRenderingContext2D, rnd: () => number) {
+	ctx.lineCap = "round"
+	for (let i = 0; i < 70; i++) {
+		const x = rnd() * 256
+		const y = rnd() * 512
+		const len = 18 + rnd() * 34
+		ctx.strokeStyle = `rgba(210,225,255,${0.18 + rnd() * 0.3})`
+		ctx.lineWidth = rnd() < 0.2 ? 1.4 : 0.8
+		for (const dy of [-512, 0, 512]) {
+			ctx.beginPath()
+			ctx.moveTo(x, y + dy)
+			ctx.lineTo(x - len * 0.08, y + dy + len)
+			ctx.stroke()
+		}
+	}
+}
+
+/** Drops on the glass: small beads with a thin trail above each. */
+function paintDrops(ctx: CanvasRenderingContext2D, rnd: () => number) {
+	for (let i = 0; i < 26; i++) {
+		const x = rnd() * 256
+		const y = rnd() * 512
+		const r = 1.2 + rnd() * 2.2
+		const trail = 20 + rnd() * 70
+		for (const dy of [-512, 0, 512]) {
+			const t = ctx.createLinearGradient(0, y + dy - trail, 0, y + dy)
+			t.addColorStop(0, "rgba(200,220,255,0)")
+			t.addColorStop(1, "rgba(200,220,255,.28)")
+			ctx.fillStyle = t
+			ctx.fillRect(x - r * 0.35, y + dy - trail, r * 0.7, trail)
+			const g = ctx.createRadialGradient(x - r * 0.3, y + dy - r * 0.3, 0, x, y + dy, r)
+			g.addColorStop(0, "rgba(235,245,255,.85)")
+			g.addColorStop(0.6, "rgba(190,210,250,.4)")
+			g.addColorStop(1, "rgba(190,210,250,0)")
+			ctx.fillStyle = g
+			ctx.beginPath()
+			ctx.arc(x, y + dy, r, 0, Math.PI * 2)
+			ctx.fill()
+		}
+	}
+}
+
+/** Film specks: a few dark blobs and hairs, two pale ones, mostly empty (the tile steps around, so they jump). */
+function paintSpecks(ctx: CanvasRenderingContext2D, rnd: () => number) {
+	for (let i = 0; i < 9; i++) {
+		const x = rnd() * 320
+		const y = rnd() * 320
+		const light = i < 2
+		const color = light ? `rgba(255,248,230,${0.35 + rnd() * 0.25})` : `rgba(12,8,4,${0.45 + rnd() * 0.35})`
+		if (rnd() < 0.35) {
+			// A hair: a short curved line.
+			ctx.strokeStyle = color
+			ctx.lineWidth = 0.9
+			ctx.beginPath()
+			ctx.moveTo(x, y)
+			ctx.quadraticCurveTo(x + (rnd() - 0.5) * 30, y + 8 + rnd() * 14, x + (rnd() - 0.5) * 24, y + 16 + rnd() * 20)
+			ctx.stroke()
+		} else {
+			ctx.fillStyle = color
+			ctx.beginPath()
+			ctx.ellipse(x, y, 0.8 + rnd() * 2.4, 0.6 + rnd() * 1.8, rnd() * Math.PI, 0, Math.PI * 2)
+			ctx.fill()
+		}
+	}
+}
 
 /**
  * The dust tile: soft light motes on transparent (a few bigger blurry ones, many small), seamless (each mote is also
@@ -206,6 +325,99 @@ function drawContrast(c: HTMLCanvasElement, img: HTMLImageElement, slots: [numbe
 	fillSlots(ctx, slots, w, h, "#808080")
 }
 
+/** Round 14 · halation: like the bloom, but a lower threshold, a wider blur and tinted red-orange. */
+function drawHalation(c: HTMLCanvasElement, img: HTMLImageElement, slots: [number, number][][]) {
+	const w = 160
+	const h = Math.round((w * img.naturalHeight) / img.naturalWidth)
+	c.width = w
+	c.height = h
+	const ctx = c.getContext("2d", { willReadFrequently: true })
+	if (!ctx) return
+	ctx.drawImage(img, 0, 0, w, h)
+	fillSlots(ctx, slots, w, h, "#000")
+	const data = ctx.getImageData(0, 0, w, h)
+	const d = data.data
+	for (let i = 0; i < d.length; i += 4) {
+		const l = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
+		const k = Math.max(0, Math.min(1, (l - 120) / 110)) ** 1.2 * 1.8
+		d[i] = 255 * k
+		d[i + 1] = 92 * k
+		d[i + 2] = 34 * k
+	}
+	boxBlur(d, w, h, 5, 3)
+	ctx.putImageData(data, 0, 0)
+}
+
+/**
+ * Round 14 · split toning (teal, xpro): a soft-light map from the scene's luminance, `shadow` color in the darks
+ * and `high` in the lights; the slots neutral gray afterwards (soft-light leaves the posters alone).
+ */
+function toned(shadow: [number, number, number], high: [number, number, number]) {
+	return (c: HTMLCanvasElement, img: HTMLImageElement, slots: [number, number][][]) => {
+		const w = Math.min(960, img.naturalWidth)
+		const h = Math.round((w * img.naturalHeight) / img.naturalWidth)
+		c.width = w
+		c.height = h
+		const ctx = c.getContext("2d", { willReadFrequently: true })
+		if (!ctx) return
+		ctx.drawImage(img, 0, 0, w, h)
+		const data = ctx.getImageData(0, 0, w, h)
+		const d = data.data
+		for (let i = 0; i < d.length; i += 4) {
+			const l = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255
+			const u = Math.max(0, Math.min(1, (l - 0.12) / 0.6))
+			const t = u * u * (3 - 2 * u)
+			d[i] = shadow[0] + (high[0] - shadow[0]) * t
+			d[i + 1] = shadow[1] + (high[1] - shadow[1]) * t
+			d[i + 2] = shadow[2] + (high[2] - shadow[2]) * t
+		}
+		ctx.putImageData(data, 0, 0)
+		fillSlots(ctx, slots, w, h, "#808080")
+	}
+}
+const drawTeal = toned([0, 112, 128], [255, 146, 60])
+const drawXpro = toned([40, 96, 170], [255, 236, 110])
+
+/** Round 14 · bleach bypass: a gray copy of the scene (slots mid gray), overlaid on the room. */
+function drawBleach(c: HTMLCanvasElement, img: HTMLImageElement, slots: [number, number][][]) {
+	const w = Math.min(960, img.naturalWidth)
+	const h = Math.round((w * img.naturalHeight) / img.naturalWidth)
+	c.width = w
+	c.height = h
+	const ctx = c.getContext("2d", { willReadFrequently: true })
+	if (!ctx) return
+	ctx.drawImage(img, 0, 0, w, h)
+	const data = ctx.getImageData(0, 0, w, h)
+	const d = data.data
+	for (let i = 0; i < d.length; i += 4) d[i] = d[i + 1] = d[i + 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
+	ctx.putImageData(data, 0, 0)
+	fillSlots(ctx, slots, w, h, "#808080")
+}
+
+/** Round 14 · one color channel of the scene (slots black), for the chroma fringes and vhs's color bleed. */
+function channel(keep: 0 | 2) {
+	return (c: HTMLCanvasElement, img: HTMLImageElement, slots: [number, number][][]) => {
+		const w = Math.min(1280, img.naturalWidth)
+		const h = Math.round((w * img.naturalHeight) / img.naturalWidth)
+		c.width = w
+		c.height = h
+		const ctx = c.getContext("2d", { willReadFrequently: true })
+		if (!ctx) return
+		ctx.drawImage(img, 0, 0, w, h)
+		fillSlots(ctx, slots, w, h, "#000")
+		const data = ctx.getImageData(0, 0, w, h)
+		const d = data.data
+		for (let i = 0; i < d.length; i += 4) {
+			if (keep !== 0) d[i] = 0
+			d[i + 1] = 0
+			if (keep !== 2) d[i + 2] = 0
+		}
+		ctx.putImageData(data, 0, 0)
+	}
+}
+const drawRed = channel(0)
+const drawBlue = channel(2)
+
 /**
  * Where the scene's lamp is, normalized: its brightest warm spot after a wide blur, away from the side shelves and
  * the slots (those shelves carry their own strip lights). Found once per image; the focus's right end if none.
@@ -268,7 +480,13 @@ function useLamp(geo: LightGeo | null, want: boolean): [number, number] | null {
 	return lamp
 }
 
-function SceneCanvas({ geo, o, blend, draw }: { geo: LightGeo; o: number; blend: CSSProperties["mixBlendMode"]; draw: typeof drawBloom }) {
+function SceneCanvas({
+	geo,
+	o,
+	blend,
+	draw,
+	style,
+}: { geo: LightGeo; o: number; blend: CSSProperties["mixBlendMode"]; draw: typeof drawBloom; style?: CSSProperties }) {
 	const ref = useRef<HTMLCanvasElement>(null)
 	const [ready, setReady] = useState(false)
 	const key = `${geo.src}|${geo.slots.length}`
@@ -292,37 +510,71 @@ function SceneCanvas({ geo, o, blend, draw }: { geo: LightGeo; o: number; blend:
 			ref={ref}
 			aria-hidden
 			className="lf"
-			style={{ ...geo.img, mixBlendMode: blend, opacity: ready ? o : 0 }}
+			style={{ ...geo.img, ...style, mixBlendMode: blend, opacity: ready ? o : 0 }}
 		/>
 	)
 }
 
-/** The effects a set of grades uses. */
-const effectsOf = (grades: string[]) => {
-	const s = new Set<Effect>()
-	for (const g of grades) for (const e of Object.keys(EFFECTS[g] ?? {}) as Effect[]) s.add(e)
+/** The effects a set of grades uses, plus the forced ones (Round 14). */
+const effectsOf = (grades: string[], table: EffectTable = EFFECTS, force: Effect[] = []) => {
+	const s = new Set<Effect>(force)
+	for (const g of grades) for (const e of Object.keys(table[g] ?? {}) as Effect[]) s.add(e)
 	return s
+}
+
+/** Round 14: the shown grade's effects, with each forced effect at least at its solo strength. */
+const fxOf = (on: string | null, table: EffectTable, force: Effect[]) => {
+	const base = (on && table[on]) || {}
+	if (!force.length) return base
+	const out: Partial<Record<Effect, number>> = { ...base }
+	for (const e of force) out[e] = Math.max(out[e] ?? 0, FX_SOLO[e])
+	return out
 }
 
 /**
  * Under the grade: the contrast copy (it should see the room before it's tinted). Mounts once a grade that uses it
  * has been shown, then only fades.
  */
-export function LightUnder({ on, mounted, geo }: { on: string | null; mounted: string[]; geo: LightGeo | null }) {
-	if (!geo || !effectsOf(mounted).has("contrast")) return null
-	const o = (on && EFFECTS[on]?.contrast) || 0
-	return <SceneCanvas geo={geo} o={o} blend="soft-light" draw={drawContrast} />
+export function LightUnder({
+	on,
+	mounted,
+	geo,
+	table = EFFECTS,
+	force = [],
+}: { on: string | null; mounted: string[]; geo: LightGeo | null; table?: EffectTable; force?: Effect[] }) {
+	if (!geo) return null
+	const used = effectsOf(mounted, table, force)
+	const fx = fxOf(on, table, force)
+	return (
+		<>
+			{used.has("contrast") ? <SceneCanvas geo={geo} o={fx.contrast ?? 0} blend="soft-light" draw={drawContrast} /> : null}
+			{/* Round 14 · the tone maps (they should see the room before it's tinted, like contrast). */}
+			{used.has("bleach") ? <SceneCanvas geo={geo} o={fx.bleach ?? 0} blend="overlay" draw={drawBleach} /> : null}
+			{used.has("teal") ? <SceneCanvas geo={geo} o={fx.teal ?? 0} blend="soft-light" draw={drawTeal} /> : null}
+			{used.has("xpro") ? <SceneCanvas geo={geo} o={fx.xpro ?? 0} blend="soft-light" draw={drawXpro} /> : null}
+		</>
+	)
 }
 
 /** Over the grade: bloom, vignette, scanlines, grain (c and d), then d's dimmed shelves and letterbox bars. */
-export function LightOver({ on, mounted, geo, cinematic }: { on: string | null; mounted: string[]; geo: LightGeo | null; cinematic: boolean }) {
-	const used = effectsOf(mounted)
-	const fx = (on && EFFECTS[on]) || {}
+export function LightOver({
+	on,
+	mounted,
+	geo,
+	cinematic,
+	table = EFFECTS,
+	force = [],
+}: { on: string | null; mounted: string[]; geo: LightGeo | null; cinematic: boolean; table?: EffectTable; force?: Effect[] }) {
+	const used = effectsOf(mounted, table, force)
+	const fx = fxOf(on, table, force)
 	const grain = useGrainUrl()
+	const streaks = useTile("rain-streaks", 256, 512, paintStreaks)
+	const drops = useTile("rain-drops", 256, 512, paintDrops)
+	const specks = useTile("film-specks", 320, 320, paintSpecks)
 	const cine = cinematic && on ? CINEMA[on] : undefined
 	const usesCinema = cinematic && mounted.some((g) => CINEMA[g])
 	const cy = geo ? (geo.band.top + geo.band.bottom) / 2 : 400
-	const lampN = useLamp(geo, used.has("dust") || used.has("flicker"))
+	const lampN = useLamp(geo, used.has("dust") || used.has("flicker") || used.has("flare") || used.has("redrim"))
 	const dustFar = useDustUrl(256, 512, 26, 7)
 	const dustNear = useDustUrl(384, 768, 14, 91)
 	// In stage px: the lamp, the scene's size, and the focus box (the window is over it).
@@ -336,9 +588,23 @@ export function LightOver({ on, mounted, geo, cinematic }: { on: string | null; 
 				h: geo.focus[3] * geo.img.height,
 			}
 		: null
+	// Round 14 · the window, a guess: the box just above the focus (the seat), as wide as most of it.
+	const win = foc ? { x: foc.x, y: foc.top - foc.h * 0.4, w: foc.w * 0.75, h: foc.h * 0.8 } : null
+	const W = geo?.w ?? 1200
+	const H = geo?.h ?? 800
+	const run = (e: Effect) => (fx[e] ? "running" : "paused")
+	// The stage center in the scene image's own box (chroma scales around it and fades in toward the edges).
+	const origin = geo ? `${Math.round(W / 2 - geo.img.left)}px ${Math.round(cy - geo.img.top)}px` : "50% 50%"
+	const edgeMask = geo
+		? `radial-gradient(ellipse ${Math.round(W * 0.62)}px ${Math.round(Math.max(320, (geo.band.bottom - geo.band.top) * 0.75))}px at ${Math.round(W / 2 - geo.img.left)}px ${Math.round(cy - geo.img.top)}px, transparent 30%, rgb(0 0 0 / .6) 70%, #000 100%)`
+		: undefined
 	return (
 		<>
 			<style>{CSS}</style>
+			{/* Round 14 · halation: the red-orange glow around bright spots. */}
+			{geo && used.has("halation") ? <SceneCanvas geo={geo} o={fx.halation ?? 0} blend="screen" draw={drawHalation} /> : null}
+			{/* Round 14 · pop: a saturation boost (a fully saturated color, saturation blend, at low opacity). */}
+			{used.has("pop") ? <div className="lf inset-0" style={{ opacity: fx.pop ?? 0, mixBlendMode: "saturation", background: "#ff1010" }} /> : null}
 			{geo && used.has("bloom") ? <SceneCanvas geo={geo} o={fx.bloom ?? 0} blend="screen" draw={drawBloom} /> : null}
 			{used.has("vignette") ? (
 				<div
@@ -449,6 +715,245 @@ export function LightOver({ on, mounted, geo, cinematic }: { on: string | null; 
 				<div className="lf inset-0 overflow-hidden" style={{ opacity: fx.sweep ?? 0, mixBlendMode: "screen" }}>
 					<div className="lf-sweep" style={{ animationPlayState: fx.sweep ? "running" : "paused" }} />
 				</div>
+			) : null}
+			{/* Round 14 · chroma: the red channel a touch bigger and the blue a touch smaller, lightened over the room,
+			    only toward the edges: color fringes like a cheap lens. */}
+			{geo && used.has("chroma") ? (
+				<>
+					<SceneCanvas
+						geo={geo}
+						o={fx.chroma ?? 0}
+						blend="lighten"
+						draw={drawRed}
+						style={{ transform: "scale(1.009)", transformOrigin: origin, maskImage: edgeMask, WebkitMaskImage: edgeMask }}
+					/>
+					<SceneCanvas
+						geo={geo}
+						o={fx.chroma ?? 0}
+						blend="lighten"
+						draw={drawBlue}
+						style={{ transform: "scale(.991)", transformOrigin: origin, maskImage: edgeMask, WebkitMaskImage: edgeMask }}
+					/>
+				</>
+			) : null}
+			{/* Round 14 · crt: phosphor stripes and scanlines (each its own multiply layer, so each blends with the
+			    room), then the tube's rounded dark corners (an outer shadow around a rounded box). */}
+			{used.has("crt") ? (
+				<>
+					<div
+						className="lf inset-0"
+						style={{
+							opacity: (fx.crt ?? 0) * 0.3,
+							mixBlendMode: "multiply",
+							background: "repeating-linear-gradient(90deg, rgb(255 80 80) 0 1px, rgb(80 255 80) 1px 2px, rgb(80 80 255) 2px 3px)",
+						}}
+					/>
+					<div
+						className="lf inset-0"
+						style={{
+							opacity: (fx.crt ?? 0) * 0.75,
+							mixBlendMode: "multiply",
+							background: "repeating-linear-gradient(to bottom, rgb(0 0 0 / .3) 0 1px, rgb(0 0 0 / 0) 1px 3px)",
+						}}
+					/>
+					<div className="lf inset-0 overflow-hidden" style={{ opacity: fx.crt ?? 0 }}>
+						<div
+							className="absolute"
+							style={{
+								inset: Math.round(Math.min(W, H) * 0.012),
+								borderRadius: `${Math.round(Math.min(W, H) * 0.09)}px / ${Math.round(Math.min(W, H) * 0.12)}px`,
+								boxShadow: `0 0 0 ${Math.round(Math.max(W, H))}px rgb(2 2 4 / .92), inset 0 0 ${Math.round(Math.min(W, H) * 0.14)}px ${Math.round(Math.min(W, H) * 0.03)}px rgb(0 0 0 / .7)`,
+							}}
+						/>
+					</div>
+				</>
+			) : null}
+			{/* Round 14 · vhs: milky blacks, a little less color, a red bleed to the right, and the tracking band. */}
+			{used.has("vhs") ? (
+				<>
+					<div className="lf inset-0" style={{ opacity: (fx.vhs ?? 0) * 0.5, mixBlendMode: "screen", background: "rgb(44 38 62)" }} />
+					<div className="lf inset-0" style={{ opacity: (fx.vhs ?? 0) * 0.3, mixBlendMode: "saturation", background: GRAY_HEX }} />
+					{geo ? (
+						<SceneCanvas geo={geo} o={(fx.vhs ?? 0) * 0.8} blend="lighten" draw={drawRed} style={{ transform: "translateX(5px)" }} />
+					) : null}
+					<div className="lf inset-0 overflow-hidden" style={{ opacity: (fx.vhs ?? 0) * 0.9, mixBlendMode: "screen" }}>
+						<div
+							className="lf-track"
+							style={
+								{
+									bottom: Math.round(H * 0.05),
+									height: Math.max(14, Math.round(H * 0.028)),
+									animationPlayState: run("vhs"),
+									"--lf-h": `${H}px`,
+									background:
+										"linear-gradient(90deg, rgb(255 255 255 / .05), rgb(255 255 255 / .18) 30%, rgb(255 255 255 / .1) 60%, rgb(255 255 255 / .2) 85%, rgb(255 255 255 / .06)), repeating-linear-gradient(to bottom, rgb(255 255 255 / .2) 0 1px, transparent 1px 3px)",
+								} as CSSProperties
+							}
+						>
+							{grain ? <div className="lf-grain" style={{ backgroundImage: `url(${grain})`, opacity: 0.35, animationPlayState: run("vhs") }} /> : null}
+						</div>
+					</div>
+				</>
+			) : null}
+			{/* Round 14 · leak: a warm burn at the left edge, breathing in and out (opacity and a small slide). */}
+			{used.has("leak") ? (
+				<div className="lf inset-0 overflow-hidden" style={{ opacity: fx.leak ?? 0, mixBlendMode: "screen" }}>
+					<div
+						className="lf-leak"
+						style={{
+							animationPlayState: run("leak"),
+							background: `radial-gradient(ellipse ${Math.round(W * 0.13)}px ${Math.round(H * 0.32)}px at 0px ${Math.round(H * 0.32)}px, rgb(255 226 160 / .55), rgb(255 226 160 / 0) 100%), radial-gradient(ellipse ${Math.round(W * 0.34)}px ${Math.round(H * 0.62)}px at 0px ${Math.round(H * 0.38)}px, rgb(255 112 40 / .55), rgb(240 60 30 / .25) 45%, rgb(240 60 30 / 0) 100%)`,
+						}}
+					/>
+				</div>
+			) : null}
+			{/* Round 14 · shafts: warm beams slanting down from the window, masked to fall off below it. */}
+			{used.has("shafts") && win ? (
+				<div
+					className="lf inset-0"
+					style={{
+						opacity: fx.shafts ?? 0,
+						mixBlendMode: "screen",
+						maskImage: `radial-gradient(ellipse ${Math.round(win.w * 0.95)}px ${Math.round(win.h * 2.4)}px at ${Math.round(win.x)}px ${Math.round(win.y)}px, #000 0%, rgb(0 0 0 / .5) 50%, transparent 100%)`,
+						WebkitMaskImage: `radial-gradient(ellipse ${Math.round(win.w * 0.95)}px ${Math.round(win.h * 2.4)}px at ${Math.round(win.x)}px ${Math.round(win.y)}px, #000 0%, rgb(0 0 0 / .5) 50%, transparent 100%)`,
+					}}
+				>
+					<div
+						className="lf-breathe"
+						style={{
+							animationPlayState: run("shafts"),
+							background:
+								"linear-gradient(104deg, transparent 0 34%, rgb(255 214 150 / .22) 36% 39%, transparent 41% 44%, rgb(255 214 150 / .14) 45% 46.5%, transparent 48% 50%, rgb(255 220 160 / .26) 52% 56%, transparent 58% 61%, rgb(255 214 150 / .16) 62% 64%, transparent 66% 100%)",
+						}}
+					/>
+				</div>
+			) : null}
+			{/* Round 14 · flare: an anamorphic streak through the lamp, a soft haze around it and two ghosts. */}
+			{used.has("flare") && lamp ? (
+				<div className="lf inset-0 overflow-hidden" style={{ opacity: fx.flare ?? 0, mixBlendMode: "screen" }}>
+					<div
+						className="lf-flare"
+						style={{
+							animationPlayState: run("flare"),
+							left: Math.round(lamp.x - S * 0.5),
+							top: Math.round(lamp.y - S * 0.02),
+							width: Math.round(S),
+							height: Math.round(S * 0.04),
+							background: "radial-gradient(ellipse 50% 50% at 50% 50%, rgb(120 170 255 / .35), rgb(120 170 255 / 0) 100%)",
+						}}
+					/>
+					<div
+						className="lf-flare"
+						style={{
+							animationPlayState: run("flare"),
+							left: Math.round(lamp.x - S * 0.45),
+							top: Math.round(lamp.y - Math.max(1, S * 0.0018)),
+							width: Math.round(S * 0.9),
+							height: Math.max(2, Math.round(S * 0.0036)),
+							background:
+								"linear-gradient(90deg, rgb(140 190 255 / 0), rgb(140 190 255 / .45) 30%, rgb(235 244 255 / .95) 50%, rgb(140 190 255 / .45) 70%, rgb(140 190 255 / 0))",
+						}}
+					/>
+					{[1.45, 1.9].map((t, i) => {
+						const gx = lamp.x + (W / 2 - lamp.x) * t
+						const gy = lamp.y + (cy - lamp.y) * t
+						const r = S * (i ? 0.035 : 0.022)
+						return (
+							<div
+								key={t}
+								className="absolute rounded-full"
+								style={{
+									left: Math.round(gx - r),
+									top: Math.round(gy - r),
+									width: Math.round(r * 2),
+									height: Math.round(r * 2),
+									background: i
+										? "radial-gradient(circle, rgb(120 255 200 / 0) 55%, rgb(120 255 200 / .16) 80%, rgb(120 255 200 / 0) 100%)"
+										: "radial-gradient(circle, rgb(150 170 255 / .2), rgb(150 170 255 / 0) 70%)",
+								}}
+							/>
+						)
+					})}
+				</div>
+			) : null}
+			{/* Round 14 · redrim: deep red at the edges and a dim red glow around the lamp, breathing slowly. */}
+			{used.has("redrim") ? (
+				<>
+					<div className="lf inset-0" style={{ opacity: fx.redrim ?? 0 }}>
+						<div
+							className="lf-breathe"
+							style={{
+								animationPlayState: run("redrim"),
+								animationDuration: "6s",
+								background: `radial-gradient(ellipse ${Math.round(W * 0.6)}px ${geo ? Math.round(Math.max(320, (geo.band.bottom - geo.band.top) * 0.9)) : 500}px at 50% ${Math.round(cy)}px, rgb(70 0 6 / 0) 45%, rgb(80 0 8 / .32) 72%, rgb(46 0 4 / .7) 100%)`,
+							}}
+						/>
+					</div>
+					{lamp ? (
+						<div className="lf inset-0" style={{ opacity: (fx.redrim ?? 0) * 0.8, mixBlendMode: "screen" }}>
+							<div
+								className="lf-breathe"
+								style={{
+									animationPlayState: run("redrim"),
+									animationDuration: "6s",
+									background: `radial-gradient(circle ${Math.round(S * 0.16)}px at ${Math.round(lamp.x)}px ${Math.round(lamp.y)}px, rgb(150 12 12 / .3), rgb(120 0 0 / .1) 50%, rgb(120 0 0 / 0) 100%)`,
+								}}
+							/>
+						</div>
+					) : null}
+				</>
+			) : null}
+			{/* Round 14 · rain: fast streaks and slow drops, only over the window. */}
+			{used.has("rain") && win && streaks && drops ? (
+				<div
+					className="lf inset-0 overflow-hidden"
+					style={{
+						opacity: fx.rain ?? 0,
+						mixBlendMode: "screen",
+						maskImage: `radial-gradient(ellipse ${Math.round(win.w * 0.55)}px ${Math.round(win.h * 0.62)}px at ${Math.round(win.x)}px ${Math.round(win.y)}px, #000 55%, transparent 100%)`,
+						WebkitMaskImage: `radial-gradient(ellipse ${Math.round(win.w * 0.55)}px ${Math.round(win.h * 0.62)}px at ${Math.round(win.x)}px ${Math.round(win.y)}px, #000 55%, transparent 100%)`,
+					}}
+				>
+					<div className="lf-rain" style={{ backgroundImage: `url(${streaks})`, opacity: 0.7, animationPlayState: run("rain") }} />
+					<div className="lf-rain lf-slow" style={{ backgroundImage: `url(${drops})`, animationPlayState: run("rain") }} />
+				</div>
+			) : null}
+			{/* Round 14 · lightning: a rare double flash at the window and a faint lift over the room. */}
+			{used.has("lightning") && win ? (
+				<div className="lf inset-0" style={{ opacity: fx.lightning ?? 0, mixBlendMode: "screen" }}>
+					<div
+						className="lf-bolt"
+						style={{
+							animationPlayState: run("lightning"),
+							background: `radial-gradient(ellipse ${Math.round(win.w * 0.8)}px ${Math.round(win.h * 1.1)}px at ${Math.round(win.x)}px ${Math.round(win.y)}px, rgb(205 222 255 / .7), rgb(170 195 255 / .22) 55%, rgb(170 195 255 / 0) 100%), linear-gradient(rgb(150 170 215 / .12), rgb(150 170 215 / .12))`,
+						}}
+					/>
+				</div>
+			) : null}
+			{/* Round 14 · scratches: thin vertical scratches jumping every few frames, plus dark specks. */}
+			{used.has("scratches") ? (
+				<>
+					<div className="lf inset-0 overflow-hidden" style={{ opacity: fx.scratches ?? 0, mixBlendMode: "screen" }}>
+						<div
+							className="lf-scr"
+							style={{
+								animationPlayState: run("scratches"),
+								background: [0.18, 0.43, 0.61, 0.79]
+									.map((x, i) => {
+										const at = Math.round(x * W * 1.5)
+										const a = [0.3, 0.16, 0.24, 0.12][i]
+										return `linear-gradient(90deg, transparent ${at}px, rgb(255 246 225 / ${a}) ${at}px ${at + 1}px, transparent ${at + 1}px)`
+									})
+									.join(", "),
+							}}
+						/>
+					</div>
+					{specks ? (
+						<div className="lf inset-0 overflow-hidden" style={{ opacity: fx.scratches ?? 0 }}>
+							<div className="lf-grain lf-specks" style={{ backgroundImage: `url(${specks})`, animationPlayState: run("scratches") }} />
+						</div>
+					) : null}
+				</>
 			) : null}
 			{used.has("grain") && grain ? (
 				<div className="lf inset-0 overflow-hidden" style={{ opacity: fx.grain ?? 0, mixBlendMode: "overlay" }}>

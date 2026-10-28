@@ -69,8 +69,22 @@ export function moodAnswer(data: LabData, key: string): FixtureAnswer | null {
 	return m ? { q: m.label, answeredAs: m.label, kind: "mood", reading: null, titles: m.titles } : null
 }
 
+/**
+ * Round 14: the search bar's presets as short phrases (2-4 words). A preset fills the field with its short phrase and
+ * searches that phrase; the lab answers it with the captured prompt it stands for.
+ */
+export const PRESET_SHORT: Record<string, string> = {
+	"a cozy mystery for a rainy Sunday": "Cozy mystery",
+	"something like Severance but funnier": "Severance, but funny",
+	"a mind-bending sci-fi movie under two hours": "Mind-bending sci-fi",
+	"a feel-good show to binge with my partner": "Feel-good binge",
+	"a dark thriller with a twist ending": "Twisty thriller",
+	"an animated movie adults will love": "Adult animation",
+	"a mind-blowing space adventure": "Space adventure",
+}
+
 export function promptAnswer(data: LabData, q: string): FixtureAnswer | null {
-	const p = data.guest.prompts.find((x) => x.q === q)
+	const p = data.guest.prompts.find((x) => x.q === q || PRESET_SHORT[x.q] === q)
 	return p ? { q: p.q, answeredAs: p.q, kind: "prompt", reading: p.reading, titles: p.titles } : null
 }
 

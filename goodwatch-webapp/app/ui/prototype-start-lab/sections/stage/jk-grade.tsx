@@ -4,11 +4,14 @@
 // sections/light (b about twice as strong, c adds film effects, d adds letterbox bars and dimmed shelves).
 // Round 13: c and d grade from GRADES_FILM (the bright moods softer), and mystery choices get a "mystery" grade
 // (crime's layers here; c adds a drifting fog).
+// Round 14: e grades from GRADES_E with EFFECTS_E, dims the resting room (REST_DIM, faded out by any grade), and
+// takes `?fx=` (the effect explorer, sections/light/explorer).
 import { useEffect, useRef, useState } from "react"
 import { MOODS } from "~/domain/moods"
 import { useLab } from "../../lab/types"
 import { type LightGeo, LightOver, LightUnder } from "../light/effects"
-import { COLOR_STRONG, GRADES_FILM, GRADES_STRONG, lightKeyOf } from "../light/tables"
+import { FxExplorer, useFx } from "../light/explorer"
+import { COLOR_STRONG, EFFECTS_E, GRADES_E, GRADES_FILM, GRADES_STRONG, REST_DIM, lightKeyOf } from "../light/tables"
 import { moodHue } from "./ab-shared"
 import { vocabOf } from "./hi-vocab"
 import type { JkFlow } from "./jk-shared"
@@ -232,10 +235,10 @@ function gradeOf(f: JkFlow): string | null | undefined {
 	return gradeOfReading(reading) ?? gradeOfText(s.q) ?? answeredMood ?? null
 }
 
-const layersOf = (g: string, strong: boolean, film: boolean): Layer[] =>
+const layersOf = (g: string, strong: boolean, film: boolean, e: boolean): Layer[] =>
 	g.startsWith("color:")
 		? [{ bg: g.slice(6), blend: "soft-light", o: strong ? COLOR_STRONG : 0.4 }]
-		: ((film ? GRADES_FILM : strong ? GRADES_STRONG : GRADES)[g] ?? [])
+		: ((e ? GRADES_E : film ? GRADES_FILM : strong ? GRADES_STRONG : GRADES)[g] ?? [])
 
 const CSS = `.jk-grade{position:absolute;inset:0;pointer-events:none;transition:opacity .6s ease-out}
 @media (prefers-reduced-motion:reduce){.jk-grade{transition:none}}`
@@ -248,7 +251,12 @@ const CSS = `.jk-grade{position:absolute;inset:0;pointer-events:none;transition:
 export function JkGrade({ f, geo = null }: { f: JkFlow; geo?: LightGeo | null }) {
 	const light = lightKeyOf(useLab().choice)
 	const strong = light !== "a"
-	const film = light === "c" || light === "d"
+	const film = light === "c" || light === "d" || light === "e"
+	// Round 14: variant e (its grade and effects, the resting dim, the `?fx=` explorer).
+	const e = light === "e"
+	const fxe = useFx()
+	const force = e ? fxe.force : []
+	const table = e ? EFFECTS_E : undefined
 	const wanted = gradeOf(f)
 	const last = useRef<string | null>(null)
 	if (wanted !== undefined) last.current = wanted
@@ -273,9 +281,20 @@ export function JkGrade({ f, geo = null }: { f: JkFlow; geo?: LightGeo | null })
 	return (
 		<div aria-hidden className="pointer-events-none absolute inset-0" data-jk-grade={on ?? "none"}>
 			<style>{CSS}</style>
-			{film ? <LightUnder on={on} mounted={mounted} geo={geo} /> : null}
+			{film ? <LightUnder on={on} mounted={mounted} geo={geo} table={table} force={force} /> : null}
+			{/* Round 14 · e's resting dim: on while no grade shows, faded out by any grade. */}
+			{e
+				? REST_DIM.map((l, i) => (
+						<div
+							// biome-ignore lint/suspicious/noArrayIndexKey: fixed layers
+							key={`rest-${i}`}
+							className="jk-grade"
+							style={{ background: l.bg, mixBlendMode: l.blend, opacity: on ? 0 : l.o }}
+						/>
+					))
+				: null}
 			{mounted.flatMap((g) =>
-				layersOf(g, strong, film).map((l, i) => (
+				layersOf(g, strong, film, e).map((l, i) => (
 					<div
 						// biome-ignore lint/suspicious/noArrayIndexKey: a grade's layers are fixed
 						key={`${g}-${i}`}
@@ -284,7 +303,8 @@ export function JkGrade({ f, geo = null }: { f: JkFlow; geo?: LightGeo | null })
 					/>
 				)),
 			)}
-			{film ? <LightOver on={on} mounted={mounted} geo={geo} cinematic={light === "d"} /> : null}
+			{film ? <LightOver on={on} mounted={mounted} geo={geo} cinematic={light === "d"} table={table} force={force} /> : null}
+			{e && fxe.open ? <FxExplorer force={fxe.force} toggle={fxe.toggle} /> : null}
 		</div>
 	)
 }

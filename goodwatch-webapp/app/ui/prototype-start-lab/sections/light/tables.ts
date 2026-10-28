@@ -4,6 +4,8 @@
 // Round 13: c (and d, built on it) grade the bright moods at about a third of b (GRADES_FILM; "the bright ones are way
 // too extreme"), and get six more effects: dust, sweep, fog, flicker, sepia, moon. "mystery" is a grade of its own
 // (crime's layers; c adds fog), for the mystery themes and genre and a reading's mystery and intrigue.
+// Round 14: e builds on c: a dimmer resting room (REST_DIM), lighter crime, red extras for scary, no sweep, fifteen
+// new picture and film effects (EFFECTS_E; names listed there), and `?fx=name,name` forces effects on to judge alone.
 import { DEFAULTS } from "../../lab/choice"
 import type { Choice } from "../../lab/choice"
 import { moodHue } from "../stage/ab-shared"
@@ -119,7 +121,34 @@ export const GRADES_FILM: Record<string, Layer[]> = {
 export const COLOR_STRONG = 0.72
 
 /** The film effects c and d can lay over the room. */
-export type Effect = "grain" | "vignette" | "bloom" | "scan" | "contrast" | "dust" | "sweep" | "fog" | "flicker" | "sepia" | "moon"
+export type Effect =
+	| "grain"
+	| "vignette"
+	| "bloom"
+	| "scan"
+	| "contrast"
+	| "dust"
+	| "sweep"
+	| "fog"
+	| "flicker"
+	| "sepia"
+	| "moon"
+	// Round 14 (e only; see EFFECTS_E).
+	| "halation"
+	| "chroma"
+	| "crt"
+	| "vhs"
+	| "teal"
+	| "xpro"
+	| "bleach"
+	| "pop"
+	| "leak"
+	| "shafts"
+	| "flare"
+	| "lightning"
+	| "rain"
+	| "scratches"
+	| "redrim"
 
 /**
  * c · FILM EFFECTS per mood (on top of c's grade, GRADES_FILM), as opacities:
@@ -169,6 +198,170 @@ export const CINEMA: Record<string, { bars: boolean; shelves: number }> = {
 	action: { bars: true, shelves: 0.5 },
 	heavy: { bars: true, shelves: 0.75 },
 }
+
+/**
+ * Round 14 · e · the grade: c's, with
+ * - the bright moods (feel-good, funny, romance, worlds, growing) about a quarter stronger than c, since the room now
+ *   rests dimmer (REST_DIM) and they lift it;
+ * - crime (and mystery) at about 60% of c's darkening (multiply .62 → .37; "crime should be not THAT dark"), keeping
+ *   the drained, cold noir cast.
+ */
+export const GRADES_E: Record<string, Layer[]> = {
+	...GRADES_FILM,
+	feelgood: [
+		{ bg: hue("feelgood"), blend: "soft-light", o: 0.4 },
+		{ bg: "rgb(255 196 130)", blend: "screen", o: 0.09 },
+	],
+	funny: [
+		{ bg: hue("funny"), blend: "soft-light", o: 0.34 },
+		{ bg: "rgb(255 236 150)", blend: "screen", o: 0.08 },
+	],
+	romance: [
+		{ bg: hue("romance"), blend: "soft-light", o: 0.4 },
+		{ bg: "rgb(255 150 190)", blend: "screen", o: 0.065 },
+	],
+	worlds: [
+		{ bg: hue("worlds"), blend: "soft-light", o: 0.36 },
+		{ bg: "rgb(20 60 80)", blend: "multiply", o: 0.12 },
+	],
+	growing: [
+		{ bg: hue("growing"), blend: "soft-light", o: 0.31 },
+		{ bg: "rgb(255 220 250)", blend: "screen", o: 0.08 },
+	],
+	//            c: saturation .8, color .6, multiply .62
+	crime: [
+		{ bg: GRAY, blend: "saturation", o: 0.72 },
+		{ bg: hue("crime"), blend: "color", o: 0.5 },
+		{ bg: "rgb(20 30 50)", blend: "multiply", o: 0.37 },
+	],
+}
+GRADES_E.mystery = GRADES_E.crime
+
+/**
+ * Round 14 · e · the resting room: with no mood on show (nothing chosen, popular, a search without a reading) the
+ * room sits a little dimmer and flatter, so a bright mood visibly lifts it. Any grade fades this out (opacity), so no
+ * mood ends up darker than in c.
+ */
+export const REST_DIM: Layer[] = [
+	{ bg: "rgb(24 28 40)", blend: "multiply", o: 0.2 },
+	{ bg: GRAY, blend: "saturation", o: 0.14 },
+]
+
+/**
+ * Round 14 · e · EFFECTS per mood. No sweep and no scanline roll any more ("looks nothing like an effect or filter
+ * that makes sense on a tv"); instead picture and film looks. Kept from c: grain, vignette, bloom, contrast, dust,
+ * fog, flicker, sepia, moon. New (the names `?fx=` takes):
+ * - halation: a warm red-orange glow bleeding around the bright spots (lamp, window lights), like film halation.
+ * - chroma: chromatic aberration: red and blue fringes that grow toward the edges of the picture.
+ * - crt: an old tube TV: rounded dark corners, RGB phosphor stripes, fine scanlines (all static).
+ * - vhs: tape playback: lifted milky blacks, a faint red bleed, and a tracking-noise band crawling up the bottom.
+ * - teal: teal-and-orange split toning (teal shadows, orange highlights), the blockbuster grade.
+ * - xpro: cross-processed film: blue-cyan shadows, yellow highlights.
+ * - bleach: bleach bypass: a gray copy of the room overlaid on itself (drained, harsh contrast).
+ * - pop: a "cartoon" saturation boost (colors stronger, grays untouched).
+ * - leak: a warm film light leak (orange-red burn) breathing in and out at the left edge.
+ * - shafts: warm sun shafts slanting down from the window, gently breathing.
+ * - flare: an anamorphic lens flare: a thin blue-white streak through the lamp with two ghosts, pulsing.
+ * - lightning: a rare double flash in the window and a faint lift on the room (every ~13 s).
+ * - rain: rain on the window: fast streaks and slow trickling drops, only over the window.
+ * - scratches: old film: thin vertical scratches and dark dust specks that jump every few frames.
+ * - redrim: dark red at the picture's edges and a dim red glow around the lamp, slowly pulsing.
+ * The window is a guess: the box just above the scene's focus (the seat), as moon uses; the lamp is found per scene.
+ * `?fx=rain,leak` forces effects on at FX_SOLO strength on top of the mood's; `?fx=` alone shows the toggles.
+ */
+export const EFFECTS_E: Record<string, Partial<Record<Effect, number>>> = {
+	// Morning warmth: sun through the window, the lamp's glow.
+	feelgood: { shafts: 0.75, halation: 0.3, flicker: 0.5 },
+	// Cartoon: stronger colors, a cross-processed snap.
+	funny: { pop: 0.35, xpro: 0.45, bloom: 0.1 },
+	// Warm film: halation and a light leak.
+	romance: { halation: 0.6, leak: 0.6, vignette: 0.3, flicker: 0.4 },
+	// Blockbuster: teal and orange, contrast, a lens flare.
+	action: { teal: 0.75, contrast: 0.6, flare: 0.85, vignette: 0.3 },
+	// c's scary with less black vignette, dark red edges, rare lightning.
+	scary: { grain: 0.26, vignette: 0.6, redrim: 0.85, lightning: 1 },
+	//            c: grain .18, vignette .6, contrast .4
+	crime: { grain: 0.18, vignette: 0.36, contrast: 0.3 },
+	// Crime's, with fog and rain on the window.
+	mystery: { grain: 0.18, vignette: 0.36, contrast: 0.3, fog: 0.7, rain: 0.75 },
+	// An old tube TV with lens fringes.
+	mind: { crt: 0.85, chroma: 1 },
+	// Bleach bypass, dust in the lamp light.
+	heavy: { bleach: 0.75, vignette: 0.55, dust: 0.5, grain: 0.1 },
+	// Moonlight and a soft glow (as c).
+	worlds: { bloom: 0.18, moon: 0.75 },
+	// Old print: sepia, scratches, specks.
+	history: { sepia: 0.45, scratches: 0.85, grain: 0.18, vignette: 0.4 },
+	// Home video: tape look and a soft leak.
+	growing: { vhs: 0.7, leak: 0.3, bloom: 0.12 },
+}
+
+/** Round 14 · the strength an effect gets when `?fx=` forces it on (the explorer). */
+export const FX_SOLO: Record<Effect, number> = {
+	grain: 0.26,
+	vignette: 0.6,
+	bloom: 0.3,
+	scan: 1,
+	contrast: 0.6,
+	dust: 0.65,
+	sweep: 0.6,
+	fog: 0.8,
+	flicker: 0.7,
+	sepia: 0.45,
+	moon: 0.75,
+	halation: 0.6,
+	chroma: 1,
+	crt: 0.85,
+	vhs: 0.75,
+	teal: 0.75,
+	xpro: 0.5,
+	bleach: 0.75,
+	pop: 0.4,
+	leak: 0.65,
+	shafts: 0.8,
+	flare: 0.85,
+	lightning: 1,
+	rain: 0.8,
+	scratches: 0.85,
+	redrim: 0.85,
+}
+
+/** Round 14 · the effects e can show, in the explorer's order (new ones first). */
+export const FX_E: Effect[] = [
+	"halation",
+	"chroma",
+	"crt",
+	"vhs",
+	"teal",
+	"xpro",
+	"bleach",
+	"pop",
+	"leak",
+	"shafts",
+	"flare",
+	"lightning",
+	"rain",
+	"scratches",
+	"redrim",
+	"grain",
+	"vignette",
+	"bloom",
+	"contrast",
+	"dust",
+	"fog",
+	"flicker",
+	"sepia",
+	"moon",
+]
+
+/** Round 14 · `?fx=a,b` → the known effect names in it (unknown ones dropped). */
+export const fxOfParam = (v: string | null): Effect[] =>
+	v
+		? v
+				.split(",")
+				.map((s) => s.trim())
+				.filter((s): s is Effect => (FX_E as string[]).includes(s))
+		: []
 
 /** The chosen mood lighting: the URL's, else the round's default, else "a"; an unknown key falls back to "a". */
 export function lightKeyOf(choice: Choice): string {

@@ -6,7 +6,7 @@ import { type ReactNode, type RefObject, useCallback, useEffect, useRef, useStat
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import { ReadAsChips, readAsChips } from "~/ui/discover/ReadAsChips"
 import { DEFAULTS } from "../../lab/choice"
-import { TYPED_READING_MS } from "../../lab/fixture-search"
+import { PRESET_SHORT, TYPED_READING_MS } from "../../lab/fixture-search"
 import { useLab } from "../../lab/types"
 import { PRIVATE, readingChips } from "../hero/shared"
 import { moodHue, type StageFlow } from "../stage/ab-shared"
@@ -160,19 +160,7 @@ export function EnterKey({ tone = "on-amber", label = false, className = "" }: {
 	)
 }
 
-/**
- * Round 13: d's presets as short labels (2-4 words) for the captured prompts; a chip still runs its full prompt
- * (promptAnswer keys on the original text). A prompt without a label here keeps its full text.
- */
-export const PRESET_SHORT: Record<string, string> = {
-	"a cozy mystery for a rainy Sunday": "Cozy mystery",
-	"something like Severance but funnier": "Severance, but funny",
-	"a mind-bending sci-fi movie under two hours": "Mind-bending sci-fi",
-	"a feel-good show to binge with my partner": "Feel-good binge",
-	"a dark thriller with a twist ending": "Twisty thriller",
-	"an animated movie adults will love": "Adult animation",
-	"a mind-blowing space adventure": "Space adventure",
-}
+export { PRESET_SHORT } from "../../lab/fixture-search"
 
 /** Round 13: d's placeholder, which repeats no preset: the long one on desktop, a short one on phones. */
 export const PLACEHOLDER_LONG = "Describe a mood, a plot, or a title…"
@@ -208,9 +196,9 @@ export function BarPresets({ f, lead = true, ghost = false, compact = false }: {
 					<button
 						key={p.q}
 						type="button"
-						title={p.q}
 						onMouseDown={(e) => e.preventDefault()}
-						onClick={() => f.prompt(p.q)}
+						// Round 14: the field shows and searches the exact short phrase.
+						onClick={() => f.prompt(PRESET_SHORT[p.q] ?? p.q)}
 						className="inline-flex h-7 shrink-0 cursor-pointer items-center whitespace-nowrap rounded-full bg-white/[0.06] px-2.5 text-[13px] text-gray-200 outline-none ring-1 ring-inset ring-white/10 transition-colors hover:bg-amber-400/10 hover:text-white hover:ring-amber-400/50 focus-visible:ring-2 focus-visible:ring-amber-400"
 					>
 						{PRESET_SHORT[p.q] ?? p.q}

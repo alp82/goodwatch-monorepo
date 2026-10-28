@@ -29,8 +29,9 @@ export const SECTIONS: { id: SectionId; name: string; for: Viewer[]; rounds: Rou
 /** The owner's round 1 picks (2026-10-27) start round 2. */
 export const DEFAULTS: Record<Round, Partial<Record<SectionId, string>>> = {
 	1: {},
+	// Round 14: mood lighting e (sections/light) is the default.
 	// Round 6: the owner's picks: stage j, browse d, member d (rounds 1-5 verdicts in BRIEF.md).
-	2: { scene: "nook-r12-b", shelf: "h", tv: "a", how: "b", stage: "j", browse: "d", member: "d", persona: "full", searchbar: "d", light: "c" },
+	2: { scene: "nook-r12-b", shelf: "h", tv: "a", how: "b", stage: "j", browse: "d", member: "d", persona: "full", searchbar: "d", light: "e" },
 }
 
 export type Choice = Partial<Record<SectionId, string>> & { as: Viewer; sec: SectionId; round: Round }
@@ -60,5 +61,10 @@ export function paramsFromChoice(choice: Choice): URLSearchParams {
 		if (v) p.set(s.id, v)
 	}
 	p.set("sec", choice.sec)
+	// PROTOTYPE · Round 14: keep the effect explorer's `fx` (sections/light/explorer) across bar changes.
+	if (typeof window !== "undefined") {
+		const fx = new URLSearchParams(window.location.search).get("fx")
+		if (fx !== null) p.set("fx", fx)
+	}
 	return p
 }

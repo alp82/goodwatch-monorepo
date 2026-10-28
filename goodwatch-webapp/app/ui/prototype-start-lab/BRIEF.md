@@ -205,3 +205,41 @@ Scene: **`nook-r9-bay-sofa-a`** (now the default). The owner's notes, verbatim:
 > 10 more variations
 
 Ten repaints of the room are coming as `nook-r11-a` … `nook-r11-j` (+ `-portrait`): Blu-ray cases spine-out on the shelves, 10-14 face-out cases whose cover area is the magenta slot.
+
+---
+
+# Round 13 (2026-10-28): short presets, gentler bright moods, more effects
+
+The owner's notes on round 12, verbatim:
+- "search: D is nice. the preset links should be a bit more compact and less wordy. and the search placeholder shouldnt duplicate a preset"
+- "effects: C is good but the bright ones are way too extreme. add more effects (scary and crime are good already)"
+- "room: 12-b is good"
+- "posters: h but we still have weird pixelized artifacts"
+- "scene: reduce the min gap to half of this"
+
+Built (f8e9ebfcd): six short presets and a new placeholder for search bar d; light c with the bright moods at about a
+third and dust, sweep, fog, flicker, sepia, and moon effects; the chips-to-card gap halved; nook-r12-b slot edges
+inpainted (scripts/prototype-start-lab/scene-slots-r13.py). Round 12 picks: searchbar d, light c, scene nook-r12-b, shelf h.
+
+Round 14 preset fix: a preset fills the field with its short phrase and searches it (`PRESET_SHORT` in lab/fixture-search.ts).
+
+# Round 14 (2026-10-28): mood lighting e
+
+The owner's notes on round 13, verbatim:
+
+> * bright: i think we should have the default brightness a bit less so that the difference for selected bright moods is better visible
+> * effects: crime should be not THAT dark
+> * scary could add some dark red extras
+> * the sweep is bad, looks nothing like an effect or filter that makes sense on a tv
+> * add more ideas for effects and filter layers
+> * presets: they should fill in the exact short phrases
+
+Built: mood lighting **e** ("Round 14", `?light=e`, now round 2's default; a-d unchanged), on c (`sections/light/tables.ts` GRADES_E, REST_DIM, EFFECTS_E):
+
+- **Dimmer resting room:** with no grade on show the room sits under a dark multiply (.2) and a light desaturation (.14), which any grade fades out, so the bright moods lift it; their grade is about a quarter stronger than c's.
+- **Crime and mystery lighter:** multiply .62 → .37, vignette .6 → .36, contrast .4 → .3; still drained and cold.
+- **Scary:** less black vignette plus `redrim` (deep red edges and a dim red glow at the lamp, breathing slowly) and rare `lightning` in the window.
+- **No sweep** anywhere in e. Funny: `pop` + `xpro`. Action: `teal` + `flare` + contrast.
+- **New effects:** halation, chroma, crt, vhs, teal, xpro, bleach, pop, leak, shafts, flare, lightning, rain, scratches, redrim (each described in tables.ts EFFECTS_E). Per mood: feel-good shafts + halation + flicker; romance halation + leak; mystery adds fog + rain; mind crt + chroma; heavy bleach + dust; history sepia + scratches; growing vhs + leak; worlds as c.
+- **Effect explorer:** `?fx=rain,leak` forces effects on (at FX_SOLO strength, on top of the mood's); while `fx` is in the URL (even `?fx=`) a small toggle list sits in the top left. The lab bar keeps `fx`.
+- The window is a guess (the box just above the scene's focus); the lamp is found per scene as before.

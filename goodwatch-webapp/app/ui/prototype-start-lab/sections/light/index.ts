@@ -7,4 +7,6 @@ export const VARIANTS: ChoiceVariant[] = [
 	{ key: "b", name: "Stronger grade" },
 	{ key: "c", name: "Grade + film effects" },
 	{ key: "d", name: "Cinematic" },
+	// PROTOTYPE · Round 14: c with a dimmer resting room, lighter crime, red scary, new film and TV effects.
+	{ key: "e", name: "Round 14" },
 ]
