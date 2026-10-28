@@ -195,6 +195,9 @@ _Avoid_: Taste profile
 **Score acknowledgement**:
 What a score press shows while one-title-at-a-time scoring moves on: the chosen score stays marked, a line names it ("Scored 8 · Great", or "Not seen · next title"), and the title leaves 0.7 seconds after the press, or when the write succeeds if that takes longer. The first press counts; presses during the acknowledgement do nothing. A refused write keeps the title, says "Couldn't save. Try again, or go to the next title.", and offers Next title. The rating flow shares it wherever it shows: /taste/quiz, the taste start on /taste, and Rate titles on the TV (`ui/scoring/score-ack.ts`).
 
+**Quick list**:
+The rating flow's second mode on /taste/quiz, next to One at a time: the person's unanswered titles as a table, 20 rows at a time, each scored or marked Haven't seen it or Not interested in place. A search there finds the whole catalog and shows earlier answers to change. The latest answered row stays dimmed until the next answer; Undo takes changes back one at a time, saves included. Same milestones, words and guest rating limit as One at a time (`ui/quick-list/`).
+
 **Taste match**:
 How well a title's fingerprint fits the person's taste, shown from 50 to 99 percent once the person has rated 5 titles they liked. It places the title within the person's own range, and high numbers are rare: 90 means the title fits better than about 99 percent of well-known titles would. The highest numbers need more liked titles: with 5 the scale ends at 85, from 100 at 99.
 _Avoid_: Match score, Similarity
