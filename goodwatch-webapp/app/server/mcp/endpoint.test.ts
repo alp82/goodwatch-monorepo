@@ -11,7 +11,9 @@ const { createReadToolServer, createToolServer } = await import(
 const { createReadMcpHandler } = await import("./endpoint.server.ts")
 
 test("MCP refuses anonymous callers and never caches the challenge", async () => {
-	const handle = createReadMcpHandler({ resource: "http://localhost:3336/mcp" })
+	const handle = createReadMcpHandler({
+		resource: "http://localhost:3336/mcp",
+	})
 	const response = await handle(new Request("http://localhost:3336/mcp"))
 	assert.equal(response.status, 401)
 	assert.match(response.headers.get("WWW-Authenticate") ?? "", /Bearer/)
@@ -985,7 +987,7 @@ test("MCP prompts list only workflows supported by the token's tools and fill ar
 		for (const prompt of prompts) {
 			assert.ok(prompt.title)
 			assert.ok(prompt.description)
-			assert.equal(prompt.title, prompt.title.toLowerCase())
+			assert.match(prompt.title, /^[A-Z]/)
 			assert.doesNotMatch(prompt.title, /best match/)
 			for (const arg of prompt.arguments) assert.ok(arg.description)
 			const got = await result(
@@ -1005,7 +1007,7 @@ test("MCP prompts list only workflows supported by the token's tools and fill ar
 			const namedTools = [...text.matchAll(/^\d+\. (\w+):/gm)].map(
 				(match) => match[1],
 			)
-			assert.ok(namedTools.length >= 2)
+			assert.ok(namedTools.length >= 1)
 			for (const name of namedTools)
 				assert.ok(toolNames.has(name), `${prompt.name}: ${name}`)
 			assert.doesNotMatch(text, /best match/i)

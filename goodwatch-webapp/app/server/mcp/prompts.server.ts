@@ -1,14 +1,20 @@
 import type { McpServer } from "@modelcontextprotocol/server"
 import * as z from "zod4"
 import { MCP_PROMPT_EXAMPLES } from "../../ui/connector/example-prompts.ts"
+import { writeToolDefinitions } from "./write-tools.server.ts"
+
+const writeTools = new Set<string>(writeToolDefinitions.map(({ name }) => name))
 
 type PromptArgs = Record<string, string | undefined>
 type PromptDefinition = {
 	name: keyof typeof MCP_PROMPT_EXAMPLES
+	// Menu label in clients; the casual ask goes in the message.
+	title: string
 	description: string
 	args: Record<string, z.ZodString | z.ZodOptional<z.ZodString>>
 	ask: (args: PromptArgs) => string
 	steps: readonly [tool: string, usage: string][]
+	note?: string
 }
 const title = z
 	.string()
@@ -19,11 +25,11 @@ const title = z
 export const promptDefinitions: readonly PromptDefinition[] = [
 	{
 		name: "watch_tonight",
+		title: "Watch tonight",
 		description: "pick something to watch next on my saved services",
 		args: {},
 		ask: () => MCP_PROMPT_EXAMPLES.watch_tonight,
 		steps: [
-			["get_settings", "read my saved country and services"],
 			[
 				"get_tonight",
 				"get one pick and its availability, noting any missing availability evidence",
@@ -32,6 +38,7 @@ export const promptDefinitions: readonly PromptDefinition[] = [
 	},
 	{
 		name: "log_and_score",
+		title: "Log and score a watch",
 		description: "log a movie or episode watch and save my score",
 		args: {
 			title,
@@ -43,11 +50,14 @@ export const promptDefinitions: readonly PromptDefinition[] = [
 				.describe("optional episode in s2e4 form"),
 			score: z
 				.string()
+				.trim()
 				.regex(/^(10|[1-9])$/)
 				.describe("my whole-number score from 1 to 10"),
 		},
 		ask: ({ title, episode, score }) =>
-			`just watched ${title}${episode ? ` ${episode}` : ""}, score it with ${score}`,
+			`just watched ${title}${
+				episode ? ` ${episode}` : ""
+			}, score it with ${score}`,
 		steps: [
 			[
 				"search_titles",
@@ -65,6 +75,7 @@ export const promptDefinitions: readonly PromptDefinition[] = [
 	},
 	{
 		name: "more_like_this",
+		title: "More like this",
 		description: "find something like a title i loved",
 		args: { title },
 		ask: ({ title }) => `something like ${title}`,
@@ -81,11 +92,11 @@ export const promptDefinitions: readonly PromptDefinition[] = [
 	},
 	{
 		name: "where_to_stream",
+		title: "Where to stream",
 		description: "find where a title streams in my saved country",
 		args: { title },
 		ask: ({ title }) => `where can i stream ${title}`,
 		steps: [
-			["get_settings", "read my saved country and services"],
 			["search_titles", "resolve the title to its id, clarifying ambiguity"],
 			[
 				"get_title",
@@ -95,6 +106,7 @@ export const promptDefinitions: readonly PromptDefinition[] = [
 	},
 	{
 		name: "catch_up_shows",
+		title: "Catch up on my shows",
 		description: "catch me up on what is next across my watching shows",
 		args: {},
 		ask: () => MCP_PROMPT_EXAMPLES.catch_up_shows,
@@ -108,6 +120,7 @@ export const promptDefinitions: readonly PromptDefinition[] = [
 	},
 	{
 		name: "bulk_mark_seen",
+		title: "Mark a list as seen",
 		description:
 			"mark a pasted list as seen with scores and keep batch ids for undo",
 		args: {
@@ -137,14 +150,12 @@ export const promptDefinitions: readonly PromptDefinition[] = [
 				"rate_title",
 				"batch only supplied whole-title scores as items, up to 50 per call, using numeric scores",
 			],
-			[
-				"undo_watch",
-				"report every returned batch_id with its operation and item failures; explain that batch_id takes back undoable changes while preserving newer edits, without calling undo unless i request it",
-			],
 		],
+		note: "report every returned batch_id with its operation and item failures; explain that batch_id takes back undoable changes while preserving newer edits, without calling undo unless i request it",
 	},
 	{
 		name: "top_five_year",
+		title: "Top 5 of a year",
 		description:
 			"build a top-5 share list from my highest-scored releases of a year",
 		args: {
@@ -167,6 +178,7 @@ export const promptDefinitions: readonly PromptDefinition[] = [
 	},
 	{
 		name: "compare_my_taste",
+		title: "Would I like it?",
 		description: "compare a title with my taste and explain the fit",
 		args: { title },
 		ask: ({ title }) => `would i like ${title} and why`,
@@ -191,7 +203,7 @@ export function registerPrompts(
 		server.registerPrompt(
 			prompt.name,
 			{
-				title: MCP_PROMPT_EXAMPLES[prompt.name],
+				title: prompt.title,
 				description: prompt.description,
 				argsSchema: z.object(prompt.args).strict(),
 			},
@@ -201,7 +213,13 @@ export function registerPrompts(
 						role: "user",
 						content: {
 							type: "text",
-							text: `${prompt.ask(args)}\n\n${prompt.steps.map(([tool, usage], i) => `${i + 1}. ${tool}: ${usage}`).join("\n")}${prompt.steps.some(([tool]) => ["log_watch", "create_list"].includes(tool)) ? "\nuse a distinct action_id for each write call, reusing it only for retries of that exact call" : ""}`,
+							text: `${prompt.ask(args)}\n\n${prompt.steps
+								.map(([tool, usage], i) => `${i + 1}. ${tool}: ${usage}`)
+								.join("\n")}${prompt.note ? `\n${prompt.note}` : ""}${
+								prompt.steps.some(([tool]) => writeTools.has(tool))
+									? "\nuse a distinct action_id for each write call, reusing it only for retries of that exact call"
+									: ""
+							}`,
 						},
 					},
 				],
