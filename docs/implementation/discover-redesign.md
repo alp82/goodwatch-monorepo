@@ -573,9 +573,22 @@ Columns, one value per title in the snapshot's row order:
 | show status | uint8 | 0 unknown, 1 running (Returning Series, In Production), 2 ended, 3 canceled |
 | production countries | uint8 × 4 | indexes into `facts.countries` (sorted), 255 none; the first four listed |
 
-That is 20 bytes per title. The publisher's change mark (`source_mark`) gains an aggregate over these columns (count
-and sums of seasons, episodes, budget and revenue, or a details timestamp if one exists), so a season or status change
-publishes on the nightly run even when no title analysis changed.
+Format 1 is exactly 20 bytes per title, little-endian, with no padding between columns. For N titles, the
+column byte offsets are: release year 0, length 2N, budget 4N, box office 8N, seasons 12N, episodes 13N,
+status 15N, then country slots 0 to 3 at 16N, 17N, 18N and 19N. Each slot is a full column, not four
+interleaved bytes per title. Decoders must account for unaligned multi-byte columns when N is odd.
+Money is floored to whole USD thousands after applying the $10,000 threshold. Other numeric facts use 0
+for missing, nonpositive or nonfinite values and saturate at their type's maximum (seasons at 254).
+Movies have zero seasons, episodes and status; shows have zero budget and box office. Country codes are
+normalized to uppercase two-letter codes and deduplicated in source order before taking the first four.
+The sorted country table includes all valid countries of snapshot titles, including countries beyond the
+four slots; at most 255 entries, with index 255 reserved for no country.
+
+The publisher's change mark (`source_mark`) stores, per table, count and sum of `dna_updated_at` followed
+by count and sum of `tmdb_details_updated_at`, plus the ratings and facts format versions. The previous
+analysis-only mark did not cover season or status changes. The TMDB details copy writes the details timestamp
+alongside seasons, episodes, status and the other facts, so its aggregate triggers a nightly publish even
+without a new analysis. Direct edits that bypass that copy must also update the details timestamp.
 
 Release year is stored although the snapshot already has `release day`: for shows, `release day` is the last air
 date (the publisher reads `last_air_date`, so Newest orders by it), while Released filters by `release_year`, the
@@ -588,7 +601,9 @@ exact for every title and already cached, while the slots hold only the first fo
 over every country would cost about 32 bytes per title, more than the rest of the sidecar together, for a filter
 that already works. The cost is that a title with more than four countries is missing from the counts of its fifth
 and later countries. Measure how many titles that affects in B10 and record it; if it is above 1% of the catalog,
-widen the slots to six in B10 before B12 ships.
+widen the slots to six in B10 before B12 ships. The publisher logs the affected count, catalog size and
+percentage on each facts build. B10 unit tests verify this log; the production measurement and 1% decision
+remain a deployment check (no database or Windmill access during implementation).
 
 ### Counts
 
@@ -851,6 +866,10 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
   count; record how many titles list more than four production countries (see [Facts sidecar](#facts-sidecar) for
   the 1% rule).
 - Depends on: nothing. Start it on day one: B10, B11 and B12 are the longest backend chain, and F8 waits on B12.
+
+- Measured 2026-10-29 (read-only preview job): 721 of 171,484 analysed movies (0.42%) and 144 of 89,046 analysed
+  shows (0.16%) list more than four production countries, so four slots stay. Show statuses: Ended 61,074, Returning
+  Series 23,446, Canceled 4,071, In Production 340, Pilot 70, Planned 45 (Pilot and Planned store 0, unknown).
 
 **B11. Facts decoder in the webapp**
 

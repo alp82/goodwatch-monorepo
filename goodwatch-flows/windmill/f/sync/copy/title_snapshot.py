@@ -29,18 +29,28 @@ the estimate (the lower median age across the countries that rated the title), t
 column per country in `countries` order, each the strictest of the title's ratings there.
 255 is no rating. That is 2 + countries bytes per title.
 
+The optional facts sidecar uses `title-snapshot:<version>:facts:<n>` and `manifest.facts`
+(format, chunk count, SHA-256 and a sorted production country table). Its little-endian
+columns occupy 20 bytes per title: release year (uint16), movie or first episode runtime in
+minutes (uint16), budget and revenue in USD thousands (2 x uint32), seasons (uint8), episodes
+(uint16), status (uint8), then four country index columns (uint8, 255 missing). Numeric facts
+are 0 when unknown; amounts below $10,000 are unknown. See the Discover plan's Facts sidecar
+section for offsets and normalization. It is read and written independently of ratings and
+the snapshot, and a failure leaves only facts out of the manifest.
+
 One run:
 
 1. Reads a mark of the analyses in Crate: per table, the count and the sum of
-   `dna_updated_at`. A new, changed or removed analysis moves it. When it equals the mark in
+   `dna_updated_at` and `tmdb_details_updated_at` for titles with analysis. A new, changed or
+   removed analysis or details refresh of an analysed title moves it. When it equals the mark in
    the current manifest, the run exits without a new version, unless `force` is set.
 2. Reads the titles from Crate in pages of `PAGE_SIZE` by tmdb_id, filtered on
    `dna_updated_at` (a timestamp with doc values). The 74 scores come from the typed
    `fingerprint_scores[...]` subcolumns; reading the whole object column is about five
    times slower and has pages near the 10 s timeout.
-3. Builds the ratings sidecar from a second, narrow read of the same titles and the
+3. Builds the ratings and facts sidecars from separate, narrow reads of the same titles and the
    `age_certification` lookup table. Whatever fails there is logged and the snapshot is
-   published without the `ratings` field: the sidecar never stops a publish.
+   published without that sidecar's manifest field: a sidecar never stops a publish.
 4. Writes the chunks of the new version, swaps `title-snapshot:current`, and deletes the
    chunks of every version but the new and the previous one.
 
@@ -100,6 +110,11 @@ UINT32_MAX = 0xFFFFFFFF
 TABLES = {"movie": ("movie", "release_date", MOVIE_BASE), "show": ("show", "last_air_date", SHOW_BASE)}
 
 assert len(KEY_ORDER) == FINGERPRINT_LENGTH
+
+FACTS_FORMAT = 1
+FACTS_BYTES_PER_TITLE = 20
+FACTS_COUNTRY_SLOTS = 4
+SHOW_STATUSES = {"Returning Series": 1, "In Production": 1, "Ended": 2, "Canceled": 3}
 
 RATINGS_FORMAT = 1
 NO_AGE = 255
@@ -249,14 +264,19 @@ def _with_retries(read: Callable[[], list]) -> list:
 
 
 def source_mark(select: Callable[[str, list], list]) -> dict:
-    """Per table, the count and sum of dna_updated_at: moves when an analysis is added, changed
-    or removed. Two aggregates over a timestamp column, well under a second. `ratings` is the
-    sidecar's format, so that the first run of a publisher that writes a new one publishes."""
+    """Analysis and TMDB details timestamp aggregates per table, scoped to analysed titles.
+    The details copy updates
+    tmdb_details_updated_at alongside seasons, status and the other facts, even without a
+    new analysis. Sidecar formats make the first run of a new publisher publish."""
     mark = {}
     for media_type, (table, _, _) in TABLES.items():
-        count, total = select(f"SELECT count(dna_updated_at), sum(dna_updated_at) FROM {table}", [])[0]
-        mark[media_type] = [int(count or 0), int(total or 0)]
+        values = select(
+            f"SELECT count(dna_updated_at), sum(dna_updated_at),"
+            f" count(tmdb_details_updated_at) FILTER (WHERE dna_updated_at IS NOT NULL),"
+            f" sum(tmdb_details_updated_at) FILTER (WHERE dna_updated_at IS NOT NULL) FROM {table}", [])[0]
+        mark[media_type] = [int(value or 0) for value in values]
     mark["ratings"] = RATINGS_FORMAT
+    mark["facts"] = FACTS_FORMAT
     return mark
 
 
@@ -428,6 +448,89 @@ def build_ratings(select: Callable[[str, list], list], point_ids: list[int]) -> 
     return encode_ratings(point_ids, titles, ladders)
 
 
+# ---- Facts -----------------------------------------------------------------
+
+
+def _fact_uint(value, maximum: int) -> int:
+    """Unknown, invalid and nonpositive facts are zero; large facts saturate."""
+    if not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+        return 0
+    return min(maximum, int(value))
+
+
+def _money_thousands(value) -> int:
+    if not isinstance(value, (int, float)) or not math.isfinite(value) or value < 10_000:
+        return 0
+    return min(UINT32_MAX, int(value // 1000))
+
+
+def read_facts(select: Callable[[str, list], list], media_type: str) -> dict[int, dict]:
+    """A separate narrow paged read, so a facts failure cannot stop the snapshot."""
+    table, _, base = TABLES[media_type]
+    specific = ("runtime, budget, revenue" if media_type == "movie" else
+                "episode_runtime[1], number_of_seasons, number_of_episodes, status")
+    sql = (
+        f"SELECT tmdb_id, release_year, production_country_codes, {specific} FROM {table}"
+        f" WHERE dna_updated_at IS NOT NULL AND tmdb_id > ? ORDER BY tmdb_id LIMIT {PAGE_SIZE}"
+    )
+    titles = {}
+    last = -1
+    while True:
+        records = _with_retries(lambda: select(sql, [last]))
+        for tmdb_id, year, countries, length, *details in records:
+            # Preserve source order, with each valid country occupying at most one slot.
+            countries = list(dict.fromkeys(c.strip().upper() for c in countries or []
+                                          if isinstance(c, str) and _COUNTRY.fullmatch(c.strip().upper())))
+            facts = {"year": year, "length": length, "countries": countries}
+            if media_type == "movie":
+                facts.update(budget=details[0], box_office=details[1])
+            else:
+                facts.update(seasons=details[0], episodes=details[1], status=SHOW_STATUSES.get(details[2], 0))
+            titles[base + int(tmdb_id)] = facts
+        if len(records) < PAGE_SIZE:
+            return titles
+        last = records[-1][0]
+
+
+def encode_facts(point_ids: list[int], titles: dict[int, dict]) -> tuple[dict, list[bytes]]:
+    """Facts format 1: little-endian columns in the plan's order, without padding.
+    Country slots are four columns (all slot 0 values, then all slot 1 values, etc.)."""
+    if sys.byteorder != "little":
+        raise RuntimeError("The title snapshot needs a little-endian machine")
+    rows = [titles.get(point_id, {}) for point_id in point_ids]
+    countries = sorted({c for row in rows for c in row.get("countries", [])})
+    if len(countries) > 255:
+        raise ValueError(f"{len(countries)} production countries; facts format {FACTS_FORMAT} holds 255")
+    country_index = {c: i for i, c in enumerate(countries)}
+    columns = []
+    for name, kind, maximum in [("year", "H", 65535), ("length", "H", 65535),
+                                 ("budget", "I", UINT32_MAX), ("box_office", "I", UINT32_MAX),
+                                 ("seasons", "B", 254), ("episodes", "H", 65535), ("status", "B", 3)]:
+        values = (_money_thousands(row.get(name)) if name in ("budget", "box_office") else
+                  _fact_uint(row.get(name), maximum) for row in rows)
+        columns.append(array(kind, values).tobytes())
+    for slot in range(FACTS_COUNTRY_SLOTS):
+        columns.append(bytes(country_index[row["countries"][slot]]
+                             if len(row.get("countries", [])) > slot else 255 for row in rows))
+    data = b"".join(columns)
+    assert len(data) == len(rows) * FACTS_BYTES_PER_TITLE
+    chunks = [data[at:at + CHUNK_BYTES] for at in range(0, len(data), CHUNK_BYTES)] or [b""]
+    return {"format": FACTS_FORMAT, "chunks": len(chunks), "sha256": sha256(data).hexdigest(),
+            "countries": countries}, chunks
+
+
+def build_facts(select: Callable[[str, list], list], point_ids: list[int]) -> tuple[dict, list[bytes], int]:
+    titles = {}
+    for media_type in TABLES:
+        titles.update(read_facts(select, media_type))
+    over = sum(len(titles.get(point_id, {}).get("countries", [])) > FACTS_COUNTRY_SLOTS for point_id in point_ids)
+    share = 100 * over / len(point_ids) if point_ids else 0
+    print(f"FACTS: {over} of {len(point_ids)} titles list more than {FACTS_COUNTRY_SLOTS} production countries ({share:.2f}%)",
+          flush=True)
+    field, chunks = encode_facts(point_ids, titles)
+    return field, chunks, over
+
+
 # ---- Encoding --------------------------------------------------------------
 
 
@@ -508,6 +611,10 @@ def ratings_chunk_key(version: str, n: int) -> str:
     return f"title-snapshot:{version}:ratings:{n}"
 
 
+def facts_chunk_key(version: str, n: int) -> str:
+    return f"title-snapshot:{version}:facts:{n}"
+
+
 def version_of(built_at: datetime) -> str:
     return built_at.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
@@ -535,14 +642,18 @@ def _scan(redis, match: str) -> Iterable[bytes]:
 
 
 def write_ratings(redis, version: str, chunks: list[bytes]) -> None:
-    """Writes the sidecar's chunks; when a write fails, deletes the ones written and raises."""
+    write_sidecar(redis, version, chunks, ratings_chunk_key)
+
+
+def write_sidecar(redis, version: str, chunks: list[bytes], key: Callable[[str, int], str]) -> None:
+    """Writes a sidecar; when a write fails, deletes its chunks and raises."""
     try:
         for n, chunk in enumerate(chunks):
-            redis.set(ratings_chunk_key(version, n), chunk)
+            redis.set(key(version, n), chunk)
     except Exception:
         for n in range(len(chunks)):
             try:
-                redis.delete(ratings_chunk_key(version, n))
+                redis.delete(key(version, n))
             except Exception:
                 pass
         raise
@@ -550,7 +661,7 @@ def write_ratings(redis, version: str, chunks: list[bytes]) -> None:
 
 def publish(redis, manifest: dict, chunks: list[bytes], previous: Optional[dict]) -> int:
     """Writes the chunks, swaps the manifest, then deletes the chunks of every other version but
-    the previous one, ratings chunks included. Returns the number of chunks deleted."""
+    the previous one, sidecar chunks included. Returns the number of chunks deleted."""
     version = manifest["version"]
     for n, chunk in enumerate(chunks):
         redis.set(chunk_key(version, n), chunk)
@@ -591,6 +702,12 @@ def _without_ratings(step: str, error: Exception) -> str:
     return f"{step}: {error!r}"
 
 
+def _without_facts(step: str, error: Exception) -> str:
+    print(f"FACTS SIDECAR FAILED while {step}: {error!r}. Publishing the snapshot without facts."
+          f"\n{traceback.format_exc()}", flush=True)
+    return f"{step}: {error!r}"
+
+
 def run(redis, select: Callable[[str, list], list], *, force: bool = False, dry_run: bool = False,
         now: Optional[Callable[[], datetime]] = None) -> dict[str, Any]:
     now = now or (lambda: datetime.now(timezone.utc))
@@ -598,6 +715,7 @@ def run(redis, select: Callable[[str, list], list], *, force: bool = False, dry_
     previous = current_manifest(redis)
     mark = source_mark(select)
     if not force and previous and previous.get("sourceMark") == mark:
+        # Keep the existing reason for callers; the mark now covers details as well.
         return {"published": False, "reason": "no title analysis changed since the current version",
                 "version": previous.get("version"), "source_mark": mark}
     # A dry run writes nothing, not even the lock.
@@ -636,6 +754,16 @@ def run(redis, select: Callable[[str, list], list], *, force: bool = False, dry_
         except Exception as error:
             summary["ratings_error"] = _without_ratings("building it", error)
         timings["ratings_seconds"] = round(time.monotonic() - at, 1)
+        facts = None
+        at = time.monotonic()
+        try:
+            facts = build_facts(select, sorted(row["point_id"] for row in rows))
+            over = facts[2]
+            summary["facts"] = {"countries": len(facts[0]["countries"]), "chunks": facts[0]["chunks"],
+                                "bytes": manifest["count"] * FACTS_BYTES_PER_TITLE, "over_slots": over}
+        except Exception as error:
+            summary["facts_error"] = _without_facts("building it", error)
+        timings["facts_seconds"] = round(time.monotonic() - at, 1)
         if not dry_run:
             at = time.monotonic()
             if ratings:
@@ -645,6 +773,13 @@ def run(redis, select: Callable[[str, list], list], *, force: bool = False, dry_
                 except Exception as error:
                     summary.pop("ratings", None)
                     summary["ratings_error"] = _without_ratings("writing it", error)
+            if facts:
+                try:
+                    write_sidecar(redis, version, facts[1], facts_chunk_key)
+                    manifest["facts"] = facts[0]
+                except Exception as error:
+                    summary.pop("facts", None)
+                    summary["facts_error"] = _without_facts("writing it", error)
             summary["pruned_chunks"] = publish(redis, manifest, chunks, previous)
             timings["write_seconds"] = round(time.monotonic() - at, 1)
             summary["published"] = True
@@ -653,7 +788,7 @@ def run(redis, select: Callable[[str, list], list], *, force: bool = False, dry_
 
 
 def main(force: bool = False, dry_run: bool = False):
-    """Publish the title snapshot when a title analysis changed since the current version."""
+    """Publish the title snapshot when an analysis or TMDB details changed."""
     crate = CrateConnector()
     redis = RedisConnector(decode_responses=False).get_redis()
     try:

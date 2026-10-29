@@ -1,7 +1,8 @@
 """The title snapshot publisher: its encoding round-trips through the webapp decoder's checks
 (ported here, and the webapp's own code under Node when it is installed), it pages Crate, and it
 publishes only when an analysis changed, keeping at most two versions in Redis. Beside it, the
-ratings sidecar: codes to ages, ladders, its byte layout, and a failure that leaves the snapshot alone."""
+ratings and facts sidecars: their byte layouts, no-data rules, change marks, and failures that
+leave the snapshot published."""
 import json
 import shutil
 import struct
@@ -127,10 +128,14 @@ class FakeCrate:
     `age_certification` lookup."""
 
     def __init__(self, tables: dict[str, list[list]], marks: dict[str, list[int]] | None = None,
-                 ratings: dict[str, list[list]] | None = None, certifications: list[list] | None = None):
+                 ratings: dict[str, list[list]] | None = None, certifications: list[list] | None = None,
+                 facts: dict[str, list[list]] | None = None):
         self.tables = tables
         self.marks = marks or {"movie": [1, 10], "show": [1, 20]}
         self.ratings = ratings or {}
+        self.facts = facts or {}
+        self.details_updated_at = {"movie": [100], "show": [200]}
+        self.unanalysed_details_updated_at = {"movie": [], "show": []}
         self.certifications = CERTIFICATIONS if certifications is None else certifications
         self.statements: list[str] = []
 
@@ -140,8 +145,18 @@ class FakeCrate:
         if table == "age_certification":
             return self.certifications
         if sql.startswith("SELECT count(dna_updated_at)"):
-            return [self.marks[table]]
-        records = self.ratings.get(table, []) if "age_certifications" in sql else self.tables[table]
+            aggregates = []
+            for aggregate in ("count", "sum"):
+                timestamps = self.details_updated_at[table]
+                if f"{aggregate}(tmdb_details_updated_at) FILTER (WHERE dna_updated_at IS NOT NULL)" not in sql:
+                    timestamps = timestamps + self.unanalysed_details_updated_at[table]
+                timestamps = [timestamp for timestamp in timestamps if timestamp is not None]
+                aggregates.append(len(timestamps) if aggregate == "count" else sum(timestamps))
+            return [[*self.marks[table], *aggregates]]
+        if sql.startswith("SELECT tmdb_id, release_year"):
+            records = self.facts.get(table, [])
+        else:
+            records = self.ratings.get(table, []) if "age_certifications" in sql else self.tables[table]
         last = params[0]
         found = sorted((r for r in records if r[0] > last), key=lambda r: r[0])
         return found[:ts.PAGE_SIZE]
@@ -213,6 +228,7 @@ class EncodingTest(unittest.TestCase):
         manifest, chunks = ts.encode_snapshot(rows, "20260927T180000Z", built_at, {"sourceMark": {}})
         out = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, out)
+        manifest["facts"] = {"format": 999, "chunks": 7, "unknown": True}
         (out / "manifest.json").write_text(json.dumps(manifest))
         for n, chunk in enumerate(chunks):
             (out / f"chunk-{n}.bin").write_bytes(chunk)
@@ -411,6 +427,98 @@ class RatingsTest(unittest.TestCase):
         self.assertEqual(titles[ts.MOVIE_BASE + 90_002], (ts.CONTENT_DRUGS, ()))
 
 
+class FactsTest(unittest.TestCase):
+    def test_bytes_follow_the_plans_column_order_in_snapshot_row_order(self):
+        field, chunks = ts.encode_facts([ts.MOVIE_BASE + 1, ts.SHOW_BASE + 2, ts.MOVIE_BASE + 3], {
+            ts.MOVIE_BASE + 1: {"year": 1999, "length": 136, "budget": 63_000_000,
+                                "box_office": 463_517_383, "countries": ["US", "AU"]},
+            ts.SHOW_BASE + 2: {"year": 2008, "length": 47, "seasons": 5, "episodes": 62,
+                               "status": 2, "countries": ["DE"]},
+            ts.MOVIE_BASE + 999: {"countries": ["GB"]},  # not in snapshot
+        })
+        # Explicit little-endian bytes, independent of the encoder and future B11 decoder.
+        expected = bytes([
+            207, 7, 216, 7, 0, 0,                 # release year
+            136, 0, 47, 0, 0, 0,                  # movie / episode minutes
+            24, 246, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  # budget, USD thousands
+            157, 18, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0,   # box office, USD thousands (floored)
+            0, 5, 0,                             # seasons
+            0, 0, 62, 0, 0, 0,                   # episodes
+            0, 2, 0,                             # show status
+            2, 1, 255,                           # country slot 0: US, DE, unknown
+            0, 255, 255,                         # slot 1: AU
+            255, 255, 255,                       # slot 2
+            255, 255, 255,                       # slot 3
+        ])
+        self.assertEqual(b"".join(chunks), expected)
+        self.assertEqual(field, {"format": 1, "chunks": 1, "countries": ["AU", "DE", "US"],
+                                 "sha256": sha256(expected).hexdigest()})
+        self.assertEqual(len(expected), 3 * 20)
+
+    def test_money_no_data_threshold_and_overflow(self):
+        for value in (None, 0, -1, 1, 9999, 9999.99, float("nan"), float("inf")):
+            with self.subTest(value=value):
+                _, chunks = ts.encode_facts([1], {1: {"budget": value, "box_office": value}})
+                self.assertEqual(struct.unpack_from("<II", b"".join(chunks), 4), (0, 0))
+        for value, expected in ((10_000, 10), (10_999, 10), (11_000, 11), (2**60, 2**32 - 1)):
+            _, chunks = ts.encode_facts([1], {1: {"budget": value, "box_office": value}})
+            self.assertEqual(struct.unpack_from("<II", b"".join(chunks), 4), (expected, expected))
+
+    def test_unknowns_and_numeric_limits(self):
+        _, chunks = ts.encode_facts([1, 2], {1: {"year": -1, "length": float("nan"), "seasons": 999,
+                                                "episodes": 999_999}, 2: {"length": 999_999}})
+        data = b"".join(chunks)
+        self.assertEqual(struct.unpack_from("<4H", data), (0, 0, 0, 65535))
+        self.assertEqual(data[24:26], bytes([254, 0]))
+        self.assertEqual(struct.unpack_from("<2H", data, 26), (65535, 0))
+        self.assertEqual(data[30:32], bytes([0, 0]))
+        self.assertEqual(data[32:], bytes([255] * 8))
+
+    def test_facts_have_separate_pages_and_first_air_year_and_first_episode_length(self):
+        movies = [[i, 1999, ["US"], 136, 63_000_000, 463_517_383] for i in range(1, ts.PAGE_SIZE + 2)]
+        crate = FakeCrate({"movie": [], "show": []}, facts={"movie": movies,
+                          "show": [[2, 2008, ["DE"], 47, 5, 62, "Ended"]]})
+        facts = ts.read_facts(crate.select, "movie")
+        facts.update(ts.read_facts(crate.select, "show"))
+        self.assertEqual(len(crate.statements), 3)
+        self.assertTrue(all("dna_updated_at IS NOT NULL AND tmdb_id > ?" in sql for sql in crate.statements))
+        self.assertIn("episode_runtime[1]", crate.statements[-1])
+        self.assertNotIn("last_air_date", crate.statements[-1])
+        self.assertEqual(facts[ts.SHOW_BASE + 2], {"year": 2008, "length": 47, "seasons": 5,
+                                                "episodes": 62, "status": 2, "countries": ["DE"]})
+        self.assertNotIn("budget", facts[ts.SHOW_BASE + 2])
+        self.assertNotIn("seasons", facts[ts.MOVIE_BASE + 1])
+
+    def test_status_codes(self):
+        statuses = [None, "Returning Series", "In Production", "Ended", "Canceled", "Planned", "Pilot"]
+        crate = FakeCrate({}, facts={"show": [[i, None, None, None, None, None, status]
+                                             for i, status in enumerate(statuses)]})
+        facts = ts.read_facts(crate.select, "show")
+        self.assertEqual([facts[ts.SHOW_BASE + i]["status"] for i in range(len(statuses))], [0, 1, 1, 2, 3, 0, 0])
+
+    def test_country_table_slots_and_over_slots_count_only_snapshot_titles(self):
+        crate = FakeCrate({}, facts={"movie": [
+            [1, None, ["us", "DE", "US", None, "bad", "FR", "GB", "JP"], None, None, None],
+            [2, None, None, None, None, None],
+            [999, None, ["US", "DE", "FR", "GB", "JP"], None, None, None],
+        ]})
+        with patch("builtins.print") as printed:
+            field, chunks, over = ts.build_facts(crate.select, [ts.MOVIE_BASE + 1, ts.MOVIE_BASE + 2])
+        self.assertEqual(over, 1)
+        self.assertEqual(field["countries"], ["DE", "FR", "GB", "JP", "US"])
+        self.assertEqual(b"".join(chunks)[32:], bytes([4, 255, 0, 255, 1, 255, 2, 255]))
+        printed.assert_called_once_with(f"FACTS: 1 of 2 titles list more than {ts.FACTS_COUNTRY_SLOTS} production countries (50.00%)",
+                                        flush=True)
+
+    def test_chunks_are_at_most_one_megabyte_and_empty_catalog_has_one_chunk(self):
+        field, chunks = ts.encode_facts(list(range(60_000)), {})
+        self.assertEqual([len(c) for c in chunks], [1024 * 1024, 60_000 * 20 - 1024 * 1024])
+        self.assertEqual(field["chunks"], 2)
+        self.assertEqual(field["sha256"], sha256(b"".join(chunks)).hexdigest())
+        field, chunks = ts.encode_facts([], {})
+        self.assertEqual((field["chunks"], field["countries"], chunks), (1, [], [b""]))
+
+
 class PublishingTest(unittest.TestCase):
     def setUp(self):
         self.redis = fakeredis.FakeRedis()
@@ -449,7 +557,7 @@ class PublishingTest(unittest.TestCase):
         manifest, chunks = self.stored()
         self.assertTrue(result["published"])
         self.assertEqual((manifest["count"], result["count"], result["source"]), (3, 3, "crate"))
-        self.assertEqual(manifest["sourceMark"], {"movie": [1, 10], "show": [1, 20], "ratings": 1})
+        self.assertEqual(manifest["sourceMark"], {"movie": [1, 10, 1, 100], "show": [1, 20, 1, 200], "ratings": 1, "facts": 1})
         self.assertEqual(len(decode(manifest, chunks, ts.KEY_ORDER)), 3)
         self.assertIsNone(self.redis.get(ts.LOCK_KEY))
 
@@ -466,7 +574,8 @@ class PublishingTest(unittest.TestCase):
         self.assertEqual(breaking_bad, {"content": ts.CONTENT_VIOLENCE | ts.CONTENT_DRUGS, "estimate": 15,
                                         "ages": {"AU": 15, "US": 17}})
         self.assertEqual(result["ratings"], {"countries": 5, "chunks": 1, "bytes": 3 * 7})
-        self.assertEqual(self.keys(), ["title-snapshot:20260927T180000Z:0", "title-snapshot:20260927T180000Z:ratings:0"])
+        self.assertEqual(self.keys(), ["title-snapshot:20260927T180000Z:0", "title-snapshot:20260927T180000Z:facts:0",
+                                      "title-snapshot:20260927T180000Z:ratings:0"])
 
     def test_the_snapshot_is_the_same_bytes_with_the_sidecar(self):
         self.run_once()
@@ -477,8 +586,8 @@ class PublishingTest(unittest.TestCase):
                 ts.to_row(ts.SHOW_BASE, record(1396))]
         plain, plain_chunks = ts.encode_snapshot(rows, "20260927T180000Z", built_at, {"sourceMark": manifest["sourceMark"]})
         self.assertEqual(chunks, plain_chunks)
-        self.assertEqual({k: v for k, v in manifest.items() if k != "ratings"}, plain)
-        self.assertEqual((manifest["format"], list(manifest)[-1]), (1, "ratings"))
+        self.assertEqual({k: v for k, v in manifest.items() if k not in ("ratings", "facts")}, plain)
+        self.assertEqual((manifest["format"], list(manifest)[-1]), (1, "facts"))
 
     def test_the_first_run_over_an_older_publishers_snapshot_publishes(self):
         self.run_once()
@@ -497,7 +606,8 @@ class PublishingTest(unittest.TestCase):
         self.assertNotIn("ratings", result)
         self.assertTrue(result["ratings_error"].startswith(step), result["ratings_error"])
         self.assertEqual(len(decode(manifest, chunks, ts.KEY_ORDER)), 3)
-        self.assertEqual(self.keys(), ["title-snapshot:20260927T180000Z:0"])
+        self.assertEqual(self.keys(), ["title-snapshot:20260927T180000Z:0",
+                                      "title-snapshot:20260927T180000Z:facts:0"])
         self.assertIsNone(self.redis.get(ts.LOCK_KEY))
 
     def test_a_sidecar_that_fails_to_build_leaves_the_snapshot_published(self):
@@ -506,7 +616,7 @@ class PublishingTest(unittest.TestCase):
             result = self.run_once()
 
         self.assert_published_without_ratings(result, "building it: ValueError('boom')")
-        self.assertIn("RATINGS SIDECAR FAILED", printed.call_args_list[-1].args[0])
+        self.assertTrue(any("RATINGS SIDECAR FAILED" in call.args[0] for call in printed.call_args_list))
 
     def test_a_ratings_read_that_fails_leaves_the_snapshot_published(self):
         def select(sql, params):
@@ -531,6 +641,93 @@ class PublishingTest(unittest.TestCase):
             result = self.run_once()
 
         self.assert_published_without_ratings(result, "writing it: ConnectionError('reset')")
+
+    def test_facts_are_published_with_their_manifest_and_checksum(self):
+        self.crate.facts["movie"] = [[603, 1999, ["US", "DE", "FR", "GB", "JP"], 136, None, None]]
+        result = self.run_once()
+        manifest, _ = self.stored()
+        field = manifest["facts"]
+        chunks = [self.redis.get(ts.facts_chunk_key(manifest["version"], n)) for n in range(field["chunks"])]
+        self.assertEqual(field["format"], 1)
+        self.assertEqual(len(b"".join(chunks)), manifest["count"] * 20)
+        self.assertEqual(field["sha256"], sha256(b"".join(chunks)).hexdigest())
+        self.assertEqual(result["facts"], {"countries": 5, "chunks": 1, "bytes": 3 * 20, "over_slots": 1})
+
+    def test_details_refresh_without_analysis_does_not_move_the_mark(self):
+        for media_type in ts.TABLES:
+            self.crate.unanalysed_details_updated_at[media_type] = [None, 300]
+        self.run_once()
+        initial_mark = self.stored()[0]["sourceMark"]
+        for media_type in ts.TABLES:
+            for index in (0, 1):
+                self.crate.unanalysed_details_updated_at[media_type][index] = 400
+                result = self.run_once()
+                self.assertFalse(result["published"])
+                self.assertEqual(result["source_mark"], initial_mark)
+
+    def test_season_and_status_changes_publish_without_changed_analysis(self):
+        self.crate.facts["show"] = [[1396, 2008, ["US"], 47, 4, 50, "Returning Series"]]
+        self.run_once()
+        initial_mark = self.stored()[0]["sourceMark"]
+        for column, value in [(4, 5), (6, "Ended")]:
+            self.crate.facts["show"][0][column] = value
+            # f/tmdb_api/tmdb_fetch_details_from_api/fetch.py sets updated_at on every refresh; f/sync/copy/tmdb_details.py copies it to tmdb_details_updated_at with number_of_seasons and status.
+            self.crate.details_updated_at["show"][0] += 1
+            result = self.run_once()
+            manifest, _ = self.stored()
+            self.assertTrue(result["published"])
+            self.assertEqual(manifest["sourceMark"]["show"][:2], initial_mark["show"][:2])
+            self.assertNotEqual(manifest["sourceMark"], initial_mark)
+            data = self.redis.get(ts.facts_chunk_key(manifest["version"], 0))
+            self.assertEqual(data[12 * 3 + 2], self.crate.facts["show"][0][4])
+            self.assertEqual(data[15 * 3 + 2], ts.SHOW_STATUSES[self.crate.facts["show"][0][6]])
+
+    def test_first_run_with_facts_over_an_older_publisher_publishes(self):
+        self.run_once()
+        older = self.stored()[0]
+        del older["facts"], older["sourceMark"]["facts"]
+        self.redis.set(ts.CURRENT_KEY, json.dumps(older))
+        self.assertTrue(self.run_once()["published"])
+        self.assertIn("facts", self.stored()[0])
+
+    def assert_published_without_facts(self, result):
+        manifest, chunks = self.stored()
+        self.assertTrue(result["published"])
+        self.assertNotIn("facts", manifest)
+        self.assertNotIn("facts", result)
+        self.assertIn("facts_error", result)
+        self.assertIn("ratings", manifest)
+        self.assertEqual(len(decode(manifest, chunks, ts.KEY_ORDER)), 3)
+        self.assertFalse(list(self.redis.scan_iter("title-snapshot:*:facts:*")))
+        self.assertIsNone(self.redis.get(ts.LOCK_KEY))
+
+    def test_failed_facts_read_still_publishes_snapshot_and_ratings(self):
+        def select(sql, params):
+            if sql.startswith("SELECT tmdb_id, release_year"):
+                raise ConnectionError("facts timeout")
+            return self.crate.select(sql, params)
+        with patch.object(ts.time, "sleep"), patch("builtins.print") as printed:
+            result = ts.run(self.redis, select, now=lambda: next(self.clock))
+        self.assert_published_without_facts(result)
+        self.assertIn("building it", result["facts_error"])
+        self.assertTrue(any("FACTS SIDECAR FAILED" in call.args[0] for call in printed.call_args_list))
+
+    def test_failed_facts_encoding_still_publishes(self):
+        with patch.object(ts, "encode_facts", side_effect=ValueError("boom")), patch("builtins.print"):
+            result = self.run_once()
+        self.assert_published_without_facts(result)
+
+    def test_partial_facts_write_is_cleaned_up_and_still_publishes(self):
+        write = self.redis.set
+        def flaky(key, *args, **kwargs):
+            if str(key).endswith(":facts:1"):
+                raise ConnectionError("reset")
+            return write(key, *args, **kwargs)
+        with patch.object(ts, "CHUNK_BYTES", 32), patch.object(self.redis, "set", side_effect=flaky), \
+                patch("builtins.print"):
+            result = self.run_once()
+        self.assert_published_without_facts(result)
+        self.assertIn("writing it", result["facts_error"])
 
     def test_a_run_without_changed_analyses_publishes_nothing(self):
         self.run_once()
@@ -565,12 +762,15 @@ class PublishingTest(unittest.TestCase):
 
     def test_the_ratings_chunks_of_old_versions_are_deleted_with_them(self):
         self.redis.set("title-snapshot:dev-old:ratings:0", b"x")
+        self.redis.set("title-snapshot:dev-old:facts:0", b"x")
         for _ in range(3):
             self.run_once(force=True)
 
         self.assertEqual(self.keys(), [
-            "title-snapshot:20260927T180100Z:0", "title-snapshot:20260927T180100Z:ratings:0",
-            "title-snapshot:20260927T180200Z:0", "title-snapshot:20260927T180200Z:ratings:0",
+            "title-snapshot:20260927T180100Z:0", "title-snapshot:20260927T180100Z:facts:0",
+            "title-snapshot:20260927T180100Z:ratings:0",
+            "title-snapshot:20260927T180200Z:0", "title-snapshot:20260927T180200Z:facts:0",
+            "title-snapshot:20260927T180200Z:ratings:0",
         ])
 
     def test_a_dry_run_writes_nothing(self):
