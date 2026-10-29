@@ -170,6 +170,7 @@ function leanStylesheet() {
 //    `shell`, which changes with most deploys, and the remaining library code to `vendor`.
 // 3. App modules under 3 KB that more than one module imports (helpers, hooks, small components) also go to `shell`.
 //    Together they are about 30 KB minified, and each was a request of its own. A style sheet never goes there.
+// 3a. Except the title page's small shared modules, which stay with its code, see TITLE_PAGE_MODULE.
 // 4. Feature modules that load together get one chunk per group, see FEATURE_CHUNKS.
 // 5. Rollup splits the rest by route, as before.
 // Rollup puts a module's own imports into the same manual chunk unless a rule names another one. Rule 3 therefore only
@@ -210,14 +211,20 @@ const FEATURE_CHUNKS = [
 		"title-actions",
 		/\/app\/ui\/(title-actions\/(ScoreControl|TitleScore|TitleActionSet|useTitleActions|ActionButton)|user\/actions\/ScoreAction)\.tsx?$/,
 	],
-	// Two icons on the first view of every title page that Rollup gave a file each (0.5 and 1.1 KB), because other
-	// pages share them too: the fingerprint's back arrow and the questions' sparkles. As two files they put the title
-	// page one script over its budget of 20.
+	// Icons on the first view of every title page that Rollup gave a file each (0.5 to 1.1 KB), because other pages
+	// share them too: the fingerprint's back arrow, the questions' sparkles, the section headers' icons, the copy-link
+	// mark, the rows' chevrons. As files of their own they put the title page over its script budget.
 	[
 		"title-icons",
-		/\/node_modules\/@heroicons\/react\/24\/outline\/esm\/(ChevronLeftIcon|SparklesIcon)\.js$/,
+		/\/node_modules\/@heroicons\/react\/24\/(outline|solid)\/esm\/(BookOpenIcon|CheckIcon|ChevronDownIcon|ChevronLeftIcon|ChevronRightIcon|FingerPrintIcon|LinkIcon|SparklesIcon|Squares2X2Icon|UserIcon)\.js$/,
 	],
 ]
+
+// Rule 3a: the title page's small modules that its lazy parts share too (the reading line, the video list, the find
+// bus, the people query, the service links) stay with the title page's own code. Rule 3 would put them into every
+// page's shell.
+const TITLE_PAGE_MODULE =
+	/\/app\/ui\/details\/(ProgressIndex|opener\/(Bars|stage-geometry|videos)|find\/(find-bus|highlight)|people\/usePeople|streaming)\.tsx?$/
 
 // Rule 5: small modules that several late parts share and that must not ride with every page. Rule 3 would put them
 // into the shell, being small and shared. The words of "newly available" (#456) are needed by the hub, home's doors,
@@ -284,6 +291,7 @@ function clientChunks() {
 		if (isOnEveryPage(id, graph))
 			return id.includes("/node_modules/") ? "vendor" : "shell"
 		for (const [name, pattern] of LATE_CHUNKS) if (pattern.test(id)) return name
+		if (TITLE_PAGE_MODULE.test(id)) return undefined
 		if (isSharedSmallModule(id, graph)) return "shell"
 		for (const [name, pattern] of FEATURE_CHUNKS) if (pattern.test(id)) return name
 		return undefined

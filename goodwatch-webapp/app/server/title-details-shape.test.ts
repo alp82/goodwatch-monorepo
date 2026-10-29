@@ -23,14 +23,19 @@ const rawFixture = () => ({
 	actors: [{ id: 99 }],
 	availability_evidence: { discard: true },
 	images: {
-		backdrops: [{ file_path: "one", width: 400 }, { file_path: "two" }],
+		backdrops: [
+			{ file_path: "one", width: 400 },
+			{ file_path: "two" },
+			{ file_path: "three" },
+			{ file_path: "four" },
+		],
 		posters: [],
 	},
 	videos: {
 		clips: null,
 		trailers: [
 			{ key: "b", name: "B" },
-			{ key: "a", name: "A" },
+			{ key: "a", name: null },
 		],
 		featurettes: [],
 	},
@@ -97,10 +102,18 @@ test("trim caches only the permitted shape, keeping array order and null video l
 			orderTropes(raw.details as never),
 		)
 		assert.equal(raw.details.tropes.length, 35)
-		assert.deepEqual(result.images, { backdrops: [{ file_path: "one" }] })
+		// The band's backdrop and two more, for the trailer card's still.
+		assert.deepEqual(result.images, {
+			backdrops: [
+				{ file_path: "one" },
+				{ file_path: "two" },
+				{ file_path: "three" },
+			],
+		})
+		// TMDB's names travel with the keys; a video without one has its key only.
 		assert.deepEqual(result.videos, {
 			clips: null,
-			trailers: [{ key: "b" }, { key: "a" }],
+			trailers: [{ key: "b", name: "B" }, { key: "a" }],
 			featurettes: [],
 		})
 		assert.deepEqual(

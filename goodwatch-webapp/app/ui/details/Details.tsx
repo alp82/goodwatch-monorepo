@@ -1,36 +1,24 @@
-import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
-import React from "react"
 import { useTitleOpened } from "~/hooks/useTitleOpened"
-import DetailsContent from "~/ui/details/DetailsContent"
-import DetailsSideNav from "~/ui/details/DetailsSideNav"
-import { navSections, sections } from "~/ui/details/sections"
-import { useTitleQuestions } from "~/ui/details/useTitleQuestions"
-import { useEpisodeTracking } from "~/ui/tracking/gate"
-import DetailsHeader from "~/ui/details/DetailsHeader"
-import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
-import DetailsHero from "~/ui/details/hero/DetailsHero"
-import { useScrollSections } from "~/utils/scroll"
-import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
-import { tmdbImageUrl } from "~/utils/tmdb-image"
+import type { GenreRow } from "~/server/genre-row/genre-row.server"
+import type { NewPagesHere } from "~/server/new-on-services-page.server"
+import type { TitleSides } from "~/server/title-sides.server"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { TitlePage } from "~/ui/details/TitlePage"
+import { BelowFoldProvider } from "~/ui/details/below-fold"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
-import { BelowFoldProvider, useBelowFold } from "~/ui/details/below-fold"
+import { useTitleQuestions } from "~/ui/details/useTitleQuestions"
 import { usePublishTitleSubject } from "~/ui/feedback/subject"
-import type { Section } from "~/utils/scroll"
-import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
 import {
 	MediaPreferenceProvider,
 	useMediaPreference,
 } from "~/ui/media-preference/MediaPreference"
-import type { TitleSides } from "~/server/title-sides.server"
 import { useTitlePreview } from "~/ui/media-preference/useTitlePreview"
-import { TalkedAboutNowSlot } from "~/ui/talked-about-now/TalkedAboutNowSlot"
-import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import { type Crumb, titleTrail } from "~/ui/nav/breadcrumb-trail"
 import { titlePath } from "~/utils/helpers"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
-import type { GenreRow } from "~/server/genre-row/genre-row.server"
+import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
 
 export interface DetailsProps {
 	episodeLayout?: EpisodeLayout | null
@@ -90,33 +78,8 @@ function DetailsPage({
 	// Fix mode's questions read the page as shown (ui/feedback).
 	usePublishTitleSubject(media, country, episodeGrid)
 	const { details } = media
-	const { backdrop_path } = details
-	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
-	const backdropUrl = backdrop_path ? tmdbImageUrl(backdrop_path, "w300") : ""
-
-	// Scroll Sections. Which sections are on screen is not state of this component, so that the observer's reports
-	// render the two navigations and not the whole page.
-	const {
-		activeSections,
-		sectionProps,
-		navigateToSection: scrollToSection,
-	} = useScrollSections({
-		sections,
-	})
-	// A section's place is exact only when every section above it is laid out.
-	const { layOutAll } = useBelowFold()
-	// Episodes is listed for a show with an episode grid, or with the episode list a member gets.
-	const tracking = useEpisodeTracking(media)
 	// Q&A is listed when the title has questions.
 	const questions = useTitleQuestions(media, country)
-	const listed = navSections(
-		tracking || hasEpisodeGrid(episodeGrid),
-		questions.length > 0,
-	)
-	const navigateToSection = (section: Section) => {
-		layOutAll()
-		scrollToSection(section)
-	}
 
 	const trail = titleTrail(
 		breadcrumb,
@@ -124,77 +87,26 @@ function DetailsPage({
 		titlePath(media.mediaType, details.tmdb_id, canonicalMediaTitle(details)),
 	)
 
-	const content = (
+	return (
 		<>
 			{/* Remembers a tap on a control that comes before the app's script. Before every control it serves. */}
 			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, see utils/replay-tap.ts */}
 			<script dangerouslySetInnerHTML={{ __html: REPLAY_TAP_SCRIPT }} />
-			{backdrop_path && (
-				<div
-					className="pointer-events-none absolute top-0 z-0 w-full h-full"
-					aria-hidden="true"
-					style={{
-						backgroundImage: `url(${backdropUrl})`,
-						backgroundSize: "cover",
-						backgroundPosition: "center",
-						filter: "blur(64px) brightness(0.17)",
-					}}
-				/>
-			)}
-
-			{/* Positioned, so it paints over the blurred backdrop. */}
-			{trail.length > 0 && <Breadcrumbs items={trail} className="relative" />}
-
-			<DetailsHeader
-				media={media}
-				country={country}
-				activeSections={activeSections}
-				navigateToSection={navigateToSection}
-				sections={listed}
-				textPreview={preview.text}
-			/>
-
-			<DetailsSideNav
-				activeSections={activeSections}
-				navigateToSection={navigateToSection}
-				sections={listed}
-			/>
-
-			<DetailsHero
+			<TitlePage
 				media={media}
 				country={country}
 				shownCountry={preference.shown.country}
-				preview={preview.offers}
+				offersPreview={preview.offers ?? null}
+				textPreview={preview.text ?? null}
 				episodeGrid={hasEpisodeGrid(episodeGrid) ? episodeGrid : null}
-				sectionProps={sectionProps}
-				sides={sides}
+				episodeLayout={episodeLayout}
+				questions={questions}
+				genreRow={genreRow}
 				newPages={newPages}
+				sides={sides ?? null}
+				talkedAboutNow={Boolean(talkedAboutNow)}
+				trail={trail}
 			/>
-
-			<div className="isolate">
-				<DetailsFingerprint
-					media={media}
-					sectionProps={sectionProps.fingerprint}
-				/>
-			</div>
-
-			{talkedAboutNow && <TalkedAboutNowSlot media={media} />}
-
-			<div className="isolate flex flex-col items-center">
-				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
-					<DetailsContent
-						episodeLayout={episodeLayout}
-						media={media}
-						country={country}
-						episodeGrid={episodeGrid}
-						questions={questions}
-						genreRow={genreRow}
-						sectionProps={sectionProps}
-						navigateToSection={navigateToSection}
-					/>
-				</div>
-			</div>
 		</>
 	)
-	return content
 }

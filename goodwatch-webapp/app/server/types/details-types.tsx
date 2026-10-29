@@ -140,6 +140,12 @@ export interface VideoResult {
 	official: boolean
 }
 
+/** A title's video: its YouTube key and, when TMDB has one, its name. */
+export interface TitleVideo {
+	key: string
+	name?: string
+}
+
 export interface Videos {
 	clips: VideoResult[]
 	featurettes: VideoResult[]
@@ -327,11 +333,13 @@ export interface ResultBase {
 	 * A value cached before this field existed has none: the block then says nothing of other countries.
 	 */
 	streaming_countries?: StreamingCountries
+	/** The band's backdrop and two more: the trailer card shows another than the band. */
 	images: { backdrops: { file_path: string }[] }
+	/** YouTube videos with TMDB's names. A value cached before names were sent has keys only. */
 	videos: {
-		clips: { key: string }[] | null
-		trailers: { key: string }[] | null
-		featurettes: { key: string }[] | null
+		clips: TitleVideo[] | null
+		trailers: TitleVideo[] | null
+		featurettes: TitleVideo[] | null
 	}
 	cast: CastMember[]
 	cast_total: number
