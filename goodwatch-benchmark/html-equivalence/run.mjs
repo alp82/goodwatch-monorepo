@@ -331,15 +331,11 @@ async function cleanup() {
 					const pid = child.pid
 					if (existsSync(`/proc/${pid}/cwd`)) {
 						const cwd = realpathSync(`/proc/${pid}/cwd`)
-						const cmd = command(["ps", "-o", "cmd=", "-p", String(pid)])
-						if (
-							!cwd.startsWith(`${resource.treePath}/`) ||
-							!/node|npm|env/.test(cmd)
-						)
+						if (!cwd.startsWith(`${resource.treePath}/`))
 							throw new Error(
-								`Refusing to stop unrecognized process ${pid}: ${cmd}`,
+								`Refusing to stop child ${pid} outside its worktree`,
 							)
-						console.log(`Stopping ${pid}: ${cmd}`)
+						console.log(`Stopping owned child ${pid}`)
 						process.kill(-pid, "SIGTERM")
 						await Promise.race([once(child, "exit"), sleep(4000)])
 						if (child.exitCode === null && child.signalCode === null) {
