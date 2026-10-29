@@ -16,7 +16,7 @@ const rendered = JSON.parse(
 	)
 		.split("__START_SEARCH_BAR__")
 		.at(-1) ?? "",
-) as Record<"empty" | "typing" | "reading" | "read" | "unread", string>
+) as Record<"empty" | "typing" | "reading" | "read" | "unread" | "mix", string>
 
 /** The classes of every element whose class sets a height, in order: the bar's boxes. */
 const boxes = (html: string) =>
@@ -81,6 +81,9 @@ test("the reading row: Reading… first, then Read as with the picks, else the t
 	assert.match(rendered.read, /Funny/)
 	assert.doesNotMatch(rendered.read, /Reading…/)
 	assert.match(rendered.unread, /“zzzz”/)
+	// A whole mix by its name, then the other words.
+	assert.match(rendered.mix, /Warm, easy comedies[\s\S]*Slow burn/)
+	assert.doesNotMatch(rendered.mix, /Feel-good/)
 })
 
 test("the field: its label, the wide placeholder from the server, private text, no heading", () => {

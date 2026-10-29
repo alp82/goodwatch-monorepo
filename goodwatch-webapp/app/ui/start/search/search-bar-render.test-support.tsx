@@ -46,5 +46,9 @@ console.log(
 			reading: READING,
 		}),
 		unread: render(searched("zzzz"), { status: "ready", reading: [] }),
+		mix: render(searched("heist", ["m:funny", "m:feelgood", "s:slow"]), {
+			status: "ready",
+			reading: READING,
+		}),
 	})}`,
 )

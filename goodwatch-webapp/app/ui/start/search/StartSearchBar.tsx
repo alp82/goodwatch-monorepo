@@ -1,6 +1,6 @@
 // The start page's search bar: a two-row bar. The first row is the field and an amber Search button joined to its ↵
 // key; under a hairline, the second row holds the six presets, or, while a search is on, how the search read the text
-// (Discover's "Read as" chips, then the picks' names). Both rows have fixed heights and both layers of the second row
+// (Discover's "Read as" chips, then the picks' names: a whole mix by its name). Both rows have fixed heights and both layers of the second row
 // are always mounted (the hidden one transparent and inert), so the bar's box never changes height.
 //
 // When it searches is field-commit.ts's rule: after an 800 ms pause, at once on Enter, the Search button, or a preset.
@@ -13,6 +13,7 @@ import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
 import { WORD_BY_ID } from "~/domain/taste-picker"
 import { ReadAsChips, readAsChips } from "~/ui/discover/ReadAsChips"
 import { preloadSearchRequest } from "~/ui/search/search-client"
+import { displayPicks, pickLabel, wordsOf } from "../moods/mixes"
 import type { StartQuery, StartResults } from "../stage/start-query"
 import { createFieldCommit } from "./field-commit"
 import {
@@ -234,7 +235,12 @@ function Reading({
 	const [answered] = JSON.parse(results.signature) as [string, string[]]
 	const own = answered === query.text
 	const reading = own ? results.reading : null
-	const picks = query.picks.flatMap((id) => WORD_BY_ID[id] ?? [])
+	// A whole mix by its name, then the other words, as the mood chips show them.
+	const picks = displayPicks(query.picks).map((id) => ({
+		id,
+		name: pickLabel(id),
+		hue: WORD_BY_ID[wordsOf(id)[0] ?? id]?.hue,
+	}))
 	const tail = picks.length ? (
 		<>
 			<span aria-hidden className="shrink-0 text-gray-500">

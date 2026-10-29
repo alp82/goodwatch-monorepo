@@ -18,13 +18,14 @@ import {
 	useMemo,
 	useState,
 } from "react"
-import { WORDS, WORD_BY_ID } from "~/domain/taste-picker"
+import { WORDS } from "~/domain/taste-picker"
 import type { TitleCard } from "~/server/title-cards.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { titlePath } from "~/utils/helpers"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { picksLine } from "../moods/mixes"
 import { seeAllHref } from "../search/start-search"
 import {
 	LOVED_NEEDED,
@@ -78,10 +79,12 @@ export const joinNames = (names: readonly string[]) =>
 		? names.join("")
 		: `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`
 
-/** What's on show, in a few words: the searched text and the picks' names ("rainy day whodunit · Funny"). */
+/**
+ * What's on show, in a few words: the searched text and the picks' names, a whole mix by its name ("rainy day
+ * whodunit · Funny", "Warm, easy comedies · Animated").
+ */
 export function shownLabel(query: Pick<StartQuery, "text" | "picks">) {
-	const names = query.picks.flatMap((id) => WORD_BY_ID[id]?.name ?? [])
-	return [query.text, ...names].filter(Boolean).join(" · ")
+	return [query.text, picksLine(query.picks)].filter(Boolean).join(" · ")
 }
 
 export function SpotlightCard({
