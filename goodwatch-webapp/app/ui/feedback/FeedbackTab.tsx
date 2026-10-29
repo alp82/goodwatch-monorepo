@@ -4,8 +4,6 @@
 // Where the phone dock is (below lg), the closed tab stays out of the page's way: Feedback is a link under the
 // account row in Go to… (navigation/Hub.tsx), and the tab shows only as the open drawer's handle.
 import { ChatBubbleLeftEllipsisIcon } from "@heroicons/react/20/solid"
-import { onFirstInteraction } from "~/utils/first-interaction"
-import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import {
 	type ComponentType,
 	type MutableRefObject,
@@ -16,6 +14,8 @@ import {
 	useRef,
 	useState,
 } from "react"
+import { onFirstInteraction } from "~/utils/first-interaction"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 /** What the drawer tells the tab: open (pressed), out (drawn as the drawer's handle), away (phone fix mode). */
 export type TabState = { open: boolean; out: boolean; away: boolean }
@@ -49,7 +49,10 @@ const closedTabHidden = () =>
 
 /** Can take focus where it is: still on the page, drawn, and not in an inert part. */
 const focusable = (el: HTMLElement | null | undefined): el is HTMLElement =>
-	!!el && el.isConnected && el.getClientRects().length > 0 && !el.closest("[inert]")
+	!!el &&
+	el.isConnected &&
+	el.getClientRects().length > 0 &&
+	!el.closest("[inert]")
 
 /** The Go to… key that opens the hub (navigation/MobileDock.tsx, SiteHeader.tsx) that is on show. */
 const hubKey = () =>
@@ -137,7 +140,12 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 	const [Dock, setDock] = useState<ComponentType<DockProps> | null>(null)
 	const openNow = useRef(false)
 	const loading = useRef(false)
-	const warm = useCallback((intent = false) => {
+	// The reader asked for the drawer (pointed at the tab, tapped it, opened it from elsewhere). A load that started in
+	// the background at the first interaction doesn't reload the page when it fails; once the drawer is wanted, its
+	// failure (a deploy removed the old chunk) loads again with the stale-chunk recovery.
+	const wanted = useRef(false)
+	const warm = useCallback(function warm(intent = false) {
+		if (intent) wanted.current = true
 		if (loading.current) return
 		loading.current = true
 		const pending = intent ? loadDockOnIntent() : loadDock()
@@ -145,6 +153,7 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 			(m) => setDock(() => m.default),
 			() => {
 				loading.current = false
+				if (!intent && wanted.current) warm(true)
 			},
 		)
 	}, [])
