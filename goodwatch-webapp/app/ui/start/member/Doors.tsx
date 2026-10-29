@@ -66,7 +66,10 @@ export function Doors({ data }: { data: MemberStartData }) {
 			: null
 
 	return (
-		<section className={`${WRAP} pt-8 pb-28`} aria-labelledby="start-doors">
+		<section
+			className={`${WRAP} pt-8 pb-28 lg:pt-2`}
+			aria-labelledby="start-doors"
+		>
 			<h2
 				id="start-doors"
 				className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400"

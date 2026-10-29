@@ -1,20 +1,46 @@
 // The guest's query on the start page in a component: the field's draft, the searched text and the picks
 // (start-query.ts has the rules). `onChoice` runs after every new choice (anything but typing), so the loved titles
 // can start over once three are loved (useLovedThree).
-import { useCallback, useMemo, useRef, useState } from "react"
+//
+// The searched text and the picks live in the URL too (`q`, and Discover's `moods`, `themes`, `styles`): a reload or a
+// shared link opens the same query. The URL is replaced, not pushed, and changing it doesn't read the page again
+// (routes/_index.tsx `shouldRevalidate`).
+import { useNavigate, useSearchParams } from "@remix-run/react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
-	EMPTY_QUERY,
 	type StartQuery,
 	type StartQueryAction,
 	isChoice,
 	querySignature,
 	reduceQuery,
 } from "./start-query"
+import { queryFromParams, queryParams } from "./start-query-url"
 
 export function useStartQuery({
 	onChoice,
 }: { onChoice?: (action: StartQueryAction) => void } = {}) {
-	const [query, setQuery] = useState<StartQuery>(EMPTY_QUERY)
+	const [params] = useSearchParams()
+	const navigate = useNavigate()
+	const [query, setQuery] = useState<StartQuery>(() => queryFromParams(params))
+	// The query as the URL holds it: the last one written or read, so each side follows only the other's changes.
+	const inUrl = useRef(urlKey(queryFromParams(params)))
+	useEffect(() => {
+		const read = queryFromParams(params)
+		const key = urlKey(read)
+		if (key === inUrl.current) return
+		inUrl.current = key
+		setQuery((current) => (urlKey(current) === key ? current : read))
+	}, [params])
+	useEffect(() => {
+		const key = urlKey(query)
+		if (key === inUrl.current) return
+		inUrl.current = key
+		const next = queryParams(query, new URLSearchParams(window.location.search))
+		navigate(
+			{ search: next.size ? `?${next}` : "" },
+			{ replace: true, preventScrollReset: true },
+		)
+	}, [query, navigate])
 	const choice = useRef(onChoice)
 	choice.current = onChoice
 	const dispatch = useCallback((action: StartQueryAction) => {
@@ -37,5 +63,9 @@ export function useStartQuery({
 	const signature = useMemo(() => querySignature(query), [query])
 	return { query, signature, ...actions }
 }
+
+/** The query as the URL writes it: picks in the URL's order, the draft left out. */
+const urlKey = (query: StartQuery) =>
+	queryParams(query, new URLSearchParams()).toString()
 
 export type StartQueryState = ReturnType<typeof useStartQuery>

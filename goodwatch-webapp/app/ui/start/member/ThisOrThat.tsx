@@ -9,11 +9,13 @@ import { Link } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useMemo, useState } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
+import { ListTag } from "~/ui/list-tag/ListTag"
 import { WatchButton, titleHref } from "~/ui/watch-next/WatchNextHero"
 import { offersOf } from "~/ui/watch-next/services"
 import { DISPLAY, EASE, backdropUrl, posterUrl } from "~/ui/watch-next/style"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import {
+	type DeckSource,
 	type DeckTitle,
 	type Duel,
 	SOURCE_LABEL,
@@ -207,7 +209,7 @@ function Side({
 						exit={{ opacity: 0, scale: 0.94 }}
 						transition={{ duration: 0.3, ease: EASE }}
 					>
-						<Art card={title.card} label={SOURCE_LABEL[title.source]} />
+						<Art card={title.card} source={title.source} />
 						<span className="mt-2 block h-16 min-w-0 lg:h-[4.5rem]">
 							<span
 								className="block truncate text-base font-bold text-white lg:text-xl"
@@ -235,7 +237,7 @@ function Side({
 }
 
 /** The side's picture: the poster on phones, the backdrop from 640 px (only the one drawn is fetched). */
-function Art({ card, label }: { card: TitleCard; label: string }) {
+function Art({ card, source }: { card: TitleCard; source: DeckSource }) {
 	const art = artOf(card)
 	return (
 		<span className="relative block aspect-[2/3] overflow-hidden rounded-lg border-2 border-gray-800 bg-gray-900 group-hover:border-amber-500/70 group-focus-visible:border-amber-400 sm:aspect-video">
@@ -249,9 +251,13 @@ function Art({ card, label }: { card: TitleCard; label: string }) {
 					className={`absolute inset-0 h-full w-full object-cover ${art.poster ? "sm:object-[center_25%]" : ""}`}
 				/>
 			</picture>
-			<span className="absolute left-1.5 top-1.5 rounded-md bg-gray-950/85 px-2 py-0.5 text-xs font-semibold text-gray-100 lg:left-2.5 lg:top-2.5 lg:text-sm">
-				{label}
-			</span>
+			<ListTag
+				kind={source}
+				size="md"
+				className="absolute left-1.5 top-1.5 shadow-md shadow-black/40 lg:left-2.5 lg:top-2.5"
+			>
+				{SOURCE_LABEL[source]}
+			</ListTag>
 		</span>
 	)
 }

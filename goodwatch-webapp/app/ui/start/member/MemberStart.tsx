@@ -1,7 +1,8 @@
 // A member's start (docs/implementation/start-page-redesign.md, "Member start"): the same lit room, search bar and
 // mood picker as a guest's, with no boot and no opening steps. The card's box holds "this or that" from the member's own lists (First
 // steps when there is nothing on any list yet), or the search's results while a search is on. Under the room, the
-// "Go deeper" doors open each list inline.
+// "Go deeper" doors open each list inline. The room's shelf shows the member's Watch next movies, else their shows to
+// continue, else For you (`memberShelf`).
 //
 // For you and Hot on socials can come later than the page (member.server.ts); they join the deck and the doors once
 // they arrive, without moving anything: the doors' order and the open door are decided before (doors.ts).
@@ -24,6 +25,7 @@ import {
 	type ArrivedLists,
 	type MemberStartData,
 	type MemberStartLater,
+	memberShelf,
 	withArrived,
 } from "./member-data"
 
@@ -45,10 +47,11 @@ export function MemberStart({
 	const results = useStartSearch(start.query, { member })
 	const deck = useMemo(() => buildDeck(data), [data])
 	const unread = !data.continue && !data.wishlist && !data.forYou
+	const ownShelf = useMemo(() => memberShelf(data, shelf), [data, shelf])
 	return (
 		<div className="start-member">
 			<StartStage
-				shelf={shelf}
+				shelf={ownShelf}
 				night={MEMBER_ROOM.night}
 				camera={MEMBER_ROOM.camera}
 				search={

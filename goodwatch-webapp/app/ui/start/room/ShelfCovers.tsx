@@ -175,7 +175,7 @@ type Lift = { index: number | null; pinned: boolean }
 type CoverHandlers = {
 	onPointerEnter: (e: React.PointerEvent) => void
 	onPointerLeave: (e: React.PointerEvent) => void
-	onFocus: () => void
+	onFocus: (e: React.FocusEvent) => void
 	onBlur: () => void
 	onClick: (e: React.MouseEvent) => void
 }
@@ -189,7 +189,23 @@ export function ShelfCovers({ titles }: { titles: readonly ShelfTitle[] }) {
 	liftRef.current = lift
 	const navigate = useNavigate()
 
-	// A tap elsewhere drops a pinned lift.
+	// Leaving the window drops a hover or focus lift: the pointer may come back elsewhere, and the cover's focus
+	// returning with the window must not lift it again (onFocus lifts only for keyboard focus).
+	useEffect(() => {
+		const drop = () => {
+			if (!liftRef.current.pinned) setLift({ index: null, pinned: false })
+		}
+		window.addEventListener("blur", drop)
+		return () => window.removeEventListener("blur", drop)
+	}, [])
+
+	// A tap elsewhere, or scrolling the page, drops a pinned lift.
+	useEffect(() => {
+		if (!lift.pinned) return
+		const drop = () => setLift({ index: null, pinned: false })
+		window.addEventListener("scroll", drop, { passive: true, once: true })
+		return () => window.removeEventListener("scroll", drop)
+	}, [lift.pinned])
 	useEffect(() => {
 		if (!lift.pinned) return
 		const off = (e: PointerEvent) => {
@@ -215,7 +231,11 @@ export function ShelfCovers({ titles }: { titles: readonly ShelfTitle[] }) {
 			if (e.pointerType === "mouse" && now.index === index && !now.pinned)
 				setLift({ index: null, pinned: false })
 		},
-		onFocus: () => setLift({ index, pinned: false }),
+		// Keyboard focus only: a click's focus stays on the cover after the mouse has left it.
+		onFocus: (e: React.FocusEvent) => {
+			if (e.currentTarget.matches(":focus-visible"))
+				setLift({ index, pinned: false })
+		},
 		onBlur: () => {
 			const now = liftRef.current
 			if (now.index === index && !now.pinned)

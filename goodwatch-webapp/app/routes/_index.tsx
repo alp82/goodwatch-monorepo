@@ -6,7 +6,7 @@
 // The page is complete in the server's HTML (the H1, the room's painting) and its scripts start after it has painted
 // (utils/start-after-paint.ts). Searches run in the browser only, never from the loader.
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
-import { useLoaderData } from "@remix-run/react"
+import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import { type ComponentProps, useMemo, useState } from "react"
 import type { startPageLoader } from "~/server/start-page/loader.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
@@ -24,7 +24,8 @@ import { SpotlightCard } from "~/ui/start/spotlight/SpotlightCard"
 import { useLovedThree } from "~/ui/start/spotlight/useLovedThree"
 import { StartStage } from "~/ui/start/stage/StartStage"
 import { roomLight, roomStep } from "~/ui/start/stage/room-steps"
-import { startView } from "~/ui/start/stage/start-query"
+import { hasQuery, startView } from "~/ui/start/stage/start-query"
+import { QUERY_PARAMS } from "~/ui/start/stage/start-query-url"
 import { useStartQuery } from "~/ui/start/stage/useStartQuery"
 import { START_SHEETS } from "~/ui/start/start-sheets"
 import { assetBase, assetUrl } from "~/utils/asset-url"
@@ -99,6 +100,28 @@ export const meta: MetaFunction = () => [
 	},
 ]
 
+/** The query's parameters: only the page's own state reads them, so changing them doesn't read the page again. */
+const STATE_PARAMS = new Set<string>(QUERY_PARAMS)
+
+const withoutState = (url: URL) => {
+	const params = new URLSearchParams(url.search)
+	for (const name of STATE_PARAMS) params.delete(name)
+	params.sort()
+	return `${url.pathname}?${params}`
+}
+
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+	currentUrl,
+	nextUrl,
+	formMethod,
+	defaultShouldRevalidate,
+}) =>
+	!formMethod &&
+	currentUrl.search !== nextUrl.search &&
+	withoutState(currentUrl) === withoutState(nextUrl)
+		? false
+		: defaultShouldRevalidate
+
 export default function Index() {
 	const data = useLoaderData<typeof startPageLoader>()
 	if (!data.member)
@@ -131,7 +154,8 @@ function GuestStart({
 	const loved = useLovedThree()
 	const start = useStartQuery({ onChoice: loved.onChoice })
 	const results = useStartSearch(start.query)
-	const [asked, setAsked] = useState(false)
+	// A link with a query opens as asked.
+	const [asked, setAsked] = useState(() => hasQuery(start.query))
 	const view = startView(
 		start.query,
 		results,

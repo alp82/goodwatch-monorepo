@@ -6,6 +6,8 @@ import type { TalkedRow, TalkedTitle } from "~/domain/talked-about-now"
 import type { TonightParts } from "~/server/home-doors.server"
 import type { MyShows, NextEpisode } from "~/server/my-shows.server"
 import type { TitleCard } from "~/server/title-cards.server"
+import type { ShelfTitle } from "../room/ShelfCovers"
+import { START_ROOM, START_ROOM_PHONE } from "../room/scene"
 
 /** How many titles each list carries: a door's grid shows eleven and its page tile. */
 export const MEMBER_LIST_SIZE = 12
@@ -84,6 +86,38 @@ export function withArrived(
 		forYou: pick(data.forYou, later?.forYou, arrived.forYou),
 		hot: pick(data.hot, later?.hot, arrived.hot),
 	}
+}
+
+/** As many titles as the room with the most shelf cases holds. */
+export const MEMBER_SHELF_SIZE = Math.max(
+	START_ROOM.slots.length,
+	START_ROOM_PHONE.slots.length,
+)
+
+/**
+ * The titles on a member's shelf: Watch next's movies (the Wishlist in My movies' order); without any, the shows to
+ * continue; without those either, For you. Cases left over take the next lists' titles, then everyone's start titles
+ * (`everyone`), each title once and only with a poster. Until For you arrives, its titles are simply not there yet.
+ */
+export function memberShelf(
+	data: Pick<MemberStartData, "wishlist" | "continue" | "forYou">,
+	everyone: readonly ShelfTitle[],
+): ShelfTitle[] {
+	const seen = new Set<string>()
+	const shelf: ShelfTitle[] = []
+	for (const title of [
+		...(data.wishlist?.titles ?? []),
+		...(data.continue?.titles ?? []).map((show) => show.card),
+		...(data.forYou?.titles ?? []),
+		...everyone,
+	]) {
+		const id = `${title.media_type}:${title.tmdb_id}`
+		if (!title.poster_path || seen.has(id)) continue
+		seen.add(id)
+		shelf.push(title)
+		if (shelf.length === MEMBER_SHELF_SIZE) break
+	}
+	return shelf
 }
 
 /** A member with nothing read: what the page shows when the member's data couldn't be read at all. */

@@ -205,6 +205,12 @@ three word ids from `app/domain/taste-picker.ts`). Typing or a preset keeps the 
 and any running search. The field's Clear (or emptying it) clears only the search; a chip's × clears only that pick;
 the picker's Clear clears the picks.
 
+**In the URL.** The searched text and the picks live in the address too, with Discover's names: `q`, `moods`,
+`themes`, `styles` (`stage/start-query-url.ts`), for guests and members. A reload or a shared link opens the same
+query; a guest's link with a query opens as asked. The URL is replaced (no history entry per change), and changing
+only these parameters doesn't run the page's loader again (`shouldRevalidate` in `routes/_index.tsx`). Unknown words
+and picks past the third are dropped when the URL is read.
+
 **Typed text and presets.** The field searches 800 ms after typing pauses (Discover's rule, including its minimum
 length); Enter and Search search at once. A preset fills the field with its exact phrase and searches it like typed
 text: `cheer me up`, `rainy day whodunit`, `severance but funny`, `twist ending`, `space adventure`, `grown up
@@ -364,6 +370,15 @@ new section.
   to say ("Bring your ratings" to imports, "Rate a few titles" to `/taste`), then one grid where posters, "add more"
   ghosts, and the end tile fill whole rows. Hot on socials shows its ranked titles inline with why each is talked
   about (`why` from `app/ui/talked-about-now/parts`). With nothing on any list, **First steps** replaces the deck.
+- **Tags:** each side of "this or that" names its list with the shared `ListTag` (`app/ui/list-tag/ListTag.tsx`), one
+  color per list everywhere (Continue amber, Wishlist sky, For you violet, Hot on socials rose; My shows' Start
+  emerald).
+- **Shelf:** the room's covers are the member's Watch next movies; without any, the shows to continue; without those,
+  For you. Free cases take the next lists' titles, then everyone's start titles (`memberShelf` in `member-data.ts`).
+- **Big screens (from 1024 px):** no black space under the card. The card grows with the screen's spare height (at
+  least 540 px, 480 px on short screens; no wider than its two backdrops), the stage ends under it so the doors
+  follow, the painting zooms in up to 1.3 times (right-aligned, so the shelf stays on screen) and the stage's foot
+  fades into the page's gray-900. Decided in the prototype `prototype/member-start-gap` (layout F).
 
 Data (`member.server.ts`; member pages are never cached, so streaming is fine):
 

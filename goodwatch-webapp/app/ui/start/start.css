@@ -1176,12 +1176,101 @@
 	}
 }
 
+/* From 1024 px a member's start uses a tall screen's spare height instead of leaving it black under the card:
+   - The card grows with the screen: as tall as the spare height allows (the gap above it still takes up to 300 px),
+     at least 540 px (480 px on short screens), and no taller than its width lets the two backdrops grow. The box is
+     as wide as that height holds, and the card is never wider than the box and its padding.
+   - The stage ends under the card (no screen-tall minimum), so the Go deeper doors follow right after it.
+   - The painting zooms in, up to 1.3 times, to cover the stage, with the sofa centered in the gap. It is aligned to
+     the right edge, so the bookcase with the shelf covers stays on screen.
+   - The stage's foot fades into the page's color (gray-900), over the painting's own fade into the night.
+   `--start-member-chrome` is the card's height around the backdrops: the header, the lines under the titles, the
+   footer row and the padding. Re-measure it when ThisOrThat's layout changes. */
 @media (min-width: 1024px) {
 	.start-member .start-stage {
-		--start-card: 540px;
+		--start-member-chrome: 215px;
+		--start-card: max(
+			var(--start-member-card-min, 540px),
+			min(
+				calc(
+					(min(100cqw - 136px, 1960px) - 24px) *
+					0.28125 +
+					var(--start-member-chrome)
+				),
+				calc(
+					100svh -
+					4rem -
+					var(--start-pad) -
+					var(--start-block) -
+					300px -
+					var(--start-card-bottom)
+				)
+			)
+		);
+		--start-member-h: calc(
+			var(--start-gap-top) +
+			var(--start-gap) +
+			var(--start-card) +
+			var(--start-card-bottom)
+		);
+		/* The focus band's center: in the painting (a share of its width), and in the gap. */
+		--start-member-c: calc(var(--start-fy) + var(--start-band) / 2);
+		--start-member-cy: calc(
+			var(--start-gap-top) +
+			var(--start-air-above) +
+			var(--start-room) /
+			2
+		);
+		--start-img-w: min(
+			max(100cqw, calc(var(--start-member-h) / var(--start-hw))),
+			130cqw
+		);
+		--start-img-top: min(
+			0px,
+			calc(var(--start-member-cy) - var(--start-img-w) * var(--start-member-c))
+		);
+		--start-img-left: calc(100cqw - var(--start-img-w));
+	}
+	.start-member .start-stage::after {
+		content: "";
+		position: absolute;
+		inset: auto 0 0;
+		z-index: 5;
+		height: 360px;
+		pointer-events: none;
+		background: linear-gradient(
+			to bottom,
+			rgb(17 24 39 / 0) 0%,
+			rgb(17 24 39 / 0.04) 15%,
+			rgb(17 24 39 / 0.14) 30%,
+			rgb(17 24 39 / 0.3) 45%,
+			rgb(17 24 39 / 0.5) 60%,
+			rgb(17 24 39 / 0.7) 72%,
+			rgb(17 24 39 / 0.87) 84%,
+			rgb(17 24 39 / 0.96) 93%,
+			rgb(17 24 39) 100%
+		);
+	}
+	.start-member .start-content {
+		min-height: 0;
+	}
+	.start-member .start-card-wrap {
+		max-width: none;
+	}
+	.start-member .start-card {
+		max-width: min(
+			100cqw -
+			96px,
+			2000px,
+			calc((var(--start-card) - var(--start-member-chrome)) * 3.5556 + 64px)
+		);
 	}
 	.start-member-box {
-		max-width: 1180px;
+		max-width: calc(
+			(var(--start-card) - var(--start-member-chrome)) *
+			3.5556 +
+			24px
+		);
 	}
 	.start-member-grid {
 		max-width: 1276px;
@@ -1190,10 +1279,7 @@
 
 @media (min-width: 1024px) and (max-height: 820px) {
 	.start-member .start-stage {
-		--start-card: 480px;
-	}
-	.start-member-box {
-		max-width: 990px;
+		--start-member-card-min: 480px;
 	}
 	.start-member-grid {
 		max-width: 1116px;

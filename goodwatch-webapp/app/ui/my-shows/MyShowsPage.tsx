@@ -36,6 +36,7 @@ import type { RowService, RowServices } from "~/server/row-services.server"
 import { FIND_NEW_BELOW, ForYouLink } from "~/ui/for-you/ForYouLink"
 import { RowLogos, RowScores, useRowMarks } from "~/ui/list-row/RowScores"
 import { useLandedRowParts } from "~/ui/list-row/landed"
+import { ListTag, type ListTagKind } from "~/ui/list-tag/ListTag"
 import { LandedRow, NewOnWords } from "~/ui/my-pages/LandedRow"
 import {
 	DISPLAY,
@@ -82,29 +83,13 @@ function airedWords(airDate: string | null, now: number): string | null {
 const isNew = (airDate: string | null, now: number) =>
 	airDate !== null && now - Date.parse(`${airDate}T00:00:00Z`) < 7 * DAY_MS
 
-const TAG = {
-	next: "bg-amber-400 text-black",
-	seenNew: "bg-amber-400 text-black",
-	start: "bg-emerald-400 text-black",
-} as const
-const Tag = ({
-	kind,
-	children,
-}: { kind: keyof typeof TAG; children: ReactNode }) => (
-	<span
-		className={`inline-block whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-black uppercase tracking-wide ${TAG[kind]}`}
-	>
-		{children}
-	</span>
-)
-
 interface RowWords {
 	id: number
 	title: string
 	poster_path: string | null
 	backdrop_path: string | null
 	goodwatch: number | null
-	tag: keyof typeof TAG
+	tag: ListTagKind
 	tagWord: string
 	fresh: boolean
 	/** The Next episode, or what starting the show costs. */
@@ -120,7 +105,7 @@ const continueRow = (row: MyShowsRow, now: number): RowWords => ({
 	poster_path: row.poster_path,
 	backdrop_path: row.backdrop_path,
 	goodwatch: row.goodwatch,
-	tag: row.kind === "seenNew" ? "seenNew" : "next",
+	tag: row.kind === "seenNew" ? "newEpisodes" : "continue",
 	tagWord: row.kind === "seenNew" ? "New episodes" : "Next episode",
 	fresh: row.kind === "next" && isNew(row.next?.airDate ?? null, now),
 	line: row.next
@@ -234,7 +219,7 @@ function Row({
 					className={`flex min-w-0 flex-1 flex-col justify-center ${big ? "py-5" : "py-3"}`}
 				>
 					<span className="flex min-w-0 items-center gap-1.5">
-						<Tag kind={row.tag}>{row.tagWord}</Tag>
+						<ListTag kind={row.tag}>{row.tagWord}</ListTag>
 						{row.fresh && (
 							<span className="rounded bg-white/15 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
 								New
