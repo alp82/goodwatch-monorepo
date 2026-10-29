@@ -13,6 +13,7 @@ import {
 	useFindRequests,
 	useRingPerson,
 } from "~/ui/details/find/find-bus"
+import { useSectionNear } from "~/ui/details/below-fold"
 import {
 	CAPTION,
 	FilterChips,
@@ -33,13 +34,14 @@ const DEPARTMENT_PAGE = 24
 /** The short key list from the page's own crew lines, plus "Created by" for a show (one small request). */
 function KeyCrew({ media }: { media: Media }) {
 	const show = media.mediaType === "show"
+	const near = useSectionNear()
 	const creators = usePeople({
 		mediaType: media.mediaType,
 		tmdbId: media.details.tmdb_id,
 		kind: "crew",
 		q: "creator",
 		pageSize: 6,
-		enabled: show,
+		enabled: show && near,
 	})
 	const created = creators.ready
 		? creators.rows.filter((r) => r.roles.includes("Creator"))
@@ -94,6 +96,7 @@ function AllCrew({ media }: { media: Media }) {
 	const [group, setGroup] = useState("")
 	const searching = q.trim().length > 0
 	const listing = searching || Boolean(group)
+	const near = useSectionNear()
 	const people = usePeople({
 		mediaType: media.mediaType,
 		tmdbId: media.details.tmdb_id,
@@ -101,6 +104,7 @@ function AllCrew({ media }: { media: Media }) {
 		q,
 		group,
 		pageSize: listing ? DEPARTMENT_PAGE : 1,
+		enabled: near,
 	})
 	// Find asked for someone behind the camera: search for them, then ring their row once it is in.
 	const root = useRef<HTMLElement>(null)

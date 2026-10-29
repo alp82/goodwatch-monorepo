@@ -1,6 +1,6 @@
 // The fingerprint section's questions about the population (the most popular titles of the type): the title's rarest
-// pairs of effects, and the titles that share a selection of effects. Both load after the page renders, so the
-// section renders without them first and keeps its room.
+// pairs of effects, and the titles that share a selection of effects. Both load once the reader comes near the
+// section, so the section renders without them first and keeps its room.
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 
 export interface PairsAnswer {
@@ -32,11 +32,17 @@ async function getJson<T>(url: string): Promise<T> {
 	return response.json()
 }
 
-export function useRarePairs(type: "movie" | "show", tmdbId: number) {
+/** `enabled`: false to wait. */
+export function useRarePairs(
+	type: "movie" | "show",
+	tmdbId: number,
+	enabled = true,
+) {
 	return useQuery({
 		queryKey: ["fingerprint-pairs", type, tmdbId],
 		queryFn: () =>
 			getJson<PairsAnswer>(`/api/fingerprint/pairs?type=${type}&id=${tmdbId}`),
+		enabled,
 	})
 }
 

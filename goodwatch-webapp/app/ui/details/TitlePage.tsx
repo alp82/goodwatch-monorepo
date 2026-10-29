@@ -22,7 +22,11 @@ import { PhoneBar } from "~/ui/details/PhoneBar"
 import { type IndexItem, ProgressIndex } from "~/ui/details/ProgressIndex"
 import { TitleBar } from "~/ui/details/TitleBar"
 import { YouBlock } from "~/ui/details/YouBlock"
-import { belowFoldProps, useBelowFold } from "~/ui/details/below-fold"
+import {
+	NearSection,
+	belowFoldProps,
+	useBelowFold,
+} from "~/ui/details/below-fold"
 import { FindField, FindResults, useFindItems } from "~/ui/details/find/Find"
 import { FindBus, useFindBusValue } from "~/ui/details/find/find-bus"
 import { type FindHit, buildFindIndex } from "~/ui/details/find/find-index"
@@ -529,7 +533,7 @@ export function TitlePage(props: TitlePageProps) {
 						{/* Every section in full. */}
 						<div className="mt-10 flex min-w-0 flex-col gap-14 lg:col-start-1 lg:row-start-2 lg:mt-14 lg:gap-16 lg:pl-6">
 							{sections.map((s) => (
-								<section
+								<NearSection
 									key={s.id}
 									id={s.id}
 									aria-labelledby={`${s.id}-h`}
@@ -556,7 +560,7 @@ export function TitlePage(props: TitlePageProps) {
 									<div className={`mt-6 min-w-0 lg:mt-8 ${s.bodyClass ?? ""}`}>
 										{s.body()}
 									</div>
-								</section>
+								</NearSection>
 							))}
 							{/* Appears only when the title has posts, so it isn't a section of the index. */}
 							{props.talkedAboutNow && <TalkedAboutNowSlot media={media} />}

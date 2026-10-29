@@ -11,6 +11,7 @@ import {
 	useFindRequests,
 	useRingPerson,
 } from "~/ui/details/find/find-bus"
+import { useSectionNear } from "~/ui/details/below-fold"
 import { FilterChips, MoreRow, SearchField, fmt } from "~/ui/details/page-ui"
 import { PersonRow } from "~/ui/details/people/PersonRow"
 import { type PeopleRow, usePeople } from "~/ui/details/people/usePeople"
@@ -31,6 +32,7 @@ export function CastSection({
 	const [q, setQ] = useState("")
 	const [group, setGroup] = useState("")
 	const [limit, setLimit] = useState(STEP)
+	const near = useSectionNear()
 	const people = usePeople({
 		mediaType: media.mediaType,
 		tmdbId: media.details.tmdb_id,
@@ -38,6 +40,8 @@ export function CastSection({
 		q,
 		group,
 		pageSize: FETCH,
+		// The page's own first people fill the rows until then.
+		enabled: near,
 	})
 	const top = useRef<HTMLDivElement>(null)
 

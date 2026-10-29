@@ -54,30 +54,64 @@ function wedge(i: number, r: number) {
 	return `M0 0L${x0} ${y0}A${r} ${r} 0 0 1 ${x1} ${y1}Z`
 }
 
-type Geo = ReturnType<typeof build>
+export type Geo = ReturnType<typeof build>
 
-/** The ridges, drawn once per print; memo keeps hover re-renders cheap. */
-const Ridges = memo(function Ridges({
+/** The print's geometry for a section's drawings: twelve turns, rim markers included. */
+export const printGeometry = (attributes: WhorlAttribute[]): Geo =>
+	build(attributes, 12, true)
+
+const RIDGE = 2.6
+
+/**
+ * The print's ridges, drawn once per section (about 850 paths): every drawing shows them by reference, twice each
+ * (faint, and brighter inside the shape), so the DOM holds them once and not four times (two drawings, phone and wide,
+ * that CSS picks from). Runs of one family share a group with its color; the paint order stays the print's own. A
+ * sprite: a zero-size SVG, not hidden by `display`, so every browser renders its references. The section draws it once
+ * the reader comes near: the print has no words for search engines, and its coordinates were a third of the page's
+ * compressed HTML.
+ */
+export const RidgeSprite = memo(function RidgeSprite({
+	id,
 	geo,
-	width,
-}: { geo: Geo; width: number }) {
+}: { id: string; geo: Geo }) {
+	const runs: {
+		family: keyof typeof FAMILY_COLOR
+		paths: Geo["turns"][number]["paths"]
+	}[] = []
+	for (const turn of geo.turns)
+		for (const p of turn.paths) {
+			const last = runs[runs.length - 1]
+			if (last && last.family === p.family) last.paths.push(p)
+			else runs.push({ family: p.family, paths: [p] })
+		}
 	return (
-		<g transform={`translate(0 ${PRINT.dy}) scale(${PRINT.k})`}>
-			{geo.turns.flatMap((turn, ti) =>
-				turn.paths.map((p, j) => (
-					<path
+		<svg
+			aria-hidden="true"
+			focusable="false"
+			width="0"
+			height="0"
+			style={{ position: "absolute", overflow: "hidden" }}
+		>
+			<defs>
+				<g
+					id={id}
+					transform={`translate(0 ${PRINT.dy}) scale(${PRINT.k})`}
+					fill="none"
+					strokeWidth={RIDGE}
+					strokeLinecap="round"
+				>
+					{runs.map((run, i) => (
 						// biome-ignore lint/suspicious/noArrayIndexKey: geometry is fixed
-						key={`${ti}-${j}`}
-						d={p.d}
-						fill="none"
-						stroke={FAMILY_COLOR[p.family]}
-						strokeOpacity={p.opacity}
-						strokeWidth={width}
-						strokeLinecap="round"
-					/>
-				)),
-			)}
-		</g>
+						<g key={i} stroke={FAMILY_COLOR[run.family]}>
+							{run.paths.map((p, j) => (
+								// biome-ignore lint/suspicious/noArrayIndexKey: geometry is fixed
+								<path key={j} d={p.d} strokeOpacity={p.opacity} />
+							))}
+						</g>
+					))}
+				</g>
+			</defs>
+		</svg>
 	)
 })
 
@@ -237,7 +271,8 @@ function placeLabels(
 
 export function Shape({
 	reading,
-	attributes,
+	geo,
+	ridges,
 	light,
 	pressed,
 	onPoint,
@@ -249,7 +284,10 @@ export function Shape({
 	className = "",
 }: {
 	reading: Reading
-	attributes: WhorlAttribute[]
+	/** The print's geometry (printGeometry); null until the reader comes near, which draws no ridges. */
+	geo: Geo | null
+	/** The id of the section's RidgeSprite. */
+	ridges: string
 	light: Light | null
 	/** The axes in the committed selection (light may be a hover preview). */
 	pressed?: ReadonlySet<string>
@@ -276,11 +314,8 @@ export function Shape({
 	const { axes } = reading
 	const tips = axes.map((a, i) => pt(radiusOf(a.strength), angleOf(i)))
 	const outline = smooth(tips)
-	const turns = 12
-	const ridge = 2.6
-	const geo = useMemo(() => build(attributes, turns, true), [attributes, turns])
 	const markers = useMemo(
-		() => new Map(geo.markers.map((m) => [m.a.key, { x: m.x, y: m.y }])),
+		() => new Map(geo?.markers.map((m) => [m.a.key, { x: m.x, y: m.y }])),
 		[geo],
 	)
 	const keysLit = !!light?.keys.length
@@ -374,7 +409,7 @@ export function Shape({
 					opacity={keysLit ? 0.06 : 0.17}
 					pointerEvents="none"
 				>
-					<Ridges geo={geo} width={ridge} />
+					<use href={`#${ridges}`} />
 				</g>
 				<circle r={R} fill="none" stroke="white" strokeOpacity=".06" />
 				{AXES.map((a, i) => {
@@ -416,7 +451,7 @@ export function Shape({
 				<g className="fp-shape" pointerEvents="none">
 					<g clipPath={`url(#${id}-shape)`}>
 						<g className="fp-fade" opacity={keysLit ? 0.16 : 0.5}>
-							<Ridges geo={geo} width={ridge} />
+							<use href={`#${ridges}`} />
 						</g>
 					</g>
 					<path
@@ -488,9 +523,9 @@ export function Shape({
 					})}
 				</g>
 
-				{keysLit && light && (
+				{keysLit && light && geo && (
 					<g key={light.id} className="fp-in" pointerEvents="none">
-						<LitRidges geo={geo} width={ridge} keys={light.keys} />
+						<LitRidges geo={geo} width={RIDGE} keys={light.keys} />
 					</g>
 				)}
 

@@ -9,7 +9,7 @@
 // - The drawing (Shape.tsx) lights the selection and names its ingredients with their scores at the rim.
 // - Under them, the titles that share the selection (Results.tsx), and the member's taste card (TasteCard.tsx).
 // It opens on the title's rarest pair of effects among its rows.
-import { type HTMLAttributes, useMemo, useRef, useState } from "react"
+import { type HTMLAttributes, useId, useMemo, useRef, useState } from "react"
 import type { EffectReading } from "~/domain/fingerprint-effects/effects"
 import { POPULATION_MEDIANS } from "~/domain/fingerprint-effects/population-medians"
 import type { TitleSides } from "~/server/title-sides.server"
@@ -17,7 +17,7 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type * as F from "~/ui/fingerprint/fingerprintText"
 import { Dials } from "./Dials"
 import { Results } from "./Results"
-import { Shape } from "./Shape"
+import { RidgeSprite, Shape, printGeometry } from "./Shape"
 import { TasteCard } from "./TasteCard"
 import { useRarePairs } from "./population"
 import {
@@ -37,6 +37,7 @@ import {
 	startSelection,
 } from "./selection"
 import { SECTION_STYLE } from "./styles"
+import { useSectionNear } from "~/ui/details/below-fold"
 
 type Media = MovieResult | ShowResult
 type Handlers = (t: Target) => HTMLAttributes<HTMLElement>
@@ -85,7 +86,10 @@ export function FingerprintSection({
 function Body({ t, selfId }: { t: F.TitleInput; selfId: number }) {
 	const scores = t.fingerprint.scores
 	const reading = useMemo(() => readTitle(t), [t])
-	const pairs = useRarePairs(t.mediaType, selfId)
+	// The rarest pairs (the opening selection), the print's ridges and the titles that share the selection wait until
+	// the reader comes near the section.
+	const near = useSectionNear()
+	const pairs = useRarePairs(t.mediaType, selfId, near)
 	const start = useMemo(
 		() => (pairs.data ? startSelection(pairs.data.pairs, reading) : []),
 		[pairs.data, reading],
@@ -94,6 +98,11 @@ function Body({ t, selfId }: { t: F.TitleInput; selfId: number }) {
 		() => printAttributes(scores, POPULATION_MEDIANS[t.mediaType]),
 		[scores, t.mediaType],
 	)
+	const geo = useMemo(
+		() => (near ? printGeometry(attributes) : null),
+		[near, attributes],
+	)
+	const ridges = `fp-ridges-${useId().replace(/:/g, "")}`
 	const isRow = (id: string) => reading.rows.some((p) => p.r.effect.id === id)
 
 	// null until the first click: the selection is then the title's rarest pair.
@@ -163,6 +172,7 @@ function Body({ t, selfId }: { t: F.TitleInput; selfId: number }) {
 
 	return (
 		<>
+			{geo && <RidgeSprite id={ridges} geo={geo} />}
 			<Dials
 				scales={reading.scales}
 				active={dialName}
@@ -195,7 +205,8 @@ function Body({ t, selfId }: { t: F.TitleInput; selfId: number }) {
 						>
 							<Shape
 								reading={reading}
-								attributes={attributes}
+								geo={geo}
+								ridges={ridges}
 								light={light}
 								pressed={pressedAxes}
 								onPoint={(axis) =>

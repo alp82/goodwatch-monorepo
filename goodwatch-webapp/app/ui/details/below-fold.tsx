@@ -10,6 +10,7 @@
 //   position. Every section is laid out first, so the jump lands where it did before.
 import {
 	type CSSProperties,
+	type ComponentPropsWithoutRef,
 	type ReactNode,
 	createContext,
 	useCallback,
@@ -107,4 +108,45 @@ export function belowFoldProps(
 			"--reserve-md": `${reserved.desktop}px`,
 		} as CSSProperties,
 	}
+}
+
+// Work a section needs only once the reader comes near it (its requests, its pictures, a drawing's fine detail) waits
+// until then: a visitor who reads the first screen never asks for it. The margin is short of the first screen's
+// neighbour, so that a phone's first view starts none of it, and a reader who scrolls gets it before it shows.
+const NEAR_MARGIN = "400px 0px"
+
+const NearContext = createContext(true)
+
+/** Whether the title page section this is in has come near the viewport. Latched; always true outside a section. */
+export const useSectionNear = () => useContext(NearContext)
+
+/** A title page section that tells its parts (useSectionNear) once it comes near the viewport. */
+export function NearSection({
+	children,
+	...props
+}: ComponentPropsWithoutRef<"section">) {
+	const ref = useRef<HTMLElement>(null)
+	const [near, setNear] = useState(false)
+	useEffect(() => {
+		const el = ref.current
+		if (!el || typeof IntersectionObserver === "undefined") {
+			setNear(true)
+			return
+		}
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (!entries.some((entry) => entry.isIntersecting)) return
+				observer.disconnect()
+				setNear(true)
+			},
+			{ rootMargin: NEAR_MARGIN },
+		)
+		observer.observe(el)
+		return () => observer.disconnect()
+	}, [])
+	return (
+		<section ref={ref} {...props}>
+			<NearContext.Provider value={near}>{children}</NearContext.Provider>
+		</section>
+	)
 }
