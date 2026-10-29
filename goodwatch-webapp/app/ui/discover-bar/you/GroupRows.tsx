@@ -46,7 +46,7 @@ function Box({ on }: { on: boolean }) {
 	return (
 		<span
 			aria-hidden
-			className={`grid h-5 w-5 shrink-0 place-items-center rounded-md transition-colors ${on ? "bg-white text-gray-950" : "ring-1 ring-inset ring-white/25"}`}
+			className={`grid h-5 w-5 shrink-0 place-items-center rounded-md ${on ? "bg-white text-gray-950" : "ring-1 ring-inset ring-white/25"}`}
 		>
 			{on && <CheckIcon className="h-3.5 w-3.5" />}
 		</span>
@@ -119,7 +119,7 @@ export function GroupRow({
 			whileTap={dim ? undefined : TAP}
 			onClick={() => !dim && onToggle()}
 			data-taste-group={group.key}
-			className={`flex h-[52px] w-full min-w-0 shrink-0 items-center gap-3 rounded-xl px-2.5 text-left transition-[background-color,opacity] ${FOCUS} ${on ? "bg-white/[0.08] ring-1 ring-inset ring-white/25" : "hover:bg-white/[0.04]"} ${dim ? "cursor-default opacity-40" : "cursor-pointer"}`}
+			className={`flex h-[52px] w-full min-w-0 shrink-0 items-center gap-3 rounded-xl px-2.5 text-left transition-opacity ${FOCUS} ${on ? "bg-white/[0.08] ring-1 ring-inset ring-white/25" : "hover:bg-white/[0.04]"} ${dim ? "cursor-default opacity-40" : "cursor-pointer"}`}
 		>
 			<PosterStack posters={group.lovedPosters} height={phone ? 34 : 40} />
 			<span className={`min-w-0 ${phone ? "flex-1" : "w-[190px] shrink-0"}`}>

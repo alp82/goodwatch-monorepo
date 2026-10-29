@@ -129,7 +129,7 @@ function ModePill({ sv, phone }: { sv: Services; phone: boolean }) {
 						whileTap={TAP}
 						onClick={() => sv.setMode(item.id)}
 						data-services-mode={item.id}
-						className={`relative z-10 flex items-center gap-2 rounded-xl font-bold whitespace-nowrap cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
+						className={`relative z-10 flex items-center gap-2 rounded-xl font-bold whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
 							phone
 								? "h-full min-w-0 flex-1 justify-center px-2 text-[13px]"
 								: "h-14 w-full justify-start px-4 text-sm"
@@ -208,7 +208,7 @@ function Tile({
 			aria-pressed={on}
 			onClick={() => sv.pick(provider.id)}
 			data-service={provider.id}
-			className={`relative flex min-w-0 items-center gap-2.5 rounded-xl p-2 text-left cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
+			className={`relative flex min-w-0 items-center gap-2.5 rounded-xl p-2 text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
 				on
 					? "bg-emerald-500/15 ring-1 ring-emerald-400/60"
 					: "bg-white/[0.035] ring-1 ring-white/[0.06] hover:bg-white/[0.07]"

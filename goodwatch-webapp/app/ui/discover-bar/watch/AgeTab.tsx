@@ -133,7 +133,7 @@ function RatingCountry({
 /** The ladder: Off, then one tile per step. */
 function Ladder({ age, phone }: { age: Age; phone: boolean }) {
 	const tile = (active: boolean) =>
-		`flex flex-col items-center justify-center gap-0.5 rounded-2xl cursor-pointer transition-colors ${FOCUS} ${phone ? "h-20" : "h-[104px]"} ${
+		`flex flex-col items-center justify-center gap-0.5 rounded-2xl cursor-pointer ${FOCUS} ${phone ? "h-20" : "h-[104px]"} ${
 			active
 				? "bg-white text-gray-950"
 				: "bg-white/[0.06] text-gray-100 hover:bg-white/[0.11]"
@@ -275,7 +275,7 @@ function FreeAge({ age, phone }: { age: Age; phone: boolean }) {
 				<div className="relative h-6">
 					<div className="absolute inset-x-0 top-[10px] h-1 rounded-full bg-white/10" />
 					<div
-						className={`absolute top-[10px] left-0 h-1 w-full origin-left rounded-full transition-colors ${on ? "bg-amber-400" : "bg-white/25"}`}
+						className={`absolute top-[10px] left-0 h-1 w-full origin-left rounded-full ${on ? "bg-amber-400" : "bg-white/25"}`}
 						style={{ transform: `scaleX(${value / MAX_AGE})` }}
 					/>
 					{age.steps.map((s) => (

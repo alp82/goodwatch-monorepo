@@ -198,7 +198,7 @@ function MatchRow({
 			whileTap={locked ? undefined : TAP}
 			onClick={onPick}
 			data-match={step}
-			className={`flex h-10 w-full min-w-0 shrink-0 items-center gap-3 rounded-xl px-2.5 text-left transition-colors ${FOCUS} ${locked ? "cursor-default" : "cursor-pointer"} ${
+			className={`flex h-10 w-full min-w-0 shrink-0 items-center gap-3 rounded-xl px-2.5 text-left ${FOCUS} ${locked ? "cursor-default" : "cursor-pointer"} ${
 				on
 					? outside
 						? "bg-sky-500/20 ring-1 ring-inset ring-sky-300/50"
@@ -290,7 +290,7 @@ function OrderSwitch({
 			disabled={off}
 			whileTap={off ? undefined : TAP}
 			onClick={() => onChange(!on)}
-			className={`flex h-11 w-full min-w-0 items-center gap-2 rounded-2xl px-3 text-[13px] font-bold whitespace-nowrap transition-colors ${FOCUS} ${
+			className={`flex h-11 w-full min-w-0 items-center gap-2 rounded-2xl px-3 text-[13px] font-bold whitespace-nowrap ${FOCUS} ${
 				off
 					? "cursor-default bg-white/[0.03] text-gray-600 ring-1 ring-white/[0.06]"
 					: lit

@@ -56,7 +56,7 @@ export function ListPill({
 			whileTap={locked ? undefined : TAP}
 			onClick={() => onChange(!on)}
 			data-list={id}
-			className={`relative flex h-9 w-full min-w-0 items-center gap-2 px-3 text-sm font-bold whitespace-nowrap transition-colors ${FOCUS} ${SHELL} ${
+			className={`relative flex h-9 w-full min-w-0 items-center gap-2 px-3 text-sm font-bold whitespace-nowrap ${FOCUS} ${SHELL} ${
 				locked
 					? "cursor-default text-gray-600"
 					: lit
@@ -80,7 +80,7 @@ export function ListPill({
 			{count !== null && (
 				<span
 					aria-hidden
-					className={`shrink-0 text-right text-xs tabular-nums transition-colors ${lit ? "text-blue-300/80" : "text-gray-500"}`}
+					className={`shrink-0 text-right text-xs tabular-nums ${lit ? "text-blue-300/80" : "text-gray-500"}`}
 				>
 					{hiddenShort(count)}
 				</span>

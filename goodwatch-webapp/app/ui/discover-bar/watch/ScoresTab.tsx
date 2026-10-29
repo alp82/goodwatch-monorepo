@@ -49,7 +49,7 @@ function GoodWatchMark({ score }: { score: number }) {
 	return (
 		<span
 			aria-hidden
-			className="grid h-7 w-7 shrink-0 place-items-center rounded-lg transition-colors"
+			className="grid h-7 w-7 shrink-0 place-items-center rounded-lg"
 			style={{
 				background: score ? vibeHex(score) : "rgba(255,255,255,0.08)",
 			}}
@@ -85,7 +85,7 @@ function ScoreTiles({ view }: { view: SubTabView }) {
 						tabIndex={on ? 0 : -1}
 						whileTap={TAP}
 						onClick={() => set(step)}
-						className={`flex flex-col items-start justify-between rounded-xl px-3 text-left cursor-pointer transition-colors ${FOCUS} ${
+						className={`flex flex-col items-start justify-between rounded-xl px-3 text-left cursor-pointer ${FOCUS} ${
 							phone ? "h-[68px] py-2" : "h-[104px] py-3"
 						} ${on ? "ring-2 ring-white ring-inset" : ""} ${lit || on ? "" : "bg-white/[0.05] hover:bg-white/[0.09]"}`}
 						style={
@@ -253,7 +253,7 @@ function SourceRow({
 							aria-label={`${source.name} ${label}${n === undefined ? "" : `, ${n.toLocaleString("en")} titles`}`}
 							tabIndex={on || (step === 0 && !steps.includes(value)) ? 0 : -1}
 							onClick={() => pick(step)}
-							className={`flex flex-col items-center justify-center rounded-md tabular-nums leading-none cursor-pointer transition-colors ${FOCUS} ${phone ? "h-9" : "h-10"} ${on ? "font-bold" : ""} ${
+							className={`flex flex-col items-center justify-center rounded-md tabular-nums leading-none cursor-pointer ${FOCUS} ${phone ? "h-9" : "h-10"} ${on ? "font-bold" : ""} ${
 								lit
 									? ""
 									: on
@@ -377,7 +377,7 @@ function GapChoices({ view }: { view: SubTabView }) {
 						tabIndex={on ? 0 : -1}
 						whileTap={TAP}
 						onClick={() => set(gap)}
-						className={`flex h-14 items-center gap-2.5 rounded-xl px-2.5 text-left cursor-pointer transition-colors ${FOCUS} ${on ? "bg-white text-gray-950" : "bg-white/[0.05] text-gray-200 hover:bg-white/[0.09]"}`}
+						className={`flex h-14 items-center gap-2.5 rounded-xl px-2.5 text-left cursor-pointer ${FOCUS} ${on ? "bg-white text-gray-950" : "bg-white/[0.05] text-gray-200 hover:bg-white/[0.09]"}`}
 					>
 						<span
 							className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${on ? "bg-gray-950" : "bg-black/30"}`}

@@ -190,7 +190,7 @@ export function DiscoverBar({
 	return (
 		<div
 			ref={barRef}
-			className={`relative flex h-[76px] items-stretch rounded-full p-1.5 ring-1 transition-colors duration-200 ${
+			className={`relative flex h-[76px] items-stretch rounded-full p-1.5 ring-1 ${
 				active
 					? "bg-gray-900 ring-white/15"
 					: "bg-white/[0.045] ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_20px_50px_-30px_rgba(0,0,0,.9)]"
@@ -387,7 +387,7 @@ export function SearchButton({
 			type="button"
 			whileTap={TAP}
 			onClick={onClick}
-			className={`flex shrink-0 items-center gap-2 rounded-full font-bold cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white ${small ? "h-10 px-3.5 text-[14px]" : "h-12 px-5 text-[15px]"} ${
+			className={`flex shrink-0 items-center gap-2 rounded-full font-bold cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white ${small ? "h-10 px-3.5 text-[14px]" : "h-12 px-5 text-[15px]"} ${
 				empty
 					? "bg-white/[0.08] text-gray-300 hover:bg-white/[0.12]"
 					: "bg-amber-400 text-gray-950 hover:bg-amber-300"
