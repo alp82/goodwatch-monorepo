@@ -1,7 +1,6 @@
 // PROTOTYPE (Discover lab, mood a): the baseline. My movies' shelf shaped for Discover: the Explorer's twelve moods as
 // picture tiles, a row of mixes (a guest has no taste groups) that turns into narrowing suggestions after a pick,
-// and About, Style and Genre folded in a side column under Movies or shows. No sub-tabs.
-import { TypeControl } from "../../shell-parts"
+// and About, Style and Genre folded in a side column. No sub-tabs.
 import type { SectionProps } from "../../types"
 import { Folds, MixChips, MoodTiles, NarrowChips, PickRow, ROW_FADE, useMixes, useMoods, useWorldArt } from "./parts"
 
@@ -28,7 +27,6 @@ export function MoodA({ d, phone }: SectionProps) {
 				<PickRow d={d} m={m} art={art} empty={empty} />
 				<MoodTiles d={d} m={m} art={art} cols="grid-cols-3" tile="h-[4.75rem]" lines={false} />
 				<SuggestRow d={d} m={m} x={x} art={art} />
-				<TypeControl d={d} />
 				<Folds d={d} keys={["themes", "styles", "genres"]} phone />
 			</div>
 		)
@@ -40,7 +38,6 @@ export function MoodA({ d, phone }: SectionProps) {
 				<SuggestRow d={d} m={m} x={x} art={art} />
 			</div>
 			<aside className="flex w-[380px] shrink-0 flex-col gap-4 border-l border-white/[0.06] px-5 py-4">
-				<TypeControl d={d} />
 				<Folds d={d} keys={["themes", "styles", "genres"]} first="themes" />
 			</aside>
 		</div>

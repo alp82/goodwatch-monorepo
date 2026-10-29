@@ -5,7 +5,7 @@
 import type { SectionProps } from "../../types"
 import { ColumnHead, ColumnRows } from "./columns"
 import { type FitKind, RecipeLine, byFit, fitRows } from "./fit"
-import { TypeSwitch, useMoods } from "./parts"
+import { useMoods } from "./parts"
 
 export const COLUMNS: { kind: FitKind; label: string }[] = [
 	{ kind: "moods", label: "Feel" },
@@ -33,9 +33,6 @@ export function MoodG({ d, phone }: SectionProps) {
 		return (
 			<div className="flex flex-col gap-4">
 				<RecipeLine d={d} m={m} size="text-[17px]" />
-				<div className="flex">
-					<TypeSwitch d={d} />
-				</div>
 				{columns}
 			</div>
 		)
@@ -45,7 +42,6 @@ export function MoodG({ d, phone }: SectionProps) {
 				<div className="min-w-0 flex-1">
 					<RecipeLine d={d} m={m} />
 				</div>
-				<TypeSwitch d={d} />
 			</div>
 			<div className="flex min-h-0 flex-1 gap-5">{columns}</div>
 		</div>

@@ -5,14 +5,15 @@ import { motion } from "framer-motion"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { TAP } from "~/ui/filter-bar/motion"
 import { RangeSlider } from "~/ui/filter-bar/SheetControls"
+import type { ProtoDiscover } from "../../../kit"
 import type { SectionProps } from "../../types"
 import { GroupLabel, ResetLink, Tile, YEAR_MIN, fmtYear, pad, sameRange, setYears, toggleYears, useRangeCounts, yearMax, yearRange } from "./parts"
 
-const DECADES = Array.from({ length: Math.floor(yearMax() / 10) - 192 + 1 }, (_, i) => 1920 + i * 10)
-const decadeRange = (start: number): [number, number] => [start, Math.min(start + 9, yearMax())]
+export const DECADES = Array.from({ length: Math.floor(yearMax() / 10) - 192 + 1 }, (_, i) => 1920 + i * 10)
+export const decadeRange = (start: number): [number, number] => [start, Math.min(start + 9, yearMax())]
 
 /** The decades the range covers exactly, as [first, last] decade starts; null when it isn't decade-aligned. */
-function decadeSpan([lo, hi]: [number, number]): [number, number] | null {
+export function decadeSpan([lo, hi]: [number, number]): [number, number] | null {
 	const now = yearMax()
 	if (lo <= YEAR_MIN && hi >= now) return null
 	if (lo % 10 !== 0) return null
@@ -20,10 +21,23 @@ function decadeSpan([lo, hi]: [number, number]): [number, number] | null {
 	return [lo, hi === now ? Math.floor(now / 10) * 10 : hi - 9]
 }
 
+/** Taps a decade: picks it, widens the span from a neighbor, narrows it from an end, or clears it when alone. */
+export function tapDecade(d: ProtoDiscover, y: number) {
+	const now = yearMax()
+	const span = decadeSpan(yearRange(d.filters.state))
+	if (!span) return setYears(d, decadeRange(y))
+	const [a, b] = span
+	if (a === b && a === y) return setYears(d, [YEAR_MIN, now])
+	if (y === a - 10) return setYears(d, [y, decadeRange(b)[1]])
+	if (y === b + 10) return setYears(d, [a, decadeRange(y)[1]])
+	if (y === a && b > a) return setYears(d, [a + 10, decadeRange(b)[1]])
+	if (y === b && b > a) return setYears(d, [a, decadeRange(b - 10)[1]])
+	setYears(d, decadeRange(y))
+}
+
 export function ReleasedB({ d, phone }: SectionProps) {
 	const range = yearRange(d.filters.state)
 	const now = yearMax()
-	const span = decadeSpan(range)
 	const any = sameRange(range, [YEAR_MIN, now])
 	const counts = useRangeCounts(
 		d,
@@ -46,16 +60,6 @@ export function ReleasedB({ d, phone }: SectionProps) {
 		recent.map((r) => ({ min: r.range[0] })),
 	)
 
-	const tapDecade = (y: number) => {
-		if (!span) return setYears(d, decadeRange(y))
-		const [a, b] = span
-		if (a === b && a === y) return setYears(d, [YEAR_MIN, now])
-		if (y === a - 10) return setYears(d, [y, decadeRange(b)[1]])
-		if (y === b + 10) return setYears(d, [a, decadeRange(y)[1]])
-		if (y === a && b > a) return setYears(d, [a + 10, decadeRange(b)[1]])
-		if (y === b && b > a) return setYears(d, [a, decadeRange(b - 10)[1]])
-		setYears(d, decadeRange(y))
-	}
 	const inRange = (y: number) => {
 		const [a, b] = decadeRange(y)
 		return !any && a <= range[1] && b >= range[0]
@@ -95,7 +99,7 @@ export function ReleasedB({ d, phone }: SectionProps) {
 								aria-pressed={on}
 								aria-label={`${y}s${n == null ? "" : `, ${n.toLocaleString("en")} titles`}`}
 								whileTap={TAP}
-								onClick={() => tapDecade(y)}
+								onClick={() => tapDecade(d, y)}
 								className="group flex h-full flex-col items-stretch justify-end gap-1 rounded-lg px-0.5 pt-1 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 							>
 								<span className={`text-center text-[11px] tabular-nums ${on ? "text-amber-300" : "text-gray-500"} ${phone ? "hidden" : ""}`}>

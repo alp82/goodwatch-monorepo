@@ -1,10 +1,13 @@
 // PROTOTYPE - throwaway. The Discover lab shell: the sub-tab row, Find a filter, and the content area where the chosen
-// variant of each section renders (`pick(useLabChoice(), id).View`). Desktop: one row (sub-tabs, Find a filter on the
-// right) over a fixed 400 px content area. Phones: the sub-tabs sit in the sheet header, sections stack in its body.
+// variant of each section renders (`pick(useLabChoice(), id).View`). Desktop: one row (sub-tabs, Find a filter or, on
+// Search, Movies or shows on the right) over a fixed 400 px content area. Phones: the sub-tabs sit in the sheet
+// header, sections stack in its body.
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ComponentType, type ReactNode, useEffect, useRef } from "react"
 import { FilterGroups } from "~/ui/filter-bar"
+import { TYPE_LABELS } from "~/ui/filter-bar/labels"
+import { Segmented } from "~/ui/filter-bar/SheetControls"
 import type { ProtoDiscover } from "../kit"
 import { useLabChoice } from "./LabBar"
 import { pick } from "./registry"
@@ -139,6 +142,21 @@ function FindAll({ pieces, text, phone }: { pieces: Pieces; text: string; phone:
 	return <div className="h-full min-h-0 overflow-y-auto overscroll-contain px-7 py-5">{body}</div>
 }
 
+/** Movies or shows for the whole Discover state, on the Search tab (round 10: no longer on Mood). */
+export function SearchType({ d }: { d: ProtoDiscover }) {
+	const c = (o: string) => d.counts?.optionCounts.type?.[o] ?? null
+	return (
+		<div className="flex">
+			<Segmented
+				label="Movies or shows"
+				value={d.filters.state.type}
+				onChange={(type) => d.filters.set({ type })}
+				options={(["all", "movie", "show"] as const).map((id) => ({ id, label: id === "all" ? "Both" : TYPE_LABELS[id], count: c(id) }))}
+			/>
+		</div>
+	)
+}
+
 /** A sub-tab's label: the chosen variant's own label, else the shell's. */
 function SubLabel({ sub }: { sub: Sub }) {
 	return <>{pick(useLabChoice(), sub.id).label ?? sub.label}</>
@@ -228,6 +246,11 @@ export function TabPanel({
 		return (
 			<div>
 				{top}
+				{!canFind && (
+					<div className="mb-5">
+						<SearchType d={section.d} />
+					</div>
+				)}
 				{canFind && !own && (
 					<div className="mb-5">
 						<FindField value={find} onChange={onFind} />
@@ -236,7 +259,8 @@ export function TabPanel({
 				{body}
 			</div>
 		)
-	const field = canFind ? <FindField value={find} onChange={onFind} /> : undefined
+	// Mood and Watch: Find a filter on the right of the row; Search: Movies or shows.
+	const field = canFind ? <FindField value={find} onChange={onFind} /> : <SearchType d={section.d} />
 	return (
 		<div className="flex min-h-0 flex-col">
 			{own ? null : subs.length > 1 ? (

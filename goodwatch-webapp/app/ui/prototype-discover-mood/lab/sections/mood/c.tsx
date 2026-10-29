@@ -1,11 +1,10 @@
 // PROTOTYPE (Discover lab, mood c): mixes first. A guest's stand-in for My movies' taste groups: big picture cards of
 // ready combinations, each with its real count and its top title. Everything else (Moods, About, Style, Genre) folds
-// in the side column as compact chips, one open at a time, under Movies or shows.
+// in the side column as compact chips, one open at a time.
 import { ChevronDownIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
 import { useState } from "react"
 import type { ProtoDiscover } from "../../../kit"
-import { TypeControl } from "../../shell-parts"
 import type { SectionProps } from "../../types"
 import {
 	ArtTile,
@@ -18,7 +17,6 @@ import {
 	type Mixes,
 	type WorldArt,
 	PickRow,
-	TypeSwitch,
 	islandOfTag,
 	mixName,
 	useMixes,
@@ -138,14 +136,13 @@ export function MoodC({ d, phone }: SectionProps) {
 			<div className="flex flex-col gap-4">
 				<PickRow d={d} m={m} art={art} empty={empty} />
 				<MixCards x={x} art={art} cols="grid-cols-2" tile="h-[5.5rem]" />
-				<TypeControl d={d} />
 				<Shelf d={d} m={m} phone />
 			</div>
 		)
 	return (
 		<div className="flex h-full min-h-0">
 			<div className="flex min-w-0 flex-1 flex-col gap-3 px-6 py-4">
-				<PickRow d={d} m={m} art={art} empty={empty} right={<TypeSwitch d={d} />} />
+				<PickRow d={d} m={m} art={art} empty={empty} />
 				<MixCards x={x} art={art} cols="grid-cols-4" tile="h-[8.5rem]" />
 			</div>
 			<aside className="flex w-[420px] shrink-0 flex-col gap-4 border-l border-white/[0.06] px-5 py-4">

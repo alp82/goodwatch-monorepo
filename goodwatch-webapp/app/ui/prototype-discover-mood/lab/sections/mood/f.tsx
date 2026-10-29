@@ -7,7 +7,6 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useState } from "react"
 import { ChoiceArt } from "~/ui/watch-next/TasteShelf"
 import type { ProtoDiscover, Tag } from "../../../kit"
-import { TypeControl } from "../../shell-parts"
 import type { SectionProps } from "../../types"
 import {
 	ArtTile,
@@ -18,7 +17,6 @@ import {
 	type Moods,
 	STYLE_TAGS,
 	THEME_TAGS,
-	TypeSwitch,
 	type WorldArt,
 	clearAll,
 	genreOptions,
@@ -230,7 +228,6 @@ export function MoodF({ d, phone }: SectionProps) {
 				<TheCard d={d} m={m} slot={slot} setSlot={setSlot} phone />
 				{head}
 				<Picker d={d} m={m} art={art} slot={slot} phone />
-				<TypeControl d={d} />
 			</div>
 		)
 	return (
@@ -241,7 +238,6 @@ export function MoodF({ d, phone }: SectionProps) {
 			<div className="flex min-w-0 flex-1 flex-col gap-2">
 				<div className="flex items-center justify-between gap-4">
 					{head}
-					<TypeSwitch d={d} />
 				</div>
 				<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-1 [scrollbar-width:thin]">
 					<Picker d={d} m={m} art={art} slot={slot} phone={false} />

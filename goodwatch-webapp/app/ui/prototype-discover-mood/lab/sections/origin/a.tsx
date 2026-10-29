@@ -79,7 +79,11 @@ export function OriginA({ d, phone }: SectionProps) {
 					{!matches.length && <p className="py-1.5 text-[13px] text-gray-500">{all.loading ? "Loading countries…" : "No matching country."}</p>}
 				</div>
 			) : (
-				<div className={phone ? "space-y-5" : "grid min-h-0 flex-1 grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,0.85fr)] gap-7"}>
+				<div className={phone ? "space-y-5" : "grid min-h-0 flex-1 grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)_minmax(0,0.85fr)] gap-7"}>
+					<section className="flex min-h-0 flex-col">
+						<SubHead note={extra.length > MAX_EXTRA ? `${extra.length} more picked` : undefined}>Popular</SubHead>
+						<div className={`flex flex-wrap content-start gap-1.5 ${scroll}`}>{popular.map((c) => chip(c, countOf(c)))}</div>
+					</section>
 					<section className="flex min-h-0 flex-col">
 						<SubHead>Film industries</SubHead>
 						<div className={`grid grid-cols-2 gap-1 ${scroll}`}>
@@ -112,10 +116,6 @@ export function OriginA({ d, phone }: SectionProps) {
 								)
 							})}
 						</div>
-					</section>
-					<section className="flex min-h-0 flex-col">
-						<SubHead note={extra.length > MAX_EXTRA ? `${extra.length} more picked` : undefined}>Popular</SubHead>
-						<div className={`flex flex-wrap content-start gap-1.5 ${scroll}`}>{popular.map((c) => chip(c, countOf(c)))}</div>
 					</section>
 					<section className="flex min-h-0 flex-col">
 						<SubHead>Regions</SubHead>

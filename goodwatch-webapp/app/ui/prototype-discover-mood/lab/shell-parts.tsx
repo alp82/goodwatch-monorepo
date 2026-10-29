@@ -23,6 +23,7 @@ import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { goodwatchVibeIndex } from "~/utils/ratings"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 import { ProtoGrid, type ProtoDiscover, TAGS, type Tag, tagId, type useFilterPieces } from "../kit"
+import { mcUsers, setMcUsers } from "./sections/scores/mc-users"
 import type { SectionId } from "./types"
 
 export type Pieces = ReturnType<typeof useFilterPieces>
@@ -48,11 +49,12 @@ export interface Sub {
 
 export const TABS: Record<SegKey, Sub[]> = {
 	search: [
-		{ id: "titles", label: "Titles", slots: ["q", "similarTo"] },
+		// Movies or shows sits on the Search row (round 10); it counts with Titles.
+		{ id: "titles", label: "Titles", slots: ["q", "similarTo", "type"] },
 		{ id: "people", label: "Cast and crew", slots: ["people"] },
 		{ id: "taste", label: "Your taste", slots: ["loved", "disliked", "minMatch"] },
 	],
-	mood: [{ id: "mood", label: "Mood", slots: ["moods", "themes", "styles", "genres", "type"] }],
+	mood: [{ id: "mood", label: "Mood", slots: ["moods", "themes", "styles", "genres"] }],
 	watch: [
 		{ id: "services", label: "Services", slots: ["services", "notSeenYet"] },
 		{ id: "scores", label: "Scores", slots: ["minScore", "sourceScores", "scoreGap"] },
@@ -86,7 +88,9 @@ export const chipsOf = (pieces: Pieces, k: CardKey) => pieces.chips.filter((c) =
 
 /** How many values a sub-tab has set. */
 export function subCount(d: ProtoDiscover, pieces: Pieces, sub: Sub) {
-	return sub.slots.reduce(
+	// Scores a's lab-only Metacritic user score counts with Scores.
+	const extra = sub.id === "scores" && mcUsers() ? 1 : 0
+	return extra + sub.slots.reduce(
 		(n, slot) =>
 			n + (slot === "q" ? (d.q ? 1 : 0) : slot === "notSeenYet" ? (d.filters.state.notSeenYet ? 1 : 0) : chipsOf(pieces, slot).length),
 		0,
@@ -119,7 +123,9 @@ export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegV
 		: s.released !== "any"
 			? RELEASED_LABELS[s.released]
 			: null
-	const searchOther = labels("similarTo", "people", "loved", "disliked", "minMatch")
+	const searchOther = [...labels("similarTo", "people", "loved", "disliked", "minMatch"), ...(s.type !== "all" ? [TYPE_LABELS[s.type]] : [])]
+	// A segment's badge is the sum of its sub-tabs' badges.
+	const badge = (k: SegKey) => subsFor(k, pieces).reduce((n, sub) => n + subCount(d, pieces, sub), 0) || undefined
 	const streaming = s.onMyServices
 		? "My services"
 		: s.services?.length
@@ -129,16 +135,16 @@ export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegV
 				: null
 	return {
 		search: d.q
-			? { value: d.q, placeholder: SEARCH_PLACEHOLDER, big: true, badge: searchOther.length || undefined }
-			: { value: headPlus(searchOther), placeholder: SEARCH_PLACEHOLDER, big: false },
+			? { value: d.q, placeholder: SEARCH_PLACEHOLDER, big: true, badge: badge("search") }
+			: { value: headPlus(searchOther), placeholder: SEARCH_PLACEHOLDER, big: false, badge: badge("search") },
 		mood: {
 			value: join([
 				headPlus(moods.map((t) => t.name)),
 				headPlus(labels("themes", "styles")),
-				s.type !== "all" && TYPE_LABELS[s.type],
 				headPlus(labels("genres")),
 			]),
 			placeholder: "Any mood, any genre",
+			badge: badge("mood"),
 			lead: moods.length ? <HueDots tags={moods} size={10} /> : null,
 		},
 		watch: {
@@ -148,11 +154,12 @@ export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegV
 				headPlus(labels("productionCountries")),
 				headPlus(labels("runtime")),
 				s.minScore > 0 && `Score ${s.minScore}+`,
-				headPlus(labels("sourceScores", "scoreGap")),
+				headPlus([...labels("sourceScores"), ...(mcUsers() ? [`User score ${(mcUsers() / 10).toFixed(1)}+`] : []), ...labels("scoreGap")]),
 				released,
 				headPlus(labels("ageLimit")),
 			]),
 			placeholder: "Everywhere, seen too",
+			badge: badge("watch"),
 			lead: chosen.length ? <ServiceStack providers={chosen} on size={16} /> : null,
 		},
 	}
@@ -331,7 +338,7 @@ export function PhoneBar({
 							onClick={() => onPick(k)}
 							className={`flex h-[52px] min-w-0 cursor-pointer flex-col justify-center px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${i ? "border-l border-white/[0.08]" : ""}`}
 						>
-							<span className="text-[10px] font-bold tracking-[0.06em] text-gray-400 uppercase">{SEG_LABEL[k]}</span>
+							<SegLabel k={k} badge={s.badge} />
 							<span className="flex min-w-0 items-center gap-1.5">
 								{s.lead}
 								<span className={`truncate text-[13px] ${s.value ? "font-semibold text-white" : "text-gray-500"}`}>
@@ -427,6 +434,7 @@ export function useClearAll(d: ProtoDiscover) {
 		}
 	}, [pending, d.q, d.filters])
 	return () => {
+		setMcUsers(0)
 		if (d.q !== null) {
 			setPending(true)
 			d.setQ(null)

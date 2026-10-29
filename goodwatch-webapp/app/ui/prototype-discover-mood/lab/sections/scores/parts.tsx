@@ -116,7 +116,7 @@ export function SourceLogo({ s, size = 28 }: { s: Source; size?: number }) {
 			style={{ width: size, height: size }}
 		>
 			<img src={assetUrl(logo)} alt={s.site} className="h-[62%] w-[62%] object-contain" />
-			{s.key === "rtAudience" && (
+			{s.who === "Audience" && (
 				<span className="absolute -right-1 -bottom-1 rounded bg-orange-400 px-[3px] text-[8px] font-black leading-[11px] text-gray-950">A</span>
 			)}
 		</span>
@@ -140,7 +140,8 @@ export function SourceRow({ d, s, dense = false }: { d: ProtoDiscover; s: Source
 	)
 }
 
-export function SourceSteps({ d, s, value }: { d: ProtoDiscover; s: Source; value: number }) {
+/** `onPick` replaces the real filter (a lab-only source: no counts). */
+export function SourceSteps({ d, s, value, onPick }: { d: ProtoDiscover; s: Source; value: number; onPick?: (v: number) => void }) {
 	return (
 		<div
 			role="radiogroup"
@@ -151,7 +152,7 @@ export function SourceSteps({ d, s, value }: { d: ProtoDiscover; s: Source; valu
 			{[0, ...s.steps].map((v) => {
 				const on = v === value
 				const lit = value !== 0 && v >= value
-				const n = sourceCount(d, s.key, v)
+				const n = onPick ? null : sourceCount(d, s.key, v)
 				return (
 					<button
 						key={v}
@@ -160,7 +161,7 @@ export function SourceSteps({ d, s, value }: { d: ProtoDiscover; s: Source; valu
 						role="radio"
 						aria-checked={on}
 						title={v && n != null ? `${compactCount(n)} titles` : undefined}
-						onClick={() => setSource(d, s.key, v)}
+						onClick={() => (onPick ? onPick(v) : setSource(d, s.key, v))}
 						className={`h-7 rounded-md text-[12px] tabular-nums cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
 							on ? "font-bold" : ""
 						} ${lit ? "" : on ? "bg-white font-semibold text-gray-950" : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-gray-200"}`}

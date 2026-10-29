@@ -4,11 +4,15 @@
 import type { SectionProps } from "../../types"
 import { ClearButton, GapChoices, GapLegend, GoodWatchMark, Head, SOURCES, ScoreHero, type Source, SourceLogo, SourceSteps, sourcesSet, sourceValue } from "./parts"
 import type { ProtoDiscover } from "../../../kit"
+import { setMcUsers, useMcUsers } from "./mc-users"
 
 /** One scale for every source, on the 0-100 the filter stores: IMDb 7.0 is 70, like Tomatometer 70% and Metascore 70. */
 const SCALE = [60, 70, 80, 90]
 
-function ScaleRow({ d, s, dense }: { d: ProtoDiscover; s: Source; dense: boolean }) {
+/** Metacritic's user score (0-10). Lab only: the key is a stand-in, the row runs on mc-users.ts. */
+const MC_USERS: Source = { key: "metacritic", name: "User score", who: "Audience", site: "Metacritic", hex: "#facc15", steps: SCALE, fmt: (v) => (v / 10).toFixed(1) }
+
+function ScaleRow({ d, s, dense, value, onPick }: { d: ProtoDiscover; s: Source; dense: boolean; value?: number; onPick?: (v: number) => void }) {
 	return (
 		<div className={`flex items-center gap-3 ${dense ? "h-10" : "h-11"}`}>
 			<SourceLogo s={s} size={dense ? 26 : 28} />
@@ -18,14 +22,15 @@ function ScaleRow({ d, s, dense }: { d: ProtoDiscover; s: Source; dense: boolean
 					{s.site === "IMDb" ? "Audience" : `${s.site === "Rotten Tomatoes" ? "RT" : s.site} ${s.who.toLowerCase()}`}
 				</span>
 			</span>
-			<SourceSteps d={d} s={{ ...s, steps: SCALE }} value={sourceValue(d, s.key)} />
+			<SourceSteps d={d} s={{ ...s, steps: SCALE }} value={value ?? sourceValue(d, s.key)} onPick={onPick} />
 		</div>
 	)
 }
 
 export function ScoresA({ d, phone }: SectionProps) {
 	const minScore = d.filters.state.minScore
-	const sources = sourcesSet(d)
+	const mc = useMcUsers()
+	const sources = sourcesSet(d) + (mc ? 1 : 0)
 	const score = (
 		<section>
 			<Head
@@ -52,7 +57,12 @@ export function ScoresA({ d, phone }: SectionProps) {
 				note={sources ? `${sources} set · each must pass` : "Each must pass"}
 				right={
 					sources ? (
-<ClearButton onClick={() => d.filters.set({ sourceScores: undefined })} />
+						<ClearButton
+							onClick={() => {
+								setMcUsers(0)
+								d.filters.set({ sourceScores: undefined })
+							}}
+						/>
 					) : undefined
 				}
 			>
@@ -62,6 +72,7 @@ export function ScoresA({ d, phone }: SectionProps) {
 				{SOURCES.map((s) => (
 					<ScaleRow key={s.key} d={d} s={s} dense={phone} />
 				))}
+				<ScaleRow d={d} s={MC_USERS} dense={phone} value={mc} onPick={setMcUsers} />
 			</div>
 		</section>
 	)

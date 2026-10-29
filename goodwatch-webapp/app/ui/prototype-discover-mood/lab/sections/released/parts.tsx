@@ -56,19 +56,30 @@ export const fmtYear = (y: number) => (y <= YEAR_MIN ? "Any year" : y >= yearMax
 const rangeParam = (r: FilterRange | undefined) =>
 	r && (r.min !== undefined || r.max !== undefined) ? `${r.min ?? ""}-${r.max ?? ""}` : null
 
+/** One range's read: its count and the first titles with a picture (Discover's order), for tiles that show the era. */
+export interface RangeRead {
+	total: number | null
+	backdrop: string | null
+	poster: string | null
+	top: string | null
+}
+
+const NO_READ: RangeRead = { total: null, backdrop: null, poster: null, top: null }
+
 /**
  * Real counts for ranges of one kind (years or runtime): what each range would leave with everything else as it is.
- * One results read per range, cached by the rest of the state. Null while loading, and always while a text search
- * is on (its ranked list isn't part of the query here, so the counts wouldn't be honest).
+ * One results read per range, cached by the rest of the state (shared by every variant). Null while loading, and
+ * always while a text search is on (its ranked list isn't part of the query here, so the counts wouldn't be honest).
+ * A null range reads the list without this kind's filter.
  */
-export function useRangeCounts(d: ProtoDiscover, name: "years" | "runtime", ranges: FilterRange[]): (number | null)[] {
+export function useRangeReads(d: ProtoDiscover, name: "years" | "runtime", ranges: (FilterRange | null)[]): RangeRead[] {
 	const base = new URLSearchParams(d.filters.query)
 	for (const p of name === "years" ? ["years", "released", "minYear", "maxYear"] : ["runtime", "minRuntime", "maxRuntime"]) base.delete(p)
 	base.delete("page")
 	const baseQuery = base.toString()
-	const keys = ranges.map(rangeParam)
-	const q = useQuery<(number | null)[]>({
-		queryKey: ["lab-range-counts", name, baseQuery, keys.join("|")],
+	const keys = ranges.map((r) => rangeParam(r ?? undefined))
+	const q = useQuery<RangeRead[]>({
+		queryKey: ["lab-range-reads", name, baseQuery, keys.join("|")],
 		enabled: d.q === null,
 		staleTime: 5 * 60_000,
 		placeholderData: (previous) => previous,
@@ -79,15 +90,32 @@ export function useRangeCounts(d: ProtoDiscover, name: "years" | "runtime", rang
 					if (k) p.set(name, k)
 					p.set("page", "1")
 					const r = await fetch(`/api/discover/results?${p}`, { signal })
-					if (!r.ok) return null
-					const j = (await r.json()) as { total?: number }
-					return typeof j.total === "number" ? j.total : null
+					if (!r.ok) return NO_READ
+					const j = (await r.json()) as { total?: number; cards?: { title: string; backdrop_path: string | null; poster_path: string | null }[] }
+					const cards = j.cards ?? []
+					const b = cards.find((c) => c.backdrop_path)
+					return {
+						total: typeof j.total === "number" ? j.total : null,
+						backdrop: b?.backdrop_path ?? null,
+						poster: cards.find((c) => c.poster_path)?.poster_path ?? null,
+						top: b?.title ?? cards[0]?.title ?? null,
+					}
 				}),
 			),
 	})
-	if (d.q !== null) return ranges.map(() => null)
-	return q.data ?? ranges.map(() => null)
+	if (d.q !== null || !q.data || q.data.length !== ranges.length) return ranges.map(() => NO_READ)
+	return q.data
 }
+
+export function useRangeCounts(d: ProtoDiscover, name: "years" | "runtime", ranges: FilterRange[]): (number | null)[] {
+	return useRangeReads(d, name, ranges).map((r) => r.total)
+}
+
+/** A year range as the years filter writes it, open ends left out. */
+export const yearsFilter = ([lo, hi]: [number, number]): FilterRange => ({
+	...(lo > YEAR_MIN ? { min: lo } : {}),
+	...(hi < yearMax() ? { max: hi } : {}),
+})
 
 /** A big choice tile: label, a quiet second line, the count it would leave. White when on. */
 export function Tile({

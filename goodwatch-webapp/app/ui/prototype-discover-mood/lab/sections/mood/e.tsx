@@ -2,15 +2,13 @@
 // built from the current state: with nothing picked they are ready mixes (a member's lean on their taste); after a
 // pick every card is "your picks + one more", with its real count, its share of the list and its top title's picture.
 // Tapping a card adds that one choice, and the cards narrow again. When few narrowing steps are left, widening steps
-// (without a pick, or one more of a picked group) fill the row and the list's top posters take the second row; at a
-// dead end, more ways back. Moods, About, Style, Genre fold in the side column.
+// (without a pick, or one more of a picked group) follow, then ready mixes. Moods, About, Style, Genre fold in the
+// side column. Round 10: no posters; the picks sit on the top row left of Find a filter (ownFind).
 import { motion } from "framer-motion"
 import { type ProtoDiscover, TAGS, type Tag, tagId } from "../../../kit"
-import { TypeControl } from "../../shell-parts"
 import type { SectionProps, Viewer } from "../../types"
 import { FoldShelf, nextTags } from "./fit"
-import { ArtTile, MIXES, MOOD_CHOICES, type Mix, type Moods, PickRow, TypeSwitch, type WorldArt, islandOfTag, mixName, tagName, useMixes, useMoods, useWorldArt } from "./parts"
-import { Posters } from "./posters"
+import { ArtTile, MIXES, MOOD_CHOICES, type Mix, type Moods, PickRow, type WorldArt, islandOfTag, mixName, tagName, useMixes, useMoods, useWorldArt } from "./parts"
 
 const findTag = (id: string): Tag => {
 	const [group, key] = id.split(":")
@@ -45,14 +43,14 @@ interface Card {
 
 const ready = (viewer: Viewer) => (viewer === "member" ? MEMBER_MIXES : MIXES).map((mix): Card => ({ kind: "mix", mix, tag: null }))
 
-/** The cards and whether posters take the room after the first `lead` cards. Never fewer than `lead` cards. */
-function useCards(d: ProtoDiscover, m: Moods, viewer: Viewer, all: number, lead: number): { cards: Card[]; posters: boolean } {
+/** The cards: narrowing steps first, then widening ones, then ready mixes, always `all` of them. */
+function useCards(d: ProtoDiscover, m: Moods, viewer: Viewer, all: number): Card[] {
 	const narrowing = d.picked.length > 0 || m.used > 0
-	if (!narrowing) return { cards: ready(viewer).slice(0, all), posters: false }
+	if (!narrowing) return ready(viewer).slice(0, all)
 	const ids = d.picked.map(tagId)
 	const step = (kind: Card["kind"], t: Tag, tags: Tag[]): Card => ({ kind, tag: t, mix: { id: `${kind}:${tags.map(tagId).join("+")}`, tags } })
 	const add = nextTags(d, m, all).map((t) => step("add", t, [...d.picked, t]))
-	if (add.length >= all) return { cards: add, posters: false }
+	if (add.length >= all) return add
 	const drop = d.picked.length > 1 ? d.picked.map((t) => step("drop", t, d.picked.filter((p) => p !== t))) : []
 	const groupFull = (g: Tag["group"]) => (g === "moods" ? m.full : d.picked.filter((p) => p.group === g).length >= 3)
 	const or = TAGS.filter(
@@ -60,25 +58,22 @@ function useCards(d: ProtoDiscover, m: Moods, viewer: Viewer, all: number, lead:
 	)
 		.sort((a, b) => (d.countFor(b) ?? 0) - (d.countFor(a) ?? 0))
 		.map((t) => step("or", t, [...d.picked, t]))
-	const steps = [...add, ...drop, ...or]
-	// With titles left, the second row shows them; at a dead end it shows more ways back (or ready mixes).
-	const posters = d.cards.some((c) => c.poster_path)
-	const cards = posters ? steps.slice(0, lead) : [...steps, ...ready(viewer)].slice(0, all)
-	return { cards: cards.length < lead ? [...cards, ...ready(viewer)].slice(0, lead) : cards, posters }
+	// Ready mixes fill what's left, so the row is always full.
+	const seen = new Set<string>()
+	return [...add, ...drop, ...or, ...ready(viewer)].filter((c) => !seen.has(c.mix.id) && seen.add(c.mix.id)).slice(0, all)
 }
 
 const MOOD_TAG_KEYS = new Set(MOOD_CHOICES.flatMap((c) => (c.tag ? [c.tag.key] : [])))
 
-function Cards({ d, m, art, viewer, cols, tile, all, lead, posterCols, slots }: { d: ProtoDiscover; m: Moods; art: WorldArt; viewer: Viewer; cols: string; tile: string; all: number; lead: number; posterCols: string; slots: number }) {
-	const { cards, posters } = useCards(d, m, viewer, all, lead)
+function Cards({ d, m, art, viewer, cols, tile, all }: { d: ProtoDiscover; m: Moods; art: WorldArt; viewer: Viewer; cols: string; tile: string; all: number }) {
+	const cards = useCards(d, m, viewer, all)
 	const x = useMixes(
 		d,
 		cards.map((c) => c.mix),
 	)
 	const total = d.total
 	return (
-		<>
-			<div className={`grid gap-2 ${cols}`}>
+		<div className={`grid gap-2 ${cols}`}>
 				{cards.map((card, i) => {
 					const c = x.count(i)
 					const t = card.tag
@@ -113,13 +108,11 @@ function Cards({ d, m, art, viewer, cols, tile, all, lead, posterCols, slots }: 
 						</motion.div>
 					)
 				})}
-			</div>
-			{posters && <Posters cards={d.cards} slots={slots} className={posterCols} busy={d.loading} />}
-		</>
+		</div>
 	)
 }
 
-export function MoodE({ d, phone, viewer }: SectionProps) {
+export function MoodE({ d, phone, viewer, find }: SectionProps) {
 	const m = useMoods(d)
 	const art = useWorldArt()
 	const narrowing = d.picked.length > 0 || m.used > 0
@@ -128,25 +121,37 @@ export function MoodE({ d, phone, viewer }: SectionProps) {
 		return (
 			<div className="flex flex-col gap-4">
 				<PickRow d={d} m={m} art={art} empty={empty} />
-				{narrowing && nextTags(d, m, 1).length > 0 && <span className="-mb-2 text-sm font-semibold text-gray-300">Narrow it</span>}
-				<div className="flex flex-col gap-2">
-					<Cards d={d} m={m} art={art} viewer={viewer} cols="grid-cols-2" tile="h-[5.5rem]" all={6} lead={4} posterCols="grid-cols-5" slots={5} />
-				</div>
-				<TypeControl d={d} />
-				<FoldShelf d={d} m={m} phone first={null} />
+				{find?.field}
+				{find?.results ?? (
+					<>
+						{narrowing && nextTags(d, m, 1).length > 0 && <span className="-mb-2 text-sm font-semibold text-gray-300">Narrow it</span>}
+						<Cards d={d} m={m} art={art} viewer={viewer} cols="grid-cols-2" tile="h-[5.5rem]" all={6} />
+						<FoldShelf d={d} m={m} phone first={null} />
+					</>
+				)}
 			</div>
 		)
 	return (
-		<div className="flex h-full min-h-0">
-			<div className="flex min-w-0 flex-1 flex-col gap-3 px-6 py-4">
-				<PickRow d={d} m={m} art={art} empty={empty} right={<TypeSwitch d={d} />} />
-				<div className="flex flex-col gap-2">
-					<Cards d={d} m={m} art={art} viewer={viewer} cols="grid-cols-4" tile="h-[8.25rem]" all={8} lead={4} posterCols="grid-cols-9" slots={9} />
+		<div className="flex h-full min-h-0 flex-col">
+			{/* The shell's row: the picks, then Find a filter on the right. */}
+			<div className="flex h-12 shrink-0 items-center gap-4 border-b border-white/[0.07] px-6">
+				<div className="min-w-0 flex-1">
+					<PickRow d={d} m={m} art={art} empty={empty} />
 				</div>
+				<div className="w-[min(320px,34%)] shrink-0">{find?.field}</div>
 			</div>
-			<aside className="flex w-[420px] shrink-0 flex-col gap-4 border-l border-white/[0.06] px-5 py-4">
-				<FoldShelf d={d} m={m} phone={false} />
-			</aside>
+			{find?.results ? (
+				<div className="min-h-0 flex-1">{find.results}</div>
+			) : (
+				<div className="flex min-h-0 flex-1">
+					<div className="min-w-0 flex-1 px-6 py-4">
+						<Cards d={d} m={m} art={art} viewer={viewer} cols="grid-cols-4" tile="h-[10.75rem]" all={8} />
+					</div>
+					<aside className="flex w-[420px] shrink-0 flex-col gap-4 border-l border-white/[0.06] px-5 py-4">
+						<FoldShelf d={d} m={m} phone={false} />
+					</aside>
+				</div>
+			)}
 		</div>
 	)
 }

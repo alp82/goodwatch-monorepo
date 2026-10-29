@@ -1,11 +1,10 @@
 // PROTOTYPE (Discover lab, mood b): Explorer-style islands. Mood, About and Style as three small maps; each island sits
 // where the Explorer puts it (similar islands close together) and is sized by its Explorer island, so nothing moves
-// while filters change. The line under a name is Discover's count. Genre and Movies or shows in a side column.
+// while filters change. The line under a name is Discover's count. Genre in a side column.
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
 import { useMemo } from "react"
 import type { ProtoDiscover, Tag } from "../../../kit"
-import { TypeControl } from "../../shell-parts"
 import type { SectionProps } from "../../types"
 import {
 	GenreChips,
@@ -178,7 +177,6 @@ export function MoodB({ d, phone }: SectionProps) {
 		return (
 			<div className="flex flex-col gap-4">
 				<PickRow d={d} m={m} art={art} />
-				<TypeControl d={d} />
 				<Region label="Mood" isles={moods} art={art} w={358} h={300} rMin={30} rMax={44} />
 				<Region label="About" isles={themes} art={art} w={358} h={290} rMin={24} rMax={36} />
 				<Region label="Style" isles={styles} art={art} w={358} h={240} rMin={24} rMax={36} />
@@ -199,7 +197,6 @@ export function MoodB({ d, phone }: SectionProps) {
 				</div>
 			</div>
 			<aside className="flex w-[320px] shrink-0 flex-col gap-4 overflow-y-auto overscroll-contain border-l border-white/[0.06] px-5 py-4">
-				<TypeControl d={d} />
 				<div>
 					<h4 className="mb-2.5 text-[14px] font-semibold text-gray-100">Genre</h4>
 					<GenreChips d={d} limit={14} />

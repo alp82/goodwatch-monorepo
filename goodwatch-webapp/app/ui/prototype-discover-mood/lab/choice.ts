@@ -1,5 +1,5 @@
 // PROTOTYPE (Discover lab): the sections and one chosen variant per section, kept in the URL:
-// `/prototype/discover-mood?variant=lab&mood=b&scores=c&sec=mood`. A missing section takes DEFAULTS, else its first
+// `/prototype/discover-mood?variant=lab&v-mood=b&v-scores=c&sec=mood`. A missing section takes DEFAULTS, else its first
 // variant. `sec` is the section the lab bar's arrows cycle.
 import type { SectionId, Viewer } from "./types"
 
@@ -33,10 +33,13 @@ export const DEFAULTS: Partial<Record<SectionId, string>> = {
 
 export type Choice = Partial<Record<SectionId, string>> & { sec: SectionId; as: Viewer }
 
+/** Section keys carry a prefix: Discover's own filters also use `released`, `services` and `people`. */
+const key = (id: SectionId) => `v-${id}`
+
 export function choiceFromParams(params: URLSearchParams): Choice {
 	const choice: Choice = { sec: "titles", as: params.get("as") === "member" ? "member" : "guest" }
 	for (const s of SECTIONS) {
-		const v = params.get(s.id)
+		const v = params.get(key(s.id))
 		if (v) choice[s.id] = v
 	}
 	const sec = params.get("sec") as SectionId | null
@@ -50,7 +53,7 @@ export function paramsFromChoice(choice: Choice): URLSearchParams {
 	if (choice.as === "member") p.set("as", "member")
 	for (const s of SECTIONS) {
 		const v = choice[s.id]
-		if (v) p.set(s.id, v)
+		if (v) p.set(key(s.id), v)
 	}
 	p.set("sec", choice.sec)
 	return p

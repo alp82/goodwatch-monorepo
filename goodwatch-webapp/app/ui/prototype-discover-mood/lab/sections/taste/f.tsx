@@ -1,7 +1,7 @@
 // PROTOTYPE - throwaway. Your taste f, "Taste in this list": bars, like the Mood tab's d. Your taste groups as rows
 // with their loved posters and how much of this list sits in each (plus the titles in none of them), Taste match as
 // rows from 90%+ down to Outside your usual with each step's share, and the order and your lists as switches.
-// A guest sees the rows faint, with one Sign up.
+// A guest sees the rows faint, with one Sign up; Order and Your lists are locked too.
 import { BarsArrowDownIcon, CheckIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
@@ -195,7 +195,7 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 				</div>
 			</section>
 			<section>
-				<BlockHead>Your lists</BlockHead>
+				<BlockHead locked={locked}>Your lists</BlockHead>
 				<div className="flex flex-col gap-2">
 					{(
 						[
@@ -210,6 +210,7 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 							tone="blue"
 							on={taste.list.value === id}
 							onChange={(on) => taste.list.set(on ? id : "all")}
+							locked={locked}
 							icon={<ScopeIcon id={id} className="h-4 w-4 shrink-0" />}
 						/>
 					))}

@@ -362,3 +362,35 @@ and empty dashed pills don't make sense without content. "taste: f is best" (now
   d, g and people a-e show nothing until something is picked.
 - Footer: with a search the Show button reads "Show top 100 matches" or "Show N matches" (`lab/show-button.tsx`);
   without one it is the real Show N titles.
+
+## Round 10 (2026-10-29)
+
+Owner on round 9, with titles g, people c, taste f, mood e, scores a, origin a open:
+
+- Taste f: Your lists is locked for guests like Order (lock on the heading, switches inert).
+- Badges: a segment's badge (bar and phone tabs) is the sum of its sub-tabs' badges, on Search, Mood and Watch. Before,
+  Search's badge counted only what wasn't the query (Cast and crew's picked person showed 1, the query 0), and Mood and
+  Watch had none. Each sub-tab counts its own slots (TABS).
+- Mood: no poster strips (posters.tsx deleted). e's cards always fill both rows: narrowing steps, then "Without X" and
+  "or X", then ready mixes. e uses `ownFind`: the picks, the count and Clear sit on the top row left of Find a filter.
+- Movies or shows left every mood variant (a-h; i, j, k had none). It sits on the right of the Search tab's sub-tab row
+  (phones: under the search field), still the whole Discover state's `type`, and counts with Titles (slot `type`).
+- Scores a: a "User score" row (Metacritic audience, 6.0+ to 9.0+ on the shared scale, audience marker). Lab only
+  (`sections/scores/mc-users.ts`): Discover's sourceScores has no key for it (the data is metacritic_user_score_* in
+  discover.server.ts), so it shows in the Watch summary and the Scores badge but doesn't narrow the list.
+- Made in a: Popular | Film industries | Regions.
+
+## Round 10 released (2026-10-29)
+
+Owner on d: "usable, but lets make this look nicer, with some sort of variety and nice design we have in other
+sections". d's function stays in both (New presets, decades, older, slider + From / To); shared looks in
+`released/art.tsx`, one read per tile through `parts.tsx` `useRangeReads` (count + the top title's backdrop and poster
+from page 1 of `/api/discover/results`, same query key for c, d, e, f) plus one any-year read for share bars.
+
+| Key | Name | Idea |
+|---|---|---|
+| e | Era wall, pictures | Three sizes: New as four big picture tiles (2x2), decades as six picture tiles (mood's ArtTile), older as small picture chips. Each era has its own tint, its top title's backdrop and "Like <title>", count and a share bar of all years. A slider range no tile matches fades the tiles outside it. Slider and fields on the right. |
+| f | Timeline with posters | Every decade since the 1920s as one column, as wide as its years, so the slider under it lines up. Each column: the decade's top poster, a tinted bar (square-root scaled, real count on top), tap = b's pick / widen / narrow. New as tinted tiles with share bars, Before 2000 / 1950 as picture chips, From / To at the right. |
+
+Known lab bug: the lab's `released=<variant>` URL param is also the real filter's `released` param, so any year pick
+rewrites it and the lab falls back to the default variant (d). Needs a different lab param name in `choice.ts`.

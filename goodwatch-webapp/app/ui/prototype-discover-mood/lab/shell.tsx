@@ -13,6 +13,7 @@ import { HiddenMeter } from "~/ui/filter-bar/SubBar"
 import { useLabChoice } from "./LabBar"
 import { pick, pick as variantOf } from "./registry"
 import { ResultsProvider, useShown } from "./results-view"
+import { useMcUsers } from "./sections/scores/mc-users"
 import { ShowButton } from "./show-button"
 import { type ProtoDiscover, useFilterPieces } from "../kit"
 import {
@@ -55,7 +56,8 @@ function Footer({ d: raw, pieces, onDone }: { d: ProtoDiscover; pieces: Pieces; 
 	// The counts are the shown list's (a mood variant may replace Discover's).
 	const d = useShown(raw)
 	const clearAll = useClearAll(d)
-	const n = pieces.secondaryCount + (d.q ? 1 : 0)
+	const mc = useMcUsers()
+	const n = pieces.secondaryCount + (d.q ? 1 : 0) + (mc ? 1 : 0)
 	return (
 		<div className="flex shrink-0 items-center gap-4 border-t border-white/[0.06] bg-gray-950/85 px-5 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:pb-3">
 			<button
@@ -108,6 +110,7 @@ function useTabState() {
 // Desktop
 
 function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces; onOpenChange: (o: boolean) => void }) {
+	useMcUsers() // the bar and badges read the lab-only Metacritic user score
 	const values = segValues(d, pieces)
 	const t = useTabState()
 	const { seg } = t
@@ -276,6 +279,7 @@ function Tabs({ d, pieces, seg, onPick }: { d: ProtoDiscover; pieces: Pieces; se
 }
 
 function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
+	useMcUsers()
 	const values = segValues(d, pieces)
 	const t = useTabState()
 	const [last, setLast] = useState<SegKey>("mood")

@@ -18,7 +18,7 @@ export const VARIANTS: SectionVariant[] = [
 	{ key: "b", name: "Island maps", View: MoodB },
 	{ key: "c", name: "Mixes first", View: MoodC },
 	{ key: "d", name: "Mixer with recipe", View: MoodD },
-	{ key: "e", name: "Mixes follow your picks", View: MoodE },
+	{ key: "e", name: "Mixes follow your picks", View: MoodE, ownFind: true },
 	{ key: "f", name: "Build your own card", View: MoodF },
 	{ key: "g", name: "Columns, best fit", View: MoodG },
 	{ key: "h", name: "One ranked list", View: MoodH },

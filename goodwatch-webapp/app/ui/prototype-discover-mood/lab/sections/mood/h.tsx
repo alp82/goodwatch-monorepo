@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { useState } from "react"
 import type { SectionProps } from "../../types"
 import { FIT_KIND_LABEL, type FitKind, type FitRow, LeaveBar, RecipeLine, byFit, fitRows } from "./fit"
-import { TypeSwitch, useMoods } from "./parts"
+import { useMoods } from "./parts"
 
 type Filter = "all" | FitKind
 const FILTERS: Filter[] = ["all", "moods", "themes", "styles", "genres"]
@@ -83,9 +83,6 @@ export function MoodH({ d, phone }: SectionProps) {
 		return (
 			<div className="flex flex-col gap-3">
 				<RecipeLine d={d} m={m} size="text-[17px]" />
-				<div className="flex">
-					<TypeSwitch d={d} />
-				</div>
 				<KindPills value={filter} onChange={setFilter} rows={all} />
 				<div className="flex flex-col gap-0.5">{more ? items : items.slice(0, PHONE_FIRST)}</div>
 				{items.length > PHONE_FIRST && (
@@ -105,7 +102,6 @@ export function MoodH({ d, phone }: SectionProps) {
 				<div className="min-w-0 flex-1">
 					<RecipeLine d={d} m={m} />
 				</div>
-				<TypeSwitch d={d} />
 			</div>
 			<KindPills value={filter} onChange={setFilter} rows={all} />
 			<div className="grid min-h-0 flex-1 auto-cols-[minmax(13rem,1fr)] grid-flow-col grid-rows-[repeat(10,26px)] content-start gap-x-4 gap-y-0.5 overflow-x-auto overscroll-contain [scrollbar-width:thin]">

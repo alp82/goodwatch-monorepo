@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import type { ReactNode } from "react"
 import type { ProtoDiscover, Tag } from "../../../kit"
 import type { SectionProps } from "../../types"
-import { MOOD_CHOICES, type Moods, PickCount, STYLE_TAGS, THEME_TAGS, type Tap, TypeSwitch, clearAll, genreOptions, tagName, tagTap, useMoods } from "./parts"
+import { MOOD_CHOICES, type Moods, PickCount, STYLE_TAGS, THEME_TAGS, type Tap, clearAll, genreOptions, tagName, tagTap, useMoods } from "./parts"
 
 interface Row {
 	id: string
@@ -217,9 +217,6 @@ export function MoodD({ d, phone }: SectionProps) {
 		return (
 			<div className="flex flex-col gap-4">
 				<Recipe d={d} m={m} />
-				<div className="flex">
-					<TypeSwitch d={d} />
-				</div>
 				{channels}
 			</div>
 		)
@@ -229,7 +226,6 @@ export function MoodD({ d, phone }: SectionProps) {
 				<div className="min-w-0 flex-1">
 					<Recipe d={d} m={m} />
 				</div>
-				<TypeSwitch d={d} />
 			</div>
 			<div className="flex min-h-0 flex-1 gap-5">{channels}</div>
 		</div>
