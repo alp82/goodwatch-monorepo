@@ -55,7 +55,6 @@ export const meta: MetaFunction = ({ data, params }) => {
 interface PageResult {
 	path: string
 	label: string
-	discoverParams: DiscoverParams
 	results: GetDiscoverResult
 }
 
@@ -98,7 +97,11 @@ const canonicalLoader: LoaderFunction = async ({
 			const results = await getDiscoverResults(discoverParams)
 			// MovieTvList renders eight cards and has no pagination or expansion.
 			// Keep the complete discovery result in its shared cache, not in this document.
-			return { ...pageData, discoverParams, results: results.slice(0, 8) }
+			return {
+				path: pageData.path,
+				label: pageData.label,
+				results: results.slice(0, 8),
+			}
 		}),
 	)
 
@@ -113,14 +116,6 @@ const canonicalLoader: LoaderFunction = async ({
 export default function MoviesCategory_index() {
 	const { type, category, path, pageResults } = useLoaderData<LoaderData>()
 	const copy = exploreCategoryCopy(type, category)
-	const discoverType = type === "shows" ? "show" : type
-
-	const pageItems = Object.values<PageData>(mainHierarchy[category as keyof typeof mainHierarchy]).filter(
-		(pageData) => {
-			return ["all", type].includes(pageData.type)
-		},
-	)
-
 	return (
 		<>
 			<Breadcrumbs path={path} />
