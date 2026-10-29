@@ -412,3 +412,20 @@ test("a dead node is read only once across subsequent title batches in the same 
 	assert.equal(fixture.calls.length, 1)
 	assert.equal(redis.writes.length, 0)
 })
+
+
+test("a missing category page stays a thrown 404 Response through catalog presentation and read health", async () => {
+	const { requireCategoryPage } = await import("./category-page.server.ts")
+	for (const agent of ["Googlebot", "Mozilla/5.0"]) {
+		const load = presentCatalogLoader(async () => {
+			requireCategoryPage(2, [])
+			return { results: [] }
+		}, { live: true })
+		await assert.rejects(
+			() => load({ request: new Request("https://goodwatch.test/movies/moods/scary?page=2", {
+				headers: { "User-Agent": agent },
+			}) }),
+			(error) => error instanceof Response && error.status === 404 && error.statusText === "",
+		)
+	}
+})

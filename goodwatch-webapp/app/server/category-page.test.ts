@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { requireCategoryPage } from "./category-page.server.ts"
+import "./title-filter/test-alias.ts"
+const { requireCategoryPage } = await import("./category-page.server.ts")
 import {
 	markFailedMediaResult,
 	noteMediaReadFailure,
@@ -27,4 +28,9 @@ test("failed reads never turn an empty category page into a missing page", async
 		noteMediaReadFailure()
 		assert.doesNotThrow(() => requireCategoryPage(2, []))
 	})
+})
+
+test("member exclusions can empty an existing later page without a 404", () => {
+	assert.doesNotThrow(() => requireCategoryPage(2, [], "member-id"))
+	assert.doesNotThrow(() => requireCategoryPage(999999, [], "member-id"))
 })

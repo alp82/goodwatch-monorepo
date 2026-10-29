@@ -106,7 +106,7 @@ const canonicalLoader: LoaderFunction = async ({
 		watchedType,
 	}
 	const results = await getDiscoverResults(discoverParamsFull)
-	requireCategoryPage(discoverParamsFull.page, results)
+	requireCategoryPage(discoverParamsFull.page, results, discoverParamsFull.userId)
 
 	const discoverParams = Object.fromEntries(
 		Object.entries(discoverParamsFull).filter(

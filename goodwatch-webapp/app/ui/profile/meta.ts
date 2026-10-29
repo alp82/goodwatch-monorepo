@@ -2,10 +2,10 @@
 // address, the link-preview card (/og/u/<handle>…, or a section's own card for a shared section address), noindex unless the profile has enough public scores, and ProfilePage
 // structured data on an indexable Overview.
 import type { MetaDescriptor } from "@remix-run/node"
-import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
+import { type ProfilePart, type ProfileShell, canSee, seesPart } from "~/domain/profile"
 import { profileLinkUrl as linkUrl } from "~/domain/profile-settings"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
-import { type ProfileTab, profileTabPath } from "./paths"
+import { PROFILE_TAB_PARTS, type ProfileTab, profileTabPath } from "./paths"
 
 const TAB_NAMES: Record<ProfileTab, string> = {
 	overview: "",
@@ -16,18 +16,6 @@ const TAB_NAMES: Record<ProfileTab, string> = {
 	lists: "Lists",
 	stats: "Stats",
 	tropes: "Tropes",
-}
-
-// Search engines are guests even when the current viewer is a member or the owner.
-const TAB_PARTS: Record<ProfileTab, readonly ProfilePart[]> = {
-	overview: [],
-	seen: ["seen"],
-	scores: ["scores"],
-	wishlist: ["wishlist"],
-	shows: ["shows"],
-	lists: ["lists"],
-	stats: ["taste"],
-	tropes: ["taste", "scores"],
 }
 
 export function profileMeta(
@@ -51,7 +39,7 @@ export function profileMeta(
 	const description = line || shell.bio || fallbackDescription(shell)
 	const indexable =
 		shell.indexable &&
-		TAB_PARTS[tab].every((part) => shell.visibility[part] === "everyone")
+		PROFILE_TAB_PARTS[tab].every((part) => canSee(shell.visibility, part, "guest"))
 	const profilePage =
 		indexable && tab === "overview"
 			? [
