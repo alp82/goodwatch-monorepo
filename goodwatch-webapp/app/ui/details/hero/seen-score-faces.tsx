@@ -229,7 +229,10 @@ export function ScoreFace({
 	due?: boolean
 }) {
 	return (
-		<span className="flex h-full min-w-0 flex-1 items-center gap-2 pl-2 pr-2 text-left sm:gap-2.5 sm:pr-3 lg:group-data-[big]/split:gap-3 lg:group-data-[big]/split:pl-2.5">
+		// A container: in a narrow place (the title page's rail beside a tracked show's status) the eyebrow steps aside
+		// for screen readers only; the ask may take two lines ("Rate it so far"), and a score shows as its colored number
+		// alone (its word for screen readers), so nothing cuts off.
+		<span className="@container/score flex h-full min-w-0 flex-1 items-center gap-2 pl-2 pr-2 text-left sm:gap-2.5 sm:pr-3 lg:group-data-[big]/split:gap-3 lg:group-data-[big]/split:pl-2.5">
 			{score ? (
 				<span
 					className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg font-black tabular-nums lg:group-data-[big]/split:h-11 lg:group-data-[big]/split:w-11 lg:group-data-[big]/split:text-xl"
@@ -249,11 +252,11 @@ export function ScoreFace({
 				</span>
 			)}
 			<span className="min-w-0 flex-1 leading-tight">
-				<span className="block truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">
+				<span className="block truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400 @max-[8.5rem]/score:sr-only">
 					Your score
 				</span>
 				<span
-					className={`block truncate text-sm font-bold lg:group-data-[big]/split:text-base ${due ? "text-amber-200" : "text-white"}`}
+					className={`block truncate text-sm font-bold lg:group-data-[big]/split:text-base ${score ? "@max-[8.5rem]/score:sr-only" : "@max-[8.5rem]/score:line-clamp-2 @max-[8.5rem]/score:whitespace-normal"} ${due ? "text-amber-200" : "text-white"}`}
 				>
 					{score ? scoreLabels[score] : ask}
 				</span>
