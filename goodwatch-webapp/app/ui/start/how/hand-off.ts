@@ -1,6 +1,6 @@
 // The intro's Try it (IntroTheater.tsx): once the theater has closed, bring the guest to the start page's search.
-// It reads the stage's markup (stage/StartStage.tsx), not its state: the card waits hidden (`#start-card[data-hidden]`)
-// until the guest has asked for something.
+// It reads the stage's markup (stage/StartStage.tsx), not its state: the card shows only its ledge until the guest
+// has asked for something (`.start-stage[data-open]` once they have).
 // - Nothing asked yet: scroll to the stage (the page's top) and focus the search field.
 // - Something asked: center the card on screen, focus its first control, and pulse its ring (how-it-works.css,
 //   `data-pulse`).
@@ -48,7 +48,7 @@ export function bringToSearch(doc: Document = document): void {
 	const y = win.scrollY
 	const cardBox = card.getBoundingClientRect()
 	const plan = handOffPlan({
-		asked: !card.hasAttribute("data-hidden"),
+		asked: stage.hasAttribute("data-open"),
 		stageTop: stage.getBoundingClientRect().top + y,
 		cardTop: cardBox.top + y,
 		cardHeight: cardBox.height,

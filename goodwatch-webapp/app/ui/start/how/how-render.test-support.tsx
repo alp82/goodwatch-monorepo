@@ -13,7 +13,7 @@ const html = renderToString(
 	</MemoryRouter>,
 )
 
-// Try it on a stage whose card is still hidden, then on one where the guest has asked.
+// Try it on a stage whose card is still the ledge, then on one where the guest has asked.
 const browser = new Window({
 	url: "https://goodwatch.app/",
 	width: 390,
@@ -25,17 +25,17 @@ browser.scrollTo = ((options: unknown) => {
 	scrolled.push(options)
 }) as typeof browser.scrollTo
 doc.body.innerHTML = `
-	<section class="start-stage" data-centered>
+	<section class="start-stage">
 		<div class="start-search"><input id="field" /></div>
-		<div id="start-card" class="start-card" data-hidden inert><button id="first">Surprise me</button></div>
+		<div id="start-card" class="start-card"><div inert><button id="first">Surprise me</button></div></div>
 	</section>`
 bringToSearch(doc)
 assert.equal(doc.activeElement?.id, "field")
 assert.deepEqual(scrolled.at(-1), { top: 0, behavior: "smooth" })
 const card = doc.getElementById("start-card")
 assert.ok(card)
-card.removeAttribute("data-hidden")
-card.removeAttribute("inert")
+doc.querySelector(".start-stage")?.setAttribute("data-open", "")
+card.querySelector("[inert]")?.removeAttribute("inert")
 bringToSearch(doc)
 assert.equal(doc.activeElement?.id, "first")
 await new Promise((resolve) => setTimeout(resolve, 500))

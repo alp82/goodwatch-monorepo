@@ -1,7 +1,7 @@
 // Which shelf slots a control covers, compared where both are drawn: on screen, in the stage's pixels.
 //
 // The covers sit in the camera, which scales the room about its origin; the controls sit in the search block, which
-// is moved to the middle of the screen while `centered`, and in the card, which waits shifted down while hidden. A
+// waits moved down until the card opens, and in the card (a card marked `data-hidden` waits shifted down). A
 // layout box (offsetLeft/offsetTop) counts none of that, so each side is mapped through the CSS transforms of its
 // element and its ancestors up to the stage.
 //

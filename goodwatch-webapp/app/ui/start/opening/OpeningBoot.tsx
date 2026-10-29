@@ -1,5 +1,5 @@
 // A guest's opening on the start page: the old TV's boot (living-room/intro/boot.tsx, sped up) drawn large in the
-// empty band above the centered search block, then, at the hand-off, it fades out while it keeps shrinking and the
+// empty band above the waiting search block, then, at the hand-off, it fades out while it keeps shrinking and the
 // site header slides down into its place. Members never get it: their HTML has none of this.
 //
 // Everything is CSS from the first paint (opening.css), since the app's scripts start after it and can be seconds

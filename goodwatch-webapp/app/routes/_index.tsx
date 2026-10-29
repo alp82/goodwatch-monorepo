@@ -1,5 +1,6 @@
-// The start page (docs/implementation/start-page-redesign.md): a search-first page over a painted room. A guest
-// lands on the centered search over the dark room; a member gets their own start over the lit room. The old TV
+// The start page (docs/implementation/start-page-redesign.md): a search-first page over a painted room, the search
+// over the room's window and a ledge on its floor that grows into the card. A guest's ledge offers Surprise me; a
+// member's opens "this or that" from their own lists. The old TV
 // living room's code stays in app/ui/living-room/ and app/server/living-room/ for a later easter egg; this page
 // doesn't load it, and `?tv=` is ignored.
 //
@@ -7,11 +8,13 @@
 // (utils/start-after-paint.ts). Searches run in the browser only, never from the loader.
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
-import { type ComponentProps, useMemo, useState } from "react"
+import { type ComponentProps, useMemo } from "react"
 import type { startPageLoader } from "~/server/start-page/loader.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
 import { StartBrowse } from "~/ui/start/browse/StartBrowse"
 import { HowItWorksCorner } from "~/ui/start/how/HowItWorksCorner"
+import { StartLedge, useCardOpen, useLamp } from "~/ui/start/ledge/StartLedge"
+import { guestLedge } from "~/ui/start/ledge/ledge-models"
 import { RoomGrade } from "~/ui/start/lighting/RoomGrade"
 import { roomGrade } from "~/ui/start/lighting/grades"
 import { MemberStart } from "~/ui/start/member/MemberStart"
@@ -20,10 +23,10 @@ import { OpeningBoot, OpeningCover } from "~/ui/start/opening/OpeningBoot"
 import type { ShelfTitle } from "~/ui/start/room/ShelfCovers"
 import { StartSearchBar } from "~/ui/start/search/StartSearchBar"
 import { useStartSearch } from "~/ui/start/search/useStartSearch"
-import { SpotlightCard } from "~/ui/start/spotlight/SpotlightCard"
+import { SpotlightCard, surpriseMood } from "~/ui/start/spotlight/SpotlightCard"
 import { useLovedThree } from "~/ui/start/spotlight/useLovedThree"
 import { StartStage } from "~/ui/start/stage/StartStage"
-import { roomLight, roomStep } from "~/ui/start/stage/room-steps"
+import { guestNight } from "~/ui/start/stage/room-steps"
 import { hasQuery, startView } from "~/ui/start/stage/start-query"
 import { QUERY_PARAMS } from "~/ui/start/stage/start-query-url"
 import { useStartQuery } from "~/ui/start/stage/useStartQuery"
@@ -139,10 +142,10 @@ export default function Index() {
 }
 
 /**
- * A guest's start: the search block waits in the middle of the dark room until the guest asks (Enter, Search, a
- * preset, a mood pick's Done, or leaving the field with a search on); then it lifts and the card comes in. The room
- * lights up step by step (stage/room-steps.ts): each loved title a little more, fully once their picks are on show.
- * While titles are on show, the shelf shows them.
+ * A guest's start: the search waits over the room's window, the ledge on its floor offers Surprise me. Asking (Enter,
+ * Search, a preset, a mood pick's Done, leaving the field with a search on, or the ledge) lifts the search and grows
+ * the card up from the ledge. The room loads dim, its lamp comes on, and it lights up as the guest goes along
+ * (stage/room-steps.ts). While titles are on show, the shelf shows them.
  */
 function GuestStart({
 	titles,
@@ -155,30 +158,36 @@ function GuestStart({
 	const start = useStartQuery({ onChoice: loved.onChoice })
 	const results = useStartSearch(start.query)
 	// A link with a query opens as asked.
-	const [asked, setAsked] = useState(() => hasQuery(start.query))
+	const card = useCardOpen(hasQuery(start.query))
+	const lamp = useLamp()
 	const view = startView(
 		start.query,
 		results,
 		loved.done ? loved.loved.length : Math.min(loved.loved.length, 2),
 	)
 	const picks = loved.picks?.status === "ready" ? loved.picks.pick : null
-	const room = roomLight(roomStep({ asked, picksShown: !!picks }), {
-		loved: loved.loved.length,
-		moods: start.query.picks.length > 0,
-	})
 	const shown = view === "results" ? results.cards : null
 	const shelf = useMemo<readonly ShelfTitle[]>(() => {
 		if (picks?.top) return [picks.top, ...picks.more]
 		return shown?.length ? shown : titles
 	}, [picks, shown, titles])
+	const surprise = () => {
+		start.clearSearch()
+		start.setPicks([surpriseMood(start.query.picks)])
+		card.show()
+	}
 	return (
 		<>
 			<StartStage
 				shelf={shelf}
-				night={room.night}
-				camera={room.camera}
-				centered={!asked}
-				cardHidden={!asked}
+				night={guestNight({
+					lamp,
+					open: card.open,
+					picksShown: !!picks,
+					loved: loved.loved.length,
+					moods: start.query.picks.length > 0,
+				})}
+				open={card.open}
 				search={
 					<StartSearchBar
 						query={start.query}
@@ -186,7 +195,7 @@ function GuestStart({
 						setDraft={start.setDraft}
 						search={start.search}
 						clearSearch={start.clearSearch}
-						onAsk={() => setAsked(true)}
+						onAsk={card.show}
 					/>
 				}
 				moods={
@@ -197,17 +206,31 @@ function GuestStart({
 						setPicks={start.setPicks}
 						clearPicks={start.clearPicks}
 						member={false}
-						onDone={() => setAsked(true)}
+						onDone={card.show}
 					/>
 				}
 				card={
-					<SpotlightCard
-						start={start}
-						results={results}
-						view={view}
-						loved={loved}
-						fan={titles}
-					/>
+					<StartLedge
+						open={card.open}
+						ledge={guestLedge({
+							query: start.query,
+							results,
+							view,
+							loved: loved.loved,
+							pick: picks ? { top: picks.top, more: picks.more } : null,
+							fan: titles,
+						})}
+						onOpen={card.show}
+						onSurprise={surprise}
+					>
+						<SpotlightCard
+							start={start}
+							results={results}
+							view={view}
+							loved={loved}
+							fan={titles}
+						/>
+					</StartLedge>
 				}
 				grade={<RoomGrade grade={roomGrade(start.query, results)} />}
 				// A guest's opening plays once a session; a member's page has none of it.

@@ -14,9 +14,9 @@
    anything that later changes on its own (the night, the camera): an animation that stays in effect would cut their
    transitions. */
 
-/* The boot's band: from the header's bottom to the centered search block's top (start.css, `[data-centered]`). */
+/* The boot's band: from the header's bottom to the waiting search block's top, the stage's headroom (start.css). */
 .start-opening {
-	--start-open-band: calc(0.46 * (100svh - 4rem) - var(--start-block) / 2);
+	--start-open-band: var(--start-headroom);
 	position: absolute;
 	inset: 0 0 auto;
 	z-index: 20;
@@ -163,12 +163,15 @@ html:has(#start-boot-gate:checked) .start-opening-cover {
 	animation: start-open-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.27s
 		backwards;
 }
-/* The presets (the bar's second row) rise with the mood button, after the field. */
+/* The presets (the bar's second row) rise with the mood button, after the field; then the ledge. */
 #start-boot-gate:not(:checked)
 	~ .start-content
 	:is(.start-bar-rows, .start-moods) {
 	animation: start-open-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.39s
 		backwards;
+}
+#start-boot-gate:not(:checked) ~ .start-content .start-ledge {
+	animation: start-open-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.55s backwards;
 }
 @keyframes start-open-camera {
 	from {
@@ -224,7 +227,8 @@ html:has(#start-boot-gate:checked) .start-opening-cover {
 			.start-heading,
 			.start-search,
 			.start-bar-rows,
-			.start-moods
+			.start-moods,
+			.start-ledge
 		) {
 		animation: start-open-fade 0.3s ease-out backwards;
 	}

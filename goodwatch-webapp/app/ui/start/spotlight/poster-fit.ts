@@ -1,8 +1,8 @@
-// Whole posters only in the spotlight card's rows (PosterPager.tsx). Each row is a size container; per breakpoint a
+// Whole posters only in the spotlight card's rows (PosterPager.tsx): For you's "Also for you" row. Each row is a size container; per breakpoint a
 // poster is at most the width the card's fixed height holds (`colMax`), shrunk just enough that a whole number fits
 // the row's width. CSS container queries do it from the first paint, so nothing shifts when scripts start.
 //
-// spotlight.css holds `fitCss`'s output for both rows between its "poster fit" markers; poster-fit.test.ts checks that
+// spotlight.css holds `fitCss`'s output between its "poster fit" markers; poster-fit.test.ts checks that
 // it's up to date and how many posters each listed screen size shows. Regenerate it with:
 //   node -e 'import("./app/ui/start/spotlight/poster-fit.ts").then((m) => console.log(m.allFitCss()))'
 
@@ -24,39 +24,6 @@ export type FitSpec = {
 
 /** The most posters a view holds. */
 const MAX_N = 12
-
-/**
- * The results row: four whole posters per view on every phone (about 70 px at 375, at most 88 px so the card's phone
- * height holds them with the page dots under them; wider phones keep four, centered), 4 at 768, 6 at 1024 and
- * 1440 × 900, 7 on short laptops, 8 at 1920 × 1080.
- */
-export const RESULTS_FIT: readonly FitSpec[] = [
-	{ media: "", minWidth: 0, colMax: 88, gap: 10, pad: 16, fixedN: 4 },
-	{ media: "(min-width: 640px)", minWidth: 640, colMax: 160, gap: 14, pad: 24 },
-	{
-		media: "(min-width: 1024px)",
-		minWidth: 1024,
-		colMax: 192,
-		gap: 14,
-		pad: 28,
-	},
-	{
-		media: "(min-width: 1024px) and (max-height: 820px)",
-		minWidth: 1024,
-		maxHeight: 820,
-		colMax: 168,
-		gap: 14,
-		pad: 28,
-	},
-	{
-		media: "(min-width: 1600px) and (min-height: 1000px)",
-		minWidth: 1600,
-		minHeight: 1000,
-		colMax: 200,
-		gap: 14,
-		pad: 28,
-	},
-]
 
 /** "Also for you": 6 on phones, 3 at 768, 5 at 1024, 6 at 1440, 7 at 1920. Pad 4 leaves room for a focus ring. */
 export const ALSO_FIT: readonly FitSpec[] = [
@@ -114,11 +81,8 @@ export function fitCss(name: string, specs: readonly FitSpec[]): string {
 	return out.join("\n")
 }
 
-/** Both rows' CSS, as spotlight.css holds it. */
-export const allFitCss = () =>
-	[fitCss("start-results", RESULTS_FIT), fitCss("start-also", ALSO_FIT)].join(
-		"\n",
-	)
+/** The rows' CSS, as spotlight.css holds it. */
+export const allFitCss = () => fitCss("start-also", ALSO_FIT)
 
 /** The spec that applies in a window of vw × vh px (the last matching one, as in the CSS). */
 export function fitAt(

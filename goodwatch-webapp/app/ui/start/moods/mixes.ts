@@ -131,6 +131,13 @@ export const pickLabel = (id: string) =>
 export const picksLine = (picks: readonly string[]) =>
 	displayPicks(picks).map(pickLabel).join(" · ")
 
+/**
+ * What's on show, in a few words: the searched text and the picks' names, a whole mix by its name ("rainy day
+ * whodunit · Funny", "Warm, easy comedies · Animated").
+ */
+export const shownLabel = (query: { text: string; picks: readonly string[] }) =>
+	[query.text, picksLine(query.picks)].filter(Boolean).join(" · ")
+
 /** A mix's line: its parts by name ("Crime & mystery · Scary · Graphic"). */
 export const mixLine = (id: string) =>
 	(MIX_BY_ID.get(id)?.parts ?? [])

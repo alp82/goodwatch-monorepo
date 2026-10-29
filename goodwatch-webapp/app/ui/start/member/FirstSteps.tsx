@@ -1,86 +1,120 @@
-// What a member with nothing on any list sees where "this or that" would be: three first steps. Each step is one big
-// link (a row on phones, a column from 640 px), so nothing here waits for data and the box keeps its size.
+// What a member with nothing on any list sees in the open card, where "this or that" would be: rating a few titles as
+// the main step, a fan of start titles beside it, and the two other ways in as rows next to it (under it on phones):
+// bringing their ratings from another site (the import sources' marks), and finding something now (the moods' colors).
+// Every step is one link, so nothing here waits for data.
 import { ArrowRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import { RatingsBar } from "./Doors"
+import type { CSSProperties } from "react"
+import { MOODS } from "~/domain/moods"
+import { IMPORT_SOURCE_LIST } from "~/ui/imports/ImportSources"
+import { assetUrl } from "~/utils/asset-url"
+import { tmdbImageUrl } from "~/utils/tmdb-image"
+import type { ShelfTitle } from "../room/ShelfCovers"
 import { MEMBER_HREF } from "./doors"
 import { PERSONAL_AT } from "./member-data"
 
-const PILL =
-	"inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-amber-400 px-5 text-sm font-black text-gray-950 group-hover:bg-amber-300"
+/** The import sources whose marks the row shows. */
+const MARKS = IMPORT_SOURCE_LIST.filter((source) => source.logo).slice(0, 5)
 
-const STEPS = [
-	{
-		title: "Rate a few titles",
-		line: `Tap the ones you've seen. Picks get personal at ${PERSONAL_AT} ratings.`,
-		cta: "Start rating",
-		href: MEMBER_HREF.taste,
-		progress: true,
-	},
-	{
-		title: "Bring your ratings",
-		line: "From IMDb, Letterboxd, Trakt, Plex and more.",
-		cta: "Import",
-		href: MEMBER_HREF.imports,
-		progress: false,
-	},
-	{
-		title: "Find something",
-		line: "Search by mood above, or browse Discover.",
-		cta: "Open Discover",
-		href: MEMBER_HREF.discover,
-		progress: false,
-	},
-]
-
-export function FirstSteps({ ratings }: { ratings: number }) {
+export function FirstSteps({
+	ratings,
+	posters,
+}: {
+	ratings: number
+	/** The start titles, for the fan beside the main step. */
+	posters: readonly ShelfTitle[]
+}) {
+	const fan = posters.filter((p) => p.poster_path).slice(0, 5)
 	return (
-		<div className="flex h-full flex-col pt-3">
-			<div className="flex h-10 items-center">
-				<h2 className="truncate text-base font-bold text-white lg:text-lg">
-					Start here
-				</h2>
-			</div>
-			<p className="text-sm text-gray-300">
-				Three ways to get your first picks.
-			</p>
-			<ol className="mt-4 grid gap-3 sm:grid-cols-3 lg:gap-5">
-				{STEPS.map((step, i) => (
-					<li key={step.href} className="min-w-0">
-						<Link
-							to={step.href}
-							prefetch="intent"
-							className="group flex h-full items-center gap-3 rounded-2xl bg-gray-900/90 p-4 outline-none ring-1 ring-white/10 hover:bg-gray-900 hover:ring-amber-400/50 focus-visible:ring-2 focus-visible:ring-amber-300 sm:flex-col sm:items-start sm:gap-2 sm:p-5 lg:p-6"
-						>
-							<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400/15 text-sm font-black text-amber-300 ring-1 ring-amber-400/40 sm:mb-1">
-								{i + 1}
+		<div className="first-steps">
+			<Link to={MEMBER_HREF.taste} prefetch="intent" className="first-main">
+				<span className="first-main-words">
+					<span className="first-kicker">Start here</span>
+					<span className="first-title">Rate a few titles you've seen</span>
+					<span className="first-line">
+						Picks get personal at {PERSONAL_AT} ratings.
+					</span>
+					<Progress have={ratings} />
+					<span className="first-go">
+						Start rating
+						<ArrowRightIcon className="h-4 w-4" aria-hidden />
+					</span>
+				</span>
+				<Fan posters={fan} />
+			</Link>
+			<div className="first-ways">
+				<Link to={MEMBER_HREF.imports} prefetch="intent" className="first-way">
+					<span aria-hidden className="first-marks">
+						{MARKS.map((source) => (
+							<span key={source.id} className="first-mark" data-id={source.id}>
+								<img src={assetUrl(source.logo as string)} alt="" />
 							</span>
-							<span className="min-w-0 flex-1">
-								<span className="block text-base font-bold text-white lg:text-lg">
-									{step.title}
-								</span>
-								<span className="mt-0.5 block text-sm leading-snug text-gray-400">
-									{step.line}
-								</span>
-								{step.progress ? (
-									<RatingsBar have={ratings} className="mt-2.5 max-sm:hidden" />
-								) : null}
-							</span>
-							<ArrowRightIcon
-								aria-hidden
-								className="h-5 w-5 shrink-0 text-amber-400 sm:hidden"
+						))}
+					</span>
+					<span className="first-way-words">
+						<span className="first-way-title">Bring your ratings</span>
+						<span className="first-way-line">
+							From IMDb, Letterboxd, Trakt, Plex and more.
+						</span>
+					</span>
+					<ArrowRightIcon className="first-chev" aria-hidden />
+				</Link>
+				<Link to={MEMBER_HREF.discover} prefetch="intent" className="first-way">
+					<span aria-hidden className="first-moods">
+						{MOODS.slice(0, 4).map((mood) => (
+							<span
+								key={mood.key}
+								className="first-mood"
+								style={{ "--h": mood.hue } as CSSProperties}
 							/>
-							<span className={`${PILL} mt-3 max-sm:hidden sm:mt-auto`}>
-								{step.cta}
-								<ArrowRightIcon
-									aria-hidden
-									className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
-								/>
-							</span>
-						</Link>
-					</li>
-				))}
-			</ol>
+						))}
+					</span>
+					<span className="first-way-words">
+						<span className="first-way-title">Find something now</span>
+						<span className="first-way-line">
+							Search by mood above, or browse Discover.
+						</span>
+					</span>
+					<ArrowRightIcon className="first-chev" aria-hidden />
+				</Link>
+			</div>
 		</div>
+	)
+}
+
+/** The ratings so far, toward PERSONAL_AT. */
+function Progress({ have }: { have: number }) {
+	const n = Math.min(have, PERSONAL_AT)
+	return (
+		<span className="first-bar">
+			<span aria-hidden className="first-bar-track">
+				<span style={{ transform: `scaleX(${n / PERSONAL_AT})` }} />
+			</span>
+			<span className="first-bar-text">
+				{n} of {PERSONAL_AT} ratings
+			</span>
+		</span>
+	)
+}
+
+function Fan({ posters }: { posters: readonly ShelfTitle[] }) {
+	const mid = (posters.length - 1) / 2
+	return (
+		<span aria-hidden className="first-fan">
+			{posters.map((p, i) => (
+				<img
+					key={`${p.media_type}-${p.tmdb_id}`}
+					src={tmdbImageUrl(p.poster_path as string, "w185")}
+					alt=""
+					decoding="async"
+					style={
+						{
+							"--d": i - mid,
+							zIndex: 10 - Math.abs(Math.round(i - mid)),
+						} as CSSProperties
+					}
+				/>
+			))}
+		</span>
 	)
 }

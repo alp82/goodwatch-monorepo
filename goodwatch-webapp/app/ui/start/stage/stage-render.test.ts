@@ -33,8 +33,13 @@ test("one H1, the page's heading", () => {
 })
 
 test("both paintings are in the HTML at full opacity, each blanked where the other one is drawn", () => {
-	const pictures = imgs(rendered.guest)
+	const pictures = imgs(rendered.guest).filter((tag) => /start-room/.test(tag))
 	assert.equal(pictures.length, 2)
+	// The ledge's posters never compete with the painting for the first paint.
+	for (const tag of imgs(rendered.guest).filter(
+		(tag) => !/start-room/.test(tag),
+	))
+		assert.doesNotMatch(tag, /fetchpriority|elementtiming/)
 	for (const tag of pictures) {
 		assert.match(tag, /fetchpriority="high"/)
 		assert.match(tag, /elementtiming="hero"/)
@@ -68,26 +73,29 @@ test("the shelf covers wait for the browser: no title links in the server's HTML
 	assert.match(rendered.guest, /<div class="start-shelf"><\/div>/)
 })
 
-test("a guest's stage starts dark, close up, centered, with the card out of reach; a member's is lit", () => {
-	assert.match(
-		rendered.guest,
-		/class="start-camera" style="--start-night:0\.9;--start-camera:1\.12"/,
-	)
-	assert.match(rendered.guest, /class="start-stage"[^>]*data-centered=""/)
-	assert.match(
-		rendered.guest,
-		/id="start-card" class="start-card" data-start-obstacle="" data-hidden="" inert=""/,
-	)
-	assert.match(
-		rendered.member,
-		/class="start-camera" style="--start-night:0;--start-camera:1"/,
-	)
-	assert.doesNotMatch(rendered.member, /data-centered|data-hidden|inert/)
+test("the stage starts dim at its normal framing, the card closed: only the ledge reachable", () => {
+	for (const html of [rendered.guest, rendered.member]) {
+		assert.match(
+			html,
+			/class="start-camera" style="--start-night:0\.55;--start-camera:1"/,
+		)
+		assert.doesNotMatch(html, /data-open|data-centered|data-hidden/)
+		assert.match(
+			html,
+			/<div id="start-card" class="start-card" data-start-obstacle="">/,
+		)
+		// The card is in the HTML but out of reach; the ledge's one button does its action.
+		assert.match(html, /class="start-ledge-card" inert="">[\s\S]*The card/)
+		assert.match(
+			html,
+			/class="start-ledge-cover" aria-label="Surprise me: Tap three you loved" aria-controls="start-card"/,
+		)
+	}
 })
 
 test("the stage carries both scenes' numbers for start.css", () => {
 	for (const name of ["landscape", "phone"])
-		for (const key of ["band", "k", "hw", "fy", "fcx"])
+		for (const key of ["hw", "fcx", "wtop", "win", "lt", "lb"])
 			assert.match(
 				rendered.guest,
 				new RegExp(`--start-${name}-${key}:[0-9.]+`),

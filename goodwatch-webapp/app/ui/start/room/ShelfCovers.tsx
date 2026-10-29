@@ -145,14 +145,12 @@ function useShelfLayout(box: RefObject<HTMLDivElement | null>) {
 		observer.observe(stage)
 		const obstacles = stage.querySelectorAll("[data-start-obstacle]")
 		for (const o of obstacles) observer.observe(o)
-		// The transforms change without a resize: the stage's `data-centered`, the camera's scale (its style), a card's
-		// `data-hidden`. The measure reads where each transition ends, so it runs once when one starts; the
+		// The transforms change without a resize: the stage's `data-open` (the search block lifts) and the camera's scale
+		// (its style). The measure reads where each transition ends, so it runs once when one starts; the
 		// `transitionend` (not a cover's own flip) is a fallback for browsers without a transition's keyframes.
 		const mutations = new MutationObserver(measure)
-		mutations.observe(stage, { attributeFilter: ["data-centered"] })
+		mutations.observe(stage, { attributeFilter: ["data-open"] })
 		mutations.observe(camera, { attributeFilter: ["style"] })
-		for (const o of obstacles)
-			mutations.observe(o, { attributeFilter: ["data-hidden"] })
 		const settled = (e: TransitionEvent) => {
 			if (e.propertyName === "transform" && !el.contains(e.target as Node))
 				measure()

@@ -5,8 +5,10 @@
 // - `slots`: the face-out Blu-ray cases on the bookcases, where the shelf covers go (ShelfCovers.tsx). Each has its
 //   quad (top-left, top-right, bottom-right, bottom-left) and the room's light around it, read from the painting
 //   once: the tint a cover is multiplied with, and the angle and strength of the shade away from the light.
-// - `focus`: the box (x, y, w, h) around the sofa's seat, which the page keeps in view between the search block and
-//   the card (stage/placement.ts).
+// - `fcx`: the sofa's center across, which the picture keeps in the stage's middle.
+// - `window` and `floor`, as shares of the picture's height (stage/placement.ts): the window's top and middle (the
+//   search block ends over its middle until the card opens), and the strip of floor in front of the sofa that the
+//   ledge stands on (the card grows up from its bottom edge).
 import type { Quad } from "./homography"
 
 export type SlotLight = {
@@ -23,7 +25,9 @@ export type RoomScene = {
 	width: number
 	height: number
 	slots: readonly ShelfSlot[]
-	focus: readonly [number, number, number, number]
+	fcx: number
+	window: { top: number; middle: number }
+	floor: { top: number; bottom: number }
 }
 
 const slot = (
@@ -40,7 +44,9 @@ const slot = (
 export const START_ROOM: RoomScene = {
 	width: 1536,
 	height: 1024,
-	focus: [0.2539, 0.5215, 0.4922, 0.3105],
+	fcx: 0.5,
+	window: { top: 0.33, middle: 0.44 },
+	floor: { top: 0.625, bottom: 0.895 },
 	slots: [
 		slot(
 			[
@@ -170,7 +176,9 @@ export const START_ROOM: RoomScene = {
 export const START_ROOM_PHONE: RoomScene = {
 	width: 1024,
 	height: 1536,
-	focus: [0.2188, 0.5286, 0.543, 0.222],
+	fcx: 0.4903,
+	window: { top: 0.29, middle: 0.42 },
+	floor: { top: 0.64, bottom: 0.955 },
 	slots: [
 		slot(
 			[

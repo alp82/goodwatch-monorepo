@@ -5,7 +5,12 @@ import { test } from "node:test"
 import { UPRIGHT_PHONE } from "../../../utils/upright-phone.ts"
 import { START_ROOM, START_ROOM_PHONE } from "../room/scene.ts"
 import {
-	GAP_CAP,
+	CARD_AIR,
+	DOCK,
+	HEADER,
+	LEDGE_MAX,
+	PICTURE_MAX,
+	PICTURE_MIN,
 	STAGE_SIZES,
 	type StageSize,
 	sceneStyle,
@@ -41,19 +46,16 @@ function mediaAt(media: string): { end: number } | null {
 	return match ? { end: match.index + match[0].length } : null
 }
 
-const PROPERTY: Record<
-	Exclude<keyof StageSize, "padVh" | "capBand">,
-	string
-> = {
+const PROPERTY: Record<"pad" | "block" | "card", string> = {
 	pad: "--start-pad",
 	block: "--start-block",
-	card: "--start-card",
-	cardBottom: "--start-card-bottom",
-	gapMin: "--start-gap-min",
-	airAbove: "--start-air-above",
-	airBelow: "--start-air-below",
-	nightTop: "--start-night-top",
+	card: "--start-card-want",
 }
+
+const vhClamp = ({ min, vh, offset, max }: StageSize["headroom"]) =>
+	offset
+		? `clamp(${min}px, calc(${vh}svh - ${-offset}px), ${max}px)`
+		: `clamp(${min}px, ${vh}svh, ${max}px)`
 
 test("start.css has STAGE_SIZES's values at every breakpoint", () => {
 	for (const bp of STAGE_SIZES) {
@@ -70,16 +72,26 @@ test("start.css has STAGE_SIZES's values at every breakpoint", () => {
 				}
 				continue
 			}
-			if (key === "capBand") {
+			if (key === "pad" && bp.size.padVh) continue
+			if (key === "headroom") {
 				assert.equal(
-					rule.get("--start-band-need")?.startsWith(`min( ${GAP_CAP}px,`) ??
-						false,
-					value,
+					rule.get("--start-headroom"),
+					vhClamp(value as StageSize["headroom"]),
 					bp.media,
 				)
 				continue
 			}
-			if (key === "pad" && bp.size.padVh) continue
+			if (key === "dock") continue
+			if (key === "foot") {
+				assert.equal(
+					rule.get("--start-foot"),
+					bp.size.dock
+						? `calc(var(--nav-dock-height, ${DOCK}px) + ${(value as number) - DOCK}px)`
+						: `${value}px`,
+					bp.media,
+				)
+				continue
+			}
 			assert.equal(
 				rule.get(PROPERTY[key as keyof typeof PROPERTY]),
 				`${value}px`,
@@ -87,6 +99,19 @@ test("start.css has STAGE_SIZES's values at every breakpoint", () => {
 			)
 		}
 	}
+})
+
+test("start.css has stageLayout's limits: the picture's zoom and the open card's air", () => {
+	const base = stageRule("")
+	assert.equal(
+		base.get("--start-img-w"),
+		`clamp(${Math.round(PICTURE_MIN * 100)}cqw, calc(var(--start-fit) / var(--start-hw)), ${Math.round(PICTURE_MAX * 100)}cqw)`,
+	)
+	assert.match(base.get("--start-card") ?? "", new RegExp(`- ${CARD_AIR}px -`))
+	assert.match(
+		base.get("--start-ledge") ?? "",
+		new RegExp(`var\\(--start-card\\) \\* ${LEDGE_MAX}\\)`),
+	)
 })
 
 test("start.css draws the phone's painting by the shared upright phone query", () => {
@@ -117,6 +142,7 @@ const SIZES: [number, number][] = [
 	[1280, 800],
 	[1440, 900],
 	[1920, 1080],
+	[2560, 1440],
 ]
 
 const sceneFor = (w: number, h: number) =>
@@ -124,85 +150,93 @@ const sceneFor = (w: number, h: number) =>
 const close = (a: number, b: number, what: string) =>
 	assert.ok(Math.abs(a - b) < 0.01, `${what}: ${a} vs ${b}`)
 
-test("at every listed size the picture is as wide as the stage and the focus band is centered in the gap", () => {
+test("the waiting search block ends over the window's middle, and the ledge stands on the floor in front of the sofa", () => {
 	for (const [w, h] of SIZES) {
 		const at = `${w}×${h}`
-		const layout = stageLayout(sceneFor(w, h), w, h)
-		const { size, band, gap, gapTop, img } = layout
-		close(img.left, 0, `${at} left`)
-		close(img.width, w, `${at} width`)
-		// Inside the gap with its air, centered in it.
-		assert.ok(
-			band.top >= gapTop + size.airAbove - 0.01,
-			`${at} band below the block`,
+		const scene = sceneFor(w, h)
+		const { size, img, block, ledge } = stageLayout(scene, w, h)
+		close(
+			block.waiting + size.block,
+			img.top + img.height * scene.window.middle,
+			`${at} block over the window`,
 		)
-		assert.ok(
-			band.top + band.height <= gapTop + gap - size.airBelow + 0.01,
-			`${at} band above the card`,
+		const { card } = stageLayout(scene, w, h)
+		close(
+			ledge.top,
+			Math.max(
+				img.top + img.height * scene.floor.top,
+				ledge.bottom - card.height * LEDGE_MAX,
+			),
+			`${at} ledge top`,
 		)
 		close(
-			band.top - (gapTop + size.airAbove),
-			gapTop + gap - size.airBelow - (band.top + band.height),
-			`${at} centered`,
+			ledge.bottom,
+			img.top + img.height * scene.floor.bottom,
+			`${at} ledge bottom`,
 		)
-		// The gap takes spare height up to the cap, and is never shorter than the band needs.
+		// The window's top shows above the waiting block's foot, the sofa between it and the ledge.
 		assert.ok(
-			gap <=
-				Math.max(GAP_CAP, band.height + size.airAbove + size.airBelow) + 0.01,
-			`${at} gap cap`,
+			img.top + img.height * scene.window.top < block.waiting + size.block,
+			at,
 		)
-		assert.ok(gap >= size.gapMin, `${at} gap min`)
-		// The picture covers the gap: no night shows behind the sofa.
-		assert.ok(
-			img.top <= gapTop && img.top + img.height >= gapTop + gap,
-			`${at} picture behind the gap`,
-		)
+		assert.ok(ledge.top > block.waiting + size.block, `${at} sofa in view`)
 	}
 })
 
-test("the gap grows into spare height up to the cap, and the column fills the screen", () => {
-	const tall = stageLayout(START_ROOM, 1920, 1400)
-	assert.equal(tall.gap, GAP_CAP)
-	assert.equal(tall.height, 1400 - 64)
-	const short = stageLayout(START_ROOM, 1280, 700)
-	// No spare height: the gap is the band's need, and the column runs below the fold.
-	close(
-		short.gap,
-		Math.max(100, sceneVars(START_ROOM).band * 1280 + 20),
-		"short gap",
-	)
-	assert.ok(short.height > 700 - 64)
-})
-
-test("past the cap the picture zooms out around the focus, and never zooms in", () => {
-	const wide = stageLayout(START_ROOM, 3400, 1100)
-	assert.ok(wide.img.width < 3400)
-	close(
-		wide.band.height,
-		wide.gap - wide.size.airAbove - wide.size.airBelow,
-		"band fills the room",
-	)
-	const [fx, , fw] = START_ROOM.focus
-	close(
-		wide.img.left + wide.img.width * (fx + fw / 2),
-		1700,
-		"focus centered across",
-	)
-	for (const [w, h] of [
-		...SIZES,
-		[3400, 1100] as [number, number],
-		[2560, 1440] as [number, number],
-	])
+test("the picture fits the screen: the ledge ends at the foot unless the zoom is at its limit", () => {
+	for (const [w, h] of SIZES) {
+		const at = `${w}×${h}`
+		const { size, img, ledge } = stageLayout(sceneFor(w, h), w, h)
+		const zoom = img.width / w
 		assert.ok(
-			stageLayout(sceneFor(w, h), w, h).img.width <= w + 0.01,
-			`${w}×${h} no zoom in`,
+			zoom >= PICTURE_MIN - 0.001 && zoom <= PICTURE_MAX + 0.001,
+			`${at} zoom ${zoom}`,
 		)
+		if (zoom > PICTURE_MIN + 0.001 && zoom < PICTURE_MAX - 0.001)
+			close(ledge.bottom, h - HEADER - size.foot, `${at} ledge at the foot`)
+		else
+			assert.ok(
+				ledge.bottom <= h - HEADER - size.foot + 0.01 ||
+					zoom <= PICTURE_MIN + 0.001,
+				at,
+			)
+		// Centered on the sofa.
+		close(img.left + img.width * sceneFor(w, h).fcx, w / 2, `${at} centered`)
+	}
 })
 
-test("the breakpoints pick the short desktop and the large screen's sizes", () => {
+test("the open card stands on the ledge's bottom and stops under the lifted block", () => {
+	for (const [w, h] of SIZES) {
+		const at = `${w}×${h}`
+		const { size, block, ledge, card } = stageLayout(sceneFor(w, h), w, h)
+		close(card.top + card.height, ledge.bottom, `${at} card on the ledge`)
+		assert.ok(card.height <= size.card + 0.01, `${at} no taller than it wants`)
+		assert.ok(
+			card.top >= block.open + size.block + CARD_AIR - 0.01,
+			`${at} card under the block`,
+		)
+		// The ledge is the card's bottom strip.
+		assert.ok(
+			ledge.bottom - ledge.top < card.height,
+			`${at} ledge inside the card`,
+		)
+	}
+	// A member's card wants more and gets what the space holds.
+	const tall = stageLayout(START_ROOM, 1440, 900, { cardWant: 2000 })
+	close(
+		tall.card.top,
+		tall.block.open + tall.size.block + CARD_AIR,
+		"a tall card reaches the block",
+	)
+})
+
+test("the breakpoints pick the phone's, the short desktop's and the large screen's sizes", () => {
 	assert.equal(stageLayout(START_ROOM, 1280, 800).size.block, 249)
+	assert.equal(stageLayout(START_ROOM, 1280, 800).pad, 20)
 	assert.equal(stageLayout(START_ROOM, 1440, 900).size.block, 281)
 	assert.equal(stageLayout(START_ROOM, 1440, 900).pad, 27)
-	assert.equal(stageLayout(START_ROOM, 1920, 1080).size.card, 436)
-	assert.equal(stageLayout(START_ROOM_PHONE, 375, 740).size.card, 266)
+	assert.equal(stageLayout(START_ROOM, 1440, 900).headroom, 160)
+	assert.equal(stageLayout(START_ROOM, 2560, 1440).headroom, 260)
+	assert.equal(stageLayout(START_ROOM_PHONE, 390, 844).size.foot, DOCK + 10)
+	assert.equal(stageLayout(START_ROOM_PHONE, 375, 740).size.card, 330)
 })

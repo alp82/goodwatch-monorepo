@@ -53,14 +53,35 @@ test("one H1, the page's heading; every other heading is an H2 or H3", () => {
 	}
 })
 
-test("a member's HTML has no boot, no gate and no centered stage; the room is lit", () => {
+test("a member's HTML has no boot and no gate; the room loads dim with the card closed", () => {
 	for (const [name, html] of all) {
 		assert.ok(!/boot/i.test(html), name)
 		assert.ok(!/sessionStorage/.test(html), name)
-		assert.ok(!/data-centered/.test(html), name)
-		assert.ok(!/id="start-card"[^>]*data-hidden/.test(html), name)
-		assert.match(html, /--start-night:0[;"]/, name)
+		assert.ok(!/data-open|data-centered|data-hidden/.test(html), name)
+		assert.match(html, /--start-night:0\.55[;"]/, name)
+		assert.match(html, /class="start-ledge-card" inert=""/, name)
 	}
+})
+
+test("the ledge is one big button, with My movies and My shows under it and as tabs on the card", () => {
+	assert.match(
+		rendered.full,
+		/<button type="button" class="start-ledge-go" aria-controls="start-card">[\s\S]*?Choose what to watch next/,
+	)
+	assert.match(
+		rendered.new,
+		/class="start-ledge-go"[\s\S]*?Get your first picks/,
+	)
+	for (const [name, html] of all)
+		assert.equal(
+			html.match(/class="start-list-link"[^>]*href="\/my-movies"/g)?.length,
+			2,
+			name,
+		)
+	assert.match(
+		rendered.full,
+		/My movies<\/span><span class="start-list-note">\d+ to see</,
+	)
 })
 
 test("a member searches with the mood picker under the bar, as a guest does", () => {

@@ -4,73 +4,72 @@
    The sizes per breakpoint are stage/placement.ts's STAGE_SIZES (placement.test.ts checks that they agree), and the
    arithmetic is its `stageLayout`. The scene's numbers (`--start-landscape-*`, `--start-phone-*`) are on the stage's
    element, from room/scene.ts. Custom properties that use `cqw` are resolved where they are used: every user is
-   inside the stage, which is the size container, so `100cqw` is the stage's width. */
+   inside the stage, which is the size container, so `100cqw` is the stage's width.
+
+   Until the card opens (`data-open` on the stage), the search block waits at the headroom's foot, its bottom over
+   the window's middle, and only the card's bottom strip shows: the ledge, on the floor in front of the sofa. Opening
+   lifts the block to the top and grows the card up from the ledge's bottom edge. Only transforms move. */
 
 .start-stage {
-	--start-pad: 12px;
+	--start-pad: 14px;
+	--start-headroom: clamp(96px, 15svh, 200px);
 	--start-block: 211px;
-	--start-card: 266px;
-	--start-card-bottom: 64px;
-	--start-gap-min: 64px;
-	--start-air-above: 8px;
-	--start-air-below: 6px;
-	--start-night-top: 110px;
+	--start-card-want: 330px;
+	--start-foot: calc(var(--nav-dock-height, 72px) + 10px);
 
-	--start-band: var(--start-landscape-band);
-	--start-k: var(--start-landscape-k);
 	--start-hw: var(--start-landscape-hw);
-	--start-fy: var(--start-landscape-fy);
 	--start-fcx: var(--start-landscape-fcx);
+	--start-wtop: var(--start-landscape-wtop);
+	--start-win: var(--start-landscape-win);
+	--start-lt: var(--start-landscape-lt);
+	--start-lb: var(--start-landscape-lb);
 
-	/* The gap between the search block and the card: at least the focus band with its air, and the screen's spare
-	   height up to 300 px. */
-	--start-band-need: max(
-		var(--start-gap-min),
-		calc(
-			var(--start-band) *
-			100cqw +
-			var(--start-air-above) +
-			var(--start-air-below)
-		)
+	/* The screen under the header, and the picture's height that fits the headroom, the block, the window-to-floor
+	   strip and the foot on it. */
+	--start-v: calc(100svh - 4rem);
+	--start-fit: calc(
+		(
+			var(--start-v) -
+			var(--start-foot) -
+			var(--start-headroom) -
+			var(--start-block)
+		) /
+		(var(--start-lb) - var(--start-win))
 	);
-	--start-gap: max(
-		var(--start-band-need),
-		min(
-			300px,
-			calc(
-				100svh -
-				4rem -
-				var(--start-pad) -
-				var(--start-block) -
-				var(--start-card) -
-				var(--start-card-bottom)
-			)
-		)
-	);
-	--start-gap-top: calc(var(--start-pad) + var(--start-block));
-	--start-room: calc(
-		var(--start-gap) -
-		var(--start-air-above) -
-		var(--start-air-below)
-	);
-	/* The picture: as wide as the stage, narrower (zoomed out) only when the gap can't hold the band at that width. */
-	--start-img-w: min(100cqw, calc(var(--start-room) * var(--start-k)));
+	--start-img-w: clamp(70cqw, calc(var(--start-fit) / var(--start-hw)), 115cqw);
 	--start-img-h: calc(var(--start-img-w) * var(--start-hw));
-	--start-focus-top: calc(
-		var(--start-gap-top) +
-		var(--start-air-above) +
-		(var(--start-room) - var(--start-img-w) * var(--start-band)) /
-		2
-	);
 	--start-img-top: calc(
-		var(--start-focus-top) -
-		var(--start-img-w) *
-		var(--start-fy)
+		var(--start-headroom) +
+		var(--start-block) -
+		var(--start-img-h) *
+		var(--start-win)
 	);
-	--start-img-left: clamp(
-		0px,
-		calc(50cqw - var(--start-img-w) * var(--start-fcx)),
-		calc(100cqw - var(--start-img-w))
+	--start-img-left: calc(50cqw - var(--start-img-w) * var(--start-fcx));
+	--start-ledge-top: calc(
+		var(--start-img-top) +
+		var(--start-img-h) *
+		var(--start-lt)
+	);
+	--start-ledge-bottom: calc(
+		var(--start-img-top) +
+		var(--start-img-h) *
+		var(--start-lb)
+	);
+	/* The open card: as tall as it wants, up to just under the lifted block (less a member's list tabs above it). */
+	--start-card: min(
+		var(--start-card-want),
+		calc(
+			var(--start-ledge-bottom) -
+			var(--start-pad) -
+			var(--start-block) -
+			16px -
+			var(--start-tabs, 0px)
+		)
+	);
+	/* The ledge: the floor's strip, at most three quarters of the card, so the card always grows out of it. */
+	--start-ledge: min(
+		calc(var(--start-ledge-bottom) - var(--start-ledge-top)),
+		calc(var(--start-card) * 0.75)
 	);
 
 	position: relative;
@@ -82,38 +81,20 @@
 
 @media (min-width: 640px) {
 	.start-stage {
-		--start-pad: 44px;
+		--start-pad: 32px;
+		--start-headroom: clamp(120px, 17svh, 260px);
 		--start-block: 268px;
-		--start-card: 356px;
-		--start-card-bottom: 72px;
-		--start-gap-min: 80px;
-		--start-air-above: 10px;
-		--start-air-below: 7px;
-		--start-night-top: 140px;
+		--start-card-want: 380px;
 	}
 }
 
 @media (min-width: 1024px) {
 	.start-stage {
-		--start-pad: clamp(20px, 3vh, 48px);
+		--start-pad: clamp(20px, 3vh, 40px);
+		--start-headroom: clamp(120px, calc(20svh - 20px), 260px);
 		--start-block: 281px;
-		--start-card: 420px;
-		--start-gap-min: 100px;
-		--start-air-above: 12px;
-		--start-air-below: 8px;
-		--start-night-top: 200px;
-		--start-band-need: min(
-			300px,
-			max(
-				var(--start-gap-min),
-				calc(
-					var(--start-band) *
-					100cqw +
-					var(--start-air-above) +
-					var(--start-air-below)
-				)
-			)
-		);
+		--start-card-want: 410px;
+		--start-foot: 24px;
 	}
 }
 
@@ -121,13 +102,7 @@
 	.start-stage {
 		--start-pad: 20px;
 		--start-block: 249px;
-		--start-card: 378px;
-	}
-}
-
-@media (min-width: 1600px) and (min-height: 1000px) {
-	.start-stage {
-		--start-card: 436px;
+		--start-card-want: 378px;
 	}
 }
 
@@ -140,11 +115,12 @@
 @media (max-width: 767.98px) and (orientation: portrait),
 	(max-width: 767.98px) and (min-height: 540.02px) {
 	.start-stage {
-		--start-band: var(--start-phone-band);
-		--start-k: var(--start-phone-k);
 		--start-hw: var(--start-phone-hw);
-		--start-fy: var(--start-phone-fy);
 		--start-fcx: var(--start-phone-fcx);
+		--start-wtop: var(--start-phone-wtop);
+		--start-win: var(--start-phone-win);
+		--start-lt: var(--start-phone-lt);
+		--start-lb: var(--start-phone-lb);
 	}
 	.start-room-landscape {
 		display: none;
@@ -205,27 +181,24 @@
 	transition: opacity 0.6s ease-out;
 }
 
-/* Where the painting ends: solid night above the room's calm top, under its lower edge, and beside it when zoomed out,
-   each fading into the picture; and the stage's foot darkening. */
+/* Where the painting ends: solid night above the window's top, under the picture's lower edge, and beside it when
+   zoomed out, each fading into the picture; and the stage's foot darkening. */
 .start-veil {
 	--start-n1: max(
 		var(--start-img-top),
-		min(calc(var(--start-night-top) + 18vh), calc(var(--start-focus-top) - 8px))
+		calc(var(--start-img-top) + var(--start-img-h) * var(--start-wtop) - 6px)
 	);
-	--start-n0: max(
-		var(--start-img-top),
-		min(var(--start-night-top), calc(var(--start-n1) - 60px))
-	);
+	--start-n0: max(var(--start-img-top), calc(var(--start-n1) - 160px));
 	--start-b1: calc(var(--start-img-top) + var(--start-img-h));
-	--start-b0: max(
-		calc(var(--start-focus-top) + var(--start-img-w) * var(--start-band) + 4px),
-		calc(var(--start-b1) - 160px)
-	);
-	/* The side fade: none while the picture is as wide as the stage. */
-	--start-e: min(
-		160px,
-		calc(var(--start-img-w) * 0.12),
-		calc((100cqw - var(--start-img-w)) * 1000)
+	--start-b0: calc(var(--start-b1) - 160px);
+	/* The side fade: none while the picture is as wide as the stage or wider. */
+	--start-e: max(
+		0px,
+		min(
+			160px,
+			calc(var(--start-img-w) * 0.12),
+			calc((100cqw - var(--start-img-w)) * 1000)
+		)
 	);
 	--start-x1: calc(var(--start-img-left) + var(--start-e));
 	--start-x3: calc(var(--start-img-left) + var(--start-img-w));
@@ -261,7 +234,8 @@
 }
 
 /* The column over the room: the search block, the gap, the card. Only the controls take pointer events, so the shelf
-   covers under the column stay reachable. */
+   covers under the column stay reachable. The gap puts the card's bottom on the ledge's bottom; the foot under it
+   fills the screen. */
 .start-content {
 	position: relative;
 	z-index: 10;
@@ -286,11 +260,9 @@
 	transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Before the guest asks, the search block waits in the middle of the screen. */
-.start-stage[data-centered] .start-block {
-	transform: translateY(
-		calc(0.46 * (100svh - 4rem) - var(--start-block) / 2 - var(--start-pad))
-	);
+/* Until the card opens, the search block waits at the headroom's foot. */
+.start-stage:not([data-open]) .start-block {
+	transform: translateY(calc(var(--start-headroom) - var(--start-pad)));
 }
 
 .start-block > :not(.start-pool) {
@@ -416,30 +388,29 @@
 
 .start-gap {
 	flex: none;
-	height: var(--start-gap);
+	height: calc(
+		var(--start-ledge-bottom) -
+		var(--start-card) -
+		var(--start-pad) -
+		var(--start-block)
+	);
 }
 
 .start-card-wrap {
 	width: 100%;
 	max-width: 1648px;
 	margin-inline: auto;
-	padding: 0 16px var(--start-card-bottom);
+	padding: 0 16px
+		max(var(--start-foot), calc(var(--start-v) - var(--start-ledge-bottom)));
 }
 
+/* The card's box is the open card's; the ledge (ledge/StartLedge.tsx) shows its bottom strip until it opens. */
 .start-card {
 	position: relative;
 	height: var(--start-card);
 	max-width: clamp(1200px, calc(100vw - 320px), 1600px);
 	margin-inline: auto;
 	pointer-events: auto;
-	transition: opacity 0.55s ease-out, transform 0.7s
-		cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* Until the guest asks, the card waits out of sight (and out of reach: `inert`). */
-.start-card[data-hidden] {
-	opacity: 0;
-	transform: translateY(28px);
 }
 
 @media (min-width: 640px) {
@@ -482,12 +453,6 @@
 	.start-block {
 		transition: none;
 	}
-	.start-card {
-		transition: opacity 0.3s ease-out;
-	}
-	.start-card[data-hidden] {
-		transform: none;
-	}
 	.start-night {
 		transition-duration: 0.4s;
 	}
@@ -499,6 +464,668 @@
 	}
 	.start-grade > div {
 		transition: none;
+	}
+}
+
+/* The ledge (ledge/StartLedge.tsx): the card's bottom strip on the floor in front of the sofa, which the card grows up
+   from. No panel: the words and posters stand on a soft pool of shadow. Only transforms and opacity move. */
+.start-card {
+	--start-ledge-r: 16px;
+	--start-ledge-py: 14px;
+	--start-ledge-px: 16px;
+	--start-ledge-ease: cubic-bezier(0.22, 0.75, 0.18, 1);
+}
+
+@media (min-width: 640px) {
+	.start-card {
+		--start-ledge-r: 22px;
+		--start-ledge-py: 18px;
+		--start-ledge-px: 22px;
+	}
+}
+
+@media (min-width: 1024px) {
+	.start-card {
+		--start-ledge-py: 20px;
+		--start-ledge-px: 26px;
+	}
+}
+
+/* Closed, the clip is moved down by the hidden height and the card back up inside it; open, both are at 0. */
+.start-ledge-clip {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	border-radius: var(--start-ledge-r);
+	pointer-events: none;
+	transform: translateY(calc(var(--start-card) - var(--start-ledge)));
+	transition: transform 0.75s var(--start-ledge-ease);
+}
+
+.start-ledge-inner {
+	position: absolute;
+	inset: 0;
+	transform: translateY(calc(var(--start-ledge) - var(--start-card)));
+	transition: transform 0.75s var(--start-ledge-ease);
+}
+
+.start-stage[data-open] .start-ledge-clip,
+.start-stage[data-open] .start-ledge-inner {
+	transform: none;
+}
+
+.start-ledge-card {
+	position: absolute;
+	inset: 0;
+	pointer-events: auto;
+	opacity: 0;
+	transition: opacity 0.35s ease-out;
+}
+
+.start-stage[data-open] .start-ledge-card {
+	opacity: 1;
+	transition: opacity 0.5s ease-out 0.12s;
+}
+
+.start-ledge {
+	position: absolute;
+	inset: auto 0 0;
+	height: var(--start-ledge);
+	pointer-events: auto;
+	transition: opacity 0.3s ease-out;
+}
+
+.start-stage[data-open] .start-ledge {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.start-ledge-face {
+	position: relative;
+	height: 100%;
+	color: #fff;
+	text-shadow: 0 1px 2px rgb(0 0 0 / 0.85), 0 6px 24px rgb(0 0 0 / 0.85);
+}
+
+/* A soft pool of shadow on the floor under the ledge, so it reads over the rug without a panel. */
+.start-ledge-face::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: radial-gradient(
+		ellipse 55% 60% at 50% 55%,
+		rgb(2 4 10 / 0.7),
+		rgb(2 4 10 / 0.38) 60%,
+		transparent 100%
+	);
+}
+
+.start-ledge-cover {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	cursor: pointer;
+	border-radius: var(--start-ledge-r);
+	outline: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.start-ledge-cover:focus-visible {
+	box-shadow: inset 0 0 0 2px rgb(252 211 77);
+}
+
+.start-ledge-body {
+	position: relative;
+	display: grid;
+	max-width: 1040px;
+	height: 100%;
+	margin-inline: auto;
+	padding: var(--start-ledge-py) var(--start-ledge-px);
+	column-gap: 16px;
+	row-gap: 10px;
+	pointer-events: none;
+	animation: start-ledge-in 0.45s var(--start-ledge-ease) both;
+}
+
+@keyframes start-ledge-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+}
+
+.start-ledge-face[data-kind="fan"] .start-ledge-body {
+	grid-template-columns: auto minmax(0, 1fr);
+	grid-template-areas: "fan words" "fan cta";
+	align-content: center;
+	align-items: center;
+	justify-content: center;
+	row-gap: 8px;
+}
+
+.start-ledge-face[data-kind="words"] .start-ledge-body {
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-areas: "words" "cta";
+	align-content: center;
+	justify-items: center;
+	text-align: center;
+}
+
+.start-ledge-face[data-kind="row"] .start-ledge-body {
+	max-width: 980px;
+	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-rows: auto minmax(0, 1fr);
+	grid-template-areas: "words cta" "row row";
+	align-items: center;
+}
+
+@media (min-width: 640px) {
+	.start-ledge-face[data-kind="fan"] .start-ledge-body {
+		grid-template-columns: auto minmax(0, 520px) auto;
+		grid-template-areas: "fan words cta";
+		column-gap: 28px;
+	}
+	.start-ledge-face[data-kind="words"] .start-ledge-body {
+		grid-template-columns: minmax(0, 560px) auto;
+		grid-template-areas: "words cta";
+		justify-content: center;
+		justify-items: stretch;
+		text-align: left;
+		column-gap: 28px;
+	}
+}
+
+.start-ledge-words {
+	grid-area: words;
+	min-width: 0;
+}
+
+.start-ledge-eyebrow {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: rgb(252 211 77);
+}
+.start-ledge-face[data-tone="violet"] .start-ledge-eyebrow {
+	color: rgb(196 181 253);
+}
+.start-ledge-face[data-tone="rose"] .start-ledge-eyebrow {
+	color: rgb(253 164 175);
+}
+.start-ledge-face[data-tone="gray"] .start-ledge-eyebrow {
+	color: rgb(156 163 175);
+}
+
+.start-ledge-headline {
+	margin-top: 2px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-size: 20px;
+	font-weight: 900;
+	line-height: 1.15;
+	letter-spacing: -0.03em;
+}
+
+.start-ledge-sub {
+	margin-top: 3px;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	font-size: 13px;
+	line-height: 1.35;
+	color: rgb(209 213 219);
+}
+
+.start-ledge-face[data-kind="row"] .start-ledge-words {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+}
+
+.start-ledge-face[data-kind="row"] .start-ledge-headline {
+	margin-top: 0;
+	font-size: 17px;
+}
+
+@media (max-width: 639.98px) {
+	/* Phones: the headline may wrap to two lines, the fan's line to one. */
+	.start-ledge-face:is([data-kind="fan"], [data-kind="words"])
+		.start-ledge-headline {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		white-space: normal;
+		font-size: 19px;
+	}
+	.start-ledge-face[data-kind="fan"] .start-ledge-sub {
+		-webkit-line-clamp: 1;
+		font-size: 12.5px;
+	}
+}
+
+@media (min-width: 640px) {
+	.start-ledge-headline {
+		font-size: 26px;
+	}
+	.start-ledge-sub {
+		font-size: 14px;
+	}
+	.start-ledge-face[data-kind="row"] .start-ledge-headline {
+		font-size: 20px;
+	}
+}
+
+@media (min-width: 1024px) {
+	.start-ledge-headline {
+		font-size: 30px;
+	}
+	.start-ledge-sub {
+		font-size: 15px;
+	}
+}
+
+/* The action's name, as a button's face: the cover under it does the action. */
+.start-ledge-cta {
+	grid-area: cta;
+	position: relative;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	justify-self: start;
+	gap: 8px;
+	height: 36px;
+	padding: 0 14px;
+	border-radius: 999px;
+	pointer-events: none;
+	white-space: nowrap;
+	font-size: 13px;
+	font-weight: 900;
+	text-shadow: none;
+	color: rgb(3 7 18);
+	background: rgb(251 191 36);
+	box-shadow: 0 8px 28px rgb(251 191 36 / 0.28);
+	transition: transform 0.2s ease-out;
+}
+
+.start-ledge-face:hover .start-ledge-cta {
+	transform: translateY(-1px);
+	background: rgb(252 211 77);
+}
+
+.start-ledge-face[data-kind="row"] .start-ledge-cta {
+	justify-self: end;
+	height: 34px;
+	padding: 0 14px;
+	font-size: 13px;
+}
+
+.start-ledge-face[data-kind="words"] .start-ledge-cta {
+	justify-self: center;
+}
+
+@media (min-width: 640px) {
+	.start-ledge-cta {
+		height: 44px;
+		padding: 0 22px;
+		font-size: 15px;
+	}
+	.start-ledge-face:is([data-kind="fan"], [data-kind="words"])
+		.start-ledge-cta {
+		justify-self: end;
+	}
+}
+
+.start-ledge-dots {
+	display: flex;
+	gap: 3px;
+}
+
+.start-ledge-dots i {
+	width: 4px;
+	height: 4px;
+	border-radius: 999px;
+	background: currentColor;
+	animation: start-ledge-dot 1s ease-in-out infinite;
+}
+.start-ledge-dots i:nth-child(2) {
+	animation-delay: 0.15s;
+}
+.start-ledge-dots i:nth-child(3) {
+	animation-delay: 0.3s;
+}
+
+@keyframes start-ledge-dot {
+	50% {
+		opacity: 0.25;
+		transform: translateY(-2px);
+	}
+}
+
+/* The fan: a few posters fanned like a hand of cards (three on phones). */
+.start-ledge-fan {
+	grid-area: fan;
+	position: relative;
+	width: calc(64px + (var(--n) - 1) * 18px);
+	height: 84px;
+	margin-inline: 14px 4px;
+}
+
+.start-ledge-fan img {
+	position: absolute;
+	left: 50%;
+	bottom: 0;
+	width: 54px;
+	height: 81px;
+	max-width: none;
+	margin-left: -27px;
+	border-radius: 6px;
+	object-fit: cover;
+	box-shadow: 0 14px 30px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.14);
+	transform-origin: 50% 120%;
+	transform: translateX(calc(var(--d) * 18px)) rotate(calc(var(--d) * 5deg));
+	transition: transform 0.35s var(--start-ledge-ease);
+}
+
+.start-ledge-fan img:nth-child(n + 4) {
+	display: none;
+}
+
+@media (min-width: 640px) {
+	.start-ledge-fan {
+		width: calc(116px + (var(--n) - 1) * 44px);
+		height: 168px;
+		margin-inline: 26px 8px;
+	}
+	.start-ledge-fan img {
+		width: 112px;
+		height: 168px;
+		margin-left: -56px;
+		transform: translateX(calc(var(--d) * 44px)) rotate(calc(var(--d) * 6deg));
+	}
+	.start-ledge-fan img:nth-child(n + 4) {
+		display: block;
+	}
+}
+
+@media (min-width: 1024px) {
+	.start-ledge-fan {
+		width: calc(136px + (var(--n) - 1) * 54px);
+		height: 200px;
+		margin-inline: 34px 8px;
+	}
+	.start-ledge-fan img {
+		width: 133px;
+		height: 200px;
+		margin-left: -66px;
+		transform: translateX(calc(var(--d) * 54px)) rotate(calc(var(--d) * 6deg));
+	}
+}
+
+/* The row: posters as tall as the space under the words, faded at the end. */
+.start-ledge-row {
+	grid-area: row;
+	display: flex;
+	gap: 10px;
+	height: 100%;
+	min-height: 0;
+	overflow: hidden;
+	-webkit-mask-image: linear-gradient(
+		to right,
+		#000 calc(100% - 56px),
+		transparent
+	);
+	mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+}
+
+.start-ledge-row img,
+.start-ledge-skel {
+	flex: none;
+	height: 100%;
+	aspect-ratio: 2 / 3;
+	border-radius: 6px;
+	object-fit: cover;
+	box-shadow: 0 14px 30px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.14);
+	animation: start-ledge-pop 0.5s var(--start-ledge-ease) both;
+	animation-delay: calc(var(--i) * 35ms);
+}
+
+.start-ledge-skel {
+	background: rgb(31 41 55);
+	animation: start-ledge-pulse 1.2s ease-in-out infinite;
+	animation-delay: calc(var(--i) * 80ms);
+}
+
+@keyframes start-ledge-pop {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+
+@keyframes start-ledge-pulse {
+	50% {
+		opacity: 0.45;
+	}
+}
+
+/* A member's ledge: one big button, gently floating over a warm pool of light, the list links under it. */
+.start-ledge-face[data-kind="choose"] {
+	display: grid;
+	place-items: center;
+}
+
+.start-ledge-choose {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	gap: 16px;
+	padding: 0 16px;
+	animation: start-ledge-in 0.45s var(--start-ledge-ease) both;
+}
+
+.start-ledge-choose::before {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 20px;
+	z-index: -1;
+	width: 150%;
+	height: 160px;
+	translate: -50% 0;
+	pointer-events: none;
+	background: radial-gradient(
+		ellipse 50% 40% at 50% 50%,
+		rgb(251 191 36 / 0.2),
+		rgb(251 191 36 / 0.06) 55%,
+		transparent 75%
+	);
+}
+
+.start-ledge-go {
+	display: inline-flex;
+	align-items: center;
+	gap: 14px;
+	height: 68px;
+	padding: 0 26px 0 12px;
+	border-radius: 999px;
+	cursor: pointer;
+	text-shadow: none;
+	color: rgb(3 7 18);
+	background: linear-gradient(to bottom, rgb(252 211 77), rgb(245 158 11));
+	box-shadow: 0 18px 40px rgb(0 0 0 / 0.55), 0 10px 40px rgb(251 191 36 / 0.35),
+		inset 0 1px 0 rgb(255 255 255 / 0.5);
+	outline: none;
+	animation: start-ledge-float 4.5s ease-in-out infinite;
+	transition: scale 0.25s var(--start-ledge-ease);
+}
+.start-ledge-go:hover {
+	scale: 1.03;
+}
+.start-ledge-go:active {
+	scale: 0.98;
+}
+.start-ledge-go:focus-visible {
+	box-shadow: 0 0 0 3px #fff, 0 18px 40px rgb(0 0 0 / 0.55);
+}
+
+@keyframes start-ledge-float {
+	50% {
+		translate: 0 -5px;
+	}
+}
+
+.start-ledge-go-icon {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	color: rgb(252 211 77);
+	background: rgb(3 7 18);
+}
+
+.start-ledge-go-label {
+	white-space: nowrap;
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-size: 19px;
+	font-weight: 900;
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+}
+
+@media (min-width: 640px) {
+	.start-ledge-go {
+		height: 84px;
+		gap: 16px;
+		padding: 0 36px 0 14px;
+	}
+	.start-ledge-go-icon {
+		width: 56px;
+		height: 56px;
+	}
+	.start-ledge-go-label {
+		font-size: 27px;
+	}
+}
+
+@media (min-width: 1024px) {
+	.start-ledge-go {
+		height: 92px;
+		padding: 0 42px 0 16px;
+	}
+	.start-ledge-go-label {
+		font-size: 30px;
+	}
+}
+
+/* My movies and My shows: quiet pills under the button, tabs on the open card's top edge. */
+.start-lists {
+	display: flex;
+	gap: 10px;
+}
+
+.start-list-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	height: 40px;
+	padding: 0 16px 0 12px;
+	border-radius: 999px;
+	pointer-events: auto;
+	white-space: nowrap;
+	text-shadow: none;
+	font-size: 14px;
+	font-weight: 800;
+	color: #fff;
+	background: rgb(3 7 18 / 0.78);
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 8px 22px
+		rgb(0 0 0 / 0.45);
+	outline: none;
+}
+.start-list-link:hover {
+	background: rgb(17 24 39 / 0.92);
+}
+.start-list-link:focus-visible {
+	box-shadow: 0 0 0 2px rgb(252 211 77);
+}
+.start-list-icon {
+	width: 18px;
+	height: 18px;
+	color: rgb(252 211 77);
+}
+.start-list-note {
+	font-size: 12px;
+	font-weight: 600;
+	color: rgb(156 163 175);
+}
+
+@media (max-width: 639.98px) {
+	.start-list-link {
+		height: 36px;
+		padding: 0 13px 0 10px;
+		font-size: 13px;
+	}
+	.start-list-note {
+		display: none;
+	}
+}
+
+.start-tabs {
+	position: absolute;
+	right: 20px;
+	bottom: 100%;
+	z-index: 40;
+	opacity: 0;
+	translate: 0 8px;
+	pointer-events: none;
+	transition: opacity 0.3s ease-out, translate 0.4s var(--start-ledge-ease);
+}
+.start-stage[data-open] .start-tabs {
+	opacity: 1;
+	translate: 0 0;
+	pointer-events: auto;
+	transition-delay: 0.45s;
+}
+.start-tabs .start-lists {
+	gap: 4px;
+}
+.start-tabs .start-list-link {
+	height: 36px;
+	border-radius: 12px 12px 0 0;
+	background: rgb(3 7 18 / 0.86);
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 1px 0 0
+		rgb(255 255 255 / 0.06), inset -1px 0 0 rgb(255 255 255 / 0.06);
+}
+.start-tabs .start-list-link:hover {
+	background: rgb(17 24 39 / 0.95);
+}
+@media (min-width: 640px) {
+	.start-tabs {
+		right: 32px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.start-ledge-clip,
+	.start-ledge-inner {
+		transition: none;
+	}
+	.start-ledge-body,
+	.start-ledge-choose,
+	.start-ledge-go,
+	.start-ledge-row img,
+	.start-ledge-skel,
+	.start-ledge-dots i {
+		animation: none;
 	}
 }
 
@@ -1130,14 +1757,16 @@
 	}
 }
 
-/* A member's start (member/MemberStart.tsx): the card holds "this or that" (two titles side by side with their lines),
-   the first steps, or the search's results, so it is taller than a guest's, on a dark panel over the lit room. Each
-   state fills the box; `.start-member-box` keeps the two sides as wide as the box's height holds. */
+/* A member's start (member/MemberStart.tsx): the open card holds "this or that" (two titles side by side with their
+   lines), the first steps, or the search's results, on a dark panel over the lit room. Each state fills the box;
+   `.start-member-box` keeps the two sides as wide as the box's height holds. The list tabs (My movies, My shows)
+   stand on the open card's top edge, so the card leaves them `--start-tabs` above it. */
 .start-member .start-stage {
-	--start-card: 452px;
+	--start-card-want: 452px;
+	--start-tabs: 42px;
 }
 
-.start-member .start-card {
+.start-member .start-ledge-card {
 	padding: 0 12px 12px;
 	border-radius: 16px;
 	background: rgb(3 7 18 / 0.82);
@@ -1159,9 +1788,9 @@
 
 @media (min-width: 640px) {
 	.start-member .start-stage {
-		--start-card: 500px;
+		--start-card-want: 500px;
 	}
-	.start-member .start-card {
+	.start-member .start-ledge-card {
 		padding: 0 20px 20px;
 		border-radius: 22px;
 	}
@@ -1176,83 +1805,36 @@
 	}
 }
 
-/* From 1024 px a member's start uses a tall screen's spare height instead of leaving it black under the card:
-   - The card grows with the screen: as tall as the spare height allows (the gap above it still takes up to 300 px),
-     at least 540 px (480 px on short screens), and no taller than its width lets the two backdrops grow. The box is
-     as wide as that height holds, and the card is never wider than the box and its padding.
-   - The stage ends under the card (no screen-tall minimum), so the Go deeper doors follow right after it.
-   - The painting zooms in, up to 1.3 times, to cover the stage, with the sofa centered in the gap. It is aligned to
-     the right edge, so the bookcase with the shelf covers stays on screen.
-   - The stage's foot fades into the page's color (gray-900), over the painting's own fade into the night.
+/* From 1024 px:
+   - The card is as tall as its width lets the two backdrops grow (when the space under the search holds it). The
+     box is as wide as that height holds, and the card is never wider than the box and its padding.
+   - The stage's foot fades into the page's color (gray-900), so the Go deeper doors follow it.
    `--start-member-chrome` is the card's height around the backdrops: the header, the lines under the titles, the
    footer row and the padding. Re-measure it when ThisOrThat's layout changes. */
 @media (min-width: 1024px) {
 	.start-member .start-stage {
 		--start-member-chrome: 215px;
-		--start-card: max(
-			var(--start-member-card-min, 540px),
-			min(
-				calc(
-					(min(100cqw - 136px, 1960px) - 24px) *
-					0.28125 +
-					var(--start-member-chrome)
-				),
-				calc(
-					100svh -
-					4rem -
-					var(--start-pad) -
-					var(--start-block) -
-					300px -
-					var(--start-card-bottom)
-				)
-			)
+		--start-card-want: calc(
+			(min(100cqw - 136px, 1960px) - 24px) *
+			0.28125 +
+			var(--start-member-chrome)
 		);
-		--start-member-h: calc(
-			var(--start-gap-top) +
-			var(--start-gap) +
-			var(--start-card) +
-			var(--start-card-bottom)
-		);
-		/* The focus band's center: in the painting (a share of its width), and in the gap. */
-		--start-member-c: calc(var(--start-fy) + var(--start-band) / 2);
-		--start-member-cy: calc(
-			var(--start-gap-top) +
-			var(--start-air-above) +
-			var(--start-room) /
-			2
-		);
-		--start-img-w: min(
-			max(100cqw, calc(var(--start-member-h) / var(--start-hw))),
-			130cqw
-		);
-		--start-img-top: min(
-			0px,
-			calc(var(--start-member-cy) - var(--start-img-w) * var(--start-member-c))
-		);
-		--start-img-left: calc(100cqw - var(--start-img-w));
 	}
 	.start-member .start-stage::after {
 		content: "";
 		position: absolute;
 		inset: auto 0 0;
 		z-index: 5;
-		height: 360px;
+		height: 140px;
 		pointer-events: none;
 		background: linear-gradient(
 			to bottom,
 			rgb(17 24 39 / 0) 0%,
-			rgb(17 24 39 / 0.04) 15%,
 			rgb(17 24 39 / 0.14) 30%,
-			rgb(17 24 39 / 0.3) 45%,
 			rgb(17 24 39 / 0.5) 60%,
-			rgb(17 24 39 / 0.7) 72%,
 			rgb(17 24 39 / 0.87) 84%,
-			rgb(17 24 39 / 0.96) 93%,
 			rgb(17 24 39) 100%
 		);
-	}
-	.start-member .start-content {
-		min-height: 0;
 	}
 	.start-member .start-card-wrap {
 		max-width: none;
@@ -1279,8 +1861,355 @@
 	}
 }
 
-@media (min-width: 1024px) and (max-height: 820px) {
-	.start-member .start-stage {
-		--start-member-card-min: 480px;
+/* A new member's card (member/FirstSteps.tsx): sized to the steps, and no wider than they read well. */
+.start-member[data-first] .start-stage {
+	--start-card-want: 470px;
+}
+.start-member[data-first] .start-card {
+	max-width: min(100cqw - 32px, 1240px);
+}
+.start-member[data-first] .start-ledge-card {
+	padding: 0;
+	overflow: hidden;
+	background: radial-gradient(
+			ellipse 60% 80% at 0% 0%,
+			rgb(251 191 36 / 0.1),
+			transparent 70%
+		), linear-gradient(to bottom, rgb(10 14 26 / 0.97), rgb(3 7 18 / 0.98));
+	box-shadow: 0 40px 100px rgb(0 0 0 / 0.7), inset 0 1px 0
+		rgb(255 255 255 / 0.08), 0 0 0 1px rgb(255 255 255 / 0.07);
+}
+@media (min-width: 640px) {
+	.start-member[data-first] .start-stage {
+		--start-card-want: 380px;
+	}
+}
+@media (min-width: 1024px) {
+	.start-member[data-first] .start-card {
+		max-width: min(100cqw - 96px, 1240px);
+	}
+}
+
+/* The first steps (member/FirstSteps.tsx): rating as the main step beside a fan of titles, the two other ways in as
+   rows next to it (under it on phones). */
+.first-steps {
+	display: grid;
+	grid-template-rows: minmax(0, 1fr) auto;
+	gap: 10px;
+	height: 100%;
+	padding: 14px;
+	color: #fff;
+	animation: start-ledge-in 0.5s var(--start-ledge-ease) 0.1s both;
+}
+
+.first-main {
+	position: relative;
+	display: flex;
+	align-items: center;
+	min-height: 0;
+	overflow: hidden;
+	padding: 18px;
+	border-radius: 18px;
+	background: linear-gradient(
+		110deg,
+		rgb(251 191 36 / 0.12),
+		rgb(251 191 36 / 0.02) 60%
+	);
+	box-shadow: inset 0 0 0 1px rgb(251 191 36 / 0.28);
+	outline: none;
+}
+.first-main:hover {
+	box-shadow: inset 0 0 0 1px rgb(251 191 36 / 0.6);
+}
+.first-main:focus-visible,
+.first-way:focus-visible {
+	box-shadow: 0 0 0 2px rgb(252 211 77);
+}
+
+.first-main-words {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	max-width: 62%;
+}
+
+.first-kicker {
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: rgb(252 211 77);
+}
+
+.first-title {
+	margin-top: 6px;
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-size: 24px;
+	font-weight: 900;
+	line-height: 1.08;
+	letter-spacing: -0.025em;
+	text-wrap: balance;
+}
+
+.first-line {
+	margin-top: 8px;
+	font-size: 14px;
+	color: rgb(209 213 219);
+}
+
+.first-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 14px;
+}
+.first-bar-track {
+	display: block;
+	width: 160px;
+	height: 6px;
+	overflow: hidden;
+	border-radius: 999px;
+	background: rgb(255 255 255 / 0.1);
+}
+.first-bar-track span {
+	display: block;
+	height: 100%;
+	border-radius: 999px;
+	background: rgb(251 191 36);
+	transform-origin: left;
+}
+.first-bar-text {
+	font-size: 12px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: rgb(252 211 77);
+}
+
+.first-go {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	width: fit-content;
+	height: 46px;
+	margin-top: 14px;
+	padding: 0 22px;
+	border-radius: 999px;
+	font-size: 15px;
+	font-weight: 900;
+	color: rgb(3 7 18);
+	background: rgb(251 191 36);
+	box-shadow: 0 10px 30px rgb(251 191 36 / 0.25);
+}
+.first-main:hover .first-go {
+	background: rgb(252 211 77);
+}
+
+/* The fan, anchored at a point so its posters keep their size. */
+.first-fan {
+	position: absolute;
+	right: 6%;
+	top: 50%;
+	width: 0;
+	height: 0;
+}
+.first-fan img {
+	position: absolute;
+	left: -30px;
+	top: -45px;
+	width: 60px;
+	height: 90px;
+	max-width: none;
+	border-radius: 7px;
+	object-fit: cover;
+	box-shadow: 0 12px 28px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.12);
+	transform-origin: 50% 130%;
+	transform: translateX(calc(var(--d) * 22px)) rotate(calc(var(--d) * 7deg));
+	transition: transform 0.4s var(--start-ledge-ease);
+}
+.first-main:hover .first-fan img {
+	transform: translateX(calc(var(--d) * 28px)) translateY(-4px)
+		rotate(calc(var(--d) * 9deg));
+}
+.first-fan img:nth-child(n + 4) {
+	display: none;
+}
+
+.first-ways {
+	display: grid;
+	gap: 8px;
+}
+
+.first-way {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	min-width: 0;
+	padding: 12px 14px;
+	border-radius: 14px;
+	background: rgb(255 255 255 / 0.04);
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+	outline: none;
+}
+.first-way:hover {
+	background: rgb(255 255 255 / 0.07);
+	box-shadow: inset 0 0 0 1px rgb(252 211 77 / 0.45);
+}
+
+.first-way-words {
+	flex: 1;
+	min-width: 0;
+}
+.first-way-title {
+	display: block;
+	font-size: 15px;
+	font-weight: 800;
+}
+.first-way-line {
+	display: block;
+	margin-top: 2px;
+	font-size: 13px;
+	line-height: 1.35;
+	color: rgb(156 163 175);
+}
+
+.first-chev {
+	flex: none;
+	width: 20px;
+	height: 20px;
+	color: rgb(252 211 77);
+	transition: translate 0.2s var(--start-ledge-ease);
+}
+.first-way:hover .first-chev {
+	translate: 3px 0;
+}
+
+.first-marks {
+	display: flex;
+	flex: none;
+	gap: 6px;
+}
+.first-mark {
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	overflow: hidden;
+	border-radius: 9px;
+}
+.first-mark img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+.first-mark[data-id="tmdb"] {
+	padding: 4px;
+	background: #0d253f;
+}
+.first-mark:nth-child(n + 4) {
+	display: none;
+}
+
+.first-moods {
+	display: flex;
+	flex: none;
+	gap: 4px;
+}
+.first-mood {
+	width: 14px;
+	height: 14px;
+	border-radius: 999px;
+	background: var(--h);
+	box-shadow: 0 0 10px color-mix(in srgb, var(--h) 60%, transparent);
+}
+
+@media (max-width: 639.98px) {
+	.first-steps .first-bar,
+	.first-way-line {
+		display: none;
+	}
+}
+
+@media (min-width: 640px) {
+	.first-steps {
+		grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+		grid-template-rows: minmax(0, 1fr);
+		gap: 14px;
+		padding: 20px;
+	}
+	.first-main {
+		padding: 28px 32px;
+		border-radius: 22px;
+	}
+	.first-title {
+		font-size: 32px;
+	}
+	.first-line {
+		font-size: 15px;
+	}
+	.first-fan {
+		right: 15%;
+	}
+	.first-fan img {
+		left: -48px;
+		top: -72px;
+		width: 96px;
+		height: 144px;
+		transform: translateX(calc(var(--d) * 34px)) rotate(calc(var(--d) * 7deg));
+	}
+	.first-main:hover .first-fan img {
+		transform: translateX(calc(var(--d) * 42px)) translateY(-6px)
+			rotate(calc(var(--d) * 9deg));
+	}
+	.first-fan img:nth-child(n + 4) {
+		display: block;
+	}
+	.first-ways {
+		grid-template-rows: 1fr 1fr;
+		gap: 14px;
+	}
+	.first-way {
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: center;
+		gap: 10px;
+		padding: 18px 20px;
+	}
+	.first-chev {
+		position: absolute;
+		right: 18px;
+		top: 50%;
+		translate: 0 -50%;
+	}
+	.first-way:hover .first-chev {
+		translate: 3px -50%;
+	}
+	.first-mark:nth-child(n + 4) {
+		display: grid;
+	}
+}
+
+@media (min-width: 1024px) {
+	.first-title {
+		font-size: 38px;
+	}
+	.first-fan img {
+		left: -56px;
+		top: -84px;
+		width: 112px;
+		height: 168px;
+		transform: translateX(calc(var(--d) * 40px)) rotate(calc(var(--d) * 7deg));
+	}
+	.first-main:hover .first-fan img {
+		transform: translateX(calc(var(--d) * 50px)) translateY(-6px)
+			rotate(calc(var(--d) * 9deg));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.first-steps {
+		animation: none;
 	}
 }

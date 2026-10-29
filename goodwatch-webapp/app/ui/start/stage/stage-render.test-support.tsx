@@ -3,8 +3,12 @@
 import { renderToString } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
+import { StartLedge } from "../ledge/StartLedge"
+import { guestLedge } from "../ledge/ledge-models"
 import { OpeningBoot, OpeningCover } from "../opening/OpeningBoot"
 import { StartStage } from "./StartStage"
+import { DIM_NIGHT } from "./room-steps"
+import { EMPTY_QUERY, IDLE_RESULTS } from "./start-query"
 
 const titles: StartTitle[] = Array.from({ length: 16 }, (_, i) => ({
 	media_type: i % 2 ? "show" : "movie",
@@ -15,15 +19,27 @@ const titles: StartTitle[] = Array.from({ length: 16 }, (_, i) => ({
 	goodwatch_overall_score_normalized_percent: 70 + i,
 }))
 
+const ledge = guestLedge({
+	query: EMPTY_QUERY,
+	results: IDLE_RESULTS,
+	view: "empty",
+	loved: [],
+	pick: null,
+	fan: titles,
+})
+
 const render = (member: boolean) =>
 	renderToString(
 		<MemoryRouter>
 			<StartStage
 				shelf={titles}
-				night={member ? 0 : 0.9}
-				camera={member ? 1 : 1.12}
-				centered={!member}
-				cardHidden={!member}
+				night={DIM_NIGHT}
+				open={false}
+				card={
+					<StartLedge open={false} ledge={ledge} onOpen={() => {}}>
+						<button type="button">The card</button>
+					</StartLedge>
+				}
 				opening={member ? undefined : <OpeningBoot />}
 			/>
 			{member ? null : <OpeningCover />}

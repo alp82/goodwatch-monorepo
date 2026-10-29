@@ -1,19 +1,30 @@
-// A member's start (docs/implementation/start-page-redesign.md, "Member start"): the same lit room, search bar and
-// mood picker as a guest's, with no boot and no opening steps. The card's box holds "this or that" from the member's own lists (First
-// steps when there is nothing on any list yet), or the search's results while a search is on. Under the room, the
-// "Go deeper" doors open each list inline. The room's shelf shows the member's Watch next movies, else their shows to
-// continue, else For you (`memberShelf`).
+// A member's start (docs/implementation/start-page-redesign.md, "Member start"): the same room, search bar and mood
+// picker as a guest's, with no boot and no opening steps. Until the card opens, the ledge on the room's floor shows one
+// big button, "Choose what to watch next" ("Get your first picks" with nothing on any list yet), with My movies and My
+// shows under it, or the search's titles while a search is on (ledge/ledge-models.ts). The button, Enter in the
+// search, a preset or the mood picker's Done opens the card: "this or that" from the member's own lists, the first
+// steps, or the search's results, with My movies and My shows as tabs on its top edge. Under the room, the "Go deeper"
+// doors open each list inline. The room's shelf shows the member's Watch next movies, else their shows to continue,
+// else For you (`memberShelf`).
 //
 // For you and Hot on socials can come later than the page (member.server.ts); they join the deck and the doors once
 // they arrive, without moving anything: the doors' order and the open door are decided before (doors.ts).
 //
 // Nothing on this page writes: "this or that" only moves its round on, and the doors only switch sections.
 import { useEffect, useMemo, useState } from "react"
+import {
+	ListLinks,
+	StartLedge,
+	useCardOpen,
+	useLamp,
+} from "../ledge/StartLedge"
+import { listLinks, memberLedge } from "../ledge/ledge-models"
 import { StartMoodPicker } from "../moods/StartMoodPicker"
 import type { ShelfTitle } from "../room/ShelfCovers"
 import { StartSearchBar } from "../search/StartSearchBar"
 import { useStartSearch } from "../search/useStartSearch"
 import { StartStage } from "../stage/StartStage"
+import { memberNight } from "../stage/room-steps"
 import { hasQuery } from "../stage/start-query"
 import { useStartQuery } from "../stage/useStartQuery"
 import { Doors } from "./Doors"
@@ -28,9 +39,6 @@ import {
 	memberShelf,
 	withArrived,
 } from "./member-data"
-
-/** A member's room is lit and seen whole. */
-const MEMBER_ROOM = { night: 0, camera: 1 }
 
 export function MemberStart({
 	shelf,
@@ -48,12 +56,21 @@ export function MemberStart({
 	const deck = useMemo(() => buildDeck(data), [data])
 	const unread = !data.continue && !data.wishlist && !data.forYou
 	const ownShelf = useMemo(() => memberShelf(data, shelf), [data, shelf])
+	// A link with a query opens as asked.
+	const card = useCardOpen(hasQuery(start.query))
+	const lamp = useLamp()
+	const lists = {
+		movies: data.wishlist?.total ?? null,
+		shows: data.continue?.total ?? null,
+	}
+	const searching = hasQuery(start.query)
+	const fresh = !searching && !deck.length && !unread
 	return (
-		<div className="start-member">
+		<div className="start-member" {...(fresh ? { "data-first": "" } : {})}>
 			<StartStage
 				shelf={ownShelf}
-				night={MEMBER_ROOM.night}
-				camera={MEMBER_ROOM.camera}
+				night={memberNight({ lamp, open: card.open })}
+				open={card.open}
 				search={
 					<StartSearchBar
 						query={start.query}
@@ -61,6 +78,7 @@ export function MemberStart({
 						setDraft={start.setDraft}
 						search={start.search}
 						clearSearch={start.clearSearch}
+						onAsk={card.show}
 					/>
 				}
 				moods={
@@ -71,27 +89,41 @@ export function MemberStart({
 						setPicks={start.setPicks}
 						clearPicks={start.clearPicks}
 						member
+						onDone={card.show}
 					/>
 				}
 				card={
-					hasQuery(start.query) ? (
-						<MemberResults
-							query={start.query}
-							results={results}
-							scope={results.scope}
-							onBack={() => {
-								start.clearSearch()
-								start.clearPicks()
-							}}
-							onRetry={results.retry}
-						/>
-					) : deck.length ? (
-						<ThisOrThat deck={deck} />
-					) : unread ? (
-						<Unread />
-					) : (
-						<FirstSteps ratings={data.ratings} />
-					)
+					<StartLedge
+						open={card.open}
+						ledge={memberLedge({
+							query: start.query,
+							results,
+							hasDeck: deck.length > 0,
+							unread,
+							lists,
+						})}
+						onOpen={card.show}
+						tabs={<ListLinks links={listLinks(lists)} />}
+					>
+						{searching ? (
+							<MemberResults
+								query={start.query}
+								results={results}
+								scope={results.scope}
+								onBack={() => {
+									start.clearSearch()
+									start.clearPicks()
+								}}
+								onRetry={results.retry}
+							/>
+						) : deck.length ? (
+							<ThisOrThat deck={deck} />
+						) : unread ? (
+							<Unread />
+						) : (
+							<FirstSteps ratings={data.ratings} posters={ownShelf} />
+						)}
+					</StartLedge>
 				}
 			/>
 			<Doors data={data} />

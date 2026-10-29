@@ -141,27 +141,32 @@ for `/` from `Sec-CH-UA-Mobile`, as today. The pictures carry `fetchpriority="hi
 reused; the phone version shows on boxes taller than wide (the lab's 0.8 aspect rule) only if that equals the media
 query; otherwise the media query wins, since nothing can measure before paint.
 
-**Placement.** The lab measured the gap between the search block and the card in the browser and faded the image in
-once placed. Production places the room in CSS from the first paint: the image is full width, its scale is known
-(`100vw / 1536` or `100vw / 1024`), the search block and card heights are fixed per breakpoint, so the scene's `focus`
-box (`[0.2539, 0.5215, 0.4922, 0.3105]` landscape, `[0.2188, 0.5286, 0.543, 0.222]` portrait) is centered in the gap
-with `calc()` on custom properties. The gap rule stays: at least the focus band's height, capped at 300 px from
-1024 px wide, zooming out (never in) past the cap. JavaScript measures only to place the shelf covers and to hide the
-slots that controls cover (the lab's `hideSlot` and registered obstacles).
+**Placement** (streamlined 2026-10-29, prototype `prototype/start-streamline`). Production places the room in CSS from
+the first paint (`start.css`, `stage/placement.ts` mirrors the math with tests). The stage is a column: the search
+block (fixed heights per breakpoint), then the card, whose bottom edge stands on the floor in front of the sofa.
 
-**The camera and the night.** The room sits in one box that scales (the camera) with two layers over it: the night
-(`#050a16` at an opacity) and the grade. Values from the lab's `C_SPEC` and `STRIP_BASE`:
+- **Before the card opens**, the search block waits at the foot of the headroom (`clamp(96px, 15svh, 200px)` on phones,
+  `clamp(120px, 17svh, 260px)` from 640 px, `clamp(120px, 20svh - 20px, 260px)` from 1024 px), its bottom over the
+  window's middle, and only the card's bottom strip shows: the **ledge** (see "The ledge").
+- **The picture** is sized so the headroom, the block, the window-to-floor strip, and the foot (24 px; on phones the
+  dock's height plus 10 px) fill the screen under the header, between 70 % and 115 % of the stage's width, centered on
+  the sofa. Each scene names its window (`window.top`, `window.middle`) and the floor strip the ledge stands on
+  (`floor.top`, `floor.bottom`), as shares of the picture's height (`room/scene.ts`).
+- **Opening** lifts the block to the top (`--start-pad`) and grows the card up from the ledge's bottom edge, at most to
+  16 px under the block (less a member's list tabs). The night above the room fades out by the window's top.
 
-| Step | When | Night opacity | Camera scale |
-|---|---|---|---|
-| 0, ask | Nothing asked yet | 0.9 | 1.12 |
-| 1, pick | The guest asked (see below) | `max(0.16, (moods ? 0.42 : 0.55) − 0.12 × loved)` | `1.07 − 0.017 × loved` |
-| 2, For you | Three loved, picks shown | 0 | 1 |
+JavaScript measures only to place the shelf covers and to hide the slots that controls cover.
 
-Transitions: camera 2.4 s `cubic-bezier(.22,.7,.2,1)`, night 1.4 s ease-in-out, card 0.55 s opacity and 0.7 s
-transform, search block lift 0.9 s `cubic-bezier(.2,.8,.2,1)`. The guest has asked after Enter, the Search button, a
-preset, the picker's Done, or the field losing focus while results show. Use `focusout` and the submit events, not
-the lab's 200 ms polling.
+**The camera and the night.** The room never moves: the camera stays at 1. The night (`room-steps.ts`):
+
+| When | Guest | Member |
+|---|---|---|
+| Load, before the lamp (700 ms after the page starts) | 0.55 | 0.55 |
+| Lamp on, card closed | 0.32 | 0.28 |
+| Card open | `max(0.04, (moods ? 0.16 : 0.22) − 0.06 × loved)` | 0 |
+| Picks shown | 0 | |
+
+The night's opacity eases over 1.4 s.
 
 **Shelf covers.** The start titles (see data) fill the 11 landscape or 12 portrait slots on load; while results are on
 show, the shelf shows them instead, flipping each cover (a `rotateY` transform). Each cover bleeds 3.5 % past its slot,
@@ -188,82 +193,13 @@ JavaScript. Every part is a CSS animation with a delay counted from the first pa
 |---|---|
 | The page assembles | Night 1 → 0.9 over 1.3 s; camera from 1.05 × 1.12 down to 1.12 over 1.8 s; H1, field, then presets and mood button rise in (opacity plus 14 px), 0.55 s each, at 0.15 s, 0.27 s, 0.39 s |
 | The boot plays | `Boot` from `app/ui/living-room/intro/boot.tsx` with `boot.css`, sped up: glow 1 s, arc 0.85 s from 0.05 s, G 0.6 s from 0.08 s, "oodWatch" 0.6 s from 0.48 s; no standby dot, no black backing |
-| Size and place | Type `min(46px, 12.5vw, 30 % of the band)` on phones, up to 62 px from 640 px and 78 px from 1024 px. The band runs from the header's bottom to the search block's top (`.46 × (100svh − 64px) − C/2`, C the block's height per breakpoint). Owner tweak: center the lockup at about 40 % of the band's height, not 50 % |
+| Size and place | Type `min(46px, 12.5vw, 30 % of the band)` on phones, up to 62 px from 640 px and 78 px from 1024 px. The band runs from the header's bottom to the waiting search block's top (the stage's headroom). Owner tweak: center the lockup at about 40 % of the band's height, not 50 % |
 | Hand-off | At 1.4 s: the boot fades (opacity 0.6 s) while it shrinks and lifts. Owner tweak: the transform runs at least as long as the opacity with an easing that doesn't settle early (for example `scale(.9) translateY(-12px)`, 0.7 s, `cubic-bezier(.4,0,.6,1)`), so it is still moving in the last visible frame. The header slides down from `translate: 0 -100%` at the same time (0.64 s `cubic-bezier(.22,.8,.24,1)`, opacity 0.42 s), backdrop blur off while it moves. The header's place shows night (`#070c19`) until then. All gone by about 2.1 s |
 | Skip | A tap or key anywhere jumps to the hand-off. The gate script adds the listener, so it works before hydration; the tap still reaches the page |
 | Reduced motion | The boot holds 0.6 s and fades in 0.3 s; the header only fades; the page's parts only fade |
 
-At step 0 the search block is centered by CSS
-(`translateY(calc(.46 * (100svh - 64px) - 50% - var(--pad) / 2))`), so nothing jumps when scripts start. The card is
-hidden (`opacity: 0`, `inert`) until the guest asks. The block heights `C` (211, 252, 281 px, and 249 px at 1024 px
-wide under 820 px tall in the lab) must be re-measured once the production block is built, and kept in one place.
-
-## Guest search
-
-**State.** `useStartQuery` holds two things the guest controls apart: the search text and the mood picks (up to
-three word ids from `app/domain/taste-picker.ts`). Typing or a preset keeps the picks; picking moods keeps the text
-and any running search. The field's Clear (or emptying it) clears only the search; a chip's × clears only that pick;
-the picker's Clear clears the picks.
-
-**In the URL.** The searched text and the picks live in the address too, with Discover's names: `q`, `moods`,
-`themes`, `styles` (`stage/start-query-url.ts`), for guests and members. A reload or a shared link opens the same
-query; a guest's link with a query opens as asked. The URL is replaced (no history entry per change), and changing
-only these parameters doesn't run the page's loader again (`shouldRevalidate` in `routes/_index.tsx`). Unknown words
-and picks past the third are dropped when the URL is read.
-
-**Typed text and presets.** The field searches 800 ms after typing pauses (Discover's rule, including its minimum
-length); Enter and Search search at once. A preset fills the field with its exact phrase and searches it like typed
-text: `cheer me up`, `rainy day whodunit`, `severance but funny`, `twist ending`, `space adventure`, `grown up
-cartoons`. The placeholder repeats no preset ("Describe a mood, a plot, or a title…", "Mood, plot, title…" on
-phones). The input's label is "Search by mood, plot, or title".
-
-**Requests.** The same two calls Discover makes, so search plus moods behaves as on Discover:
-
-1. `runDiscoverSearch` (`app/ui/discover/discover-search-request.ts`) posts `{ q, filters, discover: true }` to
-   `/api/combined-search`. Its NDJSON stream gives the reading first (`kind: "reading"`, `ReadingChip[]`) and then the
-   ranked batch. Show the reading in the bar's second row with `ReadAsChips`, then the picks' names ("Read as Mystery ·
-   Funny").
-2. `POST /api/discover/results?ranked=<keys>&moods=…&themes=…&styles=…&services=<scope>` with the guest body from
-   `useGuestBody` (`app/ui/discover/useDiscoverBrowse.ts`: interactions, country, services). Picks only (no text):
-   the same request without `ranked`. Changing picks only re-filters; it never searches again.
-
-`services` is `any` (any streaming offer in the country) for a guest without saved services and `mine` once they have
-some; the counts' wording follows (see the picker). Take the first two views of whole posters from page 1 (at most
-16 titles). A 503 `SnapshotNotLoaded` retries after its `Retry-After`; a rate-limit or error answer shows Discover's
-error copy in the card's fixed box. **See all** links to `/discover` with the text and the picks, built with the
-filter-state serializer in `app/domain/filter-state.ts`.
-
-**Loading.** The card's box keeps its size: a skeleton row while searching, the reading line as soon as it arrives.
-
-## Mood picker
-
-`StartMoodPicker` is My movies' picker with the guest's lines: the `MoodButton` ("Any mood" with the color fan, then
-"Add" or "Change"), the picks as `PickChip`s with a legible scrim (black at 60 % under the name on the left, 25 % on
-the right, a firmer text shadow, darker count and × backings; add a prop to `PickChip`), and "N titles" or "Pick up to
-three" beside them.
-
-**The panel.** "Pick up to three. Mix moods, themes, and styles.", "k of 3", Clear, and Done. "Start with a mix"
-(eight mixes, 2 × 4 on desktop), then "Everything else": Moods (11), Themes (13), Styles (10), folded. Solid gray-900,
-no blur. Picks keep it open; Done closes it and brings the card into view. It overlays (nothing behind it moves) and
-runs from where it opens down to 16 px above the viewport bottom (above `MobileDock` on phones); with less than 360 px left there, the page scrolls it
-up to 72 px from the top first. Measure on open and on resize (including `visualViewport`), never per scroll frame. A
-fourth pick is refused with My movies' hint (`useRefusalHint`).
-
-**Mixes** (`mixes.ts`, from the lab's `jl-mixes.ts`): Warm, easy comedies (Funny · Feel-good); Dark, gritty crime
-(Crime & mystery · Scary · Graphic); Eerie, mind-bending stories (Mind-bending · Scary); Funny love stories (Romance ·
-Funny); Smart, high-stakes action (Action · Mind-bending · Fast-paced); Warm coming-of-age stories (Coming of age ·
-Feel-good); Moving period dramas (History · Heavy · Slow burn); Dark fantasy epics (Fantasy · Heavy · Spectacle). The
-rules, with unit tests: a mix is on while all its parts are picked, however they got there; only one mix is on at a
-time (the one picked first); tapping a mix swaps the one that is on for it, its parts first, other words kept while
-they fit (the latest stay); tapping the mix that is on removes its parts; unticking a part turns the mix off. Mix tiles
-are never dimmed or refused; words are at three. Chips show a whole mix by its name, then the other words.
-
-**Counts.** One `/api/discover/results` request with the current picks (and `ranked` when a search is on) returns
-`optionCounts` for every mood, theme, and style; the tiles read their counts from it and the chip row reads `total`.
-Fetch it when the panel opens and after each pick, cancel stale ones. Wording: "N titles" with scope `any`, "N on your
-services" with scope `mine`. A mix tile shows its parts line ("Funny · Feel-good") instead of a count (see
-[Open questions](#owner-answers)). Tile pictures: each mix's and word's backdrop from `ChoiceArt`; pick
-backdrops that don't repeat.
+The boot's band is the stage's headroom above the waiting search block (`--start-headroom`), so the boot never
+overlaps the search. The ledge rises in at 0.55 s, after the block's parts.
 
 ## Room lighting
 
@@ -288,27 +224,41 @@ Static layers only: a static vignette per grade is allowed if it is one CSS grad
 dust, fog, flicker, leak, shafts, flare, lightning, rain, scratches, VHS, the red rim's pulse) and nothing drawn on a
 canvas ships now. Check in a trace that the camera's scale with the grade layers stays on the compositor.
 
-## Spotlight card
+## The ledge
 
-One fixed box per breakpoint (no shift between states). States:
+The card's box (`ledge/StartLedge.tsx`, `ledge/ledge-models.ts`) is always laid out at the open card's height. Until
+it opens, a clip moved down by the hidden height shows only its bottom strip, with the card moved back up inside it;
+opening moves both to 0 over 0.75 s, so the clip's top edge slides up (transforms only). The ledge is the floor
+strip, at most three quarters of the card's height. No panel: words and posters stand on a soft pool of shadow.
 
-- **Before any choice:** a dimmed fan of start titles behind "Tap three you loved" and **Surprise me** (a die beside the
-  title; picks a random mood). Fan images use `fetchpriority="low"`.
-- **Tap three:** the results as whole poster toggles. The first loved dims the rest. Three Loved slots in the header;
-  a filled slot undoes it. The card's line shows what is on show ("rainy day whodunit · Funny"), **See all**, and
-  "Back" after For you.
+- **Guests:** "Picks for you · Tap three you loved" beside a fan of start titles, labeled **Surprise me**. The whole
+  ledge is one button: a tap rolls a random mood and opens the card on its titles.
+- **Members:** one big floating button, **Choose what to watch next** (no subtitle, owner 2026-10-29), with **My
+  movies** and **My shows** under it (with the Wishlist's and the shows to continue's counts from 640 px). A member
+  with nothing on any list sees **Get your first picks**. The open card has the same two links as tabs on its top
+  edge, to the right.
+- **Both, while searching:** the search's state: placeholders while searching, then the found titles in a row with
+  their count; nothing found or an error in words.
+
+Enter, the Search button, a preset, the picker's Done, leaving the field with a search on, a link with a query, or the
+ledge opens the card. **Once open, it stays open** (owner 2026-10-29): there is no way back to the ledge.
+
+## Guest card
+
+The open card for guests (`spotlight/SpotlightCard.tsx`):
+
+- **Before any choice** (after clearing a search): a dimmed fan of start titles behind "Tap three you loved" and
+  **Surprise me**.
+- **Tap three** (`spotlight/TapThreePanel.tsx`, the prototype's design L): a panel whose posters fill its height in a
+  row that snaps to each poster (arrows from 640 px, page dots and small arrows on phones), up to 24 titles and See
+  all. The header: the heading with **Surprise me**, what's on show as a chip in the first pick's color with the count,
+  three hearts for the loved titles, and **See all**. The first loved dims the rest. Nothing found or an error says so
+  in the panel with the way on (drop the moods, Retry, Surprise me). The guest's card wants 330, 380, 410 px (378 px
+  on short desktops).
 - **For you:** the first recommendation with a backdrop, large on it (title, `ScoreRing`, "Because you loved A, B and
   C", **Keep my taste** to `/sign-up`, Details), then "Also for you" (small posters; a tap features one) and **Start
-  over**.
-
-**Whole posters** (`PosterPager`, from the lab's `jk-pager.tsx`): each row is a size container; per breakpoint a
-poster is at most the width the card's height holds (`colMax`), shrunk so a whole number fits (CSS container queries,
-right from the first paint). Rows snap to every poster; arrows page by one whole view, at most two views (`MAX_PAGES =
-2`, **See all** counts as one tile). From 640 px the title page rows' round arrows sit over the first and last poster;
-on phones page dots and small arrows sit under the row. Owner tweak: **four** whole posters per view below 640 px
-(about 72 px wide at 375 px); lower the phone card height to fit, so no empty band remains. Other breakpoints as in the
-lab: 4 at 768, 6 at 1024 and 1440 × 900, 7 at 1280 × 800 and 1440 × 800, 8 at 1920. "Also for you": 6 on phones, 3 at
-768, 5 at 1024, 6 at 1440, 7 at 1920. The card is up to `clamp(1200px, calc(100vw - 320px), 1600px)` wide.
+  over**. "Also for you" keeps whole posters per view by container queries (`poster-fit.ts`): 6 on phones, 3 at 768,
+  5 at 1024, 6 at 1440, 7 at 1920.
 
 **Loved titles** (`useLovedThree`): tapping a poster saves it with `updateGuestInteraction(mediaType, tmdbId,
 "score", 9)` (owner, 2026-10-29: loved is a 9); undoing removes it. Fewer than three carry across searches. Once three are loved, any new choice (a
@@ -354,7 +304,8 @@ new section.
 
 ## Member start
 
-`MemberStart` over the same room (no TV, no boot, no opening steps; the room lit):
+`MemberStart` over the same room (no TV, no boot, no opening steps), behind the ledge's big button (see "The
+ledge"):
 
 - **This or that:** two titles from the member's own lists side by side; tapping one keeps it and deals a challenger
   from another list; three taps give tonight's pick with **Watch** (the Watch next hero's button, to the title page).
@@ -369,16 +320,19 @@ new section.
   its page from its header and a last "See all" tile. Empty and sparse states: one slim strip when there is something
   to say ("Bring your ratings" to imports, "Rate a few titles" to `/taste`), then one grid where posters, "add more"
   ghosts, and the end tile fill whole rows. Hot on socials shows its ranked titles inline with why each is talked
-  about (`why` from `app/ui/talked-about-now/parts`). With nothing on any list, **First steps** replaces the deck.
+  about (`why` from `app/ui/talked-about-now/parts`).
+- **First steps** (`member/FirstSteps.tsx`, the prototype's design Path), with nothing on any list: rating a few
+  titles as the main step (the ratings so far toward 10, **Start rating**, a fan of start titles), and two rows beside
+  it (under it on phones): **Bring your ratings** with the import sources' marks, and **Find something now** with the
+  moods' colors. The card wants 470 px on phones and 380 px from 640 px, at most 1240 px wide.
 - **Tags:** each side of "this or that" names its list with the shared `ListTag` (`app/ui/list-tag/ListTag.tsx`), one
   color per list everywhere (Continue amber, Wishlist sky, For you violet, Hot on socials rose; My shows' Start
   emerald).
 - **Shelf:** the room's covers are the member's Watch next movies; without any, the shows to continue; without those,
   For you. Free cases take the next lists' titles, then everyone's start titles (`memberShelf` in `member-data.ts`).
-- **Big screens (from 1024 px):** no black space under the card. The card grows with the screen's spare height (at
-  least 540 px, 480 px on short screens; no wider than its two backdrops), the stage ends under it so the doors
-  follow, the painting zooms in up to 1.3 times (right-aligned, so the shelf stays on screen) and the stage's foot
-  fades into the page's gray-900. Decided in the prototype `prototype/member-start-gap` (layout F).
+- **Card size:** 452 px on phones, 500 px from 640 px, and from 1024 px as tall as its width lets the two backdrops
+  grow, each capped by the space under the lifted search block. From 1024 px the stage's foot fades into the page's
+  gray-900, so the doors follow.
 
 Data (`member.server.ts`; member pages are never cached, so streaming is fine):
 
@@ -541,6 +495,11 @@ HTTP/2 with 103 hints, fixtures for the shelf, Where to start and the members, s
   pages (new 1.78 s, old 1.45 s). The budget file's image and byte caps for home are raised to the measured values; its
   LCP, TBT and score caps wait for a generator run after deploy. Desktop (3 runs): score 79 (old 84), LCP 0.53 s
   (old 0.36 s).
+
+- **Streamlined start (2026-10-29, prototype `prototype/start-streamline`, rounds 1 to 6):** the room framed with
+  the window in view and never moving, the dim load and the lamp, the search over the window with the boot above it,
+  the ledge (guest Surprise me, member big button with My movies and My shows), the card growing up from it and
+  staying open, the guest's tap-three panel (design L), and the new member's first steps (design Path).
 
 ## Follow-ups
 

@@ -1,12 +1,12 @@
 // The start page's first screen: the room, and over it a column of the search block (the H1, then the search bar and
-// the mood button in their slots), a gap that shows the room's sofa, and the card. Every box has its size from
-// start.css before anything arrives, so nothing shifts (stage/placement.ts has the numbers).
+// the mood button in their slots), a gap that shows the room's window and sofa, and the card's box, whose bottom stands
+// on the floor in front of the sofa. Every box has its size from start.css before anything arrives, so nothing shifts
+// (stage/placement.ts has the numbers).
 //
-// - `centered`: before a guest asks, the search block waits in the middle of the screen (CSS, from the first paint).
-// - `cardHidden`: the card waits out of sight and out of reach (`inert`) until the guest asks.
+// - `open`: the card is open. Until then the search block waits lower, and the card's box shows only the ledge
+//   (ledge/StartLedge.tsx); opening lifts the block and grows the card up from the ledge (CSS, from the first paint).
 // - The H1, the slots' contents and the card are marked `data-start-obstacle`: the shelf covers stay out from under
-//   them as drawn on screen, where the block and the camera come to rest; a hidden card counts where it arrives
-//   (room/obstacles.ts).
+//   them as drawn on screen, where the block and the camera come to rest (room/obstacles.ts).
 import type { CSSProperties, ReactNode } from "react"
 import type { ShelfTitle } from "../room/ShelfCovers"
 import { StartRoom } from "../room/StartRoom"
@@ -21,9 +21,7 @@ const SCENE_STYLE = sceneStyle(START_ROOM, START_ROOM_PHONE) as CSSProperties
 export function StartStage({
 	shelf,
 	night,
-	camera,
-	centered = false,
-	cardHidden = false,
+	open,
 	search,
 	moods,
 	card,
@@ -32,16 +30,15 @@ export function StartStage({
 }: {
 	/** The titles on the room's shelf. */
 	shelf: readonly ShelfTitle[]
-	/** The room's light and framing (StartRoom). */
+	/** The room's light (StartRoom): 0 lit. */
 	night: number
-	camera: number
-	centered?: boolean
-	cardHidden?: boolean
+	/** The card is open (the ledge has grown into it). */
+	open: boolean
 	/** The search bar, under the H1. */
 	search?: ReactNode
 	/** The mood button and picks, under the search bar. */
 	moods?: ReactNode
-	/** The card's content: its box is fixed. */
+	/** The card's box's content: the ledge and the card (StartLedge). Its box is fixed. */
 	card?: ReactNode
 	/** Layers that tint the room, between the room and the night. */
 	grade?: ReactNode
@@ -53,10 +50,10 @@ export function StartStage({
 			aria-labelledby="start-heading"
 			className="start-stage"
 			style={SCENE_STYLE}
-			{...(centered ? { "data-centered": "" } : {})}
+			{...(open ? { "data-open": "" } : {})}
 		>
 			{opening}
-			<StartRoom night={night} camera={camera} titles={shelf}>
+			<StartRoom night={night} camera={1} titles={shelf}>
 				{grade}
 			</StartRoom>
 			<div aria-hidden className="start-veil" />
@@ -83,12 +80,7 @@ export function StartStage({
 				</div>
 				<div aria-hidden className="start-gap" />
 				<div className="start-card-wrap">
-					<div
-						id="start-card"
-						className="start-card"
-						data-start-obstacle=""
-						{...(cardHidden ? { "data-hidden": "", inert: "" } : {})}
-					>
+					<div id="start-card" className="start-card" data-start-obstacle="">
 						{card}
 					</div>
 				</div>
