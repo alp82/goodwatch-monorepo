@@ -71,16 +71,41 @@ test("every title of Top 10 and New on streaming is a poster card link", () => {
 	const titles = links(rendered.full).filter((link) =>
 		/^\/(movie|show)\/\d+-/.test(link.href),
 	)
-	// The Top 10 shows one list at a time (movies first); the shows are one link away.
-	assert.equal(titles.length, 10 + 12)
+	// Both Top 10 lists are in the HTML (movies, then shows), then New on streaming.
+	assert.equal(titles.length, 10 + 10 + 12)
 	assert.equal(titles[0].href, "/movie/100-a-title-number-100")
 	assert.equal(titles[1].text, "Law &amp; Order: Special Victims Unit (1991)")
+	assert.deepEqual(
+		titles.slice(10, 20).map((link) => link.href.split("-")[0]),
+		Array.from({ length: 10 }, (_, i) => `/show/${200 + i}`),
+	)
 	for (const link of titles)
 		assert.doesNotMatch(
 			link.attributes,
 			/nofollow|javascript:|onclick|data-discover/i,
 		)
-	assert.equal(rendered.full.match(/data-poster-card=""/g)?.length, 22)
+	assert.equal(rendered.full.match(/data-poster-card=""/g)?.length, 32)
+})
+
+test("the Top 10 shows movies first; the shows wait in the same cell, invisible and inert", () => {
+	const stack =
+		/<div class="sb-stack">(.*?)<\/section>/s.exec(rendered.full)?.[1] ?? ""
+	const panels = [
+		...stack.matchAll(
+			/<div( aria-hidden="true" inert="")?><div class="sb-rail"><ul aria-label="([^"]+)"/g,
+		),
+	]
+	assert.deepEqual(
+		panels.map(([, away, name]) => [name, Boolean(away)]),
+		[
+			["Top 10 movies", false],
+			["Top 10 shows", true],
+		],
+	)
+	assert.match(
+		rendered.full,
+		/<button type="button" role="tab" aria-selected="true">Movies<\/button>/,
+	)
 })
 
 test("every mood, service, and genre is a link to its page, named by it", () => {
@@ -159,6 +184,36 @@ test("each rail has its arrows in the HTML, in place: back off, forward on", () 
 			),
 		)
 	}
+})
+
+test("Escape closes a peek a chip opened by keyboard focus", () => {
+	const steps = JSON.parse(
+		execFileSync(
+			"node_modules/.bin/vite-node",
+			[
+				"--config",
+				"app/ui/imports/source-import-test-vite.config.ts",
+				"app/ui/start/browse/genre-cloud-interaction.test-support.tsx",
+			],
+			{ encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+		)
+			.split("__GENRE_CLOUD__")
+			.at(-1) ?? "",
+	)
+	assert.deepEqual(steps.focused, {
+		on: true,
+		describedBy: "sb-peek",
+		peekOpacity: "1",
+		peekText: "Title 10 · Title 11 · Title 12",
+		focused: true,
+	})
+	assert.deepEqual(steps.escaped, {
+		on: false,
+		describedBy: null,
+		peekOpacity: "0",
+		peekText: "Title 10 · Title 11 · Title 12",
+		focused: true,
+	})
 })
 
 test("the same data gives the same HTML", () => {

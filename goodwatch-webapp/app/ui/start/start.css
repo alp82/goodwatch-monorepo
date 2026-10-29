@@ -563,6 +563,18 @@
 	background: #fff;
 	color: #030712;
 }
+/* Movies and Shows share one grid cell, so the switch changes no height; the one not chosen is invisible. */
+.sb-stack {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+}
+.sb-stack > div {
+	grid-area: 1 / 1;
+	min-width: 0;
+}
+.sb-stack > [aria-hidden="true"] {
+	visibility: hidden;
+}
 .sb-ranks {
 	gap: 4px;
 }

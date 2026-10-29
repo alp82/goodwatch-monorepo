@@ -10,14 +10,14 @@ import {
 	useRef,
 	useState,
 } from "react"
+import { RailHead } from "./Rail"
+import { Fan, Poster } from "./Rails"
 import {
 	BROWSE_HUBS,
 	type BrowseGenre,
 	type BrowseKind,
 	genreHref,
 } from "./browse-data"
-import { Fan, Poster } from "./Rails"
-import { RailHead } from "./Rail"
 
 /** The peek's box (start.css `.sb-peek`). */
 const PEEK_W = 168
@@ -56,8 +56,19 @@ export function GenreCloud({
 	const box = useRef<HTMLDivElement>(null)
 	const [peek, setPeek] = useState<Peek | null>(null)
 
+	const open = Boolean(peek)
+	const byTap = Boolean(peek?.byTap)
+	// Escape closes any peek, whether a hover, a focus, or a tap opened it.
 	useEffect(() => {
-		if (!peek?.byTap) return
+		if (!open) return
+		const onKey = (event: KeyboardEvent) =>
+			event.key === "Escape" && setPeek(null)
+		document.addEventListener("keydown", onKey)
+		return () => document.removeEventListener("keydown", onKey)
+	}, [open])
+	// A tap elsewhere closes a tapped peek.
+	useEffect(() => {
+		if (!byTap) return
 		const close = (event: PointerEvent) => {
 			if (
 				!(event.target instanceof Element) ||
@@ -65,15 +76,9 @@ export function GenreCloud({
 			)
 				setPeek(null)
 		}
-		const onKey = (event: KeyboardEvent) =>
-			event.key === "Escape" && setPeek(null)
 		document.addEventListener("pointerdown", close)
-		document.addEventListener("keydown", onKey)
-		return () => {
-			document.removeEventListener("pointerdown", close)
-			document.removeEventListener("keydown", onKey)
-		}
-	}, [peek?.byTap])
+		return () => document.removeEventListener("pointerdown", close)
+	}, [byTap])
 
 	const groups = GROUPS.filter((group) => genres[group.kind].length)
 	if (!groups.length) return null
