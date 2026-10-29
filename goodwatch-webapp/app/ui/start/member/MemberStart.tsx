@@ -17,7 +17,13 @@ import { StartStage } from "../stage/StartStage"
 import { hasQuery } from "../stage/start-query"
 import { useStartQuery } from "../stage/useStartQuery"
 import { useFlow } from "../proto-streamline/ProtoSwitcher"
-import { RevealCard, revealAttrs, useLamp, useReveal } from "../proto-streamline/RevealCard"
+import {
+	RevealCard,
+	fanCount,
+	revealAttrs,
+	useLamp,
+	useReveal,
+} from "../proto-streamline/RevealCard"
 import { memberTeaser } from "../proto-streamline/teaser-models"
 import { Doors } from "./Doors"
 import { FirstSteps } from "./FirstSteps"
@@ -104,15 +110,12 @@ export function MemberStart({
 					}
 					card={
 						<RevealCard
+							fan={fanCount(flow)}
 							open={reveal.open}
 							onOpen={() => reveal.request(true)}
-							onClose={flow === "f" ? null : () => reveal.request(false)}
+							onClose={() => reveal.request(false)}
 							onAction={() => reveal.request(true)}
-							teaser={
-								flow === "f"
-									? null
-									: memberTeaser({ query: start.query, results, deck, unread })
-							}
+							teaser={memberTeaser({ query: start.query, results, deck, unread })}
 						>
 							{card}
 						</RevealCard>

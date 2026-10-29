@@ -1,14 +1,19 @@
-// PROTOTYPE (start-streamline): which flow is on show (`?flow=`), and a floating bar to switch flows and personas.
+// PROTOTYPE (start-streamline, round 3): which flow is on show (`?flow=`), and a floating bar to switch flows and personas.
 // The bar sits at the top, under the header, because the bottom of the screen is what the prototype is about.
 import { useNavigate, useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
 
 export const FLOWS = {
-	d: "Preview: a compact card under the sofa grows into the card",
-	e: "Ledge: posters on the room's floor grow into the card",
-	f: "Open: the card from the start, the lamp comes on",
+	g: "Fan: round 2's ledge, lower in the room; tap it for a surprise",
+	h: "Lineup: posters standing in a row on the floor",
+	i: "Deck: a stack of posters on the floor, the top one dealt",
+	j: "Rug: posters lying on the rug",
+	e: "Round 2's ledge, for comparison",
 	old: "Today's page",
 } as const
+
+/** Round 3's flows: the room set lower (the window in view), the card growing up from the ledge. */
+export const ROUND3: readonly Flow[] = ["g", "h", "i", "j"]
 
 export type Flow = keyof typeof FLOWS
 
@@ -18,7 +23,7 @@ const PERSONAS = ["guest", "full", "few", "new"] as const
 export function useFlow(): Flow {
 	const [params] = useSearchParams()
 	const f = params.get("flow")
-	return f && f in FLOWS ? (f as Flow) : "d"
+	return f && f in FLOWS ? (f as Flow) : "g"
 }
 
 export function ProtoSwitcher() {
@@ -53,7 +58,7 @@ export function ProtoSwitcher() {
 	const step = (d: number) =>
 		go({ flow: KEYS[(KEYS.indexOf(flow) + d + KEYS.length) % KEYS.length] })
 	return (
-		<div className="fixed top-[72px] left-1/2 z-[1100] flex -translate-x-1/2 items-center gap-1 rounded-full bg-fuchsia-950/95 p-1 text-xs font-semibold text-white shadow-[0_8px_30px_rgb(0_0_0/.6)] ring-2 ring-fuchsia-400/70">
+		<div className="fixed top-[72px] left-2 z-[1100] flex items-center gap-1 rounded-full bg-fuchsia-950/95 p-1 text-xs font-semibold text-white shadow-[0_8px_30px_rgb(0_0_0/.6)] ring-2 ring-fuchsia-400/70">
 			<button
 				type="button"
 				onClick={() => step(-1)}
@@ -62,7 +67,7 @@ export function ProtoSwitcher() {
 			>
 				←
 			</button>
-			<span className="max-w-[46vw] truncate px-1 sm:max-w-none">
+			<span className="max-w-[46vw] truncate px-1 sm:max-w-[34vw]">
 				<b>{flow.toUpperCase()}</b>
 				<span className="hidden sm:inline"> · {FLOWS[flow]}</span>
 			</span>

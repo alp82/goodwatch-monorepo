@@ -165,7 +165,7 @@ export function guestTeaser({
 		tone: "amber",
 		headline: "Tap three you loved",
 		sub: "Search or pick a mood above, then get picks for you.",
-		posters: fan.filter((t) => t.poster_path).slice(0, 5).map(posterOf),
+		posters: fan.filter((t) => t.poster_path).slice(0, 7).map(posterOf),
 		action: { id: "surprise", label: "Surprise me" },
 	}
 }

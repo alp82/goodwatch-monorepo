@@ -34,6 +34,7 @@ import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 import { ProtoSwitcher, useFlow } from "~/ui/start/proto-streamline/ProtoSwitcher"
 import {
 	RevealCard,
+	fanCount,
 	revealAttrs,
 	useLamp,
 	useReveal,
@@ -249,7 +250,7 @@ function GuestStart({
 	)
 }
 
-/** PROTOTYPE (start-streamline, round 2): a guest's start with the teaser under the sofa. */
+/** PROTOTYPE (start-streamline, rounds 2 and 3): a guest's start with the teaser on the room's floor. */
 function StreamGuest({
 	titles,
 	browse,
@@ -322,9 +323,10 @@ function StreamGuest({
 				}
 				card={
 					<RevealCard
+						fan={fanCount(flow)}
 						open={reveal.open}
 						onOpen={() => reveal.request(true)}
-						onClose={flow === "f" ? null : () => reveal.request(false)}
+						onClose={() => reveal.request(false)}
 						onAction={(id) => {
 							if (id === "surprise") {
 								start.clearSearch()
@@ -332,7 +334,7 @@ function StreamGuest({
 							}
 							reveal.request(true)
 						}}
-						teaser={flow === "f" ? null : teaser}
+						teaser={teaser}
 					>
 						<SpotlightCard
 							start={start}

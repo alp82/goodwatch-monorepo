@@ -1,23 +1,24 @@
-// PROTOTYPE (start-streamline, round 2): the card's box as a teaser that grows into the card. The room keeps the
-// framing a search gives today (the sofa between the search block and the card), so nothing in the room moves.
+// PROTOTYPE (start-streamline, rounds 2 and 3): the card's box as a teaser that grows into the card. The room
+// never moves.
 //
-// The card is always laid out at full height. Closed, only its top `--pst2-t` shows: a clip box moved up by the
-// hidden height, with the card moved back down by the same amount inside it. Opening moves both to 0, so the clip's
-// lower edge slides down while the card's top stays put. Transforms only.
+// The card is always laid out at full height, and only the teaser's height of it shows while closed: a clip box moved
+// by the hidden height, with the card moved back by the same amount inside it. Opening moves both to 0. Transforms
+// only.
 //
-// Flows (`?flow=`): d Preview (a compact panel), e Ledge (posters on the room's floor, no panel), f Open (the card
-// from the start, the room's lamp coming on).
+// - Round 2 (`?flow=e`): the teaser is the card's top, so the card grows down.
+// - Round 3 (`?flow=g|h|i|j`): the room sits lower (the window in view), the teaser is the card's bottom on the
+//   room's floor, and the card grows up from it (streamline.css, `.pst3`). Tapping the teaser does its action: a
+//   guest's empty state rolls a surprise mood at once.
 import { ChevronDownIcon } from "@heroicons/react/20/solid"
 import { type CSSProperties, type ReactNode, useEffect, useState } from "react"
 import { ListTag } from "~/ui/list-tag/ListTag"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import type { Flow } from "./ProtoSwitcher"
+import { type Flow, ROUND3 } from "./ProtoSwitcher"
 import type { TeaserModel, TeaserSide } from "./teaser-models"
 
-export function useReveal(flow: Flow, startOpen: boolean) {
-	const [open, setOpen] = useState(flow === "f" || startOpen)
+export function useReveal(_flow: Flow, startOpen: boolean) {
+	const [open, setOpen] = useState(startOpen)
 	useEffect(() => {
-		if (flow === "f") return
 		const onKey = (e: KeyboardEvent) => {
 			if (e.key !== "Escape") return
 			if ((e.target as HTMLElement | null)?.closest("input, textarea")) return
@@ -25,11 +26,8 @@ export function useReveal(flow: Flow, startOpen: boolean) {
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
-	}, [flow])
-	return {
-		open: flow === "f" || open,
-		request: (next: boolean) => setOpen(flow === "f" ? true : next),
-	}
+	}, [])
+	return { open, request: setOpen }
 }
 
 /** The lamp: the room loads dim and the light comes up a moment after the page has started. */
@@ -44,10 +42,13 @@ export function useLamp(delay = 700) {
 
 /** The wrapper's attributes: StartStage's card box reads them through `.pst2`. */
 export const revealAttrs = (flow: Flow, open: boolean) => ({
-	className: "pst2",
+	className: ROUND3.includes(flow) ? "pst2 pst3" : "pst2",
 	"data-flow": flow,
 	...(open ? { "data-open": "" } : {}),
 })
+
+/** How many posters a flow's fan shows: the row-like looks take more. */
+export const fanCount = (flow: Flow) => (flow === "h" || flow === "j" ? 7 : 5)
 
 export function RevealCard({
 	open,
@@ -55,8 +56,11 @@ export function RevealCard({
 	onClose,
 	onAction,
 	teaser,
+	fan = 5,
 	children,
 }: {
+	/** How many posters the fan shows. */
+	fan?: number
 	open: boolean
 	onOpen: () => void
 	onClose: (() => void) | null
@@ -85,7 +89,7 @@ export function RevealCard({
 					</div>
 					{teaser ? (
 						<div className="pst2-teaser" {...(open ? { inert: "" } : {})}>
-							<Teaser model={teaser} onOpen={onOpen} onAction={onAction} />
+							<Teaser model={teaser} fan={fan} onOpen={onOpen} onAction={onAction} />
 						</div>
 					) : null}
 				</div>
@@ -96,25 +100,27 @@ export function RevealCard({
 
 function Teaser({
 	model: m,
+	fan,
 	onOpen,
 	onAction,
 }: {
 	model: TeaserModel
+	fan: number
 	onOpen: () => void
 	onAction: (id: TeaserModel["action"]["id"]) => void
 }) {
 	return (
 		<div className="pst2-t" data-kind={m.kind} data-tone={m.tone}>
-			{/* The whole teaser opens the card; the button over it does its own action. */}
+			{/* The whole teaser is one button: its action (open, or a surprise mood at once). */}
 			<button
 				type="button"
 				className="pst2-cover"
-				aria-label={`Open: ${m.headline}`}
+				aria-label={`${m.action.label}: ${m.headline}`}
 				aria-controls="start-card"
-				onClick={onOpen}
+				onClick={() => (m.action.id === "open" ? onOpen() : onAction(m.action.id))}
 			/>
 			<div key={m.key} className="pst2-body">
-				{m.kind === "fan" ? <Fan posters={m.posters} /> : null}
+				{m.kind === "fan" ? <Fan posters={m.posters} max={fan} /> : null}
 				<div className="pst2-words">
 					<div className="pst2-eyebrow">
 						{m.busy ? <Dots /> : null}
@@ -123,14 +129,11 @@ function Teaser({
 					<div className="pst2-headline">{m.headline}</div>
 					{m.sub ? <div className="pst2-sub">{m.sub}</div> : null}
 				</div>
-				<button
-					type="button"
-					className="pst2-cta"
-					onClick={() => onAction(m.action.id)}
-				>
+				{/* The action's label; the cover does it. */}
+				<span aria-hidden className="pst2-cta">
 					{m.action.id === "surprise" ? <DieIcon /> : null}
 					{m.action.label}
-				</button>
+				</span>
 				{m.kind === "row" ? <Row posters={m.posters} busy={!!m.busy} /> : null}
 				{m.kind === "pair" && m.pair ? <Pair pair={m.pair} /> : null}
 			</div>
@@ -138,8 +141,8 @@ function Teaser({
 	)
 }
 
-function Fan({ posters }: { posters: TeaserModel["posters"] }) {
-	const shown = posters.filter((p) => p.path).slice(0, 5)
+function Fan({ posters, max }: { posters: TeaserModel["posters"]; max: number }) {
+	const shown = posters.filter((p) => p.path).slice(0, max)
 	const mid = (shown.length - 1) / 2
 	return (
 		<div aria-hidden className="pst2-fan" style={{ "--n": shown.length } as CSSProperties}>
