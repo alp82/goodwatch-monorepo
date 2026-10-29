@@ -1,10 +1,9 @@
-// A Settings page: each tile on /settings opens one (/settings/country, /settings/imports, ...). A full page with the
-// way back to Settings, the page's name in the My library heading font, and what the setting does.
-import { ChevronLeftIcon } from "@heroicons/react/20/solid"
-import { Link } from "@remix-run/react"
+// A Settings page: each row of the Settings column opens one (/settings/country, /settings/imports, ...). Inside the
+// Settings frame (routes/settings.tsx) it has the small head under the profile header, without a way back: the column is
+// the way around. Elsewhere (Discord's link page) it is a full page of its own with its title.
 import type { ReactNode } from "react"
 import { DISPLAY } from "~/ui/my-pages/bits"
-import { SETTINGS_PATH } from "./paths"
+import { useInSettingsFrame } from "./SettingsFrame"
 
 export function SettingsPage({
 	title,
@@ -15,21 +14,30 @@ export function SettingsPage({
 	intro?: ReactNode
 	children: ReactNode
 }) {
+	const framed = useInSettingsFrame()
+	if (framed)
+		return (
+			<div className="pb-32" data-settings-page>
+				<header className="pt-5 pb-5">
+					<h2 className="text-xl font-bold text-white md:text-2xl">{title}</h2>
+					{intro && (
+						<p className="mt-0.5 max-w-2xl text-sm text-gray-400">{intro}</p>
+					)}
+				</header>
+				<div className="text-base text-gray-300">{children}</div>
+			</div>
+		)
 	return (
 		<div className="overflow-x-clip pb-32" data-settings-page>
 			<header className="mx-auto max-w-6xl px-4 pt-6 pb-6 md:px-8 md:pt-8">
-				<Link
-					to={SETTINGS_PATH}
-					prefetch="intent"
-					className="-ml-1 mb-2 inline-flex min-h-8 items-center gap-0.5 rounded-lg pr-2 text-sm text-gray-400 hover:text-white"
-				>
-					<ChevronLeftIcon className="h-4 w-4" aria-hidden />
-					Settings
-				</Link>
 				<h1 className={`${DISPLAY} text-4xl text-white md:text-5xl`}>{title}</h1>
-				{intro && <p className="mt-2 max-w-2xl text-base text-gray-400">{intro}</p>}
+				{intro && (
+					<p className="mt-2 max-w-2xl text-base text-gray-400">{intro}</p>
+				)}
 			</header>
-			<div className="mx-auto max-w-6xl px-4 text-base text-gray-300 md:px-8">{children}</div>
+			<div className="mx-auto max-w-6xl px-4 text-base text-gray-300 md:px-8">
+				{children}
+			</div>
 		</div>
 	)
 }
@@ -47,7 +55,7 @@ export function PagePart({
 	return (
 		<section className="flex flex-col gap-3">
 			<div>
-				<h2 className="text-lg font-bold text-white">{title}</h2>
+				<h3 className="text-lg font-bold text-white">{title}</h3>
 				{hint && <p className="max-w-prose text-sm text-gray-400">{hint}</p>}
 			</div>
 			{children}

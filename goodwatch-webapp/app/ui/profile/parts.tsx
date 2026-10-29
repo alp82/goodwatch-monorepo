@@ -1,8 +1,7 @@
-// Pieces every profile page shares: buttons, the member's score chip, posters from TMDB paths, the score spread, the
-// owner's links to the private pages, the notice for a hidden part, and the "You" tag a signed-in visitor sees on
+// Pieces every profile page shares: buttons, the member's score chip, posters from TMDB paths, the score spread,
+// the notice for a hidden part, and the "You" tag a signed-in visitor sees on
 // titles they rated too.
 import {
-	ArrowTopRightOnSquareIcon,
 	CheckIcon,
 	LockClosedIcon,
 	ShareIcon,
@@ -321,19 +320,6 @@ export function SortSelect<T extends string>({
 			value={value}
 			onChange={onChange}
 		/>
-	)
-}
-
-/** The owner's way to the private page that changes what this page shows. */
-export function OwnerPageLink({
-	to,
-	children,
-}: { to: string; children: ReactNode }) {
-	return (
-		<Link to={to} className={`${QUIET_BUTTON} min-h-9`}>
-			{children}
-			<ArrowTopRightOnSquareIcon className="size-4 text-gray-400" aria-hidden />
-		</Link>
 	)
 }
 

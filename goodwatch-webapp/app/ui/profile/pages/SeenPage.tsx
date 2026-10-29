@@ -18,7 +18,7 @@ import {
 	useRowMarks,
 } from "~/ui/list-row/RowScores"
 import { DISPLAY } from "~/ui/my-pages/bits"
-import { OwnerPageLink, Segmented, TILE, TitleRow, count } from "../parts"
+import { Segmented, TILE, TitleRow, count } from "../parts"
 
 type Kind = LibraryKind
 const FIRST_MONTHS = 6
@@ -95,11 +95,6 @@ export function SeenPage({
 					]}
 				/>
 				<span className="grow" />
-				{shell.viewer === "owner" && (
-					<OwnerPageLink to="/my-library/seen">
-						Open in My library
-					</OwnerPageLink>
-				)}
 			</div>
 			{page.total > page.titles.length && (
 				<p className="text-xs text-gray-500">

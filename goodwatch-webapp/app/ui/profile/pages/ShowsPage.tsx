@@ -7,7 +7,7 @@ import type {
 	ShowGroup,
 } from "~/domain/profile"
 import { DISPLAY } from "~/ui/my-pages/bits"
-import { OwnerPageLink, PosterImg, TILE } from "../parts"
+import { PosterImg, TILE } from "../parts"
 
 const GROUPS: Record<ShowGroup, { name: string; line: string }> = {
 	continue: { name: "Continue", line: "Next episode is out" },
@@ -27,11 +27,6 @@ export function ShowsPage({
 	const groups = page.groups.filter((g) => g.shows.length)
 	return (
 		<>
-			{shell.viewer === "owner" && (
-				<div className="flex">
-					<OwnerPageLink to="/my-shows">Open My shows</OwnerPageLink>
-				</div>
-			)}
 			{groups.length ? (
 				groups.map((g) => (
 					<section key={g.group}>

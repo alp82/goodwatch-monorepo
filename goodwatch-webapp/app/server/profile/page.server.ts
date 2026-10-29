@@ -69,15 +69,53 @@ const iso = (value: Date | string | number | null | undefined) =>
 const byDateDesc = (a: ProfileTitle, b: ProfileTitle) =>
 	(b.date ?? "").localeCompare(a.date ?? "")
 
-export async function loadProfileShell(
+export interface ProfileShellOptions {
+	/** Overview and Lists render the list cards. */
+	listCards?: boolean
+	/**
+	 * The owner sees their profile as a signed-out visitor does (the shell's viewer is "guest"). Default: the request's
+	 * `?as=visitor`. The profile layout passes false: its header knows the owner either way.
+	 */
+	asVisitor?: boolean
+}
+
+type LoadedShell =
+	| { shell: ProfileShell; ownerId: string; viewerId: string | null }
+	| Response
+
+// The layout and the tab of one document request ask for the same shell: one load per request and options.
+const shellLoads = new WeakMap<Request, Map<string, Promise<LoadedShell>>>()
+
+export function loadProfileShell(
 	request: Request,
 	handle: string,
-	options: { listCards?: boolean } = {},
-): Promise<
-	{ shell: ProfileShell; ownerId: string; viewerId: string | null } | Response
-> {
+	options: ProfileShellOptions = {},
+): Promise<LoadedShell> {
+	const asVisitor =
+		options.asVisitor ??
+		new URL(request.url).searchParams.get("as") === "visitor"
+	const key = `${handle}|${options.listCards ? 1 : 0}|${asVisitor ? 1 : 0}`
+	let loads = shellLoads.get(request)
+	if (!loads) {
+		loads = new Map()
+		shellLoads.set(request, loads)
+	}
+	let load = loads.get(key)
+	if (!load) {
+		load = readProfileShell(request, handle, !!options.listCards, asVisitor)
+		loads.set(key, load)
+	}
+	return load
+}
+
+async function readProfileShell(
+	request: Request,
+	handle: string,
+	listCards: boolean,
+	asVisitor: boolean,
+): Promise<LoadedShell> {
 	// Overview and Lists render the cards, so retain their combined cache and avoid another metadata lookup.
-	const page = await (options.listCards
+	const page = await (listCards
 		? getProfilePage(handle)
 		: getProfileSummary(handle))
 	if (!page) throw notFound()
@@ -91,7 +129,13 @@ export async function loadProfileShell(
 	const ownerId = profile.userId
 	const viewerId = (await getUserIdFromRequest({ request })) ?? null
 	const viewer: ProfileViewer =
-		viewerId === ownerId ? "owner" : viewerId ? "member" : "guest"
+		viewerId === ownerId
+			? asVisitor
+				? "guest"
+				: "owner"
+			: viewerId
+				? "member"
+				: "guest"
 	const [settings, library, ownLists] = await Promise.all([
 		getProfileSettings(ownerId),
 		getProfileLibrary(ownerId),
@@ -181,11 +225,18 @@ const plainTitle = (t: ProfileTitle & { genres?: string[] }): ProfileTitle => {
 	return title
 }
 
+/**
+ * The Overview's parts. `highlights`: only the 10s and the hot takes, which the Taste profile shows; the activity row
+ * and the list cards stay empty and unread.
+ */
 export async function loadProfileOverview(
 	ownerId: string,
 	shell: ProfileShell,
+	{ highlights = false }: { highlights?: boolean } = {},
 ): Promise<ProfileOverview> {
-	const see = (part: Parameters<typeof canSee>[1]) => seesPart(shell, part)
+	const see = (part: Parameters<typeof canSee>[1]) =>
+		seesPart(shell, part) &&
+		!(highlights && (part === "activity" || part === "lists"))
 	const library = await getProfileLibrary(ownerId)
 	const { data } = library
 	const scored = [...library.scored.values()].map(plainTitle)

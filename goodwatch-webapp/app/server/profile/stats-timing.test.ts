@@ -122,8 +122,9 @@ test("Stats loader emits duration-only attribution and warm stats skip aggregate
 		assert.match(warm, new RegExp(`portrait_${tab}_cache_hit;dur=`))
 })
 
-test("Overview and Lists prime the shell with combined list cards", async () => {
-	for (const route of ["_index", "lists._index"]) {
+// The Taste profile tab (/u/:handle) draws no list cards, so only Lists asks for them.
+test("Lists primes the shell with combined list cards", async () => {
+	for (const route of ["lists._index"]) {
 		const module = await fixture(`routes/u.$handle.${route}.tsx`, {
 			...services,
 			"server/media-payload.server": `export const presentCatalogLoader = load => load`,

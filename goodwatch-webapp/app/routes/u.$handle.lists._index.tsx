@@ -9,10 +9,10 @@ import type { ProfileListsPage, ProfileShell } from "~/domain/profile"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { loadProfileLists } from "~/server/profile/page.server"
 import { profileLoader } from "~/server/profile/route.server"
-import { ProfileFrame } from "~/ui/profile/ProfileFrame"
+import { ProfileTabPage } from "~/ui/profile/ProfileFrame"
 import { profileMeta } from "~/ui/profile/meta"
 import { Body } from "~/ui/profile/parts"
-import { ListsPage } from "~/ui/profile/pages/ListsPage"
+import { ListsPage, NewListKey } from "~/ui/profile/pages/ListsPage"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -38,17 +38,21 @@ export const meta: MetaFunction<typeof loader> = ({ data }) =>
 export default function ProfileLists() {
 	const { shell, page } = useLoaderData() as Data
 	return (
-		<ProfileFrame
+		<ProfileTabPage
 			shell={shell}
-			tab="lists"
 			part="lists"
 			title="Lists"
-			line="Top 5 lists, ranked."
+			line={
+				shell.viewer === "owner"
+					? "Top 5 lists, ranked. Visitors see your public lists on this tab."
+					: "Top 5 lists, ranked."
+			}
+			links={shell.viewer === "owner" ? <NewListKey /> : undefined}
 		>
 			<Body>
 				<ListsPage shell={shell} lists={page.lists} />
 			</Body>
-		</ProfileFrame>
+		</ProfileTabPage>
 	)
 }
 

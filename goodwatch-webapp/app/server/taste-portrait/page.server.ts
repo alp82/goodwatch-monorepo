@@ -22,6 +22,8 @@ export interface TasteGroupsData {
 	kind: "groups"
 	/** The member's taste groups view; null for a guest, whose browser fetches it. */
 	view: PortraitViewOf<"sides"> | null
+	/** The member's handle; null before they pick one, and for a guest. */
+	handle?: string | null
 }
 
 export interface TastePortraitData {
@@ -48,6 +50,14 @@ const PRIVATE = { headers: { "Cache-Control": "private, no-store" } }
 export async function loadTastePage(request: Request, userId: string | null) {
 	// A guest's page carries nothing personal.
 	if (!userId) return json<TastePageData>({ kind: "groups", view: null })
+	return json(await readTastePage(request, userId), PRIVATE)
+}
+
+/** A member's Taste page data: /taste, and the owner's Taste profile tab (/u/:handle). Personal: never shared. */
+export async function readTastePage(
+	request: Request,
+	userId: string,
+): Promise<TastePageData> {
 	const base = await portraitViewer(request, undefined, userId)
 	// The three views read the member's rows once.
 	let context: Promise<ViewerContext> | undefined
@@ -67,7 +77,7 @@ export async function loadTastePage(request: Request, userId: string | null) {
 		getCachedProfileByUserId(userId).catch(() => null),
 	])
 	if (sides.status !== "ready" || fingerprint.status !== "ready")
-		return json<TastePageData>({ kind: "groups", view: sides }, PRIVATE)
+		return { kind: "groups", view: sides, handle: profile?.handle ?? null }
 	const stats = await statsLoad
 	// The groups and the crowd without the suggestions and services the page doesn't show.
 	const taste = buildProfileTaste(
@@ -75,15 +85,12 @@ export async function loadTastePage(request: Request, userId: string | null) {
 		publicView(sides, true),
 		publicView(everyone, true),
 	)
-	return json<TastePageData>(
-		{
-			kind: "portrait",
-			taste,
-			handle: profile?.handle ?? null,
-			averageYear: fingerprint.averageYear,
-			tags:
-				stats?.tags.essence.map(({ name, count }) => ({ name, count })) ?? null,
-		},
-		PRIVATE,
-	)
+	return {
+		kind: "portrait",
+		taste,
+		handle: profile?.handle ?? null,
+		averageYear: fingerprint.averageYear,
+		tags:
+			stats?.tags.essence.map(({ name, count }) => ({ name, count })) ?? null,
+	}
 }

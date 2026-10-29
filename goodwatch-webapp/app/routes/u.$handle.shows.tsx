@@ -5,8 +5,9 @@ import { useLoaderData } from "@remix-run/react"
 import type { ProfileShell, ProfileShowsPage } from "~/domain/profile"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { loadProfileShows } from "~/server/profile/page.server"
-import { profileLoader } from "~/server/profile/route.server"
-import { ProfileFrame } from "~/ui/profile/ProfileFrame"
+import { WATCH_PATHS } from "~/domain/member-paths"
+import { ownerKeepsInWatch, profileLoader } from "~/server/profile/route.server"
+import { ProfileTabPage } from "~/ui/profile/ProfileFrame"
 import { profileMeta } from "~/ui/profile/meta"
 import { Body } from "~/ui/profile/parts"
 import { ShowsPage } from "~/ui/profile/pages/ShowsPage"
@@ -20,6 +21,7 @@ interface Data {
 
 const load = (args: LoaderFunctionArgs) =>
 	profileLoader(args, async ({ ownerId, shell }) => {
+		ownerKeepsInWatch(shell, WATCH_PATHS.watching)
 		const page = await loadProfileShows(ownerId, shell)
 		return { page }
 	})
@@ -31,10 +33,10 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => profileMeta((data
 export default function ProfileShows() {
 	const { shell, page } = useLoaderData() as Data
 	return (
-		<ProfileFrame shell={shell} tab="shows" part="shows" title="Shows" line={shell.viewer === "owner" ? "The shows you follow, with progress." : "The shows they follow, with progress."}>
+		<ProfileTabPage shell={shell} part="shows" title="Shows" line={shell.viewer === "owner" ? "The shows you follow, with progress." : "The shows they follow, with progress."}>
 			<Body>
 				<ShowsPage shell={shell} page={page} />
 			</Body>
-		</ProfileFrame>
+		</ProfileTabPage>
 	)
 }

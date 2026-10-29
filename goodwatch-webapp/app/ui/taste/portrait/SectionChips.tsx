@@ -1,4 +1,4 @@
-// The Taste page's sections as chips, sticky under the site header; the section in view is marked.
+// The Taste page's sections as chips, sticky under the Taste row; the section in view is marked.
 import { type MouseEvent, useEffect, useState } from "react"
 import { WRAP } from "~/ui/my-pages/bits"
 
@@ -57,7 +57,7 @@ export function SectionChips({ sections }: { sections: Section[] }) {
 	return (
 		<nav
 			aria-label="Taste sections"
-			className="sticky top-16 z-40 border-b border-white/5 bg-gray-950/95"
+			className="sticky top-[109px] z-20 border-b border-white/5 bg-gray-950/95 lg:top-[113px]"
 		>
 			<ul
 				className={`${WRAP} flex gap-1.5 overflow-x-auto py-2 [scrollbar-width:none]`}

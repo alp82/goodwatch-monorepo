@@ -1,4 +1,5 @@
-// Your scores (My library): every title the member has scored, in one table with the ten scores beside each.
+// Your scores (Taste › Scores › Scored, the owner's view): every title the member has scored, in one table with the
+// ten scores beside each.
 //
 // What the owner chose from the prototypes (October 18, 2026): the table, with the site's tick boxes in brand amber
 // (a press on the title ticks the row), rows that open in place instead of a popup, the keys in the score control
@@ -6,11 +7,10 @@
 // together: all to one score, or each a step up or down. A change saves at once and Undo takes it back.
 //
 // The member's whole list comes with the page; rows are drawn in steps while scrolling, so a long list stays light.
-import { ArrowUturnLeftIcon, ArrowsUpDownIcon, ChevronDownIcon, ChevronRightIcon, StarIcon } from "@heroicons/react/20/solid"
-import { Link, useSearchParams } from "@remix-run/react"
+import { ArrowUturnLeftIcon, ArrowsUpDownIcon, ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
+import { useSearchParams } from "@remix-run/react"
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { STICKY_BAR } from "~/ui/layers"
-import { LIBRARY_HUB, QUICK_LIST_PAGE } from "~/domain/my-library"
 import {
 	type Direction,
 	NO_FILTERS,
@@ -24,7 +24,7 @@ import {
 	nextSort,
 } from "~/domain/my-scores"
 import type { Score } from "~/server/scores.server"
-import { Empty, PageHead, WRAP } from "~/ui/my-pages/bits"
+import { Empty, WRAP } from "~/ui/my-pages/bits"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { ChangedSwitch, FilterChips, FiltersButton, FiltersSheet, GroupControl, RowSearch } from "./ScoreFilters"
 import { ScoreKeys, ScoreRow, TickBox } from "./ScoreRow"
@@ -105,24 +105,6 @@ function Th({
 	)
 }
 
-/** The way to Quick list, to score more titles, drawn like Quick list's strip that leads here. */
-function ScoreMore() {
-	return (
-		<Link
-			to={QUICK_LIST_PAGE}
-			prefetch="intent"
-			data-score-more
-			className="group flex h-12 shrink-0 items-center gap-2.5 rounded-full bg-white/[0.03] pr-3 pl-1.5 ring-1 ring-white/10 hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-amber-400"
-		>
-			<span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-gray-400">
-				<StarIcon className="size-5" aria-hidden />
-			</span>
-			<span className="text-sm font-extrabold text-gray-100">Score more</span>
-			<ChevronRightIcon className="size-5 shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5" aria-hidden />
-		</Link>
-	)
-}
-
 /** The last change and Undo, or how saving goes. Above the phone's dock. */
 function ChangeBar({ changes, save, onUndo }: { changes: Change[]; save: SaveState; onUndo: () => void }) {
 	const last = changes[0]
@@ -173,8 +155,6 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 		const by = params.get("sort")
 		return isSort(by) ? { by, dir: FIRST_DIRECTION[by] } : { by: "score", dir: "desc" }
 	})
-	const back = { label: "My library", to: LIBRARY_HUB }
-	const aside = <ScoreMore />
 	const [grouping, setGrouping] = useState<ScoreGrouping>("none")
 	const [sheet, setSheet] = useState(false)
 	const [checked, setChecked] = useState<Set<string>>(new Set())
@@ -236,7 +216,6 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 	if (!titles.length)
 		return (
 			<div className="pb-24" data-my-scores>
-				<PageHead name="My scores" line="Every title you have scored." back={back} aside={aside} />
 				<div className={WRAP}>
 					<Empty title="No scores yet">A score you give a title on its page appears here, to change any time.</Empty>
 				</div>
@@ -246,12 +225,6 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 	let drawn = 0
 	return (
 		<div className="overflow-x-clip pb-32" data-my-scores>
-			<PageHead
-				name="My scores"
-				line={`${count(titles.length)} titles you have scored. Change any score right in the list.`}
-				back={back}
-				aside={aside}
-			/>
 			<div className={`${WRAP} flex flex-col gap-3`}>
 				<div className="flex flex-wrap items-center gap-2.5" data-controls>
 					<RowSearch q={f.q} onChange={(q) => setF((x) => ({ ...x, q }))} />
@@ -282,7 +255,7 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 
 				{picked.length > 0 && (
 					<div
-						className={`sticky top-[var(--nav-header-height,0px)] ${STICKY_BAR} flex flex-wrap items-center gap-2 rounded-2xl bg-gray-900/95 px-3 py-2 text-sm ring-1 ring-amber-400/40 ${s.save.kind === "saving" ? "[&_button]:pointer-events-none [&_button]:opacity-50" : ""}`}
+						className={`sticky top-[109px] lg:top-[113px] ${STICKY_BAR} flex flex-wrap items-center gap-2 rounded-2xl bg-gray-900/95 px-3 py-2 text-sm ring-1 ring-amber-400/40 ${s.save.kind === "saving" ? "[&_button]:pointer-events-none [&_button]:opacity-50" : ""}`}
 						aria-busy={s.save.kind === "saving"}
 						data-selection
 					>

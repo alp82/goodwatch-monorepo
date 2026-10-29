@@ -3,6 +3,7 @@
 // with the way to their tropes, and ways to sharpen it. Spec: docs/implementation/taste-redesign.md.
 import { Link } from "@remix-run/react"
 import { useMemo } from "react"
+import { member, ratePath } from "~/domain/member-paths"
 import type { TastePortraitData } from "~/server/taste-portrait/page.server"
 import { IMPORTS_PATH } from "~/ui/imports/shared"
 import { WRAP } from "~/ui/my-pages/bits"
@@ -14,7 +15,6 @@ import {
 	useTaste,
 } from "~/ui/profile/taste/model"
 import { PANEL, SectionHead } from "~/ui/profile/taste/parts"
-import { FLOW_PATH } from "~/ui/rating-flow/flow"
 import { TasteBanner } from "../tabs/TasteBanner"
 import { Explorer } from "./Explorer"
 import { TasteGroups } from "./Groups"
@@ -95,7 +95,7 @@ function Page({
 				</div>
 				<TasteTags tags={tags} handle={handle} />
 				<div className="flex flex-col gap-3">
-					<Sharpen />
+					<Sharpen handle={handle} />
 					{handle && (
 						<Link
 							to={profileTabPath(handle, "stats")}
@@ -110,14 +110,14 @@ function Page({
 	)
 }
 
-/** Rate more, or bring ratings from elsewhere. */
-function Sharpen() {
+/** Rate more (on the profile, or /taste/quiz before a handle), or bring ratings from elsewhere. */
+function Sharpen({ handle }: { handle: string | null }) {
 	return (
 		<div className={`${PANEL} flex flex-wrap items-center gap-3 p-3 sm:p-4`}>
 			<p className="mr-auto text-sm font-bold text-gray-200">
 				Sharpen your taste
 			</p>
-			<Link to={FLOW_PATH} className={QUIET_BUTTON}>
+			<Link to={ratePath(member(handle))} className={QUIET_BUTTON}>
 				Rate more
 			</Link>
 			<Link to={IMPORTS_PATH} className={QUIET_BUTTON}>

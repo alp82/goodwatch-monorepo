@@ -1,8 +1,9 @@
-// Member profile: /u/:handle, the Overview. Who the member is (picture, @handle, since, bio, links), the stat strip, the
-// profile's tabs, and the Overview's parts, each as the owner lets the viewer see it. Handles are permanent: a
-// differently cased handle redirects to the lowercase one, unknown and deleted handles answer 404.
+// The Taste profile tab: /u/:handle. The owner gets their own taste page (the portrait, or the start while their taste
+// forms). Everyone else, and the owner with ?as=visitor, gets the public portrait: who they are (bio, links, since),
+// the summary of their taste, the taste match, their 10s and their hot takes, each as the owner lets them see it.
 // Spec: docs/implementation/member-profile/README.md
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
+import { json } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import {
 	type ProfileOverview,
@@ -12,71 +13,138 @@ import {
 import type { MemberCompare } from "~/domain/profile-taste"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { getMemberCompare } from "~/server/profile/compare.server"
-import { loadProfileOverview } from "~/server/profile/page.server"
+import {
+	loadProfileOverview,
+	loadProfileShell,
+	profileCacheControl,
+} from "~/server/profile/page.server"
 import { getProfilePortrait } from "~/server/profile/portrait.server"
-import { profileLoader } from "~/server/profile/route.server"
-import { Overview, type OverviewTaste } from "~/ui/profile/Overview"
-import { ProfileFrame } from "~/ui/profile/ProfileFrame"
+import { statsTastePayload } from "~/server/profile/stats-payload"
+import {
+	type TastePageData,
+	readTastePage,
+} from "~/server/taste-portrait/page.server"
+import type { OverviewTaste } from "~/ui/profile/Overview"
 import { profileMeta } from "~/ui/profile/meta"
+import { TasteProfilePage } from "~/ui/profile/pages/TasteProfilePage"
+import { type ProfileTaste, buildProfileTaste } from "~/ui/profile/taste/model"
+import {
+	TastePageBody,
+	sideShouldRevalidate,
+} from "~/ui/taste/portrait/TastePageBody"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
-const load = (args: LoaderFunctionArgs) =>
-	profileLoader(args, async ({ ownerId, viewerId, shell }) => {
-		// The taste card and the comparison are extras: when one fails, the Overview renders without it. The match shows
-		// whatever the owner's Taste setting (Q9); without Taste the comparison carries no pulls.
-		const orNull = <T,>(work: Promise<T>, what: string) =>
-			work.catch((error) => {
-				console.error(`[profile] overview: ${what} failed`, error)
-				return null
-			})
-		const [overview, fingerprint, compare] = await Promise.all([
-			loadProfileOverview(ownerId, shell),
-			seesPart(shell, "taste")
-				? orNull(
-						getProfilePortrait(ownerId, "fingerprint", {
-							scores: seesPart(shell, "scores"),
-						}),
-						"fingerprint",
-					)
-				: null,
-			shell.viewer === "member"
-				? orNull(
-						getMemberCompare(viewerId, ownerId, shell.visibility),
-						"compare",
-					)
-				: null,
-		])
-		const taste: OverviewTaste | null =
-			fingerprint && fingerprint.status === "ready"
-				? {
-						identity: fingerprint.identity?.name ?? null,
-						line: fingerprint.line,
-						avoid: fingerprint.avoid,
-						attributes: fingerprint.attributes.map((a) => ({
-							key: a.key,
-							label: a.label,
-							family: a.family,
-							edge: a.edge,
-						})),
-					}
-				: null
-		return { overview, taste, compare }
-	}, { listCards: true })
-
-export const loader = presentCatalogLoader(load, { live: true })
-
-/** The loader's JSON (a redirect never renders). */
-interface OverviewData {
+interface OwnerData {
+	view: "owner"
 	shell: ProfileShell
+	page: TastePageData
+	viewerType: string | null
+}
+
+interface VisitorData {
+	view: "visitor"
+	shell: ProfileShell
+	taste: ProfileTaste | null
+	overviewTaste: OverviewTaste | null
 	overview: ProfileOverview
-	taste: OverviewTaste | null
 	compare: MemberCompare | null
 }
 
+type Data = OwnerData | VisitorData
+
+const load = async ({ request, params }: LoaderFunctionArgs) => {
+	const loaded = await loadProfileShell(request, params.handle ?? "")
+	if (loaded instanceof Response) return loaded
+	const { ownerId, viewerId, shell } = loaded
+	const headers = { "Cache-Control": profileCacheControl(viewerId) }
+	if (shell.viewer === "owner") {
+		const page = await readTastePage(request, ownerId)
+		return json<Data>(
+			{
+				view: "owner",
+				shell,
+				page,
+				viewerType:
+					page.kind === "portrait" ? (page.taste.identity?.name ?? null) : null,
+			},
+			{ headers },
+		)
+	}
+	// The portrait and the comparison are extras: when one fails, the tab renders without it.
+	const orNull = <T,>(work: Promise<T>, what: string) =>
+		work.catch((error) => {
+			console.error(`[profile] taste profile: ${what} failed`, error)
+			return null
+		})
+	const taste = seesPart(shell, "taste")
+	const portrait = <T extends "fingerprint" | "sides" | "everyone">(tab: T) =>
+		taste
+			? orNull(
+					getProfilePortrait(ownerId, tab, {
+						scores: seesPart(shell, "scores"),
+						summary: true,
+						request,
+					}),
+					tab,
+				)
+			: Promise.resolve(null)
+	const [overview, fingerprint, sides, everyone, compare] = await Promise.all([
+		loadProfileOverview(ownerId, shell, { highlights: true }),
+		portrait("fingerprint"),
+		portrait("sides"),
+		portrait("everyone"),
+		shell.viewer === "member"
+			? orNull(
+					getMemberCompare(viewerId, ownerId, shell.visibility),
+					"compare",
+				)
+			: null,
+	])
+	const built =
+		fingerprint && sides && everyone
+			? statsTastePayload(buildProfileTaste(fingerprint, sides, everyone))
+			: null
+	const overviewTaste: OverviewTaste | null =
+		fingerprint?.status === "ready"
+			? {
+					identity: fingerprint.identity?.name ?? null,
+					line: fingerprint.line,
+					avoid: fingerprint.avoid,
+					attributes: fingerprint.attributes.map((a) => ({
+						key: a.key,
+						label: a.label,
+						family: a.family,
+						edge: a.edge,
+					})),
+				}
+			: null
+	return json<Data>(
+		{
+			view: "visitor",
+			shell,
+			taste: built,
+			overviewTaste,
+			overview,
+			compare,
+		},
+		{ headers },
+	)
+}
+
+export const loader = presentCatalogLoader(load, { live: true })
+
+// A taste group in the address (`?side=`) alone keeps the data.
+export const shouldRevalidate = sideShouldRevalidate
+
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
-	const d = data as Partial<OverviewData> | undefined
-	const viewerType = d?.taste?.identity
+	const d = data as Partial<Data> | undefined
+	const viewerType =
+		d?.view === "owner"
+			? d.viewerType
+			: d?.view === "visitor"
+				? d.overviewTaste?.identity
+				: null
 	return profileMeta(
 		d?.shell,
 		"overview",
@@ -87,23 +155,16 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	)
 }
 
-export default function ProfileOverviewPage() {
-	const { shell, overview, taste, compare } = useLoaderData() as OverviewData
+export default function ProfileTasteTab() {
+	const data = useLoaderData() as Data
+	if (data.view === "owner") return <TastePageBody data={data.page} />
 	return (
-		<ProfileFrame
-			shell={shell}
-			tab="overview"
-			posters={{
-				wishlist: overview.newestWishlist.map((t) => t.poster),
-				lists: overview.lists.map((l) => l.posters[0] ?? null),
-			}}
-		>
-			<Overview
-				shell={shell}
-				overview={overview}
-				taste={taste}
-				compare={compare}
-			/>
-		</ProfileFrame>
+		<TasteProfilePage
+			shell={data.shell}
+			taste={data.taste}
+			overview={data.overview}
+			overviewTaste={data.overviewTaste}
+			compare={data.compare}
+		/>
 	)
 }

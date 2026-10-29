@@ -1,6 +1,7 @@
 // What every /u/:handle route's loader does: the shell (or the redirect to the lowercase handle, or 404), the page's
 // own data, the visitor's scores for "You" tags when the page shows them, and the profile's cache headers.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
+import { moveResponse } from "~/domain/member-paths"
 import type { ProfileShell, ProfileTitle } from "~/domain/profile"
 import { type RowServices, rowServices } from "~/server/row-services.server"
 import { getUserData } from "~/server/userData.server"
@@ -54,4 +55,13 @@ export async function visitorServices(
 		titles.filter((t) => !isSeen(data, t.key as MediaKey)),
 		viewerId,
 	)
+}
+
+/**
+ * The visitors-only tabs (Seen, Wishlist, Shows): the owner keeps these in Watch, so their own view goes there. The
+ * redirect depends on who asks, so no cache keeps it. With ?as=visitor the shell's viewer is a guest and the tab shows.
+ */
+export function ownerKeepsInWatch(shell: ProfileShell, to: string) {
+	if (shell.viewer === "owner")
+		throw moveResponse({ to, status: 302, private: true })
 }

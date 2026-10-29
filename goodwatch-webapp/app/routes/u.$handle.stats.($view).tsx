@@ -14,7 +14,7 @@ import { profileLoader } from "~/server/profile/route.server"
 import { statsPayload, statsTastePayload } from "~/server/profile/stats-payload"
 import { statsForViewer } from "~/server/profile/taste-stats-view"
 import { getTasteStats } from "~/server/profile/taste-stats.server"
-import { ProfileFrame } from "~/ui/profile/ProfileFrame"
+import { ProfileTabPage } from "~/ui/profile/ProfileFrame"
 import { profileMeta } from "~/ui/profile/meta"
 import { StatsPage } from "~/ui/profile/pages/StatsPage"
 import { ShareMenu } from "~/ui/profile/taste/ShareMenu"
@@ -143,9 +143,8 @@ export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
 export default function ProfileStatsTab() {
 	const { shell, taste, stats, compare } = useLoaderData() as Data
 	return (
-		<ProfileFrame
+		<ProfileTabPage
 			shell={shell}
-			tab="stats"
 			part="taste"
 			title="Stats"
 			line={
@@ -153,7 +152,7 @@ export default function ProfileStatsTab() {
 					? `${taste.counted.toLocaleString("en-US")} scores`
 					: undefined
 			}
-			headerRight={
+			links={
 				taste?.status === "ready" ? <ShareMenu shell={shell} /> : undefined
 			}
 		>
@@ -165,6 +164,6 @@ export default function ProfileStatsTab() {
 					compare={compare}
 				/>
 			)}
-		</ProfileFrame>
+		</ProfileTabPage>
 	)
 }

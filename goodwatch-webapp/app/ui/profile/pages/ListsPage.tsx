@@ -15,6 +15,16 @@ import {
 } from "~/ui/share-lists/ShareListTile"
 import { AMBER_BUTTON } from "../parts"
 
+/** The owner's key in the Lists tab's head. */
+export function NewListKey() {
+	return (
+		<Link to={newListPath()} className={AMBER_BUTTON}>
+			<PlusIcon className="size-5" aria-hidden />
+			New list
+		</Link>
+	)
+}
+
 export function ListsPage({
 	shell,
 	lists: loaded,
@@ -24,14 +34,6 @@ export function ListsPage({
 	return (
 		<>
 			<CardFonts />
-			{owner && (
-				<div className="flex">
-					<Link to={newListPath()} className={AMBER_BUTTON}>
-						<PlusIcon className="size-5" aria-hidden />
-						New list
-					</Link>
-				</div>
-			)}
 			{lists.length ? (
 				<ul className="grid grid-cols-1 gap-x-6 gap-y-10 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 					{lists.map((list, index) => (

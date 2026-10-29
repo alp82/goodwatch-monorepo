@@ -1,9 +1,9 @@
-// The Settings page: who you are, then one tile per setting. Each tile is one link to its own page and shows what the
-// setting is now: your country's flag, your language's flag with a title in it, your services' logos, where your
-// imports came from, your connected apps, and the Discover and cookie choices. Profile and Account follow, then a link
-// to My library, where Hidden titles live.
+// All settings (/settings): one tile per setting under the profile header. Each tile is one link to its own page and
+// shows what the setting is now: your country's flag, your language's flag with a title in it, your services' logos,
+// where your imports came from, your connected apps, and the Discover and cookie choices. Profile and Account follow,
+// then GoodWatch in other apps.
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
-import { BookOpenIcon, ShieldCheckIcon, UserCircleIcon } from "@heroicons/react/24/outline"
+import { ShieldCheckIcon, UserCircleIcon } from "@heroicons/react/24/outline"
 import { ExclamationTriangleIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import type { ComponentType, ReactNode, SVGProps } from "react"
@@ -23,7 +23,6 @@ import { Flag } from "~/ui/media-preference/PickerGrids"
 import { useSettingsPair } from "~/ui/media-preference/SettingsPair"
 import { englishName, languageFlag, ownName } from "~/ui/media-preference/languages"
 import { BROWSER } from "~/ui/media-preference/machine"
-import { MY_LIBRARY } from "~/ui/my-pages/bits"
 import { regionName } from "~/utils/display-names"
 import { useHydrated } from "~/utils/hydrated"
 import { SampleTitleLine } from "./SampleTitle"
@@ -48,34 +47,17 @@ export function SettingsHome({
 	connectedApps: ConnectedApp[] | null
 }) {
 	return (
-		<div className="mx-auto max-w-6xl px-4 py-4 pb-24 md:px-8 md:py-8">
-			<header className="flex flex-wrap items-center gap-4 rounded-2xl bg-gradient-to-br from-indigo-950 via-gray-900 to-gray-900 p-5 ring-1 ring-white/10 md:p-6">
-				<span
-					aria-hidden="true"
-					className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-indigo-800 text-2xl font-black text-white uppercase md:h-20 md:w-20 md:text-3xl"
-				>
-					{(handle ?? email ?? "?").slice(0, 1)}
-				</span>
-				<div className="min-w-0 flex-1">
-					<h1 className="text-sm font-normal text-gray-400">Your settings</h1>
-					{handle ? (
-						<p className="truncate text-2xl font-black text-white md:text-3xl">
-							@{handle}
-						</p>
-					) : (
-						<Link
-							to={PROFILE_PATH}
-							prefetch="intent"
-							className="text-xl font-bold text-white hover:underline md:text-2xl"
-						>
-							Choose your handle
-						</Link>
-					)}
-					{email && <p data-feedback-private className="truncate text-sm text-gray-400">{email}</p>}
-				</div>
+		<div className="pb-24" data-settings-home>
+			<header className="pt-5 pb-5">
+				<h2 className="text-xl font-bold text-white md:text-2xl">All settings</h2>
+				{email && (
+					<p data-feedback-private className="mt-0.5 truncate text-sm text-gray-400">
+						Signed in as {email}
+					</p>
+				)}
 			</header>
 
-			<div className="mt-4 grid gap-4 md:mt-6 md:grid-cols-2">
+			<div className="grid gap-4 md:grid-cols-2">
 				<WatchingFromTile />
 				<ShowTitlesInTile />
 				<YourServicesTile />
@@ -84,7 +66,7 @@ export function SettingsHome({
 				<DiscoverAndPrivacyTile />
 			</div>
 
-			<h2 className="mt-10 mb-3 text-xs font-semibold tracking-wide text-gray-500 uppercase">You</h2>
+			<h3 className="mt-10 mb-3 text-xs font-semibold tracking-wide text-gray-500 uppercase">You</h3>
 			<div className="grid gap-4 sm:grid-cols-2">
 				<RowLink
 					to={PROFILE_PATH}
@@ -95,19 +77,16 @@ export function SettingsHome({
 				<RowLink to={ACCOUNT_PATH} icon={ShieldCheckIcon} name="Account and sign-in" hint="Email, password and sign-in methods" />
 			</div>
 
-			<Link
-				to={MY_LIBRARY}
-				prefetch="intent"
-				data-settings-library
-				className="group mt-10 flex items-center gap-4 rounded-2xl border border-dashed border-white/15 p-5 hover:border-white/30 hover:bg-white/[0.03] focus-visible:outline-2 focus-visible:outline-white"
-			>
-				<BookOpenIcon className="h-7 w-7 shrink-0 text-amber-400" aria-hidden />
-				<span className="min-w-0 flex-1">
-					<b className="block text-white">My library</b>
-					<span className="block text-sm text-gray-400">Your scores, lists and hidden titles live in My library.</span>
-				</span>
-				<ChevronRightIcon className="h-5 w-5 shrink-0 text-gray-600 group-hover:text-amber-300" aria-hidden />
-			</Link>
+			<p className="mt-10 flex flex-wrap items-center gap-x-2 text-sm text-gray-400">
+				GoodWatch in other apps:
+				<Link to="/use-with-ai" prefetch="intent" className="font-semibold text-gray-200 underline decoration-white/20 underline-offset-4 hover:text-white">
+					Use with AI
+				</Link>
+				<span aria-hidden>·</span>
+				<Link to="/discord" prefetch="intent" className="font-semibold text-gray-200 underline decoration-white/20 underline-offset-4 hover:text-white">
+					Discord bot
+				</Link>
+			</p>
 		</div>
 	)
 }

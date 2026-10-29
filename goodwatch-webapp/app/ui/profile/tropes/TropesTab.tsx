@@ -4,7 +4,7 @@ import { type ProfileShell, seesPart } from "~/domain/profile"
 import { seesTropes } from "~/server/profile/tropes-model"
 import type { TropesPreview } from "~/server/profile/tropes-preview"
 import { WRAP } from "~/ui/my-pages/bits"
-import { ProfileFrame } from "~/ui/profile/ProfileFrame"
+import { ProfileTabPage } from "~/ui/profile/ProfileFrame"
 import { Body, TILE, count } from "~/ui/profile/parts"
 import { useUser } from "~/utils/auth"
 import useLocale from "~/utils/locale"
@@ -38,6 +38,8 @@ export function TropesTab({ shell, preview, pending }: TropesTabProps) {
 		queryFn: async ({ signal }) => {
 			const previous = client.getQueryData<FullData>(key)
 			const params = profileTropeRequestParams(previous)
+			// Signed in, yet a guest's view: the owner with ?as=visitor, who gets the tropes a visitor gets.
+			if (user && shell.viewer === "guest") params.set("as", "visitor")
 			const response = await fetch(
 				`/u/${encodeURIComponent(shell.handle)}/tropes/data${params.size ? `?${params}` : ""}`,
 				{ signal },
@@ -55,9 +57,8 @@ export function TropesTab({ shell, preview, pending }: TropesTabProps) {
 		initial?.carrying ?? tropes?.pool.filter((t) => t.r.length > 0).length ?? 0
 	const ready = !!tropes?.tropes.length
 	return (
-		<ProfileFrame
+		<ProfileTabPage
 			shell={shell}
-			tab="tropes"
 			// The tab shows scores and the titles that carry them: both parts must be visible.
 			part={seesPart(shell, "taste") ? "scores" : "taste"}
 			title="Tropes"
@@ -111,6 +112,6 @@ export function TropesTab({ shell, preview, pending }: TropesTabProps) {
 					</p>
 				</Body>
 			)}
-		</ProfileFrame>
+		</ProfileTabPage>
 	)
 }

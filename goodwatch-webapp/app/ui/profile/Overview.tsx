@@ -1,16 +1,10 @@
-// The profile's Overview below the header: the taste match (a signed-in visitor), a sign-up card (a signed-out
-// visitor), Favorites (every 10), the Taste card next to the score spread, the activity row (latest ratings, watching
-// now, newest on the wishlist), Lists and Hot takes. Every part follows the owner's "who sees what".
-import {
-	ArrowRightIcon,
-	ChevronLeftIcon,
-	ChevronRightIcon,
-	LinkIcon,
-	SparklesIcon,
-} from "@heroicons/react/20/solid"
-import { Link, useNavigate } from "@remix-run/react"
+// The parts of the old Overview that a visitor's Taste profile keeps (ui/profile/pages/TasteProfilePage.tsx): the taste
+// match (a signed-in visitor), a sign-up card (a signed-out visitor), every 10, and the hot takes. Every part follows the
+// owner's "who sees what".
+import { ArrowRightIcon, SparklesIcon } from "@heroicons/react/20/solid"
+import { Link } from "@remix-run/react"
 import { animate, motion, useReducedMotion } from "framer-motion"
-import { type ReactNode, useEffect, useRef, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import {
 	type ProfileOverview,
 	type ProfilePart,
@@ -18,34 +12,24 @@ import {
 	type ProfileTitle,
 	seesPart,
 } from "~/domain/profile"
+import { RATE_FALLBACK_PATH } from "~/domain/member-paths"
 import { type MemberCompare, matchTier } from "~/domain/profile-taste"
 import type { Score } from "~/server/scores.server"
 import { RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
-import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
-import { scoreLabels } from "~/utils/ratings"
+import { DISPLAY } from "~/ui/my-pages/bits"
 import { profileTabPath } from "./links"
 import { matchColor, matchStrength } from "./match"
 import {
 	AMBER_BUTTON,
 	PosterImg,
 	ProfilePoster,
-	SpreadBars,
 	TILE,
 	count,
 	posterOwner,
-	posterUrl,
-	shortDate,
-	vibe,
 } from "./parts"
 import { Whorl, type WhorlAttribute } from "./taste/Whorl"
-import {
-	CRAFT_KEYS,
-	FAMILY_COLOR,
-	type FamilyId,
-	theirLine,
-} from "./taste/model"
 
-/** What Overview shows of the owner's fingerprint: the Taste card and the match card's print. */
+/** What the match card shows of the owner's fingerprint: their print. */
 export interface OverviewTaste {
 	identity: string | null
 	line: string
@@ -53,6 +37,11 @@ export interface OverviewTaste {
 	attributes: WhorlAttribute[]
 }
 
+/**
+ * The parts of the old Overview that a visitor's Taste profile keeps, under the portrait: the taste match (a signed-in
+ * visitor) or the way to one (a signed-out visitor), every 10, and the hot takes. Each follows the owner's "who sees
+ * what".
+ */
 export function Overview({
 	shell,
 	overview,
@@ -64,14 +53,12 @@ export function Overview({
 	taste: OverviewTaste | null
 	compare: MemberCompare | null
 }) {
-	const navigate = useNavigate()
 	const see = (part: ProfilePart) => seesPart(shell, part)
 	const owner = shell.viewer === "owner"
 	const tier = (score: number) =>
 		`${profileTabPath(shell.handle, "scores")}#tier-${score}`
-	const mostOften = shell.spread.indexOf(Math.max(...shell.spread)) + 1
 	return (
-		<div className={`${WRAP} flex flex-col gap-12 pt-8 pb-32 text-white`}>
+		<>
 			{/* The match and the way to it show whatever the owner shares: they compare whole tastes, not one part. */}
 			{shell.viewer === "guest" && <GuestMatch handle={shell.handle} />}
 			{shell.viewer === "member" && compare && (
@@ -80,11 +67,11 @@ export function Overview({
 
 			{see("scores") && overview.favorites.length > 0 && (
 				<Section
-					title="Favorites"
+					title="Their 10s"
 					note="Every 10, latest watched first"
 					more={{
 						to: tier(10),
-						label: `See all ${count(shell.spread[9] ?? overview.favorites.length)} masterpieces`,
+						label: `See all ${count(shell.spread[9] ?? overview.favorites.length)}`,
 					}}
 				>
 					<ol className="grid grid-cols-4 gap-3 sm:grid-cols-6 sm:gap-4 lg:grid-cols-8">
@@ -104,113 +91,10 @@ export function Overview({
 				</Section>
 			)}
 
-			{((see("taste") && taste) || see("scores")) && (
-				<div className="grid gap-6 lg:grid-cols-2">
-					{see("taste") && taste && (
-						<Section
-							title="Taste"
-							more={{
-								to: profileTabPath(shell.handle, "stats"),
-								label: "Full taste",
-							}}
-						>
-							<TasteCard taste={taste} handle={shell.handle} owner={owner} />
-						</Section>
-					)}
-					{see("scores") && shell.counts.rated > 0 && (
-						<Section
-							title="Scores"
-							more={{
-								to: profileTabPath(shell.handle, "scores"),
-								label: "All scores by tier",
-							}}
-						>
-							<div className={`${TILE} flex h-full flex-col gap-5 p-5 pt-8`}>
-								<SpreadBars
-									spread={shell.spread}
-									average={shell.counts.average}
-									onPick={(score) => navigate(tier(score))}
-								/>
-								<p className="text-sm text-gray-400">
-									Most often <b className="text-white">{mostOften}</b> (
-									{scoreLabels[mostOften]}). {count(shell.spread[9] ?? 0)}{" "}
-									masterpieces out of {count(shell.counts.rated)}. Pick a bar to
-									see its titles.
-								</p>
-								<Link
-									to={profileTabPath(shell.handle, "scores")}
-									className="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-amber-500 hover:text-amber-400"
-								>
-									Every score, grouped by tier
-									<ArrowRightIcon className="size-4" aria-hidden />
-								</Link>
-							</div>
-						</Section>
-					)}
-				</div>
-			)}
-
-			{see("activity") && <ActivityRow shell={shell} overview={overview} />}
-
-			{see("lists") && overview.lists.length > 0 && (
-				<Section
-					title="Lists"
-					count={overview.lists.length}
-					more={{
-						to: profileTabPath(shell.handle, "lists"),
-						label: "All lists",
-					}}
-				>
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-						{overview.lists.map((list) => (
-							<Link
-								key={list.id}
-								to={list.href}
-								className={`${TILE} group flex min-w-0 flex-col gap-3 p-4 hover:bg-white/[0.06]`}
-							>
-								<span className="flex -space-x-4" aria-hidden>
-									{list.posters.map((p, i) => (
-										<span
-											// biome-ignore lint/suspicious/noArrayIndexKey: a list's posters in rank order
-											key={i}
-											className="block w-14 sm:w-16"
-											style={{ zIndex: 10 - i }}
-										>
-											{p ? (
-												<img
-													src={posterUrl(p) ?? ""}
-													alt=""
-													loading="lazy"
-													className="aspect-[2/3] w-full rounded-md object-cover shadow-lg ring-2 ring-gray-950"
-												/>
-											) : (
-												<span className="block aspect-[2/3] w-full rounded-md bg-white/10" />
-											)}
-										</span>
-									))}
-								</span>
-								<span className="flex items-center gap-1.5 font-bold text-gray-100 group-hover:text-white">
-									<LinkIcon className="size-4 text-gray-500" aria-hidden />
-									{list.title}
-								</span>
-							</Link>
-						))}
-					</div>
-				</Section>
-			)}
-
 			{see("scores") && overview.hotTakes.length > 0 && (
 				<Section
 					title="Hot takes"
 					note={`Where ${owner ? "you part" : "they part"} with everyone most`}
-					more={
-						see("taste")
-							? {
-									to: `${profileTabPath(shell.handle, "stats")}#everyone`,
-									label: owner ? "You vs everyone" : "Them vs everyone",
-								}
-							: undefined
-					}
 				>
 					<ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
 						{overview.hotTakes.map(({ title, delta }) => (
@@ -224,7 +108,7 @@ export function Overview({
 					</ul>
 				</Section>
 			)}
-		</div>
+		</>
 	)
 }
 
@@ -306,90 +190,6 @@ function Section({
 	)
 }
 
-// ---------- Taste card ----------
-
-function TasteCard({
-	taste,
-	handle,
-	owner,
-}: { taste: OverviewTaste; handle: string; owner: boolean }) {
-	const pulls = taste.attributes
-		.filter((a) => !CRAFT_KEYS.has(a.key) && a.edge > 0)
-		.sort((a, b) => b.edge - a.edge)
-		.slice(0, 5)
-	const byKey = new Map(taste.attributes.map((a) => [a.key, a]))
-	const away = taste.avoid
-		.map((k) => byKey.get(k))
-		.filter((a): a is WhorlAttribute => a != null)
-	return (
-		<Link
-			to={profileTabPath(handle, "stats")}
-			prefetch="intent"
-			className={`${TILE} group relative isolate flex h-full flex-col gap-4 overflow-hidden p-5 hover:bg-white/[0.06]`}
-		>
-			<div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
-				<span className="block w-36 shrink-0 transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transition-none sm:w-40">
-					<Whorl
-						attributes={taste.attributes}
-						turns={12}
-						rim={false}
-						label={`Fingerprint of @${handle}`}
-					/>
-				</span>
-				<div className="flex min-w-0 flex-1 flex-col gap-2">
-					<p className="text-[11px] font-bold tracking-[0.2em] text-amber-400 uppercase">
-						Viewer type
-					</p>
-					<p className="text-2xl leading-tight font-black text-white">
-						{taste.identity ?? "Taste forming"}
-					</p>
-					{taste.line && (
-						<p className="text-sm text-gray-300">
-							{owner ? taste.line : theirLine(taste.line)}
-						</p>
-					)}
-				</div>
-			</div>
-			<ul className="flex flex-wrap gap-1.5" aria-label="Strongest pulls">
-				{pulls.map((a) => (
-					<li
-						key={a.key}
-						className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-gray-100 ring-1 ring-white/10"
-					>
-						<span
-							aria-hidden
-							className="size-2 rounded-full"
-							style={{ background: FAMILY_COLOR[a.family as FamilyId] }}
-						/>
-						{a.label}
-					</li>
-				))}
-				{away.map((a) => (
-					<li
-						key={a.key}
-						className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs text-gray-500 ring-1 ring-white/10"
-					>
-						<span
-							aria-hidden
-							className="size-2 rounded-full"
-							style={{
-								boxShadow: `inset 0 0 0 1px ${FAMILY_COLOR[a.family as FamilyId]}`,
-							}}
-						/>
-						Not {a.label.toLowerCase()}
-					</li>
-				))}
-			</ul>
-			<span className="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-amber-500 group-hover:text-amber-400">
-				{owner
-					? "Your fingerprint, sides and hot takes"
-					: "Fingerprint, sides and hot takes"}
-				<ArrowRightIcon className="size-4" aria-hidden />
-			</span>
-		</Link>
-	)
-}
-
 // ---------- Match ----------
 
 function GuestMatch({ handle }: { handle: string }) {
@@ -451,7 +251,7 @@ function ThinMatch({
 				<b className="text-white">Rate 5 titles you love to see your match.</b>{" "}
 				You have {compare.liked} so far.
 			</p>
-			<Link to="/taste" className={AMBER_BUTTON}>
+			<Link to={RATE_FALLBACK_PATH} className={AMBER_BUTTON}>
 				Rate titles
 			</Link>
 		</div>
@@ -701,217 +501,8 @@ function MatchCard({
 	)
 }
 
-// ---------- Activity ----------
-
-type ActivityTab = "ratings" | "watching" | "wishlist"
-
-/** The activity strip's poster: the poster card, then the title and its line under it. */
-function Card({
-	title,
-	line,
-	owner,
-	progress,
-}: {
-	title: ProfileTitle
-	line: string
-	owner: string | null
-	progress?: number | null
-}) {
-	return (
-		<li className="w-32 shrink-0 snap-start sm:w-36">
-			<ProfilePoster title={title} owner={owner} sizes={STRIP_SIZES} />
-			{progress != null && (
-				<span
-					className="mx-1 mt-1 block h-1 overflow-hidden rounded-full bg-white/10"
-					role="progressbar"
-					aria-label="Episodes watched"
-					aria-valuemin={0}
-					aria-valuemax={100}
-					aria-valuenow={Math.round(progress * 100)}
-				>
-					<span
-						className="block h-full origin-left bg-emerald-400"
-						style={{ transform: `scaleX(${progress})` }}
-					/>
-				</span>
-			)}
-			<span className="block px-1 pt-1.5">
-				<span className="block truncate text-sm font-semibold text-gray-100">
-					{title.title}
-				</span>
-				<span className="block truncate text-xs text-gray-500">{line}</span>
-			</span>
-		</li>
-	)
-}
-
 const FAVORITE_SIZES: [string | null, string][] = [
 	["(min-width: 1024px)", "130px"],
 	["(min-width: 640px)", "16vw"],
 	[null, "25vw"],
 ]
-const STRIP_SIZES: [string | null, string][] = [
-	["(min-width: 640px)", "144px"],
-	[null, "128px"],
-]
-
-function ActivityRow({
-	shell,
-	overview,
-}: { shell: ProfileShell; overview: ProfileOverview }) {
-	const see = (part: ProfilePart) => seesPart(shell, part)
-	const owner = posterOwner(shell)
-	const tabs: {
-		id: ActivityTab
-		label: string
-		n: number
-		more: { to: string; label: string }
-	}[] = [
-		...(see("scores") && overview.recent.length
-			? [
-					{
-						id: "ratings" as const,
-						label: "Latest ratings",
-						n: overview.recent.length,
-						more: {
-							to: profileTabPath(shell.handle, "seen"),
-							label: "Watch history",
-						},
-					},
-				]
-			: []),
-		...(see("shows") && overview.watching.length
-			? [
-					{
-						id: "watching" as const,
-						label: "Watching now",
-						n: overview.watching.length,
-						more: {
-							to: profileTabPath(shell.handle, "shows"),
-							label: "All shows",
-						},
-					},
-				]
-			: []),
-		...(see("wishlist") && overview.newestWishlist.length
-			? [
-					{
-						id: "wishlist" as const,
-						label: "Newest on the wishlist",
-						n: shell.counts.wishlist,
-						more: {
-							to: profileTabPath(shell.handle, "wishlist"),
-							label: "Wishlist",
-						},
-					},
-				]
-			: []),
-	]
-	const [tab, setTab] = useState<ActivityTab>(tabs[0]?.id ?? "ratings")
-	const strip = useRef<HTMLUListElement>(null)
-	const current = tabs.find((t) => t.id === tab) ?? tabs[0]
-	if (!current) return null
-	const scroll = (dir: number) =>
-		strip.current?.scrollBy({
-			left: dir * strip.current.clientWidth * 0.8,
-			behavior: "smooth",
-		})
-	return (
-		<section className="flex min-w-0 flex-col gap-3" aria-label="Activity">
-			<div className="flex flex-wrap items-center gap-x-1 gap-y-2 border-b border-white/10">
-				<div
-					role="tablist"
-					aria-label="Activity"
-					className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]"
-				>
-					{tabs.map((t) => (
-						<button
-							key={t.id}
-							type="button"
-							role="tab"
-							aria-selected={t.id === current.id}
-							onClick={() => setTab(t.id)}
-							className={`-mb-px flex min-h-11 shrink-0 items-center gap-1.5 border-b-2 px-2 text-sm font-semibold whitespace-nowrap sm:px-3 sm:text-base ${
-								t.id === current.id
-									? "border-amber-400 text-white"
-									: "border-transparent text-gray-400 hover:text-gray-100"
-							}`}
-						>
-							{t.label}
-							<span className="text-xs tabular-nums text-gray-500">
-								{count(t.n)}
-							</span>
-						</button>
-					))}
-				</div>
-				<span className="grow" />
-				<span className="hidden gap-1 sm:flex">
-					<button
-						type="button"
-						onClick={() => scroll(-1)}
-						aria-label="Scroll back"
-						className="rounded-md bg-white/[0.06] p-1.5 text-gray-300 ring-1 ring-white/10 hover:text-white"
-					>
-						<ChevronLeftIcon className="size-5" aria-hidden />
-					</button>
-					<button
-						type="button"
-						onClick={() => scroll(1)}
-						aria-label="Scroll on"
-						className="rounded-md bg-white/[0.06] p-1.5 text-gray-300 ring-1 ring-white/10 hover:text-white"
-					>
-						<ChevronRightIcon className="size-5" aria-hidden />
-					</button>
-				</span>
-				<Link
-					to={current.more.to}
-					className="inline-flex min-h-11 items-center gap-1 px-1 text-sm font-semibold text-amber-500 hover:text-amber-400"
-				>
-					{current.more.label}
-					<ArrowRightIcon className="size-4" aria-hidden />
-				</Link>
-			</div>
-			<div role="tabpanel" aria-label={current.label} className="contents">
-				<ul
-					ref={strip}
-					className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:mx-0 sm:px-0"
-				>
-					{current.id === "ratings" &&
-						overview.recent.map((t) => (
-							<Card
-								key={t.key}
-								title={t}
-								line={shortDate(t.date)}
-								owner={owner}
-							/>
-						))}
-					{current.id === "watching" &&
-						overview.watching.map((s) => (
-							<Card
-								key={s.key}
-								title={s}
-								owner={owner}
-								line={s.next ?? `${s.watchedEpisodes} episodes`}
-								progress={
-									s.airedEpisodes
-										? Math.min(1, s.watchedEpisodes / s.airedEpisodes)
-										: null
-								}
-							/>
-						))}
-					{current.id === "wishlist" &&
-						overview.newestWishlist.map((t) => (
-							<Card
-								key={t.key}
-								title={t}
-								owner={owner}
-								line={
-									t.date ? `Added ${shortDate(t.date)}` : String(t.year ?? "")
-								}
-							/>
-						))}
-				</ul>
-			</div>
-		</section>
-	)
-}

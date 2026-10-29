@@ -1,7 +1,8 @@
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { presentCatalogLoader } from "~/server/media-payload.server"
-// Public share list page: /u/:handle/lists/:id. The card, large, and the five titles as rows: the score pill, the
+// Public share list page: /u/:handle/lists/:id, outside the profile layout (the card is the page), with the way back to
+// the owner's Lists tab. The card, large, and the five titles as rows: the score pill, the
 // owner's score on someone else's list, and the viewer's own services that stream it in their country (none for a
 // guest). Lists are looked up by id; a wrong or differently cased handle redirects to the canonical URL, and deleted lists
 // (or lists of deleted accounts) answer 404. Unlisted lists open by link. The page is noindex, follow. Its og:image is the
@@ -12,6 +13,7 @@ import {
 	PlusIcon,
 	Square2StackIcon,
 } from "@heroicons/react/24/outline"
+import { ChevronLeftIcon } from "@heroicons/react/20/solid"
 import type { MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import { ensureShareCard } from "~/server/share-card/images.server"
@@ -36,6 +38,7 @@ import {
 	SHARE_CARD_PREVIEW,
 } from "~/ui/share-card/links"
 import { type CardTitle, THEMES } from "~/ui/share-card/model"
+import { tastePath } from "~/domain/member-paths"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { titleToDashed } from "~/utils/helpers"
 import type { SizeRule } from "~/utils/tmdb-image"
@@ -159,6 +162,14 @@ export default function ShareListPage() {
 
 				<div className="flex min-w-0 flex-col gap-8">
 					<header className="flex flex-col gap-3">
+						<Link
+							to={tastePath(owner.handle, "lists")}
+							prefetch="intent"
+							className="-ml-1 inline-flex min-h-8 items-center gap-0.5 self-start pr-2 text-sm text-gray-400 hover:text-white"
+						>
+							<ChevronLeftIcon className="size-4" aria-hidden />
+							Lists
+						</Link>
 						<p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase">
 							Top {items.length} · {list.date}
 							{list.unlisted && (

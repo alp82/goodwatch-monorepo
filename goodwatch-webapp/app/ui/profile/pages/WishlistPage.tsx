@@ -13,7 +13,6 @@ import { DISPLAY } from "~/ui/my-pages/bits"
 import { ImportCta } from "../ImportCta"
 import { ProfileCard } from "../ProfileCard"
 import {
-	OwnerPageLink,
 	Segmented,
 	SortSelect,
 	TILE,
@@ -101,11 +100,6 @@ export function WishlistPage({
 						{ key: "title", label: "Title", hint: "A to Z" },
 					]}
 				/>
-				{owner && (
-					<OwnerPageLink to="/my-library/want">
-						Open in My library
-					</OwnerPageLink>
-				)}
 			</div>
 
 			<ImportCta shell={shell} what="wishlist" />

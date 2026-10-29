@@ -5,9 +5,10 @@ import { useLoaderData } from "@remix-run/react"
 import type { ProfileShell, ProfileSeenPage } from "~/domain/profile"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { loadProfileSeen } from "~/server/profile/page.server"
-import { profileLoader, visitorServices } from "~/server/profile/route.server"
+import { WATCH_PATHS } from "~/domain/member-paths"
+import { ownerKeepsInWatch, profileLoader, visitorServices } from "~/server/profile/route.server"
 import type { RowServices } from "~/server/row-services.server"
-import { ProfileFrame } from "~/ui/profile/ProfileFrame"
+import { ProfileTabPage } from "~/ui/profile/ProfileFrame"
 import { profileMeta } from "~/ui/profile/meta"
 import { Body, count } from "~/ui/profile/parts"
 import { SeenPage } from "~/ui/profile/pages/SeenPage"
@@ -22,6 +23,7 @@ interface Data {
 
 const load = (args: LoaderFunctionArgs) =>
 	profileLoader(args, async ({ ownerId, viewerId, shell }) => {
+		ownerKeepsInWatch(shell, WATCH_PATHS.moviesSeen)
 		const page = await loadProfileSeen(ownerId, shell)
 		const services = await visitorServices(args.request, viewerId, shell, page.titles)
 		return { page, services }
@@ -34,10 +36,10 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => profileMeta((data
 export default function ProfileSeen() {
 	const { shell, page, services } = useLoaderData() as Data
 	return (
-		<ProfileFrame shell={shell} tab="seen" part="seen" title="Seen" line={`${count(shell.counts.seen)} titles seen, latest first.`}>
+		<ProfileTabPage shell={shell} part="seen" title="Seen" line={`${count(shell.counts.seen)} titles seen, latest first.`}>
 			<Body>
 				<SeenPage shell={shell} page={page} services={services} />
 			</Body>
-		</ProfileFrame>
+		</ProfileTabPage>
 	)
 }

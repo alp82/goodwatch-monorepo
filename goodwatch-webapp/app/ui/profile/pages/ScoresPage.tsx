@@ -1,4 +1,3 @@
-import { PencilSquareIcon } from "@heroicons/react/20/solid"
 import { useEffect, useState } from "react"
 import { useSearchParams, useRevalidator } from "@remix-run/react"
 import { useInfiniteQuery } from "@tanstack/react-query"
@@ -20,7 +19,6 @@ import { ScorePill } from "~/ui/poster-card/ScorePill"
 import { scoreLabels } from "~/utils/ratings"
 import { ImportCta } from "../ImportCta"
 import {
-	OwnerPageLink,
 	ProfilePoster,
 	ScoreChip,
 	Segmented,
@@ -105,12 +103,6 @@ export function ScoresPage({
 						Pick a bar to jump to its tier.
 					</p>
 				</div>
-				{owner && (
-					<OwnerPageLink to="/my-library/scores">
-						<PencilSquareIcon className="size-4 text-amber-400" aria-hidden />
-						Edit scores
-					</OwnerPageLink>
-				)}
 			</div>
 			<ImportCta shell={shell} what="ratings" />
 			{you && (sharedCount > 0 || both) && (

@@ -1,42 +1,14 @@
-import {
-	LockClosedIcon,
-	PencilSquareIcon,
-	SparklesIcon,
-	UserGroupIcon,
-} from "@heroicons/react/20/solid"
+import { ChevronLeftIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import type { CSSProperties, ReactNode } from "react"
-import {
-	AUDIENCES,
-	type Audience,
-	type ProfilePart,
-	type ProfileShell,
-	seesPart,
-} from "~/domain/profile"
-import { STICKY_BAR } from "~/ui/layers"
-import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
-// The frame of every profile page: the picture, @handle, since, bio, links and actions (in full on Overview, compact on
-// the other tabs), the stat strip, the tabs (only the parts the viewer may see; the owner sees a lock or a members
-// mark on a narrowed part), and the notice in place of a part the viewer may not see. Nothing here may widen a phone's layout (overflow-x-clip keeps the sticky tabs working).
-import { PROFILE_TAB_PARTS } from "./paths"
+import type { ReactNode } from "react"
+import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
+import { WRAP } from "~/ui/my-pages/bits"
 import { assetUrl } from "~/utils/asset-url"
-import {
-	EDIT_PROFILE_PATH,
-	LINK_SERVICE_INFO,
-	type ProfileTab,
-	linkUrl,
-	profileTabPath,
-} from "./links"
-import {
-	AMBER_BUTTON,
-	HiddenPart,
-	ICON_ON_PHONE,
-	QUIET_BUTTON,
-	ShareButton,
-	count,
-	posterUrl,
-	vibe,
-} from "./parts"
+// The parts of every profile tab under the profile header (ProfileHeader.tsx): the picture, the tab's small head (the
+// header holds the h1), the notice in place of a part the viewer may not see, and the About block (bio, links, since)
+// at the top of a visitor's Taste profile. Nothing here may widen a phone's layout.
+import { LINK_SERVICE_INFO, linkUrl } from "./links"
+import { HiddenPart } from "./parts"
 
 const AVATAR_GRADIENT: Record<string, [string, string, string]> = {
 	amber: ["#fbbf24", "#b45309", "#451a03"],
@@ -86,100 +58,50 @@ export function ProfileAvatar({
 	)
 }
 
-const TABS: {
-	tab: ProfileTab
-	label: string
-	count?: (s: ProfileShell) => number
-}[] = [
-	{ tab: "overview", label: "Overview" },
-	{ tab: "seen", label: "Seen", count: (s) => s.counts.seen },
-	{
-		tab: "scores",
-		label: "Scores",
-		count: (s) => s.counts.rated,
-	},
-	{
-		tab: "wishlist",
-		label: "Wishlist",
-		count: (s) => s.counts.wishlist,
-	},
-	{ tab: "shows", label: "Shows" },
-	{ tab: "lists", label: "Lists", count: (s) => s.counts.lists },
-	{ tab: "stats", label: "Stats" },
-	{ tab: "tropes", label: "Tropes" },
-]
+/** A tab's small head under the profile header: its name, a line, and its keys at the end ("Rate more", Share). */
+export function TabHead({
+	title,
+	line,
+	back,
+	links,
+}: {
+	title: string
+	line?: ReactNode
+	/** A way back to the page above ("‹ Scores"). */
+	back?: { label: string; to: string }
+	links?: ReactNode
+}) {
+	return (
+		<div className={`${WRAP} flex flex-wrap items-end gap-x-4 gap-y-2 pt-5 pb-4`}>
+			<div className="min-w-0 flex-1 basis-60">
+				{back && (
+					<Link
+						to={back.to}
+						prefetch="intent"
+						className="-ml-1 mb-0.5 inline-flex min-h-8 items-center gap-0.5 pr-2 text-sm text-gray-400 hover:text-white"
+					>
+						<ChevronLeftIcon className="size-4" aria-hidden />
+						{back.label}
+					</Link>
+				)}
+				<h2 className="text-xl font-bold text-white md:text-2xl">{title}</h2>
+				{line && <p className="mt-0.5 text-sm text-gray-400">{line}</p>}
+			</div>
+			{links && (
+				<div className="flex shrink-0 flex-wrap items-center gap-2">{links}</div>
+			)}
+		</div>
+	)
+}
 
 /** "2019-03" → "March 2019". */
-const monthYear = (ym: string) => {
+export const monthYear = (ym: string) => {
 	const [y, m] = ym.split("-").map(Number)
 	return new Date(Date.UTC(y, (m || 1) - 1, 1)).toLocaleDateString("en-US", {
 		month: "long",
 		year: "numeric",
 		timeZone: "UTC",
 	})
-}
-
-export function ProfileTabs({
-	shell,
-	active,
-}: { shell: ProfileShell; active: ProfileTab }) {
-	const owner = shell.viewer === "owner"
-	return (
-		<nav
-			aria-label="Profile"
-			className={`sticky top-14 ${STICKY_BAR} border-b border-white/10 bg-gray-950/95 md:top-16`}
-		>
-			<div
-				className={`${WRAP} flex gap-1 overflow-x-auto [scrollbar-width:none]`}
-			>
-				{TABS.filter(
-					(t) =>
-						PROFILE_TAB_PARTS[t.tab].every((part) => seesPart(shell, part)),
-				).map((t) => {
-					const here = t.tab === active
-					const audience = PROFILE_TAB_PARTS[t.tab]
-						.map((p): Audience => shell.visibility[p])
-						.reduce((a, b) =>
-							AUDIENCES.indexOf(b) > AUDIENCES.indexOf(a) ? b : a,
-							"everyone",
-						)
-					const n = t.count?.(shell)
-					return (
-						<Link
-							key={t.tab}
-							to={profileTabPath(shell.handle, t.tab)}
-							prefetch="intent"
-							aria-current={here ? "page" : undefined}
-							className={`relative flex min-h-12 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-semibold whitespace-nowrap ${
-								here
-									? "border-amber-400 text-white"
-									: "border-transparent text-gray-400 hover:text-gray-100"
-							}`}
-						>
-							{t.label}
-							{n != null && (
-								<span className="text-xs tabular-nums text-gray-500">
-									{count(n)}
-								</span>
-							)}
-							{owner && audience === "me" && (
-								<LockClosedIcon
-									className="size-3.5 text-amber-300/80"
-									aria-label="Only you see this"
-								/>
-							)}
-							{owner && audience === "members" && (
-								<UserGroupIcon
-									className="size-3.5 text-sky-300/80"
-									aria-label="Members only"
-								/>
-							)}
-						</Link>
-					)
-				})}
-			</div>
-		</nav>
-	)
 }
 
 function LinkLogos({ shell }: { shell: ProfileShell }) {
@@ -218,292 +140,25 @@ function LinkLogos({ shell }: { shell: ProfileShell }) {
 	)
 }
 
-function Actions({ shell }: { shell: ProfileShell }) {
-	if (shell.viewer === "owner")
-		return (
-			<>
-				<ShareButton handle={shell.handle} compact />
-				<Link
-					to={EDIT_PROFILE_PATH}
-					className={`${QUIET_BUTTON} ${ICON_ON_PHONE}`}
-					aria-label="Edit profile"
-				>
-					<PencilSquareIcon className="size-4" aria-hidden />
-					<span className="max-sm:hidden">Edit profile</span>
-				</Link>
-			</>
-		)
-	if (shell.viewer === "member" && seesPart(shell, "taste"))
-		return (
-			<>
-				<Link
-					to={`${profileTabPath(shell.handle, "stats")}#compare`}
-					aria-label="Compare tastes"
-					className={`${AMBER_BUTTON} ${ICON_ON_PHONE}`}
-				>
-					<SparklesIcon className="size-4" aria-hidden />
-					<span className="max-sm:hidden">Compare tastes</span>
-				</Link>
-				<ShareButton handle={shell.handle} className={QUIET_BUTTON} compact />
-			</>
-		)
-	return <ShareButton handle={shell.handle} className={QUIET_BUTTON} compact />
-}
 
-/** Posters for the stat strip's Wishlist and Lists cells, from the Overview. */
-export interface StripPosters {
-	wishlist: (string | null)[]
-	lists: (string | null)[]
-}
-
-function MiniPosters({ paths }: { paths: (string | null)[] }) {
+/** A visitor's first look at whose profile this is: the bio, the links and since when. Nothing when all are empty. */
+export function ProfileAbout({ shell }: { shell: ProfileShell }) {
+	const links = shell.links.some((l) => l.value.trim())
+	if (!shell.bio && !links && !shell.since) return null
 	return (
-		<span className="flex -space-x-2" aria-hidden>
-			{paths
-				.filter((p): p is string => !!p)
-				.slice(0, 4)
-				.map((p, i) => (
-					<img
-						key={p}
-						src={posterUrl(p, "w92") ?? ""}
-						alt=""
-						loading="lazy"
-						className="h-7 w-5 rounded-sm object-cover ring-1 ring-gray-950"
-						style={{ zIndex: 4 - i }}
-					/>
-				))}
-		</span>
-	)
-}
-
-/** One connected strip: Seen, Scores, Wishlist, Lists, Watched, each linked to its page with a small picture of it. */
-export function StatStrip({
-	shell,
-	posters,
-}: { shell: ProfileShell; posters?: StripPosters }) {
-	const c = shell.counts
-	const see = (part: ProfilePart) => seesPart(shell, part)
-	const most = Math.max(1, ...shell.spread)
-	const movieShare = c.seen ? c.seenMovies / c.seen : 0
-	const cells: {
-		key: string
-		value: string
-		unit?: string
-		/** The unit on phones, where the strip is one row. */
-		unitShort?: string
-		label: string
-		to: string
-		visual: ReactNode
-		show: boolean
-	}[] = [
-		{
-			key: "seen",
-			value: count(c.seen),
-			label: "Seen",
-			to: profileTabPath(shell.handle, "seen"),
-			show: see("seen"),
-			visual: (
-				<span className="flex w-full flex-col gap-1">
-					<span
-						className="flex h-1.5 w-full overflow-hidden rounded-full bg-white/10"
-						aria-hidden
-					>
-						<span
-							className="bg-amber-400"
-							style={{ width: `${movieShare * 100}%` }}
-						/>
-						<span className="flex-1 bg-amber-200/40" />
-					</span>
-					<span className="text-[11px] text-gray-500">
-						{count(c.seenMovies)} movies · {count(c.seen - c.seenMovies)} shows
-					</span>
-				</span>
-			),
-		},
-		{
-			key: "scores",
-			value: count(c.rated),
-			label: "Scores",
-			to: profileTabPath(shell.handle, "scores"),
-			show: see("scores"),
-			visual: (
-				<span className="flex w-full flex-col gap-1">
-					<span className="flex h-5 items-end gap-px" aria-hidden>
-						{shell.spread.map((n, i) => (
-							<span
-								// biome-ignore lint/suspicious/noArrayIndexKey: always the ten scores
-								key={i}
-								className="flex-1 rounded-[1px]"
-								style={{
-									height: `${Math.max(8, (n / most) * 100)}%`,
-									background: vibe(i + 1),
-								}}
-							/>
-						))}
-					</span>
-					{c.average != null && (
-						<span className="text-[11px] text-gray-500">
-							average {c.average}
-						</span>
-					)}
-				</span>
-			),
-		},
-		{
-			key: "wishlist",
-			value: count(c.wishlist),
-			label: "Wishlist",
-			to: profileTabPath(shell.handle, "wishlist"),
-			show: see("wishlist"),
-			visual: <MiniPosters paths={posters?.wishlist ?? []} />,
-		},
-		{
-			key: "lists",
-			value: count(c.lists),
-			label: c.lists === 1 ? "List" : "Lists",
-			to: profileTabPath(shell.handle, "lists"),
-			show: see("lists"),
-			visual: <MiniPosters paths={posters?.lists ?? []} />,
-		},
-		{
-			key: "watched",
-			value: count(Math.round(c.hours / 24)),
-			unit: "days",
-			unitShort: "d",
-			label: "Watched",
-			to: profileTabPath(shell.handle, "stats"),
-			show: see("hours"),
-			visual: (
-				<span className="text-[11px] text-gray-500">
-					about {count(c.hours)} hours · {count(c.episodes)} episodes
-				</span>
-			),
-		},
-	]
-	const shown = cells.filter((cell) => cell.show)
-	if (!shown.length) return null
-	return (
-		<ul
-			className="grid grid-cols-[repeat(var(--n),minmax(0,1fr))] gap-px overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/10"
-			style={{ "--n": shown.length } as CSSProperties}
-		>
-			{shown.map((cell) => (
-				<li key={cell.key} className="min-w-0">
-					<Link
-						to={cell.to}
-						prefetch="intent"
-						className="group flex h-full flex-col gap-1 bg-gray-950/85 px-1.5 py-2 transition-colors min-[400px]:px-2 sm:gap-1.5 hover:bg-gray-900/90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white sm:px-4 sm:py-3"
-					>
-						<span className="truncate text-[10px] font-semibold text-gray-400 uppercase group-hover:text-amber-300 min-[400px]:tracking-wide sm:text-[11px]">
-							{cell.label}
-						</span>
-						<span
-							className={`${DISPLAY} text-base leading-none whitespace-nowrap text-white tabular-nums min-[400px]:text-lg sm:text-3xl`}
-						>
-							{cell.value}
-							{cell.unit && (
-								<span className="ml-0.5 font-sans text-xs font-bold text-gray-400 sm:ml-1">
-									<span className="sm:hidden">
-										{cell.unitShort ?? cell.unit}
-									</span>
-									<span className="max-sm:hidden">{cell.unit}</span>
-								</span>
-							)}
-						</span>
-						<span className="mt-auto hidden min-h-7 items-end sm:flex">
-							{cell.visual}
-						</span>
-					</Link>
-				</li>
-			))}
-		</ul>
-	)
-}
-
-/** The full header on Overview. */
-function FullHead({
-	shell,
-	posters,
-}: { shell: ProfileShell; posters?: StripPosters }) {
-	return (
-		<header className="relative isolate overflow-hidden">
-			{shell.cover && (
-				<img
-					src={posterUrl(shell.cover.backdrop, "w1280") ?? ""}
-					alt=""
-					className="absolute inset-0 -z-10 h-full w-full object-cover object-[center_30%] opacity-25"
-				/>
-			)}
-			<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-950 via-gray-950/85 to-gray-950/40" />
-			<div className={`${WRAP} flex flex-col gap-4 pt-6 pb-5 sm:pt-10`}>
-				<div className="flex items-start gap-x-4 sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-3">
-					<ProfileAvatar handle={shell.handle} avatar={shell.avatar} />
-					<div className="min-w-0 flex-1">
-						<h1
-							className={`${DISPLAY} text-2xl leading-tight break-words text-white sm:text-4xl`}
-						>
-							@{shell.handle}
-						</h1>
-						{shell.since && (
-							<p className="text-sm text-gray-400">
-								<span className="max-sm:hidden">On GoodWatch since </span>
-								<span className="sm:hidden">Since </span>
-								{monthYear(shell.since)}
-							</p>
-						)}
-						{shell.bio && (
-							<p className="mt-1 max-w-2xl text-sm text-gray-200 sm:text-base">
-								{shell.bio}
-							</p>
-						)}
-						{/* Phones: the link logos under the bio; the actions stay beside the name. */}
-						<div className="mt-2 empty:hidden sm:hidden">
-							<LinkLogos shell={shell} />
-						</div>
-					</div>
-					<div className="flex shrink-0 items-center gap-2">
-						<div className="max-sm:hidden">
-							<LinkLogos shell={shell} />
-						</div>
-						<Actions shell={shell} />
-					</div>
-				</div>
-				<StatStrip shell={shell} posters={posters} />
+		<div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+			<div className="min-w-0 flex-1 basis-72">
+				{shell.bio && (
+					<p className="max-w-2xl text-base text-gray-200">{shell.bio}</p>
+				)}
+				{shell.since && (
+					<p className="text-sm text-gray-400">
+						On GoodWatch since {monthYear(shell.since)}
+					</p>
+				)}
 			</div>
-		</header>
-	)
-}
-
-/** The head of a page under Overview: who it belongs to, the page's name and a line. */
-function CompactHead({
-	shell,
-	title,
-	line,
-	right,
-}: { shell: ProfileShell; title: string; line?: string; right?: ReactNode }) {
-	const home = profileTabPath(shell.handle)
-	return (
-		<header className={`${WRAP} flex items-center gap-3 pt-6 pb-4`}>
-			<Link
-				to={home}
-				aria-label={`@${shell.handle}'s profile`}
-				className="shrink-0"
-			>
-				<ProfileAvatar handle={shell.handle} avatar={shell.avatar} size="sm" />
-			</Link>
-			<div className="min-w-0">
-				<Link to={home} className="text-sm text-gray-400 hover:text-white">
-					@{shell.handle}
-				</Link>
-				<h1
-					className={`${DISPLAY} text-3xl leading-tight text-white md:text-4xl`}
-				>
-					{title}
-				</h1>
-				{line && <p className="text-sm text-gray-400">{line}</p>}
-			</div>
-			{right && <div className="ml-auto shrink-0">{right}</div>}
-		</header>
+			<LinkLogos shell={shell} />
+		</div>
 	)
 }
 
@@ -518,42 +173,37 @@ const PART_NAMES: Record<ProfilePart, string> = {
 	activity: "their activity",
 }
 
-/** A profile page: the frame, then the page, or the notice when the viewer may not see the page's part. */
-export function ProfileFrame({
+/**
+ * A profile tab's body: its small head and the page, or the notice when the viewer may not see the tab's part. The
+ * profile header and the Taste row above it come from the profile layout (routes/u.$handle.tsx).
+ */
+export function ProfileTabPage({
 	shell,
-	tab,
 	title,
 	line,
+	links,
 	part,
-	posters,
-	headerRight,
 	children,
 }: {
 	shell: ProfileShell
-	tab: ProfileTab
-	/** The compact head's right end, such as the page's Share menu. */
-	headerRight?: ReactNode
-	/** The page's name under the compact head; Overview has the full head. */
+	/** The tab's name in its small head; leave it out for a tab without one. */
 	title?: string
-	line?: string
+	line?: ReactNode
+	/** Keys at the head's end, such as the Share menu. */
+	links?: ReactNode
 	part?: ProfilePart
-	posters?: StripPosters
 	children: ReactNode
 }) {
 	const allowed = !part || seesPart(shell, part)
 	return (
-		<main className="min-h-screen overflow-x-clip text-white">
-			{tab === "overview" ? (
-				<FullHead shell={shell} posters={posters} />
-			) : (
-				<CompactHead
-					shell={shell}
-					title={title ?? ""}
+		<div className="text-white">
+			{title && (
+				<TabHead
+					title={title}
 					line={allowed ? line : undefined}
-					right={headerRight}
+					links={allowed ? links : undefined}
 				/>
 			)}
-			<ProfileTabs shell={shell} active={tab} />
 			{allowed ? (
 				children
 			) : (
@@ -569,6 +219,6 @@ export function ProfileFrame({
 					/>
 				</div>
 			)}
-		</main>
+		</div>
 	)
 }

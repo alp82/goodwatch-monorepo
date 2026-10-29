@@ -6,8 +6,9 @@ import { useLoaderData } from "@remix-run/react"
 import type { ProfileShell, ProfileWishlistPage } from "~/domain/profile"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { loadProfileWishlist } from "~/server/profile/page.server"
-import { profileLoader, visitorScores } from "~/server/profile/route.server"
-import { ProfileFrame } from "~/ui/profile/ProfileFrame"
+import { WATCH_PATHS } from "~/domain/member-paths"
+import { ownerKeepsInWatch, profileLoader, visitorScores } from "~/server/profile/route.server"
+import { ProfileTabPage } from "~/ui/profile/ProfileFrame"
 import { profileMeta } from "~/ui/profile/meta"
 import { Body, count } from "~/ui/profile/parts"
 import { WishlistPage } from "~/ui/profile/pages/WishlistPage"
@@ -22,6 +23,7 @@ interface Data {
 
 const load = (args: LoaderFunctionArgs) =>
 	profileLoader(args, async ({ ownerId, viewerId, shell }) => {
+		ownerKeepsInWatch(shell, WATCH_PATHS.wishlist)
 		const page = await loadProfileWishlist(ownerId, shell)
 		const you = await visitorScores(viewerId, shell, page.titles.map((t) => t.key))
 		return { page, you }
@@ -34,11 +36,11 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => profileMeta((data
 export default function ProfileWishlist() {
 	const { shell, page, you } = useLoaderData() as Data
 	return (
-		<ProfileFrame shell={shell} tab="wishlist" part="wishlist" title="Wishlist" line={`${count(shell.counts.wishlist)} titles to see.`}>
+		<ProfileTabPage shell={shell} part="wishlist" title="Wishlist" line={`${count(shell.counts.wishlist)} titles to see.`}>
 			<Body>
 				<WishlistPage shell={shell} page={page} you={you} />
 			</Body>
-		</ProfileFrame>
+		</ProfileTabPage>
 	)
 }
 
