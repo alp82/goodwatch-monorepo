@@ -27,7 +27,7 @@ export const DEFAULTS: Partial<Record<SectionId, string>> = {
 	origin: "a",
 	length: "d",
 	scores: "a",
-	released: "d",
+	released: "f",
 	age: "a",
 }
 

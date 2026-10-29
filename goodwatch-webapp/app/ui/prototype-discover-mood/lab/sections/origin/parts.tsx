@@ -5,6 +5,7 @@
 import { useQueries } from "@tanstack/react-query"
 import { productionCountryName } from "~/domain/production-country"
 import { useCountries } from "~/routes/api.countries"
+import { countryFlagUrl } from "~/utils/country-flag"
 import type { ProtoDiscover } from "../../../kit"
 
 export const POPULAR = ["US", "GB", "FR", "JP", "KR", "DE", "IT", "ES", "IN", "CA", "AU", "SE", "DK", "MX", "BR", "CN"]
@@ -61,7 +62,8 @@ export const BIG = ["US", "IN", "KR", "JP", "GB", "FR", "CN", "HK"]
 export const restOfWorld = (list: { code: string }[]) => list.map((c) => c.code).filter((c) => !BIG.includes(c)).sort()
 export const WORLD = REGIONS.flatMap((r) => r.codes).filter((c) => c !== "US")
 
-export const flagUrl = (code: string) => `https://flagcdn.com/w80/${code.toLowerCase()}.png`
+/** Settings' flags (public/flags), the same ones Watching from shows. */
+export const flagUrl = countryFlagUrl
 
 export function Flag({ code, className = "h-4 w-6" }: { code: string; className?: string }) {
 	return <img src={flagUrl(code)} alt="" loading="lazy" className={`shrink-0 rounded-[3px] object-cover ring-1 ring-white/10 ${className}`} />

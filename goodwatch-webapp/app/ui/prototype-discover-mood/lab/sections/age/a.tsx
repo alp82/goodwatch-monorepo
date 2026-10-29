@@ -2,14 +2,16 @@
 // show rating and count), and OK to show as a roomy checklist beside it. Round 7: a country switcher for whose ratings
 // decide, and a free age ("Watching with a 12 year old") that lands on the right step of that country's ladder.
 import { motion } from "framer-motion"
+import { useState } from "react"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { TAP } from "~/ui/filter-bar/motion"
 import type { SectionProps } from "../../types"
 import { GroupLabel, ResetLink, pad } from "../released/parts"
-import { CountrySwitch, FreeAge, KINDS, KindRow, NoLadder, useAge } from "./parts"
+import { CountryFound, CountrySwitch, FreeAge, KINDS, KindRow, NoLadder, useAge } from "./parts"
 
 export function AgeA({ d, pieces, phone }: SectionProps) {
 	const age = useAge(d, pieces)
+	const [term, setTerm] = useState("")
 	if (!age.ladder) return <NoLadder />
 	const anyChanged = Object.keys(age.changed).length > 0
 	const tile = (active: boolean) =>
@@ -19,33 +21,39 @@ export function AgeA({ d, pieces, phone }: SectionProps) {
 	return (
 		<div className={`${pad(phone)} ${phone ? "flex flex-col gap-6" : "grid grid-cols-[1.35fr_1fr] gap-10"}`}>
 			<div>
-				<div className={`mb-2 flex gap-2 ${phone ? "flex-col" : "h-7 items-center"}`}>
+				<div className={`mb-2 flex gap-2 ${phone ? "flex-col" : "h-10 items-center"}`}>
 					<span className="text-[11px] font-bold tracking-wide text-gray-500 uppercase">Age limit</span>
 					{!age.ladder.local && <span className="text-[12px] text-gray-500">Plain ages</span>}
 					<span className={phone ? "" : "ml-auto"}>
-						<CountrySwitch d={d} age={age} phone={phone} />
+						<CountrySwitch d={d} age={age} phone={phone} term={term} setTerm={setTerm} />
 					</span>
 				</div>
-				<div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${phone ? 3 : age.steps.length + 1}, minmax(0, 1fr))` }}>
-					<motion.button type="button" aria-pressed={!age.selected} whileTap={TAP} onClick={age.off} className={tile(!age.selected)}>
-						<span className="text-[20px] font-semibold">Off</span>
-						<span className={`text-[11px] ${age.selected ? "text-gray-500" : "text-gray-600"}`}>Every rating</span>
-					</motion.button>
-					{age.steps.map((step) => {
-						const on = age.selected === step
-						const n = age.stepCount(step.age)
-						return (
-							<motion.button key={step.age} type="button" aria-pressed={on} whileTap={TAP} onClick={() => age.pick(step.age)} className={tile(on)}>
-								<span className={`text-[11px] ${on ? "text-gray-600" : "text-gray-500"}`}>Up to</span>
-								<span className="text-[20px] font-semibold">{step.label}</span>
-								{step.show && <span className={`text-[12px] ${on ? "text-gray-600" : "text-gray-400"}`}>{step.show}</span>}
-								<span className={`text-[11px] tabular-nums ${on ? "text-gray-600" : "text-gray-500"}`}>{n === null ? " " : compactCount(n)}</span>
+				{/* Country matches take the ladder's place, so nothing below moves. */}
+				<div className="relative">
+					<div className={term.trim() ? "invisible" : ""}>
+						<div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${phone ? 3 : age.steps.length + 1}, minmax(0, 1fr))` }}>
+							<motion.button type="button" aria-pressed={!age.selected} whileTap={TAP} onClick={age.off} className={tile(!age.selected)}>
+								<span className="text-[20px] font-semibold">Off</span>
+								<span className={`text-[11px] ${age.selected ? "text-gray-500" : "text-gray-600"}`}>Every rating</span>
 							</motion.button>
-						)
-					})}
-				</div>
-				<div className={phone ? "mt-5" : "mt-6"}>
-					<FreeAge age={age} phone={phone} />
+							{age.steps.map((step) => {
+								const on = age.selected === step
+								const n = age.stepCount(step.age)
+								return (
+									<motion.button key={step.age} type="button" aria-pressed={on} whileTap={TAP} onClick={() => age.pick(step.age)} className={tile(on)}>
+										<span className={`text-[11px] ${on ? "text-gray-600" : "text-gray-500"}`}>Up to</span>
+										<span className="text-[20px] font-semibold">{step.label}</span>
+										{step.show && <span className={`text-[12px] ${on ? "text-gray-600" : "text-gray-400"}`}>{step.show}</span>}
+										<span className={`text-[11px] tabular-nums ${on ? "text-gray-600" : "text-gray-500"}`}>{n === null ? " " : compactCount(n)}</span>
+									</motion.button>
+								)
+							})}
+						</div>
+						<div className={phone ? "mt-5" : "mt-6"}>
+							<FreeAge age={age} phone={phone} />
+						</div>
+					</div>
+					{term.trim() && <CountryFound d={d} age={age} term={term} setTerm={setTerm} />}
 				</div>
 			</div>
 			<div>

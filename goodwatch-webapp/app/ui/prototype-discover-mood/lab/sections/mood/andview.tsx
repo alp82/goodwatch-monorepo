@@ -7,7 +7,7 @@ import type { ProtoDiscover } from "../../../kit"
 import type { SectionProps, Viewer } from "../../types"
 import { type AndCounts, type Cond, MAX_AND, picksOf, useAndCounts } from "./and"
 import { ColumnHead, ColumnRows } from "./columns"
-import { MEMBER_MIXES } from "./e"
+import { DROP_FROM, MEMBER_MIXES } from "./e"
 import { type FitRow, RecipeLine, byFit, fitRows } from "./fit"
 import { COLUMNS } from "./g"
 import { ArtTile, MIXES, MOOD_CHOICES, type Mix, type Moods, type WorldArt, genreUnits, mixName, useMixes, useMoods } from "./parts"
@@ -121,7 +121,7 @@ const readyMixes = (viewer: Viewer): Mix[] => (viewer === "member" ? MEMBER_MIXE
 
 /**
  * Ready mixes while nothing is picked; then "+ X" (the choices that narrow the most, any group, since picks AND),
- * and when few are left "Without X" (what dropping a pick brings back), filled up with ready mixes.
+ * then from three picks "Without X" (what dropping a pick brings back), then ready mixes. Only cards with titles.
  */
 export function useCards(d: ProtoDiscover, a: And, viewer: Viewer, slots: number, onMix?: () => void): Card[] {
 	const ready = readyMixes(viewer)
@@ -143,7 +143,15 @@ export function useCards(d: ProtoDiscover, a: And, viewer: Viewer, slots: number
 			path: x.count(i).path,
 		}),
 	)
-	if (!a.picks.length && !a.m.used) return mixCards.slice(0, slots)
+	// Cards that lead nowhere go; ready mixes fill what's left without a count (also when nothing leads anywhere).
+	const fill = (lead: Card[]) => {
+		const shown = new Set(lead.map((c) => c.id))
+		// The mix that's on goes last: ticked, a way back.
+		const rest = mixCards.filter((c) => !shown.has(c.id)).sort((p, q) => Number(p.on) - Number(q.on))
+		return [...lead, ...rest.map((c) => ({ ...c, n: null, line: null }))].slice(0, slots)
+	}
+	const leads = (c: Card) => (c.n === null ? a.total !== 0 : c.n > 0)
+	if (!a.picks.length && !a.m.used) return fill(mixCards.filter(leads))
 	const total = a.total
 	const adds = a.rows
 		.filter((r) => r.kind !== "genres" && !r.on && !r.dead && !r.search && r.n !== null && r.n > 0 && (total === null || r.n < total))
@@ -161,8 +169,8 @@ export function useCards(d: ProtoDiscover, a: And, viewer: Viewer, slots: number
 				tap: r.toggle,
 			}),
 		)
-	if (adds.length >= slots) return adds.slice(0, slots)
-	const drops = (a.picks.length > 1 || total === 0 ? a.picks : []).map(
+	// "Without X" only from three picks (e's DROP_FROM).
+	const drops = (a.picks.length + a.m.words.length >= DROP_FROM ? a.picks : []).map(
 		(c): Card => ({
 			id: `drop:${c.group}:${c.id}`,
 			name: `Without ${labelOf(d, c)}`,
@@ -175,7 +183,7 @@ export function useCards(d: ProtoDiscover, a: And, viewer: Viewer, slots: number
 			tap: () => dropCond(d, c),
 		}),
 	)
-	return [...adds, ...drops.sort((p, q) => (q.n ?? 0) - (p.n ?? 0)), ...mixCards.filter((c) => !c.on)].slice(0, slots)
+	return fill([...adds, ...drops.sort((p, q) => (q.n ?? 0) - (p.n ?? 0)), ...mixCards.filter((c) => !c.on)].filter(leads))
 }
 
 /** The cards in a grid. `small`: one short row (j); else e's tall cards (k). */
@@ -208,7 +216,6 @@ export function MixCards({
 							hues={card.hues}
 							path={path}
 							on={card.on}
-							dim={card.n === 0}
 							foot={foot}
 							onClick={card.tap}
 							small={small}

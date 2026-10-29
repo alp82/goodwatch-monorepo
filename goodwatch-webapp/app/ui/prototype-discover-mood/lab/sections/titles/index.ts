@@ -17,7 +17,7 @@ export const VARIANTS: SectionVariant[] = [
 	{ key: "d", name: "The bar is the search", label: "Titles", searchButton: true, View: TitlesD },
 	{ key: "e", name: "Describe or find a title", label: "Describe or find", View: TitlesE },
 	{ key: "f", name: "The grid is the preview", label: "Titles and people", liveGrid: true, View: TitlesF },
-	{ key: "g", name: "Suggestions list", label: "Titles", searchButton: true, View: TitlesG },
+	{ key: "g", name: "Suggestions list", label: "Titles", searchButton: true, ownType: true, View: TitlesG },
 	{ key: "h", name: "Steer board", label: "Steer", View: TitlesH },
 	{ key: "i", name: "One sentence", label: "Titles", View: TitlesI },
 ]

@@ -20,7 +20,8 @@ export function eras(): { id: string; label: string; items: Era[] }[] {
 			label: "New",
 			items: [
 				{ label: "This year", range: [now, now] },
-				{ label: "Last year", sub: String(now - 1), range: [now - 1, now - 1] },
+				// Last N years runs from N years back to now, like Last 3 years (the real "recent" preset).
+				{ label: "Last 2 years", range: [now - 2, now] },
 				{ label: "Last 3 years", range: [now - 3, now] },
 				{ label: "Last 5 years", range: [now - 5, now] },
 			],
@@ -36,8 +37,8 @@ export function eras(): { id: string; label: string; items: Era[] }[] {
 			items: [
 				{ label: "1960s", range: [1960, 1969] },
 				{ label: "1950s", range: [1950, 1959] },
-				{ label: "Before 1950", range: [YEAR_MIN, 1949] },
-				{ label: "Before 2000", range: [YEAR_MIN, 1999] },
+				{ label: "After 2000", range: [2000, now] },
+				{ label: "After 1950", range: [1950, now] },
 			],
 		},
 	]

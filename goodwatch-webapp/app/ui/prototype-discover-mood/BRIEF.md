@@ -413,3 +413,58 @@ open. No more "Not used" tags; the block of a kind that's out of the list (Movie
 - Status line: "Movies under 2 h" and "Episodes under 35 min" as two chips; the Watch summary joins them with " · ";
   the Length badge, the Watch badge and Clear all count each range that applies.
 - Production would need a second field (e.g. episodeRuntime) so one request can hold both.
+
+## Round 11 mood (2026-10-29)
+
+Owner on e's cards with a search and a person that leave nothing ("Without Cozy", "or Funny", every card "0 titles",
+faded): "these look disabled", and "the without filters should only appear once we have 3 selected".
+
+- e, j, k: no card leads to nothing. The grid holds only cards with titles: "+ X", then "Without X", then "or X" (e
+  only; j and k AND every pick), then ready mixes. Ready mixes fill what's left without a count, so the grid stays
+  full (8 desktop, 6 phone, j's row 6 or 4). When nothing in Mood can bring titles back (a search, people or Watch
+  filters already leave 0), the grid is the ready mixes at full strength, no counts. A count that can't be known (a
+  running search) stays in only while the list has titles.
+- "Without X" only from three picks (moods, About, Style, Genre and search moods together; `DROP_FROM` in e.tsx).
+- No dimmed cards in e, j, k (ArtTile's `dim` stays for the mood tiles and Released e). In j and k the mix that is on
+  fills last, ticked, so a full grid never runs short.
+
+## Round 11 search/footer (2026-10-29)
+
+Owner on titles g with "cozy rainy day mystery" running: the Filters row duplicated the Mood tab; move Movies or
+shows in there with the original site's anime switch; the Showing bar belongs in the footer, on every tab; "main
+title should be shows instead tv shows".
+
+- Page title: "Discover movies and shows" (`shell-parts.tsx` PageTitle; the real TYPE_LABELS already say "Shows").
+- Titles g: no Filters row, no Showing row. Movies or shows with the anime switch under it (the real sheet's type
+  card: Both / Movies / Shows, With anime / Anime only / Hide anime, live counts; `shell-tabs.tsx` TypeBlock) sits
+  where Filters was. The "Search <text>" row shows only while the text isn't the running search. Running, Titles get
+  three rows; people stay one row. `SectionVariant.ownType` (g only) drops the switch from the Search sub-tab row
+  (phones: from under the field) on every Search sub-tab; the other titles variants keep the row switch as before.
+- Footer (`lab/shell-footer.tsx`, every tab and sub-tab, desktop panel and phone sheet): the count ("N titles",
+  "N matches", "Top 100 matches"), then the search state as removable chips: the query, steering picks ("more like
+  X", "less like X", "like X" with poster), people ("with <name>" with face), Not seen yet, every other active filter
+  (moods, services, scores, length, type, anime, ...) and the lab-only user score; one row, scrolls sideways under a
+  fade. Then Clear all N and the Show button. Fixed height (desktop 68 px; phones: chips row over Clear all + Show).
+  The hidden meter left the footer. Chips open their place in the panel, as in the status line.
+- No chip twice on screen: g's pick chips and d's pick tray are gone (the footer has them). The status line under the
+  bar stays as it was; the open panel (phones: the sheet) covers it.
+
+## Round 11 age/released (2026-10-29)
+
+Owner on age a: the native country select was broken (blank dropdown over the ladder); "use a shared component for
+country selection", flags on the quick picks. On released f: keep it (now the default), drag across the graph to pick a
+range, "Last year" becomes Last 2 years from 2024, and the two Before chips switch places.
+
+- One country component for Made in and Age (`sections/origin/country-find.tsx`): CountryChip (the sheet's Chip with
+  the flag) and CountryMatches ("Find a country" matches as flag chips). Flags now come from Settings' own
+  `countryFlagUrl` (public/flags, as Watching from shows them) instead of flagcdn. Settings' CountryGrid wasn't reused
+  as is: its 4-column cards, "All countries" growth and every-country list don't fit the fixed panel.
+- Age a: Ratings in US GB DE FR IN JP as flag chips (phones: 4; a picked other country takes the first place so the
+  row keeps its length) and a Find a country field. Its matches (the 48 ladder countries) show in place of the ladder
+  and age slider, same box, nothing moves; a pick sets the country and ends the search.
+- Released f: pointer drag over the decade columns picks the spanned decades (capture starts after sideways movement
+  or a column change, `touch-action: pan-y`, so phones still scroll; a press without a drag stays b's tap rule). The
+  dragged span shows as a column wash and the bars' and posters' opacity.
+- Presets (c, d, e, f share `eras()`): This year, Last 2 years (now - 2, so 2024-now, `years=2024-`), Last 3 years
+  (now - 3, the real `recent` preset), Last 5 years. "Last N years" is always "since now - N". Older: Before 2000, then
+  Before 1950.

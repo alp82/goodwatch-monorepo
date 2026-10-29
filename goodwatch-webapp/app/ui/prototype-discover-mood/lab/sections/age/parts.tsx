@@ -8,8 +8,10 @@ import { dropFilter } from "~/domain/filter-state"
 import { productionCountryName } from "~/domain/production-country"
 import { CONTENT_LABELS, compactCount } from "~/ui/filter-bar/labels"
 import { TAP } from "~/ui/filter-bar/motion"
+import { SearchField } from "~/ui/filter-bar/SheetControls"
 import type { ProtoDiscover } from "../../../kit"
 import type { Pieces } from "../../types"
+import { type Country, CountryChip, CountryMatches } from "../origin/country-find"
 
 export function useAge(d: ProtoDiscover, pieces: Pieces) {
 	const s = d.filters.state
@@ -101,45 +103,53 @@ export function useRatingCountry(d: ProtoDiscover, age: Age) {
 	return { country, set: (code: string) => d.filters.set({ streamingCountry: code }) }
 }
 
-/** A few common countries as small chips, every other one in a select. */
-export function CountrySwitch({ d, age, phone }: { d: ProtoDiscover; age: Age; phone: boolean }) {
+/** Every ladder country by name, the current one always in. */
+export const ratingCountries = (current: string): Country[] =>
+	[...new Set([current, ...LADDER_COUNTRIES])].map((code) => ({ code, name: productionCountryName(code) })).sort((a, b) => a.name.localeCompare(b.name))
+
+/**
+ * Quick flag chips (the current country first when it isn't one, so the row keeps its length) and Made in's "Find a
+ * country" field. Its matches show in place of the ladder (CountryFound), not in a popup.
+ */
+export function CountrySwitch({
+	d,
+	age,
+	phone,
+	term,
+	setTerm,
+}: { d: ProtoDiscover; age: Age; phone: boolean; term: string; setTerm: (t: string) => void }) {
 	const { country, set } = useRatingCountry(d, age)
-	const codes = [...new Set([country, ...LADDER_COUNTRIES])]
-		.map((code) => ({ code, name: productionCountryName(code) }))
-		.sort((a, b) => a.name.localeCompare(b.name))
-	const quick = phone ? QUICK_COUNTRIES.slice(0, 3) : QUICK_COUNTRIES
+	const n = phone ? 4 : QUICK_COUNTRIES.length
+	const quick = (QUICK_COUNTRIES.includes(country) ? QUICK_COUNTRIES : [country, ...QUICK_COUNTRIES]).slice(0, n)
 	return (
-		<div className="flex items-center gap-1.5">
-			<span className="mr-1 text-[12px] text-gray-500">Ratings in</span>
-			{quick.map((code) => (
-				<button
-					key={code}
-					type="button"
-					aria-pressed={country === code}
-					title={productionCountryName(code)}
-					onClick={() => set(code)}
-					className={`h-7 rounded-md px-2 text-[12px] font-semibold cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
-						country === code ? "bg-white text-gray-950" : "bg-white/[0.06] text-gray-300 hover:bg-white/[0.11]"
-					}`}
-				>
-					{code}
-				</button>
-			))}
-			<select
-				aria-label="Rating country"
-				value={country}
-				onChange={(e) => set(e.target.value)}
-				className={`h-7 rounded-md border-0 py-0 pr-7 pl-2 text-[12px] text-white ring-1 ring-white/[0.08] ${
-					quick.includes(country) ? "bg-white/[0.05] w-[120px]" : "bg-white/[0.14] w-[150px] font-semibold"
-				}`}
-			>
-				{codes.map((c) => (
-					<option key={c.code} value={c.code}>
-						{c.name}
-					</option>
+		<div className={`flex gap-1.5 ${phone ? "flex-col" : "items-center"}`}>
+			<div className="flex items-center gap-1.5">
+				<span className="mr-1 shrink-0 text-[12px] whitespace-nowrap text-gray-500">Ratings in</span>
+				{quick.map((code) => (
+					<CountryChip key={code} code={code} short active={country === code} onClick={() => set(code)} />
 				))}
-			</select>
+			</div>
+			<div className={phone ? "" : "w-[190px]"}>
+				<SearchField value={term} onChange={setTerm} placeholder="Find a country" />
+			</div>
 		</div>
+	)
+}
+
+/** The ladder countries the search matches; a pick sets the country and ends the search. */
+export function CountryFound({ d, age, term, setTerm }: { d: ProtoDiscover; age: Age; term: string; setTerm: (t: string) => void }) {
+	const { country, set } = useRatingCountry(d, age)
+	return (
+		<CountryMatches
+			list={ratingCountries(country)}
+			term={term}
+			isOn={(c) => c === country}
+			onPick={(c) => {
+				set(c)
+				setTerm("")
+			}}
+			className="absolute inset-0 flex flex-wrap content-start gap-1.5 overflow-y-auto overscroll-contain"
+		/>
 	)
 }
 

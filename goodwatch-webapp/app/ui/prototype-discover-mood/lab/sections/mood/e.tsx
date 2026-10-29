@@ -3,12 +3,13 @@
 // pick every card is "your picks + one more", with its real count, its share of the list and its top title's picture.
 // Tapping a card adds that one choice, and the cards narrow again. When few narrowing steps are left, widening steps
 // (without a pick, or one more of a picked group) follow, then ready mixes. Moods, About, Style, Genre fold in the
-// side column. Round 10: no posters; the picks sit on the top row left of Find a filter (ownFind).
+// side column. Round 10: no posters; the picks sit on the top row left of Find a filter (ownFind). Round 11: no
+// card leads to nothing (ready mixes fill without a count), "Without X" only from three picks.
 import { motion } from "framer-motion"
 import { type ProtoDiscover, TAGS, type Tag, tagId } from "../../../kit"
 import type { SectionProps, Viewer } from "../../types"
 import { FoldShelf, nextTags } from "./fit"
-import { ArtTile, MIXES, MOOD_CHOICES, type Mix, type Moods, PickRow, type WorldArt, islandOfTag, mixName, tagName, useMixes, useMoods, useWorldArt } from "./parts"
+import { ArtTile, MIXES, MOOD_CHOICES, type Mix, type Moods, PickRow, type WorldArt, genreUnits, islandOfTag, mixName, tagName, useMixes, useMoods, useWorldArt } from "./parts"
 
 const findTag = (id: string): Tag => {
 	const [group, key] = id.split(":")
@@ -43,24 +44,50 @@ interface Card {
 
 const ready = (viewer: Viewer) => (viewer === "member" ? MEMBER_MIXES : MIXES).map((mix): Card => ({ kind: "mix", mix, tag: null }))
 
-/** The cards: narrowing steps first, then widening ones, then ready mixes, always `all` of them. */
-function useCards(d: ProtoDiscover, m: Moods, viewer: Viewer, all: number): Card[] {
+/** "Without X" cards only from this many picks on (moods, About, Style, Genre and search moods together). */
+export const DROP_FROM = 3
+
+/** All picks of the tab, genres and search moods too. */
+export const pickCount = (d: ProtoDiscover, m: Moods) => d.picked.length + m.words.length + genreUnits(d).filter((u) => u.on).length
+
+/** A card with its count; `n` null shows no count. */
+interface Counted extends Card {
+	n: number | null
+}
+
+/**
+ * The cards, always `all` of them, each leading somewhere: narrowing steps, then (from three picks) "Without X", then
+ * "or X", then ready mixes. Cards that would leave nothing are left out; ready mixes fill what's left without a count
+ * (so with nothing anywhere, e.g. a search with no results, the grid is the ready mixes at full strength).
+ */
+function useCards(d: ProtoDiscover, m: Moods, viewer: Viewer, all: number): Counted[] {
+	const mixes = ready(viewer)
 	const narrowing = d.picked.length > 0 || m.used > 0
-	if (!narrowing) return ready(viewer).slice(0, all)
 	const ids = d.picked.map(tagId)
 	const step = (kind: Card["kind"], t: Tag, tags: Tag[]): Card => ({ kind, tag: t, mix: { id: `${kind}:${tags.map(tagId).join("+")}`, tags } })
-	const add = nextTags(d, m, all).map((t) => step("add", t, [...d.picked, t]))
-	if (add.length >= all) return add
-	const drop = d.picked.length > 1 ? d.picked.map((t) => step("drop", t, d.picked.filter((p) => p !== t))) : []
+	const add = narrowing ? nextTags(d, m, 99).map((t) => step("add", t, [...d.picked, t])) : []
+	const drop = narrowing && pickCount(d, m) >= DROP_FROM ? d.picked.map((t) => step("drop", t, d.picked.filter((p) => p !== t))) : []
 	const groupFull = (g: Tag["group"]) => (g === "moods" ? m.full : d.picked.filter((p) => p.group === g).length >= 3)
-	const or = TAGS.filter(
-		(t) => d.picked.some((p) => p.group === t.group) && !groupFull(t.group) && !ids.includes(tagId(t)) && (t.group !== "moods" || MOOD_TAG_KEYS.has(t.key)),
+	const or = narrowing
+		? TAGS.filter(
+				(t) => d.picked.some((p) => p.group === t.group) && !groupFull(t.group) && !ids.includes(tagId(t)) && (t.group !== "moods" || MOOD_TAG_KEYS.has(t.key)),
+			)
+				.sort((a, b) => (d.countFor(b) ?? 0) - (d.countFor(a) ?? 0))
+				.map((t) => step("or", t, [...d.picked, t]))
+		: []
+	// Drops and mixes are counted as whole recipes; "+ X" and "or X" use Discover's own option counts.
+	const whole = [...drop, ...mixes]
+	const x = useMixes(
+		d,
+		whole.map((c) => c.mix),
 	)
-		.sort((a, b) => (d.countFor(b) ?? 0) - (d.countFor(a) ?? 0))
-		.map((t) => step("or", t, [...d.picked, t]))
-	// Ready mixes fill what's left, so the row is always full.
+	const countOf = (c: Card) => (c.tag && c.kind !== "drop" ? d.countFor(c.tag) : x.count(whole.indexOf(c)).total)
 	const seen = new Set<string>()
-	return [...add, ...drop, ...or, ...ready(viewer)].filter((c) => !seen.has(c.mix.id) && seen.add(c.mix.id)).slice(0, all)
+	const once = (c: Card) => !seen.has(c.mix.id) && seen.add(c.mix.id)
+	// Unknown counts (a running search) stay in while the list has titles; zeros go.
+	const leads = [...add, ...drop, ...or, ...mixes].map((c) => ({ ...c, n: countOf(c) })).filter((c) => (c.n === null ? d.total !== 0 : c.n > 0) && once(c))
+	const fill = mixes.filter(once).map((c) => ({ ...c, n: null }))
+	return [...leads, ...fill].slice(0, all)
 }
 
 const MOOD_TAG_KEYS = new Set(MOOD_CHOICES.flatMap((c) => (c.tag ? [c.tag.key] : [])))
@@ -77,8 +104,7 @@ function Cards({ d, m, art, viewer, cols, tile, all }: { d: ProtoDiscover; m: Mo
 				{cards.map((card, i) => {
 					const c = x.count(i)
 					const t = card.tag
-					// A narrowing or "or" card's count is Discover's own option count: exact, also while a search runs.
-					const left = card.kind === "add" || card.kind === "or" ? (t ? d.countFor(t) : null) : c.total
+					const left = card.n
 					const on = card.kind === "mix" && x.isOn(card.mix)
 					const share = card.kind === "add" && left !== null && total ? Math.round((left / total) * 100) : null
 					const foot =
@@ -92,7 +118,6 @@ function Cards({ d, m, art, viewer, cols, tile, all }: { d: ProtoDiscover; m: Mo
 								hues={t ? [t.color, (card.kind === "drop" ? card.mix.tags[0] : d.picked[0])?.color ?? t.color] : card.mix.tags.map((g) => g.color)}
 								path={c.path ?? art.get(islandOfTag(t ?? card.mix.tags[0]))?.path ?? null}
 								on={on}
-								dim={left === 0}
 								foot={foot}
 								onClick={() => (t ? d.toggle(t) : x.toggle(card.mix))}
 								className={`w-full ${tile}`}

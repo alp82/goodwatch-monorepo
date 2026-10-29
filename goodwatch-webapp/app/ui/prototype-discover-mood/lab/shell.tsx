@@ -3,18 +3,18 @@
 // sub-tabs Moods and titles, Cast and crew, Your taste; Mood is one section; Watch has Services, Made in, Length,
 // Scores, Released, Age and content. Each sub-tab's content is the chosen variant of its lab section. The search field
 // stays live in the bar on every tab; typing there from Mood or Watch jumps to Moods and titles, on Search it stays put
-// (sections read the text). Find a filter sits at the right of the sub-tab row on Mood and Watch.
+// (sections read the text). Find a filter sits at the right of the sub-tab row on Mood and Watch. Round 11: the
+// panel's footer shows the whole search state (shell-footer.tsx).
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { useEffect, useRef, useState } from "react"
 import { SnapSheet } from "~/ui/filter-bar"
-import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
-import { HiddenMeter } from "~/ui/filter-bar/SubBar"
+import { TAP } from "~/ui/filter-bar/motion"
 import { useLabChoice } from "./LabBar"
 import { pick, pick as variantOf } from "./registry"
 import { ResultsProvider, useShown } from "./results-view"
 import { useMcUsers } from "./sections/scores/mc-users"
-import { ShowButton } from "./show-button"
+import { Footer } from "./shell-footer"
 import { type ProtoDiscover, useFilterPieces } from "../kit"
 import {
 	GridUnder,
@@ -34,7 +34,6 @@ import {
 	segValues,
 	subCount,
 	subsFor,
-	useClearAll,
 	useOutsideClose,
 	useScrollTopOn,
 	useSlashKey,
@@ -51,35 +50,6 @@ const MORPH = {
 	exit: (dir: number) => ({ opacity: 0, x: dir * -28 }),
 }
 const MORPH_T = { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const }
-
-function Footer({ d: raw, pieces, onDone }: { d: ProtoDiscover; pieces: Pieces; onDone: () => void }) {
-	// The counts are the shown list's (a mood variant may replace Discover's).
-	const d = useShown(raw)
-	const clearAll = useClearAll(d)
-	const mc = useMcUsers()
-	const n = pieces.secondaryCount + (d.q ? 1 : 0) + (mc ? 1 : 0)
-	return (
-		<div className="flex shrink-0 items-center gap-4 border-t border-white/[0.06] bg-gray-950/85 px-5 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:pb-3">
-			<button
-				type="button"
-				onClick={clearAll}
-				disabled={!n}
-				className="rounded-md px-2 py-1 text-sm text-gray-400 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400 disabled:cursor-default disabled:text-gray-700"
-			>
-				{n ? `Clear all ${n}` : "Clear all"}
-			</button>
-			<span className="hidden items-center gap-2.5 text-sm text-gray-400 lg:flex">
-				<HiddenMeter counts={d.counts} className="w-24" />
-				{d.counts && d.counts.hidden > 0 && (
-					<span>
-						<RollingNumber value={d.counts.hidden} className="font-semibold text-gray-200" /> hidden
-					</span>
-				)}
-			</span>
-			<ShowButton q={d.q} counts={d.counts} onClick={onDone} className="ml-auto h-11 min-w-48 max-sm:flex-1" />
-		</div>
-	)
-}
 
 /** Which tab is open, the sub-tab each tab is on, and Find a filter's text. */
 function useTabState() {
@@ -227,7 +197,7 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 									</motion.div>
 								</AnimatePresence>
 							</div>
-							<Footer d={d} pieces={pieces} onDone={close} />
+							<Footer d={d} pieces={pieces} onDone={close} onOpen={goTo} />
 						</motion.div>
 					)}
 				</AnimatePresence>
@@ -347,7 +317,7 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 						)}
 					</div>
 				}
-				footer={<Footer d={d} pieces={pieces} onDone={() => t.go(null)} />}
+				footer={<Footer d={d} pieces={pieces} onDone={() => t.go(null)} onOpen={goTo} phone />}
 			>
 				<div ref={body} className="relative overflow-hidden px-5 pt-4 pb-8">
 					<AnimatePresence initial={false} custom={t.dir} mode="popLayout">

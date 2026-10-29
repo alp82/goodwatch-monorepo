@@ -1,8 +1,10 @@
 // PROTOTYPE (Discover lab) Released f "Timeline": every decade since the 1920s as a column on one timeline, the
 // column as wide as the years it holds, so the year slider under it lines up with the bars. Each column shows its top
 // title's poster and a bar in its era's tint, as tall as its real count. Tapping a decade picks it, a neighbor widens
-// the span (b's rule). New sits above as tinted tiles with Before 2000 / Before 1950 as chips, From / To at the right.
+// the span (b's rule); dragging across columns picks the decades it spans. New sits above as tinted tiles with After
+// 2000 / After 1950 as chips, From / To at the right.
 import { motion } from "framer-motion"
+import { type PointerEvent, useRef, useState } from "react"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { TAP } from "~/ui/filter-bar/motion"
 import { RangeSlider } from "~/ui/filter-bar/SheetControls"
@@ -11,6 +13,71 @@ import type { SectionProps } from "../../types"
 import { EraChip, type EraRead, ShareBar, YearFields, tint, useEraBoard } from "./art"
 import { DECADES, decadeRange, tapDecade } from "./b"
 import { GroupLabel, ResetLink, YEAR_MIN, fmtYear, pad, sameRange, setYears, toggleYears, useRangeReads, yearMax, yearRange } from "./parts"
+
+/** Movement before a press turns into a drag. Touch needs it sideways, so vertical scrolling stays the page's. */
+const SLOP = 8
+
+/**
+ * Drag across the decade columns to pick the span. A press without a drag stays a tap (the button's click). Capture
+ * starts only once the pointer moves sideways or onto another column.
+ */
+function useDecadeDrag(onPick: (from: number, to: number) => void) {
+	const [span, setSpan] = useState<[number, number] | null>(null)
+	const press = useRef<{ id: number; x: number; y: number; from: number; rects: DOMRect[]; dragging: boolean } | null>(null)
+	const swallow = useRef(false)
+	const at = (rects: DOMRect[], x: number) => {
+		const i = rects.findIndex((r) => x < r.right)
+		return i < 0 ? rects.length - 1 : i
+	}
+	const end = () => {
+		press.current = null
+		setSpan(null)
+	}
+	return {
+		span,
+		/** The button's click runs only when it wasn't the end of a drag. */
+		click: (run: () => void) => () => {
+			if (swallow.current) swallow.current = false
+			else run()
+		},
+		bind: {
+			onPointerDown: (e: PointerEvent<HTMLDivElement>) => {
+				if (e.button !== 0) return
+				const rects = [...e.currentTarget.children].map((c) => c.getBoundingClientRect())
+				press.current = { id: e.pointerId, x: e.clientX, y: e.clientY, from: at(rects, e.clientX), rects, dragging: false }
+			},
+			onPointerMove: (e: PointerEvent<HTMLDivElement>) => {
+				const p = press.current
+				if (!p || p.id !== e.pointerId) return
+				const to = at(p.rects, e.clientX)
+				if (!p.dragging) {
+					const dx = Math.abs(e.clientX - p.x)
+					const dy = Math.abs(e.clientY - p.y)
+					const sideways = dx > SLOP && dx > dy
+					if (e.pointerType === "touch" ? !sideways : !sideways && to === p.from) return
+					p.dragging = true
+					e.currentTarget.setPointerCapture(e.pointerId)
+				}
+				setSpan([Math.min(p.from, to), Math.max(p.from, to)])
+			},
+			onPointerUp: (e: PointerEvent<HTMLDivElement>) => {
+				const p = press.current
+				if (!p || p.id !== e.pointerId) return
+				if (p.dragging) {
+					const to = at(p.rects, e.clientX)
+					swallow.current = true
+					// No click follows a captured drag on some browsers; don't eat the next tap.
+					setTimeout(() => {
+						swallow.current = false
+					}, 0)
+					onPick(Math.min(p.from, to), Math.max(p.from, to))
+				}
+				end()
+			},
+			onPointerCancel: end,
+		},
+	}
+}
 
 /** A New tile: the era's tint as a wash from the left, its count and its share of every year. */
 function NewTile({ e, on, all, onClick }: { e: EraRead; on: boolean; all: number | null; onClick: () => void }) {
@@ -43,7 +110,7 @@ export function ReleasedF({ d, phone }: SectionProps) {
 	const any = sameRange(range, [YEAR_MIN, now])
 	const { groups, all } = useEraBoard(d)
 	const [news, , older] = groups
-	const before = older.items.filter((e) => e.label.startsWith("Before"))
+	const before = older.items.filter((e) => e.label.startsWith("After"))
 	// b's decade reads (same query, shared cache).
 	const reads = useRangeReads(
 		d,
@@ -61,31 +128,44 @@ export function ReleasedF({ d, phone }: SectionProps) {
 		return a <= range[1] && b >= range[0]
 	}
 	const weights = DECADES.map((y) => decadeRange(y)[1] - y + 1)
+	// One column dragged over is the same as tapping it; more pick their whole span.
+	const drag = useDecadeDrag((a, b) => (a === b ? tapDecade(d, DECADES[a]) : setYears(d, [DECADES[a], decadeRange(DECADES[b])[1]])))
+	const showAny = any && !drag.span
+	const lit = (i: number) => (drag.span ? i >= drag.span[0] && i <= drag.span[1] : any || inRange(DECADES[i]))
 
 	const strip = (
 		<div>
 			<GroupLabel right={<ResetLink show={!any} onClick={() => setYears(d, [YEAR_MIN, now])}>Any year</ResetLink>}>Decades</GroupLabel>
 			{/* Inset by half a slider thumb so the columns line up with the slider's years. */}
 			<div className="px-[10px]">
-				<div className="grid gap-px" style={{ gridTemplateColumns: weights.map((w) => `${w}fr`).join(" ") }}>
+				<div
+					{...drag.bind}
+					className="grid touch-pan-y gap-px select-none"
+					style={{ gridTemplateColumns: weights.map((w) => `${w}fr`).join(" ") }}
+				>
 					{DECADES.map((y, i) => {
 						const r = reads[i]
 						const n = r.total
-						const lit = any || inRange(y)
+						const on = lit(i)
 						const h = n === null ? 0.05 : Math.max(0.04, Math.sqrt(n) / top)
 						const hue = tint(`${y}s`)
 						return (
 							<motion.button
 								key={y}
 								type="button"
-								aria-pressed={!any && lit}
+								aria-pressed={!any && inRange(y)}
 								aria-label={`${y}s${n === null ? "" : `, ${n.toLocaleString("en")} titles`}`}
-								whileTap={TAP}
-								onClick={() => tapDecade(d, y)}
-								className="group flex min-w-0 flex-col items-center gap-1 rounded-lg pt-0.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+								whileTap={drag.span ? undefined : TAP}
+								onClick={drag.click(() => tapDecade(d, y))}
+								className="group relative flex min-w-0 flex-col items-center gap-1 rounded-lg pt-0.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 							>
+								{/* The span being dragged. */}
 								<span
-									className={`relative block aspect-[2/3] overflow-hidden rounded-md bg-white/[0.06] ring-1 ring-white/10 transition-opacity duration-300 ${phone ? "h-[36px]" : "w-[42px]"} ${lit ? "opacity-100" : "opacity-35 group-hover:opacity-70"}`}
+									className="pointer-events-none absolute inset-0 rounded-lg bg-white/[0.07] transition-opacity duration-150"
+									style={{ opacity: drag.span && on ? 1 : 0 }}
+								/>
+								<span
+									className={`relative block aspect-[2/3] overflow-hidden rounded-md bg-white/[0.06] ring-1 ring-white/10 transition-opacity duration-300 ${phone ? "h-[36px]" : "w-[42px]"} ${on ? "opacity-100" : "opacity-35 group-hover:opacity-70"}`}
 								>
 									{r.poster && <img src={posterUrl(r.poster, "w154")} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
 								</span>
@@ -94,20 +174,20 @@ export function ReleasedF({ d, phone }: SectionProps) {
 										className="absolute inset-x-0 bottom-0 h-full origin-bottom rounded-t-md transition-[transform,opacity] duration-300 motion-reduce:transition-none"
 										style={{
 											transform: `scaleY(${h})`,
-											opacity: any ? 0.75 : lit ? 1 : 0.22,
+											opacity: showAny ? 0.75 : on ? 1 : 0.22,
 											background: `linear-gradient(to top, ${hue}, ${hue}b3)`,
 										}}
 									/>
 									{!phone && (
 										<span
-											className={`absolute inset-x-0 top-0 text-center text-[11px] font-semibold tabular-nums transition-transform duration-300 ${lit ? "text-white" : "text-gray-500"}`}
+											className={`absolute inset-x-0 top-0 text-center text-[11px] font-semibold tabular-nums transition-transform duration-300 ${any || inRange(y) ? "text-white" : "text-gray-500"}`}
 											style={{ transform: `translateY(${Math.max(0, (1 - h) * BAR - 17)}px)` }}
 										>
 											{n === null ? "" : compactCount(n)}
 										</span>
 									)}
 								</span>
-								<span className={`w-full border-t pt-1 text-center tabular-nums ${phone ? "text-[10px]" : "text-[12px]"} ${!any && lit ? "border-white/40 font-semibold text-white" : "border-white/10 text-gray-400"}`}>
+								<span className={`w-full border-t pt-1 text-center tabular-nums ${phone ? "text-[10px]" : "text-[12px]"} ${!any && inRange(y) ? "border-white/40 font-semibold text-white" : "border-white/10 text-gray-400"}`}>
 									{phone ? `’${String(y).slice(2)}` : `${y}s`}
 								</span>
 							</motion.button>

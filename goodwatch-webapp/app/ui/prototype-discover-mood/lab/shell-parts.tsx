@@ -169,7 +169,7 @@ export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegV
 // Title
 
 export function PageTitle() {
-	return <h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">Discover movies and TV shows</h1>
+	return <h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">Discover movies and shows</h1>
 }
 
 // ---------------------------------------------------------------------------------------------------------------

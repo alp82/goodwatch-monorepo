@@ -15,13 +15,12 @@ import {
 	INDUSTRIES,
 	POPULAR,
 	REGIONS,
-	flagUrl,
 	restOfWorld,
-	searchCountries,
 	useAllCountries,
 	useOrigin,
 	useOriginCounts,
 } from "./parts"
+import { CountryChip, CountryMatches } from "./country-find"
 
 /** Picked countries outside Popular show first in Popular, unless a big set (Rest of the world) is on. */
 const MAX_EXTRA = 8
@@ -47,15 +46,8 @@ export function OriginA({ d, phone }: SectionProps) {
 	}
 	const regionCount = (i: number) => counts[1 + POPULAR.length + i]
 	const industryCount = (i: number) => counts[1 + POPULAR.length + REGIONS.length + i]
-	const matches = search.trim() ? searchCountries(all.list, search).slice(0, 60) : []
 
-	const chip = (code: string, count: number | null) => (
-		<Chip
-			key={code}
-			img={flagUrl(code)}
-			o={{ id: code, label: productionCountryName(code), active: o.has(code), count, toggle: () => o.toggle(code) }}
-		/>
-	)
+	const chip = (code: string, count: number | null) => <CountryChip key={code} code={code} active={o.has(code)} count={count} onClick={() => o.toggle(code)} />
 
 	const row = (on: boolean, h: string) =>
 		`flex ${h} w-full min-w-0 items-center gap-2.5 rounded-xl px-3 text-left text-[13px] cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
@@ -74,10 +66,15 @@ export function OriginA({ d, phone }: SectionProps) {
 			</div>
 
 			{search.trim() ? (
-				<div className={phone ? "flex flex-wrap gap-1.5" : "-mx-1 flex min-h-0 flex-1 flex-wrap content-start gap-1.5 overflow-y-auto overscroll-contain px-1"}>
-					{matches.map((c) => chip(c.code, countOf(c.code)))}
-					{!matches.length && <p className="py-1.5 text-[13px] text-gray-500">{all.loading ? "Loading countries…" : "No matching country."}</p>}
-				</div>
+				<CountryMatches
+					list={all.list}
+					term={search}
+					loading={all.loading}
+					isOn={o.has}
+					countOf={countOf}
+					onPick={o.toggle}
+					className={phone ? "flex flex-wrap gap-1.5" : "-mx-1 flex min-h-0 flex-1 flex-wrap content-start gap-1.5 overflow-y-auto overscroll-contain px-1"}
+				/>
 			) : (
 				<div className={phone ? "space-y-5" : "grid min-h-0 flex-1 grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)_minmax(0,0.85fr)] gap-7"}>
 					<section className="flex min-h-0 flex-col">

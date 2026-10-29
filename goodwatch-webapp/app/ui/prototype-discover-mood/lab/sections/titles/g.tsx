@@ -5,6 +5,8 @@
 // Round 9: one full-width list, no side column. What steers the list (More like, Less like, Like this, people) sits in
 // the search row as removable chips. When no title has the text's name, Titles lists the top of the results (or of the
 // preview) to thumb, and People lists who is most in the running search's results.
+// Round 11: no Filters row (Mood has them) and no Showing row (the footer shows the search state, with the steering
+// chips); Movies or shows with the anime switch sits where Filters was. Running, the titles and people get the room.
 import {
 	ArrowTurnDownLeftIcon,
 	CheckIcon,
@@ -17,27 +19,16 @@ import {
 import { type ReactNode, useEffect, useRef } from "react"
 import { EXAMPLE_PROMPTS, short } from "../../../kit"
 import { type FoundTitle, PRIVATE, PosterThumb, useQuickTitles } from "../../shell-parts"
+import { TypeBlock } from "../../shell-tabs"
 import type { SectionProps } from "../../types"
 import { type CountedPerson, useResultPeople } from "../people/in-results"
 import { Face, type Person, roleOf, usePeople } from "../people/shared"
-import {
-	type FilterMatch,
-	FilterMatchChip,
-	STEER,
-	STEER_ORDER,
-	SteerChip,
-	SteerToggle,
-	cardTitle,
-	chipStyle,
-	useFilterMatches,
-	useListNav,
-} from "./ghi-parts"
+import { STEER_ORDER, SteerToggle, cardTitle, chipStyle, useListNav } from "./ghi-parts"
 import { PreviewPosters, SECTION_LABEL, type TitleUses, useKnown, useSearchPreview, useTitleUses } from "./shared"
 
 type Item =
 	| { kind: "run"; text: string }
 	| { kind: "prompt"; text: string }
-	| { kind: "filter"; m: FilterMatch }
 	| { kind: "title"; t: FoundTitle }
 	| { kind: "person"; p: Person }
 
@@ -57,14 +48,15 @@ export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionPr
 	const asking = typed.length >= 2
 	const titles = useQuickTitles(text)
 	const people = usePeople(d, text)
-	const filters = useFilterMatches(d, typed, phone ? 4 : 6)
 	const preview = useSearchPreview(d, text)
 	const uses = useTitleUses(d)
 	const known = useKnown(uses.picked.map((p) => p.key))
 	const showing = typed !== "" && typed === d.q
 	const inResults = useResultPeople(d)
 
-	const nTitles = phone ? 3 : 4
+	// Running (no Search row): three rows of titles.
+	const nTitles = phone ? 3 : showing ? 6 : 4
+	const nPeople = 2
 	// No title has this name: the top of what the text returns, to thumb (the running results, else the preview).
 	const named = titles.found.slice(0, nTitles)
 	const fallback: FoundTitle[] =
@@ -73,12 +65,14 @@ export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionPr
 			: []
 	const tList = named.length ? named : fallback
 	// No person has this name: who is most in the running search's results.
-	const counted = showing && people.found.length === 0 ? [inResults.actors[0], inResults.behind[0]].filter((p): p is CountedPerson => !!p) : []
-	const pList: Person[] = people.found.length ? people.found.slice(0, 2) : counted
+	const counted =
+		showing && people.found.length === 0
+			? [...inResults.actors.slice(0, nPeople / 2), ...inResults.behind.slice(0, nPeople / 2)].filter((p): p is CountedPerson => !!p)
+			: []
+	const pList: Person[] = people.found.length ? people.found.slice(0, nPeople) : counted
 	const items: Item[] = typed
 		? [
-				{ kind: "run", text: typed },
-				...filters.map((m) => ({ kind: "filter" as const, m })),
+				...(showing ? [] : [{ kind: "run" as const, text: typed }]),
 				...(asking ? tList.map((t) => ({ kind: "title" as const, t })) : []),
 				...(asking ? pList.map((p) => ({ kind: "person" as const, p })) : []),
 			]
@@ -88,13 +82,12 @@ export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionPr
 		const it = items[i]
 		if (!it) return
 		if (it.kind === "run" || it.kind === "prompt") go(it.text)
-		else if (it.kind === "filter") it.m.toggle()
 		else if (it.kind === "title") {
 			known.remember(it.t)
 			uses.toggle("similarTo", it.t.key)
 		} else people.toggle(it.p)
 	}
-	const nav = useListNav(items.length, act, typed, typed !== "")
+	const nav = useListNav(items.length, act, `${typed}|${showing}`, typed !== "" && !showing)
 
 	const list = useRef<HTMLDivElement>(null)
 	useEffect(() => {
@@ -103,54 +96,29 @@ export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionPr
 
 	const at = (it: Item) => items.indexOf(it)
 	const run = items.find((x) => x.kind === "run")
-	const fRows = items.filter((x): x is Extract<Item, { kind: "filter" }> => x.kind === "filter")
 	const tRows = items.filter((x): x is Extract<Item, { kind: "title" }> => x.kind === "title")
 	const pRows = items.filter((x): x is Extract<Item, { kind: "person" }> => x.kind === "person")
 	const prompts = items.filter((x): x is Extract<Item, { kind: "prompt" }> => x.kind === "prompt")
-
-	const anyPick = uses.picked.length > 0 || people.chosen.length > 0
-	const chips = anyPick ? <PickChips uses={uses} known={known.known} people={people} /> : null
 
 	const listBody = (
 		<div ref={list} role="listbox" aria-label="Suggestions" className={phone ? "flex flex-col gap-1" : "flex flex-col gap-1"}>
 			{run && (
 				<Row i={at(run)} active={nav.active} onHover={nav.setActive} onClick={() => go(typed)} tall>
 					<MagnifyingGlassIcon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
-					<span className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
-						<span className="flex min-w-0 shrink items-baseline gap-1.5 text-[16px] text-gray-300">
-							<span className="shrink-0">{showing ? "Showing" : "Search"}</span>
-							<span className={`brand-header truncate text-[18px] text-white ${PRIVATE}`}>{typed}</span>
-						</span>
-						{!phone && chips}
+					<span className="flex min-w-0 flex-1 items-baseline gap-1.5 overflow-hidden text-[16px] text-gray-300">
+						<span className="shrink-0">Search</span>
+						<span className={`brand-header truncate text-[18px] text-white ${PRIVATE}`}>{typed}</span>
 					</span>
 					{!phone && (
 						<span className="flex shrink-0 items-center gap-3">
-							{showing
-								? d.total != null && <span className="text-[12px] tabular-nums text-gray-500">{matches(d.total)}</span>
-								: preview.ready && preview.total != null && <span className="text-[12px] tabular-nums text-gray-500">{matches(preview.total)}</span>}
-							{!showing && <PreviewPosters p={preview} n={5} w={22} />}
+							{preview.ready && preview.total != null && <span className="text-[12px] tabular-nums text-gray-500">{matches(preview.total)}</span>}
+							<PreviewPosters p={preview} n={5} w={22} />
 						</span>
 					)}
-					{showing ? (
-						<button
-							type="button"
-							onClick={(e) => {
-								e.stopPropagation()
-								d.setQ(null)
-								setText("")
-							}}
-							className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md px-2 text-sm font-semibold text-amber-400 cursor-pointer outline-none hover:bg-amber-400/10 focus-visible:ring-2 focus-visible:ring-amber-400"
-						>
-							<XMarkIcon className="h-4 w-4" aria-hidden />
-							Clear
-						</button>
-					) : (
-						<EnterKey show={nav.active === at(run)} />
-					)}
+					<EnterKey show={nav.active === at(run)} />
 				</Row>
 			)}
-			{/* Phones: the chips under the row; an empty bar: on their own. */}
-			{(phone || !run) && anyPick && <div className="flex flex-wrap gap-2 px-3 pt-1 pb-1">{chips}</div>}
+			<TypeBlock d={d} className={`max-w-[440px] px-3 ${run ? "pt-2 pb-1" : "pb-1"}`} />
 
 			{prompts.length > 0 && <Head icon={<MagnifyingGlassIcon />}>Try</Head>}
 			{prompts.map((it) => (
@@ -160,17 +128,6 @@ export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionPr
 					<EnterKey show={nav.active === at(it)} />
 				</Row>
 			))}
-
-			{fRows.length > 0 && <Head icon={<span className="block h-2 w-2 rounded-full bg-gray-400" />}>Filters</Head>}
-			{fRows.length > 0 && (
-				<div className={`flex gap-2 px-2 pb-1 ${phone ? "overflow-x-auto" : "flex-wrap"}`}>
-					{fRows.map((it) => (
-						<span key={it.m.id} data-row={at(it)} onMouseEnter={() => nav.setActive(at(it))}>
-							<FilterMatchChip m={it.m} active={nav.active === at(it)} />
-						</span>
-					))}
-				</div>
-			)}
 
 			{asking && <Head icon={<FilmIcon />}>{named.length || !fallback.length ? "Titles" : showing ? "In these results" : "In this search"}</Head>}
 			{asking && tRows.length === 0 && (
@@ -309,61 +266,5 @@ function TitleItem({
 			</span>
 			<EnterKey show={nav.active === i} />
 		</Row>
-	)
-}
-
-/** What steers this list now: picked titles by way, picked people, as removable chips. Nothing when none. */
-function PickChips({
-	uses,
-	known,
-	people,
-}: {
-	uses: TitleUses
-	known: ReturnType<typeof useKnown>["known"]
-	people: ReturnType<typeof usePeople>
-}) {
-	if (uses.picked.length === 0 && people.chosen.length === 0) return null
-	return (
-		// biome-ignore lint/a11y/useKeyWithClickEvents: only keeps a chip's × from running the row
-		<span className="flex min-w-0 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] max-sm:flex-wrap" onClick={(e) => e.stopPropagation()}>
-			{STEER_ORDER.flatMap((u) =>
-				uses.listOf(u).map((k) => {
-					const t = known(k)
-					return (
-						<SteerChip
-							key={`${u}:${k}`}
-							use={u}
-							size="sm"
-							prefix={STEER[u].word}
-							title={t?.title ?? "…"}
-							poster={t?.poster ?? null}
-							onRemove={() => uses.toggle(u, k)}
-						/>
-					)
-				}),
-			)}
-			{people.chosen.map((id) => {
-				const p = people.known(id)
-				return (
-					<span
-						key={id}
-						className="inline-flex h-8 shrink-0 items-center rounded-full pl-1 text-[13px] font-semibold whitespace-nowrap text-white"
-						style={chipStyle(PURPLE)}
-					>
-						<Face src={p?.profile ?? null} size={24} />
-						<span className="ml-1.5 font-normal text-purple-200">with</span>
-						<span className="ml-1 max-w-[160px] truncate">{p?.name ?? "…"}</span>
-						<button
-							type="button"
-							onClick={() => people.remove(id)}
-							aria-label={`Remove ${p?.name ?? "person"}`}
-							className="grid h-full w-8 place-items-center rounded-r-full text-white/50 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
-						>
-							<XMarkIcon className="h-3.5 w-3.5" />
-						</button>
-					</span>
-				)
-			})}
-		</span>
 	)
 }

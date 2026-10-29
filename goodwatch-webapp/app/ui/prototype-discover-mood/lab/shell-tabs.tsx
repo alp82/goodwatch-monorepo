@@ -1,12 +1,12 @@
 // PROTOTYPE - throwaway. The Discover lab shell: the sub-tab row, Find a filter, and the content area where the chosen
 // variant of each section renders (`pick(useLabChoice(), id).View`). Desktop: one row (sub-tabs, Find a filter or, on
-// Search, Movies or shows on the right) over a fixed 400 px content area. Phones: the sub-tabs sit in the sheet
-// header, sections stack in its body.
+// Search, Movies or shows on the right unless the titles variant has ownType) over a fixed 400 px content area.
+// Phones: the sub-tabs sit in the sheet header, sections stack in its body.
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ComponentType, type ReactNode, useEffect, useRef } from "react"
 import { FilterGroups } from "~/ui/filter-bar"
-import { TYPE_LABELS } from "~/ui/filter-bar/labels"
+import { ANIME_LABELS, TYPE_LABELS } from "~/ui/filter-bar/labels"
 import { Segmented } from "~/ui/filter-bar/SheetControls"
 import type { ProtoDiscover } from "../kit"
 import { useLabChoice } from "./LabBar"
@@ -157,6 +157,30 @@ export function SearchType({ d }: { d: ProtoDiscover }) {
 	)
 }
 
+/** Round 11: Movies or shows with the anime switch under it, as the real sheet's type card has them. */
+export function TypeBlock({ d, className = "" }: { d: ProtoDiscover; className?: string }) {
+	const c = (o: string) => d.counts?.optionCounts.anime?.[o] ?? null
+	return (
+		<div className={`flex flex-col gap-2 ${className}`}>
+			<SearchType d={d} />
+			<div className="flex">
+				<Segmented
+					label="Anime"
+					small
+					value={d.filters.state.anime}
+					onChange={(anime) => d.filters.set({ anime })}
+					options={(["any", "only", "none"] as const).map((id) => ({ id, label: id === "any" ? "With anime" : ANIME_LABELS[id], count: c(id) }))}
+				/>
+			</div>
+		</div>
+	)
+}
+
+/** The Search row's switch, unless the titles variant places its own (ownType). */
+function useRowType() {
+	return pick(useLabChoice(), "titles").ownType !== true
+}
+
 /** A sub-tab's label: the chosen variant's own label, else the shell's. */
 function SubLabel({ sub }: { sub: Sub }) {
 	return <>{pick(useLabChoice(), sub.id).label ?? sub.label}</>
@@ -218,6 +242,7 @@ export function TabPanel({
 	// A variant with ownFind places the field and the results itself (no row of its own here).
 	const own = canFind && pick(useLabChoice(), open.id).ownFind === true
 	const finding = canFind && find.trim() !== ""
+	const rowType = useRowType()
 	const pickSub = (s: SectionId) => {
 		onFind("")
 		onSub(s)
@@ -246,7 +271,7 @@ export function TabPanel({
 		return (
 			<div>
 				{top}
-				{!canFind && (
+				{!canFind && rowType && (
 					<div className="mb-5">
 						<SearchType d={section.d} />
 					</div>
@@ -260,7 +285,7 @@ export function TabPanel({
 			</div>
 		)
 	// Mood and Watch: Find a filter on the right of the row; Search: Movies or shows.
-	const field = canFind ? <FindField value={find} onChange={onFind} /> : <SearchType d={section.d} />
+	const field = canFind ? <FindField value={find} onChange={onFind} /> : rowType ? <SearchType d={section.d} /> : null
 	return (
 		<div className="flex min-h-0 flex-col">
 			{own ? null : subs.length > 1 ? (

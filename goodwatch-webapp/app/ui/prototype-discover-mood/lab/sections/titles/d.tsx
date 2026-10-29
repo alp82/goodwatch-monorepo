@@ -3,6 +3,7 @@
 // returns, and one action with the count. Right: titles whose name matches, to steer with the thumbs or Similar to.
 // Every pick lands as a filter chip in the funnel tray under the titles; the tray shows only once something is picked.
 // Round 8: the action runs the search and closes the panel; its label says what it does.
+// Round 11: no tray here; the panel's footer shows the picks with the rest of the search state.
 import { ArrowTurnDownLeftIcon, CheckIcon, FilmIcon, MagnifyingGlassIcon, SparklesIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
 import type { TitleCard } from "~/server/title-cards.server"
@@ -11,7 +12,7 @@ import { TAP } from "~/ui/filter-bar/motion"
 import { EXAMPLE_PROMPTS, short } from "../../../kit"
 import { type FoundTitle, POSTER_SM, PosterThumb, TitleRowsLoading, liveTitleUrl, useQuickTitles } from "../../shell-parts"
 import type { SectionProps } from "../../types"
-import { SteerButtons, SteerTray, metaLine, useExampleTitles } from "./def-steer"
+import { SteerButtons, metaLine, useExampleTitles } from "./def-steer"
 import { LaneHead, type TitleUses, useKnown, useSearchPreview, useTitleUses } from "./shared"
 
 /** The search ranks at most this many titles (discover-search-request); filters can leave fewer. */
@@ -162,14 +163,11 @@ export function TitlesD({ d, phone, text, setText, runSearch, close }: SectionPr
 		</div>
 	)
 
-	const tray = uses.picked.length > 0 && <SteerTray uses={uses} known={known.known} wrap />
-
 	if (phone)
 		return (
 			<div className="flex flex-col gap-7">
 				{reads}
 				{found}
-				{tray}
 			</div>
 		)
 	return (
@@ -178,7 +176,6 @@ export function TitlesD({ d, phone, text, setText, runSearch, close }: SectionPr
 				<div className="min-h-0 overflow-hidden border-r border-white/[0.06] px-6 py-5">{reads}</div>
 				<div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-5">
 					{found}
-					{tray && <div className="mt-3 px-2">{tray}</div>}
 				</div>
 			</div>
 		</div>

@@ -50,6 +50,8 @@ export interface SectionVariant {
 	liveGrid?: boolean
 	/** Titles only: a Search button at the right of the bar's field (runs the text, closes the panel). */
 	searchButton?: boolean
+	/** Titles only: the section places Movies or shows (and anime) itself, so the Search row drops its switch. */
+	ownType?: boolean
 	/** Mood only: the section places Find a filter itself (props.find), so the shell drops its own row. */
 	ownFind?: boolean
 	/** Mood only: a hook whose list replaces Discover's in the grid and footer while it returns one. */

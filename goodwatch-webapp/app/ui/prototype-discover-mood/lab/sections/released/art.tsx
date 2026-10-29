@@ -12,7 +12,7 @@ import { GroupLabel, ResetLink, type RangeRead, YEAR_MIN, fmtYear, sameRange, se
 /** One hue per era: warm for new, cool through the 2000s, then the film stock colors of each older decade. */
 const TINT: Record<string, string> = {
 	"This year": "#d97706",
-	"Last year": "#ea580c",
+	"Last 2 years": "#ea580c",
 	"Last 3 years": "#e11d48",
 	"Last 5 years": "#c026d3",
 	"2020s": "#0d9488",
@@ -26,8 +26,8 @@ const TINT: Record<string, string> = {
 	"1940s": "#57534e",
 	"1930s": "#44403c",
 	"1920s": "#3f3f46",
-	"Before 1950": "#57534e",
-	"Before 2000": "#475569",
+	"After 1950": "#57534e",
+	"After 2000": "#475569",
 }
 export const tint = (label: string) => TINT[label] ?? "#475569"
 
