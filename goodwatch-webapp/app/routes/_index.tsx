@@ -7,9 +7,10 @@
 // (utils/start-after-paint.ts). Searches run in the browser only, never from the loader.
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
-import { useState } from "react"
+import { type ComponentProps, useState } from "react"
 import type { startPageLoader } from "~/server/start-page/loader.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
+import { StartBrowse } from "~/ui/start/browse/StartBrowse"
 import { OpeningBoot, OpeningCover } from "~/ui/start/opening/OpeningBoot"
 import { StartSearchBar } from "~/ui/start/search/StartSearchBar"
 import { useStartSearch } from "~/ui/start/search/useStartSearch"
@@ -94,7 +95,8 @@ const MEMBER_ROOM = { night: 0, camera: 1 }
 
 export default function Index() {
 	const data = useLoaderData<typeof startPageLoader>()
-	if (!data.member) return <GuestStart titles={data.titles} />
+	if (!data.member)
+		return <GuestStart titles={data.titles} browse={data.browse} />
 	return (
 		<StartStage
 			shelf={data.titles}
@@ -108,7 +110,13 @@ export default function Index() {
  * A guest's start: the search block waits in the middle of the dark room until the guest asks (Enter, Search, a
  * preset, or leaving the field with a search on); then it lifts and the card comes in.
  */
-function GuestStart({ titles }: { titles: StartTitle[] }) {
+function GuestStart({
+	titles,
+	browse,
+}: {
+	titles: StartTitle[]
+	browse: ComponentProps<typeof StartBrowse>["data"]
+}) {
 	const start = useStartQuery()
 	const results = useStartSearch(start.query)
 	const [asked, setAsked] = useState(false)
@@ -134,6 +142,7 @@ function GuestStart({ titles }: { titles: StartTitle[] }) {
 				opening={<OpeningBoot />}
 			/>
 			<OpeningCover />
+			<StartBrowse data={browse} />
 		</>
 	)
 }
