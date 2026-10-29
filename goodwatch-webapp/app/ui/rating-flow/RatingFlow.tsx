@@ -184,6 +184,7 @@ function RateView({
 				<img
 					key={tKey}
 					src={image(t.backdrop_path, "w1280")}
+					fetchPriority="high"
 					alt=""
 					className={`${leaving} absolute inset-0 h-full max-h-[720px] w-full object-cover opacity-30`}
 				/>
@@ -200,7 +201,10 @@ function RateView({
 				{top}
 				<TopRow
 					left={
-						flow.next && !pastCounting(flow.tally, flow.member) && <NextStepDots step={flow.next} landed={flow.landed} />
+						flow.next &&
+						!pastCounting(flow.tally, flow.member) && (
+							<NextStepDots step={flow.next} landed={flow.landed} />
+						)
 					}
 					recent={flow.recent}
 					openKey={re?.key ?? null}
@@ -232,6 +236,8 @@ function RateView({
 						<img
 							key={tKey}
 							src={image(t.poster_path, "w342")}
+							width={342}
+							height={513}
 							alt={`Poster for ${t.title}${t.release_year ? ` (${t.release_year})` : ""}`}
 							className={`${leaving} aspect-[2/3] w-full rounded-md border-2 border-gray-800 object-cover shadow-2xl sm:row-span-2`}
 						/>

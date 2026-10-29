@@ -38,7 +38,7 @@ export const meta: MetaFunction<typeof loader> = () => {
 		alt: "Build your taste profile on GoodWatch",
 	}
 
-	// Personal: a guest's server HTML is an empty shell, the page fills from the browser.
+	// Personal rating flow, kept out of search results. The first title is server-rendered.
 	return buildMeta({ pageMeta, items: [], robots: "noindex, follow" })
 }
 
@@ -56,14 +56,17 @@ const canonicalLoader: LoaderFunction = async ({
 
 	const { locale } = getLocaleFromRequest(request)
 
+	// Quick list renders a table; one-at-a-time needs only a short queue and fetches more near its end.
+	const count =
+		new URL(request.url).searchParams.get("mode") === "quick" ? 300 : 20
 	const smartTitles = user
 		? await getSmartTitlesForUser({
 				userId: user.id,
-				count: 300,
+				count,
 				locale,
 			})
 		: await getSmartTitlesForGuest({
-				count: 300,
+				count,
 				locale,
 				ratingsCount: 0,
 			})

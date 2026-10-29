@@ -1,7 +1,5 @@
 import useLocale from "~/utils/locale"
-import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { queryKeySmartTitles } from "~/routes/api.smart-titles"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { readExploration, rememberExploration } from "../exploration"
 import type { TasteInteraction } from "../types"
@@ -49,11 +47,24 @@ export function useTitleQueue({
 	const { locale } = useLocale()
 	const activeLanguage = useRef(locale.language)
 	// Stable queue that only grows, never shrinks or reorders
-	const [queue, setQueue] = useState<ScoringMedia[]>([])
+	const [queue, setQueue] = useState<ScoringMedia[]>(() => {
+		const answered = new Set(answeredKeys)
+		for (const i of interactions) answered.add(`${i.media_type}-${i.tmdb_id}`)
+		return initialTitles.filter((title) => {
+			const key = `${title.media_type}-${title.tmdb_id}`
+			if (
+				(title.presentation?.language ?? "en") !== locale.language ||
+				answered.has(key)
+			)
+				return false
+			answered.add(key)
+			return true
+		})
+	})
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [isPrefetching, setIsPrefetching] = useState(false)
 	// True once a fetch came back with nothing new. Until then an empty queue is still loading: the server
-	// render and the first client render have no queue yet, and must not read as "every title seen".
+	// render can also have an empty queue, which must not read as "every title seen".
 	const [exhausted, setExhausted] = useState(false)
 	// The last fetch failed: not the same as having none left, and it can be asked again.
 	const [failed, setFailed] = useState(false)
@@ -64,10 +75,13 @@ export function useTitleQueue({
 	}, [fetchMoreTitles])
 
 	// Track which items have been seen to avoid duplicates
-	const seenIds = useRef(new Set<string>())
+	const seenIds = useRef(
+		new Set(queue.map((t) => `${t.media_type}-${t.tmdb_id}`)),
+	)
 
 	// Track if we've initialized from initial titles
-	const hasInitialized = useRef(false)
+	const hasInitialized = useRef(queue.length > 0)
+	const restorePending = useRef(resume)
 
 	// Track ongoing fetch to prevent duplicate requests
 	const fetchInProgress = useRef(false)
@@ -102,15 +116,31 @@ export function useTitleQueue({
 	useEffect(() => {
 		if (activeLanguage.current === locale.language) return
 		activeLanguage.current = locale.language
-		setQueue([]); setCurrentIndex(0); seenIds.current.clear(); hasInitialized.current = false
+		setQueue([])
+		setCurrentIndex(0)
+		seenIds.current.clear()
+		hasInitialized.current = false
 	}, [locale.language])
 
-	// Initialize queue from initial titles (only once)
+	// Browser-only resume data may replace the server queue once. Delayed titles and language changes can fill it too.
 	useEffect(() => {
-		if (hasInitialized.current || initialTitles.length === 0) return
-
-		const saved = resume ? readExploration(locale.language).ratingQueue : undefined
-		const filtered = saved?.length ? saved : filterNewTitles(initialTitles.filter(title => (title.presentation?.language ?? "en") === locale.language))
+		const saved = restorePending.current
+			? readExploration(locale.language).ratingQueue
+			: undefined
+		restorePending.current = false
+		if (
+			!saved?.length &&
+			(hasInitialized.current || initialTitles.length === 0)
+		)
+			return
+		const filtered = saved?.length
+			? saved
+			: filterNewTitles(
+					initialTitles.filter(
+						(title) =>
+							(title.presentation?.language ?? "en") === locale.language,
+					),
+				)
 		if (filtered.length > 0) {
 			// Mark all as seen
 			filtered.forEach((t) => seenIds.current.add(makeKey(t)))
@@ -148,7 +178,13 @@ export function useTitleQueue({
 			setIsPrefetching(false)
 			fetchInProgress.current = false
 		}
-	}, [fetchMoreTitles, filterNewTitles, makeKey, isPrefetching, locale.language])
+	}, [
+		fetchMoreTitles,
+		filterNewTitles,
+		makeKey,
+		isPrefetching,
+		locale.language,
+	])
 
 	// Check if we need to prefetch. Not again on its own after a fetch that failed (`retry` asks again) or found
 	// nothing new: the next answer asks again, since the answers change what the server leaves out.
@@ -162,7 +198,14 @@ export function useTitleQueue({
 		) {
 			prefetchMore()
 		}
-	}, [currentIndex, queue.length, prefetchThreshold, prefetchMore, failed, exhausted])
+	}, [
+		currentIndex,
+		queue.length,
+		prefetchThreshold,
+		prefetchMore,
+		failed,
+		exhausted,
+	])
 	// biome-ignore lint/correctness/useExhaustiveDependencies: each step on may find titles again
 	useEffect(() => {
 		if (currentIndex > 0) setExhausted(false)
