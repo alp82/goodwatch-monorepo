@@ -11,6 +11,8 @@ import {
 	kindOf,
 } from "~/domain/taste-picker"
 
+export { pickName }
+
 // My movies' rules, for the page's parts: they read them from here, so that the module stays in this chunk.
 export {
 	TIME_CHOICES,
@@ -30,6 +32,7 @@ import {
 	RATE_MORE,
 	type SortOption,
 } from "~/ui/filter-bar/labels"
+import { pickName } from "./pick-name"
 
 export { RATE_MORE }
 
@@ -91,13 +94,6 @@ export function moodsShort(moods: readonly MoodKey[]): string {
 	if (!moods.length) return "Any mood"
 	const first = MOOD_BY_KEY[moods[0]].name
 	return moods.length === 1 ? first : `${first} +${moods.length - 1}`
-}
-
-/** A pick's name: a taste group's ("Dark, psychological thrillers") or a word's ("Slow burn"). */
-export function pickName(picker: WatchNext["picker"], id: string): string {
-	const number = groupNumber(id)
-	if (number !== null) return picker.groups.find((g) => g.id === id)?.name ?? ""
-	return WORD_BY_ID[id]?.name ?? ""
 }
 
 /** The phone slab's button with the taste picker: "Any mood", "Slow burn", "Dark, psychological thrillers +1". */

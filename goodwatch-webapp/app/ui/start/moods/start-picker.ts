@@ -81,7 +81,7 @@ export type PanelBox = {
 	left: number
 	width: number
 	maxHeight: number
-	/** How far the page scrolls first (0 for none). */
+	/** How far the page scrolls first (0 for none, below 0 to bring a row above TOP back down). */
 	scrollBy: number
 	/** Where its top is in the window once that scroll is done: its height counts from there. */
 	viewTop: number
@@ -96,9 +96,14 @@ const heightFrom = (viewTop: number, bottom: number) =>
 	Math.max(200, Math.floor(bottom - BELOW - viewTop))
 
 /**
- * Where the panel goes on open: under the row (8 px), as wide as the column (MAX_WIDTH at most), down to BELOW above
- * `bottom` (the window's bottom, or the dock's top). With less than MIN_PANEL there, the page scrolls the panel up to
- * TOP, as far as the page can scroll (`room`).
+ * Where the panel goes, from the page as it is now: under the row (8 px), as wide as the column (MAX_WIDTH at most),
+ * down to BELOW above `bottom` (the window's bottom, or the dock's top). With less than MIN_PANEL there, the page
+ * scrolls the panel up to TOP, as far as the page can scroll (`room`); a row above TOP scrolls back down to it.
+ *
+ * On open, and again on each resize (a rotation, the phone's bars, the visual viewport): the row may have moved in the
+ * window since, so nothing of the last box is kept. A resize during the open's smooth scroll measures the row where it
+ * is: with too little room there the page scrolls the rest of the way to TOP, otherwise the panel ends above the
+ * bottom from where it is (shorter than it could be once the scroll ends, never behind the dock).
  */
 export function panelBox({
 	row,
@@ -115,35 +120,18 @@ export function panelBox({
 }): PanelBox {
 	const at = row.bottom + 8
 	const limit = bottom - BELOW
+	// A row above TOP (a rotation can leave it out of sight) scrolls back down to TOP, as far as the page's top allows.
 	const by =
-		limit - at < Math.min(MIN_PANEL, limit - TOP)
-			? Math.max(0, Math.min(at - TOP, room))
-			: 0
+		at < TOP
+			? Math.max(at - TOP, -scrollY)
+			: limit - at < Math.min(MIN_PANEL, limit - TOP)
+				? Math.min(at - TOP, room)
+				: 0
 	return {
 		top: at + scrollY,
 		...across(column),
 		maxHeight: heightFrom(at - by, bottom),
 		scrollBy: by,
 		viewTop: at - by,
-	}
-}
-
-/**
- * The open panel after a resize (the window's, or the visual viewport's as a phone's bars come and go): the same place
- * in the page and the same top in the window as on open, so its height follows only the new bottom. Scrolling since
- * doesn't count: nothing measures per scroll frame.
- */
-export function resizedBox(
-	box: PanelBox,
-	{
-		column,
-		bottom,
-	}: { column: { left: number; width: number }; bottom: number },
-): PanelBox {
-	return {
-		...box,
-		...across(column),
-		maxHeight: heightFrom(box.viewTop, bottom),
-		scrollBy: 0,
 	}
 }

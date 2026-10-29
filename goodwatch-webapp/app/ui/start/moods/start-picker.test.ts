@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../../server/title-filter/test-alias.ts"
 
-const { panelBox, resizedBox, startPicker, startShelfLines } = await import(
+const { panelBox, startPicker, startShelfLines } = await import(
 	"./start-picker.ts"
 )
 const { countScopeOf, countText, countsQuery, readCounts } = await import(
@@ -156,27 +156,86 @@ test("the panel runs from under the row to 16 px above the bottom; with less tha
 	assert.equal(short.maxHeight, 740 - 16 - 388)
 })
 
-test("a resize keeps the panel's place and top, its height following the new bottom; nothing scrolls", () => {
+test("a resize places the panel from the page as it is now: under its row, above the new bottom", () => {
+	const column = { left: 0, width: 375 }
 	const phone = panelBox({
-		column: { left: 0, width: 375 },
+		column,
 		row: { bottom: 480 },
 		bottom: 668,
 		scrollY: 0,
 		room: 2000,
 	})
-	// The phone's bars hide: the window grows by 56 px.
-	const grown = resizedBox(phone, {
-		column: { left: 0, width: 375 },
+	assert.equal(phone.scrollBy, 416)
+	// The phone's bars hide after that scroll: the row is at TOP - 8, the window 56 px taller. Only the height grows.
+	const grown = panelBox({
+		column,
+		row: { bottom: 64 },
 		bottom: 724,
+		scrollY: 416,
+		room: 1584,
 	})
 	assert.equal(grown.top, phone.top)
 	assert.equal(grown.viewTop, 72)
 	assert.equal(grown.maxHeight, 724 - 16 - 72)
 	assert.equal(grown.scrollBy, 0)
-	// A keyboard takes most of the window: never below 200 px.
-	assert.equal(
-		resizedBox(phone, { column: { left: 0, width: 375 }, bottom: 200 })
-			.maxHeight,
-		200,
-	)
+	// Turned to landscape: the page reflowed, the row is lower in a shorter, wider window. The panel hangs under the row
+	// where it is now and the page scrolls it up, so it ends above the window's bottom instead of behind it.
+	const turned = panelBox({
+		column: { left: 24, width: 700 },
+		row: { bottom: 300 },
+		bottom: 375,
+		scrollY: 900,
+		room: 1500,
+	})
+	assert.equal(turned.top, 300 + 8 + 900)
+	assert.equal(turned.left, 24)
+	assert.equal(turned.width, 700)
+	assert.equal(turned.scrollBy, 308 - 72)
+	assert.equal(turned.viewTop, 72)
+	assert.equal(turned.maxHeight, 375 - 16 - 72)
+	// Mid-way through the open's smooth scroll: measured where the row is. With MIN_PANEL left there, it stays put
+	// in the page and ends above the bottom from where it is now (shorter than once the scroll ends, never behind).
+	const midway = panelBox({
+		column,
+		row: { bottom: 280 },
+		bottom: 668,
+		scrollY: 200,
+		room: 1800,
+	})
+	assert.equal(midway.top, phone.top)
+	assert.equal(midway.scrollBy, 0)
+	assert.equal(midway.viewTop + midway.maxHeight, 668 - 16)
+	// With less, the rest of the way scrolls, to TOP.
+	const late = panelBox({
+		column,
+		row: { bottom: 320 },
+		bottom: 668,
+		scrollY: 160,
+		room: 1840,
+	})
+	assert.equal(late.top, phone.top)
+	assert.equal(late.scrollBy, 328 - 72)
+	assert.equal(late.maxHeight, phone.maxHeight)
+	// Turned with the row left above the window: the page scrolls back down to it, so the panel never starts out of
+	// sight or runs past the bottom; at the page's top it scrolls only as far as it can.
+	const above = panelBox({
+		column,
+		row: { bottom: -197 },
+		bottom: 318,
+		scrollY: 416,
+		room: 1500,
+	})
+	assert.equal(above.top, -189 + 416)
+	assert.equal(above.scrollBy, -189 - 72)
+	assert.equal(above.viewTop, 72)
+	assert.equal(above.maxHeight, 318 - 16 - 72)
+	const nearTop = panelBox({
+		column,
+		row: { bottom: 20 },
+		bottom: 668,
+		scrollY: 30,
+		room: 1500,
+	})
+	assert.equal(nearTop.scrollBy, -30)
+	assert.equal(nearTop.viewTop, 58)
 })
