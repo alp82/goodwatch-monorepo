@@ -360,6 +360,34 @@ test("a newer text aborts the older search, and its late answer is dropped", asy
 	assert.ok(p.shown.every((r) => r.status !== "error"))
 })
 
+test("going back to a text whose search was aborted searches it anew (A, B, A)", async (t) => {
+	let first = true
+	const net = stubFetch(t, async (call) => {
+		if (call.url.startsWith("/api/combined-search") && first) {
+			first = false
+			// The abort settles late: after the next two searches have started.
+			await new Promise<void>((resolve) =>
+				call.init?.signal?.addEventListener("abort", () =>
+					setTimeout(resolve, 30),
+				),
+			)
+			throw new DOMException("aborted", "AbortError")
+		}
+		return server(call)
+	})
+	const p = page()
+	p.dispatch({ type: "search", text: "cheer me up" })
+	p.dispatch({ type: "search", text: "space adventure" })
+	p.dispatch({ type: "search", text: "cheer me up" })
+	await until(
+		() =>
+			p.last()?.status === "ready" &&
+			p.last()?.signature === querySignature(p.query),
+	)
+	assert.equal(net.searches().length, 3)
+	assert.ok(p.shown.every((r) => r.status !== "error"))
+})
+
 test("a 503 while the snapshot loads is asked again after its Retry-After", async (t) => {
 	t.mock.timers.enable({ apis: ["setTimeout"] })
 	let refusals = 1

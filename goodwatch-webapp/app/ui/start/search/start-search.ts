@@ -161,7 +161,11 @@ export function createStartSearch({
 	} | null = null
 	let requests: AbortController | null = null
 	/** The search in flight, aborted when another text is searched. */
-	let searching: { text: string; abort: AbortController } | null = null
+	let searching: {
+		text: string
+		abort: AbortController
+		promise: Promise<Searched>
+	} | null = null
 	let retryTimer: ReturnType<typeof setTimeout> | null = null
 	let disposed = false
 
@@ -174,13 +178,21 @@ export function createStartSearch({
 		retryTimer = null
 	}
 
+	/** Stops the search in flight and forgets it now, not when its rejection settles, so its text can be asked anew. */
+	function stopSearching() {
+		if (!searching) return
+		if (searches.get(searching.text) === searching.promise)
+			searches.delete(searching.text)
+		searching.abort.abort()
+		searching = null
+	}
+
 	function search(text: string): Promise<Searched> {
 		const kept = searches.get(text)
 		if (kept) return kept
-		searching?.abort.abort()
+		stopSearching()
 		const abort = new AbortController()
-		searching = { text, abort }
-		const promise = runDiscoverSearch(
+		const promise: Promise<Searched> = runDiscoverSearch(
 			text,
 			filters,
 			false,
@@ -210,10 +222,11 @@ export function createStartSearch({
 			(error: unknown) => {
 				if (searching?.abort === abort) searching = null
 				// A failed or aborted search is asked again next time.
-				searches.delete(text)
+				if (searches.get(text) === promise) searches.delete(text)
 				throw error
 			},
 		)
+		searching = { text, abort, promise }
 		searches.set(text, promise)
 		while (searches.size > KEPT_SEARCHES)
 			searches.delete(searches.keys().next().value as string)
@@ -341,10 +354,8 @@ export function createStartSearch({
 		set(query) {
 			if (disposed || asked?.signature === querySignature(query)) return
 			// A search no longer asked for stops; a kept one (the same text) carries on.
-			if (searching && searching.text !== searchText(query.text)) {
-				searching.abort.abort()
-				searching = null
-			}
+			if (searching && searching.text !== searchText(query.text))
+				stopSearching()
 			run(query)
 		},
 		retry() {
@@ -354,7 +365,7 @@ export function createStartSearch({
 			disposed = true
 			stopRetry()
 			requests?.abort()
-			searching?.abort.abort()
+			stopSearching()
 		},
 	}
 }
