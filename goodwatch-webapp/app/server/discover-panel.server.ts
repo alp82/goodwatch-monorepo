@@ -1,8 +1,13 @@
 // Discover panel data: ready mood mixes counted over the filtered catalog, plus shared starter-title keys.
 // Cards are hydrated per viewer; only filter results and starter selection can be shared.
-import type { FilterState, SortKey } from "~/domain/filter-state"
+import {
+	filterStateToParams,
+	type FilterState,
+	type SortKey,
+} from "~/domain/filter-state"
 import { GUEST_MIXES, type MoodMix } from "~/domain/mood-mixes"
 import { MOOD_KEYS } from "~/domain/moods"
+import { groupsByTaste } from "~/domain/side-rows"
 import { picksOf } from "~/domain/taste-picker"
 import { STYLE_KEYS, THEME_KEYS, maskOfKeys } from "~/domain/themes-styles"
 import { availabilityLoadedAt } from "~/server/availability-index.server"
@@ -10,6 +15,7 @@ import {
 	discoverFilterCache,
 	discoverFilterKey,
 } from "~/server/discover-filter-cache.server"
+import { discoverFilterDefaults } from "~/server/discover-results.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { inlineTaste } from "~/server/taste/inline.server"
 import { type TitleCard, getTitleCards } from "~/server/title-cards.server"
@@ -19,12 +25,17 @@ import {
 } from "~/server/title-filter/index.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
+import type { TitleKey } from "~/utils/title-key"
+import { featuredPeople, peopleInResults } from "./discover-people.server"
 import { starterTitleKeys } from "./discover-starter-titles"
 import { carriedColorWords } from "./taste-picker-counts"
 
 interface PanelInput {
 	state: FilterState
 	sort: SortKey
+	ranked?: TitleKey[]
+	forYou?: boolean
+	side?: string | null
 }
 
 export interface PanelMix extends MoodMix {
@@ -143,7 +154,72 @@ async function titles(ctx: ViewerContext, _input: PanelInput) {
 	return { part: "titles" as const, keys, cards }
 }
 
-export const PANEL_PARTS = { mixes, titles }
+async function people(ctx: ViewerContext, input: PanelInput) {
+	const searching = input.ranked !== undefined
+	const filtered =
+		filterStateToParams(input.state, discoverFilterDefaults(ctx)).size > 0 ||
+		Boolean(input.side)
+	const unavailable = (error: unknown) => {
+		console.warn("Discover panel: people unavailable", error)
+		return {
+			mode: !searching && !filtered ? ("featured" as const) : ("results" as const),
+			actors: [],
+			crew: [],
+			unavailable: true as const,
+		}
+	}
+	if (!searching && !filtered)
+		return {
+			part: "people" as const,
+			...(await featuredPeople().catch(unavailable)),
+		}
+	const snapshot = getTitleSnapshot()
+	if (!snapshot) throw new SnapshotNotLoaded()
+	const savedTaste = await loadTaste(ctx.viewer)
+	const taste = inlineTaste(savedTaste, input.state, snapshot) ?? savedTaste
+	const forYou = input.forYou ?? ctx.forYou
+	const key = searching
+		? null
+		: discoverFilterKey({
+				viewer: ctx,
+				taste,
+				state: input.state,
+				sort: input.sort,
+				snapshotVersion: snapshot.version,
+				availabilityLoadedAt: availabilityLoadedAt(ctx.country),
+				year: new Date().getUTCFullYear(),
+			})
+	const result = await discoverFilterCache.run(key, () =>
+		filterTitles({
+			universe: input.ranked ?? "catalog",
+			includeNotInterested: searching,
+			state: input.state,
+			sort: input.sort,
+			taste: savedTaste,
+			forYou: forYou ? (searching ? "search" : "browse") : null,
+			viewer: ctx,
+		}),
+	)
+	let keys = result.keys
+	if (
+		input.side &&
+		!input.state.loved?.length &&
+		!input.state.disliked?.length &&
+		groupsByTaste({ searching, forYou, sort: result.sortUsed })
+	) {
+		const engine = await import("~/server/discover-sides.server")
+		const member = await engine.memberSides(ctx, taste, snapshot)
+		const group = member ? engine.requestedGroup(member, input.side) : undefined
+		if (member && group !== undefined)
+			keys = keys.filter((key) => engine.sideOf(member, key) === group)
+	}
+	return {
+		part: "people" as const,
+		...(await peopleInResults(keys).catch(unavailable)),
+	}
+}
+
+export const PANEL_PARTS = { mixes, titles, people }
 export type PanelPart = keyof typeof PANEL_PARTS
 export function isPanelPart(part: string | null): part is PanelPart {
 	return (

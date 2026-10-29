@@ -7,17 +7,24 @@ let snapshot: TitleSnapshot
 const boundary = globalThis as typeof globalThis & {
 	panelSnapshot: () => TitleSnapshot
 	panelGroupsFail: boolean
+	panelPeopleFail: boolean
+	panelPeopleKeys: number[]
 }
 boundary.panelSnapshot = () => snapshot
+boundary.panelPeopleFail = false
 boundary.panelGroupsFail = false
+boundary.panelPeopleKeys = []
 stubModules({
+	"~/server/list-exposure.server": "export const recordListExposure = () => null",
+	"./discover-people.server":
+		"export const featuredPeople = async () => { if (globalThis.panelPeopleFail) throw new Error('Crate unavailable'); return {mode: 'featured', actors: [], crew: []} }; export const peopleInResults = async keys => { globalThis.panelPeopleKeys = keys; if (globalThis.panelPeopleFail) throw new Error('Crate unavailable'); return {mode: 'results', actors: [], crew: []} }",
 	"~/server/title-snapshot/index.server": `export * from '${new URL("./title-snapshot/format.server.ts", import.meta.url).href}'; export const getTitleSnapshot = () => globalThis.panelSnapshot()`,
 	"~/server/availability-index.server":
 		"export const countryServices = () => null; export const availabilityLoadedAt = () => 1",
 	"~/server/taste/index.server":
 		"export const loadTaste = async () => ({ signal: 'none', ratings: 0, liked: 0, match: keys => keys.map(() => null) })",
 	"~/server/title-cards.server":
-		"export const getTitleCards = async (keys, ctx) => keys.map(key => ({key, seen: ctx.seen.has(key)}))",
+		"export const MAX_KEYS = 100; export const getTitleCards = async (keys, ctx) => keys.map(key => ({key, seen: ctx.seen.has(key)}))",
 	"~/server/watch-next-taste-picker.server":
 		"export const tasteGroupsFor = async () => { if (globalThis.panelGroupsFail) throw new Error('groups unavailable'); return {groups: [{carries: ['m:funny', 't:crime']}]}; }",
 	"./id-sets.server": `export const rangeScoreTitles = async () => null;
@@ -30,6 +37,7 @@ stubModules({
 const { getDiscoverPanel, readyMixes } = await import(
 	"./discover-panel.server.ts"
 )
+const { discoverFilterDefaults } = await import("./discover-results.server.ts")
 const { filterTitles } = await import("./title-filter/index.server.ts")
 const { filterStateFromParams } = await import("~/domain/filter-state")
 const { stateForMix, GUEST_MIXES } = await import("~/domain/mood-mixes")
@@ -240,7 +248,10 @@ test("starter titles are deterministic per version, distinct buckets, alternatin
 	)
 	assert.strictEqual(starterTitleKeys(snapshot), first)
 	const state = parseState(new URLSearchParams("type=show&moods=heavy"))
-	const guest = await getDiscoverPanel(viewer, "titles", { state, sort: "top" })
+	const guest = await getDiscoverPanel(viewer, "titles", {
+		state,
+		sort: "top",
+	})
 	viewer.seen.add(first[0])
 	const memberViewer = {
 		...viewer,
@@ -277,4 +288,90 @@ test("members never enter shared filter caches", () => {
 		null,
 	)
 	assert.equal(discoverFilterCache.stats().entries, 0) // approximate guest fixtures are not cached either
+})
+
+test("people uses ranked universe, empty search stays results, and browse without filters is featured", async () => {
+	const state = parseState(new URLSearchParams())
+	const empty = await getDiscoverPanel(viewer, "people", {
+		state,
+		sort: "popular",
+		ranked: [],
+	})
+	assert.equal(empty.part, "people")
+	assert.ok(empty.part === "people" && empty.mode === "results")
+	const featured = await getDiscoverPanel(viewer, "people", {
+		state,
+		sort: "popular",
+	})
+	assert.ok(featured.part === "people" && featured.mode === "featured")
+})
+
+test("people passes the filtered browse and search lists to the bounded reader", async () => {
+	viewer.seen.clear()
+	viewer.hidden.clear()
+	for (let i = keys.length; i < 150; i++) keys.push(1e12 + i + 1)
+	columns.pointIds = Float64Array.from(keys)
+	columns.genres = new Uint32Array(150).fill(1)
+	columns.releaseDays = new Int32Array(150).fill(19000)
+	columns.votes = new Uint32Array(150).fill(100_000)
+	columns.popularity = Float32Array.from(keys, (_, i) => 1000 - i)
+	columns.scores = new Uint8Array(150).fill(80)
+	columns.flags = new Uint8Array(150).fill(1)
+	columns.moods = new Uint16Array(150)
+	columns.themes = new Uint16Array(150)
+	columns.styles = new Uint16Array(150)
+	snapshot = { ...snapshot, version: "people-fixture", count: keys.length }
+	const state = parseState(new URLSearchParams("genres=Drama&score=80"))
+	const expected = await filterTitles({
+		universe: "catalog",
+		state,
+		sort: "popular",
+		taste: null,
+		forYou: null,
+		viewer,
+	})
+	assert.equal(expected.keys.length, 150)
+	await getDiscoverPanel(viewer, "people", { state, sort: "popular" })
+	assert.deepEqual(boundary.panelPeopleKeys, expected.keys)
+	columns.scores[5] = 60
+	await getDiscoverPanel(viewer, "people", {
+		state,
+		sort: "relevance",
+		ranked: keys.slice(0, 90),
+	})
+	assert.deepEqual(
+		boundary.panelPeopleKeys,
+		keys.slice(0, 90).filter((key) => key !== keys[5]),
+	)
+})
+
+test("empty URL uses featured people for members with saved services", async () => {
+	const ctx = {
+		...viewer,
+		viewer: { kind: "member" as const, userId: "member" },
+		services: [8],
+	}
+	const state = filterStateFromParams(new URLSearchParams(), discoverFilterDefaults(ctx))
+	assert.equal(state.notSeenYet, true)
+	assert.equal(state.onMyServices, true)
+	const panel = await getDiscoverPanel(ctx, "people", { state, sort: "popular" })
+	assert.ok(panel.part === "people" && panel.mode === "featured")
+})
+
+test("Crate failures in featured and result people warn and return unavailable", async (t) => {
+	const warnings: unknown[][] = []
+	t.mock.method(console, "warn", (...args: unknown[]) => warnings.push(args))
+	boundary.panelPeopleFail = true
+	t.after(() => { boundary.panelPeopleFail = false })
+	for (const ranked of [undefined, [], [keys[0]]]) {
+		const panel = await getDiscoverPanel(viewer, "people", {
+			state: parseState(new URLSearchParams()), sort: "popular", ranked,
+		})
+		assert.deepEqual(panel, {
+			part: "people", mode: ranked === undefined ? "featured" : "results",
+			actors: [], crew: [], unavailable: true,
+		})
+	}
+	assert.equal(warnings.length, 3)
+	assert.ok(warnings.every(([message, error]) => message === "Discover panel: people unavailable" && error instanceof Error))
 })

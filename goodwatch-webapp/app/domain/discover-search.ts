@@ -1,3 +1,4 @@
+import type { TitleKey } from "~/utils/title-key"
 // Discover's search mode: which filter bar choices go into the search ranking as eligibility, and the query limits.
 // Pure and shared by the server and the browser.
 //
@@ -101,4 +102,22 @@ export function discoverSearchPath(old: URLSearchParams): string {
 	if (old.get("allTitles") === "1") next.set("allTitles", "1")
 	const search = next.toString()
 	return `/discover${search ? `?${search}` : ""}`
+}
+
+const MOVIE_BASE = 1e12
+const KEY_END = 3e12
+
+/** The search's ranked list from `ranked`, or undefined in browse mode. Invalid keys are dropped. */
+export function rankedFromParams(
+	params: URLSearchParams,
+): TitleKey[] | undefined {
+	const value = params.get("ranked")
+	if (value === null) return undefined
+	const keys = value
+		.split(",")
+		.map(Number)
+		.filter(
+			(key) => Number.isSafeInteger(key) && key > MOVIE_BASE && key < KEY_END,
+		)
+	return [...new Set(keys)].slice(0, SEARCH_RESULTS)
 }

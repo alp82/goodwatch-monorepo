@@ -9,7 +9,7 @@ import {
 } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
 import { z } from "zod"
-import { SEARCH_RESULTS } from "~/domain/discover-search"
+import { rankedFromParams } from "~/domain/discover-search"
 import { filterStateFromParams, sortFromParams } from "~/domain/filter-state"
 import {
 	type DiscoverResults,
@@ -20,7 +20,6 @@ import {
 } from "~/server/discover-results.server"
 import { type GuestProgress, getViewerContext } from "~/server/viewer.server"
 import type { TasteInteraction } from "~/ui/taste/types"
-import type { TitleKey } from "~/utils/title-key"
 
 // One page of Discover's browse results with the filter bar's counts, recoveries, For you movement, and cards.
 // - Members: GET /api/discover/results?<filter bar parameters>&page=1
@@ -49,21 +48,6 @@ const bodySchema = z.object({
 
 const headers = { "Cache-Control": "private, no-store" }
 
-const MOVIE_BASE = 1e12
-const KEY_END = 3e12
-
-/** The search's ranked list from `ranked`, or undefined in browse mode. Invalid keys are dropped. */
-function rankedFromParams(params: URLSearchParams): TitleKey[] | undefined {
-	const value = params.get("ranked")
-	if (value === null) return undefined
-	const keys = value
-		.split(",")
-		.map(Number)
-		.filter(
-			(key) => Number.isSafeInteger(key) && key > MOVIE_BASE && key < KEY_END,
-		)
-	return [...new Set(keys)].slice(0, SEARCH_RESULTS)
-}
 const invalid = (error: string) => json({ error }, { status: 400, headers })
 
 async function respond(request: Request, guest?: GuestProgress) {

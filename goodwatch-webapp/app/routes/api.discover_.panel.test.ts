@@ -4,8 +4,8 @@ import { stubModules } from "../server/rating-onboarding.test-support.ts"
 
 stubModules({
 	"~/server/discover-results.server":
-		"export class SnapshotNotLoaded extends Error {}; export const discoverFilterDefaults = () => ({onMyServices: false, notSeenYet: false})",
-	"~/server/discover-panel.server": `export const isPanelPart = part => ['mixes', 'titles'].includes(part);
+		"export class SnapshotNotLoaded extends Error {}; export const forYouFromParams = () => false; export const discoverFilterDefaults = () => ({onMyServices: false, notSeenYet: false})",
+	"~/server/discover-panel.server": `export const isPanelPart = part => ['mixes', 'titles', 'people'].includes(part);
 		export const getDiscoverPanel = async (ctx, part, input) => ({part, input, guest: ctx.guest});`,
 	"~/server/media-payload.server":
 		"export const presentCatalogLoader = load => load",
@@ -16,7 +16,7 @@ const { loader, action } = await import("./api.discover_.panel.ts")
 const args = (request: Request) => ({ request, params: {}, context: {} })
 
 test("GET parses panel part and filter query, with private responses and timing", async () => {
-	for (const part of ["mixes", "titles"]) {
+	for (const part of ["mixes", "titles", "people"]) {
 		const response = await loader(
 			args(
 				new Request(
@@ -40,7 +40,7 @@ test("GET parses panel part and filter query, with private responses and timing"
 test("missing, unknown and inherited object property parts are rejected with 400", async () => {
 	for (const suffix of [
 		"",
-		"?part=people",
+		"?part=unknown",
 		"?part=toString",
 		"?part=__proto__",
 	]) {
@@ -73,4 +73,25 @@ test("POST forwards guest progress; invalid, oversized bodies and other methods 
 		(await action(args(new Request(url, { method: "PUT" })))).status,
 		405,
 	)
+})
+
+test("people forwards ranked search including empty results and defaults to relevance", async () => {
+	for (const ranked of [
+		"1000000000001,invalid,2000000000002,1000000000001",
+		"",
+	]) {
+		const response = await loader(
+			args(
+				new Request(
+					`https://goodwatch.test/api/discover/panel?part=people&ranked=${ranked}&page=3`,
+				),
+			),
+		)
+		const body = JSON.parse(await response.text())
+		assert.deepEqual(
+			body.input.ranked,
+			ranked ? [1000000000001, 2000000000002] : [],
+		)
+		assert.equal(body.input.sort, "relevance")
+	}
 })

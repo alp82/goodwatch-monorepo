@@ -1,7 +1,7 @@
-// Discover panel pictures and mixes: GET /api/discover/panel?part=mixes|titles with the filter bar's URL state.
+// Discover panel pictures and mixes: GET /api/discover/panel?part=mixes|titles|people with the filter bar's URL state.
 // Guests POST the same guest progress body as /api/discover/results; members use GET.
 // `mixes` returns ready tag pairs with catalog counts and a top-title card, preserving non-tag filters.
-// `titles` returns shared starter keys and viewer-specific cards. This route ignores `ranked`;
+// `titles` returns shared starter keys and viewer-specific cards. Mixes ignore `ranked`;
 // cards show no counts during a search, since these counts describe the catalog rather than the search results.
 import {
 	type ActionFunctionArgs,
@@ -9,11 +9,13 @@ import {
 	json,
 } from "@remix-run/node"
 import { z } from "zod"
+import { rankedFromParams } from "~/domain/discover-search"
 import { filterStateFromParams, sortFromParams } from "~/domain/filter-state"
 import { getDiscoverPanel, isPanelPart } from "~/server/discover-panel.server"
 import {
 	SnapshotNotLoaded,
 	discoverFilterDefaults,
+	forYouFromParams,
 } from "~/server/discover-results.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { type GuestProgress, getViewerContext } from "~/server/viewer.server"
@@ -43,10 +45,14 @@ async function respond(request: Request, guest?: GuestProgress) {
 	if (!isPanelPart(part)) return invalid("Unknown panel part")
 	const ctx = await getViewerContext(request, guest)
 	const contextMs = performance.now() - startedAt
+	const ranked = part === "people" ? rankedFromParams(params) : undefined
 	try {
 		const response = await getDiscoverPanel(ctx, part, {
 			state: filterStateFromParams(params, discoverFilterDefaults(ctx)),
-			sort: sortFromParams(params, false),
+			sort: sortFromParams(params, ranked !== undefined),
+			ranked,
+			forYou: forYouFromParams(params, ctx),
+			side: params.get("side"),
 		})
 		const totalMs = performance.now() - startedAt
 		return json(response, {
