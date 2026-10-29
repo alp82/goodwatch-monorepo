@@ -8,7 +8,12 @@
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import type { startPageLoader } from "~/server/start-page/loader.server"
+import { RoomGrade } from "~/ui/start/lighting/RoomGrade"
+import { roomGrade } from "~/ui/start/lighting/grades"
+import { StartMoodPicker } from "~/ui/start/moods/StartMoodPicker"
 import { StartStage } from "~/ui/start/stage/StartStage"
+import { IDLE_RESULTS } from "~/ui/start/stage/start-query"
+import { useStartQuery } from "~/ui/start/stage/useStartQuery"
 import { START_SHEETS } from "~/ui/start/start-sheets"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
@@ -89,6 +94,9 @@ const MEMBER_ROOM = { night: 0, camera: 1 }
 export default function Index() {
 	const data = useLoaderData<typeof startPageLoader>()
 	const room = data.member ? MEMBER_ROOM : GUEST_ROOM
+	const start = useStartQuery()
+	// What the search answered for the query (its reading lights the room); none before a search runs.
+	const results = IDLE_RESULTS
 	return (
 		<StartStage
 			shelf={data.titles}
@@ -96,6 +104,15 @@ export default function Index() {
 			camera={room.camera}
 			centered={!data.member}
 			cardHidden={!data.member}
+			moods={
+				<StartMoodPicker
+					picks={start.query.picks}
+					setPicks={start.setPicks}
+					clearPicks={start.clearPicks}
+					member={data.member}
+				/>
+			}
+			grade={<RoomGrade grade={roomGrade(start.query, results)} />}
 		/>
 	)
 }

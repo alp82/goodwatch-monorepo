@@ -10,7 +10,7 @@ import { createPortal } from "react-dom"
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { MAX_PICKS } from "~/domain/taste-picker"
 import type { WatchNext } from "~/server/watch-next.server"
-import { PickChip, TasteShelf } from "./TasteShelf"
+import { PickChip, type ShelfLines, TasteShelf } from "./TasteShelf"
 import { pickHint } from "./labels"
 import { EASE } from "./style"
 
@@ -123,13 +123,16 @@ export function useRefusalHint(control: MoodControl): string | null {
 	return hint
 }
 
-// The dropdown's top line: the title or the refusal hint, "k of 3", Clear, and Done.
-function PanelHead({
+/** The dropdown's top line: the title or the refusal hint, "k of 3", Clear, and Done. */
+export function PanelHead({
 	control,
 	onDone,
+	line,
 }: {
 	control: MoodControl
 	onDone: () => void
+	/** What follows "Pick up to three" (from 640 px); what another pick would do by default. */
+	line?: string
 }) {
 	const k = control.picker.picks.length
 	const hint = useRefusalHint(control)
@@ -158,7 +161,7 @@ function PanelHead({
 					>
 						<span className="font-semibold text-white">Pick up to three</span>
 						<span className="hidden sm:inline">
-							. {pickHint(control.picker)}
+							. {line ?? pickHint(control.picker)}
 						</span>
 					</motion.p>
 				)}
@@ -195,7 +198,13 @@ function PanelHead({
 export function MoodGrid({
 	control,
 	dense = false,
-}: { control: MoodControl; dense?: boolean }) {
+	shelf,
+}: {
+	control: MoodControl
+	dense?: boolean
+	/** The page's own shelf lines (TasteShelf). */
+	shelf?: ShelfLines
+}) {
 	return (
 		<div
 			data-shelf
@@ -205,7 +214,7 @@ export function MoodGrid({
 					: "grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-y-auto overscroll-contain p-3 sm:grid-cols-3 lg:grid-cols-4"
 			}
 		>
-			<TasteShelf control={control} dense={dense} />
+			<TasteShelf control={control} dense={dense} shelf={shelf} />
 		</div>
 	)
 }

@@ -162,27 +162,49 @@ function Tick({ on }: { on: boolean }) {
 	)
 }
 
+/**
+ * A tile's lines and state when the page says them itself (the start page's guest, whose mixes stand where taste
+ * groups do): whether it is on, whether a tap is refused (dimmed), the line under the name, and the count line (null
+ * for none).
+ */
+export interface ChoiceLines {
+	on: boolean
+	full: boolean
+	line: string | null
+	tap: string | null
+}
+
+/** What a shelf says in its own words: the first row's heading, and every tile's lines. */
+export interface ShelfLines {
+	first: { title: string; note: string }
+	lines: (id: string) => ChoiceLines
+}
+
 /** One choice as a poster tile, a checkbox. A fourth pick stays focusable and is refused with the hint. */
-function ChoiceTile({
+export function ChoiceTile({
 	control,
 	id,
 	dense,
 	mixed = false,
+	lines,
 }: {
 	control: MoodControl
 	id: string
 	dense: boolean
 	/** In a row that mixes kinds ("For you"): a taste group says it is your taste. */
 	mixed?: boolean
+	/** The tile's lines and state from the page, in place of the taste picker's. */
+	lines?: ChoiceLines
 }) {
 	const { picker } = control
 	const name = pickName(picker, id)
-	const on = picker.picks.includes(id)
-	const full = !on && picker.picks.length >= MAX_PICKS
-	const tap = tapLine(control, id)
+	const on = lines ? lines.on : picker.picks.includes(id)
+	const full = lines ? lines.full : !on && picker.picks.length >= MAX_PICKS
+	const tap = lines ? { text: lines.tap, none: false } : tapLine(control, id)
 	const hues = choiceHues(picker, id)
-	const line = tileLine(picker, id, mixed)
+	const line = lines ? lines.line : tileLine(picker, id, mixed)
 	const group = groupNumber(id) !== null
+	const yours = group && !lines
 	return (
 		<motion.button
 			type="button"
@@ -190,7 +212,14 @@ function ChoiceTile({
 			role="checkbox"
 			aria-checked={on}
 			aria-disabled={full || undefined}
-			aria-label={`${name}${group ? ", your taste" : ""}. ${line && !group ? `${line} ` : ""}${tap.text}.`}
+			aria-label={
+				lines
+					? [name, line, tap.text]
+							.filter(Boolean)
+							.map((part) => (part?.endsWith(".") ? part : `${part}.`))
+							.join(" ")
+					: `${name}${yours ? ", your taste" : ""}. ${line && !group ? `${line} ` : ""}${tap.text}.`
+			}
 			data-choice={id}
 			onClick={() => control.toggle(id)}
 			whileTap={{ scale: full ? 1 : 0.97 }}
@@ -217,9 +246,11 @@ function ChoiceTile({
 						{line}
 					</span>
 				)}
-				<span className="mt-0.5 block truncate text-[11px] font-semibold tabular-nums text-white/75">
-					{tap.text}
-				</span>
+				{tap.text && (
+					<span className="mt-0.5 block truncate text-[11px] font-semibold tabular-nums text-white/75">
+						{tap.text}
+					</span>
+				)}
 			</span>
 		</motion.button>
 	)
@@ -268,10 +299,19 @@ export function PickChip({
 	control,
 	id,
 	pinned,
+	scrim = false,
+	count = true,
 }: {
 	control: MoodControl
 	id: string
 	pinned: boolean
+	/**
+	 * A darker reading layer, for a chip over a bright picture (the start page's room): black under the name (60 % at
+	 * the left, 25 % at the right), a firmer text shadow, and darker count and × backings.
+	 */
+	scrim?: boolean
+	/** Whether the chip shows the pick's count. */
+	count?: boolean
 }) {
 	const { picker } = control
 	const name = pickName(picker, id)
@@ -281,7 +321,7 @@ export function PickChip({
 			layout
 			initial={{ opacity: 0, scale: 0.9 }}
 			animate={{ opacity: 1, scale: 1 }}
-			className={`relative isolate inline-flex max-w-[22rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 [text-shadow:0_1px_4px_rgba(0,0,0,.6)] ${pinned ? "h-8" : "h-9"}`}
+			className={`relative isolate inline-flex max-w-[22rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 ${scrim ? "[text-shadow:0_1px_2px_rgb(0_0_0/.9),0_0_10px_rgb(0_0_0/.55)]" : "[text-shadow:0_1px_4px_rgba(0,0,0,.6)]"} ${pinned ? "h-8" : "h-9"}`}
 			style={{ boxShadow: `0 4px 18px -6px ${hues[0]}` }}
 		>
 			<ChoiceArt
@@ -289,6 +329,12 @@ export function PickChip({
 				path={choiceOf(picker, id)?.picture ?? null}
 				split={groupNumber(id) !== null}
 			/>
+			{scrim && (
+				<span
+					aria-hidden
+					className="absolute inset-0 -z-10 bg-linear-to-r from-black/60 via-black/45 to-black/25"
+				/>
+			)}
 			<button
 				type="button"
 				data-moodbutton
@@ -298,15 +344,19 @@ export function PickChip({
 				className="inline-flex h-full min-w-0 cursor-pointer items-center gap-2 pl-2.5 pr-1"
 			>
 				<span className="truncate">{name}</span>
-				<span className="shrink-0 rounded-md bg-black/30 px-1 text-xs tabular-nums">
-					{choiceOf(picker, id)?.count ?? 0}
-				</span>
+				{count && (
+					<span
+						className={`shrink-0 rounded-md px-1 text-xs tabular-nums ${scrim ? "bg-black/45" : "bg-black/30"}`}
+					>
+						{choiceOf(picker, id)?.count ?? 0}
+					</span>
+				)}
 			</button>
 			<button
 				type="button"
 				aria-label={`Remove ${name}`}
 				onClick={() => control.toggle(id)}
-				className="mr-1.5 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-black/25 hover:bg-black/50"
+				className={`mr-1.5 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full ${scrim ? "bg-black/40 hover:bg-black/60" : "bg-black/25 hover:bg-black/50"}`}
 			>
 				<XMarkIcon className="h-3.5 w-3.5" />
 			</button>
@@ -314,7 +364,10 @@ export function PickChip({
 	)
 }
 
-function Heading({ children, note }: { children: ReactNode; note?: string }) {
+export function Heading({
+	children,
+	note,
+}: { children: ReactNode; note?: string }) {
 	return (
 		<div className="col-span-full flex min-h-7 items-center gap-2 pt-1 first:pt-0">
 			<h3 className="text-sm font-bold text-white">{children}</h3>
@@ -350,9 +403,12 @@ function Dots({ hues }: { hues: string[] }) {
 export function TasteShelf({
 	control,
 	dense,
+	shelf,
 }: {
 	control: MoodControl
 	dense: boolean
+	/** The page's own first heading and tile lines (the start page's guest); the taste picker's otherwise. */
+	shelf?: ShelfLines
 }) {
 	const { picker } = control
 	const [open, setOpen] = useState<WordKind | null>(null)
@@ -361,15 +417,24 @@ export function TasteShelf({
 		<>
 			<Heading
 				note={
-					picker.groups.length
-						? "Your taste groups, then the words your taste carries most"
-						: "The moods with most titles"
+					shelf
+						? shelf.first.note
+						: picker.groups.length
+							? "Your taste groups, then the words your taste carries most"
+							: "The moods with most titles"
 				}
 			>
-				For you
+				{shelf ? shelf.first.title : "For you"}
 			</Heading>
 			{picker.forYou.map((id) => (
-				<ChoiceTile key={id} control={control} id={id} dense={dense} mixed />
+				<ChoiceTile
+					key={id}
+					control={control}
+					id={id}
+					dense={dense}
+					mixed
+					lines={shelf?.lines(id)}
+				/>
 			))}
 			{room && picker.narrow.length > 0 && (
 				<div className="col-span-full rounded-xl bg-white/5 p-2.5 ring-1 ring-white/10">
@@ -432,6 +497,7 @@ export function TasteShelf({
 										control={control}
 										id={id}
 										dense={dense}
+										lines={shelf?.lines(id)}
 									/>
 								))}
 							</div>

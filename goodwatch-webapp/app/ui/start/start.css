@@ -188,6 +188,23 @@
 	transition: opacity 1.4s ease-in-out;
 }
 
+/* The mood grade (lighting/RoomGrade.tsx): color layers over the painting that blend with it (the camera is their
+   backdrop). They cover the painting's box only, so nothing tints the night around it. Only their opacity changes. */
+.start-grade {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.start-grade > div {
+	position: absolute;
+	left: var(--start-img-left);
+	top: var(--start-img-top);
+	width: var(--start-img-w);
+	height: var(--start-img-h);
+	transition: opacity 0.6s ease-out;
+}
+
 /* Where the painting ends: solid night above the room's calm top, under its lower edge, and beside it when zoomed out,
    each fading into the picture; and the stage's foot darkening. */
 .start-veil {
@@ -403,5 +420,8 @@
 	}
 	.start-night {
 		transition-duration: 0.4s;
+	}
+	.start-grade > div {
+		transition: none;
 	}
 }
