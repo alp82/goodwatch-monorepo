@@ -32,6 +32,8 @@ import {
  * them with the next version of those names.
  */
 export const SOURCE_KEYWORDS = ["based on true story", "based on novel or book", "based on comic", "based on video game"] as const
+/** Backdrops the page gets: the band's and two more, so the trailer card can show another frame. */
+const BACKDROPS = 3
 
 // Some titles list their signature tropes first, then the rest A to Z. Keep that leading run and fill up with a stable
 // sample from the alphabetical rest, so the chips don't all start with "A". Seeded, so every request gets the same.
@@ -204,8 +206,12 @@ export function trimTitleDetails(
 	details.keywords = (raw.details.keywords ?? []).filter((keyword) =>
 		(SOURCE_KEYWORDS as readonly string[]).includes(keyword),
 	)
-	const video = (rows: { key: string }[] | null | undefined) =>
-		rows == null ? null : rows.map(({ key }) => ({ key }))
+	const video = (
+		rows: { key: string; name?: string | null }[] | null | undefined,
+	) =>
+		rows == null
+			? null
+			: rows.map(({ key, name }) => (name ? { key, name } : { key }))
 	const services = (raw.streaming_services ?? []).map(
 		({ tmdb_id, name, logo, order_default }) => ({
 			tmdb_id,
@@ -246,7 +252,7 @@ export function trimTitleDetails(
 		streaming_countries: countries,
 		images: {
 			backdrops: (raw.images?.backdrops ?? [])
-				.slice(0, 1)
+				.slice(0, BACKDROPS)
 				.map(({ file_path }) => ({ file_path })),
 		},
 		videos: {
