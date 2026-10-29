@@ -203,7 +203,8 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 					<Tools href={t.href} label={t.details ?? "Details"} />
 				</div>
 			</div>
-			<div className="min-h-0 flex-1 divide-y divide-white/[0.07] overflow-hidden px-4">
+			{/* Scrolls where a short screen (the drawer's 92% cap) leaves it less room than its parts. */}
+			<div className="min-h-0 flex-1 divide-y divide-white/[0.07] overflow-y-auto overscroll-contain px-4">
 				<section className="py-3">
 					<div className="flex min-h-8 items-center">
 						{typeof t.reason === "string" ? (

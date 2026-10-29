@@ -15,6 +15,7 @@ import {
 	EyeIcon,
 	EyeSlashIcon,
 	HALF_FOCUS,
+	LEFT_HALF,
 	StatusFace,
 } from "~/ui/details/hero/seen-score-faces"
 import { NESTED_OVERLAY } from "~/ui/overlay"
@@ -138,7 +139,7 @@ function StartMenu({
 	return (
 		<div
 			ref={root}
-			className="relative flex h-full"
+			className={`relative flex h-full ${LEFT_HALF}`}
 			onPointerEnter={warmUndoToast}
 			onFocus={warmUndoToast}
 		>
@@ -149,7 +150,7 @@ function StartMenu({
 				aria-expanded={open}
 				aria-label="Not started. Set the status"
 				onClick={() => setOpen((was) => !was)}
-				className={`flex h-full cursor-pointer rounded-l-xl hover:bg-white/10 ${HALF_FOCUS}`}
+				className={`flex h-full cursor-pointer hover:bg-white/10 ${LEFT_HALF} ${HALF_FOCUS}`}
 			>
 				<StatusFace tone="none" label="Not started" detail="Set status" />
 			</button>

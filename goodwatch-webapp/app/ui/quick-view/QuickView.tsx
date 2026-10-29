@@ -56,10 +56,20 @@ export function useQuickViewFrame(): Frame {
 	return frame
 }
 
-/** The card's fixed size on wide screens and the drawer's height on phones, so a step never changes either. */
-export const CARD = { w: 400, h: 584, drawer: 532 } as const
+/**
+ * The card's fixed size on wide screens and the drawer's height on phones, so a step never changes either. The drawer
+ * holds a member's whole card: its 168 px head, a two-line reason with chips (92), their services (80), the story (87)
+ * and the footer (117).
+ */
+export const CARD = { w: 400, h: 584, drawer: 548 } as const
 /** The card's and the drawer's heights without the story (a place that has none). */
-export const SHORT = { h: 500, drawer: 448 } as const
+export const SHORT = { h: 500, drawer: 460 } as const
+/**
+ * The drawer's extra height on a narrow phone, where a tracked show's footer control stacks its status over its score
+ * (the `stacked` variant in tailwind.css: a control under 21rem, so a screen under 23rem with the footer's padding).
+ * Every title gets it there, so a step never changes the drawer's height; content still taller scrolls in the body.
+ */
+const STACK_ROOM = "max-[23rem]:[--stack-room:3.5rem]"
 
 export interface QuickViewProps {
 	/** How many titles the place has, and which one is open. */
@@ -661,9 +671,9 @@ function Drawer(p: QuickViewProps) {
 					role="dialog"
 					aria-modal="true"
 					aria-label={t.name}
-					className="pointer-events-auto absolute inset-x-0 bottom-0 max-h-[92dvh] overflow-hidden rounded-t-2xl bg-gray-900 shadow-[0_-18px_40px_-10px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.14)] outline-none"
+					className={`pointer-events-auto absolute inset-x-0 bottom-0 max-h-[min(92dvh,100%)] overflow-hidden rounded-t-2xl bg-gray-900 shadow-[0_-18px_40px_-10px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.14)] outline-none ${STACK_ROOM}`}
 					style={{
-						height: `calc(${p.height?.drawer ?? CARD.drawer}px + ${bottom ? "0px" : "env(safe-area-inset-bottom)"})`,
+						height: `calc(${p.height?.drawer ?? CARD.drawer}px + var(--stack-room, 0px) + ${bottom ? "0px" : "env(safe-area-inset-bottom)"})`,
 						y: dy,
 						touchAction: "pan-y",
 					}}

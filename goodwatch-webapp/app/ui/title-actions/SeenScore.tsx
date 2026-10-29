@@ -23,6 +23,8 @@ import { useUserScore, useWatchState } from "~/hooks/useUserDataAccessors"
 import UserAction from "~/ui/auth/UserAction"
 import {
 	HALF_FOCUS,
+	LEFT_HALF,
+	RIGHT_HALF,
 	ScoreFace,
 	SeenFace,
 	SeenSwitch,
@@ -258,7 +260,7 @@ export default function SeenScore({
 	const show = media.mediaType === "show" ? media : null
 	const episodes = show?.details.number_of_episodes
 	const firstStatus = (
-		<span className="flex h-full rounded-l-xl">
+		<span className={`flex h-full ${LEFT_HALF}`}>
 			<StatusFace
 				tone={entry?.state ?? "none"}
 				label={entry ? STATUS_LOOK[entry.state].word : "Not started"}
@@ -296,7 +298,8 @@ export default function SeenScore({
 					? "Rate it so far"
 					: "Rate it"
 	return (
-		<div ref={root} className={className}>
+		// A container: where a tracked show's status and score don't fit side by side, they stack (SplitFrame).
+		<div ref={root} className={`@container/seen ${className}`}>
 			<SplitFrame
 				big={onPage}
 				score={score}
@@ -318,7 +321,7 @@ export default function SeenScore({
 						onPointerEnter={preloadScoreDialog}
 						onTouchStart={preloadScoreDialog}
 						onFocus={preloadScoreDialog}
-						className={`flex min-w-0 flex-1 cursor-pointer rounded-r-xl hover:bg-white/[0.06] ${HALF_FOCUS}`}
+						className={`flex min-w-0 flex-1 cursor-pointer hover:bg-white/[0.06] ${RIGHT_HALF} ${HALF_FOCUS}`}
 					>
 						<ScoreFace score={score} ask={ask} due={Boolean(due) && !score} />
 					</button>

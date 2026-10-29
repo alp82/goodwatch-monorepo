@@ -14,7 +14,14 @@ const rendered = JSON.parse(
 	)
 		.split("__SCORE_CONTROL__")
 		.at(-1)!,
-) as { library: string; faces: string[]; empty: string; scored: string[]; busy: string }
+) as {
+	library: string
+	faces: string[]
+	status: string
+	empty: string
+	scored: string[]
+	busy: string
+}
 const buttons = (html: string) =>
 	[...html.matchAll(/<button\b[^>]*>/g)].map((match) => match[0])
 
@@ -57,6 +64,27 @@ test("saved-score faces render every number in white on the shared selected fill
 		assert.match(html, /color:#fff/)
 		assert.match(html, /42%, #181b20/)
 	}
+})
+
+test("a score face always shows its eyebrow and word: a narrow place stacks the control instead of hiding them", () => {
+	for (const html of [...rendered.faces, rendered.status]) {
+		assert.doesNotMatch(html, /sr-only/)
+		assert.match(html, /Your score/)
+	}
+	assert.match(rendered.faces[0], />Unwatchable</)
+	assert.match(rendered.faces[9], />Masterpiece</)
+})
+
+test("a tracked show's frame can stack its status over its score; a Seen frame has no status face to stack", () => {
+	assert.match(rendered.status, /data-status-face/)
+	assert.match(rendered.status, /stacked:flex-col/)
+	assert.match(rendered.status, />12 new episodes</)
+	// Stacked, how far wraps under a long status and the row grows, rather than running out of the frame.
+	assert.match(rendered.status, /stacked:min-h-11/)
+	assert.match(rendered.status, /stacked:flex-wrap/)
+	assert.doesNotMatch(rendered.status, /stacked:h-11\b/)
+	for (const html of rendered.faces)
+		assert.doesNotMatch(html, /data-status-face/)
 })
 
 

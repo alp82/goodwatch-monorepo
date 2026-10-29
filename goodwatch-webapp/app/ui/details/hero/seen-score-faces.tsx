@@ -13,7 +13,21 @@ import {
 export const HALF_FOCUS =
 	"outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80"
 
-/** One rounded control, 48px high, in two halves with a line between. A score colours the whole frame. */
+/**
+ * The corners and the width of what makes up the left half, from the frame's half down to the face: the left end of
+ * the row, or, stacked (the `stacked` variant in tailwind.css), the whole top row.
+ */
+export const LEFT_HALF =
+	"rounded-l-xl stacked:flex-1 stacked:rounded-bl-none stacked:rounded-tr-xl"
+/** The right half's corners: the right end of the row, or, stacked, the bottom row. */
+export const RIGHT_HALF =
+	"rounded-r-xl stacked:rounded-tr-none stacked:rounded-bl-xl"
+
+/**
+ * One rounded control, 48px high, in two halves with a line between. A score colours the whole frame. A tracked
+ * show's status and its score, where they don't fit side by side, are two rows of the frame instead: the status on
+ * top (the `stacked` variant, inside SeenScore's container).
+ */
 export function SplitFrame({
 	score,
 	left,
@@ -33,7 +47,7 @@ export function SplitFrame({
 		<div
 			data-seen-score
 			data-big={big || undefined}
-			className={`group/split relative flex h-12 min-w-0 ${big ? "lg:h-14" : ""} items-stretch rounded-xl ${score ? "" : "bg-white/[0.05] ring-1 ring-white/15"} ${className}`}
+			className={`group/split relative flex h-12 min-w-0 ${big ? "lg:h-14" : ""} items-stretch rounded-xl stacked:h-auto stacked:flex-col ${score ? "" : "bg-white/[0.05] ring-1 ring-white/15"} ${className}`}
 			style={
 				score
 					? {
@@ -44,9 +58,14 @@ export function SplitFrame({
 			}
 		>
 			{/* Not clipped: the status half's menu opens from it. Each face rounds its own corners instead. */}
-			<div className="flex shrink-0 rounded-l-xl">{left}</div>
-			<span className="w-px shrink-0 bg-white/15" aria-hidden="true" />
-			<div className="flex min-w-0 flex-1 overflow-hidden rounded-r-xl">
+			<div className={`flex shrink-0 ${LEFT_HALF}`}>{left}</div>
+			<span
+				className="w-px shrink-0 bg-white/15 stacked:h-px stacked:w-auto"
+				aria-hidden="true"
+			/>
+			<div
+				className={`flex min-w-0 flex-1 overflow-hidden stacked:h-14 stacked:flex-none ${RIGHT_HALF}`}
+			>
 				{right}
 			</div>
 		</div>
@@ -175,17 +194,17 @@ const STATUS_PATH: Partial<Record<StatusTone, string>> = {
 function StatusIcon({ tone }: { tone: StatusTone }) {
 	if (tone === "none")
 		return (
-			<EyeSlashIcon className="h-4 w-4 shrink-0 text-gray-400 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5" />
+			<EyeSlashIcon className="h-4 w-4 shrink-0 text-gray-400 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5 stacked:h-5 stacked:w-5" />
 		)
 	if (tone === "seen" || tone === "new_episodes")
 		return (
-			<EyeIcon className="h-4 w-4 shrink-0 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5" />
+			<EyeIcon className="h-4 w-4 shrink-0 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5 stacked:h-5 stacked:w-5" />
 		)
 	return (
 		<svg
 			viewBox="0 0 20 20"
 			fill="currentColor"
-			className="h-4 w-4 shrink-0 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5"
+			className="h-4 w-4 shrink-0 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5 stacked:h-5 stacked:w-5"
 			aria-hidden="true"
 		>
 			<path fillRule="evenodd" clipRule="evenodd" d={STATUS_PATH[tone]} />
@@ -193,7 +212,11 @@ function StatusIcon({ tone }: { tone: StatusTone }) {
 	)
 }
 
-/** A show's status half: the status and, under it, how far (or what to do while Not started). */
+/**
+ * A show's status half: the status and, under it, how far (or what to do while Not started). Stacked, it is the top
+ * row: the status on the left, how far and the chevron on the right; where both don't fit on one line (a long-running
+ * show's "123 new episodes" and "S10 E12 · 123/456"), how far wraps under the status and the row grows.
+ */
 export function StatusFace({
 	tone,
 	label,
@@ -207,16 +230,17 @@ export function StatusFace({
 }) {
 	return (
 		<span
-			className={`flex h-full items-center gap-1.5 rounded-l-xl px-2 sm:min-w-[6.75rem] sm:gap-2 sm:px-2.5 lg:group-data-[big]/split:min-w-[8rem] lg:group-data-[big]/split:px-3 text-left ${STATUS_TONE[tone]}`}
+			data-status-face
+			className={`flex h-full items-center gap-1.5 px-2 sm:min-w-[6.75rem] sm:gap-2 sm:px-2.5 lg:group-data-[big]/split:min-w-[8rem] lg:group-data-[big]/split:px-3 text-left stacked:h-auto stacked:min-h-11 stacked:gap-2 stacked:px-3 stacked:py-1.5 ${LEFT_HALF} ${STATUS_TONE[tone]}`}
 		>
 			<StatusIcon tone={tone} />
-			<span className="min-w-0 flex-1 leading-tight">
-				<span className="block whitespace-nowrap text-xs font-bold lg:group-data-[big]/split:text-sm">
+			<span className="min-w-0 flex-1 leading-tight stacked:flex stacked:flex-wrap stacked:items-center stacked:gap-x-2 stacked:gap-y-0.5">
+				<span className="block whitespace-nowrap text-xs font-bold lg:group-data-[big]/split:text-sm stacked:text-sm">
 					{label}
 				</span>
 				{detail && (
 					<span
-						className={`block whitespace-nowrap text-[11px] tabular-nums lg:group-data-[big]/split:text-xs ${tone === "none" ? "text-gray-400" : "opacity-80"}`}
+						className={`block whitespace-nowrap text-[11px] tabular-nums lg:group-data-[big]/split:text-xs stacked:ml-auto stacked:text-xs ${tone === "none" ? "text-gray-400" : "opacity-80"}`}
 					>
 						{detail}
 					</span>
@@ -228,20 +252,6 @@ export function StatusFace({
 }
 
 /** The score half's face: the number on its colour and its word, or a star that asks for one. */
-/**
- * Below what width of the score half a score's word steps aside (kept for screen readers): the number box, the gap and
- * about 9 px a letter, so "Great" stays where "Masterpiece" wouldn't fit. Static classes, for Tailwind to find.
- */
-function wordFits(word: string) {
-	const n = word.length
-	if (n <= 4) return "@max-[5.75rem]/score:sr-only"
-	if (n <= 5) return "@max-[6.5rem]/score:sr-only"
-	if (n <= 6) return "@max-[7rem]/score:sr-only"
-	if (n <= 8) return "@max-[8rem]/score:sr-only"
-	if (n <= 9) return "@max-[8.75rem]/score:sr-only"
-	return "@max-[9.75rem]/score:sr-only"
-}
-
 export function ScoreFace({
 	score,
 	ask,
@@ -253,10 +263,7 @@ export function ScoreFace({
 	due?: boolean
 }) {
 	return (
-		// A container: in a narrow place (the title page's rail beside a tracked show's status) the eyebrow steps aside
-		// for screen readers only; the ask may take two lines ("Rate it so far"), and a score shows as its colored number
-		// alone (its word for screen readers), so nothing cuts off.
-		<span className="@container/score flex h-full min-w-0 flex-1 items-center gap-2 pl-2 pr-2 text-left sm:gap-2.5 sm:pr-3 lg:group-data-[big]/split:gap-3 lg:group-data-[big]/split:pl-2.5">
+		<span className="flex h-full min-w-0 flex-1 items-center gap-2 pl-2 pr-2 text-left sm:gap-2.5 sm:pr-3 lg:group-data-[big]/split:gap-3 lg:group-data-[big]/split:pl-2.5">
 			{score ? (
 				<span
 					className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg font-black tabular-nums lg:group-data-[big]/split:h-11 lg:group-data-[big]/split:w-11 lg:group-data-[big]/split:text-xl"
@@ -276,11 +283,11 @@ export function ScoreFace({
 				</span>
 			)}
 			<span className="min-w-0 flex-1 leading-tight">
-				<span className="block truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400 @max-[8.5rem]/score:sr-only">
+				<span className="block truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">
 					Your score
 				</span>
 				<span
-					className={`block truncate text-sm font-bold lg:group-data-[big]/split:text-base ${score ? wordFits(scoreLabels[score]) : "@max-[8.5rem]/score:line-clamp-2 @max-[8.5rem]/score:whitespace-normal"} ${due ? "text-amber-200" : "text-white"}`}
+					className={`block truncate text-sm font-bold lg:group-data-[big]/split:text-base ${due ? "text-amber-200" : "text-white"}`}
 				>
 					{score ? scoreLabels[score] : ask}
 				</span>

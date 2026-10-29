@@ -186,6 +186,35 @@
 	}
 }
 
+/* The Seen and score control of a tracked show (ui/details/hero/seen-score-faces.tsx) where the status half and the
+   score half don't fit side by side with their longest words: one frame with two full-width rows, the status on top.
+   It asks the control's own width (SeenScore's `@container/seen`), not the page, so the title page's rail and any
+   other narrow place stack it. A frame without a status face (a movie, a guest's show) never stacks: it fits.
+   Side by side needs the widest status ("12 new episodes / S2 E4 · 24/36") beside the number box and the longest
+   word ("Unwatchable", or the ask "Rate it so far"): up to about 325px with the compact faces (290px on a phone, where
+   the chevron hides), so below 21rem it stacks and a phone's full-width block (343px at 390) and the quick view's
+   footer (368px) stay one row; about 375px with the title page's larger faces from lg up, so there below 24rem. */
+@custom-variant stacked {
+	@container seen (width < 21rem) {
+		&:is(
+				[data-seen-score]:has([data-status-face]),
+				[data-seen-score]:has([data-status-face]) *
+			) {
+			@slot;
+		}
+	}
+	@media (width >= 64rem) {
+		@container seen (width < 24rem) {
+			&:is(
+					[data-seen-score][data-big]:has([data-status-face]),
+					[data-seen-score][data-big]:has([data-status-face]) *
+				) {
+				@slot;
+			}
+		}
+	}
+}
+
 /* TODO check if still needed. Used for main search? */
 input[type="search"]::-webkit-search-cancel-button {
 	appearance: none;
