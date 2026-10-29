@@ -1,5 +1,5 @@
-// The sign-in card's main button, in a module of its own: the Feedback drawer uses it too, and the card's scene
-// (AuthScene.tsx) brings the animation library, which the drawer must not load on every page (#236).
+// The sign-in card's main button, in a module of its own: the Feedback drawer uses it too and must not load the
+// card's scene (AuthScene.tsx) on every page (#236).
 import type { ReactNode } from "react"
 import { Spinner } from "~/ui/wait/Spinner"
 

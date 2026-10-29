@@ -348,7 +348,7 @@ export function TitleCard({
 					src={tmdbImageUrl(title.backdrop, "w780")}
 					alt={`${title.name} backdrop`}
 					loading={priority ? "eager" : "lazy"}
-					fetchPriority={priority ? "high" : undefined}
+					{...(priority && { fetchpriority: "high" })}
 					crossOrigin={priority ? "anonymous" : undefined}
 					decoding="async"
 					width={780}
