@@ -283,6 +283,7 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
             failure['reason'] = failure['message']
         work.update_one({'_id': item['_id'], 'version': item['version']}, {
             '$set': {'error': failure['error'], 'message': failure['message'], 'traceback': failure['traceback'],
+                     'causes': failure['causes'],
                      'failure_day': day, 'consecutive_failure_days': streak,
                      'last_attempt_at': utc_ms(clock())}})
         report['failed'] += 1

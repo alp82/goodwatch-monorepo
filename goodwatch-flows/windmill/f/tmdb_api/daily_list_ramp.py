@@ -60,7 +60,7 @@ def record_baseline_failure(client, store, report, country, media_type, service_
     failure = job.list_failure(country, media_type, service_id, error)
     failure['consecutive_failure_days'] = store.record_failure(failure['key'], job.utc_ms(clock()), failure)
     report['lists_failed'] += 1
-    report['lists'].append(failure)
+    job.append_list_failure(report, failure)
     print(json.dumps(failure), flush=True)
     client.consecutive_list_failures = (getattr(client, 'consecutive_list_failures', 0) + 1
                                         if isinstance(error, job.TMDBReadError) else 0)

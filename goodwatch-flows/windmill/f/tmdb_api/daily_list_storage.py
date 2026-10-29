@@ -232,7 +232,12 @@ class ListStorage:
                         result = publish_history(self.connector, media_type,
                                                  [remaining[tmdb_id] for tmdb_id in owned], check_owned)
                         if result.errors:
-                            raise RuntimeError('History publication failed; checkpoint retained for retry')
+                            from itertools import islice
+                            from f.tmdb_api.daily_provider_lists import _bounded_text, _failure_message
+                            sample = '; '.join(_bounded_text(_failure_message(value), 200)
+                                               for value in islice(result.errors.values(), 3))
+                            raise RuntimeError('History publication failed; checkpoint retained for retry; '
+                                               f'{len(result.errors)} errors: {sample}')
                         check_owned()
                         self.stats['published_titles'] += len(owned)
                         for tmdb_id in owned:

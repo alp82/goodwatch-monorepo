@@ -454,14 +454,16 @@ def _failure_message(error):
         text = str(error)[:8192]
     except Exception:
         return '[exception message unavailable]'
-    parts = re.split(r'[\{\[<]|\(\s*[\x27"]|\b(?:payload|response|body|params|parameters|args)\s*[:=]|'
+    parts = re.split(r'\{|\[(?!(?:payload omitted|REDACTED (?:URL|HEADER|AUTH|CREDENTIAL|TOKEN)|'
+                     r'exception message unavailable)\])|<|\(\s*[\x27"]|'
+                     r'\b(?:payload|response|body|params|parameters|args)\s*[:=]|'
                      r'\b(?:INSERT|UPDATE|SELECT|DELETE)\s', text, maxsplit=1, flags=re.I)
     text = parts[0] + (' [payload omitted]' if len(parts) > 1 else '')
     text = re.sub(r'\b[a-z][a-z0-9+.-]*://[^\s]+', '[REDACTED URL]', text, flags=re.I)
     text = re.sub(r'\b(?:authorization|proxy-authorization|cookie|set-cookie)\s*[:=][^\r\n]*',
                   '[REDACTED HEADER]', text, flags=re.I)
     text = re.sub(r'\b(?:Bearer|Basic)\s+\S+', '[REDACTED AUTH]', text, flags=re.I)
-    text = re.sub(r'\b[\w-]*(?:token|secret|password|passwd|pass|api[ _-]?key|credential)[\w-]*'
+    text = re.sub(r'\b(?:[\w-]*(?:token|secret|passw(?:or)?d|passwd|api[ _-]?key|credential)[\w-]*|[\w-]+_PASS)'
                   r'\s*(?:[:=]\s*|\s+)(?:"[^"]*"|\x27[^\x27]*\x27|[^\s,;]+)',
                   '[REDACTED CREDENTIAL]', text, flags=re.I)
     # Opaque keys/JWTs may be printed without a credential label.
@@ -473,14 +475,40 @@ def _failure_message(error):
 def failure_details(error):
     """Bounded diagnostics: no locals, source lines, response bodies or raw URLs."""
     frames = deque(maxlen=64)
-    locations = (traceback.walk_tb(error.__traceback__) if error.__traceback__ is not None
-                 else traceback.walk_stack(sys._getframe(1)))
-    for frame, line in locations:
-        frames.append(_bounded_text(
-            f'{os.path.basename(frame.f_code.co_filename)}:{line} in {frame.f_code.co_name}', 256))
+    causes, seen, current = [], set(), error
+    # Bound depth and cycles; preserve explicit suppression of an implicit context.
+    for depth in range(4):
+        if current is None or id(current) in seen:
+            break
+        seen.add(id(current))
+        if depth:
+            causes.append(dict(error=_bounded_text(type(current).__name__, 128),
+                               message=_bounded_text(_failure_message(current), 512)))
+        frames.append(_bounded_text(type(current).__name__, 128))
+        locations = (traceback.walk_tb(current.__traceback__) if current.__traceback__ is not None
+                     else traceback.walk_stack(sys._getframe(1)) if depth == 0 else ())
+        for frame, line in locations:
+            frames.append(_bounded_text(
+                f'{os.path.basename(frame.f_code.co_filename)}:{line} in {frame.f_code.co_name}', 256))
+        current = (current.__cause__ if current.__cause__ is not None
+                   else None if current.__suppress_context__ else current.__context__)
     stack = '\n'.join(frames).encode('utf-8', errors='replace')[-4096:].decode('utf-8', errors='ignore')
     return dict(error=_bounded_text(type(error).__name__, 128),
-                message=_failure_message(error), traceback=stack)
+                message=_failure_message(error), traceback=stack, causes=causes)
+
+
+def append_list_failure(report, failure):
+    """Mongo/logs retain each diagnostic; cap detailed samples in the job result."""
+    if report['lists_failed'] <= 20:
+        report['lists'].append(failure)
+        return
+    summary = {key: value for key, value in failure.items()
+               if key in ('key', 'media_type', 'tmdb_id', 'endpoint', 'http_status',
+                          'error', 'consecutive_failure_days')}
+    summary['message'] = _bounded_text(failure['message'], 256)
+    if 'reason' in failure:
+        summary['reason'] = _bounded_text(failure['reason'], 256)
+    report['lists'].append(summary)
 
 
 def list_failure(country, media_type, service_id, error):
@@ -545,7 +573,7 @@ def run_daily_lists(client, store, *, countries, service_ids, media_types=('movi
                 report['lists_failed'] += 1
                 failure = list_failure(country, media_type, service_id, error)
                 failure['consecutive_failure_days'] = store.record_failure(failure['key'], utc_ms(clock()), failure)
-                report['lists'].append(failure)
+                append_list_failure(report, failure)
                 print(json.dumps(failure), flush=True)
                 client.consecutive_list_failures = (getattr(client, 'consecutive_list_failures', 0) + 1
                                                     if isinstance(error, TMDBReadError) else 0)

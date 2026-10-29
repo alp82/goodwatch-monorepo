@@ -137,7 +137,9 @@ class RefreshTests(unittest.TestCase):
 
     def test_refresh_failures_keep_safe_details_in_results_and_pending_work(self):
         self.enqueue()
-        self.api.get = Mock(side_effect=RuntimeError('Refresh failed token=PRIVATE_CREDENTIAL'))
+        error = RuntimeError('Refresh failed token=PRIVATE_CREDENTIAL')
+        error.__cause__ = ValueError('Inner refresh failure password=PRIVATE_CAUSE')
+        self.api.get = Mock(side_effect=error)
         result = self.drain()
         failed = result['failures'][0]
         pending = self.db.tmdb_list_offer_refresh.find_one({'_id': 'movie:42'})
@@ -145,7 +147,10 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(failed['error'], 'RuntimeError')
         self.assertIn('Refresh failed', failed['message'])
         self.assertTrue(failed['traceback'])
-        for field in ('error', 'message', 'traceback'):
+        self.assertEqual(failed['causes'][0]['error'], 'ValueError')
+        self.assertIn('Inner refresh failure', pending['causes'][0]['message'])
+        self.assertNotIn('PRIVATE', json.dumps(failed))
+        for field in ('error', 'message', 'traceback', 'causes'):
             self.assertEqual(pending[field], failed[field])
             self.assertNotIn('PRIVATE_CREDENTIAL', failed[field])
         before = deepcopy(pending)
@@ -354,6 +359,37 @@ class RefreshTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 store.flush()
         self.assertTrue(self.db.tmdb_list_offer_refresh.find_one()['pending'])
+        self.assertEqual(self.db.tmdb_daily_provider_lists.count_documents({}), 0)
+
+    def test_history_result_errors_reach_the_failed_list_details_with_a_bounded_summary(self):
+        from f.tmdb_api import daily_provider_lists as job
+        payload = dict(id=42, results={'IT': {'flatrate': [dict(provider_id=119)]}})
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42, self.now, bypass_cache=True)
+        key = OfferKey(42, 'movie', 'IT', 119, 'flatrate')
+        title = HistoryTitle(42, dict(watch_providers=payload, watch_providers_check=proof),
+                             {key: key._asdict()}, {}, [], [], ListRead('IT', 119, utc_ms(self.now)))
+        self.crate.select.return_value = []
+        store = ListStorage(db=self.db, connector=self.crate, dry_run=False)
+        store.publish('movie', title, lambda: None)
+        errors = {1: 'ValueError: bad history password=PRIVATE_HISTORY',
+                  2: 'TypeError: second history failure', 3: 'KeyError: third history failure',
+                  **{index: 'FOURTH_AND_LATER_MUST_NOT_APPEAR' for index in range(4, 101)}}
+        with patch('f.tmdb_api.daily_list_storage.publish_history', return_value=Mock(errors=errors)), \
+                patch.object(job, 'read_daily_list', side_effect=lambda *args: store.flush()):
+            result = job.run_daily_lists(self.api, store, countries=['IT'], service_ids=[119],
+                                         media_types=['movie'], now=self.now)
+        failed = result['lists'][0]
+        self.assertEqual(failed['error'], 'RuntimeError')
+        self.assertIn('100 errors', failed['message'])
+        for expected in ('ValueError: bad history', 'TypeError: second history failure',
+                         'KeyError: third history failure'):
+            self.assertIn(expected, failed['message'])
+        self.assertNotIn('PRIVATE_HISTORY', json.dumps(failed))
+        self.assertNotIn('FOURTH_AND_LATER', json.dumps(failed))
+        self.assertLessEqual(len(failed['message'].encode()), 1024)
+        pending = self.db.tmdb_daily_provider_list_pending.find_one({'_id': 'IT:movie:119'})
+        self.assertEqual(pending['last_failure']['message'], failed['message'])
+        self.assertIn('flush', pending['last_failure']['traceback'])
         self.assertEqual(self.db.tmdb_daily_provider_lists.count_documents({}), 0)
 
     def test_reused_bson_provider_proof_reaches_list_history_and_offer_handoff(self):

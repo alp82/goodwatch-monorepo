@@ -2,6 +2,8 @@
 import json
 import sys
 import unittest
+import io
+from contextlib import redirect_stdout
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -12,6 +14,87 @@ from test_daily_provider_lists import Storage, TMDB
 
 
 class FailureDetailsTests(unittest.TestCase):
+    def test_explicit_cause_and_implicit_context_keep_sanitized_inner_diagnostics(self):
+        for explicit in (True, False):
+            try:
+                try:
+                    raise ValueError('Inner history failure password=PRIVATE_CAUSE')
+                except ValueError as inner:
+                    if explicit:
+                        raise RuntimeError('Outer history failure') from inner
+                    raise RuntimeError('Outer history failure')
+            except RuntimeError as error:
+                failed = job.list_failure('IT', 'movie', 119, error)
+            self.assertEqual(failed['causes'][0]['error'], 'ValueError')
+            self.assertIn('Inner history failure', failed['causes'][0]['message'])
+            self.assertNotIn('PRIVATE_CAUSE', json.dumps(failed))
+            self.assertIn('ValueError', failed['traceback'])
+            self.assertLessEqual(len(failed['traceback'].encode()), 4096)
+
+    def test_exception_chain_depth_cycles_and_suppressed_context_are_bounded(self):
+        root = RuntimeError('outer')
+        current = root
+        for _ in range(20):
+            current.__cause__ = ValueError('inner ' + '雪' * 1000)
+            current = current.__cause__
+        current.__cause__ = root
+        details = job.failure_details(root)
+        self.assertEqual(len(details['causes']), 3)
+        self.assertTrue(all(len(cause['message'].encode()) <= 512 for cause in details['causes']))
+        root.__cause__ = root
+        self.assertEqual(job.failure_details(root)['causes'], [])
+        root.__cause__ = None
+        root.__context__ = ValueError('suppressed')
+        root.__suppress_context__ = True
+        self.assertEqual(job.failure_details(root)['causes'], [])
+
+    def test_validation_passed_is_not_a_password_and_redaction_is_idempotent(self):
+        self.assertEqual(job._failure_message('Validation passed 3 titles'), 'Validation passed 3 titles')
+        for text in ('password=PRIVATE', 'passwd=PRIVATE', 'CRATE_PASS=PRIVATE',
+                     'failure {"token":"PRIVATE"}'):
+            once = job._failure_message(text)
+            self.assertNotIn('PRIVATE', once)
+            self.assertEqual(job._failure_message(once), once)
+
+    def test_result_samples_are_shared_by_rereads_and_baselines_without_losing_pending_details(self):
+        now = datetime(2026, 10, 29, 14)
+        store = Storage()
+        store.dry_run = False
+        def fail(*args, **kwargs):
+            error = RuntimeError('History failure ' + 'diagnostic ' * 200)
+            error.read_attempts = [dict(reported_total=10, returned_total=9)]
+            raise error
+        with redirect_stdout(io.StringIO()), patch.object(job, 'read_daily_list', side_effect=fail):
+            report = job.run_daily_lists(TMDB(), store, countries=['IT'],
+                                         service_ids=range(1, 23), media_types=['movie'], now=now)
+            try:
+                fail()
+            except RuntimeError as error:
+                ramp.record_baseline_failure(TMDB(), store, report, 'LU', 'movie', 119,
+                                             error, lambda: now)
+        self.assertEqual(report['lists_failed'], 23)
+        self.assertEqual(len(report['lists']), 23)
+        self.assertEqual(sum('traceback' in failure for failure in report['lists']), 20)
+        for failure in report['lists'][20:]:
+            self.assertNotIn('causes', failure)
+            self.assertNotIn('read_attempts', failure)
+            self.assertLessEqual(len(failure['message'].encode()), 256)
+            self.assertEqual(failure['error'], 'RuntimeError')
+            self.assertEqual(failure['consecutive_failure_days'], 1)
+        pending = store.db.tmdb_daily_provider_list_pending.find_one({'_id': 'LU:movie:119'})
+        self.assertTrue(pending['last_failure']['traceback'])
+        self.assertGreater(len(pending['last_failure']['message'].encode()), 256)
+
+    def test_full_bad_day_result_stays_bounded(self):
+        report = dict(lists_failed=0, lists=[])
+        for index in range(4170):
+            report['lists_failed'] += 1
+            job.append_list_failure(report, dict(key=f'IT:movie:{index}', error='RuntimeError',
+                message='x ' * 512, traceback='x' * 4096, causes=[], consecutive_failure_days=1))
+        self.assertEqual(len(report['lists']), 4170)
+        self.assertEqual(sum('traceback' in failure for failure in report['lists']), 20)
+        self.assertLess(len(json.dumps(report).encode()), 2_000_000)
+
     def test_reread_and_baseline_keep_the_same_runtime_details_in_results_and_mongo(self):
         def broken_history(*args, **kwargs):
             secret_local = 'LOCAL_VALUE_MUST_NEVER_APPEAR'
