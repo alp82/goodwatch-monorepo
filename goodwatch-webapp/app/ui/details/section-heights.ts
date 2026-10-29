@@ -1,11 +1,12 @@
-// Estimated heights of the title page sections below the fold, in pixels. The browser reserves them for a section
-// it hasn't laid out yet (see below-fold.tsx). An estimate only has to be close: a section gets its real height
-// before it scrolls into view, and the browser remembers it from then on.
+// Estimated heights of the title page's sections, in pixels. The browser reserves them for a section it hasn't laid
+// out yet (see below-fold.tsx). An estimate only has to be close: a section gets its real height before it scrolls
+// into view, and the browser remembers it from then on.
 //
-// The numbers are measured on phones (412 px wide) and desktops (1,440 px wide) across titles with and without a
-// poster, cast, trailer, collection, and streaming offers. Keep them in step with the sections' markup.
+// Measured on phones (390 px wide) and desktops (1,440 px wide) on the saved titles. Keep them in step with the
+// sections' markup (title-sections.tsx).
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import type { TitleQuestion } from "~/ui/details/titleQuestions"
 
 type Media = MovieResult | ShowResult
 
@@ -16,66 +17,23 @@ export interface ReservedHeight {
 	desktop: number
 }
 
+/** Offer types that count as streaming (where to watch opens on them). */
+const STREAM_TYPES = new Set(["flatrate", "free", "ads", "flatrate_and_buy"])
+
 const same = (height: number): ReservedHeight => ({
 	phone: height,
 	desktop: height,
 })
-
-// Synopsis, tagline, and tags. The text length moves it by about 100 px either way.
-export const aboutHeight = (): ReservedHeight => ({ phone: 540, desktop: 390 })
-
-// One carousel row of round photos, or nothing without a cast.
-export const actorsHeight = (media: Media): ReservedHeight =>
-	same(media.cast.length ? 236 : 0)
-
-// The heading and up to four crew lines. A line stacks its label above the names on a phone.
-export function crewHeight(media: Media): ReservedHeight {
-	const { directors, writers, producers, composers } = media.crew
-	const lines = [directors, writers, producers, composers].filter(
-		(people) => people.length,
-	).length
-	const gaps = Math.max(lines - 1, 0) * 24
-	return { phone: 64 + lines * 52 + gaps, desktop: 64 + lines * 24 + gaps }
-}
-
-// The related titles as a map (ui/related-map). Its height is fixed by its style: the same for every title.
-export const relatedMapHeight = (): ReservedHeight => ({
-	phone: 602,
-	desktop: 576,
+const add = (a: ReservedHeight, b: ReservedHeight): ReservedHeight => ({
+	phone: a.phone + b.phone,
+	desktop: a.desktop + b.desktop,
 })
 
-// The genre row: the heading and eight posters, two rows of four on a phone and one row of eight on a desktop.
-// Estimated at 412 and 1,440 px wide; measure again when the row's markup changes.
-export const genreRowHeight = (): ReservedHeight => ({
-	phone: 343,
-	desktop: 286,
-})
+/** A section's frame: its top padding, the header, and the gap to the body. */
+const FRAME: ReservedHeight = { phone: 92, desktop: 108 }
 
-// A grid of the collection's posters, two per row on a phone and six on a desktop, or one line of text.
-export function sequelsHeight(media: Media): ReservedHeight {
-	const count =
-		media.mediaType === "movie"
-			? (media.movie_series?.movie_ids?.length ?? 0)
-			: 0
-	if (!count) return same(112)
-	const rows = (perRow: number, card: number) => {
-		const n = Math.ceil(count / perRow)
-		return 104 + n * card + (n - 1) * 16
-	}
-	return { phone: rows(2, 269), desktop: rows(6, 280) }
-}
-
-// The tabs and one video at 16:9 across the content width. The section opens on the trailers (see Media.tsx), so
-// without a trailer it is the heading and the tabs.
-export const mediaHeight = (media: Media): ReservedHeight =>
-	media.videos?.trailers?.length ? { phone: 360, desktop: 840 } : same(130)
-
-// One card per question, in one column on a phone and two on a desktop.
-export const questionsHeight = (count: number): ReservedHeight =>
-	count ? { phone: 60 + count * 250, desktop: 60 + count * 135 } : same(0)
-
-// The shared grid wraps long seasons; these estimates reserve space before it nears the viewport.
-export function episodeGridHeight(grid: EpisodeGrid): ReservedHeight {
+// The shared grid wraps long seasons.
+function episodeGridHeight(grid: EpisodeGrid): ReservedHeight {
 	const height = (columns: number) =>
 		84 +
 		(grid.window ? 40 : 0) +
@@ -88,4 +46,67 @@ export function episodeGridHeight(grid: EpisodeGrid): ReservedHeight {
 		) +
 		(grid.specials.length ? 48 : 0)
 	return { phone: height(8), desktop: height(26) }
+}
+
+function bodyHeight(
+	id: string,
+	media: Media,
+	{
+		episodeGrid,
+		questions,
+	}: { episodeGrid: EpisodeGrid | null; questions: TitleQuestion[] },
+): ReservedHeight {
+	switch (id) {
+		case "watch": {
+			// The toolbar, a row per service (five at most before "All N services"), the rows under them.
+			const services = new Set(
+				media.streaming_availabilities
+					.filter((a) => STREAM_TYPES.has(a.streaming_type))
+					.map((a) => a.streaming_service_id),
+			).size
+			return same(70 + Math.min(5, Math.max(1, services)) * 64 + 60)
+		}
+		case "fingerprint":
+			return { phone: 860, desktop: 506 }
+		case "episodes":
+			return episodeGrid ? episodeGridHeight(episodeGrid) : same(0)
+		case "story":
+			return { phone: 400, desktop: 320 }
+		case "cast": {
+			// Search and tiers, then 24 people: 12 rows of two on a phone, 8 rows of three on a desktop.
+			const rows = (perRow: number) =>
+				Math.ceil(Math.min(24, media.cast.length) / perRow)
+			return { phone: 200 + rows(2) * 52, desktop: 160 + rows(3) * 52 }
+		}
+		case "crew":
+			return { phone: 520, desktop: 320 }
+		case "related": {
+			// The related map and the genre row, and a movie's series as a list.
+			const films =
+				media.mediaType === "movie"
+					? (media.movie_series?.movie_ids?.length ?? 0)
+					: 0
+			const series = films ? 80 + films * 81 : 0
+			return { phone: 974 + series, desktop: 858 + series }
+		}
+		case "facts":
+			return { phone: 330, desktop: 300 }
+		case "tropes":
+			return { phone: 280, desktop: 115 }
+		case "faq":
+			return {
+				phone: 60 + questions.length * 290,
+				desktop: 60 + questions.length * 160,
+			}
+	}
+	return same(0)
+}
+
+/** The reserved height of the section `id`, frame included. */
+export function sectionHeight(
+	id: string,
+	media: Media,
+	data: { episodeGrid: EpisodeGrid | null; questions: TitleQuestion[] },
+): ReservedHeight {
+	return add(FRAME, bodyHeight(id, media, data))
 }

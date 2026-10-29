@@ -37,7 +37,8 @@ import type {
 import type { ShowResult } from "~/server/types/details-types"
 import { BelowFoldProvider } from "~/ui/details/below-fold"
 import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
-import DetailsHero from "~/ui/details/hero/DetailsHero"
+import { WatchSection } from "~/ui/details/WatchSection"
+import { YouBlock } from "~/ui/details/YouBlock"
 import { MediaPreferenceProvider } from "~/ui/media-preference/MediaPreference"
 import { imdbGrid } from "~/ui/prototype-episode-list-2/shared"
 import chernobyl from "~/ui/prototype-episode-list/fixtures/chernobyl.json"
@@ -369,7 +370,7 @@ function Harness({
 					</div>
 				</details>
 
-				{/* The real hero of the title page, and under it the real episodes section. The page's header, with the title, is not here. */}
+				{/* The title page's real "You" block and where to watch, and under them the real episodes section. */}
 				<BelowFoldProvider titleKey={`show-${show.id}`}>
 					<h1 className="mb-1 mt-6 min-w-0 truncate text-xl font-bold text-white">
 						{show.name}{" "}
@@ -378,12 +379,10 @@ function Harness({
 					{/* The hero's where-to-watch reads the header pair's country. */}
 					<MediaPreferenceProvider country="DE">
 						<div className="-mx-4 sm:-mx-6 lg:-mx-8" data-hero>
-							<DetailsHero
-								media={media}
-								country="DE"
-								episodeGrid={grid.seasons.length ? grid : null}
-								sectionProps={{ overview: {} } as never}
-							/>
+							<div className="flex flex-col gap-8 px-4 sm:px-6 lg:px-8">
+								<YouBlock media={media} country="DE" onWatch={() => {}} />
+								<WatchSection media={media} country="DE" shownCountry="DE" preview={null} />
+							</div>
 						</div>
 					</MediaPreferenceProvider>
 					<div className="mt-12 flex flex-col gap-12">
@@ -403,7 +402,7 @@ function Harness({
 	)
 }
 
-/** The episodes section as ui/details/DetailsContent.tsx renders it. */
+/** The episodes section as ui/details/EpisodesSection.tsx renders it. */
 function Episodes({
 	layout,
 	media,

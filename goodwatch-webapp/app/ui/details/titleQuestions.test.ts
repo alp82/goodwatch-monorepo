@@ -7,7 +7,6 @@ import "../../server/title-filter/test-alias.ts"
 const { titleQuestions, MAX_QUESTIONS, MIN_QUESTIONS } = await import("./titleQuestions.ts")
 const { fingerprintAnswers } = await import("./fingerprintQuestions.ts")
 const { seasonSummary } = await import("./season-summary.ts")
-const { navSections } = await import("./sections.ts")
 const { matrix, toyStory, breakingBad } = await import("./fingerprint/titles.test-support.ts")
 
 type Fingerprint = typeof matrix.fingerprint
@@ -325,12 +324,6 @@ test("no question restates a fixed sentence or asks about the source", () => {
 		"Pick any of them in Where to Watch to see the local services.",
 	])
 		assert.ok(!qa.some((q) => q.a.includes(sentence)))
-})
-
-test("the page navigation lists Q&A only when the title has questions", () => {
-	assert.ok(navSections(false).some((s) => s.id === "faq"))
-	assert.ok(!navSections(false, false).some((s) => s.id === "faq"))
-	assert.ok(navSections(true, false).some((s) => s.id === "episodes"))
 })
 
 test("the area details header, the area's slider, and the FAQ humor meter use the same level word for every tier", async () => {

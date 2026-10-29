@@ -4,7 +4,7 @@
 // a signed-in session or a database.
 //   /prototype/watch-log-real            a member
 //   /prototype/watch-log-real?guest=1    a guest: Seen asks to sign in
-//   &hero=693134|680|157336  also the REAL hero of the title page for that movie (Dune: Part Two, not seen;
+//   &hero=693134|680|157336  also the REAL "You" block and where to watch of the title page for that movie (Dune: Part Two, not seen;
 //                            Pulp Fiction, Seen through its score; Interstellar, three watches), &providers=one|many|none|only|nowhere|stale
 // A production build leaves the route out (PROTOTYPES in vite.config.js).
 import { type ShouldRevalidateFunction, useSearchParams } from "@remix-run/react"
@@ -13,7 +13,8 @@ import { startTransition, useEffect, useMemo, useReducer, useState } from "react
 import type { MovieResult } from "~/server/types/details-types"
 import type { WatchNextTitle } from "~/server/watch-next.server"
 import { BelowFoldProvider } from "~/ui/details/below-fold"
-import DetailsHero from "~/ui/details/hero/DetailsHero"
+import { WatchSection } from "~/ui/details/WatchSection"
+import { YouBlock } from "~/ui/details/YouBlock"
 import { MediaPreferenceProvider } from "~/ui/media-preference/MediaPreference"
 import { type HeroProviders, heroParts, withMemberSettings } from "~/ui/prototype-episode-tracking/hero-fixture"
 import { HARNESS_MEMBER, NEXT, SAMPLES, type Sample, createHarnessServer } from "~/ui/prototype-watch-log/harness-server"
@@ -35,7 +36,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = () => false
 
 const TMDB = "https://image.tmdb.org/t/p"
 const media = (sample: Sample) => ({ mediaType: sample.mediaType, details: { tmdb_id: sample.tmdbId, title: sample.title } })
-/** The backdrops of the movies the real hero can be shown for. */
+/** The backdrops of the movies the real title page parts can be shown for. */
 const BACKDROPS: Record<number, string> = { 693134: "/eZ239CUp1d6OryZEBPnO2n87gMG.jpg", 680: "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg", 157336: "/8sNiAPPYU14PUepFNeSNGUTiHW.jpg" }
 
 export default function WatchLogHarness() {
@@ -228,7 +229,7 @@ function ServerPanel({ server, onReset }: { server: ReturnType<typeof createHarn
 	)
 }
 
-/** The real hero of the title page for one of the sample movies, as `?hero=` asks. */
+/** The title page's real "You" block and where to watch for one of the sample movies, as `?hero=` asks. */
 function RealHero() {
 	const [params] = useSearchParams()
 	const sample = SAMPLES.find((s) => String(s.tmdbId) === params.get("hero") && s.mediaType === "movie")
@@ -244,7 +245,10 @@ function RealHero() {
 		<BelowFoldProvider titleKey={`movie-${sample.tmdbId}`}>
 			<div className="-mx-4 mt-4 sm:-mx-6 lg:-mx-8" data-real-hero>
 				<MediaPreferenceProvider country="DE">
-					<DetailsHero media={movie} country="DE" sectionProps={{ overview: {} } as never} />
+					<div className="flex flex-col gap-8 px-4 sm:px-6 lg:px-8">
+						<YouBlock media={movie} country="DE" onWatch={() => {}} />
+						<WatchSection media={movie} country="DE" shownCountry="DE" preview={null} />
+					</div>
 				</MediaPreferenceProvider>
 			</div>
 		</BelowFoldProvider>

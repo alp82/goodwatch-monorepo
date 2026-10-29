@@ -630,7 +630,7 @@ export function destinationLabel(
 	}
 }
 
-/** The id of the title page's block that says where a title streams (ui/details/hero/WhereToWatch.tsx). */
+/** The id of the title page's block that says where a title streams (ui/details/WatchSection.tsx). */
 export const STREAMING_BLOCK = "streaming"
 
 /**
