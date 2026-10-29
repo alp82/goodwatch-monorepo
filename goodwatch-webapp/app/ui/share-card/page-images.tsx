@@ -143,9 +143,13 @@ export function cardWithImagePriority(
 	priority: "high" | "lazy",
 	display?: CardDisplay,
 ): ReactNode {
+	const alternatives = new Map<string, string>()
 	const kinds = new Map<string, TmdbImageKind>()
-	for (const item of card.items) {
-		if (item.poster) kinds.set(item.poster, "poster")
+	for (const item of card.items as CardTitle[]) {
+		if (item.poster) {
+			kinds.set(item.poster, "poster")
+			alternatives.set(item.poster, item.title)
+		}
 		if (item.backdrop) kinds.set(item.backdrop, "backdrop")
 	}
 
@@ -154,7 +158,9 @@ export function cardWithImagePriority(
 		const area = Number(img.props.width) * Number(img.props.height)
 		if (typeof img.props.src === "string" && tmdbPath(img.props.src))
 			largest = Math.max(largest, area)
-		return img
+		return cloneElement(img, {
+			alt: img.props.alt ?? alternatives.get(String(img.props.src)) ?? "",
+		})
 	})
 	let prioritized = false
 	return resolve(tree, (img) => {

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { listTileDisplay } from "~/ui/share-lists/ShareListTile"
 import { DESIGNS } from "./designs"
 import type { CardProps } from "./model"
-import { cardWithImagePriority } from "./page-images"
+import { cardForPage, cardWithImagePriority } from "./page-images"
 
 const card: CardProps = {
 	title: "Favorites",
@@ -25,7 +25,7 @@ console.log(
 		JSON.stringify(
 			DESIGNS.map((design) => ({
 				key: design.key,
-				original: renderToStaticMarkup(<design.Card {...card} />),
+				original: renderToStaticMarkup(<>{cardForPage(design, card)}</>),
 				high: renderToStaticMarkup(
 					<>{cardWithImagePriority(design, card, "high")}</>,
 				),
