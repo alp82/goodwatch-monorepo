@@ -1,8 +1,8 @@
 import { BookmarkIcon, UserCircleIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
-import { whiteMark } from "~/ui/brand/white-mark"
 import { LazyAccountMenu } from "~/ui/account/LazyAccountMenu"
+import { whiteMark } from "~/ui/brand/white-mark"
 // Small pieces shared by the dock, the header, and the hub: the GoodWatch mark, Tonight's pick as a tiny poster, and
 // the account slot (Sign in for guests, the avatar and its menu for members).
 import { useUser } from "~/utils/auth"
@@ -13,10 +13,16 @@ import { useTonightsPick } from "./useTonightsPick"
 export const tmdbImage = (path: string, size: "w92" | "w300" | "w342") =>
 	`https://image.tmdb.org/t/p/${size}${path}`
 
+/**
+ * The white G of the phone's dock and the Browse menu. Low priority: it's tiny, and a request on the static hostname
+ * before the first paint that its 103 hint didn't cover (Chrome doesn't always match the hint to an image this late in
+ * the HTML) would otherwise count toward a phone's LCP with a connection of its own.
+ */
 export function GoodWatchMark({ size = 22 }: { size?: number }) {
 	return (
 		<img
 			{...whiteMark()}
+			fetchPriority="low"
 			alt=""
 			className="block shrink-0"
 			style={{ width: size, height: size }}
