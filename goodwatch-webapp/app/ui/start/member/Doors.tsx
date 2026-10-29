@@ -77,7 +77,7 @@ export function Doors({ data }: { data: MemberStartData }) {
 				Go deeper
 			</h2>
 			<ul
-				className={`grid grid-cols-2 gap-2 sm:gap-3 ${doors.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
+				className={`relative grid grid-cols-2 gap-2 sm:gap-3 ${doors.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
 			>
 				{doors.map((door) => {
 					const on = door.key === current.key
@@ -109,18 +109,21 @@ export function Doors({ data }: { data: MemberStartData }) {
 									<FewPosters titles={door.titles} />
 								</span>
 							</button>
-							{/* The notch from the open door into its section (one row of doors on desktops only). */}
-							{on ? (
-								<motion.span
-									layoutId="start-door-notch"
-									aria-hidden
-									transition={{ duration: 0.25, ease: EASE }}
-									className="pointer-events-none absolute left-1/2 top-full z-10 mt-[93px] hidden h-4 w-4 -translate-x-1/2 rotate-45 border-l-2 border-t-2 border-amber-400 bg-gray-900 lg:block"
-								/>
-							) : null}
 						</li>
 					)
 				})}
+				{/* Keep one notch mounted so every move starts at its current position, even during rapid clicks.
+				    Its slot matches a desktop column, including the gap between doors. */}
+				<li
+					aria-hidden
+					className="pointer-events-none absolute left-0 top-full z-10 mt-[93px] hidden transition-transform duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:block"
+					style={{
+						width: `calc((100% - ${(doors.length - 1) * 0.75}rem) / ${doors.length})`,
+						transform: `translateX(calc(${doors.indexOf(current) * 100}% + ${doors.indexOf(current) * 0.75}rem))`,
+					}}
+				>
+					<span className="absolute left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-l-2 border-t-2 border-amber-400 bg-gray-900" />
+				</li>
 			</ul>
 
 			{/* The open section: a gray-900 panel whose amber top edge meets the notch. */}
