@@ -67,7 +67,8 @@ export function TrailerBand({
 }: { media: Media; controls: ReactNode }) {
 	const videos = useMemo(() => videosOf(media), [media])
 	return (
-		<div data-feedback-area="media">
+		// "media" was the videos section's id before: old links land on the band, where every video plays now.
+		<div id="media" data-feedback-area="media" className="scroll-mt-20">
 			{videos.length ? (
 				<WithStage media={media} videos={videos} controls={controls} />
 			) : (

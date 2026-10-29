@@ -219,6 +219,7 @@ export default function Stage({
 
 			<section
 				ref={refs.stage}
+				data-video-stage
 				aria-label={`Videos of ${media.details.title}`}
 				onTransitionEnd={onEnd}
 				style={stageStyle}

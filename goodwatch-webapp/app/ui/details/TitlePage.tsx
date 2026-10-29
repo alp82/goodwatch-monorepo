@@ -82,6 +82,8 @@ const DESKTOP = "(min-width: 1024px)"
 /** The opener's header (poster and title): leaving the screen shows the title bar. */
 const OPENER = "title-opener"
 const YOU = "you"
+/** Something over the page that has the keys: a modal (quick view, score picker, country dialog) or the video stage. */
+const OVER_PAGE = '[aria-modal="true"], dialog[open], [data-video-stage]'
 
 export function TitlePage(props: TitlePageProps) {
 	const { media, country } = props
@@ -179,7 +181,9 @@ export function TitlePage(props: TitlePageProps) {
 		}
 	}
 
-	// Keys. "/" finds in the title (the site search keeps Ctrl K): caught before the site's own "/" listener.
+	// Keys. "/" finds in the title (the site search keeps Ctrl K): caught before the site's own "/" listener. The
+	// others wait until every other handler had the event. None while typing, while a dialog or the video stage is
+	// over the page, or when another handler already took the key.
 	const keys = useRef<Record<string, () => void>>({})
 	keys.current = {
 		"/": focusFind,
@@ -198,22 +202,37 @@ export function TitlePage(props: TitlePageProps) {
 		t: () => window.scrollTo({ top: 0, behavior: "smooth" }),
 	}
 	useEffect(() => {
-		const onKey = (e: KeyboardEvent) => {
-			if (e.ctrlKey || e.metaKey || e.altKey) return
-			if (
-				(e.target as HTMLElement | null)?.closest(
-					"input, textarea, select, [contenteditable]",
-				)
-			)
-				return
+		const handlerFor = (e: KeyboardEvent) => {
 			const handler = keys.current[e.key]
+			if (!handler || e.defaultPrevented || e.isComposing) return null
+			if (e.ctrlKey || e.metaKey || e.altKey) return null
+			const target = e.target as HTMLElement | null
+			if (target?.closest?.("input, textarea, select, [contenteditable]"))
+				return null
+			if (document.querySelector(OVER_PAGE)) return null
+			return handler
+		}
+		const onSlash = (e: KeyboardEvent) => {
+			if (e.key !== "/") return
+			const handler = handlerFor(e)
 			if (!handler) return
 			e.preventDefault()
-			if (e.key === "/") e.stopImmediatePropagation()
+			e.stopImmediatePropagation()
 			handler()
 		}
-		window.addEventListener("keydown", onKey, { capture: true })
-		return () => window.removeEventListener("keydown", onKey, { capture: true })
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "/") return
+			const handler = handlerFor(e)
+			if (!handler) return
+			e.preventDefault()
+			handler()
+		}
+		window.addEventListener("keydown", onSlash, { capture: true })
+		window.addEventListener("keydown", onKey)
+		return () => {
+			window.removeEventListener("keydown", onSlash, { capture: true })
+			window.removeEventListener("keydown", onKey)
+		}
 	}, [])
 
 	// The rail's index keeps the section you're reading in view when the window is short.
@@ -261,7 +280,8 @@ export function TitlePage(props: TitlePageProps) {
 
 	return (
 		<FindBus.Provider value={bus}>
-			<div className="relative isolate pb-28">
+			{/* "overview" is the opener's id from before, so old links land on the top of the page. */}
+			<div id="overview" className="relative isolate scroll-mt-16 pb-28">
 				{pageBackdrop && (
 					<div
 						aria-hidden="true"
@@ -519,6 +539,14 @@ export function TitlePage(props: TitlePageProps) {
 										"scroll-mt-44 border-t border-white/10 pt-8 lg:scroll-mt-32 lg:pt-10",
 									)}
 								>
+									{s.oldId && (
+										// Lands where the section does: its scroll margin plus its top padding.
+										<span
+											id={s.oldId}
+											aria-hidden="true"
+											className="block scroll-mt-[208px] lg:scroll-mt-[168px]"
+										/>
+									)}
 									<SectionHeader
 										anchor={s.id}
 										icon={s.icon}

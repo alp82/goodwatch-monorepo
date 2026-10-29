@@ -67,7 +67,8 @@ function bodyHeight(
 			return same(70 + Math.min(5, Math.max(1, services)) * 64 + 60)
 		}
 		case "fingerprint":
-			return { phone: 860, desktop: 506 }
+			// The drawing, the dials, and the results; the same height on every saved title (1,128-1,184 px on a phone).
+			return { phone: 1058, desktop: 691 }
 		case "episodes":
 			return episodeGrid ? episodeGridHeight(episodeGrid) : same(0)
 		case "story":

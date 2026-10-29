@@ -24,10 +24,10 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import { EpisodesSection } from "~/ui/details/EpisodesSection"
 import { FactsList, TropesList } from "~/ui/details/FactsSection"
-import { FingerprintSection } from "~/ui/details/fingerprint-section/FingerprintSection"
 import { RelatedSection } from "~/ui/details/RelatedSection"
 import { StorySection } from "~/ui/details/StorySection"
 import { WatchSection } from "~/ui/details/WatchSection"
+import { FingerprintSection } from "~/ui/details/fingerprint-section/FingerprintSection"
 import { CastSection } from "~/ui/details/people/CastSection"
 import { CrewSection } from "~/ui/details/people/CrewSection"
 import { useStreamNames } from "~/ui/details/streaming"
@@ -50,6 +50,8 @@ type Media = MovieResult | ShowResult
 export interface TitleSection {
 	/** The section element's id (an address with #id lands on it). */
 	id: string
+	/** The id the section had on the page before, so old links still land on it. */
+	oldId?: string
 	label: string
 	icon: ComponentType<{ className?: string }>
 	/** The gist in one line, for "On this page". */
@@ -136,6 +138,9 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 		.join(", ")
 
 	const firstSentence = (d.synopsis || "").split(/(?<=[.!?])\s/)[0]
+	const essence = media.fingerprint?.essenceTags ?? []
+	// The crew lines the page has; a show's creators come with the section's own request.
+	const hasCrew = Object.values(media.crew).some((people) => people.length > 0)
 	const tropes = tropeNames(media).names
 	const facts = titleFacts(media, country)
 	const series = media.mediaType === "movie" && Boolean(media.movie_series)
@@ -186,12 +191,14 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 					bodyClass: `${DEMOTE} [&_#episode-grid-title]:sr-only [&_#episode-list-title]:sr-only`,
 				}
 			: null,
-		d.synopsis
+		// Any of the tagline, the synopsis, or the essence tags makes the story.
+		d.synopsis || d.tagline || essence.length
 			? {
 					id: "story",
+					oldId: "about",
 					label: "Story",
 					icon: BookOpenIcon,
-					peek: d.tagline || firstSentence,
+					peek: d.tagline || firstSentence || shortList(essence, 3),
 					aliases: "about plot synopsis",
 					body: () => <StorySection media={media} />,
 				}
@@ -199,6 +206,7 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 		media.cast?.length
 			? {
 					id: "cast",
+					oldId: "actors_and_crew",
 					label: "Cast",
 					icon: UserGroupIcon,
 					peek: castNames.length ? `With ${castNames.join(", ")}` : null,
@@ -206,7 +214,7 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 					body: () => <CastSection media={media} onCrew={input.onCrew} />,
 				}
 			: null,
-		media.cast?.length
+		hasCrew
 			? {
 					id: "crew",
 					label: "Crew",
