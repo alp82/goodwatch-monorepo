@@ -1,6 +1,6 @@
 import { startBrowserGate } from "~/server/browser-gate.server"
-import { registerSessionUserObserver } from "./utils/auth-session.ts"
 import { identifyProductUser } from "./telemetry/product-analytics.server.ts"
+import { registerSessionUserObserver } from "./utils/auth-session.ts"
 // The server entry: renders a page with React and hands the HTML to the response.
 //
 // It is Remix's default Node entry with two changes, both measured in docs/benchmarks/viral-spike-render-profile.md:
@@ -16,14 +16,15 @@ import { createReadableStreamFromReadable } from "@remix-run/node"
 import { RemixServer } from "@remix-run/react"
 import { isbot } from "isbot"
 import { renderToPipeableStream } from "react-dom/server"
+import { INCOMPLETE_DATA_HEADER } from "~/navigation/loader-cache"
 import {
 	currentAssetBase,
 	manifestForBase,
 	renderWithAssetBase,
 } from "~/server/asset-address.server"
-import { INCOMPLETE_DATA_HEADER } from "~/navigation/loader-cache"
 import { applyCachePolicy } from "~/server/cache-identity.server"
 import { startEarlyHints } from "~/server/early-hints.server"
+import { startFingerprintPopulation } from "~/server/fingerprint-population.server"
 import { HtmlStream } from "~/server/html-stream.server"
 import { startPlexConnectionCleanup } from "~/server/imports/plex-connect-runtime.server"
 import { startImportResolutionReconciler } from "~/server/imports/resolution-runtime.server"
@@ -75,6 +76,7 @@ startMetrics()
 // roles keep the root loader's start, so they log what they did before roles.
 if (processRole() === "search") startProcessStats()
 startTitleSnapshot()
+if (processRole() !== "search") startFingerprintPopulation()
 // The title pages' "What's new on" links read the links of the /new pages that this keeps loaded (#489).
 if (processRole() !== "search") startNewPagesRefresh()
 // The page cache answers repeated anonymous pages before Express (see page-cache.server.ts). It starts before the
