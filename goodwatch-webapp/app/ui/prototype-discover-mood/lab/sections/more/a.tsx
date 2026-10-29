@@ -122,13 +122,14 @@ export function MoreView({ d, phone, morePart: part = "reach", skin }: SectionPr
 		<Page phone={phone}>
 			<Block off={off}>
 				<RangeBlock k="seasons" d={d} x={x} phone={phone} cols={two} skin={skin} />
+				{/* Round 20: Status under Seasons, so the Seasons and Time to finish tiles line up. */}
+				<div className="mt-2 flex flex-col gap-3">
+					<GroupHead title="Status" set={x.status !== null} onAny={() => setMore({ status: null })} />
+					<skin.Status d={d} x={x} />
+				</div>
 			</Block>
 			<Block off={off}>
-				<GroupHead title="Status" set={x.status !== null} onAny={() => setMore({ status: null })} />
-				<skin.Status d={d} x={x} />
-				<div className="mt-2 flex flex-col gap-3">
-					<RangeBlock k="finish" d={d} x={x} phone={phone} cols={two} skin={skin} />
-				</div>
+				<RangeBlock k="finish" d={d} x={x} phone={phone} cols={two} skin={skin} />
 			</Block>
 		</Page>
 	)
