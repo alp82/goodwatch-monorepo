@@ -1,5 +1,8 @@
 # Start page redesign
 
+**Status:** built on `feat/start-page-redesign` (steps 1 to 9, October 29, 2026); not merged to `main` yet. See
+[Shipped state](#shipped-state).
+
 This spec ships the start page the owner picked in the start page lab (branch `prototype/start-lab`, rounds 1 to 19,
 October 27 and 28, 2026). It replaces the TV living room at `/` with a search-first page over a painted room. Guests
 try GoodWatch right away; members get a personal start. Builders get one step at a time from the list in
@@ -496,6 +499,34 @@ step 4 needs step 2; step 8 needs step 2; step 9 comes last.
 - **Removed stand-ins.** The lab answered themes and styles with the nearest mood's list and showed list sizes as
   counts; real counts and results will differ, and some words may return few titles in small countries.
 
+## Shipped state
+
+What step 9 changed beyond the steps' own work, and what the checks found (local production build behind TLS and
+HTTP/2 with 103 hints, fixtures for the shelf, Where to start and the members, search and pick answers mocked):
+
+- **Integration.** Members have the mood picker; its counts read "N on your services" with saved services. The picker
+  reads its counts from the query's own results answer (`StartResults.optionCounts`, with the search's `ranked`
+  list), so a pick change asks once; only the open picker with nothing asked sends its own request, built from the
+  results request's query. One services-scope rule (`resultsScope`) serves both. A whole mix shows by its name in the
+  bar's reading row and the card's line. The presets row rises at 0.39 s with the mood button. Try it's ring is
+  concentric with the card (`--spotlight-radius`).
+- **103 Early Hints for `/`:** `START_SHEETS` (five sheets), the phone or landscape room AVIF by `Sec-CH-UA-Mobile`, and
+  the dock's white G. Hinting three sheets instead of five measured no steady LCP gain (both bimodal), so all five
+  stay on the first paint; none of them can load later without a flash.
+- **First-view weight.** Where to start has `content-visibility: auto` with its height reserved, and its rails read
+  their geometry only once near the screen. The TV corner's picture and the card's fan render after hydration. The
+  dock's white G asks with low priority (Chrome often fetches it apart from its hint, and it then counted toward LCP).
+- **Checks (guest at 375 × 740, 390 × 844, 768 × 1024, 1024 × 768, 1440 × 900, 1920 × 1080; members full, few, new,
+  no shows):** one H1; title, hub and How it works links in the server HTML; LCP is the room picture (phone file up to
+  640 px wide); CLS 0 through boot, preset search, mix pick, three loved and For you; no horizontal scroll; no
+  hydration errors; the boot plays once per tab session and not for members. The page cache stores the guest page
+  (two requests, the same HTML).
+- **Mobile Lighthouse (9 runs, medians, CPU-capped as the generator):** score 72 (old TV page 74), LCP 1.66 s (old
+  1.10 s; both bimodal), CLS 0, HTML 29 KB compressed (budget 52 KiB). Local TBT is far above the generator's for both
+  pages (new 1.78 s, old 1.45 s). The budget file's image and byte caps for home are raised to the measured values; its
+  LCP, TBT and score caps wait for a generator run after deploy. Desktop (3 runs): score 79 (old 84), LCP 0.53 s
+  (old 0.36 s).
+
 ## Follow-ups
 
 - **Mood effects lab:** the owner wants a lab for the mood-to-effect mapping after this ships (the lab's `EFFECTS_E`,
@@ -503,6 +534,10 @@ step 4 needs step 2; step 8 needs step 2; step 9 comes last.
 - **TV easter egg:** the old TV home on 404 pages or elsewhere, from the kept `app/ui/living-room/` code; then remove
   what it doesn't use (the TV way-back bar in `app/app.tsx` and `MobileDock.tsx`, the `?tv=` handling).
 - **OG image for `/`:** `/og/index.jpg` still shows the old room.
+- **Mobile LCP against the old page:** 1.66 s against 1.10 s locally. The slow runs are the ones where Chrome fetched
+  the white G apart from its 103 hint; a smaller phone room picture (114 KB, the old one was 37 KB plus the 36 KB hand)
+  made no difference in Lighthouse's simulation but may on real slow phones.
+- **Generator budget run** (`./bench.sh budget`) after deploy, to calibrate home's LCP, TBT and score caps.
 - **Larger scene source** if the owner finds the room soft on large screens.
 
 ## Owner answers
