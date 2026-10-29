@@ -47,7 +47,19 @@ function namesNear(path: string): ChannelName[] {
 	return [length - 1, length, length + 1].flatMap((n) => namesByLength.get(n) ?? [])
 }
 
-/** Country and canonical path only; neither progress nor account identity enters this bounded cache. */
+/** Whether the service lists could be filled: the country's availability is loaded. */
+export function servicesReady(country: string): boolean {
+	return availabilityLoadedAt(country) !== null
+}
+
+/**
+ * Country and canonical path only; neither progress nor account identity enters this bounded cache.
+ *
+ * Guesses by id in the path (`/movie/603-…`, the shape of the site's own links) work everywhere. Guesses by name
+ * read the search index's names where this process has loaded it (search roles); page roles have no list of every
+ * title in memory, so there they know only the titles this process displayed in the last minutes. The title
+ * snapshot holds no names.
+ */
 export function loadChannels(
 	snapshot: TitleSnapshot,
 	country: string,
@@ -113,12 +125,14 @@ async function buildChannels(
 	}
 	const popular = popularHomeKeys(withBackdrop, nobody, () => null, 16).keys
 	const keys = withBackdrop.all.map(({ key }) => key)
-	const netflix = serviceKeys(
-		keys,
-		(key) => isOnServices(country, [8], key),
-		16,
-	)
-	const prime = serviceKeys(keys, (key) => isOnServices(country, [9], key), 16)
+	// Only a country whose availability is already loaded: asking about another one would start its load from Crate.
+	const loaded = availabilityLoadedAt(country) !== null
+	const netflix = loaded
+		? serviceKeys(keys, (key) => isOnServices(country, [8], key), 16)
+		: []
+	const prime = loaded
+		? serviceKeys(keys, (key) => isOnServices(country, [9], key), 16)
+		: []
 	// At most 51 cache reads. Cold displays are skipped; this endpoint never fills them from Crate.
 	const displays = await getCachedDisplayFields([
 		...new Set([...guesses, ...popular, ...netflix, ...prime]),

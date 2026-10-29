@@ -1,7 +1,7 @@
 // The signed-out page's TV: "Good night" with the member's handle and the time, then the set switches itself off and
 // the lamps go down. Power turns it back on to a sign-in card; off again switches it off.
 import { Link } from "@remix-run/react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { type Key, Remote, Room, Wordmark, useRemoteKeys, useTvPower } from "./Room"
 import { SIGNED_OUT_NAME_KEY } from "./signed-out-name"
 
@@ -26,15 +26,18 @@ export default function SignedOutTv() {
 	// Once the set has been off, it wakes to the sign-in card instead of the good night.
 	const [slept, setSlept] = useState(false)
 	const { setOn } = tv
+	const night = useRef<ReturnType<typeof setTimeout>>()
 	useEffect(() => {
-		const id = setTimeout(() => {
+		night.current = setTimeout(() => {
 			setOn(false)
 			setSlept(true)
 		}, NIGHT_MS)
-		return () => clearTimeout(id)
+		return () => clearTimeout(night.current)
 	}, [setOn])
 	const press = (key: Key) => {
 		if (key !== "power") return
+		// A press of its own ends the good night: the set no longer switches itself off.
+		clearTimeout(night.current)
 		setSlept(true)
 		tv.toggle()
 	}

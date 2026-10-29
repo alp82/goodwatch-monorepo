@@ -57,3 +57,17 @@ describe("layoutEgg on a phone or an upright tablet", () => {
 		assert.ok(remote.top + 530 * remote.scale <= 780 - DOCK_H)
 	})
 })
+
+describe("layoutEgg on a short window", () => {
+	for (const [w, h] of [
+		[667, 311],
+		[844, 326],
+		[932, 366],
+	]) {
+		it(`grows the ${w}x${h} scene so the Remote's keys are above the bottom bar`, () => {
+			const { remote, height } = layoutEgg(w, h)
+			assert.ok(height >= h)
+			assert.ok(remote.top + 530 * remote.scale <= height - DOCK_H)
+		})
+	}
+})

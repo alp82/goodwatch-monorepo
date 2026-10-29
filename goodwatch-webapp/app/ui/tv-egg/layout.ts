@@ -20,6 +20,9 @@ export type EggLayout = {
 	/** The hand photo, relative to the Remote's box. */
 	hand: Box
 	phone: boolean
+	/** The scene's height: the window's, or taller where the TV and the Remote's keys don't both fit (the page then
+	 *  scrolls to the Remote, as on a phone held sideways). */
+	height: number
 }
 
 /** Under this width the site's bottom bar (MobileDock, `lg:hidden`) covers the scene's foot by DOCK_H. */
@@ -65,12 +68,15 @@ export function layoutEgg(w: number, h: number): EggLayout {
 		const want = Math.min(w * 0.4, h * 0.36 * aspect, Math.max(200, h - dock - top - FOOT - shown + OVER_TV) * aspect)
 		const s = Math.max(want / P.tv.w, w / (P.w - 2), (h - top) / (P.h - P.tv.y - 2), top / P.tv.y)
 		const tv = { left: (w - P.tv.w * s) / 2, top, width: P.tv.w * s, height: P.tv.h * s }
+		// Under the TV at the latest, where the window is too short to hold both.
+		const remoteTop = Math.max(h - dock - FOOT - shown, tv.top + tv.height - OVER_TV)
 		return {
 			photo: { left: tv.left - P.tv.x * s, top: tv.top - P.tv.y * s, width: P.w * s, height: P.h * s },
 			tv,
-			remote: { left: w / 2 - (REMOTE_W * scale) / 2, top: h - dock - FOOT - shown, scale },
+			remote: { left: w / 2 - (REMOTE_W * scale) / 2, top: remoteTop, scale },
 			hand: handFor(scale),
 			phone: false,
+			height: Math.max(h, remoteTop + shown + FOOT + dock),
 		}
 	}
 	const P = PHONE_ROOM_PHOTO
@@ -83,5 +89,12 @@ export function layoutEgg(w: number, h: number): EggLayout {
 		top: Math.max(tv.top + tv.height + 24, h - dock - FOOT - KEYS_END * scale),
 		scale,
 	}
-	return { photo, tv, remote, hand: handFor(scale), phone: true }
+	return {
+		photo,
+		tv,
+		remote,
+		hand: handFor(scale),
+		phone: true,
+		height: Math.max(h, remote.top + KEYS_END * scale + FOOT + dock),
+	}
 }

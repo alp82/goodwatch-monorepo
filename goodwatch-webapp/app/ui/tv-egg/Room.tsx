@@ -27,11 +27,16 @@ function useLayout() {
 	useEffect(() => {
 		const el = ref.current
 		if (!el) return
-		const measure = () => setLayout(layoutEgg(el.clientWidth, el.clientHeight))
+		// The window's height, not the scene's: the scene grows to the layout's height where the window is short.
+		const measure = () => setLayout(layoutEgg(el.clientWidth, window.innerHeight - HEADER))
 		measure()
 		const observer = new ResizeObserver(measure)
 		observer.observe(el)
-		return () => observer.disconnect()
+		window.addEventListener("resize", measure)
+		return () => {
+			observer.disconnect()
+			window.removeEventListener("resize", measure)
+		}
 	}, [])
 	return { ref, layout }
 }
@@ -65,7 +70,7 @@ export function Room({
 		if (power === "off") setWasOff(true)
 	}, [power])
 	return (
-		<div ref={ref} className="tve-scene" style={{ height: `calc(100svh - ${HEADER}px)` }}>
+		<div ref={ref} className="tve-scene" style={{ height: L ? L.height : `calc(100svh - ${HEADER}px)` }}>
 			{L && (
 				<>
 					<picture>
@@ -106,7 +111,10 @@ export function Room({
 					{/* Lamps down while the set is off: the room and the hand darken, the TV keeps its own dark. */}
 					<div className="tve-dim" style={{ opacity: power === "off" ? 0.6 : 0 }} />
 					<div className={`tve-screen ${power === "off" ? "tve-off" : wasOff ? "tve-on" : ""}`} style={px(L.tv)}>
-						<div className="tve-screen-inner">{power === "on" ? screen : lastOn.current}</div>
+						{/* Off, the last picture stays for the tube's animation but is out of reach: no focus, not read out. */}
+						<div className="tve-screen-inner" aria-hidden={power === "off" || undefined} {...(power === "off" ? { inert: "" } : {})}>
+							{power === "on" ? screen : lastOn.current}
+						</div>
 						{power === "off" && <div className="tve-dot" />}
 					</div>
 				</>

@@ -3,7 +3,7 @@ import {
 	applyCachePolicy,
 	PRIVATE_CACHE_CONTROL,
 } from "~/server/cache-identity.server"
-import { loadChannels } from "~/server/channels.server"
+import { loadChannels, servicesReady } from "~/server/channels.server"
 import { livingRoomAuth } from "~/server/living-room/data.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getViewerCountry } from "~/server/viewer.server"
@@ -26,6 +26,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			300,
 		)
 		const result = await loadChannels(snapshot, country, path)
+		// Without the country's availability the service lists are empty: a shared answer keeps for seconds, not 30
+		// minutes. A member's answer stays private.
+		const isPrivate = /private/i.test(headers.get("Cache-Control") ?? "")
+		if (!servicesReady(country) && !isPrivate) headers.set("Cache-Control", "public, max-age=0, s-maxage=5")
 		applyCachePolicy(request, 200, headers)
 		return json(result, { headers })
 	} catch (error) {

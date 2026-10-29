@@ -25,7 +25,8 @@
 	background: linear-gradient(180deg, #34363b, #26272b);
 	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 2px 0 #0e0f11, 0 5px
 		10px rgba(0, 0, 0, 0.4);
-	transition: transform 80ms, box-shadow 80ms, color 120ms, background 120ms;
+	/* Only the press moves; hover colours change at once (the 60 fps rule: transform and opacity only). */
+	transition: transform 80ms;
 }
 .tve-key:hover {
 	color: #fff;
@@ -217,7 +218,7 @@
 
 .tve-rocker button {
 	color: rgba(255, 255, 255, 0.75);
-	transition: transform 80ms, color 120ms;
+	transition: transform 80ms;
 }
 
 .tve-rocker button:hover {
