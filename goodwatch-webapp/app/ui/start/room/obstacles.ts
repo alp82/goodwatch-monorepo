@@ -1,15 +1,14 @@
 // Which shelf slots a control covers, compared where both are drawn: on screen, in the stage's pixels.
 //
 // The covers sit in the camera, which scales the room about its origin; the controls sit in the search block, which
-// waits moved down until the card opens, and in the card (a card marked `data-hidden` waits shifted down). A
-// layout box (offsetLeft/offsetTop) counts none of that, so each side is mapped through the CSS transforms of its
-// element and its ancestors up to the stage.
+// waits moved down until the card opens. A layout box (offsetLeft/offsetTop) counts none of that, so each side is
+// mapped through the CSS transforms of its element and its ancestors up to the stage.
 //
-// - Each transform is read at its end: while a transition runs (the camera's 2.4 s zoom, the block's 0.9 s lift),
-//   the transition's last keyframe counts, not the frame on screen, so the slots are decided once for where things
-//   come to rest, not frame by frame.
-// - A hidden card still counts, at the box it arrives in (its own "waiting" shift is skipped): the slots under it stay
-//   empty before the guest asks, so no poster vanishes from under the card when it arrives.
+// - Each transform is read at its end: while a transition runs (the block's 0.9 s lift), the transition's last
+//   keyframe counts, not the frame on screen, so the slots are decided once for where things come to rest, not frame
+//   by frame.
+// - The card counts at its open box even while only its ledge shows: the slots under it stay empty before it opens,
+//   so no poster vanishes from under the card when it grows.
 import { type Rect, overlaps } from "./homography.ts"
 
 /** A 2D CSS transform about an origin in the stage's px: p' = o + M(p - o), M = [a c e; b d f]. */
@@ -133,18 +132,14 @@ function restingMatrix(el: Element, style: CSSStyleDeclaration): Matrix | null {
 	}
 }
 
-/**
- * The transforms from `el` up to `stage` (not counting the stage's own), innermost first, at rest. `skipOwn` leaves
- * out the element's own transform (a hidden card, counted where it arrives).
- */
+/** The transforms from `el` up to `stage` (not counting the stage's own), innermost first, at rest. */
 export function restingChain(
 	el: HTMLElement,
 	stage: HTMLElement,
-	skipOwn = false,
 ): Transform2D[] {
 	const chain: Transform2D[] = []
 	for (
-		let node: HTMLElement | null = skipOwn ? el.parentElement : el;
+		let node: HTMLElement | null = el;
 		node && node !== stage;
 		node = node.parentElement
 	) {
@@ -159,10 +154,7 @@ export function restingChain(
 	return chain
 }
 
-/** A control's box on screen, at rest (a hidden one where it arrives). */
+/** A control's box on screen, at rest. */
 export function obstacleBox(el: HTMLElement, stage: HTMLElement): Rect {
-	return onScreen(
-		layoutRect(el, stage),
-		restingChain(el, stage, el.hasAttribute("data-hidden")),
-	)
+	return onScreen(layoutRect(el, stage), restingChain(el, stage))
 }

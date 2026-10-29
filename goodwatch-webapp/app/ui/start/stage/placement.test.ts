@@ -107,7 +107,10 @@ test("start.css has stageLayout's limits: the picture's zoom and the open card's
 		base.get("--start-img-w"),
 		`clamp(${Math.round(PICTURE_MIN * 100)}cqw, calc(var(--start-fit) / var(--start-hw)), ${Math.round(PICTURE_MAX * 100)}cqw)`,
 	)
-	assert.match(base.get("--start-card") ?? "", new RegExp(`- ${CARD_AIR}px -`))
+	assert.match(
+		base.get("--start-card-room") ?? "",
+		new RegExp(`- ${CARD_AIR}px -`),
+	)
 	assert.match(
 		base.get("--start-ledge") ?? "",
 		new RegExp(`var\\(--start-card\\) \\* ${LEDGE_MAX}\\)`),
@@ -221,6 +224,25 @@ test("the open card stands on the ledge's bottom and stops under the lifted bloc
 			`${at} ledge inside the card`,
 		)
 	}
+	// A member's card on a short phone keeps what its content needs: it runs past the ledge and the page scrolls, while
+	// the ledge stays on the floor.
+	const short = stageLayout(START_ROOM_PHONE, 375, 740, {
+		cardWant: 452,
+		cardMin: 420,
+		tabs: 42,
+	})
+	assert.equal(short.card.height, 420)
+	assert.ok(short.card.over > 0)
+	close(
+		short.card.top,
+		short.block.open + short.size.block + CARD_AIR + 42,
+		"short card under the tabs",
+	)
+	close(
+		short.height,
+		short.ledge.bottom + short.card.over + short.size.foot,
+		"the page scrolls by the overrun",
+	)
 	// A member's card wants more and gets what the space holds.
 	const tall = stageLayout(START_ROOM, 1440, 900, { cardWant: 2000 })
 	close(

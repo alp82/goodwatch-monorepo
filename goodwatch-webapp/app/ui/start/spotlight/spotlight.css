@@ -1023,3 +1023,18 @@
 		animation: none;
 	}
 }
+
+/* A filled heart is a button that takes its title back. */
+.tap-heart-undo {
+	display: grid;
+	place-items: center;
+	border-radius: 999px;
+	cursor: pointer;
+	outline: none;
+}
+.tap-heart-undo:hover .tap-heart {
+	opacity: 0.7;
+}
+.tap-heart-undo:focus-visible {
+	box-shadow: 0 0 0 2px rgb(252 211 77);
+}

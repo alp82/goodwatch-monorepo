@@ -159,13 +159,26 @@ const clamp = (min: number, v: number, max: number) =>
 
 /**
  * The stage in px for a window of vw × vh px (`width` is the stage's width: the window without a scrollbar), as
- * start.css computes it. `cardWant` is the open card's height when there's room for it (a guest's by default).
+ * start.css computes it.
  */
 export function stageLayout(
 	scene: RoomScene,
 	vw: number,
 	vh: number,
-	{ width = vw, cardWant }: { width?: number; cardWant?: number } = {},
+	{
+		width = vw,
+		cardWant,
+		cardMin = 0,
+		tabs = 0,
+	}: {
+		width?: number
+		/** The open card's height when there's room for it (a guest's by default). */
+		cardWant?: number
+		/** The least the card's content needs: on a short screen it runs past the ledge's bottom, and the page scrolls. */
+		cardMin?: number
+		/** A member's list tabs above the open card. */
+		tabs?: number
+	} = {},
 ) {
 	const size = stageSizeAt(vw, vh)
 	const v = sceneVars(scene)
@@ -181,10 +194,9 @@ export function stageLayout(
 	const imgTop = headroom + size.block - imgH * v.win
 	const imgLeft = width / 2 - imgW * v.fcx
 	const ledgeBottom = imgTop + imgH * v.lb
-	const card = Math.min(
-		cardWant ?? size.card,
-		ledgeBottom - pad - size.block - CARD_AIR,
-	)
+	const room = ledgeBottom - pad - size.block - CARD_AIR - tabs
+	const card = Math.max(cardMin, Math.min(cardWant ?? size.card, room))
+	const over = Math.max(0, card - room)
 	const ledgeTop =
 		ledgeBottom - Math.min(imgH * (v.lb - v.lt), card * LEDGE_MAX)
 	return {
@@ -195,9 +207,9 @@ export function stageLayout(
 		/** The block's top while it waits, and once the card is open. */
 		block: { waiting: headroom, open: pad },
 		ledge: { top: ledgeTop, bottom: ledgeBottom },
-		/** The open card's box: its bottom is the ledge's. */
-		card: { top: ledgeBottom - card, height: card },
+		/** The open card's box: its bottom is the ledge's, or `over` below it when the card needs more than the room. */
+		card: { top: ledgeBottom + over - card, height: card, over },
 		/** The stage's height: the screen under the header (the foot takes what the column leaves). */
-		height: Math.max(screen, ledgeBottom + size.foot),
+		height: Math.max(screen, ledgeBottom + over + size.foot),
 	}
 }

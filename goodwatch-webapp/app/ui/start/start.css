@@ -55,17 +55,21 @@
 		var(--start-img-h) *
 		var(--start-lb)
 	);
-	/* The open card: as tall as it wants, up to just under the lifted block (less a member's list tabs above it). */
-	--start-card: min(
-		var(--start-card-want),
-		calc(
-			var(--start-ledge-bottom) -
-			var(--start-pad) -
-			var(--start-block) -
-			16px -
-			var(--start-tabs, 0px)
-		)
+	/* The open card: as tall as it wants, up to just under the lifted block (less a member's list tabs above it), and
+	   never shorter than its content needs (`--start-card-min`). On a short screen that runs the card past the ledge's
+	   bottom by `--start-card-over`, and the page scrolls; the closed ledge stays on the floor. */
+	--start-card-room: calc(
+		var(--start-ledge-bottom) -
+		var(--start-pad) -
+		var(--start-block) -
+		16px -
+		var(--start-tabs, 0px)
 	);
+	--start-card: max(
+		var(--start-card-min, 0px),
+		min(var(--start-card-want), var(--start-card-room))
+	);
+	--start-card-over: max(0px, calc(var(--start-card) - var(--start-card-room)));
 	/* The ledge: the floor's strip, at most three quarters of the card, so the card always grows out of it. */
 	--start-ledge: min(
 		calc(var(--start-ledge-bottom) - var(--start-ledge-top)),
@@ -389,7 +393,8 @@
 .start-gap {
 	flex: none;
 	height: calc(
-		var(--start-ledge-bottom) -
+		var(--start-ledge-bottom) +
+		var(--start-card-over) -
 		var(--start-card) -
 		var(--start-pad) -
 		var(--start-block)
@@ -401,7 +406,10 @@
 	max-width: 1648px;
 	margin-inline: auto;
 	padding: 0 16px
-		max(var(--start-foot), calc(var(--start-v) - var(--start-ledge-bottom)));
+		max(
+			var(--start-foot),
+			calc(var(--start-v) - var(--start-ledge-bottom) - var(--start-card-over))
+		);
 }
 
 /* The card's box is the open card's; the ledge (ledge/StartLedge.tsx) shows its bottom strip until it opens. */
@@ -491,21 +499,26 @@
 	}
 }
 
-/* Closed, the clip is moved down by the hidden height and the card back up inside it; open, both are at 0. */
+/* Closed, the clip is moved down by the hidden height and the card back up inside it; open, both are at 0. The ledge
+   stands at the floor's bottom edge, `--start-card-over` above the card's bottom on a short screen. */
 .start-ledge-clip {
 	position: absolute;
 	inset: 0;
 	overflow: hidden;
 	border-radius: var(--start-ledge-r);
 	pointer-events: none;
-	transform: translateY(calc(var(--start-card) - var(--start-ledge)));
+	transform: translateY(
+		calc(var(--start-card) - var(--start-ledge) - var(--start-card-over))
+	);
 	transition: transform 0.75s var(--start-ledge-ease);
 }
 
 .start-ledge-inner {
 	position: absolute;
 	inset: 0;
-	transform: translateY(calc(var(--start-ledge) - var(--start-card)));
+	transform: translateY(
+		calc(var(--start-ledge) + var(--start-card-over) - var(--start-card))
+	);
 	transition: transform 0.75s var(--start-ledge-ease);
 }
 
@@ -529,7 +542,7 @@
 
 .start-ledge {
 	position: absolute;
-	inset: auto 0 0;
+	inset: auto 0 var(--start-card-over);
 	height: var(--start-ledge);
 	pointer-events: auto;
 	transition: opacity 0.3s ease-out;
@@ -1116,8 +1129,14 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.start-ledge-clip,
-	.start-ledge-inner {
+	.start-ledge-inner,
+	.start-ledge-fan img {
 		transition: none;
+	}
+	.start-tabs,
+	.start-stage[data-open] .start-tabs {
+		translate: none;
+		transition: opacity 0.3s ease-out;
 	}
 	.start-ledge-body,
 	.start-ledge-choose,
@@ -1763,6 +1782,7 @@
    stand on the open card's top edge, so the card leaves them `--start-tabs` above it. */
 .start-member .start-stage {
 	--start-card-want: 452px;
+	--start-card-min: 420px;
 	--start-tabs: 42px;
 }
 
@@ -1789,6 +1809,7 @@
 @media (min-width: 640px) {
 	.start-member .start-stage {
 		--start-card-want: 500px;
+		--start-card-min: 0px;
 	}
 	.start-member .start-ledge-card {
 		padding: 0 20px 20px;
@@ -1864,6 +1885,7 @@
 /* A new member's card (member/FirstSteps.tsx): sized to the steps, and no wider than they read well. */
 .start-member[data-first] .start-stage {
 	--start-card-want: 470px;
+	--start-card-min: 400px;
 }
 .start-member[data-first] .start-card {
 	max-width: min(100cqw - 32px, 1240px);
@@ -1882,6 +1904,7 @@
 @media (min-width: 640px) {
 	.start-member[data-first] .start-stage {
 		--start-card-want: 380px;
+		--start-card-min: 0px;
 	}
 }
 @media (min-width: 1024px) {
@@ -2211,5 +2234,9 @@
 @media (prefers-reduced-motion: reduce) {
 	.first-steps {
 		animation: none;
+	}
+	.first-fan img,
+	.first-chev {
+		transition: none;
 	}
 }

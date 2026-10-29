@@ -7,7 +7,13 @@
 // its action. Once open, the card stays open: there is no way back to the ledge.
 import { FilmIcon, PlayIcon, TvIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import { type CSSProperties, type ReactNode, useEffect, useState } from "react"
+import {
+	type CSSProperties,
+	type ReactNode,
+	useEffect,
+	useRef,
+	useState,
+} from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { DieIcon } from "../spotlight/card-parts"
 import type { LedgeModel, ListLink } from "./ledge-models"
@@ -49,6 +55,21 @@ export function StartLedge({
 	/** The open card. */
 	children: ReactNode
 }) {
+	// The ledge's button goes out of reach as the card opens, so focus moves to the card's first control.
+	const card = useRef<HTMLDivElement>(null)
+	const fromLedge = useRef(false)
+	useEffect(() => {
+		if (!open || !fromLedge.current) return
+		fromLedge.current = false
+		const frame = requestAnimationFrame(() =>
+			card.current
+				?.querySelector<HTMLElement>(
+					"button:not([disabled]), a[href], input, [tabindex]:not([tabindex='-1'])",
+				)
+				?.focus({ preventScroll: true }),
+		)
+		return () => cancelAnimationFrame(frame)
+	}, [open])
 	return (
 		<>
 			{tabs ? (
@@ -58,17 +79,21 @@ export function StartLedge({
 			) : null}
 			<div className="start-ledge-clip">
 				<div className="start-ledge-inner">
-					<div className="start-ledge-card" {...(open ? {} : { inert: "" })}>
+					<div
+						ref={card}
+						className="start-ledge-card"
+						{...(open ? {} : { inert: "" })}
+					>
 						{children}
 					</div>
 					<div className="start-ledge" {...(open ? { inert: "" } : {})}>
 						<Ledge
 							model={ledge}
-							onAction={() =>
-								ledge.action.id === "surprise" && onSurprise
-									? onSurprise()
-									: onOpen()
-							}
+							onAction={() => {
+								fromLedge.current = true
+								if (ledge.action.id === "surprise" && onSurprise) onSurprise()
+								else onOpen()
+							}}
 						/>
 					</div>
 				</div>
@@ -172,6 +197,7 @@ function Fan({ posters }: { posters: LedgeModel["posters"] }) {
 					src={tmdbImageUrl(p.path as string, "w185")}
 					alt=""
 					decoding="async"
+					{...{ fetchpriority: "low" }}
 					draggable={false}
 					style={
 						{
@@ -204,6 +230,7 @@ function Row({
 						src={tmdbImageUrl(p.path as string, "w185")}
 						alt=""
 						decoding="async"
+						{...{ fetchpriority: "low" }}
 						draggable={false}
 						style={{ "--i": i } as CSSProperties}
 					/>

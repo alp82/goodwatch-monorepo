@@ -216,12 +216,15 @@ export function SmallArrows({
 	)
 }
 
-/** Which view of the row shows, as dots (amber for the current one). */
-export function PageDots({ nav }: { nav: Pager }) {
+/** Which view of the row shows, as dots (amber for the current one), for at most `max` views. */
+export function PageDots({
+	nav,
+	max = MAX_PAGES,
+}: { nav: Pager; max?: number }) {
 	if (nav.pages < 2) return null
 	return (
 		<span aria-hidden className="flex items-center gap-1.5">
-			{Array.from({ length: Math.min(nav.pages, MAX_PAGES) }, (_, i) => (
+			{Array.from({ length: Math.min(nav.pages, max) }, (_, i) => (
 				<span
 					// biome-ignore lint/suspicious/noArrayIndexKey: page positions
 					key={i}

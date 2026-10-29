@@ -73,7 +73,7 @@ export function TapThreePanel({
 						) : null}
 					</div>
 				</div>
-				<Hearts count={loved.loved.length} />
+				<Hearts loved={loved} />
 				{ready ? (
 					<SeeAll href={seeAllHref(query)} className="tap-see max-sm:hidden" />
 				) : null}
@@ -119,22 +119,37 @@ export function TapThreePanel({
 	)
 }
 
-/** The loved titles so far, as three hearts. */
-function Hearts({ count }: { count: number }) {
+/** The loved titles so far, as three hearts; a filled one takes its title back (it may be off screen after a new search). */
+function Hearts({ loved }: { loved: LovedThreeState }) {
+	const count = loved.loved.length
 	return (
 		<div className="tap-progress">
 			<span className="sr-only" aria-live="polite">
 				{count} of {LOVED_NEEDED} loved
 			</span>
-			<span aria-hidden className="tap-hearts">
-				{Array.from({ length: LOVED_NEEDED }, (_, i) => (
-					<HeartIcon
-						// biome-ignore lint/suspicious/noArrayIndexKey: places
-						key={i}
-						className="tap-heart"
-						data-on={i < count ? "" : undefined}
-					/>
-				))}
+			<span className="tap-hearts">
+				{Array.from({ length: LOVED_NEEDED }, (_, i) => {
+					const card = loved.loved[i]
+					return card ? (
+						<button
+							key={card.key}
+							type="button"
+							className="tap-heart-undo"
+							onClick={() => loved.toggle(card)}
+							aria-label={`Remove ${card.title}`}
+							title={`Remove ${card.title}`}
+						>
+							<HeartIcon aria-hidden className="tap-heart" data-on="" />
+						</button>
+					) : (
+						<HeartIcon
+							// biome-ignore lint/suspicious/noArrayIndexKey: places
+							key={i}
+							aria-hidden
+							className="tap-heart"
+						/>
+					)
+				})}
 			</span>
 			<span aria-hidden className="tap-progress-text">
 				{count === 0 ? "Loved none yet" : `${LOVED_NEEDED - count} more`}
@@ -187,7 +202,7 @@ function Posters({
 				top="50%"
 			/>
 			<div className="tap-dots">
-				<PageDots nav={nav} />
+				<PageDots nav={nav} max={Number.POSITIVE_INFINITY} />
 				<SmallArrows nav={nav} name="results" />
 			</div>
 		</div>

@@ -47,7 +47,11 @@ export function FirstSteps({
 					<span aria-hidden className="first-marks">
 						{MARKS.map((source) => (
 							<span key={source.id} className="first-mark" data-id={source.id}>
-								<img src={assetUrl(source.logo as string)} alt="" />
+								<img
+									src={assetUrl(source.logo as string)}
+									alt=""
+									{...{ fetchpriority: "low" }}
+								/>
 							</span>
 						))}
 					</span>
@@ -107,6 +111,7 @@ function Fan({ posters }: { posters: readonly ShelfTitle[] }) {
 					src={tmdbImageUrl(p.poster_path as string, "w185")}
 					alt=""
 					decoding="async"
+					{...{ fetchpriority: "low" }}
 					style={
 						{
 							"--d": i - mid,

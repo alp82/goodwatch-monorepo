@@ -36,10 +36,12 @@ test("both paintings are in the HTML at full opacity, each blanked where the oth
 	const pictures = imgs(rendered.guest).filter((tag) => /start-room/.test(tag))
 	assert.equal(pictures.length, 2)
 	// The ledge's posters never compete with the painting for the first paint.
-	for (const tag of imgs(rendered.guest).filter(
-		(tag) => !/start-room/.test(tag),
-	))
-		assert.doesNotMatch(tag, /fetchpriority|elementtiming/)
+	const posters = imgs(rendered.guest).filter((tag) => !/start-room/.test(tag))
+	assert.ok(posters.length > 0)
+	for (const tag of posters) {
+		assert.match(tag, /fetchpriority="low"/)
+		assert.doesNotMatch(tag, /elementtiming/)
+	}
 	for (const tag of pictures) {
 		assert.match(tag, /fetchpriority="high"/)
 		assert.match(tag, /elementtiming="hero"/)
