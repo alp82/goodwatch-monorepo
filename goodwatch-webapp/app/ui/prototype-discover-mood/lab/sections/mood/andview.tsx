@@ -10,7 +10,7 @@ import { ColumnHead, ColumnRows } from "./columns"
 import { DROP_FROM, MEMBER_MIXES } from "./e"
 import { type FitRow, RecipeLine, byFit, fitRows } from "./fit"
 import { COLUMNS } from "./g"
-import { ArtTile, MIXES, MOOD_CHOICES, type Mix, type Moods, type WorldArt, genreUnits, mixName, useMixes, useMoods } from "./parts"
+import { ArtTile, type DropStep, MIXES, MOOD_CHOICES, type Mix, type Moods, WithoutRow, type WorldArt, genreUnits, mixName, showDrops, useMixes, useMoods } from "./parts"
 
 /** The condition a row stands for; null for a search mood (a word in the search, ANDed by the search itself). */
 function condOf(d: ProtoDiscover, r: FitRow): Cond | null {
@@ -121,9 +121,10 @@ const readyMixes = (viewer: Viewer): Mix[] => (viewer === "member" ? MEMBER_MIXE
 
 /**
  * Ready mixes while nothing is picked; then "+ X" (the choices that narrow the most, any group, since picks AND),
- * then from three picks "Without X" (what dropping a pick brings back), then ready mixes. Only cards with titles.
+ * then ready mixes. Only cards with titles. From three picks, when the "+ X" cards leave a full row free, "Without X"
+ * (what dropping a pick brings back) comes last as slim removal tiles.
  */
-export function useCards(d: ProtoDiscover, a: And, viewer: Viewer, slots: number, onMix?: () => void): Card[] {
+export function useCards(d: ProtoDiscover, a: And, viewer: Viewer, slots: number, cols: number, onMix?: () => void): { cards: Card[]; drops: DropStep[] } {
 	const ready = readyMixes(viewer)
 	const x = useMixes(d, ready)
 	const mixCards = ready.map(
@@ -151,7 +152,7 @@ export function useCards(d: ProtoDiscover, a: And, viewer: Viewer, slots: number
 		return [...lead, ...rest.map((c) => ({ ...c, n: null, line: null }))].slice(0, slots)
 	}
 	const leads = (c: Card) => (c.n === null ? a.total !== 0 : c.n > 0)
-	if (!a.picks.length && !a.m.used) return fill(mixCards.filter(leads))
+	if (!a.picks.length && !a.m.used) return { cards: fill(mixCards.filter(leads)), drops: [] }
 	const total = a.total
 	const adds = a.rows
 		.filter((r) => r.kind !== "genres" && !r.on && !r.dead && !r.search && r.n !== null && r.n > 0 && (total === null || r.n < total))
@@ -169,59 +170,72 @@ export function useCards(d: ProtoDiscover, a: And, viewer: Viewer, slots: number
 				tap: r.toggle,
 			}),
 		)
-	// "Without X" only from three picks (e's DROP_FROM).
-	const drops = (a.picks.length + a.m.words.length >= DROP_FROM ? a.picks : []).map(
-		(c): Card => ({
-			id: `drop:${c.group}:${c.id}`,
-			name: `Without ${labelOf(d, c)}`,
-			hues: ["#9ca3af", "#4b5563"],
-			island: c.group === "genres" ? null : c.group === "moods" ? `mood:${MOOD_CHOICES.find((x) => x.tag?.key === c.id)?.id}` : `${c.group.slice(0, -1)}:${c.id}`,
-			n: a.counts?.without(c) ?? null,
-			share: null,
-			on: false,
-			line: null,
-			tap: () => dropCond(d, c),
-		}),
-	)
-	return fill([...adds, ...drops.sort((p, q) => (q.n ?? 0) - (p.n ?? 0)), ...mixCards.filter((c) => !c.on)].filter(leads))
+	// "Without X" only from three picks (e's DROP_FROM); its count is what it brings back.
+	const drops = (a.picks.length + a.m.words.length >= DROP_FROM ? a.picks : [])
+		.map(
+			(c): DropStep => ({
+				id: `drop:${c.group}:${c.id}`,
+				name: labelOf(d, c),
+				color: c.group === "genres" ? "#9ca3af" : (d.picked.find((t) => t.group === c.group && t.key === c.id)?.color ?? "#9ca3af"),
+				n: a.counts && total !== null ? a.counts.without(c) - total : null,
+				tap: () => dropCond(d, c),
+			}),
+		)
+		.filter((s) => s.n === null || s.n > 0)
+		.sort((p, q) => (q.n ?? 0) - (p.n ?? 0))
+	return { cards: fill([...adds, ...mixCards.filter((c) => !c.on)].filter(leads)), drops: showDrops(adds.length, drops.length, slots, cols) ? drops : [] }
 }
 
-/** The cards in a grid. `small`: one short row (j); else e's tall cards (k). */
+/**
+ * The cards in a grid of `rows` fixed heights. `small`: j's short tiles. With removal tiles the last row holds them
+ * (k: compact cards over one slim row of them, so the grid keeps its height).
+ */
 export function MixCards({
 	d,
 	cards,
+	drops,
 	art,
 	cols,
-	tile,
+	rows,
+	slimRows,
 	small = false,
 }: {
 	d: ProtoDiscover
 	cards: Card[]
+	drops: DropStep[]
 	art: WorldArt
-	cols: string
-	tile: string
+	cols: number
+	/** grid-template-rows without and with removal tiles. */
+	rows: string
+	slimRows: string
 	small?: boolean
 }) {
+	const slim = drops.length > 0
+	// j's row is already short: the removal tiles take the whole last row there.
+	const shown = slim && small ? cards.slice(0, cards.length - cols) : cards
 	return (
-		<div className={`grid shrink-0 gap-2 ${cols}`}>
-			{cards.map((card, i) => {
+		<div className={`grid shrink-0 gap-2 ${slim ? slimRows : rows}`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+			{shown.map((card, i) => {
+				const compact = slim && !small && i >= cards.length - cols
+				const bare = compact && cols === 2
+				const tiny = small || compact
 				const foot =
-					card.n === null ? "" : card.share !== null && d.total !== null && !small ? `${card.n.toLocaleString("en")} left` : `${card.n.toLocaleString("en")} titles`
+					card.n === null || bare ? "" : card.share !== null && d.total !== null && !tiny ? `${card.n.toLocaleString("en")} left` : `${card.n.toLocaleString("en")} titles`
 				const path = card.path ?? (card.island ? (art.get(card.island)?.path ?? null) : null)
 				return (
 					<motion.div key={card.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, delay: i * 0.02 }} className="relative flex min-w-0">
 						<ArtTile
 							name={card.name}
-							line={small ? null : card.line}
+							line={tiny ? null : card.line}
 							hues={card.hues}
 							path={path}
 							on={card.on}
 							foot={foot}
 							onClick={card.tap}
-							small={small}
-							className={`w-full ${tile}`}
+							small={tiny}
+							className={`h-full w-full ${bare ? "py-1.5" : ""}`}
 						/>
-						{card.share !== null && (
+						{card.share !== null && !bare && (
 							<span className="pointer-events-none absolute inset-x-2.5 bottom-1.5 h-[3px] overflow-hidden rounded-full bg-white/15" aria-hidden>
 								<span
 									className="block h-full w-full origin-left rounded-full bg-white/80 transition-transform duration-300 motion-reduce:transition-none"
@@ -232,6 +246,11 @@ export function MixCards({
 					</motion.div>
 				)
 			})}
+			{slim && (
+				<motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="col-span-full min-w-0">
+					<WithoutRow drops={drops} cols={cols} className="h-full" />
+				</motion.div>
+			)}
 		</div>
 	)
 }

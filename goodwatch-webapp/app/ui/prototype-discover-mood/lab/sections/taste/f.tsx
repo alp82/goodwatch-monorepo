@@ -1,8 +1,9 @@
 // PROTOTYPE - throwaway. Your taste f, "Taste in this list": bars, like the Mood tab's d. Your taste groups as rows
 // with their loved posters and how much of this list sits in each (plus the titles in none of them), Taste match as
 // rows from 90%+ down to Outside your usual with each step's share, and the order and your lists as switches.
-// A guest sees the rows faint, with one Sign up; Order and Your lists are locked too.
-import { BarsArrowDownIcon, CheckIcon } from "@heroicons/react/20/solid"
+// A guest sees the rows faint, with one Sign up; Order, Wishlist and Seen before are locked too (Not seen yet works
+// for guests, as in production).
+import { BarsArrowDownIcon, CheckIcon, LockClosedIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
 import { compactCount } from "~/ui/filter-bar/labels"
@@ -195,11 +196,18 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 				</div>
 			</section>
 			<section>
-				<BlockHead locked={locked}>Your lists</BlockHead>
+				{/* Round 12: Not seen yet is back here (the real filter; guests too). Wishlist and Seen before need an account. */}
+				<BlockHead>Your lists</BlockHead>
 				<div className="flex flex-col gap-2">
+					<TasteSwitch
+						label="Not seen yet"
+						tone="blue"
+						on={d.filters.state.notSeenYet}
+						onChange={(on) => taste.list.set(on ? "unseen" : "all")}
+						icon={<ScopeIcon id="unseen" className="h-4 w-4 shrink-0" />}
+					/>
 					{(
 						[
-							// Round 11b: Not seen yet lives in Watch > Services only (same filter, one place).
 							["wishlist", "Only your Wishlist"],
 							["seen", "Seen before"],
 						] as const
@@ -211,7 +219,13 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 							on={taste.list.value === id}
 							onChange={(on) => taste.list.set(on ? id : "all")}
 							locked={locked}
-							icon={<ScopeIcon id={id} className="h-4 w-4 shrink-0" />}
+							icon={
+								locked ? (
+									<LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-amber-500/70" aria-label="With an account" />
+								) : (
+									<ScopeIcon id={id} className="h-4 w-4 shrink-0" />
+								)
+							}
 						/>
 					))}
 				</div>

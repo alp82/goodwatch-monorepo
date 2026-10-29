@@ -6,7 +6,7 @@ import type { SectionId, Viewer } from "./types"
 export const SECTIONS: { id: SectionId; name: string }[] = [
 	{ id: "titles", name: "Search: titles" },
 	{ id: "people", name: "Search: cast and crew" },
-	{ id: "taste", name: "Search: your taste" },
+	{ id: "taste", name: "Search: You" },
 	{ id: "mood", name: "Mood tab" },
 	{ id: "services", name: "Watch: services" },
 	{ id: "scores", name: "Watch: scores" },

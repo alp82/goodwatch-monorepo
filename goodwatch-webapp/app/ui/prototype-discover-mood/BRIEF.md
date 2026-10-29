@@ -500,3 +500,31 @@ diverse picks of titles ... similar to cast and crew". And the type switch read 
   scroller had no positioned ancestor, so it escaped the clip. The scroller is `relative` now (the footer's too).
   Lab only: production renders ReadAsChips in TasteExplanation, not in a scroller.
 - TabPanel calls useLabChoice() unconditionally.
+
+## Round 12 (2026-10-29): removal tiles, the You tab
+
+Owner on mood e's "Without X" cards and Not seen yet in Services: "the remove tiles need a better design so that it is
+obvious that it's about removing them. can be less tall too. they should only be added at the end and if only at least
+one row is missing. the not seen yet is not well placed in services. maybe we can put it back into your taste and
+rename that tab to "You"?"
+
+- Mood e, j, k: "Without X" is a slim removal tile (`WithoutTile`, `WithoutRow` in mood/parts.tsx), production's
+  recovery look: a minus in the pick's color, the pick's name struck through, a muted outline in its color, no
+  picture, and in amber what it brings back ("+ 1,882"; phones "+ 1.9k"). They come last, in one slim row at the
+  bottom of the grid, most brought back first, stretching to fill the row (more than a row's worth scroll sideways
+  under a fade).
+- When: three picks or more (DROP_FROM) and the "+ X" cards leave at least one full row free (`showDrops`; e 4 of 8,
+  phones 4 of 6; k the same; j's one row only with no "+ X" card, phones 2 of 4). "or X" cards don't count: they
+  widen like the drops and give way to them. In e only a group's one pick can be a drop (picks within a group are
+  "any of", so dropping one of two narrows); in j and k every pick ANDs, so each can. Drops that bring nothing back go.
+- No layout shift: the grid keeps its height. With removal tiles the last card row splits into compact cards (name
+  and count; phones name only) over the slim row (desktop 10.75 + 7.5 + 2.75 rem = two rows of 10.75; phones 5.5 +
+  5.5 + 2.5 + 2.5 = three of 5.5). j's tiles are already slim, so there the removal tiles take its last row at the
+  same height.
+- Search > "You" (was Your taste; TABS, the lab menu "Search: You"). Taste f's Your lists: Not seen yet (the real
+  filter, one state), Only your Wishlist, Seen before. Not seen yet works for guests (production keeps guest
+  interactions and applies them, `discoverFilterDefaults`); Wishlist and Seen before are locked for guests (lock in
+  place of their icon, the heading no longer locked).
+- Not seen yet left Services a and b (b's Any service sits in the head row on phones too). The slot `notSeenYet`
+  moved to the You sub-tab, so the You and Search badges count it, the footer and status chips open You, the Search
+  summary lists it, and Watch's summary and badge no longer do (Watch's placeholder is "Everywhere").

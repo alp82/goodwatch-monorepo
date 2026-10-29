@@ -7,10 +7,9 @@ import { useWorldArt } from "./parts"
 export function MoodJ({ d, phone, find, viewer }: SectionProps) {
 	const a = useAnd(d)
 	const art = useWorldArt()
-	const cards = useCards(d, a, viewer, phone ? 4 : 6)
-	const row = !find?.results && (
-		<MixCards d={d} cards={cards} art={art} cols={phone ? "grid-cols-2" : "grid-cols-6"} tile="h-[3.75rem]" small />
-	)
+	const { cards, drops } = useCards(d, a, viewer, phone ? 4 : 6, phone ? 2 : 6)
+	const rows = phone ? "grid-rows-[3.75rem_3.75rem]" : "grid-rows-[3.75rem]"
+	const row = !find?.results && <MixCards d={d} cards={cards} drops={drops} art={art} cols={phone ? 2 : 6} rows={rows} slimRows={rows} small />
 	if (phone)
 		return (
 			<div className="flex flex-col gap-4">

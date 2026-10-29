@@ -54,11 +54,12 @@ export const TABS: Record<SegKey, Sub[]> = {
 		// Movies or shows sits on the Search row (round 10); it counts with Titles.
 		{ id: "titles", label: "Titles", slots: ["q", "similarTo", "type"] },
 		{ id: "people", label: "Cast and crew", slots: ["people"] },
-		{ id: "taste", label: "Your taste", slots: ["loved", "disliked", "minMatch"] },
+		// Round 12: "You", with Not seen yet back from Services.
+		{ id: "taste", label: "You", slots: ["loved", "disliked", "minMatch", "notSeenYet"] },
 	],
 	mood: [{ id: "mood", label: "Mood", slots: ["moods", "themes", "styles", "genres"] }],
 	watch: [
-		{ id: "services", label: "Services", slots: ["services", "notSeenYet"] },
+		{ id: "services", label: "Services", slots: ["services"] },
 		{ id: "scores", label: "Scores", slots: ["minScore", "sourceScores", "scoreGap"] },
 		{ id: "origin", label: "Made in", slots: ["productionCountries"] },
 		{ id: "released", label: "Released", slots: ["released"] },
@@ -125,7 +126,11 @@ export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegV
 		: s.released !== "any"
 			? RELEASED_LABELS[s.released]
 			: null
-	const searchOther = [...labels("similarTo", "people", "loved", "disliked", "minMatch"), ...(s.type !== "all" ? [TYPE_LABELS[s.type]] : [])]
+	const searchOther = [
+		...labels("similarTo", "people", "loved", "disliked", "minMatch"),
+		...(s.notSeenYet ? ["Not seen yet"] : []),
+		...(s.type !== "all" ? [TYPE_LABELS[s.type]] : []),
+	]
 	// A segment's badge is the sum of its sub-tabs' badges.
 	const badge = (k: SegKey) => subsFor(k, pieces).reduce((n, sub) => n + subCount(d, pieces, sub), 0) || undefined
 	const streaming = s.onMyServices
@@ -152,7 +157,6 @@ export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegV
 		watch: {
 			value: join([
 				streaming,
-				s.notSeenYet && "Not seen yet",
 				headPlus(labels("productionCountries")),
 				labels("runtime").join(" · "),
 				s.minScore > 0 && `Score ${s.minScore}+`,
@@ -160,7 +164,7 @@ export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegV
 				released,
 				headPlus(labels("ageLimit")),
 			]),
-			placeholder: "Everywhere, seen too",
+			placeholder: "Everywhere",
 			badge: badge("watch"),
 			lead: chosen.length ? <ServiceStack providers={chosen} on size={16} /> : null,
 		},

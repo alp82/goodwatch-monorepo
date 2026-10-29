@@ -10,7 +10,7 @@
 // Discover's four topic moods (Crime & mystery, Other worlds, History, Coming of age) duplicate themes and are left to
 // About. Pictures, "apart" lines and island positions come from the Explorer's world (/api/explorer/world as a guest).
 // Counts are Discover's own (d.countFor, or the results endpoint for a mix); search moods show no count until they run.
-import { CheckIcon, ChevronDownIcon, MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { CheckIcon, ChevronDownIcon, MagnifyingGlassIcon, MinusIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 import { type ReactNode, useState } from "react"
@@ -337,7 +337,7 @@ export function ArtTile({
 			title={title}
 			onClick={onClick}
 			whileTap={{ scale: 0.97 }}
-			className={`group relative isolate flex min-w-0 cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-left text-white transition-[opacity,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${className} ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${dim ? "opacity-40" : ""}`}
+			className={`group relative isolate flex min-w-0 cursor-pointer flex-col ${line || foot ? "justify-between" : "justify-center"} overflow-hidden rounded-xl p-2.5 text-left text-white transition-[opacity,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${className} ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${dim ? "opacity-40" : ""}`}
 			style={{ boxShadow: on ? `0 8px 28px -8px ${hues[0]}` : undefined }}
 		>
 			<ChoiceArt
@@ -350,14 +350,77 @@ export function ArtTile({
 				<span className={`line-clamp-2 min-w-0 break-words font-bold leading-tight [text-shadow:0_1px_6px_rgba(0,0,0,.6)] ${small ? "text-[13px]" : "text-[15px]"}`}>{name}</span>
 				<Tick on={on} />
 			</span>
-			<span className="block min-w-0 [text-shadow:0_1px_4px_rgba(0,0,0,.8)]">
-				{line && <span className="line-clamp-1 text-xs leading-snug text-white/90">{line}</span>}
-				<span className="mt-0.5 flex items-center gap-1 truncate text-[11px] font-semibold tabular-nums text-white/75">
-					{search && <MagnifyingGlassIcon className="h-3 w-3 shrink-0" aria-hidden />}
-					{foot}
+			{(line || foot) && (
+				<span className="block min-w-0 [text-shadow:0_1px_4px_rgba(0,0,0,.8)]">
+					{line && <span className="line-clamp-1 text-xs leading-snug text-white/90">{line}</span>}
+					<span className="mt-0.5 flex items-center gap-1 truncate text-[11px] font-semibold tabular-nums text-white/75">
+						{search && <MagnifyingGlassIcon className="h-3 w-3 shrink-0" aria-hidden />}
+						{foot}
+					</span>
 				</span>
-			</span>
+			)}
 		</motion.button>
+	)
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Without X: taking one pick out (e, j, k). Round 12: slim removal tiles at the grid's end, production's recovery look.
+
+/** One pick to take out: its name, color and what it brings back. */
+export interface DropStep {
+	id: string
+	name: string
+	color: string
+	/** Titles it brings back; null while unknown. */
+	n: number | null
+	tap: () => void
+}
+
+/**
+ * Whether "Without X" shows (three picks or more are the caller's): the narrowing "+ X" cards leave at least one full
+ * row of the grid free.
+ */
+export const showDrops = (narrowing: number, drops: number, slots: number, cols: number) => drops > 0 && narrowing <= slots - cols
+
+/** A slim removal tile: minus, the pick struck through in its color, amber "+ N" it brings back. */
+export function WithoutTile({ s, className = "", basis, short = false }: { s: DropStep; className?: string; basis?: string; short?: boolean }) {
+	return (
+		<motion.button
+			type="button"
+			whileTap={{ scale: 0.97 }}
+			onClick={s.tap}
+			aria-label={`Without ${s.name}${s.n ? `, brings back ${s.n.toLocaleString("en")}` : ""}`}
+			className={`group flex h-full min-w-0 cursor-pointer items-center rounded-xl bg-white/[0.03] text-left ${short ? "gap-1.5 px-2" : "gap-2 px-3"} outline-none hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-amber-400 ${className}`}
+			style={{ boxShadow: `inset 0 0 0 1px ${s.color}59`, flexBasis: basis }}
+		>
+			<span className="grid h-5 w-5 shrink-0 place-items-center rounded-full" style={{ color: s.color, boxShadow: `inset 0 0 0 1px ${s.color}80` }}>
+				<MinusIcon className="h-3.5 w-3.5" aria-hidden />
+			</span>
+			<span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-300 line-through decoration-2 group-hover:text-white" style={{ textDecorationColor: `${s.color}cc` }}>
+				{s.name}
+			</span>
+			{s.n !== null && (
+				<span className="flex shrink-0 items-center gap-0.5 text-[13px] font-bold tabular-nums text-amber-400 group-hover:text-amber-300">
+					<PlusIcon className="h-3.5 w-3.5" aria-hidden />
+					{short ? compactCount(s.n) : s.n.toLocaleString("en")}
+				</span>
+			)}
+		</motion.button>
+	)
+}
+
+/** The removal tiles in one slim row; they stretch to fill it, more than `cols` scroll sideways under a fade. */
+export function WithoutRow({ drops, cols, className = "" }: { drops: DropStep[]; cols: number; className?: string }) {
+	const basis = `calc((100% - ${(cols - 1) * 0.5}rem) / ${cols})`
+	const more = drops.length > cols
+	return (
+		<div
+			className={`relative flex min-w-0 gap-2 overflow-x-auto [scrollbar-width:none] ${more ? "[mask-image:linear-gradient(to_right,black_88%,transparent)]" : ""} ${className}`}
+		>
+			{drops.map((s) => (
+				<WithoutTile key={s.id} s={s} basis={basis} short={cols <= 2} className="shrink-0 grow" />
+			))}
+		</div>
 	)
 }
 

@@ -1,7 +1,6 @@
 // PROTOTYPE (Discover lab, services a): the baseline. Today's Streaming card at full width: the mode pill (My
 // services, Everywhere, Streaming in…), the country and a service search, Any service and the country's services as
-// logo chips with counts, "+N more". Not seen yet sits beside the pill.
-import { NotSeenSwitch } from "~/ui/filter-bar/controls"
+// logo chips with counts, "+N more". Round 12: Not seen yet moved to Search > You.
 import { compactCount } from "~/ui/filter-bar/labels"
 import { Chip, More, SearchField } from "~/ui/filter-bar/SheetControls"
 import { productionCountryName } from "~/domain/production-country"
@@ -25,9 +24,6 @@ export function ServicesA({ d, pieces, phone, viewer }: SectionProps) {
 			<div className={phone ? "space-y-3" : "flex items-center gap-4"}>
 				<ModePill sv={sv} phone={phone} />
 				{!phone && total != null && <span className="text-[13px] text-gray-500 tabular-nums">{total.toLocaleString("en")} titles</span>}
-				<div className={phone ? "" : "ml-auto"}>
-					<NotSeenSwitch {...pieces.notSeenProps} size={phone ? "sm" : "md"} />
-				</div>
 			</div>
 
 			<div className={phone ? "space-y-3" : "flex min-h-0 flex-1 flex-col gap-3"}>

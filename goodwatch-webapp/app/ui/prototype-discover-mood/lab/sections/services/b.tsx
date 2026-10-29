@@ -1,11 +1,10 @@
 // PROTOTYPE (Discover lab, services b): a rail and a logo wall. The pill stands upright on the left with each mode's
-// count, Not seen yet under it. The right side is the country's services as big logo tiles sorted by what they
+// count. Round 12: Not seen yet moved to Search > You. The right side is the country's services as big logo tiles sorted by what they
 // carry, with the country and the search always open above them.
 import { CheckIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { productionCountryName } from "~/domain/production-country"
-import { NotSeenSwitch } from "~/ui/filter-bar/controls"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { TAP } from "~/ui/filter-bar/motion"
 import { More, SearchField } from "~/ui/filter-bar/SheetControls"
@@ -66,7 +65,7 @@ export function ServicesB({ d, pieces, phone, viewer }: SectionProps) {
 		</>
 	)
 
-	// Phones too (round 11b): beside Not seen yet, so the head row keeps its room.
+	// In the head row (phones too, round 12: no row of its own, so nothing moves down; the search field gives way).
 	const anyButton = sv.mode === "pick" && (
 		<button
 			type="button"
@@ -84,7 +83,7 @@ export function ServicesB({ d, pieces, phone, viewer }: SectionProps) {
 			<div className="min-w-0 flex-1">
 				<SearchField value={find.search} onChange={find.setSearch} placeholder={`Find a service in ${productionCountryName(sv.country)}`} />
 			</div>
-			{!phone && anyButton}
+			{anyButton}
 		</div>
 	)
 
@@ -92,12 +91,6 @@ export function ServicesB({ d, pieces, phone, viewer }: SectionProps) {
 		return (
 			<div className="space-y-4">
 				<ModePill sv={sv} phone />
-				<div className="flex items-center gap-2">
-					<div className="min-w-0 flex-1">
-						<NotSeenSwitch {...pieces.notSeenProps} size="sm" />
-					</div>
-					{anyButton}
-				</div>
 				{head}
 				{tiles}
 			</div>
@@ -107,7 +100,6 @@ export function ServicesB({ d, pieces, phone, viewer }: SectionProps) {
 		<div className="flex h-full gap-6 px-7 py-5">
 			<div className="flex w-[280px] shrink-0 flex-col gap-3">
 				<ModePill sv={sv} vertical />
-				<NotSeenSwitch {...pieces.notSeenProps} className="w-full" />
 				<p className="mt-auto text-[12px] text-gray-500">
 					Streaming in <span className="font-semibold text-gray-300">{productionCountryName(sv.country)}</span>
 				</p>

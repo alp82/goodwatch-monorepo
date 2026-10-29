@@ -1,6 +1,6 @@
 // PROTOTYPE - throwaway. The Discover lab shell (round 6, from round 5 variant 16): the static title, the bar with
 // three segments (Search, Mood, Watch), one status line, the panel under the bar and the phone sheet. Search has
-// sub-tabs Moods and titles, Cast and crew, Your taste; Mood is one section; Watch has Services, Made in, Length,
+// sub-tabs Moods and titles, Cast and crew, You; Mood is one section; Watch has Services, Made in, Length,
 // Scores, Released, Age and content. Each sub-tab's content is the chosen variant of its lab section. The search field
 // stays live in the bar on every tab; typing there from Mood or Watch jumps to Moods and titles, on Search it stays put
 // (sections read the text). Find a filter sits at the right of the sub-tab row on Mood and Watch. Round 11: the
