@@ -1,11 +1,22 @@
-// PROTOTYPE - throwaway (TV easter eggs, 2026-10-29). The simplified TV: the room photo, one screen, and a Remote
-// with four keys (Power, CH+, CH-, OK). Every page of the prototype draws its screen inside `Scene`.
-import { Link } from "@remix-run/react"
+// PROTOTYPE - throwaway (TV easter eggs, round 2, 2026-10-29). The simplified TV: the room, one screen, and a
+// Remote in the hand with Power, CH+, CH-, OK and two streaming keys. Every page draws its screen inside `Scene`.
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
 import { whiteMark } from "~/ui/brand/white-mark"
-import { ICON, Icon } from "~/ui/living-room/Remote"
-import { PHONE_ROOM, ROOM } from "~/ui/living-room/room"
+import { ICON, Icon, ServiceMark } from "~/ui/living-room/Remote"
+import { HAND_IMAGE } from "~/ui/living-room/room"
+import { PHONE_ROOM_ART, ROOM_ART } from "~/ui/living-room/tv/room-art"
+import {
+	HAND,
+	PHONE_BELOW,
+	PHONE_ROOM_PHOTO,
+	REMOTE_H,
+	ROOM_PHOTO,
+	REMOTE_REST_TRANSFORM,
+	REMOTE_W,
+	REMOTE_WRIST,
+} from "~/ui/living-room/tv/room-layout"
+import { assetUrl } from "~/utils/asset-url"
 import { goodwatchScoreDisplay, goodwatchVibeIndex, hasGoodwatchScore } from "~/utils/ratings"
 import TITLES from "./titles.json"
 
@@ -21,145 +32,276 @@ export const score = (t: Title) => (hasGoodwatchScore(t.score) ? goodwatchScoreD
 export type Key = "power" | "up" | "down" | "ok"
 
 // ---------------------------------------------------------------------------------------------------------
-// The room and its TV
+// The room and its TV. The scene fills the window under the site's header. On a desktop the old start page's
+// TV sits on the room photo as on the old start page, with the Remote in the hand under it, the Remote sized first;
+// on a phone the portrait room covers the scene from the top and the Remote rises from the bottom edge.
+
+const HEADER = 64
+const WRIST = `50% ${REMOTE_WRIST * 100}%`
+
+type Box = { left: number; top: number; width: number; height: number }
+type Layout = { photo: Box; tv: Box; remote: { left: number; top: number; scale: number }; hand: Box; phone: boolean }
+
+const handFor = (scale: number): Box => {
+	const k = (REMOTE_W * scale) / HAND.pw
+	return {
+		left: (REMOTE_W * scale) / 2 - (HAND.x + HAND.pw / 2) * k,
+		top: REMOTE_H * scale - (HAND.y + HAND.ph) * k,
+		width: HAND.w * k,
+		height: HAND.h * k,
+	}
+}
+
+/** The phone's bottom bar (MobileDock) covers this much of the scene's foot. */
+const PHONE_DOCK = 84
+
+function layoutFor(w: number, h: number): Layout {
+	if (w >= PHONE_BELOW) {
+		// The Remote first (the owner, round 2: bigger), then the TV as large as the rest allows; the Remote's top
+		// reaches a little over the picture's bottom edge, as on the old start page.
+		const P = ROOM_PHOTO
+		const top = Math.max(12, h * 0.025)
+		const scale = Math.max(0.55, Math.min(0.8, h / 1150))
+		const remoteH = REMOTE_H * scale
+		const aspect = P.tv.w / P.tv.h
+		const tvW = Math.min(w * 0.9, Math.max(200, h - top - 8 - remoteH + 18) * aspect)
+		const tvH = tvW / aspect
+		const tv = { left: (w - tvW) / 2, top, width: tvW, height: tvH }
+		const s = tvW / P.tv.w
+		const photo = { left: tv.left - P.tv.x * s, top: tv.top - P.tv.y * s, width: P.w * s, height: P.h * s }
+		const remote = { left: w / 2 - (REMOTE_W * scale) / 2, top: h - 8 - remoteH, scale }
+		return { photo, tv, remote, hand: handFor(scale), phone: false }
+	}
+	const P = PHONE_ROOM_PHOTO
+	const c = Math.max(w / P.w, h / P.h)
+	const photo = { left: (w - P.w * c) / 2, top: 0, width: P.w * c, height: P.h * c }
+	const tv = { left: photo.left + P.tv.x * c, top: P.tv.y * c, width: P.tv.w * c, height: P.tv.h * c }
+	const scale = Math.min(0.72, (w * 0.56) / REMOTE_W)
+	// Down to the streaming keys (they end 522 of the Remote's 610 px down) above the bottom bar.
+	const remote = { left: w / 2 - (REMOTE_W * scale) / 2, top: Math.max(tv.top + tv.height + 24, h - PHONE_DOCK - 8 - 530 * scale), scale }
+	return { photo, tv, remote, hand: handFor(scale), phone: true }
+}
+
+function useLayout() {
+	const ref = useRef<HTMLDivElement>(null)
+	const [layout, setLayout] = useState<Layout | null>(null)
+	useEffect(() => {
+		const el = ref.current
+		if (!el) return
+		const measure = () => setLayout(layoutFor(el.clientWidth, el.clientHeight))
+		measure()
+		const ro = new ResizeObserver(measure)
+		ro.observe(el)
+		return () => ro.disconnect()
+	}, [])
+	return { ref, layout }
+}
 
 export function Scene({
 	screen,
 	remote,
 	power = "on",
 	dimRoom = 0,
-	below,
+	heading,
 	msg,
 }: {
-	/** A short answer to a press, shown on the screen (prototype stand-in for navigating). */
-	msg?: string | null
 	screen: ReactNode
+	/** The Remote's body; the scene puts it in the hand. */
 	remote?: ReactNode
 	/** "off" plays the tube switching off once; "on" after "off" plays it switching on. */
 	power?: "on" | "off"
 	/** Darkens the room around the TV, 0..1 (lamps off after sign-out). */
 	dimRoom?: number
-	below?: ReactNode
+	/** The page's H1, for screen readers and crawlers; everything a person reads is on the TV. */
+	heading: string
+	/** A short answer to a press, shown on the screen (prototype stand-in for navigating). */
+	msg?: string | null
 }) {
+	const { ref, layout: L } = useLayout()
 	const [wasOff, setWasOff] = useState(false)
 	useEffect(() => {
 		if (power === "off") setWasOff(true)
 	}, [power])
+	const px = (b: Box) => ({ left: b.left, top: b.top, width: b.width, height: b.height })
 	return (
-		<div className="living-room w-full">
-			<div className="egg-stage">
-				<picture>
-					<source media="(max-width: 767px)" type="image/avif" srcSet={PHONE_ROOM.avif} />
-					<source media="(max-width: 767px)" type="image/webp" srcSet={PHONE_ROOM.webp} />
-					<source type="image/avif" srcSet={ROOM.avif} sizes="100vw" />
-					<source type="image/webp" srcSet={ROOM.webp} sizes="100vw" />
-					<img src={ROOM.fallback} alt={ROOM.alt} draggable={false} />
-				</picture>
-				<div className="egg-dim" style={{ opacity: dimRoom }} />
-				<div className={`egg-screen ${power === "off" ? "egg-off" : wasOff ? "egg-on" : ""}`}>
-					<div className="egg-screen-inner">
-						{screen}
-						<Toast msg={msg ?? null} />
+		<div ref={ref} className="living-room egg-scene" style={{ height: `calc(100svh - ${HEADER}px)` }}>
+			<h1 className="sr-only">{heading}</h1>
+			{L && (
+				<>
+					<picture>
+						{L.phone ? (
+							<>
+								<source type="image/avif" srcSet={assetUrl(PHONE_ROOM_ART.avif)} />
+								<img src={assetUrl(PHONE_ROOM_ART.webp)} alt="" className="egg-photo" style={px(L.photo)} draggable={false} />
+							</>
+						) : (
+							<>
+								<source type="image/avif" srcSet={assetUrl(ROOM_ART.avif)} />
+								<img src={assetUrl(ROOM_ART.webp)} alt="" className="egg-photo" style={px(L.photo)} draggable={false} />
+							</>
+						)}
+					</picture>
+					{remote && (
+						<div
+							className="absolute"
+							style={{
+								left: L.remote.left,
+								top: L.remote.top,
+								width: REMOTE_W * L.remote.scale,
+								height: REMOTE_H * L.remote.scale,
+								transformOrigin: WRIST,
+								transform: REMOTE_REST_TRANSFORM,
+							}}
+						>
+							<picture>
+								<source type="image/avif" srcSet={assetUrl(HAND_IMAGE.avif)} />
+								<img src={assetUrl(HAND_IMAGE.webp)} alt="" className="pointer-events-none absolute max-w-none select-none" style={px(L.hand)} draggable={false} />
+							</picture>
+							<div className="absolute left-0 top-0 origin-top-left" style={{ transform: `scale(${L.remote.scale})` }}>
+								{remote}
+							</div>
+						</div>
+					)}
+					{/* Lamps off: the room and the hand darken, the TV stays as it is. */}
+					<div className="egg-dim" style={{ opacity: dimRoom }} />
+					<div className={`egg-screen ${power === "off" ? "egg-off" : wasOff ? "egg-on" : ""}`} style={px(L.tv)}>
+						<div className="egg-screen-inner">
+							{screen}
+							<Toast msg={msg ?? null} />
+						</div>
+						{power === "off" && <div className="egg-dot" />}
 					</div>
-					{power === "off" && <div className="egg-dot" />}
-				</div>
-				{remote && <div className="egg-remote-spot">{remote}</div>}
-			</div>
-			{below}
+				</>
+			)}
 		</div>
 	)
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// The Remote: Power, a channel rocker, and OK. Keys a page doesn't use are left out or shown disabled.
+// The Remote, at the old Remote's size so the hand holds it: Power, a channel rocker, OK, and the two streaming
+// keys (Netflix, Prime Video). Keys a page doesn't use are dimmed.
 
-export function MiniRemote({
+export type ServiceKey = "netflix" | "prime"
+const SERVICE_KEYS: { key: ServiceKey; id: number; name: string; catalog: string }[] = [
+	{ key: "netflix", id: 8, name: "Netflix", catalog: "Netflix" },
+	{ key: "prime", id: 9, name: "Prime Video", catalog: "Amazon Prime Video" },
+]
+export const serviceCatalogName = (k: ServiceKey) => SERVICE_KEYS.find((s) => s.key === k)?.catalog as string
+export const serviceName = (k: ServiceKey) => SERVICE_KEYS.find((s) => s.key === k)?.name as string
+
+export function BigRemote({
 	press,
 	enabled = ["power", "up", "down", "ok"],
 	powerLabel,
 	okLabel = "OK",
 	pulse,
-	note,
+	services,
+	openService,
+	onService,
 }: {
 	press: (key: Key) => void
 	enabled?: Key[]
-	/** A word printed under Power, for pages where Power is the one key that matters. */
+	/** The word printed beside Power, for pages where Power is the one key that matters. */
 	powerLabel?: string
 	okLabel?: string
 	/** The key that pulses to invite a press. */
 	pulse?: Key
-	/** A tiny line printed on the body (a hint). */
-	note?: string
+	/** Whether the streaming keys work on this page. */
+	services?: boolean
+	openService?: ServiceKey | null
+	onService?: (k: ServiceKey) => void
 }) {
 	const on = (k: Key) => enabled.includes(k)
 	return (
-		<section aria-label="Remote control" className="remote-body egg-remote flex select-none flex-col items-center px-4 pb-5 pt-4">
+		<section aria-label="Remote control" className="remote-body relative flex select-none flex-col px-6 pb-6 pt-5" style={{ height: REMOTE_H }}>
 			<div className="flex w-full items-center justify-between">
-				<div className="h-1.5 w-8 rounded-full bg-black/70" aria-hidden />
-				<div className="flex flex-col items-center gap-1">
-					<button
-						type="button"
-						aria-label="Power"
-						disabled={!on("power")}
-						onClick={() => press("power")}
-						className={`remote-key flex h-11 w-11 items-center justify-center rounded-full text-rose-400 ${pulse === "power" ? "egg-pulse" : ""}`}
-					>
-						<Icon d={ICON.power} className="h-5 w-5" />
-					</button>
-				</div>
-			</div>
-			{powerLabel && (
-				<span className="mt-1.5 self-end text-right text-[10px] font-semibold uppercase leading-tight tracking-[0.08em] text-white/55">
-					{powerLabel}
-				</span>
-			)}
-			<div className="mt-6 flex w-full items-center justify-between gap-3">
-				<div className="egg-rocker flex h-[132px] w-[52px] flex-col overflow-hidden rounded-full">
-					<button
-						type="button"
-						aria-label="Next channel"
-						disabled={!on("up")}
-						onClick={() => press("up")}
-						className={`flex flex-1 items-center justify-center text-2xl font-bold ${pulse === "up" ? "egg-pulse" : ""}`}
-					>
-						+
-					</button>
-					<span className="text-center text-[10px] font-bold tracking-[0.15em] text-white/45">CH</span>
-					<button
-						type="button"
-						aria-label="Previous channel"
-						disabled={!on("down")}
-						onClick={() => press("down")}
-						className="flex flex-1 items-center justify-center text-2xl font-bold"
-					>
-						−
-					</button>
-				</div>
 				<button
 					type="button"
-					disabled={!on("ok")}
-					onClick={() => press("ok")}
-					className={`remote-ok flex h-[62px] w-[62px] items-center justify-center rounded-full text-[15px] font-bold tracking-wider text-white/85 ${pulse === "ok" ? "egg-pulse" : ""}`}
+					aria-label="Power"
+					disabled={!on("power")}
+					onClick={() => press("power")}
+					className={`remote-key flex h-14 w-14 items-center justify-center rounded-full text-rose-400 disabled:opacity-30 ${pulse === "power" ? "egg-pulse" : ""}`}
 				>
-					{okLabel}
+					<Icon d={ICON.power} className="h-6 w-6" />
 				</button>
+				{powerLabel ? (
+					<span className="max-w-[170px] text-right text-[13px] font-semibold uppercase leading-tight tracking-[0.1em] text-white/60">{powerLabel}</span>
+				) : (
+					<div className="h-2 w-20 rounded-full bg-black/70" aria-hidden />
+				)}
 			</div>
-			{note && <p className="mt-4 text-center text-[10px] leading-snug text-white/40">{note}</p>}
-			<img {...whiteMark()} alt="" className="mx-auto mt-5 h-5 opacity-20" />
+			<div className="mt-9 flex items-center justify-between px-2">
+				<div className="flex flex-col items-center gap-2">
+					<div className="egg-rocker flex h-[212px] w-[84px] flex-col overflow-hidden rounded-full">
+						<button
+							type="button"
+							aria-label="Next channel"
+							disabled={!on("up")}
+							onClick={() => press("up")}
+							className={`flex flex-1 items-center justify-center text-[40px] font-bold leading-none ${pulse === "up" ? "egg-pulse" : ""}`}
+						>
+							+
+						</button>
+						<div className="mx-auto h-px w-10 bg-black/50" />
+						<button
+							type="button"
+							aria-label="Previous channel"
+							disabled={!on("down")}
+							onClick={() => press("down")}
+							className="flex flex-1 items-center justify-center text-[40px] font-bold leading-none"
+						>
+							−
+						</button>
+					</div>
+					<span aria-hidden className="text-[13px] font-semibold uppercase tracking-[0.1em] text-white/60">
+						Channel
+					</span>
+				</div>
+				<div className="flex flex-col items-center gap-2">
+					<button
+						type="button"
+						disabled={!on("ok")}
+						onClick={() => press("ok")}
+						className={`remote-ok flex h-[118px] w-[118px] items-center justify-center rounded-full text-[22px] font-bold tracking-wider text-white/85 transition-transform active:scale-95 disabled:opacity-30 ${pulse === "ok" ? "egg-pulse" : ""}`}
+					>
+						{okLabel}
+					</button>
+					<span aria-hidden className="text-[13px] font-semibold uppercase tracking-[0.1em] text-white/0">
+						.
+					</span>
+				</div>
+			</div>
+			<div className="mt-9 grid grid-cols-2 gap-3 px-[7px]">
+				{SERVICE_KEYS.map((s) => (
+					<button
+						key={s.key}
+						type="button"
+						disabled={!services}
+						aria-pressed={openService === s.key}
+						aria-label={`On ${s.name}`}
+						title={`On ${s.name}`}
+						onClick={() => onService?.(s.key)}
+						className="remote-key remote-service flex h-[52px] min-w-0 items-center justify-center rounded-full px-3 disabled:opacity-30"
+					>
+						<ServiceMark service={{ id: s.id, name: s.name, logo_path: null }} height={32} onKey={1} />
+					</button>
+				))}
+			</div>
+			<div className="flex-1" />
+			<img {...whiteMark()} alt="" className="mx-auto mb-2 h-7 opacity-20" />
 		</section>
 	)
 }
 
-/** Keyboard: ↑ next channel, ↓ previous, Enter OK, P power. ← and → stay with the variant switcher. */
+/** Keyboard: ↑ next channel, ↓ previous, Enter OK, P power. */
 export function useRemoteKeys(press: (key: Key) => void) {
 	const latest = useRef(press)
 	latest.current = press
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
-			if ((e.target as HTMLElement).closest("input, textarea, [contenteditable], button, a")) {
-				if (e.key === "Enter") return
-			}
-			if ((e.target as HTMLElement).closest("input, textarea, [contenteditable]")) return
+			const el = e.target as HTMLElement
+			if (el.closest("input, textarea, [contenteditable]")) return
+			if (e.key === "Enter" && el.closest("button, a")) return
 			const key: Key | null =
 				e.key === "ArrowUp" ? "up" : e.key === "ArrowDown" ? "down" : e.key === "Enter" ? "ok" : e.key === "p" ? "power" : null
 			if (!key) return
@@ -174,31 +316,32 @@ export function useRemoteKeys(press: (key: Key) => void) {
 // ---------------------------------------------------------------------------------------------------------
 // Screen parts
 
-let noiseUrl: string | null = null
-function noise(): string {
-	if (noiseUrl) return noiseUrl
+const noiseUrls: Record<string, string> = {}
+function noise(calm = false): string {
+	const id = calm ? "calm" : "loud"
+	if (noiseUrls[id]) return noiseUrls[id]
 	const c = document.createElement("canvas")
 	c.width = c.height = 180
 	const ctx = c.getContext("2d") as CanvasRenderingContext2D
 	const img = ctx.createImageData(180, 180)
 	for (let i = 0; i < img.data.length; i += 4) {
-		const v = Math.random() * 255
+		const v = calm ? 20 + Math.random() * 90 : Math.random() * 255
 		img.data[i] = img.data[i + 1] = img.data[i + 2] = v
 		img.data[i + 3] = 255
 	}
 	ctx.putImageData(img, 0, 0)
-	noiseUrl = c.toDataURL()
-	return noiseUrl
+	noiseUrls[id] = c.toDataURL()
+	return noiseUrls[id]
 }
 
 /** Moving static. `flash` plays it once (a channel change) instead of looping. */
-export function Static({ opacity = 1, flash }: { opacity?: number; flash?: number }) {
+export function Static({ opacity = 1, flash, calm }: { opacity?: number; flash?: number; calm?: boolean }) {
 	const [url, setUrl] = useState<string | null>(null)
-	useEffect(() => setUrl(noise()), [])
+	useEffect(() => setUrl(noise(calm)), [calm])
 	if (!url) return <div className="absolute inset-0 bg-neutral-700" style={{ opacity }} />
 	return (
 		<div key={flash} className={`pointer-events-none absolute inset-0 overflow-hidden ${flash != null ? "egg-flash" : ""}`} style={{ opacity }}>
-			<div className="egg-static" style={{ backgroundImage: `url(${url})` }} />
+			<div className={`egg-static ${calm ? "egg-static-calm" : ""}`} style={{ backgroundImage: `url(${url})` }} />
 		</div>
 	)
 }
@@ -262,42 +405,6 @@ export function InfoBar({ t, hint }: { t: Title; hint?: string }) {
 
 export function Wordmark({ size = "6cqw", color }: { size?: string; color?: string }) {
 	return <GoodWatchG height={size} color={color} />
-}
-
-// ---------------------------------------------------------------------------------------------------------
-// Under the room: the plain page that works without the TV (and for crawlers).
-
-const BUTTON = "flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold"
-export const PRIMARY = `${BUTTON} bg-amber-400 text-black hover:bg-amber-300`
-export const SECONDARY = `${BUTTON} bg-white/[0.07] text-gray-100 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] hover:bg-white/[0.1]`
-
-export function Below({
-	kicker,
-	heading,
-	text,
-	children,
-}: {
-	kicker?: string
-	heading: string
-	text: ReactNode
-	children?: ReactNode
-}) {
-	return (
-		<div className="mx-auto flex max-w-xl flex-col items-center px-4 pb-24 pt-8 text-center">
-			{kicker && <p className="brand-header text-5xl leading-none text-amber-400">{kicker}</p>}
-			<h1 className="mt-4 text-2xl font-bold text-gray-100 sm:text-3xl">{heading}</h1>
-			<div className="mt-2 text-base text-gray-400">{text}</div>
-			{children && <div className="mt-6 flex flex-wrap items-center justify-center gap-3">{children}</div>}
-		</div>
-	)
-}
-
-export function HomeLink({ label = "Go home" }: { label?: string }) {
-	return (
-		<Link to="/" className={PRIMARY}>
-			{label}
-		</Link>
-	)
 }
 
 /** The kind of answer a fake press gives in the prototype: a short line in the corner. */

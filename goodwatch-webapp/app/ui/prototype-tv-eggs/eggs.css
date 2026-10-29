@@ -1,33 +1,14 @@
 /* PROTOTYPE - throwaway (TV easter eggs, 2026-10-29). Only transform and opacity animate (the 60 fps rule). */
 
-.egg-stage {
-	--tv-l: 31.758%;
-	--tv-t: 9.564%;
-	--tv-w: 36.543%;
-	--tv-h: 35.069%;
+.egg-scene {
 	position: relative;
-	width: min(100%, calc((100svh - 150px) * 1.7768));
-	aspect-ratio: 1672 / 941;
-	margin: 0 auto;
 	overflow: hidden;
+	background: #1a0f0a;
 }
-@media (max-width: 767px) {
-	.egg-stage {
-		--tv-l: 21.442%;
-		--tv-t: 5.618%;
-		--tv-w: 57.21%;
-		--tv-h: 20.6%;
-		width: 100%;
-		aspect-ratio: 1068 / 1602;
-		max-height: none;
-	}
-}
-.egg-stage > picture img {
+.egg-photo {
 	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
+	max-width: none;
+	user-select: none;
 }
 .egg-dim {
 	position: absolute;
@@ -39,10 +20,6 @@
 }
 .egg-screen {
 	position: absolute;
-	left: var(--tv-l);
-	top: var(--tv-t);
-	width: var(--tv-w);
-	height: var(--tv-h);
 	background: #000;
 	overflow: hidden;
 	border-radius: 0.35%;
@@ -107,6 +84,11 @@
 	80% { transform: translate(10%, 12%); }
 	100% { transform: translate(-4%, -8%); }
 }
+/* The 404's resting static: darker grain, half the speed. */
+.egg-static-calm {
+	animation-duration: 0.9s;
+	animation-timing-function: steps(5);
+}
 .egg-flash {
 	animation: egg-flash 0.32s ease-out both;
 }
@@ -146,26 +128,6 @@
 	transform-origin: 0 50%;
 }
 
-/* The four-key Remote, lying on the room's sideboard edge. */
-.egg-remote-spot {
-	position: absolute;
-	right: 7%;
-	bottom: 3%;
-	transform-origin: 100% 100%;
-	transform: scale(var(--rs, 0.62)) rotate(-7deg);
-}
-@media (max-width: 767px) {
-	.egg-remote-spot {
-		right: 50%;
-		bottom: 2%;
-		transform-origin: 50% 100%;
-		transform: translateX(50%) scale(var(--rs, 0.72)) rotate(-4deg);
-	}
-}
-.egg-remote {
-	width: 150px;
-	border-radius: 30px;
-}
 .egg-rocker {
 	background: linear-gradient(180deg, #34363b, #26272b);
 	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 2px 0 #0e0f11, 0 5px 10px rgba(0, 0, 0, 0.4);
@@ -184,7 +146,7 @@
 	outline: 2px solid #fdba74;
 	outline-offset: -4px;
 }
-.egg-remote button:disabled {
+.egg-rocker button:disabled {
 	opacity: 0.28;
 	pointer-events: none;
 }
