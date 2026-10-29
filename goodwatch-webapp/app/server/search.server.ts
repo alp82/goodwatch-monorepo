@@ -59,33 +59,41 @@ export interface SearchParams {
 	query: string
 }
 
-export const getSearchResults = async (params: SearchParams) => {
-	return await cached<SearchParams, SearchResults>({
-		name: "search",
-		target: _getSearchResults,
-		params,
-		ttlMinutes: 60 * 2,
-		//ttlMinutes: 0,
-	})
+export type SearchPage = {
+	searchResults: SearchResults
+	more: boolean
 }
 
-async function _getSearchResults({
+// Keep the array contract for callers such as the command palette.
+export const getSearchResults = async (params: SearchParams) =>
+	(await getSearchPage(params)).searchResults
+
+export const getSearchPage = async (params: SearchParams) =>
+	await cached<SearchParams, SearchPage>({
+		name: "search-page",
+		target: _getSearchPage,
+		params,
+		ttlMinutes: 60 * 2,
+	})
+
+async function _getSearchPage({
 	language,
 	query,
-}: SearchParams): Promise<SearchResults> {
+}: SearchParams): Promise<SearchPage> {
 	const response = await fetchJsonWithBackendTimeout(
 		"TMDB", 3000,
 		`https://api.themoviedb.org/3/search/multi?api_key=${process.env.TMDB_API_KEY}&language=${language}&query=${encodeURIComponent(query)}`,
 	)
 
-	return (response.results || [])
-	.map((result: SearchResult) => {
-		return {
-			...result,
-			media_type: result.media_type === "tv" ? "show" : result.media_type,
-		}
-	})
-	.filter((result: SearchResult) =>
-		["movie", "show"].includes(result.media_type),
-	)
+	return {
+		more: (response.page ?? 1) < (response.total_pages ?? 1),
+		searchResults: (response.results || [])
+			.map((result: SearchResult) => ({
+				...result,
+				media_type: result.media_type === "tv" ? "show" : result.media_type,
+			}))
+			.filter((result: SearchResult) =>
+				["movie", "show"].includes(result.media_type),
+			),
+	}
 }

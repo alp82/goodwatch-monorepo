@@ -10,11 +10,12 @@ import { useQuery } from "@tanstack/react-query"
 import {
 	type SearchParams,
 	type SearchResults,
-	getSearchResults,
+	getSearchPage,
 } from "~/server/search.server"
 
 type GetSearchResults = {
 	searchResults: Awaited<SearchResults>
+	more: boolean
 }
 
 const canonicalLoader: LoaderFunction = async ({
@@ -23,15 +24,16 @@ const canonicalLoader: LoaderFunction = async ({
 	const url = new URL(request.url)
 	const language = url.searchParams.get("language") || "en_US"
 	const query = url.searchParams.get("query") || ""
-	const rawResults = await getSearchResults({
+	const page = await getSearchPage({
 		language,
 		query,
 	})
-	const sortedResults = rawResults.sort((a, b) => {
+	const sortedResults = page.searchResults.sort((a, b) => {
 		return a.popularity < b.popularity ? 1 : -1
 	})
 
 	return json<GetSearchResults>({
+		more: page.more,
 		searchResults: sortedResults.map(row => ({ ...row, ...(!/^en(?:[-_]|$)/i.test(language) ? { canonical_language: "und" } : {}) })),
 	})
 }

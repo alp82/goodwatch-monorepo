@@ -9,6 +9,7 @@ import {
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
 import type { ReactNode, Ref } from "react"
+import { useSearchCombobox } from "./search/combobox"
 import { MOOD_BY_KEY } from "~/domain/moods"
 import { ServiceStack } from "~/ui/filter-bar/controls"
 import { TAP } from "~/ui/filter-bar/motion"
@@ -334,6 +335,7 @@ export function SearchInput({
 	inputRef?: Ref<HTMLInputElement>
 	size?: "lg" | "md"
 }) {
+	const grid = useSearchCombobox()
 	return (
 		<input
 			ref={inputRef}
@@ -343,6 +345,14 @@ export function SearchInput({
 			autoComplete="off"
 			enterKeyHint="search"
 			aria-label="Search"
+			role="combobox"
+			aria-autocomplete="list"
+			aria-haspopup="grid"
+			aria-expanded={grid !== null}
+			aria-controls={grid?.id}
+			aria-activedescendant={grid?.activeId}
+			// The Search tab's lists take arrow keys and Enter while focus is here.
+			data-discover-search=""
 			placeholder={SEARCH_PLACEHOLDER}
 			onChange={(event) => onChange(event.target.value)}
 			onFocus={onFocus}

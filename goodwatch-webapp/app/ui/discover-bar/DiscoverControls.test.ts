@@ -12,7 +12,7 @@ const run = (width: "desktop" | "phone") => {
 			"node_modules/.bin/vite-node",
 			[
 				"--config",
-				"app/ui/imports/source-import-test-vite.config.ts",
+				"app/ui/discover-bar/discover-controls-test-vite.config.ts",
 				"app/ui/discover-bar/discover-controls-keyboard.test-support.tsx",
 			],
 			{
@@ -54,7 +54,7 @@ test("desktop: closing the panel returns focus to the bar, except after a press 
 	assert.equal(r.moodOpen, true)
 	assert.equal(r.escapeClosed, true)
 	assert.match(String(r.afterEscape), /^button tab:mood/)
-	assert.match(String(r.searchFocus), /^input Search/)
+	assert.match(String(r.searchFocus), /^input combobox Search/)
 	assert.equal(r.searchClosed, true)
 	assert.match(String(r.afterSearchEscape), /^button tab:search/)
 	assert.equal(r.showFound, true)
@@ -94,4 +94,47 @@ test("phones: the sheet's tabs rove, Find gives focus back to the magnifier, and
 		String(r.afterSheetEscape),
 		new RegExp(`^button tab:${r.openerWas}`),
 	)
+})
+
+for (const width of ["desktop", "phone"] as const) {
+	test(`${width}: search arrows update the combobox descendant and steering buttons stay tabbable`, () => {
+		const r = run(width).combobox as {
+			role: string
+			expanded: string
+			popup: string
+			gridRole: string
+			before: { id: string | null }
+			first: {
+				id: string
+				role: string
+				selected: string
+				inGrid: boolean
+				focused: boolean
+			}
+			second: { id: string }
+			back: { id: string }
+			togglesReachable: boolean
+		}
+		assert.equal(r.role, "combobox")
+		assert.equal(r.expanded, "true")
+		assert.equal(r.popup, "grid")
+		assert.equal(r.gridRole, "grid")
+		assert.equal(r.before.id, null)
+		assert.ok(r.first.id)
+		assert.equal(r.first.role, "row")
+		assert.equal(r.first.selected, "true")
+		assert.equal(r.first.inGrid, true)
+		assert.equal(r.first.focused, true)
+		assert.notEqual(r.second.id, r.first.id)
+		assert.equal(r.back.id, r.first.id)
+		assert.equal(r.togglesReachable, true)
+	})
+}
+
+test("quick titles retain the plus count when people were removed from a mixed page", () => {
+	assert.deepEqual(run("desktop").quickTitles, {
+		found: 18,
+		full: true,
+		count: "4 of 18+",
+	})
 })

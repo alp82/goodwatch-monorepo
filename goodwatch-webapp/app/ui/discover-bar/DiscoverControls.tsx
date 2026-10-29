@@ -16,9 +16,12 @@ import {
 	useRef,
 	useState,
 } from "react"
+import type { SearchScope } from "~/domain/discover-search"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
+import type { TitleCard } from "~/server/title-cards.server"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
 import type { FilterStateBinding } from "~/ui/filter-bar/useFilterState"
+import type { TitleKey } from "~/utils/title-key"
 import {
 	DiscoverBar,
 	PhoneDiscoverBar,
@@ -31,6 +34,7 @@ import {
 	type PanelTab,
 	SubTabSlot,
 } from "./DiscoverPanel"
+import { SearchComboboxProvider } from "./search/combobox"
 import { PanelFooter } from "./PanelFooter"
 import { type SortChoice, StatusLine } from "./StatusLine"
 import type { BarChip } from "./chips"
@@ -54,6 +58,24 @@ import {
 	useSlashKey,
 } from "./useDiscoverBar"
 
+/** What the page knows beyond the filter state: where its search looks, what it ranked and shows, whose it is. */
+export interface DiscoverPageContext {
+	/** Where a search's On my services looks: the viewer's country and saved services. */
+	scope: SearchScope
+	/** The running search's ranked list, once it ranks; null while browsing. */
+	ranked: readonly TitleKey[] | null
+	/** The grid's first titles. */
+	cards: readonly TitleCard[]
+	/** False while the counts are still the previous answer's, or the search hasn't ranked yet. */
+	countsFresh: boolean
+	/** A guest's progress, sent with POST requests; null for a member. */
+	guest: {
+		interactions: unknown[]
+		country?: string | null
+		services?: string | null
+	} | null
+}
+
 /** What a sub-tab's content gets from the panel. */
 export interface SubTabView {
 	phone: boolean
@@ -62,6 +84,10 @@ export interface SubTabView {
 	counts: FilterBarCounts | null
 	/** Names, services, the tab context (ladder, viewer country) and chips the bar already holds. */
 	data: BarData
+	member: boolean
+	/** The running search, or null. */
+	query: string | null
+	page: DiscoverPageContext
 	/** The bar's search text as typed (not yet run). */
 	text: string
 	setText: (text: string) => void
@@ -85,6 +111,7 @@ export interface DiscoverControlsProps {
 	onSearch: (text: string) => void
 	onClearSearch: () => void
 	sort: SortChoice
+	page: DiscoverPageContext
 	/** A sub-tab's content; an empty area of its final height until its step fills it. */
 	renderSubTab?: (id: SubTabId, view: SubTabView) => ReactNode
 	/** Find's results in place of the content, while Find has text. */
@@ -92,7 +119,15 @@ export interface DiscoverControlsProps {
 	className?: string
 }
 
-export function DiscoverControls({
+export function DiscoverControls(props: DiscoverControlsProps) {
+	return (
+		<SearchComboboxProvider>
+			<DiscoverControlsContent {...props} />
+		</SearchComboboxProvider>
+	)
+}
+
+function DiscoverControlsContent({
 	bar,
 	filters,
 	counts,
@@ -102,6 +137,7 @@ export function DiscoverControls({
 	onSearch,
 	onClearSearch,
 	sort,
+	page,
 	renderSubTab,
 	renderFind,
 	className = "",
@@ -190,6 +226,9 @@ export function DiscoverControls({
 		filters,
 		counts,
 		data,
+		member,
+		query,
+		page,
 		text,
 		setText,
 		runSearch,

@@ -56,10 +56,36 @@ for (const key of [
 ).IS_REACT_ACT_ENVIRONMENT = true
 // Lists for the streaming services, an empty object for everything else.
 globalThis.fetch = (async (input: string) =>
-	new Response(String(input).includes("streaming-providers") ? "[]" : "{}", {
-		status: 200,
-		headers: { "Content-Type": "application/json" },
-	})) as typeof fetch
+	new Response(
+		String(input).includes("streaming-providers")
+			? "[]"
+			: String(input).includes("part=titles")
+				? JSON.stringify({
+						part: "titles",
+						cards: [
+							{
+								key: "movie:42",
+								title: "A title",
+								release_year: 2020,
+								poster_path: null,
+							},
+						],
+					})
+				: String(input).includes("/api/search?")
+					? JSON.stringify({
+							more: true,
+							searchResults: Array.from({ length: 18 }, (_, id) => ({
+								id,
+								media_type: "movie",
+								title: `Title ${id}`,
+							})),
+						})
+					: "{}",
+		{
+			status: 200,
+			headers: { "Content-Type": "application/json" },
+		},
+	)) as typeof fetch
 
 const { act, createElement: h } = await import("react")
 const { createRoot } = await import("react-dom/client")
@@ -70,6 +96,14 @@ const { MemoryRouter } = await import("react-router-dom")
 const { useFilterState } = await import("~/ui/filter-bar/useFilterState")
 const { useDiscoverBar } = await import("./useDiscoverBar")
 const { DiscoverControls } = await import("./DiscoverControls")
+const { TitlesTab } = await import("./search/TitlesTab")
+const { useQuickTitles } = await import("~/ui/filter-bar/FilterPickers")
+const { moreCount } = await import("./search/search-tab")
+let quickTitles: ReturnType<typeof useQuickTitles>
+function QuickTitlesProbe() {
+	quickTitles = useQuickTitles("Dune")
+	return null
+}
 
 const DEFAULTS = { onMyServices: false, notSeenYet: false }
 function Page() {
@@ -81,9 +115,18 @@ function Page() {
 		counts: null,
 		member: false,
 		query: null,
+		page: {
+			scope: { country: "US", services: [] },
+			ranked: null,
+			cards: [],
+			countsFresh: false,
+			guest: null,
+		},
 		onSearch: () => {},
 		onClearSearch: () => {},
 		sort: { options: [], value: "popularity", onChange: () => {} },
+		renderSubTab: (id, view) =>
+			id === "titles" ? h(TitlesTab, { view }) : undefined,
 	})
 }
 
@@ -101,7 +144,12 @@ await act(async () => {
 		h(
 			QueryClientProvider,
 			{ client },
-			h(MemoryRouter, { initialEntries: ["/dev/discover-bar"] }, h(Page)),
+			h(
+				MemoryRouter,
+				{ initialEntries: ["/dev/discover-bar"] },
+				h(Page),
+				h(QuickTitlesProbe),
+			),
 		),
 	)
 })
@@ -162,6 +210,46 @@ const tabList = (list: HTMLElement | null) =>
 		},
 	)
 const results: Record<string, unknown> = {}
+const checkCombobox = async () => {
+	const input = $("input[data-discover-search]")!
+	await act(async () => input.focus())
+	const gridId = input.getAttribute("aria-controls")
+	const grid = gridId ? document.getElementById(gridId) : null
+	const snapshot = () => {
+		const id = input.getAttribute("aria-activedescendant")
+		const row = id ? document.getElementById(id) : null
+		return {
+			id,
+			role: row?.getAttribute("role"),
+			selected: row?.getAttribute("aria-selected"),
+			inGrid: Boolean(row && grid?.contains(row)),
+			focused: document.activeElement === input,
+		}
+	}
+	const before = snapshot()
+	await press("ArrowDown")
+	const first = snapshot()
+	await press("ArrowDown")
+	const second = snapshot()
+	await press("ArrowUp")
+	const back = snapshot()
+	const toggles = Array.from(
+		grid?.querySelectorAll<HTMLButtonElement>("button[aria-pressed]") ?? [],
+	)
+	results.combobox = {
+		role: input.getAttribute("role"),
+		expanded: input.getAttribute("aria-expanded"),
+		popup: input.getAttribute("aria-haspopup"),
+		gridRole: grid?.getAttribute("role"),
+		before,
+		first,
+		second,
+		back,
+		togglesReachable:
+			toggles.length === 3 &&
+			toggles.every((button) => button.tabIndex === 0 && !button.disabled),
+	}
+}
 
 if (desktop) {
 	const pill = (tab: string) =>
@@ -179,6 +267,7 @@ if (desktop) {
 	await click(pill("search"))
 	await wait(60)
 	results.searchFocus = focused()
+	await checkCombobox()
 	await press("Escape")
 	results.searchClosed = !panelOpen()
 	results.afterSearchEscape = focused()
@@ -242,6 +331,7 @@ if (desktop) {
 	results.afterRight = focused()
 	await press("Home")
 	results.afterHome = focused()
+	await checkCombobox()
 
 	// Phone Find: Cancel and Escape on an empty field return focus to the magnifier.
 	const magnifier = () =>
@@ -271,6 +361,11 @@ if (desktop) {
 	results.openerWas = opener.dataset.tab
 }
 
+results.quickTitles = {
+	found: quickTitles!.found.length,
+	full: quickTitles!.full,
+	count: moreCount(4, quickTitles!.found.length, quickTitles!.full),
+}
 await act(async () => root.unmount())
 process.stdout.write(`__DISCOVER_KEYS__${JSON.stringify(results)}`)
 process.exit(0)

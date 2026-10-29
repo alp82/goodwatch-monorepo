@@ -2,6 +2,8 @@
 // (SubTabSlot) until its step fills it.
 import type { ReactNode } from "react"
 import type { SubTabView } from "../DiscoverControls"
+import { PeopleTab } from "../search/PeopleTab"
+import { TitlesTab } from "../search/TitlesTab"
 import type { SubTabId } from "../tabs"
 import { AgeTab } from "../watch/AgeTab"
 import { ScoresTab } from "../watch/ScoresTab"
@@ -10,6 +12,8 @@ import { ServicesTab } from "../watch/ServicesTab"
 type SubTabContent = (props: { view: SubTabView }) => ReactNode
 
 const SUB_TAB_CONTENT: Partial<Record<SubTabId, SubTabContent>> = {
+	titles: TitlesTab,
+	people: PeopleTab,
 	services: ServicesTab,
 	scores: ScoresTab,
 	age: AgeTab,

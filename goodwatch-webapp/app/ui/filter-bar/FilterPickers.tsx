@@ -30,7 +30,7 @@ function useDebounced<T>(value: T, ms = 220): T {
 	return v
 }
 
-interface Found {
+export interface Found {
 	key: TitleKey
 	title: string
 	year: string
@@ -38,10 +38,11 @@ interface Found {
 }
 
 /** The site's quick title search (the header's typeahead): about a quarter second, where /api/similar-media takes 1.6 s. */
-function useQuickTitles(text: string) {
+export function useQuickTitles(text: string) {
 	const term = useDebounced(text.trim())
 	const { locale } = useLocale()
 	const q = useQuery<{
+		more: boolean
 		searchResults: {
 			id: number
 			media_type: "movie" | "show"
@@ -63,10 +64,10 @@ function useQuickTitles(text: string) {
 				)
 			).json(),
 		enabled: term.length >= 2,
+		placeholderData: (previous) => previous,
 	})
-	const found: Found[] = (
-		term.length >= 2 ? (q.data?.searchResults ?? []) : []
-	).map((r) => ({
+	const results = term.length >= 2 ? (q.data?.searchResults ?? []) : []
+	const found: Found[] = results.map((r) => ({
 		key: titleKey(r.media_type, r.id),
 		title: r.title ?? r.name ?? "",
 		year: (r.release_date ?? r.first_air_date ?? "").slice(0, 4),
@@ -74,6 +75,8 @@ function useQuickTitles(text: string) {
 	}))
 	return {
 		found,
+		/** Pagination is measured before people are removed from the mixed page. */
+		full: term.length >= 2 && q.data?.more === true,
 		loading: text.trim().length >= 2 && (q.isFetching || term !== text.trim()),
 	}
 }

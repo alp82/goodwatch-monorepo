@@ -107,19 +107,24 @@ export function ChipList({
 	)
 }
 
-/** A segmented control: one track, the chosen segment white. */
+/**
+ * A segmented control: one track, the chosen segment white. While `pending` (the counts are the previous answer's),
+ * each count keeps its place but turns invisible, so no stale count shows and nothing moves.
+ */
 export function Segmented<T extends string>({
 	value,
 	options,
 	onChange,
 	small = false,
 	label,
+	pending = false,
 }: {
 	value: T
 	options: { id: T; label: string; count?: number | null }[]
 	onChange: (v: T) => void
 	small?: boolean
 	label: string
+	pending?: boolean
 }) {
 	return (
 		<div
@@ -148,7 +153,10 @@ export function Segmented<T extends string>({
 						)}
 						<span className="relative truncate">{o.label}</span>
 						{!on && o.count != null && (
-							<span className="relative text-[11px] tabular-nums text-gray-500">
+							<span
+								className={`relative text-[11px] tabular-nums text-gray-500 transition-opacity ${pending ? "opacity-0" : ""}`}
+								aria-hidden={pending}
+							>
 								{compactCount(o.count)}
 							</span>
 						)}

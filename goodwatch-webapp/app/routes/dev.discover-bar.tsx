@@ -20,6 +20,7 @@ import { useDesktop, useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
 import { useDiscoverSearch } from "~/ui/discover/useDiscoverSearch"
 import { useFilterState } from "~/ui/filter-bar"
 import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
+import { useMyServices } from "~/ui/filter-bar/useFilterData"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
@@ -68,13 +69,18 @@ export default function DevDiscoverBar() {
 	const bar = useDiscoverBar(filters.state)
 	const ready = !loading && (member || guest !== null)
 
+	// Where a search's On my services looks: the viewer's country and saved services.
+	const services = useMyServices()
+	const scope = useMemo(
+		() => ({
+			country: guest?.country || services.country || "US",
+			services: services.ids,
+		}),
+		[guest?.country, services.country, services.ids],
+	)
 	const eligibility = useMemo(
-		() =>
-			searchEligibility(filters.state, {
-				country: guest?.country || "US",
-				services: [],
-			}),
-		[filters.state, guest?.country],
+		() => searchEligibility(filters.state, scope),
+		[filters.state, scope],
 	)
 	const search = useDiscoverSearch({
 		q,
@@ -82,17 +88,34 @@ export default function DevDiscoverBar() {
 		allTitles: false,
 		enabled: ready,
 	})
-	const ranked = search.current?.ranked
 	const results = useDiscoverResults({
 		query:
-			searching && ranked
-				? `${filters.query}${filters.query ? "&" : ""}ranked=${ranked.join(",")}`
+			searching && search.current
+				? `${filters.query}${filters.query ? "&" : ""}ranked=${search.current.ranked.join(",")}`
 				: filters.query,
 		guest: member ? null : guest,
 		counts: bar.counts,
-		enabled: ready && (!searching || Boolean(ranked)),
+		enabled: ready && (!searching || Boolean(search.current)),
 	})
 	const data = results.data ?? null
+	// The ranked list once the search has ranked; a partial list sent ahead of the ranking doesn't count.
+	const ranked =
+		searching && search.current && !search.partial
+			? search.current.ranked
+			: null
+	const page = useMemo(
+		() => ({
+			scope,
+			ranked,
+			cards: data?.cards ?? [],
+			countsFresh:
+				Boolean(data) &&
+				!results.isPlaceholderData &&
+				(!searching || ranked !== null),
+			guest: member || !guest ? null : guest,
+		}),
+		[scope, ranked, data, results.isPlaceholderData, searching, member, guest],
+	)
 	const taste = tasteStateOf(data)
 
 	const setQuery = (text: string | null) =>
@@ -124,6 +147,7 @@ export default function DevDiscoverBar() {
 				reading={search.reading ?? undefined}
 				onSearch={setQuery}
 				onClearSearch={() => setQuery(null)}
+				page={page}
 				renderSubTab={renderSubTab}
 				sort={{
 					options: discoverSorts(searching, taste),
