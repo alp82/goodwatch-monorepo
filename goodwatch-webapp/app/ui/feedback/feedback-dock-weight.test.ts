@@ -1,5 +1,5 @@
-// What the Feedback drawer brings with it (FeedbackDock.tsx). FeedbackTab.tsx loads the drawer when the browser is
-// idle, on every page, so its modules are part of every page's load.
+// What the Feedback drawer brings with it (FeedbackDock.tsx). FeedbackTab.tsx loads the drawer at the first
+// interaction with any page, so its modules are part of nearly every visit.
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { staticImportGraph } from "../../utils/static-imports.test-support.ts"

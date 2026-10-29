@@ -4,6 +4,7 @@
 // Where the phone dock is (below lg), the closed tab stays out of the page's way: Feedback is a link under the
 // account row in Go to… (navigation/Hub.tsx), and the tab shows only as the open drawer's handle.
 import { ChatBubbleLeftEllipsisIcon } from "@heroicons/react/20/solid"
+import { onFirstInteraction } from "~/utils/first-interaction"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import {
 	type ComponentType,
@@ -176,19 +177,9 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 			openFromElsewhere = null
 		}
 	}, [])
-	// The drawer's code after the page has settled, so the first tap opens it at once.
-	useEffect(() => {
-		const w = window as Window & {
-			requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number
-			cancelIdleCallback?: (id: number) => void
-		}
-		if (w.requestIdleCallback) {
-			const id = w.requestIdleCallback(() => warm(), { timeout: 6000 })
-			return () => w.cancelIdleCallback?.(id)
-		}
-		const t = window.setTimeout(() => warm(), 3000)
-		return () => window.clearTimeout(t)
-	}, [warm])
+	// The drawer's code (about 35 KB) at the first sign of use, so the first tap opens it at once, and a visitor who
+	// only reads the first screen never asks for it.
+	useEffect(() => onFirstInteraction(() => warm()), [warm])
 	return (
 		<>
 			<Tab
