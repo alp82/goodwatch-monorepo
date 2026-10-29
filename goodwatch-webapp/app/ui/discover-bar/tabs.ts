@@ -165,6 +165,8 @@ export interface TabContext {
 	viewerCountry?: string
 	/** The results' rating ladder; null or undefined without one (Age and content hides, its choices don't count). */
 	ladder: ViewerLadder | null | undefined
+	/** The last response's facts availability; false keeps Budget and Shows choices unapplied. */
+	facts?: boolean
 	/** The Discover search (`q`), or null. It counts on Titles and Clear all clears it first. */
 	query: string | null
 	/**
@@ -176,21 +178,26 @@ export interface TabContext {
 
 const hasQuery = (context: TabContext) => Boolean(context.query?.trim())
 
-/** The chips that count: activeChips of the state as it applies (no age chips without a ladder). */
+/** The URL choices that actually narrow the last response's results. */
+export const appliedStateOf = (state: FilterState, context: TabContext) =>
+	stateAsApplied(
+		state,
+		context.ladder,
+		context.member,
+		context.viewerCountry,
+		context.facts,
+	)
+
+/** The chips that count: activeChips of the state as it applies. */
 const chipsOf = (
 	state: FilterState,
 	context: TabContext,
 	names?: FilterNames,
 ) =>
-	activeChips(
-		stateAsApplied(
-			state,
-			context.ladder,
-			context.member,
-			context.viewerCountry,
-		),
-		{ tasteGroup: context.tasteGroup, ...names },
-	)
+	activeChips(appliedStateOf(state, context), {
+		tasteGroup: context.tasteGroup,
+		...names,
+	})
 
 /**
  * How many choices a filter group has active: its chips, plus Not seen yet, which has no chip in activeChips. On my

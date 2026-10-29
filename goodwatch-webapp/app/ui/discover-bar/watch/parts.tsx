@@ -21,7 +21,7 @@ export function BlockHead({
 	return (
 		<div className="mb-2.5 flex min-h-7 items-center gap-2">
 			{icon}
-			<h3 id={id} className="text-[14px] font-semibold text-gray-100">
+			<h3 id={id} className="shrink-0 text-[14px] font-semibold text-gray-100">
 				{children}
 			</h3>
 			{note && <span className="text-[12px] text-gray-500">{note}</span>}

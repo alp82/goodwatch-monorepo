@@ -264,6 +264,8 @@ export function RangeSlider({
 	value,
 	onCommit,
 	format,
+	formatTo = format,
+	readout,
 	label,
 }: {
 	min: number
@@ -272,6 +274,10 @@ export function RangeSlider({
 	value: [number, number]
 	onCommit: (v: [number, number]) => void
 	format: (v: number) => string
+	/** The upper end's label, when it reads differently from the lower one. */
+	formatTo?: (v: number) => string
+	/** The span as one label between the ends ("Under 10K"), while it is narrower than the whole scale. */
+	readout?: (v: [number, number]) => string
 	label: string
 }) {
 	const [v, setV] = useState(value)
@@ -293,8 +299,13 @@ export function RangeSlider({
 				<span className={full ? "text-gray-500" : "font-semibold text-white"}>
 					{format(v[0])}
 				</span>
+				{readout && (
+					<span className="truncate px-2 font-semibold text-amber-300">
+						{full ? "" : readout(v)}
+					</span>
+				)}
 				<span className={full ? "text-gray-500" : "font-semibold text-white"}>
-					{format(v[1])}
+					{formatTo(v[1])}
 				</span>
 			</div>
 			<div className="relative h-6">

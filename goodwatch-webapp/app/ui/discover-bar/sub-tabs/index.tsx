@@ -8,11 +8,14 @@ import { PeopleTab } from "../search/PeopleTab"
 import { TitlesTab } from "../search/TitlesTab"
 import type { SubTabId } from "../tabs"
 import { AgeTab } from "../watch/AgeTab"
+import { BudgetTab } from "../watch/BudgetTab"
 import { LengthTab } from "../watch/LengthTab"
 import { MadeInTab } from "../watch/MadeInTab"
+import { PopularityTab } from "../watch/PopularityTab"
 import { ReleasedTab } from "../watch/ReleasedTab"
 import { ScoresTab } from "../watch/ScoresTab"
 import { ServicesTab } from "../watch/ServicesTab"
+import { ShowsTab } from "../watch/ShowsTab"
 import { YouTab } from "../you/YouTab"
 
 type SubTabContent = (props: { view: SubTabView }) => ReactNode
@@ -22,9 +25,12 @@ const SUB_TAB_CONTENT: Partial<Record<SubTabId, SubTabContent>> = {
 	people: PeopleTab,
 	services: ServicesTab,
 	scores: ScoresTab,
+	popularity: PopularityTab,
+	shows: ShowsTab,
 	madeIn: MadeInTab,
 	released: ReleasedTab,
 	length: LengthTab,
+	budget: BudgetTab,
 	age: AgeTab,
 	combos: CombosTab,
 	everything: EverythingTab,

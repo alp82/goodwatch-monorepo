@@ -3,7 +3,6 @@
 // badge, and the Clear all count.
 import { useMemo, useRef } from "react"
 import { ladderStepFor } from "~/domain/age-content"
-import { stateAsApplied } from "~/domain/filter-state"
 import { type FilterNames, activeChips } from "~/ui/filter-bar/labels"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
 import {
@@ -18,6 +17,7 @@ import {
 	type MainTab,
 	type TabContext,
 	type TabValue,
+	appliedStateOf,
 	clearAllCount,
 	tabValues,
 } from "./tabs"
@@ -64,6 +64,10 @@ export function useBarData({
 	const lastLadder = useRef(counts?.ladder ?? null)
 	if (counts) lastLadder.current = counts.ladder ?? null
 	const ladder = lastLadder.current
+	// Facts availability also stays while counts are pending, keeping unavailable choices unapplied.
+	const lastFacts = useRef(counts?.facts)
+	if (counts) lastFacts.current = counts.facts
+	const facts = lastFacts.current
 	// The picked taste groups' names come with the results while a group is picked (or with `counts=taste`).
 	const tasteNames = counts?.tasteGroups?.names
 
@@ -86,19 +90,20 @@ export function useBarData({
 			member,
 			viewerCountry: services.country,
 			ladder,
+			facts,
 			query,
 			tasteGroup: names.tasteGroup,
 		}),
-		[member, services.country, ladder, query, names.tasteGroup],
+		[member, services.country, ladder, facts, query, names.tasteGroup],
 	)
 	const chips = useMemo(() => {
-		const applied = stateAsApplied(state, ladder, member, services.country)
+		const applied = appliedStateOf(state, context)
 		return barChips(applied, activeChips(applied, names), {
 			query,
 			names,
 			face: (id) => people.byId.get(id)?.profile,
 		})
-	}, [state, ladder, member, services.country, names, query, people.byId])
+	}, [state, context, names, query, people.byId])
 	const values = useMemo(
 		() => tabValues(state, context, names),
 		[state, context, names],
