@@ -22,6 +22,12 @@ The experience of developing preferences, discovering suggestions, exploring tit
 **Discovery context**:
 The search, filters, sorting, results position, and current Taste card that describe where a person is in their exploration.
 
+**Discover bar**:
+The four tabs Search, Mood, Watch and You above Discover's results. Each shows its active choices and opens a panel to change them, or a sheet on phones.
+
+**Find**:
+The field in the Discover bar's panel that finds filters, values, titles and people across all four tabs. A pick changes a setting; Discover's Search instead ranks titles for a query.
+
 **TV discovery context**:
 On the TV, Discover and Search retain the query, filters, sort, page, selected poster, and row position while opening title details and returning. Filters narrow the existing server result set; changing one starts again at the first page. Search runs when submitted, using the ranked search results as its candidate set, rather than searching again for each typed character. Expand carries the query, filters, sort, and page to Discover; the full page's own presentation and position behavior still apply.
 

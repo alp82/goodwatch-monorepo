@@ -1,4 +1,4 @@
-// When the start page's search field searches: Discover's rule (DiscoverHeading.tsx). Typing searches once it pauses
+// When the start page's search field searches: typing searches once it pauses
 // SEARCH_PAUSE_MS, Enter and the Search button search at once, and a preset searches its phrase at once. Text shorter
 // than Discover's minimum (SEARCH_MIN_CHARS) is never searched; emptying the field clears the search. A text that is
 // already the search isn't searched again. Every search is a paid reading and a history row, so a pending pause is

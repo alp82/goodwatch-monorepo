@@ -1,6 +1,6 @@
 // The Filters sheet's controls: the chip, a trimmed chip list with "+N more", the segmented control, the "and up"
 // bar, the two-thumb range slider, and the search field with its spinner and labeled Clear. They know nothing of the
-// filter state; the cards in FilterCards.tsx wire them up.
+// filter state; the surfaces that use them wire them up.
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
 import { type RefObject, useEffect, useState } from "react"

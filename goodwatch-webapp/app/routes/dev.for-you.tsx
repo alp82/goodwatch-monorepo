@@ -11,7 +11,7 @@ import {
 	type LoaderFunctionArgs,
 	json,
 } from "@remix-run/node"
-import { useFetcher, useLoaderData } from "@remix-run/react"
+import { useFetcher, useLoaderData, useNavigate } from "@remix-run/react"
 import { useEffect, useMemo, useState } from "react"
 import { filterStateFromParams, sortFromParams } from "~/domain/filter-state"
 import {
@@ -45,7 +45,12 @@ import {
 	getTitleCards,
 } from "~/server/title-cards.server"
 import { type ViewerContext, getViewerContext } from "~/server/viewer.server"
-import { DISCOVER_SORTS, FilterBar, useFilterState } from "~/ui/filter-bar"
+import { DiscoverControls } from "~/ui/discover-bar/DiscoverControls"
+import { useSubTabContent } from "~/ui/discover-bar/sub-tabs/lazy"
+import { useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
+import { DISCOVER_SORTS, useFilterState } from "~/ui/filter-bar"
+import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
+import { useMyServices } from "~/ui/filter-bar/useFilterData"
 import type { TitleKey } from "~/utils/title-key"
 
 /** How many rows each column shows. */
@@ -179,9 +184,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function DevForYou() {
 	const data = useLoaderData<typeof loader>()
-	const filters = useFilterState({ defaults: data.defaults })
+	const filters = useFilterState({ defaults: data.defaults, member: data.member })
+	const bar = useDiscoverBar(filters.state)
+	const { renderSubTab, renderFind } = useSubTabContent(bar.panel.open !== null)
+	const navigate = useNavigate()
+	const services = useMyServices()
 	const counts = useDiscoverResults({
 		query: filters.query,
+		counts: bar.counts,
 		forYou: false,
 		guest: null,
 		enabled: data.member,
@@ -295,7 +305,34 @@ export default function DevForYou() {
 					: "you have no taste yet, so nothing moves: rate a few titles you love"}
 			</p>
 			<div className="mt-7">
-				<FilterBar filters={filters} counts={counts.data ?? null} />
+				<DiscoverControls
+					bar={bar}
+					filters={filters}
+					counts={counts.data ?? null}
+					member={data.member}
+					query={null}
+					// The tuner compares browse orders; run title searches on Discover.
+					onSearch={(text) => {
+						const params = new URLSearchParams(filters.query)
+						params.set("q", text)
+						navigate(`/discover?${params}`)
+					}}
+					onClearSearch={() => {}}
+					renderSubTab={renderSubTab}
+					renderFind={renderFind}
+					page={{
+						scope: { country: services.country ?? "US", services: services.ids },
+						ranked: null,
+						cards: counts.data?.cards ?? [],
+						countsFresh: Boolean(counts.data) && !counts.isPlaceholderData,
+						guest: null,
+					}}
+					sort={{
+						options: discoverSorts(false, tasteStateOf(counts.data)),
+						value: sortShown(filters.sort, false, tasteStateOf(counts.data)),
+						onChange: (key) => filters.setSort(key as typeof filters.sort),
+					}}
+				/>
 			</div>
 
 			<section className="mt-7 flex flex-wrap items-end gap-x-6 gap-y-4">

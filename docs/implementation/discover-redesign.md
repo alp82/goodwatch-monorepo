@@ -1107,15 +1107,16 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
 - Files: `app/ui/discover-bar/watch/ShowsTab.tsx`, `BudgetTab.tsx`.
 - Depends on: F9, B13, B14.
 
-**F11. Cleanup**
+**F11. Cleanup — complete**
 
-- Delete Discover-only pieces nothing imports any more: `FilterBar`, `Slab`, `PhoneFilterRow`, `FilterCards`,
-  `filter-cards.ts`, `PopularFilters`, `FilterPickers`, `SignUpPanel`, the sheet parts of `FilterGroups` and
-  `FiltersSheet` (keep `FilterSearchField` and `ShowTitlesButton`, used by My movies), `dev.filter-bar.tsx`, and
-  `DiscoverHeading` if only Discover used it. Move `dev.for-you.tsx` onto the new bar. Keep `controls.tsx`,
-  `SnapSheet`, `motion.tsx`, `useModalDialog`, `labels.ts`, `SubBar` pieces used by `HiddenTitles`.
-- Update `app/ui/filter-bar/index.ts`'s comment (it says Watch next and Explorer share the bar; they don't), benchmark
-  budgets if the page weight changed, and `CONTEXT.md` (Discover bar, Find).
+- Deleted the unused Discover bar, slab, phone row, filter cards and registry, popular filters, old sheet,
+  `dev.filter-bar.tsx`, unused `ActiveFilters` and `ForYou` components, and the unused `DiscoverHeading`,
+  `TasteExplanation`, `SignUpKey` and `ForYouStates`.
+- Trimmed `FilterGroups` to My movies' `FilterSearchField`, `FilterPickers` to the new bar's `useQuickTitles`, and
+  `SignUpPanel` to Discover's `BestMatchSignUp`. Kept `ShowTitlesButton`, shared controls, sheet primitives,
+  and the live `SubBar` meter and recovery pieces. Updated the shared exports and glossary (Discover bar, Find).
+- Moved `dev.for-you.tsx` onto the new bar with opt-in counts; its search submissions open Discover while the tuner
+  continues to compare browse orders.
 - Depends on: F10.
 
 ## Risks and checks

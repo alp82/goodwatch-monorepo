@@ -1,9 +1,7 @@
-// The shared filter bar (Discover, Watch next, Explorer). See FilterBar.tsx for the composed bar; the pieces are
-// exported for surfaces that arrange their own (Watch next's phone drawers build on SnapSheet).
-export { FilterBar, type FilterBarProps, SLAB_CLEARANCE } from "./FilterBar"
-export { ForYouExplanation, ForYouRow, ForYouSwitch } from "./ForYou"
-export { FilterGroups, FilterSearchField } from "./FilterGroups"
-export { FiltersSheet, ShowTitlesButton } from "./FiltersSheet"
+// Shared filter controls, state and result summaries for Discover and other surfaces.
+// Discover composes its bar in ui/discover-bar; other surfaces arrange these pieces themselves.
+export { FilterSearchField } from "./FilterGroups"
+export { ShowTitlesButton } from "./ShowTitlesButton"
 export {
 	DISCOVER_SORTS,
 	RATE_MORE,
@@ -16,15 +14,8 @@ export {
 	recoveryLabel,
 	tasteStateOf,
 } from "./labels"
-export { SLAB_SEGMENT, Slab, useScrollFold } from "./Slab"
 export { SHEET_SNAPS, SnapSheet } from "./SnapSheet"
-export {
-	CountLine,
-	FilterChips,
-	HiddenInsight,
-	HiddenMeter,
-	RecoveryList,
-} from "./SubBar"
+export { HiddenMeter, RecoveryList } from "./SubBar"
 export type { FilterBarCounts, ForYouControl } from "./types"
 export { useMyServices } from "./useFilterData"
 export { type FilterStateBinding, useFilterState } from "./useFilterState"

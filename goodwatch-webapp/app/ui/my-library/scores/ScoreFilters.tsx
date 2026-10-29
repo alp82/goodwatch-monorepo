@@ -1,7 +1,6 @@
 // Your scores' filters in Discover's design: the row (search, Only what I changed, Group, Filters), the removable
 // chips under it, and the Filters side sheet with the groups that fit your own scores. The sheet and the chips are
-// drawn like ui/filter-bar's (FiltersSheet, FilterGroups, SubBar), which are bound to Discover's filter state; the
-// generic controls (Filters button, the sort menu's items, the switch's knob, Show N titles) are reused as they are.
+// drawn with the shared ui/filter-bar controls (Filters button, the sort menu's items, the switch's knob, Show N titles).
 import { CheckIcon, ChevronDownIcon, MagnifyingGlassIcon, Squares2X2Icon, XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, useId, useMemo, useRef, useState } from "react"

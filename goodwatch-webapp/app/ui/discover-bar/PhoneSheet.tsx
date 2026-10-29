@@ -59,7 +59,7 @@ export function PhoneSheet({
 	} | null>(null)
 	useModalDialog({ open, onClose, container: panel, initialFocus })
 	const reduced = useReducedMotion()
-	// As in FiltersSheet, keep the scrollbar's room while the page behind the sheet stays put.
+	// Keep the scrollbar's room while the page behind the sheet stays put.
 	useEffect(() => {
 		if (!open) return
 		const html = document.documentElement
