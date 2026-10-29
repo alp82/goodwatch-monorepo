@@ -2,12 +2,13 @@
 // member's own data and the catalog (taste-stats-model.ts does the counting).
 //
 // Reads, on a cold cache: the member's data (getUserData, cached 5 minutes); the titles' details in primary-key batches
-// of BATCH per media type; their credits (top-billed cast, directors, writers, composers) in batches of BATCH titles;
+// of BATCH per media type; their credits aggregated by person and role;
 // the names of the people that make a list. Tropes are read only for titles scored 8 or more, the only ones the tags
-// count. At most MAX_TITLES titles, the latest first. Cached 10 minutes (taste-stats-cache.server.ts).
+// count. At most MAX_TITLES titles, the latest first. Fresh for 10 minutes, retained stale for 7 days.
 //
 // Cost guards: concurrent requests for one member share one computation, and the catalog reads of every computation in
 // this process go through one queue of QUERY_CONCURRENCY, so crawlers walking many profiles can't flood Crate.
+import { staleValues } from "./stale-value"
 import type { ProfileTitle } from "~/domain/profile"
 import type { TasteStats } from "~/domain/profile-taste"
 import { getUserData } from "~/server/userData.server"
@@ -27,15 +28,14 @@ import {
 	tasteStats,
 } from "./taste-stats-model"
 
-const BATCH = 400
+const BATCH = 4_000
 const MAX_TITLES = 4_000
-const CREDIT_ROWS = 20_000
 /** Top-billed cast: billing order below this. */
 const CAST_ORDER = 8
 const WRITER_JOBS = ["Screenplay", "Writer"]
 const COMPOSER_JOBS = ["Original Music Composer"]
 
-const computing = new Map<string, Promise<TasteStats>>()
+const computing = staleValues<TasteStats>()
 
 /** The owner's numbers, all of them: cut them with statsForViewer (taste-stats-view.ts) before they reach a page. */
 export async function getTasteStats(
@@ -45,17 +45,21 @@ export async function getTasteStats(
 	const cached = await timeRequestCache(request, "stats", () =>
 		readCachedTasteStats(ownerId),
 	)
-	if (cached) return cached
-	const pending = computing.get(ownerId)
-	if (pending) return pending
-	const work = (async () => {
-		const readFrom = Date.now()
-		const stats = await computeTasteStats(ownerId, request)
-		await writeCachedTasteStats(ownerId, stats, readFrom)
-		return stats
-	})().finally(() => computing.delete(ownerId))
-	computing.set(ownerId, work)
-	return work
+	return computing.read(ownerId, cached, () =>
+		buildTasteStats(ownerId, cached ? undefined : request),
+	)
+}
+
+async function buildTasteStats(ownerId: string, request?: Request) {
+	const readFrom = Date.now()
+	const stats = await computeTasteStats(ownerId, request)
+	await writeCachedTasteStats(ownerId, stats, readFrom)
+	return stats
+}
+
+/** Called after rating writes have settled, so the next visitor can use an already refreshed entry. */
+export function refreshTasteStats(ownerId: string) {
+	return computing.refreshAfterPending(ownerId, () => buildTasteStats(ownerId))
 }
 
 interface Own {
@@ -117,10 +121,20 @@ async function computeTasteStats(
 	const loved = new Set(
 		titles.filter((t) => (t.score ?? 0) >= 8).map((t) => t.key),
 	)
-	const [movieRows, showRows, credits] = await Promise.all([
-		readDetails("movie", ids.movie, loved, request),
-		readDetails("show", ids.show, loved, request),
-		timeRequestWork(request, "stats_credits", () => readCredits(ids)),
+	const [movieRows, showRows, credits, tropeCounts] = await Promise.all([
+		readDetails("movie", ids.movie, request),
+		readDetails("show", ids.show, request),
+		timeRequestWork(request, "stats_credits", () =>
+			readCredits({
+				movie: titles
+					.filter((t) => t.mediaType === "movie" && t.score !== null)
+					.map((t) => t.tmdbId),
+				show: titles
+					.filter((t) => t.mediaType === "show" && t.score !== null)
+					.map((t) => t.tmdbId),
+			}),
+		),
+		timeRequestWork(request, "stats_tropes", () => readTropes(ids, loved)),
 	])
 	const details = new Map([...movieRows, ...showRows])
 	const stats: StatsTitle[] = []
@@ -165,6 +179,7 @@ async function computeTasteStats(
 		people,
 		watching,
 		year: new Date().getFullYear(),
+		tropeCounts,
 	})
 	console.info(
 		`Taste stats for ${ownerId.slice(0, 8)}: ${stats.length} titles, ${credits.length} credits, in ${Date.now() - startedAt} ms`,
@@ -201,7 +216,6 @@ const placeholders = (n: number) =>
 async function readDetails(
 	mediaType: "movie" | "show",
 	ids: number[],
-	loved: ReadonlySet<MediaKey>,
 	request?: Request,
 ) {
 	const found = new Map<MediaKey, DetailRow>()
@@ -227,74 +241,91 @@ async function readDetails(
 			}),
 		),
 	)
-	const lovedIds = ids.filter((id) =>
-		loved.has(`${mediaType}-${id}` as MediaKey),
-	)
-	await timeRequestWork(request, "stats_tropes", () =>
-		Promise.all(
-			batches(lovedIds).map(async (batch) => {
-				const rows = await read<{ tmdb_id: number; tropes: string[] | null }>(
-					`SELECT tmdb_id, tropes FROM ${mediaType} WHERE tmdb_id IN (${placeholders(batch.length)}) LIMIT ${batch.length}`,
-					batch,
-				)
-				for (const row of rows) {
-					const entry = found.get(
-						`${mediaType}-${Number(row.tmdb_id)}` as MediaKey,
-					)
-					if (entry) entry.tropes = row.tropes
-				}
-			}),
-		),
-	)
+
 	return found
+}
+
+/** Aggregate on the catalog node instead of transferring every title's full trope array. */
+async function readTropes(
+	ids: { movie: number[]; show: number[] },
+	loved: ReadonlySet<MediaKey>,
+) {
+	const counts = new Map<string, number>()
+	await Promise.all(
+		(["movie", "show"] as const).map(async (mediaType) => {
+			const selected = ids[mediaType].filter((id) =>
+				loved.has(`${mediaType}-${id}` as MediaKey),
+			)
+			if (!selected.length) return
+			const rows = await read<{ name: string; count: number }>(
+				`SELECT name, count(*) AS count FROM
+			 (SELECT unnest(array_unique(tropes)) AS name FROM ${mediaType}
+			 WHERE tmdb_id IN (${placeholders(selected.length)})) tags
+			 GROUP BY name LIMIT 100000`,
+				selected,
+			)
+			// Do not publish silently truncated counts if the catalog ever outgrows this guard.
+			if (rows.length === 100000)
+				throw new Error("Stats trope vocabulary exceeds its read limit")
+			for (const row of rows)
+				if (row.name !== null)
+					counts.set(row.name, (counts.get(row.name) ?? 0) + Number(row.count))
+		}),
+	)
+	return counts
 }
 
 async function readCredits(ids: { movie: number[]; show: number[] }): Promise<
 	StatsCredit[]
 > {
-	const credits: StatsCredit[] = []
-	const work: Promise<void>[] = []
-	for (const mediaType of ["movie", "show"] as const)
-		for (const batch of batches(ids[mediaType]))
-			work.push(
-				read<{ pid: number; mid: number }>(
-					`SELECT person_tmdb_id AS pid, media_tmdb_id AS mid FROM person_appeared_in
-					 WHERE media_type = ? AND media_tmdb_id IN (${placeholders(batch.length)}) AND order_default >= 0 AND order_default < ${CAST_ORDER}
-					 LIMIT ${CREDIT_ROWS}`,
-					[mediaType, ...batch],
-				).then((rows) => {
-					for (const row of rows)
-						credits.push({
-							personId: Number(row.pid),
-							key: `${mediaType}-${Number(row.mid)}`,
-							role: "actor",
-						})
-				}),
-			)
-	// Crew from movies only: a show's directors and writers are per episode.
-	for (const batch of batches(ids.movie))
-		work.push(
-			read<{ pid: number; mid: number; job: string }>(
-				`SELECT person_tmdb_id AS pid, media_tmdb_id AS mid, job FROM person_worked_on
-				 WHERE media_type = 'movie' AND media_tmdb_id IN (${placeholders(batch.length)}) AND job IN ('Director', ${[...WRITER_JOBS, ...COMPOSER_JOBS].map(() => "?").join(", ")})
-				 LIMIT ${CREDIT_ROWS}`,
-				[...batch, ...WRITER_JOBS, ...COMPOSER_JOBS],
-			).then((rows) => {
-				for (const row of rows)
-					credits.push({
+	const groups = await Promise.all(
+		(["movie", "show"] as const).flatMap((mediaType) => {
+			const selected = ids[mediaType]
+			if (!selected.length) return []
+			const cast = read<{ pid: number; mids: number[] }>(
+				`SELECT person_tmdb_id AS pid, collect_set(media_tmdb_id) AS mids
+			 FROM person_appeared_in WHERE media_type = ?
+			 AND media_tmdb_id IN (${placeholders(selected.length)})
+			 AND order_default >= 0 AND order_default < ${CAST_ORDER}
+			 GROUP BY person_tmdb_id LIMIT ${selected.length * CAST_ORDER}`,
+				[mediaType, ...selected],
+			).then((rows) =>
+				rows.flatMap((row) =>
+					row.mids.map((mid) => ({
 						personId: Number(row.pid),
-						key: `movie-${Number(row.mid)}`,
-						role:
-							row.job === "Director"
-								? "director"
-								: WRITER_JOBS.includes(row.job)
-									? "writer"
-									: "composer",
-					})
-			}),
-		)
-	await Promise.all(work)
-	return credits
+						key: `${mediaType}-${Number(mid)}`,
+						role: "actor" as const,
+					})),
+				),
+			)
+			if (mediaType === "show") return [cast]
+			const crew = read<{
+				pid: number
+				role: StatsCredit["role"]
+				mids: number[]
+			}>(
+				`SELECT person_tmdb_id AS pid,
+			 CASE WHEN job = 'Director' THEN 'director' WHEN job IN ('Screenplay', 'Writer') THEN 'writer' ELSE 'composer' END AS role,
+			 collect_set(media_tmdb_id) AS mids FROM person_worked_on
+			 WHERE media_type = 'movie' AND media_tmdb_id IN (${placeholders(selected.length)})
+			 AND job IN ('Director', ${[...WRITER_JOBS, ...COMPOSER_JOBS].map(() => "?").join(",")})
+			 GROUP BY 1,2 LIMIT 100000`,
+				[...selected, ...WRITER_JOBS, ...COMPOSER_JOBS],
+			).then((rows) => {
+				if (rows.length === 100000)
+					throw new Error("Stats crew exceeds its read limit")
+				return rows.flatMap((row) =>
+					row.mids.map((mid) => ({
+						personId: Number(row.pid),
+						key: `movie-${Number(mid)}`,
+						role: row.role,
+					})),
+				)
+			})
+			return [cast, crew]
+		}),
+	)
+	return groups.flat()
 }
 
 /** Names and photos of the people with at least two rated titles in a role: the only ones a list can show. */

@@ -1,3 +1,10 @@
+import { publicView } from "~/server/profile/portrait-public"
+import {
+	readSummary,
+	writeSummary,
+} from "~/server/profile/summary-cache.server"
+import { staleValues } from "~/server/profile/stale-value"
+import { NO_TASTE } from "../taste/taste.server"
 // The Taste page's portrait: one view model per tab (taste groups, You vs everyone, Fingerprint), computed from the
 // person's ratings, the title snapshot, and the catalog statistics. It reads no people or credits: the only Crate reads
 // are the viewer context (the person's own rows) and the display fields of the titles a view shows.
@@ -94,6 +101,67 @@ export async function getTastePortrait<T extends PortraitTab>(
 			? await memberPortrait(who.viewer.userId, who, tab, snapshot, request)
 			: await guestPortrait(who, tab, snapshot)
 	return view as PortraitViewOf<T>
+}
+
+const summaries = staleValues<PortraitView>()
+
+/** Public Stats skips suggestion displays, service lookups, and personal order. */
+export async function getStatsPortrait<T extends PortraitTab>(
+	who: PortraitViewer,
+	tab: T,
+	request?: Request,
+): Promise<PortraitViewOf<T>> {
+	const snapshot = getTitleSnapshot()
+	if (!snapshot || who.viewer.kind !== "member")
+		return unavailable(tab, who.viewer.kind) as PortraitViewOf<T>
+	const userId = who.viewer.userId
+	const cached = await timeRequestCache(request, `portrait_${tab}`, () =>
+		readSummary<PortraitView>(`portrait-${tab}`, userId),
+	)
+	return summaries.read(`${userId}:${tab}`, cached, () =>
+		buildStatsPortrait(userId, who, tab, snapshot),
+	) as Promise<PortraitViewOf<T>>
+}
+
+async function buildStatsPortrait(
+	userId: string,
+	who: PortraitViewer,
+	tab: PortraitTab,
+	snapshot: TitleSnapshot,
+) {
+	const readFrom = Date.now()
+	const ctx = await who.context()
+	const view = await buildView(
+		snapshot,
+		portraitInput(
+			"member",
+			ctx,
+			tab === "sides" ? await loadTaste(who.viewer) : NO_TASTE,
+		),
+		tab,
+		undefined,
+		true,
+	)
+	if (view.status !== "unavailable")
+		await writeSummary(`portrait-${tab}`, userId, view, readFrom)
+	return view
+}
+
+/** Warm the public summaries after the member's latest write has settled. */
+export async function refreshStatsPortraits(
+	userId: string,
+	context: PortraitViewer["context"],
+) {
+	const snapshot = getTitleSnapshot()
+	if (!snapshot) return
+	const who: PortraitViewer = { viewer: { kind: "member", userId }, context }
+	await Promise.all(
+		(["fingerprint", "sides", "everyone"] as const).map((tab) =>
+			summaries.refreshAfterPending(`${userId}:${tab}`, () =>
+				buildStatsPortrait(userId, who, tab, snapshot),
+			),
+		),
+	)
 }
 
 // ---------- members ----------
@@ -240,6 +308,7 @@ async function buildView(
 	input: PortraitInput,
 	tab: PortraitTab,
 	order?: OrderTitles,
+	summary = false,
 ): Promise<PortraitView> {
 	const startedAt = performance.now()
 	const person = readPerson(snapshot, input)
@@ -248,23 +317,32 @@ async function buildView(
 		rated: person.rated.length,
 		usual: person.rated.length ? round1(person.mu) : null,
 	}
-	const built =
+	const full =
 		tab === "sides"
-			? buildSides(person, order)
+			? buildSides(person, order, summary)
 			: tab === "everyone"
 				? buildEveryone(person)
 				: buildFingerprint(person)
+	const built = summary
+		? publicView(
+				{ ...full, subject, titles: {}, services: [] } as PortraitView,
+				true,
+			)
+		: full
 	const computedMs = performance.now() - startedAt
 
 	// The titles the view names, with their display fields; a title Crate doesn't know is left out everywhere.
 	const keys = viewKeys(built)
 	const displays = await titleDisplays(keys)
-	const unseen = [...keys].filter((key) => !input.scores.has(key))
-	const matches = person.match(unseen)
+	const unseen = summary
+		? []
+		: [...keys].filter((key) => !input.scores.has(key))
+	const matches = summary ? new Map() : person.match(unseen)
 	const unseenServices = new Map(
-		(await getCardServices(input.country, unseen, input.services)).map(
-			(services, i) => [unseen[i], services],
-		),
+		(summary
+			? []
+			: await getCardServices(input.country, unseen, input.services)
+		).map((services, i) => [unseen[i], services]),
 	)
 	const titles: Record<string, PortraitTitle> = {}
 	for (const key of keys) {
@@ -292,7 +370,9 @@ async function buildView(
 		}
 	}
 	const services =
-		built.tab === "sides" ? await getServiceList(input.services) : []
+		built.tab === "sides" && !summary
+			? await getServiceList(input.services)
+			: []
 	const view = prune(
 		(built.tab === "sides"
 			? { ...built, subject, titles, services }
@@ -303,7 +383,7 @@ async function buildView(
 	console.info(
 		`Taste portrait ${tab} for a ${input.kind}: ${person.rated.length} rated, ${keys.size} titles, computed in ${Math.round(computedMs)} ms, ${Math.round(performance.now() - startedAt)} ms in all`,
 	)
-	return view
+	return summary ? publicView(view, true) : view
 }
 
 /** A view before its subject and titles are added. */

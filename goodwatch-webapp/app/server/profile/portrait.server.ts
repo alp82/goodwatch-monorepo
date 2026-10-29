@@ -1,5 +1,5 @@
-// The taste portrait of a profile's owner, for the profile's Taste tab: the same view the owner's /taste page reads,
-// from the same cache (taste-portrait cache, per member and tab), built for the owner by id.
+// A profile owner's portrait, with a separate summary cache for Stats and member comparisons.
+// Other callers use the full /taste portrait cache, built for the owner by id.
 //
 // The portrait is built for its subject: unseen titles carry the owner's match, reasons and services, and the sides
 // carry suggestions from the owner's services. A public view drops all of that (it would tell visitors which services
@@ -10,6 +10,7 @@ import {
 	type PortraitViewOf,
 	type PortraitViewer,
 	getTastePortrait,
+	getStatsPortrait,
 } from "~/server/taste-portrait/index.server"
 import { getMemberViewerContext } from "~/server/viewer.server"
 import { publicView } from "./portrait-public"
@@ -17,6 +18,8 @@ import { publicView } from "./portrait-public"
 export interface ProfilePortraitOptions {
 	/** "owner": the view as /taste has it. "public": without the owner's suggestions and services. */
 	audience?: "owner" | "public"
+	/** Stats and comparisons use the public summary without discarded suggestion and service reads. */
+	summary?: boolean
 	/** Whether the viewer may see the owner's scores; without, titles carry no score and the crowd rows go. */
 	scores?: boolean
 	/** Attribute the portrait cache lookup to this request without retaining it in the cached view. */
@@ -33,7 +36,9 @@ export async function getProfilePortrait<T extends PortraitTab>(
 		viewer: { kind: "member", userId: ownerId },
 		context: () => getMemberViewerContext(ownerId, "US"),
 	}
-	const view = await getTastePortrait(who, tab, options.request)
+	const view = options.summary
+		? await getStatsPortrait(who, tab, options.request)
+		: await getTastePortrait(who, tab, options.request)
 	if ((options.audience ?? "public") === "owner") return view
 	return publicView(view, options.scores ?? true) as PortraitViewOf<T>
 }

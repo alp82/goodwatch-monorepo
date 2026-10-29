@@ -58,6 +58,7 @@ const load = (args: LoaderFunctionArgs) => {
 					timeRequestWork(args.request, "portrait_fingerprint", () =>
 						getProfilePortrait(ownerId, "fingerprint", {
 							scores,
+							summary: true,
 							request: args.request,
 						}),
 					),
@@ -67,6 +68,7 @@ const load = (args: LoaderFunctionArgs) => {
 					timeRequestWork(args.request, "portrait_sides", () =>
 						getProfilePortrait(ownerId, "sides", {
 							scores,
+							summary: true,
 							request: args.request,
 						}),
 					),
@@ -76,6 +78,7 @@ const load = (args: LoaderFunctionArgs) => {
 					timeRequestWork(args.request, "portrait_everyone", () =>
 						getProfilePortrait(ownerId, "everyone", {
 							scores,
+							summary: true,
 							request: args.request,
 						}),
 					),

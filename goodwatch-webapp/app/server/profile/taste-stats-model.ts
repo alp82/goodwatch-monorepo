@@ -51,6 +51,8 @@ export interface StatsInput {
 	watching: number
 	/** The current year, for "classics" (25 years or older). */
 	year: number
+	/** Catalog aggregation of distinct trope labels per loved title. */
+	tropeCounts?: ReadonlyMap<string, number>
 }
 
 export const round1 = (n: number) => Math.round(n * 10) / 10
@@ -362,7 +364,7 @@ export function tasteStats(input: StatsInput): TasteStats {
 				}))
 				.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
 				.slice(0, 28),
-			tropes: [...trope.entries()]
+			tropes: [...(input.tropeCounts ?? trope).entries()]
 				.map(([name, count]) => ({ name, count }))
 				.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
 				.slice(0, 28),

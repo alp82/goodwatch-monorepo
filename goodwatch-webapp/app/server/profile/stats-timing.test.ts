@@ -10,7 +10,7 @@ async function fixture(entry: string, modules: Record<string, string>) {
 	const result = await build({
 		stdin: {
 			contents: `export * from ${JSON.stringify(
-				`./${entry}`
+				`./${entry}`,
 			)}; export { requestServerTiming } from "~/utils/request-work"`,
 			resolveDir: app,
 		},
@@ -27,10 +27,10 @@ async function fixture(entry: string, modules: Record<string, string>) {
 						const resolved = args.path.startsWith("~/")
 							? args.path.slice(2)
 							: args.path.startsWith(".")
-							? path
-									.relative(app, path.resolve(args.resolveDir, args.path))
-									.replace(/\.ts$/, "")
-							: args.path
+								? path
+										.relative(app, path.resolve(args.resolveDir, args.path))
+										.replace(/\.ts$/, "")
+								: args.path
 						if (resolved in modules)
 							return { path: resolved, namespace: "fixture" }
 						if (resolved.startsWith("ui/") || resolved === "@remix-run/react")
@@ -38,7 +38,7 @@ async function fixture(entry: string, modules: Record<string, string>) {
 					})
 					builder.onLoad(
 						{ filter: /.*/, namespace: "fixture" },
-						({ path: name }) => ({ contents: modules[name] ?? "" })
+						({ path: name }) => ({ contents: modules[name] ?? "" }),
 					)
 					builder.onLoad(
 						{ filter: /routes\/u\..*\.tsx$/ },
@@ -47,11 +47,11 @@ async function fixture(entry: string, modules: Record<string, string>) {
 							return {
 								contents: source.slice(
 									0,
-									source.indexOf("\n", source.indexOf("export const loader ="))
+									source.indexOf("\n", source.indexOf("export const loader =")),
 								),
 								loader: "tsx",
 							}
-						}
+						},
 					)
 				},
 			},
@@ -59,7 +59,7 @@ async function fixture(entry: string, modules: Record<string, string>) {
 	})
 	return import(
 		`data:text/javascript;base64,${Buffer.from(
-			result.outputFiles[0].text
+			result.outputFiles[0].text,
 		).toString("base64")}`
 	)
 }
@@ -67,8 +67,8 @@ async function fixture(entry: string, modules: Record<string, string>) {
 const services = {
 	"server/userData.server": `export const getUserData = async () => ({scores: {'movie-1': {score: 9}}, watchState: {}})`,
 	"utils/helpers": `export const titlePath = () => '/movie/1'`,
-	"server/profile/catalog.server": `export const readProfileCatalog = async (sql) => sql.includes('FROM movie') ? [{tmdb_id: 1, title: 'One', tropes: []}] : []`,
-	"server/profile/taste-stats-cache.server": `let saved; export const readCachedTasteStats = async () => saved; export const writeCachedTasteStats = async (_, value) => { saved = value }`,
+	"server/profile/catalog.server": `export const readProfileCatalog = async (sql) => sql.includes('unnest') ? [{name:'Fixture trope',count:1}] : sql.includes('FROM movie') ? [{tmdb_id: 1, title: 'One', tropes: []}] : []`,
+	"server/profile/taste-stats-cache.server": `let saved; export const readCachedTasteStats = async () => saved && ({value:saved,fresh:true}); export const writeCachedTasteStats = async (_, value) => { saved = value }`,
 	"utils/headers": `export const pageHeaders = () => ({})`,
 }
 
@@ -108,7 +108,7 @@ test("Stats loader emits duration-only attribution and warm stats skip aggregate
 	assert.ok(
 		timing
 			.split(", ")
-			.every((entry: string) => /^[a-z_]+;dur=\d+\.\d$/.test(entry))
+			.every((entry: string) => /^[a-z_]+;dur=\d+\.\d$/.test(entry)),
 	)
 	const warm = (await run()).headers.get("Server-Timing")!
 	assert.match(warm, /stats_cache_hit;dur=/)
@@ -132,7 +132,7 @@ test("Overview and Lists prime the shell with combined list cards", async () => 
 				request: new Request("http://localhost/u/test"),
 				params: {},
 			}),
-			{ listCards: true }
+			{ listCards: true },
 		)
 	}
 })
@@ -162,9 +162,55 @@ test("profile portraits forward request timings to each real portrait cache look
 			assert.match(
 				module.requestServerTiming(request),
 				new RegExp(
-					`^portrait_${tab}_cache_${outcome};dur=\\d+\\.\\d, total;dur=`
-				)
+					`^portrait_${tab}_cache_${outcome};dur=\\d+\\.\\d, total;dur=`,
+				),
 			)
 		}
 	}
+})
+
+test("public Stats portraits skip discarded lookups and warm hits skip member context", async () => {
+	const calls = { context: 0, taste: 0 }
+	;(
+		globalThis as unknown as { statsPortraitCalls: typeof calls }
+	).statsPortraitCalls = calls
+	const module = await fixture("server/profile/portrait.server.ts", {
+		"server/availability-index.server": `export const isOnServices = () => true`,
+		"server/personal-order/reader.server": `export const loadPersonalOrder = () => { throw Error('personal order') }; export const orderPersonalOrder = () => {}`,
+		"server/taste/index.server": `export const loadTaste = async () => { globalThis.statsPortraitCalls.taste++; return {} }`,
+		"server/title-cards.server": `export const getCardServices = () => { throw Error('card services') }; export const getServiceList = () => { throw Error('service list') }`,
+		"server/title-snapshot/index.server": `export const getTitleSnapshot = () => ({facts: () => ({score:80})})`,
+		"server/viewer.server": `export const getMemberViewerContext = async () => { globalThis.statsPortraitCalls.context++; return { hidden: new Set(), services: [], ratings: new Map([[2,9],[4,8]]), seen: new Set(), wishlist: new Map(), skipped: new Set(), viewer: {} } }; export const getViewerContext = () => {}`,
+		"utils/auth": `export const getUserIdFromRequest = () => null`,
+		"server/profile/summary-cache.server": `const saved = new Map(); export const readSummary = async (kind) => saved.has(kind) ? {value:saved.get(kind),fresh:true} : null; export const writeSummary = async (kind,_,view) => saved.set(kind,view)`,
+		"server/taste-portrait/cache.server": `export const readCachedPortrait = () => { throw Error('full portrait cache') }; export const writeCachedPortrait = () => {}; export const clearTastePortrait = () => {}`,
+		"server/taste-portrait/display.server": `export const titleDisplays = async keys => { if ([...keys].includes(6)) throw Error('discarded title'); return new Map([...keys].map(k => [k,{title:'Title',poster:null,backdrop:null,year:2000}])) }`,
+		"server/taste-portrait/person.server": `export const readPerson = () => ({ rated: [], match: () => { throw Error('matches') } }); export const round1 = x => x`,
+		"server/taste-portrait/fingerprint.server": `export const buildFingerprint = () => ({ tab: 'fingerprint', status:'ready', mostYou: [2], attributes: [{carriers:[2],against:[],exception:null,defining:[6]}] })`,
+		"server/taste-portrait/sides.server": `export const buildSides = () => ({ tab: 'sides', status:'ready', sides: [{here:[2],image:2,moreOfThis:[6],edges:[{rated:[4],suggestions:[6],image:6}]}] }); export const franchiseOf = x => x`,
+		"server/taste-portrait/everyone.server": `export const buildEveryone = () => ({ tab: 'everyone', status:'ready', higher: [{key:2}], lower: [] })`,
+		"server/taste-portrait/sample-context.server": `export const sampleContext = () => {}; export const guestMarksKey = () => ''`,
+	})
+	for (const scores of [true, false]) {
+		for (const tab of ["fingerprint", "sides", "everyone"]) {
+			const request = new Request("http://localhost/u/test/stats")
+			const view = await module.getProfilePortrait("owner", tab, {
+				summary: true,
+				scores,
+				request,
+			})
+			if (!scores)
+				for (const title of Object.values(view.titles) as {
+					mine: number | null
+				}[])
+					assert.equal(title.mine, null)
+			if (!scores && tab === "everyone") assert.deepEqual(view.higher, [])
+			assert.match(
+				module.requestServerTiming(request),
+				new RegExp(`portrait_${tab}_cache_${scores ? "miss" : "hit"}`),
+			)
+		}
+	}
+	assert.equal(calls.context, 3)
+	assert.equal(calls.taste, 1, "only edge qualification needs the taste vector")
 })

@@ -15,7 +15,6 @@
 // Redis cluster. Without a Redis connection, a member's taste is built on every read and not stored.
 import Redis from "ioredis"
 import { markPersonalOrderChanged } from "../personal-order/rebuild.server.ts"
-import { clearTasteStats } from "~/server/profile/taste-stats-cache.server"
 import { clearTastePortrait } from "~/server/taste-portrait/cache.server"
 import {
 	type TitleSnapshot,
@@ -197,7 +196,9 @@ export async function readStoredTaste(
 	try {
 		const value = await redis.getBuffer(tasteKey(userId))
 		const stored = value ? decodeTaste(value) : null
-		return stored?.vector ? { vector: stored.vector, liked: stored.liked } : null
+		return stored?.vector
+			? { vector: stored.vector, liked: stored.liked }
+			: null
 	} catch (error) {
 		console.error("Taste: reading a stored taste failed:", error)
 		return null
@@ -220,8 +221,8 @@ export async function markTasteChanged(
 	} catch (error) {
 		console.error("Taste: recording the write failed:", error)
 	}
-	// The Taste page's cached views and the profile's taste numbers describe the old ratings.
-	await Promise.all([clearTastePortrait(userId), clearTasteStats(userId)])
+	// /taste views need the new ratings. Public Stats retains its last summary while it refreshes.
+	await clearTastePortrait(userId)
 	if (rebuildsHeld || scheduled.has(userId)) return
 	const timer = setTimeout(async () => {
 		scheduled.delete(userId)
@@ -231,6 +232,17 @@ export async function markTasteChanged(
 			const snapshot = getTitleSnapshot()
 			await Promise.all([
 				snapshot ? sharedRebuild(userId, snapshot) : Promise.resolve(),
+				import("~/server/profile/taste-stats.server").then((m) =>
+					m.refreshTasteStats(userId),
+				),
+				import("~/server/taste-portrait/index.server").then(async (m) => {
+					const { getMemberViewerContext } = await import(
+						"~/server/viewer.server"
+					)
+					await m.refreshStatsPortraits(userId, () =>
+						getMemberViewerContext(userId, "US"),
+					)
+				}),
 				import("~/server/profile/tropes.server").then((m) =>
 					m.refreshProfileTropes(userId),
 				),

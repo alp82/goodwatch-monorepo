@@ -905,6 +905,7 @@ export function sideEdges(person: Person, named: NamedSides): SideEdges[] {
 export function buildSides(
 	person: Person,
 	order: OrderTitles = (keys) => keys,
+	summary = false,
 ): SidesResult {
 	const empty: SidesResult = {
 		tab: "sides",
@@ -945,7 +946,7 @@ export function buildSides(
 				null,
 			moods: sideMoods(draft.members),
 			edges,
-			moreOfThis: moreOfThis(person, draft.center, order),
+			moreOfThis: summary ? [] : moreOfThis(person, draft.center, order),
 		}
 	})
 

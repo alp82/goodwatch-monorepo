@@ -3,7 +3,7 @@
 //
 // Everything follows the owner's visibility as a member sees it: pulls need their Taste, titles both rated and their
 // favorites need their Scores, "on their wishlist" needs their Wishlist. The match itself is always shown.
-// Cost: the match (two stored tastes, two members' data), two fingerprint portraits (cached 10 minutes each), and one
+// Cost: the match (two stored tastes, two members' data), two fingerprint summaries (with stale refresh), and one
 // display read for at most a few dozen titles.
 import type { ProfileTitle } from "~/domain/profile"
 import { type ProfileVisibility, canSee } from "~/domain/profile"
@@ -69,9 +69,12 @@ export async function getMemberCompare(
 		await Promise.all([
 			getUserData({ user_id: viewerId }),
 			getUserData({ user_id: ownerId }),
-			getProfilePortrait(viewerId, "fingerprint", { audience: "owner" }),
+			getProfilePortrait(viewerId, "fingerprint", { summary: true }),
 			seesTaste
-				? getProfilePortrait(ownerId, "fingerprint", { scores: seesScores })
+				? getProfilePortrait(ownerId, "fingerprint", {
+						scores: seesScores,
+						summary: true,
+					})
 				: Promise.resolve(null),
 			loadMemberTaste(viewerId),
 		])
