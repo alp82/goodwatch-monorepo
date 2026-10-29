@@ -656,9 +656,10 @@ Then one `person` read for names and faces (`adult = false`). Ids are parsed pos
 ### Starter titles
 
 Twelve titles per snapshot version: walk the catalog's Popular order over titles with a GoodWatch score of 75 or more
-and 100,000 votes or more, and take a title when its bucket (kind, first production region, first mood) is not taken
+and 100,000 votes or more, and take a title when its bucket (kind, origin, first mood) is not taken
 yet, alternating movies and shows; stop at 12. Not personal, so it is the same for every viewer (seen titles can show,
-like the start page's shelf).
+like the start page's shelf). Until the Made in sets (B7) land, the bucket uses the snapshot's origin: first
+production country, else original language. First mood means the lowest set mood bit in snapshot order.
 
 ### Mixes
 

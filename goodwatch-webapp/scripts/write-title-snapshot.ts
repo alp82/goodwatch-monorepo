@@ -7,6 +7,9 @@
 //   TITLE_SNAPSHOT_REDIS_URL=redis://localhost:6379 npx vite-node --config scripts/arena-vite.config.mjs \
 //     scripts/write-title-snapshot.ts [--movies=6000] [--shows=3000] [--pad-to=240000]
 //
+// Add --file=/tmp/title-snapshot.json to also write a portable core snapshot for
+// scripts/inspect-discover-starters.ts (the reader is entirely offline).
+//
 // Then start the webapp with the same TITLE_SNAPSHOT_REDIS_URL. --pad-to repeats the sample under made-up ids (tmdb
 // ids from 900,000,000) until the snapshot has that many titles, to measure load time and memory at production size;
 // don't use a padded snapshot for anything else. It never writes to the Redis cluster the webapp's .env names.
@@ -18,6 +21,7 @@
 // the titles' age_certifications and content_advisories and the age_certification table. How a rating code becomes an
 // age, which advisories make which kind of content, and how a ladder is built are kept minimal here: the publisher's
 // Python (goodwatch-flows) is the source of truth, and this sample may differ from what it publishes.
+import { writeFile } from "node:fs/promises"
 import Redis from "ioredis"
 import {
 	CONTENT_KINDS,
@@ -64,6 +68,7 @@ if (process.env.REDIS_HOST && url.includes(process.env.REDIS_HOST))
 	throw new Error("TITLE_SNAPSHOT_REDIS_URL names the webapp's Redis cluster")
 
 type Row = {
+	title: string
 	tmdb_id: number
 	fingerprint_scores: Record<string, number | null> | null
 	genres: string[] | null
@@ -249,7 +254,7 @@ async function sample(type: "movie" | "show", limit: number) {
 	for (let i = 0; i < ids.length; i += BATCH) {
 		const batch = ids.slice(i, i + BATCH).map((r) => Number(r.tmdb_id))
 		const found = await query<Row>(
-			`SELECT tmdb_id, fingerprint_scores, genres, ${day} AS day,
+			`SELECT tmdb_id, title, fingerprint_scores, genres, ${day} AS day,
 			 goodwatch_overall_score_normalized_percent AS score, goodwatch_overall_score_voting_count AS votes,
 			 popularity, production_country_codes, original_language_code, poster_path, backdrop_path, adult, is_anime,
 			 age_certifications, content_advisories, release_year,
@@ -258,6 +263,7 @@ async function sample(type: "movie" | "show", limit: number) {
 		)
 		for (const r of found) {
 			const row = toRow(type, r)
+			titleNames[row.pointId] = r.title
 			rows.push(row)
 			ratingRows.push(toRatingRow(row.pointId, r))
 			factRows.push({
@@ -284,6 +290,8 @@ async function sample(type: "movie" | "show", limit: number) {
 	return { rows, ratingRows, factRows }
 }
 
+const titleNames: Record<number, string> = {}
+
 const startedAt = performance.now()
 const movies = await sample("movie", MOVIES)
 const shows = await sample("show", SHOWS)
@@ -306,6 +314,18 @@ const { manifest, chunks } = encodeSnapshot({
 	rows,
 	keyOrder: VALID_FINGERPRINT_KEYS,
 })
+// Optional portable core snapshot for offline inspection (no Redis needed by the reader).
+const outputFile = process.argv.find((a) => a.startsWith("--file="))?.slice(7)
+if (outputFile)
+	await writeFile(
+		outputFile,
+		JSON.stringify({
+			manifest,
+			chunks: chunks.map((chunk) => Buffer.from(chunk).toString("base64")),
+			titles: titleNames,
+		}),
+	)
+
 // Like the publisher, a failure here leaves the snapshot published without ratings.
 let ratings: ReturnType<typeof encodeRatings> | null = null
 try {

@@ -3,12 +3,14 @@
 import type { SortKey } from "~/domain/filter-state"
 import {
 	FLAG_ADULT,
-	type TitleColumns,
-	type TitleSnapshot,
 	UNKNOWN_DAY,
 	UNKNOWN_SCORE,
 	presentableAt,
-} from "~/server/title-snapshot/index.server"
+} from "~/server/title-snapshot/format.server"
+import type {
+	TitleColumns,
+	TitleSnapshot,
+} from "~/server/title-snapshot/snapshot.server"
 
 /** The sorts that are an order of the titles' own facts. Relevance is a ranked list's order; Best match is per person. */
 export type PlainSort = Exclude<SortKey, "relevance" | "match">

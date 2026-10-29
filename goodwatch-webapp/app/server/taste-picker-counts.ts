@@ -86,19 +86,26 @@ export function describeGroups(
 			.filter((x) => x.lift >= LIFT)
 			.sort((a, b) => b.lift - a.lift)
 			.map((x) => x.word)
-		const mood = ranked.find((w) => w.kind === "mood")
-		const other = ranked.find(
-			(w) => w.kind !== "mood" && !(mood && sameGround(mood.id, w.id)),
-		)
+		const colors = carriedColorWords(ranked.map((w) => w.id))
 		const madeOf: string[] = []
 		for (const word of ranked)
 			if (!madeOf.some((id) => sameGround(id, word.id))) madeOf.push(word.id)
 		return {
-			hues: [mood, other].filter((w): w is Word => !!w).map((w) => w.hue),
+			hues: colors.map((w) => w.hue),
 			madeOf: madeOf.slice(0, MADE_OF),
 			carries: ranked.map((w) => w.id),
 		}
 	})
+}
+
+/** The carried mood and theme/style used for a group's colors and Discover mix. */
+export function carriedColorWords(carries: readonly string[]): Word[] {
+	const ranked = carries.map((id) => WORD_BY_ID[id]).filter((word) => !!word)
+	const mood = ranked.find((w) => w.kind === "mood")
+	const other = ranked.find(
+		(w) => w.kind !== "mood" && !(mood && sameGround(mood.id, w.id)),
+	)
+	return [mood, other].filter((w): w is Word => !!w)
 }
 
 /** A title on the list as the picker counts it. */
