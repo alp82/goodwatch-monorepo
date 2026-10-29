@@ -20,9 +20,10 @@ import { Suspense, lazy, useEffect, useRef, useState } from "react"
 import { afterNavigationWork } from "~/navigation/instant-navigation"
 import type { RelatedMapData } from "~/server/related-map.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { inlineRecorder, recordEarlyTaps } from "~/ui/related-map/early-taps"
 import type { MapView, RawPack } from "~/ui/related-map/engine"
-import cssPath from "~/ui/related-map/related-map.css?url"
 import { whenSectionWanted } from "~/ui/related-map/late-wait"
+import cssPath from "~/ui/related-map/related-map.css?url"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 import { useHydrated } from "~/utils/hydrated"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
@@ -47,6 +48,8 @@ interface MapWindow {
 		/** Opens the title in the middle in the app's quick view (a tap on it). */
 		open: ((view: MapView) => void) | null
 		navigating?: (on: boolean) => void
+		/** The reader has used the map: the packs of the titles on it are asked for ahead (engine.ts). */
+		used?: boolean
 		render: (input: {
 			root: string
 			title: string
@@ -63,13 +66,13 @@ const ENGINE = "script[data-related-map-engine]"
 /**
  * The document's few lines of inline script, run while the document is parsed:
  * - They ask for the style without blocking the paint. The link goes into an element that React leaves alone.
- * - They remember the last tap on a poster or a chip that comes before the engine, which then does what was tapped
- *   (engine.ts).
+ * - They remember the last tap on the map that comes before the engine (early-taps.ts); the section does it once the
+ *   engine runs.
  */
 const earlyScript = (css: string, crossOrigin: boolean) =>
 	`(function(d,w){var b=d.querySelector("[data-related-map-assets]");if(b&&!d.querySelector('${STYLE}')){var l=d.createElement("link");l.rel="stylesheet";${
 		crossOrigin ? 'l.crossOrigin="anonymous";' : ""
-	}l.href=${JSON.stringify(css)};l.setAttribute("data-related-map-css","");b.appendChild(l)}if(!w.__gwRelatedMap&&!w.__gwRelatedMapTap){var q=w.__gwRelatedMapTap={el:null,on:function(e){var t=e.target&&e.target.closest&&e.target.closest("[data-related-map] [data-pl-step],[data-related-map] [data-pl-act]");if(t)q.el=t}};w.addEventListener("click",q.on,true)}})(document,window)`.replace(
+	}l.href=${JSON.stringify(css)};l.setAttribute("data-related-map-css","");b.appendChild(l)}${inlineRecorder}})(document,window)`.replace(
 		/</g,
 		"\\u003c",
 	)
@@ -213,13 +216,22 @@ export default function RelatedMap({
 	// One markup per title, for as long as the section shows that title: a later answer of the loader for the same
 	// title (a revalidation) doesn't draw over a walk. `drawn`: the markup is the engine's picture, not the heading
 	// that holds the place of a late one.
-	const held = useRef<{ key: string; html: string; drawn: boolean; language?: string }>()
+	const held = useRef<{
+		key: string
+		html: string
+		drawn: boolean
+		language?: string
+	}>()
 	const localizedKey = `${rootKey}:${map?.language ?? "canonical"}`
 	if (map && held.current?.key !== localizedKey) {
 		const html = map.late ? "" : (map.html ?? documentMarkup(rootKey))
 		held.current = html
 			? { key: localizedKey, html, drawn: true }
-			: { key: localizedKey, html: `<h2 class="pl-h">Titles like ${escapeHtml(media.details.title)}</h2>`, drawn: false }
+			: {
+					key: localizedKey,
+					html: `<h2 class="pl-h">Titles like ${escapeHtml(media.details.title)}</h2>`,
+					drawn: false,
+				}
 	}
 	const drawn = Boolean(held.current?.drawn)
 	const [, redraw] = useState(0)
@@ -251,7 +263,9 @@ export default function RelatedMap({
 		let timer: ReturnType<typeof setTimeout> | undefined
 		let stop = () => {}
 		const attempt = () => {
-			fetch(`/api/related-map?key=${rootKey}&displayLanguage=${encodeURIComponent(language)}`)
+			fetch(
+				`/api/related-map?key=${rootKey}&displayLanguage=${encodeURIComponent(language)}`,
+			)
 				.then((response) => {
 					if (response.status === 404) return null
 					if (!response.ok) throw new Error(String(response.status))
@@ -263,7 +277,13 @@ export default function RelatedMap({
 					stop = whenEngine(script, () => {
 						if (gone || !w.__gwRelatedMap || held.current?.key !== key) return
 						const spoken = pack.language ?? language
-						const html = w.__gwRelatedMap.render({ root: rootKey, title, pack, links: [], language: spoken })
+						const html = w.__gwRelatedMap.render({
+							root: rootKey,
+							title,
+							pack,
+							links: [],
+							language: spoken,
+						})
 						held.current = { key, html, drawn: true, language: spoken }
 						redraw((n) => n + 1)
 					})
@@ -275,7 +295,11 @@ export default function RelatedMap({
 				})
 		}
 		// Near and after the navigation work, or at once when the reader taps the placeholder (late-wait.ts).
-		const stopWaiting = whenSectionWanted(section.current, attempt, afterNavigationWork)
+		const stopWaiting = whenSectionWanted(
+			section.current,
+			attempt,
+			afterNavigationWork,
+		)
 		return () => {
 			gone = true
 			stopWaiting()
@@ -283,10 +307,21 @@ export default function RelatedMap({
 			stop()
 		}
 	}, [shown, drawn, localizedKey, rootKey, map?.language, script, title])
+	// A tap before the engine can do it is remembered from the section's first render on, and done once the engine runs
+	// and the app's handlers are wired (early-taps.ts, the next effect).
+	const taps = useRef<ReturnType<typeof recordEarlyTaps> | null>(null)
+	useEffect(() => {
+		if (!shown) return
+		const recorder = recordEarlyTaps(window as never, () => section.current)
+		taps.current = recorder
+		return () => {
+			recorder.stop()
+			if (taps.current === recorder) taps.current = null
+		}
+	}, [shown, localizedKey])
 	// The engine hears about every title this section shows, once the picture is in the document. Its file comes when
 	// the reader nears the section or taps it, and the page's own navigation work is done (late-wait.ts): a reader who
-	// stays at the top never asks for it. A tap before it is there is remembered by the inline script and done by the
-	// engine once it runs (engine.ts).
+	// stays at the top never asks for it. A tap before it is there is done here once `nav` and `open` are wired.
 	useEffect(() => {
 		if (!shown || !drawn) return
 		const w = window as MapWindow
@@ -297,11 +332,25 @@ export default function RelatedMap({
 				w.__gwRelatedMap.nav = (href) => navigate(href)
 				w.__gwRelatedMap.open = (next) => setView(next)
 				w.__gwRelatedMap.boot()
+				const tapped = taps.current?.take()
+				if (
+					tapped instanceof HTMLElement &&
+					tapped.isConnected &&
+					section.current?.contains(tapped)
+				) {
+					w.__gwRelatedMap.used = true
+					tapped.click()
+				}
 			})
 		}
 		let stopWaiting = () => {}
 		if (w.__gwRelatedMap) boot()
-		else stopWaiting = whenSectionWanted(section.current, boot, afterNavigationWork)
+		else
+			stopWaiting = whenSectionWanted(
+				section.current,
+				boot,
+				afterNavigationWork,
+			)
 		return () => {
 			stopWaiting()
 			stop()

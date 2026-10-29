@@ -1176,18 +1176,7 @@ export function relatedMapEngine(
 	}
 	win.__gwRelatedMap = Object.assign(G, { boot, render })
 	boot()
-	// A tap that came before this script was remembered by the document's inline script (RelatedMap.tsx): the last
-	// poster or control that was tapped is tapped now, if it is still there.
-	const early = win.__gwRelatedMapTap as
-		| { el: HTMLElement | null; on: (event: Event) => void }
-		| undefined
-	if (early) {
-		win.removeEventListener("click", early.on, true)
-		win.__gwRelatedMapTap = undefined
-		if (early.el?.isConnected && sec(early.el)) {
-			G.used = true
-			early.el.click()
-		}
-	}
+	// A tap that came before this script is done by the app's section once it has wired `nav` and `open`
+	// (RelatedMap.tsx, early-taps.ts).
 	return { section }
 }
