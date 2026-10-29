@@ -21,16 +21,29 @@ interface Data {
 }
 
 const load = (args: LoaderFunctionArgs) =>
-	profileLoader(args, async ({ ownerId, shell }) => ({ page: await loadProfileLists(ownerId, shell) }))
+	profileLoader(
+		args,
+		async ({ ownerId, shell }) => ({
+			page: await loadProfileLists(ownerId, shell),
+		}),
+		{ listCards: true },
+	)
 
 export const loader = presentCatalogLoader(load, { live: true })
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => profileMeta((data as Partial<Data> | undefined)?.shell, "lists")
+export const meta: MetaFunction<typeof loader> = ({ data }) =>
+	profileMeta((data as Partial<Data> | undefined)?.shell, "lists")
 
 export default function ProfileLists() {
 	const { shell, page } = useLoaderData() as Data
 	return (
-		<ProfileFrame shell={shell} tab="lists" part="lists" title="Lists" line="Top 5 lists, ranked.">
+		<ProfileFrame
+			shell={shell}
+			tab="lists"
+			part="lists"
+			title="Lists"
+			line="Top 5 lists, ranked."
+		>
 			<Body>
 				<ListsPage shell={shell} lists={page.lists} />
 			</Body>

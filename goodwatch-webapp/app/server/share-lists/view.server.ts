@@ -252,9 +252,9 @@ export async function getProfilePage(
 		...PROFILE_PAGE_CACHE,
 		params: { handle },
 		target: async (): Promise<ProfilePageResult> => {
-			const summary = await getProfileSummary(handle)
-			if (!summary) return { found: false }
-			const { profile, lists } = summary
+			const profile = await getProfileByHandle(handle)
+			if (!profile) return { found: false }
+			const lists = await publicListsByUser(profile.userId)
 			const titles = await resolveCardTitles(
 				lists.flatMap((list) => list.items),
 			)

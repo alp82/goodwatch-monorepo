@@ -72,10 +72,14 @@ const byDateDesc = (a: ProfileTitle, b: ProfileTitle) =>
 export async function loadProfileShell(
 	request: Request,
 	handle: string,
+	options: { listCards?: boolean } = {},
 ): Promise<
 	{ shell: ProfileShell; ownerId: string; viewerId: string | null } | Response
 > {
-	const page = await getProfileSummary(handle)
+	// Overview and Lists render the cards, so retain their combined cache and avoid another metadata lookup.
+	const page = await (options.listCards
+		? getProfilePage(handle)
+		: getProfileSummary(handle))
 	if (!page) throw notFound()
 	const { profile } = page
 	if (handle !== profile.handle) {

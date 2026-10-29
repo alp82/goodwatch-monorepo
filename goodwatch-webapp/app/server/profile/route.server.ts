@@ -15,8 +15,9 @@ export async function profileLoader<T extends object>(
 		viewerId: string | null
 		shell: ProfileShell
 	}) => Promise<T>,
+	options: { listCards?: boolean } = {},
 ) {
-	const loaded = await loadProfileShell(request, params.handle ?? "")
+	const loaded = await loadProfileShell(request, params.handle ?? "", options)
 	if (loaded instanceof Response) return loaded
 	const data = await load(loaded)
 	return json(
