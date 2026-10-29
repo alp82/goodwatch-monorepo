@@ -115,7 +115,7 @@ export function Doors({ data }: { data: MemberStartData }) {
 									layoutId="start-door-notch"
 									aria-hidden
 									transition={{ duration: 0.25, ease: EASE }}
-									className="pointer-events-none absolute left-1/2 top-full z-10 mt-[41px] hidden h-4 w-4 -translate-x-1/2 rotate-45 border-l-2 border-t-2 border-amber-400 bg-gray-900 lg:block"
+									className="pointer-events-none absolute left-1/2 top-full z-10 mt-[93px] hidden h-4 w-4 -translate-x-1/2 rotate-45 border-l-2 border-t-2 border-amber-400 bg-gray-900 lg:block"
 								/>
 							) : null}
 						</li>
@@ -126,7 +126,7 @@ export function Doors({ data }: { data: MemberStartData }) {
 			{/* The open section: a gray-900 panel whose amber top edge meets the notch. */}
 			<div
 				id={PANEL_ID}
-				className="-mx-4 mt-10 border-t-2 border-amber-400 bg-gray-900 px-4 pt-5 pb-6 ring-1 ring-white/5 sm:mx-0 sm:rounded-2xl sm:px-6 lg:mt-12"
+				className="-mx-4 mt-10 border-t-2 border-amber-400 bg-gray-900 px-4 pt-5 pb-6 ring-1 ring-white/5 sm:mx-0 sm:rounded-2xl sm:px-6 lg:mt-[100px]"
 			>
 				{/* A new section swaps in at once and fades up, so the panel never collapses between sections. */}
 				<motion.div
