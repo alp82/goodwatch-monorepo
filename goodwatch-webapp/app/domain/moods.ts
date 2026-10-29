@@ -21,6 +21,11 @@ export const MOOD_KEYS = [
 	"worlds",
 	"history",
 	"growing",
+	"tense",
+	"dark",
+	"deep",
+	"magical",
+	"quirky",
 ] as const
 
 export type MoodKey = (typeof MOOD_KEYS)[number]
@@ -198,6 +203,58 @@ const MOOD_RULES: readonly MoodRule[] = [
 		rule: "Coming of age 8 or more",
 		test: (score) => score("coming_of_age") >= 8,
 	},
+	// Fixed starting thresholds from Explorer’s mood islands; Explorer may adapt its thresholds.
+	{
+		key: "tense",
+		name: "Tense",
+		aliases: [],
+		feel: true,
+		description: "Suspense without action or horror.",
+		hue: "#5b7fa8",
+		rule: "Tension 8 or more, adrenaline 6 or less, and scare 6 or less",
+		test: (score) =>
+			score("tension") >= 8 && score("adrenaline") <= 6 && score("scare") <= 6,
+	},
+	{
+		key: "dark",
+		name: "Dark",
+		aliases: [],
+		feel: true,
+		description: "Bleak stories with little light.",
+		hue: "#6a5aa8",
+		rule: "Bleakness 8 or more",
+		test: (score) => score("bleakness") >= 8,
+	},
+	{
+		key: "deep",
+		name: "Deep",
+		aliases: [],
+		feel: true,
+		description: "Big questions that stay with you.",
+		hue: "#3fc1b0",
+		rule: "Philosophical 8 or more",
+		test: (score) => score("philosophical") >= 8,
+	},
+	{
+		key: "magical",
+		name: "Magical",
+		aliases: [],
+		feel: true,
+		description: "A sense of wonder and possibility.",
+		hue: "#e9a23b",
+		rule: "Wonder 8 or more",
+		test: (score) => score("wonder") >= 8,
+	},
+	{
+		key: "quirky",
+		name: "Quirky",
+		aliases: [],
+		feel: true,
+		description: "Eccentric people and offbeat stories.",
+		hue: "#b98a5a",
+		rule: "Eccentricity 8 or more",
+		test: (score) => score("eccentricity") >= 8,
+	},
 ]
 
 function isOrdered(
@@ -246,7 +303,7 @@ export function moodsOf(
 	return moodsInMask(moodMaskOf(fingerprint, genres))
 }
 
-/** The 11 moods in MOOD_KEYS order, without their tests. */
+/** The moods in MOOD_KEYS order, without their tests. */
 export const MOODS: readonly Mood[] = MOOD_RULES.map(
 	({ key, name, aliases, feel, description, hue, rule }) => ({
 		key,

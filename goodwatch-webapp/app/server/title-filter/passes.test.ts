@@ -38,7 +38,7 @@ const columns = {
 	popularity: Float32Array.from(SCORES, (_, row) => 100 - row),
 	scores: Uint8Array.from(SCORES),
 	flags: new Uint8Array(SCORES.length),
-	moods: new Uint16Array(SCORES.length),
+	moods: new Uint32Array(SCORES.length),
 	themes: new Uint16Array(SCORES.length),
 	styles: new Uint16Array(SCORES.length),
 	ratings: null,
@@ -640,17 +640,16 @@ function ruleColumns(titles: { scores: Scores; genres?: string[] }[]) {
 		popularity: new Float32Array(titles.length),
 		scores: new Uint8Array(titles.length).fill(70),
 		flags: new Uint8Array(titles.length),
-		moods: mask(moodMaskOf),
+		moods: Uint32Array.from(titles, (title, row) =>
+			moodMaskOf(fingerprints[row], title.genres ?? []),
+		),
 		themes: mask(themeMaskOf),
 		styles: mask(styleMaskOf),
 	}
 }
 
 /** Every group off over `rows` of the columns (-1 is a title the snapshot doesn't hold). */
-function passInput(
-	c: ReturnType<typeof ruleColumns>,
-	rows: number[],
-): PassInput {
+function passInput(c: PassInput["columns"], rows: number[]): PassInput {
 	return {
 		columns: c,
 		rows: Int32Array.from(rows),
@@ -828,7 +827,7 @@ test("the passes agree with a title-by-title count for any moods, themes and sty
 	}
 	const c = {
 		...ruleColumns(Array.from({ length: N }, () => ({ scores: {} }))),
-		moods: Uint16Array.from({ length: N }, () => bits(MOOD_KEYS.length)),
+		moods: Uint32Array.from({ length: N }, () => bits(MOOD_KEYS.length)),
 		themes: Uint16Array.from({ length: N }, () => bits(THEME_KEYS.length)),
 		styles: Uint16Array.from({ length: N }, () => bits(STYLE_KEYS.length)),
 	}
@@ -1017,7 +1016,10 @@ test("all-of masks, counts and recoveries agree with brute force for every tag g
 	const generated = {
 		...columns,
 		pointIds: Float64Array.from({ length: size }, (_, row) => MOVIE + row),
-		moods: Uint16Array.from({ length: size }, (_, row) => row & 7),
+		moods: Uint32Array.from(
+			{ length: size },
+			(_, row) => (row & 1) | (row & 2 ? 1 << 11 : 0) | (row & 4 ? 1 << 15 : 0),
+		),
 		themes: Uint16Array.from({ length: size }, (_, row) => (row >> 3) & 7),
 		styles: Uint16Array.from({ length: size }, (_, row) => (row >> 6) & 7),
 		genres: Uint32Array.from(
@@ -1030,7 +1032,12 @@ test("all-of masks, counts and recoveries agree with brute force for every tag g
 		),
 		flags: new Uint8Array(size),
 	}
-	const selected = { moods: 3, themes: 3, styles: 3, genres: 0x80000001 }
+	const selected = {
+		moods: (1 << 11) | (1 << 15),
+		themes: 3,
+		styles: 3,
+		genres: 0x80000001,
+	}
 	const rows = [...Array(size).keys(), -1]
 	const base: PassInput = {
 		columns: generated,
@@ -1367,4 +1374,59 @@ test("list and taste steps, option counts and recoveries agree with brute force"
 									}
 							}
 						}
+})
+
+test("16-mood combination table and 17-option per-title path stay bounded", (t) => {
+	assert.equal(MOOD_KEYS.length, 16)
+	const size = 65_536
+	const rows = Array.from({ length: size }, (_, row) => row)
+	const c = {
+		...columns,
+		pointIds: Float64Array.from(rows, (row) => MOVIE + row),
+		releaseDays: new Int32Array(size).fill(19000),
+		votes: new Uint32Array(size),
+		popularity: new Float32Array(size),
+		scores: new Uint8Array(size).fill(80),
+		flags: new Uint8Array(size),
+		moods: Uint32Array.from(rows),
+		themes: new Uint16Array(size),
+		styles: new Uint16Array(size),
+		genres: Uint32Array.from(rows, (row) => row | (row & 1 ? 1 << 16 : 0)),
+		genreNames: Array.from({ length: 17 }, (_, bit) => `tag-${bit}`),
+	}
+	const base = passInput(c, rows)
+	const chosen = (1 << 11) | (1 << 15)
+	for (const group of ["moods", "genres"] as const) {
+		const names = group === "moods" ? MOOD_KEYS : c.genreNames
+		for (const all of [false, true]) {
+			const input: PassInput = {
+				...base,
+				[group]: chosen,
+				genresChosen: group === "genres",
+				allOf: all ? [group] : [],
+			}
+			const accepts = (bits: number, mask: number) =>
+				!mask || (all ? (bits & mask) === mask : (bits & mask) !== 0)
+			const result = runPasses(input)
+			assert.equal(
+				result.passing.length,
+				rows.filter((row) => accepts(c[group][row], chosen)).length,
+			)
+			names.forEach((name, bit) => {
+				const toggled = chosen ^ (1 << bit)
+				assert.equal(
+					result.optionCounts[group][name],
+					rows.filter((row) => accepts(c[group][row], toggled)).length,
+					`${group} ${all} ${name}`,
+				)
+			})
+			const start = performance.now()
+			for (let i = 0; i < 5; i++) runPasses(input)
+			const elapsed = performance.now() - start
+			t.diagnostic(
+				`${names.length} ${group}, ${all ? "all" : "any"}: ${(elapsed / 5).toFixed(2)} ms/pass over ${size} titles`,
+			)
+			assert.ok(elapsed < 5000, `${group} five passes took ${elapsed} ms`)
+		}
+	}
 })

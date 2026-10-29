@@ -11,6 +11,11 @@ test("mood text matching recognizes old and new names by the same stable key", (
 		["action", "Thrilling", "action"],
 		["heavy", "Sad", "heavy"],
 		["mind", "Trippy", "mind-bending"],
+		...["tense", "dark", "deep", "magical", "quirky"].map((key) => [
+			key,
+			key,
+			key.toUpperCase(),
+		]),
 	]) {
 		for (const word of [name, alias])
 			assert.deepEqual(

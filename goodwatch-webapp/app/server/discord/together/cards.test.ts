@@ -521,3 +521,15 @@ test("a full public card with long titles and three logos per row stays within D
 		) <= 4000,
 	)
 })
+
+test("the deck names each new mood in its heading within Discord limits", () => {
+	for (const mood of ["tense", "dark", "deep", "magical", "quirky"]) {
+		const s = session()
+		s.meta.mood = mood
+		const card = publicCard(s)
+		assert.ok(
+			JSON.stringify(card).includes(mood[0].toUpperCase() + mood.slice(1)),
+		)
+		assert.ok(componentCount(card.components) <= 40)
+	}
+})

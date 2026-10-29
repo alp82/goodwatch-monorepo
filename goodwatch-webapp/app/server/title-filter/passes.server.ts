@@ -622,6 +622,9 @@ export function runPasses(input: PassInput): PassOutput {
 		optionCounts.services = services.onMyServices ? { all, mine } : { all }
 	}
 
+	// Reuse one combination buffer across tag groups in this call (16 options = 65,536 entries, 256 KiB).
+	// Above 16 options, count per title instead to bound allocation and table traversal.
+	let combinationBuffer: Uint32Array | undefined
 	// Tag groups: any of by default, opt-in all of; one bit per option.
 	const bitGroup = (
 		group: TagGroup,
@@ -656,7 +659,11 @@ export function runPasses(input: PassInput): PassOutput {
 		}
 		if (names.length <= 16) {
 			// Few options: count the titles per combination of options first, then each combination once.
-			const combinations = new Uint32Array(1 << names.length)
+			const size = 1 << names.length
+			if (!combinationBuffer || combinationBuffer.length < size)
+				combinationBuffer = new Uint32Array(size)
+			const combinations = combinationBuffer.subarray(0, size)
+			combinations.fill(0)
 			for (let i = 0; i < n; i++) {
 				if ((masks[i] & ~bit) !== 0) continue
 				const row = rows[i]

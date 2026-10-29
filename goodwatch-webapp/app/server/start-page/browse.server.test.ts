@@ -45,7 +45,7 @@ const {
 	serviceHref,
 } = await import("./browse.server.ts")
 const { BRANDS } = await import("~/domain/new-on-services")
-const { BROWSE_GENRES, BROWSE_MOODS } = await import(
+const { BROWSE_GENRES, BROWSE_MOODS, moodHref } = await import(
 	"~/ui/start/browse/browse-data"
 )
 const { exploreAddressExists } = await import("~/ui/explore/address")
@@ -140,6 +140,37 @@ describe("the shared rails", () => {
 			(read) => read.withGenres === "35" && read.type === "show",
 		)
 		assert.ok(comedy)
+		for (const [key, field] of Object.entries({
+			tense: "tension",
+			dark: "bleakness",
+			deep: "philosophical",
+			magical: "wonder",
+			quirky: "eccentricity",
+		})) {
+			const conditions = reads.map((read) =>
+				JSON.parse(read.fingerprintConditions || "[]"),
+			)
+			const expected = [
+				{
+					logic: "AND",
+					conditions: [
+						{ field, operator: ">=", value: 8 },
+						...(key === "tense"
+							? [
+									{ field: "adrenaline", operator: "<=", value: 6 },
+									{ field: "scare", operator: "<=", value: 6 },
+								]
+							: []),
+					],
+				},
+			]
+			assert.ok(
+				conditions.some(
+					(value) => JSON.stringify(value) === JSON.stringify(expected),
+				),
+				key,
+			)
+		}
 		assert.ok(reads.every((read) => read.withStreamingProviders === ""))
 		assert.ok(
 			reads
@@ -165,7 +196,11 @@ describe("the shared rails", () => {
 	})
 
 	it("every mood and genre names a page of the site", () => {
-		for (const mood of BROWSE_MOODS)
+		for (const mood of BROWSE_MOODS) {
+			if (["tense", "dark", "deep", "magical", "quirky"].includes(mood.path)) {
+				assert.equal(moodHref(mood.path), `/discover?moods=${mood.path}`)
+				continue
+			}
 			assert.ok(
 				exploreAddressExists({
 					type: "movies",
@@ -174,6 +209,7 @@ describe("the shared rails", () => {
 				}),
 				mood.path,
 			)
+		}
 		for (const [kind, paths] of Object.entries(BROWSE_GENRES))
 			for (const page of paths)
 				assert.ok(

@@ -26,7 +26,9 @@ function fixture() {
 			releaseDay: 19000,
 			votes: 20000,
 			popularity: 2,
-			fingerprint: Array.from({ length: 74 }, (_, k) => (k + i) % 11),
+			fingerprint: VALID_FINGERPRINT_KEYS.map((key, k) =>
+				key === "eccentricity" ? 8 : (k + i) % 11,
+			),
 			score: 80,
 			origin: "US",
 			hasPoster: true,
@@ -83,6 +85,13 @@ test("prepared derivations give the same facts, moods, cosines, statistics and r
 	)
 	assert.deepStrictEqual(prepared.stats, inline.stats)
 	assert.deepStrictEqual(prepared.referenceRows, inline.referenceRows)
+	assert.ok(prepared.columns.moods instanceof Uint32Array)
+	assert.ok(prepared.columns.moods[0] & (1 << 15))
+	assert.ok(prepared.factsAt(0)?.moods.includes("quirky"))
+	// The worker transfers derived buffers back to the main thread.
+	const transferred = structuredClone(result.derived)
+	assert.ok(transferred.moodMasks instanceof Uint32Array)
+	assert.equal(transferred.moodMasks[0], prepared.columns.moods[0])
 	assert.deepStrictEqual(prepared.columns.moods, inline.columns.moods)
 	assert.deepStrictEqual(prepared.columns.themes, inline.columns.themes)
 	assert.deepStrictEqual(prepared.columns.styles, inline.columns.styles)

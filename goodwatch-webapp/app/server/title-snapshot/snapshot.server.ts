@@ -72,7 +72,7 @@ export interface TitleColumns {
 	/** FLAG_* bits. */
 	readonly flags: Uint8Array
 	/** Bit i set for MOOD_KEYS[i]. */
-	readonly moods: Uint16Array
+	readonly moods: Uint32Array
 	/** Bit i set for THEME_KEYS[i]: the themes the title has at each rule's own threshold. */
 	readonly themes: Uint16Array
 	/** Bit i set for STYLE_KEYS[i]: the styles the title has at each rule's own threshold. */
@@ -151,7 +151,7 @@ const K = FINGERPRINT_LENGTH
 /** Derive all row-wise data off-thread before constructing the cheap snapshot wrapper. */
 export function deriveSnapshot(manifest: Manifest, c: Columns) {
 	const inverseNorms = new Float32Array(c.count)
-	const moodMasks = new Uint16Array(c.count)
+	const moodMasks = new Uint32Array(c.count)
 	const themeMasks = new Uint16Array(c.count)
 	const styleMasks = new Uint16Array(c.count)
 	const genreLists = new Map<number, string[]>()
@@ -197,7 +197,7 @@ class LoadedSnapshot implements TitleSnapshot {
 	// 1 / |fingerprint| per row; 0 for a fingerprint of all zeros.
 	private readonly inverseNorms: Float32Array
 	// Bit i is MOOD_KEYS[i].
-	private readonly moodMasks: Uint16Array
+	private readonly moodMasks: Uint32Array
 
 	private readonly c: Columns
 

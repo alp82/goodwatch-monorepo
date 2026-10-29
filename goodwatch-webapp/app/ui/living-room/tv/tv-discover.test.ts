@@ -76,12 +76,22 @@ describe("the options of mini Discover's tabs", () => {
 		])
 	})
 
-	it("Sad and History are on no tab", () => {
+	it("the fixed six-slot grid keeps its explicit mood set as the shared list grows", () => {
 		const all = DISCOVER_TABS.flatMap(({ tab }) =>
 			discoverOptions(tab).map((option) => option.name),
 		)
 		assert.equal(all.length, 18)
-		for (const name of ["Sad", "History", "Crime & mystery", "Any mood"])
+		for (const name of [
+			"Sad",
+			"History",
+			"Crime & mystery",
+			"Any mood",
+			"Tense",
+			"Dark",
+			"Deep",
+			"Magical",
+			"Quirky",
+		])
 			assert.ok(!all.includes(name), name)
 	})
 

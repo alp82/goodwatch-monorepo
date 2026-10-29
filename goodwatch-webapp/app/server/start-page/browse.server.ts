@@ -36,6 +36,7 @@ import {
 	BROWSE_GENRES,
 	BROWSE_LIMITS,
 	BROWSE_MOODS,
+	DISCOVER_BROWSE_MOODS,
 	type BrowseGenre,
 	type BrowseKind,
 	type BrowseMood,
@@ -199,11 +200,45 @@ async function settle<T>(reads: Promise<T>[]): Promise<Part<(T | null)[]>> {
 type SharedPart = Pick<StartBrowseData, "top" | "moods" | "genres">
 type CountryPart = Pick<StartBrowseData, "arrivals" | "services">
 
+// The legacy browse reader takes fingerprint conditions, rather than mood keys.
+// Keep these at the fixed domain/moods.ts thresholds; the rail links to those real Discover filters.
+const BROWSE_MOOD_FIELDS: Record<string, string> = {
+	dark: "bleakness",
+	deep: "philosophical",
+	magical: "wonder",
+	quirky: "eccentricity",
+}
+
 /** The rails that are the same in every country: Top 10, moods, and genres. */
 export async function readSharedBrowse(
 	readers: BrowseReaders,
 ): Promise<Part<SharedPart>> {
-	const moods = BROWSE_MOODS.map(({ path }) => moodPages[path] as PageData)
+	const moods = BROWSE_MOODS.map(({ path }) => ({
+		path,
+		discoverParams: DISCOVER_BROWSE_MOODS.some((key) => key === path)
+			? {
+					fingerprintConditions: JSON.stringify([
+						{
+							logic: "AND",
+							conditions:
+								path === "tense"
+									? [
+											{ field: "tension", operator: ">=", value: 8 },
+											{ field: "adrenaline", operator: "<=", value: 6 },
+											{ field: "scare", operator: "<=", value: 6 },
+										]
+									: [
+											{
+												field: BROWSE_MOOD_FIELDS[path],
+												operator: ">=",
+												value: 8,
+											},
+										],
+						},
+					]),
+				}
+			: (moodPages[path] as PageData).discoverParams,
+	}))
 	const genres = (["movie", "show"] as const).flatMap((kind) =>
 		BROWSE_GENRES[kind].map((path) => ({
 			kind,

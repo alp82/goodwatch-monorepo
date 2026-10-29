@@ -43,6 +43,11 @@ export const GRADE_KEYS = [
 	"worlds",
 	"history",
 	"growing",
+	"tense",
+	"dark",
+	"deep",
+	"magical",
+	"quirky",
 ] as const
 export type GradeKey = (typeof GRADE_KEYS)[number]
 
@@ -107,6 +112,28 @@ export const GRADES: Readonly<Record<GradeKey, readonly Layer[]>> = {
 	growing: [
 		{ bg: hue("growing"), blend: "soft-light", o: 0.31 },
 		{ bg: "rgb(255 220 250)", blend: "screen", o: 0.08 },
+	],
+	tense: [
+		{ bg: GRAY, blend: "saturation", o: 0.5 },
+		{ bg: hue("tense"), blend: "soft-light", o: 0.42 },
+		{ bg: "rgb(30 36 48)", blend: "multiply", o: 0.3 },
+	],
+	dark: [
+		{ bg: GRAY, blend: "saturation", o: 0.8 },
+		{ bg: "rgb(28 30 42)", blend: "multiply", o: 0.78 },
+		{ bg: hue("dark"), blend: "soft-light", o: 0.24 },
+	],
+	deep: [
+		{ bg: hue("deep"), blend: "color", o: 0.36 },
+		{ bg: hue("deep"), blend: "soft-light", o: 0.5 },
+	],
+	magical: [
+		{ bg: hue("magical"), blend: "soft-light", o: 0.42 },
+		{ bg: "rgb(205 185 255)", blend: "screen", o: 0.09 },
+	],
+	quirky: [
+		{ bg: hue("quirky"), blend: "soft-light", o: 0.38 },
+		{ bg: "rgb(255 230 170)", blend: "screen", o: 0.07 },
 	],
 }
 

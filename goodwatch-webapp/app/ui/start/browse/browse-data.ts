@@ -1,4 +1,4 @@
-import { MOOD_BY_KEY } from "~/domain/moods"
+import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 // What the start page's Where to start section shows (StartBrowse.tsx), shared by its loader (server/start-page/
 // browse.server.ts) and the browser. Every rail's links are real pages of the site, in the server HTML.
 //
@@ -64,9 +64,18 @@ export const BROWSE_LIMITS = {
 	genreTitles: 3,
 } as const
 
+// Legacy mood pages keep their addresses; new fixed-rule moods open Discover directly.
+export const DISCOVER_BROWSE_MOODS = [
+	"tense",
+	"dark",
+	"deep",
+	"magical",
+	"quirky",
+] as const satisfies readonly MoodKey[]
+
 /**
- * The moods of the mood rail, in its order: the mood pages under `/movies/moods/` (ui/explore/category/moods.ts), each
- * with a plain line and a color. The colors are the matching Discover moods' (domain/moods.ts).
+ * The mood rail links to the existing pages under `/movies/moods/` (ui/explore/category/moods.ts) and the new
+ * fixed-rule Discover moods, each with a plain line and a color. Colors follow domain/moods.ts.
  */
 export const BROWSE_MOODS = [
 	{
@@ -129,6 +138,12 @@ export const BROWSE_MOODS = [
 		line: "Playful and dreamlike.",
 		hue: "#f5d0fe",
 	},
+	...DISCOVER_BROWSE_MOODS.map((key) => ({
+		path: key,
+		name: MOOD_BY_KEY[key].name,
+		line: MOOD_BY_KEY[key].description,
+		hue: MOOD_BY_KEY[key].hue,
+	})),
 ] as const
 
 /** The genres of the genre cloud, by their pages' address parts (ui/explore/category/genres.ts). */
@@ -156,7 +171,10 @@ export const BROWSE_GENRES: Record<BrowseKind, readonly string[]> = {
 
 const PLURAL = { movie: "movies", show: "shows" } as const
 
-export const moodHref = (path: string) => `/movies/moods/${path}`
+export const moodHref = (path: string) =>
+	DISCOVER_BROWSE_MOODS.some((key) => key === path)
+		? `/discover?moods=${path}`
+		: `/movies/moods/${path}`
 export const genreHref = (kind: BrowseKind, path: string) =>
 	`/${PLURAL[kind]}/genres/${path}`
 

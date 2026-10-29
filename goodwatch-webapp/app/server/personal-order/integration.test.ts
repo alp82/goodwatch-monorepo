@@ -97,13 +97,15 @@ const snapshot = {
 		popularity: Float32Array.from([6, 5, 4, 3, 2, 1]),
 		scores: new Uint8Array(6).fill(80),
 		flags: new Uint8Array(6).fill(1),
-		moods: new Uint16Array(6),
+		moods: Uint32Array.from(keys, (_, row) =>
+			row === 3 ? 0 : (1 << 0) | (1 << 15),
+		),
 		themes: new Uint16Array(6),
 		styles: new Uint16Array(6),
 		ratings: null,
 	},
 	facts: (k: number) => ({
-		moods: k === keys[3] ? [] : [MOOD_KEYS[0]],
+		moods: k === keys[3] ? [] : [MOOD_KEYS[0], "quirky"],
 		hasBackdrop: false,
 		releaseDay: 19000,
 		score: 80,
@@ -224,7 +226,7 @@ test("Watch next franchise grouping precedes fit grouping and mix stays inside f
 	const plan = planWatchNext(
 		ctx(),
 		taste,
-		{ sort: "match", moods: [MOOD_KEYS[0]], notTonight: [keys[5]] },
+		{ sort: "match", moods: ["quirky"], notTonight: [keys[5]] },
 		undefined,
 		undefined,
 		read,

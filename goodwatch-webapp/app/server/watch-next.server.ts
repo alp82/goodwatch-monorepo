@@ -638,7 +638,7 @@ interface SuggestionPool {
 	version: string
 	rows: Int32Array // snapshot rows, most popular first
 	keys: Float64Array
-	moodMasks: Uint16Array
+	moodMasks: Uint32Array
 }
 
 let pool: SuggestionPool | null = null
@@ -672,7 +672,7 @@ function suggestionPool(snapshot: TitleSnapshot): SuggestionPool {
 		version: snapshot.version,
 		rows: Int32Array.from(found, (f) => f.row),
 		keys: Float64Array.from(found, (f) => f.key),
-		moodMasks: Uint16Array.from(found, (f) => f.mask),
+		moodMasks: Uint32Array.from(found, (f) => f.mask),
 	}
 	return pool
 }

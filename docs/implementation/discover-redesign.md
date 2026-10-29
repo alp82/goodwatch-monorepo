@@ -758,6 +758,31 @@ baseline), Biome. Page checks use an isolated local setup (no production `.env`,
   picker counts test; a `passes.test.ts` bench for the 65,536-entry table.
 - Acceptance: `/discover?moods=quirky` narrows; Server-Timing `results` stays within the budget in [Risks and
   checks](#risks-and-checks).
+- Implemented 2026-10-29: all five have exact Explorer island equivalents. Tense requires tension >= 8,
+  adrenaline <= 6 and scare <= 6; Dark bleakness >= 8; Deep philosophical >= 8; Magical wonder >= 8;
+  Quirky eccentricity >= 8. These are fixed starting thresholds, independent of Explorer’s adaptive island sizing.
+  New names have empty aliases (no former names) and `feel: true`.
+- Surface audit: Discover’s sheet, Watch next/start-page taste words, MCP enum and descriptions, descriptive search,
+  Discord `/discover`, `/watch` and `/together` choices and deck headings derive from the shared moods.
+  Discord now has 16 mood choices, below its 25-choice limit; registration must be rerun at deployment.
+  The scrolling start-page browse rail adds five cards linking directly to `/discover?moods=<key>`; its legacy
+  poster reader uses equivalent fingerprint conditions, with five extra cached reads per shared rail refresh.
+- Fixed slots retained explicitly: TV Discover keeps Funny, Cozy, Romantic, Thrilling, Scary and Trippy (six tiles,
+  `DISCOVER_TABS`); FirstSteps keeps Funny, Cozy, Romantic and Thrilling (four decorative, noninteractive dots).
+  The shared list still supplies their names and colors. No Discord mood list needs truncating.
+- Mask audit: snapshot derived columns, worker transfers, Watch next’s suggestion-pool `moodMasks`, filter passes,
+  personal-order/Watch next entries, taste-picker counts and living-room art/pools use 32-bit arrays or number masks.
+  Widening costs two extra bytes per title in the snapshot and per candidate in the Watch next suggestion pool.
+- Combination counts use one buffer reused across groups within a call: at most 16 options, 65,536 uint32 entries
+  (256 KiB); above 16 options use the per-title loop. Synthetic unit benchmark over all 65,536 mood masks:
+  about 11.7 ms any-of / 10.7 ms all-of; 17-option per-title path about 11.9 / 13.7 ms (five warm passes each).
+  Timings include the full filter/count pass, and are host-dependent; a generous five-second bound guards five passes.
+  Production Server-Timing was not measured: this step’s execution permits unit tests only.
+- Pool cost: `pool-keys.server.ts` builds 16 rather than 11 mood lists once per snapshot version and UTC day:
+  five more scans of the eligible candidates and arrays of matching references (45% more mood-list scans, no extra
+  database reads or snapshot walks). Popularity selection reads five extra lists; taste selection scans the ranked
+  candidates five more times, without additional ranking or sorting. Each viewer’s pool can gain at most 15 titles
+  (six best + three per mood: maximum 39 becomes 54 before deduplication), plus five per-mood lists of up to five keys.
 - Depends on: B2a. Owner approved 2026-10-29.
 
 **B3. Your lists and taste match steps**
@@ -1058,7 +1083,7 @@ repo's `.env`. Reads of production data for counts go through a read-only user o
 - `page_url` from MCP keeps opening Discover with the same view (`filterQuery`), and the new parameters show as
   chips there.
 - Discord reads `discoverFilters` through its strict schema: it accepts the new fields automatically; slash command
-  choices don't change (no re-registration in this build).
+  mood choices grow to 16 with B2b (re-register at deployment; still below Discord’s 25-choice limit).
 - There is no per-tool schema version; record the additions in `mcp-discover-tools.md`.
 
 ### Mobile

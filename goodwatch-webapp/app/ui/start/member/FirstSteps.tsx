@@ -5,13 +5,16 @@
 import { ArrowRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import type { CSSProperties } from "react"
-import { MOODS } from "~/domain/moods"
+import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { IMPORT_SOURCE_LIST } from "~/ui/imports/ImportSources"
 import { assetUrl } from "~/utils/asset-url"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import type { ShelfTitle } from "../room/ShelfCovers"
 import { MEMBER_HREF } from "./doors"
 import { PERSONAL_AT } from "./member-data"
+
+// Four decorative dots in a fixed-size fan.
+const MOOD_DOTS: readonly MoodKey[] = ["funny", "feelgood", "romance", "action"]
 
 /** The import sources whose marks the row shows. */
 const MARKS = IMPORT_SOURCE_LIST.filter((source) => source.logo).slice(0, 5)
@@ -65,7 +68,7 @@ export function FirstSteps({
 				</Link>
 				<Link to={MEMBER_HREF.discover} prefetch="intent" className="first-way">
 					<span aria-hidden className="first-moods">
-						{MOODS.slice(0, 4).map((mood) => (
+						{MOOD_DOTS.map((key) => MOOD_BY_KEY[key]).map((mood) => (
 							<span
 								key={mood.key}
 								className="first-mood"

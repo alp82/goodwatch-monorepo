@@ -29,7 +29,7 @@ function fake(rows: Row[]) {
 		rowOf: (key) => rows.findIndex((row) => row.key === key),
 		factsAt: (row) => ({ hasBackdrop: rows[row].backdrop !== false }),
 		columns: {
-			moods: Uint16Array.from(rows, (row) => mask(MOOD_KEYS, row.moods)),
+			moods: Uint32Array.from(rows, (row) => mask(MOOD_KEYS, row.moods)),
 			themes: Uint16Array.from(rows, (row) => mask(THEME_KEYS, row.themes)),
 			styles: Uint16Array.from(rows, (row) => mask(STYLE_KEYS, row.styles)),
 		},

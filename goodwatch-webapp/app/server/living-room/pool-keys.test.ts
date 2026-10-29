@@ -211,3 +211,21 @@ test("candidates are walked once per version and UTC day", () => {
 	assert.strictEqual(poolCandidates(second.snapshot, TODAY + 1), nextDay)
 	assert.equal(second.walks(), 2)
 })
+
+test("the five new mood pools are built and available in both viewer orders", () => {
+	resetPoolCandidatesForTest()
+	const { snapshot } = fakeSnapshot()
+	const candidates = poolCandidates(snapshot, TODAY)
+	assert.equal(candidates.byMood.size, 16)
+	for (const rankOf of [null, tasteRank]) {
+		const result = selectPoolKeys(candidates, anonymous(), rankOf)
+		for (const key of ["tense", "dark", "deep", "magical", "quirky"] as const) {
+			const candidateList = candidates.byMood.get(key) ?? []
+			const picked = result.byMood.get(key) ?? []
+			assert.ok(candidateList.length > 0)
+			assert.ok(picked.length > 0)
+			for (const title of picked)
+				assert.ok(candidateList.some((candidate) => candidate.key === title))
+		}
+	}
+})

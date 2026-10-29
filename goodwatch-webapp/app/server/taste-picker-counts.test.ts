@@ -85,7 +85,7 @@ test("counts, what a pick leaves, For you, and Narrow it", () => {
 	])
 	// An empty list still offers the moods.
 	assert.equal(pickerCounts([], [], []).forYou.length, 8)
-	assert.equal(pickerCounts([], [], []).choices.length, 11)
+	assert.equal(pickerCounts([], [], []).choices.length, 16)
 	// Groups first, then the words the groups carry (most of their titles first), then the biggest moods.
 	assert.deepEqual(none.forYou, [
 		"g1",
@@ -119,4 +119,24 @@ test("counts, what a pick leaves, For you, and Narrow it", () => {
 
 	const full = pickerCounts(list, ["m:crime", "s:slow", "t:mind"], groups)
 	assert.deepEqual(full.narrow, [])
+})
+
+test("all five new mood words have counts and combine with the same any-of rule", () => {
+	const keys = ["tense", "dark", "deep", "magical", "quirky"]
+	const list = keys.map((key, i) => ({
+		key: i,
+		masks: masks(`m:${key}`),
+		group: null,
+	}))
+	for (const key of keys) {
+		assert.equal(WORD_BY_ID[`m:${key}`].kind, "mood")
+		const counts = pickerCounts(list, [`m:${key}`], [])
+		assert.equal(counts.fitting, 1)
+		for (const other of keys) {
+			const choice = counts.choices.find((c) => c.id === `m:${other}`)
+			assert.ok(choice)
+			assert.equal(choice.count, 1)
+			assert.equal(choice.leaves, other === key ? 1 : 2)
+		}
+	}
 })

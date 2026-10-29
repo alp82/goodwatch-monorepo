@@ -474,6 +474,17 @@ test("static registration pins choices to the real domain definitions", async ()
 		choices("mood"),
 		MOODS.map((m) => ({ name: m.name, value: m.key })),
 	)
+	for (const command of commands) {
+		for (const option of command.options) {
+			if ("choices" in option)
+				assert.ok(option.choices.length <= 25, `${command.name} ${option.name}`)
+			if (option.name === "mood" && "choices" in option) {
+				assert.equal(option.choices.length, 16)
+				for (const key of ["tense", "dark", "deep", "magical", "quirky"])
+					assert.ok(option.choices.some((choice) => choice.value === key))
+			}
+		}
+	}
 	assert.deepEqual(
 		choices("sort").map((c) => c.value),
 		discoverFilters.order.unwrap().options,

@@ -315,3 +315,12 @@ test("list and taste steps validate and round trip through both tools' page URLs
 	for (const key of ["seen_only", "wishlist_only", "outside_usual"])
 		assert.equal(schema.safeParse({ [key]: "true" }).success, false)
 })
+
+test("MCP mood enum includes all 16 keys and round trips the five additions", async () => {
+	const { MOOD_KEYS } = await import("../../domain/moods.ts")
+	assert.deepEqual(discoverFilters.moods.unwrap().element.options, MOOD_KEYS)
+	for (const mood of ["tense", "dark", "deep", "magical", "quirky"] as const) {
+		assert.ok(schema.safeParse({ moods: [mood] }).success)
+		assert.equal(discoverParams({ moods: [mood] }, false).get("moods"), mood)
+	}
+})

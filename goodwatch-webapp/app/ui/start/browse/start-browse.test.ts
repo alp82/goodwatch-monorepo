@@ -114,6 +114,11 @@ test("every mood, service, and genre is a link to its page, named by it", () => 
 	assert.equal(moods.length, 10)
 	assert.equal(moods[0].href, "/movies/moods/feel-good")
 	assert.match(moods[0].text, /^Cozy Warm and hopeful/)
+	for (const mood of ["tense", "dark", "deep", "magical", "quirky"]) {
+		const link = all.find((link) => link.href === `/discover?moods=${mood}`)
+		assert.ok(link, mood)
+		assert.ok(link.text.startsWith(mood[0].toUpperCase() + mood.slice(1)))
+	}
 	const services = all.filter((link) =>
 		/^\/(shows\/streaming|new\/us)\/s\d/.test(link.href),
 	)
