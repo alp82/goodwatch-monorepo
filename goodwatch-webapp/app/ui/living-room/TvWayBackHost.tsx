@@ -6,7 +6,7 @@
 import { useLocation } from "@remix-run/react"
 import { Suspense, lazy, useEffect, useState } from "react"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
-import { TRIP_KEY, type TvTrip, pagesFromTv, parseTrip, wayBackShows } from "./tv-way-back"
+import { TRIP_KEY, type TvTrip, pagesFromTv, readLiveTrip, wayBackShows } from "./tv-way-back"
 
 const loadWayBack = reloadOnStaleChunk(() => import("./TvWayBack"))
 const TvWayBackBar = lazy(() => loadWayBack().then((module) => ({ default: module.TvWayBackBar })))
@@ -30,7 +30,8 @@ export function useTvWayBack(): TvWayBack | null {
 	useEffect(() => {
 		let trip: TvTrip | null = null
 		try {
-			trip = parseTrip(sessionStorage.getItem(TRIP_KEY))
+			// A trip from the start page, which has no TV any more, is dropped here, on the first page after it.
+			trip = readLiveTrip(sessionStorage, document)
 			const pages = pagesFromTv(trip, (window.history.state as { idx?: number } | null)?.idx ?? 0, pathname)
 			// The browser's Forward leads onto these pages again after a return: the room must know on the next Back.
 			if (trip && pages >= 1 && !trip.out) sessionStorage.setItem(TRIP_KEY, JSON.stringify({ ...trip, out: true }))

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { TV_PROPERTIES, type TvTrip, WAY_BACK_LIVES, bracketArm, openedByTv, pagesFromTv, parseTrip, tvProperties, wayBackShows } from "./tv-way-back.ts"
+import { TRIP_KEY, TV_BRACKET_ATTR, TV_PROPERTIES, TV_TRANSITION_ATTR, type TvTrip, WAY_BACK_LIVES, bracketArm, openedByTv, pagesFromTv, parseTrip, readLiveTrip, tvProperties, wayBackShows } from "./tv-way-back.ts"
 
 const trip: TvTrip = { idx: 4, to: "/discover", box: { left: 18, top: 145, width: 1080, height: 583 }, w: 1440, h: 900, art: null, out: true }
 
@@ -107,5 +107,45 @@ describe("bracketArm", () => {
 		assert.equal(bracketArm({ left: 0, top: 0, width: 1080, height: 583 }), 120)
 		assert.equal(bracketArm({ left: 0, top: 0, width: 362, height: 302 }), 60)
 		assert.equal(bracketArm({ left: 0, top: 0, width: 80, height: 60 }), 14)
+	})
+})
+
+describe("readLiveTrip", () => {
+	/** sessionStorage, and a document with what a way back into the TV left behind: four brackets and the mark. */
+	function page(stored: unknown) {
+		const storage = new Map<string, string>([[TRIP_KEY, JSON.stringify(stored)]])
+		const attributes = new Set([TV_TRANSITION_ATTR])
+		const properties = new Set<string>(TV_PROPERTIES)
+		let brackets = 4
+		return {
+			storage: { getItem: (key: string) => storage.get(key) ?? null, removeItem: (key: string) => void storage.delete(key) },
+			document: {
+				documentElement: { removeAttribute: (name: string) => void attributes.delete(name), style: { removeProperty: (name: string) => properties.delete(name) } },
+				querySelectorAll: (selectors: string) => (selectors === `[${TV_BRACKET_ATTR}]` ? Array.from({ length: brackets }, () => ({ remove: () => void brackets-- })) : []),
+			},
+			left: () => ({ trip: storage.has(TRIP_KEY), brackets, marked: attributes.size > 0, properties: properties.size }),
+		}
+	}
+	it("drops a trip an older build stored, from when the TV was the start page, and what its way back left", () => {
+		// The trip as a destination page kept it before the start page lost its TV: reloaded, then Back.
+		const before = page({ idx: 4, to: "/discover", box: { left: 18, top: 145, width: 1080, height: 583 }, w: 1440, h: 900, art: null, out: true, key: "k4" })
+		assert.equal(readLiveTrip(before.storage, before.document), null)
+		assert.deepEqual(before.left(), { trip: false, brackets: 0, marked: false, properties: 0 })
+	})
+	it("drops a trip that left from the start page", () => {
+		const home = page({ ...trip, from: "/" })
+		assert.equal(readLiveTrip(home.storage, home.document), null)
+		assert.deepEqual(home.left(), { trip: false, brackets: 0, marked: false, properties: 0 })
+	})
+	it("keeps a trip from a page that still has a TV, and leaves the document alone", () => {
+		const live = { ...trip, from: "/somewhere/tv" }
+		const tv = page(live)
+		assert.deepEqual(readLiveTrip(tv.storage, tv.document), live)
+		assert.deepEqual(tv.left(), { trip: true, brackets: 4, marked: true, properties: TV_PROPERTIES.length })
+	})
+	it("leaves the document alone without a trip", () => {
+		const none = page(null)
+		assert.equal(readLiveTrip(none.storage, none.document), null)
+		assert.equal(none.left().brackets, 4)
 	})
 })

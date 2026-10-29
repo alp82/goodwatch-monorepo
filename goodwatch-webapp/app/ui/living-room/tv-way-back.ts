@@ -16,6 +16,8 @@ export const TRIP_KEY = "living-room:left-through-tv"
 export const TV_BACK_ATTR = "data-tv-back"
 /** Marks the four brackets, 0 to 3 from the top left. `main.css` places them by it. */
 export const TV_BRACKET_ATTR = "data-tv-bracket"
+/** Marks <html> while the transition's CSS (main.css) runs, with its direction. */
+export const TV_TRANSITION_ATTR = "data-tv-transition"
 
 /** In window pixels. */
 export type TvBox = { left: number; top: number; width: number; height: number }
@@ -25,6 +27,8 @@ export type TvTrip = {
 	idx: number
 	/** The path of the page the TV opened. */
 	to: string
+	/** The path of the TV's own page. Missing in a trip an older build stored, from when the TV was the start page. */
+	from?: string
 	/** The TV's picture and the window at the moment of leaving; `null` when the page changed without motion. */
 	box: TvBox | null
 	w: number
@@ -60,7 +64,40 @@ export function parseTrip(raw: string | null | undefined): TvTrip | null {
 	const scroll = isNumber(trip.scroll) && trip.scroll >= 0 ? { scroll: trip.scroll } : {}
 	const columns = Array.isArray(trip.columns) && trip.columns.length <= 8 && trip.columns.every((top) => isNumber(top) && top >= 0) ? { columns: trip.columns } : {}
 	const key = typeof trip.key === "string" ? { key: trip.key } : {}
-	return { idx: trip.idx, to: trip.to, box: box ?? null, w: trip.w, h: trip.h, art: typeof trip.art === "string" ? trip.art : null, out: trip.out === true, ...scroll, ...columns, ...key }
+	const from = typeof trip.from === "string" ? { from: trip.from } : {}
+	return { idx: trip.idx, to: trip.to, ...from, box: box ?? null, w: trip.w, h: trip.h, art: typeof trip.art === "string" ? trip.art : null, out: trip.out === true, ...scroll, ...columns, ...key }
+}
+
+/**
+ * The start page lost its TV (docs/implementation/start-page-redesign.md): a trip that left from it, or one an older
+ * build stored without its page (the TV was the start page then), leads to no TV.
+ */
+export const FORMER_TV_PAGE = "/"
+
+export const tripLeadsToTv = (trip: TvTrip) => trip.from !== undefined && trip.from !== FORMER_TV_PAGE
+
+/** Where a trip is kept: sessionStorage in the browser. */
+export type TripStorage = Pick<Storage, "getItem" | "removeItem">
+/** What the way back leaves in the document: the brackets, and the mark and properties on <html>. */
+export type TransitionDocument = {
+	documentElement: { removeAttribute(name: string): void; style: { removeProperty(name: string): unknown } }
+	querySelectorAll(selectors: string): ArrayLike<{ remove(): void }>
+}
+
+/**
+ * The stored trip while it still leads to a TV, and null otherwise. A trip that leads to no TV is dropped, with
+ * whatever an earlier visit's way back left in the document for it, so Back neither shows the brackets nor marks
+ * the start page for a transition into a TV that isn't there.
+ */
+export function readLiveTrip(storage: TripStorage, document: TransitionDocument): TvTrip | null {
+	const trip = parseTrip(storage.getItem(TRIP_KEY))
+	if (!trip || tripLeadsToTv(trip)) return trip
+	storage.removeItem(TRIP_KEY)
+	const brackets = document.querySelectorAll(`[${TV_BRACKET_ATTR}]`)
+	for (let i = 0; i < brackets.length; i++) brackets[i].remove()
+	document.documentElement.removeAttribute(TV_TRANSITION_ATTR)
+	for (const name of TV_PROPERTIES) document.documentElement.style.removeProperty(name)
+	return null
 }
 
 /**

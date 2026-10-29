@@ -8,7 +8,7 @@ import {
 	remember,
 	restoredEntry,
 } from "~/ui/discovery-continuity"
-import { TRIP_KEY, openedByTv, parseTrip } from "~/ui/living-room/tv-way-back"
+import { openedByTv, readLiveTrip } from "~/ui/living-room/tv-way-back"
 
 const key = "goodwatch_discovery"
 /** Scroll positions are written at most this often; `pagehide` and leaving the page write the last one. */
@@ -34,7 +34,7 @@ function read(): Context {
 function arrivedThroughTv(pathname: string) {
 	try {
 		return openedByTv(
-			parseTrip(sessionStorage.getItem(TRIP_KEY)),
+			readLiveTrip(sessionStorage, document),
 			(window.history.state as { idx?: number } | null)?.idx ?? 0,
 			pathname,
 		)

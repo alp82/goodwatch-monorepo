@@ -5,7 +5,7 @@
 // on a phone. It loads only for a person who left through the TV.
 import { useLocation } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
-import { TRIP_KEY, TV_BACK_ATTR, TV_BRACKET_ATTR, parseTrip, tvProperties } from "./tv-way-back"
+import { TV_BACK_ATTR, TV_BRACKET_ATTR, readLiveTrip, tvProperties } from "./tv-way-back"
 
 /** One history move, however many pages away: the router replays the transition into the TV. */
 const backToTv = (pages: number) => window.history.go(-pages)
@@ -19,7 +19,7 @@ const backToTv = (pages: number) => window.history.go(-pages)
 function prepareReturn() {
 	let trip = null
 	try {
-		trip = parseTrip(sessionStorage.getItem(TRIP_KEY))
+		trip = readLiveTrip(sessionStorage, document)
 	} catch {
 		// Without storage there is no way in to prepare.
 	}

@@ -18,7 +18,7 @@
 import { useLocation, useNavigate, useNavigationType } from "@remix-run/react"
 import { useCallback, useEffect } from "react"
 import { warmTvWayBack } from "./TvWayBackHost"
-import { TRIP_KEY, TV_BACK_ATTR, TV_BRACKET_ATTR, TV_PROPERTIES, type TvBox, type TvTrip, parseTrip, tvProperties } from "./tv-way-back"
+import { TRIP_KEY, TV_BACK_ATTR, TV_BRACKET_ATTR, TV_PROPERTIES, type TvBox, type TvTrip, readLiveTrip, tvProperties } from "./tv-way-back"
 import { ROOM_ID } from "./use-below-room"
 
 /** Marks the TV's screen in either scene, so its box can be measured. */
@@ -51,7 +51,7 @@ function tvBox(): TvBox | null {
 
 export function readTrip(): TvTrip | null {
 	try {
-		return parseTrip(sessionStorage.getItem(TRIP_KEY))
+		return readLiveTrip(sessionStorage, document)
 	} catch {
 		return null
 	}
@@ -202,6 +202,7 @@ export function useLeaveThroughTv() {
 			writeTrip({
 				idx: historyIdx(),
 				to: new URL(href, window.location.href).pathname,
+				from: window.location.pathname,
 				box,
 				w: window.innerWidth,
 				h: window.innerHeight,
