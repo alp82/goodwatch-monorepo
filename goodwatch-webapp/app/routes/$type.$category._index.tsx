@@ -96,7 +96,9 @@ const canonicalLoader: LoaderFunction = async ({
 				...pageData.discoverParams,
 			}
 			const results = await getDiscoverResults(discoverParams)
-			return { ...pageData, discoverParams, results }
+			// MovieTvList renders eight cards and has no pagination or expansion.
+			// Keep the complete discovery result in its shared cache, not in this document.
+			return { ...pageData, discoverParams, results: results.slice(0, 8) }
 		}),
 	)
 
