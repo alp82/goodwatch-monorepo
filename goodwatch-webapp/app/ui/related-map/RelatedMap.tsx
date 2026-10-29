@@ -3,11 +3,11 @@
 // page. What a title page carries of it, by weight:
 // 1. The server's HTML: the picture of the page's title, drawn by the engine itself, and the plain title links.
 // 2. Two files of the build with hashed names, cached for a year: the engine as a script (inline.ts) and the style
-//    (related-map.css). Neither blocks the first paint, and neither waits for hydration: the script is `async`, and a
-//    few lines of inline script ask for the style and remember a tap that comes before the engine.
+//    (related-map.css). Neither blocks the first paint. A few lines of inline script ask for the style and remember a
+//    tap that comes before the engine. The engine comes when the reader nears the section or taps it.
 // 3. Until the style is there, the section holds its height and hides its content, so nothing is seen unstyled and
 //    nothing moves.
-// A page opened by a navigation inside the app asks for both files when the section mounts, once per document.
+// A page opened by a navigation inside the app asks for the style when the section mounts, once per document.
 // When the server ran out of time before the page title's pack was there, the section holds its height with only its
 // heading, asks for the pack from the browser, and the engine draws the picture.
 //
@@ -95,15 +95,11 @@ function keepStyle(href: string, path: string) {
 }
 
 /**
- * Calls `run` once the engine is there. The document's own script tag may still be on its way. A page that was opened
- * inside the app has no script tag that ran, and asks for the script now. Without the script's address, or when the
- * script fails to load, the engine comes as a lazy chunk of the app.
+ * Calls `run` once the engine is there, and asks for its script when no one has yet (another section of this document
+ * may have). Without the script's address, or when the script fails to load, the engine comes as a lazy chunk of the
+ * app.
  */
-function whenEngine(
-	src: string | null,
-	own: HTMLScriptElement | null,
-	run: () => void,
-): () => void {
+function whenEngine(src: string | null, run: () => void): () => void {
 	const w = window as MapWindow
 	let gone = false
 	let late: ReturnType<typeof setTimeout> | undefined
@@ -121,7 +117,7 @@ function whenEngine(
 	if (w.__gwRelatedMap) done()
 	else if (!src) fromChunk()
 	else {
-		let tag = own ?? document.head.querySelector<HTMLScriptElement>(ENGINE)
+		let tag = document.head.querySelector<HTMLScriptElement>(ENGINE)
 		if (!tag) {
 			tag = document.createElement("script")
 			tag.async = true
@@ -232,7 +228,6 @@ export default function RelatedMap({
 	useEffect(() => setView(null), [localizedKey])
 	const [missing, setMissing] = useState<string | null>(null)
 	const title = media.details.title
-	const engineTag = useRef<HTMLScriptElement>(null)
 	const css = assetUrl(cssPath)
 	const script = map?.script ?? null
 	const shown = Boolean(map)
@@ -265,7 +260,7 @@ export default function RelatedMap({
 				.then((pack) => {
 					if (gone) return
 					if (!pack) return setMissing(key)
-					stop = whenEngine(script, engineTag.current, () => {
+					stop = whenEngine(script, () => {
 						if (gone || !w.__gwRelatedMap || held.current?.key !== key) return
 						const spoken = pack.language ?? language
 						const html = w.__gwRelatedMap.render({ root: rootKey, title, pack, links: [], language: spoken })
@@ -288,17 +283,27 @@ export default function RelatedMap({
 			stop()
 		}
 	}, [shown, drawn, localizedKey, rootKey, map?.language, script, title])
-	// The engine hears about every title this section shows, once the picture is in the document.
+	// The engine hears about every title this section shows, once the picture is in the document. Its file comes when
+	// the reader nears the section or taps it, and the page's own navigation work is done (late-wait.ts): a reader who
+	// stays at the top never asks for it. A tap before it is there is remembered by the inline script and done by the
+	// engine once it runs (engine.ts).
 	useEffect(() => {
 		if (!shown || !drawn) return
 		const w = window as MapWindow
-		const stop = whenEngine(script, engineTag.current, () => {
-			if (!w.__gwRelatedMap) return
-			w.__gwRelatedMap.nav = (href) => navigate(href)
-			w.__gwRelatedMap.open = (next) => setView(next)
-			w.__gwRelatedMap.boot()
-		})
+		let stop = () => {}
+		const boot = () => {
+			stop = whenEngine(script, () => {
+				if (!w.__gwRelatedMap) return
+				w.__gwRelatedMap.nav = (href) => navigate(href)
+				w.__gwRelatedMap.open = (next) => setView(next)
+				w.__gwRelatedMap.boot()
+			})
+		}
+		let stopWaiting = () => {}
+		if (w.__gwRelatedMap) boot()
+		else stopWaiting = whenSectionWanted(section.current, boot, afterNavigationWork)
 		return () => {
+			stopWaiting()
 			stop()
 			if (w.__gwRelatedMap) {
 				w.__gwRelatedMap.nav = null
@@ -349,16 +354,6 @@ export default function RelatedMap({
 							__html: earlyScript(css, css !== cssPath),
 						}}
 					/>
-					{/* After the section, so that the engine finds it. */}
-					{script && (
-						<script
-							ref={engineTag}
-							async={true}
-							src={assetUrl(script)}
-							crossOrigin={assetBase() ? "anonymous" : undefined}
-							data-related-map-engine=""
-						/>
-					)}
 				</>
 			)}
 		</>

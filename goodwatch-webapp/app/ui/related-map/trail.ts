@@ -28,7 +28,8 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 	// --- The walk ---------------------------------------------------------------------------------------------------
 	const last = (ctx: MapCtx) => ctx.st.trail.length - 1
 	const at = (ctx: MapCtx, i: number) => core.title(ctx.st.trail[i].k) as MapTitle
-	const thumb = (t: MapTitle) => `<img alt="" decoding="async" src="${esc(core.src(t.p))}">`
+	// The server's markup is far below the first screen: its pictures wait until the reader comes near.
+	const thumb = (t: MapTitle) => `<img alt=""${core.win ? "" : ' loading="lazy"'} decoding="async" src="${esc(core.src(t.p))}">`
 	/** A title of the walk that a tap goes back to. */
 	const to = (ctx: MapCtx, i: number, inner: string, cls = "") =>
 		`<button type="button"${cls ? ` class="${cls}"` : ""} data-pl-to="${i}" title="${esc(at(ctx, i).t)}" aria-label="${esc(`Back to ${at(ctx, i).t}`)}">${inner}</button>`

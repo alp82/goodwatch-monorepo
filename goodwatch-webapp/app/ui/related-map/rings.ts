@@ -492,7 +492,7 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 			far: true,
 			html: `<button type="button" class="pl-p rm-p rg-c" style="${style}" data-pl-center="" data-r-c="${ctx.c.k}" data-r-k="${ctx.c.k}" data-r-q="0,0" data-r-g="m|" data-t="${esc(ctx.c.t)}" data-y="${esc(
 				ctx.c.y,
-			)}" aria-current="true" aria-haspopup="dialog" title="Quick view"><img alt="${esc(`${ctx.c.t} (${ctx.c.y})`)}" decoding="async" src="${esc(core.src(ctx.c.p))}"></button>`,
+			)}" aria-current="true" aria-haspopup="dialog" title="Quick view"><img alt="${esc(`${ctx.c.t} (${ctx.c.y})`)}"${core.win ? "" : ' loading="lazy"'} decoding="async" src="${esc(core.src(ctx.c.p))}"></button>`,
 		}
 	}
 	/**
