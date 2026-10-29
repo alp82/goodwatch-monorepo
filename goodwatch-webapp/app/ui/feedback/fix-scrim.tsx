@@ -5,12 +5,27 @@
 // - reveal(): brings an element into the visible area (below the header, clear of a phone's feedback drawer), smoothly.
 //   Rapid hovering doesn't make scrolls fight: each call aims at an absolute position, a new aim replaces the running
 //   one, and "is it on screen" is judged against where the running scroll will end, not where it is now.
-// - DimHeader: in fix mode the site header and the title page's sticky bar scroll away with the page.
+// - DimHeader: in fix mode the site header and the title page's sticky bars scroll away with the page, and its fixed
+//   title bar steps aside.
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 
-/** The page's own sticky bars (the title page's header), which stop sticking in fix mode. */
+/** The page's own sticky bars (the title page's phone section bar), which stop sticking in fix mode. */
 const STICKY = "[data-details-header]"
+/** The title page's fixed title bar, shown once the page's title has scrolled away; it fades out in fix mode. */
+const FIXED = '[data-title-bar][aria-hidden="false"]'
+
+/** The bottom of the page's bars that cover the top of the window under the site header (`header`). */
+function barsBottom(header: number) {
+	return Array.from(
+		document.querySelectorAll<HTMLElement>(`${STICKY}, ${FIXED}`),
+	).reduce((m, el) => {
+		// A bar on its way out (fix mode fades the title bar) covers nothing.
+		if (Number(getComputedStyle(el).opacity) < 0.5) return m
+		const r = el.getBoundingClientRect()
+		return r.top <= header + 1 && r.bottom > m ? r.bottom : m
+	}, header)
+}
 
 export const shown = (el: Element | null | undefined): el is HTMLElement => {
 	if (!el) return false
@@ -43,15 +58,7 @@ export function clearArea() {
 	if (sheet) {
 		const answering =
 			document.documentElement.getAttribute("data-fix-phone") === "answer"
-		const stickyBottom = answering
-			? header
-			: Array.from(document.querySelectorAll<HTMLElement>(STICKY)).reduce(
-					(m, el) => {
-						const r = el.getBoundingClientRect()
-						return r.top <= header + 1 && r.bottom > m ? r.bottom : m
-					},
-					header,
-				)
+		const stickyBottom = answering ? header : barsBottom(header)
 		// Where the sheet rests (handle included), not where a running slide has it now.
 		const panel = sheet.querySelector<HTMLElement>("[data-fix-panel]")
 		const row = Number(sheet.dataset.fixRow) || 56
@@ -63,13 +70,7 @@ export function clearArea() {
 			: sheet.getBoundingClientRect().top
 		return { top: stickyBottom + 12, bottom: rest - 12 }
 	}
-	const sticky = Array.from(
-		document.querySelectorAll<HTMLElement>(STICKY),
-	).reduce((m, el) => {
-		const r = el.getBoundingClientRect()
-		return r.top <= header + 1 && r.bottom > m ? r.bottom : m
-	}, header)
-	const top = sticky + 12
+	const top = barsBottom(header) + 12
 	const bottom = window.innerHeight - 12
 	// A phone's feedback drawer covers most of the width: the clear part is the larger one above or below it.
 	const card = document
@@ -292,7 +293,8 @@ export function useFadePresence(on: boolean, ms = 200) {
  * While fix mode is on, the site header and the page's sticky bar stop following the page: the header stays at the
  * top of the page and the bar in its place, so both scroll away like the rest. A picked part can then sit at the very
  * top of the window, and nothing draws over it. Neither changes size, so nothing on the page moves. Their scrim-colored
- * tint fades (opacity) before the rule goes.
+ * tint fades (opacity) before the rule goes. The title page's fixed title bar has no place in the page to stay in, so
+ * it fades out (its own opacity transition) and lets clicks through until fix mode ends.
  */
 export function DimHeader({ on }: { on: boolean }) {
 	const { mounted, shown } = useFadePresence(on, 220)
@@ -302,6 +304,7 @@ export function DimHeader({ on }: { on: boolean }) {
 		<style data-fix-dim>
 			{`[data-site-header]{position:absolute!important}
 ${STICKY}{position:relative!important}
+[data-title-bar]{opacity:0!important;pointer-events:none!important}
 ${bars
 	.split(",")
 	.map((b) => `${b}::after`)
