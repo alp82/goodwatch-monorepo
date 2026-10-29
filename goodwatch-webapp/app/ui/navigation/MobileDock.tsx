@@ -1,12 +1,10 @@
 // The phone dock (below the large breakpoint): the current page on the left, the raised round G key in the middle,
 // and "Go to…" on the right. The whole bar is one button that opens the hub. For two pages after a person left the
-// living room through its TV, the TV button stands in the left part instead (a key of its own, over the bar). A page's filter strip docks above it
-// (the slab) through DockStrip; the G key then shrinks and drops into the row. The dock's height is published as
+// living room through its TV, the TV button stands in the left part instead (a key of its own, over the bar). A page's filter strip renders its complete dock through DockStrip; the G key then shrinks and drops into the row. The dock's height is published as
 // --nav-dock-height so full-screen pages such as Explorer can keep clear of it.
 import { ChevronUpIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef } from "react"
-import { createPortal } from "react-dom"
 import { TvBackDockKey, useTvWayBack } from "~/ui/living-room/TvWayBackHost"
 import { useNavigation } from "./NavigationContext"
 import { GoodWatchMark, NewEpisodesMark } from "./bits"
@@ -15,7 +13,10 @@ import { useOpenerSignal } from "./useWhatsNew"
 
 const HUB_LABEL = "Browse GoodWatch"
 
-function DockButton({ docked, leftFree }: { docked: boolean; leftFree: boolean }) {
+function DockButton({
+	docked,
+	leftFree,
+}: { docked: boolean; leftFree: boolean }) {
 	const navigation = useNavigation()
 	const { pathname } = useLocation()
 	const destinations = getDestinations()
@@ -73,11 +74,10 @@ function DockButton({ docked, leftFree }: { docked: boolean; leftFree: boolean }
 	)
 }
 
-export function MobileDock() {
+export function MobileDock({ strip }: { strip?: ReactNode } = {}) {
 	const navigation = useNavigation()
 	const dock = useRef<HTMLDivElement>(null)
-	const setStripTarget = navigation.setStripTarget
-	const docked = Boolean(navigation.strips)
+	const docked = strip !== undefined
 	const quiet = navigation.quietDock > 0
 	const wayBack = useTvWayBack()
 
@@ -85,11 +85,12 @@ export function MobileDock() {
 		const element = dock.current
 		if (!element) return
 		const root = document.documentElement
-		const publish = () =>
-			root.style.setProperty(
-				"--nav-dock-height",
-				`${element.getBoundingClientRect().height}px`,
-			)
+		const publish = () => {
+			const height = element.getBoundingClientRect().height
+			// The standalone dock is CSS-hidden while a page supplies its own complete dock.
+			if (height || window.matchMedia("(min-width: 1024px)").matches)
+				root.style.setProperty("--nav-dock-height", `${height}px`)
+		}
 		publish()
 		const observer = new ResizeObserver(publish)
 		observer.observe(element)
@@ -102,24 +103,27 @@ export function MobileDock() {
 	return (
 		<>
 			{/* Keeps the end of the page clear of the fixed dock. */}
-			<div
-				aria-hidden
-				className="lg:hidden"
-				style={{ height: "var(--nav-dock-height, 72px)" }}
-			/>
+			{!docked && (
+				<div
+					aria-hidden
+					className="lg:hidden"
+					style={{ height: "var(--nav-dock-height, 72px)" }}
+				/>
+			)}
 			<div
 				ref={dock}
 				data-mobile-dock
+				data-mobile-dock-strip={docked || undefined}
+				data-mobile-dock-standalone={!docked || undefined}
 				className={`fixed inset-x-0 bottom-0 z-50 rounded-t-3xl pb-[env(safe-area-inset-bottom)] text-gray-100 shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.08)] lg:hidden ${
 					quiet ? "bg-gray-950" : "bg-gray-950/94 backdrop-blur-xl"
 				}`}
 			>
-				<div
-					ref={setStripTarget}
-					className={
-						docked ? "flex items-end gap-1.5 px-2.5 pt-2.5 pb-2" : "hidden"
-					}
-				/>
+				{docked && (
+					<div className="flex items-end gap-1.5 px-2.5 pt-2.5 pb-2">
+						{strip}
+					</div>
+				)}
 				<nav
 					aria-label="Site"
 					className={`relative transition-opacity duration-150 motion-reduce:transition-none ${
@@ -159,10 +163,6 @@ export function useQuietDock(active: boolean) {
  * the dock is hidden from the large breakpoint up.
  */
 export function DockStrip({ children }: { children: ReactNode }) {
-	const { setStrips, stripTarget } = useNavigation()
-	useEffect(() => {
-		setStrips((count) => count + 1)
-		return () => setStrips((count) => count - 1)
-	}, [setStrips])
-	return stripTarget ? createPortal(children, stripTarget) : null
+	// Portals cannot render on the server. Keep controls and navigation together from the first paint.
+	return <MobileDock strip={children} />
 }

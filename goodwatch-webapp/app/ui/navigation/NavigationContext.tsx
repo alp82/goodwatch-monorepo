@@ -15,12 +15,6 @@ interface NavigationState {
 	setHubOpen: (open: boolean) => void
 	searchOpen: boolean
 	setSearchOpen: (open: boolean) => void
-	/** The dock's strip container on phones, where DockStrip renders a page's controls; null without a dock. */
-	stripTarget: HTMLElement | null
-	setStripTarget: (element: HTMLElement | null) => void
-	/** How many DockStrips are mounted; the hub key shrinks while one is. */
-	strips: number
-	setStrips: (update: (count: number) => number) => void
 	/** How many pages ask the phone dock to step back (see useQuietDock); the dock's keys hide while one does. */
 	quietDock: number
 	setQuietDock: (update: (count: number) => number) => void
@@ -32,10 +26,6 @@ const NavigationContext = createContext<NavigationState>({
 	setHubOpen: () => {},
 	searchOpen: false,
 	setSearchOpen: () => {},
-	stripTarget: null,
-	setStripTarget: () => {},
-	strips: 0,
-	setStrips: () => {},
 	quietDock: 0,
 	setQuietDock: () => {},
 })
@@ -43,8 +33,6 @@ const NavigationContext = createContext<NavigationState>({
 export function NavigationProvider({ children }: { children: ReactNode }) {
 	const [hubOpen, setHubOpen] = useState(false)
 	const [searchOpen, setSearchOpen] = useState(false)
-	const [stripTarget, setStripTarget] = useState<HTMLElement | null>(null)
-	const [strips, setStrips] = useState(0)
 	const [quietDock, setQuietDock] = useState(0)
 	const { pathname, search } = useLocation()
 
@@ -60,14 +48,10 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 			setHubOpen,
 			searchOpen,
 			setSearchOpen,
-			stripTarget,
-			setStripTarget,
-			strips,
-			setStrips,
 			quietDock,
 			setQuietDock,
 		}),
-		[hubOpen, searchOpen, stripTarget, strips, quietDock],
+		[hubOpen, searchOpen, quietDock],
 	)
 	return (
 		<NavigationContext.Provider value={value}>
