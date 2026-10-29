@@ -49,8 +49,11 @@ export const STATUS_LOOK: Record<Status, { word: string; pill: string }> = {
 	seen: { word: "Seen", pill: "bg-green-500 text-black" },
 }
 
-/** The hero's "your show" block: the status line, then the actions, a row each. */
-export const HERO_ACTIONS = "flex min-w-0 flex-col gap-2.5"
+/**
+ * The title page's "your show" block: the status line, then the actions, a row each. A container, so the line
+ * goes compact by the block's own width: on a phone and in the desktop page's narrow right rail alike.
+ */
+export const HERO_ACTIONS = "@container flex min-w-0 flex-col gap-2.5"
 /** The status line of that block, at the height it has once its content is there. */
 export const STATUS_LINE = "flex min-h-9 min-w-0 items-center gap-2.5"
 

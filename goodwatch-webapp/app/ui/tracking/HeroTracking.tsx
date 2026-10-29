@@ -464,7 +464,7 @@ function StatusLine({
 			: "",
 	].filter(Boolean)
 	// With new episodes the pill says how many, and a phone has no room for the bar and the word beside it.
-	const narrow = derived.newEpisodes > 0 ? "max-sm:hidden" : ""
+	const narrow = derived.newEpisodes > 0 ? "@max-sm:hidden" : ""
 	// What the line says when there is no Next episode.
 	const noNext =
 		derived.state === "dropped"
@@ -486,7 +486,7 @@ function StatusLine({
 			className="flex shrink-0 items-center gap-2 text-xs font-semibold tabular-nums text-white"
 		>
 			{derived.pass > 1 && (
-				<span className="font-normal text-gray-400 max-sm:hidden">
+				<span className="font-normal text-gray-400 @max-sm:hidden">
 					Pass {derived.pass}
 				</span>
 			)}
@@ -494,7 +494,7 @@ function StatusLine({
 				{derived.watched}/{derived.aired}
 			</span>
 			<span
-				className={`block h-1.5 w-10 overflow-hidden rounded-full bg-white/10 sm:w-20 ${narrow}`}
+				className={`block h-1.5 w-10 overflow-hidden rounded-full bg-white/10 @sm:w-20 ${narrow}`}
 				aria-hidden="true"
 			>
 				<span
@@ -541,7 +541,7 @@ function StatusLine({
 				>
 					<span className={`shrink-0 text-xs text-gray-400 ${narrow}`}>
 						{derived.newEpisodes ? "New" : "Next"}
-						<span className={derived.newEpisodes ? "hidden" : "max-sm:hidden"}>
+						<span className={derived.newEpisodes ? "hidden" : "@max-sm:hidden"}>
 							{derived.newEpisodes ? " since you saw it" : " episode"}
 						</span>
 					</span>

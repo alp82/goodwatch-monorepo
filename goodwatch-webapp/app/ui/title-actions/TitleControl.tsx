@@ -1,6 +1,6 @@
 // The person's own control of one title, the same wherever a title is shown in full: the Seen and score box
-// (SeenScore), then Want to See and Not interested in one row. The title page's hero has it, and the quick view
-// (ui/quick-view) has it as its footer.
+// (SeenScore), then Want to See and Not interested in one row. The title page has it in its You block
+// (ui/details/YouBlock.tsx), and the quick view (ui/quick-view) has it as its footer.
 //
 // - On the title page (`place="page"`) the box is taller from lg up and answers the page's own events, and a member
 //   with episode tracking gets the show's status line and tracking actions around the row (ui/tracking/gate.tsx).
