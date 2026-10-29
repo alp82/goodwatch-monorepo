@@ -167,6 +167,11 @@ export interface TabContext {
 	ladder: ViewerLadder | null | undefined
 	/** The Discover search (`q`), or null. It counts on Titles and Clear all clears it first. */
 	query: string | null
+	/**
+	 * The picked taste groups' names. A pick counts in the badges and in Clear all once its name resolves; a reference
+	 * to a group the member doesn't have stays absent, as its chip does.
+	 */
+	tasteGroup?: FilterNames["tasteGroup"]
 }
 
 const hasQuery = (context: TabContext) => Boolean(context.query?.trim())
@@ -184,7 +189,7 @@ const chipsOf = (
 			context.member,
 			context.viewerCountry,
 		),
-		names,
+		{ tasteGroup: context.tasteGroup, ...names },
 	)
 
 /**

@@ -13,6 +13,7 @@ import { MadeInTab } from "../watch/MadeInTab"
 import { ReleasedTab } from "../watch/ReleasedTab"
 import { ScoresTab } from "../watch/ScoresTab"
 import { ServicesTab } from "../watch/ServicesTab"
+import { YouTab } from "../you/YouTab"
 
 type SubTabContent = (props: { view: SubTabView }) => ReactNode
 
@@ -27,6 +28,7 @@ const SUB_TAB_CONTENT: Partial<Record<SubTabId, SubTabContent>> = {
 	age: AgeTab,
 	combos: CombosTab,
 	everything: EverythingTab,
+	taste: YouTab,
 }
 
 /** The content of a sub-tab, or undefined while it has none (the panel then shows its empty slot). */

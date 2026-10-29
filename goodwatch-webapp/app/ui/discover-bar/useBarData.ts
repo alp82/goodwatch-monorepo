@@ -64,9 +64,12 @@ export function useBarData({
 	const lastLadder = useRef(counts?.ladder ?? null)
 	if (counts) lastLadder.current = counts.ladder ?? null
 	const ladder = lastLadder.current
+	// The picked taste groups' names come with the results while a group is picked (or with `counts=taste`).
+	const tasteNames = counts?.tasteGroups?.names
 
 	const names = useMemo<FilterNames>(
 		() => ({
+			tasteGroup: (key) => tasteNames?.[key],
 			service: (id) => services.countryProviders.find((p) => p.id === id)?.name,
 			serviceLogo: (id) =>
 				services.countryProviders.find((p) => p.id === id)?.logo_path,
@@ -76,11 +79,17 @@ export function useBarData({
 			ageStep: (age) =>
 				ladder ? ladderStepFor(ladder.steps, age).label : undefined,
 		}),
-		[services.countryProviders, titles.byKey, people.byId, ladder],
+		[services.countryProviders, titles.byKey, people.byId, ladder, tasteNames],
 	)
 	const context = useMemo<TabContext>(
-		() => ({ member, viewerCountry: services.country, ladder, query }),
-		[member, services.country, ladder, query],
+		() => ({
+			member,
+			viewerCountry: services.country,
+			ladder,
+			query,
+			tasteGroup: names.tasteGroup,
+		}),
+		[member, services.country, ladder, query, names.tasteGroup],
 	)
 	const chips = useMemo(() => {
 		const applied = stateAsApplied(state, ladder, member, services.country)

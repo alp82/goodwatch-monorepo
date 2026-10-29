@@ -13,16 +13,13 @@ import type {
 import type { DiscoverSide } from "~/server/discover-sides.server"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { gridPosterPriority, tmdbImageUrl } from "~/utils/tmdb-image"
+import { sideHue } from "./side-hues"
 import { SIDE_ROWS_COPY as COPY } from "./side-rows-copy"
 
-// Telling groups apart starts with their names and posters; the hue only helps.
-const HUES = ["#f59e0b", "#38bdf8", "#e879f9", "#4ade80", "#fb7185"]
-const NO_SIDE_HUE = "#9ca3af"
 // Cards a wide screen shows in a row without scrolling: the first two rows' load first.
 const IN_VIEW = 6
 
-const hueOf = (side: DiscoverSide) =>
-	side.number === null ? NO_SIDE_HUE : HUES[(side.number - 1) % HUES.length]
+const hueOf = (side: DiscoverSide) => sideHue(side.number)
 const labelOf = (side: DiscoverSide) => side.name ?? COPY.noGroup
 
 export function SideRows({

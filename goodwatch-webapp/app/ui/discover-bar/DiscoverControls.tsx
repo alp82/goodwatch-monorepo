@@ -19,7 +19,7 @@ import {
 import type { SearchScope } from "~/domain/discover-search"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { TitleCard } from "~/server/title-cards.server"
-import type { FilterBarCounts } from "~/ui/filter-bar/types"
+import type { FilterBarCounts, ForYouControl } from "~/ui/filter-bar/types"
 import type { FilterStateBinding } from "~/ui/filter-bar/useFilterState"
 import type { TitleKey } from "~/utils/title-key"
 import {
@@ -95,6 +95,8 @@ export interface SubTabView {
 	runSearch: (text: string) => void
 	open: (tab: MainTab, sub?: SubTabId) => void
 	close: () => void
+	/** The page's For you switch, for You's Order block; without it the block shows only Best match first. */
+	forYou?: ForYouControl
 }
 
 export interface DiscoverControlsProps {
@@ -112,6 +114,8 @@ export interface DiscoverControlsProps {
 	onClearSearch: () => void
 	sort: SortChoice
 	page: DiscoverPageContext
+	/** The page's For you switch, for You's Order block. */
+	forYou?: ForYouControl
 	/** A sub-tab's content; an empty area of its final height until its step fills it. */
 	renderSubTab?: (id: SubTabId, view: SubTabView) => ReactNode
 	/** Find's results in place of the content, while Find has text. */
@@ -138,6 +142,7 @@ function DiscoverControlsContent({
 	onClearSearch,
 	sort,
 	page,
+	forYou,
 	renderSubTab,
 	renderFind,
 	className = "",
@@ -234,6 +239,7 @@ function DiscoverControlsContent({
 		runSearch,
 		open: openTab,
 		close,
+		forYou,
 	})
 	const panelTab = (phone: boolean): PanelTab => ({
 		tab,

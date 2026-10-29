@@ -351,3 +351,20 @@ test("resolved taste-group names appear on You and missing references stay absen
 	assert.equal(tabValues(selected, member).you.value, null)
 	assert.equal(clearAll(selected).tasteGroups, undefined)
 })
+
+test("resolved taste-group picks count in the You badge and Clear all", () => {
+	const selected = { ...empty, tasteGroups: ["movie-603", "movie-999"] }
+	const named = {
+		...member,
+		tasteGroup: (key: string) =>
+			key === "movie-603" ? "Dark thrillers" : undefined,
+	}
+	assert.equal(tabBadge("you", selected, named), 1)
+	assert.equal(subTabBadge("taste", selected, named), 1)
+	assert.equal(clearAllCount(selected, named), 1)
+	assert.equal(tabValues(selected, named).you.badge, 1)
+	assert.equal(
+		tabBadge("you", selected, { ...guest, tasteGroup: named.tasteGroup }),
+		0,
+	)
+})
