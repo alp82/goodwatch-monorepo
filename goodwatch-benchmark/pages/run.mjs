@@ -180,6 +180,13 @@ async function main() {
         summary.options.only !== (o.only ?? null))
     )
       throw Error("Resume options differ from original run");
+    summary.skippedAudits = [
+      {
+        id: "bf-cache",
+        reason:
+          "Unscored navigation diagnostic can hang Chromium on chrome://terms; first-load category scores are unaffected",
+      },
+    ];
     if (o.resume) {
       summary.resumed ??= [];
       summary.resumed.push({

@@ -37,6 +37,9 @@ try {
   const flags = {
     onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
     logLevel: "error",
+    // This zero-weight navigation diagnostic can hang Chromium on chrome://terms.
+    // The separate navigation suite covers back/forward behavior; first-load scores are unchanged.
+    skipAudits: ["bf-cache"],
     disableStorageReset: !!cookie,
   };
   if (options.device === "mobile")
