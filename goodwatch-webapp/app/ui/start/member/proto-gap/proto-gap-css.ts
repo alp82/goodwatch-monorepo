@@ -26,8 +26,15 @@ export const PROTO_GAP_CSS = `
 			)
 		);
 	}
-	.start-member[data-gap="c"] .start-card { max-width: min(100cqw - 96px, 2000px); }
-	.start-member[data-gap="f"] .start-card { max-width: min(100cqw - 96px, 2000px); }
+	/* The card is never wider than its two pictures (the box) and its padding. */
+	.start-member[data-gap="c"] .start-card,
+	.start-member[data-gap="f"] .start-card {
+		max-width: min(
+			100cqw - 96px,
+			2000px,
+			calc((var(--start-card) - var(--proto-chrome)) * 3.5556 + 64px)
+		);
+	}
 	.start-member[data-gap="c"] .start-member-box,
 	.start-member[data-gap="f"] .start-member-box {
 		max-width: calc((var(--start-card) - var(--proto-chrome)) * 3.5556 + 24px);
@@ -58,6 +65,28 @@ export const PROTO_GAP_CSS = `
 		--start-img-w: min(max(100cqw, calc(var(--proto-h) / var(--start-hw))), 130cqw);
 		--start-img-top: min(0px, calc(var(--proto-cy) - var(--start-img-w) * var(--proto-c)));
 		--start-img-left: calc(100cqw - var(--start-img-w));
+	}
+
+	/* f: the stage's foot fades into the page's color (gray-900) instead of ending on an edge. */
+	.start-member[data-gap="f"] .start-stage::after {
+		content: "";
+		position: absolute;
+		inset: auto 0 0;
+		z-index: 5;
+		height: 360px;
+		pointer-events: none;
+		background: linear-gradient(
+			to bottom,
+			rgb(17 24 39 / 0) 0%,
+			rgb(17 24 39 / 0.04) 15%,
+			rgb(17 24 39 / 0.14) 30%,
+			rgb(17 24 39 / 0.3) 45%,
+			rgb(17 24 39 / 0.5) 60%,
+			rgb(17 24 39 / 0.7) 72%,
+			rgb(17 24 39 / 0.87) 84%,
+			rgb(17 24 39 / 0.96) 93%,
+			rgb(17 24 39) 100%
+		);
 	}
 
 	/* e: Go deeper moves into the stage under the card, and the rug continues under the painting (a soft mirror). */

@@ -10,6 +10,8 @@
 //
 // StartResults is what the search and the results requests (useStartSearch, a later step) answer for one query,
 // marked with the query's signature, so the stage never shows one query's titles under another.
+import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
+import { pickIds, picksOf } from "~/domain/taste-picker"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import type { TitleCard } from "~/server/title-cards.server"
@@ -30,6 +32,37 @@ export type StartQuery = {
 }
 
 export const EMPTY_QUERY: StartQuery = { draft: "", text: "", picks: [] }
+
+/** The URL parameters a query lives in: Discover's names. */
+export const QUERY_PARAMS = ["q", "moods", "themes", "styles"] as const
+
+const PICK_PREFIX = { moods: "m", themes: "t", styles: "s" } as const
+
+/** The query a URL holds; unknown words and anything past the third pick are left out. */
+export function queryFromParams(params: URLSearchParams): StartQuery {
+	const text = (params.get("q") ?? "").trim().slice(0, SEARCH_MAX_CHARS)
+	const ids = Object.entries(PICK_PREFIX).flatMap(([name, prefix]) =>
+		(params.get(name) ?? "")
+			.split(",")
+			.filter(Boolean)
+			.map((key) => `${prefix}:${key.trim()}`),
+	)
+	return { draft: text, text, picks: pickIds(picksOf(ids)) }
+}
+
+/** `params` with the query's own parameters set to this query (the rest are kept). */
+export function queryParams(
+	query: Pick<StartQuery, "text" | "picks">,
+	params: URLSearchParams,
+): URLSearchParams {
+	const next = new URLSearchParams(params)
+	for (const name of QUERY_PARAMS) next.delete(name)
+	if (query.text) next.set("q", query.text)
+	const picks = picksOf(query.picks)
+	for (const name of ["moods", "themes", "styles"] as const)
+		if (picks[name].length) next.set(name, picks[name].join(","))
+	return next
+}
 
 export type StartQueryAction =
 	/** The guest types: the field changes, nothing is searched yet. */
