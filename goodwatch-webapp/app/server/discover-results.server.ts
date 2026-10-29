@@ -114,6 +114,8 @@ export async function getDiscoverResults(
 		 * page; the TV and dev pages keep the grid), `side` narrows the list to one side ("none": no side).
 		 */
 		sides?: { rows: boolean; side: string | null }
+		/** Whether a member's page is recorded as a Discover list exposure (default true); false for another surface's read. */
+		exposure?: boolean
 	},
 ): Promise<DiscoverResults> {
 	const { state, sort, ranked } = input
@@ -169,7 +171,9 @@ export async function getDiscoverResults(
 		titles: readonly { key: TitleKey; match: number | null }[],
 		filters: object,
 	) =>
-		recordListExposure(ctx, {
+		input.exposure === false
+			? null
+			: recordListExposure(ctx, {
 			surface: "discover",
 			ordering: personalOrder?.todayFirst100 ? "personal-order" : "taste-v2",
 			flags: {},

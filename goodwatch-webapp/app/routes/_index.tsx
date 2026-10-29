@@ -10,6 +10,7 @@ import { useLoaderData } from "@remix-run/react"
 import { useState } from "react"
 import type { startPageLoader } from "~/server/start-page/loader.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
+import { MemberStart } from "~/ui/start/member/MemberStart"
 import { StartSearchBar } from "~/ui/start/search/StartSearchBar"
 import { useStartSearch } from "~/ui/start/search/useStartSearch"
 import { StartStage } from "~/ui/start/stage/StartStage"
@@ -87,20 +88,13 @@ export const meta: MetaFunction = () => [
 	},
 ]
 
-/** Before a guest asks: the room nearly dark, seen close up. A member's room is lit. */
+/** Before a guest asks: the room nearly dark, seen close up. A member's room is lit (MemberStart). */
 const GUEST_ROOM = { night: 0.9, camera: 1.12 }
-const MEMBER_ROOM = { night: 0, camera: 1 }
 
 export default function Index() {
 	const data = useLoaderData<typeof startPageLoader>()
 	if (!data.member) return <GuestStart titles={data.titles} />
-	return (
-		<StartStage
-			shelf={data.titles}
-			night={MEMBER_ROOM.night}
-			camera={MEMBER_ROOM.camera}
-		/>
-	)
+	return <MemberStart shelf={data.titles} data={data.start} />
 }
 
 /**

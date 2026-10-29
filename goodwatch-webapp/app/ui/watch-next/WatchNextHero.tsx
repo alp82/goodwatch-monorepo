@@ -178,7 +178,8 @@ function Eyebrow({
 	)
 }
 
-function WatchButton({
+/** The hero's main button: the first service's logo and "Watch on …", to the title page. The start page uses it too. */
+export function WatchButton({
 	title,
 	offers,
 }: { title: TitleCard; offers: ServiceOffer[] | null }) {
