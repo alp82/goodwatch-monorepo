@@ -3,7 +3,9 @@
 // (useDiscoverBar, whose `counts` go into its results request), runs the search, and passes the results' counts in.
 //
 // Keyboard: "/" opens Search from anywhere outside a text field. On desktop, Escape or a press outside the bar and
-// the panel closes it; Escape in Find clears Find first.
+// the panel closes it; Escape in Find clears Find first. Closing returns focus to the bar's segment for the tab that was
+// open (the Search segment after "/"), except after a press outside, which keeps focus where it landed. The phone sheet
+// returns focus to the control that opened it, and closing phone Find returns it to the magnifier.
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, MotionConfig } from "framer-motion"
 import {
@@ -120,7 +122,20 @@ export function DiscoverControls({
 		},
 		[open, query, bar.open],
 	)
-	const close = bar.close
+	// Desktop: once the panel has closed, focus goes back to the bar's segment for the tab that was open.
+	const [refocus, setRefocus] = useState<MainTab | null>(null)
+	const close = useCallback(() => {
+		if (open) setRefocus(open)
+		bar.close()
+	}, [open, bar.close])
+	useEffect(() => {
+		if (!refocus || open) return
+		setRefocus(null)
+		if (!desktop) return
+		barRef.current
+			?.querySelector<HTMLElement>(`[data-tab="${refocus}"] button`)
+			?.focus({ preventScroll: true })
+	}, [refocus, open, desktop])
 	const runSearch = (value: string) => {
 		const trimmed = value.trim()
 		if (trimmed) onSearch(trimmed)
@@ -146,7 +161,12 @@ export function DiscoverControls({
 		if (desktop) field.current?.focus({ preventScroll: true })
 		else if (slashed) sheetField.current?.focus({ preventScroll: true })
 	}, [open, slashed, desktop])
-	useOutsideClose(desktop && open !== null, close, panelRef, barRef)
+	useOutsideClose(
+		desktop && open !== null,
+		(how) => (how === "escape" ? close() : bar.close()),
+		panelRef,
+		barRef,
+	)
 
 	// The phone sheet keeps showing its last tab while it closes.
 	const [lastTab, setLastTab] = useState<MainTab>("search")
@@ -225,9 +245,16 @@ export function DiscoverControls({
 	useEffect(() => {
 		if (!open) setPhoneFind(false)
 	}, [open])
+	const findButton = useRef<HTMLButtonElement>(null)
+	const phoneFindField = useRef<HTMLInputElement>(null)
+	// Focuses the field each time Find opens, also while the field from the last time is still leaving.
+	useEffect(() => {
+		if (phoneFind) phoneFindField.current?.focus({ preventScroll: true })
+	}, [phoneFind])
 	const endPhoneFind = () => {
 		bar.setFind("")
 		setPhoneFind(false)
+		findButton.current?.focus({ preventScroll: true })
 	}
 
 	return (
@@ -308,7 +335,12 @@ export function DiscoverControls({
 							initialFocus={
 								slashed && open === "search" ? sheetField : undefined
 							}
-							find={<FindOpenButton onClick={() => setPhoneFind(true)} />}
+							find={
+								<FindOpenButton
+									onClick={() => setPhoneFind(true)}
+									buttonRef={findButton}
+								/>
+							}
 							findOverlay={
 								<FindOverlay
 									shown={phoneFind || panel.find !== ""}
@@ -318,7 +350,7 @@ export function DiscoverControls({
 										value={panel.find}
 										onChange={bar.setFind}
 										onEmptyEscape={endPhoneFind}
-										autoFocus={phoneFind}
+										inputRef={phoneFindField}
 									/>
 								</FindOverlay>
 							}

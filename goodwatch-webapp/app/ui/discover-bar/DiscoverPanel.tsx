@@ -3,13 +3,16 @@
 //
 // Desktop: under the bar (opacity, an 8 px rise, scale 0.97 to 1, 0.2 s). Switching tabs slides the row and content
 // 28 px in tab order. The content area is 400 px high and scrolls inside, so the page never shifts.
-// Phones: a SnapSheet at 0.94 labeled "Filters", with the four tabs and the header row in its header.
+// Phones: a PhoneSheet labeled "Filters", with the four tabs and the header row in its header.
+//
+// The four sheet tabs and each header row's sub-tabs are tab lists; the sheet's body is the main tabs' panel, and the
+// open sub-tab's content is the sub-tabs' panel.
 import { AnimatePresence, motion } from "framer-motion"
-import { type ReactNode, type Ref, useEffect, useRef } from "react"
-import { SnapSheet } from "~/ui/filter-bar/SnapSheet"
+import { type ReactNode, type Ref, useEffect, useId, useRef } from "react"
 import { TAP } from "~/ui/filter-bar/motion"
 import { TabBadge } from "./DiscoverBar"
-import { TabHeader } from "./TabHeader"
+import { PhoneSheet } from "./PhoneSheet"
+import { TabHeader, onTabListKey, tabElementId } from "./TabHeader"
 import {
 	MAIN_TABS,
 	MAIN_TAB_LABELS,
@@ -31,8 +34,6 @@ const TAB_SLIDE = {
 }
 const TAB_SLIDE_TRANSITION = { duration: 0.2, ease: EASE }
 const PILL_SPRING = { type: "spring", stiffness: 520, damping: 42 } as const
-/** Phones: the sheet opens at 94% of the screen. */
-const SHEET_SNAPS = [0.94]
 
 /** A sub-tab's content until its step fills it: an empty area of the content's final height. */
 export function SubTabSlot({ id, phone }: { id: SubTabId; phone: boolean }) {
@@ -46,19 +47,27 @@ export function SubTabSlot({ id, phone }: { id: SubTabId; phone: boolean }) {
 	)
 }
 
-/** The open sub-tab, faded in when it changes. */
+/** The open sub-tab, faded in when it changes. It's the sub-tabs' panel, except while it shows Find's results. */
 function SubTabContent({
 	id,
 	phone,
+	panelId,
+	labelledBy,
 	children,
 }: {
 	id: string
 	phone: boolean
+	panelId: string
+	/** The open sub-tab's id; null while Find's results show. */
+	labelledBy: string | null
 	children: ReactNode
 }) {
 	return (
 		<AnimatePresence mode="wait" initial={false}>
 			<motion.div
+				id={panelId}
+				role={labelledBy ? "tabpanel" : undefined}
+				aria-labelledby={labelledBy ?? undefined}
 				key={id}
 				initial={{ opacity: 0, y: 6 }}
 				animate={{ opacity: 1, y: 0 }}
@@ -118,6 +127,9 @@ export function DiscoverPanel({
 	footer: ReactNode
 	panelRef?: Ref<HTMLDivElement>
 }) {
+	const base = useId()
+	const idBase = `${base}-${tab.tab}`
+	const panelId = `${idBase}-panel`
 	return (
 		<motion.div
 			ref={panelRef}
@@ -156,11 +168,17 @@ export function DiscoverPanel({
 							phone={false}
 							find={find}
 							layoutId={`discover-sub-${tab.tab}`}
+							idBase={idBase}
+							panelId={panelId}
 						/>
 						<ContentArea id={tab.finding ? "find" : tab.active}>
 							<SubTabContent
 								id={tab.finding ? "find" : tab.active}
 								phone={false}
+								panelId={panelId}
+								labelledBy={
+									tab.finding ? null : tabElementId(idBase, tab.active)
+								}
 							>
 								{tab.content}
 							</SubTabContent>
@@ -196,16 +214,24 @@ function SheetTabs({
 	open,
 	badges,
 	onPick,
+	idBase,
+	panelId,
 }: {
 	open: MainTab
 	badges: Record<MainTab, number>
 	onPick: (tab: MainTab) => void
+	idBase: string
+	/** The sheet's body, which the tabs control. */
+	panelId: string
 }) {
 	return (
 		<div
 			role="tablist"
 			aria-label="Filters"
 			className="flex gap-0.5 px-2 pt-1 pb-1"
+			onKeyDown={(event) =>
+				onTabListKey(event, MAIN_TABS, open, onPick, idBase)
+			}
 		>
 			{MAIN_TABS.map((tab) => {
 				const on = open === tab
@@ -214,7 +240,10 @@ function SheetTabs({
 						key={tab}
 						type="button"
 						role="tab"
+						id={tabElementId(idBase, tab)}
 						aria-selected={on}
+						aria-controls={panelId}
+						tabIndex={on ? 0 : -1}
 						whileTap={TAP}
 						onClick={() => onPick(tab)}
 						data-tab={tab}
@@ -283,16 +312,26 @@ export function DiscoverSheet({
 }) {
 	const body = useRef<HTMLDivElement>(null)
 	useScrollTopOn(body, `${tab.tab}|${tab.active}|${tab.finding ? "find" : ""}`)
+	const base = useId()
+	const tabsBase = `${base}-tabs`
+	const bodyId = `${base}-body`
+	const subBase = `${base}-${tab.tab}`
+	const subPanelId = `${subBase}-panel`
 	return (
-		<SnapSheet
-			index={open ? 0 : -1}
-			onIndex={(index) => index < 0 && onClose()}
-			snaps={SHEET_SNAPS}
+		<PhoneSheet
+			open={open}
+			onClose={onClose}
 			label="Filters"
 			initialFocus={initialFocus}
 			header={
 				<div>
-					<SheetTabs open={tab.tab} badges={badges} onPick={onPickTab} />
+					<SheetTabs
+						open={tab.tab}
+						badges={badges}
+						onPick={onPickTab}
+						idBase={tabsBase}
+						panelId={bodyId}
+					/>
 					<TabHeader
 						subTabs={tab.subTabs}
 						active={tab.active}
@@ -303,12 +342,20 @@ export function DiscoverSheet({
 						find={find}
 						overlay={findOverlay}
 						layoutId={`discover-sheet-sub-${tab.tab}`}
+						idBase={subBase}
+						panelId={subPanelId}
 					/>
 				</div>
 			}
 			footer={footer}
 		>
-			<div ref={body} className="relative overflow-hidden px-5 pt-4 pb-8">
+			<div
+				ref={body}
+				id={bodyId}
+				role="tabpanel"
+				aria-labelledby={tabElementId(tabsBase, tab.tab)}
+				className="relative overflow-hidden px-5 pt-4 pb-8"
+			>
 				<AnimatePresence initial={false} custom={tab.dir} mode="popLayout">
 					<motion.div
 						key={tab.tab}
@@ -320,12 +367,19 @@ export function DiscoverSheet({
 						transition={TAB_SLIDE_TRANSITION}
 					>
 						{top}
-						<SubTabContent id={tab.finding ? "find" : tab.active} phone>
+						<SubTabContent
+							id={tab.finding ? "find" : tab.active}
+							phone
+							panelId={subPanelId}
+							labelledBy={
+								tab.finding ? null : tabElementId(subBase, tab.active)
+							}
+						>
 							{tab.content}
 						</SubTabContent>
 					</motion.div>
 				</AnimatePresence>
 			</div>
-		</SnapSheet>
+		</PhoneSheet>
 	)
 }

@@ -104,13 +104,16 @@ export function useSlashKey(onSlash: () => void) {
 const OWN_LAYERS =
 	"[role=dialog], [role=menu], [role=listbox], [data-headlessui-portal]"
 
+/** How the panel was closed from outside it: Escape, or a press somewhere else (which keeps its own focus). */
+export type OutsideClose = "escape" | "outside"
+
 /**
  * While `open`: Escape, or a pointer down outside `inside` and `keep` (and outside any menu, listbox or other dialog),
- * calls `onClose`.
+ * calls `onClose` with which of the two it was.
  */
 export function useOutsideClose(
 	open: boolean,
-	onClose: () => void,
+	onClose: (how: OutsideClose) => void,
 	inside: React.RefObject<HTMLElement>,
 	keep: React.RefObject<HTMLElement>,
 ) {
@@ -119,7 +122,8 @@ export function useOutsideClose(
 	useEffect(() => {
 		if (!open) return
 		const onKey = (event: KeyboardEvent) => {
-			if (event.key === "Escape" && !event.defaultPrevented) latest.current()
+			if (event.key === "Escape" && !event.defaultPrevented)
+				latest.current("escape")
 		}
 		const onDown = (event: Event) => {
 			const target = event.target as HTMLElement | null
@@ -127,7 +131,7 @@ export function useOutsideClose(
 			if (inside.current?.contains(target) || keep.current?.contains(target))
 				return
 			if (target.closest(OWN_LAYERS)) return
-			latest.current()
+			latest.current("outside")
 		}
 		document.addEventListener("keydown", onKey)
 		document.addEventListener("pointerdown", onDown)

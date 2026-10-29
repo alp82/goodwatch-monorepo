@@ -101,9 +101,16 @@ export function FindField({
 }
 
 /** Phones: the magnifier that opens Find. */
-export function FindOpenButton({ onClick }: { onClick: () => void }) {
+export function FindOpenButton({
+	onClick,
+	buttonRef,
+}: {
+	onClick: () => void
+	buttonRef?: RefObject<HTMLButtonElement>
+}) {
 	return (
 		<motion.button
+			ref={buttonRef}
 			type="button"
 			whileTap={TAP}
 			onClick={onClick}

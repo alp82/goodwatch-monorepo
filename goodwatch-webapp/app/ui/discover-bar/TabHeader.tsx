@@ -1,8 +1,10 @@
 // The tab header row, the same 48 px row in every tab: the sub-tabs on the left, each with a count of its active
 // choices, and Find on the right. Desktop: Find is the field, 320 px or 34% of the row, whichever is smaller. Phones:
 // the sub-tabs scroll sideways (the open one kept in view) and Find is a magnifier that opens the field over them.
+//
+// The sub-tabs are a tab list: one tab stop, Left and Right (and Home and End) move to and open the next sub-tab.
 import { motion } from "framer-motion"
-import { type ReactNode, useEffect, useRef } from "react"
+import { type KeyboardEvent, type ReactNode, useEffect, useRef } from "react"
 import { TabBadge } from "./DiscoverBar"
 import type { SubTab, SubTabId } from "./tabs"
 
@@ -14,6 +16,43 @@ const UNDERLINE_SPRING = {
 
 export const HEADER_HEIGHT = 48
 
+/** The id of a tab in a tab list whose ids start with `base`. */
+export const tabElementId = (base: string, id: string) => `${base}-tab-${id}`
+
+/**
+ * Arrow keys in a horizontal tab list: the tab that Left, Right, Home or End moves to, wrapping at the ends, or null
+ * for any other key.
+ */
+export function rovingTarget<T>(
+	tabs: readonly T[],
+	current: T,
+	key: string,
+): T | null {
+	const at = tabs.indexOf(current)
+	if (!tabs.length) return null
+	if (key === "ArrowRight") return tabs[(at + 1) % tabs.length]
+	if (key === "ArrowLeft") return tabs[(at - 1 + tabs.length) % tabs.length]
+	if (key === "Home") return tabs[0]
+	if (key === "End") return tabs[tabs.length - 1]
+	return null
+}
+
+/** The tab list's keyboard: opens the tab an arrow key moves to and focuses it. */
+export function onTabListKey<T extends string>(
+	event: KeyboardEvent<HTMLElement>,
+	tabs: readonly T[],
+	current: T,
+	pick: (tab: T) => void,
+	base: string,
+) {
+	if (event.altKey || event.ctrlKey || event.metaKey) return
+	const next = rovingTarget(tabs, current, event.key)
+	if (next === null) return
+	event.preventDefault()
+	if (next !== current) pick(next)
+	document.getElementById(tabElementId(base, next))?.focus()
+}
+
 export function TabHeader({
 	subTabs,
 	active,
@@ -24,6 +63,8 @@ export function TabHeader({
 	find,
 	overlay,
 	layoutId,
+	idBase,
+	panelId,
 }: {
 	subTabs: SubTab[]
 	active: SubTabId
@@ -39,6 +80,10 @@ export function TabHeader({
 	overlay?: ReactNode
 	/** Tells the underline of this row apart from another row's on the page. */
 	layoutId: string
+	/** Starts the sub-tabs' ids. */
+	idBase: string
+	/** The id of the content the sub-tabs control. */
+	panelId: string
 }) {
 	const row = useRef<HTMLDivElement>(null)
 	// Phones: a chip can open the last sub-tab, so scroll the open one into view.
@@ -61,6 +106,15 @@ export function TabHeader({
 				ref={row}
 				role="tablist"
 				aria-label="Sections"
+				onKeyDown={(event) =>
+					onTabListKey(
+						event,
+						subTabs.map((sub) => sub.id),
+						active,
+						onPick,
+						idBase,
+					)
+				}
 				className={`relative flex h-full min-w-0 flex-1 items-center gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${phone ? "px-3" : ""}`}
 			>
 				{subTabs.map((sub) => {
@@ -70,8 +124,11 @@ export function TabHeader({
 							key={sub.id}
 							type="button"
 							role="tab"
+							id={tabElementId(idBase, sub.id)}
 							data-sub-tab={sub.id}
 							aria-selected={on}
+							aria-controls={panelId}
+							tabIndex={sub.id === active ? 0 : -1}
 							onClick={() => onPick(sub.id)}
 							className={`relative flex h-full shrink-0 items-center gap-2 px-3 text-[14px] font-semibold whitespace-nowrap cursor-pointer outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${
 								on ? "text-white" : "text-gray-400 hover:text-gray-200"
