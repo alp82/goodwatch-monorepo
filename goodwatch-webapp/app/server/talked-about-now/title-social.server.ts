@@ -18,10 +18,13 @@ import {
 } from "./social-store.server"
 import { forgetTalkedAboutNow } from "./start-row.server"
 import type { Env } from "./flags.server"
+import { createSocialFillGate } from "./read-budget.ts"
+import { readTitleSocial, type SocialTimings } from "./title-read.ts"
+export { EMPTY } from "./title-read.ts"
 
 export type TitleMediaType = "movie" | "show"
 
-export const EMPTY: TitleSocial = { items: [], buzz: null }
+const fill = createSocialFillGate()
 
 const TITLE_CACHE = { name: "talked-about-now-title-v1", ttlMinutes: 5, staleMinutes: 5 }
 declareResettableCache(TITLE_CACHE)
@@ -84,6 +87,8 @@ export async function readBuzzTop(select: typeof query = query): Promise<BuzzTop
 	try {
 		const [row] = await select<{ day: string; payload: string }>(
 			"SELECT day, payload FROM doc.buzz_snapshot WHERE snapshot_key = 'current'",
+			[],
+			{ timeoutMs: 1_000 },
 		)
 		if (!row) return {}
 		const payload = JSON.parse(row.payload) as {
@@ -108,23 +113,29 @@ export async function getTitleSocial({
 }: {
 	mediaType: TitleMediaType
 	tmdbId: number
-}): Promise<TitleSocial> {
+}, timings: SocialTimings = {}): Promise<TitleSocial> {
 	const title: SocialTitle = { mediaType: socialMediaType(mediaType), tmdbId }
 	const lanes = disabledLanes()
 	const development = developmentStore()
-	const items = await cached({
-		...TITLE_CACHE,
-		ttlMinutes: development ? 0 : TITLE_CACHE.ttlMinutes,
-		params: { mediaType: title.mediaType, tmdbId, lanes: lanes.join(",") },
-		target: async () => ({ items: await readTitleItems(getSocialStore(), title, lanes) }),
-	})
-	if (!items.items.length) return EMPTY
-	// The lift is context, not a reason to show the section: a failed read leaves it out.
-	const buzzTop = await cached({ ...BUZZ_CACHE, params: {}, target: () => readBuzzTop() }).catch((error) => {
-		console.error("Buzz snapshot read failed", error)
-		return {} as BuzzTop
-	})
-	return { items: items.items as unknown as SocialEmbedItem[], buzz: buzzTop[`${title.mediaType}:${tmdbId}`] ?? null }
+	const params = { mediaType: title.mediaType, tmdbId, lanes: lanes.join(",") }
+	return readTitleSocial(`${title.mediaType}:${tmdbId}`, {
+		// Every lookup still checks the shared reset marker. Do not retain results or pending
+		// lookups in a second local cache: that would bypass reports from another instance.
+		items: () => cached({
+			...TITLE_CACHE,
+			ttlMinutes: development ? 0 : TITLE_CACHE.ttlMinutes,
+			params,
+			target: () => fill(JSON.stringify(params), async () => {
+				const start = performance.now()
+				try {
+					return { items: await readTitleItems(getSocialStore(), title, lanes) }
+				} finally {
+					timings.social_store = performance.now() - start
+				}
+			}),
+		}),
+		buzz: () => cached({ ...BUZZ_CACHE, params: {}, target: () => readBuzzTop() }),
+	}, timings)
 }
 
 /** Resets of caches that hold a title's posts. The start page's row adds its own. */

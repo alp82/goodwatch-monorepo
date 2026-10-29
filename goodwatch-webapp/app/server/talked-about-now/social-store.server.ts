@@ -9,7 +9,7 @@
 // built and driven without touching the production tables.
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
-import { execute, query } from "~/utils/crate"
+import { execute, query, type CrateReadOptions } from "~/utils/crate"
 import type { Env } from "./flags.server"
 
 /** Social tables name shows "tv", as TMDB does; the webapp says "show". */
@@ -121,7 +121,7 @@ export function readTitleSql(schema: string, disabledLanes: readonly string[]): 
 ) visible WHERE duplicate_rank = 1 ORDER BY score DESC NULLS LAST, published_at DESC, post_id DESC LIMIT ?`
 }
 
-type Select = <T extends {}>(sql: string, params: (string | number)[]) => Promise<T[]>
+type Select = <T extends {}>(sql: string, params: (string | number)[], options?: CrateReadOptions) => Promise<T[]>
 type Execute = (sql: string, params?: (string | number)[]) => Promise<unknown>
 
 /**
@@ -143,7 +143,7 @@ export function crateSocialStore({
 					title.tmdbId,
 					...disabledLanes,
 					Math.min(Math.max(Math.trunc(limit), 1), 100),
-				])
+				], { timeoutMs: 1_000 })
 				return rows.map((row) => ({
 					post_id: String(row.post_id),
 					image: (row.image as string | null) ?? null,

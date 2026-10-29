@@ -21,3 +21,10 @@ test("missing and invalid previews are uncached 404s", async () => {
 	assert.match(IMAGE_SQL, /INTERVAL '30 days'/)
 	assert.match(IMAGE_SQL, /i.post_id = \?/)
 })
+
+test("a failed image store answers a retryable response without caching the outage", async () => {
+	const response = await imageResponse("a".repeat(64), async () => { throw new Error("offline") })
+	assert.equal(response.status, 503)
+	assert.equal(response.headers.get("cache-control"), "no-store")
+	assert.equal(response.headers.get("retry-after"), "5")
+})

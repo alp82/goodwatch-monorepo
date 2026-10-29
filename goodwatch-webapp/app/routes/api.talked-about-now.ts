@@ -2,6 +2,7 @@
 // The same for every visitor: with the feature on, any cache may keep it for a few
 // minutes; in preview it answers only the members in TALKED_ABOUT_NOW_PREVIEW_USERS, and nothing keeps it.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
+import { withinSocialBudget } from "~/server/talked-about-now/read-budget"
 import type { TalkedRow } from "~/domain/talked-about-now"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
@@ -37,11 +38,12 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const { getTalkedAboutNow } = await import(
 		"~/server/talked-about-now/start-row.server"
 	)
-	const row = await getTalkedAboutNow()
+	const start = performance.now()
+	const row = await withinSocialBudget(() => getTalkedAboutNow(), 150, null)
 	return json<TalkedAnswer>(
 		{ row },
 		// Without a ranking the answer isn't kept: the next one may have it.
-		{ headers: { "Cache-Control": open && row ? PUBLIC : PRIVATE } },
+		{ headers: { "Cache-Control": open && row ? PUBLIC : PRIVATE, "Server-Timing": `social_row;dur=${(performance.now() - start).toFixed(1)}` } },
 	)
 }
 
