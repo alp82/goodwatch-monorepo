@@ -18,7 +18,7 @@ const cases = [
 	{
 		route: "settings.hidden",
 		from: "/settings/hidden",
-		to: "/my-library/hidden",
+		to: "/settings/not-interested",
 	},
 ]
 

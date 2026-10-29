@@ -1,55 +1,18 @@
-// My library's hub: one tile per page under it (Your scores, Want to see, Seen, Shows in progress, Not rated, then
-// lists, imports and hidden titles), each showing what is inside now. An old link that named a list with `?status=`
-// goes to that list's page. A guest is asked to sign up (docs/implementation/tracking/my-library/README.md).
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-	redirect,
-} from "@remix-run/node"
-import { useLoaderData } from "@remix-run/react"
-import { pageOfOldLink } from "~/domain/my-library"
-import { type LibraryHub, getLibraryHub } from "~/server/my-library-hub.server"
-import { LibraryHubPage } from "~/ui/my-library/hub/LibraryHubPage"
-import { GuestPage } from "~/ui/my-pages/bits"
+// Compatibility address: resolve the session viewer only when the move depends on them.
+import type { LoaderFunctionArgs } from "@remix-run/node"
+import { GUEST, member, oldToNew, moveResponse } from "~/domain/member-paths"
+import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
-export { pageHeaders as headers } from "~/utils/headers"
-
-export const meta: MetaFunction = () => [
-	{ title: "My library | GoodWatch" },
-	{
-		name: "description",
-		content:
-			"Everything you have marked, rated and brought in: what you want to see, what you have seen, your scores and the shows you are watching.",
-	},
-	// Personal to each viewer.
-	{ name: "robots", content: "noindex, follow" },
-]
-
-const headers = { "Cache-Control": "private, no-store" }
-
 export async function loader({ request }: LoaderFunctionArgs) {
-	const old = pageOfOldLink(new URL(request.url).searchParams)
-	if (old) return redirect(old, { status: 301, headers })
-	const userId = (await getUserIdFromRequest({ request })) ?? null
-	if (!userId) return json<LibraryHub | null>(null, { headers })
-	return json<LibraryHub | null>(await getLibraryHub(userId), { headers })
-}
-
-export default function MyLibraryHubRoute() {
-	const hub = useLoaderData<typeof loader>() as LibraryHub | null
-	if (!hub)
-		return (
-			<GuestPage
-				name="My library"
-				line="What you want to see, what you have seen, your scores and the shows you are watching, in one place."
-				words={{
-					title: "Sign up to keep everything you marked in one place",
-					detail:
-						"Your Wishlist, what you have seen and your scores come with you to every device.",
-				}}
-			/>
-		)
-	return <LibraryHubPage hub={hub} />
+	const url = new URL(request.url)
+	const shared = oldToNew(url.pathname, url.search, GUEST)
+	if (!shared) throw new Response("Not found", { status: 404 })
+	if (!shared.private) return moveResponse(shared)
+	const userId = await getUserIdFromRequest({ request })
+	const profile = userId ? await getCachedProfileByUserId(userId) : null
+	const viewer = userId ? member(profile?.handle ?? null) : GUEST
+	const move = oldToNew(url.pathname, url.search, viewer)
+	if (!move) throw new Response("Not found", { status: 404 })
+	return moveResponse(move)
 }

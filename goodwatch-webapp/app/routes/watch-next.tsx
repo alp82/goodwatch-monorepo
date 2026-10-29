@@ -1,65 +1,10 @@
-import { presentCatalogLoader } from "~/server/media-payload.server"
-// Watch next: the top of the Wishlist under the person's chosen sort and moods, then the rest of the Wishlist in a
-// stepped grid.
-// A member's first view is computed here; after that, and for guests (whose Wishlist lives in their browser), the
-// page reads /api/watch-next as the sort, moods, and On my services change.
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-	redirect,
-} from "@remix-run/node"
-import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
-import type { WatchNext } from "~/server/watch-next.server"
-import { WatchNextPage } from "~/ui/watch-next/WatchNextPage"
-import { apiQuery, choiceFromParams } from "~/ui/watch-next/useWatchNext"
-import { getUserIdFromRequest } from "~/utils/auth"
+// Compatibility address: the shared map owns the destination and query handling.
+import type { LoaderFunctionArgs } from "@remix-run/node"
+import { GUEST, oldToNew, moveResponse } from "~/domain/member-paths"
 
-export { pageHeaders as headers } from "~/utils/headers"
-
-export const meta: MetaFunction = () => [
-	{ title: "Watch next | GoodWatch" },
-	{
-		name: "description",
-		content:
-			"What to watch next from your Wishlist: sorted your way, narrowed by mood, on your streaming services.",
-	},
-	// Personal to each viewer.
-	{ name: "robots", content: "noindex, follow" },
-]
-
-// The sort, moods, and services change the URL, not the page: the browser reads /api/watch-next for them.
-export const shouldRevalidate: ShouldRevalidateFunction = ({
-	currentUrl,
-	nextUrl,
-	formMethod,
-	defaultShouldRevalidate,
-}) =>
-	currentUrl.pathname === nextUrl.pathname && !formMethod
-		? false
-		: defaultShouldRevalidate
-
-const headers = { "Cache-Control": "private, no-store" }
-
-async function canonicalLoader({ request }: LoaderFunctionArgs) {
-	const userId = (await getUserIdFromRequest({ request })) ?? null
-	// A member picks a movie on My movies and a show on My shows (#385); the sort, moods and services choice in the
-	// URL go along. Guests keep Watch next, which their browser fills: their Wishlist lives there.
-	if (userId)
-		return redirect(`/my-movies${new URL(request.url).search}`, {
-			// Personal: browsers must not keep the redirect.
-			headers: { ...headers, Vary: "Cookie" },
-		})
-	const query = apiQuery(choiceFromParams(new URL(request.url).searchParams))
-	return json({ query, data: null as WatchNext | null }, { headers })
+export function loader({ request }: LoaderFunctionArgs) {
+	const url = new URL(request.url)
+	const move = oldToNew(url.pathname, url.search, GUEST)
+	if (!move) throw new Response("Not found", { status: 404 })
+	return moveResponse(move)
 }
-
-export default function WatchNextRoute() {
-	const initial = useLoaderData<typeof loader>() as {
-		query: string
-		data: WatchNext | null
-	}
-	return <WatchNextPage initial={initial} />
-}
-
-export const loader = presentCatalogLoader(canonicalLoader, { live: true })

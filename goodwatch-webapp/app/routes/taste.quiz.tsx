@@ -1,3 +1,5 @@
+import { member, oldToNew, moveResponse } from "~/domain/member-paths"
+import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import type {
 	LoaderFunction,
@@ -55,6 +57,16 @@ const canonicalLoader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const user = await getUserFromRequest({ request })
+	if (user) {
+		const profile = await getCachedProfileByUserId(user.id)
+		const url = new URL(request.url)
+		const move = oldToNew(
+			url.pathname,
+			url.search,
+			member(profile?.handle ?? null),
+		)
+		if (move) return moveResponse(move)
+	}
 	const isLoggedIn = !!user
 
 	const { locale } = getLocaleFromRequest(request)

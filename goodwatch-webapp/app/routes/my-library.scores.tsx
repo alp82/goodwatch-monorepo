@@ -1,62 +1,18 @@
-// Your scores (My library): every title a member has scored, in one table with the ten scores beside each, to change
-// them in place. Search, filters in Discover's design, a two-way sort on every column, groups, and changes to many
-// titles at once. A guest is asked to sign up (docs/implementation/tracking/my-library/README.md).
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-} from "@remix-run/node"
-import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
-import type { ScoredTitle } from "~/domain/my-scores"
-import { presentCatalogLoader } from "~/server/media-payload.server"
-import { getMyScores } from "~/server/my-scores.server"
-import { GuestPage } from "~/ui/my-pages/bits"
-import { MyScoresPage } from "~/ui/my-library/scores/MyScoresPage"
+// Compatibility address: resolve the session viewer only when the move depends on them.
+import type { LoaderFunctionArgs } from "@remix-run/node"
+import { GUEST, member, oldToNew, moveResponse } from "~/domain/member-paths"
+import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
-export { pageHeaders as headers } from "~/utils/headers"
-
-export const meta: MetaFunction = () => [
-	{ title: "My scores | My library | GoodWatch" },
-	{
-		name: "description",
-		content: "Every title you have scored, with all ten scores beside it to change at once.",
-	},
-	// Personal to each viewer.
-	{ name: "robots", content: "noindex, follow" },
-]
-
-// The page keeps the scores it changed itself; reading the list again would undo where rescored rows sit.
-export const shouldRevalidate: ShouldRevalidateFunction = ({
-	currentUrl,
-	nextUrl,
-	defaultShouldRevalidate,
-}) => (currentUrl.pathname === nextUrl.pathname ? false : defaultShouldRevalidate)
-
-const headers = { "Cache-Control": "private, no-store" }
-
-type Loaded = { titles: ScoredTitle[] } | null
-
-async function canonicalLoader({ request }: LoaderFunctionArgs) {
-	const userId = (await getUserIdFromRequest({ request })) ?? null
-	if (!userId) return json<Loaded>(null, { headers })
-	return json<Loaded>({ titles: await getMyScores(userId) }, { headers })
-}
-
-export const loader = presentCatalogLoader(canonicalLoader, { live: true })
-
-export default function MyScoresRoute() {
-	const loaded = useLoaderData<typeof loader>() as Loaded
-	if (!loaded)
-		return (
-			<GuestPage
-				name="My scores"
-				line="Every title you have scored, to change any score in place."
-				words={{
-					title: "Sign up to keep your scores",
-					detail: "Rate titles and change any score later, from every device.",
-				}}
-			/>
-		)
-	return <MyScoresPage titles={loaded.titles} />
+export async function loader({ request }: LoaderFunctionArgs) {
+	const url = new URL(request.url)
+	const shared = oldToNew(url.pathname, url.search, GUEST)
+	if (!shared) throw new Response("Not found", { status: 404 })
+	if (!shared.private) return moveResponse(shared)
+	const userId = await getUserIdFromRequest({ request })
+	const profile = userId ? await getCachedProfileByUserId(userId) : null
+	const viewer = userId ? member(profile?.handle ?? null) : GUEST
+	const move = oldToNew(url.pathname, url.search, viewer)
+	if (!move) throw new Response("Not found", { status: 404 })
+	return moveResponse(move)
 }

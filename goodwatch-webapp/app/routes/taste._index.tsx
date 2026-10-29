@@ -1,3 +1,5 @@
+import { member, oldToNew, moveResponse } from "~/domain/member-paths"
+import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { useLoaderData, useLocation } from "@remix-run/react"
 import { presentCatalogLoader } from "~/server/media-payload.server"
@@ -33,6 +35,16 @@ export const meta: MetaFunction<typeof loader> = () => {
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const { userId } = await tastePageViewer(request)
+	if (userId) {
+		const profile = await getCachedProfileByUserId(userId)
+		const url = new URL(request.url)
+		const move = oldToNew(
+			url.pathname,
+			url.search,
+			member(profile?.handle ?? null),
+		)
+		if (move) return moveResponse(move)
+	}
 	return loadTastePage(request, userId)
 }
 

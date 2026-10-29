@@ -1,6 +1,10 @@
-// The old Hidden titles sheet: the titles you marked Not interested are a My library page now.
+// Compatibility address: the shared map owns the destination and query handling.
 import type { LoaderFunctionArgs } from "@remix-run/node"
-import { HIDDEN_PATH, movedTo } from "~/ui/settings/paths"
+import { GUEST, oldToNew, moveResponse } from "~/domain/member-paths"
 
-export const loader = ({ request }: LoaderFunctionArgs) =>
-	movedTo(request, HIDDEN_PATH)
+export function loader({ request }: LoaderFunctionArgs) {
+	const url = new URL(request.url)
+	const move = oldToNew(url.pathname, url.search, GUEST)
+	if (!move) throw new Response("Not found", { status: 404 })
+	return moveResponse(move)
+}
