@@ -2,6 +2,8 @@
 // (SubTabSlot) until its step fills it.
 import type { ReactNode } from "react"
 import type { SubTabView } from "../DiscoverControls"
+import { CombosTab } from "../mood/CombosTab"
+import { EverythingTab } from "../mood/EverythingTab"
 import { PeopleTab } from "../search/PeopleTab"
 import { TitlesTab } from "../search/TitlesTab"
 import type { SubTabId } from "../tabs"
@@ -17,6 +19,8 @@ const SUB_TAB_CONTENT: Partial<Record<SubTabId, SubTabContent>> = {
 	services: ServicesTab,
 	scores: ScoresTab,
 	age: AgeTab,
+	combos: CombosTab,
+	everything: EverythingTab,
 }
 
 /** The content of a sub-tab, or undefined while it has none (the panel then shows its empty slot). */

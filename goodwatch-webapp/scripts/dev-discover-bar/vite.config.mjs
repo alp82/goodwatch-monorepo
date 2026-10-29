@@ -16,6 +16,7 @@ const READS = [
 	["^/api/similar-media(\\?|$)", ["GET"]],
 	["^/api/streaming-providers(\\?|$)", ["GET"]],
 	["^/api/countries(\\?|$)", ["GET"]],
+	["^/api/explorer/world(\\?|$)", ["GET", "POST"]],
 ]
 
 const proxy = Object.fromEntries(

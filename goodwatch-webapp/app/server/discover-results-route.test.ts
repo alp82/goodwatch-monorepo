@@ -3,6 +3,8 @@ import { test } from "node:test"
 import { stubModules } from "./rating-onboarding.test-support.ts"
 
 stubModules({
+	"@tanstack/react-query": "export const useQuery = options => options",
+	"~/utils/locale": 'export default () => ({locale: {language: "en"}})',
 	"~/server/discover-results.server": `export class SnapshotNotLoaded extends Error {};
 		export const forYouFromParams = () => false;
 		export const discoverFilterDefaults = () => ({onMyServices: false, notSeenYet: false});
@@ -12,7 +14,9 @@ stubModules({
 	"~/server/viewer.server":
 		"export const getViewerContext = async (request, guest) => ({guest: guest ?? null})",
 })
-const { loader, action } = await import("../routes/api.discover_.results.ts")
+const { loader, action, useDiscoverResults } = await import(
+	"../routes/api.discover_.results.ts"
+)
 const args = (request: Request) => ({ request, params: {}, context: {} })
 
 test("GET and guest POST opt into exact comma-list count groups, including combinations", async () => {
@@ -57,5 +61,35 @@ test("GET and guest POST opt into exact comma-list count groups, including combi
 					counts?.split(",").includes(group) ?? false,
 				)
 		}
+	}
+})
+
+test("member and guest results fetches consume the query abort signal", async () => {
+	const original = globalThis.fetch
+	try {
+		for (const guest of [null, { interactions: [] }]) {
+			const controller = new AbortController()
+			globalThis.fetch = async (_url, init) => {
+				assert.equal(init?.signal, controller.signal)
+				assert.equal(init?.method ?? "GET", guest ? "POST" : "GET")
+				if (guest) assert.deepEqual(JSON.parse(String(init?.body)), { guest })
+				return new Promise((_resolve, reject) => {
+					init?.signal?.addEventListener(
+						"abort",
+						() => reject(controller.signal.reason),
+						{ once: true },
+					)
+				})
+			}
+			// The query stub exposes options without mounting React or accessing services.
+			const options = useDiscoverResults({ query: "", guest }) as unknown as {
+				queryFn: (ctx: { signal: AbortSignal }) => Promise<unknown>
+			}
+			const pending = options.queryFn({ signal: controller.signal })
+			controller.abort()
+			await assert.rejects(pending, { name: "AbortError" })
+		}
+	} finally {
+		globalThis.fetch = original
 	}
 })

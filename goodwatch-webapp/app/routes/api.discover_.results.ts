@@ -142,7 +142,7 @@ export function useDiscoverResults({
 	)
 	return useQuery<DiscoverResultsResponse>({
 		queryKey: ["discover-results", url, guest ? "guest" : "member"],
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const response = await fetch(
 				url,
 				guest
@@ -150,8 +150,9 @@ export function useDiscoverResults({
 							method: "POST",
 							headers: { "Content-Type": "application/json" },
 							body: JSON.stringify({ guest }),
+							signal,
 						}
-					: undefined,
+					: { signal },
 			)
 			if (!response.ok)
 				throw new Error(`Discover results failed: ${response.status}`)
