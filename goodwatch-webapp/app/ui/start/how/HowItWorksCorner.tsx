@@ -2,7 +2,7 @@
 // room's TV corner as one "Watch the intro" button beside the three essentials and one real link to /how-it-works.
 //
 // - The crop is placed by CSS from the first paint (how-it-works.css, with the numbers from intro-push.ts): the TV in
-//   the middle, about a third of the crop's width. The picture is below the fold and loads lazily.
+//   the middle, about a third of the crop's width. The picture is below the fold and joins once the page has started.
 // - Pressing it loads the theater (IntroTheater.tsx, which brings the film's code and intro.css) and pushes the camera
 //   into the TV from where the corner is on screen. Nothing of the film is on the page's first load. A tab opened
 //   before a deploy reloads once for the new build's chunk (reloadOnStaleChunk); when the code still doesn't come, the
@@ -17,6 +17,7 @@ import {
 	useState,
 } from "react"
 import { assetUrl } from "~/utils/asset-url"
+import { useHydrated } from "~/utils/hydrated"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { TV_CORNER_ART } from "../room/room-pictures"
 import { TV_CORNER } from "../room/scene"
@@ -77,6 +78,7 @@ export function HowItWorksCorner({
 }) {
 	const button = useRef<HTMLButtonElement>(null)
 	const picture = useRef<HTMLImageElement>(null)
+	const hydrated = useHydrated()
 	const [Theater, setTheater] = useState<Theater | null>(null)
 	const [from, setFrom] = useState<IntroFrom | null>(null)
 	const loading = useRef<Promise<Theater> | null>(null)
@@ -138,20 +140,27 @@ export function HowItWorksCorner({
 					onClick={play}
 				>
 					<span className="start-how-scene">
-						<picture>
-							<source type="image/avif" srcSet={assetUrl(TV_CORNER_ART.avif)} />
-							<img
-								ref={picture}
-								src={assetUrl(TV_CORNER_ART.webp)}
-								alt=""
-								width={TV_CORNER.width}
-								height={TV_CORNER.height}
-								loading="lazy"
-								decoding="async"
-								draggable={false}
-								className="start-how-picture"
-							/>
-						</picture>
+						{/* After the page has started, not from the HTML: a lazy picture this near the first view is fetched with
+						    the room, and 136 KB of it delays the room's paint on a slow phone. The box is the same either way. */}
+						{hydrated && (
+							<picture>
+								<source
+									type="image/avif"
+									srcSet={assetUrl(TV_CORNER_ART.avif)}
+								/>
+								<img
+									ref={picture}
+									src={assetUrl(TV_CORNER_ART.webp)}
+									alt=""
+									width={TV_CORNER.width}
+									height={TV_CORNER.height}
+									loading="lazy"
+									decoding="async"
+									draggable={false}
+									className="start-how-picture"
+								/>
+							</picture>
+						)}
 						<span className="start-how-pill">
 							<span aria-hidden className="start-how-pill-dot">
 								<svg viewBox="0 0 24 24" aria-hidden="true">

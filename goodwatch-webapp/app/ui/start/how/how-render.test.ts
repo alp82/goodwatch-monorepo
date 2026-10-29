@@ -35,7 +35,7 @@ test("an H2 section with a real link to /how-it-works and no H1", () => {
 		assert.ok(html.includes(title), title)
 })
 
-test("the TV corner is one button named Watch the intro, its picture lazy", () => {
+test("the TV corner is one button named Watch the intro; its picture isn't in the server's HTML", () => {
 	const buttons = html.match(/<button\b[^>]*>/g) ?? []
 	assert.equal(buttons.length, 1)
 	assert.match(buttons[0], /type="button"/)
@@ -43,15 +43,9 @@ test("the TV corner is one button named Watch the intro, its picture lazy", () =
 		html,
 		/<button[^>]*>[\s\S]*Watch the intro<\/span><\/span><\/button>/,
 	)
-	const img = html.match(/<img\b[^>]*>/g) ?? []
-	assert.equal(img.length, 1)
-	assert.match(img[0], /loading="lazy"/)
-	assert.match(img[0], /tv-corner[^"]*\.webp/)
-	assert.match(img[0], /width="1536" height="1024"/)
-	assert.match(
-		html,
-		/<source type="image\/avif" srcSet="[^"]*tv-corner[^"]*\.avif"/,
-	)
+	// A lazy picture this near the first view is fetched with the room: it joins once the page has started.
+	assert.equal((html.match(/<img\b[^>]*>/g) ?? []).length, 0)
+	assert.doesNotMatch(html, /tv-corner/)
 })
 
 test("the film's code and intro.css load only on press", () => {

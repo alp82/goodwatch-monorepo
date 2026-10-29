@@ -23,6 +23,7 @@ import type { TitleCard } from "~/server/title-cards.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { titlePath } from "~/utils/helpers"
+import { useHydrated } from "~/utils/hydrated"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { picksLine } from "../moods/mixes"
@@ -379,9 +380,15 @@ function EmptyFan({
 	onRoll: () => void
 	on: boolean
 }) {
+	// The fan's posters come after the page has started: the card waits out of sight until the guest asks, and eleven
+	// posters fetched with the HTML would share the slow phone's first second with the room.
+	const hydrated = useHydrated()
 	const posters = useMemo(
-		() => fan.filter((t) => t.poster_path).slice(0, FAN_HALF * 2 + 1),
-		[fan],
+		() =>
+			hydrated
+				? fan.filter((t) => t.poster_path).slice(0, FAN_HALF * 2 + 1)
+				: [],
+		[fan, hydrated],
 	)
 	return (
 		<div className="absolute inset-0 overflow-clip">
