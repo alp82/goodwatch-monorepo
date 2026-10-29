@@ -4,411 +4,553 @@
     {
       "id": "index-tsx",
       "route": "_index.tsx",
-      "examples": [
-        "/"
-      ],
+      "examples": ["/"],
       "tier": "P1",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "movie-moviekey-tsx",
       "route": "movie.$movieKey.tsx",
-      "examples": [
-        "/movie/603-the-matrix",
-        "/movie/14337-primer"
-      ],
+      "examples": ["/movie/603-the-matrix", "/movie/14337-primer"],
       "tier": "P1",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/movie/603-the-matrix",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        },
+        {
+          "path": "/movie/14337-primer",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "show-showkey-tsx",
       "route": "show.$showKey.tsx",
-      "examples": [
-        "/show/1399-game-of-thrones",
-        "/show/1396-breaking-bad"
-      ],
+      "examples": ["/show/1399-game-of-thrones", "/show/1396-breaking-bad"],
       "tier": "P1",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/show/1399-game-of-thrones",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        },
+        {
+          "path": "/show/1396-breaking-bad",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "person-personkey-tsx",
       "route": "person.$personKey.tsx",
-      "examples": [
-        "/person/138-quentin-tarantino"
-      ],
+      "examples": ["/person/138-quentin-tarantino"],
       "tier": "P1",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/person/138-quentin-tarantino",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "discover-type-tsx",
       "route": "discover.($type).tsx",
-      "examples": [
-        "/discover",
-        "/discover?type=movie",
-        "/discover?q=heist"
-      ],
+      "examples": ["/discover", "/discover?type=movie", "/discover?q=heist"],
       "tier": "P1",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/discover",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        },
+        {
+          "path": "/discover?type=movie",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        },
+        {
+          "path": "/discover?q=heist",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "type-best-tsx",
       "route": "$type.best.tsx",
-      "examples": [
-        "/movies/best",
-        "/shows/best"
-      ],
+      "examples": ["/movies/best", "/shows/best"],
       "tier": "P1",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/movies/best",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        },
+        {
+          "path": "/shows/best",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "type-index-tsx",
       "route": "$type._index.tsx",
-      "examples": [
-        "/movies",
-        "/shows"
-      ],
+      "examples": ["/movies", "/shows"],
       "tier": "P1",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/movies",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        },
+        {
+          "path": "/shows",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "for-you-tsx",
       "route": "for-you.tsx",
-      "examples": [
-        "/for-you"
-      ],
+      "examples": ["/for-you"],
       "tier": "P1",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/for-you",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "type-category-page-tsx",
       "route": "$type.$category.$page.tsx",
-      "examples": [
-        "/movies/genres/drama",
-        "/shows/moods/funny"
-      ],
+      "examples": ["/movies/genres/drama", "/shows/moods/funny"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/movies/genres/drama",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        },
+        {
+          "path": "/shows/moods/funny",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "type-category-index-tsx",
       "route": "$type.$category._index.tsx",
-      "examples": [
-        "/movies/genres",
-        "/shows/moods"
-      ],
+      "examples": ["/movies/genres", "/shows/moods"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/movies/genres",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        },
+        {
+          "path": "/shows/moods",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "blog-index-tsx",
       "route": "blog._index.tsx",
-      "examples": [
-        "/blog"
-      ],
+      "examples": ["/blog"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/blog",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "hot-on-socials-tsx",
       "route": "hot-on-socials.tsx",
-      "examples": [
-        "/hot-on-socials"
-      ],
+      "examples": ["/hot-on-socials"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/hot-on-socials",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "lists-id-tsx",
       "route": "lists.$id.tsx",
-      "examples": [
-        "/lists/o1H79d4fVu"
-      ],
+      "examples": ["/lists/o1H79d4fVu"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/lists/o1H79d4fVu",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "lists-new-tsx",
       "route": "lists.new.tsx",
-      "examples": [
-        "/lists/new"
-      ],
+      "examples": ["/lists/new"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/lists/new",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "my-library-list-tsx",
       "route": "my-library.$list.tsx",
-      "examples": [
-        "/my-library/seen"
-      ],
+      "examples": ["/my-library/seen"],
       "tier": "P2",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/my-library/seen",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "my-library-index-tsx",
       "route": "my-library._index.tsx",
-      "examples": [
-        "/my-library"
-      ],
+      "examples": ["/my-library"],
       "tier": "P2",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/my-library",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "my-library-hidden-tsx",
       "route": "my-library.hidden.tsx",
-      "examples": [
-        "/my-library/hidden"
-      ],
+      "examples": ["/my-library/hidden"],
       "tier": "P2",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/my-library/hidden",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "my-library-scores-tsx",
       "route": "my-library.scores.tsx",
-      "examples": [
-        "/my-library/scores"
-      ],
+      "examples": ["/my-library/scores"],
       "tier": "P2",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/my-library/scores",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "my-movies-tsx",
       "route": "my-movies.tsx",
-      "examples": [
-        "/my-movies"
-      ],
+      "examples": ["/my-movies"],
       "tier": "P2",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/my-movies",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "my-shows-tsx",
       "route": "my-shows.tsx",
-      "examples": [
-        "/my-shows"
-      ],
+      "examples": ["/my-shows"],
       "tier": "P2",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/my-shows",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "new-country-service-tsx",
       "route": "new.$country.$service.tsx",
-      "examples": [
-        "/new/us/netflix"
-      ],
+      "examples": ["/new/us/netflix"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/new/us/netflix",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "new-where-tsx",
       "route": "new.$where.tsx",
-      "examples": [
-        "/new/us"
-      ],
+      "examples": ["/new/us"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/new/us",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "people-tsx",
       "route": "people.tsx",
-      "examples": [
-        "/people"
-      ],
+      "examples": ["/people"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/people",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "taste-index-tsx",
       "route": "taste._index.tsx",
-      "examples": [
-        "/taste"
-      ],
+      "examples": ["/taste"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/taste",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "taste-quiz-tsx",
       "route": "taste.quiz.tsx",
-      "examples": [
-        "/taste/quiz"
-      ],
+      "examples": ["/taste/quiz"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/taste/quiz",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "u-handle-index-tsx",
       "route": "u.$handle._index.tsx",
-      "examples": [
-        "/u/alperortac"
-      ],
+      "examples": ["/u/alperortac"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/u/alperortac",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "u-handle-lists-id-tsx",
       "route": "u.$handle.lists.$id.tsx",
-      "examples": [
-        "/u/alperortac/lists/o1H79d4fVu"
-      ],
+      "examples": ["/u/alperortac/lists/o1H79d4fVu"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/u/alperortac/lists/o1H79d4fVu",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "u-handle-lists-index-tsx",
       "route": "u.$handle.lists._index.tsx",
-      "examples": [
-        "/u/alperortac/lists"
-      ],
+      "examples": ["/u/alperortac/lists"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/u/alperortac/lists",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "u-handle-scores-tsx",
       "route": "u.$handle.scores.tsx",
-      "examples": [
-        "/u/alperortac/scores"
-      ],
+      "examples": ["/u/alperortac/scores"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/u/alperortac/scores",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "u-handle-seen-tsx",
       "route": "u.$handle.seen.tsx",
-      "examples": [
-        "/u/alperortac/seen"
-      ],
+      "examples": ["/u/alperortac/seen"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/u/alperortac/seen",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "u-handle-shows-tsx",
       "route": "u.$handle.shows.tsx",
-      "examples": [
-        "/u/alperortac/shows"
-      ],
+      "examples": ["/u/alperortac/shows"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/u/alperortac/shows",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "u-handle-stats-view-tsx",
       "route": "u.$handle.stats.($view).tsx",
-      "examples": [
-        "/u/alperortac/stats"
-      ],
+      "examples": ["/u/alperortac/stats"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/u/alperortac/stats",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "u-handle-tropes-tsx",
       "route": "u.$handle.tropes.tsx",
-      "examples": [
-        "/u/alperortac/tropes"
-      ],
+      "examples": ["/u/alperortac/tropes"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/u/alperortac/tropes",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "u-handle-wishlist-tsx",
       "route": "u.$handle.wishlist.tsx",
-      "examples": [
-        "/u/alperortac/wishlist"
-      ],
+      "examples": ["/u/alperortac/wishlist"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/u/alperortac/wishlist",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
@@ -416,67 +558,82 @@
       "route": "u.$handle_.lists.$id_.edit.tsx",
       "examples": [],
       "tier": "P2",
-      "audience": [
-        "member"
-      ],
-      "unavailable": "Requires an owned editable list and member cookie; public GET baseline does not open edit handlers"
+      "audience": ["member"],
+      "unavailable": "Requires an owned editable list and member cookie; public GET baseline does not open edit handlers",
+      "verification": []
     },
     {
       "id": "watch-next-tsx",
       "route": "watch-next.tsx",
-      "examples": [
-        "/watch-next"
-      ],
+      "examples": ["/watch-next"],
       "tier": "P2",
-      "audience": [
-        "guest"
+      "audience": ["guest"],
+      "verification": [
+        {
+          "path": "/watch-next",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "wishlist-tsx",
       "route": "wishlist.tsx",
-      "examples": [
-        "/wishlist"
-      ],
+      "examples": ["/wishlist"],
       "tier": "P2",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/wishlist",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "blog-slug-tsx",
       "route": "blog.$slug.tsx",
-      "examples": [
-        "/blog/streaming-by-country-2026"
-      ],
+      "examples": ["/blog/streaming-by-country-2026"],
       "tier": "P2",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/blog/streaming-by-country-2026",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "lists-mine-tsx",
       "route": "lists.mine.tsx",
-      "examples": [
-        "/lists/mine"
-      ],
+      "examples": ["/lists/mine"],
       "tier": "P2",
-      "audience": [
-        "member"
-      ],
-      "note": "Members with a public handle redirect to their profile lists tab; members without one can see this collection page."
+      "audience": ["member"],
+      "note": "Members with a public handle redirect to their profile lists tab; members without one can see this collection page.",
+      "verification": [
+        {
+          "path": "/lists/mine",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
+      ]
     },
     {
       "id": "about-tsx",
       "route": "about.tsx",
-      "examples": [
-        "/about"
-      ],
+      "examples": ["/about"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/about",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
@@ -484,275 +641,343 @@
       "route": "auth.mcp.consent.tsx",
       "examples": [],
       "tier": "P3",
-      "audience": [
-        "member"
-      ],
-      "unavailable": "Requires a live OAuth authorization request and member credentials; do not replay authorization flows in a page benchmark"
+      "audience": ["member"],
+      "unavailable": "Requires a live OAuth authorization request and member credentials; do not replay authorization flows in a page benchmark",
+      "verification": []
     },
     {
       "id": "disclaimer-tsx",
       "route": "disclaimer.tsx",
-      "examples": [
-        "/disclaimer"
-      ],
+      "examples": ["/disclaimer"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/disclaimer",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "discord-index-tsx",
       "route": "discord._index.tsx",
-      "examples": [
-        "/discord"
-      ],
+      "examples": ["/discord"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/discord",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "explorer-tsx",
       "route": "explorer.tsx",
-      "examples": [
-        "/explorer"
-      ],
+      "examples": ["/explorer"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/explorer",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "forgot-password-tsx",
       "route": "forgot-password.tsx",
-      "examples": [
-        "/forgot-password"
-      ],
+      "examples": ["/forgot-password"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/forgot-password",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "how-it-works-tsx",
       "route": "how-it-works.tsx",
-      "examples": [
-        "/how-it-works"
-      ],
+      "examples": ["/how-it-works"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/how-it-works",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "privacy-tsx",
       "route": "privacy.tsx",
-      "examples": [
-        "/privacy"
-      ],
+      "examples": ["/privacy"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/privacy",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "reset-password-tsx",
       "route": "reset-password.tsx",
-      "examples": [
-        "/reset-password"
-      ],
+      "examples": ["/reset-password"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/reset-password",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "settings-index-tsx",
       "route": "settings._index.tsx",
-      "examples": [
-        "/settings"
-      ],
+      "examples": ["/settings"],
       "tier": "P3",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/settings",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "settings-account-tsx",
       "route": "settings.account.tsx",
-      "examples": [
-        "/settings/account"
-      ],
+      "examples": ["/settings/account"],
       "tier": "P3",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/settings/account",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "settings-connected-apps-tsx",
       "route": "settings.connected-apps.tsx",
-      "examples": [
-        "/settings/connected-apps"
-      ],
+      "examples": ["/settings/connected-apps"],
       "tier": "P3",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/settings/connected-apps",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "settings-country-tsx",
       "route": "settings.country.tsx",
-      "examples": [
-        "/settings/country"
-      ],
+      "examples": ["/settings/country"],
       "tier": "P3",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/settings/country",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "settings-discover-privacy-tsx",
       "route": "settings.discover-privacy.tsx",
-      "examples": [
-        "/settings/discover-privacy"
-      ],
+      "examples": ["/settings/discover-privacy"],
       "tier": "P3",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/settings/discover-privacy",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "settings-imports-tsx",
       "route": "settings.imports.tsx",
-      "examples": [
-        "/settings/imports"
-      ],
+      "examples": ["/settings/imports"],
       "tier": "P3",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/settings/imports",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "settings-language-tsx",
       "route": "settings.language.tsx",
-      "examples": [
-        "/settings/language"
-      ],
+      "examples": ["/settings/language"],
       "tier": "P3",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/settings/language",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "settings-profile-tsx",
       "route": "settings.profile.tsx",
-      "examples": [
-        "/settings/profile"
-      ],
+      "examples": ["/settings/profile"],
       "tier": "P3",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/settings/profile",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "settings-services-tsx",
       "route": "settings.services.tsx",
-      "examples": [
-        "/settings/services"
-      ],
+      "examples": ["/settings/services"],
       "tier": "P3",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/settings/services",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "settings-tsx",
       "route": "settings.tsx",
-      "examples": [
-        "/settings"
-      ],
+      "examples": ["/settings"],
       "tier": "P3",
-      "audience": [
-        "member"
+      "audience": ["member"],
+      "verification": [
+        {
+          "path": "/settings",
+          "status": null,
+          "reason": "Member credentials required; not checked in guest baseline"
+        }
       ]
     },
     {
       "id": "sign-in-tsx",
       "route": "sign-in.tsx",
-      "examples": [
-        "/sign-in"
-      ],
+      "examples": ["/sign-in"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/sign-in",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "sign-up-tsx",
       "route": "sign-up.tsx",
-      "examples": [
-        "/sign-up"
-      ],
+      "examples": ["/sign-up"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/sign-up",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "support-tsx",
       "route": "support.tsx",
-      "examples": [
-        "/support"
-      ],
+      "examples": ["/support"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/support",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "terms-tsx",
       "route": "terms.tsx",
-      "examples": [
-        "/terms"
-      ],
+      "examples": ["/terms"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/terms",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "use-with-ai-tsx",
       "route": "use-with-ai.tsx",
-      "examples": [
-        "/use-with-ai"
-      ],
+      "examples": ["/use-with-ai"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/use-with-ai",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     },
     {
       "id": "verify-email-tsx",
       "route": "verify-email.tsx",
-      "examples": [
-        "/verify-email"
-      ],
+      "examples": ["/verify-email"],
       "tier": "P3",
-      "audience": [
-        "guest",
-        "member"
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/verify-email",
+          "status": 200,
+          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        }
       ]
     }
   ],
