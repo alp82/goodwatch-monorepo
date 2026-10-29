@@ -20,7 +20,12 @@ import { FirstSteps } from "./FirstSteps"
 import { MemberResults } from "./MemberResults"
 import { ThisOrThat } from "./ThisOrThat"
 import { buildDeck } from "./deck"
-import type { MemberStartData, MemberStartLater } from "./member-data"
+import {
+	type ArrivedLists,
+	type MemberStartData,
+	type MemberStartLater,
+	withArrived,
+} from "./member-data"
 
 /** A member's room is lit and seen whole. */
 const MEMBER_ROOM = { night: 0, camera: 1 }
@@ -90,31 +95,35 @@ export function MemberStart({
 	)
 }
 
-type Arrived = Pick<MemberStartData, "forYou" | "hot">
-
 /**
  * The start with the lists that came later. The first render is the server's (they're still on their way there), so
- * the page hydrates as it was sent; each list joins when its promise settles. A list the start already has wins.
+ * the page hydrates as it was sent; each list joins when its promise settles, and only while that promise is the
+ * loader's current one (`withArrived`).
  */
 function useArrived(
 	data: MemberStartData,
 	later: MemberStartLater | undefined,
 ): MemberStartData {
-	const [arrived, setArrived] = useState<Arrived>({})
+	const [arrived, setArrived] = useState<ArrivedLists>({})
 	const forYou = later?.forYou
 	const hot = later?.hot
 	useEffect(() => {
 		let live = true
-		const join = <K extends keyof Arrived>(
+		const join = <K extends keyof ArrivedLists>(
 			key: K,
-			list: Promise<Arrived[K]> | undefined,
+			list: Promise<MemberStartData[K]> | undefined,
 		) =>
 			list?.then(
 				(value) => {
-					if (live) setArrived((now) => ({ ...now, [key]: value }))
+					if (live)
+						setArrived((now) => ({ ...now, [key]: { from: list, value } }))
 				},
 				() => {
-					if (live) setArrived((now) => ({ ...now, [key]: null }))
+					if (live)
+						setArrived((now) => ({
+							...now,
+							[key]: { from: list, value: null },
+						}))
 				},
 			)
 		join("forYou", forYou)
@@ -124,12 +133,8 @@ function useArrived(
 		}
 	}, [forYou, hot])
 	return useMemo(
-		() => ({
-			...data,
-			forYou: data.forYou !== undefined ? data.forYou : arrived.forYou,
-			hot: data.hot !== undefined ? data.hot : arrived.hot,
-		}),
-		[data, arrived],
+		() => withArrived(data, { forYou, hot }, arrived),
+		[data, forYou, hot, arrived],
 	)
 }
 

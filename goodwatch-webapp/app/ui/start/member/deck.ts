@@ -217,3 +217,23 @@ export function neither(deck: readonly DeckTitle[], duel: Duel): Duel {
 /** Start over: a new run from another title of the deck. */
 export const restart = (deck: readonly DeckTitle[], duel: Duel): Duel =>
 	deal(deck, duel.epoch + 1)
+
+/**
+ * The duel on a deck that changed under it. A deck that only grew (For you arriving after the page) keeps the run,
+ * and a deck of one that became a pair deals its first pair. A deck that lost a title on screen or tonight's pick
+ * (the page's data read again) deals a new run, since those sides would be blank. Returns `duel` itself when nothing
+ * changes.
+ */
+export function keepDuel(deck: readonly DeckTitle[], duel: Duel): Duel {
+	const keys = new Set(deck.map((title) => title.card.key))
+	const lost = (key: number | null) => key !== null && !keys.has(key)
+	// A finished run shows only its pick (and the runner-up); a run in play, its two sides.
+	if (
+		duel.done !== null ? lost(duel.done) : lost(duel.left) || lost(duel.right)
+	)
+		return deal(deck, duel.epoch)
+	if (lost(duel.runnerUp)) return { ...duel, runnerUp: null }
+	if (duel.right === null && duel.done === null && deck.length > 1)
+		return deal(deck, duel.epoch)
+	return duel
+}

@@ -7,7 +7,7 @@
 import { ArrowPathIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
 import { WatchButton, titleHref } from "~/ui/watch-next/WatchNextHero"
 import { offersOf } from "~/ui/watch-next/services"
@@ -19,6 +19,7 @@ import {
 	SOURCE_LABEL,
 	choose,
 	deal,
+	keepDuel,
 	neither,
 	restart,
 	roundsFor,
@@ -29,12 +30,11 @@ const QUIET =
 	"inline-flex h-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold text-gray-100 outline-none ring-1 ring-inset ring-white/15 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
 
 export function ThisOrThat({ deck }: { deck: DeckTitle[] }) {
-	const [duel, setDuel] = useState<Duel>(() => deal(deck, 0))
-	// For you can join the deck after the page (member.server.ts): a deck of one becomes a pair to play.
-	useEffect(() => {
-		if (duel.right === null && duel.done === null && deck.length > 1)
-			setDuel(deal(deck, duel.epoch))
-	}, [deck, duel])
+	const [stored, setDuel] = useState<Duel>(() => deal(deck, 0))
+	// The deck can change under the duel: For you joins it after the page (member.server.ts), and the page's data can
+	// be read again. The duel follows during render, so no frame shows a blank side.
+	const duel = keepDuel(deck, stored)
+	if (duel !== stored) setDuel(duel)
 	const byKey = useMemo(() => new Map(deck.map((t) => [t.card.key, t])), [deck])
 	const of = (key: number | null) =>
 		key === null ? null : (byKey.get(key) ?? null)

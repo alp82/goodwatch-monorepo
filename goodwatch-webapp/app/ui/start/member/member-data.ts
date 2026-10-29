@@ -51,6 +51,41 @@ export type MemberStartLater = {
 	hot?: Promise<MemberList<HotTitle> | null>
 }
 
+/** A later list as it settled, with the promise it settled from. */
+export type Settled<T> = { from: Promise<T>; value: T }
+
+export type ArrivedLists = {
+	forYou?: Settled<MemberStartData["forYou"]>
+	hot?: Settled<MemberStartData["hot"]>
+}
+
+/**
+ * The start with the later lists that have arrived. A list the start already has wins. A settled list counts only
+ * for the promise it came from: once the loader's data is read again, with new promises, the old answers are on
+ * their way again until the new ones settle.
+ */
+export function withArrived(
+	data: MemberStartData,
+	later: MemberStartLater | undefined,
+	arrived: ArrivedLists,
+): MemberStartData {
+	const pick = <T>(
+		own: T | undefined,
+		promise: Promise<T> | undefined,
+		settled: Settled<T> | undefined,
+	) =>
+		own !== undefined
+			? own
+			: settled && settled.from === promise
+				? settled.value
+				: undefined
+	return {
+		...data,
+		forYou: pick(data.forYou, later?.forYou, arrived.forYou),
+		hot: pick(data.hot, later?.hot, arrived.hot),
+	}
+}
+
 /** A member with nothing read: what the page shows when the member's data couldn't be read at all. */
 export const UNREAD_MEMBER: MemberStartData = {
 	ratings: 0,

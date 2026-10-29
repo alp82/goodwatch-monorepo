@@ -3,8 +3,17 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../../server/title-filter/test-alias.ts"
 
-const { buildDeck, choose, deal, neither, restart, roundsFor, turnOf } =
-	await import("./deck.ts")
+const {
+	buildDeck,
+	choose,
+	deal,
+	keepDuel,
+	neither,
+	restart,
+	roundsFor,
+	turnOf,
+} = await import("./deck.ts")
+const { withArrived } = await import("./member-data.ts")
 const { FEW, FULL, NEW, NO_SHOWS, NO_WISHLIST } = await import(
 	"./member-fixtures.test-support.ts"
 )
@@ -215,4 +224,84 @@ test("the rounds are pure: the same taps on the same deck give the same pick", (
 		return duel
 	}
 	assert.deepEqual(play(), play())
+})
+
+test("a deck that only grows keeps the run; a deck of one that becomes a pair deals one", () => {
+	// For you arrives after the page: the own lists' deck grows by its titles.
+	const own = buildDeck({ ...FULL, forYou: undefined })
+	let duel = choose(own, deal(own, 0), "left")
+	const grown = buildDeck(FULL)
+	assert.equal(keepDuel(grown, duel), duel)
+	duel = choose(grown, duel, "left")
+	assert.equal(duel.taps, 2)
+	const one = buildDeck({
+		...NEW,
+		wishlist: { titles: WISHLIST.slice(0, 1), total: 1 },
+	})
+	const alone = deal(one, 0)
+	assert.equal(alone.right, null)
+	const pair = keepDuel(
+		buildDeck({ ...NEW, wishlist: { titles: WISHLIST.slice(0, 3), total: 3 } }),
+		alone,
+	)
+	assert.notEqual(pair.right, null)
+})
+
+test("a deck that lost a title on screen or tonight's pick deals a new run, never a blank side", () => {
+	const deck = buildDeck(FULL)
+	const duel = deal(deck, 0)
+	// The page's data is read again and the left title is gone from every list (watched elsewhere, say).
+	const without = deck.filter((t) => t.card.key !== duel.left)
+	const kept = keepDuel(without, duel)
+	const keys = new Set(without.map((t) => t.card.key))
+	assert.ok(kept.left !== null && keys.has(kept.left))
+	assert.ok(kept.right !== null && keys.has(kept.right))
+	assert.equal(kept.taps, 0)
+	// A finished run whose pick is gone starts over; one that lost only its runner-up keeps the pick.
+	let done = deal(deck, 0)
+	for (const side of ["left", "left", "left"] as const)
+		done = choose(deck, done, side)
+	assert.ok(done.done !== null && done.runnerUp !== null)
+	const noPick = keepDuel(
+		deck.filter((t) => t.card.key !== done.done),
+		done,
+	)
+	assert.equal(noPick.done, null)
+	assert.ok(noPick.left !== null && noPick.right !== null)
+	const noRunnerUp = keepDuel(
+		deck.filter((t) => t.card.key !== done.runnerUp),
+		done,
+	)
+	assert.deepEqual(noRunnerUp, { ...done, runnerUp: null })
+})
+
+test("a later list counts only for the promise it settled from", () => {
+	const { forYou, hot, ...rest } = FULL
+	const forYouList = forYou ?? null
+	const hotList = hot ?? null
+	const data = { ...rest }
+	const first = {
+		forYou: Promise.resolve(forYouList),
+		hot: Promise.resolve(hotList),
+	}
+	const arrived = {
+		forYou: { from: first.forYou, value: forYouList },
+		hot: { from: first.hot, value: null },
+	}
+	const now = withArrived(data, first, arrived)
+	assert.equal(now.forYou, forYouList)
+	assert.equal(now.hot, null)
+	// The loader's data is read again: new promises, and the old answers are on their way again.
+	const second = {
+		forYou: new Promise<never>(() => {}),
+		hot: new Promise<never>(() => {}),
+	}
+	const next = withArrived(data, second, arrived)
+	assert.equal(next.forYou, undefined)
+	assert.equal(next.hot, undefined)
+	// A list the start already has wins over any later answer.
+	assert.equal(
+		withArrived({ ...data, forYou: null }, first, arrived).forYou,
+		null,
+	)
 })
