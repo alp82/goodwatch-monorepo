@@ -19,22 +19,40 @@ const catalog = /^\/(?:movie\/[^/]+|show\/[^/]+|person\/[^/]+|discover(?:\/[^/]+
 function knownCookies(cookie: string) {
 	return cookie.split(';').every(part => {
 		const name = part.trim().split('=')[0]
-		return !name || /^(?:gw_loc|gw_browser|_ga(?:_.*)?|_gid|_gat(?:_.*)?|ph_[\w-]+)$/.test(name)
+		return !name || /^(?:gw_loc|gw_browser|_ga(?:_.*)?|_gid|_gat(?:_.*)?|ph_[\w-]+|__cf_bm|cf_clearance|__cflb|__cfseq|cf_ob_info|cf_use_ob|__cfruid|_cfuvid|__cfwaitingroom|cf_chl_rc_(?:i|ni|m))$/.test(name)
 	})
 }
 
-export function eligible(request: Request, env: Env) {
+/** Return a bounded reason, never cookie values, paths or credentials. */
+function bypassReason(request: Request, env: Env): string | null {
 	const url = new URL(request.url)
-	return env.ENABLE_CACHE === 'true' && url.hostname === 'goodwatch.app' &&
-		request.method === 'GET' && catalog.test(url.pathname) &&
-		!url.search && // Phase 1 bypasses all queries, including _data and tracking IDs.
-		!request.headers.has('authorization') && !request.headers.has('range') &&
-		!request.headers.has('upgrade') && !request.headers.has('if-none-match') &&
-		!request.headers.has('if-modified-since') &&
-		!isbot(request.headers.get('user-agent')) &&
-		knownCookies(request.headers.get('cookie') ?? '') &&
-		edgeIdentity(request).cacheable &&
-		(request.headers.get('accept') ?? '').includes('text/html')
+	if (env.ENABLE_CACHE !== 'true') return 'disabled'
+	if (url.hostname !== 'goodwatch.app') return 'host'
+	if (request.method !== 'GET') return 'method'
+	if (!catalog.test(url.pathname)) return 'route'
+	if (url.search) return 'query'
+	if (request.headers.has('authorization')) return 'authorization'
+	if (['range', 'upgrade', 'if-none-match', 'if-modified-since'].some(name => request.headers.has(name))) return 'protocol'
+	if (isbot(request.headers.get('user-agent'))) return 'bot'
+	if (!edgeIdentity(request).cacheable) return 'identity'
+	if (!knownCookies(request.headers.get('cookie') ?? '')) return 'cookie'
+	if (!(request.headers.get('accept') ?? '').includes('text/html')) return 'accept'
+	return null
+}
+
+export function eligible(request: Request, env: Env) {
+	return bypassReason(request, env) === null
+}
+
+function observed(response: Response, reason: string | null) {
+	const status = response.headers.get('CF-Cache-Status')?.toUpperCase()
+	const outcome = reason ? `bypass-${reason}` :
+		['HIT', 'STALE', 'UPDATING', 'REVALIDATED'].includes(status ?? '') ? 'hit' :
+		['MISS', 'EXPIRED'].includes(status ?? '') ? 'miss' : 'bypass-origin-policy'
+	// Reuse the body stream without consuming it. Copy immutable fetch headers.
+	const result = new Response(response.body, response)
+	result.headers.set('GW-Edge', outcome)
+	return result
 }
 
 export async function handle(request: Request, env: Env, originFetch: typeof fetch = fetch) {
@@ -43,14 +61,15 @@ export async function handle(request: Request, env: Env, originFetch: typeof fet
 	// Only a zone route may invoke this code. Cloudflare supplies this header.
 	const clientIp = headers.get('CF-Connecting-IP')
 	if (clientIp) headers.set('X-Forwarded-For', clientIp)
-	const useCache = eligible(request, env)
+	const reason = bypassReason(request, env)
+	const useCache = reason === null
 	if (useCache) headers.set('GW-Cache-Identity', edgeIdentity(request).key!)
 	const forwarded = new Request(request, { headers, redirect: 'manual' })
-	if (!useCache) return originFetch(forwarded, { cache: 'no-store' })
+	if (!useCache) return observed(await originFetch(forwarded, { cache: 'no-store' }), reason)
 	// Native CDN fetch retains origin policy, Age and Tiered Cache semantics.
 	// See the research note: edge SWR needs a CDN-specific origin policy first.
 	// Do not set cacheTtl: it could override private/no-store and shorter lifetimes.
-	return originFetch(forwarded, {
+	return observed(await originFetch(forwarded, {
 		cf: {
 			cacheEverything: true,
 			cacheTtlByStatus: { '100-199': -1, '201-599': -1 },
@@ -62,7 +81,7 @@ export async function handle(request: Request, env: Env, originFetch: typeof fet
 				},
 			},
 		},
-	} as RequestInit)
+	} as RequestInit), null)
 }
 
 export default { fetch: (request: Request, env: Env) => handle(request, env) }

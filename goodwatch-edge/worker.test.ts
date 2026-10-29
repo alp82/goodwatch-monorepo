@@ -81,6 +81,48 @@ test('bypass strips spoofed identity and streams the unmodified origin response'
 			assert.deepEqual(options, { cache: 'no-store' })
 			return response
 		})
-	assert.equal(result, response)
+	assert.equal(result.body, response.body)
+	assert.equal(result.headers.get('GW-Edge'), 'bypass-method')
 	assert.equal(await result.text(), 'event: hello\n\n')
+})
+
+
+test('Cloudflare operational cookies preserve anonymous caching but never hide auth or unknown cookies', () => {
+	const names = ['__cf_bm', 'cf_clearance', '__cflb', '__cfseq', 'cf_ob_info', 'cf_use_ob', '__cfruid', '_cfuvid', '__cfwaitingroom', 'cf_chl_rc_i', 'cf_chl_rc_ni', 'cf_chl_rc_m']
+	const cookie = names.map(name => `${name}=opaque`).join('; ')
+	assert.equal(eligible(req({ cookie }), enabled), true)
+	for (const extra of [...authFixtures, 'future_session=x', '__cf_unknown=x', 'CF_Authorization=x']) {
+		assert.equal(eligible(req({ cookie: `${cookie}; ${extra}` }), enabled), false, extra)
+	}
+})
+
+test('GW-Edge reports CDN outcomes without buffering or changing response policy', async () => {
+	for (const [status, expected] of [['HIT', 'hit'], ['STALE', 'hit'], ['UPDATING', 'hit'], ['REVALIDATED', 'hit'], ['MISS', 'miss'], ['EXPIRED', 'miss'], ['DYNAMIC', 'bypass-origin-policy'], ['BYPASS', 'bypass-origin-policy'], ['', 'bypass-origin-policy']]) {
+		const response = new Response('HTML', { status: 200, headers: { 'CF-Cache-Status': status, 'cache-control': 'public, max-age=0', 'GW-Edge': 'untrusted', vary: 'GW-Cache-Identity' } })
+		const result = await handle(req(), enabled, async () => response)
+		assert.equal(result.headers.get('GW-Edge'), expected)
+		assert.equal(result.body, response.body)
+		assert.equal(result.status, 200)
+		assert.equal(result.headers.get('cache-control'), 'public, max-age=0')
+		assert.equal(result.headers.get('vary'), 'GW-Cache-Identity')
+	}
+})
+
+test('GW-Edge exposes bounded bypass reasons even if upstream claims a hit', async () => {
+	for (const [request, env, reason] of [
+		[req(), {}, 'disabled'],
+		[new Request('https://example.com/movie/550'), enabled, 'host'],
+		[req({}, undefined, 'HEAD'), enabled, 'method'],
+		[req({}, '/'), enabled, 'route'],
+		[req({}, '/movie/550?_data=root'), enabled, 'query'],
+		[req({ authorization: 'Bearer secret' }), enabled, 'authorization'],
+		[req({ 'if-modified-since': 'yesterday' }), enabled, 'protocol'],
+		[req({ 'user-agent': 'Googlebot' }), enabled, 'bot'],
+		[req({ cookie: 'gw.session_token=' }), enabled, 'identity'],
+		[req({ cookie: 'future_session=secret' }), enabled, 'cookie'],
+		[req({ accept: 'application/json' }), enabled, 'accept'],
+	] as const) {
+		const result = await handle(request, env, async () => new Response(null, { headers: { 'CF-Cache-Status': 'HIT' } }))
+		assert.equal(result.headers.get('GW-Edge'), `bypass-${reason}`)
+	}
 })
