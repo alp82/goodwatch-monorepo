@@ -79,6 +79,10 @@ test("a tracked show's frame can stack its status over its score; a Seen frame h
 	assert.match(rendered.status, /data-status-face/)
 	assert.match(rendered.status, /stacked:flex-col/)
 	assert.match(rendered.status, />12 new episodes</)
+	// Stacked, how far wraps under a long status and the row grows, rather than running out of the frame.
+	assert.match(rendered.status, /stacked:min-h-11/)
+	assert.match(rendered.status, /stacked:flex-wrap/)
+	assert.doesNotMatch(rendered.status, /stacked:h-11\b/)
 	for (const html of rendered.faces)
 		assert.doesNotMatch(html, /data-status-face/)
 })

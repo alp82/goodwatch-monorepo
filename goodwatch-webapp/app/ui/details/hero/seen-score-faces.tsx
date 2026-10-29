@@ -214,7 +214,8 @@ function StatusIcon({ tone }: { tone: StatusTone }) {
 
 /**
  * A show's status half: the status and, under it, how far (or what to do while Not started). Stacked, it is the top
- * row: the status on the left, how far and the chevron on the right.
+ * row: the status on the left, how far and the chevron on the right; where both don't fit on one line (a long-running
+ * show's "123 new episodes" and "S10 E12 · 123/456"), how far wraps under the status and the row grows.
  */
 export function StatusFace({
 	tone,
@@ -230,10 +231,10 @@ export function StatusFace({
 	return (
 		<span
 			data-status-face
-			className={`flex h-full items-center gap-1.5 px-2 sm:min-w-[6.75rem] sm:gap-2 sm:px-2.5 lg:group-data-[big]/split:min-w-[8rem] lg:group-data-[big]/split:px-3 text-left stacked:h-11 stacked:gap-2 stacked:px-3 ${LEFT_HALF} ${STATUS_TONE[tone]}`}
+			className={`flex h-full items-center gap-1.5 px-2 sm:min-w-[6.75rem] sm:gap-2 sm:px-2.5 lg:group-data-[big]/split:min-w-[8rem] lg:group-data-[big]/split:px-3 text-left stacked:h-auto stacked:min-h-11 stacked:gap-2 stacked:px-3 stacked:py-1.5 ${LEFT_HALF} ${STATUS_TONE[tone]}`}
 		>
 			<StatusIcon tone={tone} />
-			<span className="min-w-0 flex-1 leading-tight stacked:flex stacked:items-center stacked:gap-2">
+			<span className="min-w-0 flex-1 leading-tight stacked:flex stacked:flex-wrap stacked:items-center stacked:gap-x-2 stacked:gap-y-0.5">
 				<span className="block whitespace-nowrap text-xs font-bold lg:group-data-[big]/split:text-sm stacked:text-sm">
 					{label}
 				</span>
