@@ -17,6 +17,12 @@ const state = {
 }
 Object.assign(globalThis, { __categoryPagination: state })
 stubModules({
+	"~/server/best-lists.server":
+		"export const getRankedList=async()=>({titles:[],popular:[]})",
+	"~/server/row-services.server": "export const rowServices=async()=>null",
+	"~/ui/best-lists/ListHead": "export const ListHead=()=>null",
+	"~/ui/best-lists/RankedTitles":
+		"export const ListPageLinks=()=>null;export const RankedTitles=()=>null",
 	"~/server/discover.server":
 		"export const getDiscoverResults=async()=>globalThis.__categoryPagination.results",
 	"~/utils/discover":
@@ -133,4 +139,37 @@ test("the crawler anchor declares rel next and omits itself at the end", () => {
 		renderToStaticMarkup(createElement(NextPageLink, { url: null })),
 		"",
 	)
+})
+
+test("best-list paged canonicals and prev/next relations stay on adjacent pages", async () => {
+	const best = await import("../routes/$type.best.tsx")
+	for (const kind of ["movies", "shows"]) {
+		for (const page of [1, 2, 3, 12]) {
+			const tags = best.meta({
+				data: {
+					kind,
+					page,
+					pages: 12,
+					total: 3000,
+					popular: [],
+					first: (page - 1) * 250 + 1,
+					titles: [],
+				},
+			} as any)
+			const href = (rel: string) => {
+				const tag = tags.find((tag) => "rel" in tag && tag.rel === rel)
+				return tag && "href" in tag ? tag.href : undefined
+			}
+			const path = (n: number) => `/${kind}/best${n > 1 ? `?page=${n}` : ""}`
+			assert.equal(href("canonical"), `https://goodwatch.app${path(page)}`)
+			assert.equal(
+				href("prev"),
+				page > 1 ? `https://goodwatch.app${path(page - 1)}` : undefined,
+			)
+			assert.equal(
+				href("next"),
+				page < 12 ? `https://goodwatch.app${path(page + 1)}` : undefined,
+			)
+		}
+	}
 })

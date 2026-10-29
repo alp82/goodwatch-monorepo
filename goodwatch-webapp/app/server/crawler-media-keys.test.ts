@@ -41,7 +41,8 @@ registerHooks({
 		else if (url.endsWith("/ui/discover/DiscoverPage.tsx"))
 			source = "export const DiscoverPage=()=>null"
 		else if (url.endsWith("/ui/ErrorPage.tsx"))
-			source = "export const ErrorPage=()=>null;export const errorPageProps=()=>({status:500})"
+			source =
+				"export const ErrorPage=()=>null;export const errorPageProps=()=>({status:500})"
 		else if (url.endsWith("/routes/api.user-settings.set.tsx"))
 			source = "export const useSetUserSettings=()=>({})"
 		else if (url.endsWith("/server/media-payload.server.ts"))
@@ -79,7 +80,9 @@ registerHooks({
 	},
 })
 
-const { loader } = await import("../routes/discover.($type).tsx")
+const { loader, meta: discoverMeta } = await import(
+	"../routes/discover.($type).tsx"
+)
 const { useDiscoverBrowse } = await import(
 	"../ui/discover/useDiscoverBrowse.ts"
 )
@@ -177,21 +180,54 @@ test("Explorer SSR uses the live locale without API opt-in and labels initialDat
 	}
 })
 
-
 test("crawler Discover pagination keeps advancing beyond its bounded SSR window", async () => {
 	for (const page of [2, 3, 6, 12]) {
-		const result = await loader({ request: new Request(`https://goodwatch.test/discover?layout=grid&page=${page}`, { headers: { "User-Agent": "Googlebot" } }), params: {}, context: {} })
+		const result = await loader({
+			request: new Request(
+				`https://goodwatch.test/discover?layout=grid&page=${page}`,
+				{ headers: { "User-Agent": "Googlebot" } },
+			),
+			params: {},
+			context: {},
+		})
 		const data = result instanceof Response ? await result.json() : result
 		const pages = data.browse.initial.pages
+		const tags = discoverMeta({
+			data,
+			location: new URL(
+				`https://goodwatch.test/discover?layout=grid&page=${page}`,
+			),
+		} as any)
+		assert.ok(
+			tags.some(
+				(tag: any) =>
+					tag.rel === "canonical" &&
+					tag.href === "https://goodwatch.app/discover",
+			),
+		)
 		assert.equal(pages.at(-1).page, page)
 		assert.equal(pages.length, Math.min(page, 5))
 		function NextPage() {
-			const query = data.browse.initial.key.replace(/(?:&)?displayLanguage=en/, "").replace(/(?:&)?foryou=1/, "")
-			const found = useDiscoverBrowse({ query, forYou: true, member: false, guest: undefined, initial: data.browse.initial })
+			const query = data.browse.initial.key
+				.replace(/(?:&)?displayLanguage=en/, "")
+				.replace(/(?:&)?foryou=1/, "")
+			const found = useDiscoverBrowse({
+				query,
+				forYou: true,
+				member: false,
+				guest: undefined,
+				initial: data.browse.initial,
+			})
 			assert.equal(found.data?.pageParams.at(-1), page)
 			assert.equal(found.hasNextPage, true)
 			return null
 		}
-		renderToStaticMarkup(createElement(QueryClientProvider, { client: new QueryClient() }, createElement(NextPage)))
+		renderToStaticMarkup(
+			createElement(
+				QueryClientProvider,
+				{ client: new QueryClient() },
+				createElement(NextPage),
+			),
+		)
 	}
 })
