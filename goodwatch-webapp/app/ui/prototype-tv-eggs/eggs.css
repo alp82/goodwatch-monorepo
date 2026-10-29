@@ -1,0 +1,204 @@
+/* PROTOTYPE - throwaway (TV easter eggs, 2026-10-29). Only transform and opacity animate (the 60 fps rule). */
+
+.egg-stage {
+	--tv-l: 31.758%;
+	--tv-t: 9.564%;
+	--tv-w: 36.543%;
+	--tv-h: 35.069%;
+	position: relative;
+	width: min(100%, calc((100svh - 150px) * 1.7768));
+	aspect-ratio: 1672 / 941;
+	margin: 0 auto;
+	overflow: hidden;
+}
+@media (max-width: 767px) {
+	.egg-stage {
+		--tv-l: 21.442%;
+		--tv-t: 5.618%;
+		--tv-w: 57.21%;
+		--tv-h: 20.6%;
+		width: 100%;
+		aspect-ratio: 1068 / 1602;
+		max-height: none;
+	}
+}
+.egg-stage > picture img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.egg-dim {
+	position: absolute;
+	inset: 0;
+	background: #05060a;
+	opacity: 0;
+	transition: opacity 1.4s ease;
+	pointer-events: none;
+}
+.egg-screen {
+	position: absolute;
+	left: var(--tv-l);
+	top: var(--tv-t);
+	width: var(--tv-w);
+	height: var(--tv-h);
+	background: #000;
+	overflow: hidden;
+	border-radius: 0.35%;
+	container-type: size;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.egg-screen-inner {
+	position: absolute;
+	inset: 0;
+	transform-origin: 50% 50%;
+}
+/* The tube switching off: a line, then a dot, then dark. */
+.egg-off .egg-screen-inner {
+	animation: egg-crt-off 0.55s cubic-bezier(0.6, 0, 0.9, 0.4) forwards;
+}
+.egg-on .egg-screen-inner {
+	animation: egg-crt-on 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes egg-crt-off {
+	0% { transform: scale(1, 1); opacity: 1; }
+	55% { transform: scale(1, 0.006); opacity: 1; }
+	85% { transform: scale(0.004, 0.006); opacity: 1; }
+	100% { transform: scale(0, 0); opacity: 0; }
+}
+@keyframes egg-crt-on {
+	0% { transform: scale(0.004, 0.006); opacity: 0; }
+	30% { transform: scale(1, 0.006); opacity: 1; }
+	100% { transform: scale(1, 1); opacity: 1; }
+}
+.egg-dot {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 1.2cqw;
+	height: 1.2cqw;
+	margin: -0.6cqw;
+	border-radius: 999px;
+	background: #fff;
+	box-shadow: 0 0 2cqw 0.6cqw rgba(255, 255, 255, 0.6);
+	animation: egg-dot 0.9s ease 0.45s both;
+}
+@keyframes egg-dot {
+	0% { opacity: 0; transform: scale(1); }
+	15% { opacity: 1; }
+	100% { opacity: 0; transform: scale(0.2); }
+}
+
+/* Static: a noise tile twice the screen's size, moved in steps. */
+.egg-static {
+	position: absolute;
+	inset: -100%;
+	background-size: 180px 180px;
+	animation: egg-static 0.35s steps(6) infinite;
+	will-change: transform;
+}
+@keyframes egg-static {
+	0% { transform: translate(0, 0); }
+	20% { transform: translate(-9%, 7%); }
+	40% { transform: translate(6%, -11%); }
+	60% { transform: translate(-13%, -3%); }
+	80% { transform: translate(10%, 12%); }
+	100% { transform: translate(-4%, -8%); }
+}
+.egg-flash {
+	animation: egg-flash 0.32s ease-out both;
+}
+@keyframes egg-flash {
+	0% { opacity: 1; }
+	100% { opacity: 0; }
+}
+.egg-fade-in {
+	animation: egg-fade-in 0.4s ease-out both;
+}
+@keyframes egg-fade-in {
+	0% { opacity: 0; }
+	100% { opacity: 1; }
+}
+.egg-blink {
+	animation: egg-blink 1.1s steps(1) infinite;
+}
+@keyframes egg-blink {
+	50% { opacity: 0; }
+}
+.egg-pulse {
+	animation: egg-pulse 1.6s ease-in-out infinite;
+}
+@keyframes egg-pulse {
+	0%, 100% { transform: scale(1); }
+	50% { transform: scale(1.08); }
+}
+/* End credits roll up the screen. */
+.egg-credits {
+	animation: egg-credits var(--roll, 14s) linear forwards;
+}
+@keyframes egg-credits {
+	0% { transform: translateY(100cqh); }
+	100% { transform: translateY(-100%); }
+}
+.egg-progress {
+	transform-origin: 0 50%;
+}
+
+/* The four-key Remote, lying on the room's sideboard edge. */
+.egg-remote-spot {
+	position: absolute;
+	right: 7%;
+	bottom: 3%;
+	transform-origin: 100% 100%;
+	transform: scale(var(--rs, 0.62)) rotate(-7deg);
+}
+@media (max-width: 767px) {
+	.egg-remote-spot {
+		right: 50%;
+		bottom: 2%;
+		transform-origin: 50% 100%;
+		transform: translateX(50%) scale(var(--rs, 0.72)) rotate(-4deg);
+	}
+}
+.egg-remote {
+	width: 150px;
+	border-radius: 30px;
+}
+.egg-rocker {
+	background: linear-gradient(180deg, #34363b, #26272b);
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 2px 0 #0e0f11, 0 5px 10px rgba(0, 0, 0, 0.4);
+}
+.egg-rocker button {
+	color: rgba(255, 255, 255, 0.75);
+	transition: transform 80ms, color 120ms;
+}
+.egg-rocker button:hover {
+	color: #fff;
+}
+.egg-rocker button:active {
+	transform: translateY(1px);
+}
+.egg-rocker button:focus-visible {
+	outline: 2px solid #fdba74;
+	outline-offset: -4px;
+}
+.egg-remote button:disabled {
+	opacity: 0.28;
+	pointer-events: none;
+}
+.egg-scanlines {
+	position: absolute;
+	inset: 0;
+	background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px);
+	pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.egg-static,
+	.egg-credits,
+	.egg-pulse,
+	.egg-blink {
+		animation: none;
+	}
+}

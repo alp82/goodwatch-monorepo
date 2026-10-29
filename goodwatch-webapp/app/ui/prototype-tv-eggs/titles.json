@@ -1,0 +1,1124 @@
+[
+{
+"type": "movie",
+"id": 157336,
+"title": "Interstellar",
+"year": 2014,
+"runtime": 169,
+"score": 79.99000000000001,
+"backdrop": "/8sNiAPPYU14PUepFNeSNGUTiHW.jpg",
+"poster": "/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
+"tagline": "Mankind was born on Earth. It was never meant to die here.",
+"service": "Amazon Prime Video",
+"feels": [
+"wondrous",
+"technology-focused",
+"tense"
+]
+},
+{
+"type": "movie",
+"id": 155,
+"title": "The Dark Knight",
+"year": 2008,
+"runtime": 152,
+"score": 89.92375,
+"backdrop": "/9FE5eD92WfVCiivM9Pq9GVSrlWk.jpg",
+"poster": "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+"tagline": "Welcome to a world without rules.",
+"service": "HBO Max",
+"feels": [
+"crime-focused",
+"tense",
+"exciting"
+]
+},
+{
+"type": "show",
+"id": 1399,
+"title": "Game of Thrones",
+"year": 2011,
+"runtime": null,
+"score": 86.96875,
+"backdrop": "/zZqpAXxVSBtxV9qPBcscfXBcL2w.jpg",
+"poster": "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
+"tagline": "Winter is coming.",
+"service": "HBO Max",
+"feels": [
+"tense",
+"fantastical",
+"war-focused"
+]
+},
+{
+"type": "movie",
+"id": 278,
+"title": "The Shawshank Redemption",
+"year": 1994,
+"runtime": 142,
+"score": 89.0425,
+"backdrop": "/pNjh59JSxChQktamG3LMp9ZoQzp.jpg",
+"poster": "/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
+"tagline": "Fear can hold you prisoner. Hope can set you free.",
+"service": null,
+"feels": [
+"cathartic",
+"moving",
+"crime-focused"
+]
+},
+{
+"type": "show",
+"id": 1396,
+"title": "Breaking Bad",
+"year": 2008,
+"runtime": null,
+"score": 92.75,
+"backdrop": "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg",
+"poster": "/anFx9aTOOYqgS3v7x3R84Kz67ly.jpg",
+"tagline": "Change the equation.",
+"service": "Netflix",
+"feels": [
+"tense",
+"crime-focused",
+"psychological"
+]
+},
+{
+"type": "movie",
+"id": 27205,
+"title": "Inception",
+"year": 2010,
+"runtime": 148,
+"score": 83.78833333333333,
+"backdrop": "/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg",
+"poster": "/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
+"tagline": "Your mind is the scene of the crime.",
+"service": null,
+"feels": [
+"psychological",
+"tense",
+"exciting"
+]
+},
+{
+"type": "show",
+"id": 66732,
+"title": "Stranger Things",
+"year": 2016,
+"runtime": null,
+"score": 82.6825,
+"backdrop": "/9P4IIMYY3HifqeruZq0ZZ9g7YUi.jpg",
+"poster": "/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg",
+"tagline": "It only gets stranger...",
+"service": "Netflix",
+"feels": [
+"nostalgic",
+"tense",
+"mysterious"
+]
+},
+{
+"type": "movie",
+"id": 550,
+"title": "Fight Club",
+"year": 1999,
+"runtime": 139,
+"score": 81.625,
+"backdrop": "/c6OLXfKAk5BKeR6broC8pYiCquX.jpg",
+"poster": "/jSziioSwPVrOy9Yow3XhWIBDjq1.jpg",
+"tagline": "Mischief. Mayhem. Soap.",
+"service": null,
+"feels": [
+"psychological",
+"socially critical",
+"tense"
+]
+},
+{
+"type": "show",
+"id": 1402,
+"title": "The Walking Dead",
+"year": 2010,
+"runtime": null,
+"score": 78.975,
+"backdrop": "/rAOjnEFTuNysY7bot8zonhImGMh.jpg",
+"poster": "/ng3cMtxYKt1OSQYqFlnKWnVsqNO.jpg",
+"tagline": "Fight the dead. Fear the living.",
+"service": "Netflix",
+"feels": [
+"tense",
+"violent",
+"exciting"
+]
+},
+{
+"type": "show",
+"id": 1668,
+"title": "Friends",
+"year": 1994,
+"runtime": null,
+"score": 79.88499999999999,
+"backdrop": "/l0qVZIpXtIo7km9u5Yqh0nKPOr5.jpg",
+"poster": "/2koX1xLkpTQM4IZebYvKysFW1Nh.jpg",
+"tagline": "I'll be there for you.",
+"service": "HBO Max",
+"feels": [
+"nostalgic",
+"situationally funny",
+"pop-culture-focused"
+]
+},
+{
+"type": "movie",
+"id": 13,
+"title": "Forrest Gump",
+"year": 1994,
+"runtime": 142,
+"score": 83.8275,
+"backdrop": "/66Kn4XWhkuPkJxOJyPEx4U2CUfN.jpg",
+"poster": "/saHP97rTPS5eLmrLQEcANmKrsFl.jpg",
+"tagline": "The world will never be the same once you've seen it through the eyes of Forrest Gump.",
+"service": null,
+"feels": [
+"historical",
+"cathartic",
+"nostalgic"
+]
+},
+{
+"type": "show",
+"id": 19885,
+"title": "Sherlock",
+"year": 2010,
+"runtime": 90,
+"score": 84.63,
+"backdrop": "/8rvLEmdI4gLrMO1rLqbNdnNcPFE.jpg",
+"poster": "/7WTsnHkbA0FaG6R9twfFde0I9hl.jpg",
+"tagline": "A new sleuth for the 21st century.",
+"service": "Hulu",
+"feels": [
+"crime-focused",
+"mysterious",
+"witty"
+]
+},
+{
+"type": "movie",
+"id": 680,
+"title": "Pulp Fiction",
+"year": 1994,
+"runtime": 154,
+"score": 91.60125,
+"backdrop": "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg",
+"poster": "/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg",
+"tagline": "You won\u2019t know the facts until you\u2019ve seen the fiction.",
+"service": "Amazon Prime Video",
+"feels": [
+"witty",
+"darkly funny",
+"crime-focused"
+]
+},
+{
+"type": "show",
+"id": 87108,
+"title": "Chernobyl",
+"year": 2019,
+"runtime": null,
+"score": 90.2875,
+"backdrop": "/900tHlUYUkp7Ol04XFSoAaEIXcT.jpg",
+"poster": "/hlLXt2tOPT6RRnjiUmoxyG1LTFi.jpg",
+"tagline": "What is the cost of lies?",
+"service": "HBO Max",
+"feels": [
+"tense",
+"historical",
+"moving"
+]
+},
+{
+"type": "movie",
+"id": 603,
+"title": "The Matrix",
+"year": 1999,
+"runtime": 136,
+"score": 81.95125,
+"backdrop": "/tlm8UkiQsitc8rSuIAscQDCnP8d.jpg",
+"poster": "/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg",
+"tagline": "Believe the unbelievable.",
+"service": null,
+"feels": [
+"futuristic",
+"technology-focused",
+"exciting"
+]
+},
+{
+"type": "show",
+"id": 76479,
+"title": "The Boys",
+"year": 2019,
+"runtime": null,
+"score": 74.78125,
+"backdrop": "/bq28ajZaoMyzEIm6REelqyqtEDZ.jpg",
+"poster": "/in1R2dDc421JxsoRWaIIAqVI2KE.jpg",
+"tagline": "Never meet your heroes.",
+"service": "Amazon Prime Video",
+"feels": [
+"violent",
+"socially critical",
+"tense"
+]
+},
+{
+"type": "movie",
+"id": 122,
+"title": "The Lord of the Rings: The Return of the King",
+"year": 2003,
+"runtime": 201,
+"score": 91.38125,
+"backdrop": "/ctiw6FZK4N36LmkjSklWEbuvlq9.jpg",
+"poster": "/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg",
+"tagline": "The journey ends.",
+"service": "HBO Max",
+"feels": [
+"tense",
+"wondrous",
+"moving"
+]
+},
+{
+"type": "show",
+"id": 1405,
+"title": "Dexter",
+"year": 2006,
+"runtime": 60,
+"score": 78,
+"backdrop": "/nS5ZSmrX92lu1GYAlXZye1mkDfd.jpg",
+"poster": "/i8ORB1biusVy703lGxUi5Rle6zA.jpg",
+"tagline": "A serial killer with a heart..... just pray it's not yours.",
+"service": null,
+"feels": [
+"crime-focused",
+"violent",
+"mysterious"
+]
+},
+{
+"type": "movie",
+"id": 120,
+"title": "The Lord of the Rings: The Fellowship of the Ring",
+"year": 2001,
+"runtime": 179,
+"score": 90.875,
+"backdrop": "/oiwc338EoBgS4sEI2ixAny4KQKg.jpg",
+"poster": "/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg",
+"tagline": "One ring to rule them all.",
+"service": "HBO Max",
+"feels": [
+"wondrous",
+"fantastical",
+"cathartic"
+]
+},
+{
+"type": "show",
+"id": 1418,
+"title": "The Big Bang Theory",
+"year": 2007,
+"runtime": 22,
+"score": 75.535,
+"backdrop": "/rwYvhVv0vwbulMwxOfEsuAr1JrT.jpg",
+"poster": "/euKFiO5M125rpngFRBbSW83beeI.jpg",
+"tagline": "Smart is the new sexy.",
+"service": "HBO Max",
+"feels": [
+"situationally funny",
+"grounded",
+"pop-culture-focused"
+]
+},
+{
+"type": "movie",
+"id": 49026,
+"title": "The Dark Knight Rises",
+"year": 2012,
+"runtime": 165,
+"score": 83.25,
+"backdrop": "/c3OHQncTAnKFhdOTX7D3LTW6son.jpg",
+"poster": "/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg",
+"tagline": "The legend ends.",
+"service": "HBO Max",
+"feels": [
+"exciting",
+"cathartic",
+"class-conscious"
+]
+},
+{
+"type": "show",
+"id": 60059,
+"title": "Better Call Saul",
+"year": 2015,
+"runtime": null,
+"score": 91.39750000000001,
+"backdrop": "/rfxryDIv8huejujg4JueDJx8zCz.jpg",
+"poster": "/fC2HDm5t0kHl7mTm7jxMR31b7by.jpg",
+"tagline": "Putting the \"criminal\" in \"criminal lawyer.\"",
+"service": "Netflix",
+"feels": [
+"grounded",
+"tense",
+"crime-focused"
+]
+},
+{
+"type": "movie",
+"id": 121,
+"title": "The Lord of the Rings: The Two Towers",
+"year": 2002,
+"runtime": 179,
+"score": 90.53999999999999,
+"backdrop": "/6G73mNyooWAEQTpckPSnFxFoNmc.jpg",
+"poster": "/5VTN0pR8gcqV3EPUHHfMGnJYN9L.jpg",
+"tagline": "The journey continues.",
+"service": "HBO Max",
+"feels": [
+"fantastical",
+"exciting",
+"war-focused"
+]
+},
+{
+"type": "show",
+"id": 2316,
+"title": "The Office",
+"year": 2005,
+"runtime": null,
+"score": 80.375,
+"backdrop": "/9vMzIrMIncPmtalcxh1MOrgcE6C.jpg",
+"poster": "/7DJKHzAi83BmQrWLrYYOqcoKfhR.jpg",
+"tagline": "A comedy for anyone whose boss is an idiot.",
+"service": null,
+"feels": [
+"awkwardly funny",
+"situationally funny",
+"grounded"
+]
+},
+{
+"type": "movie",
+"id": 98,
+"title": "Gladiator",
+"year": 2000,
+"runtime": 155,
+"score": 79.41625,
+"backdrop": "/Ar7QuJ7sJEiC0oP3I8fKBKIQD9u.jpg",
+"poster": "/aDb548BOkFfI4nFm0kx8A3Ezh7H.jpg",
+"tagline": "What we do in life echoes in eternity.",
+"service": "Netflix",
+"feels": [
+"war-focused",
+"tense",
+"violent"
+]
+},
+{
+"type": "show",
+"id": 60574,
+"title": "Peaky Blinders",
+"year": 2013,
+"runtime": null,
+"score": 86.53125,
+"backdrop": "/dzq83RHwQcnP6WGJ6YkenIqeaa5.jpg",
+"poster": "/vUUqzWa2LnHIVqkaKVlVGkVcZIW.jpg",
+"tagline": "London's for the taking.",
+"service": "Netflix",
+"feels": [
+"historical",
+"crime-focused",
+"tense"
+]
+},
+{
+"type": "movie",
+"id": 807,
+"title": "Se7en",
+"year": 1995,
+"runtime": 127,
+"score": 75.13833333333332,
+"backdrop": "/i5H7zusQGsysGQ8i6P361Vnr0n2.jpg",
+"poster": "/191nKfP0ehp3uIvWqgPbFmI4lv9.jpg",
+"tagline": "Gluttony. Greed. Sloth. Envy. Wrath. Pride. Lust.",
+"service": null,
+"feels": [
+"crime-focused",
+"tense",
+"grounded"
+]
+},
+{
+"type": "show",
+"id": 93405,
+"title": "Squid Game",
+"year": 2021,
+"runtime": null,
+"score": 74.125,
+"backdrop": "/2meX1nMdScFOoV4370rqHWKmXhY.jpg",
+"poster": "/1QdXdRYfktUSONkl1oD5gc6Be0s.jpg",
+"tagline": "Only one can win.",
+"service": "Netflix",
+"feels": [
+"tense",
+"socially critical",
+"class-conscious"
+]
+},
+{
+"type": "movie",
+"id": 68718,
+"title": "Django Unchained",
+"year": 2012,
+"runtime": 165,
+"score": 85.1175,
+"backdrop": "/2oZklIzUbvZXXzIFzv7Hi68d6xf.jpg",
+"poster": "/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg",
+"tagline": "Life, liberty, and the pursuit of vengeance.",
+"service": null,
+"feels": [
+"violent",
+"cathartic",
+"historical"
+]
+},
+{
+"type": "show",
+"id": 1100,
+"title": "How I Met Your Mother",
+"year": 2005,
+"runtime": 22,
+"score": 79.5,
+"backdrop": "/3f8aW6vcYRP6mTZdgXm83BiuB9t.jpg",
+"poster": "/b34jPzmB0wZy7EjUZoleXOl2RRI.jpg",
+"tagline": "A love story in reverse.",
+"service": "Hulu",
+"feels": [
+"situationally funny",
+"romantic",
+"nostalgic"
+]
+},
+{
+"type": "movie",
+"id": 16869,
+"title": "Inglourious Basterds",
+"year": 2009,
+"runtime": 153,
+"score": 81.64625000000001,
+"backdrop": "/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg",
+"poster": "/aupnPtagH9JVBuMrGEanf4iqXEQ.jpg",
+"tagline": "Once upon a time in Nazi occupied France...",
+"service": "Amazon Prime Video",
+"feels": [
+"tense",
+"violent",
+"witty"
+]
+},
+{
+"type": "show",
+"id": 46648,
+"title": "True Detective",
+"year": 2014,
+"runtime": null,
+"score": 76.75,
+"backdrop": "/v8YFr8BbU9qsO8PYIulzTeM6Qk.jpg",
+"poster": "/cuV2O5ZyDLHSOWzg3nLVljp1ubw.jpg",
+"tagline": "The truth lies in the dark.",
+"service": "HBO Max",
+"feels": [
+"crime-focused",
+"tense",
+"mysterious"
+]
+},
+{
+"type": "movie",
+"id": 272,
+"title": "Batman Begins",
+"year": 2005,
+"runtime": 140,
+"score": 80.78999999999999,
+"backdrop": "/9IIBboV7MCT0bTxzXHmWK1Hq558.jpg",
+"poster": "/sPX89Td70IDDjVr85jdSBb4rWGr.jpg",
+"tagline": "Evil fears the knight.",
+"service": "HBO Max",
+"feels": [
+"crime-focused",
+"tense",
+"psychological"
+]
+},
+{
+"type": "show",
+"id": 100088,
+"title": "The Last of Us",
+"year": 2023,
+"runtime": null,
+"score": 80.37375,
+"backdrop": "/lY2DhbA7Hy44fAKddr06UrXWWaQ.jpg",
+"poster": "/dmo6TYuuJgaYinXBPjrgG9mB5od.jpg",
+"tagline": "Every path has a price.",
+"service": "HBO Max",
+"feels": [
+"family-focused",
+"tense",
+"violent"
+]
+},
+{
+"type": "movie",
+"id": 24428,
+"title": "The Avengers",
+"year": 2012,
+"runtime": 143,
+"score": 81.47749999999999,
+"backdrop": "/86IbFy98QjRIqg6WanKYb9tXNbJ.jpg",
+"poster": "/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg",
+"tagline": "Some assembly required.",
+"service": "Disney Plus",
+"feels": [
+"exciting",
+"pop-culture-focused",
+"wondrous"
+]
+},
+{
+"type": "show",
+"id": 42009,
+"title": "Black Mirror",
+"year": 2011,
+"runtime": null,
+"score": 80.49375,
+"backdrop": "/dg3OindVAGZBjlT3xYKqIAdukPL.jpg",
+"poster": "/seN6rRfN0I6n8iDXjlSMk1QjNcq.jpg",
+"tagline": "The future is bright.",
+"service": "Netflix",
+"feels": [
+"futuristic",
+"psychological",
+"socially critical"
+]
+},
+{
+"type": "movie",
+"id": 106646,
+"title": "The Wolf of Wall Street",
+"year": 2013,
+"runtime": 180,
+"score": 79.28375,
+"backdrop": "/7Nwnmyzrtd0FkcRyPqmdzTPppQa.jpg",
+"poster": "/kW9LmvYHAaS9iA0tHmZVq8hQYoq.jpg",
+"tagline": "Earn. Spend. Party.",
+"service": null,
+"feels": [
+"biographical",
+"class-conscious",
+"sensual"
+]
+},
+{
+"type": "show",
+"id": 1429,
+"title": "Attack on Titan",
+"year": 2013,
+"runtime": null,
+"score": 93.48333333333332,
+"backdrop": "/rqbCbjB19amtOtFQbb3K2lgm2zv.jpg",
+"poster": "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
+"tagline": "Home was a pen. Humanity, cattle.",
+"service": "Hulu",
+"feels": [
+"tense",
+"exciting",
+"violent"
+]
+},
+{
+"type": "movie",
+"id": 475557,
+"title": "Joker",
+"year": 2019,
+"runtime": 122,
+"score": 74.6425,
+"backdrop": "/rlay2M5QYvi6igbGcFjq8jxeusY.jpg",
+"poster": "/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
+"tagline": "Put on a happy face.",
+"service": "HBO Max",
+"feels": [
+"psychological",
+"tense",
+"moving"
+]
+},
+{
+"type": "show",
+"id": 60625,
+"title": "Rick and Morty",
+"year": 2013,
+"runtime": null,
+"score": 86.72375,
+"backdrop": "/5BDNWWHweQL0q1fmTv7gmRXfnl4.jpg",
+"poster": "/owhkU6KRqdXoUQpjV8uyZGPtX58.jpg",
+"tagline": "Science makes sense, family doesn't.",
+"service": "HBO Max",
+"feels": [
+"absurdly funny",
+"situationally funny",
+"witty"
+]
+},
+{
+"type": "movie",
+"id": 597,
+"title": "Titanic",
+"year": 1997,
+"runtime": 194,
+"score": 79.50125,
+"backdrop": "/sCzcYW9h55WcesOqA12cgEr9Exw.jpg",
+"poster": "/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg",
+"tagline": "Nothing on earth could come between them.",
+"service": null,
+"feels": [
+"moving",
+"romantic",
+"cathartic"
+]
+},
+{
+"type": "show",
+"id": 4607,
+"title": "Lost",
+"year": 2004,
+"runtime": null,
+"score": 84.875,
+"backdrop": "/yUOFocKDW7MCC5isx4FK8A68QFp.jpg",
+"poster": "/og6S0aTZU6YUJAbqxeKjCa3kY1E.jpg",
+"tagline": "Everything happens for a reason.",
+"service": "Hulu",
+"feels": [
+"mysterious",
+"tense",
+"spiritual"
+]
+},
+{
+"type": "movie",
+"id": 274,
+"title": "The Silence of the Lambs",
+"year": 1991,
+"runtime": 119,
+"score": 89.3075,
+"backdrop": "/mbOx1wxMLikzwWUO9TKAcFIy6op.jpg",
+"poster": "/uS9m8OBk1A8eM9I042bx8XXpqAq.jpg",
+"tagline": "To enter the mind of a killer she must challenge the mind of a madman.",
+"service": "Amazon Prime Video",
+"feels": [
+"tense",
+"psychological",
+"crime-focused"
+]
+},
+{
+"type": "show",
+"id": 82856,
+"title": "The Mandalorian",
+"year": 2019,
+"runtime": null,
+"score": 80.99875,
+"backdrop": "/9zcbqSxdsRMZWHYtyCd1nXPr2xq.jpg",
+"poster": "/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg",
+"tagline": "Bounty hunting is a complicated profession.",
+"service": "Disney Plus",
+"feels": [
+"nostalgic",
+"wondrous",
+"fantastical"
+]
+},
+{
+"type": "movie",
+"id": 19995,
+"title": "Avatar",
+"year": 2009,
+"runtime": 162,
+"score": 79.88875,
+"backdrop": "/vL5LR6WdxWPjLPFRLe133jXWsh5.jpg",
+"poster": "/gKY6q7SjCkAU6FqvqWybDYgUKIF.jpg",
+"tagline": "Enter the world of Pandora.",
+"service": "Disney Plus",
+"feels": [
+"wondrous",
+"fantastical",
+"exciting"
+]
+},
+{
+"type": "show",
+"id": 87739,
+"title": "The Queen's Gambit",
+"year": 2020,
+"runtime": null,
+"score": 87.0275,
+"backdrop": "/ktZaQ4FEmKpRgetiBooZETYQbmQ.jpg",
+"poster": "/zU0htwkhNvBQdVSIKB9s6hgVeFK.jpg",
+"tagline": "Beth Harmon makes her move.",
+"service": "Netflix",
+"feels": [
+"cathartic",
+"historical",
+"sports-focused"
+]
+},
+{
+"type": "movie",
+"id": 11324,
+"title": "Shutter Island",
+"year": 2010,
+"runtime": 138,
+"score": 73.49375,
+"backdrop": "/lavdyiJWciCJvyLG37ZOs6HJijg.jpg",
+"poster": "/nrmXQ0zcZUL8jFLrakWc90IR8z9.jpg",
+"tagline": "Someone is missing.",
+"service": null,
+"feels": [
+"mysterious",
+"psychological",
+"tense"
+]
+},
+{
+"type": "show",
+"id": 44217,
+"title": "Vikings",
+"year": 2013,
+"runtime": null,
+"score": 83.755,
+"backdrop": "/13kblIK8DnxMurcRDkeyy2sGR7v.jpg",
+"poster": "/bQLrHIRNEkE3PdIWQrZHynQZazu.jpg",
+"tagline": "",
+"service": "Netflix",
+"feels": [
+"violent",
+"historical",
+"war-focused"
+]
+},
+{
+"type": "movie",
+"id": 857,
+"title": "Saving Private Ryan",
+"year": 1998,
+"runtime": 169,
+"score": 90.29375,
+"backdrop": "/bdD39MpSVhKjxarTxLSfX6baoMP.jpg",
+"poster": "/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg",
+"tagline": "The mission is a man.",
+"service": null,
+"feels": [
+"tense",
+"violent",
+"historical"
+]
+},
+{
+"type": "movie",
+"id": 1422,
+"title": "The Departed",
+"year": 2006,
+"runtime": 151,
+"score": 87.325,
+"backdrop": "/6WRrGYalXXveItfpnipYdayFkQB.jpg",
+"poster": "/nT97ifVT2J1yMQmeq20Qblg61T.jpg",
+"tagline": "Cops or criminals. When you\u2019re facing a loaded gun, what\u2019s the difference?",
+"service": "HBO Max",
+"feels": [
+"crime-focused",
+"tense",
+"grounded"
+]
+},
+{
+"type": "movie",
+"id": 1124,
+"title": "The Prestige",
+"year": 2006,
+"runtime": 131,
+"score": 79.015,
+"backdrop": "/yaExZh6qE2cfyK3o4kAMEq0mkgy.jpg",
+"poster": "/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg",
+"tagline": "Are you watching closely?",
+"service": "Netflix",
+"feels": [
+"mysterious",
+"tense",
+"psychological"
+]
+},
+{
+"type": "movie",
+"id": 424,
+"title": "Schindler's List",
+"year": 1993,
+"runtime": 195,
+"score": 93.71125,
+"backdrop": "/zb6fM1CX41D9rF9hdgclu0peUmy.jpg",
+"poster": "/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
+"tagline": "Whoever saves one life, saves the world entire.",
+"service": null,
+"feels": [
+"moving",
+"historical",
+"biographical"
+]
+},
+{
+"type": "movie",
+"id": 497,
+"title": "The Green Mile",
+"year": 1999,
+"runtime": 189,
+"score": 78.7575,
+"backdrop": "/amZavErrjrdgDwhsIdpWxHNenIx.jpg",
+"poster": "/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
+"tagline": "Paul Edgecomb didn't believe in miracles. Until the day he met one.",
+"service": null,
+"feels": [
+"moving",
+"melancholic",
+"cathartic"
+]
+},
+{
+"type": "movie",
+"id": 299534,
+"title": "Avengers: Endgame",
+"year": 2019,
+"runtime": 181,
+"score": 85.43375,
+"backdrop": "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg",
+"poster": "/bR8ISy1O9XQxqiy0fQFw2BX72RQ.jpg",
+"tagline": "Avenge the fallen.",
+"service": "Disney Plus",
+"feels": [
+"cathartic",
+"exciting",
+"wondrous"
+]
+},
+{
+"type": "movie",
+"id": 77,
+"title": "Memento",
+"year": 2000,
+"runtime": 113,
+"score": 87.7175,
+"backdrop": "/7Wev9JMo6R5XAfz2KDvXb7oPMmy.jpg",
+"poster": "/nzlv62aC0octS5AklAiWpXLX9Z0.jpg",
+"tagline": "Some memories are best forgotten.",
+"service": "Netflix",
+"feels": [
+"mysterious",
+"tense",
+"crime-focused"
+]
+},
+{
+"type": "movie",
+"id": 22,
+"title": "Pirates of the Caribbean: The Curse of the Black Pearl",
+"year": 2003,
+"runtime": 143,
+"score": 76.67125,
+"backdrop": "/uRNgkJSkNBFbbn9fPsEjDIy8Sh3.jpg",
+"poster": "/poHwCZeWzJCShH7tOjg8RIoyjcw.jpg",
+"tagline": "Prepare to be blown out of the water.",
+"service": "Disney Plus",
+"feels": [
+"wondrous",
+"fantastical",
+"exciting"
+]
+},
+{
+"type": "movie",
+"id": 12,
+"title": "Finding Nemo",
+"year": 2003,
+"runtime": 100,
+"score": 88.77875,
+"backdrop": "/eCynaAOgYYiw5yN5lBwz3IxqvaW.jpg",
+"poster": "/eHuGQ10FUzK1mdOY69wF5pGgEf5.jpg",
+"tagline": "There are 3.7 trillion fish in the ocean. They're looking for one.",
+"service": "Disney Plus",
+"feels": [
+"heartwarming",
+"family-focused",
+"wondrous"
+]
+},
+{
+"type": "movie",
+"id": 118340,
+"title": "Guardians of the Galaxy",
+"year": 2014,
+"runtime": 121,
+"score": 83.75,
+"backdrop": "/uLtVbjvS1O7gXL8lUOwsFOH4man.jpg",
+"poster": "/r7vmZjiyZw9rpJMQJdXpjgiCOk9.jpg",
+"tagline": "You're Welcome.",
+"service": "Disney Plus",
+"feels": [
+"exciting",
+"nostalgic",
+"futuristic"
+]
+},
+{
+"type": "show",
+"id": 95396,
+"title": "Severance",
+"year": 2022,
+"runtime": null,
+"score": 86.61375,
+"backdrop": "/ixgFmf1X59PUZam2qbAfskx2gQr.jpg",
+"poster": "/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg",
+"tagline": "There's more to work than life.",
+"service": "Apple TV Store",
+"feels": [
+"psychological",
+"tense",
+"eerie"
+]
+},
+{
+"type": "show",
+"id": 136315,
+"title": "The Bear",
+"year": 2022,
+"runtime": null,
+"score": 84.375,
+"backdrop": "/aJtG4txtmiRHwAAqENQHZvBs6kY.jpg",
+"poster": "/eKfVzzEazSIjJMrw9ADa2x8ksLz.jpg",
+"tagline": "Back for seconds.",
+"service": "Disney Plus",
+"feels": [
+"tense",
+"grounded",
+"family-focused"
+]
+},
+{
+"type": "show",
+"id": 126308,
+"title": "Sh\u014dgun",
+"year": 2024,
+"runtime": null,
+"score": 88.65875,
+"backdrop": "/bwSmgmd90hCWwqOKQYTEraeOZhJ.jpg",
+"poster": "/7O4iVfOMQmdCSxhOg1WnzG1AgYT.jpg",
+"tagline": "An epic saga of war, passion, and power set in Feudal Japan.",
+"service": "Disney Plus",
+"feels": [
+"historical",
+"political",
+"tense"
+]
+},
+{
+"type": "show",
+"id": 94605,
+"title": "Arcane",
+"year": 2021,
+"runtime": null,
+"score": 90.6825,
+"backdrop": "/5cvnxEHT3e39DvT6ARw4GNCFrB0.jpg",
+"poster": "/87C0wecB8bHb1PsrKBI4kJiEkgV.jpg",
+"tagline": "The hunt is on.",
+"service": "Netflix",
+"feels": [
+"family-focused",
+"class-conscious",
+"tense"
+]
+},
+{
+"type": "show",
+"id": 119051,
+"title": "Wednesday",
+"year": 2022,
+"runtime": null,
+"score": 75.875,
+"backdrop": "/iHSwvRVsRyxpX7FE7GbviaDvgGZ.jpg",
+"poster": "/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
+"tagline": "The wait has been torture.",
+"service": "Netflix",
+"feels": [
+"mysterious",
+"coming-of-age",
+"romantic"
+]
+},
+{
+"type": "show",
+"id": 106379,
+"title": "Fallout",
+"year": 2024,
+"runtime": null,
+"score": 83.50874999999999,
+"backdrop": "/coaPCIqQBPUZsOnJcWZxhaORcDT.jpg",
+"poster": "/c15BtJxCXMrISLVmysdsnZUPQft.jpg",
+"tagline": "Let the end times roll.",
+"service": "Amazon Prime Video",
+"feels": [
+"game-focused",
+"tense",
+"violent"
+]
+},
+{
+"type": "show",
+"id": 194764,
+"title": "The Penguin",
+"year": 2024,
+"runtime": null,
+"score": 83.875,
+"backdrop": "/4TdmuuwiIiKw3JOjIuhdgYxRXnN.jpg",
+"poster": "/vOWcqC4oDQws1doDWLO7d3dh5qc.jpg",
+"tagline": "The city will be his.",
+"service": "HBO Max",
+"feels": [
+"crime-focused",
+"tense",
+"grounded"
+]
+},
+{
+"type": "show",
+"id": 94997,
+"title": "House of the Dragon",
+"year": 2022,
+"runtime": null,
+"score": 77.10125,
+"backdrop": "/577eXC8wFQT0eUrJcgznSiFPRmk.jpg",
+"poster": "/7V0Ebks0GgpKvQ7QbLAIdX5dos4.jpg",
+"tagline": "Win or die.",
+"service": "HBO Max",
+"feels": [
+"fantastical",
+"political",
+"family-focused"
+]
+}
+]
