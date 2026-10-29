@@ -37,24 +37,33 @@ export type ForYouPicks =
 	| { status: "ready"; pick: GuestPick }
 
 export function useLovedThree() {
-	const [loved, setLoved] = useState<readonly TitleCard[]>([])
+	// `round` counts the times a loved title left (an undo or a reset), so the same three loved again are a new choice:
+	// the beat and the picks of the three before never show for it.
+	const [{ loved, round }, setLoved] = useState<{
+		loved: readonly TitleCard[]
+		round: number
+	}>({ loved: [], round: 0 })
 	const three = useMemo(
 		() =>
 			createLovedThree<TitleCard, TasteInteraction[]>({
 				store: guestLovedStore,
-				onChange: setLoved,
+				onChange: (next) =>
+					setLoved((p) => ({
+						loved: next,
+						round: next.length < p.loved.length ? p.round + 1 : p.round,
+					})),
 			}),
 		[],
 	)
-	const lovedKey = loved.map((t) => t.key).join(",")
+	const lovedKey = `${round}:${loved.map((t) => t.key).join(",")}`
 	const full = loved.length >= LOVED_NEEDED
-	// Both keyed by the three they answer, so a reset forgets them without an effect.
+	// Both keyed by the three they answer (and the round), so a reset forgets them without an effect.
 	const [beat, setBeat] = useState<string | null>(null)
 	const [found, setFound] = useState<{ key: string; pick: GuestPick } | null>(
 		null,
 	)
 
-	// lovedKey names the loved titles.
+	// lovedKey names the loved titles and their round.
 	useEffect(() => {
 		if (!full) return
 		const abort = new AbortController()

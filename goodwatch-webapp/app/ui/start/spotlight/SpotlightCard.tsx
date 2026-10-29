@@ -9,12 +9,21 @@
 // - For you: ForYouPanel, with Back to the titles.
 import { HeartIcon, InformationCircleIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import { type CSSProperties, type ReactNode, useMemo, useState } from "react"
+import {
+	type CSSProperties,
+	type ReactNode,
+	Suspense,
+	lazy,
+	useEffect,
+	useMemo,
+	useState,
+} from "react"
 import { WORDS, WORD_BY_ID } from "~/domain/taste-picker"
 import type { TitleCard } from "~/server/title-cards.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { titlePath } from "~/utils/helpers"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { seeAllHref } from "../search/start-search"
 import {
@@ -24,10 +33,26 @@ import {
 	type StartView,
 } from "../stage/start-query"
 import type { StartQueryState } from "../stage/useStartQuery"
-import { ForYouPanel } from "./ForYouPanel"
+import { ForYouSkeleton } from "./ForYouSkeleton"
 import { LovedSlots } from "./LovedSlots"
 import { EdgeArrows, PageDots, SmallArrows, usePager } from "./PosterPager"
 import type { LovedThreeState } from "./useLovedThree"
+
+// For you shows only after three loved titles, so its code loads on first use: fetched once the first title is loved,
+// shown as its skeleton (the same box) until it's there.
+const importForYouPanel = () => import("./ForYouPanel")
+const ForYouPanel = lazy(
+	reloadOnStaleChunk(() =>
+		importForYouPanel().then((m) => ({ default: m.ForYouPanel })),
+	),
+)
+let forYouPreloaded = false
+function preloadForYouPanel() {
+	if (forYouPreloaded) return
+	forYouPreloaded = true
+	// A failure here is left to the lazy load, which reloads a tab that outlived a deploy.
+	void importForYouPanel().catch(() => {})
+}
 
 /** The card's heading per step. */
 export const TAP_THREE = "Tap three you loved"
@@ -81,6 +106,10 @@ export function SpotlightCard({
 		start.setPicks([surpriseMood(query.picks)])
 	}
 	const forYou = view === "forYou"
+	const anyLoved = loved.loved.length > 0
+	useEffect(() => {
+		if (anyLoved) preloadForYouPanel()
+	}, [anyLoved])
 	const tapping = view === "results" || view === "loading"
 	return (
 		<div className="spotlight">
@@ -151,7 +180,9 @@ export function SpotlightCard({
 					</Layer>
 					<Layer on={forYou} from="down">
 						{forYou ? (
-							<ForYouPanel picks={loved.picks} onStartOver={loved.reset} />
+							<Suspense fallback={<ForYouSkeleton />}>
+								<ForYouPanel picks={loved.picks} onStartOver={loved.reset} />
+							</Suspense>
 						) : null}
 					</Layer>
 				</div>

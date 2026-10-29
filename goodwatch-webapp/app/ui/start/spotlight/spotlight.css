@@ -392,6 +392,7 @@
 /* poster fit: start */
 .start-results {
 	container: start-results / inline-size;
+	margin-inline: auto;
 }
 .start-results-box {
 	--poster-w: calc(
@@ -409,131 +410,85 @@
 	gap: var(--poster-g);
 	scroll-padding-inline: var(--poster-e);
 }
+.start-results {
+	max-width: 414px;
+}
 .start-results-box {
-	--poster-n: 1;
+	--poster-n: 4;
 	--poster-g: 10px;
 	--poster-p: 16px;
 	--poster-e: 8px;
 }
-@container start-results (min-width: 120.5px) {
-	.start-results-box {
-		--poster-n: 2;
-	}
-}
-@container start-results (min-width: 218.5px) {
-	.start-results-box {
-		--poster-n: 3;
-	}
-}
-@container start-results (min-width: 316.5px) {
-	.start-results-box {
-		--poster-n: 4;
-	}
-}
-@container start-results (min-width: 414.5px) {
-	.start-results-box {
-		--poster-n: 5;
-	}
-}
-@container start-results (min-width: 512.5px) {
-	.start-results-box {
-		--poster-n: 6;
-	}
-}
-@container start-results (min-width: 610.5px) {
-	.start-results-box {
-		--poster-n: 7;
-	}
-}
-@container start-results (min-width: 708.5px) {
-	.start-results-box {
-		--poster-n: 8;
-	}
-}
-@container start-results (min-width: 806.5px) {
-	.start-results-box {
-		--poster-n: 9;
-	}
-}
-@container start-results (min-width: 904.5px) {
-	.start-results-box {
-		--poster-n: 10;
-	}
-}
-@container start-results (min-width: 1002.5px) {
-	.start-results-box {
-		--poster-n: 11;
-	}
-}
-@container start-results (min-width: 1100.5px) {
-	.start-results-box {
-		--poster-n: 12;
-	}
-}
 @media (min-width: 640px) {
+	.start-results {
+		max-width: none;
+	}
 	.start-results-box {
 		--poster-n: 1;
 		--poster-g: 14px;
 		--poster-p: 24px;
 		--poster-e: 8px;
 	}
-	@container start-results (min-width: 204.5px) {
+	@container start-results (min-width: 208.5px) {
 		.start-results-box {
 			--poster-n: 2;
 		}
 	}
-	@container start-results (min-width: 374.5px) {
+	@container start-results (min-width: 382.5px) {
 		.start-results-box {
 			--poster-n: 3;
 		}
 	}
-	@container start-results (min-width: 544.5px) {
+	@container start-results (min-width: 556.5px) {
 		.start-results-box {
 			--poster-n: 4;
 		}
 	}
-	@container start-results (min-width: 714.5px) {
+	@container start-results (min-width: 730.5px) {
 		.start-results-box {
 			--poster-n: 5;
 		}
 	}
-	@container start-results (min-width: 884.5px) {
+	@container start-results (min-width: 904.5px) {
 		.start-results-box {
 			--poster-n: 6;
 		}
 	}
-	@container start-results (min-width: 1054.5px) {
+	@container start-results (min-width: 1078.5px) {
 		.start-results-box {
 			--poster-n: 7;
 		}
 	}
-	@container start-results (min-width: 1224.5px) {
+	@container start-results (min-width: 1252.5px) {
 		.start-results-box {
 			--poster-n: 8;
 		}
 	}
-	@container start-results (min-width: 1394.5px) {
+	@container start-results (min-width: 1426.5px) {
 		.start-results-box {
 			--poster-n: 9;
 		}
 	}
-	@container start-results (min-width: 1564.5px) {
+	@container start-results (min-width: 1600.5px) {
 		.start-results-box {
 			--poster-n: 10;
 		}
 	}
-	@container start-results (min-width: 1734.5px) {
+	@container start-results (min-width: 1774.5px) {
 		.start-results-box {
 			--poster-n: 11;
 		}
 	}
-	@container start-results (min-width: 1904.5px) {
+	@container start-results (min-width: 1948.5px) {
 		.start-results-box {
 			--poster-n: 12;
 		}
 	}
 }
 @media (min-width: 1024px) {
+	.start-results {
+		max-width: none;
+	}
 	.start-results-box {
 		--poster-n: 1;
 		--poster-g: 14px;
@@ -597,6 +552,9 @@
 	}
 }
 @media (min-width: 1024px) and (max-height: 820px) {
+	.start-results {
+		max-width: none;
+	}
 	.start-results-box {
 		--poster-n: 1;
 		--poster-g: 14px;
@@ -660,6 +618,9 @@
 	}
 }
 @media (min-width: 1600px) and (min-height: 1000px) {
+	.start-results {
+		max-width: none;
+	}
 	.start-results-box {
 		--poster-n: 1;
 		--poster-g: 14px;
@@ -724,6 +685,7 @@
 }
 .start-also {
 	container: start-also / inline-size;
+	margin-inline: auto;
 }
 .start-also-box {
 	--poster-w: calc(
@@ -740,6 +702,9 @@
 	padding-inline: var(--poster-e);
 	gap: var(--poster-g);
 	scroll-padding-inline: var(--poster-e);
+}
+.start-also {
+	max-width: none;
 }
 .start-also-box {
 	--poster-n: 1;
@@ -803,6 +768,9 @@
 	}
 }
 @media (min-width: 640px) {
+	.start-also {
+		max-width: none;
+	}
 	.start-also-box {
 		--poster-n: 1;
 		--poster-g: 12px;
@@ -866,6 +834,9 @@
 	}
 }
 @media (min-width: 1024px) {
+	.start-also {
+		max-width: none;
+	}
 	.start-also-box {
 		--poster-n: 1;
 		--poster-g: 12px;
@@ -929,6 +900,9 @@
 	}
 }
 @media (min-width: 1800px) {
+	.start-also {
+		max-width: none;
+	}
 	.start-also-box {
 		--poster-n: 1;
 		--poster-g: 12px;

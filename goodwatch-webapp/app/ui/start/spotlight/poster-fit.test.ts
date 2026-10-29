@@ -50,7 +50,7 @@ const SIZES: [number, number, number, number][] = [
 	// width, height, results per view, Also for you per view
 	[375, 740, 4, 6],
 	[390, 844, 4, 6],
-	[768, 1024, 5, 3],
+	[768, 1024, 4, 3],
 	[1024, 768, 6, 5],
 	[1280, 800, 7, 6],
 	[1440, 900, 6, 6],
@@ -73,10 +73,35 @@ test("whole posters per view at every listed size", () => {
 	// Four on phones, about 70 px wide at 375 (owner, 2026-10-28).
 	const phone = postersPerView(fitAt(RESULTS_FIT, 375, 740), cardWidth(375))
 	assert.ok(Math.abs(phone.posterWidth - 70) < 2, String(phone.posterWidth))
-	for (const vw of [360, 375, 390, 414, 430])
+	// Every phone width shows four, the wider ones centered at the posters' widest, never part of a fifth.
+	for (const vw of [320, 360, 375, 390, 414, 430, 450, 500, 560, 600, 639]) {
+		const spec = fitAt(RESULTS_FIT, vw, 800)
+		const row = postersPerView(spec, cardWidth(vw))
+		assert.equal(row.n, 4, `${vw}`)
+		assert.ok(
+			row.posterWidth <= spec.colMax + 0.01,
+			`${vw}: ${row.posterWidth}`,
+		)
+		assert.ok(row.rowWidth <= cardWidth(vw), `${vw}`)
+		// The row is exactly four posters and their gaps.
+		assert.ok(
+			Math.abs(
+				4 * row.posterWidth + 3 * spec.gap + 2 * spec.pad - row.rowWidth,
+			) < 0.01,
+			`${vw}`,
+		)
+	}
+	// Tablets: four at 768 (the spec's list), more as the row widens.
+	for (const [vw, n] of [
+		[640, 4],
+		[700, 4],
+		[768, 4],
+		[900, 5],
+		[1000, 6],
+	])
 		assert.equal(
-			postersPerView(fitAt(RESULTS_FIT, vw, 800), cardWidth(vw)).n,
-			4,
+			postersPerView(fitAt(RESULTS_FIT, vw, 1024), cardWidth(vw)).n,
+			n,
 			`${vw}`,
 		)
 })
