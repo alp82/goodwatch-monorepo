@@ -468,3 +468,35 @@ range, "Last year" becomes Last 2 years from 2024, and the two Before chips swit
 - Presets (c, d, e, f share `eras()`): This year, Last 2 years (now - 2, so 2024-now, `years=2024-`), Last 3 years
   (now - 3, the real `recent` preset), Last 5 years. "Last N years" is always "since now - N". Older: Before 2000, then
   Before 1950.
+
+## Round 11b (2026-10-29): titles g idle, counts, audit fixes
+
+Owner on titles g with an empty search: only a Try list, the rest empty; "this should also show some popular very
+diverse picks of titles ... similar to cast and crew". And the type switch read "Movies 0 / Shows 0".
+
+- Titles g, no text: Try on the left (with Movies or shows and anime above it), "Popular titles" on the right, 12 in
+  two columns (phones: 6 under Try), each with the thumbs and Like this; ↑ ↓ Enter reach them too. The list is
+  hand-picked for spread (Parasite, Breaking Bad, Money Heist, Spirited Away, The Godfather, Arcane, Squid Game,
+  Amélie, RRR, Planet Earth II, Dark, Some Like It Hot), names, years and posters read live (/api/similar-media
+  through useTitleNames). Production would want a server pick (top title per far-apart bucket).
+- Type counts: kit keeps the previous answer while the next loads (placeholderData), so after a state that matched
+  nothing the switch showed that state's zeros until the new counts came. `d.countsFresh` is false while the counts
+  are placeholders or the search hasn't ranked; the type and anime switches (a lab copy of the sheet's Segmented)
+  then hide each count in place (opacity, no shift). The search preview's results query had the grid's cache key with
+  a different data shape; it has its own key now.
+- Footer: under the count, the hidden meter and "N hidden" (one fixed row, always there). While the list is 40 or
+  fewer (or empty), production's two biggest recoveries follow in amber ("+ 49 below 80"; phones: the biggest), one
+  tap drops that filter (Length drops both ranges). An "On my services" chip in the footer and the status line; the
+  status line now also keeps the picked services chip ("Netflix").
+- Empty grid: production's HiddenTitles (what each one-tap drop brings back, Clear filters; "No results for this
+  search" when nothing is hidden).
+- Mood names: the status line, footer, Mood summary and Find matches use the lab's names (Cozy, Sad, Thrilling,
+  Trippy, Romantic; `tagName` in mood/parts.tsx). The real FilterGroups (Find a filter's full results) still say
+  Feel-good etc.
+- Not seen yet: one home, Watch > Services. Taste f's Your lists keeps Only your Wishlist and Seen before (same
+  filter and label before, so nothing else changed).
+- Services b on phones: Any service sits beside Not seen yet while picking services.
+- Phone overflow (708 px with a search): ReadAsChips' sr-only "not " (absolute) inside the status line's sideways
+  scroller had no positioned ancestor, so it escaped the clip. The scroller is `relative` now (the footer's too).
+  Lab only: production renders ReadAsChips in TasteExplanation, not in a scroller.
+- TabPanel calls useLabChoice() unconditionally.

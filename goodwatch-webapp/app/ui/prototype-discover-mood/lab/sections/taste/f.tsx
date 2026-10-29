@@ -199,7 +199,7 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 				<div className="flex flex-col gap-2">
 					{(
 						[
-							["unseen", "Not seen yet"],
+							// Round 11b: Not seen yet lives in Watch > Services only (same filter, one place).
 							["wishlist", "Only your Wishlist"],
 							["seen", "Seen before"],
 						] as const

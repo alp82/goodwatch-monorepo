@@ -7,7 +7,7 @@
 // Variants own all layout. They may reuse any real component (FilterBar, DiscoverGrid, ReadAsChips, TitlePosterCard).
 import { useSearchParams } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { searchEligibility, searchText } from "~/domain/discover-search"
 import { MOODS, MAX_MOODS, type MoodKey } from "~/domain/moods"
 import {
@@ -218,6 +218,8 @@ export function useProtoDiscover() {
 		/** Titles in the current list (the search's top 100 while searching). */
 		total: counts?.total ?? null,
 		counts,
+		/** False while the counts are still the previous filters' (placeholder) or the search hasn't ranked yet. */
+		countsFresh: counts !== null && !results.isPlaceholderData && !waitingForSearch,
 		cards,
 		loading: results.isFetching || waitingForSearch,
 		hasMore,
@@ -273,13 +275,13 @@ function useLabFilters(raw: ReturnType<typeof useFilterState>, params: URLSearch
 }
 
 /** The real Discover grid, with Load more. */
-export function ProtoGrid({ d }: { d: ProtoDiscover }) {
+export function ProtoGrid({ d, empty }: { d: ProtoDiscover; empty?: ReactNode }) {
 	const sentinel = useRef<HTMLDivElement>(null)
 	return (
 		<div className={d.loading && d.cards.length ? "opacity-70 transition-opacity" : ""}>
 			<DiscoverGrid cards={d.cards} marks={null} />
 			{d.loading && !d.cards.length && <div className="py-16 text-center text-gray-400">Loading…</div>}
-			{!d.loading && !d.cards.length && <div className="py-16 text-center text-gray-400">Nothing fits. Remove a tag or a filter.</div>}
+			{!d.loading && !d.cards.length && (empty ? <div className="py-10">{empty}</div> : <div className="py-16 text-center text-gray-400">Nothing fits. Remove a tag or a filter.</div>)}
 			{d.hasMore && (
 				<div ref={sentinel} className="flex justify-center py-8">
 					<button

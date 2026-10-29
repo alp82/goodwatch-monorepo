@@ -66,22 +66,25 @@ export function ServicesB({ d, pieces, phone, viewer }: SectionProps) {
 		</>
 	)
 
+	// Phones too (round 11b): beside Not seen yet, so the head row keeps its room.
+	const anyButton = sv.mode === "pick" && (
+		<button
+			type="button"
+			onClick={() => sv.setMode("pick")}
+			aria-pressed={sv.anyService}
+			className={`h-9 shrink-0 rounded-xl px-3 text-[13px] cursor-pointer ring-1 outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${sv.anyService ? "bg-white font-semibold text-gray-950 ring-white" : "bg-white/[0.05] text-gray-300 ring-white/[0.06] hover:text-white"}`}
+		>
+			Any service
+		</button>
+	)
+
 	const head = (
 		<div className="flex items-center gap-2">
 			<CountrySelect sv={sv} className={phone ? "w-36 shrink-0" : "w-56"} />
 			<div className="min-w-0 flex-1">
 				<SearchField value={find.search} onChange={find.setSearch} placeholder={`Find a service in ${productionCountryName(sv.country)}`} />
 			</div>
-			{!phone && sv.mode === "pick" && (
-				<button
-					type="button"
-					onClick={() => sv.setMode("pick")}
-					aria-pressed={sv.anyService}
-					className={`h-9 shrink-0 rounded-xl px-3 text-[13px] cursor-pointer ring-1 outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${sv.anyService ? "bg-white font-semibold text-gray-950 ring-white" : "bg-white/[0.05] text-gray-300 ring-white/[0.06] hover:text-white"}`}
-				>
-					Any service
-				</button>
-			)}
+			{!phone && anyButton}
 		</div>
 	)
 
@@ -89,7 +92,12 @@ export function ServicesB({ d, pieces, phone, viewer }: SectionProps) {
 		return (
 			<div className="space-y-4">
 				<ModePill sv={sv} phone />
-				<NotSeenSwitch {...pieces.notSeenProps} size="sm" />
+				<div className="flex items-center gap-2">
+					<div className="min-w-0 flex-1">
+						<NotSeenSwitch {...pieces.notSeenProps} size="sm" />
+					</div>
+					{anyButton}
+				</div>
 				{head}
 				{tiles}
 			</div>

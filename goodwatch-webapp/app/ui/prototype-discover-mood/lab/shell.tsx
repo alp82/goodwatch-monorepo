@@ -7,7 +7,7 @@
 // panel's footer shows the whole search state (shell-footer.tsx).
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { SnapSheet } from "~/ui/filter-bar"
 import { TAP } from "~/ui/filter-bar/motion"
 import { useLabChoice } from "./LabBar"
@@ -15,7 +15,8 @@ import { pick, pick as variantOf } from "./registry"
 import { ResultsProvider, useShown } from "./results-view"
 import { useMcUsers } from "./sections/scores/mc-users"
 import { Footer } from "./shell-footer"
-import { type ProtoDiscover, useFilterPieces } from "../kit"
+import { type ProtoDiscover, TAGS, useFilterPieces } from "../kit"
+import { tagName } from "./sections/mood/parts"
 import {
 	GridUnder,
 	PageTitle,
@@ -373,8 +374,23 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 
 // ---------------------------------------------------------------------------------------------------------------
 
+/** The real pieces, with the lab's mood names on the mood chips (Cozy, not Feel-good), round 11b. */
+function useLabPieces(d: ProtoDiscover) {
+	const raw = useFilterPieces(d)
+	const chips = useMemo(
+		() =>
+			raw.chips.map((c) => {
+				if (c.group !== "moods") return c
+				const t = TAGS.find((x) => x.group === "moods" && `mood-${x.key}` === c.key)
+				return t ? { ...c, label: tagName(t) } : c
+			}),
+		[raw.chips],
+	)
+	return { ...raw, chips }
+}
+
 export function LabShell({ d }: { d: ProtoDiscover }) {
-	const pieces = useFilterPieces(d)
+	const pieces = useLabPieces(d)
 	const [dim, setDim] = useState(false)
 	const liveGrid = pick(useLabChoice(), "titles").liveGrid === true
 	return (

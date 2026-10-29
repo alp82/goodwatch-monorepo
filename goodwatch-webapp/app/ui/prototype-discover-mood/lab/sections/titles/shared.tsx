@@ -138,7 +138,8 @@ export function useSearchPreview(d: ProtoDiscover, text: string) {
 	const fq = d.filters.query
 	const baseQuery = ranked ? `${fq}${fq ? "&" : ""}ranked=${ranked.join(",")}` : null
 	const results = useQuery<DiscoverResults[]>({
-		queryKey: ["proto-discover-results", baseQuery ?? "", 1],
+		// Its own key: the grid's entries hold one list per length request (kit.tsx), this one a single page.
+		queryKey: ["proto-discover-preview", baseQuery ?? "", 1],
 		enabled: baseQuery !== null,
 		staleTime: 60_000,
 		queryFn: async ({ signal }) => {

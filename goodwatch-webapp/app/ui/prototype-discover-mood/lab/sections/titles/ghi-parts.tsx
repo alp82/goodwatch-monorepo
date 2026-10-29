@@ -11,6 +11,7 @@ import type { TitleCard } from "~/server/title-cards.server"
 import type { TitleKey } from "~/utils/title-key"
 import { type ProtoDiscover, TAGS, type Tag, short, tagId } from "../../../kit"
 import { type FoundTitle, POSTER_SM } from "../../shell-parts"
+import { tagName } from "../mood/parts"
 import type { Use } from "./shared"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -225,7 +226,7 @@ export function useFilterMatches(d: ProtoDiscover, text: string, n = 6): FilterM
 		for (const g of a.genres ?? []) genres.add(g)
 	}
 	for (const t of TAGS) {
-		const name = t.name.toLowerCase()
+		const name = `${t.name} ${tagName(t)}`.toLowerCase()
 		if (words.some((w) => name.split(/[^a-z]+/).some((p) => p.length >= 3 && (p.startsWith(w) || w.startsWith(p))))) tagIds.add(tagId(t))
 	}
 	const known = Object.keys(d.counts?.optionCounts.genres ?? {})
@@ -236,7 +237,7 @@ export function useFilterMatches(d: ProtoDiscover, text: string, n = 6): FilterM
 	const s = d.filters.state
 	const tags: FilterMatch[] = TAGS.filter((t) => tagIds.has(tagId(t))).map((t: Tag) => ({
 		id: tagId(t),
-		label: t.name,
+		label: tagName(t),
 		color: t.color,
 		group: GROUP_NAME[t.group],
 		on: d.isOn(t),

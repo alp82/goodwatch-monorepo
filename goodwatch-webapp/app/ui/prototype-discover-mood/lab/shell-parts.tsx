@@ -6,8 +6,9 @@ import { useNavigate } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, type Ref, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { type FilterState, RELEASED } from "~/domain/filter-state"
+import { type FilterName, type FilterState, RELEASED, dropFilter } from "~/domain/filter-state"
 import { productionCountryName } from "~/domain/production-country"
+import { HiddenTitles } from "~/ui/discover/HiddenTitles"
 import { ReadAsChips } from "~/ui/discover/ReadAsChips"
 import { FilterGroups } from "~/ui/filter-bar"
 import { type CardKey, cardOf, focusSheetOn } from "~/ui/filter-bar/filter-cards"
@@ -23,6 +24,7 @@ import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { goodwatchVibeIndex } from "~/utils/ratings"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 import { ProtoGrid, type ProtoDiscover, TAGS, type Tag, tagId, type useFilterPieces } from "../kit"
+import { tagName } from "./sections/mood/parts"
 import { mcUsers, setMcUsers } from "./sections/scores/mc-users"
 import type { SectionId } from "./types"
 
@@ -139,7 +141,7 @@ export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegV
 			: { value: headPlus(searchOther), placeholder: SEARCH_PLACEHOLDER, big: false, badge: badge("search") },
 		mood: {
 			value: join([
-				headPlus(moods.map((t) => t.name)),
+				headPlus(moods.map(tagName)),
 				headPlus(labels("themes", "styles")),
 				headPlus(labels("genres")),
 			]),
@@ -480,6 +482,19 @@ export function ValueChip({ chip, onRemove, onOpen }: { chip: ActiveChip; onRemo
 	)
 }
 
+/** "On my services" (activeChips has no chip for it); a picked list has its own ("Netflix, Prime Video"). */
+export function MyServicesChip({ d, onOpen }: { d: ProtoDiscover; onOpen: (slot: Slot) => void }) {
+	const s = d.filters.state
+	if (!s.onMyServices || d.filters.defaults.onMyServices) return null
+	return (
+		<ValueChip
+			chip={{ key: "mine", group: "services", label: "On my services", remove: (x) => ({ ...x, onMyServices: false }) }}
+			onOpen={() => onOpen("services")}
+			onRemove={() => d.filters.set({ onMyServices: false, anyService: undefined, services: undefined })}
+		/>
+	)
+}
+
 const LINE_FADE = "linear-gradient(to right, black calc(100% - 2.5rem), transparent)"
 
 export function StatusLine({
@@ -490,9 +505,10 @@ export function StatusLine({
 }: { d: ProtoDiscover; pieces: Pieces; onOpen: (slot: Slot) => void; className?: string }) {
 	const clearAll = useClearAll(d)
 	const searching = d.q !== null
-	const chips = pieces.chips.filter((c) => c.key !== "services")
+	// Round 11b: picked services keep their chip here too.
+	const chips = pieces.chips
 	const s = d.filters.state
-	const any = searching || chips.length > 0
+	const any = searching || chips.length > 0 || s.onMyServices
 	const sorts = discoverSorts(searching, TASTE)
 	const sort = sortShown(d.filters.sort, searching, TASTE)
 	return (
@@ -507,8 +523,9 @@ export function StatusLine({
 					</>
 				)}
 			</span>
+			{/* relative: the scroller clips ReadAsChips' sr-only text (absolute), which widened the phone page (11b). */}
 			<div
-				className="-mr-4 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pr-8 [scrollbar-width:none] lg:mr-0 [&::-webkit-scrollbar]:hidden"
+				className="relative -mr-4 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pr-8 [scrollbar-width:none] lg:mr-0 [&::-webkit-scrollbar]:hidden"
 				style={{ maskImage: LINE_FADE, WebkitMaskImage: LINE_FADE }}
 			>
 				{d.q && (
@@ -531,6 +548,7 @@ export function StatusLine({
 						</button>
 					</span>
 				)}
+				<MyServicesChip d={d} onOpen={onOpen} />
 				{s.notSeenYet && (
 					<ValueChip
 						chip={{ key: "notseen", group: "notSeenYet", label: "Not seen yet", remove: (x) => ({ ...x, notSeenYet: false }) }}
@@ -585,7 +603,7 @@ export function SubHead({ children, note, right }: { children: ReactNode; note?:
 
 export const tagOption = (d: ProtoDiscover, t: Tag): Option => ({
 	id: tagId(t),
-	label: t.name,
+	label: tagName(t),
 	active: d.isOn(t),
 	count: d.countFor(t),
 	toggle: () => d.toggle(t),
@@ -1079,11 +1097,23 @@ export function useSlashKey(onOpen: () => void) {
 	}, [])
 }
 
-/** The grid, dimmed while the desktop palette is open. */
+/** A one-tap recovery: drop that filter (Length drops both ranges, round 10). */
+export function dropOne(d: ProtoDiscover, f: FilterName) {
+	d.filters.update((s) => {
+		const out = dropFilter(s, f)
+		return f === "runtime" ? ({ ...out, episodeRuntime: undefined } as FilterState) : out
+	})
+}
+
+/** The grid, dimmed while the desktop palette is open. Empty: production's recoveries (HiddenTitles), round 11b. */
 export function GridUnder({ d, dim }: { d: ProtoDiscover; dim: boolean }) {
+	const clearAll = useClearAll(d)
+	const empty = d.counts && (
+		<HiddenTitles counts={d.counts} state={d.filters.state} onDrop={(f) => dropOne(d, f)} onClear={clearAll} canClear searching={d.q !== null} />
+	)
 	return (
 		<div className="relative mt-2 lg:mt-4">
-			<ProtoGrid d={d} />
+			<ProtoGrid d={d} empty={empty || undefined} />
 			<AnimatePresence>
 				{dim && (
 					<motion.div

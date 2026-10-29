@@ -1,8 +1,13 @@
 // PROTOTYPE (Discover lab, round 11): the panel's footer carries the search state on every tab and sub-tab. Left: the
 // count, then the query, steering picks, people and every other active filter as removable chips (one row, scrolls
 // sideways under a fade), Clear all; right: the Show button. Fixed height; phones put the chips on their own row.
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
-import { RollingNumber } from "~/ui/filter-bar/motion"
+// Round 11b: the hidden meter and "N hidden" under the count, production's one-tap recoveries in amber after it while
+// the list is small, and a chip for On my services.
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { motion } from "framer-motion"
+import { HiddenMeter } from "~/ui/filter-bar"
+import { compactCount, recoveryLabel } from "~/ui/filter-bar/labels"
+import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
 import { usePeopleNames, useTitleNames } from "~/ui/filter-bar/useFilterData"
 import type { ProtoDiscover } from "../kit"
 import { useShown } from "./results-view"
@@ -10,18 +15,58 @@ import { useMcUsers, setMcUsers } from "./sections/scores/mc-users"
 import { Face } from "./sections/people/shared"
 import { STEER, STEER_ORDER, SteerChip, chipStyle } from "./sections/titles/ghi-parts"
 import { ShowButton } from "./show-button"
-import { PRIVATE, type Pieces, type Slot, ValueChip, slotOfChip, useClearAll } from "./shell-parts"
+import { PRIVATE, type Pieces, type Slot, MyServicesChip, ValueChip, dropOne, slotOfChip, useClearAll } from "./shell-parts"
 
 const SEARCH_CAP = 100
 const FADE = "linear-gradient(to right, black calc(100% - 2.5rem), transparent)"
 const PURPLE = "#c084fc"
 /** Drawn as steer or person chips. */
 const OWN = new Set(["similarTo", "loved", "disliked", "people"])
+/** Recoveries show while the list is at most this long (or empty). */
+const SMALL = 40
 
 function Count({ d }: { d: ProtoDiscover }) {
 	const n = d.total
+	const hidden = d.counts?.hidden ?? 0
 	return (
-		<span className="shrink-0 text-sm whitespace-nowrap text-gray-400" aria-live="polite">
+		<span className="flex shrink-0 flex-col gap-1">
+			<CountText d={d} n={n} />
+			{/* Always this row, so the footer keeps its height. */}
+			<span className="flex h-3 items-center gap-2">
+				<HiddenMeter counts={d.counts} className="w-14" />
+				<span className="text-[11px] leading-none whitespace-nowrap text-gray-500">{d.counts && hidden > 0 ? `${compactCount(hidden)} hidden` : ""}</span>
+			</span>
+		</span>
+	)
+}
+
+/** The two biggest one-tap recoveries, production's amber "+ 57 in other genres" (phones: the biggest). */
+function Recoveries({ d, phone }: { d: ProtoDiscover; phone: boolean }) {
+	const n = d.total
+	const list = d.counts?.recoveries ?? []
+	if (n == null || n > SMALL || !list.length) return null
+	return (
+		<>
+			{list.slice(0, phone ? 1 : 2).map((r) => (
+				<motion.button
+					key={r.filter}
+					type="button"
+					whileTap={TAP}
+					onClick={() => dropOne(d, r.filter)}
+					className="flex shrink-0 items-center gap-1 rounded-md text-[13px] font-bold whitespace-nowrap text-amber-400 cursor-pointer outline-none hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400"
+				>
+					<PlusIcon className="h-3.5 w-3.5" />
+					<span className="sr-only">Show </span>
+					{recoveryLabel(r.filter, r.titles, d.filters.state)}
+				</motion.button>
+			))}
+		</>
+	)
+}
+
+function CountText({ d, n }: { d: ProtoDiscover; n: number | null }) {
+	return (
+		<span className="text-sm leading-5 whitespace-nowrap text-gray-400" aria-live="polite">
 			{n == null ? (
 				"Counting…"
 			) : d.q && n >= SEARCH_CAP ? (
@@ -114,6 +159,7 @@ function StateChips({ d, pieces, onOpen }: { d: ProtoDiscover; pieces: Pieces; o
 					</span>
 				)
 			})}
+			<MyServicesChip d={d} onOpen={onOpen} />
 			{s.notSeenYet && (
 				<ValueChip
 					chip={{ key: "notseen", group: "notSeenYet", label: "Not seen yet", remove: (x) => ({ ...x, notSeenYet: false }) }}
@@ -156,8 +202,9 @@ export function Footer({
 	const line = (
 		<div className="flex min-w-0 flex-1 items-center gap-3">
 			<Count d={d} />
+			<Recoveries d={d} phone={phone} />
 			<div
-				className="flex h-8 min-w-0 flex-1 items-center gap-1.5 overflow-x-auto overscroll-x-contain pr-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+				className="relative flex h-8 min-w-0 flex-1 items-center gap-1.5 overflow-x-auto overscroll-x-contain pr-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
 				style={{ maskImage: FADE, WebkitMaskImage: FADE }}
 			>
 				<StateChips d={d} pieces={pieces} onOpen={onOpen} />

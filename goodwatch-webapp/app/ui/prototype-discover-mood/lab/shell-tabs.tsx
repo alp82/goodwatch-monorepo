@@ -6,8 +6,7 @@ import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ComponentType, type ReactNode, useEffect, useRef } from "react"
 import { FilterGroups } from "~/ui/filter-bar"
-import { ANIME_LABELS, TYPE_LABELS } from "~/ui/filter-bar/labels"
-import { Segmented } from "~/ui/filter-bar/SheetControls"
+import { ANIME_LABELS, TYPE_LABELS, compactCount } from "~/ui/filter-bar/labels"
 import type { ProtoDiscover } from "../kit"
 import { useLabChoice } from "./LabBar"
 import { pick } from "./registry"
@@ -147,8 +146,9 @@ export function SearchType({ d }: { d: ProtoDiscover }) {
 	const c = (o: string) => d.counts?.optionCounts.type?.[o] ?? null
 	return (
 		<div className="flex">
-			<Segmented
+			<CountSegmented
 				label="Movies or shows"
+				pending={!d.countsFresh}
 				value={d.filters.state.type}
 				onChange={(type) => d.filters.set({ type })}
 				options={(["all", "movie", "show"] as const).map((id) => ({ id, label: id === "all" ? "Both" : TYPE_LABELS[id], count: c(id) }))}
@@ -164,14 +164,68 @@ export function TypeBlock({ d, className = "" }: { d: ProtoDiscover; className?:
 		<div className={`flex flex-col gap-2 ${className}`}>
 			<SearchType d={d} />
 			<div className="flex">
-				<Segmented
+				<CountSegmented
 					label="Anime"
 					small
+					pending={!d.countsFresh}
 					value={d.filters.state.anime}
 					onChange={(anime) => d.filters.set({ anime })}
 					options={(["any", "only", "none"] as const).map((id) => ({ id, label: id === "any" ? "With anime" : ANIME_LABELS[id], count: c(id) }))}
 				/>
 			</div>
+		</div>
+	)
+}
+
+/**
+ * The sheet's Segmented (SheetControls), with one change (round 11b): while the counts are still the previous
+ * filters' (`pending`), each count keeps its place but turns invisible, so no stale "0" shows and nothing moves.
+ */
+function CountSegmented<T extends string>({
+	value,
+	options,
+	onChange,
+	small = false,
+	label,
+	pending,
+}: {
+	value: T
+	options: { id: T; label: string; count?: number | null }[]
+	onChange: (v: T) => void
+	small?: boolean
+	label: string
+	pending: boolean
+}) {
+	return (
+		<div role="radiogroup" aria-label={label} className={`grid flex-1 auto-cols-fr grid-flow-col rounded-xl bg-white/[0.05] p-0.5 ${small ? "h-8" : "h-10"}`}>
+			{options.map((o) => {
+				const on = o.id === value
+				return (
+					<button
+						key={o.id}
+						type="button"
+						// biome-ignore lint/a11y/useSemanticElements: a segmented control; the buttons carry the radio role
+						role="radio"
+						aria-checked={on}
+						onClick={() => onChange(o.id)}
+						className={`relative flex min-w-0 items-center justify-center gap-1.5 rounded-[10px] px-2 whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${small ? "text-xs" : "text-[13px]"} ${on ? "font-semibold text-gray-950" : "text-gray-300 hover:bg-white/[0.05] hover:text-white"}`}
+					>
+						{on && (
+							<motion.span
+								layoutId={`seg-${label}`}
+								transition={{ type: "spring", stiffness: 500, damping: 40 }}
+								className="absolute inset-0 rounded-[10px] bg-white"
+							/>
+						)}
+						<span className="relative truncate">{o.label}</span>
+						{!on && o.count != null && (
+							<span className={`relative text-[11px] tabular-nums text-gray-500 transition-opacity ${pending ? "opacity-0" : ""}`} aria-hidden={pending}>
+								{compactCount(o.count)}
+							</span>
+						)}
+					</button>
+				)
+			})}
 		</div>
 	)
 }
@@ -240,7 +294,8 @@ export function TabPanel({
 	const open = subs.find((s) => s.id === sub) ?? subs[0]
 	const canFind = seg !== "search"
 	// A variant with ownFind places the field and the results itself (no row of its own here).
-	const own = canFind && pick(useLabChoice(), open.id).ownFind === true
+	const choice = useLabChoice()
+	const own = canFind && pick(choice, open.id).ownFind === true
 	const finding = canFind && find.trim() !== ""
 	const rowType = useRowType()
 	const pickSub = (s: SectionId) => {
