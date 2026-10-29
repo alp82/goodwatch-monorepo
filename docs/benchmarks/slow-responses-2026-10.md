@@ -19,7 +19,9 @@ A show request has more waits: correction-reset polling before the page-cache lo
 
 The page cache retains the original HTML alongside Brotli and gzip. An uncompressed hit writes those bytes directly. The original bytes count toward both the 4 MB entry limit and the 128 MB store limit, so cache memory stays bounded and fewer pages fit. Member bypass, admission, identity, validation, and expiry rules stay the same.
 
-Hot on socials keeps its successful ranking for ten minutes, then serves it for at most ten more minutes while one shared refresh runs. A failed refresh backs off for a minute and does not extend that deadline. A cold or fully expired request waits at most 400 ms for the shared read. If it cannot obtain a ranking, it returns a private 503 with `Retry-After: 2`, rather than waiting for the database timeout or treating a transient read failure as a successful empty ranking. The read can finish for a subsequent request. A wrong-title report resets the ranking and prevents an older in-flight read from restoring it. The data layer can now serve a ranking up to twenty minutes old; the existing five-minute HTML lifetime plus five-minute stale window can add another ten minutes. This is a freshness tradeoff, not a claim that every first request will succeed while its data store is unavailable.
+Hot on socials keeps its successful ranking for ten minutes, then serves it for at most ten more minutes while one shared refresh runs. A failed refresh backs off for a minute and does not extend that deadline. Production processes that serve pages start the shared ranking read during server startup without waiting for it. Search processes and tests skip this warmup. An early request joins that read. A cold or fully expired request allows five seconds for the read, so the two-second local cold-read fixture can complete successfully. A rejected read or a read still unavailable after five seconds returns a private 503 with `Retry-After: 2`. A timed-out read can finish for a subsequent request. A wrong-title report resets the ranking and prevents an older in-flight read from restoring it.
+
+The freshness limits compose: **10 minutes fresh + 10 minutes stale for ranking data + 5 minutes fresh + 5 minutes stale for HTML**. A rendered page can therefore contain ranking data up to about 30 minutes old. Failed refreshes never restart the ranking's freshness clock. Startup warmup reduces cold first-request waits, but does not gate readiness or guarantee a successful page while the store is unavailable.
 
 Document responses now preserve loader `Server-Timing`, including thrown Responses, and include the React `render` duration. The root loader contributes session and locale timing. Cache hits describe their current cache result instead of replaying the original render's timings. Loader durations can overlap and must not be added together.
 
@@ -29,7 +31,7 @@ Both production builds used the same isolated catalog and title snapshot, separa
 
 | Scenario | Before | After |
 | --- | --- | --- |
-| Cold Hot on socials, two-second snapshot read | 2,046 ms, 200 | 432 ms, private 503 with retry hint |
+| Cold Hot on socials, two-second snapshot read (original 400 ms budget) | 2,046 ms, 200 | 432 ms, private 503 with retry hint |
 | Next Hot on socials request after the fill finished | 13 ms, 200 | 14 ms, 200 |
 | Warm Brotli cache hit with the pool occupied | 3.3 ms | 3.3 ms |
 | Warm uncompressed cache hit with the pool occupied | 997 ms | 3.3 ms |
@@ -41,7 +43,15 @@ Measure arrival of the final response headers. `curl`'s `time_starttransfer` can
 
 ## Verification
 
-Run the focused Vitest tests from `goodwatch-webapp` with `npm run test:slow`. They cover cold-read deadlines, background fills, refresh sharing, failure backoff, the stale deadline, report invalidation, empty rankings, and document timing headers. The existing Node tests cover page-cache responses, byte limits, memory accounting, member bypass, resets, and share-list invalidation. Eight Vitest tests, 75 focused Node tests, 34 share-list tests, and 17 HTML-comparator tests pass. The full typecheck still reports 186 existing errors; comparison with the base found no new errors. The pool regression fails before the fix and passes afterward.
+Tests use the existing `node --test` convention and run through the `npm test` glob. No additional test dependency or configuration is required. Run the affected tests from `goodwatch-webapp`:
+
+```sh
+node --test app/server/talked-about-now/*.test.ts app/server/person-id.test.ts \
+  app/utils/headers.test.ts app/utils/request-work.test.ts \
+  app/server/page-cache.test.ts app/server/share-lists/view.test.ts
+```
+
+They cover cold-read deadlines, successful two-second cold reads, background fills, refresh sharing, failure backoff, the stale deadline, report invalidation, empty rankings, startup role and test guards, document timing headers, page-cache responses, memory limits, and share-list invalidation. All 141 affected Node tests and 17 HTML-comparator tests pass. The typecheck reports the same 186 existing errors on this branch and `origin/main`, with no new diagnostics after normalizing source line numbers. The pool regression fails before the fix and passes afterward.
 
 Run the document comparison with the benchmark databases already available:
 
@@ -72,3 +82,9 @@ The Movies → Moods hub sent 2,023,529 uncompressed bytes. Even its 86 ms cache
 The sweep includes public catalog, personal-page guest views, settings, static pages, auth forms, legacy redirects, and invalid title IDs, slugs, categories, list IDs, handles, and paths. Resource endpoints, prototype and development routes, credential callbacks, and mutation actions are excluded. A missing handle or list checks its failure path, not an existing account's content. No signed-in session was supplied, so member-specific data-store latency remains unmeasured.
 
 After the owner deploys the code through the normal process, repeat any slow final-header sample with its cache result and timing header. Correlate sustained delays with the existing HTTP duration, event-loop delay, Crate diagnostics, Redis readiness, and breaker metrics on each page instance. Check correction polling for a slow show when its loader and render timings do not account for the response time. Production logs and per-instance metrics were not accessed in this task; no claim identifies the historical spikes' exact backend or host.
+
+## Follow-up cold-start verification
+
+The original 400 ms budget deliberately returned 503 for a healthy two-second read. The follow-up raises that budget to five seconds and starts the read before requests arrive. The earlier production sweep measured Hot on socials responses at 77 to 170 ms. A follow-up production GET returned 200 in 194 ms with a page-cache miss. Neither the original final documents nor this follow-up response exposed `Server-Timing`, so these observations cannot isolate a production cold ranking read. Production timing seen on redirects describes other routes, not the Hot on socials store. The five-second budget accommodates the measured two-second local read with headroom; production cold-store latency still needs verification after deployment.
+
+The follow-up production build passed the same 342-document HTML gate with zero differences. The separately enabled Hot on socials fixture also matches the original successful normalized HTML. With a two-second snapshot delay, startup began the ranking read 152 ms before the first page request. That request returned 200 in 1,847 ms, with `data;dur=1814.3` and `render;dur=12.9`. The next request returned 200 in 12 ms. These final-header measurements exclude Early Hints. They verify that a healthy delayed read no longer becomes a cold-start 503; they do not measure a production cold read.

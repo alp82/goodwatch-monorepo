@@ -216,7 +216,7 @@ export function getTalkedAboutNow(
 
 const hotPageRead = createHotPageRead()
 
-/** Share a complete ranking and refresh it without blocking the page. Cold reads have a 400 ms budget. */
+/** Share a complete ranking and refresh it without blocking the page. Cold reads have a five-second budget. */
 export function getHotOnSocials(now = Date.now(), reads: Reads = crateReads): Promise<TalkedRow | null> {
 	return hotPageRead.get(
 		() => readTalkedAboutNow(reads, { board: PAGE_BOARD_SIZE, items: PAGE_ITEMS_PER_TITLE, oneVideo: false }),

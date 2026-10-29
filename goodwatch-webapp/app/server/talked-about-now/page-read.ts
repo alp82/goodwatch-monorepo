@@ -1,6 +1,6 @@
 import type { TalkedRow } from "../../domain/talked-about-now.ts"
 
-export const HOT_PAGE_BUDGET_MS = 400
+export const HOT_PAGE_BUDGET_MS = 5_000
 const FRESH_MS = 10 * 60 * 1000
 const STALE_MS = 10 * 60 * 1000
 const RETRY_MS = 60 * 1000
@@ -11,7 +11,7 @@ export class HotPageUnavailable extends Error {
 	}
 }
 
-/** Keep a complete ranking during refresh. A cold page never waits for a database timeout. */
+/** Keep a complete ranking during refresh. A cold page allows a normal store read, with a bounded wait during outages. */
 export function createHotPageRead() {
 	let value: { row: TalkedRow | null; at: number } | undefined
 	let pending: Promise<TalkedRow | null> | undefined

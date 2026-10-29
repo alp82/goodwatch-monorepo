@@ -44,6 +44,7 @@ import { startProcessStats } from "~/server/process-stats.server"
 import { withoutRelatedMapMarkup } from "~/server/related-map-handoff"
 import { logProcessRole, processRole } from "~/server/role.server"
 import { startStaticFiles } from "~/server/static-files.server"
+import { startHotOnSocialsWarmup } from "~/server/talked-about-now/startup.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
 import {
@@ -75,6 +76,7 @@ startMetrics()
 // roles keep the root loader's start, so they log what they did before roles.
 if (processRole() === "search") startProcessStats()
 startTitleSnapshot()
+startHotOnSocialsWarmup()
 // The title pages' "What's new on" links read the links of the /new pages that this keeps loaded (#489).
 if (processRole() !== "search") startNewPagesRefresh()
 // The page cache answers repeated anonymous pages before Express (see page-cache.server.ts). It starts before the
