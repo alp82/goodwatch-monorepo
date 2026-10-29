@@ -52,7 +52,8 @@ provider, `useTitleOpened`, `usePublishTitleSubject`, the title preview for a pi
   Supabase. Never start the app with it. Read Crate only with SELECT through `~/.cache/gw-title-proto/crate/q.sh`
   (`echo "SELECT ..." | q.sh`; it never prints credentials). Never write to any database.
 - **Checks before a commit:** `npx tsc --noEmit -p .` shows no new errors in touched files, `npx biome check` on touched
-  files, unit tests for pure logic (`npx vitest run <files>`).
+  files, unit tests for pure logic with Node's runner (`node --test <file>`; `npm test` runs them all). Tests import
+  `app/server/title-filter/test-alias.ts` first to resolve `~/` imports, as `app/domain/my-library.test.ts` does.
 - **Commits:** on your ticket branch, in your worktree. End messages with the attribution lines in the brief.
 
 ## API contracts
