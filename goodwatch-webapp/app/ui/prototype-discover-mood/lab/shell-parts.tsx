@@ -61,7 +61,7 @@ const CTX_A: Ctx = { L: LAYOUT_A, viewer: "guest" }
 export function subsFor(seg: SegKey, pieces: Pieces, L: Layout = LAYOUT_A): Sub[] {
 	const type = pieces.groups.state.type
 	// Round 16: Budget shows with movies, Shows with shows, or while one of their choices is set.
-	const fits = (s: Sub) => !s.kind || type === "all" || type === s.kind || (s.part && s.part !== "all" && partCount([s.part]) > 0)
+	const fits = (s: Sub) => !s.kind || type === "all" || type === s.kind || (s.part && partCount([s.part]) > 0)
 	return L.tabs[seg].filter((s) => (pieces.groups.ladder || s.id !== "age") && fits(s))
 }
 

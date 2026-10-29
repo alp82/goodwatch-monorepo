@@ -1,5 +1,5 @@
 // PROTOTYPE (Discover lab, round 16): shared pieces of the popularity, money and show filters (store.ts): simulated
-// counts, preset tiles, a stepped range slider and a histogram that lines up with it.
+// counts, preset tiles and a stepped range slider.
 import { motion } from "framer-motion"
 import { type ReactNode, useEffect, useState } from "react"
 import { compactCount } from "~/ui/filter-bar/labels"
@@ -150,37 +150,6 @@ export function StopSlider({ k, value, label }: { k: MoreKey; value: Idx | null;
 					className={thumb}
 				/>
 			</div>
-		</div>
-	)
-}
-
-/**
- * One bar per gap between stops, so the bars line up with StopSlider under it (thumb i sits at i/last). Height is
- * the square root of the gap's titles; bars in the range are amber. Count on hover via title.
- */
-export function Histogram({ k, value, d, x, height = 64 }: { k: MoreKey; value: Idx | null; d: ProtoDiscover; x: MoreState; height?: number }) {
-	const s = SCALES[k]
-	const sim = useSim(d, x)
-	const counts = s.shares.map((_, i) => sim.range(k, [i, i + 1]))
-	const peak = Math.max(...s.shares.map(Math.sqrt))
-	const r = value ?? [0, last(k)]
-	const all = isAny(k, value)
-	return (
-		<div className="flex items-end gap-[3px] px-[10px]" style={{ height }} aria-hidden>
-			{s.shares.map((share, i) => {
-				const on = i >= r[0] && i < r[1]
-				const c = counts[i]
-				return (
-					<div key={i} className="relative flex h-full flex-1 flex-col justify-end" title={c != null ? compactCount(c) : undefined}>
-						<motion.div
-							initial={false}
-							animate={{ scaleY: Math.max(0.04, Math.sqrt(share) / peak), opacity: c === 0 ? 0.35 : 1 }}
-							transition={{ duration: 0.25 }}
-							className={`h-full origin-bottom rounded-t-[4px] ${all ? "bg-white/[0.16]" : on ? "bg-amber-400/85" : "bg-white/[0.08]"}`}
-						/>
-					</div>
-				)
-			})}
 		</div>
 	)
 }

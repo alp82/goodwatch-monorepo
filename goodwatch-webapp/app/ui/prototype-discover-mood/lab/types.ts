@@ -31,7 +31,7 @@ export interface SectionProps {
 	close?: () => void
 	/** Only for a variant with `ownFind`: Find a filter's field to place, and its results while it has text. */
 	find?: { field: ReactNode; results: ReactNode | null }
-	/** Round 16, the "more" section: which of its sub-tabs is open (a, b); c shows all. */
+	/** Round 16, the "more" section: which of its sub-tabs is open. */
 	morePart?: "reach" | "money" | "shows"
 }
 

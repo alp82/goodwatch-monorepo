@@ -257,7 +257,7 @@ const VIEWS = { "you-taste": YouTaste, "you-lists": YouLists }
 function Section({ id, view, part, props }: { id: SubId; view?: Sub["view"]; part?: Sub["part"]; props: Omit<SectionProps, "viewer"> }) {
 	const choice = useLabChoice()
 	// Round 16: the "more" section at one of its parts.
-	if (part) return <RegisteredSection id="more" props={part === "all" ? props : { ...props, morePart: part }} />
+	if (part) return <RegisteredSection id="more" props={{ ...props, morePart: part }} />
 	if (view) {
 		const Page = VIEWS[view]
 		return <Page key={`${view}:${choice.as}`} {...props} viewer={choice.as} />

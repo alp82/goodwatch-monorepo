@@ -636,3 +636,42 @@ list's movie or show count (type option counts), with the other lab-only choices
   reads. Sub-tabs carry `part` (renders the more section at that part) and `kind` (shown with that type).
 - Production would need: a FilterState field and URL param per filter, a FILTER_NAMES bit, a snapshot range check
   (votes, rank) or a SQL set (the rest), option counts per preset, and the MCP discover schema.
+
+## Round 17 (2026-10-29): more a, with livelier tiles
+
+Owner: "i like A the most. but we can make some of those selectable tiles visually a bit more engaging. not everything
+needs to be as vibrant as the moods tiles, but still some variations needed." Shows now sits after Popularity.
+
+- b and c are gone (files, the More sub-tab, `part: "all"`, `Histogram`). `withMore(L)` always adds Popularity and
+  Shows after Scores, Budget after Length. a is unchanged; its layout is now `MoreView` with a skin (preset tiles,
+  Hit and Flop, Status chips), so d, e and f are a's structure with a different look.
+- Shared: `tiles.tsx` `RichTile` (a's tile plus a top row for a picture and the count; one label weight in both
+  states and the count stays visible when picked, so nothing moves) and `MarkChip`; `glyphs.tsx` draws the glyphs.
+- d, glyphs and ramps: quiet gray tiles, each with a glyph drawing the whole scale filled up to its step: a crowd of
+  1 to 4 figures (ratings), signal bars 4/2/1 (Popular now strongest), $ to $$$$ (budget), 1 to 3 coin stacks (box
+  office), a tower of 1 to 4 slabs (seasons), a clock a quarter to full (time to finish). Hit and Flop get an up or
+  down trend line, Status chips a live dot, a stop square, a cut circle. Gray at rest, amber when picked.
+- e, muted color: a hue per group, low saturation and alpha, stronger for bigger presets, and a different wash per
+  group: ratings blue diagonal wash, popularity rose glow from the top right corner, budget sage and box office gold
+  filling up from the bottom (taller fill for bigger), seasons a faint flat violet. Picked tiles fade in a light fill
+  of their hue (opacity only). Hit warm orange, Flop cool steel, both with d's trend line in the hue. Status and Time
+  to finish stay a's plain gray on purpose.
+- f, example posters: three posters fanned per preset (Hit and Flop two), opening out when picked (transform only);
+  boxes are there before the posters fade in; dead tiles go gray and faint. Time to finish uses d's clocks, Status
+  d's marked chips. Examples (`examples.ts`, checked 2026-10-29 through the proxy):
+  - Ratings (GoodWatch overall voting count): Hidden gems Kaili Blues, Saint Frances, Cameraperson (4K to 6K);
+    Known to fans Columbus, Petite Maman, Shiva Baby (22K to 45K); Well known Past Lives, Aftersun, Paddington 2
+    (126K to 187K); Everyone's seen it The Dark Knight, Forrest Gump, Breaking Bad (2.7M to 3.8M).
+  - Popularity (Discover's default order): Popular now The Odyssey #50, Spider-Man: Brand New Day #29, Slow Horses
+    #49; Under the radar Amélie #3,185, Shaun of the Dead #4,773, 12 Years a Slave #6,399; Deep cuts Wendy and Lucy,
+    Tangerines, Leave No Trace.
+  - Budget: Indie Moonlight, Whiplash, Paranormal Activity; Mid Parasite, La La Land, Knives Out; Big The Matrix,
+    Inglourious Basterds, Gone Girl; Blockbuster Avatar, Avengers: Endgame, Titanic.
+  - Box office: $100M+ Get Out, Arrival, The Grand Budapest Hotel; $500M+ Inception, Interstellar, Deadpool; $1B+
+    Barbie, Frozen, Jurassic World. Hit Joker, The Blair Witch Project; Flop Babylon, Mortal Engines.
+  - Seasons: One Firefly, Chernobyl, The Queen's Gambit; 2 to 3 Fleabag, Arcane, Mindhunter; 4 to 7 The Wire, The
+    Sopranos, Mad Men; 8+ The Simpsons, Grey's Anatomy, Friends.
+- Rough: Popular now drifts daily (two of its three are 2026 releases). Discover's results stop at #10,000, so Deep
+  cuts are picked by TMDB popularity (2.3 to 4.3, the #10,000 title is 7.9), not a read rank. Examples are fixed:
+  they don't follow the list's other filters (a movies-only list still shows Breaking Bad under Everyone's seen it).
+  Hit's "3x" is the label's rule; Joker and Blair Witch clear it by far.
