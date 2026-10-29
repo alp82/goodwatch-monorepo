@@ -1,0 +1,11 @@
+{
+  "name": "goodwatch-edge-review",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test worker.test.ts"
+  },
+  "dependencies": {
+    "isbot": "5.1.17"
+  }
+}
