@@ -9,12 +9,13 @@
 // - Rounds 3 and 4 (`?flow=g|k|l|m|n`): the room sits lower (the window in view), the teaser is the card's bottom
 //   on the room's floor, and the card grows up from it (streamline.css, `.pst3`). Tapping the teaser does its
 //   action: a guest's empty state rolls a surprise mood at once. Once open, the card stays open.
-import { ChevronDownIcon } from "@heroicons/react/20/solid"
+import { ChevronDownIcon, FilmIcon, PlayIcon, TvIcon } from "@heroicons/react/20/solid"
+import { Link } from "@remix-run/react"
 import { type CSSProperties, type ReactNode, useEffect, useState } from "react"
 import { ListTag } from "~/ui/list-tag/ListTag"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { type Flow, ROUND3 } from "./ProtoSwitcher"
-import type { TeaserModel, TeaserSide } from "./teaser-models"
+import type { ListLink, TeaserModel, TeaserSide } from "./teaser-models"
 
 /** Whether the card is open. Once open it stays open: there is no way back to the ledge. */
 export function useReveal(startOpen: boolean) {
@@ -46,8 +47,11 @@ export function RevealCard({
 	onAction,
 	teaser,
 	fan = 5,
+	edge = null,
 	children,
 }: {
+	/** Shown on the open card's top edge, outside its box (a member's list links). */
+	edge?: ReactNode
 	/** How many posters the fan shows. */
 	fan?: number
 	open: boolean
@@ -70,6 +74,11 @@ export function RevealCard({
 				>
 					<ChevronDownIcon className="h-4 w-4" />
 				</button>
+			) : null}
+			{edge ? (
+				<div className="pst5-edge" {...(open ? {} : { inert: "" })}>
+					{edge}
+				</div>
 			) : null}
 			<div className="pst2-clip">
 				<div className="pst2-inner">
@@ -98,6 +107,23 @@ function Teaser({
 	onOpen: () => void
 	onAction: (id: TeaserModel["action"]["id"]) => void
 }) {
+	if (m.kind === "choose")
+		return (
+			<div className="pst2-t" data-kind="choose">
+				<div key={m.key} className="pst5-choose">
+					<ListLinks links={m.links ?? []} at="ledge" />
+					<button type="button" className="pst5-go" aria-controls="start-card" onClick={onOpen}>
+						<span className="pst5-go-icon" aria-hidden>
+							<PlayIcon className="h-5 w-5" />
+						</span>
+						<span className="pst5-go-words">
+							<span className="pst5-go-label">{m.headline}</span>
+							{m.sub ? <span className="pst5-go-sub">{m.sub}</span> : null}
+						</span>
+					</button>
+				</div>
+			</div>
+		)
 	return (
 		<div className="pst2-t" data-kind={m.kind} data-tone={m.tone}>
 			{/* The whole teaser is one button: its action (open, or a surprise mood at once). */}
@@ -127,6 +153,31 @@ function Teaser({
 				{m.kind === "pair" && m.pair ? <Pair pair={m.pair} /> : null}
 			</div>
 		</div>
+	)
+}
+
+/** My movies and My shows: under the big button (l), beside it (p), or only on the open card (q), by CSS. */
+export function ListLinks({
+	links,
+	at,
+}: {
+	links: readonly ListLink[]
+	at: "ledge" | "edge"
+}) {
+	return (
+		<nav aria-label="Your lists" className="pst5-links" data-at={at}>
+			{links.map((l, i) => (
+				<Link key={l.href} to={l.href} prefetch="intent" className="pst5-link" data-side={i ? "right" : "left"}>
+					{l.href.includes("movies") ? (
+						<FilmIcon className="pst5-link-icon" aria-hidden />
+					) : (
+						<TvIcon className="pst5-link-icon" aria-hidden />
+					)}
+					<span className="pst5-link-label">{l.label}</span>
+					{l.note ? <span className="pst5-link-note">{l.note}</span> : null}
+				</Link>
+			))}
+		</nav>
 	)
 }
 

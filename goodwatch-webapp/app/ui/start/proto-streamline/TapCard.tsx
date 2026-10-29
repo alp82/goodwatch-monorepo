@@ -1,4 +1,4 @@
-// PROTOTYPE (start-streamline, round 4): other designs for the guest's open card while they tap three. Each flow lays
+// PROTOTYPE (start-streamline, rounds 4 and 5): other designs for the guest's open card while they tap three. Each flow lays
 // out the same parts: the heading with Surprise me, what's on show, the loved progress, See all, and the posters as
 // loved toggles (SpotlightCard's LovedToggle). The empty state and For you stay SpotlightCard's own.
 //
@@ -6,6 +6,8 @@
 // - l Panel: today's panel, tightened: the posters fill its height, the progress is three hearts.
 // - m Slots: three big numbered slots beside the row fill up as you tap.
 // - n Wall: two rows of posters, more to choose from at a glance.
+//
+// Round 4 verdict: l is great; every round 5 flow shows it.
 import { HeartIcon } from "@heroicons/react/20/solid"
 import type { CSSProperties } from "react"
 import { WORD_BY_ID } from "~/domain/taste-picker"
@@ -25,12 +27,11 @@ import {
 import type { LovedThreeState } from "../spotlight/useLovedThree"
 import { LOVED_NEEDED, type StartResults, type StartView } from "../stage/start-query"
 import type { StartQueryState } from "../stage/useStartQuery"
-import type { Flow } from "./ProtoSwitcher"
-
-export const CARD_FLOWS: readonly Flow[] = ["k", "l", "m", "n"]
+/** The card designs of round 4; round 5 keeps l (Panel) for every flow. */
+export type CardDesign = "k" | "l" | "m" | "n"
 
 type Props = {
-	flow: Flow
+	flow: CardDesign
 	start: StartQueryState
 	results: StartResults & { retry: () => void }
 	view: StartView
@@ -131,7 +132,7 @@ export function TapCard(props: Props) {
 }
 
 /** The loved progress: the shelf and the wall show three hearts, the panel the hearts with a count. */
-function Progress({ flow, loved }: { flow: Flow; loved: LovedThreeState }) {
+function Progress({ flow, loved }: { flow: CardDesign; loved: LovedThreeState }) {
 	const count = loved.loved.length
 	if (flow === "n") return <PosterSlots loved={loved} />
 	return (
@@ -273,7 +274,7 @@ function Posters({
 	)
 }
 
-function Skeleton({ flow }: { flow: Flow }) {
+function Skeleton({ flow }: { flow: CardDesign }) {
 	return (
 		<div aria-hidden className="ptc-posters">
 			<div className="ptc-row">

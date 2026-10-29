@@ -1,21 +1,19 @@
-// PROTOTYPE (start-streamline, round 4): which flow is on show (`?flow=`), and a floating bar to switch flows and personas.
+// PROTOTYPE (start-streamline, round 5): which flow is on show (`?flow=`), and a floating bar to switch flows and personas.
 // The bar sits at the top, under the header, because the bottom of the screen is what the prototype is about.
 import { useNavigate, useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
 
 export const FLOWS = {
-	g: "Today's card",
-	k: "Shelf: posters on a lit shelf, no panel",
-	l: "Panel: posters fill the card, three hearts",
-	m: "Slots: three big places fill up as you tap",
-	n: "Wall: two rows of posters",
+	l: "Members: My movies and My shows under the button and on the open card",
+	p: "Members: My movies and My shows beside the button",
+	q: "Members: My movies and My shows only on the open card",
 	old: "Today's page",
 } as const
 
 export type Flow = keyof typeof FLOWS
 
 /** Rounds 3 and 4: the room set lower (the window in view), the ledge on the floor, the card growing up from it. */
-export const ROUND3: readonly Flow[] = ["g", "k", "l", "m", "n"]
+export const ROUND3: readonly Flow[] = ["l", "p", "q"]
 
 const KEYS = Object.keys(FLOWS) as Flow[]
 const PERSONAS = ["guest", "full", "few", "new"] as const
@@ -23,7 +21,7 @@ const PERSONAS = ["guest", "full", "few", "new"] as const
 export function useFlow(): Flow {
 	const [params] = useSearchParams()
 	const f = params.get("flow")
-	return f && f in FLOWS ? (f as Flow) : "g"
+	return f && f in FLOWS ? (f as Flow) : "l"
 }
 
 export function ProtoSwitcher() {

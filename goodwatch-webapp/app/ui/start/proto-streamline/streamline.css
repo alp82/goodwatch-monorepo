@@ -853,7 +853,13 @@
 	/* Open, the card reaches up to just under the lifted search block at most. */
 	--pst3-card: min(
 		var(--pst4-want, var(--start-card)),
-		calc(var(--pst3-lb-y) - var(--start-pad) - var(--start-block) - 16px)
+		calc(
+			var(--pst3-lb-y) -
+			var(--start-pad) -
+			var(--start-block) -
+			16px -
+			var(--pst5-tabs, 0px)
+		)
 	);
 	--pst2-t: var(--pst3-t);
 }
@@ -987,7 +993,7 @@
 /* ---------- round 4: the open card's designs (TapCard.tsx, flows k, l, m, n) ---------- */
 
 /* How tall each design wants the card (capped by the space under the lifted search block). Members keep theirs. */
-.pst3:not(.start-member):is([data-flow="k"], [data-flow="l"], [data-flow="m"]) .start-stage {
+.pst3:not(.start-member) .start-stage {
 	--pst4-want: 330px;
 }
 .pst3:not(.start-member)[data-flow="m"] .start-stage {
@@ -997,7 +1003,7 @@
 	--pst4-want: 520px;
 }
 @media (min-width: 640px) {
-	.pst3:not(.start-member):is([data-flow="k"], [data-flow="l"], [data-flow="m"]) .start-stage {
+	.pst3:not(.start-member) .start-stage {
 		--pst4-want: 380px;
 	}
 	.pst3:not(.start-member)[data-flow="n"] .start-stage {
@@ -1005,7 +1011,7 @@
 	}
 }
 @media (min-width: 1024px) {
-	.pst3:not(.start-member):is([data-flow="k"], [data-flow="l"], [data-flow="m"]) .start-stage {
+	.pst3:not(.start-member) .start-stage {
 		--pst4-want: 410px;
 	}
 }
@@ -1571,5 +1577,281 @@
 	}
 	.ptc-pslots .ptc-slot-n {
 		font-size: 10px;
+	}
+}
+
+/* ---------- round 5: a member's ledge, one big button and the links to their lists ---------- */
+
+.pst2-t[data-kind="choose"] {
+	display: grid;
+	place-items: center;
+}
+
+.pst5-choose {
+	position: relative;
+	display: grid;
+	grid-template-areas: "go" "links";
+	justify-items: center;
+	gap: 16px;
+	padding: 0 16px;
+	animation: pst2-in 0.45s var(--pst2-ease) both;
+}
+
+/* A warm pool of light on the floor under the button. */
+.pst5-choose::before {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 20px;
+	z-index: -1;
+	width: 150%;
+	height: 160px;
+	translate: -50% 0;
+	pointer-events: none;
+	background: radial-gradient(
+		ellipse 50% 40% at 50% 50%,
+		rgb(251 191 36 / 0.2),
+		rgb(251 191 36 / 0.06) 55%,
+		transparent 75%
+	);
+}
+
+.pst5-go {
+	grid-area: go;
+	display: inline-flex;
+	align-items: center;
+	gap: 14px;
+	height: 68px;
+	padding: 0 26px 0 12px;
+	border-radius: 999px;
+	cursor: pointer;
+	pointer-events: auto;
+	text-align: left;
+	color: rgb(3 7 18);
+	background: linear-gradient(to bottom, rgb(252 211 77), rgb(245 158 11));
+	box-shadow: 0 18px 40px rgb(0 0 0 / 0.55), 0 10px 40px rgb(251 191 36 / 0.35),
+		inset 0 1px 0 rgb(255 255 255 / 0.5);
+	outline: none;
+	animation: pst5-hover 4.5s ease-in-out infinite;
+	transition: scale 0.25s var(--pst2-ease);
+}
+.pst5-go:hover {
+	scale: 1.03;
+}
+.pst5-go:active {
+	scale: 0.98;
+}
+.pst5-go:focus-visible {
+	box-shadow: 0 0 0 3px #fff, 0 18px 40px rgb(0 0 0 / 0.55);
+}
+@keyframes pst5-hover {
+	50% {
+		translate: 0 -5px;
+	}
+}
+
+.pst5-go-icon {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	color: rgb(252 211 77);
+	background: rgb(3 7 18);
+}
+
+.pst5-go-words {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.pst5-go-label {
+	white-space: nowrap;
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-size: 19px;
+	font-weight: 900;
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+}
+
+.pst5-go-sub {
+	margin-top: 2px;
+	white-space: nowrap;
+	font-size: 12.5px;
+	font-weight: 700;
+	color: rgb(3 7 18 / 0.68);
+}
+
+@media (min-width: 640px) {
+	.pst5-go {
+		height: 84px;
+		gap: 16px;
+		padding: 0 36px 0 14px;
+	}
+	.pst5-go-icon {
+		width: 56px;
+		height: 56px;
+	}
+	.pst5-go-icon svg {
+		width: 26px;
+		height: 26px;
+	}
+	.pst5-go-label {
+		font-size: 27px;
+	}
+	.pst5-go-sub {
+		font-size: 14px;
+	}
+}
+@media (min-width: 1024px) {
+	.pst5-go {
+		height: 92px;
+		padding: 0 42px 0 16px;
+	}
+	.pst5-go-label {
+		font-size: 30px;
+	}
+}
+
+/* The list links: quiet pills. */
+.pst5-links {
+	grid-area: links;
+	display: flex;
+	gap: 10px;
+}
+
+.pst5-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	height: 40px;
+	padding: 0 16px 0 12px;
+	border-radius: 999px;
+	pointer-events: auto;
+	white-space: nowrap;
+	font-size: 14px;
+	font-weight: 800;
+	color: #fff;
+	background: rgb(3 7 18 / 0.78);
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 8px 22px rgb(0 0 0 / 0.45);
+	outline: none;
+	transition: background 0.2s, box-shadow 0.2s;
+}
+.pst5-link:hover {
+	background: rgb(17 24 39 / 0.92);
+	box-shadow: inset 0 0 0 1px rgb(252 211 77 / 0.5), 0 8px 22px rgb(0 0 0 / 0.45);
+}
+.pst5-link:focus-visible {
+	box-shadow: 0 0 0 2px rgb(252 211 77);
+}
+.pst5-link-icon {
+	width: 18px;
+	height: 18px;
+	color: rgb(252 211 77);
+}
+.pst5-link-note {
+	font-size: 12px;
+	font-weight: 600;
+	color: rgb(156 163 175);
+}
+@media (max-width: 639.98px) {
+	.pst5-link {
+		height: 36px;
+		padding: 0 13px 0 10px;
+		font-size: 13px;
+	}
+	.pst5-link-note {
+		display: none;
+	}
+}
+
+/* p: the links beside the button. */
+.pst2[data-flow="p"] .pst5-choose {
+	grid-template-areas: "left go right";
+	align-items: center;
+	gap: 18px;
+}
+.pst2[data-flow="p"] .pst5-links[data-at="ledge"] {
+	display: contents;
+}
+.pst2[data-flow="p"] .pst5-link[data-side="left"] {
+	grid-area: left;
+}
+.pst2[data-flow="p"] .pst5-link[data-side="right"] {
+	grid-area: right;
+}
+@media (min-width: 640px) {
+	.pst2[data-flow="p"] .pst5-link {
+		height: 56px;
+		padding: 0 22px 0 16px;
+		font-size: 16px;
+	}
+	.pst2[data-flow="p"] .pst5-link-note {
+		display: none;
+	}
+}
+/* Phones: no room beside the button, so the links go under it. */
+@media (max-width: 639.98px) {
+	.pst2[data-flow="p"] .pst5-choose {
+		grid-template-areas: "go go" "left right";
+		gap: 14px 10px;
+	}
+	.pst2[data-flow="p"] .pst5-link[data-side="left"] {
+		justify-self: end;
+	}
+	.pst2[data-flow="p"] .pst5-link[data-side="right"] {
+		justify-self: start;
+	}
+}
+
+/* q: on the ledge, only the button. */
+.pst2[data-flow="q"] .pst5-links[data-at="ledge"] {
+	display: none;
+}
+
+/* The open card's list links: tabs on its top edge, to the right. The card leaves them room above it. */
+.pst3.pst3.start-member:is([data-flow="l"], [data-flow="q"]) .start-stage {
+	--pst5-tabs: 42px;
+}
+.pst5-edge {
+	position: absolute;
+	right: 20px;
+	bottom: 100%;
+	z-index: 40;
+	opacity: 0;
+	translate: 0 8px;
+	pointer-events: none;
+	transition: opacity 0.3s ease-out, translate 0.4s var(--pst2-ease);
+}
+.pst2[data-open] .pst5-edge {
+	opacity: 1;
+	translate: 0 0;
+	pointer-events: auto;
+	transition-delay: 0.45s;
+}
+.pst5-links[data-at="edge"] {
+	gap: 4px;
+}
+.pst5-links[data-at="edge"] .pst5-link {
+	height: 36px;
+	border-radius: 12px 12px 0 0;
+	background: rgb(3 7 18 / 0.86);
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 1px 0 0 rgb(255 255 255 / 0.06),
+		inset -1px 0 0 rgb(255 255 255 / 0.06);
+}
+.pst5-links[data-at="edge"] .pst5-link:hover {
+	background: rgb(17 24 39 / 0.95);
+}
+@media (min-width: 640px) {
+	.pst5-edge {
+		right: 32px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pst5-go {
+		animation: none;
 	}
 }

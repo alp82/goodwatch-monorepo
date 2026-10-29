@@ -5,7 +5,8 @@
 // - Members: a small "this or that" (the first pair), tonight's pick, or the first steps.
 import type { TitleCard } from "~/server/title-cards.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
-import { type DeckSource, type DeckTitle, deal } from "../member/deck"
+import { type DeckSource, type DeckTitle } from "../member/deck"
+import { MEMBER_HREF } from "../member/doors"
 import { shownLabel } from "../spotlight/SpotlightCard"
 import {
 	LOVED_NEEDED,
@@ -31,8 +32,11 @@ export type TeaserSide = {
 export type TeaserModel = {
 	/** A new key crossfades the teaser's content. */
 	key: string
-	/** fan: a few posters fanned beside the words; row: a row of posters; pair: two titles side by side. */
-	kind: "fan" | "row" | "pair" | "words"
+	/**
+	 * fan: a few posters fanned beside the words; row: a row of posters; pair: two titles side by side; choose: a
+	 * member's big "Choose what to watch next" button with the links to their lists.
+	 */
+	kind: "fan" | "row" | "pair" | "words" | "choose"
 	eyebrow: string
 	tone: TeaserTone
 	headline: string
@@ -42,6 +46,29 @@ export type TeaserModel = {
 	/** The button: opening the card, or Surprise me (a random mood, then open). */
 	action: { id: "open" | "surprise"; label: string }
 	busy?: boolean
+	/** The member's lists (choose): My movies and My shows. */
+	links?: readonly ListLink[]
+}
+
+export type ListLink = { label: string; href: string; note: string | null }
+
+/** A member's two list pages, with how much is on each. */
+export function listLinks(lists: {
+	movies: number | null
+	shows: number | null
+}): ListLink[] {
+	return [
+		{
+			label: "My movies",
+			href: MEMBER_HREF.movies,
+			note: lists.movies ? `${lists.movies} to see` : null,
+		},
+		{
+			label: "My shows",
+			href: MEMBER_HREF.shows,
+			note: lists.shows ? `${lists.shows} in progress` : null,
+		},
+	]
 }
 
 const shortTitle = (t: string) => t.replace(/:.*$/, "")
@@ -175,48 +202,28 @@ export function memberTeaser({
 	results,
 	deck,
 	unread,
+	lists,
 }: {
 	query: StartQuery
 	results: StartResults
 	deck: readonly DeckTitle[]
 	unread: boolean
+	lists: { movies: number | null; shows: number | null }
 }): TeaserModel {
 	const search = searchTeaser(query, results)
 	if (search) return { ...search, action: { id: "open", label: "Show" } }
-	if (deck.length === 1)
+	if (deck.length)
 		return {
-			key: "only",
-			kind: "fan",
-			eyebrow: "Tonight's pick",
+			key: "choose",
+			kind: "choose",
+			eyebrow: "",
 			tone: "amber",
-			headline: shortTitle(deck[0].card.title),
-			sub: deck[0].why,
-			posters: [posterOf(deck[0].card)],
-			action: { id: "open", label: "Open" },
+			headline: "Choose what to watch next",
+			sub: deck.length === 1 ? "Tonight's pick from your lists" : "This or that, from your lists",
+			posters: deck.slice(0, 3).map((t) => posterOf(t.card)),
+			action: { id: "open", label: "Choose what to watch next" },
+			links: listLinks(lists),
 		}
-	if (deck.length) {
-		const duel = deal(deck as DeckTitle[], 0)
-		const of = (k: number | null) => deck.find((t) => t.card.key === k)
-		const a = of(duel.left) ?? deck[0]
-		const b = of(duel.right) ?? deck[1]
-		const side = (t: DeckTitle): TeaserSide => ({
-			title: t.card.title,
-			poster: t.card.poster_path,
-			backdrop: t.card.backdrop_path,
-			source: t.source,
-			why: t.episode ?? t.why,
-		})
-		return {
-			key: "pair",
-			kind: "pair",
-			eyebrow: "Tonight",
-			tone: "amber",
-			headline: "This or that?",
-			posters: [posterOf(a.card), posterOf(b.card)],
-			pair: [side(a), side(b)],
-			action: { id: "open", label: "Pick one" },
-		}
-	}
 	if (unread)
 		return {
 			key: "unread",

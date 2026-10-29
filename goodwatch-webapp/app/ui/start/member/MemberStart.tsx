@@ -18,12 +18,13 @@ import { hasQuery } from "../stage/start-query"
 import { useStartQuery } from "../stage/useStartQuery"
 import { useFlow } from "../proto-streamline/ProtoSwitcher"
 import {
+	ListLinks,
 	RevealCard,
 	revealAttrs,
 	useLamp,
 	useReveal,
 } from "../proto-streamline/RevealCard"
-import { memberTeaser } from "../proto-streamline/teaser-models"
+import { listLinks, memberTeaser } from "../proto-streamline/teaser-models"
 import { Doors } from "./Doors"
 import { FirstSteps } from "./FirstSteps"
 import { MemberResults } from "./MemberResults"
@@ -55,6 +56,8 @@ export function MemberStart({
 	const results = useStartSearch(start.query, { member })
 	const deck = useMemo(() => buildDeck(data), [data])
 	const unread = !data.continue && !data.wishlist && !data.forYou
+	// PROTOTYPE (start-streamline, round 5): how much is on My movies (the Wishlist) and My shows (to continue).
+	const lists = { movies: data.wishlist?.total ?? null, shows: data.continue?.total ?? null }
 	const ownShelf = useMemo(() => memberShelf(data, shelf), [data, shelf])
 	// PROTOTYPE (start-streamline, round 2): the teaser under the sofa unless `?flow=old`.
 	const flow = useFlow()
@@ -113,7 +116,8 @@ export function MemberStart({
 							onOpen={() => reveal.request(true)}
 							onClose={null}
 							onAction={() => reveal.request(true)}
-							teaser={memberTeaser({ query: start.query, results, deck, unread })}
+							teaser={memberTeaser({ query: start.query, results, deck, unread, lists })}
+							edge={flow === "p" ? null : <ListLinks links={listLinks(lists)} at="edge" />}
 						>
 							{card}
 						</RevealCard>

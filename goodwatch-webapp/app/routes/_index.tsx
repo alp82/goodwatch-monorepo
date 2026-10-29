@@ -39,7 +39,7 @@ import {
 	useReveal,
 } from "~/ui/start/proto-streamline/RevealCard"
 import { installFixture } from "~/ui/start/proto-streamline/fixture"
-import { CARD_FLOWS, TapCard } from "~/ui/start/proto-streamline/TapCard"
+import { TapCard } from "~/ui/start/proto-streamline/TapCard"
 import { guestTeaser } from "~/ui/start/proto-streamline/teaser-models"
 import streamlineCss from "~/ui/start/proto-streamline/streamline.css?url"
 
@@ -250,7 +250,7 @@ function GuestStart({
 	)
 }
 
-/** PROTOTYPE (start-streamline, rounds 3 and 4): a guest's start with the ledge on the room's floor. */
+/** PROTOTYPE (start-streamline, rounds 3 to 5): a guest's start with the ledge on the room's floor and card l. */
 function StreamGuest({
 	titles,
 	browse,
@@ -335,24 +335,14 @@ function StreamGuest({
 						}}
 						teaser={teaser}
 					>
-						{CARD_FLOWS.includes(flow) ? (
-							<TapCard
-								flow={flow}
-								start={start}
-								results={results}
-								view={view}
-								loved={loved}
-								fan={titles}
-							/>
-						) : (
-							<SpotlightCard
-								start={start}
-								results={results}
-								view={view}
-								loved={loved}
-								fan={titles}
-							/>
-						)}
+						<TapCard
+							flow="l"
+							start={start}
+							results={results}
+							view={view}
+							loved={loved}
+							fan={titles}
+						/>
 					</RevealCard>
 				}
 				grade={<RoomGrade grade={roomGrade(start.query, results)} />}
