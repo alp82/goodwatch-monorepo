@@ -63,6 +63,12 @@
 	}
 }
 
+/* Fit the editor's flip panel in its available box before hydration. */
+.share-editor-fit {
+	width: min(100cqw, 100cqh * var(--editor-ratio));
+	aspect-ratio: var(--editor-ratio);
+}
+
 /* A share card that fills its box (ui/share-card/ScaledCard.tsx), sized here until the script has measured the box.
    --card-w and --card-h are the design's size in pixels, without a unit. The box is the nearest size container.
    tan(atan2(a, b)) divides two lengths into the number that scale() needs. A browser without it keeps the card

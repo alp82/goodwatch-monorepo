@@ -2,12 +2,9 @@
 // to add. The card is signed with the owner's @handle (byline). A single toolbar holds Edit, the design and color pickers, the save status, and Share: one row at
 // 1024 px and wider, two rows below (Edit and Share, then the pickers).
 import { PencilSquareIcon } from "@heroicons/react/24/outline"
-import { useRef, useState } from "react"
+import { type CSSProperties, useState } from "react"
 import type { CardTitle } from "~/ui/share-card/model"
-import {
-	CardFonts,
-	useIsomorphicLayoutEffect,
-} from "~/ui/share-card/ScaledCard"
+import { CardFonts } from "~/ui/share-card/ScaledCard"
 import {
 	isComplete,
 	type SaveStatus,
@@ -39,24 +36,6 @@ export type ShareAction = (draft: ListDraft) => Promise<string | null>
 
 // The card never gets narrower than this ratio, so the back panel has room on square and wide cards.
 const MIN_BOX_RATIO = 0.62
-
-// Fits a box of the given ratio into the element.
-function useFit(ratio: number) {
-	const ref = useRef<HTMLDivElement>(null)
-	const [size, setSize] = useState({ w: 0, h: 0 })
-	useIsomorphicLayoutEffect(() => {
-		const el = ref.current
-		if (!el) return
-		const observer = new ResizeObserver(([entry]) => {
-			const { width, height } = entry.contentRect
-			const w = Math.min(width, height * ratio)
-			setSize({ w, h: w / ratio })
-		})
-		observer.observe(el)
-		return () => observer.disconnect()
-	}, [ratio])
-	return { ref, size }
-}
 
 const SAVE_LABELS: Record<SaveStatus, string> = {
 	idle: "",
@@ -120,9 +99,8 @@ export function ShareListEditor({
 	const ed = useEditor({ initial, quickPicks, date, byline })
 	const status = useAutosave(ed.list, saveTarget)
 	const [flipped, setFlipped] = useState(false)
-	const { ref, size } = useFit(
-		Math.max(ed.shown.design.w / ed.shown.design.h, MIN_BOX_RATIO),
-	)
+	const [opened, setOpened] = useState(false)
+	const ratio = Math.max(ed.shown.design.w / ed.shown.design.h, MIN_BOX_RATIO)
 
 	return (
 		<div className="relative flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-neutral-950 text-white max-lg:h-[calc(100dvh-8rem)]">
@@ -138,7 +116,10 @@ export function ShareListEditor({
 			<div className="relative z-10 flex flex-wrap items-center gap-x-4 gap-y-3 px-4 pt-4">
 				<button
 					type="button"
-					onClick={() => setFlipped(!flipped)}
+					onClick={() => {
+						setOpened(true)
+						setFlipped(!flipped)
+					}}
 					className="order-1 flex w-28 items-center justify-center gap-2 rounded-full bg-white py-2.5 font-black text-black transition hover:bg-neutral-200"
 				>
 					{flipped ? (
@@ -164,17 +145,15 @@ export function ShareListEditor({
 				</div>
 			</div>
 
-			<div
-				ref={ref}
-				className="relative flex min-h-0 flex-1 items-center justify-center px-4 pt-4 pb-4 [perspective:2200px]"
-			>
+			<div className="relative flex min-h-0 flex-1 items-center justify-center px-4 pt-4 pb-4 [perspective:2200px] [container-type:size]">
 				<div
-					className="relative transition-transform duration-700 [transform-style:preserve-3d]"
-					style={{
-						width: size.w,
-						height: size.h,
-						transform: flipped ? "rotateY(180deg)" : "none",
-					}}
+					className="share-editor-fit relative transition-transform duration-700 [transform-style:preserve-3d]"
+					style={
+						{
+							"--editor-ratio": ratio,
+							transform: flipped ? "rotateY(180deg)" : "none",
+						} as CSSProperties
+					}
 				>
 					<div
 						className="absolute inset-0 [backface-visibility:hidden]"
@@ -185,6 +164,7 @@ export function ShareListEditor({
 					</div>
 					<div
 						data-drag-scroll
+						style={{ display: opened ? undefined : "none" }}
 						className="absolute inset-0 flex flex-col gap-5 overflow-y-auto rounded-[18px] bg-neutral-900 p-4 ring-1 ring-white/10 [backface-visibility:hidden] [transform:rotateY(180deg)]"
 						aria-hidden={!flipped}
 						// React 18 doesn't know `inert`; as a string attribute it reaches the DOM and keeps the hidden side out of tab order.
