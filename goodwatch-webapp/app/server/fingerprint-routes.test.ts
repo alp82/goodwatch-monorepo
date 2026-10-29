@@ -52,8 +52,8 @@ const { buildPopulation } = await import(
 const { VALID_FINGERPRINT_KEYS } = await import(
 	"../server/utils/fingerprint.ts"
 )
-const { loader: mix } = await import("./api.fingerprint.mix.ts")
-const { loader: pairs } = await import("./api.fingerprint.pairs.ts")
+const { loader: mix } = await import("../routes/api.fingerprint.mix.ts")
+const { loader: pairs } = await import("../routes/api.fingerprint.pairs.ts")
 const title: PopulationTitle = {
 	tmdbId: 1,
 	title: "Dune",
