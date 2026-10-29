@@ -6,7 +6,8 @@ export async function withinSocialBudget<T>(load: () => Promise<T>, ms: number, 
 			Promise.resolve().then(load),
 			new Promise<T>((resolve) => { timer = setTimeout(() => resolve(fallback), ms) }),
 		])
-	} catch {
+	} catch (error) {
+		console.error("Talked about now: social read failed", error)
 		return fallback
 	} finally {
 		clearTimeout(timer)

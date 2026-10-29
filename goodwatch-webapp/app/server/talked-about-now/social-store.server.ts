@@ -1,7 +1,7 @@
 // Reads the posts linked to a title and writes "wrong title?" reports, over the tables of the social discovery build
 // (#556, docs/implementation/talked-about-now/social.md): doc.social_post, doc.social_title_link,
-// doc.social_content_quality, doc.social_relevance and doc.social_link_report. The read is that ticket's reference query
-// (`Store.read_title`), including its content-quality gate, plus the relevance gate (#537: relevant buzz only); the
+// doc.social_content_quality, doc.social_relevance and doc.social_link_report. The read applies that ticket's reference query
+// (`Store.read_title`) as staged lookups, including its content-quality gate, plus the relevance gate (#537: relevant buzz only); the
 // report is its reference write (`Store.report`). Report rows are the only thing the webapp writes.
 //
 // Until discovery has run, the tables are missing or empty: the read then returns no rows and the section stays
