@@ -42,6 +42,7 @@ export function useQuickTitles(text: string) {
 	const term = useDebounced(text.trim())
 	const { locale } = useLocale()
 	const q = useQuery<{
+		query: string
 		more: boolean
 		searchResults: {
 			id: number
@@ -54,15 +55,16 @@ export function useQuickTitles(text: string) {
 		}[]
 	}>({
 		queryKey: ["filter-title-search", term, locale.language],
-		queryFn: async () =>
-			(
-				await fetch(
-					mediaLanguageUrl(
-						`/api/search?query=${encodeURIComponent(term)}`,
-						locale.language,
-					),
-				)
-			).json(),
+		queryFn: async ({ signal }) => {
+			const response = await fetch(
+				mediaLanguageUrl(
+					`/api/search?query=${encodeURIComponent(term)}`,
+					locale.language,
+				),
+				{ signal },
+			)
+			return { ...(await response.json()), query: term }
+		},
 		enabled: term.length >= 2,
 		placeholderData: (previous) => previous,
 	})
@@ -75,6 +77,8 @@ export function useQuickTitles(text: string) {
 	}))
 	return {
 		found,
+		/** The text these retained rows answer, including while the next text debounces. */
+		query: q.data?.query ?? null,
 		/** Pagination is measured before people are removed from the mixed page. */
 		full: term.length >= 2 && q.data?.more === true,
 		loading: text.trim().length >= 2 && (q.isFetching || term !== text.trim()),
@@ -278,6 +282,7 @@ export function PeoplePicker({
 	const chosen = state.people ?? []
 	const term = useDebounced(text.trim())
 	const q = useQuery<{
+		query: string
 		castMembers: {
 			tmdb_id: number
 			name: string
@@ -286,12 +291,13 @@ export function PeoplePicker({
 		}[]
 	}>({
 		queryKey: ["filter-people-search", term],
-		queryFn: async () =>
-			(
-				await fetch(
-					`/api/cast?${new URLSearchParams({ text: term, withCast: "", withoutCast: "" })}`,
-				)
-			).json(),
+		queryFn: async ({ signal }) => {
+			const response = await fetch(
+				`/api/cast?${new URLSearchParams({ text: term, withCast: "", withoutCast: "" })}`,
+				{ signal },
+			)
+			return { ...(await response.json()), query: term }
+		},
 		enabled: term.length >= 2,
 	})
 	const names = useQuery<{

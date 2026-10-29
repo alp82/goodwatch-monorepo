@@ -32,7 +32,12 @@ import {
 } from "~/utils/ratings"
 import type { SubTabView } from "../DiscoverControls"
 import { BlockHead, ClearLink, tabPad } from "./parts"
-import { sourceScorePatch, sourcesSet, stepLit } from "./watch-choices"
+import {
+	SCORE_GAP_NAMES as GAP_NAMES,
+	sourceScorePatch,
+	sourcesSet,
+	stepLit,
+} from "./watch-choices"
 
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 const BASE = "#111418"
@@ -343,11 +348,6 @@ function GapLegend() {
 }
 
 const GAPS: (ScoreGap | "any")[] = ["any", ...SCORE_GAPS]
-const GAP_NAMES: Record<ScoreGap, string> = {
-	agree: "Both agree",
-	critics: "Critics liked it more",
-	audience: "Audiences liked it more",
-}
 
 function GapChoices({ view }: { view: SubTabView }) {
 	const { phone } = view

@@ -10,6 +10,8 @@ import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, type RefObject, useEffect, useRef } from "react"
 import { TAP } from "~/ui/filter-bar/motion"
 import { PRIVATE } from "../DiscoverBar"
+import { useFindCombobox } from "../search/combobox"
+import type { SubTabId } from "../tabs"
 
 export const FIND_PLACEHOLDER = "Find: Netflix, cozy, a name"
 const FIND_LABEL = "Find in every tab"
@@ -18,6 +20,14 @@ const FIND_LABEL = "Find in every tab"
 export interface FindKeys {
 	move: (delta: 1 | -1) => void
 	enter: () => void
+}
+
+/** What the panel gives Find's results besides the sub-tab view. */
+export interface FindControls {
+	/** The field's keys, which the results take while they show. */
+	keys: RefObject<FindKeys | null>
+	/** Ends Find and opens a sub-tab. */
+	openSub: (id: SubTabId) => void
 }
 
 export function FindField({
@@ -42,6 +52,7 @@ export function FindField({
 	useEffect(() => {
 		if (autoFocus) input.current?.focus({ preventScroll: true })
 	}, [autoFocus, input])
+	const grid = useFindCombobox()
 	const live = useRef({ value, onChange, onEmptyEscape })
 	live.current = { value, onChange, onEmptyEscape }
 	useEffect(() => {
@@ -70,6 +81,12 @@ export function FindField({
 				autoComplete="off"
 				enterKeyHint="search"
 				aria-label={FIND_LABEL}
+				role="combobox"
+				aria-autocomplete="list"
+				aria-haspopup="grid"
+				aria-expanded={grid !== null}
+				aria-controls={grid?.id}
+				aria-activedescendant={grid?.activeId}
 				placeholder={FIND_PLACEHOLDER}
 				onChange={(event) => onChange(event.target.value)}
 				onKeyDown={(event) => {

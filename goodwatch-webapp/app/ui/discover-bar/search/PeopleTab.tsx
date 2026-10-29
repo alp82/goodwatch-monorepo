@@ -22,9 +22,18 @@ import {
 import { moreCount, moreRows, roleOf, togglePerson } from "./search-tab"
 import { usePanelPeople, usePeopleSearch } from "./useSearchData"
 
+// Find's "In Cast and crew" hands its text to Find a person, taken once by the tab it opens.
+let seed = ""
+export const seedFindPerson = (text: string) => {
+	seed = text
+}
+
 export function PeopleTab({ view }: { view: SubTabView }) {
 	const { phone, text, filters, page, query } = view
-	const [own, setOwn] = useState("")
+	const [own, setOwn] = useState(() => seed)
+	useEffect(() => {
+		seed = ""
+	}, [])
 	const bar = text.trim()
 	const name = own.trim() ? own : bar && bar !== query ? text : ""
 	const search = usePeopleSearch(name)

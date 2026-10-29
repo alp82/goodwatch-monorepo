@@ -55,8 +55,39 @@ for (const key of [
 	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true
 // Lists for the streaming services, an empty object for everything else.
-globalThis.fetch = (async (input: string) =>
-	new Response(
+const heldSignals: AbortSignal[] = []
+globalThis.fetch = (async (input: string, init?: RequestInit) => {
+	const url = new URL(String(input), "https://goodwatch.app")
+	if (
+		["Waiting", "Never"].includes(
+			url.searchParams.get("query") ?? url.searchParams.get("text") ?? "",
+		)
+	) {
+		const signal = init?.signal
+		if (signal) heldSignals.push(signal)
+		return new Promise<Response>((_resolve, reject) => {
+			signal?.addEventListener("abort", () => reject(new Error("aborted")), {
+				once: true,
+			})
+		})
+	}
+	if (url.pathname === "/api/cast")
+		return new Response(
+			JSON.stringify({
+				castMembers: [
+					{
+						tmdb_id: 10,
+						name: "A person",
+						profile_path: null,
+						known_for_department: "Acting",
+					},
+				],
+			}),
+			{
+				headers: { "Content-Type": "application/json" },
+			},
+		)
+	return new Response(
 		String(input).includes("streaming-providers")
 			? "[]"
 			: String(input).includes("part=titles")
@@ -85,7 +116,8 @@ globalThis.fetch = (async (input: string) =>
 			status: 200,
 			headers: { "Content-Type": "application/json" },
 		},
-	)) as typeof fetch
+	)
+}) as typeof fetch
 
 const { act, createElement: h } = await import("react")
 const { createRoot } = await import("react-dom/client")
@@ -97,6 +129,7 @@ const { useFilterState } = await import("~/ui/filter-bar/useFilterState")
 const { useDiscoverBar } = await import("./useDiscoverBar")
 const { DiscoverControls } = await import("./DiscoverControls")
 const { TitlesTab } = await import("./search/TitlesTab")
+const { FindResults } = await import("./find/FindResults")
 const { useQuickTitles } = await import("~/ui/filter-bar/FilterPickers")
 const { moreCount } = await import("./search/search-tab")
 let quickTitles: ReturnType<typeof useQuickTitles>
@@ -106,8 +139,10 @@ function QuickTitlesProbe() {
 }
 
 const DEFAULTS = { onMyServices: false, notSeenYet: false }
+let observedState: unknown
 function Page() {
 	const filters = useFilterState({ defaults: DEFAULTS, member: false })
+	observedState = filters.state
 	const bar = useDiscoverBar(filters.state)
 	return h(DiscoverControls, {
 		bar,
@@ -125,6 +160,8 @@ function Page() {
 		onSearch: () => {},
 		onClearSearch: () => {},
 		sort: { options: [], value: "popularity", onChange: () => {} },
+		renderFind: (text, view, controls) =>
+			h(FindResults, { text, view, controls }),
 		renderSubTab: (id, view) =>
 			id === "titles" ? h(TitlesTab, { view }) : undefined,
 	})
@@ -359,6 +396,91 @@ if (desktop) {
 	results.sheetClosed = !sheetOpen()
 	results.afterSheetEscape = focused()
 	results.openerWas = opener.dataset.tab
+}
+
+// Find keeps ownership of both keyboard handling and ARIA after the outgoing animated tab leaves.
+if (desktop) await click($('.lg\\:block [data-tab="mood"] button'))
+else {
+	await click($('.lg\\:hidden [data-tab="mood"]'))
+	await click($('button[aria-label="Find in every tab"]'))
+}
+const findInput = () =>
+	$('input[aria-label="Find in every tab"]') as HTMLInputElement
+const typeFind = async (text: string) => {
+	await act(async () => {
+		const input = findInput()
+		input.focus()
+		Object.getOwnPropertyDescriptor(
+			window.HTMLInputElement.prototype,
+			"value",
+		)!.set!.call(input, text)
+		input.dispatchEvent(
+			new window.Event("input", { bubbles: true }) as unknown as Event,
+		)
+	})
+}
+await typeFind("Netflix")
+await wait()
+if (desktop) await click($('.lg\\:block [data-tab="watch"] button'))
+else await click($('[role=dialog] [role=tab][data-tab="watch"]'))
+await wait()
+const find = findInput()
+await act(async () => find.focus())
+await press("ArrowDown", find)
+const findGrid = document.getElementById(
+	find.getAttribute("aria-controls") ?? "",
+)
+const findRow = document.getElementById(
+	find.getAttribute("aria-activedescendant") ?? "",
+)
+await press("Enter", find)
+results.findAcrossTabs = {
+	text: find.value,
+	expanded: find.getAttribute("aria-expanded"),
+	grid: findGrid?.getAttribute("role"),
+	activeInGrid: Boolean(findRow && findGrid?.contains(findRow)),
+	picked: Boolean(findRow?.querySelector('[aria-pressed="true"]')),
+}
+
+// The old query's rows are unavailable both before debounce and while the next request is pending.
+await typeFind("Dune")
+await wait()
+await wait(60)
+const hasSearchRows = () => {
+	const grid = document.getElementById(
+		findInput().getAttribute("aria-controls") ?? "",
+	)
+	return {
+		title: Boolean(grid?.textContent?.includes("Title 0")),
+		person: Boolean(grid?.textContent?.includes("A person")),
+	}
+}
+const previousRowsShown = hasSearchRows()
+const beforeStaleEnter = JSON.stringify(observedState)
+await typeFind("Waiting")
+const rowsDuringDebounce = hasSearchRows()
+await press("Enter", findInput())
+const debounceEnterUnchanged =
+	JSON.stringify(observedState) === beforeStaleEnter
+const rowsDuringLoad = hasSearchRows()
+await press("ArrowDown", findInput())
+await press("Enter", findInput())
+const loadingEnterUnchanged = JSON.stringify(observedState) === beforeStaleEnter
+await typeFind("Never")
+await wait()
+await typeFind("Resolved")
+await wait()
+await wait(60)
+results.findFreshness = {
+	previousRowsShown,
+	rowsDuringDebounce,
+	rowsDuringLoad,
+	debounceEnterUnchanged,
+	loadingEnterUnchanged,
+	freshRowsShown: hasSearchRows(),
+	obsoleteRequests: heldSignals.length,
+	allAborted:
+		heldSignals.length === 4 && heldSignals.every((signal) => signal.aborted),
 }
 
 results.quickTitles = {

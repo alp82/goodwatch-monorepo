@@ -1,6 +1,6 @@
 // What the Watch tab's Services, Scores and Age and content sub-tabs write to the filter state, and the lists they
 // draw. Pure, no React; the tabs call these with the state they show.
-import type { FilterState, SourceKey } from "~/domain/filter-state"
+import type { FilterState, ScoreGap, SourceKey } from "~/domain/filter-state"
 
 // ---------------------------------------------------------------------------------------------------------------
 // Services
@@ -115,6 +115,13 @@ export function sourceScorePatch(
 	if (value) next[key] = value
 	else delete next[key]
 	return { sourceScores: Object.keys(next).length ? next : undefined }
+}
+
+/** Critics vs audiences, in words. */
+export const SCORE_GAP_NAMES: Record<ScoreGap, string> = {
+	agree: "Both agree",
+	critics: "Critics liked it more",
+	audience: "Audiences liked it more",
 }
 
 /** How many sources have a minimum. */

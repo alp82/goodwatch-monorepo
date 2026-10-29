@@ -16,28 +16,29 @@ import { useEffect, useMemo, useState } from "react"
 import { searchEligibility, searchText } from "~/domain/discover-search"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
 import { DiscoverControls } from "~/ui/discover-bar/DiscoverControls"
+import { GridDim } from "~/ui/discover-bar/DiscoverPanel"
 import {
 	FIXTURE_TASTE_GROUPS,
 	withMemberCounts,
 } from "~/ui/discover-bar/dev-member-fixture"
-import { GridDim } from "~/ui/discover-bar/DiscoverPanel"
+import { renderFind } from "~/ui/discover-bar/find/FindResults"
 import { renderSubTab } from "~/ui/discover-bar/sub-tabs"
 import { useDesktop, useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
+import { YouTab } from "~/ui/discover-bar/you/YouTab"
 import {
 	TASTE_GROUPS_FIXTURE_ID,
 	tasteGroupsKey,
 } from "~/ui/discover-bar/you/taste-groups-key"
-import { YouTab } from "~/ui/discover-bar/you/YouTab"
 import { useForYou } from "~/ui/discover/useDiscoverBrowse"
 import { useDiscoverSearch } from "~/ui/discover/useDiscoverSearch"
 import { useFilterState } from "~/ui/filter-bar"
 import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
+import type { ForYouControl } from "~/ui/filter-bar/types"
 import { useMyServices } from "~/ui/filter-bar/useFilterData"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
-import type { ForYouControl } from "~/ui/filter-bar/types"
 import { useUser } from "~/utils/auth"
-import useLocale from "~/utils/locale"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
+import useLocale from "~/utils/locale"
 
 export function loader(_: LoaderFunctionArgs) {
 	if (process.env.NODE_ENV === "production")
@@ -185,6 +186,7 @@ export default function DevDiscoverBar() {
 				onClearSearch={() => setQuery(null)}
 				page={page}
 				forYou={forYou}
+				renderFind={renderFind}
 				renderSubTab={(id, view) =>
 					fixture && id === "taste" ? (
 						<YouTab view={view} fixture />

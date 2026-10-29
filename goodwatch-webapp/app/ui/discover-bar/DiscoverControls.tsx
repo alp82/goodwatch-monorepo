@@ -34,12 +34,18 @@ import {
 	type PanelTab,
 	SubTabSlot,
 } from "./DiscoverPanel"
-import { SearchComboboxProvider } from "./search/combobox"
 import { PanelFooter } from "./PanelFooter"
 import { type SortChoice, StatusLine } from "./StatusLine"
 import type { BarChip } from "./chips"
-import { FindField, FindOpenButton, FindOverlay } from "./find/FindField"
+import {
+	type FindControls,
+	FindField,
+	type FindKeys,
+	FindOpenButton,
+	FindOverlay,
+} from "./find/FindField"
 import { shownSubTab } from "./panel-state"
+import { FindComboboxProvider, SearchComboboxProvider } from "./search/combobox"
 import {
 	MAIN_TABS,
 	type MainTab,
@@ -119,14 +125,20 @@ export interface DiscoverControlsProps {
 	/** A sub-tab's content; an empty area of its final height until its step fills it. */
 	renderSubTab?: (id: SubTabId, view: SubTabView) => ReactNode
 	/** Find's results in place of the content, while Find has text. */
-	renderFind?: (text: string, view: SubTabView) => ReactNode
+	renderFind?: (
+		text: string,
+		view: SubTabView,
+		controls: FindControls,
+	) => ReactNode
 	className?: string
 }
 
 export function DiscoverControls(props: DiscoverControlsProps) {
 	return (
 		<SearchComboboxProvider>
-			<DiscoverControlsContent {...props} />
+			<FindComboboxProvider>
+				<DiscoverControlsContent {...props} />
+			</FindComboboxProvider>
 		</SearchComboboxProvider>
 	)
 }
@@ -241,6 +253,15 @@ function DiscoverControlsContent({
 		close,
 		forYou,
 	})
+	// Find's results take the field's arrow keys and Enter; a handoff ends Find in the sub-tab it opens.
+	const findKeys = useRef<FindKeys | null>(null)
+	const findControls: FindControls = {
+		keys: findKeys,
+		openSub: (id) => {
+			bar.pickSub(id)
+			setPhoneFind(false)
+		},
+	}
 	const panelTab = (phone: boolean): PanelTab => ({
 		tab,
 		dir: panel.dir,
@@ -250,7 +271,7 @@ function DiscoverControlsContent({
 		onPickSub: bar.pickSub,
 		finding,
 		content: finding
-			? (renderFind?.(panel.find, view(phone)) ?? null)
+			? (renderFind?.(panel.find, view(phone), findControls) ?? null)
 			: (renderSubTab?.(active, view(phone)) ?? (
 					<SubTabSlot id={active} phone={phone} />
 				)),
@@ -357,6 +378,7 @@ function DiscoverControlsContent({
 											value={panel.find}
 											onChange={bar.setFind}
 											onEmptyEscape={close}
+											keys={findKeys}
 										/>
 									}
 									footer={footer(false)}
@@ -404,6 +426,7 @@ function DiscoverControlsContent({
 										onChange={bar.setFind}
 										onEmptyEscape={endPhoneFind}
 										inputRef={phoneFindField}
+										keys={findKeys}
 									/>
 								</FindOverlay>
 							}

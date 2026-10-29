@@ -134,14 +134,15 @@ export const PEOPLE_CAP = 100
 /** People whose name matches `text` (two letters or more), faces and the better-known first, as the sheet's picker. */
 export function usePeopleSearch(text: string) {
 	const term = useDebounced(text.trim(), 200)
-	const query = useQuery<{ castMembers: CastMember[] }>({
+	const query = useQuery<{ query: string; castMembers: CastMember[] }>({
 		queryKey: ["filter-people-search", term],
-		queryFn: async () =>
-			(
-				await fetch(
-					`/api/cast?${new URLSearchParams({ text: term, withCast: "", withoutCast: "" })}`,
-				)
-			).json(),
+		queryFn: async ({ signal }) => {
+			const response = await fetch(
+				`/api/cast?${new URLSearchParams({ text: term, withCast: "", withoutCast: "" })}`,
+				{ signal },
+			)
+			return { ...(await response.json()), query: term }
+		},
 		enabled: term.length >= 2,
 		placeholderData: (previous) => previous,
 	})
@@ -165,6 +166,8 @@ export function usePeopleSearch(text: string) {
 	const asking = text.trim().length >= 2
 	return {
 		found,
+		/** The text these retained rows answer. */
+		query: query.data?.query ?? null,
 		asking,
 		full: found.length >= PEOPLE_CAP,
 		loading: asking && (query.isFetching || term !== text.trim()),

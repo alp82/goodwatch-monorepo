@@ -431,29 +431,39 @@ export function RowsLoading({
 	)
 }
 
-/** Under a group: "More titles" with "4 of 13" grows the group in place. Nothing while every row shows. */
+/**
+ * Under a group: "More titles" with "4 of 13" grows the group in place, and `right` sits quietly at the line's end.
+ * Nothing while every row shows and there is nothing on the right.
+ */
 export function MoreLine({
 	label,
 	count,
 	onMore,
+	right,
 }: {
 	label: string
 	count: string | null
 	onMore: () => void
+	right?: ReactNode
 }) {
-	if (!count) return null
+	if (!count && !right) return null
 	return (
-		<div className="flex h-9 items-center px-3">
-			<motion.button
-				type="button"
-				whileTap={TAP}
-				onClick={onMore}
-				className="flex h-8 cursor-pointer items-center gap-2 rounded-full px-3 text-[13px] font-semibold text-gray-200 ring-1 ring-white/10 outline-none ring-inset hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-amber-400"
-			>
-				<PlusIcon className="h-3.5 w-3.5" aria-hidden />
-				{label}
-				<span className="font-normal text-gray-500 tabular-nums">{count}</span>
-			</motion.button>
+		<div className="flex h-9 min-w-0 items-center gap-2 px-3">
+			{count && (
+				<motion.button
+					type="button"
+					whileTap={TAP}
+					onClick={onMore}
+					className="flex h-8 cursor-pointer items-center gap-2 rounded-full px-3 text-[13px] font-semibold text-gray-200 ring-1 ring-white/10 outline-none ring-inset hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-amber-400"
+				>
+					<PlusIcon className="h-3.5 w-3.5" aria-hidden />
+					{label}
+					<span className="font-normal text-gray-500 tabular-nums">
+						{count}
+					</span>
+				</motion.button>
+			)}
+			{right && <span className="ml-auto flex min-w-0">{right}</span>}
 		</div>
 	)
 }

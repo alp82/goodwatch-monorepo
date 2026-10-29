@@ -84,9 +84,9 @@ test("phones: the sheet's tabs rove, Find gives focus back to the magnifier, and
 	assertTabList(r.mainTabs as Tab[], "mood")
 	assert.match(String(r.afterRight), /tab:watch/)
 	assert.match(String(r.afterHome), /tab:search/)
-	assert.match(String(r.findFocus), /^input Find in every tab/)
+	assert.match(String(r.findFocus), /^input combobox Find in every tab/)
 	assert.equal(r.afterCancel, "button Find in every tab")
-	assert.match(String(r.findFocusAgain), /^input Find in every tab/)
+	assert.match(String(r.findFocusAgain), /^input combobox Find in every tab/)
 	assert.equal(r.afterFindEscape, "button Find in every tab")
 	assert.equal(r.sheetStillOpen, true)
 	assert.equal(r.sheetClosed, true)
@@ -138,3 +138,30 @@ test("quick titles retain the plus count when people were removed from a mixed p
 		count: "4 of 18+",
 	})
 })
+
+for (const width of ["desktop", "phone"] as const) {
+	test(`${width}: Find keyboard and ARIA survive switching main tabs with text present`, () => {
+		assert.deepEqual(run(width).findAcrossTabs, {
+			text: "Netflix",
+			expanded: "true",
+			grid: "grid",
+			activeInGrid: true,
+			picked: true,
+		})
+	})
+}
+
+for (const width of ["desktop", "phone"] as const) {
+	test(`${width}: Find excludes stale rows and cancels obsolete title and person requests`, () => {
+		assert.deepEqual(run(width).findFreshness, {
+			previousRowsShown: { title: true, person: true },
+			rowsDuringDebounce: { title: false, person: false },
+			rowsDuringLoad: { title: false, person: false },
+			debounceEnterUnchanged: true,
+			loadingEnterUnchanged: true,
+			freshRowsShown: { title: true, person: true },
+			obsoleteRequests: 4,
+			allAborted: true,
+		})
+	})
+}
