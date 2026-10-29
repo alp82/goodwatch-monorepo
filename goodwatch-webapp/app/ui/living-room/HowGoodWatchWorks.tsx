@@ -1,3 +1,4 @@
+import { MOOD_BY_KEY } from "~/domain/moods"
 // "How GoodWatch works": the intro film's chapters as plain page content at the top of the section below the room.
 // It is what a crawler reads of the start page (its one H1, one item per chapter with real facts and a link to the
 // real page), and each item can start the TV's film at its chapter. Server-rendered, no animation, images lazy.
@@ -206,7 +207,7 @@ const FEATURES: Feature[] = [
 						<i />
 					</li>
 					<li className="hgw-s-orange">
-						Feel-good
+						{MOOD_BY_KEY.feelgood.name}
 						<i />
 					</li>
 				</ul>

@@ -1,3 +1,4 @@
+import { MOOD_BY_KEY } from "~/domain/moods"
 // /discord: the GoodWatch Discord bot. What it does, how to add it in three steps (install link, My Apps or Server,
 // type /), the commands, /together, linking an account, and a short FAQ. The pictures are Discord look-alikes drawn
 // in markup (ui/discord-bot/DiscordMock). Every install button goes to /discord/add, which redirects to Discord.
@@ -471,7 +472,7 @@ function Together() {
 						<BotMessage command="/together">
 							<TogetherMessage
 								starter="alp"
-								choice="Movies · Feel-good"
+								choice={`Movies · ${MOOD_BY_KEY.feelgood.name}`}
 								participants={4}
 								stillVoting={2}
 								country="Germany"

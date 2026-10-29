@@ -256,3 +256,14 @@ test("match_all round trips through page_url and separates cache identities", ()
 	assert.deepEqual(filterArgs(args).match_all, args.match_all)
 	assert.equal(schema.safeParse({ match_all: ["unknown"] }).success, false)
 })
+
+test("MCP mood descriptions publish shared names beside the stable keys", () => {
+	for (const [key, name] of [
+		["feelgood", "Cozy"],
+		["romance", "Romantic"],
+		["action", "Thrilling"],
+		["heavy", "Sad"],
+		["mind", "Trippy"],
+	])
+		assert.ok(discoverFilters.moods.description?.includes(`${key} = ${name}`))
+})

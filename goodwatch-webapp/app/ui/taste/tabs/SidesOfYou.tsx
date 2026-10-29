@@ -338,7 +338,7 @@ function JustPastIt({
 	)
 }
 
-/** The side's moods in Watch next: "Open Heavy + Mind-bending in Watch next". */
+/** The side's moods in Watch next: "Open Sad + Trippy in Watch next". */
 function InWatchNext({ side, className }: { side: Side; className: string }) {
 	const names = side.moods.map((mood) => MOOD_BY_KEY[mood].name).join(" + ")
 	return (

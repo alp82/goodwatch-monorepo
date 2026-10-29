@@ -141,7 +141,7 @@ Without saved services, guest picks use every service in the country, and the ca
 `/together` posts a public message in the channel and runs until the group decides, the starter ends it, or 24 hours
 pass.
 
-1. **Start.** The public message says who started it, what is being chosen (for example "Movies, feel-good"), and has a
+1. **Start.** The public message says who started it, what is being chosen (for example "Movies, Cozy"), and has a
    **Join** button.
 2. **Vote.** **Join** opens a private (ephemeral) voting card for that person: one title at a time with poster, score,
    runtime, and where to watch, and the buttons **Yep**, **Nope**, **Undo**, and **Leave**. Each press replaces the card

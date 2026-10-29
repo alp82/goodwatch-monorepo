@@ -1,8 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import "../../server/title-filter/test-alias.ts"
 
-const { runtimeLabel, bestListCopy, STATIC_PAGE_COPY, SUBTEXT_MAX_LENGTH } =
-	await import("./copy.ts")
+const {
+	runtimeLabel,
+	bestListCopy,
+	DISCOVERY_COPY,
+	STATIC_PAGE_COPY,
+	SUBTEXT_MAX_LENGTH,
+} = await import("./copy.ts")
 
 test("a movie's length reads as hours and minutes", () => {
 	assert.equal(runtimeLabel(136), "2h 16m")
@@ -25,4 +31,13 @@ test("the best-of lists and the people list have cards whose subtitle fits", () 
 	})
 	for (const copy of [bestListCopy("movies"), STATIC_PAGE_COPY["/people"]])
 		assert.ok(copy.subtitle.length <= SUBTEXT_MAX_LENGTH, copy.subtitle)
+})
+
+test("the Explorer share card uses the shared mood names", () => {
+	const copy = DISCOVERY_COPY.explorer
+	assert.deepEqual(
+		copy.islands?.map((island) => island.label),
+		["Trippy", "Funny"],
+	)
+	assert.equal(copy.bridge?.label, "Trippy + Funny")
 })

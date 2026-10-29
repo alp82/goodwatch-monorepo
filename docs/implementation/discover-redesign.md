@@ -914,7 +914,7 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
   `title-scales.ts`, the film industries and regions, and the mood names), `tools.server.ts`,
   `docs/implementation/mcp-discover-tools.md`, `scripts/mcp-discover/local.integration.ts`.
 - Tests: `bash scripts/mcp-discover/run.sh`, `npm run test:auth:mcp`.
-- Depends on: B1 to B14 (or run after each, as their MCP arguments land). Mood names in MCP change only with B2b.
+- Depends on: B1 to B14 (or run after each, as their MCP arguments land). Mood names in MCP change with B2a; B2b adds keys.
 
 **B16. Discover type paths**
 
@@ -1051,7 +1051,7 @@ repo's `.env`. Reads of production data for counts go through a read-only user o
 - Every change is additive: new optional arguments, enums that gain values (`minimum_match` +60, `source_scores` +
   `metacriticUsers`, and `moods` +5 only with B2b). Old calls return what they return today, because URLs without
   `all` stay any of and `runtime` alone still covers both kinds.
-- B2a leaves MCP mood names as they are; they change in tool descriptions only with B2b. Keys never change.
+- B2a changes MCP mood names with the rest of the site; B2b adds moods. Existing keys never change.
 - `page_url` from MCP keeps opening Discover with the same view (`filterQuery`), and the new parameters show as
   chips there.
 - Discord reads `discoverFilters` through its strict schema: it accepts the new fields automatically; slash command

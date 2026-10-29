@@ -310,3 +310,14 @@ test("a page without list entries or neighbors has no ItemList and no prev or ne
 	assert.ok(!tags.some((tag) => JSON.stringify(tag).includes("ItemList")))
 	assert.ok(!tags.some((tag) => tag.rel === "prev" || tag.rel === "next"))
 })
+
+test("the Explorer card has a new preview address while category cards keep theirs", () => {
+	assert.match(ogImageUrl("https://goodwatch.app/explorer"), /&card=2$/)
+	for (const path of [
+		"/movies/moods/feel-good",
+		"/shows/moods/feel-good",
+		"/movies/moods/mind-bending",
+		"/shows/moods/mind-bending",
+	])
+		assert.doesNotMatch(ogImageUrl(`https://goodwatch.app${path}`), /[?&]card=/)
+})

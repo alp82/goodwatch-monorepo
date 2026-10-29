@@ -27,7 +27,7 @@ import {
 	scoreEmojiSvg,
 } from "./score-emoji.ts"
 import { applicationEmojiIds, resetEmojiCache } from "./emoji.server.ts"
-import { discoverHeading } from "./router.server.ts"
+const { discoverHeading } = await import("./router.server.ts")
 
 const emojis = Object.fromEntries(
 	SCORE_EMOJI_NAMES.map((name, i) => [
@@ -429,7 +429,7 @@ test("4D list card: poster gallery above the ranked list, then the menu and pagi
 		goodwatch_score: 90 - i,
 		poster_url: `https://image.tmdb.org/t/p/w342/p${i}.jpg`,
 	}))
-	const card = titleListCard("Feel-good movies", items, {
+	const card = titleListCard("Cozy movies", items, {
 		page: 0,
 		stateKey: "iabc",
 		next: true,
@@ -444,7 +444,7 @@ test("4D list card: poster gallery above the ranked list, then the menu and pagi
 	const [heading, gallery, ranked, selectRow, nav] = box.components!
 	assert.equal(
 		heading.content,
-		"### Feel-good movies\n-# Popular · every service in Germany · page 1 of 222",
+		"### Cozy movies\n-# Popular · every service in Germany · page 1 of 222",
 	)
 	assert.equal(gallery.type, 12)
 	assert.equal((gallery.items as unknown[]).length, 10)
@@ -497,7 +497,7 @@ test("4D list card: poster gallery above the ranked list, then the menu and pagi
 test("discover heading names the mood or genre and the kind", () => {
 	assert.equal(
 		discoverHeading({ moods: ["feelgood"], type: "movie" }),
-		"Feel-good movies",
+		"Cozy movies",
 	)
 	assert.equal(
 		discoverHeading({ genres: ["Comedy"], type: "show" }),

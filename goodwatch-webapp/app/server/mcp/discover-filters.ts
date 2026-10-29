@@ -11,7 +11,7 @@ import {
 	defaultFilterState,
 	filterQuery,
 } from "../../domain/filter-state.ts"
-import { MOOD_KEYS } from "../../domain/moods.ts"
+import { MOODS, MOOD_KEYS } from "../../domain/moods.ts"
 import { STYLE_KEYS, THEME_KEYS } from "../../domain/themes-styles.ts"
 
 /** Ranked cursors inherit their query; every other blank query is catalog discovery. */
@@ -89,7 +89,7 @@ export const discoverFilters = {
 		.max(3)
 		.optional()
 		.describe(
-			"Match any selected moods; include moods in match_all to require every pick.",
+			`Mood keys (names: ${MOODS.map((mood) => `${mood.key} = ${mood.name}`).join("; ")}). Match any selected moods; include moods in match_all to require every pick.`,
 		),
 	themes: z
 		.array(z.enum(THEME_KEYS))

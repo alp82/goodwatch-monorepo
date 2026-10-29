@@ -181,7 +181,7 @@ The filter that keeps only titles streaming on the person's saved services in th
 _Avoid_: My streaming, Available
 
 **Mood**:
-A named kind of evening, such as Funny or Crime & mystery, that a title belongs to by a fixed rule over its fingerprint and genres. A title can belong to several moods or to none. A person picks up to three.
+A named kind of evening, such as Funny or Cozy, that a title belongs to by a fixed rule over its fingerprint and genres. A title can belong to several moods or to none. A person picks up to three. Names are shared everywhere: Cozy (`feelgood`), Romantic (`romance`), Thrilling (`action`), Sad (`heavy`), and Trippy (`mind`); the previous names Feel-good, Romance, Action, Heavy, and Mind-bending remain search aliases. Keys and rules stay stable. Crime & mystery, Other worlds, History, and Coming of age are topic moods (`feel: false`), reserved to stay outside Discover’s future Feel column. Explorer’s islands keep their own rules, so its Thrilling count can differ.
 _Avoid_: Vibe, Mood blend
 
 **Theme**:

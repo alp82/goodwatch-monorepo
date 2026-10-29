@@ -109,3 +109,14 @@ test("Discover's rule: the same kind adds, another kind narrows", () => {
 		picked: 3,
 	})
 })
+
+test("Watch next taste words use the renamed moods", () => {
+	for (const [key, name] of [
+		["feelgood", "Cozy"],
+		["romance", "Romantic"],
+		["action", "Thrilling"],
+		["heavy", "Sad"],
+		["mind", "Trippy"],
+	])
+		assert.equal(WORD_BY_ID[`m:${key}`].name, name)
+})

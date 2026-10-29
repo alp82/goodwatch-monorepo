@@ -53,7 +53,7 @@ const member: TvHomeData = {
 }
 const named: TvHomeData = {
 	...member,
-	sides: [side("a", [11], { name: "Dark, tense crime", moods: ["Heavy"] })],
+	sides: [side("a", [11], { name: "Dark, tense crime", moods: ["Sad"] })],
 }
 
 const CANVAS: Record<"desktop" | "phone", TvCanvas> = {

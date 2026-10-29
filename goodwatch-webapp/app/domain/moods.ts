@@ -7,7 +7,7 @@
 import {
 	type CoreScores,
 	VALID_FINGERPRINT_KEYS,
-} from "~/server/utils/fingerprint"
+} from "../server/utils/fingerprint.ts"
 
 export const MOOD_KEYS = [
 	"funny",
@@ -42,6 +42,10 @@ type Score = (key: FingerprintKey) => number
 export interface Mood {
 	key: MoodKey
 	name: string
+	/** Previous names accepted when matching mood words. */
+	aliases: readonly string[]
+	/** False for topic moods; reserved for Discover’s future Feel column. */
+	feel: boolean
 	/** One line saying what the mood is, for the mood picker. */
 	description: string
 	/** The mood's color, as a hex color. */
@@ -76,6 +80,8 @@ const MOOD_RULES: readonly MoodRule[] = [
 	{
 		key: "funny",
 		name: "Funny",
+		aliases: [],
+		feel: true,
 		description: "Comedy leads: wit, slapstick or the absurd.",
 		hue: "#facc15",
 		rule: "Any humor score (situational comedy, wit and wordplay, physical comedy, absurdist humor, satire and parody) 8 or more, and bleakness 5 or less",
@@ -83,7 +89,9 @@ const MOOD_RULES: readonly MoodRule[] = [
 	},
 	{
 		key: "feelgood",
-		name: "Feel-good",
+		name: "Cozy",
+		aliases: ["Feel-good"],
+		feel: true,
 		description: "Warm and hopeful, with nothing grim.",
 		hue: "#fb923c",
 		rule: "Wholesome 7 or more, hopefulness 7 or more, and bleakness 3 or less",
@@ -94,7 +102,9 @@ const MOOD_RULES: readonly MoodRule[] = [
 	},
 	{
 		key: "romance",
-		name: "Romance",
+		name: "Romantic",
+		aliases: ["Romance"],
+		feel: true,
 		description: "A love story at the center.",
 		hue: "#f472b6",
 		rule: "Romance 7 or more",
@@ -102,7 +112,9 @@ const MOOD_RULES: readonly MoodRule[] = [
 	},
 	{
 		key: "action",
-		name: "Action",
+		name: "Thrilling",
+		aliases: ["Action"],
+		feel: true,
 		description: "High adrenaline and big set pieces.",
 		hue: "#ef4444",
 		rule: "Adrenaline 8 or more and spectacle 7 or more",
@@ -111,6 +123,8 @@ const MOOD_RULES: readonly MoodRule[] = [
 	{
 		key: "scary",
 		name: "Scary",
+		aliases: [],
+		feel: true,
 		description: "Dread, frights and horror.",
 		hue: "#a3e635",
 		rule: "Scare 7 or more, or the Horror genre with scare 5 or more",
@@ -120,6 +134,8 @@ const MOOD_RULES: readonly MoodRule[] = [
 	{
 		key: "crime",
 		name: "Crime & mystery",
+		aliases: [],
+		feel: false,
 		description: "Puzzles, investigations and heists.",
 		hue: "#60a5fa",
 		rule: "Mystery 8 or more, or crime 8 or more with intrigue 8 or more and spectacle 7 or less",
@@ -131,7 +147,9 @@ const MOOD_RULES: readonly MoodRule[] = [
 	},
 	{
 		key: "mind",
-		name: "Mind-bending",
+		name: "Trippy",
+		aliases: ["Mind-bending"],
+		feel: true,
 		description: "Surreal or layered; keeps you thinking.",
 		hue: "#c084fc",
 		rule: "Surrealism 6 or more, or complexity 8 or more with philosophical 7 or more or non-linear narrative 8 or more",
@@ -142,7 +160,9 @@ const MOOD_RULES: readonly MoodRule[] = [
 	},
 	{
 		key: "heavy",
-		name: "Heavy",
+		name: "Sad",
+		aliases: ["Heavy"],
+		feel: true,
 		description: "Grief, melancholy and big emotions.",
 		hue: "#94a3b8",
 		rule: "Pathos 8 or more, or melancholy 8 or more",
@@ -151,6 +171,8 @@ const MOOD_RULES: readonly MoodRule[] = [
 	{
 		key: "worlds",
 		name: "Other worlds",
+		aliases: [],
+		feel: false,
 		description: "Fantasy realms and imagined futures.",
 		hue: "#2dd4bf",
 		rule: "Fantasy 7 or more, or futuristic 7 or more",
@@ -159,6 +181,8 @@ const MOOD_RULES: readonly MoodRule[] = [
 	{
 		key: "history",
 		name: "History",
+		aliases: [],
+		feel: false,
 		description: "Real lives and past eras.",
 		hue: "#d4a373",
 		rule: "Biographical 6 or more, or historical 8 or more",
@@ -167,6 +191,8 @@ const MOOD_RULES: readonly MoodRule[] = [
 	{
 		key: "growing",
 		name: "Coming of age",
+		aliases: [],
+		feel: false,
 		description: "Growing up and finding your way.",
 		hue: "#f5d0fe",
 		rule: "Coming of age 8 or more",
@@ -222,9 +248,11 @@ export function moodsOf(
 
 /** The 11 moods in MOOD_KEYS order, without their tests. */
 export const MOODS: readonly Mood[] = MOOD_RULES.map(
-	({ key, name, description, hue, rule }) => ({
+	({ key, name, aliases, feel, description, hue, rule }) => ({
 		key,
 		name,
+		aliases,
+		feel,
 		description,
 		hue,
 		rule,
@@ -268,4 +296,22 @@ export function maskOfMoods(moods: readonly MoodKey[]): number {
 	let mask = 0
 	for (const key of moods) mask |= 1 << MOOD_KEYS.indexOf(key)
 	return mask
+}
+
+/** Match whole mood names, including previous names, ignoring case and hyphen/space differences. */
+const moodWords = (text: string) =>
+	text
+		.toLowerCase()
+		.replace(/[-‐‑–—]/g, " ")
+		.replace(/[^\p{L}\p{N}& ]/gu, " ")
+		.replace(/\s+/g, " ")
+		.trim()
+/** Mood words in descriptive search text, with word boundaries ("sad" does not match "saddle"). */
+export function moodsInText(text: string): readonly Mood[] {
+	const wanted = ` ${moodWords(text)} `
+	return MOODS.filter((mood) =>
+		[mood.name, ...mood.aliases].some((name) =>
+			wanted.includes(` ${moodWords(name)} `),
+		),
+	)
 }

@@ -1,3 +1,4 @@
+import { MOOD_BY_KEY, isMoodKey } from "~/domain/moods"
 // "Filters": from every title in the catalog to tonight's few, a switch at a time, each faster than the one before.
 import type { CSSProperties, ReactNode } from "react"
 import type {
@@ -15,6 +16,9 @@ type FilterStep = Omit<FilterStepBase, "kind"> & {
 const CATALOG_ON_SERVICES = { country: "US", services: [8, 9], total: 43775 }
 import type { SceneProps } from "~/ui/living-room/intro/scene"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
+
+const moodName = (d: FilterData) =>
+	isMoodKey(d.mood.key) ? MOOD_BY_KEY[d.mood.key].name : d.mood.name
 
 const ms = (n: number) => `${Math.round(n)}ms`
 const fmt = (n: number) => n.toLocaleString("en-US")
@@ -291,7 +295,7 @@ const captionOf = (s: FilterStep, d: FilterData, last: boolean) => {
 		case "seen":
 			return "you haven't seen yet"
 		case "mood":
-			return `${s.label.toLowerCase()} ones`
+			return `${moodName(d).toLowerCase()} ones`
 		case "age":
 			return `rated ${s.label.replace(/^Up to /, "up to ")}`
 		case "score":
@@ -471,7 +475,9 @@ function Panel({ list, d }: { list: Beat[]; d: FilterData }) {
 							>
 								<Mark step={b.step} d={d} />
 							</span>
-							<span className="intro-switch-label">{b.step.label}</span>
+							<span className="intro-switch-label">
+								{b.step.kind === "mood" ? moodName(d) : b.step.label}
+							</span>
 						</Switch>
 					)
 				// The score: one switch; its threshold counts up and its colour follows the vibe of the threshold.

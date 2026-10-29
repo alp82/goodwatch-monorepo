@@ -159,7 +159,7 @@ export function pickHint(picker: WatchNext["picker"]): string {
 		: `${adds}.`
 }
 
-/** "Funny", "Funny or Scary", "Funny, Scary or Heavy". */
+/** "Funny", "Funny or Scary", "Funny, Scary or Sad". */
 export function moodWords(moods: readonly MoodKey[]): string {
 	const names = moods.map((mood) => MOOD_BY_KEY[mood].name)
 	if (names.length < 2) return names[0] ?? ""

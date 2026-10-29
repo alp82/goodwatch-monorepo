@@ -111,7 +111,11 @@ test("the choice screen's items in the markup are the machine's, in reading orde
 		assert.deepEqual(ids(screen.phone), screen.phoneItems)
 		// The phone's Expand key ends the row of tabs (2026-10-22): right after them, before the options.
 		assert.deepEqual(screen.phoneItems.slice(-3), PHONE_BAR)
-		assert.deepEqual(screen.phoneItems.slice(0, 5), ["browse:all", ...TABS, "expand"])
+		assert.deepEqual(screen.phoneItems.slice(0, 5), [
+			"browse:all",
+			...TABS,
+			"expand",
+		])
 	}
 	assert.deepEqual(rendered.choice.themes.items, [
 		"browse:all",
@@ -156,7 +160,7 @@ test("three tabs with their names, and the open one marked, with or without the 
 
 test("each tab shows its six options by the app's names; the desktop says a line under each", () => {
 	const names = {
-		moods: ["Funny", "Feel-good", "Romance", "Action", "Scary", "Mind-bending"],
+		moods: ["Funny", "Cozy", "Romantic", "Thrilling", "Scary", "Trippy"],
 		themes: ["Crime", "Mystery", "Family", "Growing up", "Future", "Fantasy"],
 		styles: [
 			"Animated",

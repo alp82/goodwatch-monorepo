@@ -22,14 +22,14 @@ test("eight mixes of two or three of the picker's words, as the spec names them"
 	assert.deepEqual(
 		MIXES.map((m) => [m.name, mixLine(m.id)]),
 		[
-			["Warm, easy comedies", "Funny · Feel-good"],
+			["Warm, easy comedies", "Funny · Cozy"],
 			["Dark, gritty crime", "Crime & mystery · Scary · Graphic"],
-			["Eerie, mind-bending stories", "Mind-bending · Scary"],
-			["Funny love stories", "Romance · Funny"],
-			["Smart, high-stakes action", "Action · Mind-bending · Fast-paced"],
-			["Warm coming-of-age stories", "Coming of age · Feel-good"],
-			["Moving period dramas", "History · Heavy · Slow burn"],
-			["Dark fantasy epics", "Fantasy · Heavy · Spectacle"],
+			["Eerie, mind-bending stories", "Trippy · Scary"],
+			["Funny love stories", "Romantic · Funny"],
+			["Smart, high-stakes action", "Thrilling · Trippy · Fast-paced"],
+			["Warm coming-of-age stories", "Coming of age · Cozy"],
+			["Moving period dramas", "History · Sad · Slow burn"],
+			["Dark fantasy epics", "Fantasy · Sad · Spectacle"],
 		],
 	)
 	for (const mix of MIXES) {
@@ -50,7 +50,7 @@ test("a mix is on while all its parts are picked, however they got there", () =>
 })
 
 test("only one mix is on at a time: the one whose parts were all picked first", () => {
-	// Funny + Feel-good completes g1 at the second pick; Romance then completes g4 at the third.
+	// Funny + Cozy completes g1 at the second pick; Romance then completes g4 at the third.
 	assert.equal(activeMix(["m:funny", "m:feelgood", "m:romance"])?.id, "g1")
 	assert.equal(activeMix(["m:romance", "m:funny", "m:feelgood"])?.id, "g4")
 	assert.deepEqual(displayPicks(["m:romance", "m:funny", "m:feelgood"]), [

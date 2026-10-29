@@ -83,7 +83,7 @@ test("the reading row: Reading… first, then Read as with the picks, else the t
 	assert.match(rendered.unread, /“zzzz”/)
 	// A whole mix by its name, then the other words.
 	assert.match(rendered.mix, /Warm, easy comedies[\s\S]*Slow burn/)
-	assert.doesNotMatch(rendered.mix, /Feel-good/)
+	assert.doesNotMatch(rendered.mix, /Cozy/)
 })
 
 test("the field: its label, the wide placeholder from the server, private text, no heading", () => {

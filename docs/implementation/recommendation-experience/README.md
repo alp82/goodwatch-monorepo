@@ -363,13 +363,13 @@ and `moodsOf(fingerprint, genres): MoodKey[]`. The rules are round 7's, verbatim
 | Key | Name | Rule |
 |---|---|---|
 | `funny` | Funny | Highest of situational comedy, wit and wordplay, physical comedy, absurdist humor, satire and parody at least 8, and bleakness at most 5 |
-| `feelgood` | Feel-good | Wholesome at least 7, hopefulness at least 7, bleakness at most 3 |
-| `romance` | Romance | Romance at least 7 |
-| `action` | Action | Adrenaline at least 8 and spectacle at least 7 |
+| `feelgood` | Cozy | Wholesome at least 7, hopefulness at least 7, bleakness at most 3 |
+| `romance` | Romantic | Romance at least 7 |
+| `action` | Thrilling | Adrenaline at least 8 and spectacle at least 7 |
 | `scary` | Scary | Scare at least 7, or the Horror genre with scare at least 5 |
 | `crime` | Crime & mystery | Mystery at least 8, or crime at least 8 with intrigue at least 8 and spectacle at most 7 |
-| `mind` | Mind-bending | Surrealism at least 6, or complexity at least 8 with philosophical at least 7 or non-linear narrative at least 8 |
-| `heavy` | Heavy | Pathos at least 8 or melancholy at least 8 |
+| `mind` | Trippy | Surrealism at least 6, or complexity at least 8 with philosophical at least 7 or non-linear narrative at least 8 |
+| `heavy` | Sad | Pathos at least 8 or melancholy at least 8 |
 | `worlds` | Other worlds | Fantasy at least 7 or futuristic at least 7 |
 | `history` | History | Biographical at least 6 or historical at least 8 |
 | `growing` | Coming of age | Coming of age at least 8 |

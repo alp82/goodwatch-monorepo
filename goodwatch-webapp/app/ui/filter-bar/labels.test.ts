@@ -392,7 +392,7 @@ test("all-of tag chips join picks with and; any-of chips retain their individual
 	const chips = activeChips({ ...picks, allOf: ["moods", "genres"] })
 	assert.equal(
 		chips.find((chip) => chip.group === "moods")?.label,
-		"Funny and Feel-good",
+		"Funny and Cozy",
 	)
 	assert.equal(
 		chips.find((chip) => chip.group === "genres")?.label,
@@ -403,7 +403,7 @@ test("all-of tag chips join picks with and; any-of chips retain their individual
 		activeChips(picks)
 			.filter((chip) => chip.group === "moods")
 			.map((chip) => chip.label),
-		["Funny", "Feel-good"],
+		["Funny", "Cozy"],
 	)
 })
 
@@ -420,5 +420,19 @@ test("all-of recoveries describe titles missing any required tag", () => {
 			`12 without every ${singular}`,
 		)
 		assert.equal(recoveryLabel(group, 12, filtered, true), "12 more")
+	}
+})
+
+test("Discover chips use the shared renamed moods and keep their URL keys", () => {
+	for (const [key, name] of [
+		["feelgood", "Cozy"],
+		["romance", "Romantic"],
+		["action", "Thrilling"],
+		["heavy", "Sad"],
+		["mind", "Trippy"],
+	] as const) {
+		const chips = activeChips({ ...state, moods: [key] })
+		assert.equal(chips[0].label, name)
+		assert.equal(chips[0].key, `mood-${key}`)
 	}
 })

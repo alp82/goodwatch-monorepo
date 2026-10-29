@@ -1,3 +1,4 @@
+import { MOOD_BY_KEY } from "~/domain/moods"
 // The Filters sheet as cards, added as you go: Movies or shows, Mood, Taste match, and Score to start, plus every
 // filter with something set. Popular filters sit above "Add a filter" as one-tap tiles; "Add a filter" lists the rest.
 // Each card has its control (FilterCards' Control), Clear once something is set, and × to take it away. A search in the
@@ -217,7 +218,7 @@ const HINTS: Record<CardKey, string> = {
 	services: "Where you can watch it",
 	type: "Movies, shows, anime",
 	genres: "Drama, comedy, sci-fi…",
-	moods: "Funny, scary, feel-good…",
+	moods: `${MOOD_BY_KEY.funny.name}, ${MOOD_BY_KEY.scary.name.toLowerCase()}, ${MOOD_BY_KEY.feelgood.name.toLowerCase()}…`,
 	minScore: "Only well-rated titles",
 	sourceScores: "IMDb, Rotten Tomatoes, Metacritic",
 	scoreGap: "Where critics and audiences differ",

@@ -448,7 +448,7 @@ Decided on October 13, 2026, exactly as prototyped (`prototype-tv-design/choices
 
   | Tab | Options, in order | Their keys | Expand from an option's titles |
   | --- | --- | --- | --- |
-  | Moods | Funny, Feel-good, Romance, Action, Scary, Mind-bending | `funny`, `feelgood`, `romance`, `action`, `scary`, `mind` (`domain/moods.ts:12-24`) | `/discover?moods=<key>` |
+  | Moods | Funny, Cozy, Romantic, Thrilling, Scary, Trippy | `funny`, `feelgood`, `romance`, `action`, `scary`, `mind` (`domain/moods.ts:12-24`) | `/discover?moods=<key>` |
   | Themes | Crime, Mystery, Family, Growing up, Future, Fantasy | `crime`, `mystery`, `family`, `growing`, `future`, `fantasy` | `/discover?themes=<key>` |
   | Styles | Animated, Spectacle, Slow burn, Fast-paced, Talky, Nonlinear | `animated`, `spectacle`, `slow`, `fast`, `talky`, `nonlinear` | `/discover?styles=<key>` |
 
@@ -1186,7 +1186,7 @@ for the TV come from the prototype thread; this slice gives Discover all of them
 - **Only Discover mounts the filter bar** (`ui/discover/DiscoverPage.tsx:353`; the other uses are the old
   Discover route and two development routes).
 - **Four of Discover's moods are close to a theme by name:** Crime & mystery, History, Coming of age and
-  Mind-bending (`domain/moods.ts:12-24`) beside Crime, Mystery, History, Growing up and The mind.
+  Trippy (`domain/moods.ts:12-24`) beside Crime, Mystery, History, Growing up and The mind.
 
 **The plan (a proposal):**
 
@@ -1482,7 +1482,7 @@ the right one.
   integration branch `feat/tv-screen-revamp` and merged into `main` once, complete. The switch and the cleanup
   are one slice, and the way back is a revert of that merge ([How it ships](#how-it-ships)).
 - **2. Mini Discover's choice screen** has three tabs with six options each, exactly the prototype's. Moods:
-  Funny, Feel-good, Romance, Action, Scary, Mind-bending. Themes: Crime, Mystery, Family, Growing up, Future,
+  Funny, Cozy, Romantic, Thrilling, Scary, Trippy. Themes: Crime, Mystery, Family, Growing up, Future,
   Fantasy. Styles: Animated, Spectacle, Slow burn, Fast-paced, Talky, Nonlinear. The owner: "Good"; Heavy and
   History on no tab is fine. A tab opens when the direction keys land on it and the pointer needs a click; one
   choice leads to its titles, with no combining on the TV; Expand opens `/discover?moods=`, `?themes=` or

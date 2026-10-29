@@ -1,3 +1,4 @@
+import { MOOD_BY_KEY } from "../../domain/moods.ts"
 // Every piece of text the Open Graph cards show, in one place to review and edit.
 // After changing a card's text, bump its version in card-versions.ts (or, for every card, CACHE_PREFIX in
 // app/server/og-image/store.server.ts), or cached cards keep the old text for up to a day.
@@ -201,11 +202,15 @@ export const DISCOVERY_COPY = {
 		// Keys into moods in app/ui/explore/category/moods.ts. The bridge shows titles in both.
 		islands: [
 			// Preferred picks, as TMDB ids: Inception and The Matrix.
-			{ label: "Mind-Bending", mood: "mind-bending", picks: [27205, 603] },
+			{
+				label: MOOD_BY_KEY.mind.name,
+				mood: "mind-bending",
+				picks: [27205, 603],
+			},
 			// The Grand Budapest Hotel and Back to the Future, so the island isn't family animation.
-			{ label: "Funny", mood: "funny", picks: [120467, 105] },
+			{ label: MOOD_BY_KEY.funny.name, mood: "funny", picks: [120467, 105] },
 		],
-		bridge: { label: "Mind-Bending + Funny" },
+		bridge: { label: `${MOOD_BY_KEY.mind.name} + ${MOOD_BY_KEY.funny.name}` },
 	},
 } as const
 
@@ -255,7 +260,9 @@ export const NEW_SERVICES_CARD_COPY = {
 	member: "New on your services",
 	shareTag: "In your country",
 	tally: (count: number) =>
-		count === 1 ? "1 new movie or show" : `${count.toLocaleString("en-US")} new movies and shows`,
+		count === 1
+			? "1 new movie or show"
+			: `${count.toLocaleString("en-US")} new movies and shows`,
 	// The member card's wall marks a few services as the viewer's own, the rest step back.
 	memberPicks: ["netflix", "hulu", "paramount-plus"],
 	// The share card's disc: a few countries' flags stand for "yours, wherever you are".

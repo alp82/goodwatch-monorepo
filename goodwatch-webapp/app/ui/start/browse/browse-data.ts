@@ -1,3 +1,4 @@
+import { MOOD_BY_KEY } from "~/domain/moods"
 // What the start page's Where to start section shows (StartBrowse.tsx), shared by its loader (server/start-page/
 // browse.server.ts) and the browser. Every rail's links are real pages of the site, in the server HTML.
 //
@@ -70,7 +71,7 @@ export const BROWSE_LIMITS = {
 export const BROWSE_MOODS = [
 	{
 		path: "feel-good",
-		name: "Feel-good",
+		name: MOOD_BY_KEY.feelgood.name,
 		line: "Warm and hopeful, with nothing grim.",
 		hue: "#fb923c",
 	},
@@ -82,7 +83,7 @@ export const BROWSE_MOODS = [
 	},
 	{
 		path: "romantic",
-		name: "Romantic",
+		name: MOOD_BY_KEY.romance.name,
 		line: "A love story at the center.",
 		hue: "#f472b6",
 	},
@@ -106,7 +107,7 @@ export const BROWSE_MOODS = [
 	},
 	{
 		path: "mind-bending",
-		name: "Mind-bending",
+		name: MOOD_BY_KEY.mind.name,
 		line: "Layered stories that keep you thinking.",
 		hue: "#c084fc",
 	},

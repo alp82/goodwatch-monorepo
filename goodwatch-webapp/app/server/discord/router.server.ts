@@ -353,7 +353,7 @@ const sortNames: Record<string, string> = {
 	score: "Top scored",
 	match: "Best match",
 }
-/** "Feel-good movies", "Comedy shows", "Movies and shows". */
+/** "Cozy movies", "Comedy shows", "Movies and shows". */
 export function discoverHeading(args: DiscoverState["args"]) {
 	const kind =
 		args.type === "movie"

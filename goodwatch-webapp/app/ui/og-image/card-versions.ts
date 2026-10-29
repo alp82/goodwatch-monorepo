@@ -5,6 +5,8 @@
 // Plain relative imports only: the browser, the server and node tests read it.
 
 export const CARD_VERSIONS: Readonly<Record<string, number>> = {
+	// Explorer prints the renamed Trippy mood; its preview needs a new image address.
+	"/explorer": 2,
 	// 2: the lit taste bar (owner, October 28, 2026).
 	"/taste/quiz": 2,
 }

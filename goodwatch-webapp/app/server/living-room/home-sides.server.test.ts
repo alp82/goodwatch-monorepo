@@ -162,7 +162,7 @@ describe("home's sides", () => {
 		)
 		assert.equal(grim.watchNext, "/watch-next?moods=heavy")
 		assert.equal(funny.watchNext, "/watch-next")
-		assert.deepEqual(grim.words, { name: "Name of dark", moods: ["Heavy"] })
+		assert.deepEqual(grim.words, { name: "Name of dark", moods: ["Sad"] })
 	})
 
 	it("show the picks on the member's services when enough stream there, else all with a note", () => {

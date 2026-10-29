@@ -1,3 +1,4 @@
+import { MOODS } from "../../domain/moods.ts"
 import {
 	themeChoices,
 	styleChoices,
@@ -16,19 +17,10 @@ export function defineCommands() {
 			value: choice.value.slice(0, 100),
 		})),
 	})
-	const moodChoices = [
-		{ name: "Funny", value: "funny" },
-		{ name: "Feel-good", value: "feelgood" },
-		{ name: "Romance", value: "romance" },
-		{ name: "Action", value: "action" },
-		{ name: "Scary", value: "scary" },
-		{ name: "Crime & mystery", value: "crime" },
-		{ name: "Mind-bending", value: "mind" },
-		{ name: "Heavy", value: "heavy" },
-		{ name: "Other worlds", value: "worlds" },
-		{ name: "History", value: "history" },
-		{ name: "Coming of age", value: "growing" },
-	]
+	const moodChoices = MOODS.map((mood) => ({
+		name: mood.name,
+		value: mood.key,
+	}))
 	const title = {
 		name: "title",
 		description: "Movie or TV show title",

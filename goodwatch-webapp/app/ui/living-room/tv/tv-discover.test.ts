@@ -52,11 +52,11 @@ describe("the options of mini Discover's tabs", () => {
 			discoverOptions(tab).map((option) => option.name)
 		assert.deepEqual(names("moods"), [
 			"Funny",
-			"Feel-good",
-			"Romance",
-			"Action",
+			"Cozy",
+			"Romantic",
+			"Thrilling",
 			"Scary",
-			"Mind-bending",
+			"Trippy",
 		])
 		assert.deepEqual(names("themes"), [
 			"Crime",
@@ -76,12 +76,12 @@ describe("the options of mini Discover's tabs", () => {
 		])
 	})
 
-	it("Heavy and History are on no tab", () => {
+	it("Sad and History are on no tab", () => {
 		const all = DISCOVER_TABS.flatMap(({ tab }) =>
 			discoverOptions(tab).map((option) => option.name),
 		)
 		assert.equal(all.length, 18)
-		for (const name of ["Heavy", "History", "Crime & mystery", "Any mood"])
+		for (const name of ["Sad", "History", "Crime & mystery", "Any mood"])
 			assert.ok(!all.includes(name), name)
 	})
 

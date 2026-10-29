@@ -1,3 +1,4 @@
+import { MOOD_BY_KEY } from "~/domain/moods"
 // Popular one-tap filters: what many people look for. The count line offers a few while no filter is set, and the
 // sheet shows them as tiles above "Add a filter".
 import { PlusIcon } from "@heroicons/react/20/solid"
@@ -52,7 +53,7 @@ const POPULAR: Popular[] = [
 	},
 	{
 		id: "feelgood",
-		label: "Feel-good",
+		label: MOOD_BY_KEY.feelgood.name,
 		key: "moods",
 		on: (s) => s.moods.includes("feelgood"),
 		apply: (d) => ({ moods: addTo(d.state.moods, "feelgood").slice(-3) }),
@@ -91,7 +92,7 @@ const POPULAR: Popular[] = [
 	},
 	{
 		id: "mind",
-		label: "Mind-bending",
+		label: MOOD_BY_KEY.mind.name,
 		key: "moods",
 		on: (s) => s.moods.includes("mind"),
 		apply: (d) => ({ moods: addTo(d.state.moods, "mind").slice(-3) }),
