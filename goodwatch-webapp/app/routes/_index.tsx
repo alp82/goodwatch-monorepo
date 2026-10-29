@@ -14,6 +14,7 @@ import { StartBrowse } from "~/ui/start/browse/StartBrowse"
 import { HowItWorksCorner } from "~/ui/start/how/HowItWorksCorner"
 import { RoomGrade } from "~/ui/start/lighting/RoomGrade"
 import { roomGrade } from "~/ui/start/lighting/grades"
+import { MemberStart } from "~/ui/start/member/MemberStart"
 import { StartMoodPicker } from "~/ui/start/moods/StartMoodPicker"
 import { OpeningBoot, OpeningCover } from "~/ui/start/opening/OpeningBoot"
 import type { ShelfTitle } from "~/ui/start/room/ShelfCovers"
@@ -22,7 +23,7 @@ import { useStartSearch } from "~/ui/start/search/useStartSearch"
 import { SpotlightCard } from "~/ui/start/spotlight/SpotlightCard"
 import { useLovedThree } from "~/ui/start/spotlight/useLovedThree"
 import { StartStage } from "~/ui/start/stage/StartStage"
-import { LIT_ROOM, roomLight, roomStep } from "~/ui/start/stage/room-steps"
+import { roomLight, roomStep } from "~/ui/start/stage/room-steps"
 import { startView } from "~/ui/start/stage/start-query"
 import { useStartQuery } from "~/ui/start/stage/useStartQuery"
 import { START_SHEETS } from "~/ui/start/start-sheets"
@@ -103,10 +104,13 @@ export default function Index() {
 	if (!data.member)
 		return <GuestStart titles={data.titles} browse={data.browse} />
 	return (
-		<StartStage
+		<MemberStart
 			shelf={data.titles}
-			night={LIT_ROOM.night}
-			camera={LIT_ROOM.camera}
+			data={data.start}
+			later={{
+				forYou: "forYouLater" in data ? data.forYouLater : undefined,
+				hot: "hotLater" in data ? data.hotLater : undefined,
+			}}
 		/>
 	)
 }

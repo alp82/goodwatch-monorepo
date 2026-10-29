@@ -1,0 +1,137 @@
+// A member's start (docs/implementation/start-page-redesign.md, "Member start"): the same lit room and search bar as
+// a guest's, with no boot and no opening steps. The card's box holds "this or that" from the member's own lists (First
+// steps when there is nothing on any list yet), or the search's results while a search is on. Under the room, the
+// "Go deeper" doors open each list inline.
+//
+// For you and Hot on socials can come later than the page (member.server.ts); they join the deck and the doors once
+// they arrive, without moving anything: the doors' order and the open door are decided before (doors.ts).
+//
+// Nothing on this page writes: "this or that" only moves its round on, and the doors only switch sections.
+import { useEffect, useMemo, useState } from "react"
+import type { ShelfTitle } from "../room/ShelfCovers"
+import { StartSearchBar } from "../search/StartSearchBar"
+import { useStartSearch } from "../search/useStartSearch"
+import { StartStage } from "../stage/StartStage"
+import { hasQuery } from "../stage/start-query"
+import { useStartQuery } from "../stage/useStartQuery"
+import { Doors } from "./Doors"
+import { FirstSteps } from "./FirstSteps"
+import { MemberResults } from "./MemberResults"
+import { ThisOrThat } from "./ThisOrThat"
+import { buildDeck } from "./deck"
+import type { MemberStartData, MemberStartLater } from "./member-data"
+
+/** A member's room is lit and seen whole. */
+const MEMBER_ROOM = { night: 0, camera: 1 }
+
+export function MemberStart({
+	shelf,
+	data: first,
+	later,
+}: {
+	shelf: readonly ShelfTitle[]
+	data: MemberStartData
+	later?: MemberStartLater
+}) {
+	const data = useArrived(first, later)
+	const start = useStartQuery()
+	const member = useMemo(() => ({ services: data.services }), [data.services])
+	const results = useStartSearch(start.query, { member })
+	const deck = useMemo(() => buildDeck(data), [data])
+	const unread = !data.continue && !data.wishlist && !data.forYou
+	return (
+		<div className="start-member">
+			<StartStage
+				shelf={shelf}
+				night={MEMBER_ROOM.night}
+				camera={MEMBER_ROOM.camera}
+				search={
+					<StartSearchBar
+						query={start.query}
+						results={results}
+						setDraft={start.setDraft}
+						search={start.search}
+						clearSearch={start.clearSearch}
+					/>
+				}
+				card={
+					hasQuery(start.query) ? (
+						<MemberResults
+							query={start.query}
+							results={results}
+							onBack={() => {
+								start.clearSearch()
+								start.clearPicks()
+							}}
+							onRetry={results.retry}
+						/>
+					) : deck.length ? (
+						<ThisOrThat deck={deck} />
+					) : unread ? (
+						<Unread />
+					) : (
+						<FirstSteps ratings={data.ratings} />
+					)
+				}
+			/>
+			<Doors data={data} />
+		</div>
+	)
+}
+
+type Arrived = Pick<MemberStartData, "forYou" | "hot">
+
+/**
+ * The start with the lists that came later. The first render is the server's (they're still on their way there), so
+ * the page hydrates as it was sent; each list joins when its promise settles. A list the start already has wins.
+ */
+function useArrived(
+	data: MemberStartData,
+	later: MemberStartLater | undefined,
+): MemberStartData {
+	const [arrived, setArrived] = useState<Arrived>({})
+	const forYou = later?.forYou
+	const hot = later?.hot
+	useEffect(() => {
+		let live = true
+		const join = <K extends keyof Arrived>(
+			key: K,
+			list: Promise<Arrived[K]> | undefined,
+		) =>
+			list?.then(
+				(value) => {
+					if (live) setArrived((now) => ({ ...now, [key]: value }))
+				},
+				() => {
+					if (live) setArrived((now) => ({ ...now, [key]: null }))
+				},
+			)
+		join("forYou", forYou)
+		join("hot", hot)
+		return () => {
+			live = false
+		}
+	}, [forYou, hot])
+	return useMemo(
+		() => ({
+			...data,
+			forYou: data.forYou !== undefined ? data.forYou : arrived.forYou,
+			hot: data.hot !== undefined ? data.hot : arrived.hot,
+		}),
+		[data, arrived],
+	)
+}
+
+/** None of the member's lists could be read. */
+function Unread() {
+	return (
+		<div className="start-member-box flex h-full flex-col justify-center pt-3 text-center">
+			<h2 className="text-base font-bold text-white lg:text-lg">
+				Couldn't load your lists
+			</h2>
+			<p className="mt-1 text-sm text-gray-400">
+				Reload the page to try again, or search above.
+			</p>
+		</div>
+	)
+}
