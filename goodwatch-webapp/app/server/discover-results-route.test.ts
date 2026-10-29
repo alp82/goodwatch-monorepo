@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { stubModules } from "../server/rating-onboarding.test-support.ts"
+import { stubModules } from "./rating-onboarding.test-support.ts"
 
 stubModules({
 	"~/server/discover-results.server": `export class SnapshotNotLoaded extends Error {};
@@ -12,7 +12,7 @@ stubModules({
 	"~/server/viewer.server":
 		"export const getViewerContext = async (request, guest) => ({guest: guest ?? null})",
 })
-const { loader, action } = await import("./api.discover_.results.ts")
+const { loader, action } = await import("../routes/api.discover_.results.ts")
 const args = (request: Request) => ({ request, params: {}, context: {} })
 
 test("GET and guest POST opt into exact comma-list count groups, including combinations", async () => {

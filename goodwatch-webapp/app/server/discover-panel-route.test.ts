@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { stubModules } from "../server/rating-onboarding.test-support.ts"
+import { stubModules } from "./rating-onboarding.test-support.ts"
 
 stubModules({
 	"~/server/discover-results.server":
@@ -12,7 +12,7 @@ stubModules({
 	"~/server/viewer.server":
 		"export const getViewerContext = async (request, guest) => ({guest: guest ?? null})",
 })
-const { loader, action } = await import("./api.discover_.panel.ts")
+const { loader, action } = await import("../routes/api.discover_.panel.ts")
 const args = (request: Request) => ({ request, params: {}, context: {} })
 
 test("GET parses panel part and filter query, with private responses and timing", async () => {
