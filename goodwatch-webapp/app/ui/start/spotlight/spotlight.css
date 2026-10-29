@@ -28,6 +28,17 @@
 	opacity: 1;
 }
 
+/* The card's corner radius, on #start-card so the Try it ring around it (how/how-it-works.css) follows it. */
+#start-card {
+	--spotlight-radius: 22px;
+}
+
+@media (min-width: 640px) {
+	#start-card {
+		--spotlight-radius: 26px;
+	}
+}
+
 .spotlight-card {
 	position: relative;
 	display: flex;
@@ -36,7 +47,7 @@
 	/* Clipped, not hidden: focus or a scroll into view never scrolls the card's content out of its place. */
 	overflow: hidden;
 	overflow: clip;
-	border-radius: 22px;
+	border-radius: var(--spotlight-radius);
 	background: #030712;
 	box-shadow: 0 40px 100px rgb(0 0 0 / 0.75), 0 12px 30px rgb(0 0 0 / 0.5),
 		inset 0 1px 0 rgb(255 255 255 / 0.07), 0 0 0 1px rgb(251 191 36 / 0.25);
@@ -119,9 +130,6 @@
 }
 
 @media (min-width: 640px) {
-	.spotlight-card {
-		border-radius: 26px;
-	}
 	.spotlight-pad {
 		padding-inline: 24px;
 	}

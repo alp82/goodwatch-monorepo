@@ -203,13 +203,15 @@
 	}
 }
 
-/* Try it, with something asked: the card's amber ring and glow pulse once (hand-off.ts sets `data-pulse`). */
+/* Try it, with something asked: the card's amber ring and glow pulse once (hand-off.ts sets `data-pulse`). The ring
+   runs `--ring` outside the card, round by the card's own radius plus that (spotlight/spotlight.css). */
 #start-card[data-pulse]::after {
+	--ring: 6px;
 	content: "";
 	position: absolute;
-	inset: -6px;
+	inset: calc(-1 * var(--ring));
 	z-index: 1;
-	border-radius: 26px;
+	border-radius: calc(var(--spotlight-radius, 22px) + var(--ring));
 	pointer-events: none;
 	box-shadow: 0 0 0 3px #fbbf24, 0 0 0 8px rgba(251, 191, 36, 0.16), 0 0 60px
 		8px rgba(251, 191, 36, 0.4);
@@ -218,8 +220,7 @@
 }
 @media (min-width: 640px) {
 	#start-card[data-pulse]::after {
-		inset: -8px;
-		border-radius: 32px;
+		--ring: 8px;
 	}
 }
 @keyframes start-card-pulse {
