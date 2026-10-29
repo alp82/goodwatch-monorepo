@@ -1,8 +1,9 @@
 // Run by stage-render.test.ts through vite-node: renders the start page's stage the way the server does, for a guest
-// and a member, and prints the HTML.
+// and a member (as routes/_index.tsx does: the opening for guests only), and prints the HTML.
 import { renderToString } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
+import { OpeningBoot, OpeningCover } from "../opening/OpeningBoot"
 import { StartStage } from "./StartStage"
 
 const titles: StartTitle[] = Array.from({ length: 16 }, (_, i) => ({
@@ -23,7 +24,9 @@ const render = (member: boolean) =>
 				camera={member ? 1 : 1.12}
 				centered={!member}
 				cardHidden={!member}
+				opening={member ? undefined : <OpeningBoot />}
 			/>
+			{member ? null : <OpeningCover />}
 		</MemoryRouter>,
 	)
 

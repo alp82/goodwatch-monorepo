@@ -1,0 +1,222 @@
+/* A guest's opening on the start page (OpeningBoot.tsx): the page assembles, the boot plays large above the search
+   block, and at the hand-off the boot fades out while the header slides down. Every part is a CSS animation timed
+   from the first paint; the hand-off starts at 1.4 s (boot-gate.ts HANDOFF_MS, 0.6 s with reduced motion), and all of
+   it is over by about 2.1 s.
+
+   Every rule plays only while the gate (#start-boot-gate, boot-gate.ts) is unticked: a returning visitor's box is
+   ticked before the first paint, which hides the boot and its cover and leaves the page and the header as they rest.
+   A member's page has no gate and no boot, so nothing here applies to it.
+
+   Only transform, translate, scale and opacity move. The header's backdrop blur is off until it has come to rest.
+   The keyframes are named `start-open-…`: the gate's skip (a tap or a key) moves those and the boot's own forward to
+   the hand-off. The room and the block are moved with `scale` and `translate`, not `transform`, so the shelf's
+   placement (room/obstacles.ts reads `transform`) sees where they rest. Fills are `backwards`, never `forwards`, on
+   anything that later changes on its own (the night, the camera): an animation that stays in effect would cut their
+   transitions. */
+
+/* The boot's band: from the header's bottom to the centered search block's top (start.css, `[data-centered]`). */
+.start-opening {
+	--start-open-band: calc(0.46 * (100svh - 4rem) - var(--start-block) / 2);
+	position: absolute;
+	inset: 0 0 auto;
+	z-index: 20;
+	/* The lockup sits at 40 % of the band, a little above its middle: this box is the band's top 80 %. */
+	height: calc(var(--start-open-band) * 0.8);
+	pointer-events: none;
+}
+
+#start-boot-gate:checked ~ .start-opening {
+	display: none;
+}
+
+/* The boot as the TV's (boot.css), sped up: no black backing, no standby light, no push-in, no fading by itself. */
+.start-opening .boot {
+	overflow: visible;
+	background: transparent;
+	animation: start-open-boot-out 0.6s cubic-bezier(0.4, 0, 0.2, 1) 1.4s forwards;
+}
+.start-opening .boot-standby {
+	display: none;
+}
+.start-opening .boot-lockup {
+	font-size: min(46px, 12.5vw, calc(var(--start-open-band) * 0.3));
+}
+@media (min-width: 640px) {
+	.start-opening .boot-lockup {
+		font-size: min(62px, calc(var(--start-open-band) * 0.3));
+	}
+}
+@media (min-width: 1024px) {
+	.start-opening .boot-lockup {
+		font-size: min(78px, calc(var(--start-open-band) * 0.3));
+	}
+}
+.start-opening .boot-glow {
+	animation-duration: 1s;
+	animation-delay: 0.05s;
+	background: radial-gradient(
+		30% 60% at 50% 50%,
+		rgb(251 191 36 / 0.13) 0,
+		rgb(251 191 36 / 0) 72%
+	);
+}
+.start-opening .boot-arc {
+	animation-duration: 0.85s;
+	animation-delay: 0.05s;
+}
+.start-opening .boot-g {
+	animation-duration: 0.6s;
+	animation-delay: 0.08s;
+}
+.start-opening .boot-text {
+	animation-duration: 0.6s;
+	animation-delay: 0.48s;
+}
+
+/* The hand-off: the shrink and lift run longer than the fade, on an easing that doesn't settle early, so the boot is
+   still moving in its last visible frame. */
+.start-opening .boot-push {
+	animation: start-open-boot-shrink 0.7s cubic-bezier(0.4, 0, 0.6, 1) 1.4s
+		forwards;
+}
+@keyframes start-open-boot-out {
+	to {
+		opacity: 0;
+		visibility: hidden;
+	}
+}
+@keyframes start-open-boot-shrink {
+	to {
+		translate: 0 -12px;
+		scale: 0.9;
+	}
+}
+
+/* The header waits above the screen, then slides down into its place as the boot fades. Its box never moves: only
+   its `translate`. */
+html:has(#start-boot-gate:not(:checked)) [data-site-header] {
+	animation: start-open-header-slide 0.64s cubic-bezier(0.22, 0.8, 0.24, 1) 1.4s
+		backwards, start-open-header-fade 0.42s ease-out 1.4s backwards;
+}
+html:has(#start-boot-gate:not(:checked)) [data-site-header] .backdrop-blur-md {
+	animation: start-open-no-blur 2.1s step-end;
+}
+@keyframes start-open-header-slide {
+	from {
+		translate: 0 -100%;
+	}
+}
+@keyframes start-open-header-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes start-open-no-blur {
+	from,
+	to {
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+}
+
+/* Night in the header's place while the header is away, not the page's gray. */
+.start-opening-cover {
+	position: fixed;
+	inset: 0 0 auto;
+	z-index: 999;
+	height: 64px;
+	pointer-events: none;
+	background: #070c19;
+	animation: start-open-cover-out 0.5s ease-out 1.6s forwards;
+}
+@media (min-width: 1024px) {
+	.start-opening-cover {
+		height: 65px;
+	}
+}
+html:has(#start-boot-gate:checked) .start-opening-cover {
+	display: none;
+}
+@keyframes start-open-cover-out {
+	to {
+		opacity: 0;
+		visibility: hidden;
+	}
+}
+
+/* The page assembles under the boot: the room comes up from black while the camera settles, and the search block's
+   parts rise in one after another. */
+#start-boot-gate:not(:checked) ~ .start-camera {
+	animation: start-open-camera 1.8s cubic-bezier(0.22, 0.7, 0.2, 1) backwards;
+}
+#start-boot-gate:not(:checked) ~ .start-camera .start-night {
+	animation: start-open-night 1.3s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+#start-boot-gate:not(:checked) ~ .start-content .start-pool {
+	animation: start-open-fade 0.9s ease-out 0.05s backwards;
+}
+#start-boot-gate:not(:checked) ~ .start-content .start-heading {
+	animation: start-open-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s
+		backwards;
+}
+#start-boot-gate:not(:checked) ~ .start-content .start-search {
+	animation: start-open-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.27s
+		backwards;
+}
+#start-boot-gate:not(:checked) ~ .start-content .start-moods {
+	animation: start-open-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.39s
+		backwards;
+}
+@keyframes start-open-camera {
+	from {
+		scale: 1.05;
+	}
+}
+@keyframes start-open-night {
+	from {
+		opacity: 1;
+	}
+}
+@keyframes start-open-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes start-open-rise {
+	from {
+		opacity: 0;
+		translate: 0 14px;
+	}
+}
+
+/* Reduced motion: the boot holds 0.6 s and fades in 0.3 s; the header only fades; the page's parts only fade. */
+@media (prefers-reduced-motion: reduce) {
+	.start-opening .boot * {
+		animation: none !important;
+	}
+	.start-opening .boot {
+		animation: start-open-boot-out 0.3s linear 0.6s forwards !important;
+	}
+	html:has(#start-boot-gate:not(:checked)) [data-site-header] {
+		animation: start-open-header-fade 0.3s linear 0.6s backwards;
+	}
+	html:has(#start-boot-gate:not(:checked))
+		[data-site-header]
+		.backdrop-blur-md {
+		animation-duration: 0.9s;
+	}
+	.start-opening-cover {
+		animation: start-open-cover-out 0.3s linear 0.6s forwards;
+	}
+	#start-boot-gate:not(:checked) ~ .start-camera {
+		animation: none;
+	}
+	#start-boot-gate:not(:checked) ~ .start-camera .start-night {
+		animation-duration: 0.5s;
+	}
+	#start-boot-gate:not(:checked)
+		~ .start-content
+		:is(.start-pool, .start-heading, .start-search, .start-moods) {
+		animation: start-open-fade 0.3s ease-out backwards;
+	}
+}

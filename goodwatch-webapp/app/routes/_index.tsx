@@ -10,6 +10,7 @@ import { useLoaderData } from "@remix-run/react"
 import { useState } from "react"
 import type { startPageLoader } from "~/server/start-page/loader.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
+import { OpeningBoot, OpeningCover } from "~/ui/start/opening/OpeningBoot"
 import { StartSearchBar } from "~/ui/start/search/StartSearchBar"
 import { useStartSearch } from "~/ui/start/search/useStartSearch"
 import { StartStage } from "~/ui/start/stage/StartStage"
@@ -112,22 +113,27 @@ function GuestStart({ titles }: { titles: StartTitle[] }) {
 	const results = useStartSearch(start.query)
 	const [asked, setAsked] = useState(false)
 	return (
-		<StartStage
-			shelf={titles}
-			night={GUEST_ROOM.night}
-			camera={GUEST_ROOM.camera}
-			centered={!asked}
-			cardHidden={!asked}
-			search={
-				<StartSearchBar
-					query={start.query}
-					results={results}
-					setDraft={start.setDraft}
-					search={start.search}
-					clearSearch={start.clearSearch}
-					onAsk={() => setAsked(true)}
-				/>
-			}
-		/>
+		<>
+			<StartStage
+				shelf={titles}
+				night={GUEST_ROOM.night}
+				camera={GUEST_ROOM.camera}
+				centered={!asked}
+				cardHidden={!asked}
+				search={
+					<StartSearchBar
+						query={start.query}
+						results={results}
+						setDraft={start.setDraft}
+						search={start.search}
+						clearSearch={start.clearSearch}
+						onAsk={() => setAsked(true)}
+					/>
+				}
+				// A guest's opening plays once a session; a member's page has none of it.
+				opening={<OpeningBoot />}
+			/>
+			<OpeningCover />
+		</>
 	)
 }
