@@ -104,6 +104,7 @@ export interface DiscoverSideRow extends DiscoverSide {
 export async function getDiscoverResults(
 	ctx: ViewerContext,
 	input: {
+		popularityCounts?: boolean
 		state: FilterState
 		sort: SortKey
 		forYou: boolean
@@ -138,6 +139,7 @@ export async function getDiscoverResults(
 
 	const compute = (keep?: (key: TitleKey) => boolean) =>
 		filterTitles({
+			popularityCounts: input.popularityCounts,
 			universe: searching ? ranked : "catalog",
 			includeNotInterested: searching,
 			state,
@@ -150,6 +152,7 @@ export async function getDiscoverResults(
 	const snapshot = searching ? null : getTitleSnapshot()
 	const key = snapshot
 		? discoverFilterKey({
+				popularityCounts: input.popularityCounts,
 				viewer: ctx,
 				taste,
 				state,

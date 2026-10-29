@@ -4,7 +4,7 @@ import { test } from "node:test"
 import "./test-alias.ts"
 import type { PassInput, RatingsFilter } from "./passes.server.ts"
 
-const { ladderFor, ratingsFilter, runPasses } = await import(
+const { ladderFor, ratingsFilter, runPasses, popularityCounts } = await import(
 	"./passes.server.ts"
 )
 const { loadRatings } = await import("../title-snapshot/ratings.server.ts")
@@ -888,9 +888,36 @@ test("a fail mask has room for every filter group, the last one included", () =>
 	assert.ok(FILTER_NAMES.length <= 32)
 	assert.ok(FILTER_NAMES.includes("themes") && FILTER_NAMES.includes("styles"))
 	// Appending groups preserves the existing content bit and fits the new last group.
-	assert.equal(FILTER_NAMES.length, 24)
+	assert.deepEqual(FILTER_NAMES, [
+		"services",
+		"notSeenYet",
+		"type",
+		"anime",
+		"moods",
+		"themes",
+		"styles",
+		"genres",
+		"minScore",
+		"minMatch",
+		"released",
+		"similarTo",
+		"people",
+		"legacy",
+		"loved",
+		"disliked",
+		"productionCountries",
+		"ageLimit",
+		"content",
+		"years",
+		"runtime",
+		"sourceScores",
+		"scoreGap",
+		"wishlist",
+		"popularity",
+	])
 	assert.equal(FILTER_NAMES[18], "content")
-	assert.equal(FILTER_NAMES.at(-1), "wishlist")
+	assert.equal(FILTER_NAMES[23], "wishlist")
+	assert.equal(FILTER_NAMES.at(-1), "popularity")
 	const ratings: RatingsFilter = {
 		content: Uint8Array.from(everyRow, (row) => (row === 3 ? 1 : 0)),
 		ages: null,
@@ -1504,7 +1531,8 @@ test("rating country chooses the ladder and age column independently of streamin
 		ageLimit: 12,
 		content: { violence: "show", sex: "show" } as const,
 	}
-	const chosen = ladderFor(ratings, "GB", state)!
+	const chosen = ladderFor(ratings, "GB", state)
+	assert.ok(chosen)
 	assert.equal(chosen.country, "DE")
 	assert.deepEqual(chosen.steps, DE_LADDER)
 	assert.equal(chosen.countries, ratings.countries)
@@ -1512,7 +1540,8 @@ test("rating country chooses the ladder and age column independently of streamin
 		passes(plain, { ratings: ratingsFilter(ratings, chosen, state) }).rows,
 		[0, 1, 2],
 	)
-	const fallback = ladderFor(ratings, "GB", { ...state, ratingCountry: "ZZ" })!
+	const fallback = ladderFor(ratings, "GB", { ...state, ratingCountry: "ZZ" })
+	assert.ok(fallback)
 	assert.equal(fallback.country, "US")
 	assert.deepEqual(
 		passes(plain, { ratings: ratingsFilter(ratings, fallback, state) }).rows,
@@ -1583,4 +1612,233 @@ test("missing facts leave Rest of the world inactive with a null count and one w
 	)
 	restOfWorldColumn({ ...snapshot, version: "countries-still-missing" })
 	assert.equal(warn.mock.callCount(), 2)
+})
+
+test("popularity ranges, every preset and stop count, and shared recovery match brute force", async () => {
+	const { POPULARITY_OPTIONS } = await import("~/domain/title-scales")
+	const votes = [1000, 9999, 10000, 100000, 1000000, 2000000]
+	const ranks = [10001, 10000, 1000, 1001, 1, 40001]
+	const c = { ...columns, votes: Uint32Array.from(votes) }
+	const order = [5, 3, 1, 0, 4, 2, -1]
+	const base = passInput(c, order)
+	base.keys[6] = MOVIE + 99
+	const ranges = [
+		undefined,
+		{ max: 9999 },
+		{ min: 10000, max: 99999 },
+		{ min: 1000000 },
+		{ min: 1000, max: 1000 },
+	]
+	const rankRanges = [
+		undefined,
+		{ max: 1000 },
+		{ min: 1001, max: 10000 },
+		{ min: 10001 },
+		{ min: 1, max: 1 },
+	]
+	const keeps = (
+		value: number | undefined,
+		range?: { min?: number; max?: number },
+	) =>
+		!range ||
+		(range.min === undefined && range.max === undefined) ||
+		(value !== undefined &&
+			value >= (range.min ?? 0) &&
+			value <= (range.max ?? Number.POSITIVE_INFINITY))
+	for (const v of ranges)
+		for (const rank of rankRanges)
+			for (const minScore of [0, 70]) {
+				const other = (row: number) =>
+					!minScore ||
+					(row >= 0 && SCORES[row] !== UNKNOWN_SCORE && SCORES[row] >= minScore)
+				const vAt = (row: number) => (row < 0 ? undefined : votes[row])
+				const rAt = (row: number) => (row < 0 ? undefined : ranks[row])
+				const out = runPasses({
+					...base,
+					popularityCounts: true,
+					votes: v,
+					popularityRank: rank,
+					popularityRanks: Int32Array.from(ranks),
+					minScore,
+				})
+				const uncounted = runPasses({
+					...base,
+					votes: v,
+					popularityRank: rank,
+					popularityRanks: Int32Array.from(ranks),
+					minScore,
+				})
+				assert.equal(
+					Object.prototype.hasOwnProperty.call(
+						uncounted.optionCounts,
+						"popularity",
+					),
+					false,
+				)
+				assert.deepEqual(uncounted.passing, out.passing)
+				assert.deepEqual(uncounted.recoveries, out.recoveries)
+				const expected = order.filter(
+					(row) => other(row) && keeps(vAt(row), v) && keeps(rAt(row), rank),
+				)
+				assert.deepEqual(
+					Array.from(out.passing, (i) => order[i]),
+					expected,
+				)
+				assert.equal(
+					out.recoveries.find((r) => r.filter === "popularity")?.titles ?? 0,
+					order.filter(other).length - expected.length,
+				)
+				for (const o of POPULARITY_OPTIONS) {
+					const expectedCount = order.filter(
+						(row) =>
+							other(row) &&
+							(o.field === "votes"
+								? keeps(vAt(row), o.range) && keeps(rAt(row), rank)
+								: keeps(rAt(row), o.range) && keeps(vAt(row), v)),
+					).length
+					assert.equal(
+						out.optionCounts.popularity![o.key],
+						expectedCount,
+						o.key,
+					)
+				}
+			}
+	// A title outside the eligible catalog has no rank, including for an upper-bound-only range.
+	assert.equal(
+		runPasses({
+			...base,
+			popularityRank: { max: 1000 },
+			popularityRanks: new Int32Array(6),
+		}).passing.length,
+		0,
+	)
+})
+
+test("catalog Popular ranks are shared, stable across sorts, and renewed per snapshot version", async () => {
+	const { popularityRanks, catalogRows } = await import("./order.server.ts")
+	const { FLAG_POSTER, FLAG_ADULT } = await import(
+		"../title-snapshot/format.server.ts"
+	)
+	const c = {
+		...columns,
+		votes: Uint32Array.from([1000, 1000, 999, 1000, 1000, 1000]),
+		flags: new Uint8Array(6).fill(FLAG_POSTER),
+	}
+	c.pointIds = c.pointIds.slice()
+	c.pointIds[4] = 2e12 + 1 // Shows share the movie catalog's ranking.
+	c.popularity = Float32Array.from([100, 100, 0, 0, 50, 0]) // Equal popularity and votes break by title key.
+	c.flags[5] |= FLAG_ADULT
+	const snapshot = {
+		version: "rank-test-one",
+		count: 6,
+		columns: c,
+	} as unknown as Parameters<typeof popularityRanks>[0]
+	const ranks = popularityRanks(snapshot)
+	assert.deepEqual([...ranks], [1, 2, 0, 0, 3, 0])
+	catalogRows(snapshot, "top")
+	assert.equal(popularityRanks(snapshot), ranks)
+	assert.deepEqual([...catalogRows(snapshot, "popular").rows], [0, 1, 4])
+	const next = {
+		...snapshot,
+		version: "rank-test-two",
+		columns: { ...c, popularity: Float32Array.from([1, 100, 0, 0, 200, 0]) },
+	}
+	assert.deepEqual([...popularityRanks(next)], [3, 2, 0, 0, 1, 0])
+	const missing = {
+		...c,
+		flags: c.flags.slice(),
+		releaseDays: c.releaseDays.slice(),
+	}
+	missing.flags[0] = 0
+	missing.releaseDays[4] = -2147483648
+	assert.deepEqual(
+		[
+			...popularityRanks({
+				...snapshot,
+				version: "rank-test-three",
+				columns: missing,
+			}),
+		],
+		[0, 1, 0, 0, 0, 0],
+	)
+})
+
+test("popularity preset seams partition titles except the intentional million-vote subset", async () => {
+	const { VOTES_PRESETS, POPULARITY_RANK_PRESETS } = await import(
+		"~/domain/title-scales"
+	)
+	const contains = (value: number, range: { min?: number; max?: number }) =>
+		value >= (range.min ?? 0) &&
+		value <= (range.max ?? Number.POSITIVE_INFINITY)
+	for (const votes of [
+		0, 9999, 10000, 99999, 100000, 999999, 1000000, 2000000,
+	]) {
+		const matches = VOTES_PRESETS.filter((preset) =>
+			contains(votes, preset.range),
+		).map((preset) => preset.key)
+		assert.deepEqual(
+			matches,
+			votes < 10000
+				? ["hiddenGems"]
+				: votes < 100000
+					? ["knownToFans"]
+					: votes < 1000000
+						? ["wellKnown"]
+						: ["wellKnown", "everyone"],
+		)
+	}
+	for (const rank of [1, 999, 1000, 1001, 9999, 10000, 10001, 200000]) {
+		assert.deepEqual(
+			POPULARITY_RANK_PRESETS.filter((preset) =>
+				contains(rank, preset.range),
+			).map((preset) => preset.key),
+			rank <= 1000
+				? ["popularNow"]
+				: rank <= 10000
+					? ["underTheRadar"]
+					: ["deepCuts"],
+		)
+	}
+})
+
+test("popularity counts stay within the request budget over 200k titles", (t) => {
+	const size = 200000
+	const rows = Array.from({ length: size }, (_, row) => row)
+	const c = {
+		...columns,
+		pointIds: Float64Array.from(rows, (row) => MOVIE + row),
+		releaseDays: new Int32Array(size).fill(19000),
+		votes: Uint32Array.from(rows, (row) => (row * 7919) % 2000001),
+		popularity: new Float32Array(size),
+		scores: new Uint8Array(size).fill(80),
+		flags: new Uint8Array(size),
+		moods: new Uint32Array(size),
+		themes: new Uint16Array(size),
+		styles: new Uint16Array(size),
+		genres: new Uint32Array(size),
+	}
+	const input = {
+		...passInput(c, rows),
+		popularityCounts: true,
+		popularityRanks: Int32Array.from(rows, (row) => row + 1),
+	}
+	// Time this group's work separately from the existing passes and other groups' counts.
+	const masks = new Uint32Array(size)
+	const flaggedStart = performance.now()
+	const counts = runPasses(input).optionCounts.popularity!
+	t.diagnostic(
+		`Flagged pass: ${(performance.now() - flaggedStart).toFixed(2)} ms over ${size} titles`,
+	)
+	assert.deepEqual(counts, popularityCounts(input, masks))
+	assert.equal(counts["votes:any"], size)
+	assert.equal(counts["rank:any"], size)
+	for (let i = 0; i < 10; i++) popularityCounts(input, masks)
+	const times = Array.from({ length: 9 }, () => {
+		const start = performance.now()
+		popularityCounts(input, masks)
+		return performance.now() - start
+	}).sort((a, b) => a - b)
+	const median = times[Math.floor(times.length / 2)]
+	t.diagnostic(`Median: ${median.toFixed(2)} ms per call over ${size} titles`)
+	assert.ok(median < 15, `Median ${median.toFixed(2)} ms exceeded 15 ms`)
 })

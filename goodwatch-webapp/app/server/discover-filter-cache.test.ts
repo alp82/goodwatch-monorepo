@@ -126,6 +126,10 @@ test("keys include every filter dependency", () => {
 	for (const change of variants)
 		assert.notEqual(discoverFilterKey({ ...base, ...change }), key)
 	const states: Partial<FilterState>[] = [
+		{ votes: { min: 10000 } },
+		{ votes: { max: 10000 } },
+		{ popularityRank: { min: 1000 } },
+		{ popularityRank: { max: 1000 } },
 		{ seenBefore: true },
 		{ onWishlist: true },
 		{ outsideUsual: true },
@@ -455,4 +459,10 @@ test("all-of tag modes have separate shared filter cache entries", () => {
 	}
 	assert.notEqual(discoverFilterKey(any), discoverFilterKey(all))
 	assert.match(discoverFilterKey(all)!, /discover-filters:v3/)
+})
+
+test("popularity counts have a separate shared cache key", () => {
+	const plain = discoverFilterKey(input())
+	assert.equal(discoverFilterKey({ ...input(), popularityCounts: false }), plain)
+	assert.notEqual(discoverFilterKey({ ...input(), popularityCounts: true }), plain)
 })

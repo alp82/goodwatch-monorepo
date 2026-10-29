@@ -49,6 +49,7 @@ import {
 	type PlainSort,
 	byMatch,
 	catalogRows,
+	popularityRanks,
 	compareRows,
 	sortToUse,
 } from "./order.server"
@@ -98,6 +99,7 @@ export interface FilterResult {
 	 * unpicked options count adding their unit;
 	 * minScore `0`, `60`, `70`, `80`; minMatch `0`, `60`, `70`, `80`, `90`, `outside`; released by option; similarTo and people only for the chosen options (what
 	 * removing each would leave); legacy `on`, `off`. Rest of the world has a null count without facts.
+	 * Popularity preset and stop counts are absent unless `popularityCounts` is requested.
 	 * years, runtime, sourceScores and scoreGap are empty: their SQL sets are only read for active choices.
 	 *
 	 * ageLimit: `off` and each step of `ladder` by its age (`0`, `6`, `12`, ...). Choosing a step also changes what
@@ -127,6 +129,8 @@ export interface FilterResult {
 }
 
 export interface FilterInput {
+	/** Compute popularity option counts only when requested. */
+	popularityCounts?: boolean
 	/** "catalog" is every title Discover shows; a list is a ranked search, a Wishlist, or an Explorer pool. */
 	universe: Iterable<TitleKey> | "catalog"
 	/** Text search keeps hidden titles findable. */
@@ -271,7 +275,11 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		}))
 
 	const { passing, recoveries, optionCounts } = runPasses({
+		popularityCounts: input.popularityCounts,
 		columns: snapshot.columns,
+		votes: state.votes,
+		popularityRank: state.popularityRank,
+		popularityRanks: popularityRanks(snapshot),
 		rows,
 		keys,
 		services:

@@ -332,6 +332,11 @@ try {
 	const taste = await loadTaste(ctx.viewer)
 	// Every new filter/ordering is checked through the public SDK against the site's real shared engine.
 	const matrix = [
+		{ max_votes: 9999 },
+		{ min_votes: 10000, max_votes: 100000 },
+		{ max_popularity_rank: 1000 },
+		{ min_popularity_rank: 10001 },
+		{ min_votes: 1000, max_popularity_rank: 1000 },
 		{ type: "show" },
 		{ genres: ["Drama"] },
 		{ genres: ["Drama", "Comedy"] },

@@ -521,7 +521,8 @@ sparse outside US studio films.
 ### Fail-mask budget
 
 Each filter group is one bit of a 32-bit fail mask (`passes.server.ts`, throws above 32; `passes.test.ts` pins the
-list). Today there are 23. Related choices share a group, the way they share a sub-tab and a recovery:
+list). Today there are 25, including wishlist and popularity. Related choices share a group, the way they share a
+sub-tab and a recovery:
 
 | New group | Holds | Recovery drops |
 |---|---|---|
@@ -608,6 +609,11 @@ percentage on each facts build. B10 unit tests verify this log; the production m
 remain a deployment check (no database or Windmill access during implementation).
 
 ### Counts
+
+Popularity option counts are opt-in: the results endpoint reads `counts` as a comma-separated list
+(for example, `counts=popularity` or `counts=taste,popularity`). The UI sends `counts=popularity` while the
+Popularity sub-tab is open. Otherwise `optionCounts.popularity` is absent; active popularity ranges still filter
+and produce recoveries. Counted and uncounted results use separate guest shared cache entries. MCP omits these counts.
 
 Every count comes from the one `/api/discover/results` response in `optionCounts`, computed in the same pass:
 

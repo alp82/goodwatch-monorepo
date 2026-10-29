@@ -33,6 +33,7 @@ const sortedFields = (value: Record<string, unknown> | undefined) =>
  * the page aren't in it: without taste the switch doesn't change the result, and every page reads the same entry.
  */
 export function discoverFilterKey(input: {
+	popularityCounts?: boolean
 	viewer: ViewerContext
 	taste: Pick<Taste, "signal">
 	state: FilterState
@@ -56,6 +57,11 @@ export function discoverFilterKey(input: {
 
 	// Explicit fields keep insertion order stable and make new FilterState fields fail typecheck here.
 	const serialized: Record<keyof FilterState, unknown> = {
+		votes: state.votes && [state.votes.min, state.votes.max],
+		popularityRank: state.popularityRank && [
+			state.popularityRank.min,
+			state.popularityRank.max,
+		],
 		years: state.years && [state.years.min, state.years.max],
 		runtime: state.runtime && [state.runtime.min, state.runtime.max],
 		episodeRuntime:
@@ -104,6 +110,7 @@ export function discoverFilterKey(input: {
 		[...new Set(viewer.services)].sort((a, b) => a - b),
 		input.year,
 		input.sort,
+		input.popularityCounts === true,
 		serialized,
 	])
 }

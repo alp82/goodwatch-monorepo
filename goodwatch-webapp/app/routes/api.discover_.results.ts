@@ -60,6 +60,7 @@ async function respond(request: Request, guest?: GuestProgress) {
 	let response: DiscoverResults
 	try {
 		response = await getDiscoverResults(ctx, {
+			popularityCounts: params.get("counts")?.split(",").includes("popularity"),
 			state: filterStateFromParams(params, discoverFilterDefaults(ctx)),
 			sort: sortFromParams(params, ranked !== undefined),
 			ranked,

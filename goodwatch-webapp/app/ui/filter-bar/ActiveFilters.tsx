@@ -18,6 +18,7 @@ import { MENU, RollingNumber, TAP } from "./motion"
 import type { FilterBarCounts } from "./types"
 
 const GROUP_LABELS: Partial<Record<FilterName, string>> = {
+	popularity: "Popularity",
 	type: "Type",
 	anime: "Anime",
 	moods: "Mood",

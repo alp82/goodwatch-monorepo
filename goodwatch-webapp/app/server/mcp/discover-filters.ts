@@ -24,6 +24,31 @@ export function isDiscoverySearch(args: {
 
 /** Names map onto the site's filter state; the engine and URL codec own their semantics. */
 export const discoverFilters = {
+	min_votes: z
+		.number()
+		.int()
+		.min(0)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive rating count minimum; catalog eligibility starts at 1,000 ratings.",
+		),
+	max_votes: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).optional(),
+	min_popularity_rank: z
+		.number()
+		.int()
+		.min(1)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive catalog Popular rank, 1 first; shared by every viewer and filter, refreshed per snapshot.",
+		),
+	max_popularity_rank: z
+		.number()
+		.int()
+		.min(1)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional(),
 	source_scores: z
 		.partialRecord(z.enum(SOURCE_KEYS), z.number().int().min(0).max(100))
 		.optional()
@@ -201,6 +226,16 @@ export const hasDiscoverFilters = (args: DiscoverFilterArgs) =>
 export function validDiscoverRanges(args: DiscoverFilterArgs) {
 	return (
 		!(
+			args.min_votes !== undefined &&
+			args.max_votes !== undefined &&
+			args.min_votes > args.max_votes
+		) &&
+		!(
+			args.min_popularity_rank !== undefined &&
+			args.max_popularity_rank !== undefined &&
+			args.min_popularity_rank > args.max_popularity_rank
+		) &&
+		!(
 			args.min_year !== undefined &&
 			args.max_year !== undefined &&
 			args.min_year > args.max_year
@@ -271,6 +306,15 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 		}
 		state.released = "any"
 	}
+	for (const [field, min, max] of [
+		["votes", args.min_votes, args.max_votes],
+		["popularityRank", args.min_popularity_rank, args.max_popularity_rank],
+	] as const)
+		if (min !== undefined || max !== undefined)
+			state[field] = {
+				...(min === undefined ? {} : { min }),
+				...(max === undefined ? {} : { max }),
+			}
 	if (args.min_runtime !== undefined || args.max_runtime !== undefined)
 		state.runtime = {
 			...(args.min_runtime === undefined ? {} : { min: args.min_runtime }),

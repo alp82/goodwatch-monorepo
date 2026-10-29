@@ -14,12 +14,14 @@ import {
 import {
 	ratingCountryFor,
 	type FilterState,
+	type FilterRange,
 	FILTER_NAMES,
 	type FilterName,
 	type TagGroup,
 	MIN_MATCHES,
 	MIN_SCORES,
 } from "~/domain/filter-state"
+import { POPULARITY_OPTIONS } from "~/domain/title-scales"
 import { GENRE_FOLDS } from "~/domain/genre-fold"
 import { MOOD_KEYS } from "~/domain/moods"
 import { STYLE_KEYS, THEME_KEYS } from "~/domain/themes-styles"
@@ -45,6 +47,23 @@ const BIT = Object.fromEntries(
 const FailMasks = Uint32Array
 // Per-service option counts are reported for the services the most titles would show on, and the chosen ones.
 const MAX_SERVICE_OPTIONS = 120
+
+// Unbounded options also count titles whose value is unknown.
+function popularityBounds(field: "votes" | "popularityRank") {
+	const options: { key: string; range: FilterRange }[] =
+		POPULARITY_OPTIONS.filter((option) => option.field === field)
+	return {
+		keys: options.map((option) => option.key),
+		min: options.map(({ range }) =>
+			range.min === undefined && range.max === undefined
+				? Number.NEGATIVE_INFINITY
+				: (range.min ?? 0),
+		),
+		max: options.map(({ range }) => range.max ?? Number.POSITIVE_INFINITY),
+	}
+}
+const VOTE_BOUNDS = popularityBounds("votes")
+const RANK_BOUNDS = popularityBounds("popularityRank")
 
 /**
  * A set of titles with a flag per snapshot row, so the passes test membership by row; titles the snapshot doesn't hold
@@ -166,6 +185,12 @@ export function ratingsFilter(
 
 /** Everything the passes need, with every group resolved. A group is off when its field says so. */
 export interface PassInput {
+	/** Compute popularity option counts only when requested. */
+	popularityCounts?: boolean
+	votes?: FilterRange
+	popularityRank?: FilterRange
+	/** Catalog rank per snapshot row; zero is unranked. */
+	popularityRanks?: Int32Array
 	columns: TitleColumns
 	/** The universe in its plain order: snapshot row (-1 for a title the snapshot doesn't hold) and key per title. */
 	rows: Int32Array
@@ -265,6 +290,53 @@ class ToggleCounts {
 		if (!isChosen) return this.chosen + this.add[option]
 		return chosenCount === 1 ? this.all : this.chosen - this.only[option]
 	}
+}
+
+function within(value: number | undefined, range?: FilterRange): boolean {
+	if (!range || (range.min === undefined && range.max === undefined))
+		return true
+	return (
+		value !== undefined &&
+		value >= (range.min ?? 0) &&
+		value <= (range.max ?? Number.POSITIVE_INFINITY)
+	)
+}
+
+/** Counts each replacement range while retaining its sibling choice and every other group. */
+export function popularityCounts(
+	input: PassInput,
+	masks: Uint32Array,
+): Record<string, number> {
+	const { rows } = input
+	const n = rows.length
+	const counts: Record<string, number> = {}
+	const voteCounts = new Array<number>(VOTE_BOUNDS.keys.length).fill(0)
+	const rankCounts = new Array<number>(RANK_BOUNDS.keys.length).fill(0)
+	for (let i = 0; i < n; i++) {
+		if ((masks[i] & ~BIT.popularity) !== 0) continue
+		const row = rows[i]
+		const v = row < 0 ? undefined : input.columns.votes[row]
+		const r = row < 0 ? undefined : input.popularityRanks?.[row] || undefined
+		const vOk = within(v, input.votes)
+		const rOk = within(r, input.popularityRank)
+		const voteValue = v ?? Number.NEGATIVE_INFINITY
+		const rankValue = r ?? Number.NEGATIVE_INFINITY
+		if (rOk)
+			for (let j = 0; j < voteCounts.length; j++)
+				if (voteValue >= VOTE_BOUNDS.min[j] && voteValue <= VOTE_BOUNDS.max[j])
+					voteCounts[j]++
+		if (vOk)
+			for (let j = 0; j < rankCounts.length; j++)
+				if (rankValue >= RANK_BOUNDS.min[j] && rankValue <= RANK_BOUNDS.max[j])
+					rankCounts[j]++
+	}
+	VOTE_BOUNDS.keys.forEach((key, i) => {
+		counts[key] = voteCounts[i]
+	})
+	RANK_BOUNDS.keys.forEach((key, i) => {
+		counts[key] = rankCounts[i]
+	})
+	return counts
 }
 
 export function runPasses(input: PassInput): PassOutput {
@@ -435,11 +507,19 @@ export function runPasses(input: PassInput): PassOutput {
 	const hasPicks = (bits: number, chosen: number, requireAll: boolean) =>
 		requireAll ? (bits & chosen) >>> 0 === chosen >>> 0 : (bits & chosen) !== 0
 
+	const votesAt = (row: number) => (row < 0 ? undefined : columns.votes[row])
+	const rankAt = (row: number) =>
+		row < 0 ? undefined : input.popularityRanks?.[row] || undefined
 	// Pass 1: fail masks.
 	for (let i = 0; i < n; i++) {
 		const row = rows[i]
 		const key = keys[i]
 		let mask = 0
+		if (
+			!within(votesAt(row), input.votes) ||
+			!within(rankAt(row), input.popularityRank)
+		)
+			mask |= BIT.popularity
 		if (servicesOn && !onServices(i)) mask |= BIT.services
 		if (
 			input.seenBefore && input.seen
@@ -525,9 +605,15 @@ export function runPasses(input: PassInput): PassOutput {
 	// One pass per group over the titles every other group lets through.
 	const passesOthers = (i: number, bit: number) => (masks[i] & ~bit) === 0
 	const optionCounts = Object.fromEntries(
-		FILTER_NAMES.map((name) => [name, {}]),
+		FILTER_NAMES.filter((name) => name !== "popularity").map((name) => [
+			name,
+			{},
+		]),
 	) as FilterOptionCounts
 
+	// Replacing one popularity range keeps the other sub-choice and every other group.
+	if (input.popularityCounts)
+		optionCounts.popularity = popularityCounts(input, masks)
 	// Movies or shows.
 	{
 		let all = 0
@@ -606,7 +692,7 @@ export function runPasses(input: PassInput): PassOutput {
 				}
 			}
 			if (onMine) mineCount++
-			if (counts!.observe(hits, hit))
+			if (counts.observe(hits, hit))
 				for (let e = from; e < to; e++) counts.add[entries[e]]++
 		}
 		const serviceCounts: Record<string, number> = {
@@ -647,19 +733,19 @@ export function runPasses(input: PassInput): PassOutput {
 		group: TagGroup,
 		bit: number,
 		column: Uint16Array | Uint32Array,
-		chosenMask: number,
+		selectedMask: number,
 		names: readonly string[],
 	) => {
 		const requireAll = allOf.has(group)
 		const folded = group === "genres" && requireAll
-		if (folded) chosenMask = genreChosenUnits
-		const counts = requireAll ? null : new ToggleCounts(names.length)
+		const chosenMask = folded ? genreChosenUnits : selectedMask
+		const counts = new ToggleCounts(names.length)
 		const chosenCount = popcount(chosenMask)
 		const intersection = requireAll ? new Uint32Array(names.length) : null
-		const observe = (bits: number, titles: number) => {
+		const observe = (rawBits: number, titles: number) => {
+			const bits = folded ? genreBitsOf(rawBits) : rawBits
 			if (intersection) {
 				if (group === "genres" && genresDead) return
-				if (folded) bits = genreBitsOf(bits)
 				const missing = (chosenMask & ~bits) >>> 0
 				if (missing === 0) {
 					for (let m = bits; m; m = (m & (m - 1)) >>> 0)
@@ -670,9 +756,9 @@ export function runPasses(input: PassInput): PassOutput {
 				return
 			}
 			const hits = (bits & chosenMask) >>> 0
-			if (counts!.observe(popcount(hits), hits ? lowestBit(hits) : 0, titles))
+			if (counts.observe(popcount(hits), hits ? lowestBit(hits) : 0, titles))
 				for (let m = bits; m; m = (m & (m - 1)) >>> 0)
-					counts!.add[lowestBit(m)] += titles
+					counts.add[lowestBit(m)] += titles
 		}
 		if (names.length <= 16) {
 			// Few options: count the titles per combination of options first, then each combination once.
@@ -699,7 +785,7 @@ export function runPasses(input: PassInput): PassOutput {
 		names.forEach((name, b) => {
 			out[name] = intersection
 				? intersection[folded ? genreOptionUnits[b] : b]
-				: counts!.count(b, (chosenMask & (1 << b)) !== 0, chosenCount)
+				: counts.count(b, (chosenMask & (1 << b)) !== 0, chosenCount)
 		})
 		return out
 	}

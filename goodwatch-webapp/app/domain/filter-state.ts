@@ -61,16 +61,17 @@ export const FILTER_NAMES = [
 	"sourceScores",
 	"scoreGap",
 	"wishlist",
+	"popularity",
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
 /** A null country option count means its snapshot facts are unavailable. */
 export type FilterOptionCounts = {
-	[Name in FilterName]: Record<
+	[Name in Exclude<FilterName, "popularity">]: Record<
 		string,
 		Name extends "productionCountries" ? number | null : number
 	>
-}
+} & { popularity?: Record<string, number> }
 
 export const SORT_KEYS = [
 	"popular",
@@ -131,6 +132,9 @@ export interface FilterRange {
 }
 
 export interface FilterState {
+	/** Inclusive rating count and catalog Popular rank (1 first). */
+	votes?: FilterRange
+	popularityRank?: FilterRange
 	/** Inclusive release years; overrides the released preset. */
 	years?: FilterRange
 	/** Inclusive minutes: movie duration or usual episode runtime. */
@@ -256,7 +260,7 @@ function rangeFromParams(
 ): FilterRange | undefined {
 	const raw = params.has(name)
 		? params.get(name)!
-		: `${(oldMin && params.get(oldMin)) || ""}-${(oldMax && params.get(oldMax)) || ""}`
+		: `${oldMin ? (params.get(oldMin) ?? "") : ""}-${oldMax ? (params.get(oldMax) ?? "") : ""}`
 	const match = /^(\d*)-(\d*)$/.exec(raw)
 	if (!match || (!match[1] && !match[2])) return undefined
 	const min = match[1] ? Number(match[1]) : undefined
@@ -334,6 +338,10 @@ export function filterStateFromParams(
 			: 0
 	state.minMatch = oneOf(MIN_MATCHES, params.get("match")) ?? 0
 	if (params.get("match") === "outside") state.outsideUsual = true
+	const votes = rangeFromParams(params, "votes")
+	if (votes) state.votes = votes
+	const rank = rangeFromParams(params, "rank")
+	if (rank) state.popularityRank = rank
 	const years = rangeFromParams(params, "years", "minYear", "maxYear")
 	if (years) state.years = years
 	const runtime = rangeFromParams(params, "runtime", "minRuntime", "maxRuntime")
@@ -464,10 +472,16 @@ export function filterStateToParams(
 		"released",
 		state.years || state.released === "any" ? null : state.released,
 	)
-	for (const name of ["years", "runtime", "episodeRuntime"] as const) {
+	for (const name of [
+		"years",
+		"runtime",
+		"episodeRuntime",
+		"votes",
+		"popularityRank",
+	] as const) {
 		const range = state[name]
 		set(
-			name,
+			name === "popularityRank" ? "rank" : name,
 			range === null
 				? state.runtime &&
 					(state.runtime.min !== undefined || state.runtime.max !== undefined)
@@ -568,6 +582,8 @@ export function resolveFilterChange(
 /** The state with one filter group back at its widest: what a one-tap recovery does. */
 export function dropFilter(state: FilterState, name: FilterName): FilterState {
 	switch (name) {
+		case "popularity":
+			return { ...state, votes: undefined, popularityRank: undefined }
 		case "runtime":
 			return { ...state, runtime: undefined, episodeRuntime: undefined }
 		case "years":
@@ -635,6 +651,8 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	onWishlist: undefined,
 	outsideUsual: undefined,
 	allOf: undefined,
+	votes: undefined,
+	popularityRank: undefined,
 	years: undefined,
 	runtime: undefined,
 	episodeRuntime: undefined,
@@ -669,6 +687,8 @@ export function secondaryFilterCount(state: FilterState): number {
 	return (
 		(state.streamingCountry || state.anyService ? 1 : 0) +
 		(state.ratingCountry ? 1 : 0) +
+		(state.votes ? 1 : 0) +
+		(state.popularityRank ? 1 : 0) +
 		(state.years ? 1 : 0) +
 		(state.runtime || state.episodeRuntime ? 1 : 0) +
 		Object.keys(state.sourceScores ?? {}).length +

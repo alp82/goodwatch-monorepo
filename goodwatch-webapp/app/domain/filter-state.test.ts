@@ -824,3 +824,42 @@ test("unlimited episodes serialize only while a movie runtime bound remains", ()
 		assert.equal(filterStateFromParams(params, defaults).episodeRuntime, null)
 	}
 })
+
+test("popularity ranges round trip, validate and clear together", () => {
+	const state = parse("votes=10000-100000&rank=1-1000")
+	assert.deepEqual(state.votes, { min: 10000, max: 100000 })
+	assert.deepEqual(state.popularityRank, { min: 1, max: 1000 })
+	assert.deepEqual(parse(filterQuery(state, "popular", defaults)), state)
+	assert.equal(secondaryFilterCount(state), 2)
+	for (const cleared of [
+		dropFilter(state, "popularity"),
+		clearSecondaryFilters(state),
+	]) {
+		assert.equal(cleared.votes, undefined)
+		assert.equal(cleared.popularityRank, undefined)
+	}
+	for (const value of [
+		"-",
+		"-1-1000",
+		"1000-1",
+		"1.5-1000",
+		"x-1000",
+		"9007199254740992-",
+	]) {
+		assert.equal(parse(`votes=${value}&rank=${value}`).votes, undefined)
+		assert.equal(
+			parse(`votes=${value}&rank=${value}`).popularityRank,
+			undefined,
+		)
+	}
+	assert.deepEqual(parse("votes=-9999&rank=10001-").votes, { max: 9999 })
+	assert.deepEqual(parse("votes=-9999&rank=10001-").popularityRank, {
+		min: 10001,
+	})
+	assert.equal(
+		filterQuery(defaultFilterState(defaults), "popular", defaults).includes(
+			"rank=",
+		),
+		false,
+	)
+})

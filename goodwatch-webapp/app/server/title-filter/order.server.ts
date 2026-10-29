@@ -52,6 +52,7 @@ export function compareRows(
 interface CatalogOrders {
 	version: string
 	eligible: Int32Array
+	ranks?: Int32Array
 	sorted: Map<PlainSort, CatalogOrder>
 }
 
@@ -101,6 +102,19 @@ export function catalogRows(
 		catalog.sorted.set(plain, sorted)
 	}
 	return sorted
+}
+
+/** Catalog Popular rank per snapshot row; zero means outside the eligible catalog. */
+export function popularityRanks(snapshot: TitleSnapshot): Int32Array {
+	const catalog = catalogOrders(snapshot)
+	if (!catalog.ranks) {
+		const ranks = new Int32Array(snapshot.count)
+		catalog.ranks = ranks
+		catalogRows(snapshot, "popular").rows.forEach((row, i) => {
+			ranks[row] = i + 1
+		})
+	}
+	return catalog.ranks
 }
 
 /**

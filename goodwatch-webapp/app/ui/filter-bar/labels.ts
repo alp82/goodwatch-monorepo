@@ -208,6 +208,7 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		years: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
 		runtime: { dot: "bg-sky-400", bar: "bg-sky-500" },
 		sourceScores: { dot: "bg-yellow-400", bar: "bg-yellow-500" },
+		popularity: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
 		scoreGap: { dot: "bg-rose-400", bar: "bg-rose-500" },
 		services: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
 		wishlist: { dot: "bg-blue-400", bar: "bg-blue-500" },
@@ -239,6 +240,7 @@ export const METER_COLORS: Partial<Record<FilterName, string>> = {
 	years: "bg-cyan-600",
 	runtime: "bg-sky-600",
 	sourceScores: "bg-yellow-600",
+	popularity: "bg-cyan-600",
 	scoreGap: "bg-rose-600",
 	services: "bg-emerald-600",
 	notSeenYet: "bg-blue-600",
@@ -301,6 +303,8 @@ export function recoveryLabel(
 		case "years":
 		case "released":
 			return `${n} from other years`
+		case "popularity":
+			return `${n} of other popularity`
 		case "runtime":
 			return `${n} of other lengths`
 		case "sourceScores":
@@ -389,6 +393,39 @@ export function activeChips(
 			label: "Outside your usual",
 			remove: (s) => dropFilter(s, "minMatch"),
 		})
+	for (const field of ["votes", "popularityRank"] as const) {
+		const range = state[field]
+		if (!range || (range.min === undefined && range.max === undefined)) continue
+		const { min, max } = range
+		const k = (n: number) =>
+			n >= 1000000 && n % 1000000 === 0
+				? `${n / 1000000}M`
+				: n >= 1000 && n % 1000 === 0
+					? `${n / 1000}K`
+					: n.toLocaleString("en-US")
+		const label =
+			field === "votes"
+				? max === 9999 && (min === undefined || min === 0)
+					? "Under 10K ratings"
+					: max === undefined
+						? `${k(min ?? 0)}+ ratings`
+						: min === undefined
+							? `Up to ${k(max)} ratings`
+							: `${min.toLocaleString("en-US")} to ${max.toLocaleString("en-US")} ratings`
+				: (min === undefined || min <= 1) && max !== undefined
+					? `Top ${max.toLocaleString("en-US")}`
+					: max === undefined
+						? min !== undefined && min > 1
+							? `Past #${(min - 1).toLocaleString("en-US")}`
+							: "#1+"
+						: `#${(min ?? 1).toLocaleString("en-US")} to #${max.toLocaleString("en-US")}`
+		chips.push({
+			key: field,
+			group: "popularity",
+			label,
+			remove: (s) => ({ ...s, [field]: undefined }),
+		})
+	}
 	for (const group of ["years", "runtime", "episodeRuntime"] as const) {
 		const range = state[group]
 		if (!range || (range.min === undefined && range.max === undefined)) continue

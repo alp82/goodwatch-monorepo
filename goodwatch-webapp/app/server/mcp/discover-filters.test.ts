@@ -423,3 +423,38 @@ test("episode bounds and Rest of the world validate and travel in page URLs", ()
 		undefined,
 	)
 })
+
+test("popularity MCP ranges validate and reach page_url through the shared codec", () => {
+	const args = {
+		min_votes: 10000,
+		max_votes: 100000,
+		min_popularity_rank: 1,
+		max_popularity_rank: 1000,
+	}
+	assert.ok(schema.safeParse(args).success)
+	const view = discoverView(args, false)
+	assert.deepEqual(view.state.votes, { min: 10000, max: 100000 })
+	assert.deepEqual(view.state.popularityRank, { min: 1, max: 1000 })
+	const page = withPageLink(
+		"https://goodwatch.app",
+		"discover_titles",
+		args,
+		{},
+	)
+	const params = new URL(page.page_url as string).searchParams
+	assert.equal(params.get("votes"), "10000-100000")
+	assert.equal(params.get("rank"), "1-1000")
+	assert.deepEqual(filterArgs(args), args)
+	assert.notEqual(
+		discoverViewKey(args),
+		discoverViewKey({ ...args, max_votes: 99999 }),
+	)
+	for (const invalid of [
+		{ min_votes: 10, max_votes: 9 },
+		{ min_popularity_rank: 10, max_popularity_rank: 9 },
+		{ min_votes: -1 },
+		{ max_popularity_rank: 0 },
+		{ min_votes: 1.5 },
+	])
+		assert.equal(schema.safeParse(invalid).success, false)
+})

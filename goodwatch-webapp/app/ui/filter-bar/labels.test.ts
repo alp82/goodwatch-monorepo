@@ -378,11 +378,11 @@ test("range, source, gap and any-service chips use the agreed wording and remove
 		],
 	)
 	assert.deepEqual(
-		chips.find((c) => c.key === "source-imdb")!.remove(chosen).sourceScores,
+		chips.find((c) => c.key === "source-imdb")?.remove(chosen).sourceScores,
 		{ rtCritics: 90, rtAudience: 85, metacritic: 75 },
 	)
 	assert.equal(
-		chips.find((c) => c.key === "anyService")!.remove(chosen).anyService,
+		chips.find((c) => c.key === "anyService")?.remove(chosen).anyService,
 		undefined,
 	)
 	for (const [fields, label] of [
@@ -532,9 +532,8 @@ test("a non-default rating country has a removable production chip", () => {
 		local: true,
 	}
 	const applied = stateAsApplied(state, ladder, true, "US")
-	const chip = activeChips(applied).find(
-		(chip) => chip.key === "ratingCountry",
-	)!
+	const chip = activeChips(applied).find((chip) => chip.key === "ratingCountry")
+	assert.ok(chip)
 	assert.equal(chip.label, "Ratings in Germany")
 	const removed = chip.remove(state)
 	assert.equal(removed.ratingCountry, undefined)
@@ -591,4 +590,46 @@ test("independent length chips format both range endpoints in hours and minutes"
 		mixed.find((c) => c.key === "runtime")?.label,
 		"Movies 1 h 30 to 2 h 30",
 	)
+})
+
+test("popularity chips name both ranges and remove each independently", () => {
+	const state = filterStateFromParams(
+		new URLSearchParams("votes=-9999&rank=1-1000"),
+		{ onMyServices: false, notSeenYet: false },
+	)
+	const chips = activeChips(state).filter((c) => c.group === "popularity")
+	assert.deepEqual(
+		chips.map((c) => c.label),
+		["Under 10K ratings", "Top 1,000"],
+	)
+	assert.equal(chips[0].remove(state).votes, undefined)
+	assert.deepEqual(chips[0].remove(state).popularityRank, state.popularityRank)
+	assert.equal(chips[1].remove(state).popularityRank, undefined)
+	assert.deepEqual(chips[1].remove(state).votes, state.votes)
+	assert.equal(recoveryLabel("popularity", 12, state), "12 of other popularity")
+	assert.ok(FILTER_ACCENTS.popularity)
+})
+
+test("popularity chip ranges preserve exact endpoints and describe exclusive rank floors", () => {
+	for (const [params, expected] of [
+		["votes=5000-9999", "5,000 to 9,999 ratings"],
+		["votes=10000-99999", "10,000 to 99,999 ratings"],
+		["votes=100000-", "100K+ ratings"],
+		["votes=1000000-", "1M+ ratings"],
+		["votes=12345-", "12,345+ ratings"],
+		["votes=-9998", "Up to 9,998 ratings"],
+		["rank=1001-", "Past #1,000"],
+		["rank=10001-", "Past #10,000"],
+		["rank=1001-10000", "#1,001 to #10,000"],
+	]) {
+		const filtered = filterStateFromParams(new URLSearchParams(params), {
+			onMyServices: false,
+			notSeenYet: false,
+		})
+		assert.equal(
+			activeChips(filtered).find((chip) => chip.group === "popularity")?.label,
+			expected,
+			params,
+		)
+	}
 })
