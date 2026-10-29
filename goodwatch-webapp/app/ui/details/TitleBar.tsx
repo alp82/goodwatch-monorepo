@@ -16,6 +16,7 @@ import { TmdbImage } from "~/ui/TmdbImage"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { Bars } from "~/ui/details/opener/Bars"
 import { useNowPlaying } from "~/ui/details/opener/videos"
+import { onFirstInteraction } from "~/utils/first-interaction"
 import { scrollToTop, useOnScreen } from "~/ui/details/reading"
 import { fitMeta } from "~/ui/details/title-words"
 import MediaText from "~/ui/media-text/MediaText"
@@ -116,6 +117,13 @@ export function TitleBar({
 }) {
 	const titleOnScreen = useOnScreen(watchId, 64)
 	const shown = !titleOnScreen
+	// The bar's poster is a picture of its own (another size than the opener's). It comes at the first sign of use, before
+	// the bar can show, so a visitor who only reads the first screen never loads it.
+	const [poster, setPoster] = useState(false)
+	useEffect(() => {
+		if (shown) setPoster(true)
+		else onFirstInteraction(() => setPoster(true))
+	}, [shown])
 	const toYou = () =>
 		document.getElementById(youId)?.scrollIntoView({
 			block: "center",
@@ -146,7 +154,7 @@ export function TitleBar({
 					aria-label={`${media.details.title}. Back to the top`}
 					className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-3 text-left"
 				>
-					{media.details.poster_path ? (
+					{media.details.poster_path && poster ? (
 						<TmdbImage
 							kind="poster"
 							path={media.details.poster_path}
