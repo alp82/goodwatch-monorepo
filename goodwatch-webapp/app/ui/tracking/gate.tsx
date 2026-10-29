@@ -11,15 +11,14 @@ import {
 	useRef,
 	useState,
 } from "react"
+import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
 import { useWatchState } from "~/hooks/useUserDataAccessors"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
-import type { WatchStateEntry } from "~/types/user-data"
+import EpisodeSkeleton from "~/ui/details/episode-grid/EpisodeSkeleton"
 import { useUser } from "~/utils/auth"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { useHydrated } from "~/utils/hydrated"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
-import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
-import EpisodeSkeleton from "~/ui/details/episode-grid/EpisodeSkeleton"
 
 const HeroTracking = lazy(reloadOnStaleChunk(() => import("./HeroTracking")))
 const loadEpisodeList = reloadOnStaleChunk(() => import("./EpisodeList"))
@@ -38,15 +37,6 @@ export interface TrackedMedia {
 export function useEpisodeTracking(media: TrackedMedia): boolean {
 	const { user } = useUser()
 	return Boolean(user) && media.mediaType === "show"
-}
-
-type Status = WatchStateEntry["state"]
-
-export const STATUS_LOOK: Record<Status, { word: string; pill: string }> = {
-	watching: { word: "Watching", pill: "bg-sky-500 text-black" },
-	on_hold: { word: "On hold", pill: "bg-violet-500 text-white" },
-	dropped: { word: "Dropped", pill: "bg-pink-500 text-black" },
-	seen: { word: "Seen", pill: "bg-green-500 text-black" },
 }
 
 /**

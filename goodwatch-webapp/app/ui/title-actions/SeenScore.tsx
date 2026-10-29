@@ -33,7 +33,8 @@ import {
 	SEEN_INSTRUCTIONS,
 	useTitleActions,
 } from "~/ui/title-actions/useTitleActions"
-import { STATUS_LOOK, useEpisodeTracking } from "~/ui/tracking/gate"
+import { useEpisodeTracking } from "~/ui/tracking/gate"
+import { STATUS_LOOK } from "~/ui/tracking/status-look"
 import { useScoreAction } from "~/ui/user/actions/ScoreAction"
 import { useUser } from "~/utils/auth"
 import { useOpenedOnce } from "~/utils/first-use"
@@ -260,9 +261,7 @@ export default function SeenScore({
 		<span className="flex h-full rounded-l-xl">
 			<StatusFace
 				tone={entry?.state ?? "none"}
-				label={
-					entry ? STATUS_LOOK[entry.state].word : "Not started"
-				}
+				label={entry ? STATUS_LOOK[entry.state].word : "Not started"}
 				detail={
 					entry
 						? entry.episodesWatched && episodes
@@ -367,7 +366,10 @@ export default function SeenScore({
 												onClick={() => {
 													// The watch log opens beside the Seen half, where its date is changed.
 													close()
-													a.toggleSeen({ currentTarget: seenButton.current }, null)
+													a.toggleSeen(
+														{ currentTarget: seenButton.current },
+														null,
+													)
 												}}
 												className="cursor-pointer font-semibold text-white underline decoration-white/30 underline-offset-2 hover:decoration-white"
 											>

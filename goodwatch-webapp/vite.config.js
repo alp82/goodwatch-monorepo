@@ -207,9 +207,13 @@ const STYLE_SHEET = /\.css($|\?)/
 // also loads, are a group of their own.
 const FEATURE_CHUNKS = [
 	["user-data", /\/app\/hooks\/useUserDataMutations\.ts$/],
+	// The status words of a tracked show (tracking/status-look.ts) ride here: the poster cards' actions and the title
+	// page's Seen and score both use them and both load this group. Rule 3 would put them into every page's shell; in
+	// tracking/gate.tsx, which is in the title-page group below, they made every page with poster cards load that group
+	// at the first interaction.
 	[
 		"title-actions",
-		/\/app\/ui\/(title-actions\/(ScoreControl|TitleScore|TitleActionSet|useTitleActions|ActionButton)|user\/actions\/ScoreAction)\.tsx?$/,
+		/\/app\/ui\/(title-actions\/(ScoreControl|TitleScore|TitleActionSet|useTitleActions|ActionButton)|user\/actions\/ScoreAction|tracking\/status-look)\.tsx?$/,
 	],
 	// Icons on the first view of every title page that Rollup gave a file each (0.5 to 1.1 KB), because other pages
 	// share them too: the fingerprint's back arrow, the questions' sparkles, the section headers' icons, the copy-link
@@ -304,8 +308,9 @@ function clientChunks() {
 			return id.includes("/node_modules/") ? "vendor" : "shell"
 		for (const [name, pattern] of LATE_CHUNKS) if (pattern.test(id)) return name
 		if (TITLE_PAGE_MODULE.test(id)) return undefined
-		if (isSharedSmallModule(id, graph)) return "shell"
+		// A group's modules stay in their group even when small and shared (rule 3 would put them into the shell).
 		for (const [name, pattern] of FEATURE_CHUNKS) if (pattern.test(id)) return name
+		if (isSharedSmallModule(id, graph)) return "shell"
 		return undefined
 	}
 }

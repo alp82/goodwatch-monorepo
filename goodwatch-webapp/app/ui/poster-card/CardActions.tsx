@@ -41,7 +41,7 @@ import {
 	SEEN_SO_NOT_HIDEABLE,
 	useTitleActions,
 } from "~/ui/title-actions/useTitleActions"
-import { STATUS_LOOK } from "~/ui/tracking/gate"
+import { STATUS_LOOK } from "~/ui/tracking/status-look"
 import type { ScoredMedia } from "~/ui/user/actions/ScoreAction"
 import { useUser } from "~/utils/auth"
 import {
