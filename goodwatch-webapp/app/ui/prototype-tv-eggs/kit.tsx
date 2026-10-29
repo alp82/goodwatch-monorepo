@@ -1,5 +1,6 @@
 // PROTOTYPE - throwaway (TV easter eggs, round 2, 2026-10-29). The simplified TV: the room, one screen, and a
 // Remote in the hand with Power, CH+, CH-, OK and two streaming keys. Every page draws its screen inside `Scene`.
+import { useSearchParams } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
 import { whiteMark } from "~/ui/brand/white-mark"
@@ -224,6 +225,8 @@ export function BigRemote({
 }) {
 	const on = (k: Key) => (off ? k === "power" : enabled.includes(k))
 	if (off) pulse = "power"
+	const [params] = useSearchParams()
+	const layout = params.get("variant") ?? "a"
 	// The signal light flashes on every press.
 	const [blink, setBlink] = useState(0)
 	return (
@@ -239,56 +242,25 @@ export function BigRemote({
 			}}
 		>
 			<RemoteKeyBlink onKey={() => setBlink((n) => n + 1)} />
-			<div className="flex w-full items-center justify-between">
+			{/* Top: the signal light over Power, both on the centre line. */}
+			<div className="flex flex-col items-center">
+				<span aria-hidden className="relative h-3 w-3 rounded-full bg-[#3a1512] shadow-[inset_0_1px_2px_rgba(0,0,0,.8)]">
+					{blink > 0 && <span key={blink} className="egg-led absolute inset-0 rounded-full bg-red-500" />}
+				</span>
 				<button
 					type="button"
 					aria-label="Power"
 					disabled={!on("power")}
 					onClick={() => press("power")}
-					className={`remote-key flex h-14 w-14 items-center justify-center rounded-full text-rose-400 disabled:opacity-30 ${pulse === "power" ? "egg-pulse" : ""}`}
+					className={`remote-key mt-3 flex h-14 w-14 items-center justify-center rounded-full text-rose-400 disabled:opacity-30 ${pulse === "power" ? "egg-pulse" : ""}`}
 				>
 					<Icon d={ICON.power} className="h-6 w-6" />
 				</button>
-				<span aria-hidden className="relative mr-1 h-3.5 w-3.5 rounded-full bg-[#3a1512] shadow-[inset_0_1px_2px_rgba(0,0,0,.8)]">
-					{blink > 0 && <span key={blink} className="egg-led absolute inset-0 rounded-full bg-red-500" />}
-				</span>
 			</div>
-			<div className="mt-9 flex items-center justify-between px-2">
-				<div className="flex flex-col items-center gap-2">
-					<div className="egg-rocker flex h-[212px] w-[84px] flex-col overflow-hidden rounded-full">
-						<button
-							type="button"
-							aria-label="Next channel"
-							disabled={!on("up")}
-							onClick={() => press("up")}
-							className={`flex flex-1 items-center justify-center text-[40px] font-bold leading-none ${pulse === "up" ? "egg-pulse" : ""}`}
-						>
-							+
-						</button>
-						<div className="mx-auto h-px w-10 bg-black/50" />
-						<button
-							type="button"
-							aria-label="Previous channel"
-							disabled={!on("down")}
-							onClick={() => press("down")}
-							className="flex flex-1 items-center justify-center text-[40px] font-bold leading-none"
-						>
-							−
-						</button>
-					</div>
-				</div>
-				<div className="flex flex-col items-center gap-2">
-					<button
-						type="button"
-						disabled={!on("ok")}
-						onClick={() => press("ok")}
-						className={`remote-ok flex h-[118px] w-[118px] items-center justify-center rounded-full text-[22px] font-bold tracking-wider text-white/85 transition-transform active:scale-95 disabled:opacity-30 ${pulse === "ok" ? "egg-pulse" : ""}`}
-					>
-						OK
-					</button>
-				</div>
+			<div className="flex flex-1 flex-col items-center justify-center">
+				<Controls layout={layout} on={on} press={press} pulse={pulse} />
 			</div>
-			<div className="mt-9 grid grid-cols-2 gap-3 px-[7px]">
+			<div className="grid grid-cols-2 gap-3 px-[7px]">
 				{SERVICE_KEYS.map((s) => (
 					<button
 						key={s.key}
@@ -304,9 +276,84 @@ export function BigRemote({
 					</button>
 				))}
 			</div>
-			<div className="flex-1" />
-			<img {...whiteMark()} alt="" className="mx-auto mb-2 h-7 opacity-20" />
+			<img {...whiteMark()} alt="" className="mx-auto mb-1 mt-10 h-7 opacity-20" />
 		</section>
+	)
+}
+
+export const REMOTE_VARIANTS: Record<string, string> = {
+	a: "Remote: OK over a CH bar",
+	b: "Remote: twin pills",
+	c: "Remote: wheel",
+	d: "Remote: − OK + row",
+}
+
+type ControlsProps = { layout: string; on: (k: Key) => boolean; press: (k: Key) => void; pulse?: Key }
+
+const OK_CLASS =
+	"remote-ok flex items-center justify-center rounded-full font-bold tracking-wider text-white/85 transition-transform active:scale-95 disabled:opacity-30"
+const SIGN = "flex items-center justify-center text-[40px] font-bold leading-none disabled:opacity-30"
+
+/** The channel keys and OK, laid out symmetrically about the Remote's centre line (round 6: four takes). */
+function Controls({ layout, on, press, pulse }: ControlsProps) {
+	const ok = (cls: string) => (
+		<button type="button" disabled={!on("ok")} onClick={() => press("ok")} className={`${OK_CLASS} ${cls} ${pulse === "ok" ? "egg-pulse" : ""}`}>
+			OK
+		</button>
+	)
+	const plus = (cls: string) => (
+		<button type="button" aria-label="Next channel" disabled={!on("up")} onClick={() => press("up")} className={`${SIGN} ${cls} ${pulse === "up" ? "egg-pulse" : ""}`}>
+			+
+		</button>
+	)
+	const minus = (cls: string) => (
+		<button type="button" aria-label="Previous channel" disabled={!on("down")} onClick={() => press("down")} className={`${SIGN} ${cls}`}>
+			−
+		</button>
+	)
+	// b. Two pills of the same size side by side: the channel rocker and a tall OK.
+	if (layout === "b")
+		return (
+			<div className="flex items-center justify-center gap-6">
+				<div className="egg-rocker flex h-[212px] w-[84px] flex-col overflow-hidden rounded-full">
+					{plus("flex-1")}
+					<div className="mx-auto h-px w-10 bg-black/50" />
+					{minus("flex-1")}
+				</div>
+				{ok("h-[212px] w-[84px] text-[20px]")}
+			</div>
+		)
+	// c. A wheel like the old Remote's: + on top, − at the bottom, OK in the middle.
+	if (layout === "c")
+		return (
+			<div className="flex justify-center">
+				<div className="remote-wheel relative h-[228px] w-[228px] rounded-full">
+					<div className="remote-face pointer-events-none absolute inset-[14px] rounded-full" />
+					{plus("remote-arrow absolute left-1/2 top-2 h-14 w-14 -translate-x-1/2 rounded-full text-white/70 hover:text-white")}
+					{minus("remote-arrow absolute bottom-2 left-1/2 h-14 w-14 -translate-x-1/2 rounded-full text-white/70 hover:text-white")}
+					<div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">{ok("h-[96px] w-[96px] text-[20px]")}</div>
+				</div>
+			</div>
+		)
+	// d. One row: − and + as round keys either side of a large OK.
+	if (layout === "d")
+		return (
+			<div className="flex items-center justify-center gap-4">
+				{minus("remote-key h-[68px] w-[68px] rounded-full")}
+				{ok("h-[112px] w-[112px] text-[22px]")}
+				{plus("remote-key h-[68px] w-[68px] rounded-full")}
+			</div>
+		)
+	// a. OK on the centre line, a wide channel bar under it (− left, + right).
+	return (
+		<div className="flex flex-col items-center gap-6">
+			{ok("h-[118px] w-[118px] text-[22px]")}
+			<div className="egg-rocker flex h-[64px] w-[204px] items-stretch overflow-hidden rounded-full">
+				{minus("flex-1")}
+				<div className="my-auto h-8 w-px bg-black/50" />
+				{plus("flex-1")}
+			</div>
+		</div>
 	)
 }
 

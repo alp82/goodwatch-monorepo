@@ -8,7 +8,7 @@ import { useSearchParams } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import eggsCss from "~/ui/prototype-tv-eggs/eggs.css?url"
-import { NO_SIGNAL_VARIANTS } from "~/ui/prototype-tv-eggs/no-signal"
+import { REMOTE_VARIANTS } from "~/ui/prototype-tv-eggs/kit"
 import { Page404 } from "~/ui/prototype-tv-eggs/page-404"
 import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { PageError } from "~/ui/prototype-tv-eggs/page-error"
@@ -45,7 +45,6 @@ export default function TvEggsPrototype() {
 	const go = (p: PageKey) => {
 		const next = new URLSearchParams(params)
 		next.set("page", p)
-		next.delete("variant")
 		setParams(next, { replace: true, preventScrollReset: true })
 	}
 	return (
@@ -71,9 +70,9 @@ export default function TvEggsPrototype() {
 			) : page === "maintenance" ? (
 				<PageMaintenance key={page} />
 			) : (
-				<Page404 key={page} path={path} variant={params.get("variant") ?? "a"} />
+				<Page404 key={page} path={path} />
 			)}
-			{mounted && page === "404" && <PrototypeSwitcher variants={NO_SIGNAL_VARIANTS} position="bottom-4 right-24" />}
+			{mounted && <PrototypeSwitcher variants={REMOTE_VARIANTS} position="bottom-4 right-24" />}
 		</div>
 	)
 }

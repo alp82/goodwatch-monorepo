@@ -1,4 +1,4 @@
-// PROTOTYPE - throwaway. 1. "Channel 404" (round 2: variant a picked). The address names no page; the TV shows no
+// PROTOTYPE - throwaway. 1. "Channel 404" (round 6: OSD take b, no words on screen but the channel display). The address names no page; the TV shows no
 // signal and CH+ tunes to guesses from the broken address, then to popular titles. The Netflix and Prime Video
 // keys keep the channels to that service. `?path=` sets the broken address to try.
 import { useMemo, useState } from "react"
@@ -20,7 +20,6 @@ import {
 	useToast,
 	useTvPower,
 } from "./kit"
-import { NoSignal } from "./no-signal"
 
 // Guesses: trigram likeness between the address's words and each title.
 const norm = (s: string) =>
@@ -62,7 +61,7 @@ function guessesFor(path: string): Title[] {
 		.map((x) => x.t)
 }
 
-export function Page404({ path, variant }: { path: string; variant: string }) {
+export function Page404({ path }: { path: string }) {
 	const guesses = useMemo(() => guessesFor(path), [path])
 	const [service, setService] = useState<ServiceKey | null>(null)
 	const list = useMemo(() => {
@@ -111,10 +110,11 @@ export function Page404({ path, variant }: { path: string; variant: string }) {
 							<InfoBar t={t} hint="OK to open" />
 						</>
 					) : (
-						<NoSignal key={variant} variant={variant} count={guesses.length} />
+						<Static calm opacity={0.55} />
 					)}
 					{flips > 0 && <Static flash={flips} opacity={0.75} />}
-					{t && <ChannelNumber n={405 + at} label={label} />}
+					{/* The same channel display on every channel, 404 included; no hints, the Remote is there to be found. */}
+					<ChannelNumber n={t ? 405 + at : 404} label={t ? label : "No signal"} />
 				</>
 			}
 			remote={<BigRemote press={press} off={!tv.on} pulse={at === -1 ? "up" : undefined} services openService={service} onService={pickService} />}
