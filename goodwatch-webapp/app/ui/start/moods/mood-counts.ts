@@ -1,24 +1,24 @@
-// The start page mood picker's counts: one Discover results request with the current picks (and the search's ranked
-// list while a search is on) gives every mood's, theme's and style's count and the total for the chip row. Pure, so
-// the request and the wording are tested without a browser (mood-counts.test.ts); useMoodCounts.ts sends it.
+// The start page mood picker's counts: one Discover results answer for the current picks (and the search's titles
+// while a search is on) gives every mood's, theme's and style's count and the total for the chip row. While a query is
+// on, that answer is the results request the search already makes (StartResults.optionCounts), so a pick change asks
+// once; only with nothing asked yet does the open picker send its own request, the same request with no picks. Pure,
+// so the request and the wording are tested without a browser (start-picker.test.ts); useMoodCounts.ts sends it.
 //
-// The services scope follows the guest: `any` (any streaming offer in the country) without saved services, `mine`
-// once they have some, and the counts say which ("N titles", "N on your services"). A member's request leaves the
-// scope to their Discover defaults.
+// The services scope is the results' (start-search.ts, resultsScope): `any` (any streaming offer in the country)
+// without saved services, `mine` once the viewer has some, and the counts say which ("N titles", "N on your
+// services").
 import { WORDS, type WordKind } from "~/domain/taste-picker"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import { titleCount } from "~/ui/watch-next/labels"
 import type { TitleKey } from "~/utils/title-key"
+import { type ResultsScope, resultsPath } from "../search/start-search"
+import {
+	type StartQuery,
+	type StartResults,
+	querySignature,
+} from "../stage/start-query"
 
-export type CountScope = "any" | "mine" | null
-
-/** The scope for a viewer: null for a member (their own defaults), else by the guest's saved services. */
-export function countScopeOf(
-	guest: { services: string | null } | null,
-): CountScope {
-	if (!guest) return null
-	return guest.services?.trim() ? "mine" : "any"
-}
+export type CountScope = ResultsScope
 
 /** "N titles", or "N on your services" with scope `mine`. */
 export const countText = (n: number, scope: CountScope) =>
@@ -30,28 +30,22 @@ const PARAM: Record<WordKind, "moods" | "themes" | "styles"> = {
 	style: "styles",
 }
 
-/** The results request's query for the picks (word ids), the scope, and a search's ranked list (null: no search). */
+/**
+ * The counts request's query for the picks (word ids), the scope, and a search's ranked list (null: no search): the
+ * results request's own query, so both count the same titles.
+ */
 export function countsQuery(
 	picks: readonly string[],
 	scope: CountScope,
 	ranked: readonly TitleKey[] | null,
 ): string {
-	const params = new URLSearchParams()
-	for (const kind of ["mood", "theme", "style"] as const) {
-		const keys = WORDS.filter(
-			(w) => w.kind === kind && picks.includes(w.id),
-		).map((w) => w.key)
-		if (keys.length) params.set(PARAM[kind], keys.join(","))
-	}
-	if (scope) params.set("services", scope)
-	if (ranked) params.set("ranked", ranked.join(","))
-	params.set("page", "1")
-	return params.toString()
+	const path = resultsPath({ picks, scope, ranked })
+	return path.slice(path.indexOf("?") + 1)
 }
 
 /** What the picker reads from one answer: each word's count (by word id) and the total. */
 export interface MoodCounts {
-	/** The countsQuery the counts answer. */
+	/** What the counts answer: the countsQuery, or the results' query signature. */
 	query: string
 	byWord: Record<string, number>
 	total: number
@@ -59,7 +53,12 @@ export interface MoodCounts {
 
 export function readCounts(
 	query: string,
-	response: Pick<DiscoverResults, "optionCounts" | "total">,
+	response: {
+		optionCounts: Partial<
+			Pick<DiscoverResults["optionCounts"], "moods" | "themes" | "styles">
+		> | null
+		total: number
+	},
 ): MoodCounts {
 	const byWord: Record<string, number> = {}
 	for (const word of WORDS) {
@@ -67,4 +66,24 @@ export function readCounts(
 		if (typeof n === "number") byWord[word.id] = n
 	}
 	return { query, byWord, total: response.total }
+}
+
+/** The counts the results of this query carry, or null while they are another query's or haven't arrived. */
+export function countsOfResults(
+	query: Pick<StartQuery, "text" | "picks">,
+	results: Pick<
+		StartResults,
+		"signature" | "status" | "optionCounts" | "total"
+	>,
+): MoodCounts | null {
+	if (
+		results.status !== "ready" ||
+		results.signature !== querySignature(query) ||
+		!results.optionCounts
+	)
+		return null
+	return readCounts(results.signature, {
+		optionCounts: results.optionCounts,
+		total: results.total ?? 0,
+	})
 }

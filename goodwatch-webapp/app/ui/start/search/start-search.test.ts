@@ -235,6 +235,55 @@ test("the reading shows while the titles are on their way, then the titles (two 
 	assert.deepEqual(ready.reading, READING)
 })
 
+test("the results carry the search's ranked list and the picker's counts: one request per pick change", async (t) => {
+	const net = stubFetch(t, ({ url, init }) => {
+		if (!url.startsWith("/api/discover/results")) return server({ url, init })
+		return new Response(
+			JSON.stringify({
+				cards: [card(1)],
+				total: 9,
+				optionCounts: {
+					moods: { funny: 9, scary: 2 },
+					themes: { war: 1 },
+					styles: {},
+					genres: { drama: 4 },
+				},
+			}),
+			{ headers: { "Content-Type": "application/json" } },
+		)
+	})
+	const p = page()
+	p.dispatch({ type: "search", text: "heist" })
+	await until(() => p.last()?.status === "ready")
+	assert.equal(p.last()?.ranked?.length, 20)
+	assert.equal(p.last()?.ranked?.[0], 1e12 + 1)
+	assert.deepEqual(p.last()?.optionCounts, {
+		moods: { funny: 9, scary: 2 },
+		themes: { war: 1 },
+		styles: {},
+	})
+	p.dispatch({ type: "picks", picks: ["m:funny"] })
+	await until(
+		() =>
+			p.last()?.status === "ready" &&
+			p.last()?.signature === querySignature(p.query),
+	)
+	assert.equal(
+		net.results().length,
+		2,
+		"the counts need no request of their own",
+	)
+	// Picks alone: no ranked list.
+	p.dispatch({ type: "clearSearch" })
+	await until(
+		() =>
+			p.last()?.status === "ready" &&
+			p.last()?.signature === querySignature(p.query),
+	)
+	assert.equal(p.last()?.ranked, null)
+	assert.ok(p.last()?.optionCounts)
+})
+
 test("changing the picks re-filters the same ranked list without a new search", async (t) => {
 	const net = stubFetch(t, server)
 	const p = page()

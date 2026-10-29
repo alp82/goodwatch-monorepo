@@ -6,6 +6,9 @@
 // The panel (StartMoodPanel.tsx) overlays the page and loads on first use: its code is asked for when the guest
 // reaches for the row (a press or focus) or opens it, and a failed load says so in the row with a way to try again.
 // Picks keep it open; Done closes it and brings the card into view.
+//
+// The counts (mood-counts.ts) are the query's results' own while a query is on; only with nothing asked does the open
+// picker ask for them. Guests and members alike: "N titles", or "N on your services" with the viewer's services.
 import {
 	type ComponentType,
 	useCallback,
@@ -19,10 +22,19 @@ import { MoodButton, useRefusalHint } from "~/ui/watch-next/MoodButton"
 import type { MoodControl } from "~/ui/watch-next/MoodPicker"
 import { PickChip } from "~/ui/watch-next/PickChip"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
-import type { TitleKey } from "~/utils/title-key"
+import {
+	type StartQuery,
+	type StartResults,
+	hasQuery,
+} from "../stage/start-query"
 import type { StartMoodPanelProps } from "./StartMoodPanel"
 import { displayPicks, pickLabel, tapPick } from "./mixes"
-import { countScopeOf, countText } from "./mood-counts"
+import {
+	type CountScope,
+	type MoodCounts,
+	countText,
+	countsOfResults,
+} from "./mood-counts"
 import { startPicker, startShelfLines } from "./start-picker"
 import { useMoodCounts } from "./useMoodCounts"
 import { usePickerPictures } from "./usePickerPictures"
@@ -55,34 +67,40 @@ function useLazyPanel(open: boolean) {
 }
 
 export function StartMoodPicker({
-	picks,
+	query,
+	results,
+	scope,
 	setPicks,
 	clearPicks,
 	member,
-	ranked = null,
 	onDone,
 }: {
-	/** The picks: word ids, up to three (a mix is its parts). */
-	picks: readonly string[]
+	/** The search text and the picks (word ids, up to three; a mix is its parts). */
+	query: Pick<StartQuery, "text" | "picks">
+	/** The query's results: while a query is on, the counts are theirs (one request per pick change). */
+	results: Pick<StartResults, "signature" | "status" | "optionCounts" | "total">
+	/** The results' services scope (useStartSearch): the counts' wording follows it. */
+	scope: CountScope
 	setPicks: (picks: readonly string[]) => void
 	clearPicks: () => void
-	/** A member counts by their own Discover defaults; a guest by the services they saved. */
+	/** A member asks with their session; a guest sends their progress. */
 	member: boolean
-	/** The search's ranked list while a search is on (the counts are then of its titles); null without one. */
-	ranked?: readonly TitleKey[] | null
 	/** Done was pressed: the guest has asked. */
 	onDone?: () => void
 }) {
+	const { picks } = query
 	const [open, setOpen] = useState(false)
 	const guest = useGuestBody(member)
-	const scope = countScopeOf(guest === undefined ? { services: null } : guest)
-	const counts = useMoodCounts({
+	const asking = hasQuery(query)
+	// With nothing asked yet there are no results to read: the open picker asks for the catalog's counts itself.
+	const catalog = useMoodCounts({
 		picks,
-		ranked,
+		ranked: null,
 		guest,
 		scope,
-		active: open || picks.length > 0,
+		active: open && !asking,
 	})
+	const counts = useHeld(asking ? countsOfResults(query, results) : catalog)
 	const pictures = usePickerPictures(open)
 	const { Panel, failed, warm } = useLazyPanel(open)
 	const [refused, setRefused] = useState<MoodControl["refused"]>(null)
@@ -185,6 +203,16 @@ export function StartMoodPicker({
 			<RefusalLive control={control} />
 		</>
 	)
+}
+
+/**
+ * The latest counts, kept while the next ones load (the results of a new pick are on their way), so the tiles'
+ * numbers don't blank between taps.
+ */
+function useHeld(counts: MoodCounts | null): MoodCounts | null {
+	const held = useRef<MoodCounts | null>(null)
+	if (counts) held.current = counts
+	return counts ?? held.current
 }
 
 /** Says a refused fourth pick out loud while the panel is closed (its head shows it while open). */

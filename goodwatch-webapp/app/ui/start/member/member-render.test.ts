@@ -58,6 +58,16 @@ test("a member's HTML has no boot, no gate and no centered stage; the room is li
 	}
 })
 
+test("a member searches with the mood picker under the bar, as a guest does", () => {
+	for (const [name, html] of all) {
+		assert.match(
+			html,
+			/class="start-moods"[\s\S]*?Any mood[\s\S]*?Pick up to three/,
+			name,
+		)
+	}
+})
+
 test("the doors follow what the member has, and the first is open in the server's HTML", () => {
 	const expect: Record<Member, string[]> = {
 		full: ["Continue watching", "Wishlist", "For you", "Hot on socials"],

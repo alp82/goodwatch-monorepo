@@ -11,7 +11,9 @@
 // StartResults is what the search and the results requests (useStartSearch, a later step) answer for one query,
 // marked with the query's signature, so the stage never shows one query's titles under another.
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
+import type { DiscoverResults } from "~/server/discover-results.server"
 import type { TitleCard } from "~/server/title-cards.server"
+import type { TitleKey } from "~/utils/title-key"
 
 /** The most picks at once (the taste picker's MAX_PICKS). */
 export const MAX_START_PICKS = 3
@@ -106,6 +108,16 @@ export type StartResults = {
 	reading: ReadingChip[] | null
 	/** How many titles match in all (the picker's count line); null until known. */
 	total: number | null
+	/** The search's ranked list: null without a search, or before it arrives. */
+	ranked: TitleKey[] | null
+	/**
+	 * Every mood's, theme's and style's count for these picks (and the search's titles), from the same results answer:
+	 * the mood picker reads them, so a pick change asks once. Null until known; empty when the search found nothing.
+	 */
+	optionCounts: Pick<
+		DiscoverResults["optionCounts"],
+		"moods" | "themes" | "styles"
+	> | null
 	/** The message for the card's box when status is "error". */
 	error: string | null
 }
@@ -116,6 +128,8 @@ export const IDLE_RESULTS: StartResults = {
 	cards: [],
 	reading: null,
 	total: null,
+	ranked: null,
+	optionCounts: null,
 	error: null,
 }
 

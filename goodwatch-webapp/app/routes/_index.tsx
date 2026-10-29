@@ -167,7 +167,9 @@ function GuestStart({
 				}
 				moods={
 					<StartMoodPicker
-						picks={start.query.picks}
+						query={start.query}
+						results={results}
+						scope={results.scope}
 						setPicks={start.setPicks}
 						clearPicks={start.clearPicks}
 						member={false}

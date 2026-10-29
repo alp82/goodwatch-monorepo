@@ -1,5 +1,5 @@
-// A member's start (docs/implementation/start-page-redesign.md, "Member start"): the same lit room and search bar as
-// a guest's, with no boot and no opening steps. The card's box holds "this or that" from the member's own lists (First
+// A member's start (docs/implementation/start-page-redesign.md, "Member start"): the same lit room, search bar and
+// mood picker as a guest's, with no boot and no opening steps. The card's box holds "this or that" from the member's own lists (First
 // steps when there is nothing on any list yet), or the search's results while a search is on. Under the room, the
 // "Go deeper" doors open each list inline.
 //
@@ -8,6 +8,7 @@
 //
 // Nothing on this page writes: "this or that" only moves its round on, and the doors only switch sections.
 import { useEffect, useMemo, useState } from "react"
+import { StartMoodPicker } from "../moods/StartMoodPicker"
 import type { ShelfTitle } from "../room/ShelfCovers"
 import { StartSearchBar } from "../search/StartSearchBar"
 import { useStartSearch } from "../search/useStartSearch"
@@ -52,6 +53,16 @@ export function MemberStart({
 						setDraft={start.setDraft}
 						search={start.search}
 						clearSearch={start.clearSearch}
+					/>
+				}
+				moods={
+					<StartMoodPicker
+						query={start.query}
+						results={results}
+						scope={results.scope}
+						setPicks={start.setPicks}
+						clearPicks={start.clearPicks}
+						member
 					/>
 				}
 				card={

@@ -12,7 +12,12 @@ import {
 	type StartQuery,
 	type StartResults,
 } from "../stage/start-query"
-import { type StartSearch, createStartSearch } from "./start-search"
+import {
+	type ResultsScope,
+	type StartSearch,
+	createStartSearch,
+	resultsScope,
+} from "./start-search"
 
 const ids = (value: string | null | undefined) =>
 	(value ?? "")
@@ -23,7 +28,11 @@ const ids = (value: string | null | undefined) =>
 export function useStartSearch(
 	query: Pick<StartQuery, "text" | "picks">,
 	{ member = null }: { member?: { services: number[] } | null } = {},
-): StartResults & { retry: () => void } {
+): StartResults & {
+	retry: () => void
+	/** The results' services scope; the mood picker's counts and their wording follow it. */
+	scope: ResultsScope
+} {
 	const guest = useGuestBody(member !== null)
 	const { locale } = useLocale()
 	const guestRef = useRef<GuestBody | null | undefined>(guest)
@@ -66,5 +75,5 @@ export function useStartSearch(
 	}, [text, picksKey, ready, scope])
 
 	const retry = useMemo(() => () => search.current?.retry(), [])
-	return { ...results, retry }
+	return { ...results, retry, scope: resultsScope(scope) }
 }

@@ -1,9 +1,8 @@
-// The mood picker's counts in the browser (mood-counts.ts has the request): asked for while the picker is open or
-// something is picked, again after each pick, a stale request cancelled and its answer dropped (TanStack Query, keyed
-// by the request and the guest's signature). The last answer stays while the next one loads, so the tiles' numbers
-// don't blank between taps. Answers stay in the query cache, so reopening the picker or undoing a pick asks for
-// nothing while they are fresh. A 503 (the catalog still loading) is asked again after its Retry-After; any other
-// failure leaves the counts out.
+// The mood picker's own counts request in the browser (mood-counts.ts has the request): only while nothing is asked
+// yet and the picker is open (once a query is on, its results carry the counts), a stale request cancelled and its
+// answer dropped (TanStack Query, keyed by the request and the guest's signature). The last answer stays while the
+// next one loads. Answers stay in the query cache, so reopening the picker asks for nothing while they are fresh. A 503
+// (the catalog still loading) is asked again after its Retry-After; any other failure leaves the counts out.
 //
 // A guest's progress is part of the key: Discover leaves out what they have seen or hidden, so a loved or hidden title
 // changes the counts.
@@ -69,7 +68,7 @@ export function useMoodCounts({
 	/** The guest's body (useGuestBody): null for a member, undefined until read. */
 	guest: GuestBody | null | undefined
 	scope: CountScope
-	/** Whether the counts are wanted now: the picker is open or something is picked. */
+	/** Whether the counts are wanted now: the picker is open with nothing asked yet. */
 	active: boolean
 }): MoodCounts | null {
 	const query = countsQuery(picks, scope, ranked)

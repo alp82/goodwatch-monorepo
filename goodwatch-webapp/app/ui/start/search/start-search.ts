@@ -54,8 +54,16 @@ const KEPT_SEARCHES = 8
 /** Where the results come from: any streaming offer in the country, or the viewer's services. */
 export type ResultsScope = "any" | "mine"
 
-export const resultsScope = (scope: SearchScope): ResultsScope =>
-	scope.services.length ? "mine" : "any"
+/**
+ * The one scope rule for the start page's results and the mood picker's counts: `mine` once the viewer (a guest who
+ * saved services, or a member with services) has any, else `any`.
+ */
+export const resultsScope = (
+	scope: Pick<SearchScope, "services">,
+): ResultsScope => (scope.services.length ? "mine" : "any")
+
+/** The counts of a search that found nothing: there was nothing to count. */
+const NO_COUNTS = { moods: {}, themes: {}, styles: {} }
 
 // The defaults the start page serializes against: everything at its widest, so only what the guest chose is written.
 const WIDEST: FilterDefaults = { onMyServices: false, notSeenYet: false }
@@ -243,7 +251,15 @@ export function createStartSearch({
 		const live = () =>
 			!disposed && !signal.aborted && asked?.signature === signature
 		const fail = (error: string) =>
-			emit({ ...shown, status: "error", cards: [], total: null, error })
+			emit({
+				...shown,
+				status: "error",
+				cards: [],
+				total: null,
+				ranked: null,
+				optionCounts: null,
+				error,
+			})
 		let ranked: TitleKey[] | null = null
 		let reading: ReadingChip[] | null = null
 		if (text !== null) {
@@ -265,6 +281,8 @@ export function createStartSearch({
 					cards: [],
 					reading,
 					total: 0,
+					ranked,
+					optionCounts: NO_COUNTS,
 					error: null,
 				})
 				return
@@ -322,6 +340,12 @@ export function createStartSearch({
 			cards: body.cards.slice(0, START_CARDS),
 			reading,
 			total: body.total,
+			ranked,
+			optionCounts: {
+				moods: body.optionCounts?.moods ?? {},
+				themes: body.optionCounts?.themes ?? {},
+				styles: body.optionCounts?.styles ?? {},
+			},
 			error: null,
 		})
 	}
@@ -345,6 +369,8 @@ export function createStartSearch({
 			cards: [],
 			reading: text === null ? null : (readings.get(text) ?? null),
 			total: null,
+			ranked: null,
+			optionCounts: null,
 			error: null,
 		})
 		void load(signature, text, query.picks, abort.signal, 0)
