@@ -467,3 +467,26 @@ export function tabValues(
 		},
 	}
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// Counts
+
+/**
+ * The opt-in `counts=` flag of the results request that each sub-tab needs for its option counts. Every other count
+ * comes with every response, so the other sub-tabs ask for nothing extra.
+ */
+export const COUNTS_FLAGS: Partial<Record<SubTabId, string>> = {
+	popularity: "popularity",
+	released: "released",
+	length: "length",
+	madeIn: "origin",
+	budget: "budget",
+	shows: "shows",
+	taste: "taste",
+}
+
+/** The `counts=` flags for the open sub-tab only; none while the panel is closed. */
+export const countsFlags = (open: SubTabId | null): string[] => {
+	const flag = open ? COUNTS_FLAGS[open] : undefined
+	return flag ? [flag] : []
+}

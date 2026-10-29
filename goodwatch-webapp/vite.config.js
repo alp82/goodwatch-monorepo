@@ -352,9 +352,14 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 		},
 		remix({
 			serverMinify: false,
-			ignoredRouteFiles: process.argv.some((arg) => arg === "vite:build" || arg === "build")
-				? PROTOTYPES.routes.map((name) => `**/${name}`)
-				: [],
+			// Tests next to their route are never routes: loading one would run it, and its import hooks would break
+			// module resolution for the server.
+			ignoredRouteFiles: [
+				"**/*.test.*",
+				...(process.argv.some((arg) => arg === "vite:build" || arg === "build")
+					? PROTOTYPES.routes.map((name) => `**/${name}`)
+					: []),
+			],
 			// TODO remove
 			// serverModuleFormat: "cjs",
 		}),

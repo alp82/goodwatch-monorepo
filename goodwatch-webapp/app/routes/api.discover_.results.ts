@@ -1,7 +1,3 @@
-import { DISCOVER_MAX_PAGE } from "~/utils/constants"
-import useLocale from "~/utils/locale"
-import { mediaLanguageUrl } from "~/utils/media-presentation"
-import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
@@ -18,8 +14,12 @@ import {
 	forYouFromParams,
 	getDiscoverResults,
 } from "~/server/discover-results.server"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { type GuestProgress, getViewerContext } from "~/server/viewer.server"
 import type { TasteInteraction } from "~/ui/taste/types"
+import { DISCOVER_MAX_PAGE } from "~/utils/constants"
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 
 // One page of Discover's browse results with the filter bar's counts, recoveries, For you movement, and cards.
 // - Members: GET /api/discover/results?<filter bar parameters>&page=1
@@ -113,12 +113,15 @@ export function useDiscoverResults({
 	page = 1,
 	forYou,
 	guest,
+	counts = [],
 	enabled = true,
 }: {
 	query: string
 	page?: number
 	/** The `foryou` parameter when the view sets it. */
 	forYou?: boolean
+	/** Opt-in option counts (`counts=`), for example the open Discover sub-tab's (countsFlags). */
+	counts?: readonly string[]
 	/** A guest's progress (snapshotGuestProgress), or null for a member. */
 	guest: {
 		interactions: unknown[]
@@ -130,6 +133,7 @@ export function useDiscoverResults({
 	const params = new URLSearchParams(query)
 	params.set("page", String(page))
 	if (forYou !== undefined) params.set("foryou", forYou ? "1" : "0")
+	if (counts.length) params.set("counts", counts.join(","))
 	const { locale } = useLocale()
 	const url = mediaLanguageUrl(
 		`/api/discover/results?${params}`,
