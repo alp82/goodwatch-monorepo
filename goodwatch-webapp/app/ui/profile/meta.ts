@@ -3,8 +3,9 @@
 // structured data on an indexable Overview.
 import type { MetaDescriptor } from "@remix-run/node"
 import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
+import { profileLinkUrl as linkUrl } from "~/domain/profile-settings"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
-import { type ProfileTab, linkUrl, profileTabPath } from "./links"
+import { type ProfileTab, profileTabPath } from "./paths"
 
 const TAB_NAMES: Record<ProfileTab, string> = {
 	overview: "",
@@ -15,6 +16,18 @@ const TAB_NAMES: Record<ProfileTab, string> = {
 	lists: "Lists",
 	stats: "Stats",
 	tropes: "Tropes",
+}
+
+// Search engines are guests even when the current viewer is a member or the owner.
+const TAB_PARTS: Record<ProfileTab, readonly ProfilePart[]> = {
+	overview: [],
+	seen: ["seen"],
+	scores: ["scores"],
+	wishlist: ["wishlist"],
+	shows: ["shows"],
+	lists: ["lists"],
+	stats: ["taste"],
+	tropes: ["taste", "scores"],
 }
 
 export function profileMeta(
@@ -36,7 +49,9 @@ export function profileMeta(
 		? `${name} · @${handle} · GoodWatch`
 		: `@${handle} · GoodWatch`
 	const description = line || shell.bio || fallbackDescription(shell)
-	const indexable = shell.indexable
+	const indexable =
+		shell.indexable &&
+		TAB_PARTS[tab].every((part) => shell.visibility[part] === "everyone")
 	const profilePage =
 		indexable && tab === "overview"
 			? [
