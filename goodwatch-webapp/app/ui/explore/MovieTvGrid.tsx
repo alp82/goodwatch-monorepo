@@ -127,6 +127,7 @@ export default function MovieTvGrid({
 										mediaType={result.media_type}
 										prefetch={false}
 										posterPriority={posterPriority ?? gridPosterPriority(index)}
+										skipOffscreen={(posterPriority ?? gridPosterPriority(index)) === "lazy"}
 									/>
 								</motion.div>
 							</div>

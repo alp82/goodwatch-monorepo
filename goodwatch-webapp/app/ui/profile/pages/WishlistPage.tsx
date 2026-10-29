@@ -69,6 +69,7 @@ export function WishlistPage({
 				title={t}
 				skipWant={owner}
 				posterPriority={first && index < 6 ? "high" : "lazy"}
+				skipOffscreen={!first || index >= 6}
 			/>
 			{caption && (
 				<span className="block truncate text-[11px] text-gray-500">

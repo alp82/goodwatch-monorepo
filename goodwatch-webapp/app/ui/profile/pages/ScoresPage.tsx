@@ -280,6 +280,7 @@ function ScoreTier({
 							title={title}
 							sizes={TIER_SIZES}
 							posterPriority={first && index < 4 ? "high" : "lazy"}
+							skipOffscreen={!first || index >= 4}
 							skipScore={shell.viewer === "owner"}
 						/>
 					</li>

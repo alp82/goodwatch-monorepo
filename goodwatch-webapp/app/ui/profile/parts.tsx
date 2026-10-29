@@ -102,9 +102,11 @@ export function ProfilePoster({
 	sizes,
 	skipScore = false,
 	posterPriority,
+	skipOffscreen,
 }: {
 	title: ProfileTitle
 	posterPriority?: PosterProps["priority"]
+	skipOffscreen?: boolean
 	owner?: string | null
 	sizes?: PosterProps["sizes"]
 	skipScore?: boolean
@@ -112,6 +114,7 @@ export function ProfilePoster({
 	return (
 		<MovieTvCard
 			posterPriority={posterPriority}
+			skipOffscreen={skipOffscreen}
 			posterPaintBeforeScripts={posterPriority === "high"}
 			details={profileCardTitle(title)}
 			mediaType={title.mediaType}

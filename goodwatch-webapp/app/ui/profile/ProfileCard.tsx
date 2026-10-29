@@ -15,10 +15,12 @@ export function ProfileCard({
 	title,
 	skipWant = false,
 	posterPriority,
+	skipOffscreen,
 	posterSizes = POSTER_ROW_SIZES,
 }: {
 	title: ProfileTitle
 	posterPriority?: PosterProps["priority"]
+	skipOffscreen?: boolean
 	/** The poster's displayed widths; a row's by default. */
 	posterSizes?: PosterProps["sizes"]
 	/** The list is the viewer's own Wishlist: the pill leaves out the bookmark. */
@@ -27,6 +29,7 @@ export function ProfileCard({
 	return (
 		<MovieTvCard
 			posterPriority={posterPriority}
+			skipOffscreen={skipOffscreen}
 			posterPaintBeforeScripts={posterPriority === "high"}
 			details={{
 				tmdb_id: title.tmdbId,
