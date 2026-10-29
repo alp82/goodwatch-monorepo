@@ -27,8 +27,8 @@ export const FALLBACK_MS = 5000
 const literal = (value: unknown) =>
 	JSON.stringify(value).replace(/</g, "\\u003c")
 
-// The browser half, as plain ES5. A hero is waited for while it shows in this window (a box, a picture that isn't
-// the empty placeholder of a `<source>` for other windows) and hasn't failed to load. A picture whose request hasn't
+// The browser half, as plain ES5. Wait only for an image whose box intersects this viewport, that is not an empty
+// responsive-source placeholder, and that has not failed to load. An error releases the wait immediately. A picture whose request hasn't
 // started has no `currentSrc` yet: it is waited for too. With Early Hints the first paint can come before that.
 const BROWSER = `(function(code,preloads,fallback){
 var d=document,started=0,painted=0,seen=[];
@@ -37,8 +37,8 @@ preloads.forEach(function(href){var link=d.createElement("link");link.rel="modul
 var script=d.createElement("script");script.type="module";script.textContent=code;d.body.appendChild(script)}
 var P=window.PerformanceObserver,types=P&&P.supportedEntryTypes||[],timing=types.indexOf("element")>=0;
 if(types.indexOf("paint")<0)return start();
-function waiting(img){var src=img.currentSrc||"";return src.indexOf("data:")!==0&&!(img.complete&&!img.naturalWidth)&&img.getClientRects().length>0&&seen.indexOf(img)<0}
-function check(){if(started||!painted)return;if(timing){var heroes=d.querySelectorAll('img[elementtiming="hero"]');for(var i=0;i<heroes.length;i++)if(waiting(heroes[i]))return}setTimeout(start)}
+function waiting(img){var src=img.currentSrc||"",r=img.getBoundingClientRect();return src.indexOf("data:")!==0&&!(img.complete&&!img.naturalWidth)&&img.getClientRects().length>0&&r.width>0&&r.height>0&&r.bottom>0&&r.right>0&&r.top<window.innerHeight&&r.left<window.innerWidth&&seen.indexOf(img)<0}
+function check(){if(started||!painted)return;if(timing){var heroes=d.querySelectorAll('img[elementtiming="hero"]');for(var i=0;i<heroes.length;i++)if(waiting(heroes[i])){heroes[i].addEventListener("error",check,{once:true});return}}setTimeout(start)}
 new P(function(list){if(list.getEntriesByName("first-contentful-paint").length){painted=1;check()}}).observe({type:"paint",buffered:true});
 if(timing)new P(function(list){list.getEntries().forEach(function(entry){if(entry.element)seen.push(entry.element)});check()}).observe({type:"element",buffered:true});
 setTimeout(start,fallback)})`.replace(/\n/g, "")

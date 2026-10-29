@@ -12,7 +12,24 @@ type Node = {
 	type?: string
 	textContent?: string
 }
+type Box = {
+	top: number
+	bottom: number
+	left: number
+	right: number
+	width: number
+	height: number
+}
 type Img = {
+	onError?: () => void
+	addEventListener: (
+		name: string,
+		callback: () => void,
+		options?: { once: boolean },
+	) => void
+	fail: () => void
+	box: Box
+	getBoundingClientRect: () => Box
 	currentSrc: string
 	complete: boolean
 	naturalWidth: number
@@ -27,12 +44,22 @@ type Callback = (list: {
 
 const img = (over: Partial<Img> = {}): Img => {
 	const one = {
+		box: { top: 0, bottom: 100, left: 0, right: 100, width: 100, height: 100 },
 		currentSrc: "/assets/hand.avif",
 		complete: false,
 		naturalWidth: 0,
 		shown: true,
 		...over,
 	} as Img
+	one.addEventListener = (_name, callback) => {
+		one.onError = callback
+	}
+	one.fail = () => {
+		one.complete = true
+		one.naturalWidth = 0
+		one.onError?.()
+	}
+	one.getBoundingClientRect = () => one.box
 	one.getClientRects = () => (one.shown ? [{}] : [])
 	return one
 }
@@ -64,6 +91,8 @@ function browser({
 	}
 	const context = vm.createContext({
 		window: {
+			innerWidth: 1200,
+			innerHeight: 800,
 			PerformanceObserver: types.length ? PerformanceObserver : undefined,
 		},
 		document,
@@ -141,6 +170,50 @@ describe("startAfterPaintScript", () => {
 		assert.equal(b.started(), true)
 	})
 
+	it("waits for the viewport's posters without waiting for the next row below it", () => {
+		const visible = img()
+		const below = img({
+			currentSrc: "",
+			box: {
+				top: 900,
+				bottom: 1000,
+				left: 0,
+				right: 100,
+				width: 100,
+				height: 100,
+			},
+		})
+		const b = browser({ heroes: [visible, below] })
+		b.run(startAfterPaintScript(CODE, PRELOADS))
+		b.paint("first-contentful-paint")
+		b.tick(0)
+		assert.equal(b.started(), false)
+		b.painted(visible)
+		b.tick(0)
+		assert.equal(b.started(), true)
+	})
+
+	it("waits for an image that is partially inside the viewport", () => {
+		const partial = img({
+			box: {
+				top: -50,
+				bottom: 50,
+				left: 0,
+				right: 100,
+				width: 100,
+				height: 100,
+			},
+		})
+		const b = browser({ heroes: [partial] })
+		b.run(startAfterPaintScript(CODE, PRELOADS))
+		b.paint("first-contentful-paint")
+		b.tick(0)
+		assert.equal(b.started(), false)
+		b.painted(partial)
+		b.tick(0)
+		assert.equal(b.started(), true)
+	})
+
 	it("counts a hero painted before the first contentful paint was reported", () => {
 		const hand = img()
 		const b = browser({ heroes: [hand] })
@@ -173,6 +246,18 @@ describe("startAfterPaintScript", () => {
 		const b = browser({ heroes: [hidden, placeholder, failed] })
 		b.run(startAfterPaintScript(CODE, PRELOADS))
 		b.paint("first-contentful-paint")
+		b.tick(0)
+		assert.equal(b.started(), true)
+	})
+
+	it("starts scripts when the last visible image fails after the first contentful paint", () => {
+		const failed = img()
+		const b = browser({ heroes: [failed] })
+		b.run(startAfterPaintScript(CODE, PRELOADS))
+		b.paint("first-contentful-paint")
+		b.tick(0)
+		assert.equal(b.started(), false)
+		failed.fail()
 		b.tick(0)
 		assert.equal(b.started(), true)
 	})

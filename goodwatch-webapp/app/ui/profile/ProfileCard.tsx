@@ -27,6 +27,7 @@ export function ProfileCard({
 	return (
 		<MovieTvCard
 			posterPriority={posterPriority}
+			posterPaintBeforeScripts={posterPriority === "high"}
 			details={{
 				tmdb_id: title.tmdbId,
 				title: title.title,

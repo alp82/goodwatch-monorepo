@@ -125,6 +125,8 @@ interface MovieTvCardProps {
 	posterMinWidth?: PosterProps["minWidth"]
 	/** Set by a page for the cards it shows without scrolling. Every other poster loads lazily. */
 	posterPriority?: PosterProps["priority"]
+	/** Wait for a visible poster before starting a landing page's scripts. */
+	posterPaintBeforeScripts?: boolean
 	/**
 	 * For a card far down a long grid: the browser skips the poster and its badges until the card is near the
 	 * viewport, so a lazy poster isn't requested screens ahead. The box keeps the poster's 2:3 shape meanwhile.
@@ -168,6 +170,7 @@ export function MovieTvCard({
 	posterMinWidth,
 	posterMaxWidth,
 	posterPriority,
+	posterPaintBeforeScripts,
 	skipOffscreen = false,
 	actions: actionsOn = "bottom",
 	newOn,
@@ -255,6 +258,7 @@ export function MovieTvCard({
 						maxWidth={posterMaxWidth}
 						minWidth={posterMinWidth}
 						priority={posterPriority}
+						paintBeforeScripts={posterPaintBeforeScripts}
 					/>
 				</div>
 				{/* The link's name for a crawler and a screen reader: the title in its own language, and the year. */}

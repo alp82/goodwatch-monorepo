@@ -1,4 +1,5 @@
 import React from "react"
+import { HERO_TIMING } from "~/utils/start-after-paint"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import placeholder from "~/img/poster-placeholder.png"
 import { TmdbImage, type TmdbImageProps } from "~/ui/TmdbImage"
@@ -7,6 +8,8 @@ import { imageLoadingProps } from "~/utils/tmdb-image"
 import type { SizeRule } from "~/utils/tmdb-image"
 
 export interface PosterProps {
+	/** Let a route using START_AFTER_PAINT wait for this poster while it is in the viewport. */
+	paintBeforeScripts?: boolean
 	lang?: string
 	path?: string
 	title?: string
@@ -55,6 +58,7 @@ export function Poster({
 	tmdbId,
 	sizes = POSTER_GRID_SIZES,
 	priority = "lazy",
+	paintBeforeScripts = false,
 	maxWidth = POSTER_CARD_MAX_WIDTH,
 	minWidth = POSTER_CARD_MIN_WIDTH,
 }: PosterProps) {
@@ -84,7 +88,14 @@ export function Poster({
 			lang={lang}
 			imgRef={impressionRef}
 			kind="poster"
-			path={path}
+			path={
+				paintBeforeScripts
+					? `${path}${path.includes("?") ? "&" : "?"}gw-cors=1`
+					: path
+			}
+			{...(paintBeforeScripts
+				? { crossOrigin: "anonymous" as const, ...HERO_TIMING }
+				: {})}
 			sizes={sizes}
 			minWidth={minWidth}
 			maxWidth={maxWidth}

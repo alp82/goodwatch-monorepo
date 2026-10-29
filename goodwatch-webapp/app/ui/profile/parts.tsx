@@ -112,6 +112,7 @@ export function ProfilePoster({
 	return (
 		<MovieTvCard
 			posterPriority={posterPriority}
+			posterPaintBeforeScripts={posterPriority === "high"}
 			details={profileCardTitle(title)}
 			mediaType={title.mediaType}
 			posterSizes={sizes}
