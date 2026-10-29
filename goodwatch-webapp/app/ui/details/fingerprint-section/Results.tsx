@@ -202,7 +202,7 @@ export function Results({
 						aria-description={`Show ${total} ${noun.toLowerCase()}`}
 						className={`group/stack flex h-[calc(var(--mini)*1.5)] shrink-0 cursor-pointer items-center gap-3 self-start rounded-lg text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300 disabled:cursor-default @min-[640px]/fp:self-auto ${SIZES}`}
 					>
-						<div className="relative h-[calc(var(--mini)*1.5)] w-[calc(var(--mini)+9*var(--step))]">
+						<div aria-hidden className="relative h-[calc(var(--mini)*1.5)] w-[calc(var(--mini)+9*var(--step))]">
 							{layers.map((l) => (
 								<div
 									key={l.key}
