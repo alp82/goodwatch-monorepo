@@ -120,9 +120,14 @@ const canonicalLoader = async ({
 	}
 	// The type is a filter: /discover/movies is /discover?type=movie.
 	if (routeParams.type) {
-		const type = ({ movies: "movie", show: "show" } as Record<string, string>)[
-			routeParams.type
-		]
+		const type = (
+			{
+				movies: "movie",
+				movie: "movie",
+				shows: "show",
+				show: "show",
+			} as Record<string, string>
+		)[routeParams.type]
 		if (type && !urlParams.has("type")) urlParams.set("type", type)
 		const search = urlParams.toString()
 		return redirect(`/discover${search ? `?${search}` : ""}`, {
