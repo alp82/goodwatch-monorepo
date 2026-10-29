@@ -66,6 +66,7 @@ export function discoverFilterKey(input: {
 		services: state.services,
 		streamingCountry: state.streamingCountry,
 		notSeenYet: state.notSeenYet,
+		allOf: state.allOf,
 		moods: state.moods,
 		themes: state.themes,
 		styles: state.styles,
@@ -83,7 +84,7 @@ export function discoverFilterKey(input: {
 		content: sortedFields(state.content),
 	}
 	return JSON.stringify([
-		"discover-filters:v2",
+		"discover-filters:v3",
 		input.snapshotVersion,
 		viewer.country,
 		input.availabilityLoadedAt,

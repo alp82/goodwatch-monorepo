@@ -32,6 +32,9 @@ import {
 } from "~/domain/title-type"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 
+export const TAG_GROUPS = ["moods", "themes", "styles", "genres"] as const
+export type TagGroup = (typeof TAG_GROUPS)[number]
+
 /** The filter groups, in the order of the bits of a title's fail mask. */
 export const FILTER_NAMES = [
 	"services",
@@ -137,14 +140,16 @@ export interface FilterState {
 	/** Request-local viewing country for streaming offers; never writes saved settings. */
 	streamingCountry?: string
 	notSeenYet: boolean
-	/** Up to MAX_MOODS; a title fits if it belongs to at least one. */
+	/** Up to MAX_MOODS; a title fits if it belongs to at least one (all picks when listed in allOf). */
 	moods: MoodKey[]
-	/** Up to MAX_THEMES; a title fits if it has at least one. */
+	/** Up to MAX_THEMES; a title fits if it has at least one (all picks when listed in allOf). */
 	themes: ThemeKey[]
-	/** Up to MAX_STYLES; a title fits if it has at least one. */
+	/** Up to MAX_STYLES; a title fits if it has at least one (all picks when listed in allOf). */
 	styles: StyleKey[]
-	/** A title fits if it has at least one. */
+	/** A title fits if it has at least one (all picks when listed in allOf). */
 	genres: string[]
+	/** Tag groups whose picks must all match; omitted groups match any pick. */
+	allOf?: TagGroup[]
 	minScore: number
 	/** The least taste match; a title without a match fits only 0. It doesn't narrow for a person without taste. */
 	minMatch: MinMatch
@@ -271,6 +276,11 @@ export function filterStateFromParams(
 	state.themes = parseKeys(THEME_KEYS, params.get("themes"), MAX_THEMES)
 	state.styles = parseKeys(STYLE_KEYS, params.get("styles"), MAX_STYLES)
 	state.genres = [...new Set(list(params.get("genres")))]
+	const all = list(params.get("all"))
+	const allOf = TAG_GROUPS.filter(
+		(group) => all.includes(group) && state[group].length >= 2,
+	)
+	if (allOf.length) state.allOf = allOf
 	const score = params.get("score")
 	state.minScore =
 		score !== null && /^\d{1,3}$/.test(score) && Number(score) <= 100
@@ -381,6 +391,10 @@ export function filterStateToParams(
 	set("themes", state.themes.length ? state.themes.join(",") : null)
 	set("styles", state.styles.length ? state.styles.join(",") : null)
 	set("genres", state.genres.length ? state.genres.join(",") : null)
+	const allOf = TAG_GROUPS.filter(
+		(group) => state.allOf?.includes(group) && new Set(state[group]).size >= 2,
+	)
+	set("all", allOf.length ? allOf.join(",") : null)
 	set("score", state.minScore ? String(state.minScore) : null)
 	set("match", state.minMatch ? String(state.minMatch) : null)
 	set(
@@ -525,6 +539,7 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 /** The Filters sheet's filters cleared; On my services and Not seen yet stay as they are. */
 export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	...state,
+	allOf: undefined,
 	years: undefined,
 	runtime: undefined,
 	sourceScores: undefined,

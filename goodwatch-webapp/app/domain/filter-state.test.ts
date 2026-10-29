@@ -537,3 +537,28 @@ test("each new group drops independently and any service overrides saved service
 	assert.equal(parse("services=mine").onMyServices, true)
 	assert.deepEqual(parse("services=8,9").services, [8, 9])
 })
+
+test("tag groups opt into all of, with canonical round trips and old URLs unchanged", () => {
+	assert.equal(parse("moods=funny,feelgood").allOf, undefined)
+	const state = parse(
+		"moods=funny,feelgood&themes=war,future&styles=animated&genres=Drama,Comedy&all=genres,moods,unknown,themes,moods,styles",
+	)
+	assert.deepEqual(state.allOf, ["moods", "themes", "genres"])
+	const params = filterStateToParams(state, defaults)
+	assert.equal(params.get("all"), "moods,themes,genres")
+	assert.deepEqual(filterStateFromParams(params, defaults), state)
+	for (const query of [
+		"all=unknown",
+		"moods=funny&all=moods",
+		"moods=funny,funny&all=moods",
+		"all=genres",
+	])
+		assert.equal(parse(query).allOf, undefined)
+	const stale = filterStateToParams(
+		{ ...state, moods: [], themes: [], genres: [] },
+		defaults,
+		params,
+	)
+	assert.equal(stale.has("all"), false)
+	assert.equal(clearSecondaryFilters(state).allOf, undefined)
+})

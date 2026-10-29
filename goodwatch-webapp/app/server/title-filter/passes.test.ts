@@ -995,3 +995,257 @@ test("any service uses the country's offers and shares the services recovery", (
 		plain,
 	)
 })
+
+test("all-of masks, counts and recoveries agree with brute force for every tag group", () => {
+	const groups = ["moods", "themes", "styles", "genres"] as const
+	// Cross every combination of three tags in each group; genres also exercise the high unsigned bit.
+	const size = 8 ** groups.length
+	const genreNames = Array.from({ length: 32 }, (_, bit) => `genre-${bit}`)
+	const names = {
+		moods: MOOD_KEYS,
+		themes: THEME_KEYS,
+		styles: STYLE_KEYS,
+		genres: genreNames,
+	}
+	const generated = {
+		...columns,
+		pointIds: Float64Array.from({ length: size }, (_, row) => MOVIE + row),
+		moods: Uint16Array.from({ length: size }, (_, row) => row & 7),
+		themes: Uint16Array.from({ length: size }, (_, row) => (row >> 3) & 7),
+		styles: Uint16Array.from({ length: size }, (_, row) => (row >> 6) & 7),
+		genres: Uint32Array.from(
+			{ length: size },
+			(_, row) => ((row >> 9) & 3) | (row & 2048 ? 0x80000000 : 0),
+		),
+		genreNames,
+		scores: Uint8Array.from({ length: size }, (_, row) =>
+			row % 5 === 0 ? 60 : 80,
+		),
+		flags: new Uint8Array(size),
+	}
+	const selected = { moods: 3, themes: 3, styles: 3, genres: 0x80000001 }
+	const rows = [...Array(size).keys(), -1]
+	const base: PassInput = {
+		columns: generated,
+		rows: Int32Array.from(rows),
+		keys: Float64Array.from(rows, (row) => MOVIE + row),
+		services: { kind: "column", kept: null, onMyServices: false },
+		notSeen: null,
+		seenOrSkipped: { keys: new Set(), rows: new Uint8Array(size) },
+		type: "all",
+		anime: "any",
+		...selected,
+		genresChosen: true,
+		minScore: 70,
+		minMatch: 0,
+		matches: null,
+		released: null,
+		releasedOptions: { any: null },
+		similarTo: [],
+		people: [],
+		legacy: null,
+		ratings: null,
+	}
+	for (const allOf of [[], [...groups], ["moods", "genres"]] as NonNullable<
+		PassInput["allOf"]
+	>[]) {
+		const accepts = (
+			row: number,
+			group: (typeof groups)[number],
+			mask = selected[group],
+		) => {
+			if (!mask) return true
+			if (row < 0) return false
+			const bits = generated[group][row] >>> 0
+			const wanted = mask >>> 0
+			return allOf.includes(group)
+				? (bits & wanted) >>> 0 === wanted
+				: (bits & wanted) !== 0
+		}
+		const scorePasses = (row: number) => row >= 0 && generated.scores[row] >= 70
+		const out = runPasses({ ...base, allOf })
+		assert.deepEqual(
+			Array.from(out.passing),
+			rows.flatMap((row, i) =>
+				scorePasses(row) && groups.every((g) => accepts(row, g)) ? [i] : [],
+			),
+		)
+		for (const group of groups) {
+			const others = rows.filter(
+				(row) =>
+					scorePasses(row) &&
+					groups.every((g) => g === group || accepts(row, g)),
+			)
+			const recovery = others.filter((row) => !accepts(row, group)).length
+			assert.equal(
+				out.recoveries.find((r) => r.filter === group)?.titles ?? 0,
+				recovery,
+			)
+			names[group].forEach((name, bit) => {
+				const option = 1 << bit
+				const chosen = selected[group]
+				const wanted = allOf.includes(group)
+					? chosen & option
+						? chosen & ~option
+						: chosen | option
+					: chosen ^ option
+				assert.equal(
+					out.optionCounts[group][name],
+					others.filter((row) => accepts(row, group, wanted)).length,
+					`${allOf}: ${group} ${name}`,
+				)
+			})
+		}
+	}
+	// Unknown genres cannot silently disappear from an all-of intersection.
+	const missing = runPasses({
+		...base,
+		allOf: ["genres"],
+		genresMissing: true,
+	})
+	assert.equal(missing.passing.length, 0)
+	assert.ok(
+		Object.values(missing.optionCounts.genres).every((count) => count === 0),
+	)
+	// Folded pairs are OR units inside an AND group, in either counting path.
+	const pairs = [
+		["Action", "Action & Adventure"],
+		["Adventure", "Action & Adventure"],
+		["Science Fiction", "Sci-Fi & Fantasy"],
+		["Fantasy", "Sci-Fi & Fantasy"],
+		["War", "War & Politics"],
+	]
+	for (const [movie, tv] of pairs) {
+		for (const width of [4, 32]) {
+			const genreNames = [
+				movie,
+				tv,
+				"Drama",
+				"Romance",
+				...Array.from({ length: width - 4 }, (_, i) => `other-${i}`),
+			]
+			const genreRows = Array.from({ length: 16 }, (_, bits) => bits)
+			const pairColumns = {
+				...columns,
+				genreNames,
+				genres: Uint32Array.from(genreRows),
+			}
+			for (const picked of [1, 2, 3]) {
+				const pairInput = {
+					...base,
+					columns: pairColumns,
+					rows: Int32Array.from(genreRows, (_, row) => row),
+					keys: Float64Array.from(genreRows, (_, row) => MOVIE + row),
+					moods: 0,
+					themes: 0,
+					styles: 0,
+					minScore: 0,
+					genres: picked | 4,
+				}
+				const out = runPasses({ ...pairInput, allOf: ["genres"] })
+				const hasPair = (bits: number) => !!(bits & 3)
+				const hasDrama = (bits: number) => !!(bits & 4)
+				assert.deepEqual(
+					Array.from(out.passing),
+					genreRows.filter((bits) => hasPair(bits) && hasDrama(bits)),
+					`${movie}: ${picked}, ${width}`,
+				)
+				assert.equal(
+					out.optionCounts.genres[movie],
+					genreRows.filter(hasDrama).length,
+				)
+				assert.equal(
+					out.optionCounts.genres[tv],
+					genreRows.filter(hasDrama).length,
+				)
+				assert.equal(
+					out.optionCounts.genres.Drama,
+					genreRows.filter(hasPair).length,
+				)
+				assert.equal(
+					out.optionCounts.genres.Romance,
+					genreRows.filter(
+						(bits) => hasPair(bits) && hasDrama(bits) && !!(bits & 8),
+					).length,
+				)
+				assert.equal(
+					out.recoveries.find((r) => r.filter === "genres")?.titles,
+					genreRows.filter((bits) => !hasPair(bits) || !hasDrama(bits)).length,
+				)
+				const any = runPasses(pairInput)
+				assert.deepEqual(
+					Array.from(any.passing),
+					genreRows.filter((bits) => !!(bits & (picked | 4))),
+				)
+			}
+		}
+	}
+
+	// The shared TV names can serve two separate movie-genre units. A TV-only
+	// pick is one broad unit; it never requires both movie genres.
+	for (const family of [
+		["Action", "Adventure", "Action & Adventure"],
+		["Science Fiction", "Fantasy", "Sci-Fi & Fantasy"],
+	]) {
+		const genreNames = [...family, "Drama"]
+		const genreRows = Array.from({ length: 16 }, (_, bits) => bits)
+		for (const [chosen, requirements] of [
+			[1 | 8, [1 | 4, 8]],
+			[2 | 8, [2 | 4, 8]],
+			[4 | 8, [1 | 2 | 4, 8]],
+			[1 | 2 | 4 | 8, [1 | 4, 2 | 4, 8]],
+		] as const) {
+			const out = runPasses({
+				...base,
+				columns: {
+					...columns,
+					genreNames,
+					genres: Uint32Array.from(genreRows),
+				},
+				rows: Int32Array.from(genreRows, (_, row) => row),
+				keys: Float64Array.from(genreRows, (_, row) => MOVIE + row),
+				moods: 0,
+				themes: 0,
+				styles: 0,
+				minScore: 0,
+				genres: chosen,
+				allOf: ["genres"],
+			})
+			assert.deepEqual(
+				Array.from(out.passing),
+				genreRows.filter((bits) =>
+					requirements.every((unit) => !!(bits & unit)),
+				),
+			)
+			assert.equal(
+				out.optionCounts.genres.Drama,
+				genreRows.filter((bits) =>
+					requirements.slice(0, -1).every((unit) => !!(bits & unit)),
+				).length,
+			)
+			if (chosen === (4 | 8)) {
+				for (const name of family)
+					assert.equal(out.optionCounts.genres[name], 8)
+			}
+		}
+	}
+	// The selected movie name can be absent while its TV partner still matches.
+	const absentAlias = runPasses({
+		...base,
+		columns: {
+			...columns,
+			genreNames: ["Action & Adventure", "Adventure", "Drama"],
+			genres: Uint32Array.from([1, 2, 5, 6]),
+		},
+		rows: Int32Array.from([0, 1, 2, 3]),
+		keys: Float64Array.from([MOVIE, MOVIE + 1, MOVIE + 2, MOVIE + 3]),
+		moods: 0,
+		themes: 0,
+		styles: 0,
+		minScore: 0,
+		genres: 5,
+		genrePicks: ["Action", "Drama"],
+		allOf: ["genres"],
+	})
+	assert.deepEqual(Array.from(absentAlias.passing), [2])
+})

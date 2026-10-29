@@ -17,6 +17,7 @@ import {
 	type ForYouSurface,
 	rankForYou,
 } from "~/domain/for-you"
+import { GENRE_FOLDS } from "~/domain/genre-fold"
 import { MOOD_KEYS } from "~/domain/moods"
 import { STYLE_KEYS, THEME_KEYS, maskOfKeys } from "~/domain/themes-styles"
 import {
@@ -91,7 +92,8 @@ export interface FilterResult {
 	/**
 	 * What each option would leave, the other filters unchanged. Keys: services `all`, `any`, `mine`, and service ids;
 	 * notSeenYet `on`, `off`; type `all`, `movie`, `show`; anime `any`, `only`, `none`; moods, themes and styles by
-	 * key; genres by name;
+	 * key; genres by name. Tag options toggle under any of; under all of picked options count removing their unit,
+	 * unpicked options count adding their unit;
 	 * minScore `0`, `60`, `70`, `80`; minMatch `0`, `70`, `80`, `90`; released by option; similarTo and people only for the chosen options (what
 	 * removing each would leave); legacy `on`, `off`.
 	 * years, runtime, sourceScores and scoreGap are empty: their SQL sets are only read for active choices.
@@ -254,6 +256,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		const b = snapshot.columns.genreNames.indexOf(name)
 		return b < 0 ? bits : bits | (1 << b)
 	}, 0)
+
 	const seenOrSkipped = titleSet(
 		new Set([...viewer.seen, ...viewer.skipped]),
 		snapshot,
@@ -295,6 +298,20 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		),
 		themes: maskOfKeys(THEME_KEYS, state.themes),
 		styles: maskOfKeys(STYLE_KEYS, state.styles),
+		allOf: state.allOf,
+		genrePicks: state.genres,
+		// An absent alias still matches through its folded partner under all of.
+		genresMissing: state.genres.some(
+			(name) =>
+				!snapshot.columns.genreNames.includes(name) &&
+				!GENRE_FOLDS.some(
+					(fold) =>
+						fold.names.includes(name) &&
+						fold.names.some((partner) =>
+							snapshot.columns.genreNames.includes(partner),
+						),
+				),
+		),
 		genres: genreBits,
 		genresChosen: state.genres.length > 0,
 		minScore: state.minScore,

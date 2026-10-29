@@ -433,3 +433,17 @@ test("range, source score, gap and any-service state have distinct stable cache 
 		}),
 	)
 })
+
+test("all-of tag modes have separate shared filter cache entries", () => {
+	const any = input()
+	any.state.moods = ["funny", "feelgood"]
+	const all = {
+		...any,
+		state: {
+			...any.state,
+			allOf: ["moods"] as NonNullable<FilterState["allOf"]>,
+		},
+	}
+	assert.notEqual(discoverFilterKey(any), discoverFilterKey(all))
+	assert.match(discoverFilterKey(all)!, /discover-filters:v3/)
+})

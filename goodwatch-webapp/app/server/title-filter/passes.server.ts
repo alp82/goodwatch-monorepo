@@ -13,9 +13,11 @@ import {
 import {
 	FILTER_NAMES,
 	type FilterName,
+	type TagGroup,
 	MIN_MATCHES,
 	MIN_SCORES,
 } from "~/domain/filter-state"
+import { GENRE_FOLDS } from "~/domain/genre-fold"
 import { MOOD_KEYS } from "~/domain/moods"
 import { STYLE_KEYS, THEME_KEYS } from "~/domain/themes-styles"
 import type { AnimeChoice } from "~/domain/title-type"
@@ -171,14 +173,19 @@ export interface PassInput {
 	type: "all" | "movie" | "show"
 	/** A title the snapshot doesn't hold counts as not anime. */
 	anime: AnimeChoice
-	/** Mood bits a title needs one of; 0 when off. */
+	/** Mood bits a title needs one of (all when listed in allOf); 0 when off. */
 	moods: number
-	/** Theme bits a title needs one of; 0 when off. */
+	/** Theme bits a title needs one of (all when listed in allOf); 0 when off. */
 	themes: number
-	/** Style bits a title needs one of; 0 when off. */
+	/** Style bits a title needs one of (all when listed in allOf); 0 when off. */
 	styles: number
-	/** Genre bits a title needs one of; 0 when off. `genresChosen` says whether the filter is on (a genre not in the table has no bit). */
+	/** Genre bits a title needs one of (all when listed in allOf); 0 when off. `genresChosen` says whether the filter is on (a genre not in the table has no bit). */
 	genres: number
+	allOf?: TagGroup[]
+	/** A chosen genre absent from the snapshot cannot match under all of. */
+	genresMissing?: boolean
+	/** Original names preserve folded picks when an alias is absent from the snapshot. */
+	genrePicks?: readonly string[]
 	genresChosen: boolean
 	minScore: number
 	/** The least taste match; 0 when off, and always 0 without `matches`. */
@@ -321,6 +328,88 @@ export function runPasses(input: PassInput): PassOutput {
 			? services.anyService || keptServices !== null
 			: services.kept !== null
 
+	const allOf = new Set(input.allOf)
+	const moodsAll = allOf.has("moods")
+	const themesAll = allOf.has("themes")
+	const stylesAll = allOf.has("styles")
+	const genresAll = allOf.has("genres")
+	const genresDead = genresAll && !!input.genresMissing
+	// A folded pair is one requirement. A combined TV name on its own matches
+	// either movie genre; alongside movie picks it belongs to those picked units.
+	const genreUnits: number[] = []
+	const genreOptionUnits: number[] = []
+	let genreChosenUnits = 0
+	if (genresAll) {
+		const names = columns.genreNames
+		const bitOf = (name: string) => {
+			const b = names.indexOf(name)
+			return b < 0 ? 0 : (1 << b) >>> 0
+		}
+		const picked = new Set(
+			input.genrePicks ?? names.filter((_, b) => genreMask & (1 << b)),
+		)
+		const covered = new Set<string>()
+		for (const fold of GENRE_FOLDS) {
+			if (!picked.has(fold.names[0])) continue
+			const mask =
+				fold.names.reduce((bits, name) => bits | bitOf(name), 0) >>> 0
+			const unit = genreUnits.length
+			genreUnits.push(mask)
+			genreChosenUnits |= 1 << unit
+			for (const name of fold.names) {
+				covered.add(name)
+				const b = names.indexOf(name)
+				if (b >= 0 && genreOptionUnits[b] === undefined)
+					genreOptionUnits[b] = unit
+			}
+		}
+		for (const name of picked) {
+			if (covered.has(name)) continue
+			const related = GENRE_FOLDS.filter((fold) => fold.names[1] === name)
+			if (!related.length) continue
+			const unit = genreUnits.length
+			const members = [...new Set(related.flatMap((fold) => fold.names))]
+			genreUnits.push(
+				members.reduce((bits, member) => bits | bitOf(member), 0) >>> 0,
+			)
+			genreChosenUnits |= 1 << unit
+			for (const member of members) {
+				covered.add(member)
+				const b = names.indexOf(member)
+				if (b >= 0) genreOptionUnits[b] = unit
+			}
+		}
+		for (let b = 0; b < names.length; b++) {
+			if (covered.has(names[b])) continue
+			const related = GENRE_FOLDS.filter((fold) =>
+				fold.names.includes(names[b]),
+			)
+			const mask = related.length
+				? related.reduce(
+						(bits, fold) =>
+							bits | fold.names.reduce((m, name) => m | bitOf(name), 0),
+						0,
+					)
+				: 1 << b
+			let unit = genreUnits.indexOf(mask >>> 0)
+			if (unit < 0) {
+				unit = genreUnits.length
+				genreUnits.push(mask >>> 0)
+			}
+			genreOptionUnits[b] = unit
+			if (genreMask & (1 << b)) genreChosenUnits |= 1 << unit
+		}
+	}
+	genreChosenUnits >>>= 0
+	const genreBitsOf = (bits: number) => {
+		let units = 0
+		for (let u = 0; u < genreUnits.length; u++)
+			if (bits & genreUnits[u]) units |= 1 << u
+		return units >>> 0
+	}
+	const hasPicks = (bits: number, chosen: number, requireAll: boolean) =>
+		requireAll ? (bits & chosen) >>> 0 === chosen >>> 0 : (bits & chosen) !== 0
+
 	// Pass 1: fail masks.
 	for (let i = 0; i < n; i++) {
 		const row = rows[i]
@@ -332,13 +421,22 @@ export function runPasses(input: PassInput): PassOutput {
 			mask |= BIT.type
 		if (animeWanted >= 0 && (isAnime(i) ? 1 : 0) !== animeWanted)
 			mask |= BIT.anime
-		if (moodMask && (row < 0 || (moods[row] & moodMask) === 0))
+		if (moodMask && (row < 0 || !hasPicks(moods[row], moodMask, moodsAll)))
 			mask |= BIT.moods
-		if (themeMask && (row < 0 || (themes[row] & themeMask) === 0))
+		if (themeMask && (row < 0 || !hasPicks(themes[row], themeMask, themesAll)))
 			mask |= BIT.themes
-		if (styleMask && (row < 0 || (styles[row] & styleMask) === 0))
+		if (styleMask && (row < 0 || !hasPicks(styles[row], styleMask, stylesAll)))
 			mask |= BIT.styles
-		if (genresOn && (row < 0 || (genres[row] & genreMask) === 0))
+		if (
+			genresOn &&
+			(row < 0 ||
+				genresDead ||
+				!hasPicks(
+					genresAll ? genreBitsOf(genres[row]) : genres[row],
+					genresAll ? genreChosenUnits : genreMask,
+					genresAll,
+				))
+		)
 			mask |= BIT.genres
 		if (
 			minScore > 0 &&
@@ -458,7 +556,7 @@ export function runPasses(input: PassInput): PassOutput {
 				}
 			}
 			if (onMine) mineCount++
-			if (counts.observe(hits, hit))
+			if (counts!.observe(hits, hit))
 				for (let e = from; e < to; e++) counts.add[entries[e]]++
 		}
 		const serviceCounts: Record<string, number> = {
@@ -491,20 +589,37 @@ export function runPasses(input: PassInput): PassOutput {
 		optionCounts.services = services.onMyServices ? { all, mine } : { all }
 	}
 
-	// Moods, themes, styles and genres: OR within the group, one bit per option.
+	// Tag groups: any of by default, opt-in all of; one bit per option.
 	const bitGroup = (
+		group: TagGroup,
 		bit: number,
 		column: Uint16Array | Uint32Array,
 		chosenMask: number,
 		names: readonly string[],
 	) => {
-		const counts = new ToggleCounts(names.length)
+		const requireAll = allOf.has(group)
+		const folded = group === "genres" && requireAll
+		if (folded) chosenMask = genreChosenUnits
+		const counts = requireAll ? null : new ToggleCounts(names.length)
 		const chosenCount = popcount(chosenMask)
+		const intersection = requireAll ? new Uint32Array(names.length) : null
 		const observe = (bits: number, titles: number) => {
+			if (intersection) {
+				if (group === "genres" && genresDead) return
+				if (folded) bits = genreBitsOf(bits)
+				const missing = (chosenMask & ~bits) >>> 0
+				if (missing === 0) {
+					for (let m = bits; m; m = (m & (m - 1)) >>> 0)
+						intersection[lowestBit(m)] += titles
+				} else if (popcount(missing) === 1) {
+					intersection[lowestBit(missing)] += titles
+				}
+				return
+			}
 			const hits = (bits & chosenMask) >>> 0
-			if (counts.observe(popcount(hits), hits ? lowestBit(hits) : 0, titles))
+			if (counts!.observe(popcount(hits), hits ? lowestBit(hits) : 0, titles))
 				for (let m = bits; m; m = (m & (m - 1)) >>> 0)
-					counts.add[lowestBit(m)] += titles
+					counts!.add[lowestBit(m)] += titles
 		}
 		if (names.length <= 16) {
 			// Few options: count the titles per combination of options first, then each combination once.
@@ -525,14 +640,29 @@ export function runPasses(input: PassInput): PassOutput {
 		}
 		const out: Record<string, number> = {}
 		names.forEach((name, b) => {
-			out[name] = counts.count(b, (chosenMask & (1 << b)) !== 0, chosenCount)
+			out[name] = intersection
+				? intersection[folded ? genreOptionUnits[b] : b]
+				: counts!.count(b, (chosenMask & (1 << b)) !== 0, chosenCount)
 		})
 		return out
 	}
-	optionCounts.moods = bitGroup(BIT.moods, moods, moodMask, MOOD_KEYS)
-	optionCounts.themes = bitGroup(BIT.themes, themes, themeMask, THEME_KEYS)
-	optionCounts.styles = bitGroup(BIT.styles, styles, styleMask, STYLE_KEYS)
+	optionCounts.moods = bitGroup("moods", BIT.moods, moods, moodMask, MOOD_KEYS)
+	optionCounts.themes = bitGroup(
+		"themes",
+		BIT.themes,
+		themes,
+		themeMask,
+		THEME_KEYS,
+	)
+	optionCounts.styles = bitGroup(
+		"styles",
+		BIT.styles,
+		styles,
+		styleMask,
+		STYLE_KEYS,
+	)
 	optionCounts.genres = bitGroup(
+		"genres",
 		BIT.genres,
 		genres,
 		genreMask,

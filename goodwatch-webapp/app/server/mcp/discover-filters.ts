@@ -1,6 +1,7 @@
 import * as z from "zod4"
 import { CONTENT_KINDS, MAX_AGE } from "../../domain/age-content.ts"
 import {
+	TAG_GROUPS,
 	SCORE_GAPS,
 	SOURCE_KEYS,
 	type FilterState,
@@ -41,7 +42,7 @@ export const discoverFilters = {
 		])
 		.optional()
 		.describe(
-			"Exact genre names from get_discover_filters; a single name or an array, matching any selected genre.",
+			"Exact genre names from get_discover_filters; a single name or an array, matching any selected genre unless genres is in match_all.",
 		),
 	min_year: z.number().int().min(1800).max(2100).optional(),
 	max_year: z.number().int().min(1800).max(2100).optional(),
@@ -76,9 +77,34 @@ export const discoverFilters = {
 			"Specific provider IDs from get_discover_filters, in your saved country. Matches any selected provider; mutually exclusive with on_my_services=true.",
 		),
 	anime: z.enum(["any", "only", "none"]).optional(),
-	moods: z.array(z.enum(MOOD_KEYS)).max(3).optional(),
-	themes: z.array(z.enum(THEME_KEYS)).max(3).optional(),
-	styles: z.array(z.enum(STYLE_KEYS)).max(3).optional(),
+	match_all: z
+		.array(z.enum(TAG_GROUPS))
+		.max(TAG_GROUPS.length)
+		.optional()
+		.describe(
+			"Require all picks in these tag groups (moods, themes, styles, genres). Other groups match any pick. Ignored for fewer than two distinct picks.",
+		),
+	moods: z
+		.array(z.enum(MOOD_KEYS))
+		.max(3)
+		.optional()
+		.describe(
+			"Match any selected moods; include moods in match_all to require every pick.",
+		),
+	themes: z
+		.array(z.enum(THEME_KEYS))
+		.max(3)
+		.optional()
+		.describe(
+			"Match any selected themes; include themes in match_all to require every pick.",
+		),
+	styles: z
+		.array(z.enum(STYLE_KEYS))
+		.max(3)
+		.optional()
+		.describe(
+			"Match any selected styles; include styles in match_all to require every pick.",
+		),
 	minimum_match: z
 		.union(MIN_MATCHES.map((n) => z.literal(n)))
 		.optional()
@@ -154,6 +180,11 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 		released: args.released ?? "any",
 		...(args.age_limit === undefined ? {} : { ageLimit: args.age_limit }),
 	}
+	const allOf = TAG_GROUPS.filter(
+		(group) =>
+			args.match_all?.includes(group) && new Set(state[group]).size >= 2,
+	)
+	if (allOf.length) state.allOf = allOf
 	if (args.min_year !== undefined || args.max_year !== undefined) {
 		state.years = {
 			...(args.min_year === undefined ? {} : { min: args.min_year }),

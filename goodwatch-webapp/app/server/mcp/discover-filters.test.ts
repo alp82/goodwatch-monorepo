@@ -218,3 +218,41 @@ test("MCP exposes source scores, gap and any-service through the shared codec", 
 	)
 	assert.notEqual(discoverViewKey(args), discoverViewKey({}))
 })
+
+test("match_all round trips through page_url and separates cache identities", () => {
+	const args = schema.parse({
+		moods: ["funny", "feelgood"],
+		genres: ["Drama", "Comedy"],
+		match_all: ["genres", "moods", "styles", "moods"],
+	})
+	const params = discoverParams(args, false)
+	assert.equal(params.get("all"), "moods,genres")
+	assert.deepEqual(
+		filterStateFromParams(params, { onMyServices: false, notSeenYet: false }),
+		discoverView(args, false).state,
+	)
+	const result = withPageLink(
+		"https://goodwatch.app",
+		"discover_titles",
+		args,
+		{},
+	)
+	assert.equal(
+		new URL(String(result.page_url)).searchParams.get("all"),
+		"moods,genres",
+	)
+	assert.notEqual(
+		discoverViewKey(args),
+		discoverViewKey({ ...args, match_all: undefined }),
+	)
+	assert.equal(
+		discoverViewKey(args),
+		discoverViewKey({ ...args, match_all: ["moods", "genres"] }),
+	)
+	assert.equal(
+		discoverViewKey({ moods: ["funny"], match_all: ["moods"] }),
+		discoverViewKey({ moods: ["funny"] }),
+	)
+	assert.deepEqual(filterArgs(args).match_all, args.match_all)
+	assert.equal(schema.safeParse({ match_all: ["unknown"] }).success, false)
+})

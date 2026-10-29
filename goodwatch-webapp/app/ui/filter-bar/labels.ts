@@ -272,13 +272,21 @@ export function recoveryLabel(
 		case "anime":
 			return hidesAnime ? `${n} anime` : `${n} that aren't anime`
 		case "moods":
-			return `${n} in other moods`
+			return state.allOf?.includes("moods")
+				? `${n} without every mood`
+				: `${n} in other moods`
 		case "themes":
-			return `${n} in other themes`
+			return state.allOf?.includes("themes")
+				? `${n} without every theme`
+				: `${n} in other themes`
 		case "styles":
-			return `${n} in other styles`
+			return state.allOf?.includes("styles")
+				? `${n} without every style`
+				: `${n} in other styles`
 		case "genres":
-			return `${n} in other genres`
+			return state.allOf?.includes("genres")
+				? `${n} without every genre`
+				: `${n} in other genres`
 		case "minScore":
 			return `${n} below ${state.minScore}`
 		case "minMatch":
@@ -437,34 +445,57 @@ export function activeChips(
 			label: ANIME_STATE_NAMES[state.anime],
 			remove: (s) => ({ ...s, anime: "any" }),
 		})
-	for (const mood of state.moods)
+	const allGroups = new Set(
+		state.allOf?.filter((group) => state[group].length >= 2),
+	)
+	for (const group of allGroups) {
+		const labels =
+			group === "moods"
+				? state.moods.map((key) => MOOD_BY_KEY[key]?.name ?? key)
+				: group === "themes"
+					? state.themes.map((key) => THEME_BY_KEY[key]?.name ?? key)
+					: group === "styles"
+						? state.styles.map((key) => STYLE_BY_KEY[key]?.name ?? key)
+						: state.genres
 		chips.push({
-			key: `mood-${mood}`,
-			group: "moods",
-			label: MOOD_BY_KEY[mood]?.name ?? mood,
-			remove: (s) => ({ ...s, moods: s.moods.filter((m) => m !== mood) }),
+			key: group,
+			group,
+			label: labels.join(" and "),
+			remove: (s) => dropFilter(s, group),
 		})
-	for (const theme of state.themes)
-		chips.push({
-			key: `theme-${theme}`,
-			group: "themes",
-			label: THEME_BY_KEY[theme]?.name ?? theme,
-			remove: (s) => ({ ...s, themes: s.themes.filter((t) => t !== theme) }),
-		})
-	for (const style of state.styles)
-		chips.push({
-			key: `style-${style}`,
-			group: "styles",
-			label: STYLE_BY_KEY[style]?.name ?? style,
-			remove: (s) => ({ ...s, styles: s.styles.filter((t) => t !== style) }),
-		})
-	for (const genre of state.genres)
-		chips.push({
-			key: `genre-${genre}`,
-			group: "genres",
-			label: genre,
-			remove: (s) => ({ ...s, genres: s.genres.filter((g) => g !== genre) }),
-		})
+	}
+	if (!allGroups.has("moods"))
+		for (const mood of state.moods)
+			chips.push({
+				key: `mood-${mood}`,
+				group: "moods",
+				label: MOOD_BY_KEY[mood]?.name ?? mood,
+				remove: (s) => ({ ...s, moods: s.moods.filter((m) => m !== mood) }),
+			})
+	if (!allGroups.has("themes"))
+		for (const theme of state.themes)
+			chips.push({
+				key: `theme-${theme}`,
+				group: "themes",
+				label: THEME_BY_KEY[theme]?.name ?? theme,
+				remove: (s) => ({ ...s, themes: s.themes.filter((t) => t !== theme) }),
+			})
+	if (!allGroups.has("styles"))
+		for (const style of state.styles)
+			chips.push({
+				key: `style-${style}`,
+				group: "styles",
+				label: STYLE_BY_KEY[style]?.name ?? style,
+				remove: (s) => ({ ...s, styles: s.styles.filter((t) => t !== style) }),
+			})
+	if (!allGroups.has("genres"))
+		for (const genre of state.genres)
+			chips.push({
+				key: `genre-${genre}`,
+				group: "genres",
+				label: genre,
+				remove: (s) => ({ ...s, genres: s.genres.filter((g) => g !== genre) }),
+			})
 	if (state.minScore)
 		chips.push({
 			key: "score",

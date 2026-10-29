@@ -382,3 +382,43 @@ test("range, source, gap and any-service chips use the agreed wording and remove
 	] as const)
 		assert.equal(recoveryLabel(filter, 12, chosen), `12 ${wording}`)
 })
+
+test("all-of tag chips join picks with and; any-of chips retain their individual labels", () => {
+	const picks = {
+		...state,
+		moods: ["funny", "feelgood"] as typeof state.moods,
+		genres: ["Drama", "Comedy"],
+	}
+	const chips = activeChips({ ...picks, allOf: ["moods", "genres"] })
+	assert.equal(
+		chips.find((chip) => chip.group === "moods")?.label,
+		"Funny and Feel-good",
+	)
+	assert.equal(
+		chips.find((chip) => chip.group === "genres")?.label,
+		"Drama and Comedy",
+	)
+	assert.deepEqual(chips[0].remove(picks).moods, [])
+	assert.deepEqual(
+		activeChips(picks)
+			.filter((chip) => chip.group === "moods")
+			.map((chip) => chip.label),
+		["Funny", "Feel-good"],
+	)
+})
+
+test("all-of recoveries describe titles missing any required tag", () => {
+	for (const [group, singular] of [
+		["moods", "mood"],
+		["themes", "theme"],
+		["styles", "style"],
+		["genres", "genre"],
+	] as const) {
+		const filtered = { ...state, allOf: [group] }
+		assert.equal(
+			recoveryLabel(group, 12, filtered),
+			`12 without every ${singular}`,
+		)
+		assert.equal(recoveryLabel(group, 12, filtered, true), "12 more")
+	}
+})

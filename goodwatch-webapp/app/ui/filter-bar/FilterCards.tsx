@@ -19,6 +19,7 @@ import {
 	type SourceKey,
 	dropFilter,
 } from "~/domain/filter-state"
+import { GENRE_FOLDS } from "~/domain/genre-fold"
 import { productionCountryName } from "~/domain/production-country"
 import { goodwatchVibeIndex } from "~/utils/ratings"
 import type { TitleKey } from "~/utils/title-key"
@@ -278,14 +279,7 @@ function TypeControl({ ctx }: { ctx: Ctx }) {
 	)
 }
 
-/** TMDB gives shows their own combined genres; each folds into the movie genres it names. Genres match any of. */
-const GENRE_FOLDS: { label: string; names: string[] }[] = [
-	{ label: "Action", names: ["Action", "Action & Adventure"] },
-	{ label: "Adventure", names: ["Adventure", "Action & Adventure"] },
-	{ label: "Sci-Fi", names: ["Science Fiction", "Sci-Fi & Fantasy"] },
-	{ label: "Fantasy", names: ["Fantasy", "Sci-Fi & Fantasy"] },
-	{ label: "War", names: ["War", "War & Politics"] },
-]
+/** Each folded option is one genre unit under all of. */
 const FOLDED = new Set(GENRE_FOLDS.flatMap((f) => f.names))
 
 function genreOptions(ctx: Ctx): Option[] {
@@ -304,7 +298,11 @@ function genreOptions(ctx: Ctx): Option[] {
 			id: u.label,
 			label: u.label,
 			active: isOn(u),
-			count: parts.length ? parts.reduce((a, b) => a + b, 0) : null,
+			count: state.allOf?.includes("genres")
+				? (parts[0] ?? null)
+				: parts.length
+					? parts.reduce((a, b) => a + b, 0)
+					: null,
 			toggle: () => {
 				const on = units.filter((x) => (x === u ? !isOn(u) : isOn(x)))
 				ctx.set({ genres: [...new Set(on.flatMap((x) => x.names))] })
