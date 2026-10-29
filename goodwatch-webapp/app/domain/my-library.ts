@@ -1,3 +1,4 @@
+import { GUEST, type PathViewer, ratePath, statusHome } from "./member-paths.ts"
 // My library (#385): every title a member has marked, one status at a time. Want to see and Seen are the two main
 // choices; Watching, On hold, Dropped and Not rated are one step away in a drop-down. Pure and shared by the server
 // and the browser. The counts and the order of a list are made from the member data map alone; only the cards of
@@ -278,14 +279,10 @@ export function addedWords(
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Pages: My library is a hub, and each status's list is a page of its own under it.
+// List destinations in Watch and Taste. Legacy route helpers stay until the redirect routes move.
 
-export const LIBRARY_HUB = "/my-library"
-export const SCORES_PAGE = "/my-library/scores"
 /** Quick list, the rating flow's table of unrated titles. */
-export const QUICK_LIST_PAGE = "/taste/quiz?mode=quick"
-/** Your scores, last scored first: Quick list's way there. */
-export const SCORES_FROM_QUICK = `${SCORES_PAGE}?sort=rated`
+export const QUICK_LIST_PAGE = ratePath(GUEST, { mode: "quick" })
 
 /** The page of each status's list. */
 export const STATUS_SLUG: Record<LibraryStatus, string> = {
@@ -306,6 +303,7 @@ export const statusOfSlug = (slug: string | undefined): LibraryStatus | null =>
 /** The page of a status, with the list's sort, filter and search in the query. */
 export function statusPage(
 	choice: Pick<LibraryChoice, "status"> & Partial<LibraryChoice>,
+	viewer: PathViewer = GUEST,
 ): string {
 	const params = libraryParams({
 		sort: null,
@@ -314,8 +312,10 @@ export function statusPage(
 		...choice,
 	})
 	params.delete("status")
+	if (choice.status !== "want") params.delete("type")
 	const query = params.toString()
-	return `${LIBRARY_HUB}/${STATUS_SLUG[choice.status]}${query ? `?${query}` : ""}`
+	const path = statusHome(choice.status, choice.kind ?? "all", viewer)
+	return `${path}${query ? `?${query}` : ""}`
 }
 
 /** Where an old link with `?status=` goes now (it named one list of the single page); null when it has none. */

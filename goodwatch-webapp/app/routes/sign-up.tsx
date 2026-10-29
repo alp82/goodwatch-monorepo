@@ -1,3 +1,4 @@
+import { GUEST, tasteHome } from "~/domain/member-paths"
 import { getAuthPosters } from "~/server/auth-posters.server"
 import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
 import { discoveryReturnTo, referrerReturnTo } from "~/utils/account-transfer"
@@ -90,7 +91,7 @@ function SignedInMovesOn({ redirectUri }: { redirectUri: string }) {
 }
 
 /** Where a new account starts without a page to return to: the Taste page, which starts their taste. */
-const NEW_MEMBER_START = "/taste"
+const NEW_MEMBER_START = tasteHome(GUEST)
 
 /**
  * Where a new account goes: the return page the link named, else the page the person came from (a link clicked before

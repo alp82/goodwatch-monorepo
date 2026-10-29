@@ -364,7 +364,7 @@ test("The card view covers search, library, Watch next, errors and empty answers
 				episode: { code: "S2 E3", name: "What Is Dead May Never Die" },
 				match: 88,
 			},
-			page_url: `${origin}/my-shows`,
+			page_url: `${origin}/watch`,
 		},
 		origin,
 	)

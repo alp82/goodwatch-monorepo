@@ -74,7 +74,7 @@ test("the ledge is one big button, with My movies and My shows under it and as t
 	)
 	for (const [name, html] of all)
 		assert.equal(
-			html.match(/class="start-list-link"[^>]*href="\/my-movies"/g)?.length,
+			html.match(/class="start-list-link"[^>]*href="\/watch\/movies"/g)?.length,
 			2,
 			name,
 		)
@@ -134,7 +134,7 @@ test("doors never change height: every door has the same fixed height, open or n
 test("the open section's titles and its page are real links in the HTML", () => {
 	const full = rendered.full
 	const open = full.slice(full.indexOf('id="start-door-section"'))
-	assert.match(open, /href="\/my-shows"/)
+	assert.match(open, /href="\/watch"/)
 	assert.match(open, /href="\/show\/1-show-1"/)
 	assert.match(open, /S1 E1 · Pilot/)
 	// New members open Hot on socials: its ranked titles with why each is talked about.

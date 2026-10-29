@@ -173,10 +173,10 @@ test("Tonight says where a pick comes from and which one it is", () => {
 		line: "Free your mind.",
 	})
 	assert.equal(
-		tonightWords(pick({ href: "/my-movies" }), 1, 3).crumb,
+		tonightWords(pick({ href: "/watch/movies" }), 1, 3).crumb,
 		"From your Wishlist",
 	)
-	assert.equal(tonightWords(pick({ href: "/my-movies" }), 1, 3).kicker, "Pick 2 of 3")
+	assert.equal(tonightWords(pick({ href: "/watch/movies" }), 1, 3).kicker, "Pick 2 of 3")
 	// A guest's own pick is the last title on the Wishlist in their browser.
 	assert.equal(tonightWords(pick({ wished: true }), 0, 3).crumb, "From your Wishlist")
 	assert.equal(tonightWords(pick({ card: card({ tagline: null }) }), 0, 1).line, null)
@@ -185,7 +185,7 @@ test("Tonight says where a pick comes from and which one it is", () => {
 test("a member's next episode is named, with its own name in the title's line", () => {
 	const episode = (name: string | null): TvTonightPick => ({
 		card: card({ media_type: "show", title: "Slow Horses" }),
-		href: "/my-shows",
+		href: "/watch",
 		episode: { code: "S2 E4", name },
 	})
 	assert.deepEqual(tonightWords(episode("Cicada"), 0, 3), {

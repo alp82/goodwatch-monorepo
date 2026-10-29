@@ -1,3 +1,5 @@
+import { TASTE_FALLBACK_PATH } from "~/domain/member-paths"
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Where the footer links go, grouped into its four columns, with the icon and the line that the footer's caption
 // shows while a link is pointed at.
 import {
@@ -131,13 +133,13 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 			},
 			{
 				name: "Watch next",
-				href: "/watch-next",
+				href: WATCH_PATHS.tonight,
 				blurb: "Picks for tonight",
 				icon: PlayIcon,
 			},
 			{
 				name: "Taste",
-				href: "/taste",
+				href: TASTE_FALLBACK_PATH,
 				blurb: "Your taste fingerprint",
 				icon: FingerPrintIcon,
 			},

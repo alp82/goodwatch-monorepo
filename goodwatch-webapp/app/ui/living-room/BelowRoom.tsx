@@ -1,3 +1,4 @@
+import { TASTE_FALLBACK_PATH } from "~/domain/member-paths"
 import type { TalkedRow } from "~/domain/talked-about-now"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 // The section below the living room (#352): the start titles and the ways to browse GoodWatch, as plain
@@ -59,7 +60,7 @@ export const MAIN_HUBS = [
 		line: "A map of titles that belong together.",
 	},
 	{
-		href: "/taste",
+		href: TASTE_FALLBACK_PATH,
 		label: "Taste",
 		line: "Rate a few, get picks made for you.",
 	},

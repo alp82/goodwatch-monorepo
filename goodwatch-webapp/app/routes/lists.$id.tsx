@@ -1,3 +1,6 @@
+import { usePathViewer } from "~/ui/navigation/NavigationContext"
+import { myListsPathFor } from "~/ui/share-card/links"
+import { handleOf } from "~/domain/member-paths"
 import type { MetaFunction } from "@remix-run/node"
 import { Link, useFetcher, useLoaderData } from "@remix-run/react"
 import { useState } from "react"
@@ -17,6 +20,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => [
 	{ name: "robots", content: "noindex, nofollow" },
 ]
 export default function CollectionList() {
+	const viewer = usePathViewer()
 	const { list, titles, isOwner } = useLoaderData<typeof loader>()
 	const action = useFetcher<{
 		error?: string
@@ -39,7 +43,7 @@ export default function CollectionList() {
 	const catalog = new Map(titles.map((title) => [title.key, title]))
 	return (
 		<main className="mx-auto max-w-3xl space-y-6 px-4 py-8 text-gray-100">
-			<Link className="text-indigo-300 underline" to="/lists/mine">
+			<Link className="text-indigo-300 underline" to={myListsPathFor(handleOf(viewer))}>
 				My lists
 			</Link>
 			<h1 className="break-words text-3xl font-bold">{list.title}</h1>

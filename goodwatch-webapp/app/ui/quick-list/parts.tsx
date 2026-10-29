@@ -1,3 +1,5 @@
+import { ratePath, tasteTabFor } from "~/domain/member-paths"
+import { usePathViewer } from "~/ui/navigation/NavigationContext"
 // Quick list's pieces: the mode switch (shared with One at a time), the taste strip (the flow's taste bar in one
 // line), a row's three marks, the round selection check, the undo bar, and whether this screen selects rows.
 import {
@@ -10,13 +12,11 @@ import {
 	NoSymbolIcon,
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import { QUICK_LIST_PAGE, SCORES_FROM_QUICK } from "~/domain/my-library"
+import { QUICK_LIST_PAGE } from "~/domain/my-library"
 import { useSyncExternalStore } from "react"
 import {
-	FLOW_PATH,
 	type Milestone,
 	type NextStep,
-	TASTE_VIEW_PATH,
 	type Tally,
 	nextStepWords,
 	tasteBarWords,
@@ -32,6 +32,7 @@ export const QUICK_PATH = QUICK_LIST_PAGE
 
 /** One at a time | Quick list, above either mode. Each is its own address, so Back goes between them. */
 export function ModeSwitch({ mode }: { mode: "one" | "quick" }) {
+	const viewer = usePathViewer()
 	const seg = (on: boolean) =>
 		`flex h-9 items-center rounded-full px-3.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-amber-400 ${on ? "bg-white font-bold text-gray-950" : "text-gray-300 hover:text-white"}`
 	return (
@@ -40,10 +41,10 @@ export function ModeSwitch({ mode }: { mode: "one" | "quick" }) {
 			className="inline-flex shrink-0 rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10"
 			data-mode-switch
 		>
-			<Link to={FLOW_PATH} aria-current={mode === "one" ? "page" : undefined} className={seg(mode === "one")} preventScrollReset>
+			<Link to={ratePath(viewer)} aria-current={mode === "one" ? "page" : undefined} className={seg(mode === "one")} preventScrollReset>
 				{QUICK_WORDS.oneAtATime}
 			</Link>
-			<Link to={QUICK_PATH} aria-current={mode === "quick" ? "page" : undefined} className={seg(mode === "quick")} preventScrollReset>
+			<Link to={ratePath(viewer, { mode: "quick" })} aria-current={mode === "quick" ? "page" : undefined} className={seg(mode === "quick")} preventScrollReset>
 				{QUICK_WORDS.quick}
 			</Link>
 		</nav>
@@ -61,6 +62,7 @@ export function TasteStrip({
 	lit: milestone,
 	toScores = false,
 }: { tally: Tally; step: NextStep | null; lit: Milestone | null; toScores?: boolean }) {
+	const viewer = usePathViewer()
 	const step = toScores ? null : nextStep
 	const lit = toScores ? null : milestone
 	const on = lit != null
@@ -69,7 +71,7 @@ export function TasteStrip({
 	const { line } = words
 	return (
 		<Link
-			to={toScores ? SCORES_FROM_QUICK : TASTE_VIEW_PATH}
+			to={toScores ? tasteTabFor(viewer, "scores", { sort: "rated" }) : ratePath(viewer, { view: "taste" })}
 			prefetch={toScores ? "intent" : undefined}
 			className="group relative isolate flex h-12 min-w-0 items-center gap-2.5 overflow-hidden rounded-full bg-white/[0.03] pr-3 pl-1.5 ring-1 ring-white/10 hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-amber-400"
 			data-taste-strip

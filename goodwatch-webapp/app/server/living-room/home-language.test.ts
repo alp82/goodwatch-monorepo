@@ -18,10 +18,10 @@ const { registerHooks } = nodeModule as unknown as {
 	}): void
 }
 const sources = {
-	"/my-shows.server.ts": `export const getMyShows = async viewer => { globalThis.__tvLanguageViewers.push(viewer); return { continue: [], pickUp: [], start: [], waiting: [], onHold: [], dropped: [], total: 0 }; }`,
+	"/server/my-shows.server.ts": `export const getMyShows = async viewer => { globalThis.__tvLanguageViewers.push(viewer); return { continue: [], pickUp: [], start: [], waiting: [], onHold: [], dropped: [], total: 0 }; }`,
 	"/newly-available.server.ts": `export const getLandings = async () => ({ movies: [], shows: [] }); export const newOnOf = async () => new Map()`,
 	"/title-cards.server.ts": `export const getTitleCards = async () => []`,
-	"/watch-next.server.ts": `export const sortFactsOutsideSnapshot = async () => new Map(); export const planWatchNext = () => ({ head: [], entries: new Map(), total: 0, need: 0, heroFits: false, sort: "match" })`,
+	"/server/watch-next.server.ts": `export const sortFactsOutsideSnapshot = async () => new Map(); export const planWatchNext = () => ({ head: [], entries: new Map(), total: 0, need: 0, heroFits: false, sort: "match" })`,
 }
 registerHooks({
 	load(url, context, next) {

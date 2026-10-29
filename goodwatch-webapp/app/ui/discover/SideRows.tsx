@@ -1,3 +1,4 @@
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Sides of you on Discover (#671): while For you is on, a row per group of the member's taste and a row of the titles
 // that fit none ("More for you"). Groups keep the order the server gives; "More for you" always comes last.
 // Inside a row, titles keep the list's order. A group shows its trait name and the loved titles that stand for it, with
@@ -235,7 +236,7 @@ function SideHeader({
 				>
 					{side.moods.length > 0 ? (
 						<Link
-							to={`/watch-next?moods=${side.moods.join(",")}`}
+							to={`${WATCH_PATHS.tonight}?moods=${side.moods.join(",")}`}
 							prefetch="intent"
 							className="text-sm font-semibold text-amber-200 underline-offset-2 hover:text-amber-100 hover:underline"
 						>

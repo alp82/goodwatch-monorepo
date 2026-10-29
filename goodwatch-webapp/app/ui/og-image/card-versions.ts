@@ -1,3 +1,4 @@
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Versions of single Open Graph cards, by canonical page path (server/og-image/content.server.ts, `canonicalOgPath`).
 // Bump a path's version when only that card's design or words change: its stored card is drawn again (the store's
 // key, server/og-image/store.server.ts) and its image address changes (utils/og-image-url.ts), so link previews fetch
@@ -5,6 +6,9 @@
 // Plain relative imports only: the browser, the server and node tests read it.
 
 export const CARD_VERSIONS: Readonly<Record<string, number>> = {
+	[WATCH_PATHS.nextEpisodes]: 1,
+	[WATCH_PATHS.tonight]: 1,
+	[WATCH_PATHS.forYou]: 1,
 	// Explorer prints the renamed Trippy mood; its preview needs a new image address.
 	"/explorer": 2,
 	// 2: the lit taste bar (owner, October 28, 2026).

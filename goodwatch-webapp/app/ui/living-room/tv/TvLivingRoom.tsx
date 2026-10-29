@@ -1,3 +1,5 @@
+import { usePathViewer } from "~/ui/navigation/NavigationContext"
+import { handleOf } from "~/domain/member-paths"
 import { browseIdentity } from "./tv-browse"
 // The start page's scene with the new TV: the room (TvRoom.tsx), the TV's state (use-tv.ts), what is on the TV
 // (TvScreen.tsx), the data behind it and the effects the machine names. The route hands it the loader's data.
@@ -338,9 +340,12 @@ export function TvLivingRoom({
 			? (currentFound?.titles ?? [])
 			: serviceList?.titles
 	const tasteCtx = onTaste ? mine?.ctx : undefined
+	const viewer = usePathViewer()
+	const handle = handleOf(viewer)
 	const ctx = useMemo(
 		() => ({
 			...tvContextOf(data, pool, wished),
+			handle,
 			titleName,
 			draft,
 			browseNext: browseList?.next ?? false,
@@ -361,6 +366,7 @@ export function TvLivingRoom({
 			...titleWhere,
 		}),
 		[
+			handle,
 			data,
 			pool,
 			wished,

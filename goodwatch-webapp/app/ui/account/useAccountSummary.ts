@@ -34,8 +34,8 @@ export function useAccountSummary() {
 	const fallbackInitial = (user?.email ?? "?").charAt(0)
 	return {
 		handle: data?.handle ?? null,
-		avatarUrl: data ? data.avatar.url : providerPhoto(user),
-		color: data?.avatar.color ?? "amber",
+		avatarUrl: data?.avatar ? data.avatar.url : providerPhoto(user),
+		color: data?.avatar?.color ?? "amber",
 		initial: (data?.handle ?? fallbackInitial).charAt(0).toUpperCase(),
 		email: user?.email ?? null,
 		loaded: Boolean(data),

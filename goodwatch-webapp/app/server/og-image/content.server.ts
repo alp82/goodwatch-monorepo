@@ -1,3 +1,4 @@
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Maps a page path to what its Open Graph card shows. Image fields hold remote URLs here;
 // the renderer inlines them.
 import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
@@ -111,6 +112,8 @@ export function canonicalOgPath(path: string): string | null {
 		const tab = third === "taste" ? "stats" : third
 		// The Tropes tab has no card of its own yet: its link preview is the profile's card.
 		if (tab === "tropes" && !fourth) return `/u/${handle}`
+		if (tab === "scores" && (fourth === "not-rated" || fourth === "rate") && segments.length === 4)
+			return `/u/${handle}/scores`
 		if (fourth)
 			return segments.length === 4 &&
 				tab === "stats" &&
@@ -122,7 +125,12 @@ export function canonicalOgPath(path: string): string | null {
 	}
 	if (first === "new") return canonicalNewPath(segments)
 	if (first === "discover") return "/discover"
-	if (first === "for-you" && segments.length === 1) return "/for-you"
+	if (first === "for-you" && segments.length === 1) return WATCH_PATHS.forYou
+	if (first === "watch") {
+		if (second === "for-you" && segments.length === 2) return WATCH_PATHS.forYou
+		if (second === "movies") return WATCH_PATHS.tonight
+		return WATCH_PATHS.nextEpisodes
+	}
 	if (first === "explorer" && segments.length === 1) return "/explorer"
 
 	const clean = `/${segments.join("/")}`
@@ -438,7 +446,7 @@ async function forYouCardContent(): Promise<OgContent> {
 		"~/server/taste-portrait/index.server"
 	)
 	const who = await portraitViewer(
-		new Request("https://goodwatch.app/for-you"),
+		new Request(`https://goodwatch.app${WATCH_PATHS.forYou}`),
 		undefined,
 		null,
 	)
@@ -467,7 +475,7 @@ async function forYouCardContent(): Promise<OgContent> {
 
 async function staticPageContent(path: string): Promise<OgContent> {
 	if (path === "/discover") return discoverCardContent()
-	if (path === "/for-you") return forYouCardContent()
+	if (path === WATCH_PATHS.forYou) return forYouCardContent()
 	if (path === "/use-with-ai") return chatCardContent()
 	if (path === "/explorer") return explorerCardContent()
 	const page = STATIC_PAGE_COPY[path] ?? HOME_COPY

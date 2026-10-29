@@ -1,3 +1,5 @@
+import { TASTE_FALLBACK_PATH } from "~/domain/member-paths"
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 import { MOOD_BY_KEY } from "~/domain/moods"
 // "How GoodWatch works": the intro film's chapters as plain page content at the top of the section below the room.
 // It is what a crawler reads of the start page (its one H1, one item per chapter with real facts and a link to the
@@ -104,7 +106,7 @@ const FEATURES: Feature[] = [
 		section: "recommendations",
 		title: "Picked for you",
 		text: "Rate a few titles you loved and GoodWatch picks what you'll love next, and tells you why.",
-		link: { to: "/taste", label: "Find your taste" },
+		link: { to: TASTE_FALLBACK_PATH, label: "Find your taste" },
 		// The film's pick: Severance, because you loved Black Mirror and Inception (TMDB poster paths, fixed).
 		visual: () => (
 			<div className="hgw-v-pick">
@@ -130,7 +132,7 @@ const FEATURES: Feature[] = [
 		section: "fingerprint",
 		title: "Your taste fingerprint",
 		text: "Your ratings draw your taste fingerprint and name what defines it. Want more laughs or more tension tonight? Tune it, and your picks change with it.",
-		link: { to: "/for-you", label: "See your picks" },
+		link: { to: WATCH_PATHS.forYou, label: "See your picks" },
 		visual: () => (
 			<div className="hgw-v-feel">
 				<Img
@@ -222,7 +224,7 @@ const FEATURES: Feature[] = [
 		section: "tracking",
 		title: "It keeps track for you",
 		text: "Your Wishlist and your shows in one place: the next episode, the show to pick up, and the day a wanted title arrives on your service.",
-		link: { to: "/watch-next", label: "See Watch next" },
+		link: { to: WATCH_PATHS.tonight, label: "See Watch next" },
 		visual: () => (
 			<ul className="hgw-v-feed" aria-hidden="true">
 				<li className="hgw-f-amber">

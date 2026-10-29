@@ -1,11 +1,5 @@
-import {
-	LIBRARY_HUB,
-	type LibraryStatus,
-	SCORES_PAGE,
-	sortsFor,
-	statusPage,
-} from "../../domain/my-library.ts"
-import { HIDDEN_PATH } from "~/ui/settings/paths"
+import { type LibraryStatus, sortsFor } from "../../domain/my-library.ts"
+import { GUEST, type PathViewer, WATCH_PATHS, NOT_INTERESTED_PATH, statusHome, tasteHome, tasteTabFor } from "../../domain/member-paths.ts"
 import {
 	MCP_PROMPT_EXAMPLES,
 	TONIGHT_ASK,
@@ -42,6 +36,7 @@ export function withPageLink(
 	name: ReadToolName,
 	args: ReadArgs,
 	data: Record<string, unknown>,
+	viewer: PathViewer = GUEST,
 ): Record<string, unknown> {
 	let path: string | undefined
 	let note: string | undefined
@@ -108,13 +103,13 @@ export function withPageLink(
 				dropped: "dropped",
 				unrated: "unrated",
 			}
-			if (filter === "not_interested") path = HIDDEN_PATH
-			else if (filter === "rated") path = SCORES_PAGE
-			else if (statusOf[filter]) path = statusPage({ status: statusOf[filter] })
+			if (filter === "not_interested") path = NOT_INTERESTED_PATH
+			else if (filter === "rated") path = tasteTabFor(viewer, "scores")
+			else if (statusOf[filter]) path = statusHome(statusOf[filter], args.kind ?? "all", viewer)
 			else {
-				path = LIBRARY_HUB
+				path = tasteHome(viewer)
 				note =
-					"My library is a hub: it leads to Want to see, Seen, your scores, the shows in progress and Not rated, each on a page of its own."
+					"Watch holds your Wishlist, seen titles and shows in progress. Taste holds your scores and Not rated. This link opens your Taste profile."
 			}
 			const sort = data.sort ?? args.sort
 			const status = filter === "want_to_see" ? "want" : filter
@@ -130,22 +125,25 @@ export function withPageLink(
 					if (sort !== sorts[0]) url.searchParams.set("sort", String(sort))
 				} else
 					note =
-						"This sort is available in the tool; My library opens this status in its default website order."
-				if (args.kind && args.kind !== "all")
-					url.searchParams.set("type", args.kind)
+						"This sort is available in the tool; the linked page opens this status in its default website order."
+				path = url.pathname + url.search
+			}
+			if (filter === "want_to_see" && args.kind && args.kind !== "all") {
+				const url = new URL(path, origin)
+				url.searchParams.set("type", args.kind)
 				path = url.pathname + url.search
 			}
 			break
 		}
 		case "get_my_shows":
-			path = "/my-shows"
+			path = WATCH_PATHS.nextEpisodes
 			break
 		case "get_taste":
-			path = "/taste"
+			path = tasteHome(viewer)
 			break
 		case "get_tonight": {
 			const pick = data.pick as { title?: { id?: string } } | null | undefined
-			path = pick?.title?.id?.startsWith("show:") ? "/my-shows" : "/my-movies"
+			path = pick?.title?.id?.startsWith("show:") ? WATCH_PATHS.nextEpisodes : WATCH_PATHS.tonight
 			note =
 				"Watch next is a single pick, which can be an episode of a show already being watched. This page opens the matching movies or shows list."
 			break

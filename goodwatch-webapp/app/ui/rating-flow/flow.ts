@@ -1,3 +1,4 @@
+import { GUEST, ratePath } from "../../domain/member-paths.ts"
 // The rating flow: one title at a time on /taste/quiz and in the Taste page's start, and the taste view it opens.
 // This file is its pure state: what the person's ratings add up to, when a milestone lands, the words of the top strip,
 // the taste bar and the resume bar, the keys, and the rows of "Your ratings". No React and no I/O, so the tests run it
@@ -26,7 +27,7 @@ import type { InteractionType } from "../taste/types.ts"
 import { isRepeatPress } from "../scoring/score-ack.ts"
 
 /** The rating flow's page. */
-export const FLOW_PATH = "/taste/quiz"
+export const FLOW_PATH = ratePath(GUEST)
 /** The flow's taste view: where "Save your taste" brings a new member back after sign-up. */
 export const TASTE_VIEW_PATH = `${FLOW_PATH}?view=taste`
 

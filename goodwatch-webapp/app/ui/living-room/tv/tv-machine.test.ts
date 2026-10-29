@@ -49,9 +49,9 @@ const member: TvContext = {
 	member: true,
 	taste: true,
 	tonight: [
-		{ title: "show-3", href: "/my-shows" },
-		{ title: "movie-1", href: "/my-movies" },
-		{ title: "show-5", href: "/my-shows#start" },
+		{ title: "show-3", href: "/watch" },
+		{ title: "movie-1", href: "/watch/movies" },
+		{ title: "show-5", href: "/watch/not-started" },
 	],
 	sides: ["dark-crime", "gentle-comedy", "big-ideas"],
 	nextEpisodes: ["show-21", "show-22", "show-23", "show-24"],
@@ -1204,9 +1204,9 @@ describe("the Expand key's destinations", () => {
 	})
 
 	it("Tonight, a member: the pick's own page", () => {
-		assert.equal(dest("tv=tonight", member), "/my-shows")
-		assert.equal(dest("tv=tonight&pick=1", member), "/my-movies")
-		assert.equal(dest("tv=tonight&pick=2", member), "/my-shows#start")
+		assert.equal(dest("tv=tonight", member), "/watch")
+		assert.equal(dest("tv=tonight&pick=1", member), "/watch/movies")
+		assert.equal(dest("tv=tonight&pick=2", member), "/watch/not-started")
 	})
 
 	it("Tonight, a guest: Discover", () => {
@@ -1279,7 +1279,7 @@ describe("the Expand key's destinations", () => {
 	})
 
 	it("My shows: My shows", () => {
-		assert.equal(dest("tv=shows", member), "/my-shows")
+		assert.equal(dest("tv=shows", member), "/watch")
 	})
 
 	it("a title: its page", () => {
@@ -1338,9 +1338,9 @@ describe("the Expand key's destinations", () => {
 
 	it("knows the member pages' addresses, which the server's Tonight's pick links to too", () => {
 		assert.deepEqual(DOOR_HREF, {
-			continue: "/my-shows",
-			start: "/my-shows#start",
-			movie: "/my-movies",
+			continue: "/watch",
+			start: "/watch/not-started",
+			movie: "/watch/movies",
 		})
 	})
 })
@@ -3030,4 +3030,13 @@ describe("Where to watch on the desktop (panel=watch): the overview, which holds
 		assert.equal(run(at("tv=title&title=movie-1&panel=watch", 2, desk), desk, { type: "back" }).history, "back")
 		assert.equal(run(at("tv=title&title=movie-1&panel=watch", 0, desk), desk, { type: "back" }).url, "tv=title&title=movie-1")
 	})
+})
+
+
+it("TV expansion opens a member's own Taste and rate pages when a handle is known", () => {
+ const ctx = { ...EMPTY_CONTEXT, member: true, handle: "ana" }
+ assert.equal(destinationHref({name: "taste", side: null}, ctx), "/u/ana")
+ assert.equal(destinationHref({name: "taste", side: "dark-crime"}, ctx), "/u/ana?side=dark-crime")
+ assert.equal(destinationHref({name: "quiz"}, ctx), "/u/ana/scores/rate")
+ assert.equal(destinationLabel({name: "taste", side: null}, ctx), "Full taste profile")
 })

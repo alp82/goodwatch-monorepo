@@ -1,3 +1,5 @@
+import { TASTE_FALLBACK_PATH } from "~/domain/member-paths"
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // The /how-it-works rows: one feature each, in the start page intro's order, each with a picture made from the
 // intro's parts (pictures.tsx) or, for AI apps, the /use-with-ai chat demo. Facts checked on 2026-10-18:
 // - Score: goodwatch-flows/windmill/f/sync/copy/all_ratings.py (the mean of an audience average of TMDB, IMDb,
@@ -56,7 +58,7 @@ export const HOW_IT_WORKS_FEATURES: Feature[] = [
 		kicker: "For you",
 		title: "Picked for your taste",
 		line: "Rate titles you loved. Your match shows how well the rest fit: 90% is your top 1%.",
-		link: { to: "/taste", label: "Find your taste" },
+		link: { to: TASTE_FALLBACK_PATH, label: "Find your taste" },
 	},
 	{
 		id: "title-analysis",
@@ -65,7 +67,7 @@ export const HOW_IT_WORKS_FEATURES: Feature[] = [
 		kicker: "Your taste",
 		title: "Your taste fingerprint",
 		line: "Your ratings draw your taste fingerprint. Tune it for more laughs or more tension, and your picks change with it.",
-		link: { to: "/for-you", label: "Tune your picks" },
+		link: { to: WATCH_PATHS.forYou, label: "Tune your picks" },
 	},
 	{
 		id: "search",
@@ -101,7 +103,7 @@ export const HOW_IT_WORKS_FEATURES: Feature[] = [
 		kicker: "Tracking",
 		title: "It keeps track for you",
 		line: "Your Wishlist and your shows in one place, and a heads-up when a title lands on your service.",
-		link: { to: "/watch-next", label: "See Watch next" },
+		link: { to: WATCH_PATHS.tonight, label: "See Watch next" },
 	},
 	{
 		id: "ratings",

@@ -1,6 +1,6 @@
 import type { ListOverview } from "../share-lists/view.server"
 import { DEFAULT_DESIGN } from "../../ui/share-card/designs"
-import { myListsPath, shareListPath } from "../../ui/share-card/links"
+import { myListsPathFor, shareListPath } from "../../ui/share-card/links"
 import { canonicalTitleId } from "../../utils/title-identity"
 import { titleKey } from "../../utils/title-key"
 import {
@@ -82,7 +82,7 @@ export async function readLists(
 		items: await Promise.all(
 			selected.items.map((list) => listSummary(userId, origin, list)),
 		),
-		page_url: new URL(myListsPath, origin).href,
+		page_url: new URL(myListsPathFor((await getProfileByUserId(userId))?.handle ?? null), origin).href,
 	}
 }
 
@@ -187,7 +187,7 @@ export async function changeList(
 						...(error.code === "handle_required"
 							? {
 									status: error.code,
-									page_url: new URL(myListsPath, origin).href,
+									page_url: new URL(myListsPathFor((await getProfileByUserId(userId))?.handle ?? null), origin).href,
 								}
 							: {}),
 					}

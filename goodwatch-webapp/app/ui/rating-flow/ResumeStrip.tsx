@@ -1,3 +1,5 @@
+import { usePathViewer } from "~/ui/navigation/NavigationContext"
+import { ratePath } from "~/domain/member-paths"
 // After sign-up a member lands back on the page they came from; this slim strip under the header offers to pick the
 // rating flow up again while their taste isn't ready. One strip at a time (ui/site-strip): it shows only when no
 // account transfer and no onboarding step is showing (ui/onboarding/AccountTransfer.tsx), never on the flow itself, and
@@ -8,7 +10,6 @@ import { useUserData } from "~/routes/api.user-data"
 import { STRIP_BUTTON, STRIP_QUIET, SiteStrip } from "~/ui/site-strip/SiteStrip"
 import { useUser } from "~/utils/auth"
 import {
-	FLOW_PATH,
 	RESUME_DISMISSED_KEY,
 	offersResume,
 	resumeWords,
@@ -32,6 +33,7 @@ export function RatingResumeStrip({
 	fallback?: ReactNode
 	className?: string
 }) {
+	const viewer = usePathViewer()
 	const { user } = useUser()
 	const { pathname } = useLocation()
 	const { data } = useUserData()
@@ -61,7 +63,7 @@ export function RatingResumeStrip({
 			title={WORDS.resumeTitle}
 			actions={
 				<>
-					<Link to={FLOW_PATH} className={STRIP_BUTTON}>
+					<Link to={ratePath(viewer)} className={STRIP_BUTTON}>
 						{WORDS.continueRating}
 					</Link>
 					<button type="button" onClick={dismiss} className={STRIP_QUIET}>

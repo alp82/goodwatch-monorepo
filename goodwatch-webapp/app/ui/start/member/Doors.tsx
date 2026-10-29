@@ -1,3 +1,4 @@
+import { usePathViewer } from "~/ui/navigation/NavigationContext"
 // The "Go deeper" doors under a member's start (doors.ts has the rules): four fixed-size doors, the open one filled
 // amber with a notch into its section; the section links to its page from its header and from a last tile. The open
 // door is decided from the data alone, so the server's HTML has its section. The order is kept from the first render:
@@ -48,7 +49,8 @@ const chipTone = (on: boolean) =>
 const PANEL_ID = "start-door-section"
 
 export function Doors({ data }: { data: MemberStartData }) {
-	const all = doorsOf(data)
+	const viewer = usePathViewer()
+	const all = doorsOf(data, viewer)
 	const [order] = useState(() => orderDoors(all).map((door) => door.key))
 	const doors = order.flatMap((key) => all.filter((door) => door.key === key))
 	// A door whose list ever came later than the page, on load or after a revalidation, keeps its room for good

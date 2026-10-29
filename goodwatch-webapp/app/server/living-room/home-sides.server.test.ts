@@ -160,8 +160,8 @@ describe("home's sides", () => {
 				["movie-2", "Zodiac", "/p2.jpg"],
 			],
 		)
-		assert.equal(grim.watchNext, "/watch-next?moods=heavy")
-		assert.equal(funny.watchNext, "/watch-next")
+		assert.equal(grim.watchNext, "/watch/movies?moods=heavy")
+		assert.equal(funny.watchNext, "/watch/movies")
 		assert.deepEqual(grim.words, { name: "Name of dark", moods: ["Sad"] })
 	})
 

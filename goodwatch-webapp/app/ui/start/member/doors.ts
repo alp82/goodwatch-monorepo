@@ -1,3 +1,4 @@
+import { GUEST, type PathViewer, TASTE_FALLBACK_PATH, WATCH_PATHS, tasteHome } from "../../../domain/member-paths.ts"
 // The "Go deeper" doors under a member's start: Continue watching, Wishlist, For you, Hot on socials. Pure, so the
 // order, the open door and the grid's rows are tested without React (doors.test.ts); Doors.tsx draws them.
 //
@@ -21,12 +22,12 @@ export type Cta = { label: string; href: string }
 
 /** The pages the doors and their strips lead to. */
 export const MEMBER_HREF = {
-	shows: "/my-shows",
-	movies: "/my-movies",
-	forYou: "/for-you",
+	shows: WATCH_PATHS.nextEpisodes,
+	movies: WATCH_PATHS.tonight,
+	forYou: WATCH_PATHS.forYou,
 	hot: "/hot-on-socials",
-	watchNext: "/watch-next",
-	taste: "/taste",
+	watchNext: WATCH_PATHS.tonight,
+	taste: TASTE_FALLBACK_PATH,
 	imports: "/settings/imports",
 	findShow: "/discover?type=show",
 	discover: "/discover",
@@ -92,7 +93,8 @@ const UNREAD: Strip = {
 }
 
 /** The four doors, in their usual order. Hot on socials only when the member sees it. */
-export function doorsOf(data: MemberStartData): Door[] {
+export function doorsOf(data: MemberStartData, viewer: PathViewer = GUEST): Door[] {
+	const rate = { ...RATE, href: tasteHome(viewer) }
 	const forming = data.ratings < PERSONAL_AT
 	const shows = data.continue
 	const movies = data.wishlist
@@ -190,16 +192,16 @@ export function doorsOf(data: MemberStartData): Door[] {
 						? {
 								title: `Picks get personal at ${PERSONAL_AT} ratings`,
 								progress: data.ratings,
-								ctas: [RATE, BRING],
+								ctas: [rate, BRING],
 							}
 						: !forYou || forYou.titles.length
 							? null
 							: {
 									title: "Nothing to pick yet",
 									body: "Rate a few more titles and your picks show here.",
-									ctas: [RATE],
+									ctas: [rate],
 								},
-			ghost: { label: "Rate more to unlock", href: MEMBER_HREF.taste },
+			ghost: { label: "Rate more to unlock", href: tasteHome(viewer) },
 			filters: [
 				ALL,
 				{

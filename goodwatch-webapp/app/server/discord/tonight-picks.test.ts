@@ -47,7 +47,7 @@ registerHooks({
    export const planWatchNext=()=>({head:[1,2,3,4].map(id=>({key:1e12+id})),tiers:[{keys:[1e12+5,2e12+6]}],entries:new Map([1,2,3,4,5].map(id=>[1e12+id,{moodMask:0,fit:globalThis.__discordTonight.offServices ? 0 : 1}]).concat([[2e12+6,{moodMask:1,fit:1}]])),need:1,heroFits:true,sort:"match"});
    export const worthwhileSuggestions=(ctx,taste,options)=>{globalThis.__discordTonight.suggestions++;return [1e12+7,2e12+8].filter(key=>!options.fits||options.fits(key)).slice(0,options.count)}`,
 			"~/ui/living-room/tv/tv-machine":
-				'export const DOOR_HREF={movie:"/my-movies"}',
+				'export const DOOR_HREF={movie:"/watch/movies"}',
 			"~/utils/title-key":
 				'export const titleKey=(kind,id)=>(kind==="show"?2e12:1e12)+id',
 		}

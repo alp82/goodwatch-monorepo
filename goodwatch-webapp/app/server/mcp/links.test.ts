@@ -7,14 +7,14 @@ const origin = "https://goodwatch.app"
 test("page links use existing website filters and encode search text", () => {
 	const data = { items: [] }
 	for (const [filter, path] of [
-		["want_to_see", "/my-library/want"],
-		["seen", "/my-library/seen"],
-		["watching", "/my-library/watching"],
-		["on_hold", "/my-library/on-hold"],
-		["dropped", "/my-library/dropped"],
-		["unrated", "/my-library/not-rated"],
-		["rated", "/my-library/scores"],
-		["not_interested", "/my-library/hidden"],
+		["want_to_see", "/watch/movies/wishlist"],
+		["seen", "/watch/movies/seen"],
+		["watching", "/watch/watching"],
+		["on_hold", "/watch/on-hold"],
+		["dropped", "/watch/dropped"],
+		["unrated", "/taste"],
+		["rated", "/taste"],
+		["not_interested", "/settings/not-interested"],
 	])
 		assert.equal(
 			withPageLink(origin, "get_library", { filter }, data).page_url,
@@ -55,7 +55,7 @@ test("Watch next links to the matching movies/shows list", () => {
 		)
 		assert.equal(
 			result.page_url,
-			origin + (kind === "movie" ? "/my-movies" : "/my-shows"),
+			origin + (kind === "movie" ? "/watch/movies" : "/watch"),
 		)
 	}
 })
@@ -84,7 +84,7 @@ test("Library links preserve supported UI sorts", () => {
 	assert.equal(
 		withPageLink(origin, "get_library", { filter: "seen", sort: "score" }, {})
 			.page_url,
-		`${origin}/my-library/seen?sort=score`,
+		`${origin}/watch/movies/seen?sort=score`,
 	)
 	assert.equal(
 		withPageLink(
@@ -93,7 +93,7 @@ test("Library links preserve supported UI sorts", () => {
 			{ filter: "want_to_see", sort: "title" },
 			{},
 		).page_url,
-		`${origin}/my-library/want?sort=title`,
+		`${origin}/watch/movies/wishlist?sort=title`,
 	)
 })
 
@@ -142,4 +142,26 @@ test("blank searches link the identical discovery view without a name-lookup not
 			withPageLink(origin, "discover_titles", args, {}),
 		)
 	}
+})
+
+
+test("member page links resolve Taste tabs and Seen by kind without legacy hops", () => {
+ const viewer = { kind: "member", handle: "ana" } as const
+ for (const [filter, path] of [
+  ["all", "/u/ana"], ["rated", "/u/ana/scores"],
+  ["unrated", "/u/ana/scores/not-rated"], ["not_interested", "/settings/not-interested"],
+ ]) assert.equal(withPageLink(origin, "get_library", { filter }, {}, viewer).page_url, origin + path)
+ assert.equal(withPageLink(origin, "get_library", {filter: "want_to_see", kind: "show"}, {}, viewer).page_url, origin + "/watch/movies/wishlist?type=show")
+ assert.equal(withPageLink(origin, "get_taste", {}, {}, viewer).page_url, origin + "/u/ana")
+ assert.equal(withPageLink(origin, "get_my_shows", {}, {}, viewer).page_url, origin + "/watch")
+ for (const kind of ["show", "movie"] as const) {
+  const url = new URL(String(withPageLink(origin, "get_library", { filter: "seen", kind, sort: "score" }, {}, viewer).page_url))
+  assert.equal(url.pathname, kind === "show" ? "/watch/seen" : "/watch/movies/seen")
+  assert.equal(url.searchParams.get("sort"), "score")
+  assert.equal(url.searchParams.has("type"), false)
+ }
+ for (const filter of ["rated", "unrated"]) assert.equal(withPageLink(origin, "get_library", { filter }, {}, {kind: "member", handle: null}).page_url, origin + "/taste")
+ const note = String(withPageLink(origin, "get_library", {}, {}, viewer).page_note)
+ assert.match(note, /Watch holds/)
+ assert.doesNotMatch(note, /My library is a hub/)
 })

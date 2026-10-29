@@ -1,3 +1,4 @@
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Every page type of the webapp and the parts of it a reader can report on: what fix mode lists, outlines and asks.
 // docs/design/feedback-areas.md is the same table for people; change both together.
 //
@@ -477,9 +478,9 @@ export const PAGE_TYPES: PageType[] = [
 	{
 		id: "for-you",
 		name: "For you",
-		routes: ["for-you.tsx"],
-		example: "/for-you",
-		match: (p) => p === "/for-you",
+		routes: ["watch.for-you.tsx"],
+		example: WATCH_PATHS.forYou,
+		match: (p) => p === WATCH_PATHS.forYou,
 		areas: [
 			{
 				id: "picks",
@@ -496,9 +497,9 @@ export const PAGE_TYPES: PageType[] = [
 	{
 		id: "watch-next",
 		name: "Watch next and My movies",
-		routes: ["watch-next.tsx", "my-movies.tsx", "wishlist.tsx (redirect)"],
-		example: "/watch-next",
-		match: re(/^\/(watch-next|my-movies)\/?$/),
+		routes: ["watch.movies._index.tsx"],
+		example: WATCH_PATHS.tonight,
+		match: (p) => p === WATCH_PATHS.tonight,
 		areas: [
 			{
 				id: "picks",
@@ -514,17 +515,14 @@ export const PAGE_TYPES: PageType[] = [
 	},
 	{
 		id: "library",
-		name: "My library",
+		name: "Watch",
 		routes: [
-			"my-library._index.tsx",
-			"my-library.$list.tsx",
-			"my-library.scores.tsx",
-			"my-library.hidden.tsx",
-			"my-shows.tsx",
-			"lists.mine.tsx",
+			"watch._index.tsx",
+			"watch.$list.tsx",
+			"watch.movies.$list.tsx",
 		],
-		example: "/my-library",
-		match: re(/^\/(my-library|my-shows|lists\/mine)(\/|$)/),
+		example: WATCH_PATHS.nextEpisodes,
+		match: re(/^\/watch(\/|$)/),
 		areas: [
 			{
 				id: "titles",

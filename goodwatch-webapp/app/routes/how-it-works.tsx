@@ -1,3 +1,4 @@
+import { TASTE_FALLBACK_PATH } from "~/domain/member-paths"
 // /how-it-works: one feature per row, centred: a kicker, a short headline and one line, then a big picture made from
 // the start page intro's parts (ui/how-it-works), then a link to the real page. The text is in the server's HTML; the
 // pictures load on demand as they scroll into view. Each row has an anchor (/how-it-works#score); the start page's
@@ -54,7 +55,7 @@ export default function HowItWorks() {
 						Rate a few titles you loved. Your picks are ready in a minute.
 					</p>
 					<div className="flex flex-wrap justify-center gap-3">
-						<ActionLink to="/taste" primary>
+						<ActionLink to={TASTE_FALLBACK_PATH} primary>
 							Find your taste
 						</ActionLink>
 						<ActionLink to="/discover">Open Discover</ActionLink>

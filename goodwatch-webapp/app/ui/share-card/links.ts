@@ -1,3 +1,4 @@
+import { tastePath, tasteListPath } from "~/domain/member-paths"
 import { WORDMARK_VERSION } from "~/ui/brand/version"
 
 // Paths of share list pages and their card images. A list lives under its owner's handle, but pages look it up by id
@@ -5,6 +6,8 @@ import { WORDMARK_VERSION } from "~/ui/brand/version"
 // instead of the handle, so a changed list gets new image URLs and link previews refresh.
 /** Redirects to the signed-in person's profile, or to the new-list editor without one. */
 export const myListsPath = "/lists/mine"
+export const myListsPathFor = (handle: string | null) =>
+	handle ? tastePath(handle, "lists") : newListPath()
 export const newListPath = (remixOf?: string) =>
 	remixOf ? `/lists/new?remix=${encodeURIComponent(remixOf)}` : "/lists/new"
 /**
@@ -15,9 +18,9 @@ export const topFivePath = (guestTitleKeys?: string[]) =>
 	guestTitleKeys?.length
 		? `/lists/new?from=ratings&titles=${guestTitleKeys.join(",")}`
 		: "/lists/new?from=ratings"
-export const profilePath = (handle: string) => `/u/${handle}`
+export const profilePath = (handle: string) => tastePath(handle)
 export const shareListPath = (handle: string, id: string) =>
-	`/u/${handle}/lists/${id}`
+	tasteListPath(handle, id)
 export const shareListEditPath = (handle: string, id: string) =>
 	`/u/${handle}/lists/${id}/edit`
 /** The card at full resolution: a PNG at the design's native size, for the page and sharing. */

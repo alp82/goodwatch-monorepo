@@ -1,3 +1,5 @@
+import { usePathViewer } from "~/ui/navigation/NavigationContext"
+import { tasteHome, tasteTabFor } from "../../domain/member-paths.ts"
 // The Done step: what the import changed as count tiles (the member's new total per kind, with what came in and what
 // came off), what stayed, what couldn't come in, a question when the import took titles off a list, and Undo. After an
 // Undo the same place says it's undone, and what Undo couldn't put back.
@@ -235,6 +237,7 @@ function Done({
 	children?: ReactNode
 }) {
 	const { data } = useUserData()
+	const viewer = usePathViewer()
 	const clearedSection = section(result, "lists_cleared")
 	const whole = useWholeSection(api, summary.id, summary.status, clearedSection)
 	const clearedRows = whole.rows
@@ -408,12 +411,12 @@ function Done({
 				)}
 				<div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
 					<Link
-						to="/my-library/scores"
+						to={tasteTabFor(viewer, "scores")}
 						className={`${textLink} min-h-11 content-center`}
 					>
 						See your scores
 					</Link>
-					<Link to="/taste" className={`${textLink} min-h-11 content-center`}>
+					<Link to={tasteHome(viewer)} className={`${textLink} min-h-11 content-center`}>
 						See your taste
 					</Link>
 				</div>

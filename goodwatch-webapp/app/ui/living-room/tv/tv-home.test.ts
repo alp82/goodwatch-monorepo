@@ -61,11 +61,11 @@ const member: TvHomeData = {
 	tonight: [
 		{
 			card: card("show", 10),
-			href: "/my-shows",
+			href: "/watch",
 			episode: { code: "S2 E4", name: "Episode 4" },
 		},
-		{ card: card("movie", 1), href: "/my-movies" },
-		{ card: card("movie", 2), href: "/my-movies" },
+		{ card: card("movie", 1), href: "/watch/movies" },
+		{ card: card("movie", 2), href: "/watch/movies" },
 	],
 	shows: {
 		next: [
@@ -167,15 +167,15 @@ test("a member's Tonight and My shows come with the loader, and need no pool", (
 	assert.deepEqual(apps[3].art, { kind: "backdrop", path: "/backdrop-11.jpg" })
 	const ctx = tvContextOf(member, null)
 	assert.deepEqual(ctx.tonight, [
-		{ title: "show-10", href: "/my-shows" },
-		{ title: "movie-1", href: "/my-movies" },
-		{ title: "movie-2", href: "/my-movies" },
+		{ title: "show-10", href: "/watch" },
+		{ title: "movie-1", href: "/watch/movies" },
+		{ title: "movie-2", href: "/watch/movies" },
 	])
 	assert.deepEqual(ctx.nextEpisodes, ["show-10", "show-11"])
 	assert.deepEqual(ctx.toStart, ["show-20"])
 	// Each pick grows into the member page it is the first thing on.
-	assert.equal(destinationHref({ name: "tonight", pick: 0 }, ctx), "/my-shows")
-	assert.equal(destinationHref({ name: "tonight", pick: 1 }, ctx), "/my-movies")
+	assert.equal(destinationHref({ name: "tonight", pick: 0 }, ctx), "/watch")
+	assert.equal(destinationHref({ name: "tonight", pick: 1 }, ctx), "/watch/movies")
 	// The pool changes the Discover tile's posters only.
 	assert.deepEqual(tonightPicks(member, pool), member.tonight)
 	assert.deepEqual(artOf(member, pool, "tonight"), apps[0].art)
@@ -441,9 +441,9 @@ test("a member's service tiles draw from their own Tonight before the pool is as
 		...member,
 		services: [netflix, disney],
 		tonight: [
-			{ card: streams(10, [NETFLIX]), href: "/my-shows" },
-			{ card: streams(11, [NETFLIX]), href: "/my-movies" },
-			{ card: streams(12, [DISNEY]), href: "/my-movies" },
+			{ card: streams(10, [NETFLIX]), href: "/watch" },
+			{ card: streams(11, [NETFLIX]), href: "/watch/movies" },
+			{ card: streams(12, [DISNEY]), href: "/watch/movies" },
 		],
 	}
 	assert.deepEqual(

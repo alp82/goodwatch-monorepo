@@ -1,3 +1,4 @@
+import { WATCH_PATHS } from "../../../domain/member-paths.ts"
 // Where the title sits in the member's taste, as a card in the fingerprint section: the taste group's loved titles
 // fanned out, a wash in the badge's color (amber when the title fits a group, sky when it's close to one or between
 // two) over a still, blurred copy of the first poster, the group's name in the display face, and Watch next in the
@@ -142,8 +143,8 @@ export function TasteCard({
 				<Link
 					to={
 						side.moods.length
-							? `/watch-next?moods=${side.moods.join(",")}`
-							: "/watch-next"
+							? `${WATCH_PATHS.tonight}?moods=${side.moods.join(",")}`
+							: WATCH_PATHS.tonight
 					}
 					className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-bold transition-colors max-sm:w-full"
 					style={{

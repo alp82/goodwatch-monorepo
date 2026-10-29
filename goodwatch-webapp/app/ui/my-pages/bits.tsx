@@ -1,3 +1,4 @@
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Pieces My shows, My movies and My library share (#385): the page head with the ways to the other pages, the note
 // for an empty list, a poster, and what a guest sees in place of a member's page.
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
@@ -13,9 +14,8 @@ export const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
 export const tmdbImage = (path: string, size: string) =>
 	`https://image.tmdb.org/t/p/${size}${path}`
 
-export const MY_SHOWS = "/my-shows"
-export const MY_MOVIES = "/my-movies"
-export const MY_LIBRARY = "/my-library"
+export const MY_SHOWS = WATCH_PATHS.nextEpisodes
+export const MY_MOVIES = WATCH_PATHS.tonight
 
 export const plural = (n: number, one: string, many = `${one}s`) =>
 	`${n.toLocaleString("en-US")} ${n === 1 ? one : many}`

@@ -1,3 +1,5 @@
+import { ratePath } from "~/domain/member-paths"
+import { usePathViewer } from "~/ui/navigation/NavigationContext"
 import useLocale from "~/utils/locale"
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
@@ -15,6 +17,7 @@ import {
 
 type CurrentTitle = Pick<ScoringMedia, "tmdb_id" | "media_type" | "title">
 export default function ExploreBar({ current }: { current: CurrentTitle }) {
+	const viewer = usePathViewer()
 	const { locale } = useLocale()
 	const [origin, setOrigin] = useState<TasteExploration | null>(null)
 	const [filters, setFilters] = useState<ExploreFilters>(defaultExploreFilters)
@@ -80,7 +83,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 				<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
 					<Link
 						prefetch="render"
-						to="/taste/quiz"
+						to={ratePath(viewer)}
 						preventScrollReset
 						className="font-semibold text-cyan-300 hover:text-cyan-200"
 					>

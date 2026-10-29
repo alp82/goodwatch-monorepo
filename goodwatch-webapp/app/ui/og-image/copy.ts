@@ -1,3 +1,4 @@
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 import { MOOD_BY_KEY } from "../../domain/moods.ts"
 // Every piece of text the Open Graph cards show, in one place to review and edit.
 // After changing a card's text, bump its version in card-versions.ts (or, for every card, CACHE_PREFIX in
@@ -140,7 +141,17 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		subtitle:
 			"Pick five movies or shows, choose a card design, and share the link.",
 	},
-	"/wishlist": {
+	[WATCH_PATHS.nextEpisodes]: {
+		tag: "Watch",
+		title: "Your next episodes",
+		subtitle: "Continue your shows and find what to start next.",
+	},
+	[WATCH_PATHS.forYou]: {
+		tag: "For you",
+		title: "Picks for your taste",
+		subtitle: "Movies and shows that fit what you love.",
+	},
+	[WATCH_PATHS.tonight]: {
 		tag: "Wishlist",
 		title: "Your watch-next list",
 		subtitle: "Everything you want to watch, and where it streams.",

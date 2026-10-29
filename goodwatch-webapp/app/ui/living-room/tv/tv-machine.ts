@@ -1,3 +1,4 @@
+import { WATCH_PATHS, GUEST, member, tasteHome, ratePath } from "../../../domain/member-paths.ts"
 import {
 	BROWSE_KEYS,
 	BROWSE_OPTIONS,
@@ -60,9 +61,9 @@ export const TV_APPS: readonly TvApp[] = [
  */
 export type DoorKey = "continue" | "start" | "movie"
 export const DOOR_HREF: Record<DoorKey, string> = {
-	continue: "/my-shows",
-	start: "/my-shows#start",
-	movie: "/my-movies",
+	continue: WATCH_PATHS.nextEpisodes,
+	start: WATCH_PATHS.notStarted,
+	movie: WATCH_PATHS.tonight,
 }
 
 /** How many of each kind a screen shows. Watch next's stack holds ten picks. */
@@ -162,6 +163,7 @@ export type TvPick = { title: string; href?: string | null }
  * (`<media_type>-<tmdb_id>`); every list is best first and may be longer than the screen shows.
  */
 export type TvContext = {
+	handle?: string | null
 	member: boolean
 	browseNext?: boolean
 	browseFailed?: boolean
@@ -538,13 +540,13 @@ export function destinationHref(
 		case "taste":
 			// A side travels: the Taste page opens on it.
 			return screen.side
-				? `/taste?side=${encodeURIComponent(screen.side)}`
-				: "/taste"
+				? `${tasteHome(ctx.member ? member(ctx.handle ?? null) : GUEST)}?side=${encodeURIComponent(screen.side)}`
+				: tasteHome(ctx.member ? member(ctx.handle ?? null) : GUEST)
 		case "shows":
 			return DOOR_HREF.continue
 		// The quiz on the site goes on where the TV's left off: the person's answers are the same.
 		case "quiz":
-			return "/taste/quiz"
+			return ratePath(ctx.member ? member(ctx.handle ?? null) : GUEST)
 		case "title": {
 			const [, mediaType, tmdbId] = TITLE_KEY.exec(screen.title) ?? []
 			if (!mediaType) return null
@@ -601,8 +603,8 @@ export function destinationName(
 
 /** The Expand key's words for the pages it opens, by the page's path. */
 const PAGE_LABEL: Record<string, string> = {
-	"/my-movies": "All my movies",
-	"/my-shows": "All my shows",
+	[WATCH_PATHS.tonight]: "All my movies",
+	[WATCH_PATHS.nextEpisodes]: "All my shows",
 	"/discover": "Explore all titles",
 	"/taste": "Full taste profile",
 	"/taste/quiz": "Full page",
@@ -625,6 +627,8 @@ export function destinationLabel(
 			return "Full details"
 		case "search":
 			return "Search all titles"
+		case "taste":
+			return "Full taste profile"
 		case "discover":
 			return "Full Discover"
 		default:

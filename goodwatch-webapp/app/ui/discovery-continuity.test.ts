@@ -88,3 +88,11 @@ test("leaving a page keeps the offset it had, not the next page's", () => {
 	win.location = { pathname: "/discover", search: "?type=shows" }
 	assert.equal(offset(), 1000, "another query is another page")
 })
+
+
+test("Watch restores list filters while the Taste profile keeps its requested tab", () => {
+ let context = remember(emptyContext(), "/watch/movies/wishlist", "/watch/movies/wishlist?type=show&q=alien", 80)
+ context = remember(context, "/u/ana/scores", "/u/ana/scores?sort=rated", 40)
+ assert.equal(restoredEntry("/watch/movies/wishlist", "", context), "/watch/movies/wishlist?type=show&q=alien")
+ assert.equal(restoredEntry("/u/ana/scores", "", context), null)
+})

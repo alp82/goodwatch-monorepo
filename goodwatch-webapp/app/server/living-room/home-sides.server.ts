@@ -1,3 +1,4 @@
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Sides of you on the TV's home (#673), shaped for home's guide from the Taste page's sides view: which picks each
 // side shows and in which order the sides are listed. Pure, so the order rules have tests (home-sides.server.test.ts);
 // tv-sides.server.ts reads the view.
@@ -75,8 +76,8 @@ export function homeSides(view: View, order?: OrderTitles): TvHomeSide[] {
 			picks: picks.map((key) => portraitListTitle(view.titles[key])),
 			fewOnServices: view.hasServices && !onServices,
 			watchNext: side.moods.length
-				? `/watch-next?moods=${side.moods.join(",")}`
-				: "/watch-next",
+				? `${WATCH_PATHS.tonight}?moods=${side.moods.join(",")}`
+				: WATCH_PATHS.tonight,
 			words: {
 				name: side.name,
 				moods: side.moods.map((mood) => MOOD_BY_KEY[mood].name),

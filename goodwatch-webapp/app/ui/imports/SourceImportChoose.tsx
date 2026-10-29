@@ -1,3 +1,5 @@
+import { usePathViewer } from "~/ui/navigation/NavigationContext"
+import { tasteTabFor } from "../../domain/member-paths.ts"
 import { CheckIcon } from "@heroicons/react/20/solid"
 import { ArrowDownTrayIcon } from "@heroicons/react/20/solid"
 // The Choose step of an import and the questions after it, before anything changes: every kind the file brings with
@@ -821,6 +823,7 @@ export function CaughtUp({
 	/** Entries that couldn't come in: how many, the CSV with reasons, and a fold that lists them when cheap. */
 	skipped?: { count: number; url: string; reasons?: ReactNode }
 }) {
+	const viewer = usePathViewer()
 	return (
 		<section className="flex flex-col gap-6" data-caught-up>
 			<div className="flex flex-col items-center gap-5 rounded-3xl bg-amber-400/5 px-5 py-8 text-center ring-1 ring-amber-400/30 sm:px-8">
@@ -863,7 +866,7 @@ export function CaughtUp({
 						: `Made changes on ${source} since then? Connect again to bring them in.`}
 				</p>
 				<div className="flex flex-wrap gap-3">
-					<Link to="/my-library/scores" className={primaryButton}>
+					<Link to={tasteTabFor(viewer, "scores")} className={primaryButton}>
 						See your scores
 					</Link>
 					<button type="button" className={secondaryButton} onClick={onBack}>

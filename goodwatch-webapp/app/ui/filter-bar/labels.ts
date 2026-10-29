@@ -1,3 +1,4 @@
+import { GUEST, ratePath } from "../../domain/member-paths.ts"
 import {
 	BUDGET_PRESETS,
 	BUDGET_STEPS,
@@ -82,7 +83,7 @@ export const tasteStateOf = (
 				: "rateMore"
 
 /** Where "Rate titles" goes: the rating flow, which leaves out every title the person answered before. */
-export const RATE_TITLES_PATH = "/taste/quiz"
+export const RATE_TITLES_PATH = ratePath(GUEST)
 
 /** Best match's line while the person has too few liked titles. */
 export const RATE_MORE =

@@ -12,10 +12,10 @@ import {
 const member = {
 	...EMPTY_CONTEXT,
 	member: true,
-	tonight: [{ title: "show-10", href: "/my-shows" }],
+	tonight: [{ title: "show-10", href: "/watch" }],
 	popular: ["movie-1", "movie-2"],
 	services: [8],
-	homeSides: [{ id: "old", picks: ["movie-99"], watchNext: "/watch-next" }],
+	homeSides: [{ id: "old", picks: ["movie-99"], watchNext: "/watch/movies" }],
 }
 const home = readTvState(new URLSearchParams(), member)
 test("member home is Start: Watch next first, the other screens, then the navigation", () => {

@@ -35,7 +35,7 @@ const side = (
 	})),
 	picks: picks.map(pick),
 	fewOnServices: id === "b",
-	watchNext: "/watch-next?moods=heavy",
+	watchNext: "/watch/movies?moods=heavy",
 	words,
 })
 
@@ -121,7 +121,7 @@ const movie = {
 } as TitleCard
 const ready: TvHomeData = {
 	...member,
-	tonight: [{ card: movie, href: "/my-movies" }],
+	tonight: [{ card: movie, href: "/watch/movies" }],
 	popular: {
 		titles: [
 			{
@@ -146,7 +146,7 @@ console.log(
 				tonight: [
 					{
 						card: { ...movie, media_type: "show", runtime: 55 },
-						href: "/my-shows#start",
+						href: "/watch/not-started",
 					},
 				],
 			},
@@ -159,7 +159,7 @@ console.log(
 				tonight: [
 					{
 						card: { ...movie, media_type: "show", runtime: 99 },
-						href: "/my-shows",
+						href: "/watch",
 						episode: { code: "S2 E4", name: "The next episode", runtime: 48 },
 					},
 				],
@@ -181,7 +181,7 @@ console.log(
 			{
 				...ready,
 				tonight: [
-					{ card: { ...movie, match: null, services: [] }, href: "/my-movies" },
+					{ card: { ...movie, match: null, services: [] }, href: "/watch/movies" },
 				],
 				popular: { ...ready.popular!, scope: "all" },
 			},

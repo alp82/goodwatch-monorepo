@@ -15,7 +15,7 @@ export const emptyContext = (): Context => ({ routes: {}, positions: {} })
 // No auth/account screens: a failed login must not replace the discovery return target.
 export const isDiscovery = (path: string) =>
 	path === "/" ||
-	/^\/(taste|discover|wishlist|search|movie|show|movies|shows|explore|lists|categories)(\/|$)/.test(
+	/^\/(watch|u|taste|discover|wishlist|search|movie|show|movies|shows|explore|lists|categories)(\/|$)/.test(
 		path,
 	)
 
@@ -32,6 +32,7 @@ export function restoredEntry(
 	if (!isDiscovery(pathname) || pathname === "/") return null
 	if (
 		pathname.startsWith("/taste") ||
+		pathname.startsWith("/u/") ||
 		/^\/(movie|show)\//.test(pathname) ||
 		/^\/discover(\/|$)/.test(pathname)
 	)

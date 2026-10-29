@@ -1,3 +1,5 @@
+import { member } from "../../domain/member-paths.ts"
+import { getCachedProfileByUserId } from "../share-lists/view.server"
 import { McpServer } from "@modelcontextprotocol/server"
 import * as z from "zod4"
 import {
@@ -397,7 +399,10 @@ export function createToolServer(
 					calls.inc([tool.name, outcome])
 					durations.observe([tool.name], (performance.now() - start) / 1000)
 				}
-				data = withPageLink(origin, tool.name, args, data)
+				const profile = ["get_library", "get_taste"].includes(tool.name)
+					? await getCachedProfileByUserId(userId).catch(() => null)
+					: null
+				data = withPageLink(origin, tool.name, args, data, member(profile?.handle ?? null))
 				return {
 					content: [{ type: "text", text: JSON.stringify(data) }],
 					structuredContent: data,

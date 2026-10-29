@@ -261,7 +261,8 @@ const { statusPage, statusOfSlug, pageOfOldLink, STATUS_SLUG } = await import(
 test("each status has a page, and the page's slug names the status back", () => {
 	for (const [status, slug] of Object.entries(STATUS_SLUG)) {
 		assert.equal(statusOfSlug(slug), status)
-		assert.equal(statusPage({ status: status as never }), `/my-library/${slug}`)
+		const homes: Record<string, string> = { want: "/watch/movies/wishlist", seen: "/watch/movies/seen", watching: "/watch/watching", on_hold: "/watch/on-hold", dropped: "/watch/dropped", unrated: "/taste" }
+		assert.equal(statusPage({ status: status as never }), homes[status])
 	}
 	assert.equal(statusOfSlug("scores"), null)
 	assert.equal(statusOfSlug(undefined), null)
@@ -270,17 +271,25 @@ test("each status has a page, and the page's slug names the status back", () => 
 test("a status page keeps the list's sort, filter and search, and leaves defaults out", () => {
 	assert.equal(
 		statusPage({ status: "seen", sort: "score", kind: "movie", q: "alien" }),
-		"/my-library/seen?sort=score&type=movie&q=alien",
+		"/watch/movies/seen?sort=score&q=alien",
 	)
-	assert.equal(statusPage({ status: "seen", sort: "last" }), "/my-library/seen")
-	assert.equal(statusPage({ status: "unrated" }), "/my-library/not-rated")
+	assert.equal(statusPage({ status: "seen", sort: "last" }), "/watch/movies/seen")
+	assert.equal(statusPage({ status: "unrated" }), "/taste")
 })
 
 test("an old ?status= link goes to its page; the hub's own URL stays", () => {
 	const old = (query: string) => pageOfOldLink(new URLSearchParams(query))
-	assert.equal(old("status=seen&sort=score"), "/my-library/seen?sort=score")
-	assert.equal(old("status=on_hold"), "/my-library/on-hold")
-	assert.equal(old("status=nonsense"), "/my-library/want")
+	assert.equal(old("status=seen&sort=score"), "/watch/movies/seen?sort=score")
+	assert.equal(old("status=on_hold"), "/watch/on-hold")
+	assert.equal(old("status=nonsense"), "/watch/movies/wishlist")
 	assert.equal(old(""), null)
 	assert.equal(old("type=movie"), null)
+})
+
+
+test("status destinations use a known handle for Not rated and fix Seen's media kind", () => {
+ const viewer = {kind: "member", handle: "ana"} as const
+ assert.equal(statusPage({status: "unrated"}, viewer), "/u/ana/scores/not-rated")
+ assert.equal(statusPage({status: "seen", kind: "show", sort: "score"}, viewer), "/watch/seen?sort=score")
+ assert.equal(statusPage({status: "want", kind: "show"}, viewer), "/watch/movies/wishlist?type=show")
 })

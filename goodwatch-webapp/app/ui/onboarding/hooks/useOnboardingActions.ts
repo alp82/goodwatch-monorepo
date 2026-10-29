@@ -1,3 +1,5 @@
+import { tasteHome } from "~/domain/member-paths"
+import { usePathViewer } from "~/ui/navigation/NavigationContext"
 import { useEffect, useState } from "react"
 import { useNavigate } from "@remix-run/react"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
@@ -8,6 +10,7 @@ export const useOnboardingActions = (
 	guessedCountry?: string
 ) => {
 	const navigate = useNavigate()
+	const viewer = usePathViewer()
 	const setUserSettings = useSetUserSettings()
 	const [isDismissed, setIsDismissed] = useState(false)
 	useEffect(() => {
@@ -53,7 +56,7 @@ export const useOnboardingActions = (
 	}
 
 	const continueToQuiz = () => {
-		navigate("/taste")
+		navigate(tasteHome(viewer))
 		setIsDismissed(true)
 		sessionStorage.setItem("onboarding-banner-dismissed", "true")
 	}

@@ -1,3 +1,4 @@
+import { TASTE_FALLBACK_PATH } from "~/domain/member-paths"
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 // What the start page's Where to start section shows (StartBrowse.tsx), shared by its loader (server/start-page/
 // browse.server.ts) and the browser. Every rail's links are real pages of the site, in the server HTML.
@@ -204,6 +205,6 @@ export const MORE_HUBS = [
 	{ href: "/movies/streaming", label: "Movies by service" },
 	{ href: "/shows/streaming", label: "Shows by service" },
 	{ href: "/explorer", label: "Explorer" },
-	{ href: "/taste", label: "Your taste" },
+	{ href: TASTE_FALLBACK_PATH, label: "Your taste" },
 	{ href: "/how-it-works", label: "How it works" },
 ] as const
