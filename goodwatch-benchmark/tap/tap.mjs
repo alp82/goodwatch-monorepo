@@ -27,20 +27,15 @@ const CONTROLS = {
   streaming_tab: "Streaming tab (the first offer type that isn't selected)",
   action_want: "Title action: Want to See",
   action_seen: "Title action: Mark as Seen",
-  fingerprint_switch: "Fingerprint switcher (the first area's \"See all\" button)",
+  fingerprint_switch: "Fingerprint: the first effect that isn't selected",
   episode_cell: "Episode cell (the first one of the grid)",
-  cast_next: "Cast row: next arrow",
-  related_tab: "Related tab (the first one that isn't selected)",
-  related_next: "Related row: next arrow (the first row)",
+  cast_tier: "Cast tier (the first one that isn't selected)",
   related_step: "Related map: the first poster (a step onto that title)",
-  trailer: "Hero: Play trailer",
-  rate: "Hero: Rate this (the score half)",
+  trailer: "Opener: Play trailer",
+  rate: "You: Rate this (the score half)",
   share: "Share this page",
-  nav_menu: "Section menu (the phone's dropdown in the title header)",
+  nav_menu: "Section index (the phone's section bar)",
 };
-// Controls of the related titles carousel, which serves only for a title whose related map was not there in time.
-// They run only when TAP_CONTROLS names them.
-const OPT_IN = ["related_tab", "related_next"];
 const MODES = ["early", "scroll"];
 const NETWORKS = {
   none: null,
@@ -56,7 +51,7 @@ const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 //
 // A control has: find() for the element to tap, begin(el) for what to remember before the tap, done(el, ctx) for
 // "the effect is in the document now", and ready(el) for "script has taken this control over" (React has attached
-// the node, or Swiper has started the row). ready is a diagnosis, not part of the result.
+// the node). ready is a diagnosis, not part of the result.
 function pageLib(plan) {
   if (window !== window.top || window.__tap) return;
   const now = () => performance.now();
@@ -66,30 +61,6 @@ function pageLib(plan) {
   const shown = (el) => el.getClientRects().length > 0;
   const reactReady = (el) => Object.keys(el).some((key) => key.startsWith("__reactProps$"));
 
-  // A carousel row is a Swiper element with its two arrow buttons as direct children: previous, then next.
-  const row = (selector) => q(selector).find((swiper) => swiper.querySelector(":scope > button"));
-  const slides = (swiper) => q(":scope > .swiper-wrapper > .swiper-slide", swiper);
-  const slideKey = (slide) => slide.querySelector("a[href]")?.getAttribute("href") || text(slide).slice(0, 60);
-  const activeKey = (swiper) => {
-    const active = slides(swiper).find((slide) => slide.classList.contains("swiper-slide-active"));
-    return active ? slideKey(active) : null;
-  };
-  // Effect of an arrow: the row's active slide is another one than before the tap. A row that Swiper hasn't
-  // started has no active slide, and starting makes the first slide active, so that doesn't count.
-  const arrow = (selector) => ({
-    find: () => row(selector)?.querySelector(":scope > button:last-of-type") ?? null,
-    begin: (el) => {
-      const swiper = el.parentElement;
-      const first = slides(swiper)[0];
-      return { rest: activeKey(swiper) ?? (first ? slideKey(first) : null) };
-    },
-    done: (el, ctx) => {
-      const swiper = row(selector);
-      const key = swiper ? activeKey(swiper) : null;
-      return key != null && key !== ctx.rest;
-    },
-    ready: (el) => Boolean(el.parentElement?.classList.contains("swiper-initialized")),
-  });
   // Effect of a toggle or tab: the button with the tapped one's name reports the state "true".
   const toggle = (selector, attribute, pick) => ({
     find: () => q(selector).find((el) => el.getAttribute(attribute) === "false" && (!pick || pick(el))) ?? null,
@@ -98,30 +69,29 @@ function pageLib(plan) {
     ready: reactReady,
   });
   const controls = {
-    streaming_tab: toggle('#streaming [role="tab"]', "aria-selected"),
-    action_want: toggle("#overview button[aria-pressed]", "aria-pressed", (el) => text(el) === "Want to See"),
+    streaming_tab: toggle('#watch [role="tab"]', "aria-selected"),
+    action_want: toggle("#you button[aria-pressed]", "aria-pressed", (el) => text(el) === "Want to See"),
     // A signed-out visitor gets the sign-in prompt, whose code loads on this first press.
     action_seen: {
-      find: () => q("#overview button[aria-pressed]").find((el) => text(el) === "Mark as Seen") ?? null,
+      find: () => q("#you button[aria-pressed]").find((el) => text(el) === "Mark as Seen") ?? null,
       done: () => q('[role="dialog"]').some((dialog) => /sign in/i.test(dialog.textContent || "")),
       ready: reactReady,
     },
-    // Effect: one of the six detail views of the fingerprint is displayed.
+    // Effect: the effect is in the selection (pressed). Its name says "add to" or "take out of", so its words match.
     fingerprint_switch: {
-      find: () => document.querySelector('#fingerprint button[aria-label^="See all "]'),
-      done: () => q('#fingerprint section[aria-label$=" in detail"]').some(shown),
+      find: () => q('#fingerprint button[aria-label$=" the selection"][aria-pressed="false"]').find(shown) ?? null,
+      begin: (el) => ({ words: el.textContent.trim() }),
+      done: (_el, ctx) =>
+        q('#fingerprint button[aria-label$=" the selection"][aria-pressed="true"]').some((other) => other.textContent.trim() === ctx.words),
       ready: reactReady,
     },
-    // Effect: the episode's tip is in the document. The grid is in the document twice, and CSS displays one.
+    // Effect: the episode's details are in the document under the grid.
     episode_cell: {
-      find: () => q('#episode-ratings [data-grid-layout] button[data-float-id^="ep-"]').find(shown) ?? null,
-      done: () => document.querySelector('div[data-float-id^="ep-"][aria-hidden="true"]') != null,
+      find: () => q("#episode-ratings button[data-morph-cell]").find(shown) ?? null,
+      done: () => document.querySelector("#episode-ratings [data-episode-tip]") != null,
       ready: reactReady,
     },
-    cast_next: arrow("#actors_and_crew .swiper"),
-    // The tab row is a Swiper element too, without arrow buttons.
-    related_tab: toggle("#related .swiper:not(:has(> button)) button[aria-pressed]", "aria-pressed"),
-    related_next: arrow("#related .swiper"),
+    cast_tier: toggle("#cast button[aria-pressed]", "aria-pressed"),
     // The related map: a poster is a button, and a tap steps onto its title in place. The section's inline script
     // handles it from the first parse on. Effect: the stage is about the tapped title.
     related_step: {
@@ -130,10 +100,10 @@ function pageLib(plan) {
       done: (_el, ctx) => document.querySelector("#related [data-pl-stage]")?.getAttribute("data-pl-at") === ctx.key,
       ready: () => Boolean(window.__gwRelatedMap),
     },
-    // Effect: the trailer's dialog is open (its close button is in the document). The player loads after that.
+    // Effect: the video stage is up (its close button is in the document). The player loads after that.
     trailer: {
       find: () => q("button[data-trailer]").find(shown) ?? null,
-      done: () => document.querySelector('button[aria-label="Close trailer"]') != null,
+      done: () => document.querySelector('[data-video-stage] button[aria-label^="Close the player"]') != null,
       ready: reactReady,
     },
     // Effect: the score picker is open. A signed-out visitor gets it too; picking a score asks to sign in.
@@ -148,9 +118,9 @@ function pageLib(plan) {
       done: () => /Copied link to clipboard/.test(document.body.textContent || ""),
       ready: reactReady,
     },
-    // Effect: the menu is open.
+    // Effect: the section index under the phone's section bar is open.
     nav_menu: {
-      find: () => q('nav button[aria-haspopup="listbox"]').find(shown) ?? null,
+      find: () => q("[data-details-header] button[aria-expanded]").find(shown) ?? null,
       done: (el) => el.getAttribute("aria-expanded") === "true",
       ready: reactReady,
     },
@@ -366,12 +336,7 @@ function settings() {
   return {
     origin,
     pages,
-    controls: list(
-      "TAP_CONTROLS",
-      Object.keys(CONTROLS).filter(
-        (control) => !OPT_IN.includes(control) || (env.TAP_CONTROLS || "").split(",").includes(control),
-      ),
-    ),
+    controls: list("TAP_CONTROLS", Object.keys(CONTROLS)),
     modes: list("TAP_MODES", MODES),
     runs,
     cpu,

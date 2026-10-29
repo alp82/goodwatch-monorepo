@@ -210,7 +210,7 @@ The limits come from a measured run plus a margin: about 5% on bytes, one or two
 ```sh
 ./bench.sh tap
 ./bench.sh tap --runs 7 --label after-carousel
-./bench.sh tap --controls cast_next,related_step --modes early --runs 3
+./bench.sh tap --controls cast_tier,related_step --modes early --runs 3
 ./bench.sh tap --base-url http://127.0.0.1:3304 --label branch
 ```
 
@@ -244,23 +244,19 @@ Every measurement is its own page load in a new browser: empty cache, no cookies
 
 | Control | What is tapped | The effect |
 | --- | --- | --- |
-| `streaming_tab` | The first offer type tab in `#streaming` that isn't selected, such as "Rent" | That tab has `aria-selected="true"` |
-| `action_want` | "Want to See" | The button has `aria-pressed="true"`. A signed-out visitor's Wishlist lives in the browser, so nothing is saved on the server. |
-| `action_seen` | "Mark as Seen" | The sign-in prompt is in the document (a `dialog` with "Sign in" in its text). Its code loads on this first press, so the time includes one script request. |
-| `fingerprint_switch` | The first "See all ... traits" button in `#fingerprint` | One of the six detail views is displayed |
-| `episode_cell` | The first displayed episode cell in `#episode-ratings` (show page only) | The episode's tip is in the document |
-| `cast_next` | The next arrow of the cast row in `#actors_and_crew` | The row's active slide is another one than before the tap |
+| `streaming_tab` | The first offer type tab in `#watch` that isn't selected, such as "Rent" | That tab has `aria-selected="true"` |
+| `action_want` | "Want to See" in `#you` | The button has `aria-pressed="true"`. A signed-out visitor's Wishlist lives in the browser, so nothing is saved on the server. |
+| `action_seen` | "Mark as Seen" in `#you`, the Seen half of the control | The sign-in prompt is in the document (a `dialog` with "Sign in" in its text). Its code loads on this first press, so the time includes one script request. |
+| `fingerprint_switch` | The first effect in `#fingerprint` that isn't in the selection | That effect is in the selection (`aria-pressed="true"`) |
+| `episode_cell` | The first displayed episode cell in `#episode-ratings` (show page only) | The episode's details are in the document (`[data-episode-tip]`) |
+| `cast_tier` | The first cast tier in `#cast` that isn't selected, such as "Main cast" | That tier has `aria-pressed="true"`. Its people load after that and aren't part of the time. |
 | `related_step` | The first poster of the related map in `#related` | The map is about the tapped title: the stage's `data-pl-at` is the poster's key. The section's inline script does it, before hydration. |
-| `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. Runs only when `--controls` names it. |
-| `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap. Runs only when `--controls` names it. |
-| `trailer` | "Play trailer" in the hero | The trailer's dialog is open (its close button is in the document) |
-| `rate` | "Rate this movie" or "Rate this show", the score half of the hero's control | The score picker is open (a `dialog` named "Your score for ...") |
+| `trailer` | The trailer card in the opener (`button[data-trailer]`) | The video stage is up (its close button is in the document) |
+| `rate` | "Rate this movie" or "Rate this show", the score half of the control in `#you` | The score picker is open (a `dialog` named "Your score for ...") |
 | `share` | "Share this page" | The link is copied: a browser without a share sheet, as this one, shows the toast "Copied link to clipboard" |
-| `nav_menu` | The section menu in the title header, the phone's dropdown | The menu is open (`aria-expanded="true"`) |
+| `nav_menu` | The section index in the phone's section bar (`[data-details-header]`) | The index is open (`aria-expanded="true"`) |
 
-`related_tab` and `related_next` belong to the related titles carousel, which serves only for a title whose related map was not there in time. A default run leaves them out.
-
-The selectors use section ids, roles, and accessible names. The carousel arrows have no name: they are the last `button` that is a direct child of a `.swiper` element. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
+The selectors use section ids, roles, and accessible names. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
 
 **What a measurement can end as.**
 
@@ -585,7 +581,7 @@ Normal cleanup removes each remote run directory and its lock. Docker images and
 
 `results/static-hostname-2026-10-09/` holds the summaries of the page-view runs with the static hostname from October 9, 2026: the movie page with the files from the static hostname and from the origin, the primary mix, and the documents alone. [`docs/benchmarks/viral-spike-static-hostname.md`](../docs/benchmarks/viral-spike-static-hostname.md) explains them and says which runs aren't valid.
 
-`results/tap-baseline-2026-10-06/` holds the tap test's production baseline from October 6, 2026 (21:08 to 21:39 UTC, on the generator, five runs per control and mode): `summary.md`, `summary.json`, and the measurements in `tap.jsonl`. Compare a later `./bench.sh tap` run on the generator against it.
+`results/tap-baseline-2026-10-06/` holds the tap test's production baseline from October 6, 2026 (21:08 to 21:39 UTC, on the generator, five runs per control and mode): `summary.md`, `summary.json`, and the measurements in `tap.jsonl`. Compare a later `./bench.sh tap` run on the generator against it. It was measured on the old title page: the new page taps other controls for `fingerprint_switch`, `trailer`, and `nav_menu`, `cast_tier` replaced `cast_next`, and the carousel's `related_tab` and `related_next` are gone, so only the other rows compare.
 
 ## Sample smoke run
 
