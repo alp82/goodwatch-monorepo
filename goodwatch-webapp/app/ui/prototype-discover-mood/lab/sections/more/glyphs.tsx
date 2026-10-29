@@ -1,6 +1,7 @@
-// PROTOTYPE (Discover lab, round 17): small drawn glyphs for the more section's tiles (variants d, e, f). Each preset
-// glyph draws the whole scale and fills it up to the preset's step, so the row reads as a ramp at the same size.
-// Everything is currentColor: the tile sets gray, amber or a hue.
+// PROTOTYPE (Discover lab, round 17, round 18): small drawn glyphs for the more section's tiles (variants d, e, g).
+// Each preset glyph draws the whole scale and fills it up to the preset's step, so the row reads as a ramp at the same
+// size. Everything is currentColor (the tile sets gray, amber or a hue); Seasons' episode grid can take shade tones.
+// Round 18: Seasons is a small episode grid instead of a tower of slabs.
 import type { MoreKey, Roi, ShowStatus } from "./store"
 
 const FAINT = 0.22
@@ -61,13 +62,50 @@ function Coins({ on }: { on: number }) {
 	)
 }
 
-/** A tower of four season slabs, filled from the bottom. */
-function Slabs({ on }: { on: number }) {
+/** Shade per cell, like a ratings grid: mostly good episodes, some weaker ones. Fixed, so it never flickers. */
+const SHADE = [0, 0, 1, 0, 2, 0, 1, 1, 0, 0, 2, 1, 0, 1, 0, 0, 1, 2, 0, 0, 1]
+const OPACITY = [1, 0.64, 0.38]
+
+/**
+ * The four season grids, each in the same 40 by 24 box: rows are seasons, cells episodes, a last row a bit short.
+ * Whole pixels, so the cells stay crisp: 4 px cells for one season, 3 px up to 7, 2 px for 8+.
+ */
+const GRIDS = [
+	{ rows: [7], cell: 4, gap: 1 },
+	{ rows: [9, 9, 7], cell: 3, gap: 1 },
+	{ rows: [9, 9, 8, 9, 6], cell: 3, gap: 1 },
+	{ rows: [13, 13, 12, 13, 13, 11, 13, 10], cell: 2, gap: 1 },
+]
+
+/**
+ * A miniature of the title page's season by episode ratings grid: one short row for one season, a big dense block
+ * for 8+. Cells take three shade steps: `tones` (dark to light: best to weakest) or currentColor at three opacities.
+ */
+export function EpisodeGrid({ step, tones }: { step: number; tones?: [string, string, string] }) {
+	const g = GRIDS[Math.max(0, Math.min(3, step))]
+	const w = Math.max(...g.rows) * (g.cell + g.gap) - g.gap
+	const h = g.rows.length * (g.cell + g.gap) - g.gap
+	const x0 = Math.round((40 - w) / 2)
+	const y0 = Math.round((24 - h) / 2)
 	return (
-		<svg viewBox="0 0 22 16" className="h-4 w-[22px]" aria-hidden>
-			{[0, 1, 2, 3].map((j) => (
-				<rect key={j} x={j * 1.4} y={13 - j * 4} width={22 - j * 2.8} height={3} rx={1} fill="currentColor" opacity={j < on ? 1 : FAINT} />
-			))}
+		<svg viewBox="0 0 40 24" className="h-6 w-10" aria-hidden>
+			{g.rows.map((n, r) =>
+				Array.from({ length: n }, (_, c) => {
+					const sh = SHADE[(r * 7 + c * 3 + step) % SHADE.length]
+					return (
+						<rect
+							key={`${r}-${c}`}
+							x={x0 + c * (g.cell + g.gap)}
+							y={y0 + r * (g.cell + g.gap)}
+							width={g.cell}
+							height={g.cell}
+							rx={g.cell > 2 ? 0.8 : 0.5}
+							fill={tones ? tones[sh] : "currentColor"}
+							opacity={tones ? 1 : OPACITY[sh]}
+						/>
+					)
+				}),
+			)}
 		</svg>
 	)
 }
@@ -90,8 +128,8 @@ function Clock({ fill }: { fill: number }) {
 	)
 }
 
-/** A preset's glyph: its step `i` of the key's presets. */
-export function PresetGlyph({ k, i }: { k: MoreKey; i: number }) {
+/** A preset's glyph: its step `i` of the key's presets. `tones` shades Seasons' grid. */
+export function PresetGlyph({ k, i, tones }: { k: MoreKey; i: number; tones?: [string, string, string] }) {
 	switch (k) {
 		case "votes":
 			return <Crowd on={i + 1} />
@@ -103,7 +141,7 @@ export function PresetGlyph({ k, i }: { k: MoreKey; i: number }) {
 		case "revenue":
 			return <Coins on={i + 1} />
 		case "seasons":
-			return <Slabs on={i + 1} />
+			return <EpisodeGrid step={i} tones={tones} />
 		case "finish":
 			return <Clock fill={(i + 1) / 4} />
 	}

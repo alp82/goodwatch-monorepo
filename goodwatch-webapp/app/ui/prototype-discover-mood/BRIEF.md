@@ -675,3 +675,25 @@ needs to be as vibrant as the moods tiles, but still some variations needed." Sh
   cuts are picked by TMDB popularity (2.3 to 4.3, the #10,000 title is 7.9), not a read rank. Examples are fixed:
   they don't follow the list's other filters (a movies-only list still shows Breaking Bad under Everyone's seen it).
   Hit's "3x" is the label's rule; Joker and Blair Witch clear it by far.
+
+## Round 18 (2026-10-29): g, d's glyphs in e's color; Seasons as an episode grid
+
+Owner on round 17: "d drawings are awesome! but for seasons we need something better. maybe something like a smaller
+or bigger episode grid. combine that with e for perfection. not f, thats too much"
+
+- f is gone (`f.tsx`, `examples.ts`: the example posters, their loading and the fan). a, d and e stay for comparison.
+- Seasons glyph (`glyphs.tsx` `EpisodeGrid`, in d and g): a miniature of the title page's season by episode ratings
+  grid, rows are seasons and cells episodes, last row a bit short. One season is one row of 7 cells, 2 to 3 three
+  rows, 4 to 7 a five row block, 8+ eight rows of small cells. Same 40 by 24 box for all four (the Seasons tiles' top
+  row is 24 px, the other groups keep 16 px), whole pixel cells (4, 3, 3, 2 px) so they stay crisp. Three fixed shade
+  steps per cell, mostly the best one: in d currentColor at three opacities (gray shades at rest, amber shades
+  picked), in g three lightness steps of the group's violet (deep shades on the picked fill).
+- g (`g.tsx`, the default now): every group keeps d's glyph, drawn in e's per-group hue (ratings blue, popularity
+  rose, budget sage, box office gold, seasons violet, Hit warm, Flop steel). Behind it only one quiet wash for every
+  group: a glow from the glyph's top left corner at about two thirds of e's strength, stronger for bigger presets
+  (Popular now strongest), plus a faint hue edge. Count and sub line take the soft hue. Picked: the tile fades in a
+  light fill of its hue (opacity only) and the glyph turns a deep shade of it. Dead tiles: gray glyph, wash at 20%.
+- g's quiet groups: Time to finish keeps a's gray tile with d's clock, picked is a's white with the clock in a muted
+  teal; Status keeps d's marked chips, gray, picked is white with the mark in its state's hue (running green, ended
+  steel, canceled muted red).
+- e exports its `HUES` and `hsla` for g; nothing else in e changed.

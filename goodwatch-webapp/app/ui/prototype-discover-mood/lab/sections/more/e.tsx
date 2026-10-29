@@ -11,8 +11,8 @@ import { PresetTiles, toggleRange, useSim } from "./parts"
 import { type MoreKey, type MoreState, PRESETS, ROI_LABEL, type Roi, sameIdx, setMore } from "./store"
 import { RichTile } from "./tiles"
 
-type Wash = "diagonal" | "corner" | "rise" | "flat"
-interface Hue {
+export type Wash = "diagonal" | "corner" | "rise" | "flat"
+export interface Hue {
 	h: number
 	/** Saturation of the wash, kept low. */
 	s: number
@@ -21,7 +21,7 @@ interface Hue {
 	max: number
 }
 
-const HUES: Partial<Record<MoreKey | Roi, Hue>> = {
+export const HUES: Partial<Record<MoreKey | Roi, Hue>> = {
 	votes: { h: 205, s: 42, wash: "diagonal", max: 0.3 },
 	rank: { h: 338, s: 38, wash: "corner", max: 0.34 },
 	budget: { h: 152, s: 32, wash: "rise", max: 0.3 },
@@ -31,7 +31,7 @@ const HUES: Partial<Record<MoreKey | Roi, Hue>> = {
 	flop: { h: 214, s: 30, wash: "diagonal", max: 0.26 },
 }
 
-const hsla = (c: Hue, a: number, l = 62) => `hsla(${c.h}, ${c.s}%, ${l}%, ${a.toFixed(3)})`
+export const hsla = (c: Hue, a: number, l = 62) => `hsla(${c.h}, ${c.s}%, ${l}%, ${a.toFixed(3)})`
 
 /** The wash and the picked fill behind a tile. `t` is the preset's strength, 0 to 1. */
 function Layer({ c, t, active, dead }: { c: Hue; t: number; active: boolean; dead: boolean }) {

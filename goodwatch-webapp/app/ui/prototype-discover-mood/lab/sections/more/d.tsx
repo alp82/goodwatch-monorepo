@@ -1,6 +1,6 @@
 // PROTOTYPE (Discover lab, round 17) More d: a's layout, quiet tiles with a drawn glyph that grows along the row
-// (a crowd, signal bars, $ to $$$$, coin stacks, season slabs, a filling clock). Gray at rest, amber when picked.
-// Hit and Flop carry a trend line, the Status chips a state mark.
+// (a crowd, signal bars, $ to $$$$, coin stacks, a filling clock). Gray at rest, amber when picked. Hit and Flop
+// carry a trend line, the Status chips a state mark. Round 18: Seasons draws a small episode grid that grows.
 import type { ProtoDiscover } from "../../../kit"
 import type { SectionProps } from "../../types"
 import { type PresetsProps, MoreView, type Skin } from "./a"
@@ -22,6 +22,7 @@ export function GlyphPresets({ k, x, d, cols }: PresetsProps) {
 					active={sameIdx(x[k], p.range)}
 					onClick={() => toggleRange(x, k, p.range)}
 					art={<PresetGlyph k={k} i={i} />}
+					artH={k === "seasons" ? "h-6" : undefined}
 				/>
 			))}
 		</div>

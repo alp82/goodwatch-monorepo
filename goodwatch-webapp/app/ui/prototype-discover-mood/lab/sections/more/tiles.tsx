@@ -1,5 +1,5 @@
-// PROTOTYPE (Discover lab, round 17): the tile and chip the more section's d, e and f variants share. a's Tile with a
-// top row for a picture (glyph or posters) and the count, and an optional layer behind (e's washes). The label keeps
+// PROTOTYPE (Discover lab, round 17, round 18): the tile and chip the more section's d, e and g variants share. a's
+// Tile with a top row for a glyph and the count, and an optional layer behind (e's and g's washes). The label keeps
 // one weight in both states and the count stays put, so picking never moves anything.
 import { motion } from "framer-motion"
 import type { CSSProperties, ReactNode } from "react"
@@ -30,11 +30,11 @@ export function RichTile({
 	count: number | null
 	active: boolean
 	onClick: () => void
-	/** The top row's left: a glyph or posters (a function gets the tile's state). Without it the count sits by the label, as in a. */
+	/** The top row's left: a glyph (a function gets the tile's state). Without it the count sits by the label, as in a. */
 	art?: ReactNode | ((s: TileState) => ReactNode)
-	/** The top row's height (the art reserves it before it loads). */
+	/** The top row's height, the same for every tile of a group (Seasons' grids are taller). */
 	artH?: string
-	/** Painted behind the content (e's washes); the tile's own fill then stays faint. */
+	/** Painted behind the content (e's and g's washes); the tile's own fill then stays faint. */
 	layer?: ReactNode
 	/** No white fill when picked: the layer carries it. */
 	tinted?: boolean

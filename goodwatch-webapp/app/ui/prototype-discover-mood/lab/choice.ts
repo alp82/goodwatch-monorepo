@@ -32,7 +32,7 @@ export const DEFAULTS: Partial<Record<SectionId, string>> = {
 	scores: "a",
 	released: "f",
 	age: "a",
-	more: "a",
+	more: "g",
 }
 
 export type Choice = Partial<Record<SectionId, string>> & { sec: SectionId; as: Viewer }
