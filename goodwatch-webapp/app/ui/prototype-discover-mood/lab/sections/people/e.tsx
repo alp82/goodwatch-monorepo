@@ -5,6 +5,7 @@ import { CheckIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
 import { TAP } from "~/ui/filter-bar/motion"
 import type { SectionProps } from "../../types"
+import { useResultPeople } from "./in-results"
 import { PickedOr, byRole, useFeatured } from "./roles"
 import { Face, type People, type Person, usePeople } from "./shared"
 
@@ -52,7 +53,7 @@ function Lane({ title, list, people, phone, waiting, typed }: { title: string; l
 						<span key={i} className="shrink-0 animate-pulse rounded-full bg-white/[0.06] motion-reduce:animate-none" style={{ width: size, height: size, marginInline: 14 }} />
 					))
 				) : list.length === 0 ? (
-					<span className="self-center text-[13px] text-gray-600">{people.found.length ? "None" : `No one called “${typed}”`}</span>
+					<span className="self-center text-[13px] text-gray-600">{!typed ? "None in these results" : people.found.length ? "None" : `No one called “${typed}”`}</span>
 				) : (
 					list.slice(0, 14).map((p) => <FaceButton key={p.id} p={p} people={people} size={size} />)
 				)}
@@ -62,17 +63,22 @@ function Lane({ title, list, people, phone, waiting, typed }: { title: string; l
 }
 
 export function PeopleE({ d, phone, text }: SectionProps) {
-	const people = usePeople(d, text)
+	// Round 9: the running search's text doesn't search names; its results' people show instead of well-known ones.
+	const bar = text.trim()
+	const name = bar && bar !== d.q ? text : ""
+	const people = usePeople(d, name)
 	const featured = useFeatured()
+	const inResults = useResultPeople(d)
+	const base = inResults.active ? byRole([...inResults.actors, ...inResults.behind]) : featured
 	const found = byRole(people.found)
-	const typed = text.trim()
-	const waiting = people.asking ? people.loading && people.found.length === 0 : featured.loading
+	const typed = name.trim()
+	const waiting = people.asking ? people.loading && people.found.length === 0 : inResults.active ? inResults.loading : featured.loading
 	const lanes: { title: string; list: Person[] }[] = [
-		{ title: "Actors", list: people.asking ? found.actors : featured.actors },
-		{ title: "Directors", list: people.asking ? found.directors : featured.directors },
+		{ title: "Actors", list: people.asking ? found.actors : base.actors },
+		{ title: "Directors", list: people.asking ? found.directors : base.directors },
 		{
 			title: "Writers and crew",
-			list: people.asking ? [...found.writers, ...found.crew].sort((a, b) => b.popularity - a.popularity) : [...featured.writers, ...featured.crew],
+			list: people.asking ? [...found.writers, ...found.crew].sort((a, b) => b.popularity - a.popularity) : [...base.writers, ...base.crew],
 		},
 	]
 	return (

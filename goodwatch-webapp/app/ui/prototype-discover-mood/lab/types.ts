@@ -2,6 +2,7 @@
 // the bar, tabs, sub-tab row, status line, phone sheet and grid. A section renders the content area of one sub-tab
 // (or, for `mood`, the whole Mood tab). Each section has variants; `a` is the baseline, the rest explore.
 import type { ReactNode } from "react"
+import type { TitleCard } from "~/server/title-cards.server"
 import type { ProtoDiscover } from "../kit"
 import type { Pieces } from "./shell-parts"
 
@@ -27,6 +28,17 @@ export interface SectionProps {
 	open: (seg: "search" | "mood" | "watch", sub?: string) => void
 	/** Closes the panel (phones: the sheet), e.g. after running a search so the grid shows it. */
 	close?: () => void
+	/** Only for a variant with `ownFind`: Find a filter's field to place, and its results while it has text. */
+	find?: { field: ReactNode; results: ReactNode | null }
+}
+
+/** A list the grid, the status line and "Show N titles" show instead of Discover's own (mood i: the AND list). */
+export interface ResultsView {
+	total: number | null
+	cards: TitleCard[]
+	loading: boolean
+	hasMore: boolean
+	loadMore: () => void
 }
 
 export interface SectionVariant {
@@ -38,5 +50,9 @@ export interface SectionVariant {
 	liveGrid?: boolean
 	/** Titles only: a Search button at the right of the bar's field (runs the text, closes the panel). */
 	searchButton?: boolean
+	/** Mood only: the section places Find a filter itself (props.find), so the shell drops its own row. */
+	ownFind?: boolean
+	/** Mood only: a hook whose list replaces Discover's in the grid and footer while it returns one. */
+	useResults?: (d: ProtoDiscover) => ResultsView | null
 	View: (props: SectionProps) => ReactNode
 }

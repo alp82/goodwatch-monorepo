@@ -6,25 +6,31 @@ import { useState } from "react"
 import { TAP } from "~/ui/filter-bar/motion"
 import type { SectionProps } from "../../types"
 import { NameRow, PickedOr, ROLES, type Role, RowsLoading, byRole, useFeatured } from "./roles"
+import { useResultPeople } from "./in-results"
 import { usePeople } from "./shared"
 
 export function PeopleD({ d, phone, text }: SectionProps) {
-	const people = usePeople(d, text)
+	// Round 9: the running search's text doesn't search names; its results' people show instead of well-known ones.
+	const bar = text.trim()
+	const name = bar && bar !== d.q ? text : ""
+	const people = usePeople(d, name)
 	const featured = useFeatured()
+	const inResults = useResultPeople(d)
+	const counted = byRole([...inResults.actors, ...inResults.behind])
 	const found = byRole(people.found)
-	const typed = text.trim()
+	const typed = name.trim()
 	const [pick, setPick] = useState<{ role: Role; text: string } | null>(null)
 	const auto: Role = people.asking ? (ROLES.find((r) => found[r.id].length > 0)?.id ?? "actors") : "actors"
 	const role = pick && pick.text === people.term ? pick.role : auto
-	const list = people.asking ? found[role] : featured[role]
+	const list = people.asking ? found[role] : inResults.active ? counted[role] : featured[role]
 	const max = phone ? 6 : 20
-	const waiting = people.asking ? people.loading && people.found.length === 0 : featured.loading
+	const waiting = people.asking ? people.loading && people.found.length === 0 : inResults.active ? inResults.loading : featured.loading
 
 	const tabs = (
 		<div role="tablist" aria-label="Role" className={`flex gap-1 rounded-full bg-white/[0.05] p-1 ${phone ? "-mx-1 overflow-x-auto [scrollbar-width:none]" : ""}`}>
 			{ROLES.map((r) => {
 				const on = r.id === role
-				const n = people.asking ? found[r.id].length : null
+				const n = people.asking ? found[r.id].length : inResults.active && !inResults.loading ? counted[r.id].length : null
 				return (
 					<motion.button
 						key={r.id}
@@ -50,10 +56,16 @@ export function PeopleD({ d, phone, text }: SectionProps) {
 				<RowsLoading n={phone ? 4 : 8} />
 			) : list.length === 0 ? (
 				<span className="flex h-11 items-center pl-1.5 text-[13px] text-gray-600">
-					{people.found.length === 0 ? `No one called “${typed}”` : `No ${ROLES.find((r) => r.id === role)?.label.toLowerCase()} called “${typed}”`}
+					{!people.asking
+						? "None in these results"
+						: people.found.length === 0
+							? `No one called “${typed}”`
+							: `No ${ROLES.find((r) => r.id === role)?.label.toLowerCase()} called “${typed}”`}
 				</span>
 			) : (
-				list.slice(0, max).map((p) => <NameRow key={p.id} p={p} people={people} />)
+				list.slice(0, max).map((p) => (
+					<NameRow key={p.id} p={p} people={people} note={"count" in p ? `${(p as { count: number }).count}` : undefined} />
+				))
 			)}
 		</div>
 	)

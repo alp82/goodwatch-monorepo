@@ -21,7 +21,7 @@ export const DEFAULTS: Partial<Record<SectionId, string>> = {
 	// Round 6 and 7 verdicts (2026-10-28, 2026-10-29).
 	titles: "g",
 	people: "c",
-	taste: "a",
+	taste: "f",
 	mood: "e",
 	services: "b",
 	origin: "a",

@@ -141,11 +141,20 @@ export function RowsLoading({ n = 4 }: { n?: number }) {
 	)
 }
 
-/** The chosen titles of one side as posters with a remove mark; empty slots keep the height. */
-export function Shelf({ steer, group, slots = 5, size = "md" }: { steer: SteerApi; group: Steer; slots?: number; size?: "sm" | "md" }) {
+/** The chosen titles of one side as posters with a remove mark. Empty: up to `slots` of `suggest` as faint posters
+ * with the side's thumb; one tap puts a title in (no empty slots). */
+export function Shelf({
+	steer,
+	group,
+	slots = 5,
+	size = "md",
+	suggest = [],
+}: { steer: SteerApi; group: Steer; slots?: number; size?: "sm" | "md"; suggest?: SteerTitle[] }) {
 	const keys = group === "loved" ? steer.loved : steer.disliked
 	const ring = group === "loved" ? "ring-emerald-400" : "ring-rose-400"
 	const dim = size === "sm" ? "h-[66px] w-11" : "h-[84px] w-14"
+	const free = keys.length ? [] : suggest.filter((t) => !steer.stateOf(t.key)).slice(0, slots)
+	const Icon = group === "loved" ? HandThumbUpIcon : HandThumbDownIcon
 	return (
 		<div className="flex gap-2.5 overflow-x-auto pt-1 pb-1 pl-1 [scrollbar-width:none]">
 			{keys.map((k) => {
@@ -169,9 +178,23 @@ export function Shelf({ steer, group, slots = 5, size = "md" }: { steer: SteerAp
 					</motion.button>
 				)
 			})}
-			{Array.from({ length: Math.max(0, slots - keys.length) }, (_, i) => (
-				// biome-ignore lint/suspicious/noArrayIndexKey: empty slots
-				<span key={i} className={`${dim} shrink-0 rounded-lg border border-dashed border-white/[0.09]`} />
+			{free.map((t) => (
+				<motion.button
+					key={t.key}
+					type="button"
+					whileTap={TAP}
+					title={`${group === "loved" ? "Loved" : "Disliked"}: ${t.title}`}
+					aria-label={`${group === "loved" ? "Loved" : "Disliked"}: ${t.title}`}
+					onClick={() => steer.set(t, group)}
+					className="group relative shrink-0 rounded-lg opacity-55 transition-opacity cursor-pointer outline-none hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-amber-400"
+				>
+					<Thumb t={t} className={`${dim} rounded-lg`} />
+					<span
+						className={`absolute -right-1 -bottom-1 grid h-5 w-5 place-items-center rounded-full ring-2 ring-gray-950 ${group === "loved" ? "bg-emerald-500/80 text-white" : "bg-rose-500/80 text-white"}`}
+					>
+						<Icon className="h-3 w-3" aria-hidden />
+					</span>
+				</motion.button>
 			))}
 		</div>
 	)

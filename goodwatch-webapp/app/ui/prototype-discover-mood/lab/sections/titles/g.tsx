@@ -1,8 +1,10 @@
 // PROTOTYPE (Discover lab, titles g "Suggestions list"): a classic search-suggest list under the bar. One list, grouped,
 // ↑ ↓ Enter: the first row runs the bar's text (the text shows once, as that row's action), then filters the text
-// points at, titles (steer with thumbs or Like this), people (Cast and crew). The right column holds what steers this
-// list now, as removable session chips (only once something is picked).
+// points at, titles (steer with thumbs or Like this), people (Cast and crew).
 // Round 8: running a search (the first row, a Try row, Enter) puts it in the bar's pill and closes the panel.
+// Round 9: one full-width list, no side column. What steers the list (More like, Less like, Like this, people) sits in
+// the search row as removable chips. When no title has the text's name, Titles lists the top of the results (or of the
+// preview) to thumb, and People lists who is most in the running search's results.
 import {
 	ArrowTurnDownLeftIcon,
 	CheckIcon,
@@ -12,12 +14,11 @@ import {
 	UserIcon,
 	XMarkIcon,
 } from "@heroicons/react/20/solid"
-import { motion } from "framer-motion"
 import { type ReactNode, useEffect, useRef } from "react"
-import { TAP } from "~/ui/filter-bar/motion"
 import { EXAMPLE_PROMPTS, short } from "../../../kit"
 import { type FoundTitle, PRIVATE, PosterThumb, useQuickTitles } from "../../shell-parts"
 import type { SectionProps } from "../../types"
+import { type CountedPerson, useResultPeople } from "../people/in-results"
 import { Face, type Person, roleOf, usePeople } from "../people/shared"
 import {
 	type FilterMatch,
@@ -26,11 +27,12 @@ import {
 	STEER_ORDER,
 	SteerChip,
 	SteerToggle,
+	cardTitle,
 	chipStyle,
 	useFilterMatches,
 	useListNav,
 } from "./ghi-parts"
-import { EXAMPLE_KEYS, PreviewPosters, SECTION_LABEL, type TitleUses, useKnown, useSearchPreview, useTitleUses } from "./shared"
+import { PreviewPosters, SECTION_LABEL, type TitleUses, useKnown, useSearchPreview, useTitleUses } from "./shared"
 
 type Item =
 	| { kind: "run"; text: string }
@@ -40,6 +42,10 @@ type Item =
 	| { kind: "person"; p: Person }
 
 const PURPLE = "#c084fc"
+/** The search ranks at most this many titles; filters can leave fewer (as in d). */
+const SEARCH_CAP = 100
+const matches = (n: number) => (n >= SEARCH_CAP ? `Top ${SEARCH_CAP} matches` : `${short(n)} ${n === 1 ? "match" : "matches"}`)
+
 
 export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionProps) {
 	const go = (q: string) => {
@@ -55,14 +61,26 @@ export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionPr
 	const preview = useSearchPreview(d, text)
 	const uses = useTitleUses(d)
 	const known = useKnown(uses.picked.map((p) => p.key))
+	const showing = typed !== "" && typed === d.q
+	const inResults = useResultPeople(d)
 
 	const nTitles = phone ? 3 : 4
+	// No title has this name: the top of what the text returns, to thumb (the running results, else the preview).
+	const named = titles.found.slice(0, nTitles)
+	const fallback: FoundTitle[] =
+		asking && !titles.loading && named.length === 0
+			? (showing ? d.cards : preview.ready ? preview.cards : []).slice(0, nTitles).map(cardTitle)
+			: []
+	const tList = named.length ? named : fallback
+	// No person has this name: who is most in the running search's results.
+	const counted = showing && people.found.length === 0 ? [inResults.actors[0], inResults.behind[0]].filter((p): p is CountedPerson => !!p) : []
+	const pList: Person[] = people.found.length ? people.found.slice(0, 2) : counted
 	const items: Item[] = typed
 		? [
 				{ kind: "run", text: typed },
 				...filters.map((m) => ({ kind: "filter" as const, m })),
-				...(asking ? titles.found.slice(0, nTitles).map((t) => ({ kind: "title" as const, t })) : []),
-				...(asking ? people.found.slice(0, 2).map((p) => ({ kind: "person" as const, p })) : []),
+				...(asking ? tList.map((t) => ({ kind: "title" as const, t })) : []),
+				...(asking ? pList.map((p) => ({ kind: "person" as const, p })) : []),
 			]
 		: EXAMPLE_PROMPTS.slice(0, 5).map((p) => ({ kind: "prompt" as const, text: p }))
 
@@ -90,24 +108,30 @@ export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionPr
 	const pRows = items.filter((x): x is Extract<Item, { kind: "person" }> => x.kind === "person")
 	const prompts = items.filter((x): x is Extract<Item, { kind: "prompt" }> => x.kind === "prompt")
 
+	const anyPick = uses.picked.length > 0 || people.chosen.length > 0
+	const chips = anyPick ? <PickChips uses={uses} known={known.known} people={people} /> : null
+
 	const listBody = (
 		<div ref={list} role="listbox" aria-label="Suggestions" className={phone ? "flex flex-col gap-1" : "flex flex-col gap-1"}>
 			{run && (
 				<Row i={at(run)} active={nav.active} onHover={nav.setActive} onClick={() => go(typed)} tall>
 					<MagnifyingGlassIcon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
-					<span className="min-w-0 flex-1 truncate text-[16px] text-gray-300">
-						{typed === d.q ? "Showing" : "Search"}{" "}
-						<span className={`brand-header text-[18px] text-white ${PRIVATE}`}>{typed}</span>
+					<span className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
+						<span className="flex min-w-0 shrink items-baseline gap-1.5 text-[16px] text-gray-300">
+							<span className="shrink-0">{showing ? "Showing" : "Search"}</span>
+							<span className={`brand-header truncate text-[18px] text-white ${PRIVATE}`}>{typed}</span>
+						</span>
+						{!phone && chips}
 					</span>
-					{!phone && typed !== d.q && (
+					{!phone && (
 						<span className="flex shrink-0 items-center gap-3">
-							{preview.ready && preview.total != null && (
-								<span className="text-[12px] tabular-nums text-gray-500">{short(preview.total)} titles</span>
-							)}
-							<PreviewPosters p={preview} n={5} w={22} />
+							{showing
+								? d.total != null && <span className="text-[12px] tabular-nums text-gray-500">{matches(d.total)}</span>
+								: preview.ready && preview.total != null && <span className="text-[12px] tabular-nums text-gray-500">{matches(preview.total)}</span>}
+							{!showing && <PreviewPosters p={preview} n={5} w={22} />}
 						</span>
 					)}
-					{typed === d.q ? (
+					{showing ? (
 						<button
 							type="button"
 							onClick={(e) => {
@@ -125,6 +149,8 @@ export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionPr
 					)}
 				</Row>
 			)}
+			{/* Phones: the chips under the row; an empty bar: on their own. */}
+			{(phone || !run) && anyPick && <div className="flex flex-wrap gap-2 px-3 pt-1 pb-1">{chips}</div>}
 
 			{prompts.length > 0 && <Head icon={<MagnifyingGlassIcon />}>Try</Head>}
 			{prompts.map((it) => (
@@ -146,23 +172,26 @@ export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionPr
 				</div>
 			)}
 
-			{asking && <Head icon={<FilmIcon />}>Titles</Head>}
+			{asking && <Head icon={<FilmIcon />}>{named.length || !fallback.length ? "Titles" : showing ? "In these results" : "In this search"}</Head>}
 			{asking && tRows.length === 0 && (
-				<p className="flex h-11 items-center px-3 text-[13px] text-gray-500">{titles.loading ? "Looking…" : `No title called “${typed}”`}</p>
+				<p className="flex h-11 items-center px-3 text-[13px] text-gray-500">{titles.loading || (showing ? d.loading : preview.busy) ? "Looking…" : `No title called “${typed}”`}</p>
 			)}
-			{tRows.map((it) => (
-				<TitleItem key={it.t.key} it={it.t} i={at(it)} nav={nav} uses={uses} remember={known.remember} phone={phone} />
-			))}
+			<div className={phone ? "flex flex-col gap-1" : "grid grid-cols-2 gap-x-3 gap-y-1"}>
+				{tRows.map((it) => (
+					<TitleItem key={it.t.key} it={it.t} i={at(it)} nav={nav} uses={uses} remember={known.remember} phone={phone} />
+				))}
+			</div>
 
-			{pRows.length > 0 && <Head icon={<UserIcon />}>People</Head>}
-			{pRows.map((it) => {
+			{pRows.length > 0 && <Head icon={<UserIcon />}>{people.found.length ? "People" : "Most in these results"}</Head>}
+			<div className={phone ? "flex flex-col gap-1" : "grid grid-cols-2 gap-x-3 gap-y-1"}>
+				{pRows.map((it) => {
 				const on = people.has(it.p.id)
 				return (
 					<Row key={it.p.id} i={at(it)} active={nav.active} onHover={nav.setActive} onClick={() => people.toggle(it.p)}>
 						<Face src={it.p.profile} size={32} />
 						<span className="min-w-0 flex-1">
 							<span className="block truncate text-[14px] font-semibold text-gray-100">{it.p.name}</span>
-							<span className="block text-[12px] text-gray-500">{roleOf(it.p.department)}</span>
+							<span className="block text-[12px] text-gray-500">{personNote(it.p)}</span>
 						</span>
 						<span
 							className={`flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold whitespace-nowrap ${on ? "text-white" : "text-gray-300 ring-1 ring-inset ring-white/10"}`}
@@ -176,24 +205,20 @@ export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionPr
 					</Row>
 				)
 			})}
-		</div>
-	)
-
-	const shaping = <Shaping d={d} uses={uses} known={known.known} people={people} phone={phone} onExample={(k) => uses.toggle("similarTo", k)} />
-
-	if (phone)
-		return (
-			<div className="flex flex-col gap-6">
-				{listBody}
-				{shaping}
 			</div>
-		)
-	return (
-		<div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_380px]">
-			<div className="min-h-0 overflow-y-auto overscroll-contain border-r border-white/[0.06] px-5 py-4">{listBody}</div>
-			<div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-5">{shaping}</div>
 		</div>
 	)
+
+	if (phone) return listBody
+	return <div className="h-full min-h-0 overflow-y-auto overscroll-contain px-5 py-4">{listBody}</div>
+}
+
+/** A person row's line: the role, and for someone counted in the results, how many titles. */
+function personNote(p: Person): string {
+	if (!("count" in p)) return roleOf(p.department)
+	const c = p as CountedPerson
+	const role = c.role === "directors" ? "Director" : c.role === "writers" ? "Writer" : roleOf(c.department)
+	return `${role} · ${c.count} ${c.count === 1 ? "title" : "titles"}`
 }
 
 function Row({
@@ -287,81 +312,58 @@ function TitleItem({
 	)
 }
 
-/** What steers this list now: picked titles by way, picked people. Session chips, each removable. */
-function Shaping({
-	d,
+/** What steers this list now: picked titles by way, picked people, as removable chips. Nothing when none. */
+function PickChips({
 	uses,
 	known,
 	people,
-	phone,
-	onExample,
 }: {
-	d: SectionProps["d"]
 	uses: TitleUses
 	known: ReturnType<typeof useKnown>["known"]
 	people: ReturnType<typeof usePeople>
-	phone: boolean
-	onExample: (k: (typeof EXAMPLE_KEYS)[number]["key"]) => void
 }) {
-	const any = uses.picked.length > 0 || people.chosen.length > 0
-	if (!any && phone) return null
+	if (uses.picked.length === 0 && people.chosen.length === 0) return null
 	return (
-		<div>
-			<h3 className={`${SECTION_LABEL} mb-3 flex h-5 items-center gap-2 px-1 text-gray-400`}>
-				This list
-				<span className="font-normal normal-case tracking-normal tabular-nums text-gray-500">{d.total != null ? `${short(d.total)} titles` : ""}</span>
-			</h3>
-			{!any && (
-				<div className="flex flex-col gap-2">
-					{!phone && (
-						<div className="flex flex-wrap gap-1.5">
-							{EXAMPLE_KEYS.slice(0, 2).map((t) => (
-								<motion.button
-									key={t.key}
-									type="button"
-									whileTap={TAP}
-									onClick={() => onExample(t.key)}
-									className="flex h-8 items-center gap-1.5 rounded-full bg-white/[0.05] px-3 text-[13px] text-gray-300 ring-1 ring-inset ring-white/10 cursor-pointer outline-none hover:bg-white/[0.1] focus-visible:ring-2 focus-visible:ring-amber-400 [&>svg]:h-3.5 [&>svg]:w-3.5"
-								>
-									{STEER.similarTo.icon}
-									{t.title}
-								</motion.button>
-							))}
-						</div>
-					)}
-				</div>
-			)}
-			<div className="flex flex-wrap gap-2">
-				{STEER_ORDER.flatMap((u) =>
-					uses.listOf(u).map((k) => {
-						const t = known(k)
-						return (
-							<SteerChip key={`${u}:${k}`} use={u} title={t?.title ?? "…"} poster={t?.poster ?? null} onRemove={() => uses.toggle(u, k)} />
-						)
-					}),
-				)}
-				{people.chosen.map((id) => {
-					const p = people.known(id)
+		// biome-ignore lint/a11y/useKeyWithClickEvents: only keeps a chip's × from running the row
+		<span className="flex min-w-0 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] max-sm:flex-wrap" onClick={(e) => e.stopPropagation()}>
+			{STEER_ORDER.flatMap((u) =>
+				uses.listOf(u).map((k) => {
+					const t = known(k)
 					return (
-						<span
-							key={id}
-							className="inline-flex h-9 shrink-0 items-center rounded-full pl-1 text-[14px] font-semibold whitespace-nowrap text-white"
-							style={chipStyle(PURPLE)}
-						>
-							<Face src={p?.profile ?? null} size={26} />
-							<span className="ml-2 max-w-[180px] truncate">{p?.name ?? "…"}</span>
-							<button
-								type="button"
-								onClick={() => people.remove(id)}
-								aria-label={`Remove ${p?.name ?? "person"}`}
-								className="grid h-full w-8 place-items-center rounded-r-full text-white/50 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
-							>
-								<XMarkIcon className="h-3.5 w-3.5" />
-							</button>
-						</span>
+						<SteerChip
+							key={`${u}:${k}`}
+							use={u}
+							size="sm"
+							prefix={STEER[u].word}
+							title={t?.title ?? "…"}
+							poster={t?.poster ?? null}
+							onRemove={() => uses.toggle(u, k)}
+						/>
 					)
-				})}
-			</div>
-		</div>
+				}),
+			)}
+			{people.chosen.map((id) => {
+				const p = people.known(id)
+				return (
+					<span
+						key={id}
+						className="inline-flex h-8 shrink-0 items-center rounded-full pl-1 text-[13px] font-semibold whitespace-nowrap text-white"
+						style={chipStyle(PURPLE)}
+					>
+						<Face src={p?.profile ?? null} size={24} />
+						<span className="ml-1.5 font-normal text-purple-200">with</span>
+						<span className="ml-1 max-w-[160px] truncate">{p?.name ?? "…"}</span>
+						<button
+							type="button"
+							onClick={() => people.remove(id)}
+							aria-label={`Remove ${p?.name ?? "person"}`}
+							className="grid h-full w-8 place-items-center rounded-r-full text-white/50 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
+						>
+							<XMarkIcon className="h-3.5 w-3.5" />
+						</button>
+					</span>
+				)
+			})}
+		</span>
 	)
 }

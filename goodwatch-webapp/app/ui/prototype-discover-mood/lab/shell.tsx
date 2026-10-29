@@ -7,11 +7,13 @@
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { useEffect, useRef, useState } from "react"
-import { ShowTitlesButton, SnapSheet } from "~/ui/filter-bar"
+import { SnapSheet } from "~/ui/filter-bar"
 import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
 import { HiddenMeter } from "~/ui/filter-bar/SubBar"
 import { useLabChoice } from "./LabBar"
 import { pick, pick as variantOf } from "./registry"
+import { ResultsProvider, useShown } from "./results-view"
+import { ShowButton } from "./show-button"
 import { type ProtoDiscover, useFilterPieces } from "../kit"
 import {
 	GridUnder,
@@ -49,7 +51,9 @@ const MORPH = {
 }
 const MORPH_T = { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const }
 
-function Footer({ d, pieces, onDone }: { d: ProtoDiscover; pieces: Pieces; onDone: () => void }) {
+function Footer({ d: raw, pieces, onDone }: { d: ProtoDiscover; pieces: Pieces; onDone: () => void }) {
+	// The counts are the shown list's (a mood variant may replace Discover's).
+	const d = useShown(raw)
 	const clearAll = useClearAll(d)
 	const n = pieces.secondaryCount + (d.q ? 1 : 0)
 	return (
@@ -70,7 +74,7 @@ function Footer({ d, pieces, onDone }: { d: ProtoDiscover; pieces: Pieces; onDon
 					</span>
 				)}
 			</span>
-			<ShowTitlesButton counts={d.counts} onClick={onDone} className="ml-auto h-11 min-w-48 max-sm:flex-1" />
+			<ShowButton q={d.q} counts={d.counts} onClick={onDone} className="ml-auto h-11 min-w-48 max-sm:flex-1" />
 		</div>
 	)
 }
@@ -133,6 +137,7 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 		t.go("search")
 	}
 	const typed = text.trim()
+	const shownD = useShown(d)
 	const section: SectionBase = {
 		d,
 		pieces,
@@ -224,7 +229,7 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 					)}
 				</AnimatePresence>
 			</div>
-			<StatusLine d={d} pieces={pieces} onOpen={goTo} className="mt-3" />
+			<StatusLine d={shownD} pieces={pieces} onOpen={goTo} className="mt-3" />
 		</div>
 	)
 }
@@ -291,6 +296,7 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 		t.goTo(slot)
 	}
 	const typed = text.trim()
+	const shownD = useShown(d)
 	const section: SectionBase = {
 		d,
 		pieces,
@@ -311,7 +317,7 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 			<div className="mt-3">
 				<PhoneBar values={values} onPick={openAt} onClearSearch={() => d.setQ(null)} />
 			</div>
-			<StatusLine d={d} pieces={pieces} onOpen={goTo} className="mt-2" />
+			<StatusLine d={shownD} pieces={pieces} onOpen={goTo} className="mt-2" />
 			<SnapSheet
 				index={t.seg ? 0 : -1}
 				onIndex={(i) => i < 0 && t.go(null)}
@@ -401,9 +407,15 @@ export function LabShell({ d }: { d: ProtoDiscover }) {
 		<MotionConfig reducedMotion="user">
 			<div className="mx-auto max-w-[1600px] px-4 pt-4 pb-16 lg:px-8 lg:pt-6">
 				<PageTitle />
-				<Desktop d={d} pieces={pieces} onOpenChange={setDim} />
-				<Phone d={d} pieces={pieces} />
-				<GridUnder d={d} dim={dim && !liveGrid} />
+				<ResultsProvider d={d}>
+					{(shown) => (
+						<>
+							<Desktop d={d} pieces={pieces} onOpenChange={setDim} />
+							<Phone d={d} pieces={pieces} />
+							<GridUnder d={shown} dim={dim && !liveGrid} />
+						</>
+					)}
+				</ResultsProvider>
 				<WarmCards pieces={pieces} />
 			</div>
 		</MotionConfig>

@@ -310,3 +310,55 @@ member count (shares of the list), Outside your usual (no max-match filter exist
 list scopes (Watch next / My movies read the Wishlist; Discover has no such scope). Group picks, Outside and the list
 scope live in a page store, so the grid doesn't follow them. Guests see the same blocks faint with a lock and one
 "Sign up for your taste" chip; Your lists stays usable for guests.
+
+## Round 9 mood (2026-10-29)
+
+Owner on round 8: "i is great", but move Find a filter to where the type switch was (no Movies or shows switch), drop
+Top titles, and the CTA count was wrong (it showed Discover's any-of 1,098, not i's 34). "e is cool too because of the
+easy mix selections": one view, two tabs or two steps, open to push back.
+
+- i: Find a filter sits on the recipe line's row (`SectionVariant.ownFind`: the shell drops its 48 px row, the
+  content area gets it, and the section places `props.find.field`; Find's results replace the columns). No type
+  switch, no Top titles column.
+- Grid, status line and Show N titles are the AND list for i, j and k (`SectionVariant.useResults` = and.ts
+  `useAndResults`, run by `lab/results-view.tsx` in a host that stays mounted with the panel closed). The count is
+  and.ts's exact AND count. The list reads the cut (each group's rarest pick) 400 titles at a time and keeps the
+  titles every other pick also has, in Discover's order; it reads on by itself while fewer than 40 show, and Load more
+  reads the next 400. Checked against a full intersection: Funny + Cozy + Romantic, about history = 82, same order;
+  Funny + Cozy = 3,090, same order. Only while a group holds two picks; otherwise Discover's own list is already it.
+- j "Mix row over columns": one short row of e's cards (ready mixes; after a pick "+ X" with AND counts and a share
+  bar, then "Without X" when few are left) over i's columns.
+- k "Mixes, then choose": a Mixes | Choose switch on the recipe row. Mixes is e's big cards with AND counts; a ready
+  mix sets its picks and moves to Choose (i's columns). Starts on Mixes when nothing is picked.
+
+## Round 9 search (2026-10-29)
+
+Owner on round 8, with "cozy rainy day mystery" running: "once i have something in the search i find it difficult to
+combine that with other stuff": This list in g made no sense, Cast and crew was empty until the search was removed,
+and empty dashed pills don't make sense without content. "taste: f is best" (now the default).
+
+- Titles g: one full-width list, no This list column. What steers the list sits in the search row ("Showing <query>")
+  as removable chips: "more like Marple", "less like …", "like …", "with <person>" (phones: a line under the row);
+  nothing when none. The row's count reads "Top 100 matches" or "N matches", as in d. When no title has the text's
+  name, Titles becomes "In these results" (the running results' top 4, or the preview's for text not yet run), each
+  with the thumbs and Like this, so a search combines with More like right there. People becomes "Most in these
+  results" (the top actor and the top person behind the camera, with counts) when no person has the text's name.
+- Cast and crew c: its own Find a person field (the bar's text still finds names while typed but not run). While a
+  search runs, the columns list who is in its results, most titles first, split as before ("12 titles",
+  "Writer · 20"); without a search, the well-known people. Picks sit top right. d and e also show the results' people
+  instead of the well-known ones while a search runs, and no longer search names with the running search's text.
+- How the people are counted (real counts, simulated pool): no endpoint returns the credits of a list of titles
+  (cards, the combined search's rows, title-cast, media-title and tv-title carry none). So `people/pool.ts` holds 294
+  well-known people (actors, directors, writers, composers and DPs, ids resolved through /api/cast), counted against
+  the grid's own query through `/api/discover/results` (`people/in-results.ts`): the pool in chunks of 20 (filter-state
+  keeps 20 people), where the people option count of a picked person is what the list holds without them, so
+  total minus it is a floor; then the top ten per side in pairs, where each answer is the other's exact count.
+  About 15 + 10 requests per search and filter set, cached for the session; people outside the pool, or who only
+  share titles with others of their chunk, are missed. Production would want one server query (count
+  person_appeared_in / person_worked_on over the list's keys).
+- Empty states, no empty slots anywhere in titles, people, taste: Your taste a and b, titles b, c, e, f, h show a few
+  titles of this list (a member in taste a/b: their high scores for More like, low scores for Less like) as quiet
+  chips or faint posters with that place's thumb; one tap puts the title there (h's zones stay drop targets). Titles
+  d, g and people a-e show nothing until something is picked.
+- Footer: with a search the Show button reads "Show top 100 matches" or "Show N matches" (`lab/show-button.tsx`);
+  without one it is the real Show N titles.

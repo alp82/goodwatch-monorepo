@@ -1,7 +1,8 @@
 // PROTOTYPE - throwaway. Your taste baseline, round 7: find a title (or take one from this list, or for a member from
 // their scored titles) and thumb it up or down. What's thumbed lands as removable filter chips in two dashed wells
 // ("More like", "Less like"), so it reads as steering this list, next to the member's kept scores. Taste match on the
-// right (a guest sees what it does and one Sign up). Guest or member comes from the lab bar.
+// right (a guest sees what it does and one Sign up). Guest or member comes from the lab bar. Round 9: empty wells offer
+// a few titles to tap in instead of empty slots.
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { useState } from "react"
 import type { SectionProps } from "../../types"
@@ -83,10 +84,13 @@ export function TasteA({ d, phone, text, viewer }: SectionProps) {
 			<div style={{ height: rows * 58 }}>{body}</div>
 		</section>
 	)
+	// Empty wells offer titles to tap in: a member's high and low scores, else titles further down this list.
+	const more = member ? rated.filter((t) => t.score >= 8) : listPicks(d, 10).slice(rows, rows + 3)
+	const less = member ? rated.filter((t) => t.score <= 4) : listPicks(d, 10).slice(rows + 3, rows + 6)
 	const wells = (
 		<section className="flex min-w-0 flex-col gap-3">
-			<SteerWell steer={steer} group="loved" slots={phone ? 2 : 3} onClear={() => clearSteer(d, "loved")} />
-			<SteerWell steer={steer} group="disliked" slots={phone ? 2 : 3} onClear={() => clearSteer(d, "disliked")} />
+			<SteerWell steer={steer} group="loved" slots={phone ? 2 : 3} onClear={() => clearSteer(d, "loved")} suggest={more} />
+			<SteerWell steer={steer} group="disliked" slots={phone ? 2 : 3} onClear={() => clearSteer(d, "disliked")} suggest={less} />
 		</section>
 	)
 	const match = (

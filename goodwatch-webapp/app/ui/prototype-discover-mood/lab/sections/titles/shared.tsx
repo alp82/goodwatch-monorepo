@@ -400,7 +400,7 @@ export function PickedGroups({
 	known: ReturnType<typeof useKnown>["known"]
 	w?: number
 	row?: boolean
-	/** Also list the uses with nothing picked, as quiet labels. */
+	/** Also list the uses with nothing picked, as quiet labels (no empty slots). */
 	showEmpty?: boolean
 }) {
 	const groups = USE_ORDER.map((u) => ({ u, keys: uses.listOf(u) })).filter((g) => showEmpty || g.keys.length)
@@ -415,9 +415,6 @@ export function PickedGroups({
 						{g.keys.length > 0 && <span className="font-normal text-gray-500">{g.keys.length}</span>}
 					</div>
 					<div className="flex flex-wrap gap-3 px-1 pt-1">
-						{g.keys.length === 0 && (
-							<span className="block aspect-[2/3] rounded-lg border border-dashed border-white/[0.12]" style={{ width: w }} />
-						)}
 						{g.keys.map((k) => (
 							<PickedPoster key={k} t={known(k)} use={g.u} w={w} onRemove={() => uses.toggle(g.u, k)} />
 						))}

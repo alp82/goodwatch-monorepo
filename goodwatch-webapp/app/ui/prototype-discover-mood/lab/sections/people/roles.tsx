@@ -108,10 +108,11 @@ export function roleList(people: People, featured: ReturnType<typeof useFeatured
 
 /** The picked people as removable face chips joined by "or" (the filter keeps titles with any of them). */
 export function PickedOr({ people, lead, wrap = false }: { people: People; lead?: string; wrap?: boolean }) {
+	// Nothing picked: nothing here (no empty slot).
+	if (people.chosen.length === 0) return null
 	return (
 		<div className={`flex min-w-0 items-center gap-2 ${wrap ? "flex-wrap" : "overflow-hidden"}`}>
 			{lead && <span className="shrink-0 text-[13px] text-gray-500">{lead}</span>}
-			{people.chosen.length === 0 && <span className="h-9 w-36 shrink-0 rounded-full border border-dashed border-white/[0.12]" aria-hidden />}
 			{people.chosen.map((id, i) => (
 				<span key={id} className="flex shrink-0 items-center gap-2">
 					{i > 0 && <span className="text-[13px] font-semibold text-purple-200/70">or</span>}

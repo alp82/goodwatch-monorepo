@@ -11,7 +11,8 @@ import { TAP } from "~/ui/filter-bar/motion"
 import { EXAMPLE_PROMPTS, short } from "../../../kit"
 import { type FoundTitle, POSTER_SM, liveTitleUrl, useQuickTitles } from "../../shell-parts"
 import type { SectionProps } from "../../types"
-import { EmptySlots, Poster, SteerButtons, SteerTray, looksLikeTitle, metaLine, useExampleTitles } from "./def-steer"
+import { Poster, SteerButtons, SteerTray, looksLikeTitle, metaLine, useExampleTitles } from "./def-steer"
+import { SuggestChips, cardTitle } from "./ghi-parts"
 import { type TitleUses, useKnown, useSearchPreview, useTitleUses } from "./shared"
 
 type Mode = "describe" | "title"
@@ -234,7 +235,18 @@ export function TitlesE({ d, phone, text, setText, runSearch }: SectionProps) {
 			{mode === "describe" ? describe : find}
 		</motion.div>
 	)
-	const tray = <SteerTray uses={uses} known={known.known} empty={<EmptySlots />} wrap={phone} />
+	// Nothing picked yet: a few titles of this list to thumb up, instead of empty slots.
+	const suggest = (
+		<SuggestChips
+			titles={d.cards.slice(0, 3).map(cardTitle)}
+			use="loved"
+			onPick={(t) => {
+				known.remember(t)
+				uses.toggle("loved", t.key)
+			}}
+		/>
+	)
+	const tray = <SteerTray uses={uses} known={known.known} empty={suggest} wrap={phone} />
 
 	if (phone)
 		return (

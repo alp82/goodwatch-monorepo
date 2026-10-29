@@ -1,5 +1,6 @@
 // PROTOTYPE - throwaway. Your taste, match first: Taste match across the top (a guest sees the wide sign-up band),
-// Loved and Disliked as two lanes underneath, and the titles to mark as a poster strip beside them.
+// Loved and Disliked as two lanes underneath, and the titles to mark as a poster strip beside them. Round 9: empty lanes
+// show faint titles to tap in, not empty slots.
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { useState } from "react"
 import type { SectionProps } from "../../types"
@@ -18,7 +19,7 @@ import {
 	useSteer,
 	useTitleSearch,
 } from "./parts"
-import { MemberMatch } from "./member"
+import { MemberMatch, useRated } from "./member"
 
 export function TasteB({ d, phone, text, viewer }: SectionProps) {
 	const steer = useSteer(d)
@@ -28,6 +29,13 @@ export function TasteB({ d, phone, text, viewer }: SectionProps) {
 	const searching = find.trim().length >= 2
 	const n = phone ? 8 : 6
 	const list = searching ? picks.slice(0, n) : listPicks(d, n)
+	// Empty lanes offer titles to tap in: a member's high and low scores, else titles further down this list.
+	const rated = useRated()
+	const further = listPicks(d, n + 12).slice(n)
+	const suggest = {
+		loved: as === "member" ? rated.filter((t) => t.score >= 8) : further.slice(0, 6),
+		disliked: as === "member" ? rated.filter((t) => t.score <= 4) : further.slice(6, 12),
+	}
 
 	const match = (
 		<section>
@@ -54,7 +62,7 @@ export function TasteB({ d, phone, text, viewer }: SectionProps) {
 							)}
 						</div>
 						<div className="min-w-0 flex-1">
-							<Shelf steer={steer} group={g} slots={phone ? 4 : 6} size="sm" />
+							<Shelf steer={steer} group={g} slots={phone ? 4 : 6} size="sm" suggest={suggest[g]} />
 						</div>
 					</div>
 				)

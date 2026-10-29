@@ -21,7 +21,7 @@ const findTag = (id: string): Tag => {
 const mixOf = (...ids: string[]): Mix => ({ id: ids.join("+"), tags: ids.map(findTag) })
 
 /** A member's starting mixes, leaning on what they loved (Severance, Paddington 2, Knives Out, Past Lives). */
-const MEMBER_MIXES: Mix[] = [
+export const MEMBER_MIXES: Mix[] = [
 	mixOf("moods:mind", "themes:future"),
 	mixOf("moods:feelgood", "themes:family"),
 	mixOf("moods:funny", "themes:mystery"),

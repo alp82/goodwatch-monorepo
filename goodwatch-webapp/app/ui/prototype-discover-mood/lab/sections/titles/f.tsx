@@ -10,7 +10,8 @@ import { short } from "../../../kit"
 import { type FoundTitle, liveTitleUrl, useQuickTitles } from "../../shell-parts"
 import type { SectionProps } from "../../types"
 import { NameExamples, PeopleLoading, PersonTile, PickedFace, usePeople } from "../people/shared"
-import { EmptySlots, Poster, SteerButtons, SteerTray, metaLine, useExampleTitles } from "./def-steer"
+import { Poster, SteerButtons, SteerTray, metaLine, useExampleTitles } from "./def-steer"
+import { SuggestChips, cardTitle } from "./ghi-parts"
 import { LaneHead, type TitleUses, useKnown, useTitleUses } from "./shared"
 
 /** Runs the bar's text as the search after a pause; an empty field clears it. */
@@ -118,7 +119,18 @@ export function TitlesF({ d, phone, text, setText, runSearch }: SectionProps) {
 				))}
 			</>
 		) : undefined
-	const tray = <SteerTray uses={uses} known={known.known} extra={extra} empty={<EmptySlots />} wrap={phone} />
+	// Nothing picked yet: a few titles of this list to thumb up, instead of empty slots.
+	const suggest = (
+		<SuggestChips
+			titles={d.cards.slice(0, 3).map(cardTitle)}
+			use="loved"
+			onPick={(t) => {
+				known.remember(t)
+				uses.toggle("loved", t.key)
+			}}
+		/>
+	)
+	const tray = <SteerTray uses={uses} known={known.known} extra={extra} empty={suggest} wrap={phone} />
 
 	if (phone)
 		return (

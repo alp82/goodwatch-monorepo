@@ -7,9 +7,10 @@ import { HandThumbDownIcon, HandThumbUpIcon, Square2StackIcon, XMarkIcon } from 
 import { motion } from "framer-motion"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { TAP } from "~/ui/filter-bar/motion"
+import type { TitleCard } from "~/server/title-cards.server"
 import type { TitleKey } from "~/utils/title-key"
 import { type ProtoDiscover, TAGS, type Tag, short, tagId } from "../../../kit"
-import { POSTER_SM } from "../../shell-parts"
+import { type FoundTitle, POSTER_SM } from "../../shell-parts"
 import type { Use } from "./shared"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -136,6 +137,44 @@ export function SteerToggle({ use, on, onToggle, wide = false }: { use: Use; on:
 			{s.icon}
 			{wide && s.label}
 		</motion.button>
+	)
+}
+
+/** A result card as a found title (to steer with). */
+export const cardTitle = (c: TitleCard): FoundTitle => ({
+	key: c.key,
+	title: c.title,
+	year: c.release_year ? String(c.release_year) : "",
+	poster: c.poster_path,
+	mediaType: c.media_type === "movie" ? "movie" : "show",
+	tmdbId: c.tmdb_id,
+})
+
+/**
+ * The empty state of a place picks land in (round 9): a few titles of this list as quiet chips with that place's
+ * thumb; one tap puts the title there. No empty slots.
+ */
+export function SuggestChips({ titles, use, onPick, n = 3 }: { titles: FoundTitle[]; use: Use; onPick: (t: FoundTitle) => void; n?: number }) {
+	const s = STEER[use]
+	return (
+		<>
+			{titles.slice(0, n).map((t) => (
+				<motion.button
+					key={t.key}
+					type="button"
+					whileTap={TAP}
+					onClick={() => onPick(t)}
+					title={`${s.label} ${t.title}`}
+					className="inline-flex h-8 max-w-[220px] shrink-0 items-center gap-1.5 rounded-full bg-white/[0.04] pr-3 pl-1 text-[13px] text-gray-400 ring-1 ring-inset ring-white/[0.08] cursor-pointer outline-none transition-colors hover:bg-white/[0.09] hover:text-gray-100 focus-visible:ring-2 focus-visible:ring-amber-400"
+				>
+					<MiniPoster poster={t.poster} w={18} />
+					<span className="shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5" style={{ color: s.color }}>
+						{s.icon}
+					</span>
+					<span className="truncate">{t.title}</span>
+				</motion.button>
+			))}
+		</>
 	)
 }
 

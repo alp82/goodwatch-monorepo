@@ -9,7 +9,7 @@ import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
 import { type TitleKey, parseTitleKey } from "~/utils/title-key"
 import { type FoundTitle, POSTER_SM, useQuickTitles } from "../../shell-parts"
 import type { SectionProps } from "../../types"
-import { STEER, SteerChip } from "./ghi-parts"
+import { STEER, SteerChip, SuggestChips } from "./ghi-parts"
 import { EXAMPLE_KEYS, SECTION_LABEL, type Use, useKnown, useTitleUses } from "./shared"
 
 const ZONES: Use[] = ["loved", "disliked", "similarTo"]
@@ -128,13 +128,14 @@ export function TitlesH({ d, phone, text }: SectionProps) {
 							)}
 						</div>
 						<div className="flex min-h-0 flex-1 flex-wrap content-start gap-2 overflow-y-auto overscroll-contain">
+							{/* Empty: a few titles of the list to tap in (the zone stays a drop target). */}
 							{keys.length === 0 && (
-								<span
-									className={`grid w-full flex-1 place-items-center rounded-xl border-2 border-dashed [&>svg]:h-7 [&>svg]:w-7 ${phone ? "h-12" : "h-full min-h-[80px]"}`}
-									style={{ borderColor: `${s.color}${dragging ? "77" : "2e"}`, color: `${s.color}${dragging ? "cc" : "55"}` }}
-								>
-									{s.icon}
-								</span>
+								<SuggestChips
+									titles={source.filter((t) => !uses.usesOf(t.key).length).slice(ZONES.indexOf(u) * 2)}
+									use={u}
+									n={2}
+									onPick={(t) => tap(t, u)}
+								/>
 							)}
 							{keys.map((k) => {
 								const t = known.known(k)

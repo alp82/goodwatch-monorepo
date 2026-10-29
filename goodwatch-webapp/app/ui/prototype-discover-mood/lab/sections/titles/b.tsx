@@ -9,6 +9,7 @@ import type { TitleKey } from "~/utils/title-key"
 import { EXAMPLE_PROMPTS } from "../../../kit"
 import { type FoundTitle, POSTER_SM, keyParts, liveTitleUrl, useQuickTitles } from "../../shell-parts"
 import type { SectionProps } from "../../types"
+import { SuggestChips, cardTitle } from "./ghi-parts"
 import {
 	CurrentSearch,
 	EXAMPLE_KEYS,
@@ -199,8 +200,20 @@ export function TitlesB({ d, phone, text, runSearch }: SectionProps) {
 				</div>
 				{(!phone || uses.picked.length > 0) && (
 					<div className={phone ? "mt-5" : "w-[340px] shrink-0 overflow-y-auto border-l border-white/[0.06] pl-6"}>
-						<LaneHead>Picked titles</LaneHead>
-						<PickedGroups uses={uses} known={known.known} w={44} row={!phone} showEmpty={!phone} />
+						{uses.picked.length > 0 && <LaneHead>Picked titles</LaneHead>}
+						<PickedGroups uses={uses} known={known.known} w={44} row={!phone} />
+						{!phone && uses.picked.length === 0 && (
+							<div className="flex flex-col items-start gap-2 pt-1">
+								<SuggestChips
+									titles={d.cards.slice(0, 3).map(cardTitle)}
+									use="loved"
+									onPick={(t) => {
+										known.remember(t)
+										uses.toggle("loved", t.key)
+									}}
+								/>
+							</div>
+						)}
 					</div>
 				)}
 			</div>

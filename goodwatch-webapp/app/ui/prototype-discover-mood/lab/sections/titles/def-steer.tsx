@@ -158,7 +158,7 @@ export function SteerTray({
 	uses: TitleUses
 	known: ReturnType<typeof useKnown>["known"]
 	extra?: ReactNode
-	/** Shown while nothing is picked (for example quiet dashed slots). */
+	/** Shown while nothing is picked (for example a few titles to tap). */
 	empty?: ReactNode
 	wrap?: boolean
 	className?: string
@@ -182,22 +182,6 @@ export function SteerTray({
 				{!any && empty}
 			</div>
 		</div>
-	)
-}
-
-/** Dashed chip-shaped slots: where picks will land. */
-export function EmptySlots({ n = 3 }: { n?: number }) {
-	return (
-		<>
-			{(["loved", "disliked", "similarTo"] as const).slice(0, n).map((u) => (
-				<span
-					key={u}
-					className={`inline-flex h-8 w-36 shrink-0 items-center gap-1.5 rounded-full border border-dashed border-white/[0.12] pl-2.5 opacity-60 [&>svg]:h-3.5 [&>svg]:w-3.5 ${STEER[u].icn}`}
-				>
-					{STEER[u].icon}
-				</span>
-			))}
-		</>
 	)
 }
 

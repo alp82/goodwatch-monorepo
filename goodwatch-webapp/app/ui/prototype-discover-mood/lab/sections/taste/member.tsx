@@ -1,6 +1,7 @@
 // PROTOTYPE - throwaway. Your taste, round 7: what the member view needs (simulated ratings, a Taste match scale with
-// plausible counts) and the steer wells: picked titles as removable filter chips in a dashed well, so a thumb here
-// reads as "steer this list" and not as a rating saved to the profile.
+// plausible counts) and the steer wells: picked titles as removable filter chips in a tinted well, so a thumb here
+// reads as "steer this list" and not as a rating saved to the profile. Round 9: an empty well shows a few titles to
+// tap in (quiet chips), never empty slots.
 import { HandThumbDownIcon, HandThumbUpIcon, StarIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { MIN_MATCHES, type MinMatch } from "~/domain/filter-state"
@@ -126,13 +127,13 @@ const TONE: Record<Steer, { chip: string; x: string; icon: string; well: string 
 		chip: "bg-emerald-500/[0.12] ring-emerald-400/45",
 		x: "text-emerald-200/70 hover:text-white",
 		icon: "bg-emerald-500 text-white",
-		well: "border-emerald-400/25",
+		well: "bg-emerald-500/[0.04] ring-emerald-400/20",
 	},
 	disliked: {
 		chip: "bg-rose-500/[0.12] ring-rose-400/45",
 		x: "text-rose-200/70 hover:text-white",
 		icon: "bg-rose-500 text-white",
-		well: "border-rose-400/25",
+		well: "bg-rose-500/[0.04] ring-rose-400/20",
 	},
 }
 
@@ -161,13 +162,20 @@ export function SteerChip({ steer, group, k }: { steer: SteerApi; group: Steer; 
 	)
 }
 
-/** One side as a dashed well of chips, with empty dashed slots that keep the height. */
-export function SteerWell({ steer, group, slots = 3, onClear }: { steer: SteerApi; group: Steer; slots?: number; onClear?: () => void }) {
+/** One side as a well of chips. Empty: up to `slots` of `suggest` as quiet chips, one tap puts a title in. */
+export function SteerWell({
+	steer,
+	group,
+	slots = 3,
+	onClear,
+	suggest = [],
+}: { steer: SteerApi; group: Steer; slots?: number; onClear?: () => void; suggest?: SteerTitle[] }) {
 	const keys = group === "loved" ? steer.loved : steer.disliked
 	const tone = TONE[group]
 	const Icon = group === "loved" ? HandThumbUpIcon : HandThumbDownIcon
+	const free = keys.length ? [] : suggest.filter((t) => !steer.stateOf(t.key)).slice(0, slots)
 	return (
-		<div className={`rounded-2xl border border-dashed p-2.5 ${tone.well}`}>
+		<div className={`rounded-2xl p-2.5 ring-1 ring-inset ${tone.well}`}>
 			<div className="mb-2 flex h-6 items-center gap-2 px-0.5">
 				<span className={`grid h-6 w-6 place-items-center rounded-full ${tone.icon}`}>
 					<Icon className="h-3.5 w-3.5" aria-hidden />
@@ -183,17 +191,34 @@ export function SteerWell({ steer, group, slots = 3, onClear }: { steer: SteerAp
 					</button>
 				)}
 			</div>
-			<div className="flex max-h-[84px] flex-wrap gap-1.5 overflow-hidden">
+			<div className="flex min-h-9 max-h-[84px] flex-wrap gap-1.5 overflow-hidden">
 				<AnimatePresence initial={false}>
 					{keys.map((k) => (
 						<SteerChip key={k} steer={steer} group={group} k={k} />
 					))}
 				</AnimatePresence>
-				{Array.from({ length: Math.max(0, slots - keys.length) }, (_, i) => (
-					// biome-ignore lint/suspicious/noArrayIndexKey: empty slots
-					<span key={i} aria-hidden className="h-9 w-[104px] shrink-0 rounded-full border border-dashed border-white/[0.1]" />
+				{free.map((t) => (
+					<GhostChip key={t.key} t={t} group={group} onClick={() => steer.set(t, group)} />
 				))}
 			</div>
 		</div>
+	)
+}
+
+/** A title this side could take: quiet chip, the side's thumb, tap to put it in. */
+export function GhostChip({ t, group, onClick }: { t: SteerTitle; group: Steer; onClick: () => void }) {
+	const Icon = group === "loved" ? HandThumbUpIcon : HandThumbDownIcon
+	return (
+		<motion.button
+			type="button"
+			whileTap={TAP}
+			onClick={onClick}
+			title={`${group === "loved" ? "More like" : "Less like"} ${t.title}`}
+			className="inline-flex h-9 max-w-[200px] shrink-0 items-center gap-1.5 rounded-full bg-white/[0.03] pr-3 pl-1 text-[13px] text-gray-400 ring-1 ring-inset ring-white/[0.07] cursor-pointer outline-none transition-colors hover:bg-white/[0.08] hover:text-gray-100 focus-visible:ring-2 focus-visible:ring-amber-400"
+		>
+			<Thumb t={t} className="h-7 w-[19px] rounded-[5px] opacity-80" />
+			<Icon className={`h-3.5 w-3.5 shrink-0 ${group === "loved" ? "text-emerald-300/70" : "text-rose-300/70"}`} aria-hidden />
+			<span className="truncate">{t.title}</span>
+		</motion.button>
 	)
 }

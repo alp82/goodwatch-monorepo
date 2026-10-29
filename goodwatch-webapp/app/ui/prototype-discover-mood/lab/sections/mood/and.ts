@@ -8,15 +8,18 @@
 // running search's ranked list). Genre pairs (Action = Action or Action & Adventure) add their two names' counts, which
 // is exact while no title has both (the movie name and the show name).
 //
-// Posters: the AND list is a subset of the list with each group cut to its rarest pick. Its top 400 go back as
-// `ranked` (100 at a time) with each other pick alone, and the titles all of those keep are the AND list's top
-// titles in Discover's order. When the AND list is sparse in that cut, fewer than its count show.
+// The list (round 9, the grid and Show N titles): the AND list is a subset of the list with each group cut to its
+// rarest pick. The cut is read 400 at a time (ten pages); each chunk goes back as `ranked` (100 at a time) with each
+// other pick alone, and the titles all of those keep are the AND list in Discover's order. Load more reads the next
+// chunk, so once the cut is read to its end the list is exactly the AND list.
 import { useQueries, useQuery } from "@tanstack/react-query"
-import { useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { searchEligibility } from "~/domain/discover-search"
 import type { DiscoverResults } from "~/server/discover-results.server"
+import type { TitleCard } from "~/server/title-cards.server"
 import { runDiscoverSearch } from "~/ui/discover/discover-search-request"
 import type { ProtoDiscover } from "../../../kit"
+import type { ResultsView } from "../../types"
 import { genreUnits } from "./parts"
 
 export type AndGroup = "moods" | "themes" | "styles" | "genres"
@@ -172,33 +175,36 @@ export function useAndCounts(d: ProtoDiscover, picks: Cond[]): { counts: AndCoun
 	return { counts: safe, busy: false }
 }
 
-/** Up to this many titles of the cut list are checked: ten pages, four ranked checks per other pick. */
-const POOL = 400
+/** One chunk of the cut list: ten pages. */
+const CHUNK = 10
 
-async function pages(query: string, count: number, signal: AbortSignal) {
-	const first = await results(query, signal)
-	const more = Math.min(Math.ceil(count / first.pageSize), Math.ceil(first.total / first.pageSize)) - 1
-	const rest = await Promise.all(
-		Array.from({ length: Math.max(0, more) }, async (_, i) => {
-			const response = await fetch(`/api/discover/results?${query}&page=${i + 2}`, { signal })
-			if (!response.ok) throw new Error(`Results ${response.status}`)
-			return (await response.json()) as DiscoverResults
-		}),
-	)
+async function page(query: string, n: number, signal: AbortSignal) {
+	const response = await fetch(`/api/discover/results?${query}&page=${n}`, { signal })
+	if (!response.ok) throw new Error(`Results ${response.status}`)
+	return (await response.json()) as DiscoverResults
+}
+
+/** Pages `from`..`to` of a query, stopping at its last page. */
+async function pages(query: string, from: number, to: number, signal: AbortSignal) {
+	const first = await page(query, from, signal)
+	const last = Math.min(to, Math.ceil(first.total / first.pageSize))
+	const rest = await Promise.all(Array.from({ length: Math.max(0, last - from) }, (_, i) => page(query, from + 1 + i, signal)))
 	return [first, ...rest]
 }
 
-/** The AND list's top titles in Discover's order (see the header); d's own list when no group holds two picks. */
-export function useAndPosters(d: ProtoDiscover, picks: Cond[]) {
+/** True when a group holds two picks or more: only then the AND list differs from Discover's own. */
+export const needsAnd = (picks: Cond[]) => GROUPS.some((g) => picks.filter((c) => c.group === g).length > 1)
+
+/** The AND list in Discover's order, read a chunk at a time (see the header). */
+export function useAndList(d: ProtoDiscover, picks: Cond[], on: boolean) {
 	const { ranked, waiting } = useRanked(d)
 	const base = d.filters.query
 	const groups = GROUPS.filter((g) => picks.some((c) => c.group === g))
-	const multi = groups.some((g) => picks.filter((c) => c.group === g).length > 1)
 	// Each pick's own count (the no-pick query, shared with the counts) picks the rarest of each group for the cut.
 	const plainQ = queryFor(base, ranked, {})
 	const plain = useQuery({
 		queryKey: ["lab-mood-and", plainQ],
-		enabled: multi && !waiting,
+		enabled: on && !waiting,
 		staleTime: 60_000,
 		queryFn: ({ signal }) => results(plainQ, signal),
 	})
@@ -209,40 +215,79 @@ export function useAndPosters(d: ProtoDiscover, picks: Cond[]) {
 	const firsts: Subsets = Object.fromEntries(groups.map((g) => [g, [...picks.filter((c) => c.group === g)].sort((a, b) => own(a) - own(b)).slice(0, 1)]))
 	const others = picks.filter((c) => !(firsts[c.group] ?? []).includes(c))
 	const cut = queryFor(base, ranked, firsts)
-	const pool = useQuery({
-		queryKey: ["lab-mood-and-pool", cut],
-		enabled: multi && !waiting && Boolean(plain.data) && picks.length <= MAX_AND,
-		staleTime: 60_000,
-		queryFn: ({ signal }) => pages(cut, POOL, signal),
+	const [read, setRead] = useState({ cut: "", chunks: 1 })
+	const chunks = read.cut === cut ? read.chunks : 1
+	const ready = on && !waiting && Boolean(plain.data) && picks.length <= MAX_AND
+	const pool = useQueries({
+		queries: Array.from({ length: chunks }, (_, i) => ({
+			queryKey: ["lab-mood-and-pool", cut, i],
+			enabled: ready,
+			staleTime: 60_000,
+			queryFn: ({ signal }: { signal: AbortSignal }) => pages(cut, i * CHUNK + 1, (i + 1) * CHUNK, signal),
+		})),
 	})
-	const keys = (pool.data ?? []).flatMap((r) => r.keys).slice(0, POOL)
+	const keysOf = (i: number) => (pool[i]?.data ?? []).flatMap((r) => r.keys)
 	const checks = useQueries({
-		queries: others.map((c) => {
-			const q = queryFor(base, null, { ...firsts, [c.group]: [c] })
-			return {
-				queryKey: ["lab-mood-and-check", q, keys.join(",")],
-				enabled: multi && keys.length > 0,
-				staleTime: 60_000,
-				queryFn: async ({ signal }: { signal: AbortSignal }) => {
-					const kept = new Set<number>()
-					// The ranked list takes 100 keys; each batch is three pages at most.
-					const batches = Array.from({ length: Math.ceil(keys.length / 100) }, (_, i) => keys.slice(i * 100, i * 100 + 100))
-					await Promise.all(
-						batches.map(async (batch) => {
-							for (const r of await pages(`${q}&ranked=${batch.join(",")}`, 100, signal)) for (const k of r.keys) kept.add(k)
-						}),
-					)
-					return kept
-				},
-			}
-		}),
+		queries: Array.from({ length: chunks }, (_, i) =>
+			others.map((c) => {
+				const q = queryFor(base, null, { ...firsts, [c.group]: [c] })
+				const keys = keysOf(i)
+				return {
+					queryKey: ["lab-mood-and-check", q, keys.join(",")],
+					enabled: ready && keys.length > 0,
+					staleTime: 60_000,
+					queryFn: async ({ signal }: { signal: AbortSignal }) => {
+						const kept = new Set<number>()
+						// The ranked list takes 100 keys; each batch is three pages at most.
+						const batches = Array.from({ length: Math.ceil(keys.length / 100) }, (_, b) => keys.slice(b * 100, b * 100 + 100))
+						await Promise.all(
+							batches.map(async (batch) => {
+								for (const r of await pages(`${q}&ranked=${batch.join(",")}`, 1, 3, signal)) for (const k of r.keys) kept.add(k)
+							}),
+						)
+						return kept
+					},
+				}
+			}),
+		).flat(),
 	})
-	const last = useRef(d.cards)
-	if (!multi) return { cards: d.cards, busy: d.loading }
-	const done = pool.data && checks.every((c) => c.data)
-	if (!done) return { cards: last.current, busy: true }
-	const byKey = new Map((pool.data ?? []).flatMap((r) => r.cards).map((c) => [c.key, c]))
-	const cards = keys.filter((k) => checks.every((c) => c.data?.has(k))).flatMap((k) => byKey.get(k) ?? [])
-	last.current = cards
-	return { cards, busy: false }
+	const last = useRef<TitleCard[]>([])
+	const cutTotal = pool[0]?.data?.[0]?.total ?? 0
+	const more = () => setRead({ cut, chunks: chunks + 1 })
+	const done = on && pool.every((p) => p.data) && checks.every((c) => c.data)
+	const cards = done
+		? pool.flatMap((p, i) => {
+				const byKey = new Map((p.data ?? []).flatMap((r) => r.cards).map((c) => [c.key, c]))
+				const kept = checks.slice(i * others.length, (i + 1) * others.length)
+				return keysOf(i)
+					.filter((k) => kept.every((c) => c.data?.has(k)))
+					.flatMap((k) => byKey.get(k) ?? [])
+			})
+		: last.current
+	if (done) last.current = cards
+	const hasMore = done && chunks * CHUNK * DISCOVER_PAGE < cutTotal
+	// A sparse cut: read on by itself until a page of titles shows (five chunks, 2,000 titles, at most).
+	const thin = hasMore && cards.length < DISCOVER_PAGE && chunks < 5
+	// biome-ignore lint/correctness/useExhaustiveDependencies: reads on once per finished chunk
+	useEffect(() => {
+		if (thin) more()
+	}, [thin, chunks, cut])
+	if (!on) return { cards: [] as TitleCard[], busy: false, hasMore: false, more }
+	return { cards, busy: !done || thin, hasMore: hasMore && !thin, more }
+}
+
+/** The page size of Discover's results endpoint. */
+const DISCOVER_PAGE = 40
+
+/**
+ * The grid's and the footer's list for a mood variant with AND picks (SectionVariant.useResults): the exact AND
+ * count, and the AND list in Discover's order. Null while no group holds two picks (Discover's list is the AND list).
+ */
+export function useAndResults(d: ProtoDiscover): ResultsView | null {
+	const picks = picksOf(d)
+	const on = needsAnd(picks) && picks.length <= MAX_AND
+	const { counts, busy } = useAndCounts(d, on ? picks : [])
+	const list = useAndList(d, picks, on)
+	if (!on) return null
+	return { total: counts?.total ?? null, cards: list.cards, loading: busy || list.busy, hasMore: list.hasMore, loadMore: list.more }
 }

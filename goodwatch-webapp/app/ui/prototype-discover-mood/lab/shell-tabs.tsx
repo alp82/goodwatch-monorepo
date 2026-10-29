@@ -158,11 +158,11 @@ function Section({ id, props }: { id: SectionId; props: Omit<SectionProps, "view
 
 /** Desktop: the fixed content area. Overflow scrolls as a fallback; the sheet's cards scroll themselves into view as
  * they mount, so it's held at the top for a moment after a section opens. */
-function ContentArea({ id, children }: { id: string; children: ReactNode }) {
+function ContentArea({ id, children, height = CONTENT_H }: { id: string; children: ReactNode; height?: number }) {
 	const ref = useRef<HTMLDivElement>(null)
 	useKeepTop(ref, id)
 	return (
-		<div ref={ref} className="relative min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain" style={{ height: CONTENT_H }}>
+		<div ref={ref} className="relative min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain" style={{ height }}>
 			{children}
 		</div>
 	)
@@ -197,13 +197,17 @@ export function TabPanel({
 }) {
 	const open = subs.find((s) => s.id === sub) ?? subs[0]
 	const canFind = seg !== "search"
+	// A variant with ownFind places the field and the results itself (no row of its own here).
+	const own = canFind && pick(useLabChoice(), open.id).ownFind === true
 	const finding = canFind && find.trim() !== ""
 	const pickSub = (s: SectionId) => {
 		onFind("")
 		onSub(s)
 	}
-	const props: Omit<SectionProps, "viewer"> = { ...section, phone }
-	const body = finding ? (
+	const props: Omit<SectionProps, "viewer"> = own
+		? { ...section, phone, find: { field: <FindField value={find} onChange={onFind} />, results: finding ? <FindAll pieces={pieces} text={find} phone={phone} /> : null } }
+		: { ...section, phone }
+	const body = finding && !own ? (
 		<FindAll pieces={pieces} text={find} phone={phone} />
 	) : (
 		<AnimatePresence mode="wait" initial={false}>
@@ -224,7 +228,7 @@ export function TabPanel({
 		return (
 			<div>
 				{top}
-				{canFind && (
+				{canFind && !own && (
 					<div className="mb-5">
 						<FindField value={find} onChange={onFind} />
 					</div>
@@ -235,7 +239,7 @@ export function TabPanel({
 	const field = canFind ? <FindField value={find} onChange={onFind} /> : undefined
 	return (
 		<div className="flex min-h-0 flex-col">
-			{subs.length > 1 ? (
+			{own ? null : subs.length > 1 ? (
 				<SubTabs id={id} d={section.d} pieces={pieces} subs={subs} active={open.id} onSub={pickSub} dim={finding} phone={false} right={field} />
 			) : (
 				// One section (Mood): no sub-tabs, the row keeps Find a filter so every tab has the same frame.
@@ -243,7 +247,9 @@ export function TabPanel({
 					{field && <div className="ml-auto w-[min(320px,34%)] shrink-0">{field}</div>}
 				</div>
 			)}
-			<ContentArea id={finding ? "find" : open.id}>{body}</ContentArea>
+			<ContentArea id={finding && !own ? "find" : open.id} height={own ? CONTENT_H + 48 : CONTENT_H}>
+				{body}
+			</ContentArea>
 		</div>
 	)
 }

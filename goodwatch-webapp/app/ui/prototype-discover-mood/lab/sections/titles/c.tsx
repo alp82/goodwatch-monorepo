@@ -6,7 +6,8 @@ import type { ReactNode } from "react"
 import { EXAMPLE_PROMPTS } from "../../../kit"
 import { PRIVATE, PosterThumb, TitleRowsLoading, liveTitleUrl, useQuickTitles } from "../../shell-parts"
 import type { SectionProps } from "../../types"
-import { Face, PersonTile, PickedFace, usePeople } from "../people/shared"
+import { SuggestChips, cardTitle } from "./ghi-parts"
+import { PersonTile, PickedFace, usePeople } from "../people/shared"
 import {
 	CurrentSearch,
 	LaneHead,
@@ -139,7 +140,7 @@ export function TitlesC({ d, phone, text, setText, runSearch }: SectionProps) {
 
 			{(!phone || anyPicked) && (
 				<div className={phone ? "" : "min-h-0 overflow-y-auto border-l border-white/[0.06] px-5 py-5"}>
-					<LaneHead>Picked</LaneHead>
+					{anyPicked && <LaneHead>Picked</LaneHead>}
 					{anyPicked ? (
 						<div className="flex flex-col gap-4">
 							<PickedGroups uses={uses} known={known.known} w={44} row={!phone} />
@@ -158,11 +159,18 @@ export function TitlesC({ d, phone, text, setText, runSearch }: SectionProps) {
 							)}
 						</div>
 					) : (
-						<div className="flex items-center gap-3 px-1 text-gray-700">
-							<span className="aspect-[2/3] w-11 rounded-lg border border-dashed border-white/[0.12]" />
-							<span className="aspect-[2/3] w-11 rounded-lg border border-dashed border-white/[0.12]" />
-							<Face src={null} size={36} className="opacity-50" />
-						</div>
+						!phone && (
+							<div className="flex flex-col items-start gap-2 pt-1">
+								<SuggestChips
+									titles={d.cards.slice(0, 3).map(cardTitle)}
+									use="loved"
+									onPick={(t) => {
+										known.remember(t)
+										uses.toggle("loved", t.key)
+									}}
+								/>
+							</div>
+						)
 					)}
 				</div>
 			)}
