@@ -30,6 +30,7 @@ import {
 	titleTypeOf,
 	titleTypeParams,
 } from "~/domain/title-type"
+import { MAX_PICKS, tasteRefsOf } from "~/domain/taste-picker"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 
 export const TAG_GROUPS = ["moods", "themes", "styles", "genres"] as const
@@ -64,6 +65,7 @@ export const FILTER_NAMES = [
 	"popularity",
 	"budget",
 	"shows",
+	"tasteGroups",
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
@@ -157,6 +159,8 @@ export interface FilterState {
 	/** Inclusive rating count and catalog Popular rank (1 first). */
 	votes?: FilterRange
 	popularityRank?: FilterRange
+	/** Stable taste-group keys (or legacy size numbers), any of, up to three. */
+	tasteGroups?: string[]
 	/** Inclusive release years; overrides the released preset. */
 	years?: FilterRange
 	/** Inclusive minutes: movie duration or usual episode runtime. */
@@ -346,6 +350,8 @@ export function filterStateFromParams(
 		}
 	}
 	if (params.get("wishlist") === "1") state.onWishlist = true
+	const tasteGroups = tasteRefsOf(params.get("taste")).slice(0, MAX_PICKS)
+	if (tasteGroups.length) state.tasteGroups = tasteGroups
 	const titleType = titleTypeOf(params.get("type"), params.get("anime"))
 	state.type = titleType.format
 	state.anime = titleType.anime
@@ -471,6 +477,11 @@ export function filterStateToParams(
 	}
 	set("seen", state.seenBefore ? "1" : null)
 	set("wishlist", state.onWishlist ? "1" : null)
+	set(
+		"taste",
+		tasteRefsOf(state.tasteGroups?.join(",")).slice(0, MAX_PICKS).join(",") ||
+			null,
+	)
 	set("streamingCountry", state.streamingCountry ?? null)
 	set("ratingCountry", state.ratingCountry ?? null)
 	const services = state.anyService
@@ -650,6 +661,7 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 			return { ...state, votes: undefined, popularityRank: undefined }
 		case "runtime":
 			return { ...state, runtime: undefined, episodeRuntime: undefined }
+		case "tasteGroups":
 		case "years":
 		case "sourceScores":
 		case "scoreGap":
@@ -713,6 +725,7 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	...state,
 	seenBefore: undefined,
 	onWishlist: undefined,
+	tasteGroups: undefined,
 	outsideUsual: undefined,
 	allOf: undefined,
 	budget: undefined,
@@ -782,6 +795,7 @@ export function secondaryFilterCount(state: FilterState): number {
 		(state.minMatch || state.outsideUsual ? 1 : 0) +
 		(state.seenBefore ? 1 : 0) +
 		(state.onWishlist ? 1 : 0) +
+		(state.tasteGroups?.length ?? 0) +
 		(state.released !== "any" ? 1 : 0) +
 		(state.similarTo?.length ?? 0) +
 		(state.people?.length ?? 0) +
@@ -830,12 +844,19 @@ export const stateAsApplied = (
 		applied = { ...applied, ratingCountry: undefined }
 	if (!ladder && (state.ageLimit !== undefined || state.content))
 		applied = { ...applied, ageLimit: undefined, content: undefined }
-	if (!member && (state.seenBefore || state.onWishlist || state.outsideUsual))
+	if (
+		!member &&
+		(state.seenBefore ||
+			state.onWishlist ||
+			state.outsideUsual ||
+			state.tasteGroups?.length)
+	)
 		applied = {
 			...applied,
 			seenBefore: undefined,
 			onWishlist: undefined,
 			outsideUsual: undefined,
+			tasteGroups: undefined,
 		}
 	return applied
 }

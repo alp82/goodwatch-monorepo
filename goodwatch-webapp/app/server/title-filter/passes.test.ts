@@ -56,6 +56,7 @@ function passes(
 		minMatch?: number
 		minScore?: number
 		taste?: boolean
+		tasteGroups?: PassInput["tasteGroups"]
 		productionCountries?: PassInput["productionCountries"]
 		restOfWorld?: PassInput["restOfWorld"]
 		years?: PassInput["years"]
@@ -68,6 +69,7 @@ function passes(
 ) {
 	const input: PassInput = {
 		columns,
+		tasteGroups: filters.tasteGroups,
 		rows: Int32Array.from(order),
 		keys: Float64Array.from(order, (row) => columns.pointIds[row]),
 		services: filters.services ?? {
@@ -916,10 +918,12 @@ test("a fail mask has room for every filter group, the last one included", () =>
 		"popularity",
 		"budget",
 		"shows",
+		"tasteGroups",
 	])
 	assert.equal(FILTER_NAMES[18], "content")
 	assert.equal(FILTER_NAMES[23], "wishlist")
-	assert.equal(FILTER_NAMES.at(-1), "shows")
+	assert.equal(FILTER_NAMES.at(-1), "tasteGroups")
+	assert.equal(FILTER_NAMES.length, 28)
 	const ratings: RatingsFilter = {
 		content: Uint8Array.from(everyRow, (row) => (row === 3 ? 1 : 0)),
 		ages: null,
@@ -939,6 +943,18 @@ test("a fail mask has room for every filter group, the last one included", () =>
 	assert.deepEqual(out.recoveries, [
 		{ filter: "themes", titles: 4 },
 		{ filter: "content", titles: 1 },
+	])
+	const last = runPasses({
+		...passInput(told, everyRow),
+		tasteGroups: {
+			options: ["movie-1", "show-2"],
+			picked: ["movie-1"],
+			sideOf: () => "show-2",
+		},
+	})
+	assert.equal(last.passing.length, 0)
+	assert.deepEqual(last.recoveries, [
+		{ filter: "tasteGroups", titles: everyRow.length },
 	])
 })
 
@@ -2310,4 +2326,80 @@ test("budget and shows counts share one facts pass over 200k titles", async (t) 
 		`Budget and Shows median: ${times[4].toFixed(2)} ms over 200k titles`,
 	)
 	assert.ok(times[4] < 15, `Median ${times[4]} ms exceeded 15 ms`)
+})
+
+test("taste groups are any of, count membership including none, and assign only eligible candidates", () => {
+	const calls: number[] = []
+	const groups = ["movie-1", "show-2"]
+	const membership = [groups[0], groups[1], groups[0], null, groups[1], null]
+	const filter = (picked: string[]) => ({
+		options: groups,
+		picked,
+		sideOf: (key: number) => {
+			const row = key - MOVIE - 1
+			calls.push(row)
+			return membership[row]
+		},
+	})
+	const counts = passes(plain, { minScore: 70, tasteGroups: filter([]) })
+	assert.deepEqual(calls, [0, 2, 4])
+	assert.deepEqual(counts.rows, [0, 2, 4])
+	assert.deepEqual(counts.optionCounts.tasteGroups, {
+		"movie-1": 2,
+		"show-2": 1,
+		none: 0,
+	})
+	calls.length = 0
+	const one = passes(plain, { tasteGroups: filter([groups[0]]) })
+	assert.deepEqual(one.rows, [0, 2])
+	assert.deepEqual(one.optionCounts.tasteGroups, {
+		"movie-1": 2,
+		"show-2": 2,
+		none: 2,
+	})
+	assert.equal(
+		one.recoveries.find((r) => r.filter === "tasteGroups")?.titles,
+		4,
+	)
+	assert.deepEqual(
+		passes(plain, { tasteGroups: filter(groups) }).rows,
+		[0, 1, 2, 4],
+	)
+	// Correct counts for another filter's removal: only the chosen groups can recover.
+	const narrowed = passes(plain, {
+		minScore: 80,
+		tasteGroups: filter([groups[1]]),
+	})
+	assert.deepEqual(narrowed.rows, [])
+	assert.equal(
+		narrowed.recoveries.find((r) => r.filter === "minScore")?.titles,
+		2,
+	)
+	assert.equal(narrowed.optionCounts.minScore["0"], 2)
+	assert.equal(narrowed.optionCounts.minScore["70"], 1)
+	assert.deepEqual(passes(plain, {}).optionCounts.tasteGroups, {})
+})
+
+test("year counts replacing Years and Released still respect taste picks", () => {
+	const facts = factsFixture(6)
+	const base = passInput({ ...columns, facts }, plain)
+	const calls: number[] = []
+	const result = runPasses({
+		...base,
+		releasedCounts: true,
+		yearRange: { min: 2000 },
+		released: { from: 20000, to: 21000 },
+		tasteGroups: {
+			options: ["movie-1", "movie-2"],
+			picked: ["movie-1"],
+			sideOf: (key) => {
+				const row = key - MOVIE - 1
+				calls.push(row)
+				return row % 2 ? "movie-1" : "movie-2"
+			},
+		},
+	})
+	assert.deepEqual(calls, plain)
+	assert.equal(result.passing.length, 0)
+	assert.deepEqual(result.optionCounts.years, { 1921: 1, 1923: 1, 1925: 1 })
 })

@@ -15,7 +15,10 @@ import {
 	discoverFilterCache,
 	discoverFilterKey,
 } from "~/server/discover-filter-cache.server"
-import { discoverFilterDefaults } from "~/server/discover-results.server"
+import {
+	discoverFilterDefaults,
+	resolveTasteGroups,
+} from "~/server/discover-results.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { inlineTaste } from "~/server/taste/inline.server"
 import { type TitleCard, getTitleCards } from "~/server/title-cards.server"
@@ -76,6 +79,10 @@ async function mixes(ctx: ViewerContext, input: PanelInput) {
 						return null
 					})
 			: null
+	const { tasteFilter } = resolveTasteGroups(
+		input.state.tasteGroups?.length ? groups : null,
+		input.state.tasteGroups,
+	)
 	const definitions = readyMixes(groups?.groups ?? [])
 	// One filter pass keeps all non-tag choices, including genres. The eight pair intersections are cheap mask reads.
 	const state = { ...input.state, moods: [], themes: [], styles: [] }
@@ -96,6 +103,7 @@ async function mixes(ctx: ViewerContext, input: PanelInput) {
 			taste: savedTaste,
 			forYou: null,
 			viewer: ctx,
+			tasteGroups: tasteFilter,
 		}),
 	)
 	const counted = definitions.map((mix) => ({
@@ -191,6 +199,13 @@ async function panelTitles(ctx: ViewerContext, input: PanelInput) {
 	if (!snapshot) throw new SnapshotNotLoaded()
 	const savedTaste = await loadTaste(ctx.viewer)
 	const taste = inlineTaste(savedTaste, input.state, snapshot) ?? savedTaste
+	const groups =
+		ctx.viewer.kind === "member" && input.state.tasteGroups?.length
+			? await import("~/server/watch-next-taste-picker.server").then((m) =>
+					m.tasteGroupsFor(ctx, savedTaste, snapshot),
+				)
+			: null
+	const { tasteFilter } = resolveTasteGroups(groups, input.state.tasteGroups)
 	const forYou = input.forYou ?? ctx.forYou
 	const key = searching
 		? null
@@ -212,6 +227,7 @@ async function panelTitles(ctx: ViewerContext, input: PanelInput) {
 			taste: savedTaste,
 			forYou: forYou ? (searching ? "search" : "browse") : null,
 			viewer: ctx,
+			tasteGroups: tasteFilter,
 		}),
 	)
 	let keys = result.keys

@@ -31,6 +31,8 @@ import {
 import type { ViewerContext } from "~/server/viewer.server"
 import { DISCOVER_MAX_PAGE } from "~/utils/constants"
 import type { TitleKey } from "~/utils/title-key"
+import type { FilterBarCounts } from "~/ui/filter-bar/types"
+import type { TasteGroups } from "~/server/watch-next-taste-picker.server"
 
 export { SnapshotNotLoaded } from "~/server/title-filter/index.server"
 
@@ -48,7 +50,8 @@ export const GUEST_FOR_YOU_RATINGS = 5
 export type ForYouStatus = "ready" | "needsTaste" | "signUp"
 
 export interface DiscoverResults
-	extends Omit<FilterResult, "keys" | "moved" | "personalOrder"> {
+	extends Omit<FilterResult, "keys" | "moved" | "personalOrder">,
+		Pick<FilterBarCounts, "tasteGroups"> {
 	/** Exposure record for this member's page; null for guests or a dropped write. */
 	listId: string | null
 	page: number
@@ -95,6 +98,39 @@ export interface DiscoverSideRow extends DiscoverSide {
 	listId: string | null
 }
 
+/** Resolve URL references to current group keys, sharing the same rule across results and panels. */
+export function resolveTasteGroups(
+	groupsForTaste: TasteGroups | null,
+	refs: readonly string[] = [],
+) {
+	const picked = refs.flatMap((ref) => {
+		const number = groupsForTaste?.numberOf(ref)
+		const group = number == null ? null : groupsForTaste?.groups[number - 1]
+		return group ? [{ ref, group }] : []
+	})
+	const tasteGroups = groupsForTaste
+		? {
+				groups: groupsForTaste.groups.map(({ key, name }) => ({ key, name })),
+				names: Object.fromEntries(
+					picked.map(({ ref, group }) => [ref, group.name]),
+				),
+			}
+		: null
+	const tasteFilter = groupsForTaste
+		? {
+				options: groupsForTaste.groups.map((g) => g.key),
+				picked: picked.map(({ group }) => group.key),
+				sideOf: (key: TitleKey) => {
+					const number = groupsForTaste.groupOf(key)
+					return number === null
+						? null
+						: (groupsForTaste.groups[number - 1]?.key ?? null)
+				},
+			}
+		: null
+	return { tasteGroups, tasteFilter }
+}
+
 /**
  * One page of Discover's results for the viewer. `forYou` is the switch: the caller resolves the URL's `foryou`
  * against the member's saved setting. With `ranked`, the search's ranked list in its plain order (at most
@@ -120,6 +156,8 @@ export async function getDiscoverResults(
 		 * page; the TV and dev pages keep the grid), `side` narrows the list to one side ("none": no side).
 		 */
 		sides?: { rows: boolean; side: string | null }
+		/** Compute taste-group counts, sent while the You tab is open. Picks also request them. */
+		tasteCounts?: boolean
 		/** Whether a member's page is recorded as a Discover list exposure (default true); false for another surface's read. */
 		exposure?: boolean
 	},
@@ -142,6 +180,18 @@ export async function getDiscoverResults(
 				? "ready"
 				: "needsTaste"
 
+	const groupsForTaste =
+		ctx.viewer.kind === "member" &&
+		snapshotForTaste &&
+		(input.tasteCounts || state.tasteGroups?.length)
+			? await import("~/server/watch-next-taste-picker.server").then((m) =>
+					m.tasteGroupsFor(ctx, savedTaste, snapshotForTaste),
+				)
+			: null
+	const { tasteGroups, tasteFilter } = resolveTasteGroups(
+		groupsForTaste,
+		state.tasteGroups,
+	)
 	const compute = (keep?: (key: TitleKey) => boolean) =>
 		filterTitles({
 			budgetCounts: input.budgetCounts,
@@ -158,6 +208,7 @@ export async function getDiscoverResults(
 			forYou: input.forYou ? (searching ? "search" : "browse") : null,
 			viewer: ctx,
 			keep,
+			tasteGroups: tasteFilter,
 		})
 	const snapshot = searching ? null : getTitleSnapshot()
 	const key = snapshot
@@ -193,19 +244,21 @@ export async function getDiscoverResults(
 		input.exposure === false
 			? null
 			: recordListExposure(ctx, {
-			surface: "discover",
-			ordering: personalOrder?.todayFirst100 ? "personal-order" : "taste-v2",
-			flags: {},
-			personalOrder,
-			sort: result.sortUsed,
-			sortRequested: sort,
-			forYou: input.forYou,
-			forYouApplied: applied,
-			filters,
-			page,
-			batch: "page",
-			titles,
-		})
+					surface: "discover",
+					ordering: personalOrder?.todayFirst100
+						? "personal-order"
+						: "taste-v2",
+					flags: {},
+					personalOrder,
+					sort: result.sortUsed,
+					sortRequested: sort,
+					forYou: input.forYou,
+					forYouApplied: applied,
+					filters,
+					page,
+					batch: "page",
+					titles,
+				})
 
 	// Sides of you: a member's browse list while For you is on (any sort; Best match counts as on), when they have
 	// sides and the page asks for rows of a list with titles, or for one side. The snapshot is null while searching.
@@ -282,6 +335,7 @@ export async function getDiscoverResults(
 		})
 		return {
 			...counts,
+			tasteGroups,
 			listId: rows[0]?.listId ?? null,
 			page,
 			pageSize: DISCOVER_PAGE_SIZE,
@@ -310,6 +364,7 @@ export async function getDiscoverResults(
 	)
 	return {
 		...counts,
+		tasteGroups,
 		listId,
 		page,
 		pageSize: DISCOVER_PAGE_SIZE,

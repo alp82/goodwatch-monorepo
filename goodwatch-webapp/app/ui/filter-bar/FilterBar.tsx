@@ -104,6 +104,7 @@ export function FilterBar(props: FilterBarProps) {
 	const chips = useMemo(
 		() =>
 			activeChips(applied, {
+				tasteGroup: (key) => counts?.tasteGroups?.names[key],
 				service: (id) =>
 					services.countryProviders.find((p) => p.id === id)?.name,
 				serviceLogo: (id) =>
@@ -114,7 +115,14 @@ export function FilterBar(props: FilterBarProps) {
 				ageStep: (age) =>
 					ladder ? ladderStepFor(ladder.steps, age).label : undefined,
 			}),
-		[applied, services.countryProviders, titles.byKey, people.byId, ladder],
+		[
+			applied,
+			services.countryProviders,
+			titles.byKey,
+			people.byId,
+			ladder,
+			counts?.tasteGroups,
+		],
 	)
 	// The service selection is already shown in the control above the chips.
 	const displayChips = chips.filter((chip) => chip.key !== "services")

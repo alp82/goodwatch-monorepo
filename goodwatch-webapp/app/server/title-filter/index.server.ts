@@ -56,6 +56,7 @@ import {
 import {
 	type DayRange,
 	type ServicesFilter,
+	type TasteGroupFilter,
 	ladderFor,
 	ratingsFilter,
 	runPasses,
@@ -138,6 +139,7 @@ export interface FilterInput {
 	releasedCounts?: boolean
 	lengthCounts?: boolean
 	originCounts?: boolean
+	tasteGroups?: TasteGroupFilter | null
 	/** "catalog" is every title Discover shows; a list is a ranked search, a Wishlist, or an Explorer pool. */
 	universe: Iterable<TitleKey> | "catalog"
 	/** Text search keeps hidden titles findable. */
@@ -292,6 +294,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		releasedCounts: input.releasedCounts,
 		lengthCounts: input.lengthCounts,
 		originCounts: input.originCounts,
+		tasteGroups: input.tasteGroups,
 		columns: snapshot.columns,
 		budget: state.budget,
 		boxOffice: state.boxOffice,

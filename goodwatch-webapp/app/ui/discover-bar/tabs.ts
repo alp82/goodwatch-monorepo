@@ -138,6 +138,7 @@ export const GROUP_PLACES: Record<
 	content: { subTab: "age", line: 7 },
 	// You: the match step leads (line 0), then the other choices.
 	minMatch: { subTab: "taste", line: 0 },
+	tasteGroups: { subTab: "taste", line: 1 },
 	notSeenYet: { subTab: "taste", line: 1 },
 	wishlist: { subTab: "taste", line: 1 },
 	// Old URLs' filters: a chip, in no tab.

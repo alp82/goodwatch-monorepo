@@ -191,6 +191,14 @@ export function ratingsFilter(
 	}
 }
 
+/** Resolved member groups; absent unless taste counts or narrowing were requested. */
+export interface TasteGroupFilter {
+	options: string[]
+	picked: string[]
+	/** The stable key of the group this title fits, or null. Uses the member's lazy side cache. */
+	sideOf: (key: TitleKey) => string | null
+}
+
 /** Everything the passes need, with every group resolved. A group is off when its field says so. */
 export interface PassInput {
 	/** Compute option counts only for requested groups. */
@@ -210,6 +218,7 @@ export interface PassInput {
 	popularityRank?: FilterRange
 	/** Catalog rank per snapshot row; zero is unranked. */
 	popularityRanks?: Int32Array
+	tasteGroups?: TasteGroupFilter | null
 	columns: TitleColumns
 	/** The universe in its plain order: snapshot row (-1 for a title the snapshot doesn't hold) and key per title. */
 	rows: Int32Array
@@ -907,6 +916,33 @@ export function runPasses(input: PassInput): PassOutput {
 		masks[i] = mask
 	}
 
+	// Assign groups only after the other filters. With picks, single-failure candidates also need a group:
+	// they can pass when that one filter is removed, and must not promise recoveries outside the picked groups.
+	// Age-step counts replace age and content together; year counts replace years and Released.
+	// Include candidates failing either pair so their counts still respect taste picks.
+	const tasteGroups = input.tasteGroups
+	const groupCounts: Record<string, number> = {}
+	if (tasteGroups) {
+		for (const key of tasteGroups.options) groupCounts[key] = 0
+		groupCounts.none = 0
+		const picked = new Set(tasteGroups.picked)
+		for (let i = 0; i < n; i++) {
+			const mask = masks[i]
+			if (
+				mask !== 0 &&
+				(!picked.size ||
+					((mask & (mask - 1)) !== 0 &&
+						(mask & ~(BIT.ageLimit | BIT.content)) !== 0 &&
+						(mask & ~(BIT.years | BIT.released)) !== 0))
+			)
+				continue
+			const group = tasteGroups.sideOf(keys[i])
+			if (mask === 0) groupCounts[group ?? "none"]++
+			if (picked.size && (group === null || !picked.has(group)))
+				masks[i] |= BIT.tasteGroups
+		}
+	}
+
 	// Passing titles and recoveries.
 	const recovered = new Uint32Array(FILTER_NAMES.length)
 	let total = 0
@@ -951,6 +987,8 @@ export function runPasses(input: PassInput): PassOutput {
 		input.originCounts
 	)
 		Object.assign(optionCounts, factCounts(input, masks))
+	optionCounts.tasteGroups = groupCounts
+
 	// Movies or shows.
 	{
 		let all = 0

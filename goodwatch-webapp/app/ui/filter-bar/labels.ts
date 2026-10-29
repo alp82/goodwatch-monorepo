@@ -221,6 +221,7 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		popularity: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
 		scoreGap: { dot: "bg-rose-400", bar: "bg-rose-500" },
 		services: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
+		tasteGroups: { dot: "bg-amber-400", bar: "bg-amber-500" },
 		wishlist: { dot: "bg-blue-400", bar: "bg-blue-500" },
 		notSeenYet: { dot: "bg-blue-400", bar: "bg-blue-500" },
 		type: { dot: "bg-teal-400", bar: "bg-teal-500" },
@@ -282,6 +283,8 @@ export function recoveryLabel(
 			return `${n} on other services`
 		case "notSeenYet":
 			return state.seenBefore ? `${n} you haven't seen` : `${n} you've seen`
+		case "tasteGroups":
+			return `${n} outside ${state.tasteGroups?.length === 1 ? "this taste group" : "these taste groups"}`
 		case "wishlist":
 			return `${n} outside your wishlist`
 		case "type":
@@ -350,6 +353,7 @@ export function recoveryLabel(
  * on the viewer's ladder ("FSK 12").
  */
 export interface FilterNames {
+	tasteGroup?: (key: string) => string | undefined
 	service?: (id: number) => string | undefined
 	serviceLogo?: (id: number) => string | null | undefined
 	title?: (key: number) => string | undefined
@@ -388,6 +392,16 @@ export function activeChips(
 	names: FilterNames = {},
 ): ActiveChip[] {
 	const chips: ActiveChip[] = []
+	for (const key of state.tasteGroups ?? []) {
+		const name = names.tasteGroup?.(key)
+		if (!name) continue
+		chips.push({
+			key: `taste-${key}`,
+			group: "tasteGroups",
+			label: name,
+			remove: (s) => ({ ...s, tasteGroups: without(s.tasteGroups, key) }),
+		})
+	}
 	if (state.seenBefore)
 		chips.push({
 			key: "seen",

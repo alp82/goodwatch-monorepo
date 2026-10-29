@@ -57,18 +57,20 @@ async function respond(request: Request, guest?: GuestProgress) {
 
 	const params = new URL(request.url).searchParams
 	const ranked = rankedFromParams(params)
+	const counts = params.get("counts")?.split(",")
 	let response: DiscoverResults
 	try {
 		response = await getDiscoverResults(ctx, {
-			budgetCounts: params.get("counts")?.split(",").includes("budget"),
-			showsCounts: params.get("counts")?.split(",").includes("shows"),
-			popularityCounts: params.get("counts")?.split(",").includes("popularity"),
-			releasedCounts: params.get("counts")?.split(",").includes("released"),
-			lengthCounts: params.get("counts")?.split(",").includes("length"),
-			originCounts: params.get("counts")?.split(",").includes("origin"),
+			budgetCounts: counts?.includes("budget"),
+			showsCounts: counts?.includes("shows"),
+			popularityCounts: counts?.includes("popularity"),
+			releasedCounts: counts?.includes("released"),
+			lengthCounts: counts?.includes("length"),
+			originCounts: counts?.includes("origin"),
 			state: filterStateFromParams(params, discoverFilterDefaults(ctx)),
 			sort: sortFromParams(params, ranked !== undefined),
 			ranked,
+			tasteCounts: counts?.includes("taste"),
 			forYou: forYouFromParams(params, ctx),
 			sides: {
 				rows: params.get("sides") === "rows",

@@ -806,12 +806,15 @@ baseline), Biome. Page checks use an isolated local setup (no production `.env`,
 **B4. Taste groups on Discover**
 
 - Files: `filter-state.ts` (`tasteGroups`, `taste=`), `discover-results.server.ts` (resolve keys through
-  `tasteGroupsFor`; counts on request), `passes.server.ts` (a per-row group array for the universe, any-of over the
+  `tasteGroupsFor`; counts on request), `passes.server.ts` (lazy assignment over eligible candidates, any-of over the
   picks, counts per group and `none`), `labels.ts` (chip with the group's name; the name comes with the response).
 - Tests: a pure test with a stub `sideOf` in `passes.test.ts`; key parsing in `filter-state.test.ts`; a member
   integration check against `side=` for one group (same titles).
 - Acceptance: `/discover?taste=<key>` with For you off narrows to that group; a guest URL with `taste=` doesn't narrow.
   Measure the first uncached request for the largest member history (`Server-Timing`).
+- Measured for a member with 10,000 ratings on a fast desktop: the first taste request takes about **0.6 s**
+  (about **200 ms** building taste groups and **420 ms** assigning groups across the catalog), then about
+  **15 ms per request**. Requests without taste picks or `counts=taste` pay no taste-group cost.
 - Depends on: nothing.
 
 **B5. Scores: Metacritic user score and the shared scale**

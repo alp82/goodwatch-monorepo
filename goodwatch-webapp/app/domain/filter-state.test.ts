@@ -922,6 +922,41 @@ test("absent or invalid returns and show status do not add parser properties", (
 	for (const query of ["", "returns=unknown&showStatus=running,ended"]) {
 		const state = parse(query)
 		assert.equal(Object.prototype.hasOwnProperty.call(state, "returns"), false)
-		assert.equal(Object.prototype.hasOwnProperty.call(state, "showStatus"), false)
+		assert.equal(
+			Object.prototype.hasOwnProperty.call(state, "showStatus"),
+			false,
+		)
 	}
+})
+
+test("taste keys parse, deduplicate, cap at three and round trip including legacy references", () => {
+	const state = parse(
+		"taste=bad,movie-603,show-1399,movie-603,2,show-3,0,movie-0,movie--1",
+	)
+	assert.deepEqual(state.tasteGroups, ["movie-603", "show-1399", "2"])
+	assert.equal(
+		filterStateToParams(state, defaults).get("taste"),
+		"movie-603,show-1399,2",
+	)
+	assert.deepEqual(
+		parse(filterStateToParams(state, defaults).toString()),
+		state,
+	)
+	assert.equal(
+		parse("taste=none,g1,movie-0,movie-12345678901").tasteGroups,
+		undefined,
+	)
+	assert.equal(dropFilter(state, "tasteGroups").tasteGroups, undefined)
+	assert.equal(
+		filterStateToParams(dropFilter(state, "tasteGroups"), defaults).get(
+			"taste",
+		),
+		null,
+	)
+})
+
+test("taste picks stay in guest URLs but are omitted from applied chips", () => {
+	const state = parse("taste=movie-603")
+	assert.equal(stateAsApplied(state, null, false).tasteGroups, undefined)
+	assert.deepEqual(state.tasteGroups, ["movie-603"])
 })

@@ -711,3 +711,47 @@ test("fact range chips display stops at encoded exclusive seams", () => {
 		[],
 	)
 })
+
+test("taste-group chips use resolved names and remove just their pick", () => {
+	const state = filterStateFromParams(
+		new URLSearchParams("taste=movie-603,2"),
+		{ onMyServices: false, notSeenYet: false },
+	)
+	const chips = activeChips(state, {
+		tasteGroup: (key) =>
+			key === "movie-603" ? "Dark thrillers" : "Gentle comedy",
+	})
+	assert.deepEqual(
+		chips.map((c) => c.label),
+		["Dark thrillers", "Gentle comedy"],
+	)
+	assert.deepEqual(chips[0].remove(state).tasteGroups, ["2"])
+	assert.deepEqual(activeChips(state), [])
+})
+
+test("unresolved taste keys have no chip, while resolved picks remain removable", () => {
+	const selected = { ...state, tasteGroups: ["movie-603", "movie-999"] }
+	const chips = activeChips(selected, {
+		tasteGroup: (key) => (key === "movie-603" ? "Dark thrillers" : undefined),
+	})
+	assert.deepEqual(
+		chips.map((chip) => chip.label),
+		["Dark thrillers"],
+	)
+	assert.deepEqual(chips[0].remove(selected).tasteGroups, ["movie-999"])
+	assert.deepEqual(activeChips(selected, { tasteGroup: () => undefined }), [])
+})
+
+test("taste recovery labels distinguish one group from several", () => {
+	assert.equal(
+		recoveryLabel("tasteGroups", 12, { ...state, tasteGroups: ["movie-603"] }),
+		"12 outside this taste group",
+	)
+	assert.equal(
+		recoveryLabel("tasteGroups", 12, {
+			...state,
+			tasteGroups: ["movie-603", "2"],
+		}),
+		"12 outside these taste groups",
+	)
+})

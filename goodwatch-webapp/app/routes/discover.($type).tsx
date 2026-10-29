@@ -157,6 +157,7 @@ async function browseLoader(
 	userId: string | null,
 ): Promise<BrowseLoaderData | TypedResponse<BrowseLoaderData>> {
 	const params = new URL(request.url).searchParams
+	const counts = params.get("counts")?.split(",")
 	// A guest's progress lives in their browser: the first view is the plain guest's, and the browser asks again with it.
 	const ctx = await getViewerContext(request, undefined, userId)
 	const defaults = discoverFilterDefaults(ctx)
@@ -186,6 +187,7 @@ async function browseLoader(
 				firstPage === 1 || canShowRows
 					? await getBrowseResults(ctx, {
 							state,
+							tasteCounts: counts?.includes("taste"),
 							sort,
 							forYou,
 							sides,
@@ -201,6 +203,7 @@ async function browseLoader(
 							Array.from({ length: lastPage - start + 1 }, (_, i) =>
 								getBrowseResults(ctx, {
 									state,
+									tasteCounts: counts?.includes("taste"),
 									sort,
 									forYou,
 									sides,

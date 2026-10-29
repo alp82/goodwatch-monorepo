@@ -5,11 +5,15 @@ import type { FilterName } from "~/domain/filter-state"
 
 /** What the title filter counted for the current state; the results endpoints return it (see FilterResult). */
 export interface FilterBarCounts {
+	tasteGroups?: {
+		groups: { key: string; name: string }[]
+		names: Record<string, string>
+	} | null
 	total: number
 	hidden: number
 	/** Titles only that filter hides, largest first. */
 	recoveries: { filter: FilterName; titles: number }[]
-	/** What each option would leave, the others unchanged. */
+	/** What each option would leave, the others unchanged. Taste groups count membership before taste picks. */
 	optionCounts: FilterOptionCounts
 	/** Per-service counts are missing while the viewer's country loads. */
 	approximate?: boolean

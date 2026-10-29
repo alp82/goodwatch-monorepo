@@ -95,6 +95,8 @@ export function discoverFilterKey(input: {
 		notSeenYet: state.notSeenYet,
 		seenBefore: state.seenBefore,
 		onWishlist: state.onWishlist,
+		// Guests never narrow by member taste groups.
+		tasteGroups: undefined,
 		outsideUsual: state.outsideUsual,
 		allOf: state.allOf,
 		moods: state.moods,

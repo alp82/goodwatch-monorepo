@@ -541,3 +541,23 @@ test("all budget and shows bounds, choices and count flags separate cache entrie
 		plain,
 	)
 })
+
+test("guest taste picks share the unfiltered cache entry", async () => {
+	const base = input()
+	const cache = createFilterResultCache()
+	let calls = 0
+	const compute = async () => {
+		calls++
+		return result()
+	}
+	const plain = await cache.run(discoverFilterKey(base), compute)
+	for (const tasteGroups of [["movie-603"], ["show-1399", "2"], []]) {
+		const key = discoverFilterKey({
+			...base,
+			state: { ...base.state, tasteGroups },
+		})
+		assert.equal(key, discoverFilterKey(base))
+		assert.strictEqual(await cache.run(key, compute), plain)
+	}
+	assert.equal(calls, 1)
+})

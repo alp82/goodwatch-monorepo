@@ -20,7 +20,7 @@ test("GET parses panel part and filter query, with private responses and timing"
 		const response = await loader(
 			args(
 				new Request(
-					`https://goodwatch.test/api/discover/panel?part=${part}&moods=funny&all=moods&sort=top`,
+					`https://goodwatch.test/api/discover/panel?part=${part}&moods=funny&all=moods&sort=top&taste=movie-603,2`,
 				),
 			),
 		)
@@ -28,6 +28,7 @@ test("GET parses panel part and filter query, with private responses and timing"
 		const body = JSON.parse(await response.text())
 		assert.equal(body.part, part)
 		assert.deepEqual(body.input.state.moods, ["funny"])
+		assert.deepEqual(body.input.state.tasteGroups, ["movie-603", "2"])
 		assert.equal(body.input.sort, "top")
 		assert.equal(response.headers.get("Cache-Control"), "private, no-store")
 		assert.match(

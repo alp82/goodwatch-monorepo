@@ -18,11 +18,14 @@ const args = (request: Request) => ({ request, params: {}, context: {} })
 test("GET and guest POST opt into exact comma-list count groups, including combinations", async () => {
 	for (const counts of [
 		null,
+		"taste",
+		"budget",
+		"shows",
 		"released",
 		"length",
 		"origin",
-		"taste,popularity,released,length,origin",
-		"unreleased,lengthy,origins",
+		"taste,budget,shows,popularity,released,length,origin",
+		"tastes,budgets,show,unreleased,lengthy,origins",
 	]) {
 		for (const method of ["GET", "POST"]) {
 			const url = new URL("https://goodwatch.test/api/discover/results")
@@ -40,6 +43,9 @@ test("GET and guest POST opt into exact comma-list count groups, including combi
 			const { input } = JSON.parse(await response.text())
 			for (const [group, flag] of [
 				["popularity", "popularityCounts"],
+				["taste", "tasteCounts"],
+				["budget", "budgetCounts"],
+				["shows", "showsCounts"],
 				["released", "releasedCounts"],
 				["length", "lengthCounts"],
 				["origin", "originCounts"],

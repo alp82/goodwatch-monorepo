@@ -95,7 +95,12 @@ test("every filter group has its place, in a sub-tab that exists", () => {
 	for (const { subTab } of Object.values(GROUP_PLACES))
 		if (subTab) assert.ok(ids.has(subTab), subTab)
 	assert.deepEqual(groupsOf("scores"), ["minScore", "sourceScores", "scoreGap"])
-	assert.deepEqual(groupsOf("taste"), ["minMatch", "notSeenYet", "wishlist"])
+	assert.deepEqual(groupsOf("taste"), [
+		"minMatch",
+		"tasteGroups",
+		"notSeenYet",
+		"wishlist",
+	])
 })
 
 test("a sub-tab counts its choices, and a tab's badge is the sum of its sub-tabs", () => {
@@ -330,4 +335,19 @@ test("Budget and Shows choices feed Watch values, badges and Clear all", () => {
 	)
 	assert.equal(clearAllCount(state, member), 6)
 	assert.equal(tabBadge("watch", clearAll(state), member), 0)
+})
+
+test("resolved taste-group names appear on You and missing references stay absent", () => {
+	const selected = { ...empty, tasteGroups: ["movie-603", "movie-999"] }
+	const names = {
+		tasteGroup: (key: string) =>
+			key === "movie-603" ? "Dark thrillers" : undefined,
+	}
+	assert.equal(
+		tabValues(selected, member, names).you.value,
+		"Any match · Dark thrillers",
+	)
+	assert.equal(tabValues(selected, guest, names).you.value, null)
+	assert.equal(tabValues(selected, member).you.value, null)
+	assert.equal(clearAll(selected).tasteGroups, undefined)
 })

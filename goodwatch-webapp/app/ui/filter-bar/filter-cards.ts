@@ -8,6 +8,7 @@ export type CardKey = Exclude<
 	| "popularity"
 	| "budget"
 	| "shows"
+	| "tasteGroups"
 	| "wishlist"
 	| "notSeenYet"
 	| "anime"
@@ -59,6 +60,7 @@ export const cardOf = (group: FilterName): CardKey | null =>
 				: group === "budget" ||
 						group === "shows" ||
 						group === "popularity" ||
+						group === "tasteGroups" ||
 						group === "wishlist" ||
 						group === "notSeenYet" ||
 						group === "legacy"
