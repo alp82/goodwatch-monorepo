@@ -1,8 +1,7 @@
-// PROTOTYPE - throwaway. 5. The AUTH_MAINTENANCE notice as a program break (round 2: variant a picked). The words
-// are production's (utils/auth-maintenance.ts); the back-at time is "now + 30 minutes".
+// PROTOTYPE - throwaway. 4. Maintenance as a program break (round 3: generic words, any maintenance, not only the
+// sign-in move). Browsing keeps working: OK keeps browsing. The back-at time is "now + 30 minutes".
 import { useEffect, useMemo, useState } from "react"
-import { MAINTENANCE_TITLE } from "~/utils/auth-maintenance"
-import { BigRemote, type Key, Scene, Wordmark, useRemoteKeys, useToast } from "./kit"
+import { BigRemote, type Key, Scene, Wordmark, useRemoteKeys, useToast, useTvPower } from "./kit"
 
 function useBackAt() {
 	const backAt = useMemo(() => {
@@ -25,16 +24,19 @@ function useBackAt() {
 export function PageMaintenance() {
 	const { clock, countdown } = useBackAt()
 	const [msg, toast] = useToast()
+	const tv = useTvPower()
 	const press = (k: Key) => {
-		if (k === "up" || k === "down") toast("Sign-in is paused on every channel")
-		if (k === "ok") toast(`Back at ${clock}`)
-		if (k === "power") toast("Power: keep browsing (start page)")
+		if (k === "power") return tv.toggle()
+		if (!tv.on) return
+		if (k === "up" || k === "down") toast(`This channel is back at ${clock}`)
+		if (k === "ok") toast("OK: keep browsing (start page)")
 	}
 	useRemoteKeys(press)
 	return (
 		<Scene
-			heading={MAINTENANCE_TITLE}
+			heading="Scheduled maintenance"
 			msg={msg}
+			power={tv.power}
 			screen={
 				<div className="absolute inset-0 flex flex-col bg-gradient-to-b from-[#0f1a2e] to-[#070a12]">
 					<div className="flex items-center justify-between px-[3cqw] pt-[3cqh] text-[1.8cqw] font-semibold uppercase tracking-[0.16em] text-white/55">
@@ -43,16 +45,20 @@ export function PageMaintenance() {
 					</div>
 					<div className="flex flex-1 flex-col items-center justify-center text-center">
 						<Wordmark size="8cqw" />
-						<div className="mt-[2.4cqh] px-[6cqw] text-[4.2cqw] font-bold leading-tight">{MAINTENANCE_TITLE}</div>
-						<div className="mt-[1.6cqh] text-[2.6cqw] text-amber-300">Back at {clock}</div>
+						<div className="mt-[2.4cqh] px-[6cqw] text-[4.6cqw] font-bold leading-tight">Scheduled maintenance</div>
+						<div className="mt-[1.2cqh] px-[8cqw] text-[2.3cqw] text-white/70">Some features are paused for a short while. Back at {clock}.</div>
+						<div className="mt-[3cqh] flex items-center gap-[1.2cqw] rounded-full bg-white/10 py-[0.8cqh] pl-[0.8cqw] pr-[2cqw] text-[2.2cqw] font-semibold">
+							<span className="flex h-[4.4cqw] w-[4.4cqw] items-center justify-center rounded-full bg-white/90 text-[1.5cqw] font-bold text-black">OK</span>
+							Keep browsing
+						</div>
 					</div>
 					<div className="flex h-[9cqh] items-center gap-[2cqw] overflow-hidden bg-amber-400 px-[3cqw] text-[2cqw] font-semibold text-black">
 						<span className="shrink-0 rounded-[0.5cqw] bg-black px-[1cqw] py-[0.3cqh] text-amber-300">Still on air</span>
-						<span className="truncate">Ratings and Wishlist are safe · Power to keep browsing</span>
+						<span className="truncate">Your ratings and lists are safe · everything else works as usual</span>
 					</div>
 				</div>
 			}
-			remote={<BigRemote press={press} enabled={["power", "ok", "up", "down"]} powerLabel="Keep browsing" />}
+			remote={<BigRemote press={press} off={!tv.on} pulse="ok" />}
 		/>
 	)
 }

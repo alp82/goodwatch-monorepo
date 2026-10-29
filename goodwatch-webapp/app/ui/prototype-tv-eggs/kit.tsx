@@ -60,14 +60,17 @@ function layoutFor(w: number, h: number): Layout {
 		// The Remote first (the owner, round 2: bigger), then the TV as large as the rest allows; the Remote's top
 		// reaches a little over the picture's bottom edge, as on the old start page.
 		const P = ROOM_PHOTO
-		const top = Math.max(12, h * 0.025)
+		// The room shows around the TV (the owner, round 3: "I want to see more of the room").
+		const top = Math.max(16, h * 0.06)
 		const scale = Math.max(0.55, Math.min(0.8, h / 1150))
 		const remoteH = REMOTE_H * scale
 		const aspect = P.tv.w / P.tv.h
-		const tvW = Math.min(w * 0.9, Math.max(200, h - top - 8 - remoteH + 18) * aspect)
+		const want = Math.min(w * 0.4, h * 0.36 * aspect, Math.max(200, h - top - 8 - remoteH + 18) * aspect)
+		// Never so small that the photo stops covering the scene: it scales with the TV.
+		const s = Math.max(want / P.tv.w, w / (P.w - 2), (h - top) / (P.h - P.tv.y - 2), top / P.tv.y)
+		const tvW = P.tv.w * s
 		const tvH = tvW / aspect
 		const tv = { left: (w - tvW) / 2, top, width: tvW, height: tvH }
-		const s = tvW / P.tv.w
 		const photo = { left: tv.left - P.tv.x * s, top: tv.top - P.tv.y * s, width: P.w * s, height: P.h * s }
 		const remote = { left: w / 2 - (REMOTE_W * scale) / 2, top: h - 8 - remoteH, scale }
 		return { photo, tv, remote, hand: handFor(scale), phone: false }
@@ -97,11 +100,17 @@ function useLayout() {
 	return { ref, layout }
 }
 
+/** The TV's power, the same on every page: Power switches it off (the tube, the lamps down) and back on. */
+export function useTvPower(initial = true) {
+	const [on, setOn] = useState(initial)
+	return { on, toggle: () => setOn((v) => !v), setOn, power: (on ? "on" : "off") as "on" | "off" }
+}
+
 export function Scene({
 	screen,
 	remote,
 	power = "on",
-	dimRoom = 0,
+	dimRoom,
 	heading,
 	msg,
 }: {
@@ -110,7 +119,7 @@ export function Scene({
 	remote?: ReactNode
 	/** "off" plays the tube switching off once; "on" after "off" plays it switching on. */
 	power?: "on" | "off"
-	/** Darkens the room around the TV, 0..1 (lamps off after sign-out). */
+	/** Darkens the room around the TV, 0..1; by default the lamps go down while the TV is off. */
 	dimRoom?: number
 	/** The page's H1, for screen readers and crawlers; everything a person reads is on the TV. */
 	heading: string
@@ -163,7 +172,7 @@ export function Scene({
 						</div>
 					)}
 					{/* Lamps off: the room and the hand darken, the TV stays as it is. */}
-					<div className="egg-dim" style={{ opacity: dimRoom }} />
+					<div className="egg-dim" style={{ opacity: dimRoom ?? (power === "off" ? 0.6 : 0) }} />
 					<div className={`egg-screen ${power === "off" ? "egg-off" : wasOff ? "egg-on" : ""}`} style={px(L.tv)}>
 						<div className="egg-screen-inner">
 							{screen}
@@ -193,8 +202,8 @@ export function BigRemote({
 	press,
 	enabled = ["power", "up", "down", "ok"],
 	powerLabel,
-	okLabel = "OK",
 	pulse,
+	off,
 	services,
 	openService,
 	onService,
@@ -203,7 +212,8 @@ export function BigRemote({
 	enabled?: Key[]
 	/** The word printed beside Power, for pages where Power is the one key that matters. */
 	powerLabel?: string
-	okLabel?: string
+	/** The TV is off: only Power works, and it invites a press. */
+	off?: boolean
 	/** The key that pulses to invite a press. */
 	pulse?: Key
 	/** Whether the streaming keys work on this page. */
@@ -211,9 +221,23 @@ export function BigRemote({
 	openService?: ServiceKey | null
 	onService?: (k: ServiceKey) => void
 }) {
-	const on = (k: Key) => enabled.includes(k)
+	const on = (k: Key) => (off ? k === "power" : enabled.includes(k))
+	if (off) pulse = "power"
+	// The signal light flashes on every press.
+	const [blink, setBlink] = useState(0)
 	return (
-		<section aria-label="Remote control" className="remote-body relative flex select-none flex-col px-6 pb-6 pt-5" style={{ height: REMOTE_H }}>
+		<section
+			aria-label="Remote control"
+			className="remote-body relative flex select-none flex-col px-6 pb-6 pt-5"
+			style={{ height: REMOTE_H }}
+			onPointerDownCapture={(e) => {
+				if ((e.target as HTMLElement).closest("button:not(:disabled)")) setBlink((n) => n + 1)
+			}}
+			onKeyDownCapture={(e) => {
+				if (e.key === "Enter" || e.key === " ") setBlink((n) => n + 1)
+			}}
+		>
+			<RemoteKeyBlink onKey={() => setBlink((n) => n + 1)} />
 			<div className="flex w-full items-center justify-between">
 				<button
 					type="button"
@@ -224,11 +248,12 @@ export function BigRemote({
 				>
 					<Icon d={ICON.power} className="h-6 w-6" />
 				</button>
-				{powerLabel ? (
-					<span className="max-w-[170px] text-right text-[13px] font-semibold uppercase leading-tight tracking-[0.1em] text-white/60">{powerLabel}</span>
-				) : (
-					<div className="h-2 w-20 rounded-full bg-black/70" aria-hidden />
+				{powerLabel && (
+					<span className="max-w-[150px] flex-1 px-3 text-center text-[12px] font-semibold uppercase leading-tight tracking-[0.1em] text-white/60">{powerLabel}</span>
 				)}
+				<span aria-hidden className="relative mr-1 h-3.5 w-3.5 rounded-full bg-[#3a1512] shadow-[inset_0_1px_2px_rgba(0,0,0,.8)]">
+					{blink > 0 && <span key={blink} className="egg-led absolute inset-0 rounded-full bg-red-500" />}
+				</span>
 			</div>
 			<div className="mt-9 flex items-center justify-between px-2">
 				<div className="flex flex-col items-center gap-2">
@@ -264,7 +289,7 @@ export function BigRemote({
 						onClick={() => press("ok")}
 						className={`remote-ok flex h-[118px] w-[118px] items-center justify-center rounded-full text-[22px] font-bold tracking-wider text-white/85 transition-transform active:scale-95 disabled:opacity-30 ${pulse === "ok" ? "egg-pulse" : ""}`}
 					>
-						{okLabel}
+						OK
 					</button>
 					<span aria-hidden className="text-[13px] font-semibold uppercase tracking-[0.1em] text-white/0">
 						.
@@ -306,11 +331,23 @@ export function useRemoteKeys(press: (key: Key) => void) {
 				e.key === "ArrowUp" ? "up" : e.key === "ArrowDown" ? "down" : e.key === "Enter" ? "ok" : e.key === "p" ? "power" : null
 			if (!key) return
 			e.preventDefault()
+			window.dispatchEvent(new Event("egg-remote-key"))
 			latest.current(key)
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
 	}, [])
+}
+
+function RemoteKeyBlink({ onKey }: { onKey: () => void }) {
+	const latest = useRef(onKey)
+	latest.current = onKey
+	useEffect(() => {
+		const f = () => latest.current()
+		window.addEventListener("egg-remote-key", f)
+		return () => window.removeEventListener("egg-remote-key", f)
+	}, [])
+	return null
 }
 
 // ---------------------------------------------------------------------------------------------------------

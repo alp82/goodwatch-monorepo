@@ -2,7 +2,7 @@
 // simulated: `?outcome=fail` makes the first retry fail again, so both endings can be seen.
 import { useSearchParams } from "@remix-run/react"
 import { useEffect, useState } from "react"
-import { BigRemote, type Key, Scene, Wordmark, backdrop, titles, useRemoteKeys } from "./kit"
+import { BigRemote, type Key, Scene, Wordmark, backdrop, titles, useRemoteKeys, useTvPower } from "./kit"
 
 type Phase = "down" | "off" | "boot" | "retrying" | "back" | "still"
 const WAIT = 12
@@ -24,10 +24,11 @@ function useRetry() {
 		const id = setTimeout(() => setPhase(step[0]), step[1])
 		return () => clearTimeout(id)
 	}, [phase, tries, failFirst])
-	const retry = () => {
+	/** OK and the countdown retry with a short off and on; Power back on retries from the boot. */
+	const retry = (from: Phase = "off") => {
 		if (phase !== "down" && phase !== "still") return
 		setTries((n) => n + 1)
-		setPhase("off")
+		setPhase(from)
 	}
 	return { phase, retry, tries }
 }
@@ -89,23 +90,32 @@ function RetryScreen({ phase }: { phase: Phase }) {
 
 export function PageError() {
 	const { phase, retry, tries } = useRetry()
+	const tv = useTvPower()
 	const [left, setLeft] = useState(WAIT)
 	const down = phase === "down" || phase === "still"
 	useEffect(() => {
-		if (!down) return
+		if (!down || !tv.on) return
 		setLeft(WAIT)
 		const id = setInterval(() => setLeft((s) => s - 1), 1000)
 		return () => clearInterval(id)
-	}, [down, tries])
+	}, [down, tries, tv.on])
 	useEffect(() => {
-		if (down && left <= 0) retry()
-	}, [left, down, retry])
-	const press = (k: Key) => (k === "ok" || k === "power") && retry()
+		if (down && tv.on && left <= 0) retry()
+	}, [left, down, retry, tv.on])
+	const press = (k: Key) => {
+		// Turn it off and on again: switching back on retries.
+		if (k === "power") {
+			if (!tv.on) retry("boot")
+			return tv.toggle()
+		}
+		if (tv.on && k === "ok") retry()
+	}
 	useRemoteKeys(press)
 	return (
 		<Scene
 			heading="Something went wrong"
-			power={phase === "off" ? "off" : "on"}
+			power={phase === "off" || !tv.on ? "off" : "on"}
+			dimRoom={tv.on ? 0 : 0.6}
 			screen={
 				down ? (
 					<>
@@ -123,7 +133,7 @@ export function PageError() {
 								Please stand by
 							</div>
 							<div className="flex flex-1 items-center bg-black/85 px-[2.5cqw] py-[1.4cqh] text-[2.2cqw]">
-								Trying again in {Math.max(0, left)} s · <b className="ml-[0.6cqw]">OK</b>&nbsp;tries now
+								Trying again in {Math.max(0, left)} s · <b className="ml-[0.6cqw]">OK</b>&nbsp;tries now ·&nbsp;<b>Power</b>&nbsp;off and on
 							</div>
 						</div>
 						<div className="absolute inset-x-0 bottom-[5.8cqh] h-[0.7cqh] bg-black/40">
@@ -134,7 +144,7 @@ export function PageError() {
 					<RetryScreen phase={phase} />
 				)
 			}
-			remote={<BigRemote press={press} enabled={["ok", "power"]} okLabel="Retry" pulse={down ? "ok" : undefined} powerLabel="Turn it off and on again" />}
+			remote={<BigRemote press={press} off={!tv.on} enabled={["ok", "power"]} pulse={down ? "power" : undefined} powerLabel="Turn it off and on again" />}
 		/>
 	)
 }

@@ -164,3 +164,13 @@
 		animation: none;
 	}
 }
+
+/* The Remote's signal light: one flash per press. */
+.egg-led {
+	box-shadow: 0 0 10px 3px rgba(239, 68, 68, 0.75);
+	animation: egg-led 0.35s ease-out both;
+}
+@keyframes egg-led {
+	0% { opacity: 1; }
+	100% { opacity: 0; }
+}

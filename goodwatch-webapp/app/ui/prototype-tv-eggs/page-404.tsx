@@ -18,6 +18,7 @@ import {
 	titles,
 	useRemoteKeys,
 	useToast,
+	useTvPower,
 } from "./kit"
 
 // Guesses: trigram likeness between the address's words and each title.
@@ -74,7 +75,10 @@ export function Page404({ path }: { path: string }) {
 	const [at, setAt] = useState(-1) // -1 is channel 404 itself
 	const [flips, setFlips] = useState(0)
 	const [msg, toast] = useToast()
+	const tv = useTvPower()
 	const press = (k: Key) => {
+		if (k === "power") return tv.toggle()
+		if (!tv.on) return
 		if (k === "up" || k === "down") {
 			setAt((i) => {
 				const n = i + (k === "up" ? 1 : -1)
@@ -83,9 +87,9 @@ export function Page404({ path }: { path: string }) {
 			setFlips((f) => f + 1)
 		}
 		if (k === "ok") at >= 0 ? openTitle(list[at]) : toast("Press CH+ to tune in")
-		if (k === "power") toast("Power: back to the start page")
 	}
 	const pickService = (k: ServiceKey) => {
+		if (!tv.on) return
 		setService((s) => (s === k ? null : k))
 		setAt(0)
 		setFlips((f) => f + 1)
@@ -97,6 +101,7 @@ export function Page404({ path }: { path: string }) {
 		<Scene
 			heading="Page not found"
 			msg={msg}
+			power={tv.power}
 			screen={
 				<>
 					{t ? (
@@ -122,9 +127,6 @@ export function Page404({ path }: { path: string }) {
 										<span>
 											<b className="text-white">Netflix / Prime</b> only that service
 										</span>
-										<span>
-											<b className="text-white">Power</b> home
-										</span>
 									</div>
 								</div>
 							</div>
@@ -134,7 +136,7 @@ export function Page404({ path }: { path: string }) {
 					<ChannelNumber n={t ? 405 + at : 404} label={label} />
 				</>
 			}
-			remote={<BigRemote press={press} pulse={at === -1 ? "up" : undefined} services openService={service} onService={pickService} />}
+			remote={<BigRemote press={press} off={!tv.on} pulse={at === -1 ? "up" : undefined} services openService={service} onService={pickService} />}
 		/>
 	)
 }
