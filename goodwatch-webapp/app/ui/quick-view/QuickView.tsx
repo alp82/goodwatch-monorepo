@@ -2,8 +2,8 @@
 // you, the explorer, the related map). The place says what its titles are, in which order, and where each one's
 // poster is on the screen; the view does the rest.
 //
-// Wide screens: the poster lifts out of its slot and grows beside the card, and the page dims. Next / previous (the
-// arrows under the big poster, ← and →) bring the next title's own poster on screen (scrolling to it when it isn't
+// Wide screens: the poster lifts out of its slot and grows beside the card, and the page dims. Previous / next (the
+// two buttons under the big poster, ← and →; they wrap around) bring the next title's own poster on screen (scrolling to it when it isn't
 // in view) and lift it from there; the card glides to its new place. The poster it leaves does not fly back: its
 // slot shows again at once, dimmed like the rest, while the big copy fades out in 180 ms, drifting a little toward
 // it. The new poster rises from the dim level to full. Closing works the same way. Transform and opacity only, and
@@ -410,8 +410,9 @@ function LiftCard(p: QuickViewProps) {
 
 	const go = async (d: -1 | 1) => {
 		const { cur, closing } = state.current
-		const ni = cur.i + d
-		if (busy.current || closing || !p.ordered || ni < 0 || ni >= p.count) return
+		// Previous and next wrap around: the last title's next is the first.
+		const ni = (cur.i + d + p.count) % p.count
+		if (busy.current || closing || !p.ordered || p.count < 2) return
 		busy.current = true
 		try {
 			const el = p.anchorOf(ni)
@@ -443,8 +444,8 @@ function LiftCard(p: QuickViewProps) {
 	const steps: Steps | null = p.ordered
 		? {
 				onStep: (d) => void go(d),
-				canPrev: cur.i > 0,
-				canNext: cur.i < p.count - 1,
+				canPrev: p.count > 1,
+				canNext: p.count > 1,
 			}
 		: null
 	const requestClose = () => {
@@ -580,8 +581,9 @@ function Drawer(p: QuickViewProps) {
 	const steps: Steps | null = p.ordered
 		? {
 				onStep: (d) => {
-					const n = p.index + d
-					if (n < 0 || n >= p.count) return
+					// Previous and next wrap around: the last title's next is the first.
+					if (p.count < 2) return
+					const n = (p.index + d + p.count) % p.count
 					const at = document.activeElement
 					refocus.current =
 						at instanceof HTMLElement && view.current?.contains(at)
@@ -589,8 +591,8 @@ function Drawer(p: QuickViewProps) {
 							: null
 					p.onIndex(n)
 				},
-				canPrev: p.index > 0,
-				canNext: p.index < p.count - 1,
+				canPrev: p.count > 1,
+				canNext: p.count > 1,
 			}
 		: null
 	const requestClose = () => setClosing(true)
@@ -756,9 +758,13 @@ function PosterImage({ path, name }: { path: string | null; name: string }) {
 	)
 }
 
-function Chevron({ dir }: { dir: -1 | 1 }) {
+function Chevron({ dir, small = false }: { dir: -1 | 1; small?: boolean }) {
 	return (
-		<svg viewBox="0 0 20 20" className="size-5" aria-hidden="true">
+		<svg
+			viewBox="0 0 20 20"
+			className={small ? "size-3.5" : "size-5"}
+			aria-hidden="true"
+		>
 			<path
 				d={dir < 0 ? "M12.5 4.5 7 10l5.5 5.5" : "M7.5 4.5 13 10l-5.5 5.5"}
 				fill="none"
@@ -771,29 +777,39 @@ function Chevron({ dir }: { dir: -1 | 1 }) {
 	)
 }
 
-/** Previous and next as two round buttons, under the big poster. */
+/** Previous and next under the lifted poster: two halves of its width, each showing its arrow key. */
 export function StepButtons({ onStep, canPrev, canNext }: Steps) {
 	const button =
-		"grid size-11 shrink-0 cursor-pointer place-items-center rounded-full bg-gray-900/80 text-gray-200 ring-1 ring-white/15 hover:bg-white/10 disabled:cursor-default disabled:opacity-25"
+		"group/step flex h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gray-900/85 px-3 text-[13px] font-semibold text-gray-200 ring-1 ring-white/15 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-amber-300 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-gray-900/85"
+	const key =
+		"grid h-[22px] min-w-[22px] place-items-center rounded-md border border-white/20 border-b-[3px] bg-white/[0.06] px-1 text-gray-300 group-hover/step:text-white"
 	return (
-		<div className="flex justify-center gap-3">
+		<div className="flex w-full gap-2">
 			<button
 				type="button"
 				aria-label="Previous title"
+				aria-keyshortcuts="ArrowLeft"
 				disabled={!canPrev}
 				onClick={() => onStep(-1)}
 				className={button}
 			>
-				<Chevron dir={-1} />
+				<kbd className={key}>
+					<Chevron dir={-1} small />
+				</kbd>
+				Previous
 			</button>
 			<button
 				type="button"
 				aria-label="Next title"
+				aria-keyshortcuts="ArrowRight"
 				disabled={!canNext}
 				onClick={() => onStep(1)}
 				className={button}
 			>
-				<Chevron dir={1} />
+				Next
+				<kbd className={key}>
+					<Chevron dir={1} small />
+				</kbd>
 			</button>
 		</div>
 	)
