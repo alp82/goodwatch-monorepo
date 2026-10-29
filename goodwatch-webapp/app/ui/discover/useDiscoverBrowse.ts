@@ -1,5 +1,3 @@
-import useLocale from "~/utils/locale"
-import { mediaLanguageUrl } from "~/utils/media-presentation"
 // Discover's results: pages of /api/discover/results for the filter bar's query and the For you switch, loaded by
 // infinite scroll; in search mode, over the search's ranked list. Members GET; a guest's progress lives in their
 // browser, so guests POST it with every request.
@@ -14,7 +12,10 @@ import { useSetUserSettings } from "~/routes/api.user-settings.set"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import type { TasteInteraction } from "~/ui/taste/types"
 import { useGuestInteractions } from "~/utils/guest-progress"
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 import type { TitleKey } from "~/utils/title-key"
+import { guestSignature } from "./guest-signature"
 
 /** What a guest's browser sends: its guest progress and the country and services the guest chose. */
 export interface GuestBody {
@@ -87,14 +88,6 @@ async function fetchPage(
 	if (!response.ok)
 		throw new Error(`Discover results failed: ${response.status}`)
 	return response.json()
-}
-
-// Guest progress changes the answer; this keys it without hashing thousands of interactions on every render.
-function guestSignature(guest: GuestBody | null | undefined) {
-	if (guest === undefined) return "pending"
-	if (guest === null) return "member"
-	const last = guest.interactions[guest.interactions.length - 1]
-	return `guest:${guest.interactions.length}:${last?.timestamp ?? ""}:${guest.country ?? ""}:${guest.services ?? ""}`
 }
 
 /** A guest the server can answer without their progress: nothing rated, nothing chosen. */

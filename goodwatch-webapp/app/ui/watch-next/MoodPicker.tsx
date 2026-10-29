@@ -2,15 +2,14 @@
 // button that opens the dropdown, and the dropdown itself: the taste shelf (TasteShelf.tsx) with moods, themes,
 // styles, and the member's taste groups, "k of 3", Clear, and Done. A fourth pick is refused with a hint (the page
 // announces it in a live region). The phone's drawer reuses the shelf and the hint.
-import { ChevronDownIcon } from "@heroicons/react/24/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import type React from "react"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { MAX_PICKS } from "~/domain/taste-picker"
 import type { WatchNext } from "~/server/watch-next.server"
-import { PickChip, TasteShelf } from "./TasteShelf"
+import { useRefusalHint } from "./MoodButton"
+import { PickChip, type ShelfLines, TasteShelf } from "./TasteShelf"
 import { pickHint } from "./labels"
 import { EASE } from "./style"
 
@@ -28,31 +27,12 @@ export interface MoodControl {
 	refused: { name: string; at: number } | null
 }
 
-export const refusalText = (name: string) =>
-	`Three is the most. Remove one to add ${name}.`
-
-/** The mood colors that stand for "Any mood". */
-export const SPECTRUM: readonly MoodKey[] = [
-	"funny",
-	"romance",
-	"crime",
-	"worlds",
-]
-
-// Four mood colors in a small fan, for the "Any mood" button.
-function Spectrum() {
-	return (
-		<span className="flex -space-x-2" aria-hidden>
-			{SPECTRUM.map((mood) => (
-				<span
-					key={mood}
-					className="h-6 w-6 rounded-full ring-2 ring-gray-900"
-					style={{ background: MOOD_BY_KEY[mood].hue }}
-				/>
-			))}
-		</span>
-	)
-}
+export {
+	MoodButton,
+	SPECTRUM,
+	refusalText,
+	useRefusalHint,
+} from "./MoodButton"
 
 /** The picks as poster chips. Each opens the dropdown; its × removes the pick. */
 export function PickedMoods({
@@ -71,65 +51,16 @@ export function PickedMoods({
 	)
 }
 
-/** Opens the dropdown: "Any mood" with nothing picked, "Add" or "Change" next to picked moods. */
-export function MoodButton({
-	control,
-	buttonRef,
-}: {
-	control: MoodControl
-	buttonRef: React.RefObject<HTMLButtonElement>
-}) {
-	const picked = control.picker.picks.length > 0
-	return (
-		<button
-			ref={buttonRef}
-			type="button"
-			data-moodbutton
-			aria-haspopup="dialog"
-			aria-expanded={control.open}
-			aria-label={picked ? "Change picks" : undefined}
-			onClick={() => control.setOpen(!control.open)}
-			className={`inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full text-sm font-semibold text-white ring-1 ring-white/15 transition-colors hover:bg-white/20 ${picked ? "px-2.5" : "pl-1.5 pr-3"} ${control.open ? "bg-white/15" : "bg-white/10"}`}
-		>
-			{picked ? (
-				control.picker.picks.length < MAX_PICKS ? (
-					"Add"
-				) : (
-					"Change"
-				)
-			) : (
-				<>
-					<Spectrum />
-					Any mood
-				</>
-			)}
-			<ChevronDownIcon
-				className={`h-4 w-4 opacity-70 transition-transform ${control.open ? "rotate-180" : ""}`}
-				aria-hidden
-			/>
-		</button>
-	)
-}
-
-/** The refusal of a fourth pick, shown for a few seconds in place of the title. */
-export function useRefusalHint(control: MoodControl): string | null {
-	const [hint, setHint] = useState<string | null>(null)
-	useEffect(() => {
-		if (!control.refused) return
-		setHint(refusalText(control.refused.name))
-		const id = setTimeout(() => setHint(null), 3200)
-		return () => clearTimeout(id)
-	}, [control.refused])
-	return hint
-}
-
-// The dropdown's top line: the title or the refusal hint, "k of 3", Clear, and Done.
-function PanelHead({
+/** The dropdown's top line: the title or the refusal hint, "k of 3", Clear, and Done. */
+export function PanelHead({
 	control,
 	onDone,
+	line,
 }: {
 	control: MoodControl
 	onDone: () => void
+	/** What follows "Pick up to three" (from 640 px); what another pick would do by default. */
+	line?: string
 }) {
 	const k = control.picker.picks.length
 	const hint = useRefusalHint(control)
@@ -158,7 +89,7 @@ function PanelHead({
 					>
 						<span className="font-semibold text-white">Pick up to three</span>
 						<span className="hidden sm:inline">
-							. {pickHint(control.picker)}
+							. {line ?? pickHint(control.picker)}
 						</span>
 					</motion.p>
 				)}
@@ -195,7 +126,13 @@ function PanelHead({
 export function MoodGrid({
 	control,
 	dense = false,
-}: { control: MoodControl; dense?: boolean }) {
+	shelf,
+}: {
+	control: MoodControl
+	dense?: boolean
+	/** The page's own shelf lines (TasteShelf). */
+	shelf?: ShelfLines
+}) {
 	return (
 		<div
 			data-shelf
@@ -205,7 +142,7 @@ export function MoodGrid({
 					: "grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-y-auto overscroll-contain p-3 sm:grid-cols-3 lg:grid-cols-4"
 			}
 		>
-			<TasteShelf control={control} dense={dense} />
+			<TasteShelf control={control} dense={dense} shelf={shelf} />
 		</div>
 	)
 }

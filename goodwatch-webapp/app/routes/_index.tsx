@@ -12,6 +12,9 @@ import type { startPageLoader } from "~/server/start-page/loader.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
 import { StartBrowse } from "~/ui/start/browse/StartBrowse"
 import { HowItWorksCorner } from "~/ui/start/how/HowItWorksCorner"
+import { RoomGrade } from "~/ui/start/lighting/RoomGrade"
+import { roomGrade } from "~/ui/start/lighting/grades"
+import { StartMoodPicker } from "~/ui/start/moods/StartMoodPicker"
 import { OpeningBoot, OpeningCover } from "~/ui/start/opening/OpeningBoot"
 import { StartSearchBar } from "~/ui/start/search/StartSearchBar"
 import { useStartSearch } from "~/ui/start/search/useStartSearch"
@@ -139,6 +142,16 @@ function GuestStart({
 						onAsk={() => setAsked(true)}
 					/>
 				}
+				moods={
+					<StartMoodPicker
+						picks={start.query.picks}
+						setPicks={start.setPicks}
+						clearPicks={start.clearPicks}
+						member={false}
+						onDone={() => setAsked(true)}
+					/>
+				}
+				grade={<RoomGrade grade={roomGrade(start.query, results)} />}
 				// A guest's opening plays once a session; a member's page has none of it.
 				opening={<OpeningBoot />}
 			/>

@@ -6,12 +6,7 @@
 // that most set it apart. Color says which choice it is, never where a title stands to your taste: a pick shows by
 // its white ring and tick. Each tile says what a tap does: how many titles it holds, how many it adds next to a pick
 // of its kind, or how many are left with it next to picks of other kinds.
-import {
-	CheckIcon,
-	ChevronDownIcon,
-	PlusIcon,
-	XMarkIcon,
-} from "@heroicons/react/24/solid"
+import { CheckIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
 import { type ReactNode, useState } from "react"
 import { MOOD_KEYS } from "~/domain/moods"
@@ -25,8 +20,10 @@ import {
 } from "~/domain/taste-picker"
 import type { WatchNext } from "~/server/watch-next.server"
 import type { MoodControl } from "./MoodPicker"
-import { pickName } from "./labels"
-import { backdropUrl } from "./style"
+import { ChoiceArt, PickChip, choiceHues, choiceOf, groupOf } from "./PickChip"
+import { pickName } from "./pick-name"
+
+export { ChoiceArt, PickChip, choiceHues }
 
 type Picker = WatchNext["picker"]
 
@@ -40,21 +37,6 @@ const KIND_LINE: Record<WordKind, string> = {
 	theme: "what it's about",
 	style: "how it's told",
 }
-/** A taste group with no words that set it apart has no colors of its own. */
-const NO_HUE = "#6b7280"
-
-const choiceOf = (picker: Picker, id: string) =>
-	picker.choices.find((c) => c.id === id)
-const groupOf = (picker: Picker, id: string) =>
-	picker.groups.find((g) => g.id === id)
-
-/** A choice's colors: a word's own, or a taste group's one or two. */
-export function choiceHues(picker: Picker, id: string): string[] {
-	if (groupNumber(id) === null) return [WORD_BY_ID[id]?.hue ?? NO_HUE]
-	const hues = groupOf(picker, id)?.hues ?? []
-	return hues.length ? hues : [NO_HUE]
-}
-
 /** The choices of a kind the list holds: moods in their usual order, themes and styles most titles first. */
 function kindIds(picker: Picker, kind: WordKind): string[] {
 	const ids = picker.choices
@@ -106,51 +88,6 @@ function tileLine(picker: Picker, id: string, mixed: boolean): string | null {
 	return WORD_BY_ID[id]?.description ?? null
 }
 
-/**
- * A choice's picture: one of its titles' backdrops washed in its color, as the mood tiles have always been. A taste
- * group's wash is split on a diagonal into its two colors (or its one color and a lighter half).
- */
-export function ChoiceArt({
-	hues,
-	path,
-	split = false,
-	className = "",
-}: {
-	hues: string[]
-	path: string | null
-	split?: boolean
-	className?: string
-}) {
-	const [a, b = a] = hues
-	return (
-		<span
-			className={`absolute inset-0 -z-10 overflow-hidden ${className}`}
-			aria-hidden
-		>
-			<span className="absolute inset-0" style={{ background: a }} />
-			{path && (
-				<img
-					src={backdropUrl(path, "w300")}
-					alt=""
-					loading="lazy"
-					className="absolute inset-0 h-full w-full object-cover opacity-85"
-				/>
-			)}
-			<span
-				className="absolute inset-0"
-				style={{
-					background: split
-						? `linear-gradient(115deg, ${a}f0 0%, ${a}cc 48%, ${b}${a === b ? "70" : "cc"} 48%, ${b}50 100%)`
-						: `linear-gradient(90deg, ${a}f0 0%, ${a}a6 40%, ${a}1f 100%)`,
-				}}
-			/>
-			{/* Scrims behind the name and the count, so white text holds on yellow and on bright pictures. */}
-			<span className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/35 to-transparent" />
-			<span className="absolute inset-0 bg-linear-to-t from-black/70 via-black/15 to-transparent" />
-		</span>
-	)
-}
-
 function Tick({ on }: { on: boolean }) {
 	return (
 		<span
@@ -162,27 +99,49 @@ function Tick({ on }: { on: boolean }) {
 	)
 }
 
+/**
+ * A tile's lines and state when the page says them itself (the start page's guest, whose mixes stand where taste
+ * groups do): whether it is on, whether a tap is refused (dimmed), the line under the name, and the count line (null
+ * for none).
+ */
+export interface ChoiceLines {
+	on: boolean
+	full: boolean
+	line: string | null
+	tap: string | null
+}
+
+/** What a shelf says in its own words: the first row's heading, and every tile's lines. */
+export interface ShelfLines {
+	first: { title: string; note: string }
+	lines: (id: string) => ChoiceLines
+}
+
 /** One choice as a poster tile, a checkbox. A fourth pick stays focusable and is refused with the hint. */
-function ChoiceTile({
+export function ChoiceTile({
 	control,
 	id,
 	dense,
 	mixed = false,
+	lines,
 }: {
 	control: MoodControl
 	id: string
 	dense: boolean
 	/** In a row that mixes kinds ("For you"): a taste group says it is your taste. */
 	mixed?: boolean
+	/** The tile's lines and state from the page, in place of the taste picker's. */
+	lines?: ChoiceLines
 }) {
 	const { picker } = control
 	const name = pickName(picker, id)
-	const on = picker.picks.includes(id)
-	const full = !on && picker.picks.length >= MAX_PICKS
-	const tap = tapLine(control, id)
+	const on = lines ? lines.on : picker.picks.includes(id)
+	const full = lines ? lines.full : !on && picker.picks.length >= MAX_PICKS
+	const tap = lines ? { text: lines.tap, none: false } : tapLine(control, id)
 	const hues = choiceHues(picker, id)
-	const line = tileLine(picker, id, mixed)
+	const line = lines ? lines.line : tileLine(picker, id, mixed)
 	const group = groupNumber(id) !== null
+	const yours = group && !lines
 	return (
 		<motion.button
 			type="button"
@@ -190,7 +149,14 @@ function ChoiceTile({
 			role="checkbox"
 			aria-checked={on}
 			aria-disabled={full || undefined}
-			aria-label={`${name}${group ? ", your taste" : ""}. ${line && !group ? `${line} ` : ""}${tap.text}.`}
+			aria-label={
+				lines
+					? [name, line, tap.text]
+							.filter(Boolean)
+							.map((part) => (part?.endsWith(".") ? part : `${part}.`))
+							.join(" ")
+					: `${name}${yours ? ", your taste" : ""}. ${line && !group ? `${line} ` : ""}${tap.text}.`
+			}
 			data-choice={id}
 			onClick={() => control.toggle(id)}
 			whileTap={{ scale: full ? 1 : 0.97 }}
@@ -217,9 +183,11 @@ function ChoiceTile({
 						{line}
 					</span>
 				)}
-				<span className="mt-0.5 block truncate text-[11px] font-semibold tabular-nums text-white/75">
-					{tap.text}
-				</span>
+				{tap.text && (
+					<span className="mt-0.5 block truncate text-[11px] font-semibold tabular-nums text-white/75">
+						{tap.text}
+					</span>
+				)}
 			</span>
 		</motion.button>
 	)
@@ -263,58 +231,10 @@ function SuggestionChip({ control, id }: { control: MoodControl; id: string }) {
 	)
 }
 
-/** A pick in the strip: picture, name, count, and a button that removes it. The name opens the dropdown. */
-export function PickChip({
-	control,
-	id,
-	pinned,
-}: {
-	control: MoodControl
-	id: string
-	pinned: boolean
-}) {
-	const { picker } = control
-	const name = pickName(picker, id)
-	const hues = choiceHues(picker, id)
-	return (
-		<motion.span
-			layout
-			initial={{ opacity: 0, scale: 0.9 }}
-			animate={{ opacity: 1, scale: 1 }}
-			className={`relative isolate inline-flex max-w-[22rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 [text-shadow:0_1px_4px_rgba(0,0,0,.6)] ${pinned ? "h-8" : "h-9"}`}
-			style={{ boxShadow: `0 4px 18px -6px ${hues[0]}` }}
-		>
-			<ChoiceArt
-				hues={hues}
-				path={choiceOf(picker, id)?.picture ?? null}
-				split={groupNumber(id) !== null}
-			/>
-			<button
-				type="button"
-				data-moodbutton
-				aria-haspopup="dialog"
-				aria-expanded={control.open}
-				onClick={() => control.setOpen(!control.open)}
-				className="inline-flex h-full min-w-0 cursor-pointer items-center gap-2 pl-2.5 pr-1"
-			>
-				<span className="truncate">{name}</span>
-				<span className="shrink-0 rounded-md bg-black/30 px-1 text-xs tabular-nums">
-					{choiceOf(picker, id)?.count ?? 0}
-				</span>
-			</button>
-			<button
-				type="button"
-				aria-label={`Remove ${name}`}
-				onClick={() => control.toggle(id)}
-				className="mr-1.5 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-black/25 hover:bg-black/50"
-			>
-				<XMarkIcon className="h-3.5 w-3.5" />
-			</button>
-		</motion.span>
-	)
-}
-
-function Heading({ children, note }: { children: ReactNode; note?: string }) {
+export function Heading({
+	children,
+	note,
+}: { children: ReactNode; note?: string }) {
 	return (
 		<div className="col-span-full flex min-h-7 items-center gap-2 pt-1 first:pt-0">
 			<h3 className="text-sm font-bold text-white">{children}</h3>
@@ -350,9 +270,12 @@ function Dots({ hues }: { hues: string[] }) {
 export function TasteShelf({
 	control,
 	dense,
+	shelf,
 }: {
 	control: MoodControl
 	dense: boolean
+	/** The page's own first heading and tile lines (the start page's guest); the taste picker's otherwise. */
+	shelf?: ShelfLines
 }) {
 	const { picker } = control
 	const [open, setOpen] = useState<WordKind | null>(null)
@@ -361,15 +284,24 @@ export function TasteShelf({
 		<>
 			<Heading
 				note={
-					picker.groups.length
-						? "Your taste groups, then the words your taste carries most"
-						: "The moods with most titles"
+					shelf
+						? shelf.first.note
+						: picker.groups.length
+							? "Your taste groups, then the words your taste carries most"
+							: "The moods with most titles"
 				}
 			>
-				For you
+				{shelf ? shelf.first.title : "For you"}
 			</Heading>
 			{picker.forYou.map((id) => (
-				<ChoiceTile key={id} control={control} id={id} dense={dense} mixed />
+				<ChoiceTile
+					key={id}
+					control={control}
+					id={id}
+					dense={dense}
+					mixed
+					lines={shelf?.lines(id)}
+				/>
 			))}
 			{room && picker.narrow.length > 0 && (
 				<div className="col-span-full rounded-xl bg-white/5 p-2.5 ring-1 ring-white/10">
@@ -432,6 +364,7 @@ export function TasteShelf({
 										control={control}
 										id={id}
 										dense={dense}
+										lines={shelf?.lines(id)}
 									/>
 								))}
 							</div>
