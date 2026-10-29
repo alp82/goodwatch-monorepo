@@ -163,7 +163,10 @@ html:has(#start-boot-gate:checked) .start-opening-cover {
 	animation: start-open-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.27s
 		backwards;
 }
-#start-boot-gate:not(:checked) ~ .start-content .start-moods {
+/* The presets (the bar's second row) rise with the mood button, after the field. */
+#start-boot-gate:not(:checked)
+	~ .start-content
+	:is(.start-bar-rows, .start-moods) {
 	animation: start-open-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.39s
 		backwards;
 }
@@ -216,7 +219,13 @@ html:has(#start-boot-gate:checked) .start-opening-cover {
 	}
 	#start-boot-gate:not(:checked)
 		~ .start-content
-		:is(.start-pool, .start-heading, .start-search, .start-moods) {
+		:is(
+			.start-pool,
+			.start-heading,
+			.start-search,
+			.start-bar-rows,
+			.start-moods
+		) {
 		animation: start-open-fade 0.3s ease-out backwards;
 	}
 }

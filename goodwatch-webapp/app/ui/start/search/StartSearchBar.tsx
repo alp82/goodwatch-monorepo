@@ -156,7 +156,7 @@ export function StartSearchBar({
 					</button>
 				</div>
 				<div className="mx-4 h-px bg-white/[0.08] sm:mx-6" />
-				<div className="relative h-[42px] min-w-0 sm:h-[44px]">
+				<div className="start-bar-rows relative h-[42px] min-w-0 sm:h-[44px]">
 					<div
 						className="start-bar-row"
 						{...(searching ? { "data-off": "", inert: "" } : {})}
