@@ -29,7 +29,12 @@ export function rangeScoreConditions(
 	const conditions: string[] = []
 	const params: number[] = []
 	if (name === "years" || name === "runtime") {
-		const range = state[name]
+		const range =
+			name === "runtime" &&
+			type === "show" &&
+			state.episodeRuntime !== undefined
+				? state.episodeRuntime
+				: state[name]
 		const column =
 			name === "years"
 				? "release_year"

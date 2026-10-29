@@ -1,3 +1,4 @@
+import type { FilterOptionCounts } from "~/domain/filter-state"
 import { inlineTaste } from "~/server/taste/inline.server"
 // The title filter: the in-memory engine behind the filter bar on Discover, Watch next, and Explorer. It filters and
 // sorts a universe of titles by the filter state, counts what each filter hides and what each option would leave, and
@@ -42,6 +43,7 @@ import {
 	similarTitles,
 	titlesOnServicesByColumn,
 } from "./id-sets.server"
+import { restOfWorldColumn } from "./rest-of-world.server"
 import { universeTaste } from "./matches.server"
 import {
 	type PlainSort,
@@ -95,7 +97,7 @@ export interface FilterResult {
 	 * key; genres by name. Tag options toggle under any of; under all of picked options count removing their unit,
 	 * unpicked options count adding their unit;
 	 * minScore `0`, `60`, `70`, `80`; minMatch `0`, `60`, `70`, `80`, `90`, `outside`; released by option; similarTo and people only for the chosen options (what
-	 * removing each would leave); legacy `on`, `off`.
+	 * removing each would leave); legacy `on`, `off`. Rest of the world has a null count without facts.
 	 * years, runtime, sourceScores and scoreGap are empty: their SQL sets are only read for active choices.
 	 *
 	 * ageLimit: `off` and each step of `ladder` by its age (`0`, `6`, `12`, ...). Choosing a step also changes what
@@ -104,7 +106,7 @@ export interface FilterResult {
 	 * every other filter lets through, the age limit included: what hiding the kind hides (or already hides), not what
 	 * it would leave. Both are empty without `ladder`.
 	 */
-	optionCounts: Record<FilterName, Record<string, number>>
+	optionCounts: FilterOptionCounts
 	/**
 	 * For you movement against the plain order: titles whose place changed, `by` > 0 moved up. Missing when For you
 	 * didn't apply: it is off, the person has no taste, or the sort is Best match, which leaves it nothing to blend.
@@ -338,6 +340,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		similarTo: sets(similarTo),
 		people: sets(people),
 		productionCountries: sets(productionCountries),
+		restOfWorld: state.restOfWorld ? restOfWorldColumn(snapshot) : undefined,
 		legacy: legacy && titleSet(legacy, snapshot),
 		ratings:
 			ladder && snapshot.columns.ratings

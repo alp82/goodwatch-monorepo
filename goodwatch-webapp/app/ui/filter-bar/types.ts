@@ -1,3 +1,4 @@
+import type { FilterOptionCounts } from "~/domain/filter-state"
 import type { ReactNode } from "react"
 import type { ViewerLadder } from "~/domain/age-content"
 import type { FilterName } from "~/domain/filter-state"
@@ -9,7 +10,7 @@ export interface FilterBarCounts {
 	/** Titles only that filter hides, largest first. */
 	recoveries: { filter: FilterName; titles: number }[]
 	/** What each option would leave, the others unchanged. */
-	optionCounts: Record<FilterName, Record<string, number>>
+	optionCounts: FilterOptionCounts
 	/** Per-service counts are missing while the viewer's country loads. */
 	approximate?: boolean
 	/**

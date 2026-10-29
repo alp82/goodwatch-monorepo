@@ -58,6 +58,14 @@ export function discoverFilterKey(input: {
 	const serialized: Record<keyof FilterState, unknown> = {
 		years: state.years && [state.years.min, state.years.max],
 		runtime: state.runtime && [state.runtime.min, state.runtime.max],
+		episodeRuntime:
+			state.episodeRuntime === null
+				? "any"
+				: state.episodeRuntime && [
+						state.episodeRuntime.min,
+						state.episodeRuntime.max,
+					],
+		restOfWorld: state.restOfWorld,
 		sourceScores: sortedFields(state.sourceScores),
 		scoreGap: state.scoreGap,
 		anyService: state.anyService,

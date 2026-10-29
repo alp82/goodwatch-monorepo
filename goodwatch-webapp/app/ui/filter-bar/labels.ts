@@ -389,27 +389,44 @@ export function activeChips(
 			label: "Outside your usual",
 			remove: (s) => dropFilter(s, "minMatch"),
 		})
-	for (const group of ["years", "runtime"] as const) {
+	for (const group of ["years", "runtime", "episodeRuntime"] as const) {
 		const range = state[group]
 		if (!range || (range.min === undefined && range.max === undefined)) continue
 		const { min, max } = range
+		const minutes = (n: number) =>
+			n >= 60
+				? `${Math.floor(n / 60)} h${n % 60 ? ` ${n % 60}` : ""}`
+				: `${n} min`
+		const kind = group === "episodeRuntime" ? "Episodes" : "Movies"
 		const label =
-			group === "years"
-				? min === undefined
-					? `Until ${max}`
-					: max === undefined
-						? `From ${min}`
-						: `${min}–${max}`
-				: max === undefined
-					? `At least ${min} min`
+			group !== "years" &&
+			(group === "episodeRuntime" || state.episodeRuntime !== undefined)
+				? max === undefined
+					? `${kind} ${minutes(min!)} or more`
 					: min === undefined || min === 0
-						? `Up to ${max} min`
-						: `${min}–${max} min`
+						? `${kind} under ${minutes(max)}`
+						: `${kind} ${minutes(min)} to ${minutes(max)}`
+				: group === "years"
+					? min === undefined
+						? `Until ${max}`
+						: max === undefined
+							? `From ${min}`
+							: `${min}–${max}`
+					: max === undefined
+						? `At least ${min} min`
+						: min === undefined || min === 0
+							? `Up to ${max} min`
+							: `${min}–${max} min`
 		chips.push({
 			key: group,
-			group,
+			group: group === "episodeRuntime" ? "runtime" : group,
 			label,
-			remove: (s) => dropFilter(s, group),
+			remove: (s) =>
+				group === "episodeRuntime"
+					? { ...s, episodeRuntime: null }
+					: group === "runtime"
+						? { ...s, runtime: undefined }
+						: dropFilter(s, group),
 		})
 	}
 	for (const source of SOURCE_KEYS) {
@@ -604,6 +621,13 @@ export function activeChips(
 			group: "services",
 			label: `Streaming in ${productionCountryName(state.streamingCountry)}`,
 			remove: (s) => ({ ...s, streamingCountry: undefined }),
+		})
+	if (state.restOfWorld)
+		chips.push({
+			key: "restOfWorld",
+			group: "productionCountries",
+			label: "Rest of the world",
+			remove: (s) => ({ ...s, restOfWorld: undefined }),
 		})
 	for (const code of state.productionCountries ?? [])
 		chips.push({

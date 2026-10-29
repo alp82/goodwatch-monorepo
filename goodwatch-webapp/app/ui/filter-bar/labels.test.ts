@@ -547,3 +547,48 @@ test("a non-default rating country has a removable production chip", () => {
 		false,
 	)
 })
+
+test("independent length chips and Rest of the world remove only their own choices", () => {
+	const chosen = {
+		...state,
+		runtime: { max: 120 },
+		episodeRuntime: { max: 35 },
+		restOfWorld: true,
+		productionCountries: ["US"],
+	}
+	const chips = activeChips(chosen)
+	const movie = chips.find((c) => c.key === "runtime")!
+	const episode = chips.find((c) => c.key === "episodeRuntime")!
+	const world = chips.find((c) => c.key === "restOfWorld")!
+	assert.equal(movie.label, "Movies under 2 h")
+	assert.equal(episode.label, "Episodes under 35 min")
+	assert.equal(world.label, "Rest of the world")
+	assert.equal(episode.group, "runtime")
+	assert.equal(world.group, "productionCountries")
+	assert.deepEqual(movie.remove(chosen).episodeRuntime, { max: 35 })
+	assert.equal(episode.remove(chosen).episodeRuntime, null)
+	assert.deepEqual(episode.remove(chosen).runtime, { max: 120 })
+	assert.deepEqual(world.remove(chosen).productionCountries, ["US"])
+})
+
+test("independent length chips format both range endpoints in hours and minutes", () => {
+	const chosen = {
+		...state,
+		runtime: { min: 120, max: 180 },
+		episodeRuntime: { min: 35, max: 55 },
+	}
+	const chips = activeChips(chosen)
+	assert.equal(
+		chips.find((c) => c.key === "runtime")?.label,
+		"Movies 2 h to 3 h",
+	)
+	assert.equal(
+		chips.find((c) => c.key === "episodeRuntime")?.label,
+		"Episodes 35 min to 55 min",
+	)
+	const mixed = activeChips({ ...chosen, runtime: { min: 90, max: 150 } })
+	assert.equal(
+		mixed.find((c) => c.key === "runtime")?.label,
+		"Movies 1 h 30 to 2 h 30",
+	)
+})

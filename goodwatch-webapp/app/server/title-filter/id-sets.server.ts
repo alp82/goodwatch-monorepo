@@ -236,39 +236,37 @@ export function rangeScoreTitles(
 	name: RangeScoreFilter,
 	universe?: readonly TitleKey[],
 ): Promise<Set<TitleKey>> | null {
-	if (!rangeScoreConditions(state, name, "movie").conditions.length) return null
-	return cachedKeys(
-		name,
-		{ ...rangeScoreConditions(state, name, "movie"), universe },
-		async () => {
-			const found = await Promise.all(
-				(["movie", "show"] as const).map(async (type) => {
-					const { conditions, params } = rangeScoreConditions(state, name, type)
-					const ids = universe?.flatMap((key) => {
-						const parsed = parseTitleKey(key)
-						return parsed.mediaType === type &&
-							Number.isSafeInteger(parsed.tmdbId) &&
-							parsed.tmdbId > 0
-							? [parsed.tmdbId]
-							: []
-					})
-					if (ids && !ids.length) return []
-					const eligible = ids
-						? `tmdb_id IN (${ids.join(",")})`
-						: `goodwatch_overall_score_voting_count >= ${MIN_VOTES} AND poster_path IS NOT NULL`
-					const limit = 1_000_000
-					const rows = await query<{ tmdb_id: number }>(
-						`SELECT tmdb_id FROM ${type} WHERE ${eligible} AND ${conditions.join(" AND ")} LIMIT ${limit}`,
-						params,
-					)
-					if (rows.length >= limit)
-						throw new Error(`${name} title set exceeds its read limit`)
-					return rows.map((row) => titleKey(type, Number(row.tmdb_id)))
-				}),
-			)
-			return found.flat()
-		},
-	)
+	const movie = rangeScoreConditions(state, name, "movie")
+	const show = rangeScoreConditions(state, name, "show")
+	if (!movie.conditions.length && !show.conditions.length) return null
+	return cachedKeys(name, { movie, show, universe }, async () => {
+		const found = await Promise.all(
+			(["movie", "show"] as const).map(async (type) => {
+				const { conditions, params } = rangeScoreConditions(state, name, type)
+				const ids = universe?.flatMap((key) => {
+					const parsed = parseTitleKey(key)
+					return parsed.mediaType === type &&
+						Number.isSafeInteger(parsed.tmdbId) &&
+						parsed.tmdbId > 0
+						? [parsed.tmdbId]
+						: []
+				})
+				if (ids && !ids.length) return []
+				const eligible = ids
+					? `tmdb_id IN (${ids.join(",")})`
+					: `goodwatch_overall_score_voting_count >= ${MIN_VOTES} AND poster_path IS NOT NULL`
+				const limit = 1_000_000
+				const rows = await query<{ tmdb_id: number }>(
+					`SELECT tmdb_id FROM ${type} WHERE ${eligible} ${conditions.length ? `AND ${conditions.join(" AND ")}` : ""} LIMIT ${limit}`,
+					params,
+				)
+				if (rows.length >= limit)
+					throw new Error(`${name} title set exceeds its read limit`)
+				return rows.map((row) => titleKey(type, Number(row.tmdb_id)))
+			}),
+		)
+		return found.flat()
+	})
 }
 
 /** Same offer types as the availability index, only used while that country's index loads. */

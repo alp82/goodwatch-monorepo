@@ -56,9 +56,33 @@ export const discoverFilters = {
 		.max(10000)
 		.optional()
 		.describe(
-			"Inclusive minutes; movie duration or usual episode length for shows. Unknown runtimes do not pass.",
+			"Inclusive minutes; movie duration or usual episode length for shows unless episode runtime bounds are supplied. Unknown runtimes do not pass.",
 		),
 	max_runtime: z.number().int().min(0).max(10000).optional(),
+	min_episode_runtime: z
+		.number()
+		.int()
+		.min(0)
+		.max(10000)
+		.optional()
+		.describe(
+			"Inclusive episode minutes; when either episode bound is supplied, runtime bounds apply only to movies. Unknown episode lengths do not pass.",
+		),
+	max_episode_runtime: z
+		.number()
+		.int()
+		.min(0)
+		.max(10000)
+		.optional()
+		.describe(
+			"Inclusive maximum episode minutes; independent of movie runtime.",
+		),
+	rest_of_world: z
+		.boolean()
+		.optional()
+		.describe(
+			"Made with at least one production country outside US, IN, KR, JP, GB, FR, CN, HK. Co-productions included.",
+		),
 	minimum_score: z
 		.number()
 		.int()
@@ -186,6 +210,11 @@ export function validDiscoverRanges(args: DiscoverFilterArgs) {
 			args.max_runtime !== undefined &&
 			args.min_runtime > args.max_runtime
 		) &&
+		!(
+			args.min_episode_runtime !== undefined &&
+			args.max_episode_runtime !== undefined &&
+			args.min_episode_runtime > args.max_episode_runtime
+		) &&
 		!(args.seen_only && args.exclude_seen) &&
 		!(args.on_my_services && args.providers?.length) &&
 		!(args.any_service && (args.on_my_services || args.providers?.length))
@@ -217,6 +246,19 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 			: {}),
 		...(args.age_limit === undefined ? {} : { ageLimit: args.age_limit }),
 	}
+	if (args.rest_of_world) state.restOfWorld = true
+	if (
+		args.min_episode_runtime !== undefined ||
+		args.max_episode_runtime !== undefined
+	)
+		state.episodeRuntime = {
+			...(args.min_episode_runtime === undefined
+				? {}
+				: { min: args.min_episode_runtime }),
+			...(args.max_episode_runtime === undefined
+				? {}
+				: { max: args.max_episode_runtime }),
+		}
 	const allOf = TAG_GROUPS.filter(
 		(group) =>
 			args.match_all?.includes(group) && new Set(state[group]).size >= 2,

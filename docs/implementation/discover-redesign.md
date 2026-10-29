@@ -844,14 +844,15 @@ baseline), Biome. Page checks use an isolated local setup (no production `.env`,
 **B7. Episode length and Rest of the world**
 
 - Files: `filter-state.ts` (`episodeRuntime`, `restOfWorld`), `range-score-conditions.server.ts` (show predicate uses
-  `episodeRuntime` when present, `null` means none), `id-sets.server.ts` (a cached set of titles with a production
-  country outside the big eight: one read of `tmdb_id, production_country_codes` per kind, filtered in process),
+  `episodeRuntime` when present, `null` means none), `rest-of-world.server.ts` (a lazy per-snapshot-version
+  byte column from the facts sidecar: any country slot outside `BIG_EIGHT` matches, including co-productions),
   `app/domain/film-industries.ts` (new: Popular, industries, regions, the big eight), `passes.server.ts`
   (`restOfWorld` joins the productionCountries any-of), `labels.ts` ("Movies under 2 h", "Episodes under 35 min",
   "Rest of the world"), MCP (`min_episode_runtime`, `max_episode_runtime`, `rest_of_world`).
 - Tests: `range-score-conditions.test.ts` (old `runtime` alone still covers both kinds), `filter-state.test.ts`,
   `discover-filters.test.ts`.
-- Depends on: nothing.
+- Rest of the world never reads Crate or stores a Redis id set. Live measurement: `SELECT tmdb_id, production_country_codes FROM movie LIMIT 1000000` took 16 s against a 10 s Crate request cap; the SQL-filtered id read took 42 s. The facts sidecar keeps only the first four countries for titles with more than four (0.42% of movies). Missing countries do not match. When facts are null, this option does not narrow, its count is null, and a warning is logged once per snapshot version. Counts and recoveries share the productionCountries any-of group.
+- Depends on: B11 facts sidecar.
 
 **B8. Popularity group**
 

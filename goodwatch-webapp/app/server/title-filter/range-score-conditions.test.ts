@@ -115,3 +115,32 @@ test("Metacritic users use normalized inclusive minimums and combine with other 
 			},
 		)
 })
+
+test("episodeRuntime splits movie and show bounds, including explicitly unlimited episodes", () => {
+	const base = defaultFilterState({ onMyServices: false, notSeenYet: false })
+	const state = {
+		...base,
+		runtime: { max: 120 },
+		episodeRuntime: { min: 20, max: 35 },
+	}
+	assert.deepEqual(rangeScoreConditions(state, "runtime", "movie"), {
+		conditions: ["runtime <= ?"],
+		params: [120],
+	})
+	assert.deepEqual(rangeScoreConditions(state, "runtime", "show"), {
+		conditions: ["episode_runtime[1] >= ?", "episode_runtime[1] <= ?"],
+		params: [20, 35],
+	})
+	assert.deepEqual(
+		rangeScoreConditions({ ...state, episodeRuntime: null }, "runtime", "show"),
+		{ conditions: [], params: [] },
+	)
+	assert.deepEqual(
+		rangeScoreConditions(
+			{ ...base, episodeRuntime: { max: 35 } },
+			"runtime",
+			"movie",
+		),
+		{ conditions: [], params: [] },
+	)
+})

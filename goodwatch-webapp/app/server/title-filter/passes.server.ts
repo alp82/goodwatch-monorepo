@@ -1,3 +1,4 @@
+import type { FilterOptionCounts } from "~/domain/filter-state"
 // The filter's passes over a universe of titles that is already in its plain order. One pass computes each title's
 // fail mask: bit g is set when filter group g hides the title. A title with an empty mask passes; a title with exactly
 // one bit set is what that group alone hides (its recovery). Then one pass per group over the titles every other group
@@ -210,6 +211,7 @@ export interface PassInput {
 	similarTo: { option: string; keys: TitleSet }[]
 	people: { option: string; keys: TitleSet }[]
 	productionCountries?: { option: string; keys: TitleSet }[]
+	restOfWorld?: Uint8Array | null
 	years?: TitleSet | null
 	runtime?: TitleSet | null
 	sourceScores?: TitleSet | null
@@ -223,7 +225,7 @@ export interface PassOutput {
 	/** Universe positions (indexes into rows and keys) of the passing titles, in the plain order. */
 	passing: Int32Array
 	recoveries: { filter: FilterName; titles: number }[]
-	optionCounts: Record<FilterName, Record<string, number>>
+	optionCounts: FilterOptionCounts
 }
 
 const popcount = (x: number) => {
@@ -290,7 +292,18 @@ export function runPasses(input: PassInput): PassOutput {
 	const minMatch = matches ? input.minMatch : 0
 	const released = input.released
 	const similar = input.similarTo
-	const productionCountries = input.productionCountries ?? []
+	// Rest of the world is another Made in pick: any country or this set may pass.
+	const productionCountries = [
+		...(input.productionCountries ?? []),
+		...(input.restOfWorld
+			? [
+					{
+						option: "restOfWorld",
+						keys: { keys: new Set<TitleKey>(), rows: input.restOfWorld },
+					},
+				]
+			: []),
+	]
 	const people = input.people
 	const legacy = input.legacy
 	const notSeen = input.notSeen
@@ -513,7 +526,7 @@ export function runPasses(input: PassInput): PassOutput {
 	const passesOthers = (i: number, bit: number) => (masks[i] & ~bit) === 0
 	const optionCounts = Object.fromEntries(
 		FILTER_NAMES.map((name) => [name, {}]),
-	) as Record<FilterName, Record<string, number>>
+	) as FilterOptionCounts
 
 	// Movies or shows.
 	{
@@ -827,6 +840,9 @@ export function runPasses(input: PassInput): PassOutput {
 		BIT.productionCountries,
 		productionCountries,
 	)
+
+	if (input.restOfWorld === null)
+		optionCounts.productionCountries.restOfWorld = null
 
 	// Legacy filters: on or off as one.
 	if (legacy) {

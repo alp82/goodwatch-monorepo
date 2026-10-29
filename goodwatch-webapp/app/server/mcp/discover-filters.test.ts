@@ -373,3 +373,53 @@ test("rating_country is normalized, carried in links, and separates view identit
 		discoverViewKey({}),
 	)
 })
+
+test("episode bounds and Rest of the world validate and travel in page URLs", () => {
+	const args = {
+		max_runtime: 120,
+		min_episode_runtime: 20,
+		max_episode_runtime: 35,
+		rest_of_world: true,
+	}
+	assert.equal(schema.safeParse(args).success, true)
+	assert.equal(
+		schema.safeParse({ min_episode_runtime: 40, max_episode_runtime: 35 })
+			.success,
+		false,
+	)
+	for (const value of [-1, 1.5, 10001])
+		assert.equal(
+			schema.safeParse({ max_episode_runtime: value }).success,
+			false,
+		)
+	const params = discoverParams(args, false)
+	assert.equal(params.get("episodeRuntime"), "20-35")
+	const page = withPageLink(
+		"https://goodwatch.app",
+		"discover_titles",
+		args,
+		{},
+	)
+	const pageParams = new URL(String(page.page_url)).searchParams
+	assert.equal(pageParams.get("episodeRuntime"), "20-35")
+	assert.equal(pageParams.get("restOfWorld"), "1")
+	assert.equal(params.get("restOfWorld"), "1")
+	const state = filterStateFromParams(params, {
+		onMyServices: false,
+		notSeenYet: false,
+	})
+	assert.deepEqual(state.episodeRuntime, { min: 20, max: 35 })
+	assert.equal(state.restOfWorld, true)
+	assert.notEqual(
+		discoverViewKey(args),
+		discoverViewKey({ ...args, max_episode_runtime: 45 }),
+	)
+	assert.notEqual(
+		discoverViewKey(args),
+		discoverViewKey({ ...args, rest_of_world: false }),
+	)
+	assert.equal(
+		discoverView({ max_runtime: 120 }, false).state.episodeRuntime,
+		undefined,
+	)
+})

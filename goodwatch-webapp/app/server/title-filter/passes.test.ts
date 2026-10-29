@@ -57,6 +57,7 @@ function passes(
 		minScore?: number
 		taste?: boolean
 		productionCountries?: PassInput["productionCountries"]
+		restOfWorld?: PassInput["restOfWorld"]
 		years?: PassInput["years"]
 		runtime?: PassInput["runtime"]
 		sourceScores?: PassInput["sourceScores"]
@@ -94,6 +95,7 @@ function passes(
 		similarTo: [],
 		people: [],
 		productionCountries: filters.productionCountries,
+		restOfWorld: filters.restOfWorld,
 		years: filters.years,
 		runtime: filters.runtime,
 		sourceScores: filters.sourceScores,
@@ -921,6 +923,29 @@ test("production countries combine with OR, count co-productions once, and recov
 	})
 	const us = country("US", [0, 1])
 	const gb = country("GB", [1, 2])
+	const world = country("restOfWorld", [1, 3])
+	assert.deepEqual(passes(plain, { restOfWorld: world.keys.rows }).rows, [1, 3])
+	const worldwide = passes(plain, {
+		productionCountries: [us],
+		restOfWorld: world.keys.rows,
+	})
+	assert.deepEqual(worldwide.rows, [0, 1, 3])
+	assert.equal(worldwide.optionCounts.productionCountries.restOfWorld, 2)
+	assert.equal(worldwide.optionCounts.productionCountries.US, 2)
+	assert.equal(
+		worldwide.recoveries.find((r) => r.filter === "productionCountries")
+			?.titles,
+		3,
+	)
+	assert.deepEqual(
+		passes(plain, {
+			productionCountries: [us],
+			restOfWorld: world.keys.rows,
+			minScore: 80,
+		}).rows,
+		[0],
+	)
+
 	assert.deepEqual(passes(plain, { productionCountries: [us] }).rows, [0, 1])
 	const result = passes(plain, { productionCountries: [us, gb] })
 	assert.deepEqual(result.rows, [0, 1, 2])
@@ -1495,4 +1520,67 @@ test("rating country chooses the ladder and age column independently of streamin
 	)
 	assert.equal(ladderFor(ratings, "US", { ratingCountry: "ZZ" })?.country, "US")
 	assert.equal(ladderFor(ratings, "US", {})?.country, "US")
+})
+
+const { restOfWorldColumn } = await import("./rest-of-world.server.ts")
+
+test("Rest of the world derives once per version from all four facts country slots", () => {
+	const count = plain.length
+	const countryIndexes = new Uint8Array(4 * count).fill(255)
+	// US only; US/DE co-production; big-eight only; fourth-slot NG; missing; CA show.
+	countryIndexes.set([0, 0, 1, 255, 255, 3])
+	countryIndexes[count + 1] = 2
+	countryIndexes[2 * count + 2] = 0
+	countryIndexes[3 * count + 3] = 4
+	const facts = {
+		releaseYears: new Uint16Array(count),
+		lengths: new Uint16Array(count),
+		budgets: new Uint32Array(count),
+		boxOffice: new Uint32Array(count),
+		seasons: new Uint8Array(count),
+		episodes: new Uint16Array(count),
+		showStatuses: new Uint8Array(count),
+		countryIndexes,
+		countries: ["US", "JP", "DE", "CA", "NG"],
+	}
+	const snapshot = {
+		version: "countries-first",
+		count,
+		columns: { ...columns, facts },
+	}
+	const rows = restOfWorldColumn(snapshot)!
+	assert.deepEqual([...rows], [0, 1, 0, 1, 0, 1])
+	assert.equal(restOfWorldColumn(snapshot), rows)
+	assert.deepEqual(passes(plain, { restOfWorld: rows }).rows, [1, 3, 5])
+	const reordered = passes([5, 3, 1, 0], { restOfWorld: rows })
+	assert.deepEqual(reordered.rows, [5, 3, 1])
+	countryIndexes[count + 1] = 0
+	assert.equal(restOfWorldColumn(snapshot), rows)
+	const refreshed = restOfWorldColumn({
+		...snapshot,
+		version: "countries-next",
+	})!
+	assert.notEqual(refreshed, rows)
+	assert.deepEqual([...refreshed], [0, 0, 0, 1, 0, 1])
+})
+
+test("missing facts leave Rest of the world inactive with a null count and one warning per version", (t) => {
+	const warn = t.mock.method(console, "warn", () => {})
+	const snapshot = {
+		version: "countries-missing",
+		count: plain.length,
+		columns,
+	}
+	assert.equal(restOfWorldColumn(snapshot), null)
+	assert.equal(restOfWorldColumn(snapshot), null)
+	assert.equal(warn.mock.callCount(), 1)
+	const result = passes(plain, { restOfWorld: null })
+	assert.deepEqual(result.rows, plain)
+	assert.equal(result.optionCounts.productionCountries.restOfWorld, null)
+	assert.equal(
+		result.recoveries.find((r) => r.filter === "productionCountries"),
+		undefined,
+	)
+	restOfWorldColumn({ ...snapshot, version: "countries-still-missing" })
+	assert.equal(warn.mock.callCount(), 2)
 })

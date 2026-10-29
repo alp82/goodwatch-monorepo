@@ -64,6 +64,14 @@ export const FILTER_NAMES = [
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
+/** A null country option count means its snapshot facts are unavailable. */
+export type FilterOptionCounts = {
+	[Name in FilterName]: Record<
+		string,
+		Name extends "productionCountries" ? number | null : number
+	>
+}
+
 export const SORT_KEYS = [
 	"popular",
 	"top",
@@ -127,6 +135,8 @@ export interface FilterState {
 	years?: FilterRange
 	/** Inclusive minutes: movie duration or usual episode runtime. */
 	runtime?: FilterRange
+	/** Absent inherits runtime; null explicitly leaves episodes unlimited. */
+	episodeRuntime?: FilterRange | null
 	/** AND of minimum normalized scores (0–100); a missing score fails. */
 	sourceScores?: Partial<Record<SourceKey, number>>
 	scoreGap?: ScoreGap
@@ -167,6 +177,7 @@ export interface FilterState {
 	people?: number[]
 	/** Any of these production countries; ISO alpha-2 codes. Co-productions match each listed country. */
 	productionCountries?: string[]
+	restOfWorld?: boolean
 	/** Temporary high/low rating signals, never saved to the library. */
 	loved?: TitleKey[]
 	disliked?: TitleKey[]
@@ -240,12 +251,12 @@ const oneOf = <T extends string | number>(
 function rangeFromParams(
 	params: URLSearchParams,
 	name: string,
-	oldMin: string,
-	oldMax: string,
+	oldMin?: string,
+	oldMax?: string,
 ): FilterRange | undefined {
 	const raw = params.has(name)
 		? params.get(name)!
-		: `${params.get(oldMin) ?? ""}-${params.get(oldMax) ?? ""}`
+		: `${(oldMin && params.get(oldMin)) || ""}-${(oldMax && params.get(oldMax)) || ""}`
 	const match = /^(\d*)-(\d*)$/.exec(raw)
 	if (!match || (!match[1] && !match[2])) return undefined
 	const min = match[1] ? Number(match[1]) : undefined
@@ -327,6 +338,12 @@ export function filterStateFromParams(
 	if (years) state.years = years
 	const runtime = rangeFromParams(params, "runtime", "minRuntime", "maxRuntime")
 	if (runtime) state.runtime = runtime
+	if (params.get("episodeRuntime") === "any") state.episodeRuntime = null
+	else {
+		const episodeRuntime = rangeFromParams(params, "episodeRuntime")
+		if (episodeRuntime) state.episodeRuntime = episodeRuntime
+	}
+	if (params.get("restOfWorld") === "1") state.restOfWorld = true
 	state.released = state.years
 		? "any"
 		: (oneOf(RELEASED, params.get("released")) ?? "any")
@@ -447,15 +464,21 @@ export function filterStateToParams(
 		"released",
 		state.years || state.released === "any" ? null : state.released,
 	)
-	for (const name of ["years", "runtime"] as const) {
+	for (const name of ["years", "runtime", "episodeRuntime"] as const) {
 		const range = state[name]
 		set(
 			name,
-			range && (range.min !== undefined || range.max !== undefined)
-				? `${range.min ?? ""}-${range.max ?? ""}`
-				: null,
+			range === null
+				? state.runtime &&
+					(state.runtime.min !== undefined || state.runtime.max !== undefined)
+					? "any"
+					: null
+				: range && (range.min !== undefined || range.max !== undefined)
+					? `${range.min ?? ""}-${range.max ?? ""}`
+					: null,
 		)
 	}
+	set("restOfWorld", state.restOfWorld ? "1" : null)
 	for (const name of ["minYear", "maxYear", "minRuntime", "maxRuntime"])
 		params.delete(name)
 	set(
@@ -545,8 +568,9 @@ export function resolveFilterChange(
 /** The state with one filter group back at its widest: what a one-tap recovery does. */
 export function dropFilter(state: FilterState, name: FilterName): FilterState {
 	switch (name) {
-		case "years":
 		case "runtime":
+			return { ...state, runtime: undefined, episodeRuntime: undefined }
+		case "years":
 		case "sourceScores":
 		case "scoreGap":
 			return { ...state, [name]: undefined }
@@ -586,7 +610,11 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 		case "disliked":
 			return { ...state, [name]: undefined }
 		case "productionCountries":
-			return { ...state, productionCountries: undefined }
+			return {
+				...state,
+				productionCountries: undefined,
+				restOfWorld: undefined,
+			}
 		case "people":
 			return { ...state, people: undefined }
 		case "legacy":
@@ -609,6 +637,8 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	allOf: undefined,
 	years: undefined,
 	runtime: undefined,
+	episodeRuntime: undefined,
+	restOfWorld: undefined,
 	sourceScores: undefined,
 	scoreGap: undefined,
 	anyService: undefined,
@@ -640,7 +670,7 @@ export function secondaryFilterCount(state: FilterState): number {
 		(state.streamingCountry || state.anyService ? 1 : 0) +
 		(state.ratingCountry ? 1 : 0) +
 		(state.years ? 1 : 0) +
-		(state.runtime ? 1 : 0) +
+		(state.runtime || state.episodeRuntime ? 1 : 0) +
 		Object.keys(state.sourceScores ?? {}).length +
 		(state.scoreGap ? 1 : 0) +
 		(state.type !== "all" ? 1 : 0) +
@@ -658,6 +688,7 @@ export function secondaryFilterCount(state: FilterState): number {
 		(state.similarTo?.length ?? 0) +
 		(state.people?.length ?? 0) +
 		(state.productionCountries?.length ?? 0) +
+		(state.restOfWorld ? 1 : 0) +
 		(state.loved?.length ?? 0) +
 		(state.disliked?.length ?? 0) +
 		Object.keys(state.legacy ?? {}).length +

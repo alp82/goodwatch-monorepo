@@ -563,7 +563,11 @@ test("each new group drops independently and any service overrides saved service
 		"sourceScores",
 		"scoreGap",
 	] as const) {
-		assert.deepEqual(dropFilter(state, name), { ...state, [name]: undefined })
+		assert.deepEqual(dropFilter(state, name), {
+			...state,
+			[name]: undefined,
+			...(name === "runtime" ? { episodeRuntime: undefined } : {}),
+		})
 		assert.equal(clearSecondaryFilters(state)[name], undefined)
 	}
 	assert.equal(dropFilter(state, "services").anyService, undefined)
@@ -768,4 +772,55 @@ test("rating country codec, defaults, validation and clearing", () => {
 		stateAsApplied(parse("ratingCountry=DE"), ladder, true, "DE").ratingCountry,
 		undefined,
 	)
+})
+
+test("episode length and Rest of the world round trip, reject malformed values, and clear with their groups", () => {
+	const state = parse(
+		"runtime=-120&episodeRuntime=20-45&restOfWorld=1&productionCountries=US",
+	)
+	assert.deepEqual(state.episodeRuntime, { min: 20, max: 45 })
+	assert.equal(state.restOfWorld, true)
+	assert.deepEqual(parse(filterQuery(state, "popular", defaults)), state)
+	assert.equal(parse("episodeRuntime=any").episodeRuntime, null)
+	assert.match(
+		filterQuery(parse("runtime=-120&episodeRuntime=any"), "popular", defaults),
+		/episodeRuntime=any/,
+	)
+	for (const value of ["", "-", "-5-30", "45-20", "no", "20.5-30"])
+		assert.equal(parse(`episodeRuntime=${value}`).episodeRuntime, undefined)
+	for (const value of ["", "0", "true", "2"])
+		assert.equal(parse(`restOfWorld=${value}`).restOfWorld, undefined)
+	assert.equal(dropFilter(state, "runtime").episodeRuntime, undefined)
+	assert.equal(dropFilter(state, "productionCountries").restOfWorld, undefined)
+	assert.equal(dropFilter(state, "runtime").restOfWorld, true)
+	const cleared = clearSecondaryFilters(state)
+	assert.equal(cleared.episodeRuntime, undefined)
+	assert.equal(cleared.restOfWorld, undefined)
+	assert.equal(
+		secondaryFilterCount(parse("episodeRuntime=-35&restOfWorld=1")),
+		2,
+	)
+})
+
+test("unlimited episodes serialize only while a movie runtime bound remains", () => {
+	const base = defaultFilterState({ onMyServices: false, notSeenYet: false })
+	for (const runtime of [undefined, {}, { min: undefined, max: undefined }]) {
+		const params = filterStateToParams(
+			{ ...base, runtime, episodeRuntime: null },
+			defaults,
+		)
+		assert.equal(params.has("episodeRuntime"), false)
+		assert.equal(
+			filterStateFromParams(params, defaults).episodeRuntime,
+			undefined,
+		)
+	}
+	for (const runtime of [{ min: 0 }, { max: 120 }, { min: 120, max: 180 }]) {
+		const params = filterStateToParams(
+			{ ...base, runtime, episodeRuntime: null },
+			defaults,
+		)
+		assert.equal(params.get("episodeRuntime"), "any")
+		assert.equal(filterStateFromParams(params, defaults).episodeRuntime, null)
+	}
 })
