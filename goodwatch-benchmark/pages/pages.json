@@ -1019,6 +1019,10 @@
       "reason": "API resource, not an HTML page"
     },
     {
+      "route": "api.channels.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
       "route": "api.combined-search.ts",
       "reason": "API resource, not an HTML page"
     },
@@ -1104,6 +1108,14 @@
     },
     {
       "route": "api.fingerprint-preview.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.fingerprint.mix.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.fingerprint.pairs.ts",
       "reason": "API resource, not an HTML page"
     },
     {
@@ -1424,6 +1436,10 @@
     },
     {
       "route": "api.title-cast.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.title-people.ts",
       "reason": "API resource, not an HTML page"
     },
     {
@@ -1849,6 +1865,10 @@
     {
       "route": "settings.where-you-watch.ts",
       "reason": "Data/action resource or legacy redirect, not an HTML page"
+    },
+    {
+      "route": "signed-out.tsx",
+      "reason": "Noindex confirmation page shown after sign-out"
     },
     {
       "route": "sitemap[.]xml.ts",
