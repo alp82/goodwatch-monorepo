@@ -603,7 +603,7 @@
 	background: #2563eb;
 	color: #fff;
 	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
-	transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out;
+	transition: opacity 0.2s ease-in-out;
 	cursor: pointer;
 }
 .sb-arrow svg {
@@ -667,7 +667,6 @@
 	font-size: 14px;
 	font-weight: 600;
 	color: #d1d5db;
-	transition: background-color 0.15s, color 0.15s;
 }
 .sb-tabs button:hover {
 	color: #fff;
@@ -734,7 +733,6 @@
 	border-radius: 12px;
 	background: #111827;
 	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
-	transition: box-shadow 0.15s;
 }
 .sb-tile:hover {
 	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
@@ -918,7 +916,6 @@
 	font-size: 16px;
 	font-weight: 700;
 	color: #fff;
-	transition: background-color 0.15s, box-shadow 0.15s;
 }
 .sb-chips a:hover {
 	background: #1f2937;

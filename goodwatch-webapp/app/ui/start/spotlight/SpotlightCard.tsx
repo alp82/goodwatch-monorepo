@@ -331,7 +331,7 @@ function Dice({
 			aria-label="Surprise me: a random mood"
 			title="Surprise me"
 			style={{ opacity: away ? 0 : 1 }}
-			className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-white/[0.07] px-1.5 text-[13px] font-semibold text-gray-200 ring-1 ring-white/12 outline-none transition-[opacity,background-color,color] duration-300 hover:bg-amber-400/15 hover:text-white hover:ring-amber-400/40 focus-visible:ring-2 focus-visible:ring-amber-400 sm:pr-3 sm:pl-2 sm:text-sm"
+			className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-white/[0.07] px-1.5 text-[13px] font-semibold text-gray-200 ring-1 ring-white/12 outline-none transition-opacity duration-300 hover:bg-amber-400/15 hover:text-white hover:ring-amber-400/40 focus-visible:ring-2 focus-visible:ring-amber-400 sm:pr-3 sm:pl-2 sm:text-sm"
 		>
 			<span
 				key={roll}
@@ -432,7 +432,7 @@ function EmptyFan({
 					type="button"
 					tabIndex={on ? undefined : -1}
 					onClick={onRoll}
-					className="mt-3 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-amber-400 pr-5 pl-4 text-[14px] font-black text-gray-950 shadow-[0_8px_28px_rgb(251_191_36/.28)] outline-none transition-colors hover:bg-amber-300 focus-visible:ring-2 focus-visible:ring-white sm:mt-4 sm:min-h-11 lg:mt-5 lg:text-[15px]"
+					className="mt-3 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-amber-400 pr-5 pl-4 text-[14px] font-black text-gray-950 shadow-[0_8px_28px_rgb(251_191_36/.28)] outline-none hover:bg-amber-300 focus-visible:ring-2 focus-visible:ring-white sm:mt-4 sm:min-h-11 lg:mt-5 lg:text-[15px]"
 				>
 					<span
 						key={roll}

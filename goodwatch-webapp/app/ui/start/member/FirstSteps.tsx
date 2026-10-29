@@ -50,7 +50,7 @@ export function FirstSteps({ ratings }: { ratings: number }) {
 						<Link
 							to={step.href}
 							prefetch="intent"
-							className="group flex h-full items-center gap-3 rounded-2xl bg-gray-900/90 p-4 outline-none ring-1 ring-white/10 transition-colors hover:bg-gray-900 hover:ring-amber-400/50 focus-visible:ring-2 focus-visible:ring-amber-300 sm:flex-col sm:items-start sm:gap-2 sm:p-5 lg:p-6"
+							className="group flex h-full items-center gap-3 rounded-2xl bg-gray-900/90 p-4 outline-none ring-1 ring-white/10 hover:bg-gray-900 hover:ring-amber-400/50 focus-visible:ring-2 focus-visible:ring-amber-300 sm:flex-col sm:items-start sm:gap-2 sm:p-5 lg:p-6"
 						>
 							<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400/15 text-sm font-black text-amber-300 ring-1 ring-amber-400/40 sm:mb-1">
 								{i + 1}

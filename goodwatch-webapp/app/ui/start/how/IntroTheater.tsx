@@ -283,7 +283,7 @@ export function IntroTheater({ from, onClose, onTryIt }: IntroTheaterProps) {
 						ref={closeButton}
 						type="button"
 						onClick={closeNow}
-						className="fixed right-3 top-3 z-[40] flex h-10 items-center gap-1.5 rounded-full bg-black/60 pl-3 pr-4 text-sm font-semibold text-white ring-1 ring-white/15 transition-colors hover:bg-black/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400"
+						className="fixed right-3 top-3 z-[40] flex h-10 items-center gap-1.5 rounded-full bg-black/60 pl-3 pr-4 text-sm font-semibold text-white ring-1 ring-white/15 hover:bg-black/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400"
 						aria-label="Close the intro"
 					>
 						<svg

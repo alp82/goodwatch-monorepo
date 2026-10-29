@@ -135,7 +135,7 @@ export function StartSearchBar({
 							}}
 							aria-label="Clear the search"
 							tabIndex={filled ? 0 : -1}
-							className={`inline-flex h-8 min-w-8 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md px-2 text-sm font-semibold text-amber-400 outline-none transition-[color,background-color,opacity] hover:bg-amber-400/10 hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400 ${filled ? "opacity-100" : "pointer-events-none opacity-0"}`}
+							className={`inline-flex h-8 min-w-8 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md px-2 text-sm font-semibold text-amber-400 outline-none transition-opacity hover:bg-amber-400/10 hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400 ${filled ? "opacity-100" : "pointer-events-none opacity-0"}`}
 						>
 							<XMarkIcon className="h-4 w-4" aria-hidden />
 							<span className="hidden lg:inline">Clear</span>
@@ -147,10 +147,10 @@ export function StartSearchBar({
 						aria-label="Search"
 						className="group flex h-10 shrink-0 cursor-pointer items-stretch overflow-hidden rounded-xl font-bold text-gray-950 shadow-[0_6px_18px_-6px_rgb(251_191_36/.6)] outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 sm:h-12"
 					>
-						<span className="flex items-center bg-amber-400 px-3.5 text-sm transition-colors group-hover:bg-amber-300 sm:px-5 sm:text-base">
+						<span className="flex items-center bg-amber-400 px-3.5 text-sm group-hover:bg-amber-300 sm:px-5 sm:text-base">
 							Search
 						</span>
-						<span className="flex items-center border-l border-amber-600/40 bg-amber-500 px-2.5 transition-colors group-hover:bg-amber-400 max-sm:hidden">
+						<span className="flex items-center border-l border-amber-600/40 bg-amber-500 px-2.5 group-hover:bg-amber-400 max-sm:hidden">
 							<EnterKey />
 						</span>
 					</button>
@@ -211,7 +211,7 @@ function Presets({ onPick }: { onPick: (phrase: string) => void }) {
 					// Keeps the field's focus, so picking a preset doesn't count as leaving the field.
 					onMouseDown={(event) => event.preventDefault()}
 					onClick={() => onPick(phrase)}
-					className="inline-flex h-7 shrink-0 cursor-pointer items-center whitespace-nowrap rounded-full bg-white/[0.06] px-2.5 text-[13px] text-gray-200 outline-none ring-1 ring-inset ring-white/10 transition-colors hover:bg-amber-400/10 hover:text-white hover:ring-amber-400/50 focus-visible:ring-2 focus-visible:ring-amber-400"
+					className="inline-flex h-7 shrink-0 cursor-pointer items-center whitespace-nowrap rounded-full bg-white/[0.06] px-2.5 text-[13px] text-gray-200 outline-none ring-1 ring-inset ring-white/10 hover:bg-amber-400/10 hover:text-white hover:ring-amber-400/50 focus-visible:ring-2 focus-visible:ring-amber-400"
 				>
 					{phrase}
 				</button>

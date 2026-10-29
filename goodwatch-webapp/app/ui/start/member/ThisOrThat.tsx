@@ -123,7 +123,7 @@ function Pair({
 						<span
 							// biome-ignore lint/suspicious/noArrayIndexKey: one mark per round
 							key={i}
-							className={`h-1.5 w-5 rounded-full transition-colors ${i < taps ? "bg-amber-400" : i === taps ? "bg-amber-400/40" : "bg-white/15"}`}
+							className={`h-1.5 w-5 rounded-full ${i < taps ? "bg-amber-400" : i === taps ? "bg-amber-400/40" : "bg-white/15"}`}
 						/>
 					))}
 				</span>
@@ -238,7 +238,7 @@ function Side({
 function Art({ card, label }: { card: TitleCard; label: string }) {
 	const art = artOf(card)
 	return (
-		<span className="relative block aspect-[2/3] overflow-hidden rounded-lg border-2 border-gray-800 bg-gray-900 transition-colors group-hover:border-amber-500/70 group-focus-visible:border-amber-400 sm:aspect-video">
+		<span className="relative block aspect-[2/3] overflow-hidden rounded-lg border-2 border-gray-800 bg-gray-900 group-hover:border-amber-500/70 group-focus-visible:border-amber-400 sm:aspect-video">
 			<picture>
 				<source media="(min-width: 640px)" srcSet={art.src} />
 				<img

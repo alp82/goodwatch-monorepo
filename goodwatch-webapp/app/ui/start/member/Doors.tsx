@@ -30,7 +30,7 @@ const TEXT_LINK =
 	"group inline-flex shrink-0 items-center gap-1 rounded-md text-sm font-semibold text-amber-400 underline-offset-4 outline-none hover:text-amber-300 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
 
 const DOOR =
-	"relative flex h-[6.5rem] w-full cursor-pointer flex-col justify-between gap-2 rounded-xl p-3 text-left outline-none transition-[opacity,background-color,box-shadow] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 active:scale-[0.98] sm:h-28 sm:p-4"
+	"relative flex h-[6.5rem] w-full cursor-pointer flex-col justify-between gap-2 rounded-xl p-3 text-left outline-none transition-opacity duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 active:scale-[0.98] sm:h-28 sm:p-4"
 /** The open door: an amber fill and a strong amber ring. */
 const DOOR_OPEN =
 	"bg-amber-400/[0.16] shadow-lg shadow-amber-950/40 ring-2 ring-amber-400"
@@ -39,7 +39,7 @@ const DOOR_SHUT =
 	"bg-white/[0.05] opacity-60 ring-1 ring-white/5 hover:bg-white/10 hover:opacity-100 hover:ring-white/20 focus-visible:opacity-100"
 
 const CHIP =
-	"inline-flex h-9 shrink-0 cursor-pointer items-center rounded-full px-3.5 text-sm font-semibold outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+	"inline-flex h-9 shrink-0 cursor-pointer items-center rounded-full px-3.5 text-sm font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
 const chipTone = (on: boolean) =>
 	on
 		? "bg-amber-400 text-gray-950"
@@ -347,9 +347,9 @@ function DoorGrid({
 					<Link
 						to={door.href}
 						prefetch="intent"
-						className="group flex aspect-[2/3] w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-gray-800 bg-gray-950/60 p-2 text-center outline-none transition-colors hover:border-amber-400/70 hover:bg-amber-400/[0.08] focus-visible:border-amber-300"
+						className="group flex aspect-[2/3] w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-gray-800 bg-gray-950/60 p-2 text-center outline-none hover:border-amber-400/70 hover:bg-amber-400/[0.08] focus-visible:border-amber-300"
 					>
-						<span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-400/15 text-amber-400 ring-1 ring-amber-400/40 transition-colors group-hover:bg-amber-400 group-hover:text-gray-950 sm:h-12 sm:w-12">
+						<span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-400/15 text-amber-400 ring-1 ring-amber-400/40 group-hover:bg-amber-400 group-hover:text-gray-950 sm:h-12 sm:w-12">
 							<ArrowRightIcon
 								aria-hidden
 								className="h-5 w-5 transition-transform duration-200 ease-out group-hover:translate-x-0.5"
@@ -432,7 +432,7 @@ function Ghost({ cta, labeled }: { cta: Cta; labeled: boolean }) {
 	const box =
 		"flex aspect-[2/3] w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-800 p-2 text-center"
 	const plus = (
-		<span className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 ring-1 ring-gray-700 transition-colors group-hover:text-amber-400 group-hover:ring-amber-400/50 sm:h-10 sm:w-10">
+		<span className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 ring-1 ring-gray-700 group-hover:text-amber-400 group-hover:ring-amber-400/50 sm:h-10 sm:w-10">
 			<PlusIcon aria-hidden className="h-5 w-5" />
 		</span>
 	)
@@ -446,7 +446,7 @@ function Ghost({ cta, labeled }: { cta: Cta; labeled: boolean }) {
 		<Link
 			to={cta.href}
 			prefetch="intent"
-			className={`group ${box} outline-none transition-colors hover:border-amber-400/50 hover:bg-amber-400/[0.05] focus-visible:border-amber-300`}
+			className={`group ${box} outline-none hover:border-amber-400/50 hover:bg-amber-400/[0.05] focus-visible:border-amber-300`}
 		>
 			{plus}
 			<span className="text-xs font-semibold leading-tight text-gray-400 group-hover:text-gray-200">

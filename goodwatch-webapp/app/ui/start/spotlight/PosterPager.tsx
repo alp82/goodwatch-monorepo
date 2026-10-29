@@ -133,7 +133,7 @@ export type Pager = ReturnType<typeof usePager>
 
 /** The title page rows' arrow (ListSwiper): a round blue button with a chevron. */
 const ARROW =
-	"rounded-full bg-blue-600 text-white shadow-md hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-opacity-50 transition-[opacity,background-color] duration-200 ease-in-out cursor-pointer"
+	"rounded-full bg-blue-600 text-white shadow-md hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-opacity-50 transition-opacity duration-200 ease-in-out cursor-pointer"
 
 /** Arrows over the first and last whole poster; each fades out at its end. `top` is the posters' middle. */
 export function EdgeArrows({
