@@ -1,3 +1,4 @@
+import { canonicalTitleId } from "../utils/title-identity"
 import {
 	type CastRaw,
 	type CrewRaw,
@@ -7,6 +8,7 @@ import {
 	buildCrew,
 	peoplePage,
 } from "../utils/title-people"
+import { applyCorrections } from "./feedback/apply-corrections.server"
 
 type TitlePeopleKey = Pick<PeopleParams, "type" | "id" | "kind">
 
@@ -75,17 +77,10 @@ function joinCredits<T extends CastCredit | CrewCredit>(
 	credits: T[],
 	people: Map<number, Person>,
 ) {
-	// Retain the former inner join and credit ordering, including multiple roles.
-	return credits
-		.sort(
-			(a, b) =>
-				a.person_tmdb_id - b.person_tmdb_id ||
-				a.credit_id.localeCompare(b.credit_id),
-		)
-		.flatMap((credit) => {
-			const person = people.get(credit.person_tmdb_id)
-			return person ? [{ ...credit, ...person, id: person.tmdb_id }] : []
-		})
+	return credits.flatMap((credit) => {
+		const person = people.get(credit.person_tmdb_id)
+		return person ? [{ ...credit, ...person, id: person.tmdb_id }] : []
+	})
 }
 
 export async function fetchTitleCast(
@@ -143,7 +138,7 @@ async function fetchTitlePeople(key: TitlePeopleKey): Promise<PeopleData> {
 export function createPeopleCache(
 	fetch: (key: TitlePeopleKey) => Promise<PeopleData>,
 	{
-		ttlMs = 60 * 60 * 1000,
+		ttlMs = 24 * 60 * 60 * 1000,
 		maxEntries = 128,
 		maxBytes = 16 * 1024 * 1024,
 		now = Date.now,
@@ -159,24 +154,15 @@ export function createPeopleCache(
 		bytes -= entries.get(key)?.bytes ?? 0
 		entries.delete(key)
 	}
-	return async (key: TitlePeopleKey): Promise<PeopleData> => {
-		const name = `${key.type}:${key.id}:${key.kind}`
-		const entry = entries.get(name)
-		if (entry && entry.expires > now()) {
-			entries.delete(name)
-			entries.set(name, entry)
-			return entry.data
-		}
-		if (entry) remove(name)
+	const refresh = (key: TitlePeopleKey, name: string) => {
 		const loading = pending.get(name)
 		if (loading) return loading
-		const promise = fetch(key)
+		const promise = Promise.resolve()
+			.then(() => fetch(key))
 			.then((data) => {
 				const size = Buffer.byteLength(JSON.stringify(data))
+				remove(name)
 				if (size <= maxBytes) {
-					for (const [key, value] of entries) {
-						if (value.expires <= now()) remove(key)
-					}
 					while (
 						entries.size > 0 &&
 						(entries.size >= maxEntries || bytes + size > maxBytes)
@@ -193,10 +179,50 @@ export function createPeopleCache(
 		pending.set(name, promise)
 		return promise
 	}
+	return async (key: TitlePeopleKey): Promise<PeopleData> => {
+		const name = `${key.type}:${key.id}:${key.kind}`
+		const entry = entries.get(name)
+		if (entry) {
+			entries.delete(name)
+			entries.set(name, entry)
+			if (entry.expires <= now()) {
+				// Keep stale data on failure; the next request may retry the shared refresh.
+				void refresh(key, name).catch(() => {})
+			}
+			return entry.data
+		}
+		return refresh(key, name)
+	}
 }
 
 const loadTitlePeople = createPeopleCache(fetchTitlePeople)
 
-export async function getTitlePeoplePage(params: PeopleParams) {
-	return peoplePage(await loadTitlePeople(params), params)
+export async function getTitlePeoplePage(
+	input: PeopleParams,
+	{ load = loadTitlePeople, apply = applyCorrections } = {},
+) {
+	const params = { ...input, id: canonicalTitleId(input.type, input.id) }
+	const data = await load(params)
+	if (params.kind !== "cast") return peoplePage(data, params)
+	// Use the existing cast overlay shape, over the full list and after the cache.
+	const corrected = await apply(
+		{ kind: params.type, id: params.id },
+		{
+			cast: data.all.map(({ roles, ...row }) => ({
+				...row,
+				characters: roles,
+			})),
+		},
+	)
+	return peoplePage(
+		{
+			...data,
+			all: corrected.cast.map(({ characters, ...row }) => ({
+				...row,
+				roles: characters,
+			})),
+		},
+		params,
+		data.all,
+	)
 }

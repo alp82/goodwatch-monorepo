@@ -4,7 +4,9 @@ import { test } from "node:test"
 import type { LoaderFunctionArgs } from "@remix-run/node"
 const { loader } = await import("../routes/api.title-people.ts")
 const { buildCast } = await import("../utils/title-people.ts")
-const { createPeopleCache } = await import("./title-people.server.ts")
+const { createPeopleCache, getTitlePeoplePage } = await import(
+	"./title-people.server.ts"
+)
 
 const key = { type: "show", id: 1416, kind: "cast" } as const
 const data = buildCast("show", [], 466)
@@ -165,8 +167,8 @@ test("cast and crew query credits then people with one distinct array parameter 
 		assert.deepEqual(
 			rows.map((row) => [row.id, row.name]),
 			[
-				[1, "One"],
 				[2, "Two"],
+				[1, "One"],
 				[2, "Two"],
 			],
 		)
@@ -177,8 +179,8 @@ test("cast and crew query credits then people with one distinct array parameter 
 					: (row as { job: string }).job,
 			),
 			kind === "cast"
-				? ["First", "Other", "Second"]
-				: ["Director", "Producer", "Writer"],
+				? ["Second", "First", "Other"]
+				: ["Writer", "Director", "Producer"],
 		)
 	}
 })
@@ -203,4 +205,161 @@ test("failed people lookup rejects the title load", async () => {
 		return [{ person_tmdb_id: 1, credit_id: "a" }] as unknown as T[]
 	}
 	await assert.rejects(fetchTitleCast(key, query), /People unavailable/)
+})
+
+const { applyCorrectionRows } = await import("./feedback/apply-corrections.ts")
+const { parsePeopleParams } = await import("../utils/title-people.ts")
+import type { Correction } from "./feedback/corrections.ts"
+
+const correction = (overrides: Partial<Correction>): Correction => ({
+	id: "fix",
+	entity_kind: "show",
+	tmdb_id: 1416,
+	target: { personId: 1 },
+	field: "character",
+	op: "set",
+	value: "Corrected",
+	old_value: "Old",
+	status: "live",
+	member_id: null,
+	reviewer: null,
+	report_id: "report",
+	source_link: null,
+	created_at: 1,
+	updated_at: 1,
+	...overrides,
+})
+
+test("live character and remove corrections precede search, groups, letters and paging without changing the cache", async () => {
+	const source = buildCast(
+		"show",
+		[1, 2, 3].map((id) => ({
+			id,
+			name: `Person ${id}`,
+			character: "Old",
+			profile_path: null,
+			popularity: null,
+			order_default: id,
+			episode_count_character: 1,
+			episode_count_total: 1,
+		})),
+		100,
+	)
+	const before = JSON.stringify(source)
+	let loads = 0
+	const load = createPeopleCache(async () => {
+		loads++
+		return source
+	})
+	let corrections: Correction[] = []
+	const deps = {
+		load,
+		apply: async <T>(
+			entity: Parameters<typeof applyCorrectionRows>[0],
+			rows: T,
+		) => applyCorrectionRows(entity, rows, corrections),
+	}
+	const params = parsePeopleParams(
+		new URLSearchParams("type=show&id=1416&kind=cast&sort=name&limit=1"),
+	)
+	assert.equal((await getTitlePeoplePage(params, deps)).total, 3)
+	corrections = [
+		correction({}),
+		correction({ id: "remove", target: { personId: 2 }, op: "remove" }),
+	]
+	const page = await getTitlePeoplePage(
+		{ ...params, q: "corrected", group: "guest" },
+		deps,
+	)
+	assert.equal(page.total, 2)
+	assert.equal(page.matched, 1)
+	assert.deepEqual(
+		page.rows.map((r) => r.roles),
+		[["Corrected"]],
+	)
+	assert.deepEqual(
+		page.groups.map((g) => g.count),
+		[0, 0, 1],
+	)
+	assert.deepEqual(page.letters, { "#": 1 })
+	const first = await getTitlePeoplePage(params, deps)
+	const second = await getTitlePeoplePage({ ...params, offset: 1 }, deps)
+	assert.deepEqual(
+		[...first.rows, ...second.rows].map((r) => r.id),
+		[1, 3],
+	)
+	assert.equal(first.nextOffset, 1)
+	assert.equal(second.nextOffset, null)
+	assert.equal(loads, 1)
+	assert.equal(JSON.stringify(source), before)
+})
+
+test("retired movie ids use the canonical cache and correction identity, preserving the show namespace", async () => {
+	for (const type of ["movie", "show"] as const) {
+		const expected = type === "movie" ? 658039 : 5338654
+		const params = parsePeopleParams(
+			new URLSearchParams(`type=${type}&id=5338654&kind=cast`),
+		)
+		await getTitlePeoplePage(params, {
+			load: async (key) => {
+				assert.equal(key.id, expected)
+				return data
+			},
+			apply: async (entity, rows) => {
+				assert.deepEqual(entity, { kind: type, id: expected })
+				return rows
+			},
+		})
+	}
+})
+
+test("cache defaults to 24 hours and serves stale results during one shared refresh", async () => {
+	let time = 0
+	let calls = 0
+	let finish: (value: typeof data) => void = () => {}
+	const updated = buildCast("show", [], 500)
+	const load = createPeopleCache(
+		async () => {
+			calls++
+			if (calls === 1) {
+				time = 1000
+				return data
+			}
+			return new Promise<typeof data>((resolve) => {
+				finish = resolve
+			})
+		},
+		{ now: () => time },
+	)
+	await load(key)
+	time = 1000 + 24 * 60 * 60 * 1000 - 1
+	assert.equal(await load(key), data)
+	assert.equal(calls, 1)
+	time++
+	assert.equal(await load(key), data)
+	assert.equal(await load(key), data)
+	assert.equal(calls, 2)
+	finish(updated)
+	await new Promise((resolve) => setImmediate(resolve))
+	assert.equal(await load(key), updated)
+	assert.equal(calls, 2)
+})
+
+test("failed background refresh retains stale data and retries without an unhandled rejection", async () => {
+	let time = 0
+	let calls = 0
+	const load = createPeopleCache(
+		async () => {
+			if (++calls > 1) throw new Error("offline")
+			return data
+		},
+		{ ttlMs: 10, now: () => time },
+	)
+	await load(key)
+	time = 10
+	assert.equal(await load(key), data)
+	await new Promise((resolve) => setImmediate(resolve))
+	assert.equal(await load(key), data)
+	await new Promise((resolve) => setImmediate(resolve))
+	assert.equal(calls, 3)
 })

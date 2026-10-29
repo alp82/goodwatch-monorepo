@@ -1,6 +1,6 @@
 import "../server/title-filter/test-alias.ts"
 import assert from "node:assert/strict"
-import { test } from "node:test"
+import { mock, test } from "node:test"
 import crewFixture from "./__fixtures__/show-1399-crew.json" with {
 	type: "json",
 }
@@ -40,6 +40,8 @@ const crew = (id: number, overrides: Partial<CrewRaw> = {}): CrewRaw => ({
 test("validates required fields, integer syntax, safe ids, offsets, and limit bounds", () => {
 	assert.equal(params().limit, 60)
 	assert.equal(params().offset, 0)
+	assert.equal(params("offset=&limit=").offset, 0)
+	assert.equal(params("offset=&limit=").limit, 60)
 	assert.equal(params("limit=200&offset=3257").limit, 200)
 	for (const query of [
 		"",
@@ -58,11 +60,9 @@ test("validates required fields, integer syntax, safe ids, offsets, and limit bo
 			"offset=-1",
 			"offset=1.5",
 			"offset=Infinity",
-			"offset=",
 			"limit=0",
 			"limit=201",
 			"limit=1.5",
-			"limit=",
 		].map((value) =>
 			`type=movie&id=1&kind=cast&${value}`.replace(
 				"id=1&kind=cast&id=",
@@ -285,4 +285,42 @@ test("paging covers large casts without gaps and never mutates the cached list",
 	assert.equal(empty.total, 0)
 	assert.equal(empty.nextOffset, null)
 	assert.equal(empty.groups.length, 3)
+})
+
+test("unrecognized movie crew departments appear under Crew", () => {
+	const data = buildCrew(
+		"movie",
+		[crew(1, { department: "Actors", job: "Actor" })],
+		null,
+	)
+	const page = peoplePage(data, { ...params(), kind: "crew", group: "Crew" })
+	assert.equal(page.rows[0].group, "Crew")
+	assert.deepEqual(page.groups, [{ key: "Crew", label: "Crew", count: 1 }])
+	assert.equal(page.matched, 1)
+})
+
+test("A-Z keys and initials are computed once per cached list of 3257 people and stay off the wire", () => {
+	const data = buildCast(
+		"show",
+		Array.from({ length: 3257 }, (_, i) => cast(i)),
+		466,
+	)
+	const normalize = mock.method(String.prototype, "normalize")
+	try {
+		const first = peoplePage(data, params("sort=name"))
+		assert.equal(normalize.mock.callCount(), 3258)
+		peoplePage(data, params("sort=name&letter=p&offset=60"))
+		assert.equal(normalize.mock.callCount(), 3259)
+		assert.deepEqual(Object.keys(first.rows[0]).sort(), [
+			"episodes",
+			"group",
+			"id",
+			"name",
+			"profilePath",
+			"roles",
+		])
+		assert.ok(!JSON.stringify(data).includes('"initial"'))
+	} finally {
+		normalize.mock.restore()
+	}
 })

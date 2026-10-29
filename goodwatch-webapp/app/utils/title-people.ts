@@ -144,8 +144,8 @@ const sortKey = (name: string) =>
 		/^(van|von|de|del|della|der|di|da|du|la|le|st\.)\s+/,
 		"",
 	)
-function initialOf(name: string) {
-	const c = sortKey(name).charAt(0).toUpperCase()
+function initialOf(key: string) {
+	const c = key.charAt(0).toUpperCase()
 	return c >= "A" && c <= "Z" ? c : "#"
 }
 
@@ -166,7 +166,8 @@ export function parsePeopleParams(p: URLSearchParams): PeopleParams {
 	const kind = p.get("kind")
 	const integer = (key: string, fallback?: number) => {
 		const value = p.get(key)
-		if (value === null && fallback !== undefined) return fallback
+		if ((value === null || value === "") && fallback !== undefined)
+			return fallback
 		if (!value || !/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)))
 			throw new Response(`Invalid ${key}`, { status: 400 })
 		return Number(value)
@@ -288,7 +289,8 @@ function crewRows(type: PeopleParams["type"], raw: CrewRaw[]): PeopleRow[] {
 		{ row: CrewRaw; jobs: { job: string; eps: number; dep: string }[] }
 	>()
 	for (const r of raw) {
-		const dep = r.department ?? depOf[r.job] ?? "Crew"
+		const department = r.department ?? depOf[r.job] ?? "Crew"
+		const dep = DEPARTMENTS.includes(department) ? department : "Crew"
 		const job = { job: r.job, eps: r.episode_count_job ?? 0, dep }
 		const e = byId.get(r.id)
 		if (e) e.jobs.push(job)
@@ -325,7 +327,33 @@ function crewRows(type: PeopleParams["type"], raw: CrewRaw[]): PeopleRow[] {
 	return all.map(({ _pop, ...row }) => row)
 }
 
-export function peoplePage(data: PeopleData, params: PeopleParams): PeoplePage {
+// Serving-only metadata: never added to cached rows or serialized responses.
+const nameIndexes = new WeakMap<
+	PeopleRow[],
+	{ id: number; initial: string; key: string; name: string }[]
+>()
+function nameIndex(all: PeopleRow[]) {
+	let index = nameIndexes.get(all)
+	if (!index) {
+		index = all
+			.map(({ id, name }) => {
+				const key = sortKey(name)
+				return { id, name, key, initial: initialOf(key) }
+			})
+			.sort(
+				(a, b) => a.key.localeCompare(b.key) || a.name.localeCompare(b.name),
+			)
+		nameIndexes.set(all, index)
+	}
+	return index
+}
+
+export function peoplePage(
+	data: PeopleData,
+	params: PeopleParams,
+	// Corrections change characters or remove people; the cached name order still applies.
+	nameSource = data.all,
+): PeoplePage {
 	const q = fold(params.q.trim())
 	const { kind, group, offset, limit, byName, letter } = params
 	const { all, order, showEpisodes } = data
@@ -348,15 +376,15 @@ export function peoplePage(data: PeopleData, params: PeopleParams): PeoplePage {
 	let matched = group ? hits.filter((r) => r.group === group) : hits
 	let letters: Record<string, number> | undefined
 	if (byName) {
-		matched = [...matched].sort(
-			(a, b) =>
-				sortKey(a.name).localeCompare(sortKey(b.name)) ||
-				a.name.localeCompare(b.name),
-		)
+		const byId = new Map(matched.map((r) => [r.id, r]))
+		matched = []
 		letters = {}
-		for (const r of matched)
-			letters[initialOf(r.name)] = (letters[initialOf(r.name)] ?? 0) + 1
-		if (letter) matched = matched.filter((r) => initialOf(r.name) === letter)
+		for (const { id, initial } of nameIndex(nameSource)) {
+			const row = byId.get(id)
+			if (!row) continue
+			letters[initial] = (letters[initial] ?? 0) + 1
+			if (!letter || initial === letter) matched.push(row)
+		}
 	}
 	const rows = matched.slice(offset, offset + limit)
 	const page: PeoplePage = {
