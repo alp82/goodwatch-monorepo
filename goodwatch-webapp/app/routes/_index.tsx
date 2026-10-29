@@ -11,6 +11,7 @@ import { type ComponentProps, useState } from "react"
 import type { startPageLoader } from "~/server/start-page/loader.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
 import { StartBrowse } from "~/ui/start/browse/StartBrowse"
+import { HowItWorksCorner } from "~/ui/start/how/HowItWorksCorner"
 import { OpeningBoot, OpeningCover } from "~/ui/start/opening/OpeningBoot"
 import { StartSearchBar } from "~/ui/start/search/StartSearchBar"
 import { useStartSearch } from "~/ui/start/search/useStartSearch"
@@ -142,6 +143,7 @@ function GuestStart({
 				opening={<OpeningBoot />}
 			/>
 			<OpeningCover />
+			<HowItWorksCorner />
 			<StartBrowse data={browse} />
 		</>
 	)

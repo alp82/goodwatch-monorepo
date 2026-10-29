@@ -1,0 +1,256 @@
+/* How it works on the start page (how/HowItWorksCorner.tsx): the TV corner's crop, its "Watch the intro" pill, the
+   theater's controls, and the card's pulse when the intro hands the guest to the search (how/hand-off.ts).
+   Opacity and transform only. */
+
+.start-how {
+	max-width: 72rem;
+	margin-inline: auto;
+	padding: 40px 16px;
+}
+.start-how-grid {
+	display: grid;
+	align-items: center;
+	gap: 20px;
+}
+@media (min-width: 640px) {
+	.start-how {
+		padding-inline: 32px;
+	}
+}
+@media (min-width: 768px) {
+	.start-how {
+		padding-block: 56px;
+	}
+	.start-how-grid {
+		grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+		gap: 40px;
+	}
+}
+
+/* The crop: one button. Its size is fixed per breakpoint, so the lazy picture never moves anything. */
+.start-how-room {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 220px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	border-radius: 16px;
+	background: #0b0d14;
+	cursor: pointer;
+	container-type: size;
+	-webkit-tap-highlight-color: transparent;
+}
+@media (min-width: 640px) {
+	.start-how-room {
+		height: 280px;
+	}
+}
+@media (min-width: 768px) {
+	.start-how-room {
+		height: 340px;
+	}
+}
+/* The edge ring, and the veil that brightens the room a touch on hover. */
+.start-how-room::before,
+.start-how-room::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	border-radius: inherit;
+	pointer-events: none;
+}
+.start-how-room::before {
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.start-how-room::after {
+	background: #fff;
+	opacity: 0;
+	transition: opacity 200ms;
+}
+.start-how-room:hover::after {
+	opacity: 0.06;
+}
+.start-how-room:active::after {
+	opacity: 0.02;
+}
+.start-how-room:focus-visible {
+	outline: 2px solid #fbbf24;
+	outline-offset: -2px;
+}
+
+/* The painting covers the crop at --how-zoom with the TV's center (--how-fx, --how-fy) in the middle, never leaving a
+   gap at an edge (intro-push.ts, cornerPlacement, has the same rule). */
+.start-how-scene {
+	position: absolute;
+	inset: 0;
+	--how-w: calc(max(100cqw, 100cqh * var(--how-aspect)) * var(--how-zoom));
+	--how-h: calc(var(--how-w) / var(--how-aspect));
+	--how-x: clamp(
+		100cqw -
+		var(--how-w),
+		50cqw -
+		var(--how-fx) *
+		var(--how-w),
+		0px
+	);
+	--how-y: clamp(
+		100cqh -
+		var(--how-h),
+		50cqh -
+		var(--how-fy) *
+		var(--how-h),
+		0px
+	);
+}
+.start-how-picture {
+	position: absolute;
+	left: var(--how-x);
+	top: var(--how-y);
+	width: var(--how-w);
+	height: var(--how-h);
+	max-width: none;
+	user-select: none;
+}
+
+/* The pill: the play circle and the label in one. Under the TV on a small crop, on the TV's screen on a large one. */
+.start-how-pill {
+	position: absolute;
+	z-index: 1;
+	left: calc(var(--how-x) + var(--how-fx) * var(--how-w));
+	top: calc(var(--how-y) + var(--how-tv-bottom) * var(--how-h) + 10px);
+	translate: -50% 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	height: 40px;
+	padding: 0 16px 0 6px;
+	white-space: nowrap;
+	border-radius: 9999px;
+	background: #fbbf24; /* amber-400, the site's primary button */
+	color: #030712; /* gray-950 */
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), 0 6px 18px rgba(0, 0, 0, 0.55);
+	transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@container (min-width: 540px) {
+	.start-how-pill {
+		top: calc(var(--how-y) + var(--how-fy) * var(--how-h));
+		translate: -50% -50%;
+		height: 44px;
+		padding: 0 18px 0 7px;
+		font-size: 16px;
+	}
+}
+.start-how-pill-dot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 9999px;
+	background: #030712;
+	color: #fbbf24;
+}
+.start-how-pill-dot svg {
+	width: 16px;
+	height: 16px;
+	margin-left: 2px;
+}
+/* The idle cue: a soft amber glow that breathes behind the pill. */
+.start-how-pill::before {
+	content: "";
+	position: absolute;
+	inset: -6px;
+	z-index: -1;
+	border-radius: inherit;
+	box-shadow: 0 0 18px 6px rgba(251, 191, 36, 0.55);
+	opacity: 0.25;
+	animation: start-how-glow 2.8s ease-in-out infinite;
+	pointer-events: none;
+}
+@keyframes start-how-glow {
+	0%,
+	100% {
+		opacity: 0.2;
+		transform: scale(0.96);
+	}
+	50% {
+		opacity: 0.8;
+		transform: scale(1.03);
+	}
+}
+.start-how-room:hover .start-how-pill,
+.start-how-room:focus-visible .start-how-pill {
+	transform: translateY(-2px) scale(1.04);
+}
+.start-how-room:active .start-how-pill {
+	transform: translateY(0) scale(0.97);
+	transition-duration: 60ms;
+}
+
+/* The theater's Close and hint arrive once the film is on. */
+.start-intro-chrome {
+	animation: start-intro-fade 300ms ease-out both;
+}
+@keyframes start-intro-fade {
+	from {
+		opacity: 0;
+	}
+}
+
+/* Try it, with something asked: the card's amber ring and glow pulse once (hand-off.ts sets `data-pulse`). */
+#start-card[data-pulse]::after {
+	content: "";
+	position: absolute;
+	inset: -6px;
+	z-index: 1;
+	border-radius: 26px;
+	pointer-events: none;
+	box-shadow: 0 0 0 3px #fbbf24, 0 0 0 8px rgba(251, 191, 36, 0.16), 0 0 60px
+		8px rgba(251, 191, 36, 0.4);
+	opacity: 0;
+	animation: start-card-pulse 1.5s ease-out;
+}
+@media (min-width: 640px) {
+	#start-card[data-pulse]::after {
+		inset: -8px;
+		border-radius: 32px;
+	}
+}
+@keyframes start-card-pulse {
+	0% {
+		opacity: 0;
+		transform: scale(1.035);
+	}
+	22% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.35;
+		transform: scale(1);
+	}
+	70% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	100% {
+		opacity: 0;
+		transform: scale(1.01);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.start-how-pill::before {
+		animation: none;
+	}
+	.start-how-pill,
+	.start-how-room::after {
+		transition: none;
+	}
+}

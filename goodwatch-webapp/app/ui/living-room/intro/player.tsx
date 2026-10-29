@@ -44,9 +44,9 @@ export function Stage({ k, children }: { k: number; children: ReactNode }) {
 	)
 }
 
-/** How many scenes are chapters: everything before the quiz. */
+/** How many scenes are chapters: everything before the quiz (a closer that counts as a chapter counts). */
 export const chapterCount = (scenes: readonly Scene[]) => {
-	const i = scenes.findIndex((c) => c.section === "closer")
+	const i = scenes.findIndex((c) => c.section === "closer" && !c.chapter)
 	return i < 0 ? scenes.length : i
 }
 
@@ -248,8 +248,23 @@ const isFilm = (animation: Animation) => {
 }
 
 /**
+ * A control of the scene itself (Your turn's Try it, say) has the focus: the space bar presses it, as it would anywhere.
+ * The film's own chapter bar and Next keep the space bar for the hold, as do the page's controls outside the film (the
+ * TV home's Remote, the theater's Close).
+ */
+export const sceneControl = (target: EventTarget | null, stage: Element) =>
+	target instanceof Element &&
+	stage.contains(target) &&
+	Boolean(
+		target.closest(
+			"button, a[href], summary, select, [role=button], [role=link], [role=checkbox], [role=switch], [role=tab], [role=menuitem]",
+		),
+	) &&
+	!target.closest(".film-chapters, .film-skip")
+
+/**
  * The speed the visitor holds the film at (1 when not held): 2x, then 3x and 4x every `STEP_MS` held. A hold starts
- * with a mouse press or the space bar at once, a finger after `TOUCH_HOLD_MS` without moving (a tap or a scroll doesn't). A press on the chapter bar or
+ * with a mouse press or the space bar at once (not while a scene's own control has the focus: `sceneControl`), a finger after `TOUCH_HOLD_MS` without moving (a tap or a scroll doesn't). A press on the chapter bar or
  * Next is theirs. While the speed isn't 1x, every frame sets it on the clock and on each animation on
  * the stage, so a scene that comes in while held plays fast too.
  */
@@ -324,7 +339,11 @@ function useFastHold(
 		}
 		const onKeyDown = (e: KeyboardEvent) => {
 			if (e.code !== "Space" || e.altKey || e.ctrlKey || e.metaKey) return
-			if (!space && (typing(e.target) || !onScreen())) return
+			if (
+				!space &&
+				(typing(e.target) || sceneControl(e.target, el) || !onScreen())
+			)
+				return
 			e.preventDefault()
 			if (!space) {
 				space = true

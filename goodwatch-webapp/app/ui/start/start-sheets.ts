@@ -4,6 +4,7 @@
 // it and the first paint waits for that (#236, start-sheets.test.ts). The hints name these sheets once `/` serves
 // this page (server/early-hints.server.ts).
 import bootCss from "~/ui/living-room/intro/boot.css?url"
+import howItWorksCss from "~/ui/start/how/how-it-works.css?url"
 import openingCss from "~/ui/start/opening/opening.css?url"
 import startCss from "~/ui/start/start.css?url"
 
@@ -11,4 +12,9 @@ import startCss from "~/ui/start/start.css?url"
  * As paths from the root (`/assets/start-AbCd1234.css`); `assetUrl` puts the host in front. The boot's sheets come
  * after the stage's: a guest's opening (opening/OpeningBoot.tsx) is the old TV's boot, restyled by opening.css.
  */
-export const START_SHEETS = [startCss, bootCss, openingCss] as const
+export const START_SHEETS = [
+	startCss,
+	bootCss,
+	openingCss,
+	howItWorksCss,
+] as const

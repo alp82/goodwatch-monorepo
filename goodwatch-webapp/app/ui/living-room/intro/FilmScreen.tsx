@@ -5,9 +5,10 @@ import { FILM } from "./film"
 import { FilmPhone, isPhonePicture } from "./parts/film-phone"
 import "./intro.css"
 import { Player, Stage } from "./player"
-import type { Enter, IntroData } from "./scene"
+import type { Enter, IntroData, Scene } from "./scene"
 
 export default function FilmScreen({
+	scenes = FILM,
 	startAt,
 	firstEnter,
 	waitMs,
@@ -15,6 +16,8 @@ export default function FilmScreen({
 	onShown,
 	onFail,
 }: {
+	/** The film: the TV's (FILM) by default. */
+	scenes?: readonly Scene[]
 	startAt: number
 	firstEnter: Enter
 	/** How long the film waits before its first scene: the boot screen's time. */
@@ -22,7 +25,7 @@ export default function FilmScreen({
 	onAt: (index: number) => void
 	/** The film is on the picture: its first scene is coming in. */
 	onShown?: () => void
-	/** The data couldn't be read: the TV shows its home instead. */
+	/** The data couldn't be read: the TV shows its home instead (the start page's theater says so). */
 	onFail: () => void
 }) {
 	const [data, setData] = useState<IntroData | null>(null)
@@ -62,7 +65,8 @@ export default function FilmScreen({
 	useLayoutEffect(() => {
 		const el = box.current
 		if (!el) return
-		const measure = () => setPhone(isPhonePicture(el.clientWidth, el.clientHeight))
+		const measure = () =>
+			setPhone(isPhonePicture(el.clientWidth, el.clientHeight))
 		measure()
 		const ro = new ResizeObserver(measure)
 		ro.observe(el)
@@ -79,7 +83,7 @@ export default function FilmScreen({
 			<FilmPhone.Provider value={phone}>
 				<Stage k={1}>
 					<Player
-						scenes={FILM}
+						scenes={scenes}
 						data={data}
 						firstEnter={firstEnter}
 						startAt={startAt}
