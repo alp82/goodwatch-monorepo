@@ -428,6 +428,36 @@ class RatingsTest(unittest.TestCase):
 
 
 class FactsTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("node"), "needs Node to run the webapp's decoder")
+    def test_webapp_decodes_publisher_facts(self):
+        # Odd and even title counts catch unaligned episodes and country column offsets.
+        for count in (0, 1, 2, 3):
+            with self.subTest(count=count), tempfile.TemporaryDirectory() as directory:
+                out = Path(directory)
+                field, chunks = ts.encode_facts(list(range(count)), {
+                    0: {"year": 1999, "length": 136, "budget": 63_000_000,
+                        "box_office": 463_517_383, "countries": ["US", "AU"]},
+                    1: {"year": 2008, "length": 47, "seasons": 5, "episodes": 62,
+                        "status": 2, "countries": ["DE"]},
+                })
+                (out / "manifest.json").write_text(json.dumps({"count": count, "facts": field}))
+                for n, chunk in enumerate(chunks):
+                    (out / f"facts-{n}.bin").write_bytes(chunk)
+                result = subprocess.run(["node", str(ROOT / "tests/fixtures/title_snapshot_check.ts"),
+                                         str(out), "--facts"], capture_output=True, text=True, check=True)
+                checked = json.loads(result.stdout)
+                for name, expected in {
+                    "releaseYears": [1999, 2008, 0], "lengths": [136, 47, 0],
+                    "budgets": [63000, 0, 0], "boxOffice": [463517, 0, 0],
+                    "seasons": [0, 5, 0], "episodes": [0, 62, 0], "showStatuses": [0, 2, 0],
+                }.items():
+                    self.assertEqual(checked[name], expected[:count])
+                self.assertEqual(checked["countries"], field["countries"])
+                indexes = {c: i for i, c in enumerate(field["countries"])}
+                self.assertEqual(checked["countryIndexes"],
+                                 ([indexes["US"], indexes.get("DE", 255), 255][:count] +
+                                  [indexes["AU"], 255, 255][:count] + [255] * (2 * count)) if count else [])
+
     def test_bytes_follow_the_plans_column_order_in_snapshot_row_order(self):
         field, chunks = ts.encode_facts([ts.MOVIE_BASE + 1, ts.SHOW_BASE + 2, ts.MOVIE_BASE + 3], {
             ts.MOVIE_BASE + 1: {"year": 1999, "length": 136, "budget": 63_000_000,

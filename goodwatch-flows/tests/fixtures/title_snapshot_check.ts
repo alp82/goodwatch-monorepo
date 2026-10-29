@@ -8,6 +8,8 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import {
 	checkManifest,
+	checkFactsManifest,
+	joinFactsChunks,
 	encodeSnapshot,
 	joinChunks,
 	type SnapshotRow,
@@ -15,6 +17,30 @@ import {
 import { VALID_FINGERPRINT_KEYS } from "../../../goodwatch-webapp/app/server/utils/fingerprint.ts"
 
 const dir = process.argv[2]
+// Facts-only mode is exercised with real encode_facts output by the publisher tests.
+if (process.argv[3] === "--facts") {
+	const input = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"))
+	const manifest = checkFactsManifest(input.facts)
+	const facts = joinFactsChunks(
+		manifest,
+		input.count,
+		Array.from(
+			{ length: manifest.chunks },
+			(_, n) => new Uint8Array(readFileSync(join(dir, `facts-${n}.bin`))),
+		),
+	)
+	console.log(
+		JSON.stringify(
+			Object.fromEntries(
+				Object.entries(facts).map(([key, value]) => [
+					key,
+					ArrayBuffer.isView(value) ? Array.from(value as Uint8Array) : value,
+				]),
+			),
+		),
+	)
+	process.exit(0)
+}
 const manifest = checkManifest(
 	JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")),
 	VALID_FINGERPRINT_KEYS,
@@ -25,7 +51,9 @@ const chunks = Array.from(
 )
 const columns = joinChunks(manifest, chunks)
 
-const rows = JSON.parse(readFileSync(join(dir, "rows.json"), "utf8")) as SnapshotRow[]
+const rows = JSON.parse(
+	readFileSync(join(dir, "rows.json"), "utf8"),
+) as SnapshotRow[]
 const webapp = encodeSnapshot({
 	version: manifest.version,
 	rows,
@@ -51,7 +79,8 @@ console.log(
 		rows: Array.from({ length: columns.count }, (_, r) => row(r)),
 		sameSha256: webapp.manifest.sha256 === manifest.sha256,
 		sameGenres:
-			JSON.stringify(webapp.manifest.genres) === JSON.stringify(manifest.genres),
+			JSON.stringify(webapp.manifest.genres) ===
+			JSON.stringify(manifest.genres),
 		sameOrigins:
 			JSON.stringify(webapp.manifest.origins) ===
 			JSON.stringify(manifest.origins),

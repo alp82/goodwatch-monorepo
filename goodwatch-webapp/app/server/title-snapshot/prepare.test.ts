@@ -6,6 +6,7 @@ import "../title-filter/test-alias.ts"
 const {
 	encodeSnapshot,
 	encodeRatings,
+	encodeFacts,
 	joinChunks,
 	joinRatingsChunks,
 	SnapshotRefused,
@@ -48,7 +49,15 @@ function fixture() {
 			],
 		},
 	})
-	return { ...snapshot, ratings }
+	const facts = encodeFacts({
+		rows: [0, 1, 2].map((i) => ({
+			pointId: 1e12 + i + 1,
+			year: 2000 + i,
+			length: 120,
+			countries: ["US"],
+		})),
+	})
+	return { ...snapshot, ratings, facts }
 }
 
 test("prepared derivations give the same facts, moods, cosines, statistics and ratings", () => {
@@ -59,6 +68,7 @@ test("prepared derivations give the same facts, moods, cosines, statistics and r
 		result.columns,
 		result.ratings,
 		result.derived,
+		result.facts,
 	)
 	const inline = buildSnapshot(
 		input.manifest,
@@ -68,6 +78,8 @@ test("prepared derivations give the same facts, moods, cosines, statistics and r
 			input.manifest.count,
 			input.ratings.chunks,
 		),
+		undefined,
+		result.facts,
 	)
 	assert.deepStrictEqual(prepared.stats, inline.stats)
 	assert.deepStrictEqual(prepared.referenceRows, inline.referenceRows)
@@ -93,6 +105,8 @@ test("prepared derivations give the same facts, moods, cosines, statistics and r
 		inline.columns.ratings?.estimates,
 	)
 	assert.equal(result.ratingsRefusal, null)
+	assert.equal(result.factsRefusal, null)
+	assert.equal(prepared.columns.facts, result.facts)
 })
 
 test("the snapshot derives each title's themes and styles beside its moods, by the rules' own thresholds", async () => {
@@ -173,7 +187,8 @@ test("snapshot checksum refusal is fatal but ratings refusal still produces a sn
 	input.ratings.manifest.sha256 = "0".repeat(64)
 	const result = prepareSnapshot(input)
 	assert.equal(result.ratings, null)
-	assert.match(result.ratingsRefusal!, /checksum/i)
+	assert.ok(result.ratingsRefusal)
+	assert.match(result.ratingsRefusal, /checksum/i)
 	assert.equal(
 		buildSnapshot(
 			input.manifest,
@@ -209,7 +224,7 @@ test("source snapshot worker transfers the prepared result and reports refusals"
 				worker.once("error", reject)
 				worker.once("message", resolve)
 				worker.once("exit", (code) =>
-					reject(new Error("Worker exited before result: " + code)),
+					reject(new Error(`Worker exited before result: ${code}`)),
 				)
 			})
 		} finally {
@@ -231,4 +246,67 @@ test("source snapshot worker transfers the prepared result and reports refusals"
 	const refused = await roundTrip(input)
 	assert.equal(refused.ok, false)
 	assert.equal(refused.refused, true)
+})
+
+test("snapshots without facts or with refused facts load with null facts and unchanged queries", () => {
+	const input = fixture()
+	for (const facts of [
+		null,
+		{ ...input.facts, manifest: { ...input.facts.manifest, format: 999 } },
+		{
+			...input.facts,
+			manifest: { ...input.facts.manifest, sha256: "0".repeat(64) },
+		},
+	]) {
+		const result = prepareSnapshot({ ...input, facts })
+		assert.equal(result.facts, null)
+		if (facts) {
+			assert.ok(result.factsRefusal)
+			assert.match(result.factsRefusal, /format|checksum/)
+		} else assert.equal(result.factsRefusal, null)
+		const snapshot = buildSnapshot(
+			input.manifest,
+			result.columns,
+			result.ratings,
+			result.derived,
+			result.facts,
+		)
+		assert.equal(snapshot.columns.facts, null)
+		assert.equal(snapshot.count, 3)
+		assert.deepEqual(
+			snapshot.factsAt(0),
+			buildSnapshot(input.manifest, result.columns).factsAt(0),
+		)
+	}
+})
+
+test("production worker input preserves multiple facts chunks and leaves source buffers attached", async () => {
+	const { mkdtemp, writeFile, rm } = await import("node:fs/promises")
+	const { tmpdir } = await import("node:os")
+	const { join } = await import("node:path")
+	const { pathToFileURL } = await import("node:url")
+	const { prepareInWorker } = await import("./prepare-worker.server.ts")
+	const dir = await mkdtemp(join(tmpdir(), "title-snapshot-worker-"))
+	try {
+		const entry = join(dir, "worker.mjs")
+		await writeFile(
+			entry,
+			`import ${JSON.stringify(new URL("../title-filter/test-alias.ts", import.meta.url).href)};
+` +
+				`await import(${JSON.stringify(new URL("./title-snapshot.worker.ts", import.meta.url).href)});
+`,
+		)
+		const input = fixture()
+		const source = input.facts.chunks[0]
+		input.facts.manifest.chunks = 2
+		input.facts.chunks = [source.subarray(0, 40), source.subarray(40)]
+		const result = await prepareInWorker(input, pathToFileURL(entry))
+		assert.deepEqual(result, prepareSnapshot(input))
+		assert.equal(result.factsRefusal, null)
+		assert.equal(source.byteLength, 60)
+		assert.ok(result.facts)
+		assert.equal(result.facts.releaseYears.buffer, result.facts.episodes.buffer)
+	} finally {
+		await rm(dir, { recursive: true, force: true })
+	}
 })

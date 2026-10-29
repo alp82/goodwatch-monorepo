@@ -25,6 +25,7 @@ import {
 	checkManifest,
 	chunkKey,
 } from "./format.server"
+import { readFactsChunks } from "./facts.server"
 import { readRatingsChunks } from "./ratings.server"
 import { reloadDelayMs, retryDelayMs } from "./retry.server"
 import { prepareInWorker, stopSnapshotWorkers } from "./prepare-worker.server"
@@ -33,6 +34,7 @@ import { type TitleSnapshot, buildSnapshot } from "./snapshot.server"
 export type { CatalogStats } from "./catalog-stats.server"
 export type {
 	TitleColumns,
+	TitleFactColumns,
 	TitleFacts,
 	TitleKey,
 	TitleRatings,
@@ -43,6 +45,7 @@ export {
 	FLAG_ANIME,
 	FLAG_POSTER,
 	NO_RATING,
+	NO_COUNTRY,
 	UNKNOWN_DAY,
 	UNKNOWN_SCORE,
 	presentableAt,
@@ -147,22 +150,34 @@ async function check(): Promise<boolean> {
 			throw new Error(
 				`Title snapshot ${manifest.version} lacks chunk ${missing}; retrying at the next check`,
 			)
-		const ratingsInput = await readRatingsChunks(redis, manifest)
+		const [ratingsInput, factsInput] = await Promise.all([
+			readRatingsChunks(redis, manifest),
+			readFactsChunks(redis, manifest),
+		])
 		const readMs = performance.now() - startedAt
 		if (!started) return true
-		const { columns, derived, ratings, ratingsRefusal } = await prepareInWorker(
-			{ manifest, chunks: chunks as Buffer[], ratings: ratingsInput },
-		)
+		const { columns, derived, ratings, ratingsRefusal, facts, factsRefusal } =
+			await prepareInWorker({
+				manifest,
+				chunks: chunks as Buffer[],
+				ratings: ratingsInput,
+				facts: factsInput,
+			})
 		if (!started) return true
 		if (ratingsRefusal)
 			console.error(
 				`Title snapshot ${manifest.version} loads without ratings:`,
 				ratingsRefusal,
 			)
-		const snapshot = buildSnapshot(manifest, columns, ratings, derived)
+		if (factsRefusal)
+			console.error(
+				`Title snapshot ${manifest.version} loads without facts:`,
+				factsRefusal,
+			)
+		const snapshot = buildSnapshot(manifest, columns, ratings, derived, facts)
 		current = snapshot
 		console.info(
-			`Title snapshot ${snapshot.version} loaded: ${snapshot.count} titles, ${snapshot.stats.pool} in the reference pool, ${ratings ? `ratings for ${ratings.countries.length} countries` : "no ratings"}, in ${Math.round(performance.now() - startedAt)} ms (${Math.round(readMs)} ms reading Redis)`,
+			`Title snapshot ${snapshot.version} loaded: ${snapshot.count} titles, ${snapshot.stats.pool} in the reference pool, ${ratings ? `ratings for ${ratings.countries.length} countries` : "no ratings"}, ${facts ? `facts for ${facts.countries.length} countries` : "no facts"}, in ${Math.round(performance.now() - startedAt)} ms (${Math.round(readMs)} ms reading Redis)`,
 		)
 	} catch (error) {
 		if (error instanceof SnapshotRefused) refusedManifest = raw

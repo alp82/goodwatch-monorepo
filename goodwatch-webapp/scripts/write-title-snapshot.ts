@@ -11,6 +11,9 @@
 // ids from 900,000,000) until the snapshot has that many titles, to measure load time and memory at production size;
 // don't use a padded snapshot for anything else. It never writes to the Redis cluster the webapp's .env names.
 //
+// It also writes the facts sidecar (release year, runtime, money, show details and production countries),
+// in the publisher's format and snapshot row order.
+//
 // It also writes the ratings sidecar (the age and content filter's data), from
 // the titles' age_certifications and content_advisories and the age_certification table. How a rating code becomes an
 // age, which advisories make which kind of content, and how a ladder is built are kept minimal here: the publisher's
@@ -25,6 +28,7 @@ import {
 import {
 	CURRENT_KEY,
 	FINGERPRINT_LENGTH,
+	type FactRow,
 	MAX_RATING_COUNTRIES,
 	MISSING_SCORE,
 	MOVIE_BASE,
@@ -32,8 +36,10 @@ import {
 	SHOW_BASE,
 	type SnapshotRow,
 	chunkKey,
+	encodeFacts,
 	encodeRatings,
 	encodeSnapshot,
+	factsChunkKey,
 	ratingsChunkKey,
 } from "~/server/title-snapshot/format.server"
 import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
@@ -73,6 +79,13 @@ type Row = {
 	is_anime: boolean | null
 	age_certifications: string[] | null
 	content_advisories: string[] | null
+	release_year: number | null
+	length: number | null
+	budget?: number | null
+	revenue?: number | null
+	number_of_seasons?: number | null
+	number_of_episodes?: number | null
+	status?: string | null
 }
 
 // --- Ratings (minimal; the publisher's Python is the source of truth) ------------------------------------------------
@@ -232,22 +245,43 @@ async function sample(type: "movie" | "show", limit: number) {
 	const day = type === "movie" ? "release_date" : "last_air_date"
 	const rows: SnapshotRow[] = []
 	const ratingRows: RatingRow[] = []
+	const factRows: FactRow[] = []
 	for (let i = 0; i < ids.length; i += BATCH) {
 		const batch = ids.slice(i, i + BATCH).map((r) => Number(r.tmdb_id))
 		const found = await query<Row>(
 			`SELECT tmdb_id, fingerprint_scores, genres, ${day} AS day,
 			 goodwatch_overall_score_normalized_percent AS score, goodwatch_overall_score_voting_count AS votes,
 			 popularity, production_country_codes, original_language_code, poster_path, backdrop_path, adult, is_anime,
-			 age_certifications, content_advisories
+			 age_certifications, content_advisories, release_year,
+			 ${type === "movie" ? "runtime AS length, budget, revenue" : "episode_runtime[1] AS length, number_of_seasons, number_of_episodes, status"}
 			 FROM ${type} WHERE tmdb_id IN (${batch.join(",")}) LIMIT ${batch.length}`,
 		)
 		for (const r of found) {
 			const row = toRow(type, r)
 			rows.push(row)
 			ratingRows.push(toRatingRow(row.pointId, r))
+			factRows.push({
+				pointId: row.pointId,
+				year: r.release_year,
+				length: r.length,
+				budget: r.budget,
+				boxOffice: r.revenue,
+				seasons: r.number_of_seasons,
+				episodes: r.number_of_episodes,
+				status:
+					(
+						{
+							"Returning Series": 1,
+							"In Production": 1,
+							Ended: 2,
+							Canceled: 3,
+						} as Record<string, number>
+					)[r.status ?? ""] ?? 0,
+				countries: r.production_country_codes,
+			})
 		}
 	}
-	return { rows, ratingRows }
+	return { rows, ratingRows, factRows }
 }
 
 const startedAt = performance.now()
@@ -255,6 +289,7 @@ const movies = await sample("movie", MOVIES)
 const shows = await sample("show", SHOWS)
 const rows = [...movies.rows, ...shows.rows]
 const ratingRows = [...movies.ratingRows, ...shows.ratingRows]
+const factRows = [...movies.factRows, ...shows.factRows]
 const sampled = rows.length
 for (let i = 0; rows.length < PAD_TO; i++) {
 	const source = rows[i % sampled]
@@ -262,6 +297,7 @@ for (let i = 0; rows.length < PAD_TO; i++) {
 	const pointId = base + PADDING_BASE + i
 	rows.push({ ...source, pointId })
 	ratingRows.push({ ...ratingRows[i % sampled], pointId })
+	factRows.push({ ...factRows[i % sampled], pointId })
 }
 
 const version = `dev-${new Date().toISOString().replace(/[-:]|\.\d+/g, "")}`
@@ -282,6 +318,14 @@ try {
 	console.error("No ratings sidecar:", error)
 }
 
+let facts: ReturnType<typeof encodeFacts> | null = null
+try {
+	facts = encodeFacts({ rows: factRows })
+	manifest.facts = facts.manifest
+} catch (error) {
+	console.error("No facts sidecar:", error)
+}
+
 const redis = new Redis(url)
 const previous = JSON.parse((await redis.get(CURRENT_KEY)) ?? "null") as {
 	version: string
@@ -290,6 +334,8 @@ for (const [n, chunk] of chunks.entries())
 	await redis.set(chunkKey(version, n), Buffer.from(chunk))
 for (const [n, chunk] of ratings?.chunks.entries() ?? [])
 	await redis.set(ratingsChunkKey(version, n), Buffer.from(chunk))
+for (const [n, chunk] of facts?.chunks.entries() ?? [])
+	await redis.set(factsChunkKey(version, n), Buffer.from(chunk))
 await redis.set(CURRENT_KEY, JSON.stringify(manifest))
 const keep = new Set([version, previous?.version])
 let pruned = 0

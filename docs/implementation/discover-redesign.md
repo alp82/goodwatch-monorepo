@@ -873,7 +873,7 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
 
 **B11. Facts decoder in the webapp**
 
-- Files: `app/server/title-snapshot/format.server.ts` (decode and verify), `snapshot.server.ts` (`TitleFacts | null`
+- Files: `app/server/title-snapshot/format.server.ts` (decode and verify), `snapshot.server.ts` (`TitleFactColumns | null`
   with views), `prepare.server.ts`, `scripts/write-title-snapshot.ts` (sample facts), `prepare.test.ts`.
 - Tests: decode, checksum refusal, a snapshot without facts loads with `facts: null`.
 - Acceptance: no behavior change; memory after load grows by about 20 bytes per title.

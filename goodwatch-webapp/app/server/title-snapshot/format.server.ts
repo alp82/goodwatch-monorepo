@@ -87,6 +87,8 @@ export interface Manifest {
 	builtAt: string
 	/** The ratings sidecar as published; checkManifest doesn't look at it, checkRatingsManifest does. */
 	ratings?: unknown
+	/** Optional facts sidecar; validated separately so refusal never rejects the snapshot. */
+	facts?: unknown
 }
 
 export interface RatingsManifest {
@@ -534,6 +536,192 @@ export function encodeRatings(input: {
 			sha256: createHash("sha256").update(bytes).digest("hex"),
 			countries,
 			ladders: input.ladders,
+		},
+		chunks,
+	}
+}
+
+// Facts format 1: column offsets are 0, 2N, 4N, 8N, 12N, 13N, 15N, 16N..19N.
+export const FACTS_FORMAT = 1
+export const FACTS_BYTES_PER_TITLE = 20
+export const NO_COUNTRY = 255
+export const factsChunkKey = (version: string, n: number) =>
+	`title-snapshot:${version}:facts:${n}`
+
+export interface FactsManifest {
+	format: number
+	chunks: number
+	sha256: string
+	countries: string[]
+}
+
+/** One typed value per title in snapshot row order. Numeric zero means unknown. */
+export interface FactColumns {
+	readonly releaseYears: Uint16Array
+	/** Movie runtime or first episode runtime, in minutes. */
+	readonly lengths: Uint16Array
+	/** Nominal USD thousands, floored by the publisher; 0 for amounts below $10,000. */
+	readonly budgets: Uint32Array
+	readonly boxOffice: Uint32Array
+	readonly seasons: Uint8Array
+	readonly episodes: Uint16Array
+	/** 0 unknown, 1 running, 2 ended, 3 canceled. */
+	readonly showStatuses: Uint8Array
+	/** Four full columns in source order: slot * releaseYears.length + row; NO_COUNTRY for an unused slot. */
+	readonly countryIndexes: Uint8Array
+	readonly countries: readonly string[]
+}
+
+export function checkFactsManifest(value: unknown): FactsManifest {
+	const m = value as Partial<FactsManifest> | null
+	const fail = (why: string): never => {
+		throw new SnapshotRefused(`Title snapshot facts refused: ${why}`)
+	}
+	if (!m || typeof m !== "object") return fail("not an object")
+	if (m.format !== FACTS_FORMAT)
+		return fail(`format ${m.format}, this webapp reads ${FACTS_FORMAT}`)
+	if (
+		!Number.isSafeInteger(m.chunks) ||
+		(m.chunks as number) < 1 ||
+		(m.chunks as number) > 4096
+	)
+		return fail("bad chunk count")
+	if (typeof m.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(m.sha256))
+		return fail("bad sha256")
+	const countries = m.countries
+	if (
+		!Array.isArray(countries) ||
+		countries.length > 255 ||
+		countries.some(
+			(c, i) =>
+				typeof c !== "string" ||
+				!/^[A-Z]{2}$/.test(c) ||
+				(i > 0 && c <= countries[i - 1]),
+		)
+	)
+		return fail("bad country table")
+	return m as FactsManifest
+}
+
+export function joinFactsChunks(
+	manifest: FactsManifest,
+	count: number,
+	chunks: Uint8Array[],
+): FactColumns {
+	checkFactsManifest(manifest)
+	const fail = (why: string): never => {
+		throw new SnapshotRefused(`Title snapshot facts refused: ${why}`)
+	}
+	if (!Number.isSafeInteger(count) || count < 0) return fail("bad title count")
+	if (chunks.length !== manifest.chunks)
+		return fail("chunk count differs from manifest")
+	const total = chunks.reduce((n, c) => n + c.byteLength, 0)
+	if (total !== count * FACTS_BYTES_PER_TITLE)
+		return fail(`bad size: ${total} bytes for ${count} titles`)
+	const hash = createHash("sha256")
+	for (const chunk of chunks) hash.update(chunk)
+	if (hash.digest("hex") !== manifest.sha256)
+		return fail("checksum differs from manifest")
+	if (!isLittleEndian) return fail("needs a little-endian machine")
+	// Insert one byte before episodes when N is odd. Copy straight from chunks into the
+	// aligned buffer; retaining a second copy of the wire bytes would double memory.
+	const pad = count % 2
+	const split = 13 * count
+	const bytes = new Uint8Array(total + pad)
+	let offset = 0
+	for (const chunk of chunks) {
+		const before = Math.max(0, Math.min(chunk.length, split - offset))
+		bytes.set(chunk.subarray(0, before), offset + (offset >= split ? pad : 0))
+		if (before < chunk.length)
+			bytes.set(chunk.subarray(before), offset + before + pad)
+		offset += chunk.length
+	}
+	const buffer = bytes.buffer
+	const columns: FactColumns = {
+		releaseYears: new Uint16Array(buffer, 0, count),
+		lengths: new Uint16Array(buffer, 2 * count, count),
+		budgets: new Uint32Array(buffer, 4 * count, count),
+		boxOffice: new Uint32Array(buffer, 8 * count, count),
+		seasons: new Uint8Array(buffer, 12 * count, count),
+		episodes: new Uint16Array(buffer, 13 * count + pad, count),
+		showStatuses: new Uint8Array(buffer, 15 * count + pad, count),
+		countryIndexes: new Uint8Array(buffer, 16 * count + pad, 4 * count),
+		countries: manifest.countries,
+	}
+	for (const status of columns.showStatuses)
+		if (status > 3) return fail("bad show status")
+	for (const seasons of columns.seasons)
+		if (seasons === 255) return fail("bad seasons")
+	for (const country of columns.countryIndexes)
+		if (country !== NO_COUNTRY && country >= manifest.countries.length)
+			return fail("bad country index")
+	return columns
+}
+
+/** Sample writer input: money is raw USD, all other numbers match the publisher's facts rows. */
+export interface FactRow {
+	pointId: number
+	year?: number | null
+	length?: number | null
+	budget?: number | null
+	boxOffice?: number | null
+	seasons?: number | null
+	episodes?: number | null
+	status?: number | null
+	countries?: readonly string[] | null
+}
+
+export function encodeFacts(input: { rows: FactRow[] }): {
+	manifest: FactsManifest
+	chunks: Uint8Array[]
+} {
+	const rows = [...input.rows]
+		.sort((a, b) => a.pointId - b.pointId)
+		.map((r) => ({
+			...r,
+			countries: [
+				...new Set(
+					(r.countries ?? [])
+						.filter((c) => typeof c === "string")
+						.map((c) => c.trim().toUpperCase())
+						.filter((c) => /^[A-Z]{2}$/.test(c)),
+				),
+			],
+		}))
+	const countries = [...new Set(rows.flatMap((r) => r.countries))].sort()
+	if (countries.length > 255) throw new Error("Too many facts countries")
+	const bytes = new Uint8Array(rows.length * FACTS_BYTES_PER_TITLE)
+	const view = new DataView(bytes.buffer)
+	const n = rows.length
+	const uint = (v: number | null | undefined, max: number) =>
+		typeof v === "number" && Number.isFinite(v) && v > 0
+			? Math.min(max, Math.floor(v))
+			: 0
+	const money = (v: number | null | undefined) =>
+		v != null && v >= 10_000 ? uint(v / 1000, 0xffffffff) : 0
+	bytes.fill(NO_COUNTRY, 16 * n)
+	rows.forEach((r, i) => {
+		const show = r.pointId >= SHOW_BASE
+		view.setUint16(2 * i, uint(r.year, 65535), true)
+		view.setUint16(2 * n + 2 * i, uint(r.length, 65535), true)
+		view.setUint32(4 * n + 4 * i, show ? 0 : money(r.budget), true)
+		view.setUint32(8 * n + 4 * i, show ? 0 : money(r.boxOffice), true)
+		view.setUint8(12 * n + i, show ? uint(r.seasons, 254) : 0)
+		view.setUint16(13 * n + 2 * i, show ? uint(r.episodes, 65535) : 0, true)
+		view.setUint8(15 * n + i, show ? uint(r.status, 3) : 0)
+		r.countries.slice(0, 4).forEach((c, slot) => {
+			bytes[(16 + slot) * n + i] = countries.indexOf(c)
+		})
+	})
+	const chunks: Uint8Array[] = []
+	for (let at = 0; at < bytes.length || chunks.length === 0; at += 1024 * 1024)
+		chunks.push(bytes.subarray(at, at + 1024 * 1024))
+	return {
+		manifest: {
+			format: FACTS_FORMAT,
+			chunks: chunks.length,
+			sha256: createHash("sha256").update(bytes).digest("hex"),
+			countries,
 		},
 		chunks,
 	}

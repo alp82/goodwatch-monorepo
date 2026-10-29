@@ -42,6 +42,7 @@ const columns = {
 	themes: new Uint16Array(SCORES.length),
 	styles: new Uint16Array(SCORES.length),
 	ratings: null,
+	facts: null,
 }
 const noTitles = {
 	keys: new Set<number>(),

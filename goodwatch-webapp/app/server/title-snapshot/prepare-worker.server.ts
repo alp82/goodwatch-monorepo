@@ -46,10 +46,19 @@ export async function prepareInWorker(
 				chunks: [copyChunks(input.ratings.chunks)],
 			}
 		: null
+	const facts = input.facts
+		? {
+				manifest: input.facts.manifest,
+				chunks: input.facts.chunks.map((chunk) => copyChunks([chunk])),
+			}
+		: null
 	const transferList = [chunks[0].buffer as ArrayBuffer]
 	if (ratings) transferList.push(ratings.chunks[0].buffer as ArrayBuffer)
+	if (facts)
+		for (const chunk of facts.chunks)
+			transferList.push(chunk.buffer as ArrayBuffer)
 	const worker = new Worker(url, {
-		workerData: { ...input, chunks, ratings },
+		workerData: { ...input, chunks, ratings, facts },
 		transferList,
 	})
 	active.add(worker)

@@ -15,6 +15,7 @@ import {
 	FLAG_ANIME,
 	FLAG_BACKDROP,
 	FLAG_POSTER,
+	type FactColumns,
 	MISSING_SCORE,
 	MOVIE_BASE,
 	type Manifest,
@@ -28,6 +29,11 @@ import {
 /** A title's point id: movie 1e12 + tmdb_id, show 2e12 + tmdb_id. */
 export type TitleKey = number
 
+/**
+ * One title's core record from the main snapshot. `releaseDay` is a show's last air date. For Discover's Released,
+ * length, country, money and show filters, read `TitleFactColumns` (the facts sidecar), whose `releaseYears` is the
+ * first air year.
+ */
 export interface TitleFacts {
 	mediaType: "movie" | "show"
 	tmdbId: number
@@ -73,7 +79,15 @@ export interface TitleColumns {
 	readonly styles: Uint16Array
 	/** What the age and content filter reads; null for a snapshot published without ratings, or whose ratings were refused. */
 	readonly ratings: TitleRatings | null
+	/** Optional facts sidecar in row order; null when absent or refused. */
+	readonly facts: TitleFactColumns | null
 }
+
+/**
+ * The facts sidecar as columns per row: release year (a show's first air year), lengths, countries, money and show
+ * facts. Not the same as `TitleFacts`, the per-title core record. Null when the sidecar is missing or refused.
+ */
+export type TitleFactColumns = FactColumns
 
 /** The snapshot's ratings, one value per row. Views, not copies: don't write. */
 export interface TitleRatings {
@@ -192,6 +206,7 @@ class LoadedSnapshot implements TitleSnapshot {
 		c: Columns,
 		ratings: RatingColumns | null,
 		derived: ReturnType<typeof deriveSnapshot>,
+		facts: FactColumns | null,
 	) {
 		this.c = c
 		this.version = manifest.version
@@ -216,6 +231,7 @@ class LoadedSnapshot implements TitleSnapshot {
 			themes: derived.themeMasks,
 			styles: derived.styleMasks,
 			ratings: ratings && titleRatings(ratings),
+			facts,
 		}
 	}
 
@@ -310,13 +326,14 @@ class LoadedSnapshot implements TitleSnapshot {
 
 /**
  * Wraps checked columns and precomputed derivations. Inline callers can omit derived to compute it here.
- * Ratings are the decoded sidecar columns, or null without one.
+ * Ratings and facts are the decoded sidecar columns, or null without one.
  */
 export function buildSnapshot(
 	manifest: Manifest,
 	columns: Columns,
 	ratings: RatingColumns | null = null,
 	derived = deriveSnapshot(manifest, columns),
+	facts: FactColumns | null = null,
 ): TitleSnapshot {
-	return new LoadedSnapshot(manifest, columns, ratings, derived)
+	return new LoadedSnapshot(manifest, columns, ratings, derived, facts)
 }
