@@ -19,8 +19,8 @@ export type RailNav = {
 }
 
 /**
- * Follows a rail's ends (on scroll, once a frame, and on resize) and steps it. State changes only when an end is
- * reached or left, so scrolling renders nothing.
+ * Follows a rail's ends (on scroll, once a frame, and on resize, from when it nears the screen) and steps it. State
+ * changes only when an end is reached or left, so scrolling renders nothing.
  */
 export function useRailNav(): RailNav {
 	const [el, setEl] = useState<HTMLUListElement | null>(null)
@@ -38,13 +38,33 @@ export function useRailNav(): RailNav {
 		const later = () => {
 			if (!frame) frame = requestAnimationFrame(read)
 		}
-		read()
-		el.addEventListener("scroll", later, { passive: true })
-		const observer = new ResizeObserver(later)
-		observer.observe(el)
+		// The rail is read once it nears the screen, not when the page starts: a read lays out the page (and the
+		// browse section, which is skipped until then: start.css `.sb`), a long task on a slow phone. Until then the
+		// arrows are the server's (forward on, back off). The resize observer's first call reads it.
+		let observer: ResizeObserver | null = null
+		const follow = () => {
+			if (observer) return
+			el.addEventListener("scroll", later, { passive: true })
+			observer = new ResizeObserver(later)
+			observer.observe(el)
+		}
+		const near =
+			typeof IntersectionObserver === "undefined"
+				? null
+				: new IntersectionObserver(
+						(entries) => {
+							if (!entries.some((entry) => entry.isIntersecting)) return
+							near?.disconnect()
+							follow()
+						},
+						{ rootMargin: "300px 0px" },
+					)
+		if (near) near.observe(el)
+		else follow()
 		return () => {
+			near?.disconnect()
 			el.removeEventListener("scroll", later)
-			observer.disconnect()
+			observer?.disconnect()
 			cancelAnimationFrame(frame)
 		}
 	}, [el])

@@ -505,11 +505,28 @@
 /* Where to start, the browse section under the stage (browse/StartBrowse.tsx). Short class names: the guest's HTML has a
    byte budget, and these repeat on every card. Motion is transform and opacity only. */
 
+/* The section is skipped until it nears the screen: its posters (lazy, but a browser fetches lazy images thousands of
+   pixels ahead, more on slow connections) and its layout then don't compete with the room on the first view. The
+   reserved height is about the section's own (measured: 2,480 px at 375 px wide, 2,230 at 768, 2,100 from 1024), and
+   `auto` keeps the real one once it has rendered. Nothing in it is `position: fixed`, which the containment would
+   capture. */
 .sb {
 	max-width: 80rem;
 	margin: 0 auto;
 	padding: 40px 16px 48px;
 	color: #f3f4f6;
+	content-visibility: auto;
+	contain-intrinsic-size: auto 2400px;
+}
+@media (min-width: 640px) {
+	.sb {
+		contain-intrinsic-size: auto 2230px;
+	}
+}
+@media (min-width: 1024px) {
+	.sb {
+		contain-intrinsic-size: auto 2100px;
+	}
 }
 .sb-eye {
 	font-size: 12px;
