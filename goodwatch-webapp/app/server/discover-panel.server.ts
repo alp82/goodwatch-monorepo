@@ -1,4 +1,4 @@
-// Discover panel data: ready mood mixes counted over the filtered catalog, plus shared starter-title keys.
+// Discover panel data: result-backed pictures and lists, starter titles, and the member's taste groups.
 // Cards are hydrated per viewer; only filter results and starter selection can be shared.
 import {
 	filterStateToParams,
@@ -8,7 +8,7 @@ import {
 import { GUEST_MIXES, type MoodMix } from "~/domain/mood-mixes"
 import { MOOD_KEYS } from "~/domain/moods"
 import { groupsByTaste } from "~/domain/side-rows"
-import { picksOf } from "~/domain/taste-picker"
+import { picksOf, type Word } from "~/domain/taste-picker"
 import { STYLE_KEYS, THEME_KEYS, maskOfKeys } from "~/domain/themes-styles"
 import { availabilityLoadedAt } from "~/server/availability-index.server"
 import {
@@ -47,6 +47,16 @@ interface PanelInput {
 export interface PanelMix extends MoodMix {
 	count: number
 	topTitle: TitleCard | null
+}
+
+export interface PanelTasteGroup {
+	key: string
+	name: string
+	/** Place by size (1 is largest), for the group's hue. */
+	number: number
+	/** The words that color this group in Watch next's taste picker. */
+	wordDots: Word[]
+	lovedPosters: TitleCard[]
 }
 
 /** Largest taste groups first; incomplete and repeated pairs give way to guest mixes. */
@@ -313,7 +323,53 @@ async function released(ctx: ViewerContext, input: PanelInput) {
 	}
 }
 
-export const PANEL_PARTS = { mixes, titles, people, released }
+async function taste(ctx: ViewerContext, _input: PanelInput) {
+	const empty = { part: "taste" as const, groups: [] as PanelTasteGroup[] }
+	if (ctx.viewer.kind !== "member") return empty
+	const snapshot = getTitleSnapshot()
+	if (!snapshot) throw new SnapshotNotLoaded()
+	try {
+		const savedTaste = await loadTaste(ctx.viewer)
+		const { memberSides } = await import("~/server/discover-sides.server")
+		const member = await memberSides(ctx, savedTaste, snapshot)
+		if (!member || member.sides.length < 2) return empty
+		// Watch next reuses the same cached memberSides, including its stable anchors and word descriptions.
+		const { tasteGroupsFor } = await import(
+			"~/server/watch-next-taste-picker.server"
+		)
+		const groups = await tasteGroupsFor(ctx, savedTaste, snapshot)
+		if (!groups || groups.groups.length < 2) return empty
+		const cards = await getTitleCards(
+			[
+				...new Set(
+					member.sides.flatMap((side) => side.here.map((title) => title.key)),
+				),
+			],
+			ctx,
+			savedTaste,
+		)
+		const byKey = new Map(cards.map((card) => [card.key, card]))
+		return {
+			part: "taste" as const,
+			groups: groups.groups.map(
+				(group, i): PanelTasteGroup => ({
+					key: group.key,
+					name: group.name,
+					number: i + 1,
+					wordDots: carriedColorWords(group.carries),
+					lovedPosters: member.sides[i].here.flatMap(
+						(title) => byKey.get(title.key) ?? [],
+					),
+				}),
+			),
+		}
+	} catch (error) {
+		console.warn("Discover panel: taste groups unavailable", error)
+		return empty
+	}
+}
+
+export const PANEL_PARTS = { mixes, titles, people, released, taste }
 export type PanelPart = keyof typeof PANEL_PARTS
 export function isPanelPart(part: string | null): part is PanelPart {
 	return (

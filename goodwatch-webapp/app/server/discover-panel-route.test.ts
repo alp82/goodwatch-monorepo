@@ -5,7 +5,7 @@ import { stubModules } from "./rating-onboarding.test-support.ts"
 stubModules({
 	"~/server/discover-results.server":
 		"export class SnapshotNotLoaded extends Error {}; export const forYouFromParams = () => false; export const discoverFilterDefaults = () => ({onMyServices: false, notSeenYet: false})",
-	"~/server/discover-panel.server": `export const isPanelPart = part => ['mixes', 'titles', 'people', 'released'].includes(part);
+	"~/server/discover-panel.server": `export const isPanelPart = part => ['mixes', 'titles', 'people', 'released', 'taste'].includes(part);
 		export const getDiscoverPanel = async (ctx, part, input) => ({part, input, guest: ctx.guest});`,
 	"~/server/media-payload.server":
 		"export const presentCatalogLoader = load => load",
@@ -16,7 +16,7 @@ const { loader, action } = await import("../routes/api.discover_.panel.ts")
 const args = (request: Request) => ({ request, params: {}, context: {} })
 
 test("GET parses panel part and filter query, with private responses and timing", async () => {
-	for (const part of ["mixes", "titles", "people", "released"]) {
+	for (const part of ["mixes", "titles", "people", "released", "taste"]) {
 		const response = await loader(
 			args(
 				new Request(

@@ -6,6 +6,7 @@ import type { TitleSnapshot } from "./title-snapshot/snapshot.server"
 let snapshot: TitleSnapshot
 let hasGroups = true
 let groupReads = 0
+let groupsFail = false
 let calls: number[] = []
 const boundary = globalThis as typeof globalThis & {
 	discoverTastePeopleKeys: number[]
@@ -28,12 +29,24 @@ let member = {
 		],
 	},
 	sides: [
-		{ id: "crime", name: "Dark thrillers", here: [] },
-		{ id: "comedy", name: "Gentle comedy", here: [] },
+		{
+			id: "crime",
+			name: "Dark thrillers",
+			here: [
+				{ key: 1e12 + 4, title: "Near the center", poster: "/near.jpg" },
+				{ key: 1e12 + 1, title: "At the center", poster: "/center.jpg" },
+			],
+		},
+		{
+			id: "comedy",
+			name: "Gentle comedy",
+			here: [{ key: 1e12 + 2, title: "Comedy", poster: "/comedy.jpg" }],
+		},
 	],
 }
 boundary.discoverTasteMember = (ctx) => {
 	groupReads++
+	if (groupsFail) throw new Error("groups unavailable")
 	return ctx.viewer.kind === "member" && hasGroups ? member : null
 }
 boundary.discoverTasteSide = (_, key) => {
@@ -71,7 +84,12 @@ stubModules({
 		export const sideOfAnchor = (named, key) => named.sides.findIndex(s => s.members.some(m => m.key === key));`,
 })
 const { getDiscoverResults } = await import("./discover-results.server.ts")
-const { getDiscoverPanel } = await import("./discover-panel.server.ts")
+const { getDiscoverPanel, isPanelPart } = await import(
+	"./discover-panel.server.ts"
+)
+const { tasteGroupsFor } = await import("./watch-next-taste-picker.server.ts")
+const { loadTaste } = await import("~/server/taste/index.server")
+const { carriedColorWords } = await import("./taste-picker-counts.ts")
 const { stateForMix } = await import("~/domain/mood-mixes")
 const { filterStateFromParams } = await import("~/domain/filter-state")
 const { MOOD_KEYS } = await import("~/domain/moods")
@@ -300,4 +318,135 @@ test("unresolved taste references return only resolved names and do not narrow r
 	const mixed = await results("taste=movie-999,1")
 	assert.deepEqual(mixed.tasteGroups?.names, { "1": "Dark thrillers" })
 	assert.deepEqual(mixed.keys, (await results("taste=movie-1")).keys)
+})
+
+test("taste panel returns Watch next's stable keys and color words with each group's loved cards", async () => {
+	assert.ok(isPanelPart("taste"))
+	const original = member
+	const oldMoods = columns.moods.slice()
+	const oldThemes = columns.themes.slice()
+	const { THEME_KEYS } = await import("~/domain/themes-styles")
+	columns.moods[0] = 1 << MOOD_KEYS.indexOf("heavy")
+	columns.themes[0] = 1 << THEME_KEYS.indexOf("war")
+	columns.moods[1] = 1 << MOOD_KEYS.indexOf("funny")
+	columns.themes[1] = 1 << THEME_KEYS.indexOf("crime")
+	// A new memberSides cache entry, so Watch next describes these words anew.
+	member = { ...original }
+	try {
+		const input = {
+			state: parseState(
+				new URLSearchParams("taste=movie-1&type=show&moods=funny"),
+			),
+			sort: "popular" as const,
+			ranked: [],
+		}
+		const panel = await getDiscoverPanel(memberViewer, "taste", input)
+		if (panel.part !== "taste") throw new Error("Wrong part")
+		const picker = await tasteGroupsFor(
+			memberViewer,
+			await loadTaste(memberViewer.viewer),
+			snapshot,
+		)
+		assert.ok(picker)
+		assert.deepEqual(
+			panel.groups.map((group) => ({
+				key: group.key,
+				name: group.name,
+				number: group.number,
+				wordDots: group.wordDots,
+			})),
+			picker.groups.map((group, i) => ({
+				key: group.key,
+				name: group.name,
+				number: i + 1,
+				wordDots: carriedColorWords(group.carries),
+			})),
+		)
+		assert.deepEqual(
+			panel.groups.map((group) => group.key),
+			["movie-1", "movie-2"],
+		)
+		assert.deepEqual(
+			panel.groups.map((group) => group.wordDots.map((word) => word.id)),
+			[
+				["m:heavy", "t:war"],
+				["m:funny", "t:crime"],
+			],
+		)
+		assert.deepEqual(
+			panel.groups.map((group) => group.lovedPosters),
+			[
+				[
+					{ key: 1e12 + 4, match: null },
+					{ key: 1e12 + 1, match: null },
+				],
+				[{ key: 1e12 + 2, match: null }],
+			],
+		)
+	} finally {
+		member = original
+		columns.moods.set(oldMoods)
+		columns.themes.set(oldThemes)
+	}
+})
+
+test("taste panel is empty for a guest without reading member groups", async () => {
+	groupReads = 0
+	assert.deepEqual(
+		await getDiscoverPanel(viewer, "taste", {
+			state: parseState(new URLSearchParams()),
+			sort: "popular",
+		}),
+		{ part: "taste", groups: [] },
+	)
+	assert.equal(groupReads, 0)
+})
+
+test("taste panel is empty for a member with one group or no groups", async () => {
+	const original = member
+	try {
+		member = {
+			...original,
+			sides: original.sides.slice(0, 1),
+			named: {
+				...original.named,
+				sides: original.named.sides.slice(0, 1),
+			},
+		}
+		const input = {
+			state: parseState(new URLSearchParams()),
+			sort: "popular" as const,
+		}
+		assert.deepEqual(await getDiscoverPanel(memberViewer, "taste", input), {
+			part: "taste",
+			groups: [],
+		})
+		hasGroups = false
+		assert.deepEqual(await getDiscoverPanel(memberViewer, "taste", input), {
+			part: "taste",
+			groups: [],
+		})
+	} finally {
+		member = original
+		hasGroups = true
+	}
+})
+
+test("taste group failure warns and degrades to an empty taste panel", async (t) => {
+	const warnings: unknown[][] = []
+	t.mock.method(console, "warn", (...args: unknown[]) => warnings.push(args))
+	groupsFail = true
+	t.after(() => {
+		groupsFail = false
+	})
+	assert.deepEqual(
+		await getDiscoverPanel(memberViewer, "taste", {
+			state: parseState(new URLSearchParams()),
+			sort: "popular",
+		}),
+		{ part: "taste", groups: [] },
+	)
+	assert.equal(warnings.length, 1)
+	assert.equal(warnings[0][0], "Discover panel: taste groups unavailable")
+	assert.ok(warnings[0][1] instanceof Error)
 })
