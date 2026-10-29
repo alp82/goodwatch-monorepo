@@ -1272,16 +1272,15 @@
 			24px
 		);
 	}
+	/* The results' two rows of 2:3 posters fill the card's height: 80 px of header and padding and a 12 px gap
+	   between the rows leave two poster heights, and eight columns with seven 12 px gaps make the width. */
 	.start-member-grid {
-		max-width: 1276px;
+		max-width: calc((var(--start-card) - 92px) / 3 * 8 + 84px);
 	}
 }
 
 @media (min-width: 1024px) and (max-height: 820px) {
 	.start-member .start-stage {
 		--start-member-card-min: 480px;
-	}
-	.start-member-grid {
-		max-width: 1116px;
 	}
 }

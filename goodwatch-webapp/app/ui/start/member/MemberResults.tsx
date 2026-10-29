@@ -1,6 +1,8 @@
 // A member's search results, in the card's fixed box in place of "this or that": two rows of whole posters (six on
 // phones, ten from 640 px, twelve from 768 px, sixteen from 1024 px), as wide as the box's height holds (start.css,
-// `.start-member-grid`). The search's reading shows in the bar. Back gives the box back to "this or that".
+// `.start-member-grid`; from 1024 px they grow with the card). The search's reading shows in the bar. Back gives the
+// box back to "this or that"; See all, the main action, opens the whole list on Discover.
+import { ArrowRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion, useReducedMotion } from "framer-motion"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
@@ -28,6 +30,9 @@ const slotShown = (i: number) =>
 
 const LINK =
 	"inline-flex h-9 shrink-0 items-center rounded-lg px-3 text-sm font-semibold outline-none focus-visible:outline-2 focus-visible:outline-amber-300"
+/** The box's main action: a filled amber button. */
+const ACTION =
+	"inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-amber-400 px-4 text-sm font-bold text-gray-950 shadow-md shadow-black/30 outline-none hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
 
 export function MemberResults({
 	query,
@@ -66,23 +71,6 @@ export function MemberResults({
 				>
 					{line}
 				</h2>
-				{failed ? (
-					<button
-						type="button"
-						onClick={onRetry}
-						className={`${LINK} cursor-pointer text-amber-400 hover:bg-amber-400/10 hover:text-amber-300`}
-					>
-						Try again
-					</button>
-				) : (
-					<Link
-						to={seeAllHref(query)}
-						prefetch="intent"
-						className={`${LINK} text-amber-400 hover:bg-amber-400/10 hover:text-amber-300`}
-					>
-						See all
-					</Link>
-				)}
 				<button
 					type="button"
 					onClick={onBack}
@@ -90,6 +78,16 @@ export function MemberResults({
 				>
 					Back
 				</button>
+				{failed ? (
+					<button type="button" onClick={onRetry} className={ACTION}>
+						Try again
+					</button>
+				) : (
+					<Link to={seeAllHref(query)} prefetch="intent" className={ACTION}>
+						See all
+						<ArrowRightIcon className="h-4 w-4" aria-hidden />
+					</Link>
+				)}
 			</div>
 			<ul className="start-member-grid mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 md:grid-cols-6 lg:grid-cols-8">
 				{Array.from({ length: START_CARDS }, (_, i) => {
