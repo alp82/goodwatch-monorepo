@@ -60,6 +60,8 @@ async function respond(request: Request, guest?: GuestProgress) {
 	let response: DiscoverResults
 	try {
 		response = await getDiscoverResults(ctx, {
+			budgetCounts: params.get("counts")?.split(",").includes("budget"),
+			showsCounts: params.get("counts")?.split(",").includes("shows"),
 			popularityCounts: params.get("counts")?.split(",").includes("popularity"),
 			releasedCounts: params.get("counts")?.split(",").includes("released"),
 			lengthCounts: params.get("counts")?.split(",").includes("length"),

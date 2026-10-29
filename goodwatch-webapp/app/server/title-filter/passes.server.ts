@@ -22,7 +22,13 @@ import {
 	MIN_MATCHES,
 	MIN_SCORES,
 } from "~/domain/filter-state"
-import { POPULARITY_OPTIONS } from "~/domain/title-scales"
+import {
+	BUDGET_STEPS,
+	BOX_OFFICE_STEPS,
+	SEASONS_STEPS,
+	HOURS_STEPS,
+	POPULARITY_OPTIONS,
+} from "~/domain/title-scales"
 import { GENRE_FOLDS } from "~/domain/genre-fold"
 import { MOOD_KEYS } from "~/domain/moods"
 import { STYLE_KEYS, THEME_KEYS } from "~/domain/themes-styles"
@@ -187,11 +193,19 @@ export function ratingsFilter(
 
 /** Everything the passes need, with every group resolved. A group is off when its field says so. */
 export interface PassInput {
-	/** Compute popularity option counts only when requested. */
+	/** Compute option counts only for requested groups. */
+	budgetCounts?: boolean
+	showsCounts?: boolean
 	popularityCounts?: boolean
 	releasedCounts?: boolean
 	lengthCounts?: boolean
 	originCounts?: boolean
+	budget?: FilterState["budget"]
+	boxOffice?: FilterState["boxOffice"]
+	returns?: FilterState["returns"]
+	seasons?: FilterState["seasons"]
+	showStatus?: FilterState["showStatus"]
+	hours?: FilterState["hours"]
 	votes?: FilterRange
 	popularityRank?: FilterRange
 	/** Catalog rank per snapshot row; zero is unranked. */
@@ -319,6 +333,46 @@ function withinFact(value: number, range?: FilterRange | null): boolean {
 	)
 }
 
+const STATUS = { running: 1, ended: 2, canceled: 3 } as const
+const bounded = (range?: FilterRange) =>
+	range?.min !== undefined || range?.max !== undefined
+function returnsPass(
+	budget: number,
+	boxOffice: number,
+	choice: PassInput["returns"],
+): boolean {
+	return (
+		!choice ||
+		(budget > 0 &&
+			boxOffice > 0 &&
+			(choice === "hit" ? boxOffice >= 3 * budget : boxOffice < budget))
+	)
+}
+function statusPass(status: number, choice: PassInput["showStatus"]): boolean {
+	return !choice || status === STATUS[choice]
+}
+function incrementBucket(
+	counts: Uint32Array,
+	stops: readonly number[],
+	value: number,
+) {
+	if (value <= 0) return
+	let bucket = stops.length - 1
+	while (bucket > 0 && value < stops[bucket]) bucket--
+	counts[bucket]++
+}
+function emptyBuckets(
+	specs: [string, readonly number[]][],
+	keys: string[] = [],
+) {
+	return Object.fromEntries([
+		...specs.flatMap(([prefix, stops]) =>
+			stops.map((_, i) => [`${prefix}:${i}`, 0]),
+		),
+		...keys.map((key) => [key, 0]),
+	]) as Record<string, number>
+}
+
 /** Requested facts histograms, sharing one traversal of the universe and its fail masks. */
 export function factCounts(
 	input: PassInput,
@@ -340,11 +394,42 @@ export function factCounts(
 			? ({} as Record<string, number>)
 			: null
 		: undefined
+	const budget = input.budgetCounts
+		? facts
+			? emptyBuckets(
+					[
+						["budget", BUDGET_STEPS],
+						["boxOffice", BOX_OFFICE_STEPS],
+					],
+					["returns:hit", "returns:flop", "known:budget", "known:boxOffice"],
+				)
+			: null
+		: undefined
+	const shows = input.showsCounts
+		? facts
+			? emptyBuckets(
+					[
+						["seasons", SEASONS_STEPS],
+						["hours", HOURS_STEPS],
+					],
+					["status:running", "status:ended", "status:canceled"],
+				)
+			: null
+		: undefined
 	const out: Partial<FilterOptionCounts> = {}
+	if (budget !== undefined) out.budget = budget
+	if (shows !== undefined) out.shows = shows
 	if (years !== undefined) out.years = years
 	if (runtime !== undefined) out.runtime = runtime
 	if (origin !== undefined) out.productionCountries = origin
 	if (!facts) return out
+	const budgetBuckets = budget ? new Uint32Array(BUDGET_STEPS.length) : null
+	const boxOfficeBuckets = budget
+		? new Uint32Array(BOX_OFFICE_STEPS.length)
+		: null
+	const seasonBuckets = shows ? new Uint32Array(SEASONS_STEPS.length) : null
+	const hourBuckets = shows ? new Uint32Array(HOURS_STEPS.length) : null
+	const statusCounts = shows ? new Uint32Array(4) : null
 	const yearCounts = years ? new Uint32Array(65536) : null
 	// 49 five-minute buckets (240 includes overflow), then unknown, for each kind.
 	const lengthCounts = runtime ? new Uint32Array(100) : null
@@ -370,6 +455,52 @@ export function factCounts(
 	for (let i = 0; i < input.rows.length; i++) {
 		const row = input.rows[i]
 		const mask = masks[i]
+		if (
+			row >= 0 &&
+			budget &&
+			input.keys[i] < SHOW_BASE &&
+			(mask & ~BIT.budget) === 0
+		) {
+			const b = facts.budgets[row] / 1000,
+				o = facts.boxOffice[row] / 1000
+			const bOk = withinFact(b, input.budget),
+				oOk = withinFact(o, input.boxOffice),
+				rOk = returnsPass(
+					facts.budgets[row],
+					facts.boxOffice[row],
+					input.returns,
+				)
+			if (oOk && rOk && b > 0) {
+				budget["known:budget"]++
+				incrementBucket(budgetBuckets!, BUDGET_STEPS, b)
+			}
+			if (bOk && rOk && o > 0) {
+				budget["known:boxOffice"]++
+				incrementBucket(boxOfficeBuckets!, BOX_OFFICE_STEPS, o)
+			}
+			if (bOk && oOk) {
+				if (returnsPass(facts.budgets[row], facts.boxOffice[row], "hit"))
+					budget["returns:hit"]++
+				if (returnsPass(facts.budgets[row], facts.boxOffice[row], "flop"))
+					budget["returns:flop"]++
+			}
+		}
+		if (
+			row >= 0 &&
+			shows &&
+			input.keys[i] >= SHOW_BASE &&
+			(mask & ~BIT.shows) === 0
+		) {
+			const s = facts.seasons[row],
+				h = (facts.episodes[row] * facts.lengths[row]) / 60,
+				status = facts.showStatuses[row]
+			const sOk = withinFact(s, input.seasons),
+				hOk = withinFact(h, input.hours),
+				statusOk = statusPass(status, input.showStatus)
+			if (hOk && statusOk) incrementBucket(seasonBuckets!, SEASONS_STEPS, s)
+			if (sOk && statusOk) incrementBucket(hourBuckets!, HOURS_STEPS, h)
+			if (sOk && hOk && status > 0 && status <= 3) statusCounts![status]++
+		}
 		if (yearCounts && (mask & ~(BIT.years | BIT.released)) === 0 && row >= 0) {
 			const year = facts.releaseYears[row]
 			if (year) yearCounts[year]++
@@ -402,6 +533,24 @@ export function factCounts(
 				setCounts[lowestBit(remaining)]++
 			if (world) worldCount++
 		}
+	}
+	if (budget && budgetBuckets && boxOfficeBuckets) {
+		budgetBuckets.forEach((value, i) => {
+			budget[`budget:${i}`] = value
+		})
+		boxOfficeBuckets.forEach((value, i) => {
+			budget[`boxOffice:${i}`] = value
+		})
+	}
+	if (shows && seasonBuckets && hourBuckets && statusCounts) {
+		seasonBuckets.forEach((value, i) => {
+			shows[`seasons:${i}`] = value
+		})
+		hourBuckets.forEach((value, i) => {
+			shows[`hours:${i}`] = value
+		})
+		for (const name of ["running", "ended", "canceled"] as const)
+			shows[`status:${name}`] = statusCounts[STATUS[name]]
 	}
 	if (years && yearCounts)
 		for (let year = 1; year < yearCounts.length; year++)
@@ -633,6 +782,16 @@ export function runPasses(input: PassInput): PassOutput {
 	const votesAt = (row: number) => (row < 0 ? undefined : columns.votes[row])
 	const rankAt = (row: number) =>
 		row < 0 ? undefined : input.popularityRanks?.[row] || undefined
+	const hasBudgetFilter = !!(
+		bounded(input.budget) ||
+		bounded(input.boxOffice) ||
+		input.returns
+	)
+	const hasShowsFilter = !!(
+		bounded(input.seasons) ||
+		bounded(input.hours) ||
+		input.showStatus
+	)
 	// Pass 1: fail masks.
 	for (let i = 0; i < n; i++) {
 		const row = rows[i]
@@ -696,6 +855,28 @@ export function runPasses(input: PassInput): PassOutput {
 		if (people.length && !inAny(people, i)) mask |= BIT.people
 		if (legacy && !inSet(legacy, i)) mask |= BIT.legacy
 		if (columns.facts) {
+			const facts = columns.facts
+			if (
+				hasBudgetFilter &&
+				(key >= SHOW_BASE ||
+					row < 0 ||
+					!withinFact(facts.budgets[row] / 1000, input.budget) ||
+					!withinFact(facts.boxOffice[row] / 1000, input.boxOffice) ||
+					!returnsPass(facts.budgets[row], facts.boxOffice[row], input.returns))
+			)
+				mask |= BIT.budget
+			if (
+				hasShowsFilter &&
+				(key < SHOW_BASE ||
+					row < 0 ||
+					!withinFact(facts.seasons[row], input.seasons) ||
+					!withinFact(
+						(facts.episodes[row] * facts.lengths[row]) / 60,
+						input.hours,
+					) ||
+					!statusPass(facts.showStatuses[row], input.showStatus))
+			)
+				mask |= BIT.shows
 			if (
 				input.yearRange &&
 				!withinFact(
@@ -748,16 +929,27 @@ export function runPasses(input: PassInput): PassOutput {
 	const optionCounts = Object.fromEntries(
 		FILTER_NAMES.filter(
 			(name) =>
-				!["popularity", "years", "runtime", "productionCountries"].includes(
-					name,
-				),
+				![
+					"popularity",
+					"budget",
+					"shows",
+					"years",
+					"runtime",
+					"productionCountries",
+				].includes(name),
 		).map((name) => [name, {}]),
 	) as FilterOptionCounts
 
 	// Replacing one popularity range keeps the other sub-choice and every other group.
 	if (input.popularityCounts)
 		optionCounts.popularity = popularityCounts(input, masks)
-	if (input.releasedCounts || input.lengthCounts || input.originCounts)
+	if (
+		input.budgetCounts ||
+		input.showsCounts ||
+		input.releasedCounts ||
+		input.lengthCounts ||
+		input.originCounts
+	)
 		Object.assign(optionCounts, factCounts(input, masks))
 	// Movies or shows.
 	{

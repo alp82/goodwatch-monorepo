@@ -13,6 +13,8 @@ export interface FilterBarCounts {
 	optionCounts: FilterOptionCounts
 	/** Per-service counts are missing while the viewer's country loads. */
 	approximate?: boolean
+	/** False when the snapshot has no usable facts sidecar. */
+	facts?: boolean
 	/**
 	 * The viewer's rating country and its ladder, for the age limit's control. Null (or missing) when the age and
 	 * content filter isn't available to the viewer: the control doesn't show.

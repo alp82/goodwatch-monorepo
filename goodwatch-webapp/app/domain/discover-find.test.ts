@@ -2,8 +2,14 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../server/title-filter/test-alias.ts"
 
-const { findValues, keepBest, nameScore, normalizeFind, settingKey } =
-	await import("./discover-find.ts")
+const {
+	applyFindSetting,
+	findValues,
+	keepBest,
+	nameScore,
+	normalizeFind,
+	settingKey,
+} = await import("./discover-find.ts")
 
 const NOW = 2026
 const US = [
@@ -253,4 +259,31 @@ test("shared scales retain the catalog's reviewed steps and popularity seams", a
 		settingKey({ kind: "episodeRuntime", episodeRuntime: { max: 35 } }),
 		"episodeRuntime:-35",
 	)
+})
+
+test("Find applies Budget and Shows readings to filter state", async () => {
+	const { defaultFilterState } = await import("./filter-state.ts")
+	const cases = [
+		["budget 50m", "budget", { min: 50 }],
+		["$1b box office", "boxOffice", { min: 1000 }],
+		["hit", "returns", "hit"],
+		["box office flop", "returns", "flop"],
+		["one season", "seasons", { min: 1, max: 1 }],
+		["still running", "showStatus", "running"],
+		["ended", "showStatus", "ended"],
+		["canceled", "showStatus", "canceled"],
+		["under 30 hours", "hours", { max: 30 }],
+	] as const
+	for (const [text, field, expected] of cases) {
+		const [reading] = findValues(text, { now: NOW, ladder: US })
+		assert.ok(reading, text)
+		const state = applyFindSetting(
+			defaultFilterState({ onMyServices: false, notSeenYet: false }),
+			reading.setting,
+			NOW,
+		)
+		assert.deepEqual(state[field], expected, text)
+		assert.equal(reading.key, settingKey(reading.setting))
+		assert.deepEqual(findValues(text, { ladder: US, shown: () => false }), [])
+	}
 })

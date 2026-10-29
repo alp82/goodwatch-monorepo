@@ -103,5 +103,6 @@ export async function readDiscover(
 		sort_used: result.sortUsed,
 		filters: filterArgs(args),
 		approximate_availability: result.approximate,
+		facts_available: result.facts !== false,
 	}
 }

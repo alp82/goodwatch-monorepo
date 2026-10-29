@@ -547,6 +547,7 @@ export function DiscoverPage({
 														first.ladder,
 														member,
 														scope.country,
+														first.facts,
 													),
 												) > 0
 											}

@@ -54,6 +54,7 @@ const result = (keys = [3, 1, 2]): FilterResult => ({
 	hidden: 0,
 	recoveries: [],
 	optionCounts: {} as FilterResult["optionCounts"],
+	facts: false,
 	approximate: false,
 	ladder: null,
 })
@@ -68,6 +69,7 @@ test("repeated anonymous requests keep the filter passes and key order", async (
 	const first = await cache.run(discoverFilterKey(input()), compute)
 	const second = await cache.run(discoverFilterKey(input()), compute)
 	assert.equal(calls, 1)
+	assert.equal(first.facts, false)
 	assert.equal(first, second)
 	assert.deepEqual(second.keys, [3, 1, 2])
 })
@@ -275,7 +277,9 @@ test("entries expire at ttlMs without extending on a hit", async () => {
 })
 
 for (const options of [{ maxEntries: 2 }, { maxKeys: 6 }]) {
-	test(`least recently used eviction with ${JSON.stringify(options)}`, async () => {
+	test(`least recently used eviction with ${JSON.stringify(
+		options,
+	)}`, async () => {
 		const cache = createFilterResultCache(options)
 		const compute = async () => result()
 		const a = await cache.run("a", compute)
@@ -493,6 +497,47 @@ test("each facts count request has a separate shared cache key", () => {
 			lengthCounts: false,
 			originCounts: false,
 		}),
+		plain,
+	)
+})
+
+test("all budget and shows bounds, choices and count flags separate cache entries", () => {
+	const base = input(),
+		plain = discoverFilterKey(base),
+		keys = new Set([plain])
+	for (const change of [
+		{ budget: { min: 5 } },
+		{ budget: { max: 5 } },
+		{ boxOffice: { min: 100 } },
+		{ boxOffice: { max: 100 } },
+		{ returns: "hit" as const },
+		{ returns: "flop" as const },
+		{ seasons: { min: 2 } },
+		{ seasons: { max: 2 } },
+		{ hours: { min: 10 } },
+		{ hours: { max: 10 } },
+		{ showStatus: "running" as const },
+		{ showStatus: "ended" as const },
+		{ showStatus: "canceled" as const },
+	]) {
+		const key = discoverFilterKey({
+			...base,
+			state: { ...base.state, ...change },
+		})
+		assert.ok(!keys.has(key))
+		keys.add(key)
+	}
+	for (const flags of [
+		{ budgetCounts: true },
+		{ showsCounts: true },
+		{ budgetCounts: true, showsCounts: true },
+	]) {
+		const key = discoverFilterKey({ ...base, ...flags })
+		assert.ok(!keys.has(key))
+		keys.add(key)
+	}
+	assert.equal(
+		discoverFilterKey({ ...base, budgetCounts: false, showsCounts: false }),
 		plain,
 	)
 })

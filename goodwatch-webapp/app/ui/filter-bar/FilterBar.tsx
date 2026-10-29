@@ -89,12 +89,15 @@ export function FilterBar(props: FilterBarProps) {
 	const lastLadder = useRef(counts?.ladder ?? null)
 	if (counts) lastLadder.current = counts.ladder ?? null
 	const ladder = lastLadder.current
+	const lastFacts = useRef(counts?.facts)
+	if (counts) lastFacts.current = counts.facts
+	const facts = lastFacts.current
 	// What shows as active (chips here and on phones, the count on Filters and in the slab) goes by the state as it
 	// applies: without a ladder the title filter ignores the age limit and content, so they show nowhere, also while
 	// the first counts are on their way. Guests also omit member-only choices. The controls still change the state itself.
 	const applied = useMemo(
-		() => stateAsApplied(state, ladder, member, services.country),
-		[state, ladder, member, services.country],
+		() => stateAsApplied(state, ladder, member, services.country, facts),
+		[state, ladder, member, services.country, facts],
 	)
 	const secondaryCount = secondaryFilterCount(applied)
 

@@ -3,7 +3,7 @@
 //
 // Every filter group has one place (GROUP_PLACES): its sub-tab and its spot in the tab's value line. A step that adds
 // a filter group adds it there (the compiler asks for it) and to `activeChips`; the badges, value lines, status chips
-// and Clear all then follow. Shows and Budget stay hidden until they have filter groups.
+// and Clear all then follow.
 import type { ViewerLadder } from "~/domain/age-content"
 import type { FindSubTab } from "~/domain/discover-find"
 import {
@@ -122,9 +122,11 @@ export const GROUP_PLACES: Record<
 	themes: { subTab: "everything", line: 1 },
 	styles: { subTab: "everything", line: 1 },
 	genres: { subTab: "everything", line: 2 },
-	// Watch: services lead, then Made in, length, score, sources and gap, popularity, years, age.
+	// Watch: services lead, then Made in, length, score, sources and gap, popularity, years, age, shows, budget.
 	services: { subTab: "services", line: 0 },
 	popularity: { subTab: "popularity", line: 5 },
+	shows: { subTab: "shows", line: 8 },
+	budget: { subTab: "budget", line: 9 },
 	productionCountries: { subTab: "madeIn", line: 1 },
 	runtime: { subTab: "length", line: 2 },
 	minScore: { subTab: "scores", line: 3 },
@@ -229,7 +231,7 @@ const listHolds = (state: FilterState, kind: "movie" | "show") =>
 	state.type === "all" || state.type === kind
 
 /**
- * Whether a sub-tab with these filter groups shows. Shows and Budget stay hidden until they have filter groups.
+ * Whether a sub-tab with these filter groups shows.
  * A kind's sub-tab shows while the list holds that kind or one of its choices is set; Age and content needs a ladder.
  */
 export function subTabShown(

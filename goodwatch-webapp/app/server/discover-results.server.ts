@@ -104,6 +104,8 @@ export interface DiscoverSideRow extends DiscoverSide {
 export async function getDiscoverResults(
 	ctx: ViewerContext,
 	input: {
+		budgetCounts?: boolean
+		showsCounts?: boolean
 		popularityCounts?: boolean
 		releasedCounts?: boolean
 		lengthCounts?: boolean
@@ -142,6 +144,8 @@ export async function getDiscoverResults(
 
 	const compute = (keep?: (key: TitleKey) => boolean) =>
 		filterTitles({
+			budgetCounts: input.budgetCounts,
+			showsCounts: input.showsCounts,
 			popularityCounts: input.popularityCounts,
 			releasedCounts: input.releasedCounts,
 			lengthCounts: input.lengthCounts,
@@ -158,6 +162,8 @@ export async function getDiscoverResults(
 	const snapshot = searching ? null : getTitleSnapshot()
 	const key = snapshot
 		? discoverFilterKey({
+				budgetCounts: input.budgetCounts,
+				showsCounts: input.showsCounts,
 				popularityCounts: input.popularityCounts,
 				releasedCounts: input.releasedCounts,
 				lengthCounts: input.lengthCounts,

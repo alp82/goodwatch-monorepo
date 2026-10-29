@@ -4,7 +4,7 @@ Owner decision Q53 (2026-10-17). `search_titles` accepts the Discover filters, a
 
 ## Contract
 
-Both title tools accept the same optional filters:
+Both title tools accept the same optional filters. Without the facts sidecar, budget, box office, returns, seasons, show status and hours do not narrow results. `discover_titles` reports `facts_available: false` in that case:
 
 | Parameters | Meaning |
 | --- | --- |
@@ -14,6 +14,12 @@ Both title tools accept the same optional filters:
 | `min_runtime`, `max_runtime` | Inclusive minutes: movie runtime or the site's usual show episode length (`episode_runtime[1]`); missing runtime fails a range. When episode bounds are supplied these apply only to movies. |
 | `min_episode_runtime`, `max_episode_runtime` | Inclusive episode minutes, independent of movie bounds; missing episode length fails a range. Without these arguments runtime bounds retain their old meaning for both kinds. |
 | `rest_of_world` | At least one production country outside US, IN, KR, JP, GB, FR, CN, HK; co-productions included. Joins picked production countries with any-of. |
+| `min_budget_musd`, `max_budget_musd` | Inclusive nominal USD millions; movies with known budgets only. |
+| `min_box_office_musd`, `max_box_office_musd` | Inclusive nominal USD millions; movies with known box office only. |
+| `returns` | Single `hit` (box office at least 3× budget) or `flop` (below budget); movies with both amounts known only. |
+| `min_seasons`, `max_seasons` | Inclusive season counts; shows with known seasons only. |
+| `show_status` | Single `running`, `ended`, or `canceled`; shows with known production status only. |
+| `min_hours`, `max_hours` | Inclusive total hours, episodes × episode length / 60; shows with both facts known only. |
 | `min_votes`, `max_votes` | Inclusive rating count bounds. Catalog eligibility still starts at 1,000 ratings. URL: `votes=10000-100000`; Hidden gems uses `votes=-9999`. |
 | `min_popularity_rank`, `max_popularity_rank` | Inclusive rank in the eligible catalog's Popular order (both kinds), 1 first. Shared across viewers and filters, cached per snapshot version. URL: `rank=1-1000`. Unknown/unranked titles fail active ranges. Reversed ranges are rejected. `page_url` preserves both popularity ranges; recovery clears both. |
 | `source_scores` | Inclusive minimums keyed by `imdb`, `rtCritics`, `rtAudience`, `metacritic` (critics), `metacriticUsers`; all must pass. Normalized integers 0–100: 70 means 7.0 for IMDb/Metacritic users, 70% for RT, 70 for Metascore. Suggested shared steps: 60, 70, 80, 90; arbitrary integer thresholds remain valid. Missing scores fail even at zero. URL: `sources=metacriticUsers:70`. Like the other sources, option counts are currently unavailable (SQL sets load only active thresholds). |

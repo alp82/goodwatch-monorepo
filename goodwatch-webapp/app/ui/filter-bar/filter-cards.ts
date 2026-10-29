@@ -6,6 +6,8 @@ import type { FilterName } from "~/domain/filter-state"
 export type CardKey = Exclude<
 	FilterName,
 	| "popularity"
+	| "budget"
+	| "shows"
 	| "wishlist"
 	| "notSeenYet"
 	| "anime"
@@ -54,7 +56,9 @@ export const cardOf = (group: FilterName): CardKey | null =>
 			? "released"
 			: group === "anime"
 				? "type"
-				: group === "popularity" ||
+				: group === "budget" ||
+						group === "shows" ||
+						group === "popularity" ||
 						group === "wishlist" ||
 						group === "notSeenYet" ||
 						group === "legacy"

@@ -633,3 +633,81 @@ test("popularity chip ranges preserve exact endpoints and describe exclusive ran
 		)
 	}
 })
+
+test("budget and shows chips remove only their own choice and recover by group", () => {
+	const selected = {
+		...state,
+		budget: { min: 100 },
+		boxOffice: { min: 1000 },
+		returns: "hit" as const,
+		seasons: { min: 1, max: 1 },
+		showStatus: "running" as const,
+		hours: { max: 10 },
+	}
+	const chips = activeChips(selected)
+	for (const [key, label, group] of [
+		["budget", "Blockbuster budget", "budget"],
+		["boxOffice", "Box office $1B+", "budget"],
+		["returns", "Box office hit", "budget"],
+		["seasons", "1 season", "shows"],
+		["showStatus", "Still running", "shows"],
+		["hours", "Up to 10 h to finish", "shows"],
+	] as const) {
+		const chip = chips.find((c) => c.key === key)!
+		assert.equal(chip.label, label)
+		assert.equal(chip.group, group)
+		assert.equal(chip.remove(selected)[key], undefined)
+		assert.equal(chip.remove(selected).minScore, selected.minScore)
+	}
+	assert.equal(
+		recoveryLabel("budget", 12, selected),
+		"12 outside your budget choices",
+	)
+	assert.equal(
+		recoveryLabel("shows", 12, selected),
+		"12 outside your show choices",
+	)
+})
+
+test("fact range chips display stops at encoded exclusive seams", () => {
+	const labels = (
+		state: Partial<import("~/domain/filter-state").FilterState>,
+	) =>
+		activeChips({
+			...defaultFilterState({ onMyServices: false, notSeenYet: false }),
+			...state,
+		}).map((chip) => chip.label)
+	assert.deepEqual(
+		labels({
+			budget: { min: 5, max: 9.999 },
+			boxOffice: { min: 10, max: 49.999 },
+			hours: { min: 10, max: 1199 / 60 },
+		}),
+		["Budget $5M to $10M", "Box office $10M to $50M", "10 to 20 h to finish"],
+	)
+	assert.deepEqual(labels({ budget: { min: 100 }, returns: "flop" }), [
+		"Blockbuster budget",
+		"Box office flop",
+	])
+	assert.deepEqual(
+		labels({ budget: { min: 5, max: 9.5 }, hours: { min: 10, max: 19.5 } }),
+		["Budget $5M to $9.5M", "10 to 19.5 h to finish"],
+	)
+	assert.deepEqual(
+		activeChips(
+			stateAsApplied(
+				{
+					...defaultFilterState({ onMyServices: false, notSeenYet: false }),
+					budget: { min: 5 },
+					returns: "hit",
+					hours: { min: 10 },
+				},
+				null,
+				true,
+				"US",
+				false,
+			),
+		),
+		[],
+	)
+})

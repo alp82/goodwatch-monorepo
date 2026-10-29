@@ -914,10 +914,12 @@ test("a fail mask has room for every filter group, the last one included", () =>
 		"scoreGap",
 		"wishlist",
 		"popularity",
+		"budget",
+		"shows",
 	])
 	assert.equal(FILTER_NAMES[18], "content")
 	assert.equal(FILTER_NAMES[23], "wishlist")
-	assert.equal(FILTER_NAMES.at(-1), "popularity")
+	assert.equal(FILTER_NAMES.at(-1), "shows")
 	const ratings: RatingsFilter = {
 		content: Uint8Array.from(everyRow, (row) => (row === 3 ? 1 : 0)),
 		ages: null,
@@ -2031,4 +2033,281 @@ test("year counts ignore both Released choices and out-of-snapshot rows count as
 	const unknown = runPasses({ ...base, lengthCounts: true }).optionCounts
 		.runtime
 	assert.equal(unknown?.["movie:unknown"], 2)
+})
+
+function moneyShowsInput(n = 100): PassInput {
+	const facts = factsFixture(n)
+	const c = {
+		...columns,
+		facts,
+		pointIds: Float64Array.from(
+			{ length: n },
+			(_, i) => (i % 2 ? 2e12 : MOVIE) + i + 1,
+		),
+		scores: Uint8Array.from({ length: n }, (_, i) => (i % 3 ? 80 : 40)),
+	}
+	for (let i = 0; i < n; i++) {
+		facts.budgets[i] = [0, 10, 4999, 5000, 49999, 50000, 99999, 100000][i % 8]
+		facts.boxOffice[i] = [0, 100000, 500000, 1000000, 2000, 150000, 99999][
+			i % 7
+		]
+		facts.seasons[i] = i % 12
+		facts.episodes[i] = i % 9 ? i * 10 : 0
+		facts.lengths[i] = i % 7 ? 30 : 0
+		facts.showStatuses[i] = Math.floor(i / 2) % 4
+	}
+	// Exact 3x in stored thousands can round differently after conversion to millions.
+	if (n > 2) {
+		facts.budgets[2] = 10001
+		facts.boxOffice[2] = 30003
+	}
+	return passInput(
+		c,
+		Array.from({ length: n }, (_, i) => i),
+	)
+}
+
+test("budget and shows unknown facts and wrong media types fail, including zero bounds", () => {
+	const base = moneyShowsInput(16)
+	const f = base.columns.facts!
+	f.budgets.set([0, 10, 100, 100, 100, 100, 100, 100, 100])
+	f.boxOffice.set([100, 300, 0, 300, 300, 99, 99, 100, 100])
+	for (const choice of [
+		{ budget: { min: 0 } },
+		{ boxOffice: { min: 0 } },
+		{ returns: "hit" as const },
+		{ returns: "flop" as const },
+	]) {
+		const out = runPasses({ ...base, ...choice })
+		for (const i of out.passing) {
+			assert.ok(base.keys[i] < 2e12)
+			if ("budget" in choice || choice.returns) assert.ok(f.budgets[i] > 0)
+			if ("boxOffice" in choice || choice.returns) assert.ok(f.boxOffice[i] > 0)
+		}
+	}
+	assert.ok(
+		![...runPasses({ ...base, returns: "hit" }).passing].includes(2),
+		"missing box office cannot be a hit",
+	)
+	assert.ok(
+		![...runPasses({ ...base, returns: "flop" }).passing].includes(2),
+		"missing box office cannot be a flop",
+	)
+	assert.ok(
+		[...runPasses({ ...base, returns: "hit" }).passing].includes(4),
+		"exactly 3x is a hit",
+	)
+	const flops = [...runPasses({ ...base, returns: "flop" }).passing]
+	assert.ok(flops.includes(6), "known box office below budget is a flop")
+	assert.ok(!flops.includes(8), "breaking even is not a flop")
+	for (const choice of [
+		{ budget: { min: 0 } },
+		{ boxOffice: { min: 0 } },
+		{ returns: "hit" as const },
+		{ seasons: { min: 0 } },
+		{ hours: { min: 0 } },
+		{ showStatus: "ended" as const },
+	]) {
+		const outside = {
+			...base,
+			rows: Int32Array.of(-1),
+			keys: Float64Array.of(
+				"budget" in choice || "boxOffice" in choice || "returns" in choice
+					? MOVIE
+					: 2e12,
+			),
+		}
+		assert.equal(
+			runPasses({ ...outside, ...choice }).passing.length,
+			0,
+			"a missing snapshot row has unknown facts",
+		)
+	}
+	for (const choice of [
+		{ seasons: { min: 0 } },
+		{ hours: { min: 0 } },
+		{ showStatus: "running" as const },
+	]) {
+		for (const i of runPasses({ ...base, ...choice }).passing) {
+			assert.ok(base.keys[i] >= 2e12)
+			if ("seasons" in choice) assert.ok(f.seasons[i] > 0)
+			if ("hours" in choice) assert.ok(f.episodes[i] > 0 && f.lengths[i] > 0)
+			if ("showStatus" in choice) assert.equal(f.showStatuses[i], 1)
+		}
+	}
+	for (const group of ["budget", "shows"] as const) {
+		assert.equal(
+			Object.prototype.hasOwnProperty.call(runPasses(base).optionCounts, group),
+			false,
+		)
+		const noFacts = runPasses({
+			...base,
+			columns: { ...base.columns, facts: null },
+			budget: { min: 1 },
+			returns: "hit",
+			seasons: { min: 2 },
+			hours: { min: 10 },
+			showStatus: "ended",
+			budgetCounts: true,
+			showsCounts: true,
+		})
+		assert.equal(noFacts.passing.length, base.rows.length)
+		assert.equal(noFacts.optionCounts[group], null)
+	}
+})
+
+test("budget and shows histograms retain sibling choices and match brute force", async () => {
+	const { BUDGET_STEPS, BOX_OFFICE_STEPS, SEASONS_STEPS, HOURS_STEPS } =
+		await import("~/domain/title-scales")
+	const base = moneyShowsInput()
+	const f = base.columns.facts!
+	for (const limited of [false, true]) {
+		const input: PassInput = {
+			...base,
+			budgetCounts: true,
+			showsCounts: true,
+			minScore: limited ? 70 : 0,
+			budget: limited ? { min: 5 } : undefined,
+			boxOffice: limited ? { min: 100 } : undefined,
+			returns: limited ? "hit" : undefined,
+			seasons: limited ? { min: 2 } : undefined,
+			hours: limited ? { max: 100 } : undefined,
+			showStatus: limited ? "ended" : undefined,
+		}
+		// Budget and Shows are deliberately incompatible when both active; test each with the other group clear.
+		for (const group of ["budget", "shows"] as const) {
+			const active =
+				group === "budget"
+					? {
+							...input,
+							seasons: undefined,
+							hours: undefined,
+							showStatus: undefined,
+						}
+					: {
+							...input,
+							budget: undefined,
+							boxOffice: undefined,
+							returns: undefined,
+						}
+			const actual = runPasses(active).optionCounts[group]!
+			for (const [key, count] of Object.entries(actual)) {
+				const expected = Array.from(base.rows).filter((i) => {
+					if (limited && base.columns.scores[i] < 70) return false
+					const movie = base.keys[i] < 2e12,
+						rawBudget = f.budgets[i],
+						rawOffice = f.boxOffice[i],
+						b = rawBudget / 1000,
+						o = f.boxOffice[i] / 1000,
+						s = f.seasons[i],
+						h = (f.episodes[i] * f.lengths[i]) / 60,
+						status = f.showStatuses[i]
+					const within = (v: number, range?: { min?: number; max?: number }) =>
+						!range ||
+						(v > 0 && v >= (range.min ?? 0) && v <= (range.max ?? Infinity))
+					const [field, option] = key.split(":")
+					if (group === "budget") {
+						if (!movie) return false
+						const replacement = field === "known" ? option : field
+						if (replacement !== "budget" && !within(b, active.budget))
+							return false
+						if (replacement !== "boxOffice" && !within(o, active.boxOffice))
+							return false
+						if (
+							replacement !== "returns" &&
+							active.returns &&
+							!(rawBudget > 0 && rawOffice > 0 && rawOffice >= 3 * rawBudget)
+						)
+							return false
+						if (field === "known") return (option === "budget" ? b : o) > 0
+						if (field === "returns")
+							return (
+								rawBudget > 0 &&
+								rawOffice > 0 &&
+								(option === "hit"
+									? rawOffice >= 3 * rawBudget
+									: rawOffice < rawBudget)
+							)
+					} else {
+						if (movie) return false
+						if (field !== "seasons" && !within(s, active.seasons)) return false
+						if (field !== "hours" && !within(h, active.hours)) return false
+						if (field !== "status" && active.showStatus && status !== 2)
+							return false
+						if (field === "status")
+							return status === { running: 1, ended: 2, canceled: 3 }[option]
+					}
+					const stops =
+						field === "budget"
+							? BUDGET_STEPS
+							: field === "boxOffice"
+								? BOX_OFFICE_STEPS
+								: field === "seasons"
+									? SEASONS_STEPS
+									: HOURS_STEPS
+					const value =
+						field === "budget"
+							? b
+							: field === "boxOffice"
+								? o
+								: field === "seasons"
+									? s
+									: h
+					return (
+						value > 0 &&
+						value >= stops[Number(option)] &&
+						value < (stops[Number(option) + 1] ?? Infinity)
+					)
+				}).length
+				assert.equal(count, expected, `${group}:${key}, limited=${limited}`)
+			}
+		}
+	}
+})
+
+test("budget and show presets have disjoint inclusive seams", async () => {
+	const { BUDGET_PRESETS, SEASONS_PRESETS, HOURS_PRESETS } = await import(
+		"~/domain/title-scales"
+	)
+	for (const [presets, values] of [
+		[BUDGET_PRESETS, [0.01, 4.999, 5, 49.999, 50, 99.999, 100, 1000]],
+		[SEASONS_PRESETS, [1, 2, 3, 4, 7, 8, 254]],
+		[
+			HOURS_PRESETS,
+			[1 / 60, 599 / 60, 10, 1799 / 60, 30, 5999 / 60, 100, 1000],
+		],
+	] as const) {
+		for (const value of values)
+			assert.equal(
+				presets.filter(
+					(p: { range: { min?: number; max?: number } }) =>
+						value >= (p.range.min ?? 0) && value <= (p.range.max ?? Infinity),
+				).length,
+				1,
+			)
+	}
+})
+
+test("budget and shows counts share one facts pass over 200k titles", async (t) => {
+	const { factCounts } = await import("./passes.server.ts")
+	const input = {
+		...moneyShowsInput(200000),
+		budgetCounts: true,
+		showsCounts: true,
+	}
+	const masks = new Uint32Array(input.rows.length)
+	const actual = runPasses(input).optionCounts
+	const expected = factCounts(input, masks)
+	assert.deepEqual(actual.budget, expected.budget)
+	assert.deepEqual(actual.shows, expected.shows)
+	for (let i = 0; i < 10; i++) factCounts(input, masks)
+	const times = Array.from({ length: 9 }, () => {
+		const start = performance.now()
+		factCounts(input, masks)
+		return performance.now() - start
+	}).sort((a, b) => a - b)
+	t.diagnostic(
+		`Budget and Shows median: ${times[4].toFixed(2)} ms over 200k titles`,
+	)
+	assert.ok(times[4] < 15, `Median ${times[4]} ms exceeded 15 ms`)
 })

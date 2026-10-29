@@ -354,111 +354,39 @@ export const RANK_SCALE: StopScale = {
 	format: (rank) => `#${short(rank)}`,
 }
 
+/** Money stops are USD millions. Buckets include the lower stop and exclude the next. */
+export const BUDGET_STEPS = [0, 1, 5, 10, 25, 50, 100, 200, 300] as const
+export const BOX_OFFICE_STEPS = [
+	0, 1, 10, 50, 100, 250, 500, 1000, 2000,
+] as const
+export const SEASONS_STEPS = [1, 2, 3, 4, 5, 6, 7, 8, 10, 15] as const
+export const HOURS_STEPS = [0, 5, 10, 20, 30, 50, 100, 200] as const
+
 /** Budget in USD millions. */
 export const BUDGET_SCALE: StopScale = {
-	stops: [0, 1, 5, 10, 25, 50, 100, 200, 300],
+	stops: BUDGET_STEPS,
 	format: formatMoney,
 }
 
 /** Box office in USD millions. */
 export const BOX_OFFICE_SCALE: StopScale = {
-	stops: [0, 1, 10, 50, 100, 250, 500, 1000, 2000],
+	stops: BOX_OFFICE_STEPS,
 	format: formatMoney,
 }
 
 export const SEASONS_SCALE: StopScale = {
-	stops: [1, 2, 3, 4, 5, 6, 7, 8, 10, 15],
+	stops: SEASONS_STEPS,
 	format: String,
 }
 
 /** Hours to watch every episode. */
 export const HOURS_SCALE: StopScale = {
-	stops: [0, 5, 10, 20, 30, 50, 100, 200],
+	stops: HOURS_STEPS,
 	format: (hours) => `${hours} h`,
 }
 
 /** Popular rank tiles use the catalog's shared inclusive ranges. */
 export const RANK_PRESETS = POPULARITY_RANK_PRESETS
-
-export const BUDGET_PRESETS: readonly RangePreset[] = [
-	{ key: "indie", label: "Indie", note: "Under $5M", range: { max: 5 } },
-	{
-		key: "mid",
-		label: "Mid budget",
-		note: "$5M to $50M",
-		range: { min: 5, max: 50 },
-	},
-	{
-		key: "big",
-		label: "Big",
-		note: "$50M to $100M",
-		range: { min: 50, max: 100 },
-	},
-	{
-		key: "blockbuster",
-		label: "Blockbuster",
-		note: "$100M+",
-		range: { min: 100 },
-	},
-]
-
-export const BOX_OFFICE_PRESETS: readonly RangePreset[] = [100, 500, 1000].map(
-	(min) => ({
-		key: `over-${min}`,
-		label: `${formatMoney(min)}+`,
-		note: "Box office",
-		range: { min },
-	}),
-)
-
-export const SEASONS_PRESETS: readonly RangePreset[] = [
-	{
-		key: "one",
-		label: "One season",
-		note: "Done in one",
-		range: { min: 1, max: 1 },
-	},
-	{
-		key: "2-3",
-		label: "2 to 3",
-		note: "A short run",
-		range: { min: 2, max: 3 },
-	},
-	{
-		key: "4-7",
-		label: "4 to 7",
-		note: "A long run",
-		range: { min: 4, max: 7 },
-	},
-	{ key: "8-plus", label: "8+", note: "Years on air", range: { min: 8 } },
-]
-
-export const HOURS_PRESETS: readonly RangePreset[] = [
-	{
-		key: "weekend",
-		label: "A weekend",
-		note: "Under 10 h",
-		range: { max: 10 },
-	},
-	{
-		key: "few-weeks",
-		label: "A few weeks",
-		note: "10 to 30 h",
-		range: { min: 10, max: 30 },
-	},
-	{
-		key: "long-haul",
-		label: "A long haul",
-		note: "30 to 100 h",
-		range: { min: 30, max: 100 },
-	},
-	{
-		key: "binge",
-		label: "A real binge",
-		note: "100 h+",
-		range: { min: 100 },
-	},
-]
 
 /** Hit and Flop, as the Budget tab names them. */
 export const RETURNS_LABELS = {
@@ -486,3 +414,79 @@ export const sameRange = (
 /** A range as the URL writes it, "1990-1999", "100-", "-5"; also the key part Find and the tabs share. */
 export const rangeKey = (range: FilterRange) =>
 	`${range.min ?? ""}-${range.max ?? ""}`
+
+// Snapshot amounts are whole USD thousands: subtract $1,000 at inclusive seams.
+export const BUDGET_PRESETS = [
+	{ key: "indie", label: "Indie", note: "Under $5M", range: { max: 4.999 } },
+	{
+		key: "midBudget",
+		label: "Mid budget",
+		note: "$5M to $50M",
+		range: { min: 5, max: 49.999 },
+	},
+	{
+		key: "big",
+		label: "Big",
+		note: "$50M to $100M",
+		range: { min: 50, max: 99.999 },
+	},
+	{
+		key: "blockbuster",
+		label: "Blockbuster",
+		note: "$100M+",
+		range: { min: 100 },
+	},
+] as const satisfies readonly RangePreset[]
+export const BOX_OFFICE_PRESETS = [
+	{ key: "100m", label: "$100M+", note: "Box office", range: { min: 100 } },
+	{ key: "500m", label: "$500M+", note: "Box office", range: { min: 500 } },
+	{ key: "1b", label: "$1B+", note: "Box office", range: { min: 1000 } },
+] as const satisfies readonly RangePreset[]
+export const SEASONS_PRESETS = [
+	{
+		key: "oneSeason",
+		label: "One season",
+		note: "Done in one",
+		range: { min: 1, max: 1 },
+	},
+	{
+		key: "twoToThree",
+		label: "2 to 3",
+		note: "A short run",
+		range: { min: 2, max: 3 },
+	},
+	{
+		key: "fourToSeven",
+		label: "4 to 7",
+		note: "A long run",
+		range: { min: 4, max: 7 },
+	},
+	{ key: "eightPlus", label: "8+", note: "Years on air", range: { min: 8 } },
+] as const satisfies readonly RangePreset[]
+// Episode totals are whole minutes. Keep adjacent inclusive presets disjoint.
+export const HOURS_PRESETS = [
+	{
+		key: "weekend",
+		label: "A weekend",
+		note: "Under 10 h",
+		range: { max: 599 / 60 },
+	},
+	{
+		key: "fewWeeks",
+		label: "A few weeks",
+		note: "10 to 30 h",
+		range: { min: 10, max: 1799 / 60 },
+	},
+	{
+		key: "longHaul",
+		label: "A long haul",
+		note: "30 to 100 h",
+		range: { min: 30, max: 5999 / 60 },
+	},
+	{
+		key: "realBinge",
+		label: "A real binge",
+		note: "100 h+",
+		range: { min: 100 },
+	},
+] as const satisfies readonly RangePreset[]

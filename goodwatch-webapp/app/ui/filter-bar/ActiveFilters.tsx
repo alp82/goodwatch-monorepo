@@ -19,6 +19,8 @@ import type { FilterBarCounts } from "./types"
 
 const GROUP_LABELS: Partial<Record<FilterName, string>> = {
 	popularity: "Popularity",
+	budget: "Budget",
+	shows: "Shows",
 	type: "Type",
 	anime: "Anime",
 	moods: "Mood",

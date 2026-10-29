@@ -863,3 +863,65 @@ test("popularity ranges round trip, validate and clear together", () => {
 		false,
 	)
 })
+
+test("budget and shows decimal ranges round trip, clear and recover as groups", () => {
+	const s = parse(
+		"budget=5-49.999&boxOffice=100-&returns=hit&seasons=2-3&showStatus=ended&hours=10-29.983333333333334",
+	)
+	assert.deepEqual(s.budget, { min: 5, max: 49.999 })
+	assert.deepEqual(parse(filterStateToParams(s, defaults).toString()), s)
+	assert.equal(secondaryFilterCount(s), 6)
+	const b = dropFilter(s, "budget"),
+		h = dropFilter(s, "shows")
+	for (const field of ["budget", "boxOffice", "returns"] as const)
+		assert.equal(b[field], undefined)
+	for (const field of ["seasons", "showStatus", "hours"] as const)
+		assert.equal(h[field], undefined)
+	assert.equal(secondaryFilterCount(clearSecondaryFilters(s)), 0)
+	for (const query of [
+		"budget=-1-5",
+		"budget=5-1",
+		"hours=NaN-10",
+		"seasons=1.5-2",
+		"returns=unknown&showStatus=unknown",
+	]) {
+		const invalid = parse(query)
+		for (const field of [
+			"budget",
+			"hours",
+			"seasons",
+			"returns",
+			"showStatus",
+		] as const)
+			assert.equal(invalid[field], undefined, query)
+	}
+})
+
+test("facts-only filters look applied only when facts are available, retaining URL state", () => {
+	const state = parse(
+		"budget=5-10&boxOffice=100-&returns=hit&seasons=2-3&showStatus=ended&hours=10-20",
+	)
+	for (const facts of [true, undefined])
+		assert.equal(stateAsApplied(state, null, true, "US", facts), state)
+	const applied = stateAsApplied(state, null, true, "US", false)
+	for (const field of [
+		"budget",
+		"boxOffice",
+		"returns",
+		"seasons",
+		"showStatus",
+		"hours",
+	] as const) {
+		assert.equal(applied[field], undefined)
+		assert.notEqual(state[field], undefined)
+	}
+	assert.equal(secondaryFilterCount(applied), 0)
+})
+
+test("absent or invalid returns and show status do not add parser properties", () => {
+	for (const query of ["", "returns=unknown&showStatus=running,ended"]) {
+		const state = parse(query)
+		assert.equal(Object.prototype.hasOwnProperty.call(state, "returns"), false)
+		assert.equal(Object.prototype.hasOwnProperty.call(state, "showStatus"), false)
+	}
+})

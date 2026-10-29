@@ -24,6 +24,85 @@ export function isDiscoverySearch(args: {
 
 /** Names map onto the site's filter state; the engine and URL codec own their semantics. */
 export const discoverFilters = {
+	min_budget_musd: z
+		.number()
+		.min(0)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive nominal USD millions; keeps movies with a known amount only. Without facts these filters do not narrow results.",
+		),
+	max_budget_musd: z
+		.number()
+		.min(0)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive nominal USD millions; keeps movies with a known amount only. Without facts these filters do not narrow results.",
+		),
+	min_box_office_musd: z
+		.number()
+		.min(0)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive nominal USD millions; keeps movies with a known amount only. Without facts these filters do not narrow results.",
+		),
+	max_box_office_musd: z
+		.number()
+		.min(0)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive nominal USD millions; keeps movies with a known amount only. Without facts these filters do not narrow results.",
+		),
+	min_seasons: z
+		.number()
+		.int()
+		.min(0)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive seasons; keeps shows with known seasons only. Without facts these filters do not narrow results.",
+		),
+	max_seasons: z
+		.number()
+		.int()
+		.min(0)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive seasons; keeps shows with known seasons only. Without facts these filters do not narrow results.",
+		),
+	min_hours: z
+		.number()
+		.min(0)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive total hours (episodes × episode length); keeps shows with both facts known only. Without facts these filters do not narrow results.",
+		),
+	max_hours: z
+		.number()
+		.min(0)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive total hours (episodes × episode length); keeps shows with both facts known only. Without facts these filters do not narrow results.",
+		),
+	returns: z
+		.enum(["hit", "flop"])
+		.optional()
+		.describe(
+			"Hit: box office at least 3x budget. Flop: box office below budget. Keeps movies with both amounts known only. Without facts these filters do not narrow results.",
+		),
+	show_status: z
+		.enum(["running", "ended", "canceled"])
+		.optional()
+		.describe(
+			"Keeps shows with a known production status only. Without facts these filters do not narrow results.",
+		),
+
 	min_votes: z
 		.number()
 		.int()
@@ -226,6 +305,26 @@ export const hasDiscoverFilters = (args: DiscoverFilterArgs) =>
 export function validDiscoverRanges(args: DiscoverFilterArgs) {
 	return (
 		!(
+			args.min_budget_musd !== undefined &&
+			args.max_budget_musd !== undefined &&
+			args.min_budget_musd > args.max_budget_musd
+		) &&
+		!(
+			args.min_box_office_musd !== undefined &&
+			args.max_box_office_musd !== undefined &&
+			args.min_box_office_musd > args.max_box_office_musd
+		) &&
+		!(
+			args.min_seasons !== undefined &&
+			args.max_seasons !== undefined &&
+			args.min_seasons > args.max_seasons
+		) &&
+		!(
+			args.min_hours !== undefined &&
+			args.max_hours !== undefined &&
+			args.min_hours > args.max_hours
+		) &&
+		!(
 			args.min_votes !== undefined &&
 			args.max_votes !== undefined &&
 			args.min_votes > args.max_votes
@@ -306,7 +405,13 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 		}
 		state.released = "any"
 	}
+	if (args.returns !== undefined) state.returns = args.returns
+	if (args.show_status !== undefined) state.showStatus = args.show_status
 	for (const [field, min, max] of [
+		["budget", args.min_budget_musd, args.max_budget_musd],
+		["boxOffice", args.min_box_office_musd, args.max_box_office_musd],
+		["seasons", args.min_seasons, args.max_seasons],
+		["hours", args.min_hours, args.max_hours],
 		["votes", args.min_votes, args.max_votes],
 		["popularityRank", args.min_popularity_rank, args.max_popularity_rank],
 	] as const)

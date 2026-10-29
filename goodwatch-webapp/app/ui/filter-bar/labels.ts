@@ -1,4 +1,11 @@
-import { scoreStepLabel } from "~/domain/title-scales"
+import {
+	BUDGET_PRESETS,
+	BUDGET_STEPS,
+	BOX_OFFICE_STEPS,
+	HOURS_STEPS,
+	HOURS_PRESETS,
+	scoreStepLabel,
+} from "~/domain/title-scales"
 import { productionCountryName } from "~/domain/production-country"
 // What the filter bar says: sort options, option labels, chip labels, and the recovery wording. Every label is a
 // proper, capitalized label ("Top rated", "Crime & mystery", "Philosophical").
@@ -11,6 +18,7 @@ import {
 import {
 	SOURCE_KEYS,
 	type FilterName,
+	type FilterRange,
 	type FilterState,
 	type LegacyParam,
 	type MinMatch,
@@ -208,6 +216,8 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		years: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
 		runtime: { dot: "bg-sky-400", bar: "bg-sky-500" },
 		sourceScores: { dot: "bg-yellow-400", bar: "bg-yellow-500" },
+		budget: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
+		shows: { dot: "bg-violet-400", bar: "bg-violet-500" },
 		popularity: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
 		scoreGap: { dot: "bg-rose-400", bar: "bg-rose-500" },
 		services: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
@@ -240,6 +250,8 @@ export const METER_COLORS: Partial<Record<FilterName, string>> = {
 	years: "bg-cyan-600",
 	runtime: "bg-sky-600",
 	sourceScores: "bg-yellow-600",
+	budget: "bg-emerald-600",
+	shows: "bg-violet-600",
 	popularity: "bg-cyan-600",
 	scoreGap: "bg-rose-600",
 	services: "bg-emerald-600",
@@ -303,6 +315,10 @@ export function recoveryLabel(
 		case "years":
 		case "released":
 			return `${n} from other years`
+		case "budget":
+			return `${n} outside your budget choices`
+		case "shows":
+			return `${n} outside your show choices`
 		case "popularity":
 			return `${n} of other popularity`
 		case "runtime":
@@ -393,6 +409,85 @@ export function activeChips(
 			label: "Outside your usual",
 			remove: (s) => dropFilter(s, "minMatch"),
 		})
+	for (const field of ["budget", "boxOffice", "seasons", "hours"] as const) {
+		const range = state[field]
+		if (!range || (range.min === undefined && range.max === undefined)) continue
+		const money = field === "budget" || field === "boxOffice"
+		const fmt = (n: number) =>
+			money
+				? n >= 1000
+					? `$${n / 1000}B`
+					: `$${n}M`
+				: n.toLocaleString("en", { maximumFractionDigits: 2 })
+		const stops =
+			field === "budget"
+				? BUDGET_STEPS
+				: field === "boxOffice"
+					? BOX_OFFICE_STEPS
+					: field === "hours"
+						? HOURS_STEPS
+						: []
+		const displayMax =
+			range.max === undefined
+				? undefined
+				: (stops.find(
+						(stop) =>
+							Math.abs(range.max! - (stop - (money ? 0.001 : 1 / 60))) < 1e-9,
+					) ?? range.max)
+		const span =
+			range.min === range.max
+				? fmt(range.min!)
+				: range.max === undefined
+					? `${fmt(range.min ?? 0)}+`
+					: range.min === undefined
+						? `Up to ${fmt(displayMax!)}`
+						: `${fmt(range.min)} to ${fmt(displayMax!)}`
+		const sameRange = (preset: { range: FilterRange }) =>
+			preset.range.min === range.min && preset.range.max === range.max
+		const budgetPreset =
+			field === "budget" ? BUDGET_PRESETS.find(sameRange) : undefined
+		const hoursPreset =
+			field === "hours" ? HOURS_PRESETS.find(sameRange) : undefined
+		chips.push({
+			key: field,
+			group: money ? "budget" : "shows",
+			label:
+				field === "budget"
+					? budgetPreset
+						? budgetPreset.key === "midBudget"
+							? "Mid budget"
+							: `${budgetPreset.label} budget`
+						: `Budget ${span}`
+					: field === "boxOffice"
+						? `Box office ${span}`
+						: hoursPreset
+							? `${hoursPreset.label} to finish`
+							: `${span} ${
+									field === "hours"
+										? "h to finish"
+										: range.min === 1 && range.max === 1
+											? "season"
+											: "seasons"
+								}`,
+			remove: (s) => ({ ...s, [field]: undefined }),
+		})
+	}
+	if (state.returns)
+		chips.push({
+			key: "returns",
+			group: "budget",
+			label: state.returns === "hit" ? "Box office hit" : "Box office flop",
+			remove: (s) => ({ ...s, returns: undefined }),
+		})
+	if (state.showStatus)
+		chips.push({
+			key: "showStatus",
+			group: "shows",
+			label: { running: "Still running", ended: "Ended", canceled: "Canceled" }[
+				state.showStatus
+			],
+			remove: (s) => ({ ...s, showStatus: undefined }),
+		})
 	for (const field of ["votes", "popularityRank"] as const) {
 		const range = state[field]
 		if (!range || (range.min === undefined && range.max === undefined)) continue
@@ -411,14 +506,18 @@ export function activeChips(
 						? `${k(min ?? 0)}+ ratings`
 						: min === undefined
 							? `Up to ${k(max)} ratings`
-							: `${min.toLocaleString("en-US")} to ${max.toLocaleString("en-US")} ratings`
+							: `${min.toLocaleString("en-US")} to ${max.toLocaleString(
+									"en-US",
+								)} ratings`
 				: (min === undefined || min <= 1) && max !== undefined
 					? `Top ${max.toLocaleString("en-US")}`
 					: max === undefined
 						? min !== undefined && min > 1
 							? `Past #${(min - 1).toLocaleString("en-US")}`
 							: "#1+"
-						: `#${(min ?? 1).toLocaleString("en-US")} to #${max.toLocaleString("en-US")}`
+						: `#${(min ?? 1).toLocaleString("en-US")} to #${max.toLocaleString(
+								"en-US",
+							)}`
 		chips.push({
 			key: field,
 			group: "popularity",

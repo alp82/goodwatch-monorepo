@@ -2,19 +2,20 @@
 // age limit, "$100m" as a budget) and how well a name fits the text. Pure, no React: the panel turns each reading
 // into a result that toggles with the same setter its tab uses, so the tab, badges and footer agree.
 //
-// A reading says what it would set, as plain data, and a label in words. Readings for settings that FilterState
-// doesn't have yet (budget, box office, seasons, time to finish) remain descriptors until those fields exist.
+// A reading says what it sets, as plain data, and a label in words. applyFindSetting writes it to FilterState.
 import type { LadderStep } from "~/domain/age-content"
-import type { FilterRange, SourceKey } from "~/domain/filter-state"
+import type { FilterRange, FilterState, SourceKey } from "~/domain/filter-state"
 import {
 	BOX_OFFICE_SCALE,
 	BUDGET_SCALE,
 	GOODWATCH_SCORE_STEPS,
 	HOURS_SCALE,
 	LENGTH_MAX,
+	RETURNS_LABELS,
 	SCORE_SOURCES,
 	SCORE_STEPS,
 	SEASONS_SCALE,
+	SHOW_STATUS_LABELS,
 	YEAR_MIN,
 	currentYear,
 	decadeLabel,
@@ -25,6 +26,7 @@ import {
 	lengthRange,
 	rangeKey,
 	yearRange,
+	yearsChoice,
 } from "~/domain/title-scales"
 
 /** Names need this many letters before Find matches them; a value ("8", "r") counts from one. */
@@ -48,10 +50,15 @@ export type FindSetting =
 	| { kind: "runtime"; runtime: FilterRange }
 	| { kind: "episodeRuntime"; episodeRuntime: FilterRange }
 	/** Time to finish a show, in hours (`hours`). */
-	| { kind: "hours"; hours: FilterRange }
+	| { kind: "hours"; hours: NonNullable<FilterState["hours"]> }
 	/** USD millions (`budget`, `boxOffice`). */
-	| { kind: "budget" | "boxOffice"; millions: FilterRange }
-	| { kind: "seasons"; seasons: FilterRange }
+	| {
+			kind: "budget" | "boxOffice"
+			millions: NonNullable<FilterState["budget"]>
+	  }
+	| { kind: "returns"; returns: NonNullable<FilterState["returns"]> }
+	| { kind: "showStatus"; showStatus: NonNullable<FilterState["showStatus"]> }
+	| { kind: "seasons"; seasons: NonNullable<FilterState["seasons"]> }
 	/** The age of a step of the list's rating ladder (`ageLimit`). */
 	| { kind: "ageLimit"; age: number }
 	| { kind: "minScore"; score: number }
@@ -91,6 +98,10 @@ export function settingKey(setting: FindSetting): string {
 		case "budget":
 		case "boxOffice":
 			return `${setting.kind}:${rangeKey(setting.millions)}`
+		case "returns":
+			return `returns:${setting.returns}`
+		case "showStatus":
+			return `showStatus:${setting.showStatus}`
 		case "seasons":
 			return `seasons:${rangeKey(setting.seasons)}`
 		case "ageLimit":
@@ -99,6 +110,45 @@ export function settingKey(setting: FindSetting): string {
 			return `score:${setting.score}`
 		case "sourceScore":
 			return `source:${setting.source}:${setting.score}`
+	}
+}
+
+/** Apply a Find pick through the same fields as the filter controls. */
+export function applyFindSetting(
+	state: FilterState,
+	setting: FindSetting,
+	now = currentYear(),
+): FilterState {
+	switch (setting.kind) {
+		case "years":
+			return { ...state, ...yearsChoice(setting.years, now) }
+		case "runtime":
+			return { ...state, runtime: setting.runtime }
+		case "episodeRuntime":
+			return { ...state, episodeRuntime: setting.episodeRuntime }
+		case "budget":
+		case "boxOffice":
+			return { ...state, [setting.kind]: setting.millions }
+		case "hours":
+			return { ...state, hours: setting.hours }
+		case "seasons":
+			return { ...state, seasons: setting.seasons }
+		case "returns":
+			return { ...state, returns: setting.returns }
+		case "showStatus":
+			return { ...state, showStatus: setting.showStatus }
+		case "ageLimit":
+			return { ...state, ageLimit: setting.age }
+		case "minScore":
+			return { ...state, minScore: setting.score }
+		case "sourceScore":
+			return {
+				...state,
+				sourceScores: {
+					...state.sourceScores,
+					[setting.source]: setting.score,
+				},
+			}
 	}
 }
 
@@ -736,9 +786,34 @@ function resolve(
  */
 export function findValues(text: string, context: FindContext): FindReading[] {
 	const now = context.now ?? currentYear()
-	const readings = wantsOf(normalizeFind(text), now)
-		.flatMap((want) => resolve(want, context.ladder, now))
-		.filter((reading) => context.shown?.(reading.subTab) ?? true)
+	const q = normalizeFind(text)
+	const named: FindReading[] = []
+	for (const value of ["hit", "flop"] as const) {
+		if (q !== value && q !== `box office ${value}`) continue
+		const setting: FindSetting = { kind: "returns", returns: value }
+		named.push({
+			key: settingKey(setting),
+			subTab: "budget",
+			label: RETURNS_LABELS[value].label,
+			score: 100,
+			setting,
+		})
+	}
+	for (const value of ["running", "ended", "canceled"] as const) {
+		if (q !== value && q !== normalizeFind(SHOW_STATUS_LABELS[value])) continue
+		const setting: FindSetting = { kind: "showStatus", showStatus: value }
+		named.push({
+			key: settingKey(setting),
+			subTab: "shows",
+			label: SHOW_STATUS_LABELS[value],
+			score: 100,
+			setting,
+		})
+	}
+	const readings = [
+		...named,
+		...wantsOf(q, now).flatMap((want) => resolve(want, context.ladder, now)),
+	].filter((reading) => context.shown?.(reading.subTab) ?? true)
 	return keepBest(readings)
 		.map((reading, i) => ({ reading, i }))
 		.sort((a, b) => b.reading.score - a.reading.score || a.i - b.i)

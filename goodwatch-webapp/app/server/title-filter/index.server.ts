@@ -116,6 +116,8 @@ export interface FilterResult {
 	moved?: { key: TitleKey; by: number }[]
 	/** The "↑N moved" count. */
 	movedUp?: number
+	/** Whether snapshot facts are available; Budget and Shows do not narrow without them. */
+	facts: boolean
 	/**
 	 * True while the viewer's country loads into the availability index: On my services then goes by the titles'
 	 * streaming column, and per-service counts are missing.
@@ -129,7 +131,9 @@ export interface FilterResult {
 }
 
 export interface FilterInput {
-	/** Compute popularity option counts only when requested. */
+	/** Compute option counts only for requested groups. */
+	budgetCounts?: boolean
+	showsCounts?: boolean
 	popularityCounts?: boolean
 	releasedCounts?: boolean
 	lengthCounts?: boolean
@@ -282,11 +286,19 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		}))
 
 	const { passing, recoveries, optionCounts } = runPasses({
+		budgetCounts: input.budgetCounts,
+		showsCounts: input.showsCounts,
 		popularityCounts: input.popularityCounts,
 		releasedCounts: input.releasedCounts,
 		lengthCounts: input.lengthCounts,
 		originCounts: input.originCounts,
 		columns: snapshot.columns,
+		budget: state.budget,
+		boxOffice: state.boxOffice,
+		returns: state.returns,
+		seasons: state.seasons,
+		showStatus: state.showStatus,
+		hours: state.hours,
 		votes: state.votes,
 		popularityRank: state.popularityRank,
 		popularityRanks: popularityRanks(snapshot),
@@ -444,6 +456,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		optionCounts,
 		moved,
 		movedUp,
+		facts: snapshot.columns.facts !== null,
 		approximate: services.kind === "column",
 		ladder,
 	}

@@ -393,7 +393,7 @@ parameters are additive: a URL without them means what it means today.
 | Box office | `boxOffice?: FilterRange` (USD millions) | `boxOffice=1000-` | budget | Facts |
 | Hit or flop | `returns?: "hit" \| "flop"` | `returns=hit` | budget | Facts |
 | Seasons | `seasons?: FilterRange` | `seasons=4-7` | shows (new) | Facts |
-| Show status | `showStatus?: ShowStatus[]` (`running`, `ended`, `canceled`) | `showStatus=running,ended` | shows | Facts |
+| Show status | `showStatus?: ShowStatus` (single value: `running`, `ended`, `canceled`) | `showStatus=running` | shows | Facts |
 | Time to finish | `hours?: FilterRange` | `hours=10-30` | shows | Facts (episodes × episode length) |
 
 Parsing rules: ranges use today's `rangeFromParams` (empty, negative, reversed ranges ignored). `seen=1` turns Not
@@ -984,6 +984,11 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
   `max_budget_musd`, `min_box_office_musd`, `max_box_office_musd`, `returns`; descriptions say these keep movies with a
   known amount only).
 - Tests: `passes.test.ts` (unknown fails, shows fail, Hit and Flop need both), `discover-filters.test.ts`.
+- Implemented B13/B14: `counts=budget` and `counts=shows` request the respective count blocks, independently or
+  together. Both blocks share one facts traversal; the warmed unit benchmark measured a 4.41 ms median over
+  200,000 synthetic titles (nine samples). This is a local count-pass measurement, not a production request time.
+  Unrequested blocks are absent; requested blocks are null without facts. Applied chips omit these choices when
+  `facts: false`, retaining the URL state. MCP exposes the same availability as `facts_available`.
 - Depends on: B11. Without facts the parameters don't narrow and the response says `facts: false`.
 
 **B14. Shows group**

@@ -62,6 +62,8 @@ export const FILTER_NAMES = [
 	"scoreGap",
 	"wishlist",
 	"popularity",
+	"budget",
+	"shows",
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
@@ -69,9 +71,16 @@ export type FilterName = (typeof FILTER_NAMES)[number]
 export type FilterOptionCounts = {
 	[Name in Exclude<
 		FilterName,
-		"popularity" | "years" | "runtime" | "productionCountries"
+		| "popularity"
+		| "budget"
+		| "shows"
+		| "years"
+		| "runtime"
+		| "productionCountries"
 	>]: Record<string, number>
 } & {
+	budget?: Record<string, number> | null
+	shows?: Record<string, number> | null
 	popularity?: Record<string, number>
 	years?: Record<string, number> | null
 	runtime?: Record<string, number> | null
@@ -137,6 +146,14 @@ export interface FilterRange {
 }
 
 export interface FilterState {
+	/** Inclusive nominal USD millions; unknown amounts and shows fail. */
+	budget?: FilterRange
+	boxOffice?: FilterRange
+	returns?: "hit" | "flop"
+	seasons?: FilterRange
+	showStatus?: "running" | "ended" | "canceled"
+	/** Total episodes × usual episode length, in hours. */
+	hours?: FilterRange
 	/** Inclusive rating count and catalog Popular rank (1 first). */
 	votes?: FilterRange
 	popularityRank?: FilterRange
@@ -256,7 +273,7 @@ const oneOf = <T extends string | number>(
 	value: unknown,
 ): T | undefined => options.find((option) => String(option) === value)
 
-// Empty, negative, non-integer and reversed ranges are ignored. New names take precedence.
+// Empty, negative and reversed ranges are ignored; money and hours accept decimals. New names take precedence.
 function rangeFromParams(
 	params: URLSearchParams,
 	name: string,
@@ -265,13 +282,24 @@ function rangeFromParams(
 ): FilterRange | undefined {
 	const raw = params.has(name)
 		? params.get(name)!
-		: `${oldMin ? (params.get(oldMin) ?? "") : ""}-${oldMax ? (params.get(oldMax) ?? "") : ""}`
-	const match = /^(\d*)-(\d*)$/.exec(raw)
+		: `${oldMin ? (params.get(oldMin) ?? "") : ""}-${
+				oldMax ? (params.get(oldMax) ?? "") : ""
+			}`
+	const decimal = ["budget", "boxOffice", "hours"].includes(name)
+	const match = (
+		decimal ? /^(\d*(?:\.\d+)?)-(\d*(?:\.\d+)?)$/ : /^(\d*)-(\d*)$/
+	).exec(raw)
 	if (!match || (!match[1] && !match[2])) return undefined
 	const min = match[1] ? Number(match[1]) : undefined
 	const max = match[2] ? Number(match[2]) : undefined
 	if (
-		[min, max].some((n) => n !== undefined && !Number.isSafeInteger(n)) ||
+		[min, max].some(
+			(n) =>
+				n !== undefined &&
+				!(decimal
+					? Number.isFinite(n) && n <= Number.MAX_SAFE_INTEGER
+					: Number.isSafeInteger(n)),
+		) ||
 		(min !== undefined && max !== undefined && min > max)
 	)
 		return undefined
@@ -343,6 +371,17 @@ export function filterStateFromParams(
 			: 0
 	state.minMatch = oneOf(MIN_MATCHES, params.get("match")) ?? 0
 	if (params.get("match") === "outside") state.outsideUsual = true
+	for (const field of ["budget", "boxOffice", "seasons", "hours"] as const) {
+		const range = rangeFromParams(params, field)
+		if (range) state[field] = range
+	}
+	const returns = oneOf(["hit", "flop"] as const, params.get("returns"))
+	if (returns) state.returns = returns
+	const showStatus = oneOf(
+		["running", "ended", "canceled"] as const,
+		params.get("showStatus"),
+	)
+	if (showStatus) state.showStatus = showStatus
 	const votes = rangeFromParams(params, "votes")
 	if (votes) state.votes = votes
 	const rank = rangeFromParams(params, "rank")
@@ -483,6 +522,10 @@ export function filterStateToParams(
 		"episodeRuntime",
 		"votes",
 		"popularityRank",
+		"budget",
+		"boxOffice",
+		"seasons",
+		"hours",
 	] as const) {
 		const range = state[name]
 		set(
@@ -497,6 +540,8 @@ export function filterStateToParams(
 					: null,
 		)
 	}
+	set("returns", state.returns ?? null)
+	set("showStatus", state.showStatus ?? null)
 	set("restOfWorld", state.restOfWorld ? "1" : null)
 	for (const name of ["minYear", "maxYear", "minRuntime", "maxRuntime"])
 		params.delete(name)
@@ -587,6 +632,20 @@ export function resolveFilterChange(
 /** The state with one filter group back at its widest: what a one-tap recovery does. */
 export function dropFilter(state: FilterState, name: FilterName): FilterState {
 	switch (name) {
+		case "budget":
+			return {
+				...state,
+				budget: undefined,
+				boxOffice: undefined,
+				returns: undefined,
+			}
+		case "shows":
+			return {
+				...state,
+				seasons: undefined,
+				showStatus: undefined,
+				hours: undefined,
+			}
 		case "popularity":
 			return { ...state, votes: undefined, popularityRank: undefined }
 		case "runtime":
@@ -656,6 +715,12 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	onWishlist: undefined,
 	outsideUsual: undefined,
 	allOf: undefined,
+	budget: undefined,
+	boxOffice: undefined,
+	returns: undefined,
+	seasons: undefined,
+	showStatus: undefined,
+	hours: undefined,
 	votes: undefined,
 	popularityRank: undefined,
 	years: undefined,
@@ -692,6 +757,14 @@ export function secondaryFilterCount(state: FilterState): number {
 	return (
 		(state.streamingCountry || state.anyService ? 1 : 0) +
 		(state.ratingCountry ? 1 : 0) +
+		[
+			state.budget,
+			state.boxOffice,
+			state.returns,
+			state.seasons,
+			state.showStatus,
+			state.hours,
+		].filter(Boolean).length +
 		(state.votes ? 1 : 0) +
 		(state.popularityRank ? 1 : 0) +
 		(state.years ? 1 : 0) +
@@ -727,6 +800,7 @@ export function secondaryFilterCount(state: FilterState): number {
  * filters). The age limit and content apply only with the viewer's ladder: without one (the age filter is off for the
  * viewer, or the snapshot has no ratings; also while the first counts are on their way) the title filter ignores
  * them, so they must not look applied. Seen before, Wishlist and Outside your usual apply only to members.
+ * Budget and show facts choices apply unless the snapshot explicitly reports facts unavailable.
  * The URL keeps them.
  */
 export const stateAsApplied = (
@@ -734,8 +808,19 @@ export const stateAsApplied = (
 	ladder: ViewerLadder | null | undefined,
 	member: boolean,
 	viewerCountry?: string,
+	facts?: boolean,
 ): FilterState => {
 	let applied = state
+	if (facts === false)
+		applied = {
+			...applied,
+			budget: undefined,
+			boxOffice: undefined,
+			returns: undefined,
+			seasons: undefined,
+			showStatus: undefined,
+			hours: undefined,
+		}
 	if (
 		state.ratingCountry &&
 		(!ladder ||

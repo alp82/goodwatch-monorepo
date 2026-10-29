@@ -458,3 +458,37 @@ test("popularity MCP ranges validate and reach page_url through the shared codec
 	])
 		assert.equal(schema.safeParse(invalid).success, false)
 })
+
+test("budget and shows MCP arguments preserve units and validate ranges", () => {
+	const args = {
+		min_budget_musd: 0.01,
+		max_budget_musd: 4.999,
+		min_box_office_musd: 100,
+		max_box_office_musd: 1000,
+		returns: "hit" as const,
+		min_seasons: 2,
+		max_seasons: 3,
+		show_status: "ended" as const,
+		min_hours: 10,
+		max_hours: 29.5,
+	}
+	assert.ok(schema.safeParse(args).success)
+	const state = filterStateFromParams(discoverParams(args, false), {
+		onMyServices: false,
+		notSeenYet: false,
+	})
+	assert.deepEqual(state.budget, { min: 0.01, max: 4.999 })
+	assert.deepEqual(state.boxOffice, { min: 100, max: 1000 })
+	assert.deepEqual(state.seasons, { min: 2, max: 3 })
+	assert.deepEqual(state.hours, { min: 10, max: 29.5 })
+	assert.equal(state.returns, "hit")
+	assert.equal(state.showStatus, "ended")
+	for (const name of ["budget_musd", "box_office_musd", "seasons", "hours"]) {
+		assert.ok(
+			!schema.safeParse({ [`min_${name}`]: 20, [`max_${name}`]: 10 }).success,
+		)
+		assert.ok(!schema.safeParse({ [`min_${name}`]: -1 }).success)
+	}
+	assert.ok(!schema.safeParse({ returns: "unknown" }).success)
+	assert.ok(!schema.safeParse({ show_status: "unknown" }).success)
+})

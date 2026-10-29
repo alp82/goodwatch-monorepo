@@ -75,14 +75,15 @@ test("four main tabs, each with its sub-tabs", () => {
 	assert.deepEqual(MAIN_TABS, ["search", "mood", "watch", "you"])
 	assert.deepEqual(shownIds("search", empty, member), ["titles", "people"])
 	assert.deepEqual(shownIds("mood", empty, member), ["combos", "everything"])
-	// Shows and Budget wait for their filter groups.
 	assert.deepEqual(shownIds("watch", empty, member), [
 		"services",
 		"scores",
 		"popularity",
+		"shows",
 		"madeIn",
 		"released",
 		"length",
+		"budget",
 		"age",
 	])
 	assert.deepEqual(shownIds("you", empty, member), ["taste"])
@@ -165,22 +166,27 @@ test("Budget and Shows follow the list's kind, Age the ladder", () => {
 	const budget = SUB_TABS.find((sub) => sub.id === "budget")
 	const shows = SUB_TABS.find((sub) => sub.id === "shows")
 	assert.ok(budget && shows)
-	// Until their steps place a filter group, both stay hidden.
-	assert.ok(!isSubTabShown("budget", empty, member))
-	assert.ok(!isSubTabShown("shows", empty, member))
-	// With a group: Budget shows while the list holds movies or one of its choices is set.
-	const groups = ["runtime"] as const
-	const of = (type: State["type"], runtime?: State["runtime"]) => ({
-		...empty,
-		type,
-		runtime,
-	})
-	assert.ok(subTabShown(budget, groups, of("all"), member))
-	assert.ok(subTabShown(budget, groups, of("movie"), member))
-	assert.ok(!subTabShown(budget, groups, of("show"), member))
-	assert.ok(subTabShown(budget, groups, of("show", { max: 90 }), member))
-	assert.ok(subTabShown(shows, groups, of("show"), member))
-	assert.ok(!subTabShown(shows, groups, of("movie"), member))
+	for (const type of ["all", "movie", "show"] as const) {
+		const state = { ...empty, type }
+		assert.equal(isSubTabShown("budget", state, member), type !== "show")
+		assert.equal(isSubTabShown("shows", state, member), type !== "movie")
+	}
+	// Active choices keep their tab reachable after switching kind.
+	assert.ok(
+		isSubTabShown(
+			"budget",
+			{ ...empty, type: "show", budget: { min: 100 } },
+			member,
+		),
+	)
+	assert.ok(
+		isSubTabShown(
+			"shows",
+			{ ...empty, type: "movie", showStatus: "ended" },
+			member,
+		),
+	)
+	assert.ok(!subTabShown(budget, [], empty, member))
 	assert.ok(isSubTabShown("age", empty, member))
 	assert.ok(!isSubTabShown("age", empty, { ...member, ladder: undefined }))
 })
@@ -300,4 +306,28 @@ test("main's newer fields count and clear through their real filter groups", () 
 	assert.equal(subTabBadge("age", state, { ...member, ladder: null }), 0)
 	assert.equal(subTabBadge("age", state, { ...member, viewerCountry: "US" }), 0)
 	assert.equal(subTabBadge("age", { ...state, ratingCountry: "DE" }, member), 0)
+})
+
+test("Budget and Shows choices feed Watch values, badges and Clear all", () => {
+	const state: State = {
+		...empty,
+		budget: { min: 100 },
+		boxOffice: { min: 500 },
+		returns: "hit",
+		seasons: { min: 1, max: 1 },
+		showStatus: "ended",
+		hours: { min: 100 },
+	}
+	assert.deepEqual(groupsOf("budget"), ["budget"])
+	assert.deepEqual(groupsOf("shows"), ["shows"])
+	assert.equal(subTabBadge("budget", state, member), 3)
+	assert.equal(subTabBadge("shows", state, member), 3)
+	assert.equal(tabBadge("watch", state, member), 6)
+	const watch = tabValues(state, member).watch
+	assert.equal(
+		watch.value,
+		"1 season, A real binge to finish +1 · Blockbuster budget, Box office $500M+ +1",
+	)
+	assert.equal(clearAllCount(state, member), 6)
+	assert.equal(tabBadge("watch", clearAll(state), member), 0)
 })
