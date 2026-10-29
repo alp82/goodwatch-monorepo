@@ -34,7 +34,16 @@ if (process.argv[3] === "--facts") {
 			Object.fromEntries(
 				Object.entries(facts).map(([key, value]) => [
 					key,
-					ArrayBuffer.isView(value) ? Array.from(value as Uint8Array) : value,
+					key === "sources" && value
+						? Object.fromEntries(
+								Object.entries(value).map(([key, column]) => [
+									key,
+									Array.from(column as Uint8Array),
+								]),
+							)
+						: ArrayBuffer.isView(value)
+							? Array.from(value as Uint8Array)
+							: value,
 				]),
 			),
 		),

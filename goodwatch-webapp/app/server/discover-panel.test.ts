@@ -407,6 +407,7 @@ test("facts and stub SQL paths return identical keys and recoveries; country pas
 		i % 9 === 0 ? null : i % 9 === 1 ? 0 : 20 + i * 5,
 	)
 	const facts = {
+		sources: null,
 		releaseYears: Uint16Array.from(rawYears, (v) => v ?? 0),
 		lengths: Uint16Array.from(rawLengths, (v) => v ?? 0),
 		budgets: new Uint32Array(keys.length),
@@ -494,6 +495,7 @@ test("released panel selects facts years in list order for decades, New and Afte
 	const original = snapshot
 	const year = new Date().getUTCFullYear()
 	const facts = {
+		sources: null,
 		releaseYears: Uint16Array.from(
 			keys,
 			(_, i) => [1995, year - 5, year - 2, year, 1949, 1950, 2000, 0][i % 8],

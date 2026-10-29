@@ -1040,10 +1040,7 @@ test("years, runtime, source scores and gap have independent fail bits and recov
 			passes(plain, { [name]: keeping([1, 2]) }).rows,
 			[0, 3, 4, 5],
 		)
-		assert.deepEqual(
-			out.optionCounts[name],
-			name === "years" || name === "runtime" ? undefined : {},
-		) // No extra SQL for option counts.
+		assert.deepEqual(out.optionCounts[name], undefined) // No extra SQL for option counts.
 	}
 })
 
@@ -1583,6 +1580,7 @@ test("Rest of the world derives once per version from all four facts country slo
 	countryIndexes[2 * count + 2] = 0
 	countryIndexes[3 * count + 3] = 4
 	const facts = {
+		sources: null,
 		releaseYears: new Uint16Array(count),
 		lengths: new Uint16Array(count),
 		budgets: new Uint32Array(count),
@@ -1871,6 +1869,7 @@ function factsFixture(n: number): NonNullable<PassInput["columns"]["facts"]> {
 		for (let s = 0; s < r % 5; s++)
 			countryIndexes[s * n + r] = (r + s) % countries.length
 	return {
+		sources: null,
 		releaseYears: Uint16Array.from({ length: n }, (_, i) =>
 			i % 11 ? 1920 + (i % 108) : 0,
 		),
@@ -1950,7 +1949,9 @@ test("facts counts match brute force with other filters, distinct sets, overflow
 				years[year] = (years[year] ?? 0) + 1
 			if (scoreOK && yearOK && countryOK)
 				runtime[
-					`${show ? "episode" : "movie"}:${length ? Math.min(240, length - (length % 5)) : "unknown"}`
+					`${show ? "episode" : "movie"}:${
+						length ? Math.min(240, length - (length % 5)) : "unknown"
+					}`
 				]++
 			if (scoreOK && yearOK && lengthOK) {
 				const codes = facts.countries.filter((_, c) =>
@@ -2015,7 +2016,9 @@ test("facts count cost on a generated 260k-title universe", async (t) => {
 			return performance.now() - start
 		}).sort((a, b) => a - b)
 		t.diagnostic(
-			`${flag}: median ${times[7].toFixed(2)} ms; p95 ${times[14].toFixed(2)} ms`,
+			`${flag}: median ${times[7].toFixed(2)} ms; p95 ${times[14].toFixed(
+				2,
+			)} ms`,
 		)
 	}
 })
@@ -2402,4 +2405,196 @@ test("year counts replacing Years and Released still respect taste picks", () =>
 	assert.deepEqual(calls, plain)
 	assert.equal(result.passing.length, 0)
 	assert.deepEqual(result.optionCounts.years, { 1921: 1, 1923: 1, 1925: 1 })
+})
+
+test("format 2 source and gap filters match SQL, and counts match replacing each choice", async () => {
+	const { createRequire } = await import("node:module")
+	const { DatabaseSync } = createRequire(import.meta.url)("node:sqlite")
+	const { rangeScoreConditions } = await import(
+		"./range-score-conditions.server.ts"
+	)
+	const { defaultFilterState, SOURCE_KEYS } = await import(
+		"~/domain/filter-state"
+	)
+	const { SCORE_STEPS } = await import("~/domain/title-scales")
+	const { encodeFacts, joinFactsChunks } = await import(
+		"../title-snapshot/format.server.ts"
+	)
+	const n = 120
+	const values = [null, 0, 60, 65, 69, 70, 75, 80, 85, 90, 100]
+	const records = Array.from({ length: n }, (_, row) =>
+		Object.fromEntries(
+			SOURCE_KEYS.map((key, source) => [
+				key,
+				values[(row * (source * 2 + 1) + source * 7) % values.length],
+			]),
+		),
+	)
+	const encoded = encodeFacts({
+		rows: records.map((sources, row) => ({ pointId: MOVIE + row, sources })),
+	})
+	const facts = joinFactsChunks(encoded.manifest, n, encoded.chunks)
+	const c = {
+		...columns,
+		pointIds: Float64Array.from({ length: n }, (_, row) => MOVIE + row),
+		genres: new Uint32Array(n),
+		scores: new Uint8Array(n).fill(80),
+		moods: new Uint32Array(n),
+		themes: new Uint16Array(n),
+		styles: new Uint16Array(n),
+		flags: new Uint8Array(n),
+		facts,
+	}
+	const input = {
+		...passInput(
+			c,
+			Array.from({ length: n }, (_, row) => row),
+		),
+		scoresCounts: true,
+		minScore: 80,
+	}
+	const db = new DatabaseSync(":memory:")
+	db.exec(
+		`CREATE TABLE titles (id INTEGER, imdb_user_score_normalized_percent INTEGER, rotten_tomatoes_tomato_score_normalized_percent INTEGER, rotten_tomatoes_audience_score_normalized_percent INTEGER, metacritic_meta_score_normalized_percent INTEGER, metacritic_user_score_normalized_percent INTEGER)`,
+	)
+	const insert = db.prepare("INSERT INTO titles VALUES (?, ?, ?, ?, ?, ?)")
+	records.forEach((scores, row) =>
+		insert.run(row, ...SOURCE_KEYS.map((key) => scores[key])),
+	)
+	const defaults = defaultFilterState({
+		onMyServices: false,
+		notSeenYet: false,
+	})
+	const selected = (
+		sourceMinimums: PassInput["sourceMinimums"],
+		gapChoice: PassInput["gapChoice"],
+		group: "sourceScores" | "scoreGap",
+	) => {
+		const { conditions, params } = rangeScoreConditions(
+			{ ...defaults, sourceScores: sourceMinimums, scoreGap: gapChoice },
+			group,
+			"movie",
+		)
+		return new Set<number>(
+			db
+				.prepare(
+					`SELECT id FROM titles${
+						conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""
+					}`,
+				)
+				.all(...params)
+				.map((r: { id: number }) => r.id),
+		)
+	}
+	for (const sourceMinimums of [
+		undefined,
+		{ imdb: 0 },
+		{ imdb: 70, metacriticUsers: 80 },
+		{ rtCritics: 90, rtAudience: 60 },
+		{ metacritic: 65 },
+	]) {
+		for (const gapChoice of [
+			undefined,
+			"agree",
+			"critics",
+			"audience",
+		] as const) {
+			const request = { ...input, sourceMinimums, gapChoice }
+			const actual = runPasses(request)
+			const sqlSource = selected(sourceMinimums, gapChoice, "sourceScores"),
+				sqlGap = selected(sourceMinimums, gapChoice, "scoreGap")
+			const asSet = (ids: Set<number>) => ({
+				keys: new Set([...ids].map((row) => MOVIE + row)),
+				rows: Uint8Array.from({ length: n }, (_, row) => Number(ids.has(row))),
+			})
+			const fallback = runPasses({
+				...request,
+				columns: { ...c, facts: { ...facts, sources: null } },
+				sourceScores: asSet(sqlSource),
+				scoreGap: asSet(sqlGap),
+			})
+			assert.deepEqual(actual.passing, fallback.passing)
+			assert.deepEqual(actual.recoveries, fallback.recoveries)
+			for (const key of SOURCE_KEYS)
+				for (const step of SCORE_STEPS) {
+					const brute = runPasses({
+						...request,
+						scoresCounts: false,
+						sourceMinimums: { ...sourceMinimums, [key]: step },
+					}).passing.length
+					assert.equal(
+						actual.optionCounts.sourceScores![`${key}:${step}`],
+						brute,
+					)
+				}
+			for (const gapChoice of ["agree", "critics", "audience"] as const)
+				assert.equal(
+					actual.optionCounts.scoreGap![gapChoice],
+					runPasses({ ...request, scoresCounts: false, gapChoice }).passing
+						.length,
+				)
+		}
+	}
+	assert.equal(
+		runPasses({ ...input, scoresCounts: false }).optionCounts.sourceScores,
+		undefined,
+	)
+	assert.equal(
+		runPasses({
+			...input,
+			columns: { ...c, facts: { ...facts, sources: null } },
+		}).optionCounts.sourceScores,
+		null,
+	)
+	const outside = { ...input, rows: Int32Array.of(-1), keys: Float64Array.of(MOVIE + n + 1) }
+	assert.equal(runPasses({ ...outside, minScore: 0 }).passing.length, 1)
+	assert.equal(runPasses({ ...outside, minScore: 0, sourceMinimums: { imdb: 0 } }).passing.length, 0)
+	assert.equal(runPasses({ ...outside, minScore: 0, gapChoice: "agree" }).passing.length, 0)
+	assert.equal(runPasses({ ...input, columns: { ...c, facts: null } }).optionCounts.scoreGap, null)
+	db.close()
+})
+
+test("score counts share the facts traversal and stay within budget over 200k rows", async (t) => {
+	const { factCounts } = await import("./passes.server.ts")
+	const { SOURCE_KEYS } = await import("~/domain/filter-state")
+	const n = 200000
+	const base = moneyShowsInput(n)
+	const facts = {
+		...base.columns.facts!,
+		sources: Object.fromEntries(
+			SOURCE_KEYS.map((key, source) => [
+				key,
+				Uint8Array.from({ length: n }, (_, row) =>
+					row % 17 ? (row * (source + 1)) % 101 : 255,
+				),
+			]),
+		) as Record<(typeof SOURCE_KEYS)[number], Uint8Array>,
+	}
+	const input = {
+		...base,
+		columns: { ...base.columns, facts },
+		scoresCounts: true,
+		budgetCounts: true,
+		showsCounts: true,
+	}
+	let reads = 0
+	const rows = new Proxy(input.rows, {
+		get(target, property) {
+			if (typeof property === "string" && /^\d+$/.test(property)) reads++
+			return Reflect.get(target, property, target)
+		},
+	})
+	factCounts({ ...input, rows }, new Uint32Array(n))
+	assert.equal(reads, n)
+	const masks = new Uint32Array(n)
+	for (let warm = 0; warm < 5; warm++) factCounts(input, masks)
+	const times = Array.from({ length: 9 }, () => {
+		const start = performance.now()
+		factCounts(input, masks)
+		return performance.now() - start
+	}).sort((a, b) => a - b)
+	t.diagnostic(
+		`Scores, Budget and Shows median: ${times[4].toFixed(2)} ms over 200k rows`,
+	)
+	assert.ok(times[4] < 40, `Median ${times[4]} ms exceeded 40 ms`)
 })

@@ -79,8 +79,12 @@ export type FilterOptionCounts = {
 		| "years"
 		| "runtime"
 		| "productionCountries"
+		| "sourceScores"
+		| "scoreGap"
 	>]: Record<string, number>
 } & {
+	sourceScores?: Record<string, number> | null
+	scoreGap?: Record<string, number> | null
 	budget?: Record<string, number> | null
 	shows?: Record<string, number> | null
 	popularity?: Record<string, number>

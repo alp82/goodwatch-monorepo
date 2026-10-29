@@ -67,6 +67,7 @@ async function respond(request: Request, guest?: GuestProgress) {
 			releasedCounts: counts?.includes("released"),
 			lengthCounts: counts?.includes("length"),
 			originCounts: counts?.includes("origin"),
+			scoresCounts: counts?.includes("scores"),
 			state: filterStateFromParams(params, discoverFilterDefaults(ctx)),
 			sort: sortFromParams(params, ranked !== undefined),
 			ranked,

@@ -1,4 +1,4 @@
-// These facts are absent from the published snapshot. In particular, releaseDays is a show's last air date,
+// SQL fallback when the facts sidecar lacks these columns. releaseDays is a show's last air date,
 // not its release year. Keep each SQL predicate separate so each group has its own recovery.
 import {
 	SOURCE_KEYS,

@@ -480,11 +480,12 @@ test("popularity counts have a separate shared cache key", () => {
 test("each facts count request has a separate shared cache key", () => {
 	const plain = discoverFilterKey(input())
 	const keys = new Set([plain])
-	for (let mask = 1; mask < 8; mask++) {
+	for (let mask = 1; mask < 16; mask++) {
 		const flags = {
 			releasedCounts: !!(mask & 1),
 			lengthCounts: !!(mask & 2),
 			originCounts: !!(mask & 4),
+			scoresCounts: !!(mask & 8),
 		}
 		const key = discoverFilterKey({ ...input(), ...flags })
 		assert.ok(!keys.has(key))
@@ -496,6 +497,7 @@ test("each facts count request has a separate shared cache key", () => {
 			releasedCounts: false,
 			lengthCounts: false,
 			originCounts: false,
+			scoresCounts: false,
 		}),
 		plain,
 	)

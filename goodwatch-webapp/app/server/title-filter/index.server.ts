@@ -139,6 +139,7 @@ export interface FilterInput {
 	releasedCounts?: boolean
 	lengthCounts?: boolean
 	originCounts?: boolean
+	scoresCounts?: boolean
 	tasteGroups?: TasteGroupFilter | null
 	/** "catalog" is every title Discover shows; a list is a ranked search, a Wishlist, or an Explorer pool. */
 	universe: Iterable<TitleKey> | "catalog"
@@ -229,16 +230,20 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 					"runtime",
 					universeKeys === "catalog" ? undefined : universeKeys,
 				),
-		rangeScoreTitles(
-			state,
-			"sourceScores",
-			universeKeys === "catalog" ? undefined : universeKeys,
-		),
-		rangeScoreTitles(
-			state,
-			"scoreGap",
-			universeKeys === "catalog" ? undefined : universeKeys,
-		),
+		snapshot.columns.facts?.sources
+			? null
+			: rangeScoreTitles(
+					state,
+					"sourceScores",
+					universeKeys === "catalog" ? undefined : universeKeys,
+				),
+		snapshot.columns.facts?.sources
+			? null
+			: rangeScoreTitles(
+					state,
+					"scoreGap",
+					universeKeys === "catalog" ? undefined : universeKeys,
+				),
 	])
 
 	const contextualTaste = inlineTaste(input.taste, state, snapshot)
@@ -294,6 +299,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		releasedCounts: input.releasedCounts,
 		lengthCounts: input.lengthCounts,
 		originCounts: input.originCounts,
+		scoresCounts: input.scoresCounts,
 		tasteGroups: input.tasteGroups,
 		columns: snapshot.columns,
 		budget: state.budget,
@@ -371,6 +377,8 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 			state.episodeRuntime === undefined ? state.runtime : state.episodeRuntime,
 		years: years && titleSet(years, snapshot),
 		runtime: runtime && titleSet(runtime, snapshot),
+		sourceMinimums: state.sourceScores,
+		gapChoice: state.scoreGap,
 		sourceScores: sourceScores && titleSet(sourceScores, snapshot),
 		scoreGap: scoreGap && titleSet(scoreGap, snapshot),
 		releasedOptions,

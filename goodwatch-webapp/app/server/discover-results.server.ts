@@ -146,6 +146,7 @@ export async function getDiscoverResults(
 		releasedCounts?: boolean
 		lengthCounts?: boolean
 		originCounts?: boolean
+		scoresCounts?: boolean
 		state: FilterState
 		sort: SortKey
 		forYou: boolean
@@ -200,6 +201,7 @@ export async function getDiscoverResults(
 			releasedCounts: input.releasedCounts,
 			lengthCounts: input.lengthCounts,
 			originCounts: input.originCounts,
+			scoresCounts: input.scoresCounts,
 			universe: searching ? ranked : "catalog",
 			includeNotInterested: searching,
 			state,
@@ -219,6 +221,7 @@ export async function getDiscoverResults(
 				releasedCounts: input.releasedCounts,
 				lengthCounts: input.lengthCounts,
 				originCounts: input.originCounts,
+				scoresCounts: input.scoresCounts,
 				viewer: ctx,
 				taste,
 				state,

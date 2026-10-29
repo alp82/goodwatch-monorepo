@@ -587,6 +587,12 @@ normalized to uppercase two-letter codes and deduplicated in source order before
 The sorted country table includes all valid countries of snapshot titles, including countries beyond the
 four slots; at most 255 entries, with index 255 reserved for no country.
 
+Format 2 preserves those first 20N bytes exactly and appends five uint8 columns: IMDb at 20N,
+Tomatometer at 21N, RT audience at 22N, Metacritic at 23N and Metacritic users at 24N (25 bytes
+per title). Each reads the corresponding `*_score_normalized_percent` SQL source column: finite
+values are floored and clamped to 0–100; missing or nonfinite values are 255. Zero is a known score.
+Format 1 remains readable with `sources: null`, using SQL sets for source and gap filtering.
+
 The publisher's change mark (`source_mark`) stores, per table, count and sum of `dna_updated_at` followed
 by count and sum of `tmdb_details_updated_at`, plus the ratings and facts format versions. The previous
 analysis-only mark did not cover season or status changes. The TMDB details copy writes the details timestamp
@@ -615,6 +621,11 @@ Popularity option counts are opt-in: the results endpoint reads `counts` as a co
 Popularity sub-tab is open. Otherwise `optionCounts.popularity` is absent; active popularity ranges still filter
 and produce recoveries. Counted and uncounted results use separate guest shared cache entries. MCP omits these counts.
 
+`counts=scores` opts into source and gap counts; both blocks are absent otherwise and null without
+format 2 sources. Counted requests have their own guest cache entries. Gap filtering follows SQL COALESCE:
+critics use RT critics, else Metacritic; audiences use IMDb, else RT audience. Missing either side fails.
+Agree means an absolute difference ≤5 and critics ≥70; the other choices require a directional gap ≥15.
+
 Every count comes from the one `/api/discover/results` response in `optionCounts`, computed in the same pass:
 
 | Group | Keys |
@@ -622,6 +633,8 @@ Every count comes from the one `/api/discover/results` response in `optionCounts
 | `popularity` | `votes:<stop index>` and `rank:<stop index>`: titles per bucket between neighboring stops (`title-scales.ts`) |
 | `budget` | `budget:<i>`, `boxOffice:<i>` per bucket; `returns:hit`, `returns:flop`; `known:budget`, `known:boxOffice` |
 | `shows` | `seasons:<i>`, `hours:<i>` per bucket; `status:running`, `status:ended`, `status:canceled` |
+| `sourceScores` | `<source>:<step>` for `SCORE_STEPS`, replacing that source minimum while keeping sibling minima and other filters |
+| `scoreGap` | `agree`, `critics`, `audience`, replacing only the gap choice |
 | `years` | `<year>`: titles per release year (facts) |
 | `runtime` | `movie:<5 min bucket>` and `episode:<5 min bucket>` up to 240, plus `movie:unknown`, `episode:unknown` |
 | `productionCountries` | `<code>` per country with titles, `set:<industry or region id>` per set (distinct titles), `world`; from the facts slots (first four countries per title) |
@@ -1115,7 +1128,7 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
 - Crate: B12 removes per-request SQL sets for years and runtime (and their Redis JSON parses) when facts are
   present, which is a net saving. Production countries keep their SQL set. Rest of the world adds one cached read per 30 minutes. People in
   results is two `GROUP BY` reads over at most 100 ids per kind, cached 30 minutes per list.
-- Facts sidecar memory: about 20 bytes per title per webapp process; the publisher keeps chunks at 1 MB.
+- Facts sidecar memory: about 25 bytes per title per webapp process; the publisher keeps chunks at 1 MB.
 - Taste groups: `sideOf` per title costs a fingerprint distance; the first request after the 10-minute cache fills
   the member's row cache. Measure with the largest history (B4).
 - Cache keys: `discover-filters:v3` for the guest cache once `FilterResult` gains new count keys (in-process, but the

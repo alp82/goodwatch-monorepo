@@ -307,12 +307,13 @@ test("production worker input preserves multiple facts chunks and leaves source 
 		)
 		const input = fixture()
 		const source = input.facts.chunks[0]
+		const size = source.byteLength
 		input.facts.manifest.chunks = 2
 		input.facts.chunks = [source.subarray(0, 40), source.subarray(40)]
 		const result = await prepareInWorker(input, pathToFileURL(entry))
 		assert.deepEqual(result, prepareSnapshot(input))
 		assert.equal(result.factsRefusal, null)
-		assert.equal(source.byteLength, 60)
+		assert.equal(source.byteLength, size)
 		assert.ok(result.facts)
 		assert.equal(result.facts.releaseYears.buffer, result.facts.episodes.buffer)
 	} finally {

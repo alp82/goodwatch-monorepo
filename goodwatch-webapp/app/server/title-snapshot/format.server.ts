@@ -1,3 +1,4 @@
+import type { SourceKey } from "~/domain/filter-state"
 // The title snapshot's stored format, version 1: the manifest at `title-snapshot:current` and the column bytes split
 // into chunks at `title-snapshot:<version>:<n>`. The Windmill publisher writes it, and scripts/write-title-snapshot.ts
 // writes it from a sample for development; the webapp decodes it here. A change to the layout bumps FORMAT.
@@ -541,9 +542,17 @@ export function encodeRatings(input: {
 	}
 }
 
-// Facts format 1: column offsets are 0, 2N, 4N, 8N, 12N, 13N, 15N, 16N..19N.
-export const FACTS_FORMAT = 1
-export const FACTS_BYTES_PER_TITLE = 20
+// Facts format 1 (format 2 adds the five source columns at 20N to 24N): column offsets are 0, 2N, 4N, 8N, 12N, 13N, 15N, 16N..19N.
+// Wire order is fixed across publisher and decoder.
+export const FACTS_SOURCE_KEYS = [
+	"imdb",
+	"rtCritics",
+	"rtAudience",
+	"metacritic",
+	"metacriticUsers",
+] as const satisfies readonly SourceKey[]
+export const FACTS_FORMAT = 2
+export const FACTS_BYTES_PER_TITLE = 25
 export const NO_COUNTRY = 255
 export const factsChunkKey = (version: string, n: number) =>
 	`title-snapshot:${version}:facts:${n}`
@@ -555,8 +564,9 @@ export interface FactsManifest {
 	countries: string[]
 }
 
-/** One typed value per title in snapshot row order. Numeric zero means unknown. */
+/** One typed value per title in snapshot row order. Numeric facts use zero for unknown; source scores use 255. */
 export interface FactColumns {
+	readonly sources: Readonly<Record<SourceKey, Uint8Array>> | null
 	readonly releaseYears: Uint16Array
 	/** Movie runtime or first episode runtime, in minutes. */
 	readonly lengths: Uint16Array
@@ -578,7 +588,7 @@ export function checkFactsManifest(value: unknown): FactsManifest {
 		throw new SnapshotRefused(`Title snapshot facts refused: ${why}`)
 	}
 	if (!m || typeof m !== "object") return fail("not an object")
-	if (m.format !== FACTS_FORMAT)
+	if (m.format !== 1 && m.format !== FACTS_FORMAT)
 		return fail(`format ${m.format}, this webapp reads ${FACTS_FORMAT}`)
 	if (
 		!Number.isSafeInteger(m.chunks) ||
@@ -616,7 +626,7 @@ export function joinFactsChunks(
 	if (chunks.length !== manifest.chunks)
 		return fail("chunk count differs from manifest")
 	const total = chunks.reduce((n, c) => n + c.byteLength, 0)
-	if (total !== count * FACTS_BYTES_PER_TITLE)
+	if (total !== count * (manifest.format === 1 ? 20 : FACTS_BYTES_PER_TITLE))
 		return fail(`bad size: ${total} bytes for ${count} titles`)
 	const hash = createHash("sha256")
 	for (const chunk of chunks) hash.update(chunk)
@@ -638,6 +648,15 @@ export function joinFactsChunks(
 	}
 	const buffer = bytes.buffer
 	const columns: FactColumns = {
+		sources:
+			manifest.format === 1
+				? null
+				: (Object.fromEntries(
+						FACTS_SOURCE_KEYS.map((key, i) => [
+							key,
+							new Uint8Array(buffer, (20 + i) * count + pad, count),
+						]),
+					) as Record<SourceKey, Uint8Array>),
 		releaseYears: new Uint16Array(buffer, 0, count),
 		lengths: new Uint16Array(buffer, 2 * count, count),
 		budgets: new Uint32Array(buffer, 4 * count, count),
@@ -648,6 +667,10 @@ export function joinFactsChunks(
 		countryIndexes: new Uint8Array(buffer, 16 * count + pad, 4 * count),
 		countries: manifest.countries,
 	}
+	for (const values of Object.values(columns.sources ?? {}))
+		for (const value of values)
+			if (value > 100 && value !== UNKNOWN_SCORE)
+				return fail("bad source score")
 	for (const status of columns.showStatuses)
 		if (status > 3) return fail("bad show status")
 	for (const seasons of columns.seasons)
@@ -668,6 +691,7 @@ export interface FactRow {
 	seasons?: number | null
 	episodes?: number | null
 	status?: number | null
+	sources?: Partial<Record<SourceKey, number | null>>
 	countries?: readonly string[] | null
 }
 
@@ -701,6 +725,13 @@ export function encodeFacts(input: { rows: FactRow[] }): {
 		v != null && v >= 10_000 ? uint(v / 1000, 0xffffffff) : 0
 	bytes.fill(NO_COUNTRY, 16 * n)
 	rows.forEach((r, i) => {
+		FACTS_SOURCE_KEYS.forEach((key, source) => {
+			const value = r.sources?.[key]
+			bytes[(20 + source) * n + i] =
+				value == null || !Number.isFinite(value)
+					? UNKNOWN_SCORE
+					: Math.max(0, Math.min(100, Math.floor(value)))
+		})
 		const show = r.pointId >= SHOW_BASE
 		view.setUint16(2 * i, uint(r.year, 65535), true)
 		view.setUint16(2 * n + 2 * i, uint(r.length, 65535), true)

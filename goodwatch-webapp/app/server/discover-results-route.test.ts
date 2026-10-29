@@ -19,13 +19,14 @@ test("GET and guest POST opt into exact comma-list count groups, including combi
 	for (const counts of [
 		null,
 		"taste",
+		"scores",
 		"budget",
 		"shows",
 		"released",
 		"length",
 		"origin",
-		"taste,budget,shows,popularity,released,length,origin",
-		"tastes,budgets,show,unreleased,lengthy,origins",
+		"taste,budget,shows,popularity,released,length,origin,scores",
+		"tastes,budgets,show,unreleased,lengthy,origins,score",
 	]) {
 		for (const method of ["GET", "POST"]) {
 			const url = new URL("https://goodwatch.test/api/discover/results")
@@ -49,6 +50,7 @@ test("GET and guest POST opt into exact comma-list count groups, including combi
 				["released", "releasedCounts"],
 				["length", "lengthCounts"],
 				["origin", "originCounts"],
+				["scores", "scoresCounts"],
 			])
 				assert.equal(
 					Boolean(input[flag]),

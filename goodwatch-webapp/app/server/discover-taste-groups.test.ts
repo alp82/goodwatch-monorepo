@@ -253,6 +253,7 @@ test("panels preserve taste picks for mixes, people and released, including lega
 	const original = snapshot
 	// Released reads only the release years; the other fact columns are not needed by these filters.
 	const facts = {
+		sources: null,
 		releaseYears: Uint16Array.from(keys, (_, row) => (row < 20 ? 1995 : 2005)),
 		lengths: new Uint16Array(keys.length),
 		budgets: new Uint32Array(keys.length),

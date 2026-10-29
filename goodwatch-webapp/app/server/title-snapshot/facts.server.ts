@@ -1,4 +1,5 @@
 // Optional facts reads follow the ratings sidecar: failures are logged once per load.
+// Both formats decode here: format 1 exposes sources: null; format 2 exposes five source columns.
 import {
 	type FactColumns,
 	type FactsManifest,

@@ -34,6 +34,7 @@ test("decodes publisher bytes, odd row count, missing facts and four country col
 		[...c.countryIndexes],
 		[2, 1, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255],
 	)
+	assert.equal(c.sources, null)
 	assert.deepEqual(c.countries, fixture().countries)
 	// Every possible split, including chunks ending on or across the unaligned column.
 	for (let split = 0; split <= bytes.length; split++)
@@ -48,7 +49,7 @@ test("decodes publisher bytes, odd row count, missing facts and four country col
 
 test("rejects unknown formats, checksum, size, country tables and invalid values", () => {
 	assert.throws(
-		() => joinFactsChunks({ ...fixture(), format: 2 }, 3, [bytes]),
+		() => joinFactsChunks({ ...fixture(), format: 3 }, 3, [bytes]),
 		/format/,
 	)
 	assert.throws(
@@ -107,8 +108,10 @@ test("sample encoder matches publisher layout and money units", () => {
 			{ pointId: 2e12 + 3 },
 		],
 	})
-	assert.deepEqual(encoded.chunks, [bytes])
-	assert.deepEqual(encoded.manifest, fixture())
+	assert.deepEqual(encoded.chunks, [
+		new Uint8Array([...bytes, ...new Array(15).fill(255)]),
+	])
+	assert.equal(encoded.manifest.format, 2)
 	for (const [value, expected] of [
 		[9999, 0],
 		[10000, 10],
@@ -117,7 +120,9 @@ test("sample encoder matches publisher layout and money units", () => {
 		[Number.NaN, 0],
 		[2 ** 60, 0xffffffff],
 	]) {
-		const sample = encodeFacts({ rows: [{ pointId: 1e12 + 1, budget: value }] })
+		const sample = encodeFacts({
+			rows: [{ pointId: 1e12 + 1, budget: value }],
+		})
 		assert.equal(
 			joinFactsChunks(sample.manifest, 1, sample.chunks).budgets[0],
 			expected,
@@ -125,7 +130,7 @@ test("sample encoder matches publisher layout and money units", () => {
 	}
 })
 
-test("retained storage grows by 20 bytes per title, with at most one alignment byte", () => {
+test("retained storage grows by 25 bytes per title, with at most one alignment byte", () => {
 	for (const count of [0, 1, 2, 10000, 10001]) {
 		const sample = encodeFacts({
 			rows: Array.from({ length: count }, (_, pointId) => ({ pointId })),
@@ -134,7 +139,7 @@ test("retained storage grows by 20 bytes per title, with at most one alignment b
 		const views = Object.values(columns).filter(ArrayBuffer.isView)
 		assert.equal(views.length, 8)
 		assert.equal(new Set(views.map((v) => v.buffer)).size, 1)
-		assert.equal(views[0].buffer.byteLength, count * 20 + (count % 2))
+		assert.equal(views[0].buffer.byteLength, count * 25 + (count % 2))
 	}
 })
 
@@ -184,4 +189,50 @@ test("optional reads log once and return null on missing chunks, Redis failure, 
 		manifest,
 	)
 	assert.deepEqual(keys, ["title-snapshot:test:facts:0"])
+})
+
+test("format 2 appends source columns and rejects invalid source bytes", () => {
+	for (const count of [0, 1, 2, 3]) {
+		const encoded = encodeFacts({
+			rows: Array.from({ length: count }, (_, i) => ({
+				pointId: 1e12 + i,
+				sources: {
+					imdb: 0,
+					rtCritics: 70,
+					rtAudience: 80,
+					metacritic: 90,
+					metacriticUsers: 100,
+				},
+			})),
+		})
+		const decoded = joinFactsChunks(encoded.manifest, count, encoded.chunks)
+		assert.deepEqual([...decoded.sources!.imdb], new Array(count).fill(0))
+		assert.deepEqual(
+			[...decoded.sources!.metacriticUsers],
+			new Array(count).fill(100),
+		)
+		if (!count) continue
+		for (let split = 0; split <= encoded.chunks[0].length; split++)
+			assert.deepEqual(
+				joinFactsChunks({ ...encoded.manifest, chunks: 2 }, count, [
+					encoded.chunks[0].subarray(0, split),
+					encoded.chunks[0].subarray(split),
+				]),
+				decoded,
+			)
+		const bad = encoded.chunks[0].slice()
+		bad[20 * count] = 101
+		assert.throws(
+			() =>
+				joinFactsChunks(
+					{
+						...encoded.manifest,
+						sha256: createHash("sha256").update(bad).digest("hex"),
+					},
+					count,
+					[bad],
+				),
+			/source score/,
+		)
+	}
 })

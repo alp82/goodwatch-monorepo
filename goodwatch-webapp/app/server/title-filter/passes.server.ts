@@ -21,6 +21,7 @@ import {
 	type TagGroup,
 	MIN_MATCHES,
 	MIN_SCORES,
+	SOURCE_KEYS,
 } from "~/domain/filter-state"
 import {
 	BUDGET_STEPS,
@@ -28,6 +29,7 @@ import {
 	SEASONS_STEPS,
 	HOURS_STEPS,
 	POPULARITY_OPTIONS,
+	SCORE_STEPS,
 } from "~/domain/title-scales"
 import { GENRE_FOLDS } from "~/domain/genre-fold"
 import { MOOD_KEYS } from "~/domain/moods"
@@ -208,6 +210,7 @@ export interface PassInput {
 	releasedCounts?: boolean
 	lengthCounts?: boolean
 	originCounts?: boolean
+	scoresCounts?: boolean
 	budget?: FilterState["budget"]
 	boxOffice?: FilterState["boxOffice"]
 	returns?: FilterState["returns"]
@@ -270,6 +273,8 @@ export interface PassInput {
 	episodeRange?: FilterRange | null
 	years?: TitleSet | null
 	runtime?: TitleSet | null
+	sourceMinimums?: FilterState["sourceScores"]
+	gapChoice?: FilterState["scoreGap"]
 	sourceScores?: TitleSet | null
 	scoreGap?: TitleSet | null
 	legacy: TitleSet | null
@@ -342,6 +347,31 @@ function withinFact(value: number, range?: FilterRange | null): boolean {
 	)
 }
 
+/** SQL COALESCE selects the first known source, including a score of zero. */
+function gapPass(
+	sources: NonNullable<NonNullable<TitleColumns["facts"]>["sources"]>,
+	row: number,
+	choice: FilterState["scoreGap"],
+): boolean {
+	if (!choice) return true
+	if (row < 0) return false
+	const critics =
+		sources.rtCritics[row] === UNKNOWN_SCORE
+			? sources.metacritic[row]
+			: sources.rtCritics[row]
+	const audiences =
+		sources.imdb[row] === UNKNOWN_SCORE
+			? sources.rtAudience[row]
+			: sources.imdb[row]
+	if (critics === UNKNOWN_SCORE || audiences === UNKNOWN_SCORE) return false
+	return choice === "agree"
+		? Math.abs(critics - audiences) <= 5 && critics >= 70
+		: choice === "critics"
+			? critics - audiences >= 15
+			: audiences - critics >= 15
+}
+
+const GAP_CHOICES = ["agree", "critics", "audience"] as const
 const STATUS = { running: 1, ended: 2, canceled: 3 } as const
 const bounded = (range?: FilterRange) =>
 	range?.min !== undefined || range?.max !== undefined
@@ -425,7 +455,24 @@ export function factCounts(
 				)
 			: null
 		: undefined
+	const sources = input.scoresCounts ? facts?.sources : null
+	const sourceCounts = input.scoresCounts
+		? sources
+			? Object.fromEntries(
+					SOURCE_KEYS.flatMap((key) =>
+						SCORE_STEPS.map((step) => [`${key}:${step}`, 0]),
+					),
+				)
+			: null
+		: undefined
+	const gapCounts = input.scoresCounts
+		? sources
+			? { agree: 0, critics: 0, audience: 0 }
+			: null
+		: undefined
 	const out: Partial<FilterOptionCounts> = {}
+	if (sourceCounts !== undefined) out.sourceScores = sourceCounts
+	if (gapCounts !== undefined) out.scoreGap = gapCounts
 	if (budget !== undefined) out.budget = budget
 	if (shows !== undefined) out.shows = shows
 	if (years !== undefined) out.years = years
@@ -459,11 +506,37 @@ export function factCounts(
 			)
 		: null
 	const setCounts = origin ? new Uint32Array(sets.length) : null
+	const sourceColumns = sources ? SOURCE_KEYS.map((key) => sources[key]) : []
+	const minimums = SOURCE_KEYS.map((key) => input.sourceMinimums?.[key])
+	const perSource = sourceCounts ? new Uint32Array(5 * 101) : null
 	let worldCount = 0
 	const count = facts.releaseYears.length
 	for (let i = 0; i < input.rows.length; i++) {
 		const row = input.rows[i]
 		const mask = masks[i]
+		if (
+			sources &&
+			sourceCounts &&
+			(mask & ~BIT.sourceScores) === 0 &&
+			row >= 0
+		) {
+			// Replace one threshold, preserving each sibling source's selected minimum.
+			let failed = 0
+			for (let source = 0; source < 5; source++) {
+				const min = minimums[source],
+					value = sourceColumns[source][row]
+				if (min !== undefined && (value === UNKNOWN_SCORE || value < min))
+					failed |= 1 << source
+			}
+			for (let source = 0; source < 5; source++) {
+				if ((failed & ~(1 << source)) !== 0) continue
+				const value = sourceColumns[source][row]
+				if (value !== UNKNOWN_SCORE) perSource![source * 101 + value]++
+			}
+		}
+		if (sources && gapCounts && (mask & ~BIT.scoreGap) === 0)
+			for (const choice of GAP_CHOICES)
+				if (gapPass(sources, row, choice)) gapCounts[choice]++
 		if (
 			row >= 0 &&
 			budget &&
@@ -580,6 +653,12 @@ export function factCounts(
 		})
 		origin.world = worldCount
 	}
+	if (sourceCounts && perSource)
+		SOURCE_KEYS.forEach((key, source) => {
+			for (const step of SCORE_STEPS)
+				for (let value = step; value <= 100; value++)
+					sourceCounts[`${key}:${step}`] += perSource[source * 101 + value]
+		})
 	return out
 }
 
@@ -801,6 +880,11 @@ export function runPasses(input: PassInput): PassOutput {
 		bounded(input.hours) ||
 		input.showStatus
 	)
+	const sources =
+		input.gapChoice ||
+		SOURCE_KEYS.some((key) => input.sourceMinimums?.[key] !== undefined)
+			? columns.facts?.sources
+			: null
 	// Pass 1: fail masks.
 	for (let i = 0; i < n; i++) {
 		const row = rows[i]
@@ -905,9 +989,23 @@ export function runPasses(input: PassInput): PassOutput {
 			if (input.years && !inSet(input.years, i)) mask |= BIT.years
 			if (input.runtime && !inSet(input.runtime, i)) mask |= BIT.runtime
 		}
-		if (input.sourceScores && !inSet(input.sourceScores, i))
-			mask |= BIT.sourceScores
-		if (input.scoreGap && !inSet(input.scoreGap, i)) mask |= BIT.scoreGap
+		if (sources) {
+			for (const key of SOURCE_KEYS) {
+				const min = input.sourceMinimums?.[key]
+				if (
+					min !== undefined &&
+					(row < 0 ||
+						sources[key][row] === UNKNOWN_SCORE ||
+						sources[key][row] < min)
+				)
+					mask |= BIT.sourceScores
+			}
+			if (!gapPass(sources, row, input.gapChoice)) mask |= BIT.scoreGap
+		} else {
+			if (input.sourceScores && !inSet(input.sourceScores, i))
+				mask |= BIT.sourceScores
+			if (input.scoreGap && !inSet(input.scoreGap, i)) mask |= BIT.scoreGap
+		}
 		if (ratings) {
 			if (ageLimit >= 0 && ageOf(ratings, row) > ageLimit) mask |= BIT.ageLimit
 			if (hiddenContent && row >= 0 && ratings.content[row] & hiddenContent)
@@ -966,6 +1064,8 @@ export function runPasses(input: PassInput): PassOutput {
 		FILTER_NAMES.filter(
 			(name) =>
 				![
+					"sourceScores",
+					"scoreGap",
 					"popularity",
 					"budget",
 					"shows",
@@ -984,7 +1084,8 @@ export function runPasses(input: PassInput): PassOutput {
 		input.showsCounts ||
 		input.releasedCounts ||
 		input.lengthCounts ||
-		input.originCounts
+		input.originCounts ||
+		input.scoresCounts
 	)
 		Object.assign(optionCounts, factCounts(input, masks))
 	optionCounts.tasteGroups = groupCounts

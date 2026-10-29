@@ -39,6 +39,7 @@ export function discoverFilterKey(input: {
 	releasedCounts?: boolean
 	lengthCounts?: boolean
 	originCounts?: boolean
+	scoresCounts?: boolean
 	viewer: ViewerContext
 	taste: Pick<Taste, "signal">
 	state: FilterState
@@ -129,6 +130,7 @@ export function discoverFilterKey(input: {
 		input.releasedCounts === true,
 		input.lengthCounts === true,
 		input.originCounts === true,
+		input.scoresCounts === true,
 		serialized,
 	])
 }
