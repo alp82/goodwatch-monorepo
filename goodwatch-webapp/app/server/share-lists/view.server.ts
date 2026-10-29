@@ -158,6 +158,11 @@ const PROFILE_PAGE_CACHE = {
 } as const
 declareResettableCache(PROFILE_CACHE)
 declareResettableCache(PROFILE_PAGE_CACHE)
+const PROFILE_SUMMARY_CACHE = {
+	...PROFILE_PAGE_CACHE,
+	name: "share-profile-summary-v1",
+} as const
+declareResettableCache(PROFILE_SUMMARY_CACHE)
 
 type ProfileResult = { found: true; profile: Profile } | { found: false }
 type ProfilePage = {
@@ -216,6 +221,28 @@ export async function publicListsByUser(
 	return rows.map(listOverviewFromRow)
 }
 
+/** Identity and list previews, without catalog reads for posters on unrelated tabs. */
+export async function getProfileSummary(
+	rawHandle: string,
+): Promise<Omit<ProfilePage, "titles"> | null> {
+	const handle = normalizeHandle(rawHandle)
+	if (handleProblem(handle)) return null
+	const result = await cached({
+		...PROFILE_SUMMARY_CACHE,
+		params: { handle },
+		target: async (): Promise<
+			({ found: true } & Omit<ProfilePage, "titles">) | { found: false }
+		> => {
+			const profile = await getProfileByHandle(handle)
+			if (!profile) return { found: false }
+			const lists = await publicListsByUser(profile.userId)
+			return { found: true, profile, lists }
+		},
+	})
+	return result.found ? { profile: result.profile, lists: result.lists } : null
+}
+
+/** List cards resolve their catalog titles only when a caller renders the cards. */
 export async function getProfilePage(
 	rawHandle: string,
 ): Promise<ProfilePage | null> {
@@ -225,9 +252,9 @@ export async function getProfilePage(
 		...PROFILE_PAGE_CACHE,
 		params: { handle },
 		target: async (): Promise<ProfilePageResult> => {
-			const profile = await getProfileByHandle(handle)
-			if (!profile) return { found: false }
-			const lists = await publicListsByUser(profile.userId)
+			const summary = await getProfileSummary(handle)
+			if (!summary) return { found: false }
+			const { profile, lists } = summary
 			const titles = await resolveCardTitles(
 				lists.flatMap((list) => list.items),
 			)
@@ -258,6 +285,10 @@ export async function resetProfileViews(userId: string): Promise<void> {
 		resetPageCache(matchesProfile)
 		await resetCacheConfirmed({
 			name: PROFILE_PAGE_CACHE.name,
+			params: { handle: normalizeHandle(handle) },
+		})
+		await resetCacheConfirmed({
+			name: PROFILE_SUMMARY_CACHE.name,
 			params: { handle: normalizeHandle(handle) },
 		})
 		// Drop pages rendered while the old data was still readable.

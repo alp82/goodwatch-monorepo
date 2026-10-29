@@ -108,16 +108,15 @@ async function buildLibrary(
 	userId: string,
 	data: UserData,
 ): Promise<ProfileLibrary> {
-	const [scoredTitles, seenKeys] = [
-		await getMyScores(userId),
-		libraryKeys(data, "seen"),
-	]
-	const backdrops = await titleDisplays(
-		scoredTitles.map((t) => titleKey(t.mediaType, t.tmdbId)),
-	)
+	const seenKeys = libraryKeys(data, "seen")
+	// These reads are independent. Fetch backdrops with scores instead of reading every scored title twice.
+	const [scoredTitles, { hours, episodes }, firsts] = await Promise.all([
+		getMyScores(userId, { backdrops: true }),
+		watchTime(data, seenKeys),
+		firstDates(userId),
+	])
 	const scored = new Map<MediaKey, ProfileTitle & { genres: string[] }>()
 	for (const t of scoredTitles) {
-		const display = backdrops.get(titleKey(t.mediaType, t.tmdbId))
 		scored.set(t.key, {
 			...profileTitleOf(
 				t.key,
@@ -125,7 +124,7 @@ async function buildLibrary(
 					title: t.title,
 					year: t.release_year,
 					poster: t.poster_path,
-					backdrop: display?.backdrop,
+					backdrop: t.backdrop_path,
 					gw: t.gw,
 				},
 				{ score: t.score, date: t.watchedAt ?? t.ratedAt },
@@ -133,10 +132,6 @@ async function buildLibrary(
 			genres: t.genres,
 		})
 	}
-	const [{ hours, episodes }, firsts] = await Promise.all([
-		watchTime(data, seenKeys),
-		firstDates(userId),
-	])
 	return {
 		data,
 		scored,

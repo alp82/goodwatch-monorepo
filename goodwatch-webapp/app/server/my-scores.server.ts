@@ -16,9 +16,13 @@ interface CardRow {
 	release_year: number | null
 	genres: string[] | null
 	gw: number | null
+	backdrop_path?: string | null
 }
 
-export async function getMyScores(userId: string): Promise<ScoredTitle[]> {
+export async function getMyScores(
+	userId: string,
+	options: { backdrops?: boolean } = {},
+): Promise<(ScoredTitle & { backdrop_path?: string | null })[]> {
 	const data = await getUserData({ user_id: userId })
 	const keys = Object.keys(data.scores) as MediaKey[]
 	const ids = { movie: [] as number[], show: [] as number[] }
@@ -32,7 +36,7 @@ export async function getMyScores(userId: string): Promise<ScoredTitle[]> {
 			for (let i = 0; i < ids[type].length; i += BATCH) {
 				const batch = ids[type].slice(i, i + BATCH)
 				const rows = await query<CardRow>(
-					`SELECT tmdb_id, title, poster_path, release_year, genres,
+					`SELECT tmdb_id, title, poster_path, release_year, genres,${options.backdrops ? " backdrop_path," : ""}
 					        goodwatch_overall_score_normalized_percent AS gw
 					 FROM ${type} WHERE tmdb_id IN (${batch.map(() => "?").join(", ")})`,
 					batch,
@@ -41,28 +45,33 @@ export async function getMyScores(userId: string): Promise<ScoredTitle[]> {
 			}
 		}),
 	)
-	return keys.flatMap((key): ScoredTitle[] => {
-		const card = cards.get(key)
-		const score = data.scores[key]?.score
-		// A title the catalog no longer has (deleted on TMDB) has nothing to show.
-		if (!card || score == null) return []
-		const { mediaType, tmdbId } = parseMediaKey(key)
-		return [
-			{
-				key,
-				mediaType,
-				tmdbId,
-				title: card.title ?? "",
-				poster_path: card.poster_path,
-				release_year: card.release_year,
-				genres: card.genres ?? [],
-				gw: card.gw == null ? null : Math.round(card.gw),
-				score: Number(score),
-				ratedAt: iso(data.scores[key]?.updatedAt),
-				watchedAt: iso(data.watchState[key]?.watchedAt),
-			},
-		]
-	})
+	return keys.flatMap(
+		(key): (ScoredTitle & { backdrop_path?: string | null })[] => {
+			const card = cards.get(key)
+			const score = data.scores[key]?.score
+			// A title the catalog no longer has (deleted on TMDB) has nothing to show.
+			if (!card || score == null) return []
+			const { mediaType, tmdbId } = parseMediaKey(key)
+			return [
+				{
+					key,
+					mediaType,
+					tmdbId,
+					title: card.title ?? "",
+					poster_path: card.poster_path,
+					...(options.backdrops
+						? { backdrop_path: card.backdrop_path ?? null }
+						: {}),
+					release_year: card.release_year,
+					genres: card.genres ?? [],
+					gw: card.gw == null ? null : Math.round(card.gw),
+					score: Number(score),
+					ratedAt: iso(data.scores[key]?.updatedAt),
+					watchedAt: iso(data.watchState[key]?.watchedAt),
+				},
+			]
+		},
+	)
 }
 
 /** What an opened row shows beyond the table's columns. */

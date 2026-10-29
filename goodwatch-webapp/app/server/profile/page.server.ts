@@ -27,7 +27,10 @@ import {
 } from "~/server/my-shows.server"
 import { listsByUser } from "~/server/share-lists/store.server"
 import { entryKey, resolveCardTitles } from "~/server/share-lists/titles.server"
-import { getProfilePage } from "~/server/share-lists/view.server"
+import {
+	getProfilePage,
+	getProfileSummary,
+} from "~/server/share-lists/view.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { getMemberViewerContext } from "~/server/viewer.server"
 import { type MediaKey, parseMediaKey } from "~/types/user-data"
@@ -72,7 +75,7 @@ export async function loadProfileShell(
 ): Promise<
 	{ shell: ProfileShell; ownerId: string; viewerId: string | null } | Response
 > {
-	const page = await getProfilePage(handle)
+	const page = await getProfileSummary(handle)
 	if (!page) throw notFound()
 	const { profile } = page
 	if (handle !== profile.handle) {
