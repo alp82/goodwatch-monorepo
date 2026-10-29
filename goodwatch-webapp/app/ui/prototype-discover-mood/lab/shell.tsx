@@ -14,6 +14,7 @@ import { useLabChoice } from "./LabBar"
 import { pick, pick as variantOf } from "./registry"
 import { ResultsProvider, useShown } from "./results-view"
 import { useMcUsers } from "./sections/scores/mc-users"
+import { useYouExtras } from "./sections/taste/you-extras"
 import { Footer } from "./shell-footer"
 import { type ProtoDiscover, TAGS, useFilterPieces } from "../kit"
 import { tagName } from "./sections/mood/parts"
@@ -82,6 +83,7 @@ function useTabState() {
 
 function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces; onOpenChange: (o: boolean) => void }) {
 	useMcUsers() // the bar and badges read the lab-only Metacritic user score
+	useYouExtras() // and You's lab-only choices
 	const values = segValues(d, pieces)
 	const t = useTabState()
 	const { seg } = t
@@ -251,6 +253,7 @@ function Tabs({ d, pieces, seg, onPick }: { d: ProtoDiscover; pieces: Pieces; se
 
 function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 	useMcUsers()
+	useYouExtras()
 	const values = segValues(d, pieces)
 	const t = useTabState()
 	const [last, setLast] = useState<SegKey>("mood")

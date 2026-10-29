@@ -5,8 +5,8 @@ import type { ReactNode } from "react"
 import { compactCount } from "~/ui/filter-bar/labels"
 import type { ProtoDiscover } from "../../../kit"
 import type { SectionProps, Viewer } from "../../types"
-import { type AndCounts, type Cond, MAX_AND, picksOf, useAndCounts } from "./and"
-import { ColumnHead, ColumnRows } from "./columns"
+import { type AndCounts, type AnyOf, type Cond, MAX_AND, andCount, picksOf, useAndCounts, useAnyOf } from "./and"
+import { ColumnHead, ColumnRows, ModeToggle } from "./columns"
 import { DROP_FROM, MEMBER_MIXES } from "./e"
 import { type FitRow, RecipeLine, byFit, fitRows } from "./fit"
 import { COLUMNS } from "./g"
@@ -25,14 +25,15 @@ function condOf(d: ProtoDiscover, r: FitRow): Cond | null {
 	return { group: r.kind, id: r.id.slice(r.id.indexOf(":") + 1), values: [r.id.slice(r.id.indexOf(":") + 1)] }
 }
 
-function andRows(d: ProtoDiscover, m: Moods, counts: AndCounts | null, picks: Cond[]): FitRow[] {
-	const capped = picks.length >= MAX_AND
+function andRows(d: ProtoDiscover, m: Moods, counts: AndCounts | null, picks: Cond[], any: AnyOf): FitRow[] {
+	const capped = andCount(picks, any) >= MAX_AND
 	return fitRows(d, m).map((r) => {
 		const c = condOf(d, r)
 		if (!c) return r
 		if (r.on) return { ...r, n: counts?.total ?? null, short: "" }
 		const n = counts ? counts.adding(c) : null
-		const full = capped || (r.kind === "moods" && m.full)
+		// The five-pick cap is the inclusion-exclusion's; an "any of" group passes straight to Discover.
+		const full = (capped && !any.has(c.group)) || (r.kind === "moods" && m.full)
 		return { ...r, n, short: n === null ? "" : compactCount(n), dead: full || n === 0, toggle: full ? () => {} : r.toggle }
 	})
 }
@@ -53,9 +54,11 @@ function dropCond(d: ProtoDiscover, c: Cond) {
 export function useAnd(d: ProtoDiscover) {
 	const m = useMoods(d)
 	const picks = picksOf(d)
-	const { counts } = useAndCounts(d, picks)
-	const rows = andRows(d, m, counts, picks)
-	return { m, picks, counts, rows, total: counts?.total ?? null }
+	// Round 13: per group "all of" (default) or "any of".
+	const mode = useAnyOf()
+	const { counts } = useAndCounts(d, picks, mode.any)
+	const rows = andRows(d, m, counts, picks, mode.any)
+	return { m, picks, counts, rows, total: counts?.total ?? null, any: mode.any, setAny: mode.set }
 }
 export type And = ReturnType<typeof useAnd>
 
@@ -64,7 +67,7 @@ export function RecipeRow({ d, a, find, phone, right }: { d: ProtoDiscover; a: A
 	if (phone)
 		return (
 			<div className="flex flex-col gap-3">
-				<RecipeLine d={d} m={a.m} size="text-[17px]" within="and" total={a.total} />
+				<RecipeLine d={d} m={a.m} size="text-[17px]" within={(g) => (a.any.has(g) ? "or" : "and")} total={a.total} />
 				{right}
 				{find?.field}
 			</div>
@@ -72,7 +75,7 @@ export function RecipeRow({ d, a, find, phone, right }: { d: ProtoDiscover; a: A
 	return (
 		<div className="flex shrink-0 items-center gap-4">
 			<div className="min-w-0 flex-1">
-				<RecipeLine d={d} m={a.m} within="and" total={a.total} />
+				<RecipeLine d={d} m={a.m} within={(g) => (a.any.has(g) ? "or" : "and")} total={a.total} />
 			</div>
 			{right}
 			<div className={`${right ? "w-[260px]" : "w-[300px]"} shrink-0`}>{find?.field}</div>
@@ -83,13 +86,15 @@ export function RecipeRow({ d, a, find, phone, right }: { d: ProtoDiscover; a: A
 /** i's four columns (Feel, About, Style, Genre), or Find a filter's results in their place. */
 export function AndColumns({ a, find, phone }: { a: And; find: SectionProps["find"]; phone: boolean }) {
 	if (find?.results) return phone ? <div>{find.results}</div> : <div className="-mx-6 min-h-0 flex-1">{find.results}</div>
-	const of = Math.max(a.total ?? 0, 1)
 	const columns = COLUMNS.map((c) => {
 		const rows = byFit(a.rows.filter((r) => r.kind === c.kind))
 		const picked = rows.filter((r) => r.on).length
+		const any = a.any.has(c.kind)
+		// An "any of" row can pass the list, so its column's max caps the bars (as in g).
+		const of = Math.max(a.total ?? 0, ...(any ? rows.map((r) => r.n ?? 0) : []), 1)
 		return (
 			<div key={c.kind} className={`flex min-h-0 min-w-0 flex-col gap-1.5 ${phone ? "" : "flex-1"}`}>
-				<ColumnHead kind={c.kind} label={c.label} picked={picked} note={picked > 1 ? "all of" : undefined} />
+				<ColumnHead kind={c.kind} label={c.label} picked={picked} right={<ModeToggle label={c.label} any={any} onChange={(v) => a.setAny(c.kind, v)} />} />
 				<ColumnRows rows={rows} of={of} phone={phone} />
 			</div>
 		)
@@ -117,6 +122,9 @@ interface Card {
 	path?: string | null
 }
 
+/** The footer's small list (its recoveries show from here down). */
+const SMALL_LIST = 40
+
 const readyMixes = (viewer: Viewer): Mix[] => (viewer === "member" ? MEMBER_MIXES : MIXES)
 
 /**
@@ -124,7 +132,16 @@ const readyMixes = (viewer: Viewer): Mix[] => (viewer === "member" ? MEMBER_MIXE
  * then ready mixes. Only cards with titles. From three picks, when the "+ X" cards leave a full row free, "Without X"
  * (what dropping a pick brings back) comes last as slim removal tiles.
  */
-export function useCards(d: ProtoDiscover, a: And, viewer: Viewer, slots: number, cols: number, onMix?: () => void): { cards: Card[]; drops: DropStep[] } {
+export function useCards(
+	d: ProtoDiscover,
+	a: And,
+	viewer: Viewer,
+	slots: number,
+	cols: number,
+	onMix?: () => void,
+	/** k (round 13): the removal row also shows once the list is small, as the footer's recoveries do. */
+	dropsWhenSmall = false,
+): { cards: Card[]; drops: DropStep[] } {
 	const ready = readyMixes(viewer)
 	const x = useMixes(d, ready)
 	const mixCards = ready.map(
@@ -183,7 +200,8 @@ export function useCards(d: ProtoDiscover, a: And, viewer: Viewer, slots: number
 		)
 		.filter((s) => s.n === null || s.n > 0)
 		.sort((p, q) => (q.n ?? 0) - (p.n ?? 0))
-	return { cards: fill([...adds, ...mixCards.filter((c) => !c.on)].filter(leads)), drops: showDrops(adds.length, drops.length, slots, cols) ? drops : [] }
+	const small = dropsWhenSmall && total !== null && total <= SMALL_LIST && drops.length > 0
+	return { cards: fill([...adds, ...mixCards.filter((c) => !c.on)].filter(leads)), drops: small || showDrops(adds.length, drops.length, slots, cols) ? drops : [] }
 }
 
 /**

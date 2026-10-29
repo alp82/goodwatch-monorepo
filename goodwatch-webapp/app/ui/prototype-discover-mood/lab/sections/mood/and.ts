@@ -12,6 +12,11 @@
 // rarest pick. The cut is read 400 at a time (ten pages); each chunk goes back as `ranked` (100 at a time) with each
 // other pick alone, and the titles all of those keep are the AND list in Discover's order. Load more reads the next
 // chunk, so once the cut is read to its end the list is exactly the AND list.
+//
+// Round 13 (k): a group can be "any of" (`anyof=themes,genres`): its picks go to Discover as they are (its own OR), so
+// every query holds the whole group (or the group less one pick, for "Without X"); inclusion-exclusion runs only over
+// the "all of" groups. Across groups it is always AND.
+import { useSearchParams } from "@remix-run/react"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
 import { searchEligibility } from "~/domain/discover-search"
@@ -32,8 +37,37 @@ export interface Cond {
 	values: string[]
 }
 
-/** At most this many picks AND together (2^5 = 32 queries). */
+/** The URL param for the groups that match any of their picks. */
+export const ANY_PARAM = "anyof"
+export type AnyOf = ReadonlySet<AndGroup>
+const NONE: AnyOf = new Set()
+
+/** The "any of" groups, and a setter that keeps them in the URL. */
+export function useAnyOf(): { any: AnyOf; set: (g: AndGroup, any: boolean) => void } {
+	const [params, setParams] = useSearchParams()
+	const raw = params.get(ANY_PARAM) ?? ""
+	const any = new Set(raw.split(",").filter((g): g is AndGroup => (GROUPS as string[]).includes(g)))
+	const set = (g: AndGroup, on: boolean) =>
+		setParams(
+			(prev) => {
+				const next = new URLSearchParams(prev)
+				const now = new Set((next.get(ANY_PARAM) ?? "").split(",").filter((x): x is AndGroup => (GROUPS as string[]).includes(x)))
+				if (on) now.add(g)
+				else now.delete(g)
+				const list = GROUPS.filter((x) => now.has(x))
+				if (list.length) next.set(ANY_PARAM, list.join(","))
+				else next.delete(ANY_PARAM)
+				return next
+			},
+			{ replace: true, preventScrollReset: true },
+		)
+	return { any, set }
+}
+
+/** At most this many picks AND together (2^5 = 32 queries); "any of" groups don't count. */
 export const MAX_AND = 5
+/** The picks in "all of" groups, the ones the cap counts. */
+export const andCount = (picks: Cond[], any: AnyOf = NONE) => picks.filter((c) => !any.has(c.group)).length
 
 export function picksOf(d: ProtoDiscover): Cond[] {
 	return [
@@ -96,26 +130,28 @@ export interface AndCounts {
  * Exact AND counts, or the last ones while new ones load (so rows don't jump to "no count" and back). `busy` while
  * the shown counts are for an earlier state.
  */
-export function useAndCounts(d: ProtoDiscover, picks: Cond[]): { counts: AndCounts | null; busy: boolean } {
+export function useAndCounts(d: ProtoDiscover, picks: Cond[], any: AnyOf = NONE): { counts: AndCounts | null; busy: boolean } {
 	const { ranked, waiting } = useRanked(d)
 	const base = d.filters.query
 	const groups = GROUPS.filter((g) => picks.some((c) => c.group === g))
 	const of = (g: AndGroup) => picks.filter((c) => c.group === g)
+	// An "any of" group: the whole group, or the group less one pick (Without X).
+	const choices = (g: AndGroup) => (any.has(g) ? [of(g), ...of(g).map((c) => of(g).filter((x) => x !== c))] : subsets(of(g)))
 	// Every combination of subsets, one per group with picks.
-	const combos = groups.reduce<Subsets[]>((all, g) => all.flatMap((s) => subsets(of(g)).map((sub) => ({ ...s, [g]: sub }))), [{}])
+	const combos = groups.reduce<Subsets[]>((all, g) => all.flatMap((s) => choices(g).map((sub) => ({ ...s, [g]: sub }))), [{}])
 	const queries = useQueries({
 		queries: combos.map((s) => {
 			const q = queryFor(base, ranked, s)
 			return {
 				queryKey: ["lab-mood-and", q],
-				enabled: !waiting && picks.length <= MAX_AND,
+				enabled: !waiting && andCount(picks, any) <= MAX_AND,
 				staleTime: 60_000,
 				queryFn: ({ signal }: { signal: AbortSignal }) => results(q, signal),
 			}
 		}),
 	})
 	const last = useRef<AndCounts | null>(null)
-	const ready = !waiting && picks.length <= MAX_AND && queries.every((q) => q.data)
+	const ready = !waiting && andCount(picks, any) <= MAX_AND && queries.every((q) => q.data)
 	if (!ready) return { counts: last.current, busy: true }
 
 	const at = new Map<string, DiscoverResults>()
@@ -129,6 +165,11 @@ export function useAndCounts(d: ProtoDiscover, picks: Cond[]): { counts: AndCoun
 		const walk = (i: number, s: Subsets, sign: number) => {
 			if (i === gs.length) {
 				sum += sign * term(s)
+				return
+			}
+			// An "any of" group is one term: all of its set, as Discover reads it.
+			if (any.has(gs[i])) {
+				walk(i + 1, { ...s, [gs[i]]: sets[gs[i]] ?? [] }, sign)
 				return
 			}
 			for (const sub of subsets(sets[gs[i]] ?? [])) if (sub.length) walk(i + 1, { ...s, [gs[i]]: sub }, sign * (sub.length % 2 ? 1 : -1))
@@ -167,7 +208,7 @@ export function useAndCounts(d: ProtoDiscover, picks: Cond[]): { counts: AndCoun
 	const safe: AndCounts = {
 		...counts,
 		adding: (u) => {
-			const n = picks.length >= MAX_AND ? null : counts.adding(u)
+			const n = andCount(picks, any) >= MAX_AND && !any.has(u.group) ? null : counts.adding(u)
 			return n === null || Number.isNaN(n) ? null : Math.max(0, n)
 		},
 	}
@@ -192,11 +233,11 @@ async function pages(query: string, from: number, to: number, signal: AbortSigna
 	return [first, ...rest]
 }
 
-/** True when a group holds two picks or more: only then the AND list differs from Discover's own. */
-export const needsAnd = (picks: Cond[]) => GROUPS.some((g) => picks.filter((c) => c.group === g).length > 1)
+/** True when an "all of" group holds two picks or more: only then the AND list differs from Discover's own. */
+export const needsAnd = (picks: Cond[], any: AnyOf = NONE) => GROUPS.some((g) => !any.has(g) && picks.filter((c) => c.group === g).length > 1)
 
 /** The AND list in Discover's order, read a chunk at a time (see the header). */
-export function useAndList(d: ProtoDiscover, picks: Cond[], on: boolean) {
+export function useAndList(d: ProtoDiscover, picks: Cond[], on: boolean, any: AnyOf = NONE) {
 	const { ranked, waiting } = useRanked(d)
 	const base = d.filters.query
 	const groups = GROUPS.filter((g) => picks.some((c) => c.group === g))
@@ -212,12 +253,18 @@ export function useAndList(d: ProtoDiscover, picks: Cond[], on: boolean) {
 		const oc = plain.data?.optionCounts?.[c.group] as Record<string, number> | undefined
 		return c.values.reduce((a, v) => a + (oc?.[v] ?? 0), 0)
 	}
-	const firsts: Subsets = Object.fromEntries(groups.map((g) => [g, [...picks.filter((c) => c.group === g)].sort((a, b) => own(a) - own(b)).slice(0, 1)]))
+	// An "any of" group goes whole into the cut (Discover's OR); an "all of" group by its rarest pick.
+	const firsts: Subsets = Object.fromEntries(
+		groups.map((g) => {
+			const list = picks.filter((c) => c.group === g)
+			return [g, any.has(g) ? list : [...list].sort((a, b) => own(a) - own(b)).slice(0, 1)]
+		}),
+	)
 	const others = picks.filter((c) => !(firsts[c.group] ?? []).includes(c))
 	const cut = queryFor(base, ranked, firsts)
 	const [read, setRead] = useState({ cut: "", chunks: 1 })
 	const chunks = read.cut === cut ? read.chunks : 1
-	const ready = on && !waiting && Boolean(plain.data) && picks.length <= MAX_AND
+	const ready = on && !waiting && Boolean(plain.data) && andCount(picks, any) <= MAX_AND
 	const pool = useQueries({
 		queries: Array.from({ length: chunks }, (_, i) => ({
 			queryKey: ["lab-mood-and-pool", cut, i],
@@ -281,13 +328,14 @@ const DISCOVER_PAGE = 40
 
 /**
  * The grid's and the footer's list for a mood variant with AND picks (SectionVariant.useResults): the exact AND
- * count, and the AND list in Discover's order. Null while no group holds two picks (Discover's list is the AND list).
+ * count, and the AND list in Discover's order. Null while no "all of" group holds two picks (then Discover's list is it).
  */
 export function useAndResults(d: ProtoDiscover): ResultsView | null {
 	const picks = picksOf(d)
-	const on = needsAnd(picks) && picks.length <= MAX_AND
-	const { counts, busy } = useAndCounts(d, on ? picks : [])
-	const list = useAndList(d, picks, on)
+	const { any } = useAnyOf()
+	const on = needsAnd(picks, any) && andCount(picks, any) <= MAX_AND
+	const { counts, busy } = useAndCounts(d, on ? picks : [], any)
+	const list = useAndList(d, picks, on, any)
 	if (!on) return null
 	return { total: counts?.total ?? null, cards: list.cards, loading: busy || list.busy, hasMore: list.hasMore, loadMore: list.more }
 }

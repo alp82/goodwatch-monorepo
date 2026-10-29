@@ -396,7 +396,11 @@ export function WithoutTile({ s, className = "", basis, short = false }: { s: Dr
 			<span className="grid h-5 w-5 shrink-0 place-items-center rounded-full" style={{ color: s.color, boxShadow: `inset 0 0 0 1px ${s.color}80` }}>
 				<MinusIcon className="h-3.5 w-3.5" aria-hidden />
 			</span>
-			<span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-300 line-through decoration-2 group-hover:text-white" style={{ textDecorationColor: `${s.color}cc` }}>
+			{/* Round 13: a thicker, lighter strike (the pick's color toward white), unbroken through the letters. */}
+			<span
+				className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-300 line-through decoration-[2.5px] [text-decoration-skip-ink:none] group-hover:text-white"
+				style={{ textDecorationColor: `color-mix(in srgb, ${s.color} 60%, white)` }}
+			>
 				{s.name}
 			</span>
 			{s.n !== null && (

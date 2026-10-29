@@ -26,6 +26,7 @@ import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 import { ProtoGrid, type ProtoDiscover, TAGS, type Tag, tagId, type useFilterPieces } from "../kit"
 import { tagName } from "./sections/mood/parts"
 import { mcUsers, setMcUsers } from "./sections/scores/mc-users"
+import { clearYou, useYouExtras, youChips, youCount } from "./sections/taste/you-extras"
 import type { SectionId } from "./types"
 
 export type Pieces = ReturnType<typeof useFilterPieces>
@@ -91,8 +92,8 @@ export const chipsOf = (pieces: Pieces, k: CardKey) => pieces.chips.filter((c) =
 
 /** How many values a sub-tab has set. */
 export function subCount(d: ProtoDiscover, pieces: Pieces, sub: Sub) {
-	// Scores a's lab-only Metacritic user score counts with Scores.
-	const extra = sub.id === "scores" && mcUsers() ? 1 : 0
+	// Lab-only values: Scores a's Metacritic user score, You's taste groups, lists and steps (you-extras.ts).
+	const extra = sub.id === "scores" ? (mcUsers() ? 1 : 0) : sub.id === "taste" ? youCount() : 0
 	return extra + sub.slots.reduce(
 		(n, slot) =>
 			n + (slot === "q" ? (d.q ? 1 : 0) : slot === "notSeenYet" ? (d.filters.state.notSeenYet ? 1 : 0) : chipsOf(pieces, slot).length),
@@ -129,6 +130,7 @@ export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegV
 	const searchOther = [
 		...labels("similarTo", "people", "loved", "disliked", "minMatch"),
 		...(s.notSeenYet ? ["Not seen yet"] : []),
+		...youChips().map((c) => c.label),
 		...(s.type !== "all" ? [TYPE_LABELS[s.type]] : []),
 	]
 	// A segment's badge is the sum of its sub-tabs' badges.
@@ -441,6 +443,7 @@ export function useClearAll(d: ProtoDiscover) {
 	}, [pending, d.q, d.filters])
 	return () => {
 		setMcUsers(0)
+		clearYou()
 		if (d.q !== null) {
 			setPending(true)
 			d.setQ(null)
@@ -499,6 +502,18 @@ export function MyServicesChip({ d, onOpen }: { d: ProtoDiscover; onOpen: (slot:
 	)
 }
 
+/** You's lab-only choices as chips (taste groups, Outside your usual, Match 60%+, On your wishlist, Seen before). */
+export function YouChips({ onOpen }: { onOpen: (slot: Slot) => void }) {
+	const x = useYouExtras()
+	return (
+		<>
+			{youChips(x).map((c) => (
+				<ValueChip key={c.key} chip={{ key: c.key, group: c.group, label: c.label, remove: (v) => v }} onOpen={() => onOpen("notSeenYet")} onRemove={c.remove} />
+			))}
+		</>
+	)
+}
+
 const LINE_FADE = "linear-gradient(to right, black calc(100% - 2.5rem), transparent)"
 
 export function StatusLine({
@@ -512,7 +527,8 @@ export function StatusLine({
 	// Round 11b: picked services keep their chip here too.
 	const chips = pieces.chips
 	const s = d.filters.state
-	const any = searching || chips.length > 0 || s.onMyServices
+	const you = useYouExtras()
+	const any = searching || chips.length > 0 || s.onMyServices || youChips(you).length > 0
 	const sorts = discoverSorts(searching, TASTE)
 	const sort = sortShown(d.filters.sort, searching, TASTE)
 	return (
@@ -560,6 +576,7 @@ export function StatusLine({
 						onRemove={() => d.filters.set({ notSeenYet: false })}
 					/>
 				)}
+				<YouChips onOpen={onOpen} />
 				{chips.map((chip) => (
 					<ValueChip
 						key={chip.key}

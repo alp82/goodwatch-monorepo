@@ -1,8 +1,7 @@
 // PROTOTYPE - throwaway. Your taste f, "Taste in this list": bars, like the Mood tab's d. Your taste groups as rows
 // with their loved posters and how much of this list sits in each (plus the titles in none of them), Taste match as
 // rows from 90%+ down to Outside your usual with each step's share, and the order and your lists as switches.
-// A guest sees the rows faint, with one Sign up; Order, Wishlist and Seen before are locked too (Not seen yet works
-// for guests, as in production).
+// A guest sees the rows faint, with one Sign up; Order and Your lists are locked too (round 13: Not seen yet as well).
 import { BarsArrowDownIcon, CheckIcon, LockClosedIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
@@ -196,19 +195,13 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 				</div>
 			</section>
 			<section>
-				{/* Round 12: Not seen yet is back here (the real filter; guests too). Wishlist and Seen before need an account. */}
+				{/* Round 13: several lists at once, each its own switch; all need an account. Not seen yet and Seen before exclude each other. */}
 				<BlockHead>Your lists</BlockHead>
 				<div className="flex flex-col gap-2">
-					<TasteSwitch
-						label="Not seen yet"
-						tone="blue"
-						on={d.filters.state.notSeenYet}
-						onChange={(on) => taste.list.set(on ? "unseen" : "all")}
-						icon={<ScopeIcon id="unseen" className="h-4 w-4 shrink-0" />}
-					/>
 					{(
 						[
-							["wishlist", "Only your Wishlist"],
+							["unseen", "Not seen yet"],
+							["wishlist", "On your wishlist"],
 							["seen", "Seen before"],
 						] as const
 					).map(([id, label]) => (
@@ -216,8 +209,8 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 							key={id}
 							label={label}
 							tone="blue"
-							on={taste.list.value === id}
-							onChange={(on) => taste.list.set(on ? id : "all")}
+							on={taste.list.has(id)}
+							onChange={(on) => taste.list.turn(id, on)}
 							locked={locked}
 							icon={
 								locked ? (

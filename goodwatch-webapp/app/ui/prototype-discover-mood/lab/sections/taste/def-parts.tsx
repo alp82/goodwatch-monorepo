@@ -7,7 +7,7 @@ import { CheckIcon, EyeIcon, EyeSlashIcon, LockClosedIcon, UserPlusIcon } from "
 import { BookmarkIcon, FingerPrintIcon } from "@heroicons/react/24/solid"
 import { Link, useSearchParams } from "@remix-run/react"
 import { motion } from "framer-motion"
-import { type ReactNode, useSyncExternalStore } from "react"
+import type { ReactNode } from "react"
 import { MIN_MATCHES, type MinMatch } from "~/domain/filter-state"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { Knob, SHELL, TAP } from "~/ui/filter-bar/motion"
@@ -17,6 +17,7 @@ import { useAuthHref } from "~/utils/auth-href"
 import { type ProtoDiscover, TAGS, type Tag, tagId } from "../../../kit"
 import type { Viewer } from "../../types"
 import { POSTER } from "./parts"
+import { GROUP_NAME, setYou, useYouExtras } from "./you-extras"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The simulated member's taste (names follow the group-name rule: two traits and a noun, at most 29 characters)
@@ -55,10 +56,10 @@ export interface TasteGroup {
 }
 
 export const GROUPS: TasteGroup[] = [
-	{ id: "g1", name: "Eerie, cerebral sci-fi", words: [tag("moods:mind"), tag("themes:future")], loved: [SHOTS.severance, SHOTS.arrival, SHOTS.dark], share: 0.07 },
-	{ id: "g2", name: "Sharp, tense family drama", words: [tag("themes:family"), tag("moods:heavy")], loved: [SHOTS.bear, SHOTS.succession, SHOTS.parasite], share: 0.06 },
-	{ id: "g3", name: "Gentle, magical animation", words: [tag("moods:worlds"), tag("styles:animated")], loved: [SHOTS.spirited, SHOTS.howl], share: 0.04 },
-	{ id: "g4", name: "Quiet, tender romance", words: [tag("moods:romance"), tag("styles:slow")], loved: [SHOTS.pastLives], share: 0.03 },
+	{ id: "g1", name: GROUP_NAME.g1, words: [tag("moods:mind"), tag("themes:future")], loved: [SHOTS.severance, SHOTS.arrival, SHOTS.dark], share: 0.07 },
+	{ id: "g2", name: GROUP_NAME.g2, words: [tag("themes:family"), tag("moods:heavy")], loved: [SHOTS.bear, SHOTS.succession, SHOTS.parasite], share: 0.06 },
+	{ id: "g3", name: GROUP_NAME.g3, words: [tag("moods:worlds"), tag("styles:animated")], loved: [SHOTS.spirited, SHOTS.howl], share: 0.04 },
+	{ id: "g4", name: GROUP_NAME.g4, words: [tag("moods:romance"), tag("styles:slow")], loved: [SHOTS.pastLives], share: 0.03 },
 ]
 /** Titles in a list that sit in no group (Discover's `side=none`). */
 export const NO_GROUP_SHARE = 0.8
@@ -73,39 +74,26 @@ export const STRONG: { tag: Tag; shot: Shot }[] = [
 	{ tag: tag("styles:animated"), shot: SHOTS.howl },
 ]
 
-const MATCH_SHARE: Record<string, number> = { outside: 0.18, 0: 1, 70: 0.46, 80: 0.21, 90: 0.06 }
+const MATCH_SHARE: Record<string, number> = { outside: 0.18, 0: 1, 60: 0.68, 70: 0.46, 80: 0.21, 90: 0.06 }
 const WISHLIST = 38
 const UNSEEN_SHARE = 0.985
 const SEEN = 214
 export const MAX_PICKS = 3
 
 // ---------------------------------------------------------------------------------------------------------------
-// What the grid doesn't follow yet, kept for the page's life
+// What the grid doesn't follow yet (round 13: you-extras.ts, so the shell's badges and chips read it too)
 
 export type ListScope = "all" | "unseen" | "wishlist" | "seen"
-interface Extras {
-	groups: string[]
-	outside: boolean
-	list: "wishlist" | "seen" | null
-}
-let extras: Extras = { groups: [], outside: false, list: null }
-const subs = new Set<() => void>()
-const subscribe = (f: () => void) => {
-	subs.add(f)
-	return () => subs.delete(f)
-}
-const setExtras = (patch: Partial<Extras>) => {
-	extras = { ...extras, ...patch }
-	for (const f of subs) f()
-}
 
-export type MatchStep = MinMatch | "outside"
-export const MATCH_STEPS: MatchStep[] = ["outside", ...(MIN_MATCHES as readonly MinMatch[])]
+// Round 13: a 60%+ step, lab-only (you-extras.ts).
+export type MatchStep = MinMatch | 60 | "outside"
+const STEPS: (MinMatch | 60)[] = [0, 60, ...MIN_MATCHES.filter((v) => v > 0)]
+export const MATCH_STEPS: MatchStep[] = ["outside", ...STEPS]
 export const matchName = (v: MatchStep) => (v === "outside" ? "Outside your usual" : v ? `${v}%+` : "Any")
 
 export function useTaste(d: ProtoDiscover, viewer: Viewer) {
 	const member = viewer === "member"
-	const x = useSyncExternalStore(subscribe, () => extras, () => extras)
+	const x = useYouExtras()
 	const [params] = useSearchParams()
 	const total = d.total ?? 0
 	const s = d.filters.state
@@ -115,8 +103,10 @@ export function useTaste(d: ProtoDiscover, viewer: Viewer) {
 	const picks = x.groups.length + strongOn
 	const full = picks >= MAX_PICKS
 
-	const match: MatchStep = x.outside ? "outside" : s.minMatch
-	const list: ListScope = x.list ?? (s.notSeenYet ? "unseen" : "all")
+	const match: MatchStep = x.outside ? "outside" : x.sixty ? 60 : s.minMatch
+	// Round 13: the lists are switches, several at once; Not seen yet and Seen before exclude each other.
+	const has = (v: ListScope) => (v === "unseen" ? s.notSeenYet : v === "wishlist" ? x.wishlist : v === "seen" ? x.seen : false)
+	const list: ListScope = (["unseen", "wishlist", "seen"] as const).find(has) ?? "all"
 	const unseenCount = member ? (total ? Math.round(total * UNSEEN_SHARE) : null) : (d.counts?.optionCounts.notSeenYet?.on ?? null)
 
 	return {
@@ -128,9 +118,9 @@ export function useTaste(d: ProtoDiscover, viewer: Viewer) {
 			all: GROUPS,
 			isOn: (g: TasteGroup) => x.groups.includes(g.id),
 			toggle: (g: TasteGroup) =>
-				setExtras({ groups: x.groups.includes(g.id) ? x.groups.filter((id) => id !== g.id) : [...x.groups, g.id].slice(-MAX_PICKS) }),
+				setYou({ groups: x.groups.includes(g.id) ? x.groups.filter((id) => id !== g.id) : [...x.groups, g.id].slice(-MAX_PICKS) }),
 			count: (g: TasteGroup) => (total ? Math.max(1, Math.round(total * g.share)) : null),
-			clear: () => setExtras({ groups: [] }),
+			clear: () => setYou({ groups: [] }),
 		},
 		words: {
 			all: STRONG,
@@ -144,8 +134,8 @@ export function useTaste(d: ProtoDiscover, viewer: Viewer) {
 		match: {
 			value: match,
 			set: (v: MatchStep) => {
-				setExtras({ outside: v === "outside" })
-				d.filters.set({ minMatch: v === "outside" ? 0 : v })
+				setYou({ outside: v === "outside", sixty: v === 60 })
+				d.filters.set({ minMatch: v === "outside" || v === 60 ? 0 : v })
 			},
 			// The live counts are a guest's (no taste), so a member's are a plausible share of the list.
 			count: (v: MatchStep) => (total ? Math.round(total * (MATCH_SHARE[String(v)] ?? 1)) : null),
@@ -159,8 +149,20 @@ export function useTaste(d: ProtoDiscover, viewer: Viewer) {
 		},
 		list: {
 			value: list,
+			has,
+			/** One list on or off (f's switches). */
+			turn: (v: Exclude<ListScope, "all">, on: boolean) => {
+				if (v === "wishlist") setYou({ wishlist: on })
+				if (v === "seen") setYou({ seen: on })
+				if (v === "seen" && on && s.notSeenYet) d.filters.set({ notSeenYet: false })
+				if (v === "unseen") {
+					if (on) setYou({ seen: false })
+					d.filters.set({ notSeenYet: on })
+				}
+			},
+			/** Just this one (d's and e's radios). */
 			set: (v: ListScope) => {
-				setExtras({ list: v === "wishlist" || v === "seen" ? v : null })
+				setYou({ wishlist: v === "wishlist", seen: v === "seen" })
 				d.filters.set({ notSeenYet: v === "unseen" })
 			},
 			count: (v: ListScope): number | null =>
@@ -168,11 +170,11 @@ export function useTaste(d: ProtoDiscover, viewer: Viewer) {
 		},
 		/** Everything this tab set, back to plain. */
 		clearAll: () => {
-			setExtras({ groups: [], outside: false, list: null })
+			setYou({ groups: [], outside: false, sixty: false, wishlist: false, seen: false })
 			for (const w of STRONG) if (d.isOn(w.tag)) d.toggle(w.tag)
 			d.filters.set({ minMatch: 0, notSeenYet: false })
 		},
-		any: picks > 0 || match !== 0 || list !== "all",
+		any: picks > 0 || match !== 0 || s.notSeenYet || x.wishlist || x.seen,
 	}
 }
 export type Taste = ReturnType<typeof useTaste>
@@ -327,7 +329,7 @@ export function MatchSteps({ taste, compact = false, outside = true, phone = fal
 	const value = taste.match.value
 	const locked = !taste.member
 	return (
-		<div role="radiogroup" aria-label="Taste match" aria-disabled={locked || undefined} className={`grid gap-1.5 ${outside ? "grid-cols-[1.35fr_1fr_1fr_1fr_1fr]" : "grid-cols-4"}`}>
+		<div role="radiogroup" aria-label="Taste match" aria-disabled={locked || undefined} className={`grid gap-1.5 ${outside ? "grid-cols-[1.35fr_repeat(5,minmax(0,1fr))]" : "grid-cols-5"}`}>
 			{steps.map((v, i) => {
 				const on = !locked && v === value
 				const lit = !locked && typeof v === "number" && typeof value === "number" && value !== 0 && v >= value
@@ -356,7 +358,7 @@ export function MatchSteps({ taste, compact = false, outside = true, phone = fal
 						<span
 							aria-hidden
 							className={`absolute right-0 bottom-0 left-0 h-1 ${low ? "bg-sky-400" : "bg-amber-400"}`}
-							style={{ opacity: v === 0 ? 0 : low ? (locked ? 0.12 : 0.45) : (locked ? 0.1 : 0.15) + (0.6 * (i - (outside ? 1 : 0))) / 3 }}
+							style={{ opacity: v === 0 ? 0 : low ? (locked ? 0.12 : 0.45) : (locked ? 0.1 : 0.15) + (0.6 * (i - (outside ? 1 : 0))) / (STEPS.length - 1) }}
 						/>
 					</motion.button>
 				)

@@ -22,7 +22,7 @@ export const DEFAULTS: Partial<Record<SectionId, string>> = {
 	titles: "g",
 	people: "c",
 	taste: "f",
-	mood: "e",
+	mood: "k",
 	services: "b",
 	origin: "a",
 	length: "d",

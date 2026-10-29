@@ -15,7 +15,8 @@ import { useMcUsers, setMcUsers } from "./sections/scores/mc-users"
 import { Face } from "./sections/people/shared"
 import { STEER, STEER_ORDER, SteerChip, chipStyle } from "./sections/titles/ghi-parts"
 import { ShowButton } from "./show-button"
-import { PRIVATE, type Pieces, type Slot, MyServicesChip, ValueChip, dropOne, slotOfChip, useClearAll } from "./shell-parts"
+import { useYouExtras, youChips } from "./sections/taste/you-extras"
+import { PRIVATE, type Pieces, type Slot, MyServicesChip, ValueChip, YouChips, dropOne, slotOfChip, useClearAll } from "./shell-parts"
 
 const SEARCH_CAP = 100
 const FADE = "linear-gradient(to right, black calc(100% - 2.5rem), transparent)"
@@ -167,6 +168,7 @@ function StateChips({ d, pieces, onOpen }: { d: ProtoDiscover; pieces: Pieces; o
 					onRemove={() => d.filters.set({ notSeenYet: false })}
 				/>
 			)}
+			<YouChips onOpen={onOpen} />
 			{rest.map((chip) => (
 				<ValueChip key={chip.key} chip={chip} onOpen={() => onOpen(slotOfChip(chip))} onRemove={() => d.filters.update((x) => chip.remove(x))} />
 			))}
@@ -198,7 +200,8 @@ export function Footer({
 	const d = useShown(raw)
 	const clearAll = useClearAll(d)
 	const mc = useMcUsers()
-	const n = pieces.secondaryCount + (d.q ? 1 : 0) + (mc ? 1 : 0)
+	const you = youChips(useYouExtras()).length
+	const n = pieces.secondaryCount + (d.q ? 1 : 0) + (mc ? 1 : 0) + you
 	const line = (
 		<div className="flex min-w-0 flex-1 items-center gap-3">
 			<Count d={d} />

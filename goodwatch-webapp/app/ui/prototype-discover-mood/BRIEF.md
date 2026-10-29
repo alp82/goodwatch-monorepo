@@ -528,3 +528,31 @@ rename that tab to "You"?"
 - Not seen yet left Services a and b (b's Any service sits in the head row on phones too). The slot `notSeenYet`
   moved to the You sub-tab, so the You and Search badges count it, the footer and status chips open You, the Search
   summary lists it, and Watch's summary and badge no longer do (Watch's placeholder is "Everywhere").
+
+## Round 13 (2026-10-29): k is the mood pick, "all of" / "any of", You lists
+
+Owner: "lets pick k from now on" (DEFAULTS mood: k). On k: the "all of" over each list becomes a toggle so any group can
+be "any of"; e's removal style is better, with a more visible strike. On You: Not seen yet locked for guests too, a
+60%+ step, "On your wishlist", several lists at once, and each one counted in the You and Search badges.
+
+- k (also i, j, which share andview): each column heading has a small "all of" / "any of" switch (default all of),
+  kept in the URL as `anyof=moods,themes,styles,genres` (`useAnyOf` in and.ts). An "any of" group goes to Discover as
+  is (its own OR); inclusion-exclusion runs only over the "all of" groups, across groups always AND. Counts, bars, the
+  "+ X" cards, "Without X", the grid list and Show N titles follow; with no "all of" group of two picks the list is
+  Discover's own. The five-pick cap counts only "all of" picks. The recipe line says "Funny or Cozy" for an "any of"
+  group and "and" for "all of". Checked: Funny + Cozy about family, all of 1,304 (2,232 + 3,739 - 4,667), any of
+  4,667; Funny or Cozy about growing up and family 942 (4,671 + 2,204 - 5,933); the CTA matches each.
+- Removal tiles (`WithoutTile`, e, j, k): the strike is 2.5 px, the pick's color mixed 60% with white, unbroken
+  through the letters. k's Mixes showed them almost never (AND leaves many "+ X" cards, so no row was free); they now
+  also show once the list is 40 or fewer (the footer's recovery threshold), e's layout: compact last card row over
+  one slim row. Choose has no removal tiles (picked rows keep their ×).
+- You (taste f): Your lists are three independent switches, all locked for guests (lock in place of the icon): Not
+  seen yet (the real filter), On your wishlist, Seen before. Not seen yet and Seen before exclude each other (turning
+  one on turns the other off; together they'd leave nothing). Taste match: Any, 60, 70, 80, 90%+, Outside your usual.
+  The real `match` filter takes only 0, 70, 80, 90 (MIN_MATCHES, also the MCP schema and option counts), so 60 is
+  lab-only (production would add it to MIN_MATCHES).
+- Lab-only You choices (taste groups, Outside your usual, Match 60%+, On your wishlist, Seen before) moved to
+  `sections/taste/you-extras.ts`, so the shell reads them: each counts in the You badge and the Search total, shows in
+  the Search summary, as a removable chip in the footer and the status line (opens You), and in Clear all. Order (For
+  you, Best match first) doesn't count: it orders, filters nothing, like the sort elsewhere. f has no strongest words;
+  where d and e show them they are Mood tags and count in Mood.

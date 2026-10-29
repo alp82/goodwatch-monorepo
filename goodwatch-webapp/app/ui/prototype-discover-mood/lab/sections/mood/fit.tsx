@@ -139,6 +139,8 @@ function Part({ children, onRemove, color }: { children: ReactNode; onRemove: ()
 	)
 }
 
+export type Within = "or" | "and" | ((group: FitKind) => "or" | "and")
+
 export function RecipeLine({
 	d,
 	m,
@@ -149,12 +151,13 @@ export function RecipeLine({
 	d: ProtoDiscover
 	m: Moods
 	size?: string
-	/** How picks of one group join: "or" (Discover today) or "and" (mood i). */
-	within?: "or" | "and"
+	/** How picks of one group join: "or" (Discover today), "and" (mood i), or per group (k, round 13). */
+	within?: Within
 	/** The count to lead with; Discover's own by default. */
 	total?: number | null
 }) {
 	const s = d.filters.state
+	const w = (g: FitKind) => (typeof within === "function" ? within(g) : within)
 	const of = (g: Tag["group"]) => d.picked.filter((t) => t.group === g)
 	const moods = of("moods")
 	const styles = of("styles")
@@ -169,7 +172,7 @@ export function RecipeLine({
 			</Part>
 		))
 	const groups: ReactNode[] = []
-	if (moods.length) groups.push(<span key="moods">{join(tagParts(moods), within)}</span>)
+	if (moods.length) groups.push(<span key="moods">{join(tagParts(moods), w("moods"))}</span>)
 	if (m.words.length)
 		groups.push(
 			<span key="words">
@@ -183,7 +186,7 @@ export function RecipeLine({
 				)}
 			</span>,
 		)
-	if (styles.length) groups.push(<span key="styles">{join(tagParts(styles), within)}</span>)
+	if (styles.length) groups.push(<span key="styles">{join(tagParts(styles), w("styles"))}</span>)
 	if (themes.length)
 		groups.push(
 			<span key="about">
@@ -194,7 +197,7 @@ export function RecipeLine({
 							{t.name.toLowerCase()}
 						</Part>
 					)),
-					within,
+					w("themes"),
 				)}
 			</span>,
 		)
@@ -206,7 +209,7 @@ export function RecipeLine({
 					{genreOptions(d)
 						.filter((o) => o.active)
 						.map((o) => o.label)
-						.join(` ${within} `)}
+						.join(` ${w("genres")} `)}
 				</Part>
 			</span>,
 		)

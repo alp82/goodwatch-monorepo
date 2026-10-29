@@ -3,11 +3,12 @@
 // over a hairline. Rows sort by fit and glide to their new place; each row's bar is its share of the current list.
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
+import type { ReactNode } from "react"
 import { FILTER_ACCENTS } from "~/ui/filter-bar/labels"
 import { type FitKind, type FitRow, LeaveBar } from "./fit"
 
 /** `kind` picks the group's accent from the filter sheet; without one the bar is a quiet gray. */
-export function ColumnHead({ kind, label, picked, note }: { kind?: FitKind; label: string; picked: number; note?: string }) {
+export function ColumnHead({ kind, label, picked, note, right }: { kind?: FitKind; label: string; picked: number; note?: string; right?: ReactNode }) {
 	return (
 		<header className="flex h-8 shrink-0 items-center gap-2.5 border-b border-white/[0.07] px-1">
 			<span className={`h-3.5 w-1 shrink-0 rounded-full ${kind ? FILTER_ACCENTS[kind].bar : "bg-gray-500"}`} aria-hidden />
@@ -19,7 +20,38 @@ export function ColumnHead({ kind, label, picked, note }: { kind?: FitKind; labe
 				</span>
 			)}
 			{note && <span className="ml-auto truncate text-xs text-gray-500">{note}</span>}
+			{right && <span className="ml-auto shrink-0">{right}</span>}
 		</header>
+	)
+}
+
+/** Round 13 (k): how a group's picks join, "all of" (each pick) or "any of" (Discover's own rule). */
+export function ModeToggle({ label, any, onChange }: { label: string; any: boolean; onChange: (any: boolean) => void }) {
+	return (
+		<span role="radiogroup" aria-label={`${label}: how picks join`} className="flex h-6 items-center rounded-full bg-white/[0.05] p-0.5">
+			{(
+				[
+					[false, "all of"],
+					[true, "any of"],
+				] as const
+			).map(([v, text]) => {
+				const on = any === v
+				return (
+					<button
+						key={text}
+						type="button"
+						// biome-ignore lint/a11y/useSemanticElements: a two-way switch; the buttons carry the radio role
+						role="radio"
+						aria-checked={on}
+						onClick={() => onChange(v)}
+						className={`relative h-5 cursor-pointer rounded-full px-2 text-[11px] font-semibold whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "text-white" : "text-gray-500 hover:text-gray-200"}`}
+					>
+						{on && <motion.span layoutId={`mode-${label}`} transition={{ type: "spring", stiffness: 500, damping: 40 }} className="absolute inset-0 rounded-full bg-white/[0.16]" />}
+						<span className="relative">{text}</span>
+					</button>
+				)
+			})}
+		</span>
 	)
 }
 
