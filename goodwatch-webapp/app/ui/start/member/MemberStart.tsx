@@ -17,8 +17,8 @@ import { StartStage } from "../stage/StartStage"
 import { hasQuery } from "../stage/start-query"
 import { useStartQuery } from "../stage/useStartQuery"
 import { useFlow } from "../proto-streamline/ProtoSwitcher"
-import { StreamStage, useDock } from "../proto-streamline/StreamStage"
-import { memberModel } from "../proto-streamline/strip-models"
+import { RevealCard, revealAttrs, useLamp, useReveal } from "../proto-streamline/RevealCard"
+import { memberTeaser } from "../proto-streamline/teaser-models"
 import { Doors } from "./Doors"
 import { FirstSteps } from "./FirstSteps"
 import { MemberResults } from "./MemberResults"
@@ -51,9 +51,10 @@ export function MemberStart({
 	const deck = useMemo(() => buildDeck(data), [data])
 	const unread = !data.continue && !data.wishlist && !data.forYou
 	const ownShelf = useMemo(() => memberShelf(data, shelf), [data, shelf])
-	// PROTOTYPE (start-streamline): the streamlined stage unless `?flow=old`.
+	// PROTOTYPE (start-streamline, round 2): the teaser under the sofa unless `?flow=old`.
 	const flow = useFlow()
-	const dock = useDock(flow, hasQuery(start.query))
+	const reveal = useReveal(flow, hasQuery(start.query))
+	const lamp = useLamp()
 	if (flow !== "old") {
 		const card = hasQuery(start.query) ? (
 			<MemberResults
@@ -73,14 +74,13 @@ export function MemberStart({
 		) : (
 			<FirstSteps ratings={data.ratings} />
 		)
+		const attrs = revealAttrs(flow, reveal.open)
 		return (
-			<div className="start-member">
-				<StreamStage
-					flow={flow}
-					dock={dock}
-					light={{ closed: { night: 0.42, camera: 1 }, open: MEMBER_ROOM }}
+			<div {...attrs} className={`start-member ${attrs.className}`}>
+				<StartStage
 					shelf={ownShelf}
-					strip={memberModel({ query: start.query, results, deck, unread })}
+					night={!lamp ? 0.55 : reveal.open ? MEMBER_ROOM.night : 0.28}
+					camera={MEMBER_ROOM.camera}
 					search={
 						<StartSearchBar
 							query={start.query}
@@ -88,7 +88,7 @@ export function MemberStart({
 							setDraft={start.setDraft}
 							search={start.search}
 							clearSearch={start.clearSearch}
-							onAsk={() => dock.request(true)}
+							onAsk={() => reveal.request(true)}
 						/>
 					}
 					moods={
@@ -99,10 +99,24 @@ export function MemberStart({
 							setPicks={start.setPicks}
 							clearPicks={start.clearPicks}
 							member
-							onDone={() => dock.request(true)}
+							onDone={() => reveal.request(true)}
 						/>
 					}
-					card={card}
+					card={
+						<RevealCard
+							open={reveal.open}
+							onOpen={() => reveal.request(true)}
+							onClose={flow === "f" ? null : () => reveal.request(false)}
+							onAction={() => reveal.request(true)}
+							teaser={
+								flow === "f"
+									? null
+									: memberTeaser({ query: start.query, results, deck, unread })
+							}
+						>
+							{card}
+						</RevealCard>
+					}
 				/>
 				<Doors data={data} />
 			</div>

@@ -4,9 +4,9 @@ import { useNavigate, useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
 
 export const FLOWS = {
-	a: "Sheet: an edge band that rises into the card",
-	b: "Island: a floating pill, the card rises in its place",
-	c: "Scroll: the room stays, scrolling lifts the card",
+	d: "Preview: a compact card under the sofa grows into the card",
+	e: "Ledge: posters on the room's floor grow into the card",
+	f: "Open: the card from the start, the lamp comes on",
 	old: "Today's page",
 } as const
 
@@ -18,7 +18,7 @@ const PERSONAS = ["guest", "full", "few", "new"] as const
 export function useFlow(): Flow {
 	const [params] = useSearchParams()
 	const f = params.get("flow")
-	return f && f in FLOWS ? (f as Flow) : "a"
+	return f && f in FLOWS ? (f as Flow) : "d"
 }
 
 export function ProtoSwitcher() {

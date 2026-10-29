@@ -1,378 +1,117 @@
-/* PROTOTYPE (start-streamline): the streamlined start stage (StreamStage.tsx). Only transform and opacity animate.
+/* PROTOTYPE (start-streamline, round 2): the teaser that grows into the card (RevealCard.tsx). The stage, the room
+   and its framing are today's (start.css); only the card's box changes. Only transform and opacity animate. */
 
-   Placement: the painting's width is set by the wide framing (window + sofa) fitting the room between the search
-   block and the strip, so it is the same open or closed; opening only moves the camera (`--pst-dy`) so the sofa's
-   center sits in the middle of what's left between the search block and the card. */
-
-.pst-stage {
-	--pst-b1: var(--pst-landscape-b1);
-	--pst-y1: var(--pst-landscape-y1);
-	--pst-c2: var(--pst-landscape-c2);
-	--pst-strip: 60px;
-	/* Phones: above the fixed navigation dock. */
-	--pst-strip-bottom: calc(var(--nav-dock-height, 72px) + 10px);
-	--pst-head: 0px;
-	--pst-p: 0;
-	--pst-top: calc(var(--start-pad) + var(--start-block));
-	/* One screen tall; the card is never taller than the space under the search block. */
-	--pst-h: max(560px, calc(100svh - 4rem));
-	--pst-card: min(
-		var(--start-card),
-		max(
-			340px,
-			calc(var(--pst-h) - var(--pst-top) - var(--pst-head) - 12px - var(--start-card-bottom))
-		)
-	);
-	--pst-room1: max(
-		120px,
-		calc(
-			var(--pst-h) -
-			var(--pst-top) -
-			var(--pst-strip) -
-			var(--pst-strip-bottom) -
-			28px
-		)
-	);
-	--pst-room2: max(
-		0px,
-		calc(
-			var(--pst-h) -
-			var(--pst-top) -
-			var(--pst-head) -
-			var(--pst-card) -
-			var(--start-card-bottom)
-		)
-	);
-	--pst-rise: calc(var(--pst-card) + var(--start-card-bottom));
-	--pst-ease: cubic-bezier(0.22, 0.75, 0.18, 1);
-}
-
-@media (max-width: 767.98px) and (orientation: portrait),
-	(max-width: 767.98px) and (min-height: 540.02px) {
-	.pst-stage {
-		--pst-b1: var(--pst-phone-b1);
-		--pst-y1: var(--pst-phone-y1);
-		--pst-c2: var(--pst-phone-c2);
-	}
+.pst2 {
+	--pst2-t: 156px;
+	--pst2-pad-y: 14px;
+	--pst2-pad-x: 16px;
+	--pst2-r: 16px;
+	--pst2-ease: cubic-bezier(0.22, 0.75, 0.18, 1);
 }
 
 @media (min-width: 640px) {
-	.pst-stage {
-		--pst-strip: 64px;
+	.pst2 {
+		--pst2-t: 180px;
+		--pst2-pad-y: 18px;
+		--pst2-pad-x: 22px;
+		--pst2-r: 22px;
 	}
 }
 
 @media (min-width: 1024px) {
-	.pst-stage.start-stage {
-		--pst-strip-bottom: 28px;
-		/* No navigation dock on desktops: the open card sits close to the screen's foot. */
-		--start-card-bottom: 28px;
+	.pst2 {
+		--pst2-t: 204px;
+		--pst2-pad-y: 20px;
+		--pst2-pad-x: 26px;
 	}
 }
 
-.pst-stage[data-flow="a"] {
-	--pst-head: var(--pst-strip);
+/* Ledge: taller, the posters are the teaser. */
+.pst2[data-flow="e"] {
+	--pst2-t: 184px;
+}
+@media (min-width: 640px) {
+	.pst2[data-flow="e"] {
+		--pst2-t: 214px;
+	}
+}
+@media (min-width: 1024px) {
+	.pst2[data-flow="e"] {
+		--pst2-t: 244px;
+	}
 }
 
-.pst-stage[data-open]:not([data-flow="c"]) {
-	--pst-p: 1;
+/* The card's box keeps its size and place; its look moves inside (a member's panel on the content). */
+.pst2.pst2 .start-card {
+	padding: 0;
+	border-radius: 0;
+	background: none;
+	box-shadow: none;
 }
 
-/* Higher than `.start-member .start-stage` (member start's own placement). */
-.start-stage.pst-stage[data-flow] {
-	--start-img-w: min(100cqw, calc(var(--pst-room1) / var(--pst-b1)));
-	--start-img-h: calc(var(--start-img-w) * var(--start-hw));
-	--start-img-top: calc(
-		var(--pst-top) +
-		14px +
-		(var(--pst-room1) - var(--start-img-w) * var(--pst-b1)) /
-		2 -
-		var(--start-img-w) *
-		var(--pst-y1)
-	);
-	--start-img-left: clamp(
-		0px,
-		calc(50cqw - var(--start-img-w) * var(--start-fcx)),
-		calc(100cqw - var(--start-img-w))
-	);
-	--pst-dy: min(
-		0px,
-		calc(
-			var(--pst-top) +
-			var(--pst-room2) /
-			2 -
-			var(--start-img-top) -
-			var(--start-img-w) *
-			var(--pst-c2)
-		)
-	);
-	height: var(--pst-h);
-	overflow: clip;
-}
-
-.start-stage.pst-stage[data-flow="c"] {
-	height: calc(var(--pst-h) + var(--pst-rise));
-}
-
-.pst-frame {
-	position: relative;
-	height: var(--pst-h);
-	overflow: clip;
-}
-
-.pst-stage[data-flow="c"] .pst-frame {
-	position: sticky;
-	top: 4rem;
-}
-
-/* The camera: the room's own scale, and the move from the window down to the sofa. */
-.pst-stage .start-camera {
-	transform: translateY(calc(var(--pst-p) * var(--pst-dy)))
-		scale(var(--start-camera, 1));
-	transition: transform 1.15s var(--pst-ease);
-}
-
-.pst-stage .start-night {
-	transition: opacity 1.1s ease-in-out;
-}
-
-/* Where the painting ends: night above the search block's foot, and under the painting's lower edge. */
-.pst-stage .start-veil {
-	--start-n1: max(var(--start-img-top), calc(var(--pst-top) * 0.6));
-	--start-n0: max(var(--start-img-top), calc(var(--start-n1) - 130px));
-	--start-b1: calc(var(--start-img-top) + var(--start-img-h));
-	--start-b0: calc(var(--start-b1) - 150px);
-}
-
-.pst-content {
+.pst2-clip {
 	position: absolute;
 	inset: 0;
-	z-index: 10;
-	pointer-events: none;
-}
-
-.pst-dock {
-	position: absolute;
-	inset: auto 0 0;
-	z-index: 30;
-	pointer-events: none;
-}
-
-.pst-card-wrap {
-	position: relative;
-}
-
-.pst-stage .start-card {
-	height: var(--pst-card);
-	transition: opacity 0.5s ease-out, transform 0.8s var(--pst-ease);
-}
-
-/* ---------- the strip's content (all flows) ---------- */
-
-.pst-strip {
-	position: relative;
-	display: flex;
-	align-items: center;
-	width: 100%;
-	height: var(--pst-strip);
-	cursor: pointer;
-	pointer-events: auto;
-	text-align: left;
-	color: #fff;
-	outline: none;
-	-webkit-tap-highlight-color: transparent;
-}
-
-.pst-strip:focus-visible {
-	box-shadow: 0 0 0 2px rgb(252 211 77);
-}
-
-.pst-strip-body {
-	position: relative;
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	width: 100%;
-	min-width: 0;
-	animation: pst-in 0.42s var(--pst-ease) both;
-}
-
-@keyframes pst-in {
-	from {
-		opacity: 0;
-		transform: translateY(6px);
-	}
-}
-
-.pst-posters {
-	position: relative;
-	flex: none;
-	display: flex;
-	padding-left: 4px;
-}
-
-.pst-posters img {
-	width: 28px;
-	height: 42px;
-	margin-left: -9px;
-	border-radius: 4px;
-	object-fit: cover;
-	box-shadow: 0 4px 10px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.12);
-	transform: rotate(calc((var(--i) - (var(--n) - 1) / 2) * 5deg))
-		translateY(calc(var(--i) * 0px));
-}
-
-.pst-posters img:first-child {
-	margin-left: 0;
-}
-
-.pst-glyph {
-	flex: none;
-	display: grid;
-	place-items: center;
-	width: 34px;
-	height: 34px;
-	border-radius: 999px;
-	color: rgb(252 211 77);
-	background: rgb(251 191 36 / 0.12);
-	box-shadow: inset 0 0 0 1px rgb(251 191 36 / 0.25);
-}
-
-.pst-text {
-	display: flex;
-	min-width: 0;
-	flex: 1;
-	flex-direction: column;
-	line-height: 1.15;
-}
-
-.pst-tag {
-	font-size: 11px;
-	font-weight: 800;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: rgb(252 211 77);
-}
-
-.pst-strip[data-tone="violet"] .pst-tag {
-	color: rgb(196 181 253);
-}
-.pst-strip[data-tone="sky"] .pst-tag {
-	color: rgb(125 211 252);
-}
-.pst-strip[data-tone="rose"] .pst-tag {
-	color: rgb(253 164 175);
-}
-.pst-strip[data-tone="gray"] .pst-tag {
-	color: rgb(156 163 175);
-}
-
-.pst-line {
-	margin-top: 3px;
 	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	font-size: 14px;
-	font-weight: 600;
-	color: rgb(243 244 246);
+	border-radius: var(--pst2-r);
+	pointer-events: none;
+	transform: translateY(calc(var(--pst2-t) - var(--start-card)));
+	transition: transform 0.75s var(--pst2-ease);
 }
 
-.pst-action {
-	flex: none;
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	height: 34px;
-	padding: 0 10px 0 14px;
-	border-radius: 999px;
-	font-size: 13px;
-	font-weight: 800;
-	color: rgb(3 7 18);
-	background: rgb(251 191 36);
-	box-shadow: 0 6px 20px rgb(251 191 36 / 0.25);
-	transition: transform 0.2s ease-out;
+.pst2-inner {
+	position: absolute;
+	inset: 0;
+	transform: translateY(calc(var(--start-card) - var(--pst2-t)));
+	transition: transform 0.75s var(--pst2-ease);
 }
 
-.pst-strip:hover .pst-action {
-	transform: translateY(-1px);
+.pst2[data-open] .pst2-clip,
+.pst2[data-open] .pst2-inner {
+	transform: none;
+}
+
+.pst2-content {
+	position: absolute;
+	inset: 0;
+	pointer-events: auto;
+	opacity: 0;
+	transition: opacity 0.35s ease-out;
+}
+
+.pst2[data-open] .pst2-content {
+	opacity: 1;
+	transition: opacity 0.5s ease-out 0.12s;
+}
+
+.start-member .pst2-content {
+	padding: 0 12px 12px;
+	border-radius: var(--pst2-r);
+	background: rgb(3 7 18 / 0.82);
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
 }
 
 @media (min-width: 640px) {
-	.pst-line {
-		font-size: 15px;
-	}
-	.pst-posters img {
-		width: 30px;
-		height: 45px;
+	.start-member .pst2-content {
+		padding: 0 20px 20px;
 	}
 }
 
-.pst-dots {
-	display: flex;
-	gap: 3px;
-}
-
-.pst-dots i {
-	width: 4px;
-	height: 4px;
-	border-radius: 999px;
-	background: currentColor;
-	animation: pst-dot 1s ease-in-out infinite;
-}
-
-.pst-dots i:nth-child(2) {
-	animation-delay: 0.15s;
-}
-.pst-dots i:nth-child(3) {
-	animation-delay: 0.3s;
-}
-
-@keyframes pst-dot {
-	50% {
-		opacity: 0.25;
-		transform: translateY(-2px);
-	}
-}
-
-/* While busy: a soft amber light sweeps along the strip's top edge. */
-.pst-sweep {
+.pst2-teaser {
 	position: absolute;
 	inset: 0 0 auto;
-	height: 1px;
-	overflow: hidden;
+	height: var(--pst2-t);
+	pointer-events: auto;
+	transition: opacity 0.3s ease-out;
+}
+
+.pst2[data-open] .pst2-teaser {
 	opacity: 0;
-	transition: opacity 0.3s;
+	pointer-events: none;
 }
 
-.pst-sweep::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	width: 40%;
-	background: linear-gradient(
-		to right,
-		transparent,
-		rgb(252 211 77 / 0.9),
-		transparent
-	);
-	animation: pst-sweep 1.3s ease-in-out infinite;
-}
-
-.pst-strip[data-busy] .pst-sweep {
-	opacity: 1;
-}
-
-@keyframes pst-sweep {
-	from {
-		transform: translateX(-100%);
-	}
-	to {
-		transform: translateX(250%);
-	}
-}
-
-/* The Hide tab on the card's top edge (Island, Scroll). */
-.pst-tab {
+/* The Hide tab on the card's top edge, while open. */
+.pst2-tab {
 	position: absolute;
 	top: 0;
 	left: 50%;
@@ -387,279 +126,681 @@
 	background: rgb(17 24 39);
 	box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12), 0 6px 16px rgb(0 0 0 / 0.5);
 	transform: translate(-50%, -50%);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.3s ease-out;
 	outline: none;
 }
 
-.pst-tab:hover {
+.pst2[data-open] .pst2-tab {
+	opacity: 1;
+	pointer-events: auto;
+	transition-delay: 0.4s;
+}
+
+.pst2-tab:hover {
 	color: #fff;
 }
 
-.pst-tab:focus-visible {
+.pst2-tab:focus-visible {
 	box-shadow: 0 0 0 2px rgb(252 211 77);
 }
 
-/* ---------- a: Sheet ---------- */
+/* ---------- the teaser ---------- */
 
-.pst-stage[data-flow="a"] .pst-dock {
-	transform: translateY(
-		calc(
-			(1 - var(--pst-p)) *
-			(var(--pst-card) + var(--start-card-bottom) - var(--pst-strip-bottom))
-		)
-	);
-	transition: transform 0.85s var(--pst-ease);
-}
-
-.pst-head {
+.pst2-t {
 	position: relative;
-	height: var(--pst-strip);
-	pointer-events: auto;
-	background: linear-gradient(
-		to bottom,
-		rgb(3 7 18 / 0.72),
-		rgb(3 7 18 / 0.94) 70%
-	);
-	transition: opacity 0.5s ease-out;
+	height: 100%;
+	color: #fff;
 }
 
-/* The sheet's top edge: a hairline that glows amber in the middle. */
-.pst-edge {
-	position: absolute;
-	inset: 0 0 auto;
-	height: 1px;
-	background: linear-gradient(
-		to right,
-		rgb(255 255 255 / 0),
-		rgb(252 211 77 / 0.55) 50%,
-		rgb(255 255 255 / 0)
-	);
-}
-
-.pst-edge::before {
-	content: "";
-	position: absolute;
-	left: 20%;
-	right: 20%;
-	bottom: 0;
-	height: 26px;
-	background: radial-gradient(
-		ellipse 50% 100% at 50% 100%,
-		rgb(251 191 36 / 0.14),
-		transparent
-	);
-}
-
-.pst-head .pst-strip {
-	max-width: 880px;
-	margin-inline: auto;
-	padding-inline: 16px;
-	transition: opacity 0.35s ease-out;
-}
-
-.pst-stage[data-flow="a"][data-open] .pst-head {
-	background: linear-gradient(to bottom, rgb(3 7 18 / 0), rgb(3 7 18 / 0));
-}
-
-.pst-stage[data-flow="a"][data-open] .pst-head .pst-strip {
-	opacity: 0;
-	pointer-events: none;
-}
-
-.pst-head-hide {
+.pst2-cover {
 	position: absolute;
 	inset: 0;
+	z-index: 1;
+	cursor: pointer;
+	border-radius: var(--pst2-r);
+	outline: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.pst2-cover:focus-visible {
+	box-shadow: inset 0 0 0 2px rgb(252 211 77);
+}
+
+.pst2-body {
+	position: relative;
+	display: grid;
+	height: 100%;
+	padding: var(--pst2-pad-y) var(--pst2-pad-x);
+	column-gap: 16px;
+	row-gap: 10px;
+	pointer-events: none;
+	animation: pst2-in 0.45s var(--pst2-ease) both;
+}
+
+@keyframes pst2-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+}
+
+.pst2-t[data-kind="fan"] .pst2-body {
+	grid-template-columns: auto minmax(0, 1fr);
+	grid-template-areas: "fan words" "fan cta";
+	align-content: center;
+	align-items: center;
+}
+
+.pst2-t[data-kind="words"] .pst2-body {
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-areas: "words" "cta";
+	align-content: center;
+	justify-items: center;
+	text-align: center;
+}
+
+.pst2-t[data-kind="row"] .pst2-body,
+.pst2-t[data-kind="pair"] .pst2-body {
+	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-rows: auto minmax(0, 1fr);
+	grid-template-areas: "words cta" "row row";
+	align-items: center;
+}
+
+@media (min-width: 640px) {
+	.pst2-t[data-kind="fan"] .pst2-body {
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		grid-template-areas: "fan words cta";
+		column-gap: 28px;
+	}
+	.pst2-t[data-kind="words"] .pst2-body {
+		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-areas: "words cta";
+		justify-items: stretch;
+		text-align: left;
+		column-gap: 28px;
+	}
+}
+
+.pst2-words {
+	grid-area: words;
+	min-width: 0;
+}
+
+.pst2-eyebrow {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: rgb(252 211 77);
+}
+
+.pst2-t[data-tone="violet"] .pst2-eyebrow {
+	color: rgb(196 181 253);
+}
+.pst2-t[data-tone="sky"] .pst2-eyebrow {
+	color: rgb(125 211 252);
+}
+.pst2-t[data-tone="rose"] .pst2-eyebrow {
+	color: rgb(253 164 175);
+}
+.pst2-t[data-tone="gray"] .pst2-eyebrow {
+	color: rgb(156 163 175);
+}
+
+.pst2-headline {
+	margin-top: 2px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-size: 20px;
+	font-weight: 900;
+	line-height: 1.15;
+	letter-spacing: -0.03em;
+}
+
+.pst2-sub {
+	margin-top: 3px;
+	font-size: 13px;
+	line-height: 1.35;
+	color: rgb(209 213 219);
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.pst2-t[data-kind="row"] .pst2-words,
+.pst2-t[data-kind="pair"] .pst2-words {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+}
+
+.pst2-t[data-kind="row"] .pst2-headline,
+.pst2-t[data-kind="pair"] .pst2-headline {
+	margin-top: 0;
+	font-size: 17px;
+}
+
+@media (min-width: 640px) {
+	.pst2-headline {
+		font-size: 26px;
+	}
+	.pst2-sub {
+		font-size: 14px;
+	}
+	.pst2-t[data-kind="row"] .pst2-headline,
+	.pst2-t[data-kind="pair"] .pst2-headline {
+		font-size: 20px;
+	}
+}
+
+@media (min-width: 1024px) {
+	.pst2-headline {
+		font-size: 30px;
+	}
+	.pst2-sub {
+		font-size: 15px;
+	}
+}
+
+.pst2-cta {
+	grid-area: cta;
+	position: relative;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	justify-self: start;
+	gap: 8px;
+	height: 40px;
+	padding: 0 18px;
+	border-radius: 999px;
+	cursor: pointer;
+	pointer-events: auto;
+	font-size: 14px;
+	font-weight: 900;
+	color: rgb(3 7 18);
+	background: rgb(251 191 36);
+	box-shadow: 0 8px 28px rgb(251 191 36 / 0.28);
+	outline: none;
+	transition: transform 0.2s ease-out;
+}
+
+.pst2-cta:hover {
+	transform: translateY(-1px);
+	background: rgb(252 211 77);
+}
+
+.pst2-cta:focus-visible {
+	box-shadow: 0 0 0 2px #fff;
+}
+
+.pst2-t[data-kind="row"] .pst2-cta,
+.pst2-t[data-kind="pair"] .pst2-cta {
+	justify-self: end;
+	height: 34px;
+	padding: 0 14px;
+	font-size: 13px;
+}
+
+.pst2-t[data-kind="words"] .pst2-cta {
+	justify-self: center;
+}
+
+@media (min-width: 640px) {
+	.pst2-cta {
+		height: 44px;
+		padding: 0 22px;
+		font-size: 15px;
+	}
+	.pst2-t[data-kind="fan"] .pst2-cta,
+	.pst2-t[data-kind="words"] .pst2-cta {
+		justify-self: end;
+	}
+}
+
+.pst2-dots {
+	display: flex;
+	gap: 3px;
+}
+
+.pst2-dots i {
+	width: 4px;
+	height: 4px;
+	border-radius: 999px;
+	background: currentColor;
+	animation: pst2-dot 1s ease-in-out infinite;
+}
+.pst2-dots i:nth-child(2) {
+	animation-delay: 0.15s;
+}
+.pst2-dots i:nth-child(3) {
+	animation-delay: 0.3s;
+}
+
+@keyframes pst2-dot {
+	50% {
+		opacity: 0.25;
+		transform: translateY(-2px);
+	}
+}
+
+/* The fan: a few posters fanned like a hand of cards. */
+.pst2-fan {
+	grid-area: fan;
+	position: relative;
+	width: calc(56px + (var(--n) - 1) * 22px);
+	height: 92px;
+	margin-inline: 6px;
+}
+
+.pst2-fan img {
+	position: absolute;
+	left: 50%;
+	bottom: 0;
+	width: 60px;
+	height: 90px;
+	margin-left: -30px;
+	border-radius: 6px;
+	object-fit: cover;
+	box-shadow: 0 10px 24px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.12);
+	transform-origin: 50% 120%;
+	transform: translateX(calc(var(--d) * 22px)) rotate(calc(var(--d) * 7deg));
+}
+
+@media (min-width: 640px) {
+	.pst2-fan {
+		width: calc(88px + (var(--n) - 1) * 32px);
+		height: 128px;
+	}
+	.pst2-fan img {
+		width: 84px;
+		height: 126px;
+		margin-left: -42px;
+		transform: translateX(calc(var(--d) * 32px)) rotate(calc(var(--d) * 7deg));
+	}
+}
+
+@media (min-width: 1024px) {
+	.pst2-fan {
+		width: calc(104px + (var(--n) - 1) * 38px);
+		height: 150px;
+	}
+	.pst2-fan img {
+		width: 100px;
+		height: 150px;
+		margin-left: -50px;
+		transform: translateX(calc(var(--d) * 38px)) rotate(calc(var(--d) * 7deg));
+	}
+}
+
+/* The row: posters as tall as the space under the words, faded at the end. */
+.pst2-row {
+	grid-area: row;
+	display: flex;
+	gap: 10px;
+	height: 100%;
+	min-height: 0;
+	overflow: hidden;
+	mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+}
+
+.pst2-row img,
+.pst2-skel {
+	flex: none;
+	height: 100%;
+	aspect-ratio: 2 / 3;
+	border-radius: 6px;
+	object-fit: cover;
+	box-shadow: 0 0 0 1px rgb(255 255 255 / 0.1);
+	animation: pst2-pop 0.5s var(--pst2-ease) both;
+	animation-delay: calc(var(--i) * 35ms);
+}
+
+.pst2-skel {
+	background: rgb(31 41 55);
+	animation: pst2-pulse 1.2s ease-in-out infinite;
+	animation-delay: calc(var(--i) * 80ms);
+}
+
+@keyframes pst2-pop {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+
+@keyframes pst2-pulse {
+	50% {
+		opacity: 0.45;
+	}
+}
+
+/* The pair: two titles side by side, "or" between them. */
+.pst2-pair {
+	grid-area: row;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+	align-items: center;
+	gap: 10px;
+	height: 100%;
+	min-height: 0;
+}
+
+.pst2-or {
 	display: grid;
 	place-items: center;
-	cursor: pointer;
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity 0.35s ease-out;
-	outline: none;
-}
-
-.pst-stage[data-flow="a"][data-open] .pst-head-hide {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-.pst-grabber {
-	width: 44px;
-	height: 5px;
+	width: 28px;
+	height: 28px;
 	border-radius: 999px;
-	background: rgb(255 255 255 / 0.35);
-	transition: transform 0.2s ease-out, background-color 0.2s;
+	font-size: 12px;
+	font-weight: 800;
+	color: rgb(156 163 175);
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.15);
 }
 
-.pst-head-hide:hover .pst-grabber,
-.pst-head-hide:focus-visible .pst-grabber {
-	background: rgb(255 255 255 / 0.7);
-	transform: scaleX(1.15);
+.pst2-side {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	height: 100%;
+	min-width: 0;
 }
 
-.pst-stage[data-flow="a"] .start-card {
-	opacity: 0;
-}
-
-.pst-stage[data-flow="a"][data-open] .start-card {
-	opacity: 1;
-	transition-delay: 0.12s;
-}
-
-/* ---------- b: Island ---------- */
-
-.pst-island-wrap {
-	position: absolute;
-	left: 50%;
-	bottom: var(--pst-strip-bottom);
-	width: min(560px, calc(100% - 24px));
-	transform: translateX(-50%);
-	pointer-events: none;
-}
-
-.pst-island-wrap .pst-strip {
-	height: calc(var(--pst-strip) - 4px);
-	padding: 0 7px 0 12px;
-	border-radius: 999px;
+.pst2-art {
+	position: relative;
+	flex: none;
+	height: 100%;
+	aspect-ratio: 2 / 3;
 	overflow: hidden;
-	background: rgb(10 15 28 / 0.94);
-	box-shadow:
-		inset 0 1px 0 rgb(255 255 255 / 0.08),
-		0 0 0 1px rgb(255 255 255 / 0.09),
-		0 14px 40px rgb(0 0 0 / 0.6),
-		0 0 60px rgb(251 191 36 / 0.08);
-	transition: opacity 0.4s ease-out, transform 0.6s var(--pst-ease);
+	border-radius: 8px;
+	box-shadow: 0 0 0 1px rgb(255 255 255 / 0.1);
 }
 
-.pst-island-wrap .pst-sweep {
-	inset: auto 18% 0;
-}
-
-.pst-stage[data-flow="b"][data-open] .pst-island-wrap .pst-strip {
-	opacity: 0;
-	transform: translateY(18px) scale(0.92);
-	pointer-events: none;
-}
-
-.pst-stage[data-flow="b"] .start-card {
-	opacity: 0;
-	transform: translateY(40px) scale(0.97);
-	transform-origin: 50% 100%;
-}
-
-.pst-stage[data-flow="b"][data-open] .start-card {
-	opacity: 1;
-	transform: none;
-	transition-delay: 0.08s;
-}
-
-/* ---------- c: Scroll ---------- */
-
-.pst-stage[data-flow="c"] .start-camera,
-.pst-stage[data-flow="c"] .start-night,
-.pst-stage[data-flow="c"] .start-card,
-.pst-stage[data-flow="c"] .pst-ledge-wrap {
-	transition: none;
-}
-
-.pst-stage[data-flow="c"] .start-card {
-	opacity: clamp(0, calc(var(--pst-p) * 2.2 - 0.2), 1);
-	transform: translateY(
-		calc((1 - var(--pst-p)) * (var(--pst-card) + var(--start-card-bottom)))
-	);
-}
-
-.pst-ledge-wrap {
+.pst2-art img {
 	position: absolute;
-	left: 50%;
-	bottom: var(--pst-strip-bottom);
-	width: min(720px, calc(100% - 32px));
-	opacity: clamp(0, calc(1 - var(--pst-p) * 2.6), 1);
-	transform: translate(-50%, calc(var(--pst-p) * -28px));
-	pointer-events: none;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
-.pst-stage[data-flow="c"][data-open] .pst-ledge-wrap .pst-strip {
-	pointer-events: none;
+/* Phones show the poster; from 640 px the backdrop. */
+.pst2-art img:first-child {
+	display: none;
 }
 
-/* The ledge: no panel, the text sits on the room's dark foot; a thin rule under it, and a scroll hint. */
-.pst-ledge-wrap .pst-strip {
-	padding-inline: 4px;
-	text-shadow: 0 1px 2px rgb(0 0 0 / 0.8), 0 4px 20px rgb(0 0 0 / 0.8);
+.pst2-art-tag {
+	position: absolute;
+	left: 4px;
+	top: 4px;
+	font-size: 9px !important;
+	padding: 1px 4px !important;
 }
 
-.pst-ledge-wrap .pst-strip::after {
+.pst2-side-words {
+	min-width: 0;
+}
+
+.pst2-side-title {
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	font-size: 14px;
+	font-weight: 800;
+	line-height: 1.2;
+}
+
+.pst2-side-why {
+	margin-top: 3px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: 12px;
+	font-weight: 600;
+	color: rgb(252 211 77);
+}
+
+@media (min-width: 640px) {
+	.pst2-art {
+		aspect-ratio: 16 / 9;
+	}
+	.pst2-art img:first-child {
+		display: block;
+	}
+	.pst2-art .pst2-art-poster {
+		display: none;
+	}
+	.pst2-art-tag {
+		font-size: 11px !important;
+		padding: 2px 6px !important;
+	}
+	.pst2-side-title {
+		font-size: 16px;
+	}
+	.pst2-side-why {
+		font-size: 13px;
+	}
+}
+
+/* ---------- d: Preview, a compact panel ---------- */
+
+.pst2[data-flow="d"] .pst2-t {
+	border-radius: var(--pst2-r);
+	background: radial-gradient(
+			ellipse 60% 120% at 15% 0%,
+			rgb(251 191 36 / 0.07),
+			transparent 70%
+		),
+		linear-gradient(to bottom, rgb(10 15 28 / 0.9), rgb(3 7 18 / 0.94));
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08),
+		inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* ---------- e: Ledge, the posters on the room's floor ---------- */
+
+.pst2[data-flow="e"] .pst2-t {
+	text-shadow: 0 1px 2px rgb(0 0 0 / 0.85), 0 6px 24px rgb(0 0 0 / 0.85);
+}
+
+/* A soft pool of shadow on the floor under the teaser, so it reads over the rug without a panel. */
+.pst2[data-flow="e"] .pst2-t::before {
 	content: "";
 	position: absolute;
-	inset: auto 0 0;
-	height: 1px;
-	background: linear-gradient(
-		to right,
-		rgb(255 255 255 / 0),
-		rgb(255 255 255 / 0.22) 30%,
-		rgb(255 255 255 / 0.22) 70%,
-		rgb(255 255 255 / 0)
+	inset: 0;
+	pointer-events: none;
+	background: radial-gradient(
+		ellipse 55% 60% at 50% 55%,
+		rgb(2 4 10 / 0.7),
+		rgb(2 4 10 / 0.38) 60%,
+		transparent 100%
 	);
 }
 
-.pst-ledge-wrap .pst-sweep {
-	inset: auto 0 0;
+.pst2[data-flow="e"] .pst2-t[data-kind="fan"] .pst2-body {
+	justify-content: center;
 }
 
-.pst-ledge-wrap .pst-action {
-	color: rgb(252 211 77);
-	background: transparent;
-	box-shadow: inset 0 0 0 1px rgb(251 191 36 / 0.45);
+.pst2[data-flow="e"] .pst2-t[data-kind="row"] .pst2-body,
+.pst2[data-flow="e"] .pst2-t[data-kind="pair"] .pst2-body {
+	max-width: 1100px;
+	margin-inline: auto;
+}
+
+.pst2[data-flow="e"] .pst2-row img,
+.pst2[data-flow="e"] .pst2-art,
+.pst2[data-flow="e"] .pst2-fan img {
+	box-shadow: 0 14px 30px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+.pst2[data-flow="e"] .pst2-cta {
 	text-shadow: none;
 }
 
-.pst-ledge-wrap .pst-action svg {
-	animation: pst-nudge 2.2s ease-in-out infinite;
+@media (min-width: 640px) {
+	.pst2[data-flow="e"] .pst2-fan {
+		height: 168px;
+		width: calc(116px + (var(--n) - 1) * 44px);
+	}
+	.pst2[data-flow="e"] .pst2-fan img {
+		width: 112px;
+		height: 168px;
+		margin-left: -56px;
+		transform: translateX(calc(var(--d) * 44px)) rotate(calc(var(--d) * 6deg));
+	}
 }
 
-@keyframes pst-nudge {
-	0%,
-	60%,
-	100% {
-		transform: none;
+@media (min-width: 1024px) {
+	.pst2[data-flow="e"] .pst2-fan {
+		height: 200px;
+		width: calc(136px + (var(--n) - 1) * 54px);
 	}
-	30% {
-		transform: translateY(-3px);
+	.pst2[data-flow="e"] .pst2-fan img {
+		width: 133px;
+		height: 200px;
+		margin-left: -66px;
+		transform: translateX(calc(var(--d) * 54px)) rotate(calc(var(--d) * 6deg));
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.pst-stage .start-camera,
-	.pst-stage[data-flow="a"] .pst-dock,
-	.pst-island-wrap .pst-strip,
-	.pst-stage .start-card {
-		transition: opacity 0.25s ease-out;
+	.pst2-clip,
+	.pst2-inner {
+		transition: none;
 	}
-	.pst-strip-body,
-	.pst-ledge-wrap .pst-action svg,
-	.pst-sweep::after,
-	.pst-dots i {
+	.pst2-body,
+	.pst2-row img,
+	.pst2-skel,
+	.pst2-dots i {
 		animation: none;
 	}
 }
 
-/* A member's card is as wide as its (capped) height lets the two backdrops be: start.css's rules on --pst-card. */
+/* ---------- round 2 fixes ---------- */
+
+/* The fan keeps its rotated corners inside the teaser. */
+.pst2-fan {
+	margin-inline: 14px 4px;
+	width: calc(64px + (var(--n) - 1) * 18px);
+	height: 84px;
+}
+.pst2-fan img {
+	width: 54px;
+	height: 81px;
+	margin-left: -27px;
+	transform: translateX(calc(var(--d) * 18px)) rotate(calc(var(--d) * 5deg));
+}
+.pst2-fan img:nth-child(n + 4) {
+	display: none;
+}
+@media (min-width: 640px) {
+	.pst2-fan {
+		margin-inline: 26px 8px;
+		width: calc(92px + (var(--n) - 1) * 30px);
+		height: 126px;
+	}
+	.pst2-fan img {
+		width: 80px;
+		height: 120px;
+		margin-left: -40px;
+		transform: translateX(calc(var(--d) * 30px)) rotate(calc(var(--d) * 5deg));
+	}
+	.pst2-fan img:nth-child(n + 4) {
+		display: block;
+	}
+}
 @media (min-width: 1024px) {
-	.start-member .pst-stage .start-card {
-		max-width: min(
-			100cqw - 96px,
-			2000px,
-			calc((var(--pst-card) - var(--start-member-chrome)) * 3.5556 + 64px)
-		);
+	.pst2-fan {
+		margin-inline: 34px 8px;
+		width: calc(100px + (var(--n) - 1) * 34px);
+		height: 144px;
 	}
-	.start-member .pst-stage .start-member-box {
-		max-width: calc(
-			(var(--pst-card) - var(--start-member-chrome)) *
-			3.5556 +
-			24px
-		);
+	.pst2-fan img {
+		width: 92px;
+		height: 138px;
+		margin-left: -46px;
+		transform: translateX(calc(var(--d) * 34px)) rotate(calc(var(--d) * 5deg));
 	}
-	.start-member .pst-stage .start-member-grid {
-		max-width: calc((var(--pst-card) - 92px) / 3 * 8 + 84px);
+}
+
+/* Phones: the headline may wrap to two lines. */
+@media (max-width: 639.98px) {
+	.pst2-t[data-kind="fan"] .pst2-headline,
+	.pst2-t[data-kind="words"] .pst2-headline {
+		white-space: normal;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		font-size: 19px;
 	}
+	.pst2-t[data-kind="fan"] .pst2-sub {
+		-webkit-line-clamp: 1;
+		font-size: 12.5px;
+	}
+	.pst2-t[data-kind="fan"] .pst2-body {
+		row-gap: 8px;
+	}
+	/* The pair: no list tag on the small posters; the line under the title says it in its list's color. */
+	.pst2-art-tag {
+		display: none;
+	}
+	.pst2-pair {
+		gap: 6px;
+	}
+	.pst2-side {
+		gap: 8px;
+	}
+	.pst2-side-title {
+		font-size: 13px;
+	}
+	.pst2-side-why {
+		white-space: normal;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		font-size: 11px;
+		line-height: 1.25;
+	}
+	.pst2-or {
+		width: 22px;
+		height: 22px;
+		font-size: 10px;
+	}
+}
+
+/* Wide screens: the teaser's content stays together in the middle. */
+.pst2-t[data-kind="fan"] .pst2-body,
+.pst2-t[data-kind="words"] .pst2-body,
+.pst2-t[data-kind="row"] .pst2-body,
+.pst2-t[data-kind="pair"] .pst2-body {
+	max-width: 1040px;
+	margin-inline: auto;
+}
+@media (min-width: 640px) {
+	.pst2-t[data-kind="fan"] .pst2-body {
+		grid-template-columns: auto minmax(0, 520px) auto;
+		justify-content: center;
+	}
+	.pst2-t[data-kind="words"] .pst2-body {
+		grid-template-columns: minmax(0, 560px) auto;
+		justify-content: center;
+	}
+}
+.pst2[data-flow="e"] .pst2-t[data-kind="row"] .pst2-body,
+.pst2[data-flow="e"] .pst2-t[data-kind="pair"] .pst2-body {
+	max-width: 980px;
+}
+.pst2-side-why[data-source="wishlist"] {
+	color: rgb(125 211 252);
+}
+.pst2-side-why[data-source="forYou"] {
+	color: rgb(196 181 253);
 }

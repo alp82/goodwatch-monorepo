@@ -20,7 +20,7 @@ import { OpeningBoot, OpeningCover } from "~/ui/start/opening/OpeningBoot"
 import type { ShelfTitle } from "~/ui/start/room/ShelfCovers"
 import { StartSearchBar } from "~/ui/start/search/StartSearchBar"
 import { useStartSearch } from "~/ui/start/search/useStartSearch"
-import { SpotlightCard } from "~/ui/start/spotlight/SpotlightCard"
+import { SpotlightCard, surpriseMood } from "~/ui/start/spotlight/SpotlightCard"
 import { useLovedThree } from "~/ui/start/spotlight/useLovedThree"
 import { StartStage } from "~/ui/start/stage/StartStage"
 import { roomLight, roomStep } from "~/ui/start/stage/room-steps"
@@ -32,9 +32,14 @@ import { assetBase, assetUrl } from "~/utils/asset-url"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 import { ProtoSwitcher, useFlow } from "~/ui/start/proto-streamline/ProtoSwitcher"
-import { StreamStage, useDock } from "~/ui/start/proto-streamline/StreamStage"
+import {
+	RevealCard,
+	revealAttrs,
+	useLamp,
+	useReveal,
+} from "~/ui/start/proto-streamline/RevealCard"
 import { installFixture } from "~/ui/start/proto-streamline/fixture"
-import { guestModel } from "~/ui/start/proto-streamline/strip-models"
+import { guestTeaser } from "~/ui/start/proto-streamline/teaser-models"
 import streamlineCss from "~/ui/start/proto-streamline/streamline.css?url"
 
 // PROTOTYPE (start-streamline): the offline harness answers searches from fixtures.
@@ -244,7 +249,7 @@ function GuestStart({
 	)
 }
 
-/** PROTOTYPE (start-streamline): a guest's streamlined start. */
+/** PROTOTYPE (start-streamline, round 2): a guest's start with the teaser under the sofa. */
 function StreamGuest({
 	titles,
 	browse,
@@ -256,7 +261,8 @@ function StreamGuest({
 	const loved = useLovedThree()
 	const start = useStartQuery({ onChoice: loved.onChoice })
 	const results = useStartSearch(start.query)
-	const dock = useDock(flow, hasQuery(start.query))
+	const reveal = useReveal(flow, hasQuery(start.query))
+	const lamp = useLamp()
 	const view = startView(
 		start.query,
 		results,
@@ -265,21 +271,20 @@ function StreamGuest({
 	const picks = loved.picks?.status === "ready" ? loved.picks.pick : null
 	const moods = start.query.picks.length > 0
 	const n = loved.loved.length
-	const light = {
-		closed: { night: 0.42, camera: 1 },
-		open: picks
-			? { night: 0, camera: 1 }
-			: {
-					night: Math.max(0.04, (moods ? 0.14 : 0.2) - 0.05 * n),
-					camera: Math.round((1.035 - 0.012 * n) * 1000) / 1000,
-				},
-	}
+	// Dim on load, a bit dimmed at rest, lit as the guest goes along; the camera never moves.
+	const night = !lamp
+		? 0.55
+		: picks
+			? 0
+			: reveal.open
+				? Math.max(0.04, (moods ? 0.16 : 0.22) - 0.06 * n)
+				: 0.32
 	const shown = view === "results" ? results.cards : null
 	const shelf = useMemo<readonly ShelfTitle[]>(() => {
 		if (picks?.top) return [picks.top, ...picks.more]
 		return shown?.length ? shown : titles
 	}, [picks, shown, titles])
-	const strip = guestModel({
+	const teaser = guestTeaser({
 		query: start.query,
 		results,
 		view,
@@ -289,13 +294,11 @@ function StreamGuest({
 	})
 	if (flow === "old") return null
 	return (
-		<>
-			<StreamStage
-				flow={flow}
-				dock={dock}
-				light={light}
+		<div {...revealAttrs(flow, reveal.open)}>
+			<StartStage
 				shelf={shelf}
-				strip={strip}
+				night={night}
+				camera={1}
 				search={
 					<StartSearchBar
 						query={start.query}
@@ -303,7 +306,7 @@ function StreamGuest({
 						setDraft={start.setDraft}
 						search={start.search}
 						clearSearch={start.clearSearch}
-						onAsk={() => dock.request(true)}
+						onAsk={() => reveal.request(true)}
 					/>
 				}
 				moods={
@@ -314,17 +317,31 @@ function StreamGuest({
 						setPicks={start.setPicks}
 						clearPicks={start.clearPicks}
 						member={false}
-						onDone={() => dock.request(true)}
+						onDone={() => reveal.request(true)}
 					/>
 				}
 				card={
-					<SpotlightCard
-						start={start}
-						results={results}
-						view={view}
-						loved={loved}
-						fan={titles}
-					/>
+					<RevealCard
+						open={reveal.open}
+						onOpen={() => reveal.request(true)}
+						onClose={flow === "f" ? null : () => reveal.request(false)}
+						onAction={(id) => {
+							if (id === "surprise") {
+								start.clearSearch()
+								start.setPicks([surpriseMood(start.query.picks)])
+							}
+							reveal.request(true)
+						}}
+						teaser={flow === "f" ? null : teaser}
+					>
+						<SpotlightCard
+							start={start}
+							results={results}
+							view={view}
+							loved={loved}
+							fan={titles}
+						/>
+					</RevealCard>
 				}
 				grade={<RoomGrade grade={roomGrade(start.query, results)} />}
 				opening={<OpeningBoot />}
@@ -332,6 +349,6 @@ function StreamGuest({
 			<OpeningCover />
 			<HowItWorksCorner />
 			<StartBrowse data={browse} />
-		</>
+		</div>
 	)
 }
