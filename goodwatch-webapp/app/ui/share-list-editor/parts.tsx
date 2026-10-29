@@ -17,7 +17,6 @@ export const Thumb = ({
 	item.poster ? (
 		<img
 			src={item.poster.replace("/w500/", "/w185/")}
-			loading="lazy"
 			alt=""
 			draggable={false}
 			className={`aspect-[2/3] object-cover ${className}`}

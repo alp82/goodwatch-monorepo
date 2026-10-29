@@ -164,5 +164,7 @@ export function useQuietDock(active: boolean) {
  */
 export function DockStrip({ children }: { children: ReactNode }) {
 	// Portals cannot render on the server. Keep controls and navigation together from the first paint.
+	// The dock is position: fixed, so no ancestor of a DockStrip may set transform, filter, backdrop-filter,
+	// contain or will-change: any of these pins the dock to that ancestor instead of the viewport.
 	return <MobileDock strip={children} />
 }

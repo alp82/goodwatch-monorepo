@@ -185,6 +185,7 @@ function RateView({
 	const line = re?.clearFailed ? WORDS.clearFailed : a.line
 	return (
 		<div className="relative overflow-hidden pb-32 text-white">
+			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, see utils/replay-tap.ts */}
 			<script dangerouslySetInnerHTML={{ __html: REPLAY_TAP_SCRIPT }} />
 			{backdrop && t?.backdrop_path && (
 				<img
