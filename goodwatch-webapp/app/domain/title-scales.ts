@@ -110,7 +110,7 @@ export const decadeStarts = (now: number): number[] =>
 
 /**
  * The years of a Released preset. "recent" is the current year and the two before it, as the title filter reads it,
- * so it is the Last 3 years tile.
+ * so it is the Last 2 years tile.
  */
 export function releasedYears(released: Released, now: number): FilterRange {
 	switch (released) {
@@ -152,14 +152,14 @@ export interface YearPreset {
 }
 
 /**
- * The New tiles: This year, then Last 2, 3 and 5 years. "Last N years" is the current year and the N - 1 before it,
- * so Last 3 years is the "recent" preset.
+ * The New tiles: This year, then Last 2, 3 and 5 years. "Last N years" starts at now minus N,
+ * so Last 2 years is the "recent" preset. This year starts at now.
  */
 export const newYearPresets = (now: number): YearPreset[] =>
 	[1, 2, 3, 5].map((n) => ({
 		key: `last-${n}`,
 		label: n === 1 ? "This year" : `Last ${n} years`,
-		years: yearRange(now - n + 1, now, now),
+		years: yearRange(n === 1 ? now : now - n, now, now),
 	}))
 
 /** The After chips. */

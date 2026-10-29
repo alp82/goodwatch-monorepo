@@ -11,16 +11,19 @@ export function CountryChip({
 	active,
 	count = null,
 	short = false,
+	stableWidth = false,
 	onClick,
 }: {
 	code: string
 	active: boolean
 	count?: number | null
 	short?: boolean
+	stableWidth?: boolean
 	onClick: () => void
 }) {
 	return (
 		<Chip
+			stableWidth={stableWidth}
 			img={countryFlagUrl(code)}
 			o={{
 				id: code,
@@ -49,6 +52,7 @@ export function CountryMatches({
 	onPick,
 	className = "flex flex-wrap content-start gap-1.5",
 	max = 60,
+	stableWidth = false,
 }: {
 	list: readonly Country[]
 	term: string
@@ -57,12 +61,14 @@ export function CountryMatches({
 	onPick: (code: string) => void
 	className?: string
 	max?: number
+	stableWidth?: boolean
 }) {
 	const matches = searchCountries(list, term).slice(0, max)
 	return (
 		<div className={className}>
 			{matches.map((country) => (
 				<CountryChip
+					stableWidth={stableWidth}
 					key={country.code}
 					code={country.code}
 					active={isOn(country.code)}

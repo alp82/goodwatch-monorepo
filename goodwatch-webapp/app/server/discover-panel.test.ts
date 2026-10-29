@@ -509,17 +509,26 @@ test("released panel selects facts years in list order for decades, New and Afte
 		countryIndexes: new Uint8Array(keys.length * 4).fill(255),
 		countries: [],
 	}
-	facts.releaseYears[21] = year - 4
+	facts.releaseYears[21] = year - 3
 	try {
 		snapshot = { ...original, columns: { ...original.columns, facts } }
-		const ranked = [keys[1], keys[21], keys[0], keys[2], keys[3], keys[5], keys[6]]
+		const ranked = [
+			keys[1],
+			keys[21],
+			keys[0],
+			keys[2],
+			keys[3],
+			keys[5],
+			keys[6],
+		]
 		const top = releasedTopKeys(ranked, snapshot, year)
 		const keyFor = (id: string) => top.find((o) => o.id === id)?.key
 		assert.equal(keyFor("decade:1990"), keys[0])
 		assert.equal(keyFor("recent"), keys[2])
-		assert.equal(keyFor("last2Years"), keys[3])
+		assert.equal(keyFor("last2Years"), keys[2])
+		assert.equal(keyFor("last3Years"), keys[21])
 		assert.equal(keyFor("thisYear"), keys[3])
-		assert.equal(keyFor("last5Years"), keys[21])
+		assert.equal(keyFor("last5Years"), keys[1])
 		assert.equal(keyFor("after2000"), keys[1])
 		assert.equal(keyFor("after1950"), keys[1])
 		assert.equal(keyFor("decade:1920"), null)

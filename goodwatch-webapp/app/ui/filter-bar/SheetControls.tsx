@@ -20,8 +20,12 @@ export interface Option {
 	disabled?: boolean
 }
 
-/** The calm chip: 32 px, the count quiet, white when on. */
-export function Chip({ o, img }: { o: Option; img?: string | null }) {
+/** The calm chip: 32 px, the count quiet, white when on. `stableWidth` reserves label and count space. */
+export function Chip({
+	o,
+	img,
+	stableWidth = false,
+}: { o: Option; img?: string | null; stableWidth?: boolean }) {
 	const dead = o.disabled || (!o.active && o.count === 0)
 	return (
 		<motion.button
@@ -45,11 +49,33 @@ export function Chip({ o, img }: { o: Option; img?: string | null }) {
 					<span className="h-6 w-6 rounded-full bg-white/10" />
 				))}
 			{o.swatch}
-			{o.label}
-			{!o.active && o.count !== null && (
-				<span className="text-[11px] tabular-nums text-gray-500">
-					{compactCount(o.count)}
+			{stableWidth ? (
+				<span className="grid">
+					<span
+						aria-hidden
+						className="invisible col-start-1 row-start-1 font-semibold"
+					>
+						{o.label}
+					</span>
+					<span className="col-start-1 row-start-1">{o.label}</span>
 				</span>
+			) : (
+				o.label
+			)}
+			{stableWidth ? (
+				<span
+					aria-hidden={o.active || o.count === null || undefined}
+					className={`w-10 shrink-0 text-right text-[11px] font-normal tabular-nums text-gray-500 ${o.active || o.count === null ? "invisible" : ""}`}
+				>
+					{o.count === null ? "0" : compactCount(o.count)}
+				</span>
+			) : (
+				!o.active &&
+				o.count !== null && (
+					<span className="text-[11px] tabular-nums text-gray-500">
+						{compactCount(o.count)}
+					</span>
+				)
 			)}
 		</motion.button>
 	)

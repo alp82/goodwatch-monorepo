@@ -269,9 +269,10 @@ export function releasedTopKeys(
 			to: 1929 + i * 10,
 		})),
 		{ id: "thisYear", from: year, to: year },
-		{ id: "last2Years", from: year - 1, to: Infinity },
+		{ id: "last2Years", from: year - 2, to: Infinity },
+		{ id: "last3Years", from: year - 3, to: Infinity },
 		{ id: "recent", from: year - 2, to: Infinity },
-		{ id: "last5Years", from: year - 4, to: Infinity },
+		{ id: "last5Years", from: year - 5, to: Infinity },
 		{ id: "after2000", from: 2000, to: Infinity },
 		{ id: "after1950", from: 1950, to: Infinity },
 	]

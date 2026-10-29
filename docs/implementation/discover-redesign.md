@@ -278,8 +278,9 @@ corner glow, stronger for bigger presets. Picked tiles fade in a light fill of t
 
 **Released**
 
-- New: This year, Last 2 years, Last 3 years (today's `recent` preset), Last 5 years, as tinted tiles with a count,
-  "Since <year>" and a share bar. "Last N years" is always "since now minus N".
+- New: This year, Last 2 years (the `recent` preset), Last 3 years, Last 5 years, as tinted tiles with a count,
+  "Since <year>" and a share bar. "Last N years" is always "since now minus N" (Last 2 years is since 2024
+  in 2026); This year starts at the current year. Existing `released=recent` links light Last 2 years.
 - After 2000 and After 1950 as picture chips with the top title's backdrop.
 - A decade timeline from the 1920s to now: one column per decade as wide as its years, so the range slider under it
   lines up. Each column has the decade's top poster, a tinted bar (square root scale) with the real count. Tap picks
@@ -961,9 +962,11 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
   world retains B7's in-memory column and missing-facts behavior; this supersedes the older sidecar paragraph's
   instruction to use SQL for that option.
 - The Released panel returns `options: [{ id, topTitle }]` in decade order (1920s through the current decade), then
-  `thisYear`, `last2Years`, `recent`, `last5Years`, `after2000`, `after1950`. Each card is the first matching title
-  in the filtered list's order, using first-release years from facts. Since/After bounds are inclusive; Last N
-  years starts at current year minus (N - 1). Missing facts set `available: false` and leave cards null.
+  `thisYear`, `last2Years`, `last3Years`, `recent`, `last5Years`, `after2000`, `after1950`. Each card is the first
+  matching title in the filtered list's order, using first-release years from facts. Since/After bounds are inclusive; Last N
+  years starts at current year minus N. `recent` and `last2Years` both mean Last 2 years; `last3Years`
+  means Last 3 years, and This year starts at the current year. Missing facts set `available: false` and leave
+  cards null.
 - Unit benchmark (Node 24.15.0, generated 260,000-row universe, all titles passing other groups, alternating movies
   and shows, 0–4 country slots, five warmups and fifteen timed calls per block): released median **1.03 ms**,
   p95 **1.83 ms**; length median **1.17 ms**, p95 **1.30 ms**; origin median **3.05 ms**, p95 **3.53 ms**.

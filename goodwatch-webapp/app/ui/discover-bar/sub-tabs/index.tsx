@@ -8,6 +8,9 @@ import { PeopleTab } from "../search/PeopleTab"
 import { TitlesTab } from "../search/TitlesTab"
 import type { SubTabId } from "../tabs"
 import { AgeTab } from "../watch/AgeTab"
+import { LengthTab } from "../watch/LengthTab"
+import { MadeInTab } from "../watch/MadeInTab"
+import { ReleasedTab } from "../watch/ReleasedTab"
 import { ScoresTab } from "../watch/ScoresTab"
 import { ServicesTab } from "../watch/ServicesTab"
 
@@ -18,6 +21,9 @@ const SUB_TAB_CONTENT: Partial<Record<SubTabId, SubTabContent>> = {
 	people: PeopleTab,
 	services: ServicesTab,
 	scores: ScoresTab,
+	madeIn: MadeInTab,
+	released: ReleasedTab,
+	length: LengthTab,
 	age: AgeTab,
 	combos: CombosTab,
 	everything: EverythingTab,
