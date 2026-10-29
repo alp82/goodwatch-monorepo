@@ -1,3 +1,4 @@
+import type { CardDisplay } from "~/ui/share-card/page-images"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 // One share list in a grid: its card, scaled into a fixed-height frame so portrait, square, and story designs line up,
 // with the list title and date below. The card links to the public list page.
@@ -7,6 +8,7 @@ import { ScaledCard } from "~/ui/share-card/ScaledCard"
 import { designByKey } from "~/ui/share-card/designs"
 import { shareListPath } from "~/ui/share-card/links"
 import {
+	type CardDesign,
 	type CardTitle,
 	type ThemeKey,
 	listByline,
@@ -23,6 +25,29 @@ export interface ShareListSummary {
 	visibility?: "public" | "unlisted" | "private"
 	collection?: boolean
 	itemCount?: number
+}
+
+// Body's max-w-7xl/px-4/sm:px-6/lg:px-8, this grid's columns/gap-6, and the tile's p-3/h-72/sm:h-80.
+// A card fits both dimensions of that box, so a portrait preview is narrower than the tile.
+export function listTileDisplay(
+	design: Pick<CardDesign, "w" | "h">,
+): CardDisplay {
+	const ratio = design.w / design.h
+	const phone = 264 * ratio
+	const wide = 296 * ratio
+	return {
+		rules: [
+			["(min-width: 1280px)", `${Math.min(262, wide)}px`],
+			[
+				"(min-width: 1024px)",
+				`min(calc(33.333333vw - 61.333333px), ${wide}px)`,
+			],
+			["(min-width: 640px)", `min(calc(50vw - 60px), ${wide}px)`],
+			["(min-width: 480px)", `min(calc(50vw - 52px), ${phone}px)`],
+			[null, `min(calc(100vw - 56px), ${phone}px)`],
+		],
+		maxWidth: Math.min(452, wide),
+	}
 }
 
 export function ShareListTile({
@@ -72,6 +97,7 @@ export function ShareListTile({
 				>
 					<ScaledCard
 						imagePriority={imagePriority}
+						display={imagePriority ? listTileDisplay(design) : undefined}
 						design={design}
 						card={{
 							title: list.title,

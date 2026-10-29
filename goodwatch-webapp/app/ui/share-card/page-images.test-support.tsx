@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server"
+import { listTileDisplay } from "~/ui/share-lists/ShareListTile"
 import { DESIGNS } from "./designs"
 import type { CardProps } from "./model"
 import { cardWithImagePriority } from "./page-images"
@@ -27,6 +28,16 @@ console.log(
 				original: renderToStaticMarkup(<design.Card {...card} />),
 				high: renderToStaticMarkup(
 					<>{cardWithImagePriority(design, card, "high")}</>,
+				),
+				responsive: renderToStaticMarkup(
+					<>
+						{cardWithImagePriority(
+							design,
+							card,
+							"high",
+							listTileDisplay(design),
+						)}
+					</>,
 				),
 				lazy: renderToStaticMarkup(
 					<>{cardWithImagePriority(design, card, "lazy")}</>,

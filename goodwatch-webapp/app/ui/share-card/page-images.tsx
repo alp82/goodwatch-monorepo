@@ -136,12 +136,19 @@ export function cardForPage(
 	})
 }
 
-/** Set loading priority on a page preview without changing the export's image files or dimensions. */
+/** Prioritize a preview and optionally size its images at native density, retaining the original fallbacks. */
 export function cardWithImagePriority(
 	design: CardDesign,
 	card: Parameters<CardDesign["Card"]>[0],
 	priority: "high" | "lazy",
+	display?: CardDisplay,
 ): ReactNode {
+	const kinds = new Map<string, TmdbImageKind>()
+	for (const item of card.items) {
+		if (item.poster) kinds.set(item.poster, "poster")
+		if (item.backdrop) kinds.set(item.backdrop, "backdrop")
+	}
+
 	let largest = 0
 	const tree = resolve(design.Card(card), (img) => {
 		const area = Number(img.props.width) * Number(img.props.height)
@@ -158,9 +165,50 @@ export function cardWithImagePriority(
 			!prioritized &&
 			Number(img.props.width) * Number(img.props.height) === largest
 		if (high) prioritized = true
-		return cloneElement(
-			img,
-			imageLoadingProps(high ? "high" : priority === "high" ? "eager" : "lazy"),
-		)
+		const src = img.props.src
+		const path = tmdbPath(src)
+		const originalWidth = Number(/\/w(\d+)\//.exec(src)?.[1])
+		const kind = kinds.get(src)
+		let responsive: { srcSet?: string; sizes?: string } = {}
+		if (display && path && kind && originalWidth > 0) {
+			// Keep the original URL as src and as the largest candidate. Use the browser's native pixel ratio,
+			// without tmdbSizes' density cap, so a high-density screen retains the original's available detail.
+			const source = tmdbFluidImage(kind, path, display.rules, {
+				fallbackWidth: originalWidth,
+			})
+			const candidates = (source.srcSet?.split(", ") ?? []).filter(
+				(candidate) =>
+					Number(candidate.slice(candidate.lastIndexOf(" ") + 1, -1)) <=
+					originalWidth,
+			)
+			if (
+				!candidates.some(
+					(candidate) => candidate === `${src} ${originalWidth}w`,
+				)
+			)
+				candidates.push(`${src} ${originalWidth}w`)
+			// Cover crops can magnify a wide backdrop inside a portrait box. Size the whole source image,
+			// including the cropped-away pixels, rather than under-sizing it to the box's visible width.
+			const aspect = kind === "poster" ? 2 / 3 : 16 / 9
+			const share =
+				Math.max(Number(img.props.width), Number(img.props.height) * aspect) /
+				design.w
+			responsive = {
+				srcSet: candidates.join(", "),
+				sizes: display.rules
+					.map(
+						([condition, length]) =>
+							`${condition ? `${condition} ` : ""}${scaleLength(length, share)}`,
+					)
+					.join(", "),
+			}
+		}
+
+		return cloneElement(img, {
+			...imageLoadingProps(
+				high ? "high" : priority === "high" ? "eager" : "lazy",
+			),
+			...responsive,
+		})
 	})
 }

@@ -87,10 +87,15 @@ export function ScaledCard({
 						transform: cssSized ? undefined : `scale(${scale})`,
 					}}
 				>
-					{display ? (
+					{imagePriority ? (
+						cardWithImagePriority(
+							design,
+							{ ...card, editing },
+							imagePriority,
+							display,
+						)
+					) : display ? (
 						cardForPage(design, { ...card, editing }, display)
-					) : imagePriority ? (
-						cardWithImagePriority(design, { ...card, editing }, imagePriority)
 					) : (
 						cardForPage(design, { ...card, editing })
 					)}
