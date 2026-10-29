@@ -686,7 +686,11 @@ for (const confirmed of [false, true])
 			"gwCacheReset",
 			async (...args: Parameters<typeof reset>) => {
 				if (args[0] === keyOf()) {
-					const variant = { body: Buffer.from("old"), etag: "old", headers: {} }
+					const variant = {
+						body: Buffer.from("old"),
+						etag: "old",
+						headers: {},
+					}
 					pageCache.entries.set("during-reset", {
 						key: "during-reset",
 						path: `/u/filmfan/lists/${id}`,
@@ -932,3 +936,33 @@ test("resetProfileViews invalidates the normalized summary cache", async () => {
 	assert.deepEqual(await getProfileSummary("filmfan"), summary)
 	assert.ok(db.statements.length > 0)
 })
+
+for (const reset of ["profile", "account"] as const) {
+	test(`${reset} reset deletes all retained profile summaries for only that member`, async () => {
+		const kinds = [
+			"stats",
+			"portrait-fingerprint",
+			"portrait-sides",
+			"portrait-everyone",
+		]
+		for (const kind of kinds) {
+			redis.values.set(
+				`profile-summary:v2:${kind}:${user}`,
+				"retained owner data",
+			)
+			redis.values.set(`profile-summary:v2:${kind}:other`, "other member")
+		}
+		if (reset === "profile") await resetProfileViews(user)
+		else await store.deleteAccountData(user)
+		for (const kind of kinds) {
+			assert.equal(
+				redis.values.has(`profile-summary:v2:${kind}:${user}`),
+				false,
+			)
+			assert.equal(
+				redis.values.get(`profile-summary:v2:${kind}:other`),
+				"other member",
+			)
+		}
+	})
+}

@@ -84,3 +84,21 @@ export async function writeSummary<T>(
 		)
 	}
 }
+
+/** Remove retained owner data when the profile is reset or the account is deleted. */
+export async function clearProfileSummaries(userId: string): Promise<void> {
+	const { getRedisCluster } = await import("~/utils/cache")
+	const redis = getRedisCluster()
+	if (!redis) return
+	// Each key can belong to a different cluster slot.
+	await bounded(() =>
+		Promise.all(
+			[
+				"stats",
+				"portrait-fingerprint",
+				"portrait-sides",
+				"portrait-everyone",
+			].map((kind) => redis.del(key(kind, userId))),
+		),
+	)
+}

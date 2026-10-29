@@ -156,11 +156,12 @@ export async function refreshStatsPortraits(
 	if (!snapshot) return
 	const who: PortraitViewer = { viewer: { kind: "member", userId }, context }
 	await Promise.all(
-		(["fingerprint", "sides", "everyone"] as const).map((tab) =>
-			summaries.refreshAfterPending(`${userId}:${tab}`, () =>
+		(["fingerprint", "sides", "everyone"] as const).map(async (tab) => {
+			if (!(await readSummary<PortraitView>(`portrait-${tab}`, userId))) return
+			await summaries.refreshAfterPending(`${userId}:${tab}`, () =>
 				buildStatsPortrait(userId, who, tab, snapshot),
-			),
-		),
+			)
+		}),
 	)
 }
 

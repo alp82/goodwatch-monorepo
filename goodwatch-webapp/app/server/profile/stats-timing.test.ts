@@ -2,16 +2,21 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { test } from "node:test"
+import { gzipSync } from "node:zlib"
 import { build } from "esbuild"
 
 // Bundle real loaders and aggregate reads with in-memory external services.
-async function fixture(entry: string, modules: Record<string, string>) {
+async function fixture(
+	entry: string,
+	modules: Record<string, string>,
+	extraExports = "",
+) {
 	const app = path.resolve("app")
 	const result = await build({
 		stdin: {
 			contents: `export * from ${JSON.stringify(
 				`./${entry}`,
-			)}; export { requestServerTiming } from "~/utils/request-work"`,
+			)}; ${extraExports}; export { requestServerTiming } from "~/utils/request-work"`,
 			resolveDir: app,
 		},
 		bundle: true,
@@ -174,23 +179,48 @@ test("public Stats portraits skip discarded lookups and warm hits skip member co
 	;(
 		globalThis as unknown as { statsPortraitCalls: typeof calls }
 	).statsPortraitCalls = calls
-	const module = await fixture("server/profile/portrait.server.ts", {
-		"server/availability-index.server": `export const isOnServices = () => true`,
-		"server/personal-order/reader.server": `export const loadPersonalOrder = () => { throw Error('personal order') }; export const orderPersonalOrder = () => {}`,
-		"server/taste/index.server": `export const loadTaste = async () => { globalThis.statsPortraitCalls.taste++; return {} }`,
-		"server/title-cards.server": `export const getCardServices = () => { throw Error('card services') }; export const getServiceList = () => { throw Error('service list') }`,
-		"server/title-snapshot/index.server": `export const getTitleSnapshot = () => ({facts: () => ({score:80})})`,
-		"server/viewer.server": `export const getMemberViewerContext = async () => { globalThis.statsPortraitCalls.context++; return { hidden: new Set(), services: [], ratings: new Map([[2,9],[4,8]]), seen: new Set(), wishlist: new Map(), skipped: new Set(), viewer: {} } }; export const getViewerContext = () => {}`,
-		"utils/auth": `export const getUserIdFromRequest = () => null`,
-		"server/profile/summary-cache.server": `const saved = new Map(); export const readSummary = async (kind) => saved.has(kind) ? {value:saved.get(kind),fresh:true} : null; export const writeSummary = async (kind,_,view) => saved.set(kind,view)`,
-		"server/taste-portrait/cache.server": `export const readCachedPortrait = () => { throw Error('full portrait cache') }; export const writeCachedPortrait = () => {}; export const clearTastePortrait = () => {}`,
-		"server/taste-portrait/display.server": `export const titleDisplays = async keys => { if ([...keys].includes(6)) throw Error('discarded title'); return new Map([...keys].map(k => [k,{title:'Title',poster:null,backdrop:null,year:2000}])) }`,
-		"server/taste-portrait/person.server": `export const readPerson = () => ({ rated: [], match: () => { throw Error('matches') } }); export const round1 = x => x`,
-		"server/taste-portrait/fingerprint.server": `export const buildFingerprint = () => ({ tab: 'fingerprint', status:'ready', mostYou: [2], attributes: [{carriers:[2],against:[],exception:null,defining:[6]}] })`,
-		"server/taste-portrait/sides.server": `export const buildSides = () => ({ tab: 'sides', status:'ready', sides: [{here:[2],image:2,moreOfThis:[6],edges:[{rated:[4],suggestions:[6],image:6}]}] }); export const franchiseOf = x => x`,
-		"server/taste-portrait/everyone.server": `export const buildEveryone = () => ({ tab: 'everyone', status:'ready', higher: [{key:2}], lower: [] })`,
-		"server/taste-portrait/sample-context.server": `export const sampleContext = () => {}; export const guestMarksKey = () => ''`,
-	})
+	const module = await fixture(
+		"server/profile/portrait.server.ts",
+		{
+			"server/availability-index.server": `export const isOnServices = () => true`,
+			"server/personal-order/reader.server": `export const loadPersonalOrder = () => { throw Error('personal order') }; export const orderPersonalOrder = () => {}`,
+			"server/taste/index.server": `export const loadTaste = async () => { globalThis.statsPortraitCalls.taste++; return {} }`,
+			"server/title-cards.server": `export const getCardServices = () => { throw Error('card services') }; export const getServiceList = () => { throw Error('service list') }`,
+			"server/title-snapshot/index.server": `export const getTitleSnapshot = () => ({facts: () => ({score:80})})`,
+			"server/viewer.server": `export const getMemberViewerContext = async () => { globalThis.statsPortraitCalls.context++; return { hidden: new Set(), services: [], ratings: new Map([[2,9],[4,8]]), seen: new Set(), wishlist: new Map(), skipped: new Set(), viewer: {} } }; export const getViewerContext = () => {}`,
+			"utils/auth": `export const getUserIdFromRequest = () => null`,
+			"server/profile/summary-cache.server": `const saved = new Map(); export const readSummary = async (kind) => saved.has(kind) ? {value:saved.get(kind),fresh:true} : null; export const writeSummary = async (kind,_,view) => saved.set(kind,view)`,
+			"server/taste-portrait/cache.server": `export const readCachedPortrait = () => { throw Error('full portrait cache') }; export const writeCachedPortrait = () => {}; export const clearTastePortrait = () => {}`,
+			"server/taste-portrait/display.server": `export const titleDisplays = async keys => { if ([...keys].includes(6)) throw Error('discarded title'); return new Map([...keys].map(k => [k,{title:'Title',poster:null,backdrop:null,year:2000}])) }`,
+			"server/taste-portrait/person.server": `export const readPerson = () => ({ rated: [], match: () => { throw Error('matches') } }); export const round1 = x => x`,
+			"server/taste-portrait/fingerprint.server": `export const buildFingerprint = () => ({ tab: 'fingerprint', status:'ready', mostYou: [2], attributes: [{carriers:[2],against:[],exception:null,defining:[6]}] })`,
+			"server/taste-portrait/sides.server": `export const buildSides = () => ({ tab: 'sides', status:'ready', sides: [{here:[2],image:2,moreOfThis:[6],edges:[{rated:[4],suggestions:[6],image:6}]}] }); export const franchiseOf = x => x`,
+			"server/taste-portrait/everyone.server": `export const buildEveryone = () => ({ tab: 'everyone', status:'ready', higher: [{key:2}], lower: [] })`,
+			"server/taste-portrait/sample-context.server": `export const sampleContext = () => {}; export const guestMarksKey = () => ''`,
+		},
+		'export { refreshStatsPortraits } from "./server/taste-portrait/index.server.ts"',
+	)
+	const refresh = () =>
+		module.refreshStatsPortraits("owner", async () => {
+			calls.context++
+			return {
+				services: [],
+				ratings: new Map([
+					[2, 9],
+					[4, 8],
+				]),
+				seen: new Set(),
+				wishlist: new Map(),
+				skipped: new Set(),
+				hidden: new Set(),
+			}
+		})
+	await refresh()
+	assert.deepEqual(
+		calls,
+		{ context: 0, taste: 0 },
+		"unviewed summaries do no work",
+	)
 	for (const scores of [true, false]) {
 		for (const tab of ["fingerprint", "sides", "everyone"]) {
 			const request = new Request("http://localhost/u/test/stats")
@@ -199,6 +229,14 @@ test("public Stats portraits skip discarded lookups and warm hits skip member co
 				scores,
 				request,
 			})
+			if (scores && tab === "fingerprint") {
+				await refresh()
+				assert.deepEqual(
+					calls,
+					{ context: 2, taste: 0 },
+					"refresh only the retained fingerprint",
+				)
+			}
 			if (!scores)
 				for (const title of Object.values(view.titles) as {
 					mine: number | null
@@ -211,6 +249,75 @@ test("public Stats portraits skip discarded lookups and warm hits skip member co
 			)
 		}
 	}
-	assert.equal(calls.context, 3)
+	assert.equal(calls.context, 4)
 	assert.equal(calls.taste, 1, "only edge qualification needs the taste vector")
+	await refresh()
+	assert.deepEqual(
+		calls,
+		{ context: 7, taste: 2 },
+		"refresh every retained tab",
+	)
+})
+
+test("taste writes refresh retained Stats and leave unviewed Stats for the next view", async () => {
+	const module = await fixture("server/profile/taste-stats.server.ts", {
+		...services,
+		"server/profile/taste-stats-cache.server": `let saved = null; export const readCachedTasteStats = async () => saved; export const writeCachedTasteStats = async (_, value) => { saved = {value, fresh:false} }`,
+		"server/userData.server": `export const getUserData = async () => { globalThis.statsRefreshReads++; return { scores: {}, watchState: {} } }`,
+	})
+	const counts = globalThis as unknown as { statsRefreshReads: number }
+	counts.statsRefreshReads = 0
+	await module.refreshTasteStats("owner")
+	assert.equal(counts.statsRefreshReads, 0)
+	await module.getTasteStats("owner")
+	assert.equal(counts.statsRefreshReads, 1, "first view computes")
+	await module.refreshTasteStats("owner")
+	assert.equal(
+		counts.statsRefreshReads,
+		2,
+		"retained stale entry refreshes on write",
+	)
+	delete (globalThis as unknown as { statsRefreshReads?: number })
+		.statsRefreshReads
+})
+
+test("readSummary requires a computation after touched plus the settle window", async () => {
+	const module = await fixture("server/profile/summary-cache.server.ts", {
+		"utils/cache": `export const getRedisCluster = () => ({get: async key => key.startsWith('taste:touched:') ? globalThis.summaryFreshness.touched : globalThis.summaryFreshness.raw})`,
+	})
+	const state = { touched: "", raw: "" }
+	;(
+		globalThis as unknown as { summaryFreshness: typeof state }
+	).summaryFreshness = state
+	const now = Date.now()
+	const touched = now - 10_000
+	state.touched = String(touched)
+	const value = { titles: ["synthetic"] }
+	const payload = gzipSync(JSON.stringify(value)).toString("base64")
+	for (const [readFrom, fresh] of [
+		[touched - 1, false],
+		[touched, false],
+		[touched + 1_499, false],
+		[touched + 1_500, true],
+		[touched + 1_501, true],
+	] as const) {
+		state.raw = JSON.stringify({ readFrom, payload })
+		assert.deepEqual(await module.readSummary("stats", "owner"), {
+			value,
+			fresh,
+		})
+	}
+	state.touched = ""
+	state.raw = JSON.stringify({ readFrom: now - 10 * 60_000, payload })
+	assert.deepEqual(await module.readSummary("stats", "owner"), {
+		value,
+		fresh: false,
+	})
+	state.raw = JSON.stringify({ readFrom: now, payload })
+	assert.deepEqual(await module.readSummary("stats", "owner"), {
+		value,
+		fresh: true,
+	})
+	delete (globalThis as unknown as { summaryFreshness?: typeof state })
+		.summaryFreshness
 })

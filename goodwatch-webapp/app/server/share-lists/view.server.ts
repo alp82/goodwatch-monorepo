@@ -1,4 +1,5 @@
 // Viewer-independent share-list reads. Store writes invalidate the combined view after refreshing Crate.
+import { clearProfileSummaries } from "~/server/profile/summary-cache.server"
 import { hotCards } from "~/server/og-image/hot-cards.server"
 import { forgetStoredCard } from "~/server/og-image/store.server"
 import { resetPageCache } from "~/server/page-cache.server"
@@ -267,6 +268,11 @@ export async function getProfilePage(
 }
 
 export async function resetProfileViews(userId: string): Promise<void> {
+	try {
+		await clearProfileSummaries(userId)
+	} catch (error) {
+		console.error("Clearing retained profile summaries failed:", error)
+	}
 	let handle: string | undefined
 	try {
 		const [row] = await select<{ handle: string }>(

@@ -58,7 +58,8 @@ async function buildTasteStats(ownerId: string, request?: Request) {
 }
 
 /** Called after rating writes have settled, so the next visitor can use an already refreshed entry. */
-export function refreshTasteStats(ownerId: string) {
+export async function refreshTasteStats(ownerId: string) {
+	if (!(await readCachedTasteStats(ownerId))) return
 	return computing.refreshAfterPending(ownerId, () => buildTasteStats(ownerId))
 }
 
