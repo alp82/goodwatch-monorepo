@@ -132,7 +132,7 @@ const canonicalLoader = async ({
 	return browseLoader(request, userId)
 }
 
-// Pages the first view loads for ?page=N.
+// At most five pages ending at ?page=N, so SSR stays bounded and crawlers can keep advancing.
 const MAX_INITIAL_PAGES = 5
 
 export interface BrowseLoaderData {
@@ -157,7 +157,8 @@ async function browseLoader(
 	const sort = sortFromParams(params, false)
 	const forYou = forYouFromParams(params, ctx)
 	const requested = Number.parseInt(params.get("page") ?? "1", 10) || 1
-	const count = Math.min(Math.max(1, requested), MAX_INITIAL_PAGES)
+	const lastPage = Math.max(1, requested)
+	const firstPage = Math.max(1, lastPage - MAX_INITIAL_PAGES + 1)
 	// Search mode: the browser runs the search (its reading streams in), so the first view has no results yet.
 	const searching = searchText(params.get("q")) !== null
 	const side = params.get("side")
@@ -174,21 +175,24 @@ async function browseLoader(
 				sides,
 				page: 1,
 			})
+			const start = firstPage === 1 ? 2 : firstPage
 			const rest =
 				first.sides?.layout === "rows"
 					? []
 					: await Promise.all(
-							Array.from({ length: count - 1 }, (_, i) =>
+							Array.from({ length: lastPage - start + 1 }, (_, i) =>
 								getBrowseResults(ctx, {
 									state,
 									sort,
 									forYou,
 									sides,
-									page: i + 2,
+									page: start + i,
 								}),
 							),
 						)
-			pages = [first, ...rest]
+			pages = first.sides?.layout === "rows" || firstPage === 1
+				? [first, ...rest]
+				: rest
 		}
 	} catch (error) {
 		// Right after a restart: the browser asks /api/discover/results once the snapshot has loaded.

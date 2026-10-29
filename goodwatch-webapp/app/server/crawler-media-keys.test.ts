@@ -37,7 +37,7 @@ registerHooks({
 			source = "export const legacyDiscoverRedirect=async()=>null"
 		else if (url.endsWith("/server/discover-results.server.ts"))
 			source =
-				'export class SnapshotNotLoaded extends Error {}; export const discoverFilterDefaults=()=>({onMyServices:false,notSeenYet:false});export const forYouFromParams=()=>true;export const getDiscoverResults=async()=>({cards:[{title:"The Matrix",media_type:"movie",tmdb_id:603}],page:1,pageSize:40,total:1})'
+				'export class SnapshotNotLoaded extends Error {}; export const discoverFilterDefaults=()=>({onMyServices:false,notSeenYet:false});export const forYouFromParams=()=>true;export const getDiscoverResults=async(_ctx,input)=>({cards:[{title:"The Matrix",media_type:"movie",tmdb_id:603}],page:input.page,pageSize:40,total:4000})'
 		else if (url.endsWith("/ui/discover/DiscoverPage.tsx"))
 			source = "export const DiscoverPage=()=>null"
 		else if (url.endsWith("/ui/ErrorPage.tsx"))
@@ -174,5 +174,24 @@ test("Explorer SSR uses the live locale without API opt-in and labels initialDat
 			agent === "Googlebot" ? [] : [{ language: "fr", limit: 800 }],
 		)
 		assert.equal(response.headers.get("Cache-Control"), "private, no-store")
+	}
+})
+
+
+test("crawler Discover pagination keeps advancing beyond its bounded SSR window", async () => {
+	for (const page of [2, 3, 6, 12]) {
+		const result = await loader({ request: new Request(`https://goodwatch.test/discover?layout=grid&page=${page}`, { headers: { "User-Agent": "Googlebot" } }), params: {}, context: {} })
+		const data = result instanceof Response ? await result.json() : result
+		const pages = data.browse.initial.pages
+		assert.equal(pages.at(-1).page, page)
+		assert.equal(pages.length, Math.min(page, 5))
+		function NextPage() {
+			const query = data.browse.initial.key.replace(/(?:&)?displayLanguage=en/, "").replace(/(?:&)?foryou=1/, "")
+			const found = useDiscoverBrowse({ query, forYou: true, member: false, guest: undefined, initial: data.browse.initial })
+			assert.equal(found.data?.pageParams.at(-1), page)
+			assert.equal(found.hasNextPage, true)
+			return null
+		}
+		renderToStaticMarkup(createElement(QueryClientProvider, { client: new QueryClient() }, createElement(NextPage)))
 	}
 })

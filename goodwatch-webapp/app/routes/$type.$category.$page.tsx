@@ -203,7 +203,7 @@ export default function MoviesCategoryPage() {
 				<MovieTvGrid
 					initialData={{
 						pages: [results],
-						pageParams: [1],
+						pageParams: [discoverParams.page],
 					}}
 					initialParams={{
 						...discoverParams,

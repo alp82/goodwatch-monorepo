@@ -407,9 +407,11 @@ export function DiscoverPage({
 		(browse.isFetching && !browse.isFetchingNextPage) ||
 		(navigation.state === "loading" &&
 			navigation.location?.pathname === "/discover")
-	// For crawlers: the next page as a plain link (the loader serves ?page=N with the pages before it). Browsing only.
+	// For crawlers: advance from the last loaded page, including SSR windows beyond page five. Browsing only.
 	const { pathname, search: locationSearch } = useLocation()
-	const nextPage = browse.hasNextPage && !searching ? pages.length + 1 : null
+	const nextPage = browse.hasNextPage && !searching
+		? (pages.at(-1)?.page ?? 0) + 1
+		: null
 	const nextPageUrl = useMemo(() => {
 		if (!nextPage) return null
 		const next = new URLSearchParams(locationSearch)
