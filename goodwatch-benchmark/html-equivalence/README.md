@@ -266,3 +266,22 @@ on either side. Twelve URL/client entries were empty on both sides: `/`,
 the two mood pages, and `/people`, for all three clients. All 17 tests and
 Biome checks pass. Typecheck reports the same 188 errors, byte-identical to
 the saved origin/main check. Production was not read again for this follow-up.
+
+## Check isolated profile fixtures
+
+Set `GW_HTML_CHECK_CRATE_PORT` to use a dedicated Crate fixture on another
+loopback port. The default remains `15870`; the catalog reads and both webapp
+processes use the selected port. Set `GW_HTML_CHECK_EXTRA_PATHS` to a JSON array
+of local paths to include, such as `["/u/benchprofile/stats"]`. These paths must
+return 200. The runner rejects paths that resolve to another origin.
+
+For the profile stats payload reduction, the strict gate reports the intended
+loader differences. Verify those differences separately with:
+
+```sh
+node goodwatch-benchmark/profile/compare.mjs /absolute/path/to/equivalence-run
+```
+
+The comparison requires identical statuses, redirects, cache policies, visible
+markup and all loader values after applying only the stats preview projection.
+It does not add exceptions to the strict gate.

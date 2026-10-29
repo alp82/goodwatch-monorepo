@@ -30,6 +30,12 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const cache = process.env.GW_HTML_CHECK_CACHE || path.join(os.homedir(), ".cache/gw753-html-check")
+const cratePort = process.env.GW_HTML_CHECK_CRATE_PORT || "15870"
+if (!/^\d+$/.test(cratePort) || Number(cratePort) < 1 || Number(cratePort) > 65535)
+	throw new Error("GW_HTML_CHECK_CRATE_PORT must be a valid loopback port")
+const extraPaths = JSON.parse(process.env.GW_HTML_CHECK_EXTRA_PATHS || "[]")
+if (!Array.isArray(extraPaths) || extraPaths.some((p) => typeof p !== "string" || !p.startsWith("/") || new URL(p, "http://127.0.0.1").origin !== "http://127.0.0.1"))
+	throw new Error("GW_HTML_CHECK_EXTRA_PATHS must contain local absolute paths")
 const sharedModules = path.join(root, "goodwatch-webapp/node_modules")
 const preload =
 	"/home/alp/dev/projects/goodwatch/goodwatch-tv-a-verify/bench2/block-egress.mjs"
@@ -90,7 +96,7 @@ function environment(app, valkey) {
 		POSTHOG_DISABLED: "1",
 		SENTRY_DISABLE_AUTO_UPLOAD: "true",
 		CRATE_HOSTS: "127.0.0.1",
-		CRATE_PORT: "15870",
+		CRATE_PORT: cratePort,
 		CRATE_USER: "crate",
 		CRATE_PASS: "",
 		REDIS_HOST: "127.0.0.1",
@@ -372,7 +378,7 @@ async function cleanup() {
 async function sql(stmt) {
 	if (!/^select\b/i.test(stmt))
 		throw new Error("Bench queries must be read only")
-	const response = await fetch("http://127.0.0.1:15870/_sql", {
+	const response = await fetch(`http://127.0.0.1:${cratePort}/_sql`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ stmt }),
@@ -405,7 +411,7 @@ async function localPaths(origin) {
 	)
 	if (movies.length < 30)
 		throw new Error(`Need at least 30 movies; found ${movies.length}`)
-	const paths = [...staticPaths, ...movies.map(([id]) => `/movie/${id}`)]
+	const paths = [...staticPaths, ...extraPaths, ...movies.map(([id]) => `/movie/${id}`)]
 	for (const [table, route] of [
 		["show", "show"],
 		["person", "person"],

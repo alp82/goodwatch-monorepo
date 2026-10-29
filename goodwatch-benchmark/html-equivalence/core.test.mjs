@@ -499,3 +499,19 @@ test("CLI records repeated allowlist rules, per-side counts and empty data witho
 		rmSync(directory, { recursive: true, force: true })
 	}
 })
+
+test("isolated fixture configuration rejects remote paths and invalid ports", () => {
+	for (const env of [
+		{ GW_HTML_CHECK_CRATE_PORT: "65536" },
+		{ GW_HTML_CHECK_CRATE_PORT: "example.com" },
+		{ GW_HTML_CHECK_EXTRA_PATHS: '["//example.com/profile"]' },
+		{ GW_HTML_CHECK_EXTRA_PATHS: '["/\\\\example.com/profile"]' },
+		{ GW_HTML_CHECK_EXTRA_PATHS: '["https://example.com/profile"]' },
+	]) {
+		const result = spawnSync(process.execPath, [new URL("./run.mjs", import.meta.url).pathname], {
+			encoding: "utf8", env: { PATH: process.env.PATH, ...env },
+		})
+		assert.notEqual(result.status, 0)
+		assert.match(result.stderr, /GW_HTML_CHECK_(CRATE_PORT|EXTRA_PATHS)/)
+	}
+})
