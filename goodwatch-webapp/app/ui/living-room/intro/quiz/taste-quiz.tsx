@@ -1,8 +1,8 @@
 // The quiz the film ends on (scenes/quiz.tsx): "Tap three you loved." over twelve well-known titles. Every tap shows a
 // little more of the visitor's taste: the feeling words the picks share build up under the headline, and the three
-// slots fill with the posters. The third tap asks the guest recommendations for each kind of title picked
-// (api.guest-recommendations.ts), merges them by match, reads the best as intro cards (api.intro.ts: score, services
-// in the visitor's country, feeling words) and reveals the top pick with three more.
+// slots fill with the posters. The third tap asks for the pick (ui/taste/guest-pick.ts, shared with the start page:
+// the guest recommendations for each kind of title picked, merged by match, read as intro cards with score, services
+// in the visitor's country and feeling words) and reveals the top pick with three more.
 //
 // The taps and the pick are kept for the tab (progress.ts), so coming back from sign-up shows the quiz as it was.
 //
@@ -22,44 +22,16 @@ import ScoreRing from "~/ui/details/hero/ScoreRing"
 import type { IntroCard } from "~/ui/living-room/intro/data"
 import { useUser } from "~/utils/auth"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { accountAnsweredKeys, excludeIdsFor } from "../../../taste/answered"
+import { accountAnsweredKeys } from "../../../taste/answered"
+import { type GuestPick, findPick, shownPick } from "../../../taste/guest-pick"
 import { TAPS_KEY } from "../progress"
 
 const NEED = 3
 /** The reading screen stays at least this long, so its words can land. */
 const READ_MS = 1300
 
-type Rec = {
-	tmdb_id: number
-	media_type: "movie" | "show"
-	match_percentage: number
-}
-/**
- * The pick and three more; `top` null when nothing was left to pick. `cards` keeps every candidate in order, so the
- * pick can be chosen again when the visitor's marks arrive or change (a pick saved before has none).
- */
-type Pick = {
-	top: IntroCard | null
-	more: IntroCard[]
-	fallback: boolean
-	cards?: IntroCard[]
-}
-
-/** The pick to show: candidates the visitor already answered drop out, the best one left with a picture leads. */
-function shownPick(pick: Pick, answered: ReadonlySet<string>): Pick {
-	const cards = (
-		pick.cards ?? [pick.top, ...pick.more].filter((c): c is IntroCard => !!c)
-	).filter((c) => !answered.has(answerKey(c)))
-	const top =
-		cards.find((c) => c.backdrop_path && c.services?.length) ??
-		cards.find((c) => c.backdrop_path) ??
-		null
-	const more = cards.filter((c) => c !== top && c.poster_path).slice(0, 3)
-	return { ...pick, top, more }
-}
-
-const answerKey = (c: { media_type: string; tmdb_id: number }) =>
-	`${c.media_type}-${c.tmdb_id}`
+/** The pick and three more (ui/taste/guest-pick.ts). */
+type Pick = GuestPick<IntroCard>
 
 /** The mood words of the picks, the most shared first, with how many picks share each. */
 function tasteWords(picks: IntroCard[]) {
@@ -76,81 +48,6 @@ const joinNames = (names: string[]) =>
 	names.length < 2
 		? names.join("")
 		: `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`
-
-async function recsFor(
-	type: "movie" | "show",
-	picks: IntroCard[],
-	pool: IntroCard[],
-	answered: ReadonlySet<string>,
-): Promise<Rec[]> {
-	const params = new URLSearchParams({
-		mediaType: type,
-		scoredItems: JSON.stringify(
-			picks.map((p) => ({
-				tmdb_id: p.tmdb_id,
-				media_type: p.media_type,
-				score: 10,
-			})),
-		),
-		excludeIds: JSON.stringify([
-			...pool.map((p) => ({ tmdb_id: p.tmdb_id, media_type: p.media_type })),
-			// The most recent of them; the answer is filtered by all of them below.
-			...excludeIdsFor([...answered], [], 60),
-		]),
-		limit: "8",
-	})
-	const res = await fetch(`/api/guest-recommendations?${params}`)
-	if (!res.ok) throw new Error(`guest recommendations ${res.status}`)
-	return (await res.json()).recommendations ?? []
-}
-
-async function findPick(
-	picks: IntroCard[],
-	pool: IntroCard[],
-	answered: ReadonlySet<string>,
-): Promise<Pick> {
-	try {
-		const types = [...new Set(picks.map((p) => p.media_type))]
-		const lists = await Promise.all(
-			types.map((t) =>
-				recsFor(t, picks, pool, answered).catch(() => [] as Rec[]),
-			),
-		)
-		const seen = new Set<string>()
-		const recs = lists
-			.flat()
-			.sort((a, b) => b.match_percentage - a.match_percentage)
-			.filter((r) => {
-				const k = `${r.media_type}:${r.tmdb_id}`
-				if (seen.has(k) || answered.has(answerKey(r))) return false
-				seen.add(k)
-				return true
-			})
-			.slice(0, 10)
-		if (!recs.length) throw new Error("no recommendations")
-		const res = await fetch(
-			`/api/intro?cards=${recs.map((r) => `${r.media_type}:${r.tmdb_id}`).join(",")}`,
-		)
-		const cards: IntroCard[] = ((await res.json()).cards ?? []).filter(
-			(c: IntroCard) => !answered.has(answerKey(c)),
-		)
-		const order = (c: IntroCard) =>
-			recs.findIndex(
-				(r) => r.tmdb_id === c.tmdb_id && r.media_type === c.media_type,
-			)
-		cards.sort((a, b) => order(a) - order(b))
-		const found = shownPick(
-			{ top: null, more: [], fallback: false, cards },
-			answered,
-		)
-		if (!found.top) throw new Error("no card with a picture")
-		return found
-	} catch (error) {
-		// The pool's other titles were shown and passed over: never a pick. Nothing is left to pick.
-		console.error("The intro's quiz: no pick", error)
-		return { top: null, more: [], fallback: true }
-	}
-}
 
 /** The ring's size: it draws in pixels, so it follows the window rather than the TV. */
 function useRingSize() {
@@ -223,7 +120,7 @@ export function TasteQuiz({
 		if (!full || asked.current) return
 		asked.current = true
 		const started = Date.now()
-		findPick(picked, pool, answeredRef.current).then((found) => {
+		findPick<IntroCard>(picked, pool, answeredRef.current).then((found) => {
 			setTimeout(
 				() => {
 					setPick(found)

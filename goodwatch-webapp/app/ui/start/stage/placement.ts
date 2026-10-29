@@ -25,7 +25,9 @@ export const GAP_CAP = 300
  * - block: the search block's height: the H1 (one line), the search bar (101, 115, 119 px), and the mood row (52 px,
  *   56 px from 1024 px: a 44 or 48 px row with 4 px above and below), with their margins. Re-measure it when the block
  *   changes.
- * - card, cardBottom: the card's height and the space under it.
+ * - card, cardBottom: the card's height and the space under it. The card's header and its poster row fill it
+ *   (spotlight/spotlight.css, spotlight/poster-fit.ts): on phones a 68 px header, 14 px of room above the posters,
+ *   posters up to 88 px wide (132 px tall, four per view) and the page dots' 52 px under them.
  * - gapMin, airAbove, airBelow: the gap's least height, and the air the focus band keeps from its edges.
  * - nightTop: where the night above the room starts to fade.
  * - capBand: the band's need is capped at GAP_CAP (the picture zooms out past it).
@@ -59,7 +61,7 @@ export const STAGE_SIZES: readonly StageBreakpoint[] = [
 			pad: 12,
 			padVh: null,
 			block: 211,
-			card: 306,
+			card: 266,
 			cardBottom: 64,
 			gapMin: 64,
 			airAbove: 8,

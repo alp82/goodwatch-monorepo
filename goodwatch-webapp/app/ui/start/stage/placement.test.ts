@@ -204,5 +204,5 @@ test("the breakpoints pick the short desktop and the large screen's sizes", () =
 	assert.equal(stageLayout(START_ROOM, 1440, 900).size.block, 281)
 	assert.equal(stageLayout(START_ROOM, 1440, 900).pad, 27)
 	assert.equal(stageLayout(START_ROOM, 1920, 1080).size.card, 436)
-	assert.equal(stageLayout(START_ROOM_PHONE, 375, 740).size.card, 306)
+	assert.equal(stageLayout(START_ROOM_PHONE, 375, 740).size.card, 266)
 })

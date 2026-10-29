@@ -4,6 +4,7 @@ import { cached } from "~/utils/cache"
 import { MEDIA_COLLECTION, type QdrantFilter, makePointId, recommend } from "~/utils/qdrant"
 import { type AllRatings } from "~/utils/ratings"
 import { buildExcludeFilter, searchByTaste } from "~/server/utils/recommend"
+import { splitExamples } from "~/server/recommend-examples"
 
 interface QdrantMediaPayload {
 	tmdb_id: number
@@ -232,8 +233,9 @@ async function getGuestRecommendations({
 	return recommendFromExamples({ scored_items, target_media_type, filterConditions, limit })
 }
 
-// Qdrant's recommend API with the top half of the ratings as positive and the bottom half as negative examples: a
-// points read plus a recommend call. Serves guests without taste.
+// Qdrant's recommend API with the top half of the ratings as positive and the bottom half as negative examples
+// (recommend-examples.ts; a title scored as the best one is never negative): a points read plus a recommend call.
+// Serves guests without taste.
 async function recommendFromExamples({
 	scored_items,
 	target_media_type,
@@ -245,12 +247,9 @@ async function recommendFromExamples({
 	filterConditions: QdrantFilter
 	limit: number
 }): Promise<GuestRecommendation[]> {
-	// Use relative scoring: top half as positive, bottom half as negative
-	// This allows recommendations to work with any ratings, not just scores >= 6
-	const sorted = [...scored_items].sort((a, b) => b.score - a.score)
-	const midpoint = Math.ceil(sorted.length / 2)
-	const positiveItems = sorted.slice(0, midpoint)
-	const negativeItems = sorted.length > 1 ? sorted.slice(midpoint) : []
+	// Relative scoring: the top half positive, the bottom half negative, titles scored as the best one always positive.
+	const { positive: positiveItems, negative: negativeItems } =
+		splitExamples(scored_items)
 
 	// Create point IDs for Qdrant
 	const positivePoints = positiveItems.map(item =>

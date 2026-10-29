@@ -6,6 +6,7 @@
 import bootCss from "~/ui/living-room/intro/boot.css?url"
 import howItWorksCss from "~/ui/start/how/how-it-works.css?url"
 import openingCss from "~/ui/start/opening/opening.css?url"
+import spotlightCss from "~/ui/start/spotlight/spotlight.css?url"
 import startCss from "~/ui/start/start.css?url"
 
 /**
@@ -14,6 +15,7 @@ import startCss from "~/ui/start/start.css?url"
  */
 export const START_SHEETS = [
 	startCss,
+	spotlightCss,
 	bootCss,
 	openingCss,
 	howItWorksCss,
