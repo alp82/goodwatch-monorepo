@@ -117,6 +117,14 @@ export async function getMemberViewerContext(
 	}
 }
 
+/** Country alone for shared catalog surfaces; avoids reading progress or taste. */
+export async function getViewerCountry(request: Request, userId: string | null) {
+	const fallback = getLocaleFromRequest(request).locale.country
+	if (!userId) return fallback
+	const settings = await getUserSettings({ userId })
+	return countryCode(settings.country_default) ?? fallback
+}
+
 export function guestContext(
 	guest: GuestProgress | undefined,
 	guessedCountry: string,

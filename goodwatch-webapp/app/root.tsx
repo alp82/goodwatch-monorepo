@@ -53,6 +53,7 @@ import { useDehydratedState } from "use-dehydrated-state"
 
 import Footer from "~/ui/footer/Footer"
 import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
+import { LazyTv } from "~/ui/tv-egg/LazyTv"
 import {
 	HubDialog,
 	MobileDock,
@@ -223,6 +224,7 @@ export function ErrorBoundary() {
 	const rootData = useRouteLoaderData("root") as LoaderData | undefined
 	const root = useBoundaryRoot(rootData)
 	const { status, detail } = errorPageProps(error)
+	const location = useLocation()
 	const notFound = status === 404
 	// An address that names no page is an answer, not a failure of the app.
 	if (!notFound) {
@@ -249,7 +251,15 @@ export function ErrorBoundary() {
 		<NavigationProvider>
 			<SiteHeader />
 			<main className="relative mt-16 flex grow flex-col justify-center">
-				<ErrorPage status={status} detail={detail} />
+				{/* The little living room: CH 404 for a missing page, a test card for a failure. */}
+				<LazyTv
+					page={notFound ? "not-found" : "error"}
+					heading={notFound ? "Page not found" : "Something went wrong"}
+					path={location.pathname}
+					plain={<ErrorPage status={status} />}
+				/>
+				{/* A development build also shows what went wrong. */}
+				{detail && <ErrorPage status={status} detail={detail} />}
 			</main>
 			<Footer />
 			<MobileDock />
