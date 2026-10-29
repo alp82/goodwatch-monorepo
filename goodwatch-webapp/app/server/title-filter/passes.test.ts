@@ -117,6 +117,8 @@ test("the taste match filter keeps the titles at or above the threshold; a title
 test("the taste match options count what each would leave, the other filters unchanged", () => {
 	assert.deepEqual(passes(plain, { minMatch: 80 }).optionCounts.minMatch, {
 		"0": 6,
+		"60": 5,
+		outside: 0,
 		"70": 5,
 		"80": 4,
 		"90": 2,
@@ -126,6 +128,8 @@ test("the taste match options count what each would leave, the other filters unc
 	assert.deepEqual(both.rows, [2, 4])
 	assert.deepEqual(both.optionCounts.minMatch, {
 		"0": 3,
+		"60": 3,
+		outside: 0,
 		"70": 3,
 		"80": 2,
 		"90": 0,
@@ -157,6 +161,8 @@ test("without taste the taste match filter doesn't narrow", () => {
 	assert.deepEqual(out.recoveries, [])
 	assert.deepEqual(out.optionCounts.minMatch, {
 		"0": 6,
+		"60": 6,
+		outside: 6,
 		"70": 6,
 		"80": 6,
 		"90": 6,
@@ -880,9 +886,9 @@ test("a fail mask has room for every filter group, the last one included", () =>
 	assert.ok(FILTER_NAMES.length <= 32)
 	assert.ok(FILTER_NAMES.includes("themes") && FILTER_NAMES.includes("styles"))
 	// Appending groups preserves the existing content bit and fits the new last group.
-	assert.equal(FILTER_NAMES.length, 23)
+	assert.equal(FILTER_NAMES.length, 24)
 	assert.equal(FILTER_NAMES[18], "content")
-	assert.equal(FILTER_NAMES.at(-1), "scoreGap")
+	assert.equal(FILTER_NAMES.at(-1), "wishlist")
 	const ratings: RatingsFilter = {
 		content: Uint8Array.from(everyRow, (row) => (row === 3 ? 1 : 0)),
 		ages: null,
@@ -1249,4 +1255,116 @@ test("all-of masks, counts and recoveries agree with brute force for every tag g
 		allOf: ["genres"],
 	})
 	assert.deepEqual(Array.from(absentAlias.passing), [2])
+})
+
+test("list and taste steps, option counts and recoveries agree with brute force", () => {
+	// Include match boundaries, no match, a skipped but unseen title, rewatch wishes,
+	// and a search title absent from the snapshot (membership must fall back to its key).
+	const rows = [5, 0, 4, 1, 3, 2, -1]
+	const base = passInput(columns, rows)
+	const seenKeys = new Set([base.keys[0], base.keys[2], base.keys[6]])
+	const skippedKeys = new Set([base.keys[1]])
+	const wishes = new Set([base.keys[2], base.keys[3], base.keys[6]])
+	const set = (keys: Set<number>) => ({
+		keys,
+		rows: Uint8Array.from(columns.pointIds, (key) => Number(keys.has(key))),
+	})
+	const matches = Uint8Array.from([0, 49, 50, 59, 60, 80, 90])
+	for (const member of [true, false])
+		for (const hasTaste of [true, false])
+			for (const mode of ["off", "on", "seen"])
+				for (const onWishlist of [false, true])
+					for (const match of [0, 60, 70, 80, 90, "outside"] as const)
+						for (const minScore of [0, 70]) {
+							const listPasses = (i: number, option: string) =>
+								option === "seen"
+									? !member || seenKeys.has(base.keys[i])
+									: option !== "on" ||
+										!(
+											seenKeys.has(base.keys[i]) ||
+											skippedKeys.has(base.keys[i])
+										)
+							const wishPasses = (i: number, on: boolean) =>
+								!on || !member || wishes.has(base.keys[i])
+							const matchPasses = (i: number, option: number | "outside") =>
+								!hasTaste ||
+								(option === "outside"
+									? !member || (matches[i] >= 50 && matches[i] < 60)
+									: matches[i] >= option)
+							const scorePasses = (i: number) =>
+								!minScore ||
+								(rows[i] >= 0 &&
+									SCORES[rows[i]] !== UNKNOWN_SCORE &&
+									SCORES[rows[i]] >= minScore)
+							const all = Array.from(rows.keys())
+							const out = runPasses({
+								...base,
+								seen: member ? set(seenKeys) : undefined,
+								seenOrSkipped: set(new Set([...seenKeys, ...skippedKeys])),
+								notSeen:
+									mode === "on"
+										? set(new Set([...seenKeys, ...skippedKeys]))
+										: null,
+								seenBefore: mode === "seen" && member,
+								wishlist: member ? set(wishes) : null,
+								onWishlist,
+								matches: hasTaste ? matches : null,
+								minMatch: match === "outside" ? 0 : match,
+								outsideUsual: match === "outside",
+								outsideUsualAvailable: member,
+								minScore,
+							})
+							const predicates = {
+								notSeenYet: (i: number) => listPasses(i, mode),
+								wishlist: (i: number) => wishPasses(i, onWishlist),
+								minMatch: (i: number) => matchPasses(i, match),
+								minScore: scorePasses,
+							}
+							assert.deepEqual(
+								Array.from(out.passing),
+								all.filter((i) => Object.values(predicates).every((p) => p(i))),
+							)
+							for (const group of [
+								"notSeenYet",
+								"wishlist",
+								"minMatch",
+								"minScore",
+							] as const) {
+								const others = all.filter((i) =>
+									Object.entries(predicates).every(
+										([g, p]) => g === group || p(i),
+									),
+								)
+								assert.equal(
+									out.recoveries.find((r) => r.filter === group)?.titles ?? 0,
+									others.filter((i) => !predicates[group](i)).length,
+								)
+								if (group === "notSeenYet")
+									for (const option of ["off", "on", "seen"])
+										assert.equal(
+											out.optionCounts[group][option],
+											others.filter((i) => listPasses(i, option)).length,
+										)
+								if (group === "wishlist")
+									for (const on of [false, true])
+										assert.equal(
+											out.optionCounts[group][on ? "on" : "off"],
+											others.filter((i) => wishPasses(i, on)).length,
+										)
+								if (group === "minMatch")
+									for (const option of [
+										0,
+										60,
+										70,
+										80,
+										90,
+										"outside",
+									] as const) {
+										assert.equal(
+											out.optionCounts[group][String(option)],
+											others.filter((i) => matchPasses(i, option)).length,
+										)
+									}
+							}
+						}
 })

@@ -94,6 +94,7 @@ test("only plain guests with loaded availability get a key", () => {
 		{ seen: new Set([1]) },
 		{ skipped: new Set([1]) },
 		{ hidden: new Set([1]) },
+		{ wishlist: new Map([[1, new Date(0)]]) },
 	]
 	for (const change of variants)
 		assert.equal(
@@ -125,6 +126,9 @@ test("keys include every filter dependency", () => {
 	for (const change of variants)
 		assert.notEqual(discoverFilterKey({ ...base, ...change }), key)
 	const states: Partial<FilterState>[] = [
+		{ seenBefore: true },
+		{ onWishlist: true },
+		{ outsideUsual: true },
 		{ type: "movie" },
 		{ anime: "only" },
 		{ onMyServices: false },

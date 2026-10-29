@@ -60,6 +60,7 @@ export const FILTER_NAMES = [
 	"runtime",
 	"sourceScores",
 	"scoreGap",
+	"wishlist",
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
@@ -80,7 +81,7 @@ export const MIN_SCORES = [0, 60, 70, 80] as const
 export type MinScore = (typeof MIN_SCORES)[number]
 
 /** The taste match filter's options: a title needs a taste match of at least this. */
-export const MIN_MATCHES = [0, 70, 80, 90] as const
+export const MIN_MATCHES = [0, 60, 70, 80, 90] as const
 export type MinMatch = (typeof MIN_MATCHES)[number]
 
 export const RELEASED = [
@@ -140,6 +141,9 @@ export interface FilterState {
 	/** Request-local viewing country for streaming offers; never writes saved settings. */
 	streamingCountry?: string
 	notSeenYet: boolean
+	seenBefore?: boolean
+	onWishlist?: boolean
+	outsideUsual?: boolean
 	/** Up to MAX_MOODS; a title fits if it belongs to at least one (all picks when listed in allOf). */
 	moods: MoodKey[]
 	/** Up to MAX_THEMES; a title fits if it has at least one (all picks when listed in allOf). */
@@ -245,6 +249,7 @@ function rangeFromParams(
 export function filterStateFromParams(
 	params: URLSearchParams,
 	defaults: FilterDefaults,
+	member = true,
 ): FilterState {
 	const state = defaultFilterState(defaults)
 	const streamingCountry = params.get("streamingCountry")?.trim().toUpperCase()
@@ -261,8 +266,20 @@ export function filterStateFromParams(
 		state.onMyServices = false
 		if (chosen.length) state.services = chosen
 	}
-	const unseen = params.get("unseen")
-	if (unseen === "0" || unseen === "1") state.notSeenYet = unseen === "1"
+	// Last enabled seen/unseen choice wins, including repeats. A zero disables only its own choice.
+	// Guests ignore seen entirely, so shared links cannot turn off their Not seen yet default.
+	for (const [name, value] of params) {
+		if (name === "unseen" && (value === "0" || value === "1")) {
+			state.notSeenYet = value === "1"
+			if (state.notSeenYet) delete state.seenBefore
+		} else if (member && name === "seen" && (value === "0" || value === "1")) {
+			if (value === "1") {
+				state.seenBefore = true
+				state.notSeenYet = false
+			} else delete state.seenBefore
+		}
+	}
+	if (params.get("wishlist") === "1") state.onWishlist = true
 	const titleType = titleTypeOf(params.get("type"), params.get("anime"))
 	state.type = titleType.format
 	state.anime = titleType.anime
@@ -287,6 +304,7 @@ export function filterStateFromParams(
 			? Number(score)
 			: 0
 	state.minMatch = oneOf(MIN_MATCHES, params.get("match")) ?? 0
+	if (params.get("match") === "outside") state.outsideUsual = true
 	const years = rangeFromParams(params, "years", "minYear", "maxYear")
 	if (years) state.years = years
 	const runtime = rangeFromParams(params, "runtime", "minRuntime", "maxRuntime")
@@ -364,6 +382,8 @@ export function filterStateToParams(
 		if (value === null) params.delete(name)
 		else params.set(name, value)
 	}
+	set("seen", state.seenBefore ? "1" : null)
+	set("wishlist", state.onWishlist ? "1" : null)
 	set("streamingCountry", state.streamingCountry ?? null)
 	const services = state.anyService
 		? "any"
@@ -396,7 +416,14 @@ export function filterStateToParams(
 	)
 	set("all", allOf.length ? allOf.join(",") : null)
 	set("score", state.minScore ? String(state.minScore) : null)
-	set("match", state.minMatch ? String(state.minMatch) : null)
+	set(
+		"match",
+		state.outsideUsual
+			? "outside"
+			: state.minMatch
+				? String(state.minMatch)
+				: null,
+	)
 	set(
 		"released",
 		state.years || state.released === "any" ? null : state.released,
@@ -480,6 +507,22 @@ export function sortFromParams(
 	return sort ?? (searching ? "relevance" : "popular")
 }
 
+/** Resolve newly enabled, mutually exclusive choices after a state change. */
+export function resolveFilterChange(
+	previous: FilterState,
+	next: FilterState,
+): FilterState {
+	if (next.seenBefore && !previous.seenBefore)
+		next = { ...next, notSeenYet: false }
+	else if (next.notSeenYet && !previous.notSeenYet)
+		next = { ...next, seenBefore: undefined }
+	if (next.outsideUsual && !previous.outsideUsual)
+		next = { ...next, minMatch: 0 }
+	else if (next.minMatch !== previous.minMatch)
+		next = { ...next, outsideUsual: undefined }
+	return next
+}
+
 /** The state with one filter group back at its widest: what a one-tap recovery does. */
 export function dropFilter(state: FilterState, name: FilterName): FilterState {
 	switch (name) {
@@ -497,7 +540,9 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 				streamingCountry: undefined,
 			}
 		case "notSeenYet":
-			return { ...state, notSeenYet: false }
+			return { ...state, notSeenYet: false, seenBefore: undefined }
+		case "wishlist":
+			return { ...state, onWishlist: undefined }
 		case "type":
 			return { ...state, type: "all" }
 		case "anime":
@@ -513,7 +558,7 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 		case "minScore":
 			return { ...state, minScore: 0 }
 		case "minMatch":
-			return { ...state, minMatch: 0 }
+			return { ...state, minMatch: 0, outsideUsual: undefined }
 		case "released":
 			return { ...state, released: "any" }
 		case "similarTo":
@@ -539,6 +584,9 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 /** The Filters sheet's filters cleared; On my services and Not seen yet stay as they are. */
 export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	...state,
+	seenBefore: undefined,
+	onWishlist: undefined,
+	outsideUsual: undefined,
 	allOf: undefined,
 	years: undefined,
 	runtime: undefined,
@@ -582,7 +630,9 @@ export function secondaryFilterCount(state: FilterState): number {
 		state.styles.length +
 		state.genres.length +
 		(state.minScore ? 1 : 0) +
-		(state.minMatch ? 1 : 0) +
+		(state.minMatch || state.outsideUsual ? 1 : 0) +
+		(state.seenBefore ? 1 : 0) +
+		(state.onWishlist ? 1 : 0) +
 		(state.released !== "any" ? 1 : 0) +
 		(state.similarTo?.length ?? 0) +
 		(state.people?.length ?? 0) +
@@ -599,15 +649,26 @@ export function secondaryFilterCount(state: FilterState): number {
  * The state as it applies, for everything that shows a filter as active (chips, the count on Filters, Clear
  * filters). The age limit and content apply only with the viewer's ladder: without one (the age filter is off for the
  * viewer, or the snapshot has no ratings; also while the first counts are on their way) the title filter ignores
- * them, so they must not look applied. The URL keeps them.
+ * them, so they must not look applied. Seen before, Wishlist and Outside your usual apply only to members.
+ * The URL keeps them.
  */
 export const stateAsApplied = (
 	state: FilterState,
 	ladder: ViewerLadder | null | undefined,
-): FilterState =>
-	ladder || (state.ageLimit === undefined && !state.content)
-		? state
-		: { ...state, ageLimit: undefined, content: undefined }
+	member: boolean,
+): FilterState => {
+	let applied = state
+	if (!ladder && (state.ageLimit !== undefined || state.content))
+		applied = { ...applied, ageLimit: undefined, content: undefined }
+	if (!member && (state.seenBefore || state.onWishlist || state.outsideUsual))
+		applied = {
+			...applied,
+			seenBefore: undefined,
+			onWishlist: undefined,
+			outsideUsual: undefined,
+		}
+	return applied
+}
 
 // Today's Discover parameters that have a new name. The legacy filters keep theirs.
 const RENAMED_DISCOVER_PARAMS = [

@@ -709,9 +709,12 @@ function Control({ ctx, k, trim }: { ctx: Ctx; k: CardKey; trim: boolean }) {
 				<ThresholdBar
 					label="Taste match"
 					steps={MATCH_STEPS}
-					value={state.minMatch}
+					value={state.outsideUsual ? null : state.minMatch}
 					onChange={(minMatch) =>
-						ctx.set({ minMatch: minMatch as FilterState["minMatch"] })
+						ctx.set({
+							minMatch: minMatch as FilterState["minMatch"],
+							outsideUsual: undefined,
+						})
 					}
 					color={() => "bg-amber-400"}
 					counts={(v) => counts?.optionCounts.minMatch?.[String(v)] ?? null}

@@ -168,7 +168,15 @@ export interface PassInput {
 	services: ServicesFilter
 	/** Seen and skipped titles; null when Not seen yet is off. */
 	notSeen: TitleSet | null
-	/** Always the full hidden set, for the Not seen yet option counts. */
+	/** Member seen titles; absent for guests, for whom Seen before does not narrow. */
+	seen?: TitleSet
+	seenBefore?: boolean
+	wishlist?: TitleSet | null
+	onWishlist?: boolean
+	outsideUsual?: boolean
+	/** False for guests, even if their progress provides taste. */
+	outsideUsualAvailable?: boolean
+	/** Always the full seen and skipped set, for the Not seen yet option counts. */
 	seenOrSkipped: TitleSet
 	type: "all" | "movie" | "show"
 	/** A title the snapshot doesn't hold counts as not anime. */
@@ -416,7 +424,14 @@ export function runPasses(input: PassInput): PassOutput {
 		const key = keys[i]
 		let mask = 0
 		if (servicesOn && !onServices(i)) mask |= BIT.services
-		if (notSeen && inSet(notSeen, i)) mask |= BIT.notSeenYet
+		if (
+			input.seenBefore && input.seen
+				? !inSet(input.seen, i)
+				: notSeen && inSet(notSeen, i)
+		)
+			mask |= BIT.notSeenYet
+		if (input.onWishlist && input.wishlist && !inSet(input.wishlist, i))
+			mask |= BIT.wishlist
 		if (typeWanted >= 0 && (key >= SHOW_BASE ? 1 : 0) !== typeWanted)
 			mask |= BIT.type
 		if (animeWanted >= 0 && (isAnime(i) ? 1 : 0) !== animeWanted)
@@ -443,7 +458,13 @@ export function runPasses(input: PassInput): PassOutput {
 			(row < 0 || scores[row] === UNKNOWN_SCORE || scores[row] < minScore)
 		)
 			mask |= BIT.minScore
-		if (matches && minMatch > 0 && matches[i] < minMatch) mask |= BIT.minMatch
+		if (
+			matches &&
+			(input.outsideUsual && input.outsideUsualAvailable !== false
+				? matches[i] < 50 || matches[i] >= 60
+				: minMatch > 0 && matches[i] < minMatch)
+		)
+			mask |= BIT.minMatch
 		if (released) {
 			const day = row < 0 ? UNKNOWN_DAY : releaseDays[row]
 			if (day === UNKNOWN_DAY || day < released.from || day >= released.to)
@@ -518,12 +539,24 @@ export function runPasses(input: PassInput): PassOutput {
 	{
 		let off = 0
 		let on = 0
+		let seen = 0
 		for (let i = 0; i < n; i++) {
 			if (!passesOthers(i, BIT.notSeenYet)) continue
 			off++
 			if (!inSet(input.seenOrSkipped, i)) on++
+			if (!input.seen || inSet(input.seen, i)) seen++
 		}
-		optionCounts.notSeenYet = { on, off }
+		optionCounts.notSeenYet = { on, off, seen }
+	}
+	{
+		let on = 0
+		let off = 0
+		for (let i = 0; i < n; i++) {
+			if (!passesOthers(i, BIT.wishlist)) continue
+			off++
+			if (!input.wishlist || inSet(input.wishlist, i)) on++
+		}
+		optionCounts.wishlist = { on, off }
 	}
 
 	// Streaming services: everywhere, the viewer's own, and each service toggled into the explicit choice.
@@ -740,9 +773,18 @@ export function runPasses(input: PassInput): PassOutput {
 			for (let o = 0; o < MIN_MATCHES.length; o++)
 				if (!matches || match >= MIN_MATCHES[o])
 					matchCounts[o] += perMatch[match]
-		optionCounts.minMatch = Object.fromEntries(
-			MIN_MATCHES.map((min, o) => [String(min), matchCounts[o]]),
-		)
+		let outside = 0
+		for (let match = 0; match < 256; match++)
+			if (
+				!matches ||
+				input.outsideUsualAvailable === false ||
+				(match >= 50 && match < 60)
+			)
+				outside += perMatch[match]
+		optionCounts.minMatch = Object.fromEntries([
+			...MIN_MATCHES.map((min, o) => [String(min), matchCounts[o]]),
+			["outside", outside],
+		])
 	}
 
 	// Similar to and cast and crew: counts only for the chosen options (removing each).

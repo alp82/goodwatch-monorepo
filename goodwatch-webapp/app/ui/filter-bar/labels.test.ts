@@ -2,14 +2,20 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../server/title-filter/test-alias.ts"
 
-const { FILTER_NAMES, MIN_MATCHES, defaultFilterState, stateAsApplied } =
-	await import("~/domain/filter-state")
+const {
+	FILTER_NAMES,
+	MIN_MATCHES,
+	defaultFilterState,
+	filterStateFromParams,
+	stateAsApplied,
+} = await import("~/domain/filter-state")
 const { CONTENT_KINDS } = await import("~/domain/age-content")
 const {
 	CONTENT_LABELS,
 	DISCOVER_SORTS,
 	FILTER_ACCENTS,
 	MATCH_LABELS,
+	SCORE_LABELS,
 	RATE_MORE,
 	activeChips,
 	compactCount,
@@ -21,6 +27,22 @@ const {
 const { SORT_OPTIONS, sortOptionsFor } = await import("~/ui/watch-next/labels")
 
 const state = defaultFilterState({ onMyServices: false, notSeenYet: false })
+
+test("guest applied chips omit member-only choices from shared Discover URLs", () => {
+	for (const notSeenYet of [false, true]) {
+		const parsed = filterStateFromParams(
+			new URLSearchParams("seen=1&wishlist=1&match=outside&score=70"),
+			{ onMyServices: false, notSeenYet },
+			false,
+		)
+		const applied = stateAsApplied(parsed, null, false)
+		assert.equal(applied.notSeenYet, notSeenYet)
+		assert.deepEqual(
+			activeChips(applied).map((chip) => chip.group),
+			["minScore"],
+		)
+	}
+})
 
 test("Best match is the first sort, browsing and searching, and taste marks it", () => {
 	assert.deepEqual(
@@ -214,7 +236,7 @@ test("the age limit and every changed kind have a chip", () => {
 		["Age limit 16", "No drugs"],
 	)
 	// Without the viewer's ladder neither applies: no chips at all.
-	assert.deepEqual(activeChips(stateAsApplied(limited, null)), [])
+	assert.deepEqual(activeChips(stateAsApplied(limited, null, true)), [])
 	const hidden = activeChips({ ...state, content: { drugs: "hide" } })
 	assert.deepEqual(
 		hidden.map((chip) => chip.label),
@@ -435,4 +457,36 @@ test("Discover chips use the shared renamed moods and keep their URL keys", () =
 		assert.equal(chips[0].label, name)
 		assert.equal(chips[0].key, `mood-${key}`)
 	}
+})
+
+test("list and outside chips use production wording and remove their own choice", () => {
+	assert.equal(MATCH_LABELS[60], "60% and up")
+	assert.equal(SCORE_LABELS[60], "60 and up")
+	assert.equal(activeChips({ ...state, minMatch: 60 })[0].label, "Match 60%+")
+	const chosen = {
+		...state,
+		seenBefore: true,
+		onWishlist: true,
+		outsideUsual: true,
+	}
+	const chips = activeChips(chosen)
+	assert.deepEqual(
+		chips.map((chip) => [chip.group, chip.label]),
+		[
+			["notSeenYet", "Seen before"],
+			["wishlist", "On your wishlist"],
+			["minMatch", "Outside your usual"],
+		],
+	)
+	assert.equal(chips[0].remove(chosen).seenBefore, undefined)
+	assert.equal(chips[0].remove(chosen).onWishlist, true)
+	assert.equal(chips[1].remove(chosen).onWishlist, undefined)
+	assert.equal(chips[1].remove(chosen).seenBefore, true)
+	assert.equal(chips[2].remove(chosen).outsideUsual, undefined)
+	assert.equal(recoveryLabel("notSeenYet", 4, chosen), "4 you haven't seen")
+	assert.equal(recoveryLabel("wishlist", 4, chosen), "4 outside your wishlist")
+	assert.equal(
+		recoveryLabel("minMatch", 4, chosen),
+		"4 with other taste matches",
+	)
 })

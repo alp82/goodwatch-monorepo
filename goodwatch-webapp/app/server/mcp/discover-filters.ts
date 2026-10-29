@@ -105,6 +105,22 @@ export const discoverFilters = {
 		.describe(
 			"Match any selected styles; include styles in match_all to require every pick.",
 		),
+	seen_only: z
+		.boolean()
+		.optional()
+		.describe("Seen before; mutually exclusive with exclude_seen=true."),
+	wishlist_only: z
+		.boolean()
+		.optional()
+		.describe(
+			"Only titles on your Wishlist; combines with seen_only or exclude_seen.",
+		),
+	outside_usual: z
+		.boolean()
+		.optional()
+		.describe(
+			"Outside your usual: taste match 50–59. Supersedes minimum_match; does not narrow without taste.",
+		),
 	minimum_match: z
 		.union(MIN_MATCHES.map((n) => z.literal(n)))
 		.optional()
@@ -156,6 +172,7 @@ export function validDiscoverRanges(args: DiscoverFilterArgs) {
 			args.max_runtime !== undefined &&
 			args.min_runtime > args.max_runtime
 		) &&
+		!(args.seen_only && args.exclude_seen) &&
 		!(args.on_my_services && args.providers?.length) &&
 		!(args.any_service && (args.on_my_services || args.providers?.length))
 	)
@@ -170,13 +187,16 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 		...(args.source_scores ? { sourceScores: args.source_scores } : {}),
 		...(args.score_gap ? { scoreGap: args.score_gap } : {}),
 		...(args.providers?.length ? { services: args.providers } : {}),
-		notSeenYet: args.exclude_seen ?? false,
+		notSeenYet: args.seen_only ? false : (args.exclude_seen ?? false),
+		...(args.seen_only ? { seenBefore: true } : {}),
+		...(args.wishlist_only ? { onWishlist: true } : {}),
+		...(args.outside_usual ? { outsideUsual: true } : {}),
 		genres: args.genres ?? [],
 		moods: args.moods ?? [],
 		themes: args.themes ?? [],
 		styles: args.styles ?? [],
 		minScore: args.minimum_score ?? 0,
-		minMatch: args.minimum_match ?? 0,
+		minMatch: args.outside_usual ? 0 : (args.minimum_match ?? 0),
 		released: args.released ?? "any",
 		...(args.age_limit === undefined ? {} : { ageLimit: args.age_limit }),
 	}

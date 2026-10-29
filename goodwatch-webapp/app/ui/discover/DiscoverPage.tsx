@@ -122,7 +122,7 @@ export function DiscoverPage({
 		}),
 		[member, hasServices, guestServices, guestProgress],
 	)
-	const filters = useFilterState({ defaults, searching })
+	const filters = useFilterState({ defaults, member, searching })
 	const forYou = useForYou({ member, saved: savedForYou })
 
 	// The search: the query and the ranking's eligibility; everything else filters its ranked list in memory.
@@ -454,6 +454,7 @@ export function DiscoverPage({
 				<div className="lg:mt-7">
 					<FilterBar
 						filters={filters}
+						member={member}
 						signUpKey={signUpKey}
 						counts={counts}
 						forYou={forYouControl}
@@ -541,7 +542,7 @@ export function DiscoverPage({
 											onClear={filters.clearSecondary}
 											canClear={
 												secondaryFilterCount(
-													stateAsApplied(filters.state, first.ladder),
+													stateAsApplied(filters.state, first.ladder, member),
 												) > 0
 											}
 											searching={searching}

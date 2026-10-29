@@ -28,7 +28,7 @@ const sortedFields = (value: Record<string, unknown> | undefined) =>
 
 /**
  * The cache key for a viewer's browse filter result, or null when the result may not be shared: the viewer is a
- * member, has seen, skipped, or hidden titles, has taste, or their country's availability index is still loading (the
+ * member, has seen, skipped, hidden, or Wishlist titles, has taste, or their country's availability index is still loading (the
  * result is approximate then). The key holds every input filterTitles reads for such a viewer. The For you switch and
  * the page aren't in it: without taste the switch doesn't change the result, and every page reads the same entry.
  */
@@ -48,6 +48,7 @@ export function discoverFilterKey(input: {
 		viewer.seen.size !== 0 ||
 		viewer.skipped.size !== 0 ||
 		viewer.hidden.size !== 0 ||
+		viewer.wishlist.size !== 0 ||
 		taste.signal === "some" ||
 		input.availabilityLoadedAt === null
 	)
@@ -66,6 +67,9 @@ export function discoverFilterKey(input: {
 		services: state.services,
 		streamingCountry: state.streamingCountry,
 		notSeenYet: state.notSeenYet,
+		seenBefore: state.seenBefore,
+		onWishlist: state.onWishlist,
+		outsideUsual: state.outsideUsual,
 		allOf: state.allOf,
 		moods: state.moods,
 		themes: state.themes,

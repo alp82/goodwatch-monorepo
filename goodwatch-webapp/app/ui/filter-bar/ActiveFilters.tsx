@@ -38,6 +38,7 @@ const GROUP_LABELS: Partial<Record<FilterName, string>> = {
 	ageLimit: "Age & content",
 	services: "Streaming",
 	notSeenYet: "Not seen",
+	wishlist: "Wishlist",
 	legacy: "Other",
 }
 

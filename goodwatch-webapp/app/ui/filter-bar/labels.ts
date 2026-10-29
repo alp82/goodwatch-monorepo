@@ -146,6 +146,7 @@ export const SCORE_LABELS: Record<MinScore, string> = {
 
 export const MATCH_LABELS: Record<MinMatch, string> = {
 	0: "Any match",
+	60: "60% and up",
 	70: "70% and up",
 	80: "80% and up",
 	90: "90% and up",
@@ -208,6 +209,7 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		sourceScores: { dot: "bg-yellow-400", bar: "bg-yellow-500" },
 		scoreGap: { dot: "bg-rose-400", bar: "bg-rose-500" },
 		services: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
+		wishlist: { dot: "bg-blue-400", bar: "bg-blue-500" },
 		notSeenYet: { dot: "bg-blue-400", bar: "bg-blue-500" },
 		type: { dot: "bg-teal-400", bar: "bg-teal-500" },
 		anime: { dot: "bg-pink-400", bar: "bg-pink-500" },
@@ -264,7 +266,9 @@ export function recoveryLabel(
 		case "services":
 			return `${n} on other services`
 		case "notSeenYet":
-			return `${n} you've seen`
+			return state.seenBefore ? `${n} you haven't seen` : `${n} you've seen`
+		case "wishlist":
+			return `${n} outside your wishlist`
 		case "type":
 			return state.type === "movie"
 				? plural(titles, "show", "shows")
@@ -290,7 +294,9 @@ export function recoveryLabel(
 		case "minScore":
 			return `${n} below ${state.minScore}`
 		case "minMatch":
-			return `${n} below ${state.minMatch}% match`
+			return state.outsideUsual
+				? `${n} with other taste matches`
+				: `${n} below ${state.minMatch}% match`
 		case "years":
 		case "released":
 			return `${n} from other years`
@@ -361,6 +367,27 @@ export function activeChips(
 	names: FilterNames = {},
 ): ActiveChip[] {
 	const chips: ActiveChip[] = []
+	if (state.seenBefore)
+		chips.push({
+			key: "seen",
+			group: "notSeenYet",
+			label: "Seen before",
+			remove: (s) => ({ ...s, seenBefore: undefined }),
+		})
+	if (state.onWishlist)
+		chips.push({
+			key: "wishlist",
+			group: "wishlist",
+			label: "On your wishlist",
+			remove: (s) => dropFilter(s, "wishlist"),
+		})
+	if (state.outsideUsual)
+		chips.push({
+			key: "outside",
+			group: "minMatch",
+			label: "Outside your usual",
+			remove: (s) => dropFilter(s, "minMatch"),
+		})
 	for (const group of ["years", "runtime"] as const) {
 		const range = state[group]
 		if (!range || (range.min === undefined && range.max === undefined)) continue
@@ -503,7 +530,7 @@ export function activeChips(
 			label: `Score ${state.minScore}+`,
 			remove: (s) => ({ ...s, minScore: 0 }),
 		})
-	if (state.minMatch)
+	if (state.minMatch && !state.outsideUsual)
 		chips.push({
 			key: "match",
 			group: "minMatch",

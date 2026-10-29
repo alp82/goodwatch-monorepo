@@ -290,7 +290,7 @@ function buildGroups(
 			options: MIN_MATCHES.map((match) => ({
 				id: String(match),
 				label: MATCH_LABELS[match],
-				active: state.minMatch === match,
+				active: state.minMatch === match && !state.outsideUsual,
 				// Without taste no title has a match, so the counts would only repeat the total.
 				count: taste === "ready" ? count("minMatch", String(match)) : null,
 				// Any match stays, so a filter from a shared link can be taken off.
@@ -301,7 +301,7 @@ function buildGroups(
 						style={{ opacity: 0.4 + (match - 60) / 50 }}
 					/>
 				) : undefined,
-				toggle: () => set({ minMatch: match }),
+				toggle: () => set({ minMatch: match, outsideUsual: undefined }),
 			})),
 		},
 		{

@@ -32,6 +32,7 @@ import type { FilterStateBinding } from "./useFilterState"
 
 export interface FilterBarProps {
 	filters: FilterStateBinding
+	member?: boolean
 	/** What the title filter counted for `filters.query`; null while the first answer is on its way. */
 	counts: FilterBarCounts | null
 	/** Discover's For you switch, before the sort. */
@@ -63,7 +64,7 @@ export interface FilterBarProps {
 }
 
 export function FilterBar(props: FilterBarProps) {
-	const { filters, counts, taste = "ready" } = props
+	const { filters, counts, member = true, taste = "ready" } = props
 	const { state } = filters
 	const navigate = useNavigate()
 	const [sheetOpen, setSheetOpen] = useState(false)
@@ -90,8 +91,11 @@ export function FilterBar(props: FilterBarProps) {
 	const ladder = lastLadder.current
 	// What shows as active (chips here and on phones, the count on Filters and in the slab) goes by the state as it
 	// applies: without a ladder the title filter ignores the age limit and content, so they show nowhere, also while
-	// the first counts are on their way. The controls still change the state itself.
-	const applied = useMemo(() => stateAsApplied(state, ladder), [state, ladder])
+	// the first counts are on their way. Guests also omit member-only choices. The controls still change the state itself.
+	const applied = useMemo(
+		() => stateAsApplied(state, ladder, member),
+		[state, ladder, member],
+	)
 	const secondaryCount = secondaryFilterCount(applied)
 
 	const chips = useMemo(

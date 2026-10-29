@@ -5,7 +5,7 @@ import type { FilterName } from "~/domain/filter-state"
 /** A card of the sheet. Released covers both the presets and the year range. */
 export type CardKey = Exclude<
 	FilterName,
-	"notSeenYet" | "anime" | "legacy" | "content" | "years"
+	"wishlist" | "notSeenYet" | "anime" | "legacy" | "content" | "years"
 >
 
 /** The cards in order: what it is, how good, where, when, then the finer and the personal ones. */
@@ -48,7 +48,7 @@ export const cardOf = (group: FilterName): CardKey | null =>
 			? "released"
 			: group === "anime"
 				? "type"
-				: group === "notSeenYet" || group === "legacy"
+				: group === "wishlist" || group === "notSeenYet" || group === "legacy"
 					? null
 					: group
 

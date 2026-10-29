@@ -141,7 +141,7 @@ export const readToolDefinitions: {
 			.strict()
 			.refine(
 				validDiscoverRanges,
-				"Use ascending year/runtime bounds and choose either saved services or explicit providers",
+				"Use ascending year/runtime bounds, choose either saved services or explicit providers, and do not combine seen_only with exclude_seen=true",
 			)
 			.refine(
 				(value) =>
@@ -156,7 +156,7 @@ export const readToolDefinitions: {
 		name: "discover_titles",
 		title: "Discover movies and shows",
 		description:
-			"Discover without a query using the same catalog, filters and ordering as GoodWatch Discover/Explore. For you by default; everywhere and seen titles included. Choose popularity, newest, score or match ordering. Use on_my_services=true for saved services, or providers for specific services, in your saved country. Tag groups match any pick by default; match_all requires all picks in the named groups. Filters apply before pagination. Repeat filters when paging with offset cursors. Returns up to 40 titles and a matching Discover grid page_url.",
+			"Discover without a query using the same catalog, filters and ordering as GoodWatch Discover/Explore. For you by default; everywhere and seen titles included. Choose popularity, newest, score or match ordering. Use on_my_services=true for saved services, or providers for specific services, in your saved country. Tag groups match any pick by default; match_all requires all picks in the named groups. Use seen_only for Seen before, wishlist_only for On your wishlist, minimum_match=60 for 60%+, or outside_usual for taste match 50–59. seen_only and exclude_seen=true are mutually exclusive. Filters apply before pagination. Repeat filters when paging with offset cursors. Returns up to 40 titles and a matching Discover grid page_url.",
 		schema: z
 			.object({
 				...discoverFilters,
@@ -168,7 +168,7 @@ export const readToolDefinitions: {
 			.strict()
 			.refine(
 				validDiscoverRanges,
-				"Use ascending year/runtime bounds and choose either saved services or explicit providers",
+				"Use ascending year/runtime bounds, choose either saved services or explicit providers, and do not combine seen_only with exclude_seen=true",
 			),
 	},
 	{

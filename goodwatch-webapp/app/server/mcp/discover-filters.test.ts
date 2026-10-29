@@ -267,3 +267,51 @@ test("MCP mood descriptions publish shared names beside the stable keys", () => 
 	])
 		assert.ok(discoverFilters.moods.description?.includes(`${key} = ${name}`))
 })
+
+test("list and taste steps validate and round trip through both tools' page URLs", async () => {
+	const { readToolDefinitions } = await import("./tools.server.ts")
+	for (const name of ["search_titles", "discover_titles"] as const) {
+		const toolSchema = readToolDefinitions.find(
+			(tool) => tool.name === name,
+		)!.schema
+		assert.equal(
+			toolSchema.safeParse({ seen_only: true, exclude_seen: true }).success,
+			false,
+		)
+		for (const args of [
+			{ seen_only: true, wishlist_only: true },
+			{ wishlist_only: true, exclude_seen: true },
+			{ minimum_match: 60 as const },
+			{ outside_usual: true, minimum_match: 90 as const },
+		]) {
+			assert.ok(toolSchema.safeParse(args).success)
+			const result = withPageLink("https://goodwatch.app", name, args, {})
+			const params = new URL(String(result.page_url)).searchParams
+			assert.deepEqual(
+				filterStateFromParams(params, { onMyServices: true, notSeenYet: true }),
+				discoverView(args, false).state,
+			)
+			assert.equal(params.get("seen"), "seen_only" in args ? "1" : null)
+			assert.equal(params.get("wishlist"), "wishlist_only" in args ? "1" : null)
+			assert.equal(
+				params.get("match"),
+				"outside_usual" in args
+					? "outside"
+					: "minimum_match" in args
+						? "60"
+						: null,
+			)
+		}
+	}
+	for (const args of [
+		{ seen_only: true },
+		{ wishlist_only: true },
+		{ outside_usual: true },
+		{ minimum_match: 60 as const },
+	]) {
+		assert.notEqual(discoverViewKey(args), discoverViewKey({}))
+		assert.deepEqual(filterArgs(args), args)
+	}
+	for (const key of ["seen_only", "wishlist_only", "outside_usual"])
+		assert.equal(schema.safeParse({ [key]: "true" }).success, false)
+})

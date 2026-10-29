@@ -14,18 +14,60 @@ const {
 	secondaryFilterCount,
 	sortFromParams,
 	stateAsApplied,
+	resolveFilterChange,
 } = await import("./filter-state.ts")
 
 const defaults = { onMyServices: false, notSeenYet: false }
 const parse = (query: string) =>
 	filterStateFromParams(new URLSearchParams(query), defaults)
 
+test("guest shared links hide member-only filters without changing Not seen yet", () => {
+	for (const notSeenYet of [false, true]) {
+		const guestDefaults = { ...defaults, notSeenYet }
+		for (const query of [
+			"wishlist=1",
+			"seen=1&wishlist=1&match=outside",
+			"seen=1&unseen=1&seen=1&wishlist=1&match=outside",
+			"unseen=0&seen=1&wishlist=1&match=outside",
+		]) {
+			const params = new URLSearchParams(query)
+			const state = filterStateFromParams(params, guestDefaults, false)
+			const expectedUnseen = params.has("unseen")
+				? params.get("unseen") === "1"
+				: notSeenYet
+			assert.equal(state.notSeenYet, expectedUnseen, query)
+			assert.equal(state.seenBefore, undefined, query)
+			const applied = stateAsApplied(state, null, false)
+			assert.equal(applied.seenBefore, undefined)
+			assert.equal(applied.onWishlist, undefined)
+			assert.equal(applied.outsideUsual, undefined)
+			assert.equal(applied.notSeenYet, expectedUnseen)
+			assert.equal(secondaryFilterCount(applied), 0)
+		}
+	}
+	const state = parse("seen=1&wishlist=1&match=outside&score=70&age=12")
+	const ladder = {
+		country: "DE",
+		steps: [{ age: 12, label: "FSK 12" }],
+		local: true,
+	}
+	assert.equal(stateAsApplied(state, ladder, true), state)
+	const guest = stateAsApplied(state, ladder, false)
+	assert.equal(guest.ageLimit, 12)
+	assert.equal(guest.minScore, 70)
+	assert.equal(secondaryFilterCount(guest), 2)
+	assert.equal(secondaryFilterCount(stateAsApplied(state, null, false)), 1)
+	assert.equal(state.seenBefore, true)
+	assert.equal(state.onWishlist, true)
+	assert.equal(state.outsideUsual, true)
+})
+
 test("the taste match filter reads from and writes to `match`", () => {
-	assert.deepEqual([...MIN_MATCHES], [0, 70, 80, 90])
+	assert.deepEqual([...MIN_MATCHES], [0, 60, 70, 80, 90])
 	assert.ok(FILTER_NAMES.includes("minMatch"))
 	assert.equal(defaultFilterState(defaults).minMatch, 0)
 	assert.equal(parse("").minMatch, 0)
-	for (const min of [70, 80, 90] as const) {
+	for (const min of [60, 70, 80, 90] as const) {
 		const state = parse(`match=${min}`)
 		assert.equal(state.minMatch, min)
 		assert.equal(filterStateToParams(state, defaults).get("match"), String(min))
@@ -320,11 +362,11 @@ test("without the viewer's ladder the age limit and content don't count as appli
 		local: true,
 	}
 	const state = parse("age=6&hide=drugs&ok=violence&score=70")
-	assert.equal(stateAsApplied(state, ladder), state)
-	assert.equal(secondaryFilterCount(stateAsApplied(state, ladder)), 3)
+	assert.equal(stateAsApplied(state, ladder, true), state)
+	assert.equal(secondaryFilterCount(stateAsApplied(state, ladder, true)), 3)
 	// No ladder (the age filter is off for the viewer, or no ratings), or the counts haven't arrived yet.
 	for (const none of [null, undefined]) {
-		const applied = stateAsApplied(state, none)
+		const applied = stateAsApplied(state, none, true)
 		assert.equal(applied.ageLimit, undefined)
 		assert.equal(applied.content, undefined)
 		assert.equal(applied.minScore, 70)
@@ -333,7 +375,7 @@ test("without the viewer's ladder the age limit and content don't count as appli
 	// The state itself keeps them, and so does the URL.
 	assert.equal(state.ageLimit, 6)
 	const plain = parse("score=70")
-	assert.equal(stateAsApplied(plain, null), plain)
+	assert.equal(stateAsApplied(plain, null, true), plain)
 })
 
 test("themes and styles read from and write to `themes` and `styles`, three of each at most", () => {
@@ -561,4 +603,84 @@ test("tag groups opt into all of, with canonical round trips and old URLs unchan
 	)
 	assert.equal(stale.has("all"), false)
 	assert.equal(clearSecondaryFilters(state).allOf, undefined)
+})
+
+test("Seen before and Not seen yet exclude each other; the last enabled URL choice wins", () => {
+	for (const memberDefaults of [defaults, { ...defaults, notSeenYet: true }]) {
+		for (const [query, seen, unseen] of [
+			["seen=1", true, false],
+			["unseen=1&seen=1", true, false],
+			["seen=1&unseen=1", false, true],
+			["seen=1&unseen=1&seen=1", true, false],
+			["unseen=1&seen=bogus", false, true],
+			["seen=1&unseen=bogus", true, false],
+			["seen=1&seen=0&unseen=0", false, false],
+		] as const) {
+			const state = filterStateFromParams(
+				new URLSearchParams(query),
+				memberDefaults,
+			)
+			assert.equal(!!state.seenBefore, seen, query)
+			assert.equal(state.notSeenYet, unseen, query)
+			assert.deepEqual(
+				filterStateFromParams(
+					filterStateToParams(state, memberDefaults),
+					memberDefaults,
+				),
+				state,
+			)
+		}
+	}
+	const unseen = parse("unseen=1")
+	const seen = resolveFilterChange(unseen, { ...unseen, seenBefore: true })
+	assert.equal(seen.notSeenYet, false)
+	assert.equal(seen.seenBefore, true)
+	assert.equal(
+		resolveFilterChange(seen, { ...seen, notSeenYet: true }).seenBefore,
+		undefined,
+	)
+	assert.equal(dropFilter(seen, "notSeenYet").seenBefore, undefined)
+})
+
+test("Wishlist and outside choices round trip, clear and count as secondary filters", () => {
+	for (const query of [
+		"wishlist=1",
+		"seen=1&wishlist=1",
+		"unseen=1&wishlist=1",
+		"match=outside",
+		"seen=1&wishlist=1&match=outside",
+	]) {
+		const state = parse(query)
+		assert.deepEqual(
+			parse(filterStateToParams(state, defaults).toString()),
+			state,
+		)
+	}
+	const state = parse("seen=1&wishlist=1&match=outside")
+	assert.equal(state.minMatch, 0)
+	assert.equal(secondaryFilterCount(state), 3)
+	assert.equal(dropFilter(state, "wishlist").onWishlist, undefined)
+	assert.equal(dropFilter(state, "minMatch").outsideUsual, undefined)
+	const cleared = clearSecondaryFilters(state)
+	assert.equal(secondaryFilterCount(cleared), 0)
+	assert.equal(cleared.seenBefore, undefined)
+	assert.equal(cleared.onWishlist, undefined)
+	assert.equal(cleared.outsideUsual, undefined)
+	const outside = resolveFilterChange(parse("match=80"), {
+		...parse("match=80"),
+		outsideUsual: true,
+	})
+	assert.equal(outside.minMatch, 0)
+	assert.equal(
+		resolveFilterChange(outside, { ...outside, minMatch: 60 }).outsideUsual,
+		undefined,
+	)
+	assert.equal(
+		filterStateToParams(
+			cleared,
+			defaults,
+			new URLSearchParams("seen=1&wishlist=1&match=outside&q=heat"),
+		).toString(),
+		"q=heat",
+	)
 })

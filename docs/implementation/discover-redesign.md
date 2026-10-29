@@ -397,7 +397,9 @@ parameters are additive: a URL without them means what it means today.
 | Time to finish | `hours?: FilterRange` | `hours=10-30` | shows | Facts (episodes × episode length) |
 
 Parsing rules: ranges use today's `rangeFromParams` (empty, negative, reversed ranges ignored). `seen=1` turns Not
-seen yet off; `unseen=1` with `seen=1` keeps `seen=1` (the later, more specific choice) and writes no `unseen`.
+seen yet off. If both appear, the last enabled (`=1`) `seen`/`unseen` choice in URL order wins (including repeats).
+A `=0` turns only its own choice off; invalid values are ignored.
+Turning either on in state turns the other off.
 `match=outside` sets `outsideUsual` and `minMatch` 0. `taste` keeps at most 3 known-format keys (and the legacy size
 numbers Watch next accepts). `all` keeps only known group names; a group in `all` with one pick behaves like any of.
 `episodeRuntime` absent means `runtime` holds for both kinds, as today (old URLs and MCP keep their meaning).

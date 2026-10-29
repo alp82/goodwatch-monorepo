@@ -5,6 +5,7 @@ import {
 	type FilterName,
 	type FilterState,
 	type SortKey,
+	resolveFilterChange,
 	clearSecondaryFilters,
 	dropFilter,
 	filterQuery,
@@ -46,9 +47,11 @@ export interface FilterStateBinding {
  */
 export function useFilterState({
 	defaults,
+	member,
 	searching = false,
 }: {
 	defaults: FilterDefaults
+	member: boolean
 	searching?: boolean
 }): FilterStateBinding {
 	const [params, setParams] = useSearchParams()
@@ -58,10 +61,10 @@ export function useFilterState({
 	// Parsed again only when the URL or the defaults change.
 	const fromUrl = useMemo(
 		() => ({
-			state: filterStateFromParams(params, defaults),
+			state: filterStateFromParams(params, defaults, member),
 			sort: sortFromParams(params, searching),
 		}),
-		[urlKey, defaultsKey, searching],
+		[urlKey, defaultsKey, member, searching],
 	)
 
 	// The change the URL hasn't caught up with yet. Any URL change (ours arriving, or back and forward) ends it.
@@ -103,7 +106,13 @@ export function useFilterState({
 
 	const update = useCallback(
 		(change: (state: FilterState) => FilterState) =>
-			write({ ...latest.current, state: change(latest.current.state) }),
+			write({
+				...latest.current,
+				state: resolveFilterChange(
+					latest.current.state,
+					change(latest.current.state),
+				),
+			}),
 		[write],
 	)
 

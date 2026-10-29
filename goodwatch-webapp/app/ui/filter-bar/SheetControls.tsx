@@ -170,7 +170,7 @@ export function ThresholdBar({
 	counts,
 }: {
 	steps: { v: number; label: string }[]
-	value: number
+	value: number | null
 	onChange: (v: number) => void
 	color: (v: number) => string
 	label: string
@@ -188,8 +188,8 @@ export function ThresholdBar({
 			className={`grid auto-cols-fr grid-flow-col gap-1 ${disabled ? "opacity-40" : ""}`}
 		>
 			{steps.map((s, i) => {
-				const lit = i >= at && value !== 0
-				const on = i === at
+				const lit = value !== null && i >= at && value !== 0
+				const on = value !== null && i === at
 				const n = counts?.(s.v)
 				return (
 					<button

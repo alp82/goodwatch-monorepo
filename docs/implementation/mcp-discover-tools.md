@@ -18,7 +18,10 @@ Both title tools accept the same optional filters:
 | `anime` | `any`, `only`, `none` |
 | `match_all` | Array of `moods`, `themes`, `styles`, `genres`: require every pick within each named group; other groups keep any-of matching. Ignored with fewer than two distinct picks. The matching `page_url` carries `all=`. All-of counts for picked options show removal of that unit; unpicked options show adding it. Folded genre pairs form one unit, matching either name. Group recoveries remove the whole group. |
 | `moods`, `themes`, `styles` | Up to three of each; valid keys are enumerated from the site's constants in the schemas. Mood descriptions use the shared names: Cozy (`feelgood`), Romantic (`romance`), Thrilling (`action`), Sad (`heavy`), Trippy (`mind`). Keys and rules are unchanged; descriptive search also accepts their previous names. Include a group in `match_all` to require every pick. |
-| `minimum_match` | Site taste-match thresholds: 0, 70, 80, 90; does not narrow without taste |
+| `seen_only` | Seen before (`seen=1`); mutually exclusive with `exclude_seen=true`. URL parsing uses the last valid seen/unseen choice. Requires a member. |
+| `wishlist_only` | On your wishlist (`wishlist=1`); combines with either seen choice. Requires a member. |
+| `outside_usual` | Outside your usual (`match=outside`): taste match 50–59; supersedes `minimum_match`. Requires a member and taste; otherwise does not narrow. |
+| `minimum_match` | Site taste-match thresholds: 0, 60, 70, 80, 90; does not narrow without taste |
 | `released` | Site presets: `any`, `recent` (current year and two before it), `2010s`, `2000s`, `before2000` |
 | `age_limit`, `hide_content`, `show_content` | Saved country's rating ladder and the site's content choices; hidden choices win conflicts. Unavailable ratings do not narrow, matching the site |
 | `order` | `for_you` (default), `popularity`, `newest`, `score`, `match` |

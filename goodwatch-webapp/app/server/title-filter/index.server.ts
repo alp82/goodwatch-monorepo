@@ -91,10 +91,10 @@ export interface FilterResult {
 	recoveries: { filter: FilterName; titles: number }[]
 	/**
 	 * What each option would leave, the other filters unchanged. Keys: services `all`, `any`, `mine`, and service ids;
-	 * notSeenYet `on`, `off`; type `all`, `movie`, `show`; anime `any`, `only`, `none`; moods, themes and styles by
+	 * notSeenYet `on`, `off`, `seen`; wishlist `on`, `off`; type `all`, `movie`, `show`; anime `any`, `only`, `none`; moods, themes and styles by
 	 * key; genres by name. Tag options toggle under any of; under all of picked options count removing their unit,
 	 * unpicked options count adding their unit;
-	 * minScore `0`, `60`, `70`, `80`; minMatch `0`, `70`, `80`, `90`; released by option; similarTo and people only for the chosen options (what
+	 * minScore `0`, `60`, `70`, `80`; minMatch `0`, `60`, `70`, `80`, `90`, `outside`; released by option; similarTo and people only for the chosen options (what
 	 * removing each would leave); legacy `on`, `off`.
 	 * years, runtime, sourceScores and scoreGap are empty: their SQL sets are only read for active choices.
 	 *
@@ -290,6 +290,18 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 					},
 		notSeen: state.notSeenYet ? seenOrSkipped : null,
 		seenOrSkipped,
+		seen:
+			viewer.viewer.kind === "member"
+				? titleSet(viewer.seen, snapshot)
+				: undefined,
+		seenBefore: viewer.viewer.kind === "member" && state.seenBefore,
+		wishlist:
+			viewer.viewer.kind === "member"
+				? titleSet(new Set(viewer.wishlist.keys()), snapshot)
+				: null,
+		onWishlist: state.onWishlist,
+		outsideUsual: state.outsideUsual,
+		outsideUsualAvailable: viewer.viewer.kind === "member",
 		type: state.type,
 		anime: state.anime,
 		moods: state.moods.reduce(
