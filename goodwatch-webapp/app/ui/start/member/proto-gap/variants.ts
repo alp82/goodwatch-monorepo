@@ -10,12 +10,13 @@ export const GAP_VARIANTS = [
 	{ key: "c", name: "Card grows: bigger this or that" },
 	{ key: "d", name: "Room fills the screen" },
 	{ key: "e", name: "Go deeper in the room, floor extends" },
+	{ key: "f", name: "D's room + C's card" },
 ] as const
 
 export type GapKey = (typeof GAP_VARIANTS)[number]["key"]
 
 export const gapOf = (value: string | null): GapKey =>
-	GAP_VARIANTS.some((v) => v.key === value) ? (value as GapKey) : "a"
+	GAP_VARIANTS.some((v) => v.key === value) ? (value as GapKey) : "f"
 
 /** The phone shelf has 16 cases, the desktop shelf 11. */
 const SHELF_SLOTS = 16
