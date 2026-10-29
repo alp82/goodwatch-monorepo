@@ -28,6 +28,7 @@ export function StartStage({
 	moods,
 	card,
 	grade,
+	opening,
 }: {
 	/** The titles on the room's shelf. */
 	shelf: readonly ShelfTitle[]
@@ -44,6 +45,8 @@ export function StartStage({
 	card?: ReactNode
 	/** Layers that tint the room, between the room and the night. */
 	grade?: ReactNode
+	/** A guest's opening (opening/OpeningBoot.tsx): first in the stage, so its gate runs before the rest paints. */
+	opening?: ReactNode
 }) {
 	return (
 		<section
@@ -52,6 +55,7 @@ export function StartStage({
 			style={SCENE_STYLE}
 			{...(centered ? { "data-centered": "" } : {})}
 		>
+			{opening}
 			<StartRoom night={night} camera={camera} titles={shelf}>
 				{grade}
 			</StartRoom>

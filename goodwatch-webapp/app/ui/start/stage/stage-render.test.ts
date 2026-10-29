@@ -94,3 +94,36 @@ test("the stage carries both scenes' numbers for start.css", () => {
 				`${name} ${key}`,
 			)
 })
+
+test("a guest's opening comes first in the stage: the gate, its script, then the boot; a member's page has none", () => {
+	const guest = rendered.guest
+	const gate = guest.indexOf('<input id="start-boot-gate" type="checkbox"')
+	const script = guest.indexOf("<script>", gate)
+	const boot = guest.indexOf('class="start-opening"')
+	const room = guest.indexOf('class="start-camera"')
+	assert.ok(gate > guest.indexOf("<section"), "the gate is in the stage")
+	assert.ok(
+		gate < script && script < boot && boot < room,
+		"gate, script, boot, room",
+	)
+	// The box is unticked in the HTML (one HTML for every guest); the script decides in the browser.
+	assert.doesNotMatch(guest, /<input[^>]*checked/)
+	assert.match(guest, /gw-start-boot-seen/)
+	assert.match(guest, /class="boot"/)
+	assert.match(
+		guest,
+		/<div aria-hidden="true" class="start-opening-cover"><\/div>/,
+	)
+	assert.ok(
+		guest.indexOf("start-opening-cover") > guest.indexOf("</section>"),
+		"the cover is outside the stage",
+	)
+	for (const part of [
+		"start-boot-gate",
+		"start-opening",
+		"gw-start-boot-seen",
+		'class="boot"',
+		"<script",
+	])
+		assert.ok(!rendered.member.includes(part), part)
+})

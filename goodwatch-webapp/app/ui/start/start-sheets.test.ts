@@ -24,7 +24,12 @@ test("every style sheet of the start page's first load is in START_SHEETS, none 
 		readFileSync("app/ui/start/start-sheets.ts", "utf8"),
 		/start\/start\.css\?url"/,
 	)
-	// Nothing of the old TV home is in the start page's first load.
+	// Nothing of the old TV home is in the start page's first load but its boot screen, which a guest's opening plays
+	// (opening/OpeningBoot.tsx).
 	for (const path of modules)
-		assert.doesNotMatch(path, /ui\/living-room\/(tv|intro)\//, path)
+		if (!/^app\/ui\/living-room\/intro\/boot\.(tsx|css)$/.test(path))
+			assert.doesNotMatch(path, /ui\/living-room\/(tv|intro)\//, path)
+	const sheets = readFileSync("app/ui/start/start-sheets.ts", "utf8")
+	assert.match(sheets, /intro\/boot\.css\?url"/)
+	assert.match(sheets, /start\/opening\/opening\.css\?url"/)
 })
