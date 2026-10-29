@@ -29,6 +29,7 @@ export function StartStage({
 	card,
 	grade,
 	opening,
+	after,
 }: {
 	/** The titles on the room's shelf. */
 	shelf: readonly ShelfTitle[]
@@ -47,6 +48,8 @@ export function StartStage({
 	grade?: ReactNode
 	/** A guest's opening (opening/OpeningBoot.tsx): first in the stage, so its gate runs before the rest paints. */
 	opening?: ReactNode
+	/** PROTOTYPE (?gap=e): content under the card, inside the stage. */
+	after?: ReactNode
 }) {
 	return (
 		<section
@@ -92,6 +95,7 @@ export function StartStage({
 						{card}
 					</div>
 				</div>
+				{after}
 			</div>
 		</section>
 	)

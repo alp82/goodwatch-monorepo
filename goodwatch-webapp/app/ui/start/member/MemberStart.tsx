@@ -7,7 +7,10 @@
 // they arrive, without moving anything: the doors' order and the open door are decided before (doors.ts).
 //
 // Nothing on this page writes: "this or that" only moves its round on, and the doors only switch sections.
+import { useSearchParams } from "@remix-run/react"
 import { useEffect, useMemo, useState } from "react"
+import { assetUrl } from "~/utils/asset-url"
+import { START_ROOM_ART } from "../room/room-pictures"
 import { StartMoodPicker } from "../moods/StartMoodPicker"
 import type { ShelfTitle } from "../room/ShelfCovers"
 import { StartSearchBar } from "../search/StartSearchBar"
@@ -19,6 +22,9 @@ import { Doors } from "./Doors"
 import { FirstSteps } from "./FirstSteps"
 import { MemberResults } from "./MemberResults"
 import { ThisOrThat } from "./ThisOrThat"
+import { GapSwitcher } from "./proto-gap/GapSwitcher"
+import { PROTO_GAP_CSS } from "./proto-gap/proto-gap-css"
+import { gapOf, memberShelf } from "./proto-gap/variants"
 import { buildDeck } from "./deck"
 import {
 	type ArrivedLists,
@@ -45,10 +51,30 @@ export function MemberStart({
 	const results = useStartSearch(start.query, { member })
 	const deck = useMemo(() => buildDeck(data), [data])
 	const unread = !data.continue && !data.wishlist && !data.forYou
+	// PROTOTYPE: ?gap= variants and the member shelf rule (?shelf=old for everyone's start titles).
+	const [params] = useSearchParams()
+	const gap = gapOf(params.get("gap"))
+	const own = useMemo(() => memberShelf(data, shelf), [data, shelf])
+	const oldShelf = params.get("shelf") === "old"
+	const doors = (
+		<div className="proto-doors-wrap">
+			<Doors data={data} />
+		</div>
+	)
 	return (
-		<div className="start-member">
+		<div className="start-member" data-gap={gap}>
+			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: prototype CSS */}
+			<style dangerouslySetInnerHTML={{ __html: PROTO_GAP_CSS }} />
 			<StartStage
-				shelf={shelf}
+				shelf={oldShelf ? shelf : own.titles}
+				grade={
+					<div
+						aria-hidden
+						className="proto-floor"
+						style={{ backgroundImage: `url(${assetUrl(START_ROOM_ART.webp)})` }}
+					/>
+				}
+				after={gap === "e" ? doors : null}
 				night={MEMBER_ROOM.night}
 				camera={MEMBER_ROOM.camera}
 				search={
@@ -91,7 +117,11 @@ export function MemberStart({
 					)
 				}
 			/>
-			<Doors data={data} />
+			{gap === "e" ? null : doors}
+			<GapSwitcher
+				current={gap}
+				shelfSource={oldShelf ? "everyone's start titles" : own.source}
+			/>
 		</div>
 	)
 }
