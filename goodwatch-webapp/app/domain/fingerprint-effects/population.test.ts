@@ -152,6 +152,14 @@ describe("franchise keys", () => {
 })
 
 describe("selected titles", () => {
+	test("a loud comedy does not offer bleakness as a laugh ingredient", () => {
+		const keys = ingredientKeys(
+			scores(0, { situational_comedy: 10, physical_comedy: 10, bleakness: 9 }),
+			[effect("laugh")],
+		)
+		assert.ok(keys.length > 0)
+		assert.equal(keys.includes("bleakness"), false)
+	})
 	test("orders by weakest selected strength, keeps popularity ties, and filters after counting", () => {
 		const titles = [
 			title(1, "Dune"),

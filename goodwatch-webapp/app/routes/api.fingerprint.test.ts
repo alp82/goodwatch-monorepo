@@ -38,7 +38,12 @@ const getFingerprintPopulation = mock.fn(async (_type: string) =>
 	buildPopulation([title]),
 )
 const loadFingerprintTitle = mock.fn(
-	async (_type: string, _id: number): Promise<PopulationTitle | null> => null,
+	async (
+		_type: string,
+		_id: number,
+	): Promise<
+		(Omit<PopulationTitle, "scores"> & { scores: CoreScores | null }) | null
+	> => null,
 )
 Object.assign(state, { getFingerprintPopulation, loadFingerprintTitle })
 const { buildPopulation } = await import(
@@ -130,4 +135,23 @@ test("rejects invalid requests before loading data", async () => {
 	}
 	await assert.rejects(pairs(args("pairs?type=movie&id=1e3")), { status: 400 })
 	assert.equal(getFingerprintPopulation.mock.callCount(), 0)
+})
+
+test("pairs returns 404 for a title without a fingerprint while mix still excludes its franchise", async () => {
+	loadFingerprintTitle.mock.mockImplementation(async () => ({
+		...title,
+		tmdbId: 99,
+		title: "Dune: Part Two",
+		scores: null,
+	}))
+	await assert.rejects(pairs(args("pairs?type=movie&id=99")), { status: 404 })
+	const response = await mix(args("mix?type=movie&effects=real&exclude=99"))
+	assert.equal(response.status, 200)
+	assert.deepEqual(await response.json(), { total: 1, titles: [] })
+	loadFingerprintTitle.mock.mockImplementation(async () => ({
+		...title,
+		tmdbId: 99,
+		scores: {} as CoreScores,
+	}))
+	await assert.rejects(pairs(args("pairs?type=movie&id=99")), { status: 404 })
 })

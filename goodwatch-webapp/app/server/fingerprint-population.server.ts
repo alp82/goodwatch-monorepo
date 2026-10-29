@@ -55,9 +55,11 @@ export async function loadPopulationTitles(
 	type: MediaType,
 ): Promise<PopulationTitle[]> {
 	const { query } = await import("~/utils/crate")
-	const rows = await query<Row>(populationSql(type), [
-		new Date().getUTCFullYear(),
-	])
+	const rows = await query<Row>(
+		populationSql(type),
+		[new Date().getUTCFullYear()],
+		{ timeoutMs: 60_000 },
+	)
 	return rows
 		.filter((row) => row.fingerprint_scores)
 		.slice(0, SIZE[type])
@@ -67,10 +69,58 @@ export async function loadPopulationTitles(
 export function titleFingerprintSql(type: MediaType) {
 	return `SELECT tmdb_id, title, release_year, poster_path, goodwatch_overall_score_normalized_percent, fingerprint_scores FROM ${type} WHERE tmdb_id = ? LIMIT 1`
 }
-export async function loadFingerprintTitle(type: MediaType, id: number) {
-	const { query } = await import("~/utils/crate")
-	const rows = await query<Row>(titleFingerprintSql(type), [id])
-	return rows[0] ? toTitle(rows[0]) : null
+type FingerprintTitle = Omit<PopulationTitle, "scores"> & {
+	scores: CoreScores | null
+}
+const TITLE_TTL_MS = 60 * 60 * 1000
+const TITLE_CACHE_SIZE = 2000
+const titleCache = new Map<
+	string,
+	{ value: FingerprintTitle | null; expires: number }
+>()
+const titleLoads = new Map<string, Promise<FingerprintTitle | null>>()
+
+export function loadFingerprintTitle(
+	type: MediaType,
+	id: number,
+): Promise<FingerprintTitle | null> {
+	const key = `${type}:${id}`
+	const cached = titleCache.get(key)
+	if (cached) {
+		titleCache.delete(key)
+		if (cached.expires > Date.now()) {
+			titleCache.set(key, cached)
+			return Promise.resolve(cached.value)
+		}
+	}
+	const pending = titleLoads.get(key)
+	if (pending) return pending
+	const load = import("~/utils/crate")
+		.then(({ query }) => query<Row>(titleFingerprintSql(type), [id]))
+		.then((rows) => {
+			const row = rows[0]
+			const value = row
+				? { ...toTitle(row), scores: row.fingerprint_scores }
+				: null
+			titleCache.set(key, { value, expires: Date.now() + TITLE_TTL_MS })
+			while (titleCache.size > TITLE_CACHE_SIZE) {
+				const oldest = titleCache.keys().next().value
+				if (oldest !== undefined) titleCache.delete(oldest)
+			}
+			return value
+		})
+		.finally(() => titleLoads.delete(key))
+	titleLoads.set(key, load)
+	return load
+}
+
+/** Start both loads without holding up server startup; requests share the same work. */
+export function startFingerprintPopulation() {
+	for (const type of ["movie", "show"] as const) {
+		void getFingerprintPopulation(type).catch((error) =>
+			console.error("Fingerprint population warm-up failed", type, error),
+		)
+	}
 }
 
 export function getFingerprintPopulation(type: MediaType): Promise<Population> {
@@ -84,7 +134,14 @@ export function getFingerprintPopulation(type: MediaType): Promise<Population> {
 		if (current.pending) return current.pending
 		if (current.timer) clearTimeout(current.timer)
 		current.pending = loadPopulationTitles(type)
-			.then(buildPopulation)
+			.then((titles) => {
+				if (titles.length < SIZE[type] * 0.9) {
+					throw new Error(
+						`Fingerprint population ${type} too short: ${titles.length}/${SIZE[type]}`,
+					)
+				}
+				return buildPopulation(titles)
+			})
 			.then((value) => {
 				current.value = value
 				return value

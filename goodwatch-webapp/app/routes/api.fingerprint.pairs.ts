@@ -18,7 +18,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const title =
 		population.titles.find((t) => t.tmdbId === id) ??
 		(await loadFingerprintTitle(type, id))
-	if (!title) throw new Response("Title not found", { status: 404 })
+	if (!title?.scores || Object.keys(title.scores).length === 0)
+		throw new Response("Title not found", { status: 404 })
 	return json(rarestPairs(population, title.scores), {
 		headers: { "Cache-Control": FINGERPRINT_CACHE_CONTROL },
 	})

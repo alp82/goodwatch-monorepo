@@ -87,9 +87,9 @@ export function ingredientKeys(
 ): Key[] {
 	const keys = new Set(
 		effects.flatMap((e) =>
-			e.parts.flatMap((p) =>
-				typeof p.key === "string" ? [p.key] : [...p.key],
-			),
+			e.parts
+				.filter((p) => p.w > 0)
+				.flatMap((p) => (typeof p.key === "string" ? [p.key] : [...p.key])),
 		),
 	)
 	return [...keys]

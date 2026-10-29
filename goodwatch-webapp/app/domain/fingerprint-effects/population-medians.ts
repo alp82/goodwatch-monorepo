@@ -1,5 +1,5 @@
-// Generated population medians. Rerun from goodwatch-webapp with configured read-only Crate credentials:
-// npx vite-node --config scripts/arena-vite.config.mjs scripts/generate-fingerprint-medians.ts
+// Generated population medians (checked against production Crate on October 29, 2026). Rerun from goodwatch-webapp
+// with read-only Crate credentials: npx vite-node --config scripts/arena-vite.config.mjs scripts/generate-fingerprint-medians.ts
 import type { CoreScores } from "~/server/utils/fingerprint"
 
 export const POPULATION_MEDIANS = {
@@ -119,7 +119,7 @@ export const POPULATION_MEDIANS = {
 		music_centrality: 5,
 		music_composition: 7,
 		mystery: 3,
-		narrative_structure: 6,
+		narrative_structure: 7,
 		non_linear_narrative: 1,
 		nostalgia: 6,
 		novelty: 4,
