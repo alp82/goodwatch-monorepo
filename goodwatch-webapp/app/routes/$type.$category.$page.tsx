@@ -208,6 +208,7 @@ export default function MoviesCategoryPage() {
 					</div>
 				</div>
 				<MovieTvGrid
+					posterPriority="lazy"
 					initialData={{
 						pages: [results],
 						pageParams: [discoverParams.page],
@@ -232,3 +233,6 @@ export const clientLoader = cachedClientLoader("routes/$type.$category.$page")
 
 // The complete server document paints before route modules compete for bandwidth.
 export const handle = START_AFTER_PAINT
+
+// TMDB keeps credentialed and anonymous image connections separate.
+export const links = () => [{ rel: "preconnect", href: "https://image.tmdb.org", crossOrigin: "anonymous" as const }]

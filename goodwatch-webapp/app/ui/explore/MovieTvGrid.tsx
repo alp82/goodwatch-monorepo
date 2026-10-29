@@ -6,7 +6,7 @@ import type { DiscoverParams, DiscoverResult } from "~/server/discover.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { Spinner } from "~/ui/wait/Spinner"
 import { seededRandomSin } from "~/utils/random"
-import { gridPosterPriority } from "~/utils/tmdb-image"
+import { gridPosterPriority, type ImagePriority } from "~/utils/tmdb-image"
 import { useLocation } from "@remix-run/react"
 import { usePageTracking } from "~/hooks/usePageTracking"
 import {
@@ -19,6 +19,8 @@ import {
 } from "~/ui/explore/GridUtils"
 
 export interface MovieTvGridParams {
+	/** A grid below a large hero lets layout discover its posters after the hero request starts. */
+	posterPriority?: ImagePriority
 	initialData: { pages: GetDiscoverResult[]; pageParams: number[] }
 	initialParams: Omit<DiscoverParams, "page">
 }
@@ -26,6 +28,7 @@ export interface MovieTvGridParams {
 export default function MovieTvGrid({
 	initialData,
 	initialParams,
+	posterPriority,
 }: MovieTvGridParams) {
 	const discoverEnabled = !initialData
 	const discover = useDiscover({
@@ -123,7 +126,7 @@ export default function MovieTvGrid({
 										details={result as DiscoverResult}
 										mediaType={result.media_type}
 										prefetch={false}
-										posterPriority={gridPosterPriority(index)}
+										posterPriority={posterPriority ?? gridPosterPriority(index)}
 									/>
 								</motion.div>
 							</div>
