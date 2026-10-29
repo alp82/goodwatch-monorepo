@@ -5,7 +5,7 @@
 import { ArrowRightIcon, PlusIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { DISPLAY, EASE, WRAP, posterUrl } from "~/ui/watch-next/style"
 import {
@@ -51,10 +51,10 @@ export function Doors({ data }: { data: MemberStartData }) {
 	const all = doorsOf(data)
 	const [order] = useState(() => orderDoors(all).map((door) => door.key))
 	const doors = order.flatMap((key) => all.filter((door) => door.key === key))
-	// The doors whose lists came later than the page keep their room for good (doors.ts, `reserveOf`).
-	const [deferred] = useState(
-		() => new Set(all.filter((door) => door.pending).map((door) => door.key)),
-	)
+	// A door whose list ever came later than the page, on load or after a revalidation, keeps its room for good
+	// (doors.ts, `reserveOf`). Adding during render is safe: the set only grows, and a repeat add changes nothing.
+	const deferred = useRef(new Set<DoorKey>()).current
+	for (const door of all) if (door.pending) deferred.add(door.key)
 	const [open, setOpen] = useState<DoorKey>(order[0])
 	const [filter, setFilter] = useState("all")
 	// The section on load is the server's; a section opened later fades in.

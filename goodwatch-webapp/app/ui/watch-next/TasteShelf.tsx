@@ -160,7 +160,7 @@ export function ChoiceTile({
 			data-choice={id}
 			onClick={() => control.toggle(id)}
 			whileTap={{ scale: full ? 1 : 0.97 }}
-			className={`group relative isolate flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-left text-white transition-[opacity,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${dense ? "min-h-[4.75rem]" : "h-[6.5rem] md:h-28"} ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${full || tap.none ? "opacity-40" : ""}`}
+			className={`group relative isolate flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-left text-white transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${dense ? "min-h-[4.75rem]" : "h-[6.5rem] md:h-28"} ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${full || tap.none ? "opacity-40" : ""}`}
 			style={{ boxShadow: on ? `0 8px 28px -8px ${hues[0]}` : undefined }}
 		>
 			<ChoiceArt
@@ -331,7 +331,7 @@ export function TasteShelf({
 							type="button"
 							aria-expanded={on}
 							onClick={() => setOpen(on ? null : kind)}
-							className={`flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 text-left text-sm font-semibold text-white ring-1 transition-colors ${on ? "bg-white/10 ring-white/25" : "bg-white/5 ring-white/10 hover:bg-white/10"}`}
+							className={`flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 text-left text-sm font-semibold text-white ring-1 ${on ? "bg-white/10 ring-white/25" : "bg-white/5 ring-white/10 hover:bg-white/10"}`}
 						>
 							<Dots
 								hues={ids.slice(0, 5).map((id) => choiceHues(picker, id)[0])}

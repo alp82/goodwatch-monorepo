@@ -52,7 +52,7 @@ export function MoodButton({
 			aria-expanded={control.open}
 			aria-label={picked ? "Change picks" : undefined}
 			onClick={() => control.setOpen(!control.open)}
-			className={`inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full text-sm font-semibold text-white ring-1 ring-white/15 transition-colors hover:bg-white/20 ${picked ? "px-2.5" : "pl-1.5 pr-3"} ${control.open ? "bg-white/15" : "bg-white/10"}`}
+			className={`inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full text-sm font-semibold text-white ring-1 ring-white/15 hover:bg-white/20 ${picked ? "px-2.5" : "pl-1.5 pr-3"} ${control.open ? "bg-white/15" : "bg-white/10"}`}
 		>
 			{picked ? (
 				control.picker.picks.length < MAX_PICKS ? (
