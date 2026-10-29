@@ -14,14 +14,12 @@ title–post link and writes `doc.social_relevance`; the webapp only reads it.
 `media_tmdb_id`, `post_id`), with `version`, `content_hash`, `status` (`keep` or `drop`), `kind`, `score`,
 `dup_group`, `reasons` and `judged_at`.
 
-Both reads, the title section's (`readTitleSql`) and the start row's (`socialQuery`), add the same inner join from
-`relevanceJoin` in `app/server/talked-about-now/social-store.server.ts`, next to the content-quality join:
-
-```sql
-JOIN doc.social_relevance rel ON rel.media_type = l.media_type AND rel.media_tmdb_id = l.media_tmdb_id
-  AND rel.post_id = l.post_id AND rel.content_hash = p.content_hash
-  AND rel.version = 'relevance-1' AND rel.status = 'keep'
-```
+Both the title section and the ranking call `readSocialTitles` in
+`app/server/talked-about-now/social-store.server.ts`. It first reads visible title links, then fetches
+verdicts only for their post IDs. A relevance verdict must match the link's media type, TMDB ID, and post ID,
+have `version = 'relevance-1'` and `status = 'keep'`, and match the post's current non-null content hash.
+The quality verdict must pass the equivalent version and hash checks. The original SQL joins remain in
+`reference-social-sql.ts` for local equivalence tests only.
 
 Then one link of each duplicate group per title (`COALESCE(rel.dup_group, l.duplicate_group, post_id)`), the
 best-ranked by `score` (then the newest), and the rows ordered the same way. A link with no verdict, a `drop`, a verdict

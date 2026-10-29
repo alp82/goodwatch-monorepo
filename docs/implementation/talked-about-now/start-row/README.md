@@ -64,9 +64,10 @@ went into the shell chunk that every page loads (rule 3 in `vite.config.js`).
 4. One read of the visible links of the eight titles to their posts, with the filters of social discovery's reference
    read (`Store.read_title` of #556, `docs/implementation/talked-about-now/social.md`): a passing content-quality
    verdict (`social_content_quality`, `status = 'pass'`, `version = 'content-quality-1'`, the post's current
-   `content_hash`), as an inner join from `contentQualityJoin` in `social-store.server.ts`, and a `keep` relevance
-   verdict for the link (`social_relevance`, `version = 'relevance-1'`, the post's current `content_hash`), an inner
-   join from `relevanceJoin` beside it; both the same as the title section's read. No reported (open or confirmed),
+   `content_hash`), and a `keep` relevance
+   verdict for the link (`social_relevance`, `version = 'relevance-1'`, the post's current `content_hash`).
+   `readSocialTitles` in `social-store.server.ts` stages the same lookups as the title section, starting with
+   visible links and filtering subsequent reads by post ID. No reported (open or confirmed),
    hidden, deleted, outdated (content hash) or expired (30 days) link, no lane in `SOCIAL_DISABLED_LANES`, one of each
    duplicate group per title (the verdict's `dup_group`, else the link's `duplicate_group`), the best-ranked by the
    verdict's `score`. If the tables are missing (the relevance table too), empty or refuse the read, the titles show

@@ -71,7 +71,8 @@ check the flag again: off answers an empty section and refuses reports with 404.
 
 `server/talked-about-now/social-store.server.ts` runs #556's reference read (`Store.read_title`) and report
 (`Store.report`) over `doc.social_post`, `doc.social_title_link` and `doc.social_link_report`, with the content-quality
-gate (`contentQualityJoin`) and the relevance gate (`relevanceJoin`) as inner joins, ranked by the relevance score. A
+gate and the relevance gate. `readSocialTitles` reads visible links first, then fetches posts, verdicts, images, and
+reports in batches filtered by post ID. It applies the reference filters and duplicate ranking in memory. A
 missing table or schema reads as nothing. The read is cached per title for 5 minutes (`talked-about-now-title-v1`, reset-guarded);
 a report resets that entry before it answers. A surface with its own cache of posts adds its reset to `afterReport`
 in `title-social.server.ts`.
