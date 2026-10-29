@@ -71,3 +71,12 @@ test("on sign-in and sign-up the wordmark heads the card and the heading is for 
 		assert.match(source, /<Heading\s+srOnly\b/, page)
 	}
 })
+
+test("the card and headline animate from the document without waiting for hydration", () => {
+	const html = card(h("p", {}, "Your next favorite"))
+	assert.doesNotMatch(html, /style="[^"]*(?:opacity:0|translateY\(24px\))/)
+	assert.match(html, /class="auth-card /)
+	assert.match(html, /@keyframes auth-card-in/)
+	assert.match(html, /auth-card-in \.8s cubic-bezier\(\.22,1,\.36,1\) \.15s both/)
+	assert.match(html, /prefers-reduced-motion: reduce/)
+})
