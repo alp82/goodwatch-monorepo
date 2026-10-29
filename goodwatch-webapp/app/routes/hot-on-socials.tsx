@@ -50,12 +50,12 @@ export const loader = presentCatalogLoader(canonicalLoader)
 
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
-		title: "Hot on socials | GoodWatch",
+		title: "Hot | GoodWatch",
 		description:
 			"The movies and shows people suddenly read about most, and what news, YouTube and social posts say about them.",
 		url: "https://goodwatch.app/hot-on-socials",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
-		alt: "Hot on socials on GoodWatch",
+		alt: "Hot on GoodWatch",
 	}
 	return buildMeta({ pageMeta, items: [] })
 }

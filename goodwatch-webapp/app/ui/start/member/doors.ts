@@ -215,7 +215,7 @@ export function doorsOf(data: MemberStartData): Door[] {
 	if (data.hotOn)
 		doors.push({
 			key: "hot",
-			label: "Hot on socials",
+			label: "Hot",
 			line: hot?.titles.length
 				? `Top ${hot.titles.length} right now`
 				: hot === undefined
@@ -227,7 +227,7 @@ export function doorsOf(data: MemberStartData): Door[] {
 			})),
 			total: hot?.total ?? 0,
 			href: MEMBER_HREF.hot,
-			pageName: "Hot on socials",
+			pageName: "Hot",
 			counted: false,
 			note: "Most talked about right now, and why",
 			strip:
@@ -238,7 +238,7 @@ export function doorsOf(data: MemberStartData): Door[] {
 						: {
 								title: "Nothing measured yet today",
 								body: "The ranking updates once a day.",
-								ctas: [{ label: "Open Hot on socials", href: MEMBER_HREF.hot }],
+								ctas: [{ label: "Open Hot", href: MEMBER_HREF.hot }],
 							},
 			ghost: null,
 			filters: null,

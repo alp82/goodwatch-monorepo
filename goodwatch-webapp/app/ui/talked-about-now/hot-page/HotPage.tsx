@@ -282,7 +282,7 @@ function Head({ row }: { row: TalkedRow }) {
 	return (
 		<header className="hx-head">
 			<p className="hx-eye">Talked about now · {dateLabel(row.day)}</p>
-			<h1>Hot on socials</h1>
+			<h1>Hot</h1>
 			<p>
 				{isBackup(row)
 					? `Wikipedia's reading figures are late, so this list comes from ${backupSources(row)}: what people watch and look up right now, and what is being said about it.`
@@ -427,7 +427,7 @@ export function HotPage({ row }: { row: TalkedRow | null }) {
 				) : (
 					<div className="hx-head">
 						<p className="hx-eye">Talked about now</p>
-						<h1>Hot on socials</h1>
+						<h1>Hot</h1>
 						<p>Nothing to show right now. The ranking is made once a day; please look again later.</p>
 					</div>
 				)}

@@ -1346,7 +1346,7 @@ export function hotCard(
 	)
 	return message(
 		[
-			text(`## Hot on socials\n-# ${subtitle}`),
+			text(`## Hot\n-# ${subtitle}`),
 			...(shown.length
 				? shown.map((t) => hotBlock(t, emojis))
 				: [text("Nothing is hot right now. Try again later.")]),

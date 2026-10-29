@@ -105,7 +105,7 @@ export function getDestinations(): Record<DestinationKey, Destination> {
 		},
 		hot: {
 			key: "hot",
-			label: "Hot on socials",
+			label: "Hot",
 			short: "Hot",
 			href: "/hot-on-socials",
 			icon: FireIcon,

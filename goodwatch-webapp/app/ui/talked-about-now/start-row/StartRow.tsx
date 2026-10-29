@@ -113,7 +113,7 @@ function Board({ row }: { row: TalkedRow }) {
 			<header className="tn-top">
 				<div>
 					<p className="lrb-eye">Talked about now</p>
-					<h2 id="tn-title">Hot on socials</h2>
+					<h2 id="tn-title">Hot</h2>
 					{isBackup(row) && (
 						<p className="tn-backup">From {backupSources(row)} while Wikipedia's reading figures are late</p>
 					)}

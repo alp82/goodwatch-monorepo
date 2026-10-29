@@ -585,7 +585,7 @@ export const PAGE_TYPES: PageType[] = [
 	},
 	{
 		id: "hot",
-		name: "Hot on socials",
+		name: "Hot",
 		routes: ["hot-on-socials.tsx"],
 		example: "/hot-on-socials",
 		match: (p) => p === "/hot-on-socials",
