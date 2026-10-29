@@ -39,7 +39,12 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 			: mode === "on"
 	if (!enabled) throw new Response("Not found", { status: 404, headers: { "Cache-Control": PRIVATE } })
 	const { getHotOnSocials } = await import("~/server/talked-about-now/start-row.server")
-	const row = await getHotOnSocials()
+	const row = await getHotOnSocials().catch(() => {
+		throw new Response("Hot on socials is temporarily unavailable. Please try again.", {
+			status: 503,
+			headers: { "Cache-Control": PRIVATE, "Retry-After": "2" },
+		})
+	})
 	return json(
 		{ row },
 		{ headers: { "Cache-Control": mode === "on" && row ? PUBLIC : PRIVATE } },

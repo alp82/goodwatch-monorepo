@@ -9,6 +9,7 @@ import { FeedbackTab } from "~/ui/feedback/FeedbackTab"
 import { InstantRouteScroll } from "~/ui/nav/InstantRouteScroll"
 import { PageScrollbar } from "~/ui/nav/PageScrollbar"
 import { json } from "@remix-run/node"
+import { withRequestTiming } from "~/utils/request-work"
 import type { User } from "@supabase/auth-js"
 import { resolveMediaContext } from "~/server/media-context.server"
 import type { EffectiveMediaContext } from "~/utils/media-language"
@@ -143,7 +144,7 @@ type LoaderData = {
 // A navigation never reruns the root loader: utils/root-revalidation.ts has the rule.
 export { shouldRevalidateRoot as shouldRevalidate } from "~/utils/root-revalidation"
 
-export const loader: LoaderFunction = async ({
+export const loader: LoaderFunction = withRequestTiming(async ({
 	request,
 }: LoaderFunctionArgs) => {
 	// The title snapshot loads in the background from the server's first page request on.
@@ -186,7 +187,7 @@ export const loader: LoaderFunction = async ({
 		},
 		{ headers },
 	)
-}
+})
 
 // What the error page's header knows about the person: the root loader's data when it succeeded (a missing page, or
 // a failure of a child route), else what the browser can find out.

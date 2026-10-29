@@ -110,6 +110,7 @@ async function fixture(t: TestContext, options: PageCacheOptions = {}) {
 			"Cache-Control": app.policy,
 			"Content-Type": "text/html",
 			"X-Custom": "preserved",
+			"Server-Timing": "data;dur=500.0, render;dur=30.0",
 		})
 		if (app.cookie) outgoing.set("Set-Cookie", "foo=bar")
 		if (app.location) response.setHeader("Location", app.location)
@@ -759,12 +760,15 @@ test("LRU entry and byte bounds preserve recently served entries and account exa
 		[...f.cache.entries.values()].reduce((n, e) => n + e.bytes, 0),
 	)
 	const bytes = await fixture(t, {
-		limits: { MAX_BYTES: 2200 },
+		limits: { MAX_BYTES: 2300 },
 		compress: async () => ({ br: Buffer.alloc(20), gzip: Buffer.alloc(30) }),
 	})
 	for (const path of ["/a", "/b", "/c"]) await bytes.warm(path)
 	assert.equal(bytes.cache.stats().entries, 2)
-	assert.equal(bytes.cache.stats().bytes, 2148)
+	assert.equal(
+		bytes.cache.stats().bytes,
+		2148 + 2 * Buffer.byteLength("<html>complete</html>:en-US"),
+	)
 	for (const limits of [{ MAX_HTML_BYTES: 1 }, { MAX_ENTRY_BYTES: 1 }]) {
 		const small = await fixture(t, { limits })
 		await small.warm()
@@ -1584,4 +1588,38 @@ test("media read errors are private and cannot enter the page cache, including a
 	await f.get("/healthy-media")
 	await until(() => f.cache.stats().flights === 0)
 	assert.equal((await f.get("/healthy-media")).headers["gw-page-cache"], "hit")
+})
+
+test("identity cache hits do not wait for the shared compression and crypto pool", async (t) => {
+	const { pbkdf2 } = await import("node:crypto")
+	const f = await fixture(t, {
+		limits: { ADMIT_AFTER: 1 },
+		compress: async (html) => ({
+			br: brotliCompressSync(html),
+			gzip: gzipSync(html),
+		}),
+	})
+	await f.get()
+	await until(() => f.cache.stats().entries === 1)
+	const jobs = Array.from(
+		{ length: Number(process.env.UV_THREADPOOL_SIZE) || 4 },
+		() => new Promise<void>((resolve, reject) =>
+			pbkdf2("fixture", "fixture", 2_000_000, 32, "sha256", (error) =>
+				error ? reject(error) : resolve(),
+			),
+		),
+	)
+	t.after(() => Promise.all(jobs))
+	const compressed = await f.get("/page", { "accept-encoding": "gzip" })
+	assert.equal(compressed.headers["gw-page-cache"], "hit")
+	const answer = await Promise.race([
+		f.get("/page", { "accept-encoding": "" }),
+		new Promise<never>((_, reject) => setTimeout(
+			() => reject(new Error("identity cache hit waited over 100 ms for the thread pool")),
+			100,
+		)),
+	])
+	assert.equal(answer.headers["gw-page-cache"], "hit")
+	assert.equal(answer.body.toString(), decode(compressed))
+	assert.equal(answer.headers["server-timing"], 'page_cache;desc="hit"')
 })

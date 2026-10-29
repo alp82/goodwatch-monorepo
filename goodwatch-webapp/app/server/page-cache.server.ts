@@ -42,7 +42,7 @@ import { createHash } from "node:crypto"
 import { subscribe } from "node:diagnostics_channel"
 import type { IncomingMessage, Server, ServerResponse } from "node:http"
 import { promisify } from "node:util"
-import { constants, brotliCompress, gunzip, gzip } from "node:zlib"
+import { constants, brotliCompress, gzip } from "node:zlib"
 import { currentAssetBase } from "./asset-address.server.ts"
 import { gateAnswer } from "./browser-gate.server.ts"
 import {
@@ -213,6 +213,8 @@ export type PageEntry = PageKey & {
 	staleUntil: number
 	br: Variant
 	gzip: Variant
+	// Keep identity bytes so a cache hit never queues decompression behind unrelated pool work.
+	identityBody: Buffer
 	identityLength: number
 	identityEtag: string
 	headers: HeadersObject
@@ -251,7 +253,6 @@ export type PageCacheOptions = {
 }
 const brotli = promisify(brotliCompress)
 const zip = promisify(gzip)
-const unzip = promisify(gunzip)
 async function compressHtml(html: Buffer) {
 	const [br, gzip] = await Promise.all([
 		brotli(html, {
@@ -280,7 +281,7 @@ const evictions = metric("evictions", ["reason"])
 const refreshes = metric("refreshes", ["route", "result"])
 const notModified = metric("not_modified", ["route"])
 const omitHeaders =
-	/^(content-length|content-encoding|transfer-encoding|connection|keep-alive|date|set-cookie|etag|vary|age|gw-page-cache)$/i
+	/^(content-length|content-encoding|transfer-encoding|connection|keep-alive|date|set-cookie|etag|vary|age|gw-page-cache|server-timing)$/i
 const hopHeaders =
 	/^(connection|keep-alive|transfer-encoding|upgrade|te|trailer|proxy-.*|if-none-match|if-modified-since|range|content-length)$/i
 function fromRequest(request: Request): KeyInput {
@@ -465,7 +466,6 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		request: IncomingMessage,
 		response: ServerResponse,
 		result: string,
-		fallback: () => void,
 	) {
 		const encoding = accepted(request.headers["accept-encoding"] ?? "")
 		const variant = encoding.br
@@ -501,13 +501,14 @@ export function createPageCache(options: PageCacheOptions = {}) {
 						headers[name] = entry.headers[name]
 				notModified.inc([entry.route])
 			}
+			headers["Server-Timing"] = `page_cache;desc="${result}"`
 			headers.ETag = etag
 			headers["GW-Page-Cache"] = result === "joined" ? "miss" : result
 			response.writeHead(matched ? 304 : 200, headers)
 			response.end(matched || request.method === "HEAD" ? undefined : body)
 		}
 		if (matched || request.method === "HEAD" || variant) send(variant?.body)
-		else void unzip(entry.gzip.body).then(send, fallback)
+		else send(entry.identityBody)
 	}
 	function handle(
 		request: IncomingMessage,
@@ -594,9 +595,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		if (entry) {
 			if (now() < entry.staleUntil) {
 				const stale = now() >= entry.freshUntil
-				serve(entry, request, response, stale ? "stale" : "hit", () =>
-					pass("released"),
-				)
+				serve(entry, request, response, stale ? "stale" : "hit")
 				if (stale) refresh(entry, request)
 				return
 			}
@@ -663,7 +662,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 					response.removeListener("close", closed)
 					waiters--
 					if (entry)
-						serve(entry, request, response, "joined", () => pass("released"))
+						serve(entry, request, response, "joined")
 					else if (
 						retry &&
 						!flights.has(page.key) &&
@@ -760,7 +759,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 					(compressed) => {
 						if (!alive(flight) || draining()) return
 						if (unhealthyMedia()) return refuse("media_read_error")
-						const size = compressed.br.length + compressed.gzip.length + 1024
+						const size = html.length + compressed.br.length + compressed.gzip.length + 1024
 						if (size > limits.MAX_ENTRY_BYTES) return refuse("too_large")
 						const storedAt = flight.startedAt
 						const lifetime = pageLifetime(
@@ -799,6 +798,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 							staleUntil,
 							br: variant(compressed.br, "br", "-br"),
 							gzip: variant(compressed.gzip, "gzip", "-gz"),
+							identityBody: html,
 							identityLength,
 							identityEtag: `"${tag}"`,
 							headers: storedHeaders,

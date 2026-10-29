@@ -37,6 +37,11 @@ export const pageHeaders: HeadersFunction = ({
 			headers.set("Cache-Control", "private, no-store")
 		}
 	}
+	// Loader timings describe this render, including error-boundary responses.
+	for (const source of [loaderHeaders, actionHeaders, errorHeaders]) {
+		const timing = source?.get("Server-Timing")
+		if (timing) headers.append("Server-Timing", timing)
+	}
 	// Remix renders a thrown 503 through the nearest error boundary. Keep its retry hint in the document too.
 	for (const source of [loaderHeaders, actionHeaders, errorHeaders]) {
 		const retryAfter = source?.get("Retry-After")
