@@ -259,6 +259,27 @@ export function orderDoors(doors: readonly Door[]): Door[] {
 export const openDoorOf = (data: MemberStartData): DoorKey =>
 	orderDoors(doorsOf(data))[0].key
 
+/**
+ * The room a section keeps while its list is on its way, and keeps after the list arrives: the strip it shows while it
+ * waits, a row for the filter chips when the list can have them, and a full grid, with room for the line under each
+ * poster when its titles carry one. Whatever the list brings (a full grid, a few titles, or nothing it could read)
+ * fits in that room, so nothing under the section moves when it arrives.
+ */
+export type Reserve = { strip: Strip | null; filters: boolean; lines: boolean }
+
+export function reserveOf(data: MemberStartData, key: DoorKey): Reserve | null {
+	const door = doorsOf({ ...data, forYou: undefined, hot: undefined }).find(
+		(d) => d.key === key,
+	)
+	if (!door?.pending) return null
+	// Hot on socials says why each title is talked about, in up to two lines under its poster.
+	return {
+		strip: door.strip,
+		filters: door.filters !== null,
+		lines: key === "hot",
+	}
+}
+
 /** Filter chips only once a section has a full grid of titles; a handful needs no sorting. */
 export const FILTERS_FROM = MEMBER_LIST_SIZE
 

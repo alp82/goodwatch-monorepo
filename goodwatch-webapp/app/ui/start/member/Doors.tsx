@@ -15,11 +15,13 @@ import {
 	type DoorTitle,
 	GRID_CELLS,
 	GRID_COLUMNS,
+	type Reserve,
 	type Strip as StripData,
 	doorsOf,
 	filtersOf,
 	gridPlan,
 	orderDoors,
+	reserveOf,
 	tileText,
 } from "./doors"
 import { type MemberStartData, PERSONAL_AT } from "./member-data"
@@ -49,17 +51,19 @@ export function Doors({ data }: { data: MemberStartData }) {
 	const all = doorsOf(data)
 	const [order] = useState(() => orderDoors(all).map((door) => door.key))
 	const doors = order.flatMap((key) => all.filter((door) => door.key === key))
+	// The doors whose lists came later than the page keep their room for good (doors.ts, `reserveOf`).
+	const [deferred] = useState(
+		() => new Set(all.filter((door) => door.pending).map((door) => door.key)),
+	)
 	const [open, setOpen] = useState<DoorKey>(order[0])
 	const [filter, setFilter] = useState("all")
 	// The section on load is the server's; a section opened later fades in.
 	const [opened, setOpened] = useState(false)
 	const current = doors.find((door) => door.key === open) ?? doors[0]
-	const filters = filtersOf(current)
-	const active = filters?.find((f) => f.key === filter) ?? null
-	const shown = active
-		? current.titles.filter((t) => active.keep(t.card))
-		: current.titles
-	const has = current.titles.length > 0 || current.pending
+	const reserve =
+		current.pending || deferred.has(current.key)
+			? reserveOf(data, current.key)
+			: null
 
 	return (
 		<section className={`${WRAP} pt-8 pb-28`} aria-labelledby="start-doors">
@@ -128,70 +132,149 @@ export function Doors({ data }: { data: MemberStartData }) {
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.2, ease: EASE }}
 				>
-					<div className="mb-4">
-						<div className="flex items-baseline justify-between gap-3">
-							<h3
-								className={`${DISPLAY} min-w-0 truncate text-2xl leading-tight text-white sm:text-3xl`}
-							>
-								{current.label}
-							</h3>
-							{has ? (
-								<Link to={current.href} prefetch="intent" className={TEXT_LINK}>
-									<span>
-										<span className="max-sm:hidden">Open </span>
-										{current.pageName}
-									</span>
-									<ArrowRightIcon
-										aria-hidden
-										className="h-4 w-4 self-center transition-transform duration-200 ease-out group-hover:translate-x-1 group-focus-visible:translate-x-1"
-									/>
-								</Link>
-							) : null}
-						</div>
-						{has ? (
-							<p className="mt-0.5 text-sm text-gray-400">{current.note}</p>
-						) : null}
-					</div>
-
-					{current.strip ? <Strip strip={current.strip} /> : null}
-
-					{filters ? (
-						<fieldset className="-mx-4 mb-4 flex min-w-0 gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
-							<legend className="sr-only">Filter</legend>
-							{filters.map((f) => {
-								const on = (active?.key ?? "all") === f.key
-								return (
-									<button
-										key={f.key}
-										type="button"
-										aria-pressed={on}
-										onClick={() => setFilter(f.key)}
-										className={`${CHIP} ${chipTone(on)}`}
-									>
-										{f.label}
-										<span
-											className={`ml-1.5 tabular-nums ${on ? "text-gray-950/60" : "text-gray-500"}`}
-										>
-											{current.titles.filter((t) => f.keep(t.card)).length}
-										</span>
-									</button>
-								)
-							})}
-						</fieldset>
-					) : null}
-
-					{current.pending ? (
-						<PendingGrid />
-					) : has ? (
-						<DoorGrid
-							door={current}
-							titles={shown}
-							filtered={!!active && active.key !== "all"}
-						/>
-					) : null}
+					<DoorSection
+						door={current}
+						reserve={reserve}
+						filter={filter}
+						onFilter={setFilter}
+					/>
 				</motion.div>
 			</div>
 		</section>
+	)
+}
+
+/**
+ * An open door's section: its heading and page link, then its strip, filter chips and grid. A section with a reserve
+ * (its list came later than the page) lays its content over that reserve's room, so it is never shorter than a full
+ * grid, from the skeleton on, and its caption line keeps its place even when the list couldn't be read.
+ */
+export function DoorSection({
+	door,
+	reserve,
+	filter,
+	onFilter,
+}: {
+	door: Door
+	reserve: Reserve | null
+	filter: string
+	onFilter: (key: string) => void
+}) {
+	const filters = filtersOf(door)
+	const active = filters?.find((f) => f.key === filter) ?? null
+	const shown = active
+		? door.titles.filter((t) => active.keep(t.card))
+		: door.titles
+	const has = door.titles.length > 0 || door.pending
+	const body =
+		door.pending && reserve ? (
+			<ReservedRoom reserve={reserve} />
+		) : (
+			<>
+				{door.strip ? <Strip strip={door.strip} /> : null}
+
+				{filters ? (
+					<fieldset className="-mx-4 mb-4 flex min-w-0 gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
+						<legend className="sr-only">Filter</legend>
+						{filters.map((f) => {
+							const on = (active?.key ?? "all") === f.key
+							return (
+								<button
+									key={f.key}
+									type="button"
+									aria-pressed={on}
+									onClick={() => onFilter(f.key)}
+									className={`${CHIP} ${chipTone(on)}`}
+								>
+									{f.label}
+									<span
+										className={`ml-1.5 tabular-nums ${on ? "text-gray-950/60" : "text-gray-500"}`}
+									>
+										{door.titles.filter((t) => f.keep(t.card)).length}
+									</span>
+								</button>
+							)
+						})}
+					</fieldset>
+				) : null}
+
+				{door.pending ? (
+					<PendingGrid lines={false} />
+				) : has ? (
+					<DoorGrid
+						door={door}
+						titles={shown}
+						filtered={!!active && active.key !== "all"}
+					/>
+				) : null}
+			</>
+		)
+	return (
+		<>
+			<div className="mb-4">
+				<div className="flex items-baseline justify-between gap-3">
+					<h3
+						className={`${DISPLAY} min-w-0 truncate text-2xl leading-tight text-white sm:text-3xl`}
+					>
+						{door.label}
+					</h3>
+					{has ? (
+						<Link to={door.href} prefetch="intent" className={TEXT_LINK}>
+							<span>
+								<span className="max-sm:hidden">Open </span>
+								{door.pageName}
+							</span>
+							<ArrowRightIcon
+								aria-hidden
+								className="h-4 w-4 self-center transition-transform duration-200 ease-out group-hover:translate-x-1 group-focus-visible:translate-x-1"
+							/>
+						</Link>
+					) : null}
+				</div>
+				{has ? (
+					<p className="mt-0.5 text-sm text-gray-400">{door.note}</p>
+				) : reserve ? (
+					<p aria-hidden className="invisible mt-0.5 text-sm">
+						{door.note}
+					</p>
+				) : null}
+			</div>
+			{reserve && !door.pending ? (
+				// The reserve's room, unseen, and the list's content over it in the same grid cell.
+				<div className="grid grid-cols-1 grid-rows-1">
+					<div
+						aria-hidden
+						data-door-reserve
+						className="invisible col-start-1 row-start-1 min-w-0"
+					>
+						<ReservedRoom reserve={reserve} />
+					</div>
+					<div className="col-start-1 row-start-1 min-w-0">{body}</div>
+				</div>
+			) : (
+				body
+			)}
+		</>
+	)
+}
+
+/** A reserve's room, drawn as the skeleton of a list on its way: its strip, the chips' row and a full grid. */
+export function ReservedRoom({ reserve }: { reserve: Reserve }) {
+	return (
+		<div data-door-room>
+			{reserve.strip ? <Strip strip={reserve.strip} /> : null}
+			{reserve.filters ? (
+				<div aria-hidden className="mb-4 flex h-9 gap-2 overflow-hidden">
+					{["w-14", "w-20", "w-[4.5rem]"].map((width) => (
+						<span
+							key={width}
+							className={`h-9 ${width} shrink-0 rounded-full bg-white/[0.04]`}
+						/>
+					))}
+				</div>
+			) : null}
+			<PendingGrid lines={reserve.lines} />
+		</div>
 	)
 }
 
@@ -285,8 +368,11 @@ function DoorGrid({
 	)
 }
 
-/** A list on its way: a full grid of quiet poster slots, so the section has its size before the titles arrive. */
-function PendingGrid() {
+/**
+ * A list on its way: a full grid of quiet poster slots, so the section has its size before the titles arrive; with
+ * `lines`, each slot keeps room for two lines under its poster (Hot on socials' why).
+ */
+function PendingGrid({ lines }: { lines: boolean }) {
 	return (
 		<ul
 			aria-busy
@@ -300,11 +386,20 @@ function PendingGrid() {
 					className="min-w-0"
 				>
 					<div className="aspect-[2/3] w-full rounded-lg bg-white/[0.04]" />
+					{lines ? (
+						<div className={`mt-1.5 ${TWO_LINES} space-y-1.5 pt-0.5`}>
+							<div className="h-2.5 rounded bg-white/[0.04]" />
+							<div className="h-2.5 w-2/3 rounded bg-white/[0.04]" />
+						</div>
+					) : null}
 				</li>
 			))}
 		</ul>
 	)
 }
+
+/** Two lines of a poster's line under it (`text-xs leading-snug`), so a slot is as tall as a poster with its why. */
+const TWO_LINES = "h-[calc(2*1.375*0.75rem)]"
 
 /** The line under a poster: the next episode, or a hot title's place and why it's talked about. */
 function PosterLine({ line }: { line: NonNullable<DoorTitle["line"]> }) {

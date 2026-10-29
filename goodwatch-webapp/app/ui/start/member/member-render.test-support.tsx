@@ -4,9 +4,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderToString } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
+import { DoorSection, ReservedRoom } from "./Doors"
 import { MemberStart } from "./MemberStart"
+import { type DoorKey, doorsOf, reserveOf } from "./doors"
 import type { MemberStartData, MemberStartLater } from "./member-data"
-import { FULL, MEMBERS } from "./member-fixtures.test-support"
+import { FEW, FULL, MEMBERS } from "./member-fixtures.test-support"
 
 const shelf: StartTitle[] = Array.from({ length: 12 }, (_, i) => ({
 	media_type: i % 2 ? "show" : "movie",
@@ -26,6 +28,52 @@ const render = (data: MemberStartData, later?: MemberStartLater) =>
 		</QueryClientProvider>,
 	)
 
+/**
+ * One door's section as its list goes from on its way to each answer it can bring: a full grid, a few titles, and
+ * nothing it could read. The reserve is the one the section keeps from the first render on.
+ */
+function sectionStates(base: MemberStartData, key: DoorKey) {
+	const pending = { ...base, forYou: undefined, hot: undefined }
+	const reserve = reserveOf(pending, key)
+	if (!reserve) throw new Error(`${key} has no reserve`)
+	const list = key === "hot" ? base.hot : base.forYou
+	const answers: Record<string, MemberStartData> = {
+		pending,
+		full: base,
+		sparse: {
+			...base,
+			[key]: list && { titles: list.titles.slice(0, 2), total: 2 },
+		},
+		error: { ...base, [key]: null },
+	}
+	const section = (data: MemberStartData) => {
+		const door = doorsOf(data).find((d) => d.key === key)
+		if (!door) throw new Error(`no ${key} door`)
+		return renderToString(
+			<QueryClientProvider client={new QueryClient()}>
+				<MemoryRouter>
+					<DoorSection
+						door={door}
+						reserve={reserve}
+						filter="all"
+						onFilter={() => {}}
+					/>
+				</MemoryRouter>
+			</QueryClientProvider>,
+		)
+	}
+	return {
+		room: renderToString(
+			<MemoryRouter>
+				<ReservedRoom reserve={reserve} />
+			</MemoryRouter>,
+		),
+		...Object.fromEntries(
+			Object.entries(answers).map(([name, data]) => [name, section(data)]),
+		),
+	}
+}
+
 console.log(
 	`__MEMBER_START_RENDER__${JSON.stringify({
 		...Object.fromEntries(
@@ -37,5 +85,10 @@ console.log(
 			const never = new Promise<never>(() => {})
 			return render(data, { forYou: never, hot: never })
 		})(),
+		sections: {
+			hot: sectionStates(FULL, "hot"),
+			forYou: sectionStates(FULL, "forYou"),
+			forming: sectionStates(FEW, "forYou"),
+		},
 	})}`,
 )

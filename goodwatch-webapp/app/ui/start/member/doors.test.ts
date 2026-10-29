@@ -12,6 +12,7 @@ const {
 	gridPlan,
 	openDoorOf,
 	orderDoors,
+	reserveOf,
 	tileText,
 } = await import("./doors.ts")
 const { FEW, FULL, NEW, NO_SHOWS, NO_WISHLIST } = await import(
@@ -182,4 +183,26 @@ test("the end tile counts only what it can promise", () => {
 		top: "See all",
 		sub: "on Hot on socials",
 	})
+})
+
+test("a list that comes later reserves its waiting strip, the chips' row it can have, and the lines under posters", () => {
+	// The reserve is the list's waiting shape, whatever has arrived since.
+	assert.deepEqual(reserveOf(FULL, "forYou"), {
+		strip: null,
+		filters: true,
+		lines: false,
+	})
+	assert.deepEqual(reserveOf(FULL, "hot"), {
+		strip: null,
+		filters: false,
+		lines: true,
+	})
+	assert.equal(
+		reserveOf(FEW, "forYou")?.strip?.title,
+		"Picks get personal at 10 ratings",
+	)
+	// The member's own lists are always in the page.
+	assert.equal(reserveOf(FULL, "continue"), null)
+	assert.equal(reserveOf(FULL, "wishlist"), null)
+	assert.equal(reserveOf({ ...FULL, hotOn: false }, "hot"), null)
 })

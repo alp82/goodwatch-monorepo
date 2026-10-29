@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process"
 import { test } from "node:test"
 
 type Member = "full" | "few" | "noShows" | "noWishlist" | "new" | "later"
+type Section = Record<"room" | "pending" | "full" | "sparse" | "error", string>
 
 const rendered = JSON.parse(
 	execFileSync(
@@ -18,9 +19,12 @@ const rendered = JSON.parse(
 	)
 		.split("__MEMBER_START_RENDER__")
 		.at(-1) ?? "",
-) as Record<Member, string>
+) as Record<Member, string> & {
+	sections: Record<"hot" | "forYou" | "forming", Section>
+}
 
-const all = Object.entries(rendered) as [Member, string][]
+const { sections, ...pages } = rendered
+const all = Object.entries(pages) as [Member, string][]
 
 /** The doors in their order, and which one is open. */
 const doors = (html: string) =>
@@ -164,4 +168,45 @@ test("For you and Hot on socials on their way: the page is the same around them,
 	assert.match(html, />Right now</)
 	// The card deals from the own lists, as with every list there.
 	assert.match(html, /Show 1<\/span>[\s\S]*?Movie 101<\/span>/)
+})
+
+test("a door whose list comes later keeps one room from the skeleton to every answer, so nothing moves", () => {
+	for (const [name, states] of Object.entries(sections)) {
+		const cells = (html: string) =>
+			html.match(/<li class="min-w-0"/g)?.length ?? 0
+		// The skeleton is the room itself: the chips' row where the list can have chips, a full grid of twelve.
+		assert.ok(states.pending.includes(states.room), name)
+		assert.equal(cells(states.room), 12, name)
+		assert.equal(/class="mb-4 flex h-9/.test(states.room), name !== "hot", name)
+		// Hot on socials' slots keep room for the two lines of why under each poster.
+		assert.equal(
+			/h-\[calc\(2\*1\.375\*0\.75rem\)\]/.test(states.room),
+			name === "hot",
+			name,
+		)
+		for (const answer of ["full", "sparse", "error"] as const) {
+			const html = states[answer]
+			// The answer lies over the same room, unseen, in one grid cell.
+			assert.match(
+				html,
+				/<div aria-hidden="true" data-door-reserve="true" class="invisible col-start-1 row-start-1 min-w-0">/,
+				`${name} ${answer}`,
+			)
+			assert.ok(html.includes(states.room), `${name} ${answer}`)
+			assert.ok(
+				!/aria-busy/.test(html.replace(states.room, "")),
+				`${name} ${answer}`,
+			)
+		}
+		// The caption under the heading keeps its line, also when the list couldn't be read.
+		const note = /<p[^>]*class="[^"]*mt-0\.5 text-sm[^"]*"[^>]*>([^<]+)<\/p>/
+		const caption = note.exec(states.pending)?.[1]
+		assert.ok(caption, name)
+		for (const answer of ["full", "sparse", "error"] as const)
+			assert.equal(note.exec(states[answer])?.[1], caption, `${name} ${answer}`)
+		assert.match(states.error, /Couldn&#x27;t load this right now/, name)
+	}
+	// A full answer has the titles and, where the list has them, the chips the room kept a row for.
+	assert.match(sections.forYou.full, /<legend class="sr-only">Filter<\/legend>/)
+	assert.match(sections.hot.full, /New trailer · today/)
 })
