@@ -887,6 +887,21 @@ const OLD_SORTS: Record<string, SortKey> = {
 	release_date: "newest",
 }
 
+const DISCOVER_PATH_TYPES: Record<string, "movie" | "show"> = {
+	movies: "movie",
+	movie: "movie",
+	shows: "show",
+	show: "show",
+}
+
+/** The `type` a Discover type path stands for (/discover/movies is /discover?type=movie); undefined for others. */
+export const typeOfDiscoverPath = (
+	segment: string,
+): "movie" | "show" | undefined =>
+	Object.prototype.hasOwnProperty.call(DISCOVER_PATH_TYPES, segment)
+		? DISCOVER_PATH_TYPES[segment]
+		: undefined
+
 /**
  * Today's Discover parameters rewritten to the new names, or null when the URL carries none of them, so a caller
  * redirects only old links. Genres were ids and are names now, so the caller passes the genre table.

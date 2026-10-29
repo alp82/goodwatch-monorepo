@@ -1,28 +1,28 @@
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
-// Discover on the shared filter bar, browsing and searching on one page: the heading (tap it to search; with a search
-// on it stays the search field) with the explanation under it, the bar with For you before the sort, and the grid of
-// title cards, loaded 40 at a time as the person scrolls. The grid is never replaced between browsing and searching:
-// titles in both lists glide to their new places.
+// Discover, browsing and searching on one page: the static title, the Discover bar with the status line under it (and
+// the panel or phone sheet it opens), and the grid of title cards, loaded 40 at a time as the person scrolls. The grid
+// is never replaced between browsing and searching: titles in both lists glide to their new places.
 //
-// Browsing, the explanation shows the taste For you leans on. Searching, "Read as" shows how the search read the query,
-// Relevance joins the sorts and is chosen, and the counts and recoveries cover the search's top 100. Clearing the
-// search returns to the sort used before it.
+// Searching, the status line's query chip shows how the search read the query, Relevance joins the sorts and is
+// chosen, and the counts and recoveries cover the search's top 100. Clearing the search returns to the sort used
+// before it.
 //
-// A visitor who uses none of On my services, Not seen yet and For you sees one sign-up key in their place (SignUpKey).
+// The grid's pages carry the counts every choice needs. The open sub-tab's extra counts (`counts=`, useDiscoverBar)
+// come from one more request for the first page while that sub-tab is on screen, so opening the panel never reloads
+// the grid. The sub-tabs' content loads on demand (sub-tabs/lazy.ts).
 //
 // Best match (the sort by taste match) and the Taste match filter need taste; the bar hears from the results whether
-// the viewer has it. Under Best match For you shows on and flipping it leads to another sort (see the filter bar's
-// useForYouUnderBestMatch).
+// the viewer has it. For you sits in You's Order block.
 //
 // Sides of you: while For you is on (with any sort; Best match counts as on), a member with sides sees a row per group
 // of their taste instead of the grid (SideRows). A row's "More like this" narrows the grid to that group (`side` in
 // the URL) until "All of your taste", For you turned off, or a search.
-import { ArrowPathIcon } from "@heroicons/react/20/solid"
 import { useLocation, useNavigation, useSearchParams } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useInView } from "react-intersection-observer"
+import { withSides } from "~/domain/discover-layout"
 import {
 	type SearchScope,
 	searchEligibility,
@@ -34,36 +34,35 @@ import {
 	stateAsApplied,
 } from "~/domain/filter-state"
 import { groupsByTaste } from "~/domain/side-rows"
+import { useDiscoverResults } from "~/routes/api.discover_.results"
 import type { DiscoverResults } from "~/server/discover-results.server"
-import { NextPageLink } from "~/ui/explore/GridUtils"
 import {
-	FilterBar,
-	type ForYouControl,
-	ForYouExplanation,
-	SLAB_CLEARANCE,
-	tasteStateOf,
-	useFilterState,
-} from "~/ui/filter-bar"
-import { sortShown } from "~/ui/filter-bar/labels"
-import { SearchPeople } from "~/ui/search/SearchPeople"
+	DiscoverControls,
+	type DiscoverPageContext,
+} from "~/ui/discover-bar/DiscoverControls"
+import { GridDim } from "~/ui/discover-bar/DiscoverPanel"
+import {
+	preloadSubTabs,
+	useSubTabContent,
+} from "~/ui/discover-bar/sub-tabs/lazy"
+import { useDesktop, useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
+import { NextPageLink } from "~/ui/explore/GridUtils"
+import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
 import { BestMatchSignUp } from "~/ui/filter-bar/SignUpPanel"
+import type { ForYouControl } from "~/ui/filter-bar/types"
+import { useFilterState } from "~/ui/filter-bar/useFilterState"
+import { SearchPeople } from "~/ui/search/SearchPeople"
 import { Spinner } from "~/ui/wait/Spinner"
 import type { TitleKey } from "~/utils/title-key"
 import { DiscoverGrid } from "./DiscoverGrid"
-import { DiscoverHeading } from "./DiscoverHeading"
-import { ForYouNeedsTaste, ForYouSignUp } from "./ForYouStates"
 import { HiddenTitles } from "./HiddenTitles"
-import { SignUpKey } from "./SignUpKey"
 import { SideBanner, SideRows, sideRowsOf } from "./SideRows"
-import { TasteExplanation, explanationShows } from "./TasteExplanation"
 import {
 	type InitialBrowse,
 	browseKey,
 	useDiscoverBrowse,
 	useForYou,
 	useGuestBody,
-	withSides,
-	writeForYou,
 } from "./useDiscoverBrowse"
 import { useDiscoverSearch } from "./useDiscoverSearch"
 
@@ -124,6 +123,9 @@ export function DiscoverPage({
 	)
 	const filters = useFilterState({ defaults, member, searching })
 	const forYou = useForYou({ member, saved: savedForYou })
+	const bar = useDiscoverBar(filters.state)
+	const desktop = useDesktop()
+	const { renderSubTab, renderFind } = useSubTabContent(bar.panel.open !== null)
 
 	// The search: the query and the ranking's eligibility; everything else filters its ranked list in memory.
 	const scope = useMemo<SearchScope>(
@@ -305,8 +307,6 @@ export function DiscoverPage({
 
 	const status = first?.forYou.status ?? (member ? "ready" : "signUp")
 	const taste = tasteStateOf(first)
-	// Best match is the sort in use: For you shows on, with nothing to move.
-	const bestMatch = sortShown(filters.sort, searching, taste) === "match"
 
 	// Sides of you: the rows, or the side the grid is narrowed to, while the grouping applies (For you on, or Best match
 	// as shown). While the last answer, laid out with rows, stands in for a grid, a spinner waits for the new one.
@@ -352,8 +352,6 @@ export function DiscoverPage({
 	// "↑N moved" describes the whole list's order: rows, and a list narrowed to one group, have no movement to show.
 	const noMoves = Boolean(rows || narrowed)
 	const movedUp = applied && !stale && !noMoves ? (first?.movedUp ?? 0) : 0
-	const leanings = first?.explanation?.leanings ?? []
-	const ratings = first?.explanation?.ratings ?? first?.forYou.ratings ?? 0
 	const forYouControl: ForYouControl = {
 		on: forYou.on,
 		onChange: flipTo,
@@ -365,43 +363,46 @@ export function DiscoverPage({
 				: searching
 					? "Close matches you'd rate highly rise"
 					: undefined,
-		replacement: status === "signUp" ? <ForYouSignUp /> : undefined,
-		// One URL write for both: a second write in the same tick would drop the first.
-		onOffWithSort: (sort) => {
-			forYou.remember(false)
-			filters.setSort(sort as SortKey, (out) => writeForYou(out, false))
-		},
-		explanation:
-			status === "needsTaste" ? (
-				<ForYouNeedsTaste />
-			) : (
-				<ForYouExplanation
-					on={forYou.on || bestMatch}
-					bestMatch={bestMatch}
-					searching={searching}
-					leanings={leanings}
-					ratings={ratings}
-					movedUp={noMoves ? null : movedUp}
-				/>
-			),
+		explanation: null,
 	}
 
-	// A visitor without services, without Not seen yet and without taste gets one sign-up key in place of the three
-	// controls. A visitor using any of them keeps the controls, so nothing they turned on is hidden.
-	const signUpKey =
-		!member &&
-		status === "signUp" &&
-		!defaults.onMyServices &&
-		!defaults.notSeenYet &&
-		!filters.state.onMyServices &&
-		!filters.state.notSeenYet
-			? {
-					row: <SignUpKey country={scope.country} size="row" />,
-					slab: <SignUpKey country={scope.country} size="slab" />,
-				}
-			: undefined
-
-	const counts = stale ? null : first
+	// The open sub-tab's extra counts: the first page again with its `counts=` flag, laid out as a grid (rows carry
+	// no counts of their own) and narrowed to the side the grid shows.
+	const ranked = searching ? (search.current?.ranked ?? null) : null
+	const countsQuery = withSides(filters.query, side, false)
+	const extra = useDiscoverResults({
+		query: ranked ? `${countsQuery}&ranked=${ranked.join(",")}` : countsQuery,
+		forYou: forYou.on,
+		guest: guest ?? null,
+		counts: bar.counts,
+		enabled:
+			bar.counts.length > 0 && guest !== undefined && (!searching || !!ranked),
+	})
+	const extraShown = bar.counts.length > 0 && extra.data ? extra.data : null
+	const counts = stale ? null : (extraShown ?? first)
+	const page = useMemo<DiscoverPageContext>(
+		() => ({
+			scope,
+			ranked: searching && !search.partial ? ranked : null,
+			cards,
+			countsFresh: extraShown
+				? !extra.isPlaceholderData && (!searching || !search.partial)
+				: answered && !stale,
+			guest: guest ?? null,
+		}),
+		[
+			scope,
+			searching,
+			search.partial,
+			ranked,
+			cards,
+			extraShown,
+			extra.isPlaceholderData,
+			answered,
+			stale,
+			guest,
+		],
+	)
 	const busy =
 		search.loading ||
 		(browse.isFetching && !browse.isFetchingNextPage) ||
@@ -409,9 +410,8 @@ export function DiscoverPage({
 			navigation.location?.pathname === "/discover")
 	// For crawlers: advance from the last loaded page, including SSR windows beyond page five. Browsing only.
 	const { pathname, search: locationSearch } = useLocation()
-	const nextPage = browse.hasNextPage && !searching
-		? (pages.at(-1)?.page ?? 0) + 1
-		: null
+	const nextPage =
+		browse.hasNextPage && !searching ? (pages.at(-1)?.page ?? 0) + 1 : null
 	const nextPageUrl = useMemo(() => {
 		if (!nextPage) return null
 		const next = new URLSearchParams(locationSearch)
@@ -420,6 +420,9 @@ export function DiscoverPage({
 	}, [nextPage, pathname, locationSearch])
 
 	const found = searching ? search.current : null
+	const warm = () => {
+		preloadSubTabs().catch(() => {})
+	}
 	const allTitlesHref = useMemo(() => {
 		const next = new URLSearchParams(locationSearch)
 		next.set("allTitles", "1")
@@ -428,46 +431,35 @@ export function DiscoverPage({
 
 	return (
 		<MotionConfig reducedMotion="user">
-			<div className={`mx-auto max-w-7xl px-4 pt-5 lg:pt-8 ${SLAB_CLEARANCE}`}>
-				<DiscoverHeading
-					q={q}
-					onSearch={onSearch}
-					onClear={clearSearch}
-					explanation={
-						explanationShows({
-							status,
-							on: applied,
-							leanings,
-							guest: !member,
-							searching: q !== null,
-						}) ? (
-							<TasteExplanation
-								status={status}
-								on={applied}
-								leanings={leanings}
-								guest={!member}
-								search={q ? { q, reading: search.reading } : null}
-							/>
-						) : null
-					}
-				/>
-				<div className="lg:mt-7">
-					<FilterBar
+			<div className="mx-auto max-w-7xl px-4 pt-5 lg:pt-8">
+				<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
+					Discover movies and shows
+				</h1>
+				{/* Reaching for the bar starts loading the panel's content. */}
+				<div onPointerEnter={warm} onTouchStart={warm} onFocus={warm}>
+					<DiscoverControls
+						className="mt-3 lg:mt-5"
+						bar={bar}
 						filters={filters}
-						member={member}
-						signUpKey={signUpKey}
 						counts={counts}
+						member={member}
+						query={q}
+						reading={search.reading ?? undefined}
+						onSearch={onSearch}
+						onClearSearch={clearSearch}
+						page={page}
 						forYou={forYouControl}
-						taste={taste}
-						sortSignUp={taste === "signUp" ? <BestMatchSignUp /> : undefined}
-						insightLead={
-							busy && searching ? (
-								<ArrowPathIcon
-									className="h-4 w-4 animate-spin text-gray-400 motion-reduce:animate-none"
-									aria-label="Searching"
-								/>
-							) : undefined
-						}
+						renderSubTab={renderSubTab}
+						renderFind={renderFind}
+						sort={{
+							options: discoverSorts(searching, taste),
+							value: sortShown(filters.sort, searching, taste),
+							onChange: (key) => filters.setSort(key as SortKey),
+							footnote: searching
+								? undefined
+								: "Relevance joins once you search.",
+							signUp: taste === "signUp" ? <BestMatchSignUp /> : undefined,
+						}}
 					/>
 				</div>
 				{/* Mounted for all of search mode with one line of height: the grid doesn't move when the text comes and
@@ -508,7 +500,8 @@ export function DiscoverPage({
 						/>
 					</div>
 				)}
-				<div className="mt-3 lg:mt-7" aria-busy={busy}>
+				<div className="relative mt-3 lg:mt-5" aria-busy={busy}>
+					<GridDim on={desktop && bar.panel.open !== null} />
 					{browse.isError && !first ? (
 						<p className="py-16 text-center text-gray-400">
 							Discover couldn't load right now. Try again in a moment.

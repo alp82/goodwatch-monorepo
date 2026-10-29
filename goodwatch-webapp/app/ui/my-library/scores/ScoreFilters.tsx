@@ -18,7 +18,7 @@ import {
 import type { Score } from "~/server/scores.server"
 import { FiltersButton, SortItems, useMenu } from "~/ui/filter-bar/controls"
 import { FilterSearchField } from "~/ui/filter-bar/FilterGroups"
-import { ShowTitlesButton } from "~/ui/filter-bar/FiltersSheet"
+import { ShowTitlesButton } from "~/ui/filter-bar/ShowTitlesButton"
 import { FILTER_ACCENTS } from "~/ui/filter-bar/labels"
 import { Knob, MENU, SHELL, SPRING, TAP } from "~/ui/filter-bar/motion"
 import { useModalDialog } from "~/ui/filter-bar/useModalDialog"

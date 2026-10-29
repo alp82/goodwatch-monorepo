@@ -14,13 +14,13 @@ import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, useEffect, useId, useRef, useState } from "react"
 import type { FilterName, FilterState } from "~/domain/filter-state"
+import { ShowTitlesButton } from "~/ui/filter-bar/ShowTitlesButton"
 import { DockStrip } from "~/ui/navigation/MobileDock"
 import {
 	FilterGroups,
 	type FilterGroupsData,
 	FilterSearchField,
 } from "./FilterGroups"
-import { ShowTitlesButton } from "./FiltersSheet"
 import { FOR_YOU_SWITCH, ForYouRow, useForYouUnderBestMatch } from "./ForYou"
 import { SnapSheet } from "./SnapSheet"
 import { HiddenMeter, RecoveryList } from "./SubBar"

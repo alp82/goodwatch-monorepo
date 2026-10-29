@@ -2,7 +2,7 @@
 // ("Show N titles"). With one it counts matches: the search ranks at most 100 titles, so a full list reads "Show top 100
 // matches" and fewer "Show N matches".
 import { motion } from "framer-motion"
-import { ShowTitlesButton } from "~/ui/filter-bar/FiltersSheet"
+import { ShowTitlesButton } from "~/ui/filter-bar/ShowTitlesButton"
 import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
 import { countWords } from "./chips"

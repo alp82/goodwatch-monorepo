@@ -190,6 +190,8 @@ export function DiscoverBar({
 	return (
 		<div
 			ref={barRef}
+			role="group"
+			aria-label="Discover filters"
 			className={`relative flex h-[76px] items-stretch rounded-full p-1.5 ring-1 ${
 				active
 					? "bg-gray-900 ring-white/15"

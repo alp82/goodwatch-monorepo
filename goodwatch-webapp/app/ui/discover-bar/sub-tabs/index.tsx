@@ -36,3 +36,6 @@ export function renderSubTab(id: SubTabId, view: SubTabView): ReactNode {
 	const Content = SUB_TAB_CONTENT[id]
 	return Content ? <Content view={view} /> : undefined
 }
+
+/** Find's results ship in the same on-demand chunk as the sub-tabs. */
+export { renderFind } from "../find/FindResults"

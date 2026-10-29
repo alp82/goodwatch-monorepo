@@ -16,6 +16,7 @@ import {
 	filterStateFromParams,
 	rewriteLegacyDiscoverParams,
 	sortFromParams,
+	typeOfDiscoverPath,
 } from "~/domain/filter-state"
 import { groupsByTaste } from "~/domain/side-rows"
 import { DISCOVER_MAX_PAGE } from "~/utils/constants"
@@ -120,14 +121,7 @@ const canonicalLoader = async ({
 	}
 	// The type is a filter: /discover/movies is /discover?type=movie.
 	if (routeParams.type) {
-		const type = (
-			{
-				movies: "movie",
-				movie: "movie",
-				shows: "show",
-				show: "show",
-			} as Record<string, string>
-		)[routeParams.type]
+		const type = typeOfDiscoverPath(routeParams.type)
 		if (type && !urlParams.has("type")) urlParams.set("type", type)
 		const search = urlParams.toString()
 		return redirect(`/discover${search ? `?${search}` : ""}`, {

@@ -314,19 +314,34 @@ function Order({ view }: { view: SubTabView }) {
 			<Head locked={locked}>Order</Head>
 			<div className="flex flex-col gap-2">
 				{forYou && (
-					<OrderSwitch
-						label="For you"
-						on={forYou.on}
-						onChange={forYou.onChange}
-						locked={locked}
-						disabled={forYou.disabled}
-						icon={
-							<FingerPrintIcon
-								className="h-4 w-4 shrink-0 text-amber-500"
-								aria-hidden
-							/>
-						}
-					/>
+					<div>
+						<OrderSwitch
+							label="For you"
+							on={forYou.on}
+							onChange={forYou.onChange}
+							locked={locked}
+							disabled={forYou.disabled}
+							icon={
+								<FingerPrintIcon
+									className="h-4 w-4 shrink-0 text-amber-500"
+									aria-hidden
+								/>
+							}
+						/>
+						{forYou.disabled && forYou.hint && (
+							<p className="mt-1 px-3 text-xs text-gray-500">
+								{forYou.hint}
+							</p>
+						)}
+						{!locked &&
+							!forYou.disabled &&
+							forYou.on &&
+							forYou.movedUp > 0 && (
+								<p className="mt-1 px-3 text-xs text-gray-500">
+									↑{forYou.movedUp.toLocaleString("en")} moved up
+								</p>
+							)}
+					</div>
 				)}
 				<OrderSwitch
 					label="Best match first"

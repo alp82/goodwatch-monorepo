@@ -57,9 +57,12 @@ Terms follow `CONTEXT.md`. New terms in this spec:
 - Under it, the Discover bar, then the status line, then the grid. While the panel is closed, at most these three rows
   sit above the grid.
 - Unchanged from production: the grid (`DiscoverGrid`, glide, moved marks, 40 per page, `NextPageLink`), Sides of you
-  rows for members while For you is on (`SideRows`, `SideBanner`, `side=`), the empty state (`HiddenTitles`), For you
-  states (`ForYouSignUp`, `ForYouNeedsTaste`), `SignUpKey`, search mode with `q` (combined search, streamed reading,
-  top 100 ranked, `noindex`), server rendering of the first pages, legacy redirects, and the person-lookup redirect.
+  rows for members while For you is on (`SideRows`, `SideBanner`, `side=`), the empty state (`HiddenTitles`),
+  search mode with `q` (combined search, streamed reading, top 100 ranked, `noindex`), server rendering of the first
+  pages, legacy redirects, and the person-lookup redirect.
+- For you states move into You: guests see the locked controls and sign-up prompt; members without enough taste
+  see the disabled For you switch with "Rate a few more titles you love" underneath. The active switch shows the
+  moved-up count underneath when the current list has movement to show.
 
 ### Discover bar
 
