@@ -102,9 +102,16 @@ export function Dials({
 								onPointerLeave={(e) =>
 									e.pointerType === "mouse" && onHover(null)
 								}
-								onFocus={() => onHover(s.sc.name)}
+								// Keyboard focus previews like hover; a tap's focus doesn't, so a second tap really unpins.
+								onFocus={(e) =>
+									e.currentTarget.matches(":focus-visible") &&
+									onHover(s.sc.name)
+								}
 								onBlur={() => onHover(null)}
-								onClick={() => onPin(s.sc.name)}
+								onClick={(e) => {
+									if (!e.currentTarget.matches(":focus-visible")) onHover(null)
+									onPin(s.sc.name)
+								}}
 								className="-mx-1.5 flex w-[calc(100%+0.75rem)] min-w-0 cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1 text-left outline-none focus-visible:outline-2 focus-visible:outline-amber-300"
 								style={{
 									background:

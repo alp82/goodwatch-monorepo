@@ -133,6 +133,7 @@ function Body({ t, selfId }: { t: F.TitleInput; selfId: number }) {
 	// Hover previews the selection the click would make, on the drawing and the row marks only.
 	const preview = hover ? nextSelection(selected, hover, reading) : selected
 	const light = dial ? dialLight(dial, scores) : lightOf(preview, reading)
+	const pressedAxes = lightOf(selected, reading)?.axes
 	const effects = selected
 		.map((id) => byId(reading, id))
 		.filter((r): r is EffectReading => !!r)
@@ -196,6 +197,7 @@ function Body({ t, selfId }: { t: F.TitleInput; selfId: number }) {
 								reading={reading}
 								attributes={attributes}
 								light={light}
+								pressed={pressedAxes}
 								onPoint={(axis) =>
 									setHover(axis ? { kind: "axis", id: axis } : null)
 								}

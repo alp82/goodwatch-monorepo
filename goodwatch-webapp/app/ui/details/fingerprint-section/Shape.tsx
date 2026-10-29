@@ -239,6 +239,7 @@ export function Shape({
 	reading,
 	attributes,
 	light,
+	pressed,
 	onPoint,
 	onPick,
 	label,
@@ -250,6 +251,8 @@ export function Shape({
 	reading: Reading
 	attributes: WhorlAttribute[]
 	light: Light | null
+	/** The axes in the committed selection (light may be a hover preview). */
+	pressed?: ReadonlySet<string>
 	onPoint?: (axis: string | null) => void
 	onPick?: (axis: string | null) => void
 	label: string
@@ -552,12 +555,12 @@ export function Shape({
 						key={a.axis.id}
 						type="button"
 						tabIndex={0}
-						aria-pressed={!!light?.axes.has(a.axis.id)}
+						aria-pressed={!!pressed?.has(a.axis.id)}
 						aria-label={`${a.axis.label}, ${a.strength.toFixed(1)} of 10`}
 						onFocus={() => onPoint?.(a.axis.id)}
 						onBlur={() => onPoint?.(null)}
 						onClick={() => onPick?.(a.axis.id)}
-						className="fp-fade pointer-events-none absolute flex flex-col items-center rounded-md px-1 leading-tight focus-visible:outline-2 focus-visible:outline-amber-300"
+						className="fp-fade pointer-events-none absolute flex flex-col items-center rounded-md px-1 leading-tight focus-visible:!opacity-100 focus-visible:outline-2 focus-visible:outline-amber-300"
 						style={{
 							left: `${((x + W) / (W * 2)) * 100}%`,
 							top: `${((y + H) / (H * 2)) * 100}%`,
