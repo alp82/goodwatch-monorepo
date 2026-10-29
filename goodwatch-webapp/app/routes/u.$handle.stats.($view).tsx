@@ -11,6 +11,7 @@ import { presentCatalogLoader } from "~/server/media-payload.server"
 import { getMemberCompare } from "~/server/profile/compare.server"
 import { getProfilePortrait } from "~/server/profile/portrait.server"
 import { profileLoader } from "~/server/profile/route.server"
+import { statsPayload, statsTastePayload } from "~/server/profile/stats-payload"
 import { statsForViewer } from "~/server/profile/taste-stats-view"
 import { getTasteStats } from "~/server/profile/taste-stats.server"
 import { ProfileFrame } from "~/ui/profile/ProfileFrame"
@@ -77,7 +78,7 @@ const load = (args: LoaderFunctionArgs) => {
 				})
 			// Names for the codes here, so the server's and the browser's name tables can't disagree on hydration.
 			const named: NamedTasteStats | null = stats && {
-				...stats,
+				...statsPayload(stats),
 				world: {
 					...stats.world,
 					countries: stats.world.countries.map((c) => ({
@@ -92,7 +93,7 @@ const load = (args: LoaderFunctionArgs) => {
 			}
 			const taste =
 				fingerprint && sides && everyone
-					? buildProfileTaste(fingerprint, sides, everyone)
+					? statsTastePayload(buildProfileTaste(fingerprint, sides, everyone))
 					: null
 			return { taste, stats: named, compare }
 		},

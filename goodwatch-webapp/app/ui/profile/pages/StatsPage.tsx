@@ -24,6 +24,7 @@ import {
 	RatingStyle,
 	World,
 } from "../taste/Stats"
+import { agreementTitle } from "../taste/agreement"
 import { Whorl } from "../taste/Whorl"
 import {
 	FAMILY_COLOR,
@@ -130,14 +131,7 @@ function Summary({
 	const higher = taste.crowd.higher[0]
 	const lower = taste.crowd.lower[0]
 	// Agreement: a title scored 8 or more that they score the same as everyone.
-	const agree = Object.values(taste.titles)
-		.filter((t) => t.score != null && t.gw != null && t.score >= 8)
-		.sort(
-			(a, b) =>
-				Math.abs((a.score ?? 0) * 10 - (a.gw ?? 0)) -
-					Math.abs((b.score ?? 0) * 10 - (b.gw ?? 0)) ||
-				(b.score ?? 0) - (a.score ?? 0),
-		)[0]
+	const agree = agreementTitle(taste.titles)
 	const versus = !!(higher || lower || agree)
 	const print = (
 		<Whorl
