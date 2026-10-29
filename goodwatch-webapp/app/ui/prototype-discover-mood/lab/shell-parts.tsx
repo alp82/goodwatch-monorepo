@@ -1,7 +1,8 @@
 // PROTOTYPE - throwaway. The Discover lab shell (from round 5 variant 16): its own copy of R4-8-parts with three segments instead of five (Search,
 // Mood, Watch), the structure of tabs and sub-tabs as data (TABS: which filters live where), what each segment reads
 // (a summary over all its sub-tabs), the bar, the phone bar, the status line and the shared controls.
-import { ArrowTopRightOnSquareIcon, CheckIcon, MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { ArrowTopRightOnSquareIcon, CheckIcon, LockClosedIcon, MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { useNavigate } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
@@ -26,13 +27,15 @@ import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 import { ProtoGrid, type ProtoDiscover, TAGS, type Tag, tagId, type useFilterPieces } from "../kit"
 import { tagName } from "./sections/mood/parts"
 import { mcUsers, setMcUsers } from "./sections/scores/mc-users"
-import { clearYou, useYouExtras, youChips, youCount } from "./sections/taste/you-extras"
-import type { SectionId } from "./types"
+import { clearYou, useYouExtras, youChips } from "./sections/taste/you-extras"
+import { LAYOUT_A, type Layout, type SegKey, type Slot, type Sub, type SubId, splitsMine } from "./layouts"
+import { MEMBER_SERVICES, modeOf } from "./sections/services/parts"
+import type { Viewer } from "./types"
 
 export type Pieces = ReturnType<typeof useFilterPieces>
-export type SegKey = "search" | "mood" | "watch"
+export type { SegKey, Slot, Sub }
 export const SEG_ORDER: SegKey[] = ["search", "mood", "watch"]
-export const SEG_LABEL: Record<SegKey, string> = { search: "Search", mood: "Mood", watch: "Watch" }
+export const SEG_LABEL: Record<SegKey, string> = { search: "Search", you: "You", mood: "Mood", watch: "Watch" }
 export const PRIVATE = "search-private ph-no-capture sentry-mask"
 export const SEARCH_PLACEHOLDER = "A mood, a title, or like Severance"
 const TASTE = "signUp" as const
@@ -40,65 +43,62 @@ const TASTE = "signUp" as const
 export const MOOD_TAGS = TAGS.filter((t) => t.group === "moods")
 
 // ---------------------------------------------------------------------------------------------------------------
-// The structure: three tabs, each with one row of sub-tabs (Mood has one, so no row). A slot is a filter card, the
-// search text, or Not seen yet. A sub-tab's id is the lab section that renders it (`lab/registry.ts`).
+// The structure: three tabs (round 15: or four, lab/layouts.ts), each with one row of sub-tabs (Mood has one, so no
+// row). A slot is a filter card, the search text, or Not seen yet. A sub-tab's id is the lab section that renders it
+// (`lab/registry.ts`).
 
-export type Slot = CardKey | "q" | "notSeenYet"
-export interface Sub {
-	id: SectionId
-	label: string
-	slots: Slot[]
-}
+export const TABS = LAYOUT_A.tabs
 
-export const TABS: Record<SegKey, Sub[]> = {
-	search: [
-		// Movies or shows sits on the Search row (round 10); it counts with Titles.
-		{ id: "titles", label: "Titles", slots: ["q", "similarTo", "type"] },
-		{ id: "people", label: "Cast and crew", slots: ["people"] },
-		// Round 12: "You", with Not seen yet back from Services.
-		{ id: "taste", label: "You", slots: ["loved", "disliked", "minMatch", "notSeenYet"] },
-	],
-	mood: [{ id: "mood", label: "Mood", slots: ["moods", "themes", "styles", "genres"] }],
-	watch: [
-		{ id: "services", label: "Services", slots: ["services"] },
-		{ id: "scores", label: "Scores", slots: ["minScore", "sourceScores", "scoreGap"] },
-		{ id: "origin", label: "Made in", slots: ["productionCountries"] },
-		{ id: "released", label: "Released", slots: ["released"] },
-		{ id: "length", label: "Length", slots: ["runtime"] },
-		{ id: "age", label: "Age and content", slots: ["ageLimit"] },
-	],
+/** What the counts need besides the filters: the layout and who is looking. */
+export interface Ctx {
+	L: Layout
+	viewer: Viewer
 }
+const CTX_A: Ctx = { L: LAYOUT_A, viewer: "guest" }
 
 /** The sub-tabs this viewer gets (Age and content needs a rating ladder). */
-export function subsFor(seg: SegKey, pieces: Pieces): Sub[] {
-	if (pieces.groups.ladder) return TABS[seg]
-	return TABS[seg].filter((s) => s.id !== "age")
+export function subsFor(seg: SegKey, pieces: Pieces, L: Layout = LAYOUT_A): Sub[] {
+	if (pieces.groups.ladder) return L.tabs[seg]
+	return L.tabs[seg].filter((s) => s.id !== "age")
 }
 
+const ALL_SEGS: SegKey[] = ["search", "you", "mood", "watch"]
+
 /** Where a filter lives. */
-export function whereIs(slot: Slot): { seg: SegKey; sub: SectionId } {
-	for (const seg of SEG_ORDER) for (const s of TABS[seg]) if (s.slots.includes(slot)) return { seg, sub: s.id }
+export function whereIs(slot: Slot, L: Layout = LAYOUT_A): { seg: SegKey; sub: SubId } {
+	for (const seg of ALL_SEGS) for (const s of L.tabs[seg]) if (s.slots.includes(slot)) return { seg, sub: s.id }
 	return { seg: "watch", sub: "services" }
 }
 
 /** The tab a section lives in. */
-export function segOf(id: SectionId): SegKey {
-	for (const seg of SEG_ORDER) if (TABS[seg].some((s) => s.id === id)) return seg
+export function segOf(id: SubId, L: Layout = LAYOUT_A): SegKey {
+	for (const seg of ALL_SEGS) if (L.tabs[seg].some((s) => s.id === id)) return seg
 	return "search"
 }
 
 /** The active chips of one card. */
 export const chipsOf = (pieces: Pieces, k: CardKey) => pieces.chips.filter((c) => cardOf(c.group) === k)
 
+/** The streaming choice is "On my services" (a member's comes in as an explicit list, services/parts.tsx). */
+export function onMine(d: ProtoDiscover, viewer: Viewer) {
+	const s = d.filters.state
+	if (viewer === "guest" && d.filters.defaults.onMyServices) return false
+	return modeOf(s, viewer === "member" ? MEMBER_SERVICES : []) === "mine"
+}
+
 /** How many values a sub-tab has set. */
-export function subCount(d: ProtoDiscover, pieces: Pieces, sub: Sub) {
+export function subCount(d: ProtoDiscover, pieces: Pieces, sub: Sub, ctx: Ctx = CTX_A) {
 	// Lab-only values: Scores a's Metacritic user score, You's taste groups, lists and steps (you-extras.ts).
-	const extra = sub.id === "scores" ? (mcUsers() ? 1 : 0) : sub.id === "taste" ? youCount() : 0
-	return extra + sub.slots.reduce(
-		(n, slot) =>
-			n + (slot === "q" ? (d.q ? 1 : 0) : slot === "notSeenYet" ? (d.filters.state.notSeenYet ? 1 : 0) : chipsOf(pieces, slot).length),
-		0,
-	)
+	const you = sub.you ? youChips().filter((c) => sub.you?.includes(c.group)).length : 0
+	const extra = sub.id === "scores" ? (mcUsers() ? 1 : 0) : you
+	const split = splitsMine(ctx.L)
+	return extra + sub.slots.reduce((n, slot) => {
+		if (slot === "q") return n + (d.q ? 1 : 0)
+		if (slot === "notSeenYet") return n + (d.filters.state.notSeenYet ? 1 : 0)
+		if (slot === "myServices") return n + (onMine(d, ctx.viewer) ? 1 : 0)
+		if (slot === "services" && split && onMine(d, ctx.viewer)) return n
+		return n + chipsOf(pieces, slot).length
+	}, 0)
 }
 
 /** The slot a status chip belongs to. */
@@ -114,38 +114,75 @@ export interface SegValue {
 	badge?: number
 	/** Shows the value in the search's large type. */
 	big?: boolean
+	/** A guest's You (round 15): locked look, still opens. */
+	locked?: boolean
 }
 
-export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegValue> {
+export function segValues(d: ProtoDiscover, pieces: Pieces, ctx: Ctx = CTX_A): Record<SegKey, SegValue> {
+	const { L, viewer } = ctx
 	const s = d.filters.state
 	const labels = (...keys: CardKey[]) => keys.flatMap((k) => chipsOf(pieces, k).map((c) => c.label))
 	const moods = d.picked.filter((t) => t.group === "moods")
 	const providers = pieces.services.countryProviders
-	const chosen = s.onMyServices ? pieces.services.providers : providers.filter((p) => s.services?.includes(p.id))
+	const split = splitsMine(L)
+	const mine = onMine(d, viewer)
+	const chosenAll = s.onMyServices ? pieces.services.providers : providers.filter((p) => s.services?.includes(p.id))
+	// Layout d: On my services is You's, so Watch shows only a picked list.
+	const chosen = split && mine ? [] : chosenAll
 	const released = s.years
 		? `${s.years.min ?? "Any"}–${s.years.max ?? "now"}`
 		: s.released !== "any"
 			? RELEASED_LABELS[s.released]
 			: null
-	const searchOther = [
-		...labels("similarTo", "people", "loved", "disliked", "minMatch"),
-		...(s.notSeenYet ? ["Not seen yet"] : []),
-		...youChips().map((c) => c.label),
-		...(s.type !== "all" ? [TYPE_LABELS[s.type]] : []),
+	/** A tab's labels for the slots it holds, in one fixed order (a's Search summary reads as before). */
+	const has = (seg: SegKey, slot: Slot) => L.tabs[seg].some((x) => x.slots.includes(slot))
+	const youOf = (seg: SegKey) => {
+		const groups = L.tabs[seg].flatMap((x) => x.you ?? [])
+		return youChips().filter((c) => groups.includes(c.group))
+	}
+	const personal = (seg: SegKey, typeToo: boolean) => [
+		...(["similarTo", "people", "loved", "disliked", "minMatch"] as const).filter((k) => has(seg, k)).flatMap((k) => labels(k)),
+		...(s.notSeenYet && has(seg, "notSeenYet") ? ["Not seen yet"] : []),
+		...youOf(seg).map((c) => c.label),
+		...(mine && has(seg, "myServices") ? ["My services"] : []),
+		...(typeToo && s.type !== "all" && has(seg, "type") ? [TYPE_LABELS[s.type]] : []),
 	]
+	const searchOther = personal("search", true)
 	// A segment's badge is the sum of its sub-tabs' badges.
-	const badge = (k: SegKey) => subsFor(k, pieces).reduce((n, sub) => n + subCount(d, pieces, sub), 0) || undefined
-	const streaming = s.onMyServices
-		? "My services"
-		: s.services?.length
-			? (headPlus(chosen.map((p) => cleanName(p.name))) ?? `${s.services.length} services`)
-			: s.anyService
-				? "Any service"
-				: null
+	const badge = (k: SegKey) => subsFor(k, pieces, L).reduce((n, sub) => n + subCount(d, pieces, sub, ctx), 0) || undefined
+	const streaming =
+		split && mine
+			? null
+			: s.onMyServices
+				? "My services"
+				: s.services?.length
+					? (headPlus(chosen.map((p) => cleanName(p.name))) ?? `${s.services.length} services`)
+					: s.anyService
+						? "Any service"
+						: null
+	// You (round 15): "Any match · Not seen yet"; the match step leads, the rest follows.
+	const youList = personal("you", false)
+	const matchLabel = youList.find((x) => /^Match /.test(x) || /%/.test(x) || x === "Outside your usual")
+	const youRest = youList.filter((x) => x !== matchLabel)
+	const locked = viewer === "guest"
+	const youLead = locked ? (
+		<LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-amber-500/70" aria-hidden />
+	) : split && mine && chosenAll.length ? (
+		<ServiceStack providers={chosenAll} on size={16} />
+	) : (
+		<FingerPrintIcon className="h-4 w-4 shrink-0 text-amber-500" aria-hidden />
+	)
 	return {
 		search: d.q
 			? { value: d.q, placeholder: SEARCH_PLACEHOLDER, big: true, badge: badge("search") }
 			: { value: headPlus(searchOther), placeholder: SEARCH_PLACEHOLDER, big: false, badge: badge("search") },
+		you: {
+			value: youList.length ? join([matchLabel ?? "Any match", L.youCap ? (youRest.length ? (youRest.length > 1 ? `${youRest[0]} +${youRest.length - 1}` : youRest[0]) : null) : headPlus(youRest)]) : null,
+			placeholder: locked ? "Sign up" : "Any match",
+			badge: badge("you"),
+			lead: youLead,
+			locked,
+		},
 		mood: {
 			value: join([
 				headPlus(moods.map(tagName)),
@@ -181,9 +218,7 @@ export function PageTitle() {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// The bar: three segments, so Search gets the room.
-
-const SEG_FLEX: Record<SegKey, string> = { search: "flex-[2.6]", mood: "flex-[1.25]", watch: "flex-[1.25]" }
+// The bar: three segments (round 15: or four), so Search gets the room.
 
 export function SegmentBar({
 	id,
@@ -192,8 +227,12 @@ export function SegmentBar({
 	onPick,
 	onClearSearch,
 	searchInput,
+	order = SEG_ORDER,
+	flex = LAYOUT_A.flex,
 }: {
 	id: string
+	order?: SegKey[]
+	flex?: Record<SegKey, string>
 	values: Record<SegKey, SegValue>
 	active: SegKey | null
 	onPick: (k: SegKey) => void
@@ -210,13 +249,14 @@ export function SegmentBar({
 					: "bg-white/[0.045] ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_20px_50px_-30px_rgba(0,0,0,.9)]"
 			}`}
 		>
-			{SEG_ORDER.map((k, i) => {
+			{order.map((k, i) => {
 				const v = values[k]
 				const on = active === k
-				const nextOn = active === SEG_ORDER[i + 1]
+				const nextOn = active === order[i + 1]
 				const isSearch = k === "search"
+				const tight = order.length > 3
 				return (
-					<div key={k} data-seg={k} className={`relative flex min-w-0 ${SEG_FLEX[k]}`}>
+					<div key={k} data-seg={k} className={`relative flex min-w-0 ${flex[k]}`}>
 						{on && (
 							<motion.span
 								layoutId={`${id}-pill`}
@@ -237,17 +277,17 @@ export function SegmentBar({
 								aria-expanded={on}
 								aria-haspopup="dialog"
 								className={`relative flex min-w-0 flex-1 cursor-pointer flex-col justify-center rounded-full text-left outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
-									isSearch ? "pr-12 pl-7" : "px-6"
+									isSearch ? "pr-12 pl-7" : tight ? "px-5" : "px-6"
 								} ${on ? "" : "hover:bg-white/[0.05]"}`}
 							>
-								<SegLabel k={k} badge={v.badge} />
+								<SegLabel k={k} badge={v.badge} locked={v.locked} />
 								<span className="mt-0.5 flex min-w-0 items-center gap-2">
 									{v.lead}
 									<span
 										className={`truncate ${
 											isSearch && (v.big || !v.value)
 												? `brand-header text-[21px] leading-tight ${v.value ? "text-white" : "text-gray-500"} ${PRIVATE}`
-												: `text-[15px] ${v.value ? "font-semibold text-white" : "text-gray-500"}`
+												: `text-[15px] ${v.value ? "font-semibold text-white" : v.locked ? "font-semibold text-amber-200/80" : "text-gray-500"}`
 										}`}
 									>
 										{v.value ?? v.placeholder}
@@ -265,7 +305,7 @@ export function SegmentBar({
 								<XMarkIcon className="h-4 w-4" />
 							</button>
 						)}
-						{i < SEG_ORDER.length - 1 && (
+						{i < order.length - 1 && (
 							<span
 								aria-hidden
 								className={`absolute top-1/2 -right-px h-8 w-px -translate-y-1/2 bg-white/10 transition-opacity ${on || nextOn ? "opacity-0" : ""}`}
@@ -278,10 +318,10 @@ export function SegmentBar({
 	)
 }
 
-export function SegLabel({ k, badge }: { k: SegKey; badge?: number }) {
+export function SegLabel({ k, badge, locked }: { k: SegKey; badge?: number; locked?: boolean }) {
 	return (
 		<span
-			className={`flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] uppercase ${k === "search" ? "text-amber-300/90" : "text-gray-400"}`}
+			className={`flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] uppercase ${k === "search" ? "text-amber-300/90" : locked ? "text-gray-500" : "text-gray-400"}`}
 		>
 			{k === "search" && <MagnifyingGlassIcon className="h-3.5 w-3.5" aria-hidden />}
 			{SEG_LABEL[k]}
@@ -294,12 +334,17 @@ export function SegLabel({ k, badge }: { k: SegKey; badge?: number }) {
 	)
 }
 
-/** The phone bar: Search full width, then Mood and Watch side by side. */
+/** The phone bar: Search full width, then the other tabs side by side. */
 export function PhoneBar({
 	values,
 	onPick,
 	onClearSearch,
+	order = SEG_ORDER,
+	cols = "grid-cols-2",
 }: {
+	order?: SegKey[]
+	/** The grid of the row under Search. */
+	cols?: string
 	values: Record<SegKey, SegValue>
 	onPick: (k: SegKey) => void
 	onClearSearch?: () => void
@@ -310,6 +355,7 @@ export function PhoneBar({
 			<div className="relative">
 				<button
 					type="button"
+					data-seg-phone="search"
 					onClick={() => onPick("search")}
 					className="flex h-[62px] w-full cursor-pointer flex-col justify-center px-4 pr-12 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400"
 				>
@@ -335,21 +381,22 @@ export function PhoneBar({
 					</button>
 				)}
 			</div>
-			<div className="grid grid-cols-2 border-t border-white/[0.08]">
-				{SEG_ORDER.slice(1).map((k, i) => {
+			<div className={`grid border-t border-white/[0.08] ${cols}`}>
+				{order.filter((k) => k !== "search").map((k, i) => {
 					const s = values[k]
 					return (
 						<motion.button
 							key={k}
 							type="button"
+							data-seg-phone={k}
 							whileTap={TAP}
 							onClick={() => onPick(k)}
-							className={`flex h-[52px] min-w-0 cursor-pointer flex-col justify-center px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${i ? "border-l border-white/[0.08]" : ""}`}
+							className={`flex h-[52px] min-w-0 cursor-pointer flex-col justify-center text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${order.length > 3 ? "px-3" : "px-4"} ${i ? "border-l border-white/[0.08]" : ""}`}
 						>
-							<SegLabel k={k} badge={s.badge} />
+							<SegLabel k={k} badge={s.badge} locked={s.locked} />
 							<span className="flex min-w-0 items-center gap-1.5">
 								{s.lead}
-								<span className={`truncate text-[13px] ${s.value ? "font-semibold text-white" : "text-gray-500"}`}>
+								<span className={`truncate text-[13px] ${s.value ? "font-semibold text-white" : s.locked ? "font-semibold text-amber-200/80" : "text-gray-500"}`}>
 									{s.value ?? s.placeholder}
 								</span>
 							</span>
@@ -496,7 +543,7 @@ export function MyServicesChip({ d, onOpen }: { d: ProtoDiscover; onOpen: (slot:
 	return (
 		<ValueChip
 			chip={{ key: "mine", group: "services", label: "On my services", remove: (x) => ({ ...x, onMyServices: false }) }}
-			onOpen={() => onOpen("services")}
+			onOpen={() => onOpen("myServices")}
 			onRemove={() => d.filters.set({ onMyServices: false, anyService: undefined, services: undefined })}
 		/>
 	)
@@ -508,7 +555,7 @@ export function YouChips({ onOpen }: { onOpen: (slot: Slot) => void }) {
 	return (
 		<>
 			{youChips(x).map((c) => (
-				<ValueChip key={c.key} chip={{ key: c.key, group: c.group, label: c.label, remove: (v) => v }} onOpen={() => onOpen("notSeenYet")} onRemove={c.remove} />
+				<ValueChip key={c.key} chip={{ key: c.key, group: c.group, label: c.label, remove: (v) => v }} onOpen={() => onOpen(c.group)} onRemove={c.remove} />
 			))}
 		</>
 	)

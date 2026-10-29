@@ -8,7 +8,8 @@ import type { Pieces } from "./shell-parts"
 
 export type { Pieces }
 
-export type SectionId = "titles" | "people" | "taste" | "mood" | "services" | "origin" | "length" | "scores" | "released" | "age"
+/** "layout" is the main tabs choice (round 15), not a panel section. */
+export type SectionId = "layout" | "titles" | "people" | "taste" | "mood" | "services" | "origin" | "length" | "scores" | "released" | "age"
 
 export type Viewer = "guest" | "member"
 
@@ -25,7 +26,7 @@ export interface SectionProps {
 	/** Runs the text as the search (d.setQ) and closes nothing. */
 	runSearch: (text: string) => void
 	/** Opens another place in the panel, e.g. open("watch", "services"). */
-	open: (seg: "search" | "mood" | "watch", sub?: string) => void
+	open: (seg: "search" | "you" | "mood" | "watch", sub?: string) => void
 	/** Closes the panel (phones: the sheet), e.g. after running a search so the grid shows it. */
 	close?: () => void
 	/** Only for a variant with `ownFind`: Find a filter's field to place, and its results while it has text. */

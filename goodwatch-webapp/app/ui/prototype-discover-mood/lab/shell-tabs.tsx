@@ -10,6 +10,8 @@ import { ANIME_LABELS, TYPE_LABELS, compactCount } from "~/ui/filter-bar/labels"
 import type { ProtoDiscover } from "../kit"
 import { useLabChoice } from "./LabBar"
 import { pick } from "./registry"
+import { YouLists, YouTaste } from "./layout-d"
+import { type SubId, layoutOf } from "./layouts"
 import { type Pieces, type SegKey, type Sub, subCount, useKeepTop } from "./shell-parts"
 import type { SectionId, SectionProps } from "./types"
 
@@ -35,13 +37,15 @@ export function SubTabs({
 	pieces: Pieces
 	subs: Sub[]
 	active: string
-	onSub: (id: SectionId) => void
+	onSub: (id: SubId) => void
 	/** Find a filter is showing results instead. */
 	dim: boolean
 	phone: boolean
 	right?: ReactNode
 }) {
 	const row = useRef<HTMLDivElement>(null)
+	const choice = useLabChoice()
+	const ctx = { L: layoutOf(choice.layout), viewer: choice.as }
 	// Phones: the row scrolls sideways; keep the open sub-tab in view (a status chip can open the last one).
 	useEffect(() => {
 		const el = row.current
@@ -62,7 +66,7 @@ export function SubTabs({
 		>
 			{subs.map((s) => {
 				const on = s.id === active && !dim
-				const n = subCount(d, pieces, s)
+				const n = subCount(d, pieces, s, ctx)
 				return (
 					<button
 						key={s.id}
@@ -237,7 +241,10 @@ function useRowType() {
 
 /** A sub-tab's label: the chosen variant's own label, else the shell's. */
 function SubLabel({ sub }: { sub: Sub }) {
-	return <>{pick(useLabChoice(), sub.id).label ?? sub.label}</>
+	const choice = useLabChoice()
+	// Layout d's own pages keep the layout's labels (Taste, Lists).
+	if (sub.view) return <>{sub.label}</>
+	return <>{pick(choice, sub.id as SectionId).label ?? sub.label}</>
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -245,7 +252,18 @@ function SubLabel({ sub }: { sub: Sub }) {
 
 export type SectionBase = Omit<SectionProps, "phone" | "viewer">
 
-function Section({ id, props }: { id: SectionId; props: Omit<SectionProps, "viewer"> }) {
+const VIEWS = { "you-taste": YouTaste, "you-lists": YouLists }
+
+function Section({ id, view, props }: { id: SubId; view?: Sub["view"]; props: Omit<SectionProps, "viewer"> }) {
+	const choice = useLabChoice()
+	if (view) {
+		const Page = VIEWS[view]
+		return <Page key={`${view}:${choice.as}`} {...props} viewer={choice.as} />
+	}
+	return <RegisteredSection id={id as SectionId} props={props} />
+}
+
+function RegisteredSection({ id, props }: { id: SectionId; props: Omit<SectionProps, "viewer"> }) {
 	const choice = useLabChoice()
 	const variant = pick(choice, id)
 	const View = variant.View as ComponentType<SectionProps>
@@ -282,7 +300,7 @@ export function TabPanel({
 	seg: SegKey
 	subs: Sub[]
 	sub: string
-	onSub: (id: SectionId) => void
+	onSub: (id: SubId) => void
 	pieces: Pieces
 	phone: boolean
 	section: SectionBase
@@ -295,10 +313,10 @@ export function TabPanel({
 	const canFind = seg !== "search"
 	// A variant with ownFind places the field and the results itself (no row of its own here).
 	const choice = useLabChoice()
-	const own = canFind && pick(choice, open.id).ownFind === true
+	const own = canFind && !open.view && pick(choice, open.id as SectionId).ownFind === true
 	const finding = canFind && find.trim() !== ""
 	const rowType = useRowType()
-	const pickSub = (s: SectionId) => {
+	const pickSub = (s: SubId) => {
 		onFind("")
 		onSub(s)
 	}
@@ -318,7 +336,7 @@ export function TabPanel({
 				className={phone ? "" : "h-full min-h-0"}
 				data-lab-section={open.id}
 			>
-				<Section id={open.id} props={props} />
+				<Section id={open.id} view={open.view} props={props} />
 			</motion.div>
 		</AnimatePresence>
 	)

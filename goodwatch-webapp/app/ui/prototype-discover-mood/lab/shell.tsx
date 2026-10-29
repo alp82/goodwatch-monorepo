@@ -4,13 +4,15 @@
 // Scores, Released, Age and content. Each sub-tab's content is the chosen variant of its lab section. The search field
 // stays live in the bar on every tab; typing there from Mood or Watch jumps to Moods and titles, on Search it stays put
 // (sections read the text). Find a filter sits at the right of the sub-tab row on Mood and Watch. Round 11: the
-// panel's footer shows the whole search state (shell-footer.tsx).
+// panel's footer shows the whole search state (shell-footer.tsx). Round 15: the tab structure is a lab choice
+// (layouts.ts): a keeps these three tabs, b-e give You a tab of its own.
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { SnapSheet } from "~/ui/filter-bar"
 import { TAP } from "~/ui/filter-bar/motion"
 import { useLabChoice } from "./LabBar"
+import { type Layout, type SubId, layoutOf, splitsMine } from "./layouts"
 import { pick, pick as variantOf } from "./registry"
 import { ResultsProvider, useShown } from "./results-view"
 import { useMcUsers } from "./sections/scores/mc-users"
@@ -24,7 +26,6 @@ import {
 	PhoneBar,
 	type Pieces,
 	SEG_LABEL,
-	SEG_ORDER,
 	SearchGo,
 	SearchInput,
 	type SegKey,
@@ -33,6 +34,7 @@ import {
 	type Slot,
 	StatusLine,
 	WarmCards,
+	onMine,
 	segValues,
 	subCount,
 	subsFor,
@@ -42,7 +44,7 @@ import {
 	whereIs,
 } from "./shell-parts"
 import { CONTENT_H, type SectionBase, SubTabs, TabPanel } from "./shell-tabs"
-import type { SectionId } from "./types"
+import type { Viewer } from "./types"
 
 export const NAME = "Discover lab"
 
@@ -53,29 +55,40 @@ const MORPH = {
 }
 const MORPH_T = { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const }
 
+/** The main tabs for this choice (round 15), their bar order and what the counts need. */
+function useLayout() {
+	const choice = useLabChoice()
+	const L = layoutOf(choice.layout)
+	return { L, order: L.order(choice.as), ctx: { L, viewer: choice.as } }
+}
+
 /** Which tab is open, the sub-tab each tab is on, and Find a filter's text. */
-function useTabState() {
-	const [seg, setSeg] = useState<SegKey | null>(null)
+function useTabState(d: ProtoDiscover, { L, order, ctx }: { L: Layout; order: SegKey[]; ctx: { viewer: Viewer } }) {
+	const [raw, setSeg] = useState<SegKey | null>(null)
+	// A tab the layout no longer has (the lab bar switched it) counts as closed.
+	const seg = raw && order.includes(raw) ? raw : null
 	const [dir, setDir] = useState(1)
-	const [subs, setSubs] = useState<Record<SegKey, SectionId>>({ search: "titles", mood: "mood", watch: "services" })
+	const [subs, setSubs] = useState<Record<SegKey, SubId>>({ search: "titles", you: "taste", mood: "mood", watch: "services" })
 	const [find, setFind] = useState("")
 	const go = (k: SegKey | null) => {
-		if (k && seg) setDir(SEG_ORDER.indexOf(k) >= SEG_ORDER.indexOf(seg) ? 1 : -1)
+		if (k && seg) setDir(order.indexOf(k) >= order.indexOf(seg) ? 1 : -1)
 		if (k !== seg) setFind("")
 		setSeg(k)
 	}
-	const setSub = (k: SegKey, id: SectionId) => setSubs((s) => ({ ...s, [k]: id }))
+	const setSub = (k: SegKey, id: SubId) => setSubs((s) => ({ ...s, [k]: id }))
+	/** Where a chip's filter lives; layout d's On my services is You's, also as a member's picked list. */
+	const whereFor = (slot: Slot) => whereIs(slot === "services" && splitsMine(L) && onMine(d, ctx.viewer) ? "myServices" : slot, L)
 	const goTo = (slot: Slot) => {
-		const w = whereIs(slot)
+		const w = whereFor(slot)
 		setSub(w.seg, w.sub)
 		go(w.seg)
 	}
 	/** A section's open(seg, sub): a sub that isn't in that tab is ignored. */
 	const openAt = (k: SegKey, sub?: string) => {
-		if (sub && segOf(sub as SectionId) === k) setSub(k, sub as SectionId)
+		if (sub && segOf(sub as SubId, L) === k) setSub(k, sub as SubId)
 		go(k)
 	}
-	return { seg, dir, go, goTo, openAt, subs, setSub, find, setFind }
+	return { seg, dir, go, goTo, whereFor, openAt, subs, setSub, find, setFind }
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -84,8 +97,9 @@ function useTabState() {
 function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces; onOpenChange: (o: boolean) => void }) {
 	useMcUsers() // the bar and badges read the lab-only Metacritic user score
 	useYouExtras() // and You's lab-only choices
-	const values = segValues(d, pieces)
-	const t = useTabState()
+	const lay = useLayout()
+	const values = segValues(d, pieces, lay.ctx)
+	const t = useTabState(d, lay)
 	const { seg } = t
 	const [text, setText] = useState("")
 	const field = useRef<HTMLInputElement>(null)
@@ -133,6 +147,8 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 			<div className="relative mt-5">
 				<SegmentBar
 					id="lab"
+					order={lay.order}
+					flex={lay.L.flex}
 					values={values}
 					active={seg}
 					onPick={pick}
@@ -188,7 +204,7 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 										<TabPanel
 											id="lab-d"
 											seg={seg}
-											subs={subsFor(seg, pieces)}
+											subs={subsFor(seg, pieces, lay.L)}
 											sub={t.subs[seg]}
 											onSub={(id) => t.setSub(seg, id)}
 											pieces={pieces}
@@ -214,11 +230,12 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 // Phones
 
 function Tabs({ d, pieces, seg, onPick }: { d: ProtoDiscover; pieces: Pieces; seg: SegKey; onPick: (k: SegKey) => void }) {
+	const { L, order, ctx } = useLayout()
 	return (
 		<div role="tablist" aria-label="Filters" className="flex gap-0.5 px-2 pt-1 pb-1">
-			{SEG_ORDER.map((k) => {
+			{order.map((k) => {
 				const on = seg === k
-				const n = subsFor(k, pieces).reduce((a, s) => a + subCount(d, pieces, s), 0)
+				const n = subsFor(k, pieces, L).reduce((a, s) => a + subCount(d, pieces, s, ctx), 0)
 				return (
 					<motion.button
 						key={k}
@@ -227,7 +244,8 @@ function Tabs({ d, pieces, seg, onPick }: { d: ProtoDiscover; pieces: Pieces; se
 						aria-selected={on}
 						whileTap={TAP}
 						onClick={() => onPick(k)}
-						className={`relative flex h-10 min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-1.5 text-[14px] font-semibold whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "text-gray-950" : "text-gray-300"}`}
+						data-tab={k}
+						className={`relative flex h-10 min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-1.5 ${order.length > 3 ? "text-[13px]" : "text-[14px]"} font-semibold whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "text-gray-950" : "text-gray-300"}`}
 					>
 						{on && (
 							<motion.span
@@ -254,13 +272,15 @@ function Tabs({ d, pieces, seg, onPick }: { d: ProtoDiscover; pieces: Pieces; se
 function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 	useMcUsers()
 	useYouExtras()
-	const values = segValues(d, pieces)
-	const t = useTabState()
-	const [last, setLast] = useState<SegKey>("mood")
+	const lay = useLayout()
+	const values = segValues(d, pieces, lay.ctx)
+	const t = useTabState(d, lay)
+	const [lastRaw, setLast] = useState<SegKey>("mood")
+	const last = lay.order.includes(lastRaw) ? lastRaw : "mood"
 	const [text, setText] = useState("")
 	const field = useRef<HTMLInputElement>(null)
 	const shown = t.seg ?? last
-	const subs = subsFor(shown, pieces)
+	const subs = subsFor(shown, pieces, lay.L)
 	const sub = t.subs[shown]
 	const openAt = (k: SegKey) => {
 		if (k === "search") setText(d.q ?? "")
@@ -268,7 +288,7 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 		t.go(k)
 	}
 	const goTo = (slot: Slot) => {
-		const w = whereIs(slot)
+		const w = t.whereFor(slot)
 		if (w.seg === "search") setText(d.q ?? "")
 		setLast(w.seg)
 		t.goTo(slot)
@@ -293,7 +313,7 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 	return (
 		<div className="lg:hidden">
 			<div className="mt-3">
-				<PhoneBar values={values} onPick={openAt} onClearSearch={() => d.setQ(null)} />
+				<PhoneBar values={values} order={lay.order} cols={lay.L.phoneCols(lay.ctx.viewer)} onPick={openAt} onClearSearch={() => d.setQ(null)} />
 			</div>
 			<StatusLine d={shownD} pieces={pieces} onOpen={goTo} className="mt-2" />
 			<SnapSheet

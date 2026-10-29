@@ -572,3 +572,34 @@ bottom of these"; on production's Not seen yet switch: "this somehow looks nicer
   share when that is 0), Wishlist and Seen before the list minus the member's simulated 38 / 214; guests none. Muted
   gray when off, blue when on. Guests: lock in place of the icon, faint, no count.
 - f's third column has a 17.5rem floor so "On your wishlist" and its count fit at 1280 px.
+
+## Round 15 (2026-10-29): You as its own main tab
+
+Owner: "please give me another variation where we move You out of the search into its own main tab so that we have 4
+instead 3. few variations".
+
+- New lab choice "Main tabs" (`v-layout`, first in the lab bar's section list; `lab/layouts.ts`). Only the tab
+  structure changes; every panel still renders the chosen section variants. The shell reads the layout for the bar
+  order and widths, the phone bar and sheet tabs, badges, summaries, where a chip opens and the panel slide direction.
+- a: three tabs, You in Search (today, the default, unchanged).
+- b: You beside Search. Search | You | Mood | Watch. You is a peer segment with taste f as one page (no sub-tab row,
+  Find a filter on the row like Mood). Summary "Any match · Not seen yet": the match step leads ("Match 80%+",
+  "Outside your usual", else "Any match"), the other choices follow. Members get the fingerprint, guests a lock and
+  "Sign up" (amber, the segment still opens to f's locked look).
+- c: You at the end. Search | Mood | Watch | You, a narrower end cap (flex 0.85, phones 0.8 of a tile) with the same
+  lead and a shorter summary ("Match 80%+ · Not seen yet +1").
+- d: You hub, Taste and Lists. Search | You | Mood | Watch, You has sub-tabs: Taste (f's groups, match, order) and
+  Lists (Not seen yet, Seen before, On your wishlist, and Your services: On my services as the same pill with the
+  member's logos, their services with counts, All services opens Watch > Services). Watch > Services keeps the full
+  picker; when the choice is On my services (a member's comes in as their explicit list) it counts and shows under
+  You (badge, summary "My services", logos as the lead), and its chips open You > Lists. Watch then says Everywhere.
+- e: You first for members. Members: You | Search | Mood | Watch (You narrow, phones: first tile under Search);
+  guests keep Search first with You as c's locked end cap.
+- In b-e Search keeps Titles · Cast and crew with the sub-tab row and the type/anime control; the thumbs (loved,
+  disliked) count with Titles, so the Search badge and summary hold only search choices and You's only its own.
+  Segment badges are still the sum of their sub-tabs.
+- Phones: Search stays full width; the other three share the row under it. The sheet's four tabs use 13 px labels.
+- "/" opens Search in every layout. Find a filter applies in place (it never jumped); its picks badge the tab that
+  owns them.
+- Script: `~/.cache/ptshot/dm-layouts.mjs` (L=abcde SIZES=1440,390 SHOTS=dir) opens each layout as guest and member,
+  clicks every main tab and sub-tab, checks "/" and counts page errors.

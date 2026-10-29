@@ -5,6 +5,7 @@
 import { BarsArrowDownIcon, CheckIcon, LockClosedIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
+import type { ReactNode } from "react"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { hiddenShort } from "~/ui/filter-bar/controls"
 import { Knob, SHELL, TAP } from "~/ui/filter-bar/motion"
@@ -135,15 +136,18 @@ function MatchRow({ taste, v }: { taste: Taste; v: MatchStep }) {
 }
 
 /** Production's NotSeenSwitch look (size sm): icon, label, what it hides, the switch; amber outline when on. */
-function ListPill({
+export function ListPill({
 	id,
+	icon,
 	label,
 	on,
 	hides,
 	onChange,
 	locked,
 }: {
-	id: "unseen" | "wishlist" | "seen"
+	id: "unseen" | "wishlist" | "seen" | "mine"
+	/** In place of the list's icon (On my services: the member's logos). */
+	icon?: ReactNode
 	label: string
 	on: boolean
 	hides: number | null
@@ -168,7 +172,7 @@ function ListPill({
 				aria-hidden
 				className={`pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-amber-400/70 transition-opacity duration-200 ${lit ? "opacity-100" : "opacity-0"}`}
 			/>
-			{locked ? <LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-amber-500/70" aria-label="With an account" /> : <ScopeIcon id={id} className="h-4 w-4 shrink-0" />}
+			{locked ? <LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-amber-500/70" aria-label="With an account" /> : (icon ?? <ScopeIcon id={id === "mine" ? "all" : id} className="h-4 w-4 shrink-0" />)}
 			<span className="min-w-0 flex-1 truncate text-left">{label}</span>
 			{hides !== null && (
 				<span aria-hidden className={`shrink-0 text-right text-xs tabular-nums transition-colors ${lit ? "text-blue-300/80" : "text-gray-500"}`}>
@@ -180,7 +184,12 @@ function ListPill({
 	)
 }
 
-export function TasteF({ d, phone, viewer }: SectionProps) {
+/** Round 15: layout d's You splits f in two, Taste (groups, match, order) and Lists (layout-d.tsx). */
+export function TasteF(props: SectionProps) {
+	return <TasteFPart {...props} part="all" />
+}
+
+export function TasteFPart({ d, phone, viewer, part }: SectionProps & { part: "all" | "taste" }) {
 	const taste = useTaste(d, viewer)
 	const { member } = taste
 	const locked = !member
@@ -220,42 +229,31 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 			</div>
 		</section>
 	)
+	const order = (
+		<section>
+			<BlockHead locked={locked}>Order</BlockHead>
+			<div className="flex flex-col gap-2">
+				<TasteSwitch
+					label="For you"
+					on={taste.order.forYou}
+					onChange={taste.order.setForYou}
+					locked={locked}
+					icon={<FingerPrintIcon className="h-4 w-4 shrink-0 text-amber-500" aria-hidden />}
+				/>
+				<TasteSwitch
+					label="Best match first"
+					on={taste.order.best}
+					onChange={taste.order.setBest}
+					locked={locked}
+					icon={<BarsArrowDownIcon className="h-4 w-4 shrink-0 text-amber-400" aria-hidden />}
+				/>
+			</div>
+		</section>
+	)
 	const switches = (
 		<div className="flex min-w-0 flex-col gap-5">
-			<section>
-				<BlockHead locked={locked}>Order</BlockHead>
-				<div className="flex flex-col gap-2">
-					<TasteSwitch
-						label="For you"
-						on={taste.order.forYou}
-						onChange={taste.order.setForYou}
-						locked={locked}
-						icon={<FingerPrintIcon className="h-4 w-4 shrink-0 text-amber-500" aria-hidden />}
-					/>
-					<TasteSwitch
-						label="Best match first"
-						on={taste.order.best}
-						onChange={taste.order.setBest}
-						locked={locked}
-						icon={<BarsArrowDownIcon className="h-4 w-4 shrink-0 text-amber-400" aria-hidden />}
-					/>
-				</div>
-			</section>
-			<section>
-				{/* Round 13: several lists at once, all need an account. Round 14: production's Not seen yet pill, wishlist last. */}
-				<BlockHead>Your lists</BlockHead>
-				<div className="flex flex-col gap-2">
-					{(
-						[
-							["unseen", "Not seen yet"],
-							["seen", "Seen before"],
-							["wishlist", "On your wishlist"],
-						] as const
-					).map(([id, label]) => (
-						<ListPill key={id} id={id} label={label} on={taste.list.has(id)} hides={taste.list.hides(id)} onChange={(on) => taste.list.turn(id, on)} locked={locked} />
-					))}
-				</div>
-			</section>
+			{order}
+			{part === "all" && <YourLists taste={taste} locked={locked} />}
 		</div>
 	)
 
@@ -273,5 +271,26 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 			<div className="min-w-0 border-l border-white/[0.06] pl-8">{match}</div>
 			<div className="min-w-0 border-l border-white/[0.06] pl-8">{switches}</div>
 		</div>
+	)
+}
+
+/** Your lists as f shows them; layout d's Lists page reuses them. */
+export function YourLists({ taste, locked }: { taste: Taste; locked: boolean }) {
+	return (
+		<section>
+			{/* Round 13: several lists at once, all need an account. Round 14: production's Not seen yet pill, wishlist last. */}
+			<BlockHead>Your lists</BlockHead>
+			<div className="flex flex-col gap-2">
+				{(
+					[
+						["unseen", "Not seen yet"],
+						["seen", "Seen before"],
+						["wishlist", "On your wishlist"],
+					] as const
+				).map(([id, label]) => (
+					<ListPill key={id} id={id} label={label} on={taste.list.has(id)} hides={taste.list.hides(id)} onChange={(on) => taste.list.turn(id, on)} locked={locked} />
+				))}
+			</div>
+		</section>
 	)
 }
