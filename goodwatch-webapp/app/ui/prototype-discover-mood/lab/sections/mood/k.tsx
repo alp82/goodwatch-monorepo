@@ -1,10 +1,11 @@
 // PROTOTYPE (Discover lab, mood k): two views in one panel, the same recipe line over both. Mixes: e's big cards with
 // AND counts (a ready mix sets its picks and moves you on to Choose). Choose: i's AND columns. Round 13: each column's
 // "all of" / "any of" toggle (and.ts). Round 14: no removal tiles, the cards fill the grid. Round 21: the two views
-// are Mood's sub-tabs in the shell's header row (props.moodView), so the recipe row holds only the picks.
+// are Mood's sub-tabs in the shell's header row (props.moodView). Round 23: no recipe row (the footer chips show the
+// picks), so the cards grid fits without scrolling.
 import { motion } from "framer-motion"
 import type { SectionProps } from "../../types"
-import { AndColumns, MixCards, RecipeRow, useAnd, useCards } from "./andview"
+import { AndColumns, MixCards, useAnd, useCards } from "./andview"
 import { useWorldArt } from "./parts"
 
 export function MoodK({ d, phone, viewer, moodView = "mixes", onMoodView }: SectionProps) {
@@ -34,14 +35,10 @@ export function MoodK({ d, phone, viewer, moodView = "mixes", onMoodView }: Sect
 	)
 	if (phone)
 		return (
-			<div className="flex flex-col gap-4">
-				<RecipeRow d={d} a={a} phone />
-				{body}
-			</div>
+			<div className="flex flex-col gap-4">{body}</div>
 		)
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-3 px-6 py-3">
-			<RecipeRow d={d} a={a} phone={false} />
 			{body}
 		</div>
 	)

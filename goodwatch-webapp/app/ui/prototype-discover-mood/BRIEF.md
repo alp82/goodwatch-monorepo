@@ -856,3 +856,9 @@ and not a title called 1999.
 Rough: value chips show no counts. A value whose sub-tab is hidden (Budget with shows only, Age without a ladder) is
 dropped before the cap. Footer chips carry `data-footer-chips` for the script.
 Script: `~/.cache/ptshot/dm-r22.mjs` (SIZES=1440,390 SHOTS=dir).
+
+## Round 23 (2026-10-29): final
+
+- Mood sub-tabs named Combos | Everything.
+- The recipe row above both Mood views is removed (the footer chips show the picks), so the Combos grid fits without scrolling. The Mood pill in the top bar keeps "Any mood, any genre" as its empty label.
+- Owner: "lock all changes in, ship to main". The prototype is final; production gets a proper build, not this code.
