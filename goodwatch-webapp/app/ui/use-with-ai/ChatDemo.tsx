@@ -250,7 +250,7 @@ function WishlistCard() {
 	)
 }
 
-function UserBubble({ children }: { children: ReactNode }) {
+export function UserBubble({ children }: { children: ReactNode }) {
 	return (
 		<div className="flex justify-end">
 			<p className="max-w-[85%] rounded-2xl rounded-br-md bg-gray-700/80 px-4 py-2 text-sm text-white sm:text-base">
@@ -260,7 +260,7 @@ function UserBubble({ children }: { children: ReactNode }) {
 	)
 }
 
-function ToolLine({ children }: { children: ReactNode }) {
+export function ToolLine({ children }: { children: ReactNode }) {
 	return (
 		<p className="flex items-center gap-1.5 text-xs text-gray-500">
 			<CheckCircleIcon className="h-4 w-4 text-gray-500" aria-hidden="true" />

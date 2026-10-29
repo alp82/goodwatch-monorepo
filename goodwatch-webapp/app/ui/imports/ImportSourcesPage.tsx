@@ -1,7 +1,8 @@
 // The Imports page: the four-step import (Bring → Choose → Import → Done) with its stepper on top. Bring is one wide
-// drop zone that takes any export file and names its source, the accounts to connect, how to get each source's file,
-// and the imports so far. A file, a picked source, a return from connecting TMDB or Plex, or a past import opens that
+// drop zone that takes any export file and names its source, the accounts to connect, the member's AI app for a list
+// from anywhere else, how to get each source's file, and the imports so far. A file, a picked source, a return from connecting TMDB or Plex, or a past import opens that
 // source's flow under the stepper, which reports back where it is.
+import { ArrowRightIcon } from "@heroicons/react/24/outline"
 import { useEffect, useRef, useState } from "react"
 import type { ImdbImportSummary } from "~/domain/imdb-import"
 import type { ImportSummary } from "~/domain/imports"
@@ -35,6 +36,7 @@ import {
 import { SourceImportFlow } from "./SourceImportFlow"
 import { useSourceImports } from "./SourceImportHooks"
 import { SourceMark } from "./SourceMark"
+import { AiImportFlow, AiMark } from "./ai/AiImportFlow"
 import { useImdbImports } from "./api"
 import {
 	describeOutcome,
@@ -96,10 +98,27 @@ export function ImportSourcesPage({
 	>(null)
 	// Set by the member's own act, so the opened source takes focus then and not on arrival.
 	const [acted, setActed] = useState(0)
-	const [where, setWhere] = useState(false)
+	// The "Your AI app" source, open in a source's place.
+	const [ai, setAi] = useState(false)
+	// Counts the member's asks to see where to get a file; each one scrolls there.
+	const [where, setWhere] = useState(0)
+	useEffect(() => {
+		if (!where) return
+		const section = document.getElementById(WHERE_ID)
+		section?.scrollIntoView?.({ block: "start", behavior: "smooth" })
+		section?.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true })
+	}, [where])
 	const [reported, setReported] = useState<ImportStepState | null>(null)
 	const show = (next: Open) => {
+		setAi(false)
 		setOpen(next)
+		setActed((n) => n + 1)
+	}
+	const showAi = () => {
+		setOpen(null)
+		setHandoff(null)
+		files.clear()
+		setAi(true)
 		setActed((n) => n + 1)
 	}
 	const route = (next: ImportHandoff) => {
@@ -116,16 +135,20 @@ export function ImportSourcesPage({
 
 	// Focus moves to the source that opened, so it is announced, and the page scrolls to it.
 	const card = useRef<HTMLElement>(null)
+	const stepper = useRef<HTMLDivElement>(null)
 	useEffect(() => {
 		if (!acted) return
 		card.current?.focus({ preventScroll: true })
-		card.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
+		// The page scrolls up to the stepper when it's out of view, never past it, so the steps stay in sight.
+		const rail = stepper.current
+		if (rail && rail.getBoundingClientRect().top < 0)
+			rail.scrollIntoView?.({ block: "start", behavior: "smooth" })
 	}, [acted])
 
 	const source = open ? sourceEntry(open.id) : null
 	const handed =
 		open && handoff?.recognition.source === open.id ? handoff : undefined
-	const state = open && reported ? reported : AT_BRING
+	const state = (open || ai) && reported ? reported : AT_BRING
 	const atBring = state.step === 1
 	const unknown = files.unknown && (
 		<ProblemCard
@@ -134,13 +157,21 @@ export function ImportSourcesPage({
 			focus
 		>
 			<p>{files.unknown.hint}</p>
+			<p>
+				Your AI app reads any file.{" "}
+				<button type="button" className={textLink} onClick={showAi}>
+					Bring it with your AI app
+				</button>
+			</p>
 			<div>
 				<button
 					type="button"
 					className={textLink}
 					onClick={() => {
+						// The file sources show on Bring only: go back there, then to them.
+						setAi(false)
 						setOpen(null)
-						setWhere(true)
+						setWhere((n) => n + 1)
 					}}
 				>
 					Where do I get my file?
@@ -154,20 +185,31 @@ export function ImportSourcesPage({
 				<ImportStepReport.Provider value={setReported}>
 					<div className="flex flex-col gap-8 md:gap-10">
 						<PageDrop onFile={files.take} />
-						<ImportStepper
-							state={{
-								...state,
-								notes: [
-									state.notes[0] || (source && atBring ? source.name : ""),
-									state.notes[1],
-									state.notes[2],
-									state.notes[3],
-								],
-							}}
-						/>
-						<div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+						<div ref={stepper} className="scroll-mt-20">
+							<ImportStepper
+								state={{
+									...state,
+									notes: [
+										state.notes[0] || (source && atBring ? source.name : ""),
+										state.notes[1],
+										state.notes[2],
+										state.notes[3],
+									],
+								}}
+							/>
+						</div>
+						<div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
 							{unknown}
-							{open && source ? (
+							{ai ? (
+								<section
+									ref={card}
+									tabIndex={-1}
+									aria-label="Your AI app import"
+									className="w-full scroll-mt-20 text-left outline-none"
+								>
+									<AiImportFlow onOther={() => setAi(false)} />
+								</section>
+							) : open && source ? (
 								<section
 									ref={card}
 									tabIndex={-1}
@@ -209,9 +251,11 @@ export function ImportSourcesPage({
 								</section>
 							) : (
 								<>
-									<StartDropZone reading={files.reading} onFile={files.take} />
-									<ConnectRow onConnect={pick} />
-									<WhereToGet open={where} onToggle={setWhere} onPick={pick} />
+									<StartDropZone reading={files.reading} onFile={files.take}>
+										<NoFileCard onOpen={showAi} />
+									</StartDropZone>
+									<ConnectRow onConnect={pick} onAi={showAi} />
+									<WhereToGet onPick={pick} />
 								</>
 							)}
 							{atBring && (
@@ -238,7 +282,8 @@ const CONNECTABLE = IMPORT_SOURCE_LIST.filter((source) => source.connect)
 /** The accounts GoodWatch connects to instead of a file. */
 function ConnectRow({
 	onConnect,
-}: { onConnect: (id: ImportSourceId) => void }) {
+	onAi,
+}: { onConnect: (id: ImportSourceId) => void; onAi: () => void }) {
 	return (
 		<div className="flex flex-col items-center gap-3">
 			<p className="text-sm text-gray-400">Or connect an account</p>
@@ -259,23 +304,65 @@ function ConnectRow({
 						</button>
 					</li>
 				))}
+				<li
+					aria-hidden
+					className="mx-1 hidden w-px self-stretch bg-white/15 sm:block"
+				/>
+				<li>
+					<button type="button" className={secondaryButton} onClick={onAi}>
+						<span className="-my-1 scale-75">
+							<AiMark />
+						</span>
+						Your AI app
+						<span className="sr-only">: bring a list from anywhere</span>
+					</button>
+				</li>
 			</ul>
 		</div>
 	)
 }
 
-/** Every source that gives a file: what it brings, how long the file takes, and its how-to on a tap. */
-function WhereToGet({
-	open,
-	onToggle,
-	onPick,
-}: {
-	open: boolean
-	onToggle: (open: boolean) => void
-	onPick: (id: ImportSourceId) => void
-}) {
+/** Under the drop zone: no export file, so the member's AI app brings the list instead. */
+function NoFileCard({ onOpen }: { onOpen: () => void }) {
 	return (
-		<Disclosure label="Where do I get my file?" open={open} onToggle={onToggle}>
+		<button
+			type="button"
+			onClick={onOpen}
+			className="group mx-auto flex w-full max-w-lg cursor-pointer items-center gap-4 rounded-2xl bg-white/[0.04] px-4 py-3.5 text-left ring-1 ring-white/10 transition-colors hover:bg-white/[0.08] hover:ring-white/20"
+		>
+			<AiMark />
+			<span className="min-w-0 flex-1">
+				<span className="block font-semibold text-white">No export file?</span>
+				<span className="block text-sm text-gray-400">
+					Bring a spreadsheet, a note, a screenshot, or anything else with your
+					AI app
+				</span>
+			</span>
+			<ArrowRightIcon
+				className="size-5 shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5 group-hover:text-white"
+				aria-hidden
+			/>
+		</button>
+	)
+}
+
+const WHERE_ID = "where-to-get"
+
+/** Every source that gives a file: what it brings, how long the file takes, and its how-to on a tap. */
+function WhereToGet({ onPick }: { onPick: (id: ImportSourceId) => void }) {
+	return (
+		<section
+			id={WHERE_ID}
+			aria-labelledby={`${WHERE_ID}-heading`}
+			className="scroll-mt-20 border-t border-white/10 pt-6"
+		>
+			<h2
+				id={`${WHERE_ID}-heading`}
+				tabIndex={-1}
+				className="mb-3 text-lg font-bold text-white outline-none"
+			>
+				Where do I get my file?
+			</h2>
 			<ul className="grid gap-2 sm:grid-cols-2" data-file-sources>
 				{IMPORT_SOURCE_LIST.filter((source) => !source.connect).map(
 					(source) => (
@@ -285,7 +372,7 @@ function WhereToGet({
 					),
 				)}
 			</ul>
-		</Disclosure>
+		</section>
 	)
 }
 

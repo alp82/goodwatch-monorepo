@@ -1,0 +1,371 @@
+{
+  "at": "2026-10-29T02:00:41.298208+00:00",
+  "detectors": [
+    {
+      "id": "01a1827e-5cee-9645-103d-1e0290a7120a",
+      "started_at": "2026-10-29T00:00:00.022379Z",
+      "completed_at": "2026-10-29T00:55:02.944997Z",
+      "success": true,
+      "duration_ms": 3302915,
+      "args": {
+        "mode": "shadow",
+        "max_seconds": 3300
+      },
+      "schedule_path": "f/tmdb_api/provider_detector",
+      "result": {
+        "due": 236730,
+        "mode": "shadow",
+        "fresh": 56429,
+        "failed": 0,
+        "reused": 5055,
+        "deleted": 26,
+        "invalid": 0,
+        "seconds": 3300.062,
+        "observed": 5942,
+        "requests": {
+          "title": 5969,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 5969,
+          "statuses": {
+            "200": 5943,
+            "404": 26
+          },
+          "deleted_responses": 26
+        },
+        "selected": 8630,
+        "published": 0,
+        "registered": 500142,
+        "changed_pairs": {
+          "sweep": 1516,
+          "opened": 207,
+          "popular": 870
+        },
+        "request_p95_ms": 143.91,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a18527-3aef-9ed7-4d99-642b8084223d",
+      "started_at": "2026-10-29T01:00:03.683124Z",
+      "completed_at": "2026-10-29T01:55:06.311253Z",
+      "success": true,
+      "duration_ms": 3302618,
+      "args": {
+        "mode": "shadow",
+        "max_seconds": 3300
+      },
+      "schedule_path": "f/tmdb_api/provider_detector",
+      "result": {
+        "due": 234466,
+        "mode": "shadow",
+        "fresh": 61270,
+        "failed": 0,
+        "reused": 2986,
+        "deleted": 26,
+        "invalid": 0,
+        "seconds": 3300.048,
+        "observed": 6532,
+        "requests": {
+          "title": 6558,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 6558,
+          "statuses": {
+            "200": 6532,
+            "404": 26
+          },
+          "deleted_responses": 26
+        },
+        "selected": 6637,
+        "published": 0,
+        "registered": 501682,
+        "changed_pairs": {
+          "sweep": 6882,
+          "opened": 47,
+          "popular": 79
+        },
+        "request_p95_ms": 158.94,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a1855e-368c-f28e-ed01-0137ffaad4cd",
+      "started_at": "2026-10-29T02:00:00.018795Z",
+      "completed_at": null,
+      "success": null,
+      "duration_ms": null,
+      "args": {
+        "mode": "shadow",
+        "max_seconds": 3300
+      },
+      "schedule_path": "f/tmdb_api/provider_detector",
+      "result": {}
+    }
+  ],
+  "daily_root": {
+    "id": "01a17da9-27c2-c213-30e8-2e680253940f",
+    "started_at": "2026-10-28T14:00:00.025166Z",
+    "completed_at": "2026-10-28T21:30:03.873545Z",
+    "success": true,
+    "duration_ms": 27003848,
+    "flow_status": {
+      "step": 2,
+      "modules": [
+        {
+          "id": "lists",
+          "job": "01a182cf-8346-29a9-ec96-b90c4e54f026",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "report",
+          "job": "01a1846b-8d18-2dcf-c7cb-66e46cb95b39",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  "daily_lists": {
+    "id": "01a182cf-8346-29a9-ec96-b90c4e54f026",
+    "started_at": "2026-10-28T14:00:00.082063Z",
+    "completed_at": "2026-10-28T21:30:03.207657Z",
+    "success": true,
+    "script_hash": "d60a19be1dde3583",
+    "lists_completed": 4169,
+    "lists_failed": 1,
+    "requests": {
+      "title": 25239,
+      "catalog": 1,
+      "refused": 0,
+      "retries": 0,
+      "discover": 147605,
+      "requests": 172845,
+      "statuses": {
+        "200": 172840,
+        "404": 5
+      },
+      "deleted_responses": 5
+    },
+    "offer_refresh": {
+      "failed": 18,
+      "dry_run": false,
+      "seconds": 3927.999018,
+      "timings": {
+        "crate_run": 155.679111,
+        "crate_select": 218.573209,
+        "prepare_wall": 993.904862,
+        "catalog_reads": 6.481695,
+        "crate_run_many": 18.78592,
+        "publication_wall": 2910.496422,
+        "crate_upsert_many": 190.273944,
+        "vector_publication": 268.837515,
+        "tmdb_worker_seconds": 1654.49461,
+        "queue_acknowledgment": 9.127464,
+        "streaming_publication": 2638.845784,
+        "source_read_worker_seconds": 35.536364,
+        "source_write_worker_seconds": 3045.421925
+      },
+      "deferred": 1,
+      "failures": [
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:202214",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:203593",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:210070",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:210802",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:214355",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:217333",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:222066",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:225874",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:226684",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:227926",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:227968",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:23857",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:27457",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:284765",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:286568",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:297278",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:297430",
+          "consecutive_failure_days": 1
+        },
+        {
+          "error": "RefreshDeferred",
+          "reason": "quarantined_or_unpublishable",
+          "identity": "movie:303098",
+          "consecutive_failure_days": 1
+        }
+      ],
+      "selected": 6499,
+      "deferrals": [
+        {
+          "reason": "publication_busy",
+          "identity": "show:121301"
+        }
+      ],
+      "published": 6460,
+      "remaining": 39566,
+      "deferred_reason": "runtime_budget",
+      "max_failure_days": 1,
+      "publication_batches": 332,
+      "seconds_per_published_title": 0.608049
+    },
+    "failures": [
+      {
+        "key": "IT:movie:531",
+        "error": "RuntimeError",
+        "tmdb_id": null,
+        "endpoint": null,
+        "media_type": "movie",
+        "http_status": null,
+        "consecutive_failure_days": 1
+      }
+    ]
+  },
+  "source": {
+    "hash": "22aedc9f6abc6384",
+    "created_at": "2026-10-28T12:51:42.509118Z",
+    "matches_814cedabd": true,
+    "sha256": "b70ef43f3c471cf072131f8e0db5628caa093e696e7b8bd9b053163b9cf1330c"
+  },
+  "schedule": {
+    "workspace_id": "goodwatch",
+    "path": "f/tmdb_api/provider_detector",
+    "edited_by": "Alp",
+    "edited_at": "2026-10-26T08:39:28.408621Z",
+    "schedule": "0 0 0-11 * * *",
+    "timezone": "UTC",
+    "enabled": true,
+    "script_path": "f/tmdb_api/provider_detector",
+    "is_flow": false,
+    "args": {
+      "mode": "shadow",
+      "max_seconds": 3300
+    },
+    "extra_perms": {},
+    "email": "alportac@gmail.com",
+    "permissioned_as": "u/Alp",
+    "ws_error_handler_muted": false,
+    "no_flow_overlap": true,
+    "summary": "Hourly provider detector shadow, 00:00\u201311:00 UTC",
+    "cron_version": "v2",
+    "is_draft": false
+  },
+  "verification": {
+    "q70_pass": true,
+    "q71_timestamp_regression_pass": true,
+    "recorded_target_failures": 0,
+    "unclassified_value_errors": 0,
+    "rollback_performed": false,
+    "access": "Fresh Windmill GETs only; no production mutation in this final verification",
+    "historical_failure_counts": {
+      "2026-10-26": {
+        "ValueError": 163,
+        "RuntimeError": 1,
+        "total": 164
+      },
+      "2026-10-27": {
+        "ValueError": 249,
+        "RuntimeError": 1,
+        "total": 250
+      },
+      "2026-10-28": {
+        "ValueError": 0,
+        "RuntimeError": 1,
+        "total": 1
+      }
+    }
+  }
+}

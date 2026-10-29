@@ -63,6 +63,8 @@ export interface ImportStepState {
 	allDone: boolean
 	/** Going back to Bring from Choose. */
 	back?: () => void
+	/** Opens any earlier step from the stepper; when set, it replaces `back`. */
+	openStep?: (step: ImportStep) => void
 }
 
 /** Set by the Imports page: a flow tells it where it is. Without it (the Taste start), no stepper shows. */
@@ -79,21 +81,24 @@ export function useReportStep(state: ImportStepState) {
 	const report = useContext(ImportStepReport)
 	const back = useRef(state.back)
 	back.current = state.back
-	const key = `${state.step}|${state.notes.join("|")}|${state.allDone}|${!!state.back}`
+	const openStep = useRef(state.openStep)
+	openStep.current = state.openStep
+	const key = `${state.step}|${state.notes.join("|")}|${state.allDone}|${!!state.back}|${!!state.openStep}`
 	// The key holds everything the stepper shows.
 	useClientLayoutEffect(() => {
 		report?.({
 			...state,
 			back: state.back ? () => back.current?.() : undefined,
+			openStep: state.openStep ? (step) => openStep.current?.(step) : undefined,
 		})
 	}, [key, report])
 	useClientLayoutEffect(() => () => report?.(null), [report])
 }
 
 export function ImportStepper({ state }: { state: ImportStepState }) {
-	const { step, allDone, notes, back } = state
+	const { step, allDone, notes, back, openStep } = state
 	return (
-		<nav aria-label="Import steps" className="mx-auto w-full max-w-2xl">
+		<nav aria-label="Import steps" className="mx-auto w-full max-w-4xl">
 			<div className="relative">
 				<div
 					aria-hidden
@@ -109,7 +114,9 @@ export function ImportStepper({ state }: { state: ImportStepState }) {
 						const n = idx + 1
 						const on = step === n
 						const finished = n < step || (n === 4 && step === 4 && allDone)
-						const canOpen = n === 1 && step === 2 && !!back
+						const canOpen = openStep
+							? n < step
+							: n === 1 && step === 2 && !!back
 						return (
 							<li
 								key={label}
@@ -119,7 +126,11 @@ export function ImportStepper({ state }: { state: ImportStepState }) {
 							>
 								<button
 									type="button"
-									onClick={() => canOpen && back?.()}
+									onClick={() => {
+										if (!canOpen) return
+										if (openStep) openStep(n as ImportStep)
+										else back?.()
+									}}
 									disabled={!canOpen}
 									aria-current={on ? "step" : undefined}
 									aria-label={`Step ${n}: ${label}${finished ? ", done" : ""}`}

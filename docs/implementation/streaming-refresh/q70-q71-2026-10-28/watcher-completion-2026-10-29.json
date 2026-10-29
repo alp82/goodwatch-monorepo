@@ -1,0 +1,105 @@
+{
+  "at": "2026-10-29T02:00:17.014577+00:00",
+  "status": "verification_complete",
+  "detector": {
+    "status": "verified",
+    "checked": true,
+    "at": "2026-10-29T02:00:17.014451+00:00",
+    "runs": {
+      "2": {
+        "id": "01a1855e-368c-f28e-ed01-0137ffaad4cd",
+        "started_at": "2026-10-29T02:00:00.018795Z",
+        "completed_at": null,
+        "success": null,
+        "duration_ms": null,
+        "args": {
+          "mode": "shadow",
+          "max_seconds": 3300
+        },
+        "start_delay_seconds": 0.018795,
+        "work_seconds": null,
+        "deferred_reason": null
+      },
+      "1": {
+        "id": "01a18527-3aef-9ed7-4d99-642b8084223d",
+        "started_at": "2026-10-29T01:00:03.683124Z",
+        "completed_at": "2026-10-29T01:55:06.311253Z",
+        "success": true,
+        "duration_ms": 3302618,
+        "args": {
+          "mode": "shadow",
+          "max_seconds": 3300
+        },
+        "start_delay_seconds": 3.683124,
+        "work_seconds": 3300.048,
+        "deferred_reason": "runtime_budget"
+      },
+      "0": {
+        "id": "01a1827e-5cee-9645-103d-1e0290a7120a",
+        "started_at": "2026-10-29T00:00:00.022379Z",
+        "completed_at": "2026-10-29T00:55:02.944997Z",
+        "success": true,
+        "duration_ms": 3302915,
+        "args": {
+          "mode": "shadow",
+          "max_seconds": 3300
+        },
+        "start_delay_seconds": 0.022379,
+        "work_seconds": 3300.062,
+        "deferred_reason": "runtime_budget"
+      }
+    }
+  },
+  "daily_list": {
+    "checked_at": "2026-10-28T21:32:06.640875+00:00",
+    "status": "zero_target_failures_verified",
+    "checked": true,
+    "target_error": "Invalid verified scope or check timestamp",
+    "target_error_count": 0,
+    "unclassified_value_errors": 0,
+    "zero_target_failures_proved": true,
+    "root": {
+      "id": "01a17da9-27c2-c213-30e8-2e680253940f",
+      "started_at": "2026-10-28T14:00:00.025166Z",
+      "completed_at": "2026-10-28T21:30:03.873545Z",
+      "success": true,
+      "duration_ms": 27003848
+    },
+    "lists_job": {
+      "id": "01a182cf-8346-29a9-ec96-b90c4e54f026",
+      "script_hash": "d60a19be1dde3583",
+      "started_at": "2026-10-28T14:00:00.082063Z",
+      "completed_at": "2026-10-28T21:30:03.207657Z",
+      "success": true
+    },
+    "lists_completed": 4169,
+    "lists_failed": 1,
+    "failure_classes": {
+      "RuntimeError": 1
+    },
+    "historical_comparison": {
+      "2026-10-26": {
+        "lists_failed": 164,
+        "ValueError": 163,
+        "RuntimeError": 1
+      },
+      "2026-10-27": {
+        "lists_failed": 250,
+        "ValueError": 249,
+        "RuntimeError": 1
+      }
+    },
+    "failures": [
+      {
+        "key": "IT:movie:531",
+        "error": "RuntimeError",
+        "reason": null,
+        "consecutive_failure_days": 1
+      }
+    ],
+    "deploy_completed_at": "2026-10-28T12:51:47+00:00",
+    "qualifying_run_starts_after_deploy": true,
+    "deployed_source_still_matches": true,
+    "deployed_hash_at_result_readback": "22aedc9f6abc6384"
+  }
+}

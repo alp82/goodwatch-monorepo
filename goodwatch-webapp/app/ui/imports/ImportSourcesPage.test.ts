@@ -50,10 +50,11 @@ test("Bring shows the accounts to connect, then every file source most common fi
 	])
 	assert.equal(runs.list.opened, null)
 	assert.doesNotMatch(runs.list.text, /Simkl|Jellyfin|coming later/i)
-	// The file sources and the history wait in folds until the member opens them.
+	// The file sources are always shown under their own heading; the history waits in a fold.
 	assert.match(runs.list.closed, /Or connect an account/)
-	assert.match(runs.list.closed, /Where do I get my file\?Past imports \(3\)/)
-	assert.doesNotMatch(runs.list.closed, /Right away/)
+	assert.match(runs.list.closed, /Your AI app/)
+	assert.match(runs.list.closed, /No export file\?/)
+	assert.match(runs.list.closed, /Where do I get my file\?.*Letterboxd.*Past imports \(3\)/)
 })
 
 test("the stepper starts on Bring, with nothing ticked", () => {
