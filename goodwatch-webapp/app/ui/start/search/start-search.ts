@@ -30,6 +30,7 @@ import type { DiscoverResults } from "~/server/discover-results.server"
 import { runDiscoverSearch } from "~/ui/discover/discover-search-request"
 import type { GuestBody } from "~/ui/discover/useDiscoverBrowse"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
+import { fixtureOn, fixtureSearch } from "../proto-streamline/fixture"
 import type { TitleKey } from "~/utils/title-key"
 import {
 	IDLE_RESULTS,
@@ -200,6 +201,12 @@ export function createStartSearch({
 		if (kept) return kept
 		stopSearching()
 		const abort = new AbortController()
+		// PROTOTYPE (start-streamline): the offline fixture search while it's installed.
+		if (fixtureOn()) {
+			const promise = fixtureSearch(text)
+			searches.set(text, promise)
+			return promise
+		}
 		const promise: Promise<Searched> = runDiscoverSearch(
 			text,
 			filters,

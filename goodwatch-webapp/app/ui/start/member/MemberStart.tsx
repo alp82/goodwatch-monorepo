@@ -16,6 +16,9 @@ import { useStartSearch } from "../search/useStartSearch"
 import { StartStage } from "../stage/StartStage"
 import { hasQuery } from "../stage/start-query"
 import { useStartQuery } from "../stage/useStartQuery"
+import { useFlow } from "../proto-streamline/ProtoSwitcher"
+import { StreamStage, useDock } from "../proto-streamline/StreamStage"
+import { memberModel } from "../proto-streamline/strip-models"
 import { Doors } from "./Doors"
 import { FirstSteps } from "./FirstSteps"
 import { MemberResults } from "./MemberResults"
@@ -48,6 +51,63 @@ export function MemberStart({
 	const deck = useMemo(() => buildDeck(data), [data])
 	const unread = !data.continue && !data.wishlist && !data.forYou
 	const ownShelf = useMemo(() => memberShelf(data, shelf), [data, shelf])
+	// PROTOTYPE (start-streamline): the streamlined stage unless `?flow=old`.
+	const flow = useFlow()
+	const dock = useDock(flow, hasQuery(start.query))
+	if (flow !== "old") {
+		const card = hasQuery(start.query) ? (
+			<MemberResults
+				query={start.query}
+				results={results}
+				scope={results.scope}
+				onBack={() => {
+					start.clearSearch()
+					start.clearPicks()
+				}}
+				onRetry={results.retry}
+			/>
+		) : deck.length ? (
+			<ThisOrThat deck={deck} />
+		) : unread ? (
+			<Unread />
+		) : (
+			<FirstSteps ratings={data.ratings} />
+		)
+		return (
+			<div className="start-member">
+				<StreamStage
+					flow={flow}
+					dock={dock}
+					light={{ closed: { night: 0.42, camera: 1 }, open: MEMBER_ROOM }}
+					shelf={ownShelf}
+					strip={memberModel({ query: start.query, results, deck, unread })}
+					search={
+						<StartSearchBar
+							query={start.query}
+							results={results}
+							setDraft={start.setDraft}
+							search={start.search}
+							clearSearch={start.clearSearch}
+							onAsk={() => dock.request(true)}
+						/>
+					}
+					moods={
+						<StartMoodPicker
+							query={start.query}
+							results={results}
+							scope={results.scope}
+							setPicks={start.setPicks}
+							clearPicks={start.clearPicks}
+							member
+							onDone={() => dock.request(true)}
+						/>
+					}
+					card={card}
+				/>
+				<Doors data={data} />
+			</div>
+		)
+	}
 	return (
 		<div className="start-member">
 			<StartStage

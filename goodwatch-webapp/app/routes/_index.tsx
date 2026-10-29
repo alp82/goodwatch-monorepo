@@ -31,6 +31,14 @@ import { START_SHEETS } from "~/ui/start/start-sheets"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
+import { ProtoSwitcher, useFlow } from "~/ui/start/proto-streamline/ProtoSwitcher"
+import { StreamStage, useDock } from "~/ui/start/proto-streamline/StreamStage"
+import { installFixture } from "~/ui/start/proto-streamline/fixture"
+import { guestModel } from "~/ui/start/proto-streamline/strip-models"
+import streamlineCss from "~/ui/start/proto-streamline/streamline.css?url"
+
+// PROTOTYPE (start-streamline): the offline harness answers searches from fixtures.
+if (typeof window !== "undefined") installFixture()
 
 export { startPageLoader as loader } from "~/server/start-page/loader.server"
 export { pageHeaders as headers } from "~/utils/headers"
@@ -46,6 +54,7 @@ export const links: LinksFunction = () => [
 		...(assetBase() ? { crossOrigin: "anonymous" as const } : {}),
 	})),
 	{ rel: "preconnect", href: "https://image.tmdb.org" },
+	{ rel: "stylesheet", href: streamlineCss },
 ]
 
 const HOME_URL = "https://goodwatch.app/"
@@ -123,9 +132,24 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 		: defaultShouldRevalidate
 
 export default function Index() {
+	const flow = useFlow()
+	return (
+		<>
+			<ProtoSwitcher />
+			<IndexBody key={flow} />
+		</>
+	)
+}
+
+function IndexBody() {
 	const data = useLoaderData<typeof startPageLoader>()
+	const flow = useFlow()
 	if (!data.member)
-		return <GuestStart titles={data.titles} browse={data.browse} />
+		return flow === "old" ? (
+			<GuestStart titles={data.titles} browse={data.browse} />
+		) : (
+			<StreamGuest titles={data.titles} browse={data.browse} />
+		)
 	return (
 		<MemberStart
 			shelf={data.titles}
@@ -211,6 +235,98 @@ function GuestStart({
 				}
 				grade={<RoomGrade grade={roomGrade(start.query, results)} />}
 				// A guest's opening plays once a session; a member's page has none of it.
+				opening={<OpeningBoot />}
+			/>
+			<OpeningCover />
+			<HowItWorksCorner />
+			<StartBrowse data={browse} />
+		</>
+	)
+}
+
+/** PROTOTYPE (start-streamline): a guest's streamlined start. */
+function StreamGuest({
+	titles,
+	browse,
+}: {
+	titles: StartTitle[]
+	browse: ComponentProps<typeof StartBrowse>["data"]
+}) {
+	const flow = useFlow()
+	const loved = useLovedThree()
+	const start = useStartQuery({ onChoice: loved.onChoice })
+	const results = useStartSearch(start.query)
+	const dock = useDock(flow, hasQuery(start.query))
+	const view = startView(
+		start.query,
+		results,
+		loved.done ? loved.loved.length : Math.min(loved.loved.length, 2),
+	)
+	const picks = loved.picks?.status === "ready" ? loved.picks.pick : null
+	const moods = start.query.picks.length > 0
+	const n = loved.loved.length
+	const light = {
+		closed: { night: 0.42, camera: 1 },
+		open: picks
+			? { night: 0, camera: 1 }
+			: {
+					night: Math.max(0.04, (moods ? 0.14 : 0.2) - 0.05 * n),
+					camera: Math.round((1.035 - 0.012 * n) * 1000) / 1000,
+				},
+	}
+	const shown = view === "results" ? results.cards : null
+	const shelf = useMemo<readonly ShelfTitle[]>(() => {
+		if (picks?.top) return [picks.top, ...picks.more]
+		return shown?.length ? shown : titles
+	}, [picks, shown, titles])
+	const strip = guestModel({
+		query: start.query,
+		results,
+		view,
+		loved: loved.loved,
+		pick: picks ? { top: picks.top, more: picks.more } : null,
+		fan: titles,
+	})
+	if (flow === "old") return null
+	return (
+		<>
+			<StreamStage
+				flow={flow}
+				dock={dock}
+				light={light}
+				shelf={shelf}
+				strip={strip}
+				search={
+					<StartSearchBar
+						query={start.query}
+						results={results}
+						setDraft={start.setDraft}
+						search={start.search}
+						clearSearch={start.clearSearch}
+						onAsk={() => dock.request(true)}
+					/>
+				}
+				moods={
+					<StartMoodPicker
+						query={start.query}
+						results={results}
+						scope={results.scope}
+						setPicks={start.setPicks}
+						clearPicks={start.clearPicks}
+						member={false}
+						onDone={() => dock.request(true)}
+					/>
+				}
+				card={
+					<SpotlightCard
+						start={start}
+						results={results}
+						view={view}
+						loved={loved}
+						fan={titles}
+					/>
+				}
+				grade={<RoomGrade grade={roomGrade(start.query, results)} />}
 				opening={<OpeningBoot />}
 			/>
 			<OpeningCover />
