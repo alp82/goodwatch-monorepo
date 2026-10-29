@@ -50,7 +50,8 @@ export const buildDiscoverParams = async (request: Request) => {
 		url.searchParams.get("withStreamingTypes") || "free,flatrate"
 	const similarTitles = url.searchParams.get("similarTitles") || ""
 	const fingerprintPillars = url.searchParams.get("fingerprintPillars") || ""
-	const fingerprintPillarMinTier = url.searchParams.get("fingerprintPillarMinTier") || ""
+	const fingerprintPillarMinTier =
+		url.searchParams.get("fingerprintPillarMinTier") || ""
 	const fingerprintConditions =
 		url.searchParams.get("fingerprintConditions") || ""
 	const suitabilityFilters = url.searchParams.get("suitabilityFilters") || ""
@@ -60,10 +61,9 @@ export const buildDiscoverParams = async (request: Request) => {
 	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as
 		| "asc"
 		| "desc"
-	const page = Math.max(
-		1,
-		Number.parseInt(url.searchParams.get("page") || "1", 10),
-	)
+	const requestedPage =
+		Number.parseInt(url.searchParams.get("page") || "1", 10) || 1
+	const page = Number.isFinite(requestedPage) ? Math.max(1, requestedPage) : 1
 
 	return {
 		userId,

@@ -29,12 +29,12 @@ import {
 	getTitleSnapshot,
 } from "~/server/title-snapshot/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
+import { DISCOVER_MAX_PAGE } from "~/utils/constants"
 import type { TitleKey } from "~/utils/title-key"
 
 export { SnapshotNotLoaded } from "~/server/title-filter/index.server"
 
 export const DISCOVER_PAGE_SIZE = 40
-export const DISCOVER_MAX_PAGE = 250
 const LEANINGS = 3
 // For you works for guests from this many guest ratings (owner, #193); the match itself needs 5 liked titles.
 export const GUEST_FOR_YOU_RATINGS = 5

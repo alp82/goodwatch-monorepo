@@ -1,3 +1,4 @@
+import { DISCOVER_MAX_PAGE } from "~/utils/constants"
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { presentCatalogLoader } from "~/server/media-payload.server"
@@ -11,7 +12,6 @@ import { z } from "zod"
 import { SEARCH_RESULTS } from "~/domain/discover-search"
 import { filterStateFromParams, sortFromParams } from "~/domain/filter-state"
 import {
-	DISCOVER_MAX_PAGE,
 	type DiscoverResults,
 	SnapshotNotLoaded,
 	discoverFilterDefaults,
