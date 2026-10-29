@@ -49,6 +49,20 @@ function Mark({ mark }: { mark: AreaTab["mark"] }) {
 	return null
 }
 
+/** The sky badge of something new behind a tab, as the new-episodes mark elsewhere. */
+function News({ news }: { news: AreaTab["news"] }) {
+	if (!news) return null
+	return (
+		<span
+			data-new-episodes
+			className="flex h-[18px] min-w-[18px] items-center justify-center self-center rounded-full bg-sky-400 px-1.5 text-[11px] font-black tabular-nums leading-none text-black"
+		>
+			<span aria-hidden>{news.badge}</span>
+			<span className="sr-only">{news.label}</span>
+		</span>
+	)
+}
+
 /** One tab: one line, or two (label and a smaller line under it) when it has `sub`. The amber underline marks it current. */
 export function TabLink({ tab }: { tab: AreaTab }) {
 	const n = tab.count != null && (
@@ -76,6 +90,7 @@ export function TabLink({ tab }: { tab: AreaTab }) {
 					</b>
 					{n}
 					<Mark mark={tab.mark} />
+					<News news={tab.news} />
 				</span>
 				<span
 					className={`text-[11px] leading-4 font-medium lg:text-xs ${tab.here ? "text-amber-200/80" : "text-gray-500"}`}
@@ -98,6 +113,7 @@ export function TabLink({ tab }: { tab: AreaTab }) {
 			{tab.label}
 			{n}
 			<Mark mark={tab.mark} />
+			<News news={tab.news} />
 		</Link>
 	)
 }

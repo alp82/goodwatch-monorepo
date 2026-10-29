@@ -106,6 +106,23 @@ test("Last watched puts the latest dated watch first and the titles without a da
 	])
 })
 
+test("Last watched orders the undated watches by their latest activity, after the dated ones", () => {
+	const undated = (day: string) => ({ ...state("seen", null), lastActivityAt: at(day) })
+	const data = {
+		wishlist: {},
+		scores: {},
+		watchState: {
+			"show-1": undated("2026-01-01"),
+			"show-2": undated("2026-09-01"),
+			"movie-3": state("seen", at("2025-05-05")),
+		},
+	}
+	assert.deepEqual(
+		libraryOrder(data, { status: "seen", sort: "last", kind: "all", q: "" }).keys,
+		["movie-3", "show-2", "show-1"],
+	)
+})
+
 test("My score puts the highest score first and the titles without a score last, each by last watched", () => {
 	assert.deepEqual(order({ sort: "score" }).keys, [
 		"movie-11",

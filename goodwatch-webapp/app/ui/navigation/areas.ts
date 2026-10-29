@@ -136,6 +136,8 @@ export interface AreaTab {
 	count?: number
 	/** The owner's mark on a narrowed part: only you see it, or members only. */
 	mark?: "me" | "members"
+	/** Something new behind the tab (Up next: shows with a new episode): the sky badge and what a screen reader hears. */
+	news?: { badge: string; label: string }
 }
 
 /** One chip, or one side of a switch: the same shape. */

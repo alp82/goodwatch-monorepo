@@ -25,13 +25,10 @@ export function MyMoviesPage({
 	const movies = useMemo(
 		() => ({
 			...MOVIES_PAGE,
-			head: (data: WatchNext | null) => (
-				<>
-					{MOVIES_PAGE.head(data)}
-					<div className={WRAP}>
-						<LandedRow landed={landed} parts={parts} className="mb-4" />
-					</div>
-				</>
+			head: () => (
+				<div className={WRAP}>
+					<LandedRow landed={landed} parts={parts} className="mb-4" />
+				</div>
 			),
 		}),
 		[landed, parts],

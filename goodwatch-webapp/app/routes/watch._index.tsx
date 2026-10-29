@@ -1,5 +1,5 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
-// My shows (#385): a member's shows for tonight. A guest has no watch state: their page is the Wishlist's shows to
+// Watch › Up next › Next episodes (/watch, once My shows, #385): a member's shows for tonight. A guest has no watch state: their page is the Wishlist's shows to
 // start, read from their browser, under a sign-up card for tracking (ui/my-shows/GuestMyShows.tsx).
 import {
 	type LoaderFunctionArgs,
@@ -22,7 +22,7 @@ import { getUserIdFromRequest } from "~/utils/auth"
 export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction = () => [
-	{ title: "My shows | GoodWatch" },
+	{ title: "Up next | GoodWatch" },
 	{
 		name: "description",
 		content:

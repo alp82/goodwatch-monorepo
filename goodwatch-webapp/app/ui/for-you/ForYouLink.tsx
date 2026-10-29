@@ -3,8 +3,9 @@
 import { ArrowRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
+import { FOR_YOU_PATH } from "~/domain/member-paths"
 
-export const FOR_YOU_PATH = "/for-you"
+export { FOR_YOU_PATH }
 
 /** The For you page, optionally opening on a recipe (a library id, or `side-N` for one of the person's taste groups). */
 export const forYouHref = (recipe?: string) =>

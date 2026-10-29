@@ -9,8 +9,8 @@
 // `reset=1` starts the sample member over, `chrome=off` hides the harness's own controls. The library's own
 // parameters (`status`, `sort`, `type`, `q`) work as on /my-library.
 // The member `new` (#442) opened My shows five days ago: shows have returned since and others are waiting. The site's
-// header, dock and hub are mounted a second time for the member, over the ones a guest sees, so that the signal on
-// them can be looked at; `hub=open` starts with the hub open.
+// header and dock are mounted a second time for the member, over the ones a guest sees, so that the signal on
+// them can be looked at; `menu=open` starts with the account menu open.
 // `landed=movie|show|several|episode|old|gone` (#456, #489) puts titles of the member on their services, 1 to 15 days
 // ago, for any member: the signal counts them until the page is opened, and for 14 days My movies and My shows list
 // and mark them and the TV's Tonight leads with them (ui/prototype-my-library/setup.ts).
@@ -37,13 +37,12 @@ import { MyLibraryPage } from "~/ui/my-library/MyLibraryPage"
 import { MyMoviesPage } from "~/ui/my-movies/MyMoviesPage"
 import { MyShowsPage } from "~/ui/my-shows/MyShowsPage"
 import {
-	HubDialog,
+	AccountMenuHost,
 	MobileDock,
 	NavigationProvider,
 	SiteHeader,
 } from "~/ui/navigation"
 import { useNavigation } from "~/ui/navigation/NavigationContext"
-import { TonightsPickThumb } from "~/ui/navigation/bits"
 import {
 	HARNESS_MEMBER,
 	LANDED,
@@ -216,37 +215,30 @@ function Chrome({ page }: { page: PageKey }) {
 				The pages are the app's own; the member and the catalog are made up and
 				live in the dev server. Showing {PAGE_NAME[page]}.
 			</span>
-			{/* The site's header and dock above see a guest. This is Tonight's pick as the member's would show it. */}
-			<span
-				data-harness-pick
-				className="flex items-center gap-2 rounded-xl bg-gray-950 pr-3 ring-1 ring-fuchsia-400/60"
-			>
-				<TonightsPickThumb />
-			</span>
 		</div>
 	)
 }
 
-/** Opens the member's hub once, for a screenshot of it. */
-function OpenHub() {
-	const { setHubOpen } = useNavigation()
-	useEffect(() => setHubOpen(true), [setHubOpen])
+/** Opens the member's account menu once, for a screenshot of it. */
+function OpenMenu() {
+	const { setAccountOpen } = useNavigation()
+	useEffect(() => setAccountOpen(true), [setAccountOpen])
 	return null
 }
 
 /**
- * The site's header, dock and hub as the member sees them, over the ones the page's own shell draws for a guest.
- * They have a navigation state of their own, so the member's hub opens from the member's keys only.
+ * The site's header, dock and account menu as the member sees them, over the ones the page's own shell draws for a
+ * guest. They have a navigation state of their own, so the member's menu opens from the member's keys only.
  */
-function MemberNavigation({ hub }: { hub: boolean }) {
+function MemberNavigation({ menu }: { menu: boolean }) {
 	return (
 		<NavigationProvider>
-			{/* Above the shell's own header and dock, below the hub's dialog. */}
+			{/* Above the shell's own header and dock, below the account menu's sheet. */}
 			<div data-harness-navigation className="relative z-[1001]">
 				<SiteHeader />
 				<MobileDock />
-				<HubDialog />
-				{hub && <OpenHub />}
+				<AccountMenuHost />
+				{menu && <OpenMenu />}
 			</div>
 		</NavigationProvider>
 	)
@@ -278,7 +270,7 @@ export default function MyLibraryHarness() {
 	)
 	const chrome = params.get("chrome") !== "off" && <Chrome page={loaded.page} />
 	const navigation = ready === setup && (
-		<MemberNavigation hub={params.get("hub") === "open"} />
+		<MemberNavigation menu={params.get("menu") === "open"} />
 	)
 	if (ready !== setup)
 		return <p className="p-8 text-gray-400">Starting the harness.</p>

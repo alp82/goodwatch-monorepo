@@ -115,18 +115,15 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		[member, handle, signUp],
 	)
 	const rows = useMemo(() => {
-		const here = currentDestination(pathname)
+		const here = currentDestination(pathname, handle)
 		const pickOn = pick?.href
-			? currentDestination(pick.href.split("#")[0])
+			? currentDestination(pick.href.split("#")[0], handle)
 			: null
 		const pageRow = (page: PalettePage, typed: boolean): Row => {
 			const isHere = page.destination
 				? here === page.destination
 				: page.href === pathname
-			const upNext =
-				pick &&
-				page.destination &&
-				(page.destination === pickOn || page.destination === "watchNext")
+			const upNext = pick && page.destination && page.destination === pickOn
 			return {
 				key: `go-${page.key}`,
 				label: page.cta || page.action ? page.label : `Go to ${page.label}`,
@@ -183,7 +180,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 			})
 		for (const page of placed.afterTitles) result.push(pageRow(page, true))
 		return result
-	}, [pathname, trimmed, titles, more, pick, member, pages])
+	}, [pathname, trimmed, titles, more, pick, member, pages, handle])
 
 	const at = Math.min(active, rows.length - 1)
 	const optionId = (index: number) => `${id}-option-${index}`

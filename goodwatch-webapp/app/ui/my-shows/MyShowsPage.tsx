@@ -41,9 +41,6 @@ import { LandedRow, NewOnWords } from "~/ui/my-pages/LandedRow"
 import {
 	DISPLAY,
 	Empty,
-	MY_LIBRARY,
-	MY_MOVIES,
-	PageHead,
 	Poster,
 	WRAP,
 	plural,
@@ -586,26 +583,7 @@ export function MyShowsPage({
 	const quiet = data.onHold.length + data.dropped.length
 	return (
 		<div className="overflow-x-clip pb-24" data-my-shows>
-			<PageHead
-				name="My shows"
-				line={[
-					data.continue.length
-						? `${data.continue.length} to continue`
-						: data.pickUp.length
-							? null
-							: "Nothing in progress",
-					data.pickUp.length ? `${data.pickUp.length} to pick up` : null,
-					`${data.start.length} to start`,
-				]
-					.filter(Boolean)
-					.join(" · ")}
-				links={[
-					{ label: "My movies", to: MY_MOVIES },
-					// On phones the head keeps one row; My library is in the browse menu there.
-					{ label: "My library", to: MY_LIBRARY, fromSm: true },
-				]}
-			/>
-			<div className={`${WRAP} flex flex-col gap-10 pt-2`}>
+			<div className={`${WRAP} flex flex-col gap-10`}>
 				{notice}
 				<section data-section="tonight">
 					<h2 className={`${DISPLAY} mb-4 text-2xl text-white md:text-3xl`}>

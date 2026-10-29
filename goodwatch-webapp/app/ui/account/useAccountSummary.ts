@@ -1,12 +1,12 @@
-// The signed-in member's handle and profile picture for the account menu, and their library counts. The session
-// only knows the sign-in provider's photo; the picture chosen in Edit profile comes from /api/account-summary.
+// The signed-in member's handle and profile picture for the navigation and the account menu, and the counts the
+// navigation shows. The session only knows the sign-in provider's photo; the picture chosen in Edit profile comes from
+// /api/account-summary, which the root loader prefetches for members.
 import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import { libraryCounts } from "~/domain/my-library"
 import type { AvatarColor } from "~/domain/profile"
 import { useUserData } from "~/routes/api.user-data"
 import { useUser } from "~/utils/auth"
-import type { AccountCounts } from "./links"
 import { providerPhoto } from "./provider-photo"
 
 export interface AccountSummary {
@@ -17,6 +17,12 @@ export interface AccountSummary {
 }
 
 export const queryKeyAccountSummary = ["account-summary"] as const
+
+/** The counts the navigation shows: titles seen but not rated yet (on Taste), and Not interested (in the menu). */
+export interface AccountCounts {
+	unrated: number
+	notInterested: number
+}
 
 export function useAccountSummary() {
 	const { user } = useUser()
@@ -41,11 +47,9 @@ export function useAccountCounts(): AccountCounts | null {
 	const { data } = useUserData()
 	return useMemo(() => {
 		if (!data) return null
-		const counts = libraryCounts(data)
 		return {
-			wishlist: counts.want,
-			seen: counts.seen,
-			scores: Object.keys(data.scores).length,
+			unrated: libraryCounts(data).unrated,
+			notInterested: Object.keys(data.notInterested ?? {}).length,
 		}
 	}, [data])
 }

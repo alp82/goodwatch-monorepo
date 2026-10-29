@@ -1,50 +1,23 @@
-// Where the site navigation goes, and which destination the current page belongs to. The hub sheet, the desktop
-// Browse panel, the dock's hub key, the Browse button, and the search palette all read from here.
-import {
-	BookmarkIcon,
-	CalendarDaysIcon,
-	FilmIcon,
-	FireIcon,
-	FingerPrintIcon,
-	HomeIcon,
-	MagnifyingGlassIcon,
-	MapIcon,
-	PlayIcon,
-	SparklesIcon,
-	TvIcon,
-} from "@heroicons/react/24/solid"
-import type { ComponentType, SVGProps } from "react"
+// Where a search goes, and which of the site's main places the current page is: the command palette reads this for
+// "You're here" and for the line that says what is up next. The areas and their tabs live in ./areas.ts.
+import { watchPlaceOf } from "./areas.ts"
 
 export type DestinationKey =
 	| "home"
-	| "watchNext"
+	// Watch's three tabs: Up next (shows), Ready to watch (movies), Recommendations (For you).
+	| "upNext"
+	| "ready"
+	| "forYou"
+	// Explore's places.
 	| "discover"
-	| "taste"
-	| "explorer"
+	| "new"
+	| "hot"
 	| "movies"
 	| "shows"
-	// The buzz ranking and what is said about it (routes/hot-on-socials.tsx).
-	| "hot"
-	// A member's pages (#385). They take Watch next's tile in the hub.
-	| "myShows"
-	| "myMovies"
-	| "myLibrary"
-	// Recommendations steered by the person's taste (routes/for-you.tsx). Not the For you switch on Discover.
-	| "forYou"
-	// What arrived on a member's own services in the last 14 days (routes/new._index.tsx, #489).
-	| "new"
-
-export interface Destination {
-	key: DestinationKey
-	/** The name on tiles and in the Browse button. */
-	label: string
-	/** The shorter name under the hub key. */
-	short: string
-	/** The name in the Browse button and the dock while on the page, when `label` is too long for one line there. */
-	here?: string
-	href: string
-	icon: ComponentType<SVGProps<SVGSVGElement>>
-}
+	| "people"
+	| "explorer"
+	// The viewer's own Taste: their profile, or /taste without a handle.
+	| "taste"
 
 /** Where a search for a query goes: Discover's search mode (`/search` redirects there too). */
 export function searchHref(q: string): string {
@@ -52,125 +25,36 @@ export function searchHref(q: string): string {
 	return text ? `/discover?q=${encodeURIComponent(text)}` : "/discover"
 }
 
-export function getDestinations(): Record<DestinationKey, Destination> {
-	return {
-		home: {
-			key: "home",
-			label: "Home",
-			short: "Home",
-			href: "/",
-			icon: HomeIcon,
-		},
-		watchNext: {
-			key: "watchNext",
-			label: "Watch next",
-			short: "Watch",
-			href: "/watch-next",
-			icon: PlayIcon,
-		},
-		discover: {
-			key: "discover",
-			label: "Discover",
-			short: "Discover",
-			href: "/discover",
-			icon: MagnifyingGlassIcon,
-		},
-		taste: {
-			key: "taste",
-			label: "Taste",
-			short: "Taste",
-			href: "/taste",
-			icon: FingerPrintIcon,
-		},
-		explorer: {
-			key: "explorer",
-			label: "Explorer",
-			short: "Explorer",
-			href: "/explorer",
-			icon: MapIcon,
-		},
-		movies: {
-			key: "movies",
-			label: "Movies",
-			short: "Movies",
-			href: "/movies",
-			icon: FilmIcon,
-		},
-		shows: {
-			key: "shows",
-			label: "Shows",
-			short: "Shows",
-			href: "/shows",
-			icon: TvIcon,
-		},
-		hot: {
-			key: "hot",
-			label: "Hot",
-			short: "Hot",
-			href: "/hot-on-socials",
-			icon: FireIcon,
-		},
-		myShows: {
-			key: "myShows",
-			label: "My shows",
-			short: "My shows",
-			href: "/my-shows",
-			icon: TvIcon,
-		},
-		myMovies: {
-			key: "myMovies",
-			label: "My movies",
-			short: "My movies",
-			href: "/my-movies",
-			icon: FilmIcon,
-		},
-		myLibrary: {
-			key: "myLibrary",
-			label: "My library",
-			short: "Library",
-			href: "/my-library",
-			icon: BookmarkIcon,
-		},
-		forYou: {
-			key: "forYou",
-			label: "For you",
-			short: "For you",
-			href: "/for-you",
-			icon: SparklesIcon,
-		},
-		new: {
-			key: "new",
-			label: "New on your services",
-			short: "New",
-			// As the Browse menu's Explore key names it.
-			here: "New arrivals",
-			href: "/new",
-			icon: CalendarDaysIcon,
-		},
-	}
-}
+const under = (pathname: string, prefix: string) =>
+	pathname === prefix || pathname.startsWith(`${prefix}/`)
 
 const PREFIXES: [string, DestinationKey][] = [
-	["/my-shows", "myShows"],
-	["/my-movies", "myMovies"],
-	["/my-library", "myLibrary"],
-	["/for-you", "forYou"],
-	["/watch-next", "watchNext"],
-	["/wishlist", "watchNext"],
 	["/discover", "discover"],
-	["/taste", "taste"],
-	["/explorer", "explorer"],
+	["/hot-on-socials", "hot"],
 	["/movies", "movies"],
 	["/shows", "shows"],
-	["/hot-on-socials", "hot"],
+	["/people", "people"],
+	["/explorer", "explorer"],
+	["/taste", "taste"],
 ]
 
-/** The destination the page at `pathname` belongs to; null for pages outside them (title pages, settings, …). */
-export function currentDestination(pathname: string): DestinationKey | null {
+/**
+ * The main place the page at `pathname` is; null for pages outside them (title pages, settings, someone else's
+ * profile). `handle`: the viewer's own, whose profile is their Taste.
+ */
+export function currentDestination(
+	pathname: string,
+	handle: string | null = null,
+): DestinationKey | null {
 	if (pathname === "/") return "home"
-	// Only the member's own page: /new/us/netflix and /new/us are public pages for a country, outside the destinations.
+	const watch = watchPlaceOf(pathname)?.tab
+	if (watch === "up-next") return "upNext"
+	if (watch === "ready") return "ready"
+	if (watch === "for-you") return "forYou"
+	// Only the member's own page: /new/us/netflix and /new/us are public pages for a country.
 	if (pathname === "/new") return "new"
-	for (const [prefix, key] of PREFIXES)
-		if (pathname === prefix || pathname.startsWith(`${prefix}/`)) return key
+	if (handle && under(pathname.toLowerCase(), `/u/${handle.toLowerCase()}`))
+		return "taste"
+	for (const [prefix, key] of PREFIXES) if (under(pathname, prefix)) return key
 	return null
 }

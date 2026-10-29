@@ -9,6 +9,7 @@ import {
 	AdjustmentsHorizontalIcon,
 	ArrowDownTrayIcon,
 	ArrowRightEndOnRectangleIcon,
+	ArrowUpTrayIcon,
 	BookmarkIcon,
 	CalendarDaysIcon,
 	ChartBarIcon,
@@ -53,7 +54,18 @@ import {
 	XCircleIcon,
 } from "@heroicons/react/24/solid"
 import type { ComponentType, SVGProps } from "react"
-import { LIBRARY_HUB, SCORES_PAGE, statusPage } from "~/domain/my-library"
+import {
+	EXPORT_PATH,
+	GUEST,
+	NOT_INTERESTED_PATH,
+	type PathViewer,
+	WATCH_PATHS,
+	member as memberViewer,
+	ratePath,
+	tasteHome,
+	tastePath,
+	tasteTabFor,
+} from "~/domain/member-paths"
 import { CONNECTED_APPS_PATH } from "~/ui/connector/connector"
 import { DISCORD_BOT_PATH } from "~/ui/discord-bot/links"
 import type { PageData } from "~/ui/explore/config"
@@ -63,13 +75,12 @@ import {
 	ACCOUNT_PATH,
 	COUNTRY_PATH,
 	DISCOVER_PRIVACY_PATH,
-	HIDDEN_PATH,
 	PROFILE_PATH,
 	SERVICES_PATH,
 	SETTINGS_PATH,
 	TITLE_LANGUAGE_PATH,
 } from "~/ui/settings/paths"
-import { myListsPath, newListPath, profilePath } from "~/ui/share-card/links"
+import { myListsPath, newListPath } from "~/ui/share-card/links"
 import type { DestinationKey } from "./destinations"
 
 type Icon = ComponentType<SVGProps<SVGSVGElement>>
@@ -118,19 +129,24 @@ const page = (
 	more: PageInput = {},
 ): PalettePage => ({ key, label, href, icon, ...more })
 
-const LIBRARY = "My library"
+const WATCH = "Watch"
+const TASTE = "Taste"
 const PROFILE = "Your profile"
 const SETTINGS = "Settings"
 const DISCOVER = "Discover"
 const GOODWATCH = "GoodWatch"
 const LEGAL = "Legal"
 
+/** The viewer as the address map reads it. */
+const pathViewer = ({ member, handle }: PaletteViewer): PathViewer =>
+	member ? memberViewer(handle) : GUEST
+
 /** A profile tab: only once the member has a handle, since the profile lives at it. */
 const profileTab =
-	(tab: string, label: string, icon: Icon, words: string[]) =>
+	(tab: "stats" | "tropes", label: string, icon: Icon, words: string[]) =>
 	({ member, handle }: PaletteViewer): PalettePage | null =>
 		member && handle
-			? page(`profile-${tab}`, label, `${profilePath(handle)}/${tab}`, icon, {
+			? page(`profile-${tab}`, label, tastePath(handle, tab), icon, {
 					sub: PROFILE,
 					words,
 				})
@@ -226,14 +242,10 @@ const PAGES: Entry[] = [
 		destination: "home",
 		words: ["start", "front page", "landing"],
 	}),
-	page("watchNext", "Watch next", "/watch-next", PlayIcon, {
-		destination: "watchNext",
-		for: "visitor",
-		words: ["tonight", "pick", "wishlist", "up next"],
-	}),
-	page("myShows", "My shows", "/my-shows", TvIcon, {
-		destination: "myShows",
-		for: "member",
+	// Watch's three tabs. Guests have them too: their pages fill from the browser.
+	page("myShows", "My shows", WATCH_PATHS.nextEpisodes, TvIcon, {
+		destination: "upNext",
+		names: ["up next", "watch"],
 		words: [
 			"tv",
 			"series",
@@ -241,16 +253,16 @@ const PAGES: Entry[] = [
 			"episodes",
 			"tracking",
 			"continue",
-			"up next",
+			"next episodes",
 			"watch next",
 		],
 	}),
-	page("myMovies", "My movies", "/my-movies", FilmIcon, {
-		destination: "myMovies",
-		for: "member",
+	page("myMovies", "My movies", WATCH_PATHS.tonight, FilmIcon, {
+		destination: "ready",
+		names: ["ready to watch"],
 		words: ["films", "watch next", "want to see", "tonight", "pick"],
 	}),
-	page("forYou", "For you", "/for-you", SparklesIcon, {
+	page("forYou", "For you", WATCH_PATHS.forYou, SparklesIcon, {
 		destination: "forYou",
 		words: [
 			"recommendations",
@@ -264,16 +276,12 @@ const PAGES: Entry[] = [
 		destination: "discover",
 		words: ["search", "filter", "browse", "find"],
 	}),
-	page("taste", "Taste", "/taste", FingerPrintIcon, {
-		destination: "taste",
-		words: [
-			"viewer type",
-			"fingerprint",
-			"preferences",
-			"dna",
-			"taste profile",
-		],
-	}),
+	(viewer) =>
+		page("taste", "Taste", tasteHome(pathViewer(viewer)), FingerPrintIcon, {
+			destination: "taste",
+			names: ["taste profile"],
+			words: ["viewer type", "fingerprint", "preferences", "dna"],
+		}),
 	page("explorer", "Explorer", "/explorer", MapIcon, {
 		destination: "explorer",
 		words: ["map", "related", "similar", "graph"],
@@ -326,95 +334,112 @@ const PAGES: Entry[] = [
 	}),
 
 	// Taste.
-	page("tasteQuiz", "Rate titles", "/taste/quiz", FingerPrintIcon, {
-		sub: "Taste",
-		words: ["quiz", "taste quiz", "start", "onboarding"],
-	}),
-	page(
-		"tasteFingerprint",
-		"What pulls you",
-		"/taste#fingerprint",
-		FingerPrintIcon,
-		{
-			sub: "Taste",
-			for: "member",
-			words: ["fingerprint", "taste fingerprint"],
-		},
-	),
-	page(
-		"tasteEveryone",
-		"Your taste vs everyone",
-		"/taste#everyone",
-		UserGroupIcon,
-		{
-			sub: "Taste",
-			for: "member",
-			names: ["vs everyone"],
-			words: ["compare", "crowd", "everyone"],
-		},
-	),
+	(viewer) =>
+		page(
+			"tasteQuiz",
+			"Rate titles",
+			ratePath(pathViewer(viewer)),
+			FingerPrintIcon,
+			{
+				sub: TASTE,
+				names: ["rate more"],
+				words: ["quiz", "taste quiz", "start", "onboarding"],
+			},
+		),
+	(viewer) =>
+		page(
+			"tasteFingerprint",
+			"What pulls you",
+			`${tasteHome(pathViewer(viewer))}#fingerprint`,
+			FingerPrintIcon,
+			{
+				sub: TASTE,
+				for: "member",
+				words: ["fingerprint", "taste fingerprint"],
+			},
+		),
+	(viewer) =>
+		page(
+			"tasteEveryone",
+			"Your taste vs everyone",
+			`${tasteHome(pathViewer(viewer))}#everyone`,
+			UserGroupIcon,
+			{
+				sub: TASTE,
+				for: "member",
+				names: ["vs everyone"],
+				words: ["compare", "crowd", "everyone"],
+			},
+		),
+	(viewer) =>
+		page(
+			"myScores",
+			"My scores",
+			tasteTabFor(pathViewer(viewer), "scores"),
+			StarIcon,
+			{
+				sub: TASTE,
+				for: "member",
+				names: ["scores", "scored"],
+				words: ["ratings", "rated", "rescore"],
+			},
+		),
+	(viewer) =>
+		page(
+			"notRated",
+			"Not rated",
+			tasteTabFor(pathViewer(viewer), "not-rated"),
+			QuestionMarkCircleIcon,
+			{
+				sub: TASTE,
+				for: "member",
+				names: ["unrated"],
+				words: ["rate", "no score"],
+			},
+		),
 
-	// My library: the member's marked titles.
-	page("myLibrary", "My library", LIBRARY_HUB, BookmarkIcon, {
-		destination: "myLibrary",
+	// Watch's lists: the member's marked titles.
+	page("wishlist", "Wishlist", WATCH_PATHS.wishlist, BookmarkIcon, {
+		sub: WATCH,
 		for: "member",
-		words: ["library", "collection", "saved", "marked"],
+		names: ["want to see", "whole wishlist"],
+		words: ["watchlist", "watch later", "saved", "bookmarks", "my library"],
 	}),
-	page("wishlist", "Wishlist", statusPage({ status: "want" }), BookmarkIcon, {
-		sub: LIBRARY,
+	page("recent", "Recently added", WATCH_PATHS.recent, BookmarkIcon, {
+		sub: WATCH,
 		for: "member",
-		names: ["want to see"],
-		words: ["watchlist", "watch later", "saved", "bookmarks"],
+		words: ["new on my wishlist", "latest", "added"],
 	}),
-	page("seen", "Seen", statusPage({ status: "seen" }), EyeIcon, {
-		sub: LIBRARY,
+	page("seenMovies", "Seen movies", WATCH_PATHS.moviesSeen, EyeIcon, {
+		sub: WATCH,
 		for: "member",
-		words: ["watched", "history", "already seen"],
+		names: ["seen"],
+		words: ["watched", "history", "already seen", "films"],
 	}),
-	page("myScores", "My scores", SCORES_PAGE, StarIcon, {
-		sub: LIBRARY,
+	page("seenShows", "Seen shows", WATCH_PATHS.showsSeen, EyeIcon, {
+		sub: WATCH,
 		for: "member",
-		names: ["scores"],
-		words: ["ratings", "rated", "rescore"],
+		words: ["watched", "history", "finished", "series"],
 	}),
-	page("watching", "Watching", statusPage({ status: "watching" }), PlayIcon, {
-		sub: LIBRARY,
+	page("notStarted", "Not started", WATCH_PATHS.notStarted, TvIcon, {
+		sub: WATCH,
+		for: "member",
+		words: ["shows to start", "want to see", "start"],
+	}),
+	page("watching", "Watching", WATCH_PATHS.watching, PlayIcon, {
+		sub: WATCH,
 		for: "member",
 		words: ["in progress", "started", "currently watching"],
 	}),
-	page(
-		"onHold",
-		"On hold",
-		statusPage({ status: "on_hold" }),
-		PauseCircleIcon,
-		{
-			sub: LIBRARY,
-			for: "member",
-			words: ["paused"],
-		},
-	),
-	page("dropped", "Dropped", statusPage({ status: "dropped" }), XCircleIcon, {
-		sub: LIBRARY,
+	page("onHold", "On hold", WATCH_PATHS.onHold, PauseCircleIcon, {
+		sub: WATCH,
+		for: "member",
+		words: ["paused"],
+	}),
+	page("dropped", "Dropped", WATCH_PATHS.dropped, XCircleIcon, {
+		sub: WATCH,
 		for: "member",
 		words: ["abandoned", "stopped", "gave up"],
-	}),
-	page(
-		"notRated",
-		"Not rated",
-		statusPage({ status: "unrated" }),
-		QuestionMarkCircleIcon,
-		{
-			sub: LIBRARY,
-			for: "member",
-			names: ["unrated"],
-			words: ["rate", "no score"],
-		},
-	),
-	page("hidden", "Hidden titles", HIDDEN_PATH, EyeSlashIcon, {
-		sub: LIBRARY,
-		for: "member",
-		names: ["not interested"],
-		words: ["hidden", "blocked", "hide"],
 	}),
 
 	// Lists.
@@ -430,14 +455,20 @@ const PAGES: Entry[] = [
 		words: ["new list", "share", "list", "favorites"],
 	}),
 
-	// The member's public profile.
+	// The member's public profile: their Taste, as visitors see it.
 	({ member, handle }) =>
 		member
 			? handle
-				? page("profile", "Your profile", profilePath(handle), UserCircleIcon, {
-						names: ["profile"],
-						words: ["public profile", "me", "my page", handle],
-					})
+				? page(
+						"profile",
+						"Your profile",
+						tastePath(handle, "profile", { as: "visitor" }),
+						UserCircleIcon,
+						{
+							names: ["profile", "view as visitor"],
+							words: ["public profile", "me", "my page", handle],
+						},
+					)
 				: page("profile", "Your profile", PROFILE_PATH, UserCircleIcon, {
 						sub: "Pick a handle first",
 						names: ["profile"],
@@ -451,17 +482,6 @@ const PAGES: Entry[] = [
 		"charts",
 	]),
 	profileTab("tropes", "Tropes", TagIcon, ["tv tropes", "patterns", "themes"]),
-	profileTab("wishlist", "Profile wishlist", BookmarkIcon, [
-		"public wishlist",
-		"want to see",
-	]),
-	profileTab("seen", "Profile seen", EyeIcon, ["public seen", "watched"]),
-	profileTab("scores", "Profile scores", StarIcon, [
-		"public scores",
-		"ratings",
-	]),
-	profileTab("shows", "Profile shows", TvIcon, ["public shows", "series"]),
-	profileTab("lists", "Profile lists", ListBulletIcon, ["public lists"]),
 
 	// Settings: members only (the layout sends visitors to sign in).
 	page("settings", "Settings", SETTINGS_PATH, Cog6ToothIcon, {
@@ -540,6 +560,17 @@ const PAGES: Entry[] = [
 			"sync",
 			"bring",
 		],
+	}),
+	page("notInterested", "Not interested", NOT_INTERESTED_PATH, EyeSlashIcon, {
+		sub: SETTINGS,
+		for: "member",
+		names: ["hidden titles"],
+		words: ["hidden", "blocked", "hide"],
+	}),
+	page("export", "Export", EXPORT_PATH, ArrowUpTrayIcon, {
+		sub: SETTINGS,
+		for: "member",
+		words: ["download", "backup", "my data", "csv"],
 	}),
 	page("connectedApps", "Connected apps", CONNECTED_APPS_PATH, LinkIcon, {
 		sub: SETTINGS,
@@ -704,11 +735,11 @@ export const ESSENTIALS: Record<"member" | "visitor", string[]> = {
 		"new",
 		"discover",
 		"taste",
-		"myLibrary",
+		"wishlist",
 		"settings",
 	],
 	visitor: [
-		"watchNext",
+		"myMovies",
 		"forYou",
 		"discover",
 		"hot",

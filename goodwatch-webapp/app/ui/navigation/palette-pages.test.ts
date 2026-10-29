@@ -53,22 +53,26 @@ test("the pages named in the brief are all reachable by a member", () => {
 		palettePages(member).map((p) => p.href.split(/[?#]/)[0]),
 	)
 	for (const path of [
-		"/for-you",
-		"/taste",
-		"/taste/quiz",
+		"/watch",
+		"/watch/not-started",
+		"/watch/watching",
+		"/watch/on-hold",
+		"/watch/dropped",
+		"/watch/seen",
+		"/watch/movies",
+		"/watch/movies/wishlist",
+		"/watch/movies/recent",
+		"/watch/movies/seen",
+		"/watch/for-you",
+		"/u/ana",
 		"/u/ana/stats",
 		"/u/ana/tropes",
-		"/u/ana",
-		"/my-library",
-		"/my-library/want",
-		"/my-library/seen",
-		"/my-library/scores",
-		"/my-library/hidden",
-		"/my-library/watching",
-		"/my-library/on-hold",
-		"/my-library/dropped",
-		"/my-library/not-rated",
+		"/u/ana/scores",
+		"/u/ana/scores/not-rated",
+		"/u/ana/scores/rate",
 		"/settings",
+		"/settings/not-interested",
+		"/settings/export",
 		"/settings/country",
 		"/settings/services",
 		"/settings/language",
@@ -95,6 +99,31 @@ test("the pages named in the brief are all reachable by a member", () => {
 		assert.ok(hrefs.has(path), path)
 })
 
+test("a member without a handle gets /taste for Taste and /taste/quiz for rating", () => {
+	const hrefs = new Map(
+		palettePages(memberWithoutHandle).map((p) => [p.key, p.href]),
+	)
+	assert.equal(hrefs.get("taste"), "/taste")
+	assert.equal(hrefs.get("tasteQuiz"), "/taste/quiz")
+	assert.equal(hrefs.get("myScores"), "/taste")
+	assert.equal(hrefs.get("tasteFingerprint"), "/taste#fingerprint")
+	const visitorHrefs = new Map(
+		palettePages(visitor).map((p) => [p.key, p.href]),
+	)
+	assert.equal(visitorHrefs.get("taste"), "/taste")
+	assert.equal(visitorHrefs.get("tasteQuiz"), "/taste/quiz")
+})
+
+test("no page links to an address the new navigation retired", () => {
+	for (const viewer of [member, memberWithoutHandle, visitor])
+		for (const p of palettePages(viewer))
+			assert.doesNotMatch(
+				p.href,
+				/^\/(my-shows|my-movies|my-library|for-you|watch-next|wishlist)(\/|$|\?)/,
+				p.key,
+			)
+})
+
 test("every settings page in the routes has a palette page", () => {
 	const routes = readdirSync(new URL("../../routes/", import.meta.url))
 		.filter((f) => /^settings\.[a-z-]+\.tsx$/.test(f))
@@ -107,18 +136,19 @@ test("members and visitors see their own pages", () => {
 	const memberKeys = new Set(keysOf(palettePages(member)))
 	const visitorKeys = new Set(keysOf(palettePages(visitor)))
 	for (const key of [
-		"myShows",
-		"myMovies",
-		"myLibrary",
+		"wishlist",
+		"myScores",
 		"settings",
 		"imports",
 		"profile",
 		"profile-stats",
 	])
 		assert.ok(memberKeys.has(key) && !visitorKeys.has(key), key)
-	for (const key of ["watchNext", "signUp", "signIn"])
+	for (const key of ["signUp", "signIn"])
 		assert.ok(visitorKeys.has(key) && !memberKeys.has(key), key)
 	for (const key of [
+		"myShows",
+		"myMovies",
 		"forYou",
 		"discover",
 		"about",
@@ -181,7 +211,8 @@ test("typing a page's name finds it first", () => {
 	assert.deepEqual(top(member, "settings"), ["settings"])
 	assert.deepEqual(top(member, "Taste"), ["taste"])
 	assert.deepEqual(top(member, "for you"), ["forYou"])
-	assert.deepEqual(top(member, "my library"), ["myLibrary"])
+	assert.deepEqual(top(member, "up next"), ["myShows"])
+	assert.deepEqual(top(member, "not interested"), ["notInterested"])
 	assert.deepEqual(top(visitor, "about"), ["about"])
 	assert.deepEqual(top(member, "feedback"), ["feedback"])
 	assert.deepEqual(top(member, "discord"), ["discordBot"])
@@ -192,7 +223,7 @@ test("settings finds the settings page first and every settings page after it", 
 	const matches = matchPages(palettePages(member), "settings")
 	assert.equal(matches[0].page.key, "settings")
 	const subs = matches.slice(1).filter((m) => m.page.sub === "Settings")
-	assert.equal(subs.length, 8)
+	assert.equal(subs.length, 10)
 	assert.ok(subs.every((m) => m.score === SCORE.section))
 })
 

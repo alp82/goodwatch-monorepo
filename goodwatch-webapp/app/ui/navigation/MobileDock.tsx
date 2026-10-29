@@ -1,76 +1,69 @@
-// The phone dock (below the large breakpoint): the current page on the left, the raised round G key in the middle,
-// and "Go to…" on the right. The whole bar is one button that opens the hub. For two pages after a person left the
-// living room through its TV, the TV button stands in the left part instead (a key of its own, over the bar). A page's filter strip renders its complete dock through DockStrip; the G key then shrinks and drops into the row. The dock's height is published as
+// The phone dock (below the large breakpoint): the three area keys (Watch · Explore · Taste) in one track, and the
+// avatar outside it, which opens the account menu as a bottom sheet (Sign in for guests). For two pages after a person
+// left the living room through its TV, the TV button shows in a row above the keys. A page's filter strip renders its
+// complete dock through DockStrip; the strip then sits above the keys. The dock's height is published as
 // --nav-dock-height so full-screen pages such as Explorer can keep clear of it.
-import { ChevronUpIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
-import { useLocation } from "@remix-run/react"
+import { Link } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef } from "react"
+import { DockAccountKey, DockSignIn } from "~/ui/account/AccountKey"
 import { TvBackDockKey, useTvWayBack } from "~/ui/living-room/TvWayBackHost"
+import { useUser } from "~/utils/auth"
 import { useNavigation } from "./NavigationContext"
-import { GoodWatchMark, NewEpisodesMark } from "./bits"
-import { currentDestination, getDestinations } from "./destinations"
-import { useOpenerSignal } from "./useWhatsNew"
+import { useAreaKeys } from "./SiteHeader"
+import { NewEpisodesMark } from "./bits"
 
-const HUB_LABEL = "Browse GoodWatch"
+const count = (n: number) => n.toLocaleString("en-US")
 
-function DockButton({
-	docked,
-	leftFree,
-}: { docked: boolean; leftFree: boolean }) {
-	const navigation = useNavigation()
-	const { pathname } = useLocation()
-	const destinations = getDestinations()
-	const here = currentDestination(pathname)
-	const page = here ? destinations[here] : null
-	const Icon = page?.icon ?? Squares2X2Icon
-	const open = navigation.hubOpen
-	// My shows and My movies are tiles inside the hub, so the key that opens the hub says that something is new there.
-	const fresh = useOpenerSignal()
-	const label = `${leftFree ? "" : `${page ? (page.here ?? page.label) : "Browse"}. `}Go to… ${HUB_LABEL}${page ? `, you're on ${page.label}` : ""}`
+function DockKeys() {
+	const areas = useAreaKeys()
+	const { user, loading } = useUser()
 	return (
-		<button
-			type="button"
-			onClick={() => navigation.setHubOpen(!open)}
-			data-hub-key
-			aria-expanded={open}
-			aria-controls={open ? "site-hub" : undefined}
-			aria-haspopup="dialog"
-			aria-label={fresh ? `${label}. ${fresh.door}` : label}
-			className="grid h-[72px] w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 text-left"
-		>
-			{/* The page's name gives its place to the TV button, which is laid over it (see MobileDock). */}
-			<span
-				aria-hidden
-				className={`flex min-w-0 items-center gap-2 justify-self-start ${leftFree ? "invisible" : ""}`}
-			>
-				<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.08] text-amber-400">
-					<Icon className="h-5 w-5" />
-				</span>
-				<b className="truncate text-[14px] text-gray-100">
-					{page ? (page.here ?? page.label) : "Browse"}{" "}
-				</b>
-			</span>
-			<span
-				aria-hidden
-				className={`relative flex items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#4b5563,#111827_70%)] transition-transform duration-200 motion-reduce:transition-none ${
-					docked ? "h-14 w-14" : "-mt-[26px] h-16 w-16"
-				} ${
-					open
-						? "scale-94 shadow-[0_0_0_2px_#fbbf24,0_0_0_6px_rgba(3,7,18,0.94),0_0_30px_rgba(245,158,11,0.4)]"
-						: "shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_0_0_6px_rgba(3,7,18,0.94),0_12px_30px_-6px_rgba(0,0,0,0.9)]"
-				}`}
-			>
-				<GoodWatchMark size={docked ? 26 : 30} />
-				<NewEpisodesMark words={fresh} className="absolute top-0 right-0" />
-			</span>
-			<span
-				aria-hidden
-				className={`flex h-11 items-center gap-1.5 justify-self-end rounded-full pr-3 pl-4 text-[13.5px] font-bold ${open ? "bg-amber-500/20 text-amber-200" : "bg-white/[0.08] text-gray-100"}`}
-			>
-				Go to…
-				<ChevronUpIcon className="h-4 w-4" />
-			</span>
-		</button>
+		<div className="flex h-[76px] items-center gap-2 px-2">
+			<div className="grid h-[62px] flex-1 grid-cols-3 gap-0.5 rounded-[22px] bg-white/[0.04] p-1 ring-1 ring-white/[0.07]">
+				{areas.map((a) => {
+					const Icon = a.on ? a.iconOn : a.icon
+					return (
+						<Link
+							key={a.key}
+							to={a.href}
+							prefetch="intent"
+							data-area-key={a.key}
+							aria-current={a.on ? "true" : undefined}
+							className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${
+								a.on
+									? "bg-amber-500/15 text-amber-200"
+									: "text-gray-400 active:bg-white/[0.06]"
+							}`}
+						>
+							<span className="relative">
+								<Icon
+									className={`h-[22px] w-[22px] ${a.on ? "text-amber-300" : ""}`}
+									aria-hidden
+								/>
+								{a.badge && (
+									<span className="absolute -top-1.5 -right-3.5 rounded-full bg-amber-400 px-1 text-[10px] leading-4 font-black tabular-nums text-black">
+										{count(a.badge.n)}
+										<span className="sr-only"> {a.badge.label}</span>
+									</span>
+								)}
+								<NewEpisodesMark
+									words={a.fresh ?? null}
+									className="absolute -top-2 -right-3.5"
+								/>
+							</span>
+							<span className="truncate">{a.label}</span>
+						</Link>
+					)
+				})}
+			</div>
+			{loading ? (
+				<span className="h-[62px] w-[68px] shrink-0" />
+			) : user ? (
+				<DockAccountKey />
+			) : (
+				<DockSignIn />
+			)}
+		</div>
 	)
 }
 
@@ -107,7 +100,7 @@ export function MobileDock({ strip }: { strip?: ReactNode } = {}) {
 				<div
 					aria-hidden
 					className="lg:hidden"
-					style={{ height: "var(--nav-dock-height, 72px)" }}
+					style={{ height: "var(--nav-dock-height, 76px)" }}
 				/>
 			)}
 			<div
@@ -115,12 +108,12 @@ export function MobileDock({ strip }: { strip?: ReactNode } = {}) {
 				data-mobile-dock
 				data-mobile-dock-strip={docked || undefined}
 				data-mobile-dock-standalone={!docked || undefined}
-				className={`fixed inset-x-0 bottom-0 z-50 rounded-t-3xl pb-[env(safe-area-inset-bottom)] text-gray-100 shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.08)] lg:hidden ${
-					quiet ? "bg-gray-950" : "bg-gray-950/94 backdrop-blur-xl"
-				}`}
+				className={`fixed inset-x-0 bottom-0 z-50 pb-[env(safe-area-inset-bottom)] text-gray-100 shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.08)] lg:hidden ${
+					docked ? "rounded-t-3xl" : ""
+				} ${quiet ? "bg-gray-950" : "bg-gray-950/94 backdrop-blur-xl"}`}
 			>
 				{docked && (
-					<div className="flex items-end gap-1.5 px-2.5 pt-2.5 pb-2">
+					<div className="flex items-end gap-1.5 px-2.5 pt-2.5 pb-1">
 						{strip}
 					</div>
 				)}
@@ -131,13 +124,12 @@ export function MobileDock({ strip }: { strip?: ReactNode } = {}) {
 					}`}
 					{...(quiet && { inert: "" })}
 				>
-					<DockButton docked={docked} leftFree={Boolean(wayBack)} />
 					{wayBack && (
-						// From the dock's edge to just short of the round key.
-						<div className="absolute top-1/2 left-3 flex max-w-[calc(50%-52px)] -translate-y-1/2">
+						<div className="flex px-3 pt-2">
 							<TvBackDockKey wayBack={wayBack} />
 						</div>
 					)}
+					<DockKeys />
 				</nav>
 			</div>
 		</>
@@ -146,7 +138,7 @@ export function MobileDock({ strip }: { strip?: ReactNode } = {}) {
 
 /**
  * Asks the phone dock to step back while `active`: its keys fade out (opacity only), can't be focused or pressed, and
- * the dock turns opaque, so nothing of it (the raised G key above all) shows past a page's own sheets or bars laid
+ * the dock turns opaque, so nothing of it shows past a page's own sheets or bars laid
  * over it. Several callers count up and down, like DockStrip; the dock is back once none is active.
  */
 export function useQuietDock(active: boolean) {

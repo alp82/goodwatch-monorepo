@@ -20,6 +20,8 @@ import { startProcessStats } from "~/server/process-stats.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getUserData } from "~/server/userData.server"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
+import { getAccountSummary } from "~/server/account/summary.server"
+import { queryKeyAccountSummary } from "~/ui/account/useAccountSummary"
 import { AuthProvider } from "~/ui/auth/AuthProvider"
 import { createAuthCookieMatcher, hasSupabaseCookie } from "~/utils/auth-cookie"
 import type {
@@ -51,16 +53,9 @@ import React from "react"
 import { ToastContainer } from "react-toastify"
 import { useDehydratedState } from "use-dehydrated-state"
 
-import Footer from "~/ui/footer/Footer"
 import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
 import { LazyTv } from "~/ui/tv-egg/LazyTv"
-import {
-	HubDialog,
-	MobileDock,
-	NavigationProvider,
-	SearchDialog,
-	SiteHeader,
-} from "~/ui/navigation"
+import { SiteChrome } from "~/ui/navigation"
 import { LocaleContext } from "~/utils/locale"
 import { clearLoaderCache } from "~/navigation/instant-navigation"
 import { assetBase, assetUrl } from "~/utils/asset-url"
@@ -163,10 +158,25 @@ export const loader: LoaderFunction = withRequestTiming(async ({
 	const betterAuth = process.env.BETTER_AUTH_ENABLED === "true"
 	const queryClient = new QueryClient()
 	if (user) {
-		await queryClient.prefetchQuery({
-			queryKey: getQueryKeyUserData(user.id),
-			queryFn: () => getUserData({ user_id: user.id }),
-		})
+		const photo = user.user_metadata?.avatar_url
+		await Promise.all([
+			queryClient.prefetchQuery({
+				queryKey: getQueryKeyUserData(user.id),
+				queryFn: () => getUserData({ user_id: user.id }),
+			}),
+			// The handle and picture of the navigation's avatar and Taste key, so the first paint has them. A failed
+			// read leaves the query out, and the browser asks /api/account-summary instead.
+			queryClient.prefetchQuery({
+				queryKey: [...queryKeyAccountSummary, user.id],
+				queryFn: () =>
+					getAccountSummary(
+						user.id,
+						typeof photo === "string" && photo.startsWith("https://")
+							? photo
+							: null,
+					),
+			}),
+		])
 	}
 	return json<LoaderData>(
 		{
@@ -216,7 +226,7 @@ function useBoundaryRoot(rootData: LoaderData | undefined): BoundaryRoot {
 	return rootData ?? fallback
 }
 
-// The error page draws the site's navigation and the account slot like any page, from the root loader's data.
+// The error page draws the site's chrome (SiteChrome) like any page, from the root loader's data.
 export function ErrorBoundary() {
 	// TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
 	const error = useRouteError()
@@ -248,26 +258,23 @@ export function ErrorBoundary() {
 	)
 
 	const page = (
-		<NavigationProvider>
-			<SiteHeader />
-			<main className="relative mt-16 flex grow flex-col justify-center">
-				{/* The little living room: CH 404 for a missing page, a test card for a failure. */}
-				<LazyTv
-					page={notFound ? "not-found" : "error"}
-					heading={notFound ? "Page not found" : "Something went wrong"}
-					path={location.pathname}
-					plain={<ErrorPage status={status} />}
-				/>
-				{/* A development build also shows what went wrong. */}
-				{detail && <ErrorPage status={status} detail={detail} />}
-			</main>
-			<Footer />
-			<MobileDock />
-			<HubDialog />
-			<SearchDialog />
+		<>
+			<SiteChrome mainClassName="relative mt-16 flex grow flex-col">
+				<div className="flex grow flex-col justify-center">
+					{/* The little living room: CH 404 for a missing page, a test card for a failure. */}
+					<LazyTv
+						page={notFound ? "not-found" : "error"}
+						heading={notFound ? "Page not found" : "Something went wrong"}
+						path={location.pathname}
+						plain={<ErrorPage status={status} />}
+					/>
+					{/* A development build also shows what went wrong. */}
+					{detail && <ErrorPage status={status} detail={detail} />}
+				</div>
+			</SiteChrome>
 			{/* Send feedback only: an error page has no parts to fix. */}
 			<FeedbackTab sendOnly />
-		</NavigationProvider>
+		</>
 	)
 
 	return (

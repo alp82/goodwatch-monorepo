@@ -1,160 +1,46 @@
-// The account menu's contents. Desktop: who you are on top (your profile, or picking a handle), then Library, You
-// and App as labeled groups, Sign out last. Phones (the header's panel): the same order in
-// less height: the six places as a two-column grid, Settings and Sign out side by side, the rest as one line.
+// The account menu's contents, built from PLACES (ui/navigation/areas.ts), so its rows match the Settings column one
+// to one. Desktop: two columns. On the left, who you are (your profile, View as visitor, Share profile, Edit profile)
+// and Your data; on the right, Settings, Use GoodWatch elsewhere and Help, with Sign out at the bottom. Phones: the
+// same groups in one column, with taller rows.
 import {
 	ArrowRightStartOnRectangleIcon,
-	LinkIcon,
+	EyeIcon,
+	ShareIcon,
 } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
-import { type ReactNode, useState } from "react"
+import { type MouseEvent, type ReactNode, useState } from "react"
+import { tasteHome, tastePath, member } from "~/domain/member-paths"
 import { useSignOut } from "~/ui/auth/useSignOut"
-import { PROFILE_PATH } from "~/ui/settings/paths"
+import { openFeedback } from "~/ui/feedback/FeedbackTab"
+import {
+	EDIT_PROFILE,
+	PLACES,
+	type Place,
+	type PlaceGroup,
+} from "~/ui/navigation/areas"
 import { profilePath } from "~/ui/share-card/links"
 import { AccountAvatar } from "./AccountAvatar"
-import {
-	APP_PLACES,
-	type AccountPlace,
-	LIBRARY_PLACES,
-	SETTINGS_PLACE,
-	YOU_PLACES,
-} from "./links"
 import { useAccountCounts, useAccountSummary } from "./useAccountSummary"
 
 const count = (n: number) => n.toLocaleString("en-US")
 
-function CopyLink({
-	handle,
-	iconOnly = false,
-	className = "",
-}: { handle: string; iconOnly?: boolean; className?: string }) {
-	const [done, setDone] = useState(false)
-	return (
-		<button
-			type="button"
-			data-copy-link
-			onClick={() => {
-				navigator.clipboard
-					?.writeText(`${window.location.origin}${profilePath(handle)}`)
-					.catch(() => {})
-				setDone(true)
-				setTimeout(() => setDone(false), 1500)
-			}}
-			className={`relative z-10 flex shrink-0 items-center justify-center gap-1.5 rounded-full text-gray-300 active:bg-white/10 ring-1 ring-white/10 hover:bg-white/[0.06] hover:text-white ${className}`}
-			aria-label={
-				iconOnly
-					? done
-						? "Profile link copied"
-						: "Copy profile link"
-					: undefined
-			}
-			title="Copy profile link"
-		>
-			<LinkIcon className="h-4 w-4" aria-hidden />
-			{!iconOnly && (
-				<span className="text-xs font-semibold">
-					{done ? "Copied" : "Copy link"}
-				</span>
-			)}
-			{iconOnly && done && (
-				<span className="text-xs font-semibold">Copied</span>
-			)}
-		</button>
-	)
-}
-
-/** Who you are: your picture and @handle with your profile, or the way to pick a handle. */
-function Identity({
-	close,
-	compact,
-}: { close: () => void; compact?: boolean }) {
-	const me = useAccountSummary()
-	const avatar = (
-		<AccountAvatar
-			url={me.avatarUrl}
-			color={me.color}
-			initial={me.initial}
-			size={compact ? 40 : 44}
-		/>
-	)
-	if (!me.handle)
-		return (
-			<Link
-				to={PROFILE_PATH}
-				onClick={close}
-				className={`flex items-center gap-3 hover:bg-white/[0.04] ${compact ? "p-3" : "px-4 pt-4 pb-3"}`}
-			>
-				{avatar}
-				<span className="min-w-0">
-					{me.email && (
-						<span data-feedback-private className="block truncate text-sm text-gray-400">
-							{me.email}
-						</span>
-					)}
-					<span className="block font-bold text-amber-400">
-						{me.loaded ? "Pick a handle to get your profile" : "Your profile"}
-					</span>
-				</span>
-			</Link>
-		)
-	// The whole section opens the profile: the profile link stretches over it, and Copy link sits on top. The section
-	// lights up on hover and press, except while the pointer is on Copy link, which has its own state.
-	return (
-		<div
-			className={`group relative transition-colors hover:bg-white/[0.04] active:bg-white/[0.07] has-[[data-copy-link]:hover]:bg-transparent has-[[data-copy-link]:active]:bg-transparent ${compact ? "flex items-center gap-3 p-3" : "px-4 pt-4 pb-3"}`}
-		>
-			<div className="flex min-w-0 grow items-center gap-3">
-				{avatar}
-				<div className="min-w-0">
-					<p className="truncate font-bold text-white">@{me.handle}</p>
-					{me.email && (
-						<p data-feedback-private className="truncate text-sm text-gray-400">{me.email}</p>
-					)}
-				</div>
-			</div>
-			<div
-				className={
-					compact
-						? "flex shrink-0 items-center gap-2"
-						: "mt-3 flex items-center gap-2"
-				}
-			>
-				<Link
-					to={profilePath(me.handle)}
-					onClick={close}
-					className={`flex h-10 items-center justify-center rounded-full bg-white/[0.06] px-4 text-sm font-bold text-white ring-1 ring-white/10 group-hover:bg-white/10 group-has-[[data-copy-link]:hover]:bg-white/[0.06] after:absolute after:inset-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-amber-400 ${compact ? "" : "grow"}`}
-				>
-					{compact ? "Profile" : "View profile"}
-				</Link>
-				<CopyLink
-					handle={me.handle}
-					iconOnly={compact}
-					className={compact ? "h-10 w-10" : "h-10 px-3"}
-				/>
-			</div>
-		</div>
-	)
-}
-
 const ROW =
-	"flex min-h-10 w-full items-center gap-3 px-4 text-left text-[15px] font-medium text-gray-200 hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/[0.06] focus-visible:outline-hidden"
+	"flex w-full cursor-pointer items-center gap-3 px-4 text-left text-[15px] font-medium text-gray-200 hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/[0.06] focus-visible:outline-hidden"
+const rowHeight = (big?: boolean) => (big ? "min-h-11" : "min-h-9")
 
-function Row({ place, close }: { place: AccountPlace; close: () => void }) {
-	const counts = useAccountCounts()
-	const n = place.count && counts ? counts[place.count] : null
-	return (
-		<Link to={place.to} onClick={close} className={ROW}>
-			<place.icon className="h-5 w-5 text-amber-400" aria-hidden />
-			<span className="grow">{place.label}</span>
-			{n != null && (
-				<span className="text-sm tabular-nums text-gray-500">{count(n)}</span>
-			)}
-		</Link>
-	)
+interface PanelProps {
+	close: () => void
+	/** Phones: taller rows for touch. */
+	big?: boolean
 }
 
-function Group({ name, children }: { name: string; children: ReactNode }) {
+function Group({
+	name,
+	children,
+	first,
+}: { name: string; children: ReactNode; first?: boolean }) {
 	return (
-		<div className="border-t border-white/10 py-1.5">
+		<div className={`py-1.5 ${first ? "" : "border-t border-white/10"}`}>
 			<p className="px-4 pt-1.5 pb-1 text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
 				{name}
 			</p>
@@ -163,10 +49,227 @@ function Group({ name, children }: { name: string; children: ReactNode }) {
 	)
 }
 
-function SignOutButton({ className }: { className: string }) {
+/** Opens the Feedback drawer; without a Feedback tab on the page, goes to Support instead. */
+function feedbackFrom(close: () => void) {
+	return (event: MouseEvent<HTMLElement>) => {
+		const opener = event.currentTarget
+		close()
+		if (!openFeedback(opener)) window.location.assign("/support")
+	}
+}
+
+function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
+	const counts = useAccountCounts()
+	const n =
+		place.count === "not-interested" && counts ? counts.notInterested : null
+	const inner = (
+		<>
+			<place.icon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
+			<span className="grow truncate">{place.label}</span>
+			{n != null && n > 0 && (
+				<span className="text-sm tabular-nums text-gray-500">{count(n)}</span>
+			)}
+			{place.tag && (
+				<span className="rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-semibold text-gray-400 ring-1 ring-white/10">
+					{place.tag}
+				</span>
+			)}
+		</>
+	)
+	if (place.action === "feedback")
+		return (
+			<button
+				type="button"
+				onClick={feedbackFrom(close)}
+				className={`${ROW} ${rowHeight(big)}`}
+			>
+				{inner}
+			</button>
+		)
+	return (
+		<Link
+			to={place.href ?? "/"}
+			prefetch="intent"
+			onClick={close}
+			className={`${ROW} ${rowHeight(big)}`}
+		>
+			{inner}
+		</Link>
+	)
+}
+
+/** One Help link; Feedback opens the drawer instead. */
+function HelpCell({ place, close, big }: PanelProps & { place: Place }) {
+	const cell = `flex cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-sm text-gray-300 hover:bg-white/[0.06] hover:text-white ${big ? "min-h-11" : "min-h-9"}`
+	const inner = (
+		<>
+			<place.icon className="h-4 w-4 shrink-0 text-gray-500" aria-hidden />
+			<span className="truncate">{place.label}</span>
+		</>
+	)
+	if (place.action === "feedback")
+		return (
+			<button type="button" onClick={feedbackFrom(close)} className={cell}>
+				{inner}
+			</button>
+		)
+	return (
+		<Link to={place.href ?? "/"} onClick={close} className={cell}>
+			{inner}
+		</Link>
+	)
+}
+
+/** Help: four short links, two by two. */
+function HelpGrid({ places, close, big }: PanelProps & { places: Place[] }) {
+	return (
+		<div className="grid grid-cols-2 px-2">
+			{places.map((p) => (
+				<HelpCell key={p.id} place={p} close={close} big={big} />
+			))}
+		</div>
+	)
+}
+
+function Groups({
+	groups,
+	close,
+	big,
+	first,
+}: PanelProps & { groups: PlaceGroup[]; first?: boolean }) {
+	return (
+		<>
+			{groups.map((group, i) =>
+				group.name ? (
+					<Group key={group.name} name={group.name} first={first && i === 0}>
+						{group.grid ? (
+							<HelpGrid places={group.places} close={close} big={big} />
+						) : (
+							group.places.map((p) => (
+								<PlaceRow key={p.id} place={p} close={close} big={big} />
+							))
+						)}
+					</Group>
+				) : null,
+			)}
+		</>
+	)
+}
+
+/** Share profile: the phone's share sheet on touch screens, else the link is copied. */
+function ShareRow({ handle, big }: { handle: string; big?: boolean }) {
+	const [done, setDone] = useState(false)
+	const onClick = async () => {
+		const url = `${window.location.origin}${profilePath(handle)}`
+		try {
+			if (navigator.share && window.matchMedia("(pointer: coarse)").matches)
+				await navigator.share({ title: `@${handle} on GoodWatch`, url })
+			else await navigator.clipboard.writeText(url)
+		} catch {
+			return
+		}
+		setDone(true)
+		setTimeout(() => setDone(false), 1500)
+	}
+	return (
+		<button
+			type="button"
+			data-copy-link
+			onClick={onClick}
+			className={`${ROW} ${rowHeight(big)}`}
+		>
+			<ShareIcon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
+			<span className="grow">Share profile</span>
+			<span
+				aria-live="polite"
+				className={`text-sm text-emerald-300 transition-opacity duration-150 ${done ? "opacity-100" : "opacity-0"}`}
+			>
+				{done ? "Link copied" : ""}
+			</span>
+		</button>
+	)
+}
+
+/** Who you are: your profile, View as visitor, Share profile and Edit profile. Without a handle: Pick a handle. */
+function Identity({ close, big }: PanelProps) {
+	const me = useAccountSummary()
+	const avatar = (
+		<AccountAvatar
+			url={me.avatarUrl}
+			color={me.color}
+			initial={me.initial}
+			size={big ? 48 : 44}
+		/>
+	)
+	const head = `flex items-center gap-3 px-4 hover:bg-white/[0.05] ${big ? "py-3.5" : "pt-4 pb-3"}`
+	if (!me.handle)
+		return (
+			<>
+				<Link
+					to={EDIT_PROFILE.href ?? "/settings/profile"}
+					onClick={close}
+					className={head}
+				>
+					{avatar}
+					<span className="min-w-0">
+						{me.email && (
+							<span
+								data-feedback-private
+								className="block truncate text-sm text-gray-400"
+							>
+								{me.email}
+							</span>
+						)}
+						<span className="block font-bold text-amber-400">
+							{me.loaded ? "Pick a handle to get your profile" : "Your profile"}
+						</span>
+					</span>
+				</Link>
+				<div className="pb-1.5">
+					<PlaceRow place={EDIT_PROFILE} close={close} big={big} />
+				</div>
+			</>
+		)
+	return (
+		<>
+			<Link
+				to={tasteHome(member(me.handle))}
+				prefetch="intent"
+				onClick={close}
+				className={head}
+			>
+				{avatar}
+				<span className="min-w-0">
+					<b className="block truncate text-white">@{me.handle}</b>
+					<span className="block truncate text-sm text-gray-400">
+						Your profile and taste
+					</span>
+				</span>
+			</Link>
+			<div className="pb-1.5">
+				<Link
+					to={tastePath(me.handle, "profile", { as: "visitor" })}
+					onClick={close}
+					className={`${ROW} ${rowHeight(big)}`}
+				>
+					<EyeIcon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
+					View as visitor
+				</Link>
+				<ShareRow handle={me.handle} big={big} />
+				<PlaceRow place={EDIT_PROFILE} close={close} big={big} />
+			</div>
+		</>
+	)
+}
+
+function SignOut({ big }: { big?: boolean }) {
 	const signOut = useSignOut()
 	return (
-		<button type="button" className={className} onClick={signOut}>
+		<button
+			type="button"
+			onClick={signOut}
+			className={`${ROW} ${big ? "min-h-12" : "min-h-11"}`}
+		>
 			<ArrowRightStartOnRectangleIcon
 				className="h-5 w-5 text-gray-500"
 				aria-hidden
@@ -176,89 +279,35 @@ function SignOutButton({ className }: { className: string }) {
 	)
 }
 
+/** Desktop: two columns side by side, Sign out at the bottom of the right one. */
 export function DesktopAccountPanel({ close }: { close: () => void }) {
 	return (
-		<>
-			<Identity close={close} />
-			<Group name="Library">
-				{LIBRARY_PLACES.map((place) => (
-					<Row key={place.label} place={place} close={close} />
-				))}
-			</Group>
-			<Group name="You">
-				{YOU_PLACES.map((place) => (
-					<Row key={place.label} place={place} close={close} />
-				))}
-			</Group>
-			<Group name="App">
-				{[SETTINGS_PLACE, ...APP_PLACES].map((place) => (
-					<Row key={place.label} place={place} close={close} />
-				))}
-			</Group>
-			<div className="border-t border-white/10 py-1.5">
-				<SignOutButton className={ROW} />
+		<div className="grid grid-cols-2 divide-x divide-white/10">
+			<div className="min-w-0">
+				<Identity close={close} />
+				<Groups groups={PLACES.left} close={close} />
 			</div>
-		</>
+			<div className="flex min-w-0 flex-col">
+				<Groups groups={PLACES.right} close={close} first />
+				<span className="grow" />
+				<div className="border-t border-white/10 py-1">
+					<SignOut />
+				</div>
+			</div>
+		</div>
 	)
 }
 
-const TILE =
-	"flex min-h-11 items-center gap-2.5 rounded-xl bg-white/[0.04] px-3 text-left text-[15px] font-medium text-gray-100 ring-1 ring-white/[0.06] hover:bg-white/[0.08]"
-
-/** Phones: the header's account panel. */
+/** Phones: one column in the same order. */
 export function PhoneAccountPanel({ close }: { close: () => void }) {
-	const counts = useAccountCounts()
 	return (
 		<>
-			<Identity close={close} compact />
-			<div className="grid grid-cols-2 gap-2 border-t border-white/10 p-3">
-				{[...LIBRARY_PLACES, ...YOU_PLACES].map((place) => {
-					const n = place.count && counts ? counts[place.count] : null
-					return (
-						<Link
-							key={place.label}
-							to={place.to}
-							onClick={close}
-							className={TILE}
-						>
-							<place.icon
-								className="h-5 w-5 shrink-0 text-amber-400"
-								aria-hidden
-							/>
-							<span className="min-w-0 grow truncate">
-								{place.short ?? place.label}
-							</span>
-							{n != null && (
-								<span className="text-xs tabular-nums text-gray-500">
-									{count(n)}
-								</span>
-							)}
-						</Link>
-					)
-				})}
+			<Identity close={close} big />
+			<Groups groups={PLACES.left} close={close} big />
+			<Groups groups={PLACES.right} close={close} big />
+			<div className="border-t border-white/10 py-1">
+				<SignOut big />
 			</div>
-			<div className="grid grid-cols-2 gap-2 border-t border-white/10 px-3 pt-3 pb-3">
-				<Link to={SETTINGS_PLACE.to} onClick={close} className={TILE}>
-					<SETTINGS_PLACE.icon
-						className="h-5 w-5 shrink-0 text-amber-400"
-						aria-hidden
-					/>
-					{SETTINGS_PLACE.label}
-				</Link>
-				<SignOutButton className={TILE} />
-			</div>
-			<p className="flex flex-wrap items-center gap-x-1 border-t border-white/10 px-3 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-sm text-gray-400">
-				{APP_PLACES.map((place) => (
-					<Link
-						key={place.label}
-						to={place.to}
-						onClick={close}
-						className="inline-flex min-h-10 items-center rounded-lg px-2 hover:text-white"
-					>
-						{place.label}
-					</Link>
-				))}
-			</p>
 		</>
 	)
 }

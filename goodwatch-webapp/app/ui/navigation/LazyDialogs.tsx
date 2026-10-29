@@ -1,18 +1,20 @@
-// The hub and the search dialog, without their code in the page's first load. Both use the dialog library, which is
-// 40 KB compressed and which no page needs before a visitor opens something. Their code loads when the page is
-// interactive, so the first tap doesn't wait for it, or with that tap when it comes earlier.
+// The account menu and the search dialog, without their code in the page's first load: the header and the dock are on
+// every landing surface, and no page needs either before someone opens it. Their code loads when the page is
+// interactive (the account menu for members only), so the first tap doesn't wait for it, or with that tap when it
+// comes earlier.
 import { Suspense, lazy, useEffect } from "react"
+import { useUser } from "~/utils/auth"
 import { useOpenedOnce } from "~/utils/first-use"
 import { whenInteractive } from "~/utils/page-interactive"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { useNavigation } from "./NavigationContext"
 import { useSearchShortcuts } from "./Search"
 
-const loadHub = () => import("./Hub")
+const loadAccountMenu = () => import("~/ui/account/AccountMenu")
 const loadSearchPanel = () => import("./SearchPanel")
-const Hub = lazy(
+const AccountMenu = lazy(
 	reloadOnStaleChunk(() =>
-		loadHub().then((module) => ({ default: module.HubDialog })),
+		loadAccountMenu().then((module) => ({ default: module.AccountMenu })),
 	),
 )
 const SearchPanel = lazy(
@@ -26,22 +28,24 @@ export const preloadSearchPanel = () => {
 	void loadSearchPanel().catch(() => {})
 }
 
-/** The hub sheet (phones) and Browse panel (desktop): one dialog, opened from the hub key or the Browse button. */
-export function HubDialog() {
+/** The account menu (desktop panel, phone sheet), opened from the avatar in the header or the dock. Members only. */
+export function AccountMenuHost() {
 	const navigation = useNavigation()
-	const opened = useOpenedOnce(navigation.hubOpen)
+	const { user } = useUser()
+	const member = Boolean(user)
+	const opened = useOpenedOnce(navigation.accountOpen)
 	useEffect(
 		() =>
 			whenInteractive(() => {
-				void loadHub().catch(() => {})
+				if (member) void loadAccountMenu().catch(() => {})
 				preloadSearchPanel()
 			}),
-		[],
+		[member],
 	)
-	if (!opened) return null
+	if (!member || !opened) return null
 	return (
 		<Suspense fallback={null}>
-			<Hub />
+			<AccountMenu />
 		</Suspense>
 	)
 }

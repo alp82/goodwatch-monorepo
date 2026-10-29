@@ -1,8 +1,7 @@
-// What My movies (#385) adds to the Watch next page it is drawn with: the page's head, and "How long?", the fourth
-// choice of the control strip (a select on desktop, a button and a drawer on phones).
+// What My movies (#385) adds to the Watch next page it is drawn with: "How long?", the fourth choice of the control
+// strip (a select on desktop, a button and a drawer on phones). Watch's tabs name the page, so it has no head.
 import { ChevronDownIcon, ClockIcon } from "@heroicons/react/20/solid"
 import { TIME_CHOICES, timeLabel } from "~/ui/watch-next/labels"
-import { MY_LIBRARY, MY_SHOWS, PageHead, plural } from "~/ui/my-pages/bits"
 import type { MoviesPageParts } from "~/ui/watch-next/WatchNextPage"
 
 const CHOICES: (number | null)[] = [null, ...TIME_CHOICES]
@@ -74,23 +73,7 @@ function TimeDrawer({
 }
 
 export const MOVIES_PAGE: MoviesPageParts = {
-	head: (data) => (
-		<PageHead
-			name="My movies"
-			line={
-				data
-					? data.total
-						? `${plural(data.total, "movie")} you want to see`
-						: "Want to See on a movie puts it here."
-					: "The movies you want to see"
-			}
-			links={[
-				{ label: "My shows", to: MY_SHOWS },
-				// On phones the head keeps one row; My library is in the browse menu there.
-				{ label: "My library", to: MY_LIBRARY, fromSm: true },
-			]}
-		/>
-	),
+	head: () => null,
 	timeControl: (time, setTime) => <TimeSelect time={time} setTime={setTime} />,
 	phoneTime: {
 		label: (time) => (time === null ? "How long?" : timeLabel(time)),

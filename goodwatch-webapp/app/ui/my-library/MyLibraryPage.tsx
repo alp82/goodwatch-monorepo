@@ -1,10 +1,10 @@
-// A list of My library (#385): every title a member has marked under one status, on that status's page under the
-// hub (/my-library/want, /seen, /not-rated, /watching, /on-hold, /dropped). The hub leads to the pages, so a page has
-// no status choice of its own, only the way back; the three show statuses share a small switch.
+// A library list (#385): every title a member has marked under one status, on a page of its own (Watch's chips and
+// Seen pages, Taste's Not rated). The page's tabs and chips choose the list, so the body has no head and no status
+// choice of its own. A page can fix the kind (Seen shows, Not started) and the sort (Recently added).
 //
-// Under the head: a movies/shows filter, a search over the list, and a sort. A list is drawn in steps of 60, also
-// with 1,500 Seen titles. The choice lives in the URL (`/my-library/seen?sort=score&type=movie&q=alien`), and each
-// step is one read of /api/my-library.
+// The controls: a movies/shows filter (unless the page fixes the kind), a search over the list, and a sort. A list is
+// drawn in steps of 60, also with 1,500 Seen titles. The choice lives in the URL (`/watch/movies/seen?sort=score&q=alien`),
+// and each step is one read of /api/my-library.
 import {
 	ChevronRightIcon,
 	MagnifyingGlassIcon,
@@ -26,12 +26,10 @@ import {
 	useState,
 } from "react"
 import {
-	LIBRARY_HUB,
 	type LibraryChoice,
 	type LibraryKind,
 	type LibrarySort,
 	type LibraryStatus,
-	SHOW_STATUSES,
 	SORT_HINT,
 	SORT_LABEL,
 	STATUS_LABEL,
@@ -39,11 +37,11 @@ import {
 	libraryChoiceOf,
 	libraryParams,
 	sortsFor,
-	statusPage,
 	watchedWords,
 } from "~/domain/my-library"
 import { newOn } from "~/domain/newly-available-words"
 import { useScoreMutation } from "~/hooks/useUserDataMutations"
+import type { LibraryListLoaded } from "~/server/library-list-route.server"
 import type { LibraryItem, LibraryPage } from "~/server/my-library.server"
 import type { Score } from "~/server/scores.server"
 import { SortControl } from "~/ui/filter-bar/controls"
@@ -53,8 +51,10 @@ import {
 	rowMark,
 	useRowMarks,
 } from "~/ui/list-row/RowScores"
-import { Empty, PageHead, Poster, WRAP } from "~/ui/my-pages/bits"
+import { Empty, Poster, WRAP } from "~/ui/my-pages/bits"
 import type { PillMark } from "~/ui/poster-card/pill-mark"
+import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
+import type { SignUpMessage } from "~/ui/sign-up-prompt/messages"
 import { titleToDashed } from "~/utils/helpers"
 import useLocale from "~/utils/locale"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
@@ -86,59 +86,6 @@ export const libraryQueryKey = ["my-library"] as const
 const count = (n: number) => n.toLocaleString("en-US")
 const titleHref = (item: LibraryItem) =>
 	`/${item.mediaType}/${item.tmdbId}-${titleToDashed(canonicalMediaTitle(item))}`
-
-// ---------------------------------------------------------------------------------------------------------
-// The show statuses' switch: Watching, On hold and Dropped are three pages of one kind
-
-function ShowStatusSwitch({
-	status,
-	counts,
-}: {
-	status: LibraryStatus
-	counts: LibraryPage["counts"]
-}) {
-	return (
-		<nav
-			aria-label="Shows you started"
-			className="flex w-full gap-1 self-start rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10 sm:w-auto"
-			data-show-statuses
-		>
-			{SHOW_STATUSES.map((key) => {
-				const on = status === key
-				return (
-					<Link
-						key={key}
-						to={statusPage({ status: key })}
-						prefetch="intent"
-						replace
-						preventScrollReset
-						aria-current={on ? "page" : undefined}
-						data-status={key}
-						className={`flex h-11 min-w-0 flex-auto items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 sm:flex-none sm:px-5 ${on ? "bg-amber-400 text-black" : "text-gray-300 hover:bg-white/10"}`}
-					>
-						<span className="truncate">{STATUS_LABEL[key]}</span>
-						<span
-							className={`rounded-full px-1.5 py-0.5 text-xs tabular-nums ${on ? "bg-black/15" : "bg-white/10"}`}
-							data-count
-						>
-							{count(counts[key])}
-						</span>
-					</Link>
-				)
-			})}
-		</nav>
-	)
-}
-
-/** Each page's head: its name and what it holds. */
-const PAGE_LINE: Record<LibraryStatus, string> = {
-	want: "Titles you saved for later.",
-	seen: "Movies you watched and shows you finished.",
-	unrated: "Titles you have seen and not given a score.",
-	watching: "Shows you are in the middle of.",
-	on_hold: "Shows you set aside for now.",
-	dropped: "Shows you gave up on. They stay out of your recommendations.",
-}
 
 // ---------------------------------------------------------------------------------------------------------
 // The list's controls
@@ -481,12 +428,21 @@ const EMPTY: Record<LibraryStatus, [title: string, text: string]> = {
 
 export function MyLibraryPage({
 	status: pageStatus,
+	lockKind = null,
+	lockSort = null,
+	name,
 	initial,
 	now,
 	viewer,
 }: {
 	/** The page's status: its list is the only one it shows. */
 	status: LibraryStatus
+	/** The kind the page fixes (Seen shows, Not started): no kind control, and a `type` in the URL doesn't count. */
+	lockKind?: "movie" | "show" | null
+	/** The sort the page fixes (Recently added): no sort control. */
+	lockSort?: LibrarySort | null
+	/** The list's name in the search field and the no-match line; the status's label by default. */
+	name?: string
 	/** The first step, computed by the loader for the choice in the URL. */
 	initial: LibraryPage
 	/** The server's time when it answered, so a row says "Yesterday" the same on both sides. */
@@ -495,10 +451,15 @@ export function MyLibraryPage({
 	viewer: string
 }) {
 	const [params, setParams] = useSearchParams()
-	const choice = useMemo(
-		() => ({ ...libraryChoiceOf(params), status: pageStatus }),
-		[params, pageStatus],
-	)
+	const choice = useMemo(() => {
+		const picked = libraryChoiceOf(params)
+		return {
+			...picked,
+			status: pageStatus,
+			kind: lockKind ?? picked.kind,
+			sort: lockSort ?? picked.sort,
+		}
+	}, [params, pageStatus, lockKind, lockSort])
 	const { locale } = useLocale()
 	const query = libraryParams(choice).toString()
 	const initialQuery = useRef(
@@ -539,16 +500,21 @@ export function MyLibraryPage({
 						...next,
 						status: pageStatus,
 					}
-					// Parameters that are not the library's stay; the status is the page's, not the URL's.
+					// Parameters that are not the library's stay; what the page fixes is the page's, not the URL's.
 					const kept = new URLSearchParams(current)
 					for (const key of ["status", "sort", "type", "q"]) kept.delete(key)
 					for (const [key, value] of libraryParams(merged))
-						if (key !== "status") kept.set(key, value)
+						if (
+							key !== "status" &&
+							!(key === "type" && lockKind) &&
+							!(key === "sort" && lockSort)
+						)
+							kept.set(key, value)
 					return kept
 				},
 				{ replace: true, preventScrollReset: true },
 			),
-		[setParams, pageStatus],
+		[setParams, pageStatus, lockKind, lockSort],
 	)
 	const setQuery = useCallback((q: string) => setChoice({ q }), [setChoice])
 
@@ -593,6 +559,7 @@ export function MyLibraryPage({
 	const waiting =
 		result.isPlaceholderData || (result.isFetching && !items.length)
 	const [emptyTitle, emptyText] = EMPTY[status]
+	const listName = name ?? STATUS_LABEL[status]
 	return (
 		<div
 			className="overflow-x-clip pb-24"
@@ -600,17 +567,9 @@ export function MyLibraryPage({
 			data-status={status}
 			aria-busy={result.isFetching}
 		>
-			<PageHead
-				name={STATUS_LABEL[status]}
-				line={PAGE_LINE[status]}
-				back={{ label: "My library", to: LIBRARY_HUB }}
-			/>
 			<div className={`${WRAP} flex flex-col gap-3`}>
-				{showsOnly && (
-					<ShowStatusSwitch status={status} counts={first.counts} />
-				)}
 				<div className="flex flex-wrap items-center gap-2" data-controls>
-					{!showsOnly && (
+					{!showsOnly && !lockKind && (
 						<KindFilter
 							kind={choice.kind}
 							kinds={first.kinds}
@@ -622,32 +581,24 @@ export function MyLibraryPage({
 						placeholder={
 							status === "seen"
 								? "Have I seen…?"
-								: `Search ${STATUS_LABEL[status].toLowerCase()}`
+								: `Search ${listName.toLowerCase()}`
 						}
 						onChange={setQuery}
 					/>
 					<span className="hidden grow sm:block" />
-					<SortSelect
-						sort={first.sort}
-						sorts={sortsFor(status)}
-						onPick={(sort) => setChoice({ sort })}
-					/>
+					{!lockSort && (
+						<SortSelect
+							sort={first.sort}
+							sorts={sortsFor(status)}
+							onPick={(sort) => setChoice({ sort })}
+						/>
+					)}
 				</div>
 				<p className="flex flex-wrap items-center gap-x-3 text-xs text-gray-500">
 					<span data-result aria-live="polite">
 						{count(first.total)} {first.total === 1 ? "title" : "titles"}
 						{first.q.trim() ? ` for "${first.q.trim()}"` : ""}
 					</span>
-					{status === "seen" && first.counts.unrated > 0 && !first.q.trim() && (
-						<Link
-							to={statusPage({ status: "unrated" })}
-							prefetch="intent"
-							data-to-unrated
-							className="inline-flex min-h-8 items-center text-gray-400 underline decoration-white/20 underline-offset-4 hover:text-white"
-						>
-							{count(first.counts.unrated)} not rated
-						</Link>
-					)}
 					{status === "unrated" && (
 						<span>A score takes a title off this list.</span>
 					)}
@@ -680,9 +631,9 @@ export function MyLibraryPage({
 							/>
 						))}
 					</ul>
-				) : first.q.trim() || choice.kind !== "all" ? (
+				) : first.q.trim() || (!lockKind && choice.kind !== "all") ? (
 					<p className="py-6 text-sm text-gray-400" data-no-match>
-						Nothing under {STATUS_LABEL[status]} matches.
+						Nothing under {listName} matches.
 					</p>
 				) : (
 					<Empty title={emptyTitle}>{emptyText}</Empty>
@@ -713,5 +664,45 @@ export function MyLibraryPage({
 				</Suspense>
 			)}
 		</div>
+	)
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// A list page's body, from libraryListLoader: the list for a member, a sign-up card for a guest.
+
+export function LibraryListBody({
+	loaded,
+	name,
+	guest,
+}: {
+	loaded: LibraryListLoaded
+	/** The list's name, as its chip or page says it. */
+	name: string
+	/** What a guest is told an account adds. */
+	guest: SignUpMessage
+}) {
+	if (!loaded.page || !loaded.viewer)
+		return (
+			<div className={`${WRAP} pb-24`} data-guest-page>
+				<SignUpPrompt
+					feature="watchNext"
+					words={guest}
+					size="card"
+					className="max-w-xl"
+				/>
+			</div>
+		)
+	return (
+		<MyLibraryPage
+			// A page of its own per list: going from Watching to On hold starts the list over.
+			key={`${loaded.status}-${loaded.kind}-${loaded.sort}`}
+			status={loaded.status}
+			lockKind={loaded.kind}
+			lockSort={loaded.sort}
+			name={name}
+			initial={loaded.page}
+			now={loaded.now}
+			viewer={loaded.viewer}
+		/>
 	)
 }

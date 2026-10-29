@@ -423,12 +423,12 @@ function Steering({
 		setSheet("recipes")
 	}, [])
 
-	// The hub and search dialogs sit under the raised bar: close everything of ours when one opens.
+	// The search dialog sits under the raised bar: close everything of ours when it opens.
 	useEffect(() => {
-		if (!navigation.hubOpen && !navigation.searchOpen) return
+		if (!navigation.searchOpen) return
 		closeSheet()
 		setOpenKey(null)
-	}, [navigation.hubOpen, navigation.searchOpen, closeSheet])
+	}, [navigation.searchOpen, closeSheet])
 
 	const open = sheet !== null
 	// Focus moves into the drawer and stays in it and the taste bar (which switches between drawers); on closing it

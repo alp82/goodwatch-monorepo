@@ -1,32 +1,44 @@
-// What a person reads for the home destination: the hub tile and the palette's "Go to ..." row use `label`, the dock
-// uses `short`. Both say Home, so the palette's `${label} ${short}` match words find "home" once and never offer a
-// second Home row.
+// The main places the command palette says "You're here" for.
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { currentDestination, getDestinations } from "./destinations.ts"
+import { currentDestination, searchHref } from "./destinations.ts"
 
-test("the home destination is called Home on the tile, in the palette and on the dock", () => {
-	const { home } = getDestinations()
-	assert.equal(home.label, "Home")
-	assert.equal(home.short, "Home")
+test("Watch's pages belong to their tab", () => {
+	assert.equal(currentDestination("/watch"), "upNext")
+	assert.equal(currentDestination("/watch/on-hold"), "upNext")
+	assert.equal(currentDestination("/watch/seen"), "upNext")
+	assert.equal(currentDestination("/watch/movies"), "ready")
+	assert.equal(currentDestination("/watch/movies/wishlist"), "ready")
+	assert.equal(currentDestination("/watch/for-you"), "forYou")
+	assert.equal(currentDestination("/watch/nope"), null)
 })
 
-test("no two destinations share a label, so the palette never lists one twice", () => {
-	const labels = Object.values(getDestinations()).map(
-		(destination) => destination.label,
-	)
-	assert.equal(new Set(labels).size, labels.length)
-})
-
-test("the For you page and the pages under it belong to the For you destination", () => {
-	assert.equal(currentDestination("/for-you"), "forYou")
-	assert.equal(currentDestination("/for-you/anything"), "forYou")
-	assert.equal(currentDestination("/for-youth"), null)
-})
-
-test("the member's /new belongs to New on your services; a country's pages under it belong to none", () => {
+test("the member's /new belongs to New; a country's pages under it belong to none", () => {
 	assert.equal(currentDestination("/new"), "new")
 	assert.equal(currentDestination("/new/us/netflix"), null)
 	assert.equal(currentDestination("/new/us"), null)
 	assert.equal(currentDestination("/newsletter"), null)
+})
+
+test("Taste is the viewer's own profile, or /taste", () => {
+	assert.equal(currentDestination("/u/Ana", "ana"), "taste")
+	assert.equal(currentDestination("/u/ana/stats", "ana"), "taste")
+	assert.equal(currentDestination("/u/bob", "ana"), null)
+	assert.equal(currentDestination("/u/ana"), null)
+	assert.equal(currentDestination("/taste"), "taste")
+	assert.equal(currentDestination("/taste/quiz"), "taste")
+})
+
+test("home, Explore's places, and pages outside them", () => {
+	assert.equal(currentDestination("/"), "home")
+	assert.equal(currentDestination("/discover"), "discover")
+	assert.equal(currentDestination("/movies/genres/horror"), "movies")
+	assert.equal(currentDestination("/people"), "people")
+	assert.equal(currentDestination("/movie/123-heat"), null)
+	assert.equal(currentDestination("/settings"), null)
+})
+
+test("a search goes to Discover's search", () => {
+	assert.equal(searchHref("  heat "), "/discover?q=heat")
+	assert.equal(searchHref(""), "/discover")
 })

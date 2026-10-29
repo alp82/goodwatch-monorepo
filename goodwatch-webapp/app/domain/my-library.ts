@@ -160,7 +160,12 @@ export function libraryOrder(
 			return y - x
 		}
 	}
-	const lastWatched = byDate((key) => time(data.watchState[key]?.watchedAt))
+	// Dated watches first, latest first; then the undated ones (a Seen press, an import without dates), latest
+	// activity first, so the watch record still reads newest first.
+	const byWatch = byDate((key) => time(data.watchState[key]?.watchedAt))
+	const byActivity = byDate((key) => time(data.watchState[key]?.lastActivityAt))
+	const lastWatched = (a: MediaKey, b: MediaKey) =>
+		byWatch(a, b) || byActivity(a, b)
 	let compare: (a: MediaKey, b: MediaKey) => number
 	if (sort === "added")
 		compare = byDate((key) => time(data.wishlist[key]?.createdAt))

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { Window } from "happy-dom"
-const browser = new Window({ url: "https://goodwatch.app/my-shows" })
+const browser = new Window({ url: "https://goodwatch.app/watch" })
 for (const name of [
 	"window",
 	"document",
@@ -118,7 +118,7 @@ const router = createMemoryRouter(
 			element: <Shell />,
 			children: [
 				{
-					path: "/my-shows",
+					path: "/watch",
 					element: (
 						<MyShowsPage
 							data={
@@ -143,7 +143,7 @@ const router = createMemoryRouter(
 				},
 				{
 					path: "/show/:id",
-					element: <Link to="/my-shows">Back to My shows</Link>,
+					element: <Link to="/watch">Back to My shows</Link>,
 				},
 				{
 					path: "/api/new-episodes",
@@ -158,7 +158,7 @@ const router = createMemoryRouter(
 			],
 		},
 	],
-	{ initialEntries: ["/my-shows"] },
+	{ initialEntries: ["/watch"] },
 )
 const container = document.createElement("div")
 document.body.appendChild(container)
@@ -187,7 +187,7 @@ await act(async () => {
 	await router.navigate("/show/402-returning-show")
 })
 await act(async () => {
-	await router.navigate("/my-shows")
+	await router.navigate("/watch")
 })
 await settle()
 assert.ok(
@@ -211,7 +211,7 @@ assert.ok(
 )
 await act(async () => {
 	await router.navigate("/show/402-returning-show")
-	await router.navigate("/my-shows")
+	await router.navigate("/watch")
 })
 await settle()
 assert.equal(

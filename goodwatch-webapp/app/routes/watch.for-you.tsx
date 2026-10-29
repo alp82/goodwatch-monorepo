@@ -1,3 +1,5 @@
+// Watch › Recommendations › For you (/watch/for-you): picks from the member's taste, steered by mood. A guest gets
+// the locked preview (ui/for-you/GuestLock.tsx).
 import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
@@ -27,7 +29,7 @@ export const meta: MetaFunction = () =>
 	buildMeta({
 		pageMeta: {
 			title: "For you - GoodWatch",
-			url: "https://goodwatch.app/for-you",
+			url: "https://goodwatch.app/watch/for-you",
 			description: "Recommendations from your taste, steered by mood.",
 			image: "https://goodwatch.app/images/heroes/hero-movies.png",
 			alt: "For you on GoodWatch",

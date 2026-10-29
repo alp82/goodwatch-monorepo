@@ -1,8 +1,8 @@
 // The Feedback tab on every page: a quiet "Feedback" handle on the right edge, in the upper middle. This module is
 // all the page loads at first: the tab itself, rendered on the server, fixed, so it never moves the page. The drawer
 // and fix mode (FeedbackDock.tsx) load once the page is idle, or on the first pointer, focus or tap on the tab.
-// Where the phone dock is (below lg), the closed tab stays out of the page's way: Feedback is a link under the
-// account row in Go to… (navigation/Hub.tsx), and the tab shows only as the open drawer's handle.
+// For members on phones (below lg), the closed tab stays out of the page's way: Feedback is a row in the account
+// menu (ui/account/AccountPanels.tsx), and the tab shows only as the open drawer's handle. Guests keep the tab.
 import { ChatBubbleLeftEllipsisIcon } from "@heroicons/react/20/solid"
 import {
 	type ComponentType,
@@ -30,22 +30,22 @@ export type DockProps = {
 	/** An error page: nothing on it to fix. */
 	sendOnly: boolean
 	/**
-	 * Gives focus back as the drawer closes: to the tab where it shows when closed, else (phones with the dock, where the
-	 * closed tab is hidden) to what opened the drawer, or the Go to… key once the sheet that held it has closed.
+	 * Gives focus back as the drawer closes: to the tab where it shows when closed, else (members' phones, where the
+	 * closed tab is hidden) to what opened the drawer, or the avatar key once the menu that held it has closed.
 	 */
 	focusBack: () => void
 }
 
 /**
- * Closed, on a page with the phone dock (below lg): hidden, as Go to… has the way to Feedback. CSS, so the server's
- * first paint is already right; pages without the dock keep the tab.
+ * Closed, below lg, on a page with the account menu's key (members): hidden, as the menu has the way to Feedback.
+ * CSS, so the server's first paint is already right; guests and pages without the key keep the tab.
  */
-const OUT_OF_THE_WAY = "max-lg:[body:has([data-mobile-dock])_&]:hidden"
+const OUT_OF_THE_WAY = "max-lg:[body:has([data-account-key])_&]:hidden"
 
-/** Whether the closed tab is hidden by OUT_OF_THE_WAY: below lg (64rem), on a page with the phone dock. */
+/** Whether the closed tab is hidden by OUT_OF_THE_WAY: below lg (64rem), on a page with the account key. */
 const closedTabHidden = () =>
 	!window.matchMedia("(min-width: 64rem)").matches &&
-	!!document.querySelector("[data-mobile-dock]")
+	!!document.querySelector("[data-account-key]")
 
 /** Can take focus where it is: still on the page, drawn, and not in an inert part. */
 const focusable = (el: HTMLElement | null | undefined): el is HTMLElement =>
@@ -54,15 +54,15 @@ const focusable = (el: HTMLElement | null | undefined): el is HTMLElement =>
 	el.getClientRects().length > 0 &&
 	!el.closest("[inert]")
 
-/** The Go to… key that opens the hub (navigation/MobileDock.tsx, SiteHeader.tsx) that is on show. */
-const hubKey = () =>
-	[...document.querySelectorAll<HTMLElement>("[data-hub-key]")].find((el) =>
+/** The account key that opens the account menu (ui/account/AccountKey.tsx) that is on show. */
+const accountKey = () =>
+	[...document.querySelectorAll<HTMLElement>("[data-account-key]")].find((el) =>
 		focusable(el),
 	) ?? null
 
 /**
  * Desktop: a vertical "Feedback" label on the right edge. Phones: a slim tab with the icon, a little lower, shown
- * while the drawer is open (or where there is no dock to reach it from). It never moves: it's the drawer's handle. While the drawer is out the tab is pressed: it takes the
+ * while the drawer is open (or for guests, who have no account menu to reach it from). It never moves: it's the drawer's handle. While the drawer is out the tab is pressed: it takes the
  * drawer's colour and edge, its inner corners square off and a strip over its inner edge hides the seam, so tab and
  * drawer read as one shape.
  */
@@ -116,7 +116,7 @@ const loadDockOnIntent = reloadOnStaleChunk(loadDock)
 let openFromElsewhere: ((opener: HTMLElement | null) => void) | null = null
 
 /**
- * Opens the Feedback drawer (the command palette's "Send feedback", Go to…'s Feedback link). `opener` is what opened
+ * Opens the Feedback drawer (the command palette's "Send feedback", the account menu's Feedback row). `opener` is what opened
  * it, which gets the focus back when the drawer closes where the tab is hidden; the focused element by default.
  * False when the page has no Feedback tab.
  */
@@ -173,7 +173,7 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 			? tab
 			: focusable(opener.current)
 				? opener.current
-				: hubKey()
+				: accountKey()
 		opener.current = null
 		to?.focus({ preventScroll: true })
 	}, [])

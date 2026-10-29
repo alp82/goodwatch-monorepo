@@ -3,14 +3,7 @@ import { SignInAgainBanner } from "~/ui/auth/SignInAgainBanner"
 import { Outlet, useLocation, useMatches } from "@remix-run/react"
 import { Suspense, lazy, useEffect } from "react"
 
-import Footer from "~/ui/footer/Footer"
-import {
-	HubDialog,
-	MobileDock,
-	NavigationProvider,
-	SearchDialog,
-	SiteHeader,
-} from "~/ui/navigation"
+import { SiteChrome } from "~/ui/navigation"
 import { TvWayBackHost } from "~/ui/living-room/TvWayBackHost"
 import { WatchLogHost } from "~/ui/watch-log/WatchLogHost"
 import { useUser } from "~/utils/auth"
@@ -69,27 +62,27 @@ export default function App() {
 	if (standalone) return <Outlet />
 
 	return (
-		<NavigationProvider>
-			<SiteHeader />
-			{/* Show smart onboarding banner for logged-in users */}
-			{user && (
-				<Suspense fallback={null}>
-					<AccountTransfer key={user.id} />
-				</Suspense>
-			)}
-			<main className="relative grow mx-auto mt-16 pb-2 w-full text-neutral-300">
-				<SignInAgainBanner />
-				<GuestProgressNotice />
-				<Outlet />
-			</main>
-			<Footer />
-			{/* Where a movie's Seen button hands its press: nothing renders or loads before the first one. */}
-			<WatchLogHost />
-			{/* The way back to the TV for a person who left the living room through it: nothing renders before that. */}
-			<TvWayBackHost />
-			<MobileDock />
-			<HubDialog />
-			<SearchDialog />
-		</NavigationProvider>
+		<SiteChrome
+			afterHeader={
+				// Show smart onboarding banner for logged-in users
+				user && (
+					<Suspense fallback={null}>
+						<AccountTransfer key={user.id} />
+					</Suspense>
+				)
+			}
+			afterFooter={
+				<>
+					{/* Where a movie's Seen button hands its press: nothing renders or loads before the first one. */}
+					<WatchLogHost />
+					{/* The way back to the TV for a person who left the living room through it: nothing renders before that. */}
+					<TvWayBackHost />
+				</>
+			}
+		>
+			<SignInAgainBanner />
+			<GuestProgressNotice />
+			<Outlet />
+		</SiteChrome>
 	)
 }
