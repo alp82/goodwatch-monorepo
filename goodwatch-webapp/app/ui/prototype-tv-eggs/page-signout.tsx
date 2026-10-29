@@ -36,19 +36,18 @@ export function PageSignout() {
 						<a href="/sign-in" className="rounded-[1cqw] bg-amber-400 px-[3cqw] py-[1.4cqh] text-[2.4cqw] font-bold text-black">
 							Sign in
 						</a>
-						<div className="text-[1.8cqw] text-white/45">Your ratings and lists are saved.</div>
 					</div>
 				) : (
 					<div className="absolute inset-0 bg-gradient-to-br from-[#16181f] via-[#08090c] to-black">
 						<div className="absolute inset-0 flex flex-col items-center justify-center text-center">
 							<div className="text-[6cqw] font-bold text-white/85">Good night, {NAME}</div>
-							<div className="mt-[1.4cqh] text-[2.3cqw] text-white/55">You're signed out. Your ratings and lists are saved.</div>
+							<div className="mt-[1.4cqh] text-[2.3cqw] text-white/55">You're signed out.</div>
 							<div className="mt-[2cqh] font-mono text-[2.6cqw] text-white/35">{time}</div>
 						</div>
 					</div>
 				)
 			}
-			remote={<BigRemote press={press} enabled={["power"]} off={!tv.on} powerLabel={tv.on ? undefined : "Sign back in"} />}
+			remote={<BigRemote press={press} enabled={["power"]} off={!tv.on} />}
 		/>
 	)
 }

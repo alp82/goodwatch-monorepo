@@ -1,5 +1,5 @@
-// PROTOTYPE - throwaway. 4. Maintenance as a program break (round 3: generic words, any maintenance, not only the
-// sign-in move). Browsing keeps working: OK keeps browsing. The back-at time is "now + 30 minutes".
+// PROTOTYPE - throwaway. 4. Maintenance as a program break (round 4: the whole site is offline, generic words).
+// OK still offers Keep browsing (the owner, round 3). The back-at time is "now + 30 minutes".
 import { useEffect, useMemo, useState } from "react"
 import { BigRemote, type Key, Scene, Wordmark, useRemoteKeys, useToast, useTvPower } from "./kit"
 
@@ -46,15 +46,15 @@ export function PageMaintenance() {
 					<div className="flex flex-1 flex-col items-center justify-center text-center">
 						<Wordmark size="8cqw" />
 						<div className="mt-[2.4cqh] px-[6cqw] text-[4.6cqw] font-bold leading-tight">Scheduled maintenance</div>
-						<div className="mt-[1.2cqh] px-[8cqw] text-[2.3cqw] text-white/70">Some features are paused for a short while. Back at {clock}.</div>
+						<div className="mt-[1.2cqh] px-[8cqw] text-[2.3cqw] text-white/70">GoodWatch is offline for a short while. We'll be back at {clock}.</div>
 						<div className="mt-[3cqh] flex items-center gap-[1.2cqw] rounded-full bg-white/10 py-[0.8cqh] pl-[0.8cqw] pr-[2cqw] text-[2.2cqw] font-semibold">
 							<span className="flex h-[4.4cqw] w-[4.4cqw] items-center justify-center rounded-full bg-white/90 text-[1.5cqw] font-bold text-black">OK</span>
 							Keep browsing
 						</div>
 					</div>
 					<div className="flex h-[9cqh] items-center gap-[2cqw] overflow-hidden bg-amber-400 px-[3cqw] text-[2cqw] font-semibold text-black">
-						<span className="shrink-0 rounded-[0.5cqw] bg-black px-[1cqw] py-[0.3cqh] text-amber-300">Still on air</span>
-						<span className="truncate">Your ratings and lists are safe · everything else works as usual</span>
+						<span className="shrink-0 rounded-[0.5cqw] bg-black px-[1cqw] py-[0.3cqh] text-amber-300">Off air</span>
+						<span className="truncate">Regular programming resumes at {clock}</span>
 					</div>
 				</div>
 			}

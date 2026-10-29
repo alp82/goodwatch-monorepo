@@ -201,7 +201,6 @@ export const serviceName = (k: ServiceKey) => SERVICE_KEYS.find((s) => s.key ===
 export function BigRemote({
 	press,
 	enabled = ["power", "up", "down", "ok"],
-	powerLabel,
 	pulse,
 	off,
 	services,
@@ -210,8 +209,6 @@ export function BigRemote({
 }: {
 	press: (key: Key) => void
 	enabled?: Key[]
-	/** The word printed beside Power, for pages where Power is the one key that matters. */
-	powerLabel?: string
 	/** The TV is off: only Power works, and it invites a press. */
 	off?: boolean
 	/** The key that pulses to invite a press. */
@@ -248,9 +245,6 @@ export function BigRemote({
 				>
 					<Icon d={ICON.power} className="h-6 w-6" />
 				</button>
-				{powerLabel && (
-					<span className="max-w-[150px] flex-1 px-3 text-center text-[12px] font-semibold uppercase leading-tight tracking-[0.1em] text-white/60">{powerLabel}</span>
-				)}
 				<span aria-hidden className="relative mr-1 h-3.5 w-3.5 rounded-full bg-[#3a1512] shadow-[inset_0_1px_2px_rgba(0,0,0,.8)]">
 					{blink > 0 && <span key={blink} className="egg-led absolute inset-0 rounded-full bg-red-500" />}
 				</span>
@@ -278,9 +272,6 @@ export function BigRemote({
 							−
 						</button>
 					</div>
-					<span aria-hidden className="text-[13px] font-semibold uppercase tracking-[0.1em] text-white/60">
-						Channel
-					</span>
 				</div>
 				<div className="flex flex-col items-center gap-2">
 					<button
@@ -291,9 +282,6 @@ export function BigRemote({
 					>
 						OK
 					</button>
-					<span aria-hidden className="text-[13px] font-semibold uppercase tracking-[0.1em] text-white/0">
-						.
-					</span>
 				</div>
 			</div>
 			<div className="mt-9 grid grid-cols-2 gap-3 px-[7px]">

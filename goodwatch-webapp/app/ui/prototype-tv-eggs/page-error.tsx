@@ -144,7 +144,7 @@ export function PageError() {
 					<RetryScreen phase={phase} />
 				)
 			}
-			remote={<BigRemote press={press} off={!tv.on} enabled={["ok", "power"]} pulse={down ? "power" : undefined} powerLabel="Turn it off and on again" />}
+			remote={<BigRemote press={press} off={!tv.on} enabled={["ok", "power"]} pulse={down ? "power" : undefined} />}
 		/>
 	)
 }
