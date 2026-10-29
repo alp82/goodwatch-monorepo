@@ -219,7 +219,6 @@ export function memberTeaser({
 			eyebrow: "",
 			tone: "amber",
 			headline: "Choose what to watch next",
-			sub: deck.length === 1 ? "Tonight's pick from your lists" : "This or that, from your lists",
 			posters: deck.slice(0, 3).map((t) => posterOf(t.card)),
 			action: { id: "open", label: "Choose what to watch next" },
 			links: listLinks(lists),
@@ -237,12 +236,12 @@ export function memberTeaser({
 		}
 	return {
 		key: "first",
-		kind: "words",
-		eyebrow: "First steps",
-		tone: "sky",
-		headline: "Rate a few titles",
-		sub: "Or bring your ratings from IMDb, Letterboxd, Trakt and more.",
+		kind: "choose",
+		eyebrow: "",
+		tone: "amber",
+		headline: "Get your first picks",
 		posters: [],
-		action: { id: "open", label: "Start" },
+		action: { id: "open", label: "Get your first picks" },
+		links: listLinks(lists),
 	}
 }

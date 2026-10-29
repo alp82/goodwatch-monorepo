@@ -24,6 +24,7 @@ import {
 	useLamp,
 	useReveal,
 } from "../proto-streamline/RevealCard"
+import { FirstStepsCard } from "../proto-streamline/FirstStepsCard"
 import { listLinks, memberTeaser } from "../proto-streamline/teaser-models"
 import { Doors } from "./Doors"
 import { FirstSteps } from "./FirstSteps"
@@ -80,11 +81,16 @@ export function MemberStart({
 		) : unread ? (
 			<Unread />
 		) : (
-			<FirstSteps ratings={data.ratings} />
+			<FirstStepsCard flow={flow} ratings={data.ratings} posters={ownShelf} />
 		)
+		const first = !hasQuery(start.query) && !deck.length && !unread
 		const attrs = revealAttrs(flow, reveal.open)
 		return (
-			<div {...attrs} className={`start-member ${attrs.className}`}>
+			<div
+				{...attrs}
+				className={`start-member ${attrs.className}`}
+				{...(first ? { "data-first": "" } : {})}
+			>
 				<StartStage
 					shelf={ownShelf}
 					night={!lamp ? 0.55 : reveal.open ? MEMBER_ROOM.night : 0.28}
@@ -117,7 +123,7 @@ export function MemberStart({
 							onClose={null}
 							onAction={() => reveal.request(true)}
 							teaser={memberTeaser({ query: start.query, results, deck, unread, lists })}
-							edge={flow === "p" ? null : <ListLinks links={listLinks(lists)} at="edge" />}
+							edge={<ListLinks links={listLinks(lists)} at="edge" />}
 						>
 							{card}
 						</RevealCard>

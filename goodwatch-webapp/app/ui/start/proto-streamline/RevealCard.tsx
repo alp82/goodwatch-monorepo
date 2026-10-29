@@ -156,7 +156,7 @@ function Teaser({
 	)
 }
 
-/** My movies and My shows: under the big button (l), beside it (p), or only on the open card (q), by CSS. */
+/** My movies and My shows: under the big button on the ledge, and as tabs on the open card's top edge. */
 export function ListLinks({
 	links,
 	at,

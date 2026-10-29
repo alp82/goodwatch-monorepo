@@ -1,19 +1,19 @@
-// PROTOTYPE (start-streamline, round 5): which flow is on show (`?flow=`), and a floating bar to switch flows and personas.
+// PROTOTYPE (start-streamline, round 6): which flow is on show (`?flow=`), and a floating bar to switch flows and personas.
 // The bar sits at the top, under the header, because the bottom of the screen is what the prototype is about.
 import { useNavigate, useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
 
 export const FLOWS = {
-	l: "Members: My movies and My shows under the button and on the open card",
-	p: "Members: My movies and My shows beside the button",
-	q: "Members: My movies and My shows only on the open card",
+	l: "New member's card: Path, rating as the big step",
+	r: "New member's card: Wall of posters behind one call",
+	s: "New member's card: three tiles with pictures",
 	old: "Today's page",
 } as const
 
 export type Flow = keyof typeof FLOWS
 
 /** Rounds 3 and 4: the room set lower (the window in view), the ledge on the floor, the card growing up from it. */
-export const ROUND3: readonly Flow[] = ["l", "p", "q"]
+export const ROUND3: readonly Flow[] = ["l", "r", "s"]
 
 const KEYS = Object.keys(FLOWS) as Flow[]
 const PERSONAS = ["guest", "full", "few", "new"] as const
