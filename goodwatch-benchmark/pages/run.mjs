@@ -8,7 +8,7 @@ import {
   mkdtemp,
   rm,
 } from "node:fs/promises";
-import { homedir } from "node:os";
+import { homedir, loadavg, availableParallelism } from "node:os";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, execFileSync } from "node:child_process";
@@ -157,6 +157,8 @@ async function main() {
             encoding: "utf8",
           }).trim(),
           nodeVersion: process.version,
+          logicalCpus: availableParallelism(),
+          initialLoadAverage: loadavg(),
           requestPolicy:
             "GET only; at most two in flight; one Lighthouse at a time",
           pages: [],
@@ -304,6 +306,7 @@ async function main() {
                 await delay(2000);
               }
               entry[device] = summarizeLighthouse(reports);
+              entry[device].attempted = o.runs;
               await save();
             }
           if (o.psi && p.tier === "P1" && !o.verify && !entry.psi) {
