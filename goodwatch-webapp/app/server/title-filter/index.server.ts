@@ -98,9 +98,9 @@ export interface FilterResult {
 	 * key; genres by name. Tag options toggle under any of; under all of picked options count removing their unit,
 	 * unpicked options count adding their unit;
 	 * minScore `0`, `60`, `70`, `80`; minMatch `0`, `60`, `70`, `80`, `90`, `outside`; released by option; similarTo and people only for the chosen options (what
-	 * removing each would leave); legacy `on`, `off`. Rest of the world has a null count without facts.
+	 * removing each would leave); legacy `on`, `off`. Rest of the world is in the opt-in productionCountries bucket, null without facts.
 	 * Popularity preset and stop counts are absent unless `popularityCounts` is requested.
-	 * years, runtime, sourceScores and scoreGap are empty: their SQL sets are only read for active choices.
+	 * Years, length and origin counts are opt-in; null without facts. Source scores and score gap have no counts.
 	 *
 	 * ageLimit: `off` and each step of `ladder` by its age (`0`, `6`, `12`, ...). Choosing a step also changes what
 	 * content hides, so each counts what that step would leave with the content it sets by itself plus the person's
@@ -131,6 +131,9 @@ export interface FilterResult {
 export interface FilterInput {
 	/** Compute popularity option counts only when requested. */
 	popularityCounts?: boolean
+	releasedCounts?: boolean
+	lengthCounts?: boolean
+	originCounts?: boolean
 	/** "catalog" is every title Discover shows; a list is a ranked search, a Wishlist, or an Explorer pool. */
 	universe: Iterable<TitleKey> | "catalog"
 	/** Text search keeps hidden titles findable. */
@@ -206,16 +209,20 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 				keys: await productionCountryTitles(country),
 			})),
 		),
-		rangeScoreTitles(
-			state,
-			"years",
-			universeKeys === "catalog" ? undefined : universeKeys,
-		),
-		rangeScoreTitles(
-			state,
-			"runtime",
-			universeKeys === "catalog" ? undefined : universeKeys,
-		),
+		snapshot.columns.facts
+			? null
+			: rangeScoreTitles(
+					state,
+					"years",
+					universeKeys === "catalog" ? undefined : universeKeys,
+				),
+		snapshot.columns.facts
+			? null
+			: rangeScoreTitles(
+					state,
+					"runtime",
+					universeKeys === "catalog" ? undefined : universeKeys,
+				),
 		rangeScoreTitles(
 			state,
 			"sourceScores",
@@ -276,6 +283,9 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 
 	const { passing, recoveries, optionCounts } = runPasses({
 		popularityCounts: input.popularityCounts,
+		releasedCounts: input.releasedCounts,
+		lengthCounts: input.lengthCounts,
+		originCounts: input.originCounts,
 		columns: snapshot.columns,
 		votes: state.votes,
 		popularityRank: state.popularityRank,
@@ -340,6 +350,10 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		minMatch: state.minMatch,
 		matches,
 		released: state.years ? null : releasedOptions[state.released],
+		yearRange: state.years,
+		movieRange: state.runtime,
+		episodeRange:
+			state.episodeRuntime === undefined ? state.runtime : state.episodeRuntime,
 		years: years && titleSet(years, snapshot),
 		runtime: runtime && titleSet(runtime, snapshot),
 		sourceScores: sourceScores && titleSet(sourceScores, snapshot),

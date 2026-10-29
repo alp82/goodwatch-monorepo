@@ -957,8 +957,8 @@ test("production countries combine with OR, count co-productions once, and recov
 		restOfWorld: world.keys.rows,
 	})
 	assert.deepEqual(worldwide.rows, [0, 1, 3])
-	assert.equal(worldwide.optionCounts.productionCountries.restOfWorld, 2)
-	assert.equal(worldwide.optionCounts.productionCountries.US, 2)
+	assert.equal(worldwide.optionCounts.productionCountries, undefined)
+
 	assert.equal(
 		worldwide.recoveries.find((r) => r.filter === "productionCountries")
 			?.titles,
@@ -976,7 +976,7 @@ test("production countries combine with OR, count co-productions once, and recov
 	assert.deepEqual(passes(plain, { productionCountries: [us] }).rows, [0, 1])
 	const result = passes(plain, { productionCountries: [us, gb] })
 	assert.deepEqual(result.rows, [0, 1, 2])
-	assert.equal(result.optionCounts.productionCountries.US, 2)
+	assert.equal(result.optionCounts.productionCountries, undefined)
 	assert.equal(
 		result.recoveries.find((r) => r.filter === "productionCountries")?.titles,
 		3,
@@ -1022,7 +1022,10 @@ test("years, runtime, source scores and gap have independent fail bits and recov
 			passes(plain, { [name]: keeping([1, 2]) }).rows,
 			[0, 3, 4, 5],
 		)
-		assert.deepEqual(out.optionCounts[name], {}) // No extra SQL for option counts.
+		assert.deepEqual(
+			out.optionCounts[name],
+			name === "years" || name === "runtime" ? undefined : {},
+		) // No extra SQL for option counts.
 	}
 })
 
@@ -1605,7 +1608,7 @@ test("missing facts leave Rest of the world inactive with a null count and one w
 	assert.equal(warn.mock.callCount(), 1)
 	const result = passes(plain, { restOfWorld: null })
 	assert.deepEqual(result.rows, plain)
-	assert.equal(result.optionCounts.productionCountries.restOfWorld, null)
+	assert.equal(result.optionCounts.productionCountries, undefined)
 	assert.equal(
 		result.recoveries.find((r) => r.filter === "productionCountries"),
 		undefined,
@@ -1841,4 +1844,191 @@ test("popularity counts stay within the request budget over 200k titles", (t) =>
 	const median = times[Math.floor(times.length / 2)]
 	t.diagnostic(`Median: ${median.toFixed(2)} ms per call over ${size} titles`)
 	assert.ok(median < 15, `Median ${median.toFixed(2)} ms exceeded 15 ms`)
+})
+
+function factsFixture(n: number): NonNullable<PassInput["columns"]["facts"]> {
+	const countries = ["US", "CA", "GB", "FR", "NG", "NZ", "JP"]
+	const countryIndexes = new Uint8Array(n * 4).fill(255)
+	for (let r = 0; r < n; r++)
+		for (let s = 0; s < r % 5; s++)
+			countryIndexes[s * n + r] = (r + s) % countries.length
+	return {
+		releaseYears: Uint16Array.from({ length: n }, (_, i) =>
+			i % 11 ? 1920 + (i % 108) : 0,
+		),
+		lengths: Uint16Array.from({ length: n }, (_, i) =>
+			i % 13 ? 1 + ((i * 7) % 350) : 0,
+		),
+		budgets: new Uint32Array(n),
+		boxOffice: new Uint32Array(n),
+		seasons: new Uint8Array(n),
+		episodes: new Uint16Array(n),
+		showStatuses: new Uint8Array(n),
+		countryIndexes,
+		countries,
+	}
+}
+
+test("facts counts match brute force with other filters, distinct sets, overflow and unknown lengths", async () => {
+	const { INDUSTRIES, REGIONS, BIG_EIGHT } = await import(
+		"~/domain/film-industries"
+	)
+	const n = 100,
+		facts = factsFixture(n)
+	const c = {
+		...columns,
+		facts,
+		pointIds: Float64Array.from(
+			{ length: n },
+			(_, i) => (i % 2 ? 2e12 : MOVIE) + i + 1,
+		),
+		scores: Uint8Array.from({ length: n }, (_, i) => (i % 3 ? 80 : 40)),
+	}
+	const base = passInput(
+		c,
+		Array.from({ length: n }, (_, i) => i),
+	)
+	for (const limited of [false, true]) {
+		const actual = runPasses({
+			...base,
+			releasedCounts: true,
+			lengthCounts: true,
+			originCounts: true,
+			minScore: limited ? 70 : 0,
+			yearRange: limited ? { min: 1970, max: 2025 } : undefined,
+			movieRange: limited ? { max: 90 } : undefined,
+			episodeRange: limited ? { min: 35, max: 55 } : null,
+			productionCountries: limited
+				? [
+						{
+							option: "US",
+							keys: {
+								keys: new Set<number>(),
+								rows: Uint8Array.from({ length: n }, (_, i) => i % 2),
+							},
+						},
+					]
+				: [],
+		}).optionCounts
+		const years: Record<string, number> = {},
+			runtime: Record<string, number> = {},
+			origin: Record<string, number> = { world: 0 }
+		for (const kind of ["movie", "episode"]) {
+			for (let b = 0; b <= 240; b += 5) runtime[`${kind}:${b}`] = 0
+			runtime[`${kind}:unknown`] = 0
+		}
+		for (const set of [...INDUSTRIES, ...REGIONS]) origin[`set:${set.id}`] = 0
+		for (let i = 0; i < n; i++) {
+			const year = facts.releaseYears[i],
+				length = facts.lengths[i],
+				show = i % 2 === 1
+			const scoreOK = !limited || c.scores[i] >= 70,
+				yearOK = !limited || (year >= 1970 && year <= 2025)
+			const lengthOK =
+				!limited ||
+				(length > 0 && (show ? length >= 35 && length <= 55 : length <= 90))
+			const countryOK = !limited || show
+			if (scoreOK && lengthOK && countryOK && year)
+				years[year] = (years[year] ?? 0) + 1
+			if (scoreOK && yearOK && countryOK)
+				runtime[
+					`${show ? "episode" : "movie"}:${length ? Math.min(240, length - (length % 5)) : "unknown"}`
+				]++
+			if (scoreOK && yearOK && lengthOK) {
+				const codes = facts.countries.filter((_, c) =>
+					[0, 1, 2, 3].some((s) => facts.countryIndexes[s * n + i] === c),
+				)
+				for (const code of codes) origin[code] = (origin[code] ?? 0) + 1
+				for (const set of [...INDUSTRIES, ...REGIONS])
+					if (codes.some((code) => set.codes.includes(code)))
+						origin[`set:${set.id}`]++
+				if (codes.some((code) => !BIG_EIGHT.includes(code))) origin.world++
+			}
+		}
+		assert.deepEqual(actual.years, years)
+		assert.deepEqual(actual.runtime, runtime)
+		assert.deepEqual(actual.productionCountries, origin)
+	}
+	for (const field of ["years", "runtime", "productionCountries"] as const)
+		assert.ok(!(field in runPasses(base).optionCounts))
+	for (const [flag, field] of [
+		["releasedCounts", "years"],
+		["lengthCounts", "runtime"],
+		["originCounts", "productionCountries"],
+	] as const) {
+		assert.equal(
+			runPasses({ ...base, columns: { ...c, facts: null }, [flag]: true })
+				.optionCounts[field],
+			null,
+		)
+		const present = runPasses({ ...base, [flag]: true }).optionCounts
+		assert.ok(present[field])
+		for (const other of ["years", "runtime", "productionCountries"] as const)
+			if (other !== field) assert.ok(!(other in present))
+	}
+})
+
+test("facts count cost on a generated 260k-title universe", async (t) => {
+	const { factCounts } = await import("./passes.server.ts")
+	const n = 260_000,
+		facts = factsFixture(n)
+	const input = passInput(
+		{
+			...columns,
+			facts,
+			pointIds: Float64Array.from(
+				{ length: n },
+				(_, i) => (i % 2 ? 2e12 : MOVIE) + i + 1,
+			),
+		},
+		Array.from({ length: n }, (_, i) => i),
+	)
+	const masks = new Uint32Array(n)
+	for (const flag of [
+		"releasedCounts",
+		"lengthCounts",
+		"originCounts",
+	] as const) {
+		const requested = { ...input, [flag]: true }
+		for (let warm = 0; warm < 5; warm++) factCounts(requested, masks)
+		const times = Array.from({ length: 15 }, () => {
+			const start = performance.now()
+			factCounts(requested, masks)
+			return performance.now() - start
+		}).sort((a, b) => a - b)
+		t.diagnostic(
+			`${flag}: median ${times[7].toFixed(2)} ms; p95 ${times[14].toFixed(2)} ms`,
+		)
+	}
+})
+
+test("unrequested facts counts and inactive ranges never read the facts columns", () => {
+	const facts = factsFixture(6)
+	for (const key of Object.keys(facts))
+		Object.defineProperty(facts, key, {
+			get() {
+				throw new Error(`unexpected facts read: ${key}`)
+			},
+		})
+	const result = runPasses(passInput({ ...columns, facts }, plain))
+	assert.deepEqual([...result.passing], plain)
+	assert.equal(result.optionCounts.years, undefined)
+	assert.equal(result.optionCounts.runtime, undefined)
+	assert.equal(result.optionCounts.productionCountries, undefined)
+})
+
+test("year counts ignore both Released choices and out-of-snapshot rows count as unknown lengths", () => {
+	const facts = factsFixture(6)
+	const base = passInput({ ...columns, facts }, [0, 1, -1])
+	const result = runPasses({
+		...base,
+		releasedCounts: true,
+		lengthCounts: true,
+		released: { from: 0, to: 1 },
+	})
+	assert.deepEqual(result.optionCounts.years, { 1921: 1 })
+	assert.equal(result.optionCounts.runtime?.["movie:unknown"], 0) // Released is still another filter for Length.
+	const unknown = runPasses({ ...base, lengthCounts: true }).optionCounts
+		.runtime
+	assert.equal(unknown?.["movie:unknown"], 2)
 })

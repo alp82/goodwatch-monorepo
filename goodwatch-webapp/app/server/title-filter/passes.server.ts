@@ -1,3 +1,4 @@
+import { BIG_EIGHT, INDUSTRIES, REGIONS } from "~/domain/film-industries"
 import type { FilterOptionCounts } from "~/domain/filter-state"
 // The filter's passes over a universe of titles that is already in its plain order. One pass computes each title's
 // fail mask: bit g is set when filter group g hides the title. A title with an empty mask passes; a title with exactly
@@ -38,6 +39,7 @@ import {
 import type { TitleKey } from "~/utils/title-key"
 
 const SHOW_BASE = 2e12
+const ORIGIN_SETS = [...INDUSTRIES, ...REGIONS]
 // A fail mask is 32 bits wide (FailMasks), one bit per filter group.
 if (FILTER_NAMES.length > 32)
 	throw new Error("A title's fail mask holds at most 32 filter groups")
@@ -187,6 +189,9 @@ export function ratingsFilter(
 export interface PassInput {
 	/** Compute popularity option counts only when requested. */
 	popularityCounts?: boolean
+	releasedCounts?: boolean
+	lengthCounts?: boolean
+	originCounts?: boolean
 	votes?: FilterRange
 	popularityRank?: FilterRange
 	/** Catalog rank per snapshot row; zero is unranked. */
@@ -237,6 +242,9 @@ export interface PassInput {
 	people: { option: string; keys: TitleSet }[]
 	productionCountries?: { option: string; keys: TitleSet }[]
 	restOfWorld?: Uint8Array | null
+	yearRange?: FilterRange
+	movieRange?: FilterRange
+	episodeRange?: FilterRange | null
 	years?: TitleSet | null
 	runtime?: TitleSet | null
 	sourceScores?: TitleSet | null
@@ -300,6 +308,121 @@ function within(value: number | undefined, range?: FilterRange): boolean {
 		value >= (range.min ?? 0) &&
 		value <= (range.max ?? Number.POSITIVE_INFINITY)
 	)
+}
+
+/** An active bound rejects missing facts; bounds are inclusive, as in the SQL fallback. */
+function withinFact(value: number, range?: FilterRange | null): boolean {
+	return (
+		!range ||
+		(range.min === undefined && range.max === undefined) ||
+		(value > 0 && value >= (range.min ?? 0) && value <= (range.max ?? Infinity))
+	)
+}
+
+/** Requested facts histograms, sharing one traversal of the universe and its fail masks. */
+export function factCounts(
+	input: PassInput,
+	masks: Uint32Array,
+): Partial<FilterOptionCounts> {
+	const facts = input.columns.facts
+	const years = input.releasedCounts
+		? facts
+			? ({} as Record<string, number>)
+			: null
+		: undefined
+	const runtime = input.lengthCounts
+		? facts
+			? ({} as Record<string, number>)
+			: null
+		: undefined
+	const origin = input.originCounts
+		? facts
+			? ({} as Record<string, number>)
+			: null
+		: undefined
+	const out: Partial<FilterOptionCounts> = {}
+	if (years !== undefined) out.years = years
+	if (runtime !== undefined) out.runtime = runtime
+	if (origin !== undefined) out.productionCountries = origin
+	if (!facts) return out
+	const yearCounts = years ? new Uint32Array(65536) : null
+	// 49 five-minute buckets (240 includes overflow), then unknown, for each kind.
+	const lengthCounts = runtime ? new Uint32Array(100) : null
+	const countryCounts = origin ? new Uint32Array(facts.countries.length) : null
+	const sets = ORIGIN_SETS
+	// Precompute group membership per country, so co-productions need only four reads and a bit union.
+	const groups = origin
+		? Uint32Array.from(facts.countries, (code) =>
+				sets.reduce(
+					(bits, set, g) => (set.codes.includes(code) ? bits | (1 << g) : bits),
+					0,
+				),
+			)
+		: null
+	const outside = origin
+		? Uint8Array.from(facts.countries, (code) =>
+				BIG_EIGHT.includes(code) ? 0 : 1,
+			)
+		: null
+	const setCounts = origin ? new Uint32Array(sets.length) : null
+	let worldCount = 0
+	const count = facts.releaseYears.length
+	for (let i = 0; i < input.rows.length; i++) {
+		const row = input.rows[i]
+		const mask = masks[i]
+		if (yearCounts && (mask & ~(BIT.years | BIT.released)) === 0 && row >= 0) {
+			const year = facts.releaseYears[row]
+			if (year) yearCounts[year]++
+		}
+		if (lengthCounts && (mask & ~BIT.runtime) === 0) {
+			const length = row < 0 ? 0 : facts.lengths[row]
+			const kind = input.keys[i] >= SHOW_BASE ? 50 : 0
+			lengthCounts[
+				kind + (length ? Math.min(48, Math.floor(length / 5)) : 49)
+			]++
+		}
+		if (
+			countryCounts &&
+			setCounts &&
+			groups &&
+			outside &&
+			row >= 0 &&
+			(mask & ~BIT.productionCountries) === 0
+		) {
+			let bits = 0
+			let world = false
+			for (let slot = 0; slot < 4; slot++) {
+				const index = facts.countryIndexes[slot * count + row]
+				if (index === 255) continue
+				countryCounts[index]++
+				bits |= groups[index]
+				world ||= outside[index] === 1
+			}
+			for (let remaining = bits; remaining; remaining &= remaining - 1)
+				setCounts[lowestBit(remaining)]++
+			if (world) worldCount++
+		}
+	}
+	if (years && yearCounts)
+		for (let year = 1; year < yearCounts.length; year++)
+			if (yearCounts[year]) years[year] = yearCounts[year]
+	if (runtime && lengthCounts)
+		for (let k = 0; k < 2; k++) {
+			const kind = k ? "episode" : "movie"
+			for (let bucket = 0; bucket <= 48; bucket++)
+				runtime[`${kind}:${bucket * 5}`] = lengthCounts[k * 50 + bucket]
+			runtime[`${kind}:unknown`] = lengthCounts[k * 50 + 49]
+		}
+	if (origin && countryCounts && setCounts) {
+		facts.countries.forEach((code, i) => {
+			if (countryCounts[i]) origin[code] = countryCounts[i]
+		})
+		sets.forEach((set, i) => {
+			origin[`set:${set.id}`] = setCounts[i]
+		})
+		origin.world = worldCount
+	}
+	return out
 }
 
 /** Counts each replacement range while retaining its sibling choice and every other group. */
@@ -572,8 +695,26 @@ export function runPasses(input: PassInput): PassOutput {
 			mask |= BIT.productionCountries
 		if (people.length && !inAny(people, i)) mask |= BIT.people
 		if (legacy && !inSet(legacy, i)) mask |= BIT.legacy
-		if (input.years && !inSet(input.years, i)) mask |= BIT.years
-		if (input.runtime && !inSet(input.runtime, i)) mask |= BIT.runtime
+		if (columns.facts) {
+			if (
+				input.yearRange &&
+				!withinFact(
+					row < 0 ? 0 : columns.facts.releaseYears[row],
+					input.yearRange,
+				)
+			)
+				mask |= BIT.years
+			const lengthRange =
+				keys[i] >= SHOW_BASE ? input.episodeRange : input.movieRange
+			if (
+				lengthRange &&
+				!withinFact(row < 0 ? 0 : columns.facts.lengths[row], lengthRange)
+			)
+				mask |= BIT.runtime
+		} else {
+			if (input.years && !inSet(input.years, i)) mask |= BIT.years
+			if (input.runtime && !inSet(input.runtime, i)) mask |= BIT.runtime
+		}
 		if (input.sourceScores && !inSet(input.sourceScores, i))
 			mask |= BIT.sourceScores
 		if (input.scoreGap && !inSet(input.scoreGap, i)) mask |= BIT.scoreGap
@@ -605,15 +746,19 @@ export function runPasses(input: PassInput): PassOutput {
 	// One pass per group over the titles every other group lets through.
 	const passesOthers = (i: number, bit: number) => (masks[i] & ~bit) === 0
 	const optionCounts = Object.fromEntries(
-		FILTER_NAMES.filter((name) => name !== "popularity").map((name) => [
-			name,
-			{},
-		]),
+		FILTER_NAMES.filter(
+			(name) =>
+				!["popularity", "years", "runtime", "productionCountries"].includes(
+					name,
+				),
+		).map((name) => [name, {}]),
 	) as FilterOptionCounts
 
 	// Replacing one popularity range keeps the other sub-choice and every other group.
 	if (input.popularityCounts)
 		optionCounts.popularity = popularityCounts(input, masks)
+	if (input.releasedCounts || input.lengthCounts || input.originCounts)
+		Object.assign(optionCounts, factCounts(input, masks))
 	// Movies or shows.
 	{
 		let all = 0
@@ -922,13 +1067,6 @@ export function runPasses(input: PassInput): PassOutput {
 	}
 	optionCounts.similarTo = setGroup(BIT.similarTo, similar)
 	optionCounts.people = setGroup(BIT.people, people)
-	optionCounts.productionCountries = setGroup(
-		BIT.productionCountries,
-		productionCountries,
-	)
-
-	if (input.restOfWorld === null)
-		optionCounts.productionCountries.restOfWorld = null
 
 	// Legacy filters: on or off as one.
 	if (legacy) {

@@ -5,7 +5,7 @@ import { stubModules } from "../server/rating-onboarding.test-support.ts"
 stubModules({
 	"~/server/discover-results.server":
 		"export class SnapshotNotLoaded extends Error {}; export const forYouFromParams = () => false; export const discoverFilterDefaults = () => ({onMyServices: false, notSeenYet: false})",
-	"~/server/discover-panel.server": `export const isPanelPart = part => ['mixes', 'titles', 'people'].includes(part);
+	"~/server/discover-panel.server": `export const isPanelPart = part => ['mixes', 'titles', 'people', 'released'].includes(part);
 		export const getDiscoverPanel = async (ctx, part, input) => ({part, input, guest: ctx.guest});`,
 	"~/server/media-payload.server":
 		"export const presentCatalogLoader = load => load",
@@ -16,7 +16,7 @@ const { loader, action } = await import("./api.discover_.panel.ts")
 const args = (request: Request) => ({ request, params: {}, context: {} })
 
 test("GET parses panel part and filter query, with private responses and timing", async () => {
-	for (const part of ["mixes", "titles", "people"]) {
+	for (const part of ["mixes", "titles", "people", "released"]) {
 		const response = await loader(
 			args(
 				new Request(
@@ -75,23 +75,25 @@ test("POST forwards guest progress; invalid, oversized bodies and other methods 
 	)
 })
 
-test("people forwards ranked search including empty results and defaults to relevance", async () => {
-	for (const ranked of [
-		"1000000000001,invalid,2000000000002,1000000000001",
-		"",
-	]) {
-		const response = await loader(
-			args(
-				new Request(
-					`https://goodwatch.test/api/discover/panel?part=people&ranked=${ranked}&page=3`,
+test("people and released forward ranked search including empty results and default to relevance", async () => {
+	for (const part of ["people", "released"]) {
+		for (const ranked of [
+			"1000000000001,invalid,2000000000002,1000000000001",
+			"",
+		]) {
+			const response = await loader(
+				args(
+					new Request(
+						`https://goodwatch.test/api/discover/panel?part=${part}&ranked=${ranked}&page=3`,
+					),
 				),
-			),
-		)
-		const body = JSON.parse(await response.text())
-		assert.deepEqual(
-			body.input.ranked,
-			ranked ? [1000000000001, 2000000000002] : [],
-		)
-		assert.equal(body.input.sort, "relevance")
+			)
+			const body = JSON.parse(await response.text())
+			assert.deepEqual(
+				body.input.ranked,
+				ranked ? [1000000000001, 2000000000002] : [],
+			)
+			assert.equal(body.input.sort, "relevance")
+		}
 	}
 })

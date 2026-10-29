@@ -41,22 +41,23 @@ function selected(
 		.all(...sql.params)
 		.map((r: { id: number }) => r.id)
 }
-test("inclusive year and runtime bounds preserve zero and reject missing facts", () => {
+test("inclusive year and runtime bounds reject unknown runtimes", () => {
 	assert.deepEqual(
 		selected({ years: { min: 1990, max: 2005 } }, "years"),
 		[1, 2, 6, 7, 8],
 	)
 	assert.deepEqual(
 		selected({ runtime: { min: 0, max: 90 } }, "runtime"),
-		[1, 5],
+		[1],
 	)
+	assert.deepEqual(selected({ runtime: { max: 90 } }, "runtime"), [1])
 	assert.deepEqual(selected({ runtime: { min: 120 } }, "runtime"), [2, 3])
 	const state = {
 		...defaultFilterState({ onMyServices: false, notSeenYet: false }),
 		runtime: { max: 90 },
 	}
 	assert.deepEqual(rangeScoreConditions(state, "runtime", "show"), {
-		conditions: ["episode_runtime[1] <= ?"],
+		conditions: ["episode_runtime[1] > 0", "episode_runtime[1] <= ?"],
 		params: [90],
 	})
 })
@@ -124,11 +125,15 @@ test("episodeRuntime splits movie and show bounds, including explicitly unlimite
 		episodeRuntime: { min: 20, max: 35 },
 	}
 	assert.deepEqual(rangeScoreConditions(state, "runtime", "movie"), {
-		conditions: ["runtime <= ?"],
+		conditions: ["runtime > 0", "runtime <= ?"],
 		params: [120],
 	})
 	assert.deepEqual(rangeScoreConditions(state, "runtime", "show"), {
-		conditions: ["episode_runtime[1] >= ?", "episode_runtime[1] <= ?"],
+		conditions: [
+			"episode_runtime[1] > 0",
+			"episode_runtime[1] >= ?",
+			"episode_runtime[1] <= ?",
+		],
 		params: [20, 35],
 	})
 	assert.deepEqual(

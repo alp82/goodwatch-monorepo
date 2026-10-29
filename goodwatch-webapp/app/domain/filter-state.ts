@@ -65,13 +65,18 @@ export const FILTER_NAMES = [
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
-/** A null country option count means its snapshot facts are unavailable. */
+/** Facts count blocks are absent unless requested, and null when facts are unavailable. */
 export type FilterOptionCounts = {
-	[Name in Exclude<FilterName, "popularity">]: Record<
-		string,
-		Name extends "productionCountries" ? number | null : number
-	>
-} & { popularity?: Record<string, number> }
+	[Name in Exclude<
+		FilterName,
+		"popularity" | "years" | "runtime" | "productionCountries"
+	>]: Record<string, number>
+} & {
+	popularity?: Record<string, number>
+	years?: Record<string, number> | null
+	runtime?: Record<string, number> | null
+	productionCountries?: Record<string, number> | null
+}
 
 export const SORT_KEYS = [
 	"popular",

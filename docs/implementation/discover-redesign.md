@@ -936,6 +936,31 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
   for a set of states); counts against brute force.
 - Acceptance: `/api/discover/results` carries `optionCounts.years`, `runtime` and `productionCountries` buckets;
   Server-Timing `results` stays within the budget in [Risks and checks](#risks-and-checks).
+- Implemented: `counts=released,length,origin` opts into the three facts count blocks, independently or together.
+  Unrequested blocks are absent; requested blocks are null without facts. Counts share one traversal of the
+  universe's fail masks, ignoring their own filter group (years ignores both `years` and `released`). Length
+  buckets are lower bounds in minutes, floored to five; `240` includes longer titles. Unknown years are omitted;
+  unknown lengths have their own bucket. Country and set counts describe the first four countries, with each
+  title counted once per set and for `world`. Individual country pass/fail still uses exact SQL sets. Rest of the
+  world retains B7's in-memory column and missing-facts behavior; this supersedes the older sidecar paragraph's
+  instruction to use SQL for that option.
+- The Released panel returns `options: [{ id, topTitle }]` in decade order (1920s through the current decade), then
+  `thisYear`, `last2Years`, `recent`, `last5Years`, `after2000`, `after1950`. Each card is the first matching title
+  in the filtered list's order, using first-release years from facts. Since/After bounds are inclusive; Last N
+  years starts at current year minus (N - 1). Missing facts set `available: false` and leave cards null.
+- Unit benchmark (Node 24.15.0, generated 260,000-row universe, all titles passing other groups, alternating movies
+  and shows, 0–4 country slots, five warmups and fifteen timed calls per block): released median **1.03 ms**,
+  p95 **1.83 ms**; length median **1.17 ms**, p95 **1.30 ms**; origin median **3.05 ms**, p95 **3.53 ms**.
+  These measure the count block including allocation/materialization, not end-to-end request latency. No count
+  block is called or allocated without its flag. No databases or Windmill were accessed.
+- Compatibility limits: `episodeRuntime` absent still inherits `runtime`, and explicit null leaves shows
+  unrestricted, matching B7's SQL behavior. Facts encode numeric zero as unknown: an active range rejects it.
+  Runtime SQL also requires a positive value whenever a bound is active, so unknown stored zeros fail on both paths.
+  Titles outside the snapshot in ranked or Wishlist universes fail an active years or runtime range on the facts
+  path, as with the existing released preset. Parity covers positive values, stored runtime zeros, missing values,
+  inclusive bounds, both kinds, and combined choices; exact parity for raw stored nonpositive years or saturated
+  values would require a richer sidecar. Country truncation beyond four slots remains the B10 deployment
+  measurement, not a database check in this step.
 - Depends on: B7, B11. F8 depends on it: the owner picked Released, Length and Made in for their counts and decade
   bars, so the swap doesn't ship them without numbers.
 

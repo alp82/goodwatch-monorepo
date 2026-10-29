@@ -34,6 +34,9 @@ const sortedFields = (value: Record<string, unknown> | undefined) =>
  */
 export function discoverFilterKey(input: {
 	popularityCounts?: boolean
+	releasedCounts?: boolean
+	lengthCounts?: boolean
+	originCounts?: boolean
 	viewer: ViewerContext
 	taste: Pick<Taste, "signal">
 	state: FilterState
@@ -111,6 +114,9 @@ export function discoverFilterKey(input: {
 		input.year,
 		input.sort,
 		input.popularityCounts === true,
+		input.releasedCounts === true,
+		input.lengthCounts === true,
+		input.originCounts === true,
 		serialized,
 	])
 }

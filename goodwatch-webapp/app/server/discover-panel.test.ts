@@ -1,21 +1,27 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { stubModules } from "./rating-onboarding.test-support.ts"
+import type { FilterState } from "~/domain/filter-state"
 import type { TitleSnapshot } from "./title-snapshot/snapshot.server"
 
 let snapshot: TitleSnapshot
 const boundary = globalThis as typeof globalThis & {
 	panelSnapshot: () => TitleSnapshot
+	panelRange: (state: FilterState, name: string) => Set<number> | null
+	panelCountries: (country: string) => Set<number>
 	panelGroupsFail: boolean
 	panelPeopleFail: boolean
 	panelPeopleKeys: number[]
 }
+boundary.panelRange = () => null
+boundary.panelCountries = () => new Set()
 boundary.panelSnapshot = () => snapshot
 boundary.panelPeopleFail = false
 boundary.panelGroupsFail = false
 boundary.panelPeopleKeys = []
 stubModules({
-	"~/server/list-exposure.server": "export const recordListExposure = () => null",
+	"~/server/list-exposure.server":
+		"export const recordListExposure = () => null",
 	"./discover-people.server":
 		"export const featuredPeople = async () => { if (globalThis.panelPeopleFail) throw new Error('Crate unavailable'); return {mode: 'featured', actors: [], crew: []} }; export const peopleInResults = async keys => { globalThis.panelPeopleKeys = keys; if (globalThis.panelPeopleFail) throw new Error('Crate unavailable'); return {mode: 'results', actors: [], crew: []} }",
 	"~/server/title-snapshot/index.server": `export * from '${new URL("./title-snapshot/format.server.ts", import.meta.url).href}'; export const getTitleSnapshot = () => globalThis.panelSnapshot()`,
@@ -27,16 +33,15 @@ stubModules({
 		"export const MAX_KEYS = 100; export const getTitleCards = async (keys, ctx) => keys.map(key => ({key, seen: ctx.seen.has(key)}))",
 	"~/server/watch-next-taste-picker.server":
 		"export const tasteGroupsFor = async () => { if (globalThis.panelGroupsFail) throw new Error('groups unavailable'); return {groups: [{carries: ['m:funny', 't:crime']}]}; }",
-	"./id-sets.server": `export const rangeScoreTitles = async () => null;
+	"./id-sets.server": `export const rangeScoreTitles = async (state, name) => globalThis.panelRange(state, name);
 		export const similarTitles = async () => new Set(); export const personTitles = similarTitles;
-		export const legacyTitles = similarTitles; export const productionCountryTitles = similarTitles;
+		export const legacyTitles = similarTitles; export const productionCountryTitles = country => globalThis.panelCountries(country);
 		export const titlesOnAnyService = similarTitles; export const titlesOnServicesByColumn = similarTitles;`,
 	"../personal-order/reader.server.ts":
 		"export const loadPersonalOrder = () => {}; export const logPersonalOrder = () => {}; export const orderPersonalOrder = () => {}; export const personalOrderExposure = () => {}",
 })
-const { getDiscoverPanel, readyMixes } = await import(
-	"./discover-panel.server.ts"
-)
+const { getDiscoverPanel, readyMixes, releasedTopKeys, isPanelPart } =
+	await import("./discover-panel.server.ts")
 const { discoverFilterDefaults } = await import("./discover-results.server.ts")
 const { filterTitles } = await import("./title-filter/index.server.ts")
 const { filterStateFromParams } = await import("~/domain/filter-state")
@@ -351,10 +356,16 @@ test("empty URL uses featured people for members with saved services", async () 
 		viewer: { kind: "member" as const, userId: "member" },
 		services: [8],
 	}
-	const state = filterStateFromParams(new URLSearchParams(), discoverFilterDefaults(ctx))
+	const state = filterStateFromParams(
+		new URLSearchParams(),
+		discoverFilterDefaults(ctx),
+	)
 	assert.equal(state.notSeenYet, true)
 	assert.equal(state.onMyServices, true)
-	const panel = await getDiscoverPanel(ctx, "people", { state, sort: "popular" })
+	const panel = await getDiscoverPanel(ctx, "people", {
+		state,
+		sort: "popular",
+	})
 	assert.ok(panel.part === "people" && panel.mode === "featured")
 })
 
@@ -362,16 +373,185 @@ test("Crate failures in featured and result people warn and return unavailable",
 	const warnings: unknown[][] = []
 	t.mock.method(console, "warn", (...args: unknown[]) => warnings.push(args))
 	boundary.panelPeopleFail = true
-	t.after(() => { boundary.panelPeopleFail = false })
+	t.after(() => {
+		boundary.panelPeopleFail = false
+	})
 	for (const ranked of [undefined, [], [keys[0]]]) {
 		const panel = await getDiscoverPanel(viewer, "people", {
-			state: parseState(new URLSearchParams()), sort: "popular", ranked,
+			state: parseState(new URLSearchParams()),
+			sort: "popular",
+			ranked,
 		})
 		assert.deepEqual(panel, {
-			part: "people", mode: ranked === undefined ? "featured" : "results",
-			actors: [], crew: [], unavailable: true,
+			part: "people",
+			mode: ranked === undefined ? "featured" : "results",
+			actors: [],
+			crew: [],
+			unavailable: true,
 		})
 	}
 	assert.equal(warnings.length, 3)
-	assert.ok(warnings.every(([message, error]) => message === "Discover panel: people unavailable" && error instanceof Error))
+	assert.ok(
+		warnings.every(
+			([message, error]) =>
+				message === "Discover panel: people unavailable" &&
+				error instanceof Error,
+		),
+	)
+})
+
+test("facts and stub SQL paths return identical keys and recoveries; country pass/fail stays exact", async () => {
+	const original = snapshot
+	const rawYears = keys.map((_, i) => (i % 7 ? 1950 + i * 2 : null))
+	const rawLengths = keys.map((_, i) =>
+		i % 9 === 0 ? null : i % 9 === 1 ? 0 : 20 + i * 5,
+	)
+	const facts = {
+		releaseYears: Uint16Array.from(rawYears, (v) => v ?? 0),
+		lengths: Uint16Array.from(rawLengths, (v) => v ?? 0),
+		budgets: new Uint32Array(keys.length),
+		boxOffice: new Uint32Array(keys.length),
+		seasons: new Uint8Array(keys.length),
+		episodes: new Uint16Array(keys.length),
+		showStatuses: new Uint8Array(keys.length),
+		countryIndexes: new Uint8Array(keys.length * 4).fill(255),
+		countries: ["CA"],
+	}
+	facts.countryIndexes.fill(0, 0, keys.length) // US is deliberately absent from the four slots.
+	const calls: string[] = []
+	boundary.panelRange = (state, name) => {
+		calls.push(name)
+		if (name !== "years" && name !== "runtime") return null
+		const selected = keys.filter((_, i) => {
+			const range =
+				name === "years"
+					? state.years
+					: keys[i] < 2e12 || state.episodeRuntime === undefined
+						? state.runtime
+						: state.episodeRuntime
+			const value = name === "years" ? rawYears[i] : rawLengths[i]
+			return (
+				!range ||
+				(range.min === undefined && range.max === undefined) ||
+				(value !== null &&
+					(name !== "runtime" || value > 0) &&
+					value >= (range.min ?? 0) &&
+					value <= (range.max ?? Infinity))
+			)
+		})
+		return new Set(selected)
+	}
+	boundary.panelCountries = () => new Set([keys[1], keys[22]])
+	try {
+		for (const fields of [
+			{},
+			{ years: { min: 1990 } },
+			{ years: { max: 2005 } },
+			{ years: { min: 1990, max: 2005 } },
+			{ runtime: { min: 0, max: 90 } },
+			{ runtime: { max: 90 } },
+			{ runtime: { min: 120 } },
+			{ episodeRuntime: { max: 45 } },
+			{ runtime: { max: 90 }, episodeRuntime: null },
+			{
+				years: { min: 1990 },
+				runtime: { max: 180 },
+				episodeRuntime: { min: 60, max: 150 },
+			},
+			{ productionCountries: ["US"] },
+		]) {
+			const state = { ...parseState(new URLSearchParams()), ...fields }
+			const input = {
+				universe: keys,
+				state,
+				sort: "relevance" as const,
+				taste: null,
+				forYou: null,
+				viewer,
+			}
+			snapshot = { ...original, columns: { ...original.columns, facts: null } }
+			const sql = await filterTitles(input)
+			assert.ok(calls.includes("years") && calls.includes("runtime"))
+			calls.length = 0
+			snapshot = { ...original, columns: { ...original.columns, facts } }
+			const memory = await filterTitles(input)
+			assert.deepEqual(memory.keys, sql.keys, JSON.stringify(fields))
+			assert.deepEqual(memory.recoveries, sql.recoveries)
+			assert.ok(!calls.includes("years") && !calls.includes("runtime"))
+			calls.length = 0
+			if (fields.productionCountries)
+				assert.deepEqual(memory.keys, [keys[1], keys[22]])
+		}
+	} finally {
+		snapshot = original
+		boundary.panelRange = () => null
+		boundary.panelCountries = () => new Set()
+	}
+})
+
+test("released panel selects facts years in list order for decades, New and After, with viewer cards", async () => {
+	assert.ok(isPanelPart("released"))
+	const original = snapshot
+	const year = new Date().getUTCFullYear()
+	const facts = {
+		releaseYears: Uint16Array.from(
+			keys,
+			(_, i) => [1995, year - 5, year - 2, year, 1949, 1950, 2000, 0][i % 8],
+		),
+		lengths: new Uint16Array(keys.length),
+		budgets: new Uint32Array(keys.length),
+		boxOffice: new Uint32Array(keys.length),
+		seasons: new Uint8Array(keys.length),
+		episodes: new Uint16Array(keys.length),
+		showStatuses: new Uint8Array(keys.length),
+		countryIndexes: new Uint8Array(keys.length * 4).fill(255),
+		countries: [],
+	}
+	facts.releaseYears[21] = year - 4
+	try {
+		snapshot = { ...original, columns: { ...original.columns, facts } }
+		const ranked = [keys[1], keys[21], keys[0], keys[2], keys[3], keys[5], keys[6]]
+		const top = releasedTopKeys(ranked, snapshot, year)
+		const keyFor = (id: string) => top.find((o) => o.id === id)?.key
+		assert.equal(keyFor("decade:1990"), keys[0])
+		assert.equal(keyFor("recent"), keys[2])
+		assert.equal(keyFor("last2Years"), keys[3])
+		assert.equal(keyFor("thisYear"), keys[3])
+		assert.equal(keyFor("last5Years"), keys[21])
+		assert.equal(keyFor("after2000"), keys[1])
+		assert.equal(keyFor("after1950"), keys[1])
+		assert.equal(keyFor("decade:1920"), null)
+		const response = await getDiscoverPanel(
+			{ ...viewer, seen: new Set([keys[2]]) },
+			"released",
+			{
+				state: {
+					...parseState(new URLSearchParams("genres=Drama")),
+					years: { min: year, max: year },
+					released: "before2000",
+				},
+				sort: "relevance",
+				ranked,
+			},
+		)
+		assert.equal(response.part, "released")
+		if (response.part !== "released") throw new Error("Wrong part")
+		assert.equal(response.available, true)
+		assert.deepEqual(
+			response.options.find((o) => o.id === "recent")?.topTitle,
+			{ key: keys[2], seen: true },
+		)
+		snapshot = original
+		assert.ok(releasedTopKeys(ranked, snapshot).every((o) => o.key === null))
+		const absent = await getDiscoverPanel(viewer, "released", {
+			state: parseState(new URLSearchParams()),
+			sort: "relevance",
+			ranked,
+		})
+		if (absent.part !== "released") throw new Error("Wrong part")
+		assert.equal(absent.available, false)
+		assert.ok(absent.options.every((o) => o.topTitle === null))
+	} finally {
+		snapshot = original
+	}
 })

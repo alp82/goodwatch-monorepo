@@ -105,6 +105,9 @@ export async function getDiscoverResults(
 	ctx: ViewerContext,
 	input: {
 		popularityCounts?: boolean
+		releasedCounts?: boolean
+		lengthCounts?: boolean
+		originCounts?: boolean
 		state: FilterState
 		sort: SortKey
 		forYou: boolean
@@ -140,6 +143,9 @@ export async function getDiscoverResults(
 	const compute = (keep?: (key: TitleKey) => boolean) =>
 		filterTitles({
 			popularityCounts: input.popularityCounts,
+			releasedCounts: input.releasedCounts,
+			lengthCounts: input.lengthCounts,
+			originCounts: input.originCounts,
 			universe: searching ? ranked : "catalog",
 			includeNotInterested: searching,
 			state,
@@ -153,6 +159,9 @@ export async function getDiscoverResults(
 	const key = snapshot
 		? discoverFilterKey({
 				popularityCounts: input.popularityCounts,
+				releasedCounts: input.releasedCounts,
+				lengthCounts: input.lengthCounts,
+				originCounts: input.originCounts,
 				viewer: ctx,
 				taste,
 				state,

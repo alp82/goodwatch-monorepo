@@ -41,6 +41,11 @@ export function rangeScoreConditions(
 				: type === "movie"
 					? "runtime"
 					: "episode_runtime[1]"
+		if (
+			name === "runtime" &&
+			(range?.min !== undefined || range?.max !== undefined)
+		)
+			conditions.push(`${column} > 0`)
 		if (range?.min !== undefined) {
 			conditions.push(`${column} >= ?`)
 			params.push(range.min)

@@ -61,6 +61,9 @@ async function respond(request: Request, guest?: GuestProgress) {
 	try {
 		response = await getDiscoverResults(ctx, {
 			popularityCounts: params.get("counts")?.split(",").includes("popularity"),
+			releasedCounts: params.get("counts")?.split(",").includes("released"),
+			lengthCounts: params.get("counts")?.split(",").includes("length"),
+			originCounts: params.get("counts")?.split(",").includes("origin"),
 			state: filterStateFromParams(params, discoverFilterDefaults(ctx)),
 			sort: sortFromParams(params, ranked !== undefined),
 			ranked,

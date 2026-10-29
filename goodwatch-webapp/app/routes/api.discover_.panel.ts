@@ -1,4 +1,4 @@
-// Discover panel pictures and mixes: GET /api/discover/panel?part=mixes|titles|people with the filter bar's URL state.
+// Discover panel pictures and mixes: GET /api/discover/panel?part=mixes|titles|people|released with the filter bar's URL state.
 // Guests POST the same guest progress body as /api/discover/results; members use GET.
 // `mixes` returns ready tag pairs with catalog counts and a top-title card, preserving non-tag filters.
 // `titles` returns shared starter keys and viewer-specific cards. Mixes ignore `ranked`;
@@ -45,7 +45,10 @@ async function respond(request: Request, guest?: GuestProgress) {
 	if (!isPanelPart(part)) return invalid("Unknown panel part")
 	const ctx = await getViewerContext(request, guest)
 	const contextMs = performance.now() - startedAt
-	const ranked = part === "people" ? rankedFromParams(params) : undefined
+	const ranked =
+		part === "people" || part === "released"
+			? rankedFromParams(params)
+			: undefined
 	try {
 		const response = await getDiscoverPanel(ctx, part, {
 			state: filterStateFromParams(params, discoverFilterDefaults(ctx)),

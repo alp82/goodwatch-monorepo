@@ -463,6 +463,36 @@ test("all-of tag modes have separate shared filter cache entries", () => {
 
 test("popularity counts have a separate shared cache key", () => {
 	const plain = discoverFilterKey(input())
-	assert.equal(discoverFilterKey({ ...input(), popularityCounts: false }), plain)
-	assert.notEqual(discoverFilterKey({ ...input(), popularityCounts: true }), plain)
+	assert.equal(
+		discoverFilterKey({ ...input(), popularityCounts: false }),
+		plain,
+	)
+	assert.notEqual(
+		discoverFilterKey({ ...input(), popularityCounts: true }),
+		plain,
+	)
+})
+
+test("each facts count request has a separate shared cache key", () => {
+	const plain = discoverFilterKey(input())
+	const keys = new Set([plain])
+	for (let mask = 1; mask < 8; mask++) {
+		const flags = {
+			releasedCounts: !!(mask & 1),
+			lengthCounts: !!(mask & 2),
+			originCounts: !!(mask & 4),
+		}
+		const key = discoverFilterKey({ ...input(), ...flags })
+		assert.ok(!keys.has(key))
+		keys.add(key)
+	}
+	assert.equal(
+		discoverFilterKey({
+			...input(),
+			releasedCounts: false,
+			lengthCounts: false,
+			originCounts: false,
+		}),
+		plain,
+	)
 })

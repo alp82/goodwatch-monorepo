@@ -23,7 +23,10 @@ import {
 	SnapshotNotLoaded,
 	filterTitles,
 } from "~/server/title-filter/index.server"
-import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
+import {
+	type TitleSnapshot,
+	getTitleSnapshot,
+} from "~/server/title-snapshot/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
 import type { TitleKey } from "~/utils/title-key"
 import { featuredPeople, peopleInResults } from "./discover-people.server"
@@ -162,7 +165,8 @@ async function people(ctx: ViewerContext, input: PanelInput) {
 	const unavailable = (error: unknown) => {
 		console.warn("Discover panel: people unavailable", error)
 		return {
-			mode: !searching && !filtered ? ("featured" as const) : ("results" as const),
+			mode:
+				!searching && !filtered ? ("featured" as const) : ("results" as const),
 			actors: [],
 			crew: [],
 			unavailable: true as const,
@@ -173,6 +177,16 @@ async function people(ctx: ViewerContext, input: PanelInput) {
 			part: "people" as const,
 			...(await featuredPeople().catch(unavailable)),
 		}
+	const { keys } = await panelTitles(ctx, input)
+	return {
+		part: "people" as const,
+		...(await peopleInResults(keys).catch(unavailable)),
+	}
+}
+
+/** Filter and preserve the same complete list order for result-backed panel parts. */
+async function panelTitles(ctx: ViewerContext, input: PanelInput) {
+	const searching = input.ranked !== undefined
 	const snapshot = getTitleSnapshot()
 	if (!snapshot) throw new SnapshotNotLoaded()
 	const savedTaste = await loadTaste(ctx.viewer)
@@ -213,13 +227,77 @@ async function people(ctx: ViewerContext, input: PanelInput) {
 		if (member && group !== undefined)
 			keys = keys.filter((key) => engine.sideOf(member, key) === group)
 	}
+	return { keys, taste, result, snapshot }
+}
+
+/** First title in list order for each Released choice; a show's first air year comes from facts. */
+export function releasedTopKeys(
+	keys: readonly TitleKey[],
+	snapshot: Pick<TitleSnapshot, "columns" | "rowOf">,
+	year = new Date().getUTCFullYear(),
+) {
+	const definitions = [
+		...Array.from({ length: Math.floor((year - 1920) / 10) + 1 }, (_, i) => ({
+			id: `decade:${1920 + i * 10}`,
+			from: 1920 + i * 10,
+			to: 1929 + i * 10,
+		})),
+		{ id: "thisYear", from: year, to: year },
+		{ id: "last2Years", from: year - 1, to: Infinity },
+		{ id: "recent", from: year - 2, to: Infinity },
+		{ id: "last5Years", from: year - 4, to: Infinity },
+		{ id: "after2000", from: 2000, to: Infinity },
+		{ id: "after1950", from: 1950, to: Infinity },
+	]
+	const top = definitions.map((definition) => ({
+		...definition,
+		key: null as TitleKey | null,
+	}))
+	let remaining = top.length
+	const facts = snapshot.columns.facts
+	if (facts)
+		for (const key of keys) {
+			const row = snapshot.rowOf(key)
+			const released = row < 0 ? 0 : facts.releaseYears[row]
+			if (!released) continue
+			for (const option of top)
+				if (
+					option.key === null &&
+					released >= option.from &&
+					released <= option.to
+				) {
+					option.key = key
+					remaining--
+				}
+			if (remaining === 0) break
+		}
+	return top
+}
+
+async function released(ctx: ViewerContext, input: PanelInput) {
+	const { keys, taste, result, snapshot } = await panelTitles(ctx, {
+		...input,
+		state: { ...input.state, years: undefined, released: "any" },
+	})
+	const top = releasedTopKeys(keys, snapshot)
+	const cards = await getTitleCards(
+		[...new Set(top.flatMap((option) => option.key ?? []))],
+		ctx,
+		taste,
+		input.state.ageLimit === undefined ? null : result.ladder,
+	)
+	const byKey = new Map(cards.map((card) => [card.key, card]))
 	return {
-		part: "people" as const,
-		...(await peopleInResults(keys).catch(unavailable)),
+		part: "released" as const,
+		available: snapshot.columns.facts !== null,
+		options: top.map(({ id, key }) => ({
+			id,
+			topTitle: key === null ? null : (byKey.get(key) ?? null),
+		})),
 	}
 }
 
-export const PANEL_PARTS = { mixes, titles, people }
+export const PANEL_PARTS = { mixes, titles, people, released }
 export type PanelPart = keyof typeof PANEL_PARTS
 export function isPanelPart(part: string | null): part is PanelPart {
 	return (
