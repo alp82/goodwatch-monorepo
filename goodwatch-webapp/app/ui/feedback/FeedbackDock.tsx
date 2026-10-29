@@ -666,11 +666,23 @@ function useDrawer(
 	}
 	// Opening: measure once the drawer has its content, before the first paint.
 	useIsoLayoutEffect(() => {
-		if (!out || !pending.current || !box) return
-		pending.current = false
+		if (!out || !pending.current) return
 		const t = tab.current
 		const c = card.current
-		if (!t || !c) return
+		// The phone tab is hidden while closed. The parent reveals it in a layout effect below.
+		if (!t || !c || !t.offsetWidth) return
+		const measured = boxFor(t, wide)
+		if (
+			!box ||
+			box.width !== measured.width ||
+			box.right !== measured.right ||
+			box.top !== measured.top ||
+			box.height !== measured.height
+		) {
+			setBox(measured)
+			return
+		}
+		pending.current = false
 		shape.current = shapeFor(t, box, c.offsetHeight + 2)
 		play(true)
 	})
@@ -778,7 +790,7 @@ function Drawer({
 		check()
 		toggle(true)
 	}
-	useEffect(() => {
+	useIsoLayoutEffect(() => {
 		setTab({ open, out, away: phoneFix })
 	}, [open, out, phoneFix, setTab])
 	useEffect(() => {

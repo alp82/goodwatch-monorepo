@@ -76,6 +76,7 @@ const Tab = forwardRef<
 			type="button"
 			onClick={onToggle}
 			onPointerEnter={onWarm}
+			onTouchStart={onWarm}
 			onFocus={onWarm}
 			aria-expanded={open}
 			aria-controls="feedback-drawer"
