@@ -143,9 +143,10 @@ A response is stored only when all of these hold:
     including localized labels. The page renders without the grid; shared data-cache fills can finish for a retry.
   - **Discover without the title snapshot.** The first view has no titles, only a spinner, and the browser asks for
     them. Search mode has no titles in the document by design and stays storable.
-  - **The start page without its start titles.** The section below the living room lists 16 titles from the
-    title snapshot. While the snapshot loads, or when the titles can't be read, the section goes out with the hubs
-    only.
+  - **The start page without its start titles or a Where to start rail.** The room's shelf shows 16 titles from
+    the title snapshot, and Where to start (below the room) has rails from the best-of lists, the arrivals, Discover's
+    moods, and the services. While the snapshot loads, or when the titles or a rail can't be read, the page goes out
+    without them. A member's start page is never stored.
 - **When Discover can render without the snapshot:** readiness (`/health/ready`) waits for the snapshot's first check,
   and Docker's health check asks it, so the proxy sends no request to a new container before that. But readiness
   doesn't wait for a snapshot. It answers 200 when the first check found nothing published or refused the manifest,

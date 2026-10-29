@@ -1,5 +1,10 @@
 # The intro on the start page
 
+> **Superseded for `/`.** Since the start page redesign ([start-page-redesign.md](start-page-redesign.md)), `/` no
+> longer shows the TV. The film described here plays from the start page's How GoodWatch works and ends on the Your
+> turn card instead of the quiz. This document still describes the TV's boot, film, and quiz, whose code stays in
+> `app/ui/living-room/`.
+
 The start page's TV opens with a boot screen, then plays a guest a short film about GoodWatch in eleven chapters,
 ending in a quiz that gives a real pick. Below the room, "How GoodWatch works" carries the same chapters as page
 content: it is what a crawler reads. The film was chosen in a prototype (branch `prototype/landing-experience`) over
