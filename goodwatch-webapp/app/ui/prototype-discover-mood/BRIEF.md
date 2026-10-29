@@ -394,3 +394,22 @@ from page 1 of `/api/discover/results`, same query key for c, d, e, f) plus one 
 
 Known lab bug: the lab's `released=<variant>` URL param is also the real filter's `released` param, so any year pick
 rewrites it and the lab falls back to the default variant (d). Needs a different lab param name in `choice.ts`.
+
+## Round 10 length (2026-10-29)
+
+Owner on d: "these should be 2 different params, otherwise they cancel each other". Movies and Episodes are now two
+values: the real `runtime` holds the movie range, a lab-only `eruntime` the episode range (`any` for none; without it
+the one runtime holds for both, as Length a, b, c still write it). Code in `sections/length/two.ts`, wired in
+`kit.tsx` (`useLabFilters`, the results query, the Length chips), so it holds with the panel closed and any section
+open. No more "Not used" tags; the block of a kind that's out of the list (Movies only / Shows only) dims.
+
+- Movies only sends the movie range, Shows only the episode range. Movies and shows with two different ranges asks
+  twice (type=movie + movie range, type=show + episode range) and adds them up.
+- Exact: the count, the status line and Show N titles (two exact totals summed), hidden (catalog less that sum), option
+  counts and recoveries other than type (the two lists are disjoint).
+- Approximate: the merged order. Top rated, Best match and Newest merge by the card's score, match or year (Newest by
+  year only); Popular alternates movie, show (cards carry no popularity); while searching it keeps the ranked order.
+  Other sections' own counts (and mood i's AND list) still use the movie range for both kinds in that case.
+- Status line: "Movies under 2 h" and "Episodes under 35 min" as two chips; the Watch summary joins them with " · ";
+  the Length badge, the Watch badge and Clear all count each range that applies.
+- Production would need a second field (e.g. episodeRuntime) so one request can hold both.

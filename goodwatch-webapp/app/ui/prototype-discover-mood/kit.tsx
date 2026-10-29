@@ -7,7 +7,7 @@
 // Variants own all layout. They may reuse any real component (FilterBar, DiscoverGrid, ReadAsChips, TitlePosterCard).
 import { useSearchParams } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { searchEligibility, searchText } from "~/domain/discover-search"
 import { MOODS, MAX_MOODS, type MoodKey } from "~/domain/moods"
 import {
@@ -29,7 +29,24 @@ import type { FilterGroupsData } from "~/ui/filter-bar/FilterGroups"
 import type { ActiveChip } from "~/ui/filter-bar/labels"
 import { useMyServices, usePeopleNames, useTitleNames } from "~/ui/filter-bar/useFilterData"
 import { ladderStepFor } from "~/domain/age-content"
-import { type FilterState, secondaryFilterCount, stateAsApplied } from "~/domain/filter-state"
+import {
+	type FilterState,
+	clearSecondaryFilters,
+	filterQuery,
+	secondaryFilterCount,
+	stateAsApplied,
+} from "~/domain/filter-state"
+import {
+	EP_PARAM,
+	type LabState,
+	encodeEpisode,
+	lengthChips,
+	lengthRequests,
+	mergeKinds,
+	parseEpisode,
+	stripLab,
+	sumCounts,
+} from "./lab/sections/length/two"
 import type { TitleKey } from "~/utils/title-key"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -94,7 +111,7 @@ export function useProtoDiscover() {
 	installProxyFetch()
 	const [params, setParams] = useSearchParams()
 	const q = searchText(params.get("q"))
-	const filters = useFilterState({ defaults: GUEST_DEFAULTS, searching: q !== null })
+	const filters = useLabFilters(useFilterState({ defaults: GUEST_DEFAULTS, searching: q !== null }), params)
 
 	const setQ = (text: string | null) => {
 		const next = new URLSearchParams(params)
@@ -133,42 +150,58 @@ export function useProtoDiscover() {
 	const ranked = q !== null ? search.data?.ranked : undefined
 	const waitingForSearch = q !== null && !search.data
 	const [pages, setPages] = useState(1)
-	const baseQuery = `${filters.query}${ranked ? `${filters.query ? "&" : ""}ranked=${ranked.join(",")}` : ""}`
+	// Round 10 length: one request, or movies and shows apart when each kind has its own length (two.ts).
+	const withRanked = (fq: string) => `${fq}${ranked ? `${fq ? "&" : ""}ranked=${ranked.join(",")}` : ""}`
+	const bases = lengthRequests(filters.state).map((r) => withRanked(filterQuery(r, filters.sort, filters.defaults)))
+	const baseQuery = bases.join("||")
 	useEffect(() => setPages(1), [baseQuery])
 
-	const results = useQuery<DiscoverResults[]>({
+	const results = useQuery<DiscoverResults[][]>({
 		queryKey: ["proto-discover-results", baseQuery, pages],
 		enabled: !waitingForSearch,
 		placeholderData: (previous) => previous,
 		staleTime: 60_000,
-		queryFn: async ({ signal }) => {
-			const all: DiscoverResults[] = []
-			for (let page = 1; page <= pages; page++) {
-				const response = await fetch(`/api/discover/results?${baseQuery}${baseQuery ? "&" : ""}page=${page}`, { signal })
-				if (!response.ok) throw new Error(`Results ${response.status}`)
-				all.push((await response.json()) as DiscoverResults)
-			}
-			return all
-		},
+		queryFn: async ({ signal }) =>
+			Promise.all(
+				bases.map(async (bq) => {
+					const all: DiscoverResults[] = []
+					for (let page = 1; page <= pages; page++) {
+						const response = await fetch(`/api/discover/results?${bq}${bq ? "&" : ""}page=${page}`, { signal })
+						if (!response.ok) throw new Error(`Results ${response.status}`)
+						all.push((await response.json()) as DiscoverResults)
+					}
+					return all
+				}),
+			),
 	})
 
-	const first = results.data?.[0] ?? null
+	const lists = results.data ?? []
+	const heads = lists.map((l) => l[0]).filter(Boolean)
 	const cards: TitleCard[] = useMemo(() => {
-		const seen = new Set<TitleKey>()
-		return (results.data ?? []).flatMap((r) => r.cards).filter((c) => !seen.has(c.key) && seen.add(c.key))
-	}, [results.data])
-	const counts: FilterBarCounts | null = first
-		? {
-				total: first.total,
-				hidden: first.hidden,
-				recoveries: first.recoveries,
-				optionCounts: first.optionCounts,
-				approximate: first.approximate,
-				ladder: first.ladder,
-			}
-		: null
-	const last = results.data?.[results.data.length - 1]
-	const hasMore = Boolean(last && last.page * last.pageSize < last.total)
+		const kinds = (results.data ?? []).map((l) => {
+			const seen = new Set<TitleKey>()
+			return l.flatMap((r) => r.cards).filter((c) => !seen.has(c.key) && seen.add(c.key))
+		})
+		if (kinds.length < 2) return kinds[0] ?? []
+		return mergeKinds(kinds, results.data?.[0]?.[0]?.sortUsed ?? filters.sort, ranked)
+	}, [results.data, filters.sort, ranked])
+	const counts: FilterBarCounts | null =
+		heads.length && heads.length === lists.length
+			? sumCounts(
+					heads.map((h) => ({
+						total: h.total,
+						hidden: h.hidden,
+						recoveries: h.recoveries,
+						optionCounts: h.optionCounts,
+						approximate: h.approximate,
+						ladder: h.ladder,
+					})),
+				)
+			: null
+	const hasMore = lists.some((l) => {
+		const last = l[l.length - 1]
+		return Boolean(last && last.page * last.pageSize < last.total)
+	})
 
 	return {
 		q,
@@ -183,18 +216,61 @@ export function useProtoDiscover() {
 		searchBusy: q !== null && search.isFetching,
 		searchError: search.error ? String(search.error) : null,
 		/** Titles in the current list (the search's top 100 while searching). */
-		total: first?.total ?? null,
+		total: counts?.total ?? null,
 		counts,
 		cards,
 		loading: results.isFetching || waitingForSearch,
 		hasMore,
 		loadMore: () => setPages((p) => p + 1),
 		/** What a tag would leave with everything else unchanged (the results endpoint's option counts). */
-		countFor: (t: Tag): number | null => first?.optionCounts?.[t.group]?.[t.key] ?? null,
+		countFor: (t: Tag): number | null => counts?.optionCounts?.[t.group]?.[t.key] ?? null,
 	}
 }
 
 export type ProtoDiscover = ReturnType<typeof useProtoDiscover>
+
+/**
+ * Round 10 length: the real filter binding plus the lab-only episode range (`eruntime`) in `state.episodeRuntime`.
+ * Writes split it off again; `query` is what the list asks for when that is one request (Shows only: the episode
+ * range as runtime). With two requests it stays the movie one, so other sections' counts use it for both kinds.
+ */
+function useLabFilters(raw: ReturnType<typeof useFilterState>, params: URLSearchParams) {
+	const fromUrl = parseEpisode(params)
+	const urlEp = params.get(EP_PARAM)
+	const [pending, setPending] = useState<{ v: LabState["episodeRuntime"] } | null>(null)
+	useEffect(() => setPending(null), [urlEp])
+	const ep = pending ? pending.v : fromUrl
+	const latest = useRef(ep)
+	latest.current = ep
+	const state: LabState = useMemo(() => (ep === undefined ? raw.state : { ...raw.state, episodeRuntime: ep }), [raw.state, ep])
+	const { update: rawUpdate, setSort, sort } = raw
+	const update = useCallback(
+		(change: (s: LabState) => FilterState) => {
+			let next: LabState["episodeRuntime"] = latest.current
+			rawUpdate((s) => {
+				const out = change(latest.current === undefined ? s : { ...s, episodeRuntime: latest.current }) as LabState
+				next = out.episodeRuntime
+				return stripLab(out)
+			})
+			if (encodeEpisode(next) !== encodeEpisode(latest.current)) {
+				latest.current = next
+				setPending({ v: next })
+				const enc = encodeEpisode(next)
+				setSort(sort, (p) => (enc === null ? p.delete(EP_PARAM) : p.set(EP_PARAM, enc)))
+			}
+		},
+		[rawUpdate, setSort, sort],
+	)
+	const reqs = lengthRequests(state)
+	return {
+		...raw,
+		state,
+		query: reqs.length === 1 ? filterQuery(reqs[0], raw.sort, raw.defaults) : raw.query,
+		update,
+		set: useCallback((patch: Partial<LabState>) => update((s) => ({ ...s, ...patch })), [update]),
+		clearSecondary: useCallback(() => update((s) => ({ ...clearSecondaryFilters(s), episodeRuntime: undefined }) as FilterState), [update]),
+	}
+}
 
 /** The real Discover grid, with Load more. */
 export function ProtoGrid({ d }: { d: ProtoDiscover }) {
@@ -239,15 +315,15 @@ export function useFilterPieces(d: ProtoDiscover, taste: TasteState = "signUp") 
 	const applied = useMemo(() => stateAsApplied(state, ladder), [state, ladder])
 	const chips: ActiveChip[] = useMemo(
 		() =>
-			activeChips(applied, {
+			withLengthChips(state, activeChips(applied, {
 				service: (id) => services.countryProviders.find((p) => p.id === id)?.name,
 				serviceLogo: (id) => services.countryProviders.find((p) => p.id === id)?.logo_path,
 				title: (key) => titles.byKey.get(key)?.title,
 				poster: (key) => titles.byKey.get(key)?.poster,
 				person: (id) => people.byId.get(id)?.name,
 				ageStep: (age) => (ladder ? ladderStepFor(ladder.steps, age).label : undefined),
-			}),
-		[applied, services.countryProviders, titles.byKey, people.byId, ladder],
+			})),
+		[state, applied, services.countryProviders, titles.byKey, people.byId, ladder],
 	)
 	const onChange = (next: FilterState) => filters.update(() => next)
 	const notSeen = counts?.optionCounts.notSeenYet
@@ -267,7 +343,8 @@ export function useFilterPieces(d: ProtoDiscover, taste: TasteState = "signUp") 
 		groups,
 		/** Every active filter as a chip (services included); see activeChips. */
 		chips,
-		secondaryCount: secondaryFilterCount(applied),
+		// Length counts each kind's range (round 10).
+		secondaryCount: secondaryFilterCount(applied) - (applied.runtime ? 1 : 0) + lengthChips(state).length,
 		notSeenHides,
 		services,
 		hasServices: filters.defaults.onMyServices || services.ids.length > 0,
@@ -296,4 +373,14 @@ export function useFilterPieces(d: ProtoDiscover, taste: TasteState = "signUp") 
 		},
 		onChange,
 	}
+}
+
+/** The real runtime chip, swapped for the lab's Movies and Episodes chips in its place. */
+function withLengthChips(state: LabState, chips: ActiveChip[]): ActiveChip[] {
+	const at = chips.findIndex((c) => c.group === "runtime")
+	const rest = chips.filter((c) => c.group !== "runtime")
+	const mine = lengthChips(state)
+	if (!mine.length) return rest
+	const i = at < 0 ? rest.length : at
+	return [...rest.slice(0, i), ...mine, ...rest.slice(i)]
 }

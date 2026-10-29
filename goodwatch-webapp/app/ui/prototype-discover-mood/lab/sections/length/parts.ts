@@ -13,7 +13,8 @@ export const runtimeOf = ([lo, hi]: [number, number]): FilterState["runtime"] =>
 /** The range as a runtime filter for counting; {} for any length. */
 export const asRange = (r: [number, number]): FilterRange => runtimeOf(r) ?? {}
 
-export const setLength = (d: ProtoDiscover, r: [number, number]) => d.filters.set({ runtime: runtimeOf(r) })
+// One range for both kinds (a, b, c): drops d's separate episode range.
+export const setLength = (d: ProtoDiscover, r: [number, number]) => d.filters.set({ runtime: runtimeOf(r), episodeRuntime: undefined })
 
 export const isAnyLength = (r: [number, number]) => r[0] <= 0 && r[1] >= LEN_MAX
 

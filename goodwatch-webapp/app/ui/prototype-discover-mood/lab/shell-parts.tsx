@@ -152,7 +152,7 @@ export function segValues(d: ProtoDiscover, pieces: Pieces): Record<SegKey, SegV
 				streaming,
 				s.notSeenYet && "Not seen yet",
 				headPlus(labels("productionCountries")),
-				headPlus(labels("runtime")),
+				labels("runtime").join(" · "),
 				s.minScore > 0 && `Score ${s.minScore}+`,
 				headPlus([...labels("sourceScores"), ...(mcUsers() ? [`User score ${(mcUsers() / 10).toFixed(1)}+`] : []), ...labels("scoreGap")]),
 				released,
