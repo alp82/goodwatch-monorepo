@@ -58,7 +58,7 @@ They cover cold-read deadlines, successful two-second cold reads, background fil
 Run the document comparison with the benchmark databases already available:
 
 ```sh
-HTML_EQUIVALENCE_CACHE="$HOME/.cache/gw-perf/scratch-slow/html-equivalence" \
+GW_HTML_CHECK_CACHE="$HOME/.cache/gw-perf/scratch-slow/html-equivalence" \
   goodwatch-benchmark/html-equivalence/run.sh local <base-ref> <candidate-tree>
 ```
 
