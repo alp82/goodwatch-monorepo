@@ -1,7 +1,7 @@
 // Development only: the Discover bar, its panel, the status line and the panel footer on the real catalog, before
 // Discover uses them. The state binds to this page's URL (`q` is the search), counts come from /api/discover/results
-// with the open sub-tab's `counts=` flags, and the first page of titles shows as cards. Sub-tabs show their empty
-// slots until their steps fill them. Returns 404 in production.
+// with the open sub-tab's `counts=` flags, and the first page of titles shows as cards. Sub-tabs come from
+// ~/ui/discover-bar/sub-tabs; the ones without content yet show their empty slots. Returns 404 in production.
 //
 // The loader reads nothing, so the page also opens on a local server without databases; scripts/dev-discover-bar.sh
 // starts one that reads the live site's public endpoints as a guest.
@@ -15,6 +15,7 @@ import { searchEligibility, searchText } from "~/domain/discover-search"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
 import { DiscoverControls } from "~/ui/discover-bar/DiscoverControls"
 import { GridDim } from "~/ui/discover-bar/DiscoverPanel"
+import { renderSubTab } from "~/ui/discover-bar/sub-tabs"
 import { useDesktop, useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
 import { useDiscoverSearch } from "~/ui/discover/useDiscoverSearch"
 import { useFilterState } from "~/ui/filter-bar"
@@ -123,6 +124,7 @@ export default function DevDiscoverBar() {
 				reading={search.reading ?? undefined}
 				onSearch={setQuery}
 				onClearSearch={() => setQuery(null)}
+				renderSubTab={renderSubTab}
 				sort={{
 					options: discoverSorts(searching, taste),
 					value: sortShown(filters.sort, searching, taste),

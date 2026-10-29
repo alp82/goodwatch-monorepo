@@ -476,6 +476,7 @@ export function tabValues(
  * comes with every response, so the other sub-tabs ask for nothing extra.
  */
 export const COUNTS_FLAGS: Partial<Record<SubTabId, string>> = {
+	scores: "scores",
 	popularity: "popularity",
 	released: "released",
 	length: "length",

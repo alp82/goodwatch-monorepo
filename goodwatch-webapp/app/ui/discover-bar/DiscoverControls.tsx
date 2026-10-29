@@ -45,7 +45,7 @@ import {
 	subTabsOf,
 	tabOfSubTab,
 } from "./tabs"
-import { useBarData } from "./useBarData"
+import { type BarData, useBarData } from "./useBarData"
 import {
 	type DiscoverBarState,
 	useClearAll,
@@ -57,6 +57,11 @@ import {
 /** What a sub-tab's content gets from the panel. */
 export interface SubTabView {
 	phone: boolean
+	filters: FilterStateBinding
+	/** What the title filter counted; null while the first answer is on its way. */
+	counts: FilterBarCounts | null
+	/** Names, services, the tab context (ladder, viewer country) and chips the bar already holds. */
+	data: BarData
 	/** The bar's search text as typed (not yet run). */
 	text: string
 	setText: (text: string) => void
@@ -182,6 +187,9 @@ export function DiscoverControls({
 
 	const view = (phone: boolean): SubTabView => ({
 		phone,
+		filters,
+		counts,
+		data,
 		text,
 		setText,
 		runSearch,

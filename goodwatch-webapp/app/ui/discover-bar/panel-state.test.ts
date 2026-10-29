@@ -106,6 +106,7 @@ test("a hidden sub-tab falls back to the tab's first", () => {
 test("requests ask for the open sub-tab's counts only", () => {
 	assert.deepEqual(countsFlags(null), [])
 	assert.deepEqual(countsFlags("services"), [])
+	assert.deepEqual(countsFlags("scores"), ["scores"])
 	assert.deepEqual(countsFlags("popularity"), ["popularity"])
 	assert.deepEqual(countsFlags("released"), ["released"])
 	assert.deepEqual(countsFlags("length"), ["length"])
