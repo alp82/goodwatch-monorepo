@@ -1,7 +1,6 @@
-// PROTOTYPE (Discover lab, titles g/h/i): what the three round 7 variants share.
+// PROTOTYPE (Discover lab, titles g): pieces from round 7 (g, h, i shared them; g is the locked pick).
 // - STEER: the three ways a title steers this list (Like this = Similar to, More like = Loved, Less like = Disliked),
 //   drawn as session filter chips (pill, colored thumb, ×), never as a rating.
-// - useFilterMatches: moods, themes, styles and genres the bar's text points at ("funny" → Funny mood, Comedy genre).
 // - useListNav: ↑ ↓ Enter over a list while focus stays in the bar's field.
 import { HandThumbDownIcon, HandThumbUpIcon, Square2StackIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
@@ -9,9 +8,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react"
 import { TAP } from "~/ui/filter-bar/motion"
 import type { TitleCard } from "~/server/title-cards.server"
 import type { TitleKey } from "~/utils/title-key"
-import { type ProtoDiscover, TAGS, type Tag, short, tagId } from "../../../kit"
 import { type FoundTitle, POSTER_SM } from "../../shell-parts"
-import { tagName } from "../mood/parts"
 import type { Use } from "./shared"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -95,7 +92,7 @@ export function SteerChip({
 	)
 }
 
-export function MiniPoster({ poster, w = 20 }: { poster: string | null; w?: number }) {
+function MiniPoster({ poster, w = 20 }: { poster: string | null; w?: number }) {
 	return (
 		<span className="block shrink-0 overflow-hidden rounded-[4px] bg-white/10" style={{ width: w, height: Math.round(w * 1.5) }}>
 			{poster && <img src={`${POSTER_SM}${poster}`} alt="" loading="lazy" className="h-full w-full object-cover" />}
@@ -151,137 +148,8 @@ export const cardTitle = (c: TitleCard): FoundTitle => ({
 	tmdbId: c.tmdb_id,
 })
 
-/**
- * The empty state of a place picks land in (round 9): a few titles of this list as quiet chips with that place's
- * thumb; one tap puts the title there. No empty slots.
- */
-export function SuggestChips({ titles, use, onPick, n = 3 }: { titles: FoundTitle[]; use: Use; onPick: (t: FoundTitle) => void; n?: number }) {
-	const s = STEER[use]
-	return (
-		<>
-			{titles.slice(0, n).map((t) => (
-				<motion.button
-					key={t.key}
-					type="button"
-					whileTap={TAP}
-					onClick={() => onPick(t)}
-					title={`${s.label} ${t.title}`}
-					className="inline-flex h-8 max-w-[220px] shrink-0 items-center gap-1.5 rounded-full bg-white/[0.04] pr-3 pl-1 text-[13px] text-gray-400 ring-1 ring-inset ring-white/[0.08] cursor-pointer outline-none transition-colors hover:bg-white/[0.09] hover:text-gray-100 focus-visible:ring-2 focus-visible:ring-amber-400"
-				>
-					<MiniPoster poster={t.poster} w={18} />
-					<span className="shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5" style={{ color: s.color }}>
-						{s.icon}
-					</span>
-					<span className="truncate">{t.title}</span>
-				</motion.button>
-			))}
-		</>
-	)
-}
-
 // ---------------------------------------------------------------------------------------------------------------
 // Filters the text points at
-
-const ALIASES: { words: string[]; tags?: string[]; genres?: string[] }[] = [
-	{ words: ["funny", "fun", "laugh", "comedy", "comedies", "hilarious", "witty"], tags: ["moods:funny"], genres: ["Comedy"] },
-	{ words: ["feel", "feelgood", "cozy", "cosy", "uplifting", "wholesome", "warm"], tags: ["moods:feelgood"], genres: ["Family"] },
-	{ words: ["romantic", "romance", "love", "date"], tags: ["moods:romance"], genres: ["Romance"] },
-	{ words: ["action", "fight", "explosive"], tags: ["moods:action"], genres: ["Action", "Action & Adventure"] },
-	{ words: ["crime", "mystery", "detective", "heist", "murder"], tags: ["moods:crime"], genres: ["Crime", "Mystery"] },
-	{ words: ["twist", "mind", "trippy", "bending", "puzzle"], tags: ["moods:mind"] },
-	{ words: ["sad", "heavy", "drama", "tearjerker", "bleak"], tags: ["moods:heavy"], genres: ["Drama"] },
-	{ words: ["space", "fantasy", "sci-fi", "scifi", "future", "magic"], tags: ["moods:worlds"], genres: ["Science Fiction", "Sci-Fi & Fantasy", "Fantasy"] },
-	{ words: ["history", "historical", "period", "war"], tags: ["moods:history"], genres: ["History", "War"] },
-	{ words: ["teen", "school", "growing", "youth"], tags: ["moods:growing"] },
-	{ words: ["thriller", "tense", "suspense"], genres: ["Thriller"] },
-	{ words: ["animated", "animation", "cartoon"], genres: ["Animation"] },
-	{ words: ["documentary", "docu"], genres: ["Documentary"] },
-]
-
-export interface FilterMatch {
-	id: string
-	label: string
-	/** Mood hue or the group's color. */
-	color: string | null
-	group: "Mood" | "About" | "Style" | "Genre"
-	on: boolean
-	count: number | null
-	toggle: () => void
-}
-
-const GROUP_NAME = { moods: "Mood", themes: "About", styles: "Style" } as const
-
-/** Moods, themes, styles and genres the text points at, best first, at most `n`. */
-export function useFilterMatches(d: ProtoDiscover, text: string, n = 6): FilterMatch[] {
-	const words = text
-		.toLowerCase()
-		.split(/[^a-z0-9-]+/)
-		.filter((w) => w.length >= 3)
-	if (!words.length) return []
-	const tagIds = new Set<string>()
-	const genres = new Set<string>()
-	for (const a of ALIASES) {
-		if (!words.some((w) => a.words.some((x) => x.startsWith(w) || w.startsWith(x)))) continue
-		for (const t of a.tags ?? []) tagIds.add(t)
-		for (const g of a.genres ?? []) genres.add(g)
-	}
-	for (const t of TAGS) {
-		const name = `${t.name} ${tagName(t)}`.toLowerCase()
-		if (words.some((w) => name.split(/[^a-z]+/).some((p) => p.length >= 3 && (p.startsWith(w) || w.startsWith(p))))) tagIds.add(tagId(t))
-	}
-	const known = Object.keys(d.counts?.optionCounts.genres ?? {})
-	for (const g of known) {
-		const name = g.toLowerCase()
-		if (words.some((w) => name.split(/[^a-z]+/).some((p) => p.length >= 3 && p.startsWith(w)))) genres.add(g)
-	}
-	const s = d.filters.state
-	const tags: FilterMatch[] = TAGS.filter((t) => tagIds.has(tagId(t))).map((t: Tag) => ({
-		id: tagId(t),
-		label: tagName(t),
-		color: t.color,
-		group: GROUP_NAME[t.group],
-		on: d.isOn(t),
-		count: d.countFor(t),
-		toggle: () => d.toggle(t),
-	}))
-	const genreList: FilterMatch[] = [...genres]
-		.filter((g) => !known.length || known.includes(g) || s.genres.includes(g))
-		.map((g) => ({
-			id: `genre:${g}`,
-			label: g,
-			color: null,
-			group: "Genre" as const,
-			on: s.genres.includes(g),
-			count: d.counts?.optionCounts.genres?.[g] ?? null,
-			toggle: () => d.filters.set({ genres: s.genres.includes(g) ? s.genres.filter((x) => x !== g) : [...s.genres, g] }),
-		}))
-	return [...tags.sort((a, b) => Number(b.group === "Mood") - Number(a.group === "Mood")), ...genreList].slice(0, n)
-}
-
-/** A filter the text points at, as the sheet's chip: hue dot, name, what it would leave. */
-export function FilterMatchChip({ m, active = false }: { m: FilterMatch; active?: boolean }) {
-	return (
-		<motion.button
-			type="button"
-			whileTap={TAP}
-			aria-pressed={m.on}
-			onClick={m.toggle}
-			className={`flex h-9 shrink-0 items-center gap-2 rounded-full px-3.5 text-[14px] font-semibold whitespace-nowrap cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
-				m.on ? "text-white" : "bg-white/[0.06] text-gray-200 ring-1 ring-inset ring-white/10 hover:bg-white/[0.11]"
-			} ${active ? "ring-2 ring-amber-400/80" : ""}`}
-			style={m.on ? chipStyle(m.color ?? "#94a3b8") : undefined}
-		>
-			<span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: m.color ?? "#94a3b8" }} />
-			<span className="text-[11px] font-normal text-gray-400">{m.group}</span>
-			{m.label}
-			{m.on ? (
-				<XMarkIcon className="h-3.5 w-3.5 text-white/60" />
-			) : (
-				m.count != null && <span className="text-[12px] font-normal tabular-nums text-gray-500">{short(m.count)}</span>
-			)}
-		</motion.button>
-	)
-}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Keyboard: ↑ ↓ Enter over a list while the bar's field keeps focus

@@ -3,7 +3,7 @@
 // 2026-10-29: [id, name, profile, crew department]. The role is what each is known for (ours, not TMDB's).
 import type { Role } from "./roles"
 
-export type PoolPerson = [number, string, string | null, string?]
+type PoolPerson = [number, string, string | null, string?]
 
 export const POOL: Record<Role, PoolPerson[]> = {
 	actors: [

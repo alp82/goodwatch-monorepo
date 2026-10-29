@@ -1,15 +1,5 @@
-// PROTOTYPE (Discover lab): the "people" section's variants. `a` is the baseline.
+// PROTOTYPE (Discover lab): the "people" section. Round 20 locked c; the others live in git history.
 import type { SectionVariant } from "../../types"
-import { PeopleA } from "./a"
-import { PeopleB } from "./b"
 import { PeopleC } from "./c"
-import { PeopleD } from "./d"
-import { PeopleE } from "./e"
 
-export const VARIANTS: SectionVariant[] = [
-	{ key: "a", name: "Faces follow the bar", View: PeopleA },
-	{ key: "b", name: "Split by role", View: PeopleB },
-	{ key: "c", name: "Two calm columns", View: PeopleC },
-	{ key: "d", name: "Role switch, one list", View: PeopleD },
-	{ key: "e", name: "Role lanes of faces", View: PeopleE },
-]
+export const VARIANTS: SectionVariant[] = [{ key: "c", name: "Two calm columns", View: PeopleC }]

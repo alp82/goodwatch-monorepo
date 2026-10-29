@@ -1,6 +1,7 @@
 // PROTOTYPE (Discover lab): the sections and one chosen variant per section, kept in the URL:
-// `/prototype/discover-mood?variant=lab&v-mood=b&v-scores=c&sec=mood`. A missing section takes DEFAULTS, else its first
-// variant. `sec` is the section the lab bar's arrows cycle.
+// `/prototype/discover-mood?v-mood=b&sec=mood`. A missing or unknown key takes DEFAULTS, else the section's first
+// variant. `sec` is the section the lab bar's arrows cycle. Round 20 locked every section to its pick (one variant
+// each), so the bar lists only sections a later round gives more than one variant.
 import type { SectionId, Viewer } from "./types"
 
 export const SECTIONS: { id: SectionId; name: string }[] = [
@@ -18,9 +19,9 @@ export const SECTIONS: { id: SectionId; name: string }[] = [
 	{ id: "more", name: "Watch: popularity, money, shows" },
 ]
 
-/** The owner's picks so far. Empty: every section shows `a`, the baseline. */
+/** The owner's picks. A section without one shows its first variant. */
 export const DEFAULTS: Partial<Record<SectionId, string>> = {
-	// Round 6 and 7 verdicts (2026-10-28, 2026-10-29).
+	// Round 6 and 7 verdicts (2026-10-28, 2026-10-29), locked in round 20.
 	layout: "c",
 	titles: "g",
 	people: "c",
@@ -51,14 +52,15 @@ export function choiceFromParams(params: URLSearchParams): Choice {
 	return choice
 }
 
-export function paramsFromChoice(choice: Choice): URLSearchParams {
+/** The URL for a choice. `only`: the sections worth writing (the lab bar passes those with more than one variant). */
+export function paramsFromChoice(choice: Choice, only: SectionId[] = SECTIONS.map((s) => s.id)): URLSearchParams {
 	const p = new URLSearchParams()
 	p.set("variant", "lab")
 	if (choice.as === "member") p.set("as", "member")
-	for (const s of SECTIONS) {
-		const v = choice[s.id]
-		if (v) p.set(key(s.id), v)
+	for (const id of only) {
+		const v = choice[id]
+		if (v) p.set(key(id), v)
 	}
-	p.set("sec", choice.sec)
+	if (only.includes(choice.sec)) p.set("sec", choice.sec)
 	return p
 }

@@ -48,7 +48,7 @@ export function useAge(d: ProtoDiscover, pieces: Pieces) {
 export type Age = ReturnType<typeof useAge>
 
 export const KINDS = CONTENT_KINDS
-export const kindLabel = (k: ContentKind) => CONTENT_LABELS[k].full
+const kindLabel = (k: ContentKind) => CONTENT_LABELS[k].full
 
 /** One kind of content as a checklist row: ticked shows, unticked is struck through with how many it hides. */
 export function KindRow({ age, k, roomy }: { age: Age; k: ContentKind; roomy?: boolean }) {
@@ -91,20 +91,20 @@ export function NoLadder() {
 // also moves the streaming offers to that country, as the Services card's "Streaming in…" does.
 
 /** Countries with a ladder of their own in the title snapshot (checked against the live results, 2026-10-28). */
-export const LADDER_COUNTRIES = [
+const LADDER_COUNTRIES = [
 	"US", "GB", "DE", "FR", "ES", "IT", "NL", "IN", "JP", "KR", "BR", "CA", "AU", "SE", "TR", "AR", "AT", "BE", "BG",
 	"CH", "CL", "CZ", "DK", "FI", "GR", "HK", "HU", "ID", "IE", "IL", "LT", "LU", "LV", "MX", "MY", "NO", "NZ", "PH",
 	"PL", "PT", "RO", "RU", "SG", "SK", "TH", "TW", "UA", "ZA",
 ]
 const QUICK_COUNTRIES = ["US", "GB", "DE", "FR", "IN", "JP"]
 
-export function useRatingCountry(d: ProtoDiscover, age: Age) {
+function useRatingCountry(d: ProtoDiscover, age: Age) {
 	const country = d.filters.state.streamingCountry ?? age.ladder?.country ?? "US"
 	return { country, set: (code: string) => d.filters.set({ streamingCountry: code }) }
 }
 
 /** Every ladder country by name, the current one always in. */
-export const ratingCountries = (current: string): Country[] =>
+const ratingCountries = (current: string): Country[] =>
 	[...new Set([current, ...LADDER_COUNTRIES])].map((code) => ({ code, name: productionCountryName(code) })).sort((a, b) => a.name.localeCompare(b.name))
 
 /**

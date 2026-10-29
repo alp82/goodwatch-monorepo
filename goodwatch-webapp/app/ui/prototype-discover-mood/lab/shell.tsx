@@ -12,8 +12,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { SnapSheet } from "~/ui/filter-bar"
 import { TAP } from "~/ui/filter-bar/motion"
 import { useLabChoice } from "./LabBar"
-import { type Layout, type SubId, layoutFor, splitsMine } from "./layouts"
-import { pick, pick as variantOf } from "./registry"
+import { type Layout, type SubId, layoutFor } from "./layouts"
+import { pick as variantOf } from "./registry"
 import { ResultsProvider, useShown } from "./results-view"
 import { useMcUsers } from "./sections/scores/mc-users"
 import { useYouExtras } from "./sections/taste/you-extras"
@@ -35,7 +35,6 @@ import {
 	type Slot,
 	StatusLine,
 	WarmCards,
-	onMine,
 	segValues,
 	subCount,
 	subsFor,
@@ -77,8 +76,8 @@ function useTabState(d: ProtoDiscover, { L, order, ctx }: { L: Layout; order: Se
 		setSeg(k)
 	}
 	const setSub = (k: SegKey, id: SubId) => setSubs((s) => ({ ...s, [k]: id }))
-	/** Where a chip's filter lives; layout d's On my services is You's, also as a member's picked list. */
-	const whereFor = (slot: Slot) => whereIs(slot === "services" && splitsMine(L) && onMine(d, ctx.viewer) ? "myServices" : slot, L)
+	/** Where a chip's filter lives. */
+	const whereFor = (slot: Slot) => whereIs(slot, L)
 	const goTo = (slot: Slot) => {
 		const w = whereFor(slot)
 		setSub(w.seg, w.sub)
@@ -418,7 +417,6 @@ function useLabPieces(d: ProtoDiscover) {
 export function LabShell({ d }: { d: ProtoDiscover }) {
 	const pieces = useLabPieces(d)
 	const [dim, setDim] = useState(false)
-	const liveGrid = pick(useLabChoice(), "titles").liveGrid === true
 	return (
 		<MotionConfig reducedMotion="user">
 			<div className="mx-auto max-w-[1600px] px-4 pt-4 pb-16 lg:px-8 lg:pt-6">
@@ -428,7 +426,7 @@ export function LabShell({ d }: { d: ProtoDiscover }) {
 						<>
 							<Desktop d={d} pieces={pieces} onOpenChange={setDim} />
 							<Phone d={d} pieces={pieces} />
-							<GridUnder d={shown} dim={dim && !liveGrid} />
+							<GridUnder d={shown} dim={dim} />
 						</>
 					)}
 				</ResultsProvider>

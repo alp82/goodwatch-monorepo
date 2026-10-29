@@ -105,7 +105,7 @@ export function sumCounts(parts: FilterBarCounts[]): FilterBarCounts {
 const fmt = (m: number) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60}` : ""}`)
 
 /** "under 2 h", "3 h or more", "35 min to 55 min". */
-export function lengthWords(r: FilterRange): string {
+function lengthWords(r: FilterRange): string {
 	const lo = r.min ?? 0
 	const hi = r.max ?? MAX
 	if (lo <= 0) return `under ${fmt(hi)}`

@@ -9,7 +9,7 @@ import type { ResultsView } from "./types"
 const Shown = createContext<ResultsView | null>(null)
 
 /** `d` with the variant's list in place of Discover's (total, counts, cards, paging); `d` itself when there's none. */
-export function withView(d: ProtoDiscover, v: ResultsView | null): ProtoDiscover {
+function withView(d: ProtoDiscover, v: ResultsView | null): ProtoDiscover {
 	if (!v) return d
 	const counts = d.counts && v.total !== null ? { ...d.counts, total: v.total, hidden: d.counts.hidden + d.counts.total - v.total } : d.counts
 	return { ...d, total: v.total, counts, cards: v.cards, loading: v.loading, hasMore: v.hasMore, loadMore: v.loadMore }

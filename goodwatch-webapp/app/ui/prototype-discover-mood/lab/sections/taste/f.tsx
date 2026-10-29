@@ -26,7 +26,7 @@ import {
 	groupLine,
 	matchName,
 	useTaste,
-} from "./def-parts"
+} from "./parts"
 
 const TOP_SHARE = Math.max(...GROUPS.map((g) => g.share))
 
@@ -136,7 +136,7 @@ function MatchRow({ taste, v }: { taste: Taste; v: MatchStep }) {
 }
 
 /** Production's NotSeenSwitch look (size sm): icon, label, what it hides, the switch; amber outline when on. */
-export function ListPill({
+function ListPill({
 	id,
 	icon,
 	label,
@@ -184,12 +184,7 @@ export function ListPill({
 	)
 }
 
-/** Round 15: layout d's You splits f in two, Taste (groups, match, order) and Lists (layout-d.tsx). */
-export function TasteF(props: SectionProps) {
-	return <TasteFPart {...props} part="all" />
-}
-
-export function TasteFPart({ d, phone, viewer, part }: SectionProps & { part: "all" | "taste" }) {
+export function TasteF({ d, phone, viewer }: SectionProps) {
 	const taste = useTaste(d, viewer)
 	const { member } = taste
 	const locked = !member
@@ -253,7 +248,7 @@ export function TasteFPart({ d, phone, viewer, part }: SectionProps & { part: "a
 	const switches = (
 		<div className="flex min-w-0 flex-col gap-5">
 			{order}
-			{part === "all" && <YourLists taste={taste} locked={locked} />}
+			<YourLists taste={taste} locked={locked} />
 		</div>
 	)
 
@@ -274,8 +269,8 @@ export function TasteFPart({ d, phone, viewer, part }: SectionProps & { part: "a
 	)
 }
 
-/** Your lists as f shows them; layout d's Lists page reuses them. */
-export function YourLists({ taste, locked }: { taste: Taste; locked: boolean }) {
+/** Your lists. */
+function YourLists({ taste, locked }: { taste: Taste; locked: boolean }) {
 	return (
 		<section>
 			{/* Round 13: several lists at once, all need an account. Round 14: production's Not seen yet pill, wishlist last. */}

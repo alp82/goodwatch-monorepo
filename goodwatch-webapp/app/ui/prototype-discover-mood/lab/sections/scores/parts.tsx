@@ -16,10 +16,10 @@ import type { ProtoDiscover } from "../../../kit"
 // ---------------------------------------------------------------------------------------------------------------
 // GoodWatch score
 
-export const SCORE_STEPS = MIN_SCORES as readonly MinScore[]
-export const vibeHex = (v: number) => getVibeColorValue((goodwatchVibeIndex(v) / 10) as Parameters<typeof getVibeColorValue>[0])
-export const scoreCount = (d: ProtoDiscover, v: number) => d.counts?.optionCounts.minScore?.[String(v)] ?? null
-export const setScore = (d: ProtoDiscover, v: number) => d.filters.set({ minScore: v as MinScore })
+const SCORE_STEPS = MIN_SCORES as readonly MinScore[]
+const vibeHex = (v: number) => getVibeColorValue((goodwatchVibeIndex(v) / 10) as Parameters<typeof getVibeColorValue>[0])
+const scoreCount = (d: ProtoDiscover, v: number) => d.counts?.optionCounts.minScore?.[String(v)] ?? null
+const setScore = (d: ProtoDiscover, v: number) => d.filters.set({ minScore: v as MinScore })
 
 export function GoodWatchMark({ size = 28, v }: { size?: number; v?: number }) {
 	return (
@@ -92,8 +92,8 @@ export const SOURCES: Source[] = [
 ]
 
 export const sourceValue = (d: ProtoDiscover, k: SourceKey) => d.filters.state.sourceScores?.[k] ?? 0
-export const sourceCount = (d: ProtoDiscover, k: SourceKey, v: number) => d.counts?.optionCounts.sourceScores?.[`${k}:${v}`] ?? null
-export function setSource(d: ProtoDiscover, k: SourceKey, v: number) {
+const sourceCount = (d: ProtoDiscover, k: SourceKey, v: number) => d.counts?.optionCounts.sourceScores?.[`${k}:${v}`] ?? null
+function setSource(d: ProtoDiscover, k: SourceKey, v: number) {
 	const next = { ...(d.filters.state.sourceScores ?? {}) }
 	if (v) next[k] = v
 	else delete next[k]
@@ -120,23 +120,6 @@ export function SourceLogo({ s, size = 28 }: { s: Source; size?: number }) {
 				<span className="absolute -right-1 -bottom-1 rounded bg-orange-400 px-[3px] text-[8px] font-black leading-[11px] text-gray-950">A</span>
 			)}
 		</span>
-	)
-}
-
-/** One source as one line: logo, name, and small "and up" steps lit in the brand color. */
-export function SourceRow({ d, s, dense = false }: { d: ProtoDiscover; s: Source; dense?: boolean }) {
-	const value = sourceValue(d, s.key)
-	return (
-		<div className={`flex items-center gap-3 ${dense ? "h-10" : "h-11"}`}>
-			<SourceLogo s={s} size={dense ? 26 : 28} />
-			<span className="w-[118px] shrink-0 leading-tight">
-				<span className="block text-[13px] font-semibold text-gray-100">{s.name}</span>
-				<span className="block text-[11px] text-gray-500">
-					{s.site === "IMDb" ? "Audience" : `${s.site === "Rotten Tomatoes" ? "RT" : s.site} ${s.who.toLowerCase()}`}
-				</span>
-			</span>
-			<SourceSteps d={d} s={s} value={value} />
-		</div>
 	)
 }
 
@@ -185,21 +168,21 @@ export function SourceSteps({ d, s, value, onPick }: { d: ProtoDiscover; s: Sour
 // ---------------------------------------------------------------------------------------------------------------
 // Critics vs audiences
 
-export const GAP_WORDS: Record<ScoreGap, { label: string; short: string }> = {
+const GAP_WORDS: Record<ScoreGap, { label: string; short: string }> = {
 	agree: { label: "Both agree", short: "Agree" },
 	critics: { label: "Critics liked it more", short: "Critics' pick" },
 	audience: { label: "Audiences liked it more", short: "Crowd pleaser" },
 }
-export const GAPS = SCORE_GAPS
-export const gapCount = (d: ProtoDiscover, g: ScoreGap) => d.counts?.optionCounts.scoreGap?.[g] ?? null
-export const setGap = (d: ProtoDiscover, g: ScoreGap | undefined) =>
+const GAPS = SCORE_GAPS
+const gapCount = (d: ProtoDiscover, g: ScoreGap) => d.counts?.optionCounts.scoreGap?.[g] ?? null
+const setGap = (d: ProtoDiscover, g: ScoreGap | undefined) =>
 	d.filters.set({ scoreGap: g && d.filters.state.scoreGap !== g ? g : undefined })
 
 const CRITIC = "#f83309"
 const CROWD = "#f6c800"
 
 /** Two bars: critics (red, like the Tomatometer) and audiences (yellow, like IMDb). */
-export function GapGlyph({ gap, size = 22, dim = false }: { gap: ScoreGap | "any"; size?: number; dim?: boolean }) {
+function GapGlyph({ gap, size = 22, dim = false }: { gap: ScoreGap | "any"; size?: number; dim?: boolean }) {
 	const [c, a] = gap === "critics" ? [1, 0.45] : gap === "audience" ? [0.45, 1] : gap === "agree" ? [0.85, 0.85] : [0.6, 0.6]
 	const bar = (h: number, color: string) => (
 		<span

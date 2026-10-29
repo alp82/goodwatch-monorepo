@@ -6,10 +6,8 @@
 import { motion } from "framer-motion"
 import type { ProtoDiscover } from "../../../kit"
 import type { SectionProps } from "../../types"
-import { type PresetsProps, MoreView, type Skin } from "./a"
-import { HUES, type Hue, hsla } from "./e"
 import { PresetGlyph, RoiGlyph, StatusMark } from "./glyphs"
-import { toggleRange, useSim } from "./parts"
+import { HUES, type Hue, MoreView, type PresetsProps, type Skin, hsla, toggleRange, useSim } from "./parts"
 import { type MoreKey, type MoreState, PRESETS, ROI_LABEL, type Roi, STATUS_LABEL, type ShowStatus, sameIdx, setMore } from "./store"
 import { MarkChip, RichTile, type TileState } from "./tiles"
 

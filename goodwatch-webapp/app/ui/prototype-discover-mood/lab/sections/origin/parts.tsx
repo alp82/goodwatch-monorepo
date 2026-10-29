@@ -10,7 +10,7 @@ import type { ProtoDiscover } from "../../../kit"
 
 export const POPULAR = ["US", "GB", "FR", "JP", "KR", "DE", "IT", "ES", "IN", "CA", "AU", "SE", "DK", "MX", "BR", "CN"]
 
-export interface Region {
+interface Region {
 	id: string
 	name: string
 	codes: string[]
@@ -29,9 +29,7 @@ export const REGIONS: Region[] = [
 	{ id: "oc", name: "Oceania", codes: ["AU", "NZ"] },
 ]
 
-export const HOLLYWOOD = ["US"]
-
-export interface Industry {
+interface Industry {
 	id: string
 	name: string
 	codes: string[]
@@ -60,7 +58,7 @@ export const BIG = ["US", "IN", "KR", "JP", "GB", "FR", "CN", "HK"]
 
 /** Every other country the catalog knows. A title made with one of them and one of the big ones still fits. */
 export const restOfWorld = (list: { code: string }[]) => list.map((c) => c.code).filter((c) => !BIG.includes(c)).sort()
-export const WORLD = REGIONS.flatMap((r) => r.codes).filter((c) => c !== "US")
+const WORLD = REGIONS.flatMap((r) => r.codes).filter((c) => c !== "US")
 
 /** Settings' flags (public/flags), the same ones Watching from shows. */
 export const flagUrl = countryFlagUrl

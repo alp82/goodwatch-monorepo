@@ -1,6 +1,7 @@
 // PROTOTYPE (Discover lab, round 6, 2026-10-28): the contract between the lab shell and its sections. The shell owns
 // the bar, tabs, sub-tab row, status line, phone sheet and grid. A section renders the content area of one sub-tab
-// (or, for `mood`, the whole Mood tab). Each section has variants; `a` is the baseline, the rest explore.
+// (or, for `mood`, the whole Mood tab). Each section has variants; round 20 locked one per section, and a new round
+// adds a/b/c to a section to explore.
 import type { ReactNode } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
 import type { ProtoDiscover } from "../kit"
@@ -35,7 +36,7 @@ export interface SectionProps {
 	morePart?: "reach" | "money" | "shows"
 }
 
-/** A list the grid, the status line and "Show N titles" show instead of Discover's own (mood i: the AND list). */
+/** A list the grid, the status line and "Show N titles" show instead of Discover's own (mood k: the AND list). */
 export interface ResultsView {
 	total: number | null
 	cards: TitleCard[]
@@ -49,8 +50,6 @@ export interface SectionVariant {
 	name: string
 	/** Optional sub-tab label this variant wants instead of the shell's default. */
 	label?: string
-	/** Keep the results grid undimmed while this section is open (its preview is the grid). */
-	liveGrid?: boolean
 	/** Titles only: a Search button at the right of the bar's field (runs the text, closes the panel). */
 	searchButton?: boolean
 	/** Titles only: the section places Movies or shows (and anime) itself, so the Search row drops its switch. */

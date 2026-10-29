@@ -1,7 +1,7 @@
 // PROTOTYPE (Discover lab, section "people"): what the people variants share. The same people search as the sheet's
 // Cast and crew card (FilterPickers PeoplePicker: /api/cast, faces and the better-known first), driven by the bar's text,
 // and the picked people (d.filters.state.people) with names and faces.
-import { CheckIcon, UserIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { UserIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
@@ -9,8 +9,7 @@ import type { CastMember } from "~/server/cast.server"
 import { TAP } from "~/ui/filter-bar/motion"
 import type { ProtoDiscover } from "../../../kit"
 
-export const PROFILE = "https://image.tmdb.org/t/p/w185"
-export const NAME_EXAMPLES = ["Zendaya", "Christopher Nolan", "Greta Gerwig", "Pedro Pascal", "Denis Villeneuve", "Florence Pugh"]
+const PROFILE = "https://image.tmdb.org/t/p/w185"
 
 export interface Person {
 	id: number
@@ -117,34 +116,6 @@ export function Face({ src, size, className = "" }: { src: string | null; size: 
 	)
 }
 
-/** A found person: face, name, role; tap to add or take off. */
-export function PersonTile({ p, on, onToggle, size = 48 }: { p: Person; on: boolean; onToggle: () => void; size?: number }) {
-	return (
-		<motion.button
-			type="button"
-			whileTap={TAP}
-			aria-pressed={on}
-			onClick={onToggle}
-			className={`group flex min-w-0 items-center gap-3 rounded-xl px-2 py-2 text-left cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
-				on ? "bg-purple-400/[0.14] ring-1 ring-inset ring-purple-300/50" : "hover:bg-white/[0.06]"
-			}`}
-		>
-			<span className="relative shrink-0">
-				<Face src={p.profile} size={size} />
-				{on && (
-					<span className="absolute -right-0.5 -bottom-0.5 grid h-5 w-5 place-items-center rounded-full bg-purple-300 text-gray-950 ring-2 ring-[#0b1120]">
-						<CheckIcon className="h-3 w-3" />
-					</span>
-				)}
-			</span>
-			<span className="min-w-0">
-				<span className="block truncate text-[14px] font-semibold text-gray-100">{p.name}</span>
-				<span className="block truncate text-[12px] text-gray-500">{roleOf(p.department)}</span>
-			</span>
-		</motion.button>
-	)
-}
-
 /** A picked person as a removable face chip. */
 export function PickedFace({ p, id, onRemove, big = false }: { p: Person | undefined; id: number; onRemove: () => void; big?: boolean }) {
 	if (big)
@@ -185,34 +156,3 @@ export function PickedFace({ p, id, onRemove, big = false }: { p: Person | undef
 	)
 }
 
-export function PeopleLoading({ n, size = 48 }: { n: number; size?: number }) {
-	return (
-		<>
-			{Array.from({ length: n }, (_, i) => (
-				// biome-ignore lint/suspicious/noArrayIndexKey: fixed placeholders
-				<div key={i} className="flex items-center gap-3 px-2 py-2" aria-hidden>
-					<span className="shrink-0 animate-pulse rounded-full bg-white/[0.06] motion-reduce:animate-none" style={{ width: size, height: size }} />
-					<span className="h-3 w-24 animate-pulse rounded bg-white/[0.06] motion-reduce:animate-none" />
-				</div>
-			))}
-		</>
-	)
-}
-
-export function NameExamples({ onPick, scroll = false }: { onPick: (name: string) => void; scroll?: boolean }) {
-	return (
-		<div className={`flex gap-2 ${scroll ? "-mx-4 overflow-x-auto px-4 pb-1" : "flex-wrap"}`}>
-			{NAME_EXAMPLES.map((n) => (
-				<button
-					key={n}
-					type="button"
-					onClick={() => onPick(n)}
-					className="flex h-9 shrink-0 items-center gap-2 rounded-full bg-white/[0.06] pr-3.5 pl-2.5 text-[14px] whitespace-nowrap text-gray-200 cursor-pointer outline-none hover:bg-white/[0.11] hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
-				>
-					<UserIcon className="h-4 w-4 text-purple-300/70" aria-hidden />
-					{n}
-				</button>
-			))}
-		</div>
-	)
-}

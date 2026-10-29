@@ -9,7 +9,7 @@ export type Idx = [number, number]
 export type Roi = "hit" | "flop"
 export type ShowStatus = "running" | "ended" | "canceled"
 /** The sub-tab (or More column) a value belongs to; also its Slot. */
-export type MorePart = "reach" | "money" | "shows"
+type MorePart = "reach" | "money" | "shows"
 
 export interface MoreState {
 	votes: Idx | null
@@ -33,14 +33,14 @@ export function setMore(patch: Partial<MoreState>) {
 	state = { ...state, ...patch }
 	for (const f of subs) f()
 }
-export const moreState = () => state
+const moreState = () => state
 export const useMore = () => useSyncExternalStore(subscribe, moreState, () => EMPTY)
 export const clearMore = () => setMore(EMPTY)
 
 const K = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : n >= 1e6 ? `${n / 1e6}M` : n >= 1e3 ? `${n / 1e3}K` : String(n))
 const usd = (n: number) => (n <= 0 ? "$0" : `$${K(n)}`)
 
-export interface Scale {
+interface Scale {
 	stops: number[]
 	/** A stop's label on the slider; the last is "N+". */
 	fmt: (i: number) => string
@@ -95,7 +95,7 @@ export function shareOf(k: MoreKey, r: Idx | null) {
 export const ROI_SHARE: Record<Roi, number> = { hit: 0.11, flop: 0.09 }
 export const STATUS_SHARE: Record<ShowStatus, number> = { running: 0.31, ended: 0.53, canceled: 0.16 }
 
-export interface Preset {
+interface Preset {
 	label: string
 	sub: string
 	range: Idx
@@ -175,14 +175,14 @@ export function spanLabel(k: MoreKey, r: Idx) {
 const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
 /** The chip label: a preset's name when the range is one, else the span. */
-export function rangeLabel(k: MoreKey, r: Idx): string {
+function rangeLabel(k: MoreKey, r: Idx): string {
 	const p = PRESETS[k].find((x) => sameIdx(x.range, r))
 	if (p && k !== "revenue" && k !== "seasons") return p.label
 	if (k === "seasons" && sameIdx(r, PRESETS.seasons[0].range)) return "One season"
 	return cap(NOUN[k](spanLabel(k, r)))
 }
 
-export const PART_OF: Record<MoreKey | "roi" | "status", MorePart> = {
+const PART_OF: Record<MoreKey | "roi" | "status", MorePart> = {
 	votes: "reach",
 	rank: "reach",
 	budget: "money",
@@ -193,7 +193,7 @@ export const PART_OF: Record<MoreKey | "roi" | "status", MorePart> = {
 	finish: "shows",
 }
 
-export interface MoreChip {
+interface MoreChip {
 	key: string
 	label: string
 	part: MorePart

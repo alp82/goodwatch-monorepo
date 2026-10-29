@@ -1,7 +1,7 @@
 // PROTOTYPE (Discover lab, services): shared pieces for the services variants. The mode choice uses the filter bar's
 // "On my services" pill (green with stacked logos, next to Everywhere), widened to today's three Streaming card modes:
 // My services, Everywhere, Streaming in… (any service in a country, a tap narrows to the ones picked).
-import { GlobeAltIcon, MagnifyingGlassIcon, PlusIcon, TvIcon } from "@heroicons/react/20/solid"
+import { GlobeAltIcon, PlusIcon, TvIcon } from "@heroicons/react/20/solid"
 import { useNavigate } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
@@ -17,14 +17,14 @@ import { SERVICES_PATH } from "~/ui/settings/paths"
 import type { ProtoDiscover } from "../../../kit"
 import type { Pieces, Viewer } from "../../types"
 
-export type Mode = "mine" | "any" | "pick"
+type Mode = "mine" | "any" | "pick"
 
 /** The member the lab shows with `viewer === "member"`: Netflix, Amazon Prime Video and Disney Plus (TMDB ids). */
-export const MEMBER_SERVICES = [8, 9, 337]
+const MEMBER_SERVICES = [8, 9, 337]
 
 const sameIds = (a: number[], b: number[]) => a.length === b.length && b.every((x) => a.includes(x))
 
-export const modeOf = (s: FilterState, mine: number[] = []): Mode =>
+const modeOf = (s: FilterState, mine: number[] = []): Mode =>
 	s.onMyServices || (mine.length > 0 && !s.anyService && sameIds(s.services ?? [], mine))
 		? "mine"
 		: s.anyService || s.services?.length
@@ -208,20 +208,6 @@ export function useServiceSearch(sv: Services) {
 	const term = search.trim().toLowerCase()
 	const matches = term ? sv.providers.filter((p) => p.name.toLowerCase().includes(term)) : sv.providers
 	return { search, setSearch, term, matches }
-}
-
-export function SearchToggle({ open, onClick }: { open: boolean; onClick: () => void }) {
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			aria-label="Find a service"
-			aria-pressed={open}
-			className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl cursor-pointer ring-1 ring-white/[0.06] outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${open ? "bg-white/[0.12] text-white" : "bg-white/[0.05] text-gray-400 hover:text-white"}`}
-		>
-			<MagnifyingGlassIcon className="h-4 w-4" />
-		</button>
-	)
 }
 
 export const logo = (path: string) => `${PROVIDER_LOGO}${path}`

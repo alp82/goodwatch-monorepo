@@ -1,19 +1,17 @@
-// PROTOTYPE (Discover lab, round 15): the main tabs as a lab choice (`v-layout`). a is today's three tabs (Search with
-// You as a sub-tab, Mood, Watch); b-e move You out into a fourth tab. Only the tab structure changes; each panel
-// still renders the chosen section variants.
+// PROTOTYPE (Discover lab, round 15): the main tabs as a lab choice (`v-layout`). Round 20 locked c: four tabs, You as
+// a narrow end cap after Search, Mood and Watch. Each panel renders the chosen section variants.
 import type { CardKey } from "~/ui/filter-bar/filter-cards"
-import type { Choice } from "./choice"
+import { type Choice, DEFAULTS } from "./choice"
 import type { SectionId, Viewer } from "./types"
 
 export type SegKey = "search" | "you" | "mood" | "watch"
 
-/** A filter card, the search text, Not seen yet, or (layout d) On my services. */
-export type Slot = CardKey | "q" | "notSeenYet" | "myServices" | MoreSlot
+/** A filter card, the search text, Not seen yet, or a "more" choice. */
+export type Slot = CardKey | "q" | "notSeenYet" | MoreSlot
 /** Round 16: the lab-only popularity, money and show choices (sections/more/store.ts). */
-export type MoreSlot = "reach" | "money" | "shows"
+type MoreSlot = "reach" | "money" | "shows"
 
-/** "lists" is layout d's You > Lists page (no lab section of its own). */
-export type SubId = SectionId | "lists" | MoreSlot
+export type SubId = SectionId | MoreSlot
 
 export interface Sub {
 	id: SubId
@@ -21,8 +19,6 @@ export interface Sub {
 	slots: Slot[]
 	/** Which of You's lab-only choices count here (youChips groups). */
 	you?: ("minMatch" | "notSeenYet")[]
-	/** Renders this page instead of the section's chosen variant (layout d splits taste f in two). */
-	view?: "you-taste" | "you-lists"
 	/** Round 16: renders the "more" section at this part. */
 	part?: MoreSlot
 	/** Shown while the list holds this kind (or its choices are set). */
@@ -38,7 +34,7 @@ export interface Layout {
 	flex: Record<SegKey, string>
 	/** Phone bar: the row under Search. */
 	phoneCols: (viewer: Viewer) => string
-	/** You as a narrow personal end cap (c, e): fingerprint or lock, a short summary. */
+	/** You as a narrow personal end cap: fingerprint or lock, a short summary. */
 	youCap?: boolean
 }
 
@@ -81,48 +77,6 @@ const YOU1: Sub[] = [
 
 const LAYOUT_LIST: Layout[] = [
 	{
-		key: "a",
-		name: "Three tabs, You in Search",
-		order: () => ["search", "mood", "watch"],
-		tabs: {
-			search: [
-				// Movies or shows sits on the Search row (round 10); it counts with Titles.
-				TITLES,
-				PEOPLE,
-				// Round 12: "You", with Not seen yet back from Services.
-				{
-					id: "taste",
-					label: "You",
-					slots: ["loved", "disliked", "minMatch", "notSeenYet"],
-					you: [...BOTH],
-				},
-			],
-			you: [],
-			mood: MOOD,
-			watch: WATCH,
-		},
-		flex: {
-			search: "flex-[2.6]",
-			you: "flex-1",
-			mood: "flex-[1.25]",
-			watch: "flex-[1.25]",
-		},
-		phoneCols: () => "grid-cols-2",
-	},
-	{
-		key: "b",
-		name: "You beside Search",
-		order: () => ["search", "you", "mood", "watch"],
-		tabs: { search: SEARCH4, you: YOU1, mood: MOOD, watch: WATCH },
-		flex: {
-			search: "flex-[2.3]",
-			you: "flex-[1.05]",
-			mood: "flex-[1.1]",
-			watch: "flex-[1.1]",
-		},
-		phoneCols: () => "grid-cols-3",
-	},
-	{
 		key: "c",
 		name: "You at the end",
 		order: () => ["search", "mood", "watch", "you"],
@@ -136,77 +90,19 @@ const LAYOUT_LIST: Layout[] = [
 		phoneCols: () => "grid-cols-[1fr_1fr_0.8fr]",
 		youCap: true,
 	},
-	{
-		key: "d",
-		name: "You hub, Taste and Lists",
-		order: () => ["search", "you", "mood", "watch"],
-		tabs: {
-			search: SEARCH4,
-			you: [
-				{
-					id: "taste",
-					label: "Taste",
-					slots: ["minMatch"],
-					you: ["minMatch"],
-					view: "you-taste",
-				},
-				{
-					id: "lists",
-					label: "Lists",
-					slots: ["notSeenYet", "myServices"],
-					you: ["notSeenYet"],
-					view: "you-lists",
-				},
-			],
-			mood: MOOD,
-			watch: WATCH,
-		},
-		flex: {
-			search: "flex-[2.3]",
-			you: "flex-[1.1]",
-			mood: "flex-[1.1]",
-			watch: "flex-[1.1]",
-		},
-		phoneCols: () => "grid-cols-3",
-	},
-	{
-		key: "e",
-		name: "You first for members",
-		order: (v) =>
-			v === "member"
-				? ["you", "search", "mood", "watch"]
-				: ["search", "mood", "watch", "you"],
-		tabs: { search: SEARCH4, you: YOU1, mood: MOOD, watch: WATCH },
-		flex: {
-			search: "flex-[2.5]",
-			you: "flex-[0.85]",
-			mood: "flex-[1.2]",
-			watch: "flex-[1.2]",
-		},
-		phoneCols: (v) =>
-			v === "member"
-				? "grid-cols-[0.8fr_1fr_1fr]"
-				: "grid-cols-[1fr_1fr_0.8fr]",
-		youCap: true,
-	},
 ]
 
-export const LAYOUTS: Record<string, Layout> = Object.fromEntries(
+const LAYOUTS: Record<string, Layout> = Object.fromEntries(
 	LAYOUT_LIST.map((l) => [l.key, l]),
 )
-export const LAYOUT_A = LAYOUTS.a
+/** The locked layout (c), also the fallback for an unknown `v-layout`. */
+export const LAYOUT_C = LAYOUTS.c
 export const LAYOUT_KEYS = LAYOUT_LIST.map((l) => ({
 	key: l.key,
 	name: l.name,
 }))
-export const layoutOf = (key: string | undefined): Layout =>
-	(key && LAYOUTS[key]) || LAYOUT_A
-
-/** Every tab in this layout, in bar order. */
-export const segsOf = (L: Layout, viewer: Viewer) => L.order(viewer)
-/** Layout d counts On my services under You, so Watch > Services doesn't count it again. */
-export const splitsMine = (L: Layout) =>
-	L.tabs.you.some((s) => s.slots.includes("myServices"))
+const layoutOf = (key: string | undefined): Layout =>
+	(key && LAYOUTS[key]) || LAYOUT_C
 
 // Round 16: the "more" section's sub-tabs in Watch. Popularity and Shows after Scores (round 17), Budget after
 // Length. Round 17 dropped c's one More sub-tab; every variant has these.
@@ -223,5 +119,5 @@ export function withMore(L: Layout): Layout {
 	return { ...L, tabs: { ...L.tabs, watch } }
 }
 
-/** The lab's layout: the main tabs choice with the "more" section's sub-tabs. */
-export const layoutFor = (choice: Choice): Layout => withMore(layoutOf(choice.layout))
+/** The lab's layout: the main tabs choice (the URL's, else the pick in DEFAULTS) with the "more" section's sub-tabs. */
+export const layoutFor = (choice: Choice): Layout => withMore(layoutOf(choice.layout ?? DEFAULTS.layout))

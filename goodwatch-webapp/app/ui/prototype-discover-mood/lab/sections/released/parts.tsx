@@ -12,7 +12,7 @@ import type { ProtoDiscover } from "../../../kit"
 export const YEAR_MIN = 1920
 export const yearMax = () => new Date().getFullYear()
 
-export function releasedRange(released: Released): [number, number] {
+function releasedRange(released: Released): [number, number] {
 	const now = yearMax()
 	switch (released) {
 		case "recent":
@@ -51,6 +51,32 @@ export function toggleYears(d: ProtoDiscover, r: [number, number]) {
 }
 
 export const fmtYear = (y: number) => (y <= YEAR_MIN ? "Any year" : y >= yearMax() ? "Now" : String(y))
+
+export const DECADES = Array.from({ length: Math.floor(yearMax() / 10) - 192 + 1 }, (_, i) => 1920 + i * 10)
+export const decadeRange = (start: number): [number, number] => [start, Math.min(start + 9, yearMax())]
+
+/** The decades the range covers exactly, as [first, last] decade starts; null when it isn't decade-aligned. */
+function decadeSpan([lo, hi]: [number, number]): [number, number] | null {
+	const now = yearMax()
+	if (lo <= YEAR_MIN && hi >= now) return null
+	if (lo % 10 !== 0) return null
+	if (hi !== now && hi % 10 !== 9) return null
+	return [lo, hi === now ? Math.floor(now / 10) * 10 : hi - 9]
+}
+
+/** Taps a decade: picks it, widens the span from a neighbor, narrows it from an end, or clears it when alone. */
+export function tapDecade(d: ProtoDiscover, y: number) {
+	const now = yearMax()
+	const span = decadeSpan(yearRange(d.filters.state))
+	if (!span) return setYears(d, decadeRange(y))
+	const [a, b] = span
+	if (a === b && a === y) return setYears(d, [YEAR_MIN, now])
+	if (y === a - 10) return setYears(d, [y, decadeRange(b)[1]])
+	if (y === b + 10) return setYears(d, [a, decadeRange(y)[1]])
+	if (y === a && b > a) return setYears(d, [a + 10, decadeRange(b)[1]])
+	if (y === b && b > a) return setYears(d, [a, decadeRange(b - 10)[1]])
+	setYears(d, decadeRange(y))
+}
 
 /** A range as the URL writes it, "1990-1999", open ends empty; null for no range at all. */
 const rangeParam = (r: FilterRange | undefined) =>
@@ -105,10 +131,6 @@ export function useRangeReads(d: ProtoDiscover, name: "years" | "runtime", range
 	})
 	if (d.q !== null || !q.data || q.data.length !== ranges.length) return ranges.map(() => NO_READ)
 	return q.data
-}
-
-export function useRangeCounts(d: ProtoDiscover, name: "years" | "runtime", ranges: FilterRange[]): (number | null)[] {
-	return useRangeReads(d, name, ranges).map((r) => r.total)
 }
 
 /** A year range as the years filter writes it, open ends left out. */

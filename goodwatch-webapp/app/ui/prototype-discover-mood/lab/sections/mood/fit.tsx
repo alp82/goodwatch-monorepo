@@ -1,33 +1,17 @@
 // PROTOTYPE (Discover lab, mood e-h): shared helpers for round 7's mood variants. The recipe line (copied from d,
 // which keeps it private), c's folding shelf (copied too), one row model for every choice in the tab with its honest
 // remaining count, and the tags that would narrow the current picks.
-import { ChevronDownIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { XMarkIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
-import { type ReactNode, useState } from "react"
+import { type ReactNode } from "react"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { type ProtoDiscover, type Tag, tagId } from "../../../kit"
-import {
-	Dots,
-	FoldBody,
-	FoldHead,
-	type FoldKey,
-	MOOD_CHOICES,
-	PickCount,
-	type Moods,
-	STYLE_TAGS,
-	THEME_TAGS,
-	clearAll,
-	genreOptions,
-	islandOfTag,
-	tagName,
-	tagTap,
-} from "./parts"
+import { MOOD_CHOICES, PickCount, type Moods, STYLE_TAGS, THEME_TAGS, clearAll, genreOptions, islandOfTag, tagName, tagTap } from "./parts"
 
 // ---------------------------------------------------------------------------------------------------------------
 // One row model for every choice
 
 export type FitKind = "moods" | "themes" | "styles" | "genres"
-export const FIT_KIND_LABEL: Record<FitKind, string> = { moods: "Mood", themes: "About", styles: "Style", genres: "Genre" }
 
 export interface FitRow {
 	id: string
@@ -107,16 +91,6 @@ export const byFit = (rows: FitRow[]) =>
 	[...rows].sort(
 		(a, b) => Number(b.on) - Number(a.on) || Number(a.dead) - Number(b.dead) || (b.n ?? -1) - (a.n ?? -1) || a.name.localeCompare(b.name),
 	)
-
-/** Filter tags that would narrow the picks: groups with no pick yet (moods only when no mood is picked), most first. */
-export function nextTags(d: ProtoDiscover, m: Moods, n = 8): Tag[] {
-	const groupFree = (g: Tag["group"]) => !d.picked.some((p) => p.group === g) && (g !== "moods" || m.used === 0)
-	const moodTags = MOOD_CHOICES.flatMap((c) => (c.tag ? [c.tag] : []))
-	return [...moodTags, ...THEME_TAGS, ...STYLE_TAGS]
-		.filter((t) => groupFree(t.group) && (d.countFor(t) ?? 0) > 0 && (d.total === null || (d.countFor(t) ?? 0) < d.total))
-		.sort((a, b) => (d.countFor(b) ?? 0) - (d.countFor(a) ?? 0))
-		.slice(0, n)
-}
 
 // ---------------------------------------------------------------------------------------------------------------
 // The recipe line (copied from d)
@@ -245,88 +219,6 @@ export function RecipeLine({
 
 // ---------------------------------------------------------------------------------------------------------------
 // c's shelf: Moods, About, Style, Genre folded, one open at a time (copied from c)
-
-export function MoodChipList({ m }: { m: Moods }) {
-	return (
-		<div className="flex flex-wrap gap-1.5">
-			{MOOD_CHOICES.map((c) => {
-				const on = m.isOn(c)
-				const tap = m.tap(c)
-				const dead = !on && (m.full || tap.none)
-				return (
-					<motion.button
-						key={c.id}
-						type="button"
-						aria-pressed={on}
-						whileTap={{ scale: 0.96 }}
-						onClick={() => m.toggle(c)}
-						title={c.alias ? `Discover's ${c.alias} filter` : c.word ? `Adds "${c.word}" to the search` : undefined}
-						className={`flex h-8 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
-							on ? "bg-white font-semibold text-gray-950" : dead ? "bg-white/[0.02] text-gray-600" : "bg-white/[0.06] text-gray-200 hover:bg-white/[0.11] hover:text-white"
-						}`}
-					>
-						<span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: c.color }} />
-						{c.name}
-						{!on &&
-							(tap.search ? (
-								<MagnifyingGlassIcon className="h-3 w-3 text-gray-500" aria-hidden />
-							) : (
-								tap.short && <span className="text-[11px] tabular-nums text-gray-500">{tap.short}</span>
-							))}
-					</motion.button>
-				)
-			})}
-		</div>
-	)
-}
-
-type ShelfKind = "moods" | FoldKey
-
-export function FoldShelf({ d, m, phone, first = "moods" }: { d: ProtoDiscover; m: Moods; phone: boolean; first?: ShelfKind | null }) {
-	const [open, setOpen] = useState<ShelfKind | null>(first)
-	const kinds: ShelfKind[] = ["moods", "themes", "styles", "genres"]
-	return (
-		<div className={`flex flex-col gap-2 ${phone ? "" : "min-h-0 flex-1"}`}>
-			{kinds.map((k) => {
-				const on = open === k
-				const head =
-					k === "moods" ? (
-						<button
-							type="button"
-							aria-expanded={on}
-							onClick={() => setOpen(on ? null : k)}
-							className={`flex h-11 w-full shrink-0 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-left text-sm font-semibold text-white ring-1 transition-colors ${on ? "bg-white/10 ring-white/25" : "bg-white/5 ring-white/10 hover:bg-white/10"}`}
-						>
-							<Dots hues={MOOD_CHOICES.slice(0, 5).map((c) => c.color)} />
-							<span>Moods</span>
-							<span className="font-normal text-gray-400">{MOOD_CHOICES.length} · kinds of evening</span>
-							<span className="ml-auto flex items-center gap-2">
-								{m.used > 0 && <span className="rounded-full bg-white px-1.5 text-xs font-bold tabular-nums text-black">{m.used}</span>}
-								<ChevronDownIcon className={`h-4 w-4 opacity-70 transition-transform ${on ? "rotate-180" : ""}`} aria-hidden />
-							</span>
-						</button>
-					) : (
-						<FoldHead d={d} k={k} on={on} onClick={() => setOpen(on ? null : k)} />
-					)
-				return (
-					<div key={k} className={on && !phone ? "flex min-h-0 flex-1 flex-col gap-2" : "contents"}>
-						{head}
-						{on && (
-							<motion.div
-								initial={{ opacity: 0, y: -4 }}
-								animate={{ opacity: 1, y: 0 }}
-								transition={{ duration: 0.14 }}
-								className={phone ? "pb-1" : "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-1"}
-							>
-								{k === "moods" ? <MoodChipList m={m} /> : <FoldBody d={d} k={k} />}
-							</motion.div>
-						)}
-					</div>
-				)
-			})}
-		</div>
-	)
-}
 
 // ---------------------------------------------------------------------------------------------------------------
 // A bar that shows how much a choice leaves: scaleX only, so changes animate on the compositor

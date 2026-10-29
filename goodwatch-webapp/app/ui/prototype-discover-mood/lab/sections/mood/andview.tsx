@@ -1,16 +1,44 @@
-// PROTOTYPE (Discover lab, mood i, j, k): i's AND pieces, shared. The rows with AND counts, the four columns, the
-// recipe row with Find a filter on its right (the shell drops its own row: ownFind), and e's mix cards with AND counts.
+// PROTOTYPE (Discover lab, mood k): the AND pieces. The rows with AND counts, the four columns, the recipe row with
+// Find a filter on its right (the shell drops its own row: ownFind), and the mix cards with AND counts.
 import { motion } from "framer-motion"
 import type { ReactNode } from "react"
 import { compactCount } from "~/ui/filter-bar/labels"
-import type { ProtoDiscover } from "../../../kit"
+import { type ProtoDiscover, TAGS, type Tag } from "../../../kit"
 import type { SectionProps, Viewer } from "../../types"
 import { type AndCounts, type AnyOf, type Cond, MAX_AND, andCount, picksOf, useAndCounts, useAnyOf } from "./and"
 import { ColumnHead, ColumnRows, ModeToggle } from "./columns"
-import { DROP_FROM, MEMBER_MIXES } from "./e"
-import { type FitRow, RecipeLine, byFit, fitRows } from "./fit"
-import { COLUMNS } from "./g"
+import { type FitKind, type FitRow, RecipeLine, byFit, fitRows } from "./fit"
 import { ArtTile, type DropStep, MIXES, MOOD_CHOICES, type Mix, type Moods, WithoutRow, type WorldArt, genreUnits, mixName, showDrops, useMixes, useMoods } from "./parts"
+
+const COLUMNS: { kind: FitKind; label: string }[] = [
+	{ kind: "moods", label: "Feel" },
+	{ kind: "themes", label: "About" },
+	{ kind: "styles", label: "Style" },
+	{ kind: "genres", label: "Genre" },
+]
+
+const findTag = (id: string): Tag => {
+	const [group, key] = id.split(":")
+	const t = TAGS.find((x) => x.group === group && x.key === key)
+	if (!t) throw new Error(`No tag ${id}`)
+	return t
+}
+const mixOf = (...ids: string[]): Mix => ({ id: ids.join("+"), tags: ids.map(findTag) })
+
+/** A member's starting mixes, leaning on what they loved (Severance, Paddington 2, Knives Out, Past Lives). */
+const MEMBER_MIXES: Mix[] = [
+	mixOf("moods:mind", "themes:future"),
+	mixOf("moods:feelgood", "themes:family"),
+	mixOf("moods:funny", "themes:mystery"),
+	mixOf("moods:romance", "styles:talky"),
+	mixOf("moods:mind", "styles:nonlinear"),
+	mixOf("moods:heavy", "styles:slow"),
+	mixOf("moods:feelgood", "styles:animated"),
+	mixOf("moods:action", "styles:fast"),
+]
+
+/** "Without X" cards only from this many picks on (moods, About, Style, Genre and search moods together). */
+const DROP_FROM = 3
 
 /** The condition a row stands for; null for a search mood (a word in the search, ANDed by the search itself). */
 function condOf(d: ProtoDiscover, r: FitRow): Cond | null {
@@ -60,7 +88,7 @@ export function useAnd(d: ProtoDiscover) {
 	const rows = andRows(d, m, counts, picks, mode.any)
 	return { m, picks, counts, rows, total: counts?.total ?? null, any: mode.any, setAny: mode.set }
 }
-export type And = ReturnType<typeof useAnd>
+type And = ReturnType<typeof useAnd>
 
 /** The recipe line with Find a filter at its right (phones: under it). */
 export function RecipeRow({ d, a, find, phone, right }: { d: ProtoDiscover; a: And; find: SectionProps["find"]; phone: boolean; right?: ReactNode }) {
@@ -184,7 +212,7 @@ export function useCards(
 				tap: r.toggle,
 			}),
 		)
-	// "Without X" only from three picks (e's DROP_FROM); its count is what it brings back.
+	// "Without X" only from three picks (DROP_FROM); its count is what it brings back.
 	const drops = (withDrops && a.picks.length + a.m.words.length >= DROP_FROM ? a.picks : [])
 		.map(
 			(c): DropStep => ({

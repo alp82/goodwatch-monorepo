@@ -11,8 +11,7 @@ import { RangeSlider } from "~/ui/filter-bar/SheetControls"
 import { posterUrl } from "~/ui/watch-next/style"
 import type { SectionProps } from "../../types"
 import { EraChip, type EraRead, ShareBar, YearFields, tint, useEraBoard } from "./art"
-import { DECADES, decadeRange, tapDecade } from "./b"
-import { GroupLabel, ResetLink, YEAR_MIN, fmtYear, pad, sameRange, setYears, toggleYears, useRangeReads, yearMax, yearRange } from "./parts"
+import { DECADES, GroupLabel, ResetLink, YEAR_MIN, decadeRange, fmtYear, pad, sameRange, setYears, tapDecade, toggleYears, useRangeReads, yearMax, yearRange } from "./parts"
 
 /** Movement before a press turns into a drag. Touch needs it sideways, so vertical scrolling stays the page's. */
 const SLOP = 8

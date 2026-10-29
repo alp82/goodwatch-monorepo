@@ -1,4 +1,4 @@
-// PROTOTYPE (Discover lab) Length d: a's picks, with a slider each for Movies and Episodes. Round 10: two values,
+// PROTOTYPE (Discover lab) Length d: big picks, with a slider each for Movies and Episodes. Round 10: two values,
 // movies in the real `runtime`, episodes in the lab-only `eruntime` (two.ts); with both kinds the kit asks for movies
 // and shows apart and merges them. The block of a kind that's not in the list dims. Counts are per kind, own range.
 import { useQuery } from "@tanstack/react-query"
@@ -7,8 +7,7 @@ import { RangeSlider } from "~/ui/filter-bar/SheetControls"
 import type { ProtoDiscover } from "../../../kit"
 import type { SectionProps } from "../../types"
 import { ResetLink, Tile, pad, sameRange } from "../released/parts"
-import { EPISODE_PICKS, MOVIE_PICKS } from "./a"
-import { LEN_MAX, fmtLen, isAnyLength, runtimeOf } from "./parts"
+import { EPISODE_PICKS, LEN_MAX, MOVIE_PICKS, fmtLen, isAnyLength, runtimeOf } from "./parts"
 import { episodeRange } from "./two"
 
 type Kind = "movie" | "show"

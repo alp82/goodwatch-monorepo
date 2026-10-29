@@ -54,7 +54,7 @@ import type { TitleKey } from "~/utils/title-key"
 
 const PROXY = "/prototype/discover-mood/proxy"
 let patched = false
-export function installProxyFetch() {
+function installProxyFetch() {
 	if (patched || typeof window === "undefined") return
 	patched = true
 	const original = window.fetch.bind(window)
@@ -74,7 +74,7 @@ export function installProxyFetch() {
 // Tags: what Discover can filter by today, as one list. Within a group a title fits any picked tag (the live rule);
 // across groups it must fit each group. Up to three per group.
 
-export type TagGroup = "moods" | "themes" | "styles"
+type TagGroup = "moods" | "themes" | "styles"
 export interface Tag {
 	group: TagGroup
 	key: string
@@ -87,7 +87,6 @@ export const TAGS: Tag[] = [
 	...THEMES.map((t) => ({ group: "themes" as const, key: t.id, name: t.name, color: t.color })),
 	...STYLES.map((s) => ({ group: "styles" as const, key: s.id, name: s.name, color: s.color })),
 ]
-export const GROUP_LABEL: Record<TagGroup, string> = { moods: "Mood", themes: "About", styles: "Style" }
 const MAX: Record<TagGroup, number> = { moods: MAX_MOODS, themes: MAX_THEMES, styles: MAX_STYLES }
 export const tagId = (t: Pick<Tag, "group" | "key">) => `${t.group}:${t.key}`
 

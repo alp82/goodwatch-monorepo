@@ -83,7 +83,7 @@ const PITCH = 4
  * A small season by episode ratings grid that grows with the preset. Cells take three shade steps: `tones` (dark to
  * light: best to weakest) or currentColor at three opacities.
  */
-export function EpisodeGrid({ step, tones }: { step: number; tones?: [string, string, string] }) {
+function EpisodeGrid({ step, tones }: { step: number; tones?: [string, string, string] }) {
 	const g = GRIDS[Math.max(0, Math.min(3, step))]
 	const y0 = 16 - g.rows * PITCH + 1
 	return (

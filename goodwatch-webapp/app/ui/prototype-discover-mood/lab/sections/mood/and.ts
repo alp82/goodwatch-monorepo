@@ -27,7 +27,7 @@ import type { ProtoDiscover } from "../../../kit"
 import type { ResultsView } from "../../types"
 import { genreUnits } from "./parts"
 
-export type AndGroup = "moods" | "themes" | "styles" | "genres"
+type AndGroup = "moods" | "themes" | "styles" | "genres"
 const GROUPS: AndGroup[] = ["moods", "themes", "styles", "genres"]
 
 /** One condition: a filter tag, or a genre unit (its names). */
@@ -38,7 +38,7 @@ export interface Cond {
 }
 
 /** The URL param for the groups that match any of their picks. */
-export const ANY_PARAM = "anyof"
+const ANY_PARAM = "anyof"
 export type AnyOf = ReadonlySet<AndGroup>
 const NONE: AnyOf = new Set()
 
@@ -234,10 +234,10 @@ async function pages(query: string, from: number, to: number, signal: AbortSigna
 }
 
 /** True when an "all of" group holds two picks or more: only then the AND list differs from Discover's own. */
-export const needsAnd = (picks: Cond[], any: AnyOf = NONE) => GROUPS.some((g) => !any.has(g) && picks.filter((c) => c.group === g).length > 1)
+const needsAnd = (picks: Cond[], any: AnyOf = NONE) => GROUPS.some((g) => !any.has(g) && picks.filter((c) => c.group === g).length > 1)
 
 /** The AND list in Discover's order, read a chunk at a time (see the header). */
-export function useAndList(d: ProtoDiscover, picks: Cond[], on: boolean, any: AnyOf = NONE) {
+function useAndList(d: ProtoDiscover, picks: Cond[], on: boolean, any: AnyOf = NONE) {
 	const { ranked, waiting } = useRanked(d)
 	const base = d.filters.query
 	const groups = GROUPS.filter((g) => picks.some((c) => c.group === g))

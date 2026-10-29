@@ -11,7 +11,7 @@ export const GROUP_NAME: Record<string, string> = {
 	g4: "Quiet, tender romance",
 }
 
-export interface YouExtras {
+interface YouExtras {
 	groups: string[]
 	outside: boolean
 	/** Taste match 60%+ (the real minMatch stays 0). */
@@ -31,11 +31,11 @@ export function setYou(patch: Partial<YouExtras>) {
 	extras = { ...extras, ...patch }
 	for (const f of subs) f()
 }
-export const youExtras = () => extras
+const youExtras = () => extras
 export const useYouExtras = () => useSyncExternalStore(subscribe, youExtras, () => EMPTY)
 export const clearYou = () => setYou(EMPTY)
 
-export interface YouChip {
+interface YouChip {
 	key: string
 	label: string
 	/** The filter accent of its dot. */
@@ -53,4 +53,3 @@ export function youChips(x: YouExtras = extras): YouChip[] {
 		...(x.seen ? [{ key: "seen", label: "Seen before", group: "notSeenYet" as const, remove: () => setYou({ seen: false }) }] : []),
 	]
 }
-export const youCount = () => youChips().length

@@ -1,13 +1,69 @@
-// PROTOTYPE (Discover lab) Released e and f: shared looks. Era tints, the era board's reads (one per tile, the same
-// query as c and d, so their cache is shared), a picture chip and the slider with From / To fields.
+// PROTOTYPE (Discover lab) Released f: its looks. Era tints, the era board's reads (one per tile), a picture chip and
+// the slider with From / To fields.
 import { motion } from "framer-motion"
 import { compactCount } from "~/ui/filter-bar/labels"
-import { RangeSlider } from "~/ui/filter-bar/SheetControls"
 import { ChoiceArt } from "~/ui/watch-next/TasteShelf"
 import type { ProtoDiscover } from "../../../kit"
-import { YearField } from "./a"
-import { eras } from "./c"
-import { GroupLabel, ResetLink, type RangeRead, YEAR_MIN, fmtYear, sameRange, setYears, useRangeReads, yearMax, yearRange, yearsFilter } from "./parts"
+import { type RangeRead, YEAR_MIN, setYears, useRangeReads, yearMax, yearRange, yearsFilter } from "./parts"
+
+interface Era {
+	label: string
+	sub?: string
+	range: [number, number]
+}
+
+export function eras(): { id: string; label: string; items: Era[] }[] {
+	const now = yearMax()
+	return [
+		{
+			id: "new",
+			label: "New",
+			items: [
+				{ label: "This year", range: [now, now] },
+				// Last N years runs from N years back to now, like Last 3 years (the real "recent" preset).
+				{ label: "Last 2 years", range: [now - 2, now] },
+				{ label: "Last 3 years", range: [now - 3, now] },
+				{ label: "Last 5 years", range: [now - 5, now] },
+			],
+		},
+		{
+			id: "decades",
+			label: "Decades",
+			items: [2020, 2010, 2000, 1990, 1980, 1970].map((y) => ({ label: `${y}s`, range: [y, Math.min(y + 9, now)] as [number, number] })),
+		},
+		{
+			id: "older",
+			label: "Older",
+			items: [
+				{ label: "1960s", range: [1960, 1969] },
+				{ label: "1950s", range: [1950, 1959] },
+				{ label: "After 2000", range: [2000, now] },
+				{ label: "After 1950", range: [1950, now] },
+			],
+		},
+	]
+}
+
+function YearField({ label, value, onCommit }: { label: string; value: number; onCommit: (y: number) => void }) {
+	return (
+		<label className="flex flex-col gap-1">
+			<span className="text-[11px] font-bold tracking-wide text-gray-500 uppercase">{label}</span>
+			<input
+				key={value}
+				type="number"
+				inputMode="numeric"
+				min={YEAR_MIN}
+				max={yearMax()}
+				defaultValue={value}
+				onBlur={(e) => onCommit(Number(e.currentTarget.value))}
+				onKeyDown={(e) => {
+					if (e.key === "Enter") onCommit(Number(e.currentTarget.value))
+				}}
+				className="h-10 w-28 rounded-lg bg-white/[0.06] px-3 text-[15px] tabular-nums text-white outline-none ring-1 ring-white/10 focus:ring-2 focus:ring-amber-400"
+			/>
+		</label>
+	)
+}
 
 /** One hue per era: warm for new, cool through the 2000s, then the film stock colors of each older decade. */
 const TINT: Record<string, string> = {
@@ -87,21 +143,6 @@ export function EraChip({ e, on, onClick, className = "" }: { e: EraRead; on: bo
 			<span className="truncate">{e.label}</span>
 			<span className="ml-auto shrink-0 rounded-md bg-black/30 px-1 text-[11px] tabular-nums">{n === null ? "" : compactCount(n)}</span>
 		</motion.button>
-	)
-}
-
-/** a's year range: the slider and From / To fields, with Any year. */
-export function YearsControl({ d, label = "Years", fields = "mt-5" }: { d: ProtoDiscover; label?: string; fields?: string }) {
-	const range = yearRange(d.filters.state)
-	const now = yearMax()
-	const any = sameRange(range, [YEAR_MIN, now])
-	const clamp = (y: number) => Math.min(now, Math.max(YEAR_MIN, Number.isFinite(y) ? Math.round(y) : YEAR_MIN))
-	return (
-		<div>
-			<GroupLabel right={<ResetLink show={!any} onClick={() => setYears(d, [YEAR_MIN, now])}>Any year</ResetLink>}>{label}</GroupLabel>
-			<RangeSlider label="Released" min={YEAR_MIN} max={now} step={1} value={range} format={fmtYear} onCommit={(r) => setYears(d, r)} />
-			<YearFields d={d} className={fields} clamp={clamp} />
-		</div>
 	)
 }
 

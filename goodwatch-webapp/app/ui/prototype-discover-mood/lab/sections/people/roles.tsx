@@ -11,13 +11,6 @@ import { Face, type People, type Person, PickedFace } from "./shared"
 
 export type Role = "actors" | "directors" | "writers" | "crew"
 
-export const ROLES: { id: Role; label: string }[] = [
-	{ id: "actors", label: "Actors" },
-	{ id: "directors", label: "Directors" },
-	{ id: "writers", label: "Writers" },
-	{ id: "crew", label: "Music and crew" },
-]
-
 export const roleFor = (department: string): Role =>
 	department === "Acting" ? "actors" : department === "Directing" ? "directors" : department === "Writing" ? "writers" : "crew"
 
@@ -99,11 +92,6 @@ export function RowsLoading({ n }: { n: number }) {
 			))}
 		</>
 	)
-}
-
-/** What a list shows for one role: the found people when the bar has a name, else the featured ones. */
-export function roleList(people: People, featured: ReturnType<typeof useFeatured>, found: Record<Role, Person[]>, role: Role) {
-	return people.asking ? found[role] : featured[role]
 }
 
 /** The picked people as removable face chips joined by "or" (the filter keeps titles with any of them). */

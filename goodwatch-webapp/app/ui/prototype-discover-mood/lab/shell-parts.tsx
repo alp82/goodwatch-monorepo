@@ -1,64 +1,53 @@
 // PROTOTYPE - throwaway. The Discover lab shell (from round 5 variant 16): its own copy of R4-8-parts with three segments instead of five (Search,
-// Mood, Watch), the structure of tabs and sub-tabs as data (TABS: which filters live where), what each segment reads
+// Mood, Watch), the structure of tabs and sub-tabs as data (lab/layouts.ts: which filters live where), what each segment reads
 // (a summary over all its sub-tabs), the bar, the phone bar, the status line and the shared controls.
-import { ArrowTopRightOnSquareIcon, CheckIcon, LockClosedIcon, MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { LockClosedIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
-import { useNavigate } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
-import { type ReactNode, type Ref, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { type FilterName, type FilterState, RELEASED, dropFilter } from "~/domain/filter-state"
-import { productionCountryName } from "~/domain/production-country"
+import { type ReactNode, type Ref, useEffect, useRef, useState } from "react"
+import { type FilterName, type FilterState, dropFilter } from "~/domain/filter-state"
 import { HiddenTitles } from "~/ui/discover/HiddenTitles"
 import { ReadAsChips } from "~/ui/discover/ReadAsChips"
 import { FilterGroups } from "~/ui/filter-bar"
-import { type CardKey, cardOf, focusSheetOn } from "~/ui/filter-bar/filter-cards"
-import { NotSeenSwitch, ServiceStack, SortControl } from "~/ui/filter-bar/controls"
+import { type CardKey, cardOf } from "~/ui/filter-bar/filter-cards"
+import { ServiceStack, SortControl } from "~/ui/filter-bar/controls"
 import { type ActiveChip, FILTER_ACCENTS, RELEASED_LABELS, TYPE_LABELS, discoverSorts, sortShown } from "~/ui/filter-bar/labels"
 import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
-import { Chip, ChipList, type Option, RangeSlider, Segmented, ThresholdBar, byCount } from "~/ui/filter-bar/SheetControls"
-import { PROVIDER_LOGO } from "~/ui/filter-bar/useFilterData"
-import { SERVICES_PATH } from "~/ui/settings/paths"
 import { titlePath } from "~/utils/helpers"
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
-import { goodwatchVibeIndex } from "~/utils/ratings"
-import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
+import { type TitleKey, titleKey } from "~/utils/title-key"
 import { ProtoGrid, type ProtoDiscover, TAGS, type Tag, tagId, type useFilterPieces } from "../kit"
 import { tagName } from "./sections/mood/parts"
 import { mcUsers, setMcUsers } from "./sections/scores/mc-users"
 import { clearYou, useYouExtras, youChips } from "./sections/taste/you-extras"
 import { clearMore, moreChips, partCount, useMore } from "./sections/more/store"
-import { LAYOUT_A, type Layout, type SegKey, type Slot, type Sub, type SubId, splitsMine } from "./layouts"
-import { MEMBER_SERVICES, modeOf } from "./sections/services/parts"
+import { LAYOUT_C, type Layout, type SegKey, type Slot, type Sub, type SubId } from "./layouts"
 import type { Viewer } from "./types"
 
 export type Pieces = ReturnType<typeof useFilterPieces>
 export type { SegKey, Slot, Sub }
-export const SEG_ORDER: SegKey[] = ["search", "mood", "watch"]
+const SEG_ORDER: SegKey[] = ["search", "mood", "watch"]
 export const SEG_LABEL: Record<SegKey, string> = { search: "Search", you: "You", mood: "Mood", watch: "Watch" }
 export const PRIVATE = "search-private ph-no-capture sentry-mask"
-export const SEARCH_PLACEHOLDER = "A mood, a title, or like Severance"
+const SEARCH_PLACEHOLDER = "A mood, a title, or like Severance"
 const TASTE = "signUp" as const
-
-export const MOOD_TAGS = TAGS.filter((t) => t.group === "moods")
 
 // ---------------------------------------------------------------------------------------------------------------
 // The structure: three tabs (round 15: or four, lab/layouts.ts), each with one row of sub-tabs (Mood has one, so no
 // row). A slot is a filter card, the search text, or Not seen yet. A sub-tab's id is the lab section that renders it
 // (`lab/registry.ts`).
 
-export const TABS = LAYOUT_A.tabs
-
 /** What the counts need besides the filters: the layout and who is looking. */
-export interface Ctx {
+interface Ctx {
 	L: Layout
 	viewer: Viewer
 }
-const CTX_A: Ctx = { L: LAYOUT_A, viewer: "guest" }
+const CTX_C: Ctx = { L: LAYOUT_C, viewer: "guest" }
 
 /** The sub-tabs this viewer gets (Age and content needs a rating ladder). */
-export function subsFor(seg: SegKey, pieces: Pieces, L: Layout = LAYOUT_A): Sub[] {
+export function subsFor(seg: SegKey, pieces: Pieces, L: Layout = LAYOUT_C): Sub[] {
 	const type = pieces.groups.state.type
 	// Round 16: Budget shows with movies, Shows with shows, or while one of their choices is set.
 	const fits = (s: Sub) => !s.kind || type === "all" || type === s.kind || (s.part && partCount([s.part]) > 0)
@@ -68,39 +57,29 @@ export function subsFor(seg: SegKey, pieces: Pieces, L: Layout = LAYOUT_A): Sub[
 const ALL_SEGS: SegKey[] = ["search", "you", "mood", "watch"]
 
 /** Where a filter lives. */
-export function whereIs(slot: Slot, L: Layout = LAYOUT_A): { seg: SegKey; sub: SubId } {
+export function whereIs(slot: Slot, L: Layout = LAYOUT_C): { seg: SegKey; sub: SubId } {
 	for (const seg of ALL_SEGS) for (const s of L.tabs[seg]) if (s.slots.includes(slot)) return { seg, sub: s.id }
 	return { seg: "watch", sub: "services" }
 }
 
 /** The tab a section lives in. */
-export function segOf(id: SubId, L: Layout = LAYOUT_A): SegKey {
+export function segOf(id: SubId, L: Layout = LAYOUT_C): SegKey {
 	for (const seg of ALL_SEGS) if (L.tabs[seg].some((s) => s.id === id)) return seg
 	return "search"
 }
 
 /** The active chips of one card. */
-export const chipsOf = (pieces: Pieces, k: CardKey) => pieces.chips.filter((c) => cardOf(c.group) === k)
-
-/** The streaming choice is "On my services" (a member's comes in as an explicit list, services/parts.tsx). */
-export function onMine(d: ProtoDiscover, viewer: Viewer) {
-	const s = d.filters.state
-	if (viewer === "guest" && d.filters.defaults.onMyServices) return false
-	return modeOf(s, viewer === "member" ? MEMBER_SERVICES : []) === "mine"
-}
+const chipsOf = (pieces: Pieces, k: CardKey) => pieces.chips.filter((c) => cardOf(c.group) === k)
 
 /** How many values a sub-tab has set. */
-export function subCount(d: ProtoDiscover, pieces: Pieces, sub: Sub, ctx: Ctx = CTX_A) {
+export function subCount(d: ProtoDiscover, pieces: Pieces, sub: Sub, ctx: Ctx = CTX_C) {
 	// Lab-only values: Scores a's Metacritic user score, You's taste groups, lists and steps (you-extras.ts).
 	const you = sub.you ? youChips().filter((c) => sub.you?.includes(c.group)).length : 0
 	const extra = sub.id === "scores" ? (mcUsers() ? 1 : 0) : you
-	const split = splitsMine(ctx.L)
 	return extra + sub.slots.reduce((n, slot) => {
 		if (slot === "q") return n + (d.q ? 1 : 0)
 		if (slot === "notSeenYet") return n + (d.filters.state.notSeenYet ? 1 : 0)
-		if (slot === "myServices") return n + (onMine(d, ctx.viewer) ? 1 : 0)
 		if (slot === "reach" || slot === "money" || slot === "shows") return n + partCount([slot])
-		if (slot === "services" && split && onMine(d, ctx.viewer)) return n
 		return n + chipsOf(pieces, slot).length
 	}, 0)
 }
@@ -111,7 +90,7 @@ export const slotOfChip = (chip: ActiveChip): Slot => cardOf(chip.group) ?? "not
 const join = (parts: (string | null | undefined | false)[]) => parts.filter(Boolean).join(" · ") || null
 const headPlus = (names: string[]) => (names.length ? (names.length > 2 ? `${names.slice(0, 2).join(", ")} +${names.length - 2}` : names.join(", ")) : null)
 
-export interface SegValue {
+interface SegValue {
 	value: string | null
 	placeholder: string
 	lead?: ReactNode
@@ -122,17 +101,13 @@ export interface SegValue {
 	locked?: boolean
 }
 
-export function segValues(d: ProtoDiscover, pieces: Pieces, ctx: Ctx = CTX_A): Record<SegKey, SegValue> {
+export function segValues(d: ProtoDiscover, pieces: Pieces, ctx: Ctx = CTX_C): Record<SegKey, SegValue> {
 	const { L, viewer } = ctx
 	const s = d.filters.state
 	const labels = (...keys: CardKey[]) => keys.flatMap((k) => chipsOf(pieces, k).map((c) => c.label))
 	const moods = d.picked.filter((t) => t.group === "moods")
 	const providers = pieces.services.countryProviders
-	const split = splitsMine(L)
-	const mine = onMine(d, viewer)
-	const chosenAll = s.onMyServices ? pieces.services.providers : providers.filter((p) => s.services?.includes(p.id))
-	// Layout d: On my services is You's, so Watch shows only a picked list.
-	const chosen = split && mine ? [] : chosenAll
+	const chosen = s.onMyServices ? pieces.services.providers : providers.filter((p) => s.services?.includes(p.id))
 	const released = s.years
 		? `${s.years.min ?? "Any"}–${s.years.max ?? "now"}`
 		: s.released !== "any"
@@ -148,22 +123,18 @@ export function segValues(d: ProtoDiscover, pieces: Pieces, ctx: Ctx = CTX_A): R
 		...(["similarTo", "people", "loved", "disliked", "minMatch"] as const).filter((k) => has(seg, k)).flatMap((k) => labels(k)),
 		...(s.notSeenYet && has(seg, "notSeenYet") ? ["Not seen yet"] : []),
 		...youOf(seg).map((c) => c.label),
-		...(mine && has(seg, "myServices") ? ["My services"] : []),
 		...(typeToo && s.type !== "all" && has(seg, "type") ? [TYPE_LABELS[s.type]] : []),
 	]
 	const searchOther = personal("search", true)
 	// A segment's badge is the sum of its sub-tabs' badges.
 	const badge = (k: SegKey) => subsFor(k, pieces, L).reduce((n, sub) => n + subCount(d, pieces, sub, ctx), 0) || undefined
-	const streaming =
-		split && mine
-			? null
-			: s.onMyServices
-				? "My services"
-				: s.services?.length
-					? (headPlus(chosen.map((p) => cleanName(p.name))) ?? `${s.services.length} services`)
-					: s.anyService
-						? "Any service"
-						: null
+	const streaming = s.onMyServices
+		? "My services"
+		: s.services?.length
+			? (headPlus(chosen.map((p) => cleanName(p.name))) ?? `${s.services.length} services`)
+			: s.anyService
+				? "Any service"
+				: null
 	// You (round 15): "Any match · Not seen yet"; the match step leads, the rest follows.
 	const youList = personal("you", false)
 	const matchLabel = youList.find((x) => /^Match /.test(x) || /%/.test(x) || x === "Outside your usual")
@@ -171,8 +142,6 @@ export function segValues(d: ProtoDiscover, pieces: Pieces, ctx: Ctx = CTX_A): R
 	const locked = viewer === "guest"
 	const youLead = locked ? (
 		<LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-amber-500/70" aria-hidden />
-	) : split && mine && chosenAll.length ? (
-		<ServiceStack providers={chosenAll} on size={16} />
 	) : (
 		<FingerPrintIcon className="h-4 w-4 shrink-0 text-amber-500" aria-hidden />
 	)
@@ -233,7 +202,7 @@ export function SegmentBar({
 	onClearSearch,
 	searchInput,
 	order = SEG_ORDER,
-	flex = LAYOUT_A.flex,
+	flex = LAYOUT_C.flex,
 }: {
 	id: string
 	order?: SegKey[]
@@ -323,7 +292,7 @@ export function SegmentBar({
 	)
 }
 
-export function SegLabel({ k, badge, locked }: { k: SegKey; badge?: number; locked?: boolean }) {
+function SegLabel({ k, badge, locked }: { k: SegKey; badge?: number; locked?: boolean }) {
 	return (
 		<span
 			className={`flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] uppercase ${k === "search" ? "text-amber-300/90" : locked ? "text-gray-500" : "text-gray-400"}`}
@@ -549,7 +518,7 @@ export function MyServicesChip({ d, onOpen }: { d: ProtoDiscover; onOpen: (slot:
 	return (
 		<ValueChip
 			chip={{ key: "mine", group: "services", label: "On my services", remove: (x) => ({ ...x, onMyServices: false }) }}
-			onOpen={() => onOpen("myServices")}
+			onOpen={() => onOpen("services")}
 			onRemove={() => d.filters.set({ onMyServices: false, anyService: undefined, services: undefined })}
 		/>
 	)
@@ -690,16 +659,7 @@ export function SubHead({ children, note, right }: { children: ReactNode; note?:
 	)
 }
 
-export const tagOption = (d: ProtoDiscover, t: Tag): Option => ({
-	id: tagId(t),
-	label: tagName(t),
-	active: d.isOn(t),
-	count: d.countFor(t),
-	toggle: () => d.toggle(t),
-	swatch: <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: t.color }} />,
-})
-
-export function HueDots({ tags, size = 12 }: { tags: Tag[]; size?: number }) {
+function HueDots({ tags, size = 12 }: { tags: Tag[]; size?: number }) {
 	const shown = tags.slice(0, 4)
 	if (!shown.length) return null
 	return (
@@ -715,434 +675,14 @@ export function HueDots({ tags, size = 12 }: { tags: Tag[]; size?: number }) {
 	)
 }
 
-const groupNote = (d: ProtoDiscover, group: Tag["group"]) => {
-	const n = d.picked.filter((t) => t.group === group).length
-	return n ? `Any of these · ${n} of 3` : "Up to 3"
-}
-
-function ClearLink({ onClick }: { onClick: () => void }) {
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			className="rounded-md px-1.5 py-0.5 text-[12px] text-gray-400 cursor-pointer outline-none hover:bg-white/[0.08] hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
-		>
-			Clear
-		</button>
-	)
-}
-
-/** Mood, Theme or Style chips with hue dots and what each would leave. */
-export function TagChips({ d, group, big = false }: { d: ProtoDiscover; group: Tag["group"]; big?: boolean }) {
-	const tags = TAGS.filter((t) => t.group === group)
-	const picks = d.picked.filter((t) => t.group === group)
-	const options = group === "moods" ? tags.map((t) => tagOption(d, t)) : byCount(tags.map((t) => tagOption(d, t)))
-	return (
-		<div>
-			<SubHead
-				note={groupNote(d, group)}
-				right={
-					picks.length > 0 && (
-						<ClearLink
-							onClick={() => {
-								for (const t of picks) d.toggle(t)
-							}}
-						/>
-					)
-				}
-			>
-				{group === "moods" ? "Mood" : group === "themes" ? "About" : "Style"}
-			</SubHead>
-			<div className={`flex flex-wrap ${big ? "gap-2" : "gap-1.5"}`}>
-				{options.map((o) => {
-					const t = tags.find((x) => tagId(x) === o.id)
-					return (
-						<div key={o.id} title={t?.description} className={big ? "[&>button]:h-9 [&>button]:px-3.5 [&>button]:text-[14px]" : ""}>
-							<Chip o={o} />
-						</div>
-					)
-				})}
-			</div>
-		</div>
-	)
-}
-
-export function TypeControl({ d }: { d: ProtoDiscover }) {
-	const s = d.filters.state
-	const c = (g: "type" | "anime", o: string) => d.counts?.optionCounts[g]?.[o] ?? null
-	return (
-		<div>
-			<SubHead>Movies or shows</SubHead>
-			<div className="flex">
-				<Segmented
-					label="Movies or shows"
-					value={s.type}
-					onChange={(type) => d.filters.set({ type })}
-					options={(["all", "movie", "show"] as const).map((id) => ({
-						id,
-						label: id === "all" ? "Both" : TYPE_LABELS[id],
-						count: c("type", id),
-					}))}
-				/>
-			</div>
-		</div>
-	)
-}
-
-const GENRE_FOLDS: { label: string; names: string[] }[] = [
-	{ label: "Action", names: ["Action", "Action & Adventure"] },
-	{ label: "Adventure", names: ["Adventure", "Action & Adventure"] },
-	{ label: "Sci-Fi", names: ["Science Fiction", "Sci-Fi & Fantasy"] },
-	{ label: "Fantasy", names: ["Fantasy", "Sci-Fi & Fantasy"] },
-	{ label: "War", names: ["War", "War & Politics"] },
-]
-const FOLDED = new Set(GENRE_FOLDS.flatMap((f) => f.names))
-
-function genreOptions(d: ProtoDiscover): Option[] {
-	const s = d.filters.state
-	const oc = d.counts?.optionCounts.genres
-	const all = Object.keys(oc ?? {})
-	for (const g of s.genres) if (!all.includes(g)) all.push(g)
-	const c = (n: string) => oc?.[n] ?? null
-	const units = [
-		...GENRE_FOLDS.filter((f) => f.names.some((n) => all.includes(n))),
-		...all.filter((n) => !FOLDED.has(n)).map((n) => ({ label: n, names: [n] })),
-	]
-	const isOn = (u: { names: string[] }) => s.genres.includes(u.names[0])
-	return units.map((u) => {
-		const parts = u.names.map(c).filter((x): x is number => x !== null)
-		return {
-			id: u.label,
-			label: u.label,
-			active: isOn(u),
-			count: parts.length ? parts.reduce((a, b) => a + b, 0) : null,
-			toggle: () => {
-				const on = units.filter((x) => (x === u ? !isOn(u) : isOn(x)))
-				d.filters.set({ genres: [...new Set(on.flatMap((x) => x.names))] })
-			},
-		}
-	})
-}
-
-export function GenreControl({ d, limit = 10 }: { d: ProtoDiscover; limit?: number }) {
-	const s = d.filters.state
-	return (
-		<div>
-			<SubHead note="Any of" right={s.genres.length > 0 && <ClearLink onClick={() => d.filters.set({ genres: [] })} />}>
-				Genre
-			</SubHead>
-			<ChipList options={genreOptions(d)} limit={limit} sort />
-		</div>
-	)
-}
-
-const SCORE_STEPS = [
-	{ v: 0, label: "Any" },
-	{ v: 60, label: "60+" },
-	{ v: 70, label: "70+" },
-	{ v: 80, label: "80+" },
-]
-
-export function ScoreControl({ d }: { d: ProtoDiscover }) {
-	return (
-		<div>
-			<SubHead note="GoodWatch score">Score</SubHead>
-			<ThresholdBar
-				label="Score"
-				steps={SCORE_STEPS}
-				value={d.filters.state.minScore}
-				onChange={(minScore) => d.filters.set({ minScore })}
-				color={(v) => `bg-vibe-${goodwatchVibeIndex(v)}`}
-				counts={(v) => d.counts?.optionCounts.minScore?.[String(v)] ?? null}
-			/>
-		</div>
-	)
-}
-
-const YEAR_MIN = 1920
-const yearMax = () => new Date().getFullYear()
-function releasedRange(released: FilterState["released"]): [number, number] {
-	const now = yearMax()
-	switch (released) {
-		case "recent":
-			return [now - 3, now]
-		case "2010s":
-			return [2010, 2019]
-		case "2000s":
-			return [2000, 2009]
-		case "before2000":
-			return [YEAR_MIN, 1999]
-		default:
-			return [YEAR_MIN, now]
-	}
-}
-const yearRange = (s: FilterState): [number, number] =>
-	s.years ? [s.years.min ?? YEAR_MIN, s.years.max ?? yearMax()] : releasedRange(s.released)
-
-export function ReleasedControl({ d, slider = true }: { d: ProtoDiscover; slider?: boolean }) {
-	const s = d.filters.state
-	const c = (o: string) => d.counts?.optionCounts.released?.[o] ?? null
-	const now = yearMax()
-	return (
-		<div>
-			<SubHead>Released</SubHead>
-			<div className="flex flex-wrap gap-1.5">
-				{RELEASED.map((r) => (
-					<Chip
-						key={r}
-						o={{
-							id: r,
-							label: RELEASED_LABELS[r],
-							active: !s.years && s.released === r,
-							count: s.years || r === "any" ? null : c(r),
-							toggle: () => d.filters.set({ released: s.released === r && !s.years ? "any" : r, years: undefined }),
-						}}
-					/>
-				))}
-			</div>
-			{slider && (
-				<div className="mt-3">
-					<RangeSlider
-						label="Released"
-						min={YEAR_MIN}
-						max={now}
-						step={1}
-						value={yearRange(s)}
-						format={(y) => (y <= YEAR_MIN ? "Any year" : y >= now ? "Now" : String(y))}
-						onCommit={([lo, hi]) => {
-							const preset = (["recent", "2010s", "2000s", "before2000", "any"] as const).find((r) => {
-								const [a, b] = releasedRange(r)
-								return a === lo && b === hi
-							})
-							if (preset) d.filters.set({ released: preset, years: undefined })
-							else
-								d.filters.set({
-									released: "any",
-									years: { ...(lo > YEAR_MIN ? { min: lo } : {}), ...(hi < now ? { max: hi } : {}) },
-								})
-						}}
-					/>
-				</div>
-			)}
-		</div>
-	)
-}
-
-export function NotSeenControl({ pieces }: { pieces: Pieces }) {
-	return <NotSeenSwitch {...pieces.notSeenProps} />
-}
-
 // ---------------------------------------------------------------------------------------------------------------
 // Streaming
 
-type StreamMode = "any" | "mine" | "pick"
-const streamMode = (s: FilterState): StreamMode =>
-	s.onMyServices ? "mine" : s.anyService || s.services?.length ? "pick" : "any"
 const cleanName = (n: string) => n.replace(/ (Amazon Channel|Apple TV Channel)$/, "")
-
-export function useStreaming(d: ProtoDiscover, pieces: Pieces) {
-	const s = d.filters.state
-	const mode = streamMode(s)
-	const mine = pieces.services.ids
-	const chosen = s.onMyServices ? mine : (s.services ?? [])
-	const rank = (id: number) => (chosen.includes(id) ? 0 : mine.includes(id) ? 1 : 2)
-	const providers = pieces.services.countryProviders
-		.map((p, i) => ({ p, i }))
-		.sort((a, b) => rank(a.p.id) - rank(b.p.id) || a.i - b.i)
-		.map(({ p }) => p)
-	const setMode = (m: StreamMode) =>
-		d.filters.set(
-			m === "mine"
-				? { onMyServices: true, anyService: undefined, services: undefined }
-				: m === "pick"
-					? { onMyServices: false, anyService: true, services: undefined }
-					: { onMyServices: false, anyService: undefined, services: undefined },
-		)
-	const pick = (id: number) => {
-		const base = s.anyService || s.onMyServices ? [] : (s.services ?? [])
-		const next = s.anyService || s.onMyServices ? [id] : base.includes(id) ? base.filter((x) => x !== id) : [...base, id]
-		d.filters.set(
-			next.length
-				? { onMyServices: false, anyService: undefined, services: next }
-				: { onMyServices: false, anyService: true, services: undefined },
-		)
-	}
-	const country = s.streamingCountry ?? pieces.services.country ?? "US"
-	return { mode, chosen, providers, setMode, pick, country, hasMine: mine.length > 0 }
-}
-
-export function StreamingModes({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
-	const navigate = useNavigate()
-	const st = useStreaming(d, pieces)
-	return (
-		<div className="flex items-center gap-3">
-			<div className="flex min-w-0 flex-1">
-				<Segmented
-					label="Streaming"
-					value={st.mode}
-					onChange={st.setMode}
-					options={[
-						{ id: "any", label: "Everywhere" },
-						...(st.hasMine ? [{ id: "mine" as const, label: "My services" }] : []),
-						{ id: "pick", label: "Pick services" },
-					]}
-				/>
-			</div>
-			{!st.hasMine && (
-				<button
-					type="button"
-					onClick={() => navigate(SERVICES_PATH)}
-					className="shrink-0 rounded-md px-2 py-1 text-[13px] font-semibold text-amber-300/90 cursor-pointer outline-none hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-400"
-				>
-					Save my services
-				</button>
-			)}
-		</div>
-	)
-}
-
-/** Services as logo chips (compact) or as a grid of logo tiles. A tap narrows to the services picked. */
-export function ServiceLogos({
-	d,
-	pieces,
-	layout,
-	limit = 18,
-}: { d: ProtoDiscover; pieces: Pieces; layout: "chips" | "grid"; limit?: number }) {
-	const st = useStreaming(d, pieces)
-	const [all, setAll] = useState(false)
-	const shown = all ? st.providers.slice(0, 80) : st.providers.slice(0, Math.max(limit, st.chosen.length))
-	const rest = st.providers.length - shown.length
-	if (!st.providers.length) return <p className="text-[13px] text-gray-500">Loading services…</p>
-	const more = rest > 0 && (
-		<button
-			type="button"
-			onClick={() => setAll(true)}
-			className="flex h-8 items-center rounded-full px-2.5 text-[13px] font-medium text-amber-300/90 cursor-pointer outline-none hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-400"
-		>
-			+{rest} more
-		</button>
-	)
-	if (layout === "chips")
-		return (
-			<div className="flex flex-wrap gap-1.5">
-				{shown.map((p) => (
-					<Chip
-						key={p.id}
-						img={`${PROVIDER_LOGO}${p.logo_path}`}
-						o={{
-							id: String(p.id),
-							label: cleanName(p.name),
-							active: st.mode !== "any" && st.chosen.includes(p.id),
-							count: null,
-							toggle: () => st.pick(p.id),
-						}}
-					/>
-				))}
-				{more}
-			</div>
-		)
-	return (
-		<div>
-			<div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-				{shown.map((p) => {
-					const on = st.mode !== "any" && st.chosen.includes(p.id)
-					return (
-						<motion.button
-							key={p.id}
-							type="button"
-							whileTap={TAP}
-							aria-pressed={on}
-							onClick={() => st.pick(p.id)}
-							className={`relative flex min-w-0 items-center gap-2.5 rounded-xl p-2 text-left cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
-								on ? "bg-white/[0.12] ring-1 ring-white/40" : "bg-white/[0.035] ring-1 ring-white/[0.06] hover:bg-white/[0.07]"
-							}`}
-						>
-							<img
-								src={`${PROVIDER_LOGO}${p.logo_path}`}
-								alt=""
-								loading="lazy"
-								className={`h-9 w-9 shrink-0 rounded-lg object-cover transition-opacity ${st.mode !== "any" && !on ? "opacity-50" : ""}`}
-							/>
-							<span className={`min-w-0 truncate text-[13px] ${on ? "font-semibold text-white" : "text-gray-300"}`}>
-								{cleanName(p.name)}
-							</span>
-							{on && (
-								<span className="absolute -top-1.5 -right-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-gray-950">
-									<CheckIcon className="h-3.5 w-3.5" />
-								</span>
-							)}
-						</motion.button>
-					)
-				})}
-			</div>
-			{more && <div className="mt-2">{more}</div>}
-		</div>
-	)
-}
-
-export function CountryLine({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
-	const st = useStreaming(d, pieces)
-	return (
-		<p className="text-[12px] text-gray-500">
-			Streaming in <span className="font-semibold text-gray-300">{productionCountryName(st.country)}</span>
-		</p>
-	)
-}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Niche: one card of the real sheet, without its frame. The sheet's cards mount added-as-you-go, so this asks the
 // sheet to open at `k` (focusSheetOn) right before mounting, and hides every other card.
-
-// The sheet scrolls a card it was asked to open at into view; inside a panel column that's a jump, so the card's
-// first layout pass runs without it (child layout effects run before this one's).
-const realScroll = typeof window !== "undefined" ? HTMLElement.prototype.scrollIntoView : null
-function useNoScrollOnMount() {
-	const first = useRef(true)
-	if (first.current && realScroll) HTMLElement.prototype.scrollIntoView = () => {}
-	useLayoutEffect(() => {
-		first.current = false
-		if (realScroll) HTMLElement.prototype.scrollIntoView = realScroll
-	}, [])
-}
-
-export function OneCard({ pieces, k }: { pieces: Pieces; k: CardKey }) {
-	focusSheetOn(k)
-	useNoScrollOnMount()
-	const scope = `one-card-${k}`
-	const css = `.${scope} > .flex-col > div:not(:has(> #filter-card-${k})), .${scope} > .flex-col > section, .${scope} > [aria-busy] > div:not(:first-child) { display: none }
-.${scope} #filter-card-${k} { background: none !important; padding: 0 !important; box-shadow: none !important }
-.${scope} #filter-card-${k} > div:first-child { display: none }`
-	return (
-		<>
-			<style dangerouslySetInnerHTML={{ __html: css }} />
-			<FilterGroups data={pieces.groups} query="" className={scope} />
-		</>
-	)
-}
-
-export function NicheControl({ d, pieces, k }: { d: ProtoDiscover; pieces: Pieces; k: CardKey }) {
-	if (k === "themes" || k === "styles") return <TagChipsBare d={d} group={k} />
-	return <OneCard key={k} pieces={pieces} k={k} />
-}
-
-function TagChipsBare({ d, group }: { d: ProtoDiscover; group: "themes" | "styles" }) {
-	const options = byCount(TAGS.filter((t) => t.group === group).map((t) => tagOption(d, t)))
-	return (
-		<div>
-			<p className="mb-2 text-[12px] text-gray-500">{groupNote(d, group)}</p>
-			<div className="flex flex-wrap gap-1.5">
-				{options.map((o) => (
-					<Chip key={o.id} o={o} />
-				))}
-			</div>
-		</div>
-	)
-}
-
-
-/** Clears one niche card. */
-export const clearCard = (d: ProtoDiscover, pieces: Pieces, k: CardKey) =>
-	d.filters.update((s) => chipsOf(pieces, k).reduce((acc, c) => c.remove(acc), s))
 
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -1290,76 +830,6 @@ export function PosterThumb({ poster, title, className = "h-[54px] w-9" }: { pos
 		</span>
 	)
 }
-
-/** Similar to, as a toggle: adds or takes off one title. */
-export function useSimilar(d: ProtoDiscover) {
-	const list = d.filters.state.similarTo ?? []
-	const has = (k: TitleKey) => list.includes(k)
-	const toggle = (k: TitleKey) => {
-		const next = has(k) ? list.filter((x) => x !== k) : [...list, k]
-		d.filters.set({ similarTo: next.length ? next : undefined })
-	}
-	return { list, has, toggle }
-}
-
-/** A title match: poster, name, year and kind; open its page, or "Like this" (Similar to). */
-export function TitleRow({ t, liked, onLike }: { t: FoundTitle; liked: boolean; onLike: () => void }) {
-	return (
-		<div className="group flex h-[66px] min-w-0 items-center gap-3 rounded-xl px-2 hover:bg-white/[0.045]">
-			<a
-				href={liveTitleUrl(t)}
-				target="_blank"
-				rel="noreferrer"
-				className="flex min-w-0 flex-1 items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-			>
-				<PosterThumb poster={t.poster} title={t.title} />
-				<span className="min-w-0">
-					<span className="flex min-w-0 items-center gap-1.5 text-[14px] font-semibold text-gray-100">
-						<span className="truncate">{t.title}</span>
-						<ArrowTopRightOnSquareIcon className="h-3.5 w-3.5 shrink-0 text-gray-600 group-hover:text-gray-400" aria-hidden />
-					</span>
-					<span className="block text-[12px] text-gray-500">
-						{[t.year, t.mediaType === "movie" ? "Movie" : "Show"].filter(Boolean).join(" · ")}
-					</span>
-				</span>
-			</a>
-			<motion.button
-				type="button"
-				whileTap={TAP}
-				aria-pressed={liked}
-				onClick={onLike}
-				className={`flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-[13px] font-semibold whitespace-nowrap cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
-					liked ? "bg-white text-gray-950" : "bg-white/[0.07] text-gray-200 ring-1 ring-inset ring-white/10 hover:bg-white/[0.12]"
-				}`}
-			>
-				{liked ? <CheckIcon className="h-3.5 w-3.5" aria-hidden /> : <PlusIcon className="h-3.5 w-3.5" aria-hidden />}
-				Like this
-			</motion.button>
-		</div>
-	)
-}
-
-export function TitleRowsLoading({ n = 4 }: { n?: number }) {
-	return (
-		<div aria-busy="true">
-			{Array.from({ length: n }, (_, i) => (
-				// biome-ignore lint/suspicious/noArrayIndexKey: fixed placeholders
-				<div key={i} className="flex h-[66px] items-center gap-3 px-2">
-					<span className="h-[54px] w-9 animate-pulse rounded-md bg-white/[0.06] motion-reduce:animate-none" />
-					<span className="h-3 w-32 animate-pulse rounded bg-white/[0.06] motion-reduce:animate-none" />
-				</div>
-			))}
-		</div>
-	)
-}
-
-/** Known example titles, so an example can set Similar to without a search. */
-export const EXAMPLE_TITLES: FoundTitle[] = [
-	{ key: titleKey("show", 95396), title: "Severance", year: "2022", poster: null, mediaType: "show", tmdbId: 95396 },
-	{ key: titleKey("show", 70523), title: "Dark", year: "2017", poster: null, mediaType: "show", tmdbId: 70523 },
-	{ key: titleKey("movie", 545611), title: "Everything Everywhere All at Once", year: "2022", poster: null, mediaType: "movie", tmdbId: 545611 },
-]
-export const keyParts = parseTitleKey
 
 /**
  * The sheet's cards load once, on first use. Several single cards side by side each ask for their own card as they

@@ -10,7 +10,6 @@ import { ANIME_LABELS, TYPE_LABELS, compactCount } from "~/ui/filter-bar/labels"
 import type { ProtoDiscover } from "../kit"
 import { useLabChoice } from "./LabBar"
 import { pick } from "./registry"
-import { YouLists, YouTaste } from "./layout-d"
 import { type SubId, layoutFor } from "./layouts"
 import { type Pieces, type SegKey, type Sub, subCount, useKeepTop } from "./shell-parts"
 import type { SectionId, SectionProps } from "./types"
@@ -104,7 +103,7 @@ export function SubTabs({
 // Find a filter
 
 /** The sheet's Find a filter field, with the lab's own placeholder. */
-export function FindField({ value, onChange }: { value: string; onChange: (t: string) => void }) {
+function FindField({ value, onChange }: { value: string; onChange: (t: string) => void }) {
 	return (
 		<label className="flex h-10 items-center gap-2.5 rounded-xl bg-white/[0.06] px-3.5 ring-1 ring-white/10 focus-within:ring-amber-500/70">
 			<MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-gray-500" />
@@ -146,7 +145,7 @@ function FindAll({ pieces, text, phone }: { pieces: Pieces; text: string; phone:
 }
 
 /** Movies or shows for the whole Discover state, on the Search tab (round 10: no longer on Mood). */
-export function SearchType({ d }: { d: ProtoDiscover }) {
+function SearchType({ d }: { d: ProtoDiscover }) {
 	const c = (o: string) => d.counts?.optionCounts.type?.[o] ?? null
 	return (
 		<div className="flex">
@@ -242,8 +241,8 @@ function useRowType() {
 /** A sub-tab's label: the chosen variant's own label, else the shell's. */
 function SubLabel({ sub }: { sub: Sub }) {
 	const choice = useLabChoice()
-	// Layout d's own pages keep the layout's labels (Taste, Lists).
-	if (sub.view || sub.part) return <>{sub.label}</>
+	// The "more" section's parts keep the layout's labels.
+	if (sub.part) return <>{sub.label}</>
 	return <>{pick(choice, sub.id as SectionId).label ?? sub.label}</>
 }
 
@@ -252,16 +251,9 @@ function SubLabel({ sub }: { sub: Sub }) {
 
 export type SectionBase = Omit<SectionProps, "phone" | "viewer">
 
-const VIEWS = { "you-taste": YouTaste, "you-lists": YouLists }
-
-function Section({ id, view, part, props }: { id: SubId; view?: Sub["view"]; part?: Sub["part"]; props: Omit<SectionProps, "viewer"> }) {
-	const choice = useLabChoice()
+function Section({ id, part, props }: { id: SubId; part?: Sub["part"]; props: Omit<SectionProps, "viewer"> }) {
 	// Round 16: the "more" section at one of its parts.
 	if (part) return <RegisteredSection id="more" props={{ ...props, morePart: part }} />
-	if (view) {
-		const Page = VIEWS[view]
-		return <Page key={`${view}:${choice.as}`} {...props} viewer={choice.as} />
-	}
 	return <RegisteredSection id={id as SectionId} props={props} />
 }
 
@@ -315,7 +307,7 @@ export function TabPanel({
 	const canFind = seg !== "search"
 	// A variant with ownFind places the field and the results itself (no row of its own here).
 	const choice = useLabChoice()
-	const own = canFind && !open.view && !open.part && pick(choice, open.id as SectionId).ownFind === true
+	const own = canFind && !open.part && pick(choice, open.id as SectionId).ownFind === true
 	const finding = canFind && find.trim() !== ""
 	const rowType = useRowType()
 	const pickSub = (s: SubId) => {
@@ -338,7 +330,7 @@ export function TabPanel({
 				className={phone ? "" : "h-full min-h-0"}
 				data-lab-section={open.id}
 			>
-				<Section id={open.id} view={open.view} part={open.part} props={props} />
+				<Section id={open.id} part={open.part} props={props} />
 			</motion.div>
 		</AnimatePresence>
 	)

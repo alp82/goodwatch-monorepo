@@ -10,21 +10,21 @@
 // Discover's four topic moods (Crime & mystery, Other worlds, History, Coming of age) duplicate themes and are left to
 // About. Pictures, "apart" lines and island positions come from the Explorer's world (/api/explorer/world as a guest).
 // Counts are Discover's own (d.countFor, or the results endpoint for a mix); search moods show no count until they run.
-import { CheckIcon, ChevronDownIcon, MagnifyingGlassIcon, MinusIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { CheckIcon, MagnifyingGlassIcon, MinusIcon, PlusIcon } from "@heroicons/react/20/solid"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 import { type ReactNode, useState } from "react"
 import type { ExplorerWorld } from "~/domain/explorer"
 import type { DiscoverResults } from "~/server/discover-results.server"
-import { TYPE_LABELS, compactCount } from "~/ui/filter-bar/labels"
-import { ChipList, type Option, Segmented } from "~/ui/filter-bar/SheetControls"
+import { compactCount } from "~/ui/filter-bar/labels"
+import { type Option } from "~/ui/filter-bar/SheetControls"
 import { ChoiceArt } from "~/ui/watch-next/TasteShelf"
-import { type ProtoDiscover, TAGS, type Tag, short, tagId } from "../../../kit"
+import { type ProtoDiscover, TAGS, type Tag, short } from "../../../kit"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The mood set
 
-export interface MoodChoice {
+interface MoodChoice {
 	/** The Explorer island id. */
 	id: string
 	name: string
@@ -83,7 +83,7 @@ export const tagName = (t: Tag) =>
 // ---------------------------------------------------------------------------------------------------------------
 // The Explorer's world: pictures, lines and positions
 
-export interface IslandArt {
+interface IslandArt {
 	path: string | null
 	apart: string
 	x: number
@@ -131,7 +131,7 @@ const dropWord = (q: string | null, w: string) => (q ?? "").replace(wordRe(w), "
 
 export const MAX_MOODS = 3
 
-export interface Tap {
+interface Tap {
 	text: string
 	short: string
 	/** Picking it would leave nothing. */
@@ -187,19 +187,6 @@ export interface Pick {
 	remove: () => void
 }
 
-export function usePicks(d: ProtoDiscover, m: Moods): Pick[] {
-	return [
-		...d.picked.map((t) => ({
-			id: tagId(t),
-			name: tagName(t),
-			color: t.color,
-			island: islandOfTag(t),
-			remove: () => d.toggle(t),
-		})),
-		...m.words.map((c) => ({ id: `word:${c.id}`, name: c.name, color: c.color, island: `mood:${c.id}`, remove: () => m.toggle(c) })),
-	]
-}
-
 export function clearAll(d: ProtoDiscover, m: Moods) {
 	let q = d.q
 	for (const c of m.words) q = dropWord(q, c.word ?? "")
@@ -235,7 +222,7 @@ export const MIXES: Mix[] = [
 
 export const mixName = (x: Mix) => x.tags.map(tagName).join(" + ")
 
-export interface MixCount {
+interface MixCount {
 	total: number | null
 	path: string | null
 	/** The mix's first title. */
@@ -383,7 +370,7 @@ export interface DropStep {
 export const showDrops = (narrowing: number, drops: number, slots: number, cols: number) => drops > 0 && narrowing <= slots - cols
 
 /** A slim removal tile: minus, the pick struck through in its color, amber "+ N" it brings back. */
-export function WithoutTile({ s, className = "", basis, short = false }: { s: DropStep; className?: string; basis?: string; short?: boolean }) {
+function WithoutTile({ s, className = "", basis, short = false }: { s: DropStep; className?: string; basis?: string; short?: boolean }) {
 	return (
 		<motion.button
 			type="button"
@@ -428,113 +415,6 @@ export function WithoutRow({ drops, cols, className = "" }: { drops: DropStep[];
 	)
 }
 
-/** A small picture chip: a pick (with ×) or a suggestion (with +). */
-export function ArtChip({
-	name,
-	hues,
-	path,
-	count,
-	onRemove,
-	onAdd,
-}: {
-	name: string
-	hues: string[]
-	path: string | null
-	count?: string
-	onRemove?: () => void
-	onAdd?: () => void
-}) {
-	const body = (
-		<>
-			<ChoiceArt hues={hues} path={path} split={hues.length > 1} />
-			{onAdd && <PlusIcon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />}
-			<span className="truncate">{name}</span>
-			{count && <span className="shrink-0 rounded-md bg-black/30 px-1 text-xs tabular-nums">{count}</span>}
-		</>
-	)
-	const cls =
-		"relative isolate inline-flex h-9 max-w-[20rem] shrink-0 items-center gap-1.5 overflow-hidden rounded-xl text-sm font-bold text-white ring-1 [text-shadow:0_1px_4px_rgba(0,0,0,.6)]"
-	if (onAdd)
-		return (
-			<button type="button" onClick={onAdd} className={`${cls} cursor-pointer pl-2 pr-2.5 ring-white/20 hover:ring-white/50`}>
-				{body}
-			</button>
-		)
-	return (
-		<motion.span
-			layout
-			initial={{ opacity: 0, scale: 0.9 }}
-			animate={{ opacity: 1, scale: 1 }}
-			className={`${cls} pl-2.5 ring-white/25`}
-			style={{ boxShadow: `0 4px 18px -6px ${hues[0]}` }}
-		>
-			{body}
-			<button
-				type="button"
-				aria-label={`Remove ${name}`}
-				onClick={onRemove}
-				className="mr-1.5 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-black/25 hover:bg-black/50"
-			>
-				<XMarkIcon className="h-3.5 w-3.5" />
-			</button>
-		</motion.span>
-	)
-}
-
-/** The picks as picture chips with Clear, or `empty` when nothing is picked. Fixed height. */
-export function PickRow({
-	d,
-	m,
-	art,
-	empty,
-	right,
-}: {
-	d: ProtoDiscover
-	m: Moods
-	art: WorldArt
-	empty?: ReactNode
-	right?: ReactNode
-}) {
-	const picks = usePicks(d, m)
-	return (
-		<div className="flex h-9 min-w-0 items-center gap-2">
-			<div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none]">
-				{picks.length ? (
-					picks.map((p) => <ArtChip key={p.id} name={p.name} hues={[p.color]} path={art.get(p.island)?.path ?? null} onRemove={p.remove} />)
-				) : (
-					empty
-				)}
-			</div>
-			<PickCount n={picks.length} m={m} />
-			{picks.length > 0 && (
-				<button
-					type="button"
-					onClick={() => clearAll(d, m)}
-					className="shrink-0 cursor-pointer rounded-full px-2.5 py-1 text-sm font-semibold text-gray-200 hover:bg-white/10"
-				>
-					Clear
-				</button>
-			)}
-			{right}
-		</div>
-	)
-}
-
-/** "k of 3" moods; amber and nudged when a fourth was refused. Next to a Moods heading only (f). */
-export function MoodCount({ m }: { m: Moods }) {
-	return (
-		<motion.span
-			key={m.refusedAt}
-			initial={m.refusedAt ? { x: -4 } : false}
-			animate={{ x: 0 }}
-			transition={{ type: "spring", stiffness: 900, damping: 12 }}
-			className={`shrink-0 text-sm tabular-nums ${m.full ? "font-semibold text-amber-300" : "text-gray-400"}`}
-		>
-			{m.used} of {MAX_MOODS} moods
-		</motion.span>
-	)
-}
-
 /**
  * How many picks the tab holds ("3 picked"). The mood limit shows only once it matters: at three moods, in amber,
  * nudged when a fourth was refused. Nothing while nothing is picked.
@@ -562,109 +442,6 @@ export function PickCount({ n, m }: { n: number; m: Moods }) {
 	)
 }
 
-/** The mood tiles' grid. */
-export function MoodTiles({
-	d,
-	m,
-	art,
-	cols = "grid-cols-6",
-	tile = "h-[6.25rem]",
-	lines = true,
-}: {
-	d: ProtoDiscover
-	m: Moods
-	art: WorldArt
-	cols?: string
-	tile?: string
-	lines?: boolean
-}) {
-	return (
-		<div className={`grid gap-2 ${cols}`}>
-			{MOOD_CHOICES.map((c) => {
-				const on = m.isOn(c)
-				const tap = m.tap(c)
-				const a = art.get(`mood:${c.id}`)
-				return (
-					<ArtTile
-						key={c.id}
-						name={c.name}
-						line={lines ? a?.apart : null}
-						hues={[c.color]}
-						path={a?.path ?? null}
-						on={on}
-						dim={(!on && m.full) || tap.none}
-						search={tap.search}
-						foot={tap.text}
-						onClick={() => m.toggle(c)}
-						className={tile}
-						small={!lines}
-						title={c.alias ? `Discover's ${c.alias} filter` : c.word ? `Adds "${c.word}" to the search` : undefined}
-					/>
-				)
-			})}
-		</div>
-	)
-}
-
-/** Theme or style chips with hue dots and honest counts. */
-export function TagChipRow({ d, tags, wrap = true }: { d: ProtoDiscover; tags: Tag[]; wrap?: boolean }) {
-	return (
-		<div className={`flex gap-1.5 ${wrap ? "flex-wrap" : "overflow-x-auto [scrollbar-width:none]"}`}>
-			{tags.map((t) => {
-				const on = d.isOn(t)
-				const tap = tagTap(d, t)
-				return (
-					<motion.button
-						key={t.key}
-						type="button"
-						aria-pressed={on}
-						whileTap={{ scale: 0.96 }}
-						onClick={() => d.toggle(t)}
-						className={`flex h-8 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
-							on
-								? "bg-white font-semibold text-gray-950"
-								: tap.none
-									? "bg-white/[0.02] text-gray-600"
-									: "bg-white/[0.06] text-gray-200 hover:bg-white/[0.11] hover:text-white"
-						}`}
-					>
-						<span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: t.color }} />
-						{t.name}
-						{!on && tap.short && <span className="text-[11px] tabular-nums text-gray-500">{tap.short}</span>}
-					</motion.button>
-				)
-			})}
-		</div>
-	)
-}
-
-/** Themes and styles that would narrow the picks (groups with no pick yet), most titles first. */
-export function narrowTags(d: ProtoDiscover, n = 6): Tag[] {
-	if (!d.picked.length && d.q === null) return []
-	return [...THEME_TAGS, ...STYLE_TAGS]
-		.filter((t) => !d.picked.some((p) => p.group === t.group) && (d.countFor(t) ?? 0) > 0)
-		.sort((a, b) => (d.countFor(b) ?? 0) - (d.countFor(a) ?? 0))
-		.slice(0, n)
-}
-
-/** A row of small hue dots. */
-export function Dots({ hues }: { hues: string[] }) {
-	return (
-		<span className="flex shrink-0 -space-x-1" aria-hidden>
-			{hues.map((hue, i) => (
-				<span
-					// biome-ignore lint/suspicious/noArrayIndexKey: two colors can be the same
-					key={i}
-					className="h-3 w-3 rounded-full ring-2 ring-gray-900"
-					style={{ background: hue }}
-				/>
-			))}
-		</span>
-	)
-}
-
-export const picksIn = (d: ProtoDiscover, group: Tag["group"]) => d.picked.filter((t) => t.group === group).length
-
 // ---------------------------------------------------------------------------------------------------------------
 // Genre (copied from shell-parts, which keeps it private)
 
@@ -690,7 +467,6 @@ export function genreUnits(d: ProtoDiscover): { label: string; names: string[]; 
 }
 
 export function genreOptions(d: ProtoDiscover): Option[] {
-	const s = d.filters.state
 	const oc = d.counts?.optionCounts.genres
 	const c = (n: string) => oc?.[n] ?? null
 	const units = genreUnits(d)
@@ -710,153 +486,6 @@ export function genreOptions(d: ProtoDiscover): Option[] {
 	})
 }
 
-export function GenreChips({ d, limit = 99 }: { d: ProtoDiscover; limit?: number }) {
-	return <ChipList options={genreOptions(d)} limit={limit} sort />
-}
-
 // ---------------------------------------------------------------------------------------------------------------
 // "Everything else": About, Style and Genre folded, one open at a time
-
-export type FoldKey = "themes" | "styles" | "genres"
-export const FOLD_TITLE: Record<FoldKey, string> = { themes: "About", styles: "Style", genres: "Genre" }
-export const FOLD_LINE: Record<FoldKey, string> = { themes: "what it's about", styles: "how it's told", genres: "any of" }
-
-export function foldCount(d: ProtoDiscover, k: FoldKey) {
-	return k === "genres" ? d.filters.state.genres.length : picksIn(d, k)
-}
-export function foldSize(d: ProtoDiscover, k: FoldKey) {
-	return k === "themes" ? THEME_TAGS.length : k === "styles" ? STYLE_TAGS.length : genreOptions(d).length
-}
-export function foldHues(d: ProtoDiscover, k: FoldKey) {
-	return k === "genres" ? [] : (k === "themes" ? THEME_TAGS : STYLE_TAGS).slice(0, 5).map((t) => t.color)
-}
-const byTagCount = (d: ProtoDiscover, tags: Tag[]) =>
-	[...tags].sort((a, b) => Number(d.isOn(b)) - Number(d.isOn(a)) || (d.countFor(b) ?? 0) - (d.countFor(a) ?? 0))
-
-export function FoldBody({ d, k, wrap = true }: { d: ProtoDiscover; k: FoldKey; wrap?: boolean }) {
-	if (k === "genres") return <GenreChips d={d} />
-	return <TagChipRow d={d} tags={byTagCount(d, k === "themes" ? THEME_TAGS : STYLE_TAGS)} wrap={wrap} />
-}
-
-export function FoldHead({
-	d,
-	k,
-	on,
-	onClick,
-	lineShown = true,
-}: {
-	d: ProtoDiscover
-	k: FoldKey
-	on: boolean
-	onClick: () => void
-	lineShown?: boolean
-}) {
-	const n = foldCount(d, k)
-	return (
-		<button
-			type="button"
-			aria-expanded={on}
-			onClick={onClick}
-			className={`flex h-11 w-full shrink-0 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-left text-sm font-semibold text-white ring-1 transition-colors ${on ? "bg-white/10 ring-white/25" : "bg-white/5 ring-white/10 hover:bg-white/10"}`}
-		>
-			{k !== "genres" && <Dots hues={foldHues(d, k)} />}
-			<span>{FOLD_TITLE[k]}</span>
-			<span className="truncate font-normal text-gray-400">
-				{foldSize(d, k)}
-				{lineShown && ` · ${FOLD_LINE[k]}`}
-			</span>
-			<span className="ml-auto flex items-center gap-2">
-				{n > 0 && (
-					<span className="rounded-full bg-white px-1.5 text-xs font-bold tabular-nums text-black">
-						{n}
-						<span className="sr-only"> picked</span>
-					</span>
-				)}
-				<ChevronDownIcon className={`h-4 w-4 opacity-70 transition-transform ${on ? "rotate-180" : ""}`} aria-hidden />
-			</span>
-		</button>
-	)
-}
-
-/** Folds in a column of fixed height: the open one takes the room left and scrolls inside. */
-export function Folds({ d, keys, first = null, phone = false }: { d: ProtoDiscover; keys: FoldKey[]; first?: FoldKey | null; phone?: boolean }) {
-	const [open, setOpen] = useState<FoldKey | null>(first)
-	return (
-		<div className={`flex flex-col gap-2 ${phone ? "" : "min-h-0 flex-1"}`}>
-			{keys.map((k) => (
-				<div key={k} className={open === k && !phone ? "flex min-h-0 flex-1 flex-col gap-2" : "contents"}>
-					<FoldHead d={d} k={k} on={open === k} onClick={() => setOpen(open === k ? null : k)} />
-					{open === k && (
-						<motion.div
-							initial={{ opacity: 0, y: -4 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.14 }}
-							className={phone ? "pb-1" : "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-1"}
-						>
-							<FoldBody d={d} k={k} />
-						</motion.div>
-					)}
-				</div>
-			))}
-		</div>
-	)
-}
-
-/** Mixes as picture chips with real counts. */
-export function MixChips({ x, art }: { x: Mixes; art: WorldArt }) {
-	return (
-		<>
-			{x.mixes.map((mx, i) => {
-				const c = x.count(i)
-				const on = x.isOn(mx)
-				const path = c.path ?? art.get(islandOfTag(mx.tags[0]))?.path ?? null
-				return on ? null : (
-					<ArtChip
-						key={mx.id}
-						name={mixName(mx)}
-						hues={mx.tags.map((t) => t.color)}
-						path={path}
-						count={c.total !== null ? compactCount(c.total) : undefined}
-						onAdd={() => x.toggle(mx)}
-					/>
-				)
-			})}
-		</>
-	)
-}
-
-/** Narrowing suggestions as picture chips. */
-export function NarrowChips({ d, art, n = 6 }: { d: ProtoDiscover; art: WorldArt; n?: number }) {
-	return (
-		<>
-			{narrowTags(d, n).map((t) => (
-				<ArtChip
-					key={tagId(t)}
-					name={t.name}
-					hues={[t.color]}
-					path={art.get(islandOfTag(t))?.path ?? null}
-					count={compactCount(d.countFor(t) ?? 0)}
-					onAdd={() => d.toggle(t)}
-				/>
-			))}
-		</>
-	)
-}
-
-export const ROW_FADE = { maskImage: "linear-gradient(to right, black calc(100% - 3rem), transparent)" }
-
-/** Movies or shows as one segmented control, without a heading. */
-export function TypeSwitch({ d, count }: { d: ProtoDiscover; count?: (option: string) => number | null }) {
-	const c = count ?? ((o: string) => d.counts?.optionCounts.type?.[o] ?? null)
-	return (
-		<div className="w-[300px] max-w-full shrink-0">
-		<Segmented
-			label="Movies or shows"
-			value={d.filters.state.type}
-			onChange={(type) => d.filters.set({ type })}
-			options={(["all", "movie", "show"] as const).map((id) => ({ id, label: id === "all" ? "Both" : TYPE_LABELS[id], count: c(id) }))}
-		/>
-		</div>
-	)
-}
 

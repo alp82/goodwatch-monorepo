@@ -702,3 +702,34 @@ or bigger episode grid. combine that with e for perfection. not f, thats too muc
 
 - Owner: the season grids were too many dots; show growth, not real season counts. Seasons glyph is now 1 to 4 rows of 2 to 5 cells (2, 6, 12, 20 cells), same 3 px cells, in the same 16 px row as the other glyphs, so Seasons tiles match the other tiles' height (d and g).
 - Time to finish: "Years of it" renamed "A real binge".
+
+## Round 20 (2026-10-29): locked
+
+Owner: "lock all of the defaults and selections in and remove the rest of the options and rounds from the picker".
+
+Locked picks, one variant per section (`lab/choice.ts` DEFAULTS, each `sections/<id>/index.ts` lists only its pick):
+layout c (four tabs, You at the end), titles g, people c, taste f, mood k, services b, origin a, length d, scores a,
+released f, age a, more g.
+
+Deleted:
+
+- Rounds 1 to 5 (`variants/`, about 100 files) and the route's `?variant=` switch and `PrototypeSwitcher`. The route
+  always renders the lab; `?variant=` is ignored, so old `variant=lab` links still work. `~/ui/prototype/PrototypeSwitcher`
+  itself stays (other prototypes use it).
+- Every non-picked section variant, `titles/def-steer.tsx`, `taste/member.tsx`, `sections/placeholder.tsx`, layouts
+  a, b, d, e and `layout-d.tsx` (layout d's Taste/Lists pages, its "myServices" slot and `splitsMine`), the `liveGrid`
+  variant option (titles f only), the lab bar's R5 link.
+- Pieces a pick took from a sibling moved next to it: mood e's member mixes and DROP_FROM and g's COLUMNS into
+  `mood/andview.tsx`; released a's YearField and c's eras into `released/art.tsx`, b's decade helpers into
+  `released/parts.tsx`; length a's picks into `length/parts.ts`; more a's MoreView/Skin and e's hues into
+  `more/parts.tsx`; taste `def-parts.tsx` is now `taste/parts.tsx`.
+- Exports and helpers nothing uses any more (kit, shell and section parts), found by an export-usage scan plus tsc
+  `noUnusedLocals`.
+
+Kept for the next round: the lab bar machinery. It lists only sections with more than one variant (`PICKABLE` in
+`lab/registry.ts`), with ← → / ↑ ↓, ☰, H, the guest/member toggle and `v-<id>` / `sec=` in the URL; with none it shows
+only guest/member and hide. A URL key naming a removed variant falls back to the pick (`pick` in `registry.ts`). The
+`layout` pseudo-section stays: `layoutFor` reads `v-layout`, else DEFAULTS (c); before this round a bare URL showed
+layout a's three tabs despite the c default.
+
+Earlier rounds live in git history: the last commit before this cleanup is 4a2592c87 on `prototype/discover-mood`.

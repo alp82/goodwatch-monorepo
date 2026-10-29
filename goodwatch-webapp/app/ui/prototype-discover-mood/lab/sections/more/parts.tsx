@@ -1,31 +1,18 @@
 // PROTOTYPE (Discover lab, round 16): shared pieces of the popularity, money and show filters (store.ts): simulated
-// counts, preset tiles and a stepped range slider.
+// counts, a stepped range slider, the section's layout (MoreView, which takes a skin) and the groups' hues.
 import { motion } from "framer-motion"
 import { type ReactNode, useEffect, useState } from "react"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { TAP } from "~/ui/filter-bar/motion"
 import type { ProtoDiscover } from "../../../kit"
-import { ResetLink, Tile } from "../released/parts"
-import {
-	type Idx,
-	type MoreKey,
-	type MoreState,
-	PRESETS,
-	ROI_SHARE,
-	SCALES,
-	STATUS_SHARE,
-	isAny,
-	last,
-	sameIdx,
-	setMore,
-	shareOf,
-	spanLabel,
-} from "./store"
+import type { SectionProps } from "../../types"
+import { ResetLink, pad } from "../released/parts"
+import { type Idx, type MoreKey, type MoreState, ROI_SHARE, SCALES, type Roi, STATUS_SHARE, isAny, last, sameIdx, setMore, shareOf, spanLabel, useMore } from "./store"
 
 type Kind = "all" | "movie" | "show"
 
 /** Titles of a kind in the list now: the type's option counts, the list's total for both kinds. */
-export function kindBase(d: ProtoDiscover, kind: Kind): number | null {
+function kindBase(d: ProtoDiscover, kind: Kind): number | null {
 	const type = d.filters.state.type
 	if (kind === "all") return d.total
 	if (type !== "all") return type === kind ? d.total : 0
@@ -64,14 +51,14 @@ export function useSim(d: ProtoDiscover, x: MoreState) {
 export const toggleRange = (x: MoreState, k: MoreKey, r: Idx) => setMore({ [k]: sameIdx(x[k], r) ? null : r })
 
 /** The range as shown: Any, or "Under 10K" style spans. */
-export function shownSpan(k: MoreKey, r: Idx | null) {
+function shownSpan(k: MoreKey, r: Idx | null) {
 	if (isAny(k, r) || !r) return "Any"
 	const t = spanLabel(k, r).replace(/^./, (c) => c.toUpperCase())
 	return k === "seasons" ? `${t} ${t === "1" ? "season" : "seasons"}` : t
 }
 
 /** A heading: name, a quiet note, the choice's span or count, Any on the right once set. */
-export function GroupHead({ title, note, set, onAny, right }: { title: ReactNode; note?: ReactNode; set: boolean; onAny: () => void; right?: ReactNode }) {
+function GroupHead({ title, note, set, onAny, right }: { title: ReactNode; note?: ReactNode; set: boolean; onAny: () => void; right?: ReactNode }) {
 	return (
 		<div className="flex h-7 items-center gap-2.5">
 			<h4 className="text-[15px] font-semibold text-gray-100">{title}</h4>
@@ -84,23 +71,11 @@ export function GroupHead({ title, note, set, onAny, right }: { title: ReactNode
 	)
 }
 
-/** Preset tiles with counts: tap picks, tap again clears. */
-export function PresetTiles({ k, x, d, cols }: { k: MoreKey; x: MoreState; d: ProtoDiscover; cols: string }) {
-	const sim = useSim(d, x)
-	return (
-		<div className={`grid gap-2 ${cols}`}>
-			{PRESETS[k].map((p) => (
-				<Tile key={p.label} label={p.label} sub={p.sub} count={sim.range(k, p.range)} active={sameIdx(x[k], p.range)} onClick={() => toggleRange(x, k, p.range)} />
-			))}
-		</div>
-	)
-}
-
 /**
  * The sheet's RangeSlider over a scale's stops, with the span read as one label ("Under 10K") so uneven steps read
  * right. Commits after a short pause, like the sheet's.
  */
-export function StopSlider({ k, value, label }: { k: MoreKey; value: Idx | null; label: string }) {
+function StopSlider({ k, value, label }: { k: MoreKey; value: Idx | null; label: string }) {
 	const n = last(k)
 	const cur: Idx = value ?? [0, n]
 	const [v, setV] = useState<Idx>(cur)
@@ -172,3 +147,124 @@ export function CountChip({ label, count, active, onClick }: { label: string; co
 		</motion.button>
 	)
 }
+
+// The view, shared by every skin (round 16 a's structure).
+
+const NAME: Record<MoreKey, string> = {
+	votes: "How many ratings",
+	rank: "Popularity",
+	budget: "Budget",
+	revenue: "Box office",
+	seasons: "Seasons",
+	finish: "Time to finish",
+}
+
+/** Dims a block whose kind is out of the list (Movies only hides shows' facts), as Length d does. */
+function offFor(d: ProtoDiscover, kind: "movie" | "show" | "all") {
+	const t = d.filters.state.type
+	return kind !== "all" && t !== "all" && t !== kind
+}
+
+function Block({ off, children }: { off?: boolean; children: ReactNode }) {
+	return <div className={`flex min-w-0 flex-col gap-3 transition-opacity ${off ? "opacity-45" : ""}`}>{children}</div>
+}
+
+export interface PresetsProps {
+	k: MoreKey
+	x: MoreState
+	d: ProtoDiscover
+	cols: string
+}
+type Part = { d: ProtoDiscover; x: MoreState }
+
+/** How the choices look: preset tiles per range, the Hit and Flop pair, the Status chips. */
+export interface Skin {
+	Presets: (p: PresetsProps) => JSX.Element
+	Roi: (p: Part) => JSX.Element
+	Status: (p: Part) => JSX.Element
+}
+
+function RangeBlock({ k, d, x, phone, cols, skin }: { k: MoreKey; d: ProtoDiscover; x: MoreState; phone: boolean; cols: [string, string]; skin: Skin }) {
+	const base = useSim(d, x).base(k)
+	return (
+		<>
+			<GroupHead title={NAME[k]} note={base != null ? compactCount(base) : ""} set={!isAny(k, x[k])} onAny={() => setMore({ [k]: null })} />
+			<skin.Presets k={k} x={x} d={d} cols={phone ? cols[0] : cols[1]} />
+			<StopSlider k={k} value={x[k]} label={NAME[k]} />
+		</>
+	)
+}
+
+function Page({ phone, children }: { phone: boolean; children: ReactNode }) {
+	return <div className={`${pad(phone)} ${phone ? "flex flex-col gap-7" : "grid grid-cols-2 gap-10"}`}>{children}</div>
+}
+
+/** The section's layout (one Watch sub-tab per part) with a skin. */
+export function MoreView({ d, phone, morePart: part = "reach", skin }: SectionProps & { skin: Skin }) {
+	const x = useMore()
+	const two: [string, string] = ["grid-cols-2", "grid-cols-2"]
+	if (part === "reach")
+		return (
+			<Page phone={phone}>
+				<Block>
+					<RangeBlock k="votes" d={d} x={x} phone={phone} cols={two} skin={skin} />
+				</Block>
+				<Block>
+					<RangeBlock k="rank" d={d} x={x} phone={phone} cols={["grid-cols-2", "grid-cols-3"]} skin={skin} />
+				</Block>
+			</Page>
+		)
+	if (part === "money") {
+		const off = offFor(d, "movie")
+		return (
+			<Page phone={phone}>
+				<Block off={off}>
+					<RangeBlock k="budget" d={d} x={x} phone={phone} cols={two} skin={skin} />
+				</Block>
+				<Block off={off}>
+					<RangeBlock k="revenue" d={d} x={x} phone={phone} cols={["grid-cols-2", "grid-cols-3"]} skin={skin} />
+					<skin.Roi d={d} x={x} />
+				</Block>
+			</Page>
+		)
+	}
+	const off = offFor(d, "show")
+	return (
+		<Page phone={phone}>
+			<Block off={off}>
+				<RangeBlock k="seasons" d={d} x={x} phone={phone} cols={two} skin={skin} />
+				{/* Round 20: Status under Seasons, so the Seasons and Time to finish tiles line up. */}
+				<div className="mt-2 flex flex-col gap-3">
+					<GroupHead title="Status" set={x.status !== null} onAny={() => setMore({ status: null })} />
+					<skin.Status d={d} x={x} />
+				</div>
+			</Block>
+			<Block off={off}>
+				<RangeBlock k="finish" d={d} x={x} phone={phone} cols={two} skin={skin} />
+			</Block>
+		</Page>
+	)
+}
+
+/** Round 17: each group's soft hue. */
+type Wash = "diagonal" | "corner" | "rise" | "flat"
+export interface Hue {
+	h: number
+	/** Saturation of the wash, kept low. */
+	s: number
+	wash: Wash
+	/** The strongest alpha a wash reaches; quieter groups get less. */
+	max: number
+}
+
+export const HUES: Partial<Record<MoreKey | Roi, Hue>> = {
+	votes: { h: 205, s: 42, wash: "diagonal", max: 0.3 },
+	rank: { h: 338, s: 38, wash: "corner", max: 0.34 },
+	budget: { h: 152, s: 32, wash: "rise", max: 0.3 },
+	revenue: { h: 40, s: 44, wash: "rise", max: 0.3 },
+	seasons: { h: 262, s: 30, wash: "flat", max: 0.2 },
+	hit: { h: 22, s: 50, wash: "diagonal", max: 0.26 },
+	flop: { h: 214, s: 30, wash: "diagonal", max: 0.26 },
+}
+
+export const hsla = (c: Hue, a: number, l = 62) => `hsla(${c.h}, ${c.s}%, ${l}%, ${a.toFixed(3)})`
