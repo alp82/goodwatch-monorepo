@@ -10,6 +10,7 @@ import { getTitleSnapshot } from "../title-snapshot/index.server"
 import { type ViewerContext, getMemberViewerContext } from "../viewer.server"
 import { summary } from "./data.server.ts"
 import { discoverView, filterArgs } from "./discover-filters.ts"
+import { discoverMetadata } from "./discover-metadata.ts"
 import type { ReadArgs } from "./tools.server.ts"
 
 export async function readDiscover(
@@ -33,6 +34,7 @@ export async function readDiscover(
 			ctx.services,
 		)
 		return {
+			...discoverMetadata(!!snapshot.columns.facts),
 			country: ctx.country,
 			saved_provider_ids: ctx.services,
 			genres: [...snapshot.columns.genreNames].sort(),

@@ -1,6 +1,6 @@
 # MCP search filters and query-free discovery
 
-Owner decision Q53 (2026-10-17). `search_titles` accepts the Discover filters, and `discover_titles` browses without query text. `get_discover_filters` returns exact genre names and provider IDs/names for the member's saved country, including saved providers. All three are read-only and require `mcp:read`. No new tables, DML grants or action receipts are needed.
+Owner decision Q53 (2026-10-17). `search_titles` accepts the Discover filters, and `discover_titles` browses without query text. `get_discover_filters` returns exact genre names and provider IDs/names for the member's saved country, including saved providers, plus the shared Discover metadata described below. All three are read-only and require `mcp:read`. No new tables, DML grants or action receipts are needed.
 
 ## Contract
 
@@ -44,6 +44,22 @@ For you uses the site's popular browse order with its taste adjustment, or bound
 
 Discovery items carry canonical `url`, Markdown `link`, current `match`/`match_label`, `runtime_minutes`, `poster_url` and `goodwatch_score` (0–100). The tool shares the existing poster-grid resource. No per-title availability requests are added. `availability` reports `everywhere`, `mine` or `providers`; `country` and `approximate_availability` describe service scope and the site's column fallback while its country index loads.
 
+## Discover metadata (B15)
+
+`get_discover_filters` keeps `country`, `saved_provider_ids`, `genres` and `providers` unchanged and adds compact guidance. No tool argument schema changes or schema version are introduced. The pure `mcp/discover-metadata.ts` adapter reads shared domain constants; `discover.server.ts` supplies the live snapshot's `facts_available` boolean. A missing snapshot still returns `data_unavailable`.
+
+- `scores`: GoodWatch minimum steps and each source's stable key, name, notation (`ten`, `percent`, `hundred`) and normalized steps with display labels. For example IMDb `7.0+` and Tomatometer `70%+` both send 70. Arbitrary integer thresholds 0–100 remain accepted; missing scores fail active thresholds.
+- `votes`, `popularity_rank`, `budget`, `box_office`, `seasons`, `time_to_finish`: units, steps, min/max argument names and presets with ready-to-use `args`. Bounds are inclusive and absent bounds are open. Votes retain the 1,000-rating browse floor; catalog Popular ranks start at 1 and refresh per snapshot. Money is nominal USD millions. Budget seams use 4.999/49.999/99.999; watch-time seams use whole minutes expressed in hours. `returns` and `show_status` carry the shared labels.
+- `released`: current UTC year, This year, Last 2/3/5 years, decades from the 1920s, After 2000/1950, Any time and Before 2000. Last N years starts at current year minus N: in 2026, Last 2 years starts at 2024 and sends `released=recent`. Other year tiles supply `min_year`/`max_year`. Current-year upper ends stay open, matching the website. Preset arguments replace the previous selection's year arguments; do not merge stale bounds into them.
+- `length`: shared five-minute slider step, 240-minute open-end stop, movie and episode presets with their separate argument names. Runtime alone retains its legacy meaning for both kinds. Explicit episode bounds make runtime movie-only. Preset boundaries stay inclusive, including the website's “Under 90 min” at 90.
+- `origin`: industry and region names with country codes from `film-industries.ts`, and Rest of the world with excluded codes and `args: {rest_of_world: true}`. Co-productions match any listed country. **Industries and regions are website reference options:** the current MCP schemas have no production-country/industry/region argument. `rating_country` cannot select them. Rest of the world remains directly selectable.
+- `moods`: all 16 stable keys, current names and old-name aliases from `moods.ts`, including Tense, Dark, Deep, Magical and Quirky. Clients send keys; aliases describe previous names accepted in descriptive search, not new enum values.
+- `match`: minimum steps 0/60/70/80/90 and Outside your usual (50–59), which supersedes the minimum. Without member taste these do not narrow. `list_filters` describes member-only `seen_only` and `wishlist_only`, including the seen/exclude conflict. `match_all` lists the four supported groups and all-of behavior.
+- `rating_country`: ISO alpha-2 rating-ladder/badge scope, saved-country default and fallback for unavailable codes; independent of streaming country and production origin.
+- `facts_available` and `facts_note`: without a facts sidecar, money, returns, seasons, show status and hours do not narrow results. With facts, unknown values fail active filters and movie/show applicability follows the existing engine.
+
+No full country directory or additional service list is returned. Preset keys identify guidance, not new tool arguments. Unit tests validate every advertised preset against the unchanged strict schema, shared ranges/notation, year rollover, names/aliases and compact payload size. The isolated SDK case table also covers the newly described arguments and metadata response; it requires databases and must not run against production.
+
 ## Shared implementation
 
 `mcp/discover-filters.ts` adapts the public arguments to `domain/filter-state.ts`. Discovery and filtered search call the same `title-filter/index.server.ts` used by Discover/Explore, including hidden-title rules, provider aliases, eligibility, sort fallback, age/content rules, For you and Best match. Search keeps hidden titles findable, as the site's search does. Defaults deliberately override website saved defaults: everywhere, seen included, For you on.
@@ -72,7 +88,9 @@ npm run test:auth:mcp
 npm run build
 ```
 
-The new runner creates its own pinned CrateDB 5.10.12/Valkey 8.1.3 containers on loopback ports 15867/16867, refuses existing containers and other clusters, and removes only the containers it created. It does not load `.env`. The 72-title snapshot and rating sidecar go through the real Redis publisher format/loader. The public SDK handler checks 29 filter/sort combinations against the real Discover engine and website URL parser, plus populated taste via the existing isolated `mcp-personal` fixture, defaults, 40+32 pagination, provider options, numeric score ranges, movie/show runtimes, poster links, inherited ranked cursors, rejection of changed cursor filters and free filter changes. Unit tests cover schema bounds for every parameter, conflicting selections, all orderings and cache-key coverage.
+The new runner creates its own pinned CrateDB 5.10.12/Valkey 8.1.3 containers on loopback ports 15867/16867, refuses existing containers and other clusters, and removes only the containers it created. It does not load `.env`. The 72-title snapshot and rating sidecar go through the real Redis publisher format/loader. The public SDK handler checks the filter/sort case table against the real Discover engine and website URL parser, plus populated taste via the existing isolated `mcp-personal` fixture, defaults, 40+32 pagination, provider options, numeric score ranges, movie/show runtimes, poster links, inherited ranked cursors, rejection of changed cursor filters and free filter changes. Unit tests cover schema bounds for every parameter, conflicting selections, all orderings and cache-key coverage.
+
+Both `scripts/mcp-discover/run.sh` and `npm run test:auth:mcp` require disposable database containers; the auth runner also starts its rehearsal server. They are not unit-only commands. For B15, run only the focused `node --test` metadata/filter tests and the TypeScript check; these integration runners were not executed.
 
 The existing read, write, ranked, native provider and personal-result MCP suites were also run in isolated copies targeting those disposable ports; the native provider fixture used port 15869. The OAuth/MCP suite uses its separate disposable three-node Crate/Valkey rehearsal.
 

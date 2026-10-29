@@ -263,6 +263,16 @@ try {
 		),
 	)
 	assert.ok(options.saved_provider_ids.includes(8))
+	assert.equal(options.facts_available, false) // This fixture has no facts sidecar.
+	assert.equal(options.moods.length, 16)
+	assert.deepEqual(options.match.minimum_match, [0, 60, 70, 80, 90])
+	assert.deepEqual(options.budget.presets[0].args, { max_budget_musd: 4.999 })
+	assert.deepEqual(
+		options.released.presets.find((p: { key: string }) => p.key === "last-2")
+			.args,
+		{ released: "recent" },
+	)
+	assert.deepEqual(options.origin.rest_of_world.args, { rest_of_world: true })
 	const first = await call("discover_titles")
 	assert.equal(first.items.length, 40)
 	assert.equal(first.total, 72)
@@ -332,6 +342,24 @@ try {
 	const taste = await loadTaste(ctx.viewer)
 	// Every new filter/ordering is checked through the public SDK against the site's real shared engine.
 	const matrix = [
+		// Existing arguments advertised by the shared Discover metadata.
+		{ moods: ["tense", "dark", "deep"] },
+		{ moods: ["magical", "quirky"] },
+		{ moods: ["funny", "feelgood"], match_all: ["moods"] },
+		{ genres: ["Drama", "Comedy"], match_all: ["genres"] },
+		{ seen_only: true },
+		{ wishlist_only: true },
+		{ outside_usual: true, minimum_match: 90 },
+		{ minimum_match: 60 },
+		{ rating_country: "DE", age_limit: 12 },
+		{ min_runtime: 90, max_episode_runtime: 35 },
+		{ rest_of_world: true },
+		{ source_scores: { imdb: 70, metacriticUsers: 70 } },
+		// No facts sidecar: these arguments must leave the universe unchanged.
+		{ max_budget_musd: 4.999 },
+		{ min_box_office_musd: 1000, returns: "hit" },
+		{ min_seasons: 2, max_seasons: 3, show_status: "ended" },
+		{ max_hours: 599 / 60 },
 		{ max_votes: 9999 },
 		{ min_votes: 10000, max_votes: 100000 },
 		{ max_popularity_rank: 1000 },

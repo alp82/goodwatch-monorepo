@@ -101,7 +101,7 @@ export const readToolDefinitions: {
 		name: "search_titles",
 		title: "Search titles by name",
 		description:
-			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Defaults to everywhere and includes seen titles. Use the shared Discover filters to narrow by type, genres, years, runtime, score, services, moods and more; filters accept catalog genre and provider IDs. Tag groups match any pick by default; match_all requires all picks in the named groups. Repeat filters with offset cursors; ranked cursors inherit their view. Except when paging with a ranked cursor, a missing, empty or whitespace-only query runs the native Discover path, filters and For you default; ranked is ignored and no smarter-match attempt is charged. exclude_seen=true returns only unseen results, filtered before pagination. Returns up to 40 results by default; limit bounds the page size. Different works can share a name and year: use runtime_minutes to distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
+			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Defaults to everywhere and includes seen titles. get_discover_filters describes shared scales, presets and mood names. Use the shared Discover filters to narrow by type, genres, years, runtime, score, services, moods and more; filters accept catalog genre and provider IDs. Tag groups match any pick by default; match_all requires all picks in the named groups. Repeat filters with offset cursors; ranked cursors inherit their view. Except when paging with a ranked cursor, a missing, empty or whitespace-only query runs the native Discover path, filters and For you default; ranked is ignored and no smarter-match attempt is charged. exclude_seen=true returns only unseen results, filtered before pagination. Returns up to 40 results by default; limit bounds the page size. Different works can share a name and year: use runtime_minutes to distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
 		schema: z
 			.object({
 				...discoverFilters,
@@ -156,7 +156,7 @@ export const readToolDefinitions: {
 		name: "discover_titles",
 		title: "Discover movies and shows",
 		description:
-			"Discover without a query using the same catalog, filters and ordering as GoodWatch Discover/Explore. For you by default; everywhere and seen titles included. Choose popularity, newest, score or match ordering. Use on_my_services=true for saved services, or providers for specific services, in your saved country. Tag groups match any pick by default; match_all requires all picks in the named groups. Use seen_only for Seen before, wishlist_only for On your wishlist, minimum_match=60 for 60%+, or outside_usual for taste match 50–59. seen_only and exclude_seen=true are mutually exclusive. Filters apply before pagination. Repeat filters when paging with offset cursors. Returns up to 40 titles and a matching Discover grid page_url.",
+			"Discover without a query using the same catalog, filters and ordering as GoodWatch Discover/Explore. get_discover_filters describes shared scales, presets and mood names. For you by default; everywhere and seen titles included. Choose popularity, newest, score or match ordering. Use on_my_services=true for saved services, or providers for specific services, in your saved country. Tag groups match any pick by default; match_all requires all picks in the named groups. Use seen_only for Seen before, wishlist_only for On your wishlist, minimum_match=60 for 60%+, or outside_usual for taste match 50–59. seen_only and exclude_seen=true are mutually exclusive. Filters apply before pagination. Repeat filters when paging with offset cursors. Returns up to 40 titles and a matching Discover grid page_url.",
 		schema: z
 			.object({
 				...discoverFilters,
@@ -175,7 +175,7 @@ export const readToolDefinitions: {
 		name: "get_discover_filters",
 		title: "Get Discover filter options",
 		description:
-			"List exact genre names, provider IDs/names available in your saved country (plus saved providers), and saved services for catalog discovery. Reads existing settings without changing them.",
+			"List Discover metadata for discover_titles and search_titles: exact genres, provider IDs/names in your saved country (plus saved providers), saved services, shared score scales and range presets with existing arguments, Released and length presets, mood keys/names/old-name aliases, taste and list filters, match_all, rating_country and facts_available. Industry/region country sets are website reference options; only rest_of_world is directly selectable through MCP. Reads existing settings without changing them.",
 		schema: z.object({}).strict(),
 	},
 	{

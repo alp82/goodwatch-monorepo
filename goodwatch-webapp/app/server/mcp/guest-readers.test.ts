@@ -172,7 +172,11 @@ test("guest discovery uses local viewer and guest taste, without member telemetr
 		{},
 		ctx,
 	)
+	assert.ok("genres" in filters)
 	assert.deepEqual(filters.genres, ["Drama"])
+	assert.equal(filters.facts_available, false)
+	assert.deepEqual(filters.match.minimum_match, [0, 60, 70, 80, 90])
+	assert.equal(filters.moods.length, 16)
 	assert.equal(filters.country, "DE")
 })
 test("guest person uses canonical known-for IDs and profile links without member reads", async () => {
