@@ -621,3 +621,5 @@ node pages/run.mjs --compare results/<run-A> results/<run-B>
 ```
 
 Read [All-pages performance benchmark](../docs/benchmarks/all-pages.md) for the request limits, GET-only browser safeguards, column definitions, private member results, resume mode, and measurement limits.
+
+The [October 29 production baseline](../docs/benchmarks/all-pages-baseline-2026-10-29.md) covers 52 guest URLs and includes the priority findings and measurement limits.

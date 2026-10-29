@@ -63,7 +63,7 @@ These safeguards affect timing. A visitor can load more resources in parallel an
 
 Results go to `goodwatch-benchmark/results/<UTC timestamp>-pages-<label>/`. The benchmark `.gitignore` excludes these new directories.
 
-- `summary.json` contains configuration, source commit, dirty state, response samples, per-device medians, all failed audit IDs and titles by category, LCP elements, render-blocking details, third-party origins, guard counters, PSI data, skipped routes, and errors.
+- `summary.json` contains configuration, source commit, dirty state, response samples, per-device medians, all failed audit IDs and titles by category (the union across successful runs), LCP elements, render-blocking details, third-party origins, guard counters, PSI data, skipped routes, and errors.
 - `summary.md` contains a table per tier, slow server responses, skipped pages, and errors.
 - Each page directory contains mobile and desktop `*.json.gz` Lighthouse reports and guard counters. With PSI, it also contains compressed PSI responses. Transient jobs and Chromium profiles live under `~/.cache/gw-perf/scratch-bench/` and are removed when the runner finishes. The cookie file is mounted read-only and never copied.
 
