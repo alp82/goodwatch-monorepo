@@ -3,7 +3,10 @@
 //
 // - The camera push: a copy of the corner's room (the same picture where it was drawn) zooms about one fixed point
 //   until the TV fills the film's box, the window dims behind it, and the film fades in on the TV as it lands. Close
-//   (the button or Escape) pulls back out to the corner. Transform and opacity only.
+//   (the button or Escape) pulls back out to the corner. Transform and opacity only. After the window changed size
+//   (a phone turned sideways), the corner isn't where the camera left it: Close fades out instead.
+// - While it is open the page behind is inert and doesn't scroll (background-lock.ts): Tab stays in the theater, and
+//   Close brings the page back where it was.
 // - The film is FilmScreen with the film that ends on Your turn (film.ts): Try it, Next on the end card, or a few
 //   quiet seconds there pull back out and hand the guest to the search (onTryIt).
 // - Without a corner on screen, or with reduced motion, the film's box fades in and out instead.
@@ -19,7 +22,14 @@ import { createPortal } from "react-dom"
 import FilmScreen from "~/ui/living-room/intro/FilmScreen"
 import { FILM_ENDING_ON_YOUR_TURN } from "~/ui/living-room/intro/film"
 import { YourTurnExit } from "~/ui/living-room/intro/scenes/your-turn"
-import { type IntroFrom, type Rect, filmBox, pushFrames } from "./intro-push"
+import { lockBackground } from "./background-lock"
+import {
+	type IntroFrom,
+	type Rect,
+	filmBox,
+	pullsBack,
+	pushFrames,
+} from "./intro-push"
 
 export type IntroTheaterProps = {
 	/** Where the camera starts: the corner's TV on screen. Null opens the film plainly. */
@@ -43,7 +53,7 @@ const finished = (a: Animation | undefined) =>
 		() => undefined,
 	) ?? Promise.resolve()
 
-/** The window without its scrollbar: the page under the theater keeps its own, so nothing behind moves. */
+/** The window without its scrollbar: the page under the theater keeps its gutter, so nothing behind moves. */
 const viewport = () => ({
 	w: document.documentElement.clientWidth,
 	h: document.documentElement.clientHeight,
@@ -79,6 +89,19 @@ export function IntroTheater({ from, onClose, onTryIt }: IntroTheaterProps) {
 	const [pushed] = useState(
 		() => Boolean(from && from.tvRect.width > 0) && !reducedMotion(),
 	)
+
+	// The page behind is locked from the first frame; Close unlocks it before handing back, so focus and scrolling
+	// work there again.
+	const unlock = useRef<() => void>(() => {})
+	const openedAt = useRef(vp)
+	useLayoutEffect(() => {
+		const el = root.current
+		if (!el) return
+		const release = lockBackground(el)
+		unlock.current = release
+		el.focus({ preventScroll: true })
+		return release
+	}, [])
 
 	useLayoutEffect(() => {
 		const target = filmNow.current
@@ -158,7 +181,13 @@ export function IntroTheater({ from, onClose, onTryIt }: IntroTheaterProps) {
 				)
 			fade(chrome.current, 150)
 			const r = room.current
-			if (was === "open" && pushed && from && r) {
+			if (
+				was === "open" &&
+				pushed &&
+				from &&
+				r &&
+				pullsBack(openedAt.current, viewport())
+			) {
 				fade(screen.current, 220)
 				for (const a of r.getAnimations()) a.cancel()
 				r.style.visibility = "visible"
@@ -182,6 +211,7 @@ export function IntroTheater({ from, onClose, onTryIt }: IntroTheaterProps) {
 			} else {
 				await finished(fade(root.current, 220))
 			}
+			unlock.current()
 			then()
 		},
 		[from, pushed],
@@ -200,7 +230,8 @@ export function IntroTheater({ from, onClose, onTryIt }: IntroTheaterProps) {
 	return createPortal(
 		<div
 			ref={root}
-			className="fixed inset-0 z-[1100]"
+			tabIndex={-1}
+			className="fixed inset-0 z-[1100] outline-none"
 			// biome-ignore lint/a11y/useSemanticElements: a full-window layer animated by hand; a <dialog>'s top layer would fight the push-in.
 			role="dialog"
 			aria-modal="true"
@@ -329,7 +360,7 @@ function TurnHint({ box, vp }: { box: Rect; vp: { w: number; h: number } }) {
 	)
 }
 
-/** Escape closes; the page under the theater doesn't scroll (its scrollbar stays, so nothing behind moves). */
+/** Escape closes; a wheel or a finger over the theater doesn't scroll the page (background-lock.ts holds the rest). */
 function useTheaterKeys(close: () => void, root: RefObject<HTMLElement>) {
 	const closeRef = useRef(close)
 	closeRef.current = close

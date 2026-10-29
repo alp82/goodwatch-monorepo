@@ -8,6 +8,7 @@ import {
 	cornerPlacement,
 	filmBox,
 	introFrom,
+	pullsBack,
 	pushFrames,
 	tvRectIn,
 } from "./intro-push.ts"
@@ -103,6 +104,15 @@ test("the push starts where the corner is and ends with the TV covering the film
 	assert.ok(t <= target.top + 0.5 && b >= target.top + target.height - 0.5)
 	near((l + r) / 2, target.left + target.width / 2, 0.5)
 	near((t + b) / 2, target.top + target.height / 2, 0.5)
+})
+
+test("Close pulls back to the corner only in the window it was measured in", () => {
+	const phone = { w: 390, h: 844 }
+	assert.equal(pullsBack(phone, phone), true)
+	assert.equal(pullsBack(phone, { w: 390.5, h: 844 }), true)
+	// Turned sideways after "Turn your phone sideways": the corner moved, so the theater fades out.
+	assert.equal(pullsBack(phone, { w: 844, h: 390 }), false)
+	assert.equal(pullsBack({ w: 1280, h: 800 }, { w: 1024, h: 800 }), false)
 })
 
 test("Try it: nothing asked goes to the page's top, something asked centers the card under the header", () => {

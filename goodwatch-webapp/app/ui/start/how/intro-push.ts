@@ -121,3 +121,12 @@ export function pushFrames(
 	}
 	return frames
 }
+
+/**
+ * Whether Close can pull the camera back out to the corner: only in the window the push measured it in. After the
+ * window changed size (a phone turned sideways) the corner has moved, and the theater fades out instead.
+ */
+export const pullsBack = (
+	opened: { w: number; h: number },
+	now: { w: number; h: number },
+) => Math.abs(opened.w - now.w) <= 1 && Math.abs(opened.h - now.h) <= 1

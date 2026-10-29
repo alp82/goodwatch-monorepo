@@ -11,16 +11,23 @@ for (const name of [
 	"Node",
 	"Event",
 	"MouseEvent",
+	"Element",
 ])
 	Object.defineProperty(globalThis, name, {
 		configurable: true,
 		value: name === "window" ? browser : browser[name as keyof Window],
 	})
-Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
+Object.assign(globalThis, {
+	IS_REACT_ACT_ENVIRONMENT: true,
+	// The hold's speed ramp runs frame by frame.
+	requestAnimationFrame: (f: FrameRequestCallback) =>
+		setTimeout(() => f(performance.now()), 16),
+	cancelAnimationFrame: (id: number) => clearTimeout(id),
+})
 const { createElement: h, act } = await import("react")
 const { createRoot } = await import("react-dom/client")
 const { FILM, FILM_ENDING_ON_YOUR_TURN } = await import("./film")
-const { Player, chapterCount } = await import("./player")
+const { Player, Stage, chapterCount } = await import("./player")
 const { YOUR_TURN_MS, YourTurn, YourTurnExit } = await import(
 	"./scenes/your-turn"
 )
@@ -66,13 +73,16 @@ try {
 						tried += 1
 					},
 				},
-				h(Player, {
-					scenes,
-					data,
-					startAt: 1,
-					onAt: (i: number) => {
-						seen.push(i)
-					},
+				h(Stage, {
+					k: 1,
+					children: h(Player, {
+						scenes,
+						data,
+						startAt: 1,
+						onAt: (i: number) => {
+							seen.push(i)
+						},
+					}),
 				}),
 			),
 		),
@@ -85,6 +95,27 @@ try {
 		(b) => b.textContent === "Try it",
 	) as HTMLElement | undefined
 	assert.ok(tryIt, "the end card has Try it")
+	// The space bar on a focused Try it presses it; on the film's own Next it still holds the film at 2x.
+	const space = (el: Element, type: "keydown" | "keyup" = "keydown") => {
+		const e = new browser.KeyboardEvent(type, {
+			code: "Space",
+			key: " ",
+			bubbles: true,
+			cancelable: true,
+		})
+		el.dispatchEvent(e as unknown as Event)
+		return e.defaultPrevented
+	}
+	tryIt.focus()
+	assert.equal(space(tryIt), false, "Space on Try it is the button's")
+	const next = container.querySelector('button[aria-label="Next chapter"]')
+	assert.ok(next)
+	await act(async () => {
+		assert.equal(space(next), true, "Space on Next holds the film")
+	})
+	await act(async () => {
+		space(next, "keyup")
+	})
 	await act(async () => tryIt.click())
 	assert.equal(tried, 1)
 	await act(async () =>

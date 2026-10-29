@@ -4,7 +4,9 @@
 // - The crop is placed by CSS from the first paint (how-it-works.css, with the numbers from intro-push.ts): the TV in
 //   the middle, about a third of the crop's width. The picture is below the fold and loads lazily.
 // - Pressing it loads the theater (IntroTheater.tsx, which brings the film's code and intro.css) and pushes the camera
-//   into the TV from where the corner is on screen. Nothing of the film is on the page's first load.
+//   into the TV from where the corner is on screen. Nothing of the film is on the page's first load. A tab opened
+//   before a deploy reloads once for the new build's chunk (reloadOnStaleChunk); when the code still doesn't come, the
+//   pill says so and the next press tries again.
 // - Close gives the focus back to the corner; Try it hands the guest to the search (hand-off.ts).
 import { Link } from "@remix-run/react"
 import {
@@ -15,6 +17,7 @@ import {
 	useState,
 } from "react"
 import { assetUrl } from "~/utils/asset-url"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { TV_CORNER_ART } from "../room/room-pictures"
 import { TV_CORNER } from "../room/scene"
 import type { IntroTheaterProps } from "./IntroTheater"
@@ -62,19 +65,39 @@ const rectOf = (el: Element) => {
 
 type Theater = ComponentType<IntroTheaterProps>
 
-export function HowItWorksCorner() {
+const loadIntroTheater = reloadOnStaleChunk(() =>
+	import("./IntroTheater").then((m) => m.IntroTheater),
+)
+
+export function HowItWorksCorner({
+	loadTheater = loadIntroTheater,
+}: {
+	/** The theater's code: the lazy chunk; tests pass a stand-in. */
+	loadTheater?: () => Promise<Theater>
+}) {
 	const button = useRef<HTMLButtonElement>(null)
 	const picture = useRef<HTMLImageElement>(null)
 	const [Theater, setTheater] = useState<Theater | null>(null)
 	const [from, setFrom] = useState<IntroFrom | null>(null)
 	const loading = useRef<Promise<Theater> | null>(null)
+	const [failed, setFailed] = useState(false)
 
 	// The theater's code (and the film's) loads on the press itself: a finger or mouse going down starts it, so it is
-	// often there by the click.
+	// often there by the click. A load that fails is forgotten, so the next press asks again.
 	const load = useCallback(() => {
-		loading.current ??= import("./IntroTheater").then((m) => m.IntroTheater)
+		if (!loading.current) {
+			const next = loadTheater()
+			loading.current = next
+			next.catch(() => {
+				if (loading.current === next) loading.current = null
+			})
+		}
 		return loading.current
-	}, [])
+	}, [loadTheater])
+	// The early start on pointerdown: its failure shows when the click asks for the same load.
+	const prefetch = useCallback(() => {
+		load().catch(() => {})
+	}, [load])
 	const play = useCallback(() => {
 		load()
 			.then((C) => {
@@ -86,11 +109,12 @@ export function HowItWorksCorner() {
 						? introFrom(rectOf(box), rectOf(img), img.currentSrc || img.src)
 						: null,
 				)
+				setFailed(false)
 				setTheater(() => C)
 			})
 			.catch((error) => {
-				loading.current = null
 				console.error("The intro couldn't be loaded", error)
+				setFailed(true)
 			})
 	}, [load])
 	const close = useCallback(() => {
@@ -110,7 +134,7 @@ export function HowItWorksCorner() {
 					type="button"
 					className="start-how-room"
 					style={CORNER_STYLE}
-					onPointerDown={load}
+					onPointerDown={prefetch}
 					onClick={play}
 				>
 					<span className="start-how-scene">
@@ -134,10 +158,15 @@ export function HowItWorksCorner() {
 									<path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />
 								</svg>
 							</span>
-							Watch the intro
+							{failed ? "Couldn't load. Try again" : "Watch the intro"}
 						</span>
 					</span>
 				</button>
+				<output className="sr-only">
+					{failed
+						? "The intro couldn't load. Press the button to try again."
+						: ""}
+				</output>
 				<div>
 					<p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300/85">
 						How it works
