@@ -41,10 +41,10 @@ Terms follow `CONTEXT.md`. New terms in this spec:
 - Tag groups get an all-of mode (`all=moods,themes`). URLs without `all` keep today's any-of meaning, so old links,
   Watch next links and MCP page URLs don't change. The UI writes `all=<group>` only for a group with two or more
   picks whose switch is on all of (see [Filter state additions](#filter-state-additions)).
-- Discover shows the mood names the owner tested in the lab (Cozy, Romantic, Thrilling, Sad, Trippy) in its own UI,
-  chips and Find, with the old names as Find aliases. Mood keys, rules, and names on every other surface stay as they
-  are (B2a). Renaming moods site-wide and adding five new moods (B2b) wait for the owner (see [Open questions for the
-  owner](#open-questions-for-the-owner)).
+- Moods take the names the owner tested in the lab (Cozy, Romantic, Thrilling, Sad, Trippy) everywhere: Discover,
+  Watch next, TV, the start page, MCP and Discord, with the old names as aliases (B2a). Five new moods, Tense, Dark,
+  Deep, Magical and Quirky, become real mood filters on every surface that lists moods (B2b). Owner decision,
+  2026-10-29: "everywhere plus five new moods as filters ... it makes sense to stay consistent across all pages".
 - The new UI is assembled behind a development-only harness route (as `dev.filter-bar.tsx` was for today's bar), then
   swapped onto `/discover` in one step. Live Discover never shows a half-built bar, and there is no feature switch.
 
@@ -203,9 +203,8 @@ Escape on an empty field closes the panel. The text stays while switching main t
 
 - Four columns: Feel, About, Style, Genre (phones: stacked, rows two across). Each column head has the sheet's accent
   bar, the label, a pick count and an "all of" / "any of" switch (all of by default).
-- Feel: Funny, Cozy, Romantic, Thrilling, Scary, Sad, Trippy (B2a). Tense, Dark, Deep, Magical and Quirky join the
-  column only if the owner approves them as real moods (B2b); until then Discover doesn't offer them, because the
-  prototype's way (the word added to `q`) switches Discover into search mode. About: the 14
+- Feel: Funny, Cozy, Romantic, Thrilling, Scary, Sad, Trippy (B2a), plus Tense, Dark, Deep, Magical and Quirky as
+  real moods (B2b; the prototype added these as words to `q`, which production doesn't do). About: the 14
   themes. Style: the 10 styles. Genre: every genre with titles, with the five folded pairs counted as one (Action
   also matches Action & Adventure, and the same for Adventure, Sci-Fi, Fantasy, War).
 - Rows: 26 px, a color dot, a share bar, the count, a cross when picked. Order: picks, then live rows, then by count,
@@ -378,7 +377,7 @@ parameters are additive: a URL without them means what it means today.
 | Choice | `FilterState` field | URL | Filter group (fail-mask bit) | Server source |
 |---|---|---|---|---|
 | All of / any of per tag group | `allOf?: TagGroup[]` | `all=moods,themes,styles,genres` | moods, themes, styles, genres (existing) | Snapshot masks |
-| Five new moods (B2b, pending the owner) | `moods` (new keys) | `moods=tense,dark,deep,magical,quirky` | moods | Snapshot mask (computed at load) |
+| Five new moods (B2b) | `moods` (new keys) | `moods=tense,dark,deep,magical,quirky` | moods | Snapshot mask (computed at load) |
 | Seen before | `seenBefore?: boolean` | `seen=1` | notSeenYet (shared, they exclude each other) | `ctx.seen` |
 | On your wishlist | `onWishlist?: boolean` | `wishlist=1` | wishlist (new) | `ctx.wishlist` |
 | Match 60%+ | `minMatch: 60` | `match=60` | minMatch | Taste matches |
@@ -436,9 +435,9 @@ Every new field also goes into: `dropFilter` (per group), `clearSecondaryFilters
 | Cast and crew: Find a person, Actors and Behind the camera columns, featured, in these results | `PeoplePicker` (8 matches) | Featured people and people in results (server), UI | Build | B9b, F3 |
 | Mood Combos: ready mixes with counts and top title, "+ X" cards | Popular filter tiles | Mix definitions, mix counts and top titles (server), all-of counts, UI | Build | B1, B9a, F4 |
 | Mood Everything: four columns, all of / any of switch per group | Mood, About, Style, Genre cards (any of) | All-of mode (state, URL, passes, counts), UI | Build | B1, F4 |
-| Mood names (Cozy, Sad, Thrilling, Trippy, Romantic) on Discover | Feel-good, Heavy, Action, Mind-bending, Romance | Discover display names, old names as Find aliases; keys and rules unchanged | Build on Discover only (the owner saw the names only in the lab) | B2a |
-| Mood names on other surfaces (Watch next, TV, start page, MCP, Discord) | Today's names | Nothing until the owner decides; #680 records "never rename Discover/Explorer/TV for the picker" | Owner question | B2b |
-| Tense, Dark, Deep, Magical, Quirky | Not filters; the prototype appended the word to `q` | Five `MOOD_KEYS` with fixed fingerprint rules | Owner question; not offered until answered | B2b |
+| Mood names (Cozy, Sad, Thrilling, Trippy, Romantic) on Discover | Feel-good, Heavy, Action, Mind-bending, Romance | New names everywhere, old names as aliases; keys and rules unchanged | Build (owner, 2026-10-29) | B2a |
+| Mood names on other surfaces (Watch next, TV, start page, MCP, Discord) | Today's names | The new names everywhere, old names as aliases | Build (owner, 2026-10-29) | B2a |
+| Tense, Dark, Deep, Magical, Quirky | Not filters; the prototype appended the word to `q` | Five `MOOD_KEYS` with fixed fingerprint rules | Build (owner, 2026-10-29) | B2b |
 | Topic moods (Crime & mystery, Other worlds, History, Coming of age) | Moods | Not in the Feel column; still parsed and shown as chips | Hide in Feel only; themes cover them | B2a, F4 |
 | Services rail and wall, 18 tiles, "+N more" to 120 | Streaming card; counts for the top 60 services | `MAX_SERVICE_OPTIONS` 60 to 120 | Build | B5, F5 |
 | Scores: shared scale, source icons, Metacritic user score | Score, sources (any 0 to 100), gap | `metacriticUsers` source key, shared step constants | Build | B5, F5 |
@@ -477,8 +476,8 @@ Every new field also goes into: `dropFilter` (per group), `clearSecondaryFilters
 | Per-tile and per-group results calls (Released 26, Made in 37, Length 10, mixes 8) | One results response carries every count; one panel request carries pictures | Build | B9a, B12 |
 | Member services hardcoded (Netflix, Prime Video, Disney Plus) | The viewer's saved services | Build | F5 |
 | Member mixes written by hand | Mixes from the member's taste groups' carried words | Build | B9a |
-| Mood names relabeled only in the lab (`tagName`) | Discover display names next to `domain/moods.ts` (keys and site-wide names unchanged) | Build | B2a |
-| Search moods appended to `q` | Real moods, or not offered | Owner question | B2b |
+| Mood names relabeled only in the lab (`tagName`) | New `name`s in `domain/moods.ts` (keys unchanged) | Build | B2a |
+| Search moods appended to `q` | Real moods | Build | B2b |
 | Explorer pictures for tag art (`/api/explorer/world` as a guest) | The same endpoint, as the viewer, cached as today | Keep | F4 |
 | Five-pick AND cap (query cost) | Not needed; per-group caps of 3 stay | Drop the cap | B1 |
 | Find's score steps from today's sheet (IMDb 6.5, ...) disagree with the Scores tab | One scale constant for both | Build | F1 |
@@ -687,7 +686,7 @@ Opus.
 Critical path: F1, then F2; then F3, F4 and F6 in parallel, each as soon as its backend steps land (F3 on B9a and
 B9b, F4 on B1, B2a and B9a, F6 on B3, B4 and B9c), with F5 alongside; then F7, then F8. B10, B11 and B12 run from day
 one in parallel with everything else, because F8 waits on B12. F9 and F10 follow F8. B16 and the other backend steps
-without dependencies can merge at any time; B2b waits for the owner and blocks nothing above.
+without dependencies can merge at any time; B2b follows B2a.
 
 Checks every step runs, from `goodwatch-webapp`: `npm test`, `npm run typecheck` (no new diagnostics over the
 baseline), Biome. Page checks use an isolated local setup (no production `.env`, see
@@ -711,40 +710,37 @@ baseline), Biome. Page checks use an isolated local setup (no production `.env`,
   `all=moods`; switching to any of, or removing a pick down to one, drops it.
 - Depends on: nothing.
 
-**B2a. Mood names on Discover**
+**B2a. Mood names everywhere**
 
-- Files: `app/domain/moods.ts` gains a Discover display name for five moods (`feelgood` Cozy, `romance` Romantic,
-  `action` Thrilling, `heavy` Sad, `mind` Trippy) and a `feel` flag that leaves `crime`, `worlds`, `history` and
-  `growing` out of Discover's Feel column; `name` stays as it is, so every other surface keeps today's names. Discover's
-  chips (`labels.ts` takes the display names on Discover), the Everything column and Find read the display names;
-  Find's aliases carry the old names (Feel-good, Romance, Action, Heavy, Mind-bending).
-- No key or rule changes: Thrilling keeps Action's rule (adrenaline 8 or more and spectacle 7 or more), not the
-  explorer's Thrilling island (`islands.server.ts` around line 91, adrenaline 8 or more alone). The owner tested
-  Discover's counts with Action's rule, and changing it would move Watch next, TV and MCP results too. The explorer's
-  island keeps its own rule, so the two Thrilling counts differ; that is accepted.
-- Tests: `labels.test.ts` (Discover chips read the new names, other callers the old ones); Find alias cases in
-  `discover-find.test.ts` (F1) once both exist.
-- Acceptance: Discover's chip for `moods=feelgood` reads "Cozy"; Watch next, TV, the start page, MCP descriptions and
-  the explorer are unchanged.
-- Depends on: nothing. Update `CONTEXT.md`'s Mood entry to note Discover's display names.
+- Files: `app/domain/moods.ts`: `name` becomes Cozy (`feelgood`), Romantic (`romance`), Thrilling (`action`), Sad
+  (`heavy`) and Trippy (`mind`), with the old names as `aliases` (Feel-good, Romance, Action, Heavy, Mind-bending) for
+  search and Find; a `feel` flag leaves `crime`, `worlds`, `history` and `growing` out of Discover's Feel column. Every
+  surface that shows mood names follows: Discover chips (`labels.ts`), Watch next's taste picker, TV `tv-discover`,
+  the start page, MCP tool descriptions, Discord copy, OG cards or share images that print mood names. Check cache
+  keys or version strings that embed mood names and bump them where a stale name could show.
+- No key or rule changes: keys stay, so every existing URL keeps working. Thrilling keeps Action's rule (adrenaline 8
+  or more and spectacle 7 or more), not the explorer's Thrilling island (`islands.server.ts` around line 91); the two
+  Thrilling counts differ, which is accepted.
+- Tests: `labels.test.ts`; surface tests that assert mood names (`tv-discover.test.ts`, Discord
+  `guest-commands.test.ts`, Watch next picker tests); Find alias cases in `discover-find.test.ts` (F1) once both
+  exist.
+- Acceptance: every surface reads the new names; old-name searches still find the moods; `moods=feelgood` URLs work.
+- Depends on: nothing. Update `CONTEXT.md`'s Mood entry in the same change.
 
-**B2b. Site-wide mood names and five new moods (pending the owner)**
+**B2b. Five new moods**
 
-Not started until the owner answers the question in [Open questions for the owner](#open-questions-for-the-owner).
-If approved, as far as approved:
-
-- Site-wide names: move the five display names into `name` and keep the old names as aliases; Watch next's picker,
-  TV, the start page, MCP descriptions and the Discord copy follow.
 - New moods: keys `tense`, `dark`, `deep`, `magical`, `quirky` appended with fixed rules taken from
   `islands.server.ts`, so bit positions of the existing 11 stay; widen `moods` and `moodMasks` in
   `snapshot.server.ts` from `Uint16Array` to `Uint32Array` (see [All of and any of](#all-of-and-any-of) for the
-  combination-table cutoff); MCP enum (automatic); every `MOODS` consumer with a fixed layout (TV `tv-discover`,
-  start page `FirstSteps`, Discord deck) keeps its current set through an explicit list.
+  combination-table cutoff); MCP enum (automatic). They appear on every surface that lists moods as filters
+  (Discover, Watch next's picker, MCP, search mood words). Fixed visual grids (TV `tv-discover`, start page
+  `FirstSteps`, Discord deck) add them where the layout scrolls or wraps; where a grid has a fixed slot count, keep its
+  set through an explicit list and record which ones in this section.
 - Tests: moods rules on fingerprint fixtures; `tv-discover.test.ts`, Discord `guest-commands.test.ts`; Watch next
   picker counts test; a `passes.test.ts` bench for the 65,536-entry table.
 - Acceptance: `/discover?moods=quirky` narrows; Server-Timing `results` stays within the budget in [Risks and
   checks](#risks-and-checks).
-- Depends on: B2a and the owner's answer. Update `CONTEXT.md` (Mood example) in the same change.
+- Depends on: B2a. Owner approved 2026-10-29.
 
 **B3. Your lists and taste match steps**
 
@@ -939,7 +935,7 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
 **F4. Mood tab**
 
 - Files: `app/ui/discover-bar/mood/CombosTab.tsx`, `EverythingTab.tsx`, mix cards (`ArtTile` style), columns.
-- Depends on: F2, B1, B2a, B9a. Not on B2b: the Feel column shows the seven moods until the owner answers.
+- Depends on: F2, B1, B2a, B9a. B2b adds the five new moods to the Feel column when it lands.
 
 **F5. Watch tab: Services, Scores, Made in, Released, Length, Age and content**
 
@@ -1059,17 +1055,8 @@ repo's `.env`. Reads of production data for counts go through a read-only user o
 
 ## Open questions for the owner
 
-One question, and it blocks B2b only. Everything else, including F4 (which needs only B2a), builds without it.
-
-- **Mood names beyond Discover, and five new moods (blocks B2b).** You saw Cozy, Romantic, Thrilling, Sad and Trippy
-  only inside the lab, and Tense, Dark, Deep, Magical and Quirky only as words the lab added to the search. #680's
-  record says the opposite of a site-wide rename: "picker uses Discover's theme names; never rename
-  Discover/Explorer/TV for the picker". Which do you want?
-  1. Discover only (B2a, the default if there's no answer): the five names show on Discover; Watch next, TV, the
-     start page, MCP and Discord keep today's names; no new moods.
-  2. The five new moods as real filters, with Discover-only names. They join Discover's Feel column, MCP's `moods`
-     enum and URLs; fixed grids (TV, start page, Discord deck) keep their set.
-  3. One name everywhere, with or without the five new moods.
+None open. Answered 2026-10-29: mood names change everywhere and the five new moods become real filters on every
+surface that lists moods (B2a, B2b).
 
 Decisions taken, each with its reason:
 
