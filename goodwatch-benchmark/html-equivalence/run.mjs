@@ -389,8 +389,6 @@ const staticPaths = [
 	"/shows",
 	"/movies/moods",
 	"/shows/moods",
-	"/movies/genres",
-	"/shows/streaming",
 	"/movies/best",
 	"/shows/best",
 	"/movies/moods/feel-good",
