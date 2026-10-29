@@ -25,6 +25,9 @@ import { ModeSwitch } from "~/ui/quick-list/parts"
 import { QuickList } from "~/ui/quick-list/QuickList"
 import { getUserFromRequest } from "~/utils/auth"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
+
+export const handle = START_AFTER_PAINT
 
 export { pageHeaders as headers } from "~/utils/headers"
 

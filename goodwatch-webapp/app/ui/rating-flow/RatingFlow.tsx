@@ -10,6 +10,10 @@ import type { ScoringMedia } from "~/ui/scoring/types"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import { HiddenTileContext } from "~/ui/title-actions/hide-feedback"
 import { MIN_LIKED } from "~/domain/taste-rules"
+import { HERO_TIMING } from "~/utils/start-after-paint"
+import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
+import { useReplayedTap } from "~/utils/useReplayedTap"
+import { tmdbFluidImage } from "~/utils/tmdb-image"
 import {
 	type FlowView,
 	readFlowPress,
@@ -167,6 +171,7 @@ function RateView({
 		no: () => answerWant(false),
 		back: () => setAsking(false),
 	})
+	useReplayedTap("rate")
 	const shownScore =
 		a.score ?? (re?.answer?.type === "score" ? (re.answer.score ?? null) : null)
 	const bar = flow.tally && (
@@ -180,11 +185,13 @@ function RateView({
 	const line = re?.clearFailed ? WORDS.clearFailed : a.line
 	return (
 		<div className="relative overflow-hidden pb-32 text-white">
+			<script dangerouslySetInnerHTML={{ __html: REPLAY_TAP_SCRIPT }} />
 			{backdrop && t?.backdrop_path && (
 				<img
 					key={tKey}
 					src={image(t.backdrop_path, "w1280")}
 					fetchPriority="high"
+					{...HERO_TIMING}
 					alt=""
 					className={`${leaving} absolute inset-0 h-full max-h-[720px] w-full object-cover opacity-30`}
 				/>
@@ -235,7 +242,17 @@ function RateView({
 					<div className="mt-4 grid grid-cols-[6rem_minmax(0,1fr)] items-end gap-x-4 sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-start sm:gap-x-8">
 						<img
 							key={tKey}
-							src={image(t.poster_path, "w342")}
+							{...(t.poster_path
+								? tmdbFluidImage(
+										"poster",
+										t.poster_path,
+										[
+											["(min-width: 640px)", "192px"],
+											[null, "96px"],
+										],
+										{ fallbackWidth: 342, minWidth: 92, maxWidth: 192 },
+									)
+								: {})}
 							width={342}
 							height={513}
 							alt={`Poster for ${t.title}${t.release_year ? ` (${t.release_year})` : ""}`}
@@ -272,6 +289,7 @@ function RateView({
 								) : (
 									<ScoreControl
 										key={tKey}
+										replayGroup={`rate:${tKey}`}
 										value={shownScore}
 										acknowledged={a.score != null}
 										onRate={flow.rate}
@@ -280,6 +298,7 @@ function RateView({
 							</div>
 							<div className="mt-4">
 								<Marks
+									replayKey={`rate:${tKey}`}
 									disabled={a.busy}
 									asking={asking}
 									onUnseen={() => setAsking(true)}

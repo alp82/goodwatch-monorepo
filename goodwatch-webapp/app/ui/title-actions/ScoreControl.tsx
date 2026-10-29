@@ -4,6 +4,8 @@ import { ScoreChoices } from "~/ui/scoring/ScoreChoices"
 import { getScoreLabelText, scoreLabels } from "~/utils/ratings"
 
 export interface ScoreControlProps {
+	/** Remembers an early tap when the page starts its scripts after paint. */
+	replayGroup?: string
 	value?: Score | null
 	onRate: (score: Score) => void
 	onClear?: () => void
@@ -17,6 +19,7 @@ export interface ScoreControlProps {
 
 /** Four words above all ten exact scores, on phones as well as wide screens. */
 export function ScoreControl({
+	replayGroup,
 	value = null,
 	onRate,
 	onClear,
@@ -64,6 +67,9 @@ export function ScoreControl({
 						key={choice.id}
 						type="button"
 						data-give={choice.kind === "score" ? choice.score : undefined}
+						data-replay-tap={
+							replayGroup ? `${replayGroup}:${choice.id}` : undefined
+						}
 						disabled={busy}
 						aria-label={choice.label}
 						aria-pressed={choice.selected}

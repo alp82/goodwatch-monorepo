@@ -87,6 +87,7 @@ export function TitleLine({ t }: { t: ScoringMedia }) {
  * second click don't count (flow.ts, `takesWantPress`); the keys are the page's (RatingFlow.tsx).
  */
 export function Marks({
+	replayKey,
 	onUnseen,
 	onNotInterested,
 	disabled,
@@ -95,6 +96,7 @@ export function Marks({
 	onNo,
 	onBack,
 }: {
+	replayKey?: string
 	onUnseen: () => void
 	onNotInterested: () => void
 	disabled?: boolean
@@ -140,6 +142,7 @@ export function Marks({
 					hint={WORDS.unseenHint}
 					shortcut="H"
 					data-mark-unseen
+					data-replay-tap={replayKey ? `${replayKey}:unseen` : undefined}
 				/>
 			</div>
 			<div className="want-mark want-mark-r grid" {...off}>
@@ -151,6 +154,9 @@ export function Marks({
 							className="size-5 shrink-0 text-pink-300"
 							aria-hidden
 						/>
+					}
+					data-replay-tap={
+						replayKey ? `${replayKey}:not-interested` : undefined
 					}
 					label={WORDS.notInterested}
 					hint={WORDS.notInterestedHint}
@@ -297,6 +303,7 @@ function MarkButton({
 	hint: string
 	shortcut: string
 	"data-mark-unseen"?: boolean
+	"data-replay-tap"?: string
 }) {
 	return (
 		<button
