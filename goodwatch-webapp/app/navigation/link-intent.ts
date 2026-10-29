@@ -52,11 +52,20 @@ function prefetchLink(anchor: IntentElement, trigger: PrefetchTrigger) {
 	if (url) prefetchPage(url, trigger)
 }
 
+/**
+ * Whether the element is in content that skips its layout (`content-visibility: auto` away from the screen, like the
+ * title page's sections below the fold), so not on screen. Reading its box would lay that content out, which on a
+ * title page with its hundreds of links was a long task after the load.
+ */
+const inSkippedContent = (element: Element) =>
+	typeof element.checkVisibility === "function" &&
+	!element.checkVisibility({ contentVisibilityAuto: true })
+
 function prefetchVisible() {
 	const links = [
 		...document.querySelectorAll<HTMLAnchorElement>(VIEWPORT_LINK_SELECTOR),
 	]
-		.filter((anchor) => linkOf(anchor) === anchor)
+		.filter((anchor) => linkOf(anchor) === anchor && !inSkippedContent(anchor))
 		.map((anchor) => ({
 			href: anchor.href,
 			rect: anchor.getBoundingClientRect(),
