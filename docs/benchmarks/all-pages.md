@@ -22,7 +22,7 @@ node goodwatch-benchmark/pages/run.mjs --resume goodwatch-benchmark/results/<run
 node goodwatch-benchmark/pages/run.mjs --compare <run-A-directory> <run-B-directory> > comparison.md
 ```
 
-`--resume` keeps completed pages and raw Lighthouse runs. Supply the original base URL, tiers, run count, audience, PSI setting, image, analytics setting, server-only setting, and path filter. A failed Lighthouse run remains incomplete and can be retried. The summary updates after every page and device. A directory lock prevents two pages runners from overlapping. If the runner is killed, inspect its process and the `gw-pages-<pid>` container before removing a stale `goodwatch-benchmark/results/.pages-lock` directory. Existing benchmark commands have separate locks; do not run them concurrently.
+`--resume` keeps completed pages and raw Lighthouse runs. Supply the original base URL, tiers, run count, audience, PSI setting, image, analytics setting, server-only setting, and path filter. A failed Lighthouse run remains incomplete and can be retried. The summary updates after every page and device. Resume retains incomplete raw reports with a `.failed.json.gz` suffix and retries their slots. A directory lock prevents two pages runners from overlapping. If the runner is killed, inspect its process and the `gw-pages-<pid>` container before removing a stale `goodwatch-benchmark/results/.pages-lock` directory. Existing benchmark commands have separate locks; do not run them concurrently.
 
 Use `--base-url http://127.0.0.1:<port>` for an isolated local server, and `--image <tag>` to select an already built image. The suite never starts a webapp. Follow the repository's isolated-server recipe; never start a webapp with its production `.env`.
 
@@ -55,7 +55,7 @@ TTFB measures the interval from request start to response headers, including DNS
 
 Lighthouse uses the existing Chromium and Lighthouse 13.5.0 image. It measures all four categories. Mobile uses Lighthouse's mobile simulation with CPU slowdown 2.7, as the existing budget suite does. Desktop uses Lighthouse's desktop configuration and CPU slowdown 1. The runner records each report's CPU benchmark and configured slowdown. Compare runs on the same machine and with the same configuration. It retains every successful report; it does not apply the older budget report's CPU or observed-FCP exclusion rule.
 
-The browser guard blocks every non-GET request, known stateful GET endpoints, and WebSocket requests. It bypasses service workers and scopes member headers to the base origin. Analytics host blocking defaults to off. `--block-analytics` additionally blocks the PostHog, Sentry, Google Analytics, Google Tag Manager, and DoubleClick hostname families defined in `pages/guard.mjs`. Same-origin write requests remain blocked in either mode. Per-run guard counters show blocked requests and the maximum concurrency.
+The browser guard blocks every non-GET request, known stateful GET endpoints, and WebSocket requests. It disables background workers, bypasses service workers, and scopes member headers to the base origin. It releases ordinary requests only when the full response finishes, preserving normal HTML streaming. DevTools stylesheet inspection makes additional requests without network completion events; the guard reads those response bodies before releasing their slots. Analytics host blocking defaults to off. `--block-analytics` additionally blocks the PostHog, Sentry, Google Analytics, Google Tag Manager, and DoubleClick hostname families defined in `pages/guard.mjs`. Same-origin write requests remain blocked in either mode. Per-run guard counters show blocked requests and the maximum concurrency.
 
 These safeguards affect timing. A visitor can load more resources in parallel and can send telemetry writes. The baseline measures this constrained GET-only page load; it is not directly comparable to an unrestricted Lighthouse run. Browser queueing can increase network delays and Lighthouse warnings. The guard does not override server-side effects of GET handlers or restrict third-party audit infrastructure.
 
@@ -89,3 +89,15 @@ Comparison mode prints B minus A for both devices and server metrics, retaining 
 `--psi` requests PageSpeed Insights for P1 URLs, mobile and desktop, sequentially and without an API key. It waits 15 seconds before each API call and retries quota and transient server errors up to four attempts with increasing delays. It records API failures rather than inventing remote scores.
 
 When available, `summary.json` includes PSI lab medians from its single report and both URL-level and origin-level CrUX field data. Missing field data means insufficient or unavailable field evidence. PSI uses Google's infrastructure and its own browser policy; local request guards and analytics blocking do not apply to Google's browser. Its lab scores are a separate observation, not a controlled regional comparison or a known geographic location. A keyless quota failure leaves far-away visitor performance unverified.
+
+## Verify the browser guard
+
+The optional integration check starts a small loopback fixture inside Docker. It verifies GET-only traffic, the two-request cap through complete response bodies, and DevTools CSS inspection with three external stylesheets. The stylesheets catch a deadlock that a plain HTML fixture does not reproduce.
+
+```sh
+mkdir -p "$HOME/.cache/gw-perf/scratch-bench/guard-check"
+docker run --rm --network host --shm-size=1g --env TMPDIR=/out/tmp \
+  --volume "$PWD/goodwatch-benchmark/pages:/suite:ro" \
+  --volume "$HOME/.cache/gw-perf/scratch-bench/guard-check:/out" \
+  --entrypoint node gw-bench-lighthouse:pages-13.5.0 /suite/guard.integration.mjs
+```

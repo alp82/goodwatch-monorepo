@@ -129,38 +129,69 @@ test("guard blocks writes, stateful GETs, sockets and optional analytics", () =>
     true,
   );
 });
-test("request queue caps concurrency at two and scopes cookies to origin", async () => {
-  const page = new EventEmitter();
-  page.setBypassServiceWorker = page.setRequestInterception = async () => {};
-  page.createCDPSession = async () => ({ send: async () => {} });
-  page.evaluateOnNewDocument = async () => {};
+test("request queue waits for full transfers, scopes cookies, and handles inspector re-fetches", async () => {
+  const page = new EventEmitter(),
+    session = new EventEmitter(),
+    calls = [];
+  let finishBody;
+  session.send = async (method, params) => {
+    calls.push({ method, params });
+    if (method === "Fetch.getResponseBody")
+      await new Promise((resolve) => {
+        finishBody = resolve;
+      });
+  };
+  page.createCDPSession = async () => session;
+  page.setBypassServiceWorker = page.evaluateOnNewDocument = async () => {};
   const stats = await installGuard(page, {
     origin: "https://site.test",
     cookie: "secret=value",
   });
-  const continued = [];
-  let aborted = 0;
-  const make = (url, method = "GET") => ({
-    url: () => url,
-    method: () => method,
-    headers: () => ({}),
-    continue: async (o) => continued.push(o),
-    abort: async () => aborted++,
+  const request = (requestId, url, networkId, method = "GET") => ({
+    requestId,
+    networkId,
+    request: { url, method, headers: {} },
   });
-  const reqs = [
-    make("https://site.test/"),
-    make("https://third.test/a"),
-    make("https://site.test/b"),
-  ];
-  for (const r of reqs) page.emit("request", r);
-  page.emit("request", make("https://site.test/", "POST"));
-  assert.equal(continued.length, 2);
-  assert.equal(continued[0].headers.cookie, "secret=value");
-  assert.equal(continued[1].headers.cookie, undefined);
-  assert.equal(aborted, 1);
-  page.emit("requestfinished", reqs[0]);
-  assert.equal(continued.length, 3);
+  session.emit("Fetch.requestPaused", request("a", "https://site.test/", "n1"));
+  session.emit(
+    "Fetch.requestPaused",
+    request("b", "https://third.test/a", "n2"),
+  );
+  session.emit("Fetch.requestPaused", request("c", "https://site.test/c"));
+  session.emit(
+    "Fetch.requestPaused",
+    request("write", "https://site.test/", undefined, "POST"),
+  );
+  const continued = () =>
+    calls.filter((c) => c.method === "Fetch.continueRequest");
+  assert.equal(continued().length, 2);
+  assert.ok(
+    continued()[0].params.headers.some(
+      (h) => h.name === "Cookie" && h.value === "secret=value",
+    ),
+  );
+  assert.ok(!continued()[1].params.headers.some((h) => h.name === "Cookie"));
+  assert.equal(stats.blockedMethods, 1);
+  // Receiving headers must not free a normal request's slot.
+  session.emit("Network.responseReceived", { requestId: "n1" });
+  assert.equal(continued().length, 2);
+  session.emit("Network.loadingFinished", { requestId: "n1" });
+  assert.equal(continued().length, 3);
+  assert.equal(continued()[2].params.interceptResponse, true);
+  session.emit("Fetch.requestPaused", {
+    ...request("c", "https://site.test/c"),
+    responseStatusCode: 200,
+  });
+  session.emit(
+    "Fetch.requestPaused",
+    request("d", "https://site.test/d", "n4"),
+  );
+  assert.equal(continued().length, 3);
+  finishBody();
+  await new Promise((r) => setImmediate(r));
+  assert.equal(continued().length, 5);
   assert.equal(stats.maxConcurrent, 2);
+  assert.equal(stats.responseErrors, 0);
 });
 test("HTTP measurements preserve compressed bytes and process Early Hints", async () => {
   const server = http.createServer((req, res) => {

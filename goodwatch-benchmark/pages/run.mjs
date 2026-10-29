@@ -6,6 +6,7 @@ import {
   readdir,
   copyFile,
   mkdtemp,
+  rename,
   rm,
 } from "node:fs/promises";
 import { homedir, loadavg, availableParallelism } from "node:os";
@@ -17,6 +18,7 @@ import {
   median,
   validateInventory,
   summarizeLighthouse,
+  categories,
   markdown,
   compare,
 } from "./metrics.mjs";
@@ -245,9 +247,29 @@ async function main() {
               for (let n = 1; n <= o.runs; n++) {
                 const raw = join(folder, `${device}-${n}.json.gz`);
                 try {
-                  reports.push(JSON.parse(gunzipSync(await readFile(raw))));
+                  const cached = JSON.parse(gunzipSync(await readFile(raw)));
+                  if (
+                    cached.runtimeError ||
+                    categories.some(
+                      (c) => typeof cached.categories?.[c]?.score !== "number",
+                    )
+                  )
+                    throw Error("Incomplete cached Lighthouse report");
+                  reports.push(cached);
+                  entry.guards ??= {};
+                  entry.guards[`${device}-${n}`] = JSON.parse(
+                    await readFile(
+                      join(folder, `${device}-${n}-guard.json`),
+                      "utf8",
+                    ),
+                  );
                   continue;
-                } catch {}
+                } catch {
+                  await rename(
+                    raw,
+                    join(folder, `${device}-${n}.${Date.now()}.failed.json.gz`),
+                  ).catch(() => {});
+                }
                 await writeFile(
                   join(jobFolder, "job.json"),
                   JSON.stringify({
@@ -309,9 +331,10 @@ async function main() {
               entry[device].attempted = o.runs;
               await save();
             }
-          if (o.psi && p.tier === "P1" && !o.verify && !entry.psi) {
-            entry.psi = {};
+          if (o.psi && p.tier === "P1" && !o.verify) {
+            entry.psi ??= {};
             for (const device of ["mobile", "desktop"]) {
+              if (entry.psi[device]) continue;
               await delay(15_000);
               const r = await psi(url, device);
               if (r.lighthouseResult) {

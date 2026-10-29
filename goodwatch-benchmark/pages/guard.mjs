@@ -13,20 +13,26 @@ export function allowedRequest(method, url, blockAnalytics = false) {
     return false;
   return !blockAnalytics || !analyticsHosts.test(u.hostname);
 }
-/** Hold requests until a slot is free. Released only when the full response finishes or fails. */
+/** Gate at Fetch request and response stages, including DevTools' stylesheet re-fetches. */
 export async function installGuard(
   page,
   { blockAnalytics = false, origin, cookie } = {},
 ) {
-  const queue = [];
-  const active = new Set();
-  const stats = { blockedMethods: 0, blockedUrls: 0, maxConcurrent: 0 };
-  await page.setBypassServiceWorker(true);
   const session = await page.createCDPSession();
+  const queue = [];
+  const active = new Map();
+  const networkIds = new Map();
+  const stats = {
+    blockedMethods: 0,
+    blockedUrls: 0,
+    maxConcurrent: 0,
+    responseErrors: 0,
+  };
+  await page.setBypassServiceWorker(true);
   await session.send("Network.enable");
   await session.send("Network.setBlockedURLs", { urls: ["ws://*", "wss://*"] });
   await page.evaluateOnNewDocument(() => {
-    for (const key of ["Worker", "SharedWorker", "WebSocket"]) {
+    for (const key of ["Worker", "SharedWorker", "WebSocket"])
       Object.defineProperty(window, key, {
         value: class {
           constructor() {
@@ -36,46 +42,100 @@ export async function installGuard(
         writable: false,
         configurable: false,
       });
-    }
     if (navigator.serviceWorker)
       navigator.serviceWorker.register = async () => {
         throw new Error("Disabled by benchmark request policy");
       };
   });
-  await page.setRequestInterception(true);
+  const release = (id) => {
+    active.delete(id);
+    for (const [networkId, fetchId] of networkIds)
+      if (fetchId === id) networkIds.delete(networkId);
+    pump();
+  };
   const pump = () => {
     while (active.size < 2 && queue.length) {
-      const r = queue.shift();
-      active.add(r);
+      const e = queue.shift();
+      active.set(e.requestId, e.request.url);
+      if (e.networkId) networkIds.set(e.networkId, e.requestId);
       stats.maxConcurrent = Math.max(stats.maxConcurrent, active.size);
-      const headers = { ...r.headers(), "accept-language": "en-US" };
-      // Scope credentials to the supplied origin. Never use Lighthouse's extraHeaders (also sent to third parties).
-      if (cookie && new URL(r.url()).origin === origin) headers.cookie = cookie;
-      r.continue({ headers }).catch(() => {
-        active.delete(r);
-        pump();
-      });
+      const headers = { ...e.request.headers, "Accept-Language": "en-US" };
+      if (cookie && new URL(e.request.url).origin === origin) {
+        for (const k of Object.keys(headers))
+          if (k.toLowerCase() === "cookie") delete headers[k];
+        headers.Cookie = cookie;
+      }
+      void session
+        .send("Fetch.continueRequest", {
+          requestId: e.requestId,
+          headers: Object.entries(headers).map(([name, value]) => ({
+            name,
+            value: String(value),
+          })),
+          interceptResponse: !e.networkId,
+        })
+        .catch(() => release(e.requestId));
     }
   };
-  page.on("request", (r) => {
-    if (!allowedRequest(r.method(), r.url(), blockAnalytics)) {
-      stats[r.method() === "GET" ? "blockedUrls" : "blockedMethods"]++;
-      void r.abort().catch(() => {});
+  const networkDone = (e) => {
+    const id = networkIds.get(e.requestId);
+    if (id) release(id);
+  };
+  session.on("Network.loadingFailed", networkDone);
+  session.on("Network.loadingFinished", networkDone);
+  session.on("Network.requestWillBeSent", (e) => {
+    if (e.redirectResponse) networkDone(e);
+  });
+  session.on("Fetch.requestPaused", async (e) => {
+    if (e.responseStatusCode !== undefined || e.responseErrorReason) {
+      try {
+        // Inspector re-fetches have no Network ID or completion events. Read their full body before releasing.
+        // Ordinary browser responses stream normally and release on Network.loadingFinished.
+        // Redirects have no retrievable body and end at their response headers.
+        if (
+          !e.responseErrorReason &&
+          !(e.responseStatusCode >= 300 && e.responseStatusCode < 400) &&
+          e.responseStatusCode !== 204
+        )
+          await session.send("Fetch.getResponseBody", {
+            requestId: e.requestId,
+          });
+        await session.send("Fetch.continueRequest", { requestId: e.requestId });
+      } catch {
+        stats.responseErrors++;
+        await session
+          .send("Fetch.failRequest", {
+            requestId: e.requestId,
+            errorReason: "Aborted",
+          })
+          .catch(() => {});
+      } finally {
+        release(e.requestId);
+      }
       return;
     }
-    if (!/^https?:/.test(r.url())) {
-      void r.continue().catch(() => {});
+    if (!allowedRequest(e.request.method, e.request.url, blockAnalytics)) {
+      stats[e.request.method === "GET" ? "blockedUrls" : "blockedMethods"]++;
+      await session
+        .send("Fetch.failRequest", {
+          requestId: e.requestId,
+          errorReason: "BlockedByClient",
+        })
+        .catch(() => {});
       return;
     }
-    queue.push(r);
+    if (!/^https?:/.test(e.request.url)) {
+      await session
+        .send("Fetch.continueRequest", { requestId: e.requestId })
+        .catch(() => {});
+      return;
+    }
+    queue.push(e);
     pump();
   });
-  const release = (r) => {
-    active.delete(r);
-    pump();
-  };
-  page.on("requestfinished", release);
-  page.on("requestfailed", release);
+  await session.send("Fetch.enable", {
+    patterns: [{ urlPattern: "*", requestStage: "Request" }],
+  });
   return stats;
 }
 
