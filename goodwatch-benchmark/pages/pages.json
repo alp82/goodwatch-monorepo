@@ -1,0 +1,1681 @@
+{
+  "schema": 1,
+  "pages": [
+    {
+      "id": "index-tsx",
+      "route": "_index.tsx",
+      "examples": [
+        "/"
+      ],
+      "tier": "P1",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "movie-moviekey-tsx",
+      "route": "movie.$movieKey.tsx",
+      "examples": [
+        "/movie/603-the-matrix",
+        "/movie/14337-primer"
+      ],
+      "tier": "P1",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "show-showkey-tsx",
+      "route": "show.$showKey.tsx",
+      "examples": [
+        "/show/1399-game-of-thrones",
+        "/show/1396-breaking-bad"
+      ],
+      "tier": "P1",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "person-personkey-tsx",
+      "route": "person.$personKey.tsx",
+      "examples": [
+        "/person/138-quentin-tarantino"
+      ],
+      "tier": "P1",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "discover-type-tsx",
+      "route": "discover.($type).tsx",
+      "examples": [
+        "/discover",
+        "/discover?type=movie",
+        "/discover?q=heist"
+      ],
+      "tier": "P1",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "type-best-tsx",
+      "route": "$type.best.tsx",
+      "examples": [
+        "/movies/best",
+        "/shows/best"
+      ],
+      "tier": "P1",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "type-index-tsx",
+      "route": "$type._index.tsx",
+      "examples": [
+        "/movies",
+        "/shows"
+      ],
+      "tier": "P1",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "for-you-tsx",
+      "route": "for-you.tsx",
+      "examples": [
+        "/for-you"
+      ],
+      "tier": "P1",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "type-category-page-tsx",
+      "route": "$type.$category.$page.tsx",
+      "examples": [
+        "/movies/genres/drama",
+        "/shows/moods/funny"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "type-category-index-tsx",
+      "route": "$type.$category._index.tsx",
+      "examples": [
+        "/movies/genres",
+        "/shows/moods"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "blog-index-tsx",
+      "route": "blog._index.tsx",
+      "examples": [
+        "/blog"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "hot-on-socials-tsx",
+      "route": "hot-on-socials.tsx",
+      "examples": [
+        "/hot-on-socials"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "lists-id-tsx",
+      "route": "lists.$id.tsx",
+      "examples": [
+        "/lists/o1H79d4fVu"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "lists-new-tsx",
+      "route": "lists.new.tsx",
+      "examples": [
+        "/lists/new"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "my-library-list-tsx",
+      "route": "my-library.$list.tsx",
+      "examples": [
+        "/my-library/seen"
+      ],
+      "tier": "P2",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "my-library-index-tsx",
+      "route": "my-library._index.tsx",
+      "examples": [
+        "/my-library"
+      ],
+      "tier": "P2",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "my-library-hidden-tsx",
+      "route": "my-library.hidden.tsx",
+      "examples": [
+        "/my-library/hidden"
+      ],
+      "tier": "P2",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "my-library-scores-tsx",
+      "route": "my-library.scores.tsx",
+      "examples": [
+        "/my-library/scores"
+      ],
+      "tier": "P2",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "my-movies-tsx",
+      "route": "my-movies.tsx",
+      "examples": [
+        "/my-movies"
+      ],
+      "tier": "P2",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "my-shows-tsx",
+      "route": "my-shows.tsx",
+      "examples": [
+        "/my-shows"
+      ],
+      "tier": "P2",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "new-country-service-tsx",
+      "route": "new.$country.$service.tsx",
+      "examples": [
+        "/new/us/netflix"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "new-where-tsx",
+      "route": "new.$where.tsx",
+      "examples": [
+        "/new/us"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "people-tsx",
+      "route": "people.tsx",
+      "examples": [
+        "/people"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "taste-index-tsx",
+      "route": "taste._index.tsx",
+      "examples": [
+        "/taste"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "taste-quiz-tsx",
+      "route": "taste.quiz.tsx",
+      "examples": [
+        "/taste/quiz"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "u-handle-index-tsx",
+      "route": "u.$handle._index.tsx",
+      "examples": [
+        "/u/alperortac"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "u-handle-lists-id-tsx",
+      "route": "u.$handle.lists.$id.tsx",
+      "examples": [
+        "/u/alperortac/lists/o1H79d4fVu"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "u-handle-lists-index-tsx",
+      "route": "u.$handle.lists._index.tsx",
+      "examples": [
+        "/u/alperortac/lists"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "u-handle-scores-tsx",
+      "route": "u.$handle.scores.tsx",
+      "examples": [
+        "/u/alperortac/scores"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "u-handle-seen-tsx",
+      "route": "u.$handle.seen.tsx",
+      "examples": [
+        "/u/alperortac/seen"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "u-handle-shows-tsx",
+      "route": "u.$handle.shows.tsx",
+      "examples": [
+        "/u/alperortac/shows"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "u-handle-stats-view-tsx",
+      "route": "u.$handle.stats.($view).tsx",
+      "examples": [
+        "/u/alperortac/stats"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "u-handle-tropes-tsx",
+      "route": "u.$handle.tropes.tsx",
+      "examples": [
+        "/u/alperortac/tropes"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "u-handle-wishlist-tsx",
+      "route": "u.$handle.wishlist.tsx",
+      "examples": [
+        "/u/alperortac/wishlist"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "u-handle-lists-id-edit-tsx",
+      "route": "u.$handle_.lists.$id_.edit.tsx",
+      "examples": [],
+      "tier": "P2",
+      "audience": [
+        "member"
+      ],
+      "unavailable": "Requires an owned editable list and member cookie; public GET baseline does not open edit handlers"
+    },
+    {
+      "id": "watch-next-tsx",
+      "route": "watch-next.tsx",
+      "examples": [
+        "/watch-next"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest"
+      ]
+    },
+    {
+      "id": "wishlist-tsx",
+      "route": "wishlist.tsx",
+      "examples": [
+        "/wishlist"
+      ],
+      "tier": "P2",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "blog-slug-tsx",
+      "route": "blog.$slug.tsx",
+      "examples": [
+        "/blog/streaming-by-country-2026"
+      ],
+      "tier": "P2",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "lists-mine-tsx",
+      "route": "lists.mine.tsx",
+      "examples": [
+        "/lists/mine"
+      ],
+      "tier": "P2",
+      "audience": [
+        "member"
+      ],
+      "note": "Members with a public handle redirect to their profile lists tab; members without one can see this collection page."
+    },
+    {
+      "id": "about-tsx",
+      "route": "about.tsx",
+      "examples": [
+        "/about"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "auth-mcp-consent-tsx",
+      "route": "auth.mcp.consent.tsx",
+      "examples": [],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ],
+      "unavailable": "Requires a live OAuth authorization request and member credentials; do not replay authorization flows in a page benchmark"
+    },
+    {
+      "id": "disclaimer-tsx",
+      "route": "disclaimer.tsx",
+      "examples": [
+        "/disclaimer"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "discord-index-tsx",
+      "route": "discord._index.tsx",
+      "examples": [
+        "/discord"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "explorer-tsx",
+      "route": "explorer.tsx",
+      "examples": [
+        "/explorer"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "forgot-password-tsx",
+      "route": "forgot-password.tsx",
+      "examples": [
+        "/forgot-password"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "how-it-works-tsx",
+      "route": "how-it-works.tsx",
+      "examples": [
+        "/how-it-works"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "privacy-tsx",
+      "route": "privacy.tsx",
+      "examples": [
+        "/privacy"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "reset-password-tsx",
+      "route": "reset-password.tsx",
+      "examples": [
+        "/reset-password"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "settings-index-tsx",
+      "route": "settings._index.tsx",
+      "examples": [
+        "/settings"
+      ],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "settings-account-tsx",
+      "route": "settings.account.tsx",
+      "examples": [
+        "/settings/account"
+      ],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "settings-connected-apps-tsx",
+      "route": "settings.connected-apps.tsx",
+      "examples": [
+        "/settings/connected-apps"
+      ],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "settings-country-tsx",
+      "route": "settings.country.tsx",
+      "examples": [
+        "/settings/country"
+      ],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "settings-discover-privacy-tsx",
+      "route": "settings.discover-privacy.tsx",
+      "examples": [
+        "/settings/discover-privacy"
+      ],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "settings-imports-tsx",
+      "route": "settings.imports.tsx",
+      "examples": [
+        "/settings/imports"
+      ],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "settings-language-tsx",
+      "route": "settings.language.tsx",
+      "examples": [
+        "/settings/language"
+      ],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "settings-profile-tsx",
+      "route": "settings.profile.tsx",
+      "examples": [
+        "/settings/profile"
+      ],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "settings-services-tsx",
+      "route": "settings.services.tsx",
+      "examples": [
+        "/settings/services"
+      ],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "settings-tsx",
+      "route": "settings.tsx",
+      "examples": [
+        "/settings"
+      ],
+      "tier": "P3",
+      "audience": [
+        "member"
+      ]
+    },
+    {
+      "id": "sign-in-tsx",
+      "route": "sign-in.tsx",
+      "examples": [
+        "/sign-in"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "sign-up-tsx",
+      "route": "sign-up.tsx",
+      "examples": [
+        "/sign-up"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "support-tsx",
+      "route": "support.tsx",
+      "examples": [
+        "/support"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "terms-tsx",
+      "route": "terms.tsx",
+      "examples": [
+        "/terms"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "use-with-ai-tsx",
+      "route": "use-with-ai.tsx",
+      "examples": [
+        "/use-with-ai"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    },
+    {
+      "id": "verify-email-tsx",
+      "route": "verify-email.tsx",
+      "examples": [
+        "/verify-email"
+      ],
+      "tier": "P3",
+      "audience": [
+        "guest",
+        "member"
+      ]
+    }
+  ],
+  "skippedRoutes": [
+    {
+      "route": "[.well-known].oauth-authorization-server.$.ts",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "[.well-known].oauth-protected-resource.$.ts",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "[.well-known].openai-apps-challenge.ts",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "[.well-known].openid-configuration.$.ts",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "api.account-summary.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.auth-maintenance.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.auth.$.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.avatar.$handle.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.cast.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.combined-search.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.command-palette.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.countries.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.discord.interactions.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.discover.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.discover_.results.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.dna.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.e.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.episode-grid.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.episode-scores.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.explore.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.explorer.card.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.explorer.combination.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.explorer.island.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.explorer.map.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.explorer.parts.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.explorer.shares.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.explorer.world.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.feedback.$reportId.screenshot.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.feedback.corrections.$correctionId.undo.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.feedback.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.fingerprint-preview.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.for-you.details.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.for-you.pool.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.genres.all.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.genres.movie.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.genres.tv.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.guess-country.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.guest-recommendations.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.handle.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imdb-import.$id._index.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imdb-import.$id.confirm.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imdb-import.$id.decide.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imdb-import.$id.items.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imdb-import.$id.posters.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imdb-import.$id.skipped.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imdb-import.$id.undo.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imdb-import._index.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imdb-import.preview.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.import-guest-interactions.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id._index.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.accept-suggestions.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.confirm.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.decide.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.discard.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.items.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.matches.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.posters.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.resolve.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.skipped.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.suggestions.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.$id.undo.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports._index.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.ai-activity.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.mdblist.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.plex.$step.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.preview.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.imports.tmdb.$step.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.internal.homepage-warmup.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.intro.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.keywords.by-id.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.keywords.search.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.living-room.picks.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.media-preferences.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.media-preferences_.session.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.media-title.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.movie.collection.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.my-library.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.my-scores.title.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.my-shows.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.new-episodes.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.new-on-services.pages.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.newly-available.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.not-interested.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.og-image-warm.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.onboarding.media.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.poster-impressions.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.profile.$handle.scores.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.profile.avatar.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.profile.settings.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.recent-actions-media.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.related-by-category.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.related-map.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.search-config.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.search.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.share-lists.titles.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.share-lists.top-rated.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.share-lists.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.showcase-examples.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.similar-media.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.smart-titles.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.social.image.$postId.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.social.title.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.social.wrong-title.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.start-picker-pictures.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.streaming-countries.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.streaming-providers.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.talked-about-now.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.taste.match.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.taste.portrait.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.title-cards.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.title-cast.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.tonight.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.tracking.show.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.tv-title.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.update-favorites.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.update-not-interested.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.update-scores-batch.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.update-scores.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.update-skipped.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.update-watch-history.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.update-wishlist.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.user-data.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.user-recommendations.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.user-settings.get.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.user-settings.set.tsx",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.watch-log.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.watch-next.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.watch-next_.cards.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.watch-next_.watched.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.watchability.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.wishlist-titles.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.yepwatch.account.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.yepwatch.v1.$.ts",
+      "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "blog.rss[.]xml.ts",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "browser-check.tsx",
+      "reason": "Removed browser gate; returns 410"
+    },
+    {
+      "route": "dev.filter-bar.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "dev.for-you-page.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "dev.for-you.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "dev.title-cards.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "discord.add.tsx",
+      "reason": "External Discord authorization redirect"
+    },
+    {
+      "route": "discord.link.callback.tsx",
+      "reason": "OAuth callback; reads can change account state"
+    },
+    {
+      "route": "discord.link.tsx",
+      "reason": "OAuth initiation; reads can create auth state"
+    },
+    {
+      "route": "explore.$type.$category.$text.tsx",
+      "reason": "Legacy category redirect"
+    },
+    {
+      "route": "go.stream.$media.$tmdbId.$providerId.ts",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "living-room.tsx",
+      "reason": "301 to start page"
+    },
+    {
+      "route": "mcp.ts",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "new._index.tsx",
+      "reason": "302 to /new/us for browser requests"
+    },
+    {
+      "route": "og.$.tsx",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "og.$first.$second.$third.tsx",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "og.$first.$second.tsx",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "og.$first.tsx",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "og.lists.$id.$file.tsx",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "pmwiki.$.tsx",
+      "reason": "301 to start page"
+    },
+    {
+      "route": "prototype.combined-search.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.episode-list-2.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.episode-list-3.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.episode-list-4.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.episode-list.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.episode-tracking-real.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.jev-search.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.jev-vector.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.media-language-ui.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.my-library-real.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.my-library-real_.api.ts",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.my-library-real_.tv.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-discover-2.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-discover-3.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-discover-4.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-discover.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-2.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-2_.api.ts",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-3.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-3_.api.ts",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-4.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-4_.api.ts",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-5.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-5_.api.ts",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-6.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-7.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-7_.api.ts",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-8.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-8_.api.ts",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer-9.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-explorer.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-filter-bar-2.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-filter-bar.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-fingerprint.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-home.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-nav.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-taste-2.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-taste-3.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-taste-4.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-taste-5.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-taste-6.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-taste.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-watch-next-2.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-watch-next-3.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-watch-next-4.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-watch-next-5.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-watch-next-6.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-watch-next-7.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-watch-next-8.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.rec-watch-next.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.search-translation.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.share-list-png.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.share-list.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.share-list_.view.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.title-actions.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.tracking-machine.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.tracking-rules.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.tracking.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.watch-log-real.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "prototype.watch-log.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "search.tsx",
+      "reason": "301 to Discover search; covered by /discover?q=heist"
+    },
+    {
+      "route": "settings.hidden.ts",
+      "reason": "Data/action resource or legacy redirect, not an HTML page"
+    },
+    {
+      "route": "settings.streaming.ts",
+      "reason": "Data/action resource or legacy redirect, not an HTML page"
+    },
+    {
+      "route": "settings.where-you-watch.ts",
+      "reason": "Data/action resource or legacy redirect, not an HTML page"
+    },
+    {
+      "route": "sitemap[.]xml.ts",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "sitemaps.$file.tsx",
+      "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "taste.everyone.tsx",
+      "reason": "301 to /taste#everyone"
+    },
+    {
+      "route": "taste.fingerprint.tsx",
+      "reason": "301 to /taste#fingerprint"
+    },
+    {
+      "route": "tv-shows.$.tsx",
+      "reason": "Legacy /tv-shows redirect to /shows"
+    },
+    {
+      "route": "tv-shows.$category.$page.tsx",
+      "reason": "Legacy /tv-shows redirect to /shows"
+    },
+    {
+      "route": "tv-shows.$category._index.tsx",
+      "reason": "Legacy /tv-shows redirect to /shows"
+    },
+    {
+      "route": "tv-shows._index.tsx",
+      "reason": "Legacy /tv-shows redirect to /shows"
+    },
+    {
+      "route": "tv.$showKey.tsx",
+      "reason": "Legacy show redirect"
+    },
+    {
+      "route": "u.$handle.taste.($view).tsx",
+      "reason": "Legacy Taste tab redirect"
+    },
+    {
+      "route": "u.$handle.tropes_.data.ts",
+      "reason": "Data/action resource or legacy redirect, not an HTML page"
+    },
+    {
+      "route": "u.$handle.tropes_.descriptions.ts",
+      "reason": "Data/action resource or legacy redirect, not an HTML page"
+    },
+    {
+      "route": "u.$handle.tropes_.excerpts.ts",
+      "reason": "Data/action resource or legacy redirect, not an HTML page"
+    }
+  ]
+}

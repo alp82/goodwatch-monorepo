@@ -608,3 +608,16 @@ The following table shows the warm run by route.
 | `og_title` | 6 | 24 | 103 | 119 | 77 |
 
 All 119 requests succeeded. The serving host averaged 33% CPU on eight cores, and the generator averaged 7% on four.
+
+## All-pages first-load suite
+
+Use the route inventory and Node.js runner to measure every public page type in priority order, including server probes, mobile and desktop Lighthouse with all categories, optional PageSpeed Insights, member cookie files, and run comparisons. Existing commands remain available.
+
+```sh
+docker build -t gw-bench-lighthouse:pages-13.5.0 lighthouse
+node --test pages/pages.test.mjs
+node pages/run.mjs --tier P1,P2,P3 --runs 3 --psi --label baseline
+node pages/run.mjs --compare results/<run-A> results/<run-B>
+```
+
+Read [All-pages performance benchmark](../docs/benchmarks/all-pages.md) for the request limits, GET-only browser safeguards, column definitions, private member results, resume mode, and measurement limits.
