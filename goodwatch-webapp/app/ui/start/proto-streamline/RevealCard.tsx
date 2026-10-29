@@ -6,9 +6,9 @@
 // only.
 //
 // - Round 2 (`?flow=e`): the teaser is the card's top, so the card grows down.
-// - Round 3 (`?flow=g|h|i|j`): the room sits lower (the window in view), the teaser is the card's bottom on the
-//   room's floor, and the card grows up from it (streamline.css, `.pst3`). Tapping the teaser does its action: a
-//   guest's empty state rolls a surprise mood at once.
+// - Rounds 3 and 4 (`?flow=g|k|l|m|n`): the room sits lower (the window in view), the teaser is the card's bottom
+//   on the room's floor, and the card grows up from it (streamline.css, `.pst3`). Tapping the teaser does its
+//   action: a guest's empty state rolls a surprise mood at once. Once open, the card stays open.
 import { ChevronDownIcon } from "@heroicons/react/20/solid"
 import { type CSSProperties, type ReactNode, useEffect, useState } from "react"
 import { ListTag } from "~/ui/list-tag/ListTag"
@@ -16,18 +16,10 @@ import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { type Flow, ROUND3 } from "./ProtoSwitcher"
 import type { TeaserModel, TeaserSide } from "./teaser-models"
 
-export function useReveal(_flow: Flow, startOpen: boolean) {
+/** Whether the card is open. Once open it stays open: there is no way back to the ledge. */
+export function useReveal(startOpen: boolean) {
 	const [open, setOpen] = useState(startOpen)
-	useEffect(() => {
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key !== "Escape") return
-			if ((e.target as HTMLElement | null)?.closest("input, textarea")) return
-			setOpen(false)
-		}
-		window.addEventListener("keydown", onKey)
-		return () => window.removeEventListener("keydown", onKey)
-	}, [])
-	return { open, request: setOpen }
+	return { open, request: (next: boolean) => setOpen((was) => was || next) }
 }
 
 /** The lamp: the room loads dim and the light comes up a moment after the page has started. */
@@ -46,9 +38,6 @@ export const revealAttrs = (flow: Flow, open: boolean) => ({
 	"data-flow": flow,
 	...(open ? { "data-open": "" } : {}),
 })
-
-/** How many posters a flow's fan shows: the row-like looks take more. */
-export const fanCount = (flow: Flow) => (flow === "h" || flow === "j" ? 7 : 5)
 
 export function RevealCard({
 	open,

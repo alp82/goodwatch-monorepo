@@ -19,7 +19,6 @@ import { useStartQuery } from "../stage/useStartQuery"
 import { useFlow } from "../proto-streamline/ProtoSwitcher"
 import {
 	RevealCard,
-	fanCount,
 	revealAttrs,
 	useLamp,
 	useReveal,
@@ -59,7 +58,7 @@ export function MemberStart({
 	const ownShelf = useMemo(() => memberShelf(data, shelf), [data, shelf])
 	// PROTOTYPE (start-streamline, round 2): the teaser under the sofa unless `?flow=old`.
 	const flow = useFlow()
-	const reveal = useReveal(flow, hasQuery(start.query))
+	const reveal = useReveal(hasQuery(start.query))
 	const lamp = useLamp()
 	if (flow !== "old") {
 		const card = hasQuery(start.query) ? (
@@ -110,10 +109,9 @@ export function MemberStart({
 					}
 					card={
 						<RevealCard
-							fan={fanCount(flow)}
 							open={reveal.open}
 							onOpen={() => reveal.request(true)}
-							onClose={() => reveal.request(false)}
+							onClose={null}
 							onAction={() => reveal.request(true)}
 							teaser={memberTeaser({ query: start.query, results, deck, unread })}
 						>

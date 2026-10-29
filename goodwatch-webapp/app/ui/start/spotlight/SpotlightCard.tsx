@@ -272,7 +272,7 @@ function CardLine({
 }
 
 /** A die showing five, for Surprise me. */
-function DieIcon({ className = "" }: { className?: string }) {
+export function DieIcon({ className = "" }: { className?: string }) {
 	return (
 		<svg
 			viewBox="0 0 20 20"
@@ -345,7 +345,7 @@ function Dice({
 }
 
 /** See all: Discover with the search's text and the picks. */
-function SeeAll({
+export function SeeAll({
 	href,
 	className = "",
 }: { href: string; className?: string }) {
@@ -607,7 +607,7 @@ function PosterRow({
  * A real poster card that is itself the "loved it" toggle: a tap rings it, pops a heart and lifts it; a second tap
  * undoes. The small info button opens the title page (shown on hover with a pointer, always on touch).
  */
-function LovedToggle({
+export function LovedToggle({
 	card,
 	on,
 	full,

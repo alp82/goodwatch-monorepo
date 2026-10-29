@@ -34,12 +34,12 @@ import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 import { ProtoSwitcher, useFlow } from "~/ui/start/proto-streamline/ProtoSwitcher"
 import {
 	RevealCard,
-	fanCount,
 	revealAttrs,
 	useLamp,
 	useReveal,
 } from "~/ui/start/proto-streamline/RevealCard"
 import { installFixture } from "~/ui/start/proto-streamline/fixture"
+import { CARD_FLOWS, TapCard } from "~/ui/start/proto-streamline/TapCard"
 import { guestTeaser } from "~/ui/start/proto-streamline/teaser-models"
 import streamlineCss from "~/ui/start/proto-streamline/streamline.css?url"
 
@@ -250,7 +250,7 @@ function GuestStart({
 	)
 }
 
-/** PROTOTYPE (start-streamline, rounds 2 and 3): a guest's start with the teaser on the room's floor. */
+/** PROTOTYPE (start-streamline, rounds 3 and 4): a guest's start with the ledge on the room's floor. */
 function StreamGuest({
 	titles,
 	browse,
@@ -262,7 +262,7 @@ function StreamGuest({
 	const loved = useLovedThree()
 	const start = useStartQuery({ onChoice: loved.onChoice })
 	const results = useStartSearch(start.query)
-	const reveal = useReveal(flow, hasQuery(start.query))
+	const reveal = useReveal(hasQuery(start.query))
 	const lamp = useLamp()
 	const view = startView(
 		start.query,
@@ -323,10 +323,9 @@ function StreamGuest({
 				}
 				card={
 					<RevealCard
-						fan={fanCount(flow)}
 						open={reveal.open}
 						onOpen={() => reveal.request(true)}
-						onClose={() => reveal.request(false)}
+						onClose={null}
 						onAction={(id) => {
 							if (id === "surprise") {
 								start.clearSearch()
@@ -336,13 +335,24 @@ function StreamGuest({
 						}}
 						teaser={teaser}
 					>
-						<SpotlightCard
-							start={start}
-							results={results}
-							view={view}
-							loved={loved}
-							fan={titles}
-						/>
+						{CARD_FLOWS.includes(flow) ? (
+							<TapCard
+								flow={flow}
+								start={start}
+								results={results}
+								view={view}
+								loved={loved}
+								fan={titles}
+							/>
+						) : (
+							<SpotlightCard
+								start={start}
+								results={results}
+								view={view}
+								loved={loved}
+								fan={titles}
+							/>
+						)}
 					</RevealCard>
 				}
 				grade={<RoomGrade grade={roomGrade(start.query, results)} />}
