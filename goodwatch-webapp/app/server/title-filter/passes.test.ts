@@ -475,6 +475,7 @@ const snapshotRatings = {
 test("the viewer's ladder is their country's, plain ages without a column, and none without ratings", () => {
 	assert.deepEqual(ladderFor(snapshotRatings, "de"), {
 		country: "DE",
+		countries: ["DE"],
 		steps: DE_LADDER,
 		local: true,
 	})
@@ -1453,4 +1454,45 @@ test("service counts include 120 options and retain a chosen service beyond the 
 	assert.equal(counts[119], plain.length)
 	assert.equal(counts[120], undefined)
 	assert.equal(counts[140], plain.length)
+})
+
+test("rating country chooses the ladder and age column independently of streaming country", () => {
+	const ratings = {
+		...snapshotRatings,
+		countries: ["DE", "US"],
+		ladderOf: (country: string) =>
+			country === "DE"
+				? DE_LADDER
+				: [
+						{ age: 0, label: "G" },
+						{ age: 12, label: "PG-13" },
+						{ age: 18, label: "R" },
+					],
+		agesOf: (country: string) =>
+			country === "DE"
+				? Uint8Array.from(DE_AGES)
+				: Uint8Array.from(DE_AGES.map(() => 18)),
+	}
+	const state = {
+		streamingCountry: "US",
+		ratingCountry: "DE",
+		ageLimit: 12,
+		content: { violence: "show", sex: "show" } as const,
+	}
+	const chosen = ladderFor(ratings, "GB", state)!
+	assert.equal(chosen.country, "DE")
+	assert.deepEqual(chosen.steps, DE_LADDER)
+	assert.equal(chosen.countries, ratings.countries)
+	assert.deepEqual(
+		passes(plain, { ratings: ratingsFilter(ratings, chosen, state) }).rows,
+		[0, 1, 2],
+	)
+	const fallback = ladderFor(ratings, "GB", { ...state, ratingCountry: "ZZ" })!
+	assert.equal(fallback.country, "US")
+	assert.deepEqual(
+		passes(plain, { ratings: ratingsFilter(ratings, fallback, state) }).rows,
+		[],
+	)
+	assert.equal(ladderFor(ratings, "US", { ratingCountry: "ZZ" })?.country, "US")
+	assert.equal(ladderFor(ratings, "US", {})?.country, "US")
 })

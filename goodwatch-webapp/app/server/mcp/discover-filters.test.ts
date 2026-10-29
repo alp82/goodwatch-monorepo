@@ -31,6 +31,7 @@ test("every Discover parameter uses the site's URL codec and preserves its meani
 		minimum_match: 80 as const,
 		released: "recent" as const,
 		age_limit: 12,
+		rating_country: "DE",
 		hide_content: ["drugs" as const],
 		show_content: ["violence" as const],
 		order: "newest" as const,
@@ -62,6 +63,7 @@ test("every Discover parameter uses the site's URL codec and preserves its meani
 	assert.equal(url.pathname, "/discover")
 	assert.equal(url.searchParams.get("layout"), "grid")
 	assert.equal(url.searchParams.get("services"), "8,9")
+	assert.equal(url.searchParams.get("ratingCountry"), "DE")
 	assert.equal(result.page_note, undefined)
 	url.searchParams.delete("layout")
 	assert.deepEqual(url.searchParams, params)
@@ -349,4 +351,25 @@ test("MCP Metacritic users share normalized bounds, page URLs and cache identity
 			schema.safeParse({ source_scores: { metacriticUsers: value } }).success,
 			false,
 		)
+})
+
+test("rating_country is normalized, carried in links, and separates view identities", () => {
+	assert.equal(schema.parse({ rating_country: " de " }).rating_country, "DE")
+	assert.equal(
+		discoverView({ rating_country: "DE" }, false).state.ratingCountry,
+		"DE",
+	)
+	assert.equal(discoverView({}, false).state.ratingCountry, undefined)
+	for (const code of ["D", "DEU", "12"])
+		assert.equal(schema.safeParse({ rating_country: code }).success, false)
+	// Snapshot membership is resolved by the engine; the transport accepts an unknown two-letter code.
+	assert.equal(schema.safeParse({ rating_country: "ZZ" }).success, true)
+	assert.notEqual(
+		discoverViewKey({ rating_country: "DE" }),
+		discoverViewKey({ rating_country: "US" }),
+	)
+	assert.notEqual(
+		discoverViewKey({ rating_country: "DE" }),
+		discoverViewKey({}),
+	)
 })

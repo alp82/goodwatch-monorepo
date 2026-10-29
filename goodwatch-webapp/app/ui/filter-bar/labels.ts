@@ -639,6 +639,13 @@ export function activeChips(
 				}
 			},
 		})
+	if (state.ratingCountry)
+		chips.push({
+			key: "ratingCountry",
+			group: "ageLimit",
+			label: `Ratings in ${productionCountryName(state.ratingCountry)}`,
+			remove: (s) => ({ ...s, ratingCountry: undefined }),
+		})
 	if (state.ageLimit !== undefined)
 		chips.push({
 			key: "age",

@@ -24,7 +24,8 @@ Both title tools accept the same optional filters:
 | `outside_usual` | Outside your usual (`match=outside`): taste match 50–59; supersedes `minimum_match`. Requires a member and taste; otherwise does not narrow. |
 | `minimum_match` | Site taste-match thresholds: 0, 60, 70, 80, 90; does not narrow without taste |
 | `released` | Site presets: `any`, `recent` (current year and two before it), `2010s`, `2000s`, `before2000` |
-| `age_limit`, `hide_content`, `show_content` | Saved country's rating ladder and the site's content choices; hidden choices win conflicts. Unavailable ratings do not narrow, matching the site |
+| `rating_country` | ISO alpha-2 code for the age-rating ladder and title rating badges, independent of streaming country/services. Defaults to the saved country; codes absent from the snapshot ratings fall back to that default. `page_url` carries `ratingCountry=DE`. |
+| `age_limit`, `hide_content`, `show_content` | `rating_country` or the saved country's rating ladder and the site's content choices; hidden choices win conflicts. Unavailable ratings do not narrow, matching the site |
 | `order` | `for_you` (default), `popularity`, `newest`, `score`, `match` |
 | `for_you`, `exclude_seen` | Existing switches: For you on by default, seen titles included by default |
 | `limit`, `cursor` | Up to 40 titles per page; repeat filters for `offset:N` pages |

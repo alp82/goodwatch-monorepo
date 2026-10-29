@@ -93,8 +93,8 @@ export function FilterBar(props: FilterBarProps) {
 	// applies: without a ladder the title filter ignores the age limit and content, so they show nowhere, also while
 	// the first counts are on their way. Guests also omit member-only choices. The controls still change the state itself.
 	const applied = useMemo(
-		() => stateAsApplied(state, ladder, member),
-		[state, ladder, member],
+		() => stateAsApplied(state, ladder, member, services.country),
+		[state, ladder, member, services.country],
 	)
 	const secondaryCount = secondaryFilterCount(applied)
 

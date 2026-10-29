@@ -141,6 +141,8 @@ export interface FilterState {
 	services?: number[]
 	/** Request-local viewing country for streaming offers; never writes saved settings. */
 	streamingCountry?: string
+	/** Country whose age ratings apply; defaults to the streaming country, then the viewer. */
+	ratingCountry?: string
 	notSeenYet: boolean
 	seenBefore?: boolean
 	onWishlist?: boolean
@@ -202,6 +204,18 @@ export const defaultFilterState = (defaults: FilterDefaults): FilterState => ({
 	released: "any",
 })
 
+/** Only countries published with the snapshot can override the existing rating country. */
+export function ratingCountryFor(
+	state: Pick<FilterState, "ratingCountry" | "streamingCountry">,
+	viewerCountry: string,
+	countries: readonly string[],
+): string {
+	const chosen = state.ratingCountry?.trim().toUpperCase()
+	return chosen && countries.includes(chosen)
+		? chosen
+		: (state.streamingCountry ?? viewerCountry).toUpperCase()
+}
+
 const MAX_LIST = 20
 const list = (value: string | null) =>
 	(value ?? "")
@@ -256,6 +270,9 @@ export function filterStateFromParams(
 	const streamingCountry = params.get("streamingCountry")?.trim().toUpperCase()
 	if (streamingCountry && /^[A-Z]{2}$/.test(streamingCountry))
 		state.streamingCountry = streamingCountry
+	const ratingCountry = params.get("ratingCountry")?.trim().toUpperCase()
+	if (ratingCountry && /^[A-Z]{2}$/.test(ratingCountry))
+		state.ratingCountry = ratingCountry
 	const services = params.get("services")
 	if (services === "mine") state.onMyServices = true
 	else if (services === "any") {
@@ -386,6 +403,7 @@ export function filterStateToParams(
 	set("seen", state.seenBefore ? "1" : null)
 	set("wishlist", state.onWishlist ? "1" : null)
 	set("streamingCountry", state.streamingCountry ?? null)
+	set("ratingCountry", state.ratingCountry ?? null)
 	const services = state.anyService
 		? "any"
 		: state.onMyServices
@@ -598,6 +616,7 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	anime: "any",
 	services: undefined,
 	streamingCountry: undefined,
+	ratingCountry: undefined,
 	moods: [],
 	themes: [],
 	styles: [],
@@ -619,6 +638,7 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 export function secondaryFilterCount(state: FilterState): number {
 	return (
 		(state.streamingCountry || state.anyService ? 1 : 0) +
+		(state.ratingCountry ? 1 : 0) +
 		(state.years ? 1 : 0) +
 		(state.runtime ? 1 : 0) +
 		Object.keys(state.sourceScores ?? {}).length +
@@ -657,8 +677,16 @@ export const stateAsApplied = (
 	state: FilterState,
 	ladder: ViewerLadder | null | undefined,
 	member: boolean,
+	viewerCountry?: string,
 ): FilterState => {
 	let applied = state
+	if (
+		state.ratingCountry &&
+		(!ladder ||
+			state.ratingCountry !== ladder.country ||
+			state.ratingCountry === (state.streamingCountry ?? viewerCountry))
+	)
+		applied = { ...applied, ratingCountry: undefined }
 	if (!ladder && (state.ageLimit !== undefined || state.content))
 		applied = { ...applied, ageLimit: undefined, content: undefined }
 	if (!member && (state.seenBefore || state.onWishlist || state.outsideUsual))

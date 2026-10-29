@@ -3,6 +3,7 @@ import { test } from "node:test"
 import "../server/title-filter/test-alias.ts"
 
 const {
+	ratingCountryFor,
 	FILTER_NAMES,
 	MIN_MATCHES,
 	clearSecondaryFilters,
@@ -705,4 +706,66 @@ test("Metacritic users round trip alongside older arbitrary source thresholds", 
 			parse(`sources=metacriticUsers:${invalid}`).sourceScores,
 			undefined,
 		)
+})
+
+test("rating country codec, defaults, validation and clearing", () => {
+	const countries = ["DE", "US"]
+	const state = parse("age=12&ratingCountry=%20de%20&streamingCountry=US")
+	assert.equal(state.ratingCountry, "DE")
+	assert.equal(state.streamingCountry, "US")
+	assert.equal(state.ageLimit, 12)
+	assert.equal(
+		new URLSearchParams(filterQuery(state, "popular", defaults)).get(
+			"ratingCountry",
+		),
+		"DE",
+	)
+	assert.deepEqual(parse(filterQuery(state, "popular", defaults)), state)
+	assert.equal(parse("").ratingCountry, undefined)
+	assert.equal(
+		new URLSearchParams(filterQuery(parse(""), "popular", defaults)).has(
+			"ratingCountry",
+		),
+		false,
+	)
+	assert.equal(ratingCountryFor(state, "GB", countries), "DE")
+	assert.equal(
+		ratingCountryFor(parse("streamingCountry=DE"), "US", countries),
+		"DE",
+	)
+	assert.equal(ratingCountryFor(parse(""), "US", countries), "US")
+	assert.equal(
+		ratingCountryFor(parse("ratingCountry=ZZ"), "US", countries),
+		"US",
+	)
+	assert.equal(
+		ratingCountryFor(
+			parse("ratingCountry=ZZ&streamingCountry=DE"),
+			"US",
+			countries,
+		),
+		"DE",
+	)
+	assert.equal(ratingCountryFor(state, "GB", []), "US")
+	for (const code of ["", "D", "DEU", "12"])
+		assert.equal(parse(`ratingCountry=${code}`).ratingCountry, undefined)
+	assert.equal(clearSecondaryFilters(state).ratingCountry, undefined)
+	const ladder = {
+		country: "DE",
+		steps: [{ age: 12, label: "FSK 12" }],
+		local: true,
+	}
+	assert.equal(
+		secondaryFilterCount(stateAsApplied(state, ladder, true, "US")),
+		3,
+	)
+	assert.equal(stateAsApplied(state, null, true, "US").ratingCountry, undefined)
+	assert.equal(
+		stateAsApplied(parse("ratingCountry=ZZ"), ladder, true, "US").ratingCountry,
+		undefined,
+	)
+	assert.equal(
+		stateAsApplied(parse("ratingCountry=DE"), ladder, true, "DE").ratingCountry,
+		undefined,
+	)
 })

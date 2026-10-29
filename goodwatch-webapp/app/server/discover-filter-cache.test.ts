@@ -418,6 +418,8 @@ test("range, source score, gap and any-service state have distinct stable cache 
 		{ scoreGap: "critics" },
 		{ scoreGap: "audience" },
 		{ anyService: true },
+		{ ratingCountry: "DE" },
+		{ ratingCountry: "US" },
 	]
 	const keys = [
 		discoverFilterKey(base),

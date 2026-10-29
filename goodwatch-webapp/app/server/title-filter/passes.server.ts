@@ -11,6 +11,8 @@ import {
 	ladderStepFor,
 } from "~/domain/age-content"
 import {
+	ratingCountryFor,
+	type FilterState,
 	FILTER_NAMES,
 	type FilterName,
 	type TagGroup,
@@ -118,18 +120,20 @@ export interface RatingsFilter {
 }
 
 /**
- * The ladder a viewer's age limit goes by: their country's own, or plain ages for a country without ratings of its
- * own. Null without ratings.
+ * The selected rating country's ladder and available countries. Without an override, use the streaming country,
+ * then the viewer's country (plain ages when it has no ratings). Null without ratings.
  */
 export function ladderFor(
-	ratings: Pick<TitleRatings, "ladderOf"> | null | undefined,
+	ratings: Pick<TitleRatings, "ladderOf" | "countries"> | null | undefined,
 	country: string,
-): ViewerLadder | null {
+	state: Pick<FilterState, "ratingCountry" | "streamingCountry"> = {},
+): (ViewerLadder & { countries: readonly string[] }) | null {
 	if (!ratings) return null
-	const code = country.toUpperCase()
+	const code = ratingCountryFor(state, country, ratings.countries)
 	const steps = ratings.ladderOf(code)
 	return {
 		country: code,
+		countries: ratings.countries,
 		steps: [...(steps ?? PLAIN_LADDER)],
 		local: steps !== undefined,
 	}

@@ -118,10 +118,10 @@ export interface FilterResult {
 	 */
 	approximate: boolean
 	/**
-	 * What the age limit's control draws: the viewer's rating country and its ladder. Null when the snapshot has no
-	 * ratings; then the age limit and content don't narrow either.
+	 * What the age limit's control draws: the chosen rating country, its ladder, and available rating countries.
+	 * Null when the snapshot has no ratings; then the age limit and content don't narrow either.
 	 */
-	ladder: ViewerLadder | null
+	ladder: (ViewerLadder & { countries: readonly string[] }) | null
 }
 
 export interface FilterInput {
@@ -261,7 +261,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		new Set([...viewer.seen, ...viewer.skipped]),
 		snapshot,
 	)
-	const ladder = viewerLadder(viewer)
+	const ladder = viewerLadder(input.viewer, state)
 	const sets = (list: { option: string; keys: Set<TitleKey> }[]) =>
 		list.map(({ option, keys }) => ({
 			option,
@@ -428,8 +428,11 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
  * The ladder the viewer's age limit goes by (ladderFor), or null when the snapshot has no ratings (or hasn't loaded):
  * then the whole filter is off, the URL parameters included.
  */
-export function viewerLadder(viewer: ViewerContext): ViewerLadder | null {
-	return ladderFor(getTitleSnapshot()?.columns.ratings, viewer.country)
+export function viewerLadder(
+	viewer: ViewerContext,
+	state: Pick<FilterState, "ratingCountry" | "streamingCountry"> = {},
+): FilterResult["ladder"] {
+	return ladderFor(getTitleSnapshot()?.columns.ratings, viewer.country, state)
 }
 
 /** The universe's snapshot rows and keys in the plain order of the sort. */

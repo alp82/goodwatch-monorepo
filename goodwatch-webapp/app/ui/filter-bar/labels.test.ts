@@ -518,3 +518,32 @@ test("source score steps use each source's notation and user chips remove indepe
 	const only = { ...state, sourceScores: { metacriticUsers: 70 } }
 	assert.equal(activeChips(only)[0].remove(only).sourceScores, undefined)
 })
+
+test("a non-default rating country has a removable production chip", () => {
+	const state = {
+		...defaultFilterState({ onMyServices: false, notSeenYet: false }),
+		ratingCountry: "DE",
+		streamingCountry: "US",
+		ageLimit: 12,
+	}
+	const ladder = {
+		country: "DE",
+		steps: [{ age: 12, label: "FSK 12" }],
+		local: true,
+	}
+	const applied = stateAsApplied(state, ladder, true, "US")
+	const chip = activeChips(applied).find(
+		(chip) => chip.key === "ratingCountry",
+	)!
+	assert.equal(chip.label, "Ratings in Germany")
+	const removed = chip.remove(state)
+	assert.equal(removed.ratingCountry, undefined)
+	assert.equal(removed.streamingCountry, "US")
+	assert.equal(removed.ageLimit, 12)
+	assert.equal(
+		activeChips(
+			stateAsApplied({ ...state, streamingCountry: "DE" }, ladder, true, "US"),
+		).some((chip) => chip.key === "ratingCountry"),
+		false,
+	)
+})

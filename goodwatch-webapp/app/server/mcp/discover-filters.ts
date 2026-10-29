@@ -131,13 +131,24 @@ export const discoverFilters = {
 			"GoodWatch taste match threshold; does not narrow when taste is unavailable, as on the site.",
 		),
 	released: z.enum(RELEASED).optional(),
+	rating_country: z
+		.string()
+		.trim()
+		.toUpperCase()
+		.regex(/^[A-Z]{2}$/)
+		.optional()
+		.describe(
+			"Country code for the age-rating ladder and title rating badges, independent of streaming services. Defaults to your saved country; codes absent from the snapshot ratings use that default. The page_url carries ratingCountry.",
+		),
 	age_limit: z
 		.number()
 		.int()
 		.min(0)
 		.max(MAX_AGE)
 		.optional()
-		.describe("Uses the saved country's age-rating ladder, when available."),
+		.describe(
+			"Uses rating_country or the saved country's age-rating ladder, when available.",
+		),
 	hide_content: z
 		.array(z.enum(CONTENT_KINDS))
 		.max(CONTENT_KINDS.length)
@@ -201,6 +212,9 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 		minScore: args.minimum_score ?? 0,
 		minMatch: args.outside_usual ? 0 : (args.minimum_match ?? 0),
 		released: args.released ?? "any",
+		...(args.rating_country
+			? { ratingCountry: args.rating_country.trim().toUpperCase() }
+			: {}),
 		...(args.age_limit === undefined ? {} : { ageLimit: args.age_limit }),
 	}
 	const allOf = TAG_GROUPS.filter(

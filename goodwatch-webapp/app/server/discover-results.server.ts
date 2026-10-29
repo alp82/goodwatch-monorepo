@@ -166,6 +166,7 @@ export async function getDiscoverResults(
 	const applied = result.moved !== undefined
 	const { keys: all, moved, personalOrder } = result
 	let counts = countsOf(result)
+	// Cards show rating badges only while an age limit is on, in the filter's resolved rating country.
 	const ladder = state.ageLimit === undefined ? null : result.ladder
 	const record = (
 		titles: readonly { key: TitleKey; match: number | null }[],

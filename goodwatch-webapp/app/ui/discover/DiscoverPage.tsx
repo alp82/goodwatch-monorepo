@@ -542,7 +542,12 @@ export function DiscoverPage({
 											onClear={filters.clearSecondary}
 											canClear={
 												secondaryFilterCount(
-													stateAsApplied(filters.state, first.ladder, member),
+													stateAsApplied(
+														filters.state,
+														first.ladder,
+														member,
+														scope.country,
+													),
 												) > 0
 											}
 											searching={searching}

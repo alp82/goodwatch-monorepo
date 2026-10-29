@@ -66,6 +66,7 @@ export function discoverFilterKey(input: {
 		onMyServices: state.onMyServices,
 		services: state.services,
 		streamingCountry: state.streamingCountry,
+		ratingCountry: state.ratingCountry,
 		notSeenYet: state.notSeenYet,
 		seenBefore: state.seenBefore,
 		onWishlist: state.onWishlist,
