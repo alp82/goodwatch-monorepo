@@ -3,7 +3,11 @@
 // something (NotSeenConfirm.tsx) draw the same faces, so the preview shows the control itself.
 import type { ReactNode } from "react"
 import type { Score } from "~/server/scores.server"
-import { getVibeColorValue, scoreLabels, selectedScoreStyle } from "~/utils/ratings"
+import {
+	getVibeColorValue,
+	scoreLabels,
+	selectedScoreStyle,
+} from "~/utils/ratings"
 
 /** Keyboard focus inside a half, drawn inset so the frame's rounded corners don't cut it. */
 export const HALF_FOCUS =
@@ -141,7 +145,13 @@ export function SeenFace({
 	)
 }
 
-export type StatusTone = "none" | "watching" | "on_hold" | "dropped" | "seen" | "new_episodes"
+export type StatusTone =
+	| "none"
+	| "watching"
+	| "on_hold"
+	| "dropped"
+	| "seen"
+	| "new_episodes"
 
 const STATUS_TONE: Record<StatusTone, string> = {
 	none: "text-gray-200",
@@ -218,6 +228,20 @@ export function StatusFace({
 }
 
 /** The score half's face: the number on its colour and its word, or a star that asks for one. */
+/**
+ * Below what width of the score half a score's word steps aside (kept for screen readers): the number box, the gap and
+ * about 9 px a letter, so "Great" stays where "Masterpiece" wouldn't fit. Static classes, for Tailwind to find.
+ */
+function wordFits(word: string) {
+	const n = word.length
+	if (n <= 4) return "@max-[5.75rem]/score:sr-only"
+	if (n <= 5) return "@max-[6.5rem]/score:sr-only"
+	if (n <= 6) return "@max-[7rem]/score:sr-only"
+	if (n <= 8) return "@max-[8rem]/score:sr-only"
+	if (n <= 9) return "@max-[8.75rem]/score:sr-only"
+	return "@max-[9.75rem]/score:sr-only"
+}
+
 export function ScoreFace({
 	score,
 	ask,
@@ -256,7 +280,7 @@ export function ScoreFace({
 					Your score
 				</span>
 				<span
-					className={`block truncate text-sm font-bold lg:group-data-[big]/split:text-base ${score ? "@max-[8.5rem]/score:sr-only" : "@max-[8.5rem]/score:line-clamp-2 @max-[8.5rem]/score:whitespace-normal"} ${due ? "text-amber-200" : "text-white"}`}
+					className={`block truncate text-sm font-bold lg:group-data-[big]/split:text-base ${score ? wordFits(scoreLabels[score]) : "@max-[8.5rem]/score:line-clamp-2 @max-[8.5rem]/score:whitespace-normal"} ${due ? "text-amber-200" : "text-white"}`}
 				>
 					{score ? scoreLabels[score] : ask}
 				</span>
