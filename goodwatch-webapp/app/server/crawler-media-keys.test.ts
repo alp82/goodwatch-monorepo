@@ -44,7 +44,7 @@ registerHooks({
 			source = "export const legacyDiscoverRedirect=async()=>null"
 		else if (url.endsWith("/server/discover-results.server.ts"))
 			source =
-				'export class SnapshotNotLoaded extends Error {}; export const discoverFilterDefaults=()=>({onMyServices:false,notSeenYet:false});export const forYouFromParams=()=>true;export const getDiscoverResults=async(_ctx,input)=>{globalThis.__browseCalls.push(input);return {sides:globalThis.__browseViewer.rows?{layout:"rows",rows:[]}:null,cards:[{title:"The Matrix",media_type:"movie",tmdb_id:603}],page:input.page,pageSize:40,total:40000}}'
+				'export class SnapshotNotLoaded extends Error {}; export const discoverFilterDefaults=()=>({onMyServices:false,notSeenYet:false});export const forYouFromParams=(params)=>params.get("foryou")!=="0";export const getDiscoverResults=async(_ctx,input)=>{globalThis.__browseCalls.push(input);return {sides:globalThis.__browseViewer.rows?{layout:"rows",rows:[]}:null,cards:[{title:"The Matrix",media_type:"movie",tmdb_id:603}],page:input.page,pageSize:40,total:40000}}'
 		else if (url.endsWith("/ui/discover/DiscoverPage.tsx"))
 			source = "export const DiscoverPage=()=>null"
 		else if (url.endsWith("/ui/ErrorPage.tsx"))
@@ -277,7 +277,11 @@ test("members probe side rows without exposure and skip the probe for grids or s
 		)
 		assert.equal(browseCalls[0].exposure, false)
 		assert.ok(browseCalls.slice(1).every((p) => p.exposure !== false))
-		for (const search of ["page=12&layout=grid", "page=12&side=one"]) {
+		for (const search of [
+			"page=12&layout=grid",
+			"page=12&side=one",
+			"page=12&foryou=0",
+		]) {
 			await browse(search)
 			assert.deepEqual(
 				browseCalls.map((p) => p.page),
