@@ -1,7 +1,8 @@
-// PROTOTYPE (Discover lab, round 21): what the header search finds, across all four tabs. One flat list of hits, each
+// PROTOTYPE (Discover lab, round 21; values round 22): what the header search finds, across all four tabs. One flat list of hits, each
 // knowing its tab and sub-tab, whether it is on, and how to toggle it with the same state the tab itself uses (so the
 // tab, the badges and the footer chips agree). Local choices are matched by name (lab names, old names as extra
-// words); titles and people come live from the same title and person search Search's sections use.
+// words); titles and people come live from the same title and person search Search's sections use. Round 22: text
+// that reads as a value (1999, 90s, 90 min, pg-13, 80, $100m) also offers the settings it names (values.ts).
 import { LockClosedIcon } from "@heroicons/react/20/solid"
 import type { ReactNode } from "react"
 import { MIN_SCORES } from "~/domain/filter-state"
@@ -16,7 +17,7 @@ import { episodeRange } from "../sections/length/two"
 import { readyMixes } from "../sections/mood/andview"
 import { MOOD_CHOICES, STYLE_TAGS, THEME_TAGS, genreOptions, mixName, useMoods } from "../sections/mood/parts"
 import { toggleRange } from "../sections/more/parts"
-import { type MoreKey, PRESETS, ROI_LABEL, STATUS_LABEL, type ShowStatus, sameIdx, setMore, useMore } from "../sections/more/store"
+import { type Idx, type MoreKey, PRESETS, ROI_LABEL, SCALES, STATUS_LABEL, type ShowStatus, last, sameIdx, setMore, useMore } from "../sections/more/store"
 import { Flag, INDUSTRIES, REGIONS, useAllCountries, useOrigin } from "../sections/origin/parts"
 import { Face, roleOf, usePeople } from "../sections/people/shared"
 import { eras } from "../sections/released/art"
@@ -26,6 +27,7 @@ import { GAP_WORDS, SOURCES, setGap, setSource, sourceValue } from "../sections/
 import { cleanName, logo, useServices } from "../sections/services/parts"
 import { GROUPS, MATCH_STEPS, useTaste } from "../sections/taste/parts"
 import { useTitleUses } from "../sections/titles/shared"
+import { type Want, parseValues } from "./values"
 
 export type HitKind = "chip" | "title" | "person"
 
@@ -44,6 +46,8 @@ export interface Hit {
 	locked?: boolean
 	art?: ReactNode
 	score: number
+	/** Round 22: read from the text as a value ("Released in 1999"), not found by name. */
+	value?: boolean
 	toggle: () => void
 }
 
@@ -93,13 +97,27 @@ type Range = [number, number]
 const pair = (r: { min?: number; max?: number } | undefined): Range => [r?.min ?? 0, r?.max ?? LEN_MAX]
 const ANY_LEN: Range = [0, LEN_MAX]
 
-/** Every hit for `text` (MIN_FIND letters or more), unsorted; titles and people while their searches answer. */
+/** At most this many value readings show, the likeliest first. */
+export const VALUE_CAP = 4
+
+/** The cast search answers at most this many people. */
+const PEOPLE_PAGE = 100
+
+/** The last stop at or below `v`, -1 when none. */
+const lastAtMost = (stops: number[], v: number) => stops.reduce((i, x, j) => (x <= v ? j : i), -1)
+
+const money = (n: number) => (n >= 1e9 ? `$${n / 1e9}B` : `$${n / 1e6}M`)
+
+/** Every hit for `text` (MIN_FIND letters or more, or a value of any length), unsorted; titles and people while their searches answer. */
 export function useHits(d: ProtoDiscover, pieces: Pieces, viewer: Viewer, L: Layout, text: string) {
 	const q = norm(text)
-	const active = q.length >= MIN_FIND
+	const wants = parseValues(q)
+	// Names need two letters; a value ("8", "r") counts from one.
+	const names = q.length >= MIN_FIND
+	const active = names || wants.length > 0
 	// The same searches and state the tabs use.
-	const titles = useQuickTitles(active ? text : "")
-	const people = usePeople(d, active ? text : "")
+	const titles = useQuickTitles(names ? text : "")
+	const people = usePeople(d, names ? text : "")
 	const uses = useTitleUses(d)
 	const moods = useMoods(d)
 	const sv = useServices(d, pieces, viewer)
@@ -108,11 +126,16 @@ export function useHits(d: ProtoDiscover, pieces: Pieces, viewer: Viewer, L: Lay
 	const age = useAge(d, pieces)
 	const taste = useTaste(d, viewer)
 	const more = useMore()
-	if (!active) return { hits: [] as Hit[], active, loading: false }
+	const totals = {
+		title: { n: titles.found.length, complete: titles.complete },
+		person: { n: people.found.length, complete: people.found.length < PEOPLE_PAGE },
+	}
+	if (!active) return { hits: [] as Hit[], active, loading: false, totals }
 
 	const s = d.filters.state
 	const out: Hit[] = []
 	const add = (h: Omit<Hit, "seg" | "score">, extra = "") => {
+		if (!names) return
 		const score = scoreOf(q, h.label, extra)
 		if (score > 0) out.push({ ...h, seg: segOf(h.sub, L), score })
 	}
@@ -124,7 +147,7 @@ export function useHits(d: ProtoDiscover, pieces: Pieces, viewer: Viewer, L: Lay
 	type("show", "Shows", "show series tv")
 	add({ key: "anime:only", kind: "chip", sub: "titles", part: "Anime", label: "Anime only", on: s.anime === "only", toggle: () => d.filters.set({ anime: s.anime === "only" ? "any" : "only" }) }, "anime")
 	add({ key: "anime:none", kind: "chip", sub: "titles", part: "Anime", label: "Hide anime", on: s.anime === "none", toggle: () => d.filters.set({ anime: s.anime === "none" ? "any" : "none" }) }, "anime no without")
-	titles.found.slice(0, 6).forEach((t, i) => {
+	titles.found.forEach((t, i) => {
 		const base = scoreOf(q, t.title)
 		out.push({
 			key: `title:${t.key}`,
@@ -139,7 +162,7 @@ export function useHits(d: ProtoDiscover, pieces: Pieces, viewer: Viewer, L: Lay
 			score: Math.max(base, 30) - i * 0.5,
 		})
 	})
-	people.found.slice(0, 6).forEach((p, i) => {
+	people.found.forEach((p, i) => {
 		out.push({
 			key: `person:${p.id}`,
 			kind: "person",
@@ -265,7 +288,7 @@ export function useHits(d: ProtoDiscover, pieces: Pieces, viewer: Viewer, L: Lay
 	const preset = (k: MoreKey, sub: SubId, part: string, extra: string, label = (l: string) => l) => {
 		for (const p of PRESETS[k])
 			add(
-				{ key: `more:${k}:${p.label}`, kind: "chip", sub, part, label: label(p.label), note: p.sub, on: sameIdx(more[k], p.range), toggle: () => toggleRange(more, k, p.range) },
+				{ key: `more:${k}:${p.range.join("-")}`, kind: "chip", sub, part, label: label(p.label), note: p.sub, on: sameIdx(more[k], p.range), toggle: () => toggleRange(more, k, p.range) },
 				extra,
 			)
 	}
@@ -285,7 +308,7 @@ export function useHits(d: ProtoDiscover, pieces: Pieces, viewer: Viewer, L: Lay
 		add({ key: `industry:${g.id}`, kind: "chip", sub: "origin", part: "Film industries", label: g.name, on: origin.allOf(g.codes), art: <Flag code={g.codes[0]} className="h-3.5 w-5" />, toggle: () => origin.toggleAll(g.codes) }, "film industry made")
 	for (const r of REGIONS)
 		add({ key: `region:${r.id}`, kind: "chip", sub: "origin", part: "Regions", label: r.name, on: origin.allOf(r.codes), toggle: () => origin.toggleAll(r.codes) }, "region made")
-	for (const c of countries.list) {
+	for (const c of names ? countries.list : []) {
 		if (scoreOf(q, c.name) < 70 && norm(c.code) !== q) continue
 		out.push({
 			key: `country:${c.code}`,
@@ -305,7 +328,7 @@ export function useHits(d: ProtoDiscover, pieces: Pieces, viewer: Viewer, L: Lay
 	const years = yearRange(s)
 	for (const g of eras())
 		for (const e of g.items)
-			add({ key: `era:${e.label}`, kind: "chip", sub: "released", part: g.label, label: e.label, on: sameRange(years, e.range), toggle: () => toggleYears(d, e.range) }, "released year new recent decade old")
+			add({ key: `years:${e.range.join("-")}`, kind: "chip", sub: "released", part: g.label, label: e.label, on: sameRange(years, e.range), toggle: () => toggleYears(d, e.range) }, "released year new recent decade old")
 
 	// Length, as Length d writes it: movies in the real runtime, episodes in the lab's own range.
 	const ranges = { movie: pair(s.runtime), show: pair(episodeRange(s)) }
@@ -320,7 +343,7 @@ export function useHits(d: ProtoDiscover, pieces: Pieces, viewer: Viewer, L: Lay
 		for (const p of picks) {
 			const on = sameRange(ranges[kind], p.range)
 			add(
-				{ key: `len:${kind}:${p.label}`, kind: "chip", sub: "length", part: word, label: `${word} ${p.label.charAt(0).toLowerCase()}${p.label.slice(1)}`, note: p.sub, on, toggle: () => setKind(kind, on ? ANY_LEN : p.range) },
+				{ key: `len:${kind}:${p.range.join("-")}`, kind: "chip", sub: "length", part: word, label: `${word} ${p.label.charAt(0).toLowerCase()}${p.label.slice(1)}`, note: p.sub, on, toggle: () => setKind(kind, on ? ANY_LEN : p.range) },
 				`length runtime long short ${p.sub}`,
 			)
 		}
@@ -364,6 +387,93 @@ export function useHits(d: ProtoDiscover, pieces: Pieces, viewer: Viewer, L: Lay
 	] as const)
 		you({ key: `list:${id}`, part: "Your lists", label, on: taste.list.has(id), toggle: () => taste.list.turn(id, !taste.list.has(id)) }, extra)
 
-	return { hits: out, active, loading: titles.loading || people.loading }
+	// Values: what the text names as a setting, in plain words, set the way the tab sets it.
+	const val = (h: Omit<Hit, "seg" | "kind" | "value">) => out.push({ ...h, kind: "chip", seg: segOf(h.sub, L), value: true })
+	const steps = age.ladder ? age.steps : []
+	const nearest = (a: number) => (steps.length ? steps.reduce((b, x) => (Math.abs(x.age - a) < Math.abs(b.age - a) ? x : b), steps[0]) : null)
+	const plain = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, "")
+	const ageHit = (step: { age: number; label: string; show?: string } | null, score: number) => {
+		if (!step) return
+		const on = age.selected?.age === step.age
+		val({
+			key: `age:${step.age}`,
+			sub: "age",
+			label: `Up to ${step.label}${step.show ? ` · ${step.show}` : ""}`,
+			on,
+			score,
+			toggle: () => (on ? age.off() : age.pick(step.age)),
+		})
+	}
+	const moreHit = (k: MoreKey, r: Idx, sub: SubId, label: string, score: number) =>
+		val({ key: `more:${k}:${r.join("-")}`, sub, label, on: sameIdx(more[k], r), score, toggle: () => toggleRange(more, k, r) })
+	const scoreHits = (w: Extract<Want, { kind: "score" }>) => {
+		let sc = w.score
+		if (w.scale === "plain" && (MIN_SCORES as readonly number[]).includes(w.v) && w.v > 0) {
+			const v = w.v as (typeof MIN_SCORES)[number]
+			val({ key: `score:${v}`, sub: "scores", label: `GoodWatch ${v}+`, on: s.minScore === v, score: sc, toggle: () => d.filters.set({ minScore: s.minScore === v ? 0 : v }) })
+			sc -= 1
+		}
+		for (const src of SOURCES) {
+			const pct = src.key === "rtCritics" || src.key === "rtAudience"
+			if (!src.steps.includes(w.v) || (w.scale === "pct" && !pct) || (w.scale === "ten" && src.key !== "imdb")) continue
+			const on = sourceValue(d, src.key) === w.v
+			val({ key: `source:${src.key}:${w.v}`, sub: "scores", label: `${src.name} ${src.fmt(w.v)}+`, on, score: sc, toggle: () => setSource(d, src.key, on ? 0 : w.v) })
+			sc -= 0.5
+		}
+		if (w.scale === "ten" && [60, 70, 80, 90].includes(w.v))
+			val({ key: `mcu:${w.v}`, sub: "scores", label: `User score ${(w.v / 10).toFixed(1)}+`, on: mcUsers() === w.v, score: sc - 1, toggle: () => setMcUsers(mcUsers() === w.v ? 0 : w.v) })
+	}
+	for (const w of wants) {
+		if (w.kind === "years") {
+			const r = w.range
+			val({ key: `years:${r.join("-")}`, sub: "released", label: w.label, on: sameRange(years, r), score: w.score, toggle: () => toggleYears(d, r) })
+		} else if (w.kind === "age") {
+			const step = nearest(w.age)
+			if (step && Math.abs(step.age - w.age) <= 3) ageHit(step, w.score)
+		} else if (w.kind === "rating") {
+			// The ladder's own names first ("PG-13", "TV-MA", "FSK 16", "12A"), else the age the name stands for.
+			const own = steps.find((x) => plain(x.label) === w.code || (x.show && plain(x.show) === w.code))
+			if (own) ageHit(own, w.score)
+			else if (w.age !== null && w.code.length >= 2) ageHit(nearest(w.age), w.score - 2)
+		} else if (w.kind === "seasons") {
+			const st = SCALES.seasons.stops
+			if (w.mode === "one") moreHit("seasons", [0, 1], "shows", "One season", w.score)
+			else if (w.mode === "min" && st.indexOf(w.n) > 0) moreHit("seasons", [st.indexOf(w.n), last("seasons")], "shows", `${w.n}+ seasons`, w.score)
+			else if (w.mode === "max" && st.indexOf(w.n + 1) > 0) moreHit("seasons", [0, st.indexOf(w.n + 1)], "shows", `Up to ${w.n} seasons`, w.score)
+		} else if (w.kind === "length") {
+			const on = sameRange(ranges[w.who], w.range)
+			val({ key: `len:${w.who}:${w.range.join("-")}`, sub: "length", label: w.label, on, score: w.score, toggle: () => setKind(w.who, on ? ANY_LEN : w.range) })
+		} else if (w.kind === "finish") {
+			const st = SCALES.finish.stops
+			if (w.mode === "max") {
+				const j = st.findIndex((x) => x >= w.hours)
+				if (j > 0) moreHit("finish", [0, j], "shows", `Under ${st[j]} h to finish`, w.score)
+			} else {
+				const i = lastAtMost(st, w.hours)
+				if (i > 0 && i < last("finish")) moreHit("finish", [i, last("finish")], "shows", `${st[i]} h or more to finish`, w.score)
+			}
+		} else if (w.kind === "money") {
+			const k = w.what
+			const st = SCALES[k].stops
+			const word = k === "budget" ? "Budget" : "Box office"
+			if (w.mode === "min") {
+				const i = lastAtMost(st, w.dollars)
+				if (i > 0 && i < last(k)) moreHit(k, [i, last(k)], "money", `${word} ${money(st[i])}+`, w.score)
+			} else {
+				const j = st.findIndex((x) => x >= w.dollars)
+				if (j > 0) moreHit(k, [0, j], "money", `${word} under ${money(st[j])}`, w.score)
+			}
+		} else scoreHits(w)
+	}
+
+	// One hit per setting: a value reading and a name match of the same thing keep the better one.
+	const best = new Map<string, Hit>()
+	for (const h of out) {
+		const b = best.get(h.key)
+		if (!b || h.score > b.score) best.set(h.key, h)
+	}
+	// A lone letter that names no rating here ("a") leaves the tab as it is.
+	if (!names && best.size === 0) return { hits: [] as Hit[], active: false, loading: false, totals }
+	return { hits: [...best.values()], active, loading: titles.loading || people.loading, totals }
 }
 export type Hits = ReturnType<typeof useHits>

@@ -44,7 +44,7 @@ import {
 	useSlashKey,
 	whereIs,
 } from "./shell-parts"
-import { CONTENT_H, MatchBadge, type SectionBase, SubTabs, TabPanel } from "./shell-tabs"
+import { CONTENT_H, type SectionBase, SubTabs, TabPanel } from "./shell-tabs"
 import { FindBox, phoneFind } from "./header/field"
 import { useFind } from "./header/use-find"
 import { MOOD_CHOICES } from "./sections/mood/parts"
@@ -126,14 +126,14 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 		if (!open) setText(d.q ?? "")
 		t.goTo(slot)
 	}
-	// The bar's field takes focus on Search, unless the header search is in use (c: a tab tap shows its matches).
+	// The bar's field takes focus on Search, unless the header search is in use.
 	const finding = t.find !== ""
 	// biome-ignore lint/correctness/useExhaustiveDependencies: only when the tab changes
 	useEffect(() => {
 		if (seg === "search" && !finding) field.current?.focus()
 	}, [seg])
 	useSlashKey(() => pick("search"))
-	const f = useFind(d, pieces, lay.L, lay.order, t)
+	const f = useFind(d, pieces, lay.L, lay.order, { ...t, setText })
 	/** From Mood or Watch the field leads to Moods and titles; on Search it stays on the open sub-tab. */
 	const toSearch = () => {
 		if (seg === "search") return
@@ -167,7 +167,6 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 					active={seg}
 					onPick={pick}
 					onClearSearch={() => d.setQ(null)}
-					matches={f.segMatches}
 					searchInput={
 						open ? (
 							<>
@@ -225,9 +224,8 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 											pieces={pieces}
 											phone={false}
 											section={section}
-											results={f.results(seg, t.subs[seg], false)}
+											results={f.results(false)}
 											right={<FindBox value={t.find} onChange={t.setFind} nav={f.nav} onEmptyEscape={close} />}
-											matches={f.subMatches}
 											dim={f.dim}
 										/>
 									</motion.div>
@@ -251,8 +249,7 @@ function Tabs({
 	pieces,
 	seg,
 	onPick,
-	matches,
-}: { d: ProtoDiscover; pieces: Pieces; seg: SegKey; onPick: (k: SegKey) => void; matches?: Partial<Record<SegKey, number>> }) {
+}: { d: ProtoDiscover; pieces: Pieces; seg: SegKey; onPick: (k: SegKey) => void }) {
 	const { L, order, ctx } = useLayout()
 	return (
 		<div role="tablist" aria-label="Filters" className="flex gap-0.5 px-2 pt-1 pb-1">
@@ -285,7 +282,6 @@ function Tabs({
 								</span>
 							)}
 						</span>
-						{matches && <MatchBadge n={matches[k] ?? 0} className="absolute -top-0.5 right-0.5" />}
 					</motion.button>
 				)
 			})}
@@ -334,7 +330,7 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 	}
 	const button = variantOf(useLabChoice(), "titles").searchButton === true
 	const [findOpen, setFindOpen] = useState(false)
-	const f = useFind(d, pieces, lay.L, lay.order, t, () => setFindOpen(false))
+	const f = useFind(d, pieces, lay.L, lay.order, { ...t, setText }, () => setFindOpen(false))
 	const pf = phoneFind({ value: t.find, onChange: t.setFind, open: findOpen, setOpen: setFindOpen, nav: f.nav })
 	useEffect(() => {
 		if (!t.seg) setFindOpen(false)
@@ -354,7 +350,7 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 				label="Filters"
 				header={
 					<div>
-						<Tabs d={d} pieces={pieces} seg={shown} onPick={openAt} matches={f.segMatches} />
+						<Tabs d={d} pieces={pieces} seg={shown} onPick={openAt} />
 						{/* Round 21: every tab has the row, the search at its right end. */}
 						<SubTabs
 							id="lab-p"
@@ -367,7 +363,6 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 							phone
 							right={pf.button}
 							overlay={pf.overlay}
-							matches={f.subMatches}
 						/>
 					</div>
 				}
@@ -388,7 +383,7 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 								pieces={pieces}
 								phone
 								section={section}
-								results={f.results(shown, sub, true)}
+								results={f.results(true)}
 								dim={f.dim}
 								top={
 									shown === "search" &&

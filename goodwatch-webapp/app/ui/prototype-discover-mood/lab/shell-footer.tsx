@@ -210,6 +210,7 @@ export function Footer({
 			<Count d={d} />
 			<Recoveries d={d} phone={phone} />
 			<div
+				data-footer-chips
 				className="relative flex h-8 min-w-0 flex-1 items-center gap-1.5 overflow-x-auto overscroll-x-contain pr-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
 				style={{ maskImage: FADE, WebkitMaskImage: FADE }}
 			>

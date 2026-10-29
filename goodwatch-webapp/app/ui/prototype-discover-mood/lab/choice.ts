@@ -6,7 +6,6 @@ import type { SectionId, Viewer } from "./types"
 
 export const SECTIONS: { id: SectionId; name: string }[] = [
 	{ id: "layout", name: "Main tabs" },
-	{ id: "header", name: "Tab header and search" },
 	{ id: "titles", name: "Search: titles" },
 	{ id: "people", name: "Search: cast and crew" },
 	{ id: "taste", name: "Search: You" },
@@ -24,8 +23,6 @@ export const SECTIONS: { id: SectionId; name: string }[] = [
 export const DEFAULTS: Partial<Record<SectionId, string>> = {
 	// Round 6 and 7 verdicts (2026-10-28, 2026-10-29), locked in round 20.
 	layout: "c",
-	// Round 21 (open): how the header search shows its results.
-	header: "a",
 	titles: "g",
 	people: "c",
 	taste: "f",

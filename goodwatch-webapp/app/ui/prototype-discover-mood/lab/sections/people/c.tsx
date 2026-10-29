@@ -3,7 +3,7 @@
 // text still finds people while it's typed but not run. While a search runs, the columns show who is in its results
 // (in-results.ts), most titles first; with no search, well-known people. Picked people sit at the top right, "or".
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { PRIVATE } from "../../shell-parts"
 import type { SectionProps } from "../../types"
 import { LaneHead } from "../titles/shared"
@@ -11,10 +11,19 @@ import { type CountedPerson, useResultPeople } from "./in-results"
 import { NameRow, PickedOr, RowsLoading, byRole, roleFor, useFeatured } from "./roles"
 import { type Person, roleOf, usePeople } from "./shared"
 
+/** Round 22: the header search's "In Cast and crew" hands its text to Find a person once (read on mount). */
+let seed = ""
+export const seedFindPerson = (text: string) => {
+	seed = text
+}
+
 const titles = (n: number) => `${n} ${n === 1 ? "title" : "titles"}`
 
 export function PeopleC({ d, phone, text }: SectionProps) {
-	const [own, setOwn] = useState("")
+	const [own, setOwn] = useState(seed)
+	useEffect(() => {
+		seed = ""
+	}, [])
 	const bar = text.trim()
 	// The field wins; else the bar's text while it isn't the running search.
 	const name = own.trim() ? own : bar && bar !== d.q ? text : ""

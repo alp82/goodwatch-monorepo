@@ -800,3 +800,59 @@ Rough:
 - Lab-only counts (presets, You) aren't shown on hits; mixes show no count in the results (their counts are k's
   queries, not fired from the header).
 - Script: `~/.cache/ptshot/dm-r21.mjs` (V=abc SIZES=1440,390 SHOTS=dir QS="netflix|cozy|...").
+
+## Round 22 (2026-10-29): header search locked to a, values find filters, More titles and people
+
+Owner: "a is better. issues: some filters are not found, like 12 should be able to set age to 12 or 1999 to a released
+filter, etc. when i want to see more results for titles or cast i cant".
+
+Locked a (results in place). Removed: `sections/header/` (the lab choice, `v-header`, the b and c name pairs),
+`header/pulse.ts` (b's mark), b's ranked list and jump, c's "current tab first" and its match-count badges
+(`MatchBadge` on sub-tabs and phone tabs, the outline badge in the bar's `SegLabel`, `matches` props). `header` is gone
+from `SectionId`, `SECTIONS`, `DEFAULTS` and the registry, so no section has more than one variant and the lab bar
+shows only guest/member and hide. Mood's sub-tab names are the layout's own: "Ready mixes | Mix your own". `?v-header=`
+is ignored.
+
+Values (`header/values.ts` parses, `hits.tsx` turns each reading into a result in its tab's column). A value result is
+an ordinary chip (`data-hit-value`) in plain words under its sub-tab label, and it toggles with the tab's own setter,
+so the tab, badges and footer chips agree. At most 4 value results (`VALUE_CAP`), likeliest first. A value result
+and a name match of the same setting share a key (`years:1990-1999`, `len:movie:0-90`, `more:seasons:7-9`,
+`score:80`, `source:imdb:80`, `age:14`) and only the better one shows. A value counts from one character ("8", "r");
+names still need two. Readings:
+
+- Year `1999`: Released in 1999, From 1999, Up to 1999, The 1990s. With a word: `from`/`since` 1999, `after`, `before`,
+  `until`/`up to`, `in`/`released` 1999 give that one (plus the decade after `in`).
+- Decade `1990s`, `90s`, `'90s`, `the 90s` (two digits: 00s to 20s are 2000s to 2020s, 30s to 90s are 1900s):
+  The 1990s; `early`/`mid`/`late 90s` give a third of it. Span `1990-1999`, `1990 to 1999`, `1990-99`: that range
+  (shown as "The 1990s" when it is one decade, else "Released 1990 to 2005").
+- Length `90 min`, `2h`, `2h30`, `over 2 hours`, `under 90`, `about 45 min`: Movies (60 min and up) and Episodes
+  (60 min and down) under N, N or more, or about N (10 either side). Bare round numbers (45, 60, 90, 105, 120, 150,
+  180, and multiples of 10 from 100 to 240) also offer "Movies under N", ranked below the other readings. `100m`
+  alone is minutes.
+- Hours past 4 h (`100h`, `under 30 hours`): Time to finish, snapped to its stops (Under 100 h, 100 h or more).
+- Money `$100m`, `100m budget`, `budget 50m`, `$1b box office`, `under $5m`, `300m` (minutes past 240 read as
+  millions): Budget and Box office, snapped to their stops ("Budget $100M+", "Box office $1B+", "Budget under $5M");
+  a money word picks one, else both (box office first past $300M).
+- Ages and ratings: a bare number up to 21 (`12`, `8`, `16`), `12+`, `fsk 16`, `usk 12`, `ab 12`, `pegi 16`: the
+  nearest step of the list's rating ladder (ties to the lower; at most 3 years off), "Up to PG-13 · TV-14" in the US,
+  "Up to FSK 12" in Germany. Rating names (`pg-13`, `r`, `tv-ma`, `nc-17`, `12a`, `u`): the ladder's own label or
+  show label first, else the age the name stands for (US ages) on the local ladder. One letter only matches a label
+  the local ladder has.
+- Seasons: a bare 1 to 15 that is a step of the seasons scale (1 to 8, 10, 15) also offers "N+ seasons" ("One
+  season" for 1), ranked below the age; `8 seasons`, `3+ seasons`, `up to 3 seasons` give that one.
+- Scores: a bare 50 to 100, `over 80`, `80%`, `7.5`: the exact steps that exist, GoodWatch (60, 70, 80), each source's
+  steps (IMDb 6.5/7.5/8.0, Tomatometer 60/80/90, Popcornmeter 70/85/90, Metascore 60/75/81); `%` only the two Rotten
+  Tomatoes ones, `7.5` only IMDb and the Metacritic user score. No snapping, so `95` gives nothing.
+
+More (`results.tsx` `MoreLine`, under each titles or people group): primary is "More titles" / "More people" with
+"4 of 13" (the title search answers one page, so "20+" when it is full; people "100+" at the cast search's cap). It
+grows the group in place, 4 to 12, then 12 more each tap; inside the desktop 400 px content area (it scrolls there),
+so nothing outside the results moves. Secondary, quiet at the line's right: "In Titles" / "In Cast and crew" ends the
+search and opens that sub-tab with the text in its field (Titles: the bar's Search field, as typed and not run;
+Cast and crew: Find a person, handed over once by `seedFindPerson`). Phones close the find field there. New text
+starts at 4 again. Enter with nothing highlighted now picks the best-scoring result, so `1999` picks Released in 1999
+and not a title called 1999.
+
+Rough: value chips show no counts. A value whose sub-tab is hidden (Budget with shows only, Age without a ladder) is
+dropped before the cap. Footer chips carry `data-footer-chips` for the script.
+Script: `~/.cache/ptshot/dm-r22.mjs` (SIZES=1440,390 SHOTS=dir).

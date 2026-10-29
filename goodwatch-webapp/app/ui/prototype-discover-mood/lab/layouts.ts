@@ -47,7 +47,7 @@ const TITLES: Sub = {
 }
 const PEOPLE: Sub = { id: "people", label: "Cast and crew", slots: ["people"] }
 // Round 21: Mood's two views are its sub-tabs. The picks count on the second, where they are made (and where a chip
-// opens); the header variant names the pair (sections/header).
+// opens). Round 22 locked the names.
 const MOOD: Sub[] = [
 	{ id: "mixes", label: "Ready mixes", slots: [], view: "mixes" },
 	{ id: "choose", label: "Mix your own", slots: ["moods", "themes", "styles", "genres"], view: "choose" },

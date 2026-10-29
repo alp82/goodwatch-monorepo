@@ -9,8 +9,8 @@ import type { Pieces } from "./shell-parts"
 
 export type { Pieces }
 
-/** "layout" is the main tabs choice (round 15), "header" the tab header and search (round 21); neither is a panel section. */
-export type SectionId = "layout" | "header" | "titles" | "people" | "taste" | "mood" | "services" | "origin" | "length" | "scores" | "released" | "age" | "more"
+/** "layout" is the main tabs choice (round 15), not a panel section. The header search (round 21, locked to a in round 22) is shell machinery in lab/header/. */
+export type SectionId = "layout" | "titles" | "people" | "taste" | "mood" | "services" | "origin" | "length" | "scores" | "released" | "age" | "more"
 
 export type Viewer = "guest" | "member"
 

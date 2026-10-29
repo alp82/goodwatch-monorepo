@@ -11,7 +11,6 @@ import type { ProtoDiscover } from "../kit"
 import { useLabChoice } from "./LabBar"
 import { pick } from "./registry"
 import { type SubId, layoutFor } from "./layouts"
-import { type HeaderKey, MOOD_NAMES } from "./sections/header"
 import { type Pieces, type Sub, subCount, useKeepTop } from "./shell-parts"
 import type { SectionId, SectionProps } from "./types"
 
@@ -32,7 +31,6 @@ export function SubTabs({
 	phone,
 	right,
 	overlay,
-	matches,
 }: {
 	id: string
 	d: ProtoDiscover
@@ -47,8 +45,6 @@ export function SubTabs({
 	right?: ReactNode
 	/** Phones: the open field, over the whole row. */
 	overlay?: ReactNode
-	/** Header c: how many search results each sub-tab holds. */
-	matches?: Partial<Record<string, number>>
 }) {
 	const row = useRef<HTMLDivElement>(null)
 	const choice = useLabChoice()
@@ -77,7 +73,6 @@ export function SubTabs({
 				{subs.map((s) => {
 					const on = s.id === active && !dim
 					const n = subCount(d, pieces, s, ctx)
-					const m = matches?.[s.id] ?? 0
 					return (
 						<button
 							key={s.id}
@@ -96,7 +91,6 @@ export function SubTabs({
 									{n}
 								</span>
 							)}
-							{matches && <MatchBadge n={m} className="absolute top-1 right-0" />}
 							{on && (
 								<motion.span
 									layoutId={`${id}-sub`}
@@ -111,18 +105,6 @@ export function SubTabs({
 			{right && <div className={phone ? "shrink-0 pr-1.5 pl-1" : "ml-4 w-[min(320px,34%)] shrink-0"}>{right}</div>}
 			{overlay}
 		</div>
-	)
-}
-
-/** Header c: a search match count, in a corner so nothing moves. An outline, not the amber fill of a pick count. */
-export function MatchBadge({ n, className = "" }: { n: number; className?: string }) {
-	return (
-		<span
-			aria-hidden={n === 0}
-			className={`pointer-events-none grid h-4 min-w-4 place-items-center rounded-full bg-[#0b1120] px-1 text-[10px] font-bold tabular-nums text-amber-200 ring-1 ring-amber-400/80 transition-[opacity,transform] duration-150 ${n > 0 ? "scale-100 opacity-100" : "scale-75 opacity-0"} ${className}`}
-		>
-			{n > 0 ? (n > 99 ? "99+" : n) : ""}
-		</span>
 	)
 }
 
@@ -218,14 +200,11 @@ function CountSegmented<T extends string>({
 	)
 }
 
-/** A sub-tab's label: Mood's two views as the header variant names them, else the chosen variant's own, else the shell's. */
+/** A sub-tab's label: the chosen variant's own, else the shell's (Mood's two views and the "more" parts keep the layout's). */
 export function useSubLabel() {
 	const choice = useLabChoice()
-	const names = MOOD_NAMES[pick(choice, "header").key as HeaderKey] ?? MOOD_NAMES.a
 	return (sub: Sub): string => {
-		if (sub.view) return names[sub.view]
-		// The "more" section's parts keep the layout's labels.
-		if (sub.part) return sub.label
+		if (sub.view || sub.part) return sub.label
 		return pick(choice, sub.id as SectionId).label ?? sub.label
 	}
 }
@@ -274,7 +253,6 @@ export function TabPanel({
 	top,
 	results,
 	right,
-	matches,
 	dim,
 }: {
 	id: string
@@ -290,8 +268,7 @@ export function TabPanel({
 	results: ReactNode | null
 	/** Desktop: the header search field. Phones place the row in the sheet header. */
 	right?: ReactNode
-	matches?: Partial<Record<string, number>>
-	/** The results dim the sub-tabs (header a and b). */
+	/** The header search's results dim the sub-tabs. */
 	dim: boolean
 }) {
 	const open = subs.find((s) => s.id === sub) ?? subs[0]
@@ -324,7 +301,7 @@ export function TabPanel({
 		)
 	return (
 		<div className="flex min-h-0 flex-col">
-			<SubTabs id={id} d={section.d} pieces={pieces} subs={subs} active={open.id} onSub={onSub} dim={dim} phone={false} right={right} matches={matches} />
+			<SubTabs id={id} d={section.d} pieces={pieces} subs={subs} active={open.id} onSub={onSub} dim={dim} phone={false} right={right} />
 			<ContentArea id={results ? "find" : open.id}>{body}</ContentArea>
 		</div>
 	)
