@@ -767,7 +767,7 @@ test("LRU entry and byte bounds preserve recently served entries and account exa
 	assert.equal(bytes.cache.stats().entries, 2)
 	assert.equal(
 		bytes.cache.stats().bytes,
-		2148 + 2 * Buffer.byteLength("<html>complete</html>:en-US"),
+		2148,
 	)
 	for (const limits of [{ MAX_HTML_BYTES: 1 }, { MAX_ENTRY_BYTES: 1 }]) {
 		const small = await fixture(t, { limits })

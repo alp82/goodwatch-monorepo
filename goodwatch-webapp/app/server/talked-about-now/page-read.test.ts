@@ -4,6 +4,7 @@ import type { TalkedRow } from "../../domain/talked-about-now.ts"
 import {
 	createHotPageRead,
 	HOT_PAGE_BUDGET_MS,
+	HOT_PAGE_RETRY_SECONDS,
 	HotPageUnavailable,
 } from "./page-read.ts"
 
@@ -93,4 +94,31 @@ it("allows a normal two-second cold read to complete", async () => {
 	)
 	await advance(2_000)
 	assert.equal(await result, row)
+})
+
+it("retries a cold failure after the advertised five seconds", async () => {
+	const cache = createHotPageRead()
+	const load = mock.fn(async () => {
+		throw new Error("unavailable")
+	})
+	await assert.rejects(cache.get(load), HotPageUnavailable)
+	await advance(HOT_PAGE_RETRY_SECONDS * 1000 - 1)
+	await assert.rejects(cache.get(load), HotPageUnavailable)
+	assert.equal(load.mock.callCount(), 1)
+	await advance(1)
+	assert.equal(await cache.get(async () => row), row)
+})
+it("keeps a minute of backoff only while a stale ranking remains usable", async () => {
+	const cache = createHotPageRead()
+	await cache.get(async () => row)
+	await advance(1_190_000)
+	const load = mock.fn(async () => {
+		throw new Error("unavailable")
+	})
+	assert.equal(await cache.get(load), row)
+	await advance(5_000)
+	assert.equal(await cache.get(load), row)
+	assert.equal(load.mock.callCount(), 1)
+	await advance(5_001)
+	assert.equal(await cache.get(async () => row), row)
 })

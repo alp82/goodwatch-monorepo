@@ -3,7 +3,8 @@ import type { TalkedRow } from "../../domain/talked-about-now.ts"
 export const HOT_PAGE_BUDGET_MS = 5_000
 const FRESH_MS = 10 * 60 * 1000
 const STALE_MS = 10 * 60 * 1000
-const RETRY_MS = 60 * 1000
+export const HOT_PAGE_RETRY_SECONDS = 5
+const STALE_RETRY_MS = 60 * 1000
 
 export class HotPageUnavailable extends Error {
 	constructor() {
@@ -16,6 +17,7 @@ export function createHotPageRead() {
 	let value: { row: TalkedRow | null; at: number } | undefined
 	let pending: Promise<TalkedRow | null> | undefined
 	let retryAt = 0
+	let staleRetryAt = 0
 	let generation = 0
 	return {
 		async get(
@@ -23,7 +25,8 @@ export function createHotPageRead() {
 			now = Date.now(),
 		): Promise<TalkedRow | null> {
 			if (value && now - value.at < FRESH_MS) return value.row
-			if (!pending && now >= retryAt) {
+			const usableStale = value && now - value.at < FRESH_MS + STALE_MS
+			if (!pending && now >= (usableStale ? staleRetryAt : retryAt)) {
 				const started = generation
 				const work = Promise.resolve().then(load)
 				pending = work
@@ -33,7 +36,10 @@ export function createHotPageRead() {
 							if (generation === started) value = { row, at: Date.now() }
 						},
 						() => {
-							if (generation === started) retryAt = Date.now() + RETRY_MS
+							if (generation === started) {
+								retryAt = Date.now() + HOT_PAGE_RETRY_SECONDS * 1000
+								staleRetryAt = Date.now() + STALE_RETRY_MS
+							}
 						},
 					)
 					.finally(() => {
@@ -64,6 +70,7 @@ export function createHotPageRead() {
 			value = undefined
 			pending = undefined
 			retryAt = 0
+			staleRetryAt = 0
 		},
 	}
 }

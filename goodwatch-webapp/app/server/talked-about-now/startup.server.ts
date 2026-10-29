@@ -1,5 +1,7 @@
 import { processRole } from "../role.server.ts"
 
+import { talkedAboutNowMode } from "./flags.server.ts"
+
 let started = false
 
 /** Start the shared ranking read before the first page request, without delaying server startup. */
@@ -12,7 +14,8 @@ export function startHotOnSocialsWarmup(
 		started ||
 		env.NODE_ENV !== "production" ||
 		env.NODE_TEST_CONTEXT ||
-		processRole(env) === "search"
+		processRole(env) === "search" ||
+		talkedAboutNowMode("row", env) === "off"
 	)
 		return
 	started = true

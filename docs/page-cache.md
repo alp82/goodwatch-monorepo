@@ -160,9 +160,9 @@ A response is stored only when all of these hold:
   Their lifetime is 10 seconds fresh and 10 more seconds stale. Hidden lists and member views send
   `private, no-store`.
 - **The stored bytes:** the HTML compressed once with Brotli (quality 5) and once with gzip (level 6), on the thread
-  pool, after the response of the render. The store also keeps the original HTML, so a client that accepts neither
-  encoding gets those bytes directly. A hit never waits for decompression on the shared thread pool. All three
-  bodies count toward the existing entry and total byte limits; fewer pages fit in the same 128 MB.
+  pool, after the response of the render. A client that accepts neither encoding gets the gzip body decompressed
+  synchronously on the main thread. A hit never waits for decompression on the shared thread pool. The store
+  retains only the two compressed bodies.
 - **The stored headers:** every header of the original response except its render timings, plus `Accept-Encoding`
   in `Vary`, an `ETag`, and `Age`. A `keyed` page is replayed with `private, max-age=0` and `Vary: Accept-Language, Accept-Encoding`.
 - **`ETag`:** from the HTML, with a suffix per encoding. `If-None-Match` answers 304. `HEAD` answers the headers.
@@ -297,15 +297,14 @@ getting requests, and up to 2.5 hours for the first request after a quiet period
 
 | Limit | Value | Setting |
 | --- | --- | --- |
-| Stored bytes (HTML plus Brotli plus gzip plus 1 KB per page) | 128 MB | `PAGE_CACHE_MAX_BYTES` |
+| Stored bytes (Brotli plus gzip plus 1 KB per page) | 128 MB | `PAGE_CACHE_MAX_BYTES` |
 | Stored pages | 2,000 | `PAGE_CACHE_MAX_ENTRIES` |
 | One page, all stored encodings and overhead | 4 MB | |
 | Admission counters | 20,000 keys | |
 | Renders of one key in flight | 4 | |
 
-Each page counts its original HTML, both compressed bodies, and 1 KB of header overhead. Retaining the original
-HTML reduces the number of pages that fit compared with the earlier compressed-only store. The least recently
-used page goes first; the total byte limit remains 128 MB.
+Each page counts both compressed bodies and 1 KB of header overhead. The least recently used page goes first;
+the total byte limit remains 128 MB.
 
 ## Reset
 

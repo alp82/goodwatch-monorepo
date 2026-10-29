@@ -216,7 +216,9 @@ export function getTalkedAboutNow(
 
 const hotPageRead = createHotPageRead()
 
-/** Share a complete ranking and refresh it without blocking the page. Cold reads have a five-second budget. */
+/** Share a complete ranking and refresh it without blocking the page. Cold reads have a five-second budget.
+ * Rejects when no usable ranking is available and the read fails or exceeds its budget.
+ */
 export function getHotOnSocials(now = Date.now(), reads: Reads = crateReads): Promise<TalkedRow | null> {
 	return hotPageRead.get(
 		() => readTalkedAboutNow(reads, { board: PAGE_BOARD_SIZE, items: PAGE_ITEMS_PER_TITLE, oneVideo: false }),

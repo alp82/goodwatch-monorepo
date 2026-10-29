@@ -258,7 +258,7 @@ const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 		hotTitles(
 			await (
 				await import("../talked-about-now/start-row.server.ts")
-			).getHotOnSocials(),
+			).getHotOnSocials().catch(() => null),
 		),
 	searchTitles: async (query, user, onReading) =>
 		(await import("./search.server.ts")).searchTitles(query, user, {

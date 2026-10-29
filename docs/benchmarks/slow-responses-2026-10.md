@@ -17,15 +17,17 @@ A show request has more waits: correction-reset polling before the page-cache lo
 
 ## Changes
 
-The page cache retains the original HTML alongside Brotli and gzip. An uncompressed hit writes those bytes directly. The original bytes count toward both the 4 MB entry limit and the 128 MB store limit, so cache memory stays bounded and fewer pages fit. Member bypass, admission, identity, validation, and expiry rules stay the same.
+The page cache retains Brotli and gzip only. An uncompressed hit uses `gunzipSync` on the main thread, so it never queues behind unrelated worker-pool work. Only the compressed bodies and 1 KB of header overhead count toward the 4 MB entry limit and the 128 MB store limit. Member bypass, admission, identity, validation, and expiry rules stay the same.
 
-Hot on socials keeps its successful ranking for ten minutes, then serves it for at most ten more minutes while one shared refresh runs. A failed refresh backs off for a minute and does not extend that deadline. Production processes that serve pages start the shared ranking read during server startup without waiting for it. Search processes and tests skip this warmup. An early request joins that read. A cold or fully expired request allows five seconds for the read, so the two-second local cold-read fixture can complete successfully. A rejected read or a read still unavailable after five seconds returns a private 503 with `Retry-After: 2`. A timed-out read can finish for a subsequent request. A wrong-title report resets the ranking and prevents an older in-flight read from restoring it.
+Hot on socials keeps its successful ranking for ten minutes, then serves it for at most ten more minutes while one shared refresh runs. A failed refresh backs off for a minute while stale data remains usable and does not extend that deadline. Without a usable cached ranking, failures back off for five seconds. Production processes that serve pages start the shared ranking read during server startup without waiting for it, when the row mode is `on` or `preview`. Search processes, tests, and processes with the row mode off skip this warmup. An early request joins that read. A cold or fully expired request allows five seconds for the read, so the two-second local cold-read fixture can complete successfully. A rejected read or a read still unavailable after five seconds returns a private 503 with `Retry-After: 5`. A timed-out read can finish for a subsequent request. A wrong-title report resets the ranking and prevents an older in-flight read from restoring it.
 
 The freshness limits compose: **10 minutes fresh + 10 minutes stale for ranking data + 5 minutes fresh + 5 minutes stale for HTML**. A rendered page can therefore contain ranking data up to about 30 minutes old. Failed refreshes never restart the ranking's freshness clock. Startup warmup reduces cold first-request waits, but does not gate readiness or guarantee a successful page while the store is unavailable.
 
 Document responses now preserve loader `Server-Timing`, including thrown Responses, and include the React `render` duration. The root loader contributes session and locale timing. Cache hits describe their current cache result instead of replaying the original render's timings. Loader durations can overlap and must not be added together.
 
 ## Local measurements
+
+The initial before/after measurements below used the first fix, which retained HTML. Follow-up 2 replaces that retention with synchronous gunzip and measures its cost separately.
 
 Both production builds used the same isolated catalog and title snapshot, separate disposable Valkey clusters, empty external keys, an explicit `env -i` allowlist, and a TCP preload that blocks non-loopback egress. A loopback SQL proxy allowed reads only and delayed the current buzz-snapshot read by two seconds. It returned a fixture ranking with one title. Another loopback control occupied four worker-pool threads with crypto work. These are fault-injection measurements, not production latency forecasts.
 
@@ -88,3 +90,26 @@ After the owner deploys the code through the normal process, repeat any slow fin
 The original 400 ms budget deliberately returned 503 for a healthy two-second read. The follow-up raises that budget to five seconds and starts the read before requests arrive. The earlier production sweep measured Hot on socials responses at 77 to 170 ms. A follow-up production GET returned 200 in 194 ms with a page-cache miss. Neither the original final documents nor this follow-up response exposed `Server-Timing`, so these observations cannot isolate a production cold ranking read. Production timing seen on redirects describes other routes, not the Hot on socials store. The five-second budget accommodates the measured two-second local read with headroom; production cold-store latency still needs verification after deployment.
 
 The follow-up production build passed the same 342-document HTML gate with zero differences. The separately enabled Hot on socials fixture also matches the original successful normalized HTML. With a two-second snapshot delay, startup began the ranking read 152 ms before the first page request. That request returned 200 in 1,847 ms, with `data;dur=1814.3` and `render;dur=12.9`. The next request returned 200 in 12 ms. These final-header measurements exclude Early Hints. They verify that a healthy delayed read no longer becomes a cold-start 503; they do not measure a production cold read.
+
+
+## Follow-up 2 verification
+
+The cache stores only Brotli and gzip again. The identity-response pool-contention regression passes with `gunzipSync`. HEAD and conditional 304 responses still skip decompression. The memory-accounting test checks compressed bytes plus header overhead.
+
+The largest page observed as a cache hit in the earlier 116-URL production sweep was `/movies/moods`, at 2,023,529 raw bytes. A new low-rate browser GET returned the same raw size; this new response was a cache miss. The local probe recompressed its HTML with the cache's gzip level 6 and Brotli quality 5, then timed 1,000 synchronous gunzip operations after 100 warmups on Node v24.15.0.
+
+| Measurement | Result |
+| --- | --- |
+| Raw HTML | 2,023,529 B |
+| Stored gzip | 239,015 B |
+| Stored Brotli | 123,795 B |
+| Stored entry, including 1 KB overhead | 363,834 B |
+| Synchronous gunzip median | 1.43 ms |
+| Synchronous gunzip p95 | 2.27 ms |
+| Synchronous gunzip maximum | 2.87 ms |
+
+These timings measure main-thread decompression on the development machine, excluding network transfer. This is the largest cached page observed in the sweep, not an inventory of every process's production cache. It fits both the 8 MB raw admission limit and the 4 MB compressed entry limit. The raw buffer exists for each identity response and is not retained in the store. Large identity responses therefore add a small main-thread cost without reducing cache capacity.
+
+Startup now checks the same row feature mode used by the page, including the unset/off case. Discord's `/hot` catches ranking failures and retains its empty-result behavior. The other callers already handle failures: the page returns a private retryable 503, the member start page logs and omits the row, and startup catches its warmup rejection. The ranking reader documents that it can reject. Five-second cold backoff and `Retry-After: 5` agree, including when a formerly stale ranking expires during the longer refresh backoff. The MCP guest person reader uses the shared positive 32-bit ID guard before the people reader runs.
+
+All 249 affected Node tests and 17 HTML-comparator tests pass. Typecheck still reports 186 existing diagnostics on both this branch and `origin/main`, with no new or removed diagnostics after normalizing source positions. The isolated production-build HTML gate against the preceding follow-up commit passes 342 documents across 114 URLs and three clients, with zero document or route-manifest differences. The fixture still has no people and leaves Hot on socials disabled; focused tests cover its startup and failure behavior. No production stores or infrastructure settings were changed, and nothing was deployed.

@@ -42,7 +42,7 @@ import { createHash } from "node:crypto"
 import { subscribe } from "node:diagnostics_channel"
 import type { IncomingMessage, Server, ServerResponse } from "node:http"
 import { promisify } from "node:util"
-import { constants, brotliCompress, gzip } from "node:zlib"
+import { constants, brotliCompress, gzip, gunzipSync } from "node:zlib"
 import { currentAssetBase } from "./asset-address.server.ts"
 import { gateAnswer } from "./browser-gate.server.ts"
 import {
@@ -213,8 +213,6 @@ export type PageEntry = PageKey & {
 	staleUntil: number
 	br: Variant
 	gzip: Variant
-	// Keep identity bytes so a cache hit never queues decompression behind unrelated pool work.
-	identityBody: Buffer
 	identityLength: number
 	identityEtag: string
 	headers: HeadersObject
@@ -508,7 +506,8 @@ export function createPageCache(options: PageCacheOptions = {}) {
 			response.end(matched || request.method === "HEAD" ? undefined : body)
 		}
 		if (matched || request.method === "HEAD" || variant) send(variant?.body)
-		else send(entry.identityBody)
+		// Synchronous decompression avoids waiting behind unrelated worker-pool jobs.
+		else send(gunzipSync(entry.gzip.body))
 	}
 	function handle(
 		request: IncomingMessage,
@@ -759,7 +758,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 					(compressed) => {
 						if (!alive(flight) || draining()) return
 						if (unhealthyMedia()) return refuse("media_read_error")
-						const size = html.length + compressed.br.length + compressed.gzip.length + 1024
+						const size = compressed.br.length + compressed.gzip.length + 1024
 						if (size > limits.MAX_ENTRY_BYTES) return refuse("too_large")
 						const storedAt = flight.startedAt
 						const lifetime = pageLifetime(
@@ -798,7 +797,6 @@ export function createPageCache(options: PageCacheOptions = {}) {
 							staleUntil,
 							br: variant(compressed.br, "br", "-br"),
 							gzip: variant(compressed.gzip, "gzip", "-gz"),
-							identityBody: html,
 							identityLength,
 							identityEtag: `"${tag}"`,
 							headers: storedHeaders,
