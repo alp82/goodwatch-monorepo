@@ -5,9 +5,13 @@ library reads, and skip list poster reads on tabs that do not render lists. The 
 route sends only the title previews its components use. Visible content, interactive
 rankings, decade panels, metadata, and cache policy stay the same.
 
-This work addresses [ticket 11 of #784](https://github.com/alp82/goodwatch-monorepo/issues/784).
-The production target of less than 300 ms of data time for a large profile remains
-unverified. The isolated fixture is much smaller than the production subject.
+This work reduces shared profile reads and Stats payload size for
+[ticket 11 of #784](https://github.com/alp82/goodwatch-monorepo/issues/784).
+It does not address the Stats server-time target yet. Production showed
+`/u/alperortac/stats` with `data;dur=2208` versus `/u/alperortac/seen` with
+`data;dur=59`, with the same shell and library. That difference points to
+Stats-only reads. Local Stats timings are unchanged within measurement variation.
+The isolated fixture is much smaller than the production subject.
 
 ## Baseline evidence
 
@@ -49,6 +53,13 @@ the loader graph and a controlled test of the actual library and score loader.
 | Stats | Fingerprint, sides and everyone portraits, stats aggregates, optional visitor comparison | Existing parallel reads remain. The loader projects their results before serialization. |
 | Tropes | Owner's cached pool, catalog/trope identity reads on a cold pool, optional descriptions | Existing pool cache and read queue remain. The shared shell skips unrelated list cards. |
 
+Scored-title backdrops now bypass the display cache. Each library rebuild reads
+Crate directly in batches of 500, even when those titles have warm display entries.
+For 1,000 scores of one media type, that means two `IN(500)` reads. Combining the
+fields removes a separate backdrop pass but gives up display-cache reuse on library
+rebuilds. The in-process library signature cache still avoids reads when unchanged.
+This tradeoff has not been measured with a representative large isolated profile.
+
 The query-scheduling test gates the actual score-card query. Both first-date queries
 must start before that gate opens, and the completed library must read the scored
 movie only once while keeping its backdrop and score. It fails on untouched
@@ -56,8 +67,22 @@ movie only once while keeping its backdrop and score. It fails on untouched
 
 A fully cold portrait still computes recommendations that its public view later
 removes. A fully cold stats aggregate still reads details, credits and people through
-the existing four-query queue. This ticket does not establish which of those paths
-accounts for the production outliers. No direct production database access was used.
+the existing four-query queue.
+
+The Stats loader now records duration-only `Server-Timing` entries for
+`stats_details`, `stats_tropes`, `stats_credits`, `stats_people`,
+`portrait_fingerprint`, `portrait_sides`, and `portrait_everyone`. Cache lookups
+record `stats_cache_hit` or `stats_cache_miss`, and
+`portrait_<tab>_cache_hit` or `portrait_<tab>_cache_miss` for each portrait.
+Names contain no handles, IDs, keys, or values. Detail and trope durations sum
+movie and show batch groups, including queue waits, so overlapping entries are
+not additive. Aggregate cache hits skip the underlying reads. A request joining
+an aggregate computation sees its own cache miss; read timings belong to the
+request that started the computation. A missing catalog snapshot skips portrait
+cache lookups. The page cache drops all per-request timing headers and emits only
+its own cache timing on a hit. These entries prepare the next production read;
+they do not establish which path accounts for the outliers. No direct production
+database access was used.
 
 ## Cache identity and invalidation
 
@@ -177,6 +202,28 @@ Relevant checks:
 - No script, style, font or image on the landing surfaces named by the conditional
   asset-budget rule changed. No asset-budget limit was raised.
 
+## Follow-up validation
+
+The follow-up adds reset coverage for `getProfileSummary`, verifies that Overview
+and Lists pass `listCards: true`, exercises cold and warm Stats attribution, and
+checks that the real portrait cache lookup receives the request. The page-cache
+test checks identity, Gzip, and Brotli hits: each drops the rendering request's
+Stats durations and cache outcomes.
+
+- All 194 affected profile, share-list, request-work, and page-cache tests pass.
+- All 18 HTML equivalence tests pass.
+- TypeScript still reports the same 178 diagnostics as `origin/main`, with identical
+  output after normalizing line and column offsets.
+- The HTML gate covers 372 documents, including eight synthetic profile tabs.
+  Both self-checks have zero differences. The strict cross-build gate exits 1 for
+  three Stats payload differences already introduced by this branch. The exact
+  Stats projection comparison passes all 372 documents.
+- The captured production payload projection reproduces the byte counts above.
+  No new production request or production datastore access was needed.
+
+These checks verify attribution and response equivalence. They do not measure a
+Stats server-time improvement or validate the large-profile 300 ms target.
+
 ## Reproduce the payload checks
 
 Use Node.js 24 and the existing npm dependencies in `goodwatch-webapp`.
@@ -206,5 +253,5 @@ browser check.
 
 The owner still needs a production-scale isolated profile fixture, including episode
 history, credits and trope data, to verify the 300 ms cold-data target. Production
-per-query attribution and post-deployment timing remain open. No changes were pushed,
+read timings from the new instrumentation and post-deployment timing remain open. No changes were pushed,
 deployed, or applied to production services.

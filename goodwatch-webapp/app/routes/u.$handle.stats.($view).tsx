@@ -25,6 +25,7 @@ import {
 	buildProfileTaste,
 	theirLine,
 } from "~/ui/profile/taste/model"
+import { timeRequestWork } from "~/utils/request-work"
 import { languageName, regionName } from "~/utils/display-names"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -54,12 +55,33 @@ const load = (args: LoaderFunctionArgs) => {
 				})
 			const [fingerprint, sides, everyone, raw, compare] = await Promise.all([
 				orNull(
-					getProfilePortrait(ownerId, "fingerprint", { scores }),
+					timeRequestWork(args.request, "portrait_fingerprint", () =>
+						getProfilePortrait(ownerId, "fingerprint", {
+							scores,
+							request: args.request,
+						}),
+					),
 					"fingerprint",
 				),
-				orNull(getProfilePortrait(ownerId, "sides", { scores }), "sides"),
-				orNull(getProfilePortrait(ownerId, "everyone", { scores }), "crowd"),
-				orNull(getTasteStats(ownerId), "stats"),
+				orNull(
+					timeRequestWork(args.request, "portrait_sides", () =>
+						getProfilePortrait(ownerId, "sides", {
+							scores,
+							request: args.request,
+						}),
+					),
+					"sides",
+				),
+				orNull(
+					timeRequestWork(args.request, "portrait_everyone", () =>
+						getProfilePortrait(ownerId, "everyone", {
+							scores,
+							request: args.request,
+						}),
+					),
+					"crowd",
+				),
+				orNull(getTasteStats(ownerId, args.request), "stats"),
 				shell.viewer === "member"
 					? orNull(
 							getMemberCompare(viewerId, ownerId, shell.visibility),

@@ -1,0 +1,170 @@
+import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import path from "node:path"
+import { test } from "node:test"
+import { build } from "esbuild"
+
+// Bundle real loaders and aggregate reads with in-memory external services.
+async function fixture(entry: string, modules: Record<string, string>) {
+	const app = path.resolve("app")
+	const result = await build({
+		stdin: {
+			contents: `export * from ${JSON.stringify(
+				`./${entry}`
+			)}; export { requestServerTiming } from "~/utils/request-work"`,
+			resolveDir: app,
+		},
+		bundle: true,
+		write: false,
+		platform: "node",
+		format: "esm",
+		alias: { "~": app },
+		plugins: [
+			{
+				name: "profile-fixture",
+				setup(builder) {
+					builder.onResolve({ filter: /.*/ }, (args) => {
+						const resolved = args.path.startsWith("~/")
+							? args.path.slice(2)
+							: args.path.startsWith(".")
+							? path
+									.relative(app, path.resolve(args.resolveDir, args.path))
+									.replace(/\.ts$/, "")
+							: args.path
+						if (resolved in modules)
+							return { path: resolved, namespace: "fixture" }
+						if (resolved.startsWith("ui/") || resolved === "@remix-run/react")
+							return { path: "empty", namespace: "fixture" }
+					})
+					builder.onLoad(
+						{ filter: /.*/, namespace: "fixture" },
+						({ path: name }) => ({ contents: modules[name] ?? "" })
+					)
+					builder.onLoad(
+						{ filter: /routes\/u\..*\.tsx$/ },
+						({ path: filename }) => {
+							const source = readFileSync(filename, "utf8")
+							return {
+								contents: source.slice(
+									0,
+									source.indexOf("\n", source.indexOf("export const loader ="))
+								),
+								loader: "tsx",
+							}
+						}
+					)
+				},
+			},
+		],
+	})
+	return import(
+		`data:text/javascript;base64,${Buffer.from(
+			result.outputFiles[0].text
+		).toString("base64")}`
+	)
+}
+
+const services = {
+	"server/userData.server": `export const getUserData = async () => ({scores: {'movie-1': {score: 9}}, watchState: {}})`,
+	"utils/helpers": `export const titlePath = () => '/movie/1'`,
+	"server/profile/catalog.server": `export const readProfileCatalog = async (sql) => sql.includes('FROM movie') ? [{tmdb_id: 1, title: 'One', tropes: []}] : []`,
+	"server/profile/taste-stats-cache.server": `let saved; export const readCachedTasteStats = async () => saved; export const writeCachedTasteStats = async (_, value) => { saved = value }`,
+	"utils/headers": `export const pageHeaders = () => ({})`,
+}
+
+test("Stats loader emits duration-only attribution and warm stats skip aggregate reads", async () => {
+	const module = await fixture("routes/u.$handle.stats.($view).tsx", {
+		...services,
+		"server/media-payload.server": `export { withRequestTiming as presentCatalogLoader } from '~/utils/request-work'`,
+		"server/profile/route.server": `export const profileLoader = async (args, load) => load({ownerId: 'private-owner', viewerId: null, shell: {}})`,
+		"domain/profile": `export const seesPart = () => true`,
+		"server/profile/compare.server": `export const getMemberCompare = async () => null`,
+		"server/profile/portrait.server": `import { timeRequestCache } from '~/utils/request-work'; const saved = new Set(); export const getProfilePortrait = async (_, tab, options) => { await timeRequestCache(options.request, 'portrait_' + tab, async () => saved.has(tab)); saved.add(tab); return {} }`,
+		"server/profile/stats-payload": `export const statsPayload = x => x; export const statsTastePayload = x => x`,
+		"server/profile/taste-stats-view": `export const statsForViewer = x => x`,
+		"ui/profile/taste/model": `export const buildProfileTaste = () => ({}); export const theirLine = () => ''`,
+		"ui/og-image/profile-card-model": `export const PROFILE_CARD_VIEWS = []`,
+		"utils/display-names": `export const languageName = x => x; export const regionName = x => x`,
+	})
+	const run = () =>
+		module.loader({
+			request: new Request("http://localhost/u/test/stats"),
+			params: {},
+		})
+	const timing = (await run()).headers.get("Server-Timing")!
+	const names = [
+		"stats_details",
+		"stats_tropes",
+		"stats_credits",
+		"stats_people",
+		"stats_cache_miss",
+		...["fingerprint", "sides", "everyone"].flatMap((tab) => [
+			`portrait_${tab}`,
+			`portrait_${tab}_cache_miss`,
+		]),
+	]
+	for (const name of names)
+		assert.match(timing, new RegExp(`(?:^|, )${name};dur=\\d+\\.\\d(?:,|$)`))
+	assert.ok(
+		timing
+			.split(", ")
+			.every((entry: string) => /^[a-z_]+;dur=\d+\.\d$/.test(entry))
+	)
+	const warm = (await run()).headers.get("Server-Timing")!
+	assert.match(warm, /stats_cache_hit;dur=/)
+	assert.doesNotMatch(warm, /stats_(details|tropes|credits|people|cache_miss);/)
+	for (const tab of ["fingerprint", "sides", "everyone"])
+		assert.match(warm, new RegExp(`portrait_${tab}_cache_hit;dur=`))
+})
+
+test("Overview and Lists prime the shell with combined list cards", async () => {
+	for (const route of ["_index", "lists._index"]) {
+		const module = await fixture(`routes/u.$handle.${route}.tsx`, {
+			...services,
+			"server/media-payload.server": `export const presentCatalogLoader = load => load`,
+			"server/profile/route.server": `export const profileLoader = async (args, load, options) => options`,
+			"server/profile/page.server": `export const loadProfileOverview = () => {}; export const loadProfileLists = () => {}`,
+			"server/profile/portrait.server": `export const getProfilePortrait = () => {}`,
+			"server/profile/compare.server": `export const getMemberCompare = () => {}`,
+		})
+		assert.deepEqual(
+			await module.loader({
+				request: new Request("http://localhost/u/test"),
+				params: {},
+			}),
+			{ listCards: true }
+		)
+	}
+})
+
+test("profile portraits forward request timings to each real portrait cache lookup", async () => {
+	const module = await fixture("server/profile/portrait.server.ts", {
+		"server/availability-index.server": `export const isOnServices = () => true`,
+		"server/personal-order/reader.server": `export const loadPersonalOrder = async () => null; export const orderPersonalOrder = () => {}`,
+		"server/taste/index.server": `export const loadTaste = async () => ({})`,
+		"server/title-cards.server": `export const getCardServices = async () => []; export const getServiceList = async () => []`,
+		"server/title-snapshot/index.server": `export const getTitleSnapshot = () => ({})`,
+		"server/viewer.server": `export const getMemberViewerContext = async () => ({ hidden: new Set(), services: [], ratings: new Map(), seen: new Set(), wishlist: new Map(), skipped: new Set(), viewer: {} }); export const getViewerContext = () => {}`,
+		"utils/auth": `export const getUserIdFromRequest = () => null`,
+		"server/taste-portrait/cache.server": `const saved = new Map(); export const readCachedPortrait = async (_, tab) => saved.get(tab); export const writeCachedPortrait = (_, view) => saved.set(view.tab, view); export const clearTastePortrait = () => {}`,
+		"server/taste-portrait/display.server": `export const titleDisplays = async () => new Map()`,
+		"server/taste-portrait/person.server": `export const readPerson = () => ({ rated: [], match: () => new Map() }); export const round1 = x => x`,
+		"server/taste-portrait/fingerprint.server": `export const buildFingerprint = () => ({ tab: 'fingerprint', mostYou: [], attributes: [] })`,
+		"server/taste-portrait/sides.server": `export const buildSides = () => ({ tab: 'sides', sides: [] }); export const franchiseOf = x => x`,
+		"server/taste-portrait/everyone.server": `export const buildEveryone = () => ({ tab: 'everyone', higher: [], lower: [] })`,
+		"server/taste-portrait/sample-context.server": `export const sampleContext = () => {}; export const guestMarksKey = () => ''`,
+		"server/profile/portrait-public": `export const publicView = x => x`,
+	})
+	for (const tab of ["fingerprint", "sides", "everyone"]) {
+		for (const outcome of ["miss", "hit"]) {
+			const request = new Request("http://localhost/u/test/stats")
+			await module.getProfilePortrait("private-owner", tab, { request })
+			assert.match(
+				module.requestServerTiming(request),
+				new RegExp(
+					`^portrait_${tab}_cache_${outcome};dur=\\d+\\.\\d, total;dur=`
+				)
+			)
+		}
+	}
+})

@@ -110,7 +110,7 @@ async function fixture(t: TestContext, options: PageCacheOptions = {}) {
 			"Cache-Control": app.policy,
 			"Content-Type": "text/html",
 			"X-Custom": "preserved",
-			"Server-Timing": "data;dur=500.0, render;dur=30.0",
+			"Server-Timing": "data;dur=500.0, stats_details;dur=120.0, stats_cache_miss;dur=1.0, portrait_fingerprint;dur=50.0, portrait_fingerprint_cache_hit;dur=2.0, render;dur=30.0",
 		})
 		if (app.cookie) outgoing.set("Set-Cookie", "foo=bar")
 		if (app.location) response.setHeader("Location", app.location)
@@ -1622,4 +1622,18 @@ test("identity cache hits do not wait for the shared compression and crypto pool
 	assert.equal(answer.headers["gw-page-cache"], "hit")
 	assert.equal(answer.body.toString(), decode(compressed))
 	assert.equal(answer.headers["server-timing"], 'page_cache;desc="hit"')
+})
+
+test("cached pages discard Stats read durations and cache outcomes from the rendering request", async (t) => {
+	const f = await fixture(t, { limits: { ADMIT_AFTER: 1 } })
+	const rendered = await f.get()
+	assert.match(String(rendered.headers["server-timing"]), /stats_details;dur=120.0/)
+	assert.match(String(rendered.headers["server-timing"]), /portrait_fingerprint_cache_hit;dur=2.0/)
+	await until(() => f.cache.stats().entries === 1)
+	for (const encoding of ["", "gzip", "br"]) {
+		const cached = await f.get("/page", { "accept-encoding": encoding })
+		assert.equal(cached.headers["gw-page-cache"], "hit")
+		assert.equal(cached.headers["server-timing"], 'page_cache;desc="hit"')
+	}
+	assert.equal(f.app.calls, 1)
 })

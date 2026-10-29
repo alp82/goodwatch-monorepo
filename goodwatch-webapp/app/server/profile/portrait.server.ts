@@ -19,6 +19,8 @@ export interface ProfilePortraitOptions {
 	audience?: "owner" | "public"
 	/** Whether the viewer may see the owner's scores; without, titles carry no score and the crowd rows go. */
 	scores?: boolean
+	/** Attribute the portrait cache lookup to this request without retaining it in the cached view. */
+	request?: Request
 }
 
 /** The owner's portrait for one tab. The country only matters for suggestions, which a public view drops. */
@@ -31,7 +33,7 @@ export async function getProfilePortrait<T extends PortraitTab>(
 		viewer: { kind: "member", userId: ownerId },
 		context: () => getMemberViewerContext(ownerId, "US"),
 	}
-	const view = await getTastePortrait(who, tab)
+	const view = await getTastePortrait(who, tab, options.request)
 	if ((options.audience ?? "public") === "owner") return view
 	return publicView(view, options.scores ?? true) as PortraitViewOf<T>
 }

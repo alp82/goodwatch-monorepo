@@ -26,6 +26,7 @@ import {
 	getViewerContext,
 } from "~/server/viewer.server"
 import { getUserIdFromRequest } from "~/utils/auth"
+import { timeRequestCache } from "~/utils/request-work"
 import { type TitleKey, parseTitleKey } from "~/utils/title-key"
 import { readCachedPortrait, writeCachedPortrait } from "./cache.server"
 import { titleDisplays } from "./display.server"
@@ -84,12 +85,13 @@ export async function portraitViewer(
 export async function getTastePortrait<T extends PortraitTab>(
 	who: PortraitViewer,
 	tab: T,
+	request?: Request,
 ): Promise<PortraitViewOf<T>> {
 	const snapshot = getTitleSnapshot()
 	if (!snapshot) return unavailable(tab, who.viewer.kind) as PortraitViewOf<T>
 	const view =
 		who.viewer.kind === "member"
-			? await memberPortrait(who.viewer.userId, who, tab, snapshot)
+			? await memberPortrait(who.viewer.userId, who, tab, snapshot, request)
 			: await guestPortrait(who, tab, snapshot)
 	return view as PortraitViewOf<T>
 }
@@ -101,11 +103,14 @@ async function memberPortrait(
 	who: PortraitViewer,
 	tab: PortraitTab,
 	snapshot: TitleSnapshot,
+	request?: Request,
 ): Promise<PortraitView> {
 	const readFrom = Date.now()
 	const ctx = await who.context()
 	const hiddenKey = [...ctx.hidden].sort().join(",")
-	const cached = await readCachedPortrait(userId, tab, hiddenKey)
+	const cached = await timeRequestCache(request, `portrait_${tab}`, () =>
+		readCachedPortrait(userId, tab, hiddenKey),
+	)
 	if (cached) return cached
 	const taste = await loadTaste(who.viewer)
 	const input = portraitInput("member", ctx, taste)

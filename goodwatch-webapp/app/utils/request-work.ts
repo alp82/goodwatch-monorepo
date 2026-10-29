@@ -1,4 +1,13 @@
-type Phase = "session" | "context" | "data"
+type StatsRead = "stats_details" | "stats_tropes" | "stats_credits" | "stats_people"
+type PortraitRead = `portrait_${"fingerprint" | "sides" | "everyone"}`
+type CacheRead = "stats" | PortraitRead
+type Phase =
+	| "session"
+	| "context"
+	| "data"
+	| StatsRead
+	| PortraitRead
+	| `${CacheRead}_cache_${"hit" | "miss"}`
 type Timing = { start: number; durations: Partial<Record<Phase, number>> }
 const timings = new WeakMap<Request, Timing>()
 
@@ -13,10 +22,11 @@ function timing(request: Request) {
 
 /** Measure wall time, including waits. Overlapping phases are not additive. */
 export async function timeRequestWork<T>(
-	request: Request,
+	request: Request | undefined,
 	phase: Phase,
 	work: () => Promise<T>,
 ): Promise<T> {
+	if (!request) return work()
 	const value = timing(request)
 	const start = performance.now()
 	try {
@@ -25,6 +35,21 @@ export async function timeRequestWork<T>(
 		value.durations[phase] =
 			(value.durations[phase] ?? 0) + performance.now() - start
 	}
+}
+
+/** Record the cache lookup's duration and outcome without exposing keys or values. */
+export async function timeRequestCache<T>(
+	request: Request | undefined,
+	name: CacheRead,
+	read: () => Promise<T>,
+): Promise<T> {
+	if (!request) return read()
+	const value = timing(request)
+	const start = performance.now()
+	const result = await read()
+	const phase: Phase = `${name}_cache_${result ? "hit" : "miss"}`
+	value.durations[phase] = (value.durations[phase] ?? 0) + performance.now() - start
+	return result
 }
 
 export function requestServerTiming(request: Request): string | undefined {

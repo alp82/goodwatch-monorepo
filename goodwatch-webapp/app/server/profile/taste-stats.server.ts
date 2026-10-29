@@ -13,6 +13,7 @@ import type { TasteStats } from "~/domain/profile-taste"
 import { getUserData } from "~/server/userData.server"
 import type { MediaKey } from "~/types/user-data"
 import { titlePath } from "~/utils/helpers"
+import { timeRequestCache, timeRequestWork } from "~/utils/request-work"
 import { readProfileCatalog as read } from "./catalog.server"
 import {
 	readCachedTasteStats,
@@ -37,14 +38,19 @@ const COMPOSER_JOBS = ["Original Music Composer"]
 const computing = new Map<string, Promise<TasteStats>>()
 
 /** The owner's numbers, all of them: cut them with statsForViewer (taste-stats-view.ts) before they reach a page. */
-export async function getTasteStats(ownerId: string): Promise<TasteStats> {
-	const cached = await readCachedTasteStats(ownerId)
+export async function getTasteStats(
+	ownerId: string,
+	request?: Request,
+): Promise<TasteStats> {
+	const cached = await timeRequestCache(request, "stats", () =>
+		readCachedTasteStats(ownerId),
+	)
 	if (cached) return cached
 	const pending = computing.get(ownerId)
 	if (pending) return pending
 	const work = (async () => {
 		const readFrom = Date.now()
-		const stats = await computeTasteStats(ownerId)
+		const stats = await computeTasteStats(ownerId, request)
 		await writeCachedTasteStats(ownerId, stats, readFrom)
 		return stats
 	})().finally(() => computing.delete(ownerId))
@@ -61,7 +67,10 @@ interface Own {
 	episodesWatched: number
 }
 
-async function computeTasteStats(ownerId: string): Promise<TasteStats> {
+async function computeTasteStats(
+	ownerId: string,
+	request?: Request,
+): Promise<TasteStats> {
 	const startedAt = Date.now()
 	const data = await getUserData({ user_id: ownerId })
 	const own = new Map<MediaKey, Own>()
@@ -109,9 +118,9 @@ async function computeTasteStats(ownerId: string): Promise<TasteStats> {
 		titles.filter((t) => (t.score ?? 0) >= 8).map((t) => t.key),
 	)
 	const [movieRows, showRows, credits] = await Promise.all([
-		readDetails("movie", ids.movie, loved),
-		readDetails("show", ids.show, loved),
-		readCredits(ids),
+		readDetails("movie", ids.movie, loved, request),
+		readDetails("show", ids.show, loved, request),
+		timeRequestWork(request, "stats_credits", () => readCredits(ids)),
 	])
 	const details = new Map([...movieRows, ...showRows])
 	const stats: StatsTitle[] = []
@@ -147,7 +156,9 @@ async function computeTasteStats(ownerId: string): Promise<TasteStats> {
 			episodesWatched: t.episodesWatched,
 		})
 	}
-	const people = await readPeople(credits, stats)
+	const people = await timeRequestWork(request, "stats_people", () =>
+		readPeople(credits, stats),
+	)
 	const result = tasteStats({
 		titles: stats,
 		credits,
@@ -191,6 +202,7 @@ async function readDetails(
 	mediaType: "movie" | "show",
 	ids: number[],
 	loved: ReadonlySet<MediaKey>,
+	request?: Request,
 ) {
 	const found = new Map<MediaKey, DetailRow>()
 	// A show's runtime is its usual episode runtime: the first of episode_runtime.
@@ -200,35 +212,39 @@ async function readDetails(
 		mediaType === "movie"
 			? "budget, revenue"
 			: "NULL AS budget, NULL AS revenue"
-	await Promise.all(
-		batches(ids).map(async (batch) => {
-			const rows = await read<DetailRow>(
-				`SELECT tmdb_id, title, release_year, poster_path, backdrop_path, genres, is_anime, ${runtime}, ${money},
-				  production_country_codes, original_language_code, essence_tags,
-				  goodwatch_overall_score_normalized_percent AS gw
-				 FROM ${mediaType} WHERE tmdb_id IN (${placeholders(batch.length)}) LIMIT ${batch.length}`,
-				batch,
-			)
-			for (const row of rows)
-				found.set(`${mediaType}-${Number(row.tmdb_id)}` as MediaKey, row)
-		}),
+	await timeRequestWork(request, "stats_details", () =>
+		Promise.all(
+			batches(ids).map(async (batch) => {
+				const rows = await read<DetailRow>(
+					`SELECT tmdb_id, title, release_year, poster_path, backdrop_path, genres, is_anime, ${runtime}, ${money},
+					  production_country_codes, original_language_code, essence_tags,
+					  goodwatch_overall_score_normalized_percent AS gw
+					 FROM ${mediaType} WHERE tmdb_id IN (${placeholders(batch.length)}) LIMIT ${batch.length}`,
+					batch,
+				)
+				for (const row of rows)
+					found.set(`${mediaType}-${Number(row.tmdb_id)}` as MediaKey, row)
+			}),
+		),
 	)
 	const lovedIds = ids.filter((id) =>
 		loved.has(`${mediaType}-${id}` as MediaKey),
 	)
-	await Promise.all(
-		batches(lovedIds).map(async (batch) => {
-			const rows = await read<{ tmdb_id: number; tropes: string[] | null }>(
-				`SELECT tmdb_id, tropes FROM ${mediaType} WHERE tmdb_id IN (${placeholders(batch.length)}) LIMIT ${batch.length}`,
-				batch,
-			)
-			for (const row of rows) {
-				const entry = found.get(
-					`${mediaType}-${Number(row.tmdb_id)}` as MediaKey,
+	await timeRequestWork(request, "stats_tropes", () =>
+		Promise.all(
+			batches(lovedIds).map(async (batch) => {
+				const rows = await read<{ tmdb_id: number; tropes: string[] | null }>(
+					`SELECT tmdb_id, tropes FROM ${mediaType} WHERE tmdb_id IN (${placeholders(batch.length)}) LIMIT ${batch.length}`,
+					batch,
 				)
-				if (entry) entry.tropes = row.tropes
-			}
-		}),
+				for (const row of rows) {
+					const entry = found.get(
+						`${mediaType}-${Number(row.tmdb_id)}` as MediaKey,
+					)
+					if (entry) entry.tropes = row.tropes
+				}
+			}),
+		),
 	)
 	return found
 }
