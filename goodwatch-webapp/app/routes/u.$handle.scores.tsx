@@ -63,6 +63,3 @@ export default function ProfileScores() {
 
 // The complete server document paints before route modules compete for bandwidth.
 export const handle = START_AFTER_PAINT
-
-// The first posters ask without credentials so Element Timing can report their paint.
-export const links = () => [{ rel: "preconnect", href: "https://image.tmdb.org", crossOrigin: "anonymous" as const }]

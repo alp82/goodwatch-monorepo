@@ -171,9 +171,8 @@ export default function MoviesCategoryPage() {
 					className="relative py-8 px-4 rounded-lg before:z-10 before:bg-black/70 before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0"
 				>
 					<img
-						src={`https://image.tmdb.org/t/p/w1280/${pageData.backdrop_path}?gw-cors=1`}
+						src={`https://image.tmdb.org/t/p/w1280/${pageData.backdrop_path}`}
 						alt=""
-						crossOrigin="anonymous"
 						{...imageLoadingProps("high")}
 						{...HERO_TIMING}
 						className="absolute inset-0 w-full h-full object-cover object-top rounded-lg"
@@ -233,6 +232,3 @@ export const clientLoader = cachedClientLoader("routes/$type.$category.$page")
 
 // The complete server document paints before route modules compete for bandwidth.
 export const handle = START_AFTER_PAINT
-
-// TMDB keeps credentialed and anonymous image connections separate.
-export const links = () => [{ rel: "preconnect", href: "https://image.tmdb.org", crossOrigin: "anonymous" as const }]

@@ -88,14 +88,8 @@ export function Poster({
 			lang={lang}
 			imgRef={impressionRef}
 			kind="poster"
-			path={
-				paintBeforeScripts
-					? `${path}${path.includes("?") ? "&" : "?"}gw-cors=1`
-					: path
-			}
-			{...(paintBeforeScripts
-				? { crossOrigin: "anonymous" as const, ...HERO_TIMING }
-				: {})}
+			path={path}
+			{...(paintBeforeScripts ? HERO_TIMING : {})}
 			sizes={sizes}
 			minWidth={minWidth}
 			maxWidth={maxWidth}
