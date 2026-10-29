@@ -1,0 +1,9116 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 36544,
+    "raw": 219002,
+    "gzip9": 36347,
+    "br11": 26193,
+    "markup": 195521,
+    "scripts": 23481,
+    "loaderScript": 16880,
+    "loaderJson": 16528,
+    "svg": 50794,
+    "styles": 4209,
+    "classes": 72686,
+    "jsonLd": 1049,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/_index": {
+        "bytes": 15974,
+        "keys": [
+          [
+            "browse",
+            13025
+          ],
+          [
+            "titles",
+            2913
+          ],
+          [
+            "member",
+            5
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/_index",
+        15974
+      ],
+      [
+        "browse",
+        13025
+      ],
+      [
+        "titles",
+        6362
+      ],
+      [
+        "genres",
+        4202
+      ],
+      [
+        "movie",
+        4049
+      ],
+      [
+        "show",
+        3754
+      ],
+      [
+        "top",
+        3637
+      ],
+      [
+        "poster_path",
+        3159
+      ],
+      [
+        "arrivals",
+        2286
+      ],
+      [
+        "posters",
+        1905
+      ],
+      [
+        "title",
+        1659
+      ],
+      [
+        "services",
+        1477
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "/gO8Fo47KV1opiutRDdBS5jclTQB.jpg",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/pHNhUwSXuDQ9jPZOCb8SgJaQZsc.jpg",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/8iixmfGx5EIFPdpNvB2JvI3VIqX.jpg",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/tf0CUEynk6GfmrlHIQKQ5mfFP5P.jpg",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/f8aIvYk5h7Z8EP3dinCmVgQFYow.jpg",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/uftxEWbn3OSykTy4DX4BrdVeiuv.jpg",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/bjiS5ipwxb9JFy3XRRN4OAilSeX.jpg",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/fbKE87mojpIETWepSbD5Qt741fp.jpg",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "Law & Order: Special Victims Unit",
+        "count": 2,
+        "duplicateBytes": 33
+      },
+      {
+        "sample": "/1M876KPjulVwppEpldhdc8V4o68.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/movies",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 21439,
+    "raw": 129686,
+    "gzip9": 21370,
+    "br11": 15447,
+    "markup": 127089,
+    "scripts": 2597,
+    "loaderScript": 909,
+    "loaderJson": 577,
+    "svg": 41205,
+    "styles": 2982,
+    "classes": 39853,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type._index": {
+        "bytes": 17,
+        "keys": [
+          [
+            "type",
+            8
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "routes/$type._index",
+        17
+      ],
+      [
+        "type",
+        8
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/shows",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 21232,
+    "raw": 124878,
+    "gzip9": 21155,
+    "br11": 15348,
+    "markup": 122282,
+    "scripts": 2596,
+    "loaderScript": 908,
+    "loaderJson": 576,
+    "svg": 40380,
+    "styles": 2982,
+    "classes": 38254,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type._index": {
+        "bytes": 16,
+        "keys": [
+          [
+            "type",
+            7
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "routes/$type._index",
+        16
+      ],
+      [
+        "type",
+        7
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/movies/moods",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 228786,
+    "raw": 1760222,
+    "gzip9": 220523,
+    "br11": 102990,
+    "markup": 513714,
+    "scripts": 1246508,
+    "loaderScript": 1244497,
+    "loaderJson": 1243590,
+    "svg": 50116,
+    "styles": 2982,
+    "classes": 252760,
+    "jsonLd": 303,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type.$category._index": {
+        "bytes": 1243020,
+        "keys": [
+          [
+            "pageResults",
+            1242946
+          ],
+          [
+            "path",
+            15
+          ],
+          [
+            "type",
+            8
+          ],
+          [
+            "category",
+            7
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/$type.$category._index",
+        1243020
+      ],
+      [
+        "pageResults",
+        1242946
+      ],
+      [
+        "results",
+        1211573
+      ],
+      [
+        "streaming_service_ids",
+        151793
+      ],
+      [
+        "backdrop_path",
+        27846
+      ],
+      [
+        "poster_path",
+        27187
+      ],
+      [
+        "release_date",
+        20800
+      ],
+      [
+        "discoverParams",
+        20430
+      ],
+      [
+        "title",
+        14457
+      ],
+      [
+        "fingerprintConditions",
+        7474
+      ],
+      [
+        "goodwatch_overall_score_normalized_percent",
+        6520
+      ],
+      [
+        "goodwatch_user_score_normalized_percent",
+        5734
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "2026-09-23T00:00:00.000Z",
+        "count": 9,
+        "duplicateBytes": 192
+      },
+      {
+        "sample": "Eternal Sunshine of the Spotless Mind",
+        "count": 6,
+        "duplicateBytes": 185
+      },
+      {
+        "sample": "2026-08-26T00:00:00.000Z",
+        "count": 8,
+        "duplicateBytes": 168
+      },
+      {
+        "sample": "/m4TUa2ciEWSlk37rOsjiSIvZDXE.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/els3qltvcOnflTlU48iyfMPIctU.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/jw172VAlwfYtWNWvhVrXZPW3jGT.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/95qi5TJMIBI5VzWHia88Pbrye7Z.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/5MwkWH9tYHv3mV9OdYTMR5qreIz.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "The Lord of the Rings: The Fellowship of the Ring",
+        "count": 4,
+        "duplicateBytes": 147
+      }
+    ],
+    "duplicateTitleObjects": 463994
+  },
+  {
+    "path": "/shows/moods",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 201216,
+    "raw": 1665584,
+    "gzip9": 193691,
+    "br11": 101500,
+    "markup": 510978,
+    "scripts": 1154606,
+    "loaderScript": 1152598,
+    "loaderJson": 1151686,
+    "svg": 49291,
+    "styles": 2982,
+    "classes": 252760,
+    "jsonLd": 300,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type.$category._index": {
+        "bytes": 1151116,
+        "keys": [
+          [
+            "pageResults",
+            1151044
+          ],
+          [
+            "path",
+            14
+          ],
+          [
+            "type",
+            7
+          ],
+          [
+            "category",
+            7
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/$type.$category._index",
+        1151116
+      ],
+      [
+        "pageResults",
+        1151044
+      ],
+      [
+        "results",
+        1119711
+      ],
+      [
+        "streaming_service_ids",
+        60894
+      ],
+      [
+        "backdrop_path",
+        27844
+      ],
+      [
+        "poster_path",
+        27167
+      ],
+      [
+        "release_date",
+        20800
+      ],
+      [
+        "discoverParams",
+        20390
+      ],
+      [
+        "title",
+        13628
+      ],
+      [
+        "fingerprintConditions",
+        7474
+      ],
+      [
+        "goodwatch_overall_score_normalized_percent",
+        6528
+      ],
+      [
+        "goodwatch_user_score_normalized_percent",
+        5942
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "/rBOnrVlck7BIlGeWVlzYiZeg4l2.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/dqZENchTd7lp5zht7BdlqM7RBhD.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "Frieren: Beyond Journey's End",
+        "count": 6,
+        "duplicateBytes": 145
+      },
+      {
+        "sample": "/l0qVZIpXtIo7km9u5Yqh0nKPOr5.jpg",
+        "count": 5,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "/2koX1xLkpTQM4IZebYvKysFW1Nh.jpg",
+        "count": 5,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "/lpDVJuIro21gtMj9iXMFKHuroZN.jpg",
+        "count": 5,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "/fbKE87mojpIETWepSbD5Qt741fp.jpg",
+        "count": 5,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "/4NmCfWHzytiKM3riCMcbVYBJhlB.jpg",
+        "count": 5,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "/v3JuB15WybKmxDeT1hWdK3j6eSJ.jpg",
+        "count": 5,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "2023-09-29T00:00:00.000Z",
+        "count": 6,
+        "duplicateBytes": 120
+      }
+    ],
+    "duplicateTitleObjects": 322004
+  },
+  {
+    "path": "/movies/genres",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 213489,
+    "raw": 1653999,
+    "gzip9": 205552,
+    "br11": 97588,
+    "markup": 490166,
+    "scripts": 1163833,
+    "loaderScript": 1161820,
+    "loaderJson": 1161428,
+    "svg": 49686,
+    "styles": 2982,
+    "classes": 240943,
+    "jsonLd": 305,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type.$category._index": {
+        "bytes": 1160858,
+        "keys": [
+          [
+            "pageResults",
+            1160782
+          ],
+          [
+            "path",
+            16
+          ],
+          [
+            "type",
+            8
+          ],
+          [
+            "category",
+            8
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/$type.$category._index",
+        1160858
+      ],
+      [
+        "pageResults",
+        1160782
+      ],
+      [
+        "results",
+        1135620
+      ],
+      [
+        "streaming_service_ids",
+        128682
+      ],
+      [
+        "backdrop_path",
+        26445
+      ],
+      [
+        "poster_path",
+        25819
+      ],
+      [
+        "release_date",
+        19760
+      ],
+      [
+        "title",
+        13767
+      ],
+      [
+        "discoverParams",
+        12121
+      ],
+      [
+        "goodwatch_overall_score_normalized_percent",
+        6520
+      ],
+      [
+        "faq",
+        6380
+      ],
+      [
+        "goodwatch_user_score_normalized_percent",
+        5607
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "2026-09-10T00:00:00.000Z",
+        "count": 10,
+        "duplicateBytes": 216
+      },
+      {
+        "sample": "2026-09-02T00:00:00.000Z",
+        "count": 8,
+        "duplicateBytes": 168
+      },
+      {
+        "sample": "2026-06-24T00:00:00.000Z",
+        "count": 8,
+        "duplicateBytes": 168
+      },
+      {
+        "sample": "/qsxhnirlp7y4Ae9bd11oYJSX59j.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/7W0G3YECgDAfnuiHG91r8WqgIOe.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "2026-10-09T00:00:00.000Z",
+        "count": 7,
+        "duplicateBytes": 144
+      },
+      {
+        "sample": "2026-09-25T00:00:00.000Z",
+        "count": 7,
+        "duplicateBytes": 144
+      },
+      {
+        "sample": "/cNICUho5uiAGkfCAQq1ihyaMla4.jpg",
+        "count": 5,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "/myd1K3gefdNAWFsGNRDdMeiK9Qg.jpg",
+        "count": 5,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "/kkcwhgSFd81QDlXo8ytrpHPQjhy.jpg",
+        "count": 5,
+        "duplicateBytes": 128
+      }
+    ],
+    "duplicateTitleObjects": 438546
+  },
+  {
+    "path": "/shows/streaming",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 47276,
+    "raw": 312889,
+    "gzip9": 46072,
+    "br11": 32275,
+    "markup": 135919,
+    "scripts": 176970,
+    "loaderScript": 174954,
+    "loaderJson": 174607,
+    "svg": 41981,
+    "styles": 2982,
+    "classes": 51871,
+    "jsonLd": 308,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type.$category._index": {
+        "bytes": 174037,
+        "keys": [
+          [
+            "pageResults",
+            173957
+          ],
+          [
+            "path",
+            18
+          ],
+          [
+            "category",
+            11
+          ],
+          [
+            "type",
+            7
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/$type.$category._index",
+        174037
+      ],
+      [
+        "pageResults",
+        173957
+      ],
+      [
+        "results",
+        171366
+      ],
+      [
+        "streaming_service_ids",
+        12216
+      ],
+      [
+        "backdrop_path",
+        4241
+      ],
+      [
+        "poster_path",
+        4076
+      ],
+      [
+        "release_date",
+        3120
+      ],
+      [
+        "title",
+        1925
+      ],
+      [
+        "discoverParams",
+        1922
+      ],
+      [
+        "goodwatch_overall_score_normalized_percent",
+        1090
+      ],
+      [
+        "goodwatch_user_score_normalized_percent",
+        978
+      ],
+      [
+        "popularity",
+        927
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "Miraculous: Tales of Ladybug & Cat Noir",
+        "count": 2,
+        "duplicateBytes": 39
+      },
+      {
+        "sample": "/7OrV2aAH5Yp7hA9zCCvUloLvZtl.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/8HXkgUBO5OF8ZK9XbY69RM4S5rv.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/yYpQV25I7XB6S0POJOScPjxYWV5.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/lP4zwr0F7hWTbAFltfoFTc2AxRG.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/l2gc2dPRUPe3bAfYCRTjc6uAMmB.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/ogAWwbh3frWtiTyyXrZaVFtqCgp.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/lH22EnM0ofC7GsVGU8dAA2RXV1c.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/acrtAy8gmxcsEvrDP09MpMSCeDZ.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/yOyzlRw54oYaGvhUBdPr7TFwtrX.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      }
+    ],
+    "duplicateTitleObjects": 13621
+  },
+  {
+    "path": "/movies/moods/feel-good",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 35066,
+    "raw": 246640,
+    "gzip9": 34579,
+    "br11": 24192,
+    "markup": 181390,
+    "scripts": 65250,
+    "loaderScript": 63134,
+    "loaderJson": 62762,
+    "svg": 42603,
+    "styles": 4409,
+    "classes": 72810,
+    "jsonLd": 410,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type.$category.$page": {
+        "bytes": 62193,
+        "keys": [
+          [
+            "results",
+            60347
+          ],
+          [
+            "pageData",
+            1134
+          ],
+          [
+            "discoverParams",
+            583
+          ],
+          [
+            "path",
+            25
+          ],
+          [
+            "page",
+            11
+          ],
+          [
+            "type",
+            8
+          ],
+          [
+            "category",
+            7
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/$type.$category.$page",
+        62193
+      ],
+      [
+        "results",
+        60347
+      ],
+      [
+        "streaming_service_ids",
+        7195
+      ],
+      [
+        "backdrop_path",
+        1392
+      ],
+      [
+        "poster_path",
+        1359
+      ],
+      [
+        "pageData",
+        1134
+      ],
+      [
+        "release_date",
+        1040
+      ],
+      [
+        "discoverParams",
+        1012
+      ],
+      [
+        "title",
+        857
+      ],
+      [
+        "fingerprintConditions",
+        548
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "[{\"logic\":\"AND\",\"conditions\":[{\"field\":\"hopefulness\",\"operator\":\">=\",\"value\":8},{\"field\":\"",
+        "count": 2,
+        "duplicateBytes": 226
+      },
+      {
+        "sample": "context_is_pure_escapism,context_is_comfort_watch",
+        "count": 2,
+        "duplicateBytes": 49
+      },
+      {
+        "sample": "suitability_family,suitability_teens",
+        "count": 2,
+        "duplicateBytes": 36
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/shows/moods/scary/2",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 14912,
+    "raw": 69090,
+    "gzip9": 14853,
+    "br11": 12067,
+    "markup": 67282,
+    "scripts": 1808,
+    "loaderScript": 497,
+    "loaderJson": 2,
+    "svg": 41310,
+    "styles": 2950,
+    "classes": 16109,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/movies/best",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 57177,
+    "raw": 505892,
+    "gzip9": 56308,
+    "br11": 35400,
+    "markup": 414917,
+    "scripts": 90975,
+    "loaderScript": 65364,
+    "loaderJson": 65027,
+    "svg": 41516,
+    "styles": 2982,
+    "classes": 219242,
+    "jsonLd": 23927,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type.best": {
+        "bytes": 64469,
+        "keys": [
+          [
+            "titles",
+            64372
+          ],
+          [
+            "kind",
+            8
+          ],
+          [
+            "services",
+            4
+          ],
+          [
+            "total",
+            3
+          ],
+          [
+            "popular",
+            2
+          ],
+          [
+            "page",
+            1
+          ],
+          [
+            "pages",
+            1
+          ],
+          [
+            "first",
+            1
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/$type.best",
+        64469
+      ],
+      [
+        "titles",
+        64372
+      ],
+      [
+        "poster_path",
+        8493
+      ],
+      [
+        "path",
+        7611
+      ],
+      [
+        "genres",
+        4993
+      ],
+      [
+        "title",
+        4552
+      ],
+      [
+        "goodwatch_overall_score_normalized_percent",
+        2107
+      ],
+      [
+        "media_type",
+        1750
+      ],
+      [
+        "tmdb_id",
+        1115
+      ],
+      [
+        "release_year",
+        1000
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/shows/best",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 54317,
+    "raw": 501393,
+    "gzip9": 53525,
+    "br11": 34400,
+    "markup": 412634,
+    "scripts": 88759,
+    "loaderScript": 64202,
+    "loaderJson": 63315,
+    "svg": 40691,
+    "styles": 2982,
+    "classes": 219016,
+    "jsonLd": 22873,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type.best": {
+        "bytes": 62757,
+        "keys": [
+          [
+            "titles",
+            62661
+          ],
+          [
+            "kind",
+            7
+          ],
+          [
+            "services",
+            4
+          ],
+          [
+            "total",
+            3
+          ],
+          [
+            "popular",
+            2
+          ],
+          [
+            "page",
+            1
+          ],
+          [
+            "pages",
+            1
+          ],
+          [
+            "first",
+            1
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/$type.best",
+        62757
+      ],
+      [
+        "titles",
+        62661
+      ],
+      [
+        "poster_path",
+        8495
+      ],
+      [
+        "path",
+        6558
+      ],
+      [
+        "genres",
+        5436
+      ],
+      [
+        "title",
+        3662
+      ],
+      [
+        "goodwatch_overall_score_normalized_percent",
+        2059
+      ],
+      [
+        "media_type",
+        1500
+      ],
+      [
+        "tmdb_id",
+        1200
+      ],
+      [
+        "release_year",
+        1000
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/movie/603-the-matrix",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 70050,
+    "raw": 387173,
+    "gzip9": 69457,
+    "br11": 50990,
+    "markup": 334156,
+    "scripts": 53017,
+    "loaderScript": 30288,
+    "loaderJson": 29826,
+    "svg": 58944,
+    "styles": 50406,
+    "classes": 120122,
+    "jsonLd": 16257,
+    "hiddenRelated": 6659,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/movie.$movieKey": {
+        "bytes": 29263,
+        "keys": [
+          [
+            "media",
+            25868
+          ],
+          [
+            "dehydratedState",
+            1492
+          ],
+          [
+            "genreRow",
+            1463
+          ],
+          [
+            "newPages",
+            142
+          ],
+          [
+            "breadcrumb",
+            87
+          ],
+          [
+            "relatedMap",
+            44
+          ],
+          [
+            "params",
+            16
+          ],
+          [
+            "countryIsFallback",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/movie.$movieKey",
+        29263
+      ],
+      [
+        "media",
+        25868
+      ],
+      [
+        "streaming_availabilities",
+        11060
+      ],
+      [
+        "stream_url",
+        10202
+      ],
+      [
+        "streaming_services",
+        3969
+      ],
+      [
+        "cast",
+        2560
+      ],
+      [
+        "streaming_countries",
+        2270
+      ],
+      [
+        "details",
+        2106
+      ],
+      [
+        "fingerprint",
+        2022
+      ],
+      [
+        "counts",
+        1589
+      ],
+      [
+        "dehydratedState",
+        1521
+      ],
+      [
+        "queries",
+        1467
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "6969712e4643f373c87f1c5f",
+        "count": 2,
+        "duplicateBytes": 24
+      },
+      {
+        "sample": "696ab52c7f6c9ab39b5a1110",
+        "count": 2,
+        "duplicateBytes": 24
+      },
+      {
+        "sample": "52fe425bc3a36847f8018135",
+        "count": 2,
+        "duplicateBytes": 24
+      },
+      {
+        "sample": "/movies/genres/action",
+        "count": 2,
+        "duplicateBytes": 21
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/show/1396-breaking-bad",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 73084,
+    "raw": 400166,
+    "gzip9": 72469,
+    "br11": 52702,
+    "markup": 356524,
+    "scripts": 43642,
+    "loaderScript": 29707,
+    "loaderJson": 29315,
+    "svg": 57791,
+    "styles": 60350,
+    "classes": 125860,
+    "jsonLd": 7469,
+    "hiddenRelated": 5568,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/show.$showKey": {
+        "bytes": 28754,
+        "keys": [
+          [
+            "media",
+            18626
+          ],
+          [
+            "episodeGrid",
+            7868
+          ],
+          [
+            "genreRow",
+            1365
+          ],
+          [
+            "dehydratedState",
+            424
+          ],
+          [
+            "newPages",
+            142
+          ],
+          [
+            "breadcrumb",
+            82
+          ],
+          [
+            "relatedMap",
+            44
+          ],
+          [
+            "params",
+            16
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/show.$showKey",
+        28754
+      ],
+      [
+        "media",
+        18626
+      ],
+      [
+        "episodeGrid",
+        7868
+      ],
+      [
+        "streaming_availabilities",
+        4998
+      ],
+      [
+        "stream_url",
+        4599
+      ],
+      [
+        "seasons",
+        3609
+      ],
+      [
+        "episodeCanonical",
+        3015
+      ],
+      [
+        "cast",
+        2652
+      ],
+      [
+        "details",
+        2334
+      ],
+      [
+        "streaming_countries",
+        2127
+      ],
+      [
+        "streaming_services",
+        1915
+      ],
+      [
+        "fingerprint",
+        1900
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 51
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 51
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 51
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 51
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 51
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 50
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 50
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 50
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 50
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 50
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/person/287-brad-pitt",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 43901,
+    "raw": 335070,
+    "gzip9": 43599,
+    "br11": 31139,
+    "markup": 295711,
+    "scripts": 39359,
+    "loaderScript": 37352,
+    "loaderJson": 37010,
+    "svg": 53716,
+    "styles": 3882,
+    "classes": 135547,
+    "jsonLd": 309,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/person.$personKey": {
+        "bytes": 36445,
+        "keys": [
+          [
+            "groups",
+            26619
+          ],
+          [
+            "profile",
+            7401
+          ],
+          [
+            "knownFor",
+            1440
+          ],
+          [
+            "facets",
+            773
+          ],
+          [
+            "filters",
+            129
+          ],
+          [
+            "total",
+            3
+          ],
+          [
+            "ofAnyType",
+            3
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/person.$personKey",
+        36445
+      ],
+      [
+        "groups",
+        26619
+      ],
+      [
+        "items",
+        25816
+      ],
+      [
+        "profile",
+        7401
+      ],
+      [
+        "collaborators",
+        3906
+      ],
+      [
+        "poster_path",
+        2500
+      ],
+      [
+        "backdrop_path",
+        2285
+      ],
+      [
+        "signature",
+        1516
+      ],
+      [
+        "knownFor",
+        1440
+      ],
+      [
+        "titles",
+        1368
+      ],
+      [
+        "title",
+        1352
+      ],
+      [
+        "key",
+        1171
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "The Assassination of Jesse James by the Coward Robert Ford",
+        "count": 3,
+        "duplicateBytes": 116
+      },
+      {
+        "sample": "THE FURTHER MIS-ADVENTURES OF CLIFF BOOTH",
+        "count": 3,
+        "duplicateBytes": 82
+      },
+      {
+        "sample": "The Curious Case of Benjamin Button",
+        "count": 3,
+        "duplicateBytes": 70
+      },
+      {
+        "sample": "Once Upon a Time... in Hollywood",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "Sinbad: Legend of the Seven Seas",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/4yIQq1e6iOcaZ5rLDG3lZBP3j7a.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/9PXZIUsSDh4alB80jheWX4fhZmy.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/lkDYN0whyE82mcM20rwtwjbniKF.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/pfte7wdMobMF4CVHuOxyu6oqeeA.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/95ckrV6wQgbffurAVmETQ5YKASL.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      }
+    ],
+    "duplicateTitleObjects": 1435
+  },
+  {
+    "path": "/people",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 27242,
+    "raw": 134865,
+    "gzip9": 27103,
+    "br11": 18904,
+    "markup": 111972,
+    "scripts": 22893,
+    "loaderScript": 18352,
+    "loaderJson": 18020,
+    "svg": 40328,
+    "styles": 2982,
+    "classes": 34332,
+    "jsonLd": 2865,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/people": {
+        "bytes": 17466,
+        "keys": [
+          [
+            "people",
+            17455
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/people",
+        17466
+      ],
+      [
+        "people",
+        17455
+      ],
+      [
+        "knownFor",
+        12053
+      ],
+      [
+        "path",
+        4345
+      ],
+      [
+        "title",
+        1980
+      ],
+      [
+        "profile_path",
+        1018
+      ],
+      [
+        "media_type",
+        808
+      ],
+      [
+        "tmdb_id",
+        756
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "name",
+        453
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "department",
+        240
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "/movie/693134-dune-part-two",
+        "count": 3,
+        "duplicateBytes": 54
+      },
+      {
+        "sample": "/movie/466272-once-upon-a-time-in-hollywood",
+        "count": 2,
+        "duplicateBytes": 43
+      },
+      {
+        "sample": "/movie/353081-mission-impossible---fallout",
+        "count": 2,
+        "duplicateBytes": 42
+      },
+      {
+        "sample": "/movie/791373-zack-snyders-justice-league",
+        "count": 2,
+        "duplicateBytes": 41
+      },
+      {
+        "sample": "/movie/969681-spider-man-brand-new-day",
+        "count": 2,
+        "duplicateBytes": 38
+      },
+      {
+        "sample": "/movie/634649-spider-man-no-way-home",
+        "count": 2,
+        "duplicateBytes": 36
+      },
+      {
+        "sample": "/movie/299536-avengers-infinity-war",
+        "count": 2,
+        "duplicateBytes": 35
+      },
+      {
+        "sample": "/movie/49026-the-dark-knight-rises",
+        "count": 2,
+        "duplicateBytes": 34
+      },
+      {
+        "sample": "Once Upon a Time... in Hollywood",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/movie/436969-the-suicide-squad",
+        "count": 2,
+        "duplicateBytes": 31
+      }
+    ],
+    "duplicateTitleObjects": 2044
+  },
+  {
+    "path": "/discover",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 34102,
+    "raw": 234238,
+    "gzip9": 33940,
+    "br11": 24942,
+    "markup": 197044,
+    "scripts": 37194,
+    "loaderScript": 35498,
+    "loaderJson": 35116,
+    "svg": 48120,
+    "styles": 4406,
+    "classes": 81644,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/discover.($type)": {
+        "bytes": 34552,
+        "keys": [
+          [
+            "browse",
+            34541
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/discover.($type)",
+        34552
+      ],
+      [
+        "browse",
+        34541
+      ],
+      [
+        "initial",
+        34430
+      ],
+      [
+        "pages",
+        34338
+      ],
+      [
+        "cards",
+        30574
+      ],
+      [
+        "services",
+        12881
+      ],
+      [
+        "logo_path",
+        5032
+      ],
+      [
+        "name",
+        2372
+      ],
+      [
+        "optionCounts",
+        2304
+      ],
+      [
+        "poster_path",
+        1359
+      ],
+      [
+        "backdrop_path",
+        1359
+      ],
+      [
+        "tagline",
+        1044
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "/44uAnmSqvA4yBOdbPWN8YgQHjWm.png",
+        "count": 12,
+        "duplicateBytes": 352
+      },
+      {
+        "sample": "/3wF8xISfVlcrc8X3jaa3uMUFGAr.png",
+        "count": 10,
+        "duplicateBytes": 288
+      },
+      {
+        "sample": "/48bVXEIyCLSL9pZUQ7gB9ToyWto.png",
+        "count": 8,
+        "duplicateBytes": 224
+      },
+      {
+        "sample": "/a1UIdq5BrkcAxnxcUhFsNbXnxeu.png",
+        "count": 7,
+        "duplicateBytes": 192
+      },
+      {
+        "sample": "/yrEwyMzEKdqAoGhaWUARtIxByol.png",
+        "count": 7,
+        "duplicateBytes": 192
+      },
+      {
+        "sample": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/bxX0YVOCY7bI85BKRlJAAQ2EjUR.png",
+        "count": 5,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "/uPWQPyF4nqwtfPNmGcFcenU57HG.png",
+        "count": 5,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "/tnZCMxbcKdxuVmjxefyXCaip7q3.png",
+        "count": 5,
+        "duplicateBytes": 128
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/discover/movie",
+    "status": 301,
+    "location": "/discover",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/search",
+    "status": 301,
+    "location": "/discover",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/explorer",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 94974,
+    "raw": 470876,
+    "gzip9": 93043,
+    "br11": 61538,
+    "markup": 199914,
+    "scripts": 270962,
+    "loaderScript": 269282,
+    "loaderJson": 268715,
+    "svg": 42484,
+    "styles": 4884,
+    "classes": 36055,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/explorer": {
+        "bytes": 268159,
+        "keys": [
+          [
+            "world",
+            268126
+          ],
+          [
+            "displayLanguage",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/explorer",
+        268159
+      ],
+      [
+        "world",
+        268126
+      ],
+      [
+        "maps",
+        268117
+      ],
+      [
+        "islands",
+        266284
+      ],
+      [
+        "titles",
+        255431
+      ],
+      [
+        "backdrop",
+        26090
+      ],
+      [
+        "poster",
+        26078
+      ],
+      [
+        "genres",
+        14862
+      ],
+      [
+        "title",
+        13158
+      ],
+      [
+        "key",
+        9984
+      ],
+      [
+        "mediaType",
+        5234
+      ],
+      [
+        "seen",
+        3840
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "The Lord of the Rings: The Return of the King",
+        "count": 7,
+        "duplicateBytes": 270
+      },
+      {
+        "sample": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
+        "count": 4,
+        "duplicateBytes": 204
+      },
+      {
+        "sample": "The Lord of the Rings: The Fellowship of the Ring",
+        "count": 5,
+        "duplicateBytes": 196
+      },
+      {
+        "sample": "/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg",
+        "count": 7,
+        "duplicateBytes": 192
+      },
+      {
+        "sample": "/ctiw6FZK4N36LmkjSklWEbuvlq9.jpg",
+        "count": 7,
+        "duplicateBytes": 192
+      },
+      {
+        "sample": "/k5Qg5rgPoKdh3yTJJrLtyoyYGwC.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/nO7EzksrBzlNpAg5rgv8HzaBIkx.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/ulcAi4dKpAjHwYGS08vNyx9H6I9.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/gqrnQA6Xppdl8vIb2eJc58VC1tW.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      },
+      {
+        "sample": "/fai0rspsNeJCS69wHNjOdWxcI7P.jpg",
+        "count": 6,
+        "duplicateBytes": 160
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/explore/movie/genres/drama",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 29,
+    "raw": 9,
+    "gzip9": 29,
+    "br11": 13,
+    "markup": 9,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/for-you",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 16911,
+    "raw": 77519,
+    "gzip9": 16857,
+    "br11": 13950,
+    "markup": 74938,
+    "scripts": 2581,
+    "loaderScript": 903,
+    "loaderJson": 571,
+    "svg": 42411,
+    "styles": 2982,
+    "classes": 19029,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/for-you": {
+        "bytes": 16,
+        "keys": [
+          [
+            "kind",
+            7
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "routes/for-you",
+        16
+      ],
+      [
+        "kind",
+        7
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/hot-on-socials",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 18607,
+    "raw": 78716,
+    "gzip9": 18558,
+    "br11": 15234,
+    "markup": 68589,
+    "scripts": 10127,
+    "loaderScript": 8435,
+    "loaderJson": 8103,
+    "svg": 40303,
+    "styles": 2982,
+    "classes": 16053,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/hot-on-socials": {
+        "bytes": 7541,
+        "keys": [
+          [
+            "row",
+            7533
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/hot-on-socials",
+        7541
+      ],
+      [
+        "row",
+        7533
+      ],
+      [
+        "titles",
+        7476
+      ],
+      [
+        "curve",
+        1435
+      ],
+      [
+        "backdrop",
+        679
+      ],
+      [
+        "poster",
+        677
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "reason",
+        454
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "lift",
+        353
+      ],
+      [
+        "title",
+        327
+      ],
+      [
+        "usual",
+        307
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/new",
+    "status": 302,
+    "location": "/new/us",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/new/us",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 75296,
+    "raw": 850248,
+    "gzip9": 74629,
+    "br11": 48228,
+    "markup": 756213,
+    "scripts": 94035,
+    "loaderScript": 90907,
+    "loaderJson": 90565,
+    "svg": 41531,
+    "styles": 3602,
+    "classes": 399542,
+    "jsonLd": 1444,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/new.$where": {
+        "bytes": 90007,
+        "keys": [
+          [
+            "days",
+            69402
+          ],
+          [
+            "offerServices",
+            7914
+          ],
+          [
+            "otherCountries",
+            6742
+          ],
+          [
+            "ranked",
+            3036
+          ],
+          [
+            "keys",
+            1207
+          ],
+          [
+            "services",
+            995
+          ],
+          [
+            "copy",
+            345
+          ],
+          [
+            "country",
+            36
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/new.$where",
+        90007
+      ],
+      [
+        "days",
+        69402
+      ],
+      [
+        "titles",
+        69186
+      ],
+      [
+        "path",
+        9775
+      ],
+      [
+        "poster_path",
+        8100
+      ],
+      [
+        "offerServices",
+        7914
+      ],
+      [
+        "otherCountries",
+        6742
+      ],
+      [
+        "title",
+        5088
+      ],
+      [
+        "logo_path",
+        3942
+      ],
+      [
+        "name",
+        3493
+      ],
+      [
+        "key",
+        3250
+      ],
+      [
+        "at",
+        3250
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "/movie/1802058-cma-presents-i-will-always-love-you-a-celebration-of-dolly-parton",
+        "count": 2,
+        "duplicateBytes": 80
+      },
+      {
+        "sample": "CMA Presents I Will Always Love You: A Celebration of Dolly Parton",
+        "count": 2,
+        "duplicateBytes": 66
+      },
+      {
+        "sample": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/44uAnmSqvA4yBOdbPWN8YgQHjWm.png",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/uFL3c4Cq8M6WoLymlC5Y8bmGytV.png",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/5eZ872CghnHFLB1j8grszbrx0dx.png",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/a1UIdq5BrkcAxnxcUhFsNbXnxeu.png",
+        "count": 3,
+        "duplicateBytes": 64
+      },
+      {
+        "sample": "/skypuy7SXuugIQeYg0IglmzoKaS.png",
+        "count": 3,
+        "duplicateBytes": 64
+      }
+    ],
+    "duplicateTitleObjects": 1574
+  },
+  {
+    "path": "/new/us/netflix",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 51246,
+    "raw": 496303,
+    "gzip9": 50824,
+    "br11": 33873,
+    "markup": 441480,
+    "scripts": 54823,
+    "loaderScript": 51643,
+    "loaderJson": 51301,
+    "svg": 42206,
+    "styles": 3633,
+    "classes": 222311,
+    "jsonLd": 1474,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/new.$country.$service": {
+        "bytes": 50732,
+        "keys": [
+          [
+            "days",
+            33226
+          ],
+          [
+            "otherCountries",
+            7402
+          ],
+          [
+            "offerServices",
+            5054
+          ],
+          [
+            "ranked",
+            2949
+          ],
+          [
+            "keys",
+            1207
+          ],
+          [
+            "copy",
+            302
+          ],
+          [
+            "services",
+            95
+          ],
+          [
+            "brand",
+            89
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/new.$country.$service",
+        50732
+      ],
+      [
+        "days",
+        33226
+      ],
+      [
+        "titles",
+        32882
+      ],
+      [
+        "otherCountries",
+        7402
+      ],
+      [
+        "path",
+        6593
+      ],
+      [
+        "offerServices",
+        5054
+      ],
+      [
+        "poster_path",
+        4089
+      ],
+      [
+        "ranked",
+        2949
+      ],
+      [
+        "name",
+        2667
+      ],
+      [
+        "title",
+        2651
+      ],
+      [
+        "logo_path",
+        2480
+      ],
+      [
+        "key",
+        1612
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+        "count": 4,
+        "duplicateBytes": 96
+      },
+      {
+        "sample": "/show/337188-sam-and-colby-paranormal-investigators",
+        "count": 2,
+        "duplicateBytes": 51
+      },
+      {
+        "sample": "/movie/1620918-norm-the-tale-of-norm-macdonald",
+        "count": 2,
+        "duplicateBytes": 46
+      },
+      {
+        "sample": "Sam and Colby: Paranormal Investigators",
+        "count": 2,
+        "duplicateBytes": 39
+      },
+      {
+        "sample": "/show/293610-doctor-x-mafia-in-white",
+        "count": 2,
+        "duplicateBytes": 36
+      },
+      {
+        "sample": "/show/293607-100-days-of-deception",
+        "count": 2,
+        "duplicateBytes": 34
+      },
+      {
+        "sample": "/u0jPkIWFTO3D51h44gXkOz6H5PK.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/bZHEU42QynnMrHUWK1Hhvj2cdPA.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/1mS4rhIgHZcHIvf1beP9Av0Ui33.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      },
+      {
+        "sample": "/7NAvPYPAu7MeHwP8E9sn81PqsRh.jpg",
+        "count": 2,
+        "duplicateBytes": 32
+      }
+    ],
+    "duplicateTitleObjects": 2938
+  },
+  {
+    "path": "/taste",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 16053,
+    "raw": 74170,
+    "gzip9": 15995,
+    "br11": 12928,
+    "markup": 71561,
+    "scripts": 2609,
+    "loaderScript": 921,
+    "loaderJson": 589,
+    "svg": 40894,
+    "styles": 2982,
+    "classes": 16372,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/taste._index": {
+        "bytes": 29,
+        "keys": [
+          [
+            "kind",
+            8
+          ],
+          [
+            "view",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "routes/taste._index",
+        29
+      ],
+      [
+        "kind",
+        8
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/taste/quiz",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 106223,
+    "raw": 337519,
+    "gzip9": 105614,
+    "br11": 85496,
+    "markup": 71435,
+    "scripts": 266084,
+    "loaderScript": 264400,
+    "loaderJson": 262893,
+    "svg": 40894,
+    "styles": 2982,
+    "classes": 16861,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/taste.quiz": {
+        "bytes": 262335,
+        "keys": [
+          [
+            "smartTitles",
+            262252
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "isLoggedIn",
+            5
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/taste.quiz",
+        262335
+      ],
+      [
+        "smartTitles",
+        262252
+      ],
+      [
+        "synopsis",
+        81149
+      ],
+      [
+        "essence_tags",
+        69262
+      ],
+      [
+        "poster_path",
+        10192
+      ],
+      [
+        "backdrop_path",
+        10192
+      ],
+      [
+        "genres",
+        8778
+      ],
+      [
+        "title",
+        5011
+      ],
+      [
+        "goodwatch_overall_score_normalized_percent",
+        2547
+      ],
+      [
+        "popularity",
+        2114
+      ],
+      [
+        "media_type",
+        1950
+      ],
+      [
+        "goodwatch_overall_score_voting_count",
+        1928
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "Found Family Dynamics",
+        "count": 25,
+        "duplicateBytes": 504
+      },
+      {
+        "sample": "Psychological Thriller",
+        "count": 14,
+        "duplicateBytes": 286
+      },
+      {
+        "sample": "Ensemble Cast Dynamics",
+        "count": 10,
+        "duplicateBytes": 198
+      },
+      {
+        "sample": "Complex Character Study",
+        "count": 8,
+        "duplicateBytes": 161
+      },
+      {
+        "sample": "Emotionally Devastating",
+        "count": 8,
+        "duplicateBytes": 161
+      },
+      {
+        "sample": "Cinematic Masterpiece",
+        "count": 8,
+        "duplicateBytes": 147
+      },
+      {
+        "sample": "Ensemble Character Study",
+        "count": 7,
+        "duplicateBytes": 144
+      },
+      {
+        "sample": "Character-Driven Narrative",
+        "count": 6,
+        "duplicateBytes": 130
+      },
+      {
+        "sample": "Immersive World-Building",
+        "count": 6,
+        "duplicateBytes": 120
+      },
+      {
+        "sample": "Psychological Character Study",
+        "count": 5,
+        "duplicateBytes": 116
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/taste/fingerprint",
+    "status": 301,
+    "location": "/taste#fingerprint",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/taste/everyone",
+    "status": 301,
+    "location": "/taste#everyone",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/watch-next",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15703,
+    "raw": 72578,
+    "gzip9": 15656,
+    "br11": 12878,
+    "markup": 69980,
+    "scripts": 2598,
+    "loaderScript": 914,
+    "loaderJson": 582,
+    "svg": 40144,
+    "styles": 2982,
+    "classes": 17307,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/watch-next": {
+        "bytes": 24,
+        "keys": [
+          [
+            "data",
+            4
+          ],
+          [
+            "query",
+            2
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "routes/watch-next",
+        24
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/wishlist",
+    "status": 301,
+    "location": "/watch-next",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/my-movies",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 16170,
+    "raw": 75546,
+    "gzip9": 16118,
+    "br11": 13143,
+    "markup": 72929,
+    "scripts": 2617,
+    "loaderScript": 935,
+    "loaderJson": 603,
+    "svg": 41865,
+    "styles": 2982,
+    "classes": 17979,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/my-movies": {
+        "bytes": 46,
+        "keys": [
+          [
+            "query",
+            12
+          ],
+          [
+            "data",
+            4
+          ],
+          [
+            "landed",
+            2
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "routes/my-movies",
+        46
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "query",
+        12
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/my-shows",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15875,
+    "raw": 72548,
+    "gzip9": 15825,
+    "br11": 12926,
+    "markup": 69918,
+    "scripts": 2630,
+    "loaderScript": 950,
+    "loaderJson": 618,
+    "svg": 40828,
+    "styles": 2982,
+    "classes": 17018,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/my-shows": {
+        "bytes": 62,
+        "keys": [
+          [
+            "data",
+            4
+          ],
+          [
+            "arrival",
+            4
+          ],
+          [
+            "landed",
+            2
+          ],
+          [
+            "services",
+            2
+          ],
+          [
+            "now",
+            1
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "routes/my-shows",
+        62
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/my-library",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15578,
+    "raw": 71271,
+    "gzip9": 15529,
+    "br11": 12719,
+    "markup": 68672,
+    "scripts": 2599,
+    "loaderScript": 901,
+    "loaderJson": 569,
+    "svg": 40632,
+    "styles": 2982,
+    "classes": 17018,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/my-library._index": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/my-library/scores",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15795,
+    "raw": 72596,
+    "gzip9": 15747,
+    "br11": 12952,
+    "markup": 69997,
+    "scripts": 2599,
+    "loaderScript": 901,
+    "loaderJson": 569,
+    "svg": 40632,
+    "styles": 2982,
+    "classes": 17018,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/my-library.scores": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/my-library/hidden",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15667,
+    "raw": 71574,
+    "gzip9": 15618,
+    "br11": 12787,
+    "markup": 68961,
+    "scripts": 2613,
+    "loaderScript": 915,
+    "loaderJson": 583,
+    "svg": 40632,
+    "styles": 2982,
+    "classes": 17018,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/my-library.hidden": {
+        "bytes": 18,
+        "keys": [
+          [
+            "signedIn",
+            5
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "routes/my-library.hidden",
+        18
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "signedIn",
+        5
+      ],
+      [
+        "user",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/my-library/seen",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15814,
+    "raw": 72491,
+    "gzip9": 15763,
+    "br11": 12935,
+    "markup": 69836,
+    "scripts": 2655,
+    "loaderScript": 959,
+    "loaderJson": 627,
+    "svg": 40632,
+    "styles": 2982,
+    "classes": 17018,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/my-library.$list": {
+        "bytes": 63,
+        "keys": [
+          [
+            "now",
+            13
+          ],
+          [
+            "status",
+            6
+          ],
+          [
+            "page",
+            4
+          ],
+          [
+            "viewer",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "routes/my-library.$list",
+        63
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "now",
+        13
+      ],
+      [
+        "status",
+        6
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15921,
+    "raw": 72596,
+    "gzip9": 15873,
+    "br11": 12997,
+    "markup": 69839,
+    "scripts": 2757,
+    "loaderScript": 954,
+    "loaderJson": 622,
+    "svg": 41533,
+    "styles": 2982,
+    "classes": 16143,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/settings": {
+        "bytes": 4,
+        "keys": []
+      },
+      "routes/settings._index": {
+        "bytes": 36,
+        "keys": [
+          [
+            "handle",
+            4
+          ],
+          [
+            "connectedApps",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "routes/settings._index",
+        36
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/account",
+    "status": 302,
+    "location": "/sign-in?redirectTo=%2Fsettings%2Faccount",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/profile",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15866,
+    "raw": 72475,
+    "gzip9": 15820,
+    "br11": 12965,
+    "markup": 69707,
+    "scripts": 2768,
+    "loaderScript": 963,
+    "loaderJson": 631,
+    "svg": 41533,
+    "styles": 2982,
+    "classes": 16143,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/settings": {
+        "bytes": 4,
+        "keys": []
+      },
+      "routes/settings.profile": {
+        "bytes": 44,
+        "keys": [
+          [
+            "signedIn",
+            5
+          ],
+          [
+            "handle",
+            4
+          ],
+          [
+            "edit",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "routes/settings.profile",
+        44
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "signedIn",
+        5
+      ],
+      [
+        "user",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/services",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15548,
+    "raw": 70860,
+    "gzip9": 15499,
+    "br11": 12714,
+    "markup": 68129,
+    "scripts": 2731,
+    "loaderScript": 924,
+    "loaderJson": 592,
+    "svg": 41533,
+    "styles": 2982,
+    "classes": 16143,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/settings": {
+        "bytes": 4,
+        "keys": []
+      },
+      "routes/settings.services": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/imports",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15883,
+    "raw": 72108,
+    "gzip9": 15835,
+    "br11": 13022,
+    "markup": 69351,
+    "scripts": 2757,
+    "loaderScript": 952,
+    "loaderJson": 620,
+    "svg": 41533,
+    "styles": 2982,
+    "classes": 16143,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/settings": {
+        "bytes": 4,
+        "keys": []
+      },
+      "routes/settings.imports": {
+        "bytes": 33,
+        "keys": [
+          [
+            "imports",
+            2
+          ],
+          [
+            "sourceImports",
+            2
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "routes/settings.imports",
+        33
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/language",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15528,
+    "raw": 70766,
+    "gzip9": 15479,
+    "br11": 12697,
+    "markup": 68035,
+    "scripts": 2731,
+    "loaderScript": 924,
+    "loaderJson": 592,
+    "svg": 41533,
+    "styles": 2982,
+    "classes": 16143,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/settings": {
+        "bytes": 4,
+        "keys": []
+      },
+      "routes/settings.language": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/connected-apps",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15625,
+    "raw": 71111,
+    "gzip9": 15579,
+    "br11": 12853,
+    "markup": 68333,
+    "scripts": 2778,
+    "loaderScript": 959,
+    "loaderJson": 627,
+    "svg": 41533,
+    "styles": 2982,
+    "classes": 16143,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/settings": {
+        "bytes": 4,
+        "keys": []
+      },
+      "routes/settings.connected-apps": {
+        "bytes": 33,
+        "keys": [
+          [
+            "now",
+            13
+          ],
+          [
+            "apps",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "routes/settings.connected-apps",
+        33
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "now",
+        13
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/discover-privacy",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15545,
+    "raw": 70805,
+    "gzip9": 15497,
+    "br11": 12728,
+    "markup": 68050,
+    "scripts": 2755,
+    "loaderScript": 932,
+    "loaderJson": 600,
+    "svg": 41533,
+    "styles": 2982,
+    "classes": 16143,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/settings": {
+        "bytes": 4,
+        "keys": []
+      },
+      "routes/settings.discover-privacy": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/sign-in",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 22216,
+    "raw": 92002,
+    "gzip9": 22117,
+    "br11": 18407,
+    "markup": 78000,
+    "scripts": 14002,
+    "loaderScript": 12324,
+    "loaderJson": 11992,
+    "svg": 44670,
+    "styles": 4390,
+    "classes": 18981,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/sign-in": {
+        "bytes": 11437,
+        "keys": [
+          [
+            "posters",
+            11370
+          ],
+          [
+            "maintenance",
+            5
+          ],
+          [
+            "connecting",
+            4
+          ],
+          [
+            "redirectUri",
+            2
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/sign-in",
+        11437
+      ],
+      [
+        "posters",
+        11370
+      ],
+      [
+        "posterPath",
+        4076
+      ],
+      [
+        "title",
+        2046
+      ],
+      [
+        "key",
+        1407
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/sign-up",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 22317,
+    "raw": 92449,
+    "gzip9": 22220,
+    "br11": 18500,
+    "markup": 78465,
+    "scripts": 13984,
+    "loaderScript": 12306,
+    "loaderJson": 11974,
+    "svg": 45102,
+    "styles": 4390,
+    "classes": 18942,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/sign-up": {
+        "bytes": 11419,
+        "keys": [
+          [
+            "posters",
+            11370
+          ],
+          [
+            "maintenance",
+            5
+          ],
+          [
+            "redirectUri",
+            2
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/sign-up",
+        11419
+      ],
+      [
+        "posters",
+        11370
+      ],
+      [
+        "posterPath",
+        4076
+      ],
+      [
+        "title",
+        2046
+      ],
+      [
+        "key",
+        1407
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/forgot-password",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 21575,
+    "raw": 89883,
+    "gzip9": 21477,
+    "br11": 17865,
+    "markup": 75892,
+    "scripts": 13991,
+    "loaderScript": 12297,
+    "loaderJson": 11965,
+    "svg": 43907,
+    "styles": 4390,
+    "classes": 18132,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/forgot-password": {
+        "bytes": 11402,
+        "keys": [
+          [
+            "posters",
+            11370
+          ],
+          [
+            "maintenance",
+            5
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/forgot-password",
+        11402
+      ],
+      [
+        "posters",
+        11370
+      ],
+      [
+        "posterPath",
+        4076
+      ],
+      [
+        "title",
+        2046
+      ],
+      [
+        "key",
+        1407
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/reset-password",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 21643,
+    "raw": 90083,
+    "gzip9": 21541,
+    "br11": 17916,
+    "markup": 76095,
+    "scripts": 13988,
+    "loaderScript": 12296,
+    "loaderJson": 11964,
+    "svg": 44029,
+    "styles": 4390,
+    "classes": 18132,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/reset-password": {
+        "bytes": 11402,
+        "keys": [
+          [
+            "posters",
+            11370
+          ],
+          [
+            "maintenance",
+            5
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/reset-password",
+        11402
+      ],
+      [
+        "posters",
+        11370
+      ],
+      [
+        "posterPath",
+        4076
+      ],
+      [
+        "title",
+        2046
+      ],
+      [
+        "key",
+        1407
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/verify-email",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 16297,
+    "raw": 77361,
+    "gzip9": 16245,
+    "br11": 13285,
+    "markup": 74760,
+    "scripts": 2601,
+    "loaderScript": 913,
+    "loaderJson": 581,
+    "svg": 43954,
+    "styles": 4390,
+    "classes": 18132,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/verify-email": {
+        "bytes": 21,
+        "keys": [
+          [
+            "maintenance",
+            5
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "routes/verify-email",
+        21
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "maintenance",
+        5
+      ],
+      [
+        "user",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/auth/mcp/consent",
+    "status": 400,
+    "encoding": "gzip",
+    "wire": 15724,
+    "raw": 73287,
+    "gzip9": 15662,
+    "br11": 12803,
+    "markup": 70853,
+    "scripts": 2434,
+    "loaderScript": 998,
+    "loaderJson": 537,
+    "svg": 43022,
+    "styles": 2950,
+    "classes": 17102,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/discord",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 25310,
+    "raw": 128270,
+    "gzip9": 25219,
+    "br11": 18823,
+    "markup": 125680,
+    "scripts": 2590,
+    "loaderScript": 898,
+    "loaderJson": 566,
+    "svg": 53630,
+    "styles": 3495,
+    "classes": 44529,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/discord._index": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/discord/link",
+    "status": 302,
+    "location": "/sign-in?redirectTo=%2Fdiscord%2Flink",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/about",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 19412,
+    "raw": 87067,
+    "gzip9": 19361,
+    "br11": 14261,
+    "markup": 84504,
+    "scripts": 2563,
+    "loaderScript": 889,
+    "loaderJson": 557,
+    "svg": 48055,
+    "styles": 2982,
+    "classes": 19938,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/about": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/how-it-works",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 19056,
+    "raw": 93806,
+    "gzip9": 18997,
+    "br11": 15456,
+    "markup": 91222,
+    "scripts": 2584,
+    "loaderScript": 896,
+    "loaderJson": 564,
+    "svg": 42762,
+    "styles": 2982,
+    "classes": 29220,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/how-it-works": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/use-with-ai",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 28150,
+    "raw": 140775,
+    "gzip9": 28046,
+    "br11": 21211,
+    "markup": 138194,
+    "scripts": 2581,
+    "loaderScript": 895,
+    "loaderJson": 563,
+    "svg": 67976,
+    "styles": 2982,
+    "classes": 45107,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/use-with-ai": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/support",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 20454,
+    "raw": 95117,
+    "gzip9": 20387,
+    "br11": 16578,
+    "markup": 92548,
+    "scripts": 2569,
+    "loaderScript": 891,
+    "loaderJson": 559,
+    "svg": 51278,
+    "styles": 2982,
+    "classes": 23363,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/support": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/terms",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 16810,
+    "raw": 74499,
+    "gzip9": 16760,
+    "br11": 13555,
+    "markup": 71936,
+    "scripts": 2563,
+    "loaderScript": 889,
+    "loaderJson": 557,
+    "svg": 40328,
+    "styles": 2982,
+    "classes": 16721,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/terms": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/privacy",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 26378,
+    "raw": 99522,
+    "gzip9": 26326,
+    "br11": 19759,
+    "markup": 96941,
+    "scripts": 2581,
+    "loaderScript": 903,
+    "loaderJson": 571,
+    "svg": 40328,
+    "styles": 2982,
+    "classes": 18822,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/privacy": {
+        "bytes": 16,
+        "keys": [
+          [
+            "updated",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "routes/privacy",
+        16
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/disclaimer",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15580,
+    "raw": 71185,
+    "gzip9": 15534,
+    "br11": 12666,
+    "markup": 68607,
+    "scripts": 2578,
+    "loaderScript": 894,
+    "loaderJson": 562,
+    "svg": 40328,
+    "styles": 2982,
+    "classes": 16238,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/disclaimer": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/browser-check",
+    "status": 410,
+    "encoding": "identity",
+    "wire": 4,
+    "raw": 4,
+    "gzip9": 24,
+    "br11": 8,
+    "markup": 4,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/blog",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15729,
+    "raw": 72128,
+    "gzip9": 15684,
+    "br11": 12806,
+    "markup": 69226,
+    "scripts": 2902,
+    "loaderScript": 930,
+    "loaderJson": 598,
+    "svg": 40639,
+    "styles": 2982,
+    "classes": 16718,
+    "jsonLd": 286,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/blog._index": {
+        "bytes": 39,
+        "keys": [
+          [
+            "robots",
+            17
+          ],
+          [
+            "posts",
+            2
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "routes/blog._index",
+        39
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "robots",
+        17
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/living-room",
+    "status": 301,
+    "location": "/",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/tv/1396-breaking-bad",
+    "status": 301,
+    "location": "/show/1396-breaking-bad",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/tv-shows",
+    "status": 301,
+    "location": "/shows",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/tv-shows/moods",
+    "status": 301,
+    "location": "/shows/moods",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/tv-shows/moods/scary",
+    "status": 301,
+    "location": "/shows/moods/scary",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/lists/new",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 47322,
+    "raw": 225976,
+    "gzip9": 46617,
+    "br11": 35054,
+    "markup": 124785,
+    "scripts": 101191,
+    "loaderScript": 99509,
+    "loaderJson": 98927,
+    "svg": 44773,
+    "styles": 31218,
+    "classes": 28152,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/lists.new": {
+        "bytes": 98370,
+        "keys": [
+          [
+            "quickPicks",
+            98161
+          ],
+          [
+            "initial",
+            125
+          ],
+          [
+            "date",
+            14
+          ],
+          [
+            "byline",
+            6
+          ],
+          [
+            "startsFresh",
+            5
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/lists.new",
+        98370
+      ],
+      [
+        "quickPicks",
+        98161
+      ],
+      [
+        "backdrop",
+        25335
+      ],
+      [
+        "poster",
+        24952
+      ],
+      [
+        "scifi-shows",
+        12400
+      ],
+      [
+        "all-time",
+        12357
+      ],
+      [
+        "comfort",
+        12299
+      ],
+      [
+        "date-night",
+        12264
+      ],
+      [
+        "wrecked",
+        12251
+      ],
+      [
+        "animated",
+        12233
+      ],
+      [
+        "binge",
+        12164
+      ],
+      [
+        "scared",
+        12098
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 192
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 192
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 192
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 192
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 189
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 189
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 189
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 189
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 3,
+        "duplicateBytes": 128
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 3,
+        "duplicateBytes": 128
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/lists/mine",
+    "status": 302,
+    "location": "/lists/new",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15793,
+    "raw": 73799,
+    "gzip9": 15736,
+    "br11": 12906,
+    "markup": 71393,
+    "scripts": 2406,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/scores",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15744,
+    "raw": 73535,
+    "gzip9": 15689,
+    "br11": 12900,
+    "markup": 71129,
+    "scripts": 2406,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/seen",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15746,
+    "raw": 73529,
+    "gzip9": 15690,
+    "br11": 12885,
+    "markup": 71127,
+    "scripts": 2402,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/shows",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15733,
+    "raw": 73440,
+    "gzip9": 15677,
+    "br11": 12886,
+    "markup": 71036,
+    "scripts": 2404,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/wishlist",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15763,
+    "raw": 73635,
+    "gzip9": 15707,
+    "br11": 12843,
+    "markup": 71225,
+    "scripts": 2410,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/lists",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15790,
+    "raw": 73741,
+    "gzip9": 15733,
+    "br11": 12949,
+    "markup": 71323,
+    "scripts": 2418,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/taste",
+    "status": 301,
+    "location": "/u/alp82/stats",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/stats",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15824,
+    "raw": 74002,
+    "gzip9": 15767,
+    "br11": 12926,
+    "markup": 71582,
+    "scripts": 2420,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/tropes",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15804,
+    "raw": 73809,
+    "gzip9": 15745,
+    "br11": 12939,
+    "markup": 71403,
+    "scripts": 2406,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/__html-weight-not-found__",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15496,
+    "raw": 72139,
+    "gzip9": 15438,
+    "br11": 12641,
+    "markup": 69741,
+    "scripts": 2398,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/movies/moods/feel-good?page=2",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 35239,
+    "raw": 246536,
+    "gzip9": 34739,
+    "br11": 24371,
+    "markup": 180774,
+    "scripts": 65762,
+    "loaderScript": 63646,
+    "loaderJson": 63269,
+    "svg": 42603,
+    "styles": 4409,
+    "classes": 72810,
+    "jsonLd": 410,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type.$category.$page": {
+        "bytes": 62700,
+        "keys": [
+          [
+            "results",
+            60854
+          ],
+          [
+            "pageData",
+            1134
+          ],
+          [
+            "discoverParams",
+            583
+          ],
+          [
+            "path",
+            25
+          ],
+          [
+            "page",
+            11
+          ],
+          [
+            "type",
+            8
+          ],
+          [
+            "category",
+            7
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/$type.$category.$page",
+        62700
+      ],
+      [
+        "results",
+        60854
+      ],
+      [
+        "streaming_service_ids",
+        7814
+      ],
+      [
+        "backdrop_path",
+        1393
+      ],
+      [
+        "poster_path",
+        1358
+      ],
+      [
+        "pageData",
+        1134
+      ],
+      [
+        "release_date",
+        1040
+      ],
+      [
+        "discoverParams",
+        1012
+      ],
+      [
+        "title",
+        705
+      ],
+      [
+        "fingerprintConditions",
+        548
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "[{\"logic\":\"AND\",\"conditions\":[{\"field\":\"hopefulness\",\"operator\":\">=\",\"value\":8},{\"field\":\"",
+        "count": 2,
+        "duplicateBytes": 226
+      },
+      {
+        "sample": "context_is_pure_escapism,context_is_comfort_watch",
+        "count": 2,
+        "duplicateBytes": 49
+      },
+      {
+        "sample": "suitability_family,suitability_teens",
+        "count": 2,
+        "duplicateBytes": 36
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/shows/moods/scary",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 33785,
+    "raw": 240430,
+    "gzip9": 33374,
+    "br11": 23417,
+    "markup": 180102,
+    "scripts": 60328,
+    "loaderScript": 58224,
+    "loaderJson": 57852,
+    "svg": 41778,
+    "styles": 4409,
+    "classes": 72810,
+    "jsonLd": 398,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/$type.$category.$page": {
+        "bytes": 57283,
+        "keys": [
+          [
+            "results",
+            55533
+          ],
+          [
+            "pageData",
+            1148
+          ],
+          [
+            "discoverParams",
+            483
+          ],
+          [
+            "path",
+            20
+          ],
+          [
+            "type",
+            7
+          ],
+          [
+            "category",
+            7
+          ],
+          [
+            "page",
+            7
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/$type.$category.$page",
+        57283
+      ],
+      [
+        "results",
+        55533
+      ],
+      [
+        "streaming_service_ids",
+        2587
+      ],
+      [
+        "backdrop_path",
+        1389
+      ],
+      [
+        "poster_path",
+        1359
+      ],
+      [
+        "pageData",
+        1148
+      ],
+      [
+        "release_date",
+        1040
+      ],
+      [
+        "discoverParams",
+        813
+      ],
+      [
+        "title",
+        726
+      ],
+      [
+        "fingerprintConditions",
+        608
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "faq",
+        471
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "[{\"logic\":\"AND\",\"conditions\":[{\"field\":\"scare\",\"operator\":\">=\",\"value\":8},{\"logic\":\"OR\",\"c",
+        "count": 2,
+        "duplicateBytes": 250
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/new/us/all",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15566,
+    "raw": 72537,
+    "gzip9": 15507,
+    "br11": 12732,
+    "markup": 70121,
+    "scripts": 2416,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/blog/streaming-by-country-2026",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 34203,
+    "raw": 180897,
+    "gzip9": 33693,
+    "br11": 23097,
+    "markup": 170797,
+    "scripts": 10100,
+    "loaderScript": 4747,
+    "loaderJson": 4415,
+    "svg": 82657,
+    "styles": 2982,
+    "classes": 63780,
+    "jsonLd": 3669,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/blog.$slug": {
+        "bytes": 3857,
+        "keys": [
+          [
+            "structuredData",
+            3148
+          ],
+          [
+            "post",
+            682
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "routes/blog.$slug",
+        3857
+      ],
+      [
+        "structuredData",
+        3148
+      ],
+      [
+        "description",
+        718
+      ],
+      [
+        "post",
+        682
+      ],
+      [
+        "distribution",
+        542
+      ],
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "@id",
+        366
+      ],
+      [
+        "publisher",
+        352
+      ],
+      [
+        "card",
+        314
+      ],
+      [
+        "url",
+        297
+      ],
+      [
+        "dek",
+        234
+      ]
+    ],
+    "repeatedStrings": [
+      {
+        "sample": "It streams on Netflix in 129 countries and can't get into Japan. GoodWatch checked 4,683 m",
+        "count": 2,
+        "duplicateBytes": 171
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 144
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 105
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 3,
+        "duplicateBytes": 104
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 4,
+        "duplicateBytes": 66
+      },
+      {
+        "sample": "[repeated URL string]",
+        "count": 2,
+        "duplicateBytes": 60
+      },
+      {
+        "sample": "Spirited Away has a better passport than you",
+        "count": 2,
+        "duplicateBytes": 44
+      }
+    ],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/stats/genres",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15824,
+    "raw": 74002,
+    "gzip9": 15767,
+    "br11": 12926,
+    "markup": 71582,
+    "scripts": 2420,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/lists/html-weight-missing",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15433,
+    "raw": 71774,
+    "gzip9": 15376,
+    "br11": 12594,
+    "markup": 69382,
+    "scripts": 2392,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/lists/html-weight-missing",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15550,
+    "raw": 72365,
+    "gzip9": 15493,
+    "br11": 12680,
+    "markup": 69953,
+    "scripts": 2412,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/u/alp82/lists/html-weight-missing/edit",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15569,
+    "raw": 72399,
+    "gzip9": 15514,
+    "br11": 12702,
+    "markup": 69973,
+    "scripts": 2426,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/pmwiki/example",
+    "status": 404,
+    "encoding": "gzip",
+    "wire": 15573,
+    "raw": 72542,
+    "gzip9": 15514,
+    "br11": 12735,
+    "markup": 70124,
+    "scripts": 2418,
+    "loaderScript": 970,
+    "loaderJson": 537,
+    "svg": 42419,
+    "styles": 2950,
+    "classes": 16892,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/tv-shows/moods/scary/2",
+    "status": 301,
+    "location": "/shows/moods/scary/2",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/country",
+    "status": 200,
+    "encoding": "gzip",
+    "wire": 15528,
+    "raw": 70761,
+    "gzip9": 15479,
+    "br11": 12681,
+    "markup": 68033,
+    "scripts": 2728,
+    "loaderScript": 923,
+    "loaderJson": 591,
+    "svg": 41533,
+    "styles": 2982,
+    "classes": 16143,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {
+      "root": {
+        "bytes": 528,
+        "keys": [
+          [
+            "env",
+            398
+          ],
+          [
+            "locale",
+            32
+          ],
+          [
+            "dehydratedState",
+            29
+          ],
+          [
+            "signInAgain",
+            5
+          ],
+          [
+            "user",
+            4
+          ]
+        ]
+      },
+      "routes/settings": {
+        "bytes": 4,
+        "keys": []
+      },
+      "routes/settings.country": {
+        "bytes": 4,
+        "keys": []
+      }
+    },
+    "biggestKeys": [
+      [
+        "root",
+        528
+      ],
+      [
+        "env",
+        398
+      ],
+      [
+        "SUPABASE_ANON_KEY",
+        210
+      ],
+      [
+        "SUPABASE_URL",
+        42
+      ],
+      [
+        "FASTSTATS_SITE_KEY",
+        34
+      ],
+      [
+        "locale",
+        32
+      ],
+      [
+        "dehydratedState",
+        29
+      ],
+      [
+        "AUTH_MAINTENANCE",
+        5
+      ],
+      [
+        "signInAgain",
+        5
+      ],
+      [
+        "user",
+        4
+      ],
+      [
+        "country",
+        4
+      ],
+      [
+        "language",
+        4
+      ]
+    ],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/streaming",
+    "status": 301,
+    "location": "/settings/services",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/where-you-watch",
+    "status": 301,
+    "location": "/settings/country",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  },
+  {
+    "path": "/settings/hidden",
+    "status": 301,
+    "location": "/my-library/hidden",
+    "encoding": "identity",
+    "wire": 0,
+    "raw": 0,
+    "gzip9": 20,
+    "br11": 1,
+    "markup": 0,
+    "scripts": 0,
+    "loaderScript": 0,
+    "loaderJson": 2,
+    "svg": 0,
+    "styles": 0,
+    "classes": 0,
+    "jsonLd": 0,
+    "hiddenRelated": 0,
+    "routes": {},
+    "biggestKeys": [],
+    "repeatedStrings": [],
+    "duplicateTitleObjects": 0
+  }
+]

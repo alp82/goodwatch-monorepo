@@ -1,0 +1,94 @@
+[
+  {
+    "path": "/movies/moods",
+    "initialTitles": 800,
+    "renderedTitles": 160,
+    "before": {
+      "raw": 1760222,
+      "br11": 102990,
+      "gzip9": 220523,
+      "loaderScript": 1244497
+    },
+    "trimPreviews": {
+      "raw": 783698,
+      "br11": 41410,
+      "gzip9": 74484,
+      "loaderScript": 267973
+    },
+    "trimMetadata": {
+      "raw": 752973,
+      "br11": 36441,
+      "gzip9": 67328,
+      "loaderScript": 237248
+    }
+  },
+  {
+    "path": "/shows/moods",
+    "initialTitles": 800,
+    "renderedTitles": 160,
+    "before": {
+      "raw": 1665584,
+      "br11": 101500,
+      "gzip9": 193691,
+      "loaderScript": 1152598
+    },
+    "trimPreviews": {
+      "raw": 771129,
+      "br11": 42759,
+      "gzip9": 71700,
+      "loaderScript": 258143
+    },
+    "trimMetadata": {
+      "raw": 740444,
+      "br11": 37854,
+      "gzip9": 64459,
+      "loaderScript": 227458
+    }
+  },
+  {
+    "path": "/movies/genres",
+    "initialTitles": 760,
+    "renderedTitles": 152,
+    "before": {
+      "raw": 1653999,
+      "br11": 97588,
+      "gzip9": 205552,
+      "loaderScript": 1161820
+    },
+    "trimPreviews": {
+      "raw": 734977,
+      "br11": 40293,
+      "gzip9": 69165,
+      "loaderScript": 242798
+    },
+    "trimMetadata": {
+      "raw": 710731,
+      "br11": 35139,
+      "gzip9": 61784,
+      "loaderScript": 218552
+    }
+  },
+  {
+    "path": "/shows/streaming",
+    "initialTitles": 120,
+    "renderedTitles": 24,
+    "before": {
+      "raw": 312889,
+      "br11": 32275,
+      "gzip9": 46072,
+      "loaderScript": 174954
+    },
+    "trimPreviews": {
+      "raw": 175416,
+      "br11": 19603,
+      "gzip9": 27238,
+      "loaderScript": 37481
+    },
+    "trimMetadata": {
+      "raw": 172988,
+      "br11": 19320,
+      "gzip9": 26880,
+      "loaderScript": 35053
+    }
+  }
+]
