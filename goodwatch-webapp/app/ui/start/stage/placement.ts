@@ -22,7 +22,9 @@ export const GAP_CAP = 300
 /**
  * The stage's sizes per breakpoint, in px. Later entries override earlier ones where their media query matches.
  * - pad: the space above the search block (from 1024 px: `clamp(20px, 3vh, 48px)`, written as `padVh`).
- * - block: the search block's height (H1, search bar, mood button). Re-measure it when the block changes.
+ * - block: the search block's height: the H1 (one line), the search bar (101, 115, 119 px), and the mood row (52 px,
+ *   56 px from 1024 px: a 44 or 48 px row with 4 px above and below), with their margins. Re-measure it when the block
+ *   changes.
  * - card, cardBottom: the card's height and the space under it.
  * - gapMin, airAbove, airBelow: the gap's least height, and the air the focus band keeps from its edges.
  * - nightTop: where the night above the room starts to fade.
@@ -71,7 +73,7 @@ export const STAGE_SIZES: readonly StageBreakpoint[] = [
 		minWidth: 640,
 		size: {
 			pad: 44,
-			block: 252,
+			block: 268,
 			card: 356,
 			cardBottom: 72,
 			gapMin: 80,

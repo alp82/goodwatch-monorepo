@@ -7,8 +7,13 @@
 // (utils/start-after-paint.ts). Searches run in the browser only, never from the loader.
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
+import { useState } from "react"
 import type { startPageLoader } from "~/server/start-page/loader.server"
+import type { StartTitle } from "~/ui/living-room/living-room-data"
+import { StartSearchBar } from "~/ui/start/search/StartSearchBar"
+import { useStartSearch } from "~/ui/start/search/useStartSearch"
 import { StartStage } from "~/ui/start/stage/StartStage"
+import { useStartQuery } from "~/ui/start/stage/useStartQuery"
 import { START_SHEETS } from "~/ui/start/start-sheets"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
@@ -88,14 +93,41 @@ const MEMBER_ROOM = { night: 0, camera: 1 }
 
 export default function Index() {
 	const data = useLoaderData<typeof startPageLoader>()
-	const room = data.member ? MEMBER_ROOM : GUEST_ROOM
+	if (!data.member) return <GuestStart titles={data.titles} />
 	return (
 		<StartStage
 			shelf={data.titles}
-			night={room.night}
-			camera={room.camera}
-			centered={!data.member}
-			cardHidden={!data.member}
+			night={MEMBER_ROOM.night}
+			camera={MEMBER_ROOM.camera}
+		/>
+	)
+}
+
+/**
+ * A guest's start: the search block waits in the middle of the dark room until the guest asks (Enter, Search, a
+ * preset, or leaving the field with a search on); then it lifts and the card comes in.
+ */
+function GuestStart({ titles }: { titles: StartTitle[] }) {
+	const start = useStartQuery()
+	const results = useStartSearch(start.query)
+	const [asked, setAsked] = useState(false)
+	return (
+		<StartStage
+			shelf={titles}
+			night={GUEST_ROOM.night}
+			camera={GUEST_ROOM.camera}
+			centered={!asked}
+			cardHidden={!asked}
+			search={
+				<StartSearchBar
+					query={start.query}
+					results={results}
+					setDraft={start.setDraft}
+					search={start.search}
+					clearSearch={start.clearSearch}
+					onAsk={() => setAsked(true)}
+				/>
+			}
 		/>
 	)
 }

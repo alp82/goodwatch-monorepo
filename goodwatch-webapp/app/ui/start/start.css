@@ -83,7 +83,7 @@
 @media (min-width: 640px) {
 	.start-stage {
 		--start-pad: 44px;
-		--start-block: 252px;
+		--start-block: 268px;
 		--start-card: 356px;
 		--start-card-bottom: 72px;
 		--start-gap-min: 80px;
@@ -305,11 +305,13 @@
 		);
 }
 
+/* The heading stays on one line: about 12.2 em wide in the system font, so its size is capped at the stage's width
+   (less the padding) over 13. */
 .start-heading {
 	width: fit-content;
 	margin-inline: auto;
 	text-align: center;
-	font-size: 26px;
+	font-size: min(26px, calc((100cqw - 32px) / 13));
 	line-height: 32px;
 	font-weight: 800;
 	letter-spacing: -0.025em;
@@ -320,6 +322,74 @@
 .start-search {
 	max-width: 880px;
 	margin: 16px auto 0;
+}
+
+/* The search bar (search/StartSearchBar.tsx): lifted off the room by a deep shadow, an amber glow while focused. */
+.start-bar-shadow,
+.start-bar-glow {
+	position: absolute;
+	inset: 0;
+	border-radius: 1rem;
+	pointer-events: none;
+}
+
+.start-bar-shadow {
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 0.06),
+		0 2px 4px rgb(0 0 0 / 0.45),
+		0 10px 22px rgb(0 0 0 / 0.45),
+		0 28px 56px rgb(0 0 0 / 0.55),
+		0 60px 120px rgb(0 0 0 / 0.55);
+}
+
+.start-bar-glow {
+	opacity: 0;
+	box-shadow: 0 0 0 2px rgb(251 191 36 / 0.8), 0 0 0 6px rgb(251 191 36 / 0.12),
+		0 0 70px 10px rgb(251 191 36 / 0.28);
+	transition: opacity 0.25s ease-out;
+}
+
+.start-bar:focus-within .start-bar-glow {
+	opacity: 1;
+}
+
+/* The bar's second row: the presets and the reading, one over the other in the same box, swapped by opacity. Scrolls
+   sideways when its content doesn't fit, its end fading out. */
+.start-bar-row {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	padding-inline: 16px;
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scrollbar-width: none;
+	mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+	transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.start-bar-row::-webkit-scrollbar {
+	display: none;
+}
+
+.start-bar-row[data-off] {
+	opacity: 0;
+	transform: translateY(4px);
+	pointer-events: none;
+}
+
+.start-bar-row + .start-bar-row[data-off] {
+	transform: translateY(-4px);
+}
+
+@media (min-width: 640px) {
+	.start-bar-shadow,
+	.start-bar-glow {
+		border-radius: 22px;
+	}
+	.start-bar-row {
+		padding-inline: 24px;
+	}
 }
 
 .start-moods {
@@ -361,7 +431,7 @@
 		padding-inline: 24px;
 	}
 	.start-heading {
-		font-size: 48px;
+		font-size: min(48px, calc((100cqw - 48px) / 13));
 		line-height: 1.1;
 	}
 	.start-search {
@@ -403,5 +473,11 @@
 	}
 	.start-night {
 		transition-duration: 0.4s;
+	}
+	.start-bar-row,
+	.start-bar-row[data-off],
+	.start-bar-row + .start-bar-row[data-off] {
+		transform: none;
+		transition: opacity 0.2s ease-out;
 	}
 }
