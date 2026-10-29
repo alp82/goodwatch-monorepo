@@ -9,7 +9,7 @@
 //   the transition's last keyframe counts, not the frame on screen, so the slots are decided once for where things
 //   come to rest, not frame by frame.
 // - A hidden card still counts, at the box it arrives in (its own "waiting" shift is skipped): the slots under it stay
-//   empty before the guest asks, so no poster vanishes from under the card when it arrives (the lab did the same).
+//   empty before the guest asks, so no poster vanishes from under the card when it arrives.
 import { type Rect, overlaps } from "./homography.ts"
 
 /** A 2D CSS transform about an origin in the stage's px: p' = o + M(p - o), M = [a c e; b d f]. */

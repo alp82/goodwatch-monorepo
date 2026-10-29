@@ -72,7 +72,7 @@ const loadIntroTheater = reloadOnStaleChunk(() =>
 export function HowItWorksCorner({
 	loadTheater = loadIntroTheater,
 }: {
-	/** The theater's code: the lazy chunk; tests pass a stand-in. */
+	/** The theater's code: the lazy chunk; tests pass their own. */
 	loadTheater?: () => Promise<Theater>
 }) {
 	const button = useRef<HTMLButtonElement>(null)
