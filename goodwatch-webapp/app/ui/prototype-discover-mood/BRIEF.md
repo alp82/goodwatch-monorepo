@@ -603,3 +603,36 @@ instead 3. few variations".
   owns them.
 - Script: `~/.cache/ptshot/dm-layouts.mjs` (L=abcde SIZES=1440,390 SHOTS=dir) opens each layout as guest and member,
   clicks every main tab and sub-tab, checks "/" and counts page errors.
+
+## Round 16 (2026-10-29): popularity, money and show filters
+
+Owner: "c is best, lets pick this" (layout c is the default now), plus a screenshot of another site's vote count, rank,
+budget, box office and drop rate sliders: "do we have the possibility to add filters like these with our current
+data? for those we can, add them to appropriate locations with good design and ux. few variations if feasible".
+
+Feasibility, read from code: the ratings count (snapshot `votes`) and popularity rank (snapshot `popularity`, the
+cached Popular order) are cheap snapshot filters. Budget, box office, seasons, episodes, time to finish and show status
+are Crate columns, so each is a SQL set like `runtime`. Budget and box office are sparse on TMDB. Drop rate needs a
+per-show aggregate over members' `dropped` states, and there are far too few members for it; not built. Awards need
+an ingest. Live Discover accepts none of these, so everything below is lab-only.
+
+New lab section "Watch: popularity, money, shows" (`v-more`, `sections/more/`). The values live in `store.ts` (like
+mc-users and you-extras). The grid doesn't follow them. The Watch summary, the sub-tab and Watch badges, the status and
+footer chips (they open the sub-tab) and Clear all do. Counts are simulated: a share table per filter times the
+list's movie or show count (type option counts), with the other lab-only choices multiplied in.
+
+- Choices: How many ratings (Hidden gems under 10K, Known to fans 10K to 100K, Well known 100K+, Everyone's seen it
+  1M+), Popularity (Popular now top 1,000, Under the radar #1K to #10K, Deep cuts past #10K), Budget (Indie under $5M,
+  Mid budget, Big, Blockbuster $100M+), Box office ($100M+, $500M+, $1B+, Hit 3x budget, Flop), Seasons (One season, 2
+  to 3, 4 to 7, 8+), Status (Still running, Ended, Canceled), Time to finish (A weekend under 10 h to Years of it 100
+  h+). Every range also has a stepped slider (uneven stops, the span read as one label, "Under 10K").
+- a: own Watch sub-tabs, Services · Scores · Popularity · Made in · Released · Length · Budget · Shows · Age and
+  content. Preset tiles with counts over the slider (length d's look). Budget shows with movies in the list, Shows
+  with shows (or while one of their choices is set); a block of the other kind dims.
+- b: a's sub-tabs, each range as a histogram (one bar per stop gap, square-root heights, amber inside the range) right
+  over its slider; presets as chips under it.
+- c: one More sub-tab at the end of Watch: three columns How known | Movies | Shows, chips only, no sliders.
+- Layout: `layouts.ts` `withMore` adds the sub-tabs to any main tabs layout; `layoutFor(choice)` is what the shell
+  reads. Sub-tabs carry `part` (renders the more section at that part) and `kind` (shown with that type).
+- Production would need: a FilterState field and URL param per filter, a FILTER_NAMES bit, a snapshot range check
+  (votes, rank) or a SQL set (the rest), option counts per preset, and the MCP discover schema.

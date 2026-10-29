@@ -28,6 +28,7 @@ import { ProtoGrid, type ProtoDiscover, TAGS, type Tag, tagId, type useFilterPie
 import { tagName } from "./sections/mood/parts"
 import { mcUsers, setMcUsers } from "./sections/scores/mc-users"
 import { clearYou, useYouExtras, youChips } from "./sections/taste/you-extras"
+import { clearMore, moreChips, partCount, useMore } from "./sections/more/store"
 import { LAYOUT_A, type Layout, type SegKey, type Slot, type Sub, type SubId, splitsMine } from "./layouts"
 import { MEMBER_SERVICES, modeOf } from "./sections/services/parts"
 import type { Viewer } from "./types"
@@ -58,8 +59,10 @@ const CTX_A: Ctx = { L: LAYOUT_A, viewer: "guest" }
 
 /** The sub-tabs this viewer gets (Age and content needs a rating ladder). */
 export function subsFor(seg: SegKey, pieces: Pieces, L: Layout = LAYOUT_A): Sub[] {
-	if (pieces.groups.ladder) return L.tabs[seg]
-	return L.tabs[seg].filter((s) => s.id !== "age")
+	const type = pieces.groups.state.type
+	// Round 16: Budget shows with movies, Shows with shows, or while one of their choices is set.
+	const fits = (s: Sub) => !s.kind || type === "all" || type === s.kind || (s.part && s.part !== "all" && partCount([s.part]) > 0)
+	return L.tabs[seg].filter((s) => (pieces.groups.ladder || s.id !== "age") && fits(s))
 }
 
 const ALL_SEGS: SegKey[] = ["search", "you", "mood", "watch"]
@@ -96,6 +99,7 @@ export function subCount(d: ProtoDiscover, pieces: Pieces, sub: Sub, ctx: Ctx = 
 		if (slot === "q") return n + (d.q ? 1 : 0)
 		if (slot === "notSeenYet") return n + (d.filters.state.notSeenYet ? 1 : 0)
 		if (slot === "myServices") return n + (onMine(d, ctx.viewer) ? 1 : 0)
+		if (slot === "reach" || slot === "money" || slot === "shows") return n + partCount([slot])
 		if (slot === "services" && split && onMine(d, ctx.viewer)) return n
 		return n + chipsOf(pieces, slot).length
 	}, 0)
@@ -202,6 +206,7 @@ export function segValues(d: ProtoDiscover, pieces: Pieces, ctx: Ctx = CTX_A): R
 				headPlus([...labels("sourceScores"), ...(mcUsers() ? [`User score ${(mcUsers() / 10).toFixed(1)}+`] : []), ...labels("scoreGap")]),
 				released,
 				headPlus(labels("ageLimit")),
+				headPlus(moreChips().map((c) => c.label)),
 			]),
 			placeholder: "Everywhere",
 			badge: badge("watch"),
@@ -491,6 +496,7 @@ export function useClearAll(d: ProtoDiscover) {
 	return () => {
 		setMcUsers(0)
 		clearYou()
+		clearMore()
 		if (d.q !== null) {
 			setPending(true)
 			d.setQ(null)
@@ -561,6 +567,19 @@ export function YouChips({ onOpen }: { onOpen: (slot: Slot) => void }) {
 	)
 }
 
+/** Round 16: the lab-only popularity, money and show choices as chips (sections/more/store.ts). */
+export function MoreChips({ onOpen }: { onOpen: (slot: Slot) => void }) {
+	const x = useMore()
+	const accent = { reach: "type", money: "minScore", shows: "runtime" } as const
+	return (
+		<>
+			{moreChips(x).map((c) => (
+				<ValueChip key={c.key} chip={{ key: c.key, group: accent[c.part], label: c.label, remove: (v) => v }} onOpen={() => onOpen(c.part)} onRemove={c.remove} />
+			))}
+		</>
+	)
+}
+
 const LINE_FADE = "linear-gradient(to right, black calc(100% - 2.5rem), transparent)"
 
 export function StatusLine({
@@ -575,7 +594,8 @@ export function StatusLine({
 	const chips = pieces.chips
 	const s = d.filters.state
 	const you = useYouExtras()
-	const any = searching || chips.length > 0 || s.onMyServices || youChips(you).length > 0
+	const more = moreChips(useMore()).length
+	const any = searching || chips.length > 0 || s.onMyServices || youChips(you).length > 0 || more > 0
 	const sorts = discoverSorts(searching, TASTE)
 	const sort = sortShown(d.filters.sort, searching, TASTE)
 	return (
@@ -632,6 +652,7 @@ export function StatusLine({
 						onRemove={() => d.filters.update((x) => chip.remove(x))}
 					/>
 				))}
+				<MoreChips onOpen={onOpen} />
 				{any && (
 					<button
 						type="button"

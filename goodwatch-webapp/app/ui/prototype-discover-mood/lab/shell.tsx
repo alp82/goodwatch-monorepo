@@ -12,11 +12,12 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { SnapSheet } from "~/ui/filter-bar"
 import { TAP } from "~/ui/filter-bar/motion"
 import { useLabChoice } from "./LabBar"
-import { type Layout, type SubId, layoutOf, splitsMine } from "./layouts"
+import { type Layout, type SubId, layoutFor, splitsMine } from "./layouts"
 import { pick, pick as variantOf } from "./registry"
 import { ResultsProvider, useShown } from "./results-view"
 import { useMcUsers } from "./sections/scores/mc-users"
 import { useYouExtras } from "./sections/taste/you-extras"
+import { useMore } from "./sections/more/store"
 import { Footer } from "./shell-footer"
 import { type ProtoDiscover, TAGS, useFilterPieces } from "../kit"
 import { tagName } from "./sections/mood/parts"
@@ -58,7 +59,7 @@ const MORPH_T = { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const }
 /** The main tabs for this choice (round 15), their bar order and what the counts need. */
 function useLayout() {
 	const choice = useLabChoice()
-	const L = layoutOf(choice.layout)
+	const L = layoutFor(choice)
 	return { L, order: L.order(choice.as), ctx: { L, viewer: choice.as } }
 }
 
@@ -97,6 +98,7 @@ function useTabState(d: ProtoDiscover, { L, order, ctx }: { L: Layout; order: Se
 function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces; onOpenChange: (o: boolean) => void }) {
 	useMcUsers() // the bar and badges read the lab-only Metacritic user score
 	useYouExtras() // and You's lab-only choices
+	useMore() // and round 16's popularity, money and show choices
 	const lay = useLayout()
 	const values = segValues(d, pieces, lay.ctx)
 	const t = useTabState(d, lay)
@@ -272,6 +274,7 @@ function Tabs({ d, pieces, seg, onPick }: { d: ProtoDiscover; pieces: Pieces; se
 function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 	useMcUsers()
 	useYouExtras()
+	useMore()
 	const lay = useLayout()
 	const values = segValues(d, pieces, lay.ctx)
 	const t = useTabState(d, lay)

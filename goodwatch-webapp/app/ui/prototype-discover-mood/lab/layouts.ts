@@ -2,15 +2,18 @@
 // You as a sub-tab, Mood, Watch); b-e move You out into a fourth tab. Only the tab structure changes; each panel
 // still renders the chosen section variants.
 import type { CardKey } from "~/ui/filter-bar/filter-cards"
+import { type Choice, DEFAULTS } from "./choice"
 import type { SectionId, Viewer } from "./types"
 
 export type SegKey = "search" | "you" | "mood" | "watch"
 
 /** A filter card, the search text, Not seen yet, or (layout d) On my services. */
-export type Slot = CardKey | "q" | "notSeenYet" | "myServices"
+export type Slot = CardKey | "q" | "notSeenYet" | "myServices" | MoreSlot
+/** Round 16: the lab-only popularity, money and show choices (sections/more/store.ts). */
+export type MoreSlot = "reach" | "money" | "shows"
 
 /** "lists" is layout d's You > Lists page (no lab section of its own). */
-export type SubId = SectionId | "lists"
+export type SubId = SectionId | "lists" | MoreSlot
 
 export interface Sub {
 	id: SubId
@@ -20,6 +23,10 @@ export interface Sub {
 	you?: ("minMatch" | "notSeenYet")[]
 	/** Renders this page instead of the section's chosen variant (layout d splits taste f in two). */
 	view?: "you-taste" | "you-lists"
+	/** Round 16: renders the "more" section, at this part (all: c's one page). */
+	part?: MoreSlot | "all"
+	/** Shown while the list holds this kind (or its choices are set). */
+	kind?: "movie" | "show"
 }
 
 export interface Layout {
@@ -200,3 +207,25 @@ export const segsOf = (L: Layout, viewer: Viewer) => L.order(viewer)
 /** Layout d counts On my services under You, so Watch > Services doesn't count it again. */
 export const splitsMine = (L: Layout) =>
 	L.tabs.you.some((s) => s.slots.includes("myServices"))
+
+// Round 16: the "more" section's sub-tabs in Watch. a, b: Popularity after Scores, Budget and Shows after Length;
+// c: one More at the end.
+const REACH: Sub = { id: "reach", label: "Popularity", slots: ["reach"], part: "reach" }
+const MONEY: Sub = { id: "money", label: "Budget", slots: ["money"], part: "money", kind: "movie" }
+const SHOWS: Sub = { id: "shows", label: "Shows", slots: ["shows"], part: "shows", kind: "show" }
+const MORE: Sub = { id: "more", label: "More", slots: ["reach", "money", "shows"], part: "all" }
+
+export function withMore(L: Layout, key: string | undefined): Layout {
+	const watch = L.tabs.watch.flatMap((s): Sub[] => {
+		if (key === "c") return s.id === "age" ? [s, MORE] : [s]
+		if (s.id === "scores") return [s, REACH]
+		if (s.id === "length") return [s, MONEY, SHOWS]
+		return [s]
+	})
+	// No Age and content tab to follow (it needs a ladder): More still goes last.
+	if (key === "c" && !watch.includes(MORE)) watch.push(MORE)
+	return { ...L, tabs: { ...L.tabs, watch } }
+}
+
+/** The lab's layout: the main tabs choice with the "more" section's sub-tabs. */
+export const layoutFor = (choice: Choice): Layout => withMore(layoutOf(choice.layout), choice.more ?? DEFAULTS.more)

@@ -9,7 +9,7 @@ import type { Pieces } from "./shell-parts"
 export type { Pieces }
 
 /** "layout" is the main tabs choice (round 15), not a panel section. */
-export type SectionId = "layout" | "titles" | "people" | "taste" | "mood" | "services" | "origin" | "length" | "scores" | "released" | "age"
+export type SectionId = "layout" | "titles" | "people" | "taste" | "mood" | "services" | "origin" | "length" | "scores" | "released" | "age" | "more"
 
 export type Viewer = "guest" | "member"
 
@@ -31,6 +31,8 @@ export interface SectionProps {
 	close?: () => void
 	/** Only for a variant with `ownFind`: Find a filter's field to place, and its results while it has text. */
 	find?: { field: ReactNode; results: ReactNode | null }
+	/** Round 16, the "more" section: which of its sub-tabs is open (a, b); c shows all. */
+	morePart?: "reach" | "money" | "shows"
 }
 
 /** A list the grid, the status line and "Show N titles" show instead of Discover's own (mood i: the AND list). */

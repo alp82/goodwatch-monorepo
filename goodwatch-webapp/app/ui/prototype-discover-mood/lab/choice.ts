@@ -15,12 +15,13 @@ export const SECTIONS: { id: SectionId; name: string }[] = [
 	{ id: "released", name: "Watch: released" },
 	{ id: "length", name: "Watch: length" },
 	{ id: "age", name: "Watch: age and content" },
+	{ id: "more", name: "Watch: popularity, money, shows" },
 ]
 
 /** The owner's picks so far. Empty: every section shows `a`, the baseline. */
 export const DEFAULTS: Partial<Record<SectionId, string>> = {
 	// Round 6 and 7 verdicts (2026-10-28, 2026-10-29).
-	layout: "a",
+	layout: "c",
 	titles: "g",
 	people: "c",
 	taste: "f",
@@ -31,6 +32,7 @@ export const DEFAULTS: Partial<Record<SectionId, string>> = {
 	scores: "a",
 	released: "f",
 	age: "a",
+	more: "a",
 }
 
 export type Choice = Partial<Record<SectionId, string>> & { sec: SectionId; as: Viewer }
