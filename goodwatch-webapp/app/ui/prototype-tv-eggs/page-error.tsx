@@ -132,7 +132,7 @@ export function PageError() {
 								<span className="egg-blink mr-[1cqw] inline-block h-[1.3cqw] w-[1.3cqw] rounded-full bg-red-600" />
 								Please stand by
 							</div>
-							<div className="flex flex-1 items-center bg-black/85 px-[2.5cqw] py-[1.4cqh] text-[2.2cqw]">
+							<div className="flex flex-1 items-center justify-center bg-black/85 px-[2.5cqw] py-[1.4cqh] text-center text-[2.2cqw]">
 								Trying again in {Math.max(0, left)} s · <b className="ml-[0.6cqw]">OK</b>&nbsp;tries now ·&nbsp;<b>Power</b>&nbsp;off and on
 							</div>
 						</div>

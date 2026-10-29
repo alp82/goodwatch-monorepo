@@ -127,6 +127,10 @@ export function Scene({
 	msg?: string | null
 }) {
 	const { ref, layout: L } = useLayout()
+	// While the tube switches off it keeps the last picture it showed: a page that changes its screen on Power off
+	// (sign-out's Welcome back) shows the change only when the set comes back on.
+	const lastOn = useRef<ReactNode>(screen)
+	if (power === "on") lastOn.current = screen
 	const [wasOff, setWasOff] = useState(false)
 	useEffect(() => {
 		if (power === "off") setWasOff(true)
@@ -175,7 +179,7 @@ export function Scene({
 					<div className="egg-dim" style={{ opacity: dimRoom ?? (power === "off" ? 0.6 : 0) }} />
 					<div className={`egg-screen ${power === "off" ? "egg-off" : wasOff ? "egg-on" : ""}`} style={px(L.tv)}>
 						<div className="egg-screen-inner">
-							{screen}
+							{power === "on" ? screen : lastOn.current}
 							<Toast msg={msg ?? null} />
 						</div>
 						{power === "off" && <div className="egg-dot" />}

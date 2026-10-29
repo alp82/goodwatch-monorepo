@@ -20,6 +20,7 @@ import {
 	useToast,
 	useTvPower,
 } from "./kit"
+import { NoSignal } from "./no-signal"
 
 // Guesses: trigram likeness between the address's words and each title.
 const norm = (s: string) =>
@@ -61,7 +62,7 @@ function guessesFor(path: string): Title[] {
 		.map((x) => x.t)
 }
 
-export function Page404({ path }: { path: string }) {
+export function Page404({ path, variant }: { path: string; variant: string }) {
 	const guesses = useMemo(() => guessesFor(path), [path])
 	const [service, setService] = useState<ServiceKey | null>(null)
 	const list = useMemo(() => {
@@ -96,7 +97,7 @@ export function Page404({ path }: { path: string }) {
 	}
 	useRemoteKeys(press)
 	const t = at >= 0 ? list[at] : null
-	const label = t ? (service ? serviceName(service) : guesses.includes(t) ? "Did you mean" : "Popular now") : "No signal"
+	const label = service ? serviceName(service) : t && guesses.includes(t) ? "Did you mean" : "Popular now"
 	return (
 		<Scene
 			heading="Page not found"
@@ -110,30 +111,10 @@ export function Page404({ path }: { path: string }) {
 							<InfoBar t={t} hint="OK to open" />
 						</>
 					) : (
-						<>
-							<Static calm opacity={0.5} />
-							<div className="absolute inset-0 flex items-center justify-center">
-								<div className="max-w-[80%] rounded-[1.2cqw] bg-black/80 px-[4cqw] py-[3cqh] text-center">
-									<div className="font-mono text-[2cqw] uppercase tracking-[0.2em] text-white/50">Error 404</div>
-									<div className="mt-[1cqh] text-[6cqw] font-bold leading-none">No signal</div>
-									<div className="mt-[1.6cqh] text-[2.1cqw] text-white/70">
-										<span className="font-mono text-white/90">{path}</span> doesn't lead anywhere.
-									</div>
-									<div className="mt-[2.4cqh] flex flex-wrap items-center justify-center gap-x-[2.4cqw] gap-y-[1cqh] text-[2cqw] text-white/75">
-										<span>
-											<b className="text-white">CH+</b>{" "}
-											{guesses.length ? (guesses.length === 1 ? "a likely match" : `${guesses.length} likely matches`) : "something good"}
-										</span>
-										<span>
-											<b className="text-white">Netflix / Prime</b> only that service
-										</span>
-									</div>
-								</div>
-							</div>
-						</>
+						<NoSignal key={variant} variant={variant} count={guesses.length} />
 					)}
 					{flips > 0 && <Static flash={flips} opacity={0.75} />}
-					<ChannelNumber n={t ? 405 + at : 404} label={label} />
+					{t && <ChannelNumber n={405 + at} label={label} />}
 				</>
 			}
 			remote={<BigRemote press={press} off={!tv.on} pulse={at === -1 ? "up" : undefined} services openService={service} onService={pickService} />}

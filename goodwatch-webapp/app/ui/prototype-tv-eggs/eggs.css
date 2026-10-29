@@ -174,3 +174,25 @@
 	0% { opacity: 1; }
 	100% { opacity: 0; }
 }
+
+/* The 404's screensaver: X and Y drift on two elements with different periods, so the path never repeats soon. */
+.egg-bounce-x {
+	animation: egg-bounce-x 7.3s linear infinite alternate;
+}
+.egg-bounce-y {
+	animation: egg-bounce-y 4.1s linear infinite alternate;
+}
+@keyframes egg-bounce-x {
+	from { transform: translateX(2cqw); }
+	to { transform: translateX(calc(100cqw - 27cqw)); }
+}
+@keyframes egg-bounce-y {
+	from { transform: translateY(2cqh); }
+	to { transform: translateY(calc(100cqh - 9cqw - 20cqh)); }
+}
+@media (prefers-reduced-motion: reduce) {
+	.egg-bounce-x,
+	.egg-bounce-y {
+		animation: none;
+	}
+}
