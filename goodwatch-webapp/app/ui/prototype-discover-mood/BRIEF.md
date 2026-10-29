@@ -556,3 +556,19 @@ be "any of"; e's removal style is better, with a more visible strike. On You: No
   the Search summary, as a removable chip in the footer and the status line (opens You), and in Clear all. Order (For
   you, Best match first) doesn't count: it orders, filters nothing, like the sort elsewhere. f has no strongest words;
   where d and e show them they are Mood tags and count in Mood.
+
+## Round 14 (2026-10-29): k without removal tiles, You lists as Not seen yet pills
+
+Owner: "just remove the removal tiles on the mixes tab of mood, we dont need that anymore"; "wishlist should be on the
+bottom of these"; on production's Not seen yet switch: "this somehow looks nicer on the orig discover".
+
+- k's Mixes has no "Without X" tiles (`useCards(..., withDrops = false)`), and the round 13 "list of 40 or fewer"
+  rule is gone. The grid always holds its 8 cards (phones 6) at the plain row heights. e and j keep their tiles.
+- You (taste f), Your lists order: Not seen yet, Seen before, On your wishlist.
+- Each is `ListPill` (f.tsx): production's `NotSeenSwitch` look at its small size (SHELL pill, h-9, icon, label,
+  `hiddenShort` count, blue Knob) plus an amber inset outline when on (opacity fade). Production's component is
+  hard-wired to its label and eye icons and has no lock, so the pill copies its classes. The count is what the switch
+  hides from this list: Not seen yet from Discover's counts (FilterBar's `notSeenHides`, off minus on; the simulated
+  share when that is 0), Wishlist and Seen before the list minus the member's simulated 38 / 214; guests none. Muted
+  gray when off, blue when on. Guests: lock in place of the icon, faint, no count.
+- f's third column has a 17.5rem floor so "On your wishlist" and its count fit at 1280 px.

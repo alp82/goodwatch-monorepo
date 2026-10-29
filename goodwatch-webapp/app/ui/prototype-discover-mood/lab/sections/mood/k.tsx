@@ -1,7 +1,7 @@
 // PROTOTYPE (Discover lab, mood k): two views in one panel, the same recipe line over both. Mixes: e's big cards with
 // AND counts (a ready mix sets its picks and moves you on to Choose). Choose: i's AND columns. The switch sits on the
-// recipe row, so you can go back and forth. Round 13: each column's "all of" / "any of" toggle (and.ts), e's slim
-// removal tiles also once the list is small (40 or fewer).
+// recipe row, so you can go back and forth. Round 13: each column's "all of" / "any of" toggle (and.ts). Round 14:
+// no removal tiles, the cards fill the grid.
 import { AnimatePresence, motion } from "framer-motion"
 import { useState } from "react"
 import { Segmented } from "~/ui/filter-bar/SheetControls"
@@ -15,7 +15,7 @@ export function MoodK({ d, phone, find, viewer }: SectionProps) {
 	const a = useAnd(d)
 	const art = useWorldArt()
 	const [view, setView] = useState<View>(a.picks.length || a.m.used ? "choose" : "mixes")
-	const { cards, drops } = useCards(d, a, viewer, phone ? 6 : 8, phone ? 2 : 4, () => setView("choose"), true)
+	const { cards, drops } = useCards(d, a, viewer, phone ? 6 : 8, phone ? 2 : 4, () => setView("choose"), false)
 	const shown: View = find?.results ? "choose" : view
 	const toggle = (
 		<div className={phone ? "" : "w-[168px] shrink-0"}>
@@ -49,7 +49,6 @@ export function MoodK({ d, phone, find, viewer }: SectionProps) {
 						art={art}
 						cols={phone ? 2 : 4}
 						rows={phone ? "grid-rows-[5.5rem_5.5rem_5.5rem]" : "grid-rows-[10.75rem_10.75rem]"}
-						slimRows={phone ? "grid-rows-[5.5rem_5.5rem_2.5rem_2.5rem]" : "grid-rows-[10.75rem_7.5rem_2.75rem]"}
 					/>
 				) : (
 					<AndColumns a={a} find={find} phone={phone} />

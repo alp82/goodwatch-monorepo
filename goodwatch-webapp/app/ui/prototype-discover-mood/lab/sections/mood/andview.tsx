@@ -122,9 +122,6 @@ interface Card {
 	path?: string | null
 }
 
-/** The footer's small list (its recoveries show from here down). */
-const SMALL_LIST = 40
-
 const readyMixes = (viewer: Viewer): Mix[] => (viewer === "member" ? MEMBER_MIXES : MIXES)
 
 /**
@@ -139,8 +136,8 @@ export function useCards(
 	slots: number,
 	cols: number,
 	onMix?: () => void,
-	/** k (round 13): the removal row also shows once the list is small, as the footer's recoveries do. */
-	dropsWhenSmall = false,
+	/** k (round 14): no removal tiles, the grid stays full of cards. */
+	withDrops = true,
 ): { cards: Card[]; drops: DropStep[] } {
 	const ready = readyMixes(viewer)
 	const x = useMixes(d, ready)
@@ -188,7 +185,7 @@ export function useCards(
 			}),
 		)
 	// "Without X" only from three picks (e's DROP_FROM); its count is what it brings back.
-	const drops = (a.picks.length + a.m.words.length >= DROP_FROM ? a.picks : [])
+	const drops = (withDrops && a.picks.length + a.m.words.length >= DROP_FROM ? a.picks : [])
 		.map(
 			(c): DropStep => ({
 				id: `drop:${c.group}:${c.id}`,
@@ -200,13 +197,12 @@ export function useCards(
 		)
 		.filter((s) => s.n === null || s.n > 0)
 		.sort((p, q) => (q.n ?? 0) - (p.n ?? 0))
-	const small = dropsWhenSmall && total !== null && total <= SMALL_LIST && drops.length > 0
-	return { cards: fill([...adds, ...mixCards.filter((c) => !c.on)].filter(leads)), drops: small || showDrops(adds.length, drops.length, slots, cols) ? drops : [] }
+	return { cards: fill([...adds, ...mixCards.filter((c) => !c.on)].filter(leads)), drops: showDrops(adds.length, drops.length, slots, cols) ? drops : [] }
 }
 
 /**
  * The cards in a grid of `rows` fixed heights. `small`: j's short tiles. With removal tiles the last row holds them
- * (k: compact cards over one slim row of them, so the grid keeps its height).
+ * (compact cards over one slim row of them, so the grid keeps its height).
  */
 export function MixCards({
 	d,
@@ -225,14 +221,14 @@ export function MixCards({
 	cols: number
 	/** grid-template-rows without and with removal tiles. */
 	rows: string
-	slimRows: string
+	slimRows?: string
 	small?: boolean
 }) {
 	const slim = drops.length > 0
 	// j's row is already short: the removal tiles take the whole last row there.
 	const shown = slim && small ? cards.slice(0, cards.length - cols) : cards
 	return (
-		<div className={`grid shrink-0 gap-2 ${slim ? slimRows : rows}`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+		<div className={`grid shrink-0 gap-2 ${slim ? (slimRows ?? rows) : rows}`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
 			{shown.map((card, i) => {
 				const compact = slim && !small && i >= cards.length - cols
 				const bare = compact && cols === 2

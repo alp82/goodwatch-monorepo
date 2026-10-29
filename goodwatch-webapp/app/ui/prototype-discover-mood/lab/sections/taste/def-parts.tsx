@@ -107,6 +107,9 @@ export function useTaste(d: ProtoDiscover, viewer: Viewer) {
 	// Round 13: the lists are switches, several at once; Not seen yet and Seen before exclude each other.
 	const has = (v: ListScope) => (v === "unseen" ? s.notSeenYet : v === "wishlist" ? x.wishlist : v === "seen" ? x.seen : false)
 	const list: ListScope = (["unseen", "wishlist", "seen"] as const).find(has) ?? "all"
+	const ns = d.counts?.optionCounts.notSeenYet
+	// Production's NotSeenSwitch count (FilterBar's notSeenHides).
+	const realHides = ns ? Math.max(0, (ns.off ?? 0) - (ns.on ?? 0)) : 0
 	const unseenCount = member ? (total ? Math.round(total * UNSEEN_SHARE) : null) : (d.counts?.optionCounts.notSeenYet?.on ?? null)
 
 	return {
@@ -164,6 +167,12 @@ export function useTaste(d: ProtoDiscover, viewer: Viewer) {
 			set: (v: ListScope) => {
 				setYou({ wishlist: v === "wishlist", seen: v === "seen" })
 				d.filters.set({ notSeenYet: v === "unseen" })
+			},
+			/** What a list's switch hides from this list (f's pills): Not seen yet from Discover's counts, the others simulated; guests none. */
+			hides: (v: Exclude<ListScope, "all">): number | null => {
+				if (!member || !total) return null
+				if (v === "unseen") return realHides || Math.max(0, total - (unseenCount ?? total))
+				return Math.max(0, total - Math.min(v === "wishlist" ? WISHLIST : SEEN, total))
 			},
 			count: (v: ListScope): number | null =>
 				v === "all" ? total || null : v === "unseen" ? unseenCount : !member ? null : Math.min(v === "wishlist" ? WISHLIST : SEEN, total || SEEN),

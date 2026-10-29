@@ -6,7 +6,8 @@ import { BarsArrowDownIcon, CheckIcon, LockClosedIcon } from "@heroicons/react/2
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
 import { compactCount } from "~/ui/filter-bar/labels"
-import { TAP } from "~/ui/filter-bar/motion"
+import { hiddenShort } from "~/ui/filter-bar/controls"
+import { Knob, SHELL, TAP } from "~/ui/filter-bar/motion"
 import type { SectionProps } from "../../types"
 import {
 	BlockHead,
@@ -133,6 +134,52 @@ function MatchRow({ taste, v }: { taste: Taste; v: MatchStep }) {
 	)
 }
 
+/** Production's NotSeenSwitch look (size sm): icon, label, what it hides, the switch; amber outline when on. */
+function ListPill({
+	id,
+	label,
+	on,
+	hides,
+	onChange,
+	locked,
+}: {
+	id: "unseen" | "wishlist" | "seen"
+	label: string
+	on: boolean
+	hides: number | null
+	onChange: (on: boolean) => void
+	locked: boolean
+}) {
+	const lit = on && !locked
+	return (
+		<motion.button
+			type="button"
+			role="switch"
+			aria-checked={lit}
+			aria-label={lit && hides ? `${label}, hides ${hides.toLocaleString("en")} titles` : label}
+			disabled={locked}
+			whileTap={locked ? undefined : TAP}
+			onClick={() => onChange(!on)}
+			className={`relative flex h-9 w-full min-w-0 items-center gap-2 px-3 text-sm font-bold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL} ${
+				locked ? "cursor-default text-gray-600" : lit ? "cursor-pointer text-white" : "cursor-pointer text-gray-400 hover:text-gray-200"
+			}`}
+		>
+			<span
+				aria-hidden
+				className={`pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-amber-400/70 transition-opacity duration-200 ${lit ? "opacity-100" : "opacity-0"}`}
+			/>
+			{locked ? <LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-amber-500/70" aria-label="With an account" /> : <ScopeIcon id={id} className="h-4 w-4 shrink-0" />}
+			<span className="min-w-0 flex-1 truncate text-left">{label}</span>
+			{hides !== null && (
+				<span aria-hidden className={`shrink-0 text-right text-xs tabular-nums transition-colors ${lit ? "text-blue-300/80" : "text-gray-500"}`}>
+					{hiddenShort(hides)}
+				</span>
+			)}
+			<Knob on={lit} onClass="bg-blue-600 shadow-[0_0_14px_rgba(37,99,235,.6)]" />
+		</motion.button>
+	)
+}
+
 export function TasteF({ d, phone, viewer }: SectionProps) {
 	const taste = useTaste(d, viewer)
 	const { member } = taste
@@ -195,31 +242,17 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 				</div>
 			</section>
 			<section>
-				{/* Round 13: several lists at once, each its own switch; all need an account. Not seen yet and Seen before exclude each other. */}
+				{/* Round 13: several lists at once, all need an account. Round 14: production's Not seen yet pill, wishlist last. */}
 				<BlockHead>Your lists</BlockHead>
 				<div className="flex flex-col gap-2">
 					{(
 						[
 							["unseen", "Not seen yet"],
-							["wishlist", "On your wishlist"],
 							["seen", "Seen before"],
+							["wishlist", "On your wishlist"],
 						] as const
 					).map(([id, label]) => (
-						<TasteSwitch
-							key={id}
-							label={label}
-							tone="blue"
-							on={taste.list.has(id)}
-							onChange={(on) => taste.list.turn(id, on)}
-							locked={locked}
-							icon={
-								locked ? (
-									<LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-amber-500/70" aria-label="With an account" />
-								) : (
-									<ScopeIcon id={id} className="h-4 w-4 shrink-0" />
-								)
-							}
-						/>
+						<ListPill key={id} id={id} label={label} on={taste.list.has(id)} hides={taste.list.hides(id)} onChange={(on) => taste.list.turn(id, on)} locked={locked} />
 					))}
 				</div>
 			</section>
@@ -235,7 +268,7 @@ export function TasteF({ d, phone, viewer }: SectionProps) {
 			</div>
 		)
 	return (
-		<div className="grid h-full grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,0.62fr)] gap-8 px-7 py-5">
+		<div className="grid h-full grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(17.5rem,0.62fr)] gap-8 px-7 py-5">
 			{groups}
 			<div className="min-w-0 border-l border-white/[0.06] pl-8">{match}</div>
 			<div className="min-w-0 border-l border-white/[0.06] pl-8">{switches}</div>
