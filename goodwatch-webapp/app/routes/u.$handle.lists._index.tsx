@@ -1,3 +1,4 @@
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 // Member profile, Lists tab: /u/:handle/lists. Their share lists, newest first; for the owner this is also My lists
 // (unlisted lists too, with Edit, Share, Delete and the Public or Unlisted switch). Each list keeps its own page at
 // /u/:handle/lists/:id.
@@ -50,3 +51,6 @@ export default function ProfileLists() {
 		</ProfileFrame>
 	)
 }
+
+// The complete server document paints before route modules compete for bandwidth.
+export const handle = START_AFTER_PAINT

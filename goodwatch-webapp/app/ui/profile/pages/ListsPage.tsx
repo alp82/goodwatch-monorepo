@@ -34,8 +34,13 @@ export function ListsPage({
 			)}
 			{lists.length ? (
 				<ul className="grid grid-cols-1 gap-x-6 gap-y-10 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-					{lists.map((list) => (
-						<ShareListTile key={list.id} list={list} handle={shell.handle}>
+					{lists.map((list, index) => (
+						<ShareListTile
+							imagePriority={index < 2 ? "high" : "lazy"}
+							key={list.id}
+							list={list}
+							handle={shell.handle}
+						>
 							{owner && (
 								<OwnerListControls
 									list={list}

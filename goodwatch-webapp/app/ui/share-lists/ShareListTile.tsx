@@ -29,7 +29,13 @@ export function ShareListTile({
 	list,
 	handle,
 	children,
-}: { list: ShareListSummary; handle: string; children?: ReactNode }) {
+	imagePriority,
+}: {
+	list: ShareListSummary
+	handle: string
+	children?: ReactNode
+	imagePriority?: "high" | "lazy"
+}) {
 	if (list.collection)
 		return (
 			<li className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
@@ -65,6 +71,7 @@ export function ShareListTile({
 					className="pointer-events-none h-full transition duration-300 group-hover:-translate-y-0.5"
 				>
 					<ScaledCard
+						imagePriority={imagePriority}
 						design={design}
 						card={{
 							title: list.title,

@@ -13,7 +13,11 @@ import {
 } from "react"
 import { cardFontCss } from "~/ui/share-card/font-faces"
 import type { CardDesign, CardProps } from "~/ui/share-card/model"
-import { type CardDisplay, cardForPage } from "~/ui/share-card/page-images"
+import {
+	type CardDisplay,
+	cardForPage,
+	cardWithImagePriority,
+} from "~/ui/share-card/page-images"
 
 // Measures before paint in the browser; on the server there is nothing to measure.
 export const useIsomorphicLayoutEffect =
@@ -26,6 +30,7 @@ export function ScaledCard({
 	fill,
 	editing,
 	display,
+	imagePriority,
 	className = "",
 	children,
 }: {
@@ -36,6 +41,8 @@ export function ScaledCard({
 	editing?: boolean
 	/** How wide the page shows the card. With it, the title images load at that size instead of the export's. */
 	display?: CardDisplay
+	/** Loading priority for page previews that retain the export's original image files. */
+	imagePriority?: "high" | "lazy"
 	className?: string
 	children?: ReactNode
 }) {
@@ -80,7 +87,13 @@ export function ScaledCard({
 						transform: cssSized ? undefined : `scale(${scale})`,
 					}}
 				>
-					{cardForPage(design, { ...card, editing }, display)}
+					{display ? (
+						cardForPage(design, { ...card, editing }, display)
+					) : imagePriority ? (
+						cardWithImagePriority(design, { ...card, editing }, imagePriority)
+					) : (
+						cardForPage(design, { ...card, editing })
+					)}
 					{children}
 				</div>
 			</div>

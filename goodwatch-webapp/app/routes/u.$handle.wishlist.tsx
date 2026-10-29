@@ -1,3 +1,4 @@
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 // Member profile, Wishlist tab: /u/:handle/wishlist. What they want to see; the owner's Watch now first.
 // Spec: docs/implementation/member-profile/README.md
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
@@ -40,3 +41,6 @@ export default function ProfileWishlist() {
 		</ProfileFrame>
 	)
 }
+
+// The complete server document paints before route modules compete for bandwidth.
+export const handle = START_AFTER_PAINT

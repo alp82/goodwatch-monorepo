@@ -172,10 +172,11 @@ export function ScoresPage({
 			{!tiers.length && (
 				<p className="py-8 text-gray-400">No titles match these filters.</p>
 			)}
-			{tiers.map((tier) => (
+			{tiers.map((tier, index) => (
 				<ScoreTier
 					key={`${scoresParams(page.choice)}:${tier.score}`}
 					initial={tier}
+					first={index === 0}
 					you={you}
 					shell={shell}
 					choice={page.choice}
@@ -188,6 +189,7 @@ export function ScoresPage({
 }
 
 function ScoreTier({
+	first,
 	initial,
 	you,
 	shell,
@@ -195,6 +197,7 @@ function ScoreTier({
 	viewerKey,
 	revision,
 }: {
+	first: boolean
 	initial: ProfileScoresPage["tiers"][number]
 	you: Record<string, number> | null
 	shell: ProfileShell
@@ -271,11 +274,12 @@ function ScoreTier({
 				</span>
 			</h2>
 			<ul className="grid grid-cols-4 gap-2.5 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10">
-				{shown.map((title) => (
+				{shown.map((title, index) => (
 					<li key={title.key} className="min-w-0">
 						<ProfilePoster
 							title={title}
 							sizes={TIER_SIZES}
+							posterPriority={first && index < 4 ? "high" : "lazy"}
 							skipScore={shell.viewer === "owner"}
 						/>
 					</li>

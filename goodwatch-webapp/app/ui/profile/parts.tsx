@@ -101,14 +101,17 @@ export function ProfilePoster({
 	owner,
 	sizes,
 	skipScore = false,
+	posterPriority,
 }: {
 	title: ProfileTitle
+	posterPriority?: PosterProps["priority"]
 	owner?: string | null
 	sizes?: PosterProps["sizes"]
 	skipScore?: boolean
 }) {
 	return (
 		<MovieTvCard
+			posterPriority={posterPriority}
 			details={profileCardTitle(title)}
 			mediaType={title.mediaType}
 			posterSizes={sizes}

@@ -58,9 +58,18 @@ export function WishlistPage({
 		? page.titles.filter((t) => you[t.key] != null).length
 		: 0
 	const movies = page.titles.filter((t) => t.mediaType === "movie").length
-	const card = (t: ProfileTitle, caption: string | null | undefined) => (
+	const card = (
+		t: ProfileTitle,
+		caption: string | null | undefined,
+		index: number,
+		first: boolean,
+	) => (
 		<li key={t.key} className="flex min-w-0 flex-col gap-1.5">
-			<ProfileCard title={t} skipWant={owner} />
+			<ProfileCard
+				title={t}
+				skipWant={owner}
+				posterPriority={first && index < 6 ? "high" : "lazy"}
+			/>
 			{caption && (
 				<span className="block truncate text-[11px] text-gray-500">
 					{caption}
@@ -107,8 +116,13 @@ export function WishlistPage({
 						On your services today, your best match first. Only you see this.
 					</p>
 					<ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8">
-						{page.watchNow.map((t) =>
-							card(t, t.match ? `${t.match}% match` : shortDate(t.date)),
+						{page.watchNow.map((t, index) =>
+							card(
+								t,
+								t.match ? `${t.match}% match` : shortDate(t.date),
+								index,
+								true,
+							),
 						)}
 					</ul>
 				</section>
@@ -131,7 +145,7 @@ export function WishlistPage({
 						</span>
 					</h2>
 					<ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8">
-						{(all ? rest : rest.slice(0, FIRST)).map((t) =>
+						{(all ? rest : rest.slice(0, FIRST)).map((t, index) =>
 							card(
 								t,
 								t.date
@@ -139,6 +153,8 @@ export function WishlistPage({
 									: t.year
 										? String(t.year)
 										: undefined,
+								index,
+								!(owner && page.watchNow?.length),
 							),
 						)}
 					</ul>

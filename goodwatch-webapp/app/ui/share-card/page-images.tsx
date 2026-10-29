@@ -135,3 +135,32 @@ export function cardForPage(
 		})
 	})
 }
+
+/** Set loading priority on a page preview without changing the export's image files or dimensions. */
+export function cardWithImagePriority(
+	design: CardDesign,
+	card: Parameters<CardDesign["Card"]>[0],
+	priority: "high" | "lazy",
+): ReactNode {
+	let largest = 0
+	const tree = resolve(design.Card(card), (img) => {
+		const area = Number(img.props.width) * Number(img.props.height)
+		if (typeof img.props.src === "string" && tmdbPath(img.props.src))
+			largest = Math.max(largest, area)
+		return img
+	})
+	let prioritized = false
+	return resolve(tree, (img) => {
+		if (typeof img.props.src !== "string" || !tmdbPath(img.props.src))
+			return img
+		const high =
+			priority === "high" &&
+			!prioritized &&
+			Number(img.props.width) * Number(img.props.height) === largest
+		if (high) prioritized = true
+		return cloneElement(
+			img,
+			imageLoadingProps(high ? "high" : priority === "high" ? "eager" : "lazy"),
+		)
+	})
+}
