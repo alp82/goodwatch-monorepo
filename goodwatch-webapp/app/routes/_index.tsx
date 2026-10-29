@@ -7,12 +7,17 @@
 // (utils/start-after-paint.ts). Searches run in the browser only, never from the loader.
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import type { startPageLoader } from "~/server/start-page/loader.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
+import type { ShelfTitle } from "~/ui/start/room/ShelfCovers"
 import { StartSearchBar } from "~/ui/start/search/StartSearchBar"
 import { useStartSearch } from "~/ui/start/search/useStartSearch"
+import { SpotlightCard } from "~/ui/start/spotlight/SpotlightCard"
+import { useLovedThree } from "~/ui/start/spotlight/useLovedThree"
 import { StartStage } from "~/ui/start/stage/StartStage"
+import { LIT_ROOM, roomLight, roomStep } from "~/ui/start/stage/room-steps"
+import { startView } from "~/ui/start/stage/start-query"
 import { useStartQuery } from "~/ui/start/stage/useStartQuery"
 import { START_SHEETS } from "~/ui/start/start-sheets"
 import { assetBase, assetUrl } from "~/utils/asset-url"
@@ -87,35 +92,49 @@ export const meta: MetaFunction = () => [
 	},
 ]
 
-/** Before a guest asks: the room nearly dark, seen close up. A member's room is lit. */
-const GUEST_ROOM = { night: 0.9, camera: 1.12 }
-const MEMBER_ROOM = { night: 0, camera: 1 }
-
 export default function Index() {
 	const data = useLoaderData<typeof startPageLoader>()
 	if (!data.member) return <GuestStart titles={data.titles} />
 	return (
 		<StartStage
 			shelf={data.titles}
-			night={MEMBER_ROOM.night}
-			camera={MEMBER_ROOM.camera}
+			night={LIT_ROOM.night}
+			camera={LIT_ROOM.camera}
 		/>
 	)
 }
 
 /**
  * A guest's start: the search block waits in the middle of the dark room until the guest asks (Enter, Search, a
- * preset, or leaving the field with a search on); then it lifts and the card comes in.
+ * preset, or leaving the field with a search on); then it lifts and the card comes in. The room lights up step by step
+ * (stage/room-steps.ts): each loved title a little more, fully once their picks are on show. While titles are on show,
+ * the shelf shows them.
  */
 function GuestStart({ titles }: { titles: StartTitle[] }) {
-	const start = useStartQuery()
+	const loved = useLovedThree()
+	const start = useStartQuery({ onChoice: loved.onChoice })
 	const results = useStartSearch(start.query)
 	const [asked, setAsked] = useState(false)
+	const view = startView(
+		start.query,
+		results,
+		loved.done ? loved.loved.length : Math.min(loved.loved.length, 2),
+	)
+	const picks = loved.picks?.status === "ready" ? loved.picks.pick : null
+	const room = roomLight(roomStep({ asked, picksShown: !!picks }), {
+		loved: loved.loved.length,
+		moods: start.query.picks.length > 0,
+	})
+	const shown = view === "results" ? results.cards : null
+	const shelf = useMemo<readonly ShelfTitle[]>(() => {
+		if (picks?.top) return [picks.top, ...picks.more]
+		return shown?.length ? shown : titles
+	}, [picks, shown, titles])
 	return (
 		<StartStage
-			shelf={titles}
-			night={GUEST_ROOM.night}
-			camera={GUEST_ROOM.camera}
+			shelf={shelf}
+			night={room.night}
+			camera={room.camera}
 			centered={!asked}
 			cardHidden={!asked}
 			search={
@@ -126,6 +145,15 @@ function GuestStart({ titles }: { titles: StartTitle[] }) {
 					search={start.search}
 					clearSearch={start.clearSearch}
 					onAsk={() => setAsked(true)}
+				/>
+			}
+			card={
+				<SpotlightCard
+					start={start}
+					results={results}
+					view={view}
+					loved={loved}
+					fan={titles}
 				/>
 			}
 		/>
