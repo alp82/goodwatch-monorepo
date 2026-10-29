@@ -1,7 +1,9 @@
-// Discover people: featured sitemap cohorts and adult-safe credit aggregates for filtered title results.
+// Discover people: sitemap actors and adult-safe credit aggregates for featured crew and filtered results.
 // Public credit results share a best-effort Redis cache; viewer state stays in the panel.
 import { createHash } from "node:crypto"
 import { parsePeopleSitemap } from "~/domain/best-lists"
+import { catalogRows } from "~/server/title-filter/order.server"
+import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getRedisCluster, withRedisDeadline } from "~/utils/cache"
 import { query } from "~/utils/crate"
 import { parseTitleKey, type TitleKey } from "~/utils/title-key"
@@ -29,6 +31,7 @@ interface Credit {
 	job?: string
 }
 const PEOPLE_TITLES = 100
+const FEATURED_TITLES = 300
 const JOBS = [
 	"Director",
 	"Screenplay",
@@ -65,7 +68,19 @@ export async function readPeopleInResults(
 	keys: readonly TitleKey[],
 	run: typeof query = query,
 ): Promise<DiscoverPeople> {
-	const safe = validKeys(keys).slice(0, PEOPLE_TITLES)
+	return readCreditPeople(keys, run, false)
+}
+
+/** Featured crew keeps every role candidate until quotas are filled; results keep their existing caps. */
+async function readCreditPeople(
+	keys: readonly TitleKey[],
+	run: typeof query,
+	featuredCrew: boolean,
+): Promise<DiscoverPeople> {
+	const safe = validKeys(keys).slice(
+		0,
+		featuredCrew ? FEATURED_TITLES : PEOPLE_TITLES,
+	)
 	const groups = await Promise.all(
 		(["movie", "show"] as const).map(async (kind) => {
 			const ids = safe.flatMap((key) => {
@@ -76,12 +91,14 @@ export async function readPeopleInResults(
 			// Like legacyTitles: only parsed positive integer IDs are inlined; values stay bound.
 			const where = `media_type = ? AND media_tmdb_id IN (${ids.join(",")})`
 			const [actors, crew] = await Promise.all([
+				featuredCrew
+					? Promise.resolve([])
+					: run<Credit>(
+							`SELECT person_tmdb_id, COUNT(*) AS count FROM person_appeared_in WHERE ${where} AND order_default < 15 GROUP BY person_tmdb_id ORDER BY 2 DESC LIMIT 60`,
+							[kind],
+						),
 				run<Credit>(
-					`SELECT person_tmdb_id, COUNT(*) AS count FROM person_appeared_in WHERE ${where} AND order_default < 15 GROUP BY person_tmdb_id ORDER BY 2 DESC LIMIT 60`,
-					[kind],
-				),
-				run<Credit>(
-					`SELECT person_tmdb_id, job, COUNT(*) AS count FROM person_worked_on WHERE ${where} AND job IN (${JOBS.map(() => "?").join(",")}) GROUP BY person_tmdb_id, job ORDER BY 3 DESC LIMIT 60`,
+					`SELECT person_tmdb_id, job, COUNT(${featuredCrew ? "DISTINCT media_tmdb_id" : "*"}) AS count FROM person_worked_on WHERE ${where} AND job IN (${JOBS.map(() => "?").join(",")}) GROUP BY person_tmdb_id, job ORDER BY 3 DESC${featuredCrew ? "" : " LIMIT 60"}`,
 					[kind, ...JOBS],
 				),
 			])
@@ -127,7 +144,7 @@ export async function readPeopleInResults(
 		return credits
 			.flatMap(({ id, role, count }): PanelPerson[] => {
 				const person = byId.get(id)
-				if (!person || seen.has(id)) return []
+				if (!person || (!featuredCrew && seen.has(id))) return []
 				seen.add(id)
 				return [
 					{
@@ -140,7 +157,7 @@ export async function readPeopleInResults(
 					},
 				]
 			})
-			.slice(0, 10)
+			.slice(0, featuredCrew ? credits.length : 10)
 	}
 	return {
 		mode: "results",
@@ -178,44 +195,50 @@ export function peopleInResults(
 	return load
 }
 
-/** Preserve the people list's sitemap order within each department. */
-export function selectFeaturedPeople(
-	people: readonly Person[],
-): DiscoverPeople {
-	const pick = (department: string, limit: number, role: string) =>
-		people
-			.filter((person) => person.known_for_department === department)
-			.slice(0, limit)
-			.map((person) => ({ ...person, role, count: null, note: role }))
-	const other = people
-		.filter(
-			(person) =>
-				person.known_for_department &&
-				!["Acting", "Directing", "Writing"].includes(
-					person.known_for_department,
-				),
-		)
-		.slice(0, 2)
-		.map((person) => ({
-			...person,
-			role: person.known_for_department!,
-			count: null,
-			note: person.known_for_department!,
-		}))
+/** Preserve the people list's sitemap order for the eight featured actors. */
+export function selectFeaturedPeople(people: readonly Person[]): DiscoverPeople {
 	return {
 		mode: "featured",
-		actors: pick("Acting", 8, "Actor"),
-		crew: [
-			...pick("Directing", 4, "Director"),
-			...pick("Writing", 4, "Writer"),
-			...other,
-		],
+		actors: people
+			.filter((person) => person.known_for_department === "Acting")
+			.slice(0, 8)
+			.map((person) => ({ ...person, role: "Actor", count: null, note: "Actor" })),
+		crew: [],
 	}
 }
 
-let featured: Promise<DiscoverPeople> | undefined
-export function featuredPeople(): Promise<DiscoverPeople> {
-	featured ??= (async () => {
+/** Quotas take precedence in this order; a multi-role person can fill only one slot. */
+function selectFeaturedCrew(
+	candidates: readonly PanelPerson[],
+	actors: readonly PanelPerson[],
+) {
+	const seen = new Set(actors.map((person) => Number(person.tmdb_id)))
+	const crew: PanelPerson[] = []
+	for (const [job, limit, role] of [
+		["Director", 4, "Director"],
+		["Writer", 4, "Writer"],
+		["Original Music Composer", 1, "Music"],
+		["Director of Photography", 1, "Camera"],
+	] as const) {
+		let picked = 0
+		for (const person of candidates) {
+			const id = Number(person.tmdb_id)
+			if (
+				person.role !== job ||
+				person.known_for_department === "Acting" ||
+				seen.has(id)
+			) continue
+			seen.add(id)
+			crew.push({ ...person, role, count: null, note: role })
+			if (++picked === limit) break
+		}
+	}
+	return crew
+}
+
+let featuredActors: Promise<DiscoverPeople> | undefined
+function readFeaturedActors(): Promise<DiscoverPeople> {
+	featuredActors ??= (async () => {
 		// Equivalent to getListPeople's cohort and ordering, without loading titles and known-for credits.
 		const ids = [...parsePeopleSitemap(peopleSitemap).keys()]
 		const people = await query<Person>(
@@ -226,8 +249,36 @@ export function featuredPeople(): Promise<DiscoverPeople> {
 		)
 		return selectFeaturedPeople(ids.flatMap((id) => byId.get(id) ?? []))
 	})().catch((error) => {
-		featured = undefined
+		featuredActors = undefined
 		throw error
 	})
-	return featured
+	return featuredActors
+}
+
+// Retain only the current version, sharing both completed reads and in-flight requests.
+let featured: { version: string; result: Promise<DiscoverPeople> } | undefined
+export async function featuredPeople(): Promise<DiscoverPeople> {
+	const actors = await readFeaturedActors()
+	const snapshot = getTitleSnapshot()
+	if (!snapshot) return actors
+	if (featured?.version === snapshot.version) return featured.result
+	const entry = {
+		version: snapshot.version,
+		result: (async () => {
+			// Filter kind before the cutoff so shows cannot displace Popular movies.
+			const keys = Array.from(
+				catalogRows(snapshot, "popular").keys,
+			)
+				.filter((key) => parseTitleKey(key).mediaType === "movie")
+				.slice(0, FEATURED_TITLES)
+			const credits = await readCreditPeople(keys, query, true)
+			return { ...actors, crew: selectFeaturedCrew(credits.crew, actors.actors) }
+		})().catch((error) => {
+			if (featured === entry) featured = undefined
+			console.warn("Discover panel: featured crew unavailable", error)
+			return actors
+		}),
+	}
+	featured = entry
+	return entry.result
 }
