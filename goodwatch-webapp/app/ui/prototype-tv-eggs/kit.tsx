@@ -226,7 +226,7 @@ export function BigRemote({
 	const on = (k: Key) => (off ? k === "power" : enabled.includes(k))
 	if (off) pulse = "power"
 	const [params] = useSearchParams()
-	const layout = params.get("variant") ?? "a"
+	const layout = params.get("variant") ?? "b"
 	// The signal light flashes on every press.
 	const [blink, setBlink] = useState(0)
 	return (
