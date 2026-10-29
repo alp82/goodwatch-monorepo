@@ -11,26 +11,27 @@
 import { subscribe } from "node:diagnostics_channel"
 import type { IncomingMessage, Server } from "node:http"
 import gabaritoLatin from "~/fonts/gabarito-latin.woff2"
-import primeVideoLogo from "~/img/primevideo-logo.svg"
 import cssTailwind from "~/tailwind.css?url"
 import { WHITE_MARK } from "~/ui/brand/white-mark"
-import { HOME_SHEETS } from "~/ui/living-room/home-sheets"
-import { HAND_IMAGE } from "~/ui/living-room/room"
-import { PHONE_ROOM_ART, ROOM_ART } from "~/ui/living-room/tv/room-art"
+import {
+	START_ROOM_ART,
+	START_ROOM_PHONE_ART,
+} from "~/ui/start/room/room-pictures"
+import { START_SHEETS } from "~/ui/start/start-sheets"
 import { currentAssetBase, isStaticHost } from "./asset-address.server"
 import { earlyHintLinks } from "./early-hints"
 import { heroHints } from "./hero-hints.server"
 
 const FILES = {
 	site: cssTailwind,
-	home: [...HOME_SHEETS],
+	home: [...START_SHEETS],
 	font: gabaritoLatin,
 	room: {
-		phone: [PHONE_ROOM_ART.avif, HAND_IMAGE.avif],
-		desktop: [ROOM_ART.avif, HAND_IMAGE.avif],
+		phone: [START_ROOM_PHONE_ART.avif],
+		desktop: [START_ROOM_ART.avif],
 	},
-	// The Prime Video mark is living-room.css's `.tv-mark-9` mask.
-	marks: { images: [WHITE_MARK], masks: [primeVideoLogo] },
+	// The white G is the phone dock's (ui/navigation/MobileDock.tsx), on the first screen.
+	marks: { images: [WHITE_MARK], masks: [] },
 }
 
 let started = false

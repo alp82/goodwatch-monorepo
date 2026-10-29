@@ -1,10 +1,10 @@
 // What a page's 103 Early Hints response says (early-hints.server.ts sends it). While the server renders, the browser
 // already opens the connections to the static hostname and fetches what the first paint needs: the render-blocking
-// style sheets, the brand font, and on the start page the room's pictures and the small marks on its first screen.
+// style sheets, the brand font, and on the start page the room's picture and the small marks on its first screen.
 //
 // The hints follow the page's own elements, so the browser can use what they fetch: while the files come from the
-// static hostname, the style sheets (root.tsx, _index.tsx) and the room's pictures (TvRoom.tsx, PhoneRoom.tsx) ask with
-// `crossorigin`, and Chrome preloads a file of another host from a 103 response in that mode only; so does the white
+// static hostname, the style sheets (root.tsx, _index.tsx) and the room's pictures (ui/start/room/StartRoom.tsx) ask
+// with `crossorigin`, and Chrome preloads a file of another host from a 103 response in that mode only; so does the white
 // G mark (ui/brand/white-mark.ts), and a CSS mask is fetched in that mode anyway. The page's other images go with credentials,
 // and a browser keeps the two kinds on separate connections, so there is a preconnect for each.
 
@@ -28,14 +28,14 @@ export type EarlyHintsFiles = {
 	font: string
 	/**
 	 * The start page's room pictures in AVIF: the first screen's largest content (its LCP). A phone upright draws the
-	 * portrait room and the hand, a desktop the room photo and the hand.
+	 * portrait room, a desktop the landscape room.
 	 */
 	room: { phone: string[]; desktop: string[] }
 	/**
 	 * The start page's small marks on its first screen, in every layout, hinted so that they don't wait for a
 	 * connection of their own while the room paints. `images` are `img` elements, which ask like the room's pictures
-	 * (the G on the Remotes, ui/brand/white-mark.ts). `masks` are CSS masks (the Prime Video mark on its key), which a
-	 * browser fetches in CORS mode on any host, the site's own too.
+	 * (the G on the phone's dock, ui/brand/white-mark.ts). `masks` are CSS masks, which a browser fetches in CORS mode
+	 * on any host, the site's own too.
 	 */
 	marks: { images: string[]; masks: string[] }
 }
@@ -59,7 +59,7 @@ export function isPageNavigation(request: EarlyHintsRequest): boolean {
 /**
  * The room pictures to hint for this request, or none. The server doesn't know the window, so it reads what a Chromium
  * browser says on every request: `Sec-CH-UA-Mobile` (`?1` on a phone) and whether `Accept` takes AVIF. Other browsers
- * don't send the first, and get no picture hints. A phone held sideways draws the room photo, not the portrait room:
+ * don't send the first, and get no picture hints. A phone held sideways draws the landscape room, not the portrait one:
  * its hinted pictures go unused, and the page fetches its own.
  */
 function roomPictures(
