@@ -218,6 +218,18 @@ const FEATURE_CHUNKS = [
 		"title-icons",
 		/\/node_modules\/@heroicons\/react\/24\/(outline|solid)\/esm\/(BookOpenIcon|CheckIcon|ChevronDownIcon|ChevronLeftIcon|ChevronRightIcon|FingerPrintIcon|LinkIcon|SparklesIcon|Squares2X2Icon|UserIcon)\.js$/,
 	],
+	// More icons on the first view of the title page (the sections' headers, find, the verdict, where to watch) that
+	// only a few pages that aren't landing surfaces share. Not in title-icons: the start page loads that one.
+	[
+		"title-page-icons",
+		/\/node_modules\/@heroicons\/react\/24\/outline\/esm\/(AdjustmentsHorizontalIcon|ChartBarIcon|FilmIcon|MagnifyingGlassIcon|ShieldCheckIcon|StarIcon|TvIcon|UserGroupIcon)\.js$/,
+	],
+	// The title page's own modules that the explorer shares (the You block's Seen and score, the episode tracking gate)
+	// and the episode grid's parts that the verdict's rating chips use. Rollup gave them six files on the title page.
+	[
+		"title-page",
+		/\/app\/ui\/(title-actions\/(TitleControl|SeenScore)|details\/hero\/(seen-score-faces|RatingChips)|tracking\/gate|details\/episode-grid\/(EpisodeSkeleton|RatingsGrid|ScoreTile|consistency-scale|scale))\.tsx?$/,
+	],
 ]
 
 // Rule 3a: the title page's small modules that its lazy parts share too (the reading line, the video list, the find
