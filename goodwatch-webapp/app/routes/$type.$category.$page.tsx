@@ -1,3 +1,5 @@
+import { HERO_TIMING, START_AFTER_PAINT } from "~/utils/start-after-paint"
+import { imageLoadingProps } from "~/utils/tmdb-image"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { requireCategoryPage } from "~/server/category-page.server"
 import {
@@ -166,11 +168,16 @@ export default function MoviesCategoryPage() {
 
 			<div className="max-w-7xl mx-auto p-4 flex flex-col gap-4">
 				<div
-					className="relative py-8 px-4 rounded-lg bg-cover bg-top bg-no-repeat before:bg-black/70 before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0"
-					style={{
-						backgroundImage: `url('https://image.tmdb.org/t/p/w1280/${pageData.backdrop_path}')`,
-					}}
+					className="relative py-8 px-4 rounded-lg before:z-10 before:bg-black/70 before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0"
 				>
+					<img
+						src={`https://image.tmdb.org/t/p/w1280/${pageData.backdrop_path}?gw-cors=1`}
+						alt=""
+						crossOrigin="anonymous"
+						{...imageLoadingProps("high")}
+						{...HERO_TIMING}
+						className="absolute inset-0 w-full h-full object-cover object-top rounded-lg"
+					/>
 					<div className="relative m-auto ow-full max-w-7xl z-20">
 						<h1 className="mb-4 text-4xl md:text-6xl font-extrabold text-gray-300">
 							{copy.heading}
@@ -222,3 +229,6 @@ export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
 export const clientLoader = cachedClientLoader("routes/$type.$category.$page")
+
+// The complete server document paints before route modules compete for bandwidth.
+export const handle = START_AFTER_PAINT

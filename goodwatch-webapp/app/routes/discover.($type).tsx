@@ -1,3 +1,4 @@
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
@@ -275,3 +276,6 @@ export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
 export const clientLoader = cachedClientLoader("routes/discover.($type)")
+
+// The complete server document paints before route modules compete for bandwidth.
+export const handle = START_AFTER_PAINT
