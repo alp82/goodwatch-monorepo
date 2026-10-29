@@ -41,6 +41,7 @@ export const MyStreamingCheckbox = ({
 			>
 				<input
 					type="checkbox"
+					aria-label="Available on my Streaming Services"
 					checked={checked}
 					onChange={() => {}}
 					className="w-4 h-4 text-emerald-600 bg-gray-300 border-gray-600 rounded-sm focus:ring-emerald-600 ring-offset-gray-800 focus:ring-2 cursor-pointer"

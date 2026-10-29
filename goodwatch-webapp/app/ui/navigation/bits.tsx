@@ -78,13 +78,7 @@ export function TonightsPickThumb({
 		<Link
 			to={to}
 			prefetch="intent"
-			aria-label={
-				pick?.href && title
-					? `Watch next: ${title.title}${pick.episode ? `, ${pick.episode.code}` : ""}`
-					: title
-						? `Watch next: ${title.title}`
-						: "Watch next"
-			}
+			aria-label={`${user ? "Next" : "Wishlist"}${pick?.episode ? ` · ${pick.episode.code}` : ""} ${title?.title ?? "Watch next"}`}
 			aria-current={here ? "page" : undefined}
 			className={`flex min-w-0 items-center gap-2 rounded-xl p-[3px] text-left ${className}`}
 		>
@@ -106,6 +100,7 @@ export function TonightsPickThumb({
 					<small className="text-[11px] font-bold text-amber-400">
 						{user ? "Next" : "Wishlist"}
 						{pick?.episode && ` · ${pick.episode.code}`}
+						{" "}
 					</small>
 					<b className="max-w-[118px] truncate text-[13.5px] text-gray-100">
 						{title?.title ?? "Watch next"}

@@ -383,11 +383,12 @@ function Compact({
 				{title}
 			</p>
 			<ul className="flex flex-col gap-0.5 text-sm">
-				{people.slice(0, 3).map((p) => (
+				{people.slice(0, 3).map((p, i, shown) => (
 					<li key={p.id} className="flex gap-2">
 						<Link
 							to={personHref(p)}
-							className="min-w-0 flex-1 truncate text-gray-300 hover:text-white"
+							// Keep the text and rows in place. Pad the ends outward and the middle into the two gaps, so 24px targets do not overlap.
+							className={`min-w-0 flex-1 truncate text-gray-300 hover:text-white ${i === 0 ? "pt-1 -mt-1" : i === shown.length - 1 ? "pb-1 -mb-1" : "py-0.5 -my-0.5"}`}
 						>
 							{p.name}
 						</Link>

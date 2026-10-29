@@ -269,7 +269,7 @@ export function ScoreFace({
 					className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg font-black tabular-nums lg:group-data-[big]/split:h-11 lg:group-data-[big]/split:w-11 lg:group-data-[big]/split:text-xl"
 					style={selectedScoreStyle(score)}
 				>
-					{score}
+					{score}{" "}
 				</span>
 			) : (
 				<span className="relative shrink-0">
@@ -284,7 +284,7 @@ export function ScoreFace({
 			)}
 			<span className="min-w-0 flex-1 leading-tight">
 				<span className="block truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">
-					Your score
+					Your score{" "}
 				</span>
 				<span
 					className={`block truncate text-sm font-bold lg:group-data-[big]/split:text-base ${due ? "text-amber-200" : "text-white"}`}

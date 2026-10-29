@@ -69,7 +69,11 @@ function ShowCard({ show }: { show: Show }) {
 	const share = aired ? Math.min(1, show.watchedEpisodes / aired) : 0
 	return (
 		<li className={`${TILE} flex min-w-0 gap-3 p-3`}>
-			<Link to={show.href} className="block w-14 shrink-0">
+			<Link
+				to={show.href}
+				aria-label={show.title}
+				className="block w-14 shrink-0"
+			>
 				<PosterImg title={show} className="rounded-md" />
 			</Link>
 			<div className="flex min-w-0 flex-1 flex-col gap-1.5">

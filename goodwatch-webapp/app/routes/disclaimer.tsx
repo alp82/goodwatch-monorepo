@@ -1,20 +1,19 @@
-import type { MetaFunction } from "@remix-run/node";
-import { type PageMeta, buildMeta } from "~/utils/meta";
+import type { MetaFunction } from "@remix-run/node"
+import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
 		title: "Disclaimer | GoodWatch",
-		description:
-			"Legal disclaimer and impressum for GoodWatch",
+		description: "Legal disclaimer and impressum for GoodWatch",
 		url: "https://goodwatch.app/disclaimer",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "GoodWatch Disclaimer",
-	};
+	}
 
-	return buildMeta({ pageMeta, items: [] });
-};
+	return buildMeta({ pageMeta, items: [] })
+}
 
 export default function Disclaimer() {
 	return (
@@ -24,11 +23,11 @@ export default function Disclaimer() {
 			<h2 className="mb-4 text-2xl">Impressum</h2>
 			<section className="prose prose-invert lg:prose-xl mx-auto">
 				<p>
-					<div>Alper Ortac</div>
-					<div>Kassel, Germany</div>
-					<div>
+					<span className="block">Alper Ortac</span>
+					<span className="block">Kassel, Germany</span>
+					<span className="block">
 						<a href="mailto:hello@goodwatch.app">hello@goodwatch.app</a>
-					</div>
+					</span>
 				</p>
 			</section>
 
@@ -51,5 +50,5 @@ export default function Disclaimer() {
 				</p>
 			</section>
 		</div>
-	);
+	)
 }

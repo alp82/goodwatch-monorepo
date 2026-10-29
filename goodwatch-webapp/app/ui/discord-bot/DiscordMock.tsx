@@ -357,11 +357,11 @@ export function TitleCard({
 				/>
 			)}
 			<Section poster={title.poster} alt={`${title.name} poster`}>
-				<h3
+				<h2
 					className={`text-xl leading-tight font-bold sm:text-2xl ${HEADING}`}
 				>
 					{title.name}
-				</h3>
+				</h2>
 				<Facts title={title} />
 				{title.overview && <p className="leading-snug">{title.overview}</p>}
 			</Section>

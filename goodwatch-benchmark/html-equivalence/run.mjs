@@ -122,7 +122,10 @@ function environment(app, valkey) {
 
 async function freePort(cluster = false) {
 	const occupied = command(["ss", "-ltn"])
-	for (let port = 19000; port < 29000; port++) {
+	const first = Number(process.env.GW_HTML_CHECK_PORT_BASE ?? 19000)
+	if (!Number.isInteger(first) || first < 1024 || first > 45000)
+		throw new Error("GW_HTML_CHECK_PORT_BASE must be an integer from 1024 to 45000")
+	for (let port = first; port < first + 10000; port++) {
 		if (
 			occupied.includes(`:${port} `) ||
 			(cluster && occupied.includes(`:${port + 10000} `))

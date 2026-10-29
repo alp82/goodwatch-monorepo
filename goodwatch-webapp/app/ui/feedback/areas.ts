@@ -133,7 +133,10 @@ export const PAGE_TYPES: PageType[] = [
 			{
 				id: "search",
 				name: "Search",
-				selector: ['button[aria-label="Search Discover"]', "main h1"],
+				selector: [
+					'button[aria-label="Discover movies and TV shows. Search"]',
+					"main h1",
+				],
 				chips: [
 					flag("The best match is wrong"),
 					flag("A title I expected is missing"),
@@ -361,10 +364,7 @@ export const PAGE_TYPES: PageType[] = [
 				id: "standout",
 				name: "What stands out",
 				selector: '[data-feedback-area="standout"]',
-				chips: [
-					flag("A trait doesn't fit them"),
-					flag("The chart looks off"),
-				],
+				chips: [flag("A trait doesn't fit them"), flag("The chart looks off")],
 			},
 			{
 				id: "credits",

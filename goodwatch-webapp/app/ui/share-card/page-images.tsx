@@ -75,11 +75,15 @@ function resolve(
 export function cardForPage(
 	design: CardDesign,
 	card: Parameters<CardDesign["Card"]>[0],
-	display: CardDisplay,
+	display?: CardDisplay,
 ): ReactNode {
+	const alternatives = new Map<string, string>()
 	const kinds = new Map<string, TmdbImageKind>()
 	for (const item of card.items as CardTitle[]) {
-		if (item.poster) kinds.set(item.poster, "poster")
+		if (item.poster) {
+			kinds.set(item.poster, "poster")
+			alternatives.set(item.poster, item.title)
+		}
 		if (item.backdrop) kinds.set(item.backdrop, "backdrop")
 	}
 	const boxWidth = (img: ReactElement<Props>) => Number(img.props.width) || 0
@@ -96,8 +100,11 @@ export function cardForPage(
 	const tree = resolve(design.Card(card), (img) => {
 		if (titleImage(img) && area(img) > largest.area)
 			Object.assign(largest, { src: img.props.src, area: area(img) })
-		return img
+		return cloneElement(img, {
+			alt: img.props.alt ?? alternatives.get(String(img.props.src)) ?? "",
+		})
 	})
+	if (!display) return tree
 	let prioritized = false
 	return resolve(tree, (img) => {
 		if (!titleImage(img)) return img

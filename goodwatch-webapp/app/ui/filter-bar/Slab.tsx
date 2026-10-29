@@ -324,7 +324,7 @@ export function Slab(props: SlabProps) {
 						type="button"
 						whileTap={TAP}
 						onClick={() => onDrop(top.filter)}
-						className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap font-bold text-amber-400 cursor-pointer"
+						className="ml-auto -mt-2 flex shrink-0 items-center gap-1 whitespace-nowrap pt-2 font-bold text-amber-400 cursor-pointer"
 					>
 						<PlusIcon className="h-3 w-3" />
 						<span className="sr-only">Show </span>
@@ -435,7 +435,7 @@ export function Slab(props: SlabProps) {
 							aria-haspopup="menu"
 							aria-expanded={menu === "sort"}
 							aria-controls={menu === "sort" ? sortId : undefined}
-							aria-label={`Sort: ${sortLabel}`}
+							aria-label={`Sort ${sortLabel}`}
 							onClick={() => setMenu((m) => (m === "sort" ? null : "sort"))}
 							className={`${SLAB_SEGMENT} ${menu === "sort" ? "bg-white/10 text-white" : "text-gray-200"}`}
 						>
@@ -471,7 +471,7 @@ export function Slab(props: SlabProps) {
 						aria-expanded={sheet >= 0}
 						aria-label={
 							props.secondaryCount
-								? `Filters, ${props.secondaryCount} active`
+								? `Filters ${props.secondaryCount} active`
 								: "Filters"
 						}
 						className="relative grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-white/[0.08] text-white ring-1 ring-white/10 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"

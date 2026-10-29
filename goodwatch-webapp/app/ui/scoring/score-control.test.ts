@@ -27,13 +27,13 @@ const buttons = (html: string) =>
 
 test("every score, including no score, offers four words and all ten numbers", () => {
 	for (const html of [rendered.empty, ...rendered.scored]) {
-		for (const [word, n] of [
-			["Bad", 3],
-			["Mediocre", 5],
-			["Good", 7],
-			["Excellent", 9],
+		for (const [word, range, n] of [
+			["Bad", "1–4", 3],
+			["Mediocre", "5–6", 5],
+			["Good", "7–8", 7],
+			["Excellent", "9–10", 9],
 		])
-			assert.ok(html.includes(`aria-label="${word}, ${n}"`))
+			assert.ok(html.includes(`aria-label="${word} ${range}. Give ${n}"`))
 		assert.equal(buttons(html).filter((b) => /data-give=/.test(b)).length, 10)
 	}
 })
@@ -90,8 +90,11 @@ test("a tracked show's frame can stack its status over its score; a Seen frame h
 
 test("library row and bulk picker share words, exact scores and the comparison dot", () => {
 	assert.equal(buttons(rendered.library).length, 14)
-	assert.match(rendered.library, /aria-label="Good, 7"/)
+	assert.match(rendered.library, /aria-label="Good 7–8. Give 7"/)
 	assert.match(rendered.library, /aria-label="Your score for Dune"/)
-	assert.match(buttons(rendered.library).find((b) => b.includes('data-give="7"'))!, /color:#fff/)
+	assert.match(
+		buttons(rendered.library).find((b) => b.includes('data-give="7"'))!,
+		/color:#fff/,
+	)
 	assert.match(rendered.library, /bottom-1 h-1 w-1/)
 })

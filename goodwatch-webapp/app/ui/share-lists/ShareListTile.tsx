@@ -53,14 +53,17 @@ export function ShareListTile({
 				to={shareListPath(handle, list.id)}
 				prefetch="intent"
 				className="group relative block h-72 rounded-2xl bg-gray-900/60 p-3 ring-1 ring-white/5 transition hover:bg-gray-800/70 hover:ring-white/15 sm:h-80"
-				aria-label={list.title}
 			>
 				{list.visibility === "unlisted" && (
 					<span className="absolute top-3 left-3 z-10 rounded-full bg-gray-950/90 px-2.5 py-1 text-xs font-bold text-gray-200 ring-1 ring-white/15">
 						Unlisted
 					</span>
 				)}
-				<div className="pointer-events-none h-full transition duration-300 group-hover:-translate-y-0.5">
+				<div
+					role="img"
+					aria-label={list.title}
+					className="pointer-events-none h-full transition duration-300 group-hover:-translate-y-0.5"
+				>
 					<ScaledCard
 						design={design}
 						card={{

@@ -207,9 +207,9 @@ export function FindField({
 				}}
 				placeholder={placeholder}
 				aria-label={placeholder}
-				aria-controls={listId}
+				aria-controls={query.trim() ? listId : undefined}
 				aria-activedescendant={
-					query && items[active] ? `${listId}-${active}` : undefined
+					query.trim() && items[active] ? `${listId}-${active}` : undefined
 				}
 				className="h-10 w-full rounded-xl border border-white/10 bg-white/[0.03] pl-9 pr-16 text-sm text-white placeholder:text-gray-500 focus:border-amber-400/50 focus:bg-white/[0.05] focus:outline-none [&::-webkit-search-cancel-button]:hidden"
 			/>

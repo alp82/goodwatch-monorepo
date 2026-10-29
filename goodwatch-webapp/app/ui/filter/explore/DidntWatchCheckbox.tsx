@@ -38,6 +38,7 @@ export const DidntWatchCheckbox = ({
 			>
 				<input
 					type="checkbox"
+					aria-label="Show only what I didn't watch"
 					checked={checked}
 					onChange={() => {}}
 					className="w-4 h-4 text-orange-600 bg-gray-300 border-gray-600 rounded-sm focus:ring-orange-600 ring-offset-gray-800 focus:ring-2 cursor-pointer"

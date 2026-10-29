@@ -532,7 +532,7 @@ export function SortControl<K extends string>({
 				aria-haspopup="menu"
 				aria-expanded={open}
 				aria-controls={open ? menuId : undefined}
-				aria-label={`Sort: ${label}`}
+				aria-label={`Sort ${label}`}
 				data-sort-button
 				onClick={() => setOpen(!open)}
 				onKeyDown={(event) => {
@@ -547,7 +547,7 @@ export function SortControl<K extends string>({
 				<ArrowsUpDownIcon
 					className={`h-4 w-4 shrink-0 ${chosen?.taste ? "text-amber-400" : "text-gray-400"}`}
 				/>
-				<span className="text-gray-400">Sort</span>
+				<span className="text-gray-400">Sort </span>
 				<span
 					className={`relative overflow-hidden text-left ${sm ? "" : "flex-1"}`}
 				>
@@ -599,12 +599,12 @@ export function FiltersButton({
 			onClick={onClick}
 			aria-haspopup="dialog"
 			aria-expanded={expanded}
-			aria-label={count ? `Filters, ${count} active` : "Filters"}
+			aria-label={`Filters ${count} active`}
 			className={`flex h-12 shrink-0 items-center gap-2 px-4 text-sm font-bold text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL} hover:ring-white/25`}
 		>
 			<AdjustmentsHorizontalIcon className="h-4 w-4" />
 			<span className={compact ? "max-xl:sr-only" : undefined}>
-				{children ?? "Filters"}
+				{children ?? "Filters"}{" "}
 			</span>
 			<span
 				aria-hidden

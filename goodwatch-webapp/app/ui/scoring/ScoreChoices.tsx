@@ -68,7 +68,7 @@ export function ScoreChoices({
 			score: level.score,
 			level: i,
 			kind: "level",
-			label: `${level.name}, ${level.score}`,
+			label: `${level.name} ${level.lo}–${level.hi}. Give ${level.score}`,
 			selected: mine === i,
 			acknowledged: acknowledged && mine === i,
 			style: {
@@ -76,7 +76,9 @@ export function ScoreChoices({
 				borderTop: `3px solid ${color}`,
 				"--score-color": color,
 				"--score-hover": `color-mix(in srgb, ${color} 70%, #22201f)`,
-				background: lit ? `color-mix(in srgb, ${color} 38%, #2b2a29)` : "#343333",
+				background: lit
+					? `color-mix(in srgb, ${color} 38%, #2b2a29)`
+					: "#343333",
 				...(mine === i ? pickedChoiceStyle(color) : {}),
 			} as CSSProperties,
 			children: (

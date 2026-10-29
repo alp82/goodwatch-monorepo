@@ -442,7 +442,7 @@ function PhoneSlab({ m }: { m: TropeFacets }) {
 					</motion.button>
 					<motion.button
 						{...segment("sort")}
-						aria-label={`Sort: ${sort?.label}`}
+						aria-label={`Sort ${sort?.label}`}
 						className={`${SEGMENT} flex-1 text-white`}
 					>
 						<ArrowsUpDownIcon className="h-4 w-4 text-gray-400" aria-hidden />

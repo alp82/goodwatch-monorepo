@@ -19,7 +19,7 @@ const ui = JSON.parse(
 test("an unscored episode asks for a score in the title control's face, and the season asks with a star", () => {
 	assert.deepEqual(ui.unscored, {
 		frame: "none",
-		text: "Your scoreRate this episode",
+		text: "Your score Rate this episode",
 		label: "Rate S1 E3",
 		season: "Rate Season 2",
 		part: "Your score for S1 E1–12· Spy x Family8",
@@ -30,7 +30,7 @@ test("the episode's picker is the score dialog, titled with the episode; a score
 	assert.equal(ui.dialogTitle, "S1 E3 · Bad Tradecraft")
 	assert.deepEqual(ui.scored, {
 		frame: "9",
-		text: "9Your scoreExcellent",
+		text: "9 Your score Excellent",
 		dialogOpen: false,
 	})
 	assert.deepEqual(ui.sent[0], { scope: "episode", episodeId: 62087, score: 9 })

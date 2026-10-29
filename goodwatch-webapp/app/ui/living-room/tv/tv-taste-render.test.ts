@@ -436,7 +436,7 @@ test("the strip on the desktop: four levels low to high, each as wide as its sco
 			const id = `level:${level.score}`
 			assert.match(
 				tag(html, id),
-				new RegExp(`aria-label="${level.name}, ${level.score}"`),
+				new RegExp(`aria-label="${level.name} ${level.lo}–${level.hi}. Give ${level.score}"`),
 			)
 			assert.match(
 				styleOf(html, id),

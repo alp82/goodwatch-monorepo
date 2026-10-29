@@ -48,11 +48,11 @@ export function PhoneFilterRow({
 				type="button"
 				whileTap={TAP}
 				onClick={() => onOpen(null)}
-				aria-label={count ? `Filters, ${count} active` : "Filters"}
+				aria-label={`Filters ${count} active`}
 				className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/[0.08] pr-2.5 pl-3 text-sm font-bold text-white ring-1 ring-white/15 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 			>
 				<AdjustmentsHorizontalIcon className="h-4 w-4" />
-				Filters
+				Filters{" "}
 				{count > 0 && (
 					<span className="grid h-5 min-w-5 place-items-center rounded-full bg-amber-500 px-1.5 text-xs tabular-nums text-gray-950">
 						{count}

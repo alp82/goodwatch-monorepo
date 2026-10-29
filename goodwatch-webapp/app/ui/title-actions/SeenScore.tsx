@@ -314,8 +314,8 @@ export default function SeenScore({
 						aria-expanded={open}
 						aria-label={
 							score
-								? `Your score: ${score}, ${scoreLabels[score]}. Change it`
-								: `Rate this ${mediaType}`
+								? `${score}. Your score. ${scoreLabels[score]}. Change it`
+								: `Rate this ${mediaType}. Your score. ${ask}`
 						}
 						onClick={() => setOpen(true)}
 						onPointerEnter={preloadScoreDialog}

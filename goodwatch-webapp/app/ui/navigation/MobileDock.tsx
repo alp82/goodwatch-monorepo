@@ -26,7 +26,7 @@ function DockButton({
 	const open = navigation.hubOpen
 	// My shows and My movies are tiles inside the hub, so the key that opens the hub says that something is new there.
 	const fresh = useOpenerSignal()
-	const label = page ? `${HUB_LABEL}, you're on ${page.label}` : HUB_LABEL
+	const label = `${leftFree ? "" : `${page ? (page.here ?? page.label) : "Browse"}. `}Go to… ${HUB_LABEL}${page ? `, you're on ${page.label}` : ""}`
 	return (
 		<button
 			type="button"
@@ -47,7 +47,7 @@ function DockButton({
 					<Icon className="h-5 w-5" />
 				</span>
 				<b className="truncate text-[14px] text-gray-100">
-					{page ? (page.here ?? page.label) : "Browse"}
+					{page ? (page.here ?? page.label) : "Browse"}{" "}
 				</b>
 			</span>
 			<span

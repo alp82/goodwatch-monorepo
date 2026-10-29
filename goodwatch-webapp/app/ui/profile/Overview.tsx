@@ -723,7 +723,11 @@ function Card({
 			{progress != null && (
 				<span
 					className="mx-1 mt-1 block h-1 overflow-hidden rounded-full bg-white/10"
-					aria-label={`${Math.round(progress * 100)}% watched`}
+					role="progressbar"
+					aria-label="Episodes watched"
+					aria-valuemin={0}
+					aria-valuemax={100}
+					aria-valuenow={Math.round(progress * 100)}
 				>
 					<span
 						className="block h-full origin-left bg-emerald-400"
@@ -867,46 +871,47 @@ function ActivityRow({
 					<ArrowRightIcon className="size-4" aria-hidden />
 				</Link>
 			</div>
-			<ul
-				ref={strip}
-				role="tabpanel"
-				className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:mx-0 sm:px-0"
-			>
-				{current.id === "ratings" &&
-					overview.recent.map((t) => (
-						<Card
-							key={t.key}
-							title={t}
-							line={shortDate(t.date)}
-							owner={owner}
-						/>
-					))}
-				{current.id === "watching" &&
-					overview.watching.map((s) => (
-						<Card
-							key={s.key}
-							title={s}
-							owner={owner}
-							line={s.next ?? `${s.watchedEpisodes} episodes`}
-							progress={
-								s.airedEpisodes
-									? Math.min(1, s.watchedEpisodes / s.airedEpisodes)
-									: null
-							}
-						/>
-					))}
-				{current.id === "wishlist" &&
-					overview.newestWishlist.map((t) => (
-						<Card
-							key={t.key}
-							title={t}
-							owner={owner}
-							line={
-								t.date ? `Added ${shortDate(t.date)}` : String(t.year ?? "")
-							}
-						/>
-					))}
-			</ul>
+			<div role="tabpanel" aria-label={current.label} className="contents">
+				<ul
+					ref={strip}
+					className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:mx-0 sm:px-0"
+				>
+					{current.id === "ratings" &&
+						overview.recent.map((t) => (
+							<Card
+								key={t.key}
+								title={t}
+								line={shortDate(t.date)}
+								owner={owner}
+							/>
+						))}
+					{current.id === "watching" &&
+						overview.watching.map((s) => (
+							<Card
+								key={s.key}
+								title={s}
+								owner={owner}
+								line={s.next ?? `${s.watchedEpisodes} episodes`}
+								progress={
+									s.airedEpisodes
+										? Math.min(1, s.watchedEpisodes / s.airedEpisodes)
+										: null
+								}
+							/>
+						))}
+					{current.id === "wishlist" &&
+						overview.newestWishlist.map((t) => (
+							<Card
+								key={t.key}
+								title={t}
+								owner={owner}
+								line={
+									t.date ? `Added ${shortDate(t.date)}` : String(t.year ?? "")
+								}
+							/>
+						))}
+				</ul>
+			</div>
 		</section>
 	)
 }

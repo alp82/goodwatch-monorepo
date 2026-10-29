@@ -199,7 +199,7 @@ export function Results({
 						type="button"
 						onClick={more}
 						disabled={total === 0}
-						aria-label={`Show ${total} ${noun.toLowerCase()}`}
+						aria-description={`Show ${total} ${noun.toLowerCase()}`}
 						className={`group/stack flex h-[calc(var(--mini)*1.5)] shrink-0 cursor-pointer items-center gap-3 self-start rounded-lg text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300 disabled:cursor-default @min-[640px]/fp:self-auto ${SIZES}`}
 					>
 						<div className="relative h-[calc(var(--mini)*1.5)] w-[calc(var(--mini)+9*var(--step))]">
@@ -316,7 +316,7 @@ function Chips({
 						<button
 							type="button"
 							onClick={() => onRemove(r.effect.id)}
-							aria-label={`Take ${r.effect.name.toLowerCase()} out`}
+							aria-description={`Take ${r.effect.name.toLowerCase()} out`}
 							className="group/chip flex h-[28px] cursor-pointer items-center gap-1.5 rounded-full pr-1 pl-2.5 text-[13px] font-semibold whitespace-nowrap focus-visible:outline-2 focus-visible:outline-amber-300"
 							style={{
 								color,

@@ -40,7 +40,7 @@ export function ListPageLinks({
 						to={pagePath(kind, n)}
 						prefetch="intent"
 						aria-current={n === page ? "page" : undefined}
-						aria-label={`Ranks ${first} to ${last}`}
+						aria-label={`${first}–${last}. Ranks ${first} to ${last}`}
 						className={`rounded-md px-3 py-1.5 tabular-nums ${n === page ? "bg-amber-400 font-bold text-black" : "bg-white/[0.06] text-gray-300 ring-1 ring-white/10 hover:bg-white/10"}`}
 					>
 						{first}–{last}

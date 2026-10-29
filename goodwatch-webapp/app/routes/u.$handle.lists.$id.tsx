@@ -250,6 +250,7 @@ export default function ShareListPage() {
 									<Link
 										to={titlePath(item)}
 										prefetch="intent"
+										aria-label={item.title}
 										className="shrink-0"
 									>
 										{item.poster ? (

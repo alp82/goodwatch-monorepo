@@ -387,7 +387,7 @@ function WithStage({
 									<button
 										type="button"
 										onClick={() => press({ list: true })}
-										aria-label={`All ${videos.length} videos: ${countsLine(videos)}`}
+										aria-description={`All ${videos.length} videos: ${countsLine(videos)}`}
 										className="pointer-events-auto relative ml-auto flex h-14 shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-white/15 pl-5 pr-4 text-[1.5rem] font-semibold leading-none text-white ring-2 ring-white/30 hover:bg-white/25 focus-visible:outline-4 focus-visible:outline-amber-300"
 									>
 										{hint}

@@ -156,12 +156,7 @@ export default function Footer() {
 			<div className="mx-auto grid max-w-7xl gap-12 px-4 pt-12 pb-10 sm:px-6 lg:grid-cols-[1fr_360px] lg:gap-16 lg:px-8">
 				<div>
 					<Reveal hidden={hidden}>
-						<Link
-							to="/"
-							prefetch="intent"
-							aria-label="GoodWatch home"
-							className="inline-flex"
-						>
+						<Link to="/" prefetch="intent" className="inline-flex">
 							<GoodWatchWordmark fontSize={34} />
 						</Link>
 					</Reveal>

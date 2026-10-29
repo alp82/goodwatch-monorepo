@@ -151,7 +151,7 @@ export function TitleBar({
 				<button
 					type="button"
 					onClick={scrollToTop}
-					aria-label={`${media.details.title}. Back to the top`}
+					aria-description="Back to the top"
 					className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-3 text-left"
 				>
 					{media.details.poster_path && poster ? (
@@ -204,7 +204,7 @@ export function TitleBar({
 						<button
 							type="button"
 							onClick={now.back}
-							aria-label={`Now playing: ${now.name}. Back to the video`}
+							aria-description="Back to the video"
 							className="group flex h-full max-w-[11rem] shrink-0 cursor-pointer items-center gap-2 pl-2.5 pr-1.5 text-left text-black transition-colors duration-150 hover:bg-black/10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-black active:bg-black/20 lg:max-w-[22rem] lg:pl-3"
 						>
 							<Bars on={running} />

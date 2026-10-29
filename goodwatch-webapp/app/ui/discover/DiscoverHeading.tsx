@@ -209,11 +209,11 @@ export function DiscoverHeading({
 				<button
 					type="button"
 					onClick={() => setOpen(true)}
-					aria-label="Search Discover"
+					aria-label="Discover movies and TV shows. Search"
 					className="group flex min-h-14 w-full min-w-0 items-center gap-3 py-2 rounded-lg text-left cursor-text outline-none focus-visible:ring-2 focus-visible:ring-amber-400 lg:min-h-16"
 				>
 					<h1 className="brand-header min-w-0 text-[32px] leading-tight text-white lg:text-[42px]">
-						Discover movies and TV shows
+						Discover movies and TV shows{" "}
 					</h1>
 					<span className="ml-auto inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-white/[0.06] px-3.5 text-sm font-semibold text-gray-200 transition-colors group-hover:bg-white/10 group-hover:text-white">
 						<MagnifyingGlassIcon className="h-4 w-4" aria-hidden />

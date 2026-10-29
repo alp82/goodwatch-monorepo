@@ -575,7 +575,12 @@ test("the rating asks how the title was, on the strip's levels from low to high"
 		assert.deepEqual(ids(html), own)
 		assert.deepEqual(focused(html), ["level:9"])
 		assert.match(html, />How was The Matrix\?</)
-		for (const name of ["Bad, 3", "Mediocre, 5", "Good, 7", "Excellent, 9"])
+		for (const name of [
+			"Bad 1–4. Give 3",
+			"Mediocre 5–6. Give 5",
+			"Good 7–8. Give 7",
+			"Excellent 9–10. Give 9",
+		])
 			assert.equal(count(html, `aria-label="${name}"`), 1)
 		assert.ok(!html.includes("data-tv-expand-place"))
 	}

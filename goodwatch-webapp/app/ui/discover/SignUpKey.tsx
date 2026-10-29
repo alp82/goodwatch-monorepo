@@ -8,7 +8,7 @@ import { useStreamingProviders } from "~/routes/api.streaming-providers"
 import { ServiceStack } from "~/ui/filter-bar/controls"
 import { useAuthHref } from "~/utils/auth-href"
 
-const LABEL =
+const DESCRIPTION =
 	"Sign up free: see only your streaming services, skip what you've seen, and get picks for your taste"
 
 export function SignUpKey({
@@ -58,7 +58,7 @@ export function SignUpKey({
 		<Link
 			rel="nofollow"
 			to={authHref("sign-up")}
-			aria-label={LABEL}
+			aria-description={DESCRIPTION}
 			className={`relative flex min-w-0 items-center bg-amber-500/[0.12] text-amber-100 ring-1 ring-inset ring-amber-500/40 transition-colors hover:bg-amber-500/20 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${row ? "h-12 shrink-0 gap-4 rounded-2xl px-4" : "h-full flex-[2.7] flex-col justify-center gap-1 rounded-[14px] px-1.5"}`}
 		>
 			{heading}

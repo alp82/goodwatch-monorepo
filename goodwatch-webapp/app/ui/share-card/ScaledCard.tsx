@@ -80,11 +80,7 @@ export function ScaledCard({
 						transform: cssSized ? undefined : `scale(${scale})`,
 					}}
 				>
-					{display ? (
-						cardForPage(design, { ...card, editing }, display)
-					) : (
-						<design.Card {...card} editing={editing} />
-					)}
+					{cardForPage(design, { ...card, editing }, display)}
 					{children}
 				</div>
 			</div>

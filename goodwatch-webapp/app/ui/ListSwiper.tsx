@@ -16,7 +16,8 @@ export default function ListSwiper<T>({ children }: ListSwiperProps<T>) {
 	// The carousel has started by the time this component's effects run.
 	useReplayedTap(
 		"row",
-		(el) => el === navigationPrevRef.current || el === navigationNextRef.current,
+		(el) =>
+			el === navigationPrevRef.current || el === navigationNextRef.current,
 	)
 
 	return (
@@ -76,6 +77,7 @@ export default function ListSwiper<T>({ children }: ListSwiperProps<T>) {
 				ref={navigationPrevRef}
 				type="button"
 				data-replay-tap="row:previous"
+				aria-label="Previous items"
 				className="absolute top-1/2 left-0 transform -translate-y-1/2 z-10 p-2 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 ease-in-out cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
 			>
 				<ChevronLeftIcon className="h-6 w-6" />
@@ -85,6 +87,7 @@ export default function ListSwiper<T>({ children }: ListSwiperProps<T>) {
 				ref={navigationNextRef}
 				type="button"
 				data-replay-tap="row:next"
+				aria-label="Next items"
 				className="absolute top-1/2 right-0 transform -translate-y-1/2 z-10 p-2 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 ease-in-out cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
 			>
 				<ChevronRightIcon className="h-6 w-6" />

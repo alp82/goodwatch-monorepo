@@ -95,7 +95,7 @@ export function Dials({
 							<button
 								type="button"
 								aria-pressed={pinned === s.sc.name}
-								aria-label={`${s.sc.name}: ${s.word}, between ${s.sc.left.toLowerCase()} and ${s.sc.right.toLowerCase()}. Show what it's read from on the drawing.`}
+								aria-description={`Between ${s.sc.left.toLowerCase()} and ${s.sc.right.toLowerCase()}. Show what it's read from on the drawing.`}
 								onPointerEnter={(e) =>
 									e.pointerType === "mouse" && onHover(s.sc.name)
 								}

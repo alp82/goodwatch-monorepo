@@ -222,9 +222,10 @@ export default function RatingsGrid({
 	return (
 		<div
 			ref={ref}
-			// biome-ignore lint/a11y/useSemanticElements: a grid of buttons with arrow-key movement, not a data table
+			// biome-ignore lint/a11y/useSemanticElements: interactive grid with roving button focus
 			role="grid"
 			aria-label="Episodes by season"
+			aria-description="Use the arrow keys to move between episodes, Home for the first episode, and End for the last."
 			onKeyDown={onKeyDown}
 			className="w-full"
 			data-morph={chart ? "chart" : "grid"}
@@ -251,27 +252,38 @@ export default function RatingsGrid({
 			/>
 			{/* Wrapped seasons are told apart by space, not by text. */}
 			<div className="flex flex-col" style={{ gap: layout.wrapped ? 12 : GAP }}>
-				{stats.map((s) => (
-					<div key={s.season.number} data-season-row={s.season.number}>
-						<SeasonRow
-							s={s}
-							model={model}
-							layout={layout}
-							chart={chart}
-							most={most}
-							selected={selectedSeason === s.season.number}
-							selectedEpisode={selectedEpisode}
-							roving={roving}
-							onFocusCell={setFocusId}
-							onSeason={onSeason}
-							onEpisode={onEpisode}
-							seasonScores={seasonScores}
-							transition={transition}
-							reduced={reduced}
-						/>
-						{afterRow(s.season)}
-					</div>
-				))}
+				{stats.map((s) => {
+					const detail = afterRow(s.season)
+					return (
+						<div
+							key={s.season.number}
+							data-season-row={s.season.number}
+							role="row"
+						>
+							<SeasonRow
+								s={s}
+								model={model}
+								layout={layout}
+								chart={chart}
+								most={most}
+								selected={selectedSeason === s.season.number}
+								selectedEpisode={selectedEpisode}
+								roving={roving}
+								onFocusCell={setFocusId}
+								onSeason={onSeason}
+								onEpisode={onEpisode}
+								seasonScores={seasonScores}
+								transition={transition}
+								reduced={reduced}
+							/>
+							{detail && (
+								<div role="gridcell" className="contents">
+									{detail}
+								</div>
+							)}
+						</div>
+					)
+				})}
 			</div>
 		</div>
 	)
@@ -464,20 +476,22 @@ function SeasonRow({
 				columnGap: GAP,
 			}}
 		>
-			<button
-				type="button"
-				data-season-press={season.number}
-				aria-pressed={selected}
-				aria-label={`Season ${season.number}${model.tracked ? `, ${count.watched} of ${count.aired} watched` : ""}`}
-				onClick={() => onSeason(season)}
-				className={`flex min-w-0 cursor-pointer flex-col rounded-md px-1.5 text-left text-xs font-bold tabular-nums ${lines > 1 ? "justify-start pt-2" : "justify-center"} ${selected ? "bg-white/15 text-white" : count.done ? "text-green-300 hover:bg-white/10" : "text-gray-300 hover:bg-white/10"} ${FOCUS}`}
-				style={{ height: rowH }}
-			>
-				<span className="flex items-center gap-1">
-					{seasonShort(season.number)}
-					{count.done && <CheckIcon className="h-3 w-3 shrink-0" />}
-				</span>
-			</button>
+			<div role="rowheader" className="contents">
+				<button
+					type="button"
+					data-season-press={season.number}
+					aria-pressed={selected}
+					aria-label={`${seasonShort(season.number)}. Season ${season.number}${model.tracked ? `, ${count.watched} of ${count.aired} watched` : ""}`}
+					onClick={() => onSeason(season)}
+					className={`flex min-w-0 cursor-pointer flex-col rounded-md px-1.5 text-left text-xs font-bold tabular-nums ${lines > 1 ? "justify-start pt-2" : "justify-center"} ${selected ? "bg-white/15 text-white" : count.done ? "text-green-300 hover:bg-white/10" : "text-gray-300 hover:bg-white/10"} ${FOCUS}`}
+					style={{ height: rowH }}
+				>
+					<span className="flex items-center gap-1">
+						{seasonShort(season.number)}
+						{count.done && <CheckIcon className="h-3 w-3 shrink-0" />}
+					</span>
+				</button>
+			</div>
 			<div
 				className="relative"
 				style={
@@ -592,102 +606,104 @@ function SeasonRow({
 						? 0
 						: Math.min(160, (chart ? col : most - col) * 7)
 					return (
-						<button
-							key={e.id}
-							type="button"
-							data-morph-cell={e.id}
-							data-watched={watched || undefined}
-							data-next={isNext || undefined}
-							tabIndex={roving === e.id ? 0 : -1}
-							aria-label={label}
-							aria-pressed={sel}
-							title={label}
-							onFocus={() => onFocusCell(e.id)}
-							onClick={() => onEpisode(e)}
-							className={`episode-rating-tile ${aired ? "" : "border border-dashed border-white/25"}`}
-							style={
-								layout.measured
-									? {
-											width: cell,
-											fontSize: cell >= 28 ? 11.5 : 10,
-											position: layout.measured ? "absolute" : "relative",
-											height: TILE_H,
-											transform: layout.measured ? transform : undefined,
-											transformOrigin: "0 0",
-											// No background, radius or shadow change here: a tile and a dot are two layers that cross-fade, so
-											// the morph only animates transform and opacity and never waits for a repaint to look right.
-											opacity: chart && !rated ? 0 : 1,
-											pointerEvents: chart && !rated ? "none" : undefined,
-											zIndex: sel ? 3 : isNext ? 2 : 1,
-											transition: transition === "none" ? "none" : transition,
-											transitionDelay: `${stagger}ms`,
-										}
-									: { background: aired ? colour : undefined }
-							}
-						>
-							{layout.measured ? (
-								<>
+						<div key={e.id} role="gridcell" className="contents">
+							<button
+								type="button"
+								data-morph-cell={e.id}
+								data-watched={watched || undefined}
+								data-next={isNext || undefined}
+								tabIndex={roving === e.id ? 0 : -1}
+								aria-label={label}
+								aria-pressed={sel}
+								title={label}
+								onFocus={() => onFocusCell(e.id)}
+								onClick={() => onEpisode(e)}
+								className={`episode-rating-tile ${aired ? "" : "border border-dashed border-white/25"}`}
+								style={
+									layout.measured
+										? {
+												width: cell,
+												fontSize: cell >= 28 ? 11.5 : 10,
+												position: layout.measured ? "absolute" : "relative",
+												height: TILE_H,
+												transform: layout.measured ? transform : undefined,
+												transformOrigin: "0 0",
+												// No background, radius or shadow change here: a tile and a dot are two layers that cross-fade, so
+												// the morph only animates transform and opacity and never waits for a repaint to look right.
+												opacity: chart && !rated ? 0 : 1,
+												pointerEvents: chart && !rated ? "none" : undefined,
+												zIndex: sel ? 3 : isNext ? 2 : 1,
+												transition: transition === "none" ? "none" : transition,
+												transitionDelay: `${stagger}ms`,
+											}
+										: { background: aired ? colour : undefined }
+								}
+							>
+								{layout.measured ? (
+									<>
+										<span
+											aria-hidden
+											className="absolute inset-0 rounded-[3px]"
+											style={{
+												background: aired ? colour : undefined,
+												boxShadow: chart ? undefined : ring,
+												...fade(!chart),
+											}}
+										/>
+										<span
+											aria-hidden
+											className="absolute inset-0 rounded-[50%]"
+											style={{
+												background: aired ? colour : undefined,
+												boxShadow: chart ? ring : undefined,
+												...fade(chart),
+											}}
+										/>
+										{/* The score, gone in the chart: the dot's place on the axis says it. */}
+										<span
+											className="relative"
+											style={fade(
+												!chart && (!layout.measured || readable) && rated,
+											)}
+											aria-hidden
+										>
+											{rated ? formatScore(e.rating ?? 0) : null}
+										</span>
+									</>
+								) : rated ? (
+									formatScore(e.rating ?? 0)
+								) : null}
+								{/* An unwatched dot is a ring: a hole of the page colour, its border kept at 2 screen pixels. */}
+								{model.tracked && !watched && rated && (
 									<span
 										aria-hidden
-										className="absolute inset-0 rounded-[3px]"
+										className="absolute rounded-[50%]"
 										style={{
-											background: aired ? colour : undefined,
-											boxShadow: chart ? undefined : ring,
-											...fade(!chart),
-										}}
-									/>
-									<span
-										aria-hidden
-										className="absolute inset-0 rounded-[50%]"
-										style={{
-											background: aired ? colour : undefined,
-											boxShadow: chart ? ring : undefined,
+											left: 2 / sx,
+											right: 2 / sx,
+											top: 2 / sy,
+											bottom: 2 / sy,
+											background: SURFACE_BG,
 											...fade(chart),
 										}}
 									/>
-									{/* The score, gone in the chart: the dot's place on the axis says it. */}
+								)}
+								{/* Watched in the grid: the white foot bar. In the chart a filled dot says it. */}
+								{watched && (
 									<span
-										className="relative"
-										style={fade(
-											!chart && (!layout.measured || readable) && rated,
-										)}
 										aria-hidden
-									>
-										{rated ? formatScore(e.rating ?? 0) : null}
-									</span>
-								</>
-							) : rated ? (
-								formatScore(e.rating ?? 0)
-							) : null}
-							{/* An unwatched dot is a ring: a hole of the page colour, its border kept at 2 screen pixels. */}
-							{model.tracked && !watched && rated && (
-								<span
-									aria-hidden
-									className="absolute rounded-[50%]"
-									style={{
-										left: 2 / sx,
-										right: 2 / sx,
-										top: 2 / sy,
-										bottom: 2 / sy,
-										background: SURFACE_BG,
-										...fade(chart),
-									}}
-								/>
-							)}
-							{/* Watched in the grid: the white foot bar. In the chart a filled dot says it. */}
-							{watched && (
-								<span
-									aria-hidden
-									className="absolute inset-x-[3px] bottom-[2px] h-[3px] rounded-full bg-white"
-									style={fade(!chart)}
-								/>
-							)}
-						</button>
+										className="absolute inset-x-[3px] bottom-[2px] h-[3px] rounded-full bg-white"
+										style={fade(!chart)}
+									/>
+								)}
+							</button>
+						</div>
 					)
 				})}
 			</div>
 			{seasonScores && (
 				<span
+					role="gridcell"
 					className="flex items-center justify-end"
 					style={{ height: rowH }}
 				>

@@ -108,7 +108,7 @@ test("the chips are the middle title's own: full ones to drop, low ones to add, 
 		["spectacle<4", "tension<4", "situational_comedy>6"],
 	)
 	assert.ok(chips.every((chip) => chip[2] === "false"))
-	assert.match(html, /aria-label="Spectacle: 10 of 10 here. Tap: titles with 4 or less."/)
+	assert.match(html, /aria-description="Spectacle: 10 of 10 here. Tap: titles with 4 or less."/)
 })
 
 test("the trail starts at the page's title, with back off and no count of steps", () => {
@@ -297,7 +297,7 @@ test("a browser that may not ask for the pack keeps the chips of the page's titl
 	assert.ok(posters(html).length > 8, "the engine drew its own, wider picture")
 	assert.doesNotMatch(html, WAITING)
 	assert.match(html, /aria-label="The traits of The Middle\. /)
-	assert.match(html, /aria-label="Spectacle: 10 of 10 here. Tap: titles with 4 or less."/)
+	assert.match(html, /aria-description="Spectacle: 10 of 10 here. Tap: titles with 4 or less."/)
 	assert.equal((html.match(/data-pl-act="tk"/g) ?? []).length, 3)
 })
 

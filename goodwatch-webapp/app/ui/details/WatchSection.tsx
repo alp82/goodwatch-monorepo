@@ -197,7 +197,7 @@ export function WatchSection({
 								type="button"
 								role="tab"
 								aria-selected={on}
-								aria-label={`${TAB_LABEL[t]}: ${plural(count, "service", "services")}`}
+								aria-label={`${TAB_LABEL[t]} ${plural(count, "service", "services")}`}
 								data-replay-tap={`offer:${t}`}
 								onClick={() => {
 									setType(t)
@@ -211,7 +211,7 @@ export function WatchSection({
 											: "text-gray-500 hover:text-gray-300"
 								}`}
 							>
-								{TAB_LABEL[t]}
+								{TAB_LABEL[t]}{" "}
 								<span
 									className={`text-xs tabular-nums ${on ? "text-amber-300" : "text-gray-500"}`}
 								>
@@ -229,7 +229,7 @@ export function WatchSection({
 					onFocus={preloadPreferenceDialog}
 					disabled={off}
 					aria-haspopup="dialog"
-					aria-label={`Country: ${here}. Change`}
+					aria-label={`${shownCountry}. Country: ${here}. Change`}
 					className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg px-1.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white disabled:cursor-wait disabled:opacity-50 sm:gap-2 sm:px-2"
 				>
 					<img
@@ -286,7 +286,7 @@ export function WatchSection({
 									data-media-type={media.mediaType}
 									data-country={country}
 									data-offer-type={l.type}
-									aria-label={`${TYPE_LABEL[l.type] ?? "Watch"} on ${l.name}${l.owned ? ", one of your services" : ""}. Opens ${l.name}`}
+									aria-description={`${TYPE_LABEL[l.type] ?? "Watch"} on ${l.name}${l.owned ? ", one of your services" : ""}. Opens ${l.name}`}
 									className={`${ROW} relative isolate h-16`}
 								>
 									{/* The service's color, faint, behind its logo. */}

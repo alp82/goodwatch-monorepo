@@ -59,7 +59,7 @@ export default function PreferencePair({
 				aria-haspopup="dialog"
 				aria-expanded={p.dialog.open}
 				aria-disabled={saving || undefined}
-				aria-label={spoken}
+				aria-label={`${country} · ${language}. ${shortCode(shown.language)}. ${spoken}`}
 				onPointerEnter={() => {
 					preloadPreferenceDialog()
 					p.warm()

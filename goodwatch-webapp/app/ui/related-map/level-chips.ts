@@ -26,7 +26,11 @@ export function chipsKit(core: MapCore, kit: RingsKit) {
 	const SLOTS = ["#fbbf24", "#22d3ee", "#e879f9"]
 	const now = () => (core.win ? (core.win.performance.now() as number) : 0)
 	const active = (ctx: MapCtx) => (ctx.st.mem.w as string[] | undefined) ?? []
-	const colorOf = (ctx: MapCtx, token: string) => SLOTS[((ctx.st.mem.sl as Record<string, number> | undefined)?.[token] ?? 0) % SLOTS.length]
+	const colorOf = (ctx: MapCtx, token: string) =>
+		SLOTS[
+			((ctx.st.mem.sl as Record<string, number> | undefined)?.[token] ?? 0) %
+				SLOTS.length
+		]
 	/** The selection after a tap on a token: it goes when it was on. Otherwise it comes, one per trait and `max` in all. */
 	const after = (ctx: MapCtx, token: string, max: number) => {
 		const cur = active(ctx)
@@ -87,7 +91,7 @@ export function chipsKit(core: MapCore, kit: RingsKit) {
 		const to = moved ? `${o.v}→${level(o.token)}` : level(o.token)
 		return `<button type="button" class="ix-c" data-pl-act="tk" data-arg="${esc(o.token)}" data-k="${k.key}" aria-pressed="${o.on}" data-d="${up ? "up" : "dn"}"${flashing ? ' data-fl=""' : ""} style="--v:${o.v};--a:${zone[0]};--b:${zone[1]};--n:${k.n};--c:${o.color}${
 			flashing ? `;--fa:${-Math.round(since)}ms` : ""
-		}" aria-label="${esc(`${kit.word(k.key)}: ${o.v} of 10 here. ${o.on ? "On" : "Tap"}: titles with ${orMore(o.token)}.`)}"><u class="ix-f"></u><u class="ix-z"></u><u class="ix-n"></u><u class="fn-pz"></u><u class="fn-pk"></u><i>${kit.emo(k.key)}</i><b>${esc(
+		}" aria-description="${esc(`${kit.word(k.key)}: ${o.v} of 10 here. ${o.on ? "On" : "Tap"}: titles with ${orMore(o.token)}.`)}"><u class="ix-f"></u><u class="ix-z"></u><u class="ix-n"></u><u class="fn-pz"></u><u class="fn-pk"></u><i aria-hidden="true">${kit.emo(k.key)}</i><b>${esc(
 			o.label,
 		)}</b><em><span class="ix-r">${o.v}</span><span class="ix-p">${esc(to)}</span><span class="fn-pt"></span></em></button>`
 	}

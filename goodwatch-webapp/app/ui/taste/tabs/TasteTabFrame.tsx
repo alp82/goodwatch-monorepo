@@ -109,6 +109,7 @@ function Loading() {
 	return (
 		<div
 			className="mx-auto max-w-7xl animate-pulse px-4 pt-10 md:px-8 md:pt-14"
+			role="status"
 			aria-busy="true"
 			aria-label="Loading your taste"
 		>
