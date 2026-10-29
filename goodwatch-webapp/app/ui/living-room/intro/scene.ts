@@ -58,5 +58,10 @@ export type Scene = {
 	ms: number
 	/** How it takes over from the scene before it; a crossfade by default. "cut" continues the last frame. */
 	enter?: Enter
+	/**
+	 * The closer counts as a chapter: the chapter bar and Next stay on it, and Next steps past it. For an end card
+	 * that goes on by itself (the start page's Your turn); the TV's quiz waits for the visitor and isn't one.
+	 */
+	chapter?: boolean
 	C: ComponentType<SceneProps>
 }

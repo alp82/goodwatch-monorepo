@@ -1,5 +1,7 @@
-// The film the start page's TV plays for a guest (docs/implementation/home-intro.md): one scene per chapter, in the
-// chapters' order (CHAPTERS in scene.ts). To reorder the film, reorder CHAPTERS; to change a chapter, change its scene.
+// The film the TV plays for a guest (docs/implementation/home-intro.md): one scene per chapter, in the chapters' order
+// (CHAPTERS in scene.ts). To reorder the film, reorder CHAPTERS; to change a chapter, change its scene. The start
+// page's How it works plays the same film ending on Your turn instead of the quiz
+// (docs/implementation/start-page-redesign.md).
 import { CHAPTERS, type ChapterId, type Scene } from "./scene"
 import { USE_WITH_AI_MS, UseWithAi } from "./scenes/ai/use-with-ai"
 import { CHAT_MS, Chat } from "./scenes/chat"
@@ -13,6 +15,7 @@ import { Search } from "./scenes/search"
 import { STREAMING_MS, Streaming } from "./scenes/streaming"
 import { TASTE_MS, YourTaste } from "./scenes/taste/taste"
 import { Tracking } from "./scenes/tracking"
+import { YOUR_TURN_MS, YourTurn } from "./scenes/your-turn"
 
 const SCENES: Record<ChapterId, Omit<Scene, "section">> = {
 	// Deals in as the boot screen leaves.
@@ -38,3 +41,20 @@ export const FILM: Scene[] = CHAPTERS.map((chapter) => ({
 	section: chapter.id,
 	...SCENES[chapter.id],
 }))
+
+/**
+ * The film for a page the visitor can try right under it: the quiz becomes the Your turn end card, which counts as a
+ * chapter (it goes on by itself, so the chapter bar fills over it and Next steps past it).
+ */
+export const FILM_ENDING_ON_YOUR_TURN: Scene[] = FILM.map((scene) =>
+	scene.section === "closer"
+		? {
+				id: "your-turn",
+				section: "closer",
+				ms: YOUR_TURN_MS,
+				enter: "fade",
+				chapter: true,
+				C: YourTurn,
+			}
+		: scene,
+)

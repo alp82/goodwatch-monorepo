@@ -44,9 +44,9 @@ export function Stage({ k, children }: { k: number; children: ReactNode }) {
 	)
 }
 
-/** How many scenes are chapters: everything before the quiz. */
+/** How many scenes are chapters: everything before the quiz (a closer that counts as a chapter counts). */
 export const chapterCount = (scenes: readonly Scene[]) => {
-	const i = scenes.findIndex((c) => c.section === "closer")
+	const i = scenes.findIndex((c) => c.section === "closer" && !c.chapter)
 	return i < 0 ? scenes.length : i
 }
 
