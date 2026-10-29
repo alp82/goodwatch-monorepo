@@ -27,6 +27,7 @@ export async function installGuard(
     blockedUrls: 0,
     maxConcurrent: 0,
     responseErrors: 0,
+    repeatedPauses: 0,
   };
   await page.setBypassServiceWorker(true);
   await session.send("Network.enable");
@@ -53,28 +54,34 @@ export async function installGuard(
       if (fetchId === id) networkIds.delete(networkId);
     pump();
   };
+  const continueRequest = (e, slot, repeat = false) => {
+    const headers = { ...e.request.headers, "Accept-Language": "en-US" };
+    if (cookie && new URL(e.request.url).origin === origin) {
+      for (const k of Object.keys(headers))
+        if (k.toLowerCase() === "cookie") delete headers[k];
+      headers.Cookie = cookie;
+    }
+    void session
+      .send("Fetch.continueRequest", {
+        requestId: e.requestId,
+        headers: Object.entries(headers).map(([name, value]) => ({
+          name,
+          value: String(value),
+        })),
+        interceptResponse: !e.networkId,
+      })
+      .catch(() => {
+        stats.responseErrors++;
+        if (!repeat) release(slot);
+      });
+  };
   const pump = () => {
     while (active.size < 2 && queue.length) {
       const e = queue.shift();
       active.set(e.requestId, e.request.url);
       if (e.networkId) networkIds.set(e.networkId, e.requestId);
       stats.maxConcurrent = Math.max(stats.maxConcurrent, active.size);
-      const headers = { ...e.request.headers, "Accept-Language": "en-US" };
-      if (cookie && new URL(e.request.url).origin === origin) {
-        for (const k of Object.keys(headers))
-          if (k.toLowerCase() === "cookie") delete headers[k];
-        headers.Cookie = cookie;
-      }
-      void session
-        .send("Fetch.continueRequest", {
-          requestId: e.requestId,
-          headers: Object.entries(headers).map(([name, value]) => ({
-            name,
-            value: String(value),
-          })),
-          interceptResponse: !e.networkId,
-        })
-        .catch(() => release(e.requestId));
+      continueRequest(e, e.requestId);
     }
   };
   const networkDone = (e) => {
@@ -128,6 +135,14 @@ export async function installGuard(
       await session
         .send("Fetch.continueRequest", { requestId: e.requestId })
         .catch(() => {});
+      return;
+    }
+    // Chromium can pause a font request again with a new Fetch ID but the same Network ID.
+    // It still owns one slot. Queuing that continuation would make it wait for itself.
+    const existing = e.networkId && networkIds.get(e.networkId);
+    if (existing) {
+      stats.repeatedPauses++;
+      continueRequest(e, existing, true);
       return;
     }
     queue.push(e);

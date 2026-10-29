@@ -74,6 +74,9 @@ export function summarizeLighthouse(reports) {
     })),
   );
   return {
+    warnings: reports.flatMap((r, index) =>
+      (r.runWarnings ?? []).map((message) => ({ run: index + 1, message })),
+    ),
     runs: valid.length,
     attempted: reports.length,
     metrics,
@@ -205,6 +208,14 @@ export function compare(a, b) {
     "cls",
     "si_ms",
     "ttfb_ms",
+    "html_bytes",
+    "host_requests",
+    "origin_requests",
+    "static_requests",
+    "image_count",
+    "font_requests",
+    "blocking_requests",
+    "third_party_origins",
     "script_count",
     "script_bytes",
     "image_bytes",

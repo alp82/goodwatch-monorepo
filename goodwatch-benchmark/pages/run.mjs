@@ -180,6 +180,20 @@ async function main() {
         summary.options.only !== (o.only ?? null))
     )
       throw Error("Resume options differ from original run");
+    if (o.resume) {
+      summary.resumed ??= [];
+      summary.resumed.push({
+        at: new Date().toISOString(),
+        commit: execFileSync("git", ["rev-parse", "HEAD"], {
+          cwd: here,
+          encoding: "utf8",
+        }).trim(),
+        dirty: !!execFileSync("git", ["status", "--porcelain"], {
+          cwd: here,
+          encoding: "utf8",
+        }).trim(),
+      });
+    }
     const save = async () => {
       await writeFile(
         join(output, "summary.json"),

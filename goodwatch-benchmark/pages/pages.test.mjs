@@ -227,3 +227,36 @@ test("credential redaction preserves numeric metrics and removes header values",
   assert.deepEqual(clean.nested, ["[redacted]", "[redacted]"]);
   assert.equal(data.cookie, "x=1");
 });
+
+test("repeated Fetch pauses for the same network request reuse its slot", async () => {
+  const page = new EventEmitter(),
+    session = new EventEmitter(),
+    calls = [];
+  session.send = async (method, params) => calls.push({ method, params });
+  page.createCDPSession = async () => session;
+  page.setBypassServiceWorker = page.evaluateOnNewDocument = async () => {};
+  const stats = await installGuard(page, { origin: "https://site.test" });
+  const pause = (id, networkId) => ({
+    requestId: id,
+    networkId,
+    request: {
+      url: "https://site.test/font.woff2",
+      method: "GET",
+      headers: {},
+    },
+  });
+  session.emit("Fetch.requestPaused", pause("first", "font-1"));
+  session.emit("Fetch.requestPaused", pause("second", "font-2"));
+  session.emit("Fetch.requestPaused", pause("repeated", "font-1"));
+  session.emit("Fetch.requestPaused", pause("waiting", "font-3"));
+  const continued = () =>
+    calls.filter((c) => c.method === "Fetch.continueRequest");
+  assert.equal(
+    continued().length,
+    3,
+    "A repeated pause must continue inside the existing slot",
+  );
+  assert.equal(stats.maxConcurrent, 2);
+  session.emit("Network.loadingFinished", { requestId: "font-1" });
+  assert.equal(continued().length, 4);
+});
