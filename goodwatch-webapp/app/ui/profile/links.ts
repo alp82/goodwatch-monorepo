@@ -4,18 +4,7 @@ import { LINK_SERVICES, type LinkService } from "~/domain/profile"
 import { LINK_RULES, profileLinkUrl } from "~/domain/profile-settings"
 import { IMPORT_SOURCE_LIST } from "~/ui/imports/ImportSources"
 
-export type ProfileTab =
-	| "overview"
-	| "seen"
-	| "scores"
-	| "wishlist"
-	| "shows"
-	| "lists"
-	| "stats"
-	| "tropes"
-
-export const profileTabPath = (handle: string, tab: ProfileTab = "overview") =>
-	tab === "overview" ? `/u/${handle}` : `/u/${handle}/${tab}`
+export { type ProfileTab, profileTabPath } from "./paths"
 
 export const EDIT_PROFILE_PATH = "/settings/profile"
 

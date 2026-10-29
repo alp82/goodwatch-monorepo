@@ -45,6 +45,7 @@ import { startProcessStats } from "~/server/process-stats.server"
 import { withoutRelatedMapMarkup } from "~/server/related-map-handoff"
 import { logProcessRole, processRole } from "~/server/role.server"
 import { startStaticFiles } from "~/server/static-files.server"
+import { startHotOnSocialsWarmup } from "~/server/talked-about-now/startup.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
 import {
@@ -77,6 +78,7 @@ startMetrics()
 if (processRole() === "search") startProcessStats()
 startTitleSnapshot()
 if (processRole() !== "search") startFingerprintPopulation()
+startHotOnSocialsWarmup()
 // The title pages' "What's new on" links read the links of the /new pages that this keeps loaded (#489).
 if (processRole() !== "search") startNewPagesRefresh()
 // The page cache answers repeated anonymous pages before Express (see page-cache.server.ts). It starts before the
@@ -127,6 +129,7 @@ function renderDocument(
 	responseHeaders: Headers,
 	remixContext: EntryContext,
 ) {
+	const renderStarted = performance.now()
 	// Crawlers get the complete document in one piece. Browsers get the shell first and suspended parts as they finish.
 	const waitForAll =
 		isbot(request.headers.get("user-agent") ?? "") || remixContext.isSpaMode
@@ -143,6 +146,7 @@ function renderDocument(
 		const send = () => {
 			shellRendered = true
 			responseHeaders.set("Content-Type", "text/html")
+			responseHeaders.append("Server-Timing", `render;dur=${(performance.now() - renderStarted).toFixed(1)}`)
 			protectMediaResponse(responseHeaders)
 			const routePolicy = responseHeaders.get("Cache-Control")
 			const decision = applyCachePolicy(request, status, responseHeaders)

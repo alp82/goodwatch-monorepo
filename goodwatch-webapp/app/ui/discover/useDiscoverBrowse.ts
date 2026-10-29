@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import type { TasteInteraction } from "~/ui/taste/types"
+import { DISCOVER_MAX_PAGE } from "~/utils/constants"
 import { useGuestInteractions } from "~/utils/guest-progress"
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
@@ -142,7 +143,9 @@ export function useDiscoverBrowse({
 		initialPageParam: 1,
 		// A row per side is the whole first view: "See all" narrows the list to a side, which pages again.
 		getNextPageParam: (last) =>
-			last.sides?.layout !== "rows" && last.page * last.pageSize < last.total
+			last.sides?.layout !== "rows" &&
+			last.page < DISCOVER_MAX_PAGE &&
+			last.page * last.pageSize < last.total
 				? last.page + 1
 				: undefined,
 		initialData:

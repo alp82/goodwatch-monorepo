@@ -116,7 +116,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 				icon: MagnifyingGlassIcon,
 			},
 			{
-				name: "Hot on socials",
+				name: "Hot",
 				href: "/hot-on-socials",
 				blurb: "What people talk about now",
 				icon: FireIcon,

@@ -9,6 +9,7 @@ import { FeedbackTab } from "~/ui/feedback/FeedbackTab"
 import { InstantRouteScroll } from "~/ui/nav/InstantRouteScroll"
 import { PageScrollbar } from "~/ui/nav/PageScrollbar"
 import { json } from "@remix-run/node"
+import { withRequestTiming } from "~/utils/request-work"
 import type { User } from "@supabase/auth-js"
 import { resolveMediaContext } from "~/server/media-context.server"
 import type { EffectiveMediaContext } from "~/utils/media-language"
@@ -52,6 +53,7 @@ import { useDehydratedState } from "use-dehydrated-state"
 
 import Footer from "~/ui/footer/Footer"
 import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
+import { LazyTv } from "~/ui/tv-egg/LazyTv"
 import {
 	HubDialog,
 	MobileDock,
@@ -143,7 +145,7 @@ type LoaderData = {
 // A navigation never reruns the root loader: utils/root-revalidation.ts has the rule.
 export { shouldRevalidateRoot as shouldRevalidate } from "~/utils/root-revalidation"
 
-export const loader: LoaderFunction = async ({
+export const loader: LoaderFunction = withRequestTiming(async ({
 	request,
 }: LoaderFunctionArgs) => {
 	// The title snapshot loads in the background from the server's first page request on.
@@ -186,7 +188,7 @@ export const loader: LoaderFunction = async ({
 		},
 		{ headers },
 	)
-}
+})
 
 // What the error page's header knows about the person: the root loader's data when it succeeded (a missing page, or
 // a failure of a child route), else what the browser can find out.
@@ -222,6 +224,7 @@ export function ErrorBoundary() {
 	const rootData = useRouteLoaderData("root") as LoaderData | undefined
 	const root = useBoundaryRoot(rootData)
 	const { status, detail } = errorPageProps(error)
+	const location = useLocation()
 	const notFound = status === 404
 	// An address that names no page is an answer, not a failure of the app.
 	if (!notFound) {
@@ -248,7 +251,15 @@ export function ErrorBoundary() {
 		<NavigationProvider>
 			<SiteHeader />
 			<main className="relative mt-16 flex grow flex-col justify-center">
-				<ErrorPage status={status} detail={detail} />
+				{/* The little living room: CH 404 for a missing page, a test card for a failure. */}
+				<LazyTv
+					page={notFound ? "not-found" : "error"}
+					heading={notFound ? "Page not found" : "Something went wrong"}
+					path={location.pathname}
+					plain={<ErrorPage status={status} />}
+				/>
+				{/* A development build also shows what went wrong. */}
+				{detail && <ErrorPage status={status} detail={detail} />}
 			</main>
 			<Footer />
 			<MobileDock />

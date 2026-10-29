@@ -23,9 +23,11 @@ An existing worktree keeps its build output. The runner removes only the
 worktrees it created. Use distinct trees for the two builds.
 
 For a ref, the runner creates a detached worktree under
-`~/.cache/gw753-html-check/run-<time>-<pid>/`. Its `node_modules` is a real
-directory, with one symlink per entry into
-`/home/alp/dev/projects/goodwatch/gw-nav-speed/goodwatch-webapp/node_modules`.
+`~/.cache/gw753-html-check/run-<time>-<pid>/`. To use another directory, set
+`GW_HTML_CHECK_CACHE`. The worktree's `node_modules` is a real directory, with
+one symlink per entry into `goodwatch-webapp/node_modules` of the checkout that
+runs the gate. Install that checkout's dependencies first, and keep them
+current: a stale install builds both refs with old packages.
 It never runs an install. Builds run sequentially with `npm run build`.
 
 Each build and server runs through `env -i` with an explicit allowlist.

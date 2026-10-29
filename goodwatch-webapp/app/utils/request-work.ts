@@ -57,7 +57,18 @@ export function withRequestTiming<A extends { request: Request }, R>(
 ): (args: A) => Promise<R> {
 	return async (args) => {
 		timing(args.request)
-		const result = await load(args)
+		let result: R
+		try {
+			result = await load(args)
+		} catch (error) {
+			if (error instanceof Response) {
+				const value = requestServerTiming(args.request)
+				if (value) {
+					try { error.headers.append("Server-Timing", value) } catch {}
+				}
+			}
+			throw error
+		}
 		if (result === undefined) return result
 		const response =
 			result instanceof Response

@@ -29,9 +29,8 @@ import {
 } from "./core.mjs"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
-const cache = path.join(os.homedir(), ".cache/gw753-html-check")
-const sharedModules =
-	"/home/alp/dev/projects/goodwatch/gw-nav-speed/goodwatch-webapp/node_modules"
+const cache = process.env.GW_HTML_CHECK_CACHE || path.join(os.homedir(), ".cache/gw753-html-check")
+const sharedModules = path.join(root, "goodwatch-webapp/node_modules")
 const preload =
 	"/home/alp/dev/projects/goodwatch/goodwatch-tv-a-verify/bench2/block-egress.mjs"
 const empty =
@@ -388,6 +387,8 @@ const staticPaths = [
 	"/",
 	"/movies",
 	"/shows",
+	"/movies/moods",
+	"/shows/moods",
 	"/movies/best",
 	"/shows/best",
 	"/movies/moods/feel-good",

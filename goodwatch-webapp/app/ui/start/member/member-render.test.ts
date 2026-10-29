@@ -75,12 +75,12 @@ test("a member searches with the mood picker under the bar, as a guest does", ()
 
 test("the doors follow what the member has, and the first is open in the server's HTML", () => {
 	const expect: Record<Member, string[]> = {
-		full: ["Continue watching", "Wishlist", "For you", "Hot on socials"],
-		few: ["Continue watching", "Wishlist", "For you", "Hot on socials"],
-		noShows: ["Wishlist", "For you", "Hot on socials", "Continue watching"],
-		noWishlist: ["Continue watching", "For you", "Hot on socials", "Wishlist"],
-		new: ["Hot on socials", "Continue watching", "Wishlist", "For you"],
-		later: ["Continue watching", "Wishlist", "For you", "Hot on socials"],
+		full: ["Continue watching", "Wishlist", "For you", "Hot"],
+		few: ["Continue watching", "Wishlist", "For you", "Hot"],
+		noShows: ["Wishlist", "For you", "Hot", "Continue watching"],
+		noWishlist: ["Continue watching", "For you", "Hot", "Wishlist"],
+		new: ["Hot", "Continue watching", "Wishlist", "For you"],
+		later: ["Continue watching", "Wishlist", "For you", "Hot"],
 	}
 	for (const [name, html] of all) {
 		const found = doors(html)

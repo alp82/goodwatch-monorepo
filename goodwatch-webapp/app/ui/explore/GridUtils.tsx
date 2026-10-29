@@ -70,6 +70,7 @@ export const NextPageLink = ({ url }: NextPageLinkProps) => {
     <div className="h-0 overflow-hidden">
       <Link
         to={url}
+        rel="next"
         prefetch="intent"
         aria-hidden="true"
         tabIndex={-1}

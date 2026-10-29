@@ -57,3 +57,47 @@ test("page headers allow a child to shorten the shared lifetime, with privacy ta
 		)
 	}
 })
+
+test("preserves parent, child and thrown-response timing in document headers", () => {
+	const headers = new Headers(
+		pageHeaders({
+			parentHeaders: new Headers({ "Server-Timing": "session;dur=12.0" }),
+			loaderHeaders: new Headers({ "Server-Timing": "data;dur=350.0" }),
+			actionHeaders: new Headers(),
+			errorHeaders: new Headers({
+				"Server-Timing": "total;dur=400.0",
+				"Cache-Control": "private, no-store",
+				"Retry-After": "2",
+			}),
+		}),
+	)
+	assert.equal(
+		headers.get("Server-Timing"),
+		"session;dur=12.0, data;dur=350.0, total;dur=400.0",
+	)
+	assert.equal(headers.get("Cache-Control"), "private, no-store")
+	assert.equal(headers.get("Retry-After"), "2")
+})
+
+test("adds timings to a thrown loader Response without changing its status or retry policy", async () => {
+	const { withRequestTiming, timeRequestWork } = await import(
+		"./request-work.ts"
+	)
+	const response = new Response("temporarily unavailable", {
+		status: 503,
+		headers: { "Cache-Control": "private, no-store", "Retry-After": "2" },
+	})
+	const request = new Request("http://localhost/hot-on-socials")
+	const load = withRequestTiming(async ({ request }: { request: Request }) => {
+		await timeRequestWork(request, "data", async () => {
+			throw response
+		})
+	})
+	await assert.rejects(load({ request }), (error) => error === response)
+	assert.match(
+		response.headers.get("Server-Timing") ?? "",
+		/data;dur=\d+\.\d, total;dur=\d+\.\d/,
+	)
+	assert.equal(response.status, 503)
+	assert.equal(response.headers.get("Retry-After"), "2")
+})

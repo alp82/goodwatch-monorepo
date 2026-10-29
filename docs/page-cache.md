@@ -127,7 +127,7 @@ A response is stored only when all of these hold:
 | The gate wouldn't answer the request | `gateAnswer`, before any lookup and again when the render is offered. |
 | The page is complete | A loader that left out a part of the page answers `Cache-Control: no-store`. See below. |
 | The URL repeated | The admission rule, checked when the render is offered. |
-| At most 8 MB of HTML and 4 MB compressed | Checked before and after compression. |
+| At most 8 MB of input HTML and 4 MB per stored entry, including every encoding | Checked before and after compression. |
 
 - **Incomplete pages:** a page is incomplete when a part that the document normally holds is missing, because a
   data source wasn't ready, ran out of time, or failed. The loader then answers `Cache-Control: no-store`
@@ -160,10 +160,11 @@ A response is stored only when all of these hold:
   Their lifetime is 10 seconds fresh and 10 more seconds stale. Hidden lists and member views send
   `private, no-store`.
 - **The stored bytes:** the HTML compressed once with Brotli (quality 5) and once with gzip (level 6), on the thread
-  pool, after the response of the render. The uncompressed HTML isn't kept. A client that accepts neither encoding
-  gets the gzip copy decompressed on the thread pool.
-- **The stored headers:** every header of the original response, plus `Accept-Encoding` in `Vary`, an `ETag`, and
-  `Age`. A `keyed` page is replayed with `private, max-age=0` and `Vary: Accept-Language, Accept-Encoding`.
+  pool, after the response of the render. A client that accepts neither encoding gets the gzip body decompressed
+  synchronously on the main thread. A hit never waits for decompression on the shared thread pool. The store
+  retains only the two compressed bodies.
+- **The stored headers:** every header of the original response except its render timings, plus `Accept-Encoding`
+  in `Vary`, an `ETag`, and `Age`. A `keyed` page is replayed with `private, max-age=0` and `Vary: Accept-Language, Accept-Encoding`.
 - **`ETag`:** from the HTML, with a suffix per encoding. `If-None-Match` answers 304. `HEAD` answers the headers.
 
 Essential title details have a separate 3,000 ms page deadline across cache reads, SQL and presentation. A timeout
@@ -298,12 +299,12 @@ getting requests, and up to 2.5 hours for the first request after a quiet period
 | --- | --- | --- |
 | Stored bytes (Brotli plus gzip plus 1 KB per page) | 128 MB | `PAGE_CACHE_MAX_BYTES` |
 | Stored pages | 2,000 | `PAGE_CACHE_MAX_ENTRIES` |
-| One page, compressed | 4 MB | |
+| One page, all stored encodings and overhead | 4 MB | |
 | Admission counters | 20,000 keys | |
 | Renders of one key in flight | 4 | |
 
-A movie page takes about 106 KB (47 KB Brotli, 59 KB gzip), so 128 MB holds about 1,200 title pages. The least
-recently used page goes first. The process holds about 2.2 GB today, against a planned limit of 4 GB.
+Each page counts both compressed bodies and 1 KB of header overhead. The least recently used page goes first;
+the total byte limit remains 128 MB.
 
 ## Reset
 
@@ -393,7 +394,12 @@ cache, and no response carries `GW-Page-Cache`. Without a restart there is no sw
 
 ## Metrics
 
-See "Page cache" in [viral-spike-metrics.md](benchmarks/viral-spike-metrics.md). The response header
+See "Page cache" in [viral-spike-metrics.md](benchmarks/viral-spike-metrics.md).
+A stored response sends `Server-Timing: page_cache;desc="hit"` (or `stale` or `joined`) instead of replaying the
+original loader and render durations. A rendered document includes its loaders' timings and a `render` duration.
+Overlapping loader durations are not additive.
+
+The response header
 `GW-Page-Cache` says `hit`, `stale`, `miss`, `bypass`, or `busy` for every page request.
 
 ## What changes with two instances

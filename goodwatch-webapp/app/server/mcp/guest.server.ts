@@ -1,6 +1,7 @@
 import { getDetailsForMovie, getDetailsForShow } from "../details.server"
 import { guestContext, type ViewerContext } from "../viewer.server"
 import { getDisplayFields } from "../title-cards.server"
+import { validPersonId } from "../person-id.ts"
 import { titleKey } from "../../utils/title-key"
 import { lookup, resolve, summary } from "./data.server.ts"
 import { watchAvailability } from "./watch-links.server.ts"
@@ -50,7 +51,7 @@ export async function readGuestTool(
 			throw new Error("search_people requires a nonblank query")
 		if (
 			name === "get_person" &&
-			(!Number.isSafeInteger(args.person_id) || Number(args.person_id) <= 0)
+			!validPersonId(args.person_id ?? 0)
 		)
 			throw new Error("get_person requires person_id")
 		return (await import("./people.server.ts")).readPeople(

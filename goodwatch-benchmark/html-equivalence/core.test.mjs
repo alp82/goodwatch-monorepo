@@ -226,7 +226,7 @@ test("standalone Remix manifest is build-only", () => {
 })
 
 test("production CLI saves separate structure and text reports", () => {
-	const cache = path.join(os.homedir(), ".cache/gw753-html-check")
+	const cache = process.env.GW_HTML_CHECK_CACHE || path.join(os.homedir(), ".cache/gw753-html-check")
 	mkdirSync(cache, { recursive: true })
 	const directory = mkdtempSync(path.join(cache, "report-test-"))
 	try {
@@ -425,7 +425,7 @@ test("empty loader lists report only route data and its immediate fields", () =>
 })
 
 test("CLI records repeated allowlist rules, per-side counts and empty data without hiding failures", () => {
-	const cache = path.join(os.homedir(), ".cache/gw753-html-check")
+	const cache = process.env.GW_HTML_CHECK_CACHE || path.join(os.homedir(), ".cache/gw753-html-check")
 	mkdirSync(cache, { recursive: true })
 	const directory = mkdtempSync(path.join(cache, "allowlist-test-"))
 	try {

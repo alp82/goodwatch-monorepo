@@ -287,8 +287,10 @@ const PAGES: Entry[] = [
 		names: ["tv shows"],
 		words: ["tv", "series"],
 	}),
-	page("hot", "Hot on socials", "/hot-on-socials", FireIcon, {
+	page("hot", "Hot", "/hot-on-socials", FireIcon, {
 		destination: "hot",
+		// Its name until 2026-10-29: people still search for it.
+		names: ["hot on socials"],
 		words: [
 			"trending",
 			"buzz",

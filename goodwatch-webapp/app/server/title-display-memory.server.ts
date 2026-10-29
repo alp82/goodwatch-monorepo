@@ -27,6 +27,15 @@ export function createDisplayMemory<V>(
 				entries.delete(oldest)
 			}
 		},
+		/** Current display values for small, cache-only discovery surfaces. */
+		values(): V[] {
+			const values: V[] = []
+			for (const [key, entry] of entries) {
+				if (entry.until <= now()) entries.delete(key)
+				else values.push(entry.value)
+			}
+			return values
+		},
 		size: () => entries.size,
 		clear: () => entries.clear(),
 	}

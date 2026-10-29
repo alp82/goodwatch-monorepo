@@ -44,7 +44,7 @@ export const useDiscover = ({
 	enabled = true,
 }: UseDiscoverParams) => {
 	const { locale } = useLocale()
-	const initialPageParam = params?.page || 1
+	const initialPageParam = initialData?.pageParams[0] ?? (params?.page || 1)
 	if (params?.page) {
 		delete params.page
 	}

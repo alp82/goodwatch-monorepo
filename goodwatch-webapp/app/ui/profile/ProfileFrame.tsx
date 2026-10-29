@@ -18,6 +18,7 @@ import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 // The frame of every profile page: the picture, @handle, since, bio, links and actions (in full on Overview, compact on
 // the other tabs), the stat strip, the tabs (only the parts the viewer may see; the owner sees a lock or a members
 // mark on a narrowed part), and the notice in place of a part the viewer may not see. Nothing here may widen a phone's layout (overflow-x-clip keeps the sticky tabs working).
+import { PROFILE_TAB_PARTS } from "./paths"
 import { assetUrl } from "~/utils/asset-url"
 import {
 	EDIT_PROFILE_PATH,
@@ -88,29 +89,24 @@ export function ProfileAvatar({
 const TABS: {
 	tab: ProfileTab
 	label: string
-	part?: ProfilePart
-	/** A second part the tab needs; the narrower audience of the two marks it. */
-	also?: ProfilePart
 	count?: (s: ProfileShell) => number
 }[] = [
 	{ tab: "overview", label: "Overview" },
-	{ tab: "seen", label: "Seen", part: "seen", count: (s) => s.counts.seen },
+	{ tab: "seen", label: "Seen", count: (s) => s.counts.seen },
 	{
 		tab: "scores",
 		label: "Scores",
-		part: "scores",
 		count: (s) => s.counts.rated,
 	},
 	{
 		tab: "wishlist",
 		label: "Wishlist",
-		part: "wishlist",
 		count: (s) => s.counts.wishlist,
 	},
-	{ tab: "shows", label: "Shows", part: "shows" },
-	{ tab: "lists", label: "Lists", part: "lists", count: (s) => s.counts.lists },
-	{ tab: "stats", label: "Stats", part: "taste" },
-	{ tab: "tropes", label: "Tropes", part: "taste", also: "scores" },
+	{ tab: "shows", label: "Shows" },
+	{ tab: "lists", label: "Lists", count: (s) => s.counts.lists },
+	{ tab: "stats", label: "Stats" },
+	{ tab: "tropes", label: "Tropes" },
 ]
 
 /** "2019-03" → "March 2019". */
@@ -138,14 +134,14 @@ export function ProfileTabs({
 			>
 				{TABS.filter(
 					(t) =>
-						(!t.part || seesPart(shell, t.part)) &&
-						(!t.also || seesPart(shell, t.also)),
+						PROFILE_TAB_PARTS[t.tab].every((part) => seesPart(shell, part)),
 				).map((t) => {
 					const here = t.tab === active
-					const audience = [t.part, t.also]
-						.map((p): Audience => (p ? shell.visibility[p] : "everyone"))
+					const audience = PROFILE_TAB_PARTS[t.tab]
+						.map((p): Audience => shell.visibility[p])
 						.reduce((a, b) =>
 							AUDIENCES.indexOf(b) > AUDIENCES.indexOf(a) ? b : a,
+							"everyone",
 						)
 					const n = t.count?.(shell)
 					return (

@@ -2,9 +2,10 @@
 // address, the link-preview card (/og/u/<handle>…, or a section's own card for a shared section address), noindex unless the profile has enough public scores, and ProfilePage
 // structured data on an indexable Overview.
 import type { MetaDescriptor } from "@remix-run/node"
-import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
+import { type ProfilePart, type ProfileShell, canSee, seesPart } from "~/domain/profile"
+import { profileLinkUrl as linkUrl } from "~/domain/profile-settings"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
-import { type ProfileTab, linkUrl, profileTabPath } from "./links"
+import { PROFILE_TAB_PARTS, type ProfileTab, profileTabPath } from "./paths"
 
 const TAB_NAMES: Record<ProfileTab, string> = {
 	overview: "",
@@ -36,7 +37,9 @@ export function profileMeta(
 		? `${name} · @${handle} · GoodWatch`
 		: `@${handle} · GoodWatch`
 	const description = line || shell.bio || fallbackDescription(shell)
-	const indexable = shell.indexable
+	const indexable =
+		shell.indexable &&
+		PROFILE_TAB_PARTS[tab].every((part) => canSee(shell.visibility, part, "guest"))
 	const profilePage =
 		indexable && tab === "overview"
 			? [

@@ -76,11 +76,13 @@ import { cachedClientLoader } from "~/navigation/instant-navigation"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
+import { validPersonId } from "~/server/person-id"
+
 const PER_GROUP = 12
 
 async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	const id = Number((params.personKey ?? "").split("-")[0])
-	if (!Number.isSafeInteger(id) || id <= 0)
+	if (!validPersonId(id))
 		throw new Response("Not found", { status: 404 })
 
 	// Crawlers only get the unfiltered page, and get sent there before the profile is loaded.

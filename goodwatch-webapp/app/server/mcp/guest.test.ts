@@ -186,3 +186,32 @@ test("guest title reads use saved guild services for availability", async () => 
 		8,
 	])
 })
+
+test("guest person IDs must fit the catalog integer before reading people", async () => {
+	for (const person_id of [
+		0,
+		-1,
+		1.5,
+		2_147_483_648,
+		Number.MAX_SAFE_INTEGER,
+		Infinity,
+		NaN,
+	]) {
+		calls.length = 0
+		await assert.rejects(
+			readGuestTool({ country: "DE" }, "https://goodwatch.app", "get_person", {
+				person_id,
+			}),
+			/person_id/,
+		)
+		assert.equal(calls.filter((c) => c.kind === "readPeople").length, 0)
+	}
+	calls.length = 0
+	await readGuestTool(
+		{ country: "DE" },
+		"https://goodwatch.app",
+		"get_person",
+		{ person_id: 2_147_483_647 },
+	)
+	assert.equal(calls.filter((c) => c.kind === "readPeople").length, 1)
+})

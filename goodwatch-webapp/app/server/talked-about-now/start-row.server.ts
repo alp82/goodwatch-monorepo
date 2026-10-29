@@ -29,6 +29,7 @@ import {
 import type { TitleDisplay } from "~/server/title-cards.server"
 import { query } from "~/utils/crate"
 import { titleKey } from "~/utils/title-key"
+import { createHotPageRead } from "./page-read.ts"
 import {
 	contentQualityJoin,
 	getSocialStore,
@@ -213,26 +214,20 @@ export function getTalkedAboutNow(
 	return entry.row
 }
 
-let keptPage: { at: number; ttl: number; row: Promise<TalkedRow | null> } | null = null
+const hotPageRead = createHotPageRead()
 
-/** The Hot on socials page's read, shared like the row's. */
+/** Share a complete ranking and refresh it without blocking the page. Cold reads have a five-second budget.
+ * Rejects when no usable ranking is available and the read fails or exceeds its budget.
+ */
 export function getHotOnSocials(now = Date.now(), reads: Reads = crateReads): Promise<TalkedRow | null> {
-	if (keptPage && now - keptPage.at < keptPage.ttl) return keptPage.row
-	const entry = {
-		at: now,
-		ttl: TALKED_TTL_MS,
-		row: readTalkedAboutNow(reads, { board: PAGE_BOARD_SIZE, items: PAGE_ITEMS_PER_TITLE, oneVideo: false }).catch((error) => {
-			console.error("Hot on socials: reading the ranking failed", error)
-			entry.ttl = FAILED_TTL_MS
-			return null
-		}),
-	}
-	keptPage = entry
-	return entry.row
+	return hotPageRead.get(
+		() => readTalkedAboutNow(reads, { board: PAGE_BOARD_SIZE, items: PAGE_ITEMS_PER_TITLE, oneVideo: false }),
+		now,
+	)
 }
 
 /** Drops the shared answer, so the next request reads again: a "wrong title?" report calls this (`afterReport`). */
 export function forgetTalkedAboutNow() {
 	kept = null
-	keptPage = null
+	hotPageRead.reset()
 }

@@ -248,8 +248,21 @@ export async function getDisplayFields(
 	return new Map((await overlayTitles(originals, language)).map((row, index) => [row.key, copyPresentationFields(originals[index], row)]))
 }
 
+/** Names already in the card memory cache, including on page roles without a search index. */
+export function cachedDisplayNames() {
+	return displayMemory.values().map(({ key, title }) => ({ key, title }))
+}
+
+/** Cached canonical fields only: a cold title is omitted rather than queried from Crate. */
+export async function getCachedDisplayFields(keys: TitleKey[]) {
+	if (keys.length > MAX_KEYS)
+		throw new Error(`getCachedDisplayFields takes at most ${MAX_KEYS} titles`)
+	return readDisplays([...new Set(keys)], true)
+}
+
 async function readDisplays(
 	keys: TitleKey[],
+	cacheOnly = false,
 ): Promise<Map<TitleKey, TitleDisplay>> {
 	const displays = new Map<TitleKey, TitleDisplay>()
 	if (!keys.length) return displays
@@ -274,7 +287,7 @@ async function readDisplays(
 		})
 	}
 	const missing = keys.filter((key) => !displays.has(key))
-	if (!missing.length) return displays
+	if (cacheOnly || !missing.length) return displays
 
 	const read = await readFromCrate(missing)
 	for (const display of read) {

@@ -17,6 +17,8 @@ import {
 	rewriteLegacyDiscoverParams,
 	sortFromParams,
 } from "~/domain/filter-state"
+import { groupsByTaste } from "~/domain/side-rows"
+import { DISCOVER_MAX_PAGE } from "~/utils/constants"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { legacyDiscoverRedirect } from "~/server/discover-legacy-params.server"
 import {
@@ -132,7 +134,7 @@ const canonicalLoader = async ({
 	return browseLoader(request, userId)
 }
 
-// Pages the first view loads for ?page=N.
+// At most five pages ending at ?page=N, so SSR stays bounded and browser pagination keeps advancing.
 const MAX_INITIAL_PAGES = 5
 
 export interface BrowseLoaderData {
@@ -157,7 +159,8 @@ async function browseLoader(
 	const sort = sortFromParams(params, false)
 	const forYou = forYouFromParams(params, ctx)
 	const requested = Number.parseInt(params.get("page") ?? "1", 10) || 1
-	const count = Math.min(Math.max(1, requested), MAX_INITIAL_PAGES)
+	const lastPage = Math.min(DISCOVER_MAX_PAGE, Math.max(1, requested))
+	const firstPage = Math.max(1, lastPage - MAX_INITIAL_PAGES + 1)
 	// Search mode: the browser runs the search (its reading streams in), so the first view has no results yet.
 	const searching = searchText(params.get("q")) !== null
 	const side = params.get("side")
@@ -166,29 +169,44 @@ async function browseLoader(
 	let pages: BrowseResults[] | null = null
 	try {
 		if (!searching) {
-			// A row per side is the whole first view: no later pages to load (or record as shown).
-			const first = await getBrowseResults(ctx, {
-				state,
-				sort,
-				forYou,
-				sides,
-				page: 1,
-			})
+			// Probe only when page one could replace the window with a member's side rows.
+			const canShowRows =
+				ctx.viewer.kind === "member" &&
+				sides.rows &&
+				!side &&
+				!state.loved?.length &&
+				!state.disliked?.length &&
+				groupsByTaste({ searching, forYou, sort })
+			const first =
+				firstPage === 1 || canShowRows
+					? await getBrowseResults(ctx, {
+							state,
+							sort,
+							forYou,
+							sides,
+							page: 1,
+							exposure: firstPage === 1,
+						})
+					: null
+			const start = firstPage === 1 ? 2 : firstPage
 			const rest =
-				first.sides?.layout === "rows"
+				first?.sides?.layout === "rows"
 					? []
 					: await Promise.all(
-							Array.from({ length: count - 1 }, (_, i) =>
+							Array.from({ length: lastPage - start + 1 }, (_, i) =>
 								getBrowseResults(ctx, {
 									state,
 									sort,
 									forYou,
 									sides,
-									page: i + 2,
+									page: start + i,
 								}),
 							),
 						)
-			pages = [first, ...rest]
+			pages =
+				first && (first.sides?.layout === "rows" || firstPage === 1)
+					? [first, ...rest]
+					: rest
 		}
 	} catch (error) {
 		// Right after a restart: the browser asks /api/discover/results once the snapshot has loaded.

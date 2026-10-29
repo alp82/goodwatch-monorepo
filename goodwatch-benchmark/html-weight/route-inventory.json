@@ -1,0 +1,909 @@
+[
+  {
+    "module": "$type.$category.$page.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/movies/moods/feel-good",
+        "status": 200
+      },
+      {
+        "path": "/movies/moods/feel-good?page=2",
+        "status": 200
+      },
+      {
+        "path": "/shows/moods/scary",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "$type.$category._index.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/movies/moods",
+        "status": 200
+      },
+      {
+        "path": "/shows/moods",
+        "status": 200
+      },
+      {
+        "path": "/movies/genres",
+        "status": 200
+      },
+      {
+        "path": "/shows/streaming",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "$type._index.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/movies",
+        "status": 200
+      },
+      {
+        "path": "/shows",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "$type.best.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/movies/best",
+        "status": 200
+      },
+      {
+        "path": "/shows/best",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "[.well-known].oauth-authorization-server.$.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "[.well-known].oauth-protected-resource.$.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "[.well-known].openai-apps-challenge.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "[.well-known].openid-configuration.$.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "_index.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "about.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/about",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "auth.mcp.consent.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "blog.$slug.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/blog/streaming-by-country-2026",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "blog._index.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/blog",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "blog.rss[.]xml.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "browser-check.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "disclaimer.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/disclaimer",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "discord._index.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/discord",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "discord.add.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "discord.link.callback.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "discord.link.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "discover.($type).tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/discover",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "explore.$type.$category.$text.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "explorer.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/explorer",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "for-you.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/for-you",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "forgot-password.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/forgot-password",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "go.stream.$media.$tmdbId.$providerId.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "hot-on-socials.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/hot-on-socials",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "how-it-works.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/how-it-works",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "lists.$id.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "lists.mine.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "lists.new.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/lists/new",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "living-room.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "mcp.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "movie.$movieKey.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/movie/603-the-matrix",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "my-library.$list.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/my-library/seen",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "my-library._index.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/my-library",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "my-library.hidden.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/my-library/hidden",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "my-library.scores.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/my-library/scores",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "my-movies.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/my-movies",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "my-shows.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/my-shows",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "new.$country.$service.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/new/us/netflix",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "new.$where.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/new/us",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "new._index.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "og.$.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "og.$first.$second.$third.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "og.$first.$second.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "og.$first.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "og.lists.$id.$file.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "people.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/people",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "person.$personKey.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/person/287-brad-pitt",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "pmwiki.$.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "privacy.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/privacy",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "reset-password.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/reset-password",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "search.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "settings._index.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/settings",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "settings.account.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "settings.connected-apps.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/settings/connected-apps",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "settings.country.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/settings/country",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "settings.discover-privacy.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/settings/discover-privacy",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "settings.hidden.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "settings.imports.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/settings/imports",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "settings.language.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/settings/language",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "settings.profile.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/settings/profile",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "settings.services.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/settings/services",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "settings.streaming.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "settings.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/settings",
+        "status": 200
+      },
+      {
+        "path": "/settings/profile",
+        "status": 200
+      },
+      {
+        "path": "/settings/services",
+        "status": 200
+      },
+      {
+        "path": "/settings/imports",
+        "status": 200
+      },
+      {
+        "path": "/settings/language",
+        "status": 200
+      },
+      {
+        "path": "/settings/connected-apps",
+        "status": 200
+      },
+      {
+        "path": "/settings/discover-privacy",
+        "status": 200
+      },
+      {
+        "path": "/settings/country",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "settings.where-you-watch.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "show.$showKey.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/show/1396-breaking-bad",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "sign-in.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/sign-in",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "sign-up.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/sign-up",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "sitemap[.]xml.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "sitemaps.$file.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "support.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/support",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "taste._index.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/taste",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "taste.everyone.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "taste.fingerprint.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "taste.quiz.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/taste/quiz",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "terms.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/terms",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "tv-shows.$.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "tv-shows.$category.$page.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "tv-shows.$category._index.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "tv-shows._index.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "tv.$showKey.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle._index.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.lists.$id.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.lists._index.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.scores.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.seen.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.shows.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.stats.($view).tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.taste.($view).tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.tropes.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.tropes_.data.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.tropes_.descriptions.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.tropes_.excerpts.ts",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle.wishlist.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "u.$handle_.lists.$id_.edit.tsx",
+    "kind": "document",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  },
+  {
+    "module": "use-with-ai.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/use-with-ai",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "verify-email.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/verify-email",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "watch-next.tsx",
+    "kind": "document",
+    "samples": [
+      {
+        "path": "/watch-next",
+        "status": 200
+      }
+    ],
+    "coverage": "captured route loader"
+  },
+  {
+    "module": "wishlist.tsx",
+    "kind": "redirect or resource",
+    "samples": [],
+    "coverage": "no successful loader sample; see capture paths and coverage gaps"
+  }
+]

@@ -208,7 +208,7 @@ test("the page is held still until it is open, and a script is not needed to ope
 })
 
 test("the social ranking, post preview and links are present before JavaScript or scrolling", () => {
-	assert.ok(rendered.social.includes("Hot on socials"))
+	assert.ok(rendered.social.includes(">Hot<"))
 	assert.ok(
 		links(rendered.social).some(
 			(link) =>

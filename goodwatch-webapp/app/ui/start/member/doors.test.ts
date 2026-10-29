@@ -181,7 +181,7 @@ test("the end tile counts only what it can promise", () => {
 	})
 	assert.deepEqual(tileText(door(FULL, "hot"), 11), {
 		top: "See all",
-		sub: "on Hot on socials",
+		sub: "on Hot",
 	})
 })
 

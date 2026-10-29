@@ -1,4 +1,5 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
+import { requireCategoryPage } from "~/server/category-page.server"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -105,6 +106,7 @@ const canonicalLoader: LoaderFunction = async ({
 		watchedType,
 	}
 	const results = await getDiscoverResults(discoverParamsFull)
+	requireCategoryPage(discoverParamsFull.page, results, discoverParamsFull.userId)
 
 	const discoverParams = Object.fromEntries(
 		Object.entries(discoverParamsFull).filter(
@@ -201,7 +203,7 @@ export default function MoviesCategoryPage() {
 				<MovieTvGrid
 					initialData={{
 						pages: [results],
-						pageParams: [1],
+						pageParams: [discoverParams.page],
 					}}
 					initialParams={{
 						...discoverParams,

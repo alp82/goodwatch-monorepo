@@ -13,6 +13,7 @@ import type { TalkedRow } from "~/domain/talked-about-now"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { talkedAboutNowEnabled, talkedAboutNowMode } from "~/server/talked-about-now/flags.server"
+import { HOT_PAGE_RETRY_SECONDS } from "~/server/talked-about-now/page-read"
 import { HotPage } from "~/ui/talked-about-now/hot-page/HotPage"
 import hotPageCss from "~/ui/talked-about-now/hot-page/hot-page.css?url"
 import startRowCss from "~/ui/talked-about-now/start-row/start-row.css?url"
@@ -39,7 +40,12 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 			: mode === "on"
 	if (!enabled) throw new Response("Not found", { status: 404, headers: { "Cache-Control": PRIVATE } })
 	const { getHotOnSocials } = await import("~/server/talked-about-now/start-row.server")
-	const row = await getHotOnSocials()
+	const row = await getHotOnSocials().catch(() => {
+		throw new Response("Hot on socials is temporarily unavailable. Please try again.", {
+			status: 503,
+			headers: { "Cache-Control": PRIVATE, "Retry-After": String(HOT_PAGE_RETRY_SECONDS) },
+		})
+	})
 	return json(
 		{ row },
 		{ headers: { "Cache-Control": mode === "on" && row ? PUBLIC : PRIVATE } },
@@ -50,12 +56,12 @@ export const loader = presentCatalogLoader(canonicalLoader)
 
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
-		title: "Hot on socials | GoodWatch",
+		title: "Hot | GoodWatch",
 		description:
 			"The movies and shows people suddenly read about most, and what news, YouTube and social posts say about them.",
 		url: "https://goodwatch.app/hot-on-socials",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
-		alt: "Hot on socials on GoodWatch",
+		alt: "Hot on GoodWatch",
 	}
 	return buildMeta({ pageMeta, items: [] })
 }
