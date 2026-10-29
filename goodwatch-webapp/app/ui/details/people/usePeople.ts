@@ -11,35 +11,8 @@ import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 
 // The response of /api/title-people (routes/api.title-people.ts).
-export interface PeopleRow {
-	id: number
-	name: string
-	profilePath: string | null
-	/** Cast: the characters, most episodes first. Crew: the jobs. */
-	roles: string[]
-	/** Episodes (shows); null for movies. */
-	episodes: number | null
-	/** Cast: main | recurring | guest (shows), top | more (movies). Crew: the department. */
-	group: string
-	/** Crew: holds a job that leads its department. */
-	key?: boolean
-}
-export interface PeopleGroup {
-	key: string
-	label: string
-	count: number
-}
-export interface PeoplePage {
-	kind: "cast" | "crew"
-	total: number
-	matched: number
-	groups: PeopleGroup[]
-	rows: PeopleRow[]
-	offset: number
-	nextOffset: number | null
-	showEpisodes: number | null
-	letters?: Record<string, number>
-}
+import type { PeoplePage, PeopleRow } from "~/utils/title-people"
+export type { PeopleGroup, PeoplePage, PeopleRow } from "~/utils/title-people"
 
 export interface PeopleQuery {
 	mediaType: "movie" | "show"
