@@ -30,12 +30,17 @@ import {
 	DISCORD_ADD_PATH,
 	DISCORD_ADD_URL,
 	DISCORD_BOT_PATH,
+	DISCORD_PREVIEW_BACKDROP,
 } from "~/ui/discord-bot/links"
 import { DISCORD_URL, DiscordMark } from "~/ui/footer/links"
 import { Kicker, Question, SectionHeading } from "~/ui/info-page"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 
 export { pageHeaders as headers } from "~/utils/headers"
+
+// The preview can be below the fold on short phones. Wait for FCP, without marking it as a hero to wait for.
+export const handle = START_AFTER_PAINT
 
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
@@ -62,7 +67,7 @@ const PROJECT_HAIL_MARY: MockTitle = {
 	genres: ["Science Fiction", "Adventure"],
 	service: SERVICES.prime,
 	poster: "/iOb2fjXLbpJgyQXe46n1WtGCnaa.jpg",
-	backdrop: "/8Tfys3mDZVp4tNoH2ktm06a0Tau.jpg",
+	backdrop: DISCORD_PREVIEW_BACKDROP,
 	overview:
 		"Science teacher Ryland Grace wakes up on a spaceship light years from home with no recollection of who he is or how he got there…",
 }

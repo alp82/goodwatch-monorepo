@@ -15,7 +15,7 @@ export { AUTH_SUBMIT_CLASS } from "./PrimaryButton"
 
 const SCENE_CSS = `
 @keyframes auth-card-in { from { opacity: 0; transform: translateY(24px) } to { opacity: 1; transform: none } }
-@keyframes auth-word-in { from { opacity: 0; filter: blur(12px); transform: translateY(14px) } to { opacity: 1; filter: blur(0); transform: none } }
+@keyframes auth-word-in { from { opacity: 0; filter: blur(12px); transform: translateY(14px) } to { opacity: 1; filter: none; transform: none } }
 .auth-card { animation: auth-card-in .8s cubic-bezier(.22,1,.36,1) .15s both }
 .auth-word { animation: auth-word-in .7s cubic-bezier(.22,1,.36,1) both }
 @keyframes auth-aurora { from { transform: translate(-50%, -50%) rotate(0deg) } to { transform: translate(-50%, -50%) rotate(360deg) } }

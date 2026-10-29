@@ -13,6 +13,7 @@ import type { IncomingMessage, Server } from "node:http"
 import gabaritoLatin from "~/fonts/gabarito-latin.woff2"
 import cssTailwind from "~/tailwind.css?url"
 import { WHITE_MARK } from "~/ui/brand/white-mark"
+import explorerCss from "~/ui/explorer/explorer.css?url"
 import {
 	START_ROOM_ART,
 	START_ROOM_PHONE_ART,
@@ -24,6 +25,7 @@ import { heroHints } from "./hero-hints.server"
 
 const FILES = {
 	site: cssTailwind,
+	explorer: explorerCss,
 	home: [...START_SHEETS],
 	font: gabaritoLatin,
 	room: {

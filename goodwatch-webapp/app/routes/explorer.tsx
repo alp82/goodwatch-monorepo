@@ -78,7 +78,13 @@ export const meta: MetaFunction = () => {
 	return buildMeta({ pageMeta })
 }
 
-export const links = () => [{ rel: "stylesheet", href: assetUrl(explorerCss) }]
+export const links = () => [
+	{
+		rel: "stylesheet",
+		href: assetUrl(explorerCss),
+		crossOrigin: "anonymous" as const,
+	},
+]
 
 // Without JavaScript the list shows in place of the map, and the controls that need the map step aside.
 const NO_SCRIPT_CSS =

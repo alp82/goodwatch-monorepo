@@ -1,4 +1,5 @@
-// A title page's hero picture in its 103 Early Hints response (early-hints.server.ts). The server doesn't know the
+// A page's hero picture in its 103 Early Hints response (early-hints.server.ts). Static pages can name their files
+// at startup, outside the bounded map. For title pages, the server doesn't know the
 // picture before it renders the page, and the hint path makes no database query: each instance remembers the files of a
 // page it has rendered (the loader names them), for that page's next visit. The first visit after a start gets no
 // hero hint. The map keeps the most recent pages and forgets the oldest.
@@ -25,7 +26,11 @@ export type HeroRequest = {
 /** How many pages an instance remembers. A path and two file names are about 200 bytes. */
 export const HERO_PAGES = 5000
 
-export function createHeroHints(max = HERO_PAGES) {
+export function createHeroHints(
+	max = HERO_PAGES,
+	/** Known static pictures remain available when remembered title pages are evicted. */
+	staticHeroes: Readonly<Record<string, HeroFiles>> = {},
+) {
 	const heroes = new Map<string, HeroFiles>()
 	const pathOf = (url: string | undefined) => (url ?? "/").split("?", 1)[0]
 	return {
@@ -42,7 +47,8 @@ export function createHeroHints(max = HERO_PAGES) {
 		link(request: HeroRequest): string | undefined {
 			const mobile = request.headers["sec-ch-ua-mobile"]
 			if (mobile === undefined) return undefined
-			const files = heroes.get(pathOf(request.url))
+			const path = pathOf(request.url)
+			const files = staticHeroes[path] ?? heroes.get(path)
 			if (!files) return undefined
 			const phone = (Array.isArray(mobile) ? mobile[0] : mobile) === "?1"
 			return `<${phone ? files.phone : files.desktop}>; rel=preload; as=image; crossorigin`

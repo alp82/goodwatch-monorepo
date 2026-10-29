@@ -36,6 +36,22 @@ describe("createHeroHints", () => {
 		assert.equal(hints.link(request("/movie/157336-interstellar")), undefined)
 	})
 
+	it("keeps static heroes available before rendering and after remembered pages are evicted", () => {
+		const hints = createHeroHints(1, { "/discord": files("discord") })
+		assert.match(
+			hints.link(request("/discord?from=footer", "?1")) ?? "",
+			/w780\/discord\.jpg/,
+		)
+		hints.remember("/a", files("a"))
+		hints.remember("/b", files("b"))
+		assert.equal(hints.size, 1)
+		assert.match(
+			hints.link(request("/discord", "?0")) ?? "",
+			/w1280\/discord\.jpg/,
+		)
+		assert.equal(hints.link(request("/discord")), undefined)
+	})
+
 	it("keeps the most recent pages and forgets the oldest", () => {
 		const hints = createHeroHints(2)
 		hints.remember("/a", files("a"))

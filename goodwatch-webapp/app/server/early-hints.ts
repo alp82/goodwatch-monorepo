@@ -19,6 +19,8 @@ export type EarlyHintsRequest = {
 export type EarlyHintsFiles = {
 	/** The site's style sheet on every page. */
 	site: string
+	/** Explorer has a second render-blocking stylesheet. It always requests it in CORS mode. */
+	explorer?: string
 	/** The start page's own style sheets, in the order the page links them. */
 	home: string[]
 	/**
@@ -94,6 +96,8 @@ export function earlyHintLinks(
 	links.push(
 		`<${base}${files.font}>; rel=preload; as=font; type="font/woff2"; crossorigin`,
 	)
+	if (path === "/explorer" && files.explorer)
+		links.push(`<${base}${files.explorer}>; rel=preload; as=style; crossorigin`)
 	if (path !== "/") return links
 	for (const sheet of files.home)
 		links.push(`<${base}${sheet}>; rel=preload; as=style${cors}`)

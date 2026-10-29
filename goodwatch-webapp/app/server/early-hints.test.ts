@@ -6,6 +6,7 @@ import { earlyHintLinks, isPageNavigation } from "./early-hints.ts"
 const base = "https://static.example.com"
 const files = {
 	site: "/assets/tailwind-A1.css",
+	explorer: "/assets/explorer-J0.css",
 	home: ["/assets/start-B2.css", "/assets/boot-C3.css"],
 	font: "/assets/gabarito-latin-D4.woff2",
 	room: {
@@ -81,6 +82,21 @@ describe("earlyHintLinks", () => {
 			),
 			[...shared, ...homeSheets, ...marks],
 		)
+	})
+
+	it("hints Explorer's stylesheet only on Explorer, in the stylesheet's CORS mode", () => {
+		assert.deepEqual(
+			earlyHintLinks(page("/explorer?type=movie", phone), base, files),
+			[
+				...shared,
+				`<${base}/assets/explorer-J0.css>; rel=preload; as=style; crossorigin`,
+			],
+		)
+		assert.deepEqual(earlyHintLinks(page("/explorer", phone), "", files), [
+			"</assets/tailwind-A1.css>; rel=preload; as=style",
+			'</assets/gabarito-latin-D4.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin',
+			"</assets/explorer-J0.css>; rel=preload; as=style; crossorigin",
+		])
 	})
 
 	it("gives every other page the site's style sheet and the brand font", () => {
