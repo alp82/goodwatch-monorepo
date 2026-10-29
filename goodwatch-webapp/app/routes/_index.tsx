@@ -94,7 +94,16 @@ const GUEST_ROOM = { night: 0.9, camera: 1.12 }
 export default function Index() {
 	const data = useLoaderData<typeof startPageLoader>()
 	if (!data.member) return <GuestStart titles={data.titles} />
-	return <MemberStart shelf={data.titles} data={data.start} />
+	return (
+		<MemberStart
+			shelf={data.titles}
+			data={data.start}
+			later={{
+				forYou: "forYouLater" in data ? data.forYouLater : undefined,
+				hot: "hotLater" in data ? data.hotLater : undefined,
+			}}
+		/>
+	)
 }
 
 /**

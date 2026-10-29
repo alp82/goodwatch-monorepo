@@ -4,7 +4,7 @@ import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { test } from "node:test"
 
-type Member = "full" | "few" | "noShows" | "noWishlist" | "new"
+type Member = "full" | "few" | "noShows" | "noWishlist" | "new" | "later"
 
 const rendered = JSON.parse(
 	execFileSync(
@@ -65,6 +65,7 @@ test("the doors follow what the member has, and the first is open in the server'
 		noShows: ["Wishlist", "For you", "Hot on socials", "Continue watching"],
 		noWishlist: ["Continue watching", "For you", "Hot on socials", "Wishlist"],
 		new: ["Hot on socials", "Continue watching", "Wishlist", "For you"],
+		later: ["Continue watching", "Wishlist", "For you", "Hot on socials"],
 	}
 	for (const [name, html] of all) {
 		const found = doors(html)
@@ -141,4 +142,16 @@ test("nothing on the page writes: no form but the search bar's", () => {
 		assert.equal(html.match(/<form\b/g)?.length, 1, name)
 		assert.match(html, /<form[^>]*role="search"/, name)
 	}
+})
+
+test("For you and Hot on socials on their way: the page is the same around them, the open section complete", () => {
+	const html = rendered.later
+	const full = rendered.full
+	const open = (page: string) =>
+		page.slice(page.indexOf('id="start-door-section"'))
+	assert.equal(open(html), open(full))
+	assert.match(html, />Your taste</)
+	assert.match(html, />Right now</)
+	// The card deals from the own lists, as with every list there.
+	assert.match(html, /Show 1<\/span>[\s\S]*?Movie 101<\/span>/)
 })

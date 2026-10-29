@@ -9,11 +9,13 @@
 //    Taking turns puts every list in the first few titles, so the pairs move between kinds of evening.
 // 3. Each title once; the first list that reaches it wins.
 // A list with no titles drops out of the turns. While For you is still forming (fewer than PERSONAL_AT ratings) its
-// titles are guesses, so they wait until the member's own lists run out instead of taking turns with them.
+// titles are guesses, so they wait until the member's own lists run out instead of taking turns with them: they come
+// last in the deck, and a run deals none while it still has a title of the member's own lists to deal.
 //
 // A round: two titles side by side. Tapping one keeps it and deals a challenger from another list (when there is
-// one) to the other side; ROUNDS taps give tonight's pick. "Neither" deals a fresh pair; Start over reshuffles. A short
-// deck plays fewer rounds: two titles, one tap; one title is simply tonight's pick.
+// one) to the other side; ROUNDS taps give tonight's pick. "Neither" deals a fresh pair; Start over starts a run at
+// another title, so even a deck of two or four deals differently. A short deck plays fewer rounds: two titles, one
+// tap; one title is simply tonight's pick.
 import type { TitleCard } from "~/server/title-cards.server"
 import { type MemberStartData, PERSONAL_AT } from "./member-data"
 
@@ -32,6 +34,8 @@ export type DeckTitle = {
 	why: string
 	/** "S2 E1 · Name" for a show with a next episode. */
 	episode: string | null
+	/** A first guess of For you while it is still forming: dealt only once the member's own lists are dealt. */
+	guess: boolean
 }
 
 const whyOf = (card: TitleCard, source: DeckSource) =>
@@ -72,6 +76,7 @@ export function buildDeck(
 			source,
 			why: whyOf(card, source),
 			episode: episode ?? episodes.get(card.key) ?? null,
+			guess: forming && source === "forYou",
 		})
 	}
 	if (data.tonight)
@@ -105,8 +110,22 @@ export type Duel = {
 	runnerUp: number | null
 }
 
-/** How far each run turns the deck: Tonight's pick leads the first run, later runs start further down. */
+/** How far each run turns the deck at least: Tonight's pick leads the first run, later runs start further down. */
 const TURN = 4
+
+const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a)
+
+/**
+ * How far one run turns a deck of `n`: TURN or more, but less than the deck (a short deck turns by one less than its
+ * size), and sharing no factor with `n`, so every title leads a run before any leads twice. A deck of two swaps its
+ * sides; a deck of four starts at its last title.
+ */
+export function turnOf(n: number): number {
+	if (n < 2) return 0
+	for (let step = Math.min(TURN, n - 1); step < n; step++)
+		if (gcd(step, n) === 1) return step
+	return 1
+}
 
 /** The deck in this run's order. */
 export function runOrder(
@@ -114,18 +133,23 @@ export function runOrder(
 	epoch: number,
 ): DeckTitle[] {
 	const n = deck.length
-	const k = n ? (epoch * TURN) % n : 0
+	const k = n ? (epoch * turnOf(n)) % n : 0
 	return [...deck.slice(k), ...deck.slice(0, k)]
 }
 
-/** The next title this run hasn't dealt, from another list than `avoid` when there is one. */
+/**
+ * The next title this run hasn't dealt, from another list than `avoid` when there is one. First guesses wait while a
+ * title of the member's own lists is left, even when that title is from the same list as `avoid`.
+ */
 function nextOf(
 	order: readonly DeckTitle[],
 	seen: ReadonlySet<number>,
 	avoid?: DeckSource,
 ): DeckTitle | null {
 	const fresh = order.filter((title) => !seen.has(title.card.key))
-	return fresh.find((title) => title.source !== avoid) ?? fresh[0] ?? null
+	const own = fresh.filter((title) => !title.guess)
+	const pool = own.length ? own : fresh
+	return pool.find((title) => title.source !== avoid) ?? pool[0] ?? null
 }
 
 /** A run's first pair, with the titles already dealt left out. */
@@ -190,6 +214,6 @@ export function neither(deck: readonly DeckTitle[], duel: Duel): Duel {
 		: deal(deck, duel.epoch)
 }
 
-/** Start over: a new run further down the deck. */
+/** Start over: a new run from another title of the deck. */
 export const restart = (deck: readonly DeckTitle[], duel: Duel): Duel =>
 	deal(deck, duel.epoch + 1)

@@ -37,11 +37,18 @@ export type MemberStartData = {
 	continue: MemberList<ContinueShow> | null
 	/** The Wishlist's movies, in My movies' order. */
 	wishlist: MemberList<TitleCard> | null
-	/** Movies and shows taking turns; empty without ratings. */
-	forYou: MemberList<TitleCard> | null
+	/** Movies and shows taking turns; empty without ratings. Undefined while it is on its way (MemberStartLater). */
+	forYou?: MemberList<TitleCard> | null
 	/** Whether the member sees Hot on socials at all (its door). */
 	hotOn: boolean
-	hot: MemberList<HotTitle> | null
+	/** Undefined while it is on its way (MemberStartLater). */
+	hot?: MemberList<HotTitle> | null
+}
+
+/** The lists that come later in the page's response (Remix's `defer`); each resolves to null when it couldn't be read. */
+export type MemberStartLater = {
+	forYou?: Promise<MemberList<TitleCard> | null>
+	hot?: Promise<MemberList<HotTitle> | null>
 }
 
 /** A member with nothing read: what the page shows when the member's data couldn't be read at all. */

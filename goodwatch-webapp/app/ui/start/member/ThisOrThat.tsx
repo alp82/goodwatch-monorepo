@@ -7,7 +7,7 @@
 import { ArrowPathIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
 import { WatchButton, titleHref } from "~/ui/watch-next/WatchNextHero"
 import { offersOf } from "~/ui/watch-next/services"
@@ -30,6 +30,11 @@ const QUIET =
 
 export function ThisOrThat({ deck }: { deck: DeckTitle[] }) {
 	const [duel, setDuel] = useState<Duel>(() => deal(deck, 0))
+	// For you can join the deck after the page (member.server.ts): a deck of one becomes a pair to play.
+	useEffect(() => {
+		if (duel.right === null && duel.done === null && deck.length > 1)
+			setDuel(deal(deck, duel.epoch))
+	}, [deck, duel])
 	const byKey = useMemo(() => new Map(deck.map((t) => [t.card.key, t])), [deck])
 	const of = (key: number | null) =>
 		key === null ? null : (byKey.get(key) ?? null)

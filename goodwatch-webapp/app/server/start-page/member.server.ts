@@ -13,16 +13,26 @@
 // Every read starts as soon as what it needs is there, side by side; none waits for another list. A read that fails
 // leaves its list `null` (the door says it couldn't load) and never fails the page.
 //
+// The page waits for the member's own lists (Tonight's pick, Continue, the Wishlist): "this or that" deals from them
+// and the first door is usually one of them. For you and Hot on socials are the slow reads (Discover's ranking, the
+// shared ranking and its cards), so they come later in the same response (`later`, streamed with Remix's `defer`)
+// and the page doesn't wait for them, except for the one door that opens on load: the open door's section is in the
+// server's HTML. The open door is decided before they arrive (`openDoorOf`, from the own lists, the ratings and
+// whether Hot on socials shows), so when it is For you or Hot on socials, that list is read before the page and the
+// other still comes later.
+//
 // Nothing here writes: no list exposure, no history. "This or that" happens in the browser and writes nothing either.
 import type { TonightParts } from "~/server/home-doors.server"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import type { Taste } from "~/server/taste/index.server"
 import type { TitleCard } from "~/server/title-cards.server"
 import type { ViewerContext } from "~/server/viewer.server"
+import { openDoorOf } from "~/ui/start/member/doors"
 import {
 	type HotPick,
 	MEMBER_LIST_SIZE,
 	type MemberStartData,
+	type MemberStartLater,
 	continueRows,
 	episodeLine,
 	hotTitles,
@@ -31,7 +41,7 @@ import {
 } from "~/ui/start/member/member-data"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
-export type { MemberStartData }
+export type { MemberStartData, MemberStartLater }
 
 /** What the member start reads. The defaults are the site's reads; tests pass their own. */
 export interface MemberStartReads {
@@ -145,12 +155,15 @@ const orNull =
 		return null
 	}
 
+/** What the page waits for, and the lists that come later in the same response. */
+export type MemberStart = { data: MemberStartData; later: MemberStartLater }
+
 export async function loadMemberStart(
 	request: Request,
 	userId: string,
 	reads: MemberStartReads = memberStartReads,
 	now = Date.now(),
-): Promise<MemberStartData> {
+): Promise<MemberStart> {
 	const started = performance.now()
 	const viewer = reads.viewer(request, userId)
 	const taste = reads.taste(userId)
@@ -162,97 +175,124 @@ export async function loadMemberStart(
 	const shows = both.then(async ([ctx, t]) => {
 		const parts = await reads.tonightParts(ctx, t, now)
 		const rows = continueRows(parts.shows)
+		const listed = rows.slice(0, MEMBER_LIST_SIZE)
 		const choice = tonightChoice(parts)
-		const keys = rows
-			.slice(0, MEMBER_LIST_SIZE)
-			.map((row) => titleKey("show", row.id))
-		if (choice?.kind === "start") keys.push(titleKey("show", choice.showId))
+		// Tonight's pick is the show last active on, while Continue is in its own order: the pick's show can be past the
+		// first titles, so its card is read with them.
+		const chosen =
+			choice?.kind === "episode" || choice?.kind === "start"
+				? titleKey("show", choice.showId)
+				: null
+		const keys = [
+			...new Set([
+				...listed.map((row) => titleKey("show", row.id)),
+				...(chosen === null ? [] : [chosen]),
+			]),
+		]
 		const cards = keys.length ? await reads.cards(keys, ctx, t) : []
 		const byKey = new Map(cards.map((card) => [card.key, card]))
-		const list = rows.slice(0, MEMBER_LIST_SIZE).flatMap((row) => {
+		const list = listed.flatMap((row) => {
 			const card = byKey.get(titleKey("show", row.id))
 			return card
 				? [{ card, episode: row.next ? episodeLine(row.next) : null }]
 				: []
 		})
+		const chosenCard = chosen === null ? undefined : byKey.get(chosen)
+		const chosenRow =
+			choice?.kind === "episode"
+				? rows.find((row) => row.id === choice.showId)
+				: undefined
 		const tonight =
 			choice?.kind === "episode"
-				? (() => {
-						const show = list.find((s) => s.card.tmdb_id === choice.showId)
-						return show
-							? {
-									card: show.card,
-									episode: show.episode,
-									source: "continue" as const,
-								}
-							: null
-					})()
+				? chosenCard
+					? {
+							card: chosenCard,
+							episode: chosenRow?.next ? episodeLine(chosenRow.next) : null,
+							source: "continue" as const,
+						}
+					: null
 				: choice?.kind === "movie" && parts.movies[0]
 					? {
 							card: parts.movies[0],
 							episode: null,
 							source: "wishlist" as const,
 						}
-					: choice?.kind === "start"
-						? (() => {
-								const card = byKey.get(titleKey("show", choice.showId))
-								return card
-									? { card, episode: null, source: "wishlist" as const }
-									: null
-							})()
+					: choice?.kind === "start" && chosenCard
+						? { card: chosenCard, episode: null, source: "wishlist" as const }
 						: null
 		return { list, total: rows.length, tonight }
 	})
 
 	const wishlist = both.then(([ctx, t]) => reads.wishlist(ctx, t))
 
-	const forYou = both.then(async ([ctx, t]) => {
-		if (!t.ratings) return []
-		const [movies, series] = await Promise.all([
-			reads.forYou(ctx, "movie"),
-			reads.forYou(ctx, "show"),
-		])
-		return interleave(movies, series).slice(0, MEMBER_LIST_SIZE)
-	})
+	const forYou = both
+		.then(async ([ctx, t]) => {
+			if (!t.ratings) return { titles: [], total: 0 }
+			const [movies, series] = await Promise.all([
+				reads.forYou(ctx, "movie"),
+				reads.forYou(ctx, "show"),
+			])
+			const titles = interleave(movies, series).slice(0, MEMBER_LIST_SIZE)
+			return { titles, total: titles.length }
+		})
+		.catch(orNull("For you"))
 
 	const hot = hotRow
-		? Promise.all([hotRow, both]).then(async ([row, [ctx, t]]) => {
-				if (!row) return null
-				const picked = row
-				const cards = picked.length
-					? await reads.cards(
-							picked.map((title) => titleKey(title.mediaType, title.tmdbId)),
-							ctx,
-							t,
-						)
-					: []
-				const byKey = new Map(cards.map((card) => [card.key, card]))
-				return picked.flatMap((title) => {
-					const card = byKey.get(titleKey(title.mediaType, title.tmdbId))
-					return card ? [{ card, rank: title.rank, why: title.why }] : []
+		? Promise.all([hotRow, both])
+				.then(async ([row, [ctx, t]]) => {
+					if (!row) return null
+					const cards = row.length
+						? await reads.cards(
+								row.map((title) => titleKey(title.mediaType, title.tmdbId)),
+								ctx,
+								t,
+							)
+						: []
+					const byKey = new Map(cards.map((card) => [card.key, card]))
+					const titles = row.flatMap((title) => {
+						const card = byKey.get(titleKey(title.mediaType, title.tmdbId))
+						return card ? [{ card, rank: title.rank, why: title.why }] : []
+					})
+					return { titles, total: titles.length }
 				})
-			})
+				.catch(orNull("Hot on socials"))
 		: null
 
-	const [ctx, t, own, movies, picks, talked] = await Promise.all([
+	const [ctx, t, own, movies] = await Promise.all([
 		viewer,
 		taste,
 		shows.catch(orNull("shows")),
 		wishlist.catch(orNull("the Wishlist")),
-		forYou.catch(orNull("For you")),
-		hot ? hot.catch(orNull("Hot on socials")) : null,
 	])
-	console.info(
-		`Member start computed in ${Math.round(performance.now() - started)} ms`,
-	)
-	return {
+	const data: MemberStartData = {
 		ratings: t.ratings,
 		services: ctx.services,
 		tonight: own?.tonight ?? null,
 		continue: own ? { titles: own.list, total: own.total } : null,
 		wishlist: movies ? { titles: movies.cards, total: movies.total } : null,
-		forYou: picks ? { titles: picks, total: picks.length } : null,
 		hotOn,
-		hot: talked ? { titles: talked, total: talked.length } : null,
+		// Without Hot on socials there is nothing to wait for.
+		...(hot ? {} : { hot: null }),
+	}
+	// Without a rating For you isn't read: it is known to be empty, nothing to wait for.
+	if (!t.ratings) data.forYou = await forYou
+	// The open door's list is read before the page. If it turns out empty, the next door opens instead: read that too.
+	for (;;) {
+		const open = openDoorOf(data)
+		if (open === "forYou" && data.forYou === undefined)
+			data.forYou = await forYou
+		else if (open === "hot" && data.hot === undefined)
+			data.hot = hot ? await hot : null
+		else break
+	}
+	console.info(
+		`Member start computed in ${Math.round(performance.now() - started)} ms`,
+	)
+	return {
+		data,
+		later: {
+			...(data.forYou === undefined ? { forYou } : {}),
+			...(data.hot === undefined && hot ? { hot } : {}),
+		},
 	}
 }

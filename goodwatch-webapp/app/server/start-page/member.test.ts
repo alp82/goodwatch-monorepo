@@ -8,7 +8,7 @@ import type { MyShowsRow } from "~/server/my-shows.server"
 import type { Taste } from "~/server/taste/index.server"
 import type { TitleCard } from "~/server/title-cards.server"
 import type { ViewerContext } from "~/server/viewer.server"
-import type { MemberStartReads } from "./member.server.ts"
+import type { MemberStart, MemberStartReads } from "./member.server.ts"
 
 const { loadMemberStart } = await import("./member.server.ts")
 const { card } = await import(
@@ -102,9 +102,36 @@ function fakeReads(over: Partial<MemberStartReads> = {}, ratings = 40) {
 
 const request = new Request("https://goodwatch.app/")
 
+/** The start once the lists that come later have arrived. */
+async function settled({ data, later }: MemberStart) {
+	return {
+		...data,
+		...(later.forYou ? { forYou: await later.forYou } : {}),
+		...(later.hot ? { hot: await later.hot } : {}),
+	}
+}
+
+/** A read that waits until its gate opens (every call to it). */
+function gated<T>(value: () => T) {
+	const waiting: (() => void)[] = []
+	const read = () =>
+		new Promise<T>((resolve) => {
+			waiting.push(() => resolve(value()))
+		})
+	return {
+		read,
+		open: () => {
+			for (const resolve of waiting) resolve()
+		},
+		get asked() {
+			return waiting.length > 0
+		},
+	}
+}
+
 test("reads every list and shapes it for the start", async () => {
 	const { reads } = fakeReads()
-	const start = await loadMemberStart(request, "member-1", reads)
+	const start = await settled(await loadMemberStart(request, "member-1", reads))
 	assert.equal(start.ratings, 40)
 	assert.deepEqual(start.services, [8, 9])
 	// Show 2 was active last: its next episode is Tonight's pick.
@@ -173,14 +200,14 @@ test("the reads start side by side: none waits for another list", async () => {
 
 test("For you isn't read without a single rating", async () => {
 	const { reads, asked } = fakeReads({}, 0)
-	const start = await loadMemberStart(request, "member-1", reads)
+	const start = await settled(await loadMemberStart(request, "member-1", reads))
 	assert.ok(!asked.some((name) => name.startsWith("forYou")))
 	assert.deepEqual(start.forYou, { titles: [], total: 0 })
 })
 
 test("Hot on socials isn't read while the member doesn't see it", async () => {
 	const { reads, asked } = fakeReads({ hotEnabled: () => false })
-	const start = await loadMemberStart(request, "member-1", reads)
+	const start = await settled(await loadMemberStart(request, "member-1", reads))
 	assert.ok(!asked.includes("hot"))
 	assert.equal(start.hotOn, false)
 	assert.equal(start.hot, null)
@@ -198,7 +225,9 @@ test("a failed read leaves its list null and the rest of the start", async () =>
 			hot: fail,
 			tonightParts: fail,
 		})
-		const start = await loadMemberStart(request, "member-1", reads)
+		const start = await settled(
+			await loadMemberStart(request, "member-1", reads),
+		)
 		assert.equal(start.wishlist, null)
 		assert.equal(start.hot, null)
 		assert.equal(start.hotOn, true)
@@ -219,14 +248,130 @@ test("Tonight's pick is the first movie without a show to continue, and the show
 		} as unknown as TonightParts["shows"],
 	})
 	let { reads } = fakeReads({ tonightParts: async () => noShows })
-	let start = await loadMemberStart(request, "member-1", reads)
+	let start = await settled(await loadMemberStart(request, "member-1", reads))
 	assert.equal(start.tonight?.card.key, 1e12 + 101)
 	assert.equal(start.tonight?.source, "wishlist")
 	;({ reads } = fakeReads({
 		tonightParts: async () => ({ ...noShows, movies: [] }),
 	}))
-	start = await loadMemberStart(request, "member-1", reads)
+	start = await settled(await loadMemberStart(request, "member-1", reads))
 	assert.equal(start.tonight?.card.key, 2e12 + 50)
 	assert.equal(start.tonight?.source, "wishlist")
 	assert.deepEqual(start.continue?.titles, [])
+})
+
+test("Tonight's pick stays when its show is past the first titles of Continue", async () => {
+	// Thirteen shows: Continue lists them by its own order, the pick is the one last active on (show 13, the last).
+	const shows = Array.from({ length: 13 }, (_, i) =>
+		row(i + 1, i === 12 ? 99 : 1),
+	)
+	const { reads, asked } = fakeReads({
+		tonightParts: async () =>
+			parts({
+				shows: {
+					continue: shows,
+					pickUp: [],
+					start: [],
+				} as unknown as TonightParts["shows"],
+			}),
+	})
+	const { data: start } = await loadMemberStart(request, "member-1", reads)
+	assert.equal(start.continue?.titles.length, 12)
+	assert.ok(!start.continue?.titles.some((s) => s.card.tmdb_id === 13))
+	assert.equal(start.continue?.total, 13)
+	assert.equal(start.tonight?.card.key, 2e12 + 13)
+	assert.equal(start.tonight?.episode, "S2 E13 · Episode name 13")
+	assert.equal(start.tonight?.source, "continue")
+	// One read for the twelve listed shows and the pick's show.
+	assert.ok(asked.includes("cards:13"))
+})
+
+test("the page doesn't wait for For you and Hot on socials while an own list opens first", async () => {
+	const forYou = gated(() => [card("movie", 201)])
+	const hot = gated(() => [
+		{ mediaType: "movie" as const, tmdbId: 301, rank: 1, why: "New trailer" },
+	])
+	const { reads } = fakeReads({ forYou: forYou.read, hot: hot.read })
+	const { data, later } = await loadMemberStart(request, "member-1", reads)
+	// Both were asked for at once, and the page came without them.
+	assert.ok(forYou.asked && hot.asked)
+	assert.equal(data.forYou, undefined)
+	assert.equal(data.hot, undefined)
+	assert.ok(data.continue?.titles.length)
+	assert.ok(later.forYou && later.hot)
+	forYou.open()
+	hot.open()
+	assert.deepEqual(
+		(await later.forYou)?.titles.map((c) => c.key),
+		[1e12 + 201],
+	)
+	assert.deepEqual(
+		(await later.hot)?.titles.map((t) => t.card.key),
+		[1e12 + 301],
+	)
+})
+
+test("when For you is the door that opens, the page waits for it and Hot on socials still comes later", async () => {
+	const hot = gated(() => [])
+	const { reads } = fakeReads({
+		tonightParts: async () =>
+			parts({
+				shows: {
+					continue: [],
+					pickUp: [],
+					start: [],
+				} as unknown as TonightParts["shows"],
+				movies: [],
+			}),
+		wishlist: async () => ({ cards: [], total: 0 }),
+		hot: hot.read,
+	})
+	const { data, later } = await loadMemberStart(request, "member-1", reads)
+	assert.equal(data.forYou?.titles.length, 3)
+	assert.equal(later.forYou, undefined)
+	assert.equal(data.hot, undefined)
+	assert.ok(later.hot)
+	hot.open()
+})
+
+test("a new member opens Hot on socials: the page waits for it; For you without ratings is known to be empty", async () => {
+	const { reads } = fakeReads(
+		{
+			tonightParts: async () =>
+				parts({
+					shows: {
+						continue: [],
+						pickUp: [],
+						start: [],
+					} as unknown as TonightParts["shows"],
+					movies: [],
+				}),
+			wishlist: async () => ({ cards: [], total: 0 }),
+		},
+		0,
+	)
+	const { data, later } = await loadMemberStart(request, "member-1", reads)
+	assert.deepEqual(data.forYou, { titles: [], total: 0 })
+	assert.equal(data.hot?.titles.length, 2)
+	assert.deepEqual(later, {})
+})
+
+test("an open door that turns out empty passes the opening on, and the page waits for the next one", async () => {
+	const { reads } = fakeReads({
+		tonightParts: async () =>
+			parts({
+				shows: {
+					continue: [],
+					pickUp: [],
+					start: [],
+				} as unknown as TonightParts["shows"],
+				movies: [],
+			}),
+		wishlist: async () => ({ cards: [], total: 0 }),
+		forYou: async () => [],
+	})
+	const { data, later } = await loadMemberStart(request, "member-1", reads)
+	assert.deepEqual(data.forYou, { titles: [], total: 0 })
+	assert.equal(data.hot?.titles.length, 2)
+	assert.deepEqual(later, {})
 })

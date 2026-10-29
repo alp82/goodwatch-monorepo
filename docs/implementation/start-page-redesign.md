@@ -373,6 +373,13 @@ Data (`member.server.ts`; member pages are never cached, so streaming is fine):
 | Hot on socials | `getHotOnSocials()` (`app/server/talked-about-now/start-row.server.ts`) when `talkedAboutNowEnabled("row", userId)`; otherwise no door; deferred |
 | Ratings count | The member's taste (`loadMemberTaste`) |
 
+Deferred lists come later in the same response (Remix `defer`, `forYouLater` and `hotLater` at the top of the
+loader data, presented in the member's language). The door order and the open door are decided before they arrive:
+a door whose list is on its way counts as one with titles, so nothing moves when it arrives. The open door's section
+is always in the server HTML: when the open door is For you or Hot on socials (no titles on the member's own lists),
+the loader waits for that list and defers only the other one. "This or that" deals from the own lists at once; For
+you's titles join the deck when they arrive.
+
 ## Data sources
 
 | Piece | Source | Where it runs |

@@ -1,6 +1,7 @@
 // The "Go deeper" doors under a member's start (doors.ts has the rules): four fixed-size doors, the open one filled
 // amber with a notch into its section; the section links to its page from its header and from a last tile. The open
-// door is decided from the data alone, so the server's HTML has its section.
+// door is decided from the data alone, so the server's HTML has its section. The order is kept from the first render:
+// a list that arrives later fills its door in place.
 import { ArrowRightIcon, PlusIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
@@ -12,6 +13,7 @@ import {
 	type Door,
 	type DoorKey,
 	type DoorTitle,
+	GRID_CELLS,
 	GRID_COLUMNS,
 	type Strip as StripData,
 	doorsOf,
@@ -44,8 +46,10 @@ const chipTone = (on: boolean) =>
 const PANEL_ID = "start-door-section"
 
 export function Doors({ data }: { data: MemberStartData }) {
-	const doors = orderDoors(doorsOf(data))
-	const [open, setOpen] = useState<DoorKey>(doors[0].key)
+	const all = doorsOf(data)
+	const [order] = useState(() => orderDoors(all).map((door) => door.key))
+	const doors = order.flatMap((key) => all.filter((door) => door.key === key))
+	const [open, setOpen] = useState<DoorKey>(order[0])
 	const [filter, setFilter] = useState("all")
 	// The section on load is the server's; a section opened later fades in.
 	const [opened, setOpened] = useState(false)
@@ -55,7 +59,7 @@ export function Doors({ data }: { data: MemberStartData }) {
 	const shown = active
 		? current.titles.filter((t) => active.keep(t.card))
 		: current.titles
-	const has = current.titles.length > 0
+	const has = current.titles.length > 0 || current.pending
 
 	return (
 		<section className={`${WRAP} pt-8 pb-28`} aria-labelledby="start-doors">
@@ -176,7 +180,9 @@ export function Doors({ data }: { data: MemberStartData }) {
 						</fieldset>
 					) : null}
 
-					{has ? (
+					{current.pending ? (
+						<PendingGrid />
+					) : has ? (
 						<DoorGrid
 							door={current}
 							titles={shown}
@@ -219,6 +225,7 @@ function DoorGrid({
 	)
 	const posters = Math.max(...plans.map((p) => p.posters))
 	const ghosts = Math.max(...plans.map((p) => p.ghosts))
+	const blanks = Math.max(...plans.map((p) => p.blanks))
 	const tile = tileText(door, Math.min(...plans.map((p) => p.posters)))
 	return (
 		<ul className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 lg:grid-cols-6">
@@ -242,6 +249,16 @@ function DoorGrid({
 						</li>
 					))
 				: null}
+			{Array.from({ length: blanks }, (_, i) => (
+				<li
+					// biome-ignore lint/suspicious/noArrayIndexKey: the blanks are interchangeable
+					key={`blank${i}`}
+					aria-hidden
+					className={`min-w-0 ${shownAt(plans.map((p) => i < p.blanks))}`}
+				>
+					<div className="aspect-[2/3] w-full rounded-lg border-2 border-dashed border-gray-800/70" />
+				</li>
+			))}
 			{plans.some((p) => p.tile) ? (
 				<li className={`min-w-0 ${shownAt(plans.map((p) => p.tile))}`}>
 					<Link
@@ -264,6 +281,27 @@ function DoorGrid({
 					</Link>
 				</li>
 			) : null}
+		</ul>
+	)
+}
+
+/** A list on its way: a full grid of quiet poster slots, so the section has its size before the titles arrive. */
+function PendingGrid() {
+	return (
+		<ul
+			aria-busy
+			aria-label="Loading"
+			className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 lg:grid-cols-6"
+		>
+			{Array.from({ length: GRID_CELLS }, (_, i) => (
+				<li
+					// biome-ignore lint/suspicious/noArrayIndexKey: the slots are interchangeable
+					key={i}
+					className="min-w-0"
+				>
+					<div className="aspect-[2/3] w-full rounded-lg bg-white/[0.04]" />
+				</li>
+			))}
 		</ul>
 	)
 }

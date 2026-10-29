@@ -3,8 +3,11 @@
 // steps when there is nothing on any list yet), or the search's results while a search is on. Under the room, the
 // "Go deeper" doors open each list inline.
 //
+// For you and Hot on socials can come later than the page (member.server.ts); they join the deck and the doors once
+// they arrive, without moving anything: the doors' order and the open door are decided before (doors.ts).
+//
 // Nothing on this page writes: "this or that" only moves its round on, and the doors only switch sections.
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { ShelfTitle } from "../room/ShelfCovers"
 import { StartSearchBar } from "../search/StartSearchBar"
 import { useStartSearch } from "../search/useStartSearch"
@@ -16,18 +19,21 @@ import { FirstSteps } from "./FirstSteps"
 import { MemberResults } from "./MemberResults"
 import { ThisOrThat } from "./ThisOrThat"
 import { buildDeck } from "./deck"
-import type { MemberStartData } from "./member-data"
+import type { MemberStartData, MemberStartLater } from "./member-data"
 
 /** A member's room is lit and seen whole. */
 const MEMBER_ROOM = { night: 0, camera: 1 }
 
 export function MemberStart({
 	shelf,
-	data,
+	data: first,
+	later,
 }: {
 	shelf: readonly ShelfTitle[]
 	data: MemberStartData
+	later?: MemberStartLater
 }) {
+	const data = useArrived(first, later)
 	const start = useStartQuery()
 	const member = useMemo(() => ({ services: data.services }), [data.services])
 	const results = useStartSearch(start.query, { member })
@@ -70,6 +76,49 @@ export function MemberStart({
 			/>
 			<Doors data={data} />
 		</div>
+	)
+}
+
+type Arrived = Pick<MemberStartData, "forYou" | "hot">
+
+/**
+ * The start with the lists that came later. The first render is the server's (they're still on their way there), so
+ * the page hydrates as it was sent; each list joins when its promise settles. A list the start already has wins.
+ */
+function useArrived(
+	data: MemberStartData,
+	later: MemberStartLater | undefined,
+): MemberStartData {
+	const [arrived, setArrived] = useState<Arrived>({})
+	const forYou = later?.forYou
+	const hot = later?.hot
+	useEffect(() => {
+		let live = true
+		const join = <K extends keyof Arrived>(
+			key: K,
+			list: Promise<Arrived[K]> | undefined,
+		) =>
+			list?.then(
+				(value) => {
+					if (live) setArrived((now) => ({ ...now, [key]: value }))
+				},
+				() => {
+					if (live) setArrived((now) => ({ ...now, [key]: null }))
+				},
+			)
+		join("forYou", forYou)
+		join("hot", hot)
+		return () => {
+			live = false
+		}
+	}, [forYou, hot])
+	return useMemo(
+		() => ({
+			...data,
+			forYou: data.forYou !== undefined ? data.forYou : arrived.forYou,
+			hot: data.hot !== undefined ? data.hot : arrived.hot,
+		}),
+		[data, arrived],
 	)
 }
 

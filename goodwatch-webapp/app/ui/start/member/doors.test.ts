@@ -4,8 +4,16 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../../server/title-filter/test-alias.ts"
 
-const { GRID_COLUMNS, doorsOf, filtersOf, gridPlan, orderDoors, tileText } =
-	await import("./doors.ts")
+const {
+	GRID_COLUMNS,
+	cellsOf,
+	doorsOf,
+	filtersOf,
+	gridPlan,
+	openDoorOf,
+	orderDoors,
+	tileText,
+} = await import("./doors.ts")
 const { FEW, FULL, NEW, NO_SHOWS, NO_WISHLIST } = await import(
 	"./member-fixtures.test-support.ts"
 )
@@ -79,6 +87,30 @@ test("new: only Hot on socials has titles and opens first; For you needs ratings
 	])
 })
 
+test("lists on their way keep their place: the order and the open door don't change when they arrive", () => {
+	for (const member of [FULL, FEW, NO_SHOWS, NO_WISHLIST]) {
+		const { forYou: _f, hot: _h, ...waiting } = member
+		assert.deepEqual(order(waiting), order(member))
+		assert.equal(openDoorOf(waiting), openDoorOf(member))
+		assert.ok(door(waiting, "forYou").pending)
+		assert.ok(door(waiting, "hot").pending)
+		assert.ok(!door(member, "forYou").pending)
+	}
+	// On its way, a door has no error strip; For you still says it is forming, Hot on socials waits quietly.
+	const { forYou: _f, hot: _h, ...few } = FEW
+	assert.equal(
+		door(few, "forYou").strip?.title,
+		"Picks get personal at 10 ratings",
+	)
+	assert.equal(door(few, "hot").strip, null)
+	assert.equal(door(few, "hot").line, "Right now")
+	// With nothing on the own lists, a list on its way would open first: the server waits for that one.
+	const { hot: _, ...fresh } = NEW
+	assert.equal(openDoorOf(fresh), "hot")
+	const { forYou: __, ...rated } = { ...NEW, ratings: 4 }
+	assert.equal(openDoorOf(rated), "forYou")
+})
+
 test("Hot on socials has no door while the member doesn't see it", () => {
 	assert.ok(!doorsOf({ ...FULL, hotOn: false }).some((d) => d.key === "hot"))
 })
@@ -100,33 +132,37 @@ test("the grid fills whole rows at every width, for every count", () => {
 		for (const columns of GRID_COLUMNS)
 			for (let n = 0; n <= 14; n++) {
 				const plan = gridPlan(n, columns, ghost)
-				const cells = plan.posters + plan.ghosts + (plan.tile ? 1 : 0)
-				assert.equal(
-					cells % columns === 0 || cells < columns,
-					true,
-					`${n} at ${columns}, ghost ${ghost}`,
-				)
-				// A short row closes with the tile; a row of a few posters alone is the tile's row.
+				const cells = cellsOf(plan)
+				// An empty section has no grid (its strip says it all); every other grid ends on a full row.
 				if (n === 0) assert.equal(cells, 0)
+				else
+					assert.equal(cells % columns, 0, `${n} at ${columns}, ghost ${ghost}`)
 				assert.ok(plan.posters <= n)
 				assert.ok(plan.posters <= 11)
-				if (ghost && n > 0 && n < 11)
-					assert.ok(cells % columns === 0, `${n} at ${columns}`)
+				if (n > 0) assert.ok(plan.tile)
+				// Ghosts ask for more, so only a whole list has them; blanks only close a row of few posters.
+				if (!ghost) assert.equal(plan.ghosts, 0)
+				if (ghost) assert.equal(plan.blanks, 0)
 			}
 })
 
 test("the grid: a short list shows every poster, ghosts to the row's end, and the tile", () => {
-	assert.deepEqual(gridPlan(2, 3, true), { posters: 2, ghosts: 0, tile: true })
-	assert.deepEqual(gridPlan(1, 6, true), { posters: 1, ghosts: 4, tile: true })
-	// Seven under six across: a row of mostly ghosts would read as missing titles, so five posters and the tile.
-	assert.deepEqual(gridPlan(7, 6, true), { posters: 5, ghosts: 0, tile: true })
-	// Hot on socials has no ghost: whole rows of posters with the tile.
-	assert.deepEqual(gridPlan(7, 6, false), { posters: 5, ghosts: 0, tile: true })
-	assert.deepEqual(gridPlan(12, 4, false), {
-		posters: 11,
-		ghosts: 0,
+	const plan = (posters: number, ghosts = 0, blanks = 0) => ({
+		posters,
+		ghosts,
+		blanks,
 		tile: true,
 	})
+	assert.deepEqual(gridPlan(2, 3, true), plan(2))
+	assert.deepEqual(gridPlan(1, 6, true), plan(1, 4))
+	// Seven under six across: a row of mostly ghosts would read as missing titles, so five posters and the tile.
+	assert.deepEqual(gridPlan(7, 6, true), plan(5))
+	// Hot on socials has no ghost: whole rows of posters with the tile.
+	assert.deepEqual(gridPlan(7, 6, false), plan(5))
+	assert.deepEqual(gridPlan(12, 4, false), plan(11))
+	// One hot title (or one left by a filter) at six across: the poster, four blanks, the tile.
+	assert.deepEqual(gridPlan(1, 6, false), plan(1, 0, 4))
+	assert.deepEqual(gridPlan(1, 3, false), plan(1, 0, 1))
 })
 
 test("the end tile counts only what it can promise", () => {

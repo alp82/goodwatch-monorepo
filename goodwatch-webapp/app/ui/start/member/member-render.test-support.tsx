@@ -5,7 +5,8 @@ import { renderToString } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
 import { MemberStart } from "./MemberStart"
-import { MEMBERS } from "./member-fixtures.test-support"
+import type { MemberStartData, MemberStartLater } from "./member-data"
+import { FULL, MEMBERS } from "./member-fixtures.test-support"
 
 const shelf: StartTitle[] = Array.from({ length: 12 }, (_, i) => ({
 	media_type: i % 2 ? "show" : "movie",
@@ -16,19 +17,25 @@ const shelf: StartTitle[] = Array.from({ length: 12 }, (_, i) => ({
 	goodwatch_overall_score_normalized_percent: 70 + i,
 }))
 
-const render = (data: (typeof MEMBERS)[keyof typeof MEMBERS]) =>
+const render = (data: MemberStartData, later?: MemberStartLater) =>
 	renderToString(
 		<QueryClientProvider client={new QueryClient()}>
 			<MemoryRouter>
-				<MemberStart shelf={shelf} data={data} />
+				<MemberStart shelf={shelf} data={data} later={later} />
 			</MemoryRouter>
 		</QueryClientProvider>,
 	)
 
 console.log(
-	`__MEMBER_START_RENDER__${JSON.stringify(
-		Object.fromEntries(
+	`__MEMBER_START_RENDER__${JSON.stringify({
+		...Object.fromEntries(
 			Object.entries(MEMBERS).map(([name, data]) => [name, render(data)]),
 		),
-	)}`,
+		// For you and Hot on socials still on their way, as the server sends a full member's page.
+		later: (() => {
+			const { forYou: _f, hot: _h, ...data } = FULL
+			const never = new Promise<never>(() => {})
+			return render(data, { forYou: never, hot: never })
+		})(),
+	})}`,
 )

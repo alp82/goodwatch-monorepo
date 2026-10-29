@@ -3,9 +3,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../../server/title-filter/test-alias.ts"
 
-const { buildDeck, choose, deal, neither, restart, roundsFor } = await import(
-	"./deck.ts"
-)
+const { buildDeck, choose, deal, neither, restart, roundsFor, turnOf } =
+	await import("./deck.ts")
 const { FEW, FULL, NEW, NO_SHOWS, NO_WISHLIST } = await import(
 	"./member-fixtures.test-support.ts"
 )
@@ -38,6 +37,28 @@ test("few: For you is still forming, so its guesses wait until the member's own 
 		deck.map((t) => t.source),
 		["continue", "wishlist", "wishlist", ...Array(9).fill("forYou")],
 	)
+})
+
+test("few: no run deals a first guess while a title of the member's own lists is left", () => {
+	const deck = buildDeck(FEW)
+	const source = new Map(deck.map((t) => [t.card.key, t.source]))
+	const own = deck.filter((t) => t.source !== "forYou").map((t) => t.card.key)
+	// Keeping the Wishlist movie: the challenger is the other Wishlist movie, not a guess from For you.
+	let duel = deal(deck, 0)
+	assert.deepEqual([duel.left, duel.right], own.slice(0, 2))
+	duel = choose(deck, duel, "right")
+	assert.equal(duel.right, own[1])
+	assert.equal(duel.left, own[2])
+	assert.equal(source.get(duel.left ?? 0), "wishlist")
+	// The member's own lists are dealt: now the guesses come in.
+	duel = choose(deck, duel, "left")
+	assert.equal(source.get(duel.right ?? 0), "forYou")
+	// A run that starts further down, among the guesses, still deals the own titles first.
+	for (let epoch = 1; epoch < deck.length; epoch++) {
+		const run = deal(deck, epoch)
+		assert.equal(source.get(run.left ?? 0) === "forYou", false, `${epoch}`)
+		assert.equal(source.get(run.right ?? 0) === "forYou", false, `${epoch}`)
+	}
 })
 
 test("no shows: Tonight's pick is a movie, and the Wishlist and For you take turns", () => {
@@ -145,7 +166,44 @@ test("Start over turns the deck, so the new run deals other titles first", () =>
 	const duel = restart(deck, deal(deck, 0))
 	assert.equal(duel.epoch, 1)
 	assert.equal(duel.taps, 0)
-	assert.equal(duel.left, deck[4].card.key)
+	assert.equal(duel.left, deck[turnOf(deck.length)].card.key)
+	// Every title leads a run before any leads twice.
+	const leads = Array.from(
+		{ length: deck.length },
+		(_, epoch) => deal(deck, epoch).left,
+	)
+	assert.equal(new Set(leads).size, deck.length)
+})
+
+test("Start over changes short decks too: two titles swap sides, four start elsewhere", () => {
+	for (const n of [2, 3, 4, 5, 8]) {
+		const deck = buildDeck({
+			...NEW,
+			wishlist: { titles: WISHLIST.slice(0, n), total: n },
+		})
+		assert.equal(deck.length, n)
+		const first = deal(deck, 0)
+		const next = restart(deck, first)
+		assert.notDeepEqual(
+			[next.left, next.right],
+			[first.left, first.right],
+			`${n} titles`,
+		)
+	}
+	const two = buildDeck({
+		...NEW,
+		wishlist: { titles: WISHLIST.slice(0, 2), total: 2 },
+	})
+	const swapped = restart(two, deal(two, 0))
+	assert.deepEqual(
+		[swapped.left, swapped.right],
+		[two[1].card.key, two[0].card.key],
+	)
+	const four = buildDeck({
+		...NEW,
+		wishlist: { titles: WISHLIST.slice(0, 4), total: 4 },
+	})
+	assert.equal(restart(four, deal(four, 0)).left, four[3].card.key)
 })
 
 test("the rounds are pure: the same taps on the same deck give the same pick", () => {
