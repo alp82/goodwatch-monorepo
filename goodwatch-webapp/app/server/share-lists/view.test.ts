@@ -76,6 +76,7 @@ const {
 	getListView,
 	resetListView,
 	getProfilePage,
+	getProfileSummary,
 	getCachedProfileByUserId,
 	resetProfileViews,
 } = await import("./view.server.ts")
@@ -540,11 +541,15 @@ const profileKey = (userId = user) =>
 	cacheEntryKey("share-profile-by-user-v1", { userId })
 const pageKey = (handle = "filmfan") =>
 	cacheEntryKey("share-profile-page-v1", { handle })
+const summaryKey = (handle = "filmfan") =>
+	cacheEntryKey("share-profile-summary-v1", { handle })
 async function warmProfiles() {
+	await getProfileSummary("FILMFAN")
 	await getCachedProfileByUserId(user)
 	await getProfilePage("filmfan")
 }
 function profilesReset() {
+	assert.equal(redis.values.has(summaryKey()), false)
 	assert.equal(redis.values.has(profileKey()), false)
 	assert.equal(redis.values.has(pageKey()), false)
 }
@@ -912,4 +917,18 @@ test("remix refuses another members private lists and collections, but allows an
 	assert.equal(own?.items.length, 5)
 	assert.equal(own?.itemCount, 1000)
 	assert.equal("collection" in own!, false)
+})
+
+test("resetProfileViews invalidates the normalized summary cache", async () => {
+	const summary = await getProfileSummary("FILMFAN")
+	assert.ok(summary)
+	assert.ok(redis.values.has(summaryKey()))
+	db.statements.length = 0
+	assert.deepEqual(await getProfileSummary("filmfan"), summary)
+	assert.equal(db.statements.length, 0)
+	await resetProfileViews(user)
+	assert.equal(redis.values.has(summaryKey()), false)
+	db.statements.length = 0
+	assert.deepEqual(await getProfileSummary("filmfan"), summary)
+	assert.ok(db.statements.length > 0)
 })

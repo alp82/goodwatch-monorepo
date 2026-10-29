@@ -22,51 +22,47 @@ import { profileMeta } from "~/ui/profile/meta"
 export { pageHeaders as headers } from "~/utils/headers"
 
 const load = (args: LoaderFunctionArgs) =>
-	profileLoader(
-		args,
-		async ({ ownerId, viewerId, shell }) => {
-			// The taste card and the comparison are extras: when one fails, the Overview renders without it. The match shows
-			// whatever the owner's Taste setting (Q9); without Taste the comparison carries no pulls.
-			const orNull = <T,>(work: Promise<T>, what: string) =>
-				work.catch((error) => {
-					console.error(`[profile] overview: ${what} failed`, error)
-					return null
-				})
-			const [overview, fingerprint, compare] = await Promise.all([
-				loadProfileOverview(ownerId, shell),
-				seesPart(shell, "taste")
-					? orNull(
-							getProfilePortrait(ownerId, "fingerprint", {
-								scores: seesPart(shell, "scores"),
-							}),
-							"fingerprint",
-						)
-					: null,
-				shell.viewer === "member"
-					? orNull(
-							getMemberCompare(viewerId, ownerId, shell.visibility),
-							"compare",
-						)
-					: null,
-			])
-			const taste: OverviewTaste | null =
-				fingerprint && fingerprint.status === "ready"
-					? {
-							identity: fingerprint.identity?.name ?? null,
-							line: fingerprint.line,
-							avoid: fingerprint.avoid,
-							attributes: fingerprint.attributes.map((a) => ({
-								key: a.key,
-								label: a.label,
-								family: a.family,
-								edge: a.edge,
-							})),
-						}
-					: null
-			return { overview, taste, compare }
-		},
-		{ listCards: true },
-	)
+	profileLoader(args, async ({ ownerId, viewerId, shell }) => {
+		// The taste card and the comparison are extras: when one fails, the Overview renders without it. The match shows
+		// whatever the owner's Taste setting (Q9); without Taste the comparison carries no pulls.
+		const orNull = <T,>(work: Promise<T>, what: string) =>
+			work.catch((error) => {
+				console.error(`[profile] overview: ${what} failed`, error)
+				return null
+			})
+		const [overview, fingerprint, compare] = await Promise.all([
+			loadProfileOverview(ownerId, shell),
+			seesPart(shell, "taste")
+				? orNull(
+						getProfilePortrait(ownerId, "fingerprint", {
+							scores: seesPart(shell, "scores"),
+						}),
+						"fingerprint",
+					)
+				: null,
+			shell.viewer === "member"
+				? orNull(
+						getMemberCompare(viewerId, ownerId, shell.visibility),
+						"compare",
+					)
+				: null,
+		])
+		const taste: OverviewTaste | null =
+			fingerprint && fingerprint.status === "ready"
+				? {
+						identity: fingerprint.identity?.name ?? null,
+						line: fingerprint.line,
+						avoid: fingerprint.avoid,
+						attributes: fingerprint.attributes.map((a) => ({
+							key: a.key,
+							label: a.label,
+							family: a.family,
+							edge: a.edge,
+						})),
+					}
+				: null
+		return { overview, taste, compare }
+	}, { listCards: true })
 
 export const loader = presentCatalogLoader(load, { live: true })
 

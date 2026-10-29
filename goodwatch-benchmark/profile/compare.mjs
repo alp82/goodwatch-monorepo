@@ -6,10 +6,10 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 import { contexts, normalize } from "../html-equivalence/core.mjs";
-import {
-	statsPayload,
-	statsTastePayload,
-} from "../../goodwatch-webapp/app/server/profile/stats-payload.ts";
+import "../../goodwatch-webapp/app/server/title-filter/test-alias.ts";
+const { statsPayload, statsTastePayload } = await import(
+	"../../goodwatch-webapp/app/server/profile/stats-payload.ts"
+);
 const routeKey = "routes/u.$handle.stats.($view)";
 const serialize = (value) =>
 	JSON.stringify(value).replace(

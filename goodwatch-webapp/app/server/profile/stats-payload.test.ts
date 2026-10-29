@@ -1,8 +1,10 @@
+import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import type { TastePerson, TasteStats } from "../../domain/profile-taste.ts"
-import { statsPayload } from "./stats-payload.ts"
+import type { TastePerson, TasteStats } from "~/domain/profile-taste"
 import { tasteStats } from "./taste-stats-model.ts"
+
+const { statsPayload } = await import("./stats-payload.ts")
 
 const empty = () =>
 	tasteStats({
@@ -76,7 +78,7 @@ test("stats send only rendered people and title previews, keeping totals and bot
 
 test("summary keeps its exact agreement winner, both crowd cards and all group posters", async () => {
 	const { statsTastePayload } = await import("./stats-payload.ts")
-	const { agreementTitle } = await import("../../ui/profile/taste/agreement.ts")
+	const { agreementTitle } = await import("~/ui/profile/taste/agreement")
 	// The renderer only reads these fields from this fixture; the helper preserves the rest of the portrait.
 	const title = (id: number, score = 8, gw = 70) => ({
 		...person(1).titles[0],
@@ -100,7 +102,7 @@ test("summary keeps its exact agreement winner, both crowd cards and all group p
 			})),
 		},
 		crowd: { higher: [{ key: "movie-10" }], lower: [{ key: "movie-11" }] },
-	} as unknown as import("../../ui/profile/taste/model.ts").ProfileTaste
+	} as unknown as import("~/ui/profile/taste/model").ProfileTaste
 	const before = structuredClone(taste)
 	const result = statsTastePayload(taste)
 	assert.deepEqual(Object.keys(result.titles), [

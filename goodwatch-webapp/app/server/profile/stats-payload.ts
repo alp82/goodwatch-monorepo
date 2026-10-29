@@ -1,6 +1,6 @@
-import type { ProfileTaste } from "../../ui/profile/taste/model.ts"
-import { agreementTitle } from "../../ui/profile/taste/agreement.ts"
-import type { TasteStats } from "../../domain/profile-taste.ts"
+import type { ProfileTaste } from "~/ui/profile/taste/model"
+import { agreementTitle } from "~/ui/profile/taste/agreement"
+import type { TasteStats } from "~/domain/profile-taste"
 
 /** Keep the data used by both director rankings and every interactive stats panel. */
 export function statsPayload(stats: TasteStats): TasteStats {

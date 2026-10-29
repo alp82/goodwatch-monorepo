@@ -1,8 +1,9 @@
 import { libraryKeys } from "~/domain/my-library"
 // What a profile shows of a member's library: their scored titles with the catalog's fields, the titles they've seen,
-// their wishlist, and how long they've watched. Built from the member data map (getUserData) and catalog reads that
-// are already cached elsewhere; the built library is kept in process memory under a signature of the member data, so a
-// new score, watch or wishlist title shows on the next view.
+// their wishlist, and how long they've watched. Built from the member data map (getUserData) and catalog reads.
+// Scored titles and their backdrops bypass the display cache and read Crate in batches of 500 on each rebuild.
+// Other title displays use their existing caches. The built library is kept in process memory under a signature of
+// the member data, so a new score, watch or wishlist title shows on the next view.
 import type { ProfileTitle } from "~/domain/profile"
 import { movieRuntimes } from "~/server/movie-runtimes.server"
 import { getMyScores } from "~/server/my-scores.server"
