@@ -443,7 +443,7 @@ Every new field also goes into: `dropFilter` (per group), `clearSecondaryFilters
 | Topic moods (Crime & mystery, Other worlds, History, Coming of age) | Moods | Not in the Feel column; still parsed and shown as chips | Hide in Feel only; themes cover them | B2a, F4 |
 | Services rail and wall, 18 tiles, "+N more" to 120 | Streaming card; counts for the top 60 services | `MAX_SERVICE_OPTIONS` 60 to 120 | Build | B5, F5 |
 | Scores: shared scale, source icons, Metacritic user score | Score, sources (any 0 to 100), gap | `metacriticUsers` source key, shared step constants | Build | B5, F5 |
-| Source and gap steps without counts | No counts for SQL sets | None | Keep without counts (as the prototype) | none |
+| Source and gap step counts | No counts for SQL sets | Source scores in the facts sidecar, counted in memory | Build: the prototype shows counts per step | B12b |
 | Popularity: ratings count and rank presets and sliders with counts | None | Fields, URL, group bit, rank per version, per-stop counts, recoveries, MCP, UI | Build | B8, F9 |
 | Budget: budget, box office, Hit, Flop with counts | None | Facts sidecar, fields, URL, group bit, counts, no-data rule, MCP, UI | Build | B10, B11, B13, F10 |
 | Shows: seasons, status, time to finish with counts | None | Facts sidecar, fields, URL, group bit, counts, MCP, UI | Build | B10, B11, B14, F10 |
@@ -818,6 +818,18 @@ baseline), Biome. Page checks use an isolated local setup (no production `.env`,
 - Acceptance: measure the service count loop at 60 and at 120 services (bench over the sample snapshot, then
   Server-Timing `results` for a member on the full catalog) and record both; the step to 120 fits within the budget in
   [Risks and checks](#risks-and-checks), else counts past the top 60 come only while "+N more" is open.
+- Offline measurement (2026-10-29): `node scripts/bench-service-counts.mjs` in `goodwatch-webapp`, Node
+  v24.15.0, deterministic generated 260,000-title snapshot, 180 services and 614,040 offers. The script executes
+  the production service-count loop (including sorting and output construction), alternating 50 paired batches
+  of 10 requests after 100 warmups. Median per request: **60 options 3.207 ms; 120 options 3.205 ms**;
+  extra **-0.002 ms** (measurement noise), within the 1 ms extra budget. The loop counts all services before
+  limiting its output, so the setting can't change CPU time; its only cost is output size, about 0.3 KB gzipped
+  per response (123 instead of 63 service keys). If live measurements exceed 1 ms extra, count beyond the top 60 only while "+N more" is
+  open. Member/full-catalog Server-Timing `results` remains unmeasured: this step's validation prohibits servers
+  and database access. This generated snapshot is not evidence of live end-to-end latency.
+- Source option counts retain parity: all sources, including `metacriticUsers`, currently have no per-step counts;
+  their SQL sets are read only for active choices (`title-filter/index.server.ts`). Shared step constants and notation
+  are ready for the later source controls; arbitrary old URL thresholds still work.
 - Depends on: nothing.
 
 **B6. Rating country**
@@ -919,6 +931,19 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
   Server-Timing `results` stays within the budget in [Risks and checks](#risks-and-checks).
 - Depends on: B7, B11. F8 depends on it: the owner picked Released, Length and Made in for their counts and decade
   bars, so the swap doesn't ship them without numbers.
+
+**B12b. Source score step counts from facts**
+
+- Files: `goodwatch-flows/windmill/f/sync/copy/title_snapshot.py` (facts format 2: one byte per source with the
+  normalized percent for IMDb, Tomatometer, RT audience, Metacritic and Metacritic users; 255 unknown), the webapp
+  decoder (`title-snapshot/format.server.ts`, `facts.server.ts`), `passes.server.ts` (count `<source>:<step>` for
+  `SCORE_STEPS` under the other filters, as `minScore` is counted; filter source scores and the critics vs
+  audiences gap in memory when facts exist, SQL set as the fallback).
+- Tests: publisher bytes and decoder cross-check for format 2; counts against brute force; parity between the
+  facts path and the SQL path.
+- Acceptance: `/api/discover/results` carries `optionCounts.sourceScores` keyed `<source>:<step>`; the live Scores
+  card and the Watch tab read them without UI changes.
+- Depends on: B5, B11, B12.
 
 **B13. Budget group**
 

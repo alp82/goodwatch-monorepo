@@ -1,3 +1,4 @@
+import { scoreStepLabel } from "~/domain/title-scales"
 import { productionCountryName } from "~/domain/production-country"
 // What the filter bar says: sort options, option labels, chip labels, and the recovery wording. Every label is a
 // proper, capitalized label ("Top rated", "Crime & mystery", "Philosophical").
@@ -414,14 +415,14 @@ export function activeChips(
 	for (const source of SOURCE_KEYS) {
 		const score = state.sourceScores?.[source]
 		if (score === undefined) continue
-		const label =
-			source === "imdb"
-				? `IMDb ${(score / 10).toFixed(1)}+`
-				: source === "rtCritics"
-					? `Rotten Tomatoes ${score}%+`
-					: source === "rtAudience"
-						? `RT audience ${score}%+`
-						: `Metacritic ${score}+`
+		const sourceName = {
+			imdb: "IMDb",
+			rtCritics: "Rotten Tomatoes",
+			rtAudience: "RT audience",
+			metacritic: "Metacritic",
+			metacriticUsers: "Metacritic users",
+		}[source]
+		const label = `${sourceName} ${scoreStepLabel(source, score)}`
 		chips.push({
 			key: `source-${source}`,
 			group: "sourceScores",

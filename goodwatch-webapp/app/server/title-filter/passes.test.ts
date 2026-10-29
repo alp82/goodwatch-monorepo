@@ -1430,3 +1430,27 @@ test("16-mood combination table and 17-option per-title path stay bounded", (t) 
 		}
 	}
 })
+
+test("service counts include 120 options and retain a chosen service beyond the top services", () => {
+	const ids = Array.from({ length: 140 }, (_, s) => s + 1)
+	const services: PassInput["services"] = {
+		kind: "index",
+		index: {
+			services: ids,
+			offsets: Uint32Array.from([0, ids.length]),
+			entries: Uint16Array.from(ids, (id) => id - 1),
+			loadedAt: 1,
+			rowOf: () => 0,
+			indexOfService: (id) => ids.indexOf(id),
+		},
+		availabilityRows: new Int32Array(plain.length),
+		kept: [],
+		mine: [],
+		chosen: [139],
+	}
+	const counts = passes(plain, { services }).optionCounts.services
+	assert.equal(Object.keys(counts).length, 122) // 120 service IDs, all and any
+	assert.equal(counts[119], plain.length)
+	assert.equal(counts[120], undefined)
+	assert.equal(counts[140], plain.length)
+})

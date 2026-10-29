@@ -18,6 +18,7 @@ const SOURCE_COLUMNS: Record<SourceKey, string> = {
 	rtCritics: "rotten_tomatoes_tomato_score_normalized_percent",
 	rtAudience: "rotten_tomatoes_audience_score_normalized_percent",
 	metacritic: "metacritic_meta_score_normalized_percent",
+	metacriticUsers: "metacritic_user_score_normalized_percent",
 }
 
 export function rangeScoreConditions(

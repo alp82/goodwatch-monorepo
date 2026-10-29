@@ -684,3 +684,25 @@ test("Wishlist and outside choices round trip, clear and count as secondary filt
 		"q=heat",
 	)
 })
+
+test("Metacritic users round trip alongside older arbitrary source thresholds", () => {
+	const state = parse("sources=metacriticUsers:70,imdb:65,metacritic:81")
+	assert.deepEqual(state.sourceScores, {
+		imdb: 65,
+		metacritic: 81,
+		metacriticUsers: 70,
+	})
+	const params = filterStateToParams(state, defaults)
+	assert.equal(
+		params.get("sources"),
+		"imdb:65,metacritic:81,metacriticUsers:70",
+	)
+	assert.deepEqual(parse(params.toString()), state)
+	assert.equal(secondaryFilterCount(state), 3)
+	assert.equal(dropFilter(state, "sourceScores").sourceScores, undefined)
+	for (const invalid of ["-1", "101", "7.5", "NaN"])
+		assert.equal(
+			parse(`sources=metacriticUsers:${invalid}`).sourceScores,
+			undefined,
+		)
+})

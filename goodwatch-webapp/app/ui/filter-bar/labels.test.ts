@@ -490,3 +490,31 @@ test("list and outside chips use production wording and remove their own choice"
 		"4 with other taste matches",
 	)
 })
+
+test("source score steps use each source's notation and user chips remove independently", async () => {
+	const { SCORE_STEPS, scoreStepLabel } = await import("~/domain/title-scales")
+	assert.deepEqual(SCORE_STEPS, [60, 70, 80, 90])
+	for (const source of ["imdb", "metacriticUsers"] as const)
+		assert.deepEqual(
+			SCORE_STEPS.map((score) => scoreStepLabel(source, score)),
+			["6.0+", "7.0+", "8.0+", "9.0+"],
+		)
+	for (const source of ["rtCritics", "rtAudience"] as const)
+		assert.deepEqual(
+			SCORE_STEPS.map((score) => scoreStepLabel(source, score)),
+			["60%+", "70%+", "80%+", "90%+"],
+		)
+	assert.deepEqual(
+		SCORE_STEPS.map((score) => scoreStepLabel("metacritic", score)),
+		["60+", "70+", "80+", "90+"],
+	)
+	const chosen = { ...state, sourceScores: { imdb: 65, metacriticUsers: 70 } }
+	const chips = activeChips(chosen)
+	assert.deepEqual(
+		chips.map((chip) => chip.label),
+		["IMDb 6.5+", "Metacritic users 7.0+"],
+	)
+	assert.deepEqual(chips[1].remove(chosen).sourceScores, { imdb: 65 })
+	const only = { ...state, sourceScores: { metacriticUsers: 70 } }
+	assert.equal(activeChips(only)[0].remove(only).sourceScores, undefined)
+})

@@ -324,3 +324,29 @@ test("MCP mood enum includes all 16 keys and round trips the five additions", as
 		assert.equal(discoverParams({ moods: [mood] }, false).get("moods"), mood)
 	}
 })
+
+test("MCP Metacritic users share normalized bounds, page URLs and cache identity", () => {
+	const args = schema.parse({
+		source_scores: { imdb: 65, metacriticUsers: 70 },
+	})
+	const params = discoverParams(args, false)
+	assert.equal(params.get("sources"), "imdb:65,metacriticUsers:70")
+	assert.deepEqual(
+		filterStateFromParams(params, { onMyServices: false, notSeenYet: false }),
+		discoverView(args, false).state,
+	)
+	assert.notEqual(
+		discoverViewKey(args),
+		discoverViewKey({ source_scores: { imdb: 65 } }),
+	)
+	for (const value of [0, 60, 70, 80, 90, 100])
+		assert.equal(
+			schema.safeParse({ source_scores: { metacriticUsers: value } }).success,
+			true,
+		)
+	for (const value of [-1, 101, 7.5])
+		assert.equal(
+			schema.safeParse({ source_scores: { metacriticUsers: value } }).success,
+			false,
+		)
+})

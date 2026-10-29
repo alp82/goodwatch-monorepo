@@ -12,16 +12,16 @@ const { DatabaseSync } = createRequire(import.meta.url)("node:sqlite")
 const db = new DatabaseSync(":memory:")
 db.exec(`CREATE TABLE titles (id INTEGER, release_year INTEGER, runtime INTEGER,
  imdb_user_score_normalized_percent REAL, rotten_tomatoes_tomato_score_normalized_percent REAL,
- rotten_tomatoes_audience_score_normalized_percent REAL, metacritic_meta_score_normalized_percent REAL);
+ rotten_tomatoes_audience_score_normalized_percent REAL, metacritic_meta_score_normalized_percent REAL, metacritic_user_score_normalized_percent REAL);
  INSERT INTO titles VALUES
- (1, 1990, 90, 80, 80, 95, 30),
- (2, 2005, 120, 70, 85, NULL, 10),
- (3, 2006, 121, 90, 75, NULL, 99),
- (4, NULL, NULL, NULL, NULL, 80, 75),
- (5, 1989, 0, NULL, 90, NULL, 90),
- (6, 2000, 100, 80, NULL, 90, NULL),
- (7, 2000, 100, 65, 70, NULL, NULL),
- (8, 2000, 100, 69, 69, NULL, NULL);`)
+ (1, 1990, 90, 80, 80, 95, 30, 70),
+ (2, 2005, 120, 70, 85, NULL, 10, 69),
+ (3, 2006, 121, 90, 75, NULL, 99, 80),
+ (4, NULL, NULL, NULL, NULL, 80, 75, NULL),
+ (5, 1989, 0, NULL, 90, NULL, 90, 0),
+ (6, 2000, 100, 80, NULL, 90, NULL, 90),
+ (7, 2000, 100, 65, 70, NULL, NULL, NULL),
+ (8, 2000, 100, 69, 69, NULL, NULL, 65);`)
 function selected(
 	fields: Partial<FilterState>,
 	group: Parameters<typeof rangeScoreConditions>[1],
@@ -81,4 +81,37 @@ test("gap boundaries, preferred sources, fallbacks and missing sides", () => {
 	assert.deepEqual(selected({ scoreGap: "agree" }, "scoreGap"), [1, 4, 7])
 	assert.deepEqual(selected({ scoreGap: "critics" }, "scoreGap"), [2])
 	assert.deepEqual(selected({ scoreGap: "audience" }, "scoreGap"), [3])
+})
+
+test("Metacritic users use normalized inclusive minimums and combine with other sources", () => {
+	assert.deepEqual(
+		selected({ sourceScores: { metacriticUsers: 70 } }, "sourceScores"),
+		[1, 3, 6],
+	)
+	assert.deepEqual(
+		selected({ sourceScores: { metacriticUsers: 0 } }, "sourceScores"),
+		[1, 2, 3, 5, 6, 8],
+	)
+	assert.deepEqual(
+		selected(
+			{ sourceScores: { metacriticUsers: 70, rtCritics: 80 } },
+			"sourceScores",
+		),
+		[1],
+	)
+	for (const type of ["movie", "show"] as const)
+		assert.deepEqual(
+			rangeScoreConditions(
+				{
+					...defaultFilterState({ onMyServices: false, notSeenYet: false }),
+					sourceScores: { metacriticUsers: 70 },
+				},
+				"sourceScores",
+				type,
+			),
+			{
+				conditions: ["metacritic_user_score_normalized_percent >= ?"],
+				params: [70],
+			},
+		)
 })

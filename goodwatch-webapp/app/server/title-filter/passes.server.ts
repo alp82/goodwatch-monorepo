@@ -41,7 +41,7 @@ const BIT = Object.fromEntries(
 ) as Record<FilterName, number>
 const FailMasks = Uint32Array
 // Per-service option counts are reported for the services the most titles would show on, and the chosen ones.
-const MAX_SERVICE_OPTIONS = 60
+const MAX_SERVICE_OPTIONS = 120
 
 /**
  * A set of titles with a flag per snapshot row, so the passes test membership by row; titles the snapshot doesn't hold

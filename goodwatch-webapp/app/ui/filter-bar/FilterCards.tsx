@@ -16,6 +16,7 @@ import {
 	type FilterName,
 	type FilterState,
 	SCORE_GAPS,
+	SOURCE_KEYS,
 	type ScoreGap,
 	type SourceKey,
 	dropFilter,
@@ -173,7 +174,7 @@ export function isCardSet(
 ): boolean {
 	if (k === "runtime") return !!state.runtime
 	if (k === "sourceScores")
-		return SOURCES.some((src) => !!state.sourceScores?.[src.key])
+		return SOURCE_KEYS.some((key) => !!state.sourceScores?.[key])
 	if (k === "scoreGap") return !!state.scoreGap
 	if (k === "released") return state.released !== "any" || !!state.years
 	if (k === "type") return state.type !== "all" || state.anime !== "any"

@@ -112,6 +112,7 @@ export const SOURCE_KEYS = [
 	"rtCritics",
 	"rtAudience",
 	"metacritic",
+	"metacriticUsers",
 ] as const
 export type SourceKey = (typeof SOURCE_KEYS)[number]
 export const SCORE_GAPS = ["agree", "critics", "audience"] as const

@@ -12,6 +12,7 @@ Both title tools accept the same optional filters:
 | `genres` | One exact genre name or an array of names from `get_discover_filters`; matches any selected genre |
 | `min_year`, `max_year` | Inclusive release years, 1800–2100 |
 | `min_runtime`, `max_runtime` | Inclusive minutes: movie runtime or the site's usual show episode length (`episode_runtime[1]`); missing runtime fails a range |
+| `source_scores` | Inclusive minimums keyed by `imdb`, `rtCritics`, `rtAudience`, `metacritic` (critics), `metacriticUsers`; all must pass. Normalized integers 0–100: 70 means 7.0 for IMDb/Metacritic users, 70% for RT, 70 for Metascore. Suggested shared steps: 60, 70, 80, 90; arbitrary integer thresholds remain valid. Missing scores fail even at zero. URL: `sources=metacriticUsers:70`. Like the other sources, option counts are currently unavailable (SQL sets load only active thresholds). |
 | `minimum_score` | Inclusive GoodWatch score, integer 0–100 |
 | `on_my_services` | Saved services in the saved country; defaults false. As on the site, no saved services means no narrowing |
 | `providers` | Any of the selected numeric provider IDs in the saved country; cannot combine a nonempty list with `on_my_services=true` |
