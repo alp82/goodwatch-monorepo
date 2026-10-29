@@ -697,3 +697,8 @@ or bigger episode grid. combine that with e for perfection. not f, thats too muc
   teal; Status keeps d's marked chips, gray, picked is white with the mark in its state's hue (running green, ended
   steel, canceled muted red).
 - e exports its `HUES` and `hsla` for g; nothing else in e changed.
+
+## Round 19
+
+- Owner: the season grids were too many dots; show growth, not real season counts. Seasons glyph is now 1 to 4 rows of 2 to 5 cells (2, 6, 12, 20 cells), same 3 px cells, in the same 16 px row as the other glyphs, so Seasons tiles match the other tiles' height (d and g).
+- Time to finish: "Years of it" renamed "A real binge".

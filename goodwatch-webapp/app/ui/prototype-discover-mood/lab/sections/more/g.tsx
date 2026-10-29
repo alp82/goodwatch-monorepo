@@ -103,7 +103,6 @@ function HuePresets(props: PresetsProps) {
 						active={active}
 						onClick={() => toggleRange(x, k, p.range)}
 						tinted
-						artH={k === "seasons" ? "h-6" : undefined}
 						art={(s) => (
 							<span style={{ color: glyphColor(c, s) }}>
 								<PresetGlyph k={k} i={i} tones={k === "seasons" && !s.dead ? gridTones(c, s) : undefined} />

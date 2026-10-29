@@ -138,7 +138,7 @@ export const PRESETS: Record<MoreKey, Preset[]> = {
 		{ label: "A weekend", sub: "Under 10 h", range: idx("finish", 0, 10) },
 		{ label: "A few weeks", sub: "10 to 30 h", range: idx("finish", 10, 30) },
 		{ label: "A long haul", sub: "30 to 100 h", range: idx("finish", 30, 100) },
-		{ label: "Years of it", sub: "100 h+", range: idx("finish", 100, null) },
+		{ label: "A real binge", sub: "100 h+", range: idx("finish", 100, null) },
 	],
 }
 

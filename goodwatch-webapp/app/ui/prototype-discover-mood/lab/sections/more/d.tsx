@@ -22,7 +22,6 @@ export function GlyphPresets({ k, x, d, cols }: PresetsProps) {
 					active={sameIdx(x[k], p.range)}
 					onClick={() => toggleRange(x, k, p.range)}
 					art={<PresetGlyph k={k} i={i} />}
-					artH={k === "seasons" ? "h-6" : undefined}
 				/>
 			))}
 		</div>

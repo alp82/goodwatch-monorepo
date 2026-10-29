@@ -67,39 +67,38 @@ const SHADE = [0, 0, 1, 0, 2, 0, 1, 1, 0, 0, 2, 1, 0, 1, 0, 0, 1, 2, 0, 0, 1]
 const OPACITY = [1, 0.64, 0.38]
 
 /**
- * The four season grids, each in the same 40 by 24 box: rows are seasons, cells episodes, a last row a bit short.
- * Whole pixels, so the cells stay crisp: 4 px cells for one season, 3 px up to 7, 2 px for 8+.
+ * The four season grids grow in steps (round 19): same 3 px cells, 1 to 4 rows of 2 to 5, bottom-left aligned in a
+ * 19 by 16 box like the other glyphs. They show growth, not the real season count.
  */
 const GRIDS = [
-	{ rows: [7], cell: 4, gap: 1 },
-	{ rows: [9, 9, 7], cell: 3, gap: 1 },
-	{ rows: [9, 9, 8, 9, 6], cell: 3, gap: 1 },
-	{ rows: [13, 13, 12, 13, 13, 11, 13, 10], cell: 2, gap: 1 },
+	{ rows: 1, cols: 2 },
+	{ rows: 2, cols: 3 },
+	{ rows: 3, cols: 4 },
+	{ rows: 4, cols: 5 },
 ]
+const CELL = 3
+const PITCH = 4
 
 /**
- * A miniature of the title page's season by episode ratings grid: one short row for one season, a big dense block
- * for 8+. Cells take three shade steps: `tones` (dark to light: best to weakest) or currentColor at three opacities.
+ * A small season by episode ratings grid that grows with the preset. Cells take three shade steps: `tones` (dark to
+ * light: best to weakest) or currentColor at three opacities.
  */
 export function EpisodeGrid({ step, tones }: { step: number; tones?: [string, string, string] }) {
 	const g = GRIDS[Math.max(0, Math.min(3, step))]
-	const w = Math.max(...g.rows) * (g.cell + g.gap) - g.gap
-	const h = g.rows.length * (g.cell + g.gap) - g.gap
-	const x0 = Math.round((40 - w) / 2)
-	const y0 = Math.round((24 - h) / 2)
+	const y0 = 16 - g.rows * PITCH + 1
 	return (
-		<svg viewBox="0 0 40 24" className="h-6 w-10" aria-hidden>
-			{g.rows.map((n, r) =>
-				Array.from({ length: n }, (_, c) => {
+		<svg viewBox="0 0 19 16" className="h-4 w-[19px]" aria-hidden>
+			{Array.from({ length: g.rows }, (_, r) =>
+				Array.from({ length: g.cols }, (_, c) => {
 					const sh = SHADE[(r * 7 + c * 3 + step) % SHADE.length]
 					return (
 						<rect
 							key={`${r}-${c}`}
-							x={x0 + c * (g.cell + g.gap)}
-							y={y0 + r * (g.cell + g.gap)}
-							width={g.cell}
-							height={g.cell}
-							rx={g.cell > 2 ? 0.8 : 0.5}
+							x={c * PITCH}
+							y={y0 + r * PITCH}
+							width={CELL}
+							height={CELL}
+							rx={0.8}
 							fill={tones ? tones[sh] : "currentColor"}
 							opacity={tones ? 1 : OPACITY[sh]}
 						/>
