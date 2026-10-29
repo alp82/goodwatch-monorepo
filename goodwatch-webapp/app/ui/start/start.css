@@ -405,3 +405,605 @@
 		transition-duration: 0.4s;
 	}
 }
+
+/* Where to start, the browse section under the stage (browse/StartBrowse.tsx). Short class names: the guest's HTML has a
+   byte budget, and these repeat on every card. Motion is transform and opacity only. */
+
+.sb {
+	max-width: 80rem;
+	margin: 0 auto;
+	padding: 40px 16px 48px;
+	color: #f3f4f6;
+}
+.sb-eye {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #fbbf24;
+}
+.sb > h2 {
+	margin: 4px 0 24px;
+	font-size: 24px;
+	line-height: 1.25;
+	font-weight: 700;
+	color: #fff;
+}
+.sb-rails {
+	display: flex;
+	flex-direction: column;
+	gap: 40px;
+}
+
+/* A rail's heading row */
+.sb-head {
+	display: flex;
+	align-items: flex-end;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+.sb-titles {
+	min-width: 0;
+	flex: 1;
+}
+.sb-titles h3 {
+	font-size: 18px;
+	line-height: 1.25;
+	font-weight: 700;
+	color: #fff;
+}
+.sb-titles p {
+	margin-top: 2px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: 14px;
+	color: #9ca3af;
+}
+.sb-all {
+	flex-shrink: 0;
+	padding: 4px;
+	white-space: nowrap;
+	font-size: 14px;
+	font-weight: 600;
+	color: #fbbf24;
+}
+.sb-all:hover,
+.sb-also a:hover,
+.sb-group a:hover {
+	color: #fcd34d;
+}
+.sb-pair {
+	display: flex;
+	flex-shrink: 0;
+	gap: 6px;
+}
+
+/* The title page rows' circular blue arrows */
+.sb-arrow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 9999px;
+	background: #2563eb;
+	color: #fff;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+	transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out;
+	cursor: pointer;
+}
+.sb-arrow svg {
+	width: 20px;
+	height: 20px;
+}
+.sb-arrow:hover {
+	background: #1d4ed8;
+}
+.sb-arrow:focus-visible {
+	outline: 2px solid rgb(59 130 246 / 0.6);
+	outline-offset: 2px;
+}
+.sb-arrow:disabled {
+	opacity: 0.3;
+	cursor: default;
+	background: #2563eb;
+}
+.sb-edge {
+	display: none;
+}
+
+/* The rail: a native scroll row that bleeds to the screen's edges and snaps to each card */
+.sb-rail {
+	position: relative;
+}
+.sb-row {
+	display: flex;
+	gap: 12px;
+	margin: 0 -16px;
+	padding: 0 16px 12px;
+	scroll-padding: 0 16px;
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+}
+.sb-row::-webkit-scrollbar {
+	display: none;
+}
+.sb-row > li {
+	flex-shrink: 0;
+	scroll-snap-align: start;
+}
+.sb-card {
+	width: 116px;
+}
+
+/* Top 10 */
+.sb-tabs {
+	display: inline-flex;
+	margin-bottom: 12px;
+	padding: 4px;
+	border-radius: 9999px;
+	background: rgb(31 41 55 / 0.8);
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+.sb-tabs button {
+	padding: 4px 14px;
+	border-radius: 9999px;
+	font-size: 14px;
+	font-weight: 600;
+	color: #d1d5db;
+	transition: background-color 0.15s, color 0.15s;
+}
+.sb-tabs button:hover {
+	color: #fff;
+}
+.sb-tabs [aria-selected="true"] {
+	background: #fff;
+	color: #030712;
+}
+.sb-ranks {
+	gap: 4px;
+}
+.sb-ranks > li {
+	display: flex;
+	align-items: flex-end;
+}
+.sb-rank {
+	position: relative;
+	margin-right: -16px;
+	font-size: 6.5rem;
+	font-weight: 900;
+	line-height: 0.78;
+	font-variant-numeric: tabular-nums;
+	color: transparent;
+	-webkit-text-stroke: 2px rgb(251 191 36 / 0.75);
+	user-select: none;
+}
+.sb-ranks > li:last-child .sb-rank {
+	margin-right: -24px;
+	letter-spacing: -0.12em;
+}
+.sb-ranks .sb-card {
+	position: relative;
+	width: 108px;
+}
+.sb-also {
+	margin-top: 4px;
+	font-size: 14px;
+	color: #9ca3af;
+}
+.sb-also a {
+	font-weight: 600;
+	color: #fbbf24;
+}
+
+/* Tiles: moods and services */
+.sb-tile {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	border-radius: 12px;
+	background: #111827;
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+	transition: box-shadow 0.15s;
+}
+.sb-tile:hover {
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+.sb-tile:focus-visible {
+	outline: 2px solid #fbbf24;
+	outline-offset: 2px;
+}
+.sb-poster {
+	display: block;
+	height: auto;
+	aspect-ratio: 2 / 3;
+	border-radius: 6px;
+	background: #1f2937;
+	object-fit: cover;
+	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 0 0 1px
+		rgb(255 255 255 / 0.1);
+}
+.sb-mood {
+	width: 184px;
+}
+.sb-mood .sb-tile::before {
+	content: "";
+	position: absolute;
+	inset: 0 0 auto;
+	height: 128px;
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--hue) 33%, transparent),
+		transparent
+	);
+}
+.sb-mood .sb-fan {
+	width: 78%;
+	height: 136px;
+	margin: 16px auto 0;
+}
+.sb-tile > b {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-weight: 700;
+	color: #fff;
+}
+.sb-mood b {
+	margin-top: 12px;
+	padding: 0 12px;
+}
+.sb-mood b::before {
+	content: "";
+	flex-shrink: 0;
+	width: 10px;
+	height: 10px;
+	border-radius: 9999px;
+	background: var(--hue);
+}
+.sb-mood .sb-tile > span {
+	position: relative;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	padding: 2px 12px 12px;
+	font-size: 12px;
+	line-height: 1.375;
+	color: #9ca3af;
+}
+
+/* Three posters fanned out from the bottom center */
+.sb-fan {
+	position: relative;
+}
+.sb-fan > * {
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	width: 46%;
+	transform-origin: bottom;
+	transform: translateX(calc(-50% + var(--x))) rotate(var(--r));
+	transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sb-fan-l {
+	--x: -38%;
+	--r: -9deg;
+	z-index: 1;
+}
+.sb-fan-r {
+	--x: 38%;
+	--r: 9deg;
+	z-index: 2;
+}
+.sb-fan-c {
+	--x: 0%;
+	--r: 0deg;
+	z-index: 3;
+}
+@media (hover: hover) {
+	.sb-tile:hover .sb-fan > *,
+	.sb-tile:focus-visible .sb-fan > * {
+		transform: translateX(calc(-50% + var(--x) * 1.35))
+			rotate(calc(var(--r) * 1.4)) translateY(-4%);
+	}
+}
+
+.sb-service {
+	width: 240px;
+}
+.sb-service .sb-tile {
+	gap: 12px;
+	padding: 12px;
+}
+.sb-service b {
+	gap: 10px;
+}
+.sb-service b > img,
+.sb-service b > i {
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	background: #1f2937;
+}
+.sb-stack {
+	display: flex;
+}
+.sb-stack > * {
+	position: relative;
+	width: 30%;
+	flex-shrink: 0;
+}
+.sb-stack > * + * {
+	margin-left: -9%;
+}
+.sb-stack > :nth-child(1) {
+	z-index: 4;
+}
+.sb-stack > :nth-child(2) {
+	z-index: 3;
+}
+.sb-stack > :nth-child(3) {
+	z-index: 2;
+}
+
+/* The genre cloud and its peek */
+.sb-cloud {
+	position: relative;
+	display: grid;
+	gap: 32px;
+}
+.sb-group {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 12px;
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #9ca3af;
+}
+.sb-group a {
+	letter-spacing: normal;
+	text-transform: none;
+	color: #fbbf24;
+}
+.sb-chips {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+.sb-chips a {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 6px 16px 6px 6px;
+	border-radius: 9999px;
+	background: #111827;
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+	font-size: 16px;
+	font-weight: 700;
+	color: #fff;
+	transition: background-color 0.15s, box-shadow 0.15s;
+}
+.sb-chips a:hover {
+	background: #1f2937;
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+.sb-chips a[data-on] {
+	background: #1f2937;
+	box-shadow: inset 0 0 0 1px rgb(251 191 36 / 0.6);
+}
+.sb-chips li:nth-child(8n + 1) a,
+.sb-chips li:nth-child(8n + 8) a {
+	font-size: 20px;
+}
+.sb-chips li:nth-child(8n + 3) a,
+.sb-chips li:nth-child(8n + 6) a {
+	font-size: 18px;
+}
+.sb-chips li:nth-child(8n + 5) a {
+	font-size: 24px;
+}
+.sb-chips a > span {
+	display: flex;
+}
+.sb-chips .sb-poster {
+	width: 28px;
+	height: 28px;
+	aspect-ratio: 1;
+	border-radius: 9999px;
+}
+.sb-chips .sb-poster + .sb-poster {
+	margin-left: -12px;
+}
+.sb-peek {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 30;
+	display: block;
+	width: 168px;
+	height: 170px;
+	padding: 8px;
+	border-radius: 12px;
+	background: rgb(3 7 18 / 0.95);
+	box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6), inset 0 0 0 1px
+		rgb(255 255 255 / 0.15);
+	transition: opacity 0.18s ease;
+}
+.sb-glide {
+	transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
+}
+.sb-peek-fan {
+	width: 100%;
+	height: 132px;
+	animation: sb-fade 0.25s ease-out;
+}
+.sb-peek > span {
+	display: block;
+	margin-top: 6px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	text-align: center;
+	font-size: 12px;
+	font-weight: 600;
+	color: #e5e7eb;
+}
+@keyframes sb-fade {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+}
+
+/* More ways to browse */
+.sb-more {
+	margin-top: 48px;
+	padding-top: 24px;
+	border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+.sb-more h3 {
+	margin-bottom: 12px;
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #9ca3af;
+}
+.sb-more ul {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 20px;
+}
+.sb-more a {
+	font-size: 15px;
+	color: #e5e7eb;
+}
+.sb-more a:hover {
+	color: #fff;
+	text-decoration: underline;
+}
+
+@media (min-width: 640px) {
+	.sb {
+		padding-inline: 32px;
+	}
+	.sb-row {
+		margin: 0 -32px;
+		padding-inline: 32px;
+		scroll-padding: 0 32px;
+	}
+	.sb-card {
+		width: 144px;
+	}
+	.sb-ranks {
+		gap: 8px;
+	}
+	.sb-rank {
+		font-size: 8.5rem;
+	}
+	.sb-ranks .sb-card {
+		width: 136px;
+	}
+	.sb-mood {
+		width: 216px;
+	}
+	.sb-mood .sb-fan {
+		height: 160px;
+	}
+	.sb-service {
+		width: 272px;
+	}
+	.sb-chips li:nth-child(8n + 1) a {
+		font-size: 24px;
+	}
+	.sb-chips li:nth-child(8n + 2) a,
+	.sb-chips li:nth-child(8n + 7) a {
+		font-size: 18px;
+	}
+	.sb-chips li:nth-child(8n + 3) a {
+		font-size: 20px;
+	}
+	.sb-chips li:nth-child(8n + 5) a {
+		font-size: 30px;
+	}
+}
+
+@media (min-width: 768px) {
+	.sb {
+		padding-block: 56px 64px;
+	}
+	.sb > h2 {
+		margin-bottom: 32px;
+		font-size: 30px;
+	}
+	.sb-rails {
+		gap: 48px;
+	}
+	.sb-titles h3 {
+		font-size: 20px;
+	}
+	.sb-pair {
+		display: none;
+	}
+	/* From here the arrows sit over the first and last card, and fade out at an end. */
+	.sb-edge {
+		position: absolute;
+		top: 50%;
+		z-index: 10;
+		display: flex;
+		width: 40px;
+		height: 40px;
+		transform: translateY(-50%);
+	}
+	.sb-edge svg {
+		width: 24px;
+		height: 24px;
+	}
+	.sb-edge:disabled {
+		opacity: 0;
+		pointer-events: none;
+	}
+	.sb-prev {
+		left: -8px;
+	}
+	.sb-next {
+		right: -8px;
+	}
+	.sb-cloud {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+@media (min-width: 1024px) {
+	.sb-card {
+		width: 164px;
+	}
+	.sb-rank {
+		font-size: 10rem;
+	}
+	.sb-ranks .sb-card {
+		width: 152px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sb-fan > *,
+	.sb-glide {
+		transition: opacity 0.1s;
+	}
+	.sb-peek-fan {
+		animation: none;
+	}
+}

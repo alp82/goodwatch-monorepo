@@ -8,6 +8,7 @@
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import type { startPageLoader } from "~/server/start-page/loader.server"
+import { StartBrowse } from "~/ui/start/browse/StartBrowse"
 import { StartStage } from "~/ui/start/stage/StartStage"
 import { START_SHEETS } from "~/ui/start/start-sheets"
 import { assetBase, assetUrl } from "~/utils/asset-url"
@@ -90,12 +91,15 @@ export default function Index() {
 	const data = useLoaderData<typeof startPageLoader>()
 	const room = data.member ? MEMBER_ROOM : GUEST_ROOM
 	return (
-		<StartStage
-			shelf={data.titles}
-			night={room.night}
-			camera={room.camera}
-			centered={!data.member}
-			cardHidden={!data.member}
-		/>
+		<>
+			<StartStage
+				shelf={data.titles}
+				night={room.night}
+				camera={room.camera}
+				centered={!data.member}
+				cardHidden={!data.member}
+			/>
+			{!data.member && <StartBrowse data={data.browse} />}
+		</>
 	)
 }
