@@ -733,3 +733,70 @@ only guest/member and hide. A URL key naming a removed variant falls back to the
 layout a's three tabs despite the c default.
 
 Earlier rounds live in git history: the last commit before this cleanup is 4a2592c87 on `prototype/discover-mood`.
+
+## Round 21 (2026-10-29): one header row, one search across all tabs
+
+Owner: "i want the header bar inside each tab to always have the same structure: tabs top left, search top right.
+search finds everything across ALL 4 tabs. mood shows mixes and choose as tabs instead of the x titles - i think we
+need a better name for mixes and choose too. a few variations please".
+
+New lab choice "Tab header and search" (`v-header=a|b|c`, default a, `sections/header/index.ts`; the shell does the
+work in `lab/header/`). It is the only pickable section, so the lab bar shows it.
+
+Shared by a, b, c:
+
+- One header row in every tab, desktop and phone (`SubTabs` in `shell-tabs.tsx`, `data-header-row`): sub-tabs left,
+  the search right, 48 px high, same place in all four tabs. Desktop: the field (`header/field.tsx` `FindBox`,
+  320 px). Phones: the row sits in the sheet header under the main tabs; sub-tabs scroll sideways, a magnifier at the
+  right end opens the field over the sub-tabs (opacity and a short slide), Cancel or Escape on an empty field closes
+  it. You's one page now has a sub-tab, "Taste and lists". Nothing else is in the row any more: Find a filter is gone
+  (the header search replaces it), Mood's recipe row lost its switch and its field, and Search's Movies or shows was
+  already in titles g's content (TypeBlock), so the row's switch code is gone.
+- Mood's two views are its sub-tabs (`layouts.ts` MOOD: `mixes` and `choose`, `Sub.view`; the section gets
+  `moodView`, a ready mix still moves on with `onMoodView("choose")`). The picks count on the second sub-tab, so the
+  Mood badge is unchanged and chips open there. Mood opens on the second when something is picked (k's old rule).
+  The recipe line stays in the content without the count ("Titles that are Funny and Cozy", "Any mood, any genre"
+  when empty; the footer has the count). Name pairs (`MOOD_NAMES`): a "Ready mixes | Mix your own", b "Starters |
+  Build your own", c "Quick picks | Feel, about, style".
+- What it finds (`header/hits.tsx` `useHits`, from two letters): Search: Movies, Shows, Anime only, Hide anime, titles
+  (the live title search, Like this) and people (the live person search, Cast and crew). Mood: the ready mixes (the
+  member's own set for members), the twelve lab moods by their lab names (Discover's old names, Feel-good, Romance,
+  Action, Heavy, Mind-bending, still find them), About, Style, Genre. Watch: On my services, Any service, every
+  service of the country, GoodWatch score steps, each source's steps, the Metacritic user score, Critics vs
+  audiences, the round 16 presets (ratings, popularity, seasons, time to finish, status, budget, box office, Hit,
+  Flop), film industries, regions, countries, release eras, movie and episode length picks, the age ladder. You: taste
+  groups (members), match steps, For you, Best match first, Not seen yet, Seen before, On your wishlist; locked for
+  guests (lock, faint, inert; guests get one "Your taste groups" row). Matching: whole name, then the start, a word's
+  start, every word's start ("hidden gems"), inside the name, then extra words (old names, "box office", "watchlist").
+  Hits of hidden sub-tabs (Budget with shows only, Age without a ladder) are left out.
+- A pick calls the same toggle the tab uses (d.toggle, useMoods, useServices, useOrigin, toggleYears, Length d's
+  ranges, the more store, useTaste), so the tab, the badges, the status line and the footer chips agree.
+- Escape clears the field (taken at the window in the capture phase, so the phone sheet and the desktop panel don't
+  close on it); Escape on an empty field closes the panel. ↑ ↓ move through the results, Enter picks the highlighted
+  one or the first. The text stays while you switch main tabs; closing the panel clears it.
+
+Variants (how results show):
+
+- a, results in place: the content area shows the results in columns by tab (Search, Mood, Watch, You, empty ones
+  hidden), each sub-tab's name as a quiet label, chips as the sheet's option chips (count, tick when on), titles and
+  people as titles g's rows. Picked in place; the field keeps its text. The sub-tabs dim; tapping one ends the search
+  and opens it.
+- b, jump to it: one ranked list (best match first, ties in tab order; 16 desktop in two columns, 12 phone), each row
+  with a breadcrumb "Watch · Services" (plus the group, "· Box office"). A pick toggles it, clears the field, opens its
+  tab and sub-tab and marks it there once: an amber outline over the control fades in and out (opacity and scale,
+  1.1 s, `header/pulse.ts`). A locked You row only jumps (You shows Sign up).
+- c, current tab first: the open tab's matches on the left (the open sub-tab leading, its label amber), "In other
+  tabs" on the right (phones: under it). The main tabs (bar and phone sheet tabs) and the sub-tabs carry a match count
+  as an amber outline badge (the filled amber badge stays the pick count); sub-tab badges sit in the corner so nothing
+  moves. Tapping a main tab or a sub-tab keeps the text and reorders the results around it.
+
+Rough:
+
+- Titles and people come from the name searches, so mood words find titles named like them ("Warm and Cozy", "Cozy
+  Powell"); in a they lead because Search is the first column. Capped at 4 each.
+- b's mark finds the item by its text in the open panel (section first, then footer chips). Where a section draws a
+  control without the hit's words (score steps drawn as numbers, service logos) it marks the footer chip, or nothing.
+- c on phones: while the field is open it covers the sub-tabs, so only the main tabs show their counts there.
+- Lab-only counts (presets, You) aren't shown on hits; mixes show no count in the results (their counts are k's
+  queries, not fired from the header).
+- Script: `~/.cache/ptshot/dm-r21.mjs` (V=abc SIZES=1440,390 SHOTS=dir QS="netflix|cozy|...").

@@ -121,6 +121,7 @@ export function RecipeLine({
 	size = "text-[19px]",
 	within = "or",
 	total = d.total,
+	noCount = false,
 }: {
 	d: ProtoDiscover
 	m: Moods
@@ -129,6 +130,8 @@ export function RecipeLine({
 	within?: Within
 	/** The count to lead with; Discover's own by default. */
 	total?: number | null
+	/** Round 21 (mood k): no count; the footer has it. "Titles that are …", or the empty state when nothing is picked. */
+	noCount?: boolean
 }) {
 	const s = d.filters.state
 	const w = (g: FitKind) => (typeof within === "function" ? within(g) : within)
@@ -191,7 +194,17 @@ export function RecipeLine({
 	return (
 		<div className="flex min-h-10 min-w-0 items-center gap-3">
 			<p className={`min-w-0 flex-1 truncate leading-tight text-gray-300 ${size}`}>
-				<span className="font-bold tabular-nums text-white">{total === null ? "…" : total.toLocaleString("en")}</span> {noun}
+				{noCount ? (
+					groups.length ? (
+						<span className="text-white">{noun.charAt(0).toUpperCase() + noun.slice(1)}</span>
+					) : (
+						<span className="text-gray-500">Any mood, any genre</span>
+					)
+				) : (
+					<>
+						<span className="font-bold tabular-nums text-white">{total === null ? "…" : total.toLocaleString("en")}</span> {noun}
+					</>
+				)}
 				{groups.length > 0 && (
 					<>
 						{" "}

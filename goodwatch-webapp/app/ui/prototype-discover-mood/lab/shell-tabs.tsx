@@ -2,16 +2,17 @@
 // variant of each section renders (`pick(useLabChoice(), id).View`). Desktop: one row (sub-tabs, Find a filter or, on
 // Search, Movies or shows on the right unless the titles variant has ownType) over a fixed 400 px content area.
 // Phones: the sub-tabs sit in the sheet header, sections stack in its body.
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
+// Round 21: every tab has the same header row, sub-tabs left and the header search right (desktop: the field, phones:
+// a magnifier that opens it over the sub-tabs). The search's results replace the content area (lab/header/).
 import { AnimatePresence, motion } from "framer-motion"
 import { type ComponentType, type ReactNode, useEffect, useRef } from "react"
-import { FilterGroups } from "~/ui/filter-bar"
 import { ANIME_LABELS, TYPE_LABELS, compactCount } from "~/ui/filter-bar/labels"
 import type { ProtoDiscover } from "../kit"
 import { useLabChoice } from "./LabBar"
 import { pick } from "./registry"
 import { type SubId, layoutFor } from "./layouts"
-import { type Pieces, type SegKey, type Sub, subCount, useKeepTop } from "./shell-parts"
+import { type HeaderKey, MOOD_NAMES } from "./sections/header"
+import { type Pieces, type Sub, subCount, useKeepTop } from "./shell-parts"
 import type { SectionId, SectionProps } from "./types"
 
 /** The content area's height on desktop. Sections fill it (`h-full`) and keep their own scroll short. */
@@ -30,6 +31,8 @@ export function SubTabs({
 	dim,
 	phone,
 	right,
+	overlay,
+	matches,
 }: {
 	id: string
 	d: ProtoDiscover
@@ -37,14 +40,20 @@ export function SubTabs({
 	subs: Sub[]
 	active: string
 	onSub: (id: SubId) => void
-	/** Find a filter is showing results instead. */
+	/** The header search is showing results instead. */
 	dim: boolean
 	phone: boolean
+	/** The header search (desktop: the field, phones: its magnifier). */
 	right?: ReactNode
+	/** Phones: the open field, over the whole row. */
+	overlay?: ReactNode
+	/** Header c: how many search results each sub-tab holds. */
+	matches?: Partial<Record<string, number>>
 }) {
 	const row = useRef<HTMLDivElement>(null)
 	const choice = useLabChoice()
 	const ctx = { L: layoutFor(choice), viewer: choice.as }
+	const label = useSubLabel()
 	// Phones: the row scrolls sideways; keep the open sub-tab in view (a status chip can open the last one).
 	useEffect(() => {
 		const el = row.current
@@ -57,92 +66,68 @@ export function SubTabs({
 		else if (el.scrollLeft < right) el.scrollLeft = right
 	}, [active, phone])
 	return (
-		<div
-			ref={row}
-			role="tablist"
-			aria-label="Sections"
-			className={`flex h-12 shrink-0 items-center gap-1 border-b border-white/[0.07] ${phone ? "overflow-x-auto overscroll-x-contain px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "px-5"}`}
-		>
-			{subs.map((s) => {
-				const on = s.id === active && !dim
-				const n = subCount(d, pieces, s, ctx)
-				return (
-					<button
-						key={s.id}
-						data-sub={s.id}
-						type="button"
-						role="tab"
-						aria-selected={on}
-						onClick={() => onSub(s.id)}
-						className={`relative flex h-12 shrink-0 items-center gap-2 px-3 text-[14px] font-semibold whitespace-nowrap cursor-pointer outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${
-							on ? "text-white" : "text-gray-400 hover:text-gray-200"
-						} ${dim ? "opacity-50" : ""}`}
-					>
-						<SubLabel sub={s} />
-						{n > 0 && (
-							<span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-amber-500 px-1 text-[11px] font-bold text-gray-950 tabular-nums">
-								{n}
-							</span>
-						)}
-						{on && (
-							<motion.span
-								layoutId={`${id}-sub`}
-								transition={{ type: "spring", stiffness: 520, damping: 42 }}
-								className="absolute inset-x-3 -bottom-px h-[2px] rounded-full bg-amber-400"
-							/>
-						)}
-					</button>
-				)
-			})}
-			{right && <div className="ml-auto w-[min(320px,34%)] shrink-0 py-1.5">{right}</div>}
+		<div data-header-row className={`relative flex h-12 shrink-0 items-center border-b border-white/[0.07] ${phone ? "" : "px-5"}`}>
+			<div
+				ref={row}
+				role="tablist"
+				aria-label="Sections"
+				data-header-tabs
+				className={`flex h-12 min-w-0 flex-1 items-center gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${phone ? "px-3" : ""}`}
+			>
+				{subs.map((s) => {
+					const on = s.id === active && !dim
+					const n = subCount(d, pieces, s, ctx)
+					const m = matches?.[s.id] ?? 0
+					return (
+						<button
+							key={s.id}
+							data-sub={s.id}
+							type="button"
+							role="tab"
+							aria-selected={on}
+							onClick={() => onSub(s.id)}
+							className={`relative flex h-12 shrink-0 items-center gap-2 px-3 text-[14px] font-semibold whitespace-nowrap cursor-pointer outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${
+								on ? "text-white" : "text-gray-400 hover:text-gray-200"
+							} ${dim ? "opacity-50" : ""}`}
+						>
+							{label(s)}
+							{n > 0 && (
+								<span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-amber-500 px-1 text-[11px] font-bold text-gray-950 tabular-nums">
+									{n}
+								</span>
+							)}
+							{matches && <MatchBadge n={m} className="absolute top-1 right-0" />}
+							{on && (
+								<motion.span
+									layoutId={`${id}-sub`}
+									transition={{ type: "spring", stiffness: 520, damping: 42 }}
+									className="absolute inset-x-3 -bottom-px h-[2px] rounded-full bg-amber-400"
+								/>
+							)}
+						</button>
+					)
+				})}
+			</div>
+			{right && <div className={phone ? "shrink-0 pr-1.5 pl-1" : "ml-4 w-[min(320px,34%)] shrink-0"}>{right}</div>}
+			{overlay}
 		</div>
 	)
 }
 
-// ---------------------------------------------------------------------------------------------------------------
-// Find a filter
-
-/** The sheet's Find a filter field, with the lab's own placeholder. */
-function FindField({ value, onChange }: { value: string; onChange: (t: string) => void }) {
+/** Header c: a search match count, in a corner so nothing moves. An outline, not the amber fill of a pick count. */
+export function MatchBadge({ n, className = "" }: { n: number; className?: string }) {
 	return (
-		<label className="flex h-10 items-center gap-2.5 rounded-xl bg-white/[0.06] px-3.5 ring-1 ring-white/10 focus-within:ring-amber-500/70">
-			<MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-gray-500" />
-			<span className="sr-only">Find a filter</span>
-			<input
-				type="search"
-				value={value}
-				onChange={(e) => onChange(e.target.value)}
-				placeholder="Find a filter: thriller, a title, a name"
-				className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-white outline-none placeholder:text-gray-500 focus:ring-0 [&::-webkit-search-cancel-button]:hidden"
-			/>
-			{value && (
-				<button
-					type="button"
-					onClick={() => onChange("")}
-					aria-label="Clear the filter search"
-					className="text-gray-500 cursor-pointer hover:text-white"
-				>
-					<XMarkIcon className="h-4 w-4" />
-				</button>
-			)}
-		</label>
+		<span
+			aria-hidden={n === 0}
+			className={`pointer-events-none grid h-4 min-w-4 place-items-center rounded-full bg-[#0b1120] px-1 text-[10px] font-bold tabular-nums text-amber-200 ring-1 ring-amber-400/80 transition-[opacity,transform] duration-150 ${n > 0 ? "scale-100 opacity-100" : "scale-75 opacity-0"} ${className}`}
+		>
+			{n > 0 ? (n > 99 ? "99+" : n) : ""}
+		</span>
 	)
 }
 
-/** Find a filter's results across every filter, laid out in columns so the list stays short. */
-function FindAll({ pieces, text, phone }: { pieces: Pieces; text: string; phone: boolean }) {
-	const css = phone
-		? ""
-		: `.lab-find-all > .flex-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 2rem; row-gap: 1.75rem; align-items: start }`
-	const body = (
-		<>
-			{css && <style dangerouslySetInnerHTML={{ __html: css }} />}
-			<FilterGroups data={pieces.groups} query={text} className="lab-find-all" />
-		</>
-	)
-	if (phone) return body
-	return <div className="h-full min-h-0 overflow-y-auto overscroll-contain px-7 py-5">{body}</div>
-}
+// ---------------------------------------------------------------------------------------------------------------
+// Movies or shows
 
 /** Movies or shows for the whole Discover state, on the Search tab (round 10: no longer on Mood). */
 function SearchType({ d }: { d: ProtoDiscover }) {
@@ -233,17 +218,16 @@ function CountSegmented<T extends string>({
 	)
 }
 
-/** The Search row's switch, unless the titles variant places its own (ownType). */
-function useRowType() {
-	return pick(useLabChoice(), "titles").ownType !== true
-}
-
-/** A sub-tab's label: the chosen variant's own label, else the shell's. */
-function SubLabel({ sub }: { sub: Sub }) {
+/** A sub-tab's label: Mood's two views as the header variant names them, else the chosen variant's own, else the shell's. */
+export function useSubLabel() {
 	const choice = useLabChoice()
-	// The "more" section's parts keep the layout's labels.
-	if (sub.part) return <>{sub.label}</>
-	return <>{pick(choice, sub.id as SectionId).label ?? sub.label}</>
+	const names = MOOD_NAMES[pick(choice, "header").key as HeaderKey] ?? MOOD_NAMES.a
+	return (sub: Sub): string => {
+		if (sub.view) return names[sub.view]
+		// The "more" section's parts keep the layout's labels.
+		if (sub.part) return sub.label
+		return pick(choice, sub.id as SectionId).label ?? sub.label
+	}
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -251,9 +235,11 @@ function SubLabel({ sub }: { sub: Sub }) {
 
 export type SectionBase = Omit<SectionProps, "phone" | "viewer">
 
-function Section({ id, part, props }: { id: SubId; part?: Sub["part"]; props: Omit<SectionProps, "viewer"> }) {
+function Section({ id, part, view, props }: { id: SubId; part?: Sub["part"]; view?: Sub["view"]; props: Omit<SectionProps, "viewer"> }) {
 	// Round 16: the "more" section at one of its parts.
 	if (part) return <RegisteredSection id="more" props={{ ...props, morePart: part }} />
+	// Round 21: Mood at one of its two views.
+	if (view) return <RegisteredSection id="mood" props={{ ...props, moodView: view }} />
 	return <RegisteredSection id={id as SectionId} props={props} />
 }
 
@@ -276,50 +262,45 @@ function ContentArea({ id, children, height = CONTENT_H }: { id: string; childre
 	)
 }
 
-/** A tab: its sub-tab row (with Find a filter on Mood and Watch) over the open section, or Find a filter's results. */
+/** A tab: the header row (sub-tabs and the header search) over the open section, or the search's results. */
 export function TabPanel({
 	id,
-	seg,
 	subs,
 	sub,
 	onSub,
 	pieces,
 	phone,
 	section,
-	find,
-	onFind,
 	top,
+	results,
+	right,
+	matches,
+	dim,
 }: {
 	id: string
-	seg: SegKey
 	subs: Sub[]
 	sub: string
 	onSub: (id: SubId) => void
 	pieces: Pieces
 	phone: boolean
 	section: SectionBase
-	find: string
-	onFind: (t: string) => void
 	/** Phones: shown above the section (the search field on Search). */
 	top?: ReactNode
+	/** The header search's results, in place of the section while it has text. */
+	results: ReactNode | null
+	/** Desktop: the header search field. Phones place the row in the sheet header. */
+	right?: ReactNode
+	matches?: Partial<Record<string, number>>
+	/** The results dim the sub-tabs (header a and b). */
+	dim: boolean
 }) {
 	const open = subs.find((s) => s.id === sub) ?? subs[0]
-	const canFind = seg !== "search"
-	// A variant with ownFind places the field and the results itself (no row of its own here).
-	const choice = useLabChoice()
-	const own = canFind && !open.part && pick(choice, open.id as SectionId).ownFind === true
-	const finding = canFind && find.trim() !== ""
-	const rowType = useRowType()
-	const pickSub = (s: SubId) => {
-		onFind("")
-		onSub(s)
+	const props: Omit<SectionProps, "viewer"> = {
+		...section,
+		phone,
+		onMoodView: (v) => onSub(v),
 	}
-	const props: Omit<SectionProps, "viewer"> = own
-		? { ...section, phone, find: { field: <FindField value={find} onChange={onFind} />, results: finding ? <FindAll pieces={pieces} text={find} phone={phone} /> : null } }
-		: { ...section, phone }
-	const body = finding && !own ? (
-		<FindAll pieces={pieces} text={find} phone={phone} />
-	) : (
+	const body = results ?? (
 		<AnimatePresence mode="wait" initial={false}>
 			<motion.div
 				key={open.id}
@@ -330,7 +311,7 @@ export function TabPanel({
 				className={phone ? "" : "h-full min-h-0"}
 				data-lab-section={open.id}
 			>
-				<Section id={open.id} part={open.part} props={props} />
+				<Section id={open.id} part={open.part} view={open.view} props={props} />
 			</motion.div>
 		</AnimatePresence>
 	)
@@ -338,34 +319,13 @@ export function TabPanel({
 		return (
 			<div>
 				{top}
-				{!canFind && rowType && (
-					<div className="mb-5">
-						<SearchType d={section.d} />
-					</div>
-				)}
-				{canFind && !own && (
-					<div className="mb-5">
-						<FindField value={find} onChange={onFind} />
-					</div>
-				)}
 				{body}
 			</div>
 		)
-	// Mood and Watch: Find a filter on the right of the row; Search: Movies or shows.
-	const field = canFind ? <FindField value={find} onChange={onFind} /> : rowType ? <SearchType d={section.d} /> : null
 	return (
 		<div className="flex min-h-0 flex-col">
-			{own ? null : subs.length > 1 ? (
-				<SubTabs id={id} d={section.d} pieces={pieces} subs={subs} active={open.id} onSub={pickSub} dim={finding} phone={false} right={field} />
-			) : (
-				// One section (Mood): no sub-tabs, the row keeps Find a filter so every tab has the same frame.
-				<div className="flex h-12 shrink-0 items-center border-b border-white/[0.07] px-5">
-					{field && <div className="ml-auto w-[min(320px,34%)] shrink-0">{field}</div>}
-				</div>
-			)}
-			<ContentArea id={finding && !own ? "find" : open.id} height={own ? CONTENT_H + 48 : CONTENT_H}>
-				{body}
-			</ContentArea>
+			<SubTabs id={id} d={section.d} pieces={pieces} subs={subs} active={open.id} onSub={onSub} dim={dim} phone={false} right={right} matches={matches} />
+			<ContentArea id={results ? "find" : open.id}>{body}</ContentArea>
 		</div>
 	)
 }

@@ -4,4 +4,5 @@ import type { SectionVariant } from "../../types"
 import { useAndResults } from "./and"
 import { MoodK } from "./k"
 
-export const VARIANTS: SectionVariant[] = [{ key: "k", name: "Mixes, then choose", View: MoodK, ownFind: true, useResults: useAndResults }]
+// Round 21: no ownFind; the header row (shell) holds the search and Mood's two views as sub-tabs.
+export const VARIANTS: SectionVariant[] = [{ key: "k", name: "Mixes, then choose", View: MoodK, useResults: useAndResults }]

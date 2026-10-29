@@ -1,7 +1,6 @@
 // PROTOTYPE (Discover lab, mood k): the AND pieces. The rows with AND counts, the four columns, the recipe row with
 // Find a filter on its right (the shell drops its own row: ownFind), and the mix cards with AND counts.
 import { motion } from "framer-motion"
-import type { ReactNode } from "react"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { type ProtoDiscover, TAGS, type Tag } from "../../../kit"
 import type { SectionProps, Viewer } from "../../types"
@@ -90,29 +89,20 @@ export function useAnd(d: ProtoDiscover) {
 }
 type And = ReturnType<typeof useAnd>
 
-/** The recipe line with Find a filter at its right (phones: under it). */
-export function RecipeRow({ d, a, find, phone, right }: { d: ProtoDiscover; a: And; find: SectionProps["find"]; phone: boolean; right?: ReactNode }) {
-	if (phone)
-		return (
-			<div className="flex flex-col gap-3">
-				<RecipeLine d={d} m={a.m} size="text-[17px]" within={(g) => (a.any.has(g) ? "or" : "and")} total={a.total} />
-				{right}
-				{find?.field}
-			</div>
-		)
+/** The recipe line: what is picked, removable. Round 21: no count (the footer has it), nothing on its right (the
+ * view switch and the search moved to the tab's header row). */
+export function RecipeRow({ d, a, phone }: { d: ProtoDiscover; a: And; phone: boolean }) {
 	return (
-		<div className="flex shrink-0 items-center gap-4">
+		<div className="flex shrink-0 items-center">
 			<div className="min-w-0 flex-1">
-				<RecipeLine d={d} m={a.m} within={(g) => (a.any.has(g) ? "or" : "and")} total={a.total} />
+				<RecipeLine d={d} m={a.m} size={phone ? "text-[17px]" : undefined} within={(g) => (a.any.has(g) ? "or" : "and")} total={a.total} noCount />
 			</div>
-			{right}
-			<div className={`${right ? "w-[260px]" : "w-[300px]"} shrink-0`}>{find?.field}</div>
 		</div>
 	)
 }
 
 /** i's four columns (Feel, About, Style, Genre), or Find a filter's results in their place. */
-export function AndColumns({ a, find, phone }: { a: And; find: SectionProps["find"]; phone: boolean }) {
+export function AndColumns({ a, find, phone }: { a: And; find?: SectionProps["find"]; phone: boolean }) {
 	if (find?.results) return phone ? <div>{find.results}</div> : <div className="-mx-6 min-h-0 flex-1">{find.results}</div>
 	const columns = COLUMNS.map((c) => {
 		const rows = byFit(a.rows.filter((r) => r.kind === c.kind))
@@ -150,7 +140,7 @@ interface Card {
 	path?: string | null
 }
 
-const readyMixes = (viewer: Viewer): Mix[] => (viewer === "member" ? MEMBER_MIXES : MIXES)
+export const readyMixes = (viewer: Viewer): Mix[] => (viewer === "member" ? MEMBER_MIXES : MIXES)
 
 /**
  * Ready mixes while nothing is picked; then "+ X" (the choices that narrow the most, any group, since picks AND),

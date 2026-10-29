@@ -9,8 +9,8 @@ import type { Pieces } from "./shell-parts"
 
 export type { Pieces }
 
-/** "layout" is the main tabs choice (round 15), not a panel section. */
-export type SectionId = "layout" | "titles" | "people" | "taste" | "mood" | "services" | "origin" | "length" | "scores" | "released" | "age" | "more"
+/** "layout" is the main tabs choice (round 15), "header" the tab header and search (round 21); neither is a panel section. */
+export type SectionId = "layout" | "header" | "titles" | "people" | "taste" | "mood" | "services" | "origin" | "length" | "scores" | "released" | "age" | "more"
 
 export type Viewer = "guest" | "member"
 
@@ -34,7 +34,13 @@ export interface SectionProps {
 	find?: { field: ReactNode; results: ReactNode | null }
 	/** Round 16, the "more" section: which of its sub-tabs is open. */
 	morePart?: "reach" | "money" | "shows"
+	/** Round 21, the "mood" section: which of Mood's two sub-tabs is open, and a way to switch (a ready mix moves on). */
+	moodView?: MoodView
+	onMoodView?: (v: MoodView) => void
 }
+
+/** Round 21: Mood's two sub-tabs, hand-picked mixes or the columns of single choices. */
+export type MoodView = "mixes" | "choose"
 
 /** A list the grid, the status line and "Show N titles" show instead of Discover's own (mood k: the AND list). */
 export interface ResultsView {

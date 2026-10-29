@@ -203,8 +203,11 @@ export function SegmentBar({
 	searchInput,
 	order = SEG_ORDER,
 	flex = LAYOUT_C.flex,
+	matches,
 }: {
 	id: string
+	/** Header c (round 21): how many header search results each tab holds. */
+	matches?: Partial<Record<SegKey, number>>
 	order?: SegKey[]
 	flex?: Record<SegKey, string>
 	values: Record<SegKey, SegValue>
@@ -240,7 +243,7 @@ export function SegmentBar({
 						)}
 						{isSearch && searchInput ? (
 							<div className="relative flex min-w-0 flex-1 flex-col justify-center pr-4 pl-7">
-								<SegLabel k={k} badge={v.badge} />
+								<SegLabel k={k} badge={v.badge} match={matches ? (matches[k] ?? 0) : undefined} />
 								{searchInput}
 							</div>
 						) : (
@@ -254,7 +257,7 @@ export function SegmentBar({
 									isSearch ? "pr-12 pl-7" : tight ? "px-5" : "px-6"
 								} ${on ? "" : "hover:bg-white/[0.05]"}`}
 							>
-								<SegLabel k={k} badge={v.badge} locked={v.locked} />
+								<SegLabel k={k} badge={v.badge} locked={v.locked} match={matches ? (matches[k] ?? 0) : undefined} />
 								<span className="mt-0.5 flex min-w-0 items-center gap-2">
 									{v.lead}
 									<span
@@ -292,7 +295,7 @@ export function SegmentBar({
 	)
 }
 
-function SegLabel({ k, badge, locked }: { k: SegKey; badge?: number; locked?: boolean }) {
+function SegLabel({ k, badge, locked, match }: { k: SegKey; badge?: number; locked?: boolean; match?: number }) {
 	return (
 		<span
 			className={`flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] uppercase ${k === "search" ? "text-amber-300/90" : locked ? "text-gray-500" : "text-gray-400"}`}
@@ -304,6 +307,15 @@ function SegLabel({ k, badge, locked }: { k: SegKey; badge?: number; locked?: bo
 					{badge}
 				</span>
 			) : null}
+			{match !== undefined && (
+				// Round 21, header c: search matches in this tab, an outline beside the amber pick count.
+				<span
+					aria-hidden={match === 0}
+					className={`grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] tracking-normal text-amber-200 tabular-nums ring-1 ring-amber-400/80 transition-[opacity,transform] duration-150 ${match > 0 ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}
+				>
+					{match > 0 ? (match > 99 ? "99+" : match) : ""}
+				</span>
+			)}
 		</span>
 	)
 }

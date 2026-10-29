@@ -5,7 +5,8 @@
 // stays live in the bar on every tab; typing there from Mood or Watch jumps to Moods and titles, on Search it stays put
 // (sections read the text). Find a filter sits at the right of the sub-tab row on Mood and Watch. Round 11: the
 // panel's footer shows the whole search state (shell-footer.tsx). Round 15: the tab structure is a lab choice
-// (layouts.ts): a keeps these three tabs, b-e give You a tab of its own.
+// (layouts.ts): a keeps these three tabs, b-e give You a tab of its own. Round 21: every tab has the same header row
+// (sub-tabs left, one search right) and that search finds things in all four tabs (lab/header/, header a, b, c).
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -43,7 +44,10 @@ import {
 	useSlashKey,
 	whereIs,
 } from "./shell-parts"
-import { CONTENT_H, type SectionBase, SubTabs, TabPanel } from "./shell-tabs"
+import { CONTENT_H, MatchBadge, type SectionBase, SubTabs, TabPanel } from "./shell-tabs"
+import { FindBox, phoneFind } from "./header/field"
+import { useFind } from "./header/use-find"
+import { MOOD_CHOICES } from "./sections/mood/parts"
 import type { Viewer } from "./types"
 
 export const NAME = "Discover lab"
@@ -62,32 +66,37 @@ function useLayout() {
 	return { L, order: L.order(choice.as), ctx: { L, viewer: choice.as } }
 }
 
-/** Which tab is open, the sub-tab each tab is on, and Find a filter's text. */
-function useTabState(d: ProtoDiscover, { L, order, ctx }: { L: Layout; order: SegKey[]; ctx: { viewer: Viewer } }) {
+/** Mood opens on Mix your own once something is picked (k's own rule before round 21), else on the ready mixes. */
+const moodUsed = (d: ProtoDiscover) =>
+	d.picked.length > 0 ||
+	d.filters.state.genres.length > 0 ||
+	MOOD_CHOICES.some((c) => c.word && d.q && new RegExp(`(^|\\s)${c.word}(?=\\s|$|[,.])`, "i").test(d.q))
+
+/** Which tab is open, the sub-tab each tab is on, and the header search's text. */
+function useTabState(d: ProtoDiscover, { L, order }: { L: Layout; order: SegKey[]; ctx: { viewer: Viewer } }) {
 	const [raw, setSeg] = useState<SegKey | null>(null)
 	// A tab the layout no longer has (the lab bar switched it) counts as closed.
 	const seg = raw && order.includes(raw) ? raw : null
 	const [dir, setDir] = useState(1)
-	const [subs, setSubs] = useState<Record<SegKey, SubId>>({ search: "titles", you: "taste", mood: "mood", watch: "services" })
+	const [subs, setSubs] = useState<Record<SegKey, SubId>>({ search: "titles", you: "taste", mood: "mixes", watch: "services" })
 	const [find, setFind] = useState("")
-	const go = (k: SegKey | null) => {
+	const setSub = (k: SegKey, id: SubId) => setSubs((s) => ({ ...s, [k]: id }))
+	/** Opens a tab (at a sub-tab of it, when given). The header search keeps its text across tabs; closing clears it. */
+	const go = (k: SegKey | null, sub?: SubId) => {
 		if (k && seg) setDir(order.indexOf(k) >= order.indexOf(seg) ? 1 : -1)
-		if (k !== seg) setFind("")
+		if (k === null) setFind("")
+		const at = sub && k && segOf(sub, L) === k ? sub : k === "mood" && seg !== "mood" ? (moodUsed(d) ? "choose" : "mixes") : null
+		if (k && at) setSub(k, at)
 		setSeg(k)
 	}
-	const setSub = (k: SegKey, id: SubId) => setSubs((s) => ({ ...s, [k]: id }))
 	/** Where a chip's filter lives. */
 	const whereFor = (slot: Slot) => whereIs(slot, L)
 	const goTo = (slot: Slot) => {
 		const w = whereFor(slot)
-		setSub(w.seg, w.sub)
-		go(w.seg)
+		go(w.seg, w.sub)
 	}
 	/** A section's open(seg, sub): a sub that isn't in that tab is ignored. */
-	const openAt = (k: SegKey, sub?: string) => {
-		if (sub && segOf(sub as SubId, L) === k) setSub(k, sub as SubId)
-		go(k)
-	}
+	const openAt = (k: SegKey, sub?: string) => go(k, sub as SubId | undefined)
 	return { seg, dir, go, goTo, whereFor, openAt, subs, setSub, find, setFind }
 }
 
@@ -117,10 +126,14 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 		if (!open) setText(d.q ?? "")
 		t.goTo(slot)
 	}
+	// The bar's field takes focus on Search, unless the header search is in use (c: a tab tap shows its matches).
+	const finding = t.find !== ""
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only when the tab changes
 	useEffect(() => {
-		if (seg === "search") field.current?.focus()
+		if (seg === "search" && !finding) field.current?.focus()
 	}, [seg])
 	useSlashKey(() => pick("search"))
+	const f = useFind(d, pieces, lay.L, lay.order, t)
 	/** From Mood or Watch the field leads to Moods and titles; on Search it stays on the open sub-tab. */
 	const toSearch = () => {
 		if (seg === "search") return
@@ -154,6 +167,7 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 					active={seg}
 					onPick={pick}
 					onClearSearch={() => d.setQ(null)}
+					matches={f.segMatches}
 					searchInput={
 						open ? (
 							<>
@@ -181,6 +195,7 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 						<motion.div
 							ref={panel}
 							role="dialog"
+							data-lab-panel
 							aria-label={SEG_LABEL[seg]}
 							initial={{ opacity: 0, y: -8, scaleY: 0.97 }}
 							animate={{ opacity: 1, y: 0, scaleY: 1 }}
@@ -204,15 +219,16 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 									>
 										<TabPanel
 											id="lab-d"
-											seg={seg}
 											subs={subsFor(seg, pieces, lay.L)}
 											sub={t.subs[seg]}
-											onSub={(id) => t.setSub(seg, id)}
+											onSub={(id) => f.onSub(seg, id)}
 											pieces={pieces}
 											phone={false}
 											section={section}
-											find={t.find}
-											onFind={t.setFind}
+											results={f.results(seg, t.subs[seg], false)}
+											right={<FindBox value={t.find} onChange={t.setFind} nav={f.nav} onEmptyEscape={close} />}
+											matches={f.subMatches}
+											dim={f.dim}
 										/>
 									</motion.div>
 								</AnimatePresence>
@@ -230,7 +246,13 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 // ---------------------------------------------------------------------------------------------------------------
 // Phones
 
-function Tabs({ d, pieces, seg, onPick }: { d: ProtoDiscover; pieces: Pieces; seg: SegKey; onPick: (k: SegKey) => void }) {
+function Tabs({
+	d,
+	pieces,
+	seg,
+	onPick,
+	matches,
+}: { d: ProtoDiscover; pieces: Pieces; seg: SegKey; onPick: (k: SegKey) => void; matches?: Partial<Record<SegKey, number>> }) {
 	const { L, order, ctx } = useLayout()
 	return (
 		<div role="tablist" aria-label="Filters" className="flex gap-0.5 px-2 pt-1 pb-1">
@@ -263,6 +285,7 @@ function Tabs({ d, pieces, seg, onPick }: { d: ProtoDiscover; pieces: Pieces; se
 								</span>
 							)}
 						</span>
+						{matches && <MatchBadge n={matches[k] ?? 0} className="absolute -top-0.5 right-0.5" />}
 					</motion.button>
 				)
 			})}
@@ -310,6 +333,12 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 		close: () => t.go(null),
 	}
 	const button = variantOf(useLabChoice(), "titles").searchButton === true
+	const [findOpen, setFindOpen] = useState(false)
+	const f = useFind(d, pieces, lay.L, lay.order, t, () => setFindOpen(false))
+	const pf = phoneFind({ value: t.find, onChange: t.setFind, open: findOpen, setOpen: setFindOpen, nav: f.nav })
+	useEffect(() => {
+		if (!t.seg) setFindOpen(false)
+	}, [t.seg])
 	const body = useRef<HTMLDivElement>(null)
 	useScrollTopOn(body, `${shown}|${sub}|${t.find.trim() ? "find" : ""}`)
 	return (
@@ -325,42 +354,45 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 				label="Filters"
 				header={
 					<div>
-						<Tabs d={d} pieces={pieces} seg={shown} onPick={openAt} />
-						{subs.length > 1 && (
-							<SubTabs
-								id="lab-p"
-								d={d}
-								pieces={pieces}
-								subs={subs}
-								active={sub}
-								onSub={(id) => {
-									t.setFind("")
-									t.setSub(shown, id)
-								}}
-								dim={t.find.trim() !== ""}
-								phone
-							/>
-						)}
+						<Tabs d={d} pieces={pieces} seg={shown} onPick={openAt} matches={f.segMatches} />
+						{/* Round 21: every tab has the row, the search at its right end. */}
+						<SubTabs
+							id="lab-p"
+							d={d}
+							pieces={pieces}
+							subs={subs}
+							active={sub}
+							onSub={(id) => f.onSub(shown, id)}
+							dim={f.dim}
+							phone
+							right={pf.button}
+							overlay={pf.overlay}
+							matches={f.subMatches}
+						/>
 					</div>
 				}
-				footer={<Footer d={d} pieces={pieces} onDone={() => t.go(null)} onOpen={goTo} phone />}
+				footer={
+					<div data-lab-panel>
+						<Footer d={d} pieces={pieces} onDone={() => t.go(null)} onOpen={goTo} phone />
+					</div>
+				}
 			>
-				<div ref={body} className="relative overflow-hidden px-5 pt-4 pb-8">
+				<div ref={body} data-lab-panel className="relative overflow-hidden px-5 pt-4 pb-8">
 					<AnimatePresence initial={false} custom={t.dir} mode="popLayout">
 						<motion.div key={shown} custom={t.dir} variants={MORPH} initial="enter" animate="center" exit="exit" transition={MORPH_T}>
 							<TabPanel
 								id="lab-p"
-								seg={shown}
 								subs={subs}
 								sub={sub}
-								onSub={(id) => t.setSub(shown, id)}
+								onSub={(id) => f.onSub(shown, id)}
 								pieces={pieces}
 								phone
 								section={section}
-								find={t.find}
-								onFind={t.setFind}
+								results={f.results(shown, sub, true)}
+								dim={f.dim}
 								top={
-									shown === "search" && (
+									shown === "search" &&
+									!f.active && (
 										<div className="mb-5 flex h-14 items-center gap-2.5 rounded-[14px] bg-white/[0.07] px-4 shadow-[inset_0_0_0_1.5px_rgba(251,191,36,0.6)]">
 											<MagnifyingGlassIcon className="h-5 w-5 shrink-0 text-gray-300" aria-hidden />
 											<SearchInput

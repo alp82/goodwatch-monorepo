@@ -93,7 +93,7 @@ export const SOURCES: Source[] = [
 
 export const sourceValue = (d: ProtoDiscover, k: SourceKey) => d.filters.state.sourceScores?.[k] ?? 0
 const sourceCount = (d: ProtoDiscover, k: SourceKey, v: number) => d.counts?.optionCounts.sourceScores?.[`${k}:${v}`] ?? null
-function setSource(d: ProtoDiscover, k: SourceKey, v: number) {
+export function setSource(d: ProtoDiscover, k: SourceKey, v: number) {
 	const next = { ...(d.filters.state.sourceScores ?? {}) }
 	if (v) next[k] = v
 	else delete next[k]
@@ -168,14 +168,14 @@ export function SourceSteps({ d, s, value, onPick }: { d: ProtoDiscover; s: Sour
 // ---------------------------------------------------------------------------------------------------------------
 // Critics vs audiences
 
-const GAP_WORDS: Record<ScoreGap, { label: string; short: string }> = {
+export const GAP_WORDS: Record<ScoreGap, { label: string; short: string }> = {
 	agree: { label: "Both agree", short: "Agree" },
 	critics: { label: "Critics liked it more", short: "Critics' pick" },
 	audience: { label: "Audiences liked it more", short: "Crowd pleaser" },
 }
 const GAPS = SCORE_GAPS
 const gapCount = (d: ProtoDiscover, g: ScoreGap) => d.counts?.optionCounts.scoreGap?.[g] ?? null
-const setGap = (d: ProtoDiscover, g: ScoreGap | undefined) =>
+export const setGap = (d: ProtoDiscover, g: ScoreGap | undefined) =>
 	d.filters.set({ scoreGap: g && d.filters.state.scoreGap !== g ? g : undefined })
 
 const CRITIC = "#f83309"

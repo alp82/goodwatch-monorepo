@@ -2,7 +2,7 @@
 // a narrow end cap after Search, Mood and Watch. Each panel renders the chosen section variants.
 import type { CardKey } from "~/ui/filter-bar/filter-cards"
 import { type Choice, DEFAULTS } from "./choice"
-import type { SectionId, Viewer } from "./types"
+import type { MoodView, SectionId, Viewer } from "./types"
 
 export type SegKey = "search" | "you" | "mood" | "watch"
 
@@ -11,7 +11,7 @@ export type Slot = CardKey | "q" | "notSeenYet" | MoreSlot
 /** Round 16: the lab-only popularity, money and show choices (sections/more/store.ts). */
 type MoreSlot = "reach" | "money" | "shows"
 
-export type SubId = SectionId | MoreSlot
+export type SubId = SectionId | MoreSlot | MoodView
 
 export interface Sub {
 	id: SubId
@@ -23,6 +23,8 @@ export interface Sub {
 	part?: MoreSlot
 	/** Shown while the list holds this kind (or its choices are set). */
 	kind?: "movie" | "show"
+	/** Round 21: renders the "mood" section at this view (Mood's two sub-tabs). */
+	view?: MoodView
 }
 
 export interface Layout {
@@ -44,8 +46,11 @@ const TITLES: Sub = {
 	slots: ["q", "similarTo", "type"],
 }
 const PEOPLE: Sub = { id: "people", label: "Cast and crew", slots: ["people"] }
+// Round 21: Mood's two views are its sub-tabs. The picks count on the second, where they are made (and where a chip
+// opens); the header variant names the pair (sections/header).
 const MOOD: Sub[] = [
-	{ id: "mood", label: "Mood", slots: ["moods", "themes", "styles", "genres"] },
+	{ id: "mixes", label: "Ready mixes", slots: [], view: "mixes" },
+	{ id: "choose", label: "Mix your own", slots: ["moods", "themes", "styles", "genres"], view: "choose" },
 ]
 const WATCH: Sub[] = [
 	{ id: "services", label: "Services", slots: ["services"] },
@@ -69,7 +74,8 @@ const SEARCH4: Sub[] = [
 const YOU1: Sub[] = [
 	{
 		id: "taste",
-		label: "You",
+		// Round 21: every tab has a sub-tab row, so You's one page has a name there.
+		label: "Taste and lists",
 		slots: ["minMatch", "notSeenYet"],
 		you: [...BOTH],
 	},
