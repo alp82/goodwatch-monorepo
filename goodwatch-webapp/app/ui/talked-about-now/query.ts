@@ -14,6 +14,7 @@ export interface TitleBuzz {
 export interface TitleSocial {
 	items: SocialEmbedItem[]
 	buzz: TitleBuzz | null
+	pending?: boolean
 }
 
 export interface SocialTitleRef {
@@ -34,4 +35,6 @@ export type TitleSocialQuery = ReturnType<typeof titleSocialQuery>
 export const titleSocialQuery = (title: SocialTitleRef) => ({
 	queryKey: titleSocialKey(title),
 	queryFn: () => fetchTitleSocial(title),
+	refetchInterval: (query: { state: { data: TitleSocial | undefined; dataUpdateCount: number } }) =>
+		query.state.data?.pending && query.state.dataUpdateCount < 3 ? 1500 : false,
 })

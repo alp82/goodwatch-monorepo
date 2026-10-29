@@ -88,7 +88,7 @@ export async function readBuzzTop(select: typeof query = query): Promise<BuzzTop
 		const [row] = await select<{ day: string; payload: string }>(
 			"SELECT day, payload FROM doc.buzz_snapshot WHERE snapshot_key = 'current'",
 			[],
-			{ timeoutMs: 1_000 },
+			{ signal: AbortSignal.timeout(1_000) },
 		)
 		if (!row) return {}
 		const payload = JSON.parse(row.payload) as {

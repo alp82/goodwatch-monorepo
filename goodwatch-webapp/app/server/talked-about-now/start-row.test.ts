@@ -6,8 +6,9 @@ import "../title-filter/test-alias.ts"
 import type { SocialRow } from "~/domain/talked-about-now"
 import type { TitleDisplay } from "../title-cards.server.ts"
 
-const { fixtureRows, getTalkedAboutNow, readTalkedAboutNow, socialQuery } =
+const { fixtureRows, getTalkedAboutNow, readTalkedAboutNow } =
 	await import("./start-row.server.ts")
+const { socialQuery } = await import("./reference-social-sql.ts")
 const { titleKey } = await import("~/utils/title-key")
 
 const entry = (kind: "movie" | "tv", tmdbId: number, score: number) => ({

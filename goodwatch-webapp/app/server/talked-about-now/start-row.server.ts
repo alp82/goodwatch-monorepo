@@ -7,7 +7,7 @@
 // - What is said: one read of the visible links of the board's titles to their posts (`doc.social_title_link`,
 //   `doc.social_post`), with the filters of social discovery's reference read (`Store.read_title` of #556): a
 //   passing content-quality verdict for the post's current content (`social_content_quality`) and a `keep` relevance
-//   verdict for the link (`social_relevance`), the same joins as the title section's read; no reported, hidden,
+//   verdict for the link (`social_relevance`), the same staged lookups as the title section's read; no reported, hidden,
 //   deleted, outdated or expired link, no switched-off lane, one of each duplicate group, best-ranked first. Missing or
 //   empty tables (the relevance table too) answer nothing, and the row shows its titles without what is said.
 //
@@ -31,9 +31,8 @@ import { query } from "~/utils/crate"
 import { titleKey } from "~/utils/title-key"
 import { createHotPageRead } from "./page-read.ts"
 import {
-	contentQualityJoin,
+	readSocialTitles,
 	getSocialStore,
-	relevanceJoin,
 } from "./social-store.server"
 
 /** How long one answer is shared: the score changes once a day, discovery runs hourly. */
@@ -48,40 +47,6 @@ export const disabledLanes = () =>
 	(process.env.SOCIAL_DISABLED_LANES ?? "")
 		.split(/[\s,]+/)
 		.filter((lane) => lane)
-
-/** The relevant visible links of these titles to their posts, best-ranked first, one of each duplicate group per title. */
-export function socialQuery(
-	titles: Pick<BuzzTitle, "mediaType" | "tmdbId">[],
-	lanes: string[] = disabledLanes(),
-): { sql: string; params: (string | number)[] } {
-	const params: (string | number)[] = []
-	const which = titles
-		.map((title) => {
-			params.push(title.mediaType === "show" ? "tv" : "movie", title.tmdbId)
-			return "(l.media_type = ? AND l.media_tmdb_id = ?)"
-		})
-		.join(" OR ")
-	const lane = lanes.length
-		? ` AND l.lane NOT IN (${lanes.map(() => "?").join(", ")})`
-		: ""
-	params.push(...lanes)
-	const sql = `SELECT media_type, media_tmdb_id, post_id, source, source_id, url, author, published_at, text, image, score, dup_group FROM (
-  SELECT l.media_type, l.media_tmdb_id, p.post_id, p.source, p.source_id, p.url, p.author, p.published_at, p.text, CASE WHEN i.post_id IS NOT NULL THEN '/api/social/image/' || p.post_id ELSE NULL END AS image,
-    rel.score, COALESCE(rel.dup_group, l.duplicate_group, p.post_id) AS dup_group,
-    ROW_NUMBER() OVER (PARTITION BY l.media_type, l.media_tmdb_id, COALESCE(rel.dup_group, l.duplicate_group, p.post_id)
-      ORDER BY rel.score DESC NULLS LAST, p.published_at DESC, p.post_id DESC) AS duplicate_rank
-  FROM doc.social_title_link l JOIN doc.social_post p ON p.post_id = l.post_id
-  LEFT JOIN doc.social_image i ON i.post_id = p.post_id AND i.status = 'ok'
-  ${contentQualityJoin("doc")}
-  ${relevanceJoin("doc")}
-  LEFT JOIN doc.social_link_report r ON r.media_type = l.media_type AND r.media_tmdb_id = l.media_tmdb_id
-    AND r.post_id = l.post_id AND r.status IN ('open', 'confirmed')
-  WHERE (${which}) AND l.hidden_at IS NULL AND p.deleted_at IS NULL
-    AND p.published_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'
-    AND l.content_hash = p.content_hash AND r.report_id IS NULL${lane}
-) visible WHERE duplicate_rank = 1 ORDER BY score DESC NULLS LAST, published_at DESC, post_id DESC LIMIT 400`
-	return { sql, params }
-}
 
 /** Whether SOCIAL_FIXTURE (development only, see social-store.server.ts) stands in for the social tables. */
 const fixtureInUse = (env = process.env) =>
@@ -124,8 +89,7 @@ const crateReads: Reads = {
 		)[0] ?? null,
 	social: async (titles) => {
 		if (fixtureInUse()) return fixtureRows(titles)
-		const { sql, params } = socialQuery(titles)
-		return query<SocialRow>(sql, params)
+		return readSocialTitles(titles.map(t => ({ mediaType: t.mediaType === "show" ? "tv" : "movie", tmdbId: t.tmdbId })), { disabledLanes: disabledLanes() })
 	},
 	// Imported when asked: the cards' module pulls in the title snapshot and Valkey, which the tests of this one leave out.
 	displays: async (keys) =>

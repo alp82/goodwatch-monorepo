@@ -85,3 +85,34 @@ test("real Crate requests close on timeout without affecting other statements or
 	await withBackendTimeout("Cancelled socket close", 1000, async () => { await closure })
 	assert.deepEqual(await query("SELECT after_overlay"), [{ n: 1 }])
 })
+
+test("a social caller abort makes one attempt and leaves all coordinators available", async (t) => {
+	const previous = { ...process.env }
+	Object.assign(process.env, { CRATE_HOSTS: "127.0.0.1,127.0.0.2,127.0.0.3", CRATE_PORT: "19649", CRATE_USER: "", CRATE_PASS: "", CRATE_TIMEOUT_MS: "10000" })
+	setCrateClientForTest(null)
+	t.after(() => {
+		for (const key of ["CRATE_HOSTS", "CRATE_PORT", "CRATE_USER", "CRATE_PASS", "CRATE_TIMEOUT_MS"]) {
+			if (previous[key] === undefined) delete process.env[key]; else process.env[key] = previous[key]
+		}
+		setCrateClientForTest(null)
+	})
+	const events: Record<string, unknown>[] = []
+	t.mock.method(console, "warn", (line: string) => { if (line.startsWith("{")) events.push(JSON.parse(line)) })
+	for (const method of ["log", "error", "trace"] as const) t.mock.method(console, method, () => {})
+	const attempts: string[] = []
+	await assert.rejects(getCrateClient().execute("SELECT social_stall", [], {
+		signal: AbortSignal.timeout(30),
+		transport: async (url, signal) => {
+			attempts.push(url)
+			return new Promise((_, reject) => signal.addEventListener("abort", () => reject(signal.reason), { once: true }))
+		},
+	}), /timeout|aborted/i)
+	assert.equal(attempts.length, 1)
+	const hosts: string[] = []
+	for (let i = 0; i < 3; i++) await getCrateClient().execute("SELECT healthy", [], { transport: async (url) => {
+		hosts.push(url)
+		return { cols: [], rows: [], json: [], rowcount: 0, duration: 0 }
+	} })
+	assert.equal(new Set(hosts).size, 3)
+	assert.ok(events.some(event => event.cooldownMs === 0 && event.failureKind === "cancelled"))
+})

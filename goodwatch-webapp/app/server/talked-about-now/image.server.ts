@@ -8,7 +8,7 @@ AND p.published_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'`
 
 export async function imageResponse(
 	postId: string | undefined,
-	read = (id: string) => query<{ data: string }>(IMAGE_SQL, [id, id], { timeoutMs: 1_000 }),
+	read = (id: string) => query<{ data: string }>(IMAGE_SQL, [id, id], { signal: AbortSignal.timeout(1_000) }),
 ): Promise<Response> {
 	const missing = () => new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } })
 	if (!postId || !/^[a-f0-9]{64}$/.test(postId)) return missing()

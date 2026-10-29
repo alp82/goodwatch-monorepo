@@ -20,7 +20,7 @@ function read(target: () => Promise<typeof value>) {
 test("a timed-out cold request continues filling the guarded per-title cache", async () => {
 	let resolve!: (data: typeof value) => void
 	const fill = new Promise<typeof value>((yes) => { resolve = yes })
-	assert.deepEqual(await read(() => fill), EMPTY)
+	assert.deepEqual(await read(() => fill), { ...EMPTY, pending: true })
 	resolve(value)
 	await tick()
 	assert.deepEqual(await read(async () => { throw Error("must hit cache") }), { ...value, buzz: null })

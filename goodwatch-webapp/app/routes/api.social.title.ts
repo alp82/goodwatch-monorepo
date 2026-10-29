@@ -10,7 +10,7 @@ import type { SocialTimings } from "~/server/talked-about-now/title-read"
 const HEADERS = { "Cache-Control": "private, no-store", "Content-Type": "application/json" }
 const answer = (body: unknown, status = 200, timings: SocialTimings = {}) => new Response(JSON.stringify(body), {
 	status,
-	headers: { ...HEADERS, "Server-Timing": Object.entries(timings).map(([name, ms]) => `${name};dur=${ms.toFixed(1)}`).join(", ") },
+	headers: { ...HEADERS, ...(Object.keys(timings).length ? { "Server-Timing": Object.entries(timings).map(([name, ms]) => `${name};dur=${ms.toFixed(1)}`).join(", ") } : {}) },
 })
 
 export async function loader({ request }: LoaderFunctionArgs) {

@@ -16,15 +16,21 @@ export async function withinSocialBudget<T>(load: () => Promise<T>, ms: number, 
 /** Bound optional title fills across keys, and avoid retrying a broken query on every viewport event. */
 export function createSocialFillGate(limit = 16) {
 	let active = 0
+	let trippedUntil = 0
+	let failures: number[] = []
 	const retryAt = new Map<string, number>()
 	return async <T>(key: string, load: () => Promise<T>): Promise<T> => {
-		if (active >= limit || Date.now() < (retryAt.get(key) ?? 0)) throw new Error("Social fill deferred")
+		if (Date.now() < trippedUntil || active >= limit || Date.now() < (retryAt.get(key) ?? 0)) throw new Error("Social fill deferred")
 		active++
 		try {
 			const value = await load()
 			retryAt.delete(key)
 			return value
 		} catch (error) {
+			const now = Date.now()
+			failures = failures.filter(at => now - at < 10_000)
+			failures.push(now)
+			if (failures.length >= 8) { trippedUntil = now + 10_000; failures = [] }
 			if (retryAt.size >= 1000) retryAt.delete(retryAt.keys().next().value!)
 			retryAt.set(key, Date.now() + 5_000)
 			throw error

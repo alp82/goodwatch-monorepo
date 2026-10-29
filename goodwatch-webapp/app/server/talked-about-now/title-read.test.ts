@@ -18,7 +18,7 @@ test("a cold stalled title answers empty within 120 ms", async () => {
 	const buzz = mock.fn(async () => ({}))
 	const read = readTitleSocial("movie:603", { items: never, buzz })
 	await advance(120)
-	assert.deepEqual(await read, EMPTY)
+	assert.deepEqual(await read, { ...EMPTY, pending: true })
 	assert.equal(buzz.mock.callCount(), 0)
 })
 test("optional stalled buzz keeps the posts and costs at most 20 ms", async () => {
@@ -29,7 +29,7 @@ test("optional stalled buzz keeps the posts and costs at most 20 ms", async () =
 test("keeps response shape and degrades errors without rejecting", async () => {
 	const buzz = { lift: 2, views: 100, day: "2026-10-29" }
 	assert.deepEqual(await readTitleSocial("movie:603", { items: async () => ({ items: [item] }), buzz: async () => ({ "movie:603": buzz }) }), { items: [item], buzz })
-	assert.deepEqual(await readTitleSocial("movie:603", { items: async () => { throw Error("offline") }, buzz: never }), EMPTY)
+	assert.deepEqual(await readTitleSocial("movie:603", { items: async () => { throw Error("offline") }, buzz: never }), { ...EMPTY, pending: true })
 })
 test("bounds fills across titles and backs off failed keys for five seconds", async () => {
 	const gate = createSocialFillGate(1)
@@ -42,4 +42,26 @@ test("bounds fills across titles and backs off failed keys for five seconds", as
 	await assert.rejects(gate("b", async () => 1), /deferred/)
 	await advance(5000)
 	assert.equal(await gate("b", async () => 1), 1)
+})
+
+test("eight failed fills trip every key for ten seconds", async () => {
+	const gate = createSocialFillGate()
+	for (let i = 0; i < 8; i++) await assert.rejects(gate(String(i), async () => { throw Error("offline") }), /offline/)
+	await assert.rejects(gate("new", async () => 1), /deferred/)
+	await advance(9999)
+	await assert.rejects(gate("new", async () => 1), /deferred/)
+	await advance(1)
+	assert.equal(await gate("new", async () => 1), 1)
+})
+
+test("failures older than ten seconds do not trip other keys", async () => {
+	const gate = createSocialFillGate()
+	for (let i = 0; i < 7; i++) await assert.rejects(gate(String(i), async () => { throw Error("offline") }))
+	await advance(10_000)
+	await assert.rejects(gate("last", async () => { throw Error("offline") }))
+	assert.equal(await gate("new", async () => 1), 1)
+})
+
+test("a completed empty read is final", async () => {
+	assert.deepEqual(await readTitleSocial("movie:603", { items: async () => ({ items: [] }), buzz: never }), EMPTY)
 })

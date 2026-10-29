@@ -61,29 +61,11 @@ export const POST_ID = /^[a-f0-9]{64}$/
 export const CONTENT_QUALITY_VERSION = "content-quality-1"
 
 /**
- * The read rule every read of links copies: an inner join to the post's passing verdict for its current content. A
- * post without one (not screened yet, rejected, screened by an older version, or changed since) isn't shown.
- */
-export const contentQualityJoin = (schema: string) =>
-	`JOIN ${schema}.social_content_quality q ON q.post_id = p.post_id AND q.content_hash = p.content_hash
-    AND q.version = '${CONTENT_QUALITY_VERSION}' AND q.status = 'pass'`
-
-/**
  * The relevance verdicts a read accepts (doc.social_relevance, written by social discovery): a link is shown only when
  * it has a `keep` of this version for the post's current content hash. A new version is judged again before its rows
  * can appear, so this changes with it.
  */
 export const RELEVANCE_VERSION = "relevance-1"
-
-/**
- * The second read rule every read of links copies: an inner join to the link's `keep` verdict for the post's current
- * content. A link without one (not judged yet, dropped, judged by an older version or before an edit) isn't shown.
- * The verdict also ranks (`rel.score`) and groups the same story told by several sources (`rel.dup_group`).
- */
-export const relevanceJoin = (schema: string) =>
-	`JOIN ${schema}.social_relevance rel ON rel.media_type = l.media_type AND rel.media_tmdb_id = l.media_tmdb_id
-    AND rel.post_id = l.post_id AND rel.content_hash = p.content_hash
-    AND rel.version = '${RELEVANCE_VERSION}' AND rel.status = 'keep'`
 
 export const MAX_REASON = 500
 
@@ -102,27 +84,74 @@ const scoreOf = (value: unknown): number | null => (value === null || value === 
 
 const iso = (value: unknown): string => new Date(value instanceof Date ? value.getTime() : (value as number | string)).toISOString()
 
-/** The read: relevant visible links of one title, one per duplicate group (the best-ranked), best-ranked first. */
-export function readTitleSql(schema: string, disabledLanes: readonly string[]): string {
-	const lanes = disabledLanes.length ? ` AND l.lane NOT IN (${disabledLanes.map(() => "?").join(", ")})` : ""
-	return `SELECT post_id, source, source_id, url, author, published_at, text, image, lane, score FROM (
-  SELECT p.post_id, p.source, p.source_id, p.url, p.author, p.published_at, p.text, CASE WHEN i.post_id IS NOT NULL THEN '/api/social/image/' || p.post_id ELSE NULL END AS image, l.lane, rel.score,
-    ROW_NUMBER() OVER (PARTITION BY COALESCE(rel.dup_group, l.duplicate_group, l.post_id)
-      ORDER BY rel.score DESC NULLS LAST, p.published_at DESC, p.post_id DESC) AS duplicate_rank
-  FROM ${schema}.social_title_link l JOIN ${schema}.social_post p ON p.post_id = l.post_id
-  LEFT JOIN ${schema}.social_image i ON i.post_id = p.post_id AND i.status = 'ok'
-  ${contentQualityJoin(schema)}
-  ${relevanceJoin(schema)}
-  LEFT JOIN ${schema}.social_link_report r ON r.media_type = l.media_type AND r.media_tmdb_id = l.media_tmdb_id
-    AND r.post_id = l.post_id AND r.status IN ('open', 'confirmed')
-  WHERE l.media_type = ? AND l.media_tmdb_id = ? AND l.hidden_at IS NULL AND p.deleted_at IS NULL
-    AND p.published_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'
-    AND l.content_hash = p.content_hash AND r.report_id IS NULL${lanes}
-) visible WHERE duplicate_rank = 1 ORDER BY score DESC NULLS LAST, published_at DESC, post_id DESC LIMIT ?`
-}
-
 type Select = <T extends {}>(sql: string, params: (string | number)[], options?: CrateReadOptions) => Promise<T[]>
 type Execute = (sql: string, params?: (string | number)[]) => Promise<unknown>
+
+/** Read small link sets first so Crate never builds hash joins over the social corpus. */
+export async function readSocialTitles(
+	titles: SocialTitle[],
+	{ schema = "doc", select = query as Select, disabledLanes = [], limit = 400 }: {
+		schema?: string; select?: Select; disabledLanes?: readonly string[]; limit?: number
+	} = {},
+) {
+	if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error(`Invalid schema ${schema}`)
+	if (!titles.length) return []
+	// One caller deadline covers every stage, without coordinator cooldown on expiry.
+	const options = { signal: AbortSignal.timeout(1_000) }
+	const where = titles.map(() => "(media_type = ? AND media_tmdb_id = ?)").join(" OR ")
+	const lanes = disabledLanes.length ? ` AND lane NOT IN (${disabledLanes.map(() => "?").join(", ")})` : ""
+	const links = await select<FixtureLink>(
+		`SELECT media_type, media_tmdb_id, post_id, lane, duplicate_group, content_hash FROM ${schema}.social_title_link WHERE (${where}) AND hidden_at IS NULL${lanes} LIMIT 2147483647`,
+		[...titles.flatMap(t => [t.mediaType, t.tmdbId]), ...disabledLanes], options,
+	)
+	if (!links.length) return []
+	const ids = [...new Set(links.map(l => l.post_id))]
+	async function lookup<T extends {}>(table: string, columns: string, filter = "") {
+		const rows: T[] = []
+		// Keep parameter lists and each response bounded, without truncating eligible links.
+		for (let offset = 0; offset < ids.length; offset += 500) {
+			options.signal.throwIfAborted()
+			const batch = ids.slice(offset, offset + 500)
+			rows.push(...await select<T>(`SELECT ${columns} FROM ${schema}.${table} WHERE post_id IN (${batch.map(() => "?").join(", ")})${filter} LIMIT 2147483647`, batch, options))
+		}
+		return rows
+	}
+	const [posts, quality] = await Promise.all([
+		lookup<FixturePost>("social_post", "post_id, source, source_id, url, author, published_at, text, content_hash", " AND deleted_at IS NULL AND published_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'"),
+		lookup<FixtureQuality>("social_content_quality", "post_id, content_hash", ` AND version = '${CONTENT_QUALITY_VERSION}' AND status = 'pass'`),
+	])
+	const [relevance, reports] = await Promise.all([
+		lookup<FixtureRelevance>("social_relevance", "media_type, media_tmdb_id, post_id, content_hash, score, dup_group", ` AND version = '${RELEVANCE_VERSION}' AND status = 'keep'`),
+		lookup<FixtureReport>("social_link_report", "media_type, media_tmdb_id, post_id, report_id", " AND status IN ('open', 'confirmed')"),
+	])
+	const images = new Set((await lookup<{ post_id: string }>("social_image", "post_id", " AND status = 'ok'")).map(i => i.post_id))
+	const byPost = new Map(posts.map(p => [p.post_id, p]))
+	const linkKey = (l: { media_type: string; media_tmdb_id: number; post_id: string }) => `${l.media_type}:${l.media_tmdb_id}:${l.post_id}`
+	const byRelevance = new Map(relevance.map(r => [linkKey(r), r]))
+	const byQuality = new Map(quality.map(q => [q.post_id, q]))
+	const reported = new Set(reports.filter(r => r.report_id != null).map(linkKey))
+	const visible = links.flatMap(l => {
+		const p = byPost.get(l.post_id)
+		const q = byQuality.get(l.post_id)
+		const rel = byRelevance.get(linkKey(l))
+		// SQL equality rejects NULL hashes, including NULL = NULL.
+		if (!p || p.content_hash == null || l.content_hash !== p.content_hash || q?.content_hash !== p.content_hash || rel?.content_hash !== p.content_hash || reported.has(linkKey(l))) return []
+		return [{
+			media_type: l.media_type, media_tmdb_id: l.media_tmdb_id,
+			post_id: p.post_id, image: images.has(p.post_id) ? `/api/social/image/${p.post_id}` : null,
+			source: p.source, source_id: p.source_id ?? null, url: p.url ?? "", author: p.author ?? null,
+			published_at: iso(p.published_at), text: p.text ?? null, lane: String(l.lane ?? ""),
+			score: scoreOf(rel.score), dup_group: rel.dup_group ?? l.duplicate_group ?? l.post_id,
+		}]
+	}).sort((a, b) => (b.score ?? -Infinity) - (a.score ?? -Infinity) || b.published_at.localeCompare(a.published_at) || b.post_id.localeCompare(a.post_id))
+	const groups = new Set<string>()
+	return visible.filter(row => {
+		const key = `${row.media_type}:${row.media_tmdb_id}:${row.dup_group}`
+		if (groups.has(key)) return false
+		groups.add(key)
+		return true
+	}).slice(0, limit)
+}
 
 /**
  * The production store. `schema` is "doc"; a scratch schema lets the queries run against copies of the tables.
@@ -138,24 +167,8 @@ export function crateSocialStore({
 	return {
 		async readTitle(title, { limit, disabledLanes }) {
 			try {
-				const rows = await select<Record<string, unknown>>(readTitleSql(schema, disabledLanes), [
-					title.mediaType,
-					title.tmdbId,
-					...disabledLanes,
-					Math.min(Math.max(Math.trunc(limit), 1), 100),
-				], { timeoutMs: 1_000 })
-				return rows.map((row) => ({
-					post_id: String(row.post_id),
-					image: (row.image as string | null) ?? null,
-					source: row.source as SocialPostSource,
-					source_id: (row.source_id as string | null) ?? null,
-					url: String(row.url ?? ""),
-					author: (row.author as string | null) ?? null,
-					published_at: iso(row.published_at),
-					text: (row.text as string | null) ?? null,
-					lane: String(row.lane ?? ""),
-					score: scoreOf(row.score),
-				}))
+				const rows = await readSocialTitles([title], { schema, select, disabledLanes, limit: Math.min(Math.max(Math.trunc(limit), 1), 100) })
+				return rows.map(({ media_type, media_tmdb_id, dup_group, ...row }) => row)
 			} catch (error) {
 				if (isMissingTable(error)) return []
 				throw error

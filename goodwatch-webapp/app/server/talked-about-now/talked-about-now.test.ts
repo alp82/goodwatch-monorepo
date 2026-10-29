@@ -6,7 +6,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 
 const { talkedAboutNowEnabled, talkedAboutNowMode } = await import("./flags.server.ts")
-const { CONTENT_QUALITY_VERSION, RELEVANCE_VERSION, crateSocialStore, fixtureSocialStore, isMissingTable, readTitleSql, reportId, withMemoryReports } =
+const { CONTENT_QUALITY_VERSION, RELEVANCE_VERSION, crateSocialStore, fixtureSocialStore, isMissingTable, reportId, withMemoryReports } =
 	await import("./social-store.server.ts")
 const { readBuzzTop, readTitleItems, toItem } = await import("./title-social.server.ts")
 const { createRateLimit } = await import("./rate-limit.server.ts")
@@ -15,6 +15,8 @@ type SocialFixture = import("./social-store.server.ts").SocialFixture
 type FixtureRelevance = import("./social-store.server.ts").FixtureRelevance
 
 const NOW = new Date("2026-10-14T12:00:00Z")
+const { readTitleSql } = await import("./reference-social-sql.ts")
+
 const hex = (n: number) => n.toString(16).padStart(64, "0")
 const NARNIA = { mediaType: "movie" as const, tmdbId: 1147572 }
 
@@ -209,21 +211,19 @@ test("a fixture can be moved in time so that its newest post is recent", async (
 	assert.equal(newest.published_at, "2026-11-29T22:00:00.000Z")
 })
 
-test("the Crate read sends the title, the disabled lanes and a bounded limit, and dates come back as ISO", async () => {
+test("empty visible links return before any corpus lookups", async () => {
 	const calls: { sql: string; params: unknown[] }[] = []
-	const store = crateSocialStore({
-		select: async <T,>(sql: string, params: unknown[]) => {
-			calls.push({ sql, params })
-			return [{ post_id: hex(1), source: "youtube", source_id: "abc", url: "https://youtu.be/x", author: "A", published_at: new Date(1791994499000), text: "T", lane: "official_video_id", score: 0.8 }] as T[]
-		},
-	})
-	const rows = await store.readTitle({ mediaType: "tv", tmdbId: 1396 }, { limit: 500, disabledLanes: ["vector_context", "foreground_fuzzy"] })
-	assert.deepEqual(calls[0].params, ["tv", 1396, "vector_context", "foreground_fuzzy", 100])
-	assert.match(calls[0].sql, /l\.lane NOT IN \(\?, \?\)/)
-	assert.match(calls[0].sql, /r\.status IN \('open', 'confirmed'\)/)
-	assert.equal(rows[0].published_at, "2026-10-14T16:14:59.000Z")
-	assert.equal(rows[0].score, 0.8)
-	assert.doesNotMatch(readTitleSql("doc", []), /NOT IN/)
+	const store = crateSocialStore({ select: async (sql, params, options) => {
+		calls.push({ sql, params })
+		assert.ok(options?.signal instanceof AbortSignal)
+		assert.equal(options?.timeoutMs, undefined)
+		return []
+	} })
+	assert.deepEqual(await store.readTitle({ mediaType: "tv", tmdbId: 1396 }, { limit: 500, disabledLanes: ["vector_context", "foreground_fuzzy"] }), [])
+	assert.equal(calls.length, 1)
+	assert.deepEqual(calls[0].params, ["tv", 1396, "vector_context", "foreground_fuzzy"])
+	assert.match(calls[0].sql, /lane NOT IN \(\?, \?\)/)
+	assert.doesNotMatch(calls[0].sql, /JOIN/)
 })
 
 test("missing tables read as nothing; other failures are thrown", async () => {
@@ -384,4 +384,34 @@ test("the rate limit counts per client and window, and forgets the oldest client
 	assert.equal(limit.take("a"), true)
 	time = 1000
 	assert.equal(limit.take("c"), true)
+})
+
+test("invalid title requests omit Server-Timing and stay private", async () => {
+	const { loader } = await import("../../routes/api.social.title.ts")
+	const response = await loader({ request: new Request("http://localhost/api/social/title?type=invalid&id=603"), params: {}, context: {} })
+	assert.equal(response.status, 400)
+	assert.equal(response.headers.get("Server-Timing"), null)
+	assert.equal(response.headers.get("Cache-Control"), "private, no-store")
+})
+
+test("staged social lookups use bounded IDs and share one abort signal", async () => {
+	const { readSocialTitles } = await import("./social-store.server.ts")
+	const signals = new Set<AbortSignal>()
+	const counts = new Map<string, number>()
+	const links = Array.from({ length: 501 }, (_, i) => ({ media_type: "movie", media_tmdb_id: 1, post_id: hex(i), lane: "exact", content_hash: "hash" }))
+	const rows = await readSocialTitles([{ mediaType: "movie", tmdbId: 1 }], { select: async <T,>(sql: string, params: (string | number)[], options?: import("../../utils/crate.ts").CrateReadOptions) => {
+		assert.ok(options?.signal)
+		signals.add(options.signal)
+		assert.doesNotMatch(sql, /JOIN/)
+		if (sql.includes("social_title_link")) return links as T[]
+		assert.ok(params.length <= 500)
+		assert.match(sql, /WHERE post_id IN/)
+		const table = sql.match(/FROM doc\.(\w+)/)![1]
+		counts.set(table, (counts.get(table) ?? 0) + 1)
+		return []
+	} })
+	assert.deepEqual(rows, [])
+	assert.equal(signals.size, 1)
+	assert.equal(counts.size, 5)
+	assert.ok([...counts.values()].every(n => n === 2))
 })

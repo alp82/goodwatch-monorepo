@@ -14,8 +14,9 @@ export async function readTitleSocial(
 	timings: SocialTimings = {},
 ): Promise<TitleSocial> {
 	const start = performance.now()
-	const items = await withinSocialBudget(reads.items, TITLE_ITEMS_BUDGET_MS, { items: [] })
+	const items = await withinSocialBudget(reads.items, TITLE_ITEMS_BUDGET_MS, null)
 	timings.social_items = performance.now() - start
+	if (items === null) return { ...EMPTY, pending: true }
 	if (!items.items.length) return EMPTY
 	const buzzStart = performance.now()
 	const buzz = await withinSocialBudget(reads.buzz, TITLE_BUZZ_BUDGET_MS, {})
