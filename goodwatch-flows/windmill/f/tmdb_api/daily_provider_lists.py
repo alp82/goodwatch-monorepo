@@ -16,6 +16,11 @@ import json
 import sqlite3
 import tempfile
 import zlib
+import os
+import re
+import traceback
+import sys
+from collections import deque
 from email.utils import parsedate_to_datetime
 from uuid import uuid4
 from contextlib import nullcontext
@@ -439,17 +444,79 @@ def read_daily_list(client, store, title_reads, country, media_type, service_id,
                     retry_titles=len(retry_ids), **diagnostics)
 
 
+def _bounded_text(text, limit):
+    return text.encode('utf-8', errors='replace')[:limit].decode('utf-8', errors='ignore')
+
+
+def _failure_message(error):
+    # Inspect only a bounded prefix. Never copy structured response/SQL payloads.
+    try:
+        text = str(error)[:8192]
+    except Exception:
+        return '[exception message unavailable]'
+    parts = re.split(r'[\{\[<]|\(\s*[\x27"]|\b(?:payload|response|body|params|parameters|args)\s*[:=]|'
+                     r'\b(?:INSERT|UPDATE|SELECT|DELETE)\s', text, maxsplit=1, flags=re.I)
+    text = parts[0] + (' [payload omitted]' if len(parts) > 1 else '')
+    text = re.sub(r'\b[a-z][a-z0-9+.-]*://[^\s]+', '[REDACTED URL]', text, flags=re.I)
+    text = re.sub(r'\b(?:authorization|proxy-authorization|cookie|set-cookie)\s*[:=][^\r\n]*',
+                  '[REDACTED HEADER]', text, flags=re.I)
+    text = re.sub(r'\b(?:Bearer|Basic)\s+\S+', '[REDACTED AUTH]', text, flags=re.I)
+    text = re.sub(r'\b[\w-]*(?:token|secret|password|passwd|pass|api[ _-]?key|credential)[\w-]*'
+                  r'\s*(?:[:=]\s*|\s+)(?:"[^"]*"|\x27[^\x27]*\x27|[^\s,;]+)',
+                  '[REDACTED CREDENTIAL]', text, flags=re.I)
+    # Opaque keys/JWTs may be printed without a credential label.
+    text = re.sub(r'\b[A-Za-z0-9.-]{24,}\b|\b(?=[\w.-]{24,}\b)(?=[\w.-]*\d)[\w.-]+\b',
+                  '[REDACTED TOKEN]', text)
+    return _bounded_text(text.strip(), 1024)
+
+
+def failure_details(error):
+    """Bounded diagnostics: no locals, source lines, response bodies or raw URLs."""
+    frames = deque(maxlen=64)
+    locations = (traceback.walk_tb(error.__traceback__) if error.__traceback__ is not None
+                 else traceback.walk_stack(sys._getframe(1)))
+    for frame, line in locations:
+        frames.append(_bounded_text(
+            f'{os.path.basename(frame.f_code.co_filename)}:{line} in {frame.f_code.co_name}', 256))
+    stack = '\n'.join(frames).encode('utf-8', errors='replace')[-4096:].decode('utf-8', errors='ignore')
+    return dict(error=_bounded_text(type(error).__name__, 128),
+                message=_failure_message(error), traceback=stack)
+
+
 def list_failure(country, media_type, service_id, error):
     endpoint = getattr(error, 'endpoint', None)
     if endpoint is None and isinstance(error, IncompleteList):
         endpoint = '/discover/' + ('tv' if media_type == 'show' else 'movie')
     failure = dict(key=f'{country}:{media_type}:{service_id}', media_type=media_type,
                    tmdb_id=getattr(error, 'tmdb_id', None), endpoint=endpoint,
-                   http_status=getattr(error, 'http_status', None), error=type(error).__name__)
+                   http_status=getattr(error, 'http_status', None), **failure_details(error))
+    if isinstance(endpoint, str):
+        failure['endpoint'] = _bounded_text(endpoint.split('?')[0].split('#')[0], 256)
+        if '://' in failure['endpoint']:
+            failure['endpoint'] = '[REDACTED URL]'
     if isinstance(error, (IncompleteList, TMDBReadError)):
-        failure['reason'] = str(error)
+        failure['reason'] = failure['message']
     if hasattr(error, 'read_attempts'):
-        failure['read_attempts'] = error.read_attempts
+        # Retain the existing count diagnostics, never arbitrary attached payloads.
+        attempts = []
+        fields = {'sort', 'vote_min', 'vote_max', 'equivalent_query', 'reported_total',
+                  'returned_total', 'duplicate_count', 'metadata_values', 'rejection'}
+        for attempt in error.read_attempts[-8:]:
+            safe = {}
+            for key, value in attempt.items():
+                if key not in fields:
+                    continue
+                if key == 'metadata_values':
+                    safe[key] = [list(pair) for pair in value[-8:]
+                                 if isinstance(pair, (list, tuple)) and len(pair) == 2
+                                 and all(type(item) is int for item in pair)] if isinstance(value, (list, tuple)) else []
+                elif isinstance(value, str):
+                    safe[key] = _bounded_text(_failure_message(value), 128)
+                elif value is None or isinstance(value, (int, float, bool)):
+                    safe[key] = value
+            if len(json.dumps(attempts + [safe]).encode('utf-8')) <= 2048:
+                attempts.append(safe)
+        failure['read_attempts'] = attempts
     return failure
 
 

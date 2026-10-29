@@ -231,9 +231,10 @@ def preview_pending(client, db, connector, *, limit=1000, clock=lambda: datetime
         except (TMDBAccessDenied, RequestBudgetExceeded):
             raise
         except Exception as error:
-            failure = dict(identity=item['_id'], error=type(error).__name__)
+            from f.tmdb_api.daily_provider_lists import failure_details
+            failure = dict(identity=item['_id'], **failure_details(error))
             if isinstance(error, RefreshDeferred):
-                failure['reason'] = str(error)
+                failure['reason'] = failure['message']
             report['failures'].append(failure)
             report['failed'] += 1
     report['requests'] = client.stats
@@ -276,11 +277,13 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
         streak = item.get('consecutive_failure_days', 0)
         if item.get('failure_day') != day:
             streak = streak + 1 if item.get('failure_day') == day - 86400000 else 1
-        failure = dict(identity=item['_id'], error=type(error).__name__, consecutive_failure_days=streak)
+        from f.tmdb_api.daily_provider_lists import failure_details
+        failure = dict(identity=item['_id'], consecutive_failure_days=streak, **failure_details(error))
         if isinstance(error, RefreshDeferred):
-            failure['reason'] = str(error)
+            failure['reason'] = failure['message']
         work.update_one({'_id': item['_id'], 'version': item['version']}, {
-            '$set': {'error': failure['error'], 'failure_day': day, 'consecutive_failure_days': streak,
+            '$set': {'error': failure['error'], 'message': failure['message'], 'traceback': failure['traceback'],
+                     'failure_day': day, 'consecutive_failure_days': streak,
                      'last_attempt_at': utc_ms(clock())}})
         report['failed'] += 1
         report['max_failure_days'] = max(report['max_failure_days'], streak)

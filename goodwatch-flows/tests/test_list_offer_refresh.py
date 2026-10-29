@@ -116,10 +116,11 @@ class RefreshTests(unittest.TestCase):
 
     def test_publication_failure_and_newer_enqueues_remain_pending(self):
         self.enqueue()
-        self.publish.side_effect = RuntimeError('private upstream failure')
+        self.publish.side_effect = RuntimeError('Upstream failure token=private')
         result = self.drain()
         self.assertEqual((result['failed'], result['remaining']), (1, 1))
         self.assertNotIn('private', str(result))
+        self.assertIn('Upstream failure', result['failures'][0]['message'])
         self.publish.side_effect = lambda *args: self.enqueue({'GB_8': utc_ms(self.now)})
         result = self.drain()
         self.assertEqual(result['remaining'], 1)
@@ -133,6 +134,26 @@ class RefreshTests(unittest.TestCase):
             self.drain()
         self.assertTrue(self.db.tmdb_list_offer_refresh.find_one()['pending'])
         self.publish.assert_not_called()
+
+    def test_refresh_failures_keep_safe_details_in_results_and_pending_work(self):
+        self.enqueue()
+        self.api.get = Mock(side_effect=RuntimeError('Refresh failed token=PRIVATE_CREDENTIAL'))
+        result = self.drain()
+        failed = result['failures'][0]
+        pending = self.db.tmdb_list_offer_refresh.find_one({'_id': 'movie:42'})
+        self.assertTrue(pending['pending'])
+        self.assertEqual(failed['error'], 'RuntimeError')
+        self.assertIn('Refresh failed', failed['message'])
+        self.assertTrue(failed['traceback'])
+        for field in ('error', 'message', 'traceback'):
+            self.assertEqual(pending[field], failed[field])
+            self.assertNotIn('PRIVATE_CREDENTIAL', failed[field])
+        before = deepcopy(pending)
+        preview = refresh.preview_pending(self.api, self.db, self.crate, clock=lambda: self.now)
+        self.assertEqual(preview['failed'], 1)
+        self.assertEqual(preview['failures'][0]['message'], failed['message'])
+        self.assertTrue(preview['failures'][0]['traceback'])
+        self.assertEqual(self.db.tmdb_list_offer_refresh.find_one({'_id': 'movie:42'}), before)
 
     def test_runtime_budget_preserves_pending_work_before_the_flow_timeout(self):
         self.enqueue()

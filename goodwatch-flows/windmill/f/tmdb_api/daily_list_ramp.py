@@ -281,7 +281,7 @@ def run_daily_job(*, countries, service_ids, dry_run, requests_per_second, max_r
         if hasattr(error, 'report'):
             error.report.update(seconds=round(time.monotonic() - started, 3), requests=client.stats,
                                 history=getattr(store, 'stats', {}), countries=countries)
-            print(json.dumps(dict(event='daily_list_run_stopped', error=type(error).__name__,
+            print(json.dumps(dict(event='daily_list_run_stopped', **job.failure_details(error),
                                   report=error.report)), flush=True)
         raise
     except job.LeaseBusy:
