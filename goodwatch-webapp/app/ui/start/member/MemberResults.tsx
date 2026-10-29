@@ -4,8 +4,12 @@
 import { Link } from "@remix-run/react"
 import { motion, useReducedMotion } from "framer-motion"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
-import { seeAllHref } from "../search/start-search"
-import { START_CARDS } from "../search/start-search"
+import { countText } from "../moods/mood-counts"
+import {
+	type ResultsScope,
+	START_CARDS,
+	seeAllHref,
+} from "../search/start-search"
 import {
 	type StartQuery,
 	type StartResults,
@@ -28,11 +32,14 @@ const LINK =
 export function MemberResults({
 	query,
 	results,
+	scope,
 	onBack,
 	onRetry,
 }: {
 	query: Pick<StartQuery, "text" | "picks">
 	results: StartResults
+	/** The results' services scope (start-search.ts, `resultsScope`), the same as the mood picker's counts. */
+	scope: ResultsScope
 	onBack: () => void
 	onRetry: () => void
 }) {
@@ -46,7 +53,7 @@ export function MemberResults({
 		: ready
 			? cards.length
 				? results.total !== null
-					? `${results.total.toLocaleString("en-US")} ${results.total === 1 ? "title" : "titles"}`
+					? countText(results.total, scope)
 					: "Results"
 				: "Nothing matches this search."
 			: "Searching…"

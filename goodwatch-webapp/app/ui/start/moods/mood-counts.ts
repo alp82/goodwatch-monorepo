@@ -9,7 +9,6 @@
 // services").
 import { WORDS, type WordKind } from "~/domain/taste-picker"
 import type { DiscoverResults } from "~/server/discover-results.server"
-import { titleCount } from "~/ui/watch-next/labels"
 import type { TitleKey } from "~/utils/title-key"
 import { type ResultsScope, resultsPath } from "../search/start-search"
 import {
@@ -20,9 +19,15 @@ import {
 
 export type CountScope = ResultsScope
 
-/** "N titles", or "N on your services" with scope `mine`. */
-export const countText = (n: number, scope: CountScope) =>
-	scope === "mine" ? `${n} on your services` : titleCount(n)
+/**
+ * "N titles", or "N on your services" with scope `mine`: the mood picker's counts and the member's results line, so
+ * both say the same scope.
+ */
+export function countText(n: number, scope: CountScope): string {
+	const count = n.toLocaleString("en-US")
+	if (scope === "mine") return `${count} on your services`
+	return `${count} ${n === 1 ? "title" : "titles"}`
+}
 
 const PARAM: Record<WordKind, "moods" | "themes" | "styles"> = {
 	mood: "moods",

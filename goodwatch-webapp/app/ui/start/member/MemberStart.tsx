@@ -75,6 +75,7 @@ export function MemberStart({
 						<MemberResults
 							query={start.query}
 							results={results}
+							scope={results.scope}
 							onBack={() => {
 								start.clearSearch()
 								start.clearPicks()

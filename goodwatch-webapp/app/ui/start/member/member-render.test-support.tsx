@@ -4,7 +4,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderToString } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
+import {
+	IDLE_RESULTS,
+	type StartResults,
+	querySignature,
+} from "../stage/start-query"
 import { DoorSection, ReservedRoom } from "./Doors"
+import { MemberResults } from "./MemberResults"
 import { MemberStart } from "./MemberStart"
 import { type DoorKey, doorsOf, reserveOf } from "./doors"
 import type { MemberStartData, MemberStartLater } from "./member-data"
@@ -74,6 +80,31 @@ function sectionStates(base: MemberStartData, key: DoorKey) {
 	}
 }
 
+/** A member's results line for a search that found 1,234 titles, in each services scope. */
+function resultsLine(scope: "any" | "mine") {
+	const query = { text: "space", picks: [] }
+	const results: StartResults = {
+		...IDLE_RESULTS,
+		status: "ready",
+		signature: querySignature(query),
+		cards: (FULL.wishlist?.titles ?? []).slice(0, 4),
+		total: 1234,
+	}
+	return renderToString(
+		<QueryClientProvider client={new QueryClient()}>
+			<MemoryRouter>
+				<MemberResults
+					query={query}
+					results={results}
+					scope={scope}
+					onBack={() => {}}
+					onRetry={() => {}}
+				/>
+			</MemoryRouter>
+		</QueryClientProvider>,
+	)
+}
+
 console.log(
 	`__MEMBER_START_RENDER__${JSON.stringify({
 		...Object.fromEntries(
@@ -85,6 +116,7 @@ console.log(
 			const never = new Promise<never>(() => {})
 			return render(data, { forYou: never, hot: never })
 		})(),
+		results: { any: resultsLine("any"), mine: resultsLine("mine") },
 		sections: {
 			hot: sectionStates(FULL, "hot"),
 			forYou: sectionStates(FULL, "forYou"),

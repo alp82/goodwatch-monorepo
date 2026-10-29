@@ -21,9 +21,10 @@ const rendered = JSON.parse(
 		.at(-1) ?? "",
 ) as Record<Member, string> & {
 	sections: Record<"hot" | "forYou" | "forming", Section>
+	results: Record<"any" | "mine", string>
 }
 
-const { sections, ...pages } = rendered
+const { sections, results, ...pages } = rendered
 const all = Object.entries(pages) as [Member, string][]
 
 /** The doors in their order, and which one is open. */
@@ -209,4 +210,9 @@ test("a door whose list comes later keeps one room from the skeleton to every an
 	// A full answer has the titles and, where the list has them, the chips the room kept a row for.
 	assert.match(sections.forYou.full, /<legend class="sr-only">Filter<\/legend>/)
 	assert.match(sections.hot.full, /New trailer · today/)
+})
+
+test("the results line says the services scope as the mood picker's counts do", () => {
+	assert.match(results.any, /aria-live="polite">1,234 titles<\/h2>/)
+	assert.match(results.mine, /aria-live="polite">1,234 on your services<\/h2>/)
 })

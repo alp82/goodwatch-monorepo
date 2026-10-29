@@ -77,6 +77,8 @@ test("the counts' wording follows the results' scope", () => {
 	assert.equal(countText(1, "any"), "1 title")
 	assert.equal(countText(12, "any"), "12 titles")
 	assert.equal(countText(12, "mine"), "12 on your services")
+	assert.equal(countText(1234, "any"), "1,234 titles")
+	assert.equal(countText(1234, "mine"), "1,234 on your services")
 })
 
 test("one counts request: the results request's own query, with the picks by kind, the scope, and the search's ranked list", () => {
