@@ -18,7 +18,7 @@ import { episodeLabel } from "~/domain/tracking/machine"
 import type { ShowView } from "~/domain/tracking/show-page"
 import type { MenuEntry, MenuEntryId } from "~/domain/tracking/status-menu"
 import { EPISODE_GRID_ANCHOR } from "~/ui/details/episode-grid/scale"
-import { HALF_FOCUS } from "~/ui/details/hero/seen-score-faces"
+import { HALF_FOCUS, LEFT_HALF } from "~/ui/details/hero/seen-score-faces"
 import { NESTED_OVERLAY } from "~/ui/overlay"
 import { ActionButton } from "~/ui/title-actions/ActionButton"
 import { RATE_DUE_EVENT, SCORE_SAVED_EVENT } from "~/ui/title-actions/SeenScore"
@@ -187,12 +187,12 @@ export function StatusPill({
 	if (derived.state === "not_started") return null
 	if (!withNotStarted(view.menu, view).length)
 		return (
-			<span data-status-pill className="flex h-full rounded-l-xl">
+			<span data-status-pill className={`flex h-full ${LEFT_HALF}`}>
 				{face}
 			</span>
 		)
 	return (
-		<div ref={root} className="relative flex h-full">
+		<div ref={root} className={`relative flex h-full ${LEFT_HALF}`}>
 			<button
 				ref={pillButton}
 				type="button"
@@ -201,7 +201,7 @@ export function StatusPill({
 				aria-expanded={open}
 				aria-label={`Status: ${derived.label}. Change it`}
 				onClick={() => (open ? close() : setOpen(true))}
-				className={`flex h-full cursor-pointer rounded-l-xl hover:brightness-110 ${HALF_FOCUS}`}
+				className={`flex h-full cursor-pointer hover:brightness-110 ${LEFT_HALF} ${HALF_FOCUS}`}
 			>
 				{face}
 			</button>
