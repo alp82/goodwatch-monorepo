@@ -329,6 +329,10 @@ async function main() {
               }
               entry[device] = summarizeLighthouse(reports);
               entry[device].attempted = o.runs;
+              if (entry[device].runs < o.runs)
+                entry.errors.push(
+                  `${device}: ${entry[device].runs}/${o.runs} complete reports; ${entry[device].errors.join(", ") || "process failure"}`,
+                );
               await save();
             }
           if (o.psi && p.tier === "P1" && !o.verify) {
