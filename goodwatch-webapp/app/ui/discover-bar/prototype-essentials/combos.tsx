@@ -672,7 +672,6 @@ function OrderB({
 		>
 			<Tip
 				off={level === 2}
-				grow
 				tip={
 					<TipText
 						name="For you"
@@ -688,16 +687,16 @@ function OrderB({
 					aria-label="For you"
 					whileTap={TAP}
 					onClick={() => !forYou.disabled && forYou.onChange(!forYou.on)}
-					className={`${SEG} flex-1 rounded-l-xl ${FOCUS} ${level === 2 ? "justify-between gap-3 pr-3 pl-3.5" : level === 1 ? "justify-between pr-3 pl-3" : "pr-2 pl-3"} ${lit ? "text-white" : "text-gray-400 hover:bg-white/[0.04] hover:text-gray-200"}`}
+					className={`${SEG} rounded-l-xl ${FOCUS} gap-2 ${level === 0 ? "pr-2 pl-3" : "pr-1 pl-3.5"} ${lit ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
 				>
 					<span className="flex items-center gap-2">
 						<MainIcon kind="you" lit={lit} />
 						{level === 2 && <span className="text-sm">For you</span>}
 					</span>
-					<span className="flex items-center gap-2.5">
+					<span className="flex items-center gap-2">
 					{level === 2 && (
 						<span
-							className={`w-9 text-right text-xs tabular-nums ${moved ? "text-amber-300" : "text-transparent"}`}
+							className={`w-9 text-left text-xs tabular-nums ${moved ? "text-amber-300" : "text-transparent"}`}
 							title={moved ? `${moved.toLocaleString("en")} moved up` : undefined}
 						>
 							<span aria-hidden>{moved ? `↑${compactCount(moved)}` : ""}</span>
@@ -709,7 +708,10 @@ function OrderB({
 					<BaseLine on={lit} color="bg-amber-400" />
 				</motion.button>
 			</Tip>
-			<span className="my-2.5 w-px shrink-0 bg-white/10" aria-hidden />
+			{/* Only the divider moves: centered in whatever the sort's name leaves free. */}
+			<div className={`flex min-w-0 flex-1 justify-center ${level === 0 ? "" : "min-w-5"}`} aria-hidden>
+				<span className="my-2.5 w-px bg-white/10" />
+			</div>
 			<Tip
 				off={level > 0}
 				align="end"
@@ -718,9 +720,9 @@ function OrderB({
 				<div
 					className={`flex [&_[data-sort-button]]:h-10 [&_[data-sort-button]]:rounded-l-none [&_[data-sort-button]]:rounded-r-xl [&_[data-sort-button]>span.relative]:flex-none ${
 						level === 2
-							? "[&_[data-sort-button]]:pl-3"
+							? "[&_[data-sort-button]]:pl-1"
 							: level === 1
-								? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]]:px-3"
+								? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]]:pr-3 [&_[data-sort-button]]:pl-1"
 								: "[&_[data-sort-button]>span]:hidden [&_[data-sort-button]]:px-3"
 					}`}
 				>
@@ -738,7 +740,7 @@ function OrderB({
 }
 
 /** The pill's width per size (0: as wide as its content), from the longest sort name. */
-const ORDER_WIDTH: Record<Level, number> = { 2: 384, 1: 220, 0: 0 }
+const ORDER_WIDTH: Record<Level, number> = { 2: 384, 1: 216, 0: 0 }
 
 /** Each sort's own icon (menu, and the button below full size). */
 const SORT_ICONS: Record<string, import("react").ComponentType<{ className?: string }>> = {
