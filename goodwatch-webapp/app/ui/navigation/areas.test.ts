@@ -77,6 +77,24 @@ test("areaKeys: Taste leads to the profile, or /taste without a handle", () => {
 	assert.equal(areaKeys(GUEST)[2].href, "/taste")
 })
 
+test("the third key says Profile, and every tab of every area has an icon", () => {
+	assert.deepEqual(
+		areaKeys(ANA).map((a) => a.label),
+		["Watch", "Explore", "Profile"],
+	)
+	const rows = [
+		watchTabs("/watch"),
+		exploreTabs("/discover"),
+		tasteRow({ pathname: "/u/ana", viewer: ANA })?.tabs ?? [],
+		tasteRow({ pathname: "/u/bo", viewer: ANA })?.trailing ?? [],
+		tasteRow({ pathname: "/taste", viewer: GUEST })?.tabs ?? [],
+	]
+	for (const tabs of rows) {
+		assert.ok(tabs.length > 0)
+		for (const tab of tabs) assert.ok(tab.icon, tab.key)
+	}
+})
+
 test("Watch: tabs, the To watch | Seen switch and the chips for every page", () => {
 	const cases: [string, string, "to-watch" | "seen" | null, string | null][] = [
 		["/watch", "up-next", "to-watch", "next-episodes"],
@@ -193,7 +211,7 @@ test("Taste row, owner: five tabs, the gear, the current tab per page", () => {
 		assert.deepEqual(hereOf(row.tabs), here, path)
 		assert.deepEqual(
 			row.tabs.map((t) => t.label),
-			["Taste profile", "Tropes", "Scores", "Stats", "Lists"],
+			["Taste", "Tropes", "Scores", "Stats", "Lists"],
 		)
 		assert.deepEqual(row.trailing, [])
 		assert.deepEqual(
@@ -266,20 +284,27 @@ test("Taste row: visible and mark narrow the tabs; marks show to the owner only"
 	assert.equal(visitor?.tabs.at(-1)?.mark, undefined)
 })
 
-test("Taste row without a profile: Taste profile → /taste, Rate more → /taste/quiz, the gear for members", () => {
+test("Profile row without a profile: Taste → /taste, Rate more → /taste/quiz, Lists, the gear for members", () => {
 	for (const [path, viewer, here, gear] of [
 		["/taste", NO_HANDLE, "profile", { href: "/settings", here: false }],
 		["/taste/quiz", NO_HANDLE, "rate", { href: "/settings", here: false }],
 		["/settings/profile", NO_HANDLE, null, { href: "/settings", here: true }],
+		["/lists/mine", NO_HANDLE, "lists", { href: "/settings", here: false }],
 		["/taste", GUEST, "profile", null],
 		["/taste/quiz", GUEST, "rate", null],
+		["/lists/new", GUEST, "lists", null],
 	] as const) {
 		const row = tasteRow({ pathname: path, viewer })
 		assert.ok(row, path)
 		assert.equal(row.handle, null)
+		assert.equal(row.label, "Profile")
 		assert.deepEqual(
-			row.tabs.map((t) => t.href),
-			["/taste", "/taste/quiz"],
+			row.tabs.map((t) => [t.label, t.href]),
+			[
+				["Taste", "/taste"],
+				["Rate more", "/taste/quiz"],
+				["Lists", viewer === GUEST ? "/lists/new" : "/lists/mine"],
+			],
 		)
 		assert.deepEqual(hereOf(row.tabs), here ? [here] : [], path)
 		assert.deepEqual(row.gear, gear, path)

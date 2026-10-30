@@ -16,7 +16,7 @@ async function routeLoader(route: string, viewer: PathViewer) {
 	const app = path.resolve("app")
 	const user = viewer.kind === "member" ? { id: "session-member" } : null
 	const modules: Record<string, string> = {
-		"~/utils/auth": `export const getUserIdFromRequest = async () => ${JSON.stringify(user?.id)}; export const getUserFromRequest = async () => (${JSON.stringify(user)})`,
+		"~/utils/auth": `export const getUserIdFromRequest = async () => ${JSON.stringify(user?.id)}; export const getUserFromRequest = async () => (${JSON.stringify(user)}); export const useUser = () => ({})`,
 		"~/server/share-lists/view.server": `export const getCachedProfileByUserId = async id => { if (id !== 'session-member') throw Error('wrong user'); return ${JSON.stringify(viewer.kind === "member" ? { handle: viewer.handle } : null)} }`,
 		"~/server/media-payload.server":
 			"export const presentCatalogLoader = load => load",
@@ -29,6 +29,15 @@ async function routeLoader(route: string, viewer: PathViewer) {
 			"export const prefetchUserSettings = async () => {}",
 		"@tanstack/react-query":
 			"export class QueryClient {}; export const dehydrate = () => ({})",
+		// The list editor's loader (lists.new.tsx): what it reads after the redirect check.
+		"~/server/share-lists/prefill.server":
+			"export const prefillTitles = async t => t; export const topRatedEntries = async () => []",
+		"~/server/share-lists/remix.server":
+			"export const getRemixSource = async () => null",
+		"~/server/share-lists/titles.server":
+			"export const getQuickPicks = async () => []; export const parseTitleKey = () => null; export const resolveCardTitles = async () => []",
+		"~/ui/share-card/model":
+			"export const LIST_PROMPTS = [{ title: 'Top 5' }]; export const DEFAULT_PROMPT_ID = 'top'; export const DEFAULT_THEME = 'amber'; export const GUEST_BYLINE = 'you'; export const cardDate = () => 'today'; export const listByline = h => '@' + h",
 	}
 	const result = await build({
 		stdin: {
@@ -251,4 +260,51 @@ test("Taste section fragments survive the next member redirect by browser fragme
 test("Lists mine stays with its existing resolver", () => {
 	for (const [, viewer] of viewers)
 		assert.equal(oldToNew("/lists/mine", "?from=menu", viewer), null)
+})
+
+test("the new-list editor lives in the owner's profile; guests and members without a handle keep /lists/new", async () => {
+	const cases: [string, string, PathViewer, string | null][] = [
+		[
+			"lists.new.tsx",
+			"/lists/new?remix=abc&share=1",
+			member("ana"),
+			"/u/ana/lists/new?remix=abc&share=1",
+		],
+		["lists.new.tsx", "/lists/new?from=ratings", GUEST, null],
+		["lists.new.tsx", "/lists/new", member(null), null],
+		["u.$handle.lists.new.tsx", "/u/ana/lists/new", member("ana"), null],
+		["u.$handle.lists.new.tsx", "/u/Ana/lists/new", member("ana"), null],
+		[
+			"u.$handle.lists.new.tsx",
+			"/u/bo/lists/new?remix=x",
+			member("ana"),
+			"/u/ana/lists/new?remix=x",
+		],
+		[
+			"u.$handle.lists.new.tsx",
+			"/u/ana/lists/new?remix=x",
+			member(null),
+			"/lists/new?remix=x",
+		],
+		["u.$handle.lists.new.tsx", "/u/ana/lists/new", GUEST, "/lists/new"],
+	]
+	for (const [route, address, viewer, to] of cases) {
+		const url = new URL(address, "https://goodwatch.app")
+		const move = oldToNew(url.pathname, url.search, viewer)
+		assert.equal(move?.to ?? null, to, address)
+		const loader = await routeLoader(route, viewer)
+		const response: Response = await loader({
+			request: new Request(url),
+			params: { handle: url.pathname.split("/")[2] },
+			context: {},
+		})
+		if (!to) {
+			assert.equal(response.status, 200, address)
+			continue
+		}
+		assert.equal(response.status, 302, address)
+		assert.equal(response.headers.get("Location"), to, address)
+		assert.equal(response.headers.get("Cache-Control"), "private, no-store")
+		assert.equal(response.headers.get("Vary"), "Cookie")
+	}
 })

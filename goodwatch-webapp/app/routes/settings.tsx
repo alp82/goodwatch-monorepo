@@ -89,6 +89,8 @@ export default function Settings() {
 				<ProfileChrome
 					shell={header.shell as ProfileHeaderData["shell"]}
 					identity={header.identity}
+					print={header.print}
+					posters={header.posters}
 					pathname={pathname}
 					search={search}
 				/>

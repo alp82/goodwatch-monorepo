@@ -135,9 +135,19 @@ export const tastePath = (
 	query?: Query,
 ) => withQuery(`/u/${handle}${TASTE_SUFFIX[tab]}`, query)
 
-/** One of a profile's Top 5 lists. It sits outside the profile layout and links back to Lists. */
+/** One of a profile's Top 5 lists, under the profile header with the Lists tab lit. */
 export const tasteListPath = (handle: string, id: string) =>
 	`/u/${handle}/lists/${id}`
+
+/** A Top 5 list's editor, inside the profile like the list. */
+export const tasteListEditPath = (handle: string, id: string) =>
+	`${tasteListPath(handle, id)}/edit`
+
+/** The editor for a new list, inside the owner's profile. Guests and members without a handle use `/lists/new`. */
+export const tasteNewListPath = (handle: string) => `/u/${handle}/lists/new`
+
+/** The new-list editor outside a profile: guests (their draft lives in the browser) and members without a handle. */
+export const NEW_LIST_FALLBACK_PATH = "/lists/new"
 
 /** Taste for guests and members without a handle: the taste page that lives in the browser for guests. */
 export const TASTE_FALLBACK_PATH = "/taste"
@@ -354,6 +364,20 @@ export function oldToNew(
 
 	if (path === "/taste/quiz")
 		return handle ? personal(carry(tastePath(handle, "rate"), params)) : null
+
+	// The list editor moved into the profile; ?remix, ?from=ratings and ?share=1 come along.
+	if (path === NEW_LIST_FALLBACK_PATH)
+		return handle ? personal(carry(tasteNewListPath(handle), params)) : null
+
+	// Someone else's new-list address leads to your own editor (or the one outside a profile).
+	const newList = /^\/u\/([^/]+)\/lists\/new$/.exec(path)
+	if (newList) {
+		if (handle && sameHandle(handle, decodeURIComponent(newList[1])))
+			return null
+		return personal(
+			carry(handle ? tasteNewListPath(handle) : NEW_LIST_FALLBACK_PATH, params),
+		)
+	}
 
 	if (path === "/wishlist")
 		return personal(

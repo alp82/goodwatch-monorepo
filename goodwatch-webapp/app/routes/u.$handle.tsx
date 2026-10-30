@@ -1,6 +1,6 @@
-// The Taste area on a member's profile: /u/:handle and its tabs. The profile header and the Taste row stay put while
+// The Profile area on a member's profile: /u/:handle and its tabs. The profile header and the Profile row stay put while
 // the tabs change under them (the Outlet). Handles are permanent: a differently cased handle redirects to the lowercase
-// one, unknown and deleted handles answer 404. The share list pages (/u/:handle/lists/:id) sit outside this layout.
+// one, unknown and deleted handles answer 404. List pages (/u/:handle/lists/new, /:id, /:id/edit) render inside it.
 // Spec: docs/implementation/member-profile/README.md
 import {
 	type LoaderFunctionArgs,
@@ -14,11 +14,11 @@ import {
 	useLocation,
 	useRouteLoaderData,
 } from "@remix-run/react"
-import { profileCacheControl } from "~/server/profile/page.server"
 import {
 	type ProfileHeaderData,
 	loadProfileHeader,
 } from "~/server/profile/header.server"
+import { profileCacheControl } from "~/server/profile/page.server"
 import { ProfileChrome } from "~/ui/profile/ProfileHeader"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -59,13 +59,17 @@ export function useProfileLayout() {
 }
 
 export default function ProfileLayout() {
-	const { shell, identity } = useLoaderData<typeof loader>() as ProfileLayoutData
+	const { shell, identity, print, posters } = useLoaderData<
+		typeof loader
+	>() as ProfileLayoutData
 	const { pathname, search } = useLocation()
 	return (
 		<main className="min-h-screen overflow-x-clip text-white">
 			<ProfileChrome
 				shell={shell}
 				identity={identity}
+				print={print}
+				posters={posters}
 				pathname={pathname}
 				search={search}
 			/>

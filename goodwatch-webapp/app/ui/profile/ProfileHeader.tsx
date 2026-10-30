@@ -1,8 +1,12 @@
-// The top of the Taste area: the profile header (picture, @handle, viewer type, a few counts, and for the owner "Your
-// view | View as visitor") and the Taste tab row under it. It has one height on every tab and on Settings, so moving
-// between them never shifts the page. A member without a handle gets a strip of the same height that asks for one.
-import { EyeIcon, UserCircleIcon } from "@heroicons/react/24/outline"
+// The top of the Profile area: the profile header (picture, @handle, viewer type, a few counts, Share, and for the
+// owner a way to view the profile as visitors see it) and the Profile tab row under it. The header has one height on
+// every tab, list page and Settings page, so moving between them never shifts the page. A member without a handle gets
+// a strip of the same height that asks for one.
+// PROTOTYPE OPTIONS (member nav, round 8): the header layout (`header`) and View as visitor (`visitor`) come from
+// nav-options.ts; the layouts are in header/Layouts.tsx and the visitor controls in header/VisitorView.tsx.
+import { UserCircleIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
+import { EDIT_PROFILE_PATH, type PathViewer } from "~/domain/member-paths"
 import {
 	AUDIENCES,
 	type Audience,
@@ -10,20 +14,28 @@ import {
 	canSee,
 	seesPart,
 } from "~/domain/profile"
-import {
-	EDIT_PROFILE_PATH,
-	type PathViewer,
-	tastePath,
-} from "~/domain/member-paths"
-import { type TasteTabKey, tasteRow } from "~/ui/navigation/areas"
-import { TasteTabs } from "~/ui/navigation/AreaTabs"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
-import { ProfileAvatar } from "./ProfileFrame"
+import { TasteTabs } from "~/ui/navigation/AreaTabs"
+import { type TasteTabKey, tasteRow } from "~/ui/navigation/areas"
+import { useNavOptions } from "~/ui/navigation/nav-options"
+import {
+	BOX,
+	type HeaderLook,
+	type HeaderProps,
+	LAYOUTS,
+} from "./header/Layouts"
+import {
+	EyeKey,
+	PreviewItem,
+	TAB_ROW_TINT,
+	VisitorBadge,
+	VisitorBar,
+	VisitorSwitch,
+	viewSwitchHref,
+} from "./header/VisitorView"
+import { AMBER_BUTTON } from "./parts"
 import { PROFILE_TAB_PARTS, type ProfileTab } from "./paths"
-import { AMBER_BUTTON, QUIET_BUTTON, ShareButton, count, posterUrl } from "./parts"
-
-/** The header's one height: one row on phones, a taller row from sm up. The handle strip uses it too. */
-const HEADER_BOX = "h-[88px] sm:h-[120px]"
+import type { WhorlAttribute } from "./taste/Whorl"
 
 /**
  * The shell as a signed-out visitor sees it: the owner's own shell with every part guests may not see emptied. The
@@ -80,186 +92,23 @@ function audienceOf(shell: ProfileShell, tab: TasteTabKey): Audience {
 		)
 }
 
-/**
- * Where "Your view | View as visitor" leads from this page. The owner-only pages (Not rated, Rate more) have no
- * visitor view, so they switch to Scores; the visitors-only tabs (Seen, Wishlist, Shows) switch back to the profile.
- */
-function viewSwitchHref(handle: string, pathname: string, toVisitor: boolean) {
-	const query = toVisitor ? { as: "visitor" } : undefined
-	// Off the profile (Settings): the profile itself.
-	if (!/^\/u\/[^/]+/.test(pathname)) return tastePath(handle, "profile", query)
-	const rest = pathname.replace(/^\/u\/[^/]+/, "").replace(/\/$/, "")
-	if (toVisitor && rest.startsWith("/scores/"))
-		return tastePath(handle, "scores", query)
-	if (!toVisitor && ["/seen", "/wishlist", "/shows"].includes(rest))
-		return tastePath(handle)
-	return `/u/${handle}${rest}${toVisitor ? "?as=visitor" : ""}`
-}
-
-const SEG_TRACK =
-	"inline-flex shrink-0 rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10"
-const seg = (on: boolean) =>
-	`flex h-9 shrink-0 items-center whitespace-nowrap rounded-full px-3.5 text-sm transition-colors ${
-		on ? "bg-white font-bold text-gray-950" : "text-gray-300 hover:text-white"
-	}`
-
-function ViewSwitch({
-	handle,
-	pathname,
-	asVisitor,
-}: { handle: string; pathname: string; asVisitor: boolean }) {
-	const own = viewSwitchHref(handle, pathname, false)
-	const visitor = viewSwitchHref(handle, pathname, true)
-	return (
-		<>
-			<nav aria-label="Whose view" className={`${SEG_TRACK} max-sm:hidden`}>
-				<Link
-					to={own}
-					replace
-					preventScrollReset
-					aria-current={asVisitor ? undefined : "page"}
-					className={seg(!asVisitor)}
-				>
-					Your view
-				</Link>
-				<Link
-					to={visitor}
-					replace
-					preventScrollReset
-					aria-current={asVisitor ? "page" : undefined}
-					className={seg(asVisitor)}
-				>
-					View as visitor
-				</Link>
-			</nav>
-			{/* Phones: one key, so the header stays one row. */}
-			<Link
-				to={asVisitor ? own : visitor}
-				replace
-				preventScrollReset
-				aria-label={asVisitor ? "Back to your view" : "View as visitor"}
-				aria-pressed={asVisitor}
-				className={`flex size-10 items-center justify-center rounded-full ring-1 sm:hidden ${
-					asVisitor
-						? "bg-amber-400/20 text-amber-200 ring-amber-400/50"
-						: "bg-white/[0.06] text-gray-300 ring-white/10"
-				}`}
-			>
-				<EyeIcon className="size-5" aria-hidden />
-			</Link>
-		</>
-	)
-}
-
-function Stat({ n, label, to }: { n: number; label: string; to?: string }) {
-	const inner = (
-		<>
-			<b className="font-bold text-gray-100 tabular-nums">{count(n)}</b> {label}
-		</>
-	)
-	return to ? (
-		<Link to={to} prefetch="intent" className="whitespace-nowrap hover:text-white">
-			{inner}
-		</Link>
-	) : (
-		<span className="whitespace-nowrap">{inner}</span>
-	)
-}
-
-/**
- * The profile header. `shell` is the shell as the viewer sees it (for the owner's visitor view, `asGuestSees`), and
- * `owner` says the viewer owns the profile, so the view switch shows in both views.
- */
-export function ProfileHeader({
-	shell,
-	identity,
-	owner,
-	asVisitor,
-	pathname,
-}: {
-	shell: ProfileShell
-	/** The viewer type ("Restless Romantic Dreamer"), when the viewer may see the taste. */
-	identity: string | null
-	owner: boolean
-	asVisitor: boolean
-	pathname: string
-}) {
-	const c = shell.counts
-	const see = (part: Parameters<typeof seesPart>[1]) => seesPart(shell, part)
-	const query = asVisitor ? { as: "visitor" } : undefined
-	return (
-		<header className="relative isolate shrink-0 overflow-hidden" data-profile-header>
-			{shell.cover && (
-				<img
-					src={posterUrl(shell.cover.backdrop, "w780") ?? ""}
-					alt=""
-					className="absolute inset-0 -z-10 h-full w-full object-cover object-[center_30%] opacity-20"
-				/>
-			)}
-			<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-950 via-gray-950/85 to-gray-950/50" />
-			<div className={`${WRAP} ${HEADER_BOX} flex items-center gap-3 sm:gap-5`}>
-				<div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-					<span className="sm:hidden">
-						<ProfileAvatar handle={shell.handle} avatar={shell.avatar} size="sm" />
-					</span>
-					<span className="max-sm:hidden">
-						<ProfileAvatar handle={shell.handle} avatar={shell.avatar} size="md" />
-					</span>
-					<div className="min-w-0 flex-1">
-						<h1
-							className={`${DISPLAY} truncate text-xl leading-tight text-white sm:text-3xl`}
-						>
-							@{shell.handle}
-						</h1>
-						{identity && (
-							<p className="truncate text-sm font-semibold text-violet-200">
-								{identity}
-							</p>
-						)}
-						<p className="mt-0.5 flex gap-x-3 overflow-hidden text-xs text-gray-400 sm:mt-1 sm:text-sm">
-							{see("seen") && <Stat n={c.seen} label="seen" />}
-							{see("scores") && (
-								<Stat
-									n={c.rated}
-									label="scores"
-									to={tastePath(shell.handle, "scores", query)}
-								/>
-							)}
-							{see("lists") && (
-								<Stat
-									n={c.lists}
-									label={c.lists === 1 ? "list" : "lists"}
-									to={tastePath(shell.handle, "lists", query)}
-								/>
-							)}
-							{see("hours") && (
-								<Stat n={Math.round(c.hours / 24)} label="days watched" />
-							)}
-						</p>
-					</div>
-				</div>
-				<div className="flex shrink-0 items-center gap-2">
-					{owner ? (
-						<ViewSwitch
-							handle={shell.handle}
-							pathname={pathname}
-							asVisitor={asVisitor}
-						/>
-					) : (
-						<ShareButton handle={shell.handle} className={QUIET_BUTTON} compact />
-					)}
-				</div>
-			</div>
-		</header>
-	)
+/** The profile header in the layout the options pick (header/Layouts.tsx). */
+export function ProfileHeader(props: HeaderProps & { look: HeaderLook }) {
+	const Layout = LAYOUTS[props.look]
+	return <Layout {...props} />
 }
 
 /** In place of the profile header for a member without a handle: the same height, and the way to pick one. */
 export function HandleStrip() {
+	const { header: look } = useNavOptions()
 	return (
-		<header className="relative isolate shrink-0 overflow-hidden" data-profile-header>
+		<header
+			className={`relative isolate shrink-0 overflow-hidden ${BOX[look]}`}
+			data-profile-header={look}
+			data-handle-strip
+		>
 			<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-950 via-gray-950/85 to-gray-900/60" />
-			<div className={`${WRAP} ${HEADER_BOX} flex items-center gap-3 sm:gap-5`}>
+			<div className={`${WRAP} flex h-full items-center gap-3 sm:gap-5`}>
 				<UserCircleIcon
 					className="size-11 shrink-0 text-gray-500 sm:size-16"
 					aria-hidden
@@ -274,7 +123,11 @@ export function HandleStrip() {
 						Pick a handle to get a profile you can share.
 					</p>
 				</div>
-				<Link to={EDIT_PROFILE_PATH} prefetch="intent" className={`${AMBER_BUTTON} shrink-0`}>
+				<Link
+					to={EDIT_PROFILE_PATH}
+					prefetch="intent"
+					className={`${AMBER_BUTTON} shrink-0`}
+				>
 					Pick your handle
 				</Link>
 			</div>
@@ -283,24 +136,32 @@ export function HandleStrip() {
 }
 
 /**
- * The profile header and the Taste row. `shell` is the real one (the owner's own on their profile); with `asVisitor`
- * the header and the tabs show what a signed-out visitor sees.
+ * The profile header and the Profile row. `shell` is the real one (the owner's own on their profile); with
+ * ?as=visitor the header and the tabs show what a signed-out visitor sees. Settings never has the visitor view.
  */
 export function ProfileChrome({
 	shell,
 	identity,
+	print = null,
+	posters = [],
 	pathname,
 	search,
 }: {
 	shell: ProfileShell
 	/** The viewer type, from the owner's taste; shown when the viewer may see the taste. */
 	identity: string | null
+	/** The taste print, under the same rule. */
+	print?: WhorlAttribute[] | null
+	/** The best scored posters; shown when the viewer may see the scores. */
+	posters?: string[]
 	pathname: string
 	search: string
 }) {
+	const options = useNavOptions()
 	const owner = shell.viewer === "owner"
+	const onProfile = /^\/u\/[^/]+/.test(pathname)
 	const asVisitor =
-		owner && new URLSearchParams(search).get("as") === "visitor"
+		owner && onProfile && new URLSearchParams(search).get("as") === "visitor"
 	const view = asVisitor ? asGuestSees(shell) : shell
 	const viewer: PathViewer = owner
 		? { kind: "member", handle: shell.handle }
@@ -321,16 +182,49 @@ export function ProfileChrome({
 			return audience === "everyone" ? undefined : audience
 		},
 	})
+
+	// The owner's way to view as a visitor: on the profile's pages only, never on Settings.
+	const visitor = owner && onProfile ? options.visitor : null
+	const links = {
+		own: viewSwitchHref(shell.handle, pathname, false),
+		visitor: viewSwitchHref(shell.handle, pathname, true),
+		on: asVisitor,
+	}
+	const props: HeaderProps = {
+		shell: view,
+		identity: seesPart(view, "taste") ? identity : null,
+		print: seesPart(view, "taste") ? print : null,
+		posters: seesPart(view, "scores") ? posters : [],
+		query: asVisitor ? { as: "visitor" } : undefined,
+		control:
+			visitor === "bar" ? ( // OPTION visitor=bar
+				<EyeKey {...links} />
+			) : visitor === "switch" ? ( // OPTION visitor=switch
+				<VisitorSwitch {...links} />
+			) : null,
+		edit: options.header === "card" && owner && !asVisitor,
+		badge: visitor === "switch" && asVisitor ? <VisitorBadge /> : null,
+		ring: visitor === "bar" && asVisitor,
+		tint: visitor === "switch" && asVisitor,
+	}
+	const tintRow = asVisitor && (visitor === "switch" || visitor === "preview")
 	return (
 		<>
-			<ProfileHeader
-				shell={view}
-				identity={seesPart(view, "taste") ? identity : null}
-				owner={owner}
-				asVisitor={asVisitor}
-				pathname={pathname}
-			/>
-			{row && <TasteTabs row={row} />}
+			{visitor === "bar" && asVisitor && <VisitorBar own={links.own} />}
+			<ProfileHeader {...props} look={options.header} />
+			{row && (
+				// `contents` keeps the row a sticky child of the page while the wrapper tints it.
+				<div className={`contents ${tintRow ? TAB_ROW_TINT : ""}`}>
+					<TasteTabs
+						row={row}
+						before={
+							visitor === "preview" ? ( // OPTION visitor=preview
+								<PreviewItem {...links} />
+							) : undefined
+						}
+					/>
+				</div>
+			)}
 		</>
 	)
 }

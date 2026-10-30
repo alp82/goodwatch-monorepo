@@ -210,6 +210,7 @@ test("one edit apart: a letter wrong, missing, extra, or two swapped", () => {
 test("typing a page's name finds it first", () => {
 	assert.deepEqual(top(member, "settings"), ["settings"])
 	assert.deepEqual(top(member, "Taste"), ["taste"])
+	assert.deepEqual(top(member, "Profile"), ["taste"])
 	assert.deepEqual(top(member, "for you"), ["forYou"])
 	assert.deepEqual(top(member, "up next"), ["myShows"])
 	assert.deepEqual(top(member, "not interested"), ["notInterested"])

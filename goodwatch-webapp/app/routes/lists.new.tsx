@@ -1,5 +1,7 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
-// The editor for a new share list. ?remix=<list id> starts from another list's prompt and titles.
+// The editor for a new share list, for guests and members without a handle: /lists/new. Members with a handle make
+// theirs inside their profile, /u/:handle/lists/new (u.$handle.lists.new.tsx draws this page there), and are sent on.
+// ?remix=<list id> starts from another list's prompt and titles.
 // ?from=ratings starts from the person's highest-rated titles ("Share your top 5" on Taste): signed-in people's
 // come from their ratings, guests send their ranked ratings as ?titles=movie:603,show:1399.
 // A new list saves as a draft in this browser until it's shared; a visit that starts fresh doesn't restore it.
@@ -9,7 +11,7 @@ import {
 	type MetaFunction,
 	json,
 } from "@remix-run/node"
-import { useLoaderData, useSearchParams } from "@remix-run/react"
+import { useLoaderData, useLocation, useSearchParams } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import {
 	prefillTitles,
@@ -37,10 +39,19 @@ import { useShareFlow } from "~/ui/share-list-editor/ShareFlow"
 import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
 import { isComplete, readBrowserDraft } from "~/ui/share-list-editor/autosave"
 import type { ListDraft } from "~/ui/share-list-editor/list-state"
+import { GUEST, member, moveResponse, oldToNew } from "~/domain/member-paths"
+import { NoHandleChrome } from "~/ui/profile/ProfileHeader"
 import { getUserIdFromRequest, useUser } from "~/utils/auth"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
+
+/**
+ * The editor fills the screen under the header. Here the Profile row sits above it too (sticky under the header), so
+ * the editor is that much shorter: once the profile header scrolls away, the whole editor fits under the row.
+ */
+export const EDITOR_UNDER_ROW =
+	"[&>div:first-child]:h-[calc(100dvh-4rem-49px)] max-lg:[&>div:first-child]:h-[calc(100dvh-8rem-45px)]"
 
 const EMPTY_DRAFT: ListDraft = {
 	title: LIST_PROMPTS[0].title,
@@ -69,10 +80,18 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const remixId = params.get("remix")
 	const fromRatings = !remixId && params.get("from") === "ratings"
 	const userId = await getUserIdFromRequest({ request })
-	const [quickPicks, source, profile, rated] = await Promise.all([
+	const profile = userId ? await getCachedProfileByUserId(userId) : null
+	// /lists/new with a handle, or someone else's /u/:handle/lists/new: on to the viewer's own editor.
+	const url = new URL(request.url)
+	const move = oldToNew(
+		url.pathname,
+		url.search,
+		userId ? member(profile?.handle ?? null) : GUEST,
+	)
+	if (move) return moveResponse(move)
+	const [quickPicks, source, rated] = await Promise.all([
 		getQuickPicks(),
 		remixId ? getRemixSource(remixId, userId) : null,
-		userId ? getCachedProfileByUserId(userId) : null,
 		fromRatings ? ratedEntries(params, userId).then(prefillTitles) : [],
 	])
 	// A remix is a new list with the source's prompt, titles, design, and colors, signed by the viewer.
@@ -101,6 +120,9 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 			date: cardDate(new Date()),
 			// Cards are signed with the person's handle; guests see a placeholder until they share.
 			byline: profile ? listByline(profile.handle) : GUEST_BYLINE,
+			// A member without a handle gets the handle strip and the Profile row over the editor (SiteChrome draws
+			// the row for guests; the profile layout draws the chrome at /u/:handle/lists/new).
+			noHandle: userId != null && !profile?.handle,
 		},
 		{ headers: { "Cache-Control": "private, no-store" } },
 	)
@@ -120,8 +142,9 @@ export const meta: MetaFunction = () => {
 }
 
 export default function NewShareList() {
-	const { initial, startsFresh, quickPicks, date, byline } =
+	const { initial, startsFresh, quickPicks, date, byline, noHandle } =
 		useLoaderData<typeof loader>()
+	const { pathname, search } = useLocation()
 	// The browser draft is only readable after hydration; restoring it remounts the editor with the draft.
 	const [start, setStart] = useState<{ draft: ListDraft; restored: boolean }>({
 		draft: initial,
@@ -157,15 +180,18 @@ export default function NewShareList() {
 
 	return (
 		<>
-			<ShareListEditor
-				key={start.restored ? "restored" : "initial"}
-				initial={start.draft}
-				quickPicks={quickPicks}
-				date={date}
-				byline={byline}
-				saveTarget={{ kind: "draft" }}
-				share={flow.share}
-			/>
+			{noHandle && <NoHandleChrome pathname={pathname} search={search} />}
+			<div className={EDITOR_UNDER_ROW}>
+				<ShareListEditor
+					key={start.restored ? "restored" : "initial"}
+					initial={start.draft}
+					quickPicks={quickPicks}
+					date={date}
+					byline={byline}
+					saveTarget={{ kind: "draft" }}
+					share={flow.share}
+				/>
+			</div>
 			{flow.dialogs}
 		</>
 	)

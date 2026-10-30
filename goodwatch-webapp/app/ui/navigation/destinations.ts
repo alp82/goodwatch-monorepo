@@ -16,7 +16,7 @@ export type DestinationKey =
 	| "shows"
 	| "people"
 	| "explorer"
-	// The viewer's own Taste: their profile, or /taste without a handle.
+	// The viewer's own Profile (key "taste"): their profile, or /taste without a handle.
 	| "taste"
 
 /** Where a search for a query goes: Discover's search mode (`/search` redirects there too). */
@@ -40,7 +40,7 @@ const PREFIXES: [string, DestinationKey][] = [
 
 /**
  * The main place the page at `pathname` is; null for pages outside them (title pages, settings, someone else's
- * profile). `handle`: the viewer's own, whose profile is their Taste.
+ * profile). `handle`: the viewer's own, whose profile is their Profile area.
  */
 export function currentDestination(
 	pathname: string,

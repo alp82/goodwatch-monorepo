@@ -1,4 +1,4 @@
-// The phone dock (below the large breakpoint): the three area keys (Watch · Explore · Taste) in one track, and the
+// The phone dock (below the large breakpoint): the three area keys (Watch · Explore · Profile) in one track, and the
 // avatar outside it, which opens the account menu as a bottom sheet (Sign in for guests). For two pages after a person
 // left the living room through its TV, the TV button shows in a row above the keys. A page's filter strip renders its
 // complete dock through DockStrip; the strip then sits above the keys. The dock's height is published as
@@ -9,10 +9,8 @@ import { DockAccountKey, DockSignIn } from "~/ui/account/AccountKey"
 import { TvBackDockKey, useTvWayBack } from "~/ui/living-room/TvWayBackHost"
 import { useUser } from "~/utils/auth"
 import { useNavigation } from "./NavigationContext"
-import { useAreaKeys } from "./SiteHeader"
+import { KeyBadge, useAreaKeys } from "./SiteHeader"
 import { NewEpisodesMark } from "./bits"
-
-const count = (n: number) => n.toLocaleString("en-US")
 
 function DockKeys() {
 	const areas = useAreaKeys()
@@ -29,6 +27,9 @@ function DockKeys() {
 							prefetch="intent"
 							data-area-key={a.key}
 							aria-current={a.on ? "true" : undefined}
+							title={
+								a.badge && a.badge.show !== "none" ? a.badge.label : undefined
+							}
 							className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${
 								a.on
 									? "bg-amber-500/15 text-amber-200"
@@ -40,12 +41,7 @@ function DockKeys() {
 									className={`h-[22px] w-[22px] ${a.on ? "text-amber-300" : ""}`}
 									aria-hidden
 								/>
-								{a.badge && (
-									<span className="absolute -top-1.5 -right-3.5 rounded-full bg-amber-400 px-1 text-[10px] leading-4 font-black tabular-nums text-black">
-										{count(a.badge.n)}
-										<span className="sr-only"> {a.badge.label}</span>
-									</span>
-								)}
+								<KeyBadge badge={a.badge} variant="dock" />
 								<NewEpisodesMark
 									words={a.fresh ?? null}
 									className="absolute -top-2 -right-3.5"

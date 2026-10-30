@@ -1,7 +1,8 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
-// The editor for a saved share list: /u/:handle/lists/:id/edit. Only the owner can open it; everyone else goes to
-// the list page. A wrong or differently cased handle redirects to the canonical URL, and deleted lists answer 404.
-// The trailing underscores keep this route out of the profile and list page layouts.
+// The editor for a saved share list: /u/:handle/lists/:id/edit, inside the profile layout (the header and the Profile
+// row with Lists lit stay above it). Only the owner can open it; everyone else goes to the list page. A wrong or
+// differently cased handle redirects to the canonical URL, and deleted lists answer 404. The underscore after $id
+// keeps it out of the list page.
 import {
 	json,
 	type LoaderFunctionArgs,
@@ -25,6 +26,7 @@ import type { ListDraft } from "~/ui/share-list-editor/list-state"
 import { SharedNotice } from "~/ui/share-list-editor/ShareFlow"
 import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
 import { getUserIdFromRequest } from "~/utils/auth"
+import { EDITOR_UNDER_ROW } from "./lists.new"
 
 // A list or profile can come back (Undo, a restored account), so "not found" must never be cached.
 const notFound = () =>
@@ -89,21 +91,23 @@ export default function EditShareList() {
 	const path = shareListPath(handle, id)
 	return (
 		<>
-			<ShareListEditor
-				initial={initial}
-				quickPicks={quickPicks}
-				date={date}
-				byline={byline}
-				saveTarget={{ kind: "list", id }}
-				share={async () => {
-					// Make sure the card image is current before the link gets pasted somewhere.
-					navigator.sendBeacon?.(
-						"/api/og-image-warm",
-						new Blob([path], { type: "text/plain" }),
-					)
-					return `${publicOrigin()}${path}`
-				}}
-			/>
+			<div className={EDITOR_UNDER_ROW}>
+				<ShareListEditor
+					initial={initial}
+					quickPicks={quickPicks}
+					date={date}
+					byline={byline}
+					saveTarget={{ kind: "list", id }}
+					share={async () => {
+						// Make sure the card image is current before the link gets pasted somewhere.
+						navigator.sendBeacon?.(
+							"/api/og-image-warm",
+							new Blob([path], { type: "text/plain" }),
+						)
+						return `${publicOrigin()}${path}`
+					}}
+				/>
+			</div>
 			<SharedNotice />
 		</>
 	)

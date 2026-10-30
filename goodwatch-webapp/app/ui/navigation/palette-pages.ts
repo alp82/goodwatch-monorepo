@@ -130,7 +130,8 @@ const page = (
 ): PalettePage => ({ key, label, href, icon, ...more })
 
 const WATCH = "Watch"
-const TASTE = "Taste"
+// The Profile area's pages.
+const TASTE = "Profile"
 const PROFILE = "Your profile"
 const SETTINGS = "Settings"
 const DISCOVER = "Discover"
@@ -277,9 +278,9 @@ const PAGES: Entry[] = [
 		words: ["search", "filter", "browse", "find"],
 	}),
 	(viewer) =>
-		page("taste", "Taste", tasteHome(pathViewer(viewer)), FingerPrintIcon, {
+		page("taste", "Profile", tasteHome(pathViewer(viewer)), UserCircleIcon, {
 			destination: "taste",
-			names: ["taste profile"],
+			names: ["taste", "taste profile", "my profile"],
 			words: ["viewer type", "fingerprint", "preferences", "dna"],
 		}),
 	page("explorer", "Explorer", "/explorer", MapIcon, {
@@ -333,7 +334,7 @@ const PAGES: Entry[] = [
 		words: ["actors", "actresses", "cast", "directors", "stars", "celebrities"],
 	}),
 
-	// Taste.
+	// Profile.
 	(viewer) =>
 		page(
 			"tasteQuiz",
@@ -455,7 +456,7 @@ const PAGES: Entry[] = [
 		words: ["new list", "share", "list", "favorites"],
 	}),
 
-	// The member's public profile: their Taste, as visitors see it.
+	// The member's public profile: their Profile area as visitors see it.
 	({ member, handle }) =>
 		member
 			? handle

@@ -1,11 +1,11 @@
 // The rows under the site header: an area's tabs (sticky under the h-16 header, sideways scroll on phones), the Settings
-// gear at the Taste row's end, the small two-option switch ("To watch | Seen", "Scored | Not rated", Best's "Movies |
+// gear at the Profile row's end, the small two-option switch ("To watch | Seen", "Scored | Not rated", Best's "Movies |
 // Shows") and the chip row under Watch's To watch. Props in, links out: the data comes from ./areas.ts.
 import { LockClosedIcon, UserGroupIcon } from "@heroicons/react/20/solid"
 import { Cog6ToothIcon } from "@heroicons/react/24/outline"
 import {
 	Cog6ToothIcon as CogSolid,
-	FingerPrintIcon as FingerPrintSolid,
+	UserCircleIcon as UserCircleSolid,
 } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { type ReactNode, useLayoutEffect, useRef } from "react"
@@ -63,6 +63,21 @@ function News({ news }: { news: AreaTab["news"] }) {
 	)
 }
 
+/**
+ * A tab's icon, left of the label. One size and weight in every area (the gear's 20 px outline); amber on the current
+ * tab. Phones keep it inline too: an icon over the label would make the row taller under the sticky header.
+ */
+function TabIcon({ tab }: { tab: AreaTab }) {
+	const Icon = tab.icon
+	if (!Icon) return null
+	return (
+		<Icon
+			aria-hidden
+			className={`size-5 shrink-0 ${tab.here ? "text-amber-300" : "text-gray-500"}`}
+		/>
+	)
+}
+
 /** One tab: one line, or two (label and a smaller line under it) when it has `sub`. The amber underline marks it current. */
 export function TabLink({ tab }: { tab: AreaTab }) {
 	const n = tab.count != null && (
@@ -76,26 +91,29 @@ export function TabLink({ tab }: { tab: AreaTab }) {
 				to={tab.href}
 				prefetch="intent"
 				aria-current={tab.here ? "page" : undefined}
-				className={`relative flex min-h-14 shrink-0 flex-col items-start justify-center border-b-2 px-3 whitespace-nowrap lg:min-h-[60px] lg:px-4 ${
+				className={`relative flex min-h-14 shrink-0 items-center gap-2.5 border-b-2 px-3 whitespace-nowrap lg:min-h-[60px] lg:px-4 ${
 					tab.here
 						? "border-amber-400"
 						: "border-transparent hover:[&_b]:text-gray-100"
 				}`}
 			>
-				<span className="flex items-baseline gap-1.5">
-					<b
-						className={`text-sm leading-5 font-semibold ${tab.here ? "text-white" : "text-gray-300"}`}
+				<TabIcon tab={tab} />
+				<span className="flex flex-col items-start">
+					<span className="flex items-baseline gap-1.5">
+						<b
+							className={`text-sm leading-5 font-semibold ${tab.here ? "text-white" : "text-gray-300"}`}
+						>
+							{tab.label}
+						</b>
+						{n}
+						<Mark mark={tab.mark} />
+						<News news={tab.news} />
+					</span>
+					<span
+						className={`text-[11px] leading-4 font-medium lg:text-xs ${tab.here ? "text-amber-200/80" : "text-gray-500"}`}
 					>
-						{tab.label}
-					</b>
-					{n}
-					<Mark mark={tab.mark} />
-					<News news={tab.news} />
-				</span>
-				<span
-					className={`text-[11px] leading-4 font-medium lg:text-xs ${tab.here ? "text-amber-200/80" : "text-gray-500"}`}
-				>
-					{tab.sub}
+						{tab.sub}
+					</span>
 				</span>
 			</Link>
 		)
@@ -110,6 +128,7 @@ export function TabLink({ tab }: { tab: AreaTab }) {
 					: "border-transparent text-gray-400 hover:text-gray-100"
 			}`}
 		>
+			<TabIcon tab={tab} />
 			{tab.label}
 			{n}
 			<Mark mark={tab.mark} />
@@ -181,7 +200,7 @@ export function AreaTabs({
 	)
 }
 
-/** The Settings gear at the Taste row's end: an icon on phones, "Settings" beside it on desktop. */
+/** The Settings gear at the Profile row's end: an icon on phones, "Settings" beside it on desktop. */
 export function SettingsGear({ href, here }: { href: string; here: boolean }) {
 	const Icon = here ? CogSolid : Cog6ToothIcon
 	return (
@@ -202,19 +221,35 @@ export function SettingsGear({ href, here }: { href: string; here: boolean }) {
 	)
 }
 
-/** The Taste row from `tasteRow()` in ./areas: tabs, visitors-only tabs and the gear. */
+/** The Profile row from `tasteRow()` in ./areas: tabs, visitors-only tabs and the gear. */
 export function TasteTabs({
 	row,
 	sticky,
-}: { row: TasteRow; sticky?: boolean }) {
+	before,
+}: {
+	row: TasteRow
+	sticky?: boolean
+	/** An item at the row's end before the gear (the profile's Preview key). */
+	before?: ReactNode
+}) {
+	const gear = row.gear && (
+		<SettingsGear href={row.gear.href} here={row.gear.here} />
+	)
 	return (
 		<AreaTabs
 			label={row.label}
-			icon={row.areaIcon ? FingerPrintSolid : undefined}
+			icon={row.areaIcon ? UserCircleSolid : undefined}
 			tabs={row.tabs}
 			trailing={row.trailing}
 			end={
-				row.gear && <SettingsGear href={row.gear.href} here={row.gear.here} />
+				before ? (
+					<>
+						{before}
+						{gear}
+					</>
+				) : (
+					gear
+				)
 			}
 			sticky={sticky}
 		/>

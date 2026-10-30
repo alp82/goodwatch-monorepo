@@ -1,23 +1,33 @@
-// The three areas of the site navigation (Watch · Explore · Taste): which area a page belongs to, each area's tabs, the
+// The three areas of the site navigation (Watch · Explore · Profile): which area a page belongs to, each area's tabs, the
 // chips and switches under Watch's tabs and on Scores, and PLACES, the one list of places the account menu and the
 // Settings column both draw from, so their rows match one to one. Pure: the header, the dock, the area layouts and
 // the account menu read from here; AreaTabs.tsx draws the rows.
 //
-// Someone else's profile: a member on /u/:other gets the Taste area's chrome (the key lit, the tab row) with the
-// visitor's tabs and that profile's header; a guest gets the same tabs under "@other" with no area key lit, since a
-// guest has no Taste of their own there.
+// The Profile area keeps the key "taste" in code (route ids, tests and the other modules name it so); only what people
+// see says Profile. Someone else's profile: a member on /u/:other gets the Profile area's chrome (the key lit, the tab
+// row) with the visitor's tabs and that profile's header; a guest gets the same tabs under "@other" with no area key
+// lit, since a guest has no profile of their own there.
 import {
 	ArrowDownTrayIcon,
 	ArrowUpTrayIcon,
+	BookmarkIcon,
+	CalendarDaysIcon,
+	ChartBarIcon,
 	ChatBubbleLeftEllipsisIcon,
 	Cog6ToothIcon,
+	EyeIcon,
+	FilmIcon,
 	FingerPrintIcon,
+	FireIcon,
 	GlobeAltIcon,
 	GlobeEuropeAfricaIcon,
 	InformationCircleIcon,
 	KeyIcon,
 	LanguageIcon,
 	LifebuoyIcon,
+	ListBulletIcon,
+	MagnifyingGlassIcon,
+	MapIcon,
 	NoSymbolIcon,
 	PencilSquareIcon,
 	PlayIcon,
@@ -25,12 +35,17 @@ import {
 	QuestionMarkCircleIcon,
 	ShieldCheckIcon,
 	SparklesIcon,
+	StarIcon,
+	TagIcon,
+	TrophyIcon,
 	TvIcon,
+	UserCircleIcon,
+	UserGroupIcon,
 } from "@heroicons/react/24/outline"
 import {
-	FingerPrintIcon as FingerPrintSolid,
 	GlobeAltIcon as GlobeAltSolid,
 	PlayIcon as PlaySolid,
+	UserCircleIcon as UserCircleSolid,
 } from "@heroicons/react/24/solid"
 import { type ComponentType, type SVGProps, createElement } from "react"
 import {
@@ -61,7 +76,7 @@ export interface AreaDef {
 	iconOn: NavIcon
 }
 
-/** The three area keys, in order, for this viewer (Taste: the profile, or /taste without a handle). */
+/** The three area keys, in order, for this viewer (Profile: the profile, or /taste without a handle). */
 export function areaKeys(viewer: PathViewer): AreaDef[] {
 	return [
 		{
@@ -80,10 +95,10 @@ export function areaKeys(viewer: PathViewer): AreaDef[] {
 		},
 		{
 			key: "taste",
-			label: "Taste",
+			label: "Profile",
 			href: tasteHome(viewer),
-			icon: FingerPrintIcon,
-			iconOn: FingerPrintSolid,
+			icon: UserCircleIcon,
+			iconOn: UserCircleSolid,
 		},
 	]
 }
@@ -104,7 +119,7 @@ const EXPLORE_PREFIXES = [
 const TASTE_PREFIXES = ["/u", "/settings", "/taste", "/lists"]
 
 /**
- * The area a page belongs to, from its path alone: Watch for /watch/*, Explore for the browsing pages, Taste for
+ * The area a page belongs to, from its path alone: Watch for /watch/*, Explore for the browsing pages, Profile for
  * profiles (/u/:handle/*, anyone's), Settings, /taste, /taste/quiz and the list pages. Null for pages outside the
  * areas: home, title and person pages, Help and the apps pages.
  */
@@ -129,6 +144,8 @@ export function litArea(pathname: string, viewer: PathViewer): AreaKey | null {
 export interface AreaTab {
 	key: string
 	label: string
+	/** The tab's icon, left of its label (of both lines on a two-line tab). */
+	icon?: NavIcon
 	/** A second, smaller line under the label (Watch: "My shows", "My movies", "For you"). */
 	sub?: string
 	href: string
@@ -217,6 +234,7 @@ export function watchTabs(pathname: string): AreaTab[] {
 			key: "up-next",
 			label: "Up next",
 			sub: "My shows",
+			icon: TvIcon,
 			href: WATCH_PATHS.nextEpisodes,
 			here: tab === "up-next",
 		},
@@ -224,6 +242,7 @@ export function watchTabs(pathname: string): AreaTab[] {
 			key: "ready",
 			label: "Ready to watch",
 			sub: "My movies",
+			icon: FilmIcon,
 			href: WATCH_PATHS.tonight,
 			here: tab === "ready",
 		},
@@ -231,6 +250,7 @@ export function watchTabs(pathname: string): AreaTab[] {
 			key: "for-you",
 			label: "Recommendations",
 			sub: "For you",
+			icon: SparklesIcon,
 			href: WATCH_PATHS.forYou,
 			here: tab === "for-you",
 		},
@@ -306,44 +326,63 @@ const EXPLORE_TABS: {
 	key: ExploreTabKey
 	label: string
 	href: string
+	icon: NavIcon
 	here: (path: string) => boolean
 }[] = [
 	{
 		key: "discover",
 		label: "Discover",
 		href: "/discover",
+		icon: MagnifyingGlassIcon,
 		here: (p) => under(p, "/discover"),
 	},
-	{ key: "new", label: "New", href: "/new", here: (p) => under(p, "/new") },
+	{
+		key: "new",
+		label: "New",
+		href: "/new",
+		icon: CalendarDaysIcon,
+		here: (p) => under(p, "/new"),
+	},
 	{
 		key: "hot",
 		label: "Hot",
 		href: "/hot-on-socials",
+		icon: FireIcon,
 		here: (p) => under(p, "/hot-on-socials"),
 	},
-	{ key: "best", label: "Best", href: "/movies/best", here: isBest },
+	{
+		key: "best",
+		label: "Best",
+		href: "/movies/best",
+		icon: TrophyIcon,
+		here: isBest,
+	},
 	{
 		key: "movies",
 		label: "Movies",
 		href: "/movies",
+		icon: FilmIcon,
 		here: (p) => under(p, "/movies") && !isBest(p),
 	},
 	{
 		key: "shows",
 		label: "Shows",
 		href: "/shows",
+		icon: TvIcon,
 		here: (p) => under(p, "/shows") && !isBest(p),
 	},
 	{
 		key: "people",
 		label: "People",
 		href: "/people",
+		icon: UserGroupIcon,
 		here: (p) => under(p, "/people"),
 	},
 	{
 		key: "map",
 		label: "Map",
 		href: "/explorer",
+		icon: MapIcon,
 		here: (p) => under(p, "/explorer"),
 	},
 ]
@@ -357,6 +396,7 @@ export function exploreTabs(
 	return EXPLORE_TABS.map((t) => ({
 		key: t.key,
 		label: t.label,
+		icon: t.icon,
 		href: t.key === "new" ? newHref : t.href,
 		here: t.here(path),
 	}))
@@ -385,9 +425,9 @@ export function bestSwitch(pathname: string): NavChoices | null {
 	}
 }
 
-// Taste ----------------------------------------------------------------------------------------------------
+// Profile (key "taste") ------------------------------------------------------------------------------------
 
-/** A Taste tab. "rate" is the one extra tab of the row without a profile (/taste, /taste/quiz). */
+/** A Profile tab. "rate" is the extra tab of the row without a profile (/taste, /taste/quiz, the list pages). */
 export type TasteTabKey =
 	| "profile"
 	| "tropes"
@@ -399,24 +439,26 @@ export type TasteTabKey =
 	| "shows"
 	| "rate"
 
-export const OWNER_TASTE_TABS: { key: TasteTabKey; label: string }[] = [
-	{ key: "profile", label: "Taste profile" },
-	{ key: "tropes", label: "Tropes" },
-	{ key: "scores", label: "Scores" },
-	{ key: "stats", label: "Stats" },
-	{ key: "lists", label: "Lists" },
+type TasteTabDef = { key: TasteTabKey; label: string; icon: NavIcon }
+
+export const OWNER_TASTE_TABS: TasteTabDef[] = [
+	{ key: "profile", label: "Taste", icon: FingerPrintIcon },
+	{ key: "tropes", label: "Tropes", icon: TagIcon },
+	{ key: "scores", label: "Scores", icon: StarIcon },
+	{ key: "stats", label: "Stats", icon: ChartBarIcon },
+	{ key: "lists", label: "Lists", icon: ListBulletIcon },
 ]
 
 /** Tabs only visitors get, set apart at the row's end: the owner keeps these in Watch. */
-export const VISITOR_TASTE_TABS: { key: TasteTabKey; label: string }[] = [
-	{ key: "seen", label: "Seen" },
-	{ key: "wishlist", label: "Wishlist" },
-	{ key: "shows", label: "Shows" },
+export const VISITOR_TASTE_TABS: TasteTabDef[] = [
+	{ key: "seen", label: "Seen", icon: EyeIcon },
+	{ key: "wishlist", label: "Wishlist", icon: BookmarkIcon },
+	{ key: "shows", label: "Shows", icon: TvIcon },
 ]
 
-/** How the Taste row is drawn for this page and viewer. */
+/** How the Profile row is drawn for this page and viewer. */
 export interface TasteRow {
-	/** The row's name at its start on desktop: "Taste", "As visitors see it", or "@handle". */
+	/** The row's name at its start on desktop: "Profile", "As visitors see it", or "@handle". */
 	label: string
 	/** False for a guest on a profile: no area icon, no lit key. */
 	areaIcon: boolean
@@ -433,7 +475,7 @@ export interface TasteRow {
 
 const PROFILE_PATH = /^\/u\/([^/]+)(?:\/([^/]+))?/
 
-/** The Taste tab a profile path lights. */
+/** The Profile tab a profile path lights. */
 function profileTabOf(rest: string | undefined): TasteTabKey | null {
 	if (!rest) return "profile"
 	if (rest === "taste") return "stats"
@@ -465,10 +507,11 @@ export interface TasteRowOptions {
 }
 
 /**
- * The Taste row for a page in the Taste area, or null outside it. On a profile: the owner's five tabs and the gear;
+ * The Profile row for a page in the Profile area, or null outside it. On a profile: the owner's five tabs and the gear;
  * visitors (and the owner with ?as=visitor) get the five plus Seen · Wishlist · Shows and no gear, every link keeping
- * ?as=visitor. Without a profile (/taste, /taste/quiz, list pages and Settings for members without a handle): Taste
- * profile → /taste and Rate more → /taste/quiz, plus the gear for members.
+ * ?as=visitor. Without a profile (/taste, /taste/quiz, list pages and Settings for guests and members without a
+ * handle): Taste → /taste, Rate more → /taste/quiz and Lists (/lists/mine for members, /lists/new for guests), plus the
+ * gear for members.
  */
 export function tasteRow({
 	pathname,
@@ -504,19 +547,28 @@ export function tasteRow({
 		const tabs: AreaTab[] = [
 			{
 				key: "profile",
-				label: "Taste profile",
+				label: "Taste",
+				icon: FingerPrintIcon,
 				href: TASTE_FALLBACK_PATH,
 				here: here === "profile",
 			},
 			{
 				key: "rate",
 				label: "Rate more",
+				icon: StarIcon,
 				href: RATE_FALLBACK_PATH,
 				here: here === "rate",
 			},
+			{
+				key: "lists",
+				label: "Lists",
+				icon: ListBulletIcon,
+				href: member ? "/lists/mine" : "/lists/new",
+				here: here === "lists",
+			},
 		]
 		return {
-			label: "Taste",
+			label: "Profile",
 			areaIcon: true,
 			handle: null,
 			asVisitor: false,
@@ -531,9 +583,10 @@ export function tasteRow({
 		isOwner && new URLSearchParams(search).get("as") === "visitor"
 	const visitorView = !isOwner || asVisitor
 	const query = asVisitor ? { as: "visitor" } : undefined
-	const tab = (t: { key: TasteTabKey; label: string }): AreaTab => ({
+	const tab = (t: TasteTabDef): AreaTab => ({
 		key: t.key,
 		label: t.label,
+		icon: t.icon,
 		href: tastePath(handle, t.key as Exclude<TasteTabKey, "rate">, query),
 		here: !inSettings && here === t.key,
 		count: counts[t.key],
@@ -542,7 +595,7 @@ export function tasteRow({
 	const tabs = OWNER_TASTE_TABS.filter((t) => visible(t.key)).map(tab)
 	if (!visitorView)
 		return {
-			label: "Taste",
+			label: "Profile",
 			areaIcon: true,
 			handle,
 			asVisitor: false,

@@ -1,19 +1,19 @@
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { presentCatalogLoader } from "~/server/media-payload.server"
-// Public share list page: /u/:handle/lists/:id, outside the profile layout (the card is the page), with the way back to
-// the owner's Lists tab. The card, large, and the five titles as rows: the score pill, the
+// Public share list page: /u/:handle/lists/:id, inside the profile layout: the owner's profile header and the Profile
+// row with Lists lit stay above it. The card, large, and the five titles as rows: the score pill, the
 // owner's score on someone else's list, and the viewer's own services that stream it in their country (none for a
 // guest). Lists are looked up by id; a wrong or differently cased handle redirects to the canonical URL, and deleted lists
 // (or lists of deleted accounts) answer 404. Unlisted lists open by link. The page is noindex, follow. Its og:image is the
 // list's share card itself, as a small JPEG preview versioned by the list's content hash; the full-resolution card PNG
-// stays at the same path with .png.
+// stays at the same path with .png. Caching: the layout and this page both give anonymous views of a public list the
+// share list lifetime and everything else `private, no-store`, so the stricter of the two keeps the old policy.
 import {
 	PencilSquareIcon,
 	PlusIcon,
 	Square2StackIcon,
 } from "@heroicons/react/24/outline"
-import { ChevronLeftIcon } from "@heroicons/react/20/solid"
 import type { MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import { ensureShareCard } from "~/server/share-card/images.server"
@@ -38,7 +38,6 @@ import {
 	SHARE_CARD_PREVIEW,
 } from "~/ui/share-card/links"
 import { type CardTitle, THEMES } from "~/ui/share-card/model"
-import { tastePath } from "~/domain/member-paths"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { titleToDashed } from "~/utils/helpers"
 import type { SizeRule } from "~/utils/tmdb-image"
@@ -132,7 +131,7 @@ export default function ShareListPage() {
 		maxWidth: Math.round(Math.min(624, 860 * shape)),
 	}
 	return (
-		<main className="relative isolate min-h-screen overflow-hidden pb-24 text-white">
+		<div className="relative isolate min-h-screen overflow-hidden pb-24 text-white">
 			<CardFonts design={design.key} />
 			<div
 				aria-hidden
@@ -142,8 +141,8 @@ export default function ShareListPage() {
 				}}
 			/>
 			<div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-4 pt-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14 lg:pt-10">
-				<div className="lg:sticky lg:top-20 lg:self-start">
-					<div className="h-[min(70vh,640px)] lg:h-[calc(100vh-7rem)] lg:max-h-[860px]">
+				<div className="lg:sticky lg:top-32 lg:self-start">
+					<div className="h-[min(70vh,640px)] lg:h-[calc(100vh-10rem)] lg:max-h-[860px]">
 						<ScaledCard
 							design={design}
 							card={{
@@ -162,14 +161,6 @@ export default function ShareListPage() {
 
 				<div className="flex min-w-0 flex-col gap-8">
 					<header className="flex flex-col gap-3">
-						<Link
-							to={tastePath(owner.handle, "lists")}
-							prefetch="intent"
-							className="-ml-1 inline-flex min-h-8 items-center gap-0.5 self-start pr-2 text-sm text-gray-400 hover:text-white"
-						>
-							<ChevronLeftIcon className="size-4" aria-hidden />
-							Lists
-						</Link>
 						<p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase">
 							Top {items.length} · {list.date}
 							{list.unlisted && (
@@ -344,7 +335,7 @@ export default function ShareListPage() {
 					</section>
 				</div>
 			</div>
-		</main>
+		</div>
 	)
 }
 

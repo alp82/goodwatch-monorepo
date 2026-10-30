@@ -297,7 +297,7 @@ test("member HTML is never shared across the actual route inventory", () => {
 		"movie.$movieKey",
 		"show.$showKey",
 		"person.$personKey",
-		"u.$handle_.lists.$id",
+		"u.$handle.lists.$id",
 		"discover.($type)",
 	])
 		assert.ok(

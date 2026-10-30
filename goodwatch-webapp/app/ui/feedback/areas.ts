@@ -667,7 +667,7 @@ export const PAGE_TYPES: PageType[] = [
 	{
 		id: "list-edit",
 		name: "List editor",
-		routes: ["lists.new.tsx", "u.$handle_.lists.$id_.edit.tsx"],
+		routes: ["lists.new.tsx", "u.$handle.lists.new.tsx", "u.$handle.lists.$id_.edit.tsx"],
 		example: "/lists/new",
 		match: re(/^\/(lists\/new|u\/[^/]+\/lists\/[^/]+\/edit)\/?$/),
 		areas: [],
