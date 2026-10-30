@@ -3,7 +3,7 @@ import type { CatalogRead } from "../profile/tropes-data.ts"
 import type { TropePageReferences } from "../profile/trope-pages.ts"
 import { tropeTarget } from "../profile/trope-uri-pool.ts"
 import { defining } from "../profile/tropes-model.ts"
-import type { Candidate } from "./ranking.ts"
+import type { Candidate, CandidateIndex } from "./ranking.ts"
 
 interface TitleRow {
 	tmdb_id: number
@@ -46,9 +46,14 @@ export async function buildCandidateIndex(
 	read: CatalogRead,
 	resolve: (urls: string[]) => Promise<TropePageReferences>,
 	titlePath: (kind: "movie" | "show", id: number, name: string) => string,
-): Promise<Candidate[]> {
-	const out: Candidate[] = []
-	// Sequential batches bound memory and catalog concurrency; no content/excerpts are fetched here.
+): Promise<CandidateIndex> {
+	const raw: {
+		title: Omit<Candidate, "tropes">
+		names: string[]
+		rows: Association[]
+	}[] = []
+	const urls = new Set<string>()
+	// Sequential batches bound query size and concurrency; only metadata is retained for union resolution.
 	for (const kind of ["movie", "show"] as const) {
 		const titles = await read<TitleRow>(
 			`SELECT tmdb_id, title, release_year, poster_path, popularity, tropes,
@@ -71,9 +76,7 @@ export async function buildCandidateIndex(
 				rows.push(...page)
 				if (page.length < 10000) break
 			}
-			const resolved = await resolve([
-				...new Set(rows.flatMap((r) => r.url ?? [])),
-			])
+			for (const row of rows) if (row.url) urls.add(row.url)
 			const byTitle = new Map<number, Association[]>()
 			for (const row of rows) {
 				const list = byTitle.get(Number(row.media_tmdb_id)) ?? []
@@ -81,22 +84,58 @@ export async function buildCandidateIndex(
 				byTitle.set(Number(row.media_tmdb_id), list)
 			}
 			for (const t of batch)
-				out.push({
-					id: `${kind}-${t.tmdb_id}` as MediaKey,
-					kind,
-					name: t.title ?? "",
-					year: t.release_year,
-					poster: t.poster_path,
-					gwScore: Number(t.gw),
-					popularity: Number(t.popularity) || 0,
-					href: titlePath(kind, Number(t.tmdb_id), t.title ?? ""),
-					tropes: candidateTropes(
-						t.tropes ?? [],
-						byTitle.get(Number(t.tmdb_id)) ?? [],
-						resolved,
-					),
+				raw.push({
+					title: {
+						id: `${kind}-${t.tmdb_id}` as MediaKey,
+						kind,
+						name: t.title ?? "",
+						year: t.release_year,
+						poster: t.poster_path,
+						gwScore: Number(t.gw),
+						popularity: Number(t.popularity) || 0,
+						href: titlePath(kind, Number(t.tmdb_id), t.title ?? ""),
+					},
+					names: t.tropes ?? [],
+					rows: byTitle.get(Number(t.tmdb_id)) ?? [],
 				})
 		}
 	}
-	return out
+	// Resolve the union once, including negative lookups, across every title batch and both kinds.
+	const resolved = await resolve([...urls])
+	const displayNames = new Map(
+		Object.values(resolved).map((r) => [r.url, r.title]),
+	)
+	const tropes: string[] = []
+	const names: string[] = []
+	const references: string[][] = []
+	const positions = new Map<string, number>()
+	const titles = raw.map(({ title, names: labels, rows }) => ({
+		...title,
+		tropes: candidateTropes(labels, rows, resolved).map(({ id, d }) => {
+			let i = positions.get(id)
+			if (i === undefined) {
+				i = tropes.length
+				positions.set(id, i)
+				tropes.push(id)
+				names.push(
+					displayNames.get(id) ??
+						rows.find((r) => tropeTarget(r.name, r.url, resolved) === id)
+							?.name ??
+						labels.find((name) => tropeTarget(name, null) === id) ??
+						"",
+				)
+				references.push([])
+			}
+			return { i, d }
+		}),
+	}))
+	const sources = tropes.map(() => new Set<string>())
+	for (const { rows } of raw)
+		for (const row of rows) {
+			const i = positions.get(tropeTarget(row.name, row.url, resolved))
+			if (i !== undefined && row.url) sources[i].add(row.url)
+		}
+	for (let i = 0; i < sources.length; i++) references[i] = [...sources[i]]
+	// Only numeric associations and one identity table survive publication; raw/resolved are build-local.
+	return { titles, tropes, names, references }
 }

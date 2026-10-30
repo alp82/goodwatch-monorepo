@@ -5,36 +5,47 @@
  * Retry-After: 2. Limits: 120 For you / 60 single-trope titles. Rank is one-based;
  * d is rounded definingness x100. No excerpt text is included.
  * GET /api/trope-recs/excerpts?trope=<ID>&keys=movie-1,show-2 loads <=16 examples.
+ * GET /api/trope-recs/tropes returns only { pending, tropes } (no candidate index), for links and switches.
  * Descriptions use /u/:handle/tropes/descriptions with the member's own handle.
  * See docs/implementation/trope-recs.md for sources, caches and ranking.
  */
 import { createHash } from "node:crypto"
 import { DEFAULT_VISIBILITY } from "~/domain/profile"
 import { readProfileCatalog } from "~/server/profile/catalog.server"
-import { resolveTropeReferences } from "~/server/profile/trope-catalog.server"
+import {
+	readCandidateCatalog,
+	resolveCandidateReferences,
+} from "./build-reader.server"
+import { processRole } from "~/server/role.server"
 import { loadProfileTropes } from "~/server/profile/tropes.server"
 import { getUserData } from "~/server/userData.server"
 import { cached } from "~/utils/cache"
 import { titlePath } from "~/utils/helpers"
 import type { MediaKey } from "~/types/user-data"
 import { buildCandidateIndex } from "./candidates"
-import { sharedIndex, resultCache } from "./cache"
+import { sharedIndex, resultCache, warmIndex } from "./cache"
 import {
 	type Kind,
 	type Recommendation,
 	memberTropes,
+	memberExclusions,
 	rankRecommendations,
 } from "./ranking"
 
 const index = sharedIndex(
 	() =>
-		buildCandidateIndex(readProfileCatalog, resolveTropeReferences, titlePath),
+		buildCandidateIndex(
+			readCandidateCatalog,
+			resolveCandidateReferences,
+			titlePath,
+		),
 	Date.now,
 	() =>
 		console.error(
 			"Trope recommendations: candidate index build failed; retrying later",
 		),
 )
+warmIndex(index, processRole())
 const results = resultCache<Recommendation[]>()
 const ownSight = { viewer: "owner", visibility: DEFAULT_VISIBILITY } as const
 async function readWatchLogKeys({
@@ -49,6 +60,20 @@ async function readWatchLogKeys({
 	)
 	return { keys: rows.map((r): MediaKey => `${r.media_type}-${r.tmdb_id}`) }
 }
+/**
+ * The member's top positive tropes alone: no candidate index, no member data. Pending while the profile snapshot is
+ * built (the read starts that build). For the For you switch, the profile's links and the title page's trope names.
+ */
+export async function loadMemberTropes(userId: string) {
+	const pool = await loadProfileTropes(userId, ownSight, userId, {
+		wait: false,
+		descriptions: false,
+	})
+	return pool
+		? { pending: false, tropes: memberTropes(pool) }
+		: { pending: true, tropes: [] }
+}
+
 /** Authenticated callers only. Reuses the profile snapshot loader, including its background refresh. */
 export async function loadTropeRecommendations(
 	userId: string,
@@ -56,20 +81,7 @@ export async function loadTropeRecommendations(
 	trope?: string,
 ) {
 	const shared = index()
-	const [pool, data, log] = await Promise.all([
-		loadProfileTropes(userId, ownSight, userId, {
-			wait: false,
-			descriptions: false,
-		}),
-		getUserData({ user_id: userId }),
-		cached({
-			name: "trope-recs-watch-log-v1",
-			ttlMinutes: 0.25,
-			staleMinutes: 0,
-			target: readWatchLogKeys,
-			params: { userId },
-		}),
-	])
+	const { pool, data, log } = await memberInputs(userId)
 	const tropes = pool ? memberTropes(pool) : []
 	if (pool && trope !== undefined && !tropes.some((t) => t.id === trope))
 		throw new RangeError("Trope is not in the member profile")
@@ -82,13 +94,7 @@ export async function loadTropeRecommendations(
 	if (!shared.current || !pool)
 		return { ...base, pending: true, titles: [] as Recommendation[] }
 	// Existing member-data resets apply before checking cached results. Include actual keys, not counts.
-	const excluded = new Set([
-		...Object.keys(data.scores),
-		...Object.keys(data.watchState),
-		...Object.keys(data.skipped),
-		...Object.keys(data.notInterested),
-		...log.keys,
-	])
+	const excluded = memberExclusions(data, log.keys)
 	const signature = createHash("sha256")
 		.update(
 			JSON.stringify([
@@ -105,12 +111,51 @@ export async function loadTropeRecommendations(
 		.digest("hex")
 	let titles = results.get(signature)
 	if (!titles) {
-		const input = { ...data, skipped: { ...data.skipped } }
-		for (const key of log.keys) input.skipped[key] = { updatedAt: new Date(0) }
 		titles = results.set(
 			signature,
-			rankRecommendations(shared.current.value, tropes, input, kind, trope),
+			rankRecommendations(
+				shared.current.value,
+				tropes,
+				data,
+				kind,
+				trope,
+				excluded,
+			),
 		)
 	}
 	return { ...base, pending: false, titles }
+}
+
+async function memberInputs(userId: string) {
+	const [pool, data, log] = await Promise.all([
+		loadProfileTropes(userId, ownSight, userId, {
+			wait: false,
+			descriptions: false,
+		}),
+		getUserData({ user_id: userId }),
+		cached({
+			name: "trope-recs-watch-log-v1",
+			ttlMinutes: 0.25,
+			staleMinutes: 0,
+			target: readWatchLogKeys,
+			params: { userId },
+		}),
+	])
+	return { pool, data, log }
+}
+
+/** Authorization uses membership, never the truncated ranked recommendation lists. */
+export async function recommendationExcerptContext(
+	userId: string,
+	trope: string,
+) {
+	const shared = index()
+	const { pool, data, log } = await memberInputs(userId)
+	if (pool && !memberTropes(pool).some((t) => t.id === trope))
+		throw new RangeError("Trope is not in the member profile")
+	return {
+		pending: !shared.current || !pool,
+		index: shared.current?.value,
+		excluded: memberExclusions(data, log.keys),
+	}
 }

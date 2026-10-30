@@ -8,6 +8,11 @@ export interface MemberTrope {
 	name: string
 	rank: number
 	z: number
+	/** The member's titles carrying it, and how many of them they scored 8+ (the single-trope header). */
+	count: number
+	loved: number
+	/** The title aggregate names merged into this identity, for matching a title page's trope names. */
+	labels: string[]
 }
 export interface Candidate {
 	id: MediaKey
@@ -18,13 +23,21 @@ export interface Candidate {
 	gwScore: number
 	popularity: number
 	href: string
-	/** Same rounded definingness x100 as the Tropes tab and prototype G. */
-	tropes: { id: string; d: number }[]
+	/** Rounded definingness x100, using distinct aggregate names as in prototype G. */
+	tropes: { i: number; d: number }[]
+}
+export interface CandidateIndex {
+	titles: Candidate[]
+	tropes: string[]
+	names: string[]
+	references: string[][]
 }
 export interface Recommendation
 	extends Omit<Candidate, "tropes" | "popularity"> {
 	match: number
 	matchedTropes: { id: string; name: string; rank: number; d: number }[]
+	/** Every profile trope the title carries; matchedTropes lists at most eight of them. */
+	matchedCount: number
 	wishlist: boolean
 }
 
@@ -33,36 +46,43 @@ export function memberTropes(pool: TropePool): MemberTrope[] {
 	return rankTropes(pool, pool.pool)
 		.ranked.filter((t) => t.count >= 10 && t.z > 0)
 		.slice(0, 60)
-		.map((t, i) => ({ id: t.id ?? t.name, name: t.name, rank: i + 1, z: t.z }))
+		.map((t, i) => ({
+			// Legacy name-indexed snapshots have no URI; preserve their name identity until rebuilt.
+			id: t.id ?? t.name,
+			name: t.name,
+			rank: i + 1,
+			z: t.z,
+			count: t.count,
+			loved: t.loved,
+			labels: t.labels ?? [t.name],
+		}))
 }
 
 /** Full eligible list is scored before either mode truncates or normalizes. */
 export function rankRecommendations(
-	candidates: Candidate[],
+	index: CandidateIndex,
 	profile: MemberTrope[],
 	data: UserData,
 	kind: Kind,
 	trope?: string,
+	excluded: ReadonlySet<string> = memberExclusions(data),
 ): Recommendation[] {
 	const byId = new Map(profile.map((t) => [t.id, t]))
 	if (trope !== undefined && !byId.has(trope))
 		throw new RangeError("Trope is not in the member profile")
 	const seen = new Set<string>()
-	const rows = candidates
+	const rows = index.titles
 		.flatMap((t) => {
 			if (
 				seen.has(t.id) ||
 				(kind !== "all" && t.kind !== kind) ||
-				t.id in data.scores ||
-				t.id in data.watchState ||
-				t.id in data.skipped ||
-				t.id in data.notInterested
+				excluded.has(t.id)
 			)
 				return []
 			seen.add(t.id)
 			const hits = t.tropes
 				.flatMap((h) => {
-					const p = byId.get(h.id)
+					const p = byId.get(index.tropes[h.i])
 					return p ? [{ ...p, d: h.d }] : []
 				})
 				.sort((a, b) => a.rank - b.rank)
@@ -108,10 +128,24 @@ export function rankRecommendations(
 		return {
 			...title,
 			match: trope === undefined ? r.match : Math.round((r.raw / top) * 100),
-			matchedTropes: r.hits.slice(0, 8).map(({ z: _, ...hit }) => hit),
+			matchedTropes: shownHits(r.hits, trope).map((h) => ({
+				id: h.id,
+				name: h.name,
+				rank: h.rank,
+				d: h.d,
+			})),
+			matchedCount: r.hits.length,
 			wishlist: r.t.id in data.wishlist,
 		}
 	})
+}
+
+/** The first eight hits in rank order; a selected trope ranked lower takes the eighth place. */
+function shownHits<T extends { id: string }>(hits: T[], trope?: string): T[] {
+	const shown = hits.slice(0, 8)
+	if (trope === undefined || shown.some((h) => h.id === trope)) return shown
+	const hit = hits.find((h) => h.id === trope)
+	return hit ? [...shown.slice(0, 7), hit] : shown
 }
 
 export function recParams(
@@ -125,4 +159,14 @@ export function recParams(
 	)
 		return null
 	return { kind: kind as Kind, trope }
+}
+
+export function memberExclusions(data: UserData, log: readonly string[] = []) {
+	return new Set([
+		...Object.keys(data.scores),
+		...Object.keys(data.watchState),
+		...Object.keys(data.skipped),
+		...Object.keys(data.notInterested),
+		...log,
+	])
 }

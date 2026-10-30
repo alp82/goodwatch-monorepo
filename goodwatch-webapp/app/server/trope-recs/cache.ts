@@ -3,20 +3,25 @@ export function sharedIndex<T>(
 	build: () => Promise<T>,
 	now = Date.now,
 	onError: (error: unknown) => void = () => {},
+	random = Math.random,
 ) {
 	let current: { value: T; version: number } | undefined
 	let expires = 0
 	let retryAt = 0
+	let failures = 0
 	let pending: Promise<void> | undefined
 	return () => {
 		if (now() >= expires && now() >= retryAt && !pending) {
 			pending = build()
 				.then((value) => {
 					current = { value, version: now() }
+					failures = 0
+					retryAt = 0
 					expires = now() + 3_600_000
 				})
 				.catch((error) => {
-					retryAt = now() + 30_000
+					const delay = Math.min(900_000, 30_000 * 2 ** Math.min(failures++, 5))
+					retryAt = now() + delay * (1 + 0.25 * random())
 					onError(error)
 				})
 				.finally(() => {
@@ -48,4 +53,17 @@ export function resultCache<T>(now = Date.now) {
 			return value
 		},
 	}
+}
+
+/** Schedule once per loaded process module; unref lets scripts and tests exit normally. */
+export function warmIndex(
+	read: () => unknown,
+	role: string,
+	schedule = (task: () => void, delay: number) => setTimeout(task, delay),
+) {
+	if (role === "search") return
+	const timer = schedule(() => {
+		read()
+	}, 30_000)
+	timer.unref()
 }

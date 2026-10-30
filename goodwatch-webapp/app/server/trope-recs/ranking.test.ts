@@ -2,14 +2,39 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { performance } from "node:perf_hooks"
 import {
-	type Candidate,
+	type Candidate as IndexedCandidate,
+	type CandidateIndex,
 	type MemberTrope,
 	memberTropes,
-	rankRecommendations,
+	rankRecommendations as rankIndex,
 	recParams,
 } from "./ranking.ts"
 import type { UserData } from "../../types/user-data.ts"
 import type { TropePool } from "../profile/tropes-model.ts"
+
+type Candidate = Omit<IndexedCandidate, "tropes"> & {
+	tropes: { id: string; d: number }[]
+}
+function compact(titles: Candidate[]): CandidateIndex {
+	const tropes = [...new Set(titles.flatMap((t) => t.tropes.map((h) => h.id)))]
+	return {
+		tropes,
+		names: tropes,
+		references: tropes.map(() => []),
+		titles: titles.map((t) => ({
+			...t,
+			tropes: t.tropes.map((h) => ({ i: tropes.indexOf(h.id), d: h.d })),
+		})),
+	}
+}
+function rankRecommendations(
+	titles: Candidate[],
+	...args: Parameters<typeof rankIndex> extends [unknown, ...infer R]
+		? R
+		: never
+) {
+	return rankIndex(compact(titles), ...args)
+}
 
 const empty = (): UserData => ({
 	scores: {},
@@ -20,8 +45,8 @@ const empty = (): UserData => ({
 	notInterested: {},
 })
 const profile: MemberTrope[] = [
-	{ id: "a", name: "A", rank: 1, z: 2 },
-	{ id: "b", name: "B", rank: 2, z: 1 },
+	{ id: "a", name: "A", rank: 1, z: 2, count: 10, loved: 8, labels: ["A"] },
+	{ id: "b", name: "B", rank: 2, z: 1, count: 10, loved: 6, labels: ["B"] },
 ]
 const candidate = (
 	n: number,
@@ -144,6 +169,9 @@ test("limits are applied after scoring all candidates; single-trope can reach ou
 		name: `T${i}`,
 		rank: i + 1,
 		z: 1,
+		count: 10,
+		loved: 5,
+		labels: [`T${i}`],
 	}))
 	const row = rankRecommendations(
 		[
@@ -157,6 +185,30 @@ test("limits are applied after scoring all candidates; single-trope can reach ou
 		"all",
 	)[0]
 	assert.equal(row.matchedTropes.length, 8)
+	assert.equal(row.matchedCount, 12)
+	assert.deepEqual(Object.keys(row.matchedTropes[0]).sort(), [
+		"d",
+		"id",
+		"name",
+		"rank",
+	])
+	const single = rankRecommendations(
+		[
+			candidate(
+				1,
+				many.map((t) => ({ id: t.id, d: 50 })),
+			),
+		],
+		many,
+		empty(),
+		"all",
+		"t10",
+	)[0]
+	assert.equal(single.matchedTropes.length, 8)
+	assert.deepEqual(
+		single.matchedTropes.map((t) => t.id),
+		["t0", "t1", "t2", "t3", "t4", "t5", "t6", "t10"],
+	)
 })
 
 test("member profile reuses z rules with fixed minimum ten, positive only, top sixty", () => {
@@ -186,6 +238,9 @@ test("member profile reuses z rules with fixed minimum ten, positive only, top s
 		["a"],
 	)
 	assert.equal(ranked[0].rank, 1)
+	assert.equal(ranked[0].count, 10)
+	assert.equal(ranked[0].loved, 10)
+	assert.deepEqual(ranked[0].labels, ["A"])
 	assert.ok(
 		Math.abs(ranked[0].z - (10 - 10 / 3) / Math.sqrt(10 * (1 / 3) * (2 / 3))) <
 			1e-10,
@@ -219,6 +274,9 @@ test("warm in-memory ranking on 12,000 titles stays below 300ms", () => {
 	const tropes = Array.from({ length: 60 }, (_, i) => ({
 		id: `t${i}`,
 		name: `Trope ${i}`,
+		count: 10,
+		loved: 8,
+		labels: [`Trope ${i}`],
 		rank: i + 1,
 		z: 1 + i / 60,
 	}))
@@ -228,10 +286,28 @@ test("warm in-memory ranking on 12,000 titles stays below 300ms", () => {
 			tropes.slice(i % 40, (i % 40) + 20).map((t) => ({ id: t.id, d: 50 })),
 		),
 	)
-	rankRecommendations(titles, tropes, empty(), "all")
+	const index = compact(titles)
+	rankIndex(index, tropes, empty(), "all")
 	const start = performance.now()
-	assert.equal(rankRecommendations(titles, tropes, empty(), "all").length, 120)
+	assert.equal(rankIndex(index, tropes, empty(), "all").length, 120)
 	const elapsed = performance.now() - start
 	console.log(`12,000-title warm ranking: ${elapsed.toFixed(1)} ms`)
 	assert.ok(elapsed < 300, `ranking took ${elapsed}ms`)
+})
+
+test("dedicated log exclusions apply without mutating member skipped data", () => {
+	const data = empty()
+	const excluded = new Set(["movie-1"])
+	assert.deepEqual(
+		rankRecommendations(
+			[candidate(1), candidate(2)],
+			profile,
+			data,
+			"all",
+			undefined,
+			excluded,
+		).map((t) => t.id),
+		["movie-2"],
+	)
+	assert.deepEqual(data.skipped, {})
 })
