@@ -1,12 +1,10 @@
 // What a click on the orbit opens in the header: the fingerprint's key facts (the viewer type, the strongest families,
 // the top attributes) and, for a member visitor, their match on a half-round pill that slides out from behind the
 // picture across the name and facts. The header keeps its height; motion is transform and opacity only. The header
-// (Layouts.tsx) owns the open state; the pill designs live in Pills.tsx; this file holds the pieces they share.
-import { XMarkIcon } from "@heroicons/react/24/outline"
+// (Layouts.tsx) owns the open state; the pill lives in Pills.tsx; this file holds the pieces they share.
 import type { ReactNode } from "react"
-import { FAMILY_COLOR } from "../taste/model"
 import type { MatchView } from "./Compare"
-import type { FamilyPull, KeyFacts } from "./facts"
+import type { KeyFacts } from "./facts"
 
 export interface RevealProps {
 	open: boolean
@@ -16,7 +14,6 @@ export interface RevealProps {
 	facts: KeyFacts
 	/** The signed-in visitor's match; null for the owner and guests. */
 	match: MatchView | null
-	onClose: () => void
 }
 
 /** `inert` while hidden, so its links leave the tab order (React 18 passes the attribute through as a string). */
@@ -24,66 +21,6 @@ export const inertUnless = (shown: boolean) =>
 	(shown ? {} : { inert: "" }) as Record<string, string>
 
 const FADE = "transition-[opacity,transform] duration-300 ease-out"
-
-export function CloseKey({
-	onClose,
-	className = "",
-}: { onClose: () => void; className?: string }) {
-	return (
-		<button
-			type="button"
-			onClick={onClose}
-			aria-label="Close taste facts"
-			className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white ${className}`}
-		>
-			<XMarkIcon className="size-5" aria-hidden />
-		</button>
-	)
-}
-
-/** The families as chips: a colored dot and the name. */
-export function FamilyChips({
-	families,
-	className = "",
-}: { families: FamilyPull[]; className?: string }) {
-	return (
-		<span className={`flex min-w-0 gap-1.5 overflow-hidden ${className}`}>
-			{families.map((f) => (
-				<span
-					key={f.id}
-					className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full bg-white/[0.06] px-2 text-xs font-bold text-gray-100 ring-1 ring-white/10"
-					style={{ boxShadow: `inset 0 0 0 1px ${FAMILY_COLOR[f.id]}33` }}
-				>
-					<span
-						aria-hidden
-						className="size-2 rounded-full"
-						style={{ background: FAMILY_COLOR[f.id] }}
-					/>
-					{f.name}
-				</span>
-			))}
-		</span>
-	)
-}
-
-/** "Seeks dread · moral weight · slow burn". */
-export function AttributeLine({
-	facts,
-	className = "",
-}: { facts: KeyFacts; className?: string }) {
-	if (!facts.attributes.length) return null
-	return (
-		<p className={`truncate text-gray-400 ${className}`}>
-			Seeks{" "}
-			{facts.attributes.map((a, i) => (
-				<span key={a.key}>
-					{i > 0 && <span className="text-gray-600"> · </span>}
-					<b className="font-semibold text-gray-200">{a.label}</b>
-				</span>
-			))}
-		</p>
-	)
-}
 
 /** A layer over the content column that fades in when open. */
 export function Layer({

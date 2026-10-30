@@ -1,14 +1,12 @@
-// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-15). Not a feature switch: these let the owner
+// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-16). Not a feature switch: these let the owner
 // compare navigation options on the local preview branch. The choice lives in one cookie; the root loader reads it
 // for the server render, and the options bar sets it and reloads the page.
 import { useRouteLoaderData } from "@remix-run/react"
 
 export const NAV_OPTIONS = {
-	/** The taste comparison (round 15): "4" is round 14's compact strip; a-e build on it with the score between the two
-	 * avatars (from 6) and the bold tier word, big numbers and the tier-colored bar (from 10). */
-	twins: ["4", "a", "b", "c", "d", "e"],
-	/** The orbit's reveal pill, redesigned, holding the match badge for member visitors (round 15). */
-	pill: ["1", "2", "3", "4", "5"],
+	/** How the expanded comparison presents its panels (round 16): no boxes, separators instead, and the strip's
+	 * surface unchanged when open; the values try different separators and background colors. */
+	panels: ["1", "2", "3", "4", "5"],
 	/** Simulates the match percentage everywhere it shows, to see each tier: "real" keeps the actual number. */
 	match: ["real", "12", "35", "55", "75", "97"],
 } as const
@@ -16,7 +14,7 @@ export const NAV_OPTIONS = {
 export type NavOptionKey = keyof typeof NAV_OPTIONS
 export type NavOptions = { [K in NavOptionKey]: (typeof NAV_OPTIONS)[K][number] }
 
-export const DEFAULT_NAV_OPTIONS: NavOptions = { twins: "a", pill: "1", match: "real" }
+export const DEFAULT_NAV_OPTIONS: NavOptions = { panels: "1", match: "real" }
 
 export const NAV_OPTIONS_COOKIE = "gw_navopt"
 

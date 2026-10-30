@@ -1,7 +1,7 @@
 // The profile header: the orbit round the picture (Ring.tsx), the handle with the join date under it, the facts, and one
 // control cluster (Controls.tsx). It has one height per width (BOX) on every profile tab, list page and Settings page,
 // and the handle strip uses the same one. The orbit is a key: hover, touch or focus wakes it, a click opens the
-// fingerprint's key facts on a pill over the name and facts (Reveal.tsx), and a second click, Escape or the close key
+// fingerprint's key facts on a pill over the name and facts (Reveal.tsx), and a second click or Escape
 // goes back. The header keeps its height in every state. For a member on someone else's profile the pill holds their
 // match with you, with a small percent tag on the closed orbit; without a fingerprint it is a chip next to the handle
 // (Compare.tsx).
@@ -168,10 +168,6 @@ export function InlineHeader(props: HeaderProps) {
 	}, [open])
 	// Another profile starts closed.
 	useEffect(() => setOpen(false), [shell.handle])
-	const close = () => {
-		setOpen(false)
-		key.current?.focus()
-	}
 	const covers = open && !!facts
 
 	const ring = (
@@ -184,7 +180,7 @@ export function InlineHeader(props: HeaderProps) {
 				className={`${WRAP} relative flex h-full items-center gap-3 sm:gap-6`}
 			>
 				<div className="relative flex h-full min-w-0 flex-1 items-center gap-3 sm:gap-6">
-					{facts && <PillBackground open={open} facts={facts} />}
+					{facts && <PillBackground open={open} />}
 					<div className="relative z-10 shrink-0">
 						{facts ? (
 							<button
@@ -247,7 +243,6 @@ export function InlineHeader(props: HeaderProps) {
 								identity={props.identity}
 								facts={facts}
 								match={view}
-								onClose={close}
 							/>
 						)}
 					</div>

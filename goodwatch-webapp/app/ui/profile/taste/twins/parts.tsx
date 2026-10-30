@@ -1,52 +1,25 @@
-// The comparison's shared pieces (round 14): the match card of round 13 and the three panels of "Where your tastes
-// meet" (Overlap, Splits, Picks), plus small helpers. Variants in this folder (V4.tsx, Va.tsx … Ve.tsx) compose them; the
-// panels' contents stay as they are, the frame around them is what each variant designs.
-import {
-	ArrowRightIcon,
-	ChevronDownIcon,
-	SparklesIcon,
-} from "@heroicons/react/20/solid"
+// The comparison's shared pieces: the three panels of "Where your tastes meet" (Overlap, Splits, Picks) and small
+// helpers. Each panel takes `frame`, the classes of its surface (a boxed PANEL by default); the strip (Strip.tsx) passes
+// "" and separates them itself.
+import { ArrowRightIcon, SparklesIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import {
-	AnimatePresence,
-	animate,
-	motion,
-	useReducedMotion,
-} from "framer-motion"
-import { type ReactNode, useEffect, useRef, useState } from "react"
+import { animate } from "framer-motion"
+import { useEffect, useState } from "react"
 import { RATE_FALLBACK_PATH } from "~/domain/member-paths"
-import type { ProfileShell, ProfileTitle } from "~/domain/profile"
-import { type MemberCompare, matchTier } from "~/domain/profile-taste"
-import { useAccountSummary } from "~/ui/account/useAccountSummary"
-import { DISPLAY } from "~/ui/my-pages/bits"
+import type { ProfileTitle } from "~/domain/profile"
+import type { MemberCompare } from "~/domain/profile-taste"
 import { PANEL_CARD_SIZES, ProfileCard } from "../../ProfileCard"
-import { ProfileAvatar } from "../../ProfileFrame"
-import { COMPARE_ID, onCompareRequest, scrollUnderRows } from "../../compare-link"
-import { useShownMatch } from "~/ui/navigation/nav-options"
-import { matchColor, matchStrength } from "../../match"
 import { AMBER_BUTTON, TILE, posterUrl, vibe } from "../../parts"
 import { PANEL } from "../parts"
 
 export type Ready = Extract<MemberCompare, { status: "ready" }>
 
-/** "Where your tastes meet", trimmed for its place under the card: the overlap, then the splits and the picks. */
-export function Meet({ handle, c }: { handle: string; c: Ready }) {
-	return (
-		<>
-			<Overlap handle={handle} c={c} />
-			{(c.shared.length > 0 ||
-				c.overlap.onlyThem.length > 0 ||
-				c.overlap.onlyYou.some((x) => x.wished)) && (
-				<div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-					{c.shared.length > 0 && <Splits handle={handle} c={c} />}
-					<Picks handle={handle} c={c} />
-				</div>
-			)}
-		</>
-	)
+interface PanelProps {
+	handle: string
+	c: Ready
+	/** The panel's surface classes; "" drops the box. */
+	frame?: string
 }
-
-// ---------- The match card ----------
 
 export function CountUp({ to, still }: { to: number; still: boolean }) {
 	const [n, setN] = useState(to)
@@ -93,199 +66,6 @@ export function ThinMatch({
 				<ArrowRightIcon className="size-4" aria-hidden />
 			</Link>
 		</div>
-	)
-}
-
-/** Their avatar and yours, overlapping. */
-export function Avatars({ shell }: { shell: ProfileShell }) {
-	const me = useAccountSummary()
-	return (
-		<span className="flex shrink-0 items-center" aria-hidden>
-			<ProfileAvatar handle={shell.handle} avatar={shell.avatar} size="md" />
-			<span className="-ml-4">
-				<ProfileAvatar
-					handle={me.handle ?? me.initial}
-					avatar={{ url: me.avatarUrl, color: me.color }}
-					size="md"
-				/>
-			</span>
-		</span>
-	)
-}
-
-/** The signed-in visitor's match with the owner: the ring, the tier word, what pulls you both, the counts, and both
- * avatars; `children` is the row at the card's foot, under a hairline. */
-export function MatchCard({
-	shell,
-	compare,
-	children,
-}: { shell: ProfileShell; compare: Ready; children: ReactNode }) {
-	const still = useReducedMotion() ?? false
-	const p = useShownMatch(compare.percent)
-	const s = matchStrength(p)
-	const color = matchColor(p)
-	const splits = compare.shared.filter(
-		(r) => Math.abs(r.yours - r.theirs) >= 3,
-	).length
-	const pulls = compare.pulls
-	const R = 52
-	const C = 2 * Math.PI * R
-	return (
-		<section
-			aria-label="Taste match"
-			className="relative overflow-hidden rounded-3xl p-px"
-			style={{ background: `color-mix(in srgb, ${color} 30%, transparent)` }}
-		>
-			{/* A light that runs round the border: faster and brighter the closer the match. */}
-			{!still && (
-				<motion.span
-					aria-hidden
-					className="pointer-events-none absolute top-1/2 left-1/2 aspect-square w-[150%]"
-					style={{
-						x: "-50%",
-						y: "-50%",
-						opacity: 0.25 + s * 0.75,
-						background: `conic-gradient(from 0deg, transparent 0 62%, ${color} 80%, transparent 92%)`,
-					}}
-					animate={{ rotate: 360 }}
-					transition={{
-						duration: 16 - s * 9,
-						ease: "linear",
-						repeat: Number.POSITIVE_INFINITY,
-					}}
-				/>
-			)}
-			<div
-				className="relative rounded-[23px] bg-gray-950"
-				style={{
-					backgroundImage: `radial-gradient(90% 120% at 0% 40%, color-mix(in srgb, ${color} ${8 + s * 16}%, transparent), transparent 65%)`,
-				}}
-			>
-				<div className="grid items-center gap-x-8 gap-y-5 p-5 sm:p-6 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-					<div className="flex items-center gap-5 md:block">
-						<div className="relative size-28 shrink-0 sm:size-32">
-							{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden; the numbers beside it carry the meaning */}
-							<svg
-								viewBox="0 0 120 120"
-								className="size-full -rotate-90"
-								aria-hidden
-							>
-								<circle
-									cx="60"
-									cy="60"
-									r={R}
-									fill="none"
-									stroke="rgba(255,255,255,.08)"
-									strokeWidth="9"
-								/>
-								<motion.circle
-									cx="60"
-									cy="60"
-									r={R}
-									fill="none"
-									stroke={color}
-									strokeWidth="9"
-									strokeLinecap="round"
-									strokeDasharray={`${((C * p) / 100).toFixed(1)} ${C.toFixed(1)}`}
-									initial={still ? false : { opacity: 0 }}
-									animate={{ opacity: 1 }}
-									transition={{ duration: 0.8 }}
-								/>
-							</svg>
-							<span className="absolute inset-0 flex flex-col items-center justify-center">
-								<span
-									className="text-4xl leading-none font-black tabular-nums"
-									style={{ color }}
-								>
-									<CountUp to={p} still={still} />
-									<span className="text-xl">%</span>
-								</span>
-								<span className="mt-1 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
-									match
-								</span>
-							</span>
-						</div>
-						<div className="flex flex-col items-start gap-2 md:hidden">
-							<Avatars shell={shell} />
-							<p className="text-sm text-gray-400">
-								You and <b className="text-gray-200">@{shell.handle}</b>
-							</p>
-						</div>
-					</div>
-
-					<div className="flex min-w-0 flex-col gap-3">
-						<div>
-							<p className="hidden text-xs font-bold tracking-[0.18em] text-gray-500 uppercase md:block">
-								You and @{shell.handle}
-							</p>
-							<h2 className={`${DISPLAY} text-3xl sm:text-4xl`}>
-								<span
-									className="relative inline-block overflow-hidden"
-									style={{ color }}
-								>
-									{matchTier(p)}
-									{/* A sheen across the word; it passes more often for a closer match. */}
-									{!still && (
-										<motion.span
-											aria-hidden
-											className="absolute inset-y-0 -left-1/2 w-1/2 bg-linear-to-r from-transparent via-white/40 to-transparent"
-											animate={{ x: ["0%", "400%"] }}
-											transition={{
-												duration: 1.4,
-												ease: "easeInOut",
-												repeat: Number.POSITIVE_INFINITY,
-												repeatDelay: 7 - s * 4,
-											}}
-										/>
-									)}
-								</span>
-							</h2>
-							{(pulls.both.length > 0 ||
-								(pulls.onlyThem[0] && pulls.onlyYou[0])) && (
-								<p className="mt-1 text-sm text-gray-300">
-									{pulls.both.length > 0 && (
-										<>
-											You both go for{" "}
-											{pulls.both.slice(0, 2).join(" and ").toLowerCase()}.{" "}
-										</>
-									)}
-									{pulls.onlyThem[0] && pulls.onlyYou[0] && (
-										<>
-											They chase {pulls.onlyThem[0].toLowerCase()}; you chase{" "}
-											{pulls.onlyYou[0].toLowerCase()}.
-										</>
-									)}
-								</p>
-							)}
-						</div>
-						<dl className="flex gap-5 text-sm">
-							<div>
-								<dt className="text-[11px] text-gray-500">Both love</dt>
-								<dd className="font-black text-white tabular-nums">
-									{compare.overlap.bothCount}
-								</dd>
-							</div>
-							<div>
-								<dt className="text-[11px] text-gray-500">Rated by both</dt>
-								<dd className="font-black text-white tabular-nums">
-									{compare.shared.length}
-								</dd>
-							</div>
-							<div>
-								<dt className="text-[11px] text-gray-500">Big splits</dt>
-								<dd className="font-black text-white tabular-nums">{splits}</dd>
-							</div>
-						</dl>
-					</div>
-
-					<div className="hidden md:block">
-						<Avatars shell={shell} />
-					</div>
-				</div>
-				<div aria-hidden className="h-px bg-white/10" />
-				{children}
-			</div>
-		</section>
 	)
 }
 
@@ -353,13 +133,13 @@ export function Region({
 	)
 }
 
-export function Overlap({ handle, c }: { handle: string; c: Ready }) {
+export function Overlap({ handle, c, frame = PANEL }: PanelProps) {
 	const overlap = c.overlap
 	const both = overlap.both.slice(0, 3)
 	const them = overlap.onlyThem.slice(0, 4)
 	const you = overlap.onlyYou.slice(0, 4)
 	return (
-		<div className={`${PANEL} relative overflow-hidden p-4 sm:p-6`}>
+		<div className={`${frame} relative overflow-hidden p-4 sm:p-6`}>
 			{/* Two circles that overlap: theirs amber, yours white. Drawn behind three poster fans on wide screens. */}
 			{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden; the numbers beside it carry the meaning */}
 			<svg
@@ -426,13 +206,13 @@ export function Overlap({ handle, c }: { handle: string; c: Ready }) {
 
 // ---------- Where you split ----------
 
-export function Splits({ handle, c }: { handle: string; c: Ready }) {
+export function Splits({ handle, c, frame = PANEL }: PanelProps) {
 	const shared = c.shared
 	const [all, setAll] = useState(false)
 	const rows = all ? shared : shared.slice(0, 6)
 	const at = (score: number) => `${((score - 1) / 9) * 100}%`
 	return (
-		<div className={`${PANEL} flex flex-col gap-3 p-4 sm:p-5`}>
+		<div className={`${frame} flex flex-col gap-3 p-4 sm:p-5`}>
 			<div className="flex flex-wrap items-baseline gap-x-3">
 				<p className="font-bold text-white">Where you split</p>
 				<p className="text-xs text-gray-400">
@@ -515,12 +295,12 @@ export function Dot({ at, score, ring }: { at: string; score: number; ring: stri
 
 // ---------- Picks for each other ----------
 
-export function Picks({ handle, c }: { handle: string; c: Ready }) {
+export function Picks({ handle, c, frame = PANEL }: PanelProps) {
 	const forYou = c.overlap.onlyThem.slice(0, 4)
 	const forThem = c.overlap.onlyYou.filter((x) => x.wished).slice(0, 4)
 	if (!forYou.length && !forThem.length) return null
 	return (
-		<div className={`${PANEL} flex flex-col gap-4 p-4 sm:p-5`}>
+		<div className={`${frame} flex flex-col gap-4 p-4 sm:p-5`}>
 			<div>
 				<p className="font-bold text-white">Picks for each other</p>
 				<p className="text-xs text-gray-400">
