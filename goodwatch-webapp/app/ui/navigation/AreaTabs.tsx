@@ -1,6 +1,9 @@
-// The rows under the site header: an area's tabs (sticky under the h-16 header, sideways scroll on phones), the Settings
-// gear at the Profile row's end, the small two-option switch ("To watch | Seen", "Scored | Not rated", Best's "Movies |
-// Shows") and the chip row under Watch's To watch. Props in, links out: the data comes from ./areas.ts.
+// The rows under the site header: an area's tabs (sticky under the h-16 header, sideways scroll on phones) and the
+// Settings gear at the Profile row's end. The third level under the tabs is SubNav.tsx. Props in, links out: the data
+// comes from ./areas.ts.
+//
+// Every row has one fixed height, so the rows under it can stick at a known offset. A profile with the sticky visitor
+// bar sets `--visitor-bar-h` on its wrapper (0px elsewhere); every sticky offset here adds it.
 import { LockClosedIcon, UserGroupIcon } from "@heroicons/react/20/solid"
 import { Cog6ToothIcon } from "@heroicons/react/24/outline"
 import {
@@ -10,14 +13,40 @@ import {
 import { Link } from "@remix-run/react"
 import { type ReactNode, useLayoutEffect, useRef } from "react"
 import { STICKY_BAR } from "~/ui/layers"
-import type { AreaTab, NavChoices, NavIcon, TasteRow } from "./areas"
+import type { AreaTab, NavIcon, TasteRow } from "./areas"
 
 /** The page width, as ui/my-pages/bits.tsx (kept here so the header chunk does not pull that module). */
 const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
 const count = (n: number) => n.toLocaleString("en-US")
 
-/** Keeps the current tab or chip in view in a row that scrolls sideways. */
-function useCenterCurrent() {
+/**
+ * The tab row's height in px, border included, below lg and from lg: one-line rows (Explore, Profile) and Watch's
+ * two-line row. The classes below repeat these numbers, since Tailwind reads whole literals.
+ */
+export const TAB_ROW_PX = { one: [45, 49], two: [57, 61] } as const
+/** The third-level row's height in px (SubNav.tsx), the same at every width. */
+export const SUBNAV_PX = 44
+
+/** Where the tab row sticks: under the site header and the visitor bar. */
+export const TABS_TOP = "top-[calc(4rem_+_var(--visitor-bar-h,0px))]"
+/** Where a row right under the tab row sticks (SubNav, the Settings column), by the tab row it sits under. */
+export const UNDER_TABS = {
+	one: "top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_45px)] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_49px)]",
+	two: "top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_57px)] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_61px)]",
+} as const
+/** Where a bar under the tab row and a SubNav sticks (the My scores selection bar). */
+export const UNDER_SUBNAV = {
+	one: "top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_89px)] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_93px)]",
+	two: "top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_101px)] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_105px)]",
+} as const
+/** The tab row's own height, by kind (TAB_ROW_PX). */
+const ROW_H = {
+	one: "h-[45px] lg:h-[49px]",
+	two: "h-[57px] lg:h-[61px]",
+} as const
+
+/** Keeps the current tab in view in a row that scrolls sideways. */
+export function useCenterCurrent() {
 	const box = useRef<HTMLDivElement>(null)
 	useLayoutEffect(() => {
 		const row = box.current
@@ -64,8 +93,9 @@ function News({ news }: { news: AreaTab["news"] }) {
 }
 
 /**
- * A tab's icon, left of the label. One size and weight in every area (the gear's 20 px outline); amber on the current
- * tab. Phones keep it inline too: an icon over the label would make the row taller under the sticky header.
+ * A tab's icon, left of the label; amber on the current tab. One-line tabs use the gear's 20 px outline. A two-line
+ * tab's icon is as tall as its two lines (20 px label + 16 px second line). Phones keep it inline too: an icon over
+ * the label would make the row taller under the sticky header.
  */
 function TabIcon({ tab }: { tab: AreaTab }) {
 	const Icon = tab.icon
@@ -73,7 +103,7 @@ function TabIcon({ tab }: { tab: AreaTab }) {
 	return (
 		<Icon
 			aria-hidden
-			className={`size-5 shrink-0 ${tab.here ? "text-amber-300" : "text-gray-500"}`}
+			className={`${tab.sub ? "size-9" : "size-5"} shrink-0 ${tab.here ? "text-amber-300" : "text-gray-500"}`}
 		/>
 	)
 }
@@ -91,7 +121,7 @@ export function TabLink({ tab }: { tab: AreaTab }) {
 				to={tab.href}
 				prefetch="intent"
 				aria-current={tab.here ? "page" : undefined}
-				className={`relative flex min-h-14 shrink-0 items-center gap-2.5 border-b-2 px-3 whitespace-nowrap lg:min-h-[60px] lg:px-4 ${
+				className={`relative flex h-14 shrink-0 items-center gap-2.5 border-b-2 px-3 whitespace-nowrap lg:h-[60px] lg:px-4 ${
 					tab.here
 						? "border-amber-400"
 						: "border-transparent hover:[&_b]:text-gray-100"
@@ -122,7 +152,7 @@ export function TabLink({ tab }: { tab: AreaTab }) {
 			to={tab.href}
 			prefetch="intent"
 			aria-current={tab.here ? "page" : undefined}
-			className={`relative flex min-h-11 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-semibold whitespace-nowrap lg:min-h-12 ${
+			className={`relative flex h-11 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-semibold whitespace-nowrap lg:h-12 ${
 				tab.here
 					? "border-amber-400 text-white"
 					: "border-transparent text-gray-400 hover:text-gray-100"
@@ -141,14 +171,16 @@ const Divider = () => <span aria-hidden className="mr-1 h-5 w-px bg-white/10" />
 
 /**
  * An area's tab row. `label` names the row at its start on desktop ("Watch", "@handle"); `trailing` tabs sit at the
- * row's end after a thin divider; `end` (the Settings gear) closes the row. Sticky under the header unless `sticky`
- * is false (pages with their own sticky bar or a full-screen layout).
+ * row's end after a thin divider (with `trailingEnd="desktop"`, at the end on desktop only and right after the tabs on
+ * phones); `end` (the Settings gear) closes the row. Sticky under the header unless `sticky` is false (pages with their
+ * own sticky bar or a full-screen layout).
  */
 export function AreaTabs({
 	label,
 	icon: Icon,
 	tabs,
 	trailing,
+	trailingEnd = "always",
 	end,
 	sticky = true,
 }: {
@@ -157,19 +189,22 @@ export function AreaTabs({
 	icon?: NavIcon
 	tabs: AreaTab[]
 	trailing?: AreaTab[]
+	trailingEnd?: "always" | "desktop"
 	end?: ReactNode
 	sticky?: boolean
 }) {
 	const scroller = useCenterCurrent()
 	const hasTrailing = trailing != null && trailing.length > 0
+	const kind = [...tabs, ...(trailing ?? [])].some((t) => t.sub) ? "two" : "one"
 	return (
 		<nav
 			aria-label={typeof label === "string" ? label : "Area"}
-			className={`${sticky ? `sticky top-16 ${STICKY_BAR}` : "relative"} border-b border-white/10 bg-gray-950/95`}
+			data-tab-row={kind}
+			className={`${sticky ? `sticky ${TABS_TOP} ${STICKY_BAR}` : "relative"} ${ROW_H[kind]} border-b border-white/10 bg-gray-950/95`}
 		>
 			<div
 				ref={scroller}
-				className={`${WRAP} flex items-center gap-1 overflow-x-auto [scrollbar-width:none]`}
+				className={`${WRAP} flex h-full items-center gap-1 overflow-x-auto [scrollbar-width:none]`}
 			>
 				<span className="hidden shrink-0 items-center gap-1.5 pr-3 text-[11px] font-semibold tracking-wide text-gray-500 uppercase lg:flex">
 					{Icon && <Icon className="h-4 w-4 text-amber-400" aria-hidden />}
@@ -179,7 +214,9 @@ export function AreaTabs({
 					<TabLink key={t.key} tab={t} />
 				))}
 				{hasTrailing && (
-					<span className="ml-auto flex shrink-0 items-center gap-1 pl-4 lg:pl-8">
+					<span
+						className={`${trailingEnd === "always" ? "ml-auto" : "lg:ml-auto"} flex shrink-0 items-center gap-1 pl-2 lg:pl-8`}
+					>
 						<Divider />
 						{trailing.map((t) => (
 							<TabLink key={t.key} tab={t} />
@@ -209,7 +246,7 @@ export function SettingsGear({ href, here }: { href: string; here: boolean }) {
 			prefetch="intent"
 			aria-current={here ? "page" : undefined}
 			aria-label="Settings"
-			className={`flex min-h-11 items-center gap-1.5 border-b-2 px-2.5 text-[13px] font-medium whitespace-nowrap lg:min-h-12 ${
+			className={`flex h-11 items-center gap-1.5 border-b-2 px-2.5 text-[13px] font-medium whitespace-nowrap lg:h-12 ${
 				here
 					? "border-amber-400 text-white"
 					: "border-transparent text-gray-500 hover:text-gray-200"
@@ -253,86 +290,5 @@ export function TasteTabs({
 			}
 			sticky={sticky}
 		/>
-	)
-}
-
-// ---------------------------------------------------------------------------------------------------------
-// The two-option switch and the chips. Both replace the history entry and keep the scroll position.
-
-const SEG_TRACK =
-	"inline-flex max-w-full shrink-0 rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10"
-const seg = (on: boolean) =>
-	`flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 text-sm transition-colors ${
-		on ? "bg-white font-bold text-gray-950" : "text-gray-300 hover:text-white"
-	}`
-
-/** "To watch | Seen" and its kin: one track, the current side white. `className` sets the spacing around it. */
-export function ChoiceSwitch({
-	choices,
-	className = "mb-3",
-}: { choices: NavChoices; className?: string }) {
-	return (
-		<div className={`${WRAP} ${className}`}>
-			<nav aria-label={choices.label} className={SEG_TRACK}>
-				{choices.choices.map((c) => (
-					<Link
-						key={c.key}
-						to={c.href}
-						replace
-						preventScrollReset
-						prefetch="intent"
-						aria-current={c.here ? "page" : undefined}
-						className={seg(c.here)}
-					>
-						{c.label}
-						{c.count != null && (
-							<span
-								className={`rounded-full px-1.5 py-0.5 text-xs tabular-nums ${c.here ? "bg-black/10" : "bg-white/10"}`}
-							>
-								{count(c.count)}
-							</span>
-						)}
-					</Link>
-				))}
-			</nav>
-		</div>
-	)
-}
-
-/** The chips under To watch, in Discover's chip look: they wrap on a phone and never scroll sideways. */
-export function ChipRow({
-	choices,
-	className = "mb-4",
-}: { choices: NavChoices; className?: string }) {
-	return (
-		<nav
-			aria-label={choices.label}
-			className={`${WRAP} ${className} flex flex-wrap gap-1.5`}
-		>
-			{choices.choices.map((c) => (
-				<Link
-					key={c.key}
-					to={c.href}
-					replace
-					preventScrollReset
-					prefetch="intent"
-					aria-current={c.here ? "page" : undefined}
-					className={`flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-semibold ring-1 ${
-						c.here
-							? "bg-amber-400/15 text-amber-100 ring-amber-400/50"
-							: "bg-white/[0.04] text-gray-300 ring-white/10 hover:bg-white/[0.08]"
-					}`}
-				>
-					{c.label}
-					{c.count != null && (
-						<span
-							className={`text-xs tabular-nums ${c.here ? "text-amber-200/80" : "text-gray-500"}`}
-						>
-							{count(c.count)}
-						</span>
-					)}
-				</Link>
-			))}
-		</nav>
 	)
 }

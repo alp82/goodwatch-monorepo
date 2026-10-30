@@ -1,15 +1,16 @@
-import { presentCatalogLoader } from "~/server/media-payload.server"
 // The editor for a saved share list: /u/:handle/lists/:id/edit, inside the profile layout (the header and the Profile
 // row with Lists lit stay above it). Only the owner can open it; everyone else goes to the list page. A wrong or
 // differently cased handle redirects to the canonical URL, and deleted lists answer 404. The underscore after $id
 // keeps it out of the list page.
 import {
-	json,
 	type LoaderFunctionArgs,
 	type MetaFunction,
+	json,
 	redirect,
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
+import { tastePath } from "~/domain/member-paths"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { getList } from "~/server/share-lists/store.server"
 import {
 	getQuickPicks,
@@ -22,9 +23,9 @@ import {
 	shareListPath,
 } from "~/ui/share-card/links"
 import { cardDate, listByline } from "~/ui/share-card/model"
-import type { ListDraft } from "~/ui/share-list-editor/list-state"
 import { SharedNotice } from "~/ui/share-list-editor/ShareFlow"
 import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
+import type { ListDraft } from "~/ui/share-list-editor/list-state"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { EDITOR_UNDER_ROW } from "./lists.new"
 
@@ -98,6 +99,7 @@ export default function EditShareList() {
 					date={date}
 					byline={byline}
 					saveTarget={{ kind: "list", id }}
+					back={tastePath(handle, "lists")}
 					share={async () => {
 						// Make sure the card image is current before the link gets pasted somewhere.
 						navigator.sendBeacon?.(

@@ -1,5 +1,6 @@
-// The Scores tab: /u/:handle/scores and its pages. The owner gets the head with "Rate more" and the switch between
-// Scored (/scores) and Not rated (/scores/not-rated); Rate more (/scores/rate) has its own head with the way back.
+// The Scores tab: /u/:handle/scores and its pages. The owner gets the SubNav between Scored (/scores) and Not rated
+// (/scores/not-rated), right under the tab row, then the head with "Rate more"; Rate more (/scores/rate) has its own
+// head with the way back.
 // Visitors, and the owner with ?as=visitor, get the public Scores page under a plain head.
 import { Link, Outlet, useLocation } from "@remix-run/react"
 import { useMemo } from "react"
@@ -7,8 +8,8 @@ import { tastePath } from "~/domain/member-paths"
 import { libraryCounts } from "~/domain/my-library"
 import { useUserData } from "~/routes/api.user-data"
 import { useProfileLayout } from "~/routes/u.$handle"
+import { SubNav } from "~/ui/navigation/SubNav"
 import { scoresSwitch } from "~/ui/navigation/areas"
-import { ChoiceSwitch } from "~/ui/navigation/AreaTabs"
 import { ProfileTabPage, TabHead } from "~/ui/profile/ProfileFrame"
 import { asGuestSees } from "~/ui/profile/ProfileHeader"
 import { AMBER_BUTTON, count } from "~/ui/profile/parts"
@@ -64,6 +65,7 @@ export default function ProfileScoresLayout() {
 	})
 	return (
 		<>
+			{choices && <SubNav label={choices.label} items={choices.choices} />}
 			<TabHead
 				title="Scores"
 				line={
@@ -81,7 +83,6 @@ export default function ProfileScoresLayout() {
 					</Link>
 				}
 			/>
-			{choices && <ChoiceSwitch choices={choices} />}
 			<Outlet />
 		</>
 	)

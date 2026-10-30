@@ -4,10 +4,12 @@ import { PlusIcon } from "@heroicons/react/20/solid"
 import { Link, useRevalidator } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import { toast } from "react-toastify"
+import { handleOf } from "~/domain/member-paths"
 import type { ProfileShell } from "~/domain/profile"
 import { useShareListOwnerAction } from "~/routes/api.share-lists"
+import { usePathViewer } from "~/ui/navigation/NavigationContext"
 import { CardFonts } from "~/ui/share-card/ScaledCard"
-import { newListPath } from "~/ui/share-card/links"
+import { newListPathFor } from "~/ui/share-card/links"
 import { OwnerListControls } from "~/ui/share-lists/OwnerListControls"
 import {
 	type ShareListSummary,
@@ -17,8 +19,9 @@ import { AMBER_BUTTON } from "../parts"
 
 /** The owner's key in the Lists tab's head. */
 export function NewListKey() {
+	const handle = handleOf(usePathViewer())
 	return (
-		<Link to={newListPath()} className={AMBER_BUTTON}>
+		<Link to={newListPathFor(handle)} className={AMBER_BUTTON}>
 			<PlusIcon className="size-5" aria-hidden />
 			New list
 		</Link>
@@ -31,6 +34,8 @@ export function ListsPage({
 }: { shell: ProfileShell; lists: ShareListSummary[] }) {
 	const owner = shell.viewer === "owner"
 	const { lists, patch, removed } = useOwnerLists(loaded)
+	// Straight to the viewer's own editor, without the /lists/new redirect.
+	const newList = newListPathFor(handleOf(usePathViewer()))
 	return (
 		<>
 			<CardFonts />
@@ -63,7 +68,7 @@ export function ListsPage({
 					</p>
 					{owner ? (
 						<Link
-							to={newListPath()}
+							to={newList}
 							className="mt-4 inline-block rounded-full bg-white px-5 py-2.5 font-black text-black hover:bg-gray-200"
 						>
 							Make your first list
@@ -72,7 +77,7 @@ export function ListsPage({
 						<p className="mt-2 text-gray-400">
 							Rank your own favorite movies and shows.{" "}
 							<Link
-								to={newListPath()}
+								to={newList}
 								className="font-semibold text-gray-100 underline underline-offset-4 hover:text-white"
 							>
 								Make a list

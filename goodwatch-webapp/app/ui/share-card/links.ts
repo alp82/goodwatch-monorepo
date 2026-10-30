@@ -1,4 +1,4 @@
-import { tastePath, tasteListPath } from "~/domain/member-paths"
+import { tasteListPath, tastePath } from "~/domain/member-paths"
 import { WORDMARK_VERSION } from "~/ui/brand/version"
 
 // Paths of share list pages and their card images. A list lives under its owner's handle, but pages look it up by id
@@ -10,6 +10,9 @@ export const myListsPathFor = (handle: string | null) =>
 	handle ? tastePath(handle, "lists") : newListPath()
 export const newListPath = (remixOf?: string) =>
 	remixOf ? `/lists/new?remix=${encodeURIComponent(remixOf)}` : "/lists/new"
+/** The new-list editor for this viewer: inside their profile with a handle, /lists/new without one. */
+export const newListPathFor = (handle: string | null) =>
+	handle ? `/u/${handle}/lists/new` : newListPath()
 /**
  * "Share your top 5": a new list prefilled from the person's highest-rated titles. Signed-in people's ratings are read on
  * the server; guests pass their own, ranked, as title keys.

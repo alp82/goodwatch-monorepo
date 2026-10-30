@@ -14,19 +14,20 @@ import { profileLoader } from "~/server/profile/route.server"
 import { statsPayload, statsTastePayload } from "~/server/profile/stats-payload"
 import { statsForViewer } from "~/server/profile/taste-stats-view"
 import { getTasteStats } from "~/server/profile/taste-stats.server"
+import { SubNav, type SubNavItem } from "~/ui/navigation/SubNav"
+import { PROFILE_CARD_VIEWS } from "~/ui/og-image/profile-card-model"
 import { ProfileTabPage } from "~/ui/profile/ProfileFrame"
 import { profileMeta } from "~/ui/profile/meta"
 import { StatsPage } from "~/ui/profile/pages/StatsPage"
 import { ShareMenu } from "~/ui/profile/taste/ShareMenu"
-import { PROFILE_CARD_VIEWS } from "~/ui/og-image/profile-card-model"
 import type { NamedTasteStats } from "~/ui/profile/taste/Stats"
 import {
 	type ProfileTaste,
 	buildProfileTaste,
 	theirLine,
 } from "~/ui/profile/taste/model"
-import { timeRequestWork } from "~/utils/request-work"
 import { languageName, regionName } from "~/utils/display-names"
+import { timeRequestWork } from "~/utils/request-work"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -140,30 +141,45 @@ export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
 	)
 }
 
+/** The Stats tab's sections, as SubNav milestones (ui/profile/taste/Stats.tsx draws them; one without data is left out). */
+const STATS_SECTIONS: SubNavItem[] = [
+	["genres", "Genres"],
+	["people", "People"],
+	["eras", "Eras"],
+	["world", "World"],
+	["facts", "Facts"],
+	["style", "Rating style"],
+].map(([id, label]) => ({ key: id, label, href: `#${id}` }))
+
 export default function ProfileStatsTab() {
 	const { shell, taste, stats, compare } = useLoaderData() as Data
 	return (
-		<ProfileTabPage
-			shell={shell}
-			part="taste"
-			title="Stats"
-			line={
-				taste?.status === "ready"
-					? `${taste.counted.toLocaleString("en-US")} scores`
-					: undefined
-			}
-			links={
-				taste?.status === "ready" ? <ShareMenu shell={shell} /> : undefined
-			}
-		>
-			{taste && (
-				<StatsPage
-					shell={shell}
-					taste={taste}
-					stats={stats}
-					compare={compare}
-				/>
+		<>
+			{taste?.status === "ready" && seesPart(shell, "taste") && (
+				<SubNav label="Stats sections" items={STATS_SECTIONS} sections />
 			)}
-		</ProfileTabPage>
+			<ProfileTabPage
+				shell={shell}
+				part="taste"
+				title="Stats"
+				line={
+					taste?.status === "ready"
+						? `${taste.counted.toLocaleString("en-US")} scores`
+						: undefined
+				}
+				links={
+					taste?.status === "ready" ? <ShareMenu shell={shell} /> : undefined
+				}
+			>
+				{taste && (
+					<StatsPage
+						shell={shell}
+						taste={taste}
+						stats={stats}
+						compare={compare}
+					/>
+				)}
+			</ProfileTabPage>
+		</>
 	)
 }

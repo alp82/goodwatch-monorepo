@@ -17,6 +17,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query"
 import {
+	type ReactNode,
 	Suspense,
 	lazy,
 	useCallback,
@@ -434,9 +435,15 @@ export function MyLibraryPage({
 	initial,
 	now,
 	viewer,
+	kindControl = true,
+	filter = null,
 }: {
 	/** The page's status: its list is the only one it shows. */
 	status: LibraryStatus
+	/** False where the page's navigation picks the kind (the Seen tab's SubNav): `type` in the URL still counts. */
+	kindControl?: boolean
+	/** A control first in the row, before the search (All shows' status filter). */
+	filter?: ReactNode
 	/** The kind the page fixes (Seen shows, Not started): no kind control, and a `type` in the URL doesn't count. */
 	lockKind?: "movie" | "show" | null
 	/** The sort the page fixes (Recently added): no sort control. */
@@ -569,7 +576,8 @@ export function MyLibraryPage({
 		>
 			<div className={`${WRAP} flex flex-col gap-3`}>
 				<div className="flex flex-wrap items-center gap-2" data-controls>
-					{!showsOnly && !lockKind && (
+					{filter}
+					{kindControl && !showsOnly && !lockKind && (
 						<KindFilter
 							kind={choice.kind}
 							kinds={first.kinds}
@@ -674,7 +682,12 @@ export function LibraryListBody({
 	loaded,
 	name,
 	guest,
+	kindControl,
+	filter,
 }: {
+	/** See MyLibraryPage. */
+	kindControl?: boolean
+	filter?: ReactNode
 	loaded: LibraryListLoaded
 	/** The list's name, as its chip or page says it. */
 	name: string
@@ -703,6 +716,8 @@ export function LibraryListBody({
 			initial={loaded.page}
 			now={loaded.now}
 			viewer={loaded.viewer}
+			kindControl={kindControl}
+			filter={filter}
 		/>
 	)
 }

@@ -1,10 +1,11 @@
-// Watch › Up next's lists: /watch/not-started, /watching, /on-hold, /dropped (the chips under To watch) and
-// /watch/seen (Seen shows, latest watch first). Shows only. Another slug is not found. A guest is asked to sign up.
-// OPTION seen=tab: /watch/seen is the Seen tab instead, every title you watched, with the kind filter (`?type=`).
+// Watch › Up next's lists: /watch/not-started, /watching, /on-hold, /dropped, shows only. /watch/seen is the Seen tab,
+// every title you watched; the layout's SubNav picks the kind (`?type=`). Another slug is not found. A guest is asked
+// to sign up. OPTION upnext=split: the status lists are All shows, with the status filter first in the list's controls.
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
 	useLoaderData,
+	useLocation,
 	useParams,
 } from "@remix-run/react"
 import { WATCH_SHOW_LISTS } from "~/domain/member-paths"
@@ -14,7 +15,10 @@ import {
 } from "~/server/library-list-route.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { LibraryListBody } from "~/ui/my-library/MyLibraryPage"
-import { parseNavOptions } from "~/ui/navigation/nav-options"
+import { useNavOptions } from "~/ui/navigation/nav-options"
+import { StatusFilter } from "~/ui/watch/StatusFilter"
+import { useWatchCounts } from "~/ui/watch/useWatchCounts"
+import { statusViews, upNextViews } from "~/ui/watch/watch-views"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -54,11 +58,8 @@ async function canonicalLoader(args: LoaderFunctionArgs) {
 	const slug = args.params.list ?? ""
 	if (!Object.prototype.hasOwnProperty.call(WATCH_SHOW_LISTS, slug))
 		throw new Response("Not found", { status: 404 })
-	// OPTION seen=tab: the Seen tab keeps movies and shows; the kind filter narrows it.
-	if (
-		slug === "seen" &&
-		parseNavOptions(args.request.headers.get("Cookie")).seen === "tab"
-	)
+	// The Seen tab keeps movies and shows; the SubNav's kind narrows it.
+	if (slug === "seen")
 		return libraryListLoader(args, { status: "seen", kind: "all" })
 	return libraryListLoader(args, WATCH_SHOW_LISTS[slug])
 }
@@ -68,16 +69,24 @@ export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 export default function WatchShowList() {
 	const loaded = useLoaderData<typeof loader>() as LibraryListLoaded
 	const { list } = useParams()
+	const { pathname } = useLocation()
+	const { upnext } = useNavOptions()
+	const counts = useWatchCounts()
+	const seen = loaded.status === "seen" && !loaded.kind
+	const views = upNextViews(pathname, counts)
 	return (
 		<LibraryListBody
 			loaded={loaded}
-			name={
-				loaded.status === "seen" && !loaded.kind
-					? "Seen"
-					: (NAME[list ?? ""] ?? "Shows")
+			kindControl={!seen}
+			filter={
+				// OPTION upnext=split
+				upnext === "split" && views ? (
+					<StatusFilter statuses={statusViews(views)} />
+				) : null
 			}
+			name={seen ? "Seen" : (NAME[list ?? ""] ?? "Shows")}
 			guest={
-				loaded.status === "seen" && !loaded.kind
+				seen
 					? {
 							title: "Sign up to keep a record of what you watched",
 							detail:

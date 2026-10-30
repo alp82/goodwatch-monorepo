@@ -1,80 +1,106 @@
-// Watch's views under each place Seen can sit (round 8 options): the current view, the Seen tab, and the redirect of
-// /watch/movies/seen on the Seen tab.
+// Watch's tabs and views (round 9): the Seen tab, Up next's and Ready to watch's views, All shows (upnext=split), the
+// Seen tab's kinds, and the redirect of /watch/movies/seen.
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
 	moviesSeenMove,
+	readyViews,
+	seenKinds,
 	seenTab,
+	statusViews,
+	upNextSplit,
+	upNextViews,
 	watchTabOf,
 	watchTabsFor,
-	watchViews,
 } from "./watch-views.ts"
 
 const counts = {
-	chips: { "not-started": 3, watching: 2, wishlist: 9 },
+	chips: {
+		"not-started": 3,
+		watching: 2,
+		"on-hold": 1,
+		dropped: 0,
+		wishlist: 9,
+	},
 	seenShows: 4,
 	seenMovies: 7,
 }
 
-test("a tab's views are its to-watch chips, then Seen, with the page's view current", () => {
-	const views = watchViews("/watch/watching", "chip", counts)
-	assert.ok(views)
-	assert.equal(views.tab, "up-next")
+test("Up next's views: Next episodes, then the statuses, with the page's view current", () => {
+	const views = upNextViews("/watch/watching/", counts)
 	assert.deepEqual(
-		views.toWatch.map((c) => c.key),
+		views?.map((c) => c.key),
 		["next-episodes", "not-started", "watching", "on-hold", "dropped"],
 	)
-	assert.equal(views.current.key, "watching")
-	assert.equal(views.seen.href, "/watch/seen")
-	assert.equal(views.seen.count, 4)
-	assert.equal(views.seen.here, false)
-})
-
-test("Seen pages keep the same views, with Seen current", () => {
-	for (const option of ["chip", "picker"] as const) {
-		const shows = watchViews("/watch/seen", option, counts)
-		assert.equal(shows?.current.key, "seen")
-		assert.equal(shows?.toWatch.length, 5)
-		assert.ok(shows?.toWatch.every((c) => !c.here))
-		const movies = watchViews("/watch/movies/seen/", option, counts)
-		assert.equal(movies?.tab, "ready")
-		assert.equal(movies?.seen.count, 7)
-		assert.equal(movies?.current.href, "/watch/movies/seen")
-	}
-})
-
-test("guests get no counts", () => {
-	const views = watchViews("/watch/movies", "picker", null)
-	assert.equal(views?.current.key, "tonight")
-	assert.equal(views?.seen.count, undefined)
-	assert.equal(views?.toWatch[1].count, undefined)
-})
-
-test("For you and pages outside Watch have no views", () => {
-	assert.equal(watchViews("/watch/for-you", "chip", counts), null)
-	assert.equal(watchViews("/discover", "picker", counts), null)
-})
-
-test("seen=tab: /watch/seen is the Seen tab, and none of the three is current", () => {
-	assert.equal(watchTabOf("/watch/seen", "tab"), "seen")
-	assert.equal(watchTabOf("/watch/seen", "chip"), "up-next")
-	assert.equal(seenTab("/watch/seen", "tab").here, true)
-	assert.equal(seenTab("/watch", "tab").here, false)
-	assert.ok(watchTabsFor("/watch/seen", "tab").every((t) => !t.here))
-	assert.equal(watchTabsFor("/watch/seen", "chip")[0].here, true)
-	assert.equal(watchViews("/watch/seen", "tab", counts), null)
-	assert.equal(
-		watchViews("/watch/movies/wishlist", "tab", counts)?.current.key,
-		"wishlist",
+	assert.deepEqual(
+		views?.filter((c) => c.here).map((c) => c.key),
+		["watching"],
 	)
+	assert.equal(views?.[1].count, 3)
+	assert.equal(upNextViews("/watch/movies", counts), null)
+	assert.equal(upNextViews("/watch/seen", counts), null)
 })
 
-test("seen=tab sends /watch/movies/seen to the Seen tab with Movies picked", () => {
-	assert.equal(moviesSeenMove("", "tab"), "/watch/seen?type=movie")
+test("Ready to watch's views, and guests get no counts", () => {
+	const views = readyViews("/watch/movies/recent", null)
+	assert.deepEqual(
+		views?.map((c) => [c.key, c.here, c.count]),
+		[
+			["tonight", false, undefined],
+			["wishlist", false, undefined],
+			["recent", true, undefined],
+		],
+	)
+	assert.equal(readyViews("/watch", counts), null)
+	assert.equal(readyViews("/watch/for-you", counts), null)
+})
+
+test("upnext=split: Next episodes | All shows, All shows current on each status page", () => {
+	const onNext = upNextSplit(upNextViews("/watch", counts) ?? [])
+	assert.deepEqual(
+		onNext.map((c) => [c.key, c.here, c.href, c.count]),
+		[
+			["next-episodes", true, "/watch", undefined],
+			["all-shows", false, "/watch/watching", 6],
+		],
+	)
+	const onDropped = upNextSplit(upNextViews("/watch/dropped", counts) ?? [])
+	assert.equal(onDropped[1].here, true)
 	assert.equal(
-		moviesSeenMove("?sort=score&type=show", "tab"),
+		upNextSplit(upNextViews("/watch", null) ?? [])[1].count,
+		undefined,
+	)
+	assert.equal(statusViews(upNextViews("/watch", counts) ?? []).length, 4)
+})
+
+test("/watch/seen is the Seen tab, and none of the three is current", () => {
+	assert.equal(watchTabOf("/watch/seen"), "seen")
+	assert.equal(watchTabOf("/watch/on-hold"), "up-next")
+	assert.equal(seenTab("/watch/seen/").here, true)
+	assert.equal(seenTab("/watch").here, false)
+	assert.ok(watchTabsFor("/watch/seen").every((t) => !t.here))
+	assert.equal(watchTabsFor("/watch")[0].here, true)
+})
+
+test("the Seen tab's kinds keep the rest of the query", () => {
+	const kinds = seenKinds("?type=movie&sort=score", counts)
+	assert.deepEqual(
+		kinds.map((c) => [c.key, c.here, c.href, c.count]),
+		[
+			["all", false, "/watch/seen?sort=score", 11],
+			["movie", true, "/watch/seen?type=movie&sort=score", 7],
+			["show", false, "/watch/seen?type=show&sort=score", 4],
+		],
+	)
+	assert.equal(seenKinds("", null)[0].here, true)
+	assert.equal(seenKinds("", null)[0].href, "/watch/seen")
+	assert.equal(seenKinds("?type=nope", null)[0].here, true)
+})
+
+test("/watch/movies/seen goes to the Seen tab with Movies picked", () => {
+	assert.equal(moviesSeenMove(""), "/watch/seen?type=movie")
+	assert.equal(
+		moviesSeenMove("?sort=score&type=show"),
 		"/watch/seen?sort=score&type=movie",
 	)
-	assert.equal(moviesSeenMove("", "chip"), null)
-	assert.equal(moviesSeenMove("", "picker"), null)
 })

@@ -19,7 +19,8 @@ import {
 	loadProfileHeader,
 } from "~/server/profile/header.server"
 import { profileCacheControl } from "~/server/profile/page.server"
-import { ProfileChrome } from "~/ui/profile/ProfileHeader"
+import { ProfileChrome, isVisitorView } from "~/ui/profile/ProfileHeader"
+import { visitorBarStyle } from "~/ui/profile/header/VisitorView"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -59,17 +60,21 @@ export function useProfileLayout() {
 }
 
 export default function ProfileLayout() {
-	const { shell, identity, print, posters } = useLoaderData<
+	const { shell, identity, print, facts } = useLoaderData<
 		typeof loader
 	>() as ProfileLayoutData
 	const { pathname, search } = useLocation()
+	// --visitor-bar-h: the sticky visitor bar's height while it shows, for the sticky rows under it.
 	return (
-		<main className="min-h-screen overflow-x-clip text-white">
+		<main
+			className="min-h-screen overflow-x-clip text-white"
+			style={visitorBarStyle(isVisitorView(shell, pathname, search))}
+		>
 			<ProfileChrome
 				shell={shell}
 				identity={identity}
 				print={print}
-				posters={posters}
+				facts={facts}
 				pathname={pathname}
 				search={search}
 			/>

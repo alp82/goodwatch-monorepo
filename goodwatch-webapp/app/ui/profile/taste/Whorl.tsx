@@ -211,6 +211,7 @@ export const Whorl = memo(function Whorl({
 	label,
 	animate = true,
 	markers = true,
+	labels = true,
 }: {
 	attributes: WhorlAttribute[]
 	turns?: number
@@ -224,6 +225,8 @@ export const Whorl = memo(function Whorl({
 	animate?: boolean
 	/** The rim dots; Vs me hides them while its tracks take their place. */
 	markers?: boolean
+	/** The family names round the rim; the profile header leaves them out. */
+	labels?: boolean
 }) {
 	const g = useMemo(
 		() => build(attributes, turns, rim),
@@ -315,7 +318,7 @@ export const Whorl = memo(function Whorl({
 					</g>
 				)
 			})}
-			{g.labels.map((l) => (
+			{(labels ? g.labels : []).map((l) => (
 				<text
 					key={l.id}
 					x={l.x}

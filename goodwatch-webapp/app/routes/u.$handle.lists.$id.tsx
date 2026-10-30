@@ -1,6 +1,3 @@
-import { mediaFieldLanguage } from "~/utils/media-presentation"
-import { canonicalMediaTitle } from "~/utils/media-presentation"
-import { presentCatalogLoader } from "~/server/media-payload.server"
 // Public share list page: /u/:handle/lists/:id, inside the profile layout: the owner's profile header and the Profile
 // row with Lists lit stay above it. The card, large, and the five titles as rows: the score pill, the
 // owner's score on someone else's list, and the viewer's own services that stream it in their country (none for a
@@ -9,6 +6,7 @@ import { presentCatalogLoader } from "~/server/media-payload.server"
 // list's share card itself, as a small JPEG preview versioned by the list's content hash; the full-resolution card PNG
 // stays at the same path with .png. Caching: the layout and this page both give anonymous views of a public list the
 // share list lifetime and everything else `private, no-store`, so the stricter of the two keeps the old policy.
+// A toolbar at the page width of the profile header and tab row: Lists on the left; Edit (owner) and Share on the right.
 import {
 	PencilSquareIcon,
 	PlusIcon,
@@ -16,8 +14,11 @@ import {
 } from "@heroicons/react/24/outline"
 import type { MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
-import { ensureShareCard } from "~/server/share-card/images.server"
+import { useState } from "react"
+import { tastePath } from "~/domain/member-paths"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { ownServicesOf } from "~/server/row-services.server"
+import { ensureShareCard } from "~/server/share-card/images.server"
 import { getOwnerScores } from "~/server/share-lists/owner-scores.server"
 import { createShareListPageLoader } from "~/server/share-lists/page-loaders.server"
 import { getListView } from "~/server/share-lists/store.server"
@@ -32,16 +33,19 @@ import { CardFonts, ScaledCard } from "~/ui/share-card/ScaledCard"
 import { designByKey } from "~/ui/share-card/designs"
 import { titleFontPreload } from "~/ui/share-card/font-faces"
 import {
+	SHARE_CARD_PREVIEW,
 	newListPath,
 	profilePath,
 	shareListEditPath,
-	SHARE_CARD_PREVIEW,
 } from "~/ui/share-card/links"
 import { type CardTitle, THEMES } from "~/ui/share-card/model"
+import { BackToLists, TAB_ROW_H } from "~/ui/share-list-editor/ShareListEditor"
 import { getUserIdFromRequest } from "~/utils/auth"
-import { titleToDashed } from "~/utils/helpers"
-import type { SizeRule } from "~/utils/tmdb-image"
 import { countryFlagUrl } from "~/utils/country-flag"
+import { titleToDashed } from "~/utils/helpers"
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import type { SizeRule } from "~/utils/tmdb-image"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -109,11 +113,36 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	]
 }
 
+/** Copies the list's link. The card is its preview image. */
+function ShareLink({ url, gradient }: { url: string; gradient: string }) {
+	const [copied, setCopied] = useState(false)
+	const onClick = async () => {
+		try {
+			await navigator.clipboard.writeText(url)
+			setCopied(true)
+			setTimeout(() => setCopied(false), 2000)
+		} catch {
+			window.prompt("Copy this link", url)
+		}
+	}
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			title="Copies a link. The card is its preview image."
+			className="w-32 rounded-full py-2.5 text-center text-base font-black whitespace-nowrap text-black transition hover:brightness-110 sm:w-40"
+			style={{ backgroundImage: gradient }}
+		>
+			{copied ? "Link copied ✓" : "Share"}
+		</button>
+	)
+}
+
 const titlePath = (item: CardTitle) =>
 	`/${item.type}/${item.key.split(":")[1]}-${titleToDashed(canonicalMediaTitle(item))}`
 
 export default function ShareListPage() {
-	const { list, items, services, ownerScores, country, owner, isOwner } =
+	const { list, items, services, ownerScores, country, owner, isOwner, share } =
 		useLoaderData<typeof loader>()
 	const design = designByKey(list.design)
 	const t = THEMES[list.theme]
@@ -131,17 +160,29 @@ export default function ShareListPage() {
 		maxWidth: Math.round(Math.min(624, 860 * shape)),
 	}
 	return (
-		<div className="relative isolate min-h-screen overflow-hidden pb-24 text-white">
+		<div
+			className={`relative isolate min-h-screen pb-24 text-white ${TAB_ROW_H}`}
+		>
 			<CardFonts design={design.key} />
 			<div
-				aria-hidden
-				className="pointer-events-none absolute inset-0 -z-10 opacity-40"
-				style={{
-					backgroundImage: `radial-gradient(ellipse at 30% 20%, ${t.accent}40 0%, transparent 60%)`,
-				}}
-			/>
-			<div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-4 pt-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14 lg:pt-10">
-				<div className="lg:sticky lg:top-32 lg:self-start">
+				data-list-toolbar
+				className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 pt-4 sm:px-6 lg:px-8"
+			>
+				<BackToLists href={tastePath(owner.handle, "lists")} />
+				<span className="flex-1" />
+				{isOwner && (
+					<Link
+						to={shareListEditPath(owner.handle, list.id)}
+						className="flex w-24 items-center justify-center gap-2 rounded-full bg-white py-2.5 font-black text-black transition hover:bg-neutral-200 sm:w-28"
+					>
+						<PencilSquareIcon className="size-5" aria-hidden />
+						Edit
+					</Link>
+				)}
+				<ShareLink url={share.url} gradient={gradient} />
+			</div>
+			<div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-4 pt-6 sm:px-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14 lg:px-8 lg:pt-8">
+				<div className="lg:sticky lg:top-[calc(4rem+var(--visitor-bar-h,0px)+var(--tab-row-h)+1.5rem)] lg:self-start">
 					<div className="h-[min(70vh,640px)] lg:h-[calc(100vh-10rem)] lg:max-h-[860px]">
 						<ScaledCard
 							design={design}
@@ -190,15 +231,7 @@ export default function ShareListPage() {
 								<PlusIcon className="size-5" aria-hidden />
 								Make your own
 							</Link>
-							{isOwner ? (
-								<Link
-									to={shareListEditPath(owner.handle, list.id)}
-									className="flex items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 font-bold hover:bg-white/15"
-								>
-									<PencilSquareIcon className="size-5" aria-hidden />
-									Edit
-								</Link>
-							) : (
+							{!isOwner && (
 								<Link
 									to={newListPath(list.id)}
 									className="flex items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 font-bold hover:bg-white/15"
@@ -233,104 +266,106 @@ export default function ShareListPage() {
 						</div>
 						<ol className="flex flex-col gap-2">
 							{items.map((item, i) => {
-								const marks = marksOf(
-									item.type,
-									Number(item.key.split(":")[1]),
-								)
+								const marks = marksOf(item.type, Number(item.key.split(":")[1]))
 								const yours = services?.[item.key] ?? []
 								return (
-								<li
-									key={item.key}
-									className="flex items-center gap-3 rounded-2xl bg-white/5 p-2.5 pr-3 ring-1 ring-white/5 sm:gap-4"
-								>
-									<span
-										className="w-7 shrink-0 text-center text-2xl font-black sm:w-10 sm:text-4xl"
-										style={{ color: t.accent }}
+									<li
+										key={item.key}
+										className="flex items-center gap-3 rounded-2xl bg-white/5 p-2.5 pr-3 ring-1 ring-white/5 sm:gap-4"
 									>
-										{i + 1}
-									</span>
-									<Link
-										to={titlePath(item)}
-										prefetch="intent"
-										aria-label={item.title}
-										className="shrink-0"
-									>
-										{item.poster ? (
-											<img
-												loading="lazy"
-												decoding="async"
-												width={56}
-												height={84}
-												srcSet={`${item.poster.replace("/w500/", "/w92/")} 1x, ${item.poster.replace("/w500/", "/w154/")} 2x`}
-												src={item.poster.replace("/w500/", "/w92/")}
-												alt=""
-												className="aspect-[2/3] h-auto w-12 rounded-md object-cover shadow-lg shadow-black/50 sm:w-14"
-											/>
-										) : (
-											<div className="aspect-[2/3] w-12 rounded-md bg-gray-800 sm:w-14" />
-										)}
-									</Link>
-									<div className="flex min-w-0 flex-1 flex-col gap-1.5">
-										<div className="min-w-0">
-											<Link
-												to={titlePath(item)}
-												prefetch="intent"
-												className="block truncate font-bold hover:underline hover:underline-offset-4"
-											>
-												<span lang={mediaFieldLanguage(item)}>{item.title}</span>
-											</Link>
-											<p className="text-xs text-gray-400">
-												{[item.year, item.type === "movie" ? "Movie" : "Series"]
-													.filter(Boolean)
-													.join(" · ")}
-											</p>
-										</div>
-										{services && (
-											<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-400">
-												<RowLogos services={yours} max={LOGOS_SHOWN} />
-												<span className="truncate">
-													{yours.length === 1
-														? yours[0].name
-														: yours.length
-															? null
-															: "Not on your services"}
+										<span
+											className="w-7 shrink-0 text-center text-2xl font-black sm:w-10 sm:text-4xl"
+											style={{ color: t.accent }}
+										>
+											{i + 1}
+										</span>
+										<Link
+											to={titlePath(item)}
+											prefetch="intent"
+											aria-label={item.title}
+											className="shrink-0"
+										>
+											{item.poster ? (
+												<img
+													loading="lazy"
+													decoding="async"
+													width={56}
+													height={84}
+													srcSet={`${item.poster.replace("/w500/", "/w92/")} 1x, ${item.poster.replace("/w500/", "/w154/")} 2x`}
+													src={item.poster.replace("/w500/", "/w92/")}
+													alt=""
+													className="aspect-[2/3] h-auto w-12 rounded-md object-cover shadow-lg shadow-black/50 sm:w-14"
+												/>
+											) : (
+												<div className="aspect-[2/3] w-12 rounded-md bg-gray-800 sm:w-14" />
+											)}
+										</Link>
+										<div className="flex min-w-0 flex-1 flex-col gap-1.5">
+											<div className="min-w-0">
+												<Link
+													to={titlePath(item)}
+													prefetch="intent"
+													className="block truncate font-bold hover:underline hover:underline-offset-4"
+												>
+													<span lang={mediaFieldLanguage(item)}>
+														{item.title}
+													</span>
+												</Link>
+												<p className="text-xs text-gray-400">
+													{[
+														item.year,
+														item.type === "movie" ? "Movie" : "Series",
+													]
+														.filter(Boolean)
+														.join(" · ")}
+												</p>
+											</div>
+											{services && (
+												<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-400">
+													<RowLogos services={yours} max={LOGOS_SHOWN} />
+													<span className="truncate">
+														{yours.length === 1
+															? yours[0].name
+															: yours.length
+																? null
+																: "Not on your services"}
+													</span>
 												</span>
-											</span>
-										)}
-									</div>
-									<RowScores
-										goodwatch={item.score}
-										score={marks.score}
-										mark={rowMark(marks)}
-										owner={ownerScores?.[item.key]}
-										ownerName={list.byline}
-									/>
-								</li>
+											)}
+										</div>
+										<RowScores
+											goodwatch={item.score}
+											score={marks.score}
+											mark={rowMark(marks)}
+											owner={ownerScores?.[item.key]}
+											ownerName={list.byline}
+										/>
+									</li>
 								)
 							})}
 						</ol>
 						{services && (
-						<p className="text-[11px] text-gray-500">
-							Where to watch: data from{" "}
-							<a
-								href="https://www.justwatch.com"
-								target="_blank"
-								rel="noreferrer"
-								className="underline decoration-white/20 hover:text-gray-300"
-							>
-								JustWatch
-							</a>{" "}
-							and{" "}
-							<a
-								href="https://www.themoviedb.org"
-								target="_blank"
-								rel="noreferrer"
-								className="underline decoration-white/20 hover:text-gray-300"
-							>
-								TMDB
-							</a>
-							.
-						</p>
+							<p className="text-[11px] text-gray-500">
+								Where to watch: data from{" "}
+								<a
+									href="https://www.justwatch.com"
+									target="_blank"
+									rel="noreferrer"
+									className="underline decoration-white/20 hover:text-gray-300"
+								>
+									JustWatch
+								</a>{" "}
+								and{" "}
+								<a
+									href="https://www.themoviedb.org"
+									target="_blank"
+									rel="noreferrer"
+									className="underline decoration-white/20 hover:text-gray-300"
+								>
+									TMDB
+								</a>
+								.
+							</p>
 						)}
 					</section>
 				</div>

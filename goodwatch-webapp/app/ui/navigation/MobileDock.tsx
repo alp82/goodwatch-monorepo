@@ -9,7 +9,7 @@ import { DockAccountKey, DockSignIn } from "~/ui/account/AccountKey"
 import { TvBackDockKey, useTvWayBack } from "~/ui/living-room/TvWayBackHost"
 import { useUser } from "~/utils/auth"
 import { useNavigation } from "./NavigationContext"
-import { KeyBadge, useAreaKeys } from "./SiteHeader"
+import { useAreaKeys } from "./SiteHeader"
 import { NewEpisodesMark } from "./bits"
 
 function DockKeys() {
@@ -27,9 +27,6 @@ function DockKeys() {
 							prefetch="intent"
 							data-area-key={a.key}
 							aria-current={a.on ? "true" : undefined}
-							title={
-								a.badge && a.badge.show !== "none" ? a.badge.label : undefined
-							}
 							className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${
 								a.on
 									? "bg-amber-500/15 text-amber-200"
@@ -41,7 +38,6 @@ function DockKeys() {
 									className={`h-[22px] w-[22px] ${a.on ? "text-amber-300" : ""}`}
 									aria-hidden
 								/>
-								<KeyBadge badge={a.badge} variant="dock" />
 								<NewEpisodesMark
 									words={a.fresh ?? null}
 									className="absolute -top-2 -right-3.5"

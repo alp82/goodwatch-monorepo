@@ -6,9 +6,9 @@ import {
 	ChevronRightIcon,
 } from "@heroicons/react/24/outline"
 import { useState } from "react"
+import { ScaledCard } from "~/ui/share-card/ScaledCard"
 import { DESIGNS } from "~/ui/share-card/designs"
 import { THEMES, type ThemeKey } from "~/ui/share-card/model"
-import { ScaledCard } from "~/ui/share-card/ScaledCard"
 import { Popover, sectionLabel } from "~/ui/share-list-editor/parts"
 import type { Editor } from "~/ui/share-list-editor/useEditor"
 
@@ -23,7 +23,8 @@ export function DesignPicker({ ed }: { ed: Editor }) {
 		ed.setPreviewDesign(null)
 	}
 	return (
-		<div className="relative">
+		// Not `relative`: the panel is placed against the toolbar, not this control.
+		<div>
 			<div className="flex items-center gap-1 rounded-full bg-white/10 p-1">
 				<button
 					type="button"
@@ -54,11 +55,15 @@ export function DesignPicker({ ed }: { ed: Editor }) {
 					<ChevronRightIcon className="size-4" />
 				</button>
 			</div>
-			{/* On wide screens the panel opens along the left edge, so the card stays visible while hovering. */}
+			{/*
+			 * The panel opens under the toolbar at its left edge, so the card stays visible while hovering. Its height
+			 * fits the editor once the page has scrolled the editor under the sticky rows (header, visitor bar, and the
+			 * tab row: --tab-row-h from the editor's page); the toolbar is one row from lg up and two below.
+			 */}
 			<Popover
 				open={open}
 				onClose={close}
-				className="fixed! top-[8.5rem] left-4 max-h-[calc(100dvh-10rem)] w-[min(340px,calc(100vw-2rem))] overflow-y-auto"
+				className="top-full left-4 mt-3 max-h-[calc(100dvh-16.75rem-var(--visitor-bar-h,0px)-var(--tab-row-h,0px))] w-[min(340px,calc(100vw-2rem))] overflow-y-auto sm:left-6 lg:left-8 lg:max-h-[calc(100dvh-9.5rem-var(--visitor-bar-h,0px)-var(--tab-row-h,0px))]"
 			>
 				<div className={sectionLabel}>Designs</div>
 				<div

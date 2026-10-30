@@ -14,7 +14,8 @@ import { MobileDock } from "./MobileDock"
 import { NavOptionsBar } from "./NavOptionsBar"
 import { NavigationProvider, usePathViewer } from "./NavigationContext"
 import { SiteHeader } from "./SiteHeader"
-import { areaOf, exploreTabs, tasteRow } from "./areas"
+import { SubNav } from "./SubNav"
+import { areaOf, bestSwitch, exploreTabs, tasteRow } from "./areas"
 
 const under = (pathname: string, prefix: string) =>
 	pathname === prefix || pathname.startsWith(`${prefix}/`)
@@ -38,6 +39,8 @@ function ExploreRow() {
 	const { locale } = useLocale()
 	const mode = exploreRowMode(pathname)
 	if (mode === "off") return null
+	// Explore's third level: Best's Movies | Shows.
+	const best = bestSwitch(pathname)
 	return (
 		// `contents`: no box of its own, so the row sticks within <main> rather than within this wrapper.
 		<div data-explore-tabs={mode} className="contents">
@@ -49,6 +52,7 @@ function ExploreRow() {
 				})}
 				sticky={mode === "sticky"}
 			/>
+			{best && <SubNav label={best.label} items={best.choices} />}
 		</div>
 	)
 }

@@ -13,7 +13,6 @@ import {
 	litArea,
 	placeHere,
 	scoresSwitch,
-	seenSwitch,
 	tasteRow,
 	watchChips,
 	watchPlaceOf,
@@ -112,8 +111,6 @@ test("Watch: tabs, the To watch | Seen switch and the chips for every page", () 
 	for (const [path, tab, side, chip] of cases) {
 		assert.deepEqual(watchPlaceOf(path), { tab, side, chip }, path)
 		assert.deepEqual(hereOf(watchTabs(path)), [tab], path)
-		const sw = seenSwitch(path)
-		assert.deepEqual(sw ? hereOf(sw.choices) : null, side ? [side] : null, path)
 		const chips = watchChips(path)
 		assert.deepEqual(
 			chips ? hereOf(chips.choices) : null,
@@ -136,18 +133,7 @@ test("Watch tabs read Up next, Ready to watch, Recommendations, each with its se
 	)
 })
 
-test("the Seen switch and chips point at their own tab's pages and carry counts", () => {
-	assert.deepEqual(
-		seenSwitch("/watch/watching", 12)?.choices.map((c) => [c.href, c.count]),
-		[
-			["/watch", undefined],
-			["/watch/seen", 12],
-		],
-	)
-	assert.deepEqual(
-		seenSwitch("/watch/movies/seen")?.choices.map((c) => c.href),
-		["/watch/movies", "/watch/movies/seen"],
-	)
+test("the chips point at their own tab's pages and carry counts", () => {
 	assert.deepEqual(
 		watchChips("/watch/movies", { wishlist: 40 })?.choices.map((c) => [
 			c.label,
@@ -211,7 +197,7 @@ test("Taste row, owner: five tabs, the gear, the current tab per page", () => {
 		assert.deepEqual(hereOf(row.tabs), here, path)
 		assert.deepEqual(
 			row.tabs.map((t) => t.label),
-			["Taste", "Tropes", "Scores", "Stats", "Lists"],
+			["Taste", "Tropes", "Scores", "Lists", "Stats"],
 		)
 		assert.deepEqual(row.trailing, [])
 		assert.deepEqual(
@@ -235,7 +221,7 @@ test("Taste row, owner as visitor: visitor tabs keep ?as=visitor, no gear", () =
 		viewer: ANA,
 	})
 	assert.ok(row)
-	assert.equal(row.label, "As visitors see it")
+	assert.equal(row.label, "Profile")
 	assert.equal(row.asVisitor, true)
 	assert.equal(row.gear, null)
 	assert.equal(row.tabs[0].href, "/u/ana?as=visitor")
@@ -273,9 +259,9 @@ test("Taste row: visible and mark narrow the tabs; marks show to the owner only"
 	const owner = tasteRow({ pathname: "/u/ana", viewer: ANA, visible, mark })
 	assert.deepEqual(
 		owner?.tabs.map((t) => t.key),
-		["profile", "scores", "stats", "lists"],
+		["profile", "scores", "lists", "stats"],
 	)
-	assert.equal(owner?.tabs.at(-1)?.mark, "me")
+	assert.equal(owner?.tabs.find((t) => t.key === "lists")?.mark, "me")
 	const visitor = tasteRow({ pathname: "/u/ana", viewer: GUEST, visible, mark })
 	assert.deepEqual(
 		visitor?.trailing.map((t) => t.key),

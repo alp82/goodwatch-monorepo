@@ -527,8 +527,11 @@ export function MyShowsPage({
 	landed = NOTHING_LANDED,
 	services = NO_SERVICES,
 	notice = null,
+	setAside = true,
 }: {
 	data: MyShows
+	/** The On hold and Dropped groups at the end; off where the page lists those statuses itself. */
+	setAside?: boolean
 	now: number
 	/** What leads the page under its head: a guest's sign-up card. */
 	notice?: ReactNode
@@ -698,7 +701,7 @@ export function MyShowsPage({
 						<ForYouLink className="mt-4">Find something new</ForYouLink>
 					)}
 				</section>
-				{quiet > 0 && (
+				{setAside && quiet > 0 && (
 					<section
 						className="flex flex-col gap-4 border-t border-white/5 pt-6"
 						aria-label="Shows you set aside"

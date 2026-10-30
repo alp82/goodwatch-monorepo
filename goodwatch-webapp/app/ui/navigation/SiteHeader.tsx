@@ -6,7 +6,6 @@ import { Link, useLocation } from "@remix-run/react"
 import { useMemo } from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import { GuestKeys, HeaderAccountKey } from "~/ui/account/AccountKey"
-import { useAccountCounts } from "~/ui/account/useAccountSummary"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useUser } from "~/utils/auth"
@@ -14,20 +13,12 @@ import { useNavigation, usePathViewer } from "./NavigationContext"
 import { HeaderSearchBar, Omnibox, holdKeyboardForSearch } from "./Search"
 import { type AreaDef, areaKeys, litArea } from "./areas"
 import { NewEpisodesMark } from "./bits"
-import { type NavOptions, useNavOptions } from "./nav-options"
 import { useOpenerSignal } from "./useWhatsNew"
-
-const count = (n: number) => n.toLocaleString("en-US")
 
 export interface AreaKeyView extends AreaDef {
 	on: boolean
 	/** Watch: what is new for the member's shows and movies. */
 	fresh?: SignalWords | null
-	/**
-	 * Profile: titles seen but not scored yet (members only). `show` is how the key shows it: the number, a dot, or
-	 * nothing (the number is then on the Not rated chip in Scores only).
-	 */
-	badge?: { n: number; label: string; show: NavOptions["badge"] }
 }
 
 /** The three area keys for this viewer and page, with the lit one and their marks. Shared with the dock. */
@@ -35,67 +26,15 @@ export function useAreaKeys(): AreaKeyView[] {
 	const viewer = usePathViewer()
 	const { pathname } = useLocation()
 	const fresh = useOpenerSignal()
-	const counts = useAccountCounts()
 	const lit = litArea(pathname, viewer)
-	const unrated = viewer.kind === "member" ? (counts?.unrated ?? 0) : 0
-	const { badge } = useNavOptions()
 	return useMemo(
 		() =>
 			areaKeys(viewer).map((a) => ({
 				...a,
 				on: a.key === lit,
 				fresh: a.key === "watch" ? fresh : undefined,
-				badge:
-					a.key === "taste" && unrated > 0
-						? {
-								n: unrated,
-								label: unratedLabel(unrated),
-								show: badge,
-							}
-						: undefined,
 			})),
-		[viewer, lit, fresh, unrated, badge],
-	)
-}
-
-/** What the Profile key's mark says: "9 seen, not scored yet". */
-export const unratedLabel = (n: number) => `${count(n)} seen, not scored yet`
-
-/** The Profile key's mark as the badge option asks: the number, a dot, or none. Header and dock share it. */
-export function KeyBadge({
-	badge,
-	variant,
-}: { badge: AreaKeyView["badge"]; variant: "header" | "dock" }) {
-	if (!badge) return null
-	// OPTION badge=none
-	if (badge.show === "none") return null
-	// OPTION badge=dot
-	if (badge.show === "dot")
-		return (
-			<span
-				title={badge.label}
-				className={
-					variant === "header"
-						? "absolute top-1 right-1 size-2 rounded-full bg-amber-400 ring-2 ring-gray-950"
-						: "absolute -top-0.5 -right-1 size-2.5 rounded-full bg-amber-400 ring-2 ring-gray-950"
-				}
-			>
-				<span className="sr-only">{badge.label}</span>
-			</span>
-		)
-	// OPTION badge=count
-	return (
-		<span
-			title={badge.label}
-			className={
-				variant === "header"
-					? "rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[11px] leading-none font-bold tabular-nums text-amber-200 ring-1 ring-amber-400/30"
-					: "absolute -top-1.5 -right-3.5 rounded-full bg-amber-400 px-1 text-[10px] leading-4 font-black tabular-nums text-black"
-			}
-		>
-			<span aria-hidden>{count(badge.n)}</span>
-			<span className="sr-only">{badge.label}</span>
-		</span>
+		[viewer, lit, fresh],
 	)
 }
 
@@ -128,9 +67,6 @@ function AreaKeys({ areas }: { areas: AreaKeyView[] }) {
 						prefetch="intent"
 						data-area-key={a.key}
 						aria-current={a.on ? "true" : undefined}
-						title={
-							a.badge && a.badge.show !== "none" ? a.badge.label : undefined
-						}
 						className={`relative flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-[14.5px] font-bold ${
 							a.on
 								? "bg-amber-500/20 text-amber-200"
@@ -142,7 +78,6 @@ function AreaKeys({ areas }: { areas: AreaKeyView[] }) {
 							aria-hidden
 						/>
 						{a.label}
-						<KeyBadge badge={a.badge} variant="header" />
 						<NewEpisodesMark
 							words={a.fresh ?? null}
 							className="absolute -top-2 -right-2"

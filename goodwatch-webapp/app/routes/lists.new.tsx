@@ -1,4 +1,3 @@
-import { presentCatalogLoader } from "~/server/media-payload.server"
 // The editor for a new share list, for guests and members without a handle: /lists/new. Members with a handle make
 // theirs inside their profile, /u/:handle/lists/new (u.$handle.lists.new.tsx draws this page there), and are sent on.
 // ?remix=<list id> starts from another list's prompt and titles.
@@ -14,6 +13,14 @@ import {
 import { useLoaderData, useLocation, useSearchParams } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import {
+	GUEST,
+	member,
+	moveResponse,
+	oldToNew,
+	tastePath,
+} from "~/domain/member-paths"
+import { presentCatalogLoader } from "~/server/media-payload.server"
+import {
 	prefillTitles,
 	topRatedEntries,
 } from "~/server/share-lists/prefill.server"
@@ -25,6 +32,7 @@ import {
 	resolveCardTitles,
 } from "~/server/share-lists/titles.server"
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
+import { NoHandleChrome } from "~/ui/profile/ProfileHeader"
 import { DEFAULT_DESIGN } from "~/ui/share-card/designs"
 import {
 	DEFAULT_PROMPT_ID,
@@ -36,11 +44,12 @@ import {
 } from "~/ui/share-card/model"
 import { PREFILL_CANDIDATES, prefillPrompt } from "~/ui/share-card/prefill"
 import { useShareFlow } from "~/ui/share-list-editor/ShareFlow"
-import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
+import {
+	ShareListEditor,
+	TAB_ROW_H,
+} from "~/ui/share-list-editor/ShareListEditor"
 import { isComplete, readBrowserDraft } from "~/ui/share-list-editor/autosave"
 import type { ListDraft } from "~/ui/share-list-editor/list-state"
-import { GUEST, member, moveResponse, oldToNew } from "~/domain/member-paths"
-import { NoHandleChrome } from "~/ui/profile/ProfileHeader"
 import { getUserIdFromRequest, useUser } from "~/utils/auth"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
@@ -48,10 +57,10 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 /**
  * The editor fills the screen under the header. Here the Profile row sits above it too (sticky under the header), so
- * the editor is that much shorter: once the profile header scrolls away, the whole editor fits under the row.
+ * the editor is that much shorter: once the profile header scrolls away, the whole editor fits under the row. The
+ * row's height comes from TAB_ROW_H (the design picker uses it too).
  */
-export const EDITOR_UNDER_ROW =
-	"[&>div:first-child]:h-[calc(100dvh-4rem-49px)] max-lg:[&>div:first-child]:h-[calc(100dvh-8rem-45px)]"
+export const EDITOR_UNDER_ROW = `${TAB_ROW_H} [&>div:first-child]:h-[calc(100dvh-4rem-var(--visitor-bar-h,0px)-var(--tab-row-h))] max-lg:[&>div:first-child]:h-[calc(100dvh-8rem-var(--visitor-bar-h,0px)-var(--tab-row-h))]`
 
 const EMPTY_DRAFT: ListDraft = {
 	title: LIST_PROMPTS[0].title,
@@ -123,6 +132,12 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 			// A member without a handle gets the handle strip and the Profile row over the editor (SiteChrome draws
 			// the row for guests; the profile layout draws the chrome at /u/:handle/lists/new).
 			noHandle: userId != null && !profile?.handle,
+			// The toolbar's Lists key: the profile's Lists tab, My lists without a handle, none for guests.
+			back: profile?.handle
+				? tastePath(profile.handle, "lists")
+				: userId
+					? "/lists/mine"
+					: null,
 		},
 		{ headers: { "Cache-Control": "private, no-store" } },
 	)
@@ -142,7 +157,7 @@ export const meta: MetaFunction = () => {
 }
 
 export default function NewShareList() {
-	const { initial, startsFresh, quickPicks, date, byline, noHandle } =
+	const { initial, startsFresh, quickPicks, date, byline, noHandle, back } =
 		useLoaderData<typeof loader>()
 	const { pathname, search } = useLocation()
 	// The browser draft is only readable after hydration; restoring it remounts the editor with the draft.
@@ -190,6 +205,7 @@ export default function NewShareList() {
 					byline={byline}
 					saveTarget={{ kind: "draft" }}
 					share={flow.share}
+					back={back}
 				/>
 			</div>
 			{flow.dialogs}

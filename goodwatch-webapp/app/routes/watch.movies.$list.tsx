@@ -1,6 +1,6 @@
 // Watch › Ready to watch's lists: /watch/movies/wishlist (Whole Wishlist, movies and shows), /recent (Recently
 // added: movies, newest first) and /seen (Seen movies, latest watch first). Another slug is not found. A guest is
-// asked to sign up. OPTION seen=tab: /seen goes to the Seen tab with Movies picked.
+// asked to sign up. /seen goes to the Seen tab with Movies picked.
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
@@ -15,7 +15,6 @@ import {
 } from "~/server/library-list-route.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { LibraryListBody } from "~/ui/my-library/MyLibraryPage"
-import { parseNavOptions } from "~/ui/navigation/nav-options"
 import { moviesSeenMove } from "~/ui/watch/watch-views"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -52,14 +51,12 @@ async function canonicalLoader(args: LoaderFunctionArgs) {
 	const slug = args.params.list ?? ""
 	if (!Object.prototype.hasOwnProperty.call(WATCH_MOVIE_LISTS, slug))
 		throw new Response("Not found", { status: 404 })
-	if (slug === "seen") {
-		const to = moviesSeenMove(
-			new URL(args.request.url).search,
-			parseNavOptions(args.request.headers.get("Cookie")).seen,
-		)
-		// It depends on the option cookie: a private 302.
-		if (to) throw moveResponse({ to, status: 302, private: true })
-	}
+	if (slug === "seen")
+		throw moveResponse({
+			to: moviesSeenMove(new URL(args.request.url).search),
+			status: 302,
+			private: true,
+		})
 	return libraryListLoader(args, WATCH_MOVIE_LISTS[slug])
 }
 

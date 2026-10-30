@@ -7,6 +7,7 @@ import { member, ratePath } from "~/domain/member-paths"
 import type { TastePortraitData } from "~/server/taste-portrait/page.server"
 import { IMPORTS_PATH } from "~/ui/imports/shared"
 import { WRAP } from "~/ui/my-pages/bits"
+import { SubNav, type SubNavItem } from "~/ui/navigation/SubNav"
 import { profileTabPath } from "~/ui/profile/links"
 import { QUIET_BUTTON } from "~/ui/profile/parts"
 import {
@@ -20,7 +21,6 @@ import { Explorer } from "./Explorer"
 import { TasteGroups } from "./Groups"
 import { TasteHero } from "./Hero"
 import { MostYou } from "./MostYou"
-import { type Section, SectionChips } from "./SectionChips"
 import { TasteTags, hasTags } from "./Tags"
 import { VsEveryone } from "./VsEveryone"
 import { usePrintState } from "./print-state"
@@ -60,21 +60,22 @@ function Page({
 	const state = usePrintState()
 	const { taste } = useTaste()
 	const sections = useMemo(() => {
-		const list: Section[] = [
-			{ id: "viewer-type", label: "Type" },
-			{ id: "fingerprint", label: "What pulls you" },
+		const list: [string, string][] = [
+			["viewer-type", "Type"],
+			["fingerprint", "What pulls you"],
 		]
-		if (taste.sides.list.length) list.push({ id: "sides", label: "Groups" })
-		if (taste.crowd.status === "ready")
-			list.push({ id: "everyone", label: "Vs everyone" })
-		if (taste.mostYou.length) list.push({ id: "most-you", label: "Most you" })
-		if (hasTags(tags) || handle) list.push({ id: "tags", label: "Tags" })
-		return list
+		if (taste.sides.list.length) list.push(["sides", "Groups"])
+		if (taste.crowd.status === "ready") list.push(["everyone", "Vs everyone"])
+		if (taste.mostYou.length) list.push(["most-you", "Most you"])
+		if (hasTags(tags) || handle) list.push(["tags", "Tags"])
+		return list.map(
+			([id, label]): SubNavItem => ({ key: id, label, href: `#${id}` }),
+		)
 	}, [taste, handle, tags])
 	return (
 		<div className="pb-32 text-white">
+			<SubNav label="Taste sections" items={sections} sections />
 			<TasteBanner member />
-			<SectionChips sections={sections} />
 			<div className={`${WRAP} flex flex-col gap-16 pt-6 pb-8 sm:gap-20`}>
 				<TasteHero state={state} averageYear={averageYear} />
 				<section aria-labelledby="fingerprint" className="flex flex-col gap-5">

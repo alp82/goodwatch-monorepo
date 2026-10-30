@@ -23,6 +23,7 @@ import {
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { MediaPreferenceProvider } from "~/ui/media-preference/MediaPreference"
 import { NoHandleChrome, ProfileChrome } from "~/ui/profile/ProfileHeader"
+import { visitorBarStyle } from "~/ui/profile/header/VisitorView"
 import { SettingsFrame } from "~/ui/settings/SettingsFrame"
 import { Spinner } from "~/ui/wait/Spinner"
 import { getUserIdFromRequest, useUser } from "~/utils/auth"
@@ -84,13 +85,17 @@ export default function Settings() {
 	}
 
 	return (
-		<main className="min-h-screen overflow-x-clip text-white">
+		// Settings has no visitor view: no visitor bar over its sticky rows.
+		<main
+			className="min-h-screen overflow-x-clip text-white"
+			style={visitorBarStyle(false)}
+		>
 			{header ? (
 				<ProfileChrome
 					shell={header.shell as ProfileHeaderData["shell"]}
 					identity={header.identity}
 					print={header.print}
-					posters={header.posters}
+					facts={header.facts}
 					pathname={pathname}
 					search={search}
 				/>

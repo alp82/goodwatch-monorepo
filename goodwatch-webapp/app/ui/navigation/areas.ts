@@ -1,5 +1,5 @@
 // The three areas of the site navigation (Watch · Explore · Profile): which area a page belongs to, each area's tabs, the
-// chips and switches under Watch's tabs and on Scores, and PLACES, the one list of places the account menu and the
+// views under Watch's tabs and on Scores (drawn by SubNav.tsx), and PLACES, the one list of places the account menu and the
 // Settings column both draw from, so their rows match one to one. Pure: the header, the dock, the area layouts and
 // the account menu read from here; AreaTabs.tsx draws the rows.
 //
@@ -257,34 +257,6 @@ export function watchTabs(pathname: string): AreaTab[] {
 	]
 }
 
-/** The "To watch | Seen" switch at the top of Up next and Ready to watch; null on For you and outside Watch. */
-export function seenSwitch(
-	pathname: string,
-	seenCount?: number,
-): NavChoices | null {
-	const place = watchPlaceOf(pathname)
-	if (!place || place.side === null) return null
-	const shows = place.tab === "up-next"
-	return {
-		label: shows ? "Your shows" : "Your movies",
-		choices: [
-			{
-				key: "to-watch",
-				label: "To watch",
-				href: shows ? WATCH_PATHS.nextEpisodes : WATCH_PATHS.tonight,
-				here: place.side === "to-watch",
-			},
-			{
-				key: "seen",
-				label: "Seen",
-				href: shows ? WATCH_PATHS.showsSeen : WATCH_PATHS.moviesSeen,
-				here: place.side === "seen",
-				count: seenCount,
-			},
-		],
-	}
-}
-
 /** The chips under To watch; null on Seen, For you and outside Watch. Leave counts out for guests. */
 export function watchChips(
 	pathname: string,
@@ -445,8 +417,8 @@ export const OWNER_TASTE_TABS: TasteTabDef[] = [
 	{ key: "profile", label: "Taste", icon: FingerPrintIcon },
 	{ key: "tropes", label: "Tropes", icon: TagIcon },
 	{ key: "scores", label: "Scores", icon: StarIcon },
-	{ key: "stats", label: "Stats", icon: ChartBarIcon },
 	{ key: "lists", label: "Lists", icon: ListBulletIcon },
+	{ key: "stats", label: "Stats", icon: ChartBarIcon },
 ]
 
 /** Tabs only visitors get, set apart at the row's end: the owner keeps these in Watch. */
@@ -458,7 +430,7 @@ export const VISITOR_TASTE_TABS: TasteTabDef[] = [
 
 /** How the Profile row is drawn for this page and viewer. */
 export interface TasteRow {
-	/** The row's name at its start on desktop: "Profile", "As visitors see it", or "@handle". */
+	/** The row's name at its start on desktop: "Profile" (also in the owner's visitor view) or "@handle". */
 	label: string
 	/** False for a guest on a profile: no area icon, no lit key. */
 	areaIcon: boolean
@@ -604,7 +576,8 @@ export function tasteRow({
 			gear: gearOf(true),
 		}
 	return {
-		label: asVisitor ? "As visitors see it" : `@${handle}`,
+		// The owner's own row keeps its name in the visitor's view: the view is a preview, not what visitors see.
+		label: asVisitor ? "Profile" : `@${handle}`,
 		areaIcon: viewer.kind === "member",
 		handle,
 		asVisitor,
