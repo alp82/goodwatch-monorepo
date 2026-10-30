@@ -45,6 +45,15 @@ import {
 	FindOverlay,
 } from "./find/FindField"
 import { shownSubTab } from "./panel-state"
+import {
+	BarStrip,
+	ESSENTIAL_CHIPS,
+	type EssentialsProps,
+	PillPair,
+	ReadySwitch,
+	ThumbBar,
+	type Variant,
+} from "./prototype-essentials/Essentials"
 import { FindComboboxProvider, SearchComboboxProvider } from "./search/combobox"
 import {
 	MAIN_TABS,
@@ -131,6 +140,8 @@ export interface DiscoverControlsProps {
 		controls: FindControls,
 	) => ReactNode
 	className?: string
+	/** PROTOTYPE: where On my services and Not seen yet sit (prototype-essentials). */
+	essentials?: Variant
 }
 
 export function DiscoverControls(props: DiscoverControlsProps) {
@@ -158,6 +169,7 @@ function DiscoverControlsContent({
 	renderSubTab,
 	renderFind,
 	className = "",
+	essentials,
 }: DiscoverControlsProps) {
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
@@ -292,11 +304,31 @@ function DiscoverControlsContent({
 			phone={phone}
 		/>
 	)
+	const ess: EssentialsProps = {
+		state,
+		update: filters.update,
+		mine: data.myProviders,
+		counts,
+		member,
+		open: openTab,
+	}
+	const v = essentials && essentials !== "0" ? essentials : null
+	const statusChips = v
+		? data.chips.filter((chip) => !ESSENTIAL_CHIPS.has(chip.key))
+		: data.chips
 	const statusLine = (
 		<StatusLine
 			counts={counts}
 			searching={searching}
-			chips={data.chips}
+			chips={statusChips}
+			lead={
+				v === "A" && desktop ? (
+					<PillPair p={ess} />
+				) : undefined
+			}
+			beforeSort={
+				v === "C" && desktop ? <ReadySwitch p={ess} phone={false} /> : undefined
+			}
 			reading={reading}
 			clearCount={data.clearCount}
 			sort={sort}
@@ -344,6 +376,7 @@ function DiscoverControlsContent({
 							providers={providers}
 							barRef={barRef}
 							panelId={panelId}
+							strip={v === "B" ? <BarStrip p={ess} phone={false} /> : undefined}
 							search={
 								desktop && open ? (
 									<div className="flex items-center gap-2">
@@ -394,7 +427,18 @@ function DiscoverControlsContent({
 						onPick={openTab}
 						onClearSearch={onClearSearch}
 						providers={providers}
+						strip={v === "B" ? <BarStrip p={ess} phone /> : undefined}
 					/>
+					{v === "A" && (
+						<div className="mt-2">
+							<PillPair p={ess} stretch />
+						</div>
+					)}
+					{v === "C" && (
+						<div className="mt-2">
+							<ReadySwitch p={ess} phone />
+						</div>
+					)}
 					{statusLine}
 					{!desktop && (
 						<DiscoverSheet
@@ -457,6 +501,7 @@ function DiscoverControlsContent({
 						/>
 					)}
 				</div>
+				{v === "E" && <ThumbBar p={ess} />}
 			</div>
 		</MotionConfig>
 	)

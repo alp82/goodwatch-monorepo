@@ -33,6 +33,8 @@ export function StatusLine({
 	onChange,
 	onClearSearch,
 	onClearAll,
+	lead,
+	beforeSort,
 	className = "",
 }: {
 	counts: FilterBarCounts | null
@@ -45,6 +47,9 @@ export function StatusLine({
 	onChange: (change: (state: FilterState) => FilterState) => void
 	onClearSearch: () => void
 	onClearAll: () => void
+	/** PROTOTYPE essentials: after the count, and before the sort. */
+	lead?: ReactNode
+	beforeSort?: ReactNode
 	className?: string
 }) {
 	return (
@@ -55,6 +60,7 @@ export function StatusLine({
 			<span className="shrink-0">
 				<CountText counts={counts} searching={searching} />
 			</span>
+			{lead}
 			<BarChips
 				chips={chips}
 				reading={reading}
@@ -74,6 +80,7 @@ export function StatusLine({
 					)
 				}
 			/>
+			{beforeSort}
 			<div className="shrink-0 max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden">
 				<SortControl
 					options={sort.options}

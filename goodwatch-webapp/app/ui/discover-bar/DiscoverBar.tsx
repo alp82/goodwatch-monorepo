@@ -174,7 +174,10 @@ export function DiscoverBar({
 	search,
 	barRef,
 	panelId,
+	strip,
 }: {
+	/** PROTOTYPE essentials B: a strip under the segments. */
+	strip?: ReactNode
 	values: Record<MainTab, TabValue>
 	/** The open tab; null while the panel is closed. */
 	active: MainTab | null
@@ -187,9 +190,9 @@ export function DiscoverBar({
 	/** The panel's id, for aria-controls. */
 	panelId: string
 }) {
-	return (
+	const row = (
 		<div
-			ref={barRef}
+			ref={strip ? undefined : barRef}
 			role="group"
 			aria-label="Discover filters"
 			className={`relative flex h-[76px] items-stretch rounded-full p-1.5 ring-1 ${
@@ -257,6 +260,16 @@ export function DiscoverBar({
 			})}
 		</div>
 	)
+	if (!strip) return row
+	return (
+		<div
+			ref={barRef}
+			className="overflow-hidden rounded-[38px] bg-white/[0.02] ring-1 ring-white/10"
+		>
+			{row}
+			{strip}
+		</div>
+	)
 }
 
 /** Phones: Search on its own 62 px row, then Mood, Watch and You on a 52 px row. */
@@ -265,11 +278,14 @@ export function PhoneDiscoverBar({
 	onPick,
 	onClearSearch,
 	providers,
+	strip,
 }: {
 	values: Record<MainTab, TabValue>
 	onPick: (tab: MainTab) => void
 	onClearSearch: () => void
 	providers: BarProviders
+	/** PROTOTYPE essentials B. */
+	strip?: ReactNode
 }) {
 	const search = values.search
 	return (
@@ -314,6 +330,7 @@ export function PhoneDiscoverBar({
 					)
 				})}
 			</div>
+			{strip}
 		</div>
 	)
 }
