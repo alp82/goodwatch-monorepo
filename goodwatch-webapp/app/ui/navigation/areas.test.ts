@@ -4,6 +4,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
 	GUEST,
+	RATE_FALLBACK_PATH,
 	SETTINGS_PATHS,
 	WATCH_PATHS,
 	member,
@@ -176,13 +177,14 @@ test("Explore tabs: one current tab per page; Best covers both kinds; guests' Ne
 	assert.equal(bestSwitch("/movies"), null)
 })
 
-test("Taste row, owner: five tabs, the gear, the current tab per page", () => {
+test("Taste row, owner: five tabs with Rate more after Scores, the gear, the current tab per page", () => {
 	const cases: [string, string[]][] = [
 		["/u/ana", ["profile"]],
 		["/u/ana/tropes", ["tropes"]],
 		["/u/ana/scores", ["scores"]],
 		["/u/ana/scores/not-rated", ["scores"]],
-		["/u/ana/scores/rate", ["scores"]],
+		["/u/ana/scores/rate", ["rate"]],
+		["/u/ana/scores/rate/", ["rate"]],
 		["/u/ana/stats", ["stats"]],
 		["/u/ana/stats/numbers", ["stats"]],
 		["/u/ana/lists", ["lists"]],
@@ -200,7 +202,7 @@ test("Taste row, owner: five tabs, the gear, the current tab per page", () => {
 		assert.deepEqual(hereOf(row.tabs), here, path)
 		assert.deepEqual(
 			row.tabs.map((t) => t.label),
-			["Taste", "Tropes", "Scores", "Lists", "Stats"],
+			["Taste", "Tropes", "Scores", "Rate more", "Lists", "Stats"],
 		)
 		assert.deepEqual(row.trailing, [])
 		assert.deepEqual(
@@ -215,6 +217,28 @@ test("Taste row, owner: five tabs, the gear, the current tab per page", () => {
 		"/u/ana",
 	)
 	assert.equal(tasteRow({ pathname: "/watch/shows", viewer: ANA }), null)
+	// Same label and icon as the guests' Rate more.
+	const guestRate = tasteRow({ pathname: "/taste", viewer: GUEST })?.tabs[1]
+	const rate = tasteRow({ pathname: "/u/ana", viewer: ANA })?.tabs[3]
+	assert.deepEqual(
+		[rate?.key, rate?.label, rate?.href, rate?.icon === guestRate?.icon],
+		["rate", "Rate more", "/u/ana/scores/rate", true],
+	)
+})
+
+test("Taste row: Rate more is the owner's own tab, never in a visitor's view", () => {
+	for (const [path, search, viewer] of [
+		["/u/ana", "?as=visitor", ANA],
+		["/u/ana/scores", "?as=visitor", ANA],
+		["/u/bo", "", ANA],
+		["/u/bo/scores", "", ANA],
+		["/u/bo", "", GUEST],
+	] as const) {
+		const row = tasteRow({ pathname: path, search, viewer })
+		assert.ok(row, path)
+		const keys = row.tabs.concat(row.trailing).map((t) => t.key)
+		assert.ok(!keys.includes("rate"), `${path}${search}`)
+	}
 })
 
 test("Taste row, owner as visitor: visitor tabs keep ?as=visitor, no gear", () => {
@@ -262,7 +286,7 @@ test("Taste row: visible and mark narrow the tabs; marks show to the owner only"
 	const owner = tasteRow({ pathname: "/u/ana", viewer: ANA, visible, mark })
 	assert.deepEqual(
 		owner?.tabs.map((t) => t.key),
-		["profile", "scores", "lists", "stats"],
+		["profile", "scores", "rate", "lists", "stats"],
 	)
 	assert.equal(owner?.tabs.find((t) => t.key === "lists")?.mark, "me")
 	const visitor = tasteRow({ pathname: "/u/ana", viewer: GUEST, visible, mark })
@@ -359,10 +383,13 @@ test("Places: Library leads to the Watch pages", () => {
 			["My movies", WATCH_PATHS.tonight],
 			["Want to Watch", WATCH_PATHS.wishlist],
 			["Seen", WATCH_PATHS.showsSeen],
+			["Rate more", RATE_FALLBACK_PATH],
 			["Recommendations", WATCH_PATHS.forYou],
 		],
 	)
 	assert.equal(library[0].badge, "new-episodes")
+	// The menu sends a member with a handle to their own Rate more (ratePath); the fallback is for those without.
+	assert.equal(library.find((p) => p.id === "rate-more")?.own, "rate")
 })
 
 test("Places: real addresses, Feedback acts instead of navigating", () => {

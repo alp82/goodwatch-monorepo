@@ -8,7 +8,7 @@ import {
 } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import { type MouseEvent, type ReactNode, useState } from "react"
-import { member, tasteHome, tastePath } from "~/domain/member-paths"
+import { member, ratePath, tasteHome, tastePath } from "~/domain/member-paths"
 import { useSignOut } from "~/ui/auth/useSignOut"
 import { openFeedback } from "~/ui/feedback/FeedbackTab"
 import {
@@ -69,6 +69,9 @@ const IDENTITY_PLACES = PLACES.left.find((g) => g.name === null)?.places ?? []
 
 function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
 	const counts = useAccountCounts()
+	const { handle } = useAccountSummary()
+	const to =
+		place.own === "rate" && handle ? ratePath(member(handle)) : place.href
 	const n =
 		place.count === "not-interested" && counts ? counts.notInterested : null
 	const inner = (
@@ -98,7 +101,7 @@ function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
 		)
 	return (
 		<Link
-			to={place.href ?? "/"}
+			to={to ?? "/"}
 			prefetch="intent"
 			onClick={close}
 			className={`${ROW} ${rowHeight(big)}`}

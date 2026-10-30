@@ -400,7 +400,10 @@ export function bestSwitch(pathname: string): NavChoices | null {
 
 // Profile (key "taste") ------------------------------------------------------------------------------------
 
-/** A Profile tab. "rate" is the extra tab of the row without a profile (/taste, /taste/quiz, the list pages). */
+/**
+ * A Profile tab. "rate" is Rate more: the owner's tab after Scores (/u/:h/scores/rate), and the row without a profile's
+ * (/taste/quiz). Visitors never get it.
+ */
 export type TasteTabKey =
 	| "profile"
 	| "tropes"
@@ -414,6 +417,7 @@ export type TasteTabKey =
 
 type TasteTabDef = { key: TasteTabKey; label: string; icon: NavIcon }
 
+/** The profile's tabs, for the owner and visitors alike. */
 export const OWNER_TASTE_TABS: TasteTabDef[] = [
 	{ key: "profile", label: "Taste", icon: FingerPrintIcon },
 	{ key: "tropes", label: "Tropes", icon: TagIcon },
@@ -421,6 +425,13 @@ export const OWNER_TASTE_TABS: TasteTabDef[] = [
 	{ key: "lists", label: "Lists", icon: ListBulletIcon },
 	{ key: "stats", label: "Stats", icon: ChartBarIcon },
 ]
+
+/** The owner's own tab, right after Scores: rating new titles. Never in a visitor's view, ?as=visitor included. */
+const RATE_TAB: TasteTabDef = {
+	key: "rate",
+	label: "Rate more",
+	icon: StarIcon,
+}
 
 /** Tabs only visitors get, set apart at the row's end: the owner keeps these in Watch. */
 export const VISITOR_TASTE_TABS: TasteTabDef[] = [
@@ -446,11 +457,15 @@ export interface TasteRow {
 	gear: { href: string; here: boolean } | null
 }
 
-const PROFILE_PATH = /^\/u\/([^/]+)(?:\/([^/]+))?/
+const PROFILE_PATH = /^\/u\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?/
 
-/** The Profile tab a profile path lights. */
-function profileTabOf(rest: string | undefined): TasteTabKey | null {
+/** The Profile tab a profile path lights: /scores/rate is Rate more, every other page under Scores is Scores. */
+function profileTabOf(
+	rest: string | undefined,
+	sub: string | undefined,
+): TasteTabKey | null {
 	if (!rest) return "profile"
+	if (rest === "scores" && sub === "rate") return "rate"
 	if (rest === "taste") return "stats"
 	return (
 		(
@@ -480,7 +495,8 @@ export interface TasteRowOptions {
 }
 
 /**
- * The Profile row for a page in the Profile area, or null outside it. On a profile: the owner's five tabs and the gear;
+ * The Profile row for a page in the Profile area, or null outside it. On a profile: the owner's five tabs with Rate more
+ * after Scores, and the gear;
  * visitors (and the owner with ?as=visitor) get the five plus Seen · Wishlist · Shows and no gear, every link keeping
  * ?as=visitor. Without a profile (/taste, /taste/quiz, list pages and Settings for guests and members without a
  * handle): Taste → /taste, Rate more → /taste/quiz and Lists (/lists/mine for members, /lists/new for guests), plus the
@@ -505,13 +521,11 @@ export function tasteRow({
 	const profile = PROFILE_PATH.exec(path)
 	const handle = profile ? decodeURIComponent(profile[1]) : own
 	const here: TasteTabKey | null = profile
-		? profileTabOf(profile[2])
+		? profileTabOf(profile[2], profile[3])
 		: under(path, "/lists")
 			? "lists"
 			: under(path, RATE_FALLBACK_PATH)
-				? handle
-					? "scores"
-					: "rate"
+				? "rate"
 				: path === TASTE_FALLBACK_PATH
 					? "profile"
 					: null
@@ -560,7 +574,7 @@ export function tasteRow({
 		key: t.key,
 		label: t.label,
 		icon: t.icon,
-		href: tastePath(handle, t.key as Exclude<TasteTabKey, "rate">, query),
+		href: tastePath(handle, t.key, query),
 		here: !inSettings && here === t.key,
 		count: counts[t.key],
 		mark: isOwner ? mark?.(t.key) : undefined,
@@ -572,7 +586,9 @@ export function tasteRow({
 			areaIcon: true,
 			handle,
 			asVisitor: false,
-			tabs,
+			tabs: tabs.flatMap((t) =>
+				t.key === "scores" ? [t, tab(RATE_TAB)] : [t],
+			),
 			trailing: [],
 			gear: gearOf(true),
 		}
@@ -654,6 +670,9 @@ export interface Place {
 	count?: "not-interested"
 	/** The mark after the label, read by the caller: My shows' new-episodes number (NewEpisodesMark). */
 	badge?: "new-episodes"
+	/** The address is the member's own, read by the caller: Rate more's ratePath with the handle. `href` is the way for a
+	 * member without a handle (/taste/quiz). */
+	own?: "rate"
 }
 
 /** Settings rows, most used first. */
@@ -737,7 +756,7 @@ export const DATA_PLACES: Place[] = [
 	},
 ]
 
-/** Library: the Watch pages, as the account menu lists them. */
+/** Library: the Watch pages, as the account menu lists them, and Rate more (the owner's Profile tab after Scores). */
 export const LIBRARY_PLACES: Place[] = [
 	{
 		id: "my-shows",
@@ -759,6 +778,13 @@ export const LIBRARY_PLACES: Place[] = [
 		href: WATCH_PATHS.wishlist,
 	},
 	{ id: "seen", label: "Seen", icon: ClockIcon, href: WATCH_PATHS.showsSeen },
+	{
+		id: "rate-more",
+		label: "Rate more",
+		icon: StarIcon,
+		href: RATE_FALLBACK_PATH,
+		own: "rate",
+	},
 	{
 		id: "recommendations",
 		label: "Recommendations",

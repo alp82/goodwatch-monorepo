@@ -206,7 +206,7 @@ export function ProfileChrome({
 
 /**
  * What Share offers: the profile, and the page you're on when it is a tab or a list. A tab shares its own address (a
- * Stats view included); the owner-only pages under Scores share Scores.
+ * Stats view included); Not rated shares Scores, Rate more only the profile.
  */
 function shareTargets(
 	handle: string,
@@ -218,7 +218,14 @@ function shareTargets(
 	if (/^(\/u\/[^/]+)?\/lists\/(?!new$|mine$)[^/]+$/.test(path))
 		return [profile, { name: "This list", path }]
 	const tab = tabs.find((t) => t.here)
-	if (!tab || tab.key === "profile" || !path.startsWith("/u/")) return [profile]
+	// Rate more is the owner's own page: nothing there to share but the profile.
+	if (
+		!tab ||
+		tab.key === "profile" ||
+		tab.key === "rate" ||
+		!path.startsWith("/u/")
+	)
+		return [profile]
 	const tabPath = new URL(tab.href, "https://goodwatch.app").pathname
 	return [
 		profile,

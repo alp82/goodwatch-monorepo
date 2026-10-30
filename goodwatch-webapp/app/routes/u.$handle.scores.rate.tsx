@@ -1,5 +1,5 @@
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
-// Scores › Rate more: /u/:handle/scores/rate. The rating flow, one title at a time, or Quick list's table with
+// Rate more, the owner's Profile tab after Scores: /u/:handle/scores/rate. The rating flow, one title at a time, or Quick list's table with
 // `?mode=quick`; `?view=taste` opens its taste view. Only the owner has this page; anyone else goes to Scores.
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { useLoaderData, useSearchParams } from "@remix-run/react"

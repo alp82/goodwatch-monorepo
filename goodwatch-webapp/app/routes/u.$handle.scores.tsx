@@ -1,10 +1,9 @@
 // The Scores tab: /u/:handle/scores and its pages. The owner gets the SubNav between Scored (/scores) and Not rated
-// (/scores/not-rated), right under the tab row, then the head with "Rate more"; Rate more (/scores/rate) has its own
-// head with the way back.
+// (/scores/not-rated), right under the tab row, then the head. Rate more (/scores/rate) is the owner's own tab after
+// Scores (ui/navigation/areas.ts) and has its own head.
 // Visitors, and the owner with ?as=visitor, get the public Scores page under a plain head.
-import { Link, Outlet, useLocation } from "@remix-run/react"
+import { Outlet, useLocation } from "@remix-run/react"
 import { useMemo } from "react"
-import { tastePath } from "~/domain/member-paths"
 import { libraryCounts } from "~/domain/my-library"
 import { useUserData } from "~/routes/api.user-data"
 import { useProfileLayout } from "~/routes/u.$handle"
@@ -12,7 +11,7 @@ import { SubNav } from "~/ui/navigation/SubNav"
 import { scoresSwitch } from "~/ui/navigation/areas"
 import { ProfileTabPage, TabHead } from "~/ui/profile/ProfileFrame"
 import { asGuestSees } from "~/ui/profile/ProfileHeader"
-import { AMBER_BUTTON, count } from "~/ui/profile/parts"
+import { count } from "~/ui/profile/parts"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -45,14 +44,12 @@ export default function ProfileScoresLayout() {
 			</ProfileTabPage>
 		)
 
-	const scores = tastePath(shell.handle, "scores")
 	if (pathname.replace(/\/$/, "").endsWith("/scores/rate"))
 		return (
 			<>
 				<TabHead
 					title="Rate more"
 					line="Titles you've likely seen, best guesses first."
-					back={{ label: "Scores", to: scores }}
 				/>
 				<Outlet />
 			</>
@@ -72,15 +69,6 @@ export default function ProfileScoresLayout() {
 					notRated
 						? "What you've seen without a score yet."
 						: `${count(shell.counts.rated)} titles${average}. Change any score right in the list.`
-				}
-				links={
-					<Link
-						to={tastePath(shell.handle, "rate")}
-						prefetch="intent"
-						className={AMBER_BUTTON}
-					>
-						Rate more
-					</Link>
 				}
 			/>
 			<Outlet />
