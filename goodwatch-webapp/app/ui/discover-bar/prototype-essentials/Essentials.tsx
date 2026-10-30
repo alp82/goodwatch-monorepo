@@ -14,7 +14,7 @@ import {
 	LockClosedIcon,
 	PlusIcon,
 } from "@heroicons/react/20/solid"
-import { BoltIcon } from "@heroicons/react/24/solid"
+import { PlayCircleIcon as BoltIcon } from "@heroicons/react/24/solid"
 import { useNavigate, useSearchParams } from "@remix-run/react"
 import { motion } from "framer-motion"
 import { useEffect } from "react"
@@ -33,8 +33,15 @@ export const VARIANTS = [
 	{ key: "C", name: "Ready to watch" },
 	{ key: "D", name: "Heading row" },
 	{ key: "E", name: "Thumb bar" },
-	{ key: "F", name: "Ready to watch v2" },
+	{ key: "F", name: "Ready v2: corner" },
+	{ key: "G", name: "Ready v2: one row, ends apart" },
+	{ key: "H", name: "Ready v2: diagonal" },
+	{ key: "I", name: "Ready v2: quiet shells" },
+	{ key: "J", name: "Ready v2: count up top" },
 ] as const
+
+/** The Ready to watch v2 family. */
+export const READY_V2 = new Set(["F", "G", "H", "I", "J"])
 export type Variant = (typeof VARIANTS)[number]["key"]
 
 export const useVariant = (): Variant => {
@@ -258,7 +265,8 @@ export function ReadySwitch({
 	p,
 	phone,
 	v2 = false,
-}: { p: EssentialsProps; phone: boolean; v2?: boolean }) {
+	quiet = false,
+}: { p: EssentialsProps; phone: boolean; v2?: boolean; quiet?: boolean }) {
 	const canServices = p.mine.length > 0
 	const canUnseen = p.member
 	const s = canServices && p.state.onMyServices
@@ -319,8 +327,8 @@ export function ReadySwitch({
 				on
 					? `${tint} text-white ring-transparent`
 					: locked
-						? "bg-white/[0.03] text-gray-500 ring-white/[0.06]"
-						: "bg-white/[0.04] text-gray-400 ring-white/10 hover:text-gray-200"
+						? "bg-white/[0.03] text-gray-500 ring-transparent"
+						: "bg-white/[0.05] text-gray-400 ring-transparent hover:bg-white/[0.08] hover:text-gray-200"
 			}`}
 		>
 			{icon}
@@ -386,7 +394,7 @@ export function ReadySwitch({
 		)
 	return (
 		<div
-			className={`relative flex items-center gap-1 ${SHELL} ${phone ? "h-12 w-full pr-1.5 pl-1" : "h-10 pr-1 pl-1"}`}
+			className={`relative flex items-center gap-1 ${quiet ? "" : SHELL} ${phone ? "h-12 w-full pr-1.5 pl-1" : quiet ? "h-10" : "h-10 pr-1 pl-1"}`}
 		>
 			{!v2 && (
 				<span
@@ -400,7 +408,7 @@ export function ReadySwitch({
 				aria-checked={all}
 				whileTap={TAP}
 				onClick={toggleAll}
-				className={`flex h-full min-w-0 flex-1 items-center gap-2 rounded-2xl pr-2 pl-2.5 text-sm font-bold whitespace-nowrap cursor-pointer ${FOCUS} ${all || some ? "text-white" : "text-gray-400 hover:text-gray-200"} ${phone && all && !v2 ? "bg-amber-500/15" : ""}`}
+				className={`flex h-full min-w-0 flex-1 items-center gap-2 ${quiet ? "rounded-xl bg-white/[0.04]" : "rounded-2xl"} pr-2 pl-2.5 text-sm font-bold whitespace-nowrap cursor-pointer ${FOCUS} ${all || some ? "text-white" : "text-gray-400 hover:text-gray-200"} ${phone && all && !v2 ? "bg-amber-500/15" : ""}`}
 			>
 				<BoltIcon
 					className={`h-4 w-4 shrink-0 ${all ? "text-amber-400" : some ? "text-amber-400/60" : ""}`}
@@ -408,7 +416,7 @@ export function ReadySwitch({
 				<span className="flex-1 text-left">Ready to watch</span>
 				{(v2 || !phone) && <Knob on={all} />}
 			</motion.button>
-			<span className="mx-0.5 h-5 w-px bg-white/10" aria-hidden />
+			{!quiet && <span className="mx-0.5 h-5 w-px bg-white/10" aria-hidden />}
 			{v2 ? (
 				<div className="flex min-w-0 items-center gap-1">{v2Parts}</div>
 			) : null}

@@ -8,7 +8,8 @@ import { SortControl } from "~/ui/filter-bar/controls"
 import type { SortOption } from "~/ui/filter-bar/labels"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
 import { BarChips } from "./BarChips"
-import { Count, CountText } from "./PanelFooter"
+import { CountText } from "./PanelFooter"
+import { CountTip } from "./prototype-essentials/CountTip"
 import type { BarChip } from "./chips"
 
 export const STATUS_HEIGHT = 40
@@ -37,6 +38,8 @@ export function StatusLine({
 	beforeSort,
 	meter = false,
 	hideSort = false,
+	noCount = false,
+	state,
 	className = "",
 }: {
 	counts: FilterBarCounts | null
@@ -56,6 +59,9 @@ export function StatusLine({
 	meter?: boolean
 	/** PROTOTYPE: the sort lives elsewhere (the heading row). */
 	hideSort?: boolean
+	/** PROTOTYPE: the count lives in the heading row. */
+	noCount?: boolean
+	state?: FilterState
 	className?: string
 }) {
 	return (
@@ -63,9 +69,9 @@ export function StatusLine({
 			className={`flex items-center gap-3 ${className}`}
 			style={{ height: STATUS_HEIGHT }}
 		>
-			<span className="shrink-0">
-				{meter ? (
-					<Count counts={counts} searching={searching} />
+			<span className={`shrink-0 ${noCount ? "hidden" : ""}`}>
+				{meter && state ? (
+					<CountTip counts={counts} searching={searching} state={state} />
 				) : (
 					<CountText counts={counts} searching={searching} />
 				)}
@@ -77,7 +83,7 @@ export function StatusLine({
 				onOpen={onOpen}
 				onChange={onChange}
 				onClearSearch={onClearSearch}
-				className="-mr-1 h-10 lg:mr-0"
+				className={`-mr-1 h-10 lg:mr-0 ${meter ? "max-lg:pr-1" : ""}`}
 				trail={
 					clearCount > 0 && (
 						<button

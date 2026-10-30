@@ -36,7 +36,11 @@ import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 import useLocale from "~/utils/locale"
-import { SortControl } from "~/ui/filter-bar/controls"
+import { CountTip } from "~/ui/discover-bar/prototype-essentials/CountTip"
+import {
+	ForYouExplanation,
+	ForYouSort,
+} from "~/ui/discover-bar/prototype-essentials/ForYouSort"
 import {
 	PillPair,
 	VariantSwitcher,
@@ -164,12 +168,20 @@ export default function PrototypeDiscoverEssentials() {
 		}),
 		[scope, ranked, data, results.isPlaceholderData, searching, member, guest],
 	)
-	const taste = tasteStateOf(data)
+	// The fixture member has taste, so Best match is open (the grid still comes back in the guest's order).
+	const taste = fixture ? "ready" : tasteStateOf(data)
 	const forYou: ForYouControl = {
 		on: forYouState.on,
 		onChange: forYouState.set,
 		movedUp: 0,
-		explanation: null,
+		explanation: (
+			<ForYouExplanation
+				on={forYouState.on}
+				searching={searching}
+				bestMatch={filters.sort === "match"}
+				movedUp={null}
+			/>
+		),
 	}
 
 	const setQuery = (text: string | null) =>
@@ -186,23 +198,32 @@ export default function PrototypeDiscoverEssentials() {
 		)
 
 	const desktop = useDesktop()
+	const order = (
+					<div className="shrink-0 max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden">
+						<ForYouSort
+							forYou={forYou}
+							compact={!desktop}
+							quiet={variant === "I"}
+							slim={variant === "G" || variant === "J"}
+							sort={{
+								options: discoverSorts(searching, taste),
+								value: sortShown(filters.sort, searching, taste),
+								onChange: (key) => filters.setSort(key as typeof filters.sort),
+								footnote: searching ? undefined : "Relevance joins once you search.",
+								align: "right",
+							}}
+						/>
+					</div>
+	)
 	return (
 		<div className="mx-auto max-w-[1600px] px-4 pt-4 pb-16 lg:px-8 lg:pt-6">
-			<div className={`flex items-center justify-between gap-x-6 gap-y-3 ${variant === "F" ? "" : "flex-wrap"}`}>
+			<div className={`flex items-center justify-between gap-x-6 gap-y-3 ${variant >= "F" ? "" : "flex-wrap"}`}>
 				<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
 					Discover movies and shows
 				</h1>
-				{variant === "F" && (
-					<div className="shrink-0 max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden">
-						<SortControl
-							options={discoverSorts(searching, taste)}
-							value={sortShown(filters.sort, searching, taste)}
-							onChange={(key) => filters.setSort(key as typeof filters.sort)}
-							footnote={searching ? undefined : "Relevance joins once you search."}
-							size="sm"
-							align="right"
-						/>
-					</div>
+				{(variant === "F" || variant === "H" || variant === "I") && desktop && order}
+				{variant === "J" && desktop && (
+					<CountTip counts={data} searching={searching} state={filters.state} />
 				)}
 				{variant === "D" && (
 					<div className="max-lg:w-full">
@@ -224,6 +245,7 @@ export default function PrototypeDiscoverEssentials() {
 			<DiscoverControls
 				className="mt-3 lg:mt-5"
 				essentials={variant}
+				phoneOrder={order}
 				bar={bar}
 				filters={filters}
 				counts={data}

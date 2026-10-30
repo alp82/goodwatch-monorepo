@@ -50,6 +50,7 @@ import {
 	ESSENTIAL_CHIPS,
 	type EssentialsProps,
 	PillPair,
+	READY_V2,
 	ReadySwitch,
 	ThumbBar,
 	type Variant,
@@ -112,6 +113,8 @@ export interface SubTabView {
 	close: () => void
 	/** The page's For you switch, for You's Order block; without it the block shows only Best match first. */
 	forYou?: ForYouControl
+	/** PROTOTYPE essentials F: Order lives in the heading row. */
+	noOrder?: boolean
 }
 
 export interface DiscoverControlsProps {
@@ -142,6 +145,8 @@ export interface DiscoverControlsProps {
 	className?: string
 	/** PROTOTYPE: where On my services and Not seen yet sit (prototype-essentials). */
 	essentials?: Variant
+	/** PROTOTYPE essentials F, phones: For you and Sort at the end of the status line. */
+	phoneOrder?: ReactNode
 }
 
 export function DiscoverControls(props: DiscoverControlsProps) {
@@ -170,6 +175,7 @@ function DiscoverControlsContent({
 	renderFind,
 	className = "",
 	essentials,
+	phoneOrder,
 }: DiscoverControlsProps) {
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
@@ -264,6 +270,7 @@ function DiscoverControlsContent({
 		open: openTab,
 		close,
 		forYou,
+		noOrder: READY_V2.has(v ?? ""),
 	})
 	// Find's results take the field's arrow keys and Enter; a handoff ends Find in the sub-tab it opens.
 	const findKeys = useRef<FindKeys | null>(null)
@@ -316,23 +323,35 @@ function DiscoverControlsContent({
 	const statusChips = v
 		? data.chips.filter((chip) => !ESSENTIAL_CHIPS.has(chip.key))
 		: data.chips
+	const r2 = READY_V2.has(v ?? "")
+	const ready = <ReadySwitch p={ess} phone={false} v2 quiet={v === "I"} />
 	const statusLine = (
 		<StatusLine
+			noCount={v === "J" && desktop}
 			counts={counts}
 			searching={searching}
 			chips={statusChips}
 			lead={
 				v === "A" && desktop ? (
 					<PillPair p={ess} />
+				) : desktop && (v === "G" || v === "H" || v === "J") ? (
+					ready
 				) : undefined
 			}
 			beforeSort={
-				(v === "C" || v === "F") && desktop ? (
-					<ReadySwitch p={ess} phone={false} v2={v === "F"} />
+				v === "C" && desktop ? (
+					<ReadySwitch p={ess} phone={false} />
+				) : desktop && (v === "F" || v === "I") ? (
+					ready
+				) : desktop && (v === "G" || v === "J") ? (
+					phoneOrder
+				) : r2 && !desktop ? (
+					<div className="-mr-1 ml-auto">{phoneOrder}</div>
 				) : undefined
 			}
-			meter={v === "F"}
-			hideSort={v === "F"}
+			meter={r2}
+			state={state}
+			hideSort={r2}
 			reading={reading}
 			clearCount={data.clearCount}
 			sort={sort}
@@ -438,9 +457,9 @@ function DiscoverControlsContent({
 							<PillPair p={ess} stretch />
 						</div>
 					)}
-					{(v === "C" || v === "F") && (
+					{(v === "C" || r2) && (
 						<div className="mt-2">
-							<ReadySwitch p={ess} phone v2={v === "F"} />
+							<ReadySwitch p={ess} phone v2={r2} />
 						</div>
 					)}
 					{statusLine}

@@ -394,7 +394,7 @@ export function YouTab({
 }: { view: SubTabView; fixture?: boolean }) {
 	const lists = (
 		<div className="flex min-w-0 flex-col gap-5">
-			<Order view={view} />
+			{!view.noOrder && <Order view={view} />}
 			<YourLists view={view} />
 		</div>
 	)
