@@ -1,18 +1,22 @@
-// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-14). Not a feature switch: these let the owner
+// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-15). Not a feature switch: these let the owner
 // compare navigation options on the local preview branch. The choice lives in one cookie; the root loader reads it
 // for the server render, and the options bar sets it and reloads the page.
 import { useRouteLoaderData } from "@remix-run/react"
 
 export const NAV_OPTIONS = {
-	/** The Taste twins comparison's design, collapsed and expanded (round 14): ten variations, 1-5 and 6-10 by two
-	 * builders. */
-	twins: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+	/** The taste comparison (round 15): "4" is round 14's compact strip; a-e build on it with the score between the two
+	 * avatars (from 6) and the bold tier word, big numbers and the tier-colored bar (from 10). */
+	twins: ["4", "a", "b", "c", "d", "e"],
+	/** The orbit's reveal pill, redesigned, holding the match badge for member visitors (round 15). */
+	pill: ["1", "2", "3", "4", "5"],
+	/** Simulates the match percentage everywhere it shows, to see each tier: "real" keeps the actual number. */
+	match: ["real", "12", "35", "55", "75", "97"],
 } as const
 
 export type NavOptionKey = keyof typeof NAV_OPTIONS
 export type NavOptions = { [K in NavOptionKey]: (typeof NAV_OPTIONS)[K][number] }
 
-export const DEFAULT_NAV_OPTIONS: NavOptions = { twins: "1" }
+export const DEFAULT_NAV_OPTIONS: NavOptions = { twins: "a", pill: "1", match: "real" }
 
 export const NAV_OPTIONS_COOKIE = "gw_navopt"
 
@@ -48,4 +52,10 @@ export function setNavOption<K extends NavOptionKey>(current: NavOptions, key: K
 	const next = serializeNavOptions({ ...current, [key]: value })
 	document.cookie = `${NAV_OPTIONS_COOKIE}=${encodeURIComponent(next)}; Path=/; Max-Age=31536000; SameSite=Lax`
 	window.location.reload()
+}
+
+/** PROTOTYPE OPTIONS: the match percentage to show, honoring the `match` simulation. */
+export function useShownMatch(actual: number): number {
+	const { match } = useNavOptions()
+	return match === "real" ? actual : Number(match)
 }

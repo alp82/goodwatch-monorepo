@@ -2,8 +2,9 @@
 // control cluster (Controls.tsx). It has one height per width (BOX) on every profile tab, list page and Settings page,
 // and the handle strip uses the same one. The orbit is a key: hover, touch or focus wakes it, a click opens the
 // fingerprint's key facts on a pill over the name and facts (Reveal.tsx), and a second click, Escape or the close key
-// goes back. The header keeps its height in every state. For a member on someone else's profile it shows their match
-// with you as a chip next to the handle (Compare.tsx).
+// goes back. The header keeps its height in every state. For a member on someone else's profile the pill holds their
+// match with you, with a small percent tag on the closed orbit; without a fingerprint it is a chip next to the handle
+// (Compare.tsx).
 import { Link } from "@remix-run/react"
 import {
 	type ReactNode,
@@ -17,9 +18,10 @@ import type { ProfileShell } from "~/domain/profile"
 import type { HeaderMatch } from "~/server/profile/header.server"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 import type { WhorlAttribute } from "../taste/Whorl"
-import { MatchChip } from "./Compare"
+import { MatchChip, OrbitMatchTag, useMatchView } from "./Compare"
 import { ClusterControls, type ControlsProps } from "./Controls"
-import { PillBackground, PillFacts, inertUnless } from "./Reveal"
+import { PillBackground, PillFacts } from "./Pills"
+import { inertUnless } from "./Reveal"
 import { type OrbitMotion, OrbitRing } from "./Ring"
 import { type HeaderFact, keyFacts } from "./facts"
 
@@ -153,6 +155,7 @@ export function InlineHeader(props: HeaderProps) {
 	const id = useId()
 	const facts = useMemo(() => (print ? keyFacts(print) : null), [print])
 	const { motion, handlers } = useMotion(open)
+	const view = useMatchView(match)
 	useEffect(() => {
 		if (!open) return
 		const onKey = (e: KeyboardEvent) => {
@@ -181,7 +184,7 @@ export function InlineHeader(props: HeaderProps) {
 				className={`${WRAP} relative flex h-full items-center gap-3 sm:gap-6`}
 			>
 				<div className="relative flex h-full min-w-0 flex-1 items-center gap-3 sm:gap-6">
-					{facts && <PillBackground open={open} />}
+					{facts && <PillBackground open={open} facts={facts} />}
 					<div className="relative z-10 shrink-0">
 						{facts ? (
 							<button
@@ -192,14 +195,15 @@ export function InlineHeader(props: HeaderProps) {
 								aria-label={
 									open
 										? "Close taste facts"
-										: `Show @${shell.handle}'s taste at a glance`
+										: `Show @${shell.handle}'s taste at a glance${view ? `, ${view.percent}% match with you` : ""}`
 								}
 								onClick={() => setOpen((o) => !o)}
 								{...handlers}
-								className="block cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+								className="relative block cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
 								data-orbit-key
 							>
 								{ring}
+								{view && <OrbitMatchTag view={view} open={open} />}
 							</button>
 						) : (
 							ring
@@ -218,7 +222,9 @@ export function InlineHeader(props: HeaderProps) {
 									>
 										@{shell.handle}
 									</h1>
-									{match && <MatchChip handle={shell.handle} match={match} />}
+									{match && !facts && (
+										<MatchChip handle={shell.handle} match={match} />
+									)}
 								</div>
 								{props.since && (
 									<p
@@ -240,6 +246,7 @@ export function InlineHeader(props: HeaderProps) {
 								handle={shell.handle}
 								identity={props.identity}
 								facts={facts}
+								match={view}
 								onClose={close}
 							/>
 						)}

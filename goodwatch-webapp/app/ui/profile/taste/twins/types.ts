@@ -1,4 +1,4 @@
-// The contract between TasteMatch (../Compare.tsx) and the ten comparison variants (round 14, nav-options `twins`).
+// The contract between TasteMatch (../Compare.tsx) and the ten comparison variants (nav-options `twins`).
 import type { RefObject } from "react"
 import type { ProfileShell } from "~/domain/profile"
 import type { Ready } from "./parts"

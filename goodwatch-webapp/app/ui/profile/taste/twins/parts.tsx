@@ -1,5 +1,5 @@
 // The comparison's shared pieces (round 14): the match card of round 13 and the three panels of "Where your tastes
-// meet" (Overlap, Splits, Picks), plus small helpers. Variants in this folder (V1.tsx … V10.tsx) compose them; the
+// meet" (Overlap, Splits, Picks), plus small helpers. Variants in this folder (V4.tsx, Va.tsx … Ve.tsx) compose them; the
 // panels' contents stay as they are, the frame around them is what each variant designs.
 import {
 	ArrowRightIcon,
@@ -22,6 +22,7 @@ import { DISPLAY } from "~/ui/my-pages/bits"
 import { PANEL_CARD_SIZES, ProfileCard } from "../../ProfileCard"
 import { ProfileAvatar } from "../../ProfileFrame"
 import { COMPARE_ID, onCompareRequest, scrollUnderRows } from "../../compare-link"
+import { useShownMatch } from "~/ui/navigation/nav-options"
 import { matchColor, matchStrength } from "../../match"
 import { AMBER_BUTTON, TILE, posterUrl, vibe } from "../../parts"
 import { PANEL } from "../parts"
@@ -120,7 +121,7 @@ export function MatchCard({
 	children,
 }: { shell: ProfileShell; compare: Ready; children: ReactNode }) {
 	const still = useReducedMotion() ?? false
-	const p = compare.percent
+	const p = useShownMatch(compare.percent)
 	const s = matchStrength(p)
 	const color = matchColor(p)
 	const splits = compare.shared.filter(

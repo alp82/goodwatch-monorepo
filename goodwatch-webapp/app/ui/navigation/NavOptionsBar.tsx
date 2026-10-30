@@ -16,6 +16,8 @@ import {
 
 const ROWS: { key: NavOptionKey; label: string }[] = [
 	{ key: "twins", label: "Compare" },
+	{ key: "pill", label: "Pill" },
+	{ key: "match", label: "Match %" },
 ]
 
 const FOLDED_KEY = "gw-nav-options-folded"

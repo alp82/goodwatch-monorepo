@@ -1,10 +1,11 @@
 // What a click on the orbit opens in the header: the fingerprint's key facts (the viewer type, the strongest families,
-// the top attributes) on a half-round pill that slides out from behind the picture across the name and facts. The
-// header keeps its height; motion is transform and opacity only. The header (Layouts.tsx) owns the open state; this
-// draws the pill and its close key.
+// the top attributes) and, for a member visitor, their match on a half-round pill that slides out from behind the
+// picture across the name and facts. The header keeps its height; motion is transform and opacity only. The header
+// (Layouts.tsx) owns the open state; the pill designs live in Pills.tsx; this file holds the pieces they share.
 import { XMarkIcon } from "@heroicons/react/24/outline"
 import type { ReactNode } from "react"
 import { FAMILY_COLOR } from "../taste/model"
+import type { MatchView } from "./Compare"
 import type { FamilyPull, KeyFacts } from "./facts"
 
 export interface RevealProps {
@@ -13,6 +14,8 @@ export interface RevealProps {
 	handle: string
 	identity: string | null
 	facts: KeyFacts
+	/** The signed-in visitor's match; null for the owner and guests. */
+	match: MatchView | null
 	onClose: () => void
 }
 
@@ -22,7 +25,7 @@ export const inertUnless = (shown: boolean) =>
 
 const FADE = "transition-[opacity,transform] duration-300 ease-out"
 
-function CloseKey({
+export function CloseKey({
 	onClose,
 	className = "",
 }: { onClose: () => void; className?: string }) {
@@ -38,8 +41,8 @@ function CloseKey({
 	)
 }
 
-/** The families as chips: a colored dot and the name, stronger ones brighter. */
-function FamilyChips({
+/** The families as chips: a colored dot and the name. */
+export function FamilyChips({
 	families,
 	className = "",
 }: { families: FamilyPull[]; className?: string }) {
@@ -64,7 +67,7 @@ function FamilyChips({
 }
 
 /** "Seeks dread · moral weight · slow burn". */
-function AttributeLine({
+export function AttributeLine({
 	facts,
 	className = "",
 }: { facts: KeyFacts; className?: string }) {
@@ -82,14 +85,8 @@ function AttributeLine({
 	)
 }
 
-const Small = ({ handle }: { handle: string }) => (
-	<p className="truncate text-[11px] leading-4 font-semibold text-gray-400 sm:text-xs">
-		@{handle}
-	</p>
-)
-
 /** A layer over the content column that fades in when open. */
-function Layer({
+export function Layer({
 	open,
 	id,
 	className,
@@ -109,51 +106,27 @@ function Layer({
 }
 
 /**
- * The pill's background, behind the picture: closed, only its round end sits under the picture (hidden); open, it
- * slides out to the right across the content column.
+ * The pill's frame behind the picture: closed, only its round end sits under the picture (hidden); open, it slides out
+ * to the right across the content column. `surface` styles the pill itself.
  */
-export function PillBackground({ open }: { open: boolean }) {
+export function PillFrame({
+	open,
+	surface,
+	style,
+}: { open: boolean; surface: string; style?: React.CSSProperties }) {
 	return (
 		<span
 			aria-hidden
 			className="pointer-events-none absolute top-1/2 left-0 h-[88px] w-full -translate-y-1/2 overflow-hidden rounded-full sm:h-[132px]"
 		>
 			<span
-				className={`absolute inset-0 rounded-full bg-linear-to-r from-white/[0.1] via-white/[0.06] to-white/[0.04] ring-1 ring-white/10 ring-inset transition-[transform,opacity] duration-500 ease-out ${
+				className={`absolute inset-0 rounded-full transition-[transform,opacity] duration-500 ease-out ${surface} ${
 					open
 						? "translate-x-0 opacity-100"
 						: "-translate-x-[calc(100%-88px)] opacity-0 sm:-translate-x-[calc(100%-132px)]"
 				}`}
+				style={style}
 			/>
 		</span>
-	)
-}
-
-/** The pill's facts, in the content column. */
-export function PillFacts(props: RevealProps) {
-	const { open, facts } = props
-	return (
-		<Layer
-			open={open}
-			id={props.id}
-			className={`inset-0 flex items-center gap-2 pr-1 delay-100 sm:pr-3 ${open ? "translate-x-0" : "-translate-x-4"}`}
-		>
-			<div className="min-w-0 flex-1">
-				<div className="min-w-0 sm:flex sm:items-baseline sm:gap-2">
-					<Small handle={props.handle} />
-					{props.identity && (
-						<p className="truncate text-sm font-bold text-violet-200 sm:text-base">
-							{props.identity}
-						</p>
-					)}
-				</div>
-				<FamilyChips families={facts.families} className="mt-1 sm:mt-1.5" />
-				<AttributeLine
-					facts={facts}
-					className="mt-1 text-xs sm:mt-1.5 sm:text-sm"
-				/>
-			</div>
-			<CloseKey onClose={props.onClose} />
-		</Layer>
 	)
 }
