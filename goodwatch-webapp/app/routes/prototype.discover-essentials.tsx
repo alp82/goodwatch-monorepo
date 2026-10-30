@@ -257,6 +257,19 @@ export default function PrototypeDiscoverEssentials() {
 				className="mt-3 lg:mt-5"
 				essentials={variant}
 				heading={variant === "J" ? title : undefined}
+				orderAt={
+					variant === "J"
+						? (level) => (
+								<OrderCombo
+									forYou={forYou}
+									sort={sortProps}
+									combo={combo}
+									phone={!desktop}
+									level={level}
+								/>
+							)
+						: undefined
+				}
 				phoneOrder={order}
 				bar={bar}
 				filters={filters}

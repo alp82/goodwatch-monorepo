@@ -39,6 +39,7 @@ export function StatusLine({
 	meter = false,
 	hideSort = false,
 	noCount = false,
+	rowRef,
 	state,
 	className = "",
 }: {
@@ -61,11 +62,13 @@ export function StatusLine({
 	hideSort?: boolean
 	/** PROTOTYPE: the count lives in the heading row. */
 	noCount?: boolean
+	rowRef?: React.Ref<HTMLDivElement>
 	state?: FilterState
 	className?: string
 }) {
 	return (
 		<div
+			ref={rowRef}
 			className={`flex items-center gap-3 ${className}`}
 			style={{ height: STATUS_HEIGHT }}
 		>

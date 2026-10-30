@@ -14,8 +14,8 @@ import {
 } from "@heroicons/react/20/solid"
 import { FingerPrintIcon, PlayCircleIcon } from "@heroicons/react/24/solid"
 import { useNavigate, useSearchParams } from "@remix-run/react"
-import { motion } from "framer-motion"
-import type { ComponentProps, ReactNode } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { type ComponentProps, type ReactNode, useRef, useState } from "react"
 import type { FilterState } from "~/domain/filter-state"
 import { ServiceStack, SortControl } from "~/ui/filter-bar/controls"
 import { Knob, TAP } from "~/ui/filter-bar/motion"
@@ -30,10 +30,90 @@ export const COMBOS = [
 ] as const
 export type Combo = (typeof COMBOS)[number]["key"]
 
+/** How much of style b shows: 2 everything, 1 short labels, 0 icons only. */
+export type Level = 0 | 1 | 2
+
+/**
+ * A small tooltip above its child on hover or keyboard focus, after a short wait. Transform and opacity only.
+ * `off` shows the child alone (the label is already on screen).
+ */
+export function Tip({
+	tip,
+	children,
+	off = false,
+	align = "center",
+}: {
+	tip: ReactNode
+	children: ReactNode
+	off?: boolean
+	align?: "center" | "start" | "end"
+}) {
+	const [shown, setShown] = useState(false)
+	const timer = useRef<ReturnType<typeof setTimeout>>()
+	if (off) return <>{children}</>
+	const show = () => {
+		clearTimeout(timer.current)
+		timer.current = setTimeout(() => setShown(true), 160)
+	}
+	const hide = () => {
+		clearTimeout(timer.current)
+		setShown(false)
+	}
+	return (
+		<span
+			className="relative flex"
+			onPointerEnter={(e) => e.pointerType === "mouse" && show()}
+			onPointerLeave={hide}
+			onFocus={(e) => (e.target as HTMLElement).matches(":focus-visible") && show()}
+			onBlur={hide}
+			onPointerDown={hide}
+		>
+			{children}
+			<AnimatePresence>
+				{shown && (
+					<span
+						className={`pointer-events-none absolute bottom-full z-[60] mb-2 ${align === "end" ? "right-0" : align === "start" ? "left-0" : "left-1/2 -translate-x-1/2"}`}
+					>
+						<motion.span
+							role="tooltip"
+							initial={{ opacity: 0, y: 4 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: 4 }}
+							transition={{ duration: 0.12 }}
+							className="block rounded-xl bg-gray-900 px-3 py-2 text-left text-xs whitespace-nowrap text-gray-300 shadow-[0_14px_40px_-10px_rgba(0,0,0,.9)] ring-1 ring-white/10"
+						>
+							{tip}
+						</motion.span>
+					</span>
+				)}
+			</AnimatePresence>
+		</span>
+	)
+}
+
+/** A tooltip's two lines: the name with its state, and what it does. */
+function TipText({ name, on, line }: { name: string; on?: boolean; line?: string }) {
+	return (
+		<>
+			<span className="flex items-center gap-2 text-[13px] font-bold text-white">
+				{name}
+				{on !== undefined && (
+					<span
+						className={`rounded-full px-1.5 py-px text-[10px] font-bold ${on ? "bg-amber-500 text-gray-950" : "text-gray-400 ring-1 ring-inset ring-white/15"}`}
+					>
+						{on ? "On" : "Off"}
+					</span>
+				)}
+			</span>
+			{line && <span className="mt-0.5 block text-gray-400">{line}</span>}
+		</>
+	)
+}
+
 export const useCombo = (): Combo => {
 	const [params] = useSearchParams()
 	const c = params.get("combo")
-	return (COMBOS.find((x) => x.key === c)?.key ?? "a") as Combo
+	return (COMBOS.find((x) => x.key === c)?.key ?? "b") as Combo
 }
 
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
@@ -209,11 +289,13 @@ export function ReadyCombo({
 	p,
 	combo,
 	phone,
-}: { p: EssentialsProps; combo: Combo; phone: boolean }) {
+	level = 2,
+}: { p: EssentialsProps; combo: Combo; phone: boolean; level?: Level }) {
 	const r = useReady(p)
 	const parts = partsOf(p, r)
 	const label = phone ? "Ready" : "Ready to watch"
-	if (combo === "b")
+	if (combo === "b") return <ReadyB p={p} r={r} parts={parts} level={phone ? 1 : level} />
+	if ((combo as string) === "b-old")
 		return (
 			<div className="flex h-10 shrink-0 overflow-hidden rounded-full bg-white/[0.04] ring-1 ring-white/10">
 				<div className="relative flex">
@@ -338,15 +420,18 @@ export function OrderCombo({
 	sort,
 	combo,
 	phone,
+	level = phone ? 1 : 2,
 }: {
 	forYou: ForYouControl
 	sort: SortProps
 	combo: Combo
 	phone: boolean
+	level?: Level
 }) {
 	const lit = forYou.on && !forYou.disabled
 	const flip = () => !forYou.disabled && forYou.onChange(!forYou.on)
-	if (combo === "b")
+	if (combo === "b") return <OrderB forYou={forYou} sort={sort} level={level} />
+	if ((combo as string) === "b-old")
 		return (
 			<div className="flex h-10 shrink-0 overflow-hidden rounded-full bg-white/[0.04] ring-1 ring-white/10">
 				<div className="relative flex">
@@ -453,6 +538,159 @@ export function ComboSwitcher() {
 			<button type="button" onClick={() => go(1)} className="rounded-full p-1.5 hover:bg-white/20" aria-label="Next style">
 				<ChevronRightIcon className="h-4 w-4" />
 			</button>
+		</div>
+	)
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Style b at three sizes. No overflow clipping, so tooltips can leave the pill; the end segments round themselves.
+
+const SEG = "relative flex h-full items-center gap-1.5 text-[13px] font-bold whitespace-nowrap cursor-pointer transition-colors"
+
+function BaseLine({ on, color }: { on: boolean; color: string }) {
+	return (
+		<span
+			aria-hidden
+			className={`pointer-events-none absolute inset-x-2.5 bottom-0 h-0.5 rounded-full ${color} transition-opacity duration-200 ${on ? "opacity-100" : "opacity-0"}`}
+		/>
+	)
+}
+
+function ReadyB({
+	p,
+	r,
+	parts,
+	level,
+}: {
+	p: EssentialsProps
+	r: ReturnType<typeof useReady>
+	parts: PartDef[]
+	level: Level
+}) {
+	const names = p.mine.map((m) => m.name).join(", ")
+	return (
+		<div className="flex h-10 shrink-0 rounded-full bg-white/[0.04] ring-1 ring-white/10">
+			<Tip
+				off={level === 2}
+				align="start"
+				tip={
+					<TipText
+						name="Ready to watch"
+						on={r.all}
+						line="My services and Not seen yet in one switch"
+					/>
+				}
+			>
+				<motion.button
+					type="button"
+					role="switch"
+					aria-checked={r.all}
+					aria-label="Ready to watch"
+					whileTap={TAP}
+					onClick={r.toggleAll}
+					className={`${SEG} rounded-l-full ${FOCUS} ${level === 0 ? "pr-2 pl-3" : "pr-2.5 pl-3.5"} ${r.all || r.some ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+				>
+					<MainIcon kind="ready" lit={r.all} some={r.some} />
+					{level === 2 && <span className="text-sm">Ready to watch</span>}
+					{level === 1 && <span className="text-sm">Ready</span>}
+					<Knob on={r.all} />
+					<BaseLine on={r.all} color="bg-amber-400" />
+				</motion.button>
+			</Tip>
+			{parts.map((part, i) => (
+				<Tip
+					key={part.key}
+					off={level === 2}
+					align="start"
+					tip={
+						<TipText
+							name={part.label}
+							on={part.locked ? undefined : part.on}
+							line={
+								part.locked
+									? "Sign up to hide what you've seen"
+									: part.key === "s"
+										? names || "Pick the services you have"
+										: "Hides what you've seen or passed on"
+							}
+						/>
+					}
+				>
+					<motion.button
+						type="button"
+						role={part.locked ? undefined : "switch"}
+						aria-checked={part.locked ? undefined : part.on}
+						aria-label={part.label}
+						whileTap={TAP}
+						onClick={part.onClick}
+						className={`${SEG} border-l border-white/10 ${FOCUS} ${level === 0 ? "px-2.5" : "px-3"} ${i === parts.length - 1 ? "rounded-r-full pr-3.5" : ""} ${part.on ? `${part.tint} text-white` : part.locked ? "text-gray-500" : "text-gray-400 hover:bg-white/[0.05] hover:text-gray-200"}`}
+					>
+						{part.icon}
+						{level === 2 && part.label}
+						{level === 1 && part.short}
+						<BaseLine on={part.on} color={part.line} />
+					</motion.button>
+				</Tip>
+			))}
+		</div>
+	)
+}
+
+function OrderB({
+	forYou,
+	sort,
+	level,
+}: {
+	forYou: ForYouControl
+	sort: SortProps
+	level: Level
+}) {
+	const lit = forYou.on && !forYou.disabled
+	const chosen = sort.options.find((o) => o.key === sort.value)?.label ?? ""
+	return (
+		<div className="flex h-10 shrink-0 rounded-full bg-white/[0.04] ring-1 ring-white/10">
+			<Tip
+				off={level === 2}
+				tip={
+					<TipText
+						name="For you"
+						on={lit}
+						line="Titles that fit your taste rise; nothing is hidden"
+					/>
+				}
+			>
+				<motion.button
+					type="button"
+					role="switch"
+					aria-checked={lit}
+					aria-label="For you"
+					whileTap={TAP}
+					onClick={() => !forYou.disabled && forYou.onChange(!forYou.on)}
+					className={`${SEG} rounded-l-full ${FOCUS} ${level === 0 ? "pr-2 pl-3" : "pr-2.5 pl-3.5"} ${lit ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+				>
+					<MainIcon kind="you" lit={lit} />
+					{level === 2 && <span className="text-sm">For you</span>}
+					<Knob on={lit} />
+					<BaseLine on={lit} color="bg-amber-400" />
+				</motion.button>
+			</Tip>
+			<Tip
+				off={level > 0}
+				align="end"
+				tip={<TipText name={`Sort: ${chosen}`} />}
+			>
+				<div
+					className={`flex border-l border-white/10 [&_[data-sort-button]]:h-10 [&_[data-sort-button]]:rounded-l-none [&_[data-sort-button]]:rounded-r-full ${
+						level === 2
+							? "[&_[data-sort-button]]:w-[190px]"
+							: level === 1
+								? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]]:w-[136px] [&_[data-sort-button]]:px-3"
+								: "[&_[data-sort-button]>span]:hidden [&_[data-sort-button]]:px-3"
+					}`}
+				>
+					<SortControl {...sort} bare />
+				</div>
+			</Tip>
 		</div>
 	)
 }

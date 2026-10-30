@@ -108,6 +108,8 @@ export function FilterMix({
 		{ group: string; label: string; restore: Partial<FilterState> }[]
 	>([])
 
+	// Rows keep the place they first took, also while switched off.
+	const seen = useRef<string[]>([])
 	const total = counts?.total ?? 0
 	const hidden = counts?.hidden ?? 0
 	const sole = new Map((counts?.recoveries ?? []).map((r) => [r.filter as string, r.titles]))
@@ -130,12 +132,14 @@ export function FilterMix({
 		chips: g.chips,
 		off: false,
 	}))
-	const rows: Row[] = [
+	const unsorted: Row[] = [
 		...live,
 		...parked
 			.filter((p) => !live.some((r) => r.group === p.group))
 			.map((p) => ({ group: p.group, label: p.label, color: colorOf(p.group), hides: 0, chips: [], off: true })),
 	]
+	for (const row of unsorted) if (!seen.current.includes(row.group)) seen.current.push(row.group)
+	const rows = [...unsorted].sort((a, b) => seen.current.indexOf(a.group) - seen.current.indexOf(b.group))
 
 	const switchOff = (row: Row) => {
 		update((s) => {
@@ -153,6 +157,7 @@ export function FilterMix({
 	const remove = (row: Row) => {
 		if (!row.off) update((s) => removeAll(row.chips, s))
 		setParked((list) => list.filter((x) => x.group !== row.group))
+		seen.current = seen.current.filter((g) => g !== row.group)
 	}
 
 	return (
@@ -162,11 +167,11 @@ export function FilterMix({
 				aria-expanded={open}
 				aria-controls={id}
 				onClick={() => setOpen((o) => !o)}
-				className={`flex flex-col items-end gap-1 rounded-lg px-1.5 py-1 text-right cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[116px]" : "w-[172px]"}`}
+				className={`flex h-12 flex-col items-end justify-center gap-1 rounded-lg px-1.5 text-right cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[116px]" : "w-[172px]"}`}
 			>
 				<CountText counts={counts} searching={searching} />
-				<span className="flex w-full items-center gap-2">
-					<span className="text-[11px] leading-none whitespace-nowrap text-gray-500">
+				<span className="flex h-3 w-full items-center gap-2">
+					<span className="h-3 text-[11px] leading-3 whitespace-nowrap text-gray-500">
 						{hidden > 0 && !phone ? `${compactCount(hidden)} hidden` : ""}
 					</span>
 					<Stack shown={total} rows={rows} className="h-2 flex-1" />
@@ -193,33 +198,40 @@ export function FilterMix({
 								<span className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500" aria-hidden />
 								<span className="flex-1 font-bold text-white">Shown</span>
 								<span className="tabular-nums text-gray-300">{total.toLocaleString("en")}</span>
-								<span className="w-[68px]" aria-hidden />
+								<span className="w-[86px]" aria-hidden />
 							</li>
 							{rows.map((row) => (
-								<li key={row.group} className={`flex h-8 items-center gap-2.5 ${row.off ? "opacity-50" : ""}`}>
-									<span className={`h-2.5 w-2.5 shrink-0 rounded-full ${row.color}`} aria-hidden />
-									<span className={`min-w-0 flex-1 truncate ${row.off ? "text-gray-400 line-through decoration-gray-500" : "text-gray-200"}`}>
-										{row.label}
-									</span>
-									<span className="shrink-0 text-xs tabular-nums text-gray-500">
-										{row.off ? "off" : `hides ~${compactCount(row.hides)}`}
-									</span>
+								<li key={row.group} className="flex h-9 items-center gap-1">
 									<motion.button
 										type="button"
 										role="switch"
 										aria-checked={!row.off}
-										aria-label={`${row.label} ${row.off ? "off" : "on"}`}
-										whileTap={TAP}
+										aria-label={row.label}
+										whileTap={{ scale: 0.985 }}
 										onClick={() => (row.off ? switchOn(row) : switchOff(row))}
-										className="shrink-0 origin-center scale-75 cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+										className="-ml-2 flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-lg pr-1 pl-2 text-left cursor-pointer outline-none hover:bg-white/[0.05] focus-visible:ring-2 focus-visible:ring-amber-400"
 									>
-										<Knob on={!row.off} />
+										<span
+											className={`h-2.5 w-2.5 shrink-0 rounded-full ${row.color} ${row.off ? "opacity-40" : ""}`}
+											aria-hidden
+										/>
+										<span
+											className={`min-w-0 flex-1 truncate ${row.off ? "text-gray-500 line-through decoration-gray-600" : "text-gray-200"}`}
+										>
+											{row.label}
+										</span>
+										<span className="shrink-0 text-xs tabular-nums text-gray-500">
+											{row.off ? "off" : row.hides < 1 ? "no effect" : `hides ~${compactCount(row.hides)}`}
+										</span>
+										<span className="shrink-0 origin-center scale-75" aria-hidden>
+											<Knob on={!row.off} />
+										</span>
 									</motion.button>
 									<button
 										type="button"
 										aria-label={`Remove ${row.label}`}
 										onClick={() => remove(row)}
-										className="-ml-1 grid h-7 w-7 shrink-0 place-items-center rounded-full text-gray-500 cursor-pointer outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
+										className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-gray-500 cursor-pointer outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
 									>
 										<XMarkIcon className="h-4 w-4" />
 									</button>

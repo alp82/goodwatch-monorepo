@@ -13,6 +13,7 @@ import {
 	useCallback,
 	useEffect,
 	useId,
+	useLayoutEffect,
 	useRef,
 	useState,
 } from "react"
@@ -46,7 +47,8 @@ import {
 } from "./find/FindField"
 import { shownSubTab } from "./panel-state"
 import { FilterMix } from "./prototype-essentials/FilterMix"
-import { ReadyCombo, useCombo } from "./prototype-essentials/combos"
+import { type Level, ReadyCombo, useCombo } from "./prototype-essentials/combos"
+import { useSearchParams } from "@remix-run/react"
 import {
 	BarStrip,
 	ESSENTIAL_CHIPS,
@@ -151,6 +153,8 @@ export interface DiscoverControlsProps {
 	phoneOrder?: ReactNode
 	/** PROTOTYPE essentials J: the page title, with the count at its right. */
 	heading?: ReactNode
+	/** PROTOTYPE essentials J: For you + Sort at a size (style b shortens). */
+	orderAt?: (level: Level) => ReactNode
 }
 
 export function DiscoverControls(props: DiscoverControlsProps) {
@@ -181,8 +185,11 @@ function DiscoverControlsContent({
 	essentials,
 	phoneOrder,
 	heading,
+	orderAt,
 }: DiscoverControlsProps) {
 	const combo = useCombo()
+	const [fitParams] = useSearchParams()
+	const fixedFit = fitParams.get("fit")
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
 	const desktop = useDesktop()
@@ -317,6 +324,39 @@ function DiscoverControlsContent({
 			phone={phone}
 		/>
 	)
+	// PROTOTYPE J: style b's size. The widest size whose two controls leave the chips the room they need.
+	// The status line renders in both the desktop and the phone block; only one is visible.
+	const rows = useRef(new Set<HTMLDivElement>())
+	const rowRef = useCallback((el: HTMLDivElement | null) => {
+		if (el) rows.current.add(el)
+	}, [])
+	const measure = useRef<HTMLDivElement>(null)
+	const [fit, setFit] = useState<Level>(2)
+	const chipKey = data.chips.map((c) => c.key).join(",")
+	useLayoutEffect(() => {
+		const m = measure.current
+		if (!m || !orderAt) return
+		const run = () => {
+			const row = [...rows.current].find((r) => r.isConnected && r.clientWidth > 0)
+			if (!row) return
+			const ul = row.querySelector<HTMLElement>('ul[aria-label="Active filters"]')
+			const last = ul?.lastElementChild as HTMLElement | null | undefined
+			const chips = Math.max(120, last ? last.offsetLeft + last.offsetWidth + 32 : 0)
+			const width = (key: string) =>
+				m.querySelector<HTMLElement>(`[data-m="${key}"]`)?.offsetWidth ?? 0
+			const room = row.clientWidth - 36
+			const levels: Level[] = desktop ? [2, 1, 0] : [1, 0]
+			const pick =
+				levels.find(
+					(l) => (desktop ? width(`r${l}`) : 0) + width(`o${l}`) + chips <= room,
+				) ?? 0
+			setFit((was) => (was === pick ? was : pick))
+		}
+		run()
+		const observer = new ResizeObserver(run)
+		for (const r of rows.current) if (r.isConnected) observer.observe(r)
+		return () => observer.disconnect()
+	}, [desktop, chipKey, orderAt, combo])
 	const ess: EssentialsProps = {
 		state,
 		update: filters.update,
@@ -330,15 +370,20 @@ function DiscoverControlsContent({
 		? data.chips.filter((chip) => !ESSENTIAL_CHIPS.has(chip.key))
 		: data.chips
 	const r2 = READY_V2.has(v ?? "")
+	const levelShown: Level =
+		fixedFit === "0" || fixedFit === "1" || fixedFit === "2"
+			? (Number(fixedFit) as Level)
+			: fit
 	const ready =
 		v === "J" ? (
-			<ReadyCombo p={ess} combo={combo} phone={false} />
+			<ReadyCombo p={ess} combo={combo} phone={false} level={levelShown} />
 		) : (
 			<ReadySwitch p={ess} phone={false} v2 quiet={v === "I"} />
 		)
 	const statusLine = (
 		<StatusLine
 			noCount={v === "J"}
+			rowRef={v === "J" ? rowRef : undefined}
 			counts={counts}
 			searching={searching}
 			chips={statusChips}
@@ -354,7 +399,11 @@ function DiscoverControlsContent({
 					<ReadySwitch p={ess} phone={false} />
 				) : desktop && (v === "F" || v === "I") ? (
 					ready
-				) : desktop && (v === "G" || v === "J") ? (
+				) : desktop && v === "J" && orderAt ? (
+					orderAt(levelShown)
+				) : v === "J" && orderAt ? (
+					<div className="-mr-1 ml-auto">{orderAt(Math.min(levelShown, 1) as Level)}</div>
+				) : desktop && v === "G" ? (
 					phoneOrder
 				) : r2 && !desktop ? (
 					<div className="-mr-1 ml-auto">{phoneOrder}</div>
@@ -399,6 +448,25 @@ function DiscoverControlsContent({
 
 	return (
 		<MotionConfig reducedMotion="user">
+			{v === "J" && orderAt && (
+				<div
+					ref={measure}
+					aria-hidden
+					{...{ inert: "" }}
+					className="pointer-events-none invisible fixed top-0 left-0 -z-10 flex flex-col items-start"
+				>
+					{([0, 1, 2] as Level[]).map((l) => (
+						<div key={l} className="flex">
+							<div data-m={`r${l}`} className="flex">
+								<ReadyCombo p={ess} combo={combo} phone={false} level={l} />
+							</div>
+							<div data-m={`o${l}`} className="flex">
+								{orderAt(l)}
+							</div>
+						</div>
+					))}
+				</div>
+			)}
 			{heading && (
 				<div className="flex items-start justify-between gap-4">
 					<div className="min-w-0">{heading}</div>
