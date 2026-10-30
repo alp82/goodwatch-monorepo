@@ -15,6 +15,7 @@ import { NewEpisodesMark } from "./bits"
 function DockKeys() {
 	const areas = useAreaKeys()
 	const { user, loading } = useUser()
+	const navigation = useNavigation()
 	return (
 		<div className="flex h-[76px] items-center gap-2 px-2">
 			<div className="grid h-[62px] flex-1 grid-cols-3 gap-0.5 rounded-[22px] bg-white/[0.04] p-1 ring-1 ring-white/[0.07]">
@@ -27,6 +28,12 @@ function DockKeys() {
 							prefetch="intent"
 							data-area-key={a.key}
 							aria-current={a.on ? "true" : undefined}
+							onClick={(event) => {
+								// A second tap on the lit key opens the area's pages, as the top bar's title does.
+								if (!a.on || !navigation.phoneRow) return
+								event.preventDefault()
+								navigation.setTabsOpen(true)
+							}}
 							className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${
 								a.on
 									? "bg-amber-500/15 text-amber-200"
@@ -143,12 +150,17 @@ export function useQuietDock(active: boolean) {
 }
 
 /**
- * A page's phone controls, docked above the navigation (the slab). Desktop layouts keep their controls in the page:
- * the dock is hidden from the large breakpoint up.
+ * A page's phone controls, below lg. They sit in the page where the page puts them and scroll away with it: phones
+ * keep two persistent bars only (the top bar and the dock), so nothing docks above the navigation any more.
+ * Desktop layouts draw their own controls.
  */
 export function DockStrip({ children }: { children: ReactNode }) {
-	// Portals cannot render on the server. Keep controls and navigation together from the first paint.
-	// The dock is position: fixed, so no ancestor of a DockStrip may set transform, filter, backdrop-filter,
-	// contain or will-change: any of these pins the dock to that ancestor instead of the viewport.
-	return <MobileDock strip={children} />
+	return (
+		<div
+			data-phone-controls
+			className="mx-auto flex w-full max-w-7xl items-end gap-1.5 px-4 pt-3 sm:px-6 lg:hidden"
+		>
+			{children}
+		</div>
+	)
 }

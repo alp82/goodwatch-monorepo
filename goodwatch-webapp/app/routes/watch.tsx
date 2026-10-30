@@ -56,7 +56,14 @@ export default function WatchLayout() {
 					.filter(Boolean)
 					.join(", ")}
 			</h1>
-			{sub && <SubNav label={sub.label} items={sub.items} under="two" />}
+			{sub && (
+				<SubNav
+					label={sub.label}
+					items={sub.items}
+					under="two"
+					phoneItems={upNext && !history.here && !ready ? upNext : undefined}
+				/>
+			)}
 			<div className="pt-4" aria-hidden />
 			<Outlet />
 		</>

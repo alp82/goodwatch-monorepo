@@ -1,4 +1,5 @@
-// Settings inside the Taste area: every settings page in a slim column on desktop, or the SubNav row on a phone, the
+// Settings inside the Taste area: every settings page in a slim column on desktop (phones reach them from the Settings
+// home's tiles and come back with the top bar's "‹ Settings"), the
 // same rows as the account menu (SETTINGS_COLUMN in ui/navigation/areas.ts), then the page. Pages drawn with SettingsPage
 // inside the frame get the small head and the frame's gutter.
 import { Link, useLocation } from "@remix-run/react"
@@ -6,7 +7,6 @@ import { type ReactNode, createContext, useContext, useMemo } from "react"
 import { useUserData } from "~/routes/api.user-data"
 import { WRAP } from "~/ui/my-pages/bits"
 import { UNDER_TABS } from "~/ui/navigation/AreaTabs"
-import { SubNav, type SubNavItem } from "~/ui/navigation/SubNav"
 import { type Place, SETTINGS_COLUMN, placeHere } from "~/ui/navigation/areas"
 
 const count = (n: number) => n.toLocaleString("en-US")
@@ -70,27 +70,8 @@ export function SettingsFrame({ children }: { children: ReactNode }) {
 	const notInterested = useNotInterestedCount()
 	const countOf = (place: Place) =>
 		place.count === "not-interested" ? notInterested : undefined
-	// The phone's row: the places in their groups, a thin divider between groups.
-	const items: SubNavItem[] = SETTINGS_COLUMN.flatMap((g, i) =>
-		g.places.flatMap((p, j) =>
-			p.href
-				? [
-						{
-							key: p.id,
-							label: p.label,
-							href: p.href,
-							icon: p.icon,
-							here: placeHere(p, pathname),
-							count: countOf(p),
-							sep: i > 0 && j === 0,
-						},
-					]
-				: [],
-		),
-	)
 	return (
 		<>
-			<SubNav label="Settings pages" items={items} className="lg:hidden" />
 			<div className={`${WRAP} lg:flex lg:gap-8`} data-settings-frame>
 				<aside className="hidden w-56 shrink-0 lg:block">
 					<nav

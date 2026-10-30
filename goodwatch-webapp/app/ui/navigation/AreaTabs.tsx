@@ -14,9 +14,10 @@ import {
 	UserCircleIcon as UserCircleSolid,
 } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import { type ReactNode, useLayoutEffect, useRef } from "react"
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react"
 import { STICKY_BAR } from "~/ui/layers"
 import type { AreaTab, NavIcon, TasteRow } from "./areas"
+import { useNavigation } from "./NavigationContext"
 import { TAB_ROW } from "./bar-layers"
 
 /** The page width, as ui/my-pages/bits.tsx (kept here so the header chunk does not pull that module). */
@@ -35,13 +36,14 @@ export const SUBNAV_PX = 44
 export const TABS_TOP = "top-[calc(4rem_+_var(--visitor-bar-h,0px))]"
 /** Where a row right under the tab row sticks (SubNav, the Settings column), by the tab row it sits under. */
 export const UNDER_TABS = {
-	one: "top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_45px)] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_49px)]",
-	two: "top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_57px)] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_61px)]",
+	one: "top-[calc(4rem_+_var(--visitor-bar-h,0px))] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_49px)]",
+	two: "top-[calc(4rem_+_var(--visitor-bar-h,0px))] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_61px)]",
 } as const
-/** Where a bar under the tab row and a SubNav sticks (the My scores selection bar). */
+/** Where a bar under the tab row and a SubNav sticks (the My scores selection bar). Phones: under the header only, as
+ * neither row shows or sticks there (the tabs move into the top bar's sheet, SubNav is a quiet row in the page). */
 export const UNDER_SUBNAV = {
-	one: "top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_89px)] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_93px)]",
-	two: "top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_101px)] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_105px)]",
+	one: "top-[calc(4rem_+_var(--visitor-bar-h,0px))] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_93px)]",
+	two: "top-[calc(4rem_+_var(--visitor-bar-h,0px))] lg:top-[calc(4rem_+_var(--visitor-bar-h,0px)_+_105px)]",
 } as const
 /** The tab row's own height, by kind (TAB_ROW_PX). */
 const ROW_H = {
@@ -213,13 +215,14 @@ export function AreaTabs({
 	sticky?: boolean
 }) {
 	const scroller = useCenterCurrent()
+	usePhoneRow(typeof label === "string" ? label : "", tabs, trailing)
 	const hasTrailing = trailing != null && trailing.length > 0
 	const kind = [...tabs, ...(trailing ?? [])].some((t) => t.sub) ? "two" : "one"
 	return (
 		<nav
 			aria-label={typeof label === "string" ? label : "Area"}
 			data-tab-row={kind}
-			className={`${sticky ? `sticky ${TABS_TOP} ${STICKY_BAR}` : "relative"} ${ROW_H[kind]} ${TAB_ROW}`}
+			className={`${sticky ? `sticky ${TABS_TOP} ${STICKY_BAR}` : "relative"} ${ROW_H[kind]} ${TAB_ROW} max-lg:hidden`}
 		>
 			<div
 				ref={scroller}
@@ -262,6 +265,23 @@ export function AreaTabs({
 			</div>
 		</nav>
 	)
+}
+
+/**
+ * Phones don't draw the row: its tabs go to the top bar's sheet (PhoneBar.tsx), with this page's counts, marks and
+ * hrefs. Keyed by content, so a parent's fresh arrays don't loop.
+ */
+function usePhoneRow(label: string, tabs: AreaTab[], trailing?: AreaTab[]) {
+	const { setPhoneRow } = useNavigation()
+	const all = trailing ? [...tabs, ...trailing] : tabs
+	const key = `${label}|${all.map((t) => `${t.key}:${t.href}:${t.here}:${t.count ?? ""}`).join(",")}`
+	const latest = useRef(all)
+	latest.current = all
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `key` stands for the tabs' content
+	useEffect(() => {
+		setPhoneRow({ label, tabs: latest.current })
+		return () => setPhoneRow(null)
+	}, [key, setPhoneRow])
 }
 
 /** The Settings gear at the Profile row's end: an icon on phones, "Settings" beside it on desktop. */

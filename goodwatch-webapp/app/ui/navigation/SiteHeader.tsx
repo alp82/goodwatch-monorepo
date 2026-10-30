@@ -1,7 +1,6 @@
 // The site header. Desktop: the wordmark, the three area keys (Watch · Explore · Profile), the search field in the
-// middle, and the avatar that opens the account menu (Sign in and Sign up for guests). Phones: the wordmark and the
-// search key, plus Sign up for guests; the area keys and the avatar live in the dock (MobileDock.tsx).
-import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
+// middle, and the avatar that opens the account menu (Sign in and Sign up for guests). Phones: the page's own bar
+// (PhoneBar.tsx: area label, title, the area's pages in a sheet); the area keys and the avatar live in the dock.
 import { Link, useLocation } from "@remix-run/react"
 import { useMemo } from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
@@ -9,10 +8,11 @@ import { GuestKeys, HeaderAccountKey } from "~/ui/account/AccountKey"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useUser } from "~/utils/auth"
-import { useNavigation, usePathViewer } from "./NavigationContext"
-import { HeaderSearchBar, Omnibox, holdKeyboardForSearch } from "./Search"
+import { usePathViewer } from "./NavigationContext"
+import { HeaderSearchBar, Omnibox } from "./Search"
 import { type AreaDef, areaKeys, litArea } from "./areas"
-import { HEADER_BAR } from "./bar-layers"
+import { PhoneBar } from "./PhoneBar"
+import { HEADER_BAR, PHONE_BAR } from "./bar-layers"
 import { NewEpisodesMark } from "./bits"
 import { useOpenerSignal } from "./useWhatsNew"
 
@@ -90,31 +90,12 @@ function AreaKeys({ areas }: { areas: AreaKeyView[] }) {
 	)
 }
 
-/** Phones: search is a key in the header (the dock holds the areas). */
-function PhoneSearchKey() {
-	const navigation = useNavigation()
-	return (
-		<button
-			type="button"
-			onClick={() => {
-				holdKeyboardForSearch()
-				navigation.setSearchOpen(true)
-			}}
-			aria-haspopup="dialog"
-			aria-label="Search titles, people, moods"
-			className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-white/[0.06] text-amber-400 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]"
-		>
-			<MagnifyingGlassIcon className="h-5 w-5" aria-hidden />
-		</button>
-	)
-}
-
 /** The account slot: nothing while the sign-in check runs, the avatar for members, Sign in and Sign up for guests. */
-function AccountSlot({ compact }: { compact?: boolean }) {
+function AccountSlot() {
 	const { user, loading } = useUser()
-	if (loading) return <span className={compact ? "" : "size-10 shrink-0"} />
-	if (user) return compact ? null : <HeaderAccountKey />
-	return <GuestKeys compact={compact} />
+	if (loading) return <span className="size-10 shrink-0" />
+	if (user) return <HeaderAccountKey />
+	return <GuestKeys />
 }
 
 export function SiteHeader() {
@@ -123,14 +104,8 @@ export function SiteHeader() {
 		// `data-site-header`: leaving the living room through its TV holds the header still (main.css).
 		<div data-site-header className="fixed top-0 z-[1000] w-full text-gray-100">
 			<GlobalLoading />
-			<div
-				className={`flex h-16 items-center gap-2.5 px-4 lg:hidden ${HEADER_BAR}`}
-			>
-				<Wordmark fontSize={20} />
-				<span className="flex-1" />
-				<PhoneSearchKey />
-				<AccountSlot compact />
-			</div>
+			{/* Phones: the bar that names the page and opens its area's pages (PhoneBar.tsx). It slides, so no blur. */}
+			<PhoneBar surface={PHONE_BAR} />
 			<header className={`hidden lg:block ${HEADER_BAR}`}>
 				<div className="mx-auto flex h-16 max-w-7xl items-center gap-[18px] px-8">
 					<Wordmark fontSize={30} />

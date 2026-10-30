@@ -313,7 +313,7 @@ export function WatchNextHero({
 			<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-900 via-gray-900/70 to-gray-900/10 md:bg-linear-to-r md:from-gray-900 md:via-gray-900/75 md:to-transparent" />
 			<div className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-linear-to-t from-gray-900 to-transparent" />
 			<div className="absolute inset-x-0 top-0 -z-10 h-40 bg-linear-to-b from-gray-900/90 to-transparent" />
-			{/* Phones get the controls at the bottom instead (PhoneControls). */}
+			{/* Phones get the controls in the page under the pick instead (PhoneControls). */}
 			<div className={`${WRAP} relative z-20 hidden pt-6 lg:block`}>
 				{strip}
 			</div>

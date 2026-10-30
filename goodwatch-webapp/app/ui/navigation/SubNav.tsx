@@ -7,6 +7,10 @@
 // a lighter weight, no icons (Settings keeps small ones), muted counts. Its bar is a step lighter than the page
 // (./bar-layers.ts), and the current item has an amber dot that moves between items with a layout animation
 // (transform only).
+//
+// Phones (below lg) get QuietRow instead: one line of text in the page that scrolls away with it, never sticky. Views
+// are one tap each for the first three, the rest under "More"; sections scroll to their part of the page.
+import { ChevronDownIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { LayoutGroup, motion } from "framer-motion"
 import {
@@ -20,6 +24,7 @@ import {
 	useRef,
 	useState,
 } from "react"
+import { SnapSheet } from "~/ui/filter-bar"
 import { STICKY_SUBBAR } from "~/ui/layers"
 import { UNDER_TABS } from "./AreaTabs"
 import type { NavIcon } from "./areas"
@@ -171,12 +176,15 @@ export function SubNav({
 	sections = false,
 	under = "one",
 	className = "",
+	phoneItems,
 }: {
 	label: string
 	items: SubNavItem[]
 	sections?: boolean
 	under?: keyof typeof UNDER_TABS
 	className?: string
+	/** Phones' views, when they differ from desktop's (Up next: every status instead of Next episodes | All shows). */
+	phoneItems?: SubNavItem[]
 }) {
 	const nav = useRef<HTMLElement>(null)
 	const sentinel = useRef<HTMLDivElement>(null)
@@ -287,12 +295,18 @@ export function SubNav({
 
 	return (
 		<>
-			<div ref={sentinel} aria-hidden className={className} />
+			<QuietRow
+				label={label}
+				items={sections ? items : (phoneItems ?? items)}
+				sections={sections}
+				className={className}
+			/>
+			<div ref={sentinel} aria-hidden className={`max-lg:hidden ${className}`} />
 			<nav
 				ref={nav}
 				aria-label={label}
 				data-subnav
-				className={`sticky ${UNDER_TABS[under]} ${STICKY_SUBBAR} h-11 ${SUBNAV_BAR} ${className}`}
+				className={`sticky ${UNDER_TABS[under]} ${STICKY_SUBBAR} h-11 ${SUBNAV_BAR} max-lg:hidden ${className}`}
 			>
 				<LayoutGroup id={thumb}>
 					<div className={`${WRAP} flex h-full items-center`}>
@@ -316,5 +330,138 @@ export function SubNav({
 				</LayoutGroup>
 			</nav>
 		</>
+	)
+}
+
+/** How many views the phone's row shows one tap away; the rest wait under "More". */
+const FREQUENT = 3
+
+/** Where a section lands under the phone's top bar. */
+const PHONE_BAR_PX = 64
+
+/**
+ * The phone's third level: a quiet text row in the page, scrolling away with it. Views: the first three as words
+ * ("Next episodes · Watching · Start"), the rest under "More", which opens a sheet. Sections: every part of the page,
+ * each scrolling to its part.
+ */
+function QuietRow({
+	label,
+	items,
+	sections,
+	className,
+}: {
+	label: string
+	items: SubNavItem[]
+	sections: boolean
+	className: string
+}) {
+	const [more, setMore] = useState(false)
+	const word = (on: boolean) =>
+		`shrink-0 py-2.5 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+			on ? "font-bold text-white" : "text-gray-400 active:text-gray-200"
+		}`
+	const dot = <span aria-hidden className="shrink-0 text-gray-600">·</span>
+	if (sections)
+		return (
+			<nav
+				aria-label={label}
+				data-quiet-row="sections"
+				className={`mx-auto flex w-full max-w-7xl gap-4 overflow-x-auto px-4 pt-2 text-sm [scrollbar-width:none] sm:px-6 lg:hidden ${className}`}
+			>
+				{items.map((it) => (
+					<a
+						key={it.key}
+						href={it.href}
+						onClick={(event) => {
+							const el = document.getElementById(it.href.slice(1))
+							if (!plainClick(event) || !el) return
+							event.preventDefault()
+							const top =
+								el.getBoundingClientRect().top + window.scrollY - PHONE_BAR_PX - 12
+							window.scrollTo({
+								top: Math.max(0, top),
+								behavior: reducedMotion() ? "auto" : "smooth",
+							})
+							window.history.replaceState(window.history.state, "", it.href)
+						}}
+						className={word(false)}
+					>
+						{it.label}
+					</a>
+				))}
+			</nav>
+		)
+	const head = items.slice(0, items.length > FREQUENT + 1 ? FREQUENT : items.length)
+	const rest = items.slice(head.length)
+	const restHere = rest.find((it) => it.here)
+	const link = (it: SubNavItem, extra = "") => (
+		<Link
+			key={it.key}
+			to={it.href}
+			replace
+			preventScrollReset
+			prefetch="intent"
+			aria-current={it.here ? "page" : undefined}
+			className={`${word(!!it.here)} ${extra}`}
+		>
+			{it.label}
+		</Link>
+	)
+	return (
+		<nav
+			aria-label={label}
+			data-quiet-row="views"
+			className={`mx-auto flex w-full max-w-7xl items-center gap-2 overflow-x-auto px-4 pt-2 text-sm [scrollbar-width:none] sm:px-6 lg:hidden ${className}`}
+		>
+			{head.map((it, i) => (
+				<span key={it.key} className="flex shrink-0 items-center gap-2">
+					{i > 0 && dot}
+					{link(it)}
+				</span>
+			))}
+			{rest.length > 0 && (
+				<>
+					{dot}
+					<button
+						type="button"
+						aria-haspopup="dialog"
+						onClick={() => setMore(true)}
+						className={`flex cursor-pointer items-center gap-0.5 ${word(!!restHere)}`}
+					>
+						{restHere?.label ?? "More"}
+						<ChevronDownIcon className="size-4" aria-hidden />
+					</button>
+					<SnapSheet
+						index={more ? 0 : -1}
+						onIndex={(index) => setMore(index >= 0)}
+						label={label}
+						snaps={[Math.min(0.9, (96 + rest.length * 56) / 800)]}
+					>
+						<div className="space-y-1 px-2 pb-6">
+							{rest.map((it) => (
+								<Link
+									key={it.key}
+									to={it.href}
+									replace
+									prefetch="intent"
+									onClick={() => setMore(false)}
+									aria-current={it.here ? "page" : undefined}
+									className={`flex items-center rounded-xl px-3 py-3 font-semibold ${
+										it.here ? "bg-amber-500/15 text-amber-100" : "text-white active:bg-white/[0.05]"
+									}`}
+								>
+									<span className="flex-1">{it.label}</span>
+									{it.count != null && (
+										<span className="text-sm font-normal tabular-nums text-gray-500">
+											{count(it.count)}
+										</span>
+									)}
+								</Link>
+							))}
+						</div>
+					</SnapSheet>
+				</>
+			)}
+		</nav>
 	)
 }

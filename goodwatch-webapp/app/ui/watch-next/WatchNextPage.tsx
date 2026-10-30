@@ -191,6 +191,23 @@ export function WatchNextPage({
 				onPass={(title) => state.pass(title.key)}
 				onWant={want}
 			/>
+			{/* Phones: the controls in the page, between the pick and the grid (they scroll away with it). */}
+			<PhoneControls
+				data={data}
+				moods={moods}
+				setOnMyServices={setOnMyServices}
+				setSort={setSort}
+				extra={
+					movies && {
+						key: "time",
+						title: "How long?",
+						label: movies.phoneTime.label(time),
+						icon: movies.phoneTime.icon(time),
+						on: time !== null,
+						body: movies.phoneTime.drawer(time, setTime),
+					}
+				}
+			/>
 			{state.isError && (
 				<div className={`${WRAP} pt-6`} role="alert">
 					<p className="text-gray-300">
@@ -223,22 +240,6 @@ export function WatchNextPage({
 					)}
 				</div>
 			)}
-			<PhoneControls
-				data={data}
-				moods={moods}
-				setOnMyServices={setOnMyServices}
-				setSort={setSort}
-				extra={
-					movies && {
-						key: "time",
-						title: "How long?",
-						label: movies.phoneTime.label(time),
-						icon: movies.phoneTime.icon(time),
-						on: time !== null,
-						body: movies.phoneTime.drawer(time, setTime),
-					}
-				}
-			/>
 			<FinishPrompt
 				finished={finishing.prompt}
 				onClose={finishing.closePrompt}

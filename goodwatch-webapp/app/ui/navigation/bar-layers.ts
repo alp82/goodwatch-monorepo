@@ -22,6 +22,10 @@ export const LAYER_VARS = {
 export const HEADER_BAR =
 	"border-b border-white/[0.05] bg-[#030509]/95 shadow-[0_1px_0_rgba(0,0,0,0.6)] backdrop-blur-md"
 
+/** The phone's top bar: the header's color without the blur, since it slides away on scroll (transform only). */
+export const PHONE_BAR =
+	"border-b border-white/[0.05] bg-[#030509]/95 shadow-[0_1px_0_rgba(0,0,0,0.6)]"
+
 /** The tab row's own surface. */
 export const TAB_ROW =
 	"border-b border-white/[0.08] bg-[#0b1019] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
