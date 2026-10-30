@@ -109,7 +109,7 @@ export function canonicalOgPath(path: string): string | null {
 		// card addresses already shared under /taste get the Stats cards.
 		const handle = second?.toLowerCase() ?? ""
 		if (!/^[a-z][a-z0-9_]{2,29}$/.test(handle)) return null
-		const tab = third === "taste" ? "stats" : third
+		const tab = third === "taste" ? "stats" : third === "want" ? "wishlist" : third
 		// The Tropes tab has no card of its own yet: its link preview is the profile's card.
 		if (tab === "tropes" && !fourth) return `/u/${handle}`
 		if (tab === "scores" && (fourth === "not-rated" || fourth === "rate") && segments.length === 4)
@@ -131,7 +131,7 @@ export function canonicalOgPath(path: string): string | null {
 		if (second === "movies") return WATCH_PATHS.tonight
 		return WATCH_PATHS.nextEpisodes
 	}
-	if (first === "explorer" && segments.length === 1) return "/explorer"
+	if ((first === "explorer" || first === "map") && segments.length === 1) return "/map"
 
 	const clean = `/${segments.join("/")}`
 	return hasKey(STATIC_PAGE_COPY, clean) ? clean : "/"
@@ -477,7 +477,7 @@ async function staticPageContent(path: string): Promise<OgContent> {
 	if (path === "/discover") return discoverCardContent()
 	if (path === WATCH_PATHS.forYou) return forYouCardContent()
 	if (path === "/use-with-ai") return chatCardContent()
-	if (path === "/explorer") return explorerCardContent()
+	if (path === "/map") return explorerCardContent()
 	const page = STATIC_PAGE_COPY[path] ?? HOME_COPY
 	const backdrops = await discoverBackdrops({ type: "movie", minScore: "80" })
 	// Taste pages skip the rotation, so they lead with a different title than the other main pages.

@@ -175,7 +175,7 @@ test("every builder stays within component, button, select and text limits", () 
 			}),
 			titleListCard("Hot", titles, {
 				share: shared,
-				url: "https://goodwatch.app/hot-on-socials",
+				url: "https://goodwatch.app/hot",
 			}),
 			personCard(person, shared),
 			personCard({ ...person, profile_url: null, known_for: [] }, shared),

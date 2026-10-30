@@ -33,8 +33,8 @@ const routes = [
 	["/show/1399-game-of-thrones", "routes/show.$showKey"],
 	["/movies/best", "routes/$type.best"],
 	["/discover", "routes/discover.($type)"],
-	["/my-library/want", "routes/my-library.$list"],
-	["/taste", "routes/taste._index"],
+	["/watch/movies/want", "routes/watch.movies.$list"],
+	["/u/alp82", "routes/u.$handle._index"],
 ]
 const rows = []
 for (const [path, route] of routes)

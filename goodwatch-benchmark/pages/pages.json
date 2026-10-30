@@ -144,13 +144,13 @@
     },
     {
       "id": "for-you-tsx",
-      "route": "for-you.tsx",
-      "examples": ["/for-you"],
+      "route": "watch.for-you.tsx",
+      "examples": ["/watch/for-you"],
       "tier": "P1",
       "audience": ["guest", "member"],
       "verification": [
         {
-          "path": "/for-you",
+          "path": "/watch/for-you",
           "status": 200,
           "checkedAt": "2026-10-29T08:18:39.469Z",
           "audience": "guest"
@@ -216,13 +216,13 @@
     },
     {
       "id": "hot-on-socials-tsx",
-      "route": "hot-on-socials.tsx",
-      "examples": ["/hot-on-socials"],
+      "route": "hot.tsx",
+      "examples": ["/hot"],
       "tier": "P2",
       "audience": ["guest", "member"],
       "verification": [
         {
-          "path": "/hot-on-socials",
+          "path": "/hot",
           "status": 200,
           "checkedAt": "2026-10-29T08:18:39.469Z",
           "audience": "guest"
@@ -261,13 +261,13 @@
     },
     {
       "id": "my-library-list-tsx",
-      "route": "my-library.$list.tsx",
-      "examples": ["/my-library/seen"],
+      "route": "watch.seen.tsx",
+      "examples": ["/watch/seen"],
       "tier": "P2",
       "audience": ["member"],
       "verification": [
         {
-          "path": "/my-library/seen",
+          "path": "/watch/seen",
           "status": null,
           "reason": "Member credentials required; not checked in guest baseline"
         }
@@ -275,13 +275,13 @@
     },
     {
       "id": "my-library-index-tsx",
-      "route": "my-library._index.tsx",
-      "examples": ["/my-library"],
+      "route": "u.$handle._index.tsx",
+      "examples": ["/u/alp82"],
       "tier": "P2",
       "audience": ["member"],
       "verification": [
         {
-          "path": "/my-library",
+          "path": "/u/alp82",
           "status": null,
           "reason": "Member credentials required; not checked in guest baseline"
         }
@@ -289,13 +289,13 @@
     },
     {
       "id": "my-library-hidden-tsx",
-      "route": "my-library.hidden.tsx",
-      "examples": ["/my-library/hidden"],
+      "route": "settings.not-interested.tsx",
+      "examples": ["/settings/not-interested"],
       "tier": "P2",
       "audience": ["member"],
       "verification": [
         {
-          "path": "/my-library/hidden",
+          "path": "/settings/not-interested",
           "status": null,
           "reason": "Member credentials required; not checked in guest baseline"
         }
@@ -303,13 +303,13 @@
     },
     {
       "id": "my-library-scores-tsx",
-      "route": "my-library.scores.tsx",
-      "examples": ["/my-library/scores"],
+      "route": "u.$handle.scores.tsx",
+      "examples": ["/u/alp82/scores"],
       "tier": "P2",
       "audience": ["member"],
       "verification": [
         {
-          "path": "/my-library/scores",
+          "path": "/u/alp82/scores",
           "status": null,
           "reason": "Member credentials required; not checked in guest baseline"
         }
@@ -317,13 +317,13 @@
     },
     {
       "id": "my-movies-tsx",
-      "route": "my-movies.tsx",
-      "examples": ["/my-movies"],
+      "route": "watch.movies._index.tsx",
+      "examples": ["/watch/movies"],
       "tier": "P2",
       "audience": ["member"],
       "verification": [
         {
-          "path": "/my-movies",
+          "path": "/watch/movies",
           "status": null,
           "reason": "Member credentials required; not checked in guest baseline"
         }
@@ -331,13 +331,13 @@
     },
     {
       "id": "my-shows-tsx",
-      "route": "my-shows.tsx",
-      "examples": ["/my-shows"],
+      "route": "watch.shows._index.tsx",
+      "examples": ["/watch/shows"],
       "tier": "P2",
       "audience": ["member"],
       "verification": [
         {
-          "path": "/my-shows",
+          "path": "/watch/shows",
           "status": null,
           "reason": "Member credentials required; not checked in guest baseline"
         }
@@ -540,13 +540,13 @@
     },
     {
       "id": "u-handle-wishlist-tsx",
-      "route": "u.$handle.wishlist.tsx",
-      "examples": ["/u/alperortac/wishlist"],
+      "route": "u.$handle.want.tsx",
+      "examples": ["/u/alperortac/want"],
       "tier": "P2",
       "audience": ["guest", "member"],
       "verification": [
         {
-          "path": "/u/alperortac/wishlist",
+          "path": "/u/alperortac/want",
           "status": 200,
           "checkedAt": "2026-10-29T08:18:39.469Z",
           "audience": "guest"
@@ -564,13 +564,13 @@
     },
     {
       "id": "watch-next-tsx",
-      "route": "watch-next.tsx",
-      "examples": ["/watch-next"],
+      "route": "watch.movies._index.tsx",
+      "examples": ["/watch/movies"],
       "tier": "P2",
       "audience": ["guest"],
       "verification": [
         {
-          "path": "/watch-next",
+          "path": "/watch/movies",
           "status": 200,
           "checkedAt": "2026-10-29T08:18:39.469Z",
           "audience": "guest"
@@ -579,13 +579,13 @@
     },
     {
       "id": "wishlist-tsx",
-      "route": "wishlist.tsx",
-      "examples": ["/wishlist"],
+      "route": "watch.movies.$list.tsx",
+      "examples": ["/watch/movies/want"],
       "tier": "P2",
       "audience": ["member"],
       "verification": [
         {
-          "path": "/wishlist",
+          "path": "/watch/movies/want",
           "status": null,
           "reason": "Member credentials required; not checked in guest baseline"
         }
@@ -677,13 +677,13 @@
     },
     {
       "id": "explorer-tsx",
-      "route": "explorer.tsx",
-      "examples": ["/explorer"],
+      "route": "map.tsx",
+      "examples": ["/map"],
       "tier": "P3",
       "audience": ["guest", "member"],
       "verification": [
         {
-          "path": "/explorer",
+          "path": "/map",
           "status": 200,
           "checkedAt": "2026-10-29T08:18:39.469Z",
           "audience": "guest"

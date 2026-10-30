@@ -4,7 +4,7 @@
 // Four tabs: Up next, Ready to watch, Recommendations, and Seen (/watch/seen, every title you watched, set at the row's
 // end on desktop). Ready to watch's views (Next Movie · Want to Watch) and Seen's kinds (All · Movies · Shows) are
 // SubNav rows. Up next's SubNav is Next episodes | All shows; All shows is the status pages (Watching · Start ·
-// On hold · Dropped, /watch/watching first), each with a status filter in the list's controls.
+// On hold · Dropped, /watch/shows/watching first), each with a status filter in the list's controls.
 import { ClockIcon } from "@heroicons/react/24/outline"
 import { WATCH_PATHS } from "../../domain/member-paths.ts"
 import {
@@ -144,11 +144,4 @@ export function seenKinds(
 			count: counts?.seenShows,
 		},
 	]
-}
-
-/** Where /watch/movies/seen goes: the Seen tab with Movies picked, the rest of the query kept. */
-export function moviesSeenMove(search: string): string {
-	const params = new URLSearchParams(search)
-	params.set("type", "movie")
-	return `${WATCH_PATHS.showsSeen}?${params}`
 }

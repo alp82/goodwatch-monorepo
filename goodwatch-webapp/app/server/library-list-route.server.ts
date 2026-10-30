@@ -1,5 +1,5 @@
 // The loader of a library list page: one status, maybe one kind and one sort, fixed by the page. Watch's list chips
-// (/watch/watching, /watch/movies/seen, ...), Taste's Not rated and the old /my-library/:list pages share it. The
+// (/watch/shows/watching, /watch/seen, ...), Taste's Not rated and the old /my-library/:list pages share it. The
 // sort, filter and search in the query pick the first step; the browser reads /api/my-library for the steps after.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import {

@@ -12,7 +12,7 @@ export type ProfileTab =
 	| "tropes"
 
 export const profileTabPath = (handle: string, tab: ProfileTab = "overview") =>
-	tab === "overview" ? `/u/${handle}` : `/u/${handle}/${tab}`
+	tab === "overview" ? `/u/${handle}` : `/u/${handle}/${tab === "wishlist" ? "want" : tab}`
 
 /** Parts needed by each tab, shared by navigation and guest indexing policy. */
 export const PROFILE_TAB_PARTS: Record<ProfileTab, readonly ProfilePart[]> = {

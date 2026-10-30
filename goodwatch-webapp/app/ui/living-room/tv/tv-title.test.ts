@@ -185,7 +185,7 @@ test("Tonight says where a pick comes from and which one it is", () => {
 test("a member's next episode is named, with its own name in the title's line", () => {
 	const episode = (name: string | null): TvTonightPick => ({
 		card: card({ media_type: "show", title: "Slow Horses" }),
-		href: "/watch",
+		href: "/watch/shows",
 		episode: { code: "S2 E4", name },
 	})
 	assert.deepEqual(tonightWords(episode("Cicada"), 0, 3), {

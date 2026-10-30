@@ -9,7 +9,7 @@ const HUBS = [
 	"/discover",
 	"/movies",
 	"/shows",
-	"/explorer",
+	"/map",
 	"/taste",
 	"/how-it-works",
 	"/movies/moods",
@@ -220,7 +220,7 @@ test("the social ranking, post preview and links are present before JavaScript o
 	assert.ok(
 		links(rendered.social).some(
 			(link) =>
-				link.href === "/hot-on-socials#movie-603" &&
+				link.href === "/hot#movie-603" &&
 				link.text.includes("The Matrix"),
 		),
 	)

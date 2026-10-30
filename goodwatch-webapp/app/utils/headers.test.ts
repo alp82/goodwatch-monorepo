@@ -87,7 +87,7 @@ test("adds timings to a thrown loader Response without changing its status or re
 		status: 503,
 		headers: { "Cache-Control": "private, no-store", "Retry-After": "2" },
 	})
-	const request = new Request("http://localhost/hot-on-socials")
+	const request = new Request("http://localhost/hot")
 	const load = withRequestTiming(async ({ request }: { request: Request }) => {
 		await timeRequestWork(request, "data", async () => {
 			throw response

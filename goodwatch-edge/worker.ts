@@ -15,7 +15,7 @@ export function edgeIdentity(request: Request) {
 }
 
 // Start with catalog documents only. No root, profiles, lists, auth, data or APIs.
-const catalog = /^\/(?:movie\/[^/]+|show\/[^/]+|person\/[^/]+|discover(?:\/[^/]+)?|people|hot-on-socials|blog(?:\/[^/]+)?)\/?$/
+const catalog = /^\/(?:movie\/[^/]+|show\/[^/]+|person\/[^/]+|discover(?:\/[^/]+)?|people|hot|blog(?:\/[^/]+)?)\/?$/
 function knownCookies(cookie: string) {
 	return cookie.split(';').every(part => {
 		const name = part.trim().split('=')[0]

@@ -9,7 +9,7 @@ const HUBS = [
 	"/discover",
 	"/movies",
 	"/shows",
-	"/explorer",
+	"/map",
 	"/taste",
 	"/how-it-works",
 	"/movies/moods",

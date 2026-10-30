@@ -96,7 +96,7 @@ export function earlyHintLinks(
 	links.push(
 		`<${base}${files.font}>; rel=preload; as=font; type="font/woff2"; crossorigin`,
 	)
-	if (path === "/explorer" && files.explorer)
+	if (path === "/map" && files.explorer)
 		links.push(`<${base}${files.explorer}>; rel=preload; as=style; crossorigin`)
 	if (path !== "/") return links
 	for (const sheet of files.home)

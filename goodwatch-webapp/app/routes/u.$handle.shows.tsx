@@ -5,7 +5,6 @@ import { useLoaderData } from "@remix-run/react"
 import type { ProfileShell, ProfileShowsPage } from "~/domain/profile"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { loadProfileShows } from "~/server/profile/page.server"
-import { WATCH_PATHS } from "~/domain/member-paths"
 import { ownerKeepsInWatch, profileLoader } from "~/server/profile/route.server"
 import { ProfileTabPage } from "~/ui/profile/ProfileFrame"
 import { profileMeta } from "~/ui/profile/meta"
@@ -21,7 +20,7 @@ interface Data {
 
 const load = (args: LoaderFunctionArgs) =>
 	profileLoader(args, async ({ ownerId, shell }) => {
-		ownerKeepsInWatch(shell, WATCH_PATHS.watching)
+		ownerKeepsInWatch(shell, args.request)
 		const page = await loadProfileShows(ownerId, shell)
 		return { page }
 	})

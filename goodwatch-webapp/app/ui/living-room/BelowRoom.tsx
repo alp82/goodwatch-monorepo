@@ -55,7 +55,7 @@ export const MAIN_HUBS = [
 	{ href: "/movies", label: "Movies", line: "Films worth your evening." },
 	{ href: "/shows", label: "TV shows", line: "A series to start next." },
 	{
-		href: "/explorer",
+		href: "/map",
 		label: "Explorer",
 		line: "A map of titles that belong together.",
 	},

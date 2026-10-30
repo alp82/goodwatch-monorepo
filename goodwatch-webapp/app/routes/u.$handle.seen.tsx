@@ -5,7 +5,6 @@ import { useLoaderData } from "@remix-run/react"
 import type { ProfileShell, ProfileSeenPage } from "~/domain/profile"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { loadProfileSeen } from "~/server/profile/page.server"
-import { WATCH_PATHS } from "~/domain/member-paths"
 import { ownerKeepsInWatch, profileLoader, visitorServices } from "~/server/profile/route.server"
 import type { RowServices } from "~/server/row-services.server"
 import { ProfileTabPage } from "~/ui/profile/ProfileFrame"
@@ -23,7 +22,7 @@ interface Data {
 
 const load = (args: LoaderFunctionArgs) =>
 	profileLoader(args, async ({ ownerId, viewerId, shell }) => {
-		ownerKeepsInWatch(shell, WATCH_PATHS.moviesSeen)
+		ownerKeepsInWatch(shell, args.request)
 		const page = await loadProfileSeen(ownerId, shell)
 		const services = await visitorServices(args.request, viewerId, shell, page.titles)
 		return { page, services }

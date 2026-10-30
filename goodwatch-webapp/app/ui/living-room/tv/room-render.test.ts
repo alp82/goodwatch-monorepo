@@ -281,6 +281,6 @@ test("the section below the room follows it, with its lip, its 16 titles and its
 		[...after.matchAll(/<a [^>]*href="\/(movie|show)\//g)].length,
 		16,
 	)
-	for (const hub of ["/discover", "/explorer", "/taste", "/movies/moods"])
+	for (const hub of ["/discover", "/map", "/taste", "/movies/moods"])
 		assert.ok(after.includes(`href="${hub}"`), hub)
 })

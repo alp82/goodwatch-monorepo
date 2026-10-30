@@ -1,4 +1,4 @@
-// Watch › Up next's lists: /watch/watching, /not-started (Start), /on-hold, /dropped, shows only. /watch/seen is the Seen tab,
+// Watch › Up next's lists: /watch/shows/watching, /not-started (Start), /on-hold, /dropped, shows only. /watch/seen is the Seen tab,
 // every title you watched; the layout's SubNav picks the kind (`?type=`). Another slug is not found. A guest is asked
 // to sign up. The status lists are Up next's All shows, with the status filter first in the list's controls.
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
@@ -57,9 +57,6 @@ async function canonicalLoader(args: LoaderFunctionArgs) {
 	const slug = args.params.list ?? ""
 	if (!Object.prototype.hasOwnProperty.call(WATCH_SHOW_LISTS, slug))
 		throw new Response("Not found", { status: 404 })
-	// The Seen tab keeps movies and shows; the SubNav's kind narrows it.
-	if (slug === "seen")
-		return libraryListLoader(args, { status: "seen", kind: "all" })
 	return libraryListLoader(args, WATCH_SHOW_LISTS[slug])
 }
 

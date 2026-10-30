@@ -12,7 +12,7 @@ Code: `goodwatch-webapp/app/navigation/`.
 
 ## Which routes
 
-Only catalog pages, listed in `cached-routes.ts`: title pages, person pages, the type and category listings, the best lists, Discover, `/people`, `/hot-on-socials`, and the blog. Each exports one line:
+Only catalog pages, listed in `cached-routes.ts`: title pages, person pages, the type and category listings, the best lists, Discover, `/people`, `/hot`, and the blog. Each exports one line:
 
 ```ts
 export const clientLoader = cachedClientLoader("routes/movie.$movieKey")

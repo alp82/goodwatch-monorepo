@@ -49,9 +49,9 @@ const member: TvContext = {
 	member: true,
 	taste: true,
 	tonight: [
-		{ title: "show-3", href: "/watch" },
+		{ title: "show-3", href: "/watch/shows" },
 		{ title: "movie-1", href: "/watch/movies" },
-		{ title: "show-5", href: "/watch/not-started" },
+		{ title: "show-5", href: "/watch/shows/not-started" },
 	],
 	sides: ["dark-crime", "gentle-comedy", "big-ideas"],
 	nextEpisodes: ["show-21", "show-22", "show-23", "show-24"],
@@ -1204,9 +1204,9 @@ describe("the Expand key's destinations", () => {
 	})
 
 	it("Tonight, a member: the pick's own page", () => {
-		assert.equal(dest("tv=tonight", member), "/watch")
+		assert.equal(dest("tv=tonight", member), "/watch/shows")
 		assert.equal(dest("tv=tonight&pick=1", member), "/watch/movies")
-		assert.equal(dest("tv=tonight&pick=2", member), "/watch/not-started")
+		assert.equal(dest("tv=tonight&pick=2", member), "/watch/shows/not-started")
 	})
 
 	it("Tonight, a guest: Discover", () => {
@@ -1260,13 +1260,13 @@ describe("the Expand key's destinations", () => {
 	})
 
 	it("Explorer, the map: the grouping travels", () => {
-		assert.equal(dest("tv=explorer"), "/explorer?grouping=mood")
+		assert.equal(dest("tv=explorer"), "/map?grouping=mood")
 	})
 
 	it("Explorer, an island: the island travels", () => {
 		assert.equal(
 			dest("tv=explorer&island=i3"),
-			"/explorer?grouping=mood&island=i3",
+			"/map?grouping=mood&island=i3",
 		)
 	})
 
@@ -1279,7 +1279,7 @@ describe("the Expand key's destinations", () => {
 	})
 
 	it("My shows: My shows", () => {
-		assert.equal(dest("tv=shows", member), "/watch")
+		assert.equal(dest("tv=shows", member), "/watch/shows")
 	})
 
 	it("a title: its page", () => {
@@ -1338,8 +1338,8 @@ describe("the Expand key's destinations", () => {
 
 	it("knows the member pages' addresses, which the server's Tonight's pick links to too", () => {
 		assert.deepEqual(DOOR_HREF, {
-			continue: "/watch",
-			start: "/watch/not-started",
+			continue: "/watch/shows",
+			start: "/watch/shows/not-started",
 			movie: "/watch/movies",
 		})
 	})

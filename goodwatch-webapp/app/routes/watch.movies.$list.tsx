@@ -1,6 +1,4 @@
-// Watch › Ready to watch's lists: /watch/movies/wishlist (Want to Watch: the Wishlist's movies; its shows are Up
-// next's Start) and /seen (Seen movies, latest watch first). Another slug is not found. A guest is asked to sign up.
-// /seen goes to the Seen tab with Movies picked; /recent (once Recently added) goes to Want to Watch, newest first.
+// Watch movie list: Want to Watch. Unknown slugs are 404.
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
@@ -9,8 +7,6 @@ import {
 } from "@remix-run/react"
 import {
 	WATCH_MOVIE_LISTS,
-	moveResponse,
-	recentMove,
 } from "~/domain/member-paths"
 import {
 	type LibraryListLoaded,
@@ -18,12 +14,11 @@ import {
 } from "~/server/library-list-route.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { LibraryListBody } from "~/ui/my-library/MyLibraryPage"
-import { moviesSeenMove } from "~/ui/watch/watch-views"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
 const NAME: Record<string, string> = {
-	wishlist: "Want to Watch",
+	want: "Want to Watch",
 	seen: "Seen movies",
 }
 
@@ -51,16 +46,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 async function canonicalLoader(args: LoaderFunctionArgs) {
 	const slug = args.params.list ?? ""
-	if (slug === "recent")
-		throw moveResponse(recentMove(new URL(args.request.url).search))
 	if (!Object.prototype.hasOwnProperty.call(WATCH_MOVIE_LISTS, slug))
 		throw new Response("Not found", { status: 404 })
-	if (slug === "seen")
-		throw moveResponse({
-			to: moviesSeenMove(new URL(args.request.url).search),
-			status: 302,
-			private: true,
-		})
 	return libraryListLoader(args, WATCH_MOVIE_LISTS[slug])
 }
 

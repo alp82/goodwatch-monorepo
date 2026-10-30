@@ -12,7 +12,7 @@ import {
 const member = {
 	...EMPTY_CONTEXT,
 	member: true,
-	tonight: [{ title: "show-10", href: "/watch" }],
+	tonight: [{ title: "show-10", href: "/watch/shows" }],
 	popular: ["movie-1", "movie-2"],
 	services: [8],
 	homeSides: [{ id: "old", picks: ["movie-99"], watchNext: "/watch/movies" }],
@@ -90,7 +90,7 @@ test("no TV home/menu offers Explorer or taste-group entries; bookmarks still op
 	for (const ctx of [EMPTY_CONTEXT, member]) {
 		assert.ok(
 			![...tvItems(home.screen, ctx), ...menuItems(ctx)].some((id) =>
-				/explorer|home-side|watch-next:/.test(id),
+				/map|home-side|watch-next:/.test(id),
 			),
 		)
 	}

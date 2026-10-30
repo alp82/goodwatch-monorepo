@@ -54,7 +54,7 @@ SLEEP_BETWEEN_INSPECTIONS = 0.5
 RETRY_WAIT = 10
 
 CANONICAL_HOST = "goodwatch.app"
-HUB_PATHS = {"/movies", "/shows", "/discover", "/explorer"}
+HUB_PATHS = {"/movies", "/shows", "/discover", "/map"}
 
 
 def url_shape(url):

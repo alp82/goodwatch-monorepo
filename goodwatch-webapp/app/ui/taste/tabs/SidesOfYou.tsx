@@ -1,3 +1,4 @@
+import { WATCH_PATHS } from "~/domain/member-paths"
 // The taste groups (CONTEXT.md; in code still "sides"): the contradiction in the person's taste as the first line, the
 // groups picked from poster chips, each as "Fits your taste" next to "Close to your taste" (a place right next to it
 // they've barely tried, a step from it, or the way toward another group), then "More of this" on their services and a
@@ -343,7 +344,7 @@ function InWatchNext({ side, className }: { side: Side; className: string }) {
 	const names = side.moods.map((mood) => MOOD_BY_KEY[mood].name).join(" + ")
 	return (
 		<Link
-			to={`/watch-next?moods=${side.moods.join(",")}`}
+			to={`${WATCH_PATHS.tonight}?moods=${side.moods.join(",")}`}
 			prefetch="intent"
 			className={`inline-flex min-h-11 items-center rounded-full border-2 border-amber-600/70 bg-amber-900/30 px-4 text-sm font-semibold text-amber-100 transition hover:border-amber-400 md:min-h-9 ${className}`}
 		>

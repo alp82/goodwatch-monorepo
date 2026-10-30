@@ -69,7 +69,7 @@ registerHooks({
 			source = 'export default "/explorer.css"'
 		else if (
 			url.endsWith("/routes/discover.($type).tsx") ||
-			url.endsWith("/routes/explorer.tsx")
+			url.endsWith("/routes/map.tsx")
 		)
 			source = readFileSync(new URL(url), "utf8")
 		if (source === undefined) return next(url, context)
@@ -162,7 +162,7 @@ test("crawler movie collection prefetch is canonical and hydrates the English cl
 	})
 })
 
-const { loader: explorerLoader } = await import("../routes/explorer.tsx")
+const { loader: explorerLoader } = await import("../routes/map.tsx")
 test("Explorer SSR uses the live locale without API opt-in and labels initialData consistently; crawlers stay canonical", async () => {
 	for (const agent of [
 		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -170,7 +170,7 @@ test("Explorer SSR uses the live locale without API opt-in and labels initialDat
 	]) {
 		explorerOverlays.length = 0
 		const response = await explorerLoader({
-			request: new Request("https://goodwatch.test/explorer", {
+			request: new Request("https://goodwatch.test/map", {
 				headers: { "User-Agent": agent, "Accept-Language": "fr-FR" },
 			}),
 			params: {},

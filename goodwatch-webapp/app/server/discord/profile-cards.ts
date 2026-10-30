@@ -61,7 +61,7 @@ export const PROFILE_CARDS = {
 	wishlist: {
 		name: "Wishlist",
 		image: "wishlist",
-		link: "/wishlist",
+		link: "/want",
 		parts: ["wishlist"],
 	},
 	shows: { name: "Shows", image: "shows", link: "/shows", parts: ["shows"] },

@@ -28,8 +28,8 @@ export function exploreRowMode(pathname: string): "off" | "static" | "sticky" {
 	if (areaOf(pathname) !== "explore") return "off"
 	if (
 		under(pathname, "/discover") ||
-		under(pathname, "/hot-on-socials") ||
-		under(pathname, "/explorer")
+		under(pathname, "/hot") ||
+		under(pathname, "/map")
 	)
 		return "static"
 	return "sticky"

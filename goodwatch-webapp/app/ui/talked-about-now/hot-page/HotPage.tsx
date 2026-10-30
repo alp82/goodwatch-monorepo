@@ -1,4 +1,4 @@
-// The Hot on socials page (routes/hot-on-socials.tsx): every title of the buzz ranking with something said about it,
+// The Hot on socials page (routes/hot.tsx): every title of the buzz ranking with something said about it,
 // one block each with its two best posts (one on a phone), most talked about first. "All N posts" narrows the page
 // to that title. Search (title, headline, post, publisher), source, movie or show, and the title narrow everything;
 // on a phone the search stays on top and the rest opens as a sheet. Cards show the picture social discovery saved

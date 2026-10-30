@@ -288,7 +288,7 @@ describe("what the screens show", () => {
 			"bar:search",
 			"bar:menu",
 		])
-		assert.equal(destinationHref(screen, ctx), "/explorer?grouping=mood")
+		assert.equal(destinationHref(screen, ctx), "/map?grouping=mood")
 	})
 
 	it("an island of the map that is not among the six shows its titles too", () => {

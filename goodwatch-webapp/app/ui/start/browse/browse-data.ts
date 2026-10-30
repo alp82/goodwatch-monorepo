@@ -204,7 +204,7 @@ export const MORE_HUBS = [
 	{ href: "/shows/genres", label: "Shows by genre" },
 	{ href: "/movies/streaming", label: "Movies by service" },
 	{ href: "/shows/streaming", label: "Shows by service" },
-	{ href: "/explorer", label: "Explorer" },
+	{ href: "/map", label: "Explorer" },
 	{ href: TASTE_FALLBACK_PATH, label: "Your taste" },
 	{ href: "/how-it-works", label: "How it works" },
 ] as const

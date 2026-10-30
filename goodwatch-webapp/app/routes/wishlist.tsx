@@ -8,6 +8,5 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await getUserIdFromRequest({ request })
 	const move = oldToNew(url.pathname, url.search, userId ? member(null) : GUEST)
 	if (!move) throw new Response("Not found", { status: 404 })
-	// The orchestrator explicitly chose a permanent move for guests.
-	return moveResponse(userId ? move : { ...move, status: 301, private: false })
+	return moveResponse(move)
 }

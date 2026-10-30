@@ -22,7 +22,10 @@
     <loc>https://goodwatch.app/discover</loc>
   </url>
   <url>
-    <loc>https://goodwatch.app/explorer</loc>
+    <loc>https://goodwatch.app/map</loc>
+  </url>
+  <url>
+    <loc>https://goodwatch.app/hot</loc>
   </url>
   <url>
     <loc>https://goodwatch.app/how-it-works</loc>

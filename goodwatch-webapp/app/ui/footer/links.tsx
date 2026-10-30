@@ -119,7 +119,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 			},
 			{
 				name: "Hot",
-				href: "/hot-on-socials",
+				href: "/hot",
 				blurb: "What people talk about now",
 				icon: FireIcon,
 			},

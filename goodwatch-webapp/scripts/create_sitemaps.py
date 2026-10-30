@@ -48,7 +48,8 @@ MAIN_CATEGORIES = [
 # Only canonical public pages. Search is noindex; Taste may redirect guests to
 # the quiz. The best-of lists list only their first page; later pages are linked from it. Auth, quiz, /living-room (301), and TV-state URLs are left out.
 STATIC_ROUTES = [
-    "/", "/movies", "/movies/best", "/shows", "/shows/best", "/people", "/discover", "/explorer", "/how-it-works",
+    "/", "/movies", "/movies/best", "/shows", "/shows/best", "/people", "/discover", "/map",
+    "/hot", "/how-it-works",
     "/about", "/disclaimer", "/privacy", "/support", "/use-with-ai",
     "/discord"
 ]

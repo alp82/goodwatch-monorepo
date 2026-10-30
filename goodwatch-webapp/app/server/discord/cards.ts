@@ -1327,7 +1327,7 @@ export function hotCard(
 					listCustomId("hot", String(target)),
 				)
 			: []),
-		linkButton("Open on GoodWatch", "https://goodwatch.app/hot-on-socials"),
+		linkButton("Open on GoodWatch", "https://goodwatch.app/hot"),
 		...(!options.share
 			? [
 					{

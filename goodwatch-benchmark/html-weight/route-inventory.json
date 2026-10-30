@@ -215,22 +215,22 @@
     "coverage": "no successful loader sample; see capture paths and coverage gaps"
   },
   {
-    "module": "explorer.tsx",
+    "module": "map.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/explorer",
+        "path": "/map",
         "status": 200
       }
     ],
     "coverage": "captured route loader"
   },
   {
-    "module": "for-you.tsx",
+    "module": "watch.for-you.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/for-you",
+        "path": "/watch/for-you",
         "status": 200
       }
     ],
@@ -254,11 +254,11 @@
     "coverage": "no successful loader sample; see capture paths and coverage gaps"
   },
   {
-    "module": "hot-on-socials.tsx",
+    "module": "hot.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/hot-on-socials",
+        "path": "/hot",
         "status": 200
       }
     ],
@@ -322,66 +322,66 @@
     "coverage": "captured route loader"
   },
   {
-    "module": "my-library.$list.tsx",
+    "module": "watch.seen.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/my-library/seen",
+        "path": "/watch/seen",
         "status": 200
       }
     ],
     "coverage": "captured route loader"
   },
   {
-    "module": "my-library._index.tsx",
+    "module": "u.$handle._index.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/my-library",
+        "path": "/u/alp82",
         "status": 200
       }
     ],
     "coverage": "captured route loader"
   },
   {
-    "module": "my-library.hidden.tsx",
+    "module": "settings.not-interested.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/my-library/hidden",
+        "path": "/settings/not-interested",
         "status": 200
       }
     ],
     "coverage": "captured route loader"
   },
   {
-    "module": "my-library.scores.tsx",
+    "module": "u.$handle.scores.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/my-library/scores",
+        "path": "/u/alp82/scores",
         "status": 200
       }
     ],
     "coverage": "captured route loader"
   },
   {
-    "module": "my-movies.tsx",
+    "module": "watch.movies._index.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/my-movies",
+        "path": "/watch/movies",
         "status": 200
       }
     ],
     "coverage": "captured route loader"
   },
   {
-    "module": "my-shows.tsx",
+    "module": "watch.shows._index.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/my-shows",
+        "path": "/watch/shows",
         "status": 200
       }
     ],
@@ -856,7 +856,7 @@
     "coverage": "no successful loader sample; see capture paths and coverage gaps"
   },
   {
-    "module": "u.$handle.wishlist.tsx",
+    "module": "u.$handle.want.tsx",
     "kind": "document",
     "samples": [],
     "coverage": "no successful loader sample; see capture paths and coverage gaps"
@@ -890,18 +890,18 @@
     "coverage": "captured route loader"
   },
   {
-    "module": "watch-next.tsx",
+    "module": "watch.movies._index.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/watch-next",
+        "path": "/watch/movies",
         "status": 200
       }
     ],
     "coverage": "captured route loader"
   },
   {
-    "module": "wishlist.tsx",
+    "module": "watch.movies.$list.tsx",
     "kind": "redirect or resource",
     "samples": [],
     "coverage": "no successful loader sample; see capture paths and coverage gaps"

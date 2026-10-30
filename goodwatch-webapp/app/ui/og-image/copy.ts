@@ -199,7 +199,7 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 	},
 }
 
-// /discover and /explorer: headline lines are set as written, one per line.
+// /discover and /map: headline lines are set as written, one per line.
 export const DISCOVERY_COPY = {
 	discover: {
 		tag: "Discover",

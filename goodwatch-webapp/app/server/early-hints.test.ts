@@ -86,13 +86,13 @@ describe("earlyHintLinks", () => {
 
 	it("hints Explorer's stylesheet only on Explorer, in the stylesheet's CORS mode", () => {
 		assert.deepEqual(
-			earlyHintLinks(page("/explorer?type=movie", phone), base, files),
+			earlyHintLinks(page("/map?type=movie", phone), base, files),
 			[
 				...shared,
 				`<${base}/assets/explorer-J0.css>; rel=preload; as=style; crossorigin`,
 			],
 		)
-		assert.deepEqual(earlyHintLinks(page("/explorer", phone), "", files), [
+		assert.deepEqual(earlyHintLinks(page("/map", phone), "", files), [
 			"</assets/tailwind-A1.css>; rel=preload; as=style",
 			'</assets/gabarito-latin-D4.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin',
 			"</assets/explorer-J0.css>; rel=preload; as=style; crossorigin",

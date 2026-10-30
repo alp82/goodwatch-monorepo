@@ -312,7 +312,7 @@ test("a page without list entries or neighbors has no ItemList and no prev or ne
 })
 
 test("the Explorer card has a new preview address while category cards keep theirs", () => {
-	assert.match(ogImageUrl("https://goodwatch.app/explorer"), /&card=2$/)
+	assert.match(ogImageUrl("https://goodwatch.app/map"), /&card=2$/)
 	for (const path of [
 		"/movies/moods/feel-good",
 		"/shows/moods/feel-good",

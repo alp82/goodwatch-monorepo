@@ -35,33 +35,31 @@ const sameHandle = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
 
 export const WATCH_PATHS = {
 	/** Up next › Next episodes: the area's first page. */
-	nextEpisodes: "/watch",
-	watching: "/watch/watching",
+	nextEpisodes: "/watch/shows",
+	watching: "/watch/shows/watching",
 	/** Up next › All shows › Start: the Wishlist's shows. */
-	notStarted: "/watch/not-started",
-	onHold: "/watch/on-hold",
-	dropped: "/watch/dropped",
+	notStarted: "/watch/shows/not-started",
+	onHold: "/watch/shows/on-hold",
+	dropped: "/watch/shows/dropped",
 	/** Up next › Seen: every show you watched. */
 	showsSeen: "/watch/seen",
 	/** Ready to watch › Next Movie. */
 	tonight: "/watch/movies",
 	/** Ready to watch › Want to Watch: the Wishlist's movies (its shows are Up next's Start). */
-	wishlist: "/watch/movies/wishlist",
-	/** Once Recently added; now Want to Watch, newest first (see recentMove). */
-	recent: "/watch/movies/recent",
-	/** Ready to watch › Seen: every movie you watched. */
-	moviesSeen: "/watch/movies/seen",
+	wishlist: "/watch/movies/want",
 	/** Recommendations › For you. */
 	forYou: "/watch/for-you",
 } as const
 
+/** Prefix for classifying every Watch page, including its root redirect. */
+export const WATCH_PREFIX = "/watch"
 export const WATCH_PATH = WATCH_PATHS.nextEpisodes
 export const WATCH_MOVIES_PATH = WATCH_PATHS.tonight
 export const FOR_YOU_PATH = WATCH_PATHS.forYou
 
-/** The Seen page of one kind: shows under Up next, movies under Ready to watch. */
+/** The Seen page with one kind selected. */
 export const watchSeenPath = (kind: "movie" | "show") =>
-	kind === "show" ? WATCH_PATHS.showsSeen : WATCH_PATHS.moviesSeen
+	`${WATCH_PATHS.showsSeen}?type=${kind}`
 
 /** What one Watch list page shows: a library status, a fixed kind ("all" keeps the kind control), and its sort. */
 export interface WatchList {
@@ -71,19 +69,17 @@ export interface WatchList {
 	sort: LibrarySort | null
 }
 
-/** The `$list` pages under `/watch` (Up next): shows only. An unknown slug is a 404. */
+/** The `$list` pages under `/watch/shows` (Up next): shows only. An unknown slug is a 404. */
 export const WATCH_SHOW_LISTS: Record<string, WatchList> = {
 	watching: { status: "watching", kind: "show", sort: null },
 	"not-started": { status: "want", kind: "show", sort: null },
 	"on-hold": { status: "on_hold", kind: "show", sort: null },
 	dropped: { status: "dropped", kind: "show", sort: null },
-	seen: { status: "seen", kind: "show", sort: null },
 }
 
 /** The `$list` pages under `/watch/movies` (Ready to watch). An unknown slug is a 404. */
 export const WATCH_MOVIE_LISTS: Record<string, WatchList> = {
-	wishlist: { status: "want", kind: "movie", sort: null },
-	seen: { status: "seen", kind: "movie", sort: null },
+	want: { status: "want", kind: "movie", sort: null },
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -111,7 +107,7 @@ const TASTE_SUFFIX: Record<TasteTab, string> = {
 	stats: "/stats",
 	lists: "/lists",
 	seen: "/seen",
-	wishlist: "/wishlist",
+	wishlist: "/want",
 	shows: "/shows",
 }
 
@@ -208,7 +204,7 @@ export const EDIT_PROFILE_PATH = SETTINGS_PATHS.profile
 
 /**
  * The page of a library status for this viewer. Want to see splits by kind: shows are Start, movies (and "all") Want to
- * Watch; Seen splits by kind too (movies when the kind is "all"); the show statuses are Up next chips; Not rated is a Taste page, so it needs a handle.
+ * Watch; Seen keeps its kind in the query; the show statuses are Up next chips; Not rated is a Taste page, so it needs a handle.
  */
 export function statusHome(
 	status: LibraryStatus,
@@ -217,8 +213,7 @@ export function statusHome(
 ): string {
 	if (status === "want")
 		return kind === "show" ? WATCH_PATHS.notStarted : WATCH_PATHS.wishlist
-	if (status === "seen")
-		return watchSeenPath(kind === "show" ? "show" : "movie")
+	if (status === "seen") return WATCH_PATHS.showsSeen
 	if (status === "watching") return WATCH_PATHS.watching
 	if (status === "on_hold") return WATCH_PATHS.onHold
 	if (status === "dropped") return WATCH_PATHS.dropped
@@ -278,7 +273,7 @@ const kindOf = (search: URLSearchParams): LibraryKind => {
 	return type === "movie" || type === "show" ? type : "all"
 }
 
-/** A status page's move. Every status page fixes its kind, so `type` goes (it picked the page). */
+/** A status page fixes its kind except Seen, which keeps the query's type control. */
 function statusMove(
 	status: LibraryStatus,
 	search: URLSearchParams,
@@ -286,7 +281,7 @@ function statusMove(
 	drop: string[] = [],
 ): Move {
 	const to = statusHome(status, kindOf(search), viewer)
-	const query = carry(to, search, [...drop, "type"])
+	const query = carry(to, search, status === "seen" ? drop : [...drop, "type"])
 	if (!statusIsShared(status))
 		return personal(to === TASTE_FALLBACK_PATH ? to : query)
 	return shared(query)
@@ -294,31 +289,28 @@ function statusMove(
 
 /** The owner's own Seen, Wishlist and Shows tabs live in Watch. */
 const OWNER_TAB_HOME: Record<string, (search: URLSearchParams) => string> = {
-	seen: (search) =>
-		kindOf(search) === "show" ? WATCH_PATHS.showsSeen : WATCH_PATHS.moviesSeen,
+	seen: () => WATCH_PATHS.showsSeen,
 	wishlist: (search) =>
 		kindOf(search) === "show" ? WATCH_PATHS.notStarted : WATCH_PATHS.wishlist,
 	shows: () => WATCH_PATHS.watching,
 }
 
-/** Where /watch/movies/recent (once Recently added) goes: Want to Watch, newest first, the rest of the query kept. */
-export function recentMove(search: string | URLSearchParams): Move {
-	const params = new URLSearchParams(search)
-	params.set("sort", "added")
-	return shared(carry(WATCH_PATHS.wishlist, params))
-}
-
 const FIXED: Record<string, string> = {
+	"/watch": WATCH_PATHS.nextEpisodes,
+	"/hot-on-socials": "/hot",
+	"/explorer": "/map",
 	"/my-shows": WATCH_PATHS.nextEpisodes,
 	"/my-movies": WATCH_PATHS.tonight,
 	"/for-you": WATCH_PATHS.forYou,
 	"/my-library/hidden": NOT_INTERESTED_PATH,
 	"/settings/hidden": NOT_INTERESTED_PATH,
+	"/settings/streaming": SETTINGS_PATHS.services,
+	"/settings/where-you-watch": SETTINGS_PATHS.country,
 	// Watch next is retired for everyone (guests' Ready to watch fills from the browser).
 	"/watch-next": WATCH_PATHS.tonight,
 }
 
-/** The old Taste tabs, sections of the one Taste page now. Then the `/taste` rule applies. */
+/** The old Taste tabs go straight to a section of the viewer's final Taste page. */
 const TASTE_SECTIONS: Record<string, string> = {
 	"/taste/everyone": "/taste#everyone",
 	"/taste/fingerprint": "/taste#fingerprint",
@@ -344,10 +336,13 @@ export function oldToNew(
 	const fixed = FIXED[path]
 	if (fixed) return shared(carry(fixed, params))
 
-	if (path === WATCH_PATHS.recent) return recentMove(params)
-
 	const section = TASTE_SECTIONS[path]
-	if (section) return shared(carry(section, params))
+	if (section) {
+		const destination = handle
+			? section.replace("/taste", tastePath(handle))
+			: section
+		return personal(carry(destination, params))
+	}
 
 	if (path === "/my-library") {
 		const old = params.get("status")
@@ -389,24 +384,39 @@ export function oldToNew(
 		)
 	}
 
-	if (path === "/wishlist")
+	if (path === "/wishlist") {
+		const sort = params.get("sortBy")
+		params.delete("sortBy")
+		if (sort === "most_recently_added") params.set("sort", "added")
 		return personal(
 			carry(
 				viewer.kind === "member" ? WATCH_PATHS.wishlist : WATCH_PATHS.tonight,
 				params,
 			),
 		)
+	}
 
-	const profileTab = /^\/u\/([^/]+)\/(seen|wishlist|shows)$/.exec(path)
+	const profileTaste = /^\/u\/([^/]+)\/taste(?:\/([^/]+))?$/.exec(path)
+	if (profileTaste) {
+		const [, owner, view] = profileTaste
+		return shared(
+			carry(`${tastePath(owner, "stats")}${view ? `/${view}` : ""}`, params),
+		)
+	}
+
+	const profileTab = /^\/u\/([^/]+)\/(seen|wishlist|want|shows)$/.exec(path)
 	if (profileTab) {
 		const [, owner, tab] = profileTab
 		const own = handle != null && sameHandle(handle, decodeURIComponent(owner))
-		if (!own || params.get("as") === "visitor") return null
+		if (!own || params.get("as") === "visitor")
+			return tab === "wishlist"
+				? shared(carry(tastePath(decodeURIComponent(owner).toLowerCase(), "wishlist"), params))
+				: null
 		return personal(
 			carry(
-				OWNER_TAB_HOME[tab](params),
+				OWNER_TAB_HOME[tab === "want" ? "wishlist" : tab](params),
 				params,
-				tab === "shows" ? [] : ["type"],
+				tab === "seen" || tab === "shows" ? [] : ["type"],
 			),
 		)
 	}

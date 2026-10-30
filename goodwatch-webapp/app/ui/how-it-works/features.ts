@@ -94,7 +94,7 @@ export const HOW_IT_WORKS_FEATURES: Feature[] = [
 		kicker: "Explorer",
 		title: "A map of how movies feel",
 		line: "Islands of titles that feel alike. Mix two to see what they share.",
-		link: { to: "/explorer", label: "Open the Explorer" },
+		link: { to: "/map", label: "Open the Explorer" },
 	},
 	{
 		id: "tracking",

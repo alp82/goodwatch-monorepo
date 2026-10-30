@@ -118,7 +118,7 @@ const router = createMemoryRouter(
 			element: <Shell />,
 			children: [
 				{
-					path: "/watch",
+					path: "/watch/shows",
 					element: (
 						<MyShowsPage
 							data={
@@ -143,7 +143,7 @@ const router = createMemoryRouter(
 				},
 				{
 					path: "/show/:id",
-					element: <Link to="/watch">Back to My shows</Link>,
+					element: <Link to="/watch/shows">Back to My shows</Link>,
 				},
 				{
 					path: "/api/new-episodes",
@@ -158,7 +158,7 @@ const router = createMemoryRouter(
 			],
 		},
 	],
-	{ initialEntries: ["/watch"] },
+	{ initialEntries: ["/watch/shows"] },
 )
 const container = document.createElement("div")
 document.body.appendChild(container)
@@ -187,7 +187,7 @@ await act(async () => {
 	await router.navigate("/show/402-returning-show")
 })
 await act(async () => {
-	await router.navigate("/watch")
+	await router.navigate("/watch/shows")
 })
 await settle()
 assert.ok(
@@ -211,7 +211,7 @@ assert.ok(
 )
 await act(async () => {
 	await router.navigate("/show/402-returning-show")
-	await router.navigate("/watch")
+	await router.navigate("/watch/shows")
 })
 await settle()
 assert.equal(

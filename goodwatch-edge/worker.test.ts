@@ -126,3 +126,9 @@ test('GW-Edge exposes bounded bypass reasons even if upstream claims a hit', asy
 		assert.equal(result.headers.get('GW-Edge'), `bypass-${reason}`)
 	}
 })
+
+ test('Hot uses the final page path; compatibility and member routes bypass', () => {
+  assert.equal(eligible(req({}, '/hot'), enabled), true)
+  for (const path of ['/hot-on-socials', '/explorer', '/map', '/watch', '/watch/shows', '/watch/movies/want', '/watch/seen'])
+   assert.equal(eligible(req({}, path), enabled), false, path)
+ })

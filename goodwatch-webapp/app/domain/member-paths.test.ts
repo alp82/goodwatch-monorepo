@@ -61,11 +61,11 @@ test("Taste paths: profile, tabs, Rate more's query", () => {
 })
 
 test("Watch paths: Seen per kind, and every list slug names a Watch path", () => {
-	assert.equal(watchSeenPath("show"), "/watch/seen")
-	assert.equal(watchSeenPath("movie"), "/watch/movies/seen")
+	assert.equal(watchSeenPath("show"), "/watch/seen?type=show")
+	assert.equal(watchSeenPath("movie"), "/watch/seen?type=movie")
 	const paths = new Set<string>(Object.values(WATCH_PATHS))
 	for (const slug of Object.keys(WATCH_SHOW_LISTS))
-		assert.ok(paths.has(`/watch/${slug}`), slug)
+		assert.ok(paths.has(`/watch/shows/${slug}`), slug)
 	for (const slug of Object.keys(WATCH_MOVIE_LISTS))
 		assert.ok(paths.has(`/watch/movies/${slug}`), slug)
 	assert.deepEqual(WATCH_SHOW_LISTS["not-started"], {
@@ -74,7 +74,7 @@ test("Watch paths: Seen per kind, and every list slug names a Watch path", () =>
 		sort: null,
 	})
 	assert.equal(WATCH_MOVIE_LISTS.recent, undefined)
-	assert.deepEqual(WATCH_MOVIE_LISTS.wishlist, {
+	assert.deepEqual(WATCH_MOVIE_LISTS.want, {
 		status: "want",
 		kind: "movie",
 		sort: null,
@@ -82,49 +82,55 @@ test("Watch paths: Seen per kind, and every list slug names a Watch path", () =>
 })
 
 test("statusHome: library statuses land on Watch, Not rated on Taste", () => {
-	assert.equal(statusHome("want", "all", ANA), "/watch/movies/wishlist")
-	assert.equal(statusHome("want", "movie", ANA), "/watch/movies/wishlist")
-	assert.equal(statusHome("want", "show", ANA), "/watch/not-started")
+	assert.equal(statusHome("want", "all", ANA), "/watch/movies/want")
+	assert.equal(statusHome("want", "movie", ANA), "/watch/movies/want")
+	assert.equal(statusHome("want", "show", ANA), "/watch/shows/not-started")
 	assert.equal(statusHome("seen", "show", ANA), "/watch/seen")
-	assert.equal(statusHome("seen", "all", ANA), "/watch/movies/seen")
-	assert.equal(statusHome("on_hold", "all", GUEST), "/watch/on-hold")
+	assert.equal(statusHome("seen", "all", ANA), "/watch/seen")
+	assert.equal(statusHome("on_hold", "all", GUEST), "/watch/shows/on-hold")
 	assert.equal(statusHome("unrated", "all", ANA), "/u/ana/scores/not-rated")
 	assert.equal(statusHome("unrated", "all", NO_HANDLE), "/taste")
 })
 
 // Rows that are the same for everyone: 301, query kept.
 const SHARED_ROWS: [string, string, string][] = [
-	["/my-shows", "?from=menu", "/watch?from=menu"],
+	["/watch", "", "/watch/shows"],
+	["/u/ana/taste", "?x=1", "/u/ana/stats?x=1"],
+	["/u/ana/taste/everyone", "", "/u/ana/stats/everyone"],
+	["/hot-on-socials", "?from=menu", "/hot?from=menu"],
+	["/explorer", "?grouping=mood", "/map?grouping=mood"],
+	["/settings/streaming", "?from=menu", "/settings/services?from=menu"],
+	["/settings/where-you-watch", "", "/settings/country"],
+	["/my-shows", "?from=menu", "/watch/shows?from=menu"],
 	["/my-movies", "", "/watch/movies"],
 	["/for-you", "?mood=cozy", "/watch/for-you?mood=cozy"],
-	["/my-library/want", "?sort=title&type=show", "/watch/not-started?sort=title"],
-	["/my-library/want", "?type=movie", "/watch/movies/wishlist"],
-	// Recently added is Want to Watch's newest-first order now.
-	["/watch/movies/recent", "", "/watch/movies/wishlist?sort=added"],
 	[
-		"/watch/movies/recent",
-		"?sort=title&q=dune",
-		"/watch/movies/wishlist?sort=added&q=dune",
+		"/my-library/want",
+		"?sort=title&type=show",
+		"/watch/shows/not-started?sort=title",
 	],
-	["/my-library/seen", "?type=show&sort=score", "/watch/seen?sort=score"],
-	["/my-library/seen", "?type=movie", "/watch/movies/seen"],
-	["/my-library/seen", "?q=alien", "/watch/movies/seen?q=alien"],
-	["/my-library/watching", "", "/watch/watching"],
-	["/my-library/on-hold", "?sort=title", "/watch/on-hold?sort=title"],
-	["/my-library/dropped", "", "/watch/dropped"],
+	["/my-library/want", "?type=movie", "/watch/movies/want"],
+	[
+		"/my-library/seen",
+		"?type=show&sort=score",
+		"/watch/seen?type=show&sort=score",
+	],
+	["/my-library/seen", "?type=movie", "/watch/seen?type=movie"],
+	["/my-library/seen", "?q=alien", "/watch/seen?q=alien"],
+	["/my-library/watching", "", "/watch/shows/watching"],
+	["/my-library/on-hold", "?sort=title", "/watch/shows/on-hold?sort=title"],
+	["/my-library/dropped", "", "/watch/shows/dropped"],
 	["/my-library/hidden", "?from=menu", "/settings/not-interested?from=menu"],
 	["/settings/hidden", "", "/settings/not-interested"],
-	["/taste/everyone", "", "/taste#everyone"],
-	["/taste/fingerprint", "?a=1", "/taste?a=1#fingerprint"],
 	["/watch-next", "?sort=top", "/watch/movies?sort=top"],
-	["/my-library", "?status=watching", "/watch/watching"],
+	["/my-library", "?status=watching", "/watch/shows/watching"],
 	[
 		"/my-library",
 		"?status=seen&type=show&sort=score",
-		"/watch/seen?sort=score",
+		"/watch/seen?type=show&sort=score",
 	],
-	["/my-library", "?status=want&q=dune", "/watch/movies/wishlist?q=dune"],
-	["/my-library", "?status=nonsense", "/watch/movies/wishlist"],
+	["/my-library", "?status=want&q=dune", "/watch/movies/want?q=dune"],
+	["/my-library", "?status=nonsense", "/watch/movies/want"],
 ]
 
 for (const [from, search, to] of SHARED_ROWS)
@@ -142,7 +148,21 @@ const PERSONAL_ROWS: [
 	string | null,
 	string | null,
 ][] = [
-	["/my-library", "", "/watch", "/taste", "/u/ana"],
+	["/my-library", "", "/watch/shows", "/taste", "/u/ana"],
+	[
+		"/taste/everyone",
+		"?view=taste",
+		"/taste?view=taste#everyone",
+		"/taste?view=taste#everyone",
+		"/u/ana?view=taste#everyone",
+	],
+	[
+		"/taste/fingerprint",
+		"",
+		"/taste#fingerprint",
+		"/taste#fingerprint",
+		"/u/ana#fingerprint",
+	],
 	[
 		"/my-library",
 		"?status=unrated&sort=title",
@@ -170,9 +190,9 @@ const PERSONAL_ROWS: [
 	[
 		"/wishlist",
 		"?sortBy=highest_score",
-		"/watch/movies?sortBy=highest_score",
-		"/watch/movies/wishlist?sortBy=highest_score",
-		"/watch/movies/wishlist?sortBy=highest_score",
+		"/watch/movies",
+		"/watch/movies/want",
+		"/watch/movies/want",
 	],
 ]
 
@@ -185,31 +205,31 @@ for (const [from, search, ...targets] of PERSONAL_ROWS)
 	})
 
 test("the owner's /u/:h/seen, /wishlist and /shows go to Watch; visitors and ?as=visitor stay", () => {
-	assert.deepEqual(
-		oldToNew("/u/ana/seen", "", ANA),
-		personal("/watch/movies/seen"),
-	)
+	assert.deepEqual(oldToNew("/u/ana/seen", "", ANA), personal("/watch/seen"))
 	assert.deepEqual(
 		oldToNew("/u/ana/seen", "?type=show", ANA),
-		personal("/watch/seen"),
+		personal("/watch/seen?type=show"),
 	)
 	assert.deepEqual(
 		oldToNew("/u/Ana/wishlist", "?type=show", ANA),
-		personal("/watch/not-started"),
+		personal("/watch/shows/not-started"),
 	)
 	assert.deepEqual(
 		oldToNew("/u/ana/shows", "", ANA),
-		personal("/watch/watching"),
+		personal("/watch/shows/watching"),
 	)
 	assert.equal(oldToNew("/u/ana/seen", "?as=visitor", ANA), null)
 	assert.equal(oldToNew("/u/ana/seen", "", member("bo")), null)
-	assert.equal(oldToNew("/u/ana/wishlist", "", NO_HANDLE), null)
+	assert.deepEqual(
+		oldToNew("/u/ana/wishlist", "", NO_HANDLE),
+		shared("/u/ana/want"),
+	)
 	assert.equal(oldToNew("/u/ana/shows", "", GUEST), null)
 })
 
 test("new addresses and pages that stay answer null", () => {
 	for (const path of [
-		"/watch",
+		"/watch/shows",
 		"/watch/movies",
 		"/u/ana",
 		"/u/ana/scores",
@@ -224,7 +244,7 @@ test("new addresses and pages that stay answer null", () => {
 test("a trailing slash and a leading ? both work", () => {
 	assert.deepEqual(
 		oldToNew("/my-shows/", "from=menu", GUEST),
-		shared("/watch?from=menu"),
+		shared("/watch/shows?from=menu"),
 	)
 	assert.deepEqual(
 		oldToNew("/taste/", new URLSearchParams("side=x"), ANA),
@@ -233,12 +253,73 @@ test("a trailing slash and a leading ? both work", () => {
 })
 
 test("moveResponse: 301 has no Cache-Control, 302 is private, no-store with Vary: Cookie", () => {
-	const permanent = moveResponse(shared("/watch"))
+	const permanent = moveResponse(shared("/watch/shows"))
 	assert.equal(permanent.status, 301)
-	assert.equal(permanent.headers.get("Location"), "/watch")
+	assert.equal(permanent.headers.get("Location"), "/watch/shows")
 	assert.equal(permanent.headers.get("Cache-Control"), null)
 	const temporary = moveResponse(personal("/u/ana"))
 	assert.equal(temporary.status, 302)
 	assert.equal(temporary.headers.get("Cache-Control"), "private, no-store")
 	assert.equal(temporary.headers.get("Vary"), "Cookie")
+})
+
+// Every source in the table must land on a page for the same viewer, including section fragments.
+test("every redirect lands in one hop", () => {
+	const addresses = [
+		...SHARED_ROWS.map(([p, q]) => p + q),
+		...PERSONAL_ROWS.map(([p, q]) => p + q),
+		"/watch",
+		"/hot-on-socials?x=1",
+		"/explorer?grouping=mood",
+		"/taste/everyone?view=taste",
+		"/taste/fingerprint",
+		...["seen", "wishlist", "want", "shows"].flatMap((tab) =>
+			["", "?type=show&sort=title", "?as=visitor"].map(
+				(q) => `/u/ana/${tab}${q}`,
+			),
+		),
+		"/lists/new",
+		"/u/bo/lists/new",
+	]
+	for (const [, viewer] of VIEWERS)
+		for (const address of addresses) {
+			const url = new URL(address, "https://goodwatch.app")
+			const move = oldToNew(url.pathname, url.search, viewer)
+			if (!move) continue
+			const target = new URL(move.to, url)
+			assert.equal(
+				oldToNew(target.pathname, target.search, viewer),
+				null,
+				`${address} -> ${move.to}`,
+			)
+		}
+})
+test("branch-only addresses have no compatibility redirects", () => {
+	for (const [, viewer] of VIEWERS)
+		for (const address of [
+			"/watch/watching",
+			"/watch/not-started",
+			"/watch/on-hold",
+			"/watch/dropped",
+			"/watch/movies/wishlist",
+			"/watch/movies/recent",
+			"/watch/movies/seen",
+		])
+			assert.equal(oldToNew(address, "", viewer), null)
+})
+
+test("wishlist legacy sort maps only Recently added", () => {
+	for (const [, viewer] of VIEWERS) {
+		const move = oldToNew(
+			"/wishlist",
+			"?sortBy=most_recently_added&q=dune",
+			viewer,
+		)!
+		assert.equal(
+			new URL(move.to, "https://goodwatch.app").search,
+			"?q=dune&sort=added",
+		)
+		assert.equal(move.status, 302)
+		assert.equal(move.private, true)
+	}
 })

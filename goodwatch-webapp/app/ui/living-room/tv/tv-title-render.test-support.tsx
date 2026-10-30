@@ -84,7 +84,7 @@ const member: TvHomeData = {
 	tonight: [
 		{
 			card: card("show", 10, { match: 92 }),
-			href: "/watch",
+			href: "/watch/shows",
 			episode: { code: "S2 E4", name: "Cicada", runtime: 50 },
 		},
 		{ card: card("movie", 11, { match: 88 }), href: "/watch/movies" },

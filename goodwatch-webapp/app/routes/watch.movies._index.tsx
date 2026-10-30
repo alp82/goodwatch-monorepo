@@ -19,7 +19,7 @@ import { getUserIdFromRequest } from "~/utils/auth"
 export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction = () => [
-	{ title: "Ready to watch | GoodWatch" },
+	{ title: "My movies | GoodWatch" },
 	{
 		name: "description",
 		content:

@@ -1,7 +1,7 @@
 // "Hot on socials" on the start page (#557): the eight titles read about most against their own usual, and one
 // thing said about the chosen one. From 1024 px a panel stands beside the board, exactly as tall as the board
 // whatever it holds (`contain: size` in start-row.css), so pressing a row never moves the page. Below 1024 px
-// there is no panel: each row goes to that title on the Hot on socials page (routes/hot-on-socials.tsx), which
+// there is no panel: each row goes to that title on the Hot on socials page (routes/hot.tsx), which
 // has every post. The heading's link goes there too.
 //
 // Rendered with the start page and its loader data, before the visitor scrolls. Its styles are in start-row.css,
@@ -21,7 +21,7 @@ import { Spark } from "./Spark"
 
 /** The Hot on socials page, opened at a title when one is given. */
 export const pageHref = (title?: TalkedTitle) =>
-	`/hot-on-socials${title ? `#${title.mediaType}-${title.tmdbId}` : ""}`
+	`/hot${title ? `#${title.mediaType}-${title.tmdbId}` : ""}`
 
 const Name = ({ title }: { title: TalkedTitle }) => (
 	<MediaText value={{ text: title.title, lang: mediaFieldLanguage(title, "title") }} />

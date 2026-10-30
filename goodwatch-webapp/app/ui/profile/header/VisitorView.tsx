@@ -23,7 +23,7 @@ export function viewSwitchHref(
 	const rest = pathname.replace(/^\/u\/[^/]+/, "").replace(/\/$/, "")
 	if (toVisitor && rest.startsWith("/scores/"))
 		return tastePath(handle, "scores", query)
-	if (!toVisitor && ["/seen", "/wishlist", "/shows"].includes(rest))
+	if (!toVisitor && ["/seen", "/want", "/shows"].includes(rest))
 		return tastePath(handle)
 	return `/u/${handle}${rest}${toVisitor ? "?as=visitor" : ""}`
 }

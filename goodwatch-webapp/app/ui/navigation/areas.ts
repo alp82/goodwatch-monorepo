@@ -55,6 +55,7 @@ import {
 	SETTINGS_PATHS,
 	TASTE_FALLBACK_PATH,
 	WATCH_PATHS,
+	WATCH_PREFIX,
 	handleOf,
 	tasteHome,
 	tastePath,
@@ -110,11 +111,11 @@ const under = (pathname: string, prefix: string) =>
 const EXPLORE_PREFIXES = [
 	"/discover",
 	"/new",
-	"/hot-on-socials",
+	"/hot",
 	"/movies",
 	"/shows",
 	"/people",
-	"/explorer",
+	"/map",
 	"/explore",
 ]
 const TASTE_PREFIXES = ["/u", "/settings", "/taste", "/lists"]
@@ -125,7 +126,7 @@ const TASTE_PREFIXES = ["/u", "/settings", "/taste", "/lists"]
  * areas: home, title and person pages, Help and the apps pages.
  */
 export function areaOf(pathname: string): AreaKey | null {
-	if (under(pathname, "/watch")) return "watch"
+	if (under(pathname, WATCH_PREFIX)) return "watch"
 	if (EXPLORE_PREFIXES.some((p) => under(pathname, p))) return "explore"
 	if (TASTE_PREFIXES.some((p) => under(pathname, p))) return "taste"
 	return null
@@ -218,8 +219,6 @@ export function watchPlaceOf(pathname: string): WatchPlace | null {
 		return { tab: "for-you", side: null, chip: null }
 	if (path === WATCH_PATHS.showsSeen)
 		return { tab: "up-next", side: "seen", chip: null }
-	if (path === WATCH_PATHS.moviesSeen)
-		return { tab: "ready", side: "seen", chip: null }
 	const show = UP_NEXT_CHIPS.find(([, , href]) => href === path)
 	if (show) return { tab: "up-next", side: "to-watch", chip: show[0] }
 	const movie = READY_CHIPS.find(([, , href]) => href === path)
@@ -320,9 +319,9 @@ const EXPLORE_TABS: {
 	{
 		key: "hot",
 		label: "Hot",
-		href: "/hot-on-socials",
+		href: "/hot",
 		icon: FireIcon,
-		here: (p) => under(p, "/hot-on-socials"),
+		here: (p) => under(p, "/hot"),
 	},
 	{
 		key: "best",
@@ -355,9 +354,9 @@ const EXPLORE_TABS: {
 	{
 		key: "map",
 		label: "Map",
-		href: "/explorer",
+		href: "/map",
 		icon: MapIcon,
-		here: (p) => under(p, "/explorer"),
+		here: (p) => under(p, "/map"),
 	},
 ]
 

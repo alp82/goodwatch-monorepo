@@ -56,7 +56,7 @@ const member: TvHomeData = {
 				backdrop_path: "/show-backdrop-10.jpg",
 				poster_path: "/show-poster-10.jpg",
 			} as TitleCard,
-			href: "/watch",
+			href: "/watch/shows",
 			episode: { code: "S2 E4", name: "Episode 4" },
 		},
 	],

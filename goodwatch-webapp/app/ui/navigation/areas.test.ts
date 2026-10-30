@@ -32,18 +32,18 @@ const hereOf = (tabs: { key: string; here: boolean }[]) =>
 
 test("areaOf: Watch, Explore, Taste, or none", () => {
 	const cases: [string, ReturnType<typeof areaOf>][] = [
-		["/watch", "watch"],
-		["/watch/movies/seen", "watch"],
+		["/watch/shows", "watch"],
+		["/watch/seen", "watch"],
 		["/watch/for-you", "watch"],
 		["/discover", "explore"],
 		["/discover/movies", "explore"],
 		["/new", "explore"],
 		["/new/de/netflix", "explore"],
-		["/hot-on-socials", "explore"],
+		["/hot", "explore"],
 		["/movies/best", "explore"],
 		["/shows/drama", "explore"],
 		["/people", "explore"],
-		["/explorer", "explore"],
+		["/map", "explore"],
 		["/u/ana", "taste"],
 		["/u/bo/stats/numbers", "taste"],
 		["/settings", "taste"],
@@ -66,14 +66,14 @@ test("litArea: a guest on a profile lights no key; a member on someone else's li
 	assert.equal(litArea("/u/bo", GUEST), null)
 	assert.equal(litArea("/u/bo", ANA), "taste")
 	assert.equal(litArea("/taste", GUEST), "taste")
-	assert.equal(litArea("/watch", GUEST), "watch")
+	assert.equal(litArea("/watch/shows", GUEST), "watch")
 })
 
 test("areaKeys: Taste leads to the profile, or /taste without a handle", () => {
 	assert.deepEqual(
 		areaKeys(ANA).map((a) => [a.key, a.href]),
 		[
-			["watch", "/watch"],
+			["watch", "/watch/shows"],
 			["explore", "/discover"],
 			["taste", "/u/ana"],
 		],
@@ -88,7 +88,7 @@ test("the third key says Profile, and every tab of every area has an icon", () =
 		["Watch", "Explore", "Profile"],
 	)
 	const rows = [
-		watchTabs("/watch"),
+		watchTabs("/watch/shows"),
 		exploreTabs("/discover"),
 		tasteRow({ pathname: "/u/ana", viewer: ANA })?.tabs ?? [],
 		tasteRow({ pathname: "/u/bo", viewer: ANA })?.trailing ?? [],
@@ -102,15 +102,14 @@ test("the third key says Profile, and every tab of every area has an icon", () =
 
 test("Watch: tabs, the To watch | Seen switch and the chips for every page", () => {
 	const cases: [string, string, "to-watch" | "seen" | null, string | null][] = [
-		["/watch", "up-next", "to-watch", "next-episodes"],
-		["/watch/not-started", "up-next", "to-watch", "not-started"],
-		["/watch/watching", "up-next", "to-watch", "watching"],
-		["/watch/on-hold", "up-next", "to-watch", "on-hold"],
-		["/watch/dropped", "up-next", "to-watch", "dropped"],
+		["/watch/shows", "up-next", "to-watch", "next-episodes"],
+		["/watch/shows/not-started", "up-next", "to-watch", "not-started"],
+		["/watch/shows/watching", "up-next", "to-watch", "watching"],
+		["/watch/shows/on-hold", "up-next", "to-watch", "on-hold"],
+		["/watch/shows/dropped", "up-next", "to-watch", "dropped"],
 		["/watch/seen", "up-next", "seen", null],
 		["/watch/movies", "ready", "to-watch", "tonight"],
-		["/watch/movies/wishlist", "ready", "to-watch", "wishlist"],
-		["/watch/movies/seen", "ready", "seen", null],
+		["/watch/movies/want", "ready", "to-watch", "wishlist"],
 		["/watch/for-you", "for-you", null, null],
 	]
 	for (const [path, tab, side, chip] of cases) {
@@ -129,9 +128,9 @@ test("Watch: tabs, the To watch | Seen switch and the chips for every page", () 
 
 test("Watch tabs read My shows, My movies, Recommendations, each with its second line", () => {
 	assert.deepEqual(
-		watchTabs("/watch").map((t) => [t.label, t.sub, t.href]),
+		watchTabs("/watch/shows").map((t) => [t.label, t.sub, t.href]),
 		[
-			["My shows", "Up next", "/watch"],
+			["My shows", "Up next", "/watch/shows"],
 			["My movies", "Ready to watch", "/watch/movies"],
 			["Recommendations", "Curated For You", "/watch/for-you"],
 		],
@@ -149,21 +148,21 @@ test("the chips point at their own tab's pages and carry counts", () => {
 			["Want to Watch", 40],
 		],
 	)
-	assert.equal(watchChips("/watch")?.choices.length, 5)
+	assert.equal(watchChips("/watch/shows")?.choices.length, 5)
 })
 
 test("Explore tabs: one current tab per page; Best covers both kinds; guests' New goes to their country", () => {
 	const cases: [string, string[]][] = [
 		["/discover", ["discover"]],
 		["/new/de", ["new"]],
-		["/hot-on-socials", ["hot"]],
+		["/hot", ["hot"]],
 		["/movies/best", ["best"]],
 		["/shows/best", ["best"]],
 		["/movies", ["movies"]],
 		["/movies/drama/2", ["movies"]],
 		["/shows", ["shows"]],
 		["/people", ["people"]],
-		["/explorer", ["map"]],
+		["/map", ["map"]],
 	]
 	for (const [path, here] of cases)
 		assert.deepEqual(hereOf(exploreTabs(path)), here, path)
@@ -215,7 +214,7 @@ test("Taste row, owner: five tabs, the gear, the current tab per page", () => {
 		tasteRow({ pathname: "/u/ana", viewer: ANA })?.tabs[0].href,
 		"/u/ana",
 	)
-	assert.equal(tasteRow({ pathname: "/watch", viewer: ANA }), null)
+	assert.equal(tasteRow({ pathname: "/watch/shows", viewer: ANA }), null)
 })
 
 test("Taste row, owner as visitor: visitor tabs keep ?as=visitor, no gear", () => {
@@ -233,7 +232,7 @@ test("Taste row, owner as visitor: visitor tabs keep ?as=visitor, no gear", () =
 		row.trailing.map((t) => t.href),
 		[
 			"/u/ana/seen?as=visitor",
-			"/u/ana/wishlist?as=visitor",
+			"/u/ana/want?as=visitor",
 			"/u/ana/shows?as=visitor",
 		],
 	)

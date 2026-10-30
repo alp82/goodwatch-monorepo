@@ -244,7 +244,7 @@ const EXPECTED: Record<ProfileCardChoice, { image: string; link: string }> = {
 	seen: { image: "/og/u/film_fan/seen.jpg", link: "/u/film_fan/seen" },
 	wishlist: {
 		image: "/og/u/film_fan/wishlist.jpg",
-		link: "/u/film_fan/wishlist",
+		link: "/u/film_fan/want",
 	},
 	shows: { image: "/og/u/film_fan/shows.jpg", link: "/u/film_fan/shows" },
 	lists: { image: "/og/u/film_fan/lists.jpg", link: "/u/film_fan/lists" },

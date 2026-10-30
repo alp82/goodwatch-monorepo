@@ -35,6 +35,8 @@ The command takes about 50 minutes and does three things:
 - `goodwatch-webapp/scripts/.env` (or `goodwatch-webapp/.env`) with `CRATE_HOSTS`, `CRATE_PORT`, `CRATE_USER`, and `CRATE_PASS` for the production database. The generator only reads.
 - Network access to the database and to https://goodwatch.app.
 
+The static landing URLs include `/hot` and `/map`. Change the generator and committed static XML together; the live check rejects redirect sources. `/watch/*` stays out of the sitemap and carries `noindex, follow`.
+
 ## Publishing
 
 The files are tracked in git, and every update to `main` deploys the webapp through the existing Coolify integration.

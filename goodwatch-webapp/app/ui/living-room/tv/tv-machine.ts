@@ -535,7 +535,7 @@ export function destinationHref(
 		case "explorer": {
 			const query = new URLSearchParams({ grouping: "mood" })
 			if (screen.island) query.set("island", screen.island)
-			return `/explorer?${query}`
+			return `/map?${query}`
 		}
 		case "taste":
 			// A side travels: the Taste page opens on it.
@@ -608,7 +608,7 @@ const PAGE_LABEL: Record<string, string> = {
 	"/discover": "Explore all titles",
 	"/taste": "Full taste profile",
 	"/taste/quiz": "Full page",
-	"/explorer": "Full Explorer",
+	"/map": "Full Explorer",
 }
 
 /**

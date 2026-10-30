@@ -56,17 +56,16 @@ the final status.
 A route can shorten the shared policy. Public share lists and profile pages without an identity header use the
 anonymous keyed policy above. Hidden lists and all member views stay `private, no-store`.
 
-Compression adds `Accept-Encoding` to `Vary`. Without a front cache, HTML remains private,max-age=0 while the in-process cache keys on normalized cookie preferences. It needs no broad Cookie variant. No response of the app varies on `Cookie`, except the gate's 403 and
-410, which are `private, no-store`.
+Compression adds `Accept-Encoding` to `Vary`. Without a front cache, HTML remains private,max-age=0 while the in-process cache keys on normalized cookie preferences. It needs no broad Cookie variant. Viewer-dependent redirects and the gate's 403 and 410 use `Vary: Cookie` with `private, no-store`.
 
 ### Errors, redirects, and the gate
 
 - **Errors:** every 4xx and 5xx document is `private, no-store`. There is no negative caching: a missing title can
   appear with the next import, and no cache exists whose load a short lifetime would cut.
 - **The gate:** the 403 check and the 410 for the old check page stay `private, no-store` with `Vary: Cookie`.
-- **Redirects that depend on who asks** are `private, no-store`: `/taste` for visitors without a session, the list
+- **Redirects that depend on who asks** are 302 with `private, no-store` and `Vary: Cookie`: `/taste` for visitors without a session, the list
   editor for non-owners, `/search` and `/discover/:type` under a preview flag, `/sign-in` and `/sign-up` with a return
-  page, `/lists/mine`, `/wishlist`.
+  page, `/lists/mine`, `/wishlist` (the compatibility redirect).
 - **Redirects that are the same for everyone** carry no `Cache-Control`: the canonical title, person, and profile
   paths, `/tv/*`, `/living-room`. A cache may keep a 301 by its own default.
 
@@ -108,7 +107,7 @@ a request with the auth cookie. `Accept-Encoding` in `Vary` comes from compressi
 | Filtered person page with `gw_browser`, anonymous | Same as a person page | Same as a person page | Same as a person page |
 | Any page, member | `private, no-store`, `Vary: Cookie, Accept-Language` | `private, no-store` | `private, no-store` |
 | Share list page, search page: everyone | `private, no-store` | `private, no-store` | `private, no-store` |
-| Missing title or person, `/watch-next` and `/explorer` with the feature off (404): anonymous | The public title policy above, `Vary: Cookie, Accept-Language` | `private, no-store` | `private, no-store` |
+| Missing title or person, `/watch/movies` and `/map` with the feature off (404): anonymous | The public title policy above, `Vary: Cookie, Accept-Language` | `private, no-store` | `private, no-store` |
 | Missing list (404) | `private, no-store` | `private, no-store` | `private, no-store` |
 | Unknown path (404) | none | `private, no-store` | `private, no-store` |
 | Render error (500) | The page's public policy (seen in an earlier local run, not measured again) | `private, no-store` | `private, no-store` |

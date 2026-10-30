@@ -38,7 +38,7 @@ class UrlShapeTest(unittest.TestCase):
             "https://goodwatch.app/movies/": "category_hub",
             "https://goodwatch.app/shows/genres/drama": "category_hub",
             "https://goodwatch.app/discover": "category_hub",
-            "https://goodwatch.app/explorer": "category_hub",
+            "https://goodwatch.app/map": "category_hub",
         }.items():
             self.assertEqual(url_shape(url), shape, url)
 

@@ -146,7 +146,7 @@ console.log(
 				tonight: [
 					{
 						card: { ...movie, media_type: "show", runtime: 55 },
-						href: "/watch/not-started",
+						href: "/watch/shows/not-started",
 					},
 				],
 			},
@@ -159,7 +159,7 @@ console.log(
 				tonight: [
 					{
 						card: { ...movie, media_type: "show", runtime: 99 },
-						href: "/watch",
+						href: "/watch/shows",
 						episode: { code: "S2 E4", name: "The next episode", runtime: 48 },
 					},
 				],

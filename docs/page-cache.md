@@ -225,18 +225,18 @@ identical anonymous requests in flight get the busy answer. For an anonymous vis
 | Page | Why |
 | --- | --- |
 | `/search` | The route answers `private, no-store`. With the filter bar on, it redirects to `/discover?q=...`, which is storable. |
-| `/explorer` | The loader answers `private, no-store` (404 while the feature is off). |
-| `/watch-next` | The loader answers `private, no-store` (404 while the feature is off). |
+| `/map` | The loader answers `private, no-store` (404 while the feature is off). |
+| `/watch/*` | Personal pages answer `private, no-store` and carry `noindex, follow`. |
 | `/lists/new`, `/settings` and every Settings page under it | The loader answers `private, no-store` (the Settings layout's loader covers the pages without a loader of their own). |
 | `/lists/mine`, `/u/<handle>/lists/<id>/edit` | A redirect, or 404. |
 | `/u/<handle>/lists/<id>` of an unlisted list | The loader answers `private, no-store`. |
 | An incomplete page | `no-store` for this render only. See [What is stored](#what-is-stored). |
-| A redirect, a 404, an error | The status isn't 200. This includes `/discover/<type>` and Discover's old parameter names with the filter bar on, and `/wishlist` with Watch next on. |
+| A redirect, a 404, an error | The status isn't 200. This includes `/discover/<type>` and Discover's old parameter names with the filter bar on, and the compatibility `/wishlist` redirect. |
 | A filtered person URL, `/sign-in` and `/sign-up` with `redirectTo`, without the `gw_browser` cookie | The gate answers. These bypass the cache and aren't limited. |
 
 Every other page is storable for an anonymous visitor, including `/taste/quiz`. `/settings/where-you-watch`,
 `/settings/streaming` and `/settings/hidden` are permanent redirects to `/settings/country`, `/settings/services` and
-`/my-library/hidden`.
+`/settings/not-interested`.
 
 `goodwatch_page_cache_busy_total` counts the busy answers per route. See
 [viral-spike-metrics.md](benchmarks/viral-spike-metrics.md).

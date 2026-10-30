@@ -25,7 +25,7 @@ export const MEMBER_HREF = {
 	shows: WATCH_PATHS.nextEpisodes,
 	movies: WATCH_PATHS.tonight,
 	forYou: WATCH_PATHS.forYou,
-	hot: "/hot-on-socials",
+	hot: "/hot",
 	watchNext: WATCH_PATHS.tonight,
 	taste: TASTE_FALLBACK_PATH,
 	imports: "/settings/imports",

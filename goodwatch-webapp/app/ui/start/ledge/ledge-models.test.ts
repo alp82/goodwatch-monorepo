@@ -139,7 +139,7 @@ test("a member's ledge is one big button with their lists; a new member's says t
 test("the list links go to My movies and My shows, with how much is on each when there is any", () => {
 	assert.deepEqual(listLinks({ movies: 64, shows: 6 }), [
 		{ label: "My movies", href: "/watch/movies", note: "64 to see" },
-		{ label: "My shows", href: "/watch", note: "6 in progress" },
+		{ label: "My shows", href: "/watch/shows", note: "6 in progress" },
 	])
 	assert.deepEqual(
 		listLinks({ movies: 0, shows: null }).map((l) => l.note),

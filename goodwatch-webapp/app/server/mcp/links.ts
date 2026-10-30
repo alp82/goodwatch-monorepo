@@ -128,7 +128,7 @@ export function withPageLink(
 						"This sort is available in the tool; the linked page opens this status in its default website order."
 				path = url.pathname + url.search
 			}
-			if (filter === "want_to_see" && args.kind && args.kind !== "all") {
+			if (filter === "seen" && args.kind && args.kind !== "all") {
 				const url = new URL(path, origin)
 				url.searchParams.set("type", args.kind)
 				path = url.pathname + url.search

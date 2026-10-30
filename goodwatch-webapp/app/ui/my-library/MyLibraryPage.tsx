@@ -3,7 +3,7 @@
 // choice of its own. A page can fix the kind (Seen shows, Start, Want to Watch) and the sort.
 //
 // The controls: a movies/shows filter (unless the page fixes the kind), a search over the list, and a sort. A list is
-// drawn in steps of 60, also with 1,500 Seen titles. The choice lives in the URL (`/watch/movies/seen?sort=score&q=alien`),
+// drawn in steps of 60, also with 1,500 Seen titles. The choice lives in the URL (`/watch/seen?sort=score&q=alien`),
 // and each step is one read of /api/my-library.
 import {
 	ChevronRightIcon,

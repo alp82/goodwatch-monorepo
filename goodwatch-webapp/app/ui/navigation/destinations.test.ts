@@ -4,11 +4,11 @@ import { test } from "node:test"
 import { currentDestination, searchHref } from "./destinations.ts"
 
 test("Watch's pages belong to their tab", () => {
-	assert.equal(currentDestination("/watch"), "upNext")
-	assert.equal(currentDestination("/watch/on-hold"), "upNext")
+	assert.equal(currentDestination("/watch/shows"), "upNext")
+	assert.equal(currentDestination("/watch/shows/on-hold"), "upNext")
 	assert.equal(currentDestination("/watch/seen"), "upNext")
 	assert.equal(currentDestination("/watch/movies"), "ready")
-	assert.equal(currentDestination("/watch/movies/wishlist"), "ready")
+	assert.equal(currentDestination("/watch/movies/want"), "ready")
 	assert.equal(currentDestination("/watch/for-you"), "forYou")
 	assert.equal(currentDestination("/watch/nope"), null)
 })

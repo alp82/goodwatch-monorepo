@@ -14,7 +14,7 @@ export const CACHED_ROUTE_IDS = [
 	"routes/$type.$category.$page",
 	"routes/discover.($type)",
 	"routes/people",
-	"routes/hot-on-socials",
+	"routes/hot",
 	"routes/blog._index",
 	"routes/blog.$slug",
 ] as const

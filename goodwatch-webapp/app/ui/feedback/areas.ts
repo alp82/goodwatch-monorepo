@@ -434,12 +434,12 @@ export const PAGE_TYPES: PageType[] = [
 			"u.$handle.scores.tsx",
 			"u.$handle.seen.tsx",
 			"u.$handle.shows.tsx",
-			"u.$handle.wishlist.tsx",
+			"u.$handle.want.tsx",
 			"u.$handle.taste.tsx",
 			"u.$handle.lists._index.tsx",
 		],
 		example: "/u/<handle>/taste",
-		match: re(/^\/u\/[^/]+\/(scores|seen|shows|wishlist|taste|lists)\/?$/),
+		match: re(/^\/u\/[^/]+\/(scores|seen|shows|want|wishlist|taste|lists)\/?$/),
 		areas: [
 			{
 				id: "titles",
@@ -517,8 +517,9 @@ export const PAGE_TYPES: PageType[] = [
 		id: "library",
 		name: "Watch",
 		routes: [
-			"watch._index.tsx",
-			"watch.$list.tsx",
+			"watch.shows._index.tsx",
+			"watch.shows.$list.tsx",
+			"watch.seen.tsx",
 			"watch.movies.$list.tsx",
 		],
 		example: WATCH_PATHS.nextEpisodes,
@@ -565,10 +566,10 @@ export const PAGE_TYPES: PageType[] = [
 	},
 	{
 		id: "explorer",
-		name: "Explorer",
-		routes: ["explorer.tsx"],
-		example: "/explorer",
-		match: (p) => p === "/explorer",
+		name: "Map",
+		routes: ["map.tsx"],
+		example: "/map",
+		match: (p) => p === "/map",
 		areas: [
 			{
 				id: "map",
@@ -584,9 +585,9 @@ export const PAGE_TYPES: PageType[] = [
 	{
 		id: "hot",
 		name: "Hot",
-		routes: ["hot-on-socials.tsx"],
-		example: "/hot-on-socials",
-		match: (p) => p === "/hot-on-socials",
+		routes: ["hot.tsx"],
+		example: "/hot",
+		match: (p) => p === "/hot",
 		areas: [
 			{
 				id: "ranking",

@@ -185,11 +185,11 @@ test("Tonight's pick is the Next episode of the first show to continue, then the
 	assert.deepEqual(tonightShowIds(p), [10, 20])
 	const { tonight } = memberHome(p, cardsFor(p))
 	assert.deepEqual(tonightOf(p), [
-		["show-10", "/watch"],
+		["show-10", "/watch/shows"],
 		["movie-1", "/watch/movies"],
 		["movie-2", "/watch/movies"],
 		["movie-3", "/watch/movies"],
-		["show-20", "/watch/not-started"],
+		["show-20", "/watch/shows/not-started"],
 	])
 	assert.deepEqual(tonight[0].episode, { code: "S2 E4", name: "Episode 4", runtime: 48 })
 	assert.equal(tonight[1].episode, undefined)
@@ -204,7 +204,7 @@ test("without a show to continue the first movie is the pick, and the first show
 	assert.deepEqual(tonightOf(p), [
 		["movie-1", "/watch/movies"],
 		["movie-2", "/watch/movies"],
-		["show-20", "/watch/not-started"],
+		["show-20", "/watch/shows/not-started"],
 	])
 	// Watch next holds up to ten: ten movies leave no place for it.
 	const ten = Array.from({ length: 10 }, (_, i) => card("movie", i + 1))
@@ -214,13 +214,13 @@ test("without a show to continue the first movie is the pick, and the first show
 	)
 	assert.deepEqual(
 		tonightOf(parts({ start: [toStart(20)] }, ten.slice(0, 9))).at(-1),
-		["show-20", "/watch/not-started"],
+		["show-20", "/watch/shows/not-started"],
 	)
 })
 
 test("without a show to continue and without a movie the first show to start is the pick, once", () => {
 	const p = parts({ start: [toStart(20), toStart(21)] })
-	assert.deepEqual(tonightOf(p), [["show-20", "/watch/not-started"]])
+	assert.deepEqual(tonightOf(p), [["show-20", "/watch/shows/not-started"]])
 })
 
 test("a show waiting for its list is no episode pick: Continue's first row must have a Next episode", () => {

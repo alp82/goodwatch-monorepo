@@ -45,7 +45,7 @@ test("the Explorer share card uses the shared mood names", () => {
 
 test("Watch entry pages have their own card copy and versions; guest Taste cards stay", async () => {
  const { cardVersion } = await import("./card-versions.ts")
- for (const path of ["/watch", "/watch/movies", "/watch/for-you"]) {
+ for (const path of ["/watch/shows", "/watch/movies", "/watch/for-you"]) {
   assert.ok(STATIC_PAGE_COPY[path]?.title, path)
   assert.equal(cardVersion(path), 1)
  }

@@ -39,7 +39,8 @@ async function routeLoader(route: string, viewer: PathViewer) {
 		// Watch's movie lists (watch.movies.$list.tsx): the list itself never loads here.
 		"~/server/library-list-route.server":
 			"export const libraryListLoader = async () => new Response('list')",
-		"~/ui/my-library/MyLibraryPage": "export const LibraryListBody = () => null",
+		"~/ui/my-library/MyLibraryPage":
+			"export const LibraryListBody = () => null",
 		"~/ui/share-card/model":
 			"export const LIST_PROMPTS = [{ title: 'Top 5' }]; export const DEFAULT_PROMPT_ID = 'top'; export const DEFAULT_THEME = 'amber'; export const GUEST_BYLINE = 'you'; export const cardDate = () => 'today'; export const listByline = h => '@' + h",
 	}
@@ -105,6 +106,12 @@ const viewers: [string, PathViewer][] = [
 ]
 const rows: [string, string][] = [
 	["my-shows.tsx", "/my-shows"],
+	["watch._index.tsx", "/watch"],
+	["hot-on-socials.tsx", "/hot-on-socials"],
+	["explorer.tsx", "/explorer"],
+	["taste.everyone.tsx", "/taste/everyone"],
+	["taste.fingerprint.tsx", "/taste/fingerprint"],
+	["u.$handle.wishlist.tsx", "/u/ana/wishlist"],
 	["my-movies.tsx", "/my-movies"],
 	["for-you.tsx", "/for-you"],
 	["watch-next.tsx", "/watch-next"],
@@ -113,6 +120,8 @@ const rows: [string, string][] = [
 	["my-library.scores.tsx", "/my-library/scores"],
 	["my-library.hidden.tsx", "/my-library/hidden"],
 	["settings.hidden.ts", "/settings/hidden"],
+	["settings.streaming.ts", "/settings/streaming"],
+	["settings.where-you-watch.ts", "/settings/where-you-watch"],
 	["taste._index.tsx", "/taste"],
 	["taste.quiz.tsx", "/taste/quiz"],
 	...["want", "seen", "watching", "on-hold", "dropped", "not-rated"].map(
@@ -160,11 +169,13 @@ for (const [name, viewer] of viewers) {
 				assert.equal(response.headers.get("Location"), null)
 				return
 			}
-			const expected = moveResponse(
-				route === "wishlist.tsx" && viewer.kind === "guest"
-					? { ...move, status: 301, private: false }
-					: move,
+			const target = new URL(move.to, url)
+			assert.equal(
+				oldToNew(target.pathname, target.search, viewer),
+				null,
+				"one hop",
 			)
+			const expected = moveResponse(move)
 			assert.equal(response.status, expected.status)
 			for (const header of ["Location", "Cache-Control", "Vary"])
 				assert.equal(
@@ -211,55 +222,16 @@ test("unknown library slugs stay 404", async () => {
 	)
 })
 
-// These routes belong to the Taste builder. Check their wiring and exercise every viewer through the map.
-for (const tab of ["seen", "wishlist", "shows"]) {
-	test(`profile ${tab}: owner-only moves, with visitor override`, () => {
+// Canonical profile tabs must use the request-aware owner move (preserves ?type and sorting).
+for (const tab of ["seen", "want", "shows"]) {
+	test(`profile ${tab} uses the shared owner move`, () => {
 		const source = readFileSync(
 			new URL(`./u.$handle.${tab}.tsx`, import.meta.url),
 			"utf8",
 		)
-		assert.match(source, /ownerKeepsInWatch\(/)
-		const ownerRedirect = readFileSync(
-			new URL("../server/profile/route.server.ts", import.meta.url),
-			"utf8",
-		)
-		assert.match(
-			ownerRedirect,
-			/throw moveResponse\(\{ to, status: 302, private: true \}\)/,
-		)
-		for (const [, viewer] of viewers) {
-			const move = oldToNew(`/u/ana/${tab}`, "?sort=title", viewer)
-			if (viewer.kind !== "member" || !viewer.handle) assert.equal(move, null)
-			else {
-				assert.ok(move)
-				const response = moveResponse(move)
-				assert.equal(response.status, 302)
-				assert.equal(
-					response.headers.get("Location"),
-					`${tab === "seen" ? "/watch/movies/seen" : tab === "wishlist" ? "/watch/movies/wishlist" : "/watch/watching"}?sort=title`,
-				)
-				assert.equal(response.headers.get("Cache-Control"), "private, no-store")
-			}
-			assert.equal(oldToNew(`/u/ana/${tab}`, "?as=visitor", viewer), null)
-		}
+		assert.match(source, /ownerKeepsInWatch\(shell, args.request\)/)
 	})
 }
-
-test("Taste section fragments survive the next member redirect by browser fragment inheritance", () => {
-	for (const section of ["everyone", "fingerprint"]) {
-		const source = readFileSync(
-			new URL(`./taste.${section}.tsx`, import.meta.url),
-			"utf8",
-		)
-		assert.ok(source.includes(`redirect("/taste#${section}", 301)`))
-		const first = oldToNew(`/taste/${section}`, "?view=taste", GUEST)!
-		assert.equal(first.to, `/taste?view=taste#${section}`)
-		const url = new URL(first.to, "https://goodwatch.app")
-		const next = oldToNew(url.pathname, url.search, member("ana"))!
-		assert.equal(next.to, "/u/ana?view=taste")
-		assert.equal(new URL(next.to, url).hash || url.hash, `#${section}`)
-	}
-})
 
 test("Lists mine stays with its existing resolver", () => {
 	for (const [, viewer] of viewers)
@@ -313,26 +285,16 @@ test("the new-list editor lives in the owner's profile; guests and members witho
 	}
 })
 
-test("/watch/movies/recent goes to Want to Watch, newest first, for everyone", async () => {
-	for (const [, viewer] of viewers) {
-		const loader = await routeLoader("watch.movies.$list.tsx", viewer)
-		let response: Response
-		try {
-			response = await loader({
-				request: new Request(
-					"https://goodwatch.app/watch/movies/recent?sort=title&q=dune",
-				),
-				params: { list: "recent" },
+test("interim movie list slugs are 404, with no redirects", async () => {
+	for (const slug of ["recent", "seen", "wishlist"]) {
+		const loader = await routeLoader("watch.movies.$list.tsx", GUEST)
+		await assert.rejects(
+			loader({
+				request: new Request(`https://goodwatch.app/watch/movies/${slug}`),
+				params: { list: slug },
 				context: {},
-			})
-		} catch (thrown) {
-			response = thrown as Response
-		}
-		assert.equal(response.status, 301)
-		assert.equal(
-			response.headers.get("Location"),
-			"/watch/movies/wishlist?sort=added&q=dune",
+			}),
+			(error: unknown) => error instanceof Response && error.status === 404,
 		)
-		assert.equal(response.headers.get("Cache-Control"), null)
 	}
 })

@@ -30,11 +30,11 @@ const under = (pathname: string, prefix: string) =>
 
 const PREFIXES: [string, DestinationKey][] = [
 	["/discover", "discover"],
-	["/hot-on-socials", "hot"],
+	["/hot", "hot"],
 	["/movies", "movies"],
 	["/shows", "shows"],
 	["/people", "people"],
-	["/explorer", "explorer"],
+	["/map", "explorer"],
 	["/taste", "taste"],
 ]
 

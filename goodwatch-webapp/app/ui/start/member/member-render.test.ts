@@ -134,7 +134,7 @@ test("doors never change height: every door has the same fixed height, open or n
 test("the open section's titles and its page are real links in the HTML", () => {
 	const full = rendered.full
 	const open = full.slice(full.indexOf('id="start-door-section"'))
-	assert.match(open, /href="\/watch"/)
+	assert.match(open, /href="\/watch\/shows"/)
 	assert.match(open, /href="\/show\/1-show-1"/)
 	assert.match(open, /S1 E1 · Pilot/)
 	// New members open Hot on socials: its ranked titles with why each is talked about.
@@ -143,7 +143,7 @@ test("the open section's titles and its page are real links in the HTML", () => 
 	)
 	assert.match(hot, /href="\/movie\/301-movie-301"/)
 	assert.match(hot, /New trailer · today/)
-	assert.match(hot, /href="\/hot-on-socials"/)
+	assert.match(hot, /href="\/hot"/)
 })
 
 test("the card: this or that from the member's lists, the first steps for a new member", () => {

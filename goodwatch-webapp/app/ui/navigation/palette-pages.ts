@@ -283,7 +283,7 @@ const PAGES: Entry[] = [
 			names: ["taste", "taste profile", "my profile"],
 			words: ["viewer type", "fingerprint", "preferences", "dna"],
 		}),
-	page("explorer", "Explorer", "/explorer", MapIcon, {
+	page("explorer", "Explorer", "/map", MapIcon, {
 		destination: "explorer",
 		words: ["map", "related", "similar", "graph"],
 	}),
@@ -296,7 +296,7 @@ const PAGES: Entry[] = [
 		names: ["tv shows"],
 		words: ["tv", "series"],
 	}),
-	page("hot", "Hot", "/hot-on-socials", FireIcon, {
+	page("hot", "Hot", "/hot", FireIcon, {
 		destination: "hot",
 		// Its name until 2026-10-29: people still search for it.
 		names: ["hot on socials"],
@@ -417,7 +417,7 @@ const PAGES: Entry[] = [
 			words: ["new on my wishlist", "latest", "added"],
 		},
 	),
-	page("seenMovies", "Seen movies", WATCH_PATHS.moviesSeen, EyeIcon, {
+	page("seenMovies", "Seen movies", `${WATCH_PATHS.showsSeen}?type=movie`, EyeIcon, {
 		sub: WATCH,
 		for: "member",
 		names: ["seen"],
