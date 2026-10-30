@@ -1,5 +1,17 @@
-from f.db.cratedb import CrateConnector
 from f.sync.models.crate_schemas import BLOB_TABLES, SCHEMAS
+
+
+def CrateConnector():
+    # Maintenance tools can reuse the pure migration helpers without Windmill credentials.
+    from f.db.cratedb import CrateConnector as connector
+    return connector()
+
+
+def add_missing_columns(table_name, spec, existing_columns, change):
+    """Shared additive migration, also usable by a narrowly scoped maintenance tool."""
+    for col_name, col_type in column_specs(spec).items():
+        if col_name.strip('"') not in existing_columns:
+            change(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}")
 
 
 def column_specs(spec: dict) -> dict[str, str]:
@@ -47,10 +59,7 @@ def init_database(dry_run: bool = False):
             else:
                 print(f"Table '{table_name}' already exists. Checking for missing columns...")
                 existing_columns = db.get_existing_columns(table_name)
-                for col_name, col_type in col_specs.items():
-                    if col_name.strip('"') not in existing_columns:
-                        print(f"Adding missing column '{col_name}' to table '{table_name}'.")
-                        change(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}")
+                add_missing_columns(table_name, spec, existing_columns, change)
                 # Explicit nested mappings avoid dynamic object loss on conflict updates. A newly added
                 # root already includes these children; an older empty root needs additive migration.
                 for parent, children in spec.get("object_columns", {}).items():

@@ -25,6 +25,18 @@ def encoded(value):
     return (json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + '\n').encode('utf-8')
 
 
+def verified_record(rawline, record_sha256, article_sha256):
+    """Verify the publisher's exact JSONL bytes and decoded UTF-8 article."""
+    if hashlib.sha256(rawline).hexdigest() != record_sha256:
+        raise ValueError('Raw record SHA256 mismatch')
+    record = json.loads(rawline)
+    if not isinstance(record, dict) or record.get('ns') != 'Main' or not isinstance(record.get('article'), str):
+        raise ValueError('Record identity/provenance mismatch')
+    if hashlib.sha256(record['article'].encode('utf-8')).hexdigest() != article_sha256:
+        raise ValueError('Article UTF8 SHA256 mismatch')
+    return record
+
+
 def atomic_write(path, data):
     path = Path(path)
     with tempfile.NamedTemporaryFile(dir=path.parent, prefix='.' + path.name, delete=False) as handle:
@@ -215,8 +227,7 @@ def stage_archive(directory, catalog, output, *, progress=lambda item: None, ext
                     raise ValueError('Source locator does not start at a JSONL boundary')
             if not rawline.endswith(b'\n') and offset + length != manifest['size_bytes']:
                 raise ValueError('Source locator does not end at a JSONL boundary')
-            if hashlib.sha256(rawline).hexdigest() != ledger.get('raw_record_sha256'):
-                raise ValueError(f'Raw record SHA256 mismatch at record {number}')
+            verified_record(rawline, ledger.get('raw_record_sha256'), ledger.get('article_utf8_sha256'))
             if (not isinstance(record, dict) or record.get('ns') != 'Main' or not isinstance(record.get('article'), str)
                     or record.get('ns') != ledger.get('ns') or record.get('id') != ledger.get('id')
                     or ledger.get('corpus_revision') != manifest['revision']
@@ -224,8 +235,6 @@ def stage_archive(directory, catalog, output, *, progress=lambda item: None, ext
                     or ledger.get('main_record_number') != number
                     or ledger.get('original_tvtropes_capture_time') is not None):
                 raise ValueError(f'Record identity/provenance ledger mismatch at record {number}')
-            if hashlib.sha256(record['article'].encode('utf-8')).hexdigest() != ledger.get('article_utf8_sha256'):
-                raise ValueError(f'Article UTF8 SHA256 mismatch at record {number}')
             count += 1
             archive = {**provenance, 'record_sha256': ledger['raw_record_sha256'],
                        'article_sha256': ledger['article_utf8_sha256'], 'byte_offset': offset, 'byte_length': length}

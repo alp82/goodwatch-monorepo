@@ -292,13 +292,49 @@ def verify_archive_writes(db, records, *, batch_size=200, replace_descriptions=F
                                + ". Writes may have succeeded partially; stop and inspect exact staged evidence before repair.")
 
 
-def import_records(db, records, *, apply=False, replace_descriptions=False, batch_size=200):
+def import_records(db, records, *, apply=False, replace_descriptions=False, batch_size=200, expected_hashes=None):
     """Import an already validated batch. Repeated imports preserve timestamps and unchanged rows."""
     if not 1 <= batch_size <= 1000:
         raise ValueError("batch_size must be between 1 and 1000")
     # Validate even callers that bypass records_from_document, before any DB access.
     records = [{**row, "description_doc": serialize_description_doc(row.get("description_doc"), row.get("description"))}
                for row in records]
+    if expected_hashes is not None:
+        if not replace_descriptions or any(row['name'] not in expected_hashes for row in records):
+            raise ValueError('Guarded replacements require an expected hash for every row')
+        # UPDATE cannot recreate a deleted row, and checks the reviewed hash atomically.
+        # Only content fields change: URL and per-row provenance remain owned by their original import.
+        report = {'apply': apply, 'input': len(records), 'guarded': len(records)}
+        if apply:
+            sql = (f'UPDATE {TABLE} SET description=?,description_doc=?,description_hash=?,updated_at=current_timestamp '
+                   'WHERE name=? AND url=? AND description_hash IS NOT DISTINCT FROM ?')
+            values = [(r['description'], r['description_doc'], r['description_hash'], r['name'], r['url'],
+                       expected_hashes[r['name']]) for r in records]
+            for start in range(0, len(values), batch_size):
+                if hasattr(db, 'run_many'):
+                    db.run_many(sql, values[start:start + batch_size])
+                else:
+                    for value in values[start:start + batch_size]:
+                        db.run(sql, value)
+            if records:
+                db.run(f'REFRESH TABLE {TABLE}')
+                marks = ','.join('?' for _ in records)
+                stored = {r['name']: r['actual_doc'] for r in db.select(
+                    f'SELECT name,_doc AS actual_doc FROM {TABLE} WHERE name IN ({marks})',
+                    tuple(r['name'] for r in records))}
+                report['written'] = report['stale'] = 0
+                report['stale_names'] = []
+                for row in records:
+                    actual = stored.get(row['name'], {})
+                    if all(actual.get(k) == row.get(k) for k in ('url', 'description', 'description_doc', 'description_hash')):
+                        report['written'] += 1
+                    elif (actual.get('description_hash') != expected_hashes[row['name']]
+                          or actual.get('url') != row['url']):
+                        report['stale'] += 1
+                        report['stale_names'].append(row['name'])
+                    else:
+                        raise RuntimeError('Guarded catalog write verification failed; inspect staging and rerun')
+        return report
     schema_missing = ensure_schema(db, apply=apply)
     existing = {}
     if not schema_missing or apply:
