@@ -1,7 +1,7 @@
 // The panel footer, the same on every tab and sub-tab: the count with the hidden meter under it, the biggest one-tap
 // recoveries while the list is short, every choice as a removable chip, Clear all, and the Show button. Desktop: one
 // 68 px row. Phones: the count and chips over Clear all and Show.
-import { PlusIcon } from "@heroicons/react/20/solid"
+import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
 import type { FilterName, FilterState } from "~/domain/filter-state"
 import { HiddenMeter } from "~/ui/filter-bar/SubBar"
@@ -144,10 +144,48 @@ export function PanelFooter({
 			))}
 		</div>
 	)
+	// d: every active filter as a removal pill, the ones that bring back the most first. "+N": what removing it alone
+	// lets back in.
+	const groups: { group: string; label: string; chips: BarChip[]; gain: number }[] = []
+	for (const chip of chips) {
+		if (chip.kind === "query" || !chip.group) continue
+		const at = groups.find((g) => g.group === chip.group)
+		if (at) {
+			at.chips.push(chip)
+			at.label = `${at.label} · ${chip.label}`
+		} else
+			groups.push({
+				group: chip.group,
+				label: chip.label,
+				chips: [chip],
+				gain: counts?.recoveries.find((r) => r.filter === chip.group)?.titles ?? 0,
+			})
+	}
+	groups.sort((a, b) => b.gain - a.gain)
+	const removals = (
+		<div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none]">
+			{groups.map((g) => (
+				<motion.button
+					key={g.group}
+					type="button"
+					whileTap={TAP}
+					onClick={() => onChange((s) => g.chips.reduce((acc, c) => (c.remove ? c.remove(acc) : acc), s))}
+					aria-label={`Remove ${g.label}${g.gain ? `, shows ${g.gain} more` : ""}`}
+					title={g.gain ? `Remove to see ${g.gain.toLocaleString("en")} more` : "Remove"}
+					className="group flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white/[0.06] pr-3 pl-2.5 text-[13px] font-semibold whitespace-nowrap text-gray-100 cursor-pointer outline-none hover:bg-white/[0.1] focus-visible:ring-2 focus-visible:ring-amber-400"
+				>
+					<XMarkIcon className="h-3.5 w-3.5 shrink-0 text-gray-500 group-hover:text-white" aria-hidden />
+					<span className={`h-2 w-2 shrink-0 rounded-full ${colorOf(g.group)}`} aria-hidden />
+					<span className="max-w-[180px] truncate group-hover:line-through group-hover:decoration-gray-400">{g.label}</span>
+					{g.gain > 0 && <span className="font-bold text-amber-300">+{g.gain.toLocaleString("en")}</span>}
+				</motion.button>
+			))}
+		</div>
+	)
 	const line = look !== "a" ? (
 		<div className="flex min-w-0 flex-1 items-center gap-4">
 			{look !== "d" && mix}
-			{look === "b" ? links : pills}
+			{look === "b" ? links : look === "d" ? removals : pills}
 		</div>
 	) : (
 		<div className="flex min-w-0 flex-1 items-center gap-3">

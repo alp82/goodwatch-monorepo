@@ -194,7 +194,7 @@ function DiscoverControlsContent({
 	const footerLook = (
 		footerParam === "a" || footerParam === "b" || footerParam === "c" || footerParam === "d"
 			? footerParam
-			: "c"
+			: "d"
 	) as "a" | "b" | "c" | "d"
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })

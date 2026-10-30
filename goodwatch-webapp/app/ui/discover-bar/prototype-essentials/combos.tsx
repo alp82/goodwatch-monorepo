@@ -649,16 +649,16 @@ function OrderB({
 	const lit = forYou.on && !forYou.disabled
 	const chosen = sort.options.find((o) => o.key === sort.value)?.label ?? ""
 	const moved = lit ? forYou.movedUp : 0
-	// A fixed width per size, so another sort doesn't move anything; the slack sits at the pill's left end, and the
-	// divider keeps equal gaps on both sides.
-	const fixed = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("w") === "auto" ? undefined : ORDER_WIDTH[level]
+	// A fixed width per size, so another sort doesn't move anything. For you sits at the left end, the sort at the right
+	// end, and the divider in the middle of what's left, with equal space on both sides.
+	const [params] = useSearchParams()
+	const fixed = params.get("w") === "auto" ? undefined : ORDER_WIDTH[level]
 	return (
 		<div
 			className="flex h-10 shrink-0 rounded-full bg-white/[0.04] ring-1 ring-white/10"
 			style={fixed ? { width: fixed } : undefined}
 			data-order-b={level}
 		>
-			<div className="flex flex-1 justify-end">
 			<Tip
 				off={level === 2}
 				tip={
@@ -693,6 +693,8 @@ function OrderB({
 					<BaseLine on={lit} color="bg-amber-400" />
 				</motion.button>
 			</Tip>
+			<div className="flex min-w-3 flex-1 justify-center" aria-hidden>
+				<span className="my-2.5 w-px bg-white/10" />
 			</div>
 			<Tip
 				off={level > 0}
@@ -700,11 +702,11 @@ function OrderB({
 				tip={<TipText name={`Sort: ${chosen}`} />}
 			>
 				<div
-					className={`flex border-l border-white/10 [&_[data-sort-button]]:h-10 [&_[data-sort-button]]:rounded-l-none [&_[data-sort-button]]:rounded-r-full [&_[data-sort-button]>span.relative]:flex-none ${
+					className={`flex [&_[data-sort-button]]:h-10 [&_[data-sort-button]]:rounded-l-none [&_[data-sort-button]]:rounded-r-full [&_[data-sort-button]>span.relative]:flex-none ${
 						level === 2
-							? "[&_[data-sort-button]]:pl-3"
+							? "[&_[data-sort-button]]:pl-0"
 							: level === 1
-								? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]]:px-3"
+								? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]]:pr-3 [&_[data-sort-button]]:pl-0"
 								: "[&_[data-sort-button]>span]:hidden [&_[data-sort-button]]:px-3"
 					}`}
 				>
@@ -720,7 +722,7 @@ function OrderB({
 }
 
 /** The pill's width per size (0: as wide as its content), from the longest sort name. */
-const ORDER_WIDTH: Record<Level, number> = { 2: 374, 1: 210, 0: 0 }
+const ORDER_WIDTH: Record<Level, number> = { 2: 384, 1: 220, 0: 0 }
 
 /** Sort names that fit the short size. */
 const SHORT_SORT: Record<string, string> = {
@@ -775,7 +777,7 @@ export const FOOTER_LOOKS = [
 export function FooterSwitcher() {
 	const [params] = useSearchParams()
 	const navigate = useNavigate()
-	const current = params.get("footer") ?? "c"
+	const current = params.get("footer") ?? "d"
 	const i = Math.max(0, FOOTER_LOOKS.findIndex((c) => c.key === current))
 	const go = (d: number) => {
 		const next = new URLSearchParams(params)
