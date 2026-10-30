@@ -1,6 +1,6 @@
 // The profile header's data (routes/u.$handle.tsx, Settings and list pages for a member with a handle): the shell as
 // the viewer sees it, the viewer type and the taste print when they may see the taste, and for a signed-in visitor on
-// someone else's profile, the match with them and their own print. The owner's shell stays the owner's while they view
+// someone else's profile, the match with them. The owner's shell stays the owner's while they view
 // their profile as a visitor: the header cuts that view itself (ui/profile/header/facts.ts builds its facts from the
 // shell). The match is kept in process memory for KEEP_MS.
 import type { ProfileShell } from "~/domain/profile"
@@ -18,8 +18,6 @@ const MAX_KEPT = 200
 export interface HeaderMatch {
 	percent: number
 	tier: MatchTier
-	/** The visitor's own print, for the comparisons that show which families you share. */
-	yours: WhorlAttribute[] | null
 }
 
 export interface ProfileHeaderData {
@@ -115,16 +113,7 @@ async function readMatch(
 	viewerId: string,
 	ownerId: string,
 ): Promise<HeaderMatch | null> {
-	const [match, yours] = await Promise.all([
-		getMemberMatch(viewerId, ownerId),
-		getProfilePortrait(viewerId, "fingerprint", { summary: true }).catch(
-			() => null,
-		),
-	])
+	const match = await getMemberMatch(viewerId, ownerId)
 	if ("thin" in match) return null
-	return {
-		percent: match.percent,
-		tier: matchTier(match.percent),
-		yours: printOf(yours),
-	}
+	return { percent: match.percent, tier: matchTier(match.percent) }
 }

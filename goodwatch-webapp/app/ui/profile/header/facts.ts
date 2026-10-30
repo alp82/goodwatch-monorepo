@@ -1,8 +1,7 @@
 // The profile header's facts, all from the shell and the taste print, so the owner's visitor view cuts them by the
-// same visibility rule: the fact line (movies and shows seen, then the watch time), the "On GoodWatch since" line, the
-// fingerprint's key facts the orbit opens (the strongest families, the top attributes), and for a member visitor the
-// families both of you lean toward. When a fact is missing (watch time hidden), the next one from the pool takes its
-// place, so the line keeps three where it can.
+// same visibility rule: the fact line (movies and shows seen, then the watch time), the join date ("On GoodWatch
+// since"), and the fingerprint's key facts the orbit opens (the strongest families, the top attributes). When a fact is
+// missing (watch time hidden), the next one from the pool takes its place, so the line keeps three where it can.
 import { tastePath } from "~/domain/member-paths"
 import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
 import { FAMILY_NAMES } from "~/domain/taste-attributes"
@@ -104,9 +103,9 @@ export function headerFacts(
 	)
 }
 
-/** "On GoodWatch since October 2026", or null when the viewer may not see it. */
-export const sinceLine = (shell: ProfileShell) =>
-	shell.since ? `On GoodWatch since ${monthYear(shell.since)}` : null
+/** The join date's month, "October 2026", for "On GoodWatch since October 2026"; null when the viewer may not see it. */
+export const joinedMonth = (shell: ProfileShell) =>
+	shell.since ? monthYear(shell.since) : null
 
 // ---------- The fingerprint's key facts ----------
 
@@ -155,21 +154,3 @@ export function keyFacts(print: WhorlAttribute[]): KeyFacts {
 			.slice(0, 3),
 	}
 }
-
-/** The families both prints lean toward (each at least half its own strongest), the shared pull first. */
-export function sharedFamilies(
-	theirs: WhorlAttribute[],
-	yours: WhorlAttribute[],
-): FamilyPull[] {
-	const mine = new Map(familyPulls(yours).map((f) => [f.id, f.strength]))
-	return familyPulls(theirs)
-		.map((f) => ({ ...f, strength: Math.min(f.strength, mine.get(f.id) ?? 0) }))
-		.filter((f) => f.strength >= 0.5)
-		.sort((a, b) => b.strength - a.strength)
-}
-
-/** "Feel and Story", "Feel, World and Story". */
-export const andList = (names: string[]) =>
-	names.length <= 1
-		? (names[0] ?? "")
-		: `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`

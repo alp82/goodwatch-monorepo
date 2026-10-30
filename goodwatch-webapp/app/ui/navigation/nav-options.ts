@@ -1,23 +1,18 @@
-// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-11). Not a feature switch: these let the owner
+// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-12). Not a feature switch: these let the owner
 // compare navigation options on the local preview branch. The choice lives in one cookie; the root loader reads it
 // for the server render, and the options bar sets it and reloads the page.
 import { useRouteLoaderData } from "@remix-run/react"
 
 export const NAV_OPTIONS = {
-	/** The orbit ring's style around the avatar (round 11; the orbit ring itself is locked). */
-	orbit: ["dots", "comets", "constellation", "bands", "sparks"],
-	/** What a click on the orbit avatar opens in the header: the fingerprint's key facts. */
-	reveal: ["pill", "panel", "morph", "card"],
-	/** How a member visitor sees the match with the profile in the header. */
-	compare: ["chip", "gauge", "overlap", "halves"],
-	/** How New picks its country, in place of the breadcrumb bar. */
-	country: ["title", "flag", "chips", "sheet"],
+	/** Where the match chip sits in the header for a member visitor (round 12): next to the handle, as a badge on
+	 * the orbit, in the facts line, beside the controls, or under the avatar. */
+	chip: ["name", "ring", "facts", "controls", "below"],
 } as const
 
 export type NavOptionKey = keyof typeof NAV_OPTIONS
 export type NavOptions = { [K in NavOptionKey]: (typeof NAV_OPTIONS)[K][number] }
 
-export const DEFAULT_NAV_OPTIONS: NavOptions = { orbit: "dots", reveal: "pill", compare: "chip", country: "title" }
+export const DEFAULT_NAV_OPTIONS: NavOptions = { chip: "name" }
 
 export const NAV_OPTIONS_COOKIE = "gw_navopt"
 

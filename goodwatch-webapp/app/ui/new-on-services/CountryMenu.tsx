@@ -1,7 +1,7 @@
-// New's country menu (member nav round 11): a search over the countries with new titles and a list of links, each to
-// that country's page. A navigation menu, not a dialog: it opens under its button and closes on a pick, Escape, a
-// click outside or a page change. "list" is one column under the button. "sheet" is a bottom sheet on phones and a
-// two-column menu on desktop, with "Use my country" on top. Loaded on first use (./CountryChooser.tsx).
+// New's country menu: a search over the countries with new titles and a list of links, each to that country's page.
+// A navigation menu, not a dialog: it closes on a pick, Escape, a click outside or a page change. On phones it is a
+// bottom sheet, on desktop a two-column menu under its button, with "Use my country" on top. Loaded on first use
+// (./CountryChooser.tsx).
 import {
 	CheckIcon,
 	MagnifyingGlassIcon,
@@ -48,7 +48,6 @@ export default function CountryMenu({
 	choices,
 	current,
 	home,
-	look,
 	anchor,
 	onClose,
 }: {
@@ -56,7 +55,6 @@ export default function CountryMenu({
 	current: string
 	/** The viewer's own country. */
 	home: string
-	look: "list" | "sheet"
 	anchor: HTMLElement
 	/** `refocus`: give the focus back to the button (Escape). */
 	onClose: (refocus: boolean) => void
@@ -68,9 +66,8 @@ export default function CountryMenu({
 	const input = useRef<HTMLInputElement>(null)
 	const [query, setQuery] = useState("")
 	const [shown, setShown] = useState(false)
-	const [sheet] = useState(() => look === "sheet" && phone())
-	const columns = look === "sheet" && !sheet
-	const [place, setPlace] = useState(() => placeOf(anchor, columns ? 560 : 320))
+	const [sheet] = useState(phone)
+	const [place, setPlace] = useState(() => placeOf(anchor, 560))
 	const dragRef = useDragToClose(() => onClose(false))
 
 	const mine = choices.find((c) => c.code === home) ?? null
@@ -84,11 +81,8 @@ export default function CountryMenu({
 					Number(!a.name.toLowerCase().startsWith(text)) -
 					Number(!b.name.toLowerCase().startsWith(text)),
 			)
-		// The list look keeps your own country on top while nothing is typed.
-		if (!text && look === "list" && mine)
-			return [mine, ...found.filter((c) => c !== mine)]
 		return found
-	}, [choices, query, look, mine])
+	}, [choices, query])
 
 	// In, with opacity and a short slide.
 	useEffect(() => {
@@ -99,10 +93,10 @@ export default function CountryMenu({
 
 	useLayoutEffect(() => {
 		if (sheet) return
-		const update = () => setPlace(placeOf(anchor, columns ? 560 : 320))
+		const update = () => setPlace(placeOf(anchor, 560))
 		window.addEventListener("resize", update)
 		return () => window.removeEventListener("resize", update)
-	}, [anchor, columns, sheet])
+	}, [anchor, sheet])
 
 	// A page change closes it (a pick lands on another country's page of the same route).
 	const opened = useRef(pathname)
@@ -185,7 +179,7 @@ export default function CountryMenu({
 		</label>
 	)
 
-	const useMine = look === "sheet" && mine && (
+	const useMine = mine && (
 		<Link
 			to={mine.path}
 			prefetch="intent"
@@ -212,7 +206,7 @@ export default function CountryMenu({
 			id={`${id}-list`}
 			aria-label="Countries"
 			onKeyDown={onListKey}
-			className={`min-h-0 overflow-y-auto overscroll-contain ${columns ? "grid max-h-[min(60vh,420px)] grid-cols-2 gap-x-2" : sheet ? "flex-1" : "max-h-[min(60vh,380px)]"}`}
+			className={`min-h-0 overflow-y-auto overscroll-contain ${sheet ? "flex-1" : "grid max-h-[min(60vh,420px)] grid-cols-2 gap-x-2"}`}
 		>
 			{rows.map((choice) => {
 				const on = choice.code === current
@@ -228,11 +222,6 @@ export default function CountryMenu({
 						>
 							<Flag country={choice.code} />
 							<span className="min-w-0 flex-1 truncate">{choice.name}</span>
-							{choice.code === home && look === "list" && (
-								<span className="text-xs font-semibold text-gray-500">
-									Yours
-								</span>
-							)}
 							{on && (
 								<CheckIcon
 									className="size-4 shrink-0 text-amber-400"

@@ -3,15 +3,11 @@
 // height on every tab, list page and Settings page, so moving between them never shifts the page. A member without a
 // handle gets a strip of the same height that asks for one. While the owner views as a visitor, the amber bar sticks
 // under the site header (header/VisitorView.tsx).
-// PROTOTYPE OPTIONS (member nav, round 11): the orbit's style (`orbit`), what a click on it opens (`reveal`) and how a
-// member visitor sees the match (`compare`) come from nav-options.ts; the header is in header/Layouts.tsx.
+// PROTOTYPE OPTIONS (member nav, round 12): where a member visitor's match chip sits (`chip`) comes from
+// nav-options.ts; the header is in header/Layouts.tsx.
 import { UserCircleIcon } from "@heroicons/react/24/outline"
 import { Link, useLocation } from "@remix-run/react"
-import {
-	EDIT_PROFILE_PATH,
-	type PathViewer,
-	tastePath,
-} from "~/domain/member-paths"
+import { EDIT_PROFILE_PATH, type PathViewer } from "~/domain/member-paths"
 import {
 	AUDIENCES,
 	type Audience,
@@ -27,7 +23,7 @@ import { useNavOptions } from "~/ui/navigation/nav-options"
 import type { ShareTarget } from "./header/Controls"
 import { Frame, InlineHeader } from "./header/Layouts"
 import { VisitorBar, viewSwitchHref } from "./header/VisitorView"
-import { headerFacts, sinceLine } from "./header/facts"
+import { headerFacts, joinedMonth } from "./header/facts"
 import { AMBER_BUTTON } from "./parts"
 import { PROFILE_TAB_PARTS, type ProfileTab } from "./paths"
 import type { WhorlAttribute } from "./taste/Whorl"
@@ -202,13 +198,11 @@ export function ProfileChrome({
 				identity={seesPart(view, "taste") ? identity : null}
 				print={seesPart(view, "taste") ? print : null}
 				facts={headerFacts(view, query)}
-				since={sinceLine(view)}
+				since={joinedMonth(view)}
 				controls={controls}
 				match={shell.viewer === "member" ? match : null}
 				ring={asVisitor}
 				options={options}
-				tasteHref={tastePath(shell.handle, "profile", query)}
-				own={owner && !asVisitor}
 			/>
 			{row && <TasteTabs row={row} />}
 		</>

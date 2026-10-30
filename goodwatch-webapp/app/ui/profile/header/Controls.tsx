@@ -53,13 +53,23 @@ function Tip({ children }: { children: ReactNode }) {
 const SEG = `group relative inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition-colors ${FOCUS}`
 const IDLE = "text-gray-300 hover:bg-white/[0.08] hover:text-white"
 
-/** The cluster. Phones show the icons, and leave Edit profile to the Settings gear. */
-export function ClusterControls({ handle, view, edit, share }: ControlsProps) {
+/**
+ * The cluster. Phones show the icons, and leave Edit profile to the Settings gear. `lead` goes first, inside the
+ * cluster (the match chip, when it sits with the controls).
+ */
+export function ClusterControls({
+	handle,
+	view,
+	edit,
+	share,
+	lead,
+}: ControlsProps & { lead?: ReactNode }) {
 	return (
 		<div
 			className="flex shrink-0 items-center rounded-full bg-white/[0.05] p-1 ring-1 ring-white/12 sm:relative"
 			data-header-controls="cluster"
 		>
+			{lead && <span className="flex shrink-0 items-center pr-1 pl-0.5">{lead}</span>}
 			<ShareMenu handle={handle} targets={share} />
 			{view && (
 				<Link
