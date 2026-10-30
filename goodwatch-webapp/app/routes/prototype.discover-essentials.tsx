@@ -179,7 +179,8 @@ export default function PrototypeDiscoverEssentials() {
 	const forYou: ForYouControl = {
 		on: forYouState.on,
 		onChange: forYouState.set,
-		movedUp: 0,
+		// Simulated: the harness reads guest results, which move nothing.
+		movedUp: fixture && forYouState.on && data ? Math.round(data.total * 0.12) : 0,
 		explanation: (
 			<ForYouExplanation
 				on={forYouState.on}

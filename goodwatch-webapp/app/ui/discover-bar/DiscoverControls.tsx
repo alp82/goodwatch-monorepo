@@ -388,7 +388,7 @@ function DiscoverControlsContent({
 				v === "J"
 					? ((["a", "b", "c", "d"].includes(fitParams.get("chips") ?? "")
 							? fitParams.get("chips")
-							: "b") as "a" | "b" | "c" | "d")
+							: "c") as "a" | "b" | "c" | "d")
 					: undefined
 			}
 			counts={counts}
