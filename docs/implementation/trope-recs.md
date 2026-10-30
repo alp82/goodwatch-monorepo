@@ -13,10 +13,16 @@ The JSON response contains:
 - `pending`: no completed candidate index or member profile snapshot yet. HTTP 202 with `Retry-After: 2`; retry the request. HTTP 200 means a completed result, including a legitimately empty list.
 - `refreshing`: a candidate/profile rebuild is running while the last complete generation remains usable.
 - `kind`, `trope` (null for For you).
-- `tropes`: the member's top 60 positive tropes, each `{ id, name, rank, z }`; rank starts at 1. The profile uses the member's entire scored pool; `kind` filters candidate titles only.
-- `titles`: at most 120 For you or 60 single-trope titles. Each has `{ id, kind, name, year, poster, gwScore, href, match, matchedTropes, wishlist }`. `id` is `movie-<TMDB ID>` or `show-<TMDB ID>`. `poster` is the stored poster path; `href` comes from the existing `titlePath`. `matchedTropes` contains at most eight `{ id, name, rank, d }` entries in member rank order. All matched tropes contribute to scoring even when only eight are returned.
+- `tropes`: the member's top 60 positive tropes, each `{ id, name, rank, z, count, loved, labels }`; rank starts at 1. `count`/`loved` are the member's titles carrying it and those scored 8+; `labels` are the aggregate title trope names merged into the identity (the title page matches its trope names against them). The profile uses the member's entire scored pool; `kind` filters candidate titles only.
+- `titles`: at most 120 For you or 60 single-trope titles. Each has `{ id, kind, name, year, poster, gwScore, href, match, matchedTropes, matchedCount, wishlist }`. `id` is `movie-<TMDB ID>` or `show-<TMDB ID>`. `poster` is the stored poster path; `href` comes from the existing `titlePath`. `matchedTropes` contains at most eight `{ id, name, rank, d }` entries in member rank order. All matched tropes contribute to scoring even when only eight are returned; `matchedCount` counts them all. In single-trope mode the selected trope is always among the eight (it takes the eighth place when ranked lower).
 
 Every response is `Cache-Control: private, no-store`, `Vary: Cookie`. Backend read failures propagate as failures rather than masquerading as an empty recommendation list. A failed shared build retains its previous complete generation and retries with exponential backoff and jitter (starting at 30–37.5 seconds); without a previous generation the resource remains pending.
+
+`GET /api/trope-recs/tropes` returns only `{ pending, tropes }` (same trope shape, no candidate index, no member data reads beyond the profile snapshot); 202 with `Retry-After: 2` while the snapshot builds, 401 signed out, always `private, no-store`. The For you switch, the profile's "Picks with this trope" link and the title page's trope links read it.
+
+## UI
+
+`/watch/for-you/tropes` (route `watch.for-you_.tropes.tsx`, UI `app/ui/trope-recs/`; `/for-you/tropes` redirects there). Query: `trope=<key>` (`tropeSlug` in `app/domain/trope-recs.ts`: a Main page name, `Namespace.Page`, or the `label:` identity) and `kind=movie|show`. The page is `private, no-store` and `noindex, follow`; data loads in the browser. `/watch/for-you` shows "Curated for you | By your tropes" only when the loader finds the member has top tropes.
 
 ## Lazy text
 

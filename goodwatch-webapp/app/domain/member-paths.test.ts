@@ -104,6 +104,7 @@ const SHARED_ROWS: [string, string, string][] = [
 	["/my-shows", "?from=menu", "/watch/shows?from=menu"],
 	["/my-movies", "", "/watch/movies"],
 	["/for-you", "?mood=cozy", "/watch/for-you?mood=cozy"],
+	["/for-you/tropes", "?trope=AntiHero", "/watch/for-you/tropes?trope=AntiHero"],
 	[
 		"/my-library/want",
 		"?sort=title&type=show",

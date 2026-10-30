@@ -215,7 +215,7 @@ const trim = (pathname: string) =>
 /** The Watch page a path names, or null outside Watch (and for an unknown /watch/* slug). */
 export function watchPlaceOf(pathname: string): WatchPlace | null {
 	const path = trim(pathname)
-	if (path === WATCH_PATHS.forYou)
+	if (path === WATCH_PATHS.forYou || path === WATCH_PATHS.forYouTropes)
 		return { tab: "for-you", side: null, chip: null }
 	if (path === WATCH_PATHS.showsSeen)
 		return { tab: "up-next", side: "seen", chip: null }

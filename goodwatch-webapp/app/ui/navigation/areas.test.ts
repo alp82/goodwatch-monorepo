@@ -112,6 +112,7 @@ test("Watch: tabs, the To watch | Seen switch and the chips for every page", () 
 		["/watch/movies", "ready", "to-watch", "tonight"],
 		["/watch/movies/want", "ready", "to-watch", "wishlist"],
 		["/watch/for-you", "for-you", null, null],
+		["/watch/for-you/tropes", "for-you", null, null],
 	]
 	for (const [path, tab, side, chip] of cases) {
 		assert.deepEqual(watchPlaceOf(path), { tab, side, chip }, path)

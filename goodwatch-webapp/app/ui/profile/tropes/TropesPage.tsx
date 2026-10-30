@@ -7,16 +7,20 @@
 //   title's backdrop, "In <Title>", prev / next, the excerpt); on phones a poster row above the reader
 //   the license credit (and the TV Tropes link when there is no description); a page-level credit also closes the
 //   list, for the bands' excerpts
+//   on the owner's own profile, "Picks with this trope →" to By your tropes, for the tropes among their top tropes
 // The filter bar (FilterStrip) sits above. Motion: the tapped band holds still and the others slide (FLIP, transform
 // only), the detail fades in, switching titles crossfades; nothing moves with reduced motion.
 // Spec: docs/implementation/taste-redesign.md, decision 3.
 import { ChevronDownIcon } from "@heroicons/react/20/solid"
+import { Link } from "@remix-run/react"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import type { ProfileShell } from "~/domain/profile"
+import { tropeRecsPath } from "~/domain/trope-recs"
 import type { TropesPreview } from "~/server/profile/tropes-preview"
 import type { ProfileTropes } from "~/server/profile/tropes.server"
 import { PosterImg, backdropUrl, posterUrl } from "~/ui/profile/parts"
+import { useMyTropes } from "~/ui/trope-recs/api"
 import { describeTrope } from "~/utils/profile-trope-descriptions"
 import { openingLead } from "~/utils/trope-opening"
 import { FilterStrip } from "./FilterStrip"
@@ -68,6 +72,9 @@ export function TropesPage({
 }) {
 	const m = useTropeFacets(data, shell.viewer === "owner", preview)
 	const handle = shell.handle
+	// Only the owner's own tropes lead to their picks; another member's profile has no such link.
+	const mine = useMyTropes(shell.viewer === "owner").data
+	const picks = useMemo(() => new Set(mine?.tropes.map((t) => t.id)), [mine])
 	const [open, setOpen] = useState<string | null>(null)
 	const [focus, setFocus] = useState<string | null>(null)
 	const [shown, setShown] = useState(PAGE)
@@ -155,6 +162,11 @@ export function TropesPage({
 										>
 											<Detail
 												tag={tag}
+												picks={
+													m.owner && picks.has(tag.id ?? tag.name)
+														? tropeRecsPath({ trope: tag.id ?? tag.name })
+														: null
+												}
 												m={m}
 												handle={handle}
 												focus={focus}
@@ -345,6 +357,7 @@ function Preview({
 
 function Detail({
 	tag,
+	picks,
 	m,
 	handle,
 	focus,
@@ -352,6 +365,8 @@ function Detail({
 	wide,
 }: {
 	tag: RankedTrope
+	/** By your tropes for this trope, on the owner's own profile. */
+	picks: string | null
 	m: TropeFacets
 	handle: string
 	focus: string | null
@@ -384,6 +399,15 @@ function Detail({
 					owner={m.owner}
 					className={opening ? (tag.url ? "mt-1" : "mt-3") : ""}
 				/>
+				{picks && (
+					<Link
+						to={picks}
+						prefetch="intent"
+						className="inline-flex min-h-9 items-center text-sm text-gray-400 hover:text-white"
+					>
+						Picks with this trope →
+					</Link>
+				)}
 			</section>
 			{wide ? (
 				<section aria-label="The titles that define it" className="mt-6">

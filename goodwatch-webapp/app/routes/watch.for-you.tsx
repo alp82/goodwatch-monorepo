@@ -1,5 +1,6 @@
 // Watch › Recommendations › For you (/watch/for-you): picks from the member's taste, steered by mood. A guest gets
-// the locked preview (ui/for-you/GuestLock.tsx).
+// the locked preview (ui/for-you/GuestLock.tsx). A member with a trope profile also gets the switch to By your tropes
+// (/watch/for-you/tropes, ui/trope-recs).
 import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
@@ -9,14 +10,35 @@ import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import type { ForYouPage } from "~/domain/for-you-page/contract"
 import { loadForYouPage } from "~/server/for-you-page/page.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
+import { loadMemberTropes } from "~/server/trope-recs/index.server"
 import { ForYouPage as ForYouPageView } from "~/ui/for-you/ForYouPage"
+import { TropeSwitchContext } from "~/ui/for-you/Heading"
+import { getUserIdFromRequest } from "~/utils/auth"
 import { buildMeta } from "~/utils/meta"
+
+type ForYouRouteData = ForYouPage & { tropeSwitch?: boolean }
+
+/** The member has top tropes already. Unknown (the profile is still building) or failing: no switch this time. */
+async function hasTropeProfile(request: Request) {
+	try {
+		const userId = await getUserIdFromRequest({ request })
+		if (!userId) return false
+		const { tropes } = await loadMemberTropes(userId)
+		return tropes.length > 0
+	} catch (error) {
+		console.error("For you: trope profile check failed:", error)
+		return false
+	}
+}
 
 export const loader = presentCatalogLoader(
 	async ({ request }: LoaderFunctionArgs) => {
-		const page = await loadForYouPage(request)
-		return json<ForYouPage>(
-			page,
+		const [page, tropeSwitch] = await Promise.all([
+			loadForYouPage(request),
+			hasTropeProfile(request),
+		])
+		return json<ForYouRouteData>(
+			page.kind === "member" ? { ...page, tropeSwitch } : page,
 			page.kind === "member"
 				? { headers: { "Cache-Control": "private, no-store" } }
 				: undefined,
@@ -58,6 +80,10 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 }
 
 export default function ForYouRoute() {
-	const data = useLoaderData<typeof loader>() as unknown as ForYouPage
-	return <ForYouPageView data={data} />
+	const data = useLoaderData<typeof loader>() as unknown as ForYouRouteData
+	return (
+		<TropeSwitchContext.Provider value={!!data.tropeSwitch}>
+			<ForYouPageView data={data} />
+		</TropeSwitchContext.Provider>
+	)
 }

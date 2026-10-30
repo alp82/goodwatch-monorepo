@@ -273,6 +273,12 @@ const PAGES: Entry[] = [
 			"personal",
 		],
 	}),
+	page("forYouTropes", "By your tropes", WATCH_PATHS.forYouTropes, TagIcon, {
+		sub: "For you",
+		for: "member",
+		names: ["picks by tropes", "trope picks"],
+		words: ["tropes", "tv tropes", "recommendations", "picks", "patterns"],
+	}),
 	page("discover", "Discover", "/discover", MagnifyingGlassIcon, {
 		destination: "discover",
 		words: ["search", "filter", "browse", "find"],

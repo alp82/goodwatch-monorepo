@@ -49,6 +49,8 @@ export const WATCH_PATHS = {
 	wishlist: "/watch/movies/want",
 	/** Recommendations › For you. */
 	forYou: "/watch/for-you",
+	/** Recommendations › By your tropes (`?trope=` narrows it to one trope, ui/trope-recs). */
+	forYouTropes: "/watch/for-you/tropes",
 } as const
 
 /** Prefix for classifying every Watch page, including its root redirect. */
@@ -302,6 +304,7 @@ const FIXED: Record<string, string> = {
 	"/my-shows": WATCH_PATHS.nextEpisodes,
 	"/my-movies": WATCH_PATHS.tonight,
 	"/for-you": WATCH_PATHS.forYou,
+	"/for-you/tropes": WATCH_PATHS.forYouTropes,
 	"/my-library/hidden": NOT_INTERESTED_PATH,
 	"/settings/hidden": NOT_INTERESTED_PATH,
 	"/settings/streaming": SETTINGS_PATHS.services,
