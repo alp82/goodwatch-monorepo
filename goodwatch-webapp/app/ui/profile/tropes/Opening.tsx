@@ -151,9 +151,10 @@ export function DescriptionOpening({
 					className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-sky-300 hover:text-sky-200"
 				>
 					{more ? "Keep reading on TV Tropes" : "Read it on TV Tropes"}
-					{more > 0 && (
+					{/* One paragraph left only when the opening is one long paragraph: no count then. */}
+					{more > 1 && (
 						<span className="font-normal text-gray-500">
-							· {more} more {more === 1 ? "paragraph" : "paragraphs"}
+							· {more} more paragraphs
 						</span>
 					)}
 					<ArrowTopRightOnSquareIcon className="size-4" aria-hidden />

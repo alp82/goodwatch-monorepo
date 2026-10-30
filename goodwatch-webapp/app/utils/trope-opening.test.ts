@@ -65,10 +65,42 @@ test("never exactly one more paragraph: the last opening paragraph moves after t
 	const withList = tropeOpening(doc([p(500), p(600), list(800)]), null)
 	assert.equal(withList?.blocks.length, 1)
 	assert.equal(withList?.more, 2)
-	// With only one opening paragraph there is nothing to move: one more it is.
+	// With only one opening paragraph there is nothing to move: up to 2,400 characters the whole text shows...
 	const single = tropeOpening(doc([p(1500), p(400)]), null)
-	assert.equal(single?.blocks.length, 1)
-	assert.equal(single?.more, 1)
+	assert.equal(single?.blocks.length, 2)
+	assert.equal(single?.more, 0)
+	// ...and past that, one more it is (the link shows no count).
+	const long = tropeOpening(doc([p(1500), p(1000)]), null)
+	assert.equal(long?.blocks.length, 1)
+	assert.equal(long?.more, 1)
+})
+
+test("a short reader note before the first paragraph is skipped, unless nothing else is left", () => {
+	const note = {
+		kind: "p",
+		text: "For added atmosphere, play this video while reading on.",
+	}
+	const opening = tropeOpening(doc([note, p(300)]), null)
+	assert.equal(opening?.blocks.length, 1)
+	assert.equal((opening?.blocks[0] as { text: string }).text, "x".repeat(300))
+	assert.equal(tropeOpening(doc([note]), null)?.blocks.length, 1)
+	// Plain text gets the same treatment.
+	const plain = tropeOpening(
+		null,
+		`(For the proper reading experience, play the music from this video while reading this page.)\n\n${"y".repeat(50)}`,
+	)
+	assert.equal(plain?.blocks.length, 1)
+	// Definitions that mention playing or listening stay.
+	for (const text of [
+		"Many writers listen to music while writing. And, hey, why not have built-in background music in your story?",
+		"The children decide they want a new mother/father. Now if only they can get their parent to listen to them.",
+		"A plot about a child being toilet trained. There are two reasons the writers might want to play this trope.",
+	])
+		assert.equal(
+			tropeOpening(doc([{ kind: "p", text }, p(300)]), null)?.blocks.length,
+			2,
+			text,
+		)
 })
 
 test("a text that opens with a list shows its first items; a leading heading stays with its paragraph", () => {
@@ -78,7 +110,7 @@ test("a text that opens with a list shows its first items; a leading heading sta
 		[2],
 	)
 	assert.equal(rest.length, 2)
-	const labelled = cutOpening([heading, p(1200), p(700)])
+	const labelled = cutOpening([heading, p(1200), p(1500)])
 	assert.equal(labelled.head.length, 2)
 	assert.equal(labelled.head[0].kind, "heading")
 })

@@ -38,6 +38,8 @@ export const WHOLE = 1800
 export const OPENING_MIN = 1000
 /** ...but never goes past this many once one paragraph is in. */
 export const OPENING_MAX = 1400
+/** With one paragraph left and none to give up, a description up to this many characters shows whole instead. */
+export const WHOLE_STRETCH = 2400
 
 const WIKI = "https://tvtropes.org/pmwiki/pmwiki.php/"
 const PAGE = /^([A-Za-z]+)\/[A-Za-z0-9_]+$/
@@ -182,7 +184,8 @@ const counted = (blocks: DocBlock[]) =>
 /**
  * Up to 1,800 characters: everything. Longer: whole paragraphs until at least 1,000 characters, never past 1,400 once
  * one is in, stopping at the first list or heading. Never exactly one paragraph left: the last opening paragraph moves
- * after the cut instead, as long as the opening keeps one.
+ * after the cut instead, as long as the opening keeps one. With a one-paragraph opening, a description up to 2,400
+ * characters shows whole; a longer one keeps its one paragraph left, and the link then shows no count.
  */
 export function cutOpening(blocks: DocBlock[]): {
 	head: DocBlock[]
@@ -228,11 +231,37 @@ export function cutOpening(blocks: DocBlock[]): {
 		paragraphs++
 	}
 	let rest = blocks.slice(i)
-	if (counted(rest) === 1 && paragraphs > 1) {
-		rest = [head[head.length - 1], ...rest]
-		head.pop()
+	if (counted(rest) === 1) {
+		if (paragraphs > 1) {
+			rest = [head[head.length - 1], ...rest]
+			head.pop()
+		} else if (blocks.reduce((n, b) => n + size(b), 0) <= WHOLE_STRETCH)
+			return { head: blocks, rest: [] }
 	}
 	return { head, rest }
+}
+
+/**
+ * A short first paragraph that asks the reader to play music while reading ("For added atmosphere, play this video
+ * while reading on."). It points at media the page doesn't carry, so the opening skips it.
+ */
+export function isReaderNote(text: string): boolean {
+	return (
+		text.length < 220 &&
+		/\b(play|playing|listen|run)\b/i.test(text) &&
+		/\b(read|reading|reader|article|page)\b|going through/i.test(text) &&
+		/atmosphere|effect|experience|\bwhile\b|\bas you\b|\bbefore\b/i.test(text)
+	)
+}
+
+/** The blocks without a leading reader note, as long as something else is left to show. */
+export function withoutReaderNote(blocks: DocBlock[]): DocBlock[] {
+	const first = blocks[0]
+	return first?.kind === "p" &&
+		isReaderNote(first.text) &&
+		counted(blocks.slice(1)) > 0
+		? blocks.slice(1)
+		: blocks
 }
 
 /** Page paths for links, and no empty range lists. */
@@ -250,7 +279,9 @@ export function tropeOpening(
 	doc: unknown,
 	text: string | null | undefined,
 ): TropeOpening | null {
-	const blocks = parseDescriptionDoc(doc)?.blocks ?? plainBlocks(text)
+	const blocks = withoutReaderNote(
+		parseDescriptionDoc(doc)?.blocks ?? plainBlocks(text),
+	)
 	if (!blocks.length) return null
 	const { head, rest } = cutOpening(blocks)
 	return {
