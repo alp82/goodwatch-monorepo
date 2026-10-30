@@ -208,8 +208,10 @@ export function FilterMix({
 					>
 						<p className="text-sm font-bold text-white">
 							{total.toLocaleString("en")} of{" "}
-							{(total + hidden).toLocaleString("en")} titles
+							{(total + hidden).toLocaleString("en")}{" "}
+							{searching ? "candidate matches" : "titles"}
 						</p>
+
 						<Stack shown={total} rows={rows} className="mt-2.5 h-2.5 w-full" />
 						<ul className="mt-3 flex flex-col gap-1">
 							<li className="flex h-8 items-center gap-2.5">

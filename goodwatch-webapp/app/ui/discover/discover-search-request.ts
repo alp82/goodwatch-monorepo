@@ -12,6 +12,8 @@ export interface DiscoverSearchResult {
 	q: string
 	/** The ranked list in the ranking's order. */
 	ranked: TitleKey[]
+	/** Shared server snapshot; absent when the shared cache is unavailable. */
+	searchSet?: string
 	reading: ReadingChip[]
 	people: SearchBatch["people"]
 	creditScope: SearchBatch["creditScope"]
@@ -35,7 +37,10 @@ const rankedKeys = (batch: SearchBatch): TitleKey[] => {
 
 const resultFor = (q: string, batch: SearchBatch): DiscoverSearchResult => ({
 	q,
-	ranked: rankedKeys(batch),
+	ranked: batch.searchKeys
+		? (batch.searchKeys as TitleKey[])
+		: rankedKeys(batch),
+	...(batch.searchSet ? { searchSet: batch.searchSet } : {}),
 	reading: batch.reading ?? [],
 	people: batch.people ?? [],
 	creditScope: batch.creditScope ?? null,
@@ -59,7 +64,7 @@ export async function runDiscoverSearch(
 ): Promise<DiscoverSearchResult> {
 	const batch = await requestSearch({
 		language,
-		// discover: the whole ranked list (up to 100 titles), which the results endpoint filters and counts.
+		// discover: the frozen ranked candidate set, which the results endpoint filters and counts.
 		body: { q, filters, allTitles, discover: true },
 		signal,
 		onReading,

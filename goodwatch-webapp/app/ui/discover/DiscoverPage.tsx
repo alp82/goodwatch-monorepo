@@ -5,7 +5,7 @@ import { discoveryProperties } from "~/telemetry/product-events"
 // is never replaced between browsing and searching: titles in both lists glide to their new places.
 //
 // Searching, the status line's query chip shows how the search read the query, Relevance joins the sorts and is
-// chosen, and the counts and recoveries cover the search's top 100. Clearing the search returns to the sort used
+// chosen, and the counts and recoveries cover the search's frozen candidate set. Clearing the search returns to the sort used
 // before it.
 //
 // The grid's pages carry the counts every choice needs. The open sub-tab's extra counts (`counts=`, useDiscoverBar)
@@ -158,6 +158,7 @@ export function DiscoverPage({
 		guest,
 		initial,
 		ranked: searching ? (search.current?.ranked ?? null) : undefined,
+		searchSet: searching ? search.current?.searchSet : undefined,
 		provisional: searching && search.partial,
 	})
 
@@ -230,6 +231,8 @@ export function DiscoverPage({
 				browseQuery,
 				on,
 				searching ? (search.current?.ranked ?? undefined) : undefined,
+				new URLSearchParams(browse.key).get("displayLanguage") ?? undefined,
+				searching ? search.current?.searchSet : undefined,
 			),
 			before: new Map(cards.map((card, i) => [card.key, i])),
 			pages: pages.length,
@@ -295,10 +298,22 @@ export function DiscoverPage({
 	// Infinite scroll.
 	const { ref: moreRef, inView } = useInView({ rootMargin: "600px 0px" })
 	useEffect(() => {
-		if (inView && browse.hasNextPage && !browse.isFetchingNextPage && !flip)
+		if (
+			inView &&
+			browse.hasNextPage &&
+			!browse.isFetching &&
+			!browse.isFetchNextPageError &&
+			!browse.isPlaceholderData &&
+			!search.partial &&
+			!flip
+		)
 			browse.fetchNextPage()
 	}, [
 		inView,
+		browse.isFetching,
+		browse.isFetchNextPageError,
+		browse.isPlaceholderData,
+		search.partial,
 		browse.hasNextPage,
 		browse.isFetchingNextPage,
 		browse.fetchNextPage,
@@ -369,9 +384,14 @@ export function DiscoverPage({
 	// The open sub-tab's extra counts: the first page again with its `counts=` flag, laid out as a grid (rows carry
 	// no counts of their own) and narrowed to the side the grid shows.
 	const ranked = searching ? (search.current?.ranked ?? null) : null
+	const searchSet = searching ? search.current?.searchSet : undefined
 	const countsQuery = withSides(filters.query, side, false)
 	const extra = useDiscoverResults({
-		query: ranked ? `${countsQuery}&ranked=${ranked.join(",")}` : countsQuery,
+		query: searchSet
+			? `${countsQuery}&searchSet=${searchSet}`
+			: ranked
+				? `${countsQuery}&ranked=${ranked.join(",")}`
+				: countsQuery,
 		forYou: forYou.on,
 		guest: guest ?? null,
 		counts: bar.counts,
@@ -383,6 +403,7 @@ export function DiscoverPage({
 	const page = useMemo<DiscoverPageContext>(
 		() => ({
 			scope,
+			searchSet,
 			ranked: searching && !search.partial ? ranked : null,
 			cards,
 			countsFresh: extraShown
@@ -392,6 +413,7 @@ export function DiscoverPage({
 		}),
 		[
 			scope,
+			searchSet,
 			searching,
 			search.partial,
 			ranked,
@@ -552,8 +574,38 @@ export function DiscoverPage({
 							</DiscoverGrid>
 						</>
 					)}
-					<div ref={moreRef} className="flex h-24 items-center justify-center">
-						{browse.isFetchingNextPage && <Spinner size="large" />}
+					<div
+						ref={moreRef}
+						className="flex min-h-24 items-center justify-center gap-3 text-sm text-gray-400"
+						role="status"
+					>
+						{browse.isFetchingNextPage ? (
+							<>
+								<Spinner size="large" />
+								<span className="sr-only">Loading more matches.</span>
+							</>
+						) : browse.isFetchNextPageError ? (
+							<>
+								<span>
+									Couldn't load more {searching ? "matches" : "titles"}.
+								</span>
+								<button
+									type="button"
+									onClick={() => browse.fetchNextPage()}
+									className="font-bold text-amber-400 cursor-pointer underline underline-offset-4"
+								>
+									Retry
+								</button>
+							</>
+						) : searching &&
+							first &&
+							!browse.hasNextPage &&
+							!busy &&
+							!search.partial &&
+							!stale &&
+							first.total > 0 ? (
+							<span>You've reached the end of these matches.</span>
+						) : null}
 					</div>
 					<NextPageLink url={nextPageUrl} />
 				</div>

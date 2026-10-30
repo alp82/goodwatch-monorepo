@@ -89,6 +89,8 @@ export interface SearchRequest extends QueryRequest {
 	titleLookup: TitleLookupRow[]
 	/** Also return the intermediate values (texts, candidate scores, profile terms), for parity checks. */
 	trace?: boolean
+	/** Discover keeps a larger, frozen candidate set for paging; other search surfaces retain their head. */
+	resultLimit?: number
 	/** prepareSearch of the same query, started before the reading was known. */
 	prepared?: Promise<PreparedSearch>
 }
@@ -1018,7 +1020,11 @@ export async function rankSearch(
 			addTo(WEIGHTS.career * (ref.era === "late" ? 1 : -1), zy, "career")
 		}
 	}
-	const ranked = topIds(cand, total, RESULT_LENGTH)
+	const resultLimit = Math.max(
+		RESULT_LENGTH,
+		Math.min(5000, request.resultLimit ?? RESULT_LENGTH),
+	)
+	const ranked = topIds(cand, total, resultLimit)
 	lap("score")
 	let trace: SearchTrace | undefined
 	if (request.trace) {
@@ -1062,6 +1068,7 @@ export async function rankSearch(
 		baseFilter.rows,
 		outsideFacts,
 		ref,
+		resultLimit,
 	)
 	const results = reblend(request.titleLookup)
 	lap("blend")

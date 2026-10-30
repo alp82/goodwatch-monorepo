@@ -66,7 +66,7 @@ test("More's count", () => {
 
 test("labels", () => {
 	const short = (n: number) => String(n)
-	assert.equal(matchesLabel(100, short), "Top 100 matches")
+	assert.equal(matchesLabel(100, short), "100 matches")
 	assert.equal(matchesLabel(1, short), "1 match")
 	assert.equal(matchesLabel(42, short), "42 matches")
 	assert.equal(titlesLabel(1), "1 title")

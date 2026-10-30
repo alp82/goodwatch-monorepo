@@ -686,6 +686,10 @@ export interface ReadingChip {
 	kind: "attribute" | "excluded" | "want" | "avoid" | "phrase";
 	// want/avoid: the fingerprint dimension, so the chip can wear its color.
 	key?: string;
+	/** Definition of an interpreted attribute, not a claim about why it was inferred. */
+	description?: string;
+	weight?: number;
+	filters?: boolean;
 }
 // The phrases the text search looks for: Jev's best phrase and, when it reaches
 // SECOND_PHRASE_PROBABILITY, the second one. None when the best phrase is a single word that Jev
@@ -730,8 +734,19 @@ export function summarizeReading(
 		const soft = f.id.startsWith("suitability_") || f.id.startsWith("context_");
 		if (judgment.decision === "excluded" && soft) continue;
 		if (judgment.decision === "required")
-			chips.push({ text: f.label, kind: "attribute" });
-		else chips.push({ text: `Not ${f.label.toLowerCase()}`, kind: "excluded" });
+			chips.push({
+				text: f.label,
+				kind: "attribute",
+				description: f.description,
+				filters: !soft,
+			});
+		else
+			chips.push({
+				text: `Not ${f.label.toLowerCase()}`,
+				kind: "excluded",
+				description: f.description,
+				filters: true,
+			});
 	}
 	const dimensions = (Object.entries(weights) as [Key, number][])
 		.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
@@ -741,6 +756,8 @@ export function summarizeReading(
 			text: weight > 0 ? label(key) : `Low ${label(key).toLowerCase()}`,
 			kind: weight > 0 ? "want" : "avoid",
 			key,
+			weight,
+			description: FINGERPRINT_META[key]?.description,
 		});
 	if (!nativeOnly)
 		for (const p of searchedPhrases(attributes))

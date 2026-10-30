@@ -324,7 +324,8 @@ export function ReleasedTab({ view }: { view: SubTabView }) {
 	const count = (range: FilterRange) => yearsCount(years, range)
 	const all = count({})
 	const params = new URLSearchParams(view.filters.query)
-	if (view.page.ranked !== null)
+	if (view.page.searchSet) params.set("searchSet", view.page.searchSet)
+	else if (view.page.ranked !== null)
 		params.set("ranked", view.page.ranked.join(","))
 	const tops = useReleasedTops(
 		params.toString(),

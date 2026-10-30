@@ -267,6 +267,7 @@ export function blend(
 	concreteWords: Set<string>,
 	filterRows: Uint8Array,
 	outside: Map<number, TitleFacts> = new Map(),
+	limit = BLEND_LENGTH,
 ): BlendedTitle[] {
 	const t = index.titleTable
 	const q = normalized(query)
@@ -410,7 +411,7 @@ export function blend(
 				b.popularity - a.popularity ||
 				(key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0),
 		)
-		.slice(0, BLEND_LENGTH)
+		.slice(0, limit)
 	const seen = new Set<string>()
 	const out: BlendedTitle[] = []
 	for (const row of ordered) {

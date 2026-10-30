@@ -77,6 +77,7 @@ export interface DiscoverPageContext {
 	scope: SearchScope
 	/** The running search's ranked list, once it ranks; null while browsing. */
 	ranked: readonly TitleKey[] | null
+	searchSet?: string
 	/** The grid's first titles. */
 	cards: readonly TitleCard[]
 	/** False while the counts are still the previous answer's, or the search hasn't ranked yet. */
@@ -308,8 +309,12 @@ function DiscoverControlsContent({
 		member,
 		open: openTab,
 	}
-	const chipKey = data.chips.map((chip) => chip.key).join(",")
-	const { size, rowRef, measureRef } = useControlSize({ desktop, chipKey })
+	const chipKey = `${data.chips.map((chip) => `${chip.key}:${chip.label}`).join(",")}|${reading?.map((chip) => chip.text).join(",") ?? ""}`
+	const { size, rowRef, measureRef } = useControlSize({
+		desktop,
+		chipKey,
+		maxSize: data.chips.some((chip) => !READY_CHIPS.has(chip.key)) ? 1 : 2,
+	})
 	const order = (at: ControlSize) =>
 		forYou ? (
 			<ForYouSort

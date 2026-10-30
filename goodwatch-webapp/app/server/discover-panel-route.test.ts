@@ -98,3 +98,14 @@ test("people and released forward ranked search including empty results and defa
 		}
 	}
 })
+
+test("expanded search facets accept the complete ranked list in POST without URL truncation", async () => {
+	const ranked = Array.from({ length: 640 }, (_, i) => 1e12 + i + 1)
+	const response = await action(args(new Request("https://goodwatch.test/api/discover/panel?part=people", {
+		method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ranked }),
+	})))
+	assert.equal(response.status, 200)
+	const body: { input: { ranked: number[]; sort: string } } = JSON.parse(await response.text())
+	assert.deepEqual(body.input.ranked, ranked)
+	assert.equal(body.input.sort, "relevance")
+})

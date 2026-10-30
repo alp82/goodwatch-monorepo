@@ -1,4 +1,5 @@
 import * as z from "zod4"
+import { titleKey } from "../../utils/title-key.ts"
 import { CONTENT_KINDS, MAX_AGE } from "../../domain/age-content.ts"
 import {
 	TAG_GROUPS,
@@ -22,8 +23,72 @@ export function isDiscoverySearch(args: {
 	return !args.query?.trim() && !args.cursor?.startsWith("ranked:")
 }
 
+const countryCode = z
+	.string()
+	.trim()
+	.toUpperCase()
+	.regex(/^[A-Z]{2}$/)
+const titleIds = z
+	.array(z.string().regex(/^(movie|show):[1-9]\d{0,9}$/))
+	.max(10)
+const titleKeys = (values: string[]) => [
+	...new Set(
+		values.map((value) => {
+			const [type, id] = value.split(":")
+			return titleKey(type === "movie" ? "movie" : "show", Number(id))
+		}),
+	),
+]
+
 /** Names map onto the site's filter state; the engine and URL codec own their semantics. */
 export const discoverFilters = {
+	taste_groups: z
+		.array(z.string().regex(/^(movie|show)-[1-9]\d{0,9}$/))
+		.max(3)
+		.optional()
+		.describe(
+			"Any of up to three stable taste-group keys returned for this member by get_discover_filters. Groups use saved taste, not temporary hints. Unresolved picks do not narrow results, as on Discover.",
+		),
+	unlimited_episode_runtime: z
+		.boolean()
+		.optional()
+		.describe(
+			"Leave shows unrestricted by runtime while keeping movie min_runtime/max_runtime bounds, including shows with unknown episode lengths. Mutually exclusive with min_episode_runtime/max_episode_runtime.",
+		),
+	similar_to: titleIds
+		.optional()
+		.describe(
+			"Hard filter to titles similar to any supplied canonical movie:ID or show:ID (up to 10). Resolve IDs with search_titles/get_title first. Combines with other filters; does not mark or rate titles.",
+		),
+	more_like: titleIds
+		.optional()
+		.describe(
+			"Temporary positive taste hints, up to 10 canonical movie:ID/show:ID values. Use order=match or for_you=true to steer ordering; combines with saved taste without saving ratings. less_like wins for overlaps.",
+		),
+	less_like: titleIds
+		.optional()
+		.describe(
+			"Temporary negative taste hints, up to 10 canonical movie:ID/show:ID values. Use order=match or for_you=true to steer ordering; never changes ratings or Not interested. Wins over more_like for overlaps.",
+		),
+	people: z
+		.array(z.number().int().positive().max(999999999))
+		.max(20)
+		.optional()
+		.describe(
+			"TMDB person IDs from search_people/get_person. Keep titles featuring any selected person in cast or crew, combined with other filters.",
+		),
+	production_countries: z
+		.array(countryCode)
+		.max(250)
+		.optional()
+		.describe(
+			"Made in any selected ISO alpha-2 production countries; co-productions match each country. Use industry/region args from get_discover_filters. Joins rest_of_world with OR; independent of streaming_country and rating_country.",
+		),
+	streaming_country: countryCode
+		.optional()
+		.describe(
+			"Request-only country for availability and providers; defaults to your saved viewing country and never changes settings. Does not imply production origin. get_discover_filters accepts this country for provider options.",
+		),
 	min_budget_musd: z
 		.number()
 		.min(0)
@@ -112,7 +177,15 @@ export const discoverFilters = {
 		.describe(
 			"Inclusive rating count minimum; catalog eligibility starts at 1,000 ratings.",
 		),
-	max_votes: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).optional(),
+	max_votes: z
+		.number()
+		.int()
+		.min(0)
+		.max(Number.MAX_SAFE_INTEGER)
+		.optional()
+		.describe(
+			"Inclusive rating-count ceiling; useful for hidden gems. Browse eligibility still starts at 1,000 ratings.",
+		),
 	min_popularity_rank: z
 		.number()
 		.int()
@@ -127,16 +200,34 @@ export const discoverFilters = {
 		.int()
 		.min(1)
 		.max(Number.MAX_SAFE_INTEGER)
-		.optional(),
+		.optional()
+		.describe(
+			"Inclusive catalog Popular rank ceiling; 1 first. Combine with min_popularity_rank for a rank band.",
+		),
 	source_scores: z
 		.partialRecord(z.enum(SOURCE_KEYS), z.number().int().min(0).max(100))
 		.optional()
 		.describe(
 			"Inclusive source minimums, all must pass: imdb, rtCritics, rtAudience, metacritic (critics), metacriticUsers. All values are normalized 0–100 integers: 70 means IMDb/Metacritic users 7.0, RT 70%, Metascore 70. Suggested steps: 60, 70, 80, 90. Missing scores do not pass, even at zero.",
 		),
-	score_gap: z.enum(SCORE_GAPS).optional(),
-	any_service: z.boolean().optional(),
-	type: z.enum(["all", "movie", "show"]).optional(),
+	score_gap: z
+		.enum(SCORE_GAPS)
+		.optional()
+		.describe(
+			"Source-score agreement: agree keeps consensus picks, critics favors critic-over-audience scores, audience favors audience-over-critic scores; titles need the compared scores.",
+		),
+	any_service: z
+		.boolean()
+		.optional()
+		.describe(
+			"Require an offer on any service in streaming_country (saved country by default). Mutually exclusive with on_my_services=true or explicit providers; false means no such requirement.",
+		),
+	type: z
+		.enum(["all", "movie", "show"])
+		.optional()
+		.describe(
+			"Movies, shows, or both (default all). Movie-only and show-only fact filters narrow to their applicable type.",
+		),
 	genres: z
 		.union([
 			z.array(z.string().trim().min(1).max(80)).max(20),
@@ -151,8 +242,22 @@ export const discoverFilters = {
 		.describe(
 			"Exact genre names from get_discover_filters; a single name or an array, matching any selected genre unless genres is in match_all.",
 		),
-	min_year: z.number().int().min(1800).max(2100).optional(),
-	max_year: z.number().int().min(1800).max(2100).optional(),
+	min_year: z
+		.number()
+		.int()
+		.min(1800)
+		.max(2100)
+		.optional()
+		.describe(
+			"Inclusive release-year minimum; explicit years override released presets.",
+		),
+	max_year: z
+		.number()
+		.int()
+		.min(1800)
+		.max(2100)
+		.optional()
+		.describe("Inclusive release-year maximum; omit for an open upper end."),
 	min_runtime: z
 		.number()
 		.int()
@@ -162,7 +267,15 @@ export const discoverFilters = {
 		.describe(
 			"Inclusive minutes; movie duration or usual episode length for shows unless episode runtime bounds are supplied. Unknown runtimes do not pass.",
 		),
-	max_runtime: z.number().int().min(0).max(10000).optional(),
+	max_runtime: z
+		.number()
+		.int()
+		.min(0)
+		.max(10000)
+		.optional()
+		.describe(
+			"Inclusive maximum minutes; movie duration or usual episode length unless independent episode bounds are provided.",
+		),
 	min_episode_runtime: z
 		.number()
 		.int()
@@ -198,16 +311,21 @@ export const discoverFilters = {
 		.boolean()
 		.optional()
 		.describe(
-			"Default false (everywhere). Uses saved country and services. Without saved services this does not narrow, as on the site.",
+			"Default false (everywhere). Uses saved services in streaming_country or the saved viewing country. Without saved services this does not narrow, as on the site.",
 		),
 	providers: z
 		.array(z.number().int().positive().max(999999999))
 		.max(20)
 		.optional()
 		.describe(
-			"Specific provider IDs from get_discover_filters, in your saved country. Matches any selected provider; mutually exclusive with on_my_services=true.",
+			"Specific provider IDs from get_discover_filters, in streaming_country or your saved viewing country. Matches any selected provider; mutually exclusive with on_my_services=true.",
 		),
-	anime: z.enum(["any", "only", "none"]).optional(),
+	anime: z
+		.enum(["any", "only", "none"])
+		.optional()
+		.describe(
+			"Include all animation/live action (any), only anime (only), or exclude anime (none).",
+		),
 	match_all: z
 		.array(z.enum(TAG_GROUPS))
 		.max(TAG_GROUPS.length)
@@ -258,7 +376,12 @@ export const discoverFilters = {
 		.describe(
 			"GoodWatch taste match threshold; does not narrow when taste is unavailable, as on the site.",
 		),
-	released: z.enum(RELEASED).optional(),
+	released: z
+		.enum(RELEASED)
+		.optional()
+		.describe(
+			"Release presets: any, recent (current year and previous two), 2010s, 2000s, before2000. Explicit min_year/max_year take precedence.",
+		),
 	rating_country: z
 		.string()
 		.trim()
@@ -266,7 +389,7 @@ export const discoverFilters = {
 		.regex(/^[A-Z]{2}$/)
 		.optional()
 		.describe(
-			"Country code for the age-rating ladder and title rating badges, independent of streaming services. Defaults to your saved country; codes absent from the snapshot ratings use that default. The page_url carries ratingCountry.",
+			"Country code for the age-rating ladder and title rating badges, independent of streaming services. Defaults to the viewing country (streaming_country or saved country); codes absent from snapshot ratings use that default. The page_url carries ratingCountry.",
 		),
 	age_limit: z
 		.number()
@@ -275,16 +398,22 @@ export const discoverFilters = {
 		.max(MAX_AGE)
 		.optional()
 		.describe(
-			"Uses rating_country or the saved country's age-rating ladder, when available.",
+			"Uses rating_country or the viewing country's age-rating ladder, when available.",
 		),
 	hide_content: z
 		.array(z.enum(CONTENT_KINDS))
 		.max(CONTENT_KINDS.length)
-		.optional(),
+		.optional()
+		.describe(
+			"Explicitly hide selected content kinds, overriding age defaults. A kind in both hide_content and show_content stays hidden.",
+		),
 	show_content: z
 		.array(z.enum(CONTENT_KINDS))
 		.max(CONTENT_KINDS.length)
-		.optional(),
+		.optional()
+		.describe(
+			"Allow selected content kinds despite age defaults; does not lift age_limit itself or override hide_content.",
+		),
 	order: z
 		.enum(["for_you", "popularity", "newest", "score", "match"])
 		.optional()
@@ -349,6 +478,11 @@ export function validDiscoverRanges(args: DiscoverFilterArgs) {
 			args.max_episode_runtime !== undefined &&
 			args.min_episode_runtime > args.max_episode_runtime
 		) &&
+		!(
+			args.unlimited_episode_runtime &&
+			(args.min_episode_runtime !== undefined ||
+				args.max_episode_runtime !== undefined)
+		) &&
 		!(args.seen_only && args.exclude_seen) &&
 		!(args.on_my_services && args.providers?.length) &&
 		!(args.any_service && (args.on_my_services || args.providers?.length))
@@ -358,6 +492,27 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 	const state: FilterState = {
 		...defaultFilterState({ onMyServices: false, notSeenYet: false }),
 		type: args.type ?? "all",
+		...(args.taste_groups?.length
+			? { tasteGroups: [...new Set(args.taste_groups)] }
+			: {}),
+		...(args.streaming_country
+			? { streamingCountry: args.streaming_country }
+			: {}),
+		...(args.production_countries?.length
+			? { productionCountries: [...new Set(args.production_countries)] }
+			: {}),
+		...(args.similar_to?.length
+			? { similarTo: titleKeys(args.similar_to) }
+			: {}),
+		...(args.people?.length ? { people: [...new Set(args.people)] } : {}),
+		...(args.less_like?.length ? { disliked: titleKeys(args.less_like) } : {}),
+		...(args.more_like?.length
+			? {
+					loved: titleKeys(args.more_like).filter(
+						(key) => !titleKeys(args.less_like ?? []).includes(key),
+					),
+				}
+			: {}),
 		anime: args.anime ?? "any",
 		onMyServices: args.any_service ? false : (args.on_my_services ?? false),
 		...(args.any_service ? { anyService: true } : {}),
@@ -393,6 +548,7 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 				? {}
 				: { max: args.max_episode_runtime }),
 		}
+	if (args.unlimited_episode_runtime) state.episodeRuntime = null
 	const allOf = TAG_GROUPS.filter(
 		(group) =>
 			args.match_all?.includes(group) && new Set(state[group]).size >= 2,
@@ -442,6 +598,7 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 	const forYou =
 		args.for_you ??
 		(!args.order || args.order === "for_you" || args.order === "match")
+	if (state.loved && !state.loved.length) delete state.loved
 	return { state, sort, forYou }
 }
 /** Explicit defaults override the member's website defaults when following a tool link. */

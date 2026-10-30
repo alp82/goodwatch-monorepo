@@ -1,3 +1,4 @@
+import { discoverFetch } from "~/ui/discover/discover-fetch"
 // What the Search tab reads: starter titles and people from the panel endpoint, the person search, the preview of a
 // typed search, and the keyboard over a list while focus stays in the bar's search field.
 import { useQuery } from "@tanstack/react-query"
@@ -43,16 +44,7 @@ function usePanelPart<P extends "titles" | "people">(
 	return useQuery<PanelOf<P>>({
 		queryKey: ["discover-panel", url, guest ? "guest" : "member"],
 		queryFn: async ({ signal }) => {
-			const response = await fetch(url, {
-				signal,
-				...(guest
-					? {
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({ guest }),
-						}
-					: {}),
-			})
+			const response = await discoverFetch(url, guest, signal)
 			if (!response.ok)
 				throw new Error(`Discover panel failed: ${response.status}`)
 			return response.json()
@@ -94,7 +86,8 @@ export function usePanelPeople(
 	enabled = true,
 ) {
 	const params = new URLSearchParams(filters.query)
-	if (page.ranked) params.set("ranked", page.ranked.join(","))
+	if (page.searchSet) params.set("searchSet", page.searchSet)
+	else if (page.ranked) params.set("ranked", page.ranked.join(","))
 	// While a search is still ranking, its people wait for the ranked list.
 	const panel = usePanelPart(
 		"people",

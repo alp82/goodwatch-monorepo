@@ -3,13 +3,21 @@
 // chips carry a small poster (More like emerald, Less like red, Like rose), people chips a face, and mood chips their
 // hue. The row scrolls sideways under a fade at its end.
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
-import type { CSSProperties, ReactNode } from "react"
+import { type CSSProperties, type ReactNode, lazy, Suspense } from "react"
 import type { FilterState } from "~/domain/filter-state"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
-import { ReadAsChips } from "~/ui/discover/ReadAsChips"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { FILTER_ACCENTS } from "~/ui/filter-bar/labels"
 import { PRIVATE } from "./DiscoverBar"
 import type { BarChip } from "./chips"
+
+const ReadingPreview = lazy(
+	reloadOnStaleChunk(() =>
+		import("~/ui/discover/ReadingPreview").then((module) => ({
+			default: module.ReadingPreview,
+		})),
+	),
+)
 
 const IMAGE = "https://image.tmdb.org/t/p/w92"
 const FADE = "linear-gradient(to right, black calc(100% - 2.5rem), transparent)"
@@ -109,10 +117,9 @@ function OneChip({
 					<span className="truncate">{chip.label}</span>
 				</button>
 				{reading && reading.length > 0 && (
-					<ReadAsChips
-						reading={reading}
-						className="max-h-6 flex-nowrap overflow-hidden"
-					/>
+					<Suspense fallback={null}>
+						<ReadingPreview reading={reading} />
+					</Suspense>
 				)}
 				<Remove
 					label="the search"

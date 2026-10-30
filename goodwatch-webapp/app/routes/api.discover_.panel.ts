@@ -9,7 +9,7 @@ import {
 	json,
 } from "@remix-run/node"
 import { z } from "zod"
-import { rankedFromParams } from "~/domain/discover-search"
+import { discoverSearchKeys } from "~/server/discover-search-set.server"
 import { filterStateFromParams, sortFromParams } from "~/domain/filter-state"
 import { getDiscoverPanel, isPanelPart } from "~/server/discover-panel.server"
 import {
@@ -25,6 +25,7 @@ import type { TasteInteraction } from "~/ui/taste/types"
 const MAX_BODY_CHARS = 256 * 1024
 
 const bodySchema = z.object({
+	ranked: z.array(z.number().int().gt(1e12).lt(3e12)).max(5000).optional(),
 	guest: z
 		.object({
 			interactions: z.array(z.unknown()).max(5000),
@@ -38,16 +39,21 @@ const headers = { "Cache-Control": "private, no-store" }
 
 const invalid = (error: string) => json({ error }, { status: 400, headers })
 
-async function respond(request: Request, guest?: GuestProgress) {
+async function respond(
+	request: Request,
+	guest?: GuestProgress,
+	bodyRanked?: number[],
+) {
 	const startedAt = performance.now()
 	const params = new URL(request.url).searchParams
+	if (bodyRanked) params.set("ranked", bodyRanked.join(","))
 	const part = params.get("part")
 	if (!isPanelPart(part)) return invalid("Unknown panel part")
 	const ctx = await getViewerContext(request, guest)
 	const contextMs = performance.now() - startedAt
 	const ranked =
 		part === "people" || part === "released"
-			? rankedFromParams(params)
+			? await discoverSearchKeys(params)
 			: undefined
 	try {
 		const response = await getDiscoverPanel(ctx, part, {
@@ -89,11 +95,15 @@ async function canonicalAction({ request }: ActionFunctionArgs) {
 	} catch {
 		return invalid("Send { guest: { interactions, country, services } }")
 	}
-	return respond(request, {
-		interactions: (body.guest?.interactions ?? []) as TasteInteraction[],
-		country: body.guest?.country ?? null,
-		services: body.guest?.services ?? null,
-	})
+	return respond(
+		request,
+		{
+			interactions: (body.guest?.interactions ?? []) as TasteInteraction[],
+			country: body.guest?.country ?? null,
+			services: body.guest?.services ?? null,
+		},
+		body.ranked,
+	)
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })

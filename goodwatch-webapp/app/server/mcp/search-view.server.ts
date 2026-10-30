@@ -10,6 +10,7 @@ import {
 	hasDiscoverFilters,
 } from "./discover-filters.ts"
 import { searchView } from "./search-view.ts"
+import { discoverGroupSelection } from "./discover-taste.server.ts"
 import type { ReadArgs } from "./tools.server.ts"
 
 export async function prepareSearchView(
@@ -24,7 +25,11 @@ export async function prepareSearchView(
 			loadTaste({ kind: "member", userId }),
 		])
 		const view = discoverView(args, ranked)
+		const selection = args.taste_groups?.length
+			? await discoverGroupSelection(ctx, taste, args.taste_groups)
+			: null
 		const result = await filterTitles({
+			tasteGroups: selection?.tasteFilter,
 			universe: titles.map((t) => titleKey(t.media_type, t.tmdb_id)),
 			includeNotInterested: true,
 			state: view.state,
@@ -42,11 +47,16 @@ export async function prepareSearchView(
 				for_you: view.forYou,
 				exclude_seen: view.state.notSeenYet,
 				for_you_applied: !!result.moved,
-				availability: view.state.onMyServices
-					? ("mine" as const)
-					: view.state.services?.length
-						? ("providers" as const)
-						: ("everywhere" as const),
+				...(view.state.streamingCountry
+					? { country: view.state.streamingCountry }
+					: {}),
+				availability: view.state.anyService
+					? ("any" as const)
+					: view.state.onMyServices
+						? ("mine" as const)
+						: view.state.services?.length
+							? ("providers" as const)
+							: ("everywhere" as const),
 				filters: filterArgs(args),
 				filter_key: discoverViewKey(args),
 			},

@@ -11,6 +11,7 @@ import { type ViewerContext, getMemberViewerContext } from "../viewer.server"
 import { summary } from "./data.server.ts"
 import { discoverView, filterArgs } from "./discover-filters.ts"
 import { discoverMetadata } from "./discover-metadata.ts"
+import { discoverGroupSelection } from "./discover-taste.server.ts"
 import type { ReadArgs } from "./tools.server.ts"
 
 export async function readDiscover(
@@ -20,7 +21,10 @@ export async function readDiscover(
 	args: ReadArgs,
 	guest?: ViewerContext,
 ) {
-	const ctx = guest ?? (await getMemberViewerContext(userId, "US"))
+	const saved = guest ?? (await getMemberViewerContext(userId, "US"))
+	const ctx = args.streaming_country
+		? { ...saved, country: args.streaming_country }
+		: saved
 	if (name === "get_discover_filters") {
 		const snapshot = getTitleSnapshot()
 		if (!snapshot)
@@ -33,7 +37,11 @@ export async function readDiscover(
 			ctx.country,
 			ctx.services,
 		)
+		const selection = await loadTaste(ctx.viewer)
+			.then((taste) => discoverGroupSelection(ctx, taste))
+			.catch(() => ({ tasteGroups: null }))
 		return {
+			taste_groups: selection.tasteGroups?.groups ?? [],
 			...discoverMetadata(!!snapshot.columns.facts),
 			country: ctx.country,
 			saved_provider_ids: ctx.services,
@@ -43,7 +51,11 @@ export async function readDiscover(
 	}
 	const taste = await loadTaste(ctx.viewer)
 	const view = discoverView(args, false)
+	const selection = args.taste_groups?.length
+		? await discoverGroupSelection(ctx, taste, args.taste_groups)
+		: null
 	const result = await filterTitles({
+		tasteGroups: selection?.tasteFilter,
 		universe: "catalog",
 		state: view.state,
 		sort: view.sort,

@@ -1,3 +1,4 @@
+import { discoverFetch } from "~/ui/discover/discover-fetch"
 // The Released sub-tab's pictures: the top title of each decade and of each New and After preset, in the list's order,
 // from /api/discover/panel?part=released. The year choice doesn't change them (the server reads every year), so the
 // request leaves it out and a new year pick asks again for nothing. Members GET; guests POST their progress.
@@ -35,16 +36,10 @@ export function useReleasedTops(
 		enabled,
 		placeholderData: (previous) => previous,
 		queryFn: async ({ signal }) => {
-			const response = await fetch(
+			const response = await discoverFetch(
 				url,
-				member
-					? { signal }
-					: {
-							signal,
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({ guest: snapshotGuestProgress() }),
-						},
+				member ? null : snapshotGuestProgress(),
+				signal,
 			)
 			if (!response.ok)
 				throw new Error(`Discover panel failed: ${response.status}`)

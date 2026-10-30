@@ -10,7 +10,8 @@ import {
 	searchAdmission,
 	searchBusyResponse,
 } from "~/server/search-runtime/admission.server";
-import { RESULT_LENGTH } from "~/server/search-ranking/ranking.server";
+import { SEARCH_RESULTS } from "~/domain/discover-search";
+import { saveSearchSet } from "~/server/discover-search-set.server";
 import { beginSearchTelemetry, recordSearchRejection } from "~/server/search-runtime/telemetry.server";
 import { checkSearchRate, trustedClientAddress } from "~/server/search-runtime/rate-limit.server";
 import {
@@ -115,6 +116,10 @@ export async function action({ request }: ActionFunctionArgs) {
 					return true;
 				};
 				const sendBatch = async (kind: "provisional" | "batch", batch: SearchBatch) => {
+					if (fullList && kind === "batch" && batch.searchKeys) {
+						const token = await saveSearchSet(batch.searchKeys);
+						if (token) batch = { ...batch, searchSet: token };
+					}
 					const memberTaste = await taste;
 					const displayed = await localizeApiTitlePayload(memberTaste
 						? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
@@ -141,7 +146,7 @@ export async function action({ request }: ActionFunctionArgs) {
 							onComplete: (batch) => sendBatch("batch", batch),
 							allTitles: body.allTitles === true,
 							// Discover's search mode filters and counts over the whole ranked list.
-							rows: fullList ? RESULT_LENGTH : undefined,
+							rows: fullList ? SEARCH_RESULTS : undefined,
 						},
 					);
 					completed = true;

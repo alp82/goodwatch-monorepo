@@ -14,6 +14,7 @@ import type { TasteInteraction } from "~/ui/taste/types"
 import { DISCOVER_MAX_PAGE } from "~/utils/constants"
 import { useGuestInteractions } from "~/utils/guest-progress"
 import useLocale from "~/utils/locale"
+import { discoverFetch } from "./discover-fetch"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 import type { TitleKey } from "~/utils/title-key"
 import { guestSignature } from "./guest-signature"
@@ -38,8 +39,9 @@ export const browseKey = (
 	forYou: boolean,
 	ranked?: readonly TitleKey[],
 	language?: string,
+	searchSet?: string,
 ) =>
-	`${query}${query ? "&" : ""}foryou=${forYou ? 1 : 0}${ranked ? `&ranked=${ranked.join(",")}` : ""}${language ? `&displayLanguage=${encodeURIComponent(language)}` : ""}`
+	`${query}${query ? "&" : ""}foryou=${forYou ? 1 : 0}${searchSet ? `&searchSet=${searchSet}` : ranked ? `&ranked=${ranked.join(",")}` : ""}${language ? `&displayLanguage=${encodeURIComponent(language)}` : ""}`
 
 export { withSides } from "~/domain/discover-layout"
 
@@ -73,19 +75,16 @@ async function fetchPage(
 	page: number,
 	guest: GuestBody | null,
 	signal: AbortSignal,
+	fallbackRanked?: readonly TitleKey[],
 ): Promise<DiscoverResults> {
 	const url = `/api/discover/results?${key}&page=${page}`
-	const response = await fetch(
-		url,
-		guest
-			? {
-					signal,
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ guest }),
-				}
-			: { signal },
-	)
+	const response = await discoverFetch(url, guest, signal)
+	if (response.status === 410 && fallbackRanked) {
+		const params = new URLSearchParams(key)
+		params.delete("searchSet")
+		params.set("ranked", fallbackRanked.join(","))
+		return fetchPage(params.toString(), page, guest, signal)
+	}
 	if (!response.ok)
 		throw new Error(`Discover results failed: ${response.status}`)
 	return response.json()
@@ -101,6 +100,7 @@ export function useDiscoverBrowse({
 	guest,
 	initial,
 	ranked,
+	searchSet,
 	provisional = false,
 }: {
 	query: string
@@ -114,11 +114,18 @@ export function useDiscoverBrowse({
 	 * browsing.
 	 */
 	ranked?: readonly TitleKey[] | null
+	searchSet?: string
 	/** Partial search results get a disposable cache, never the completed list cache. */
 	provisional?: boolean
 }) {
 	const { locale } = useLocale()
-	const key = browseKey(query, forYou, ranked ?? undefined, locale.language)
+	const key = browseKey(
+		query,
+		forYou,
+		ranked ?? undefined,
+		locale.language,
+		searchSet,
+	)
 	const signature = guestSignature(guest)
 	// The loader's pages answer a member, or a guest who hasn't rated or chosen anything (the server's view of any guest).
 	const initialFits =
@@ -139,7 +146,7 @@ export function useDiscoverBrowse({
 		],
 		gcTime: provisional ? 0 : undefined,
 		queryFn: ({ pageParam, signal }) =>
-			fetchPage(key, pageParam, guest ?? null, signal),
+			fetchPage(key, pageParam, guest ?? null, signal, ranked ?? undefined),
 		initialPageParam: 1,
 		// A row per side is the whole first view: "See all" narrows the list to a side, which pages again.
 		getNextPageParam: (last) =>

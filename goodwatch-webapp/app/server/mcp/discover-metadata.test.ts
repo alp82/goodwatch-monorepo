@@ -11,7 +11,14 @@ const { MOODS } = await import("../../domain/moods.ts")
 const { BIG_EIGHT, INDUSTRIES, REGIONS } = await import(
 	"../../domain/film-industries.ts"
 )
-const schema = z.object(discoverFilters).strict().refine(validDiscoverRanges)
+const schema = z
+	.object({
+		...discoverFilters,
+		for_you: z.boolean().optional(),
+		exclude_seen: z.boolean().optional(),
+	})
+	.strict()
+	.refine(validDiscoverRanges)
 
 test("every advertised preset uses accepted existing MCP arguments, in a compact payload", () => {
 	const metadata = JSON.parse(JSON.stringify(discoverMetadata(true, 2026)))
@@ -30,7 +37,7 @@ test("every advertised preset uses accepted existing MCP arguments, in a compact
 	}
 	visit(metadata)
 	assert.ok(presets > 40)
-	assert.ok(JSON.stringify(metadata).length < 16000)
+	assert.ok(JSON.stringify(metadata).length < 24000)
 })
 
 test("range guidance preserves shared stops, inclusive seams, units and argument names", () => {
@@ -179,11 +186,17 @@ test("Released presets follow the clock, including Last 2 years at year minus 2"
 
 test("origin references and all 16 stable mood keys retain shared names and aliases", () => {
 	const m = discoverMetadata(true)
-	assert.deepEqual(m.origin.industries, INDUSTRIES)
-	assert.deepEqual(m.origin.regions, REGIONS)
+	assert.deepEqual(
+		m.origin.industries.map(({ args, ...option }) => option),
+		INDUSTRIES,
+	)
+	assert.deepEqual(
+		m.origin.regions.map(({ args, ...option }) => option),
+		REGIONS,
+	)
 	assert.deepEqual(m.origin.rest_of_world.excluded_codes, BIG_EIGHT)
 	assert.deepEqual(m.origin.rest_of_world.args, { rest_of_world: true })
-	assert.match(m.origin.note, /no production-country argument/)
+	assert.match(m.origin.note, /Pass production_countries/)
 	assert.deepEqual(
 		m.moods,
 		MOODS.map(({ key, name, aliases }) => ({ key, name, aliases })),
@@ -219,5 +232,47 @@ test("facts presence and taste, list, all-of and rating-country semantics are di
 	)
 	assert.deepEqual(m.match_all.groups, ["moods", "themes", "styles", "genres"])
 	assert.match(m.rating_country.note, /independent of streaming/)
-	assert.match(m.rating_country.note, /fall back to the saved country/)
+	assert.match(m.rating_country.note, /fall back to the viewing country/)
+})
+
+test("the guide covers every public filter and every example parses as a real tool call", async () => {
+	const { readToolDefinitions } = await import("./tools.server.ts")
+	const metadata = discoverMetadata(true)
+	const described = new Set(
+		metadata.filter_groups.flatMap((group) => group.arguments),
+	)
+	assert.deepEqual(
+		[...described].sort(),
+		[...Object.keys(discoverFilters), "for_you", "exclude_seen"].sort(),
+	)
+	const discover = readToolDefinitions.find(
+		(tool) => tool.name === "discover_titles",
+	)!.schema
+	const search = readToolDefinitions.find(
+		(tool) => tool.name === "search_titles",
+	)!.schema
+	for (const example of metadata.examples) {
+		assert.equal(
+			discover.safeParse(example.args).success,
+			true,
+			example.use_case,
+		)
+		assert.equal(
+			search.safeParse({
+				...example.args,
+				query: "something atmospheric",
+				ranked: true,
+			}).success,
+			true,
+			example.use_case,
+		)
+	}
+	for (const option of [
+		...metadata.origin.industries,
+		...metadata.origin.regions,
+	]) {
+		assert.deepEqual(option.args.production_countries, option.codes)
+		assert.equal(discover.safeParse(option.args).success, true)
+	}
+	assert.equal(metadata.examples.length, 14)
 })

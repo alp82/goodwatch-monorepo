@@ -13,8 +13,8 @@ import type { FilterState, Released } from "./filter-state"
 export const SEARCH_MIN_CHARS = 2
 /** The longest query the field takes. */
 export const SEARCH_MAX_CHARS = 512
-/** The ranked list's length: counts and recoveries cover this many results (RESULT_LENGTH of the ranking). */
-export const SEARCH_RESULTS = 100
+/** Maximum frozen search candidate set; counts and recoveries cover this set, with cards paged separately. */
+export const SEARCH_RESULTS = 5000
 
 /** Where "On my services" looks: the viewer's country and saved (or, for guests, chosen) services. */
 export interface SearchScope {

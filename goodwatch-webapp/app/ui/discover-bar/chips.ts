@@ -12,7 +12,6 @@ import { type SubTabId, subTabOfGroup } from "./tabs"
 /** Recoveries show while the list holds at most this many titles. */
 export const RECOVERY_LIST_MAX = 40
 /** A search ranks at most this many titles. */
-export const SEARCH_CAP = 100
 
 export type BarChipKind = "query" | "steer" | "person" | "filter"
 
@@ -184,19 +183,28 @@ export function barChips(
 		.map(({ chip }) => chip)
 }
 
-/** What the count says: "Counting…", "N titles", "N matches", or "Top 100 matches" for a full search. */
+/** What the count says: "Counting…", "N titles", "N matches", or "About N matches" for a full search. */
 export function countWords(
 	total: number | null | undefined,
 	searching: boolean,
-): { n: number | null; words: string; top: boolean } {
-	if (total == null) return { n: null, words: "Counting…", top: false }
-	if (searching && total >= SEARCH_CAP)
-		return { n: SEARCH_CAP, words: "matches", top: true }
+	estimate = false,
+): { n: number | null; words: string; about: boolean } {
+	if (total == null) return { n: null, words: "Counting…", about: false }
+	if (searching && estimate && total > 0)
+		return {
+			n:
+				total < 100
+					? total
+					: Math.round(total / (total < 1000 ? 10 : 100)) *
+						(total < 1000 ? 10 : 100),
+			words: total === 1 ? "match" : "matches",
+			about: true,
+		}
 	const one = total === 1
 	return {
 		n: total,
 		words: searching ? (one ? "match" : "matches") : one ? "title" : "titles",
-		top: false,
+		about: false,
 	}
 }
 

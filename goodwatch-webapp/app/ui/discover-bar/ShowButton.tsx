@@ -1,6 +1,4 @@
-// The panel footer's Show button; it closes the panel. Without a search it is the filter sheet's ShowTitlesButton
-// ("Show N titles"). With one it counts matches: the search ranks at most 100 titles, so a full list reads "Show top 100
-// matches" and fewer "Show N matches".
+// The panel closes onto the matches already counted; candidate-set totals are labelled approximate.
 import { motion } from "framer-motion"
 import { ShowTitlesButton } from "~/ui/filter-bar/ShowTitlesButton"
 import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
@@ -26,7 +24,11 @@ export function ShowButton({
 				className={className}
 			/>
 		)
-	const { n, words, top } = countWords(counts?.total, true)
+	const { n, words, about } = countWords(
+		counts?.total,
+		true,
+		counts?.searchEstimate,
+	)
 	return (
 		<motion.button
 			type="button"
@@ -42,8 +44,8 @@ export function ShowButton({
 				"Show matches"
 			) : n === 0 ? (
 				"No titles match"
-			) : top ? (
-				`Show top ${n} matches`
+			) : about ? (
+				`Show about ${n.toLocaleString("en")} matches`
 			) : (
 				<>
 					Show <RollingNumber value={n} /> {words}

@@ -121,3 +121,13 @@ test("a pendingRanking list keeps its flag and no reading of its own, and the re
 	assert.deepEqual(final.reading, [{ label: "heist" }])
 	assert.equal(final.pendingRanking, undefined)
 })
+
+test("Discover keeps every candidate and the shared snapshot token, not only the hydrated head", async (t) => {
+	const keys = Array.from({ length: 640 }, (_, i) => 1e12 + i + 1)
+	stubFetch(t, () => streamAnswer({ kind: "batch", batch: {
+		rows: [{ key: "movie:1" }], searchKeys: keys, searchSet: "ab".repeat(16), reading: [],
+	} }))
+	const answer = await runDiscoverSearch("fixture", {}, false, new AbortController().signal, () => {})
+	assert.deepEqual(answer.ranked, keys)
+	assert.equal(answer.searchSet, "ab".repeat(16))
+})

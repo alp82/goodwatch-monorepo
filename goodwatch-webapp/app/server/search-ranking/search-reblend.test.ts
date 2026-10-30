@@ -37,3 +37,56 @@ test("reblend retains the original reference's own-title bounds", () => {
 	assert.notEqual(reblend([lookup])[0].id, movie(2))
 	assert.ok(reblend([lookup]).some(row => row.id === movie(99)))
 })
+
+test("Discover continues past 100 while preserving every position in the original head", () => {
+	const keys = Array.from({ length: 640 }, (_, i) => movie(i + 1))
+	const table = {
+		pointIds: keys,
+		rowOf: new Map(keys.map((key, row) => [key, row])),
+		titles: keys.map((_, i) => `Candidate ${i}`),
+		originalTitles: keys.map((_, i) => `Candidate ${i}`),
+		years: keys.map(() => 2000),
+		popularity: keys.map(() => 0),
+		imdbIds: keys.map((_, i) => `tt${i}`),
+	}
+	const large = {
+		...index,
+		words: { df: new Map([["candidate", 1]]) },
+		titleTable: table,
+		alternateCuts: new Map(),
+	} as unknown as SearchIndex
+	const mask = new Uint8Array(keys.length).fill(1)
+	const before = createSearchReblend(
+		large,
+		"candidate",
+		keys.slice(0, 100),
+		new Set(),
+		mask,
+		new Map(),
+		null,
+	)([])
+	const expanded = createSearchReblend(
+		large,
+		"candidate",
+		keys,
+		new Set(),
+		mask,
+		new Map(),
+		null,
+		5000,
+	)([])
+	assert.equal(expanded.length, 640)
+	assert.deepEqual(expanded.slice(0, 100), before)
+	assert.equal(new Set(expanded.map((row) => row.id)).size, 640)
+	const next = createSearchReblend(
+		large,
+		"candidate",
+		keys,
+		new Set(),
+		mask,
+		new Map(),
+		null,
+		5000,
+	)
+	assert.deepEqual(next([]), expanded, "later pages use one frozen order")
+})

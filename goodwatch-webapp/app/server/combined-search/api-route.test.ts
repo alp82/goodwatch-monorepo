@@ -23,6 +23,9 @@ console.info = (line: string) => {
 after(() => { console.info = info })
 ;(globalThis as any).__routeSearchTest = state
 const stubs: Record<string, string> = {
+	"/combined-search/yepwatch.server.ts": `export const searchYepWatchRoom=async()=>null;`,
+	"/domain/discover-search.ts": `export const SEARCH_RESULTS=5000;`,
+	"/server/discover-search-set.server.ts": `export const saveSearchSet=async()=>null;`,
 	"/media-payload.server.ts": `export const payloadLanguage=request=>new URL(request.url).searchParams.get("displayLanguage")||"en"; export const localizeApiTitlePayload=async(batch,request)=>new URL(request.url).searchParams.has("displayLanguage")?({...batch,rows:batch.rows.map(row=>({...row,displayLanguage:new URL(request.url).searchParams.get("displayLanguage")}))}):batch;`,
 	"@remix-run/node": `export const json=(body,options={})=>Response.json(body,options);`,
 	"/utils/auth.ts": `export const getAuthFromRequest=async()=>{globalThis.__routeSearchTest.auth++;return {user:{id:'member'},headers:new Headers()}};`,
@@ -236,4 +239,22 @@ test("legacy search request against a new role retains the canonical NDJSON row 
 	assert.equal(packet.kind,"batch")
 	assert.equal(packet.batch.rows[0].title,"Canonical English")
 	assert.equal(packet.batch.rows[0].displayLanguage,undefined)
+})
+
+test("Discover asks for the expanded candidate set and retains it when shared storage is unavailable", async () => {
+	reset()
+	const keys = Array.from({ length: 640 }, (_, i) => 1e12 + i + 1)
+	state.run = async (_q, _policy, _viewer, _signal, _reading, options) => {
+		assert.equal(options.rows, 5000)
+		const batch = { rows: [{ key: "movie:1" }], searchKeys: keys }
+		await options.onComplete(batch)
+		return batch
+	}
+	const response = await action({ request: new Request("http://localhost:3107/api/combined-search", {
+		method: "POST", headers: { "Content-Type": "application/json", Origin: "http://localhost:3107" },
+		body: JSON.stringify({ q: "fixture", discover: true }),
+	}), params: {}, context: {} })
+	const packets = (await response.text()).trim().split("\n").map(line => JSON.parse(line))
+	assert.equal(response.status, 200)
+	assert.deepEqual(packets.find(packet => packet.kind === "batch").batch.searchKeys, keys)
 })

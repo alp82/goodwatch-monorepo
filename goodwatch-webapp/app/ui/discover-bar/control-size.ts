@@ -25,10 +25,13 @@ const useIsomorphicLayoutEffect =
 export function useControlSize({
 	desktop,
 	chipKey,
+	maxSize = 2,
 }: {
 	desktop: boolean
 	/** Changes whenever the chips do. */
 	chipKey: string
+	/** Active criteria leave more room for their chips, even on a wide screen. */
+	maxSize?: ControlSize
 }) {
 	// The status line renders in both the desktop and the phone block; only one is visible.
 	const rows = useRef(new Set<HTMLElement>())
@@ -58,7 +61,9 @@ export function useControlSize({
 				measure.querySelector<HTMLElement>(`[data-size="${key}"]`)
 					?.offsetWidth ?? 0
 			const room = row.clientWidth - GAPS
-			const sizes: ControlSize[] = desktop ? [2, 1, 0] : [1, 0]
+			const sizes = ([2, 1, 0] as ControlSize[]).filter(
+				(s) => s <= Math.min(maxSize, desktop ? 2 : 1),
+			)
 			const fit =
 				sizes.find(
 					(s) =>
@@ -71,7 +76,7 @@ export function useControlSize({
 		const observer = new ResizeObserver(run)
 		for (const el of rows.current) if (el.isConnected) observer.observe(el)
 		return () => observer.disconnect()
-	}, [desktop, chipKey])
+	}, [desktop, chipKey, maxSize])
 
-	return { size, rowRef, measureRef }
+	return { size: Math.min(size, maxSize) as ControlSize, rowRef, measureRef }
 }

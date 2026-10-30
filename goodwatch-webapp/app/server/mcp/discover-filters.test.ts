@@ -492,3 +492,98 @@ test("budget and shows MCP arguments preserve units and validate ranges", () => 
 	assert.ok(!schema.safeParse({ returns: "unknown" }).success)
 	assert.ok(!schema.safeParse({ show_status: "unknown" }).success)
 })
+
+test("steering, people, origin, country and taste groups round-trip through the native URL codec", () => {
+	const args = schema.parse({
+		similar_to: ["movie:603", "show:95396"],
+		more_like: ["movie:603"],
+		less_like: ["show:95396"],
+		people: [6193, 6193],
+		production_countries: ["jp", "KR", "JP"],
+		streaming_country: "fr",
+		rating_country: "DE",
+		taste_groups: ["show-95396"],
+		max_runtime: 120,
+		unlimited_episode_runtime: true,
+	})
+	const view = discoverView(args, false)
+	assert.deepEqual(view.state.similarTo, [1000000000603, 2000000095396])
+	assert.deepEqual(view.state.loved, [1000000000603])
+	assert.deepEqual(view.state.disliked, [2000000095396])
+	assert.deepEqual(view.state.people, [6193])
+	assert.deepEqual(view.state.productionCountries, ["JP", "KR"])
+	assert.equal(view.state.streamingCountry, "FR")
+	assert.equal(view.state.ratingCountry, "DE")
+	assert.deepEqual(view.state.tasteGroups, ["show-95396"])
+	assert.equal(view.state.episodeRuntime, null)
+	assert.deepEqual(
+		filterStateFromParams(discoverParams(args, false), {
+			onMyServices: false,
+			notSeenYet: false,
+		}),
+		view.state,
+	)
+	const key = discoverViewKey({})
+	for (const name of [
+		"similar_to",
+		"more_like",
+		"less_like",
+		"people",
+		"production_countries",
+		"streaming_country",
+		"taste_groups",
+	] as const) {
+		assert.notEqual(discoverViewKey({ [name]: args[name] }), key, name)
+	}
+})
+
+test("new filter inputs reject invalid namespaces, unbounded selections, and conflicting episode choices", () => {
+	for (const args of [
+		{ similar_to: ["603"] },
+		{ more_like: ["tv:603"] },
+		{ less_like: ["movie:0"] },
+		{ similar_to: Array(11).fill("movie:603") },
+		{ people: [0] },
+		{ people: [1e9] },
+		{ production_countries: ["Japan"] },
+		{ streaming_country: "France" },
+		{ taste_groups: ["private arbitrary group"] },
+		{ taste_groups: Array(4).fill("movie-603") },
+		{ unlimited_episode_runtime: true, min_episode_runtime: 0 },
+		{ unlimited_episode_runtime: true, max_episode_runtime: 30 },
+	])
+		assert.equal(schema.safeParse(args).success, false, JSON.stringify(args))
+	const overlap = discoverView(
+		schema.parse({
+			more_like: ["movie:603", "show:95396"],
+			less_like: ["movie:603"],
+		}),
+		false,
+	)
+	assert.deepEqual(overlap.state.loved, [2000000095396])
+	assert.deepEqual(overlap.state.disliked, [1000000000603])
+})
+
+test("unlimited episodes have a distinct cursor view only when movie bounds otherwise constrain shows", () => {
+	assert.notEqual(
+		discoverViewKey({ max_runtime: 120, unlimited_episode_runtime: true }),
+		discoverViewKey({ max_runtime: 120 }),
+	)
+	assert.equal(
+		discoverViewKey({ unlimited_episode_runtime: true }),
+		discoverViewKey({}),
+	)
+	const args = schema.parse({
+		more_like: ["movie:603"],
+		less_like: ["movie:603"],
+	})
+	const view = discoverView(args, false)
+	assert.equal(view.state.loved, undefined)
+	assert.deepEqual(
+		filterStateFromParams(discoverParams(args, false), {
+			onMyServices: false,
+			notSeenYet: false,
+		}),
+		view.state,
+	)
+})

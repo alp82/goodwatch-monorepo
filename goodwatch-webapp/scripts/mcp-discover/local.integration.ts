@@ -99,9 +99,13 @@ for (const f of fixture)
 		goodwatch_overall_score_voting_count: 2000 + f.id,
 		adult: false,
 		poster_path: "/local.jpg",
+		production_country_codes: f.id % 2 ? ["JP"] : ["US"],
 		streaming_availabilities: [f.id % 2 ? "DE_9" : "DE_8", "US_9"],
 	})
-for (const table of ["movie", "show", "streaming_service", "user_setting"])
+for (const f of fixture)
+	for (const [country, provider] of [["DE", f.id % 2 ? 9 : 8], ["US", 9]] as const)
+		await sql("INSERT INTO streaming_availability (media_tmdb_id,media_type,country_code,streaming_service_id,streaming_type) VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING", [f.id, f.type, country, provider, "flatrate"])
+for (const table of ["movie", "show", "streaming_service", "user_setting", "streaming_availability"])
 	await sql(`REFRESH TABLE ${table}`)
 const version = `mcp-discover-${Date.now()}`
 const rows = fixture.map((f, i) => ({
@@ -185,6 +189,10 @@ const rankedSearch = createRankedSearch({
 		}
 	},
 })
+const {countryServices, availabilityLoaded} = await import("../../app/server/availability-index.server")
+countryServices("DE"); countryServices("US")
+assert.equal(await availabilityLoaded("DE",5000),true)
+assert.equal(await availabilityLoaded("US",5000),true)
 const resource = "http://localhost:3336/mcp"
 let id = 0
 let memberId = "mcp-member-A"
@@ -264,6 +272,9 @@ try {
 	)
 	assert.ok(options.saved_provider_ids.includes(8))
 	assert.equal(options.facts_available, false) // This fixture has no facts sidecar.
+	assert.equal(options.examples.length, 14)
+	assert.ok(Array.isArray(options.taste_groups))
+	assert.deepEqual(options.origin.industries.find((p: {id:string}) => p.id === "japanese").args, {production_countries:["JP"]})
 	assert.equal(options.moods.length, 16)
 	assert.deepEqual(options.match.minimum_match, [0, 60, 70, 80, 90])
 	assert.deepEqual(options.budget.presets[0].args, { max_budget_musd: 4.999 })
@@ -273,6 +284,9 @@ try {
 		{ released: "recent" },
 	)
 	assert.deepEqual(options.origin.rest_of_world.args, { rest_of_world: true })
+	const abroad = await call("get_discover_filters", {streaming_country:"US"})
+	assert.equal(abroad.country,"US")
+	assert.equal((await getMemberViewerContext("mcp-member-A","US")).country,"DE")
 	const first = await call("discover_titles")
 	assert.equal(first.items.length, 40)
 	assert.equal(first.total, 72)
@@ -342,6 +356,15 @@ try {
 	const taste = await loadTaste(ctx.viewer)
 	// Every new filter/ordering is checked through the public SDK against the site's real shared engine.
 	const matrix = [
+		{ more_like: ["movie:9000"], order: "match" },
+		{ less_like: ["movie:9001"], order: "match" },
+		{ more_like: ["movie:9000"], less_like: ["movie:9001"], order: "match" },
+		{ production_countries: ["JP"] },
+		{ production_countries: ["JP", "US"] },
+		{ streaming_country: "US", providers: [9] },
+		{ streaming_country: "US", any_service: true },
+		{ max_runtime: 90, unlimited_episode_runtime: true },
+		{ taste_groups: ["movie-999999"] },
 		// Existing arguments advertised by the shared Discover metadata.
 		{ moods: ["tense", "dark", "deep"] },
 		{ moods: ["magical", "quirky"] },

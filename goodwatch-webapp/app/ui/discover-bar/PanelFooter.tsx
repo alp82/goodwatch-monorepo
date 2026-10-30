@@ -12,7 +12,7 @@ import { type BarChip, countWords } from "./chips"
 
 export const FOOTER_HEIGHT = 68
 
-/** "N titles", "N matches", "Top 100 matches" or "Counting…". */
+/** "N titles", "N matches", "About N matches" or "Counting…". */
 export function CountText({
 	counts,
 	searching,
@@ -20,7 +20,11 @@ export function CountText({
 	counts: FilterBarCounts | null
 	searching: boolean
 }) {
-	const { n, words, top } = countWords(counts?.total, searching)
+	const { n, words, about } = countWords(
+		counts?.total,
+		searching,
+		counts?.searchEstimate,
+	)
 	return (
 		<span
 			className="text-sm leading-5 whitespace-nowrap text-gray-400"
@@ -28,9 +32,11 @@ export function CountText({
 		>
 			{n === null ? (
 				words
-			) : top ? (
+			) : about ? (
 				<>
-					Top <span className="font-bold text-white">{n}</span> {words}
+					About{" "}
+					<span className="font-bold text-white">{n.toLocaleString("en")}</span>{" "}
+					{words}
 				</>
 			) : (
 				<>

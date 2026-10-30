@@ -10,6 +10,8 @@ export interface FilterBarCounts {
 		names: Record<string, string>
 	} | null
 	total: number
+	/** Count within the retrieved search candidate pool, not an exhaustive catalog count. */
+	searchEstimate?: boolean
 	hidden: number
 	/** Titles only that filter hides, largest first. */
 	recoveries: { filter: FilterName; titles: number }[]

@@ -15,9 +15,6 @@ export const TRY_PROMPTS = [
 	"mind-bending sci-fi like Dark",
 ] as const
 
-/** The search ranks at most this many titles; filters can leave fewer. */
-export const SEARCH_CAP = 100
-
 const without = <T>(list: readonly T[] | undefined, value: T) => {
 	const rest = (list ?? []).filter((item) => item !== value)
 	return rest.length ? rest : undefined
@@ -66,9 +63,9 @@ export function moreCount(
 	return `${shown} of ${total}${full ? "+" : ""}`
 }
 
-/** "Top 100 matches", "12 matches", "1 match". */
+/** "About N matches", "12 matches", "1 match". */
 export function matchesLabel(total: number, short: (n: number) => string) {
-	if (total >= SEARCH_CAP) return `Top ${SEARCH_CAP} matches`
+	if (total > 100) return `About ${short(total)} matches`
 	return `${short(total)} ${total === 1 ? "match" : "matches"}`
 }
 

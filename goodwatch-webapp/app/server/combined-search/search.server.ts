@@ -81,6 +81,9 @@ if (runsSearch()) {
 export interface SearchBatch {
 	q: string;
 	rows: Row[];
+	/** Frozen candidate keys for Discover; cards are fetched separately, 40 at a time. */
+	searchKeys?: number[];
+	searchSet?: string;
 	// The interpretation the search used; empty when it ran as a basic search.
 	reading: ReadingChip[];
 	metadata: Metadata[];
@@ -395,6 +398,7 @@ async function titleMatches(
 
 interface ServedList {
 	rows: Row[];
+	searchKeys?: number[];
 	metadata: Metadata[];
 	rankerVersion: string;
 	titleError: boolean;
@@ -487,6 +491,7 @@ async function rankedList(
 		: await rankForServing(
 				fields,
 				{
+					resultLimit: length,
 					query: q,
 					text: language.text,
 					nonEnglish: language.policy.mode !== "english",
@@ -507,7 +512,7 @@ async function rankedList(
 	const rankDone = performance.now();
 	if (signal.aborted) throw new Error("Search interrupted");
 	late?.checkpoint();
-	const listed = ranked.results.slice(0, length).map((r) => ({
+	const listed = ranked.results.slice(0, Math.min(length, 100)).map((r) => ({
 		key: `${r.mediaType}:${r.id % TMDB_ID_RANGE}`,
 		tmdbId: r.id % TMDB_ID_RANGE,
 		mediaType: r.mediaType,
@@ -556,7 +561,10 @@ async function rankedList(
 		const m = meta.get(key);
 		const shown = display.get(key);
 		const poster =
-			found?.poster?.trim() || shown?.poster_path?.trim() || m?.poster_path?.trim() || null;
+			found?.poster?.trim() ||
+			shown?.poster_path?.trim() ||
+			m?.poster_path?.trim() ||
+			null;
 		// Same checks as today's list: eligibility from the catalog, and one row per IMDb title.
 		if (!eligible(m, policy, !found, poster)) continue;
 		if (!found && !shown && at < HEAD_LENGTH) continue;
@@ -623,6 +631,9 @@ async function rankedList(
 				late,
 			),
 		rows,
+		...(length > 100
+			? { searchKeys: ranked.results.map((row) => row.id) }
+			: {}),
 		metadata: [...responseMetadataKeys].flatMap((key) =>
 			meta.has(key) ? [meta.get(key)!] : [],
 		),
@@ -895,15 +906,16 @@ export async function combinedSearch(
 		checkpoint() {
 			if (!lateState.window?.signal.aborted) return;
 			throw new Error(
-				signal.aborted ? "Search interrupted" : "Search ranking did not complete",
+				signal.aborted
+					? "Search interrupted"
+					: "Search ranking did not complete",
 			);
 		},
 		signal: () => lateState.window?.signal,
 		budget: (ms) => {
 			const window = lateState.window;
 			if (!window) return ms;
-			const left =
-				window.missedAt + LATE_COMPLETION_CAP_MS - performance.now();
+			const left = window.missedAt + LATE_COMPLETION_CAP_MS - performance.now();
 			return Math.max(1, Math.min(ms, left));
 		},
 	};
@@ -1098,26 +1110,26 @@ export async function combinedSearch(
 			);
 			const allowedTitles = titleRows
 				.map((t) => withPoster(t, meta.get(titleKey(t))))
-				.filter((t) => eligible(meta.get(titleKey(t)), policy, false, t.poster));
+				.filter((t) =>
+					eligible(meta.get(titleKey(t)), policy, false, t.poster),
+				);
 			const description = results.filter((r) =>
 				eligible(meta.get(`${r.media_type}:${r.tmdb_id}`), policy, true),
 			);
 			const identities = new Set<string>();
-			const rows = blend(
-				allowedTitles,
-				{ results: description },
-				q,
-				"balanced",
-			).map((r) => ({
-				...r,
-				poster: r.poster?.trim() || meta.get(r.key)?.poster_path?.trim() || null,
-			})).filter((r) => {
-				const m = meta.get(r.key),
-					identity = m?.imdb_id?.trim() ? `imdb:${m.imdb_id.trim()}` : r.key;
-				if (identities.has(identity)) return false;
-				identities.add(identity);
-				return true;
-			});
+			const rows = blend(allowedTitles, { results: description }, q, "balanced")
+				.map((r) => ({
+					...r,
+					poster:
+						r.poster?.trim() || meta.get(r.key)?.poster_path?.trim() || null,
+				}))
+				.filter((r) => {
+					const m = meta.get(r.key),
+						identity = m?.imdb_id?.trim() ? `imdb:${m.imdb_id.trim()}` : r.key;
+					if (identities.has(identity)) return false;
+					identities.add(identity);
+					return true;
+				});
 			if ("error" in title && errors.includes("Description search unavailable"))
 				throw new Error("Search unavailable");
 			if (firstBasicList) lap("display");
@@ -1182,6 +1194,7 @@ export async function combinedSearch(
 				);
 				rows = refreshed.rows;
 				metadata = refreshed.metadata;
+				served.searchKeys = refreshed.searchKeys;
 				served.titleError = refreshed.titleError;
 				if (
 					refreshed.titleError &&
@@ -1207,6 +1220,7 @@ export async function combinedSearch(
 		// The history row is written after the response: nothing in the results depends on it. When the session check
 		// failed, the search records nothing.
 		const batch: SearchBatch = {
+			...(served?.searchKeys ? { searchKeys: served.searchKeys } : {}),
 			q: query,
 			rows,
 			reading,
@@ -1229,7 +1243,8 @@ export async function combinedSearch(
 		if (signal.aborted) throw new Error("Search interrupted");
 		// A declined final is not a completed search. The checkpoint below writes no row when nothing reached the
 		// person, and marks the completion failed when an earlier batch did.
-		if (delivered === false) throw new Error("Search results were not delivered");
+		if (delivered === false)
+			throw new Error("Search results were not delivered");
 		stageMs.firstResults ??= options.onComplete
 			? Date.now() - started
 			: elapsedMs;

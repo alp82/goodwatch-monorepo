@@ -12,7 +12,8 @@ export interface SearchView {
 	for_you: boolean
 	exclude_seen: boolean
 	for_you_applied: boolean
-	availability: "everywhere" | "mine" | "providers"
+	availability: "everywhere" | "mine" | "providers" | "any"
+	country?: string
 	filters?: import("./discover-filters.ts").DiscoverFilterArgs
 	filter_key?: string
 }

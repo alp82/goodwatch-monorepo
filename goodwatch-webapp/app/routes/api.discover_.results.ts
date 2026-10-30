@@ -5,7 +5,7 @@ import {
 } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
 import { z } from "zod"
-import { rankedFromParams } from "~/domain/discover-search"
+import { discoverSearchKeys } from "~/server/discover-search-set.server"
 import { filterStateFromParams, sortFromParams } from "~/domain/filter-state"
 import {
 	type DiscoverResults,
@@ -19,6 +19,7 @@ import { type GuestProgress, getViewerContext } from "~/server/viewer.server"
 import type { TasteInteraction } from "~/ui/taste/types"
 import { DISCOVER_MAX_PAGE } from "~/utils/constants"
 import useLocale from "~/utils/locale"
+import { discoverFetch } from "~/ui/discover/discover-fetch"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 
 // One page of Discover's browse results with the filter bar's counts, recoveries, For you movement, and cards.
@@ -37,6 +38,7 @@ export type DiscoverResultsResponse = DiscoverResults
 const MAX_BODY_CHARS = 256 * 1024
 
 const bodySchema = z.object({
+	ranked: z.array(z.number().int().gt(1e12).lt(3e12)).max(5000).optional(),
 	guest: z
 		.object({
 			interactions: z.array(z.unknown()).max(5000),
@@ -50,13 +52,18 @@ const headers = { "Cache-Control": "private, no-store" }
 
 const invalid = (error: string) => json({ error }, { status: 400, headers })
 
-async function respond(request: Request, guest?: GuestProgress) {
+async function respond(
+	request: Request,
+	guest?: GuestProgress,
+	bodyRanked?: number[],
+) {
 	const startedAt = performance.now()
 	const ctx = await getViewerContext(request, guest)
 	const contextMs = performance.now() - startedAt
 
 	const params = new URL(request.url).searchParams
-	const ranked = rankedFromParams(params)
+	if (bodyRanked) params.set("ranked", bodyRanked.join(","))
+	const ranked = await discoverSearchKeys(params)
 	const counts = params.get("counts")?.split(",")
 	let response: DiscoverResults
 	try {
@@ -143,17 +150,7 @@ export function useDiscoverResults({
 	return useQuery<DiscoverResultsResponse>({
 		queryKey: ["discover-results", url, guest ? "guest" : "member"],
 		queryFn: async ({ signal }) => {
-			const response = await fetch(
-				url,
-				guest
-					? {
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({ guest }),
-							signal,
-						}
-					: { signal },
-			)
+			const response = await discoverFetch(url, guest, signal)
 			if (!response.ok)
 				throw new Error(`Discover results failed: ${response.status}`)
 			return response.json()
@@ -181,11 +178,15 @@ async function canonicalAction({ request }: ActionFunctionArgs) {
 	} catch {
 		return invalid("Send { guest: { interactions, country, services } }")
 	}
-	return respond(request, {
-		interactions: (body.guest?.interactions ?? []) as TasteInteraction[],
-		country: body.guest?.country ?? null,
-		services: body.guest?.services ?? null,
-	})
+	return respond(
+		request,
+		{
+			interactions: (body.guest?.interactions ?? []) as TasteInteraction[],
+			country: body.guest?.country ?? null,
+			services: body.guest?.services ?? null,
+		},
+		body.ranked,
+	)
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })

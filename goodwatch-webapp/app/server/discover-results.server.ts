@@ -80,6 +80,7 @@ export interface DiscoverResults
 	explanation: { leanings: FingerprintKey[]; ratings: number } | null
 	/** Whether these are a search's results (the ranked list), not the catalog's. */
 	searching: boolean
+	searchEstimate?: boolean
 	/**
 	 * Sides of you: `rows` on the first page, a row per side (and the titles that fit no side) in place of the page's
 	 * titles, which are then empty; `side` when the list is narrowed to one side's titles. Null otherwise.
@@ -338,6 +339,7 @@ export async function getDiscoverResults(
 		})
 		return {
 			...counts,
+			searchEstimate: searching && ranked.length > 100,
 			tasteGroups,
 			listId: rows[0]?.listId ?? null,
 			page,
@@ -367,6 +369,7 @@ export async function getDiscoverResults(
 	)
 	return {
 		...counts,
+		searchEstimate: searching && ranked.length > 100,
 		tasteGroups,
 		listId,
 		page,

@@ -101,26 +101,26 @@ test("the count's words", () => {
 	assert.deepEqual(countWords(null, false), {
 		n: null,
 		words: "Counting…",
-		top: false,
+		about: false,
 	})
-	assert.deepEqual(countWords(1, false), { n: 1, words: "title", top: false })
+	assert.deepEqual(countWords(1, false), { n: 1, words: "title", about: false })
 	assert.deepEqual(countWords(12, false), {
 		n: 12,
 		words: "titles",
-		top: false,
+		about: false,
 	})
-	assert.deepEqual(countWords(1, true), { n: 1, words: "match", top: false })
+	assert.deepEqual(countWords(1, true), { n: 1, words: "match", about: false })
 	assert.deepEqual(countWords(42, true), {
 		n: 42,
 		words: "matches",
-		top: false,
+		about: false,
 	})
 	assert.deepEqual(countWords(100, true), {
 		n: 100,
 		words: "matches",
-		top: true,
+		about: false,
 	})
-	assert.deepEqual(countWords(5000, false).top, false)
+	assert.deepEqual(countWords(5000, false).about, false)
 })
 
 test("recoveries only while the list is short, biggest first", () => {
@@ -139,4 +139,23 @@ test("recoveries only while the list is short, biggest first", () => {
 		footerRecoveries(0, list, 1).map((r) => r.filter),
 		["moods"],
 	)
+})
+
+test("expanded search counts are approximate, rounded and never capped at 100", () => {
+	assert.deepEqual(countWords(1234, true, true), {
+		n: 1200,
+		words: "matches",
+		about: true,
+	})
+	assert.deepEqual(countWords(640, true, true), {
+		n: 640,
+		words: "matches",
+		about: true,
+	})
+	assert.deepEqual(countWords(0, true, true), {
+		n: 0,
+		words: "matches",
+		about: false,
+	})
+	assert.equal(countWords(5000, true).n, 5000)
 })
