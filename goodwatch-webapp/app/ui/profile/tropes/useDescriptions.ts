@@ -12,6 +12,7 @@ import useLocale from "~/utils/locale"
 import {
 	type ProfileTropeDescriptions,
 	descriptionBatches,
+	descriptionQueryKeys,
 	mergeDescriptionEntries,
 	previewDescriptions,
 } from "~/utils/profile-trope-descriptions"
@@ -27,15 +28,15 @@ export function useDescriptions(
 	const client = useQueryClient()
 	const { user } = useUser()
 	const { locale } = useLocale()
-	const scope = [
-		...profileTropeQueryKey(shell, user?.id ?? null, locale.language),
-		"descriptions",
-	]
+	const keys = descriptionQueryKeys(
+		profileTropeQueryKey(shell, user?.id ?? null, locale.language),
+		seed?.catalogVersion,
+	)
 	const [mounted, setMounted] = useState(false)
 	useEffect(() => setMounted(true), [])
 	const seeds = previewDescriptions(seed?.ranked ?? [])
 	const batches = descriptionBatches(visible.map((tag) => tag.id ?? tag.name))
-	const itemKey = (id: string) => [...scope, "item", id]
+	const itemKey = keys.item
 	const queries = useQueries({
 		queries: batches.map((ids) => {
 			const initialEntries = Object.fromEntries(
@@ -46,7 +47,7 @@ export function useDescriptions(
 				}),
 			)
 			return {
-				queryKey: [...scope, "batch", ...ids.slice().sort()],
+				queryKey: keys.batch(ids),
 				enabled: mounted && seesTropes(shell),
 				initialData: Object.keys(initialEntries).length
 					? {

@@ -3,7 +3,7 @@
 // One link closes it: "Read it on TV Tropes" when the opening is the whole text, else "Keep reading on TV Tropes"
 // with how many paragraphs follow. Spec: docs/implementation/trope-description-doc.md, step 3.
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
-import { Fragment, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import {
 	type LinkRun,
 	type MarkedText,
@@ -43,21 +43,45 @@ function Links({ links, live }: { links: LinkRun[]; live: boolean }) {
 	)
 }
 
-/** Covered until tapped; links inside stay plain text until then, so a tap never opens one by accident. */
+/**
+ * Covered until tapped; links inside stay plain text until then, so a tap never opens one by accident. The wrapper
+ * stays when the button goes and takes the focus, so keyboard and screen reader users land on the uncovered text
+ * (announced as a spoiler) rather than on the page body. Only the covered text blurs, never the focus ring.
+ */
 function Spoiler({ links }: { links: LinkRun[] }) {
 	const [open, setOpen] = useState(false)
-	if (open) return <Links links={links} live />
+	const wrapper = useRef<HTMLSpanElement>(null)
+	const hadFocus = useRef(false)
+	useEffect(() => {
+		if (open && hadFocus.current) wrapper.current?.focus()
+	}, [open])
 	return (
-		<button
-			type="button"
-			onClick={() => setOpen(true)}
-			aria-label="Spoiler, tap to show"
-			className="inline cursor-pointer rounded-sm bg-white/10 text-left blur-[4px] select-none"
+		<span
+			ref={wrapper}
+			tabIndex={open ? -1 : undefined}
+			className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70"
 		>
-			<span aria-hidden>
-				<Links links={links} live={false} />
-			</span>
-		</button>
+			{open ? (
+				<>
+					<span className="sr-only">Spoiler: </span>
+					<Links links={links} live />
+				</>
+			) : (
+				<button
+					type="button"
+					onClick={(event) => {
+						hadFocus.current = document.activeElement === event.currentTarget
+						setOpen(true)
+					}}
+					aria-label="Spoiler, tap to show"
+					className="inline cursor-pointer rounded-sm bg-white/10 text-left outline-none select-none focus-visible:ring-2 focus-visible:ring-sky-300/70"
+				>
+					<span aria-hidden className="blur-[4px]">
+						<Links links={links} live={false} />
+					</span>
+				</button>
+			)}
+		</span>
 	)
 }
 

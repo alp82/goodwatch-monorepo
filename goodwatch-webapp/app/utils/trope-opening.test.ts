@@ -189,6 +189,34 @@ test("the validator mirrors the stored contract", () => {
 	assert.equal(parseDescriptionDoc("[]"), null)
 })
 
+test("the validator agrees with Python on null ranges and on what counts as blank text", () => {
+	// Only an absent field defaults to no ranges; an explicit null breaks the contract, as in Python.
+	for (const key of ["links", "spoilers", "em"])
+		assert.equal(
+			parseDescriptionDoc(doc([{ kind: "p", text: "abc", [key]: null }])),
+			null,
+			key,
+		)
+	assert.equal(
+		parseDescriptionDoc(
+			doc([{ kind: "list", items: [{ text: "abc", depth: 0, em: null }] }]),
+		),
+		null,
+	)
+	// str.isspace, not JavaScript's trim: U+0085 and U+001C-U+001F are blank, U+FEFF and U+200B are text.
+	for (const blank of ["\u0085", "\u001c\u001f", "\u3000 \u00a0", "\t\v"])
+		assert.equal(
+			parseDescriptionDoc(doc([{ kind: "p", text: blank }])),
+			null,
+			JSON.stringify(blank),
+		)
+	for (const text of ["\ufeff", "\u200b", "\u0085x"])
+		assert.ok(
+			parseDescriptionDoc(doc([{ kind: "p", text }])),
+			JSON.stringify(text),
+		)
+})
+
 test("links travel as page paths and only rebuild to TV Tropes wiki pages", () => {
 	const opening = tropeOpening(
 		doc([
@@ -274,4 +302,31 @@ test("the teaser line comes from the opening's first text", () => {
 	)
 	assert.equal(openingLead({ blocks: [list(3)], more: 0 }), "iii")
 	assert.equal(openingLead(null), null)
+})
+
+test("the teaser never shows a spoiler: each becomes an ellipsis, and a lead that is all spoiler shows nothing", () => {
+	const text = "Vader is Luke's father. Then more."
+	assert.equal(
+		openingLead({
+			blocks: [{ kind: "p", text, spoilers: [[9, 22]] }],
+			more: 0,
+		}),
+		"Vader is …. Then more.",
+	)
+	assert.equal(
+		openingLead({
+			blocks: [
+				{ kind: "list", items: [{ text, depth: 0, spoilers: [[0, 5]] }] },
+			],
+			more: 0,
+		}),
+		"… is Luke's father. Then more.",
+	)
+	assert.equal(
+		openingLead({
+			blocks: [{ kind: "p", text: "Vader dies.", spoilers: [[0, 10]] }],
+			more: 0,
+		}),
+		null,
+	)
 })

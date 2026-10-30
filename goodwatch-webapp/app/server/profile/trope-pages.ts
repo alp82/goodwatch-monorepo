@@ -2,6 +2,7 @@ import {
 	type DescriptionReadOptions,
 	type TropeDescriptions,
 	describeRow,
+	descriptionColumns,
 } from "./trope-catalog-data.ts"
 import type { CatalogRead } from "./tropes-data.ts"
 
@@ -149,9 +150,7 @@ export function createTropePageReader(read: CatalogRead) {
 		}>(
 			read,
 			"trope_catalog_page",
-			options.openings === false
-				? "url, title, description"
-				: "url, title, description, description_doc",
+			`url, title, ${descriptionColumns(options)}`,
 			"url",
 			urls,
 		)

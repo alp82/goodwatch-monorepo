@@ -3,17 +3,22 @@ import { query } from "~/utils/crate"
 import {
 	type DescriptionReadOptions,
 	createTropeCatalogReader,
+	withPlainOpenings,
 } from "./trope-catalog-data"
 import {
 	createTropePageReader,
 	createTropeReferenceReader,
 } from "./trope-pages"
 
-const read = createTropeCatalogReader((sql, params) =>
-	query(sql, params, { timeoutMs: 400 }),
+const read = withPlainOpenings(
+	createTropeCatalogReader((sql, params) =>
+		query(sql, params, { timeoutMs: 400 }),
+	),
 )
-const pages = createTropePageReader((sql, params) =>
-	query(sql, params, { timeoutMs: 400 }),
+const pages = withPlainOpenings(
+	createTropePageReader((sql, params) =>
+		query(sql, params, { timeoutMs: 400 }),
+	),
 )
 /** A failed identity read must fail the background build, never persist a degraded grouping. */
 export const resolveTropeReferences = createTropeReferenceReader(
@@ -32,14 +37,7 @@ export async function readTropeDescriptions(
 		)
 			? pages
 			: read
-		try {
-			return await reader(names, options)
-		} catch (error) {
-			// Before the document column exists, keep the plain text; the page splits it into paragraphs itself.
-			if (options.openings === false || !/description_doc/i.test(String(error)))
-				throw error
-			return await reader(names, { openings: false })
-		}
+		return await reader(names, options)
 	} catch (error) {
 		noteMediaReadFailure()
 		console.error(

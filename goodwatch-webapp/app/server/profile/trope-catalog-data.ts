@@ -19,9 +19,20 @@ interface CatalogRow {
 }
 
 export interface DescriptionReadOptions {
-	/** Read the stored document and cut the opening; off for callers that only need the plain text. */
+	/** Cut the opening; off for callers that only need the plain text. */
 	openings?: boolean
+	/**
+	 * Read the stored document for the opening; off before the column exists, when the opening is cut from the plain
+	 * text instead, so the page still never receives the whole text.
+	 */
+	documents?: boolean
 }
+
+/** The columns a read needs besides its key and title. */
+export const descriptionColumns = (options: DescriptionReadOptions) =>
+	options.openings === false || options.documents === false
+		? "description"
+		: "description, description_doc"
 
 /** The plain text plus, when asked for, the opening from the stored document (or the text when it has none). */
 export function describeRow(
@@ -32,7 +43,12 @@ export function describeRow(
 	const plain = text?.trim() || null
 	return options.openings === false
 		? { text: plain }
-		: { text: plain, opening: plain ? tropeOpening(doc, plain) : null }
+		: {
+				text: plain,
+				opening: plain
+					? tropeOpening(options.documents === false ? null : doc, plain)
+					: null,
+			}
 }
 
 /** What crosses to the page: the opening replaces the whole plain text, which can run to 24,000 characters. */
@@ -47,16 +63,40 @@ export function pageDescriptions(
 	)
 }
 
+type DescriptionReader = (
+	names: string[],
+	options?: DescriptionReadOptions,
+) => Promise<TropeDescriptions>
+
+/**
+ * Before the document column exists, cut the opening from the plain text: the page still receives only the opening,
+ * never the whole text. Any other failure stays a failure.
+ */
+export function withPlainOpenings(
+	reader: DescriptionReader,
+): DescriptionReader {
+	return async (names, options = {}) => {
+		try {
+			return await reader(names, options)
+		} catch (error) {
+			if (
+				options.openings === false ||
+				options.documents === false ||
+				!/description_doc/i.test(String(error))
+			)
+				throw error
+			return await reader(names, { ...options, documents: false })
+		}
+	}
+}
+
 /** Exact-name reads from the shared catalog; the per-title `trope.name` full-text index is unrelated. */
 export function createTropeCatalogReader(read: CatalogRead) {
 	return async (
 		input: string[],
 		options: DescriptionReadOptions = {},
 	): Promise<TropeDescriptions> => {
-		const columns =
-			options.openings === false
-				? "name, url, description"
-				: "name, url, description, description_doc"
+		const columns = `name, url, ${descriptionColumns(options)}`
 		const names = [...new Set(input)].sort()
 		const entries: [string, TropeDescription][] = []
 		let next = 0

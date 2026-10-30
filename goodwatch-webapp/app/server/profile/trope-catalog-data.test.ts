@@ -1,8 +1,10 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
-	createTropeCatalogReader,
 	catalogVersion,
+	createTropeCatalogReader,
+	pageDescriptions,
+	withPlainOpenings,
 } from "./trope-catalog-data.ts"
 
 test("catalog reads exact names in bounded batches and retains metadata-only URLs", async () => {
@@ -56,5 +58,41 @@ test("catalog version changes for descriptions and URLs but not result ordering"
 			...a,
 			First: { ...a.First, url: "https://tvtropes.org/renamed" },
 		}),
+	)
+})
+
+test("before the document column exists, the retry still cuts an opening, so the page never gets the whole text", async () => {
+	const sql: string[] = []
+	const long = Array.from({ length: 8 }, (_, i) => `${i}`.repeat(400)).join(
+		"\n\n",
+	)
+	const read = withPlainOpenings(
+		createTropeCatalogReader(async <T extends {}>(query: string) => {
+			sql.push(query)
+			if (query.includes("description_doc"))
+				throw new Error("Column unknown: description_doc")
+			return [
+				{ name: "Long", url: "https://tvtropes.org/x", description: long },
+			] as unknown as T[]
+		}),
+	)
+	const result = await read(["Long"])
+	assert.equal(sql.length, 2)
+	assert.ok(!sql[1].includes("description_doc"))
+	const sent = pageDescriptions(result)
+	assert.equal(sent.Long.text, null)
+	assert.equal(sent.Long.opening?.blocks.length, 3)
+	assert.equal(sent.Long.opening?.more, 5)
+	// Other failures, and callers that only want plain text, are not retried.
+	await assert.rejects(
+		withPlainOpenings(async () => {
+			throw new Error("timeout")
+		})(["Long"]),
+		/timeout/,
+	)
+	await assert.rejects(
+		withPlainOpenings(async () => {
+			throw new Error("description_doc")
+		})(["Long"], { openings: false }),
 	)
 })

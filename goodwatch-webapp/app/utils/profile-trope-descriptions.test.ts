@@ -6,6 +6,7 @@ import {
 	describeTrope,
 	descriptionBatches,
 	descriptionIds,
+	descriptionQueryKeys,
 	mergeDescriptionEntries,
 	previewDescriptions,
 } from "./profile-trope-descriptions.ts"
@@ -115,4 +116,25 @@ test("request-body byte limit rejects a dishonest Content-Length and Unicode byt
 		),
 		{ ok: true, value: ["valid"] },
 	)
+})
+
+test("a new catalog version gets its own item and batch keys, so older cached descriptions can't override it", () => {
+	const base = ["profile-tropes", "alp", null, "en"]
+	const old = descriptionQueryKeys(base, "v-old")
+	const fresh = descriptionQueryKeys(base, "v-new")
+	assert.notDeepEqual(old.item("Main/X"), fresh.item("Main/X"))
+	assert.notDeepEqual(old.batch(["a", "b"]), fresh.batch(["a", "b"]))
+	// Same version: stable keys, batch order doesn't matter, base untouched.
+	assert.deepEqual(
+		old.batch(["b", "a"]),
+		descriptionQueryKeys(base, "v-old").batch(["a", "b"]),
+	)
+	assert.deepEqual(base, ["profile-tropes", "alp", null, "en"])
+	assert.deepEqual(descriptionQueryKeys(base, undefined).item("x"), [
+		...base,
+		"descriptions",
+		"",
+		"item",
+		"x",
+	])
 })

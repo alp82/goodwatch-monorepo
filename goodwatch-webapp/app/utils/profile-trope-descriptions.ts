@@ -33,6 +33,22 @@ export function descriptionBatches(ids: string[]): string[][] {
 	return batches
 }
 
+/**
+ * Query keys for one page's descriptions. The SSR catalog version is part of every key, so a page rendered from a newer
+ * catalog (a backfilled document, a corrected text) never meets items or batches cached from an older one: those
+ * would otherwise override its fresh seeds and, inside the freshness window, keep it from fetching.
+ */
+export function descriptionQueryKeys(
+	base: readonly unknown[],
+	catalogVersion: string | undefined,
+) {
+	const scope = [...base, "descriptions", catalogVersion ?? ""]
+	return {
+		item: (id: string) => [...scope, "item", id],
+		batch: (ids: string[]) => [...scope, "batch", ...ids.slice().sort()],
+	}
+}
+
 /** The initial ranked bands already contain the SSR text; keep it during matrix arrival and revalidation. */
 export function previewDescriptions(ranked: RankedTrope[]): TropeDescriptions {
 	return Object.fromEntries(

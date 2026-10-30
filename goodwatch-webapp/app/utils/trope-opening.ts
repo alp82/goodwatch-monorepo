@@ -52,6 +52,17 @@ export function pageHref(path: string): string | null {
 
 const TEXT_KEYS = new Set(["text", "links", "spoilers", "em"])
 const isInt = (value: unknown): value is number => Number.isInteger(value)
+/** Python's str.isspace set, so `blank` agrees with the validator's `not text.strip()` (JavaScript's trim differs). */
+const PY_SPACE = new Set([
+	0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x85, 0xa0,
+	0x1680, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007,
+	0x2008, 0x2009, 0x200a, 0x2028, 0x2029, 0x202f, 0x205f, 0x3000,
+])
+const blank = (text: string) => {
+	for (let i = 0; i < text.length; i++)
+		if (!PY_SPACE.has(text.charCodeAt(i))) return false
+	return true
+}
 
 /** Offsets that fall between whole characters; null when the text holds a lone surrogate. */
 function boundaries(text: string): Set<number> | null {
@@ -72,11 +83,14 @@ function validText(block: Record<string, unknown>, extra: string) {
 	for (const key of Object.keys(block))
 		if (!TEXT_KEYS.has(key) && key !== extra) return false
 	const text = block.text
-	if (typeof text !== "string" || !text.trim()) return false
+	if (typeof text !== "string" || blank(text)) return false
 	const edges = boundaries(text)
 	if (!edges) return false
 	for (const key of ["links", "spoilers", "em"] as const) {
-		const ranges = block[key] ?? []
+		// Only an absent field defaults; an explicit null is invalid, as in Python's `block.get(key, [])`.
+		const ranges = Object.prototype.hasOwnProperty.call(block, key)
+			? block[key]
+			: []
 		if (!Array.isArray(ranges)) return false
 		let previous = 0
 		for (const span of ranges) {
@@ -254,11 +268,24 @@ export function tropeOpening(
 	}
 }
 
-/** The opening's first text, for a closed band's one-line teaser. */
+/** A closed band can't uncover anything, so each spoiler becomes "…"; null when nothing else is left. */
+function withoutSpoilers(m: MarkedText | undefined): string | null {
+	if (!m) return null
+	let out = ""
+	let at = 0
+	for (const [s, e] of m.spoilers ?? []) {
+		out += `${m.text.slice(at, s)}…`
+		at = e
+	}
+	out += m.text.slice(at)
+	return /[\p{L}\p{N}]/u.test(out.replace(/…/g, "")) ? out : null
+}
+
+/** The opening's first text, spoilers masked, for a closed band's one-line teaser. */
 export function openingLead(opening: TropeOpening | null | undefined) {
 	for (const b of opening?.blocks ?? []) {
-		if (b.kind === "p") return b.text
-		if (b.kind === "list") return b.items[0]?.text ?? null
+		if (b.kind === "p") return withoutSpoilers(b)
+		if (b.kind === "list") return withoutSpoilers(b.items[0])
 	}
 	return null
 }

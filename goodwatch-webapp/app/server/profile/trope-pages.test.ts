@@ -289,4 +289,9 @@ test("page reads bring the description document and cut the opening; an invalid 
 	)
 	await read([page], { openings: false })
 	assert.ok(!sql.at(-1)?.includes("description_doc"))
+	// Without the document column the opening comes from the plain text, and still replaces it.
+	const plainOnly = await read([page], { documents: false })
+	assert.ok(!sql.at(-1)?.includes("description_doc"))
+	assert.deepEqual(plainOnly[page].opening, plain)
+	assert.equal(pageDescriptions(plainOnly)[page].text, null)
 })
