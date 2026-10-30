@@ -3,8 +3,6 @@
 // height on every tab, list page and Settings page, so moving between them never shifts the page. A member without a
 // handle gets a strip of the same height that asks for one. While the owner views as a visitor, the amber bar sticks
 // under the site header (header/VisitorView.tsx).
-// PROTOTYPE OPTIONS (member nav, round 12): where a member visitor's match chip sits (`chip`) comes from
-// nav-options.ts; the header is in header/Layouts.tsx.
 import { UserCircleIcon } from "@heroicons/react/24/outline"
 import { Link, useLocation } from "@remix-run/react"
 import { EDIT_PROFILE_PATH, type PathViewer } from "~/domain/member-paths"
@@ -19,7 +17,6 @@ import type { HeaderMatch } from "~/server/profile/header.server"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 import { TasteTabs } from "~/ui/navigation/AreaTabs"
 import { type TasteTabKey, tasteRow } from "~/ui/navigation/areas"
-import { useNavOptions } from "~/ui/navigation/nav-options"
 import type { ShareTarget } from "./header/Controls"
 import { Frame, InlineHeader } from "./header/Layouts"
 import { VisitorBar, viewSwitchHref } from "./header/VisitorView"
@@ -149,7 +146,6 @@ export function ProfileChrome({
 	pathname: string
 	search: string
 }) {
-	const options = useNavOptions()
 	const location = useLocation()
 	const owner = shell.viewer === "owner"
 	const onProfile = /^\/u\/[^/]+/.test(pathname)
@@ -202,7 +198,6 @@ export function ProfileChrome({
 				controls={controls}
 				match={shell.viewer === "member" ? match : null}
 				ring={asVisitor}
-				options={options}
 			/>
 			{row && <TasteTabs row={row} />}
 		</>

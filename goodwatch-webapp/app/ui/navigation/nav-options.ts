@@ -1,18 +1,17 @@
-// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-12). Not a feature switch: these let the owner
+// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-13). Not a feature switch: these let the owner
 // compare navigation options on the local preview branch. The choice lives in one cookie; the root loader reads it
 // for the server render, and the options bar sets it and reloads the page.
 import { useRouteLoaderData } from "@remix-run/react"
 
 export const NAV_OPTIONS = {
-	/** Where the match chip sits in the header for a member visitor (round 12): next to the handle, as a badge on
-	 * the orbit, in the facts line, beside the controls, or under the avatar. */
-	chip: ["name", "ring", "facts", "controls", "below"],
+	/** The label of the full-width control at the bottom of the Taste twins card (round 13). */
+	meet: ["meet", "share", "compare", "both"],
 } as const
 
 export type NavOptionKey = keyof typeof NAV_OPTIONS
 export type NavOptions = { [K in NavOptionKey]: (typeof NAV_OPTIONS)[K][number] }
 
-export const DEFAULT_NAV_OPTIONS: NavOptions = { chip: "name" }
+export const DEFAULT_NAV_OPTIONS: NavOptions = { meet: "meet" }
 
 export const NAV_OPTIONS_COOKIE = "gw_navopt"
 

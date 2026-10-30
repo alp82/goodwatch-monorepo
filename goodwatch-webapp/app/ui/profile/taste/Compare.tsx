@@ -1,7 +1,8 @@
 // Compare-to-me for a signed-in visitor, at the top of someone else's Taste tab: the match card (the tier word, the
-// percentage, both avatars), then a split button that opens "Where your tastes meet" in place. The section is told
-// through titles, not tags: what only they love, what you both love and what only you love, where your scores split
-// on titles you both rated, and picks for each other.
+// percentage, both avatars) with a full-width row at its foot that opens "Where your tastes meet" right under it. The
+// section is told through titles, not tags: what only they love, what you both love and what only you love, where your
+// scores split on titles you both rated, and picks for each other.
+// PROTOTYPE OPTIONS (member nav, round 13): the row's label, nav-options.ts `meet`.
 import {
 	ArrowRightIcon,
 	ChevronDownIcon,
@@ -14,85 +15,106 @@ import {
 	motion,
 	useReducedMotion,
 } from "framer-motion"
-import { useEffect, useState } from "react"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 import { RATE_FALLBACK_PATH } from "~/domain/member-paths"
 import type { ProfileShell, ProfileTitle } from "~/domain/profile"
 import { type MemberCompare, matchTier } from "~/domain/profile-taste"
 import { useAccountSummary } from "~/ui/account/useAccountSummary"
 import { DISPLAY } from "~/ui/my-pages/bits"
+import { type NavOptions, useNavOptions } from "~/ui/navigation/nav-options"
 import { PANEL_CARD_SIZES, ProfileCard } from "../ProfileCard"
 import { ProfileAvatar } from "../ProfileFrame"
+import { COMPARE_ID, onCompareRequest, scrollUnderRows } from "../compare-link"
 import { matchColor, matchStrength } from "../match"
 import { AMBER_BUTTON, TILE, posterUrl, vibe } from "../parts"
 import { PANEL } from "./parts"
 
 type Ready = Extract<MemberCompare, { status: "ready" }>
 
-/** The section's id. A link to the Taste tab with #compare opens it. */
-export const COMPARE_ID = "compare"
+/** PROTOTYPE OPTIONS (round 13): the row's label. */
+const MEET_LABEL: Record<NavOptions["meet"], string> = {
+	meet: "Where your tastes meet",
+	share: "See what you share",
+	compare: "Compare your tastes side by side",
+	both: "What you both love, and where you split",
+}
 
 /**
- * The match card and, under it, the way into "Where your tastes meet": a split button whose main part and chevron both
- * open and close the section in place. The section fades and slides in; the page below moves down with it.
+ * The match card and, at its foot, the way into "Where your tastes meet": one full-width row under a hairline that
+ * opens and closes the section. The section follows right under the card, fading and sliding in; the page below moves
+ * down with it. The header's match chip opens it too (compare-link.ts): in place on this tab, or by #compare on arrival.
  */
 export function TasteMatch({
 	shell,
 	compare,
 }: { shell: ProfileShell; compare: MemberCompare }) {
 	const still = useReducedMotion() ?? false
+	const label = MEET_LABEL[useNavOptions().meet]
 	const [open, setOpen] = useState(false)
+	const row = useRef<HTMLButtonElement>(null)
+	// Set by the chip or #compare: once the section is open, scroll the row to just under the sticky rows.
+	const [scroll, setScroll] = useState(0)
 	useEffect(() => {
-		if (window.location.hash === `#${COMPARE_ID}`) setOpen(true)
+		const reveal = () => {
+			setOpen(true)
+			setScroll((n) => n + 1)
+		}
+		if (window.location.hash === `#${COMPARE_ID}`) reveal()
+		return onCompareRequest(reveal)
 	}, [])
+	useEffect(() => {
+		if (scroll && open && row.current) scrollUnderRows(row.current)
+	}, [scroll, open])
 	if (compare.status === "thin")
 		return <ThinMatch compare={compare} handle={shell.handle} />
-	const toggle = () => setOpen((o) => !o)
+	const toggle = () => {
+		// A closed section drops #compare, so a reload starts closed.
+		if (open && window.location.hash === `#${COMPARE_ID}`)
+			window.history.replaceState(
+				window.history.state,
+				"",
+				window.location.pathname + window.location.search,
+			)
+		setOpen(!open)
+	}
 	// `layout` makes this a member of the page's LayoutGroup, so the content below slides when the section opens or
 	// closes; popLayout takes a closing section out of the flow at once.
 	return (
 		<motion.div
 			layout={still ? false : "position"}
-			className="relative flex flex-col gap-3"
+			className="relative flex flex-col gap-4"
 		>
-			<MatchCard shell={shell} compare={compare} />
-			<div className="flex">
-				<div className="inline-flex items-stretch rounded-full bg-white/[0.06] ring-1 ring-white/15">
-					<button
-						type="button"
-						aria-expanded={open}
-						aria-controls={COMPARE_ID}
-						onClick={toggle}
-						className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-l-full pr-3 pl-4 text-sm font-bold text-gray-100 hover:bg-white/[0.06]"
-					>
-						Where your tastes meet
-					</button>
-					<span className="my-2 w-px bg-white/15" aria-hidden />
-					<button
-						type="button"
-						aria-expanded={open}
-						aria-controls={COMPARE_ID}
-						aria-label={
-							open
-								? "Hide where your tastes meet"
-								: "Show where your tastes meet"
-						}
-						onClick={toggle}
-						className="inline-flex min-h-10 cursor-pointer items-center rounded-r-full pr-3.5 pl-2.5 text-gray-300 hover:bg-white/[0.06] hover:text-white"
-					>
-						<ChevronDownIcon
-							className={`size-5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-							aria-hidden
-						/>
-					</button>
-				</div>
-			</div>
+			<MatchCard shell={shell} compare={compare}>
+				<button
+					ref={row}
+					type="button"
+					aria-expanded={open}
+					aria-controls={COMPARE_ID}
+					onClick={toggle}
+					className="group flex min-h-14 w-full cursor-pointer items-center gap-3 rounded-b-[23px] px-5 text-left transition-colors hover:bg-white/[0.05] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white sm:px-6"
+					data-compare-row
+				>
+					<span className="min-w-0 flex-1">
+						<span className="block text-sm font-bold text-gray-100 group-hover:text-white sm:text-base">
+							{label}
+						</span>
+						<span className="block text-xs text-gray-500">
+							Overlap, splits, and picks for each other
+						</span>
+					</span>
+					<ChevronDownIcon
+						className={`size-5 shrink-0 text-gray-400 transition-transform duration-200 group-hover:text-white ${open ? "rotate-180" : ""}`}
+						aria-hidden
+					/>
+				</button>
+			</MatchCard>
 			<AnimatePresence initial={false} mode="popLayout">
 				{open && (
 					<motion.section
 						key="meet"
 						id={COMPARE_ID}
-						aria-label="Where your tastes meet"
-						className="flex scroll-mt-44 flex-col gap-4 pt-1"
+						aria-label={label}
+						className="flex flex-col gap-4"
 						initial={{ opacity: 0, y: still ? 0 : -10 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: still ? 0 : -10 }}
@@ -191,11 +213,12 @@ function Avatars({ shell }: { shell: ProfileShell }) {
 }
 
 /** The signed-in visitor's match with the owner: the ring, the tier word, what pulls you both, the counts, and both
- * avatars. */
+ * avatars; `children` is the row at the card's foot, under a hairline. */
 function MatchCard({
 	shell,
 	compare,
-}: { shell: ProfileShell; compare: Ready }) {
+	children,
+}: { shell: ProfileShell; compare: Ready; children: ReactNode }) {
 	const still = useReducedMotion() ?? false
 	const p = compare.percent
 	const s = matchStrength(p)
@@ -232,130 +255,134 @@ function MatchCard({
 				/>
 			)}
 			<div
-				className="relative grid items-center gap-x-8 gap-y-5 rounded-[23px] bg-gray-950 p-5 sm:p-6 md:grid-cols-[auto_minmax(0,1fr)_auto]"
+				className="relative rounded-[23px] bg-gray-950"
 				style={{
-					backgroundImage: `radial-gradient(90% 120% at 0% 50%, color-mix(in srgb, ${color} ${8 + s * 16}%, transparent), transparent 65%)`,
+					backgroundImage: `radial-gradient(90% 120% at 0% 40%, color-mix(in srgb, ${color} ${8 + s * 16}%, transparent), transparent 65%)`,
 				}}
 			>
-				<div className="flex items-center gap-5 md:block">
-					<div className="relative size-28 shrink-0 sm:size-32">
-						{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden; the numbers beside it carry the meaning */}
-						<svg
-							viewBox="0 0 120 120"
-							className="size-full -rotate-90"
-							aria-hidden
-						>
-							<circle
-								cx="60"
-								cy="60"
-								r={R}
-								fill="none"
-								stroke="rgba(255,255,255,.08)"
-								strokeWidth="9"
-							/>
-							<motion.circle
-								cx="60"
-								cy="60"
-								r={R}
-								fill="none"
-								stroke={color}
-								strokeWidth="9"
-								strokeLinecap="round"
-								strokeDasharray={`${((C * p) / 100).toFixed(1)} ${C.toFixed(1)}`}
-								initial={still ? false : { opacity: 0 }}
-								animate={{ opacity: 1 }}
-								transition={{ duration: 0.8 }}
-							/>
-						</svg>
-						<span className="absolute inset-0 flex flex-col items-center justify-center">
-							<span
-								className="text-4xl leading-none font-black tabular-nums"
-								style={{ color }}
+				<div className="grid items-center gap-x-8 gap-y-5 p-5 sm:p-6 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+					<div className="flex items-center gap-5 md:block">
+						<div className="relative size-28 shrink-0 sm:size-32">
+							{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden; the numbers beside it carry the meaning */}
+							<svg
+								viewBox="0 0 120 120"
+								className="size-full -rotate-90"
+								aria-hidden
 							>
-								<CountUp to={p} still={still} />
-								<span className="text-xl">%</span>
+								<circle
+									cx="60"
+									cy="60"
+									r={R}
+									fill="none"
+									stroke="rgba(255,255,255,.08)"
+									strokeWidth="9"
+								/>
+								<motion.circle
+									cx="60"
+									cy="60"
+									r={R}
+									fill="none"
+									stroke={color}
+									strokeWidth="9"
+									strokeLinecap="round"
+									strokeDasharray={`${((C * p) / 100).toFixed(1)} ${C.toFixed(1)}`}
+									initial={still ? false : { opacity: 0 }}
+									animate={{ opacity: 1 }}
+									transition={{ duration: 0.8 }}
+								/>
+							</svg>
+							<span className="absolute inset-0 flex flex-col items-center justify-center">
+								<span
+									className="text-4xl leading-none font-black tabular-nums"
+									style={{ color }}
+								>
+									<CountUp to={p} still={still} />
+									<span className="text-xl">%</span>
+								</span>
+								<span className="mt-1 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
+									match
+								</span>
 							</span>
-							<span className="mt-1 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
-								match
-							</span>
-						</span>
-					</div>
-					<div className="flex flex-col items-start gap-2 md:hidden">
-						<Avatars shell={shell} />
-						<p className="text-sm text-gray-400">
-							You and <b className="text-gray-200">@{shell.handle}</b>
-						</p>
-					</div>
-				</div>
-
-				<div className="flex min-w-0 flex-col gap-3">
-					<div>
-						<p className="hidden text-xs font-bold tracking-[0.18em] text-gray-500 uppercase md:block">
-							You and @{shell.handle}
-						</p>
-						<h2 className={`${DISPLAY} text-3xl sm:text-4xl`}>
-							<span
-								className="relative inline-block overflow-hidden"
-								style={{ color }}
-							>
-								{matchTier(p)}
-								{/* A sheen across the word; it passes more often for a closer match. */}
-								{!still && (
-									<motion.span
-										aria-hidden
-										className="absolute inset-y-0 -left-1/2 w-1/2 bg-linear-to-r from-transparent via-white/40 to-transparent"
-										animate={{ x: ["0%", "400%"] }}
-										transition={{
-											duration: 1.4,
-											ease: "easeInOut",
-											repeat: Number.POSITIVE_INFINITY,
-											repeatDelay: 7 - s * 4,
-										}}
-									/>
-								)}
-							</span>
-						</h2>
-						{(pulls.both.length > 0 ||
-							(pulls.onlyThem[0] && pulls.onlyYou[0])) && (
-							<p className="mt-1 text-sm text-gray-300">
-								{pulls.both.length > 0 && (
-									<>
-										You both go for{" "}
-										{pulls.both.slice(0, 2).join(" and ").toLowerCase()}.{" "}
-									</>
-								)}
-								{pulls.onlyThem[0] && pulls.onlyYou[0] && (
-									<>
-										They chase {pulls.onlyThem[0].toLowerCase()}; you chase{" "}
-										{pulls.onlyYou[0].toLowerCase()}.
-									</>
-								)}
+						</div>
+						<div className="flex flex-col items-start gap-2 md:hidden">
+							<Avatars shell={shell} />
+							<p className="text-sm text-gray-400">
+								You and <b className="text-gray-200">@{shell.handle}</b>
 							</p>
-						)}
+						</div>
 					</div>
-					<dl className="flex gap-5 text-sm">
-						<div>
-							<dt className="text-[11px] text-gray-500">Both love</dt>
-							<dd className="font-black text-white tabular-nums">
-								{compare.overlap.bothCount}
-							</dd>
-						</div>
-						<div>
-							<dt className="text-[11px] text-gray-500">Rated by both</dt>
-							<dd className="font-black text-white tabular-nums">
-								{compare.shared.length}
-							</dd>
-						</div>
-						<div>
-							<dt className="text-[11px] text-gray-500">Big splits</dt>
-							<dd className="font-black text-white tabular-nums">{splits}</dd>
-						</div>
-					</dl>
-				</div>
 
-				<div className="hidden md:block">
-					<Avatars shell={shell} />
+					<div className="flex min-w-0 flex-col gap-3">
+						<div>
+							<p className="hidden text-xs font-bold tracking-[0.18em] text-gray-500 uppercase md:block">
+								You and @{shell.handle}
+							</p>
+							<h2 className={`${DISPLAY} text-3xl sm:text-4xl`}>
+								<span
+									className="relative inline-block overflow-hidden"
+									style={{ color }}
+								>
+									{matchTier(p)}
+									{/* A sheen across the word; it passes more often for a closer match. */}
+									{!still && (
+										<motion.span
+											aria-hidden
+											className="absolute inset-y-0 -left-1/2 w-1/2 bg-linear-to-r from-transparent via-white/40 to-transparent"
+											animate={{ x: ["0%", "400%"] }}
+											transition={{
+												duration: 1.4,
+												ease: "easeInOut",
+												repeat: Number.POSITIVE_INFINITY,
+												repeatDelay: 7 - s * 4,
+											}}
+										/>
+									)}
+								</span>
+							</h2>
+							{(pulls.both.length > 0 ||
+								(pulls.onlyThem[0] && pulls.onlyYou[0])) && (
+								<p className="mt-1 text-sm text-gray-300">
+									{pulls.both.length > 0 && (
+										<>
+											You both go for{" "}
+											{pulls.both.slice(0, 2).join(" and ").toLowerCase()}.{" "}
+										</>
+									)}
+									{pulls.onlyThem[0] && pulls.onlyYou[0] && (
+										<>
+											They chase {pulls.onlyThem[0].toLowerCase()}; you chase{" "}
+											{pulls.onlyYou[0].toLowerCase()}.
+										</>
+									)}
+								</p>
+							)}
+						</div>
+						<dl className="flex gap-5 text-sm">
+							<div>
+								<dt className="text-[11px] text-gray-500">Both love</dt>
+								<dd className="font-black text-white tabular-nums">
+									{compare.overlap.bothCount}
+								</dd>
+							</div>
+							<div>
+								<dt className="text-[11px] text-gray-500">Rated by both</dt>
+								<dd className="font-black text-white tabular-nums">
+									{compare.shared.length}
+								</dd>
+							</div>
+							<div>
+								<dt className="text-[11px] text-gray-500">Big splits</dt>
+								<dd className="font-black text-white tabular-nums">{splits}</dd>
+							</div>
+						</dl>
+					</div>
+
+					<div className="hidden md:block">
+						<Avatars shell={shell} />
+					</div>
 				</div>
+				<div aria-hidden className="h-px bg-white/10" />
+				{children}
 			</div>
 		</section>
 	)
