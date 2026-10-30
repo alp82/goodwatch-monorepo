@@ -142,3 +142,8 @@ Intended commit message: `fix(tropes): preserve description text and provenance 
 - The webapp reads `trope_catalog_page` (keyed by URL) first. A second pass filled its `description_doc`: the planned
   document where the page text equals the plan's text for that URL, a `plain` document built from the page's own
   text where the page text is longer, and nothing otherwise (the page falls back to plain text).
+- Results: `trope_catalog` 35,175 of 35,176 described rows have a document (34,920 written, 255 already current, 0
+  stale; "Faux Computer Code" is skipped because its stored text contains HTML). `trope_catalog_page` 29,727 of
+  29,896: 29,502 documents (28,857 planned, 645 plain from longer page text), then 225 page rows whose text was
+  shorter than the URL's catalog text got that text, document, and provenance (never shorter). The rest fall back to
+  plain text.
