@@ -45,6 +45,8 @@ import {
 	FindOverlay,
 } from "./find/FindField"
 import { shownSubTab } from "./panel-state"
+import { FilterMix } from "./prototype-essentials/FilterMix"
+import { ReadyCombo, useCombo } from "./prototype-essentials/combos"
 import {
 	BarStrip,
 	ESSENTIAL_CHIPS,
@@ -147,6 +149,8 @@ export interface DiscoverControlsProps {
 	essentials?: Variant
 	/** PROTOTYPE essentials F, phones: For you and Sort at the end of the status line. */
 	phoneOrder?: ReactNode
+	/** PROTOTYPE essentials J: the page title, with the count at its right. */
+	heading?: ReactNode
 }
 
 export function DiscoverControls(props: DiscoverControlsProps) {
@@ -176,7 +180,9 @@ function DiscoverControlsContent({
 	className = "",
 	essentials,
 	phoneOrder,
+	heading,
 }: DiscoverControlsProps) {
+	const combo = useCombo()
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
 	const desktop = useDesktop()
@@ -324,10 +330,15 @@ function DiscoverControlsContent({
 		? data.chips.filter((chip) => !ESSENTIAL_CHIPS.has(chip.key))
 		: data.chips
 	const r2 = READY_V2.has(v ?? "")
-	const ready = <ReadySwitch p={ess} phone={false} v2 quiet={v === "I"} />
+	const ready =
+		v === "J" ? (
+			<ReadyCombo p={ess} combo={combo} phone={false} />
+		) : (
+			<ReadySwitch p={ess} phone={false} v2 quiet={v === "I"} />
+		)
 	const statusLine = (
 		<StatusLine
-			noCount={v === "J" && desktop}
+			noCount={v === "J"}
 			counts={counts}
 			searching={searching}
 			chips={statusChips}
@@ -388,6 +399,19 @@ function DiscoverControlsContent({
 
 	return (
 		<MotionConfig reducedMotion="user">
+			{heading && (
+				<div className="flex items-start justify-between gap-4">
+					<div className="min-w-0">{heading}</div>
+					<FilterMix
+						counts={counts}
+						searching={searching}
+						state={state}
+						chips={data.chips}
+						update={filters.update}
+						phone={!desktop}
+					/>
+				</div>
+			)}
 			<div className={className}>
 				<div className="hidden lg:block">
 					<div className="relative">
@@ -457,7 +481,12 @@ function DiscoverControlsContent({
 							<PillPair p={ess} stretch />
 						</div>
 					)}
-					{(v === "C" || r2) && (
+					{v === "J" && (
+						<div className="mt-2">
+							<ReadyCombo p={ess} combo={combo} phone />
+						</div>
+					)}
+					{(v === "C" || (r2 && v !== "J")) && (
 						<div className="mt-2">
 							<ReadySwitch p={ess} phone v2={r2} />
 						</div>

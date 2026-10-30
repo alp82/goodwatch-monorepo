@@ -46,8 +46,8 @@ export type Variant = (typeof VARIANTS)[number]["key"]
 
 export const useVariant = (): Variant => {
 	const [params] = useSearchParams()
-	const v = params.get("variant") ?? "F"
-	return (VARIANTS.find((x) => x.key === v)?.key ?? "F") as Variant
+	const v = params.get("variant") ?? "J"
+	return (VARIANTS.find((x) => x.key === v)?.key ?? "J") as Variant
 }
 
 /** The chips the variant's switches stand in for. */

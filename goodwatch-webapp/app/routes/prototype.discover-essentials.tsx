@@ -36,7 +36,11 @@ import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 import useLocale from "~/utils/locale"
-import { CountTip } from "~/ui/discover-bar/prototype-essentials/CountTip"
+import {
+	ComboSwitcher,
+	OrderCombo,
+	useCombo,
+} from "~/ui/discover-bar/prototype-essentials/combos"
 import {
 	ForYouExplanation,
 	ForYouSort,
@@ -76,6 +80,7 @@ function seed(none: boolean) {
 
 export default function PrototypeDiscoverEssentials() {
 	const variant = useVariant()
+	const combo = useCombo()
 	const [seedParams] = useSearchParams()
 	seed(seedParams.get("services") === "none")
 	const { user, loading } = useUser()
@@ -198,33 +203,39 @@ export default function PrototypeDiscoverEssentials() {
 		)
 
 	const desktop = useDesktop()
-	const order = (
-					<div className="shrink-0 max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden">
-						<ForYouSort
-							forYou={forYou}
-							compact={!desktop}
-							quiet={variant === "I"}
-							slim={variant === "G" || variant === "J"}
-							sort={{
-								options: discoverSorts(searching, taste),
-								value: sortShown(filters.sort, searching, taste),
-								onChange: (key) => filters.setSort(key as typeof filters.sort),
-								footnote: searching ? undefined : "Relevance joins once you search.",
-								align: "right",
-							}}
-						/>
-					</div>
+	const sortProps = {
+		options: discoverSorts(searching, taste),
+		value: sortShown(filters.sort, searching, taste),
+		onChange: (key: string) => filters.setSort(key as typeof filters.sort),
+		footnote: searching ? undefined : "Relevance joins once you search.",
+		align: "right" as const,
+	}
+	const order =
+		variant === "J" ? (
+			<OrderCombo forYou={forYou} sort={sortProps} combo={combo} phone={!desktop} />
+		) : (
+			<div className="shrink-0 max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden">
+				<ForYouSort
+					forYou={forYou}
+					compact={!desktop}
+					quiet={variant === "I"}
+					slim={variant === "G"}
+					sort={sortProps}
+				/>
+			</div>
+		)
+	const title = (
+		<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
+			Discover movies and shows
+		</h1>
 	)
 	return (
 		<div className="mx-auto max-w-[1600px] px-4 pt-4 pb-16 lg:px-8 lg:pt-6">
-			<div className={`flex items-center justify-between gap-x-6 gap-y-3 ${variant >= "F" ? "" : "flex-wrap"}`}>
+			<div className={`flex items-center justify-between gap-x-6 gap-y-3 ${variant >= "F" ? "" : "flex-wrap"} ${variant === "J" ? "hidden" : ""}`}>
 				<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
 					Discover movies and shows
 				</h1>
 				{(variant === "F" || variant === "H" || variant === "I") && desktop && order}
-				{variant === "J" && desktop && (
-					<CountTip counts={data} searching={searching} state={filters.state} />
-				)}
 				{variant === "D" && (
 					<div className="max-lg:w-full">
 						<PillPair
@@ -245,6 +256,7 @@ export default function PrototypeDiscoverEssentials() {
 			<DiscoverControls
 				className="mt-3 lg:mt-5"
 				essentials={variant}
+				heading={variant === "J" ? title : undefined}
 				phoneOrder={order}
 				bar={bar}
 				filters={filters}
@@ -280,6 +292,7 @@ export default function PrototypeDiscoverEssentials() {
 				<GridDim on={desktop && bar.panel.open !== null} />
 			</div>
 			<VariantSwitcher />
+			{variant === "J" && <ComboSwitcher />}
 		</div>
 	)
 }
