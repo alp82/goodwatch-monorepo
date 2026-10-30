@@ -21,7 +21,7 @@ export const isDiscovery = (path: string) =>
 
 /**
  * The URL with the last filters of a listing, when someone opens its entry point without a query. Null when the
- * page opens as asked.
+ * page opens as asked. Discover never restores: a plain /discover link opens fresh, not with the last search.
  */
 export function restoredEntry(
 	pathname: string,
@@ -30,7 +30,11 @@ export function restoredEntry(
 ): string | null {
 	if (search && search !== "?") return null
 	if (!isDiscovery(pathname) || pathname === "/") return null
-	if (pathname.startsWith("/taste") || /^\/(movie|show)\//.test(pathname))
+	if (
+		pathname.startsWith("/taste") ||
+		/^\/(movie|show)\//.test(pathname) ||
+		/^\/discover(\/|$)/.test(pathname)
+	)
 		return null
 	const previous = context.routes?.[pathname]
 	return previous?.url.includes("?") ? previous.url : null
