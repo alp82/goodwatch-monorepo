@@ -11,6 +11,7 @@ import type { FilterBarCounts } from "~/ui/filter-bar/types"
 import { BarChips } from "./BarChips"
 import { ShowButton } from "./ShowButton"
 import { type BarChip, countWords, footerRecoveries } from "./chips"
+import { colorOf } from "./prototype-essentials/FilterMix"
 
 export const FOOTER_HEIGHT = 68
 
@@ -78,7 +79,16 @@ export function PanelFooter({
 	onClearAll,
 	onShow,
 	phone = false,
+	look = "a",
+	mix,
 }: {
+	/**
+	 * PROTOTYPE footer looks (`?footer=`): a today; b the header's count + line, recoveries as links, no chips; c the
+	 * same with recoveries as pills in their filter's color; d no count (the Show button has it), recovery pills only.
+	 */
+	look?: "a" | "b" | "c" | "d"
+	/** PROTOTYPE: the header's count with its line and popout (FilterMix). */
+	mix?: React.ReactNode
 	counts: FilterBarCounts | null
 	searching: boolean
 	state: FilterState
@@ -95,12 +105,51 @@ export function PanelFooter({
 	onShow: () => void
 	phone?: boolean
 }) {
-	const recoveries = footerRecoveries(
-		counts?.total,
-		counts?.recoveries,
-		phone ? 1 : 2,
+	const recoveries =
+		look === "a"
+			? footerRecoveries(counts?.total, counts?.recoveries, phone ? 1 : 2)
+			: footerRecoveries(counts?.total, counts?.recoveries, phone ? 2 : 3)
+	const pills = (
+		<div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none]">
+			{recoveries.map((r) => (
+				<motion.button
+					key={r.filter}
+					type="button"
+					whileTap={TAP}
+					onClick={() => onDrop(r.filter)}
+					className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white/[0.06] px-3 text-[13px] font-semibold whitespace-nowrap text-gray-100 cursor-pointer outline-none hover:bg-white/[0.1] focus-visible:ring-2 focus-visible:ring-amber-400"
+				>
+					<span className={`h-2 w-2 shrink-0 rounded-full ${colorOf(r.filter)}`} aria-hidden />
+					<span className="sr-only">Show </span>
+					<span className="font-bold text-amber-300">+{r.titles.toLocaleString("en")}</span>
+					{recoveryLabel(r.filter, r.titles, state).replace(/^[\d,.k]+\s*/, "")}
+				</motion.button>
+			))}
+		</div>
 	)
-	const line = (
+	const links = (
+		<div className="flex min-w-0 flex-1 items-center gap-4 overflow-x-auto [scrollbar-width:none]">
+			{recoveries.map((r) => (
+				<motion.button
+					key={r.filter}
+					type="button"
+					whileTap={TAP}
+					onClick={() => onDrop(r.filter)}
+					className="flex shrink-0 items-center gap-1 rounded-md text-[13px] font-bold whitespace-nowrap text-amber-400 cursor-pointer outline-none hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400"
+				>
+					<PlusIcon className="h-3.5 w-3.5" aria-hidden />
+					<span className="sr-only">Show </span>
+					{recoveryLabel(r.filter, r.titles, state)}
+				</motion.button>
+			))}
+		</div>
+	)
+	const line = look !== "a" ? (
+		<div className="flex min-w-0 flex-1 items-center gap-4">
+			{look !== "d" && mix}
+			{look === "b" ? links : pills}
+		</div>
+	) : (
 		<div className="flex min-w-0 flex-1 items-center gap-3">
 			<Count counts={counts} searching={searching} />
 			{recoveries.map((r) => (

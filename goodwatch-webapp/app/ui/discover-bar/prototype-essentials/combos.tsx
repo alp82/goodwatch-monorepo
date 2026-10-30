@@ -763,3 +763,36 @@ export function ChipSwitcher() {
 		</div>
 	)
 }
+
+export const FOOTER_LOOKS = [
+	{ key: "a", name: "Footer today" },
+	{ key: "b", name: "Count + line, links" },
+	{ key: "c", name: "Count + line, pills" },
+	{ key: "d", name: "Pills only" },
+] as const
+
+/** A fourth switcher, for the panel footer looks. */
+export function FooterSwitcher() {
+	const [params] = useSearchParams()
+	const navigate = useNavigate()
+	const current = params.get("footer") ?? "c"
+	const i = Math.max(0, FOOTER_LOOKS.findIndex((c) => c.key === current))
+	const go = (d: number) => {
+		const next = new URLSearchParams(params)
+		next.set("footer", FOOTER_LOOKS[(i + d + FOOTER_LOOKS.length) % FOOTER_LOOKS.length].key)
+		navigate(`?${next}`, { replace: true, preventScrollReset: true })
+	}
+	return (
+		<div className="fixed bottom-[146px] left-3 z-[2000] flex items-center gap-1 rounded-full bg-orange-700 px-1 py-1 text-xs font-bold text-white shadow-lg max-lg:bottom-[276px]">
+			<button type="button" onClick={() => go(-1)} className="rounded-full p-1.5 hover:bg-white/20" aria-label="Previous footer">
+				<ChevronLeftIcon className="h-4 w-4" />
+			</button>
+			<span className="px-1 whitespace-nowrap">
+				Footer {FOOTER_LOOKS[i].key} · {FOOTER_LOOKS[i].name}
+			</span>
+			<button type="button" onClick={() => go(1)} className="rounded-full p-1.5 hover:bg-white/20" aria-label="Next footer">
+				<ChevronRightIcon className="h-4 w-4" />
+			</button>
+		</div>
+	)
+}

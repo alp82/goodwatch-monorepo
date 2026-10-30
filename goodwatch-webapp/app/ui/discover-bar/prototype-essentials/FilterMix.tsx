@@ -14,7 +14,7 @@ import type { FilterBarCounts } from "~/ui/filter-bar/types"
 import { CountText } from "../PanelFooter"
 import type { BarChip } from "../chips"
 
-const colorOf = (group: FilterName | string): string => {
+export const colorOf = (group: FilterName | string): string => {
 	const meter = METER_COLORS[group as FilterName]
 	if (meter) return meter
 	const bar = FILTER_ACCENTS[group as FilterName]?.bar
@@ -80,7 +80,10 @@ export function FilterMix({
 	chips,
 	update,
 	phone,
+	side = "right",
 }: {
+	/** Left: the count and the popout start at the left; the popout opens upward (the panel footer). */
+	side?: "right" | "left"
 	counts: FilterBarCounts | null
 	searching: boolean
 	state: FilterState
@@ -167,10 +170,10 @@ export function FilterMix({
 				aria-expanded={open}
 				aria-controls={id}
 				onClick={() => setOpen((o) => !o)}
-				className={`flex h-12 flex-col items-end justify-center gap-1 rounded-lg px-1.5 text-right cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[116px]" : "w-[172px]"}`}
+				className={`flex h-12 flex-col justify-center gap-1 rounded-lg px-1.5 ${side === "left" ? "items-start text-left" : "items-end text-right"} cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[116px]" : "w-[172px]"}`}
 			>
 				<CountText counts={counts} searching={searching} />
-				<span className="flex h-3 w-full items-center gap-2">
+				<span className={`flex h-3 w-full items-center gap-2 ${side === "left" ? "flex-row-reverse" : ""}`}>
 					<span className="h-3 text-[11px] leading-3 whitespace-nowrap text-gray-500">
 						{hidden > 0 && !phone ? `${compactCount(hidden)} hidden` : ""}
 					</span>
@@ -183,11 +186,11 @@ export function FilterMix({
 						id={id}
 						role="dialog"
 						aria-label="What your filters hide"
-						initial={{ opacity: 0, y: -4 }}
+						initial={{ opacity: 0, y: side === "left" ? 4 : -4 }}
 						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: -4 }}
+						exit={{ opacity: 0, y: side === "left" ? 4 : -4 }}
 						transition={{ duration: 0.14 }}
-						className={`absolute top-full right-0 z-50 mt-2 p-3.5 text-[13px] ${phone ? "w-[min(340px,calc(100vw-32px))]" : "w-[360px]"} ${MENU}`}
+						className={`absolute z-50 p-3.5 ${side === "left" ? "bottom-full left-0 mb-2" : "top-full right-0 mt-2"} text-[13px] ${phone ? "w-[min(340px,calc(100vw-32px))]" : "w-[360px]"} ${MENU}`}
 					>
 						<p className="text-sm font-bold text-white">
 							{total.toLocaleString("en")} of {(total + hidden).toLocaleString("en")} titles

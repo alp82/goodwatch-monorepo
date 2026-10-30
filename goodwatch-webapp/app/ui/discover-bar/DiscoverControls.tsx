@@ -190,6 +190,12 @@ function DiscoverControlsContent({
 	const combo = useCombo()
 	const [fitParams] = useSearchParams()
 	const fixedFit = fitParams.get("fit")
+	const footerParam = fitParams.get("footer")
+	const footerLook = (
+		footerParam === "a" || footerParam === "b" || footerParam === "c" || footerParam === "d"
+			? footerParam
+			: "c"
+	) as "a" | "b" | "c" | "d"
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
 	const desktop = useDesktop()
@@ -322,6 +328,18 @@ function DiscoverControlsContent({
 			onClearAll={clearAllNow}
 			onShow={close}
 			phone={phone}
+			look={v === "J" ? footerLook : "a"}
+			mix={
+				<FilterMix
+					counts={counts}
+					searching={searching}
+					state={state}
+					chips={data.chips}
+					update={filters.update}
+					phone={phone}
+					side="left"
+				/>
+			}
 		/>
 	)
 	// PROTOTYPE J: style b's size. The widest size whose two controls leave the chips the room they need.
