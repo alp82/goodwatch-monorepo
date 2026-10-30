@@ -139,7 +139,7 @@ export function Overlap({ handle, c, frame = PANEL }: PanelProps) {
 	const them = overlap.onlyThem.slice(0, 4)
 	const you = overlap.onlyYou.slice(0, 4)
 	return (
-		<div className={`${frame} relative overflow-hidden p-4 sm:p-6`}>
+		<div className={`${frame} relative overflow-hidden p-5 sm:p-8`}>
 			{/* Two circles that overlap: theirs amber, yours white. Drawn behind three poster fans on wide screens. */}
 			{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden; the numbers beside it carry the meaning */}
 			<svg
@@ -212,7 +212,7 @@ export function Splits({ handle, c, frame = PANEL }: PanelProps) {
 	const rows = all ? shared : shared.slice(0, 6)
 	const at = (score: number) => `${((score - 1) / 9) * 100}%`
 	return (
-		<div className={`${frame} flex flex-col gap-3 p-4 sm:p-5`}>
+		<div className={`${frame} flex flex-col gap-3 p-5 sm:p-8`}>
 			<div className="flex flex-wrap items-baseline gap-x-3">
 				<p className="font-bold text-white">Where you split</p>
 				<p className="text-xs text-gray-400">
@@ -300,7 +300,7 @@ export function Picks({ handle, c, frame = PANEL }: PanelProps) {
 	const forThem = c.overlap.onlyYou.filter((x) => x.wished).slice(0, 4)
 	if (!forYou.length && !forThem.length) return null
 	return (
-		<div className={`${frame} flex flex-col gap-4 p-4 sm:p-5`}>
+		<div className={`${frame} flex flex-col gap-4 p-5 sm:p-8`}>
 			<div>
 				<p className="font-bold text-white">Picks for each other</p>
 				<p className="text-xs text-gray-400">

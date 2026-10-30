@@ -15,7 +15,6 @@ import {
 } from "./nav-options"
 
 const ROWS: { key: NavOptionKey; label: string }[] = [
-	{ key: "panels", label: "Panels" },
 	{ key: "match", label: "Match %" },
 ]
 

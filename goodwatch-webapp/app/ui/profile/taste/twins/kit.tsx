@@ -187,6 +187,16 @@ export function EdgeBar({ p, still, rounded }: { p: number; still: boolean; roun
 						transition={t}
 					/>
 				</motion.span>
+				{/* The tier dividers stay visible over the fill too. */}
+				<span className="absolute inset-x-0 bottom-0 h-[5px]">
+					{ZONES.slice(1).map(([a]) => (
+						<span
+							key={a}
+							className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-gray-950"
+							style={{ left: `${a}%` }}
+						/>
+					))}
+				</span>
 			</span>
 			{/* The marker: a line 13 px tall, centered on the 5 px bar. */}
 			<motion.span
@@ -217,7 +227,11 @@ export function Cue({ open, short = true, className = "" }: { open: boolean; sho
 		<span
 			className={`relative flex shrink-0 items-center gap-1.5 rounded-full bg-white/[0.06] py-2 pr-2.5 pl-3 text-sm font-bold text-amber-300 ring-1 ring-white/10 transition-colors group-hover:bg-amber-400 group-hover:text-gray-950 group-hover:ring-amber-400 ${short ? "max-sm:pl-2.5" : ""} ${className}`}
 		>
-			<span className={short ? "max-sm:sr-only" : ""}>{open ? "Hide" : "Compare side by side"}</span>
+			{/* Both labels share one grid cell, so the button keeps its width and nothing beside it moves. */}
+			<span className={`grid ${short ? "max-sm:sr-only" : ""}`}>
+				<span className={`col-start-1 row-start-1 ${open ? "invisible" : ""}`}>Compare side by side</span>
+				<span className={`col-start-1 row-start-1 ${open ? "" : "invisible"}`}>Hide the comparison</span>
+			</span>
 			<ChevronDownIcon className={`size-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} aria-hidden />
 		</span>
 	)

@@ -10,7 +10,7 @@ import type { TwinsProps } from "./types"
 
 export default function TwinsStrip({ shell, compare, open, toggle, topRef, still, label, sectionId }: TwinsProps) {
 	const f = useMatchFacts(compare)
-	const look = useNavOptions().panels
+	const look = "3" as const // Panels 3 locked (round 17)
 	const inCard = attached(look)
 	// Open inside the card, the bar becomes the seam, so the strip's bottom corners go square.
 	const seam = open && inCard

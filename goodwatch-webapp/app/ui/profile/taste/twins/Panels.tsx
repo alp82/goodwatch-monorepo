@@ -15,7 +15,7 @@ import type { NavOptions } from "~/ui/navigation/nav-options"
 import { EASE, type Facts } from "./kit"
 import { Overlap, Picks, type Ready, Splits } from "./parts"
 
-export type Look = NavOptions["panels"]
+export type Look = "1" | "2" | "3" | "4" | "5"
 
 /** Whether the panels open inside the strip's card (the bar becomes the seam) rather than below it. */
 export const attached = (look: Look) => look !== "2"
@@ -61,8 +61,8 @@ export function Panels({
 
 	// Per look: the section's own surface, each part's surface, and the lines between them.
 	const lined = look === "1" || look === "3" || look === "5"
-	const line = look === "1" ? "border-white/[0.08]" : look === "5" ? "border-white/[0.06]" : ""
-	const lineStyle = look === "3" ? { borderColor: tint(f.color, 40) } : undefined
+	const line = look === "1" ? "border-white/[0.08]" : look === "5" ? "border-white/[0.06]" : look === "3" ? "border-white/[0.1]" : ""
+	const lineStyle = undefined
 	const shade = (i: number) => (look === "4" && i % 2 === 0 ? "bg-white/[0.055]" : "")
 	const section = {
 		"1": "",

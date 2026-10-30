@@ -4,9 +4,6 @@
 import { useRouteLoaderData } from "@remix-run/react"
 
 export const NAV_OPTIONS = {
-	/** How the expanded comparison presents its panels (round 16): no boxes, separators instead, and the strip's
-	 * surface unchanged when open; the values try different separators and background colors. */
-	panels: ["1", "2", "3", "4", "5"],
 	/** Simulates the match percentage everywhere it shows, to see each tier: "real" keeps the actual number. */
 	match: ["real", "12", "35", "55", "75", "97"],
 } as const
@@ -14,7 +11,7 @@ export const NAV_OPTIONS = {
 export type NavOptionKey = keyof typeof NAV_OPTIONS
 export type NavOptions = { [K in NavOptionKey]: (typeof NAV_OPTIONS)[K][number] }
 
-export const DEFAULT_NAV_OPTIONS: NavOptions = { panels: "1", match: "real" }
+export const DEFAULT_NAV_OPTIONS: NavOptions = { match: "real" }
 
 export const NAV_OPTIONS_COOKIE = "gw_navopt"
 
