@@ -134,6 +134,57 @@ function page({
 	}
 }
 
+for (const member of [false, true]) {
+	for (const count of [1092, 5000]) {
+		test(`homepage Enter search loads ${count} ranked titles for a ${member ? "member" : "guest"} without an oversized URL`, async (t) => {
+			const ids = Array.from({ length: count }, (_, i) => i + 1)
+			const ranked = ids.map((id) => 1e12 + id)
+			const net = stubFetch(t, (call) => {
+				if (call.url.startsWith("/api/combined-search"))
+					return searchStream(ids)
+				// The production HTTP parser rejects the homepage's long request target with 431.
+				if (call.url.length > 16 * 1024)
+					return new Response(null, { status: 431 })
+				return resultsAnswer(ids.slice(0, START_CARDS), count)
+			})
+			const p = page({ member })
+			t.after(() => p.search.dispose())
+			assert.equal(p.field.submit("funny science fiction"), true)
+			await until(
+				() => p.last()?.status !== "loading",
+				"the homepage search to finish",
+			)
+			assert.equal(
+				p.last()?.status,
+				"ready",
+				p.last()?.error ?? "results should load",
+			)
+			assert.equal(p.last()?.cards.length, START_CARDS)
+			assert.equal(p.last()?.total, count)
+			assert.deepEqual(
+				p.last()?.ranked,
+				ranked,
+				"keep the complete ranking and its order",
+			)
+			assert.equal(net.results().length, 1)
+			const request = net.results()[0]
+			assert.equal(request.init?.method, "POST")
+			assert.equal(request.init?.signal?.aborted, false)
+			const params = new URL(request.url, "https://goodwatch.invalid")
+				.searchParams
+			assert.equal(params.has("ranked"), false)
+			assert.equal(params.get("services"), "any")
+			assert.equal(params.get("unseen"), "0")
+			assert.equal(params.get("sort"), "relevance")
+			assert.equal(params.get("page"), "1")
+			assert.deepEqual(JSON.parse(String(request.init?.body)), {
+				...(member ? {} : { guest: GUEST }),
+				ranked,
+			})
+		})
+	}
+}
+
 test("typing searches once, after the pause", async (t) => {
 	t.mock.timers.enable({ apis: ["setTimeout"] })
 	const net = stubFetch(t, server)

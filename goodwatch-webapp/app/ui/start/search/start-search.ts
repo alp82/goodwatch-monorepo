@@ -5,7 +5,7 @@
 //    then the ranked list. Each text is searched once: the answer is kept, so changing the picks only re-filters.
 // 2. The ranked list (or, with picks only, the catalog) goes to /api/discover/results with the picks as moods, themes,
 //    and styles, and the services scope: `any` (any streaming offer in the country) without saved services, `mine`
-//    with them. A guest POSTs their progress (useGuestBody); a member GETs.
+//    with them. Discover's transport POSTs large ranked lists in the body; guests also include their browser progress.
 //
 // The answer is StartResults, marked with the query's signature. A newer query aborts the requests of an older one,
 // and an answer that arrives for a query no longer asked is dropped. A 503 while the title snapshot loads is asked
@@ -27,6 +27,7 @@ import {
 import { picksOf } from "~/domain/taste-picker"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { DiscoverResults } from "~/server/discover-results.server"
+import { discoverFetch } from "~/ui/discover/discover-fetch"
 import { runDiscoverSearch } from "~/ui/discover/discover-search-request"
 import type { GuestBody } from "~/ui/discover/useDiscoverBrowse"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
@@ -297,17 +298,7 @@ export function createStartSearch({
 		})
 		let response: Response
 		try {
-			response = await fetch(
-				path,
-				viewer
-					? {
-							signal,
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({ guest: viewer }),
-						}
-					: { signal },
-			)
+			response = await discoverFetch(path, viewer, signal)
 		} catch {
 			if (live()) fail(RESULTS_ERROR)
 			return
