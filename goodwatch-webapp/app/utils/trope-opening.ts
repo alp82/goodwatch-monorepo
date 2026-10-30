@@ -254,13 +254,15 @@ export function isReaderNote(text: string): boolean {
 	)
 }
 
-/** The blocks without a leading reader note, as long as something else is left to show. */
+/** The blocks without a reader note before the first paragraph (headings stay), as long as something else is left. */
 export function withoutReaderNote(blocks: DocBlock[]): DocBlock[] {
-	const first = blocks[0]
+	let i = 0
+	while (blocks[i]?.kind === "heading") i++
+	const first = blocks[i]
 	return first?.kind === "p" &&
 		isReaderNote(first.text) &&
-		counted(blocks.slice(1)) > 0
-		? blocks.slice(1)
+		counted(blocks.slice(i + 1)) > 0
+		? [...blocks.slice(0, i), ...blocks.slice(i + 1)]
 		: blocks
 }
 

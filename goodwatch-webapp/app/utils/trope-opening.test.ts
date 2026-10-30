@@ -84,6 +84,13 @@ test("a short reader note before the first paragraph is skipped, unless nothing 
 	assert.equal(opening?.blocks.length, 1)
 	assert.equal((opening?.blocks[0] as { text: string }).text, "x".repeat(300))
 	assert.equal(tropeOpening(doc([note]), null)?.blocks.length, 1)
+	// A heading before the note stays; the note goes, so the teaser starts at the definition.
+	const labelled = tropeOpening(doc([heading, note, p(300)]), null)
+	assert.deepEqual(
+		labelled?.blocks.map((b) => b.kind),
+		["heading", "p"],
+	)
+	assert.equal(openingLead(labelled), "x".repeat(300))
 	// Plain text gets the same treatment.
 	const plain = tropeOpening(
 		null,
