@@ -15,6 +15,7 @@ import {
 } from "./nav-options"
 
 const ROWS: { key: NavOptionKey; label: string }[] = [
+	{ key: "dupes", label: "Repeats" },
 	{ key: "match", label: "Match %" },
 ]
 

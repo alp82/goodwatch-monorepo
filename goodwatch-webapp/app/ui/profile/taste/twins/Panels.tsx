@@ -11,9 +11,9 @@
 import { AnimatePresence, motion } from "framer-motion"
 import type { ReactNode } from "react"
 import type { ProfileShell } from "~/domain/profile"
-import type { NavOptions } from "~/ui/navigation/nav-options"
+import { type NavOptions, useNavOptions } from "~/ui/navigation/nav-options"
 import { EASE, type Facts } from "./kit"
-import { Overlap, Picks, type Ready, Splits } from "./parts"
+import { Overlap, Picks, type Ready, Splits, planCompare } from "./parts"
 
 export type Look = "1" | "2" | "3" | "4" | "5"
 
@@ -56,7 +56,9 @@ export function Panels({
 }) {
 	const handle = shell.handle
 	const hasSplits = compare.shared.length > 0
-	const hasPicks = compare.overlap.onlyThem.length > 0 || compare.overlap.onlyYou.some((x) => x.wished)
+	const { dupes } = useNavOptions()
+	const plan = planCompare(handle, compare, dupes)
+	const hasPicks = plan.hasPicks
 	const both = hasSplits && hasPicks
 
 	// Per look: the section's own surface, each part's surface, and the lines between them.
@@ -74,9 +76,9 @@ export function Panels({
 	const top = lined ? `border-t ${line}` : ""
 	const side = lined && both ? `max-lg:border-t lg:border-l ${line}` : ""
 
-	const overlap = <Overlap handle={handle} c={compare} frame="" />
+	const overlap = <Overlap handle={handle} c={compare} plan={plan} still={still} frame="" />
 	const splits = hasSplits && <Splits handle={handle} c={compare} frame="" />
-	const picks = hasPicks && <Picks handle={handle} c={compare} frame="" />
+	const picks = hasPicks && <Picks handle={handle} plan={plan} frame="" />
 
 	const body =
 		look === "2" ? (

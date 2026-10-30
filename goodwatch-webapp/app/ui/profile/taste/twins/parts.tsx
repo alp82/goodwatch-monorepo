@@ -1,7 +1,7 @@
 // The comparison's shared pieces: the three panels of "Where your tastes meet" (Overlap, Splits, Picks) and small
 // helpers. Each panel takes `frame`, the classes of its surface (a boxed PANEL by default); the strip (Strip.tsx) passes
 // "" and separates them itself.
-import { ArrowRightIcon, SparklesIcon } from "@heroicons/react/20/solid"
+import { ArrowDownIcon, ArrowRightIcon, SparklesIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { animate } from "framer-motion"
 import { useEffect, useState } from "react"
@@ -11,6 +11,8 @@ import type { MemberCompare } from "~/domain/profile-taste"
 import { PANEL_CARD_SIZES, ProfileCard } from "../../ProfileCard"
 import { AMBER_BUTTON, TILE, posterUrl, vibe } from "../../parts"
 import { PANEL } from "../parts"
+import type { NavOptions } from "~/ui/navigation/nav-options"
+import { DISPLAY } from "~/ui/my-pages/bits"
 
 export type Ready = Extract<MemberCompare, { status: "ready" }>
 
@@ -133,11 +135,137 @@ export function Region({
 	)
 }
 
-export function Overlap({ handle, c, frame = PANEL }: PanelProps) {
+/** How many posters a fan or a pick row shows. */
+const FAN_MAX = 4
+/** Split rows shown before "Show all". */
+const SPLITS_SHOWN = 6
+/** The Picks panel's id, for the "See picks below" link (dupes count). */
+export const PICKS_ID = "compare-picks"
+
+type ThemTitle = Ready["overlap"]["onlyThem"][number]
+type YouTitle = Ready["overlap"]["onlyYou"][number]
+
+/** One side fan of the Venn: posters, or only its count and a link to the picks (dupes count). */
+interface Side<T> {
+	title: string
+	count: string
+	titles: T[]
+	/** Show the count and "See picks below" instead of posters. */
+	countOnly: boolean
+}
+
+/**
+ * PROTOTYPE OPTIONS (round 18, nav option `dupes`): what each part of the expanded comparison shows, so no title
+ * shows twice. Their 9s and 10s you haven't rated (`onlyThem`, best fit first) feed both the "Only @x loves" fan and
+ * "From @x's favorites, for you"; your 8s and up they haven't rated (`onlyYou`, wished first) feed both "Only you
+ * love" and "You loved these; @x wants to see them".
+ *   picks  The fans keep their titles; the picks skip them and take the next best ones.
+ *   fan    The picks keep their titles; the fans skip them and show the next most loved ones.
+ *   merge  The "Only @x loves" side becomes "Picks for you"; the panel keeps only the other direction, and the
+ *          "Only you love" fan skips it.
+ *   count  A side whose titles are in the picks shows only its number and "See picks below".
+ * The "You both love" fan also skips the split rows shown by default (titles you both love are titles you both rated).
+ */
+export function planCompare(handle: string, c: Ready, dupes: NavOptions["dupes"]) {
+	const o = c.overlap
+	const notIn = <T extends { key: string }>(list: T[], taken: { key: string }[]) => {
+		const keys = new Set(taken.map((t) => t.key))
+		return list.filter((t) => !keys.has(t.key))
+	}
+	const byScore = (list: ThemTitle[]) => [...list].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+	const byYours = (list: YouTitle[]) => [...list].sort((a, b) => b.yours - a.yours)
+	const wished = o.onlyYou.filter((x) => x.wished)
+
+	let themFan: ThemTitle[]
+	let youFan: YouTitle[]
+	let forYou: ThemTitle[]
+	let forThem: YouTitle[]
+	if (dupes === "picks") {
+		themFan = o.onlyThem.slice(0, FAN_MAX)
+		youFan = o.onlyYou.slice(0, FAN_MAX)
+		forYou = notIn(o.onlyThem, themFan).slice(0, FAN_MAX)
+		forThem = notIn(wished, youFan).slice(0, FAN_MAX)
+	} else if (dupes === "fan") {
+		forYou = o.onlyThem.slice(0, FAN_MAX)
+		forThem = wished.slice(0, FAN_MAX)
+		themFan = byScore(notIn(o.onlyThem, forYou)).slice(0, FAN_MAX)
+		youFan = byYours(notIn(o.onlyYou, forThem)).slice(0, FAN_MAX)
+	} else if (dupes === "merge") {
+		themFan = o.onlyThem.slice(0, FAN_MAX)
+		forYou = []
+		forThem = wished.slice(0, FAN_MAX)
+		youFan = notIn(o.onlyYou, forThem).slice(0, FAN_MAX)
+	} else {
+		forYou = o.onlyThem.slice(0, FAN_MAX)
+		forThem = wished.slice(0, FAN_MAX)
+		themFan = forYou.length ? [] : o.onlyThem.slice(0, FAN_MAX)
+		youFan = forThem.length ? [] : o.onlyYou.slice(0, FAN_MAX)
+	}
+
+	const split = new Set(c.shared.slice(0, SPLITS_SHOWN).map((s) => s.key))
+	const bothFan = o.both.filter((t) => !split.has(t.key)).slice(0, 3)
+
+	const them: Side<ThemTitle> = {
+		title: dupes === "merge" ? "Picks for you" : `Only @${handle} loves`,
+		count:
+			dupes === "merge"
+				? `From ${o.onlyThemCount} of their 9s and 10s, best fit first`
+				: `${o.onlyThemCount} of their 9s and 10s you haven't rated`,
+		titles: themFan,
+		countOnly: dupes === "count" && forYou.length > 0,
+	}
+	const you: Side<YouTitle> = {
+		title: "Only you love",
+		count: `${o.onlyYouCount} of your 8s and up they haven't rated`,
+		titles: youFan,
+		countOnly: dupes === "count" && forThem.length > 0,
+	}
+	return { them, you, both: bothFan, forYou, forThem, hasPicks: forYou.length + forThem.length > 0 }
+}
+
+export type Plan = ReturnType<typeof planCompare>
+
+/** "See picks below": scrolls to the Picks panel, under the sticky rows (its scroll margin). */
+function SeePicks({ still }: { still: boolean }) {
+	return (
+		<button
+			type="button"
+			onClick={() =>
+				document.getElementById(PICKS_ID)?.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" })
+			}
+			className="inline-flex items-center gap-1 text-sm font-semibold text-amber-500 hover:text-amber-400"
+		>
+			See picks below
+			<ArrowDownIcon className="size-4" aria-hidden />
+		</button>
+	)
+}
+
+function SideFan<T extends ProfileTitle>({
+	side,
+	tone,
+	label,
+	number,
+	still,
+}: { side: Side<T>; tone: string; label: string; number: number; still: boolean }) {
+	if (side.countOnly)
+		return (
+			<div className="flex flex-col items-center gap-2 text-center">
+				<span className={`block text-[11px] font-bold tracking-wide uppercase ${tone}`}>{side.title}</span>
+				<span className={`${DISPLAY} text-5xl leading-none text-white tabular-nums`}>{number}</span>
+				<span className="block max-w-[14rem] text-xs text-gray-500">{side.count.replace(/^\d+ /, "")}</span>
+				<SeePicks still={still} />
+			</div>
+		)
+	return (
+		<Region title={side.title} count={side.count} tone={tone}>
+			<Fan titles={side.titles} size="sm" label={label} />
+		</Region>
+	)
+}
+
+export function Overlap({ handle, c, plan, still, frame = PANEL }: PanelProps & { plan: Plan; still: boolean }) {
 	const overlap = c.overlap
-	const both = overlap.both.slice(0, 3)
-	const them = overlap.onlyThem.slice(0, 4)
-	const you = overlap.onlyYou.slice(0, 4)
 	return (
 		<div className={`${frame} relative overflow-hidden p-5 sm:p-8`}>
 			{/* Two circles that overlap: theirs amber, yours white. Drawn behind three poster fans on wide screens. */}
@@ -178,27 +306,27 @@ export function Overlap({ handle, c, frame = PANEL }: PanelProps) {
 				/>
 			</svg>
 			<div className="relative grid gap-8 md:min-h-[22rem] md:grid-cols-[1fr_0.9fr_1fr] md:items-center md:gap-2 md:px-[4%]">
-				<Region
-					title={`Only @${handle} loves`}
-					count={`${overlap.onlyThemCount} of their 9s and 10s you haven't rated`}
+				<SideFan
+					side={plan.them}
 					tone="text-amber-300"
-				>
-					<Fan titles={them} size="sm" label={`Loved by @${handle}`} />
-				</Region>
+					label={`Loved by @${handle}`}
+					number={overlap.onlyThemCount}
+					still={still}
+				/>
 				<Region
 					title="You both love"
 					count={`${overlap.bothCount} titles you both scored 8 or more`}
 					tone="text-white"
 				>
-					<Fan titles={both} size="lg" label="Loved by you both" />
+					<Fan titles={plan.both} size="lg" label="Loved by you both" />
 				</Region>
-				<Region
-					title="Only you love"
-					count={`${overlap.onlyYouCount} of your 8s and up they haven't rated`}
+				<SideFan
+					side={plan.you}
 					tone="text-gray-200"
-				>
-					<Fan titles={you} size="sm" label="Loved by you" />
-				</Region>
+					label="Loved by you"
+					number={overlap.onlyYouCount}
+					still={still}
+				/>
 			</div>
 		</div>
 	)
@@ -209,20 +337,19 @@ export function Overlap({ handle, c, frame = PANEL }: PanelProps) {
 export function Splits({ handle, c, frame = PANEL }: PanelProps) {
 	const shared = c.shared
 	const [all, setAll] = useState(false)
-	const rows = all ? shared : shared.slice(0, 6)
+	const rows = all ? shared : shared.slice(0, SPLITS_SHOWN)
 	const at = (score: number) => `${((score - 1) / 9) * 100}%`
 	return (
 		<div className={`${frame} flex flex-col gap-3 p-5 sm:p-8`}>
-			<div className="flex flex-wrap items-baseline gap-x-3">
+			<div className="flex items-baseline justify-between gap-3">
 				<p className="font-bold text-white">Where you split</p>
-				<p className="text-xs text-gray-400">
-					{shared.length} titles you both rated, widest gap first ·{" "}
+				{/* Tiny legend: the dots' rings say whose score is whose. */}
+				<p className="flex shrink-0 items-center gap-2.5 text-[11px] text-gray-500">
 					<span className="inline-flex items-center gap-1">
-						<span className="size-2 rounded-full bg-amber-400" aria-hidden />@
-						{handle}
-					</span>{" "}
+						<span className="size-1.5 rounded-full bg-amber-400" aria-hidden />@{handle}
+					</span>
 					<span className="inline-flex items-center gap-1">
-						<span className="size-2 rounded-full bg-white" aria-hidden />
+						<span className="size-1.5 rounded-full bg-white" aria-hidden />
 						you
 					</span>
 				</p>
@@ -269,7 +396,7 @@ export function Splits({ handle, c, frame = PANEL }: PanelProps) {
 					)
 				})}
 			</ul>
-			{shared.length > 6 && (
+			{shared.length > SPLITS_SHOWN && (
 				<button
 					type="button"
 					onClick={() => setAll(!all)}
@@ -295,19 +422,12 @@ export function Dot({ at, score, ring }: { at: string; score: number; ring: stri
 
 // ---------- Picks for each other ----------
 
-export function Picks({ handle, c, frame = PANEL }: PanelProps) {
-	const forYou = c.overlap.onlyThem.slice(0, 4)
-	const forThem = c.overlap.onlyYou.filter((x) => x.wished).slice(0, 4)
+export function Picks({ handle, plan, frame = PANEL }: Omit<PanelProps, "c"> & { plan: Plan }) {
+	const { forYou, forThem } = plan
 	if (!forYou.length && !forThem.length) return null
 	return (
-		<div className={`${frame} flex flex-col gap-4 p-5 sm:p-8`}>
-			<div>
-				<p className="font-bold text-white">Picks for each other</p>
-				<p className="text-xs text-gray-400">
-					Their favorites that carry what you seek, and yours already on their
-					wishlist.
-				</p>
-			</div>
+		<div id={PICKS_ID} className={`${frame} flex scroll-mt-40 flex-col gap-4 p-5 sm:p-8`}>
+			<p className="font-bold text-white">Picks for each other</p>
 			<PickRow
 				title={`From @${handle}'s favorites, for you`}
 				items={forYou.map((t) => ({
