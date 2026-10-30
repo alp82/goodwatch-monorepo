@@ -40,6 +40,7 @@ export function StatusLine({
 	hideSort = false,
 	noCount = false,
 	rowRef,
+	chipLook,
 	state,
 	className = "",
 }: {
@@ -63,6 +64,7 @@ export function StatusLine({
 	/** PROTOTYPE: the count lives in the heading row. */
 	noCount?: boolean
 	rowRef?: React.Ref<HTMLDivElement>
+	chipLook?: import("./BarChips").ChipLook
 	state?: FilterState
 	className?: string
 }) {
@@ -86,6 +88,7 @@ export function StatusLine({
 				onOpen={onOpen}
 				onChange={onChange}
 				onClearSearch={onClearSearch}
+				look={chipLook}
 				className={`-mr-1 h-10 lg:mr-0 ${meter ? "max-lg:pr-1" : ""}`}
 				trail={
 					clearCount > 0 && (

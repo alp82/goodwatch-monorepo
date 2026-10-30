@@ -419,9 +419,12 @@ export function SortControl<K extends string>({
 	onOpenChange,
 	outsideIgnore,
 	bare = false,
+	buttonLabel,
 }: {
 	/** Without a shell of its own, for the For you | Sort control. */
 	bare?: boolean
+	/** PROTOTYPE: a shorter name for the button only; the menu keeps the full names. */
+	buttonLabel?: (key: string, label: string) => string
 	options: SortOption<K>[]
 	value: K
 	onChange: (key: K) => void
@@ -489,7 +492,9 @@ export function SortControl<K extends string>({
 	}, [open, portal, align])
 
 	const chosen = options.find((s) => s.key === value)
-	const label = chosen?.label ?? ""
+	const label = buttonLabel
+		? buttonLabel(chosen?.key ?? "", chosen?.label ?? "")
+		: (chosen?.label ?? "")
 	const sm = size === "sm"
 	// No AnimatePresence: it took a menu opened again right after a pick for the one still leaving and removed it,
 	// so the sort button needed three clicks to open its menu again.

@@ -384,6 +384,13 @@ function DiscoverControlsContent({
 		<StatusLine
 			noCount={v === "J"}
 			rowRef={v === "J" ? rowRef : undefined}
+			chipLook={
+				v === "J"
+					? ((["a", "b", "c", "d"].includes(fitParams.get("chips") ?? "")
+							? fitParams.get("chips")
+							: "b") as "a" | "b" | "c" | "d")
+					: undefined
+			}
 			counts={counts}
 			searching={searching}
 			chips={statusChips}

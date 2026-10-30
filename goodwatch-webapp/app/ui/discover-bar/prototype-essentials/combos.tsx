@@ -682,15 +682,61 @@ function OrderB({
 				<div
 					className={`flex border-l border-white/10 [&_[data-sort-button]]:h-10 [&_[data-sort-button]]:rounded-l-none [&_[data-sort-button]]:rounded-r-full ${
 						level === 2
-							? "[&_[data-sort-button]]:w-[190px]"
+							? "[&_[data-sort-button]]:w-[214px]"
 							: level === 1
 								? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]]:w-[136px] [&_[data-sort-button]]:px-3"
 								: "[&_[data-sort-button]>span]:hidden [&_[data-sort-button]]:px-3"
 					}`}
 				>
-					<SortControl {...sort} bare />
+					<SortControl
+						{...sort}
+						bare
+						buttonLabel={level === 1 ? (key, label) => SHORT_SORT[key] ?? label : undefined}
+					/>
 				</div>
 			</Tip>
+		</div>
+	)
+}
+
+/** Sort names that fit the short size. */
+const SHORT_SORT: Record<string, string> = {
+	match: "Best",
+	top: "Top",
+	relevance: "Closest",
+	popular: "Popular",
+	newest: "Newest",
+}
+
+export const CHIP_LOOKS = [
+	{ key: "a", name: "Today, 32 px" },
+	{ key: "b", name: "40 px pills" },
+	{ key: "c", name: "40 px soft squares" },
+	{ key: "d", name: "40 px shell + base line" },
+] as const
+
+/** A third switcher, for the chip looks. */
+export function ChipSwitcher() {
+	const [params] = useSearchParams()
+	const navigate = useNavigate()
+	const current = params.get("chips") ?? "b"
+	const i = Math.max(0, CHIP_LOOKS.findIndex((c) => c.key === current))
+	const go = (d: number) => {
+		const next = new URLSearchParams(params)
+		next.set("chips", CHIP_LOOKS[(i + d + CHIP_LOOKS.length) % CHIP_LOOKS.length].key)
+		navigate(`?${next}`, { replace: true, preventScrollReset: true })
+	}
+	return (
+		<div className="fixed bottom-[100px] left-3 z-[2000] flex items-center gap-1 rounded-full bg-emerald-700 px-1 py-1 text-xs font-bold text-white shadow-lg max-lg:bottom-[234px]">
+			<button type="button" onClick={() => go(-1)} className="rounded-full p-1.5 hover:bg-white/20" aria-label="Previous chips">
+				<ChevronLeftIcon className="h-4 w-4" />
+			</button>
+			<span className="px-1 whitespace-nowrap">
+				Chips {CHIP_LOOKS[i].key} · {CHIP_LOOKS[i].name}
+			</span>
+			<button type="button" onClick={() => go(1)} className="rounded-full p-1.5 hover:bg-white/20" aria-label="Next chips">
+				<ChevronRightIcon className="h-4 w-4" />
+			</button>
 		</div>
 	)
 }

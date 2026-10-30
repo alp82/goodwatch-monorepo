@@ -37,6 +37,7 @@ import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 import useLocale from "~/utils/locale"
 import {
+	ChipSwitcher,
 	ComboSwitcher,
 	OrderCombo,
 	useCombo,
@@ -306,6 +307,7 @@ export default function PrototypeDiscoverEssentials() {
 			</div>
 			<VariantSwitcher />
 			{variant === "J" && <ComboSwitcher />}
+			{variant === "J" && <ChipSwitcher />}
 		</div>
 	)
 }

@@ -15,6 +15,16 @@ const IMAGE = "https://image.tmdb.org/t/p/w92"
 const FADE = "linear-gradient(to right, black calc(100% - 2.5rem), transparent)"
 const CHIP =
 	"inline-flex h-8 shrink-0 items-center rounded-full text-[13px] whitespace-nowrap"
+
+/**
+ * PROTOTYPE chip looks (essentials J, `?chips=`): a today's 32 px, b 40 px pills, c 40 px soft squares, d 40 px in the
+ * combined controls' shell with a colored base line in place of the dot.
+ */
+export type ChipLook = "a" | "b" | "c" | "d"
+const chipClass = (look: ChipLook) =>
+	look === "a"
+		? CHIP
+		: `relative inline-flex h-10 shrink-0 items-center text-[13px] whitespace-nowrap ${look === "c" ? "rounded-xl [&>button:first-child]:rounded-l-xl [&>button:last-child]:rounded-r-xl" : "rounded-full"}`
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 
 const TINTS: Record<string, string> = {
@@ -78,7 +88,9 @@ function OneChip({
 	onOpen,
 	onRemove,
 	onClearSearch,
+	look = "a",
 }: {
+	look?: ChipLook
 	chip: BarChip
 	reading?: ReadingChip[]
 	onOpen: (chip: BarChip) => void
@@ -86,6 +98,7 @@ function OneChip({
 	onClearSearch: () => void
 }) {
 	const words = chip.prefix ? `${chip.prefix} ${chip.label}` : chip.label
+	const CHIP = chipClass(look)
 	if (chip.kind === "query")
 		return (
 			<span
@@ -141,6 +154,28 @@ function OneChip({
 			</span>
 		)
 	}
+	if (look === "d") {
+		const accent = chip.group ? FILTER_ACCENTS[chip.group].bar : "bg-gray-400"
+		return (
+			<span
+				className={`${CHIP} bg-white/[0.04] font-semibold text-gray-100 ring-1 ring-inset ring-white/10`}
+			>
+				<button
+					type="button"
+					onClick={() => onOpen(chip)}
+					className={`flex h-full items-center rounded-l-full pl-3.5 cursor-pointer ${FOCUS}`}
+				>
+					{chip.label}
+				</button>
+				<Remove label={words} onClick={() => onRemove(chip)} />
+				<span
+					aria-hidden
+					className={`pointer-events-none absolute inset-x-3 bottom-0 h-0.5 rounded-full ${chip.hue ? "" : accent}`}
+					style={chip.hue ? { background: chip.hue } : undefined}
+				/>
+			</span>
+		)
+	}
 	return (
 		<span
 			className={`${CHIP} ${chip.hue ? "font-semibold text-white" : "bg-white/[0.06] text-gray-100"}`}
@@ -177,7 +212,9 @@ export function BarChips({
 	onClearSearch,
 	trail,
 	className = "",
+	look = "a",
 }: {
+	look?: ChipLook
 	chips: BarChip[]
 	/** How the search read the query, inline in the query chip. */
 	reading?: ReadingChip[]
@@ -202,6 +239,7 @@ export function BarChips({
 						onOpen={onOpen}
 						onRemove={(c) => c.remove && onChange(c.remove)}
 						onClearSearch={onClearSearch}
+						look={look}
 					/>
 				</li>
 			))}
