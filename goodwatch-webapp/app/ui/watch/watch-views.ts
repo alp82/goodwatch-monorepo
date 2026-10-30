@@ -2,9 +2,9 @@
 // folder read from here.
 //
 // Four tabs: Up next, Ready to watch, Recommendations, and Seen (/watch/seen, every title you watched, set at the row's
-// end on desktop). Ready to watch's views (Tonight · Whole Wishlist · Recently added) and Seen's kinds (All · Movies ·
-// Shows) are SubNav rows. Up next's SubNav is Next episodes | All shows; All shows is the status pages
-// (/watch/watching first), each with a status filter in the list's controls.
+// end on desktop). Ready to watch's views (Next Movie · Want to Watch) and Seen's kinds (All · Movies · Shows) are
+// SubNav rows. Up next's SubNav is Next episodes | All shows; All shows is the status pages (Watching · Start ·
+// On hold · Dropped, /watch/watching first), each with a status filter in the list's controls.
 import { ClockIcon } from "@heroicons/react/24/outline"
 import { WATCH_PATHS } from "../../domain/member-paths.ts"
 import {
@@ -70,7 +70,7 @@ export function upNextViews(
 	).map((choice) => ({ ...choice, here: choice.href === trim(pathname) }))
 }
 
-/** Ready to watch's views (Tonight · Whole Wishlist · Recently added). Null off Ready to watch. */
+/** Ready to watch's views (Next Movie · Want to Watch). Null off Ready to watch. */
 export function readyViews(
 	pathname: string,
 	counts?: WatchViewCounts | null,

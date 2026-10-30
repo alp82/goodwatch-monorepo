@@ -1,73 +1,71 @@
+// PROTOTYPE OPTIONS (member nav, round 11): the orbit round the profile picture, in five styles (nav-options.ts
+// `orbit`): dots (the sought attributes as family-colored dots on a dotted track), comets (the strongest ones with short
+// fading trails), constellation (stars joined by thin lines within each family), bands (one short arc per family, each
+// on its own radius and turning at its own pace) and sparks (tiny points, brighter for stronger attributes, that
+// twinkle). At rest the orbit is still; `live` (hover, touch, focus, or the open key facts) sets it moving and brightens
+// it with a soft glow. Motion is transform and opacity only, and stops under reduced motion. `split` draws the halves
+// comparison in place of the orbit: their print on the left half, yours on the right, shared families lit.
+import type { CSSProperties, ReactNode } from "react"
 import type { ProfileShell } from "~/domain/profile"
-// PROTOTYPE OPTIONS (member nav, round 10): the fingerprint ring round the profile picture (nav-options.ts `ring`).
-// The layout sets the ring's box (one size per width); each style draws inside it and picks its own picture size:
-// classic (the taste print behind the picture), halo (thick glowing family bands), orbit (the sought attributes as
-// dots on a dotted track, turning slowly), pulse (the print with a soft breathing glow), duo (a quiet ring with an
-// amber arc over the strongest family). Motion is transform and opacity only, and stops under reduced motion. With
-// `yours` (a member on someone else's profile), orbit and duo also draw the visitor's print (an inner track, an outer arc).
-import { FAMILY_NAMES } from "~/domain/taste-attributes"
 import type { NavOptions } from "~/ui/navigation/nav-options"
 import { ProfileAvatar } from "../ProfileFrame"
-import { Whorl, type WhorlAttribute } from "../taste/Whorl"
+import type { WhorlAttribute } from "../taste/Whorl"
 import { FAMILY_COLOR, FAMILY_ORDER, type FamilyId } from "../taste/model"
+import { familyPulls, sharedFamilies } from "./facts"
 
-export type RingLook = NavOptions["ring"]
+export type OrbitStyle = NavOptions["orbit"]
 
 const TAU = Math.PI * 2
 const GAP = 0.06
+const R = 88
+// Server and browser Math can differ in the last digit; round so hydration matches.
 const r1 = (n: number) => Math.round(n * 10) / 10
+// A fixed-seed hash, so every visit draws the same orbit.
+const hash = (n: number) => {
+	const x = Math.sin(n * 127.1 + 311.7) * 43758.5453
+	return x - Math.floor(x)
+}
 
 interface Sector {
 	id: FamilyId
 	from: number
 	to: number
-	/** 0..1: how strongly the member seeks the family's attributes, against the strongest family. */
 	strength: number
 }
 
-/** The five family sectors round the circle (Feel at the top, clockwise), sized by their attribute counts. */
-function sectorsOf(print: WhorlAttribute[]): Sector[] {
-	const free = TAU - GAP * FAMILY_ORDER.length
-	const raw = FAMILY_ORDER.map((id) => {
-		const attrs = print.filter((a) => a.family === id)
-		const pull = attrs.reduce((sum, a) => sum + Math.max(0, a.edge), 0)
-		return { id, n: attrs.length, pull: attrs.length ? pull / attrs.length : 0 }
-	})
-	const max = Math.max(...raw.map((f) => f.pull), 0.0001)
-	let angle = -Math.PI / 2 + GAP / 2
-	return raw.map((f) => {
+/** The five family sectors over `[start, start + span]` (Feel first, clockwise), sized by their attribute counts. */
+function sectorsOf(print: WhorlAttribute[], start = -Math.PI / 2, span = TAU) {
+	const pulls = familyPulls(print)
+	const gap = (GAP * span) / TAU
+	const free = span - gap * FAMILY_ORDER.length
+	let angle = start + gap / 2
+	return FAMILY_ORDER.map((id, i): Sector => {
+		const n = print.filter((a) => a.family === id).length
 		const from = angle
-		angle += (free * f.n) / Math.max(1, print.length)
-		const sector = { id: f.id, from, to: angle, strength: f.pull / max }
-		angle += GAP
+		angle += (free * n) / Math.max(1, print.length)
+		const sector = { id, from, to: angle, strength: pulls[i].strength }
+		angle += gap
 		return sector
 	})
 }
 
-const strongest = (print: WhorlAttribute[]) =>
-	[...sectorsOf(print)].sort((a, b) => b.strength - a.strength)[0]
-
-/** An accent arc over a sector: centred on it, at least `min` radians long so a small family still reads. */
-function accent(sector: Sector, min = 1.25) {
-	const mid = (sector.from + sector.to) / 2
-	const half = Math.max(sector.to - sector.from, min) / 2
-	return { from: mid - half, to: mid + half }
-}
-
-/** Each attribute's angle, in the same sectors. */
-function anglesOf(print: WhorlAttribute[]) {
-	const sectors = sectorsOf(print)
-	return sectors.flatMap((sector) => {
+/** Each attribute's angle in its family's sector, with its strength against the strongest edge. */
+function placed(print: WhorlAttribute[], start?: number, span?: number) {
+	const max = Math.max(...print.map((a) => a.edge), 0.01)
+	return sectorsOf(print, start, span).flatMap((sector) => {
 		const attrs = print.filter((a) => a.family === sector.id)
 		const w = (sector.to - sector.from) / Math.max(1, attrs.length)
-		return attrs.map((a, i) => ({ a, angle: sector.from + w * (i + 0.5) }))
+		return attrs.map((a, i) => ({
+			a,
+			angle: sector.from + w * (i + 0.5),
+			strength: Math.max(0, a.edge) / max,
+		}))
 	})
 }
 
 const at = (r: number, angle: number) =>
 	[r1(r * Math.cos(angle)), r1(r * Math.sin(angle))] as const
 
-/** An SVG arc path on a circle round 0,0. */
 function arc(r: number, from: number, to: number) {
 	const [x0, y0] = at(r, from)
 	const [x1, y1] = at(r, to)
@@ -75,331 +73,385 @@ function arc(r: number, from: number, to: number) {
 	return `M${x0} ${y0}A${r} ${r} 0 ${large} 1 ${x1} ${y1}`
 }
 
+// Each spinning layer turns while the orbit is live and pauses where it is when it rests, so it never jumps back.
 const STYLE = `
-@keyframes gw-ring-turn { to { transform: rotate(360deg); } }
-@keyframes gw-ring-breathe { from { opacity: .35; transform: scale(.9); } to { opacity: .85; transform: scale(1.06); } }
-.gw-ring-turn { animation: gw-ring-turn 120s linear infinite; }
-.gw-ring-turn-back { animation: gw-ring-turn 160s linear infinite reverse; }
-.gw-ring-breathe { animation: gw-ring-breathe 4.8s ease-in-out infinite alternate; }
+@keyframes gw-orbit-turn { to { transform: rotate(360deg); } }
+@keyframes gw-orbit-twinkle { 0%, 100% { opacity: var(--o, .5); } 50% { opacity: 1; } }
+.gw-orbit [data-spin] { animation: gw-orbit-turn var(--turn, 30s) linear infinite; animation-play-state: paused; transform-origin: 50% 50%; will-change: transform; }
+.gw-orbit [data-spin=back] { animation-direction: reverse; }
+.gw-orbit[data-live] [data-spin] { animation-play-state: running; }
+.gw-orbit [data-twinkle] { opacity: var(--o, .5); }
+.gw-orbit[data-live] [data-twinkle] { animation: gw-orbit-twinkle var(--tw, 1.6s) ease-in-out var(--delay, 0s) infinite; }
+.gw-orbit [data-bright] { opacity: .78; transition: opacity .3s ease; }
+.gw-orbit[data-live] [data-bright] { opacity: 1; }
+.gw-orbit [data-glow] { opacity: 0; transition: opacity .4s ease; }
+.gw-orbit[data-live] [data-glow] { opacity: 1; }
+.gw-orbit [data-lines] { opacity: .3; transition: opacity .3s ease; }
+.gw-orbit[data-live] [data-lines] { opacity: .65; }
 @media (prefers-reduced-motion: reduce) {
-	.gw-ring-turn, .gw-ring-turn-back { animation: none; }
-	.gw-ring-breathe { animation: none; opacity: .6; }
+	.gw-orbit [data-spin], .gw-orbit[data-live] [data-twinkle] { animation: none; }
+	.gw-orbit [data-bright], .gw-orbit [data-glow], .gw-orbit [data-lines] { transition: none; }
 }
 `
 
-/** The picture's share of the ring's box, per style. */
-const PICTURE: Record<RingLook, string> = {
-	classic: "56%",
-	halo: "64%",
-	orbit: "60%",
-	pulse: "54%",
-	duo: "74%",
-}
-
-/** The profile picture, filling `size` of the ring's box. The initial scales with it. */
+/** The profile picture in the middle; `className` moves it (the morph shrinks it). */
 function Picture({
 	shell,
-	size,
-	ring,
-}: { shell: ProfileShell; size: string; ring: string }) {
+	className = "",
+}: { shell: ProfileShell; className?: string }) {
 	return (
 		<span
-			className="absolute top-1/2 left-1/2 -translate-1/2 @container"
-			style={{ width: size, height: size }}
+			className={`absolute top-[20%] left-[20%] size-[60%] @container ${className}`}
 		>
-			<span className={`block size-full *:size-full! *:text-[44cqw]! ${ring}`}>
+			<span className="block size-full *:size-full! *:text-[44cqw]! *:ring-2!">
 				<ProfileAvatar handle={shell.handle} avatar={shell.avatar} size="sm" />
 			</span>
 		</span>
 	)
 }
 
-const label = (handle: string) => `@${handle}'s taste print`
+const Svg = ({ children }: { children: ReactNode }) => (
+	<svg
+		aria-hidden="true"
+		viewBox="-100 -100 200 200"
+		className="absolute inset-0 size-full overflow-visible"
+	>
+		{children}
+	</svg>
+)
+
+/** A layer that turns while live, once every `turn` seconds. */
+const Spin = ({
+	turn,
+	back = false,
+	children,
+}: { turn: number; back?: boolean; children: ReactNode }) => (
+	<span
+		aria-hidden
+		data-spin={back ? "back" : ""}
+		className="absolute inset-0"
+		style={{ "--turn": `${turn}s` } as CSSProperties}
+	>
+		<Svg>{children}</Svg>
+	</span>
+)
 
 /**
- * The fingerprint ring with the picture in it. `className` sets the box (the layout's size per width). Without a print,
- * a dashed ring of the same size.
+ * The orbit with the picture in it. `className` sets the box (the layout's size per width). Without a print, a dashed
+ * ring of the same size. `children` draw inside the box, over the orbit and under the picture (the morph's print).
  */
-export function PrintRing({
+export function OrbitRing({
 	look,
 	shell,
 	print,
-	yours = null,
+	live,
+	split = null,
 	className,
+	orbitClassName = "",
+	pictureClassName = "",
+	children,
 }: {
-	look: RingLook
+	look: OrbitStyle
 	shell: ProfileShell
 	print: WhorlAttribute[] | null
-	/** The visitor's print, on someone else's profile. */
-	yours?: WhorlAttribute[] | null
+	live: boolean
+	/** The visitor's print, to draw the halves comparison in place of the orbit. */
+	split?: WhorlAttribute[] | null
 	className: string
+	/** Moves the orbit layer (the morph grows it). */
+	orbitClassName?: string
+	pictureClassName?: string
+	children?: ReactNode
 }) {
+	const top = print
+		? [...familyPulls(print)].sort((a, b) => b.strength - a.strength)[0]
+		: null
 	return (
-		<div className={`relative shrink-0 ${className}`} data-ring={look}>
+		<div
+			className={`gw-orbit relative shrink-0 ${className}`}
+			data-orbit={split ? "halves" : look}
+			data-live={live || undefined}
+		>
 			<style>{STYLE}</style>
-			{print ? (
-				<Drawn look={look} shell={shell} print={print} yours={yours} />
+			{print && top ? (
+				<>
+					<span
+						aria-hidden
+						data-glow
+						className="absolute -inset-[10%] rounded-full"
+						style={{
+							background: `radial-gradient(closest-side, ${FAMILY_COLOR[top.id]}40, ${FAMILY_COLOR[top.id]}14 62%, transparent 76%)`,
+						}}
+					/>
+					<span
+						data-bright
+						className={`absolute inset-0 transition-[transform,opacity] duration-500 ease-out ${orbitClassName}`}
+					>
+						{split ? (
+							<Halves theirs={print} yours={split} />
+						) : (
+							<Orbit look={look} print={print} />
+						)}
+					</span>
+				</>
 			) : (
 				<span
 					aria-hidden
 					className="absolute inset-[6%] rounded-full ring-1 ring-white/10 ring-dashed"
 				/>
 			)}
-			<Picture
-				shell={shell}
-				size={PICTURE[look]}
-				ring={look === "duo" ? "*:ring-0!" : "*:ring-2!"}
-			/>
+			{children}
+			<Picture shell={shell} className={pictureClassName} />
 		</div>
 	)
 }
 
-function Drawn({
-	look,
-	shell,
-	print,
-	yours,
-}: {
-	look: RingLook
-	shell: ProfileShell
-	print: WhorlAttribute[]
-	yours: WhorlAttribute[] | null
-}) {
-	if (look === "halo") return <Halo shell={shell} print={print} />
-	if (look === "orbit")
-		return <Orbit shell={shell} print={print} yours={yours} />
-	if (look === "duo") return <Duo shell={shell} print={print} yours={yours} />
-	const top = strongest(print)
+function Orbit({ look, print }: { look: OrbitStyle; print: WhorlAttribute[] }) {
+	if (look === "comets") return <Comets print={print} />
+	if (look === "constellation") return <Constellation print={print} />
+	if (look === "bands") return <Bands print={print} />
+	if (look === "sparks") return <Sparks print={print} />
+	return <Dots print={print} />
+}
+
+const dotSize = (strength: number) => r1(1.6 + 4.2 * strength)
+
+// OPTION orbit=dots
+/** The sought attributes as family-colored dots on a dotted track. */
+function Dots({ print }: { print: WhorlAttribute[] }) {
+	return (
+		<Spin turn={36}>
+			<circle
+				r={R}
+				fill="none"
+				stroke="rgba(255,255,255,.24)"
+				strokeWidth={1.4}
+				strokeDasharray="0.1 5.2"
+				strokeLinecap="round"
+			/>
+			{placed(print)
+				.filter((p) => p.strength > 0)
+				.map(({ a, angle, strength }) => {
+					const [x, y] = at(R, angle)
+					return (
+						<circle
+							key={a.key}
+							cx={x}
+							cy={y}
+							r={dotSize(strength)}
+							fill={FAMILY_COLOR[a.family]}
+						/>
+					)
+				})}
+		</Spin>
+	)
+}
+
+// OPTION orbit=comets
+/** The strongest attributes as comets: a head and a short trail fading behind it, on a faint track. */
+function Comets({ print }: { print: WhorlAttribute[] }) {
+	const heads = placed(print)
+		.filter((p) => p.strength >= 0.35)
+		.sort((a, b) => b.strength - a.strength)
+		.slice(0, 14)
+	return (
+		<Spin turn={16}>
+			<circle
+				r={R}
+				fill="none"
+				stroke="rgba(255,255,255,.08)"
+				strokeWidth={1}
+			/>
+			{heads.map(({ a, angle, strength }) => {
+				const size = r1(2 + 3.4 * strength)
+				const color = FAMILY_COLOR[a.family]
+				return (
+					<g key={a.key}>
+						{[1, 2, 3, 4, 5].map((k) => {
+							const [x, y] = at(R, angle - k * 0.045 * (0.7 + strength))
+							return (
+								<circle
+									key={k}
+									cx={x}
+									cy={y}
+									r={r1(size * (1 - k * 0.15))}
+									fill={color}
+									fillOpacity={r1(0.55 - k * 0.1)}
+								/>
+							)
+						})}
+						<circle
+							cx={at(R, angle)[0]}
+							cy={at(R, angle)[1]}
+							r={size}
+							fill={color}
+						/>
+					</g>
+				)
+			})}
+		</Spin>
+	)
+}
+
+// OPTION orbit=constellation
+/** The sought attributes as stars at slightly different radii, joined by thin lines within each family. */
+function Constellation({ print }: { print: WhorlAttribute[] }) {
+	const stars = placed(print)
+		.filter((p) => p.strength >= 0.3)
+		.map((p, i) => {
+			const r = R - 9 + hash(i + 1) * 15
+			const [x, y] = at(r, p.angle)
+			return { ...p, x, y }
+		})
+	const lines = stars.flatMap((s, i) => {
+		const next = stars[i + 1]
+		return next && next.a.family === s.a.family ? [[s, next] as const] : []
+	})
+	return (
+		<Spin turn={48}>
+			<g data-lines>
+				{lines.map(([s, t]) => (
+					<line
+						key={`${s.a.key}-${t.a.key}`}
+						x1={s.x}
+						y1={s.y}
+						x2={t.x}
+						y2={t.y}
+						stroke={FAMILY_COLOR[s.a.family]}
+						strokeWidth={0.9}
+						strokeLinecap="round"
+					/>
+				))}
+			</g>
+			{stars.map(({ a, x, y, strength }) => (
+				<g key={a.key}>
+					<circle
+						cx={x}
+						cy={y}
+						r={r1(2.4 + 3.2 * strength)}
+						fill={FAMILY_COLOR[a.family]}
+						fillOpacity={0.22}
+					/>
+					<circle cx={x} cy={y} r={r1(1.1 + 1.6 * strength)} fill="#fff" />
+				</g>
+			))}
+		</Spin>
+	)
+}
+
+// OPTION orbit=bands
+/** One short arc per family, as long as its pull, each on its own radius and turning at its own pace and way. */
+function Bands({ print }: { print: WhorlAttribute[] }) {
+	const radii = [94, 86, 78, 90, 82]
+	const turns = [14, 22, 18, 26, 20]
 	return (
 		<>
-			{look === "pulse" && (
-				<span
-					aria-hidden
-					className="gw-ring-breathe absolute -inset-[8%] rounded-full"
-					style={{
-						background: `radial-gradient(closest-side, ${FAMILY_COLOR[top.id]}66, ${FAMILY_COLOR[top.id]}22 55%, transparent 72%)`,
-					}}
-				/>
-			)}
-			<span
-				aria-hidden
-				className="absolute inset-[18%] rounded-full bg-white/[0.04] shadow-[0_0_40px_rgba(167,139,250,0.18)]"
-			/>
-			<Whorl
-				attributes={print}
-				turns={look === "pulse" ? 9 : 11}
-				rim={false}
-				markers={false}
-				animate={false}
-				label={label(shell.handle)}
-				className="absolute inset-0 size-full"
-			/>
-			{look === "classic" && (
-				<span
-					aria-hidden
-					className="pointer-events-none absolute inset-[3%] rounded-full ring-1 ring-white/[0.07]"
-				/>
-			)}
+			{sectorsOf(print).map((s, i) => {
+				const mid = (s.from + s.to) / 2
+				const half = r1(0.25 + 0.75 * s.strength)
+				return (
+					<Spin key={s.id} turn={turns[i]} back={i % 2 === 1}>
+						<circle
+							r={radii[i]}
+							fill="none"
+							stroke="rgba(255,255,255,.05)"
+							strokeWidth={1}
+						/>
+						<path
+							d={arc(radii[i], mid - half, mid + half)}
+							fill="none"
+							stroke={FAMILY_COLOR[s.id]}
+							strokeOpacity={r1(0.35 + 0.65 * s.strength)}
+							strokeWidth={r1(2.4 + 2.2 * s.strength)}
+							strokeLinecap="round"
+						/>
+					</Spin>
+				)
+			})}
 		</>
 	)
 }
 
-// OPTION ring=halo
-/** Thick family bands round the picture, each as bright as the member's pull to it, glowing softly. */
-function Halo({
-	shell,
-	print,
-}: { shell: ProfileShell; print: WhorlAttribute[] }) {
-	const sectors = sectorsOf(print)
-	const deg = (a: number) => r1(((a + Math.PI / 2) / TAU) * 360)
-	const stops = sectors
-		.flatMap((s) => {
-			const alpha = Math.round((0.18 + 0.82 * s.strength) * 255)
-				.toString(16)
-				.padStart(2, "0")
-			const color = `${FAMILY_COLOR[s.id]}${alpha}`
-			return [
-				`transparent ${deg(s.from - GAP / 2)}deg`,
-				`transparent ${deg(s.from)}deg`,
-				`${color} ${deg(s.from)}deg`,
-				`${color} ${deg(s.to)}deg`,
-				`transparent ${deg(s.to)}deg`,
-			]
-		})
-		.join(", ")
-	const band = {
-		background: `conic-gradient(from 0deg, ${stops})`,
-		mask: "radial-gradient(closest-side, transparent 66%, #000 67.5%, #000 98%, transparent 100%)",
-		WebkitMask:
-			"radial-gradient(closest-side, transparent 66%, #000 67.5%, #000 98%, transparent 100%)",
-	}
-	const name = sectors
-		.slice()
-		.sort((a, b) => b.strength - a.strength)
-		.map((s) => FAMILY_NAMES[s.id].name)
-		.join(", ")
+/** A four-point star round x,y. */
+const star = (x: number, y: number, s: number) =>
+	`M${x} ${r1(y - s)}Q${x} ${y} ${r1(x + s)} ${y}Q${x} ${y} ${x} ${r1(y + s)}Q${x} ${y} ${r1(x - s)} ${y}Q${x} ${y} ${x} ${r1(y - s)}Z`
+
+// OPTION orbit=sparks
+/** Every sought attribute as a tiny point of light, brighter and bigger for stronger ones; live, they twinkle. */
+function Sparks({ print }: { print: WhorlAttribute[] }) {
 	return (
-		<span role="img" aria-label={`${label(shell.handle)}: ${name}`}>
-			<span
-				aria-hidden
-				className="absolute inset-[2%] rounded-full opacity-70 blur-md"
-				style={band}
-			/>
-			<span
-				aria-hidden
-				className="absolute inset-[2%] rounded-full"
-				style={band}
-			/>
-			<span
-				aria-hidden
-				className="absolute inset-[17%] rounded-full bg-gray-950/60"
-			/>
-		</span>
+		<Spin turn={60}>
+			{placed(print)
+				.filter((p) => p.strength > 0.05)
+				.map(({ a, angle, strength }, i) => {
+					const [x, y] = at(R - 6 + hash(i + 7) * 12, angle)
+					const style = {
+						"--o": r1(0.25 + 0.7 * strength),
+						"--delay": `${r1(hash(i + 3) * 1.6)}s`,
+						"--tw": `${r1(1.1 + hash(i + 5) * 1.2)}s`,
+					} as CSSProperties
+					return (
+						<path
+							key={a.key}
+							data-twinkle
+							style={style}
+							d={star(x, y, r1(2 + 4.6 * strength))}
+							fill={strength > 0.6 ? "#fff" : FAMILY_COLOR[a.family]}
+						/>
+					)
+				})}
+		</Spin>
 	)
 }
 
-// OPTION ring=orbit
-/** The sought attributes as dots on a dotted track, turning slowly; the visitor's own on an inner track, turning back. */
-function Orbit({
-	shell,
-	print,
+// OPTION compare=halves
+/**
+ * Their print on the left half, yours mirrored on the right, so each family faces itself across the picture. Families
+ * you both lean toward keep their color on both sides; the others go gray.
+ */
+function Halves({
+	theirs,
 	yours,
-}: {
-	shell: ProfileShell
-	print: WhorlAttribute[]
-	yours: WhorlAttribute[] | null
-}) {
-	const dots = (attrs: WhorlAttribute[], r: number, own: boolean) => {
-		const max = Math.max(...attrs.map((a) => Math.abs(a.edge)), 0.01)
-		return anglesOf(attrs)
-			.filter(({ a }) => a.edge > 0)
-			.map(({ a, angle }) => {
-				const [x, y] = at(r, angle)
-				const size = r1(1.6 + 4.4 * Math.min(1, a.edge / max))
+}: { theirs: WhorlAttribute[]; yours: WhorlAttribute[] }) {
+	const shared = new Set(sharedFamilies(theirs, yours).map((f) => f.id))
+	const side = (print: WhorlAttribute[], left: boolean) =>
+		placed(print, Math.PI / 2 + 0.12, Math.PI - 0.24)
+			.filter((p) => p.strength > 0)
+			.map(({ a, angle, strength }) => {
+				const [x, y] = at(R, left ? angle : Math.PI - angle)
+				const lit = shared.has(a.family)
 				return (
 					<circle
-						key={a.key}
+						key={`${left ? "t" : "y"}-${a.key}`}
 						cx={x}
 						cy={y}
-						r={own ? size : r1(size * 0.8)}
-						fill={own ? FAMILY_COLOR[a.family] : "#fff"}
-						fillOpacity={own ? 0.95 : 0.7}
+						r={dotSize(strength)}
+						fill={lit ? FAMILY_COLOR[a.family] : "#9ca3af"}
+						fillOpacity={lit ? 1 : 0.35}
 					/>
 				)
 			})
-	}
 	return (
-		<span role="img" aria-label={label(shell.handle)}>
-			<span aria-hidden className="gw-ring-turn absolute inset-0">
-				<svg
-					aria-hidden="true"
-					viewBox="-100 -100 200 200"
-					className="size-full overflow-visible"
-				>
-					<circle
-						r={88}
-						fill="none"
-						stroke="rgba(255,255,255,.22)"
-						strokeWidth={1.4}
-						strokeDasharray="0.1 5.2"
-						strokeLinecap="round"
-					/>
-					{dots(print, 88, true)}
-				</svg>
-			</span>
-			{yours && (
-				<span aria-hidden className="gw-ring-turn-back absolute inset-0">
-					<svg
-						aria-hidden="true"
-						viewBox="-100 -100 200 200"
-						className="size-full overflow-visible"
-					>
-						<circle
-							r={72}
-							fill="none"
-							stroke="rgba(255,255,255,.12)"
-							strokeWidth={1}
-							strokeDasharray="0.1 4"
-							strokeLinecap="round"
-						/>
-						{dots(yours, 72, false)}
-					</svg>
-				</span>
-			)}
-		</span>
-	)
-}
-
-// OPTION ring=duo
-/** A quiet ring with an amber arc over the strongest family; the visitor's strongest as a thin white arc just outside it. */
-function Duo({
-	shell,
-	print,
-	yours,
-}: {
-	shell: ProfileShell
-	print: WhorlAttribute[]
-	yours: WhorlAttribute[] | null
-}) {
-	const strong = strongest(print)
-	const top = accent(strong)
-	const mine = yours ? accent(strongest(yours), 0.9) : null
-	const name = FAMILY_NAMES[strong.id].name
-	return (
-		<svg
-			viewBox="-100 -100 200 200"
-			className="absolute inset-0 size-full overflow-visible"
-			role="img"
-			aria-label={`${label(shell.handle)}: strongest in ${name}`}
-		>
-			<title>{`Strongest in ${name}`}</title>
-			<circle
-				r={90}
-				fill="none"
-				stroke="rgba(255,255,255,.1)"
-				strokeWidth={4}
-			/>
-			{anglesOf(print).map(({ a, angle }) => {
-				const [x0, y0] = at(84, angle)
-				const [x1, y1] = at(84 - 2 - 4 * Math.max(0, a.edge), angle)
-				return (
-					<line
-						key={a.key}
-						x1={x0}
-						y1={y0}
-						x2={x1}
-						y2={y1}
-						stroke="rgba(255,255,255,.26)"
-						strokeWidth={1.3}
-						strokeLinecap="round"
-					/>
-				)
-			})}
+		<Svg>
 			<path
-				d={arc(90, top.from, top.to)}
+				d={arc(R, Math.PI / 2 + 0.12, (3 * Math.PI) / 2 - 0.12)}
 				fill="none"
-				stroke="#fbbf24"
-				strokeOpacity={0.25}
-				strokeWidth={12}
+				stroke="rgba(255,255,255,.2)"
+				strokeWidth={1.4}
+				strokeDasharray="0.1 5.2"
 				strokeLinecap="round"
 			/>
 			<path
-				d={arc(90, top.from, top.to)}
+				d={arc(R, -Math.PI / 2 + 0.12, Math.PI / 2 - 0.12)}
 				fill="none"
-				stroke="#fbbf24"
-				strokeWidth={5}
+				stroke="rgba(251,191,36,.3)"
+				strokeWidth={1.4}
+				strokeDasharray="0.1 5.2"
 				strokeLinecap="round"
 			/>
-			{mine && (
-				<path
-					d={arc(97.5, mine.from, mine.to)}
-					fill="none"
-					stroke="#fff"
-					strokeOpacity={0.85}
-					strokeWidth={2.5}
-					strokeLinecap="round"
-				/>
-			)}
-		</svg>
+			<line x1={0} y1={-96} x2={0} y2={-80} stroke="rgba(255,255,255,.35)" />
+			{side(theirs, true)}
+			{side(yours, false)}
+		</Svg>
 	)
 }

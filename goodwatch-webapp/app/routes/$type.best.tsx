@@ -86,11 +86,7 @@ export default function BestList() {
 	)
 	return (
 		<div className="pb-16">
-			<ListHead
-				crumbs={crumbsOf(kind)}
-				heading={copy.heading}
-				intro={copy.intro}
-			>
+			<ListHead heading={copy.heading} intro={copy.intro}>
 				<div className="mt-3">{links}</div>
 			</ListHead>
 			<RankedTitles titles={titles} first={first} services={services} />

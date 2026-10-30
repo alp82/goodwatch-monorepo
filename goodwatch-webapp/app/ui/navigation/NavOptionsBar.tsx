@@ -15,10 +15,10 @@ import {
 } from "./nav-options"
 
 const ROWS: { key: NavOptionKey; label: string }[] = [
-	{ key: "layers", label: "Layers" },
-	{ key: "ring", label: "Ring" },
-	{ key: "layout", label: "Header" },
-	{ key: "facts", label: "Facts" },
+	{ key: "orbit", label: "Orbit" },
+	{ key: "reveal", label: "Reveal" },
+	{ key: "compare", label: "Compare" },
+	{ key: "country", label: "Country" },
 ]
 
 const FOLDED_KEY = "gw-nav-options-folded"

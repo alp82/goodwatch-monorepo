@@ -72,7 +72,9 @@ export function TabHead({
 	links?: ReactNode
 }) {
 	return (
-		<div className={`${WRAP} flex flex-wrap items-end gap-x-4 gap-y-2 pt-5 pb-4`}>
+		<div
+			className={`${WRAP} flex flex-wrap items-end gap-x-4 gap-y-2 pt-5 pb-4`}
+		>
 			<div className="min-w-0 flex-1 basis-60">
 				{back && (
 					<Link
@@ -88,7 +90,9 @@ export function TabHead({
 				{line && <p className="mt-0.5 text-sm text-gray-400">{line}</p>}
 			</div>
 			{links && (
-				<div className="flex shrink-0 flex-wrap items-center gap-2">{links}</div>
+				<div className="flex shrink-0 flex-wrap items-center gap-2">
+					{links}
+				</div>
 			)}
 		</div>
 	)
@@ -140,21 +144,16 @@ function LinkLogos({ shell }: { shell: ProfileShell }) {
 	)
 }
 
-
-/** A visitor's first look at whose profile this is: the bio, the links and since when. Nothing when all are empty. */
+/** A visitor's first look at whose profile this is: the bio and the links. Nothing when both are empty. Since when is in
+ * the profile header. */
 export function ProfileAbout({ shell }: { shell: ProfileShell }) {
 	const links = shell.links.some((l) => l.value.trim())
-	if (!shell.bio && !links && !shell.since) return null
+	if (!shell.bio && !links) return null
 	return (
 		<div className="flex flex-wrap items-center gap-x-6 gap-y-3">
 			<div className="min-w-0 flex-1 basis-72">
 				{shell.bio && (
 					<p className="max-w-2xl text-base text-gray-200">{shell.bio}</p>
-				)}
-				{shell.since && (
-					<p className="text-sm text-gray-400">
-						On GoodWatch since {monthYear(shell.since)}
-					</p>
 				)}
 			</div>
 			<LinkLogos shell={shell} />

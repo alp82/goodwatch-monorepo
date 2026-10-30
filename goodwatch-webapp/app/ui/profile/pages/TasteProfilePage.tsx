@@ -1,8 +1,10 @@
-// A visitor's Taste profile: /u/:handle as others see it (and the owner with ?as=visitor). Who they are (bio, links,
-// since), the summary of their taste (the viewer type with what draws them and what doesn't, the counts, the print, the
-// taste groups, three titles against everyone), then the taste match, their 10s and their hot takes.
+// A visitor's Taste profile: /u/:handle as others see it (and the owner with ?as=visitor). For a signed-in visitor the
+// taste match first, with "Where your tastes meet" in place under it. Then who they are (bio, links), the summary of
+// their taste (the viewer type with what draws them and what doesn't, the counts, the print, the taste groups, three
+// titles against everyone), their 10s and their hot takes.
 import { ArrowRightIcon, SparklesIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
+import { LayoutGroup, motion, useReducedMotion } from "framer-motion"
 import { useMemo } from "react"
 import {
 	type ProfileOverview,
@@ -11,11 +13,12 @@ import {
 } from "~/domain/profile"
 import type { MemberCompare } from "~/domain/profile-taste"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
-import { Overview, type OverviewTaste } from "../Overview"
+import { Overview } from "../Overview"
 import { ProfileAbout } from "../ProfileFrame"
 import { AMBER_BUTTON, TILE } from "../parts"
-import { agreementTitle } from "../taste/agreement"
+import { TasteMatch } from "../taste/Compare"
 import { Whorl } from "../taste/Whorl"
+import { agreementTitle } from "../taste/agreement"
 import {
 	FAMILY_COLOR,
 	type ProfileTaste,
@@ -33,62 +36,73 @@ export function TasteProfilePage({
 	shell,
 	taste,
 	overview,
-	overviewTaste,
 	compare,
 }: {
 	shell: ProfileShell
 	/** Null when the viewer may not see the taste, or it failed to load. */
 	taste: ProfileTaste | null
 	overview: ProfileOverview
-	overviewTaste: OverviewTaste | null
 	compare: MemberCompare | null
 }) {
+	const still = useReducedMotion() ?? false
 	const value = useMemo(
-		() =>
-			taste && tasteContextValue(taste, null, null, shell.handle, false),
+		() => taste && tasteContextValue(taste, null, null, shell.handle, false),
 		[taste, shell.handle],
 	)
 	return (
-		<div className={`${WRAP} flex flex-col gap-10 pt-6 pb-32 text-white`}>
-			<ProfileAbout shell={shell} />
-			{shell.viewer === "guest" && (
-				<div className="flex flex-wrap items-center gap-3">
-					<Link to="/sign-up" rel="nofollow" className={AMBER_BUTTON}>
-						Find your own viewer type
-						<ArrowRightIcon className="size-4" aria-hidden />
-					</Link>
-				</div>
-			)}
-			{seesPart(shell, "taste") &&
-				(taste && value && taste.status === "ready" ? (
-					<TasteContext.Provider value={value}>
-						<TasteSummary
-							counts={{
-								rated: seesPart(shell, "scores") ? shell.counts.rated : undefined,
-								seen: seesPart(shell, "seen") ? shell.counts.seen : undefined,
-								hours: seesPart(shell, "hours") ? shell.counts.hours : undefined,
-							}}
-						/>
-					</TasteContext.Provider>
-				) : (
-					<div
-						className={`${TILE} flex flex-col items-center gap-3 px-6 py-14 text-center`}
-					>
-						<SparklesIcon className="size-7 text-amber-400" aria-hidden />
-						<p className="text-lg font-bold text-gray-100">
-							{taste?.status === "empty"
-								? `@${shell.handle}'s taste is still forming.`
-								: "The taste portrait is loading. Try again in a moment."}
-						</p>
-					</div>
-				))}
-			<Overview
-				shell={shell}
-				overview={overview}
-				taste={overviewTaste}
-				compare={compare}
-			/>
-		</div>
+		<LayoutGroup>
+			<div className={`${WRAP} flex flex-col gap-10 pt-6 pb-32 text-white`}>
+				{shell.viewer === "member" && compare && (
+					<TasteMatch shell={shell} compare={compare} />
+				)}
+				{/* Moves down with "Where your tastes meet" as it opens, by transform only. */}
+				<motion.div
+					layout={still ? false : "position"}
+					transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+					className="flex flex-col gap-10"
+				>
+					<ProfileAbout shell={shell} />
+					{shell.viewer === "guest" && (
+						<div className="flex flex-wrap items-center gap-3">
+							<Link to="/sign-up" rel="nofollow" className={AMBER_BUTTON}>
+								Find your own viewer type
+								<ArrowRightIcon className="size-4" aria-hidden />
+							</Link>
+						</div>
+					)}
+					{seesPart(shell, "taste") &&
+						(taste && value && taste.status === "ready" ? (
+							<TasteContext.Provider value={value}>
+								<TasteSummary
+									counts={{
+										rated: seesPart(shell, "scores")
+											? shell.counts.rated
+											: undefined,
+										seen: seesPart(shell, "seen")
+											? shell.counts.seen
+											: undefined,
+										hours: seesPart(shell, "hours")
+											? shell.counts.hours
+											: undefined,
+									}}
+								/>
+							</TasteContext.Provider>
+						) : (
+							<div
+								className={`${TILE} flex flex-col items-center gap-3 px-6 py-14 text-center`}
+							>
+								<SparklesIcon className="size-7 text-amber-400" aria-hidden />
+								<p className="text-lg font-bold text-gray-100">
+									{taste?.status === "empty"
+										? `@${shell.handle}'s taste is still forming.`
+										: "The taste portrait is loading. Try again in a moment."}
+								</p>
+							</div>
+						))}
+					<Overview shell={shell} overview={overview} />
+				</motion.div>
+			</div>
+		</LayoutGroup>
 	)
 }
 
@@ -334,4 +348,3 @@ function VsRow({
 		</li>
 	)
 }
-

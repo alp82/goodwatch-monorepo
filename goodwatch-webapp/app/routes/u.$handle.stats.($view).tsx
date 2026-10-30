@@ -1,6 +1,6 @@
 // Member profile, Stats tab: /u/:handle/stats. The summary of the owner's taste as the public sees it (viewer type,
-// print, taste groups, against everyone), their taste numbers, and for a signed-in visitor the comparison with their own
-// taste. /u/:handle/stats/everyone and /stats/sides are the same page with that section's share card as the link
+// print, taste groups, against everyone), their taste numbers, and for a signed-in visitor their usual score beside the
+// owner's (the full comparison is on the Taste tab). /u/:handle/stats/everyone and /stats/sides are the same page with that section's share card as the link
 // preview. The owner's own taste page is /taste. The tab was Taste at /u/:handle/taste, which redirects here.
 // Spec: docs/implementation/member-profile/README.md, docs/implementation/taste-redesign.md
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
@@ -19,7 +19,6 @@ import { PROFILE_CARD_VIEWS } from "~/ui/og-image/profile-card-model"
 import { ProfileTabPage } from "~/ui/profile/ProfileFrame"
 import { profileMeta } from "~/ui/profile/meta"
 import { StatsPage } from "~/ui/profile/pages/StatsPage"
-import { ShareMenu } from "~/ui/profile/taste/ShareMenu"
 import type { NamedTasteStats } from "~/ui/profile/taste/Stats"
 import {
 	type ProfileTaste,
@@ -166,9 +165,6 @@ export default function ProfileStatsTab() {
 					taste?.status === "ready"
 						? `${taste.counted.toLocaleString("en-US")} scores`
 						: undefined
-				}
-				links={
-					taste?.status === "ready" ? <ShareMenu shell={shell} /> : undefined
 				}
 			>
 				{taste && (

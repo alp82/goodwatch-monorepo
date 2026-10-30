@@ -73,20 +73,18 @@ test("Watch paths: Seen per kind, and every list slug names a Watch path", () =>
 		kind: "show",
 		sort: null,
 	})
-	assert.deepEqual(WATCH_MOVIE_LISTS.recent, {
-		status: "want",
-		kind: "movie",
-		sort: "added",
-	})
+	assert.equal(WATCH_MOVIE_LISTS.recent, undefined)
 	assert.deepEqual(WATCH_MOVIE_LISTS.wishlist, {
 		status: "want",
-		kind: "all",
+		kind: "movie",
 		sort: null,
 	})
 })
 
 test("statusHome: library statuses land on Watch, Not rated on Taste", () => {
 	assert.equal(statusHome("want", "all", ANA), "/watch/movies/wishlist")
+	assert.equal(statusHome("want", "movie", ANA), "/watch/movies/wishlist")
+	assert.equal(statusHome("want", "show", ANA), "/watch/not-started")
 	assert.equal(statusHome("seen", "show", ANA), "/watch/seen")
 	assert.equal(statusHome("seen", "all", ANA), "/watch/movies/seen")
 	assert.equal(statusHome("on_hold", "all", GUEST), "/watch/on-hold")
@@ -99,10 +97,14 @@ const SHARED_ROWS: [string, string, string][] = [
 	["/my-shows", "?from=menu", "/watch?from=menu"],
 	["/my-movies", "", "/watch/movies"],
 	["/for-you", "?mood=cozy", "/watch/for-you?mood=cozy"],
+	["/my-library/want", "?sort=title&type=show", "/watch/not-started?sort=title"],
+	["/my-library/want", "?type=movie", "/watch/movies/wishlist"],
+	// Recently added is Want to Watch's newest-first order now.
+	["/watch/movies/recent", "", "/watch/movies/wishlist?sort=added"],
 	[
-		"/my-library/want",
-		"?sort=title&type=show",
-		"/watch/movies/wishlist?sort=title&type=show",
+		"/watch/movies/recent",
+		"?sort=title&q=dune",
+		"/watch/movies/wishlist?sort=added&q=dune",
 	],
 	["/my-library/seen", "?type=show&sort=score", "/watch/seen?sort=score"],
 	["/my-library/seen", "?type=movie", "/watch/movies/seen"],
@@ -193,7 +195,7 @@ test("the owner's /u/:h/seen, /wishlist and /shows go to Watch; visitors and ?as
 	)
 	assert.deepEqual(
 		oldToNew("/u/Ana/wishlist", "?type=show", ANA),
-		personal("/watch/movies/wishlist?type=show"),
+		personal("/watch/not-started"),
 	)
 	assert.deepEqual(
 		oldToNew("/u/ana/shows", "", ANA),

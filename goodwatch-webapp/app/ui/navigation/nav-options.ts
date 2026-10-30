@@ -1,24 +1,23 @@
-// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-10). Not a feature switch: these let the owner
+// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-11). Not a feature switch: these let the owner
 // compare navigation options on the local preview branch. The choice lives in one cookie; the root loader reads it
 // for the server render, and the options bar sets it and reloads the page.
 import { useRouteLoaderData } from "@remix-run/react"
 
 export const NAV_OPTIONS = {
-	/** How the three stacked bars (site header, tab row, in-page nav) tell themselves apart, and the in-page nav's
-	 * look with it: brightness steps, a tinted gradient, faint imagery, or folder tabs opening into the in-page bar. */
-	layers: ["steps", "gradient", "imagery", "folder"],
-	/** The fingerprint ring's style around the avatar (round 10). */
-	ring: ["classic", "halo", "orbit", "pulse", "duo"],
-	/** The whole profile header's layout, with Share, View as visitor and Edit profile placed as part of it. */
-	layout: ["inline", "centered", "split", "stacked"],
-	/** Which facts the header shows. */
-	facts: ["time", "range", "people", "year"],
+	/** The orbit ring's style around the avatar (round 11; the orbit ring itself is locked). */
+	orbit: ["dots", "comets", "constellation", "bands", "sparks"],
+	/** What a click on the orbit avatar opens in the header: the fingerprint's key facts. */
+	reveal: ["pill", "panel", "morph", "card"],
+	/** How a member visitor sees the match with the profile in the header. */
+	compare: ["chip", "gauge", "overlap", "halves"],
+	/** How New picks its country, in place of the breadcrumb bar. */
+	country: ["title", "flag", "chips", "sheet"],
 } as const
 
 export type NavOptionKey = keyof typeof NAV_OPTIONS
 export type NavOptions = { [K in NavOptionKey]: (typeof NAV_OPTIONS)[K][number] }
 
-export const DEFAULT_NAV_OPTIONS: NavOptions = { layers: "steps", ring: "classic", layout: "inline", facts: "time" }
+export const DEFAULT_NAV_OPTIONS: NavOptions = { orbit: "dots", reveal: "pill", compare: "chip", country: "title" }
 
 export const NAV_OPTIONS_COOKIE = "gw_navopt"
 

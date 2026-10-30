@@ -1,6 +1,6 @@
 // A library list (#385): every title a member has marked under one status, on a page of its own (Watch's chips and
 // Seen pages, Taste's Not rated). The page's tabs and chips choose the list, so the body has no head and no status
-// choice of its own. A page can fix the kind (Seen shows, Not started) and the sort (Recently added).
+// choice of its own. A page can fix the kind (Seen shows, Start, Want to Watch) and the sort.
 //
 // The controls: a movies/shows filter (unless the page fixes the kind), a search over the list, and a sort. A list is
 // drawn in steps of 60, also with 1,500 Seen titles. The choice lives in the URL (`/watch/movies/seen?sort=score&q=alien`),
@@ -444,9 +444,9 @@ export function MyLibraryPage({
 	kindControl?: boolean
 	/** A control first in the row, before the search (All shows' status filter). */
 	filter?: ReactNode
-	/** The kind the page fixes (Seen shows, Not started): no kind control, and a `type` in the URL doesn't count. */
+	/** The kind the page fixes (Seen shows, Start, Want to Watch): no kind control, and a `type` in the URL doesn't count. */
 	lockKind?: "movie" | "show" | null
-	/** The sort the page fixes (Recently added): no sort control. */
+	/** The sort the page fixes: no sort control. */
 	lockSort?: LibrarySort | null
 	/** The list's name in the search field and the no-match line; the status's label by default. */
 	name?: string

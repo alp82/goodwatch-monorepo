@@ -18,7 +18,7 @@ export function watchCounts(data: LibraryData): WatchViewCounts {
 			watching: libraryKeys(data, "watching").length,
 			"on-hold": libraryKeys(data, "on_hold").length,
 			dropped: libraryKeys(data, "dropped").length,
-			wishlist: want.length,
+			wishlist: want.length - want.filter(isShow).length,
 		},
 		seenShows,
 		seenMovies: seen.length - seenShows,

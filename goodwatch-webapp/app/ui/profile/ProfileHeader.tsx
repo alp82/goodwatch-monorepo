@@ -3,12 +3,15 @@
 // height on every tab, list page and Settings page, so moving between them never shifts the page. A member without a
 // handle gets a strip of the same height that asks for one. While the owner views as a visitor, the amber bar sticks
 // under the site header (header/VisitorView.tsx).
-// PROTOTYPE OPTIONS (member nav, round 10): the header's layout (`layout`), its ring (`ring`) and its facts (`facts`)
-// come from nav-options.ts; the layouts are in header/Layouts.tsx, the rings in header/Ring.tsx, the controls each
-// layout draws in header/Controls.tsx.
+// PROTOTYPE OPTIONS (member nav, round 11): the orbit's style (`orbit`), what a click on it opens (`reveal`) and how a
+// member visitor sees the match (`compare`) come from nav-options.ts; the header is in header/Layouts.tsx.
 import { UserCircleIcon } from "@heroicons/react/24/outline"
-import { Link } from "@remix-run/react"
-import { EDIT_PROFILE_PATH, type PathViewer } from "~/domain/member-paths"
+import { Link, useLocation } from "@remix-run/react"
+import {
+	EDIT_PROFILE_PATH,
+	type PathViewer,
+	tastePath,
+} from "~/domain/member-paths"
 import {
 	AUDIENCES,
 	type Audience,
@@ -21,14 +24,10 @@ import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 import { TasteTabs } from "~/ui/navigation/AreaTabs"
 import { type TasteTabKey, tasteRow } from "~/ui/navigation/areas"
 import { useNavOptions } from "~/ui/navigation/nav-options"
-import {
-	Frame,
-	type HeaderLayout,
-	type HeaderProps,
-	LAYOUTS,
-} from "./header/Layouts"
+import type { ShareTarget } from "./header/Controls"
+import { Frame, InlineHeader } from "./header/Layouts"
 import { VisitorBar, viewSwitchHref } from "./header/VisitorView"
-import { type HeaderFact, headerFacts } from "./header/facts"
+import { headerFacts, sinceLine } from "./header/facts"
 import { AMBER_BUTTON } from "./parts"
 import { PROFILE_TAB_PARTS, type ProfileTab } from "./paths"
 import type { WhorlAttribute } from "./taste/Whorl"
@@ -88,17 +87,10 @@ function audienceOf(shell: ProfileShell, tab: TasteTabKey): Audience {
 		)
 }
 
-/** The profile header in the layout the options pick (header/Layouts.tsx). */
-export function ProfileHeader(props: HeaderProps & { layout: HeaderLayout }) {
-	const Layout = LAYOUTS[props.layout]
-	return <Layout {...props} />
-}
-
 /** In place of the profile header for a member without a handle: the same height, and the way to pick one. */
 export function HandleStrip() {
-	const { layout } = useNavOptions()
 	return (
-		<Frame layout={layout} ring={false} strip>
+		<Frame ring={false} strip>
 			<div className={`${WRAP} flex h-full items-center gap-3 sm:gap-5`}>
 				<UserCircleIcon
 					className="size-11 shrink-0 text-gray-500 sm:size-16"
@@ -147,7 +139,6 @@ export function ProfileChrome({
 	shell,
 	identity,
 	print = null,
-	facts = [],
 	match = null,
 	pathname,
 	search,
@@ -157,14 +148,13 @@ export function ProfileChrome({
 	identity: string | null
 	/** The taste print, under the same rule. */
 	print?: WhorlAttribute[] | null
-	/** The cached facts for the essence (header.server.ts). */
-	facts?: HeaderFact[]
 	/** The signed-in visitor's match, on someone else's profile. */
 	match?: HeaderMatch | null
 	pathname: string
 	search: string
 }) {
 	const options = useNavOptions()
+	const location = useLocation()
 	const owner = shell.viewer === "owner"
 	const onProfile = /^\/u\/[^/]+/.test(pathname)
 	const asVisitor = isVisitorView(shell, pathname, search)
@@ -191,6 +181,7 @@ export function ProfileChrome({
 
 	// The owner's way to view as a visitor: on the profile's pages only, never on Settings.
 	const controls = {
+		share: shareTargets(shell.handle, row?.tabs ?? [], location.pathname),
 		handle: shell.handle,
 		view:
 			owner && onProfile
@@ -203,23 +194,55 @@ export function ProfileChrome({
 		edit: owner && !asVisitor,
 	}
 	const query = asVisitor ? { as: "visitor" } : undefined
-	const props: HeaderProps = {
-		shell: view,
-		identity: seesPart(view, "taste") ? identity : null,
-		print: seesPart(view, "taste") ? print : null,
-		ringLook: options.ring,
-		facts: headerFacts(view, facts, options.facts, query),
-		controls,
-		match: shell.viewer === "member" ? match : null,
-		ring: asVisitor,
-	}
 	return (
 		<>
 			{asVisitor && controls.view && <VisitorBar own={controls.view.own} />}
-			<ProfileHeader {...props} layout={options.layout} />
+			<InlineHeader
+				shell={view}
+				identity={seesPart(view, "taste") ? identity : null}
+				print={seesPart(view, "taste") ? print : null}
+				facts={headerFacts(view, query)}
+				since={sinceLine(view)}
+				controls={controls}
+				match={shell.viewer === "member" ? match : null}
+				ring={asVisitor}
+				options={options}
+				tasteHref={tastePath(shell.handle, "profile", query)}
+				own={owner && !asVisitor}
+			/>
 			{row && <TasteTabs row={row} />}
 		</>
 	)
+}
+
+/**
+ * What Share offers: the profile, and the page you're on when it is a tab or a list. A tab shares its own address (a
+ * Stats view included); the owner-only pages under Scores share Scores.
+ */
+function shareTargets(
+	handle: string,
+	tabs: { key: string; label: string; href: string; here: boolean }[],
+	pathname: string,
+): ShareTarget[] {
+	const profile = { name: "Profile", path: `/u/${handle}` }
+	const path = pathname.replace(/\/$/, "")
+	if (/^(\/u\/[^/]+)?\/lists\/(?!new$|mine$)[^/]+$/.test(path))
+		return [profile, { name: "This list", path }]
+	const tab = tabs.find((t) => t.here)
+	if (!tab || tab.key === "profile" || !path.startsWith("/u/")) return [profile]
+	const tabPath = new URL(tab.href, "https://goodwatch.app").pathname
+	return [
+		profile,
+		{
+			name: `${tab.label} tab`,
+			path:
+				path.startsWith(tabPath) &&
+				!path.startsWith(`${tabPath}/rate`) &&
+				!path.startsWith(`${tabPath}/not-rated`)
+					? path
+					: tabPath,
+		},
+	]
 }
 
 /** The handle strip and the Taste row without a profile (/taste, Settings), for a member without a handle. */

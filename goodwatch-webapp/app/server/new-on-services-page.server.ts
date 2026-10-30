@@ -168,6 +168,11 @@ export interface NewPageData {
 	/** The services row: one link per service page. */
 	keys: (PageService & { path: string })[]
 	otherCountries: { code: string; name: string; path: string }[]
+	/**
+	 * The country chooser's list: every country with new titles (this page's country too), by name. On a service page a
+	 * country leads to the same service there when it has new titles on it, else to the country's page.
+	 */
+	countryChoices: { code: string; name: string; path: string }[]
 	offer: { country: string; path: string; words: string } | null
 	/** The link without the country that the share button copies. */
 	share: string | null
@@ -560,6 +565,19 @@ async function buildPage({
 							name,
 							path: brand ? servicePath(code, brand) : countryPath(code),
 						})),
+		countryChoices: countries
+			.filter(
+				({ code }) => code === country.code || hasTitles(code, null),
+			)
+			.map(({ code, name }) => ({
+				code,
+				name,
+				path:
+					brand && hasTitles(code, brand.slug)
+						? servicePath(code, brand)
+						: countryPath(code),
+			}))
+			.sort((a, b) => a.name.localeCompare(b.name, "en")),
 		offer:
 			kind === "member"
 				? null

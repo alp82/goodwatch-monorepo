@@ -7,10 +7,7 @@ import { getListPeople } from "~/server/best-lists.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { ListHead } from "~/ui/best-lists/ListHead"
 import { PeopleCards } from "~/ui/best-lists/PeopleCards"
-import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { buildMeta } from "~/utils/meta"
-
-const CRUMBS: Crumb[] = [{ label: "People", path: "/people" }]
 
 export const loader = presentCatalogLoader(
 	async () => ({ people: await getListPeople() }),
@@ -37,7 +34,7 @@ export default function People() {
 	const copy = peopleCopy(people.map((p) => p.department))
 	return (
 		<div className="pb-16">
-			<ListHead crumbs={CRUMBS} heading={copy.heading} intro={copy.intro} />
+			<ListHead heading={copy.heading} intro={copy.intro} />
 			<PeopleCards people={people} />
 		</div>
 	)

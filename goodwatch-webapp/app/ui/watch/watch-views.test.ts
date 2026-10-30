@@ -30,27 +30,28 @@ test("Up next's views: Next episodes, then the statuses, with the page's view cu
 	const views = upNextViews("/watch/watching/", counts)
 	assert.deepEqual(
 		views?.map((c) => c.key),
-		["next-episodes", "not-started", "watching", "on-hold", "dropped"],
+		["next-episodes", "watching", "not-started", "on-hold", "dropped"],
 	)
 	assert.deepEqual(
 		views?.filter((c) => c.here).map((c) => c.key),
 		["watching"],
 	)
-	assert.equal(views?.[1].count, 3)
+	assert.equal(views?.[2].count, 3)
+	assert.equal(views?.[2].label, "Start")
 	assert.equal(upNextViews("/watch/movies", counts), null)
 	assert.equal(upNextViews("/watch/seen", counts), null)
 })
 
 test("Ready to watch's views, and guests get no counts", () => {
-	const views = readyViews("/watch/movies/recent", null)
+	const views = readyViews("/watch/movies/wishlist", null)
 	assert.deepEqual(
-		views?.map((c) => [c.key, c.here, c.count]),
+		views?.map((c) => [c.key, c.label, c.here, c.count]),
 		[
-			["tonight", false, undefined],
-			["wishlist", false, undefined],
-			["recent", true, undefined],
+			["tonight", "Next Movie", false, undefined],
+			["wishlist", "Want to Watch", true, undefined],
 		],
 	)
+	assert.equal(readyViews("/watch/movies/recent", counts), null)
 	assert.equal(readyViews("/watch", counts), null)
 	assert.equal(readyViews("/watch/for-you", counts), null)
 })

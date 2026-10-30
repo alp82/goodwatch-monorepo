@@ -36,6 +36,10 @@ async function routeLoader(route: string, viewer: PathViewer) {
 			"export const getRemixSource = async () => null",
 		"~/server/share-lists/titles.server":
 			"export const getQuickPicks = async () => []; export const parseTitleKey = () => null; export const resolveCardTitles = async () => []",
+		// Watch's movie lists (watch.movies.$list.tsx): the list itself never loads here.
+		"~/server/library-list-route.server":
+			"export const libraryListLoader = async () => new Response('list')",
+		"~/ui/my-library/MyLibraryPage": "export const LibraryListBody = () => null",
 		"~/ui/share-card/model":
 			"export const LIST_PROMPTS = [{ title: 'Top 5' }]; export const DEFAULT_PROMPT_ID = 'top'; export const DEFAULT_THEME = 'amber'; export const GUEST_BYLINE = 'you'; export const cardDate = () => 'today'; export const listByline = h => '@' + h",
 	}
@@ -306,5 +310,29 @@ test("the new-list editor lives in the owner's profile; guests and members witho
 		assert.equal(response.headers.get("Location"), to, address)
 		assert.equal(response.headers.get("Cache-Control"), "private, no-store")
 		assert.equal(response.headers.get("Vary"), "Cookie")
+	}
+})
+
+test("/watch/movies/recent goes to Want to Watch, newest first, for everyone", async () => {
+	for (const [, viewer] of viewers) {
+		const loader = await routeLoader("watch.movies.$list.tsx", viewer)
+		let response: Response
+		try {
+			response = await loader({
+				request: new Request(
+					"https://goodwatch.app/watch/movies/recent?sort=title&q=dune",
+				),
+				params: { list: "recent" },
+				context: {},
+			})
+		} catch (thrown) {
+			response = thrown as Response
+		}
+		assert.equal(response.status, 301)
+		assert.equal(
+			response.headers.get("Location"),
+			"/watch/movies/wishlist?sort=added&q=dune",
+		)
+		assert.equal(response.headers.get("Cache-Control"), null)
 	}
 })

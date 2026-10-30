@@ -14,7 +14,6 @@ import { HeaderSearchBar, Omnibox, holdKeyboardForSearch } from "./Search"
 import { type AreaDef, areaKeys, litArea } from "./areas"
 import { HEADER_BAR } from "./bar-layers"
 import { NewEpisodesMark } from "./bits"
-import { useNavOptions } from "./nav-options"
 import { useOpenerSignal } from "./useWhatsNew"
 
 export interface AreaKeyView extends AreaDef {
@@ -120,21 +119,19 @@ function AccountSlot({ compact }: { compact?: boolean }) {
 
 export function SiteHeader() {
 	const areas = useAreaKeys()
-	// OPTION layers: the header is the top of the three bars (./bar-layers.ts).
-	const { layers } = useNavOptions()
 	return (
 		// `data-site-header`: leaving the living room through its TV holds the header still (main.css).
 		<div data-site-header className="fixed top-0 z-[1000] w-full text-gray-100">
 			<GlobalLoading />
 			<div
-				className={`flex h-16 items-center gap-2.5 px-4 lg:hidden ${HEADER_BAR[layers]}`}
+				className={`flex h-16 items-center gap-2.5 px-4 lg:hidden ${HEADER_BAR}`}
 			>
 				<Wordmark fontSize={20} />
 				<span className="flex-1" />
 				<PhoneSearchKey />
 				<AccountSlot compact />
 			</div>
-			<header className={`hidden lg:block ${HEADER_BAR[layers]}`}>
+			<header className={`hidden lg:block ${HEADER_BAR}`}>
 				<div className="mx-auto flex h-16 max-w-7xl items-center gap-[18px] px-8">
 					<Wordmark fontSize={30} />
 					<AreaKeys areas={areas} />

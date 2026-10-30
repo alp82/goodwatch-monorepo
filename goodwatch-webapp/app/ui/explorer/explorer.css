@@ -1,4 +1,5 @@
-/* The Explorer page: a map that fills the window under the site header (and above the bottom navigation on phones).
+/* The Explorer page: a map that fills the window under the site header and the Explore tab row (and above the bottom
+   navigation on phones).
    The page never scrolls, the footer is hidden on this route, and every control sits on the map, glass over the
    islands, at least 44 px. */
 
@@ -15,8 +16,9 @@ body:has(.ex-stage) {
 body:has(.ex-stage) > footer {
 	display: none;
 }
+/* The Explore tab row stays in the flow under the header (45 px, 49 px from lg); the map starts under it. */
 body:has(.ex-stage) > main {
-	margin: 0;
+	margin: 4rem 0 0;
 	padding: 0;
 	min-height: 0;
 	flex: none;
@@ -33,7 +35,7 @@ body:has(.ex-stage) > main {
 	position: fixed;
 	left: 0;
 	right: 0;
-	top: 4rem;
+	top: calc(4rem + 45px);
 	bottom: 0;
 	z-index: 1;
 	overflow: hidden;
@@ -48,6 +50,11 @@ body:has(.ex-stage) > main {
 @media (max-width: 1023px) {
 	.ex-stage {
 		bottom: 65px;
+	}
+}
+@media (min-width: 1024px) {
+	.ex-stage {
+		top: calc(4rem + 49px);
 	}
 }
 .ex-sea,

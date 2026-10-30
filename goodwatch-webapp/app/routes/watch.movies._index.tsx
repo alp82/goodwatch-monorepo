@@ -1,5 +1,5 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
-// Watch › Ready to watch › Tonight (/watch/movies, once My movies, #385): the page for choosing a movie. It is the Watch next page for the Wishlist's movies, with "How
+// Watch › Ready to watch › Next Movie (/watch/movies, once My movies, #385): the page for choosing a movie. It is the Watch next page for the Wishlist's movies, with "How
 // long?" as a fourth choice and one group for what does not fit tonight. For members; it reads /api/watch-next with
 // `kind=movie`. A guest's Wishlist lives in their browser, so their page reads it from there, as Watch next does.
 import {

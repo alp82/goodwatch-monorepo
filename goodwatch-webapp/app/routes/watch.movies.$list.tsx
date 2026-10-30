@@ -1,14 +1,17 @@
-// Watch › Ready to watch's lists: /watch/movies/wishlist (Whole Wishlist, movies and shows), /recent (Recently
-// added: movies, newest first) and /seen (Seen movies, latest watch first). Another slug is not found. A guest is
-// asked to sign up. /seen goes to the Seen tab with Movies picked.
+// Watch › Ready to watch's lists: /watch/movies/wishlist (Want to Watch: the Wishlist's movies; its shows are Up
+// next's Start) and /seen (Seen movies, latest watch first). Another slug is not found. A guest is asked to sign up.
+// /seen goes to the Seen tab with Movies picked; /recent (once Recently added) goes to Want to Watch, newest first.
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
 	useLoaderData,
 	useParams,
 } from "@remix-run/react"
-import { WATCH_MOVIE_LISTS } from "~/domain/member-paths"
-import { moveResponse } from "~/domain/member-paths"
+import {
+	WATCH_MOVIE_LISTS,
+	moveResponse,
+	recentMove,
+} from "~/domain/member-paths"
 import {
 	type LibraryListLoaded,
 	libraryListLoader,
@@ -20,8 +23,7 @@ import { moviesSeenMove } from "~/ui/watch/watch-views"
 export { pageHeaders as headers } from "~/utils/headers"
 
 const NAME: Record<string, string> = {
-	wishlist: "Wishlist",
-	recent: "Recently added",
+	wishlist: "Want to Watch",
 	seen: "Seen movies",
 }
 
@@ -30,7 +32,7 @@ export const meta: MetaFunction = ({ params }) => [
 	{
 		name: "description",
 		content:
-			"Your movies: your Wishlist, what you added lately, and every movie you watched.",
+			"Your movies: the ones you want to watch, and every movie you watched.",
 	},
 	// Personal to each viewer.
 	{ name: "robots", content: "noindex, follow" },
@@ -49,6 +51,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 async function canonicalLoader(args: LoaderFunctionArgs) {
 	const slug = args.params.list ?? ""
+	if (slug === "recent")
+		throw moveResponse(recentMove(new URL(args.request.url).search))
 	if (!Object.prototype.hasOwnProperty.call(WATCH_MOVIE_LISTS, slug))
 		throw new Response("Not found", { status: 404 })
 	if (slug === "seen")

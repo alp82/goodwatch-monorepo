@@ -260,7 +260,7 @@ const PAGES: Entry[] = [
 	}),
 	page("myMovies", "My movies", WATCH_PATHS.tonight, FilmIcon, {
 		destination: "ready",
-		names: ["ready to watch"],
+		names: ["ready to watch", "next movie"],
 		words: ["films", "watch next", "want to see", "tonight", "pick"],
 	}),
 	page("forYou", "For you", WATCH_PATHS.forYou, SparklesIcon, {
@@ -400,17 +400,23 @@ const PAGES: Entry[] = [
 		),
 
 	// Watch's lists: the member's marked titles.
-	page("wishlist", "Wishlist", WATCH_PATHS.wishlist, BookmarkIcon, {
+	page("wishlist", "Want to Watch", WATCH_PATHS.wishlist, BookmarkIcon, {
 		sub: WATCH,
 		for: "member",
-		names: ["want to see", "whole wishlist"],
+		names: ["want to see", "wishlist", "whole wishlist"],
 		words: ["watchlist", "watch later", "saved", "bookmarks", "my library"],
 	}),
-	page("recent", "Recently added", WATCH_PATHS.recent, BookmarkIcon, {
-		sub: WATCH,
-		for: "member",
-		words: ["new on my wishlist", "latest", "added"],
-	}),
+	page(
+		"recent",
+		"Recently added",
+		`${WATCH_PATHS.wishlist}?sort=added`,
+		BookmarkIcon,
+		{
+			sub: WATCH,
+			for: "member",
+			words: ["new on my wishlist", "latest", "added"],
+		},
+	),
 	page("seenMovies", "Seen movies", WATCH_PATHS.moviesSeen, EyeIcon, {
 		sub: WATCH,
 		for: "member",
@@ -422,9 +428,10 @@ const PAGES: Entry[] = [
 		for: "member",
 		words: ["watched", "history", "finished", "series"],
 	}),
-	page("notStarted", "Not started", WATCH_PATHS.notStarted, TvIcon, {
+	page("notStarted", "Start", WATCH_PATHS.notStarted, TvIcon, {
 		sub: WATCH,
 		for: "member",
+		names: ["not started"],
 		words: ["shows to start", "want to see", "start"],
 	}),
 	page("watching", "Watching", WATCH_PATHS.watching, PlayIcon, {

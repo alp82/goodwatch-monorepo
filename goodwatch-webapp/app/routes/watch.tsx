@@ -1,7 +1,7 @@
 // Watch: what you watch next and what you watched. The layout draws the area's two-line tabs (My shows / Up next,
 // My movies / Ready to watch, Recommendations / Curated For You, and Seen / History at the row's end on desktop), sticky under
 // the header, then the tab's third level, all chosen from the path, then the page:
-// - Ready to watch: SubNav with Tonight · Whole Wishlist · Recently added.
+// - Ready to watch: SubNav with Next Movie · Want to Watch.
 // - Seen: SubNav with All · Movies · Shows (`?type=` on /watch/seen).
 // - Up next: SubNav with Next episodes | All shows (the status pages, each with a status filter).
 // It has no loader: the counts come from the member data the root loader already read, the new-episodes badge from
@@ -47,7 +47,6 @@ export default function WatchLayout() {
 			<AreaTabs
 				label="Watch"
 				icon={PlayIcon}
-				area="watch"
 				tabs={tabs}
 				trailing={[history]}
 				trailingEnd="desktop"

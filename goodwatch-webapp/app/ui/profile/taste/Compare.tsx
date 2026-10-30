@@ -1,70 +1,361 @@
-// Compare-to-me for a signed-in visitor, told through titles, not tags: the match and one sentence, an overlap of what
-// each of you loves (posters in the two circles and the lens), where your scores split on titles you both rated, and
-// picks for each other.
+// Compare-to-me for a signed-in visitor, at the top of someone else's Taste tab: the match card (the tier word, the
+// percentage, both avatars), then a split button that opens "Where your tastes meet" in place. The section is told
+// through titles, not tags: what only they love, what you both love and what only you love, where your scores split
+// on titles you both rated, and picks for each other.
+import {
+	ArrowRightIcon,
+	ChevronDownIcon,
+	SparklesIcon,
+} from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import { useState } from "react"
-import type { ProfileTitle } from "~/domain/profile"
-import { matchTier } from "~/domain/profile-taste"
+import {
+	AnimatePresence,
+	animate,
+	motion,
+	useReducedMotion,
+} from "framer-motion"
+import { useEffect, useState } from "react"
+import { RATE_FALLBACK_PATH } from "~/domain/member-paths"
+import type { ProfileShell, ProfileTitle } from "~/domain/profile"
+import { type MemberCompare, matchTier } from "~/domain/profile-taste"
+import { useAccountSummary } from "~/ui/account/useAccountSummary"
+import { DISPLAY } from "~/ui/my-pages/bits"
 import { PANEL_CARD_SIZES, ProfileCard } from "../ProfileCard"
-import { matchColor } from "../match"
-import { posterUrl, vibe } from "../parts"
-import { useTaste } from "./model"
-import { PANEL, SectionHead } from "./parts"
+import { ProfileAvatar } from "../ProfileFrame"
+import { matchColor, matchStrength } from "../match"
+import { AMBER_BUTTON, TILE, posterUrl, vibe } from "../parts"
+import { PANEL } from "./parts"
 
-type Ready = NonNullable<ReturnType<typeof useTaste>["compare"]>
+type Ready = Extract<MemberCompare, { status: "ready" }>
 
-export function CompareBanner() {
-	const { compare, handle } = useTaste()
-	if (!compare) return null
-	const matchPercent = compare.percent
-	const color = matchColor(matchPercent)
-	const pulls = {
-		both: compare.pulls.both.slice(0, 2),
-		onlyThem: compare.pulls.onlyThem.slice(0, 2),
-		onlyYou: compare.pulls.onlyYou.slice(0, 2),
-	}
-	const sentence = [
-		pulls.both.length
-			? `You both go for ${pulls.both.join(" and ").toLowerCase()}.`
-			: "",
-		pulls.onlyThem[0] && pulls.onlyYou[0]
-			? `@${handle} chases ${pulls.onlyThem[0].toLowerCase()}; you chase ${pulls.onlyYou[0].toLowerCase()}.`
-			: "",
-	]
-		.filter(Boolean)
-		.join(" ")
+/** The section's id. A link to the Taste tab with #compare opens it. */
+export const COMPARE_ID = "compare"
+
+/**
+ * The match card and, under it, the way into "Where your tastes meet": a split button whose main part and chevron both
+ * open and close the section in place. The section fades and slides in; the page below moves down with it.
+ */
+export function TasteMatch({
+	shell,
+	compare,
+}: { shell: ProfileShell; compare: MemberCompare }) {
+	const still = useReducedMotion() ?? false
+	const [open, setOpen] = useState(false)
+	useEffect(() => {
+		if (window.location.hash === `#${COMPARE_ID}`) setOpen(true)
+	}, [])
+	if (compare.status === "thin")
+		return <ThinMatch compare={compare} handle={shell.handle} />
+	const toggle = () => setOpen((o) => !o)
+	// `layout` makes this a member of the page's LayoutGroup, so the content below slides when the section opens or
+	// closes; popLayout takes a closing section out of the flow at once.
 	return (
-		<section aria-labelledby="compare" className="flex flex-col gap-5">
-			<SectionHead
-				id="compare"
-				eyebrow={`You and @${handle}`}
-				lead="Where your tastes"
-				accent="meet"
-				sub={sentence}
-				right={
-					<span className="flex items-center gap-3">
-						<span
-							className="text-5xl leading-none font-black tabular-nums"
-							style={{ color }}
+		<motion.div
+			layout={still ? false : "position"}
+			className="relative flex flex-col gap-3"
+		>
+			<MatchCard shell={shell} compare={compare} />
+			<div className="flex">
+				<div className="inline-flex items-stretch rounded-full bg-white/[0.06] ring-1 ring-white/15">
+					<button
+						type="button"
+						aria-expanded={open}
+						aria-controls={COMPARE_ID}
+						onClick={toggle}
+						className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-l-full pr-3 pl-4 text-sm font-bold text-gray-100 hover:bg-white/[0.06]"
+					>
+						Where your tastes meet
+					</button>
+					<span className="my-2 w-px bg-white/15" aria-hidden />
+					<button
+						type="button"
+						aria-expanded={open}
+						aria-controls={COMPARE_ID}
+						aria-label={
+							open
+								? "Hide where your tastes meet"
+								: "Show where your tastes meet"
+						}
+						onClick={toggle}
+						className="inline-flex min-h-10 cursor-pointer items-center rounded-r-full pr-3.5 pl-2.5 text-gray-300 hover:bg-white/[0.06] hover:text-white"
+					>
+						<ChevronDownIcon
+							className={`size-5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+							aria-hidden
+						/>
+					</button>
+				</div>
+			</div>
+			<AnimatePresence initial={false} mode="popLayout">
+				{open && (
+					<motion.section
+						key="meet"
+						id={COMPARE_ID}
+						aria-label="Where your tastes meet"
+						className="flex scroll-mt-44 flex-col gap-4 pt-1"
+						initial={{ opacity: 0, y: still ? 0 : -10 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: still ? 0 : -10 }}
+						transition={{ duration: still ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
+					>
+						<Meet handle={shell.handle} c={compare} />
+					</motion.section>
+				)}
+			</AnimatePresence>
+		</motion.div>
+	)
+}
+
+/** "Where your tastes meet", trimmed for its place under the card: the overlap, then the splits and the picks. */
+function Meet({ handle, c }: { handle: string; c: Ready }) {
+	return (
+		<>
+			<Overlap handle={handle} c={c} />
+			{(c.shared.length > 0 ||
+				c.overlap.onlyThem.length > 0 ||
+				c.overlap.onlyYou.some((x) => x.wished)) && (
+				<div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+					{c.shared.length > 0 && <Splits handle={handle} c={c} />}
+					<Picks handle={handle} c={c} />
+				</div>
+			)}
+		</>
+	)
+}
+
+// ---------- The match card ----------
+
+function CountUp({ to, still }: { to: number; still: boolean }) {
+	const [n, setN] = useState(to)
+	useEffect(() => {
+		if (still) {
+			setN(to)
+			return
+		}
+		const run = animate(0, to, {
+			duration: 1.1,
+			ease: [0.16, 1, 0.3, 1],
+			onUpdate: (v) => setN(Math.round(v)),
+		})
+		return () => run.stop()
+	}, [to, still])
+	return <>{n}</>
+}
+
+/** Too few liked titles on one side to compare: the visitor's (rate more) or the owner's (nothing to do). */
+function ThinMatch({
+	compare,
+	handle,
+}: { compare: Extract<MemberCompare, { status: "thin" }>; handle: string }) {
+	if (compare.side === "them")
+		return (
+			<div className={`${TILE} flex flex-wrap items-center gap-4 p-4 sm:p-5`}>
+				<SparklesIcon className="size-7 shrink-0 text-gray-500" aria-hidden />
+				<p className="min-w-[12rem] flex-1 text-gray-300">
+					<b className="text-white">
+						@{handle} hasn't rated enough yet to compare.
+					</b>
+				</p>
+			</div>
+		)
+	return (
+		<div className={`${TILE} flex flex-wrap items-center gap-4 p-4 sm:p-5`}>
+			<SparklesIcon className="size-7 shrink-0 text-amber-400" aria-hidden />
+			<p className="min-w-[12rem] flex-1 text-gray-300">
+				<b className="text-white">Rate 5 titles you love to see your match.</b>{" "}
+				You have {compare.liked} so far.
+			</p>
+			<Link to={RATE_FALLBACK_PATH} className={AMBER_BUTTON}>
+				Rate titles
+				<ArrowRightIcon className="size-4" aria-hidden />
+			</Link>
+		</div>
+	)
+}
+
+/** Their avatar and yours, overlapping. */
+function Avatars({ shell }: { shell: ProfileShell }) {
+	const me = useAccountSummary()
+	return (
+		<span className="flex shrink-0 items-center" aria-hidden>
+			<ProfileAvatar handle={shell.handle} avatar={shell.avatar} size="md" />
+			<span className="-ml-4">
+				<ProfileAvatar
+					handle={me.handle ?? me.initial}
+					avatar={{ url: me.avatarUrl, color: me.color }}
+					size="md"
+				/>
+			</span>
+		</span>
+	)
+}
+
+/** The signed-in visitor's match with the owner: the ring, the tier word, what pulls you both, the counts, and both
+ * avatars. */
+function MatchCard({
+	shell,
+	compare,
+}: { shell: ProfileShell; compare: Ready }) {
+	const still = useReducedMotion() ?? false
+	const p = compare.percent
+	const s = matchStrength(p)
+	const color = matchColor(p)
+	const splits = compare.shared.filter(
+		(r) => Math.abs(r.yours - r.theirs) >= 3,
+	).length
+	const pulls = compare.pulls
+	const R = 52
+	const C = 2 * Math.PI * R
+	return (
+		<section
+			aria-label="Taste match"
+			className="relative overflow-hidden rounded-3xl p-px"
+			style={{ background: `color-mix(in srgb, ${color} 30%, transparent)` }}
+		>
+			{/* A light that runs round the border: faster and brighter the closer the match. */}
+			{!still && (
+				<motion.span
+					aria-hidden
+					className="pointer-events-none absolute top-1/2 left-1/2 aspect-square w-[150%]"
+					style={{
+						x: "-50%",
+						y: "-50%",
+						opacity: 0.25 + s * 0.75,
+						background: `conic-gradient(from 0deg, transparent 0 62%, ${color} 80%, transparent 92%)`,
+					}}
+					animate={{ rotate: 360 }}
+					transition={{
+						duration: 16 - s * 9,
+						ease: "linear",
+						repeat: Number.POSITIVE_INFINITY,
+					}}
+				/>
+			)}
+			<div
+				className="relative grid items-center gap-x-8 gap-y-5 rounded-[23px] bg-gray-950 p-5 sm:p-6 md:grid-cols-[auto_minmax(0,1fr)_auto]"
+				style={{
+					backgroundImage: `radial-gradient(90% 120% at 0% 50%, color-mix(in srgb, ${color} ${8 + s * 16}%, transparent), transparent 65%)`,
+				}}
+			>
+				<div className="flex items-center gap-5 md:block">
+					<div className="relative size-28 shrink-0 sm:size-32">
+						{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden; the numbers beside it carry the meaning */}
+						<svg
+							viewBox="0 0 120 120"
+							className="size-full -rotate-90"
+							aria-hidden
 						>
-							{matchPercent}%
-						</span>
-						<span className="flex flex-col items-start gap-1">
+							<circle
+								cx="60"
+								cy="60"
+								r={R}
+								fill="none"
+								stroke="rgba(255,255,255,.08)"
+								strokeWidth="9"
+							/>
+							<motion.circle
+								cx="60"
+								cy="60"
+								r={R}
+								fill="none"
+								stroke={color}
+								strokeWidth="9"
+								strokeLinecap="round"
+								strokeDasharray={`${((C * p) / 100).toFixed(1)} ${C.toFixed(1)}`}
+								initial={still ? false : { opacity: 0 }}
+								animate={{ opacity: 1 }}
+								transition={{ duration: 0.8 }}
+							/>
+						</svg>
+						<span className="absolute inset-0 flex flex-col items-center justify-center">
 							<span
-								className="rounded-full px-2.5 py-0.5 text-sm font-black text-gray-950"
-								style={{ background: color }}
+								className="text-4xl leading-none font-black tabular-nums"
+								style={{ color }}
 							>
-								{matchTier(matchPercent)}
+								<CountUp to={p} still={still} />
+								<span className="text-xl">%</span>
 							</span>
-							<span className="text-xs text-gray-400">taste match</span>
+							<span className="mt-1 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
+								match
+							</span>
 						</span>
-					</span>
-				}
-			/>
-			<Overlap handle={handle} c={compare} />
-			<div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-				<Splits handle={handle} c={compare} />
-				<Picks handle={handle} c={compare} />
+					</div>
+					<div className="flex flex-col items-start gap-2 md:hidden">
+						<Avatars shell={shell} />
+						<p className="text-sm text-gray-400">
+							You and <b className="text-gray-200">@{shell.handle}</b>
+						</p>
+					</div>
+				</div>
+
+				<div className="flex min-w-0 flex-col gap-3">
+					<div>
+						<p className="hidden text-xs font-bold tracking-[0.18em] text-gray-500 uppercase md:block">
+							You and @{shell.handle}
+						</p>
+						<h2 className={`${DISPLAY} text-3xl sm:text-4xl`}>
+							<span
+								className="relative inline-block overflow-hidden"
+								style={{ color }}
+							>
+								{matchTier(p)}
+								{/* A sheen across the word; it passes more often for a closer match. */}
+								{!still && (
+									<motion.span
+										aria-hidden
+										className="absolute inset-y-0 -left-1/2 w-1/2 bg-linear-to-r from-transparent via-white/40 to-transparent"
+										animate={{ x: ["0%", "400%"] }}
+										transition={{
+											duration: 1.4,
+											ease: "easeInOut",
+											repeat: Number.POSITIVE_INFINITY,
+											repeatDelay: 7 - s * 4,
+										}}
+									/>
+								)}
+							</span>
+						</h2>
+						{(pulls.both.length > 0 ||
+							(pulls.onlyThem[0] && pulls.onlyYou[0])) && (
+							<p className="mt-1 text-sm text-gray-300">
+								{pulls.both.length > 0 && (
+									<>
+										You both go for{" "}
+										{pulls.both.slice(0, 2).join(" and ").toLowerCase()}.{" "}
+									</>
+								)}
+								{pulls.onlyThem[0] && pulls.onlyYou[0] && (
+									<>
+										They chase {pulls.onlyThem[0].toLowerCase()}; you chase{" "}
+										{pulls.onlyYou[0].toLowerCase()}.
+									</>
+								)}
+							</p>
+						)}
+					</div>
+					<dl className="flex gap-5 text-sm">
+						<div>
+							<dt className="text-[11px] text-gray-500">Both love</dt>
+							<dd className="font-black text-white tabular-nums">
+								{compare.overlap.bothCount}
+							</dd>
+						</div>
+						<div>
+							<dt className="text-[11px] text-gray-500">Rated by both</dt>
+							<dd className="font-black text-white tabular-nums">
+								{compare.shared.length}
+							</dd>
+						</div>
+						<div>
+							<dt className="text-[11px] text-gray-500">Big splits</dt>
+							<dd className="font-black text-white tabular-nums">{splits}</dd>
+						</div>
+					</dl>
+				</div>
+
+				<div className="hidden md:block">
+					<Avatars shell={shell} />
+				</div>
 			</div>
 		</section>
 	)

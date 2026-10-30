@@ -61,7 +61,6 @@ test("the pages named in the brief are all reachable by a member", () => {
 		"/watch/seen",
 		"/watch/movies",
 		"/watch/movies/wishlist",
-		"/watch/movies/recent",
 		"/watch/movies/seen",
 		"/watch/for-you",
 		"/u/ana",

@@ -1,6 +1,7 @@
 // The Taste profile tab: /u/:handle. The owner gets their own taste page (the portrait, or the start while their taste
-// forms). Everyone else, and the owner with ?as=visitor, gets the public portrait: who they are (bio, links, since),
-// the summary of their taste, the taste match, their 10s and their hot takes, each as the owner lets them see it.
+// forms). Everyone else, and the owner with ?as=visitor, gets the public portrait: for a signed-in visitor the taste
+// match first, then who they are (bio, links), the summary of their taste, their 10s and their hot takes, each as the
+// owner lets them see it.
 // Spec: docs/implementation/member-profile/README.md
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
@@ -24,7 +25,6 @@ import {
 	type TastePageData,
 	readTastePage,
 } from "~/server/taste-portrait/page.server"
-import type { OverviewTaste } from "~/ui/profile/Overview"
 import { profileMeta } from "~/ui/profile/meta"
 import { TasteProfilePage } from "~/ui/profile/pages/TasteProfilePage"
 import { type ProfileTaste, buildProfileTaste } from "~/ui/profile/taste/model"
@@ -46,7 +46,7 @@ interface VisitorData {
 	view: "visitor"
 	shell: ProfileShell
 	taste: ProfileTaste | null
-	overviewTaste: OverviewTaste | null
+	viewerType: string | null
 	overview: ProfileOverview
 	compare: MemberCompare | null
 }
@@ -95,36 +95,22 @@ const load = async ({ request, params }: LoaderFunctionArgs) => {
 		portrait("sides"),
 		portrait("everyone"),
 		shell.viewer === "member"
-			? orNull(
-					getMemberCompare(viewerId, ownerId, shell.visibility),
-					"compare",
-				)
+			? orNull(getMemberCompare(viewerId, ownerId, shell.visibility), "compare")
 			: null,
 	])
 	const built =
 		fingerprint && sides && everyone
 			? statsTastePayload(buildProfileTaste(fingerprint, sides, everyone))
 			: null
-	const overviewTaste: OverviewTaste | null =
-		fingerprint?.status === "ready"
-			? {
-					identity: fingerprint.identity?.name ?? null,
-					line: fingerprint.line,
-					avoid: fingerprint.avoid,
-					attributes: fingerprint.attributes.map((a) => ({
-						key: a.key,
-						label: a.label,
-						family: a.family,
-						edge: a.edge,
-					})),
-				}
-			: null
 	return json<Data>(
 		{
 			view: "visitor",
 			shell,
 			taste: built,
-			overviewTaste,
+			viewerType:
+				fingerprint?.status === "ready"
+					? (fingerprint.identity?.name ?? null)
+					: null,
 			overview,
 			compare,
 		},
@@ -139,12 +125,7 @@ export const shouldRevalidate = sideShouldRevalidate
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	const d = data as Partial<Data> | undefined
-	const viewerType =
-		d?.view === "owner"
-			? d.viewerType
-			: d?.view === "visitor"
-				? d.overviewTaste?.identity
-				: null
+	const viewerType = d?.viewerType
 	return profileMeta(
 		d?.shell,
 		"overview",
@@ -163,7 +144,6 @@ export default function ProfileTasteTab() {
 			shell={data.shell}
 			taste={data.taste}
 			overview={data.overview}
-			overviewTaste={data.overviewTaste}
 			compare={data.compare}
 		/>
 	)

@@ -95,7 +95,6 @@ export default function Settings() {
 					shell={header.shell as ProfileHeaderData["shell"]}
 					identity={header.identity}
 					print={header.print}
-					facts={header.facts}
 					pathname={pathname}
 					search={search}
 				/>

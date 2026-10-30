@@ -1,9 +1,12 @@
 // "New on your services" (#489 Part C): one page for /new/us/netflix, /new/us and the member's /new: a heading that
 // answers the search, the ten best arrivals ranked, then every arrival day by day, the latest first (#625), and links
 // to the other services and countries. A member's own page leads with what they waited for. Everything is in the
-// server HTML, with the sizes of its images reserved, so nothing moves after the first paint.
+// server HTML, with the sizes of its images reserved, so nothing moves after the first paint. Explore's tab row names
+// the page, so there is no visible breadcrumb (the BreadcrumbList stays in the meta); the country is chosen in the
+// page itself, by the round 11 option (./CountryChooser.tsx).
 import { ChevronRightIcon, InformationCircleIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
+import type { ReactNode } from "react"
 import {
 	countryPath,
 	dateWords,
@@ -18,12 +21,18 @@ import type {
 import { TmdbImage } from "~/ui/TmdbImage"
 import ShareButton from "~/ui/button/ShareButton"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
-import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
+import { useNavOptions } from "~/ui/navigation/nav-options"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
+import {
+	ChipCountries,
+	FlagCountry,
+	SheetCountry,
+	TitleCountry,
+} from "./CountryChooser"
 import { Flag, Logo, PosterImage, PosterRow, RankedRow, Sub } from "./parts"
 
-/** The page's trail, for the visible breadcrumb and the BreadcrumbList. */
+/** The page's trail, for the BreadcrumbList. */
 export function crumbsOf(data: NewPageData): Crumb[] {
 	const home = { label: "Home", path: "/" }
 	if (data.kind === "member")
@@ -37,8 +46,12 @@ export function crumbsOf(data: NewPageData): Crumb[] {
 		: [home, country, { label: data.brand.name, path: data.path }]
 }
 
-/** What a member waited for, in the place of the heading. */
-function Waited({ data }: { data: NewPageData }) {
+/** What a member waited for, in the place of the heading. `place` is the country control after the line over it. */
+function Waited({
+	data,
+	place,
+	end,
+}: { data: NewPageData; place?: ReactNode; end?: ReactNode }) {
 	const [first, ...others] = data.waited
 	const name = (title: NewTitle) =>
 		data.services[title.service]?.name ?? "your services"
@@ -46,10 +59,13 @@ function Waited({ data }: { data: NewPageData }) {
 	return (
 		<div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
 			<div>
-				<p className="flex items-center gap-2 text-sm font-bold text-sky-200">
-					<span className="h-2 w-2 rounded-full bg-sky-400" aria-hidden />
-					New on your services
-				</p>
+				<div className="flex items-center justify-between gap-3">
+					<p className="flex items-center gap-2 text-sm font-bold text-sky-200">
+						<span className="h-2 w-2 rounded-full bg-sky-400" aria-hidden />
+						<span>New on your services{place && <> {place}</>}</span>
+					</p>
+					{end}
+				</div>
 				<h1 className={`${DISPLAY} mt-1 text-4xl text-white md:text-6xl`}>
 					{first.title} is now on {name(first)}
 				</h1>
@@ -106,7 +122,7 @@ function Waited({ data }: { data: NewPageData }) {
 }
 
 /** The line under the heading: the count, and when the data was last updated, behind an info icon. */
-function HowLine({ data }: { data: NewPageData }) {
+function HowLine({ data, lead }: { data: NewPageData; lead?: ReactNode }) {
 	const mine =
 		data.kind === "member"
 			? Object.values(data.services)
@@ -115,7 +131,7 @@ function HowLine({ data }: { data: NewPageData }) {
 			: null
 	return (
 		<p className="-mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-base text-gray-200">
-			<Flag country={data.country.code} />
+			{lead || <Flag country={data.country.code} />}
 			<span>
 				{mine ? `${mine} ${inCountry(data.country.name)}. ` : ""}
 				{data.copy.tally}.
@@ -314,11 +330,23 @@ function OtherCountries({ data }: { data: NewPageData }) {
 	)
 }
 
+/** The heading without its trailing "in Germany", for the title option to put the control there. */
+function headingLead(data: NewPageData) {
+	const tail = inCountry(data.country.name)
+	const { heading } = data.copy
+	return heading.endsWith(tail)
+		? heading.slice(0, -tail.length).trimEnd()
+		: heading
+}
+
 export function NewOnServicesPage({ data }: { data: NewPageData }) {
 	const brand = data.kind === "service" ? data.brand : null
+	// PROTOTYPE OPTIONS (round 11): how the page picks its country.
+	const { country: chooser } = useNavOptions()
+	const chooserProps = { choices: data.countryChoices, current: data.country }
+	const flag = chooser === "flag" && <FlagCountry {...chooserProps} />
 	return (
 		<div className="pb-28">
-			<Breadcrumbs items={crumbsOf(data)} />
 			<section className="relative overflow-hidden border-b border-white/[0.07]">
 				{data.hero && (
 					<TmdbImage
@@ -331,9 +359,16 @@ export function NewOnServicesPage({ data }: { data: NewPageData }) {
 					/>
 				)}
 				<span className="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/80 to-gray-900/50" />
-				<div className={`${WRAP} relative flex flex-col gap-5 pb-7 pt-4`}>
+				<div className={`${WRAP} relative flex flex-col gap-5 pb-7 pt-5`}>
+					{chooser === "chips" && <ChipCountries {...chooserProps} />}
 					{data.waited.length > 0 ? (
-						<Waited data={data} />
+						<Waited
+							data={data}
+							place={
+								chooser === "title" && <TitleCountry {...chooserProps} />
+							}
+							end={flag}
+						/>
 					) : (
 						<div className="flex items-start justify-between gap-4">
 							<h1
@@ -342,16 +377,29 @@ export function NewOnServicesPage({ data }: { data: NewPageData }) {
 								{brand && (
 									<Logo service={brand} size={56} className="rounded-2xl" />
 								)}
-								{data.copy.heading}
+								{chooser === "title" ? (
+									<span>
+										{headingLead(data)}{" "}
+										<TitleCountry {...chooserProps} />
+									</span>
+								) : (
+									data.copy.heading
+								)}
 							</h1>
-							{data.share && (
-								<div className="mt-2 shrink-0">
-									<ShareButton link={`https://goodwatch.app${data.share}`} />
+							{(flag || data.share) && (
+								<div className="mt-2 flex shrink-0 items-center gap-2">
+									{flag}
+									{data.share && (
+										<ShareButton link={`https://goodwatch.app${data.share}`} />
+									)}
 								</div>
 							)}
 						</div>
 					)}
-					<HowLine data={data} />
+					<HowLine
+						data={data}
+						lead={chooser === "sheet" && <SheetCountry {...chooserProps} />}
+					/>
 					{data.offer && (
 						<Link
 							to={data.offer.path}

@@ -185,7 +185,6 @@ export type WatchChipKey =
 	| "dropped"
 	| "tonight"
 	| "wishlist"
-	| "recent"
 
 /** Where a Watch page sits: its tab, the To watch | Seen side (null on For you), its chip (null on Seen and For you). */
 export interface WatchPlace {
@@ -196,15 +195,14 @@ export interface WatchPlace {
 
 const UP_NEXT_CHIPS: [WatchChipKey, string, string][] = [
 	["next-episodes", "Next episodes", WATCH_PATHS.nextEpisodes],
-	["not-started", "Not started", WATCH_PATHS.notStarted],
 	["watching", "Watching", WATCH_PATHS.watching],
+	["not-started", "Start", WATCH_PATHS.notStarted],
 	["on-hold", "On hold", WATCH_PATHS.onHold],
 	["dropped", "Dropped", WATCH_PATHS.dropped],
 ]
 const READY_CHIPS: [WatchChipKey, string, string][] = [
-	["tonight", "Tonight", WATCH_PATHS.tonight],
-	["wishlist", "Whole Wishlist", WATCH_PATHS.wishlist],
-	["recent", "Recently added", WATCH_PATHS.recent],
+	["tonight", "Next Movie", WATCH_PATHS.tonight],
+	["wishlist", "Want to Watch", WATCH_PATHS.wishlist],
 ]
 
 const trim = (pathname: string) =>

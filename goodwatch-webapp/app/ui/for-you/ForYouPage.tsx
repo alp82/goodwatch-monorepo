@@ -167,7 +167,7 @@ export function ForYouPage({
 function Unready({ status }: { status: "empty" | "unavailable" }) {
 	const revalidator = useRevalidator()
 	return (
-		<div className="mx-auto max-w-[1600px] px-4 pt-5 pb-16 md:px-8">
+		<div className="mx-auto max-w-[1600px] px-4 pb-16 md:px-8">
 			<Heading className="mb-6 flex" />
 			<div
 				className="max-w-lg rounded-2xl bg-white/[0.035] p-6 ring-1 ring-white/10"
@@ -591,7 +591,7 @@ function Steering({
 
 	return (
 		<ForYouContext.Provider value={ctx}>
-			<div className="mx-auto max-w-[1600px] overflow-x-clip px-4 pt-3 pb-28 sm:pt-5 md:px-8 lg:pb-10">
+			<div className="mx-auto max-w-[1600px] overflow-x-clip px-4 pb-28 md:px-8 lg:pb-10">
 				<Heading className="mb-4 hidden lg:flex" />
 				<PhoneHeadingRow />
 

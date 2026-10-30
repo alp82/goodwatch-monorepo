@@ -16,20 +16,22 @@ import { NavigationProvider, usePathViewer } from "./NavigationContext"
 import { SiteHeader } from "./SiteHeader"
 import { SubNav } from "./SubNav"
 import { areaOf, bestSwitch, exploreTabs, tasteRow } from "./areas"
-import { layerVars } from "./bar-layers"
-import { useNavOptions } from "./nav-options"
+import { LAYER_VARS } from "./bar-layers"
 
 const under = (pathname: string, prefix: string) =>
 	pathname === prefix || pathname.startsWith(`${prefix}/`)
 
 /**
- * How the Explore row shows on this page: left out on Explorer (a full-screen map), not sticky where the page pins a
- * bar of its own under the header (Discover's filter bar, the phone bar on Hot), sticky elsewhere.
+ * How the Explore row shows on this page: not sticky where the page pins a bar of its own under the header (Discover's
+ * filter bar, the phone bar on Hot) or fills the window under the row (Explorer's map), sticky elsewhere.
  */
 export function exploreRowMode(pathname: string): "off" | "static" | "sticky" {
-	if (areaOf(pathname) !== "explore" || under(pathname, "/explorer"))
-		return "off"
-	if (under(pathname, "/discover") || under(pathname, "/hot-on-socials"))
+	if (areaOf(pathname) !== "explore") return "off"
+	if (
+		under(pathname, "/discover") ||
+		under(pathname, "/hot-on-socials") ||
+		under(pathname, "/explorer")
+	)
 		return "static"
 	return "sticky"
 }
@@ -49,7 +51,6 @@ function ExploreRow() {
 			<AreaTabs
 				label="Explore"
 				icon={GlobeAltIcon}
-				area="explore"
 				tabs={exploreTabs(pathname, {
 					newHref: user ? "/new" : countryPath(locale.country),
 				})}
@@ -103,12 +104,11 @@ export function SiteChrome({
 	/** After the footer, before the dock (hosts that render nothing until used). */
 	afterFooter?: ReactNode
 }) {
-	const { layers } = useNavOptions()
 	return (
 		<NavigationProvider>
-			{/* OPTION layers: the bars' surfaces as CSS variables for the rows among them (./bar-layers.ts). `contents`:
-			    no box of its own, so the page's layout and sticky rows work as before. */}
-			<div data-layers={layers} style={layerVars(layers)} className="contents">
+			{/* The bars' surfaces as CSS variables for the rows among them (./bar-layers.ts). `contents`: no box of its
+			    own, so the page's layout and sticky rows work as before. */}
+			<div style={LAYER_VARS} className="contents">
 				<SiteHeader />
 				{afterHeader}
 				<main className={mainClassName}>

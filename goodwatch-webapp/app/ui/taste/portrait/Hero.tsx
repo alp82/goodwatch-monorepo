@@ -1,24 +1,18 @@
-// The Taste page's opening: the fingerprint drawing once, beside the viewer type, a few numbers, the way into For you,
-// and Share, which opens the share card in place under the row (no popup).
-import { ShareIcon } from "@heroicons/react/20/solid"
-import { motion, useReducedMotion } from "framer-motion"
-import { useState } from "react"
+// The Taste page's opening: the fingerprint drawing once, beside the viewer type, a few numbers, and the way into For
+// you. Sharing is the profile header's Share.
 import { ForYouLink } from "~/ui/for-you/ForYouLink"
 import { DISPLAY } from "~/ui/my-pages/bits"
-import { QUIET_BUTTON, ShareButton, count } from "~/ui/profile/parts"
+import { count } from "~/ui/profile/parts"
 import { Whorl } from "~/ui/profile/taste/Whorl"
 import { useTaste } from "~/ui/profile/taste/model"
 import { PANEL } from "~/ui/profile/taste/parts"
 import type { PrintState } from "./print-state"
 
-const SHARE_ID = "share"
-
 export function TasteHero({
 	state,
 	averageYear,
 }: { state: PrintState; averageYear: number | null }) {
-	const { taste, handle } = useTaste()
-	const [share, setShare] = useState(false)
+	const { taste } = useTaste()
 	const agree =
 		taste.crowd.agreement >= 0.5
 			? "Often"
@@ -71,22 +65,9 @@ export function TasteHero({
 					</dl>
 					<div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
 						<ForYouLink>Recommend me</ForYouLink>
-						{handle && (
-							<button
-								type="button"
-								aria-expanded={share}
-								aria-controls={SHARE_ID}
-								onClick={() => setShare((open) => !open)}
-								className={`${QUIET_BUTTON} cursor-pointer ${share ? "ring-white/50" : ""}`}
-							>
-								<ShareIcon className="size-4" aria-hidden />
-								Share
-							</button>
-						)}
 					</div>
 				</div>
 			</section>
-			{share && handle && <SharePreview handle={handle} />}
 		</div>
 	)
 }
@@ -99,29 +80,5 @@ function Stat({ value, label }: { value: string; label: string }) {
 				{label}
 			</dt>
 		</div>
-	)
-}
-
-/** The taste card as others see it when the member shares it, and the button that copies the link. */
-function SharePreview({ handle }: { handle: string }) {
-	const still = useReducedMotion()
-	return (
-		<motion.div
-			id={SHARE_ID}
-			initial={{ opacity: 0, y: still ? 0 : -6 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.2 }}
-			className={`${PANEL} flex scroll-mt-32 flex-wrap items-center gap-4 p-3 sm:flex-nowrap sm:p-4`}
-		>
-			<img
-				src={`/og/u/${handle}/stats.jpg`}
-				alt="Your taste card as others see it when you share"
-				className="aspect-[1200/630] w-56 rounded-lg ring-1 ring-white/10 sm:w-72"
-			/>
-			<div className="flex min-w-0 flex-col items-start gap-2">
-				<p className="text-sm font-bold text-white">Share your viewer type</p>
-				<ShareButton handle={handle} path="/stats" label="Share" className={QUIET_BUTTON} />
-			</div>
-		</motion.div>
 	)
 }

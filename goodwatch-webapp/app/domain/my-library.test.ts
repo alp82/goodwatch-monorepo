@@ -291,5 +291,5 @@ test("status destinations use a known handle for Not rated and fix Seen's media 
  const viewer = {kind: "member", handle: "ana"} as const
  assert.equal(statusPage({status: "unrated"}, viewer), "/u/ana/scores/not-rated")
  assert.equal(statusPage({status: "seen", kind: "show", sort: "score"}, viewer), "/watch/seen?sort=score")
- assert.equal(statusPage({status: "want", kind: "show"}, viewer), "/watch/movies/wishlist?type=show")
+ assert.equal(statusPage({status: "want", kind: "show"}, viewer), "/watch/not-started?type=show")
 })

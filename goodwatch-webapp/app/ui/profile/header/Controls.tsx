@@ -1,19 +1,29 @@
-// PROTOTYPE OPTIONS (member nav, round 10): Share, View as visitor and Edit profile, drawn as part of each header
-// layout (nav-options.ts `layout`): one control cluster (inline), a centered pill group (centered), small keys in the
-// facts panel's corner (split), and the card's bottom toolbar (stacked). Guests and other members get Share only. The
-// owner gets View as visitor on the profile's pages (never on Settings) and Edit profile in their own view. View as
-// visitor is a link that adds or drops ?as=visitor (VisitorView.tsx).
+// The profile header's controls, one compact cluster: Share, View as visitor and Edit profile. Share opens a small
+// menu that offers the whole profile and, on a tab or a list, the page you're on: each with its link and its card
+// image, and Copy link and (where the device has one) Share. Guests and other members get Share only. The owner gets
+// View as visitor on the profile's pages (never on Settings) and Edit profile in their own view. View as visitor is a
+// link that adds or drops ?as=visitor (VisitorView.tsx).
 import {
 	CheckIcon,
 	EyeIcon,
 	EyeSlashIcon,
+	LinkIcon,
 	PencilSquareIcon,
 	ShareIcon,
 } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useEffect, useId, useRef, useState } from "react"
 import { EDIT_PROFILE_PATH } from "~/domain/member-paths"
+import { ogImageUrl } from "~/utils/og-image-url"
 import { type ViewLinks, toggleView } from "./VisitorView"
+
+/** Something the Share menu offers: the profile, or the tab or list you're on. */
+export interface ShareTarget {
+	/** "Profile", "Stats tab", "This list". */
+	name: string
+	/** The page's path on goodwatch.app, without ?as=visitor. */
+	path: string
+}
 
 export interface ControlsProps {
 	handle: string
@@ -21,34 +31,9 @@ export interface ControlsProps {
 	view: ViewLinks | null
 	/** Edit profile, for the owner in their own view. */
 	edit: boolean
+	/** The profile first, then the page you're on when it isn't the profile. */
+	share: ShareTarget[]
 }
-
-/** Share on a phone opens the share sheet; elsewhere the link goes to the clipboard. */
-function useShare(handle: string) {
-	const [copied, setCopied] = useState(false)
-	const url = `https://goodwatch.app/u/${handle}`
-	const share = async () => {
-		if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
-			try {
-				await navigator.share({ title: `@${handle} on GoodWatch`, url })
-			} catch {
-				// Closed without sharing.
-			}
-			return
-		}
-		try {
-			await navigator.clipboard.writeText(url)
-		} catch {
-			return
-		}
-		setCopied(true)
-		setTimeout(() => setCopied(false), 1600)
-	}
-	return { copied, share }
-}
-
-const visitorLabel = (on: boolean) =>
-	on ? "Back to your view" : "View as visitor"
 
 const FOCUS =
 	"focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
@@ -65,243 +50,209 @@ function Tip({ children }: { children: ReactNode }) {
 	)
 }
 
-/** The three controls as data, so each layout only draws them. */
-function useItems({ handle, view, edit }: ControlsProps) {
-	const { copied, share } = useShare(handle)
-	return {
-		share: {
-			name: copied ? "Link copied" : "Share profile",
-			short: copied ? "Copied" : "Share",
-			icon: copied ? CheckIcon : ShareIcon,
-			onClick: share,
-		},
-		view: view && {
-			name: visitorLabel(view.on),
-			short: view.on ? "Your view" : "Visitor view",
-			icon: view.on ? EyeSlashIcon : EyeIcon,
-			to: toggleView(view),
-			on: view.on,
-		},
-		edit,
-	}
-}
+const SEG = `group relative inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition-colors ${FOCUS}`
+const IDLE = "text-gray-300 hover:bg-white/[0.08] hover:text-white"
 
-type Items = ReturnType<typeof useItems>
-
-function ViewLink({
-	view,
-	className,
-	children,
-}: {
-	view: NonNullable<Items["view"]>
-	className: string
-	children: ReactNode
-}) {
-	return (
-		<Link
-			to={view.to}
-			replace
-			preventScrollReset
-			aria-pressed={view.on}
-			aria-label={view.name}
-			className={className}
-		>
-			{children}
-		</Link>
-	)
-}
-
-function EditLink({
-	className,
-	children,
-	label = true,
-}: { className: string; children: ReactNode; label?: boolean }) {
-	return (
-		<Link
-			to={EDIT_PROFILE_PATH}
-			prefetch="intent"
-			aria-label={label ? undefined : "Edit profile"}
-			className={className}
-		>
-			{children}
-		</Link>
-	)
-}
-
-// OPTION layout=inline
-/** One compact cluster: a single track holding Share, View as visitor and Edit profile. Phones show the icons, and
- * leave Edit profile to the Settings gear. */
-export function ClusterControls(props: ControlsProps) {
-	const items = useItems(props)
-	const Share = items.share.icon
-	const seg = `group relative inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition-colors ${FOCUS}`
-	const idle = "text-gray-300 hover:bg-white/[0.08] hover:text-white"
+/** The cluster. Phones show the icons, and leave Edit profile to the Settings gear. */
+export function ClusterControls({ handle, view, edit, share }: ControlsProps) {
 	return (
 		<div
-			className="flex shrink-0 items-center rounded-full bg-white/[0.05] p-1 ring-1 ring-white/12"
+			className="flex shrink-0 items-center rounded-full bg-white/[0.05] p-1 ring-1 ring-white/12 sm:relative"
 			data-header-controls="cluster"
 		>
-			<button
-				type="button"
-				onClick={items.share.onClick}
-				aria-label={items.share.name}
-				className={`${seg} ${idle} w-9 sm:w-auto sm:px-3`}
-			>
-				<Share className="size-[18px]" aria-hidden />
-				<span className="max-sm:hidden">{items.share.short}</span>
-			</button>
-			{items.view && (
-				<ViewLink
-					view={items.view}
-					className={`${seg} w-9 sm:w-auto sm:px-3 ${items.view.on ? "bg-amber-400 text-gray-950" : idle}`}
+			<ShareMenu handle={handle} targets={share} />
+			{view && (
+				<Link
+					to={toggleView(view)}
+					replace
+					preventScrollReset
+					aria-pressed={view.on}
+					aria-label={view.on ? "Back to your view" : "View as visitor"}
+					className={`${SEG} w-9 sm:w-auto sm:px-3 ${view.on ? "bg-amber-400 text-gray-950" : IDLE}`}
 				>
-					<items.view.icon className="size-[18px]" aria-hidden />
-					<span className="max-sm:hidden">{items.view.name}</span>
-				</ViewLink>
+					{view.on ? (
+						<EyeSlashIcon className="size-[18px]" aria-hidden />
+					) : (
+						<EyeIcon className="size-[18px]" aria-hidden />
+					)}
+					<span className="max-sm:hidden">
+						{view.on ? "Back to your view" : "View as visitor"}
+					</span>
+				</Link>
 			)}
-			{items.edit && (
+			{edit && (
 				<>
 					<span
 						aria-hidden
 						className="mx-0.5 h-5 w-px bg-white/12 max-sm:hidden"
 					/>
-					<EditLink
-						label={false}
-						className={`${seg} ${idle} w-9 max-sm:hidden`}
+					<Link
+						to={EDIT_PROFILE_PATH}
+						prefetch="intent"
+						aria-label="Edit profile"
+						className={`${SEG} ${IDLE} w-9 max-sm:hidden`}
 					>
 						<PencilSquareIcon className="size-[18px]" aria-hidden />
 						<Tip>Edit profile</Tip>
-					</EditLink>
+					</Link>
 				</>
 			)}
 		</div>
 	)
 }
 
-// OPTION layout=centered
-/** A centered pill group under the facts: Share first, then View as visitor and Edit profile. */
-export function PillControls(props: ControlsProps) {
-	const items = useItems(props)
-	const Share = items.share.icon
-	const pill = `inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-bold transition-colors sm:px-4 sm:text-sm ${FOCUS}`
-	const quiet =
-		"bg-white/[0.06] text-gray-100 ring-1 ring-white/15 hover:bg-white/[0.1]"
-	return (
-		<div
-			className="flex items-center justify-center gap-2"
-			data-header-controls="pills"
-		>
-			<button
-				type="button"
-				onClick={items.share.onClick}
-				className={`${pill} bg-white text-gray-950 hover:bg-gray-200`}
-			>
-				<Share className="size-4" aria-hidden />
-				<span className="sm:hidden">{items.share.short}</span>
-				<span className="max-sm:hidden">{items.share.name}</span>
-			</button>
-			{items.view && (
-				<ViewLink
-					view={items.view}
-					className={`${pill} ${items.view.on ? "bg-amber-400 text-gray-950" : quiet}`}
-				>
-					<items.view.icon className="size-4" aria-hidden />
-					<span className="sm:hidden">{items.view.short}</span>
-					<span className="max-sm:hidden">{items.view.name}</span>
-				</ViewLink>
-			)}
-			{items.edit && (
-				<EditLink className={`${pill} ${quiet}`}>
-					<PencilSquareIcon className="size-4" aria-hidden />
-					<span className="sm:hidden">Edit</span>
-					<span className="max-sm:hidden">Edit profile</span>
-				</EditLink>
-			)}
-		</div>
-	)
+/** The card image's address on this host: the card route serves every host the same card. */
+const cardImage = (path: string) => {
+	const url = new URL(ogImageUrl(`https://goodwatch.app${path}`))
+	return `${url.pathname}${url.search}`
 }
 
-// OPTION layout=split
-/** Small keys in the facts panel's corner, with their names on hover. */
-export function CornerControls(props: ControlsProps) {
-	const items = useItems(props)
-	const Share = items.share.icon
-	const key = `group relative inline-flex size-8 items-center justify-center rounded-lg transition-colors ${FOCUS}`
-	const idle = "text-gray-400 hover:bg-white/[0.08] hover:text-white"
-	return (
-		<div className="flex items-center gap-0.5" data-header-controls="corner">
-			<button
-				type="button"
-				onClick={items.share.onClick}
-				aria-label={items.share.name}
-				className={`${key} ${idle}`}
-			>
-				<Share className="size-[18px]" aria-hidden />
-				<Tip>{items.share.name}</Tip>
-			</button>
-			{items.view && (
-				<ViewLink
-					view={items.view}
-					className={`${key} ${items.view.on ? "bg-amber-400 text-gray-950" : idle}`}
-				>
-					<items.view.icon className="size-[18px]" aria-hidden />
-					<Tip>{items.view.name}</Tip>
-				</ViewLink>
-			)}
-			{items.edit && (
-				<EditLink label={false} className={`${key} ${idle}`}>
-					<PencilSquareIcon className="size-[18px]" aria-hidden />
-					<Tip>Edit profile</Tip>
-				</EditLink>
-			)}
-		</div>
-	)
-}
+/** Share, as a small menu of what to share. */
+function ShareMenu({
+	handle,
+	targets,
+}: { handle: string; targets: ShareTarget[] }) {
+	const [open, setOpen] = useState(false)
+	const [native, setNative] = useState(false)
+	const [copied, setCopied] = useState<string | null>(null)
+	const box = useRef<HTMLDivElement>(null)
+	const trigger = useRef<HTMLButtonElement>(null)
+	const [pageImage, setPageImage] = useState<string | null>(null)
+	const id = useId()
+	useEffect(() => setNative(typeof navigator.share === "function"), [])
+	// The page you're on has its own card (a list's is versioned by its content): its og:image, on this host.
+	useEffect(() => {
+		if (!open) return
+		const meta = document.querySelector<HTMLMetaElement>(
+			'meta[property="og:image"]',
+		)?.content
+		if (!meta) return setPageImage(null)
+		const url = new URL(meta, window.location.origin)
+		setPageImage(`${url.pathname}${url.search}`)
+	}, [open])
+	const imageOf = (target: ShareTarget) =>
+		pageImage && target.path === window.location.pathname.replace(/\/$/, "")
+			? pageImage
+			: cardImage(target.path)
+	useEffect(() => {
+		if (!open) return
+		const onDown = (e: PointerEvent) => {
+			if (box.current && !box.current.contains(e.target as Node)) setOpen(false)
+		}
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key !== "Escape") return
+			setOpen(false)
+			trigger.current?.focus()
+		}
+		window.addEventListener("pointerdown", onDown)
+		window.addEventListener("keydown", onKey)
+		return () => {
+			window.removeEventListener("pointerdown", onDown)
+			window.removeEventListener("keydown", onKey)
+		}
+	}, [open])
 
-const CELL = `flex h-full min-w-0 flex-1 items-center justify-center gap-2 text-[13px] font-bold transition-colors sm:text-sm ${FOCUS} focus-visible:-outline-offset-2`
-const CELL_IDLE = "text-gray-300 hover:bg-white/[0.05] hover:text-white"
-/** A toolbar cell for a link the layout adds (Compare). */
-export const TOOLBAR_CELL = `${CELL} ${CELL_IDLE}`
+	const copy = async (target: ShareTarget) => {
+		try {
+			await navigator.clipboard.writeText(`https://goodwatch.app${target.path}`)
+		} catch {
+			return
+		}
+		setCopied(target.path)
+		setTimeout(() => setCopied(null), 1600)
+	}
+	const shareOut = async (target: ShareTarget) => {
+		try {
+			await navigator.share({
+				title:
+					target.path === `/u/${handle}`
+						? `@${handle} on GoodWatch`
+						: `@${handle}'s ${target.name.replace(/ tab$/, "")} on GoodWatch`,
+				url: `https://goodwatch.app${target.path}`,
+			})
+		} catch {
+			// Closed without sharing.
+		}
+	}
 
-// OPTION layout=stacked
-/** The card's bottom toolbar: the controls share its width, divided by hairlines. `extra` adds a link (Compare). */
-export function ToolbarControls(props: ControlsProps & { extra?: ReactNode }) {
-	const items = useItems(props)
-	const Share = items.share.icon
-	const cell = CELL
-	const idle = CELL_IDLE
+	const key = `inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-bold transition-colors ${FOCUS}`
 	return (
-		<div
-			className="flex h-11 items-stretch divide-x divide-white/[0.08] border-t border-white/[0.08]"
-			data-header-controls="toolbar"
-		>
+		<div ref={box} className="sm:relative">
 			<button
+				ref={trigger}
 				type="button"
-				onClick={items.share.onClick}
-				className={`${cell} ${idle}`}
+				aria-expanded={open}
+				aria-controls={id}
+				onClick={() => setOpen((o) => !o)}
+				aria-label="Share"
+				className={`${SEG} w-9 sm:w-auto sm:px-3 ${open ? "bg-white/[0.1] text-white" : IDLE}`}
 			>
-				<Share className="size-[18px] shrink-0" aria-hidden />
-				<span className="truncate sm:hidden">{items.share.short}</span>
-				<span className="truncate max-sm:hidden">{items.share.name}</span>
+				<ShareIcon className="size-[18px]" aria-hidden />
+				<span className="max-sm:hidden">Share</span>
 			</button>
-			{items.view && (
-				<ViewLink
-					view={items.view}
-					className={`${cell} ${items.view.on ? "bg-amber-400 text-gray-950" : idle}`}
+			{open && (
+				<div
+					id={id}
+					// On a phone the menu spans the header's width (the header row is its box).
+					className="absolute top-full right-4 left-4 z-40 mt-2 rounded-2xl bg-gray-900 p-1.5 shadow-2xl ring-1 ring-white/15 sm:right-0 sm:left-auto sm:w-[22rem]"
+					data-share-menu
 				>
-					<items.view.icon className="size-[18px] shrink-0" aria-hidden />
-					<span className="truncate sm:hidden">{items.view.short}</span>
-					<span className="truncate max-sm:hidden">{items.view.name}</span>
-				</ViewLink>
+					<p className="px-2.5 pt-1.5 pb-1 text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+						Share
+					</p>
+					<ul className="flex flex-col gap-1">
+						{targets.map((target) => (
+							<li
+								key={target.path}
+								className="rounded-xl p-2 hover:bg-white/[0.04]"
+								data-share-target={target.path}
+							>
+								<div className="flex items-center gap-3">
+									<img
+										src={imageOf(target)}
+										alt=""
+										width={1200}
+										height={630}
+										className="aspect-[1200/630] w-24 shrink-0 rounded-md bg-white/5 object-cover ring-1 ring-white/10"
+									/>
+									<div className="min-w-0 flex-1">
+										<p className="truncate text-sm font-bold text-gray-100">
+											{target.name}
+										</p>
+										<p className="truncate text-xs text-gray-400">
+											goodwatch.app{target.path}
+										</p>
+									</div>
+								</div>
+								<div className="mt-2 flex gap-1.5">
+									<button
+										type="button"
+										onClick={() => copy(target)}
+										className={`${key} bg-white/[0.06] text-gray-100 ring-1 ring-white/12 hover:bg-white/[0.1]`}
+									>
+										{copied === target.path ? (
+											<CheckIcon className="size-4" aria-hidden />
+										) : (
+											<LinkIcon className="size-4" aria-hidden />
+										)}
+										{copied === target.path ? "Copied" : "Copy link"}
+									</button>
+									{native && (
+										<button
+											type="button"
+											onClick={() => shareOut(target)}
+											className={`${key} bg-white text-gray-950 hover:bg-gray-200`}
+										>
+											<ShareIcon className="size-4" aria-hidden />
+											Share
+										</button>
+									)}
+								</div>
+							</li>
+						))}
+					</ul>
+				</div>
 			)}
-			{items.edit && (
-				<EditLink className={`${cell} ${idle}`}>
-					<PencilSquareIcon className="size-[18px] shrink-0" aria-hidden />
-					<span className="truncate sm:hidden">Edit</span>
-					<span className="truncate max-sm:hidden">Edit profile</span>
-				</EditLink>
-			)}
-			{props.extra}
 		</div>
 	)
 }

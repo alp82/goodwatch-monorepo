@@ -6,7 +6,8 @@
 // list's share card itself, as a small JPEG preview versioned by the list's content hash; the full-resolution card PNG
 // stays at the same path with .png. Caching: the layout and this page both give anonymous views of a public list the
 // share list lifetime and everything else `private, no-store`, so the stricter of the two keeps the old policy.
-// A toolbar at the page width of the profile header and tab row: Lists on the left; Edit (owner) and Share on the right.
+// A toolbar at the page width of the profile header and tab row: Lists on the left, Edit (owner) on the right. Share is
+// the profile header's, which offers this list.
 import {
 	PencilSquareIcon,
 	PlusIcon,
@@ -14,7 +15,6 @@ import {
 } from "@heroicons/react/24/outline"
 import type { MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
-import { useState } from "react"
 import { tastePath } from "~/domain/member-paths"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { ownServicesOf } from "~/server/row-services.server"
@@ -113,36 +113,11 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	]
 }
 
-/** Copies the list's link. The card is its preview image. */
-function ShareLink({ url, gradient }: { url: string; gradient: string }) {
-	const [copied, setCopied] = useState(false)
-	const onClick = async () => {
-		try {
-			await navigator.clipboard.writeText(url)
-			setCopied(true)
-			setTimeout(() => setCopied(false), 2000)
-		} catch {
-			window.prompt("Copy this link", url)
-		}
-	}
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			title="Copies a link. The card is its preview image."
-			className="w-32 rounded-full py-2.5 text-center text-base font-black whitespace-nowrap text-black transition hover:brightness-110 sm:w-40"
-			style={{ backgroundImage: gradient }}
-		>
-			{copied ? "Link copied ✓" : "Share"}
-		</button>
-	)
-}
-
 const titlePath = (item: CardTitle) =>
 	`/${item.type}/${item.key.split(":")[1]}-${titleToDashed(canonicalMediaTitle(item))}`
 
 export default function ShareListPage() {
-	const { list, items, services, ownerScores, country, owner, isOwner, share } =
+	const { list, items, services, ownerScores, country, owner, isOwner } =
 		useLoaderData<typeof loader>()
 	const design = designByKey(list.design)
 	const t = THEMES[list.theme]
@@ -179,7 +154,6 @@ export default function ShareListPage() {
 						Edit
 					</Link>
 				)}
-				<ShareLink url={share.url} gradient={gradient} />
 			</div>
 			<div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-4 pt-6 sm:px-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14 lg:px-8 lg:pt-8">
 				<div className="lg:sticky lg:top-[calc(4rem+var(--visitor-bar-h,0px)+var(--tab-row-h)+1.5rem)] lg:self-start">

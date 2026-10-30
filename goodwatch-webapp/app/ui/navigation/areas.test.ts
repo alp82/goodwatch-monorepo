@@ -104,7 +104,6 @@ test("Watch: tabs, the To watch | Seen switch and the chips for every page", () 
 		["/watch/seen", "up-next", "seen", null],
 		["/watch/movies", "ready", "to-watch", "tonight"],
 		["/watch/movies/wishlist", "ready", "to-watch", "wishlist"],
-		["/watch/movies/recent", "ready", "to-watch", "recent"],
 		["/watch/movies/seen", "ready", "seen", null],
 		["/watch/for-you", "for-you", null, null],
 	]
@@ -140,9 +139,8 @@ test("the chips point at their own tab's pages and carry counts", () => {
 			c.count,
 		]),
 		[
-			["Tonight", undefined],
-			["Whole Wishlist", 40],
-			["Recently added", undefined],
+			["Next Movie", undefined],
+			["Want to Watch", 40],
 		],
 	)
 	assert.equal(watchChips("/watch")?.choices.length, 5)

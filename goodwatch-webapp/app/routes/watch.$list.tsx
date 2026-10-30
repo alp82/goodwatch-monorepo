@@ -1,4 +1,4 @@
-// Watch › Up next's lists: /watch/not-started, /watching, /on-hold, /dropped, shows only. /watch/seen is the Seen tab,
+// Watch › Up next's lists: /watch/watching, /not-started (Start), /on-hold, /dropped, shows only. /watch/seen is the Seen tab,
 // every title you watched; the layout's SubNav picks the kind (`?type=`). Another slug is not found. A guest is asked
 // to sign up. The status lists are Up next's All shows, with the status filter first in the list's controls.
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
@@ -22,8 +22,8 @@ import { statusViews, upNextViews } from "~/ui/watch/watch-views"
 export { pageHeaders as headers } from "~/utils/headers"
 
 const NAME: Record<string, string> = {
-	"not-started": "Not started",
 	watching: "Watching",
+	"not-started": "Start",
 	"on-hold": "On hold",
 	dropped: "Dropped",
 	seen: "Seen shows",

@@ -1,16 +1,16 @@
-// The profile's Stats tab: the numbers of a taste (genres, people, eras, world, facts, rating style), and for a
-// signed-in visitor "Where your tastes meet" first. The summary of the taste (viewer type, print, groups, against
-// everyone) is on the Taste profile tab. The owner also gets the import call to action.
+// The profile's Stats tab: the numbers of a taste (genres, people, eras, world, facts, rating style). A signed-in visitor
+// sees their usual score in Rating style; the rest of the comparison is on the Taste tab. The summary of the taste
+// (viewer type, print, groups, against everyone) is on the Taste profile tab too. The owner also gets the import call to
+// action.
 import { SparklesIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { useMemo } from "react"
-import type { ProfileShell } from "~/domain/profile"
 import { tastePath } from "~/domain/member-paths"
+import type { ProfileShell } from "~/domain/profile"
 import type { MemberCompare } from "~/domain/profile-taste"
 import { WRAP } from "~/ui/my-pages/bits"
 import { ImportCta } from "../ImportCta"
 import { AMBER_BUTTON, TILE } from "../parts"
-import { CompareBanner } from "../taste/Compare"
 import {
 	Eras,
 	Facts,
@@ -58,10 +58,7 @@ export function StatsPage({
 								: `@${shell.handle}'s taste is still forming.`}
 					</p>
 					{owner && taste.status === "empty" && (
-						<Link
-							to={tastePath(shell.handle, "rate")}
-							className={AMBER_BUTTON}
-						>
+						<Link to={tastePath(shell.handle, "rate")} className={AMBER_BUTTON}>
 							Rate titles
 						</Link>
 					)}
@@ -73,7 +70,6 @@ export function StatsPage({
 		<TasteContext.Provider value={value}>
 			<div className={`${WRAP} flex flex-col gap-12 pt-2 pb-32 text-white`}>
 				<ImportCta shell={shell} what="ratings" />
-				{value.compare && <CompareBanner />}
 				<div className="flex flex-col gap-16 sm:gap-20">
 					<Genres />
 					<People />

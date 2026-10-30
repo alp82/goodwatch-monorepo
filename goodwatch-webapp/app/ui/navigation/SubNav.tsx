@@ -1,12 +1,12 @@
 // The third level of the navigation, under an area's tabs: one row for a tab's views (links to their own addresses,
-// such as Watch's Tonight · Whole Wishlist · Recently added or Scores' Scored · Not rated) and for the sections of a
+// such as Watch's Next Movie · Want to Watch or Scores' Scored · Not rated) and for the sections of a
 // one-page tab (anchor links with scroll-spy, such as the Taste portrait's Type · What pulls you · Groups).
 //
 // The row sticks right under the tab row (UNDER_TABS in ./AreaTabs.tsx), has one fixed height (SUBNAV_PX) and scrolls
 // sideways on phones with the current item kept in view. It sits below the tabs in the visual hierarchy: smaller type,
-// a lighter weight, no icons (Settings keeps small ones), muted counts. Its bar and the current item's mark follow the
-// round 10 option (layers, ./bar-layers.ts): an amber dot (steps), a soft amber glow chip (gradient), a white chip
-// (imagery), or a darker well (folder). The mark moves between items with a layout animation (transform only).
+// a lighter weight, no icons (Settings keeps small ones), muted counts. Its bar is a step lighter than the page
+// (./bar-layers.ts), and the current item has an amber dot that moves between items with a layout animation
+// (transform only).
 import { Link } from "@remix-run/react"
 import { LayoutGroup, motion } from "framer-motion"
 import {
@@ -24,15 +24,13 @@ import { STICKY_SUBBAR } from "~/ui/layers"
 import { UNDER_TABS } from "./AreaTabs"
 import type { NavIcon } from "./areas"
 import {
-	type Layers,
 	SUBNAV_BAR,
 	SUBNAV_HERE_ICON,
 	SUBNAV_HERE_MUTED,
-	SUBNAV_ITEM,
 	SUBNAV_LIST,
 	SUBNAV_MARK,
+	subnavItem,
 } from "./bar-layers"
-import { useNavOptions } from "./nav-options"
 
 const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
 const count = (n: number) => n.toLocaleString("en-US")
@@ -50,8 +48,6 @@ export interface SubNavItem {
 	/** A thin divider before the item, between groups. */
 	sep?: boolean
 }
-
-type Look = Layers
 
 /** The scroll position where the row starts to stick: the content starts there. */
 function stuckAt(sentinel: HTMLElement, nav: HTMLElement) {
@@ -143,11 +139,11 @@ function scrollToSection(id: string, nav: HTMLElement) {
 	return true
 }
 
-function Count({ n, here, look }: { n: number; here: boolean; look: Look }) {
+function Count({ n, here }: { n: number; here: boolean }) {
 	return (
 		<span
 			className={`text-[11px] font-normal tabular-nums ${
-				here ? SUBNAV_HERE_MUTED[look] : "text-gray-500"
+				here ? SUBNAV_HERE_MUTED : "text-gray-500"
 			}`}
 		>
 			{count(n)}
@@ -182,7 +178,6 @@ export function SubNav({
 	under?: keyof typeof UNDER_TABS
 	className?: string
 }) {
-	const { layers: look } = useNavOptions()
 	const nav = useRef<HTMLElement>(null)
 	const sentinel = useRef<HTMLDivElement>(null)
 	const scroller = useRef<HTMLDivElement>(null)
@@ -241,24 +236,24 @@ export function SubNav({
 						layoutId={thumb}
 						aria-hidden
 						transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
-						className={SUBNAV_MARK[look]}
+						className={SUBNAV_MARK}
 					/>
 				)}
 				{Icon && (
 					<Icon
 						aria-hidden
-						className={`relative size-3.5 shrink-0 ${on ? SUBNAV_HERE_ICON[look] : "text-gray-500"}`}
+						className={`relative size-3.5 shrink-0 ${on ? SUBNAV_HERE_ICON : "text-gray-500"}`}
 					/>
 				)}
 				<span className="relative">{it.label}</span>
 				{it.count != null && (
 					<span className="relative">
-						<Count n={it.count} here={on} look={look} />
+						<Count n={it.count} here={on} />
 					</span>
 				)}
 			</>
 		)
-		const className = `${SUBNAV_ITEM[look](on)} shrink-0 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400`
+		const className = `${subnavItem(on)} shrink-0 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400`
 		return sections ? (
 			<a
 				href={it.href}
@@ -296,8 +291,8 @@ export function SubNav({
 			<nav
 				ref={nav}
 				aria-label={label}
-				data-subnav={look}
-				className={`sticky ${UNDER_TABS[under]} ${STICKY_SUBBAR} h-11 ${SUBNAV_BAR[look]} ${className}`}
+				data-subnav
+				className={`sticky ${UNDER_TABS[under]} ${STICKY_SUBBAR} h-11 ${SUBNAV_BAR} ${className}`}
 			>
 				<LayoutGroup id={thumb}>
 					<div className={`${WRAP} flex h-full items-center`}>
@@ -305,7 +300,7 @@ export function SubNav({
 							ref={scroller}
 							className="-mx-1 flex h-full min-w-0 items-center overflow-x-auto px-1 [scrollbar-width:none]"
 						>
-							<ul className={`${SUBNAV_LIST[look]} shrink-0`}>
+							<ul className={`${SUBNAV_LIST} shrink-0`}>
 								{items.flatMap((it) => [
 									...(it.sep ? [<Sep key={`${it.key}-sep`} />] : []),
 									<li
