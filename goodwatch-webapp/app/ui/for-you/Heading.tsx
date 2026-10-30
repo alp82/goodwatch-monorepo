@@ -3,7 +3,8 @@ import { Link } from "@remix-run/react"
 import { createContext, useContext } from "react"
 import { RecsSwitch } from "~/ui/trope-recs/RecsSwitch"
 
-/** The member has a trope profile: the row leads with "Curated for you | By your tropes" (the route provides it). */
+/** The viewer is a member (the route provides it): the row leads with "Curated for you | By your tropes". Members
+ * without a trope profile yet get the Rate more card on the tropes page. Always shown, so the row never shifts. */
 export const TropeSwitchContext = createContext(false)
 
 /**

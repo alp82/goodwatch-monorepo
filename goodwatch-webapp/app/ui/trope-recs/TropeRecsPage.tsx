@@ -296,8 +296,10 @@ function Picks({
 	kind: RecKind
 }) {
 	const [shown, setShown] = useState(STEP)
-	const [open, setOpen] = useState<number | null>(null)
-	const pick = open === null ? null : titles[open]
+	// Selected by title id: a refetch that drops or moves the title closes the sheet instead of showing another one.
+	const [openId, setOpenId] = useState<RecTitle["id"] | null>(null)
+	const index = openId === null ? -1 : titles.findIndex((t) => t.id === openId)
+	const pick = index < 0 ? null : titles[index]
 	const visible = useMemo(() => titles.slice(0, shown), [titles, shown])
 	return (
 		<>
@@ -313,7 +315,7 @@ function Picks({
 									return
 								e.preventDefault()
 								e.stopPropagation()
-								setOpen(i)
+								setOpenId(t.id)
 							}}
 						>
 							<MovieTvCard
@@ -343,14 +345,15 @@ function Picks({
 					</button>
 				</p>
 			)}
-			{pick && open !== null && (
+			{pick && (
 				<Suspense fallback={null}>
 					<PickSheet
+						key={pick.id}
 						pick={pick}
-						place={open + 1}
+						place={index + 1}
 						tropeCount={tropeCount}
 						kind={kind}
-						onClose={() => setOpen(null)}
+						onClose={() => setOpenId(null)}
 					/>
 				</Suspense>
 			)}
