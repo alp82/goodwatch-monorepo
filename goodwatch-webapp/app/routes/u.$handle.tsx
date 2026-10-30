@@ -60,7 +60,7 @@ export function useProfileLayout() {
 }
 
 export default function ProfileLayout() {
-	const { shell, identity, print, facts } = useLoaderData<
+	const { shell, identity, print, facts, match } = useLoaderData<
 		typeof loader
 	>() as ProfileLayoutData
 	const { pathname, search } = useLocation()
@@ -75,6 +75,7 @@ export default function ProfileLayout() {
 				identity={identity}
 				print={print}
 				facts={facts}
+				match={match}
 				pathname={pathname}
 				search={search}
 			/>

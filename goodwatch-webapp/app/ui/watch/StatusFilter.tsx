@@ -1,4 +1,4 @@
-// OPTION upnext=split: All shows' status filter, first in the list's controls, in the look of the list's own kind
+// All shows' status filter, first in the list's controls, in the look of the list's own kind
 // filter (ui/my-library/MyLibraryPage.tsx). Each status is a page of its own, so each choice is a link.
 import { Link } from "@remix-run/react"
 import type { NavChoice } from "~/ui/navigation/areas"

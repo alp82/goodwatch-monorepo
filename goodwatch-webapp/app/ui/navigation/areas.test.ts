@@ -122,13 +122,13 @@ test("Watch: tabs, the To watch | Seen switch and the chips for every page", () 
 	assert.equal(watchPlaceOf("/discover"), null)
 })
 
-test("Watch tabs read Up next, Ready to watch, Recommendations, each with its second line", () => {
+test("Watch tabs read My shows, My movies, Recommendations, each with its second line", () => {
 	assert.deepEqual(
 		watchTabs("/watch").map((t) => [t.label, t.sub, t.href]),
 		[
-			["Up next", "My shows", "/watch"],
-			["Ready to watch", "My movies", "/watch/movies"],
-			["Recommendations", "For you", "/watch/for-you"],
+			["My shows", "Up next", "/watch"],
+			["My movies", "Ready to watch", "/watch/movies"],
+			["Recommendations", "Curated For You", "/watch/for-you"],
 		],
 	)
 })

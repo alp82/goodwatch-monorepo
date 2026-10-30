@@ -146,8 +146,10 @@ export interface AreaTab {
 	label: string
 	/** The tab's icon, left of its label (of both lines on a two-line tab). */
 	icon?: NavIcon
-	/** A second, smaller line under the label (Watch: "My shows", "My movies", "For you"). */
+	/** A second, smaller line under the label (Watch: "Up next", "Ready to watch", "Curated For You"). */
 	sub?: string
+	/** A shorter label for phones, where the whole row has to fit (Watch: "For you" for "Recommendations"). */
+	short?: string
 	href: string
 	here: boolean
 	count?: number
@@ -232,16 +234,16 @@ export function watchTabs(pathname: string): AreaTab[] {
 	return [
 		{
 			key: "up-next",
-			label: "Up next",
-			sub: "My shows",
+			label: "My shows",
+			sub: "Up next",
 			icon: TvIcon,
 			href: WATCH_PATHS.nextEpisodes,
 			here: tab === "up-next",
 		},
 		{
 			key: "ready",
-			label: "Ready to watch",
-			sub: "My movies",
+			label: "My movies",
+			sub: "Ready to watch",
 			icon: FilmIcon,
 			href: WATCH_PATHS.tonight,
 			here: tab === "ready",
@@ -249,7 +251,8 @@ export function watchTabs(pathname: string): AreaTab[] {
 		{
 			key: "for-you",
 			label: "Recommendations",
-			sub: "For you",
+			short: "For you",
+			sub: "Curated For You",
 			icon: SparklesIcon,
 			href: WATCH_PATHS.forYou,
 			here: tab === "for-you",

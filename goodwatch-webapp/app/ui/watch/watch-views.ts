@@ -3,12 +3,8 @@
 //
 // Four tabs: Up next, Ready to watch, Recommendations, and Seen (/watch/seen, every title you watched, set at the row's
 // end on desktop). Ready to watch's views (Tonight · Whole Wishlist · Recently added) and Seen's kinds (All · Movies ·
-// Shows) are SubNav rows. How Up next reaches its show lists is a round 9 option (upnext):
-// - menu: /watch is Next episodes with no third-level row; a status menu in the page's heading line lists Next
-//   episodes, then Not started · Watching · On hold · Dropped.
-// - split: a SubNav with Next episodes | All shows. All shows is the status pages (/watch/watching first), each with a
-//   status filter in the list's controls.
-// - sections: no third-level row; /watch shows Next episodes, then a short row per status with "See all".
+// Shows) are SubNav rows. Up next's SubNav is Next episodes | All shows; All shows is the status pages
+// (/watch/watching first), each with a status filter in the list's controls.
 import { ClockIcon } from "@heroicons/react/24/outline"
 import { WATCH_PATHS } from "../../domain/member-paths.ts"
 import {
@@ -20,8 +16,6 @@ import {
 	watchPlaceOf,
 	watchTabs,
 } from "../navigation/areas.ts"
-
-export type UpNextOption = "menu" | "split" | "sections"
 
 /** Counts for the views, from the member's data. Guests have none. */
 export interface WatchViewCounts {
@@ -87,14 +81,14 @@ export function readyViews(
 	)
 }
 
-/** The status pages All shows covers (upnext=split): every Up next view but Next episodes. */
+/** The status pages All shows covers: every Up next view but Next episodes. */
 export const statusViews = (views: NavChoice[]) =>
 	views.filter((view) => view.key !== "next-episodes")
 
-/** All shows' address (upnext=split): Watching, the status a member opens most. */
+/** All shows' address: Watching, the status a member opens most. */
 export const ALL_SHOWS_PATH = WATCH_PATHS.watching
 
-/** Up next's SubNav under upnext=split: Next episodes | All shows, All shows current on every status page. */
+/** Up next's SubNav: Next episodes | All shows, All shows current on every status page. */
 export function upNextSplit(views: NavChoice[]): NavChoice[] {
 	const statuses = statusViews(views)
 	const counted = statuses.every((view) => view.count != null)

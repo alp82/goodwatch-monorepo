@@ -4,10 +4,9 @@
 //
 // The row sticks right under the tab row (UNDER_TABS in ./AreaTabs.tsx), has one fixed height (SUBNAV_PX) and scrolls
 // sideways on phones with the current item kept in view. It sits below the tabs in the visual hierarchy: smaller type,
-// a lighter weight, no icons (Settings keeps small ones), muted counts. Its look is a round 9 option (subnav):
-// - line: small text items with a quiet underline under the current one.
-// - segment: one rounded track; the current item is a lighter thumb that slides (transform only).
-// - quiet: small outline pills; the current one has amber text and border, no fill.
+// a lighter weight, no icons (Settings keeps small ones), muted counts. Its bar and the current item's mark follow the
+// round 10 option (layers, ./bar-layers.ts): an amber dot (steps), a soft amber glow chip (gradient), a white chip
+// (imagery), or a darker well (folder). The mark moves between items with a layout animation (transform only).
 import { Link } from "@remix-run/react"
 import { LayoutGroup, motion } from "framer-motion"
 import {
@@ -24,7 +23,16 @@ import {
 import { STICKY_SUBBAR } from "~/ui/layers"
 import { UNDER_TABS } from "./AreaTabs"
 import type { NavIcon } from "./areas"
-import { type NavOptions, useNavOptions } from "./nav-options"
+import {
+	type Layers,
+	SUBNAV_BAR,
+	SUBNAV_HERE_ICON,
+	SUBNAV_HERE_MUTED,
+	SUBNAV_ITEM,
+	SUBNAV_LIST,
+	SUBNAV_MARK,
+} from "./bar-layers"
+import { useNavOptions } from "./nav-options"
 
 const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
 const count = (n: number) => n.toLocaleString("en-US")
@@ -43,7 +51,7 @@ export interface SubNavItem {
 	sep?: boolean
 }
 
-type Look = NavOptions["subnav"]
+type Look = Layers
 
 /** The scroll position where the row starts to stick: the content starts there. */
 function stuckAt(sentinel: HTMLElement, nav: HTMLElement) {
@@ -139,11 +147,7 @@ function Count({ n, here, look }: { n: number; here: boolean; look: Look }) {
 	return (
 		<span
 			className={`text-[11px] font-normal tabular-nums ${
-				here
-					? look === "quiet"
-						? "text-amber-300/70"
-						: "text-gray-400"
-					: "text-gray-500"
+				here ? SUBNAV_HERE_MUTED[look] : "text-gray-500"
 			}`}
 		>
 			{count(n)}
@@ -151,36 +155,9 @@ function Count({ n, here, look }: { n: number; here: boolean; look: Look }) {
 	)
 }
 
-const ITEM: Record<Look, (here: boolean) => string> = {
-	line: (here) =>
-		`relative flex h-full items-center gap-1.5 px-2.5 text-[13px] font-medium ${
-			here ? "text-white" : "text-gray-400 hover:text-gray-200"
-		}`,
-	segment: (here) =>
-		`relative flex h-7 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium ${
-			here ? "text-white" : "text-gray-400 hover:text-gray-200"
-		}`,
-	quiet: (here) =>
-		`flex h-7 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium ring-1 transition-colors ${
-			here
-				? "text-amber-300 ring-amber-400/60"
-				: "text-gray-400 ring-white/10 hover:text-gray-200 hover:ring-white/20"
-		}`,
-}
-
-const LIST: Record<Look, string> = {
-	line: "-ml-2.5 flex h-full items-stretch",
-	segment:
-		"flex h-8 items-center rounded-full bg-white/[0.05] p-0.5 ring-1 ring-white/[0.08]",
-	quiet: "flex h-full items-center gap-1.5",
-}
-
-function Sep({ look }: { look: Look }) {
+function Sep() {
 	return (
-		<li
-			aria-hidden
-			className={`flex items-center ${look === "segment" ? "px-1" : "px-1.5"}`}
-		>
+		<li aria-hidden className="flex items-center px-1.5">
 			<span className="h-4 w-px bg-white/10" />
 		</li>
 	)
@@ -205,7 +182,7 @@ export function SubNav({
 	under?: keyof typeof UNDER_TABS
 	className?: string
 }) {
-	const { subnav: look } = useNavOptions()
+	const { layers: look } = useNavOptions()
 	const nav = useRef<HTMLElement>(null)
 	const sentinel = useRef<HTMLDivElement>(null)
 	const scroller = useRef<HTMLDivElement>(null)
@@ -259,18 +236,18 @@ export function SubNav({
 		const Icon = it.icon
 		const inner = (
 			<>
-				{look === "segment" && on && (
+				{on && (
 					<motion.span
 						layoutId={thumb}
 						aria-hidden
 						transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
-						className="absolute inset-0 rounded-full bg-white/[0.13] ring-1 ring-white/10"
+						className={SUBNAV_MARK[look]}
 					/>
 				)}
 				{Icon && (
 					<Icon
 						aria-hidden
-						className={`relative size-3.5 shrink-0 ${on ? (look === "quiet" ? "text-amber-300" : "text-gray-200") : "text-gray-500"}`}
+						className={`relative size-3.5 shrink-0 ${on ? SUBNAV_HERE_ICON[look] : "text-gray-500"}`}
 					/>
 				)}
 				<span className="relative">{it.label}</span>
@@ -279,15 +256,9 @@ export function SubNav({
 						<Count n={it.count} here={on} look={look} />
 					</span>
 				)}
-				{look === "line" && on && (
-					<span
-						aria-hidden
-						className="absolute inset-x-2.5 bottom-0 h-0.5 rounded-full bg-white/50"
-					/>
-				)}
 			</>
 		)
-		const className = `${ITEM[look](on)} shrink-0 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400`
+		const className = `${SUBNAV_ITEM[look](on)} shrink-0 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400`
 		return sections ? (
 			<a
 				href={it.href}
@@ -326,7 +297,7 @@ export function SubNav({
 				ref={nav}
 				aria-label={label}
 				data-subnav={look}
-				className={`sticky ${UNDER_TABS[under]} ${STICKY_SUBBAR} h-11 border-b border-white/[0.06] bg-gray-950/95 ${className}`}
+				className={`sticky ${UNDER_TABS[under]} ${STICKY_SUBBAR} h-11 ${SUBNAV_BAR[look]} ${className}`}
 			>
 				<LayoutGroup id={thumb}>
 					<div className={`${WRAP} flex h-full items-center`}>
@@ -334,11 +305,9 @@ export function SubNav({
 							ref={scroller}
 							className="-mx-1 flex h-full min-w-0 items-center overflow-x-auto px-1 [scrollbar-width:none]"
 						>
-							<ul className={`${LIST[look]} shrink-0`}>
+							<ul className={`${SUBNAV_LIST[look]} shrink-0`}>
 								{items.flatMap((it) => [
-									...(it.sep
-										? [<Sep key={`${it.key}-sep`} look={look} />]
-										: []),
+									...(it.sep ? [<Sep key={`${it.key}-sep`} />] : []),
 									<li
 										key={it.key}
 										className="flex h-full shrink-0 items-center"

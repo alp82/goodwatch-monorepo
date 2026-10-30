@@ -1,6 +1,6 @@
 // Watch › Up next's lists: /watch/not-started, /watching, /on-hold, /dropped, shows only. /watch/seen is the Seen tab,
 // every title you watched; the layout's SubNav picks the kind (`?type=`). Another slug is not found. A guest is asked
-// to sign up. OPTION upnext=split: the status lists are All shows, with the status filter first in the list's controls.
+// to sign up. The status lists are Up next's All shows, with the status filter first in the list's controls.
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
@@ -15,7 +15,6 @@ import {
 } from "~/server/library-list-route.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { LibraryListBody } from "~/ui/my-library/MyLibraryPage"
-import { useNavOptions } from "~/ui/navigation/nav-options"
 import { StatusFilter } from "~/ui/watch/StatusFilter"
 import { useWatchCounts } from "~/ui/watch/useWatchCounts"
 import { statusViews, upNextViews } from "~/ui/watch/watch-views"
@@ -70,7 +69,6 @@ export default function WatchShowList() {
 	const loaded = useLoaderData<typeof loader>() as LibraryListLoaded
 	const { list } = useParams()
 	const { pathname } = useLocation()
-	const { upnext } = useNavOptions()
 	const counts = useWatchCounts()
 	const seen = loaded.status === "seen" && !loaded.kind
 	const views = upNextViews(pathname, counts)
@@ -78,12 +76,7 @@ export default function WatchShowList() {
 		<LibraryListBody
 			loaded={loaded}
 			kindControl={!seen}
-			filter={
-				// OPTION upnext=split
-				upnext === "split" && views ? (
-					<StatusFilter statuses={statusViews(views)} />
-				) : null
-			}
+			filter={views ? <StatusFilter statuses={statusViews(views)} /> : null}
 			name={seen ? "Seen" : (NAME[list ?? ""] ?? "Shows")}
 			guest={
 				seen

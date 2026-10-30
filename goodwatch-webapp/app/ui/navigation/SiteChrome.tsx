@@ -16,6 +16,8 @@ import { NavigationProvider, usePathViewer } from "./NavigationContext"
 import { SiteHeader } from "./SiteHeader"
 import { SubNav } from "./SubNav"
 import { areaOf, bestSwitch, exploreTabs, tasteRow } from "./areas"
+import { layerVars } from "./bar-layers"
+import { useNavOptions } from "./nav-options"
 
 const under = (pathname: string, prefix: string) =>
 	pathname === prefix || pathname.startsWith(`${prefix}/`)
@@ -47,6 +49,7 @@ function ExploreRow() {
 			<AreaTabs
 				label="Explore"
 				icon={GlobeAltIcon}
+				area="explore"
 				tabs={exploreTabs(pathname, {
 					newHref: user ? "/new" : countryPath(locale.country),
 				})}
@@ -100,22 +103,27 @@ export function SiteChrome({
 	/** After the footer, before the dock (hosts that render nothing until used). */
 	afterFooter?: ReactNode
 }) {
+	const { layers } = useNavOptions()
 	return (
 		<NavigationProvider>
-			<SiteHeader />
-			{afterHeader}
-			<main className={mainClassName}>
-				<ExploreRow />
-				<ProfileRow />
-				{children}
-			</main>
-			<Footer />
-			{afterFooter}
-			<MobileDock />
-			<AccountMenuHost />
-			<SearchDialog />
-			{/* PROTOTYPE OPTIONS (round 8): development builds only. */}
-			{import.meta.env.DEV && <NavOptionsBar />}
+			{/* OPTION layers: the bars' surfaces as CSS variables for the rows among them (./bar-layers.ts). `contents`:
+			    no box of its own, so the page's layout and sticky rows work as before. */}
+			<div data-layers={layers} style={layerVars(layers)} className="contents">
+				<SiteHeader />
+				{afterHeader}
+				<main className={mainClassName}>
+					<ExploreRow />
+					<ProfileRow />
+					{children}
+				</main>
+				<Footer />
+				{afterFooter}
+				<MobileDock />
+				<AccountMenuHost />
+				<SearchDialog />
+				{/* PROTOTYPE OPTIONS (round 8): development builds only. */}
+				{import.meta.env.DEV && <NavOptionsBar />}
+			</div>
 		</NavigationProvider>
 	)
 }

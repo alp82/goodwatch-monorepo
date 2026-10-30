@@ -2,6 +2,9 @@
 // Settings gear at the Profile row's end. The third level under the tabs is SubNav.tsx. Props in, links out: the data
 // comes from ./areas.ts.
 //
+// How the row looks against the header above and the in-page nav below is a round 10 option (layers, ./bar-layers.ts).
+// Watch's two-line row fits a phone as four equal columns: no icons, and Recommendations reads "For you" there.
+//
 // Every row has one fixed height, so the rows under it can stick at a known offset. A profile with the sticky visitor
 // bar sets `--visitor-bar-h` on its wrapper (0px elsewhere); every sticky offset here adds it.
 import { LockClosedIcon, UserGroupIcon } from "@heroicons/react/20/solid"
@@ -10,10 +13,24 @@ import {
 	Cog6ToothIcon as CogSolid,
 	UserCircleIcon as UserCircleSolid,
 } from "@heroicons/react/24/solid"
-import { Link } from "@remix-run/react"
-import { type ReactNode, useLayoutEffect, useRef } from "react"
+import { Link, useLocation } from "@remix-run/react"
+import {
+	type ReactNode,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react"
 import { STICKY_BAR } from "~/ui/layers"
 import type { AreaTab, NavIcon, TasteRow } from "./areas"
+import {
+	AREA_EDGE,
+	AREA_TINT,
+	type BarArea,
+	type Layers,
+	TAB_ROW,
+} from "./bar-layers"
+import { useNavOptions } from "./nav-options"
 
 /** The page width, as ui/my-pages/bits.tsx (kept here so the header chunk does not pull that module). */
 const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
@@ -94,8 +111,8 @@ function News({ news }: { news: AreaTab["news"] }) {
 
 /**
  * A tab's icon, left of the label; amber on the current tab. One-line tabs use the gear's 20 px outline. A two-line
- * tab's icon is as tall as its two lines (20 px label + 16 px second line). Phones keep it inline too: an icon over
- * the label would make the row taller under the sticky header.
+ * tab's icon is a little smaller than its two lines (32 px next to 20 px + 16 px), and phones leave it out: the four
+ * Watch tabs only fit a 390 px phone as text.
  */
 function TabIcon({ tab }: { tab: AreaTab }) {
 	const Icon = tab.icon
@@ -103,13 +120,42 @@ function TabIcon({ tab }: { tab: AreaTab }) {
 	return (
 		<Icon
 			aria-hidden
-			className={`${tab.sub ? "size-9" : "size-5"} shrink-0 ${tab.here ? "text-amber-300" : "text-gray-500"}`}
+			className={`${tab.sub ? "size-8 max-md:hidden" : "size-5"} shrink-0 ${tab.here ? "text-amber-300" : "text-gray-500"}`}
 		/>
+	)
+}
+
+/**
+ * A tab's box by option: the amber underline, or in folder a folder tab in the page's color that reaches down over the
+ * row's bottom line, with an amber top edge. Folder tabs start 6 px below the row's top, the same on every tab.
+ */
+function tabBox(layers: Layers, here: boolean, kind: "one" | "two") {
+	if (layers === "folder") {
+		const h = kind === "two" ? "h-[51px] lg:h-[55px]" : "h-[39px] lg:h-[43px]"
+		return `${h} rounded-t-xl ${
+			here
+				? "bg-[#111827] shadow-[inset_0_2px_0_rgb(251_191_36/0.85),inset_1px_0_0_rgb(255_255_255/0.08),inset_-1px_0_0_rgb(255_255_255/0.08)]"
+				: "hover:bg-white/[0.03]"
+		}`
+	}
+	const h = kind === "two" ? "h-14 lg:h-[60px]" : "h-11 lg:h-12"
+	return `${h} border-b-2 ${here ? "border-amber-400" : "border-transparent"}`
+}
+
+/** The label, with the phone's shorter one where the tab has it. */
+function Label({ tab }: { tab: AreaTab }) {
+	if (!tab.short) return <>{tab.label}</>
+	return (
+		<>
+			<span className="md:hidden">{tab.short}</span>
+			<span className="max-md:hidden">{tab.label}</span>
+		</>
 	)
 }
 
 /** One tab: one line, or two (label and a smaller line under it) when it has `sub`. The amber underline marks it current. */
 export function TabLink({ tab }: { tab: AreaTab }) {
+	const { layers } = useNavOptions()
 	const n = tab.count != null && (
 		<span className="text-xs tabular-nums text-gray-500">
 			{count(tab.count)}
@@ -121,19 +167,17 @@ export function TabLink({ tab }: { tab: AreaTab }) {
 				to={tab.href}
 				prefetch="intent"
 				aria-current={tab.here ? "page" : undefined}
-				className={`relative flex h-14 shrink-0 items-center gap-2.5 border-b-2 px-3 whitespace-nowrap lg:h-[60px] lg:px-4 ${
-					tab.here
-						? "border-amber-400"
-						: "border-transparent hover:[&_b]:text-gray-100"
+				className={`relative flex items-center gap-2.5 px-3 whitespace-nowrap max-md:min-w-0 max-md:flex-1 max-md:justify-center max-md:px-1 md:shrink-0 lg:px-4 ${tabBox(layers, tab.here, "two")} ${
+					tab.here ? "" : "hover:[&_b]:text-gray-100"
 				}`}
 			>
 				<TabIcon tab={tab} />
-				<span className="flex flex-col items-start">
+				<span className="flex flex-col items-start max-md:items-center">
 					<span className="flex items-baseline gap-1.5">
 						<b
-							className={`text-sm leading-5 font-semibold ${tab.here ? "text-white" : "text-gray-300"}`}
+							className={`text-sm leading-5 font-semibold max-md:text-[13px] ${tab.here ? "text-white" : "text-gray-300"}`}
 						>
-							{tab.label}
+							<Label tab={tab} />
 						</b>
 						{n}
 						<Mark mark={tab.mark} />
@@ -152,14 +196,12 @@ export function TabLink({ tab }: { tab: AreaTab }) {
 			to={tab.href}
 			prefetch="intent"
 			aria-current={tab.here ? "page" : undefined}
-			className={`relative flex h-11 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-semibold whitespace-nowrap lg:h-12 ${
-				tab.here
-					? "border-amber-400 text-white"
-					: "border-transparent text-gray-400 hover:text-gray-100"
+			className={`relative flex shrink-0 items-center gap-1.5 px-3 text-sm font-semibold whitespace-nowrap ${tabBox(layers, tab.here, "one")} ${
+				tab.here ? "text-white" : "text-gray-400 hover:text-gray-100"
 			}`}
 		>
 			<TabIcon tab={tab} />
-			{tab.label}
+			<Label tab={tab} />
 			{n}
 			<Mark mark={tab.mark} />
 			<News news={tab.news} />
@@ -167,7 +209,139 @@ export function TabLink({ tab }: { tab: AreaTab }) {
 	)
 }
 
-const Divider = () => <span aria-hidden className="mr-1 h-5 w-px bg-white/10" />
+const Divider = () => (
+	<span aria-hidden className="mr-1 h-5 w-px self-center bg-white/10" />
+)
+
+/** The posters on the page under the row (no extra requests: they are on screen or already asked for). */
+function pagePosters(): string[] {
+	const POSTER = /image\.tmdb\.org\/t\/p\/w(92|154|185|342|500)\//
+	const BACKDROP = /image\.tmdb\.org\/t\/p\/(w780|w1280|original)\//
+	const imgs = Array.from(
+		document.querySelectorAll<HTMLImageElement>("main img"),
+	).filter((img) => !img.closest("[data-tab-row],[data-subnav]"))
+	const src = (img: HTMLImageElement) => img.currentSrc || img.src
+	const loaded = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0
+	const backdrop = imgs.find((img) => BACKDROP.test(src(img)) && loaded(img))
+	if (backdrop) return [`backdrop:${src(backdrop)}`]
+	// Posters only: service logos are square .png files from the same host.
+	const posters = imgs.filter(
+		(img) =>
+			POSTER.test(src(img)) &&
+			!src(img).endsWith(".png") &&
+			(!loaded(img) || img.naturalHeight > img.naturalWidth * 1.2),
+	)
+	const ordered = [
+		...posters.filter(loaded),
+		...posters.filter((i) => !loaded(i)),
+	]
+	const seen = new Set<string>()
+	const out: string[] = []
+	for (const img of ordered) {
+		const url = src(img)
+		const file = url.slice(url.lastIndexOf("/"))
+		if (seen.has(file)) continue
+		seen.add(file)
+		out.push(url)
+		if (out.length >= 18) break
+	}
+	return out
+}
+
+/**
+ * OPTION layers=imagery: the page's posters (or its hero backdrop) for the tab row. Read after the page draws and
+ * again shortly after, since some lists arrive after the first paint. The last set stays while the next page loads.
+ */
+function usePagePosters(on: boolean) {
+	const { pathname } = useLocation()
+	const [urls, setUrls] = useState<string[]>([])
+	useEffect(() => {
+		if (!on) return
+		let tries = 0
+		let timer = 0
+		const read = () => {
+			const found = pagePosters()
+			if (found.length > 0)
+				setUrls((prev) => (prev.join() === found.join() ? prev : found))
+			if (found.length >= 6 || tries >= 3) return
+			tries += 1
+			timer = window.setTimeout(read, tries * 700)
+		}
+		timer = window.setTimeout(read, 60)
+		return () => window.clearTimeout(timer)
+	}, [on, pathname])
+	return urls
+}
+
+/** OPTION layers=imagery: the faint posters behind the tabs, faded in with opacity. */
+function Imagery({ urls }: { urls: string[] }) {
+	const [shown, setShown] = useState(false)
+	useEffect(() => {
+		if (!urls.length) return
+		const frame = requestAnimationFrame(() => setShown(true))
+		return () => cancelAnimationFrame(frame)
+	}, [urls])
+	if (!urls.length) return null
+	const backdrop = urls[0].startsWith("backdrop:")
+	return (
+		<div
+			aria-hidden
+			className={`pointer-events-none absolute inset-0 overflow-hidden transition-opacity duration-700 ${shown ? "opacity-100" : "opacity-0"}`}
+		>
+			{backdrop ? (
+				<img
+					src={urls[0].slice("backdrop:".length)}
+					alt=""
+					decoding="async"
+					className="absolute inset-0 h-full w-full object-cover object-[center_30%] opacity-30 saturate-[.7]"
+				/>
+			) : (
+				<div className="flex h-full justify-end opacity-[0.28] saturate-[.7]">
+					{urls.map((url) => (
+						<img
+							key={url}
+							src={url}
+							alt=""
+							decoding="async"
+							className="h-full w-[76px] shrink-0 object-cover object-[center_25%] lg:w-[92px]"
+						/>
+					))}
+				</div>
+			)}
+			<div className="absolute inset-0 bg-gradient-to-r from-[#06080d] via-[#06080d]/75 to-[#06080d]/35" />
+		</div>
+	)
+}
+
+/** What sits behind the tabs, by option: the area's tint, the page's posters, or the folder row's bottom line. */
+function TabRowBackdrop({
+	layers,
+	area,
+	urls,
+}: { layers: Layers; area: BarArea; urls: string[] }) {
+	if (layers === "gradient")
+		return (
+			<>
+				<div
+					aria-hidden
+					className={`pointer-events-none absolute inset-0 ${AREA_TINT[area]}`}
+				/>
+				<div
+					aria-hidden
+					className={`pointer-events-none absolute inset-x-0 bottom-0 h-px ${AREA_EDGE[area]}`}
+				/>
+			</>
+		)
+	if (layers === "imagery") return <Imagery urls={urls} />
+	if (layers === "folder")
+		return (
+			<div
+				aria-hidden
+				className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/[0.09]"
+			/>
+		)
+	return null
+}
 
 /**
  * An area's tab row. `label` names the row at its start on desktop ("Watch", "@handle"); `trailing` tabs sit at the
@@ -183,6 +357,7 @@ export function AreaTabs({
 	trailingEnd = "always",
 	end,
 	sticky = true,
+	area,
 }: {
 	label: ReactNode
 	/** The area's filled icon before the label; leave it out for a guest on a profile. */
@@ -192,21 +367,29 @@ export function AreaTabs({
 	trailingEnd?: "always" | "desktop"
 	end?: ReactNode
 	sticky?: boolean
+	/** The area, for the gradient option's tint. */
+	area: BarArea
 }) {
+	const { layers } = useNavOptions()
 	const scroller = useCenterCurrent()
+	const urls = usePagePosters(layers === "imagery")
 	const hasTrailing = trailing != null && trailing.length > 0
 	const kind = [...tabs, ...(trailing ?? [])].some((t) => t.sub) ? "two" : "one"
+	// Folder tabs stand on the row's bottom line (drawn by TabRowBackdrop, so the current tab can cover it).
+	const align = layers === "folder" ? "items-end" : "items-center"
 	return (
 		<nav
 			aria-label={typeof label === "string" ? label : "Area"}
 			data-tab-row={kind}
-			className={`${sticky ? `sticky ${TABS_TOP} ${STICKY_BAR}` : "relative"} ${ROW_H[kind]} border-b border-white/10 bg-gray-950/95`}
+			data-layers={layers}
+			className={`${sticky ? `sticky ${TABS_TOP} ${STICKY_BAR}` : "relative"} ${ROW_H[kind]} ${TAB_ROW[layers]}`}
 		>
+			<TabRowBackdrop layers={layers} area={area} urls={urls} />
 			<div
 				ref={scroller}
-				className={`${WRAP} flex h-full items-center gap-1 overflow-x-auto [scrollbar-width:none]`}
+				className={`${WRAP} relative flex h-full ${align} gap-1 overflow-x-auto [scrollbar-width:none]`}
 			>
-				<span className="hidden shrink-0 items-center gap-1.5 pr-3 text-[11px] font-semibold tracking-wide text-gray-500 uppercase lg:flex">
+				<span className="hidden shrink-0 items-center gap-1.5 self-center pr-3 text-[11px] font-semibold tracking-wide text-gray-500 uppercase lg:flex">
 					{Icon && <Icon className="h-4 w-4 text-amber-400" aria-hidden />}
 					{label}
 				</span>
@@ -215,22 +398,32 @@ export function AreaTabs({
 				))}
 				{hasTrailing && (
 					<span
-						className={`${trailingEnd === "always" ? "ml-auto" : "lg:ml-auto"} flex shrink-0 items-center gap-1 pl-2 lg:pl-8`}
+						className={`${trailingEnd === "always" ? "ml-auto" : "lg:ml-auto"} flex h-full ${align} gap-1 pl-2 lg:pl-8 ${
+							kind === "two"
+								? "max-md:min-w-0 max-md:flex-1 max-md:pl-0 md:shrink-0"
+								: "shrink-0"
+						}`}
 					>
-						<Divider />
+						<span
+							className={kind === "two" ? "contents max-md:hidden" : "contents"}
+						>
+							<Divider />
+						</span>
 						{trailing.map((t) => (
 							<TabLink key={t.key} tab={t} />
 						))}
 					</span>
 				)}
 				{end && !hasTrailing && (
-					<span className="ml-auto flex shrink-0 items-center gap-1 pl-3 lg:pl-8">
+					<span
+						className={`ml-auto flex h-full shrink-0 ${align} gap-1 pl-3 lg:pl-8`}
+					>
 						<Divider />
 						{end}
 					</span>
 				)}
 				{end && hasTrailing && (
-					<span className="flex shrink-0 items-center pl-1">{end}</span>
+					<span className={`flex h-full shrink-0 ${align} pl-1`}>{end}</span>
 				)}
 			</div>
 		</nav>
@@ -239,6 +432,7 @@ export function AreaTabs({
 
 /** The Settings gear at the Profile row's end: an icon on phones, "Settings" beside it on desktop. */
 export function SettingsGear({ href, here }: { href: string; here: boolean }) {
+	const { layers } = useNavOptions()
 	const Icon = here ? CogSolid : Cog6ToothIcon
 	return (
 		<Link
@@ -246,10 +440,8 @@ export function SettingsGear({ href, here }: { href: string; here: boolean }) {
 			prefetch="intent"
 			aria-current={here ? "page" : undefined}
 			aria-label="Settings"
-			className={`flex h-11 items-center gap-1.5 border-b-2 px-2.5 text-[13px] font-medium whitespace-nowrap lg:h-12 ${
-				here
-					? "border-amber-400 text-white"
-					: "border-transparent text-gray-500 hover:text-gray-200"
+			className={`flex items-center gap-1.5 px-2.5 text-[13px] font-medium whitespace-nowrap ${tabBox(layers, here, "one")} ${
+				here ? "text-white" : "text-gray-500 hover:text-gray-200"
 			}`}
 		>
 			<Icon className="h-5 w-5" aria-hidden />
@@ -276,6 +468,7 @@ export function TasteTabs({
 		<AreaTabs
 			label={row.label}
 			icon={row.areaIcon ? UserCircleSolid : undefined}
+			area="profile"
 			tabs={row.tabs}
 			trailing={row.trailing}
 			end={

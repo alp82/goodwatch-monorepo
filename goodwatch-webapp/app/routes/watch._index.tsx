@@ -6,7 +6,6 @@ import {
 	json,
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
-import { WATCH_PATHS } from "~/domain/member-paths"
 import type { Arrival } from "~/domain/new-episodes"
 import type { LandedTitle } from "~/domain/newly-available-words"
 import { presentCatalogLoader } from "~/server/media-payload.server"
@@ -18,10 +17,6 @@ import { loadTaste } from "~/server/taste/index.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { GuestMyShows } from "~/ui/my-shows/GuestMyShows"
 import { MyShowsPage } from "~/ui/my-shows/MyShowsPage"
-import { useNavOptions } from "~/ui/navigation/nav-options"
-import { StatusSections } from "~/ui/watch/StatusSections"
-import { useWatchCounts } from "~/ui/watch/useWatchCounts"
-import { upNextViews } from "~/ui/watch/watch-views"
 import { getUserIdFromRequest } from "~/utils/auth"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -113,28 +108,15 @@ export default function MyShowsRoute() {
 		landed: LandedTitle[]
 		services: RowServices
 	}
-	const { upnext } = useNavOptions()
-	const counts = useWatchCounts()
 	if (!data) return <GuestMyShows />
-	// OPTION upnext=sections: the statuses as short rows under Next episodes, in place of the set-aside groups.
-	const sections = upnext === "sections"
 	return (
-		<>
-			<MyShowsPage
-				data={data}
-				now={now}
-				arrival={arrival}
-				landed={landed}
-				services={services}
-				setAside={!sections}
-			/>
-			{sections && (
-				<StatusSections
-					views={upNextViews(WATCH_PATHS.nextEpisodes, counts) ?? []}
-					data={data}
-				/>
-			)}
-		</>
+		<MyShowsPage
+			data={data}
+			now={now}
+			arrival={arrival}
+			landed={landed}
+			services={services}
+		/>
 	)
 }
 

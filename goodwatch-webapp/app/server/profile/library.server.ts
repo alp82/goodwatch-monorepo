@@ -206,7 +206,7 @@ const episodeMinutesKept = new Map<
 	{ at: number; minutes: number | null }
 >()
 
-async function episodeMinutes(
+export async function episodeMinutes(
 	ids: number[],
 ): Promise<Map<number, number | null>> {
 	const now = Date.now()

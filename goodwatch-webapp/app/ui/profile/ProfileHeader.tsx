@@ -3,8 +3,9 @@
 // height on every tab, list page and Settings page, so moving between them never shifts the page. A member without a
 // handle gets a strip of the same height that asks for one. While the owner views as a visitor, the amber bar sticks
 // under the site header (header/VisitorView.tsx).
-// PROTOTYPE OPTIONS (member nav, round 9): the header layout (`header`) and where Share and View as visitor sit
-// (`controls`) come from nav-options.ts; the layouts are in header/Layouts.tsx and the controls in header/Controls.tsx.
+// PROTOTYPE OPTIONS (member nav, round 10): the header's layout (`layout`), its ring (`ring`) and its facts (`facts`)
+// come from nav-options.ts; the layouts are in header/Layouts.tsx, the rings in header/Ring.tsx, the controls each
+// layout draws in header/Controls.tsx.
 import { UserCircleIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import { EDIT_PROFILE_PATH, type PathViewer } from "~/domain/member-paths"
@@ -15,19 +16,19 @@ import {
 	canSee,
 	seesPart,
 } from "~/domain/profile"
+import type { HeaderMatch } from "~/server/profile/header.server"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 import { TasteTabs } from "~/ui/navigation/AreaTabs"
 import { type TasteTabKey, tasteRow } from "~/ui/navigation/areas"
 import { useNavOptions } from "~/ui/navigation/nav-options"
-import { HEADER_CONTROLS, RowControls } from "./header/Controls"
 import {
 	Frame,
-	type HeaderLook,
+	type HeaderLayout,
 	type HeaderProps,
 	LAYOUTS,
 } from "./header/Layouts"
 import { VisitorBar, viewSwitchHref } from "./header/VisitorView"
-import { type HeaderFact, headerCount, headerFacts } from "./header/facts"
+import { type HeaderFact, headerFacts } from "./header/facts"
 import { AMBER_BUTTON } from "./parts"
 import { PROFILE_TAB_PARTS, type ProfileTab } from "./paths"
 import type { WhorlAttribute } from "./taste/Whorl"
@@ -88,16 +89,16 @@ function audienceOf(shell: ProfileShell, tab: TasteTabKey): Audience {
 }
 
 /** The profile header in the layout the options pick (header/Layouts.tsx). */
-export function ProfileHeader(props: HeaderProps & { look: HeaderLook }) {
-	const Layout = LAYOUTS[props.look]
+export function ProfileHeader(props: HeaderProps & { layout: HeaderLayout }) {
+	const Layout = LAYOUTS[props.layout]
 	return <Layout {...props} />
 }
 
 /** In place of the profile header for a member without a handle: the same height, and the way to pick one. */
 export function HandleStrip() {
-	const { header: look } = useNavOptions()
+	const { layout } = useNavOptions()
 	return (
-		<Frame look={look} ring={false} strip>
+		<Frame layout={layout} ring={false} strip>
 			<div className={`${WRAP} flex h-full items-center gap-3 sm:gap-5`}>
 				<UserCircleIcon
 					className="size-11 shrink-0 text-gray-500 sm:size-16"
@@ -147,6 +148,7 @@ export function ProfileChrome({
 	identity,
 	print = null,
 	facts = [],
+	match = null,
 	pathname,
 	search,
 }: {
@@ -157,6 +159,8 @@ export function ProfileChrome({
 	print?: WhorlAttribute[] | null
 	/** The cached facts for the essence (header.server.ts). */
 	facts?: HeaderFact[]
+	/** The signed-in visitor's match, on someone else's profile. */
+	match?: HeaderMatch | null
 	pathname: string
 	search: string
 }) {
@@ -199,30 +203,21 @@ export function ProfileChrome({
 		edit: owner && !asVisitor,
 	}
 	const query = asVisitor ? { as: "visitor" } : undefined
-	const Controls = HEADER_CONTROLS[options.controls]
 	const props: HeaderProps = {
 		shell: view,
 		identity: seesPart(view, "taste") ? identity : null,
 		print: seesPart(view, "taste") ? print : null,
-		count: headerCount(view, query),
-		facts: headerFacts(view, facts),
-		controls: <Controls {...controls} />,
+		ringLook: options.ring,
+		facts: headerFacts(view, facts, options.facts, query),
+		controls,
+		match: shell.viewer === "member" ? match : null,
 		ring: asVisitor,
 	}
 	return (
 		<>
 			{asVisitor && controls.view && <VisitorBar own={controls.view.own} />}
-			<ProfileHeader {...props} look={options.header} />
-			{row && (
-				<TasteTabs
-					row={row}
-					before={
-						options.controls === "row" ? ( // OPTION controls=row
-							<RowControls {...controls} />
-						) : undefined
-					}
-				/>
-			)}
+			<ProfileHeader {...props} layout={options.layout} />
+			{row && <TasteTabs row={row} />}
 		</>
 	)
 }

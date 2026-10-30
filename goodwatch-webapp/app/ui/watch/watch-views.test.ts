@@ -1,4 +1,4 @@
-// Watch's tabs and views (round 9): the Seen tab, Up next's and Ready to watch's views, All shows (upnext=split), the
+// Watch's tabs and views (round 9): the Seen tab, Up next's and Ready to watch's views, All shows, the
 // Seen tab's kinds, and the redirect of /watch/movies/seen.
 import assert from "node:assert/strict"
 import { test } from "node:test"
@@ -55,7 +55,7 @@ test("Ready to watch's views, and guests get no counts", () => {
 	assert.equal(readyViews("/watch/for-you", counts), null)
 })
 
-test("upnext=split: Next episodes | All shows, All shows current on each status page", () => {
+test("Next episodes | All shows, All shows current on each status page", () => {
 	const onNext = upNextSplit(upNextViews("/watch", counts) ?? [])
 	assert.deepEqual(
 		onNext.map((c) => [c.key, c.here, c.href, c.count]),

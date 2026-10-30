@@ -1,26 +1,24 @@
-// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-9). Not a feature switch: these let the owner
+// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-10). Not a feature switch: these let the owner
 // compare navigation options on the local preview branch. The choice lives in one cookie; the root loader reads it
 // for the server render, and the options bar sets it and reloads the page.
 import { useRouteLoaderData } from "@remix-run/react"
 
 export const NAV_OPTIONS = {
-	/** The profile header, all built around the fingerprint avatar (round 9): the fingerprint as a ring around the
-	 * avatar, a large fingerprint beside a small avatar, the fingerprint as a faint backdrop, or a small emblem. */
-	header: ["ring", "beside", "backdrop", "emblem"],
-	/** Where Share and View as visitor sit: two quiet buttons, round icon keys, one menu, or the tab row's end. */
-	controls: ["buttons", "icons", "menu", "row"],
-	/** The one look for third-level navigation (tab chips and on-page section links): an underline row, a
-	 * segmented track, or quiet outline pills. Sticky under the tab row. */
-	subnav: ["line", "segment", "quiet"],
-	/** How Up next organizes its show lists: Next episodes plus a status menu, two views (Next episodes | All shows
-	 * with a status filter), or Next episodes with the other statuses as sections below. */
-	upnext: ["menu", "split", "sections"],
+	/** How the three stacked bars (site header, tab row, in-page nav) tell themselves apart, and the in-page nav's
+	 * look with it: brightness steps, a tinted gradient, faint imagery, or folder tabs opening into the in-page bar. */
+	layers: ["steps", "gradient", "imagery", "folder"],
+	/** The fingerprint ring's style around the avatar (round 10). */
+	ring: ["classic", "halo", "orbit", "pulse", "duo"],
+	/** The whole profile header's layout, with Share, View as visitor and Edit profile placed as part of it. */
+	layout: ["inline", "centered", "split", "stacked"],
+	/** Which facts the header shows. */
+	facts: ["time", "range", "people", "year"],
 } as const
 
 export type NavOptionKey = keyof typeof NAV_OPTIONS
 export type NavOptions = { [K in NavOptionKey]: (typeof NAV_OPTIONS)[K][number] }
 
-export const DEFAULT_NAV_OPTIONS: NavOptions = { header: "ring", controls: "buttons", subnav: "line", upnext: "menu" }
+export const DEFAULT_NAV_OPTIONS: NavOptions = { layers: "steps", ring: "classic", layout: "inline", facts: "time" }
 
 export const NAV_OPTIONS_COOKIE = "gw_navopt"
 
