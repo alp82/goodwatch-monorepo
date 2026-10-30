@@ -170,15 +170,15 @@ export function FilterMix({
 				aria-expanded={open}
 				aria-controls={id}
 				onClick={() => setOpen((o) => !o)}
-				className={`flex h-12 flex-col justify-center gap-1 rounded-lg px-1.5 ${side === "left" ? "items-start text-left" : "items-end text-right"} cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[116px]" : "w-[172px]"}`}
+				className={`flex h-12 flex-col justify-center gap-1 rounded-lg px-1.5 ${side === "left" ? "items-start text-left" : "items-end text-right"} cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[150px]" : "w-[188px]"}`}
 			>
-				<CountText counts={counts} searching={searching} />
-				<span className={`flex h-3 w-full items-center gap-2 ${side === "left" ? "flex-row-reverse" : ""}`}>
-					<span className="h-3 text-[11px] leading-3 whitespace-nowrap text-gray-500">
-						{hidden > 0 && !phone ? `${compactCount(hidden)} hidden` : ""}
+				<span className={`flex w-full items-baseline justify-between gap-2 ${side === "left" ? "flex-row-reverse" : ""}`}>
+					<span className="text-[11px] whitespace-nowrap text-gray-500">
+						{hidden > 0 ? `${compactCount(hidden)} hidden` : ""}
 					</span>
-					<Stack shown={total} rows={rows} className="h-2 flex-1" />
+					<CountText counts={counts} searching={searching} />
 				</span>
+				<Stack shown={total} rows={rows} className="h-2 w-full" />
 			</button>
 			<AnimatePresence>
 				{open && counts && (

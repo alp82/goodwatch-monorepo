@@ -62,7 +62,7 @@ export function Tip({
 }) {
 	const [shown, setShown] = useState(false)
 	const timer = useRef<ReturnType<typeof setTimeout>>()
-	if (off) return grow ? <span className="flex flex-1">{children}</span> : <>{children}</>
+	if (off) return grow ? <span className="flex flex-auto">{children}</span> : <>{children}</>
 	const show = () => {
 		clearTimeout(timer.current)
 		timer.current = setTimeout(() => setShown(true), 160)
@@ -73,7 +73,7 @@ export function Tip({
 	}
 	return (
 		<span
-			className={`relative flex ${grow ? "flex-1" : ""}`}
+			className={`relative flex ${grow ? "flex-auto" : ""}`}
 			onPointerEnter={(e) => e.pointerType === "mouse" && show()}
 			onPointerLeave={hide}
 			onFocus={(e) => (e.target as HTMLElement).matches(":focus-visible") && show()}
@@ -659,19 +659,23 @@ function OrderB({
 }) {
 	const lit = forYou.on && !forYou.disabled
 	const chosen = sort.options.find((o) => o.key === sort.value)?.label ?? ""
-	const moved = lit ? forYou.movedUp : 0
-	// A fixed width per size, so another sort doesn't move anything. For you sits at the left end, the sort at the right
-	// end, and the divider in the middle of what's left, with equal space on both sides.
+	const moved = lit && level === 2 ? forYou.movedUp : 0
+	// One width per size, so another sort moves nothing but the divider. The free space in the middle is split evenly
+	// between the two halves: For you's content stays at the left end, the sort's at the right end, both halves' active
+	// states reach the divider, and the divider sits in the middle of the free space. The moved count isn't reserved:
+	// when it shows, the pill grows by its slot.
 	const [params] = useSearchParams()
-	const fixed = params.get("w") === "auto" ? undefined : ORDER_WIDTH[level]
+	const auto = params.get("w") === "auto"
+	const width = auto || !ORDER_WIDTH[level] ? undefined : ORDER_WIDTH[level] + (moved ? MOVED_SLOT : 0)
 	return (
 		<div
 			className="flex h-10 shrink-0 rounded-xl bg-white/[0.04] ring-1 ring-white/10"
-			style={fixed ? { width: fixed } : undefined}
+			style={width ? { width } : undefined}
 			data-order-b={level}
 		>
 			<Tip
 				off={level === 2}
+				grow
 				tip={
 					<TipText
 						name="For you"
@@ -687,42 +691,37 @@ function OrderB({
 					aria-label="For you"
 					whileTap={TAP}
 					onClick={() => !forYou.disabled && forYou.onChange(!forYou.on)}
-					className={`${SEG} rounded-l-xl ${FOCUS} gap-2 ${level === 0 ? "pr-2 pl-3" : "pr-1 pl-3.5"} ${lit ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+					className={`${SEG} flex-auto justify-start gap-2 rounded-l-xl ${FOCUS} ${level === 0 ? "pr-2 pl-3" : "pr-2.5 pl-3.5"} ${lit ? "text-white" : "text-gray-400 hover:bg-white/[0.04] hover:text-gray-200"}`}
 				>
-					<span className="flex items-center gap-2">
-						<MainIcon kind="you" lit={lit} />
-						{level === 2 && <span className="text-sm">For you</span>}
-					</span>
-					<span className="flex items-center gap-2">
-					{level === 2 && (
+					<MainIcon kind="you" lit={lit} />
+					{level === 2 && <span className="text-sm">For you</span>}
+					{moved > 0 && (
 						<span
-							className={`w-9 text-left text-xs tabular-nums ${moved ? "text-amber-300" : "text-transparent"}`}
-							title={moved ? `${moved.toLocaleString("en")} moved up` : undefined}
+							className="text-xs tabular-nums text-amber-300"
+							style={{ width: MOVED_SLOT - 8 }}
+							title={`${moved.toLocaleString("en")} moved up`}
 						>
-							<span aria-hidden>{moved ? `↑${compactCount(moved)}` : ""}</span>
-							{moved > 0 && <span className="sr-only">{moved.toLocaleString("en")} moved up</span>}
+							<span aria-hidden>↑{compactCount(moved)}</span>
+							<span className="sr-only">{moved.toLocaleString("en")} moved up</span>
 						</span>
 					)}
 					<Knob on={lit} />
-					</span>
 					<BaseLine on={lit} color="bg-amber-400" />
 				</motion.button>
 			</Tip>
-			{/* Only the divider moves: centered in whatever the sort's name leaves free. */}
-			<div className={`flex min-w-0 flex-1 justify-center ${level === 0 ? "" : "min-w-5"}`} aria-hidden>
-				<span className="my-2.5 w-px bg-white/10" />
-			</div>
+			<span className="my-2.5 w-px shrink-0 bg-white/10" aria-hidden />
 			<Tip
 				off={level > 0}
+				grow
 				align="end"
 				tip={<TipText name={`Sort: ${chosen}`} />}
 			>
 				<div
-					className={`flex [&_[data-sort-button]]:h-10 [&_[data-sort-button]]:rounded-l-none [&_[data-sort-button]]:rounded-r-xl [&_[data-sort-button]>span.relative]:flex-none ${
+					className={`flex flex-auto [&>div]:flex [&>div]:w-full [&_[data-sort-button]]:h-10 [&_[data-sort-button]]:w-full [&_[data-sort-button]]:justify-end [&_[data-sort-button]]:rounded-l-none [&_[data-sort-button]]:rounded-r-xl [&_[data-sort-button]>span.relative]:flex-none ${
 						level === 2
-							? "[&_[data-sort-button]]:pl-1"
+							? "[&_[data-sort-button]]:pl-2.5"
 							: level === 1
-								? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]]:pr-3 [&_[data-sort-button]]:pl-1"
+								? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]]:pr-3 [&_[data-sort-button]]:pl-2.5"
 								: "[&_[data-sort-button]>span]:hidden [&_[data-sort-button]]:px-3"
 					}`}
 				>
@@ -739,8 +738,11 @@ function OrderB({
 	)
 }
 
+/** The moved count's room when it shows (its text plus the gap after it). */
+const MOVED_SLOT = 46
+
 /** The pill's width per size (0: as wide as its content), from the longest sort name. */
-const ORDER_WIDTH: Record<Level, number> = { 2: 384, 1: 216, 0: 0 }
+const ORDER_WIDTH: Record<Level, number> = { 2: 349, 1: 225, 0: 0 }
 
 /** Each sort's own icon (menu, and the button below full size). */
 const SORT_ICONS: Record<string, import("react").ComponentType<{ className?: string }>> = {
