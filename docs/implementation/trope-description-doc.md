@@ -58,6 +58,8 @@ object mapping out of it.
 - Ranges are `[start, end)` offsets in UTF-16 code units of that block's `text`, so the webapp can slice JavaScript
   strings directly. Ranges in one block don't overlap within the same kind. Empty arrays may be omitted.
 - A list's intro sentence ("Compare and contrast with:") is the preceding `p` block.
+- `heading` blocks only come from `plain` documents; step 2 may produce them from short lines ending in `:`.
+  In `archive` and `crawl` documents, headings end the introduction and are excluded from both outputs.
 - `source`: `archive` (built from the archived HTML), `crawl` (built from HTML the crawler fetched), `plain` (built
   from the stored plain text with name-matched links).
 - Block text uses the same whitespace rules as the plain text extraction (`descriptions.py`, `_text`), so a document
@@ -85,9 +87,9 @@ Ported from the prototype (`app/ui/prototype-trope-descriptions/format.ts`, `lin
    The apply step is separate, needs the owner's approval, writes in batches, and verifies each batch.
 3. **Webapp (Opus).** The Tropes tab reads `description_doc` and shows the prototype's D3 layout:
    - A description up to 1,800 characters shows whole, then "Read it on TV Tropes".
-   - A longer one shows whole paragraphs up to about 1,000 characters (at most 1,400), stopping at the first heading
-     or list, then "Keep reading on TV Tropes · N more paragraphs". N is never 1: the last opening paragraph moves
-     after the cut instead.
+   - A longer one shows whole paragraphs up to about 1,000 characters (at most 1,400), stopping at the first list
+     (or heading, when there is one), then "Keep reading on TV Tropes · N more paragraphs". N is never 1: the last
+     opening paragraph moves after the cut instead.
    - Links are sky-200 text with a sky-300/60 underline and open TV Tropes in a new tab.
    - Spoiler ranges stay covered until the reader taps them, like TV Tropes does (the general description belongs to
      no single title, so seen state doesn't apply).

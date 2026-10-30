@@ -50,6 +50,38 @@ class DescriptionDocumentsTests(unittest.TestCase):
         self.assertEqual([link[2] for link in block['links']], [URL.replace('SeriousBusiness', 'Hero'), 'https://tvtropes.org/pmwiki/pmwiki.php/Film/Example'])
         self.assertTrue(all('word'+str(i) in block['text'] for i in range(len(targets))))
 
+    def test_inline_edge_spaces_and_whitespace_only_marks_are_unmarked(self):
+        for opening, closing, key in (
+                ('<a href="Main/Hero">', '</a>', 'links'),
+                ('<span class="spoiler">', '</span>', 'spoilers'),
+                ('<em>', '</em>', 'em')):
+            for marked, expected in ((' bar ', [[4, 7]]), (' ', [])):
+                with self.subTest(key=key, marked=marked):
+                    result = self.extract(f'<p>foo{opening}{marked}{closing}baz {LEAD}</p>')
+                    block = result['description_doc']['blocks'][0]
+                    self.assertEqual(block['text'], f'foo{marked}baz {LEAD}')
+                    self.assertEqual([r[:2] for r in block.get(key, [])], expected)
+
+    def test_collapsed_spaces_keep_only_marks_shared_by_neighbors(self):
+        result = self.extract(f'<p><a href="Main/Hero"><em>one \n<span class="spoiler"> </span> two</em></a> '
+                              f'<span class="spoiler">a <i> \t </i> b</span> {LEAD}</p>')
+        block = result['description_doc']['blocks'][0]
+        self.assertEqual(block['text'], f'one two a b {LEAD}')
+        self.assertEqual(block['links'], [[0, 7, URL.replace('SeriousBusiness', 'Hero')]])
+        self.assertEqual(block['em'], [[0, 7]])
+        self.assertEqual(block['spoilers'], [[8, 11]])
+
+    def test_marked_spaces_at_paragraph_and_list_item_edges_are_trimmed(self):
+        result = self.extract(f'<p> \n<a href="Main/Hero"><span class="spoiler"><em> {LEAD} </em></span></a> \t</p>'
+                              '<ul><li><em> one </em></li><li><em> </em>two<em> </em></li></ul>')
+        block, listing = result['description_doc']['blocks']
+        self.assertEqual(block['text'], LEAD)
+        self.assertEqual(block['links'], [[0, len(LEAD), URL.replace('SeriousBusiness', 'Hero')]])
+        self.assertEqual(block['spoilers'], [[0, len(LEAD)]])
+        self.assertEqual(block['em'], [[0, len(LEAD)]])
+        self.assertEqual(listing['items'], [{'depth': 0, 'text': 'one', 'em': [[0, 3]]},
+                                           {'depth': 0, 'text': 'two'}])
+
     def test_notes_junk_and_numeric_scripts_share_plain_text_cleanup(self):
         notes = ''.join(f'<span class="{cls}">unwanted</span>' for cls in ('notelabel', 'inlinefolder', 'notetext', 'footnote', 'footnotes', 'reference'))
         result = self.extract(f'<p>{LEAD}{notes} 2<sup>2</sup> <span hidden>unwanted</span><script>unwanted</script></p>')
@@ -76,6 +108,13 @@ class DescriptionDocumentsTests(unittest.TestCase):
         result = self.extract(f'<li>{LEAD}</li>')
         self.assertEqual(result['description_doc'], doc())
 
+    def test_sibling_nested_list_keeps_depth_in_one_list_block(self):
+        result = self.extract(f'<p>{LEAD}</p><ul><li>A</li><ul><li>B</li></ul><li>C</li></ul>')
+        self.assertEqual(result['description_doc']['blocks'][1:], [
+            {'kind': 'list', 'items': [{'depth': 0, 'text': 'A'}, {'depth': 1, 'text': 'B'},
+                                       {'depth': 0, 'text': 'C'}]}])
+        self.assertEqual(result['description'], LEAD + '\n\nA\n\nB\n\nC')
+
     def test_bounded_continuation_outside_article_carries_document(self):
         # Put the continuation after the article, within main-content.
         html = page(f'<p>{LEAD}</p>').replace('</div></div></body>', '</div><p>Continuation with <i>emphasis</i>.</p><hr></div></body>')
@@ -88,6 +127,12 @@ class DescriptionDocumentsTests(unittest.TestCase):
         links = result['description_doc']['blocks'][0]['links']
         self.assertEqual([link[2] for link in links], [URL.replace('SeriousBusiness', 'Hero'), URL.replace('SeriousBusiness', 'Villain')])
         self.assertEqual(links[0][1], links[1][0])
+
+    def test_adjacent_anchors_to_same_target_keep_separate_ranges(self):
+        result = self.extract(f'<p><a href="Main/Hero">one</a><a href="Main/Hero">two</a> {LEAD}</p>')
+        self.assertEqual(result['description_doc']['blocks'][0]['links'], [
+            [0, 3, URL.replace('SeriousBusiness', 'Hero')],
+            [3, 6, URL.replace('SeriousBusiness', 'Hero')]])
 
     def test_nested_annotations_merge_without_overlapping_same_kind(self):
         result = self.extract(f'<p>{LEAD} <em>one <i>two</i> three</em> <span class="spoiler">a<span class="spoiler">b</span>c</span></p>')

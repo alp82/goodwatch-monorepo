@@ -94,4 +94,25 @@ Mary Sue has two. The index also includes Anti-Hero with no sample file; it coul
 
 No backfill, name-matched links, URL-wide source selection, webapp rendering, production migration/apply, or push.
 Those belong to later steps. No product decisions remain open for step 1. Before applying later work, resolve the
-missing test dependencies and review the existing sample identity/text differences; identity guards were kept.
+existing sample identity/text differences; identity guards were kept. The test dependencies are now available.
+
+## Review fixes
+
+- Fixed the populate-page assertion to compare the document dict returned by its identity `restore` stub.
+- Collapsed spaces inherit only annotations shared by their neighboring nonspace characters. Inline and block
+  edge spaces carry no ranges; whitespace-only annotations disappear. Links track anchor identity so adjacent
+  anchors with the same URL retain separate ranges.
+- Sibling nested lists retain their enclosing-list depth and join the same outer list block. Legacy plain text
+  and complete-paragraph byte-budget selection remain unchanged.
+- Clarified the spec: heading blocks come only from `plain` documents (step 2 may infer short colon-ended lines).
+  HTML headings remain intro boundaries; the validator still accepts `heading`. Step 3 stops the opening at the
+  first list, or heading when present.
+- Added five regression tests covering inline/block whitespace, shared annotations, adjacent same-URL anchors,
+  and sibling nested lists. Full suite: `.venv/bin/python -m unittest discover -s tests -p 'test_*trope*.py'`
+  from `goodwatch-flows`: **376 tests, 372 passed, 4 skipped**, no failures or errors.
+- Ran the reviewer's read-only `check_samples.py` with bytecode writes disabled: all eight samples retain the
+  baseline plain-text result/rejection, all generated documents validate, and all link/spoiler/emphasis text
+  comparisons have zero mismatches. Existing stored-text/identity differences noted above remain unchanged.
+- `git diff --check` passes. No network, production, or `.env` access; changes remain uncommitted in this worktree.
+
+Intended commit message: `fix(tropes): preserve annotation edges and nested list depth`

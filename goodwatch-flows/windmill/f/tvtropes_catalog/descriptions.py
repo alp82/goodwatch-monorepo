@@ -162,15 +162,19 @@ def _external_link_icon(node):
 
 def _formatted_text(chars):
     """Collapse whitespace across inline boundaries, then derive UTF-16 ranges."""
-    normalized, pending = [], None
+    normalized, pending = [], False
     for char, *marks in chars:
+        marks = marks[:3]
         if char.isspace():
-            if normalized and pending is None:
-                pending = (" ", *marks)
+            pending = bool(normalized)
         else:
-            if pending is not None:
-                normalized.append(pending)
-                pending = None
+            if pending:
+                # Whitespace belongs to a range only between two marked
+                # characters. This also trims every range's inline edges.
+                shared = [left if left == right else None
+                          for left, right in zip(normalized[-1][1:], marks)]
+                normalized.append((" ", *shared))
+                pending = False
             normalized.append((char, *marks))
     block = {"text": "".join(char[0] for char in normalized)}
     for index, key in enumerate(("links", "spoilers", "em"), 1):
@@ -179,11 +183,11 @@ def _formatted_text(chars):
             mark = marks[index - 1]
             if mark != active:
                 if active:
-                    ranges.append([start, offset, active] if key == "links" else [start, offset])
+                    ranges.append([start, offset, active[1]] if key == "links" else [start, offset])
                 active, start = mark, offset
             offset += utf16_length(char)
         if active:
-            ranges.append([start, offset, active] if key == "links" else [start, offset])
+            ranges.append([start, offset, active[1]] if key == "links" else [start, offset])
         if ranges:
             block[key] = ranges
     return block
@@ -207,9 +211,11 @@ def _description_content(nodes):
             chars.extend((char, link, spoiler, emphasis, item, depth) for char in str(node))
         elif isinstance(node, Tag):
             if node.name == "li":
-                item, depth = node, depth + 1
+                item = node
+                depth = len(node.find_parents(["ul", "ol"])) - 1
             if node.name == "a":
-                link = wiki_link(node.get("href"))
+                target = wiki_link(node.get("href"))
+                link = (id(node), target) if target else None
             spoiler = spoiler or (node.name == "span" and "spoiler" in node.get("class", []))
             emphasis = emphasis or node.name in {"em", "i"}
             for child in node.children:
@@ -240,8 +246,9 @@ def _paragraph_event(nodes):
             and not any((node.name == "a" and "/JustForFun/DescribeTopicHere" in node.get("href", ""))
                         or node.select_one('a[href*="/JustForFun/DescribeTopicHere"]') for node in tags)
             and text.casefold() not in {"advertisement:", "noreallife", "noexamplesplease"}):
-        list_parent = (nodes[0].find_parent(["ul", "ol"])
+        list_parents = (nodes[0].find_parents(["ul", "ol"])
                        if len(nodes) == 1 and isinstance(nodes[0], Tag) and nodes[0].name == "li" else None)
+        list_parent = list_parents[-1] if list_parents else None
         yield "paragraph", (text, blocks, list_parent)
 
 
