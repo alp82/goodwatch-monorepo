@@ -56,6 +56,7 @@ import { useDehydratedState } from "use-dehydrated-state"
 import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
 import { LazyTv } from "~/ui/tv-egg/LazyTv"
 import { SiteChrome } from "~/ui/navigation"
+import { type NavOptions, parseNavOptions } from "~/ui/navigation/nav-options"
 import { LocaleContext } from "~/utils/locale"
 import { clearLoaderCache } from "~/navigation/instant-navigation"
 import { assetBase, assetUrl } from "~/utils/asset-url"
@@ -135,6 +136,8 @@ type LoaderData = {
 	}
 	/** This browser still holds a Supabase sign-in from before the move to Better Auth: ask once to sign in again. */
 	signInAgain: boolean
+	/** PROTOTYPE OPTIONS - remove after the owner picks (ui/navigation/nav-options.ts). */
+	navOptions: NavOptions
 }
 
 // A navigation never reruns the root loader: utils/root-revalidation.ts has the rule.
@@ -195,6 +198,7 @@ export const loader: LoaderFunction = withRequestTiming(async ({
 			},
 			signInAgain:
 				betterAuth && !user && hasSupabaseCookie(request.headers.get("Cookie")),
+			navOptions: parseNavOptions(request.headers.get("Cookie")),
 		},
 		{ headers },
 	)

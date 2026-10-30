@@ -1,0 +1,57 @@
+// PROTOTYPE OPTIONS - remove after the owner picks (member nav, round 8). Not a feature switch: these let the owner
+// compare navigation options on the local preview branch. The choice lives in one cookie; the root loader reads it
+// for the server render, and the options bar sets it and reloads the page.
+import { useRouteLoaderData } from "@remix-run/react"
+
+export const NAV_OPTIONS = {
+	/** Where Seen sits in Watch: a last chip after a divider, its own Watch tab, or one view picker per page. */
+	seen: ["chip", "tab", "picker"],
+	/** How View as visitor looks: an eye key with a page-wide bar when on, a switch that tints the header, or a
+	 * Preview item at the tab row's end. */
+	visitor: ["bar", "switch", "preview"],
+	/** The profile header's layout. */
+	header: ["slim", "cover", "print", "card"],
+	/** What the Profile key's count shows: the unrated count, a dot, or nothing (the count moves to Scores). */
+	badge: ["count", "dot", "none"],
+} as const
+
+export type NavOptionKey = keyof typeof NAV_OPTIONS
+export type NavOptions = { [K in NavOptionKey]: (typeof NAV_OPTIONS)[K][number] }
+
+export const DEFAULT_NAV_OPTIONS: NavOptions = { seen: "chip", visitor: "bar", header: "slim", badge: "count" }
+
+export const NAV_OPTIONS_COOKIE = "gw_navopt"
+
+/** Reads `seen:tab,header:cover` from the cookie; unknown keys and values fall back to the defaults. */
+export function parseNavOptions(cookieHeader: string | null | undefined): NavOptions {
+	const options: NavOptions = { ...DEFAULT_NAV_OPTIONS }
+	const raw = (cookieHeader ?? "")
+		.split(";")
+		.map((part) => part.trim())
+		.find((part) => part.startsWith(`${NAV_OPTIONS_COOKIE}=`))
+	if (!raw) return options
+	for (const pair of decodeURIComponent(raw.slice(NAV_OPTIONS_COOKIE.length + 1)).split(",")) {
+		const [key, value] = pair.split(":")
+		if (!(key in NAV_OPTIONS)) continue
+		const allowed = NAV_OPTIONS[key as NavOptionKey] as readonly string[]
+		if (allowed.includes(value)) (options as Record<string, string>)[key] = value
+	}
+	return options
+}
+
+export function serializeNavOptions(options: NavOptions): string {
+	return (Object.keys(NAV_OPTIONS) as NavOptionKey[]).map((key) => `${key}:${options[key]}`).join(",")
+}
+
+/** The current options, from the root loader's data. */
+export function useNavOptions(): NavOptions {
+	const root = useRouteLoaderData("root") as { navOptions?: NavOptions } | undefined
+	return root?.navOptions ?? DEFAULT_NAV_OPTIONS
+}
+
+/** Sets one option and reloads, so every loader and layout renders with it. */
+export function setNavOption<K extends NavOptionKey>(current: NavOptions, key: K, value: NavOptions[K]): void {
+	const next = serializeNavOptions({ ...current, [key]: value })
+	document.cookie = `${NAV_OPTIONS_COOKIE}=${encodeURIComponent(next)}; Path=/; Max-Age=31536000; SameSite=Lax`
+	window.location.reload()
+}
