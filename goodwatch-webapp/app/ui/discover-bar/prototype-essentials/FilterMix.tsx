@@ -172,11 +172,11 @@ export function FilterMix({
 				onClick={() => setOpen((o) => !o)}
 				className={`flex h-12 flex-col justify-center gap-1 rounded-lg px-1.5 ${side === "left" ? "items-start text-left" : "items-end text-right"} cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[150px]" : "w-[188px]"}`}
 			>
-				<span className={`flex w-full items-baseline justify-between gap-2 ${side === "left" ? "flex-row-reverse" : ""}`}>
+				<span className="flex w-full items-baseline justify-between gap-2">
+					<CountText counts={counts} searching={searching} />
 					<span className="text-[11px] whitespace-nowrap text-gray-500">
 						{hidden > 0 ? `${compactCount(hidden)} hidden` : ""}
 					</span>
-					<CountText counts={counts} searching={searching} />
 				</span>
 				<Stack shown={total} rows={rows} className="h-2 w-full" />
 			</button>
