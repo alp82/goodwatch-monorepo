@@ -375,12 +375,14 @@ class PlanApplyTests(unittest.TestCase):
         self.assertEqual(b.apply(db, stage)['unchanged'], 2)
 
     def test_provenance_readback_failure_is_not_stale(self):
-        original = self.db.run_many
-        def corrupt(sql, values):
-            original(sql, values)
-            for r in self.db.rows.values():
-                r['source_hash'] = 'f' * 64
-        self.db.run_many = corrupt
+        original = self.db.run
+        def corrupt(sql, params=()):
+            result = original(sql, params)
+            if sql.startswith('UPDATE'):
+                for r in self.db.rows.values():
+                    r['source_hash'] = 'f' * 64
+            return result
+        self.db.run = corrupt
         with self.assertRaisesRegex(RuntimeError, 'verification failed'):
             b.apply(self.db, self.path)
 
@@ -426,21 +428,23 @@ class PlanApplyTests(unittest.TestCase):
             b.apply(self.db, self.path)
         self.assertEqual(self.db.writes, [])
     def test_resume_partial_write(self):
-        original, count = self.db.run_many, 0
-        def interrupted(sql, values):
+        original, count = self.db.run, 0
+        def interrupted(sql, params=()):
             nonlocal count
-            count += 1
-            if count == 2:
-                raise RuntimeError('interrupted')
-            return original(sql, values)
-        self.db.run_many = interrupted
+            if sql.startswith('UPDATE'):
+                count += 1
+                if count == 2:
+                    raise RuntimeError('interrupted')
+            return original(sql, params)
+        self.db.run = interrupted
         with self.assertRaises(RuntimeError):
             b.apply(self.db, self.path, batch_size=1)
-        self.db.run_many = original
+        self.db.run = original
         report = b.apply(self.db, self.path)
         self.assertEqual((report['unchanged'], report['written']), (1, 1))
     def test_readback_failure(self):
-        self.db.run_many = lambda *a: None
+        original = self.db.run
+        self.db.run = lambda sql, params=(): None if sql.startswith('UPDATE') else original(sql, params)
         with self.assertRaisesRegex(RuntimeError, 'verification failed'):
             b.apply(self.db, self.path)
     def test_keyset_paging(self):

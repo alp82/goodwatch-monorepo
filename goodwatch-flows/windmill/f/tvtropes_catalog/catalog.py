@@ -312,12 +312,10 @@ def import_records(db, records, *, apply=False, replace_descriptions=False, batc
             values = [(r['description'], r['description_doc'], r['description_hash'], r['source'],
                        r['source_hash'], r['fetched_at'], r['source_archive'], r['name'], r['url'],
                        expected_hashes[r['name']]) for r in records]
-            for start in range(0, len(values), batch_size):
-                if hasattr(db, 'run_many'):
-                    db.run_many(sql, values[start:start + batch_size])
-                else:
-                    for value in values[start:start + batch_size]:
-                        db.run(sql, value)
+            # One statement per row: on production Crate (6.4.6), this guarded UPDATE sent as bulk_args hung for
+            # minutes per batch, while single statements take about 0.15 s.
+            for value in values:
+                db.run(sql, value)
             if records:
                 db.run(f'REFRESH TABLE {TABLE}')
                 marks = ','.join('?' for _ in records)

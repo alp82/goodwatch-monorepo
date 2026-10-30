@@ -130,3 +130,15 @@ were read without modification. No production access, network requests, credenti
 Windmill profiles, or commits were used.
 
 Intended commit message: `fix(tropes): preserve description text and provenance during backfill`
+
+## Production run (October 30, 2026)
+
+- `plan` ran read-only as the webapp database user, with `--range-gap 33554432`. The default 256 KB gap needed
+  about 32,000 small range requests (about 4.5 hours, mostly latency). 32 MB blocks downloaded about 51 GB at about
+  2 GB per minute (about 25 minutes). Delete `~/.cache/trope-doc/archive-cache/` afterwards.
+- The first `apply` hung: the guarded `UPDATE` sent as one `bulk_args` request (200 and then 50 rows) ran for minutes
+  on the server, while a single statement takes about 0.15 s. Guarded updates now go one statement per row. The run
+  finished with a driver that used the same staging checks and importer with 4 parallel workers.
+- The webapp reads `trope_catalog_page` (keyed by URL) first. A second pass filled its `description_doc`: the planned
+  document where the page text equals the plan's text for that URL, a `plain` document built from the page's own
+  text where the page text is longer, and nothing otherwise (the page falls back to plain text).
