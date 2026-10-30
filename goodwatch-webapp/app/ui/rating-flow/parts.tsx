@@ -1,9 +1,7 @@
-// The rating flow's pieces: the title asked about, the two marks and the Want to See question they turn into, the top
-// row (the next step's dots, the last answers), the taste bar and a guest's sign-up line under it, the locked panel,
-// picks, Your ratings, and a guest's Save your taste. Motion is transform and opacity only (main.css, score-ack-* and
-// want-*).
+// The rating flow's pieces: the title asked about, the three marks, the top row (the next step's dots, the last
+// answers), the taste bar and a guest's sign-up line under it, the locked panel, picks, Your ratings, and a guest's
+// Save your taste. Motion is transform and opacity only (main.css, score-ack-*).
 import {
-	ArrowLeftIcon,
 	BookmarkIcon,
 	ChevronRightIcon,
 	EyeSlashIcon,
@@ -11,13 +9,12 @@ import {
 	NoSymbolIcon,
 	UserPlusIcon,
 } from "@heroicons/react/20/solid"
+import { BookmarkIcon as BookmarkOutlineIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import {
 	type ComponentPropsWithoutRef,
-	type MouseEvent as ReactMouseEvent,
 	type ReactNode,
 	useEffect,
-	useRef,
 	useState,
 } from "react"
 import type { Score } from "~/server/scores.server"
@@ -39,7 +36,6 @@ import {
 	type Tally,
 	answerWords,
 	nextStepWords,
-	takesWantPress,
 	tasteBarWords,
 } from "./flow"
 import type { AnsweredTitle } from "./use-rating-core"
@@ -80,197 +76,83 @@ export function TitleLine({ t }: { t: ScoringMedia }) {
 }
 
 /**
- * The two marks: one about asking, one about recommending. Each its own icon, color and hint. After "Haven't seen it"
- * (`asking`) they turn into the Want to See question in exactly their box, so nothing else moves: the left half asks
- * "Want to see it?" and goes back to the marks when pressed (nothing saved), the right half answers No (Haven't seen
- * it) or Yes, add (Haven't seen it with Want to See). No timer. Presses in its first moment and a double click's
- * second click don't count (flow.ts, `takesWantPress`); the keys are the page's (RatingFlow.tsx).
+ * The three marks, one press each: a bookmark for Want to See (Haven't seen it, with Want to See), Haven't seen it,
+ * and Not interested. The bookmark is an icon with its name for screen readers and as a tooltip; the other two have
+ * their words and hints. The keys are the page's (RatingFlow.tsx): W, H, N.
  */
 export function Marks({
 	replayKey,
+	onWant,
 	onUnseen,
 	onNotInterested,
 	disabled,
-	asking = false,
-	onWant,
-	onNo,
-	onBack,
 }: {
 	replayKey?: string
+	onWant: () => void
 	onUnseen: () => void
 	onNotInterested: () => void
 	disabled?: boolean
-	/** The Want to See question is up. */
-	asking?: boolean
-	onWant?: () => void
-	onNo?: () => void
-	onBack?: () => void
 }) {
-	const box = useRef<HTMLDivElement>(null)
-	const shownAt = useRef(0)
-	useEffect(() => {
-		shownAt.current = asking ? performance.now() : 0
-		// The focus follows the press that changed the box: to No (the safe answer) when the question comes, back to
-		// Haven't seen it when it goes. Only when it was in the box, so a key press elsewhere keeps its place.
-		const el = box.current
-		if (!el || !el.contains(document.activeElement)) return
-		el.querySelector<HTMLElement>(
-			asking ? "[data-want-no]" : "[data-mark-unseen]",
-		)?.focus()
-	}, [asking])
-	const guard = (fn?: () => void) => (e: ReactMouseEvent) => {
-		if (takesWantPress(shownAt.current, performance.now(), e.detail)) fn?.()
-	}
-	const off = asking ? { inert: "" } : {}
 	return (
-		<div
-			ref={box}
-			data-asking={asking || undefined}
-			className="want relative grid grid-cols-2 gap-2 sm:w-fit sm:gap-3"
-		>
-			<div className="want-mark want-mark-l grid" {...off}>
-				<MarkButton
-					onClick={onUnseen}
-					disabled={disabled}
-					icon={
-						<EyeSlashIcon
-							className="size-5 shrink-0 text-gray-300"
-							aria-hidden
-						/>
-					}
-					label={WORDS.unseen}
-					hint={WORDS.unseenHint}
-					shortcut="H"
-					data-mark-unseen
-					data-replay-tap={replayKey ? `${replayKey}:unseen` : undefined}
-				/>
-			</div>
-			<div className="want-mark want-mark-r grid" {...off}>
-				<MarkButton
-					onClick={onNotInterested}
-					disabled={disabled}
-					icon={
-						<NoSymbolIcon
-							className="size-5 shrink-0 text-pink-300"
-							aria-hidden
-						/>
-					}
-					data-replay-tap={
-						replayKey ? `${replayKey}:not-interested` : undefined
-					}
-					label={WORDS.notInterested}
-					hint={WORDS.notInterestedHint}
-					shortcut="N"
-				/>
-			</div>
-			{onWant && (
-				// biome-ignore lint/a11y/useSemanticElements: one joined control in the marks' box; a fieldset adds nothing here
-				<div
-					role="group"
-					aria-label={WORDS.wantAsk}
-					className={`want-shell absolute inset-0 flex select-none overflow-hidden rounded-xl border-2 border-gray-700 bg-gray-900 ${asking ? "" : "pointer-events-none"}`}
-					{...(asking ? {} : { inert: "" })}
-				>
-					<button
-						type="button"
-						onClick={guard(onBack)}
-						disabled={disabled}
-						aria-label={`${WORDS.wantAsk} ${WORDS.wantBack}`}
-						aria-keyshortcuts="Escape Backspace"
-						className="want-btn flex min-w-0 basis-1/2 cursor-pointer items-center gap-2 px-3 text-left hover:bg-white/5 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-amber-300 active:bg-white/10"
-					>
-						<span className="want-c flex min-w-0 flex-1 items-center gap-2">
-							<ArrowLeftIcon
-								className="size-5 shrink-0 text-gray-400"
-								aria-hidden
-							/>
-							<span className="text-sm font-bold text-gray-100">
-								{WORDS.wantAsk}
-							</span>
-							<KeyHint k="Esc" />
-						</span>
-					</button>
-					<span aria-hidden className="want-div w-0.5 shrink-0 bg-gray-700" />
-					<div className="flex min-w-0 basis-1/2">
-						<WantAnswer
-							kind="no"
-							data-want-no
-							onClick={guard(onNo)}
-							disabled={disabled}
-							aria-keyshortcuts="N"
-							className="flex-1 gap-1.5 px-2 text-sm"
-						>
-							<EyeSlashIcon className="size-4 shrink-0" aria-hidden />
-							{WORDS.wantNo}
-							<KeyHint k="N" />
-						</WantAnswer>
-						<span aria-hidden className="want-div w-0.5 shrink-0 bg-gray-700" />
-						<WantAnswer
-							kind="yes"
-							onClick={guard(onWant)}
-							disabled={disabled}
-							aria-keyshortcuts="Y W"
-							className="flex-[1.7] gap-1.5 px-2 text-sm"
-						>
-							<BookmarkIcon className="size-4 shrink-0" aria-hidden />
-							{WORDS.wantYes}
-							<KeyHint k="Y" />
-						</WantAnswer>
-					</div>
-				</div>
-			)}
+		<div className="grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)] gap-2 sm:w-fit sm:grid-cols-[auto_auto_auto] sm:gap-3">
+			<BookmarkMark
+				onClick={onWant}
+				disabled={disabled}
+				aria-keyshortcuts="W"
+				className="min-h-11 w-12 md:min-h-10"
+				data-replay-tap={replayKey ? `${replayKey}:want` : undefined}
+			/>
+			<MarkButton
+				onClick={onUnseen}
+				disabled={disabled}
+				icon={<EyeSlashIcon className="size-5 shrink-0 text-gray-300" aria-hidden />}
+				label={WORDS.unseen}
+				hint={WORDS.unseenHint}
+				shortcut="H"
+				data-mark-unseen
+				data-replay-tap={replayKey ? `${replayKey}:unseen` : undefined}
+			/>
+			<MarkButton
+				onClick={onNotInterested}
+				disabled={disabled}
+				icon={<NoSymbolIcon className="size-5 shrink-0 text-pink-300" aria-hidden />}
+				data-replay-tap={replayKey ? `${replayKey}:not-interested` : undefined}
+				label={WORDS.notInterested}
+				hint={WORDS.notInterestedHint}
+				shortcut="N"
+			/>
 		</div>
 	)
 }
 
-// The Want to See answers: quiet at rest (No a faint slate with slate words and the eye-slash, Yes, add a faint amber with amber words), the clear color on
-// hover, keyboard focus and press. A touch keeps the clear color a moment after the finger lifts, so the tap shows
-// (data-flash). The clear color is its own layer that fades in (opacity), the words change color: nothing moves.
-const WANT_ANSWER = {
-	no: {
-		btn: "text-slate-300 hover:text-gray-950 focus-visible:text-gray-950 active:text-gray-950 data-flash:text-gray-950 focus-visible:outline-gray-950",
-		rest: "bg-slate-400/15",
-		hot: "bg-slate-400 group-hover:bg-slate-300 group-active:bg-slate-500",
-	},
-	yes: {
-		btn: "text-amber-300 hover:text-gray-950 focus-visible:text-gray-950 active:text-gray-950 data-flash:text-gray-950 focus-visible:outline-gray-950",
-		rest: "bg-amber-500/15",
-		hot: "bg-amber-500 group-hover:bg-amber-400 group-active:bg-amber-600",
-	},
-} as const
-const FLASH_MS = 320
-
 /**
- * One answer of the Want to See question (the flow's Marks and Quick list's rows share it). `kind` sets the colors; the
- * size and spacing come from `className`. Inside `.want` its fill sweeps in with the question (main.css, want-fill).
+ * The Want to See mark as a square bookmark (the flow's Marks and Quick list's rows share it): an outline at rest, amber
+ * on hover, filled amber when `on`, which also makes it a toggle for screen readers (Quick list; the flow moves on, so it
+ * leaves `on` out). Its name is its label and tooltip; the size comes from `className`.
  */
-export function WantAnswer({
-	kind,
+export function BookmarkMark({
+	on,
 	className = "",
-	children,
-	onPointerUp,
 	...rest
-}: { kind: "no" | "yes"; children: ReactNode } & ComponentPropsWithoutRef<"button">) {
-	const c = WANT_ANSWER[kind]
+}: { on?: boolean; className?: string; "data-replay-tap"?: string } & Omit<
+	ComponentPropsWithoutRef<"button">,
+	"children" | "className"
+>) {
 	return (
 		<button
 			type="button"
+			aria-label={WORDS.wantToSee}
+			title={WORDS.wantToSee}
+			aria-pressed={on}
 			{...rest}
-			onPointerUp={(e) => {
-				onPointerUp?.(e)
-				if (e.pointerType === "mouse") return
-				const el = e.currentTarget
-				el.setAttribute("data-flash", "")
-				window.setTimeout(() => el.removeAttribute("data-flash"), FLASH_MS)
-			}}
-			className={`want-btn group relative isolate flex min-w-0 cursor-pointer items-center justify-center font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:-outline-offset-4 ${c.btn} ${className}`}
+			className={`flex shrink-0 cursor-pointer items-center justify-center rounded-xl border-2 transition-colors focus-visible:outline-2 focus-visible:outline-amber-400 disabled:cursor-wait disabled:opacity-60 ${on ? "border-amber-400/80 bg-amber-400/15 text-amber-300" : "border-gray-700 text-gray-300 hover:border-amber-400/60 hover:text-amber-300"} ${className}`}
+			data-mark-want
 		>
-			<span aria-hidden className={`want-fill absolute inset-0 -z-20 ${c.rest}`} />
-			<span
-				aria-hidden
-				className={`absolute inset-0 -z-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100 group-active:duration-0 group-data-flash:opacity-100 ${c.hot}`}
-			/>
-			<span className="want-c inline-flex min-w-0 items-center gap-[inherit]">{children}</span>
+			{on ? (
+				<BookmarkIcon className="size-5" aria-hidden />
+			) : (
+				<BookmarkOutlineIcon className="size-5" aria-hidden />
+			)}
 		</button>
 	)
 }

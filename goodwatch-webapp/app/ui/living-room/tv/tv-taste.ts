@@ -330,7 +330,7 @@ export function tasteKnown(
 /**
  * Carries out the machine's effects of Rate titles with the rating flow's own actions (ui/rating-flow/
  * use-rating-core.ts): a score is stored through `rate` exactly as the strip gave it, "Haven't seen it" through
- * `unseen` and "Not interested" through `notInterested`. Answers whether the effect was Rate titles'. This is the
+ * `unseen`, Want to See through `wantToSee` and "Not interested" through `notInterested`. Answers whether the effect was Rate titles'. This is the
  * whole write path on the TV, the one /taste/quiz uses, which stores a guest's answer in their browser and a member's
  * on their account. After a save that failed, the "Haven't seen it" key reads "Next title" (screens/Quiz.tsx) and goes
  * on without saving (`pass`).
@@ -340,6 +340,7 @@ export function carryOutQuiz(
 	flow: {
 		rate: (score: Score) => void
 		unseen: () => void
+		wantToSee: () => void
 		notInterested: () => void
 		pass?: () => void
 		retryTitles?: () => void
@@ -357,6 +358,10 @@ export function carryOutQuiz(
 	if (effect.type === "quiz-skip") {
 		if (flow.answered?.failed && flow.pass) flow.pass()
 		else flow.unseen()
+		return true
+	}
+	if (effect.type === "quiz-want") {
+		flow.wantToSee()
 		return true
 	}
 	if (effect.type === "quiz-not-interested") {

@@ -530,6 +530,7 @@ describe("the machine's context for Taste, and the items it gives", () => {
 		assert.deepEqual(tvItems(QUIZ, ctxOf(QUIZ, shown)), [
 			...levels,
 			...STRIP_SCORES.map((score) => `score:${score}`),
+			"want",
 			"skip",
 			"not-interested",
 			"your-taste",
@@ -584,7 +585,7 @@ describe("what Taste's lists know of a title", () => {
 describe("Rate titles' write path", () => {
 	/** A rating flow that records what it was asked to store. */
 	const recorder = () => {
-		const stored: (Score | "unseen" | "not-interested" | "pass")[] = []
+		const stored: (Score | "want" | "unseen" | "not-interested" | "pass")[] = []
 		const answered = { failed: false }
 		return {
 			stored,
@@ -592,6 +593,7 @@ describe("Rate titles' write path", () => {
 			flow: {
 				rate: (score: Score) => void stored.push(score),
 				unseen: () => void stored.push("unseen"),
+				wantToSee: () => void stored.push("want"),
 				notInterested: () => void stored.push("not-interested"),
 				pass: () => void stored.push("pass"),
 				answered,
@@ -634,14 +636,15 @@ describe("Rate titles' write path", () => {
 		assert.deepEqual(flow.stored, [8])
 	})
 
-	it("Haven't seen it and Not interested are two marks of their own, and store no score", () => {
+	it("Want to See, Haven't seen it and Not interested are three marks of their own, and store no score", () => {
 		const flow = recorder()
+		assert.equal(press("want", ctxOf(QUIZ, shown), flow).history, "none")
 		assert.equal(press("skip", ctxOf(QUIZ, shown), flow).history, "none")
 		assert.equal(
 			press("not-interested", ctxOf(QUIZ, shown), flow).history,
 			"none",
 		)
-		assert.deepEqual(flow.stored, ["unseen", "not-interested"])
+		assert.deepEqual(flow.stored, ["want", "unseen", "not-interested"])
 	})
 
 	it("after a save that failed, Haven't seen it is Next title: on without saving", () => {
@@ -658,18 +661,18 @@ describe("Rate titles' write path", () => {
 			{ title: asked, tally: t(4) },
 		)
 		const ctx = ctxOf(QUIZ, ready)
-		for (const item of ["level:7", "score:9", "skip", "not-interested"]) {
+		for (const item of ["level:7", "score:9", "want", "skip", "not-interested"]) {
 			const next = press(item, ctx, flow)
 			assert.equal(next.history, "none", item)
 			assert.equal(next.state.screen.name, "quiz", item)
 		}
-		assert.deepEqual(flow.stored, [7, 9, "unseen", "not-interested"])
+		assert.deepEqual(flow.stored, [7, 9, "want", "unseen", "not-interested"])
 	})
 
 	it("without a title to ask about nothing can be pressed", () => {
 		const flow = recorder()
 		const empty = screensOf({ state: "start", tally: t(0), backdrop: null })
-		for (const item of ["level:7", "skip", "not-interested"])
+		for (const item of ["level:7", "want", "skip", "not-interested"])
 			press(item, ctxOf(QUIZ, empty), flow)
 		assert.deepEqual(flow.stored, [])
 	})
@@ -687,6 +690,7 @@ describe("Rate titles' write path", () => {
 		assert.deepEqual(flow.stored, [])
 		assert.equal(carryOutQuiz({ type: "quiz-rate", score: 8 }, flow.flow), true)
 		assert.equal(carryOutQuiz({ type: "quiz-skip" }, flow.flow), true)
+		assert.equal(carryOutQuiz({ type: "quiz-want" }, flow.flow), true)
 		assert.equal(
 			carryOutQuiz({ type: "quiz-not-interested" }, flow.flow),
 			true,

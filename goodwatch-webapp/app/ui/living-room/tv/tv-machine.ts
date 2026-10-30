@@ -254,6 +254,8 @@ export type TvEffect =
 	| { type: "rate"; title: string; score: Score }
 	/** Rate titles: score the title on screen. */
 	| { type: "quiz-rate"; score: Score }
+	/** Rate titles: Want to See (Haven't seen it, with Want to See). */
+	| { type: "quiz-want" }
 	/** Rate titles: "Haven't seen it", or "Next title" after a save that failed. */
 	| { type: "quiz-skip" }
 	/** Rate titles: "Not interested". */
@@ -756,7 +758,7 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 				"start-quiz",
 				...(ctx.member ? [] : ["sign-up"]),
 			]
-		// Rate titles: the strip and its two marks, with Your taste one key away. Reaching a milestone never ends it:
+		// Rate titles: the strip and its three marks, with Your taste one key away. Reaching a milestone never ends it:
 		// Your taste lights amber (screens/Quiz.tsx), and the person goes on rating or opens it.
 		case "quiz":
 			if (ctx.quizLocked && !ctx.member) return ["sign-up", "your-taste"]
@@ -1392,8 +1394,8 @@ const levelItem = (score: number) =>
 export const STRIP_START = levelItem(7)
 
 /**
- * The strip's items in reading order: the levels, the exact scores where they show, and on Rate titles its two marks,
- * "Haven't seen it" and "Not interested". Rate titles has them while it has a title to ask about (`titles`); the
+ * The strip's items in reading order: the levels, the exact scores where they show, and on Rate titles its three marks,
+ * Want to See, "Haven't seen it" and "Not interested". Rate titles has them while it has a title to ask about (`titles`); the
  * rating's title is in its address.
  */
 function stripItems(screen: StripScreen, ctx: TvContext): string[] {
@@ -1401,7 +1403,7 @@ function stripItems(screen: StripScreen, ctx: TvContext): string[] {
 	return [
 		...STRIP_LEVELS.map((score) => `level:${score}`),
 		...STRIP_SCORES.map((score) => `score:${score}`),
-		...(screen.name === "quiz" ? ["skip", "not-interested"] : []),
+		...(screen.name === "quiz" ? ["want", "skip", "not-interested"] : []),
 	]
 }
 
@@ -1682,7 +1684,11 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 		return onStrip(s)
 			? chooseScore(state, s, Number(arg) as Score, ctx)
 			: none(state)
-	// The two marks go on to the next title.
+	// The three marks go on to the next title.
+	if (kind === "want")
+		return s.name === "quiz"
+			? none(state, [{ type: "quiz-want" }])
+			: none(state)
 	if (kind === "skip")
 		return s.name === "quiz"
 			? none(state, [{ type: "quiz-skip" }])

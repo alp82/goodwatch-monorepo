@@ -586,9 +586,10 @@ describe("the screens and their items, in reading order", () => {
 		])
 	})
 
-	it("Rate titles: the strip's four levels from low to high, its two marks, Your taste, then Expand", () => {
+	it("Rate titles: the strip's four levels from low to high, its three marks, Your taste, then Expand", () => {
 		assert.deepEqual(items("tv=quiz"), [
 			...LEVELS, ...SCORES,
+			"want",
 			"skip",
 			"not-interested",
 			"your-taste",
@@ -600,6 +601,7 @@ describe("the screens and their items, in reading order", () => {
 	it("Rate titles on the desktop: the ten exact scores under the levels", () => {
 		assert.deepEqual(items("tv=quiz", desktop), [
 			...LEVELS, ...SCORES,
+			"want",
 			"skip",
 			"not-interested",
 			"your-taste",

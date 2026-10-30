@@ -1,10 +1,7 @@
 // Quick list's pieces: the mode switch (shared with One at a time), the taste strip (the flow's taste bar in one
-// line), a row's two marks and the Want to See question they turn into, the round selection check, the undo bar, and
-// whether this screen selects rows. Motion is transform and opacity only (main.css, want-*).
+// line), a row's three marks, the round selection check, the undo bar, and whether this screen selects rows.
 import {
-	ArrowLeftIcon,
 	ArrowUturnLeftIcon,
-	BookmarkIcon,
 	CheckIcon,
 	ChevronRightIcon,
 	EyeSlashIcon,
@@ -14,7 +11,7 @@ import {
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { QUICK_LIST_PAGE, SCORES_FROM_QUICK } from "~/domain/my-library"
-import { type MouseEvent as ReactMouseEvent, useEffect, useRef, useSyncExternalStore } from "react"
+import { useSyncExternalStore } from "react"
 import {
 	FLOW_PATH,
 	type Milestone,
@@ -22,10 +19,9 @@ import {
 	TASTE_VIEW_PATH,
 	type Tally,
 	nextStepWords,
-	takesWantPress,
 	tasteBarWords,
 } from "~/ui/rating-flow/flow"
-import { WantAnswer } from "~/ui/rating-flow/parts"
+import { BookmarkMark } from "~/ui/rating-flow/parts"
 import { RatingDots } from "~/ui/rating-flow/RatingDots"
 import { WORDS } from "~/ui/rating-flow/words"
 import type { QuickAnswer } from "./model"
@@ -107,117 +103,48 @@ export function TasteStrip({
 }
 
 const rowMark =
-	"flex h-11 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-2 px-2 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-amber-400 disabled:cursor-wait disabled:opacity-60 xl:text-xs"
+	"flex h-11 min-w-0 cursor-pointer items-center justify-center gap-1 rounded-xl border-2 px-1.5 text-[13px] font-bold whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-amber-400 disabled:cursor-wait disabled:opacity-60 max-[380px]:px-1 max-[380px]:text-xs md:gap-1.5 md:px-2 md:text-xs"
 
 /**
- * A row's two marks and the Want to See question they turn into: the rating flow's joined control (rating-flow/
- * parts.tsx, Marks) at a row's size. After Haven't seen it the question takes exactly the marks' box. Its left half
- * asks "Want to see it?" and goes back to the marks (nothing saved; Escape too); the right half answers No (Haven't
- * seen it) or Yes, add (with Want to See). Presses in the question's first moment and a double click's second click
- * don't count (flow.ts, `takesWantPress`).
+ * A row's three marks, one press each, as the rating flow's (rating-flow/parts.tsx, Marks): a bookmark for Want to See
+ * (Haven't seen it, with Want to See), Haven't seen it, and Not interested. The one that is on shows it; pressing it
+ * again takes the answer back. Their words never shorten: the columns take the width the words need.
  */
 export function RowMarks({
 	answer,
-	asking,
 	disabled,
-	onUnseen,
-	onNotInterested,
-	onBack,
-	onNo,
-	onWant,
+	onAnswer,
 }: {
 	answer: QuickAnswer | null
-	asking: boolean
 	disabled?: boolean
-	onUnseen: () => void
-	onNotInterested: () => void
-	onBack: () => void
-	onNo: () => void
-	onWant: () => void
+	onAnswer: (a: QuickAnswer | null) => void
 }) {
-	const box = useRef<HTMLDivElement>(null)
-	const shownAt = useRef(0)
-	useEffect(() => {
-		shownAt.current = asking ? performance.now() : 0
-		// The focus follows the press that changed the box, when it was in the box.
-		const el = box.current
-		if (!el || !el.contains(document.activeElement)) return
-		el.querySelector<HTMLElement>(asking ? "[data-want-no]" : "[data-mark-unseen]")?.focus()
-	}, [asking])
-	const guard = (fn: () => void) => (e: ReactMouseEvent) => {
-		if (takesWantPress(shownAt.current, performance.now(), e.detail)) fn()
-	}
-	const unseen = answer?.type === "skip" || answer?.type === "plan"
-	const off = asking ? { inert: "" } : {}
+	const on = answer?.type
+	const press = (type: "plan" | "skip" | "not-interested") => () => onAnswer(on === type ? null : { type })
 	return (
-		<div ref={box} data-asking={asking || undefined} className="want relative grid w-full grid-cols-2 gap-2" data-row-marks>
-			<div className="want-mark want-mark-l grid" {...off}>
-				<button
-					type="button"
-					onClick={onUnseen}
-					disabled={disabled}
-					aria-pressed={unseen}
-					className={`${rowMark} ${unseen ? "border-gray-300 bg-white/10 text-white" : "border-gray-700 text-gray-100 hover:border-gray-500"}`}
-					data-mark-unseen
-				>
-					{answer?.type === "plan" ? (
-						<BookmarkIcon className="size-4 shrink-0 text-amber-300" aria-hidden />
-					) : (
-						<EyeSlashIcon className="size-4 shrink-0 text-gray-300" aria-hidden />
-					)}
-					<span className="truncate">{answer?.type === "plan" ? WORDS.wantToSee : WORDS.unseen}</span>
-				</button>
-			</div>
-			<div className="want-mark want-mark-r grid" {...off}>
-				<button
-					type="button"
-					onClick={onNotInterested}
-					disabled={disabled}
-					aria-pressed={answer?.type === "not-interested"}
-					className={`${rowMark} ${answer?.type === "not-interested" ? "border-pink-300/70 bg-pink-300/10 text-white" : "border-gray-700 text-gray-100 hover:border-gray-500"}`}
-				>
-					<NoSymbolIcon className="size-4 shrink-0 text-pink-300" aria-hidden />
-					<span className="truncate">{WORDS.notInterested}</span>
-				</button>
-			</div>
-			{/* biome-ignore lint/a11y/useSemanticElements: one joined control in the marks' box, as the flow's */}
-			<div
-				role="group"
-				aria-label={WORDS.wantAsk}
-				className={`want-shell absolute inset-0 flex select-none overflow-hidden rounded-xl border-2 border-gray-700 bg-gray-900 ${asking ? "" : "pointer-events-none"}`}
-				onKeyDown={(e) => {
-					if (e.key !== "Escape") return
-					e.preventDefault()
-					onBack()
-				}}
-				{...(asking ? {} : { inert: "" })}
-				data-want
+		<div className="grid w-full grid-cols-[auto_minmax(max-content,1fr)_minmax(max-content,1fr)] gap-1.5 md:gap-2" data-row-marks>
+			<BookmarkMark on={on === "plan"} onClick={press("plan")} disabled={disabled} className="h-11 w-11" />
+			<button
+				type="button"
+				onClick={press("skip")}
+				disabled={disabled}
+				aria-pressed={on === "skip"}
+				className={`${rowMark} ${on === "skip" ? "border-gray-300 bg-white/10 text-white" : "border-gray-700 text-gray-100 hover:border-gray-500"}`}
+				data-mark-unseen
 			>
-				<button
-					type="button"
-					onClick={guard(onBack)}
-					aria-label={`${WORDS.wantAsk} ${WORDS.wantBack}`}
-					aria-keyshortcuts="Escape"
-					className="want-btn flex min-w-0 basis-1/2 cursor-pointer items-center gap-1.5 px-2 text-left hover:bg-white/5 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-amber-300 active:bg-white/10"
-				>
-					<span className="want-c flex min-w-0 flex-1 items-center gap-1.5">
-						<ArrowLeftIcon className="size-4 shrink-0 text-gray-400" aria-hidden />
-						<span className="truncate text-sm font-bold text-gray-100 xl:text-xs">{WORDS.wantAsk}</span>
-					</span>
-				</button>
-				<span aria-hidden className="want-div w-0.5 shrink-0 bg-gray-700" />
-				<div className="flex min-w-0 basis-1/2">
-					<WantAnswer kind="no" data-want-no onClick={guard(onNo)} disabled={disabled} className="flex-1 gap-1 px-1.5 text-sm xl:text-xs">
-						<EyeSlashIcon className="size-4 shrink-0" aria-hidden />
-						<span className="truncate">{WORDS.wantNo}</span>
-					</WantAnswer>
-					<span aria-hidden className="want-div w-0.5 shrink-0 bg-gray-700" />
-					<WantAnswer kind="yes" onClick={guard(onWant)} disabled={disabled} className="flex-[1.7] gap-1 px-1.5 text-sm xl:text-xs">
-						<BookmarkIcon className="size-4 shrink-0" aria-hidden />
-						<span className="truncate">{WORDS.wantYes}</span>
-					</WantAnswer>
-				</div>
-			</div>
+				<EyeSlashIcon className="size-4 shrink-0 text-gray-300" aria-hidden />
+				{WORDS.unseen}
+			</button>
+			<button
+				type="button"
+				onClick={press("not-interested")}
+				disabled={disabled}
+				aria-pressed={on === "not-interested"}
+				className={`${rowMark} ${on === "not-interested" ? "border-pink-300/70 bg-pink-300/10 text-white" : "border-gray-700 text-gray-100 hover:border-gray-500"}`}
+			>
+				<NoSymbolIcon className="size-4 shrink-0 text-pink-300" aria-hidden />
+				{WORDS.notInterested}
+			</button>
 		</div>
 	)
 }

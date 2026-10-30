@@ -1,11 +1,11 @@
 // The rating flow (CONTEXT.md, Answer acknowledgement): one title at a time on its backdrop, with its poster, title
-// and year, the score control, the two marks (Haven't seen it asks Want to see it? in their place), and the taste bar;
+// and year, the score control, the three marks (Want to See, Haven't seen it, Not interested), and the taste bar;
 // a row on top counts toward the next milestone and shows the last answers, each of which opens again to change or
 // clear it. The taste bar opens the taste view: picks, a guest's Save your taste, and Your ratings. A guest gets a
 // quiet sign-up line under the bar from a few ratings on, and at the limit a locked panel in place of the score
 // control. /taste/quiz shows it as the page; a member's Taste start (/taste) shows it as its rating step. State:
 // flow.ts; binding: use-rating-flow.ts.
-import { type ReactNode, useEffect, useRef, useState } from "react"
+import { type ReactNode, useEffect, useRef } from "react"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import { HiddenTileContext } from "~/ui/title-actions/hide-feedback"
@@ -17,7 +17,6 @@ import { tmdbFluidImage } from "~/utils/tmdb-image"
 import {
 	type FlowView,
 	readFlowPress,
-	readWantPress,
 	pastCounting,
 	showsSignUpLine,
 } from "./flow"
@@ -89,16 +88,10 @@ export function RatingFlow({
 	)
 }
 
-/** What the page's keys do now: the flow's keys, the Want to See question's while it is up, none while locked. */
+/** What the page's keys do now: the flow's keys, without scores while locked. */
 type FlowKeys = {
-	/** The Want to See question is up: Y/W, N and Escape/Backspace answer it. */
-	asking: boolean
 	/** Scores wait for sign-up: digits do nothing. */
 	locked: boolean
-	unseen: () => void
-	want: () => void
-	no: () => void
-	back: () => void
 }
 
 function useFlowKeys(flow: RatingFlowModel, keys: FlowKeys) {
@@ -111,24 +104,15 @@ function useFlowKeys(flow: RatingFlowModel, keys: FlowKeys) {
 			)
 				return
 			if (!flow.title) return
-			if (keys.asking) {
-				const want = readWantPress(e)
-				if (want) {
-					e.preventDefault()
-					if (want === "yes") keys.want()
-					else if (want === "no") keys.no()
-					else keys.back()
-					return
-				}
-			}
 			const intent = readFlowPress(e)
 			if (!intent) return
 			e.preventDefault()
 			if (intent === "held") return
 			if (intent.type === "score") {
 				if (!keys.locked) flow.rate(intent.score)
-			} else if (intent.type === "unseen") keys.unseen()
-			else if (!keys.asking) flow.notInterested()
+			} else if (intent.type === "want") flow.wantToSee()
+			else if (intent.type === "unseen") flow.unseen()
+			else flow.notInterested()
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
@@ -151,26 +135,9 @@ function RateView({
 	const tKey = t ? `${t.media_type}-${t.tmdb_id}` : null
 	const leaving = a.leaving ? "score-ack-leave" : "score-ack-enter"
 	const re = flow.reopened
-	// After Haven't seen it, the marks ask Want to see it? in their place until it is answered or taken back. A new
-	// title ends it.
-	const [asking, setAsking] = useState(false)
-	// biome-ignore lint/correctness/useExhaustiveDependencies: a new title ends the question
-	useEffect(() => setAsking(false), [tKey])
-	const answerWant = (yes: boolean) => {
-		setAsking(false)
-		if (yes) flow.wantToSee()
-		else flow.unseen()
-	}
 	// Scores wait for sign-up, unless this is a title opened again that has one (changing it adds no rating).
 	const locked = flow.locked && re?.answer?.type !== "score"
-	useFlowKeys(flow, {
-		asking,
-		locked,
-		unseen: () => !a.busy && setAsking(true),
-		want: () => answerWant(true),
-		no: () => answerWant(false),
-		back: () => setAsking(false),
-	})
+	useFlowKeys(flow, { locked })
 	useReplayedTap("rate")
 	const shownScore =
 		a.score ?? (re?.answer?.type === "score" ? (re.answer.score ?? null) : null)
@@ -277,7 +244,7 @@ function RateView({
 							)}
 						</div>
 						<div className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2">
-							{/* What was given, or that it failed; never the Want to See question, which the marks ask. */}
+							{/* What was given, or that it failed. */}
 							<p
 								aria-live="polite"
 								className={`mt-2 min-h-6 font-bold ${a.failed || re?.clearFailed ? "text-red-300" : "text-amber-300"}`}
@@ -301,12 +268,9 @@ function RateView({
 								<Marks
 									replayKey={`rate:${tKey}`}
 									disabled={a.busy}
-									asking={asking}
-									onUnseen={() => setAsking(true)}
+									onUnseen={flow.unseen}
 									onNotInterested={flow.notInterested}
-									onWant={() => answerWant(true)}
-									onNo={() => answerWant(false)}
-									onBack={() => setAsking(false)}
+									onWant={flow.wantToSee}
 								/>
 							</div>
 							{/* A save that failed: on without saving it. */}
@@ -320,7 +284,7 @@ function RateView({
 								</button>
 							)}
 							<p className="mt-3 hidden text-xs text-gray-500 md:block">
-								{asking ? WORDS.wantKeys : WORDS.keys}
+								{WORDS.keys}
 							</p>
 						</div>
 						<div className="col-span-2 mt-5 min-h-16 md:mt-6">{bar}</div>

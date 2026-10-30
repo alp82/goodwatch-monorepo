@@ -2,9 +2,9 @@ import { mediaFieldLanguage } from "~/utils/media-presentation"
 // Rate titles on the TV: the rating flow (ui/rating-flow) at TV size, one widely seen title at a time over its
 // picture, with its poster, and the rating strip to answer with across the picture's width (../RatingStrip.tsx, the
 // screen "How was it?" also is). A level or an exact score lights at once, is saved, holds for a moment and brings
-// the next title, with the focus where it was: the same answer as on /taste/quiz (ui/scoring/score-ack.ts). The two
-// marks, "Haven't seen it" and "Not interested", are keys of their own under the strip; after a save that failed,
-// "Haven't seen it" reads "Next title".
+// the next title, with the focus where it was: the same answer as on /taste/quiz (ui/scoring/score-ack.ts). The three
+// marks, a bookmark for Want to See, "Haven't seen it" and "Not interested", are keys of their own under the strip;
+// after a save that failed, "Haven't seen it" reads "Next title".
 //
 // The top line counts toward the next milestone, as the web's top strip does ("3 more liked to your taste", "4 more
 // to new picks"). Your taste is the web's taste bar: a key beside the marks on the desktop, in the menu on the phone,
@@ -13,6 +13,7 @@ import { mediaFieldLanguage } from "~/utils/media-presentation"
 // just given, under it. A guest at the rating limit gets the web's locked panel in simple form: what they rated, that
 // sign-up keeps rating going, and the keys Sign up free and Your taste. Its page is the site's /taste/quiz (the Expand
 // key). A chunk the TV asks for on first use (screen-code.tsx).
+import { BookmarkIcon } from "@heroicons/react/24/outline"
 import { RatingScreen } from "../RatingStrip"
 import {
 	CornerBar,
@@ -158,6 +159,16 @@ export default function Quiz({
 		>
 			{/* After a save that failed, the same key goes on to the next title without saving (tv-taste.ts,
 			    `carryOutQuiz`). */}
+			{items.includes("want") && (
+				<Item
+					id="want"
+					label={WORDS.wantToSee}
+					className={`${key} px-0!`}
+					style={{ height, width: height }}
+				>
+					<BookmarkIcon className={P ? "size-6" : "size-8"} aria-hidden />
+				</Item>
+			)}
 			{items.includes("skip") && (
 				<Item id="skip" className={key} style={{ height }}>
 					{quiz.answered.failed ? WORDS.nextTitle : WORDS.unseen}
@@ -168,7 +179,7 @@ export default function Quiz({
 					{WORDS.notInterested}
 				</Item>
 			)}
-			{/* The phone's row holds the two marks and the Expand key; Your taste is in its menu there. */}
+			{/* The phone's row holds the three marks and the Expand key; Your taste is in its menu there. */}
 			{!P && yourTaste}
 			{announce}
 		</RatingScreen>

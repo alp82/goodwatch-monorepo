@@ -508,16 +508,17 @@ test("selected numerals stay white on their full score color, with one lighter i
 	}
 })
 
-test("Rate titles asks about one title: its name, the next step, and its two marks as keys of their own", () => {
+test("Rate titles asks about one title: its name, the next step, and its three marks as keys of their own", () => {
 	const { asking, more, long, waiting, none } = rendered.quiz
 	for (const edition of EDITIONS) {
 		const { html, items } = asking[edition]
 		const nav = edition === "phone" ? HEADER : NAV
 		assert.match(html, edition === "desktop" ? />The Office</ : />The Office \(2005\)</)
-		// The two marks and Your taste are keys of their own after the strip.
+		// The three marks and Your taste are keys of their own after the strip.
 		const mine = drawn(items).slice(0, -nav.length)
-		assert.deepEqual(mine.slice(-3), ["skip", "not-interested", "your-taste"])
+		assert.deepEqual(mine.slice(-4), ["want", "skip", "not-interested", "your-taste"])
 		assert.deepEqual(drawn(items).slice(-nav.length), nav)
+		assert.match(html, /data-tv-item="want"[^>]*aria-label="Want to See"/)
 		assert.match(html, /data-tv-item="skip"[^>]*>Haven&#x27;t seen it</)
 		assert.match(html, /data-tv-item="not-interested"[^>]*>Not interested</)
 		// The top line is the web's top strip: liked titles toward the taste, then ratings toward new picks.

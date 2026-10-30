@@ -10,7 +10,7 @@
 //   to do: on Rate titles, and on Your taste before the taste is ready (the first title is its picture). A person
 //   looking at their sides causes none of its requests.
 //
-// The answers are writes, and they are the flow's own: `rate`, `unseen` and `notInterested` keep a guest's answer in
+// The answers are writes, and they are the flow's own: `rate`, `wantToSee`, `unseen` and `notInterested` keep a guest's answer in
 // their browser and send a member's to their account (tv-taste.ts, `carryOutQuiz`). A milestone never ends Rate
 // titles: Your taste lights amber (`lit`) until it is opened or a few more ratings pass.
 //

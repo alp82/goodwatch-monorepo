@@ -10,6 +10,7 @@
 //
 // The rows' motion (transform and opacity only): an answered row slides out to the left, the rows below close up,
 // a new title fades in at the bottom, and a row Undo brings back comes in from the left.
+import { BookmarkIcon } from "@heroicons/react/20/solid"
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { ScoreKeys } from "~/ui/my-library/scores/ScoreRow"
 import { Poster } from "~/ui/my-pages/bits"
@@ -33,7 +34,7 @@ import { QUICK_WORDS, answerLabel } from "./words"
 // Tablet: the marks at the right of the words; the keys under both; the poster spans the two lines.
 // Wide: one line. Words and keys share the width 5 to 7, the marks keep a fixed column at the right edge.
 const COLS =
-	"grid grid-cols-[4.5rem_minmax(0,1fr)] md:grid-cols-[5rem_minmax(0,1fr)_18rem] xl:grid-cols-[5rem_minmax(0,5fr)_minmax(0,7fr)_18.5rem]"
+	"grid grid-cols-[4.5rem_minmax(0,1fr)] md:grid-cols-[5rem_minmax(0,1fr)_21rem] xl:grid-cols-[5rem_minmax(0,5fr)_minmax(0,7fr)_21rem]"
 const GAPS = "gap-x-3 gap-y-3 px-2 md:gap-x-4 md:px-3 xl:gap-x-5"
 const AT = {
 	poster: "col-start-1 row-start-1 md:row-span-2 xl:row-span-1",
@@ -82,15 +83,10 @@ const Row = memo(function Row({
 	onAnswer: (key: string, a: QuickAnswer | null) => void
 }) {
 	const tick = `quick-tick-${t.key}`
-	// The Want to See question is up: Haven't seen it was pressed, not answered yet.
-	const [asking, setAsking] = useState(false)
-	const give = (a: QuickAnswer) => {
-		setAsking(false)
-		onAnswer(t.key, a)
-	}
+	const give = (a: QuickAnswer) => onAnswer(t.key, a)
 	const score = answer?.type === "score" ? answer.score : null
 	const meta = [t.release_year, kindWord(t)].filter(Boolean).join(" · ")
-	const dim = latest && !asking && !checked
+	const dim = latest && !checked
 	const select = selects && !leaving
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: a CSS grid table: div rows keep their table roles where display on table elements would drop them
@@ -193,16 +189,7 @@ const Row = memo(function Row({
 			</div>
 			{/* biome-ignore lint/a11y/useSemanticElements: a CSS grid table: div rows keep their table roles where display on table elements would drop them */}
 			<div role="cell" className={AT.marks}>
-				<RowMarks
-					answer={answer}
-					asking={asking}
-					disabled={busy}
-					onUnseen={() => setAsking(true)}
-					onNotInterested={() => give({ type: "not-interested" })}
-					onBack={() => setAsking(false)}
-					onNo={() => give({ type: "skip" })}
-					onWant={() => give({ type: "plan" })}
-				/>
+				<RowMarks answer={answer} disabled={busy} onAnswer={(a) => onAnswer(t.key, a)} />
 			</div>
 		</div>
 	)
@@ -302,6 +289,10 @@ function SelectionBar({
 			<b className="mr-1" aria-live="polite">
 				{QUICK_WORDS.selected(n)}
 			</b>
+			<button type="button" className={mark} onClick={() => onMark({ type: "plan" })}>
+				<BookmarkIcon className="size-4 text-amber-300" aria-hidden />
+				{WORDS.wantToSee}
+			</button>
 			<button type="button" className={mark} onClick={() => onMark({ type: "skip" })}>
 				{WORDS.unseen}
 			</button>
@@ -431,7 +422,7 @@ export function QuickTable({
 						</div>
 						{/* biome-ignore lint/a11y/useSemanticElements: a CSS grid table: div rows keep their table roles where display on table elements would drop them */}
 						<div role="columnheader" className="hidden md:col-start-3 md:row-start-1 md:block xl:col-start-4">
-							<span className="sr-only">{`${WORDS.unseen} · ${WORDS.notInterested}`}</span>
+							<span className="sr-only">{`${WORDS.wantToSee} · ${WORDS.unseen} · ${WORDS.notInterested}`}</span>
 						</div>
 					</div>
 				</div>

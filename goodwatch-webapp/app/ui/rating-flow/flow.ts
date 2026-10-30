@@ -259,16 +259,18 @@ export function offersResume({
 export const resumeWords = (t: Tally) => nextStepWords(nextStep(t, null))
 
 // ---------------------------------------------------------------------------------------------------------
-// Keys: 1-9 score, 0 is 10, H is Haven't seen it, N is Not interested.
+// Keys: 1-9 score, 0 is 10, W is Want to See, H is Haven't seen it, N is Not interested.
 
 export type FlowKey =
 	| { type: "score"; score: Score }
+	| { type: "want" }
 	| { type: "unseen" }
 	| { type: "not-interested" }
 
 export function readFlowKey(key: string): FlowKey | null {
 	if (/^[0-9]$/.test(key))
 		return { type: "score", score: (key === "0" ? 10 : Number(key)) as Score }
+	if (key === "w" || key === "W") return { type: "want" }
 	if (key === "h" || key === "H") return { type: "unseen" }
 	if (key === "n" || key === "N") return { type: "not-interested" }
 	return null
@@ -290,39 +292,6 @@ export function readFlowPress(
 	if (!intent) return null
 	return isRepeatPress(press) ? "held" : intent
 }
-
-/**
- * After "Haven't seen it" the two marks become the Want to See question (parts.tsx, `WantToSee`): "yes" saves Haven't
- * seen it with Want to See, "no" saves Haven't seen it alone, "back" returns to the marks and saves nothing. Its keys:
- * Y or W, N, Escape or Backspace. Any other key, a modifier, or a held key's repeat: null, so the page treats it as it
- * would without the question.
- */
-export type WantKey = "yes" | "no" | "back"
-
-export function readWantPress(
-	press: Pick<
-		KeyboardEvent,
-		"key" | "repeat" | "metaKey" | "ctrlKey" | "altKey"
-	>,
-): WantKey | null {
-	if (press.metaKey || press.ctrlKey || press.altKey || isRepeatPress(press))
-		return null
-	const key = press.key.toLowerCase()
-	if (key === "y" || key === "w") return "yes"
-	if (key === "n") return "no"
-	if (key === "escape" || key === "backspace") return "back"
-	return null
-}
-
-/** How soon after the Want to See question appears a press counts: earlier ones are the tail of the first press. */
-export const WANT_GUARD_MS = 400
-
-/**
- * Whether a press on the Want to See question counts: not within WANT_GUARD_MS of it appearing, and not the second
- * click of a double click (`detail` counts the clicks; 0 for a key press on a button).
- */
-export const takesWantPress = (shownAt: number, now: number, detail: number) =>
-	shownAt > 0 && now - shownAt >= WANT_GUARD_MS && detail <= 1
 
 // ---------------------------------------------------------------------------------------------------------
 // The top row's last answers: the newest few, tapping one opens its title again to change or clear the answer.

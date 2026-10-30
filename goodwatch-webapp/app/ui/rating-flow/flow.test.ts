@@ -13,7 +13,6 @@ import {
 	INITIAL_FLOW,
 	MILESTONE_GLOW,
 	type Tally,
-	WANT_GUARD_MS,
 	answerWords,
 	isLocked,
 	justLanded,
@@ -25,11 +24,9 @@ import {
 	ratingFlow,
 	ratingRows,
 	readFlowPress,
-	readWantPress,
 	resumeWords,
 	pastCounting,
 	showsSignUpLine,
-	takesWantPress,
 	tally,
 	tasteBarWords,
 	viewOf,
@@ -225,6 +222,8 @@ test("the taste bar says the totals, and what liked means until the taste is rea
 test("keys: digits score with 0 as 10, H and N mark, held keys and modifiers answer nothing", () => {
 	assert.deepEqual(readFlowPress(press("7")), { type: "score", score: 7 })
 	assert.deepEqual(readFlowPress(press("0")), { type: "score", score: 10 })
+	assert.deepEqual(readFlowPress(press("w")), { type: "want" })
+	assert.deepEqual(readFlowPress(press("W")), { type: "want" })
 	assert.deepEqual(readFlowPress(press("h")), { type: "unseen" })
 	assert.deepEqual(readFlowPress(press("N")), { type: "not-interested" })
 	assert.equal(readFlowPress(press("s")), null)
@@ -312,26 +311,6 @@ test("the quiet sign-up line: guests from 5 ratings until the lock, never member
 	assert.equal(showsSignUpLine({ rated: 19, liked: 9 }, false), true)
 	assert.equal(showsSignUpLine({ rated: 20, liked: 9 }, false), false)
 	assert.equal(showsSignUpLine({ rated: 8, liked: 6 }, true), false)
-})
-
-test("Want to See keys: Y or W adds, N says no, Escape or Backspace goes back; nothing else, held or with a modifier", () => {
-	assert.equal(readWantPress(press("y")), "yes")
-	assert.equal(readWantPress(press("W")), "yes")
-	assert.equal(readWantPress(press("n")), "no")
-	assert.equal(readWantPress(press("Escape")), "back")
-	assert.equal(readWantPress(press("Backspace")), "back")
-	assert.equal(readWantPress(press("h")), null)
-	assert.equal(readWantPress(press("8")), null)
-	assert.equal(readWantPress(press("y", { repeat: true })), null)
-	assert.equal(readWantPress(press("y", { metaKey: true })), null)
-})
-
-test("Want to See ignores presses right after it appears and a double click's second click", () => {
-	assert.equal(takesWantPress(0, 5000, 1), false, "not shown")
-	assert.equal(takesWantPress(1000, 1000 + WANT_GUARD_MS - 1, 1), false)
-	assert.equal(takesWantPress(1000, 1000 + WANT_GUARD_MS, 1), true)
-	assert.equal(takesWantPress(1000, 2000, 2), false)
-	assert.equal(takesWantPress(1000, 2000, 0), true, "a key press on the button")
 })
 
 test("the top row: the newest answers with known titles, each title once", () => {
