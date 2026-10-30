@@ -15,7 +15,7 @@ import {
 } from "./nav-options"
 
 const ROWS: { key: NavOptionKey; label: string }[] = [
-	{ key: "meet", label: "Card label" },
+	{ key: "twins", label: "Compare" },
 ]
 
 const FOLDED_KEY = "gw-nav-options-folded"
