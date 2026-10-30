@@ -4,7 +4,7 @@
 // Everything follows the owner's visibility as a member sees it: pulls need their Taste, titles both rated and their
 // favorites need their Scores, "on their wishlist" needs their Wishlist. The match itself is always shown.
 // Cost: the match (two stored tastes, two members' data), two fingerprint summaries (with stale refresh), and one
-// display read for at most a few dozen titles.
+// display read for at most 180 titles (60 shared, 40 per group list).
 import type { ProfileTitle } from "~/domain/profile"
 import { type ProfileVisibility, canSee } from "~/domain/profile"
 import type { MemberCompare } from "~/domain/profile-taste"
@@ -25,9 +25,9 @@ import {
 } from "./compare-model"
 import { getProfilePortrait } from "./portrait.server"
 
-/** How many titles each list carries; the counts say how many there are in all. */
+/** How many titles each list carries (the comparison's groups open into these); the counts say how many in all. */
 const SHARED_MAX = 60
-const LIST_MAX = 12
+const LIST_MAX = 40
 /** The visitor's scores sent for the "You" tags. */
 const YOUR_SCORES_MAX = 2_000
 

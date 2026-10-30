@@ -23,7 +23,7 @@ export function statsPayload(stats: TasteStats): TasteStats {
 	}
 }
 
-/** The profile summary uses two titles per visible taste group and one card per crowd row.
+/** The profile summary uses two titles per visible taste group and the first two crowd rows each way (the summary shows both firsts and the stronger runner-up).
  * Keep the agreement winner from the full pool and retain input order so ties stay stable.
  * The full portrait remains in its owner cache for /taste and share cards.
  */
@@ -33,7 +33,10 @@ export function statsTastePayload(taste: ProfileTaste): ProfileTaste {
 	)
 	const agree = agreementTitle(taste.titles)
 	if (agree) keys.add(agree.key)
-	for (const row of [taste.crowd.higher[0], taste.crowd.lower[0]])
+	for (const row of [
+		...taste.crowd.higher.slice(0, 2),
+		...taste.crowd.lower.slice(0, 2),
+	])
 		if (row) keys.add(row.key)
 	return {
 		...taste,

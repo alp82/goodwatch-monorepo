@@ -1,133 +1,220 @@
-// PROTOTYPE OPTIONS (round 16, nav option `panels`): five ways to present the comparison's panels under the strip,
-// none of them boxed. The strip keeps its own surface when open; what changes is the expanded part's background and
-// how the overlap, the splits and the picks are separated.
-//   1 One surface: the strip's color carries on below the bar, the sections split by hairlines.
-//   2 On the page: the strip stays a closed card; the sections sit on the page background below it, with generous
-//     space and small uppercase labels.
-//   3 Lighter band: a slightly lighter band under the bar, the sections split by hairlines in the match color.
-//   4 Alternating: each section on its own subtle background, no lines.
-//   5 Inset: a darker well set into the card under the bar, with a margin and an inner shadow, the sections split by
-//     faint hairlines.
+// The comparison's panels under the strip, on a slightly lighter band split by gray hairlines (round 17 look 3).
+// PROTOTYPE OPTIONS (round 19, nav option `venn`): how the three groups (Picks for you, You both love, Only you love)
+// open into their full lists (Groups.tsx).
+//   swap   A click on a Venn part replaces the Splits area below with that group's list; "Back to where you split"
+//          returns, and the open part shows its count in place of its posters.
+//   tabs   One tab row over one content area; a compact Venn above it, whose parts are tab targets too.
+//   graph  The Venn holds Where you split in its lens (Venn.tsx); a part opens its list below.
+//   stage  A click turns the Venn area itself into the group's stage, with a way back; Splits stay below.
+// No title shows twice at once: open parts give way to their counts, and the picks panel (your loved titles on their
+// wishlist) hides while Only you love is open next to it.
+import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
-import type { ReactNode } from "react"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 import type { ProfileShell } from "~/domain/profile"
-import { type NavOptions, useNavOptions } from "~/ui/navigation/nav-options"
-import { EASE, type Facts } from "./kit"
-import { Overlap, Picks, type Ready, Splits, planCompare } from "./parts"
-
-export type Look = "1" | "2" | "3" | "4" | "5"
-
-/** Whether the panels open inside the strip's card (the bar becomes the seam) rather than below it. */
-export const attached = (look: Look) => look !== "2"
+import { useNavOptions } from "~/ui/navigation/nav-options"
+import { GroupView } from "./Groups"
+import { EASE } from "./kit"
+import {
+	type GroupId,
+	Overlap,
+	Picks,
+	type Plan,
+	type Ready,
+	Splits,
+	planCompare,
+	splitsOf,
+} from "./parts"
+import { GraphVenn, LENS_SPLITS, MiniVenn, TabRow, type TabId } from "./Venn"
 
 /** The card's classes: the strip's surface, the same open or closed. */
 export const CARD = "relative rounded-2xl bg-gray-950 ring-1 ring-white/10"
 
-const tint = (color: string, pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`
-
-/** Small uppercase label over a section (look 2). */
-function Label({ children, className }: { children: ReactNode; className: string }) {
-	return (
-		<p className={`flex items-center gap-2.5 text-[11px] font-bold tracking-[0.16em] text-gray-500 uppercase ${className}`}>
-			<span aria-hidden className="h-px w-5 bg-gray-600" />
-			{children}
-		</p>
-	)
-}
+const LINE = "border-white/[0.1]"
 
 export function Panels({
-	look,
 	shell,
 	compare,
-	f,
 	open,
 	still,
 	label,
 	sectionId,
 }: {
-	look: Look
 	shell: ProfileShell
 	compare: Ready
-	f: Facts
 	open: boolean
 	still: boolean
 	label: string
 	sectionId: string
 }) {
 	const handle = shell.handle
-	const hasSplits = compare.shared.length > 0
-	const { dupes } = useNavOptions()
-	const plan = planCompare(handle, compare, dupes)
-	const hasPicks = plan.hasPicks
-	const both = hasSplits && hasPicks
+	const { venn } = useNavOptions()
+	const plan = planCompare(handle, compare)
+	const [active, setActive] = useState<GroupId | null>(null)
+	const [tab, setTab] = useState<TabId>("picks")
+	const toggle = (g: GroupId) => setActive(active === g ? null : g)
+	// Opening a group brings its list into view when it starts off screen (on phones the Venn's parts stack up).
+	const listRef = useRef<HTMLDivElement>(null)
+	useEffect(() => {
+		const el = listRef.current
+		if (!active || !el) return
+		const top = el.getBoundingClientRect().top
+		if (top < 150 || top > window.innerHeight * 0.7)
+			el.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" })
+	}, [active, still])
 
-	// Per look: the section's own surface, each part's surface, and the lines between them.
-	const lined = look === "1" || look === "3" || look === "5"
-	const line = look === "1" ? "border-white/[0.08]" : look === "5" ? "border-white/[0.06]" : look === "3" ? "border-white/[0.1]" : ""
-	const lineStyle = undefined
-	const shade = (i: number) => (look === "4" && i % 2 === 0 ? "bg-white/[0.055]" : "")
-	const section = {
-		"1": "",
-		"2": "mt-8 grid gap-10 sm:mt-10 sm:gap-12",
-		"3": "rounded-b-2xl bg-white/[0.065]",
-		"4": "overflow-hidden rounded-b-2xl",
-		"5": "m-2 mt-3 overflow-hidden rounded-xl bg-black shadow-[inset_0_2px_14px_rgb(0_0_0)] ring-1 ring-white/[0.07] ring-inset sm:m-3 sm:mt-4",
-	}[look]
-	const top = lined ? `border-t ${line}` : ""
-	const side = lined && both ? `max-lg:border-t lg:border-l ${line}` : ""
-
-	const overlap = <Overlap handle={handle} c={compare} plan={plan} still={still} frame="" />
-	const splits = hasSplits && <Splits handle={handle} c={compare} frame="" />
-	const picks = hasPicks && <Picks handle={handle} plan={plan} frame="" />
-
-	const body =
-		look === "2" ? (
+	let body: ReactNode
+	if (venn === "tabs") {
+		const panelId = `${sectionId}-tab`
+		const splits = splitsOf(compare).length
+		body = (
 			<>
-				<Cell still={still}>
-					<Label className="mb-1 px-4 sm:px-6">Overlap</Label>
-					{overlap}
+				<Cell
+					still={still}
+					className="flex flex-col gap-4 px-5 pt-6 sm:px-8 sm:pt-8"
+				>
+					<MiniVenn
+						plan={plan}
+						splits={splits}
+						tab={tab}
+						onPick={setTab}
+						controls={panelId}
+					/>
+					<TabRow
+						plan={plan}
+						splits={splits}
+						tab={tab}
+						onPick={setTab}
+						controls={panelId}
+					/>
 				</Cell>
-				{(hasSplits || hasPicks) && (
-					<Cell still={still}>
-						<div className={`grid gap-10 ${both ? "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-8" : ""}`}>
-							{splits && (
-								<div>
-									<Label className="mb-1 px-4 sm:px-5">Splits</Label>
-									{splits}
-								</div>
+				<Cell still={still} className={`border-t ${LINE}`}>
+					<div id={panelId} role="tabpanel">
+						<Swap k={tab} still={still}>
+							{tab === "splits" ? (
+								<Lower handle={handle} c={compare} plan={plan} />
+							) : (
+								<GroupView id={tab} plan={plan} c={compare} />
 							)}
-							{picks && (
-								<div>
-									<Label className="mb-1 px-4 sm:px-5">Picks</Label>
-									{picks}
-								</div>
-							)}
-						</div>
-					</Cell>
-				)}
-			</>
-		) : (
-			<>
-				<Cell still={still} className={shade(0)}>
-					{overlap}
+						</Swap>
+					</div>
 				</Cell>
-				{(hasSplits || hasPicks) && (
-					<Cell still={still} className={top} style={lineStyle}>
-						<div className={`grid ${both ? "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]" : ""}`}>
-							{splits && <div className={shade(1)}>{splits}</div>}
-							{picks && (
-								<div
-									className={`${side} ${shade(both ? 2 : 1)}`}
-									style={lineStyle}
-								>
-									{picks}
-								</div>
-							)}
-						</div>
-					</Cell>
-				)}
 			</>
 		)
+	} else if (venn === "graph") {
+		body = (
+			<>
+				<Cell still={still}>
+					<GraphVenn
+						plan={plan}
+						c={compare}
+						handle={handle}
+						active={active}
+						onOpen={toggle}
+					/>
+				</Cell>
+				<div ref={listRef} className="scroll-mt-40">
+					<Swap k={active ?? "rest"} still={still}>
+						{active ? (
+							<div className={`border-t ${LINE}`}>
+								<GroupView
+									id={active}
+									plan={plan}
+									c={compare}
+									control={
+										<Control icon="close" onClick={() => setActive(null)}>
+											Close
+										</Control>
+									}
+								/>
+							</div>
+						) : (
+							<Lower
+								handle={handle}
+								c={compare}
+								plan={plan}
+								lined
+								splits={{ from: LENS_SPLITS, first: 0, title: "More splits" }}
+							/>
+						)}
+					</Swap>
+				</div>
+			</>
+		)
+	} else if (venn === "stage") {
+		body = (
+			<>
+				<Cell still={still}>
+					<div ref={listRef} className="scroll-mt-40">
+						<Swap k={active ?? "venn"} still={still}>
+							{active ? (
+								<GroupView
+									id={active}
+									plan={plan}
+									c={compare}
+									control={
+										<Control icon="back" onClick={() => setActive(null)}>
+											Back to overview
+										</Control>
+									}
+								/>
+							) : (
+								<Overlap
+									handle={handle}
+									plan={plan}
+									frame=""
+									onOpen={toggle}
+									active={null}
+								/>
+							)}
+						</Swap>
+					</div>
+				</Cell>
+				<Lower
+					handle={handle}
+					c={compare}
+					plan={plan}
+					lined
+					hidePicks={active === "only"}
+				/>
+			</>
+		)
+	} else {
+		// swap
+		body = (
+			<>
+				<Cell still={still}>
+					<Overlap
+						handle={handle}
+						plan={plan}
+						frame=""
+						onOpen={toggle}
+						active={active}
+					/>
+				</Cell>
+				<div ref={listRef} className="scroll-mt-40">
+					<Swap k={active ?? "splits"} still={still}>
+						{active ? (
+							<div className={`border-t ${LINE}`}>
+								<GroupView
+									id={active}
+									plan={plan}
+									c={compare}
+									control={
+										<Control icon="back" onClick={() => setActive(null)}>
+											Back to where you split
+										</Control>
+									}
+								/>
+							</div>
+						) : (
+							<Lower handle={handle} c={compare} plan={plan} lined />
+						)}
+					</Swap>
+				</div>
+			</>
+		)
+	}
 
 	return (
 		<AnimatePresence initial={false}>
@@ -136,13 +223,19 @@ export function Panels({
 					key="panels"
 					id={sectionId}
 					aria-label={label}
-					className={section}
+					className="rounded-b-2xl bg-white/[0.065]"
 					initial="hidden"
 					animate="shown"
 					exit={{ opacity: 0, transition: { duration: still ? 0 : 0.12 } }}
 					variants={{
 						hidden: { opacity: 0 },
-						shown: { opacity: 1, transition: { duration: still ? 0 : 0.2, staggerChildren: still ? 0 : 0.06 } },
+						shown: {
+							opacity: 1,
+							transition: {
+								duration: still ? 0 : 0.2,
+								staggerChildren: still ? 0 : 0.06,
+							},
+						},
 					}}
 				>
 					{body}
@@ -152,19 +245,97 @@ export function Panels({
 	)
 }
 
+/** The Splits and the picks panel side by side on wide screens (stacked on phones), under a hairline when `lined`. */
+function Lower({
+	handle,
+	c,
+	plan,
+	lined = false,
+	hidePicks = false,
+	splits,
+}: {
+	handle: string
+	c: Ready
+	plan: Plan
+	lined?: boolean
+	hidePicks?: boolean
+	splits?: { from: number; first: number; title: string }
+}) {
+	const hasSplits = splitsOf(c).length > (splits?.from ?? 0)
+	const hasPicks = plan.hasPicks && !hidePicks
+	if (!hasSplits && !hasPicks) return null
+	const both = hasSplits && hasPicks
+	return (
+		<div
+			className={`grid ${lined ? `border-t ${LINE}` : ""} ${both ? "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]" : ""}`}
+		>
+			{hasSplits && <Splits handle={handle} c={c} frame="" {...splits} />}
+			{hasPicks && (
+				<div className={both ? `max-lg:border-t lg:border-l ${LINE}` : ""}>
+					<Picks handle={handle} plan={plan} frame="" />
+				</div>
+			)}
+		</div>
+	)
+}
+
+/** The way back (or out) at a group list's header. */
+function Control({
+	icon,
+	onClick,
+	children,
+}: { icon: "back" | "close"; onClick: () => void; children: ReactNode }) {
+	const Icon = icon === "back" ? ArrowLeftIcon : XMarkIcon
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/[0.06] px-3 py-1.5 text-sm font-semibold text-gray-200 ring-1 ring-white/10 transition-colors hover:bg-white/10 hover:text-white"
+		>
+			<Icon className="size-4" aria-hidden />
+			{children}
+		</button>
+	)
+}
+
+/** A crossfade between what one area shows (opacity only). */
+function Swap({
+	k,
+	still,
+	children,
+}: { k: string; still: boolean; children: ReactNode }) {
+	return (
+		<AnimatePresence mode="wait" initial={false}>
+			<motion.div
+				key={k}
+				initial={{ opacity: 0 }}
+				animate={{
+					opacity: 1,
+					transition: { duration: still ? 0 : 0.22, ease: EASE },
+				}}
+				exit={{ opacity: 0, transition: { duration: still ? 0 : 0.12 } }}
+			>
+				{children}
+			</motion.div>
+		</AnimatePresence>
+	)
+}
+
 function Cell({
 	still,
 	className = "",
-	style,
 	children,
-}: { still: boolean; className?: string; style?: React.CSSProperties; children: ReactNode }) {
+}: { still: boolean; className?: string; children: ReactNode }) {
 	return (
 		<motion.div
 			className={className}
-			style={style}
 			variants={{
 				hidden: { opacity: 0, y: still ? 0 : 10 },
-				shown: { opacity: 1, y: 0, transition: { duration: still ? 0 : 0.28, ease: EASE } },
+				shown: {
+					opacity: 1,
+					y: 0,
+					transition: { duration: still ? 0 : 0.28, ease: EASE },
+				},
 			}}
 		>
 			{children}

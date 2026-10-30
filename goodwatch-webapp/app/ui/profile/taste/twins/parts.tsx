@@ -1,7 +1,7 @@
 // The comparison's shared pieces: the three panels of "Where your tastes meet" (Overlap, Splits, Picks) and small
 // helpers. Each panel takes `frame`, the classes of its surface (a boxed PANEL by default); the strip (Strip.tsx) passes
 // "" and separates them itself.
-import { ArrowDownIcon, ArrowRightIcon, SparklesIcon } from "@heroicons/react/20/solid"
+import { ArrowRightIcon, SparklesIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { animate } from "framer-motion"
 import { useEffect, useState } from "react"
@@ -11,7 +11,6 @@ import type { MemberCompare } from "~/domain/profile-taste"
 import { PANEL_CARD_SIZES, ProfileCard } from "../../ProfileCard"
 import { AMBER_BUTTON, TILE, posterUrl, vibe } from "../../parts"
 import { PANEL } from "../parts"
-import type { NavOptions } from "~/ui/navigation/nav-options"
 import { DISPLAY } from "~/ui/my-pages/bits"
 
 export type Ready = Extract<MemberCompare, { status: "ready" }>
@@ -77,7 +76,14 @@ export function Fan({
 	titles,
 	size,
 	label,
-}: { titles: ProfileTitle[]; size: "sm" | "lg"; label: string }) {
+	linked = true,
+}: {
+	titles: ProfileTitle[]
+	size: "sm" | "lg"
+	label: string
+	/** Posters link to their title pages; off when the whole fan is a button. */
+	linked?: boolean
+}) {
 	const n = titles.length
 	const w = size === "lg" ? "w-[4.6rem] sm:w-24" : "w-14 sm:w-[4.5rem]"
 	return (
@@ -86,27 +92,33 @@ export function Fan({
 				const mid = (n - 1) / 2
 				const turn = (i - mid) * (size === "lg" ? 7 : 9)
 				const lift = Math.abs(i - mid) * (size === "lg" ? 7 : 6)
+				const poster = t.poster ? (
+					<img
+						src={posterUrl(t.poster) ?? ""}
+						alt={t.title}
+						loading="lazy"
+						className="aspect-[2/3] w-full rounded-lg object-cover shadow-xl ring-2 ring-gray-950"
+					/>
+				) : (
+					<span className="block aspect-[2/3] w-full rounded-lg bg-white/10" />
+				)
 				return (
 					<li
 						key={t.key}
+						data-title-key={t.key}
 						className={`${w} shrink-0 ${i ? (size === "lg" ? "-ml-6 sm:-ml-8" : "-ml-5 sm:-ml-6") : ""}`}
 						style={{
 							transform: `translateY(${lift}px) rotate(${turn}deg)`,
 							zIndex: 10 - Math.round(Math.abs(i - mid)),
 						}}
 					>
-						<Link to={t.href} title={t.title} className="block">
-							{t.poster ? (
-								<img
-									src={posterUrl(t.poster) ?? ""}
-									alt={t.title}
-									loading="lazy"
-									className="aspect-[2/3] w-full rounded-lg object-cover shadow-xl ring-2 ring-gray-950"
-								/>
-							) : (
-								<span className="block aspect-[2/3] w-full rounded-lg bg-white/10" />
-							)}
-						</Link>
+						{linked ? (
+							<Link to={t.href} title={t.title} className="block">
+								{poster}
+							</Link>
+						) : (
+							<span className="block">{poster}</span>
+						)}
 					</li>
 				)
 			})}
@@ -135,281 +147,369 @@ export function Region({
 	)
 }
 
-/** How many posters a fan or a pick row shows. */
+/** How many posters a fan shows, and how many the picks panel's row shows. */
 const FAN_MAX = 4
-/** Split rows shown before "Show all". */
-const SPLITS_SHOWN = 6
-/** The Picks panel's id, for the "See picks below" link (dupes count). */
-export const PICKS_ID = "compare-picks"
+
+/** The three groups of the Venn. */
+export type GroupId = "picks" | "both" | "only"
 
 type ThemTitle = Ready["overlap"]["onlyThem"][number]
 type YouTitle = Ready["overlap"]["onlyYou"][number]
 
-/** One side fan of the Venn: posters, or only its count and a link to the picks (dupes count). */
-interface Side<T> {
-	title: string
-	count: string
-	titles: T[]
-	/** Show the count and "See picks below" instead of posters. */
-	countOnly: boolean
-}
-
 /**
- * PROTOTYPE OPTIONS (round 18, nav option `dupes`): what each part of the expanded comparison shows, so no title
- * shows twice. Their 9s and 10s you haven't rated (`onlyThem`, best fit first) feed both the "Only @x loves" fan and
- * "From @x's favorites, for you"; your 8s and up they haven't rated (`onlyYou`, wished first) feed both "Only you
- * love" and "You loved these; @x wants to see them".
- *   picks  The fans keep their titles; the picks skip them and take the next best ones.
- *   fan    The picks keep their titles; the fans skip them and show the next most loved ones.
- *   merge  The "Only @x loves" side becomes "Picks for you"; the panel keeps only the other direction, and the
- *          "Only you love" fan skips it.
- *   count  A side whose titles are in the picks shows only its number and "See picks below".
- * The "You both love" fan also skips the split rows shown by default (titles you both love are titles you both rated).
+ * What each part of the expanded comparison shows, so no title shows twice (round 18, `merge` locked in round 19).
+ * Their 9s and 10s you haven't rated (`onlyThem`, best fit first) are "Picks for you"; the picks panel keeps only your
+ * loved titles on their wishlist, and the "Only you love" fan skips them. `groups` are the full lists the three parts
+ * open into.
  */
-export function planCompare(handle: string, c: Ready, dupes: NavOptions["dupes"]) {
+export function planCompare(handle: string, c: Ready) {
 	const o = c.overlap
-	const notIn = <T extends { key: string }>(list: T[], taken: { key: string }[]) => {
-		const keys = new Set(taken.map((t) => t.key))
-		return list.filter((t) => !keys.has(t.key))
-	}
-	const byScore = (list: ThemTitle[]) => [...list].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-	const byYours = (list: YouTitle[]) => [...list].sort((a, b) => b.yours - a.yours)
 	const wished = o.onlyYou.filter((x) => x.wished)
-
-	let themFan: ThemTitle[]
-	let youFan: YouTitle[]
-	let forYou: ThemTitle[]
-	let forThem: YouTitle[]
-	if (dupes === "picks") {
-		themFan = o.onlyThem.slice(0, FAN_MAX)
-		youFan = o.onlyYou.slice(0, FAN_MAX)
-		forYou = notIn(o.onlyThem, themFan).slice(0, FAN_MAX)
-		forThem = notIn(wished, youFan).slice(0, FAN_MAX)
-	} else if (dupes === "fan") {
-		forYou = o.onlyThem.slice(0, FAN_MAX)
-		forThem = wished.slice(0, FAN_MAX)
-		themFan = byScore(notIn(o.onlyThem, forYou)).slice(0, FAN_MAX)
-		youFan = byYours(notIn(o.onlyYou, forThem)).slice(0, FAN_MAX)
-	} else if (dupes === "merge") {
-		themFan = o.onlyThem.slice(0, FAN_MAX)
-		forYou = []
-		forThem = wished.slice(0, FAN_MAX)
-		youFan = notIn(o.onlyYou, forThem).slice(0, FAN_MAX)
-	} else {
-		forYou = o.onlyThem.slice(0, FAN_MAX)
-		forThem = wished.slice(0, FAN_MAX)
-		themFan = forYou.length ? [] : o.onlyThem.slice(0, FAN_MAX)
-		youFan = forThem.length ? [] : o.onlyYou.slice(0, FAN_MAX)
+	const forThem = wished.slice(0, FAN_MAX)
+	const taken = new Set(forThem.map((t) => t.key))
+	return {
+		them: o.onlyThem.slice(0, FAN_MAX),
+		you: o.onlyYou.filter((t) => !taken.has(t.key)).slice(0, FAN_MAX),
+		both: o.both.slice(0, 3),
+		forThem,
+		hasPicks: forThem.length > 0,
+		groups: { picks: o.onlyThem, both: o.both, only: o.onlyYou },
+		counts: { picks: o.onlyThemCount, both: o.bothCount, only: o.onlyYouCount },
+		handle,
 	}
-
-	const split = new Set(c.shared.slice(0, SPLITS_SHOWN).map((s) => s.key))
-	const bothFan = o.both.filter((t) => !split.has(t.key)).slice(0, 3)
-
-	const them: Side<ThemTitle> = {
-		title: dupes === "merge" ? "Picks for you" : `Only @${handle} loves`,
-		count:
-			dupes === "merge"
-				? `From ${o.onlyThemCount} of their 9s and 10s, best fit first`
-				: `${o.onlyThemCount} of their 9s and 10s you haven't rated`,
-		titles: themFan,
-		countOnly: dupes === "count" && forYou.length > 0,
-	}
-	const you: Side<YouTitle> = {
-		title: "Only you love",
-		count: `${o.onlyYouCount} of your 8s and up they haven't rated`,
-		titles: youFan,
-		countOnly: dupes === "count" && forThem.length > 0,
-	}
-	return { them, you, both: bothFan, forYou, forThem, hasPicks: forYou.length + forThem.length > 0 }
 }
 
 export type Plan = ReturnType<typeof planCompare>
 
-/** "See picks below": scrolls to the Picks panel, under the sticky rows (its scroll margin). */
-function SeePicks({ still }: { still: boolean }) {
+/** The groups' names, colors and count lines, in the Venn's order. */
+export const GROUPS: {
+	id: GroupId
+	name: string
+	tone: string
+	/** The color behind the group: theirs amber, both white, yours gray. */
+	color: string
+	count: (n: number) => string
+}[] = [
+	{
+		id: "picks",
+		name: "Picks for you",
+		tone: "text-amber-300",
+		color: "#fbbf24",
+		count: (n) => `From ${n} of their 9s and 10s, best fit first`,
+	},
+	{
+		id: "both",
+		name: "You both love",
+		tone: "text-white",
+		color: "#ffffff",
+		count: (n) => `${n} titles you both scored 8 or more`,
+	},
+	{
+		id: "only",
+		name: "Only you love",
+		tone: "text-gray-200",
+		color: "#d1d5db",
+		count: (n) => `${n} of your 8s and up they haven't rated`,
+	},
+]
+
+/**
+ * One part of the Venn. With `onOpen` the whole part is a button that opens the group's full list; while it is open,
+ * its posters give way to the group's count (the list shows them), and "See all" turns into "Showing below".
+ */
+export function VennPart({
+	group,
+	titles,
+	count,
+	size,
+	label,
+	onOpen,
+	active,
+	dim,
+	openLabel,
+}: {
+	group: (typeof GROUPS)[number]
+	titles: ProfileTitle[]
+	count: number
+	size: "sm" | "lg"
+	label: string
+	onOpen?: (g: GroupId) => void
+	active: boolean
+	dim: boolean
+	openLabel: string
+}) {
+	if (!onOpen)
+		return (
+			<Region title={group.name} count={group.count(count)} tone={group.tone}>
+				<Fan titles={titles} size={size} label={label} />
+			</Region>
+		)
 	return (
 		<button
 			type="button"
-			onClick={() =>
-				document.getElementById(PICKS_ID)?.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" })
-			}
-			className="inline-flex items-center gap-1 text-sm font-semibold text-amber-500 hover:text-amber-400"
+			aria-pressed={active}
+			onClick={() => onOpen(group.id)}
+			className={`group/part relative flex flex-col items-center gap-3 rounded-2xl px-2 py-3 transition-opacity duration-300 focus-visible:outline-2 focus-visible:outline-amber-400 ${dim ? "opacity-55 hover:opacity-90" : ""}`}
 		>
-			See picks below
-			<ArrowDownIcon className="size-4" aria-hidden />
+			{/* The active part's glow, in the group's color. */}
+			<span
+				aria-hidden
+				className={`pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300 ${active ? "opacity-100" : "opacity-0"}`}
+				style={{
+					background: `radial-gradient(50% 50% at 50% 55%, color-mix(in srgb, ${group.color} 14%, transparent), transparent 100%)`,
+				}}
+			/>
+			<span className="relative text-center">
+				<span
+					className={`block text-[11px] font-bold tracking-wide uppercase ${group.tone}`}
+				>
+					{group.name}
+				</span>
+				<span className="block text-xs text-gray-500">
+					{group.count(count)}
+				</span>
+			</span>
+			<span className="relative block">
+				<span
+					className={`block transition-[opacity,transform] duration-300 group-hover/part:-translate-y-1 ${active ? "opacity-0" : "opacity-100"}`}
+				>
+					<Fan titles={titles} size={size} label={label} linked={false} />
+				</span>
+				<span
+					aria-hidden={!active}
+					className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-300 ${active ? "opacity-100" : "opacity-0"}`}
+				>
+					<span
+						className={`${DISPLAY} text-6xl leading-none tabular-nums ${group.tone}`}
+					>
+						{count}
+					</span>
+				</span>
+			</span>
+			<span
+				className={`relative inline-flex items-center gap-1 text-xs font-semibold ${active ? "text-amber-400" : "text-gray-400 group-hover/part:text-white"}`}
+			>
+				{active ? openLabel : `See all ${count}`}
+				<ArrowRightIcon
+					className={`size-3.5 transition-transform ${active ? "rotate-90" : ""}`}
+					aria-hidden
+				/>
+			</span>
 		</button>
 	)
 }
 
-function SideFan<T extends ProfileTitle>({
-	side,
-	tone,
-	label,
-	number,
-	still,
-}: { side: Side<T>; tone: string; label: string; number: number; still: boolean }) {
-	if (side.countOnly)
-		return (
-			<div className="flex flex-col items-center gap-2 text-center">
-				<span className={`block text-[11px] font-bold tracking-wide uppercase ${tone}`}>{side.title}</span>
-				<span className={`${DISPLAY} text-5xl leading-none text-white tabular-nums`}>{number}</span>
-				<span className="block max-w-[14rem] text-xs text-gray-500">{side.count.replace(/^\d+ /, "")}</span>
-				<SeePicks still={still} />
-			</div>
-		)
-	return (
-		<Region title={side.title} count={side.count} tone={tone}>
-			<Fan titles={side.titles} size="sm" label={label} />
-		</Region>
+export function Overlap({
+	handle,
+	plan,
+	frame = PANEL,
+	onOpen,
+	active = null,
+	openLabel = "Showing below",
+}: Omit<PanelProps, "c"> & {
+	plan: Plan
+	/** Makes each part a button that opens its group. */
+	onOpen?: (g: GroupId) => void
+	active?: GroupId | null
+	/** What the open part says under its count. */
+	openLabel?: string
+}) {
+	const part = (
+		g: (typeof GROUPS)[number],
+		titles: ProfileTitle[],
+		size: "sm" | "lg",
+		label: string,
+	) => (
+		<VennPart
+			group={g}
+			titles={titles}
+			count={plan.counts[g.id]}
+			size={size}
+			label={label}
+			onOpen={onOpen}
+			active={active === g.id}
+			dim={active != null && active !== g.id}
+			openLabel={openLabel}
+		/>
 	)
-}
-
-export function Overlap({ handle, c, plan, still, frame = PANEL }: PanelProps & { plan: Plan; still: boolean }) {
-	const overlap = c.overlap
 	return (
 		<div className={`${frame} relative overflow-hidden p-5 sm:p-8`}>
-			{/* Two circles that overlap: theirs amber, yours white. Drawn behind three poster fans on wide screens. */}
-			{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden; the numbers beside it carry the meaning */}
-			<svg
-				viewBox="0 0 1000 420"
-				preserveAspectRatio="xMidYMid meet"
-				className="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
-				aria-hidden
-			>
-				<defs>
-					<radialGradient id="ov-them" cx="35%" cy="50%" r="40%">
-						<stop offset="0" stopColor="#fbbf24" stopOpacity=".12" />
-						<stop offset="1" stopColor="#fbbf24" stopOpacity=".02" />
-					</radialGradient>
-					<radialGradient id="ov-you" cx="65%" cy="50%" r="40%">
-						<stop offset="0" stopColor="#ffffff" stopOpacity=".1" />
-						<stop offset="1" stopColor="#ffffff" stopOpacity=".02" />
-					</radialGradient>
-				</defs>
-				<circle
-					cx="355"
-					cy="210"
-					r="195"
-					fill="url(#ov-them)"
-					stroke="#fbbf24"
-					strokeOpacity=".45"
-					strokeWidth="1.5"
-				/>
-				<circle
-					cx="645"
-					cy="210"
-					r="195"
-					fill="url(#ov-you)"
-					stroke="#ffffff"
-					strokeOpacity=".4"
-					strokeWidth="1.5"
-				/>
-			</svg>
+			<VennCircles />
 			<div className="relative grid gap-8 md:min-h-[22rem] md:grid-cols-[1fr_0.9fr_1fr] md:items-center md:gap-2 md:px-[4%]">
-				<SideFan
-					side={plan.them}
-					tone="text-amber-300"
-					label={`Loved by @${handle}`}
-					number={overlap.onlyThemCount}
-					still={still}
-				/>
-				<Region
-					title="You both love"
-					count={`${overlap.bothCount} titles you both scored 8 or more`}
-					tone="text-white"
-				>
-					<Fan titles={plan.both} size="lg" label="Loved by you both" />
-				</Region>
-				<SideFan
-					side={plan.you}
-					tone="text-gray-200"
-					label="Loved by you"
-					number={overlap.onlyYouCount}
-					still={still}
-				/>
+				{part(GROUPS[0], plan.them, "sm", `Picks for you from @${handle}`)}
+				{part(GROUPS[1], plan.both, "lg", "Loved by you both")}
+				{part(GROUPS[2], plan.you, "sm", "Loved by you")}
 			</div>
 		</div>
 	)
 }
 
+/** The two overlapping circles behind the Venn on wide screens: theirs amber, yours white. */
+export function VennCircles({ id = "ov" }: { id?: string }) {
+	return (
+		// biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden; the parts carry the meaning
+		<svg
+			viewBox="0 0 1000 420"
+			preserveAspectRatio="xMidYMid meet"
+			className="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
+			aria-hidden
+		>
+			<defs>
+				<radialGradient id={`${id}-them`} cx="35%" cy="50%" r="40%">
+					<stop offset="0" stopColor="#fbbf24" stopOpacity=".12" />
+					<stop offset="1" stopColor="#fbbf24" stopOpacity=".02" />
+				</radialGradient>
+				<radialGradient id={`${id}-you`} cx="65%" cy="50%" r="40%">
+					<stop offset="0" stopColor="#ffffff" stopOpacity=".1" />
+					<stop offset="1" stopColor="#ffffff" stopOpacity=".02" />
+				</radialGradient>
+			</defs>
+			<circle
+				cx="355"
+				cy="210"
+				r="195"
+				fill={`url(#${id}-them)`}
+				stroke="#fbbf24"
+				strokeOpacity=".45"
+				strokeWidth="1.5"
+			/>
+			<circle
+				cx="645"
+				cy="210"
+				r="195"
+				fill={`url(#${id}-you)`}
+				stroke="#ffffff"
+				strokeOpacity=".4"
+				strokeWidth="1.5"
+			/>
+		</svg>
+	)
+}
+
 // ---------- Where you split ----------
 
-export function Splits({ handle, c, frame = PANEL }: PanelProps) {
-	const shared = c.shared
-	const [all, setAll] = useState(false)
-	const rows = all ? shared : shared.slice(0, SPLITS_SHOWN)
-	const at = (score: number) => `${((score - 1) / 9) * 100}%`
+/** A split is a title you both rated with scores 4 or more apart. */
+export const SPLIT_GAP = 4
+/** Split rows shown first, then each "Show 20 more" adds a batch. */
+export const SPLITS_FIRST = 6
+const SPLITS_BATCH = 20
+
+type SplitRow = Ready["shared"][number]
+const gapOf = (r: SplitRow) => Math.abs(r.yours - r.theirs)
+
+/** Titles you both rated 4 or more points apart, widest gap first. */
+export const splitsOf = (c: Ready) =>
+	c.shared
+		.filter((r) => gapOf(r) >= SPLIT_GAP)
+		.sort((a, b) => gapOf(b) - gapOf(a))
+
+/** The 1 to 10 scale as a share of the track. */
+export const at = (score: number) => `${((score - 1) / 9) * 100}%`
+
+export function Splits({
+	handle,
+	c,
+	frame = PANEL,
+	from = 0,
+	first = SPLITS_FIRST,
+	title = "Where you split",
+}: PanelProps & {
+	/** Rows to skip (shown elsewhere, as in the graph's Venn). */
+	from?: number
+	/** Rows shown before the first "Show 20 more". */
+	first?: number
+	title?: string
+}) {
+	const rest = splitsOf(c).slice(from)
+	const [shown, setShown] = useState(first)
+	const rows = rest.slice(0, shown)
+	const left = rest.length - rows.length
+	if (!rest.length) return null
 	return (
 		<div className={`${frame} flex flex-col gap-3 p-5 sm:p-8`}>
 			<div className="flex items-baseline justify-between gap-3">
-				<p className="font-bold text-white">Where you split</p>
-				{/* Tiny legend: the dots' rings say whose score is whose. */}
-				<p className="flex shrink-0 items-center gap-2.5 text-[11px] text-gray-500">
-					<span className="inline-flex items-center gap-1">
-						<span className="size-1.5 rounded-full bg-amber-400" aria-hidden />@{handle}
-					</span>
-					<span className="inline-flex items-center gap-1">
-						<span className="size-1.5 rounded-full bg-white" aria-hidden />
-						you
-					</span>
-				</p>
+				<p className="font-bold text-white">{title}</p>
+				<SplitLegend handle={handle} />
 			</div>
-			<ul className="flex flex-col gap-1">
-				{rows.map((r) => {
-					const lo = Math.min(r.yours, r.theirs)
-					const hi = Math.max(r.yours, r.theirs)
-					const wide = hi - lo >= 3
-					return (
-						<li
-							key={r.key}
-							className="grid grid-cols-[2rem_minmax(0,7rem)_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[2rem_minmax(0,10rem)_minmax(0,1fr)]"
-						>
-							<span className="block w-8">
-								{r.poster && (
-									<img
-										src={posterUrl(r.poster, "w92") ?? ""}
-										alt=""
-										loading="lazy"
-										className="aspect-[2/3] w-full rounded object-cover"
-									/>
-								)}
-							</span>
-							<Link
-								to={r.href}
-								className="truncate text-sm font-semibold text-gray-200 hover:text-white"
-							>
-								{r.title}
-							</Link>
-							<span
-								className="relative mx-3 h-8"
-								aria-label={`@${handle} ${r.theirs}, you ${r.yours}`}
-							>
-								<span className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
-								<span
-									className={`absolute top-1/2 h-1 -translate-y-1/2 rounded-full ${wide ? "bg-rose-400/70" : "bg-white/30"}`}
-									style={{ left: at(lo), width: `${((hi - lo) / 9) * 100}%` }}
-								/>
-								<Dot at={at(r.theirs)} score={r.theirs} ring="ring-amber-400" />
-								<Dot at={at(r.yours)} score={r.yours} ring="ring-white" />
-							</span>
-						</li>
-					)
-				})}
-			</ul>
-			{shared.length > SPLITS_SHOWN && (
+			{rows.length > 0 && (
+				<ul className="grid gap-y-2 sm:grid-cols-[2.25rem_fit-content(22rem)_minmax(10rem,1fr)] sm:gap-x-4 sm:gap-y-1">
+					{rows.map((r) => (
+						<SplitLine key={r.key} r={r} handle={handle} />
+					))}
+				</ul>
+			)}
+			{left > 0 && (
 				<button
 					type="button"
-					onClick={() => setAll(!all)}
+					onClick={() => setShown(shown + SPLITS_BATCH)}
 					className="self-start text-sm font-semibold text-amber-500 hover:text-amber-400"
 				>
-					{all ? "Show fewer" : `Show all ${shared.length}`}
+					Show {Math.min(SPLITS_BATCH, left)} more
 				</button>
 			)}
 		</div>
 	)
 }
 
-export function Dot({ at, score, ring }: { at: string; score: number; ring: string }) {
+/** Tiny legend: the dots' rings say whose score is whose. */
+export function SplitLegend({ handle }: { handle: string }) {
+	return (
+		<p className="flex shrink-0 items-center gap-2.5 text-[11px] text-gray-500">
+			<span className="inline-flex items-center gap-1">
+				<span className="size-1.5 rounded-full bg-amber-400" aria-hidden />@
+				{handle}
+			</span>
+			<span className="inline-flex items-center gap-1">
+				<span className="size-1.5 rounded-full bg-white" aria-hidden />
+				you
+			</span>
+		</p>
+	)
+}
+
+/** One split: poster, title and the dumbbell track. Phones put the track under the title. */
+function SplitLine({ r, handle }: { r: SplitRow; handle: string }) {
+	const lo = Math.min(r.yours, r.theirs)
+	const hi = Math.max(r.yours, r.theirs)
+	return (
+		<li className="grid grid-cols-[2rem_minmax(0,1fr)] items-center gap-x-3 sm:col-span-3 sm:grid-cols-subgrid sm:gap-x-4">
+			<span className="block w-8 max-sm:row-span-2 sm:w-9">
+				{r.poster && (
+					<img
+						src={posterUrl(r.poster, "w92") ?? ""}
+						alt=""
+						loading="lazy"
+						className="aspect-[2/3] w-full rounded object-cover"
+					/>
+				)}
+			</span>
+			<Link
+				to={r.href}
+				className="truncate text-sm font-semibold text-gray-200 hover:text-white"
+			>
+				{r.title}
+			</Link>
+			<span
+				className="relative mx-3 h-7 sm:h-9"
+				aria-label={`@${handle} ${r.theirs}, you ${r.yours}`}
+			>
+				<span className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
+				<span
+					className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-rose-400/70"
+					style={{ left: at(lo), width: `${((hi - lo) / 9) * 100}%` }}
+				/>
+				<Dot at={at(r.theirs)} score={r.theirs} ring="ring-amber-400" />
+				<Dot at={at(r.yours)} score={r.yours} ring="ring-white" />
+			</span>
+		</li>
+	)
+}
+
+export function Dot({
+	at,
+	score,
+	ring,
+}: { at: string; score: number; ring: string }) {
 	return (
 		<span
 			className={`absolute top-1/2 flex size-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[11px] font-black text-gray-950 ring-2 ${ring}`}
@@ -422,21 +522,16 @@ export function Dot({ at, score, ring }: { at: string; score: number; ring: stri
 
 // ---------- Picks for each other ----------
 
-export function Picks({ handle, plan, frame = PANEL }: Omit<PanelProps, "c"> & { plan: Plan }) {
-	const { forYou, forThem } = plan
-	if (!forYou.length && !forThem.length) return null
+export function Picks({
+	handle,
+	plan,
+	frame = PANEL,
+}: Omit<PanelProps, "c"> & { plan: Plan }) {
+	const { forThem } = plan
+	if (!forThem.length) return null
 	return (
-		<div id={PICKS_ID} className={`${frame} flex scroll-mt-40 flex-col gap-4 p-5 sm:p-8`}>
+		<div className={`${frame} flex flex-col gap-4 p-5 sm:p-8`}>
 			<p className="font-bold text-white">Picks for each other</p>
-			<PickRow
-				title={`From @${handle}'s favorites, for you`}
-				items={forYou.map((t) => ({
-					t,
-					note: t.why
-						? `For your ${t.why.toLowerCase()}`
-						: `They scored it ${t.score}`,
-				}))}
-			/>
 			<PickRow
 				title={`You loved these; @${handle} wants to see them`}
 				items={forThem.map((t) => ({ t, note: `You scored it ${t.yours}` }))}

@@ -18,7 +18,6 @@ import { ProfileAbout } from "../ProfileFrame"
 import { AMBER_BUTTON, TILE } from "../parts"
 import { TasteMatch } from "../taste/Compare"
 import { Whorl } from "../taste/Whorl"
-import { agreementTitle } from "../taste/agreement"
 import {
 	FAMILY_COLOR,
 	type ProfileTaste,
@@ -119,11 +118,28 @@ export function TasteSummary({
 		.filter((a) => a != null)
 		.slice(0, 3)
 	const groups = taste.sides.list.slice(0, 3)
-	const higher = taste.crowd.higher[0]
-	const lower = taste.crowd.lower[0]
-	// Agreement: a title scored 8 or more that they score the same as everyone.
-	const agree = agreementTitle(taste.titles)
-	const versus = !!(higher || lower || agree)
+	// You vs everyone: the farthest above and the farthest below, then the stronger of the two runners-up.
+	const [higher, nextUp] = taste.crowd.higher
+	const [lower, nextDown] = taste.crowd.lower
+	const third =
+		nextUp && nextDown
+			? Math.abs(nextUp.delta) >= Math.abs(nextDown.delta)
+				? { row: nextUp, tone: "up" as const }
+				: { row: nextDown, tone: "down" as const }
+			: nextUp
+				? { row: nextUp, tone: "up" as const }
+				: nextDown
+					? { row: nextDown, tone: "down" as const }
+					: null
+	const versusRows = [
+		higher && { row: higher, tone: "up" as const },
+		lower && { row: lower, tone: "down" as const },
+		third,
+	].filter((r) => r != null && taste.titles[r.row.key] != null) as {
+		row: (typeof taste.crowd.higher)[number]
+		tone: "up" | "down"
+	}[]
+	const versus = versusRows.length > 0
 	const print = (
 		<Whorl
 			attributes={taste.attributes}
@@ -241,33 +257,18 @@ export function TasteSummary({
 						{owner ? "You" : "Them"} vs everyone
 					</p>
 					<ul className="flex flex-col gap-3">
-						{higher && (
+						{versusRows.map(({ row, tone }) => (
 							<VsRow
-								t={title(higher.key)}
-								mine={higher.mine}
-								everyone={higher.everyone}
-								tone="up"
-								note="Far above everyone"
+								key={row.key}
+								t={title(row.key)}
+								mine={row.mine}
+								everyone={row.everyone}
+								tone={tone}
+								note={
+									tone === "up" ? "Far above everyone" : "Far below everyone"
+								}
 							/>
-						)}
-						{lower && (
-							<VsRow
-								t={title(lower.key)}
-								mine={lower.mine}
-								everyone={lower.everyone}
-								tone="down"
-								note="Far below everyone"
-							/>
-						)}
-						{agree && agree.score != null && agree.gw != null && (
-							<VsRow
-								t={agree}
-								mine={agree.score}
-								everyone={agree.gw}
-								tone="same"
-								note="Same as everyone"
-							/>
-						)}
+						))}
 					</ul>
 				</div>
 			)}
@@ -324,15 +325,10 @@ function VsRow({
 	t: TasteTitle
 	mine: number
 	everyone: number
-	tone: "up" | "down" | "same"
+	tone: "up" | "down"
 	note: string
 }) {
-	const color =
-		tone === "up"
-			? "text-emerald-300"
-			: tone === "down"
-				? "text-rose-300"
-				: "text-gray-300"
+	const color = tone === "up" ? "text-emerald-300" : "text-rose-300"
 	return (
 		<li className="flex items-center gap-3">
 			<span className="w-[6.5rem] shrink-0">

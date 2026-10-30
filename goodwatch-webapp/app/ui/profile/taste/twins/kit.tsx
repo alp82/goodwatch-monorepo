@@ -11,7 +11,7 @@ import { DISPLAY } from "~/ui/my-pages/bits"
 import { useShownMatch } from "~/ui/navigation/nav-options"
 import { ProfileAvatar } from "../../ProfileFrame"
 import { matchColor, matchStrength } from "../../match"
-import { CountUp, type Ready } from "./parts"
+import { CountUp, type Ready, splitsOf } from "./parts"
 
 export const EASE = [0.16, 1, 0.3, 1] as const
 
@@ -25,7 +25,7 @@ export function useMatchFacts(c: Ready) {
 		tier: matchTier(p),
 		both: c.overlap.bothCount,
 		rated: c.shared.length,
-		splits: c.shared.filter((r) => Math.abs(r.yours - r.theirs) >= 3).length,
+		splits: splitsOf(c).length,
 	}
 }
 export type Facts = ReturnType<typeof useMatchFacts>
