@@ -303,12 +303,14 @@ def import_records(db, records, *, apply=False, replace_descriptions=False, batc
         if not replace_descriptions or any(row['name'] not in expected_hashes for row in records):
             raise ValueError('Guarded replacements require an expected hash for every row')
         # UPDATE cannot recreate a deleted row, and checks the reviewed hash atomically.
-        # Only content fields change: URL and per-row provenance remain owned by their original import.
+        # Keep the reviewed content and its provenance together; names and URLs never change.
         report = {'apply': apply, 'input': len(records), 'guarded': len(records)}
         if apply:
-            sql = (f'UPDATE {TABLE} SET description=?,description_doc=?,description_hash=?,updated_at=current_timestamp '
+            sql = (f'UPDATE {TABLE} SET description=?,description_doc=?,description_hash=?,'
+                   'source=?,source_hash=?,fetched_at=?,source_archive=?,updated_at=current_timestamp '
                    'WHERE name=? AND url=? AND description_hash IS NOT DISTINCT FROM ?')
-            values = [(r['description'], r['description_doc'], r['description_hash'], r['name'], r['url'],
+            values = [(r['description'], r['description_doc'], r['description_hash'], r['source'],
+                       r['source_hash'], r['fetched_at'], r['source_archive'], r['name'], r['url'],
                        expected_hashes[r['name']]) for r in records]
             for start in range(0, len(values), batch_size):
                 if hasattr(db, 'run_many'):
@@ -326,9 +328,10 @@ def import_records(db, records, *, apply=False, replace_descriptions=False, batc
                 report['stale_names'] = []
                 for row in records:
                     actual = stored.get(row['name'], {})
-                    if all(actual.get(k) == row.get(k) for k in ('url', 'description', 'description_doc', 'description_hash')):
+                    if all(actual.get(k) == row.get(k) for k in ('url', 'description', 'description_doc', 'description_hash',
+                                                               'source', 'source_hash', 'fetched_at', 'source_archive')):
                         report['written'] += 1
-                    elif (actual.get('description_hash') != expected_hashes[row['name']]
+                    elif (actual.get('description_hash') not in (expected_hashes[row['name']], row['description_hash'])
                           or actual.get('url') != row['url']):
                         report['stale'] += 1
                         report['stale_names'].append(row['name'])

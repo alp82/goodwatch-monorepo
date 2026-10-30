@@ -50,6 +50,20 @@ class DescriptionDocumentsTests(unittest.TestCase):
         self.assertEqual([link[2] for link in block['links']], [URL.replace('SeriousBusiness', 'Hero'), 'https://tvtropes.org/pmwiki/pmwiki.php/Film/Example'])
         self.assertTrue(all('word'+str(i) in block['text'] for i in range(len(targets))))
 
+    def test_self_links_use_final_canonical_url_and_keep_text_and_other_marks(self):
+        result = self.extract(f'<p>{LEAD} <a href="{URL}?from=alias#part"><em>self link</em></a></p>'
+                              f'<ul><li><a href="{URL}">self item</a></li></ul>')
+        blocks = result['description_doc']['blocks']
+        self.assertNotIn('links', blocks[0])
+        self.assertIn('em', blocks[0])
+        self.assertTrue(blocks[0]['text'].endswith('self link'))
+        self.assertEqual(blocks[1]['items'], [{'depth': 0, 'text': 'self item'}])
+
+    def test_letter_scripts_match_legacy_extractor_without_guessing_modifiers(self):
+        result = self.extract(f'<p>{LEAD} *d<sup>h</sup>oh<sub>1</sub>mos.</p>')
+        self.assertTrue(result['description'].endswith('*dhoh₁mos.'))
+        self.assertEqual(result['description_doc']['blocks'][0]['text'], result['description'])
+
     def test_inline_edge_spaces_and_whitespace_only_marks_are_unmarked(self):
         for opening, closing, key in (
                 ('<a href="Main/Hero">', '</a>', 'links'),

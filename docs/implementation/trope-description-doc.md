@@ -32,8 +32,10 @@ often very long: the median is 1,660 characters, 10% are over 3,560, and the lon
 5. Rows without an archive record (about 2,777) don't trigger TV Tropes requests. Their document is built from the
    plain text, with links found by matching catalog names (rules in the following section), and is marked as such.
 6. Name variants with the same URL (for example, "Chekhov's Gunman", 313 characters, and "Chekhovs Gunman", 2,988)
-   get the same document, built from the best source for that URL: a verified archive record first, then the longest
-   plain text.
+   get the same document. Compare every verified archive extraction with every stored text for that URL.
+   Choose the longest archive when it is at least as long as the longest stored text (archive wins ties);
+   otherwise choose the longest stored text with a `plain` document. Name order breaks equal-length ties
+   within each source kind. A plan must reject shorter replacement text unless only boilerplate was dropped.
 7. Production writes follow the existing staging pattern: a dry run writes a reviewable file, the owner approves a
    sample, then an idempotent apply runs in batches and verifies what it wrote.
 
@@ -84,7 +86,11 @@ Ported from the prototype (`app/ui/prototype-trope-descriptions/format.ts`, `lin
 2. **Backfill (Codex).** A script in `goodwatch-flows/scripts/` builds documents for every described row: archive
    byte ranges for rows that have them, name-matched `plain` documents for the rest, and one document per URL. The
    dry run writes a staging file plus a report (counts per source, hash mismatches, rows skipped, links per row, size).
-   The apply step is separate, needs the owner's approval, writes in batches, and verifies each batch.
+   Selection follows the URL rule above and never drops stored prose. Changed text from another row's archive
+   gets `source_archive = selected_archive`, `source_hash = NULL`, and `fetched_at = NULL`; changed text from
+   another row's stored description copies that row's `source`, `source_hash`, `fetched_at`, and `source_archive`.
+   Rows whose text stays the same keep their provenance. The apply step is separate, needs the owner's approval,
+   writes in batches with the old-hash guard, and verifies content and provenance in each batch.
 3. **Webapp (Opus).** The Tropes tab reads `description_doc` and shows the prototype's D3 layout:
    - A description up to 1,800 characters shows whole, then "Read it on TV Tropes".
    - A longer one shows whole paragraphs up to about 1,000 characters (at most 1,400), stopping at the first list
@@ -95,3 +101,15 @@ Ported from the prototype (`app/ui/prototype-trope-descriptions/format.ts`, `lin
      no single title, so seen state doesn't apply).
    - The server sends only the opening and the paragraph count, not the whole document.
    - Without a document, the page falls back to the plain text split on blank lines.
+
+## Review fixes
+
+Step 2 now compares all archive and stored candidates per URL, prefers the longest text with archive winning
+length ties, and fails planning on lost prose (only dropped boilerplate is exempt). Copied text carries its
+selected source's provenance; unchanged text keeps its own. Guarded apply verifies the provenance fields too.
+One-word inferred links must match the target slug using the run's identity or its singular; multi-word matching
+is unchanged. Self-links are removed both in backfill and future extraction. Plain headings require a short
+capitalized line of at most six words without the specified conjunction/discourse prefixes. Superscript letter
+tables remain unchanged after tracing the reported `ʰ` to stored text that the legacy numeric-only extractor
+could not produce. See [the step 2 implementation report](trope-description-doc-step2.md#review-fixes) for
+evidence and tests.

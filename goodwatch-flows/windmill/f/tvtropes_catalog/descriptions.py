@@ -458,6 +458,9 @@ def _extract_intro(soup, result, *, source="crawl"):
         return {**result, "error": message}
 
     _sanitize(soup)
+    for anchor in soup.find_all('a', href=True):
+        if wiki_link(anchor['href']) == result['canonical_url']:
+            del anchor['href']
     article = soup.select_one("#main-article")
     if not article:
         return reject("Missing main article")

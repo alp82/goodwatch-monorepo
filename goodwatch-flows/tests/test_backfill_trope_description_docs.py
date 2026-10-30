@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from urllib.error import HTTPError
+from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'windmill')]
 import backfill_trope_description_docs as b
@@ -48,10 +49,11 @@ class MemoryCrate:
             if self.race:
                 self.race(self)
                 self.race = None
-            text, doc, digest, name, url, expected = params
+            text, doc, digest, source, source_hash, fetched_at, source_archive, name, url, expected = params
             current = self.rows.get(name)
             if current and current['url'] == url and current['description_hash'] == expected:
-                current.update(description=text, description_doc=doc, description_hash=digest)
+                current.update(description=text, description_doc=doc, description_hash=digest, source=source,
+                               source_hash=source_hash, fetched_at=fetched_at, source_archive=source_archive)
     def run_many(self, sql, values):
         for value in values:
             self.run(sql, value)
@@ -101,8 +103,27 @@ class PlainTests(unittest.TestCase):
     def test_no_sentence_crossing(self):
         self.assertNotIn('links', self.doc('Bright. Beacon shines.', {'Bright. Beacon': OTHER})['blocks'][0])
     def test_unicode_capital_and_digit(self):
-        links = self.doc('with Éclair and 7 Wonders.', {'Éclair': OTHER, '7 Wonders': URL})['blocks'][0]['links']
+        links = self.doc('with Éclair and 7 Wonders.', {'Éclair': OTHER.replace('Beacon', 'Eclair'), '7 Wonders': URL})['blocks'][0]['links']
         self.assertEqual(len(links), 1)
+    def test_sentence_fragments_stay_paragraphs_and_can_introduce_lists(self):
+        for intro in ('Or', 'Well, usually one of two things',
+                      'However, they all sport a few common ground rules',
+                      'One two three four five six seven', 'lowercase heading',
+                      'And', 'But', 'So', 'Also', 'Here', 'These', 'This', 'Some', 'Examples'):
+            with self.subTest(intro=intro):
+                self.assertEqual(self.doc(intro + ':')['blocks'][0], {'kind': 'p', 'text': intro + ':'})
+                self.assertEqual([b['kind'] for b in self.doc(intro + ':\n\nOne.\n\nTwo.')['blocks']], ['p', 'list'])
+        self.assertEqual(self.doc('One two three four five six:')['blocks'][0]['kind'], 'heading')
+
+    def test_one_word_links_require_slug_identity(self):
+        for name, slug in [('Western', 'TheWestern'), ('Japanese', 'JapaneseMedia'),
+                           ('Video', 'VideogameCrueltyPotential'), ('French', 'FrancoBelgianComics'),
+                           ('Hollywood', 'HollywoodTactics'), ('Space', 'SpaceX')]:
+            with self.subTest(name=name):
+                self.assertNotIn('links', self.doc('with ' + name + ' countries.', {name: OTHER.replace('Beacon', slug)})['blocks'][0])
+        self.assertIn('links', self.doc('with Beacons.', {'Beacon': OTHER})['blocks'][0])
+        self.assertIn('links', self.doc('with Bright Beacon.', {'Bright Beacon': OTHER})['blocks'][0])
+
     def test_boilerplate_only_rejected(self):
         with self.assertRaises(ValueError):
             self.doc('Warning: spoiler')
@@ -120,16 +141,55 @@ class GroupTests(unittest.TestCase):
         return [row(source_archive=archive(raw)), row('Alias', text='A much longer stored fixture description.')]
     def test_archive_wins_and_linked_retry(self):
         calls = []
-        doc = {'v': 1, 'source': 'archive', 'blocks': [{'kind': 'p', 'text': 'Archive fixture.'}]}
+        doc = {'v': 1, 'source': 'archive', 'blocks': [{'kind': 'p', 'text': 'Archive fixture that is longer than all stored text.'}]}
         def extract(*args, **kw):
             calls.append(kw)
             if not kw:
                 return {'error': 'name rejected'}
-            return {'description': 'Archive fixture.', 'description_doc': doc, 'canonical_url': URL}
+            return {'description': 'Archive fixture that is longer than all stored text.', 'description_doc': doc, 'canonical_url': URL}
         changes, _ = b.build_changes(self.archive_rows(), FakeCache(), extract)
         self.assertEqual(calls, [{}, {'linked': True}])
         self.assertTrue(all(r['source'] == 'archive' and r['selected_archive'] for r in changes))
         self.assertTrue(all('description_text_changed' in r['notes'] for r in changes))
+    def test_longest_stored_beats_short_archive_without_shortening(self):
+        changes, _ = b.build_changes(self.archive_rows(), FakeCache(), lambda *a, **k: {
+            'description': 'Short archive.', 'description_doc': {'v': 1, 'source': 'archive',
+            'blocks': [{'kind': 'p', 'text': 'Short archive.'}]}, 'canonical_url': URL})
+        originals = {r['name']: r for r in self.archive_rows()}
+        self.assertTrue(all(c['source'] == 'plain' and c['selected_name'] == 'Alias' for c in changes))
+        self.assertTrue(all(len(c['new_description']) >= len(originals[c['name']]['description']) for c in changes))
+
+    def test_all_archives_tried_longest_and_name_ties(self):
+        rows = [row('Alpha', text='Stored.', source_archive=archive(b'a')),
+                row('Beta', text='Stored.', source_archive=archive(b'b')),
+                row('Gamma', text='Stored.', source_archive=archive(b'c'))]
+        calls = []
+        def extract(record, name, url, **kw):
+            calls.append(name)
+            text = 'Short.' if name == 'Alpha' else 'Long archive candidate.'
+            return {'description': text, 'description_doc': {'v': 1, 'source': 'archive',
+                    'blocks': [{'kind': 'p', 'text': text}]}, 'canonical_url': url}
+        changes, _ = b.build_changes(list(reversed(rows)), FakeCache(), extract)
+        self.assertEqual(calls, ['Alpha', 'Beta', 'Gamma'])
+        self.assertTrue(all(c['selected_name'] == 'Beta' for c in changes))
+        self.assertTrue(all(c['selected_archive'] == rows[1]['source_archive'] for c in changes))
+
+    def test_archive_wins_length_tie_and_self_links_removed(self):
+        text = 'Stored fixture.'
+        r = row(text=text, source_archive=archive(b'a'))
+        doc = {'v': 1, 'source': 'archive', 'blocks': [{'kind': 'p', 'text': text, 'links': [[0, 6, URL]]},
+               {'kind': 'list', 'items': [{'depth': 0, 'text': 'Signal', 'links': [[0, 6, URL]]}]}]}
+        changes, _ = b.build_changes([r], FakeCache(), lambda *a, **k: {
+            'description': text, 'description_doc': doc, 'canonical_url': URL})
+        self.assertEqual(changes[0]['source'], 'archive')
+        self.assertTrue(all('links' not in block for block in b.text_blocks(changes[0]['new_document'])))
+        self.assertEqual(changes[0]['new_description'], text)
+        self.assertEqual(changes[0]['new_provenance'], {})
+
+    def test_stored_name_tie_is_deterministic(self):
+        changes, _ = b.build_changes([row('Zulu', text='BBBB'), row('Alpha', text='AAAA')], FakeCache())
+        self.assertTrue(all(c['new_description'] == 'AAAA' and c['selected_name'] == 'Alpha' for c in changes))
+
     def test_hash_mismatch_fallback(self):
         changes, _ = b.build_changes(self.archive_rows(), FakeCache('Raw record SHA256 mismatch'))
         self.assertTrue(all(r['source'] == 'plain' for r in changes))
@@ -271,6 +331,59 @@ class PlanApplyTests(unittest.TestCase):
         self.assertEqual((again['written'], again['unchanged']), (0, 2))
         self.assertEqual(len(self.db.writes), count)
         self.assertEqual(len(report['schema_changes']), 1)
+    def test_plan_rejects_shortening_except_removed_boilerplate(self):
+        changes, _ = b.load_staging(self.path)
+        changes[0]['new_description'] = 'Short.'
+        with patch.object(b, 'build_changes', return_value=(changes, [])):
+            with self.assertRaisesRegex(ValueError, 'shorten'):
+                b.plan(self.db, FakeCache(), self.path.parent / 'bad')
+        b.assert_no_shortening('Warning: spoilers\n\nKept prose.', 'Kept prose.', 'Fixture')
+        for old, new in [('Lost prose.\n\nKept prose.', 'Kept prose.'),
+                         ('Warning: spoilers\n\nKept prose.', 'Other prose.')]:
+            with self.assertRaisesRegex(ValueError, 'shorten'):
+                b.assert_no_shortening(old, new, 'Fixture')
+
+    def test_copied_crawl_provenance_and_unchanged_text_preserved(self):
+        donor = row('Alias', text='Longer crawl fixture description.', source_hash='a' * 64, fetched_at='2026-10-25T20:00:00Z')
+        recipient = row(source_archive=archive(b'a'))
+        same = row('Same', text=donor['description'], source_hash='b' * 64, fetched_at='2026-10-24T20:00:00Z')
+        db = MemoryCrate([recipient, donor, same])
+        stage = self.path.parent / 'crawl'
+        b.plan(db, FakeCache('invalid'), stage)
+        b.apply(db, stage)
+        for field in b.PROVENANCE:
+            self.assertEqual(db.rows['Signal'][field], donor[field])
+            self.assertEqual(db.rows['Same'][field], same[field])
+        self.assertEqual(b.apply(db, stage)['unchanged'], 3)
+
+    def test_copied_archive_provenance(self):
+        donor = row('Alias', source_archive=archive(b'a'))
+        recipient = row(source_hash='b' * 64, fetched_at='2026-10-24T20:00:00Z')
+        text = 'Archive description longer than either stored fixture.'
+        db = MemoryCrate([donor, recipient])
+        stage = self.path.parent / 'archive'
+        original = b.build_changes
+        def extract(*args, **kwargs):
+            return {'description': text, 'description_doc': {
+                'v': 1, 'source': 'archive', 'blocks': [{'kind': 'p', 'text': text}]}, 'canonical_url': URL}
+        with patch.object(b, 'build_changes', side_effect=lambda rows, cache: original(rows, cache, extract)):
+            b.plan(db, FakeCache(), stage)
+        b.apply(db, stage)
+        self.assertEqual(db.rows['Signal']['source_archive'], donor['source_archive'])
+        self.assertIsNone(db.rows['Signal']['source_hash'])
+        self.assertIsNone(db.rows['Signal']['fetched_at'])
+        self.assertEqual(b.apply(db, stage)['unchanged'], 2)
+
+    def test_provenance_readback_failure_is_not_stale(self):
+        original = self.db.run_many
+        def corrupt(sql, values):
+            original(sql, values)
+            for r in self.db.rows.values():
+                r['source_hash'] = 'f' * 64
+        self.db.run_many = corrupt
+        with self.assertRaisesRegex(RuntimeError, 'verification failed'):
+            b.apply(self.db, self.path)
+
     def test_stale_hash_skipped(self):
         self.db.rows['Signal']['description_hash'] = 'f' * 64
         self.assertEqual(b.apply(self.db, self.path)['stale'], 1)
@@ -293,6 +406,20 @@ class PlanApplyTests(unittest.TestCase):
             self.assertEqual(len(self.db.reads), reads)
             self.assertEqual(self.db.writes, [])
             (self.path / file).write_bytes(original)
+    def test_staging_without_reviewed_provenance_rejected_before_db(self):
+        changes, _ = b.load_staging(self.path)
+        del changes[0]['new_provenance']
+        data = b''.join(json.dumps(r).encode() + b'\n' for r in changes)
+        (self.path / 'changes.jsonl').write_bytes(data)
+        manifest = json.loads((self.path / 'manifest.json').read_text())
+        manifest['files']['changes.jsonl'] = b.sha(data)
+        (self.path / 'manifest.json').write_text(json.dumps(manifest))
+        reads = len(self.db.reads)
+        with self.assertRaisesRegex(ValueError, 'invalid staging'):
+            b.apply(self.db, self.path)
+        self.assertEqual(len(self.db.reads), reads)
+        self.assertEqual(self.db.writes, [])
+
     def test_incomplete_staging(self):
         (self.path / 'manifest.json').unlink()
         with self.assertRaises(ValueError):

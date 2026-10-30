@@ -2,6 +2,7 @@
 """Stage URL-wide description documents; apply only an intact reviewed staging directory."""
 import argparse
 from collections import Counter
+from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -25,10 +26,12 @@ from import_trope_catalog import Crate, settings
 from stage_trope_catalog_archive import atomic_write, encoded, verified_record
 from f.tvtropes_catalog.catalog import FIELDS, canonical_url, import_records, normalize_archive, normalize_record
 from f.tvtropes_catalog.description_docs import serialize_description_doc, utf16_length, validate_description_doc, wiki_link
-from f.tvtropes_catalog.descriptions import extract_archive_description
+from f.tvtropes_catalog.descriptions import extract_archive_description, _identity
 
 BOILERPLATE = re.compile(r"^(warning:.*spoiler|examples of this trope (may )?contain|this trope (is|may be) (inherently )?(a )?spoiler|due to the nature of this trope)", re.I)
 FILES = ('changes.jsonl', 'report.json', 'samples.md')
+PROVENANCE = ('source', 'source_hash', 'fetched_at', 'source_archive')
+HEADING_START = re.compile(r'^(Or|And|But|However|Well|So|Also|Here|These|This|Some|Examples)\b', re.I)
 
 
 def sha(data):
@@ -78,6 +81,10 @@ class NameLinks:
                     url = self.names.get(span)
                 if not url or url == self_url:
                     continue
+                if j == i:
+                    slug = _identity(url.rsplit('/', 1)[-1])
+                    if slug not in {_identity(span), _identity(span[:-1]) if span.endswith('s') else ''}:
+                        continue
                 if url not in used:
                     used.add(url)
                     out.append([utf16_length(text[:start]), utf16_length(text[:start + len(span)]), url])
@@ -111,7 +118,8 @@ def plain_document(raw, matcher, self_url):
                 blocks.append({'kind': 'list', 'items': [block(t, depth=0) for t in paras[i + 1:j]]})
                 i = j
                 continue
-            if utf16_length(p) < 60:
+            if (utf16_length(p) < 60 and len(list(words(p))) <= 6
+                    and p[0].isupper() and not HEADING_START.match(p)):
                 blocks.append(block(p[:-1], kind='heading'))
                 i += 1
                 continue
@@ -301,7 +309,7 @@ def build_changes(rows, cache, extractor=extract_archive_description):
     cache.prepare(archives)
     matcher, changes = NameLinks(names), []
     for url, group in sorted(groups.items()):
-        notes, chosen, evidence = [], None, None
+        notes, candidates, evidence = [], [], None
         differing = len({r['description'] for r in group}) > 1
         if differing:
             notes.append('url_group_differing_texts')
@@ -322,19 +330,26 @@ def build_changes(rows, cache, extractor=extract_archive_description):
                 if result.get('error') or not result.get('description') or result.get('canonical_url') != url:
                     raise ValueError('Archive extraction rejected: ' + (result.get('error') or 'empty description or URL mismatch'))
                 validate_description_doc(result['description_doc'])
-                chosen = (result['description'], result['description_doc'])
-                evidence = archive
-                break
+                candidates.append((row, result['description'], result['description_doc'], archive))
             except (ValueError, KeyError) as error:
                 notes.append(row['name'] + ': ' + str(error))
-        if chosen is None:
-            text = max(group, key=lambda r: len(r['description']))['description']
+        stored = min(group, key=lambda r: (-len(r['description']), r['name']))
+        best = min(candidates, key=lambda c: (-len(c[1]), c[0]['name'])) if candidates else None
+        if best and len(best[1]) >= len(stored['description']):
+            selected, text, doc, evidence = best
+        else:
+            selected, text = stored, stored['description']
             try:
-                chosen = text, plain_document(text, matcher, url)
+                doc = plain_document(text, matcher, url)
             except ValueError as error:
                 skipped.extend({'name': r['name'], 'reason': str(error), 'notes': notes} for r in group)
                 continue
-        text, doc = chosen
+        doc = deepcopy(doc)
+        for block in text_blocks(doc):
+            if 'links' in block:
+                block['links'] = [link for link in block['links'] if link[2] != url]
+                if not block['links']:
+                    del block['links']
         serialized = serialize_description_doc(doc, text)
         for row in group:
             row_notes = list(notes)
@@ -344,8 +359,14 @@ def build_changes(rows, cache, extractor=extract_archive_description):
                 row_notes.append('description_text_changed')
             if row.get('description_doc') == serialized and row['description'] == text and row.get('description_hash') == sha(text.encode()):
                 continue
+            assert_no_shortening(row['description'], text, row['name'])
+            provenance = {}
+            if row['description'] != text and row['name'] != selected['name']:
+                provenance = {k: selected.get(k) for k in PROVENANCE}
+                if evidence is not None:
+                    provenance.update(source_archive=evidence, source_hash=None, fetched_at=None)
             try:
-                normalized = normalize_record({**row, 'description': text, 'description_doc': doc})
+                normalized = normalize_record({**row, **provenance, 'description': text, 'description_doc': doc})
                 if normalized['url'] != row['url']:
                     raise ValueError('Noncanonical stored URL; refusing to change it')
             except ValueError as error:
@@ -354,8 +375,21 @@ def build_changes(rows, cache, extractor=extract_archive_description):
             changes.append({'name': row['name'], 'url': row['url'], 'old_description_hash': row.get('description_hash'),
                             'new_description': text, 'new_description_hash': normalized['description_hash'],
                             'new_document': doc, 'source': doc['source'], 'notes': row_notes,
-                            'selected_archive': evidence})
+                            'selected_archive': evidence, 'selected_name': selected['name'],
+                            'new_provenance': {k: normalized[k] for k in provenance}})
     return changes, skipped
+
+
+def assert_no_shortening(stored, selected, name):
+    """Fail the plan on lost prose; only removal of whole boilerplate paragraphs is allowed."""
+    if len(selected) >= len(stored):
+        return
+    def paragraphs(text):
+        return [re.sub(r'\s+', ' ', p).strip() for p in re.split(r'\n\s*\n', text) if p.strip()]
+    old = paragraphs(stored)
+    kept = [p for p in old if not BOILERPLATE.search(p)]
+    if kept == old or paragraphs(selected) != kept:
+        raise ValueError(f'{name}: plan would shorten stored description')
 
 
 def text_blocks(doc):
@@ -405,6 +439,9 @@ def plan(db, cache, directory, *, seed=82):
         raise ValueError('Choose an empty staging directory; cache resumes independently')
     rows = read_catalog(db)
     changes, skipped = build_changes(rows, cache)
+    originals = {r['name']: r for r in rows}
+    for change in changes:
+        assert_no_shortening(originals[change['name']]['description'], change['new_description'], change['name'])
     data = b''.join(json.dumps(r, ensure_ascii=False, sort_keys=True).encode() + b'\n' for r in changes)
     links = [sum(len(b.get('links', [])) for b in text_blocks(r['new_document'])) for r in changes]
     report = {'version': 1, 'input_rows': len(rows), 'described_rows': sum(bool(r.get('description')) for r in rows),
@@ -438,6 +475,8 @@ def load_staging(directory):
             raise ValueError('Staging row count or unique names mismatch')
         for row in rows:
             validate_description_doc(row['new_document'])
+            if not isinstance(row['new_provenance'], dict) or set(row['new_provenance']) not in (set(), set(PROVENANCE)):
+                raise ValueError('Invalid staged provenance; regenerate the plan')
             if sha(row['new_description'].encode()) != row['new_description_hash'] or row['source'] != row['new_document']['source']:
                 raise ValueError('Invalid staged description hash/source')
         return rows, sha(encoded(manifest))
@@ -474,13 +513,13 @@ def apply(db, directory, *, batch_size=200):
         for row in batch:
             old = current.get(row['name'])
             doc = serialize_description_doc(row['new_document'], row['new_description'])
-            if old and all(old.get(k) == v for k, v in [('url', row['url']), ('description', row['new_description']), ('description_hash', row['new_description_hash']), ('description_doc', doc)]):
+            if old and all(old.get(k) == v for k, v in [('url', row['url']), ('description', row['new_description']), ('description_hash', row['new_description_hash']), ('description_doc', doc), *row['new_provenance'].items()]):
                 report['unchanged'] += 1
             elif not old or old.get('description_hash') != row['old_description_hash'] or old.get('url') != row['url']:
                 report['stale'] += 1
                 report['stale_names'].append(row['name'])
             else:
-                incoming.append(normalize_record({**old, 'description': row['new_description'], 'description_doc': doc}))
+                incoming.append(normalize_record({**old, **row['new_provenance'], 'description': row['new_description'], 'description_doc': doc}))
                 expected[row['name']] = row['old_description_hash']
         if incoming:
             result = import_records(db, incoming, apply=True, replace_descriptions=True, batch_size=batch_size, expected_hashes=expected)
