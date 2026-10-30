@@ -117,6 +117,36 @@ test("a short reader note before the first paragraph is skipped, unless nothing 
 		`(For the proper reading experience, play the music from this video while reading this page.)\n\n${"y".repeat(50)}`,
 	)
 	assert.equal(plain?.blocks.length, 1)
+	// A short paragraph that is a note plus a definition, alone: only the note sentence goes.
+	const short = tropeOpening(
+		doc([{ kind: "p", text: `${note.text} A sound cue for madness.` }]),
+		null,
+	)
+	assert.equal(
+		(short?.blocks[0] as { text: string }).text,
+		"A sound cue for madness.",
+	)
+	// Parentheses inside the note don't end the sentence.
+	const paren = tropeOpening(
+		doc([
+			{
+				kind: "p",
+				text: `For added atmosphere, play this (the original recording) while reading on. ${"z".repeat(300)}`,
+			},
+		]),
+		null,
+	)
+	assert.equal((paren?.blocks[0] as { text: string }).text, "z".repeat(300))
+	// Nothing but blank text after the note (Python's whitespace set): the paragraph stays as it is.
+	const nel = `For added atmosphere, play this video while reading on. ${"\u0085".repeat(200)}`
+	assert.equal(
+		(
+			tropeOpening(doc([{ kind: "p", text: nel }]), null)?.blocks[0] as {
+				text: string
+			}
+		).text,
+		nel,
+	)
 	// Definitions that mention playing or listening stay.
 	for (const text of [
 		"Many writers listen to music while writing. And, hey, why not have built-in background music in your story?",

@@ -274,13 +274,13 @@ export function withoutReaderNote(blocks: DocBlock[]): DocBlock[] {
 	while (blocks[i]?.kind === "heading") i++
 	const first = blocks[i]
 	if (first?.kind !== "p") return blocks
-	if (isReaderNote(first.text))
-		return counted(blocks.slice(i + 1)) > 0
-			? [...blocks.slice(0, i), ...blocks.slice(i + 1)]
-			: blocks
-	const sentence = /^(.+?[.!?)])\s+(?=\S)/.exec(first.text)
+	if (isReaderNote(first.text) && counted(blocks.slice(i + 1)) > 0)
+		return [...blocks.slice(0, i), ...blocks.slice(i + 1)]
+	// A sentence ends at . ! or ?, with any closing quotes or brackets after it.
+	const sentence = /^(.+?[.!?]["'”’)\]]*)\s+/.exec(first.text)
 	if (!sentence || !isReaderNote(sentence[1])) return blocks
 	const cut = sentence[0].length
+	if (blank(first.text.slice(cut))) return blocks
 	const trimmed: DocBlock = { kind: "p", text: first.text.slice(cut) }
 	const links = shifted(first.links, cut)
 	const spoilers = shifted(first.spoilers, cut)
