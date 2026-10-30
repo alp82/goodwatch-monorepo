@@ -91,6 +91,26 @@ test("a short reader note before the first paragraph is skipped, unless nothing 
 		["heading", "p"],
 	)
 	assert.equal(openingLead(labelled), "x".repeat(300))
+	// A note that opens a longer paragraph loses only that sentence; ranges after it move back with the text.
+	const joined = tropeOpening(
+		doc([
+			{
+				kind: "p",
+				text: `For added atmosphere, play this full Psycho Strings while reading on. A sound cue for madness. ${"y".repeat(200)}`,
+				links: [
+					[37, 51, `${WIKI}Main/PsychoStrings`],
+					[86, 93, `${WIKI}Main/GoMadFromTheRevelation`],
+				],
+				em: [[2, 7]],
+			},
+		]),
+		null,
+	)
+	assert.deepEqual(joined?.blocks[0], {
+		kind: "p",
+		text: `A sound cue for madness. ${"y".repeat(200)}`,
+		links: [[16, 23, "Main/GoMadFromTheRevelation"]],
+	})
 	// Plain text gets the same treatment.
 	const plain = tropeOpening(
 		null,

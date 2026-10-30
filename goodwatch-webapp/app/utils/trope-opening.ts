@@ -254,16 +254,41 @@ export function isReaderNote(text: string): boolean {
 	)
 }
 
-/** The blocks without a reader note before the first paragraph (headings stay), as long as something else is left. */
+/** Ranges after `cut`, moved back by it; a range that starts before the cut is dropped. */
+function shifted<T extends [number, number, ...unknown[]]>(
+	ranges: T[] | undefined,
+	cut: number,
+): T[] | undefined {
+	const out = (ranges ?? [])
+		.filter(([s]) => s >= cut)
+		.map(([s, e, ...rest]) => [s - cut, e - cut, ...rest] as T)
+	return out.length ? out : undefined
+}
+
+/**
+ * The blocks without a reader note before the first paragraph (headings stay), as long as something else is left.
+ * A note can also be the first sentence of a longer first paragraph; then only that sentence goes.
+ */
 export function withoutReaderNote(blocks: DocBlock[]): DocBlock[] {
 	let i = 0
 	while (blocks[i]?.kind === "heading") i++
 	const first = blocks[i]
-	return first?.kind === "p" &&
-		isReaderNote(first.text) &&
-		counted(blocks.slice(i + 1)) > 0
-		? [...blocks.slice(0, i), ...blocks.slice(i + 1)]
-		: blocks
+	if (first?.kind !== "p") return blocks
+	if (isReaderNote(first.text))
+		return counted(blocks.slice(i + 1)) > 0
+			? [...blocks.slice(0, i), ...blocks.slice(i + 1)]
+			: blocks
+	const sentence = /^(.+?[.!?)])\s+(?=\S)/.exec(first.text)
+	if (!sentence || !isReaderNote(sentence[1])) return blocks
+	const cut = sentence[0].length
+	const trimmed: DocBlock = { kind: "p", text: first.text.slice(cut) }
+	const links = shifted(first.links, cut)
+	const spoilers = shifted(first.spoilers, cut)
+	const em = shifted(first.em, cut)
+	if (links) trimmed.links = links
+	if (spoilers) trimmed.spoilers = spoilers
+	if (em) trimmed.em = em
+	return [...blocks.slice(0, i), trimmed, ...blocks.slice(i + 1)]
 }
 
 /** Page paths for links, and no empty range lists. */
