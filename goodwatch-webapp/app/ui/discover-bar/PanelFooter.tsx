@@ -1,16 +1,14 @@
-// The panel footer, the same on every tab and sub-tab: the count with the hidden meter under it, the biggest one-tap
-// recoveries while the list is short, every choice as a removable chip, Clear all, and the Show button. Desktop: one
-// 68 px row. Phones: the count and chips over Clear all and Show.
-import { PlusIcon } from "@heroicons/react/20/solid"
+// The panel footer, the same on every tab and sub-tab: every active filter as a removal pill (an x, its color, its name,
+// and "+N" when removing it alone lets titles back in; the ones that bring back the most first), Clear all, and the
+// Show button, which carries the count. Desktop: one 68 px row. Phones: the pills over Clear all and Show.
+import { XMarkIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
 import type { FilterName, FilterState } from "~/domain/filter-state"
-import { HiddenMeter } from "~/ui/filter-bar/SubBar"
-import { compactCount, recoveryLabel } from "~/ui/filter-bar/labels"
+import { FILTER_ACCENTS, METER_COLORS } from "~/ui/filter-bar/labels"
 import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
-import { BarChips } from "./BarChips"
 import { ShowButton } from "./ShowButton"
-import { type BarChip, countWords, footerRecoveries } from "./chips"
+import { type BarChip, countWords } from "./chips"
 
 export const FOOTER_HEIGHT = 68
 
@@ -43,86 +41,107 @@ export function CountText({
 	)
 }
 
-function Count({
-	counts,
-	searching,
-}: {
-	counts: FilterBarCounts | null
-	searching: boolean
-}) {
-	const hidden = counts?.hidden ?? 0
-	return (
-		<span className="flex shrink-0 flex-col gap-1">
-			<CountText counts={counts} searching={searching} />
-			{/* Always there, so the footer keeps its height. */}
-			<span className="flex h-3 items-center gap-2">
-				<HiddenMeter counts={counts} className="w-14" />
-				<span className="text-[11px] leading-none whitespace-nowrap text-gray-500">
-					{hidden > 0 ? `${compactCount(hidden)} hidden` : ""}
-				</span>
-			</span>
-		</span>
-	)
+/** A filter's color in the count's line and the footer's pills; amber stays for what shows. */
+export function filterColor(group: FilterName | string): string {
+	const meter = METER_COLORS[group as FilterName]
+	if (meter) return meter
+	const bar = FILTER_ACCENTS[group as FilterName]?.bar
+	if (bar?.includes("orange")) return "bg-rose-500"
+	return !bar || bar.includes("amber") ? "bg-gray-400" : bar
+}
+
+interface Removal {
+	group: string
+	label: string
+	chips: BarChip[]
+	/** What removing this filter alone lets back in. */
+	gain: number
+}
+
+/** The chips by filter group, the groups that bring back the most first. */
+export function removalsOf(
+	chips: BarChip[],
+	counts: FilterBarCounts | null,
+): Removal[] {
+	const out: Removal[] = []
+	for (const chip of chips) {
+		if (chip.kind === "query" || !chip.group) continue
+		const at = out.find((r) => r.group === chip.group)
+		if (at) {
+			at.chips.push(chip)
+			at.label = `${at.label} · ${chip.label}`
+		} else
+			out.push({
+				group: chip.group,
+				label: chip.label,
+				chips: [chip],
+				gain:
+					counts?.recoveries.find((r) => r.filter === chip.group)?.titles ?? 0,
+			})
+	}
+	return out.sort((a, b) => b.gain - a.gain)
 }
 
 export function PanelFooter({
 	counts,
 	searching,
-	state,
 	chips,
 	clearCount,
-	onOpen,
 	onChange,
-	onDrop,
-	onClearSearch,
 	onClearAll,
 	onShow,
 	phone = false,
 }: {
 	counts: FilterBarCounts | null
 	searching: boolean
-	state: FilterState
 	chips: BarChip[]
 	/** What Clear all clears (clearAllCount). */
 	clearCount: number
-	onOpen: (chip: BarChip) => void
 	onChange: (change: (state: FilterState) => FilterState) => void
-	/** A one-tap recovery: drops that filter group. */
-	onDrop: (filter: FilterName) => void
-	onClearSearch: () => void
 	onClearAll: () => void
 	/** The Show button: closes the panel. */
 	onShow: () => void
 	phone?: boolean
 }) {
-	const recoveries = footerRecoveries(
-		counts?.total,
-		counts?.recoveries,
-		phone ? 1 : 2,
-	)
-	const line = (
-		<div className="flex min-w-0 flex-1 items-center gap-3">
-			<Count counts={counts} searching={searching} />
-			{recoveries.map((r) => (
+	const removals = removalsOf(chips, counts)
+	const pills = (
+		<div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+			{removals.map((r) => (
 				<motion.button
-					key={r.filter}
+					key={r.group}
 					type="button"
 					whileTap={TAP}
-					onClick={() => onDrop(r.filter)}
-					className="flex shrink-0 items-center gap-1 rounded-md text-[13px] font-bold whitespace-nowrap text-amber-400 cursor-pointer outline-none hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400"
+					onClick={() =>
+						onChange((s) =>
+							r.chips.reduce((acc, c) => (c.remove ? c.remove(acc) : acc), s),
+						)
+					}
+					aria-label={`Remove ${r.label}${r.gain ? `, shows ${r.gain.toLocaleString("en")} more` : ""}`}
+					title={
+						r.gain
+							? `Remove to see ${r.gain.toLocaleString("en")} more`
+							: "Remove"
+					}
+					className="group flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white/[0.06] pr-3 pl-2.5 text-[13px] font-semibold whitespace-nowrap text-gray-100 cursor-pointer outline-none hover:bg-white/[0.1] focus-visible:ring-2 focus-visible:ring-amber-400"
 				>
-					<PlusIcon className="h-3.5 w-3.5" aria-hidden />
-					<span className="sr-only">Show </span>
-					{recoveryLabel(r.filter, r.titles, state)}
+					<XMarkIcon
+						className="h-3.5 w-3.5 shrink-0 text-gray-500 group-hover:text-white"
+						aria-hidden
+					/>
+					<span
+						className={`h-2 w-2 shrink-0 rounded-full ${filterColor(r.group)}`}
+						aria-hidden
+					/>
+					<span className="max-w-[180px] truncate group-hover:line-through group-hover:decoration-gray-400">
+						{r.label}
+					</span>
+					{r.gain > 0 && (
+						<span className="font-bold text-amber-300">
+							+{r.gain.toLocaleString("en")}
+						</span>
+					)}
 				</motion.button>
 			))}
-			<BarChips
-				chips={chips}
-				onOpen={onOpen}
-				onChange={onChange}
-				onClearSearch={onClearSearch}
-				className="h-8"
-			/>
 		</div>
 	)
 	const clear = (
@@ -146,7 +165,7 @@ export function PanelFooter({
 	if (phone)
 		return (
 			<div className="flex shrink-0 flex-col gap-2.5 border-t border-white/[0.06] bg-gray-950/85 px-5 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))]">
-				{line}
+				{removals.length > 0 && pills}
 				<div className="flex items-center gap-3">
 					{clear}
 					{show}
@@ -158,7 +177,7 @@ export function PanelFooter({
 			className="flex shrink-0 items-center gap-4 border-t border-white/[0.06] bg-gray-950/85 px-5"
 			style={{ height: FOOTER_HEIGHT }}
 		>
-			{line}
+			{pills}
 			{clear}
 			{show}
 		</div>

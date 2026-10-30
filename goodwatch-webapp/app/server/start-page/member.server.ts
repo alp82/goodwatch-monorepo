@@ -114,14 +114,14 @@ export const memberStartReads: MemberStartReads = {
 	async forYou(ctx, kind) {
 		const [
 			{ filterStateFromParams, sortFromParams },
-			{ discoverFilterDefaults, getDiscoverResults },
+			{ readyToWatchDefaults, getDiscoverResults },
 		] = await Promise.all([
 			import("~/domain/filter-state"),
 			import("~/server/discover-results.server"),
 		])
 		const params = new URLSearchParams({ type: kind })
 		const results = await getDiscoverResults(ctx, {
-			state: filterStateFromParams(params, discoverFilterDefaults(ctx)),
+			state: filterStateFromParams(params, readyToWatchDefaults(ctx)),
 			sort: sortFromParams(params, false),
 			forYou: true,
 			page: 1,

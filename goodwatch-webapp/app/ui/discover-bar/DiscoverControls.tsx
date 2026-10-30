@@ -1,5 +1,7 @@
-// Discover's controls above the grid: the Discover bar, the status line, and the panel that opens from the bar (desktop)
-// or the sheet (phones). The page owns the data: it binds the filter state (useFilterState), keeps the bar's state
+// Discover's controls above the grid: the page heading with the count at its right (FilterMix), the Discover bar, the
+// status line (Ready to watch, the chips, For you + Sort), and the panel that opens from the bar (desktop) or the sheet
+// (phones). On phones Ready to watch takes its own row under the bar. Both combined controls shrink to short labels or
+// icons when the chips need the room (useControlSize). The page owns the data: it binds the filter state (useFilterState), keeps the bar's state
 // (useDiscoverBar, whose `counts` go into its results request), runs the search, and passes the results' counts in.
 //
 // Keyboard: "/" opens Search from anywhere outside a text field. On desktop, Escape or a press outside the bar and
@@ -19,6 +21,7 @@ import {
 import type { SearchScope } from "~/domain/discover-search"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { TitleCard } from "~/server/title-cards.server"
+import { SortControl } from "~/ui/filter-bar/controls"
 import type { FilterBarCounts, ForYouControl } from "~/ui/filter-bar/types"
 import type { FilterStateBinding } from "~/ui/filter-bar/useFilterState"
 import type { TitleKey } from "~/utils/title-key"
@@ -34,7 +37,10 @@ import {
 	type PanelTab,
 	SubTabSlot,
 } from "./DiscoverPanel"
+import { FilterMix } from "./FilterMix"
+import { ForYouSort } from "./ForYouSort"
 import { PanelFooter } from "./PanelFooter"
+import { ReadyToWatch, type ReadyToWatchProps } from "./ReadyToWatch"
 import { type SortChoice, StatusLine } from "./StatusLine"
 import type { BarChip } from "./chips"
 import {
@@ -44,6 +50,7 @@ import {
 	FindOpenButton,
 	FindOverlay,
 } from "./find/FindField"
+import { type ControlSize, useControlSize } from "./control-size"
 import { shownSubTab } from "./panel-state"
 import { FindComboboxProvider, SearchComboboxProvider } from "./search/combobox"
 import {
@@ -130,8 +137,13 @@ export interface DiscoverControlsProps {
 		view: SubTabView,
 		controls: FindControls,
 	) => ReactNode
+	/** The page's title; the count sits at its right. */
+	heading?: ReactNode
 	className?: string
 }
+
+/** The chips Ready to watch stands in for on the status line. */
+const READY_CHIPS = new Set(["on-my-services", "not-seen-yet"])
 
 export function DiscoverControls(props: DiscoverControlsProps) {
 	return (
@@ -157,6 +169,7 @@ function DiscoverControlsContent({
 	forYou,
 	renderSubTab,
 	renderFind,
+	heading,
 	className = "",
 }: DiscoverControlsProps) {
 	const { state } = filters
@@ -280,30 +293,48 @@ function DiscoverControlsContent({
 		<PanelFooter
 			counts={counts}
 			searching={searching}
-			state={state}
 			chips={data.chips}
 			clearCount={data.clearCount}
-			onOpen={openChip}
 			onChange={filters.update}
-			onDrop={filters.drop}
-			onClearSearch={onClearSearch}
 			onClearAll={clearAllNow}
 			onShow={close}
 			phone={phone}
 		/>
 	)
-	const statusLine = (
+	const ready: ReadyToWatchProps = {
+		state,
+		update: filters.update,
+		mine: data.myProviders,
+		member,
+		open: openTab,
+	}
+	const chipKey = data.chips.map((chip) => chip.key).join(",")
+	const { size, rowRef, measureRef } = useControlSize({ desktop, chipKey })
+	const order = (at: ControlSize) =>
+		forYou ? (
+			<ForYouSort
+				forYou={forYou}
+				sort={sort}
+				size={at}
+				locked={!member}
+				onLocked={() => openTab("you", "taste")}
+			/>
+		) : (
+			<SortControl {...sort} size="sm" align="right" />
+		)
+	// Desktop: Ready to watch leads the line; phones give it its own row above.
+	const statusLine = (phone: boolean) => (
 		<StatusLine
-			counts={counts}
-			searching={searching}
-			chips={data.chips}
+			chips={data.chips.filter((chip) => !READY_CHIPS.has(chip.key))}
 			reading={reading}
 			clearCount={data.clearCount}
-			sort={sort}
 			onOpen={openChip}
 			onChange={filters.update}
 			onClearSearch={onClearSearch}
 			onClearAll={clearAllNow}
+			lead={phone ? undefined : <ReadyToWatch ready={ready} size={size} />}
+			end={order(phone ? (Math.min(size, 1) as ControlSize) : size)}
+			rowRef={rowRef}
 			className="mt-2 lg:mt-3"
 		/>
 	)
@@ -333,6 +364,37 @@ function DiscoverControlsContent({
 
 	return (
 		<MotionConfig reducedMotion="user">
+			{/* Both combined controls at every size, for useControlSize; never seen or reached. */}
+			<div
+				ref={measureRef}
+				aria-hidden
+				{...{ inert: "" }}
+				className="pointer-events-none invisible fixed top-0 left-0 -z-10 flex flex-col items-start"
+			>
+				{([0, 1, 2] as ControlSize[]).map((at) => (
+					<div key={at} className="flex">
+						<div data-size={`ready-${at}`} className="flex">
+							<ReadyToWatch ready={ready} size={at} />
+						</div>
+						<div data-size={`order-${at}`} className="flex">
+							{order(at)}
+						</div>
+					</div>
+				))}
+			</div>
+			{heading && (
+				<div className="flex items-start justify-between gap-4">
+					<div className="min-w-0">{heading}</div>
+					<FilterMix
+						counts={counts}
+						searching={searching}
+						state={state}
+						chips={data.chips}
+						update={filters.update}
+						phone={!desktop}
+					/>
+				</div>
+			)}
 			<div className={className}>
 				<div className="hidden lg:block">
 					<div className="relative">
@@ -386,7 +448,7 @@ function DiscoverControlsContent({
 							)}
 						</AnimatePresence>
 					</div>
-					{statusLine}
+					{statusLine(false)}
 				</div>
 				<div className="lg:hidden">
 					<PhoneDiscoverBar
@@ -395,7 +457,10 @@ function DiscoverControlsContent({
 						onClearSearch={onClearSearch}
 						providers={providers}
 					/>
-					{statusLine}
+					<div className="mt-2">
+						<ReadyToWatch ready={ready} size={1} />
+					</div>
+					{statusLine(true)}
 					{!desktop && (
 						<DiscoverSheet
 							open={open !== null}

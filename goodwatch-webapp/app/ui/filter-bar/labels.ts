@@ -7,6 +7,14 @@ import {
 	scoreStepLabel,
 } from "~/domain/title-scales"
 import { productionCountryName } from "~/domain/production-country"
+import {
+	ClockIcon,
+	FireIcon,
+	MagnifyingGlassIcon,
+	SparklesIcon,
+	StarIcon,
+} from "@heroicons/react/24/solid"
+import type { ComponentType } from "react"
 // What the filter bar says: sort options, option labels, chip labels, and the recovery wording. Every label is a
 // proper, capitalized label ("Top rated", "Crime & mystery", "Philosophical").
 import {
@@ -43,6 +51,10 @@ export interface SortOption<K extends string = string> {
 	taste?: boolean
 	/** Shown but not pickable; `hint` says why. */
 	disabled?: boolean
+	/** The sort's own icon: in the menu, and on a compact sort button in place of the arrows. */
+	icon?: ComponentType<{ className?: string }>
+	/** A name that fits a compact sort button ("Best" for Best match). */
+	short?: string
 }
 
 /**
@@ -81,16 +93,36 @@ export const DISCOVER_SORTS: Record<SortKey, SortOption<SortKey>> = {
 		key: "relevance",
 		label: "Relevance",
 		hint: "Closest to your search",
+		icon: MagnifyingGlassIcon,
+		short: "Closest",
 	},
 	match: {
 		key: "match",
 		label: "Best match",
 		hint: "Closest to your taste",
 		taste: true,
+		icon: SparklesIcon,
+		short: "Best",
 	},
-	popular: { key: "popular", label: "Popular", hint: "What people watch now" },
-	top: { key: "top", label: "Top rated", hint: "Highest GoodWatch score" },
-	newest: { key: "newest", label: "Newest", hint: "Latest releases first" },
+	popular: {
+		key: "popular",
+		label: "Popular",
+		hint: "What people watch now",
+		icon: FireIcon,
+	},
+	top: {
+		key: "top",
+		label: "Top rated",
+		hint: "Highest GoodWatch score",
+		icon: StarIcon,
+		short: "Top",
+	},
+	newest: {
+		key: "newest",
+		label: "Newest",
+		hint: "Latest releases first",
+		icon: ClockIcon,
+	},
 }
 
 /**

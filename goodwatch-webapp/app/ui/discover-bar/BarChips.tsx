@@ -13,8 +13,11 @@ import type { BarChip } from "./chips"
 
 const IMAGE = "https://image.tmdb.org/t/p/w92"
 const FADE = "linear-gradient(to right, black calc(100% - 2.5rem), transparent)"
-const CHIP =
+const CHIP_MD =
 	"inline-flex h-8 shrink-0 items-center rounded-full text-[13px] whitespace-nowrap"
+/** The status line's chips: as tall as Ready to watch and For you + Sort, with their rounded rect. */
+const CHIP_LG =
+	"inline-flex h-10 shrink-0 items-center rounded-xl text-[13px] whitespace-nowrap [&>button:first-child]:rounded-l-xl [&>button:last-child]:rounded-r-xl"
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 
 const TINTS: Record<string, string> = {
@@ -78,7 +81,9 @@ function OneChip({
 	onOpen,
 	onRemove,
 	onClearSearch,
+	large,
 }: {
+	large: boolean
 	chip: BarChip
 	reading?: ReadingChip[]
 	onOpen: (chip: BarChip) => void
@@ -86,6 +91,7 @@ function OneChip({
 	onClearSearch: () => void
 }) {
 	const words = chip.prefix ? `${chip.prefix} ${chip.label}` : chip.label
+	const CHIP = large ? CHIP_LG : CHIP_MD
 	if (chip.kind === "query")
 		return (
 			<span
@@ -177,7 +183,10 @@ export function BarChips({
 	onClearSearch,
 	trail,
 	className = "",
+	size = "md",
 }: {
+	/** lg: the status line's 40 px chips. */
+	size?: "md" | "lg"
 	chips: BarChip[]
 	/** How the search read the query, inline in the query chip. */
 	reading?: ReadingChip[]
@@ -202,6 +211,7 @@ export function BarChips({
 						onOpen={onOpen}
 						onRemove={(c) => c.remove && onChange(c.remove)}
 						onClearSearch={onClearSearch}
+						large={size === "lg"}
 					/>
 				</li>
 			))}

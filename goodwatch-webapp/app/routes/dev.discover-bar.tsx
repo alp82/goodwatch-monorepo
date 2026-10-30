@@ -40,6 +40,8 @@ import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 import useLocale from "~/utils/locale"
 
+const DEFAULTS = { onMyServices: false, notSeenYet: false }
+
 export function loader(_: LoaderFunctionArgs) {
 	if (process.env.NODE_ENV === "production")
 		throw new Response("Not found", { status: 404 })
@@ -79,18 +81,8 @@ export default function DevDiscoverBar() {
 	useEffect(() => {
 		if (!loading && !user && !fixture) setGuest(snapshotGuestProgress())
 	}, [loading, user, fixture])
-	// The viewer's defaults, as on Discover; a guest's services and progress live in the browser. The loader reads no
-	// settings, so a member's On my services starts off here.
-	const guestServices = Boolean(guest?.services)
-	const guestProgress = (guest?.interactions.length ?? 0) > 0
-	const defaults = useMemo(
-		() => ({
-			onMyServices: guestServices,
-			notSeenYet: member || guestProgress,
-		}),
-		[member, guestServices, guestProgress],
-	)
-	const filters = useFilterState({ defaults, member, searching })
+	// Discover's defaults: everything, on any service, seen or not.
+	const filters = useFilterState({ defaults: DEFAULTS, member, searching })
 	const bar = useDiscoverBar(filters.state)
 	const ready = !loading && (member || guest !== null)
 
@@ -171,10 +163,12 @@ export default function DevDiscoverBar() {
 	const desktop = useDesktop()
 	return (
 		<div className="mx-auto max-w-[1600px] px-4 pt-4 pb-16 lg:px-8 lg:pt-6">
-			<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
-				Discover movies and shows
-			</h1>
 			<DiscoverControls
+				heading={
+					<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
+						Discover movies and shows
+					</h1>
+				}
 				className="mt-3 lg:mt-5"
 				bar={bar}
 				filters={filters}

@@ -360,8 +360,9 @@ test("empty URL uses featured people for members with saved services", async () 
 		new URLSearchParams(),
 		discoverFilterDefaults(ctx),
 	)
-	assert.equal(state.notSeenYet, true)
-	assert.equal(state.onMyServices, true)
+	// Discover's defaults are everything: Ready to watch starts off.
+	assert.equal(state.notSeenYet, false)
+	assert.equal(state.onMyServices, false)
 	const panel = await getDiscoverPanel(ctx, "people", {
 		state,
 		sort: "popular",

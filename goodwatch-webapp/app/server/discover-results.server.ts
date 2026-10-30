@@ -442,8 +442,16 @@ export async function getForYouPreview(
 	}
 }
 
-/** The filter bar's defaults for the viewer: On my services with saved (or chosen) services; Not seen yet for members and guests with progress. */
-export function discoverFilterDefaults(ctx: ViewerContext) {
+/**
+ * Discover's filter defaults: everything, on any service, seen or not. Ready to watch (On my services and Not seen yet)
+ * is one tap away, and a URL says it when it's on. The viewer isn't read; the parameter stays for the callers.
+ */
+export function discoverFilterDefaults(_ctx: ViewerContext) {
+	return { onMyServices: false, notSeenYet: false }
+}
+
+/** Lists picked for the viewer (the start page's For you row): on their services, not seen yet. */
+export function readyToWatchDefaults(ctx: ViewerContext) {
 	return {
 		onMyServices: ctx.services.length > 0,
 		notSeenYet:

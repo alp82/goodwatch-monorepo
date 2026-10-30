@@ -66,13 +66,19 @@ import {
 } from "./useDiscoverBrowse"
 import { useDiscoverSearch } from "./useDiscoverSearch"
 
+/**
+ * Everything, on any service, seen or not: Ready to watch turns on My services and Not seen yet in one tap. The same
+ * as the server's discoverFilterDefaults.
+ */
+const DISCOVER_DEFAULTS = { onMyServices: false, notSeenYet: false }
+
 /** How long the per-card movement marks show after For you flips. */
 const MARKS_MS = 2600
 
 export interface DiscoverPageProps {
 	initial: InitialBrowse | null
 	member: boolean
-	/** The member has saved services. */
+	/** The member has saved services (Ready to watch reads them from the settings itself). */
 	hasServices: boolean
 	/** The member's saved For you setting; true for guests. */
 	savedForYou: boolean
@@ -101,7 +107,6 @@ const ids = (value: string | null | undefined) =>
 export function DiscoverPage({
 	initial,
 	member,
-	hasServices,
 	savedForYou,
 	searchScope,
 }: DiscoverPageProps) {
@@ -112,16 +117,11 @@ export function DiscoverPage({
 	const side = params.get("side")
 
 	const guest = useGuestBody(member)
-	const guestServices = Boolean(guest?.services)
-	const guestProgress = (guest?.interactions.length ?? 0) > 0
-	const defaults = useMemo(
-		() => ({
-			onMyServices: member ? hasServices : guestServices,
-			notSeenYet: member || guestProgress,
-		}),
-		[member, hasServices, guestServices, guestProgress],
-	)
-	const filters = useFilterState({ defaults, member, searching })
+	const filters = useFilterState({
+		defaults: DISCOVER_DEFAULTS,
+		member,
+		searching,
+	})
 	const forYou = useForYou({ member, saved: savedForYou })
 	const bar = useDiscoverBar(filters.state)
 	const desktop = useDesktop()
@@ -432,12 +432,14 @@ export function DiscoverPage({
 	return (
 		<MotionConfig reducedMotion="user">
 			<div className="mx-auto max-w-7xl px-4 pt-5 lg:pt-8">
-				<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
-					Discover movies and shows
-				</h1>
 				{/* Reaching for the bar starts loading the panel's content. */}
 				<div onPointerEnter={warm} onTouchStart={warm} onFocus={warm}>
 					<DiscoverControls
+						heading={
+							<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
+								Discover movies and shows
+							</h1>
+						}
 						className="mt-3 lg:mt-5"
 						bar={bar}
 						filters={filters}

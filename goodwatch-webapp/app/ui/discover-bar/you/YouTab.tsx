@@ -3,13 +3,14 @@
 //   count); up to three picks, any of, then the other rows dim. "In none of them" is a count, not a pick. Members with
 //   fewer than two groups see no rows.
 // - Taste match: 90%+ down to Any, then Outside your usual; rows from the pick up tinted amber, Outside in sky blue.
-// - Order (For you, Best match first) and Your lists (Not seen yet, Seen before, On your wishlist as switches).
+// - Your lists (Not seen yet, Seen before, On your wishlist as switches). For you and Best match live in the status
+//   line's For you + Sort.
 // Guests see the same blocks locked: placeholder group rows with the sign-up key, match rows without counts, and
-// Order and Your lists faint with a lock.
+// Your lists faint with a lock.
 //
 // Counts come with `counts=taste` (optionCounts.tasteGroups, minMatch, notSeenYet, wishlist); the groups come from
 // /api/discover/panel?part=taste.
-import { BarsArrowDownIcon, LockClosedIcon } from "@heroicons/react/20/solid"
+import { LockClosedIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
 import { type ReactNode, useId } from "react"
@@ -263,106 +264,7 @@ function TasteMatch({ view }: { view: SubTabView }) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Order and Your lists
-
-function OrderSwitch({
-	label,
-	icon,
-	on,
-	onChange,
-	locked,
-	disabled = false,
-}: {
-	label: string
-	icon: ReactNode
-	on: boolean
-	onChange: (on: boolean) => void
-	locked: boolean
-	disabled?: boolean
-}) {
-	const lit = on && !locked && !disabled
-	const off = locked || disabled
-	return (
-		<motion.button
-			type="button"
-			role="switch"
-			aria-checked={lit}
-			disabled={off}
-			whileTap={off ? undefined : TAP}
-			onClick={() => onChange(!on)}
-			className={`flex h-11 w-full min-w-0 items-center gap-2 rounded-2xl px-3 text-[13px] font-bold whitespace-nowrap ${FOCUS} ${
-				off
-					? "cursor-default bg-white/[0.03] text-gray-600 ring-1 ring-white/[0.06]"
-					: lit
-						? "cursor-pointer bg-amber-500/[0.14] text-white ring-1 ring-amber-500/45"
-						: `cursor-pointer text-gray-400 hover:text-gray-200 ${SHELL}`
-			}`}
-		>
-			{locked ? <Lock /> : icon}
-			<span className="min-w-0 flex-1 truncate text-left">{label}</span>
-			<Knob on={lit} />
-		</motion.button>
-	)
-}
-
-function Order({ view }: { view: SubTabView }) {
-	const locked = !view.data.context.member
-	const { forYou, filters } = view
-	const best = filters.sort === "match"
-	return (
-		<section>
-			<Head locked={locked}>Order</Head>
-			<div className="flex flex-col gap-2">
-				{forYou && (
-					<div>
-						<OrderSwitch
-							label="For you"
-							on={forYou.on}
-							onChange={forYou.onChange}
-							locked={locked}
-							disabled={forYou.disabled}
-							icon={
-								<FingerPrintIcon
-									className="h-4 w-4 shrink-0 text-amber-500"
-									aria-hidden
-								/>
-							}
-						/>
-						{forYou.disabled && forYou.hint && (
-							<p className="mt-1 px-3 text-xs text-gray-500">
-								{forYou.hint}
-							</p>
-						)}
-						{!locked &&
-							!forYou.disabled &&
-							forYou.on &&
-							forYou.movedUp > 0 && (
-								<p className="mt-1 px-3 text-xs text-gray-500">
-									↑{forYou.movedUp.toLocaleString("en")} moved up
-								</p>
-							)}
-					</div>
-				)}
-				<OrderSwitch
-					label="Best match first"
-					on={best}
-					onChange={(on) =>
-						filters.setSort(
-							on ? "match" : filters.searching ? "relevance" : "popular",
-						)
-					}
-					locked={locked}
-					icon={
-						<BarsArrowDownIcon
-							className="h-4 w-4 shrink-0 text-amber-400"
-							aria-hidden
-						/>
-					}
-				/>
-			</div>
-		</section>
-	)
-}
+// Your lists
 
 function YourLists({ view }: { view: SubTabView }) {
 	const locked = !view.data.context.member
@@ -394,7 +296,6 @@ export function YouTab({
 }: { view: SubTabView; fixture?: boolean }) {
 	const lists = (
 		<div className="flex min-w-0 flex-col gap-5">
-			<Order view={view} />
 			<YourLists view={view} />
 		</div>
 	)

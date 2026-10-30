@@ -214,7 +214,8 @@ export function DiscoverBar({
 							<motion.span
 								layoutId="discover-bar-pill"
 								transition={PILL_SPRING}
-								className="absolute inset-0 rounded-full bg-white/[0.1] ring-1 ring-white/20 shadow-[0_10px_30px_-10px_rgba(0,0,0,.8),inset_0_1px_0_rgba(255,255,255,.08)]"
+								// The bar's padding is the gap at its ends; between segments the pill keeps the same gap.
+								className={`absolute inset-y-0 rounded-full bg-white/[0.1] ring-1 ring-white/20 shadow-[0_10px_30px_-10px_rgba(0,0,0,.8),inset_0_1px_0_rgba(255,255,255,.08)] ${i === 0 ? "left-0" : "left-1.5"} ${i === MAIN_TABS.length - 1 ? "right-0" : "right-1.5"}`}
 							/>
 						)}
 						{isSearch && search ? (
