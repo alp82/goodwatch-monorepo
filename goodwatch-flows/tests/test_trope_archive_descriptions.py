@@ -57,7 +57,7 @@ class ArchiveDescriptionsTest(unittest.TestCase):
         self.assertEqual(result['heading'], 'Exactly What I Aimed At')
         self.assertEqual(result['canonical_url'], URL)
         self.assertEqual(result['description'], LEAD + '\n\nA complete second explanatory paragraph remains in the actual source order.')
-        self.assertEqual(set(result), {'description', 'heading', 'canonical_url', 'error'})
+        self.assertEqual(set(result), {'description', 'description_doc', 'heading', 'canonical_url', 'error'})
         # The HTTP protocol remains strict: body metadata is not an HTTP canonical.
         self.assertIn('canonical', extract_description(record()['article'], 'Exactly What I Aimed At', URL)['error'])
 

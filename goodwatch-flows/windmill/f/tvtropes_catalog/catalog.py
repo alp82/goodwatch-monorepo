@@ -9,9 +9,10 @@ import hashlib
 import re
 from urllib.parse import unquote, urlsplit
 from f.sync.models.crate_schemas import ARCHIVE_COLUMN_TYPES
+from f.tvtropes_catalog.description_docs import serialize_description_doc
 
 TABLE = "trope_catalog"
-FIELDS = ("name", "url", "description", "description_hash", "source", "source_hash", "fetched_at", "source_archive")
+FIELDS = ("name", "url", "description", "description_doc", "description_hash", "source", "source_hash", "fetched_at", "source_archive")
 SOURCE = "tvtropes"
 _HASH = re.compile(r"^[0-9a-f]{64}$")
 _HTML_TAG = re.compile(
@@ -177,6 +178,7 @@ def normalize_record(row, *, evidence=None):
     fetched_at = None if archive is not None else timestamp(row.get("fetched_at", evidence_row.get("started_at")))
     return {
         "name": name, "url": url, "description": text,
+        "description_doc": serialize_description_doc(row.get("description_doc"), text),
         "description_hash": hashlib.sha256(text.encode("utf-8")).hexdigest() if text is not None else None,
         "source": source if text is not None else None,
         "source_hash": source_hash if text is not None else None,
@@ -281,7 +283,8 @@ def verify_archive_writes(db, records, *, batch_size=200, replace_descriptions=F
                 if actual.get("source_hash") is not None or actual.get("fetched_at") is not None:
                     continue
             if (actual.get("description_hash") != row["description_hash"]
-                    or actual.get("source_archive") != row["source_archive"]):
+                    or actual.get("source_archive") != row["source_archive"]
+                    or actual.get("description_doc") != row.get("description_doc")):
                 failed.append(row["name"])
         if failed:
             raise RuntimeError("Archive import stored-document verification failed for " + str(len(failed))
@@ -293,6 +296,9 @@ def import_records(db, records, *, apply=False, replace_descriptions=False, batc
     """Import an already validated batch. Repeated imports preserve timestamps and unchanged rows."""
     if not 1 <= batch_size <= 1000:
         raise ValueError("batch_size must be between 1 and 1000")
+    # Validate even callers that bypass records_from_document, before any DB access.
+    records = [{**row, "description_doc": serialize_description_doc(row.get("description_doc"), row.get("description"))}
+               for row in records]
     schema_missing = ensure_schema(db, apply=apply)
     existing = {}
     if not schema_missing or apply:

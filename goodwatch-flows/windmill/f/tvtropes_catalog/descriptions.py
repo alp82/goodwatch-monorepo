@@ -8,11 +8,13 @@ No transport or writes. html5lib follows browser error recovery, including wiki
 paragraphs that contain divs and prematurely close under html.parser.
 """
 import re
+from itertools import groupby
 import unicodedata
 from urllib.parse import parse_qsl, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Comment, FeatureNotFound, NavigableString, Tag
 from f.tvtropes_catalog.pages import canonical_page_url
+from f.tvtropes_catalog.description_docs import wiki_link, utf16_length
 
 MAX_DESCRIPTION_BYTES = 24_000
 MIN_DESCRIPTION_CHARS = 40
@@ -158,8 +160,77 @@ def _external_link_icon(node):
             and not url.params and not url.query and not url.fragment)
 
 
-def _paragraph_event(text, nodes):
-    text = re.sub(r"\s+", " ", text).strip()
+def _formatted_text(chars):
+    """Collapse whitespace across inline boundaries, then derive UTF-16 ranges."""
+    normalized, pending = [], None
+    for char, *marks in chars:
+        if char.isspace():
+            if normalized and pending is None:
+                pending = (" ", *marks)
+        else:
+            if pending is not None:
+                normalized.append(pending)
+                pending = None
+            normalized.append((char, *marks))
+    block = {"text": "".join(char[0] for char in normalized)}
+    for index, key in enumerate(("links", "spoilers", "em"), 1):
+        ranges, offset, active, start = [], 0, None, 0
+        for char, *marks in normalized:
+            mark = marks[index - 1]
+            if mark != active:
+                if active:
+                    ranges.append([start, offset, active] if key == "links" else [start, offset])
+                active, start = mark, offset
+            offset += utf16_length(char)
+        if active:
+            ranges.append([start, offset, active] if key == "links" else [start, offset])
+        if ranges:
+            block[key] = ranges
+    return block
+
+
+def _description_content(nodes):
+    """One DOM walk supplies the legacy paragraph and all document annotations.
+
+    A legacy li paragraph includes its nested lists. Its complete text remains
+    the selection/byte-budget unit, while document items retain their own depth.
+    Text after a nested list becomes a continuation item at the parent's depth.
+    """
+    chars = []
+    is_list = (len(nodes) == 1 and isinstance(nodes[0], Tag) and nodes[0].name == "li"
+               and nodes[0].find_parent(["ul", "ol"]) is not None)
+
+    def walk(node, link=None, spoiler=False, emphasis=False, item=None, depth=-1):
+        if isinstance(node, Comment):
+            return
+        if isinstance(node, NavigableString):
+            chars.extend((char, link, spoiler, emphasis, item, depth) for char in str(node))
+        elif isinstance(node, Tag):
+            if node.name == "li":
+                item, depth = node, depth + 1
+            if node.name == "a":
+                link = wiki_link(node.get("href"))
+            spoiler = spoiler or (node.name == "span" and "spoiler" in node.get("class", []))
+            emphasis = emphasis or node.name in {"em", "i"}
+            for child in node.children:
+                walk(child, link, spoiler, emphasis, item, depth)
+
+    for node in nodes:
+        walk(node)
+    rich = _formatted_text(chars)
+    if not is_list:
+        return rich["text"], [{"kind": "p", **rich}]
+    items = []
+    for _, group in groupby(chars, key=lambda char: id(char[4])):
+        group = list(group)
+        item = _formatted_text(group)
+        if item["text"]:
+            items.append({"depth": group[0][5], **item})
+    return rich["text"], [{"kind": "list", "items": items}] if items else []
+
+
+def _paragraph_event(nodes):
+    text, blocks = _description_content(nodes)
     if _EXAMPLES_LABEL.fullmatch(text):
         yield "stop", ""
         return
@@ -169,7 +240,9 @@ def _paragraph_event(text, nodes):
             and not any((node.name == "a" and "/JustForFun/DescribeTopicHere" in node.get("href", ""))
                         or node.select_one('a[href*="/JustForFun/DescribeTopicHere"]') for node in tags)
             and text.casefold() not in {"advertisement:", "noreallife", "noexamplesplease"}):
-        yield "paragraph", text
+        list_parent = (nodes[0].find_parent(["ul", "ol"])
+                       if len(nodes) == 1 and isinstance(nodes[0], Tag) and nodes[0].name == "li" else None)
+        yield "paragraph", (text, blocks, list_parent)
 
 
 def _is_boundary(node):
@@ -193,13 +266,11 @@ def _container_events(nodes):
             inline.append(node)
             continue
         if inline:
-            text = "".join(str(part) if isinstance(part, NavigableString) else part.get_text() for part in inline)
-            yield from _paragraph_event(text, inline)
+            yield from _paragraph_event(inline)
             inline = []
         yield from _events(node)
     if inline:
-        text = "".join(str(part) if isinstance(part, NavigableString) else part.get_text() for part in inline)
-        yield from _paragraph_event(text, inline)
+        yield from _paragraph_event(inline)
 
 
 def _events(node):
@@ -210,17 +281,17 @@ def _events(node):
         yield "stop", ""
         return
     if node.name in {"p", "li"}:
-        yield from _paragraph_event(_text(node), [node])
+        yield from _paragraph_event([node])
         return
     yield from _container_events(node.children)
 
 
-def _collect(nodes):
+def _collect(nodes, *, documents=False):
     paragraphs = []
     for kind, text in _container_events(nodes):
         if kind == "stop":
             return paragraphs, True
-        paragraphs.append(text)
+        paragraphs.append(text if documents else text[0])
     return paragraphs, False
 
 
@@ -288,7 +359,7 @@ def _following_in_content(article, content):
 
 
 def extract_description(html, name, final_url, *, requested_url=None, linked=False, allow_general=False):
-    """Return {description, error, heading, canonical_url}; never fetch a page.
+    """Return {description, description_doc, error, heading, canonical_url}; never fetch a page.
 
     Exact primary Main subjects qualify after final/canonical URL verification.
     An old name qualifies only with its caller-supplied bare requested_url,
@@ -301,7 +372,7 @@ def extract_description(html, name, final_url, *, requested_url=None, linked=Fal
     Only explicit linked allow_general mode admits approved general namespaces;
     original redirect routes remain bare Main URIs with exact captured from= proof.
     """
-    result = {"description": None, "error": None, "heading": "", "canonical_url": None}
+    result = {"description": None, "description_doc": None, "error": None, "heading": "", "canonical_url": None}
 
     def reject(message):
         return {**result, "error": message}
@@ -374,7 +445,7 @@ def extract_description(html, name, final_url, *, requested_url=None, linked=Fal
     return _extract_intro(soup, result)
 
 
-def _extract_intro(soup, result):
+def _extract_intro(soup, result, *, source="crawl"):
     """Shared intro cleanup after the caller has verified its actual identity evidence."""
     def reject(message):
         return {**result, "error": message}
@@ -384,28 +455,37 @@ def _extract_intro(soup, result):
     if not article:
         return reject("Missing main article")
     _skip_leading_metadata(article)
-    paragraphs, boundary = _collect(list(article.children))
+    paragraphs, boundary = _collect(list(article.children), documents=True)
     if not boundary:
         content = article.find_parent(id="main-content")
         if content:
-            continuation, continued_boundary = _collect(_following_in_content(article, content))
+            continuation, continued_boundary = _collect(_following_in_content(article, content), documents=True)
             if continued_boundary:
                 paragraphs.extend(continuation)
             elif continuation:
                 return reject("Unbounded introduction outside the main article")
-    selected, size = [], 0
-    for paragraph in paragraphs:
+    selected, blocks, size = [], [], 0
+    last_list = None
+    for paragraph, document_blocks, list_parent in paragraphs:
         added = len(paragraph.encode("utf-8")) + (2 if selected else 0)
         if size + added > MAX_DESCRIPTION_BYTES:
             if not selected:
                 return reject("Introduction paragraph exceeds the UTF-8 byte budget")
             break
         selected.append(paragraph)
+        for block in document_blocks:
+            if (block["kind"] == "list" and blocks and blocks[-1]["kind"] == "list"
+                    and list_parent is last_list):
+                blocks[-1]["items"].extend(block["items"])
+            else:
+                blocks.append(block)
+        last_list = list_parent
         size += added
     text = "\n\n".join(selected)
     if len(text) < MIN_DESCRIPTION_CHARS:
         return reject("Missing or very short introduction before the examples boundary")
     result["description"] = text
+    result["description_doc"] = {"v": 1, "source": source, "blocks": blocks}
     return result
 
 
@@ -420,7 +500,7 @@ def extract_archive_description(record, name, known_url, *, linked=False):
     Linked mode stores the actual primary title instead of comparing it with a
     contextual label; known/original URI and actual AKA bindings stay mandatory.
     """
-    result = {"description": None, "error": None, "heading": "", "canonical_url": None}
+    result = {"description": None, "description_doc": None, "error": None, "heading": "", "canonical_url": None}
 
     def reject(message):
         return {**result, "error": message}
@@ -513,7 +593,7 @@ def extract_archive_description(record, name, known_url, *, linked=False):
     text = _text(articles[0])
     if (challenge or re.match(r"^(?:There is currently no text in this page|This page (?:does not exist|has been deleted)|Just a moment|Checking your browser|Access denied|Attention required|Verify you are human)\b", text, re.I)):
         return reject("Archive body is an unavailable page or browser challenge")
-    return _extract_intro(soup, result)
+    return _extract_intro(soup, result, source="archive")
 
 
 def _document_main_url(value, *, historical_http=False):
@@ -538,7 +618,7 @@ def extract_document_archive_description(original_url, html, name, known_url, *,
     Linked mode ignores the contextual label, retaining the same original/canonical
     URI and real AKA evidence and returning the actual nonempty primary heading.
     """
-    result = {"description": None, "error": None, "heading": "", "canonical_url": None}
+    result = {"description": None, "description_doc": None, "error": None, "heading": "", "canonical_url": None}
 
     def reject(message):
         return {**result, "error": message}
@@ -636,7 +716,7 @@ def extract_document_archive_description(original_url, html, name, known_url, *,
         return reject("Archived document is unavailable or a browser challenge")
     if re.search(r"\b(?:may|can) refer to(?:\b|[.:])|\bdisambiguation page\b", lead, re.I) or re.match(r"A link somewhere\b.*(?:sent you|led you)", lead, re.I):
         return reject("Archived document is a disambiguation stub")
-    return _extract_intro(soup, result)
+    return _extract_intro(soup, result, source="archive")
 
 
 def main():

@@ -66,6 +66,7 @@ class TropeCatalogInitializerTests(unittest.TestCase):
         self.assertIn("name TEXT", catalog)
         self.assertIn("PRIMARY KEY (name)", catalog)
         self.assertIn("description TEXT INDEX OFF", catalog)
+        self.assertIn("description_doc TEXT INDEX OFF STORAGE WITH (columnstore = false)", catalog)
         self.assertIn("source_hash TEXT", catalog)
         self.assertIn("fetched_at TIMESTAMP", catalog)
         self.assertNotIn("FULLTEXT", catalog)
@@ -131,6 +132,7 @@ class TropeCatalogInitializerTests(unittest.TestCase):
                 self.assertIn(f"{child} {kind}", sql)
         page_sql = next(s for s in statements if s.startswith("CREATE TABLE trope_catalog_page "))
         self.assertIn("description TEXT INDEX OFF STORAGE WITH (columnstore = false)", page_sql)
+        self.assertIn("description_doc TEXT INDEX OFF STORAGE WITH (columnstore = false)", page_sql)
 
     def test_existing_uri_tables_receive_missing_archive_children_without_other_changes(self):
         tables = initialized_tables()

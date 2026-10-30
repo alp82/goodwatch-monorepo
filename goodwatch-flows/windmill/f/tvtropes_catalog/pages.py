@@ -8,11 +8,12 @@ import hashlib
 import json
 import re
 from f.sync.models.crate_schemas import SCHEMAS, ARCHIVE_COLUMN_TYPES
+from f.tvtropes_catalog.description_docs import serialize_description_doc
 from f.tvtropes_catalog.catalog import canonical_url, normalize_archive, timestamp, _has_unquoted_html
 
 PAGE_TABLE = 'trope_catalog_page'
 REFERENCE_TABLE = 'trope_catalog_reference'
-PAGE_FIELDS = ('url', 'title', 'description', 'description_hash', 'source', 'source_hash', 'fetched_at', 'source_archive')
+PAGE_FIELDS = ('url', 'title', 'description', 'description_doc', 'description_hash', 'source', 'source_hash', 'fetched_at', 'source_archive')
 REFERENCE_FIELDS = ('reference_url', 'canonical_url', 'source_hash', 'fetched_at', 'source_archive')
 TABLES = ((PAGE_TABLE, 'url', PAGE_FIELDS, 'pages'), (REFERENCE_TABLE, 'reference_url', REFERENCE_FIELDS, 'references'))
 _HASH = re.compile(r'[0-9a-f]{64}\Z')
@@ -85,6 +86,7 @@ def normalize_page(row):
     if row.get('source', 'tvtropes') != 'tvtropes':
         raise ValueError('Page source must be tvtropes')
     return {'url': _page_url(row.get('url')), 'title': title, 'description': description,
+            'description_doc': serialize_description_doc(row.get('description_doc'), description),
             'description_hash': hashlib.sha256(description.encode()).hexdigest() if description is not None else None,
             'source': 'tvtropes', **_provenance(row)}
 

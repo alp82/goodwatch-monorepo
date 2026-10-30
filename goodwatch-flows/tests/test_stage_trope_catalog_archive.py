@@ -108,6 +108,8 @@ class ArchiveStagingTests(unittest.TestCase):
         self.assertIsNone(rows[0]['fetched_at'])
         self.assertIsNone(rows[0]['source_hash'])
         self.assertIn(LEAD, rows[0]['description'])
+        self.assertEqual(json.loads(rows[0]['description_doc'])['source'], 'archive')
+        self.assertIn(LEAD, json.loads(rows[0]['description_doc'])['blocks'][0]['text'])
         self.assertEqual(rows[0]['source_archive']['revision'], REVISION)
         self.assertGreater(rows[0]['source_archive']['byte_offset'], 0)
         self.assertEqual(rows[0]['source_archive']['article_sha256'], sha(record()['article'].encode()))
@@ -117,6 +119,11 @@ class ArchiveStagingTests(unittest.TestCase):
         self.assertEqual((report['accepted'], report['identical_duplicates']), (1, 1))
         rows = json.loads((self.output / 'records.json').read_text())
         self.assertEqual(rows[0]['source_archive']['byte_offset'], len(b'{"ns":"Film"}\n'))
+
+    def test_identical_plain_text_with_different_links_is_a_conflict(self):
+        other = record(record()['article'].replace('The character', '<a href="/pmwiki/pmwiki.php/Main/Hero">The character</a>'))
+        report = self.run_stage([record(), other])
+        self.assertEqual((report['accepted'], report['conflict_names']), (0, 1))
 
     def test_conflicting_definitions_quarantine_every_candidate(self):
         other = record(record()['article'].replace(LEAD, 'Another complete definition changes the explanation of this narrative convention.'))

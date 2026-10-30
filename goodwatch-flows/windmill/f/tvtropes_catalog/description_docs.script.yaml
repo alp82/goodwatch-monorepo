@@ -1,0 +1,9 @@
+summary: Validate version 1 TV Tropes description documents
+description: 'Pure library: validates document shape and UTF-16 ranges, filters wiki links and serializes JSON text. No transport or writes; main does nothing.'
+lock: '!inline f/tvtropes_catalog/description_docs.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

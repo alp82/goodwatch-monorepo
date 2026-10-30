@@ -560,6 +560,7 @@ SCHEMAS = {
         "columns": {
             "url": "TEXT", "title": "TEXT",
             "description": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "description_doc": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
             "description_hash": "TEXT", "source": "TEXT", "source_hash": "TEXT",
             "fetched_at": "TIMESTAMP", "source_archive": ARCHIVE_OBJECT_SQL,
             "imported_at": "TIMESTAMP", "updated_at": "TIMESTAMP",
@@ -581,6 +582,7 @@ SCHEMAS = {
             "name": "TEXT",
             "url": "TEXT",
             "description": "TEXT INDEX OFF",
+            "description_doc": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
             "description_hash": "TEXT",
             "source": "TEXT",
             "source_hash": "TEXT",

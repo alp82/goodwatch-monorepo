@@ -241,6 +241,7 @@ def stage_archive(directory, catalog, output, *, progress=lambda item: None, ext
                     continue
                 try:
                     row = normalize_record({'name': name, 'url': result['canonical_url'], 'description': result['description'],
+                                            'description_doc': result.get('description_doc'),
                                             'source_hash': None, 'fetched_at': None, 'source_archive': archive})
                 except ValueError as error:
                     rejected += 1
@@ -250,7 +251,7 @@ def stage_archive(directory, catalog, output, *, progress=lambda item: None, ext
                 if name in conflicts:
                     conflicts[name].append(row)
                 elif name in accepted:
-                    if accepted[name]['description'] == row['description'] and accepted[name]['url'] == row['url']:
+                    if all(accepted[name].get(key) == row.get(key) for key in ('description', 'description_doc', 'url')):
                         duplicates += 1  # First source byte position deterministically supplies equivalent evidence.
                     else:
                         conflicts[name] = [accepted.pop(name), row]
@@ -262,7 +263,7 @@ def stage_archive(directory, catalog, output, *, progress=lambda item: None, ext
         raise ValueError('Verified Main record count disagrees with manifest')
     records = [accepted[name] for name in sorted(accepted)]
     for name, candidates in sorted(conflicts.items()):
-        review.append({'name': name, 'error': 'Conflicting verified source descriptions or canonical URLs', 'candidates': candidates})
+        review.append({'name': name, 'error': 'Conflicting verified source descriptions, documents or canonical URLs', 'candidates': candidates})
     data = encoded(records)
     report = {'phase': 'staged', 'input_records': count, 'catalog_missing': catalog_count,
               'catalog_invalid_or_missing_url': invalid_catalog, 'accepted': len(records), 'rejected': rejected,

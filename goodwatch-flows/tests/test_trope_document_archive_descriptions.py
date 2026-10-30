@@ -44,7 +44,7 @@ class DocumentArchiveDescriptionsTest(unittest.TestCase):
         self.assertEqual(result['heading'], 'Abandoned Catchphrase')
         self.assertEqual(result['canonical_url'], URL)
         self.assertEqual(result['description'], LEAD)
-        self.assertEqual(set(result), {'description', 'heading', 'canonical_url', 'error'})
+        self.assertEqual(set(result), {'description', 'description_doc', 'heading', 'canonical_url', 'error'})
 
     def test_real_2023_aka_without_parentheses_supports_original_alias_uri(self):
         original, canonical = BASE + 'AbandonedSubway', BASE + 'SinisterSubway'

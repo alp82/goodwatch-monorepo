@@ -136,7 +136,8 @@ class PageCatalog:
         url = result['canonical_url']
         provenance = {'source_hash': evidence['sha256'], 'fetched_at': evidence['started_at']}
         return self.restore({
-            'pages': [{'url': url, 'title': result['heading'], 'description': result['description'], **provenance}],
+            'pages': [{'url': url, 'title': result['heading'], 'description': result['description'],
+                       'description_doc': result.get('description_doc'), **provenance}],
             'references': [{'reference_url': reference, 'canonical_url': url, **provenance}
                            for reference in sorted({entry['url'], url})],
         })

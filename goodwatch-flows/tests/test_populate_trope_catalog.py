@@ -95,6 +95,12 @@ class PopulationTests(unittest.TestCase):
                           state_path=self.root / "state.json", lock_path=self.root / "worker.lock", pace_path=self.root / "pace.json",
                           emit=self.events.append, **kwargs)
 
+    def test_label_catalog_carries_the_extracted_document(self):
+        value = {'v': 1, 'source': 'crawl', 'blocks': [{'kind': 'p', 'text': 'An actual source definition.'}]}
+        result = {**extract('An actual source definition.', 'Trope 00001', entry(1)['url']), 'description_doc': value}
+        row = worker.LabelCatalog.record(entry(1), result, {'sha256': 'a' * 64, 'started_at': '2026-10-25T00:00:00Z'}, None)
+        self.assertEqual(json.loads(row['description_doc']), value)
+
     def test_all_missing_names_are_keyset_paginated_past_the_first_thousand(self):
         db = Database([entry(i) for i in range(1005)])
         queued = list(worker.missing_entries(db))

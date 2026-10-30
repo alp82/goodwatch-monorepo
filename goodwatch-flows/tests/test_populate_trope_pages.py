@@ -171,10 +171,12 @@ class PagePopulationTests(unittest.TestCase):
         self.assertEqual({r['reference_url'] for r in record['references']}, {BASE+'OneBigLie',canonical})
 
     def test_record_preserves_real_heading_and_separate_reference(self):
-        result = {'canonical_url': BASE + 'Canonical', 'heading': 'Actual title', 'description': 'Actual source introduction.'}
+        result = {'canonical_url': BASE + 'Canonical', 'heading': 'Actual title', 'description': 'Actual source introduction.',
+                  'description_doc': {'v': 1, 'source': 'crawl', 'blocks': [{'kind': 'p', 'text': 'Actual source introduction.'}]}}
         record = self.catalog.record({'url': BASE + 'Old'}, result,
                                       {'sha256': 'a' * 64, 'started_at': '2026-10-25T00:00:00+00:00'}, None)
         self.assertEqual(record['pages'][0]['title'], 'Actual title')
+        self.assertEqual(json.loads(record['pages'][0]['description_doc']), result['description_doc'])
         self.assertEqual({r['reference_url'] for r in record['references']}, {BASE + 'Old', BASE + 'Canonical'})
         self.assertEqual({r['canonical_url'] for r in record['references']}, {BASE + 'Canonical'})
         with self.assertRaises(ValueError):

@@ -277,7 +277,8 @@ class LabelCatalog:
     @staticmethod
     def record(entry, result, evidence, page):
         record = normalize_record({"name": entry["name"], "url": result.get("canonical_url") or page.url,
-                                   "description": result["description"], "source_hash": evidence.get("sha256"),
+                                   "description": result["description"], "description_doc": result.get("description_doc"),
+                                   "source_hash": evidence.get("sha256"),
                                    "fetched_at": evidence.get("started_at")})
         if not record["source_hash"] or record["fetched_at"] is None:
             raise ValueError("Missing captured source provenance")
