@@ -43,6 +43,8 @@ export interface SortOption<K extends string = string> {
 	taste?: boolean
 	/** Shown but not pickable; `hint` says why. */
 	disabled?: boolean
+	/** PROTOTYPE: the sort's own icon, in the menu and on a short sort button. */
+	icon?: import("react").ComponentType<{ className?: string }>
 }
 
 /**

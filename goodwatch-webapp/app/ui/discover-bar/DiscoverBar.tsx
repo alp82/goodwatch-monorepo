@@ -217,7 +217,8 @@ export function DiscoverBar({
 							<motion.span
 								layoutId="discover-bar-pill"
 								transition={PILL_SPRING}
-								className="absolute inset-0 rounded-full bg-white/[0.1] ring-1 ring-white/20 shadow-[0_10px_30px_-10px_rgba(0,0,0,.8),inset_0_1px_0_rgba(255,255,255,.08)]"
+								className={`absolute inset-y-0 rounded-full bg-white/[0.1] ${i === 0 ? "left-0" : "left-1.5"} ${i === MAIN_TABS.length - 1 ? "right-0" : "right-1.5"}`}
+								style={{ boxShadow: "0 10px 30px -10px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.08), inset 0 0 0 1px rgba(255,255,255,.2)" }}
 							/>
 						)}
 						{isSearch && search ? (

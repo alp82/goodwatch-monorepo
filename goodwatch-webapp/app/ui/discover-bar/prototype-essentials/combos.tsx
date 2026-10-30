@@ -12,7 +12,15 @@ import {
 	LockClosedIcon,
 	PlusIcon,
 } from "@heroicons/react/20/solid"
-import { FingerPrintIcon, PlayCircleIcon } from "@heroicons/react/24/solid"
+import {
+	ClockIcon,
+	FingerPrintIcon,
+	FireIcon,
+	MagnifyingGlassIcon,
+	PlayCircleIcon,
+	SparklesIcon,
+	StarIcon,
+} from "@heroicons/react/24/solid"
 import { useNavigate, useSearchParams } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ComponentProps, type ReactNode, useRef, useState } from "react"
@@ -43,7 +51,10 @@ export function Tip({
 	children,
 	off = false,
 	align = "center",
+	grow = false,
 }: {
+	/** Fill the free width of a flex row (the For you half). */
+	grow?: boolean
 	tip: ReactNode
 	children: ReactNode
 	off?: boolean
@@ -51,7 +62,7 @@ export function Tip({
 }) {
 	const [shown, setShown] = useState(false)
 	const timer = useRef<ReturnType<typeof setTimeout>>()
-	if (off) return <>{children}</>
+	if (off) return grow ? <span className="flex flex-1">{children}</span> : <>{children}</>
 	const show = () => {
 		clearTimeout(timer.current)
 		timer.current = setTimeout(() => setShown(true), 160)
@@ -62,7 +73,7 @@ export function Tip({
 	}
 	return (
 		<span
-			className="relative flex"
+			className={`relative flex ${grow ? "flex-1" : ""}`}
 			onPointerEnter={(e) => e.pointerType === "mouse" && show()}
 			onPointerLeave={hide}
 			onFocus={(e) => (e.target as HTMLElement).matches(":focus-visible") && show()}
@@ -570,7 +581,7 @@ function ReadyB({
 }) {
 	const names = p.mine.map((m) => m.name).join(", ")
 	return (
-		<div className="flex h-10 shrink-0 rounded-full bg-white/[0.04] ring-1 ring-white/10">
+		<div className="flex h-10 shrink-0 rounded-xl bg-white/[0.04] ring-1 ring-white/10">
 			<Tip
 				off={level === 2}
 				align="start"
@@ -589,7 +600,7 @@ function ReadyB({
 					aria-label="Ready to watch"
 					whileTap={TAP}
 					onClick={r.toggleAll}
-					className={`${SEG} rounded-l-full ${FOCUS} ${level === 0 ? "pr-2 pl-3" : "pr-2.5 pl-3.5"} ${r.all || r.some ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+					className={`${SEG} rounded-l-xl ${FOCUS} ${level === 0 ? "pr-2 pl-3" : "pr-2.5 pl-3.5"} ${r.all || r.some ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
 				>
 					<MainIcon kind="ready" lit={r.all} some={r.some} />
 					{level === 2 && <span className="text-sm">Ready to watch</span>}
@@ -624,7 +635,7 @@ function ReadyB({
 						aria-label={part.label}
 						whileTap={TAP}
 						onClick={part.onClick}
-						className={`${SEG} border-l border-white/10 ${FOCUS} ${level === 0 ? "px-2.5" : "px-3"} ${i === parts.length - 1 ? "rounded-r-full pr-3.5" : ""} ${part.on ? `${part.tint} text-white` : part.locked ? "text-gray-500" : "text-gray-400 hover:bg-white/[0.05] hover:text-gray-200"}`}
+						className={`${SEG} border-l border-white/10 ${FOCUS} ${level === 0 ? "px-2.5" : "px-3"} ${i === parts.length - 1 ? "rounded-r-xl pr-3.5" : ""} ${part.on ? `${part.tint} text-white` : part.locked ? "text-gray-500" : "text-gray-400 hover:bg-white/[0.05] hover:text-gray-200"}`}
 					>
 						{part.icon}
 						{level === 2 && part.label}
@@ -655,12 +666,13 @@ function OrderB({
 	const fixed = params.get("w") === "auto" ? undefined : ORDER_WIDTH[level]
 	return (
 		<div
-			className="flex h-10 shrink-0 rounded-full bg-white/[0.04] ring-1 ring-white/10"
+			className="flex h-10 shrink-0 rounded-xl bg-white/[0.04] ring-1 ring-white/10"
 			style={fixed ? { width: fixed } : undefined}
 			data-order-b={level}
 		>
 			<Tip
 				off={level === 2}
+				grow
 				tip={
 					<TipText
 						name="For you"
@@ -676,10 +688,13 @@ function OrderB({
 					aria-label="For you"
 					whileTap={TAP}
 					onClick={() => !forYou.disabled && forYou.onChange(!forYou.on)}
-					className={`${SEG} rounded-l-full ${FOCUS} ${level === 0 ? "pr-2 pl-3" : "pr-2.5 pl-3.5"} ${lit ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+					className={`${SEG} flex-1 rounded-l-xl ${FOCUS} ${level === 2 ? "justify-between gap-3 pr-3 pl-3.5" : level === 1 ? "justify-between pr-3 pl-3" : "pr-2 pl-3"} ${lit ? "text-white" : "text-gray-400 hover:bg-white/[0.04] hover:text-gray-200"}`}
 				>
-					<MainIcon kind="you" lit={lit} />
-					{level === 2 && <span className="text-sm">For you</span>}
+					<span className="flex items-center gap-2">
+						<MainIcon kind="you" lit={lit} />
+						{level === 2 && <span className="text-sm">For you</span>}
+					</span>
+					<span className="flex items-center gap-2.5">
 					{level === 2 && (
 						<span
 							className={`w-9 text-right text-xs tabular-nums ${moved ? "text-amber-300" : "text-transparent"}`}
@@ -690,28 +705,29 @@ function OrderB({
 						</span>
 					)}
 					<Knob on={lit} />
+					</span>
 					<BaseLine on={lit} color="bg-amber-400" />
 				</motion.button>
 			</Tip>
-			<div className="flex min-w-3 flex-1 justify-center" aria-hidden>
-				<span className="my-2.5 w-px bg-white/10" />
-			</div>
+			<span className="my-2.5 w-px shrink-0 bg-white/10" aria-hidden />
 			<Tip
 				off={level > 0}
 				align="end"
 				tip={<TipText name={`Sort: ${chosen}`} />}
 			>
 				<div
-					className={`flex [&_[data-sort-button]]:h-10 [&_[data-sort-button]]:rounded-l-none [&_[data-sort-button]]:rounded-r-full [&_[data-sort-button]>span.relative]:flex-none ${
+					className={`flex [&_[data-sort-button]]:h-10 [&_[data-sort-button]]:rounded-l-none [&_[data-sort-button]]:rounded-r-xl [&_[data-sort-button]>span.relative]:flex-none ${
 						level === 2
-							? "[&_[data-sort-button]]:pl-0"
+							? "[&_[data-sort-button]]:pl-3"
 							: level === 1
-								? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]]:pr-3 [&_[data-sort-button]]:pl-0"
+								? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]]:px-3"
 								: "[&_[data-sort-button]>span]:hidden [&_[data-sort-button]]:px-3"
 					}`}
 				>
 					<SortControl
 						{...sort}
+						options={sort.options.map((o) => ({ ...o, icon: SORT_ICONS[o.key] }))}
+						modeIcon={level < 2}
 						bare
 						buttonLabel={level === 1 ? (key, label) => SHORT_SORT[key] ?? label : undefined}
 					/>
@@ -723,6 +739,15 @@ function OrderB({
 
 /** The pill's width per size (0: as wide as its content), from the longest sort name. */
 const ORDER_WIDTH: Record<Level, number> = { 2: 384, 1: 220, 0: 0 }
+
+/** Each sort's own icon (menu, and the button below full size). */
+const SORT_ICONS: Record<string, import("react").ComponentType<{ className?: string }>> = {
+	match: SparklesIcon,
+	popular: FireIcon,
+	top: StarIcon,
+	newest: ClockIcon,
+	relevance: MagnifyingGlassIcon,
+}
 
 /** Sort names that fit the short size. */
 const SHORT_SORT: Record<string, string> = {

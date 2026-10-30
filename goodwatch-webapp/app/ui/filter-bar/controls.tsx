@@ -321,6 +321,11 @@ export function SortItems<K extends string>({
 								className="absolute inset-0 rounded-xl bg-white/[0.07] ring-1 ring-white/10"
 							/>
 						)}
+						{s.icon && (
+							<s.icon
+								className={`relative h-4 w-4 shrink-0 ${s.taste ? "text-amber-400" : on ? "text-white" : "text-gray-400"}`}
+							/>
+						)}
 						<span className="relative min-w-0 flex-1">
 							<span
 								className={`block text-sm font-bold ${on ? "text-white" : "text-gray-300"}`}
@@ -420,11 +425,14 @@ export function SortControl<K extends string>({
 	outsideIgnore,
 	bare = false,
 	buttonLabel,
+	modeIcon = false,
 }: {
 	/** Without a shell of its own, for the For you | Sort control. */
 	bare?: boolean
 	/** PROTOTYPE: a shorter name for the button only; the menu keeps the full names. */
 	buttonLabel?: (key: string, label: string) => string
+	/** PROTOTYPE: the chosen sort's own icon on the button in place of the arrows. */
+	modeIcon?: boolean
 	options: SortOption<K>[]
 	value: K
 	onChange: (key: K) => void
@@ -549,9 +557,15 @@ export function SortControl<K extends string>({
 				}}
 				className={`flex items-center text-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${sm ? "h-9 gap-1.5 px-3 whitespace-nowrap" : bare ? "h-12 gap-2 px-4 whitespace-nowrap" : "h-12 w-52 gap-2 px-4"} ${bare ? `rounded-r-2xl ${open ? "bg-white/[0.06]" : "hover:bg-white/[0.05]"}` : `${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}`}
 			>
-				<ArrowsUpDownIcon
-					className={`h-4 w-4 shrink-0 ${chosen?.taste ? "text-amber-400" : "text-gray-400"}`}
-				/>
+				{modeIcon && chosen?.icon ? (
+					<chosen.icon
+						className={`h-4 w-4 shrink-0 ${chosen?.taste ? "text-amber-400" : "text-gray-300"}`}
+					/>
+				) : (
+					<ArrowsUpDownIcon
+						className={`h-4 w-4 shrink-0 ${chosen?.taste ? "text-amber-400" : "text-gray-400"}`}
+					/>
+				)}
 				<span className="text-gray-400">Sort </span>
 				<span
 					className={`relative overflow-hidden text-left ${sm ? "" : "flex-1"}`}
