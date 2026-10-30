@@ -327,8 +327,12 @@ function DiscoverControlsContent({
 				) : undefined
 			}
 			beforeSort={
-				v === "C" && desktop ? <ReadySwitch p={ess} phone={false} /> : undefined
+				(v === "C" || v === "F") && desktop ? (
+					<ReadySwitch p={ess} phone={false} v2={v === "F"} />
+				) : undefined
 			}
+			meter={v === "F"}
+			hideSort={v === "F"}
 			reading={reading}
 			clearCount={data.clearCount}
 			sort={sort}
@@ -434,9 +438,9 @@ function DiscoverControlsContent({
 							<PillPair p={ess} stretch />
 						</div>
 					)}
-					{v === "C" && (
+					{(v === "C" || v === "F") && (
 						<div className="mt-2">
-							<ReadySwitch p={ess} phone />
+							<ReadySwitch p={ess} phone v2={v === "F"} />
 						</div>
 					)}
 					{statusLine}

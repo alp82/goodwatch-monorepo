@@ -36,6 +36,7 @@ import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 import useLocale from "~/utils/locale"
+import { SortControl } from "~/ui/filter-bar/controls"
 import {
 	PillPair,
 	VariantSwitcher,
@@ -187,10 +188,22 @@ export default function PrototypeDiscoverEssentials() {
 	const desktop = useDesktop()
 	return (
 		<div className="mx-auto max-w-[1600px] px-4 pt-4 pb-16 lg:px-8 lg:pt-6">
-			<div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+			<div className={`flex items-center justify-between gap-x-6 gap-y-3 ${variant === "F" ? "" : "flex-wrap"}`}>
 				<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
 					Discover movies and shows
 				</h1>
+				{variant === "F" && (
+					<div className="shrink-0 max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden">
+						<SortControl
+							options={discoverSorts(searching, taste)}
+							value={sortShown(filters.sort, searching, taste)}
+							onChange={(key) => filters.setSort(key as typeof filters.sort)}
+							footnote={searching ? undefined : "Relevance joins once you search."}
+							size="sm"
+							align="right"
+						/>
+					</div>
+				)}
 				{variant === "D" && (
 					<div className="max-lg:w-full">
 						<PillPair

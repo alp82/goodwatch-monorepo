@@ -43,7 +43,7 @@ export function CountText({
 	)
 }
 
-function Count({
+export function Count({
 	counts,
 	searching,
 }: {

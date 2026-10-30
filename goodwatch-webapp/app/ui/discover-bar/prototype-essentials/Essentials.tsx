@@ -33,13 +33,14 @@ export const VARIANTS = [
 	{ key: "C", name: "Ready to watch" },
 	{ key: "D", name: "Heading row" },
 	{ key: "E", name: "Thumb bar" },
+	{ key: "F", name: "Ready to watch v2" },
 ] as const
 export type Variant = (typeof VARIANTS)[number]["key"]
 
 export const useVariant = (): Variant => {
 	const [params] = useSearchParams()
-	const v = params.get("variant") ?? "A"
-	return (VARIANTS.find((x) => x.key === v)?.key ?? "A") as Variant
+	const v = params.get("variant") ?? "F"
+	return (VARIANTS.find((x) => x.key === v)?.key ?? "F") as Variant
 }
 
 /** The chips the variant's switches stand in for. */
@@ -256,7 +257,8 @@ export function BarStrip({ p, phone }: { p: EssentialsProps; phone: boolean }) {
 export function ReadySwitch({
 	p,
 	phone,
-}: { p: EssentialsProps; phone: boolean }) {
+	v2 = false,
+}: { p: EssentialsProps; phone: boolean; v2?: boolean }) {
 	const canServices = p.mine.length > 0
 	const canUnseen = p.member
 	const s = canServices && p.state.onMyServices
@@ -299,30 +301,118 @@ export function ReadySwitch({
 			{label}
 		</motion.button>
 	)
+	const mini = (
+		label: string,
+		on: boolean,
+		icon: React.ReactNode,
+		tint: string,
+		onClick: () => void,
+		locked = false,
+	) => (
+		<motion.button
+			type="button"
+			role={locked ? undefined : "switch"}
+			aria-checked={locked ? undefined : on}
+			whileTap={TAP}
+			onClick={onClick}
+			className={`flex h-8 min-w-0 shrink items-center gap-1.5 rounded-xl px-2.5 text-[13px] font-bold whitespace-nowrap cursor-pointer ring-1 ring-inset transition-colors duration-200 ${FOCUS} ${
+				on
+					? `${tint} text-white ring-transparent`
+					: locked
+						? "bg-white/[0.03] text-gray-500 ring-white/[0.06]"
+						: "bg-white/[0.04] text-gray-400 ring-white/10 hover:text-gray-200"
+			}`}
+		>
+			{icon}
+			<span className="truncate">{label}</span>
+		</motion.button>
+	)
+	const v2Parts = (
+		<>
+			{canServices
+				? mini(
+						"My services",
+						s,
+						<ServiceStack providers={p.mine} on={s} size={14} max={phone ? 2 : 3} />,
+						"bg-emerald-500/20",
+						() => p.update(s ? servicesOff : servicesOn),
+					)
+				: mini(
+						"Pick services",
+						false,
+						<PlusIcon className="h-3.5 w-3.5 shrink-0 text-emerald-400" />,
+						"",
+						() => p.open("watch", "services"),
+					)}
+			{canUnseen
+				? mini(
+						"Not seen yet",
+						u,
+						<EyeSlashIcon className={`h-3.5 w-3.5 shrink-0 ${u ? "text-blue-400" : ""}`} />,
+						"bg-blue-500/20",
+						() => p.update((st) => unseen(st, !u)),
+					)
+				: mini(
+						"Not seen yet",
+						false,
+						<LockClosedIcon className="h-3 w-3 shrink-0 text-amber-500/70" />,
+						"",
+						() => p.open("you", "taste"),
+						true,
+					)}
+		</>
+	)
+	if (v2 && phone)
+		return (
+			<div className={`flex w-full flex-col gap-1 p-1 ${SHELL}`}>
+				<motion.button
+					type="button"
+					role="switch"
+					aria-checked={all}
+					whileTap={TAP}
+					onClick={toggleAll}
+					className={`flex h-10 items-center gap-2 rounded-xl pr-1.5 pl-2.5 text-sm font-bold cursor-pointer ${FOCUS} ${all || some ? "text-white" : "text-gray-400"}`}
+				>
+					<BoltIcon
+						className={`h-4 w-4 shrink-0 ${all ? "text-amber-400" : some ? "text-amber-400/60" : ""}`}
+					/>
+					<span className="flex-1 text-left">Ready to watch</span>
+					<Knob on={all} />
+				</motion.button>
+				<div className="grid grid-cols-2 gap-1 [&>button]:h-9 [&>button]:justify-center">
+					{v2Parts}
+				</div>
+			</div>
+		)
 	return (
 		<div
-			className={`relative flex items-center gap-1 ${SHELL} ${phone ? "h-12 w-full pr-1.5 pl-1" : "h-10 pr-1.5 pl-1"}`}
+			className={`relative flex items-center gap-1 ${SHELL} ${phone ? "h-12 w-full pr-1.5 pl-1" : "h-10 pr-1 pl-1"}`}
 		>
-			<span
-				aria-hidden
-				className={`pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-amber-400/70 transition-opacity duration-200 ${all ? "opacity-100" : "opacity-0"}`}
-			/>
+			{!v2 && (
+				<span
+					aria-hidden
+					className={`pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-amber-400/70 transition-opacity duration-200 ${all ? "opacity-100" : "opacity-0"}`}
+				/>
+			)}
 			<motion.button
 				type="button"
 				role="switch"
 				aria-checked={all}
 				whileTap={TAP}
 				onClick={toggleAll}
-				className={`flex h-full min-w-0 flex-1 items-center gap-2 rounded-2xl pr-2 pl-2.5 text-sm font-bold whitespace-nowrap cursor-pointer ${FOCUS} ${all || some ? "text-white" : "text-gray-400 hover:text-gray-200"} ${phone && all ? "bg-amber-500/15" : ""}`}
+				className={`flex h-full min-w-0 flex-1 items-center gap-2 rounded-2xl pr-2 pl-2.5 text-sm font-bold whitespace-nowrap cursor-pointer ${FOCUS} ${all || some ? "text-white" : "text-gray-400 hover:text-gray-200"} ${phone && all && !v2 ? "bg-amber-500/15" : ""}`}
 			>
 				<BoltIcon
 					className={`h-4 w-4 shrink-0 ${all ? "text-amber-400" : some ? "text-amber-400/60" : ""}`}
 				/>
 				<span className="flex-1 text-left">Ready to watch</span>
-				{!phone && <Knob on={all} />}
+				{(v2 || !phone) && <Knob on={all} />}
 			</motion.button>
 			<span className="mx-0.5 h-5 w-px bg-white/10" aria-hidden />
-			{canServices
+			{v2 ? (
+				<div className="flex min-w-0 items-center gap-1">{v2Parts}</div>
+			) : null}
+			{!v2 && canServices
 				? part(
 						"My services",
 						s,
@@ -330,8 +420,8 @@ export function ReadySwitch({
 						() => p.update(s ? servicesOff : servicesOn),
 						"bg-emerald-400",
 					)
-				: part("Services", false, true, () => p.open("watch", "services"), "")}
-			{part(
+				: !v2 && part("Services", false, true, () => p.open("watch", "services"), "")}
+			{!v2 && part(
 				phone ? "Unseen" : "Not seen yet",
 				u,
 				canUnseen,

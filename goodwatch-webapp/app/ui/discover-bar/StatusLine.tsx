@@ -8,7 +8,7 @@ import { SortControl } from "~/ui/filter-bar/controls"
 import type { SortOption } from "~/ui/filter-bar/labels"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
 import { BarChips } from "./BarChips"
-import { CountText } from "./PanelFooter"
+import { Count, CountText } from "./PanelFooter"
 import type { BarChip } from "./chips"
 
 export const STATUS_HEIGHT = 40
@@ -35,6 +35,8 @@ export function StatusLine({
 	onClearAll,
 	lead,
 	beforeSort,
+	meter = false,
+	hideSort = false,
 	className = "",
 }: {
 	counts: FilterBarCounts | null
@@ -50,6 +52,10 @@ export function StatusLine({
 	/** PROTOTYPE essentials: after the count, and before the sort. */
 	lead?: ReactNode
 	beforeSort?: ReactNode
+	/** PROTOTYPE: the count with the hidden meter under it, as in the panel footer. */
+	meter?: boolean
+	/** PROTOTYPE: the sort lives elsewhere (the heading row). */
+	hideSort?: boolean
 	className?: string
 }) {
 	return (
@@ -58,7 +64,11 @@ export function StatusLine({
 			style={{ height: STATUS_HEIGHT }}
 		>
 			<span className="shrink-0">
-				<CountText counts={counts} searching={searching} />
+				{meter ? (
+					<Count counts={counts} searching={searching} />
+				) : (
+					<CountText counts={counts} searching={searching} />
+				)}
 			</span>
 			{lead}
 			<BarChips
@@ -81,7 +91,7 @@ export function StatusLine({
 				}
 			/>
 			{beforeSort}
-			<div className="shrink-0 max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden">
+			<div className={`${hideSort ? "hidden" : ""} shrink-0 max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden`}>
 				<SortControl
 					options={sort.options}
 					value={sort.value}
