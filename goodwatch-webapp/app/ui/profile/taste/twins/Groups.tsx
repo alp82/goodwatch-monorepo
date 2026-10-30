@@ -1,4 +1,4 @@
-// The full lists the comparison's three groups open into (round 19). Each carries its group's
+// The full lists the comparison's three groups open into. Each carries its group's
 // meaning: Picks for you is a ranked shelf with why each title fits you, You both love is a shared wall with both
 // scores side by side, and Only you love is your titles they haven't rated, with a nudge.
 import { BookmarkIcon } from "@heroicons/react/20/solid"

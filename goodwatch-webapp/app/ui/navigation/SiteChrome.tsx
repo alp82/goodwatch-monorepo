@@ -11,7 +11,6 @@ import useLocale from "~/utils/locale"
 import { AreaTabs, TasteTabs } from "./AreaTabs"
 import { AccountMenuHost, SearchDialog } from "./LazyDialogs"
 import { MobileDock } from "./MobileDock"
-import { NavOptionsBar } from "./NavOptionsBar"
 import { NavigationProvider, usePathViewer } from "./NavigationContext"
 import { SiteHeader } from "./SiteHeader"
 import { SubNav } from "./SubNav"
@@ -121,8 +120,6 @@ export function SiteChrome({
 				<MobileDock />
 				<AccountMenuHost />
 				<SearchDialog />
-				{/* PROTOTYPE OPTIONS (round 8): development builds only. */}
-				{import.meta.env.DEV && <NavOptionsBar />}
 			</div>
 		</NavigationProvider>
 	)

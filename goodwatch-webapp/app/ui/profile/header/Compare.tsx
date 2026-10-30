@@ -8,7 +8,6 @@ import type { MouseEvent, ReactNode } from "react"
 import { tastePath } from "~/domain/member-paths"
 import { type MatchTier, matchTier } from "~/domain/profile-taste"
 import type { HeaderMatch } from "~/server/profile/header.server"
-import { useShownMatch } from "~/ui/navigation/nav-options"
 import { COMPARE_ID, requestCompare } from "../compare-link"
 import { matchColor, matchStrength } from "../match"
 
@@ -19,7 +18,7 @@ const plainClick = (event: MouseEvent) =>
 	!event.shiftKey &&
 	!event.altKey
 
-/** The match as the header shows it: the percent (honoring the prototype's simulation), its tier, color and strength. */
+/** The match as the header shows it: the percent, its tier, color and strength. */
 export interface MatchView {
 	percent: number
 	tier: MatchTier
@@ -28,9 +27,9 @@ export interface MatchView {
 	strength: number
 }
 
-export function useMatchView(match: HeaderMatch | null): MatchView | null {
-	const percent = useShownMatch(match?.percent ?? 0)
+export function matchView(match: HeaderMatch | null): MatchView | null {
 	if (!match) return null
+	const percent = match.percent
 	return {
 		percent,
 		tier: matchTier(percent),
@@ -84,7 +83,7 @@ export function MatchChip({
 	handle,
 	match,
 }: { handle: string; match: HeaderMatch }) {
-	const view = useMatchView(match)
+	const view = matchView(match)
 	if (!view) return null
 	return (
 		<MatchLink

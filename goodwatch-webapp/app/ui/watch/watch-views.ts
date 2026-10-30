@@ -1,4 +1,4 @@
-// Watch's tabs and the views under them (member nav round 9). Pure: app/routes/watch.tsx and the components in this
+// Watch's tabs and the views under them. Pure: app/routes/watch.tsx and the components in this
 // folder read from here.
 //
 // Four tabs: Up next, Ready to watch, Recommendations, and Seen (/watch/seen, every title you watched, set at the row's

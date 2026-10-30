@@ -1,7 +1,6 @@
-// The account menu's contents, built from PLACES (ui/navigation/areas.ts), so its rows match the Settings column one
-// to one. Desktop: two columns. On the left, who you are (your profile, View as visitor, Share profile, Edit profile)
-// and Your data; on the right, Settings, Use GoodWatch elsewhere and Help, with Sign out at the bottom. Phones: the
-// same groups in one column, with taller rows.
+// The account menu's contents, built from PLACES (ui/navigation/areas.ts). Desktop: two columns. On the left, who you
+// are (your profile, View as visitor, Share profile, Edit profile, Settings) and Library; on the right, Your data, Use
+// GoodWatch elsewhere and Help, with Sign out at the bottom. Phones: the same groups in one column, with taller rows.
 import {
 	ArrowRightStartOnRectangleIcon,
 	EyeIcon,
@@ -9,7 +8,7 @@ import {
 } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import { type MouseEvent, type ReactNode, useState } from "react"
-import { tasteHome, tastePath, member } from "~/domain/member-paths"
+import { member, tasteHome, tastePath } from "~/domain/member-paths"
 import { useSignOut } from "~/ui/auth/useSignOut"
 import { openFeedback } from "~/ui/feedback/FeedbackTab"
 import {
@@ -18,6 +17,8 @@ import {
 	type Place,
 	type PlaceGroup,
 } from "~/ui/navigation/areas"
+import { NewEpisodesMark } from "~/ui/navigation/bits"
+import { useNewEpisodes } from "~/ui/navigation/useNewEpisodes"
 import { profilePath } from "~/ui/share-card/links"
 import { AccountAvatar } from "./AccountAvatar"
 import { useAccountCounts, useAccountSummary } from "./useAccountSummary"
@@ -58,6 +59,14 @@ function feedbackFrom(close: () => void) {
 	}
 }
 
+/** My shows' new-episodes number; it reads the header's signal, so it sends no request of its own. */
+function NewEpisodesBadge() {
+	return <NewEpisodesMark words={useNewEpisodes()} />
+}
+
+/** The identity rows the menu takes from PLACES (Edit profile, Settings). */
+const IDENTITY_PLACES = PLACES.left.find((g) => g.name === null)?.places ?? []
+
 function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
 	const counts = useAccountCounts()
 	const n =
@@ -69,6 +78,7 @@ function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
 			{n != null && n > 0 && (
 				<span className="text-sm tabular-nums text-gray-500">{count(n)}</span>
 			)}
+			{place.badge === "new-episodes" && <NewEpisodesBadge />}
 			{place.tag && (
 				<span className="rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-semibold text-gray-400 ring-1 ring-white/10">
 					{place.tag}
@@ -190,7 +200,8 @@ function ShareRow({ handle, big }: { handle: string; big?: boolean }) {
 	)
 }
 
-/** Who you are: your profile, View as visitor, Share profile and Edit profile. Without a handle: Pick a handle. */
+/** Who you are: your profile, View as visitor, Share profile, Edit profile and Settings. Without a handle: Pick a
+ * handle, Edit profile and Settings. */
 function Identity({ close, big }: PanelProps) {
 	const me = useAccountSummary()
 	const avatar = (
@@ -202,6 +213,9 @@ function Identity({ close, big }: PanelProps) {
 		/>
 	)
 	const head = `flex items-center gap-3 px-4 hover:bg-white/[0.05] ${big ? "py-3.5" : "pt-4 pb-3"}`
+	const identityRows = IDENTITY_PLACES.map((p) => (
+		<PlaceRow key={p.id} place={p} close={close} big={big} />
+	))
 	if (!me.handle)
 		return (
 			<>
@@ -225,9 +239,7 @@ function Identity({ close, big }: PanelProps) {
 						</span>
 					</span>
 				</Link>
-				<div className="pb-1.5">
-					<PlaceRow place={EDIT_PROFILE} close={close} big={big} />
-				</div>
+				<div className="pb-1.5">{identityRows}</div>
 			</>
 		)
 	return (
@@ -256,7 +268,7 @@ function Identity({ close, big }: PanelProps) {
 					View as visitor
 				</Link>
 				<ShareRow handle={me.handle} big={big} />
-				<PlaceRow place={EDIT_PROFILE} close={close} big={big} />
+				{identityRows}
 			</div>
 		</>
 	)

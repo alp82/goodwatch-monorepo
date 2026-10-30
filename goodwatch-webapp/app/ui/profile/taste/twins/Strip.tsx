@@ -1,9 +1,9 @@
-// The comparison strip (round 15 design b): their avatar, the score and yours, the bold tier word, then the counts as
+// The comparison strip: their avatar, the score and yours, the bold tier word, then the counts as
 // big numbers. Its bottom edge is the 0 to 100 bar, filled from the left up to the match with a thin line marking it.
 // The whole strip is the button; the panels open under it (Panels.tsx), and the strip's own
 // surface stays the same open or closed.
-import { useNavOptions } from "~/ui/navigation/nav-options"
 import { DISPLAY } from "~/ui/my-pages/bits"
+import { CARD, Panels } from "./Panels"
 import {
 	Cue,
 	EdgeBar,
@@ -11,10 +11,9 @@ import {
 	TierWord,
 	Trio,
 	counts,
+	matchFacts,
 	stripLabel,
-	useMatchFacts,
 } from "./kit"
-import { CARD, Panels } from "./Panels"
 import type { TwinsProps } from "./types"
 
 export default function TwinsStrip({
@@ -27,8 +26,8 @@ export default function TwinsStrip({
 	label,
 	sectionId,
 }: TwinsProps) {
-	const f = useMatchFacts(compare)
-	// The panels open inside the card (look 3, locked in round 17): the bar becomes the seam, so the strip's bottom
+	const f = matchFacts(compare)
+	// The panels open inside the card: the bar becomes the seam, so the strip's bottom
 	// corners go square.
 	const seam = open
 	const strip = (

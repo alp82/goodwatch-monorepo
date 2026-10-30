@@ -1,5 +1,5 @@
-// The comparison's panels under the strip, on a slightly lighter band split by gray hairlines (round 17 look 3).
-// Round 20: the Venn (Venn.tsx) with a tab row under it, over one view: Where you split (the default) or one group's
+// The comparison's panels under the strip, on a slightly lighter band split by gray hairlines: the Venn (Venn.tsx)
+// with a tab row under it, over one view: Where you split (the default) or one group's
 // full list (Groups.tsx). A Venn part, the split visual and a tab pick the same view, and the picked part and tab light
 // up. No title shows twice at once: an open part gives way to its count, and a group's list replaces the Splits and the
 // picks panel.
@@ -41,10 +41,7 @@ export function Panels({
 	const handle = shell.handle
 	const plan = planCompare(handle, compare)
 	const rows = splitsOf(compare)
-	const splits = {
-		n: rows.length,
-		gaps: rows.map((r) => Math.abs(r.theirs - r.yours)),
-	}
+	const splits = { n: rows.length }
 	const [tab, setTab] = useState<TabId>(splits.n ? "splits" : "picks")
 	const panelId = `${sectionId}-view`
 	// A new view brings the tab row into view when the view starts off screen (on phones the Venn is tall).

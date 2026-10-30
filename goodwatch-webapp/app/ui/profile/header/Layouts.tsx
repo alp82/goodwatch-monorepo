@@ -18,7 +18,7 @@ import type { ProfileShell } from "~/domain/profile"
 import type { HeaderMatch } from "~/server/profile/header.server"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 import type { WhorlAttribute } from "../taste/Whorl"
-import { MatchChip, OrbitMatchTag, useMatchView } from "./Compare"
+import { MatchChip, OrbitMatchTag, matchView } from "./Compare"
 import { ClusterControls, type ControlsProps } from "./Controls"
 import { PillBackground, PillFacts } from "./Pills"
 import { inertUnless } from "./Reveal"
@@ -155,7 +155,7 @@ export function InlineHeader(props: HeaderProps) {
 	const id = useId()
 	const facts = useMemo(() => (print ? keyFacts(print) : null), [print])
 	const { motion, handlers } = useMotion(open)
-	const view = useMatchView(match)
+	const view = matchView(match)
 	useEffect(() => {
 		if (!open) return
 		const onKey = (e: KeyboardEvent) => {

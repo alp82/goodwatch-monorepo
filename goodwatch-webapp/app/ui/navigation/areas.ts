@@ -1,6 +1,6 @@
 // The three areas of the site navigation (Watch · Explore · Profile): which area a page belongs to, each area's tabs, the
-// views under Watch's tabs and on Scores (drawn by SubNav.tsx), and PLACES, the one list of places the account menu and the
-// Settings column both draw from, so their rows match one to one. Pure: the header, the dock, the area layouts and
+// views under Watch's tabs and on Scores (drawn by SubNav.tsx), and PLACES, the account menu's rows, built from the
+// same Place lists as the Settings column (SETTINGS_COLUMN). Pure: the header, the dock, the area layouts and
 // the account menu read from here; AreaTabs.tsx draws the rows.
 //
 // The Profile area keeps the key "taste" in code (route ids, tests and the other modules name it so); only what people
@@ -14,6 +14,7 @@ import {
 	CalendarDaysIcon,
 	ChartBarIcon,
 	ChatBubbleLeftEllipsisIcon,
+	ClockIcon,
 	Cog6ToothIcon,
 	EyeIcon,
 	FilmIcon,
@@ -652,6 +653,8 @@ export interface Place {
 	tag?: string
 	/** The count after the label, read by the caller: Not interested's number of titles. */
 	count?: "not-interested"
+	/** The mark after the label, read by the caller: My shows' new-episodes number (NewEpisodesMark). */
+	badge?: "new-episodes"
 }
 
 /** Settings rows, most used first. */
@@ -701,6 +704,9 @@ export const ALL_SETTINGS: Place = {
 	href: SETTINGS_PATHS.home,
 }
 
+/** The account menu's one Settings row: the Settings home, which lists every settings page. */
+export const SETTINGS_ROW: Place = { ...ALL_SETTINGS, label: "Settings" }
+
 export const EDIT_PROFILE: Place = {
 	id: "profile",
 	label: "Edit profile",
@@ -729,6 +735,36 @@ export const DATA_PLACES: Place[] = [
 		icon: ArrowUpTrayIcon,
 		href: SETTINGS_PATHS.export,
 		tag: "Soon",
+	},
+]
+
+/** Library: the Watch pages, as the account menu lists them. */
+export const LIBRARY_PLACES: Place[] = [
+	{
+		id: "my-shows",
+		label: "My shows",
+		icon: TvIcon,
+		href: WATCH_PATHS.nextEpisodes,
+		badge: "new-episodes",
+	},
+	{
+		id: "my-movies",
+		label: "My movies",
+		icon: FilmIcon,
+		href: WATCH_PATHS.tonight,
+	},
+	{
+		id: "want-to-watch",
+		label: "Want to Watch",
+		icon: BookmarkIcon,
+		href: WATCH_PATHS.wishlist,
+	},
+	{ id: "seen", label: "Seen", icon: ClockIcon, href: WATCH_PATHS.showsSeen },
+	{
+		id: "recommendations",
+		label: "Recommendations",
+		icon: SparklesIcon,
+		href: WATCH_PATHS.forYou,
 	},
 ]
 
@@ -776,17 +812,18 @@ export interface PlaceGroup {
 }
 
 /**
- * Every place, grouped as the account menu shows them. Desktop: two columns, `left` (identity rows: View as visitor and
- * Share profile come before Edit profile and are drawn by the menu itself, then Your data) and `right` (Settings, Use
- * GoodWatch elsewhere, Help), with Sign out under the right column. Phone: `left` then `right` in one column.
+ * The account menu's places, grouped as it shows them. Desktop: two columns, `left` (the identity rows, Edit profile
+ * and Settings, after View as visitor and Share profile, which the menu draws itself; then Library) and `right` (Your
+ * data, Use GoodWatch elsewhere, Help), with Sign out under the right column. Phone: `left` then `right` in one
+ * column. The settings pages themselves are listed in SETTINGS_COLUMN, not here.
  */
 export const PLACES: { left: PlaceGroup[]; right: PlaceGroup[] } = {
 	left: [
-		{ name: null, places: [EDIT_PROFILE] },
-		{ name: "Your data", places: DATA_PLACES },
+		{ name: null, places: [EDIT_PROFILE, SETTINGS_ROW] },
+		{ name: "Library", places: LIBRARY_PLACES },
 	],
 	right: [
-		{ name: "Settings", places: [...SETTINGS_PLACES, ALL_SETTINGS] },
+		{ name: "Your data", places: DATA_PLACES },
 		{ name: "Use GoodWatch elsewhere", places: APP_PLACES },
 		{ name: "Help", places: HELP_PLACES, grid: true },
 	],

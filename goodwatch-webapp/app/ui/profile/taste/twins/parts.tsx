@@ -85,7 +85,7 @@ export function Fan({
 	linked?: boolean
 }) {
 	const n = titles.length
-	// About 78% of round 19's posters, so the Venn takes less height.
+	// Small posters, so the Venn takes less height.
 	const w = size === "lg" ? "w-16 md:w-[4.75rem]" : "w-11 md:w-14"
 	return (
 		<ul className="flex justify-center" aria-label={label}>
@@ -137,7 +137,7 @@ type ThemTitle = Ready["overlap"]["onlyThem"][number]
 type YouTitle = Ready["overlap"]["onlyYou"][number]
 
 /**
- * What each part of the expanded comparison shows, so no title shows twice (round 18, `merge` locked in round 19).
+ * What each part of the expanded comparison shows, so no title shows twice.
  * Their 9s and 10s you haven't rated (`onlyThem`, best fit first) are "Picks for you"; the picks panel keeps only your
  * loved titles on their wishlist, and the "Only you love" fan skips them. `groups` are the full lists the three parts
  * open into.

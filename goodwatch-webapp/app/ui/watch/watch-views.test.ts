@@ -1,4 +1,4 @@
-// Watch's tabs and views (round 9): the Seen tab, Up next's and Ready to watch's views, All shows, the
+// Watch's tabs and views: the Seen tab, Up next's and Ready to watch's views, All shows, the
 // Seen tab's kinds, and the redirect of /watch/movies/seen.
 import assert from "node:assert/strict"
 import { test } from "node:test"

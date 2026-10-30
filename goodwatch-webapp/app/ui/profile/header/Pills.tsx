@@ -1,4 +1,4 @@
-// The orbit's open pill (design 4 of round 15): the viewer type in display type, families and attributes as chips,
+// The orbit's open pill: the viewer type in display type, families and attributes as chips,
 // and for a member visitor the match as a ring that mirrors the orbit at the pill's other end and links to the
 // comparison. The owner and guests see the same pill without the ring. It closes on the orbit again or Escape.
 import { DISPLAY } from "~/ui/my-pages/bits"

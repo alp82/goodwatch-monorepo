@@ -2,10 +2,16 @@
 // To watch | Seen switch, the Taste row for owners, visitors and members without a handle, and the places list.
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { GUEST, member } from "../../domain/member-paths.ts"
+import {
+	GUEST,
+	SETTINGS_PATHS,
+	WATCH_PATHS,
+	member,
+} from "../../domain/member-paths.ts"
 import {
 	PLACES,
 	SETTINGS_COLUMN,
+	SETTINGS_PLACES,
 	areaKeys,
 	areaOf,
 	bestSwitch,
@@ -311,24 +317,53 @@ test("Scores switch: Scored | Not rated on the two score pages only", () => {
 	assert.equal(scoresSwitch("ana", "/u/ana/stats"), null)
 })
 
-test("Places: the Settings column and the menu hold the same Settings and Your data rows", () => {
-	const ids = (groups: { places: { id: string }[] }[]) =>
-		new Set(groups.flatMap((g) => g.places.map((p) => p.id)))
-	const column = ids(SETTINGS_COLUMN)
-	const menu = ids(
-		PLACES.left
-			.concat(PLACES.right)
-			.filter((g) => g.name !== "Use GoodWatch elsewhere" && g.name !== "Help"),
-	)
-	assert.deepEqual([...column].sort(), [...menu].sort())
-	assert.deepEqual(
-		PLACES.right.map((g) => g.name),
-		["Settings", "Use GoodWatch elsewhere", "Help"],
-	)
+test("Places: the menu has one Settings row and Library; the Settings column keeps every settings row", () => {
 	assert.deepEqual(
 		PLACES.left.map((g) => g.name),
-		[null, "Your data"],
+		[null, "Library"],
 	)
+	assert.deepEqual(
+		PLACES.right.map((g) => g.name),
+		["Your data", "Use GoodWatch elsewhere", "Help"],
+	)
+	const identity = PLACES.left[0].places
+	assert.deepEqual(
+		identity.map((p) => [p.id, p.label, p.href]),
+		[
+			["profile", "Edit profile", SETTINGS_PATHS.profile],
+			["settings", "Settings", SETTINGS_PATHS.home],
+		],
+	)
+	const menu = new Set(
+		PLACES.left.concat(PLACES.right).flatMap((g) => g.places.map((p) => p.id)),
+	)
+	const column = new Set(
+		SETTINGS_COLUMN.flatMap((g) => g.places.map((p) => p.id)),
+	)
+	for (const p of SETTINGS_PLACES) {
+		assert.ok(column.has(p.id), p.id)
+		assert.ok(!menu.has(p.id), p.id)
+	}
+	// Your data is the same in both.
+	assert.deepEqual(
+		PLACES.right[0].places.map((p) => p.id),
+		SETTINGS_COLUMN[1].places.map((p) => p.id),
+	)
+})
+
+test("Places: Library leads to the Watch pages", () => {
+	const library = PLACES.left[1].places
+	assert.deepEqual(
+		library.map((p) => [p.label, p.href]),
+		[
+			["My shows", WATCH_PATHS.nextEpisodes],
+			["My movies", WATCH_PATHS.tonight],
+			["Want to Watch", WATCH_PATHS.wishlist],
+			["Seen", WATCH_PATHS.showsSeen],
+			["Recommendations", WATCH_PATHS.forYou],
+		],
+	)
+	assert.equal(library[0].badge, "new-episodes")
 })
 
 test("Places: real addresses, Feedback acts instead of navigating", () => {
