@@ -1,6 +1,9 @@
 import { noteMediaReadFailure } from "~/server/media-read-health.server"
 import { query } from "~/utils/crate"
-import { createTropeCatalogReader } from "./trope-catalog-data"
+import {
+	type DescriptionReadOptions,
+	createTropeCatalogReader,
+} from "./trope-catalog-data"
 import {
 	createTropePageReader,
 	createTropeReferenceReader,
@@ -20,15 +23,23 @@ export const resolveTropeReferences = createTropeReferenceReader(
 /** Optional text must not hold up a profile when the catalog is unavailable. A later request retries. */
 export async function readTropeDescriptions(
 	names: string[],
-	options: { strict?: boolean } = {},
+	options: { strict?: boolean } & DescriptionReadOptions = {},
 ) {
 	try {
 		// The old reader remains for callers holding the legacy name contract during rollout.
-		return names.some(
+		const reader = names.some(
 			(name) => name.startsWith("https://") || name.startsWith("label:"),
 		)
-			? await pages(names)
-			: await read(names)
+			? pages
+			: read
+		try {
+			return await reader(names, options)
+		} catch (error) {
+			// Before the document column exists, keep the plain text; the page splits it into paragraphs itself.
+			if (options.openings === false || !/description_doc/i.test(String(error)))
+				throw error
+			return await reader(names, { openings: false })
+		}
 	} catch (error) {
 		noteMediaReadFailure()
 		console.error(

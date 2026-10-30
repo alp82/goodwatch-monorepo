@@ -1,10 +1,12 @@
 // The profile's Tropes tab: full-width bands in ranked order, stepping down in size. Ranks 1-3 are hero bands that
 // already show how the trope shows up in their top title ("In <Title>": the poster and the excerpt's first lines,
 // covered when the viewer hasn't seen it); 4-10 medium bands, the rest compact rows. Opening a band carries on:
-//   What it is      the TV Tropes description (when there is one) and the numbers on one line
+//   What it is      the opening of the TV Tropes description (when there is one, see Opening.tsx), ending in the
+//                   TV Tropes link, and the numbers on one line
 //   below, side by side at the same height: the 12 defining titles as a poster grid, and the reader (the selected
 //   title's backdrop, "In <Title>", prev / next, the excerpt); on phones a poster row above the reader
-//   the TV Tropes link and the license credit; a page-level credit also closes the list, for the bands' excerpts
+//   the license credit (and the TV Tropes link when there is no description); a page-level credit also closes the
+//   list, for the bands' excerpts
 // The filter bar (FilterStrip) sits above. Motion: the tapped band holds still and the others slide (FLIP, transform
 // only), the detail fades in, switching titles crossfades; nothing moves with reduced motion.
 // Spec: docs/implementation/taste-redesign.md, decision 3.
@@ -16,11 +18,14 @@ import type { TropesPreview } from "~/server/profile/tropes-preview"
 import type { ProfileTropes } from "~/server/profile/tropes.server"
 import { PosterImg, backdropUrl, posterUrl } from "~/ui/profile/parts"
 import { describeTrope } from "~/utils/profile-trope-descriptions"
+import { openingLead } from "~/utils/trope-opening"
 import { FilterStrip } from "./FilterStrip"
+import { DescriptionOpening } from "./Opening"
 import {
 	type RankedTrope,
 	type Tier,
 	WHOLE_WORDS,
+	bandOpening,
 	nameSize,
 	teaser,
 	tierOf,
@@ -208,7 +213,7 @@ function Band({
 	const hero = tier === "hero"
 	const compact = tier === "compact"
 	const share = tag.loved / Math.max(1, tag.count)
-	const line = teaser(tag.description)
+	const line = teaser(tag.opening ? openingLead(tag.opening) : tag.description)
 	const posters = tag.top
 		.map((k) => m.titles[k])
 		.filter(Boolean)
@@ -354,6 +359,7 @@ function Detail({
 	wide: boolean
 }) {
 	const d = useDetail(handle, tag, m.titles, m.seen, focus, onFocus)
+	const opening = bandOpening(tag)
 	const label = (
 		<p className="mb-2.5 text-xs font-bold tracking-[0.16em] text-gray-400 uppercase">
 			The titles that define it {m.owner ? "for you" : "for them"}
@@ -361,20 +367,22 @@ function Detail({
 	)
 	return (
 		<div className="px-4 pb-4 sm:px-5 sm:pb-6 md:pl-[5.25rem]">
-			<section aria-label={tag.description ? "What it is" : undefined}>
-				{tag.description && (
+			<section aria-label={opening ? "What it is" : undefined}>
+				{opening && (
 					<>
 						<WhatItIs />
-						<p className="mt-1.5 max-w-3xl text-[16px] leading-relaxed text-gray-200 sm:text-[17px]">
-							{tag.description}
-						</p>
+						<DescriptionOpening
+							opening={opening}
+							url={tag.url}
+							className="mt-1.5 max-w-3xl"
+						/>
 					</>
 				)}
 				<Numbers
 					tag={tag}
 					usual={m.usual}
 					owner={m.owner}
-					className={tag.description ? "mt-3" : ""}
+					className={opening ? (tag.url ? "mt-1" : "mt-3") : ""}
 				/>
 			</section>
 			{wide ? (
@@ -402,7 +410,8 @@ function Detail({
 					<Reader d={d} phone />
 				</section>
 			)}
-			<Credits tag={tag} className="mt-3" />
+			{/* The opening already ends in the TV Tropes link; the license credit stays. */}
+			<Credits tag={tag} link={!opening} className="mt-3" />
 		</div>
 	)
 }

@@ -8,7 +8,11 @@ import {
 	erasOf,
 	rankTropes,
 } from "../../ui/profile/tropes/model.ts"
-import { type TropeDescriptions, catalogVersion } from "./trope-catalog-data.ts"
+import {
+	type TropeDescriptions,
+	catalogVersion,
+	pageDescriptions,
+} from "./trope-catalog-data.ts"
 import type { ProfileTropes } from "./tropes-data.ts"
 
 export const FIRST_TROPES = 30
@@ -81,14 +85,19 @@ export function withPreviewDescriptions(
 	preview: TropesPreview,
 	entries: TropeDescriptions,
 ): TropesPreview {
+	const page = pageDescriptions(entries)
 	return {
 		...preview,
-		catalogVersion: catalogVersion(entries),
-		ranked: preview.ranked.map((tag) => ({
-			...tag,
-			name: entries[tag.id ?? tag.name]?.title || tag.name,
-			description: entries[tag.id ?? tag.name]?.text || null,
-			url: entries[tag.id ?? tag.name]?.url || tag.url,
-		})),
+		catalogVersion: catalogVersion(page),
+		ranked: preview.ranked.map((tag) => {
+			const entry = page[tag.id ?? tag.name]
+			return {
+				...tag,
+				name: entry?.title || tag.name,
+				description: entry?.text || null,
+				opening: entry?.opening ?? null,
+				url: entry?.url || tag.url,
+			}
+		}),
 	}
 }

@@ -136,4 +136,22 @@ test("URI previews keep only thirty visible identities and show fresh canonical 
 	assert.equal(enriched.ranked[0].name, "Corrected primary heading")
 	assert.deepEqual(enriched.ranked[0].labels, ["Contextual label"])
 	assert.equal(first.name, preview.ranked[0].name)
+	// The opening replaces the whole plain text in what the page receives.
+	const opening = {
+		blocks: [
+			{ kind: "p" as const, text: "The linked page general definition." },
+		],
+		more: 3,
+	}
+	const sent = withPreviewDescriptions(preview, {
+		[first.id]: {
+			url: first.id,
+			title: null,
+			text: "The linked page general definition.\n\nMore text the page never needs.",
+			opening,
+		},
+	})
+	assert.equal(sent.ranked[0].description, null)
+	assert.deepEqual(sent.ranked[0].opening, opening)
+	assert.notEqual(sent.catalogVersion, enriched.catalogVersion)
 })

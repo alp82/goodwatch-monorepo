@@ -296,22 +296,26 @@ export function PosterButton({
 }
 
 /** The TV Tropes link and the license credit, side by side where there's room. */
+/** The TV Tropes link (unless the description already ends in one) and the license credit. */
 export function Credits({
 	tag,
+	link = true,
 	className = "",
-}: { tag: RankedTrope; className?: string }) {
+}: { tag: RankedTrope; link?: boolean; className?: string }) {
 	if (!tag.url) return null
 	return (
 		<div className={`flex flex-wrap items-center gap-x-6 ${className}`}>
-			<a
-				href={tag.url}
-				target="_blank"
-				rel="noreferrer noopener"
-				className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-sky-300 hover:text-sky-200"
-			>
-				Read about it on TV Tropes (opens in a new tab)
-				<ArrowTopRightOnSquareIcon className="size-4" aria-hidden />
-			</a>
+			{link && (
+				<a
+					href={tag.url}
+					target="_blank"
+					rel="noreferrer noopener"
+					className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-sky-300 hover:text-sky-200"
+				>
+					Read about it on TV Tropes (opens in a new tab)
+					<ArrowTopRightOnSquareIcon className="size-4" aria-hidden />
+				</a>
+			)}
 			<LicenseCredit />
 		</div>
 	)

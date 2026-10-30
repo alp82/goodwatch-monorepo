@@ -8,6 +8,7 @@ import {
 import {
 	type TropeDescriptions,
 	catalogVersion,
+	pageDescriptions,
 	withTropeDescriptions,
 } from "./trope-catalog-data.ts"
 import {
@@ -74,7 +75,7 @@ export interface TropesDependencies {
 	titlePath: (mediaType: "movie" | "show", id: number, title: string) => string
 	readDescriptions: (
 		names: string[],
-		options?: { strict?: boolean },
+		options?: { strict?: boolean; openings?: boolean },
 	) => Promise<TropeDescriptions>
 	/** Omitted only by legacy dependency adapters. Production always groups by resolved URI. */
 	resolveReferences?: (urls: string[]) => Promise<TropePageReferences>
@@ -258,11 +259,17 @@ export function createTropesLoader(deps: TropesDependencies) {
 			const current = visible.length
 				? await deps.readDescriptions(visible, { strict: true })
 				: {}
-			const entries = Object.fromEntries(
-				visible.map((id) => [
-					id,
-					current[id] ?? { url: pool.urls[id] ?? "", title: null, text: null },
-				]),
+			const entries = pageDescriptions(
+				Object.fromEntries(
+					visible.map((id) => [
+						id,
+						current[id] ?? {
+							url: pool.urls[id] ?? "",
+							title: null,
+							text: null,
+						},
+					]),
+				),
 			)
 			return {
 				entries,
@@ -293,7 +300,7 @@ export function createTropesLoader(deps: TropesDependencies) {
 			const descriptions =
 				options.descriptions === false
 					? {}
-					: await deps.readDescriptions(pool.tropes)
+					: await deps.readDescriptions(pool.tropes, { openings: false })
 			return { ...withTropeDescriptions(pool, descriptions), seen }
 		},
 		async loadProfileTropeExcerpts(

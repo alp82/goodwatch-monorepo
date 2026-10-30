@@ -38,7 +38,12 @@ export function previewDescriptions(ranked: RankedTrope[]): TropeDescriptions {
 	return Object.fromEntries(
 		ranked.map((tag) => [
 			tag.id ?? tag.name,
-			{ url: tag.url, title: tag.name, text: tag.description },
+			{
+				url: tag.url,
+				title: tag.name,
+				text: tag.description,
+				opening: tag.opening,
+			},
 		]),
 	)
 }
@@ -54,6 +59,7 @@ export function describeTrope(
 				name: entry.title || tag.name,
 				url: entry.url || tag.url,
 				description: entry.text,
+				opening: entry.opening,
 			}
 		: tag
 }

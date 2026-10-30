@@ -1,6 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { catalogVersion, withTropeDescriptions } from "./trope-catalog-data.ts"
+import type { TropeOpening } from "../../utils/trope-opening.ts"
+import {
+	catalogVersion,
+	pageDescriptions,
+	withTropeDescriptions,
+} from "./trope-catalog-data.ts"
 import {
 	createTropePageReader,
 	createTropeReferenceReader,
@@ -210,11 +215,78 @@ test("Main references resolve to actual Mohs pages; only known general self-iden
 			] as unknown as T[]
 		},
 	)
-	assert.deepEqual(await descriptions([mohs, creator]), {
+	assert.deepEqual(await descriptions([mohs, creator], { openings: false }), {
 		[mohs]: {
 			url: mohs,
 			title: "One Big Lie",
 			text: "The actual general-page introduction.",
 		},
 	})
+})
+
+test("page reads bring the description document and cut the opening; an invalid one falls back to the text", async () => {
+	const page = url("Jerkass")
+	const sql: string[] = []
+	const docs: Record<string, string | null> = {
+		[page]: JSON.stringify({
+			v: 1,
+			source: "archive",
+			blocks: [
+				{
+					kind: "p",
+					text: "Enjoys schadenfreude.",
+					links: [[7, 20, url("ComedicSociopathy")]],
+				},
+			],
+		}),
+		[url("Broken")]:
+			'{"v":1,"source":"archive","blocks":[{"kind":"p","text":"x","links":[[0,1,"https://evil.test/"]]}]}',
+	}
+	const read = createTropePageReader(
+		async <T extends {}>(query: string, params: (string | number | Date)[]) => {
+			sql.push(query)
+			return params.map((u) => ({
+				url: u,
+				title: null,
+				description: "Plain one.\n\nPlain two.",
+				description_doc: docs[String(u)] ?? null,
+			})) as unknown as T[]
+		},
+	)
+	const result = await read([page, url("Broken"), url("Missing")])
+	assert.ok(sql.every((q) => q.includes("description_doc")))
+	assert.deepEqual(result[page].opening, {
+		blocks: [
+			{
+				kind: "p",
+				text: "Enjoys schadenfreude.",
+				links: [[7, 20, "Main/ComedicSociopathy"]],
+			},
+		],
+		more: 0,
+	})
+	const plain: TropeOpening = {
+		blocks: [
+			{ kind: "p", text: "Plain one." },
+			{ kind: "p", text: "Plain two." },
+		],
+		more: 0,
+	}
+	assert.deepEqual(result[url("Broken")].opening, plain)
+	assert.deepEqual(result[url("Missing")].opening, plain)
+	// Only the opening crosses to the page.
+	const sent = pageDescriptions(result)
+	assert.equal(sent[page].text, null)
+	assert.deepEqual(sent[page].opening, result[page].opening)
+	assert.notEqual(
+		catalogVersion(sent),
+		catalogVersion(
+			pageDescriptions({
+				...result,
+				[page]: { ...result[page], opening: plain },
+			}),
+		),
+	)
+	await read([page], { openings: false })
+	assert.ok(!sql.at(-1)?.includes("description_doc"))
 })

@@ -10,6 +10,10 @@ import {
 	leastTitles,
 	lovedZ,
 } from "../../../server/profile/tropes-model.ts"
+import {
+	type TropeOpening,
+	tropeOpening,
+} from "../../../utils/trope-opening.ts"
 
 export type Kind = "all" | "movie" | "show"
 export type MinScore = "any" | "7" | "8" | "9"
@@ -98,6 +102,8 @@ export interface RankedTrope {
 	/** The defining title keys, up to 12. */
 	top: string[]
 	description: string | null
+	/** The part of the description the open band shows; when absent, `description` is split into paragraphs. */
+	opening?: TropeOpening | null
 	/** The TV Tropes page; empty when unknown. */
 	url: string
 }
@@ -198,6 +204,13 @@ export type Tier = "hero" | "medium" | "compact"
 /** Ranks 1-3 hero, 4-10 medium, the rest compact. */
 export const tierOf = (index: number): Tier =>
 	index < 3 ? "hero" : index < 10 ? "medium" : "compact"
+
+/** What the open band shows: the server's opening, or the plain text cut the same way (older payloads). */
+export function bandOpening(
+	tag: Pick<RankedTrope, "opening" | "description">,
+): TropeOpening | null {
+	return tag.opening ?? tropeOpening(null, tag.description)
+}
 
 /** A description's first sentence, for a closed band's line. */
 export const teaser = (text: string | null | undefined) =>

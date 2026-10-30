@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto"
+import { type TropeOpening, tropeOpening } from "../../utils/trope-opening.ts"
 import type { CatalogRead } from "./tropes-data.ts"
 
 export interface TropeDescription {
@@ -6,17 +7,56 @@ export interface TropeDescription {
 	url: string
 	/** Actual page heading; legacy name-keyed rows cannot supply this proof. */
 	title?: string | null
+	/** What the Tropes tab shows. Absent where only the plain text was read. */
+	opening?: TropeOpening | null
 }
 export type TropeDescriptions = Record<string, TropeDescription>
 interface CatalogRow {
 	name: string
 	url: string | null
 	description: string | null
+	description_doc?: string | null
+}
+
+export interface DescriptionReadOptions {
+	/** Read the stored document and cut the opening; off for callers that only need the plain text. */
+	openings?: boolean
+}
+
+/** The plain text plus, when asked for, the opening from the stored document (or the text when it has none). */
+export function describeRow(
+	text: string | null | undefined,
+	doc: string | null | undefined,
+	options: DescriptionReadOptions,
+): Pick<TropeDescription, "text" | "opening"> {
+	const plain = text?.trim() || null
+	return options.openings === false
+		? { text: plain }
+		: { text: plain, opening: plain ? tropeOpening(doc, plain) : null }
+}
+
+/** What crosses to the page: the opening replaces the whole plain text, which can run to 24,000 characters. */
+export function pageDescriptions(
+	entries: TropeDescriptions,
+): TropeDescriptions {
+	return Object.fromEntries(
+		Object.entries(entries).map(([id, entry]) => [
+			id,
+			entry.opening ? { ...entry, text: null } : entry,
+		]),
+	)
 }
 
 /** Exact-name reads from the shared catalog; the per-title `trope.name` full-text index is unrelated. */
 export function createTropeCatalogReader(read: CatalogRead) {
-	return async (input: string[]): Promise<TropeDescriptions> => {
+	return async (
+		input: string[],
+		options: DescriptionReadOptions = {},
+	): Promise<TropeDescriptions> => {
+		const columns =
+			options.openings === false
+				? "name, url, description"
+				: "name, url, description, description_doc"
 		const names = [...new Set(input)].sort()
 		const entries: [string, TropeDescription][] = []
 		let next = 0
@@ -25,7 +65,7 @@ export function createTropeCatalogReader(read: CatalogRead) {
 				const batch = names.slice(next, next + 400)
 				next += batch.length
 				const rows = await read<CatalogRow>(
-					`SELECT name, url, description FROM trope_catalog WHERE name IN (${batch.map(() => "?").join(",")}) LIMIT ${batch.length}`,
+					`SELECT ${columns} FROM trope_catalog WHERE name IN (${batch.map(() => "?").join(",")}) LIMIT ${batch.length}`,
 					batch,
 				)
 				const allowed = new Set(batch)
@@ -33,7 +73,10 @@ export function createTropeCatalogReader(read: CatalogRead) {
 					if (!allowed.has(row.name)) continue
 					entries.push([
 						row.name,
-						{ text: row.description?.trim() || null, url: row.url ?? "" },
+						{
+							...describeRow(row.description, row.description_doc, options),
+							url: row.url ?? "",
+						},
 					])
 				}
 			}

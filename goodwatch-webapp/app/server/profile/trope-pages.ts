@@ -1,4 +1,8 @@
-import type { TropeDescriptions } from "./trope-catalog-data.ts"
+import {
+	type DescriptionReadOptions,
+	type TropeDescriptions,
+	describeRow,
+} from "./trope-catalog-data.ts"
 import type { CatalogRead } from "./tropes-data.ts"
 
 const GENERAL_TROPE_NAMESPACES = new Set([
@@ -131,14 +135,26 @@ export function createTropeReferenceReader(read: CatalogRead) {
 
 /** Small request-time read: preview supplies only the first thirty target IDs. */
 export function createTropePageReader(read: CatalogRead) {
-	return async (input: string[]): Promise<TropeDescriptions> => {
+	return async (
+		input: string[],
+		options: DescriptionReadOptions = {},
+	): Promise<TropeDescriptions> => {
 		const urls = input.filter((url) => tropePageUrl(url) === url)
 		const allowed = new Set(urls)
 		const rows = await batched<{
 			url: string
 			title: string | null
 			description: string | null
-		}>(read, "trope_catalog_page", "url, title, description", "url", urls)
+			description_doc?: string | null
+		}>(
+			read,
+			"trope_catalog_page",
+			options.openings === false
+				? "url, title, description"
+				: "url, title, description, description_doc",
+			"url",
+			urls,
+		)
 		return Object.fromEntries(
 			rows
 				.filter((row) => allowed.has(row.url))
@@ -147,7 +163,7 @@ export function createTropePageReader(read: CatalogRead) {
 					{
 						url: row.url,
 						title: row.title?.trim() || null,
-						text: row.description?.trim() || null,
+						...describeRow(row.description, row.description_doc, options),
 					},
 				]),
 		)
