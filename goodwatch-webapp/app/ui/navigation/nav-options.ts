@@ -1,13 +1,11 @@
-// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-19). Not a feature switch: these let the owner
+// PROTOTYPE OPTIONS - remove after the owner picks (member nav, rounds 8-20). Not a feature switch: these let the owner
 // compare navigation options on the local preview branch. The choice lives in one cookie; the root loader reads it
 // for the server render, and the options bar sets it and reloads the page.
 import { useRouteLoaderData } from "@remix-run/react"
 
 export const NAV_OPTIONS = {
-	/** How the three groups (Picks for you, You both love, Only you love) open into full lists (round 19): a click
-	 * swaps the Splits area for that group's grid, tabs over one content area, a Venn redesign that holds the splits,
-	 * or a click that turns the Venn itself into the group's stage. */
-	venn: ["swap", "tabs", "graph", "stage"],
+	/** The small clickable visual for "Where you split" next to the three Venn groups (round 20). */
+	splitvis: ["glyph", "bridge", "rim", "spark"],
 	/** Simulates the match percentage everywhere it shows, to see each tier: "real" keeps the actual number. */
 	match: ["real", "12", "35", "55", "75", "97"],
 } as const
@@ -15,7 +13,7 @@ export const NAV_OPTIONS = {
 export type NavOptionKey = keyof typeof NAV_OPTIONS
 export type NavOptions = { [K in NavOptionKey]: (typeof NAV_OPTIONS)[K][number] }
 
-export const DEFAULT_NAV_OPTIONS: NavOptions = { venn: "swap", match: "real" }
+export const DEFAULT_NAV_OPTIONS: NavOptions = { splitvis: "glyph", match: "real" }
 
 export const NAV_OPTIONS_COOKIE = "gw_navopt"
 

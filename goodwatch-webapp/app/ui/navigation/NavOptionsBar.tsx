@@ -15,7 +15,7 @@ import {
 } from "./nav-options"
 
 const ROWS: { key: NavOptionKey; label: string }[] = [
-	{ key: "venn", label: "Groups" },
+	{ key: "splitvis", label: "Split visual" },
 	{ key: "match", label: "Match %" },
 ]
 

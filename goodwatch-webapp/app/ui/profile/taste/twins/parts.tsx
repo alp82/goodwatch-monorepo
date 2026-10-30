@@ -1,4 +1,4 @@
-// The comparison's shared pieces: the three panels of "Where your tastes meet" (Overlap, Splits, Picks) and small
+// The comparison's shared pieces: the Venn's parts (the board is in Venn.tsx), Where you split, the picks panel and small
 // helpers. Each panel takes `frame`, the classes of its surface (a boxed PANEL by default); the strip (Strip.tsx) passes
 // "" and separates them itself.
 import { ArrowRightIcon, SparklesIcon } from "@heroicons/react/20/solid"
@@ -8,10 +8,10 @@ import { useEffect, useState } from "react"
 import { RATE_FALLBACK_PATH } from "~/domain/member-paths"
 import type { ProfileTitle } from "~/domain/profile"
 import type { MemberCompare } from "~/domain/profile-taste"
+import { DISPLAY } from "~/ui/my-pages/bits"
 import { PANEL_CARD_SIZES, ProfileCard } from "../../ProfileCard"
 import { AMBER_BUTTON, TILE, posterUrl, vibe } from "../../parts"
 import { PANEL } from "../parts"
-import { DISPLAY } from "~/ui/my-pages/bits"
 
 export type Ready = Extract<MemberCompare, { status: "ready" }>
 
@@ -85,13 +85,14 @@ export function Fan({
 	linked?: boolean
 }) {
 	const n = titles.length
-	const w = size === "lg" ? "w-[4.6rem] sm:w-24" : "w-14 sm:w-[4.5rem]"
+	// About 78% of round 19's posters, so the Venn takes less height.
+	const w = size === "lg" ? "w-16 md:w-[4.75rem]" : "w-11 md:w-14"
 	return (
 		<ul className="flex justify-center" aria-label={label}>
 			{titles.map((t, i) => {
 				const mid = (n - 1) / 2
 				const turn = (i - mid) * (size === "lg" ? 7 : 9)
-				const lift = Math.abs(i - mid) * (size === "lg" ? 7 : 6)
+				const lift = Math.abs(i - mid) * (size === "lg" ? 6 : 4)
 				const poster = t.poster ? (
 					<img
 						src={posterUrl(t.poster) ?? ""}
@@ -106,7 +107,7 @@ export function Fan({
 					<li
 						key={t.key}
 						data-title-key={t.key}
-						className={`${w} shrink-0 ${i ? (size === "lg" ? "-ml-6 sm:-ml-8" : "-ml-5 sm:-ml-6") : ""}`}
+						className={`${w} shrink-0 ${i ? (size === "lg" ? "-ml-5 md:-ml-6" : "-ml-4 md:-ml-5") : ""}`}
 						style={{
 							transform: `translateY(${lift}px) rotate(${turn}deg)`,
 							zIndex: 10 - Math.round(Math.abs(i - mid)),
@@ -123,27 +124,6 @@ export function Fan({
 				)
 			})}
 		</ul>
-	)
-}
-
-export function Region({
-	title,
-	count,
-	children,
-	tone,
-}: { title: string; count: string; children: React.ReactNode; tone: string }) {
-	return (
-		<div className="flex flex-col items-center gap-3">
-			<p className="text-center">
-				<span
-					className={`block text-[11px] font-bold tracking-wide uppercase ${tone}`}
-				>
-					{title}
-				</span>
-				<span className="block text-xs text-gray-500">{count}</span>
-			</p>
-			{children}
-		</div>
 	)
 }
 
@@ -214,8 +194,8 @@ export const GROUPS: {
 ]
 
 /**
- * One part of the Venn. With `onOpen` the whole part is a button that opens the group's full list; while it is open,
- * its posters give way to the group's count (the list shows them), and "See all" turns into "Showing below".
+ * One part of the Venn, a button that opens the group's full list below. While it is open, its posters give way to the
+ * group's count (the list shows them), and "See all" turns into `openLabel`.
  */
 export function VennPart({
 	group,
@@ -227,29 +207,30 @@ export function VennPart({
 	active,
 	dim,
 	openLabel,
+	controls,
+	phoneCount = true,
 }: {
 	group: (typeof GROUPS)[number]
 	titles: ProfileTitle[]
 	count: number
 	size: "sm" | "lg"
 	label: string
-	onOpen?: (g: GroupId) => void
+	onOpen: (g: GroupId) => void
 	active: boolean
 	dim: boolean
 	openLabel: string
+	/** The id of the view the part opens. */
+	controls?: string
+	/** Shows the count line on phones too (the parts in the circles skip it). */
+	phoneCount?: boolean
 }) {
-	if (!onOpen)
-		return (
-			<Region title={group.name} count={group.count(count)} tone={group.tone}>
-				<Fan titles={titles} size={size} label={label} />
-			</Region>
-		)
 	return (
 		<button
 			type="button"
 			aria-pressed={active}
+			aria-controls={controls}
 			onClick={() => onOpen(group.id)}
-			className={`group/part relative flex flex-col items-center gap-3 rounded-2xl px-2 py-3 transition-opacity duration-300 focus-visible:outline-2 focus-visible:outline-amber-400 ${dim ? "opacity-55 hover:opacity-90" : ""}`}
+			className={`group/part relative flex flex-col items-center gap-2 rounded-2xl px-2 py-2 transition-opacity duration-300 focus-visible:outline-2 focus-visible:outline-amber-400 ${dim ? "opacity-55 hover:opacity-90" : ""}`}
 		>
 			{/* The active part's glow, in the group's color. */}
 			<span
@@ -261,11 +242,13 @@ export function VennPart({
 			/>
 			<span className="relative text-center">
 				<span
-					className={`block text-[11px] font-bold tracking-wide uppercase ${group.tone}`}
+					className={`block text-[10px] font-bold tracking-wide uppercase md:text-[11px] ${group.tone}`}
 				>
 					{group.name}
 				</span>
-				<span className="block text-xs text-gray-500">
+				<span
+					className={`block max-w-[15rem] text-[11px] text-gray-500 md:text-xs ${phoneCount ? "" : "max-md:hidden"}`}
+				>
 					{group.count(count)}
 				</span>
 			</span>
@@ -280,14 +263,14 @@ export function VennPart({
 					className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-300 ${active ? "opacity-100" : "opacity-0"}`}
 				>
 					<span
-						className={`${DISPLAY} text-6xl leading-none tabular-nums ${group.tone}`}
+						className={`${DISPLAY} text-4xl leading-none tabular-nums md:text-5xl ${group.tone}`}
 					>
 						{count}
 					</span>
 				</span>
 			</span>
 			<span
-				className={`relative inline-flex items-center gap-1 text-xs font-semibold ${active ? "text-amber-400" : "text-gray-400 group-hover/part:text-white"}`}
+				className={`relative inline-flex items-center gap-1 text-[11px] font-semibold md:text-xs ${active ? "text-amber-400" : "text-gray-400 group-hover/part:text-white"}`}
 			>
 				{active ? openLabel : `See all ${count}`}
 				<ArrowRightIcon
@@ -296,93 +279,6 @@ export function VennPart({
 				/>
 			</span>
 		</button>
-	)
-}
-
-export function Overlap({
-	handle,
-	plan,
-	frame = PANEL,
-	onOpen,
-	active = null,
-	openLabel = "Showing below",
-}: Omit<PanelProps, "c"> & {
-	plan: Plan
-	/** Makes each part a button that opens its group. */
-	onOpen?: (g: GroupId) => void
-	active?: GroupId | null
-	/** What the open part says under its count. */
-	openLabel?: string
-}) {
-	const part = (
-		g: (typeof GROUPS)[number],
-		titles: ProfileTitle[],
-		size: "sm" | "lg",
-		label: string,
-	) => (
-		<VennPart
-			group={g}
-			titles={titles}
-			count={plan.counts[g.id]}
-			size={size}
-			label={label}
-			onOpen={onOpen}
-			active={active === g.id}
-			dim={active != null && active !== g.id}
-			openLabel={openLabel}
-		/>
-	)
-	return (
-		<div className={`${frame} relative overflow-hidden p-5 sm:p-8`}>
-			<VennCircles />
-			<div className="relative grid gap-8 md:min-h-[22rem] md:grid-cols-[1fr_0.9fr_1fr] md:items-center md:gap-2 md:px-[4%]">
-				{part(GROUPS[0], plan.them, "sm", `Picks for you from @${handle}`)}
-				{part(GROUPS[1], plan.both, "lg", "Loved by you both")}
-				{part(GROUPS[2], plan.you, "sm", "Loved by you")}
-			</div>
-		</div>
-	)
-}
-
-/** The two overlapping circles behind the Venn on wide screens: theirs amber, yours white. */
-export function VennCircles({ id = "ov" }: { id?: string }) {
-	return (
-		// biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden; the parts carry the meaning
-		<svg
-			viewBox="0 0 1000 420"
-			preserveAspectRatio="xMidYMid meet"
-			className="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
-			aria-hidden
-		>
-			<defs>
-				<radialGradient id={`${id}-them`} cx="35%" cy="50%" r="40%">
-					<stop offset="0" stopColor="#fbbf24" stopOpacity=".12" />
-					<stop offset="1" stopColor="#fbbf24" stopOpacity=".02" />
-				</radialGradient>
-				<radialGradient id={`${id}-you`} cx="65%" cy="50%" r="40%">
-					<stop offset="0" stopColor="#ffffff" stopOpacity=".1" />
-					<stop offset="1" stopColor="#ffffff" stopOpacity=".02" />
-				</radialGradient>
-			</defs>
-			<circle
-				cx="355"
-				cy="210"
-				r="195"
-				fill={`url(#${id}-them)`}
-				stroke="#fbbf24"
-				strokeOpacity=".45"
-				strokeWidth="1.5"
-			/>
-			<circle
-				cx="645"
-				cy="210"
-				r="195"
-				fill={`url(#${id}-you)`}
-				stroke="#ffffff"
-				strokeOpacity=".4"
-				strokeWidth="1.5"
-			/>
-		</svg>
 	)
 }
 
@@ -406,29 +302,16 @@ export const splitsOf = (c: Ready) =>
 /** The 1 to 10 scale as a share of the track. */
 export const at = (score: number) => `${((score - 1) / 9) * 100}%`
 
-export function Splits({
-	handle,
-	c,
-	frame = PANEL,
-	from = 0,
-	first = SPLITS_FIRST,
-	title = "Where you split",
-}: PanelProps & {
-	/** Rows to skip (shown elsewhere, as in the graph's Venn). */
-	from?: number
-	/** Rows shown before the first "Show 20 more". */
-	first?: number
-	title?: string
-}) {
-	const rest = splitsOf(c).slice(from)
-	const [shown, setShown] = useState(first)
+export function Splits({ handle, c, frame = PANEL }: PanelProps) {
+	const rest = splitsOf(c)
+	const [shown, setShown] = useState(SPLITS_FIRST)
 	const rows = rest.slice(0, shown)
 	const left = rest.length - rows.length
 	if (!rest.length) return null
 	return (
 		<div className={`${frame} flex flex-col gap-3 p-5 sm:p-8`}>
 			<div className="flex items-baseline justify-between gap-3">
-				<p className="font-bold text-white">{title}</p>
+				<p className="font-bold text-white">Where you split</p>
 				<SplitLegend handle={handle} />
 			</div>
 			{rows.length > 0 && (

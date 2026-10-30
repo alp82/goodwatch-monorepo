@@ -1,13 +1,12 @@
-// The full lists the comparison's three groups open into (round 19, nav option `venn`). Each carries its group's
+// The full lists the comparison's three groups open into (round 19). Each carries its group's
 // meaning: Picks for you is a ranked shelf with why each title fits you, You both love is a shared wall with both
 // scores side by side, and Only you love is your titles they haven't rated, with a nudge.
 import { BookmarkIcon } from "@heroicons/react/20/solid"
-import type { ReactNode } from "react"
 import { useState } from "react"
 import type { ProfileTitle } from "~/domain/profile"
+import type { PosterProps } from "~/ui/Poster"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { ProfileCard } from "../../ProfileCard"
-import type { PosterProps } from "~/ui/Poster"
 import { GROUPS, type GroupId, type Plan, type Ready } from "./parts"
 
 /** Cards three to a row on phones, up to six in the card. */
@@ -24,14 +23,11 @@ export function GroupView({
 	id,
 	plan,
 	c,
-	control,
 	className = "p-5 sm:p-8",
 }: {
 	id: GroupId
 	plan: Plan
 	c: Ready
-	/** The way back or out, at the header's end. */
-	control?: ReactNode
 	className?: string
 }) {
 	const g = GROUPS.find((x) => x.id === id) ?? GROUPS[0]
@@ -70,7 +66,6 @@ export function GroupView({
 						</span>
 					</span>
 				</div>
-				{control}
 			</div>
 
 			{id === "only" && (
