@@ -10,7 +10,9 @@ import {
 	member,
 } from "../../domain/member-paths.ts"
 import {
-	PLACES,
+	MENU_FOOTER,
+	MENU_SETUP,
+	MENU_WATCH,
 	SETTINGS_COLUMN,
 	SETTINGS_PLACES,
 	areaKeys,
@@ -341,25 +343,31 @@ test("Scores switch: Scored | Not rated on the two score pages only", () => {
 	assert.equal(scoresSwitch("ana", "/u/ana/stats"), null)
 })
 
-test("Places: the menu has one Settings row and Library; the Settings column keeps every settings row", () => {
+test("Menu: Watch leads to the Watch pages and what's new on the member's services", () => {
 	assert.deepEqual(
-		PLACES.left.map((g) => g.name),
-		[null, "Library"],
-	)
-	assert.deepEqual(
-		PLACES.right.map((g) => g.name),
-		["Your data", "Use GoodWatch elsewhere", "Help"],
-	)
-	const identity = PLACES.left[0].places
-	assert.deepEqual(
-		identity.map((p) => [p.id, p.label, p.href]),
+		MENU_WATCH.map((p) => [p.label, p.href]),
 		[
-			["profile", "Edit profile", SETTINGS_PATHS.profile],
-			["settings", "Settings", SETTINGS_PATHS.home],
+			["My shows", WATCH_PATHS.nextEpisodes],
+			["My movies", WATCH_PATHS.tonight],
+			["New on my services", "/new"],
+			["Recommendations", WATCH_PATHS.forYou],
+		],
+	)
+	assert.equal(MENU_WATCH[0].badge, "new-episodes")
+})
+
+test("Menu: Set up has one Settings row; the Settings column keeps every settings row", () => {
+	assert.deepEqual(
+		MENU_SETUP.map((p) => [p.label, p.href]),
+		[
+			["Settings", SETTINGS_PATHS.home],
+			["Import", SETTINGS_PATHS.imports],
+			["Use with AI", "/use-with-ai"],
+			["Discord bot", "/discord"],
 		],
 	)
 	const menu = new Set(
-		PLACES.left.concat(PLACES.right).flatMap((g) => g.places.map((p) => p.id)),
+		[...MENU_WATCH, ...MENU_SETUP, ...MENU_FOOTER].map((p) => p.id),
 	)
 	const column = new Set(
 		SETTINGS_COLUMN.flatMap((g) => g.places.map((p) => p.id)),
@@ -368,46 +376,17 @@ test("Places: the menu has one Settings row and Library; the Settings column kee
 		assert.ok(column.has(p.id), p.id)
 		assert.ok(!menu.has(p.id), p.id)
 	}
-	// Your data is the same in both.
-	assert.deepEqual(
-		PLACES.right[0].places.map((p) => p.id),
-		SETTINGS_COLUMN[1].places.map((p) => p.id),
-	)
 })
 
-test("Places: Library leads to the Watch pages", () => {
-	const library = PLACES.left[1].places
-	assert.deepEqual(
-		library.map((p) => [p.label, p.href]),
-		[
-			["My shows", WATCH_PATHS.nextEpisodes],
-			["My movies", WATCH_PATHS.tonight],
-			["Want to Watch", WATCH_PATHS.wishlist],
-			["Seen", WATCH_PATHS.showsSeen],
-			["Rate more", RATE_FALLBACK_PATH],
-			["Recommendations", WATCH_PATHS.forYou],
-		],
-	)
-	assert.equal(library[0].badge, "new-episodes")
-	// The menu sends a member with a handle to their own Rate more (ratePath); the fallback is for those without.
-	assert.equal(library.find((p) => p.id === "rate-more")?.own, "rate")
-})
-
-test("Places: real addresses, Feedback acts instead of navigating", () => {
-	const all = PLACES.left.concat(PLACES.right).flatMap((g) => g.places)
-	const href = (id: string) => all.find((p) => p.id === id)?.href
-	assert.equal(href("use-with-ai"), "/use-with-ai")
-	assert.equal(href("discord-bot"), "/discord")
-	assert.equal(href("support"), "/support")
+test("Menu: the footer has real addresses, Feedback acts instead of navigating", () => {
+	const href = (id: string) => MENU_FOOTER.find((p) => p.id === id)?.href
 	assert.equal(href("how-it-works"), "/how-it-works")
 	assert.equal(href("about"), "/about")
-	assert.equal(href("imports"), "/settings/imports")
-	assert.equal(href("not-interested"), "/settings/not-interested")
-	assert.equal(href("export"), "/settings/export")
-	const feedback = all.find((p) => p.id === "feedback")
+	const feedback = MENU_FOOTER.find((p) => p.id === "feedback")
 	assert.equal(feedback?.href, undefined)
 	assert.equal(feedback?.action, "feedback")
-	for (const p of all) assert.ok(p.href || p.action, p.id)
+	for (const p of [...MENU_WATCH, ...MENU_SETUP, ...MENU_FOOTER])
+		assert.ok(p.href || p.action, p.id)
 })
 
 test("placeHere: All settings only on /settings, other rows on their page and below", () => {

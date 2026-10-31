@@ -69,7 +69,7 @@ export function ClusterControls({ handle, view, edit, share }: ControlsProps) {
 					replace
 					preventScrollReset
 					aria-pressed={view.on}
-					aria-label={view.on ? "Back to your view" : "View as visitor"}
+					aria-label="View as visitor"
 					className={`${SEG} w-9 sm:w-auto sm:px-3 ${view.on ? "bg-amber-400 text-gray-950" : IDLE}`}
 				>
 					{view.on ? (
@@ -77,9 +77,7 @@ export function ClusterControls({ handle, view, edit, share }: ControlsProps) {
 					) : (
 						<EyeIcon className="size-[18px]" aria-hidden />
 					)}
-					<span className="max-sm:hidden">
-						{view.on ? "Back to your view" : "View as visitor"}
-					</span>
+					<span className="max-sm:hidden">View as visitor</span>
 				</Link>
 			)}
 			{edit && (

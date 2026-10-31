@@ -261,6 +261,15 @@ export async function listsByUser(userId: string): Promise<ListOverview[]> {
 	return rows.map(listOverviewFromRow)
 }
 
+/** How many lists the member has, for the account menu's Lists count. */
+export async function countListsByUser(userId: string): Promise<number> {
+	const [row] = await readListRows<{ n: number }>(
+		"SELECT count(*) AS n FROM doc.user_list WHERE user_id = ? AND deleted_at IS NULL",
+		[userId],
+	)
+	return Number(row?.n ?? 0)
+}
+
 export { publicListsByUser, getProfileByHandle } from "./view.server"
 
 export async function createList(

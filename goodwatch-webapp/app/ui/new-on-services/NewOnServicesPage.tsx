@@ -23,6 +23,7 @@ import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { CountryChooser } from "./CountryChooser"
+import { MyServicesSwitch } from "./MyServicesSwitch"
 import { Flag, Logo, PosterImage, PosterRow, RankedRow, Sub } from "./parts"
 
 /** The page's trail, for the BreadcrumbList. */
@@ -150,6 +151,7 @@ const KEY_OFF = "bg-gray-950/60 text-gray-200 ring-white/15 hover:ring-white/40"
 function ServiceKeys({ data }: { data: NewPageData }) {
 	return (
 		<nav aria-label="Services" className="flex flex-wrap gap-2">
+			<MyServicesSwitch data={data} />
 			{data.kind !== "member" && (
 				<Link
 					to={countryPath(data.country.code)}
@@ -370,7 +372,9 @@ export function NewOnServicesPage({ data }: { data: NewPageData }) {
 							<ChevronRightIcon className="h-4 w-4" aria-hidden />
 						</Link>
 					)}
-					{(data.kind !== "member" || data.keys.length > 0) && (
+					{(data.kind !== "member" ||
+						data.keys.length > 0 ||
+						data.member?.hasServices) && (
 						<ServiceKeys data={data} />
 					)}
 				</div>

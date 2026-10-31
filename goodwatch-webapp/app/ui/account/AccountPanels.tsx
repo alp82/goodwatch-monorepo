@@ -1,60 +1,59 @@
-// The account menu's contents, built from PLACES (ui/navigation/areas.ts). Desktop: two columns. On the left, who you
-// are (your profile, View as visitor, Share profile, Edit profile, Settings) and Library; on the right, Your data, Use
-// GoodWatch elsewhere and Help, with Sign out at the bottom. Phones: the same groups in one column, with taller rows.
-// Guests on phones get GuestPanel: search, the main pages and Sign in / Sign up.
+// The account menu's contents. Members get a profile card (avatar and handle, Edit profile, View as visitor and Share
+// profile, then the Seen, Want, Lists and Rate more counts), the Watch and Set up groups (ui/navigation/areas.ts
+// MENU_WATCH and MENU_SETUP), and a footer with Feedback, How it works, About and Sign out. Desktop puts Watch and Set
+// up side by side under the card; phones stack them, with taller rows. Guests on phones get GuestPanel: search, the
+// main pages and Sign in / Sign up.
 import {
-	ArrowRightStartOnRectangleIcon,
 	EyeIcon,
+	PencilSquareIcon,
 	ShareIcon,
+	StarIcon,
 } from "@heroicons/react/24/outline"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
+import { useQuery } from "@tanstack/react-query"
 import { type MouseEvent, type ReactNode, useMemo, useState } from "react"
-import { member, ratePath, tasteHome, tastePath } from "~/domain/member-paths"
+import {
+	EDIT_PROFILE_PATH,
+	RATE_FALLBACK_PATH,
+	WATCH_PATHS,
+	member,
+	ratePath,
+	tasteHome,
+	tastePath,
+} from "~/domain/member-paths"
+import { libraryCounts } from "~/domain/my-library"
+import { useUserData } from "~/routes/api.user-data"
 import { useSignOut } from "~/ui/auth/useSignOut"
 import { openFeedback } from "~/ui/feedback/FeedbackTab"
-import {
-	EDIT_PROFILE,
-	PLACES,
-	type Place,
-	type PlaceGroup,
-} from "~/ui/navigation/areas"
 import { DiscordMark } from "~/ui/footer/links"
 import { useNavigation } from "~/ui/navigation/NavigationContext"
 import { holdKeyboardForSearch } from "~/ui/navigation/Search"
+import {
+	MENU_FOOTER,
+	MENU_SETUP,
+	MENU_WATCH,
+	type Place,
+} from "~/ui/navigation/areas"
 import { NewEpisodesMark } from "~/ui/navigation/bits"
 import { guestMenuPages, palettePages } from "~/ui/navigation/palette-pages"
-import { useAuthHref } from "~/utils/auth-href"
 import { useNewEpisodes } from "~/ui/navigation/useNewEpisodes"
 import { profilePath } from "~/ui/share-card/links"
+import { useUser } from "~/utils/auth"
+import { useAuthHref } from "~/utils/auth-href"
 import { AccountAvatar } from "./AccountAvatar"
-import { useAccountCounts, useAccountSummary } from "./useAccountSummary"
+import { useAccountSummary } from "./useAccountSummary"
 
 const count = (n: number) => n.toLocaleString("en-US")
 
 const ROW =
 	"flex w-full cursor-pointer items-center gap-3 px-4 text-left text-[15px] font-medium text-gray-200 hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/[0.06] focus-visible:outline-hidden"
-const rowHeight = (big?: boolean) => (big ? "min-h-11" : "min-h-9")
+const rowHeight = (big?: boolean) => (big ? "min-h-12" : "min-h-10")
 
 interface PanelProps {
 	close: () => void
-	/** Phones: taller rows for touch. */
+	/** Phones: taller rows and buttons for touch. */
 	big?: boolean
-}
-
-function Group({
-	name,
-	children,
-	first,
-}: { name: string; children: ReactNode; first?: boolean }) {
-	return (
-		<div className={`py-1.5 ${first ? "" : "border-t border-white/10"}`}>
-			<p className="px-4 pt-1.5 pb-1 text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
-				{name}
-			</p>
-			{children}
-		</div>
-	)
 }
 
 /** Opens the Feedback drawer; without a Feedback tab on the page, goes to Support instead. */
@@ -71,113 +70,74 @@ function NewEpisodesBadge() {
 	return <NewEpisodesMark words={useNewEpisodes()} />
 }
 
-/** The identity rows the menu takes from PLACES (Edit profile, Settings). */
-const IDENTITY_PLACES = PLACES.left.find((g) => g.name === null)?.places ?? []
-
-function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
-	const counts = useAccountCounts()
-	const { handle } = useAccountSummary()
-	const to =
-		place.own === "rate" && handle ? ratePath(member(handle)) : place.href
-	const n =
-		place.count === "not-interested" && counts ? counts.notInterested : null
-	const inner = (
-		<>
-			<place.icon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
-			<span className="grow truncate">{place.label}</span>
-			{n != null && n > 0 && (
-				<span className="text-sm tabular-nums text-gray-500">{count(n)}</span>
-			)}
-			{place.badge === "new-episodes" && <NewEpisodesBadge />}
-			{place.tag && (
-				<span className="rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-semibold text-gray-400 ring-1 ring-white/10">
-					{place.tag}
-				</span>
-			)}
-		</>
-	)
+/** A place as a link, or as a button when it acts (Feedback). */
+function PlaceLink({
+	place,
+	close,
+	className,
+	children,
+}: {
+	place: Place
+	close: () => void
+	className: string
+	children: ReactNode
+}) {
 	if (place.action === "feedback")
 		return (
-			<button
-				type="button"
-				onClick={feedbackFrom(close)}
-				className={`${ROW} ${rowHeight(big)}`}
-			>
-				{inner}
+			<button type="button" onClick={feedbackFrom(close)} className={className}>
+				{children}
 			</button>
 		)
 	return (
 		<Link
-			to={to ?? "/"}
+			to={place.href ?? "/"}
 			prefetch="intent"
 			onClick={close}
+			className={className}
+		>
+			{children}
+		</Link>
+	)
+}
+
+function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
+	return (
+		<PlaceLink
+			place={place}
+			close={close}
 			className={`${ROW} ${rowHeight(big)}`}
 		>
-			{inner}
-		</Link>
+			<place.icon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
+			<span className="grow truncate">{place.label}</span>
+			{place.badge === "new-episodes" && <NewEpisodesBadge />}
+		</PlaceLink>
 	)
 }
 
-/** One Help link; Feedback opens the drawer instead. */
-function HelpCell({ place, close, big }: PanelProps & { place: Place }) {
-	const cell = `flex cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-sm text-gray-300 hover:bg-white/[0.06] hover:text-white ${big ? "min-h-11" : "min-h-9"}`
-	const inner = (
-		<>
-			<place.icon className="h-4 w-4 shrink-0 text-gray-500" aria-hidden />
-			<span className="truncate">{place.label}</span>
-		</>
-	)
-	if (place.action === "feedback")
-		return (
-			<button type="button" onClick={feedbackFrom(close)} className={cell}>
-				{inner}
-			</button>
-		)
+function Group({
+	name,
+	places,
+	close,
+	big,
+}: PanelProps & { name: string; places: Place[] }) {
 	return (
-		<Link to={place.href ?? "/"} onClick={close} className={cell}>
-			{inner}
-		</Link>
-	)
-}
-
-/** Help: four short links, two by two. */
-function HelpGrid({ places, close, big }: PanelProps & { places: Place[] }) {
-	return (
-		<div className="grid grid-cols-2 px-2">
-			{places.map((p) => (
-				<HelpCell key={p.id} place={p} close={close} big={big} />
+		<div>
+			<p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
+				{name}
+			</p>
+			{places.map((place) => (
+				<PlaceRow key={place.id} place={place} close={close} big={big} />
 			))}
 		</div>
 	)
 }
 
-function Groups({
-	groups,
-	close,
-	big,
-	first,
-}: PanelProps & { groups: PlaceGroup[]; first?: boolean }) {
-	return (
-		<>
-			{groups.map((group, i) =>
-				group.name ? (
-					<Group key={group.name} name={group.name} first={first && i === 0}>
-						{group.grid ? (
-							<HelpGrid places={group.places} close={close} big={big} />
-						) : (
-							group.places.map((p) => (
-								<PlaceRow key={p.id} place={p} close={close} big={big} />
-							))
-						)}
-					</Group>
-				) : null,
-			)}
-		</>
-	)
-}
+const ICON_KEY =
+	"flex shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-200 hover:bg-white/[0.08] hover:text-white"
+const iconKeySize = (big?: boolean) => (big ? "size-11" : "size-10")
 
 /** Share profile: the phone's share sheet on touch screens, else the link is copied. */
-function ShareRow({ handle, big }: { handle: string; big?: boolean }) {
+function ShareKey({ handle, big }: { handle: string; big?: boolean }) {
 	const [done, setDone] = useState(false)
 	const onClick = async () => {
 		const url = `${window.location.origin}${profilePath(handle)}`
@@ -191,145 +151,220 @@ function ShareRow({ handle, big }: { handle: string; big?: boolean }) {
 		setDone(true)
 		setTimeout(() => setDone(false), 1500)
 	}
+	const label = done ? "Link copied" : "Share profile"
 	return (
 		<button
 			type="button"
 			data-copy-link
 			onClick={onClick}
-			className={`${ROW} ${rowHeight(big)}`}
+			aria-label={label}
+			title={label}
+			className={`${ICON_KEY} ${iconKeySize(big)} ${done ? "text-emerald-300" : ""}`}
 		>
-			<ShareIcon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
-			<span className="grow">Share profile</span>
-			<span
-				aria-live="polite"
-				className={`text-sm text-emerald-300 transition-opacity duration-150 ${done ? "opacity-100" : "opacity-0"}`}
-			>
+			<ShareIcon className="h-5 w-5" aria-hidden />
+			<span aria-live="polite" className="sr-only">
 				{done ? "Link copied" : ""}
 			</span>
 		</button>
 	)
 }
 
-/** Who you are: your profile, View as visitor, Share profile, Edit profile and Settings. Without a handle: Pick a
- * handle, Edit profile and Settings. */
-function Identity({ close, big }: PanelProps) {
-	const me = useAccountSummary()
-	const avatar = (
-		<AccountAvatar
-			url={me.avatarUrl}
-			color={me.color}
-			initial={me.initial}
-			size={big ? 48 : 44}
-		/>
+function IconLink({
+	to,
+	label,
+	icon: Icon,
+	close,
+	big,
+}: PanelProps & { to: string; label: string; icon: typeof EyeIcon }) {
+	return (
+		<Link
+			to={to}
+			onClick={close}
+			aria-label={label}
+			title={label}
+			className={`${ICON_KEY} ${iconKeySize(big)}`}
+		>
+			<Icon className="h-5 w-5" aria-hidden />
+		</Link>
 	)
-	const head = `flex items-center gap-3 px-4 hover:bg-white/[0.05] ${big ? "py-3.5" : "pt-4 pb-3"}`
-	const identityRows = IDENTITY_PLACES.map((p) => (
-		<PlaceRow key={p.id} place={p} close={close} big={big} />
-	))
-	if (!me.handle)
-		return (
-			<>
+}
+
+/** How many lists the member has. The menu asks when it opens, so the number stays off the page's first load. */
+function useListCount(): number | null {
+	const { user } = useUser()
+	const { data } = useQuery<{ count: number | null }>({
+		queryKey: ["account-lists", user?.id],
+		queryFn: async () => (await fetch("/api/account-lists")).json(),
+		enabled: Boolean(user?.id),
+	})
+	return data?.count ?? null
+}
+
+interface Stat {
+	label: string
+	to: string
+	/** The number; null while it loads. Rate more has none: its list never ends. */
+	value: number | null
+	star?: boolean
+}
+
+/** Who you are: avatar and handle (your profile), the three profile actions, and four counts. */
+function ProfileCard({ close, big }: PanelProps) {
+	const me = useAccountSummary()
+	const { data } = useUserData()
+	const lists = useListCount()
+	const library = useMemo(() => (data ? libraryCounts(data) : null), [data])
+	const handle = me.handle
+	const stats: Stat[] = [
+		{
+			label: "Seen",
+			to: handle ? tastePath(handle, "seen") : WATCH_PATHS.showsSeen,
+			value: library?.seen ?? null,
+		},
+		{
+			label: "Want",
+			to: handle ? tastePath(handle, "wishlist") : WATCH_PATHS.wishlist,
+			value: library?.want ?? null,
+		},
+		{
+			label: "Lists",
+			to: handle ? tastePath(handle, "lists") : "/lists/mine",
+			value: lists,
+		},
+		{
+			label: "Rate more",
+			to: handle ? ratePath(member(handle)) : RATE_FALLBACK_PATH,
+			value: null,
+			star: true,
+		},
+	]
+	return (
+		<div className="m-2 rounded-2xl bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-1 ring-1 ring-white/10">
+			<div className="flex items-center gap-1 pr-1">
 				<Link
-					to={EDIT_PROFILE.href ?? "/settings/profile"}
+					to={handle ? tasteHome(member(handle)) : EDIT_PROFILE_PATH}
+					prefetch="intent"
 					onClick={close}
-					className={head}
+					className="flex min-w-0 grow items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-white/[0.05]"
 				>
-					{avatar}
+					<AccountAvatar
+						url={me.avatarUrl}
+						color={me.color}
+						initial={me.initial}
+						size={52}
+					/>
 					<span className="min-w-0">
-						{me.email && (
-							<span
-								data-feedback-private
-								className="block truncate text-sm text-gray-400"
-							>
-								{me.email}
-							</span>
-						)}
-						<span className="block font-bold text-amber-400">
-							{me.loaded ? "Pick a handle to get your profile" : "Your profile"}
+						<b className="block truncate text-lg text-white">
+							{handle ? `@${handle}` : "Your profile"}
+						</b>
+						<span className="block truncate text-sm text-gray-400">
+							{handle
+								? "Your profile and taste"
+								: me.loaded
+									? "Pick a handle to get your profile"
+									: ""}
 						</span>
 					</span>
 				</Link>
-				<div className="pb-1.5">{identityRows}</div>
-			</>
-		)
-	return (
-		<>
-			<Link
-				to={tasteHome(member(me.handle))}
-				prefetch="intent"
-				onClick={close}
-				className={head}
-			>
-				{avatar}
-				<span className="min-w-0">
-					<b className="block truncate text-white">@{me.handle}</b>
-					<span className="block truncate text-sm text-gray-400">
-						Your profile and taste
-					</span>
-				</span>
-			</Link>
-			<div className="pb-1.5">
-				<Link
-					to={tastePath(me.handle, "profile", { as: "visitor" })}
-					onClick={close}
-					className={`${ROW} ${rowHeight(big)}`}
-				>
-					<EyeIcon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
-					View as visitor
-				</Link>
-				<ShareRow handle={me.handle} big={big} />
-				{identityRows}
+				<IconLink
+					to={EDIT_PROFILE_PATH}
+					label="Edit profile"
+					icon={PencilSquareIcon}
+					close={close}
+					big={big}
+				/>
+				{handle && (
+					<>
+						<IconLink
+							to={tastePath(handle, "profile", { as: "visitor" })}
+							label="View as visitor"
+							icon={EyeIcon}
+							close={close}
+							big={big}
+						/>
+						<ShareKey handle={handle} big={big} />
+					</>
+				)}
 			</div>
-		</>
-	)
-}
-
-function SignOut({ big }: { big?: boolean }) {
-	const signOut = useSignOut()
-	return (
-		<button
-			type="button"
-			onClick={signOut}
-			className={`${ROW} ${big ? "min-h-12" : "min-h-11"}`}
-		>
-			<ArrowRightStartOnRectangleIcon
-				className="h-5 w-5 text-gray-500"
-				aria-hidden
-			/>
-			Sign out
-		</button>
-	)
-}
-
-/** Desktop: two columns side by side, Sign out at the bottom of the right one. */
-export function DesktopAccountPanel({ close }: { close: () => void }) {
-	return (
-		<div className="grid grid-cols-2 divide-x divide-white/10">
-			<div className="min-w-0">
-				<Identity close={close} />
-				<Groups groups={PLACES.left} close={close} />
-			</div>
-			<div className="flex min-w-0 flex-col">
-				<Groups groups={PLACES.right} close={close} first />
-				<span className="grow" />
-				<div className="border-t border-white/10 py-1">
-					<SignOut />
-				</div>
+			<div className="grid grid-cols-4 gap-1 px-1 pb-1">
+				{stats.map((stat) => (
+					<Link
+						key={stat.label}
+						to={stat.to}
+						prefetch="intent"
+						onClick={close}
+						className="flex flex-col items-center rounded-xl py-2 hover:bg-white/[0.06]"
+					>
+						{stat.star ? (
+							<StarIcon
+								className="my-[3px] h-[22px] w-[22px] text-amber-400"
+								aria-hidden
+							/>
+						) : (
+							<b className="text-lg leading-tight tabular-nums text-white">
+								{stat.value != null ? count(stat.value) : "–"}
+							</b>
+						)}
+						<span className="text-[12px] text-gray-400">{stat.label}</span>
+					</Link>
+				))}
 			</div>
 		</div>
 	)
 }
 
-/** Phones: one column in the same order. */
+/** Feedback, How it works and About as quiet links, Sign out at the end. */
+function Footer({ close }: PanelProps) {
+	const signOut = useSignOut()
+	return (
+		<div className="flex items-center justify-between border-t border-white/10">
+			<div className="flex flex-wrap gap-x-1 gap-y-0.5 px-2.5 py-2">
+				{MENU_FOOTER.map((place) => (
+					<PlaceLink
+						key={place.id}
+						place={place}
+						close={close}
+						className="cursor-pointer rounded-lg px-1.5 py-1 text-[13px] text-gray-400 hover:bg-white/[0.06] hover:text-white"
+					>
+						{place.label}
+					</PlaceLink>
+				))}
+			</div>
+			<button
+				type="button"
+				onClick={signOut}
+				className="mr-3 shrink-0 cursor-pointer rounded-full px-3 py-1 text-[13px] font-semibold text-gray-200 hover:bg-white/[0.06] hover:text-white"
+			>
+				Sign out
+			</button>
+		</div>
+	)
+}
+
+/** Desktop: the card, then Watch and Set up side by side. */
+export function DesktopAccountPanel({ close }: { close: () => void }) {
+	return (
+		<>
+			<ProfileCard close={close} />
+			<div className="grid grid-cols-2 divide-x divide-white/10 pb-2">
+				<Group name="Watch" places={MENU_WATCH} close={close} />
+				<Group name="Set up" places={MENU_SETUP} close={close} />
+			</div>
+			<Footer close={close} />
+		</>
+	)
+}
+
+/** Phones: the same parts in one column. */
 export function PhoneAccountPanel({ close }: { close: () => void }) {
 	return (
 		<>
-			<Identity close={close} big />
-			<Groups groups={PLACES.left} close={close} big />
-			<Groups groups={PLACES.right} close={close} big />
-			<div className="border-t border-white/10 py-1">
-				<SignOut big />
+			<ProfileCard close={close} big />
+			<div className="pb-1">
+				<Group name="Watch" places={MENU_WATCH} close={close} big />
+				<Group name="Set up" places={MENU_SETUP} close={close} big />
 			</div>
+			<Footer close={close} big />
 		</>
 	)
 }

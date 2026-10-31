@@ -1,11 +1,11 @@
 // The menu the Menu keys open: a disclosure (the keys and a nav of links, not an ARIA menu). Members, desktop: a
-// two-column panel under the header's Menu button. Phones: a one-column bottom sheet over the dock, as tall as its
+// panel under the header's Menu button (profile card, then Watch and Set up side by side). Phones: a one-column bottom sheet over the dock, as tall as its
 // content, that scrolls when it must; guests get the guest panel there (desktop guests have Sign in in the header). It slides up with transform and opacity only, over a plain dim backdrop (no blur over motion). This module
 // loads on first use (ui/navigation/LazyDialogs.tsx); the keys that open it are in ./AccountKey.tsx.
 import { useEffect, useRef } from "react"
 import { useNavigation } from "~/ui/navigation/NavigationContext"
-import { ACCOUNT_MENU_ID, visibleAccountKey } from "./AccountKey"
 import { useUser } from "~/utils/auth"
+import { ACCOUNT_MENU_ID, visibleAccountKey } from "./AccountKey"
 import {
 	DesktopAccountPanel,
 	GuestPanel,
@@ -52,7 +52,7 @@ export function AccountMenu() {
 					<div className="mx-auto flex max-w-7xl justify-end px-8">
 						<nav
 							aria-label="Your account"
-							className="pointer-events-auto mt-2 max-h-[calc(100dvh-5rem)] w-[min(560px,calc(100vw-2rem))] origin-top-right overflow-y-auto overscroll-contain rounded-2xl bg-gray-950 text-gray-100 shadow-2xl ring-1 ring-white/10 transition-[opacity,transform] duration-150 ease-out starting:scale-95 starting:opacity-0 motion-reduce:transition-none"
+							className="pointer-events-auto mt-2 max-h-[calc(100dvh-5rem)] w-[min(580px,calc(100vw-2rem))] origin-top-right overflow-y-auto overscroll-contain rounded-2xl bg-gray-950 text-gray-100 shadow-2xl ring-1 ring-white/10 transition-[opacity,transform] duration-150 ease-out starting:scale-95 starting:opacity-0 motion-reduce:transition-none"
 						>
 							<DesktopAccountPanel close={close} />
 						</nav>

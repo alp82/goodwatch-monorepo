@@ -670,9 +670,6 @@ export interface Place {
 	count?: "not-interested"
 	/** The mark after the label, read by the caller: My shows' new-episodes number (NewEpisodesMark). */
 	badge?: "new-episodes"
-	/** The address is the member's own, read by the caller: Rate more's ratePath with the handle. `href` is the way for a
-	 * member without a handle (/taste/quiz). */
-	own?: "rate"
 }
 
 /** Settings rows, most used first. */
@@ -722,9 +719,6 @@ export const ALL_SETTINGS: Place = {
 	href: SETTINGS_PATHS.home,
 }
 
-/** The account menu's one Settings row: the Settings home, which lists every settings page. */
-export const SETTINGS_ROW: Place = { ...ALL_SETTINGS, label: "Settings" }
-
 export const EDIT_PROFILE: Place = {
 	id: "profile",
 	label: "Edit profile",
@@ -756,8 +750,8 @@ export const DATA_PLACES: Place[] = [
 	},
 ]
 
-/** Library: the Watch pages, as the account menu lists them, and Rate more (the owner's Profile tab after Scores). */
-export const LIBRARY_PLACES: Place[] = [
+/** The account menu's Watch group: the Watch pages, then what just arrived on the member's services. */
+export const MENU_WATCH: Place[] = [
 	{
 		id: "my-shows",
 		label: "My shows",
@@ -772,18 +766,10 @@ export const LIBRARY_PLACES: Place[] = [
 		href: WATCH_PATHS.tonight,
 	},
 	{
-		id: "want-to-watch",
-		label: "Want to Watch",
-		icon: BookmarkIcon,
-		href: WATCH_PATHS.wishlist,
-	},
-	{ id: "seen", label: "Seen", icon: ClockIcon, href: WATCH_PATHS.showsSeen },
-	{
-		id: "rate-more",
-		label: "Rate more",
-		icon: StarIcon,
-		href: RATE_FALLBACK_PATH,
-		own: "rate",
+		id: "new-on-services",
+		label: "New on my services",
+		icon: CalendarDaysIcon,
+		href: "/new",
 	},
 	{
 		id: "recommendations",
@@ -793,8 +779,20 @@ export const LIBRARY_PLACES: Place[] = [
 	},
 ]
 
-/** GoodWatch elsewhere: two rows, each with its own mark. */
-export const APP_PLACES: Place[] = [
+/** The account menu's Set up group: Settings, Import, and GoodWatch in other apps. */
+export const MENU_SETUP: Place[] = [
+	{
+		id: "settings",
+		label: "Settings",
+		icon: Cog6ToothIcon,
+		href: SETTINGS_PATHS.home,
+	},
+	{
+		id: "imports",
+		label: "Import",
+		icon: ArrowDownTrayIcon,
+		href: SETTINGS_PATHS.imports,
+	},
 	{
 		id: "use-with-ai",
 		label: "Use with AI",
@@ -810,15 +808,14 @@ export const APP_PLACES: Place[] = [
 	},
 ]
 
-/** Help: drawn two by two in the menu. */
-export const HELP_PLACES: Place[] = [
+/** The account menu's footer links, before Sign out. Feedback opens the Feedback tab. */
+export const MENU_FOOTER: Place[] = [
 	{
 		id: "feedback",
 		label: "Feedback",
 		icon: ChatBubbleLeftEllipsisIcon,
 		action: "feedback",
 	},
-	{ id: "support", label: "Support", icon: LifebuoyIcon, href: "/support" },
 	{
 		id: "how-it-works",
 		label: "How it works",
@@ -829,29 +826,9 @@ export const HELP_PLACES: Place[] = [
 ]
 
 export interface PlaceGroup {
-	/** The group's small uppercase name; null for the identity rows at the top of the menu. */
-	name: string | null
+	/** The group's small uppercase name. */
+	name: string
 	places: Place[]
-	/** Drawn two by two (Help). */
-	grid?: boolean
-}
-
-/**
- * The account menu's places, grouped as it shows them. Desktop: two columns, `left` (the identity rows, Edit profile
- * and Settings, after View as visitor and Share profile, which the menu draws itself; then Library) and `right` (Your
- * data, Use GoodWatch elsewhere, Help), with Sign out under the right column. Phone: `left` then `right` in one
- * column. The settings pages themselves are listed in SETTINGS_COLUMN, not here.
- */
-export const PLACES: { left: PlaceGroup[]; right: PlaceGroup[] } = {
-	left: [
-		{ name: null, places: [EDIT_PROFILE, SETTINGS_ROW] },
-		{ name: "Library", places: LIBRARY_PLACES },
-	],
-	right: [
-		{ name: "Your data", places: DATA_PLACES },
-		{ name: "Use GoodWatch elsewhere", places: APP_PLACES },
-		{ name: "Help", places: HELP_PLACES, grid: true },
-	],
 }
 
 /** The Settings column (desktop) and chip row (phone): All settings, Edit profile, the settings rows, then Your data. */
