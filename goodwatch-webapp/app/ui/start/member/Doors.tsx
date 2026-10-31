@@ -2,7 +2,9 @@ import { usePathViewer } from "~/ui/navigation/NavigationContext"
 // The "Go deeper" doors under a member's start (doors.ts has the rules): four fixed-size doors, the open one filled
 // amber with a notch into its section; the section links to its page from its header and from a last tile. The open
 // door is decided from the data alone, so the server's HTML has its section. The order is kept from the first render:
-// a list that arrives later fills its door in place.
+// a list that arrives later fills its door in place. The section's posters are the site's poster cards with the
+// standard actions, as on Discover (a panel on hover, tiles after the first tap on a touch screen; a click opens the
+// title page), the Wishlist door's bookmark included.
 import { ArrowRightIcon, PlusIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
@@ -325,7 +327,7 @@ function DoorGrid({
 					key={title.card.key}
 					className={`min-w-0 ${shownAt(plans.map((p) => i < p.posters))}`}
 				>
-					<TitlePosterCard card={title.card} actions={false} />
+					<TitlePosterCard card={title.card} />
 					{title.line ? <PosterLine line={title.line} /> : null}
 				</li>
 			))}

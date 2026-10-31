@@ -1295,7 +1295,8 @@
 	scroll-snap-align: start;
 }
 .sb-card {
-	width: 116px;
+	/* From 7.5rem (120 px) a card's first tap shows the full action tiles (MovieTvCard). */
+	width: 124px;
 }
 
 /* Top 10 */
@@ -1357,7 +1358,7 @@
 }
 .sb-ranks .sb-card {
 	position: relative;
-	width: 108px;
+	width: 124px;
 }
 .sb-also {
 	margin-top: 4px;

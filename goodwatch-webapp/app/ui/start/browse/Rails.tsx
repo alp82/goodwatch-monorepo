@@ -1,5 +1,8 @@
 // The Where to start section's rails of cards and tiles: New on streaming, the moods, and the services. Every card and
-// tile is one link to its page, with the page's name as its text; the posters in a tile are decoration.
+// tile is one link to its page, with the page's name as its text; the posters in a tile are decoration. The poster
+// cards (New on streaming, and Top 10's) carry the site's standard card actions, as on Discover: a panel on hover,
+// tiles after the first tap on a touch screen; a click opens the title page. The actions' code loads at the first
+// interaction, and no card link (the tiles' Open included) asks for the title route before a click.
 import { Link } from "@remix-run/react"
 import type { CSSProperties } from "react"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
@@ -14,14 +17,20 @@ import {
 } from "./browse-data"
 import { Rail, RailHead, useRailNav } from "./Rail"
 
-/** A rail's poster card is 116 px wide on a phone, 144 px from 640 px, and 164 px from 1024 px (start.css). */
+/**
+ * A rail's poster card is 124 px wide on a phone (from 7.5rem a card's tap shows the full tiles), 144 px from 640 px,
+ * and 164 px from 1024 px (start.css).
+ */
 export const RAIL_POSTER_SIZES: SizeRule[] = [
 	["(min-width: 1024px)", "164px"],
 	["(min-width: 640px)", "144px"],
-	[null, "116px"],
+	[null, "124px"],
 ]
 
-/** A start title as the site's poster card, its link named by the title and year. Lazy: the section is below. */
+/**
+ * A start title as the site's poster card with the standard actions, its link named by the title and year. Lazy: the
+ * section is below.
+ */
 export function RailCard({
 	title,
 	sizes = RAIL_POSTER_SIZES,
@@ -31,7 +40,6 @@ export function RailCard({
 			details={title}
 			mediaType={title.media_type}
 			discover="none"
-			actions={false}
 			posterSizes={sizes}
 			posterMaxWidth={164}
 		/>

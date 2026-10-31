@@ -1,7 +1,9 @@
 // A member's search results, in the card's fixed box in place of "this or that": two rows of whole posters (six on
 // phones, ten from 640 px, twelve from 768 px, sixteen from 1024 px), as wide as the box's height holds (start.css,
 // `.start-member-grid`; from 1024 px they grow with the card). The search's reading shows in the bar. Back gives the
-// box back to "this or that"; See all, the main action, opens the whole list on Discover.
+// box back to "this or that"; See all, the main action, opens the whole list on Discover. The posters are the site's
+// poster cards with the standard actions, as on Discover: a panel on hover, tiles after the first tap on a touch
+// screen (Open and Actions on a phone's three across, under 7.5rem), a click opens the title page.
 import { ArrowRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion, useReducedMotion } from "framer-motion"
@@ -108,7 +110,7 @@ export function MemberResults({
 										ease: "easeOut",
 									}}
 								>
-									<TitlePosterCard card={card} actions={false} />
+									<TitlePosterCard card={card} />
 								</motion.div>
 							) : (
 								<div

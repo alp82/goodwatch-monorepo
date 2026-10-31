@@ -1,7 +1,7 @@
 // Top 10 on GoodWatch: the ten best movies or shows of all time (the best-of lists), with big outlined ranks. Movies
 // and Shows switch in place: both rails are in the server HTML, stacked in one grid cell, and the one not chosen is
 // invisible and inert, so the switch changes no height and every title link is in the HTML. Both best-of lists are
-// also one link away under the rail.
+// also one link away under the rail. The posters are the rails' cards (RailCard), with the standard card actions.
 import { Link } from "@remix-run/react"
 import { useState } from "react"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
@@ -10,11 +10,14 @@ import { Rail, RailHead, type RailNav, useRailNav } from "./Rail"
 import { RailCard } from "./Rails"
 import { BROWSE_HUBS, type BrowseKind } from "./browse-data"
 
-/** The Top 10's poster is 108 px wide on a phone, 136 px from 640 px, and 152 px from 1024 px (start.css). */
+/**
+ * The Top 10's poster is 124 px wide on a phone (from 7.5rem a card's tap shows the full tiles), 136 px from 640 px,
+ * and 152 px from 1024 px (start.css).
+ */
 const TOP_POSTER_SIZES: SizeRule[] = [
 	["(min-width: 1024px)", "152px"],
 	["(min-width: 640px)", "136px"],
-	[null, "108px"],
+	[null, "124px"],
 ]
 
 const KINDS: { kind: BrowseKind; label: string }[] = [
