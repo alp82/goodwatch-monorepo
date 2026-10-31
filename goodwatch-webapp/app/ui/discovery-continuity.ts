@@ -22,6 +22,7 @@ export const isDiscovery = (path: string) =>
 /**
  * The URL with the last filters of a listing, when someone opens its entry point without a query. Null when the
  * page opens as asked. Discover never restores: a plain /discover link opens fresh, not with the last search.
+ * By your tropes never restores either: ?trope= is a pick, and its "All picks for you" link must open the full list.
  */
 export function restoredEntry(
 	pathname: string,
@@ -34,7 +35,8 @@ export function restoredEntry(
 		pathname.startsWith("/taste") ||
 		pathname.startsWith("/u/") ||
 		/^\/(movie|show)\//.test(pathname) ||
-		/^\/discover(\/|$)/.test(pathname)
+		/^\/discover(\/|$)/.test(pathname) ||
+		/^\/watch\/for-you\/tropes\/?$/.test(pathname)
 	)
 		return null
 	const previous = context.routes?.[pathname]

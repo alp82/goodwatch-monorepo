@@ -96,3 +96,13 @@ test("Watch restores list filters while the Taste profile keeps its requested ta
  assert.equal(restoredEntry("/watch/movies/want", "", context), "/watch/movies/want?type=show&q=alien")
  assert.equal(restoredEntry("/u/ana/scores", "", context), null)
 })
+
+test("By your tropes opens the full list: a remembered ?trope= pick is never restored", () => {
+	const context = remember(
+		emptyContext(),
+		"/watch/for-you/tropes",
+		"/watch/for-you/tropes?trope=BlackAndGrayMorality",
+		0,
+	)
+	assert.equal(restoredEntry("/watch/for-you/tropes", "", context), null)
+})
