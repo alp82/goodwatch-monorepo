@@ -351,8 +351,8 @@ function Picks({
 			)}
 			{pick && (
 				<Suspense fallback={null}>
+					{/* One sheet across Previous / Next, so focus stays on the button that stepped. */}
 					<PickSheet
-						key={pick.id}
 						pick={pick}
 						place={index + 1}
 						tropeCount={tropeCount}

@@ -157,7 +157,8 @@ export default function PickSheet({
 				<ul className="mt-4 grid gap-2 sm:grid-cols-2">
 					{pick.matchedTropes.map((trope) => (
 						<TropeBox
-							key={trope.id}
+							// Per pick: a step to the next pick covers its write-ups again.
+							key={`${pick.id}|${trope.id}`}
 							trope={trope}
 							pick={pick}
 							kind={kind}
@@ -188,10 +189,6 @@ function TropeBox({
 	pick: RecTitle
 	kind: RecKind
 	onClose: () => void
-	/** Opens the previous pick; null on the first. */
-	onPrev?: (() => void) | null
-	/** Opens the next pick; null on the last. */
-	onNext?: (() => void) | null
 }) {
 	const [open, setOpen] = useState(false)
 	const excerpt = useExcerpt(trope.id, pick.id)

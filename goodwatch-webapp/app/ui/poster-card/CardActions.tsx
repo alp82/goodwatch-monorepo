@@ -118,6 +118,15 @@ export default function CardActions({
 	tile: boolean
 	setTile: (tile: boolean) => void
 }) {
+	// The page's own view: focus moves to the poster's link first, since the tiles go away, so the view's dialog
+	// gives focus back to the card when it closes.
+	const openView = () => {
+		frame.current
+			?.querySelector<HTMLElement>(":scope > a")
+			?.focus({ preventScroll: true })
+		setRevealed(null)
+		onOpen?.()
+	}
 	const a = useTitleActions(media)
 	const navigate = useNavigate()
 	const { status } = useTitleMarks(media.mediaType, media.details.tmdb_id)
@@ -354,12 +363,12 @@ export default function CardActions({
 					title={media.details.title}
 					href={href}
 					discover={discover}
-					onOpen={onOpen}
+					onOpen={onOpen && openView}
 					onArt={() => {
 						// The second tap on the art opens the title, as the Open bar does.
+						if (onOpen) return openView()
 						setRevealed(null)
-						if (onOpen) onOpen()
-						else navigate(href)
+						navigate(href)
 					}}
 					onSheet={(event) => {
 						opener.current = event.currentTarget

@@ -242,11 +242,15 @@ export function MovieTvCard({
 				onClick={(event) => {
 					// The title page, or the page's own view of the title.
 					const opens = () => {
-						if (!onOpen || !plainClick(event)) return
+						if (!onOpen) return
 						event.preventDefault()
 						setRevealed(null)
 						onOpen()
 					}
+					// A modified click opens the link as the browser does (a new tab, a new window).
+					if (!plainClick(event)) return
+					// Enter or a screen reader's activation opens straight away: tiles are for a finger.
+					if (onOpen && event.detail === 0) return opens()
 					// Touch: the first tap shows the actions over the art, the second opens the title.
 					if (!actions || tile) return opens()
 					// Too narrow for tiles: the tap opens the title.
