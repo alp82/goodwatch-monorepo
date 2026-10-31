@@ -1,3 +1,4 @@
+import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
 import { inlineTaste } from "~/server/taste/inline.server"
 // Discover's results: in browse mode the catalog, in search mode the search's ranked list, filtered and sorted in
 // memory by the filter bar's state, taste applied (the taste match filter, Best match, For you), and one page of title
@@ -450,7 +451,7 @@ export async function getForYouPreview(
  * is one tap away, and a URL says it when it's on. The viewer isn't read; the parameter stays for the callers.
  */
 export function discoverFilterDefaults(_ctx: ViewerContext) {
-	return { onMyServices: false, notSeenYet: false }
+	return DISCOVER_DEFAULTS
 }
 
 /** Lists picked for the viewer (the start page's For you row): on their services, not seen yet. */

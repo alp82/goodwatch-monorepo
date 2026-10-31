@@ -1,3 +1,4 @@
+import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
 // Discover, browsing and searching on one page: the static title, the Discover bar with the status line under it (and
@@ -70,7 +71,6 @@ import { useDiscoverSearch } from "./useDiscoverSearch"
  * Everything, on any service, seen or not: Ready to watch turns on My services and Not seen yet in one tap. The same
  * as the server's discoverFilterDefaults.
  */
-const DISCOVER_DEFAULTS = { onMyServices: false, notSeenYet: false }
 
 /** How long the per-card movement marks show after For you flips. */
 const MARKS_MS = 2600

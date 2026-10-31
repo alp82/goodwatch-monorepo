@@ -4,8 +4,8 @@
 // 1. The search text goes to the combined search (runDiscoverSearch): its stream gives the reading first ("Read as"),
 //    then the ranked list. Each text is searched once: the answer is kept, so changing the picks only re-filters.
 // 2. The ranked list (or, with picks only, the catalog) goes to /api/discover/results with the picks as moods, themes,
-//    and styles, and the services scope: `any` (any streaming offer in the country) without saved services, `mine`
-//    with them. Discover's transport POSTs large ranked lists in the body; guests also include their browser progress.
+//    and styles. Text searches use Discover's defaults: everywhere, including seen titles. Picks alone use `any`
+//    (any streaming offer in the country) without saved services, `mine` with them. Discover's transport POSTs large ranked lists in the body; guests also include their browser progress.
 //
 // The answer is StartResults, marked with the query's signature. A newer query aborts the requests of an older one,
 // and an answer that arrives for a query no longer asked is dropped. A 503 while the title snapshot loads is asked
@@ -13,6 +13,7 @@
 //
 // Framework-free, so it's tested against a mocked `fetch` (start-search.test.ts); useStartSearch.ts holds one per page.
 import {
+	DISCOVER_DEFAULTS,
 	type SearchScope,
 	searchEligibility,
 	searchText,
@@ -52,8 +53,8 @@ const RETRY_AFTER = { fallback: 5, min: 1, max: 30 }
 /** Searched texts kept, so going back to one doesn't search it again. */
 const KEPT_SEARCHES = 8
 
-/** Where the results come from: any streaming offer in the country, or the viewer's services. */
-export type ResultsScope = "any" | "mine"
+/** Where results come from: the whole catalog, any streaming offer in the country, or the viewer's services. */
+export type ResultsScope = "all" | "any" | "mine"
 
 /**
  * The one scope rule for the start page's results and the mood picker's counts: `mine` once the viewer (a guest who
@@ -71,16 +72,19 @@ const WIDEST: FilterDefaults = { onMyServices: false, notSeenYet: false }
 
 /**
  * The filter state of the picks in a scope. Titles the viewer has seen stay in: the row is for tapping titles they
- * loved, so a loved title has to stay where it is.
+ * loved, so a loved title has to stay where it is. Text searches use Discover's defaults, independent of saved services.
  */
 function pickedState(
 	picks: readonly string[],
 	scope: ResultsScope,
+	searching = false,
 ): FilterState {
 	const { moods, themes, styles } = picksOf(picks)
+	const discover = searching || scope === "all"
 	return {
-		...defaultFilterState(WIDEST),
-		...(scope === "mine" ? { onMyServices: true } : { anyService: true }),
+		...defaultFilterState(discover ? DISCOVER_DEFAULTS : WIDEST),
+		...(!discover &&
+			(scope === "mine" ? { onMyServices: true } : { anyService: true })),
 		moods,
 		themes,
 		styles,
@@ -102,7 +106,7 @@ export function resultsPath({
 }): string {
 	const params = new URLSearchParams(
 		filterQuery(
-			pickedState(picks, scope),
+			pickedState(picks, scope, ranked !== null),
 			ranked ? "relevance" : "popular",
 			WIDEST,
 		),
@@ -162,7 +166,10 @@ export function createStartSearch({
 	const searches = new Map<string, Promise<Searched>>()
 	/** Readings streamed ahead of their ranked lists. */
 	const readings = new Map<string, ReadingChip[]>()
-	const filters = searchEligibility(pickedState([], resultsScope(scope)), scope)
+	const filters = searchEligibility(
+		defaultFilterState(DISCOVER_DEFAULTS),
+		scope,
+	)
 	let shown: StartResults = IDLE_RESULTS
 	let asked: {
 		query: Pick<StartQuery, "text" | "picks">

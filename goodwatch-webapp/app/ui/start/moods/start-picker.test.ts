@@ -101,7 +101,7 @@ test("one counts request: the results request's own query, with the picks by kin
 		countsQuery([], "mine", [1000000000603, 2000000001399]),
 	)
 	assert.equal(searched.get("ranked"), "1000000000603,2000000001399")
-	assert.equal(searched.get("services"), "mine")
+	assert.equal(searched.get("services"), "all")
 	assert.equal(searched.has("moods"), false)
 	// A search that found nothing still searches.
 	assert.equal(

@@ -1,28 +1,25 @@
-// The phone dock (below the large breakpoint): Watch and Explore on the left, Profile (the member's avatar, name and
-// handle) on the right, and the GoodWatch G raised over the middle, which opens the menu (the account menu for
+// The phone dock (below the large breakpoint): Home and Watch on the left, Explore and Profile on the right.
+// The GoodWatch G is raised over the middle and opens the menu (the account menu for
 // members; search, the main pages and Sign in for guests). The area keys don't navigate: each opens the sheet of its
 // area's pages (PhoneBar.tsx draws it). For two pages after a person left the living room through its TV, the TV
 // button shows in a row above the keys. The dock's height is published as --nav-dock-height so full-screen pages
 // such as Explorer can keep clear of it.
-import { Link } from "@remix-run/react"
+import { HomeIcon } from "@heroicons/react/24/outline"
+import { HomeIcon as HomeSolid } from "@heroicons/react/24/solid"
+import { Link, useLocation } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef } from "react"
 import { DockMenuKey, ProfileKeyIcon } from "~/ui/account/AccountKey"
-import { useAccountSummary } from "~/ui/account/useAccountSummary"
 import { TvBackDockKey, useTvWayBack } from "~/ui/living-room/TvWayBackHost"
-import { useUser } from "~/utils/auth"
 import { useNavigation, usePathViewer } from "./NavigationContext"
 import { areaSheetOf } from "./phone-bar"
 import { type AreaKeyView, useAreaKeys } from "./SiteHeader"
 import { NewEpisodesMark } from "./bits"
 
 /** One area key. A tap opens the area's sheet of pages; the link stays for new tabs and for no-script. */
-function DockAreaKey({ area, wide }: { area: AreaKeyView; wide?: boolean }) {
+function DockAreaKey({ area }: { area: AreaKeyView }) {
 	const navigation = useNavigation()
-	const { user } = useUser()
-	const me = useAccountSummary()
 	const Icon = area.on ? area.iconOn : area.icon
 	const profile = area.key === "taste"
-	const handle = wide && profile && user ? me.handle : null
 	const viewer = usePathViewer()
 	// An area without pages for this viewer (a guest's Profile) is a plain link.
 	const sheet = area.on || areaSheetOf(area.key, area.href, viewer) !== null
@@ -38,13 +35,11 @@ function DockAreaKey({ area, wide }: { area: AreaKeyView; wide?: boolean }) {
 				event.preventDefault()
 				navigation.openSheet(area.key)
 			}}
-			className={`flex h-full min-w-0 items-center justify-center rounded-[18px] font-bold ${
-				wide ? "gap-2.5 px-2 text-[13px]" : "flex-col gap-0.5 text-[12px]"
-			} ${area.on ? "bg-amber-500/15 text-amber-200" : "text-gray-400 active:bg-white/[0.06]"}`}
+			className={`flex h-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${area.on ? "bg-amber-500/15 text-amber-200" : "text-gray-400 active:bg-white/[0.06]"}`}
 		>
 			<span className="relative">
 				{profile ? (
-					<ProfileKeyIcon size={wide ? 30 : 24} on={area.on} fallback={Icon} />
+					<ProfileKeyIcon size={24} on={area.on} fallback={Icon} />
 				) : (
 					<Icon
 						className={`h-[22px] w-[22px] ${area.on ? "text-amber-300" : ""}`}
@@ -56,34 +51,40 @@ function DockAreaKey({ area, wide }: { area: AreaKeyView; wide?: boolean }) {
 					className="absolute -top-2 -right-3.5"
 				/>
 			</span>
-			{handle ? (
-				<span className="flex min-w-0 flex-col items-start leading-tight">
-					<span>{area.label}</span>
-					<span className="max-w-full truncate text-[11px] font-medium text-gray-500">
-						@{handle}
-					</span>
-				</span>
-			) : (
-				<span className="truncate">{area.label}</span>
-			)}
+			<span className="truncate">{area.label}</span>
 		</Link>
 	)
 }
 
-/** Watch · Explore · (the G's column) · Profile. Profile takes the right half, so the G sits in the screen's middle. */
+/** Home · Watch · (the G's column) · Explore · Profile, with equal space for the four navigation keys. */
 function DockKeys() {
 	const areas = useAreaKeys()
+	const { pathname } = useLocation()
+	const home = pathname === "/"
+	const Home = home ? HomeSolid : HomeIcon
 	const byKey = (key: string) => areas.find((a) => a.key === key)
 	const watch = byKey("watch")
 	const explore = byKey("explore")
 	const profile = byKey("taste")
 	return (
 		<div className="relative flex h-[76px] items-center px-2">
-			<div className="grid h-[62px] flex-1 grid-cols-[1fr_1fr_80px_2fr] items-center gap-0.5 rounded-[22px] bg-white/[0.04] p-1 ring-1 ring-white/[0.07]">
+			<div className="grid h-[62px] flex-1 grid-cols-[1fr_1fr_80px_1fr_1fr] items-center gap-0.5 rounded-[22px] bg-white/[0.04] p-1 ring-1 ring-white/[0.07]">
+				<Link
+					to="/"
+					prefetch="intent"
+					aria-current={home ? "page" : undefined}
+					className={`flex h-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${home ? "bg-amber-500/15 text-amber-200" : "text-gray-400 active:bg-white/[0.06]"}`}
+				>
+					<Home
+						className={`h-[22px] w-[22px] ${home ? "text-amber-300" : ""}`}
+						aria-hidden
+					/>
+					<span>Home</span>
+				</Link>
 				{watch && <DockAreaKey area={watch} />}
-				{explore && <DockAreaKey area={explore} />}
 				<span aria-hidden />
-				{profile && <DockAreaKey area={profile} wide />}
+				{explore && <DockAreaKey area={explore} />}
+				{profile && <DockAreaKey area={profile} />}
 			</div>
 			<DockMenuKey />
 		</div>

@@ -9,6 +9,9 @@ import type { TitleKey } from "~/utils/title-key"
 import type { SearchFilters } from "~/server/combined-search/search-filters"
 import type { FilterState, Released } from "./filter-state"
 
+/** Discover starts with the whole catalog, including seen titles, for every viewer. */
+export const DISCOVER_DEFAULTS = { onMyServices: false, notSeenYet: false }
+
 /** A query shorter than this isn't searched (the search endpoint's minimum). */
 export const SEARCH_MIN_CHARS = 2
 /** The longest query the field takes. */

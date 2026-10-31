@@ -173,7 +173,7 @@ for (const member of [false, true]) {
 			const params = new URL(request.url, "https://goodwatch.invalid")
 				.searchParams
 			assert.equal(params.has("ranked"), false)
-			assert.equal(params.get("services"), "any")
+			assert.equal(params.get("services"), "all")
 			assert.equal(params.get("unseen"), "0")
 			assert.equal(params.get("sort"), "relevance")
 			assert.equal(params.get("page"), "1")
@@ -381,7 +381,7 @@ test("picks alone ask for the catalog filtered by them, without a search", async
 	assert.equal(p.last()?.status, "idle")
 })
 
-test("a guest POSTs their progress; a member GETs; saved services make the scope theirs", async (t) => {
+test("a guest POSTs their progress; a member GETs; search stays as wide as Discover with saved services", async (t) => {
 	const net = stubFetch(t, server)
 	const guest = page()
 	guest.dispatch({ type: "picks", picks: ["m:funny"] })
@@ -398,13 +398,10 @@ test("a guest POSTs their progress; a member GETs; saved services make the scope
 	assert.equal(get.init?.method, undefined)
 	assert.equal(
 		new URL(get.url, "https://x.invalid").searchParams.get("services"),
-		"mine",
+		"all",
 	)
 	const body = JSON.parse(String(net.searches().at(-1)?.init?.body))
-	assert.deepEqual(body.filters.streaming, {
-		country: "DE",
-		providerIds: [8, 337],
-	})
+	assert.deepEqual(body.filters, {})
 })
 
 test("a slow answer for an older query never replaces the newer one's", async (t) => {
@@ -589,10 +586,40 @@ test("the results path names the scope, the sort, and the display language", () 
 		language: "de",
 	})
 	const params = new URL(path, "https://x.invalid").searchParams
-	assert.equal(params.get("services"), "mine")
+	assert.equal(params.get("services"), "all")
 	assert.equal(params.get("sort"), "relevance")
 	assert.equal(params.get("ranked"), "1000000000001")
 	assert.equal(params.get("page"), "1")
 	assert.ok(params.get("displayLanguage"))
 	mock.reset()
+})
+
+test("start search and See all use Discover's identical filters, even with saved services", async () => {
+	const { DISCOVER_DEFAULTS, searchEligibility } = await import(
+		"../../../domain/discover-search.ts"
+	)
+	const { filterStateFromParams, sortFromParams } = await import(
+		"../../../domain/filter-state.ts"
+	)
+	for (const scope of ["any", "mine"] as const) {
+		for (const picks of [[], ["m:funny", "t:crime", "s:slow"]]) {
+			const query = { text: "funny science fiction", picks }
+			const start = new URL(
+				resultsPath({ picks, scope, ranked: [1e12 + 1] }),
+				"https://x.invalid",
+			).searchParams
+			const discover = new URL(seeAllHref(query), "https://x.invalid")
+				.searchParams
+			const expected = filterStateFromParams(discover, DISCOVER_DEFAULTS)
+			assert.deepEqual(
+				filterStateFromParams(start, DISCOVER_DEFAULTS),
+				expected,
+			)
+			assert.equal(sortFromParams(start, true), sortFromParams(discover, true))
+			assert.deepEqual(
+				searchEligibility(expected, { country: "DE", services: [8, 337] }),
+				{},
+			)
+		}
+	}
 })

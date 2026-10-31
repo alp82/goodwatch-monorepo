@@ -4,7 +4,7 @@
 //
 // A member passes their services (from the loader): members GET, and the server knows who they are.
 import { useEffect, useMemo, useRef, useState } from "react"
-import type { SearchScope } from "~/domain/discover-search"
+import { type SearchScope, searchText } from "~/domain/discover-search"
 import { type GuestBody, useGuestBody } from "~/ui/discover/useDiscoverBrowse"
 import useLocale from "~/utils/locale"
 import {
@@ -75,5 +75,9 @@ export function useStartSearch(
 	}, [text, picksKey, ready, scope])
 
 	const retry = useMemo(() => () => search.current?.retry(), [])
-	return { ...results, retry, scope: resultsScope(scope) }
+	return {
+		...results,
+		retry,
+		scope: searchText(query.text) !== null ? "all" : resultsScope(scope),
+	}
 }
