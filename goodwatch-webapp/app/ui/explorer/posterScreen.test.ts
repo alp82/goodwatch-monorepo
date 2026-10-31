@@ -8,6 +8,7 @@ import {
 	createScreenWatch,
 	fillWidth,
 	largestPoster,
+	wheelScrolls,
 } from "./posterScreen.ts"
 
 test("posters grow to about 0.41 of the stage height", () => {
@@ -81,4 +82,28 @@ test("nothing opens while a poster is already the screen", () => {
 	watch.begin(500, 400)
 	watch.see(island, 3, title(7), 500, 400, LARGEST, 340, LARGEST)
 	assert.equal(watch.end(LARGEST, true, true), null)
+})
+
+const area = (scrollTop: number, scrollHeight = 600, clientHeight = 300) => ({
+	scrollTop,
+	scrollHeight,
+	clientHeight,
+})
+
+test("a wheel turn over details that can scroll that way scrolls them", () => {
+	assert.equal(wheelScrolls([area(0)], 40), true)
+	assert.equal(wheelScrolls([area(150)], -40), true)
+	assert.equal(wheelScrolls([area(150)], 40), true)
+})
+
+test("past the details' end, or over details that don't scroll, the wheel reaches the screen", () => {
+	assert.equal(wheelScrolls([area(300)], 40), false)
+	assert.equal(wheelScrolls([area(0)], -40), false)
+	assert.equal(wheelScrolls([area(0, 300, 300)], 40), false)
+	assert.equal(wheelScrolls([], 40), false)
+	assert.equal(wheelScrolls([area(100)], 0), false)
+})
+
+test("an outer scrollable area still scrolls when the inner one is at its end", () => {
+	assert.equal(wheelScrolls([area(300), area(0)], 40), true)
 })

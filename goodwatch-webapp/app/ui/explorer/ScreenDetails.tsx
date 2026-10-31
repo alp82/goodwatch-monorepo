@@ -32,7 +32,7 @@ export function ScreenDetails({
 		<div className="relative">
 			<div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/70 to-transparent" />
 			<div
-				className={`mx-auto flex max-w-6xl gap-6 px-5 ${phone ? "flex-col pt-4 pb-4" : "items-end pt-5 pb-6 md:px-8"}`}
+				className={`mx-auto flex max-w-6xl gap-6 px-5 ${phone ? "flex-col pt-4 pb-16" : "items-end pt-5 pb-6 md:px-8"}`}
 			>
 				<div className="min-w-0 flex-1">
 					<div className="flex items-center gap-2 text-[10.5px] font-bold tracking-[0.3em] text-amber-300/90 uppercase">
@@ -88,6 +88,7 @@ export function ScreenDetails({
 						</a>
 						<button
 							type="button"
+							data-screen-back
 							onClick={onBack}
 							className="text-gray-400 hover:text-white"
 						>

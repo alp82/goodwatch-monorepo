@@ -107,3 +107,24 @@ export function createScreenWatch() {
 		},
 	}
 }
+
+/** What a wheel turn needs of an element to tell whether it scrolls it. */
+export interface Scroller {
+	scrollTop: number
+	scrollHeight: number
+	clientHeight: number
+}
+
+/**
+ * Whether a wheel turn of `dy` (down is positive) scrolls one of these scrollable areas (innermost first) rather than
+ * reaching the screen behind them: the details band scrolls while it has room in that direction, and only past its
+ * end does the wheel let the screen go.
+ */
+export function wheelScrolls(chain: readonly Scroller[], dy: number): boolean {
+	if (!dy) return false
+	return chain.some((s) => {
+		const room = s.scrollHeight - s.clientHeight
+		if (room <= 1) return false
+		return dy > 0 ? s.scrollTop < room - 1 : s.scrollTop > 1
+	})
+}
