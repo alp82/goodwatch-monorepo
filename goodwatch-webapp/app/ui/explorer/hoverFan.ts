@@ -1,6 +1,8 @@
 // The hover fan: at island level, the island under the mouse swells a little and fans its top six posters up in an arc
 // above it (below it near the top of the view), with its name and size in a pill beyond them.
+import type { ExplorerTitle } from "~/domain/explorer"
 import { type Rgb, mixRgb, rgbCss } from "./color"
+import { fanTitles } from "./fanTitles"
 import { posterImage } from "./images"
 import type { MapIsland } from "./island"
 import { FONT, clamp } from "./paint"
@@ -47,8 +49,6 @@ export function stepFans(
 	return moving
 }
 
-const FAN_COUNT = 6
-
 function roundRect(
 	g: CanvasRenderingContext2D,
 	x: number,
@@ -70,16 +70,19 @@ function roundRect(
 export function paintFans(
 	g: CanvasRenderingContext2D,
 	fans: readonly Fan[],
-	view: { W: number; H: number; top: number; dpr: number },
+	view: {
+		W: number
+		H: number
+		top: number
+		dpr: number
+		visible: (title: ExplorerTitle) => boolean
+	},
 ) {
 	for (const f of fans) {
 		if (f.k < 0.01) continue
 		const island = f.island
 		if (!island.on) continue
-		const list = (island.top.length ? island.top : island.titles).slice(
-			0,
-			FAN_COUNT,
-		)
+		const list = fanTitles(island, view.visible)
 		const n = list.length
 		const pw = clamp(island.sr * 0.36, 44, 64)
 		const ph = pw * 1.5

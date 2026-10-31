@@ -450,7 +450,10 @@ export function createMapEngine(
 		const minW = Math.min(...islands.map((x) => x.w1).filter((w) => w > 0), 1e9)
 		maxS = Math.max(baseS * 6, (ACT() * 2.4) / (minW / 8))
 		// Every poster can be zoomed on into the screen.
-		maxS = Math.max(maxS, (fillWidth(W, H, phone()) * SCREEN_AT * 1.3) / (minW / 8))
+		maxS = Math.max(
+			maxS,
+			(fillWidth(W, H, phone()) * SCREEN_AT * 1.3) / (minW / 8),
+		)
 	}
 	/** The whole map; when the focus layout spills over the map's edges, all of it. */
 	function homeCam(): Cam {
@@ -1521,11 +1524,7 @@ export function createMapEngine(
 					h,
 					cx,
 					cy,
-					a:
-						smooth(show * 0.9, show * 2, rw) *
-						pm *
-						rise *
-						(first ? 1 : kids),
+					a: smooth(show * 0.9, show * 2, rw) * pm * rise * (first ? 1 : kids),
 					t,
 				})
 			}
@@ -1595,7 +1594,13 @@ export function createMapEngine(
 								smooth(0.55, 0.95, f) * smooth(17, 27, island.sr),
 			})
 			paintLabels()
-			paintFans(g, fans, { W, H, top: hooks.current.pad().t - 40, dpr })
+			paintFans(g, fans, {
+				W,
+				H,
+				top: hooks.current.pad().t - 40,
+				dpr,
+				visible: hooks.current.visible,
+			})
 		}
 		// Keep reading the next dots' colors.
 		if (budget.left <= 0) dirty = true
