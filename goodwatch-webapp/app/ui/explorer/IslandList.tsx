@@ -4,7 +4,7 @@ import {
 	type ExplorerWorld,
 	GROUPING_NAMES,
 } from "~/domain/explorer"
-import { titlePath } from "./Caption"
+import { titlePath } from "./titlePath"
 
 const TitleLinks = ({ titles }: { titles: ExplorerTitle[] }) => (
 	<ul>

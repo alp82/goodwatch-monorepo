@@ -1,7 +1,9 @@
 import useLocale from "~/utils/locale"
 // The Explorer's page: one map with every grouping's islands, each grouping in a region of its own around a middle
 // kept free. The Viewing menu flies to a region; a tap picks an island, which sails to the middle, and two to five
-// picked islands raise their combination there.
+// picked islands raise their combination there. Hovering a poster labels it, a tap opens it in the docked panel (the
+// quick view's drawer on phones), and zooming on into a big poster puts it on the big screen. Pixel effects play over
+// the map as accents.
 import { useSearchParams } from "@remix-run/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
@@ -28,10 +30,12 @@ import {
 } from "~/domain/title-type"
 import { NoTitlesOfType } from "~/ui/type-filter"
 import { useUser } from "~/utils/auth"
+import type { TitleChange } from "~/ui/title-actions/TitleControl"
 import { Minimap } from "./Minimap"
-import { Caption } from "./Caption"
 import { ExplorerQuickView } from "./ExplorerQuickView"
+import { PosterLabel } from "./PosterLabel"
 import { Selection, type SelectionState } from "./Selection"
+import { TITLE_PANEL, TitlePanel } from "./TitlePanel"
 import { TopBar } from "./TopBar"
 import { Tutorial, type TutorialStep, useTutorial } from "./Tutorial"
 import { ZoomRail } from "./ZoomRail"
@@ -46,26 +50,27 @@ import {
 	fetchShares,
 	fetchWorld,
 } from "./api"
-import { rgbCss } from "./color"
+import { rgbCss, rgbHex } from "./color"
 import {
 	combinationSentence,
 	sharedLine,
 	sharedNote,
 } from "./combination-words"
+import type { EffectTitle, MapEffects } from "./effects/types"
 import { type Drawn, type MapEngine, type Pad, createMapEngine } from "./engine"
 import type { IslandInput, MapIsland } from "./island"
 import { openingOf } from "./opening"
 import { groupingOf, layRegions, localId, worldId } from "./regions"
+import { usePosterScreen } from "./usePosterScreen"
 
 /** The map's filters as the URL holds them (null is the default). */
 type Filters = WorldQuery
 
-/** The title nearest the focus (its caption), or pinned by a tap (its quick view). */
+/** The open title: a tap on its poster opened its panel (its quick view on phones). */
 interface Active {
 	key: number
 	island: string
 	title: ExplorerTitle
-	pinned: boolean
 }
 
 /** The combination that's up: the islands it joins (in the order picked) and what it holds. */
@@ -92,6 +97,20 @@ const filterKey = (f: Filters) =>
 const currentParams = () => new URLSearchParams(window.location.search)
 
 const clampN = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
+
+const effectTitle = (t: ExplorerTitle): EffectTitle => ({
+	name: t.title,
+	year: t.year,
+	kind: t.mediaType === "show" ? "tv" : "movie",
+})
+
+const CHANGE_WORDS: Record<TitleChange, string> = {
+	want: "Added to Wishlist",
+	unwant: "Removed from Wishlist",
+	seen: "Marked as seen",
+	unseen: "Unmarked as seen",
+	scored: "Score saved",
+}
 
 const sideOf = (island: MapIsland) => ({
 	id: island.id,
@@ -201,6 +220,8 @@ export function ExplorerMap({
 	const seaCanvas = useRef<HTMLCanvasElement>(null)
 	const posterCanvas = useRef<HTMLCanvasElement>(null)
 	const engineRef = useRef<MapEngine | null>(null)
+	/** The pixel effects, once their chunk has loaded. */
+	const effectsRef = useRef<MapEffects | null>(null)
 	const [engine, setEngine] = useState<MapEngine | null>(null)
 	const [aspect, setAspect] = useState<number | null>(null)
 	const [width, setWidth] = useState(1440)
@@ -208,6 +229,17 @@ export function ExplorerMap({
 	const padRef = useRef<Pad>({ t: 150, r: 70, b: 70, l: 16 })
 	const phone = width < 640
 	const form: "float" | "sheet" = phone ? "sheet" : "float"
+	/** The big screen over the map. */
+	const screen = usePosterScreen({
+		engine,
+		effects: effectsRef,
+		member,
+		viewer,
+		language: locale.language,
+		userLoading,
+		phone,
+		onChange: (key, change) => noteChange(key, change),
+	})
 
 	useEffect(() => {
 		const el = stage.current
@@ -228,6 +260,7 @@ export function ExplorerMap({
 					: { t: t + 54, r: 12, b: w < 640 ? 150 : 120, l: 12 }
 			el.style.setProperty("--ex-pad-t", `${padRef.current.t}px`)
 			setWidth(w)
+			effectsRef.current?.resize(w, h)
 			const p = padRef.current
 			const a = (w - p.l - p.r) / Math.max(1, h - p.t - p.b)
 			// Aspect ratios in steps, so small resizes don't lay the islands out again.
@@ -276,7 +309,10 @@ export function ExplorerMap({
 		activeRef.current = a
 		setActiveState(a)
 	}, [])
-	const [captions, setCaptions] = useState<Drawn[]>([])
+	/** The poster under the mouse, for its label. */
+	const [hovered, setHovered] = useState<ExplorerTitle | null>(null)
+	const hoveredKey = useRef("")
+	const labelEl = useRef<HTMLDivElement>(null)
 	const [focusIsland, setFocusIsland] = useState<MapIsland | null>(null)
 	const [atOverview, setAtOverview] = useState(true)
 	/** The region in the middle of the view, "hub" for the middle, "all" out at the world. */
@@ -287,7 +323,6 @@ export function ExplorerMap({
 		setTouch(window.matchMedia?.("(pointer: coarse)").matches ?? false)
 	}, [])
 	const goEl = useRef<HTMLDivElement>(null)
-	const captionEls = useRef(new Map<string, HTMLDivElement>())
 	const layerEl = useRef<HTMLDivElement>(null)
 
 	// Fingers on the card (or a caption) pinch the map too: one of two there, or both.
@@ -335,16 +370,8 @@ export function ExplorerMap({
 		}
 	}, [])
 
-	/** The card's data loads once the title has stayed nearest for a moment (at once when pinned). */
-	const [cardKey, setCardKey] = useState<number | null>(null)
-	useEffect(() => {
-		if (!active) {
-			setCardKey(null)
-			return
-		}
-		const t = setTimeout(() => setCardKey(active.key), active.pinned ? 0 : 260)
-		return () => clearTimeout(t)
-	}, [active?.key, active?.pinned])
+	/** The open title's card. */
+	const cardKey = active?.key ?? null
 	const cardQuery = useQuery({
 		queryKey: [...explorerKeys.card(viewer, cardKey ?? 0), locale.language],
 		queryFn: () => fetchCard(cardKey as number, member, locale.language),
@@ -359,19 +386,40 @@ export function ExplorerMap({
 		setToast(text)
 		setTimeout(() => setToast((t) => (t === text ? null : t)), 2200)
 	}
+	/**
+	 * A title's control changed something: a toast says what. A title marked Seen leaves the map (with Not seen yet on),
+	 * and Seen that asks for the score says so only once the picker has closed (TitleControl), so nothing leaves under it.
+	 */
+	const noteChange = (key: number, change: TitleChange) => {
+		say(CHANGE_WORDS[change])
+		if (change === "want" || change === "unwant") return
+		const seen = change !== "unseen"
+		setSeenNow((s) => {
+			const next = new Set(s)
+			if (seen) next.add(key)
+			else next.delete(key)
+			return next
+		})
+	}
 
 	/** The focus without a mouse: the middle of the free part of the view (above the quick view's drawer on phones). */
 	const center = () => {
 		const p = padRef.current
 		const size = engineRef.current?.size() ?? { w: width, h: 800 }
 		const { w, h } = size
+		const open = !!activeRef.current
 		if (w < 640) {
-			const a = activeRef.current
-			if (!a?.pinned) return { x: w / 2, y: p.t + (h - p.t - p.b) * 0.5 }
+			if (!open) return { x: w / 2, y: p.t + (h - p.t - p.b) * 0.5 }
 			// Above the quick view's drawer.
 			const top = h - 60 - h * 0.5
 			return { x: w / 2, y: p.t + Math.max(60, top - p.t) * 0.5 }
 		}
+		// With the docked panel open, the map left of it.
+		if (open)
+			return {
+				x: (p.l + w - TITLE_PANEL.right - TITLE_PANEL.w - 16) / 2,
+				y: (p.t + h - p.b) / 2,
+			}
 		return { x: (p.l + w - p.r) / 2, y: (p.t + h - p.b) / 2 }
 	}
 
@@ -380,7 +428,6 @@ export function ExplorerMap({
 			key: d.title.key,
 			island: d.island.id,
 			title: d.title,
-			pinned: true,
 		})
 	const unpin = () => {
 		if (activeRef.current) setActive(null)
@@ -502,6 +549,9 @@ export function ExplorerMap({
 		}
 		const island = e.fillMix(tree)
 		if (!island) return
+		effectsRef.current?.burst("combine", island.sx, island.sy, {
+			color: rgbHex(island.tint),
+		})
 		setMix({ id: island.id, of: next, kind: tree.kind, count: tree.count })
 	}
 	const goRegion = (id: string) => {
@@ -521,14 +571,21 @@ export function ExplorerMap({
 	const tapIsland = (island: MapIsland) => {
 		if (island.bridge) return flyIn(island)
 		const cur = picksRef.current
-		if (cur.includes(island.id))
+		const burst = (kind: "pick" | "unpick") =>
+			effectsRef.current?.burst(kind, island.sx, island.sy, {
+				color: rgbHex(island.tint),
+			})
+		if (cur.includes(island.id)) {
+			burst("unpick")
 			return void applyPicks(cur.filter((id) => id !== island.id))
+		}
 		if (cur.length >= MAX_PICKS)
 			return say(`${MAX_PICKS} islands at most. Let one go to pick another.`)
 		if (cur.length && sharesRef.current?.get(island.id)?.count === 0)
 			return say(
 				`${namesOf([...cur, island.id])} share no titles with these filters`,
 			)
+		burst("pick")
 		void applyPicks([...cur, island.id])
 	}
 	const applyRef = useRef(applyPicks)
@@ -547,116 +604,100 @@ export function ExplorerMap({
 		if (!want.length) e.overview()
 	}, [mixParam])
 
-	// ------------------------------------------------------------ the title nearest the focus
+	// ------------------------------------------------------------ each frame: effects and the hovered poster
 
-	const pending = useRef<{ key: number | null; t: number }>({
-		key: null,
-		t: 0,
-	})
-	const lastCaptions = useRef("")
-	/** Each frame: the title nearest the focus becomes active after a short wait, and the captions near it. */
+	const lastAmbient = useRef(0)
+	const lastZoom = useRef(0)
+	const comboUp = useRef(false)
+	/**
+	 * Each frame: the islands on screen, the zoom and the live combination feed the effects, and the poster under the
+	 * mouse gets its label.
+	 */
 	const compute = () => {
 		const e = engineRef.current
 		if (!e) return
-		const a = activeRef.current
-		const ACT = e.activationWidth()
-		const { w, h } = e.size()
-		const ptr = e.pointer()
-		const c = center()
-		let list: Drawn[] = []
-		if (!a?.pinned) {
-			const byPointer = !!ptr && !phone
-			const pt = byPointer && ptr ? ptr : c
-			const reach = byPointer ? 36 : Math.min(w, h) * 0.16
-			let near = e.nearest(pt.x, pt.y, ACT, reach)
-			// The open card holds on a little, so it doesn't flicker between two titles.
-			if (a && near && near.title.key !== a.key) {
-				const cur = e.find(a.key, a.island)
-				if (cur && cur.w >= ACT * 0.9) {
-					const dc = Math.hypot(cur.cx - pt.x, cur.cy - pt.y)
-					const dn = Math.hypot(near.cx - pt.x, near.cy - pt.y)
-					if (dc < dn * 1.3 + 12) near = cur
-				}
+		const now = performance.now()
+		const fx = effectsRef.current
+		if (fx) {
+			if (now - lastAmbient.current > 33) {
+				lastAmbient.current = now
+				fx.ambient(
+					e
+						.islands()
+						.filter((i) => i.on && i.sr > 6)
+						.map((i) => ({
+							id: i.id,
+							name: i.name,
+							group: groupingOf(i.id),
+							x: i.sx,
+							y: i.sy,
+							r: i.sr,
+							color: rgbHex(i.tint),
+						})),
+				)
 			}
-			list = phone
-				? []
-				: e
-					.drawn()
-					.filter(
-						(d) =>
-							d.w >= Math.min(ACT * 0.6, 52) &&
-							d.a > 0.9 &&
-							d.title.key !== near?.title.key &&
-							Math.hypot(d.cx - pt.x, d.cy - pt.y) < ACT * 2.6,
-					)
-					.sort(
-						(x, y) =>
-							Math.hypot(x.cx - pt.x, x.cy - pt.y) -
-							Math.hypot(y.cx - pt.x, y.cy - pt.y),
-					)
-					.slice(0, 4)
-			// The nearest title's caption leads: a press on it opens its quick view.
-			if (near) list.unshift(near)
-			const key = near?.title.key ?? null
-			const now = performance.now()
-			if (key !== (a?.key ?? null)) {
-				if (pending.current.key !== key) pending.current = { key, t: now }
-				const wait = key == null ? 160 : 90
-				if (now - pending.current.t >= wait)
-					setActive(
-						near
-							? {
-									key: near.title.key,
-									island: near.island.id,
-									title: near.title,
-									pinned: false,
-								}
-							: null,
-					)
-				else setTimeout(() => engineRef.current && compute(), wait + 5)
-			} else pending.current = { key, t: now }
+			const z = e.zoomLevel()
+			if (z !== lastZoom.current) {
+				lastZoom.current = z
+				fx.setZoom(z)
+			}
+			const c = e.combination()
+			if (c) {
+				fx.combination(c)
+				comboUp.current = true
+			} else if (comboUp.current) {
+				fx.combination(null)
+				comboUp.current = false
+			}
 		}
-		const listKey = list.map((d) => `${d.island.id}|${d.title.key}`).join(",")
-		if (listKey !== lastCaptions.current) {
-			lastCaptions.current = listKey
-			setCaptions(list)
+		const ptr = e.pointer()
+		const a = activeRef.current
+		let hit: Drawn | null = null
+		if (ptr?.mouse) {
+			// The one painted on top: nearest the light, then the bigger generation.
+			for (const d of e.drawn())
+				if (
+					d.a > 0.5 &&
+					d.w >= 18 &&
+					ptr.x >= d.x &&
+					ptr.x <= d.x + d.w &&
+					ptr.y >= d.y &&
+					ptr.y <= d.y + d.h &&
+					(!hit ||
+						d.t > hit.t ||
+						(d.t === hit.t && d.generation < hit.generation))
+				)
+					hit = d
+		}
+		// The open title's poster has the panel.
+		if (hit && a && a.key === hit.title.key && a.island === hit.island.id)
+			hit = null
+		const key = hit ? `${hit.island.id}|${hit.title.key}` : ""
+		if (key !== hoveredKey.current) {
+			hoveredKey.current = key
+			setHovered(hit?.title ?? null)
+		}
+		const el = labelEl.current
+		if (el) {
+			if (!hit) el.style.visibility = "hidden"
+			else {
+				const { w, h } = e.size()
+				const lw = el.offsetWidth || 120
+				const x = Math.min(w - lw - 8, Math.max(8, hit.cx - lw / 2))
+				const y = Math.min(h - 36, hit.y + hit.h + 6)
+				el.style.transform = `translate3d(${Math.round(x)}px,${Math.round(y)}px,0)`
+				el.style.visibility = "visible"
+			}
 		}
 		place()
 	}
 
-	/** Positions the captions under their posters (clear of each other), and "Go in" on a lone picked island. */
+	/** Positions "Go in" on a lone picked island. */
 	const place = () => {
 		const e = engineRef.current
 		if (!e) return
 		const { w, h } = e.size()
 		const p = padRef.current
-		const a = activeRef.current
-		const taken: { x: number; y: number; w: number; h: number }[] = []
-		// Captions never cover the active poster either.
-		const shown = a ? e.find(a.key, a.island) : null
-		if (shown) taken.push({ x: shown.x, y: shown.y, w: shown.w, h: shown.h })
-		for (const [id, cel] of captionEls.current) {
-			const [island, key] = id.split("\n")
-			const d = e.find(Number(key), island)
-			if (!d) {
-				cel.style.visibility = "hidden"
-				continue
-			}
-			const cw = cel.offsetWidth || 120
-			const ch = cel.offsetHeight || 28
-			const x = Math.min(w - cw - 8, Math.max(8, d.cx - cw / 2))
-			const y = d.y + d.h + 8
-			const hit = taken.some(
-				(r) =>
-					x < r.x + r.w + 6 &&
-					x + cw > r.x - 6 &&
-					y < r.y + r.h + 4 &&
-					y + ch > r.y - 4,
-			)
-			cel.style.transform = `translate3d(${Math.round(x)}px,${Math.round(y)}px,0)`
-			cel.style.visibility = hit || y > h - 40 ? "hidden" : "visible"
-			if (!hit) taken.push({ x, y, w: cw, h: ch })
-		}
 		// "Go in" on a lit island: inside it, low, when it fits; otherwise next to it, wherever it covers the least of
 		// the other islands.
 		const go = goEl.current
@@ -706,7 +747,7 @@ export function ExplorerMap({
 	useEffect(() => {
 		placeRef.current()
 		engineRef.current?.invalidate()
-	}, [active, captions, card, picks, forming])
+	}, [active, card, picks, forming])
 
 	// ------------------------------------------------------------ the engine
 
@@ -720,22 +761,28 @@ export function ExplorerMap({
 		center,
 		active: () => {
 			const a = activeRef.current
-			return a ? { key: a.key, pinned: a.pinned, island: a.island } : null
+			return a ? { key: a.key, island: a.island } : null
 		},
 		// The quick view covers the map: no thread from the poster to a card.
 		card: () => null,
 		onTapPoster: (d) => {
 			const a = activeRef.current
-			if (a?.pinned && a.key === d.title.key) return
+			if (a && a.key === d.title.key) return
 			pin(d)
 			const e = engineRef.current
 			if (!e) return
+			const fx = effectsRef.current
+			fx?.burst("open", d.cx, d.cy, { color: rgbHex(d.island.tint) })
+			fx?.pun(effectTitle(d.title), { x: d.x, y: d.y, w: d.w, h: d.h })
 			const p = padRef.current
 			const { w, h } = e.size()
+			// The poster stays in view, left of the docked panel.
+			const right =
+				w < 640 ? w - p.r : w - TITLE_PANEL.right - TITLE_PANEL.w - 24
 			const out =
 				d.x < p.l ||
 				d.y < p.t - 20 ||
-				d.x + d.w > w - p.r ||
+				d.x + d.w > right ||
 				d.y + d.h > h - Math.min(p.b, 40)
 			if (d.w < e.activationWidth() || out || w < 640)
 				e.glideToPoster(d.island, d.i)
@@ -745,15 +792,30 @@ export function ExplorerMap({
 			tapIsland(island)
 		},
 		onDoubleTapIsland: (island) => flyIn(island),
-		onTapWater: () => {
-			if (activeRef.current?.pinned) unpin()
-		},
+		onTapWater: () => unpin(),
 		onLongPress: (d) => pin(d),
 		needTree: (island) => needTree.current(island),
 		onFrame: () => compute(),
 		onPointer: () => compute(),
-		onHoverIsland: () => {},
+		onHoverIsland: (island) => {
+			const fx = effectsRef.current
+			fx?.setFocus(island?.id ?? null)
+			if (island)
+				fx?.burst("hover", island.sx, island.sy, {
+					color: rgbHex(island.tint),
+				})
+		},
 		holdsPointer: () => false,
+		onScreen: (d) => {
+			// Another title's panel closes: the screen is what's open now.
+			const a = activeRef.current
+			if (a && (a.key !== d.title.key || a.island !== d.island.id)) unpin()
+			screen.ctl.open(d, "zoom")
+		},
+		onLand: () => {
+			const c = center()
+			effectsRef.current?.burst("land", c.x, c.y)
+		},
 	}
 
 	/** Loads an island's tree once, for the query of the map it belongs to. */
@@ -788,6 +850,18 @@ export function ExplorerMap({
 		const e = createMapEngine(sea, posters, hooks, { reducedMotion })
 		engineRef.current = e
 		setEngine(e)
+		// The effects arrive in their own chunk, once the map is up.
+		let gone = false
+		void import("./effects/mapEffects")
+			.then(({ createMapEffects }) => {
+				const host = stage.current
+				if (gone || !host) return
+				const fx = createMapEffects(host, { reducedMotion })
+				const size = e.size()
+				fx.resize(size.w, size.h)
+				effectsRef.current = fx
+			})
+			.catch(() => {})
 		if (import.meta.env.DEV)
 			(window as unknown as { __explorer?: unknown }).__explorer = {
 				engine: e,
@@ -815,6 +889,9 @@ export function ExplorerMap({
 				go: (id: string) => goRef.current(id),
 			}
 		return () => {
+			gone = true
+			effectsRef.current?.destroy()
+			effectsRef.current = null
 			e.destroy()
 			engineRef.current = null
 		}
@@ -849,8 +926,6 @@ export function ExplorerMap({
 	}, [engine, world])
 	useEffect(() => {
 		engine?.refilter()
-		const a = activeRef.current
-		if (a && !visible(a.title) && !a.pinned) setActive(null)
 	}, [visible])
 
 	useEffect(() => {
@@ -927,7 +1002,7 @@ export function ExplorerMap({
 	// After Separate, one line on what else there is: more islands narrow a combination. It goes with the next pick.
 	if (tutorial && maps && toldSeparate && picks.length < 2)
 		tutStep = picks.length ? null : "more"
-	else if (tutorial && maps && !active?.pinned) {
+	else if (tutorial && maps && !active) {
 		const far = at === "all"
 		const inside = !!focusIsland?.bridge
 		if (picks.length >= 3 && (mix || forming))
@@ -962,8 +1037,61 @@ export function ExplorerMap({
 
 	// ------------------------------------------------------------ keyboard
 
-	const keys = useRef({ pin, unpin, flyIn })
-	keys.current = { pin, unpin, flyIn }
+	/** The open title's island, its visible titles in order, and where the open one is among them. */
+	const islandOrder = () => {
+		const e = engineRef.current
+		const a = activeRef.current
+		const island = e && a ? e.island(a.island) : null
+		if (!island || !a) return null
+		const list: number[] = []
+		for (let i = 0; i < island.titles.length; i++)
+			if (visible(island.titles[i])) list.push(i)
+		const at = list.findIndex((i) => island.titles[i].key === a.key)
+		return { island, list, at }
+	}
+	/** Steps the docked panel to the next or previous title on the island; the map glides to it. */
+	const stepTitle = (dir: -1 | 1) => {
+		const o = islandOrder()
+		const e = engineRef.current
+		if (!o || !e || o.at < 0) return
+		const i = o.list[o.at + dir]
+		if (i == null) return
+		e.glideToPoster(o.island, i)
+		pin({ island: o.island, title: o.island.titles[i] })
+	}
+	/** The open title goes on the big screen. */
+	const openScreen = () => {
+		const e = engineRef.current
+		const a = activeRef.current
+		if (!e || !a) return
+		const d = e.find(a.key, a.island)
+		if (d) return screen.ctl.open(d, "panel")
+		// Off the view: it rises from the middle of the map.
+		const island = e.island(a.island)
+		const i = island ? island.titles.findIndex((t) => t.key === a.key) : -1
+		if (!island || i < 0) return
+		const c = center()
+		const w = 120
+		screen.ctl.open(
+			{
+				island,
+				i,
+				title: island.titles[i],
+				generation: island.generation[i],
+				x: c.x - w / 2,
+				y: c.y - w * 0.75,
+				w,
+				h: w * 1.5,
+				cx: c.x,
+				cy: c.y,
+				a: 1,
+				t: 1,
+			},
+			"panel",
+		)
+	}
+	const keys = useRef({ pin, unpin, flyIn, stepTitle, openScreen })
+	keys.current = { pin, unpin, flyIn, stepTitle, openScreen }
 	useEffect(() => {
 		const onKey = (ev: KeyboardEvent) => {
 			const e = engineRef.current
@@ -971,6 +1099,8 @@ export function ExplorerMap({
 			const target = ev.target as HTMLElement | null
 			if (!e || !el || !target || !el.contains(target)) return
 			if (target.closest("input, textarea, select")) return
+			// The big screen takes its own keys (Escape); the map's wait under it.
+			if (screen.ctl.up()) return
 			const onMap = target === posterCanvas.current
 			const a = activeRef.current
 			const k = keys.current
@@ -981,6 +1111,17 @@ export function ExplorerMap({
 				else if (picksRef.current.length)
 					void applyRef.current(picksRef.current.slice(0, -1), false)
 				else e.stepZoom(-1)
+				return
+			}
+			if (
+				a &&
+				(ev.key === "[" || ev.key === "]") &&
+				!ev.altKey &&
+				!ev.ctrlKey &&
+				!ev.metaKey
+			) {
+				ev.preventDefault()
+				k.stepTitle(ev.key === "[" ? -1 : 1)
 				return
 			}
 			if (!onMap || ev.altKey || ev.ctrlKey || ev.metaKey) return
@@ -1019,13 +1160,13 @@ export function ExplorerMap({
 				e.overview()
 			} else if (ev.key === "Enter") {
 				ev.preventDefault()
+				// Enter on the open title puts it on the big screen.
+				if (a) return k.openScreen()
 				const lone =
 					picksRef.current.length === 1 ? e.island(picksRef.current[0]) : null
 				if (lone) return k.flyIn(lone)
 				const c = center()
-				const d =
-					(a && e.find(a.key, a.island)) ||
-					e.nearest(c.x, c.y, e.activationWidth() * 0.5, 1e9)
+				const d = e.nearest(c.x, c.y, e.activationWidth() * 0.5, 1e9)
 				if (d) k.pin(d)
 				else e.stepZoom(1)
 			}
@@ -1040,9 +1181,8 @@ export function ExplorerMap({
 	const where = activeIsland
 		? { name: activeIsland.name, color: rgbCss(activeIsland.tint) }
 		: { name: "", color: "#888" }
-	// A pinned title opens in the quick view. A title it marks Seen leaves the map (with Not seen yet on), and Seen
-	// that asks for the score says so only once the picker has closed (TitleControl), so nothing leaves under it.
-	const quickView = active?.pinned && activeIsland && (
+	// On phones the open title shows in the quick view's drawer.
+	const quickView = phone && active && activeIsland && (
 		<ExplorerQuickView
 			key={active.key}
 			title={active.title}
@@ -1057,24 +1197,25 @@ export function ExplorerMap({
 			}}
 			focusOf={() => posterCanvas.current}
 			onClose={unpin}
+			onChange={(change) => noteChange(active.key, change)}
+		/>
+	)
+	const order = active && !phone ? islandOrder() : null
+	// Elsewhere it docks on the right edge.
+	const panel = !phone && (
+		<TitlePanel
+			open={!!(active && activeIsland)}
+			title={active?.title ?? null}
+			where={where}
+			card={card}
+			at={order && order.at >= 0 ? { index: order.at, count: order.list.length } : null}
+			top={Math.max(16, padRef.current.t - 40)}
+			onStep={stepTitle}
+			onClose={unpin}
+			onScreen={openScreen}
 			onChange={(change) => {
-				say(
-					{
-						want: "Added to Wishlist",
-						unwant: "Removed from Wishlist",
-						seen: "Marked as seen",
-						unseen: "Unmarked as seen",
-						scored: "Score saved",
-					}[change],
-				)
-				if (change === "want" || change === "unwant") return
-				const seen = change !== "unseen"
-				setSeenNow((s) => {
-					const next = new Set(s)
-					if (seen) next.add(active.key)
-					else next.delete(active.key)
-					return next
-				})
+				const key = activeRef.current?.key
+				if (key != null) noteChange(key, change)
 			}}
 		/>
 	)
@@ -1151,26 +1292,13 @@ export function ExplorerMap({
 				}
 				aria-label={
 					maps
-						? `Islands map of films and shows in ${maps.length} groups. Arrow keys move between titles, plus and minus zoom, Enter opens a title, Escape steps back.`
+						? `Islands map of films and shows in ${maps.length} groups. Arrow keys move between titles, plus and minus zoom, Enter opens a title and then puts it on the big screen, [ and ] step through its island, Escape steps back.`
 						: "Islands map"
 				}
 			/>
 			{fallback}
 			<div ref={layerEl} className="ex-layer">
-				{captions.map((d) => {
-					const id = `${d.island.id}\n${d.title.key}`
-					return (
-						<Caption
-							key={id}
-							ref={(el) => {
-								if (el) captionEls.current.set(id, el)
-								else captionEls.current.delete(id)
-							}}
-							title={d.title}
-							onClick={() => pin(d)}
-						/>
-					)
-				})}
+				<PosterLabel ref={labelEl} title={hovered} />
 				{litIsland && !forming && (
 					<div ref={goEl} className="ex-on" style={{ visibility: "hidden" }}>
 						<button
@@ -1201,7 +1329,7 @@ export function ExplorerMap({
 				)}
 			</div>
 			<TopBar
-				selection={bar && !(phone && active?.pinned) ? selection : null}
+				selection={bar && !(phone && active) ? selection : null}
 				phone={width < 768}
 				groupings={
 					maps?.map((m) => ({ id: m.grouping, islands: m.islands.length })) ??
@@ -1257,7 +1385,7 @@ export function ExplorerMap({
 					}}
 				/>
 			)}
-			{!(phone && active?.pinned) && (
+			{!(phone && active) && (
 				<ZoomRail
 					engine={engine as unknown as MapEngine}
 					onStop={(s) => {
@@ -1302,8 +1430,10 @@ export function ExplorerMap({
 				!bar &&
 				!focusIsland && <p className="ex-hint">{hint}</p>
 			)}
+			{screen.view}
 			{toast && <output className="ex-toast">{toast}</output>}
 			{quickView}
+			{panel}
 		</div>
 	)
 }

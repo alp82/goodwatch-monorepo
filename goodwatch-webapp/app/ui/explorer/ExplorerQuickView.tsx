@@ -7,7 +7,7 @@ import { QuickViewCard } from "~/ui/quick-view/QuickViewCard"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import type { TitleChange } from "~/ui/title-actions/TitleControl"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
-import { titlePath } from "./Caption"
+import { titlePath } from "./titlePath"
 
 export function ExplorerQuickView({
 	title,

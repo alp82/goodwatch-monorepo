@@ -5,14 +5,11 @@
 //   gets the cast and the islands nearest the middle of the view.
 // - Up to five islands are picked (`setLit`); their combination rises in the middle (`raiseMix`). A picked island
 //   sails to the middle and sits against the combination. Nothing else moves.
+// - Zooming glides (zoomGlide.ts). Posters grow to `largestPoster` and stay whole; zooming on into one makes it the
+//   screen (posterScreen.ts), which the page shows over the map while the engine holds still under it.
+// - At island level the hovered island fans its top posters (hoverFan.ts).
 import type { BridgeKind, ExplorerTitle, ExplorerTree } from "~/domain/explorer"
-import {
-	type Cam,
-	nextStop,
-	overviewStep,
-	settleStop,
-	zoomAbout,
-} from "./camera"
+import { type Cam, nextStop, overviewStep, zoomAbout } from "./camera"
 import { type Rgb, luminous, mixRgb } from "./color"
 import { beginImageFrame, onImageReady } from "./images"
 import {
@@ -48,6 +45,28 @@ import { loadBackdropImages, paintBackdropTile } from "./sea/backdrop"
 import { createSeaRenderer } from "./sea/renderer"
 import type { BackdropTile, IslandShape, SeaRenderer } from "./sea/types"
 import { shoreDistance, shoreRadius } from "./world"
+import type { EffectCombination } from "./effects/types"
+import { type Fan, paintFans, stepFans, swellOf } from "./hoverFan"
+import {
+	IN_MS,
+	MAGNET_AT,
+	SCREEN_AT,
+	createScreenWatch,
+	fillWidth,
+	largestPoster,
+} from "./posterScreen"
+import {
+	type DriftGeo,
+	LAND_MS,
+	NOTCH,
+	NOTCH_MS,
+	STEP_MS,
+	type ZoomGlide,
+	drifted,
+	driftTarget,
+	glideAt,
+	makeGlide,
+} from "./zoomGlide"
 
 type World = RegionWorld
 
@@ -77,8 +96,8 @@ export interface EngineHooks {
 	pad: () => Pad
 	/** The focus without a mouse: the middle of the free part of the view. */
 	center: () => { x: number; y: number }
-	/** The active title and the island it's on. */
-	active: () => { key: number; pinned: boolean; island: string } | null
+	/** The open title (its panel or quick view) and the island it's on. */
+	active: () => { key: number; island: string } | null
 	/** Where the card of the active title is on screen, if it floats beside it. */
 	card: () => DOMRect | null
 	onTapPoster: (d: Drawn) => void
@@ -96,6 +115,10 @@ export interface EngineHooks {
 	onHoverIsland: (island: MapIsland | null) => void
 	/** The mouse left the map for something over it that keeps the map's focus where it was (the card under it). */
 	holdsPointer: (to: EventTarget | null) => boolean
+	/** A poster was zoomed on into past its largest size: the page makes it the screen. */
+	onScreen: (d: Drawn) => void
+	/** A long camera flight or glide came to rest. */
+	onLand: () => void
 }
 
 interface Flight {
@@ -123,6 +146,16 @@ export function createMapEngine(
 ) {
 	const g = canvas.getContext("2d") as CanvasRenderingContext2D
 	const reduce = prefs.reducedMotion
+	/** The zoom glide under way. */
+	let glide: ZoomGlide | null = null
+	/** The hover fans, opening and closing. */
+	const fans: Fan[] = []
+	/** Watches the poster at the zoom's point grow into the screen. */
+	const screenWatch = createScreenWatch()
+	/** Until when the last zoom input counts as zooming in (for the screen). */
+	let zoomInUntil = 0
+	/** A poster is the screen: the map holds still under it. */
+	let screenUp = false
 	const sea: SeaRenderer = createSeaRenderer(seaCanvas, {
 		reducedMotion: reduce,
 	})
@@ -187,8 +220,8 @@ export function createMapEngine(
 	const ACT = () => (phone() ? 92 : 118)
 	/** Titles narrower than this aren't drawn. */
 	const SHOW = () => (phone() ? 14 : 16)
-	/** Posters wider than this fade out: they'd fill the view. */
-	const BIG = () => Math.max(phone() ? 300 : 440, Math.min(W, H) * 0.62)
+	/** The widest a poster grows; one more zoom in on it makes it the screen. */
+	const LARGEST = () => largestPoster(W, H, phone())
 
 	const offImages = onImageReady(() => wake())
 
@@ -197,7 +230,7 @@ export function createMapEngine(
 	const lens = { x: 0, y: 0, r: 300, on: false }
 	function lensTarget() {
 		const a = hooks.current.active()
-		if (a?.pinned) {
+		if (a) {
 			const d = drawn.find((x) => isActive(x, a))
 			if (d) return { x: d.cx, y: d.cy }
 		}
@@ -235,7 +268,9 @@ export function createMapEngine(
 
 	/** How big an island is drawn: its focus scale, and a bridge's growth as it rises. */
 	const V = (island: MapIsland) =>
-		island.look.scale * (island.bridge ? backOut(island.bridge.grow) : 1)
+		island.look.scale *
+		(island.bridge ? backOut(island.bridge.grow) : 1) *
+		swellOf(island)
 	/** The islands on the map: all but a bridge that is sinking. */
 	const live = () => islands.filter((i) => !i.bridge || i.bridge.to === 1)
 	const bridgeOf = () => islands.find((i) => i.bridge?.to === 1) ?? null
@@ -414,6 +449,8 @@ export function createMapEngine(
 		baseS = (Math.min(W - p.l - p.r, H - p.t - p.b) / (2 * widest)) * 0.96
 		const minW = Math.min(...islands.map((x) => x.w1).filter((w) => w > 0), 1e9)
 		maxS = Math.max(baseS * 6, (ACT() * 2.4) / (minW / 8))
+		// Every poster can be zoomed on into the screen.
+		maxS = Math.max(maxS, (fillWidth(W, H, phone()) * SCREEN_AT * 1.3) / (minW / 8))
 	}
 	/** The whole map; when the focus layout spills over the map's edges, all of it. */
 	function homeCam(): Cam {
@@ -605,51 +642,14 @@ export function createMapEngine(
 	}
 	function zoomAt(s: number, sx: number, sy: number) {
 		flight = null
+		glide = null
 		Object.assign(tgt, zoomAbout(cur, clamp(s, fitS * 0.8, maxS), sx, sy, W, H))
-		clampTgt()
-		wake()
-	}
-	/** Zooms in to a poster stop, centering the poster nearest the point so it lands under it, big enough for its card. */
-	function zoomInAt(want: number, sx: number, sy: number) {
-		const s = clamp(want, fitS * 0.8, maxS)
-		const a = toWorld(sx, sy, cur)
-		const minW = ACT() * 0.92
-		const big = BIG()
-		let best = -1
-		let bestIsland: MapIsland | null = null
-		let bd = Number.POSITIVE_INFINITY
-		for (const island of islands) {
-			if (distN(island, a.x, a.y) > 0.6) continue
-			for (let i = 0; i < island.titles.length; i++) {
-				const w = PW(island, i) * s
-				if (w < minW || w > big || !hooks.current.visible(island.titles[i]))
-					continue
-				const dx =
-					Math.max(0, Math.abs(a.x - PX(island, i)) - PW(island, i) / 2) * s
-				const dy =
-					Math.max(0, Math.abs(a.y - PY(island, i)) - PW(island, i) * 0.75) * s
-				const d = Math.hypot(dx, dy)
-				if (d < bd) {
-					bd = d
-					best = i
-					bestIsland = island
-				}
-			}
-		}
-		if (!bestIsland || bd <= 28) return zoomAt(s, sx, sy)
-		const p = hooks.current.pad()
-		const pw = PW(bestIsland, best) * s
-		const px = clamp(sx, p.l + pw * 0.6, W - p.r - pw * 0.6)
-		const py = clamp(sy, p.t + pw * 0.8, H - p.b - pw * 0.8)
-		flight = null
-		tgt.s = s
-		tgt.x = PX(bestIsland, best) - (px - W / 2) / s
-		tgt.y = PY(bestIsland, best) - (py - H / 2) / s
 		clampTgt()
 		wake()
 	}
 	function glideTo(c: Cam) {
 		flight = null
+		glide = null
 		vel = { x: 0, y: 0 }
 		tgt.x = c.x
 		tgt.y = c.y
@@ -660,6 +660,7 @@ export function createMapEngine(
 	/** A camera flight: out a little and back in when the way is long, so the person keeps their bearings. */
 	function flyTo(to: Cam, ms?: number) {
 		vel = { x: 0, y: 0 }
+		glide = null
 		const dist = Math.hypot(to.x - cur.x, to.y - cur.y)
 		const sHop = (Math.min(W, H) * 0.8) / Math.max(dist, 1e-6)
 		const hop =
@@ -691,11 +692,12 @@ export function createMapEngine(
 		if (t >= 1) {
 			Object.assign(cur, f.to)
 			flight = null
+			if (f.ms >= 600) hooks.current.onLand()
 		}
 	}
 	/**
-	 * After a free zoom (trackpad, pinch), the camera stays where it was let go: it settles on a stop only from close
-	 * by, about the point of the gesture, and goes back to the whole map from further out than that.
+	 * After a free zoom (trackpad, pinch), the camera stays where it was let go; zoomed out past the whole map it goes
+	 * back to it, and a zoom in let go over water slides gently toward what's nearest.
 	 */
 	function settle() {
 		if (!snapPt || drag || pts.size) return
@@ -705,42 +707,172 @@ export function createMapEngine(
 		gestureDir = 0
 		const home = homeCam()
 		if (tgt.s < Math.min(fitS, home.s) * 0.999) return glideTo(home)
-		// Between the world and a region the camera stays where it's let go.
-		if (tgt.s < baseS * 0.85) return
-		const island = islandAt(pt.x, pt.y, 0.3) ?? focusIsland()
-		const best = settleStop(stopsOf(island), tgt.s, dir)
-		if (best != null && Math.abs(Math.log(best / tgt.s)) > 0.004)
-			zoomAt(best, pt.x, pt.y)
+		if (dir <= 0) return
+		const at = toWorld(pt.x, pt.y)
+		const d = driftTarget(driftGeo, at.x, at.y, tgt.s)
+		if (!d) return
+		const w = drifted(at, d, tgt.s, 0.55, 240)
+		glideAbout(
+			{
+				s: tgt.s,
+				x: w.x - (pt.x - W / 2) / tgt.s,
+				y: w.y - (pt.y - H / 2) / tgt.s,
+			},
+			pt.x,
+			pt.y,
+			650,
+			false,
+		)
+	}
+
+	// ------------------------------------------------------------ zoom glides
+
+	/** What the drift toward the nearest region, island or poster reads of the world. */
+	const driftGeo: DriftGeo = {
+		far: () => openness() < 0.5,
+		region: (x, y) => {
+			const r = regionAt(x, y)
+			const hub = (world as World).hub
+			return r === "hub" ? { x: hub.x, y: hub.y } : { x: r.cx, y: r.cy }
+		},
+		nearestIsland: (x, y) => {
+			let best: MapIsland | null = null
+			let bd = Number.POSITIVE_INFINITY
+			for (const island of live()) {
+				const d = distN(island, x, y)
+				if (d < bd) {
+					bd = d
+					best = island
+				}
+			}
+			return best ? { island: best, d: bd } : null
+		},
+		frameScale: (island) => stopsOf(island)[1] ?? baseS * 3,
+		cx: cX,
+		cy: cY,
+		px: PX,
+		py: PY,
+		pw: PW,
+		visible: (island, i) => hooks.current.visible(island.titles[i]),
+	}
+	/** Glides the camera to `to`, the world under (sx, sy) easing along with the scale. */
+	function glideAbout(
+		to: Cam,
+		sx: number,
+		sy: number,
+		ms: number,
+		land = ms >= LAND_MS,
+	) {
+		flight = null
+		vel = { x: 0, y: 0 }
+		snapPt = null
+		Object.assign(tgt, to)
+		clampTgt()
+		if (reduce) {
+			glide = null
+			Object.assign(cur, tgt)
+		} else
+			glide = makeGlide(cur, tgt, sx, sy, W, H, ms, performance.now(), land)
+		wake()
 	}
 	/**
-	 * One step in or out. A wheel notch is `anchored`: what's under the cursor stays there, so a notch back returns to
-	 * where it was. A button, a key, or a double tap frames the island, then centers the nearest poster.
+	 * Zooms to `toS` about (sx, sy). Quick steps in a row chain onto the target the last one was heading for. Zooming in,
+	 * the point drifts part of the way (k, at most `cap` px) toward the nearest region, island, or poster.
 	 */
-	function stepZoom(dir: 1 | -1, sx: number, sy: number, anchored = false) {
-		const island =
-			islandAt(sx, sy, 0.3) ?? (dir > 0 ? islandAt(sx, sy, 1.2) : focusIsland())
-		const st = stopsOf(island)
-		const base = flight ? flight.to.s : tgt.s
-		// Out at the world: a step in frames the region there, a step out shows the whole world.
+	function zoomGlide(
+		toS: number,
+		sx: number,
+		sy: number,
+		ms: number,
+		dir: 1 | -1,
+		k: number,
+		cap: number,
+	) {
+		if (!world) return
+		const home = homeCam()
+		if (dir < 0 && toS <= Math.min(fitS, home.s) * 1.001)
+			return glideAbout(home, sx, sy, ms)
+		const s = clamp(toS, Math.min(fitS, home.s), maxS)
+		const prev = glide
+		const base =
+			prev && Math.hypot(prev.px - sx, prev.py - sy) < 24
+				? { x: prev.w1x, y: prev.w1y }
+				: toWorld(sx, sy)
+		const at =
+			dir > 0
+				? drifted(base, driftTarget(driftGeo, base.x, base.y, s), s, k, cap)
+				: base
+		glideAbout(
+			{ s, x: at.x - (sx - W / 2) / s, y: at.y - (sy - H / 2) / s },
+			sx,
+			sy,
+			ms,
+		)
+	}
+	/** A wheel notch: 1.25x in a short ease-out glide. Close to the screen, the poster at the pointer holds still. */
+	function wheelNotch(dir: 1 | -1, sx0: number, sy0: number) {
+		let sx = sx0
+		let sy = sy0
+		if (dir > 0) {
+			zoomInUntil = performance.now() + IN_MS + NOTCH_MS
+			const m = posterToHold(sx, sy)
+			if (m) {
+				sx = m.cx
+				sy = m.cy
+			}
+		}
+		const base = glide ? glide.s1 : tgt.s
+		zoomGlide(
+			dir > 0 ? base * NOTCH : base / NOTCH,
+			sx,
+			sy,
+			NOTCH_MS,
+			dir,
+			0.32,
+			150,
+		)
+	}
+	/**
+	 * A button, a key, a double tap: a slower glide to the next stop (about twice as close). Out at the world a step in
+	 * frames the region there, a step out shows the whole world.
+	 */
+	function stepZoom(dir: 1 | -1, sx: number, sy: number) {
+		if (!world || screenUp) return
+		if (dir > 0) zoomInUntil = performance.now() + IN_MS + STEP_MS
+		const ms = STEP_MS
+		const base = glide ? glide.s1 : flight ? flight.to.s : tgt.s
+		const home = homeCam()
+		if (dir < 0 && base <= Math.max(home.s, fitS) * 1.05)
+			return glideAbout(home, sx, sy, ms)
 		const frame = overviewStep(base, baseS, dir, homeCam, () => {
 			const at = toWorld(sx, sy)
 			return camAt(at.x, at.y)
 		})
-		if (frame) return glideTo(frame)
-		const next = nextStop(st, base, dir) ?? (dir > 0 ? base * 1.7 : base / 1.7)
-		if (dir < 0 && base <= baseS * 1.05) return glideTo(homeCam())
-		if (dir < 0 && next <= baseS * 1.01 && !anchored) {
+		if (frame) return glideAbout(frame, sx, sy, ms)
+		const island = islandAt(sx, sy, 0.3) ?? focusIsland()
+		const st = stopsOf(island)
+		let next = nextStop(st, base, dir) ?? (dir > 0 ? base * 1.8 : base / 1.8)
+		next =
+			dir > 0
+				? clamp(next, base * 1.4, base * 2.4)
+				: clamp(next, base / 2.4, base / 1.4)
+		if (dir < 0 && next <= baseS * 1.01) {
 			const c = hooks.current.center()
 			const at = toWorld(c.x, c.y)
-			return glideTo(camAt(at.x, at.y))
+			return glideAbout(camAt(at.x, at.y), c.x, c.y, ms)
 		}
-		if (!anchored && dir > 0) {
-			if (island && base < st[1] * 0.9 && next === st[1])
-				return glideTo(islandCam(island))
-			if (st.length > 2 && next >= st[2] * 0.98) return zoomInAt(next, sx, sy)
-		}
-		zoomAt(next, sx, sy)
+		zoomGlide(next, sx, sy, ms, dir, 0.65, 280)
 	}
+	/** The island the mouse is on, at island level, fans its top posters. */
+	function stepHoverFans(dt: number) {
+		const h = hoverIsland
+		const open =
+			h && !h.bridge && !drag && !pinch && openness() >= 0.5 && islandLevel(h)
+				? h
+				: null
+		return stepFans(fans, open, dt, reduce)
+	}
+
 	function panBy(dx: number, dy: number) {
 		cur.x -= dx / cur.s
 		cur.y -= dy / cur.s
@@ -784,18 +916,21 @@ export function createMapEngine(
 		const dy = e.deltaY * (mode === 1 ? 33 : mode === 2 ? 400 : 1)
 		if (!dy) return
 		const now = performance.now()
-		// A mouse wheel's notch steps from stop to stop; a trackpad (small deltas, or pinch with ctrl) zooms freely.
+		// The screen takes the wheel while it's up.
+		if (screenUp) return
+		// A mouse wheel's notch glides 1.25x; a trackpad (small deltas, or pinch with ctrl) zooms freely, and gently.
 		const notch = !e.ctrlKey && Math.abs(dy) >= 50 && now > trackpadUntil
-		if (!notch) {
-			trackpadUntil = now + 260
-			const f = Math.exp(-dy * (e.ctrlKey ? 0.012 : 0.0045))
-			gestureDir = f > 1 ? 1 : -1
-			zoomAt((flight ? cur.s : tgt.s) * f, p.x, p.y)
-			snapAt = now + 200
-			snapPt = p
-			return
-		}
-		stepZoom(dy < 0 ? 1 : -1, p.x, p.y, true)
+		if (notch) return wheelNotch(dy < 0 ? 1 : -1, p.x, p.y)
+		trackpadUntil = now + 260
+		const f = Math.exp(-dy * (e.ctrlKey ? 0.008 : 0.003))
+		gestureDir = f > 1 ? 1 : -1
+		// Zooming in close to the screen, the poster at the pointer holds still and grows.
+		const m = f > 1 ? posterToHold(p.x, p.y) : null
+		if (f > 1) zoomInUntil = now + IN_MS
+		const at = m ? { x: m.cx, y: m.cy } : p
+		zoomAt((glide ? cur.s : tgt.s) * f, at.x, at.y)
+		snapAt = now + 220
+		snapPt = at
 	}
 	function hitPoster(x: number, y: number) {
 		for (let k = drawn.length - 1; k >= 0; k--) {
@@ -815,6 +950,7 @@ export function createMapEngine(
 		held.clear()
 		pts.set(e.pointerId, p)
 		flight = null
+		glide = null
 		vel = { x: 0, y: 0 }
 		if (pts.size === 1) {
 			const d = hitPoster(p.x, p.y)
@@ -883,7 +1019,8 @@ export function createMapEngine(
 				const d = hitPoster(p.x, p.y)
 				const key = d ? d.title.key : null
 				const far = openness() < 0.5
-				const over = d || far ? null : islandAt(p.x, p.y, 0.05)
+				// Over a poster too: the island keeps its fan.
+				const over = far ? null : islandAt(p.x, p.y, 0.05)
 				const at = toWorld(p.x, p.y)
 				const region = far ? regionAt(at.x, at.y) : null
 				const regionId = region ? (region === "hub" ? "hub" : region.id) : null
@@ -909,7 +1046,8 @@ export function createMapEngine(
 			const d = Math.hypot(a.x - b.x, a.y - b.y)
 			const cx = (a.x + b.x) / 2
 			const cy = (a.y + b.y) / 2
-			const f = d / Math.max(pinch.d, 1)
+			// A little damped, like the wheel.
+			const f = (d / Math.max(pinch.d, 1)) ** 0.85
 			const at = toWorld(pinch.cx, pinch.cy, cur)
 			const ns = clamp(cur.s * f, fitS * 0.7, maxS * 1.1)
 			cur.s = ns
@@ -917,6 +1055,7 @@ export function createMapEngine(
 			cur.y = at.y - (cy - H / 2) / ns
 			Object.assign(tgt, cur)
 			gestureDir = ns > pinchFrom * 1.02 ? 1 : ns < pinchFrom / 1.02 ? -1 : 0
+			if (f > 1) zoomInUntil = performance.now() + IN_MS
 			pinch = { d, cx, cy }
 			snapPt = { x: cx, y: cy }
 			snapAt = performance.now() + 120
@@ -1224,7 +1363,14 @@ export function createMapEngine(
 		last = now
 		if (!world) return
 		const started = performance.now()
-		if (flight) stepFlight(now)
+		if (glide) {
+			const gl = glide
+			if (glideAt(gl, now, cur)) {
+				glide = null
+				if (gl.land) hooks.current.onLand()
+			}
+			Object.assign(tgt, cur)
+		} else if (flight) stepFlight(now)
 		else {
 			if (!drag && !pinch && (Math.abs(vel.x) > 8 || Math.abs(vel.y) > 8)) {
 				panBy(vel.x * dt, vel.y * dt)
@@ -1246,6 +1392,7 @@ export function createMapEngine(
 		prevCam = { ...cur }
 		const islandsMoving = stepIslands(dt)
 		const lensMoving = stepLens(dt)
+		const fansMoving = stepHoverFans(dt)
 		const st = stopsOf(focusIsland())
 		sea.setIslands(seaIslands())
 		sea.setCamera({
@@ -1258,7 +1405,7 @@ export function createMapEngine(
 			height: H,
 		})
 		const seaMoving = sea.draw(now)
-		if (moved || dirty || islandsMoving || lensMoving) {
+		if (moved || dirty || islandsMoving || lensMoving || fansMoving) {
 			dirty = false
 			drawPosters()
 			for (const fn of listeners) fn()
@@ -1268,6 +1415,8 @@ export function createMapEngine(
 		if (stats.work.length > 600) stats.work.shift()
 		const busy =
 			!!flight ||
+			!!glide ||
+			fansMoving ||
 			moved ||
 			islandsMoving ||
 			lensMoving ||
@@ -1285,7 +1434,18 @@ export function createMapEngine(
 		const act = hooks.current.active()
 		const show = SHOW()
 		const ml = mapLevel()
-		const big = BIG()
+		const largest = LARGEST()
+		// The poster that becomes the screen is the one the zoom holds still.
+		const at = glide
+			? { x: glide.px, y: glide.py }
+			: pinch
+				? { x: pinch.cx, y: pinch.cy }
+				: snapPt
+					? snapPt
+					: pointer?.mouse
+						? pointer
+						: hooks.current.center()
+		screenWatch.begin(at.x, at.y)
 		for (const island of islands) {
 			const v = V(island)
 			island.sx = W / 2 + (cX(island) - cur.x) * cur.s
@@ -1326,7 +1486,9 @@ export function createMapEngine(
 			for (let i = 0; i < island.titles.length && out.length < MAX_DRAWN; i++) {
 				const first = island.generation[i] === 1
 				if (!first && kids < 0.01) break
-				const rw = PW(island, i) * cur.s * (first ? b1 : 1)
+				const raw = PW(island, i) * cur.s * (first ? b1 : 1)
+				// A poster stops growing at its largest and stays whole; the map moves on behind it.
+				const rw = Math.min(raw, largest)
 				if (rw < show * 0.9) {
 					// Breadth first: once one child is too small, so are the rest.
 					if (!first) break
@@ -1344,8 +1506,7 @@ export function createMapEngine(
 				)
 					continue
 				const isAct = !!act && act.key === title.key && act.island === island.id
-				if (rw > big && !(isAct && rw < big * 1.6)) continue
-				const fade = isAct ? 1 : 1 - smooth(big * 0.72, big, rw)
+				screenWatch.see(island, i, title, cx, cy, rw, raw, largest)
 				const t = isAct ? 1 : closeness(cx, cy)
 				const w = rw * (FAR + (1 - FAR) * t)
 				const h = w * 1.5
@@ -1362,7 +1523,6 @@ export function createMapEngine(
 					cy,
 					a:
 						smooth(show * 0.9, show * 2, rw) *
-						fade *
 						pm *
 						rise *
 						(first ? 1 : kids),
@@ -1378,6 +1538,7 @@ export function createMapEngine(
 		g.setTransform(dpr, 0, 0, dpr, 0, 0)
 		g.clearRect(0, 0, W, H)
 		drawn = layOutPosters()
+		checkScreen()
 		const act = hooks.current.active()
 		paintMeta()
 		paintPreview()
@@ -1389,7 +1550,7 @@ export function createMapEngine(
 		const order = [...drawn].sort(
 			(a, b) => lift(a) - lift(b) || a.t - b.t || b.generation - a.generation,
 		)
-		const dimOthers = act?.pinned ? 0.55 : 1
+		const dimOthers = act ? 0.55 : 1
 		const budget = { left: 10 }
 		for (const d of order) {
 			const l = lift(d)
@@ -1434,6 +1595,7 @@ export function createMapEngine(
 								smooth(0.55, 0.95, f) * smooth(17, 27, island.sr),
 			})
 			paintLabels()
+			paintFans(g, fans, { W, H, top: hooks.current.pad().t - 40, dpr })
 		}
 		// Keep reading the next dots' colors.
 		if (budget.left <= 0) dirty = true
@@ -1851,10 +2013,132 @@ export function createMapEngine(
 	ro.observe(canvas)
 	resize()
 
+	// ------------------------------------------------------------ the screen
+
+	/** Zooming in at (x, y) among big posters: the one under it (or just by it), if it's big enough to hold on. */
+	function posterToHold(x: number, y: number): Drawn | null {
+		const min = LARGEST() * MAGNET_AT
+		let best: Drawn | null = null
+		let bd = Number.POSITIVE_INFINITY
+		for (const d of drawn) {
+			if (d.a < 0.5 || d.w < min) continue
+			const out = Math.hypot(
+				Math.max(0, Math.abs(x - d.cx) - d.w / 2),
+				Math.max(0, Math.abs(y - d.cy) - d.h / 2),
+			)
+			if (out > 40) continue
+			const v = out - d.w * 0.01
+			if (v < bd) {
+				bd = v
+				best = d
+			}
+		}
+		return best
+	}
+	/** A poster was zoomed on into past its largest size: the camera stops and the page makes it the screen. */
+	function checkScreen() {
+		const zoomingIn = glide
+			? glide.s1 > glide.s0 * 1.0001
+			: performance.now() < zoomInUntil
+		const c = screenWatch.end(LARGEST(), screenUp, zoomingIn)
+		if (!c) return
+		glide = null
+		flight = null
+		snapPt = null
+		Object.assign(tgt, cur)
+		const h = c.w * 1.5
+		hooks.current.onScreen({
+			island: c.island,
+			i: c.i,
+			title: c.title,
+			generation: c.island.generation[c.i],
+			x: c.cx - c.w / 2,
+			y: c.cy - h / 2,
+			w: c.w,
+			h,
+			cx: c.cx,
+			cy: c.cy,
+			a: 1,
+			t: 1,
+		})
+	}
+
+	// ------------------------------------------------------------ what the effects read
+
+	const combo: EffectCombination = {
+		hub: { x: 0, y: 0, r: 0 },
+		rise: 0,
+		ready: false,
+		picked: [],
+	}
+	const comboPicked: EffectCombination["picked"] = []
+	/** The combination as the effects see it (one object, rewritten each call), null when there is none. */
+	function combination(): EffectCombination | null {
+		let mix: MapIsland | null = null
+		for (const island of islands) {
+			const b = island.bridge
+			if (!b) continue
+			// The one rising or up first; a sinking one only while it's still there.
+			if (b.to === 1) {
+				mix = island
+				break
+			}
+			if (b.grow > 0.01 && !mix) mix = island
+		}
+		const b = mix?.bridge
+		if (!mix || !b) return null
+		combo.hub.x = mix.sx
+		combo.hub.y = mix.sy
+		combo.hub.r = mix.sr
+		combo.rise = clamp(b.grow, 0, 1)
+		combo.ready = !b.pending
+		let n = 0
+		for (const id of b.of) {
+			const o = islands.find((x) => x.id === id)
+			if (!o) continue
+			const item =
+				comboPicked[n] ??
+				// biome-ignore lint/suspicious/noAssignInExpressions: grows the reused list in place.
+				(comboPicked[n] = { id: "", x: 0, y: 0, r: 0, color: "#ffffff" })
+			item.id = o.id
+			item.x = o.sx
+			item.y = o.sy
+			item.r = o.sr
+			item.color = rgbHex(o.tint)
+			n++
+		}
+		comboPicked.length = n
+		combo.picked = comboPicked
+		return combo
+	}
+
 	return {
 		forward,
 		/** The mouse left what held the map's focus (the card) for somewhere off the map. */
 		leave: () => onLeave(),
+		/** The camera's scale against one region's (1 shows a region). */
+		zoomLevel: () => cur.s / baseS,
+		/** The live combination for the effects (null when there is none). */
+		combination,
+		/** A poster is the screen (the map holds still under it), or not any more. */
+		holdForScreen(on: boolean) {
+			screenUp = on
+			if (on) {
+				glide = null
+				snapPt = null
+				Object.assign(tgt, cur)
+			}
+		},
+		/** Flies the map in behind a poster that is becoming the screen from the panel. */
+		presentPoster(island: MapIsland, i: number) {
+			flyTo(posterCam(island, i, LARGEST(), { x: W / 2, y: H / 2 }), 750)
+		},
+		/** Flies back out to where the screen's poster sits in the map; its rect when there. */
+		releasePoster(island: MapIsland, i: number) {
+			const w = LARGEST() * 0.55
+			flyTo(posterCam(island, i, w, { x: W / 2, y: H / 2 }), 800)
+			return { x: W / 2 - w / 2, y: H / 2 - w * 0.75, w, h: w * 1.5 }
+		},
 		/** Shows the world, laid out in `next`; `key` names the filters for cached surfaces. */
 		setWorld(next: World, inputs: IslandInput[], key: string) {
 			const first = !world
@@ -1918,6 +2202,7 @@ export function createMapEngine(
 		size: () => ({ w: W, h: H }),
 		busy: () =>
 			!!flight ||
+			!!glide ||
 			!!drag ||
 			!!pinch ||
 			Math.abs(vel.x) > 0 ||
@@ -1966,6 +2251,7 @@ export function createMapEngine(
 		},
 		panBy(dx: number, dy: number) {
 			flight = null
+			glide = null
 			tgt.x += dx / tgt.s
 			tgt.y += dy / tgt.s
 			clampTgt()

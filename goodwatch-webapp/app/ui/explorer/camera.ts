@@ -1,5 +1,5 @@
-// The map camera's zoom math, apart from the engine's state: zooming about a point on screen, the stop a step lands
-// on, and the stop a free zoom (trackpad, pinch) settles on.
+// The map camera's zoom math, apart from the engine's state: zooming about a point on screen, and the stop a step lands
+// on.
 
 /** The world point at the middle of the view, and the scale (screen pixels per world unit). */
 export interface Cam {
@@ -49,29 +49,4 @@ export function overviewStep(
 	if (dir < 0) return home()
 	const target = frame()
 	return base < target.s * 0.9 ? target : null
-}
-
-/** A free zoom settles on a stop only from this close (in log scale, about 10%), and from half that against its way. */
-export const SETTLE_REACH = 0.1
-
-/**
- * The stop a free zoom that ended at scale `s` settles on, or null to stay where it was let go. `dir` is the way the
- * gesture went (1 in, -1 out, 0 neither).
- */
-export function settleStop(
-	stops: readonly number[],
-	s: number,
-	dir: number,
-): number | null {
-	let best: number | null = null
-	let gap = Number.POSITIVE_INFINITY
-	for (const stop of stops) {
-		const d = Math.log(stop / s)
-		const reach = dir && d * dir < 0 ? SETTLE_REACH / 2 : SETTLE_REACH
-		if (Math.abs(d) < reach && Math.abs(d) < gap) {
-			gap = Math.abs(d)
-			best = stop
-		}
-	}
-	return best
 }

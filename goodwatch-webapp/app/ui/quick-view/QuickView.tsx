@@ -49,7 +49,8 @@ interface Frame {
 	steps: Steps | null
 	close: () => void
 }
-const FrameContext = createContext<Frame | null>(null)
+// Exported for the explorer map's docked title panel, which shows the quick view's card outside a quick view.
+export const FrameContext = createContext<Frame | null>(null)
 export function useQuickViewFrame(): Frame {
 	const frame = useContext(FrameContext)
 	if (!frame) throw new Error("useQuickViewFrame outside a quick view")

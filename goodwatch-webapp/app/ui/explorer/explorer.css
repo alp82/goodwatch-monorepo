@@ -403,42 +403,6 @@ body:has(.ex-stage) > main {
 	z-index: 20;
 	pointer-events: none;
 }
-.ex-cap {
-	position: absolute;
-	left: 0;
-	top: 0;
-	will-change: transform;
-	pointer-events: auto;
-}
-.ex-cap-b {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	max-width: 170px;
-	height: 26px;
-	padding: 0 9px;
-	border-radius: 9px;
-	background: rgba(9, 12, 23, 0.72);
-	border: 1px solid rgba(255, 255, 255, 0.12);
-	backdrop-filter: blur(14px);
-	-webkit-backdrop-filter: blur(14px);
-	font-size: 12px;
-	font-weight: 600;
-	color: #fff;
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-	animation: ex-fade 0.22s ease both;
-}
-.ex-cap-t {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	min-width: 0;
-}
-.ex-cap-m {
-	font-weight: 800;
-	flex: none;
-}
-
 /* ---- the islands as a list: without JavaScript, and for search engines. Rendered on the server and replaced by the
    map once the page runs; until then it's only visually hidden, and a noscript style (ExplorerPage) shows it. */
 .ex-list {
@@ -623,7 +587,6 @@ body:has(.ex-stage) > main {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.ex-cap-b,
 	.ex-where,
 	.ex-toast,
 	.ex-goin,
