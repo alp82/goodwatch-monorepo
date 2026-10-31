@@ -3,7 +3,7 @@
 // tabs. Desktop keeps the header and the tab rows.
 //
 // Phones show at most two persistent bars: this one at the top and the dock at the bottom. An area's tab row moves
-// into the sheet the title opens (and a second tap on the lit dock key); the views under a tab are a quiet text row
+// into the sheet the title opens (and the area's dock key, from any page); the views under a tab are a quiet text row
 // in the page (SubNav.tsx).
 //
 // Kinds:
@@ -86,8 +86,9 @@ function detailOf(
 	if (/^\/(movie|show|tv|person)\/[^/]+/.test(path))
 		return { href: "/", label: "" }
 	if (/^\/blog\/[^/]+$/.test(path)) return { href: "/blog", label: "" }
-	const list =
-		/^(?:\/u\/([^/]+))?\/lists\/(?!mine$)([^/]+)(?:\/edit)?$/.exec(path)
+	const list = /^(?:\/u\/([^/]+))?\/lists\/(?!mine$)([^/]+)(?:\/edit)?$/.exec(
+		path,
+	)
 	if (list) {
 		const handle = list[1] ?? (viewer.kind === "member" ? viewer.handle : null)
 		return {
@@ -110,7 +111,8 @@ export function phoneBarOf({
 }): PhoneBar {
 	const path = trim(pathname)
 	const base = { siblings: [] as AreaTab[], pinned: false }
-	if (path === "/") return { ...base, kind: "home", area: null, eyebrow: "", title: "" }
+	if (path === "/")
+		return { ...base, kind: "home", area: null, eyebrow: "", title: "" }
 
 	const detail = detailOf(path, viewer)
 	if (detail)
@@ -124,10 +126,7 @@ export function phoneBarOf({
 		}
 
 	const area = areaOf(path)
-	if (
-		path.startsWith("/discover") &&
-		new URLSearchParams(search).get("q")
-	)
+	if (path.startsWith("/discover") && new URLSearchParams(search).get("q"))
 		return { ...base, kind: "search", area, eyebrow: "Search", title: "" }
 
 	if (path.startsWith(`${SETTINGS_PATHS.home}/`)) {
@@ -180,4 +179,19 @@ export function areaTabsOf(
 		return { label: row.label, tabs: [...row.tabs, ...row.trailing] }
 	}
 	return null
+}
+
+/**
+ * The sheet a dock key opens: the area's pages as seen from its first page (`href`), none marked as the page you're
+ * on. Null when the area has no pages for this viewer, so the key just goes to `href`.
+ */
+export function areaSheetOf(
+	area: AreaKey,
+	href: string,
+	viewer: PathViewer,
+): { label: string; tabs: AreaTab[] } | null {
+	const [path, query = ""] = href.split("?")
+	const sheet = areaTabsOf(area, trim(path), query ? `?${query}` : "", viewer)
+	if (!sheet || sheet.tabs.length === 0) return null
+	return { ...sheet, tabs: sheet.tabs.map((t) => ({ ...t, here: false })) }
 }

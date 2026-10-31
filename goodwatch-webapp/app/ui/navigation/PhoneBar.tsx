@@ -1,18 +1,18 @@
-// The phone's top bar (below lg): a small area label over the big page title with a plain chevron. The title opens a
-// sheet of the area's pages (so does a second tap on the lit dock key). The bar slides away while the page scrolls
+// The phone's top bar (below lg): a small area label over the big page title with a plain chevron, and search at the
+// right end. The title opens the sheet of the area's pages; the dock's area keys open the same sheet for their area. The bar slides away while the page scrolls
 // down and comes back on the way up (transform only). Which bar a page gets: ./phone-bar.ts.
 import { ChevronDownIcon, ChevronLeftIcon } from "@heroicons/react/24/outline"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation, useNavigate } from "@remix-run/react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { SnapSheet } from "~/ui/filter-bar"
 import { useUser } from "~/utils/auth"
 import { useAuthHref } from "~/utils/auth-href"
 import { useNavigation, usePathViewer } from "./NavigationContext"
 import { holdKeyboardForSearch } from "./Search"
-import type { AreaTab } from "./areas"
-import { type PhoneBar as Bar, phoneBarOf } from "./phone-bar"
+import { type AreaTab, areaKeys } from "./areas"
+import { type PhoneBar as Bar, areaSheetOf, phoneBarOf } from "./phone-bar"
 
 /** The bar's height in px (h-16): the page starts under it, and it slides away by this much. */
 const BAR_PX = 64
@@ -116,7 +116,7 @@ function SearchKey() {
 	)
 }
 
-/** Guests: a small Sign up text in place of the search key (the dock holds Sign in). */
+/** Guests: a small Sign up text before the search key (the dock's menu holds Sign in). */
 function SignUpText() {
 	const authHref = useAuthHref()
 	return (
@@ -130,11 +130,37 @@ function SignUpText() {
 	)
 }
 
-/** The bar's right end: nothing while the sign-in check runs, the search key for members, Sign up for guests. */
+/** The bar's right end: the search key, after Sign up for guests (nothing extra while the sign-in check runs). */
 function EndKey() {
 	const { user, loading } = useUser()
-	if (loading) return <span className="size-10 shrink-0" />
-	return user ? <SearchKey /> : <SignUpText />
+	return (
+		<span className="flex shrink-0 items-center gap-2">
+			{!loading && !user && <SignUpText />}
+			<SearchKey />
+		</span>
+	)
+}
+
+/** A sheet as tall as its content: one snap, the content's height (plus the handle and header) over the window's. */
+function useFitSnap(chrome: number) {
+	const ref = useRef<HTMLDivElement>(null)
+	const [snap, setSnap] = useState(0.5)
+	useEffect(() => {
+		const el = ref.current
+		if (!el) return
+		const measure = () =>
+			setSnap(
+				Math.min(
+					0.9,
+					Math.max(0.15, (el.scrollHeight + chrome) / window.innerHeight),
+				),
+			)
+		measure()
+		const observer = new ResizeObserver(measure)
+		observer.observe(el)
+		return () => observer.disconnect()
+	})
+	return { ref, snaps: useMemo(() => [snap], [snap]) }
 }
 
 /** Search mode: the bar is the search field, showing the query; it opens the search dialog to change it. */
@@ -244,24 +270,38 @@ function SheetRow({ tab }: { tab: AreaTab }) {
 	)
 }
 
-/** The sheet of the area's pages: the tab row this page drew (with its counts), else the path's own tabs. */
+/**
+ * The sheet of an area's pages. This page's area: the tab row the page drew (with its counts), else the path's own
+ * tabs. Another area (a dock key asked for it): that area's pages from its first page. As tall as its rows.
+ */
 function TabsSheet({ bar }: { bar: Bar }) {
 	const navigation = useNavigation()
-	const tabs = navigation.phoneRow?.tabs ?? bar.siblings
-	const label = navigation.phoneRow?.label || bar.eyebrow
+	const viewer = usePathViewer()
+	const asked = navigation.sheetArea
+	const other =
+		asked && asked !== bar.area
+			? (() => {
+					const def = areaKeys(viewer).find((a) => a.key === asked)
+					const sheet = def && areaSheetOf(def.key, def.href, viewer)
+					return sheet && { label: def.label, tabs: sheet.tabs }
+				})()
+			: null
+	const tabs = other?.tabs ?? navigation.phoneRow?.tabs ?? bar.siblings
+	const label = other?.label ?? (navigation.phoneRow?.label || bar.eyebrow)
+	const fit = useFitSnap(72)
 	return (
 		<SnapSheet
 			index={navigation.tabsOpen ? 0 : -1}
 			onIndex={(index) => navigation.setTabsOpen(index >= 0)}
 			label={label}
-			snaps={[Math.min(0.9, (96 + tabs.length * 64) / 800)]}
+			snaps={fit.snaps}
 			header={
 				<p className="px-5 pb-2 text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
 					{label}
 				</p>
 			}
 		>
-			<nav aria-label={label} className="space-y-1 px-2 pb-6">
+			<nav ref={fit.ref} aria-label={label} className="space-y-1 px-2 pb-6">
 				{tabs.map((t) => (
 					<SheetRow key={t.key} tab={t} />
 				))}
@@ -321,9 +361,7 @@ export function PhoneBar({ surface }: { surface: string }) {
 					</>
 				)}
 			</div>
-			{(bar.siblings.length > 0 || navigation.phoneRow) && (
-				<TabsSheet bar={bar} />
-			)}
+			<TabsSheet bar={bar} />
 		</>
 	)
 }

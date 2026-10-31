@@ -1,67 +1,91 @@
-// The phone dock (below the large breakpoint): the three area keys (Watch · Explore · Profile) in one track, and the
-// avatar outside it, which opens the account menu as a bottom sheet (Sign in for guests). For two pages after a person
-// left the living room through its TV, the TV button shows in a row above the keys. A page's filter strip renders its
-// complete dock through DockStrip; the strip then sits above the keys. The dock's height is published as
-// --nav-dock-height so full-screen pages such as Explorer can keep clear of it.
+// The phone dock (below the large breakpoint): Watch and Explore on the left, Profile (the member's avatar, name and
+// handle) on the right, and the GoodWatch G raised over the middle, which opens the menu (the account menu for
+// members; search, the main pages and Sign in for guests). The area keys don't navigate: each opens the sheet of its
+// area's pages (PhoneBar.tsx draws it). For two pages after a person left the living room through its TV, the TV
+// button shows in a row above the keys. The dock's height is published as --nav-dock-height so full-screen pages
+// such as Explorer can keep clear of it.
 import { Link } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef } from "react"
-import { DockAccountKey, DockSignIn } from "~/ui/account/AccountKey"
+import { DockMenuKey, ProfileKeyIcon } from "~/ui/account/AccountKey"
+import { useAccountSummary } from "~/ui/account/useAccountSummary"
 import { TvBackDockKey, useTvWayBack } from "~/ui/living-room/TvWayBackHost"
 import { useUser } from "~/utils/auth"
-import { useNavigation } from "./NavigationContext"
-import { useAreaKeys } from "./SiteHeader"
+import { useNavigation, usePathViewer } from "./NavigationContext"
+import { areaSheetOf } from "./phone-bar"
+import { type AreaKeyView, useAreaKeys } from "./SiteHeader"
 import { NewEpisodesMark } from "./bits"
 
+/** One area key. A tap opens the area's sheet of pages; the link stays for new tabs and for no-script. */
+function DockAreaKey({ area, wide }: { area: AreaKeyView; wide?: boolean }) {
+	const navigation = useNavigation()
+	const { user } = useUser()
+	const me = useAccountSummary()
+	const Icon = area.on ? area.iconOn : area.icon
+	const profile = area.key === "taste"
+	const handle = wide && profile && user ? me.handle : null
+	const viewer = usePathViewer()
+	// An area without pages for this viewer (a guest's Profile) is a plain link.
+	const sheet = area.on || areaSheetOf(area.key, area.href, viewer) !== null
+	return (
+		<Link
+			to={area.href}
+			prefetch="intent"
+			data-area-key={area.key}
+			aria-current={area.on ? "true" : undefined}
+			aria-haspopup={sheet ? "dialog" : undefined}
+			onClick={(event) => {
+				if (!sheet || event.metaKey || event.ctrlKey || event.shiftKey) return
+				event.preventDefault()
+				navigation.openSheet(area.key)
+			}}
+			className={`flex h-full min-w-0 items-center justify-center rounded-[18px] font-bold ${
+				wide ? "gap-2.5 px-2 text-[13px]" : "flex-col gap-0.5 text-[12px]"
+			} ${area.on ? "bg-amber-500/15 text-amber-200" : "text-gray-400 active:bg-white/[0.06]"}`}
+		>
+			<span className="relative">
+				{profile ? (
+					<ProfileKeyIcon size={wide ? 30 : 24} on={area.on} fallback={Icon} />
+				) : (
+					<Icon
+						className={`h-[22px] w-[22px] ${area.on ? "text-amber-300" : ""}`}
+						aria-hidden
+					/>
+				)}
+				<NewEpisodesMark
+					words={area.fresh ?? null}
+					className="absolute -top-2 -right-3.5"
+				/>
+			</span>
+			{handle ? (
+				<span className="flex min-w-0 flex-col items-start leading-tight">
+					<span>{area.label}</span>
+					<span className="max-w-full truncate text-[11px] font-medium text-gray-500">
+						@{handle}
+					</span>
+				</span>
+			) : (
+				<span className="truncate">{area.label}</span>
+			)}
+		</Link>
+	)
+}
+
+/** Watch · Explore · (the G's column) · Profile. Profile takes the right half, so the G sits in the screen's middle. */
 function DockKeys() {
 	const areas = useAreaKeys()
-	const { user, loading } = useUser()
-	const navigation = useNavigation()
+	const byKey = (key: string) => areas.find((a) => a.key === key)
+	const watch = byKey("watch")
+	const explore = byKey("explore")
+	const profile = byKey("taste")
 	return (
-		<div className="flex h-[76px] items-center gap-2 px-2">
-			<div className="grid h-[62px] flex-1 grid-cols-3 gap-0.5 rounded-[22px] bg-white/[0.04] p-1 ring-1 ring-white/[0.07]">
-				{areas.map((a) => {
-					const Icon = a.on ? a.iconOn : a.icon
-					return (
-						<Link
-							key={a.key}
-							to={a.href}
-							prefetch="intent"
-							data-area-key={a.key}
-							aria-current={a.on ? "true" : undefined}
-							onClick={(event) => {
-								// A second tap on the lit key opens the area's pages, as the top bar's title does.
-								if (!a.on || !navigation.phoneRow) return
-								event.preventDefault()
-								navigation.setTabsOpen(true)
-							}}
-							className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${
-								a.on
-									? "bg-amber-500/15 text-amber-200"
-									: "text-gray-400 active:bg-white/[0.06]"
-							}`}
-						>
-							<span className="relative">
-								<Icon
-									className={`h-[22px] w-[22px] ${a.on ? "text-amber-300" : ""}`}
-									aria-hidden
-								/>
-								<NewEpisodesMark
-									words={a.fresh ?? null}
-									className="absolute -top-2 -right-3.5"
-								/>
-							</span>
-							<span className="truncate">{a.label}</span>
-						</Link>
-					)
-				})}
+		<div className="relative flex h-[76px] items-center px-2">
+			<div className="grid h-[62px] flex-1 grid-cols-[1fr_1fr_80px_2fr] items-center gap-0.5 rounded-[22px] bg-white/[0.04] p-1 ring-1 ring-white/[0.07]">
+				{watch && <DockAreaKey area={watch} />}
+				{explore && <DockAreaKey area={explore} />}
+				<span aria-hidden />
+				{profile && <DockAreaKey area={profile} wide />}
 			</div>
-			{loading ? (
-				<span className="h-[62px] w-[68px] shrink-0" />
-			) : user ? (
-				<DockAccountKey />
-			) : (
-				<DockSignIn />
-			)}
+			<DockMenuKey />
 		</div>
 	)
 }

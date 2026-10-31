@@ -6,15 +6,14 @@ import "../../server/title-filter/test-alias.ts"
 import type { PaletteViewer } from "./palette-pages.ts"
 
 const {
-	ESSENTIALS,
+	GUEST_MENU,
 	SCORE,
-	essentialPages,
+	guestMenuPages,
 	matchPages,
 	normalize,
 	oneEditApart,
 	palettePages,
 	placePages,
-	typeHint,
 } = await import("./palette-pages.ts")
 
 const member: PaletteViewer = {
@@ -165,28 +164,10 @@ test("before a member picks a handle, the profile row goes to picking one and th
 	assert.ok(!pages.some((p) => p.key.startsWith("profile-")))
 })
 
-test("the empty palette shows six to eight essentials, every one of them a page the viewer has", () => {
-	for (const viewer of [member, visitor]) {
-		const essentials = essentialPages(palettePages(viewer), viewer)
-		const wanted = ESSENTIALS[viewer.member ? "member" : "visitor"]
-		assert.deepEqual(keysOf(essentials), wanted)
-		assert.ok(essentials.length >= 6 && essentials.length <= 8)
-	}
-	assert.deepEqual(
-		keysOf(essentialPages(palettePages(visitor), visitor)).at(-1),
-		"signUp",
-	)
-})
-
-test("the hint rounds the page count down to tens", () => {
-	assert.equal(
-		typeHint(147),
-		"Type to search 140+ pages, plus every title and person",
-	)
-	assert.equal(
-		typeHint(12),
-		"Type to search 12 pages, plus every title and person",
-	)
+test("the guest menu shows six pages, every one of them a page a visitor has", () => {
+	const pages = guestMenuPages(palettePages(visitor))
+	assert.deepEqual(keysOf(pages), GUEST_MENU)
+	assert.equal(pages.length, 6)
 	assert.ok(palettePages(visitor).length >= 60)
 })
 

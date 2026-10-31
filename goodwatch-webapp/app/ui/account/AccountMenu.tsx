@@ -1,15 +1,21 @@
-// The signed-in member's account menu: a disclosure (the account keys and a nav of links, not an ARIA menu). Desktop:
-// a two-column panel under the header's avatar. Phones: a one-column bottom sheet over the dock that scrolls when it
-// must. It slides up with transform and opacity only, over a plain dim backdrop (no blur over motion). This module
+// The menu the Menu keys open: a disclosure (the keys and a nav of links, not an ARIA menu). Members, desktop: a
+// two-column panel under the header's Menu button. Phones: a one-column bottom sheet over the dock, as tall as its
+// content, that scrolls when it must; guests get the guest panel there (desktop guests have Sign in in the header). It slides up with transform and opacity only, over a plain dim backdrop (no blur over motion). This module
 // loads on first use (ui/navigation/LazyDialogs.tsx); the keys that open it are in ./AccountKey.tsx.
 import { useEffect, useRef } from "react"
 import { useNavigation } from "~/ui/navigation/NavigationContext"
 import { ACCOUNT_MENU_ID, visibleAccountKey } from "./AccountKey"
-import { DesktopAccountPanel, PhoneAccountPanel } from "./AccountPanels"
+import { useUser } from "~/utils/auth"
+import {
+	DesktopAccountPanel,
+	GuestPanel,
+	PhoneAccountPanel,
+} from "./AccountPanels"
 
 export function AccountMenu() {
 	const { accountOpen: open, setAccountOpen } = useNavigation()
 	const root = useRef<HTMLDivElement>(null)
+	const { user } = useUser()
 
 	useEffect(() => {
 		if (!open) return
@@ -40,17 +46,19 @@ export function AccountMenu() {
 	const close = () => setAccountOpen(false)
 	return (
 		<div ref={root} id={ACCOUNT_MENU_ID} data-account-menu>
-			{/* Desktop: under the header's right end, where the avatar sits. */}
-			<div className="pointer-events-none fixed inset-x-0 top-16 z-[1001] hidden lg:block">
-				<div className="mx-auto flex max-w-7xl justify-end px-8">
-					<nav
-						aria-label="Your account"
-						className="pointer-events-auto mt-2 max-h-[calc(100dvh-5rem)] w-[min(560px,calc(100vw-2rem))] origin-top-right overflow-y-auto overscroll-contain rounded-2xl bg-gray-950 text-gray-100 shadow-2xl ring-1 ring-white/10 transition-[opacity,transform] duration-150 ease-out starting:scale-95 starting:opacity-0 motion-reduce:transition-none"
-					>
-						<DesktopAccountPanel close={close} />
-					</nav>
+			{/* Desktop: under the header's right end, where the Menu button sits. */}
+			{user && (
+				<div className="pointer-events-none fixed inset-x-0 top-16 z-[1001] hidden lg:block">
+					<div className="mx-auto flex max-w-7xl justify-end px-8">
+						<nav
+							aria-label="Your account"
+							className="pointer-events-auto mt-2 max-h-[calc(100dvh-5rem)] w-[min(560px,calc(100vw-2rem))] origin-top-right overflow-y-auto overscroll-contain rounded-2xl bg-gray-950 text-gray-100 shadow-2xl ring-1 ring-white/10 transition-[opacity,transform] duration-150 ease-out starting:scale-95 starting:opacity-0 motion-reduce:transition-none"
+						>
+							<DesktopAccountPanel close={close} />
+						</nav>
+					</div>
 				</div>
-			</div>
+			)}
 			{/* Phones: a bottom sheet over the dock. */}
 			<div className="fixed inset-0 z-[1100] lg:hidden">
 				<button
@@ -61,14 +69,18 @@ export function AccountMenu() {
 					className="absolute inset-0 cursor-default bg-black/60 transition-opacity duration-200 starting:opacity-0 motion-reduce:transition-none"
 				/>
 				<nav
-					aria-label="Your account"
+					aria-label={user ? "Your account" : "Menu"}
 					className="absolute inset-x-0 bottom-0 max-h-[88dvh] overflow-y-auto overscroll-contain rounded-t-3xl bg-gray-950 pb-[max(env(safe-area-inset-bottom),12px)] text-gray-100 shadow-2xl ring-1 ring-white/10 transition-transform duration-200 ease-out starting:translate-y-full motion-reduce:transition-none"
 				>
 					<span
 						aria-hidden
 						className="mx-auto mt-2.5 block h-1 w-10 rounded-full bg-white/20"
 					/>
-					<PhoneAccountPanel close={close} />
+					{user ? (
+						<PhoneAccountPanel close={close} />
+					) : (
+						<GuestPanel close={close} />
+					)}
 				</nav>
 			</div>
 		</div>

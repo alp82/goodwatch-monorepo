@@ -1,10 +1,15 @@
-// The site header. Desktop: the wordmark, the three area keys (Watch · Explore · Profile), the search field in the
-// middle, and the avatar that opens the account menu (Sign in and Sign up for guests). Phones: the page's own bar
-// (PhoneBar.tsx: area label, title, the area's pages in a sheet); the area keys and the avatar live in the dock.
+// The site header. Desktop: the wordmark, the three area keys (Watch · Explore · Profile, which wears the member's
+// avatar), the search field in the middle, and the Menu button that opens the account menu (Sign in and Sign up for
+// guests). Phones: the page's own bar (PhoneBar.tsx: area label, title, the area's pages in a sheet, search); the area
+// keys and the menu's G live in the dock.
 import { Link, useLocation } from "@remix-run/react"
 import { useMemo } from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
-import { GuestKeys, HeaderAccountKey } from "~/ui/account/AccountKey"
+import {
+	GuestKeys,
+	HeaderMenuKey,
+	ProfileKeyIcon,
+} from "~/ui/account/AccountKey"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useUser } from "~/utils/auth"
@@ -74,10 +79,14 @@ function AreaKeys({ areas }: { areas: AreaKeyView[] }) {
 								: "text-gray-300 hover:bg-white/[0.07] hover:text-white"
 						}`}
 					>
-						<Icon
-							className={`h-[18px] w-[18px] ${a.on ? "text-amber-300" : "text-gray-500"}`}
-							aria-hidden
-						/>
+						{a.key === "taste" ? (
+							<ProfileKeyIcon size={22} on={a.on} fallback={Icon} />
+						) : (
+							<Icon
+								className={`h-[18px] w-[18px] ${a.on ? "text-amber-300" : "text-gray-500"}`}
+								aria-hidden
+							/>
+						)}
 						{a.label}
 						<NewEpisodesMark
 							words={a.fresh ?? null}
@@ -90,11 +99,11 @@ function AreaKeys({ areas }: { areas: AreaKeyView[] }) {
 	)
 }
 
-/** The account slot: nothing while the sign-in check runs, the avatar for members, Sign in and Sign up for guests. */
+/** The right end: nothing while the sign-in check runs, the Menu button for members, Sign in and Sign up for guests. */
 function AccountSlot() {
 	const { user, loading } = useUser()
 	if (loading) return <span className="size-10 shrink-0" />
-	if (user) return <HeaderAccountKey />
+	if (user) return <HeaderMenuKey />
 	return <GuestKeys />
 }
 

@@ -1,8 +1,8 @@
-// Every page the command palette can go to, and how typed text finds them. Opened empty, the palette shows only the
-// essentials (ESSENTIALS); typing searches the whole list, next to the title search.
+// Every page the command palette can go to, and how typed text finds them. The palette opens empty, like a search
+// field: pages show only when typed words match them, next to the title search. A guest's phone menu shows a few
+// main pages as tiles (GUEST_MENU).
 //
-// To add a page, add one line to PAGES with `page(...)`. To also show it on the empty palette, put its key in
-// ESSENTIALS. `label` is the name people read; `names` are other names that count as typing its name exactly;
+// To add a page, add one line to PAGES with `page(...)`. To also show it in the guest menu, put its key in GUEST_MENU. `label` is the name people read; `names` are other names that count as typing its name exactly;
 // `words` are synonyms and related words that find it. The section a page sits in (`sub`) is searchable too, so
 // "settings" finds every Settings page.
 import {
@@ -423,12 +423,18 @@ const PAGES: Entry[] = [
 			words: ["new on my wishlist", "latest", "added"],
 		},
 	),
-	page("seenMovies", "Seen movies", `${WATCH_PATHS.showsSeen}?type=movie`, EyeIcon, {
-		sub: WATCH,
-		for: "member",
-		names: ["seen"],
-		words: ["watched", "history", "already seen", "films"],
-	}),
+	page(
+		"seenMovies",
+		"Seen movies",
+		`${WATCH_PATHS.showsSeen}?type=movie`,
+		EyeIcon,
+		{
+			sub: WATCH,
+			for: "member",
+			names: ["seen"],
+			words: ["watched", "history", "already seen", "films"],
+		},
+	),
 	page("seenShows", "Seen shows", WATCH_PATHS.showsSeen, EyeIcon, {
 		sub: WATCH,
 		for: "member",
@@ -740,28 +746,15 @@ const PAGES: Entry[] = [
 	...browsePages(),
 ]
 
-/** What the empty palette shows, in this order. Visitors also get Sign up last. */
-export const ESSENTIALS: Record<"member" | "visitor", string[]> = {
-	member: [
-		"myShows",
-		"myMovies",
-		"forYou",
-		"new",
-		"discover",
-		"taste",
-		"wishlist",
-		"settings",
-	],
-	visitor: [
-		"myMovies",
-		"forYou",
-		"discover",
-		"hot",
-		"movies",
-		"shows",
-		"signUp",
-	],
-}
+/** The main pages in a guest's phone menu, in this order (Sign in and Sign up follow as buttons). */
+export const GUEST_MENU = [
+	"myMovies",
+	"forYou",
+	"discover",
+	"hot",
+	"movies",
+	"shows",
+]
 
 /** Every page the viewer can go to, in tie-break order. */
 export function palettePages(viewer: PaletteViewer): PalettePage[] {
@@ -776,22 +769,10 @@ export function palettePages(viewer: PaletteViewer): PalettePage[] {
 	return pages
 }
 
-/** The empty palette's rows: the viewer's essentials, in their order. */
-export function essentialPages(
-	pages: PalettePage[],
-	viewer: Pick<PaletteViewer, "member">,
-): PalettePage[] {
+/** The guest menu's pages, in GUEST_MENU's order. */
+export function guestMenuPages(pages: PalettePage[]): PalettePage[] {
 	const byKey = new Map(pages.map((p) => [p.key, p]))
-	return ESSENTIALS[viewer.member ? "member" : "visitor"].flatMap(
-		(key) => byKey.get(key) ?? [],
-	)
-}
-
-/** The hint on the empty palette: how much typing reaches, rounded down to tens. */
-export function typeHint(pageCount: number): string {
-	const shown =
-		pageCount >= 20 ? `${Math.floor(pageCount / 10) * 10}+` : String(pageCount)
-	return `Type to search ${shown} pages, plus every title and person`
+	return GUEST_MENU.flatMap((key) => byKey.get(key) ?? [])
 }
 
 // ---------------------------------------------------------------------------------------------------------

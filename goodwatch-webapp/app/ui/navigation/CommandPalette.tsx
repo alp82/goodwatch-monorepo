@@ -1,7 +1,7 @@
 import useLocale from "~/utils/locale"
 import MediaText from "~/ui/media-text/MediaText"
-// The command palette: one field that goes anywhere. Empty, it shows a few essential pages and a line saying how
-// much more typing reaches. Typed, it searches every page (palette-pages.ts) next to the titles: a page named
+// The command palette: one field that goes anywhere. It opens empty, like a search field, with a line saying what
+// typing finds. Typed, it searches every page (palette-pages.ts) next to the titles: a page named
 // exactly comes first, so Enter goes there; then "Search Discover" (Discover's search mode); then pages that match
 // well; then up to eight matching titles ending in "Show 120 more" (Discover's search mode again) when more match;
 // then pages that match less well. The field sits in the dialog's header and pages are compact rows, so the search
@@ -33,11 +33,9 @@ import { tmdbImage, useSignUpHref } from "./bits"
 import { currentDestination, searchHref } from "./destinations"
 import {
 	type PalettePage,
-	essentialPages,
 	matchPages,
 	palettePages,
 	placePages,
-	typeHint,
 } from "./palette-pages"
 import { paletteTitlesQuery, shownPaletteTitles } from "./palette-titles"
 import { useTonightsPick } from "./useTonightsPick"
@@ -142,10 +140,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				icon: page.icon === "discord" ? DiscordMark : page.icon,
 			}
 		}
-		if (!trimmed)
-			return essentialPages(pages, { member }).map((page) =>
-				pageRow(page, false),
-			)
+		if (!trimmed) return []
 		const placed = placePages(matchPages(pages, trimmed))
 		const result: Row[] = placed.first.map((page) => pageRow(page, true))
 		result.push({
@@ -311,13 +306,13 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 					</kbd>
 				</div>
 			</header>
-			{/* Opened empty, only the essentials show: this says how much typing reaches. */}
+			{/* Opened empty: this says what typing finds. */}
 			{!trimmed && (
 				<p
 					id={`${id}-hint`}
 					className="shrink-0 px-7 pt-3 text-[12.5px] text-gray-400 lg:px-6"
 				>
-					{typeHint(pages.length)}
+					Titles, people, moods, and pages
 				</p>
 			)}
 			{/* The combobox pattern: focus stays in the field, which points at the active option, so the listbox and

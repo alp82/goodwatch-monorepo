@@ -1,13 +1,15 @@
 // The account menu's contents, built from PLACES (ui/navigation/areas.ts). Desktop: two columns. On the left, who you
 // are (your profile, View as visitor, Share profile, Edit profile, Settings) and Library; on the right, Your data, Use
 // GoodWatch elsewhere and Help, with Sign out at the bottom. Phones: the same groups in one column, with taller rows.
+// Guests on phones get GuestPanel: search, the main pages and Sign in / Sign up.
 import {
 	ArrowRightStartOnRectangleIcon,
 	EyeIcon,
 	ShareIcon,
 } from "@heroicons/react/24/outline"
+import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import { type MouseEvent, type ReactNode, useState } from "react"
+import { type MouseEvent, type ReactNode, useMemo, useState } from "react"
 import { member, ratePath, tasteHome, tastePath } from "~/domain/member-paths"
 import { useSignOut } from "~/ui/auth/useSignOut"
 import { openFeedback } from "~/ui/feedback/FeedbackTab"
@@ -17,7 +19,12 @@ import {
 	type Place,
 	type PlaceGroup,
 } from "~/ui/navigation/areas"
+import { DiscordMark } from "~/ui/footer/links"
+import { useNavigation } from "~/ui/navigation/NavigationContext"
+import { holdKeyboardForSearch } from "~/ui/navigation/Search"
 import { NewEpisodesMark } from "~/ui/navigation/bits"
+import { guestMenuPages, palettePages } from "~/ui/navigation/palette-pages"
+import { useAuthHref } from "~/utils/auth-href"
 import { useNewEpisodes } from "~/ui/navigation/useNewEpisodes"
 import { profilePath } from "~/ui/share-card/links"
 import { AccountAvatar } from "./AccountAvatar"
@@ -324,5 +331,70 @@ export function PhoneAccountPanel({ close }: { close: () => void }) {
 				<SignOut big />
 			</div>
 		</>
+	)
+}
+
+/** Phones, guests: search, the main pages as tiles, then Sign in and Sign up. */
+export function GuestPanel({ close }: { close: () => void }) {
+	const navigation = useNavigation()
+	const authHref = useAuthHref()
+	const signUp = authHref("sign-up")
+	const pages = useMemo(
+		() =>
+			guestMenuPages(
+				palettePages({ member: false, handle: null, signUpHref: signUp }),
+			),
+		[signUp],
+	)
+	return (
+		<div className="pt-3">
+			<button
+				type="button"
+				onClick={() => {
+					close()
+					holdKeyboardForSearch()
+					navigation.setSearchOpen(true)
+				}}
+				className="mx-4 mb-3 flex h-12 w-[calc(100%-2rem)] cursor-pointer items-center gap-3 rounded-2xl bg-white/[0.07] px-4 text-left text-[16px] text-gray-400 ring-1 ring-white/10"
+			>
+				<MagnifyingGlassIcon className="size-5 text-amber-300" aria-hidden />
+				Search titles, people, moods
+			</button>
+			<div className="grid grid-cols-3 gap-1 px-3 pb-2">
+				{pages.map((page) => {
+					const Icon = page.icon === "discord" ? DiscordMark : page.icon
+					return (
+						<Link
+							key={page.key}
+							to={page.href}
+							prefetch="intent"
+							onClick={close}
+							className="flex flex-col items-center gap-1.5 rounded-2xl px-1 py-3 text-center text-[13px] leading-tight font-semibold text-gray-200 active:bg-white/[0.06]"
+						>
+							<Icon className="size-6 text-amber-400" aria-hidden />
+							{page.label}
+						</Link>
+					)
+				})}
+			</div>
+			<div className="flex gap-2 border-t border-white/10 px-4 pt-4 pb-2">
+				<Link
+					rel="nofollow"
+					to={authHref("sign-in")}
+					onClick={close}
+					className="flex h-11 flex-1 items-center justify-center rounded-full bg-white/[0.07] font-semibold"
+				>
+					Sign in
+				</Link>
+				<Link
+					rel="nofollow"
+					to={signUp}
+					onClick={close}
+					className="flex h-11 flex-1 items-center justify-center rounded-full bg-amber-400 font-bold text-black"
+				>
+					Sign up
+				</Link>
+			</div>
+		</div>
 	)
 }

@@ -28,7 +28,7 @@ export const preloadSearchPanel = () => {
 	void loadSearchPanel().catch(() => {})
 }
 
-/** The account menu (desktop panel, phone sheet), opened from the avatar in the header or the dock. Members only. */
+/** The menu (desktop panel, phone sheet), opened by the Menu keys. Members preload it; guests (phones) load it on use. */
 export function AccountMenuHost() {
 	const navigation = useNavigation()
 	const { user } = useUser()
@@ -42,7 +42,7 @@ export function AccountMenuHost() {
 			}),
 		[member],
 	)
-	if (!member || !opened) return null
+	if (!opened) return null
 	return (
 		<Suspense fallback={null}>
 			<AccountMenu />

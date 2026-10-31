@@ -5,13 +5,14 @@ import { useLocation } from "@remix-run/react"
 import {
 	type ReactNode,
 	createContext,
+	useCallback,
 	useContext,
 	useEffect,
 	useMemo,
 	useState,
 } from "react"
 import { GUEST, type PathViewer, member } from "~/domain/member-paths"
-import type { AreaTab } from "./areas"
+import type { AreaKey, AreaTab } from "./areas"
 import { useAccountSummary } from "~/ui/account/useAccountSummary"
 import { useUser } from "~/utils/auth"
 
@@ -23,9 +24,13 @@ interface NavigationState {
 	/** How many pages ask the phone dock to step back (see useQuietDock); the dock's keys hide while one does. */
 	quietDock: number
 	setQuietDock: (update: (count: number) => number) => void
-	/** Phones: the sheet of the area's pages, opened by the top bar's title or a second tap on the lit dock key. */
+	/** Phones: the sheet of an area's pages, opened by the top bar's title (this page's area) or a dock key. */
 	tabsOpen: boolean
 	setTabsOpen: (open: boolean) => void
+	/** The area whose pages the sheet shows; null: the page's own area. Closing the sheet clears it. */
+	sheetArea: AreaKey | null
+	/** Opens the sheet on `area`'s pages (null: the page's own area). */
+	openSheet: (area: AreaKey | null) => void
 	/** The tab row the page drew (AreaTabs), hidden on phones: the sheet lists these, with the page's counts. */
 	phoneRow: PhoneRow | null
 	setPhoneRow: (row: PhoneRow | null) => void
@@ -47,6 +52,8 @@ const NavigationContext = createContext<NavigationState>({
 	setQuietDock: () => {},
 	tabsOpen: false,
 	setTabsOpen: () => {},
+	sheetArea: null,
+	openSheet: () => {},
 	phoneRow: null,
 	setPhoneRow: () => {},
 })
@@ -55,7 +62,16 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 	const [accountOpen, setAccountOpen] = useState(false)
 	const [searchOpen, setSearchOpen] = useState(false)
 	const [quietDock, setQuietDock] = useState(0)
-	const [tabsOpen, setTabsOpen] = useState(false)
+	const [tabsOpen, setTabsOpenState] = useState(false)
+	const [sheetArea, setSheetArea] = useState<AreaKey | null>(null)
+	const setTabsOpen = useCallback((open: boolean) => {
+		setTabsOpenState(open)
+		if (!open) setSheetArea(null)
+	}, [])
+	const openSheet = useCallback((area: AreaKey | null) => {
+		setSheetArea(area)
+		setTabsOpenState(true)
+	}, [])
 	const [phoneRow, setPhoneRow] = useState<PhoneRow | null>(null)
 	const { pathname, search } = useLocation()
 
@@ -76,10 +92,21 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 			setQuietDock,
 			tabsOpen,
 			setTabsOpen,
+			sheetArea,
+			openSheet,
 			phoneRow,
 			setPhoneRow,
 		}),
-		[accountOpen, searchOpen, quietDock, tabsOpen, phoneRow],
+		[
+			accountOpen,
+			searchOpen,
+			quietDock,
+			tabsOpen,
+			setTabsOpen,
+			sheetArea,
+			openSheet,
+			phoneRow,
+		],
 	)
 	return (
 		<NavigationContext.Provider value={value}>
