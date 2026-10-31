@@ -193,7 +193,11 @@ export function createMapEffects(
 	const ambients = new Map<string, AmbientLive>()
 	/** Effects that are fading out after they were replaced (ambients that changed, combination parts let go). */
 	let fading: Live[] = []
+	/** The combination's drawn effects (none with reduced motion). */
 	let combo: Combo | null = null
+	/** With reduced motion: whether the ready glint has played for the combination that's up. Bookkeeping only, so the
+	 * loop stops once the glint ends. */
+	let glinted = false
 	let zoomStep = 1
 	let tick = 0
 	let raf = 0
@@ -328,7 +332,7 @@ export function createMapEffects(
 			}
 		}
 		// Keep going while anything is alive; one more frame after the last one clears the canvases.
-		if (any || live.length || fading.length || ambients.size || combo)
+		if (any || live.length || fading.length || ambients.size || drawing(combo))
 			raf = requestAnimationFrame(loop)
 	}
 
@@ -493,17 +497,17 @@ export function createMapEffects(
 		if (destroyed) return
 		if (!state) {
 			endCombo()
+			glinted = false
 			return
 		}
 		const colors = state.picked.map((p) => p.color)
 		if (reduce) {
 			// No streams or loops: one glint when it's ready.
-			if (!combo) combo = freshCombo(1, colors)
-			if (state.ready && !combo.ready && state.rise >= 0.85) {
+			if (state.ready && !glinted && state.rise >= 0.85) {
 				play("cinema/glint", state.hub.x, state.hub.y, { s: 1.4 })
-				combo.ready = true
+				glinted = true
 			}
-			if (!state.ready) combo.ready = false
+			if (!state.ready) glinted = false
 			return
 		}
 		const k = stepFor(state.hub.r, HUB_R_STEP, sizeCap(), combo?.k)
@@ -636,6 +640,7 @@ export function createMapEffects(
 		live = []
 		fading = []
 		combo = null
+		glinted = false
 		ambients.clear()
 		for (const L of layers) L?.canvas.remove()
 		layers.length = 0
@@ -663,6 +668,13 @@ export function createMapEffects(
 		},
 		destroy,
 	}
+}
+
+/** Whether a combination has anything to draw: the loop keeps running only for that. */
+function drawing(
+	c: Pick<Combo, "streams" | "warm" | "calm" | "reveal"> | null,
+): boolean {
+	return !!c && (c.streams.size > 0 || !!c.warm || !!c.calm || !!c.reveal)
 }
 
 function seedOf(s: string): number {
