@@ -1,6 +1,5 @@
-// Phones: a slim bar between the opener and the sections that sticks under the title bar. It names the sections on
-// screen, shows the page's progress, and opens the index or find in its own flow (the page below moves down; nothing
-// covers it).
+// Phones: section navigation and reading progress inside the fixed title bar. It appears with the title when
+// the opener leaves the screen, and expands to show the index or find results.
 import {
 	ChevronDownIcon,
 	MagnifyingGlassIcon,
@@ -8,7 +7,6 @@ import {
 } from "@heroicons/react/24/outline"
 import { type ReactNode, useEffect, useRef } from "react"
 import { type IndexItem, ProgressIndex } from "~/ui/details/ProgressIndex"
-import { FOLLOW_PHONE_BAR } from "~/ui/layers"
 
 /** A line that fills with the whole page's reading progress (transform only, written once per frame). */
 function PageProgress() {
@@ -67,11 +65,8 @@ export function PhoneBar({
 	const at = first ? items.indexOf(first) + 1 : 0
 	const Icon = first?.icon
 	return (
-		// The page's sticky bar on a phone (fix mode and the episode list's float read it as the header).
-		<div
-			data-details-header
-			className={`sticky top-[116px] z-20 -mx-4 mt-8 lg:hidden ${FOLLOW_PHONE_BAR}`}
-		>
+		// Inside TitleBar: inherits its visibility, inert state, and movement with the site header.
+		<div className="lg:hidden">
 			<div className="border-y border-white/10 bg-stone-950">
 				<div className="flex h-12 items-center gap-1 pl-4 pr-2">
 					<button

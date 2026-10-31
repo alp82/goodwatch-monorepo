@@ -10,7 +10,7 @@ import {
 	PlayIcon,
 	StarIcon as StarSolid,
 } from "@heroicons/react/24/solid"
-import { useEffect, useRef, useState } from "react"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
@@ -106,6 +106,7 @@ export function TitleBar({
 	country,
 	watchId,
 	youId,
+	children,
 }: {
 	media: Media
 	title: MediaTextValue
@@ -114,6 +115,8 @@ export function TitleBar({
 	watchId: string
 	/** The "You" block's id; the phone's score chip scrolls to it. */
 	youId: string
+	/** Phone navigation shares this bar's visibility and motion. */
+	children?: ReactNode
 }) {
 	const titleOnScreen = useOnScreen(watchId, 64)
 	const shown = !titleOnScreen
@@ -243,6 +246,7 @@ export function TitleBar({
 					<span className="max-lg:sr-only">Top</span>
 				</button>
 			</div>
+			{children}
 		</div>
 	)
 }

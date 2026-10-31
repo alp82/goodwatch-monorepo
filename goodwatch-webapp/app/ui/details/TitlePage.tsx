@@ -318,7 +318,53 @@ export function TitlePage(props: TitlePageProps) {
 					country={country}
 					watchId={OPENER}
 					youId={YOU}
-				/>
+				>
+					<PhoneBar
+						items={items}
+						visible={visible}
+						panel={phonePanel}
+						onJump={jump}
+						setPanel={(p) => {
+							setPhonePanel(p)
+							if (p === "find")
+								requestAnimationFrame(() => phoneFind.current?.focus())
+							if (p !== "find") setQuery("")
+						}}
+						find={
+							<>
+								<FindField
+									inputRef={phoneFind}
+									query={query}
+									onQuery={setQuery}
+									placeholder={findPlaceholder}
+									items={findItems}
+									active={active}
+									onActive={setActive}
+									listId="find-phone"
+								/>
+								<div className="mt-2">
+									{searching ? (
+										<FindResults
+											listId="find-phone"
+											query={query}
+											items={findItems}
+											busy={findBusy}
+											active={active}
+											onActive={setActive}
+											example={example}
+											onClear={() => clearFind(phoneFind.current)}
+										/>
+									) : (
+										<p className="px-2.5 py-2 text-xs text-gray-500">
+											Anyone in the cast or crew, episodes, questions, facts,
+											tropes and services.
+										</p>
+									)}
+								</div>
+							</>
+						}
+					/>
+				</TitleBar>
 
 				<div className="mx-auto max-w-[88rem] px-4 lg:mt-4 lg:px-8">
 					<TrailerBand
@@ -483,52 +529,6 @@ export function TitlePage(props: TitlePageProps) {
 								</p>
 							</div>
 						</aside>
-
-						<PhoneBar
-							items={items}
-							visible={visible}
-							panel={phonePanel}
-							onJump={jump}
-							setPanel={(p) => {
-								setPhonePanel(p)
-								if (p === "find")
-									requestAnimationFrame(() => phoneFind.current?.focus())
-								if (p !== "find") setQuery("")
-							}}
-							find={
-								<>
-									<FindField
-										inputRef={phoneFind}
-										query={query}
-										onQuery={setQuery}
-										placeholder={findPlaceholder}
-										items={findItems}
-										active={active}
-										onActive={setActive}
-										listId="find-phone"
-									/>
-									<div className="mt-2">
-										{searching ? (
-											<FindResults
-												listId="find-phone"
-												query={query}
-												items={findItems}
-												busy={findBusy}
-												active={active}
-												onActive={setActive}
-												example={example}
-												onClear={() => clearFind(phoneFind.current)}
-											/>
-										) : (
-											<p className="px-2.5 py-2 text-xs text-gray-500">
-												Anyone in the cast or crew, episodes, questions, facts,
-												tropes and services.
-											</p>
-										)}
-									</div>
-								</>
-							}
-						/>
 
 						{/* Every section in full. */}
 						<div className="mt-10 flex min-w-0 flex-col gap-14 lg:col-start-1 lg:row-start-2 lg:mt-14 lg:gap-16 lg:pl-6">
