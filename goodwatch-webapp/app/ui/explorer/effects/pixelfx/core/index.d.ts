@@ -41,3 +41,14 @@ export function composite(
 	bg?: number | Uint32Array | null,
 	lightK?: number,
 ): Uint8ClampedArray
+
+/** The drawing API effects get (only what the map's own code and tests call). */
+export class Painter {
+	constructor(frame: FxFrame)
+	toX(x: number, y: number): number
+	toY(x: number, y: number): number
+	add(sx: number, sy: number, c: number, k?: number): void
+	glow(x: number, y: number, r: number, c: number, k?: number): void
+	glowLine(x0: number, y0: number, x1: number, y1: number, r: number, c: number, k?: number): void
+	glowRing(x: number, y: number, R: number, r: number, c: number, k?: number): void
+}

@@ -255,7 +255,9 @@ export class Painter {
   glow(x, y, r, c, k = 0.5) {
     if (r < 1 || k <= 0.004) return;
     const cx = this.toX(x, y), cy = this.toY(x, y);
-    const x0 = Math.floor(cx - r), x1 = Math.ceil(cx + r), y0 = Math.floor(cy - r), y1 = Math.ceil(cy + r);
+    // GoodWatch map: clipped to the frame, like glowRing.
+    const x0 = Math.max(Math.floor(cx - r), this.ox), x1 = Math.min(Math.ceil(cx + r), this.ox + this.w - 1);
+    const y0 = Math.max(Math.floor(cy - r), this.oy), y1 = Math.min(Math.ceil(cy + r), this.oy + this.h - 1);
     for (let sy = y0; sy <= y1; sy++) {
       const dy = (sy + 0.5 - cy) / r;
       for (let sx = x0; sx <= x1; sx++) {
@@ -271,8 +273,9 @@ export class Painter {
     if (r < 1 || k <= 0.004) return;
     const ax = this.toX(x0, y0), ay = this.toY(x0, y0), bx = this.toX(x1, y1), by = this.toY(x1, y1);
     const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy || 1e-9;
-    const X0 = Math.floor(Math.min(ax, bx) - r), X1 = Math.ceil(Math.max(ax, bx) + r);
-    const Y0 = Math.floor(Math.min(ay, by) - r), Y1 = Math.ceil(Math.max(ay, by) + r);
+    // GoodWatch map: clipped to the frame, so a beam from a hub far off screen costs only its visible part.
+    const X0 = Math.max(Math.floor(Math.min(ax, bx) - r), this.ox), X1 = Math.min(Math.ceil(Math.max(ax, bx) + r), this.ox + this.w - 1);
+    const Y0 = Math.max(Math.floor(Math.min(ay, by) - r), this.oy), Y1 = Math.min(Math.ceil(Math.max(ay, by) + r), this.oy + this.h - 1);
     for (let sy = Y0; sy <= Y1; sy++)
       for (let sx = X0; sx <= X1; sx++) {
         const px = sx + 0.5, py = sy + 0.5, u = clamp(((px - ax) * dx + (py - ay) * dy) / L2);
