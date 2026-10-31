@@ -3,7 +3,8 @@
 //   status), Not interested, and the score under them (its label from 7.5rem, the number alone under it, no score row
 //   under 6rem, and no panel at all under 4.5rem, where the poster is only a link);
 // - touch screens, after the first tap on the poster: tiles over the lower art (Seen | Score, Want | Not for me) and
-//   an Open bar; a card under 7.5rem has Open and Actions, which opens the phone sheet;
+//   an Open bar; a card under 7.5rem has Open and Actions, which opens the phone sheet. Open and a tap on the bare art
+//   go to the title page, or open the page's own view of the title where the card has one (`onOpen`);
 // - the score picker, the phone sheet (the picker with the whole action set and Open details), a show's status menu;
 // - the Not interested cover with Undo.
 // The rules are the title page's: Seen on an unscored title asks for the score (useTitleActions.toggleSeen), a seen
@@ -87,6 +88,8 @@ const STATUS_ICON: Record<WatchStatus, typeof PlayIcon> = {
 export default function CardActions({
 	media,
 	href,
+	discover,
+	onOpen,
 	cardKey,
 	frame,
 	placement,
@@ -100,6 +103,10 @@ export default function CardActions({
 	media: ScoredMedia
 	/** The title page. */
 	href: string
+	/** The card's `discover`: "none" keeps the router from asking for the title route when the tiles show. */
+	discover?: "none"
+	/** The page's own view of the title, which Open and the bare art open instead of the title page. */
+	onOpen?: () => void
 	/** The card's key for the one card showing its tap actions. */
 	cardKey: string
 	frame: RefObject<HTMLDivElement>
@@ -346,10 +353,13 @@ export default function CardActions({
 				<TapTiles
 					title={media.details.title}
 					href={href}
+					discover={discover}
+					onOpen={onOpen}
 					onArt={() => {
 						// The second tap on the art opens the title, as the Open bar does.
 						setRevealed(null)
-						navigate(href)
+						if (onOpen) onOpen()
+						else navigate(href)
 					}}
 					onSheet={(event) => {
 						opener.current = event.currentTarget
@@ -467,6 +477,7 @@ export default function CardActions({
 								/>
 								<Link
 									to={href}
+									discover={discover}
 									onClick={() => {
 										closeDialog()
 										setRevealed(null)
@@ -550,17 +561,22 @@ function useRise<T extends HTMLElement>() {
 /**
  * The tap actions over the art: from a 7.5rem card the four tiles and an Open bar, the top of the art and the pill
  * left bare; a narrower card has Open and Actions (the phone sheet), each 44 px high. A tap on the bare art opens
- * the title too; a tap outside the card closes them.
+ * the title too; a tap outside the card closes them. Open goes to the title page, or opens the page's own view
+ * (`onOpen`) on a plain tap, its link kept for a new tab.
  */
 function TapTiles({
 	title,
 	href,
+	discover,
+	onOpen,
 	onArt,
 	onSheet,
 	children,
 }: {
 	title: string
 	href: string
+	discover?: "none"
+	onOpen?: () => void
 	/** A tap on the bare art above the tiles. */
 	onArt: () => void
 	onSheet: (event: { currentTarget: HTMLElement }) => void
@@ -571,7 +587,15 @@ function TapTiles({
 	const open = (
 		<Link
 			to={href}
-			onClick={() => setRevealed(null)}
+			discover={discover}
+			onClick={(event) => {
+				setRevealed(null)
+				if (!onOpen || event.button !== 0) return
+				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+					return
+				event.preventDefault()
+				onOpen()
+			}}
 			aria-label={`Open ${title}`}
 			className={`flex w-full shrink-0 items-center justify-center gap-0.5 rounded-md bg-amber-400 font-black text-gray-950 ${FOCUS}`}
 		>

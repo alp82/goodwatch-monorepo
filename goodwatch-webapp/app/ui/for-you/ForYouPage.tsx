@@ -11,10 +11,13 @@
 //   bottom nav steps back (useQuietDock).
 // - the print drawer has no instructions: a ghost fingertip drags one handle out and back (DragHint.tsx) on its first
 //   open and at most once more after a long idle.
-// - a tap on a pick opens its quick view as a drawer (ForYouQuickView.tsx).
+// - every pick is a poster card with the site's standard actions: the first tap lays its tiles over the art, and
+//   Open or a tap on the bare art opens its quick view as a drawer (ForYouQuickView.tsx); a pick too narrow for
+//   actions (the strip's six small) opens it on the first tap.
 //
 // Desktop: the print top left, filling a column as tall as the two rows of recipe tiles beside it; the dice top left,
-// Reset bottom left; the results full width below. A tap on a pick lifts it into its quick view (ForYouQuickView.tsx).
+// Reset bottom left; the results full width below. Every pick has the card's hover actions; a click on its poster
+// lifts it into its quick view (ForYouQuickView.tsx).
 //
 // No totals or counts anywhere; the recipe tiles never move while you steer.
 import { Link, useRevalidator, useSearchParams } from "@remix-run/react"

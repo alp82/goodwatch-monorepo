@@ -17,8 +17,8 @@ export type PillMark = Exclude<WatchStatus, "seen"> | "want" | "seen"
 
 /**
  * Which state icon the pill ends with: a show status other than Seen (Watching, On hold, Dropped), else the Wishlist
- * bookmark (left out where the whole list is the Wishlist), else Seen for a title Seen without a score. A score says
- * Seen by itself, so a scored Seen title has no icon.
+ * bookmark (a list row leaves it out where every row of the list is on the Wishlist; a poster card always shows
+ * it), else Seen for a title Seen without a score. A score says Seen by itself, so a scored Seen title has no icon.
  */
 export function pillMark(
 	marks: Pick<TitleMarks, "score" | "want" | "status">,

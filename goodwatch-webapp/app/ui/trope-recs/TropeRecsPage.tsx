@@ -1,6 +1,9 @@
 // By your tropes (/watch/for-you/tropes): unseen picks ranked by the member's top tropes, as a poster grid.
-// - Every poster has one quiet gray line under it: "#n · match · N of your tropes". A tap opens the pick's sheet
-//   (PickSheet.tsx) with how each of the member's tropes shows up in it; each trope there links to its own picks.
+// - Every poster is the site's poster card with its standard actions (a panel on hover, tiles after the first tap on
+//   a touch screen) and one quiet gray line under it: "#n · match · N of your tropes". A click on the poster, the Open
+//   tile or a tap on the bare art opens the pick's sheet (PickSheet.tsx) with how each of the member's tropes shows
+//   up in it, and arrows to the previous and next pick; each trope there links to its own picks. The card's link
+//   stays for middle-click and new tabs.
 // - ?trope=<key> narrows the grid to one trope: a header with its name, the member's rank for it, how many of their
 //   titles with it they loved, and the opening line of its TV Tropes description, with the way back to all picks.
 // - "Your tropes ▾" opens a plain list of the member's top tropes to pick one from. All / Movies / Shows is ?kind=.
@@ -301,27 +304,28 @@ function Picks({
 	const index = openId === null ? -1 : titles.findIndex((t) => t.id === openId)
 	const pick = index < 0 ? null : titles[index]
 	const visible = useMemo(() => titles.slice(0, shown), [titles, shown])
+	/** The pick `by` places away from the open one, revealing more of the grid when it's past the shown ones. */
+	const step = (by: number) => {
+		const next = titles[index + by]
+		if (index < 0 || !next) return null
+		return () => {
+			if (index + by >= shown) setShown((n) => n + STEP)
+			setOpenId(next.id)
+		}
+	}
 	return (
 		<>
 			<ol className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
 				{visible.map((t, i) => (
 					<li key={t.id} className="flex min-w-0 flex-col gap-1">
-						{/* A tap opens the sheet; the card's own link stays for middle-click and new tabs. */}
-						<div
-							className="cursor-pointer"
-							onPointerDown={() => void loadSheet().catch(() => {})}
-							onClickCapture={(e) => {
-								if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey)
-									return
-								e.preventDefault()
-								e.stopPropagation()
-								setOpenId(t.id)
-							}}
-						>
+						<div onPointerDown={() => void loadSheet().catch(() => {})}>
 							<MovieTvCard
 								details={cardTitle(t)}
 								mediaType={t.kind}
-								actions={false}
+								onOpen={() => {
+									void loadSheet().catch(() => {})
+									setOpenId(t.id)
+								}}
 								posterPriority={i < 6 ? "eager" : undefined}
 								skipOffscreen={i >= 18}
 							/>
@@ -354,6 +358,8 @@ function Picks({
 						tropeCount={tropeCount}
 						kind={kind}
 						onClose={() => setOpenId(null)}
+						onPrev={step(-1)}
+						onNext={step(1)}
 					/>
 				</Suspense>
 			)}

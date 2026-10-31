@@ -1,11 +1,11 @@
 // The open grid of the titles that share the selection, in the site's poster card (MovieTvCard: score pill, title
-// band, hover actions). A click on a poster opens the quick view, stepping through the grid's titles; phones get the
-// card without its tap-to-reveal actions, so a tap opens the quick view, whose footer has Seen and the score. Loads
-// on the first Show more; the quick view's code loads on the first click.
+// band, the standard actions). A click on a poster opens the quick view, stepping through the grid's titles; on a
+// phone the first tap lays the card's tiles over the art, and Open or a tap on the bare art opens the quick view (a
+// card too narrow for tiles opens it on the first tap). The card's link stays for middle-click and new tabs. Loads on
+// the first Show more; the quick view's code loads on the first click.
 import { Suspense, lazy, useEffect, useLayoutEffect, useState } from "react"
 import type { EffectReading } from "~/domain/fingerprint-effects/effects"
 import { MovieTvCard } from "~/ui/MovieTvCard"
-import { useTouchPointer } from "~/ui/title-actions/pointer"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import type { SharedTitle } from "./population"
 
@@ -37,7 +37,6 @@ export function SharedGrid({
 	/** Called once the grid is in the page, so the stacked posters can fly to their places. */
 	onMount: () => void
 }) {
-	const touch = useTouchPointer()
 	const [open, setOpen] = useState<number | null>(null)
 	// Once, on mount: the grid is in the page.
 	useLayoutEffect(() => onMount(), [])
@@ -60,19 +59,10 @@ export function SharedGrid({
 								? { animationDelay: `${Math.min(10, i - late) * 18}ms` }
 								: undefined
 						}
-						onClickCapture={(e) => {
-							if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return
-							const target = e.target as Element
-							// The card's own actions keep working; the poster opens the quick view.
-							if (!target.closest("a") || target.closest("button")) return
-							e.preventDefault()
-							e.stopPropagation()
-							setOpen(i)
-						}}
 					>
 						<MovieTvCard
 							mediaType={type}
-							actions={touch ? false : undefined}
+							onOpen={() => setOpen(i)}
 							details={{
 								tmdb_id: p.tmdbId,
 								title: p.title,

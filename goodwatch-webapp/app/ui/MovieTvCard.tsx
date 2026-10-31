@@ -18,9 +18,12 @@
 //
 // The title actions (ui/poster-card/CardActions.tsx) load as their own chunk at the first interaction with the page
 // and mount on the first hover, focus or tap: a panel on hover for a pointer, tiles over the art after a first tap on
-// a touch screen (a second tap, or Open, goes to the title page). After Not interested the card keeps its place,
-// greyed, with Undo, until the list is next loaded. A title already hidden (the Hidden titles page) starts under that
-// cover, and its Undo is the page's.
+// a touch screen (a second tap, or Open, goes to the title page). A page with its own view of the title (a quick view,
+// a why sheet) passes `onOpen`: a click on the poster with a pointer, the Open tile, a tap on the bare art above the
+// tiles, and any tap on a card too narrow for actions open that view instead; the poster stays a link to the title
+// page for a middle-click or a new tab. After Not interested the card keeps its place, greyed, with Undo, until the
+// list is next loaded. A title already hidden (the Hidden titles page) starts under that cover, and its Undo is the
+// page's.
 import { Link } from "@remix-run/react"
 import {
 	Suspense,
@@ -136,10 +139,14 @@ interface MovieTvCardProps {
 	 * Where the title actions sit on the poster; `false` leaves them off, for a surface that opens titles its own way.
 	 */
 	actions?: ActionsPlacement | false
+	/**
+	 * The page's own view of the title (a quick view, a why sheet), opened in place of the title page by a pointer's
+	 * click on the poster, the Open tile, a tap on the bare art above the tiles, or a tap on a card too narrow for
+	 * actions. The touch screen's first tap still lays out the tiles.
+	 */
+	onOpen?: () => void
 	/** The service the title is new on for the viewer (#489), by id: its logo leads, ringed. */
 	newOn?: number | null
-	/** The list is the Wishlist: the pill leaves out the Wishlist bookmark. */
-	skipWant?: boolean
 	/** The page shows the viewer's score already (their own Scores tier): the pill shows GoodWatch's instead. */
 	skipScore?: boolean
 	/** The title is hidden already: the card starts under its Not interested cover, without actions. */
@@ -155,6 +162,14 @@ interface MovieTvCardProps {
 
 /** Under this width (4.5rem) the card has no actions: a tap opens the title. */
 const NO_ACTIONS_PX = 72
+
+/** A plain left click, which a page's own view may take; a modified one opens the link as the browser does. */
+const plainClick = (event: React.MouseEvent) =>
+	event.button === 0 &&
+	!event.metaKey &&
+	!event.ctrlKey &&
+	!event.shiftKey &&
+	!event.altKey
 
 type CardDetails = MovieTvCardProps["details"] & {
 	streaming_links?: readonly ServiceOffer[] | null
@@ -173,8 +188,8 @@ export function MovieTvCard({
 	posterPaintBeforeScripts,
 	skipOffscreen = false,
 	actions: actionsOn = "bottom",
+	onOpen,
 	newOn,
-	skipWant = false,
 	skipScore = false,
 	hidden,
 	ownerScore = null,
@@ -225,16 +240,26 @@ export function MovieTvCard({
 				discover={discover}
 				draggable="false"
 				onClick={(event) => {
+					// The title page, or the page's own view of the title.
+					const opens = () => {
+						if (!onOpen || !plainClick(event)) return
+						event.preventDefault()
+						setRevealed(null)
+						onOpen()
+					}
 					// Touch: the first tap shows the actions over the art, the second opens the title.
-					if (!actions || tile) return
+					if (!actions || tile) return opens()
 					// Too narrow for tiles: the tap opens the title.
 					if ((frame.current?.offsetWidth ?? NO_ACTIONS_PX) < NO_ACTIONS_PX)
-						return
+						return opens()
 					if (!touch) {
-						if (!touchPointerNow()) return
+						if (!touchPointerNow()) return opens()
 						setTouchNow(true)
 					}
-					if (revealed) return setRevealed(null)
+					if (revealed) {
+						setRevealed(null)
+						return opens()
+					}
 					event.preventDefault()
 					setArmed(true)
 					setRevealed(cardKey)
@@ -301,7 +326,6 @@ export function MovieTvCard({
 							mediaType={mediaType}
 							tmdbId={details.tmdb_id}
 							goodwatch={ratings?.goodwatch_overall_score_normalized_percent}
-							skipWant={skipWant}
 							skipScore={skipScore}
 							// The owner's square takes the pill's place under 7.5rem.
 							className={
@@ -352,6 +376,8 @@ export function MovieTvCard({
 					<CardActions
 						media={{ mediaType, details }}
 						href={href}
+						discover={discover}
+						onOpen={onOpen}
 						cardKey={cardKey}
 						frame={frame}
 						placement={actions}

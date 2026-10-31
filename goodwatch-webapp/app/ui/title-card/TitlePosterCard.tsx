@@ -11,7 +11,7 @@ export function TitlePosterCard({
 	skipOffscreen,
 	actions,
 	newOn,
-	skipWant,
+	onOpen,
 }: {
 	card: TitleCard
 	prefetch?: boolean
@@ -23,8 +23,8 @@ export function TitlePosterCard({
 	actions?: ActionsPlacement | false
 	/** The service the title is new on for the viewer (#489), by id, see MovieTvCard. */
 	newOn?: number | null
-	/** The list is the Wishlist: no Wishlist bookmark on the poster. */
-	skipWant?: boolean
+	/** The page's own view of the title, opened in place of the title page, see MovieTvCard. */
+	onOpen?: () => void
 }) {
 	const details = {
 		...card,
@@ -43,7 +43,7 @@ export function TitlePosterCard({
 			skipOffscreen={skipOffscreen}
 			actions={actions}
 			newOn={newOn}
-			skipWant={skipWant}
+			onOpen={onOpen}
 			rating={card.rating}
 		/>
 	)

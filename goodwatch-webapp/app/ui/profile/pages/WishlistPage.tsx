@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 // The profile's Wishlist tab. The owner sees "Watch now" first (wishlist titles on their services, best match first),
 // the import call to action and the way to the editable page; a signed-in visitor sees the titles they've already
 // seen first, their own score in each card's pill. Then everything, newest first or by title. The posters are the
-// site's poster cards, for the visitor to pick from; on the owner's own Wishlist they leave out the bookmark.
+// site's poster cards with the same controls as everywhere, the Wishlist bookmark included.
 import type { LibraryKind } from "~/domain/my-library"
 import type {
 	ProfileShell,
@@ -66,7 +66,6 @@ export function WishlistPage({
 		<li key={t.key} className="flex min-w-0 flex-col gap-1.5">
 			<ProfileCard
 				title={t}
-				skipWant={owner}
 				posterPriority={first && index < 6 ? "high" : "lazy"}
 				skipOffscreen={!first || index >= 6}
 			/>

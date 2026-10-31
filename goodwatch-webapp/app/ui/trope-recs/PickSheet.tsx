@@ -1,7 +1,8 @@
 // Why a pick: a sheet from the bottom on phones, a dialog in the middle from sm up. The pick's poster, name and match,
 // then one box per trope of the member's it carries (at most eight, in their rank order): the trope's name, a "More
 // like this →" link to that trope's picks, and how the trope shows up in the title (TV Tropes text, under a spoiler
-// cover since the member hasn't seen it). No chips. Loaded on first use (TropeRecsPage).
+// cover since the member hasn't seen it). ← and → beside Close (and the arrow keys) step to the previous and next
+// pick. No chips. Loaded on first use (TropeRecsPage).
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
@@ -24,7 +25,14 @@ export interface PickSheetProps {
 	tropeCount: number
 	kind: RecKind
 	onClose: () => void
+	/** Opens the previous pick; null on the first. */
+	onPrev?: (() => void) | null
+	/** Opens the next pick; null on the last. */
+	onNext?: (() => void) | null
 }
+
+const SHEET_BUTTON =
+	"min-h-9 shrink-0 cursor-pointer rounded-full px-3 text-xs font-bold text-gray-300 ring-1 ring-white/15 hover:bg-white/10 disabled:cursor-default disabled:opacity-30"
 
 const sourceOf = (id: string) => (id.startsWith("https://") ? id : null)
 
@@ -34,10 +42,24 @@ export default function PickSheet({
 	tropeCount,
 	kind,
 	onClose,
+	onPrev = null,
+	onNext = null,
 }: PickSheetProps) {
 	const root = useOverlayRoot()
 	const box = useRef<HTMLDivElement>(null)
 	useModalDialog({ open: true, onClose, container: box })
+	useEffect(() => {
+		if (!onPrev && !onNext) return
+		const onKey = (e: KeyboardEvent) => {
+			if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return
+			const el = document.activeElement
+			if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return
+			if (e.key === "ArrowLeft" && onPrev) onPrev()
+			if (e.key === "ArrowRight" && onNext) onNext()
+		}
+		window.addEventListener("keydown", onKey)
+		return () => window.removeEventListener("keydown", onKey)
+	}, [onPrev, onNext])
 	useEffect(() => {
 		const before = document.body.style.overflow
 		document.body.style.overflow = "hidden"
@@ -90,13 +112,37 @@ export default function PickSheet({
 									{pick.name}
 								</Link>
 							</h2>
-							<button
-								type="button"
-								onClick={onClose}
-								className="min-h-9 shrink-0 cursor-pointer rounded-full px-3 text-xs font-bold text-gray-300 ring-1 ring-white/15 hover:bg-white/10"
-							>
-								Close
-							</button>
+							<div className="flex shrink-0 gap-1.5">
+								{(onPrev || onNext) && (
+									<>
+										<button
+											type="button"
+											onClick={onPrev ?? undefined}
+											disabled={!onPrev}
+											aria-label="Previous pick"
+											className={SHEET_BUTTON}
+										>
+											←
+										</button>
+										<button
+											type="button"
+											onClick={onNext ?? undefined}
+											disabled={!onNext}
+											aria-label="Next pick"
+											className={SHEET_BUTTON}
+										>
+											→
+										</button>
+									</>
+								)}
+								<button
+									type="button"
+									onClick={onClose}
+									className={SHEET_BUTTON}
+								>
+									Close
+								</button>
+							</div>
 						</div>
 						<p className="text-sm text-gray-400">
 							{[pick.year, kindName].filter(Boolean).join(" · ")}
@@ -142,6 +188,10 @@ function TropeBox({
 	pick: RecTitle
 	kind: RecKind
 	onClose: () => void
+	/** Opens the previous pick; null on the first. */
+	onPrev?: (() => void) | null
+	/** Opens the next pick; null on the last. */
+	onNext?: (() => void) | null
 }) {
 	const [open, setOpen] = useState(false)
 	const excerpt = useExcerpt(trope.id, pick.id)

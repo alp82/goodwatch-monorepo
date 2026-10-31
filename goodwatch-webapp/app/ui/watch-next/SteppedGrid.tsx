@@ -152,7 +152,6 @@ function TierRow({
 								aria-hidden
 							/>
 						)
-					// The list is the Wishlist: no bookmark on each poster.
 					return (
 						<div
 							key={key}
@@ -161,7 +160,6 @@ function TierRow({
 						>
 							<TitlePosterCard
 								card={title}
-								skipWant
 								newOn={newOn?.serviceOf(title.tmdb_id)}
 							/>
 							{/* A small poster has no room for logos: the service it just arrived on gets its sticker, top left (the title band fills the foot). */}

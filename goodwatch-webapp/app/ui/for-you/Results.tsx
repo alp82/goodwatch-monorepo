@@ -1,4 +1,6 @@
-// The picks. Every poster sits in a PickTap: a tap opens its detail.
+// The picks, every one in the site's poster card with its standard actions (a panel on hover, tiles after the first
+// tap on a touch screen), inside a PickTap: a click on the poster, the Open tile or a tap on the bare art opens its
+// detail (the For you quick view), and a card too narrow for actions opens it on the first tap.
 // - phones (and tablets): the list starts with the strip: the top four big with titles, then six small, in one
 //   12-column grid. An open drawer covers the page below those two rows, so closing it leaves the strip in place and
 //   uncovers the rest: three across, then four across. Titles climbing from #7 to #2 slide and grow into place.
@@ -6,14 +8,13 @@
 // - no counts or chips under posters: the why lives in the detail.
 // Before hydration both layouts render (each hidden by CSS on the other screen size), so the first paint is right
 // on every screen; after it only the matching one stays.
-import { Link } from "@remix-run/react"
 import { LayoutGroup, motion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import type { Ranked } from "~/domain/for-you-page/rank"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { PickTap } from "./PickTap"
-import { posterSrc, titleAt, toCard, useForYou } from "./context"
+import { titleAt, toCard, useForYou } from "./context"
 
 const SPRING = {
 	type: "spring",
@@ -148,25 +149,18 @@ function PhoneList({
 							data-strip-row={big ? 1 : 2}
 						>
 							<PickTap r={r}>
-								<motion.div
-									layout
-									transition={SPRING}
-									className={`relative aspect-[2/3] overflow-hidden bg-gray-800 ring-1 ring-white/10 ${big ? "rounded-lg" : "rounded-md"}`}
-								>
-									<Link to={t.href} className="absolute inset-0">
-										{t.poster && (
-											<img
-												src={posterSrc(t.poster, "w185")}
-												alt={t.name}
-												draggable={false}
-												className="size-full object-cover"
-											/>
-										)}
-									</Link>
-									<span className="pointer-events-none absolute top-1 left-1 rounded-md bg-gray-950/85 px-1 text-[10px] leading-4 font-black text-white tabular-nums">
-										{i + 1}
-									</span>
-								</motion.div>
+								{(open) => (
+									<motion.div layout transition={SPRING} className="relative">
+										<TitlePosterCard
+											card={toCard(pool, r)}
+											onOpen={open}
+											posterPriority="eager"
+										/>
+										<span className="pointer-events-none absolute top-1 left-1 z-30 rounded-md bg-gray-950/85 px-1 text-[10px] leading-4 font-black text-white tabular-nums">
+											{i + 1}
+										</span>
+									</motion.div>
+								)}
 							</PickTap>
 							{big && (
 								<motion.p
@@ -192,7 +186,9 @@ function PhoneList({
 							mounted={mounted}
 						>
 							<PickTap r={r}>
-								<SmallPoster r={r} />
+								{(open) => (
+									<TitlePosterCard card={toCard(pool, r)} onOpen={open} />
+								)}
 							</PickTap>
 						</Item>
 					))}
@@ -209,7 +205,9 @@ function PhoneList({
 							mounted={mounted}
 						>
 							<PickTap r={r}>
-								<SmallPoster r={r} />
+								{(open) => (
+									<TitlePosterCard card={toCard(pool, r)} onOpen={open} />
+								)}
 							</PickTap>
 						</Item>
 					))}
@@ -249,9 +247,17 @@ function DeskList({
 	const small = ranked.slice(c1, c2)
 	const denseCount = t.dense * 4 * (more + 1)
 	const dense = ranked.slice(c2, c2 + denseCount)
-	const item = (r: Ranked, at: number, child: React.ReactNode) => (
+	const item = (r: Ranked, at: number, eagerPoster = false) => (
 		<Item key={r.index} r={r} at={at} prefix="desk" mounted={mounted}>
-			<PickTap r={r}>{child}</PickTap>
+			<PickTap r={r}>
+				{(open) => (
+					<TitlePosterCard
+						card={toCard(pool, r)}
+						onOpen={open}
+						posterPriority={eagerPoster ? "eager" : undefined}
+					/>
+				)}
+			</PickTap>
 		</Item>
 	)
 	return (
@@ -262,33 +268,17 @@ function DeskList({
 				</h2>
 			)}
 			<div className={`grid gap-5 ${t.big}`}>
-				{big.map((r, i) =>
-					item(
-						r,
-						i,
-						<TitlePosterCard
-							card={toCard(pool, r)}
-							actions={false}
-							posterPriority={eager ? "eager" : undefined}
-						/>,
-					),
-				)}
+				{big.map((r, i) => item(r, i, eager))}
 			</div>
 			<div className={`mt-8 grid gap-3 ${t.medium}`}>
-				{medium.map((r, i) =>
-					item(
-						r,
-						c0 + i,
-						<TitlePosterCard card={toCard(pool, r)} actions={false} />,
-					),
-				)}
+				{medium.map((r, i) => item(r, c0 + i))}
 			</div>
 			<div className={`mt-8 grid gap-2.5 ${t.small}`}>
-				{small.map((r, i) => item(r, c1 + i, <SmallPoster r={r} />))}
+				{small.map((r, i) => item(r, c1 + i))}
 			</div>
 			{dense.length > 0 && (
 				<div className={`mt-8 grid gap-2 ${t.denseCols}`}>
-					{dense.map((r, i) => item(r, c2 + i, <SmallPoster r={r} dense />))}
+					{dense.map((r, i) => item(r, c2 + i))}
 				</div>
 			)}
 			{c2 + denseCount < ranked.length && (
@@ -330,28 +320,5 @@ function Item({
 		>
 			{children}
 		</motion.div>
-	)
-}
-
-function SmallPoster({ r, dense = false }: { r: Ranked; dense?: boolean }) {
-	const { pool } = useForYou()
-	const t = titleAt(pool, r.index)
-	return (
-		<Link
-			to={t.href}
-			className="group relative block overflow-hidden rounded-lg bg-gray-800 ring-1 ring-white/10"
-			title={`${t.name}${t.year ? ` (${t.year})` : ""}`}
-		>
-			{t.poster ? (
-				<img
-					src={posterSrc(t.poster, dense ? "w154" : "w185")}
-					alt={t.name}
-					loading="lazy"
-					className="aspect-[2/3] w-full object-cover transition-transform group-hover:scale-[1.03]"
-				/>
-			) : (
-				<div className="aspect-[2/3] w-full" aria-label={t.name} />
-			)}
-		</Link>
 	)
 }

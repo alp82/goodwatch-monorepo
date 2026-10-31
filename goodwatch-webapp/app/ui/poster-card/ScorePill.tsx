@@ -186,15 +186,14 @@ export function ScorePill({
 }
 
 /**
- * The pill for a title, from the viewer's member data: their score, and the state icon. `skipWant` leaves the Wishlist
- * bookmark off, for a list that is the Wishlist; `skipScore` the viewer's score, where the page shows it already.
+ * The pill for a title, from the viewer's member data: their score, and the state icon. `skipScore` leaves the
+ * viewer's score out, where the page shows it already.
  */
 export function TitleScorePill({
 	mediaType,
 	tmdbId,
 	goodwatch,
 	size = "auto",
-	skipWant = false,
 	skipScore = false,
 	className,
 }: {
@@ -202,7 +201,6 @@ export function TitleScorePill({
 	tmdbId: number
 	goodwatch?: number | null
 	size?: PartSize
-	skipWant?: boolean
 	/** Leaves the viewer's score out where the page says it already (their own Scores tier): GoodWatch's shows. */
 	skipScore?: boolean
 	className?: string
@@ -213,7 +211,7 @@ export function TitleScorePill({
 			goodwatch={goodwatch}
 			score={skipScore ? null : marks.score}
 			// From the real score: a scored title stays without the Seen icon.
-			mark={pillMark(marks, skipWant)}
+			mark={pillMark(marks)}
 			size={size}
 			className={className}
 		/>

@@ -13,7 +13,6 @@ export const PANEL_CARD_SIZES: PosterProps["sizes"] = [
 
 export function ProfileCard({
 	title,
-	skipWant = false,
 	posterPriority,
 	skipOffscreen,
 	posterSizes = POSTER_ROW_SIZES,
@@ -23,8 +22,6 @@ export function ProfileCard({
 	skipOffscreen?: boolean
 	/** The poster's displayed widths; a row's by default. */
 	posterSizes?: PosterProps["sizes"]
-	/** The list is the viewer's own Wishlist: the pill leaves out the bookmark. */
-	skipWant?: boolean
 }) {
 	return (
 		<MovieTvCard
@@ -39,7 +36,6 @@ export function ProfileCard({
 				goodwatch_overall_score_normalized_percent: title.gw,
 			}}
 			mediaType={title.mediaType}
-			skipWant={skipWant}
 			posterSizes={posterSizes}
 		/>
 	)
