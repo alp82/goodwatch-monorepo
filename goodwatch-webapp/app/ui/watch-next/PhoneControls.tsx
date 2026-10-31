@@ -1,72 +1,47 @@
-import { mediaFieldLanguage } from "~/utils/media-presentation"
-// Watch next's controls on phones (below the large breakpoint): the slab's three buttons, moods,
-// services, and sort, each opening its own drawer (owner addendum on #176).
-// Every drawer is a labeled modal sheet with a focus trap, closing with Escape, the backdrop, a drag down, or its
-// Show button. The buttons sit in the page under the pick (DockStrip), not docked.
-import { SERVICES_PATH } from "~/ui/settings/paths"
-import {
-	ArrowsUpDownIcon,
-	GlobeAltIcon,
-	PlusIcon,
-} from "@heroicons/react/24/solid"
+import { PlusIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import type React from "react"
 import { useRef, useState } from "react"
-import { MOOD_BY_KEY } from "~/domain/moods"
 import { MAX_PICKS } from "~/domain/taste-picker"
 import type { WatchNextSort } from "~/domain/watch-next"
 import type { WatchNext } from "~/server/watch-next.server"
-import { SnapSheet } from "~/ui/filter-bar"
-import { ServiceStack, radioKeys } from "~/ui/filter-bar/controls"
-import { Knob, SPRING, TAP } from "~/ui/filter-bar/motion"
-import { DockStrip } from "~/ui/navigation"
-import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import {
-	type MoodControl,
-	MoodGrid,
-	SPECTRUM,
-	useRefusalHint,
-} from "./MoodPicker"
-import { choiceHues } from "./TasteShelf"
+	FilterGroup,
+	FilterSheet,
+	FilterSummaryRow,
+} from "~/ui/filter-bar/PhoneFilters"
+import { ServiceStack, radioKeys } from "~/ui/filter-bar/controls"
+import { Knob, TAP } from "~/ui/filter-bar/motion"
+// Watch next's and My movies' controls on phones (below the large breakpoint), the B3 way: one quiet line in the page
+// under the pick naming the filters in use and the count, opening one sheet with moods, where to watch, sort, and
+// the page's own extra group (My movies' "How long?"). The sheet is a labeled modal with a focus trap, closing with
+// Escape, the backdrop, a drag down, or its Show button (ui/filter-bar/PhoneFilters.tsx).
+import { SERVICES_PATH } from "~/ui/settings/paths"
+import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { type MoodControl, MoodGrid, useRefusalHint } from "./MoodPicker"
 import {
 	RATE_MORE,
 	SORT_LABEL,
 	SORT_OPTIONS,
 	pickName,
-	picksShort,
 	titleCount,
 } from "./labels"
 
-type Drawer = "moods" | "services" | "sort" | "time"
-
-const DRAWER_LABEL: Record<Drawer, string> = {
-	moods: "Moods",
-	services: "Where to watch",
-	sort: "Sort",
-	time: "How long?",
-}
-
-/** A fourth button and drawer, from the page that owns it: "How long?" on My movies (#385). */
+/** A fourth group in the sheet, from the page that owns it: "How long?" on My movies (#385). */
 export interface ExtraDrawer {
 	key: "time"
 	title: string
-	/** What the button says: the choice in use. */
+	/** The choice in use, for the summary line. */
 	label: string
 	icon: React.ReactNode
 	/** A choice other than the default is in use. */
 	on: boolean
 	body: React.ReactNode
+	/** Back to the default, for Clear all. */
+	clear: () => void
 }
-
-/** One of the slab's buttons: an icon over a short label. */
-const SEGMENT =
-	"relative flex h-full min-w-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-[14px] px-1.5 text-[12px] font-bold outline-none transition-colors active:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-400"
-
-// The services drawer holds one switch; the other two scroll from about half the screen to nearly all of it. The
-// sort drawer opens taller while it carries a guest's sign-up card, so the card shows whole.
-const SERVICES_SNAPS = [0.36]
-const SORT_WITH_PROMPT_SNAPS = [0.76, 0.94]
 
 export interface PhoneControlsProps {
 	data: WatchNext | null
@@ -74,31 +49,6 @@ export interface PhoneControlsProps {
 	setOnMyServices: (on: boolean) => void
 	setSort: (sort: WatchNextSort) => void
 	extra?: ExtraDrawer | false
-}
-
-/** The picks' colors, or the moods' fan with nothing picked. */
-function MoodDots({ control }: { control: MoodControl }) {
-	const { picks } = control.picker
-	const shown = picks.length
-		? picks.map((id) => ({ id, hue: choiceHues(control.picker, id)[0] }))
-		: SPECTRUM.map((mood) => ({ id: mood, hue: MOOD_BY_KEY[mood].hue }))
-	return (
-		<span className="flex -space-x-1" aria-hidden>
-			{shown.map((dot) => (
-				<motion.span
-					key={dot.id}
-					layout
-					initial={{ scale: 0.4 }}
-					animate={{ scale: 1 }}
-					className="h-3.5 w-3.5 rounded-full ring-2 ring-gray-950"
-					style={{
-						background: dot.hue,
-						opacity: picks.length ? 1 : 0.55,
-					}}
-				/>
-			))}
-		</span>
-	)
 }
 
 // "Show 23 that fit", "Show 151 on your services", "Show 349 titles"; "Done" when there is nothing to show.
@@ -115,25 +65,6 @@ function showLabel(data: WatchNext | null): string {
 			? `Show ${titleCount(n)}`
 			: `Show ${n} ${n === 1 ? "movie" : "movies"}`
 	return picked || timed ? `Show ${n} that fit` : `Show ${n} on your services`
-}
-
-function ShowButton({
-	data,
-	onClick,
-}: { data: WatchNext | null; onClick: () => void }) {
-	return (
-		<div className="shrink-0 border-t border-white/10 bg-gray-950/95 px-4 pt-3 pb-4">
-			<motion.button
-				type="button"
-				whileTap={TAP}
-				onClick={onClick}
-				data-drawer-done
-				className="h-12 w-full cursor-pointer rounded-2xl bg-white text-base font-bold text-black outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-			>
-				{showLabel(data)}
-			</motion.button>
-		</div>
-	)
 }
 
 /** A drawer's top line, in the sheet's drag area. */
@@ -162,18 +93,15 @@ function MoodsHead({ control }: { control: MoodControl }) {
 						{hint}
 					</motion.p>
 				) : (
-					<motion.h2
+					<motion.h3
 						key="title"
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						exit={{ opacity: 0, transition: { duration: 0.08 } }}
-						className="min-w-0 flex-1 text-base font-bold text-white"
+						className="min-w-0 flex-1 text-sm font-bold text-white"
 					>
-						Pick{" "}
-						<span className="text-sm font-normal text-gray-400">
-							up to three
-						</span>
-					</motion.h2>
+						Moods <span className="font-normal text-gray-400">up to three</span>
+					</motion.h3>
 				)}
 			</AnimatePresence>
 			<span
@@ -329,114 +257,23 @@ function SortBody({
 	)
 }
 
-/** The slab's three buttons. */
-function Segments({
-	data,
-	moods,
-	open,
-	onOpen,
-	extra,
-}: {
-	data: WatchNext
-	moods: MoodControl
-	extra?: ExtraDrawer | false
-	open: Drawer | null
-	onOpen: (drawer: Drawer) => void
-}) {
-	const { picker } = moods
-	const picked = picker.picks.length > 0
-	const segment = (drawer: Drawer) => ({
-		type: "button" as const,
-		"aria-haspopup": "dialog" as const,
-		"aria-expanded": open === drawer,
-		"data-segment": drawer,
-		whileTap: TAP,
-		onClick: () => onOpen(drawer),
-	})
-	const services = !data.hasServices
-		? "Add services"
-		: data.onMyServices
-			? "My services"
-			: "Everywhere"
-	return (
-		<>
-			<motion.button
-				{...segment("moods")}
-				aria-label={`Picks: ${picked ? picker.picks.map((id) => pickName(picker, id)).join(", ") : "any mood"}`}
-				className={`${SEGMENT} flex-[1.25] ${picked ? "bg-white/[0.07] text-white" : "text-gray-300"}`}
-			>
-				<MoodDots control={moods} />
-				<span className="w-full truncate text-center">
-					{picksShort(picker)}
-				</span>
-			</motion.button>
-			<motion.button
-				{...segment("services")}
-				aria-label={`Where to watch: ${services}`}
-				className={`${SEGMENT} flex-1 ${data.hasServices && data.onMyServices ? "text-white" : "text-gray-300"}`}
-			>
-				{!data.hasServices ? (
-					<PlusIcon className="h-4 w-4" aria-hidden />
-				) : data.onMyServices ? (
-					<ServiceStack providers={data.myServices} on size={16} />
-				) : (
-					<GlobeAltIcon className="h-[18px] w-[18px]" aria-hidden />
-				)}
-				<span className="w-full truncate text-center">{services}</span>
-			</motion.button>
-			<motion.button
-				{...segment("sort")}
-				aria-label={`Sort: ${SORT_LABEL[data.sort]}`}
-				className={`${SEGMENT} flex-1 text-white`}
-			>
-				<ArrowsUpDownIcon
-					className={`h-4 w-4 ${data.sort === "match" ? "text-amber-400" : "text-gray-400"}`}
-					aria-hidden
-				/>
-				<span className="relative w-full overflow-hidden text-center">
-					<AnimatePresence mode="popLayout" initial={false}>
-						<motion.span
-							key={data.sort}
-							initial={{ y: 12, opacity: 0 }}
-							animate={{ y: 0, opacity: 1 }}
-							exit={{ y: -12, opacity: 0 }}
-							transition={SPRING}
-							className="block truncate"
-						>
-							{SORT_LABEL[data.sort]}
-						</motion.span>
-					</AnimatePresence>
-				</span>
-			</motion.button>
-			{extra && (
-				<motion.button
-					{...segment(extra.key)}
-					aria-label={`${extra.title} ${extra.label}`}
-					className={`${SEGMENT} flex-1 ${extra.on ? "bg-white/[0.07] text-amber-200" : "text-gray-300"}`}
-				>
-					{extra.icon}
-					<span className="w-full truncate text-center">{extra.label}</span>
-				</motion.button>
-			)}
-		</>
-	)
+/** The summary line's words: only what differs from the defaults. */
+function activeWords(data: WatchNext, extra?: ExtraDrawer): string[] {
+	const words = data.picker.picks.map((id) => pickName(data.picker, id))
+	if (data.hasServices && !data.onMyServices) words.push("Everywhere")
+	if (extra?.on) words.push(extra.label)
+	if (data.sort !== data.defaultSort) words.push(SORT_LABEL[data.sort])
+	return words
 }
 
-// While the first view loads: the three buttons' places, so nothing jumps when they arrive.
-function LoadingSegments() {
-	return (
-		<>
-			{[1.25, 1, 1].map((grow, i) => (
-				<span
-					// biome-ignore lint/suspicious/noArrayIndexKey: three fixed placeholders
-					key={i}
-					aria-hidden
-					className="m-1 animate-pulse rounded-[12px] bg-white/[0.06]"
-					style={{ flex: grow }}
-				/>
-			))}
-		</>
-	)
+/** "23 movies" / "349 titles": what the line and the Show button count. */
+function countWords(data: WatchNext): string {
+	const filtered =
+		data.picker.picks.length > 0 || data.onMyServices || Boolean(data.time)
+	const n = filtered ? data.fitting : data.total
+	return data.time === undefined
+		? titleCount(n)
+		: `${n} ${n === 1 ? "movie" : "movies"}`
 }
 
 export function PhoneControls({
@@ -444,72 +281,64 @@ export function PhoneControls({
 	moods,
 	setOnMyServices,
 	setSort,
-	extra,
+	extra: extraOrNot,
 }: PhoneControlsProps) {
-	const [open, setOpen] = useState<Drawer | null>(null)
+	const extra = extraOrNot || undefined
+	const [open, setOpen] = useState(false)
 	const checkedSort = useRef<HTMLButtonElement>(null)
-	const close = () => setOpen(null)
-	const segments =
-		data && moods ? (
-			<Segments
-				data={data}
-				moods={moods}
-				open={open}
-				onOpen={setOpen}
-				extra={extra}
-			/>
-		) : (
-			<LoadingSegments />
-		)
-	const sheet = (drawer: Drawer) => ({
-		index: open === drawer ? 0 : -1,
-		onIndex: (index: number) => setOpen(index < 0 ? null : drawer),
-		label: DRAWER_LABEL[drawer],
-		footer: <ShowButton data={data} onClick={close} />,
-	})
+	const ready = Boolean(data && moods)
+	const canClear = Boolean(
+		data &&
+			(data.picker.picks.length > 0 ||
+				(data.hasServices && !data.onMyServices) ||
+				extra?.on),
+	)
+	const clearAll = () => {
+		moods?.clear()
+		if (data && !data.onMyServices) setOnMyServices(true)
+		if (extra?.on) extra.clear()
+	}
 
 	return (
 		<MotionConfig reducedMotion="user">
-			<DockStrip>
-				<div
-					className="flex h-[52px] min-w-0 flex-1 items-stretch gap-1 rounded-[18px] bg-white/[0.05] p-1 ring-1 ring-white/10"
-					data-watch-next-strip
-				>
-					{segments}
-				</div>
-			</DockStrip>
+			<FilterSummaryRow
+				active={data ? activeWords(data, extra) : []}
+				count={data ? countWords(data) : undefined}
+				open={open}
+				onOpen={() => setOpen(true)}
+				disabled={!ready}
+			/>
 			{data && moods && (
-				<>
-					<SnapSheet {...sheet("moods")} header={<MoodsHead control={moods} />}>
-						<div className="px-4 pt-1 pb-4" data-drawer="moods">
+				<FilterSheet
+					open={open}
+					setOpen={setOpen}
+					canClear={canClear}
+					onClear={clearAll}
+					show={showLabel(data)}
+				>
+					<section data-drawer="moods">
+						<MoodsHead control={moods} />
+						<div className="px-4 pt-1">
 							<MoodGrid control={moods} dense />
 						</div>
-					</SnapSheet>
-					<SnapSheet
-						{...sheet("services")}
-						snaps={SERVICES_SNAPS}
-						header={
-							<DrawerHead>
-								<h2 className="text-base font-bold text-white">
-									Where to watch
-								</h2>
-							</DrawerHead>
-						}
-					>
+					</section>
+					<FilterGroup title="Where to watch">
 						<div data-drawer="services">
 							<ServicesBody data={data} setOnMyServices={setOnMyServices} />
 						</div>
-					</SnapSheet>
-					<SnapSheet
-						{...sheet("sort")}
-						snaps={signUpPrompted(data) ? SORT_WITH_PROMPT_SNAPS : undefined}
-						initialFocus={checkedSort}
-						header={
-							<DrawerHead>
-								<h2 className="text-base font-bold text-white">Sort</h2>
-							</DrawerHead>
-						}
-					>
+					</FilterGroup>
+					{extra && (
+						<FilterGroup
+							title={
+								<span lang={mediaFieldLanguage(extra)}>{extra.title}</span>
+							}
+						>
+							<div className="px-4 pb-4" data-drawer={extra.key}>
+								{extra.body}
+							</div>
+						</FilterGroup>
+					)}
+					<FilterGroup title="Sort">
 						<div data-drawer="sort">
 							<SortBody
 								data={data}
@@ -517,25 +346,8 @@ export function PhoneControls({
 								checkedRef={checkedSort}
 							/>
 						</div>
-					</SnapSheet>
-					{extra && (
-						<SnapSheet
-							{...sheet(extra.key)}
-							snaps={SERVICES_SNAPS}
-							header={
-								<DrawerHead>
-									<h2 className="text-base font-bold text-white">
-										<span lang={mediaFieldLanguage(extra)}>{extra.title}</span>
-									</h2>
-								</DrawerHead>
-							}
-						>
-							<div className="px-4 pb-4" data-drawer={extra.key}>
-								{extra.body}
-							</div>
-						</SnapSheet>
-					)}
-				</>
+					</FilterGroup>
+				</FilterSheet>
 			)}
 		</MotionConfig>
 	)

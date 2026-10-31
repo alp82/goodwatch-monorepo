@@ -7,8 +7,8 @@ import { Link, useLocation, useNavigate } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { SnapSheet } from "~/ui/filter-bar"
-import { useAuthHref } from "~/utils/auth-href"
 import { useUser } from "~/utils/auth"
+import { useAuthHref } from "~/utils/auth-href"
 import { useNavigation, usePathViewer } from "./NavigationContext"
 import { holdKeyboardForSearch } from "./Search"
 import type { AreaTab } from "./areas"
@@ -153,7 +153,10 @@ function SearchField() {
 			aria-label={`Search: ${q}`}
 			className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl bg-white/[0.06] px-3 text-left"
 		>
-			<MagnifyingGlassIcon className="size-5 shrink-0 text-amber-300" aria-hidden />
+			<MagnifyingGlassIcon
+				className="size-5 shrink-0 text-amber-300"
+				aria-hidden
+			/>
 			<span className="truncate text-[16px] text-gray-100">{q}</span>
 		</button>
 	)
@@ -176,7 +179,10 @@ function TitleBlock({ bar, title }: { bar: Bar; title: string }) {
 				<span className="flex min-w-0 items-center gap-1 text-xl font-black text-white">
 					<span className="truncate">{title}</span>
 					{menu && (
-						<ChevronDownIcon className="size-5 shrink-0 text-gray-400" aria-hidden />
+						<ChevronDownIcon
+							className="size-5 shrink-0 text-gray-400"
+							aria-hidden
+						/>
 					)}
 				</span>
 			</span>
@@ -271,6 +277,14 @@ export function PhoneBar({ surface }: { surface: string }) {
 	const bar = phoneBarOf({ pathname, search, viewer })
 	const navigation = useNavigation()
 	const away = useScrollAway(!bar.pinned && !navigation.tabsOpen)
+	// Bars that stick under this one (FOLLOW_PHONE_BAR in ~/ui/layers) move up with it: one attribute, CSS does the rest.
+	useEffect(() => {
+		document.documentElement.toggleAttribute("data-phone-bar-away", away)
+	}, [away])
+	useEffect(
+		() => () => document.documentElement.removeAttribute("data-phone-bar-away"),
+		[],
+	)
 	const heading = useHeadingTitle(bar.kind === "detail")
 	const title = bar.kind === "detail" ? heading : bar.title
 
@@ -284,7 +298,12 @@ export function PhoneBar({ surface }: { surface: string }) {
 			>
 				{bar.kind === "home" ? (
 					<>
-						<Link to="/" prefetch="intent" aria-label="GoodWatch home" className="flex shrink-0">
+						<Link
+							to="/"
+							prefetch="intent"
+							aria-label="GoodWatch home"
+							className="flex shrink-0"
+						>
 							<GoodWatchWordmark fontSize={20} />
 						</Link>
 						<span className="flex-1" />
@@ -294,13 +313,17 @@ export function PhoneBar({ surface }: { surface: string }) {
 					<SearchField />
 				) : (
 					<>
-						{bar.back && <BackKey href={bar.back.href} label={bar.back.label} />}
+						{bar.back && (
+							<BackKey href={bar.back.href} label={bar.back.label} />
+						)}
 						<TitleBlock bar={bar} title={title} />
 						{bar.kind !== "settings" && <EndKey />}
 					</>
 				)}
 			</div>
-			{(bar.siblings.length > 0 || navigation.phoneRow) && <TabsSheet bar={bar} />}
+			{(bar.siblings.length > 0 || navigation.phoneRow) && (
+				<TabsSheet bar={bar} />
+			)}
 		</>
 	)
 }

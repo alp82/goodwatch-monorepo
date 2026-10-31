@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline"
 import { type ReactNode, useEffect, useRef } from "react"
 import { type IndexItem, ProgressIndex } from "~/ui/details/ProgressIndex"
+import { FOLLOW_PHONE_BAR } from "~/ui/layers"
 
 /** A line that fills with the whole page's reading progress (transform only, written once per frame). */
 function PageProgress() {
@@ -69,7 +70,7 @@ export function PhoneBar({
 		// The page's sticky bar on a phone (fix mode and the episode list's float read it as the header).
 		<div
 			data-details-header
-			className="sticky top-[116px] z-20 -mx-4 mt-8 lg:hidden"
+			className={`sticky top-[116px] z-20 -mx-4 mt-8 lg:hidden ${FOLLOW_PHONE_BAR}`}
 		>
 			<div className="border-y border-white/10 bg-stone-950">
 				<div className="flex h-12 items-center gap-1 pl-4 pr-2">

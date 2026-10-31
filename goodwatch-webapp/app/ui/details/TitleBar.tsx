@@ -141,7 +141,7 @@ export function TitleBar({
 			data-title-bar
 			aria-hidden={!shown}
 			{...(shown ? {} : { inert: "" })}
-			className={`fixed inset-x-0 top-16 z-30 border-b border-white/10 bg-stone-950 shadow-[0_8px_24px_rgba(0,0,0,.45)] transition-[transform,opacity] duration-200 ease-out motion-reduce:transition-none ${
+			className={`follow-phone-bar fixed inset-x-0 top-16 z-30 border-b border-white/10 bg-stone-950 shadow-[0_8px_24px_rgba(0,0,0,.45)] transition-[transform,opacity] duration-200 ease-out motion-reduce:transition-none ${
 				shown
 					? "translate-y-0 opacity-100"
 					: "pointer-events-none -translate-y-2 opacity-0"

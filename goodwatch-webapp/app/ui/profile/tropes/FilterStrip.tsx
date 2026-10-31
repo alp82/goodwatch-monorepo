@@ -1,23 +1,21 @@
 // The Tropes tab's filters, drawn the way My movies draws its controls.
 // - From lg: one strip with Movies or shows, the genre picks as chips and a genre button whose dropdown holds the
 //   picture tiles, how many tropes, then era and score as selects and the shared SortControl.
-// - Below lg: the four-button bar docked above the navigation (DockStrip), each button opening its drawer (SnapSheet)
-//   with tiles and a "Show N tropes" button; in the page, one fixed-height line with the count and the picks.
-import {
-	ArrowsUpDownIcon,
-	CalendarDaysIcon,
-	ChevronDownIcon,
-	FilmIcon,
-} from "@heroicons/react/20/solid"
+// - Below lg (B3): a quiet line naming the filters in use and the count, opening one sheet (PhoneFilters) with every
+//   group as tiles, Clear all and a "Show N tropes" button.
+import { ChevronDownIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
-import { type ReactNode, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { SnapSheet } from "~/ui/filter-bar"
+import {
+	FilterGroup,
+	FilterSheet,
+	FilterSummaryRow,
+} from "~/ui/filter-bar/PhoneFilters"
 import { SortControl } from "~/ui/filter-bar/controls"
-import { MENU, TAP } from "~/ui/filter-bar/motion"
+import { MENU } from "~/ui/filter-bar/motion"
 import { plural } from "~/ui/my-pages/bits"
-import { DockStrip } from "~/ui/navigation"
-import { type MinScore, SORTS, type SortKey } from "./model"
+import { type MinScore, NO_FACETS, SORTS, type SortKey } from "./model"
 import { EASE, useIso } from "./motion"
 import { FacetChip, FacetTile, Fan } from "./tiles"
 import type { TropeFacets } from "./useTropeFacets"
@@ -335,237 +333,136 @@ function Count({ m, className = "" }: { m: TropeFacets; className?: string }) {
 	)
 }
 
-type Drawer = "type" | "genre" | "era" | "sort"
-const SEGMENT =
-	"relative flex h-full min-w-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-[14px] px-1.5 text-[12px] font-bold outline-none transition-colors active:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-400"
 const RADIO_TILE = (on: boolean) =>
 	`flex min-h-12 cursor-pointer flex-col items-start justify-center rounded-xl px-3 py-2 text-left text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "bg-white text-black" : "bg-white/[0.05] text-white ring-1 ring-white/10"}`
 
-function DrawerHead({ children }: { children: ReactNode }) {
-	return (
-		<div className="flex min-h-11 items-center gap-3 px-4 pb-1">{children}</div>
-	)
-}
-
 function PhoneSlab({ m }: { m: TropeFacets }) {
-	const [open, setOpen] = useState<Drawer | null>(null)
-	const kind = m.kindChoices.find((c) => c.on)
-	const genres = m.genreChoices.filter((c) => c.on)
-	const eraOrScore = m.f.eras.length + (m.f.min !== "any" ? 1 : 0)
+	const [open, setOpen] = useState(false)
 	const sort = SORTS.find((s) => s.key === m.f.sort)
-	const segment = (d: Drawer) => ({
-		disabled: !m.ready,
-		type: "button" as const,
-		"aria-haspopup": "dialog" as const,
-		"aria-expanded": open === d,
-		whileTap: TAP,
-		onClick: () => setOpen(d),
-	})
+	const active = m.picked.map((c) => c.label)
+	if (m.f.sort !== NO_FACETS.sort && sort) active.push(sort.label)
 	const n = m.total
-	const sheet = (d: Drawer, title: string) => ({
-		index: open === d ? 0 : -1,
-		onIndex: (i: number) => setOpen(i < 0 ? null : d),
-		label: title,
-		header: (
-			<DrawerHead>
-				<h2 className="min-w-0 flex-1 text-base font-bold text-white">
-					{title}
-				</h2>
-			</DrawerHead>
-		),
-		footer: (
-			<div className="shrink-0 border-t border-white/10 bg-gray-950/95 px-4 pt-3 pb-4">
-				<motion.button
-					type="button"
-					whileTap={TAP}
-					onClick={() => setOpen(null)}
-					className="h-12 w-full cursor-pointer rounded-2xl bg-white text-base font-bold text-black outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-				>
-					{n ? `Show ${plural(n, "trope")}` : "Done"}
-				</motion.button>
-			</div>
-		),
-	})
 	return (
 		<>
-			<DockStrip>
-				<div className="flex h-[52px] min-w-0 flex-1 items-stretch gap-1 rounded-[18px] bg-white/[0.05] p-1 ring-1 ring-white/10">
-					<motion.button
-						{...segment("type")}
-						aria-label={`Type: ${kind?.label ?? "All"}`}
-						className={`${SEGMENT} flex-1 ${kind?.id !== "all" ? "bg-white/[0.07] text-white" : "text-gray-300"}`}
+			<FilterSummaryRow
+				active={active}
+				count={plural(n, "trope")}
+				open={open}
+				onOpen={() => setOpen(true)}
+				disabled={!m.ready}
+			/>
+			<FilterSheet
+				open={open}
+				setOpen={setOpen}
+				canClear={m.picked.length > 0}
+				onClear={m.reset}
+				show={n ? `Show ${plural(n, "trope")}` : "Done"}
+			>
+				<FilterGroup title="Movies or shows">
+					<div
+						role="radiogroup"
+						aria-label="Movies or shows"
+						className="grid grid-cols-3 gap-2 px-4 pb-4"
 					>
-						<FilmIcon className="h-4 w-4 text-gray-400" aria-hidden />
-						<span className="w-full truncate text-center">
-							{kind?.id === "all" ? "All types" : kind?.label}
-						</span>
-					</motion.button>
-					<motion.button
-						{...segment("genre")}
-						aria-label={`Genre: ${genres.map((g) => g.label).join(", ") || "any"}`}
-						className={`${SEGMENT} flex-[1.25] ${genres.length ? "bg-white/[0.07] text-white" : "text-gray-300"}`}
-					>
-						<span className="flex -space-x-1" aria-hidden>
-							{(genres.length ? genres : m.genreChoices.slice(0, 4))
-								.slice(0, 4)
-								.map((g) => (
-									<span
-										key={g.id}
-										className="h-3.5 w-3.5 rounded-full ring-2 ring-gray-950"
-										style={{
-											background: g.hue,
-											opacity: genres.length ? 1 : 0.55,
-										}}
-									/>
-								))}
-						</span>
-						<span className="w-full truncate text-center">
-							{genres.length === 0
-								? "Any genre"
-								: genres.length === 1
-									? genres[0].label
-									: `${genres.length} genres`}
-						</span>
-					</motion.button>
-					<motion.button
-						{...segment("era")}
-						aria-label="Era and score"
-						className={`${SEGMENT} flex-1 ${eraOrScore ? "bg-white/[0.07] text-amber-200" : "text-gray-300"}`}
-					>
-						<CalendarDaysIcon
-							className={`h-4 w-4 ${eraOrScore ? "text-amber-300" : "text-gray-400"}`}
-							aria-hidden
-						/>
-						<span className="w-full truncate text-center">
-							{eraOrScore ? `${eraOrScore} set` : "Era, score"}
-						</span>
-					</motion.button>
-					<motion.button
-						{...segment("sort")}
-						aria-label={`Sort ${sort?.label}`}
-						className={`${SEGMENT} flex-1 text-white`}
-					>
-						<ArrowsUpDownIcon className="h-4 w-4 text-gray-400" aria-hidden />
-						<span className="w-full truncate text-center">{sort?.label}</span>
-					</motion.button>
-				</div>
-			</DockStrip>
-			<SnapSheet {...sheet("type", "Movies or shows")} snaps={[0.36]}>
-				<div
-					role="radiogroup"
-					aria-label="Movies or shows"
-					className="grid grid-cols-3 gap-2 px-4 pb-4"
-				>
-					{m.kindChoices.map((c) => (
-						<button
-							key={c.id}
-							type="button"
-							// biome-ignore lint/a11y/useSemanticElements: a tile grid, as My movies' drawers
-							role="radio"
-							aria-checked={c.on}
-							onClick={c.toggle}
-							className={RADIO_TILE(c.on)}
-						>
-							{c.label}
-							<span
-								className={`text-[11px] font-semibold tabular-nums ${c.on ? "text-black/60" : "text-gray-400"}`}
-							>
-								{c.count === 1 ? "1 title" : `${c.count} titles`}
-							</span>
-						</button>
-					))}
-				</div>
-			</SnapSheet>
-			<SnapSheet {...sheet("genre", "Genres")}>
-				<div className="grid grid-cols-2 gap-2 px-4 pt-1 pb-4">
-					{m.genreChoices.map((c) => (
-						<FacetTile key={c.id} c={c} className="min-h-[4.75rem]" />
-					))}
-				</div>
-			</SnapSheet>
-			<SnapSheet {...sheet("era", "Era and score")}>
-				<div className="flex flex-col gap-4 px-4 pt-1 pb-4">
-					<div>
-						<h3 className="mb-2 text-sm font-bold text-white">Era</h3>
-						<div className="grid grid-cols-2 gap-2">
-							{m.eraChoices.map((c) => (
-								<FacetTile key={c.id} c={c} className="min-h-[4.75rem]" />
-							))}
-						</div>
-					</div>
-					<div>
-						<h3 className="mb-2 text-sm font-bold text-white">
-							{m.owner ? "Your score" : "Their score"}
-						</h3>
-						<div
-							role="radiogroup"
-							aria-label="Score"
-							className="grid grid-cols-2 gap-2"
-						>
-							{m.minChoices.map((c) => (
-								<button
-									key={c.id}
-									type="button"
-									// biome-ignore lint/a11y/useSemanticElements: a tile grid
-									role="radio"
-									aria-checked={c.on}
-									onClick={c.toggle}
-									className={RADIO_TILE(c.on)}
-								>
-									{c.label}
-									<span
-										className={`text-[11px] font-semibold tabular-nums ${c.on ? "text-black/60" : "text-gray-400"}`}
-									>
-										{c.count === 1 ? "1 title" : `${c.count} titles`}
-									</span>
-								</button>
-							))}
-						</div>
-					</div>
-				</div>
-			</SnapSheet>
-			<SnapSheet {...sheet("sort", "Sort")} snaps={[0.44]}>
-				<div
-					role="radiogroup"
-					aria-label="Sort"
-					className="grid grid-cols-2 gap-2 px-4 pb-4"
-				>
-					{SORTS.map((s) => {
-						const on = s.key === m.f.sort
-						return (
+						{m.kindChoices.map((c) => (
 							<button
-								key={s.key}
+								key={c.id}
 								type="button"
-								// biome-ignore lint/a11y/useSemanticElements: a tile grid, as My movies' sort drawer
+								// biome-ignore lint/a11y/useSemanticElements: a tile grid, as My movies' drawers
 								role="radio"
-								aria-checked={on}
-								onClick={() => m.set({ sort: s.key })}
-								className={RADIO_TILE(on)}
+								aria-checked={c.on}
+								onClick={c.toggle}
+								className={RADIO_TILE(c.on)}
 							>
-								{s.label}
+								{c.label}
 								<span
-									className={`mt-0.5 line-clamp-2 text-[11px] font-normal leading-snug ${on ? "text-black/70" : "text-gray-400"}`}
+									className={`text-[11px] font-semibold tabular-nums ${c.on ? "text-black/60" : "text-gray-400"}`}
 								>
-									{s.hint}
+									{c.count === 1 ? "1 title" : `${c.count} titles`}
 								</span>
 							</button>
-						)
-					})}
-				</div>
-			</SnapSheet>
+						))}
+					</div>
+				</FilterGroup>
+				<FilterGroup title="Genres">
+					<div className="grid grid-cols-2 gap-2 px-4 pt-1 pb-4">
+						{m.genreChoices.map((c) => (
+							<FacetTile key={c.id} c={c} className="min-h-[4.75rem]" />
+						))}
+					</div>
+				</FilterGroup>
+				<section className="border-t border-white/[0.06] pt-3">
+					<div className="flex flex-col gap-4 px-4 pt-1 pb-4">
+						<div>
+							<h3 className="mb-2 text-sm font-bold text-white">Era</h3>
+							<div className="grid grid-cols-2 gap-2">
+								{m.eraChoices.map((c) => (
+									<FacetTile key={c.id} c={c} className="min-h-[4.75rem]" />
+								))}
+							</div>
+						</div>
+						<div>
+							<h3 className="mb-2 text-sm font-bold text-white">
+								{m.owner ? "Your score" : "Their score"}
+							</h3>
+							<div
+								role="radiogroup"
+								aria-label="Score"
+								className="grid grid-cols-2 gap-2"
+							>
+								{m.minChoices.map((c) => (
+									<button
+										key={c.id}
+										type="button"
+										// biome-ignore lint/a11y/useSemanticElements: a tile grid
+										role="radio"
+										aria-checked={c.on}
+										onClick={c.toggle}
+										className={RADIO_TILE(c.on)}
+									>
+										{c.label}
+										<span
+											className={`text-[11px] font-semibold tabular-nums ${c.on ? "text-black/60" : "text-gray-400"}`}
+										>
+											{c.count === 1 ? "1 title" : `${c.count} titles`}
+										</span>
+									</button>
+								))}
+							</div>
+						</div>
+					</div>
+				</section>
+				<FilterGroup title="Sort">
+					<div
+						role="radiogroup"
+						aria-label="Sort"
+						className="grid grid-cols-2 gap-2 px-4 pb-4"
+					>
+						{SORTS.map((s) => {
+							const on = s.key === m.f.sort
+							return (
+								<button
+									key={s.key}
+									type="button"
+									// biome-ignore lint/a11y/useSemanticElements: a tile grid, as My movies' sort drawer
+									role="radio"
+									aria-checked={on}
+									onClick={() => m.set({ sort: s.key })}
+									className={RADIO_TILE(on)}
+								>
+									{s.label}
+									<span
+										className={`mt-0.5 line-clamp-2 text-[11px] font-normal leading-snug ${on ? "text-black/70" : "text-gray-400"}`}
+									>
+										{s.hint}
+									</span>
+								</button>
+							)
+						})}
+					</div>
+				</FilterGroup>
+			</FilterSheet>
 		</>
-	)
-}
-
-/** Phones: the count and the picks on one fixed-height line in the page. */
-function PhoneLine({ m }: { m: TropeFacets }) {
-	return (
-		<div className="-mx-4 flex h-11 items-center gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] lg:hidden">
-			<Count m={m} className="shrink-0 pr-1" />
-			{m.picked.map((c) => (
-				<FacetChip key={c.id} c={c} />
-			))}
-		</div>
 	)
 }
 
@@ -573,7 +470,6 @@ export function FilterStrip({ m, wide }: { m: TropeFacets; wide: boolean }) {
 	return (
 		<MotionConfig reducedMotion="user">
 			<DesktopStrip m={m} />
-			<PhoneLine m={m} />
 			{!wide && <PhoneSlab m={m} />}
 		</MotionConfig>
 	)

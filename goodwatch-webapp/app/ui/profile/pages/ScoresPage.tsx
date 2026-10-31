@@ -13,7 +13,7 @@ import useLocale from "~/utils/locale"
 // their own scores in each poster's pill and can keep to the titles both rated. The posters don't repeat the owner's
 // score: their tier's heading says it. On the owner's own page the pill shows the GoodWatch score instead.
 import type { ProfileScoresPage, ProfileShell } from "~/domain/profile"
-import { STICKY_SUBBAR } from "~/ui/layers"
+import { FOLLOW_PHONE_BAR, STICKY_SUBBAR } from "~/ui/layers"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { ScorePill } from "~/ui/poster-card/ScorePill"
 import { scoreLabels } from "~/utils/ratings"
@@ -133,7 +133,7 @@ export function ScoresPage({
 			)}
 
 			<div
-				className={`sticky top-[6.5rem] ${STICKY_SUBBAR} -mx-4 flex flex-wrap items-center gap-3 bg-gray-950/90 px-4 py-2 sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8`}
+				className={`sticky top-[calc(4rem_+_var(--visitor-bar-h,0px))] ${STICKY_SUBBAR} ${FOLLOW_PHONE_BAR} -mx-4 flex flex-wrap items-center gap-3 bg-gray-950/90 px-4 py-2 sm:-mx-6 sm:px-6 lg:top-28 lg:-mx-8 lg:px-8`}
 			>
 				<Segmented
 					label="Movies or shows"

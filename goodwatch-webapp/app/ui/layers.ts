@@ -13,5 +13,12 @@ export const CARD_RAISED = "z-10"
 /** A bar that pins under the site header while the page scrolls, such as a page's tabs or its filter row. */
 export const STICKY_BAR = "z-30"
 
+/**
+ * For a bar that sticks (or is fixed) under the phone's top bar: while that bar slides away on scroll, this one moves
+ * up by the bar's height with it (main.css, `html[data-phone-bar-away]`), by transform only. Phones only.
+ */
+export const FOLLOW_PHONE_BAR =
+	"follow-phone-bar transition-transform duration-200 ease-out motion-reduce:transition-none"
+
 /** A bar that pins right under another sticky bar, such as a tab's filter row under the tabs: below that bar. */
 export const STICKY_SUBBAR = "z-20"

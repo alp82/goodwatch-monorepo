@@ -6,7 +6,7 @@ import { EyeIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import type { CSSProperties } from "react"
 import { tastePath } from "~/domain/member-paths"
-import { STICKY_BAR } from "~/ui/layers"
+import { FOLLOW_PHONE_BAR, STICKY_BAR } from "~/ui/layers"
 import { WRAP } from "~/ui/my-pages/bits"
 
 /**
@@ -50,7 +50,7 @@ export const toggleView = ({ own, visitor, on }: ViewLinks) =>
 export function VisitorBar({ own }: { own: string }) {
 	return (
 		<div
-			className={`sticky top-16 ${STICKY_BAR} bg-amber-400 text-gray-950`}
+			className={`sticky top-16 ${STICKY_BAR} ${FOLLOW_PHONE_BAR} bg-amber-400 text-gray-950`}
 			style={{ height: VISITOR_BAR_H }}
 			data-visitor-bar
 		>

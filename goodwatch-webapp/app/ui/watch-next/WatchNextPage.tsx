@@ -205,6 +205,7 @@ export function WatchNextPage({
 						icon: movies.phoneTime.icon(time),
 						on: time !== null,
 						body: movies.phoneTime.drawer(time, setTime),
+						clear: () => setTime(null),
 					}
 				}
 			/>

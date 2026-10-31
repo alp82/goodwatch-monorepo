@@ -415,3 +415,11 @@ html[data-scrollbar-near] {
 		transition: none;
 	}
 }
+
+/* Bars under the phone's top bar follow it while it slides away on scroll (FOLLOW_PHONE_BAR in app/ui/layers.ts).
+   `transform`, so it adds to Tailwind's own `translate` on the same element. */
+@media (max-width: 1023.98px) {
+	html[data-phone-bar-away] .follow-phone-bar {
+		transform: translateY(-4rem);
+	}
+}
