@@ -682,13 +682,26 @@ export class ProposalService {
 				command.type === "set_services" ||
 				command.type === "set_service_enabled"
 			) {
-				const metadata = await this.catalog.metadata(
-					old.room.screens[0]?.country ?? "US"
+				const country = old.room.screens[0]?.country ?? null
+				// The app sets the room country right after creation; services are only valid within a country.
+				requireRoom(Boolean(country), "needs_context", "Choose a country first", 409)
+				const metadata = await this.catalog.metadata(country)
+				const countries = new Set<string>()
+				if (command.type === "set_services") {
+					const prefillCountry = p.member.state === "linked"
+						? p.member.prefill?.country
+						: null
+					if (prefillCountry && prefillCountry !== country)
+						countries.add(prefillCountry)
+				}
+				const catalogs = await Promise.all(
+					[...countries].map((c) => this.catalog.metadata(c))
+				)
+				const validIds = new Set(
+					[metadata, ...catalogs].flatMap((m) => m.services.map((s) => s.id))
 				)
 				requireRoom(
-					command.serviceIds.every((id) =>
-						metadata.services.some((s) => s.id === id)
-					),
+					command.serviceIds.every((id) => validIds.has(id)),
 					"invalid_request",
 					"Choose valid services",
 					400
@@ -724,12 +737,20 @@ export class ProposalService {
 				attributeCandidates(room)
 			}
 			if (
-				(redesignCommands.has(command.type) && command.type !== "rename") ||
+				redesignCommands.has(command.type) ||
 				(command.type === "leave" &&
 					room.phase !== "decided" &&
 					activeRoom(room).participants.length > 0)
 			) {
-				if (this.catalog.refresh)
+				if (
+					this.catalog.refresh &&
+					(command.type === "set_services" ||
+						command.type === "set_service_enabled" ||
+						(command.type === "configure" &&
+							command.country !== undefined &&
+							command.country !== old.room.screens[0]?.country) ||
+						command.type === "leave")
+				)
 					room.candidates = await this.catalog.refresh(activeRoom(room))
 				retireIneligible(
 					room,

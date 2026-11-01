@@ -9,6 +9,7 @@ import {
 import { proposalTransition, proposalSnapshot } from "./proposal-machine.ts"
 import {
 	attributeCandidates,
+	matchingIdeaIds,
 	retireIneligible,
 	rankedKey,
 	titleKey
@@ -23,18 +24,30 @@ import { applyRoomRedesign } from "./migrations/apply-room-redesign.ts"
 import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { ProposalRoom } from "./proposal-types.ts"
 
-async function fixture() {
+async function fixture(countrySpecific = false) {
 	const repo = new ProposalMemoryRepository()
 	let searches = 0
+	let refreshes = 0
 	const catalog = {
 		...proposalFixtureCatalog,
-		async metadata() {
+		async refresh(room: ProposalRoom) {
+			refreshes++
+			return structuredClone(room.candidates)
+		},
+		async metadata(country: string | null) {
 			return {
 				countries: [
 					{ code: "DE", name: "Germany" },
 					{ code: "US", name: "United States" }
 				],
-				services: [1, 2, 3].map((id) => ({
+				services: (!countrySpecific
+					? [1, 2, 3]
+					: country === "DE"
+					? [1, 2]
+					: country === "US"
+					? [1, 3]
+					: []
+				).map((id) => ({
 					id,
 					name: String(id),
 					logoUrl: null
@@ -91,7 +104,17 @@ async function fixture() {
 			hostReady: true
 		})
 	}
-	return { repo, service, a, b, id, send, start, searches: () => searches }
+	return {
+		repo,
+		service,
+		a,
+		b,
+		id,
+		send,
+		start,
+		searches: () => searches,
+		refreshes: () => refreshes
+	}
 }
 const command = (room: ProposalRoom, c: RoomCommand, actorId = room.hostId) =>
 	proposalTransition(
@@ -517,4 +540,127 @@ test("readiness probes every new nullable column and the immutable idea table", 
 		/idea_ids/
 	)
 	assert.ok(statements.some((s) => s.includes(" FROM doc.yepwatch_idea ")))
+})
+
+test("idea switches retire cards without refreshing availability; only availability commands refresh", async () => {
+	const f = await fixture()
+	await f.start()
+	const added = (await f.send({ type: "add_idea", text: "A mystery" })).snapshot
+	const before = f.refreshes()
+	await f.send({
+		type: "set_idea",
+		ideaId: added.shared.ideas[0].id,
+		on: false
+	})
+	await f.send({ type: "rename", nickname: "New host" })
+	let s = await f.service.read(f.id, f.a.credential)
+	await f.send({
+		type: "configure",
+		expectedContextVersion: s.shared.contextVersion,
+		constraints: { kinds: ["movie"], moods: [], maxMinutes: null }
+	})
+	assert.equal(f.refreshes(), before)
+	s = await f.service.read(f.id, f.a.credential)
+	await f.send({
+		type: "configure",
+		expectedContextVersion: s.shared.contextVersion,
+		country: "DE"
+	})
+	assert.equal(f.refreshes(), before + 1)
+	s = await f.service.read(f.id, f.a.credential)
+	await f.send({
+		type: "configure",
+		expectedContextVersion: s.shared.contextVersion,
+		country: "DE"
+	})
+	assert.equal(f.refreshes(), before + 1)
+	await f.send({ type: "set_services", serviceIds: [1, 2] })
+	await f.send({ type: "set_service_enabled", serviceIds: [2], enabled: false })
+	await f.send({ type: "leave" }, f.b)
+	assert.equal(f.refreshes(), before + 4)
+})
+
+test("fallback cards have no idea attribution and survive idea switches while obeying eligibility filters", async () => {
+	const f = await fixture()
+	await f.start()
+	const room = (await f.repo.read(f.id))!.room
+	const fallback = room.candidates.find((c) => c.identity.kind === "movie")!
+	room.ideas = [
+		{
+			id: "idea",
+			text: "A different title",
+			authorId: room.hostId,
+			on: true,
+			attributes: [],
+			rankedKeys: [rankedKey(fallback) + 100],
+			interpretedAt: 1
+		}
+	]
+	fallback.ideaIds = matchingIdeaIds(room, fallback)
+	assert.deepEqual(fallback.ideaIds, [])
+	assert.deepEqual(
+		matchingIdeaIds(room, {
+			identity: { kind: "movie", tmdbId: fallback.identity.tmdbId + 100 }
+		}),
+		["idea"]
+	)
+	let next = command(room, { type: "set_idea", ideaId: "idea", on: false })
+	assert.ok(next.candidates.some((c) => c.id === fallback.id))
+	next = command(next, { type: "set_idea", ideaId: "idea", on: true })
+	assert.ok(next.candidates.some((c) => c.id === fallback.id))
+	for (const rule of ["availability", "kinds", "seen"]) {
+		const filtered = structuredClone(next)
+		if (rule === "availability") filtered.screens[0].serviceIds = [999]
+		if (rule === "kinds") filtered.constraints.kinds = ["show_start"]
+		retireIneligible(
+			filtered,
+			new Set(rule === "seen" ? [titleKey(fallback)] : [])
+		)
+		assert.ok(!filtered.candidates.some((c) => c.id === fallback.id), rule)
+	}
+})
+
+test("service picks without a room country are refused until the host sets one", async () => {
+	const f = await fixture(true)
+	const old = (await f.repo.read(f.id))!
+	const room = structuredClone(old.room)
+	room.screens = []
+	await f.repo.compareAndSwap(old, room, false)
+	await assert.rejects(f.send({ type: "set_services", serviceIds: [2, 3] }), {
+		code: "needs_context"
+	})
+})
+
+test("linked service picks accept the union of room and prefill countries; guests use only the room country", async () => {
+	const f = await fixture(true)
+	const s = await f.service.read(f.id, f.a.credential)
+	await f.send({
+		type: "configure",
+		expectedContextVersion: s.shared.contextVersion,
+		country: "DE"
+	})
+	const old = (await f.repo.read(f.id))!
+	const room = structuredClone(old.room)
+	room.participants[1].member = {
+		state: "linked",
+		prefill: {
+			country: "US",
+			serviceIds: [3],
+			savedProgressAvailable: false
+		}
+	}
+	await f.repo.compareAndSwap(old, room, false)
+	await f.send({ type: "set_services", serviceIds: [2, 3] }, f.b)
+	assert.deepEqual(
+		(await f.repo.read(f.id))!.room.participants[1].serviceIds,
+		[2, 3]
+	)
+	await assert.rejects(
+		f.send({ type: "set_services", serviceIds: [999] }, f.b),
+		{ code: "invalid_request" }
+	)
+	await assert.rejects(f.send({ type: "set_services", serviceIds: [3] }), {
+		code: "invalid_request"
+	})
+	await f.send({ type: "set_services", serviceIds: [2] })
 })

@@ -1,4 +1,4 @@
-import { rankedKey } from "./proposal-redesign.ts"
+import { matchingIdeaIds } from "./proposal-redesign.ts"
 import { roomIntentKeys } from "./proposal-intent.ts"
 import { createContinuousCatalog } from "./continuous-catalog.ts"
 import { goodwatchCatalog, goodwatchReads } from "./goodwatch.server.ts"
@@ -55,13 +55,13 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 		...base,
 		async page(room) {
 			const page = await base.page(room)
-			const on = (
-				(room as import("./proposal-types.ts").ProposalRoom).ideas ?? []
-			).filter((i) => i.on)
-			const attributed = page.candidates.map((c) => {
-				const ranked = on.filter((i) => i.rankedKeys.includes(rankedKey(c)))
-				return { ...c, ideaIds: (ranked.length ? ranked : on).map((i) => i.id) }
-			})
+			const attributed = page.candidates.map((c) => ({
+				...c,
+				ideaIds: matchingIdeaIds(
+					room as import("./proposal-types.ts").ProposalRoom,
+					c
+				)
+			}))
 			const country = room.screens.find((s) =>
 				room.participants.some((p) => p.screenId === s.id)
 			)?.country

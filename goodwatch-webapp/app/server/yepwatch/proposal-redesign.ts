@@ -241,15 +241,22 @@ export function candidateEligible(
 	)
 }
 
+export function matchingIdeaIds(
+	room: Pick<ProposalRoom, "ideas">,
+	candidate: Parameters<typeof rankedKey>[0]
+) {
+	return (room.ideas ?? [])
+		.filter((i) => i.on && i.rankedKeys.includes(rankedKey(candidate)))
+		.map((i) => i.id)
+}
+
 export function attributeCandidates(room: ProposalRoom) {
 	for (const c of room.candidates) {
 		if (c.ideaIds === undefined) continue
 		c.ideaIds = [
 			...new Set([
 				...c.ideaIds,
-				...(room.ideas ?? [])
-					.filter((i) => i.on && i.rankedKeys.includes(rankedKey(c)))
-					.map((i) => i.id)
+				...matchingIdeaIds(room, c)
 			])
 		]
 	}

@@ -297,6 +297,7 @@ export class ContinuousMembers {
 		})
 		const grant = await this.issuer.verify(tokens.accessToken)
 		const prefill = await this.reads.prefill(grant.userId, tokens.accessToken)
+		const seen = await this.reads.seen?.(grant.userId, tokens.accessToken)
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)
 			const room = structuredClone(old.room)
@@ -332,7 +333,6 @@ export class ContinuousMembers {
 				expiresAt: Math.min(tokens.expiresAt, grant.expiresAt),
 			}
 			if ((room as import("./proposal-types.ts").ProposalRoom).flowVersion === 3 && this.reads.seen) {
-              const seen = await this.reads.seen(grant.userId, tokens.accessToken)
               retireIneligible(room as import("./proposal-types.ts").ProposalRoom, new Set(seen))
             }
             if ((room as import("./proposal-types.ts").ProposalRoom).flowVersion === 3) reconcileProposal(room as import("./proposal-types.ts").ProposalRoom,old.room as import("./proposal-types.ts").ProposalRoom)
