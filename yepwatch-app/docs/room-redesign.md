@@ -95,3 +95,13 @@ Write the migration under `goodwatch-webapp/app/server/yepwatch/migrations/` and
 - Gateway: projection tests for the new shared fields.
 - App: typecheck, lint, unit tests, browser tests; a multiplayer browser run (host + 2 friends: create, ideas on/off mid-vote, services merge, propose, agree, Tonight, start again).
 - Release: fingerprint matches build 16 on both platforms before the OTA publish.
+
+## Reviewer findings adopted (Fable, 2026-11-01)
+
+- Shared with the room: idea authors and each person's services ("who brings which service"). Not shared: proposer and approvers. The proposal screen has no face row; it shows "Someone proposes" (or "Your proposal") and "2 of 3 agree".
+- "Keep swiping" dismissal keys on the proposal version, so a new proposal shows again.
+- A match or proposal on a title that leaves the deck (service switched off, idea off) is withdrawn.
+- Ideas are records (`doc.yepwatch_idea`); candidates store `ideaIds`. Retired unanswered cards leave `seenKeys` so they can return.
+- The host can't switch off the last enabled service while voting.
+- One paid search per idea add/edit (outside the write retry loop), with a per-room budget.
+- Release order: Crate DDL → push to main (GoodWatch webapp and the YepWatch stack deploy) → OTA immediately once healthy. Rolling back means server and OTA together: build 16's embedded bundle can't read the new snapshot.
