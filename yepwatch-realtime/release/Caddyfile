@@ -40,7 +40,7 @@
   }
   @admission {
     method POST
-    path /api/yepwatch/v1/proposal/rooms /api/yepwatch/v1/proposal/guest/resolve-invite
+    path /api/yepwatch/v1/proposal/rooms /api/yepwatch/v1/proposal/guest/resolve-invite /api/yepwatch/v1/proposal/invites/preview
   }
   handle @admission {
     reverse_proxy api:3000
