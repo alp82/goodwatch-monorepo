@@ -192,7 +192,7 @@ for (const mixed of [false, true])
 				})
 			}
 			s = await read()
-			if (s.shared.stream.state === "exhausted") break
+			if (s.shared.stream.state === "exhausted" || delivered.size === displays.size) break
 			await send({
 				type: "refill",
 				generation: s.shared.generation,
@@ -200,7 +200,7 @@ for (const mixed of [false, true])
 			})
 		}
 		s = await read()
-		assert.equal(s.shared.stream.state, "exhausted")
+		assert.equal(s.shared.stream.state, "ready")
 		assert.equal(delivered.size, displays.size)
 		for (const showId of saved.keys())
 			assert.equal(

@@ -125,22 +125,12 @@ test("Published prompt ranking changes actual cards, keeps availability checks, 
 	})
 	const id = a.credential.roomId,
 		credential = a.credential
-	await service.command(id, credential, {
-		commandId: "describe",
-		sequence: 1,
-		command: {
-			type: "configure",
-			expectedContextVersion: 1,
-			country: "DE",
-			serviceIds: [1],
-			constraints: { kinds: ["movie"], moods: [], maxMinutes: null },
-			prompt: intent.prompt,
-		},
-	})
+    await service.command(id,credential,{commandId:"services",sequence:1,command:{type:"set_services",serviceIds:[1]}})
+    await service.command(id,credential,{commandId:"describe",sequence:2,command:{type:"add_idea",text:intent.prompt}})
 	let s = await service.read(id, credential)
 	await service.command(id, credential, {
 		commandId: "start",
-		sequence: 2,
+		sequence: 3,
 		command: {
 			type: "start",
 			expectedContextVersion: s.shared.contextVersion,
@@ -151,16 +141,16 @@ test("Published prompt ranking changes actual cards, keeps availability checks, 
 	s = await service.read(id, credential)
 	assert.deepEqual(
 		s.shared.candidates.map((c) => c.identity.tmdbId),
-		[3, 1]
+		[3, 1, 2]
 	)
-	assert.deepEqual(checked, [1000000000003, 1000000000001])
+	assert.deepEqual(checked, [1000000000003, 1000000000001, 1000000000002])
 	const room = (await repo.read(id))!.room
 	const again = await catalog.page(room)
 	assert.equal(again.candidates.length, 0)
 	assert.equal(again.exhausted, true)
 })
 
-test("draft Jev preview is host-only, budgeted and never publishes or changes room state", async () => {
+test("draft Jev preview is host-only, shares the lifetime budget and never publishes ideas", async () => {
   const { createProposalHandler } = await import('./proposal-http.server.ts')
   const { paths } = await import('../../../packages/yepwatch-contracts/proposal.ts')
   const repo = new ProposalMemoryRepository()
@@ -181,7 +171,9 @@ test("draft Jev preview is host-only, budgeted and never publishes or changes ro
   const response=await request(host,input)
   assert.equal(response.status,200)
   assert.deepEqual(await response.json(),{prompt:input.prompt,attributes:intent.attributes})
-  assert.deepEqual(await repo.read(id),before)
+  assert.equal((await repo.read(id))!.room.interpretationCount,1)
+  assert.deepEqual((await repo.read(id))!.room.ideas,before!.room.ideas)
+  assert.equal((await repo.read(id))!.room.participants[0].nextSequence,before!.room.participants[0].nextSequence)
   assert.equal((await request(guest,input)).status,403)
   assert.equal((await request(host,{...input,prompt:''})).status,400)
   assert.equal((await request(host,{...input,serviceIds:[987654321]})).status,400)

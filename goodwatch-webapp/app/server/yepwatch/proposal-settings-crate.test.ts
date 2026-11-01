@@ -205,19 +205,12 @@ test(
 		await nextService.command(id, credential, {
 			commandId: "describe-after-migration",
 			sequence: n++,
-			command: {
-				type: "configure",
-				expectedContextVersion: reset.shared.contextVersion,
-				country: "DE",
-				serviceIds: [1],
-				constraints: { kinds: ["movie"], moods: [], maxMinutes: null },
-				prompt: described.prompt,
-			},
+            command: {type:"add_idea",text:described.prompt},
 		})
 		assert.deepEqual(
 			(await new RelationalProposalRepository(sql, secret).read(id))!.room
-				.intent,
-			described
+				.ideas?.[0].rankedKeys,
+            described.rankedKeys
 		)
 		await nextService.command(id, credential, {
 			commandId: "leave-after-migration",
@@ -239,6 +232,6 @@ test(
 		assert.equal(returned.snapshot.shared.participants[0].dropped, false)
 		assert.equal(returned.snapshot.shared.participants[0].nickname, "Host")
 		assert.equal((await new RelationalProposalRepository(sql, secret).read(id))!.room.participants[0].leftAt, null)
-		assert.deepEqual(returned.snapshot.shared.description, {prompt: described.prompt, attributes: described.attributes})
+		assert.equal(returned.snapshot.shared.ideas[0].text, described.prompt)
 	}
 )

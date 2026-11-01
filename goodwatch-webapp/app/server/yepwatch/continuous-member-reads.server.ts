@@ -68,3 +68,10 @@ export async function goodwatchMemberDisplayName(userId: string): Promise<string
 	})
 	return user?.name?.trim() || null
 }
+
+export async function goodwatchSeenTitles(userId: string): Promise<string[]> {
+ const {getMemberViewerContext} = await import("../viewer.server")
+ const {parseTitleKey} = await import("../../utils/title-key")
+ const viewer = await getMemberViewerContext(userId, "US")
+ return [...viewer.seen].map(key => { const p = parseTitleKey(key); return `${p.mediaType}_${p.tmdbId}` })
+}

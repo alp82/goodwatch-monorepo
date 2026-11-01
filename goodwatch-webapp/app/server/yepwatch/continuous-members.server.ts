@@ -1,3 +1,5 @@
+import { reconcile as reconcileProposal } from "./proposal-machine.ts"
+import { refreshServices, retireIneligible } from "./proposal-redesign.ts"
 import { createHash } from "node:crypto"
 import type {
 	MemberPrefill,
@@ -31,6 +33,7 @@ export interface MemberIssuer {
 	verify(token: string): Promise<{ userId: string; expiresAt: number; displayName?: string | null }>
 }
 export interface MemberReads {
+ seen?(userId: string, accessToken?: string): Promise<string[]>
 	prefill(userId: string, accessToken?: string): Promise<MemberPrefill>
 	progress?(userId: string, accessToken?: string): Promise<MemberProgressResponse>
 }
@@ -57,7 +60,7 @@ export const pkce = (verifier: string) =>
 /** Never replace a chosen nickname or fall back to an email address. */
 function linkedNickname(current: string, name?: string | null) {
 	const clean = name?.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 40)
-	return current === "Guest" && clean ? clean : current
+	return (current === "Guest" || current === "") && clean ? clean : current
 }
 export class ContinuousMembers {
 	private repo: ContinuousRepository
@@ -318,11 +321,22 @@ export class ContinuousMembers {
 			p.nickname = linkedNickname(p.nickname, grant.displayName)
 			p.memberUserId = grant.userId
 			p.member = { state: "linked", prefill }
+            if ((room as import("./proposal-types.ts").ProposalRoom).flowVersion === 3) {
+              (p as import("./proposal-types.ts").ProposalParticipant).serviceIds = [...prefill.serviceIds]
+              refreshServices(room as import("./proposal-types.ts").ProposalRoom)
+              room.contextVersion++
+              room.stream = {version:room.stream.version+1,state:"ready",reason:null}
+            }
 			p.memberGrant = {
 				accessToken: tokens.accessToken,
 				expiresAt: Math.min(tokens.expiresAt, grant.expiresAt),
 			}
-			intent.status = "linked"
+			if ((room as import("./proposal-types.ts").ProposalRoom).flowVersion === 3 && this.reads.seen) {
+              const seen = await this.reads.seen(grant.userId, tokens.accessToken)
+              retireIneligible(room as import("./proposal-types.ts").ProposalRoom, new Set(seen))
+            }
+            if ((room as import("./proposal-types.ts").ProposalRoom).flowVersion === 3) reconcileProposal(room as import("./proposal-types.ts").ProposalRoom,old.room as import("./proposal-types.ts").ProposalRoom)
+            intent.status = "linked"
 			intent.verifier = null
 			room.revision++
 			if (await this.repo.compareAndSwap(old, room, true))
@@ -391,6 +405,18 @@ export class ContinuousMembers {
 		)
 		return this.reads.progress(userId, actor(room, participantId).memberGrant!.accessToken)
 	}
+    private seenCache = new Map<string, {roster: number; keys: string[]}>()
+    async seen(room: ContinuousRoom, participantId: string): Promise<string[]> {
+      if (!this.reads.seen) return []
+      const key = `${room.id}:${participantId}`
+      const cached = this.seenCache.get(key)
+      if (cached?.roster === room.rosterVersion) return cached.keys
+      const userId = await this.identity(room, participantId)
+      const keys = await this.reads.seen(userId, actor(room, participantId).memberGrant!.accessToken)
+      this.seenCache.set(key, {roster:room.rosterVersion,keys})
+      if (this.seenCache.size > 512) this.seenCache.delete(this.seenCache.keys().next().value!)
+      return keys
+    }
 	async ownProgress(id: string, participantId: string) {
 		return this.progress((await this.get(id)).room, participantId)
 	}

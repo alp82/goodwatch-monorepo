@@ -7,7 +7,6 @@ import {
 } from "~/server/combined-search/search.server"
 import { searchAdmission } from "~/server/search-runtime/admission.server"
 import { runsSearch } from "~/server/role.server"
-import { RESULT_LENGTH } from "~/server/search-ranking/ranking.server"
 import { titlePointId } from "~/server/combined-search/search-filters"
 
 /** Search stays in the existing search role with its Jev cache, spending bounds and ranker. */
@@ -44,7 +43,7 @@ export async function searchYepWatchRoom(request: Request) {
 			.object({
 				prompt: z.string().trim().min(2).max(1000),
 				country: z.string().regex(/^[A-Z]{2}$/),
-				serviceIds: z.array(z.number().int().positive()).max(100),
+				serviceIds: z.array(z.number().int().positive()).max(1200),
 			})
 			.strict()
 			.parse(JSON.parse(Buffer.concat(chunks).toString("utf8")))
@@ -62,7 +61,7 @@ export async function searchYepWatchRoom(request: Request) {
 			request.signal,
 			undefined,
 			{
-				rows: Math.min(2000, RESULT_LENGTH),
+				rows: 500,
 				onComplete: async (batch) => {
 					complete = batch
 					return true

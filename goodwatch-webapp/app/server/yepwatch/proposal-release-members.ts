@@ -184,6 +184,10 @@ export function releaseMembers(
         if (!token) throw new Error("Member grant required");
         return prefill.parse((await resource(token, "prefill", userId)).data);
       },
+      async seen(userId, token) {
+        if (!token) throw new Error("Member grant required");
+        return z.array(z.string().regex(/^(movie|show)_[1-9][0-9]*$/)).max(100000).parse((await resource(token, "seen", userId)).data);
+      },
       async progress(userId, token) {
         if (!token) throw new Error("Member grant required");
         return progress.parse((await resource(token, "progress", userId)).data);

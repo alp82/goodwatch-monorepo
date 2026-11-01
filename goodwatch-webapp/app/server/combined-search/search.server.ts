@@ -512,7 +512,7 @@ async function rankedList(
 	const rankDone = performance.now();
 	if (signal.aborted) throw new Error("Search interrupted");
 	late?.checkpoint();
-	const listed = ranked.results.slice(0, Math.min(length, 100)).map((r) => ({
+	const listed = ranked.results.slice(0, Math.min(length, 500)).map((r) => ({
 		key: `${r.mediaType}:${r.id % TMDB_ID_RANGE}`,
 		tmdbId: r.id % TMDB_ID_RANGE,
 		mediaType: r.mediaType,

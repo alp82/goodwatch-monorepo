@@ -1,19 +1,25 @@
 import {
+	redesignTransition,
+	refreshServices,
+	candidateEligible,
+	retireIneligible
+} from "./proposal-redesign.ts"
+import {
 	activeRoom,
 	normalizeRoomContext,
-	ROOM_CONTEXT,
+	ROOM_CONTEXT
 } from "./proposal-context.ts"
 import type {
 	Candidate,
 	CommandEnvelope,
 	RoomSnapshot,
-	SharedRoomSnapshot,
+	SharedRoomSnapshot
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import {
 	continuousTransition,
 	continuousSnapshot,
 	preflight as basePreflight,
-	matches as baseMatches,
+	matches as baseMatches
 } from "./continuous-machine.ts"
 import { actor as baseActor, continuousLive } from "./continuous-machine.ts"
 import { projectCandidate } from "./machine.ts"
@@ -26,7 +32,9 @@ export const actor = (room: ProposalRoom, id: string) =>
 	baseActor(room, id) as ProposalParticipant
 export function matches(room: ProposalRoom): Candidate[] {
 	return activeRoom(room).participants.length
-		? (baseMatches(activeRoom(room)) as Candidate[])
+		? (baseMatches(activeRoom(room)) as Candidate[]).filter((c) =>
+				candidateEligible(room, c)
+		  )
 		: []
 }
 function readyScreens(room: ProposalRoom) {
@@ -76,8 +84,8 @@ function signature(room: ProposalRoom) {
 			p.id,
 			p.screenId,
 			p.approvedProposalVersion,
-			p.votes[room.proposal?.candidateId ?? ""]?.value ?? null,
-		]),
+			p.votes[room.proposal?.candidateId ?? ""]?.value ?? null
+		])
 	])
 }
 export function agreementCandidate(room: ProposalRoom): Candidate | null {
@@ -101,7 +109,7 @@ export function agreementCandidate(room: ProposalRoom): Candidate | null {
 		)
 	)
 		return null
-	return c ?? null
+	return c && candidateEligible(room, c) ? c : null
 }
 function clearApprovals(room: ProposalRoom) {
 	for (const p of room.participants) {
@@ -115,7 +123,9 @@ export function reconcile(room: ProposalRoom, previous: ProposalRoom) {
 	const proposal = room.proposal
 	if (proposal) {
 		const broken =
-			!room.candidates.some((c) => c.id === proposal.candidateId) ||
+			!room.candidates.some(
+				(c) => c.id === proposal.candidateId && candidateEligible(room, c)
+			) ||
 			activeRoom(room).participants.some(
 				(p) =>
 					p.votes[proposal.candidateId]?.value === "pass" ||
@@ -145,8 +155,7 @@ export function reconcile(room: ProposalRoom, previous: ProposalRoom) {
 			: allApproved && !readyScreens(room)
 			? "unavailable"
 			: "none",
-		error:
-			allApproved && !readyScreens(room) ? { code: "needs_context" } : null,
+		error: allApproved && !readyScreens(room) ? { code: "needs_context" } : null
 	}
 }
 function projectedCandidate(c: Candidate): Candidate {
@@ -155,7 +164,7 @@ function projectedCandidate(c: Candidate): Candidate {
 		...base,
 		viewingDuration: c.viewingDuration
 			? { minutes: c.viewingDuration.minutes, scope: c.viewingDuration.scope }
-			: null,
+			: null
 	}
 }
 function continuousSnapshotCandidate(
@@ -168,7 +177,7 @@ function continuousSnapshotCandidate(
 		...(c.goodwatchScore === undefined
 			? {}
 			: { goodwatchScore: c.goodwatchScore }),
-		...(c.genres === undefined ? {} : { genres: [...c.genres] }),
+		...(c.genres === undefined ? {} : { genres: [...c.genres] })
 	}
 }
 export function proposalSnapshot(
@@ -182,27 +191,19 @@ export function proposalSnapshot(
 	const shared: SharedRoomSnapshot = {
 		...legacy.shared,
 		contractVersion: 3,
-		savedServiceIds: [
-			...new Set(
-				active.participants
-					.filter((p) => !p.revoked && p.member.state === "linked")
-					.flatMap((p) => p.member.prefill?.serviceIds ?? [])
-			),
-		].sort((a, b) => a - b),
+		ideas: (room.ideas ?? []).map(
+			({ rankedKeys: _, interpretedAt: __, ...idea }) => structuredClone(idea)
+		),
+		disabledServiceIds: [...(room.disabledServiceIds ?? [])],
 		participants: legacy.shared.participants.map((person) => ({
 			...person,
-			dropped: actor(room, person.participantId).leftAt != null,
+			serviceIds: actor(room, person.participantId).serviceIds ?? null,
+			dropped: actor(room, person.participantId).leftAt != null
 		})),
-		description: room.intent
-			? {
-					prompt: room.intent.prompt,
-					attributes: structuredClone(room.intent.attributes),
-			  }
-			: null,
 		candidates: room.candidates.map(projectedCandidate),
 		matches: matches(room).map((c) => ({
 			candidateId: c.id,
-			averageYepMs: averageYepMs(room, c.id),
+			averageYepMs: averageYepMs(room, c.id)
 		})),
 		proposalVersion: room.proposalVersion,
 		proposal: proposal
@@ -214,7 +215,7 @@ export function proposalSnapshot(
 						(p) => p.approvedProposalVersion === proposal.version
 					).length,
 					requiredCount: active.participants.length,
-					averageYepMs: averageYepMs(room, proposal.candidateId),
+					averageYepMs: averageYepMs(room, proposal.candidateId)
 			  }
 			: null,
 		decision: room.decision
@@ -226,10 +227,10 @@ export function proposalSnapshot(
 						...room.candidates.find(
 							(c) => c.id === room.decision!.candidateId
 						)!,
-						availability: room.decision.availability,
-					}).availability,
+						availability: room.decision.availability
+					}).availability
 			  }
-			: null,
+			: null
 	}
 	// A recovered departure is an acknowledgement, not continuing room access.
 	if (p.leftAt != null) {
@@ -237,12 +238,12 @@ export function proposalSnapshot(
 		shared.hostParticipantId = p.id
 		shared.participants = []
 		shared.screens = []
-		shared.description = null
-		shared.savedServiceIds = []
+		shared.ideas = []
+		shared.disabledServiceIds = []
 		shared.constraints = {
 			kinds: ["movie", "show_start"],
 			moods: [],
-			maxMinutes: null,
+			maxMinutes: null
 		}
 		shared.candidates = []
 		shared.matches = []
@@ -256,6 +257,7 @@ export function proposalSnapshot(
 		shared,
 		own: {
 			...own,
+			showSeen: p.showSeen ?? false,
 			left: p.leftAt != null,
 			canHost: p.leftAt == null && room.hostId === p.id,
 			votes: Object.entries(p.votes).map(([candidateId, v]) => ({
@@ -263,15 +265,15 @@ export function proposalSnapshot(
 				value: v.value,
 				revision: v.revision,
 				activeExposureMs: v.activeExposureMs ?? null,
-				timingSource: v.timingSource ?? "unavailable",
+				timingSource: v.timingSource ?? "unavailable"
 			})),
 			agreement: {
 				proposalVersion: room.proposalVersion,
 				agreed: !!proposal && p.approvedProposalVersion === proposal.version,
 				revision: p.agreementRevision,
-				isProposer: proposal?.proposerId === p.id,
-			},
-		},
+				isProposer: proposal?.proposerId === p.id
+			}
+		}
 	}
 }
 export function preflight(
@@ -280,6 +282,12 @@ export function preflight(
 	envelope: CommandEnvelope,
 	now: number
 ) {
+	if (envelope.command.type === "start")
+		requireRoom(
+			!!actor(room, room.hostId).nickname.trim(),
+			"needs_context",
+			"Set your name before starting"
+		)
 	if (envelope.command.type === "start" || envelope.command.type === "refill")
 		basePreflight(
 			activeRoom(room),
@@ -293,7 +301,8 @@ export function proposalTransition(
 	actorId: string,
 	envelope: CommandEnvelope,
 	now: number,
-	page?: { candidates: Candidate[]; exhausted: boolean }
+	page?: { candidates: Candidate[]; exhausted: boolean },
+	interpretationReserved = false
 ): ProposalRoom {
 	const c =
 		envelope.command.type === "assign_screen" && original.screens.length === 1
@@ -325,6 +334,15 @@ export function proposalTransition(
 		const remaining = activeRoom(next).participants
 		if (next.hostId === actorId && remaining.length)
 			next.hostId = remaining[0].id
+		refreshServices(next)
+		if (next.phase !== "decided" && activeRoom(next).participants.length > 0) {
+			retireIneligible(next)
+			next.stream = {
+				version: next.stream.version + 1,
+				state: "ready",
+				reason: null
+			}
+		}
 		// Keep the room, cards and answers even if everyone drops out.
 		// A completed decision is historical and cannot be reopened by a departure.
 		if (next.phase !== "decided") reconcile(next, original)
@@ -334,35 +352,23 @@ export function proposalTransition(
 		// Keep parsing the legacy command so older installed clients receive an
 		// actionable error. A final decision is never reopened; only the owner's
 		// explicit restart may begin another round.
-		requireRoom(false, "conflict", "This decision is final. The room owner can choose Start again for a new round.")
+		requireRoom(
+			false,
+			"conflict",
+			"This decision is final. The room owner can choose Start again for a new round."
+		)
 	}
 
-	if (c.type === "configure") {
-		const next = proposalTransition(
-			original,
-			actorId,
-			{
-				...envelope,
-				command: {
-					type: "setup",
-					expectedContextVersion: c.expectedContextVersion,
-					screens: [
-						{
-							id: ROOM_CONTEXT,
-							label: "Our room",
-							country: c.country,
-							serviceIds: c.serviceIds,
-							confirmed: true,
-						},
-					],
-					screenId: ROOM_CONTEXT,
-					constraints: c.constraints,
-				},
-			},
-			now
-		)
-		normalizeRoomContext(next)
-		return next
+	const redesigned = redesignTransition(
+		original,
+		actorId,
+		envelope,
+		now,
+		interpretationReserved
+	)
+	if (redesigned) {
+		reconcile(redesigned, original)
+		return redesigned
 	}
 	let room: ProposalRoom
 	if (
@@ -393,7 +399,7 @@ export function proposalTransition(
 			room.agreement = {
 				version: room.agreement.version + 1,
 				state: "checking",
-				error: null,
+				error: null
 			}
 			room.revision++
 			return room
@@ -421,7 +427,7 @@ export function proposalTransition(
 				version: room.proposalVersion,
 				previousCandidateId,
 				proposerId: p.id,
-				baseParticipantIds: activeRoom(room).participants.map((p) => p.id),
+				baseParticipantIds: activeRoom(room).participants.map((p) => p.id)
 			}
 			p.approvedProposalVersion = room.proposalVersion
 		} else {
@@ -454,7 +460,7 @@ export function proposalTransition(
 						value: "watch",
 						revision: (old?.revision ?? 0) + 1,
 						activeExposureMs: null,
-						timingSource: "implied",
+						timingSource: "implied"
 					}
 					p.lastVotedId = c.candidateId
 				}
@@ -480,7 +486,7 @@ export function proposalTransition(
 					reason:
 						room.seenKeys.length >= L.seen
 							? "room_capacity"
-							: "awaiting_answers",
+							: "awaiting_answers"
 				}
 			else {
 				requireRoom(
@@ -489,19 +495,26 @@ export function proposalTransition(
 					"Catalog page unavailable",
 					503
 				)
-				appendPage(room, page)
+				appendPage(room, { ...page, exhausted: false })
 			}
 			room.revision++
 		} else
 			room = continuousTransition(
 				activeRoom(original),
 				actorId,
-				{ ...envelope, command: c },
+				{
+					...envelope,
+					command:
+						c as import("../../../packages/yepwatch-contracts/continuous.ts").RoomCommand
+				},
 				now,
-				page
+				page ? { ...page, exhausted: false } : page
 			) as ProposalRoom
 		if (c.type === "setup" || c.type === "restart") {
-			if (c.type === "setup") room.intent = null
+			if (c.type === "setup") {
+				actor(room, actorId).serviceIds = [...(c.screens[0]?.serviceIds ?? [])]
+				room.intent = null
+			}
 			normalizeRoomContext(room)
 			room.proposalVersion++
 			room.proposal = null
@@ -541,7 +554,7 @@ export function retire(room: ProposalRoom) {
 	const pinned = new Set([
 		...matches(room).map((c) => c.id),
 		...(room.proposal ? [room.proposal.candidateId] : []),
-		...room.participants.flatMap((p) => (p.lastVotedId ? [p.lastVotedId] : [])),
+		...room.participants.flatMap((p) => (p.lastVotedId ? [p.lastVotedId] : []))
 	])
 	const remove = new Set(
 		room.candidates

@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_room (
   "seen_keys" ARRAY(TEXT) NOT NULL,
   "proposal_version" BIGINT NOT NULL,
   "participant_records" ARRAY(TEXT) NOT NULL,
+  "idea_records" ARRAY(TEXT),
+  "disabled_service_ids" ARRAY(BIGINT),
+  "interpretation_count" BIGINT,
   "country" TEXT,
   "service_ids" ARRAY(BIGINT) NOT NULL,
   "services_confirmed" BOOLEAN NOT NULL,
@@ -40,11 +43,27 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_room (
   CONSTRAINT check_2 CHECK (revision>=0)
 ) CLUSTERED INTO 4 SHARDS WITH (column_policy='strict',number_of_replicas=2,"write.wait_for_active_shards"='3',refresh_interval=1000);
 
+CREATE TABLE IF NOT EXISTS doc.yepwatch_idea (
+  "record_id" TEXT PRIMARY KEY,
+  "room_id" TEXT NOT NULL,
+  "generation" BIGINT NOT NULL,
+  "expires_at" BIGINT NOT NULL,
+  "idea_id" TEXT NOT NULL,
+  "text" TEXT NOT NULL,
+  "author_id" TEXT NOT NULL,
+  "on" BOOLEAN NOT NULL,
+  "attributes" ARRAY(OBJECT(STRICT) AS ("text" TEXT,"kind" TEXT,"key" TEXT)) NOT NULL,
+  "ranked_keys" ARRAY(BIGINT) NOT NULL,
+  "interpreted_at" BIGINT NOT NULL
+) CLUSTERED INTO 1 SHARDS WITH (column_policy='strict',number_of_replicas=2,"write.wait_for_active_shards"='3',refresh_interval=1000);
+
 CREATE TABLE IF NOT EXISTS doc.yepwatch_participant (
   "record_id" TEXT PRIMARY KEY,
   "room_id" TEXT NOT NULL,
   "generation" BIGINT NOT NULL,
   "expires_at" BIGINT NOT NULL,
+  "service_ids" ARRAY(BIGINT),
+  "show_seen" BOOLEAN,
   "participant_id" TEXT NOT NULL,
   "nickname" TEXT NOT NULL,
   "token_hash" TEXT NOT NULL,
@@ -120,6 +139,7 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_candidate (
   "room_id" TEXT NOT NULL,
   "generation" BIGINT NOT NULL,
   "expires_at" BIGINT NOT NULL,
+  "idea_ids" ARRAY(TEXT),
   "candidate_id" TEXT NOT NULL,
   "identity" OBJECT(STRICT) AS ("kind" TEXT,"tmdbId" BIGINT,"episode" OBJECT(STRICT) AS ("tmdbId" BIGINT,"season" BIGINT,"number" BIGINT,"displaySeason" BIGINT,"displayNumber" BIGINT,"presentationVersion" TEXT)) NOT NULL,
   "title" TEXT NOT NULL,

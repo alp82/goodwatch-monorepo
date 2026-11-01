@@ -63,10 +63,10 @@ export interface RoomDescription {
   prompt: string
   attributes: { text: string; kind: "attribute" | "excluded" | "want" | "avoid" | "phrase"; key?: string }[]
 }
+export interface RoomIdea { id: string; text: string; authorId: string; on: boolean; attributes: RoomDescription["attributes"] }
 export interface SharedRoomSnapshot {
-  /** Union of active linked members’ saved providers; no per-person attribution. */
-  savedServiceIds?: number[]
-  description?: RoomDescription | null
+  ideas: RoomIdea[]
+  disabledServiceIds: number[]
 	contractVersion: 3
 	roomId: string
 	revision: number
@@ -79,6 +79,7 @@ export interface SharedRoomSnapshot {
 	participants: {
 		participantId: string
 		nickname: string
+		serviceIds: number[] | null
 		screenId: string | null
 		ready: boolean
 		dropped?: boolean
@@ -107,6 +108,7 @@ export interface SharedRoomSnapshot {
 	decision: Decision | null
 }
 export interface OwnPrivateSnapshot {
+  showSeen: boolean
   left?: boolean
 	participantId: string
 	nextSequence: number
@@ -168,7 +170,15 @@ export interface CommandEnvelope<T extends RoomCommand = RoomCommand> {
 }
 export type RoomCommand =
   | { type: "leave" }
-  | { type: "configure"; expectedContextVersion: number; country: string; serviceIds: number[]; constraints: RoomConstraints; prompt: string }
+  | { type: "configure"; expectedContextVersion: number; country?: string; constraints?: RoomConstraints }
+  | { type: "add_idea"; text: string }
+  | { type: "edit_idea"; ideaId: string; text: string }
+  | { type: "remove_idea"; ideaId: string }
+  | { type: "set_idea"; ideaId: string; on: boolean }
+  | { type: "set_services"; serviceIds: number[] }
+  | { type: "set_service_enabled"; serviceIds: number[]; enabled: boolean }
+  | { type: "rename"; nickname: string }
+  | { type: "set_show_seen"; show: boolean }
 	| {
 			type: "setup"
 			expectedContextVersion: number
@@ -310,6 +320,7 @@ export type ClientRealtimeFrame =
 			roomId: string
 			lastRevision: number | null
 			pointers?: true
+			roomDetails?: true
 			cheers?: true
 	  }
 	| { type: "ping" }

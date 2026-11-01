@@ -43,7 +43,9 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
     participantId = guest.credential.participantId;
   const before = (await repo.read(id))!.room;
   let linkedUser = "new-account";
+  let seenReads=0;
   const resource = createMemberResource({
+    async seen(user){assert.equal(user,linkedUser);seenReads++;return ["movie_1","show_2"]},
     async verify(token) {
       assert.equal(token, "fixture-grant");
       return { userId: linkedUser, expiresAt: Date.now() + 600000 };
@@ -121,9 +123,16 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
     false
   );
   assert.equal(JSON.stringify(snapshot.shared).includes("new-account"), false);
+  const seenRoom=(await repo.read(id))!.room;
+  const seenBefore=seenReads;
+  assert.deepEqual(await members.seen(seenRoom,participantId),["movie_1","show_2"]);
+  assert.deepEqual(await members.seen(seenRoom,participantId),["movie_1","show_2"]);
+  assert.equal(seenReads,seenBefore+1,"session cache avoids repeat account reads");
+  await members.seen({...seenRoom,rosterVersion:seenRoom.rosterVersion+1},participantId);
+  assert.equal(seenReads,seenBefore+2,"joining refreshes the session cache");
   // A room linked by the previous release repairs itself on its ordinary authenticated read.
   const old = (await repo.read(id))!;
-  const legacy = structuredClone(old.room); legacy.participants[0].nickname = "Guest";
+  const legacy = structuredClone(old.room); legacy.participants[0].nickname = "";
   assert.equal(await repo.compareAndSwap(old, legacy, false), true);
   const handler = createProposalHandler(service, {allowedOrigins:[origin],serviceSecret:"test-service-secret-at-least-thirty-two",members});
   const restored = await handler(new Request(`${origin}/api/yepwatch/v1/proposal/rooms/${id}`, {headers:{authorization:`Bearer ${guest.credential.token}`,"x-yepwatch-participant":participantId}}));

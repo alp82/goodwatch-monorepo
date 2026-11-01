@@ -99,9 +99,25 @@ test("first YepWatch callback after Remix installs its fetch globals completes w
 		assert.match(response.headers.get("content-type") ?? "", /text\/html/)
 		assert.ok(body.includes(returnTo))
 		assert.ok(!body.includes("fixture-grant"))
-		assert.equal(reads, 2)
+		assert.equal(reads, 3)
 		assert.equal((await members.status(roomId, participantId)).state, "linked")
 	} finally {
 		Object.assign(globalThis, globals)
 	}
+})
+
+test("seen view verifies the same account grant and has no writable account or caller-selected identity", async()=>{
+ let verified=0,seenUser=""
+ const handler=createMemberResource({
+  async verify(token){assert.equal(token,"seen-grant");verified++;return {userId:"viewer",expiresAt:Date.now()+1000}},
+  async prefill(){return {country:"DE",serviceIds:[],savedProgressAvailable:false}},
+  async progress(){return {source:"goodwatch",shows:[],limitReached:false}},
+  async seen(userId){seenUser=userId;return ["movie_1","show_2"]}
+ })
+ const request=(query:string,method="GET")=>new Request(`https://goodwatch.test/api/yepwatch/account?${query}`,{method,headers:{authorization:"Bearer seen-grant"}})
+ const response=await handler(request("view=seen"))
+ assert.equal(response.status,200);assert.deepEqual((await response.json()).data,["movie_1","show_2"])
+ assert.equal(seenUser,"viewer");assert.equal(verified,1)
+ assert.equal((await handler(request("view=seen&userId=other"))).status,400)
+ assert.equal((await handler(request("view=seen","POST"))).status,405)
 })

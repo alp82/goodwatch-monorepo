@@ -310,9 +310,9 @@ export function createProposalHandler(
 					if (options.members) {
 						const member = await options.members.status(id, snapshot.own.participantId)
 						// Status may repair a legacy Guest name; return its newly committed roster.
-						if (member.state === "linked" && snapshot.shared.participants.find(
+						if (member.state === "linked" && ["Guest", ""].includes(snapshot.shared.participants.find(
 							(p) => p.participantId === snapshot.own.participantId,
-						)?.nickname === "Guest") snapshot = await service.read(id, actor)
+						)?.nickname ?? "unknown")) snapshot = await service.read(id, actor)
 						snapshot.own.member = member
 					}
 					return reply(snapshot)

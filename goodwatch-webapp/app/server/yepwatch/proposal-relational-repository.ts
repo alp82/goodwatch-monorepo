@@ -7,7 +7,7 @@ import type { Sql } from "./repository.server.ts"
 import type {
 	ProposalRoom,
 	ProposalStored,
-	ProposalRepository,
+	ProposalRepository
 } from "./proposal-types.ts"
 import {
 	tables,
@@ -15,7 +15,7 @@ import {
 	columns,
 	parseRow,
 	tableDdl,
-	type Entity,
+	type Entity
 } from "./proposal-storage-schema.ts"
 
 type Row = Record<string, any>
@@ -39,7 +39,7 @@ const stable = (value: unknown): string =>
 	)
 const secretField: Partial<Record<Entity, string>> = {
 	grant: "access_token_ciphertext",
-	intent: "verifier_ciphertext",
+	intent: "verifier_ciphertext"
 }
 const fail = () =>
 	new RoomError("busy", "Stored room is incomplete or incompatible", 503, true)
@@ -140,12 +140,24 @@ export class RelationalProposalRepository implements ProposalRepository {
 			: z.string().parse(this.crypto.decode(row[field], aad))
 		return result
 	}
+	private validRecordId(entity: Entity, row: Row, id: string) {
+		if (this.recordId(entity, row) === id) return true
+		const legacy = { ...row }
+		for (const key of entity === "participant"
+			? ["service_ids", "show_seen"]
+			: entity === "candidate"
+			? ["idea_ids"]
+			: []) {
+			if (legacy[key] == null) delete legacy[key]
+		}
+		return this.recordId(entity, legacy) === id
+	}
 	private validateRecord(entity: Entity, raw: Row, roomId: string, id: string) {
 		const row = this.protectedRow(entity, parseRow(tables[entity], raw), false)
 		if (
 			row.room_id !== roomId ||
 			row.record_id !== id ||
-			this.recordId(entity, row) !== id
+			!this.validRecordId(entity, row, id)
 		)
 			throw fail()
 		return row
@@ -195,7 +207,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 				room_id: room.id,
 				generation: room.generation,
 				expires_at: room.expiresAt,
-				...values,
+				...values
 			}
 			row.record_id = this.recordId(entity, row)
 			// Ciphertext columns store a bounded encrypted string; plaintext is validated before encryption too.
@@ -211,7 +223,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 					choice: v.value,
 					revision: v.revision,
 					active_exposure_ms: v.activeExposureMs ?? null,
-					timing_source: v.timingSource ?? null,
+					timing_source: v.timingSource ?? null
 				})
 			)
 			const receipts = p.receipts.map((r) =>
@@ -220,24 +232,26 @@ export class RelationalProposalRepository implements ProposalRepository {
 					command_id: r.commandId,
 					sequence: r.sequence,
 					digest: r.digest,
-					revision: r.revision,
+					revision: r.revision
 				})
 			)
 			const agreement = put("agreement", {
 				participant_id: p.id,
 				proposal_version: p.approvedProposalVersion,
-				revision: p.agreementRevision,
+				revision: p.agreementRevision
 			})
 			const grant = p.memberGrant
 				? put("grant", {
 						participant_id: p.id,
 						access_token_ciphertext: p.memberGrant.accessToken,
-						grant_expires_at: p.memberGrant.expiresAt,
+						grant_expires_at: p.memberGrant.expiresAt
 				  })
 				: null
 			return put("participant", {
 				participant_id: p.id,
 				nickname: p.nickname,
+				service_ids: p.serviceIds ?? null,
+				show_seen: p.showSeen ?? false,
 				token_hash: p.tokenHash,
 				admission_hash: p.admissionHash,
 				epoch: p.epoch,
@@ -254,12 +268,13 @@ export class RelationalProposalRepository implements ProposalRepository {
 				agreement_record: agreement,
 				grant_record: grant,
 				legacy_pick_id: p.pick.candidateId,
-				legacy_pick_revision: p.pick.revision,
+				legacy_pick_revision: p.pick.revision
 			})
 		})
 		const candidates = room.candidates.map((c) =>
 			put("candidate", {
 				candidate_id: c.id,
+				idea_ids: c.ideaIds ?? null,
 				identity: c.identity,
 				title: c.title,
 				year: c.year,
@@ -273,7 +288,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 				backdrop_url: c.backdropUrl ?? null,
 				trailer_url: c.trailerUrl ?? null,
 				goodwatch_score: c.goodwatchScore ?? null,
-				genres: c.genres ?? null,
+				genres: c.genres ?? null
 			})
 		)
 		const tickets = room.tickets.map((t) =>
@@ -281,7 +296,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 				ticket_hash: t.hash,
 				participant_id: t.participantId,
 				epoch: t.epoch,
-				ticket_expires_at: t.expiresAt,
+				ticket_expires_at: t.expiresAt
 			})
 		)
 		const intents = (room.memberIntents ?? []).map((t) =>
@@ -295,7 +310,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 				challenge: t.challenge,
 				verifier_ciphertext: t.verifier,
 				status: t.status,
-				code_hash: t.codeHash,
+				code_hash: t.codeHash
 			})
 		)
 		const p = room.proposal,
@@ -306,7 +321,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 					version: p.version,
 					previous_candidate_id: p.previousCandidateId,
 					proposer_id: p.proposerId,
-					base_participant_ids: p.baseParticipantIds,
+					base_participant_ids: p.baseParticipantIds
 			  })
 			: null
 		const decision = d
@@ -316,7 +331,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 					decided_at: d.decidedAt,
 					availability: d.availability.map(
 						({ screenId: _, ...evidence }) => evidence
-					),
+					)
 			  })
 			: null
 		const head = parseRow(tables.room, {
@@ -339,14 +354,27 @@ export class RelationalProposalRepository implements ProposalRepository {
 			country: room.screens[0]?.country ?? null,
 			service_ids: room.screens[0]?.serviceIds ?? [],
 			services_confirmed: room.screens[0]?.confirmed ?? false,
-			intent: room.intent ?? null,
+			intent: null,
+			idea_records: (room.ideas ?? []).map((i) =>
+				put("idea", {
+					idea_id: i.id,
+					text: i.text,
+					author_id: i.authorId,
+					on: i.on,
+					attributes: i.attributes,
+					ranked_keys: i.rankedKeys,
+					interpreted_at: i.interpretedAt
+				})
+			),
+			disabled_service_ids: room.disabledServiceIds ?? [],
+			interpretation_count: room.interpretationCount ?? 0,
 			candidate_records: candidates,
 			ticket_records: tickets,
 			member_intent_records: intents,
 			proposal_record: proposal,
 			decision_record: decision,
 			pending_revision: pending,
-			pending_agreement: room.agreement.state === "checking",
+			pending_agreement: room.agreement.state === "checking"
 		})
 		this.validateRelations(room)
 		return { head, records }
@@ -360,6 +388,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 			screens = new Set(room.screens.map((s) => s.id))
 		unique(room.participants.map((p) => p.id))
 		unique(room.candidates.map((c) => c.id))
+		unique((room.ideas ?? []).map((i) => i.id))
+		if ((room.ideas ?? []).some((i) => !people.has(i.authorId))) throw fail()
 		unique(room.screens.map((s) => s.id))
 		if (!people.has(room.hostId)) throw fail()
 		if ((room.phase === "decided") !== Boolean(room.decision)) throw fail()
@@ -466,7 +496,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 						...names.map((k) => plan.head[k]),
 						room.id,
 						previous.seq,
-						previous.term,
+						previous.term
 					]
 				)
 			).rowcount === 1
@@ -527,7 +557,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 						many("vote", p.vote_records),
 						many("receipt", p.receipt_records),
 						get("agreement", p.agreement_record),
-						p.grant_record ? get("grant", p.grant_record) : null,
+						p.grant_record ? get("grant", p.grant_record) : null
 					])
 					if (
 						[...votes, ...receipts, agreement, ...(grant ? [grant] : [])].some(
@@ -545,6 +575,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 					return {
 						id: p.participant_id,
 						nickname: p.nickname,
+						serviceIds: p.service_ids ?? null,
+						showSeen: p.show_seen ?? false,
 						tokenHash: p.token_hash,
 						admissionHash: p.admission_hash,
 						epoch: p.epoch,
@@ -563,13 +595,13 @@ export class RelationalProposalRepository implements ProposalRepository {
 									activeExposureMs: v.active_exposure_ms,
 									...(v.timing_source !== null
 										? { timingSource: v.timing_source }
-										: {}),
-								},
+										: {})
+								}
 							])
 						),
 						pick: {
 							candidateId: p.legacy_pick_id,
-							revision: p.legacy_pick_revision,
+							revision: p.legacy_pick_revision
 						},
 						approvedProposalVersion: agreement.proposal_version,
 						agreementRevision: agreement.revision,
@@ -579,34 +611,36 @@ export class RelationalProposalRepository implements ProposalRepository {
 							? {
 									memberGrant: {
 										accessToken: grant.access_token_ciphertext,
-										expiresAt: grant.grant_expires_at,
-									},
+										expiresAt: grant.grant_expires_at
+									}
 							  }
 							: {}),
 						receipts: receipts.map((r) => ({
 							commandId: r.command_id,
 							sequence: r.sequence,
 							digest: r.digest,
-							revision: r.revision,
-						})),
+							revision: r.revision
+						}))
 					}
 				}
 			)
-			const [candidates, tickets, intents, proposal, decision] =
+			const [candidates, tickets, intents, proposal, decision, ideas] =
 				await Promise.all([
 					many("candidate", h.candidate_records),
 					many("ticket", h.ticket_records),
 					many("intent", h.member_intent_records),
 					h.proposal_record ? get("proposal", h.proposal_record) : null,
 					h.decision_record ? get("decision", h.decision_record) : null,
+					many("idea", h.idea_records ?? [])
 				])
 			if (
 				[
 					...candidates,
+					...ideas,
 					...tickets,
 					...intents,
 					...(proposal ? [proposal] : []),
-					...(decision ? [decision] : []),
+					...(decision ? [decision] : [])
 				].some(
 					(r) => r.generation !== h.generation || r.expires_at !== h.expires_at
 				)
@@ -632,14 +666,26 @@ export class RelationalProposalRepository implements ProposalRepository {
 								label: "Our room",
 								country: h.country,
 								serviceIds: h.service_ids,
-								confirmed: true,
-							},
+								confirmed: true
+							}
 					  ]
 					: [],
-				intent: h.intent,
+				ideas: ideas.map((i) => ({
+					id: i.idea_id,
+					text: i.text,
+					authorId: i.author_id,
+					on: i.on,
+					attributes: i.attributes,
+					rankedKeys: i.ranked_keys,
+					interpretedAt: i.interpreted_at
+				})),
+				disabledServiceIds: h.disabled_service_ids ?? [],
+				interpretationCount: h.interpretation_count ?? 0,
+				intent: null,
 				constraints: h.constraints,
 				candidates: candidates.map((c) => ({
 					id: c.candidate_id,
+					...(c.idea_ids == null ? {} : { ideaIds: c.idea_ids }),
 					identity: c.identity,
 					title: c.title,
 					year: c.year,
@@ -648,13 +694,13 @@ export class RelationalProposalRepository implements ProposalRepository {
 					runtimeMinutes: c.runtime_minutes,
 					availability: c.availability.map((a: Row) => ({
 						...a,
-						screenId: ROOM_CONTEXT,
+						screenId: ROOM_CONTEXT
 					})),
 					viewingDuration: c.viewing_duration,
 					backdropUrl: c.backdrop_url,
 					trailerUrl: c.trailer_url,
 					goodwatchScore: c.goodwatch_score,
-					...(c.genres !== null ? { genres: c.genres } : {}),
+					...(c.genres !== null ? { genres: c.genres } : {})
 				})),
 				seenKeys: h.seen_keys,
 				stream: h.stream,
@@ -666,8 +712,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 							decidedAt: decision.decided_at,
 							availability: decision.availability.map((a: Row) => ({
 								...a,
-								screenId: ROOM_CONTEXT,
-							})),
+								screenId: ROOM_CONTEXT
+							}))
 					  }
 					: null,
 				proposalVersion: h.proposal_version,
@@ -677,14 +723,14 @@ export class RelationalProposalRepository implements ProposalRepository {
 							version: proposal.version,
 							previousCandidateId: proposal.previous_candidate_id,
 							proposerId: proposal.proposer_id,
-							baseParticipantIds: proposal.base_participant_ids,
+							baseParticipantIds: proposal.base_participant_ids
 					  }
 					: null,
 				tickets: tickets.map((t) => ({
 					hash: t.ticket_hash,
 					participantId: t.participant_id,
 					epoch: t.epoch,
-					expiresAt: t.ticket_expires_at,
+					expiresAt: t.ticket_expires_at
 				})),
 				memberIntents: intents.map((t) => ({
 					stateHash: t.state_hash,
@@ -696,8 +742,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 					challenge: t.challenge,
 					verifier: t.verifier_ciphertext,
 					status: t.status,
-					codeHash: t.code_hash,
-				})),
+					codeHash: t.code_hash
+				}))
 			}
 			this.validateRelations(room)
 			return {
@@ -707,7 +753,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 					.number()
 					.int()
 					.parse(raw[names.length + 1]),
-				pendingRevision: h.pending_revision,
+				pendingRevision: h.pending_revision
 			}
 		} catch (e) {
 			if (e instanceof RoomError) throw e

@@ -10,13 +10,13 @@ export const roomIntentSchema = z
 					.object({
 						text: z.string().min(1).max(200),
 						kind: z.enum(["attribute", "excluded", "want", "avoid", "phrase"]),
-						key: z.string().max(100).optional(),
+						key: z.string().max(100).optional()
 					})
 					.strict()
 			)
 			.max(100),
 		rankedKeys: z.array(z.number().int().positive().safe()).max(2000),
-		interpretedAt: z.number().int().nonnegative(),
+		interpretedAt: z.number().int().nonnegative()
 	})
 	.strict()
 export type InterpretRoom = (
@@ -49,10 +49,10 @@ export function roomSearch(
 				headers: {
 					authorization: `Bearer ${env.YEPWATCH_SEARCH_SECRET}`,
 					"content-type": "application/json",
-					"x-goodwatch-consumer": "yepwatch",
+					"x-goodwatch-consumer": "yepwatch"
 				},
 				body: JSON.stringify({ prompt, country, serviceIds }),
-				signal: AbortSignal.timeout(12000),
+				signal: AbortSignal.timeout(12000)
 			})
 		} catch {
 			throw new RoomError(
@@ -91,12 +91,41 @@ export function roomSearch(
 	}
 }
 
-/** Jev candidates are a bounded ordered subset of currently eligible catalog titles. */
+/** Interleave the remaining idea lanes; each lane falls back to base popularity. */
 export function roomIntentKeys(
-	room: Pick<ProposalRoom, "intent">,
+	room: Pick<ProposalRoom, "ideas" | "seenKeys">,
 	base: number[]
 ) {
-	if (!room.intent) return base
-	const eligible = new Set(base)
-	return [...new Set(room.intent.rankedKeys)].filter((key) => eligible.has(key))
+	const seen = new Set(room.seenKeys ?? [])
+	const eligible = base.filter(
+		(key) =>
+			!seen.has(
+				`${key >= 2_000_000_000_000 ? "show" : "movie"}_${
+					key % 1_000_000_000_000
+				}`
+			)
+	)
+	const allowed = new Set(eligible)
+	const ideas = (room.ideas ?? []).filter((i) => i.on)
+	if (!ideas.length) return eligible
+	const lanes = ideas.map((i) => [
+		...new Set([...i.rankedKeys.filter((k) => allowed.has(k)), ...eligible])
+	])
+	const result: number[] = [],
+		used = new Set<number>()
+	const cursors = lanes.map(() => 0)
+	for (;;) {
+		let changed = false
+		for (let i = 0; i < lanes.length; i++) {
+			while (cursors[i] < lanes[i].length && used.has(lanes[i][cursors[i]]))
+				cursors[i]++
+			if (cursors[i] < lanes[i].length) {
+				const key = lanes[i][cursors[i]++]
+				used.add(key)
+				result.push(key)
+				changed = true
+			}
+		}
+		if (!changed) return result
+	}
 }

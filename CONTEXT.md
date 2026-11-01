@@ -377,7 +377,7 @@ A season's Tomatometer or Metascore as Rotten Tomatoes or Metacritic publish it,
 
 ## YepWatch rooms
 
-A YepWatch room shares one country/provider selection and one host-authored description. Jev interprets the prompt using GoodWatch search; its attributes are visible to the group and its ranked titles constrain suggestions. There is no selectable playback screen. Explicit Leave removes someone from the active group and transfers hosting if necessary; a disconnected participant still counts. See [the room-description decision](docs/adr/yepwatch-shared-room-description.md).
+A YepWatch room shares one country and up to eight authored ideas. The host controls which ideas and services are enabled; present people contribute their own services to the room's union. A person without a service pick still counts for voting and agreement. Jev interprets each added/edited idea once, and the deck interleaves ideas with popularity fallback. Settings edits preserve the round's answers. Explicit Leave removes someone from the active group and transfers hosting if necessary; a disconnected participant still counts. See [the room-ideas decision](docs/adr/yepwatch-room-ideas.md).
 
 **Your rooms**: The returning person's home lists active rooms remembered on this device. Each entry is refreshed with that room's existing credential; the index is a navigation aid, not a second source of room membership. Back preserves the person's place. Past decisions belong to History rather than the active-room list.
 

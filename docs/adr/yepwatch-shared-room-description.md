@@ -1,6 +1,6 @@
 # YepWatch shared room description
 
-Status: shared room settings and the typed migration deployed on 2026-10-23.
+Status: shared room settings and the typed migration deployed on 2026-10-23. Description, service-selection and exhaustion rules superseded by [room ideas](yepwatch-room-ideas.md), owner-approved 2026-11-01.
 
 A YepWatch room has one country and one explicitly chosen set of streaming services. Participants do not create, choose or join playback screens. The host edits the shared selection. Its initial provider default is the deduplicated union of active linked participants’ saved GoodWatch providers, filtered to providers offered in the chosen country. The public default exposes no per-person attribution. An explicitly saved room selection is not silently overwritten by later joins, linking, dropping or returning; the host can choose “Use everyone’s saved services” to apply the current union. Unlinked/unavailable accounts contribute no defaults. The existing typed member preferences supply the default, so no second provider-preferences table is added. The database stores `country`, `service_ids` and `services_confirmed` directly on `yepwatch_room`; `yepwatch_screen`, participant `screen_id`, room `screen_records` and availability `screenId` columns are removed. The old wire/catalog adapters temporarily derive a singleton `room` context for installed clients. This is compatibility data, not a persisted or selectable screen.
 

@@ -61,9 +61,10 @@ async function fixture() {
 		},
 		screenId: "couch",
 	})
+	await send(b, {type:"set_services", serviceIds:[1]})
 	await send(b, {
 		type: "assign_screen",
-		expectedContextVersion: 2,
+		expectedContextVersion: 3,
 		screenId: "couch",
 	})
 	let s = await service.read(id, credential(a))
@@ -521,7 +522,7 @@ test("Leave removes a required voter, transfers host, and exact retry recovers t
 	assert.deepEqual(recovered.snapshot.shared.participants, [])
 	assert.deepEqual(recovered.snapshot.shared.candidates, [])
 	assert.equal(recovered.snapshot.shared.decision, null)
-	assert.equal(recovered.snapshot.shared.description, null)
+	assert.deepEqual(recovered.snapshot.shared.ideas, [])
 })
 
 test("Room prompt is interpreted before publication and retained across start, refill and restart", async () => {
@@ -550,17 +551,12 @@ test("Room prompt is interpreted before publication and retained across start, r
 		commandId: "describe",
 		sequence: 1,
 		command: {
-			type: "configure",
-			expectedContextVersion: 1,
-			country: "DE",
-			serviceIds: [1],
-			constraints: { kinds: ["movie"], moods: [], maxMinutes: null },
-			prompt: "Something funny",
+			type: "add_idea", text: "Something funny",
 		},
 	})
 	assert.equal(interpreted, 1)
 	assert.equal(
-		configured.snapshot.shared.description?.prompt,
+		configured.snapshot.shared.ideas[0]?.text,
 		"Something funny"
 	)
 	assert.equal(configured.snapshot.shared.screens.length, 1)
@@ -569,12 +565,7 @@ test("Room prompt is interpreted before publication and retained across start, r
 		commandId: "describe",
 		sequence: 1,
 		command: {
-			type: "configure",
-			expectedContextVersion: 1,
-			country: "DE",
-			serviceIds: [1],
-			constraints: { kinds: ["movie"], moods: [], maxMinutes: null },
-			prompt: "Something funny",
+			type: "add_idea", text: "Something funny",
 		},
 	})
 	assert.equal(interpreted, 1, "committed retry never calls search again")
@@ -586,7 +577,8 @@ test("Room prompt is interpreted before publication and retained across start, r
 			command,
 		})
 	}
-	const ready = configured.snapshot.shared
+	await send({type:"set_services",serviceIds:[1]})
+	const ready = (await service.read(id,credential(a))).shared
 	await send({
 		type: "start",
 		expectedContextVersion: ready.contextVersion,
@@ -602,8 +594,8 @@ test("Room prompt is interpreted before publication and retained across start, r
 	current = await service.read(id, credential(a))
 	await send({ type: "restart", expectedRevision: current.shared.revision })
 	assert.deepEqual(
-		(await service.read(id, credential(a))).shared.description,
-		configured.snapshot.shared.description
+		(await service.read(id, credential(a))).shared.ideas,
+		configured.snapshot.shared.ideas
 	)
 	assert.equal(interpreted, 1)
 })
@@ -754,42 +746,19 @@ test("Native authenticated rejoin restores the retained place through the HTTP r
 	assert.equal(back.snapshot.shared.participants.length, 2)
 })
 
-test("Shared provider defaults union active linked accounts without changing the chosen room services", async () => {
-	const f = await fixture()
-	const old = (await f.repo.read(f.id))!
-	const room = structuredClone(old.room)
-	room.participants[0].member = {
-		state: "linked",
-		prefill: {
-			country: "DE",
-			serviceIds: [8, 337],
-			savedProgressAvailable: false,
-		},
-	}
-	room.participants[1].member = {
-		state: "linked",
-		prefill: {
-			country: "US",
-			serviceIds: [8, 9],
-			savedProgressAvailable: false,
-		},
-	}
-	room.revision++
-	assert.equal(await f.repo.compareAndSwap(old, room, true), true)
-	const shared = (await f.service.read(f.id, credential(f.a))).shared
-	assert.deepEqual(shared.savedServiceIds, [8, 9, 337])
-	assert.deepEqual(shared.screens[0].serviceIds, [1])
-	const b = await f.service.read(f.id, credential(f.b))
-	await f.service.command(f.id, credential(f.b), {
-		commandId: "drop-saved-provider",
-		sequence: b.own.nextSequence,
-		command: { type: "leave" },
-	})
-	const after = await f.service.read(f.id, credential(f.a))
-	assert.deepEqual(after.shared.savedServiceIds, [8, 337])
-	assert.deepEqual(after.shared.screens[0].serviceIds, [1])
+test("Per-person services are shared and departures remove their services from the union", async () => {
+ const f = await fixture()
+ for (const [who,ids] of [[f.a,[1]],[f.b,[1]]] as const) {
+  const s = await f.service.read(f.id,credential(who))
+  await f.service.command(f.id,credential(who),{commandId:randomBytes(12).toString("hex"),sequence:s.own.nextSequence,command:{type:"set_services",serviceIds:[...ids]}})
+ }
+ let s = await f.service.read(f.id,credential(f.a))
+ assert.deepEqual(s.shared.screens[0].serviceIds,[1])
+ const b = await f.service.read(f.id,credential(f.b))
+ await f.service.command(f.id,credential(f.b),{commandId:"leave-union",sequence:b.own.nextSequence,command:{type:"leave"}})
+ s = await f.service.read(f.id,credential(f.a))
+ assert.deepEqual(s.shared.screens[0].serviceIds,[1])
 })
-
 
 test("Final decisions reject legacy Keep swiping without changing votes; only owner restart begins a new round", async () => {
  const f = await fixture()

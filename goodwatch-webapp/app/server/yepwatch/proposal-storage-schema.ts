@@ -7,25 +7,29 @@ export interface Field {
 export type Fields = Record<string, Field>
 const text = (max = 16384): Field => ({
 	sql: "TEXT",
-	schema: z.string().max(max),
+	schema: z.string().max(max)
 })
 const integer = (min = 0): Field => ({
 	sql: "BIGINT",
-	schema: z.number().int().safe().min(min),
+	schema: z.number().int().safe().min(min)
 })
 const real: Field = { sql: "DOUBLE PRECISION", schema: z.number().finite() }
 const bool: Field = { sql: "BOOLEAN", schema: z.boolean() }
 const enumeration = (values: [string, ...string[]]): Field => ({
 	sql: "TEXT",
-	schema: z.enum(values),
+	schema: z.enum(values)
 })
 const nullable = (f: Field): Field => ({
 	sql: f.sql,
-	schema: f.schema.nullable(),
+	schema: f.schema.nullable()
+})
+const additive = (f: Field): Field => ({
+	sql: f.sql,
+	schema: f.schema.nullable().optional()
 })
 const optional = (f: Field): Field => ({
 	sql: f.sql,
-	schema: f.schema.optional(),
+	schema: f.schema.optional()
 })
 export function object(fields: Fields): Field {
 	return {
@@ -38,12 +42,12 @@ export function object(fields: Fields): Field {
 					Object.entries(fields).map(([k, v]) => [k, v.schema])
 				)
 			)
-			.strict(),
+			.strict()
 	}
 }
 const array = (f: Field, max = 2400): Field => ({
 	sql: `ARRAY(${f.sql})`,
-	schema: z.array(f.schema).max(max),
+	schema: z.array(f.schema).max(max)
 })
 const strings = array(text())
 const ref = nullable(text(128))
@@ -54,18 +58,18 @@ const episode = object({
 	number: integer(),
 	displaySeason: optional(integer()),
 	displayNumber: optional(integer()),
-	presentationVersion: optional(text()),
+	presentationVersion: optional(text())
 })
 const identity = object({
 	kind: enumeration(["movie", "show_start", "show_continue"]),
 	tmdbId: integer(1),
-	episode: optional(episode),
+	episode: optional(episode)
 })
 identity.schema = identity.schema.superRefine((v, ctx) => {
 	if ((v.kind === "movie") === Boolean(v.episode))
 		ctx.addIssue({
 			code: "custom",
-			message: "Movie/episode identity mismatch",
+			message: "Movie/episode identity mismatch"
 		})
 })
 const offer = object({
@@ -73,14 +77,14 @@ const offer = object({
 	name: text(),
 	url: nullable(text()),
 	kind: enumeration(["provider", "where_to_watch", "search"]),
-	offerType: enumeration(["flatrate", "free", "ads"]),
+	offerType: enumeration(["flatrate", "free", "ads"])
 })
 export const availability = array(
 	object({
 		state: enumeration(["watchable", "no_match", "unknown"]),
 		scope: enumeration(["title", "episode"]),
 		checkedAt: nullable(integer()),
-		offers: array(offer, 100),
+		offers: array(offer, 100)
 	}),
 	12
 )
@@ -103,16 +107,16 @@ const failure = object({
 				serviceIds: array(integer(1), 100),
 				watchable: integer(),
 				noMatch: integer(),
-				unknown: integer(),
+				unknown: integer()
 			}),
 			12
 		)
-	),
+	)
 })
 export const constraints = object({
 	kinds: array(enumeration(["movie", "show_start", "show_continue"]), 3),
 	maxMinutes: nullable(integer(1)),
-	moods: strings,
+	moods: strings
 })
 export const stream = object({
 	version: integer(),
@@ -122,25 +126,25 @@ export const stream = object({
 			"catalog_end",
 			"catalog_incomplete",
 			"room_capacity",
-			"awaiting_answers",
+			"awaiting_answers"
 		])
-	),
+	)
 })
 export const checkState = object({
 	version: integer(),
 	state: enumeration(["none", "checking", "unavailable"]),
-	error: nullable(object({ code: text(), details: optional(failure) })),
+	error: nullable(object({ code: text(), details: optional(failure) }))
 })
 export const prefill = object({
 	country: nullable(text(2)),
 	serviceIds: array(integer(1), 100),
-	savedProgressAvailable: bool,
+	savedProgressAvailable: bool
 })
 const base: Fields = {
 	record_id: text(128),
 	room_id: text(128),
 	generation: integer(),
-	expires_at: integer(),
+	expires_at: integer()
 }
 export interface Table {
 	name: string
@@ -152,7 +156,7 @@ const entity = (name: string, fields: Fields, checks?: string[]): Table => ({
 	name: `doc.yepwatch_${name}`,
 	fields: { ...base, ...fields },
 	primary: "record_id",
-	checks,
+	checks
 })
 export const tables = {
 	room: {
@@ -175,8 +179,11 @@ export const tables = {
 			seen_keys: array(text(), 2000),
 			proposal_version: integer(),
 			participant_records: array(text(128), 12),
+			idea_records: additive(array(text(128), 8)),
+			disabled_service_ids: additive(array(integer(1), 1200)),
+			interpretation_count: additive(integer()),
 			country: nullable(text(2)),
-			service_ids: array(integer(1), 100),
+			service_ids: array(integer(1), 1200),
 			services_confirmed: bool,
 			intent: nullable(
 				object({
@@ -189,14 +196,14 @@ export const tables = {
 								"excluded",
 								"want",
 								"avoid",
-								"phrase",
+								"phrase"
 							]),
-							key: optional(text(100)),
+							key: optional(text(100))
 						}),
 						100
 					),
 					rankedKeys: array(integer(1), 2000),
-					interpretedAt: integer(),
+					interpretedAt: integer()
 				})
 			),
 			candidate_records: array(text(128), 120),
@@ -205,15 +212,33 @@ export const tables = {
 			proposal_record: ref,
 			decision_record: ref,
 			pending_revision: integer(),
-			pending_agreement: bool,
+			pending_agreement: bool
 		},
 		checks: [
 			"phase IN ('setup','choosing','decided')",
 			"storage_format=2",
-			"revision>=0",
-		],
+			"revision>=0"
+		]
 	} as Table,
+	idea: entity("idea", {
+		idea_id: text(128),
+		text: text(200),
+		author_id: text(128),
+		on: bool,
+		attributes: array(
+			object({
+				text: text(200),
+				kind: enumeration(["attribute", "excluded", "want", "avoid", "phrase"]),
+				key: optional(text(100))
+			}),
+			100
+		),
+		ranked_keys: array(integer(1), 2000),
+		interpreted_at: integer()
+	}),
 	participant: entity("participant", {
+		service_ids: additive(array(integer(1), 100)),
+		show_seen: additive(bool),
 		participant_id: text(128),
 		nickname: text(200),
 		token_hash: text(),
@@ -233,7 +258,7 @@ export const tables = {
 		grant_record: ref,
 		// Compatibility with member reader interface, never used to finalize proposals.
 		legacy_pick_id: nullable(text(128)),
-		legacy_pick_revision: integer(),
+		legacy_pick_revision: integer()
 	}),
 	vote: entity(
 		"vote",
@@ -245,33 +270,34 @@ export const tables = {
 			active_exposure_ms: nullable(integer()),
 			timing_source: nullable(
 				enumeration(["active_exposure", "implied", "unavailable"])
-			),
+			)
 		},
 		[
 			"choice IS NULL OR choice IN ('watch','pass')",
 			"revision>=0",
-			"active_exposure_ms IS NULL OR active_exposure_ms>=0",
+			"active_exposure_ms IS NULL OR active_exposure_ms>=0"
 		]
 	),
 	agreement: entity("agreement", {
 		participant_id: text(128),
 		proposal_version: nullable(integer()),
-		revision: integer(),
+		revision: integer()
 	}),
 	proposal: entity("proposal", {
 		candidate_id: text(128),
 		version: integer(),
 		previous_candidate_id: nullable(text(128)),
 		proposer_id: text(128),
-		base_participant_ids: array(text(128), 12),
+		base_participant_ids: array(text(128), 12)
 	}),
 	decision: entity("decision", {
 		candidate_id: text(128),
 		agreement_version: integer(),
 		decided_at: integer(),
-		availability,
+		availability
 	}),
 	candidate: entity("candidate", {
+		idea_ids: additive(array(text(128), 24)),
 		candidate_id: text(128),
 		identity,
 		title: text(),
@@ -286,25 +312,25 @@ export const tables = {
 		backdrop_url: nullable(text()),
 		trailer_url: nullable(text()),
 		goodwatch_score: nullable(real),
-		genres: nullable(strings),
+		genres: nullable(strings)
 	}),
 	receipt: entity("command_receipt", {
 		participant_id: text(128),
 		command_id: text(128),
 		sequence: integer(),
 		digest: text(128),
-		revision: integer(),
+		revision: integer()
 	}),
 	ticket: entity("ticket", {
 		ticket_hash: text(128),
 		participant_id: text(128),
 		epoch: integer(),
-		ticket_expires_at: integer(),
+		ticket_expires_at: integer()
 	}),
 	grant: entity("member_grant", {
 		participant_id: text(128),
 		access_token_ciphertext: text(40000),
-		grant_expires_at: integer(),
+		grant_expires_at: integer()
 	}),
 	intent: entity("member_intent", {
 		state_hash: text(128),
@@ -316,8 +342,8 @@ export const tables = {
 		challenge: text(),
 		verifier_ciphertext: nullable(text(40000)),
 		status: enumeration(["ready", "exchanging", "linked"]),
-		code_hash: nullable(text()),
-	}),
+		code_hash: nullable(text())
+	})
 } as const
 export type Entity = Exclude<keyof typeof tables, "room">
 export const entityNames = Object.keys(tables).filter(
@@ -362,7 +388,7 @@ export const controlTable: Table = {
 			object({
 				room_id: text(128),
 				admission_digest: text(128),
-				expires_at: integer(),
+				expires_at: integer()
 			}),
 			100
 		),
@@ -370,8 +396,8 @@ export const controlTable: Table = {
 		command_grants: array(
 			object({ command_digest: text(128), actor_digest: text(128) }),
 			2400
-		),
-	},
+		)
+	}
 }
 
 export const runtimeTable: Table = {
@@ -382,18 +408,18 @@ export const runtimeTable: Table = {
 		format_version: integer(1),
 		key_id: text(128),
 		key_check: text(128),
-		room_ttl_ms: integer(1),
-	},
+		room_ttl_ms: integer(1)
+	}
 }
 /** Durable invite lookup. No plaintext key or room state is stored here. */
 export const invitationTable: Table = {
 	name: "doc.yepwatch_invitation",
 	primary: "code_hash",
-	fields: { code_hash: text(64), room_id: text(128), expires_at: integer() },
+	fields: { code_hash: text(64), room_id: text(128), expires_at: integer() }
 }
 export const storageTables: Table[] = [
 	invitationTable,
 	...Object.values(tables),
 	runtimeTable,
-	controlTable,
+	controlTable
 ]

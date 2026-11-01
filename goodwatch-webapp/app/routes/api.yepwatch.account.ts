@@ -5,6 +5,7 @@ import {
   goodwatchMemberPrefill,
   goodwatchMemberDisplayName,
   goodwatchSavedProgress,
+  goodwatchSeenTitles,
 } from "../server/yepwatch/continuous-member-reads.server";
 import { verifyOAuthResourceToken } from "../server/auth/oauth-access.server";
 import {
@@ -32,6 +33,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     displayName: goodwatchMemberDisplayName,
     prefill: goodwatchMemberPrefill,
     progress: goodwatchSavedProgress,
+    seen: goodwatchSeenTitles,
   })(request);
 }
 export function action(_: ActionFunctionArgs) {

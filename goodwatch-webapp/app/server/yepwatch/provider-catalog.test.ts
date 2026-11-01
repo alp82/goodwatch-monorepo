@@ -18,3 +18,16 @@ test('country filtering precedes duplicate grouping: no foreign aliases become s
 	assert.equal(result.services.length, 1)
 	assert.deepEqual(result.providerGroups.map(g => g.selectionIds), [[119]])
 })
+
+test("big subscriptions rank first once, use subscription names, and expose minor stores and channels", () => {
+ const names=["Apple TV Store","Google Play Movies","Netflix","Amazon Prime Video","Disney Plus","HBO Max","Paramount+","Paramount+ Premium","Apple TV","Rakuten TV","Peacock","Netflix Kids"]
+ const rows=names.map((name,i)=>({tmdb_id:([2,3,8,9,337,1899,531,2303,350,35,386,175] as number[])[i],name,logo_path:null,order_default:i,order_by_country:{US:i}}))
+ const {providerGroups}=providerCatalog(rows,"US")
+ const main=providerGroups.filter(g=>!g.minor)
+ assert.equal(main[0].name,"Netflix")
+ assert.equal(main[1].name,"Prime Video")
+ assert.equal(main[2].name,"Disney+")
+ assert.equal(providerGroups.find(g=>g.selectionIds.includes(2))?.name,"Apple TV")
+ assert.equal(providerGroups.find(g=>g.selectionIds.includes(3))?.minor,true)
+ assert.equal(providerGroups.find(g=>g.selectionIds.includes(35))?.minor,true)
+})

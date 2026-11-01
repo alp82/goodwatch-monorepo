@@ -1,3 +1,10 @@
+import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
+import {
+	redesignCommands,
+	retireIneligible,
+	refreshServices,
+	attributeCandidates
+} from "./proposal-redesign.ts"
 import type { InterpretRoom } from "./proposal-intent.ts"
 import { activeRoom, normalizeRoomContext } from "./proposal-context.ts"
 import { CONTINUOUS_LIMITS as L } from "./continuous-types.ts"
@@ -10,13 +17,13 @@ import type {
 	RealtimeAttachment,
 	RealtimeTicket,
 	RealtimeViewResponse,
-	RoomInvalidation,
+	RoomInvalidation
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import {
 	shortInvite,
 	previousInvite,
 	INVITE_ATTEMPTS,
-	normalizeShortInvite,
+	normalizeShortInvite
 } from "./proposal-invites.ts"
 import { hash, equal, keyed, random, sign, verify } from "./crypto.server.ts"
 import { IndeterminateWrite, RoomError, requireRoom } from "./errors.ts"
@@ -28,7 +35,7 @@ import {
 	proposalTransition,
 	preflight,
 	reconcile,
-	retire,
+	retire
 } from "./proposal-machine.ts"
 import type {
 	ProposalCatalog,
@@ -138,17 +145,70 @@ export class ProposalService {
 		)
 		return p
 	}
-	/** Private draft interpretation; never mutates the room or consumes its command sequence. */
-	async preview(id: string, credential: ActorCredential, input: { prompt: string; country: string; serviceIds: number[] }) {
+	/** Private draft interpretation; only the durable search budget changes, never ideas or command sequence. */
+	async preview(
+		id: string,
+		credential: ActorCredential,
+		input: { prompt: string; country: string; serviceIds: number[] }
+	) {
 		const { room } = await this.get(id)
 		const p = this.auth(room, credential)
-		requireRoom(room.hostId === p.id, "forbidden", "Only the host can edit the room description", 403)
-		requireRoom(room.phase === "setup", "conflict", "Return to setup to edit the room")
+		requireRoom(
+			room.hostId === p.id,
+			"forbidden",
+			"Only the host can edit the room description",
+			403
+		)
+		requireRoom(
+			room.phase === "setup",
+			"conflict",
+			"Return to setup to edit the room"
+		)
 		const metadata = await this.catalog.metadata(input.country)
-		requireRoom(metadata.countries.some(c => c.code === input.country) && input.serviceIds.every(id => metadata.services.some(s => s.id === id)), "invalid_request", "Choose a valid country and services", 400)
-		requireRoom(this.interpret, "busy", "Room prompts are temporarily unavailable", 503)
+		requireRoom(
+			metadata.countries.some((c) => c.code === input.country) &&
+				input.serviceIds.every((id) =>
+					metadata.services.some((s) => s.id === id)
+				),
+			"invalid_request",
+			"Choose a valid country and services",
+			400
+		)
+		requireRoom(
+			this.interpret,
+			"busy",
+			"Room prompts are temporarily unavailable",
+			503
+		)
 		await this.guard?.command(id, p.id, hash(`preview:${random()}`))
-		const result = await this.interpret!(input.prompt, input.country, input.serviceIds)
+		let reserved = false
+		for (let attempt = 0; attempt < 6; attempt++) {
+			const old = await this.get(id),
+				person = this.auth(old.room, credential)
+			requireRoom(
+				old.room.hostId === person.id && old.room.phase === "setup",
+				"conflict",
+				"Room setup changed"
+			)
+			requireRoom(
+				(old.room.interpretationCount ?? 0) < 24,
+				"limit_reached",
+				"Room interpretation budget reached"
+			)
+			const next = structuredClone(old.room)
+			next.interpretationCount = (next.interpretationCount ?? 0) + 1
+			next.revision++
+			if (await this.repository.compareAndSwap(old, next, true)) {
+				reserved = true
+				break
+			}
+		}
+		requireRoom(reserved, "busy", "Room busy; retry shortly", 503)
+		const result = await this.interpret!(
+			input.prompt,
+			input.country,
+			input.serviceIds
+		)
 		return { prompt: result.prompt, attributes: result.attributes }
 	}
 	private identity(id: string, request: GuestAdmissionRequest) {
@@ -156,7 +216,7 @@ export class ProposalService {
 		return {
 			id: keyed(this.secret, "proposal-participant", key).slice(0, 32),
 			token: keyed(this.secret, "proposal-token", key),
-			digest: hash(JSON.stringify(request)),
+			digest: hash(JSON.stringify(request))
 		}
 	}
 	private legacyInvite(id: string) {
@@ -187,7 +247,7 @@ export class ProposalService {
 			previousInvite(this.secret, room.id),
 			...Array.from({ length: INVITE_ATTEMPTS }, (_, i) =>
 				shortInvite(this.secret, room.id, i)
-			),
+			)
 		]
 		const code = codes.find((code) => equal(hash(code), room.inviteHash))
 		requireRoom(code, "not_found", "Invite unavailable", 404)
@@ -228,13 +288,13 @@ export class ProposalService {
 				roomId: room.id,
 				participantId: p.id,
 				token: p.token,
-				expiresAt: room.expiresAt,
+				expiresAt: room.expiresAt
 			},
 			invite: {
 				code,
-				path: `/r/${code}`,
+				path: `/r/${code}`
 			},
-			snapshot: proposalSnapshot(room, p.id),
+			snapshot: proposalSnapshot(room, p.id)
 		}
 	}
 	private member(
@@ -247,6 +307,8 @@ export class ProposalService {
 			tokenHash: hash(p.token),
 			admissionHash: p.digest,
 			nickname: request.nickname,
+			serviceIds: null,
+			showSeen: false,
 			epoch: 1,
 			nextSequence: 1,
 			screenId: null,
@@ -257,7 +319,7 @@ export class ProposalService {
 			agreementRevision: 0,
 			member: { state: "guest", prefill: null },
 			memberUserId: null,
-			receipts: [],
+			receipts: []
 		}
 	}
 	async create(request: GuestAdmissionRequest) {
@@ -281,6 +343,9 @@ export class ProposalService {
 			const room: ProposalRoom = {
 				format: 2,
 				flowVersion: 3,
+				ideas: [],
+				disabledServiceIds: [],
+				interpretationCount: 0,
 				proposalVersion: 0,
 				proposal: null,
 				id,
@@ -297,14 +362,14 @@ export class ProposalService {
 				constraints: {
 					kinds: ["movie", "show_start"],
 					maxMinutes: null,
-					moods: [],
+					moods: []
 				},
 				candidates: [],
 				seenKeys: [],
 				stream: { version: 0, state: "ready", reason: null },
 				agreement: { version: 0, state: "none", error: null },
 				decision: null,
-				tickets: [],
+				tickets: []
 			}
 			try {
 				await this.repository.insert(room)
@@ -376,11 +441,22 @@ export class ProposalService {
 			await this.guard?.join(id, p.id, p.admissionHash)
 			if (!activeRoom(room).participants.length) room.hostId = p.id
 			room.participants.push(p)
-			normalizeRoomContext(room)
+			refreshServices(room)
 			room.rosterVersion++
 			room.revision++
 			if (room.phase === "choosing" && this.catalog.refresh)
 				room.candidates = await this.catalog.refresh(activeRoom(room))
+			if (room.phase === "choosing") {
+				retireIneligible(
+					room,
+					new Set((await this.catalog.excludedKeys?.(room)) ?? [])
+				)
+				room.stream = {
+					version: room.stream.version + 1,
+					state: "ready",
+					reason: null
+				}
+			}
 			reconcile(room, old.room)
 			try {
 				if (!(await this.repository.compareAndSwap(old, room, true))) continue
@@ -414,7 +490,7 @@ export class ProposalService {
 			const returning = actor(room, p.id)
 			returning.leftAt = null
 			returning.epoch++
-			normalizeRoomContext(room)
+			refreshServices(room)
 			room.rosterVersion++
 			room.revision++
 			if (room.phase === "choosing" && this.catalog.refresh)
@@ -450,10 +526,10 @@ export class ProposalService {
 				roomId: id,
 				participantId: p.id,
 				token: credential.token,
-				expiresAt: room.expiresAt,
+				expiresAt: room.expiresAt
 			},
 			invite: { code, path: `/r/${code}` },
-			snapshot: proposalSnapshot(room, p.id),
+			snapshot: proposalSnapshot(room, p.id)
 		}
 	}
 	async read(id: string, credential: ActorCredential) {
@@ -485,6 +561,61 @@ export class ProposalService {
 	): Promise<CommandResult["receipt"]> {
 		const digest = hash(JSON.stringify(envelope))
 		let uncertain = false
+		let interpreted: ProposalRoom["intent"] | undefined
+		const ideaCommand =
+			envelope.command.type === "add_idea" ||
+			envelope.command.type === "edit_idea"
+		if (ideaCommand) {
+			// Reserve the lifetime spend before search; failed searches also spend a slot.
+			// Search runs once here, outside the command-publication retry loop.
+			for (let attempt = 0; attempt < 6; attempt++) {
+				const old = await this.get(id),
+					p = this.auth(old.room, credential)
+				const receipt = p.receipts.find(
+					(r) =>
+						r.commandId === envelope.commandId ||
+						r.sequence === envelope.sequence
+				)
+				if (receipt) {
+					requireRoom(
+						receipt.digest === digest,
+						"conflict",
+						"Command ID/sequence reused"
+					)
+					return {
+						commandId: receipt.commandId,
+						sequence: receipt.sequence,
+						appliedRevision: receipt.revision,
+						replayed: true
+					}
+				}
+				requireRoom(
+					p.nextSequence === envelope.sequence,
+					"conflict",
+					"Commands must be sent in order"
+				)
+				proposalTransition(old.room, p.id, envelope, this.now())
+				requireRoom(this.interpret, "busy", "Room search is unavailable", 503)
+				await this.guard?.command(id, p.id, digest)
+				const reserved = structuredClone(old.room)
+				reserved.interpretationCount = (reserved.interpretationCount ?? 0) + 1
+				reserved.revision++
+				// An ambiguous reservation never starts search: retry may spend another slot but cannot exceed 24.
+				if (!(await this.repository.compareAndSwap(old, reserved, true)))
+					continue
+				const c = envelope.command as Extract<
+					RoomCommand,
+					{ type: "add_idea" | "edit_idea" }
+				>
+				interpreted = await this.interpret!(
+					c.text,
+					old.room.screens[0]?.country ?? "US",
+					old.room.screens[0]?.serviceIds ?? []
+				)
+				break
+			}
+			requireRoom(interpreted, "busy", "Room busy; retry this idea", 503)
+		}
 		for (let i = 0; i < 6; i++) {
 			const old = await this.get(id)
 			const p = this.auth(
@@ -527,48 +658,41 @@ export class ProposalService {
 				403
 			)
 			preflight(old.room, p.id, envelope, this.now())
-			if (envelope.command.type === "configure") {
-				requireRoom(
-					old.room.hostId === p.id,
-					"forbidden",
-					"Only the host can change the room description",
-					403
+			if (redesignCommands.has(envelope.command.type))
+				proposalTransition(
+					old.room,
+					p.id,
+					envelope,
+					this.now(),
+					undefined,
+					ideaCommand
 				)
-				requireRoom(
-					old.room.contextVersion === envelope.command.expectedContextVersion &&
-						old.room.phase !== "decided",
-					"conflict",
-					"Room setup changed"
-				)
-				proposalTransition(old.room, p.id, envelope, this.now()) // Validate settings before paid interpretation.
-			}
 			await this.guard?.command(id, p.id, digest)
-			let intent: ProposalRoom["intent"] = null
-			if (envelope.command.type === "configure") {
-				const c = envelope.command
-				const metadata = await this.catalog.metadata(c.country)
+			const command = envelope.command
+			if (command.type === "configure" && command.country) {
+				const metadata = await this.catalog.metadata(command.country)
 				requireRoom(
-					metadata.countries.some((v) => v.code === c.country) &&
-						c.serviceIds.every((v) =>
-							metadata.services.some((s) => s.id === v)
-						),
+					metadata.countries.some((v) => v.code === command.country),
 					"invalid_request",
-					"Choose a valid country and services",
+					"Choose a valid country",
 					400
 				)
-				if (c.prompt.trim()) {
-					requireRoom(
-						this.interpret,
-						"busy",
-						"Room prompts are not configured yet",
-						503
-					)
-					intent = await this.interpret!(
-						c.prompt.trim(),
-						c.country,
-						c.serviceIds
-					)
-				}
+			}
+			if (
+				command.type === "set_services" ||
+				command.type === "set_service_enabled"
+			) {
+				const metadata = await this.catalog.metadata(
+					old.room.screens[0]?.country ?? "US"
+				)
+				requireRoom(
+					command.serviceIds.every((id) =>
+						metadata.services.some((s) => s.id === id)
+					),
+					"invalid_request",
+					"Choose valid services",
+					400
+				)
 			}
 			let page: Awaited<ReturnType<ProposalCatalog["page"]>> | undefined
 			if (
@@ -585,9 +709,34 @@ export class ProposalService {
 				p.id,
 				envelope,
 				this.now(),
-				page
+				page,
+				ideaCommand
 			)
-			if (envelope.command.type === "configure") room.intent = intent
+			if (command.type === "add_idea" || command.type === "edit_idea") {
+				const idea = room.ideas!.find(
+					(i) =>
+						i.id ===
+						(command.type === "add_idea" ? envelope.commandId : command.ideaId)
+				)!
+				idea.attributes = structuredClone(interpreted!.attributes)
+				idea.rankedKeys = [...interpreted!.rankedKeys]
+				idea.interpretedAt = interpreted!.interpretedAt
+				attributeCandidates(room)
+			}
+			if (
+				(redesignCommands.has(command.type) && command.type !== "rename") ||
+				(command.type === "leave" &&
+					room.phase !== "decided" &&
+					activeRoom(room).participants.length > 0)
+			) {
+				if (this.catalog.refresh)
+					room.candidates = await this.catalog.refresh(activeRoom(room))
+				retireIneligible(
+					room,
+					new Set((await this.catalog.excludedKeys?.(room)) ?? [])
+				)
+				reconcile(room, old.room)
+			}
 			if (
 				envelope.command.type === "assign_screen" &&
 				room.phase === "choosing" &&
@@ -602,7 +751,7 @@ export class ProposalService {
 				commandId: envelope.commandId,
 				sequence: envelope.sequence,
 				digest,
-				revision: room.revision,
+				revision: room.revision
 			})
 			changed.receipts = changed.receipts.slice(-L.receipts)
 			try {
@@ -663,7 +812,7 @@ export class ProposalService {
 					candidateId: candidate.id,
 					agreementVersion: room.agreement.version,
 					decidedAt: this.now(),
-					availability: evidence,
+					availability: evidence
 				}
 				room.phase = "decided"
 				room.agreement.state = "none"
@@ -673,7 +822,7 @@ export class ProposalService {
 				room.agreement = {
 					version: room.agreement.version,
 					state: "unavailable",
-					error: { code: e.code, ...(e.details ? { details: e.details } : {}) },
+					error: { code: e.code, ...(e.details ? { details: e.details } : {}) }
 				}
 			}
 			room.revision++
@@ -713,14 +862,14 @@ export class ProposalService {
 				hash: hash(ticket),
 				participantId: p.id,
 				epoch: p.epoch,
-				expiresAt,
+				expiresAt
 			})
 			try {
 				if (await this.repository.compareAndSwap(old, room, false))
 					return {
 						ticket,
 						expiresAt,
-						websocketPath: "/api/yepwatch/v1/proposal/realtime",
+						websocketPath: "/api/yepwatch/v1/proposal/realtime"
 					}
 			} catch (e) {
 				if (!(e instanceof IndeterminateWrite)) throw e
@@ -744,7 +893,7 @@ export class ProposalService {
 			participantId: id,
 			epoch: p.epoch,
 			expiresAt,
-			scope: "shared:read",
+			scope: "shared:read"
 		}
 		return {
 			roomId: room.id,
@@ -753,7 +902,7 @@ export class ProposalService {
 			leaseExpiresAt: expiresAt,
 			roomExpiresAt: room.expiresAt,
 			capabilityEpoch: p.epoch,
-			scope: "shared:read",
+			scope: "shared:read"
 		}
 	}
 	async attach(id: string, ticket: string) {
@@ -821,7 +970,7 @@ export class ProposalService {
 		)
 		return {
 			...this.attachment(room, lease.participantId),
-			snapshot: proposalSnapshot(room, lease.participantId).shared,
+			snapshot: proposalSnapshot(room, lease.participantId).shared
 		}
 	}
 	async notify(id: string) {
