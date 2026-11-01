@@ -577,6 +577,7 @@ test("Room prompt is interpreted before publication and retained across start, r
 			command,
 		})
 	}
+	await send({type:"configure",expectedContextVersion:(await service.read(id,credential(a))).shared.contextVersion,country:"DE"})
 	await send({type:"set_services",serviceIds:[1]})
 	const ready = (await service.read(id,credential(a))).shared
 	await send({

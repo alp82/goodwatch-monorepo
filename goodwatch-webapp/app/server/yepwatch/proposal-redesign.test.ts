@@ -24,7 +24,8 @@ import { applyRoomRedesign } from "./migrations/apply-room-redesign.ts"
 import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { ProposalRoom } from "./proposal-types.ts"
 
-async function fixture(countrySpecific = false) {
+/** A room as the app makes it: created, configured with a country, joined by a friend. */
+async function fixture(countrySpecific = false, country: string | null = "US") {
 	const repo = new ProposalMemoryRepository()
 	let searches = 0
 	let refreshes = 0
@@ -92,6 +93,10 @@ async function fixture(countrySpecific = false) {
 			sequence: s.own.nextSequence,
 			command: c
 		})
+	}
+	if (country) {
+		const s = await service.read(id, a.credential)
+		await send({ type: "configure", expectedContextVersion: s.shared.contextVersion, country })
 	}
 	async function start() {
 		await send({ type: "rename", nickname: "Host" })
@@ -621,14 +626,16 @@ test("fallback cards have no idea attribution and survive idea switches while ob
 })
 
 test("service picks without a room country are refused until the host sets one", async () => {
-	const f = await fixture(true)
-	const old = (await f.repo.read(f.id))!
-	const room = structuredClone(old.room)
-	room.screens = []
-	await f.repo.compareAndSwap(old, room, false)
+	const f = await fixture(true, null)
+	// Joins and other room commands never pick a country on the host's behalf.
+	await f.send({ type: "add_idea", text: "Something funny" })
+	assert.equal((await f.service.read(f.id, f.a.credential)).shared.screens[0]?.country ?? null, null)
 	await assert.rejects(f.send({ type: "set_services", serviceIds: [2, 3] }), {
 		code: "needs_context"
 	})
+	const s = await f.service.read(f.id, f.a.credential)
+	await f.send({ type: "configure", expectedContextVersion: s.shared.contextVersion, country: "US" })
+	await f.send({ type: "set_services", serviceIds: [1, 3] })
 })
 
 test("linked service picks accept the union of room and prefill countries; guests use only the room country", async () => {

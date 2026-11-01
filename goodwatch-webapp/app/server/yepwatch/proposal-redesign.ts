@@ -36,7 +36,8 @@ export function refreshServices(room: ProposalRoom) {
 		{
 			id: ROOM_CONTEXT,
 			label: "Our room",
-			country: first?.country ?? "US",
+			// No silent default: the host sets the country (configure) before anyone picks services.
+			country: first?.country ?? null,
 			serviceIds: services,
 			confirmed: true
 		}

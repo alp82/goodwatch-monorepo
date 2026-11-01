@@ -125,12 +125,13 @@ test("Published prompt ranking changes actual cards, keeps availability checks, 
 	})
 	const id = a.credential.roomId,
 		credential = a.credential
-    await service.command(id,credential,{commandId:"services",sequence:1,command:{type:"set_services",serviceIds:[1]}})
-    await service.command(id,credential,{commandId:"describe",sequence:2,command:{type:"add_idea",text:intent.prompt}})
+    await service.command(id,credential,{commandId:"country",sequence:1,command:{type:"configure",expectedContextVersion:1,country:"DE"}})
+    await service.command(id,credential,{commandId:"services",sequence:2,command:{type:"set_services",serviceIds:[1]}})
+    await service.command(id,credential,{commandId:"describe",sequence:3,command:{type:"add_idea",text:intent.prompt}})
 	let s = await service.read(id, credential)
 	await service.command(id, credential, {
 		commandId: "start",
-		sequence: 3,
+		sequence: 4,
 		command: {
 			type: "start",
 			expectedContextVersion: s.shared.contextVersion,

@@ -49,7 +49,7 @@ Budget exhaustion returns `limit_reached`. At most eight ideas exist at once, wi
 - `needs_context` from refill means nobody brings a service. Prompt participants to pick services instead of showing an error.
 - `set_services` may return `needs_context` when clearing the last enabled service while voting. Keep the current selection and prompt for a service.
 - When the host changes country, send `configure` with the new country before `set_services`, so service validation uses the updated country.
-- The room needs a country before anyone sends `set_services` (`needs_context` otherwise). The app sets it with `configure` right after creating the room.
+- The room needs a country before anyone sends `set_services` (`needs_context` otherwise). The app sets it with `configure` right after creating the room (member prefill, else device region). No other command or join picks one: the shared screen's country stays null until `configure`.
 - `limit_reached` signals the idea budget: at most eight current ideas and 24 lifetime interpretations. Removing an idea frees a current slot; it does not restore the lifetime budget.
 
 ## Storage and search
