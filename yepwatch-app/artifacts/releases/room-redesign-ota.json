@@ -1,0 +1,41 @@
+{
+  "sourceCommit": "3067e64e2adab30dbc4cfc19bd1fbc360a6040dc",
+  "release": "room redesign: ideas, per-person streaming, endless deck, proposal for everyone",
+  "prototypeCommit": "9a2241e3e",
+  "mainCommits": [
+    "a9d53fd91",
+    "005f89ddf",
+    "2b113728f",
+    "c9ceaf5d9"
+  ],
+  "storage": {
+    "snapshot": "goodwatch-db-backup-v2.yepwatch_pre_room_redesign_20261101 (14 tables, SUCCESS)",
+    "migration": "goodwatch-webapp/app/server/yepwatch/migrations/20261101-room-redesign.sql applied 2026-11-01 before the push"
+  },
+  "searchRoles": "vector1 search-a and search-b on a9d53fd91 (room search 500 keys, 875 ms probe)",
+  "checks": {
+    "serverCrate": "72 pass, 1 skipped",
+    "gateway": "39 pass, 9 skipped",
+    "appUnit": 117,
+    "appBrowser": 116,
+    "typecheck": "passed",
+    "lint": "zero errors; existing unused View warning",
+    "productionE2E": "room-redesign-multiplayer.cjs passed on https://yepwatch.com (host + 2 guests through round 2)"
+  },
+  "ota": {
+    "ios": {
+      "channel": "beta",
+      "runtime": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "updateId": "01a19979-1442-702e-86a2-61d71235405a",
+      "groupId": "e4a1ef4a-2907-48ea-b3cb-050c4f6f3b3a"
+    },
+    "android": {
+      "channel": "beta-preview",
+      "runtime": "e602b9da0532d0b6553acc72b771132638acce70",
+      "updateId": "01a19979-a4e7-794b-b9f2-ff9d45aca75e",
+      "groupId": "7be009dd-b63e-4b85-a658-4b3ea5044e75"
+    }
+  },
+  "nativeFingerprints": "runtimes match installed build 16 on both platforms; no native inputs changed",
+  "rollback": "server and OTA together: build 16's embedded bundle cannot read the new snapshot"
+}
