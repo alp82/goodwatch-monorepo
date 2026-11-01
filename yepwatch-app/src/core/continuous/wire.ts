@@ -134,6 +134,30 @@ export const sharedSchema = z
   .object({
     contractVersion: z.literal(3),
     savedServiceIds: z.array(z.number().int().positive()).max(1200).optional(),
+    // Room redesign (ideas, per-person services, host switches): optional until every server sends them.
+    ideas: z
+      .array(
+        z
+          .object({
+            id,
+            text: z.string().max(200),
+            authorId: id,
+            on: z.boolean(),
+            attributes: z.array(
+              z
+                .object({
+                  text: z.string(),
+                  kind: z.enum(['attribute', 'excluded', 'want', 'avoid', 'phrase']),
+                  key: z.string().optional(),
+                })
+                .strict()
+            ),
+          })
+          .strict()
+      )
+      .max(8)
+      .optional(),
+    disabledServiceIds: z.array(z.number().int().positive()).max(1200).optional(),
     description: z
       .object({
         prompt: z.string(),
@@ -166,6 +190,7 @@ export const sharedSchema = z
           screenId: id.nullable(),
           ready: z.boolean(),
           dropped: z.boolean().optional(),
+          serviceIds: z.array(z.number().int().positive()).max(100).nullable().optional(),
         })
         .strict()
     ),
