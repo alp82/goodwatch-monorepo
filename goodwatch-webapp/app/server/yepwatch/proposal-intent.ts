@@ -7,18 +7,19 @@ export const roomIntentSchema = z
 		attributes: z
 			.array(
 				z
+					// The search adds fields over time (weight, description); keep only what rooms store.
 					.object({
 						text: z.string().min(1).max(200),
 						kind: z.enum(["attribute", "excluded", "want", "avoid", "phrase"]),
 						key: z.string().max(100).optional()
 					})
-					.strict()
+					.strip()
 			)
 			.max(100),
 		rankedKeys: z.array(z.number().int().positive().safe()).max(2000),
 		interpretedAt: z.number().int().nonnegative()
 	})
-	.strict()
+	.strip()
 export type InterpretRoom = (
 	prompt: string,
 	country: string,

@@ -180,3 +180,26 @@ test("draft Jev preview is host-only, shares the lifetime budget and never publi
   assert.equal((await request(host,{...input,serviceIds:[987654321]})).status,400)
   assert.equal(calls,1);assert.equal(grants,1)
 })
+
+test("room search accepts extra fields from the search role and stores only text, kind and key", async () => {
+	const search = roomSearch(
+		{ YEPWATCH_SEARCH_SECRET: "x".repeat(32) },
+		(async () =>
+			new Response(
+				JSON.stringify({
+					prompt: "something funny",
+					attributes: [
+						{ text: "Situational Comedy", kind: "want", key: "situational_comedy", weight: 0.8, description: "Humor from everyday scenarios." }
+					],
+					rankedKeys: [2000000001400],
+					interpretedAt: 1,
+					extra: true
+				}),
+				{ status: 200, headers: { "content-type": "application/json" } }
+			)) as unknown as typeof fetch
+	)!
+	const intent = await search("something funny", "US", [8])
+	assert.deepEqual(intent.attributes, [{ text: "Situational Comedy", kind: "want", key: "situational_comedy" }])
+	assert.deepEqual(intent.rankedKeys, [2000000001400])
+	assert.equal(Object.hasOwn(intent, "extra"), false)
+})
