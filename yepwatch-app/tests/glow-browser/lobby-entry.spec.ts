@@ -117,7 +117,7 @@ test('guests see one room selection without a screen picker or setup controls', 
   page,
 }) => {
   const f = await guest(page);
-  await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await page.getByText('Waiting for Host to start', { exact: true }).waitFor();
   await expect(
     page.getByRole('button', { name: /Choose.*screen|Watch on|Ready to watch/ })
   ).toHaveCount(0);
@@ -130,7 +130,7 @@ test('missing actual services never produces assignment/readiness or another con
   page,
 }) => {
   const f = await guest(page, { missing: true });
-  await page.getByText('The host is setting up the room.', { exact: true }).waitFor();
+  await page.getByText('Waiting for Host to start', { exact: true }).waitFor();
   expect(f.commands).toHaveLength(0);
   await expect(page.getByRole('button', { name: 'Ready to watch', exact: true })).toHaveCount(0);
 });
@@ -138,11 +138,11 @@ test('uncertain automatic assignment retries the exact envelope after reload, th
   page,
 }) => {
   const f = await guest(page, { lose: true });
-  await page.getByRole('button', { name: 'Retry pending action', exact: true }).waitFor();
+  await page.getByRole('button', { name: /^Retry( in \d+s)?$/ }).waitFor();
   const first = structuredClone(f.commands[0]);
   await page.reload();
-  await page.getByRole('button', { name: 'Retry pending action', exact: true }).click();
-  await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: /^Retry( in \d+s)?$/ }).click();
+  await page.getByText('Waiting for Host to start', { exact: true }).waitFor();
   await expect.poll(() => f.commands.length).toBe(3);
   expect(f.commands[1]).toEqual(first);
   expect(f.commands.map((e) => e.command.type)).toEqual([
@@ -157,10 +157,10 @@ test('failed entry refresh has bounded recovery through Retry connection without
   page,
 }) => {
   const f = await guest(page, { failRead: true });
-  await page.getByRole('button', { name: 'Retry connection', exact: true }).waitFor();
+  await page.getByRole('button', { name: /^Retry( in \d+s)?$/ }).waitFor();
   expect(f.commands).toHaveLength(0);
-  await page.getByRole('button', { name: 'Retry connection', exact: true }).click();
-  await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: /^Retry( in \d+s)?$/ }).click();
+  await page.getByText('Waiting for Host to start', { exact: true }).waitFor();
   await expect.poll(() => f.commands.length).toBe(2);
   expect(f.commands.map((e) => e.command.type)).toEqual(['assign_screen', 'ready']);
   await expect(page.getByRole('button', { name: 'Ready to watch', exact: true })).toHaveCount(0);
@@ -169,7 +169,7 @@ test('fresh context is used for automatic entry; later roster/context resets re-
   page,
 }) => {
   const f = await guest(page, { changeContext: true });
-  await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await page.getByText('Waiting for Host to start', { exact: true }).waitFor();
   await expect.poll(() => f.commands.length).toBe(2);
   expect(f.commands[0].command).toEqual({
     type: 'assign_screen',
@@ -180,11 +180,11 @@ test('fresh context is used for automatic entry; later roster/context resets re-
   f.room.shared.rosterVersion++;
   f.room.shared.revision++;
   f.room.shared.participants[0].ready = false;
-  await page.getByRole('button', { name: 'Refresh room', exact: true }).click();
+  await page.getByRole('button', { name: 'Refresh', exact: true }).click();
   await expect.poll(() => f.commands.length).toBe(3);
-  await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await page.getByText('Waiting for Host to start', { exact: true }).waitFor();
   expect(f.commands[2].command).toEqual({ type: 'ready', expectedContextVersion: 3, ready: true });
-  await page.getByRole('button', { name: 'Refresh room', exact: true }).click();
+  await page.getByRole('button', { name: 'Refresh', exact: true }).click();
   await page.waitForTimeout(200);
   expect(f.commands).toHaveLength(3);
 });
@@ -193,25 +193,25 @@ test('lost ready response retries its exact envelope without another confirmatio
   page,
 }) => {
   const f = await guest(page, { loseReady: true });
-  await page.getByRole('button', { name: 'Retry pending action', exact: true }).waitFor();
+  await page.getByRole('button', { name: /^Retry( in \d+s)?$/ }).waitFor();
   const ready = structuredClone(f.commands[1]);
-  await page.getByRole('button', { name: 'Retry pending action', exact: true }).click();
-  await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: /^Retry( in \d+s)?$/ }).click();
+  await page.getByText('Waiting for Host to start', { exact: true }).waitFor();
   await expect.poll(() => f.commands.length).toBe(3);
   expect(f.commands[2]).toEqual(ready);
-  await expect(page.getByRole('button', { name: 'Retry connection', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Retry( in \d+s)?$/ })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Ready to watch', exact: true })).toHaveCount(0);
 });
 test('definitive failed ready write stops without loops and generic connection retry uses the unchanged sequence', async ({
   page,
 }) => {
   const f = await guest(page, { failReady: true });
-  await page.getByRole('button', { name: 'Retry connection', exact: true }).waitFor();
+  await page.getByRole('button', { name: /^Retry( in \d+s)?$/ }).waitFor();
   const failed = structuredClone(f.commands[1]);
   await page.waitForTimeout(250);
   expect(f.commands).toHaveLength(2);
-  await page.getByRole('button', { name: 'Retry connection', exact: true }).click();
-  await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: /^Retry( in \d+s)?$/ }).click();
+  await page.getByText('Waiting for Host to start', { exact: true }).waitFor();
   await expect.poll(() => f.commands.length).toBe(3);
   expect(f.commands[2].sequence).toBe(failed.sequence);
   expect(f.commands[2].command).toEqual(failed.command);

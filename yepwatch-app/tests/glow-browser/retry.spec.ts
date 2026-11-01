@@ -1,14 +1,16 @@
 import { test, expect, type Page } from '@playwright/test';
 import type { CommandEnvelope, GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
-const CREATE = /^(Create room|Retry room request|Retry in \d+s|Connecting…)$/;
+const CREATE = /^(Create a room|Create room|Retry room request|Retry in \d+s|Connecting…)$/;
 const JOIN = /^(Join|Retry joining|Retry in \d+s|Connecting…)$/;
-/** Opens Create (name) or Join (code + name) the way a first visit does. */
+/** Create needs no name (it is sent at once); Join opens with a code and a name, the way a first visit does. */
 async function open(page: Page, mode: 'create' | 'join', name: string) {
   await page.goto('/');
-  await page.getByRole('button', { name: mode === 'create' ? 'Create a room' : 'Join a room', exact: true }).click();
-  if (mode === 'join') await page.getByLabel('Room code or invitation').fill('fixture-invite');
-  await page.getByLabel('Your name').fill(name);
+  if (mode === 'join') {
+    await page.getByRole('button', { name: 'Join a room', exact: true }).click();
+    await page.getByLabel('Room code or invitation').fill('fixture-invite');
+    await page.getByLabel('Your name').fill(name);
+  }
   return page.getByRole('button', { name: mode === 'create' ? CREATE : JOIN });
 }
 async function common(page: Page) {
@@ -38,8 +40,7 @@ for (const mode of ['create','join'] as const) test(`429 ${mode} retains the sam
   await expect(page.getByText(/Your room request is saved/)).toBeVisible();
   expect(bodies).toHaveLength(1); const first=structuredClone(bodies[0]);
   await page.reload(); await expect(action).toBeDisabled();
-  if (mode === 'create') await expect(page.getByLabel('Your name')).toHaveValue('Guest');
-  else await expect(page.getByText('Joining as Guest', { exact: true })).toBeVisible();
+  if (mode === 'join') await expect(page.getByRole('button', { name: 'Change name', exact: true })).toBeVisible();
   if(mode==='join') await expect(page.getByLabel('Room code or invitation')).toHaveValue('fixture-invite');
   await expect(action).toBeEnabled(); expect(bodies).toHaveLength(1);
   await page.waitForTimeout(150); expect(bodies).toHaveLength(1);
@@ -58,29 +59,30 @@ test('retryable command retains exact envelope + cooldown across reload; expiry 
     return route.fulfill({json:{receipt:{},snapshot:room}});
   });
   await page.goto('/room/test-room'); await page.getByRole('button',{name:'Yep',exact:true}).click();
-  const retry=page.getByRole('button',{name:'Retry pending action',exact:true}); await expect(retry).toBeDisabled();
+  const retry=page.getByRole('button',{name:/^Retry( in \d+s)?$/}); await expect(retry).toBeDisabled();
   await expect(page.getByText(/Try again in .*Your action is saved/)).toBeVisible();
   const first=structuredClone(commands[0]); await page.reload(); await expect(retry).toBeDisabled();
   await expect(retry).toBeEnabled(); await page.waitForTimeout(150);expect(commands).toHaveLength(1);
   await retry.click(); await expect.poll(()=>commands.length).toBe(2);expect(commands[1]).toEqual(first);
   expect(commands.every(c=>c.command.type==='vote')).toBe(true);
-  await expect(page.getByRole('button',{name:'Undo last choice',exact:true})).toBeEnabled();
+  await expect(page.getByRole('button',{name:'Undo',exact:true})).toBeEnabled();
 });
 
-test('definitive admission failure clears bootstrap so corrected input gets a new request; malformed Retry-After is bounded',async({page})=>{
+test('definitive admission failure clears bootstrap so the next Create is a new request; malformed Retry-After is bounded',async({page})=>{
   await common(page);const bodies:GuestAdmissionRequest[]=[];
-  await page.route('**/proposal/rooms',async route=>{bodies.push(route.request().postDataJSON());return route.fulfill({status:400,headers:{'Retry-After':'999999999999999'},json:{error:{code:'invalid_request',message:'Please correct your nickname.',retryable:false}}});});
-  const action = await open(page, 'create', 'First'); await action.click();
-  await expect(page.getByText('Please correct your nickname.',{exact:true})).toBeVisible();
-  await page.getByLabel('Your name').fill('Corrected');await action.click();
-  await expect.poll(()=>bodies.length).toBe(2);expect(bodies[1].commandId).not.toBe(bodies[0].commandId);expect(bodies[1].nickname).toBe('Corrected');
+  await page.route('**/proposal/rooms',async route=>{bodies.push(route.request().postDataJSON());return route.fulfill({status:400,headers:{'Retry-After':'999999999999999'},json:{error:{code:'invalid_request',message:'Please try again.',retryable:false}}});});
+  await page.goto('/');
+  await page.getByRole('button',{name:'Create a room',exact:true}).click();
+  await expect(page.getByText('Please try again.',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Create a room',exact:true}).click();
+  await expect.poll(()=>bodies.length).toBe(2);expect(bodies[1].commandId).not.toBe(bodies[0].commandId);expect(bodies[1].nickname).toBe('');
 });
 
 test('terminal HTTP status takes precedence over retryable busy and never offers a pending action',async({page})=>{
   await common(page);let commands=0;
   await page.route('**/proposal/rooms/test-room/commands',async route=>{commands++;return route.fulfill({status:410,headers:{'Retry-After':'60'},json:{error:{code:'expired',message:'Expired',retryable:true}}});});
   await page.goto('/room/test-room');await page.getByRole('button',{name:'Yep',exact:true}).click();
-  await expect(page.getByText('This room has expired',{exact:false})).toBeVisible();await expect(page.getByRole('button',{name:'Retry pending action',exact:true})).toHaveCount(0);expect(commands).toBe(1);
+  await expect(page.getByText('This room has expired',{exact:false})).toBeVisible();await expect(page.getByRole('button',{name:/^Retry( in \d+s)?$/})).toHaveCount(0);expect(commands).toBe(1);
 });
 
 for (const mode of ['create', 'join'] as const) test(`${mode} must persist the exact bootstrap before every submit after repeated storage failures`, async ({page}) => {

@@ -87,5 +87,5 @@ test('a slow home page keeps the arc circling, then dissolves into the loaded ro
   await expect(boot).toBeVisible();
   expect(await page.locator('.review-boot-wait').evaluate((el) => el.getAnimations().length)).toBeGreaterThan(0);
   await expect(boot).toHaveCount(0, { timeout: 5000 });
-  await expect(page.getByRole('button', { name: 'Open Host’s room' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Anything', exact: true })).toBeVisible();
 });

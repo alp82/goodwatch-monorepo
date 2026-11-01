@@ -45,23 +45,23 @@ async function fixture(page: Page, setup = false) {
   return { room, writes, countries };
 }
 
-test('full provider list scrolls in popularity order; country selects a new list', async ({ page }) => {
+test('Your services: More lists every provider in order; the host’s country selects a new list', async ({ page }) => {
   const f = await fixture(page, true);
-  await page.getByRole('button', { name: 'Mood & services' }).click();
+  await page.goto('/room/test-room/services');
   const services = page.getByRole('checkbox', { name: /^Service / });
+  await expect(services).toHaveCount(8);
+  await page.getByRole('button', { name: 'More services', exact: true }).click();
   await expect(services).toHaveCount(65);
   await expect(services.first()).toHaveAccessibleName('Service 01');
   const last = page.getByRole('checkbox', { name: 'Service 65', exact: true });
   await last.scrollIntoViewIfNeeded();
   await last.click();
   await expect(last).toBeChecked();
-  await expect(services.first()).toHaveAccessibleName('Service 01');
-  await page.screenshot({ path: '.expo/feedback-provider-last.png' });
-  await page.getByRole('button', { name: 'Choose country' }).click();
+  await page.getByRole('button', { name: /Germany/ }).click();
   await expect(page.getByRole('textbox', { name: 'Find country' })).toBeVisible();
-  await page.getByRole('button', { name: 'Montenegro', exact: true }).click();
-  await expect(services).toHaveCount(0);
+  await page.getByRole('button', { name: /Montenegro/ }).click();
   await expect(page.getByRole('checkbox', { name: 'Netflix', exact: true })).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: 'Service 65', exact: true })).toHaveCount(0);
   expect(f.countries).toContain('ME');
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
 });
@@ -69,23 +69,25 @@ test('full provider list scrolls in popularity order; country selects a new list
 test('Back closes matches, returns to Your rooms without leaving, and reopens the same room after reload', async ({ page }) => {
   const f = await fixture(page);
   const original = await page.getByTestId('poster').innerText();
-  await page.getByRole('button', { name: 'Inspect 1 matches' }).click();
-  await page.getByRole('button', { name: 'Back to Voting' }).click();
+  await page.getByRole('button', { name: '1 match', exact: true }).click();
+  await expect(page.getByTestId('matches')).toBeVisible();
+  await page.getByRole('button', { name: 'Back', exact: true }).filter({ visible: true }).click();
   await expect(page.getByTestId('poster')).toHaveText(original, { useInnerText: true });
-  await page.getByRole('button', { name: 'Back to Your rooms' }).click();
-  await expect(page.getByRole('button', { name: 'Open Host’s room' })).toBeVisible();
+  await page.getByRole('button', { name: 'Back', exact: true }).filter({ visible: true }).click();
+  await expect(page.getByRole('button', { name: 'Anything', exact: true })).toBeVisible();
   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
   await page.reload();
-  await page.getByRole('button', { name: 'Open Host’s room' }).click();
+  await page.getByRole('button', { name: 'Anything', exact: true }).click();
   await expect(page.getByTestId('poster')).toHaveText(original, { useInnerText: true });
   expect(f.writes).toEqual([]);
 });
 
 test('explicit Leave moves the room to History; Return rejoins with the existing identity', async ({ page }) => {
   const f = await fixture(page);
-  await page.getByRole('button', { name: /^Room, \d/ }).click();
+  await page.getByRole('button', { name: 'Anything', exact: true }).click();
   await page.getByRole('button', { name: 'Leave room', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Open Host’s room' })).toHaveCount(0);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText('YOUR ROOMS', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'History', exact: true }).click();
   await page.getByRole('button', { name: 'Return', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeVisible();
@@ -107,8 +109,10 @@ for (const [width, height] of [[320,568], [375,667], [390,844], [844,390], [1440
   test(`Back and Your rooms fit ${width}x${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     await fixture(page);
-    await page.getByRole('button', { name: 'Back to Your rooms' }).click();
-    const back = page.getByRole('button', { name: 'Open Host’s room' });
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await expect(page).toHaveURL(/\/$/);
+    const back = page.getByRole('button', { name: 'Anything', exact: true });
+    await expect(back).toBeVisible();
     const bounds = await back.boundingBox();
     expect(bounds!.y).toBeGreaterThanOrEqual(0);
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(height);
@@ -146,26 +150,21 @@ test('room activity and exposure do not begin behind the boot overlay', async ({
   expect(roomReads).toBeGreaterThan(0);
 });
 
-for (const navigation of ['button', 'edge'] as const) test(`Tonight review ${navigation} Back returns to Your rooms without changing the decision`, async ({ page }) => {
+for (const navigation of ['button', 'edge'] as const) test(`Tonight ${navigation} Back returns to Your rooms without changing the decision`, async ({ page }) => {
   const f = await fixture(page);
   f.room.shared.phase = 'decided';
   f.room.shared.matches = [{ candidateId:'c1',averageYepMs:1000 },{candidateId:'c2',averageYepMs:2000}];
   f.room.shared.decision = { candidateId:'c1',proposalVersion:1,decidedAt:Date.now(),availability:[] };
   await page.reload();
-  await expect(page.getByText('TONIGHT',{exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'Back to Matches',exact:true}).click();
+  await expect(page.getByTestId('tonight')).toBeVisible();
   await expect(page.getByRole('button',{name:/Keep voting|Keep swiping/})).toHaveCount(0);
-  await expect(page.getByText('Tonight’s choice is saved.',{exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:/^Propose /})).toHaveCount(0);
-  await expect(page.getByRole('button',{name:/^Agree to /})).toHaveCount(0);
-  await expect(page.getByRole('button',{name:'Back to Your rooms',exact:true})).toBeVisible();
-  if (navigation === 'button') await page.getByRole('button',{name:'Back to Your rooms',exact:true}).click();
+  if (navigation === 'button') await page.getByRole('button',{name:'Back',exact:true}).click();
   else { await page.mouse.move(5,350);await page.mouse.down();await page.mouse.move(125,355,{steps:12});await page.mouse.up(); }
   await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText('Tonight: Isolated test c1',{exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:'History',exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'History',exact:true}).click();
-  await page.getByRole('button',{name:/^Isolated test c1,/}).click();
-  await expect(page.getByText('TONIGHT',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Anything',exact:true}).click();
+  await expect(page.getByTestId('tonight')).toBeVisible();
   expect(f.writes).toEqual([]);expect(f.room.shared.decision?.candidateId).toBe('c1');
 });
 
@@ -186,13 +185,14 @@ for (const input of ['mouse', 'touch'] as const) {
         await page.mouse.move(endX,endY,{steps:12}); await page.mouse.up();
       }
     }
-    await page.getByRole('button', { name: 'Inspect 1 matches' }).click();
+    await page.getByRole('button', { name: '1 match', exact: true }).click();
+    await expect(page.getByTestId('matches')).toBeVisible();
     await swipe(4,350,110,353);
     await expect(page.getByTestId('poster')).toBeVisible();
     expect(f.writes).toEqual([]);
-    await page.getByRole('button', { name: /^Room, \d/ }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
-    const edge = page.getByTestId('back-gesture-edge');
+    await page.getByRole('button', { name: 'Anything', exact: true }).click();
+    await expect(page.getByTestId('room-page')).toBeVisible();
+    const edge = page.getByTestId('back-gesture-edge').filter({ visible: true });
     await expect(edge).toBeVisible(); const box = await edge.boundingBox();
     await swipe(box!.x+5,box!.y+70,box!.x+115,box!.y+73);
     await expect(page.getByRole('button', { name: 'Leave room', exact: true })).toHaveCount(0);
@@ -253,40 +253,36 @@ test('cached next poster fades in without a full-opacity flash', async ({ page }
 });
 
 for (const [width, height] of [[320, 568], [390, 844], [844, 390]]) {
-  test(`Save stays visible while scrolling all providers at ${width}x${height}`, async ({ page }) => {
+  test(`Done stays visible while scrolling all providers at ${width}x${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const f = await fixture(page, true);
-    await page.getByRole('button', { name: 'Mood & services' }).click();
-    const save = page.getByRole('button', { name: 'Save', exact: true });
-    await expect(save).toBeInViewport({ ratio: 1 });
-    const before = await save.boundingBox();
+    await page.goto('/room/test-room/services');
+    const done = page.getByRole('button', { name: 'Done', exact: true });
+    await expect(done).toBeInViewport({ ratio: 1 });
+    const before = await done.boundingBox();
+    await page.getByRole('button', { name: 'More services', exact: true }).click();
     const last = page.getByRole('checkbox', { name: 'Service 65', exact: true });
     await last.scrollIntoViewIfNeeded();
     await last.click();
-    await expect(save).toBeInViewport({ ratio: 1 });
-    expect(await save.boundingBox()).toEqual(before);
-    await save.click();
-    await expect.poll(() => f.writes.some(c => c.type === 'configure')).toBe(true);
+    await expect(done).toBeInViewport({ ratio: 1 });
+    expect(await done.boundingBox()).toEqual(before);
+    await done.click();
+    await expect.poll(() => f.writes.some(c => c.type === 'set_services')).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
   });
 }
 
-test('device region suggests country only for an unconfigured room; a saved country wins', async ({ page }) => {
+test('device region suggests the country only for a room without one; a saved country wins', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'languages', { value: ['sr-ME', 'en-US'] }));
   const f = await fixture(page, true);
   f.room.shared.screens[0].country = null;
   f.room.shared.screens[0].confirmed = false;
-  await page.reload();
-  await page.getByRole('button', { name: 'Set up our room' }).click();
-  await expect(page.getByRole('button', { name: 'Choose country' })).toContainText('Montenegro');
-  await page.getByRole('button', { name: 'Choose country' }).click();
-  await page.getByRole('button', { name: 'Germany', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Choose country' })).toContainText('Germany');
+  await page.goto('/room/test-room/services');
+  await expect(page.getByRole('button', { name: /Montenegro/ })).toBeVisible();
   f.room.shared.screens[0].country = 'DE';
   f.room.shared.screens[0].confirmed = true;
   await page.reload();
-  await page.getByRole('button', { name: 'Mood & services' }).click();
-  await expect(page.getByRole('button', { name: 'Choose country' })).toContainText('Germany');
+  await expect(page.getByRole('button', { name: /Germany/ })).toBeVisible();
 });
 
 test('Continue with GoodWatch needs no guest name and shows its G mark', async ({ page }) => {
@@ -307,20 +303,15 @@ test('Continue with GoodWatch needs no guest name and shows its G mark', async (
   expect(f.writes).toEqual([]);
 });
 
-test('Tonight is final: host Start again opens prefilled settings, Back keeps the decision, confirm starts the next round', async ({page}) => {
+test('Tonight is final: host Start again restarts into the room page, Start begins the next round', async ({page}) => {
   const f=await fixture(page); f.room.shared.phase='decided';
   f.room.shared.decision={candidateId:'c2',proposalVersion:1,decidedAt:Date.now(),availability:[]};
   await page.reload();
   await expect(page.getByRole('button',{name:/Keep swiping|Keep voting/})).toHaveCount(0);
   await page.getByRole('button',{name:'Start again',exact:true}).click();
-  await expect(page.getByRole('checkbox',{name:'Service 08',exact:true})).toBeChecked();
-  await page.getByRole('button',{name:'Back to Tonight',exact:true}).click();
-  await expect(page.getByText('Isolated test c2 (2020)',{exact:true})).toBeVisible();
-  expect(f.writes).toEqual([]);
-  await page.getByRole('button',{name:'Start again',exact:true}).click();
-  await page.getByRole('button',{name:'Start again',exact:true}).last().click();
+  await expect(page.getByTestId('room-setup')).toBeVisible();
+  await page.getByRole('button',{name:'Start',exact:true}).click();
   await expect(page.getByRole('button',{name:'Yep',exact:true})).toBeVisible();
-  // The small fixture deck then asks for more cards on its own (refill).
   expect(f.writes.map(c=>c.type).slice(0,2)).toEqual(['restart','start']);
   expect(f.writes[1]).toEqual({type:'start',expectedRosterVersion:2,expectedContextVersion:2,hostReady:true});
 });
@@ -333,14 +324,12 @@ test('guests see who can start again and get no Start again control', async ({pa
   await expect(page.getByRole('button',{name:'Start again'})).toHaveCount(0);
 });
 
-test('opening matches plays a bundled card fan, and lens selection plays a click', async ({ page }) => {
+test('opening matches plays a bundled card fan', async ({ page }) => {
   const clips: string[] = [];
   page.on('request', request => { if (request.url().includes('.mp3')) clips.push(request.url()); });
   await fixture(page);
-  await page.getByRole('button', { name: 'Inspect 1 matches' }).click();
+  await page.getByRole('button', { name: '1 match', exact: true }).click();
   await expect.poll(() => clips.some(url => /card-fan-[12]/.test(url))).toBe(true);
-  await page.getByRole('button', { name: /^Top score:/ }).click();
-  await expect.poll(() => clips.some(url => /click-00[123]/.test(url))).toBe(true);
   const fan = clips.find(url => /card-fan-[12]/.test(url))!;
   const duration = await page.evaluate(async url => {
     const context = new AudioContext();
