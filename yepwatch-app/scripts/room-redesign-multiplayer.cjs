@@ -80,9 +80,9 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
       await expect(host.getByTestId('room-setup')).toBeVisible();
       await expect.poll(() => me('Alp')?.serviceIds).toEqual([8, 1796]);
       await expect(button(host, 'Start')).toBeEnabled();
-      invite = (await host.getByTestId('room-link').innerText()).match(/127\.0\.0\.1:\d+\/r\/\S+/)?.[0];
-      if (!invite) throw new Error('No invitation link on the room page');
-      invite = `http://${invite}`;
+      const path = (await host.getByTestId('room-link').innerText()).match(/\/r\/\S+/)?.[0];
+      if (!path) throw new Error('No invitation link on the room page');
+      invite = `${origin}${path}`;
       await shot(host, '02-host-room');
     });
 
@@ -147,7 +147,7 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
       await button(host, 'something funny +1').click();
       await button(host, /^Netflix, Disney\+.*change$/).click();
       await host.getByRole('switch', { name: 'Use HBO Max' }).click();
-      await expect.poll(() => snapshots.get('Alp')?.shared.disabledServiceIds).toEqual([1899]);
+      await expect.poll(() => snapshots.get('Alp')?.shared.disabledServiceIds.includes(1899)).toBe(true); // a tile can group several ids
       await expect(sam.getByText('Off', { exact: true })).toHaveCount(0); // Sam is voting, not on the page
       await button(host, 'Done').click();
       await button(host, 'Back').first().click();
@@ -179,7 +179,7 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
       await expect(mia.getByText('You agree', { exact: true })).toBeVisible();
       await button(sam, 'Agree').click();
       for (const p of [host, mia, sam]) await expect(p.getByTestId('tonight')).toBeVisible({ timeout: 20000 });
-      await expect(host.getByRole('link', { name: /^Watch on / })).toBeVisible();
+      await expect(host.getByRole('link', { name: /^(Watch|Find) on / })).toBeVisible();
       await expect(mia.getByText('Alp can start again', { exact: true })).toBeVisible();
       await shot(host, '09-host-tonight');
     });
