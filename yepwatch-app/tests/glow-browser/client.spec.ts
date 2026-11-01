@@ -32,10 +32,10 @@ async function fixture(page: Page, setupGuest = false) {
         json: {
           countries: [{ code: 'DE', name: 'Germany' }],
           services: [{ id: 8, name: 'Netflix', logoUrl: null }, { id: 337, name: 'Disney+', logoUrl: null }],
+          providerGroups: [{ id: 8, name: 'Netflix', logoUrl: null, selectionIds: [8], minor: false }, { id: 337, name: 'Disney+', logoUrl: null, selectionIds: [337], minor: false }],
           moods: [{ id: 'relaxed', label: 'Relaxed' }],
         },
       });
-    if (url.pathname.endsWith('/preview')) return route.fulfill({ json: { prompt: route.request().postDataJSON().prompt, attributes: [{ text: 'Funny', kind: 'want' }] } });
     if (url.pathname.endsWith('/member/start'))
       return route.fulfill({
         status: 501,
@@ -93,20 +93,9 @@ async function fixture(page: Page, setupGuest = false) {
           room.shared.contextVersion++;
         }
         if (c.type === 'configure') {
-          room.shared.screens = [
-            {
-              id: 'room',
-              label: 'Our room',
-              country: c.country,
-              serviceIds: c.serviceIds,
-              confirmed: true,
-            },
-          ];
-          room.shared.constraints = c.constraints;
-          room.shared.description = {
-            prompt: c.prompt,
-            attributes: c.prompt ? [{ text: 'Funny', kind: 'want' }] : [],
-          };
+          if (c.country)
+            room.shared.screens = [{ ...(room.shared.screens[0] ?? { id: 'room', label: 'Our room', serviceIds: [] }), country: c.country, confirmed: true }];
+          if (c.constraints) room.shared.constraints = c.constraints;
           room.shared.contextVersion++;
         }
         if (c.type === 'assign_screen') {
@@ -510,6 +499,7 @@ test('live hover positions cross the poster, pressed swipes stay private, releas
   f.room.shared.participants.push({
     participantId: 'peer',
     nickname: 'Friend',
+    serviceIds: null,
     screenId: 'tv',
     ready: true,
   });
@@ -598,7 +588,7 @@ test('leaving the room sends one explicit command and returns to the entrance', 
 
 test('dropped people do not count as in the room', async ({page}) => {
   const f = await fixture(page);
-  f.room.shared.participants.push({participantId:'dropped-friend',nickname:'Sam',screenId:'tv',ready:true,dropped:true});
+  f.room.shared.participants.push({participantId:'dropped-friend',nickname:'Sam',serviceIds:null,screenId:'tv',ready:true,dropped:true});
   await page.reload();
   await page.getByRole('button',{name:'Anything',exact:true}).click();
   await expect(page.getByText('Just you',{exact:true})).toBeVisible();
@@ -636,7 +626,7 @@ for (const mode of ['no-share', 'rejected', 'cancelled', 'manual'] as const) {
 
 test('Tonight cheers send real activity: tap, renewed hold with one seed, all-hold Marquee, release on pointer up', async ({ page }) => {
   const f = await fixture(page);
-  f.room.shared.participants.push({ participantId: 'peer', nickname: 'Friend', screenId: 'tv', ready: true });
+  f.room.shared.participants.push({ participantId: 'peer', nickname: 'Friend', serviceIds: null, screenId: 'tv', ready: true });
   f.room.shared.phase = 'decided';
   f.room.shared.decision = { candidateId: 'c1', proposalVersion: 1, decidedAt: Date.now(), availability: [] };
   const sent: any[] = [];

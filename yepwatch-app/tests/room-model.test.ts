@@ -5,10 +5,8 @@ import { bringers, fitSize, ideasLabel, roomCommands, roomView, showsProposal, s
 import { firstTiles, namesLine, rankServices, servicesIn, toggleService } from '../src/features/room/services';
 import { continuousFixture } from './continuous-fixture';
 
-type Next = RoomSnapshot & { shared: { ideas?: unknown[]; disabledServiceIds?: number[]; participants: { serviceIds?: number[] | null }[] }; own: { showSeen?: boolean } };
-
-function room(): Next {
-  const s = continuousFixture() as Next;
+function room(): RoomSnapshot {
+  const s = continuousFixture();
   s.shared.phase = 'setup';
   s.shared.participants = [
     { participantId: 'host', nickname: 'Alp', screenId: 'tv', ready: true, serviceIds: [8, 9] },
@@ -56,19 +54,22 @@ test('room view: a guest host without a name cannot start; nor without a service
   assert.equal(roomView(s).canStart, false);
   assert.equal(roomView(s).faces[0].nickname, 'You');
   const t = room();
-  t.shared.participants.forEach((p) => { (p as { serviceIds?: number[] | null }).serviceIds = [9]; });
+  t.shared.participants.forEach((p) => { p.serviceIds = [9]; });
   assert.equal(roomView(t).canStart, false, 'every service is switched off');
 });
 
-test('room view: rooms from the current server read their prompt as the host’s one idea', () => {
+test('room view: no ideas reads as Anything; seen-titles switch for linked members only', () => {
   const s = continuousFixture();
-  s.shared.description = { prompt: 'a twisty thriller', attributes: [] };
   const v = roomView(s);
-  assert.equal(v.label, 'a twisty thriller');
-  assert.equal(v.ideas[0].mine, false, 'not editable through the new commands');
-  assert.equal(v.servicesKnown, false);
-  assert.deepEqual(v.myServiceIds, [8], 'the host’s services are the room’s');
+  assert.equal(v.label, 'Anything');
+  assert.deepEqual(v.myServiceIds, [8]);
   assert.equal(v.showSeen, null, 'guests have no seen-titles switch');
+  s.own.member = { state: 'linked', prefill: null };
+  s.own.showSeen = true;
+  assert.equal(roomView(s).showSeen, true);
+  s.shared.participants[0].serviceIds = null;
+  assert.equal(roomView(s).myServiceIds, null, 'not picked yet');
+  assert.deepEqual(roomView(s).enabledServiceIds, [], 'null picks contribute nothing');
 });
 
 test('proposal: shown to everyone in the round until set aside for that version; never who proposed', () => {
@@ -127,20 +128,19 @@ const meta: CatalogMetadata = {
     { id: 8, name: 'Netflix', logoUrl: 'n' }, { id: 50, name: 'MagentaTV', logoUrl: null }, { id: 60, name: 'Rakuten TV', logoUrl: null },
   ],
   providerGroups: [
-    { id: 50, name: 'MagentaTV', logoUrl: null, selectionIds: [50] },
-    { id: 60, name: 'Rakuten TV', logoUrl: null, selectionIds: [60] },
-    { id: 9, name: 'Amazon Prime Video', logoUrl: 'p', selectionIds: [9, 10] },
-    { id: 8, name: 'Netflix', logoUrl: 'n', selectionIds: [8] },
+    { id: 8, name: 'Netflix', logoUrl: 'n', selectionIds: [8], minor: false },
+    { id: 9, name: 'Prime Video', logoUrl: 'p', selectionIds: [9, 10], minor: false },
+    { id: 50, name: 'MagentaTV', logoUrl: null, selectionIds: [50], minor: false },
+    { id: 60, name: 'Rakuten TV', logoUrl: null, selectionIds: [60], minor: true },
   ],
   moods: [],
 };
 
-test('service tiles: big subscriptions first, minor tiles last, named after the subscription', () => {
+test('service tiles: the catalog’s groups, names and order; toggles select whole groups', () => {
   const all = rankServices(meta);
   assert.deepEqual(all.map((s) => s.name), ['Netflix', 'Prime Video', 'MagentaTV', 'Rakuten TV']);
   assert.equal(all.at(-1)?.minor, true);
-  const flagged = rankServices({ ...meta, providerGroups: meta.providerGroups!.map((g) => ({ ...g, minor: g.id === 50 })) } as CatalogMetadata);
-  assert.deepEqual(flagged.map((s) => s.name), ['Netflix', 'Prime Video', 'Rakuten TV', 'MagentaTV'], 'the catalog’s minor flag wins');
+  assert.deepEqual(rankServices(undefined), []);
   assert.deepEqual(toggleService([8], all[1]), [8, 9, 10]);
   assert.deepEqual(toggleService([8, 9, 10], all[1]), [8]);
   assert.equal(namesLine(servicesIn(all, [8, 9, 50, 60])), 'Netflix, Prime Video +2');

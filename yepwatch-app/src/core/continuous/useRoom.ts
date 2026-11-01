@@ -32,6 +32,8 @@ export function useContinuousRoom(roomId: string) {
   const [access, setAccess] = useState<RoomAccess | null>();
   const [connection, setConnection] = useState<Connection>('connecting');
   const [error, setError] = useState('');
+  /** The last command failure's code, for screens that answer it in place (needs_context, limit_reached). */
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [privateError, setPrivateError] = useState(false);
   const [terminal, setTerminal] = useState<'expired' | 'access' | null>(null);
@@ -306,6 +308,7 @@ export function useContinuousRoom(roomId: string) {
     if (!access || !snapshot || expired() || privateError || queue.current.busy || Date.now() < queue.current.retryAt) return false;
     setBusy(true);
     setError('');
+    setErrorCode(null);
     try {
       const value = await queue.current.send(command, snapshot, (body) =>
         api.command(access, body)
@@ -315,6 +318,7 @@ export function useContinuousRoom(roomId: string) {
     } catch (e) {
       if (e instanceof RoomFailure && e.snapshot) apply(e.snapshot);
       authority(e);
+      if (!terminalRef.current) setErrorCode(e instanceof RoomFailure ? e.code : null);
       if (!terminalRef.current)
         setError(
           e instanceof RoomFailure
@@ -355,6 +359,8 @@ export function useContinuousRoom(roomId: string) {
     },
     connection,
     error,
+    errorCode,
+    clearError: () => { setError(''); setErrorCode(null); },
     busy,
     privateError,
     terminal,

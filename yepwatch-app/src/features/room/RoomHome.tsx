@@ -32,7 +32,7 @@ export function RoomHome() {
   }, [params.fresh, view, id]);
   // Guests who just joined pick their services first.
   useEffect(() => {
-    if (!view || steps.current.services || view.isHost || view.member || !view.servicesKnown || view.myServiceIds !== null || view.phase === 'decided') return;
+    if (!view || steps.current.services || view.isHost || view.member || view.myServiceIds !== null || view.phase === 'decided') return;
     steps.current.services = true;
     openPage(id, 'services');
   }, [view, id]);

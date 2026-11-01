@@ -1,30 +1,8 @@
 /**
- * The room as the redesigned screens see it, and the commands they send. This is the only module
- * that knows the redesigned contract's field and command names (ideas, per-person services, host
- * switches, rename, seen titles). Until the contract package carries them, they are declared here
- * as optional fields; rooms from the current server fall back to `description` and the room's
- * own service list.
+ * The room as the redesigned screens see it, and the commands they send: ideas, per-person
+ * services, host switches, rename and seen titles, straight from contract 3.
  */
-import type { Candidate, RoomCommand, RoomConstraints, RoomDescription, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
-
-export interface IdeaRecord { id: string; text: string; authorId: string; on: boolean; attributes: RoomDescription['attributes'] }
-
-/** Redesigned contract fields, optional until the backend lands. */
-interface NextShared { ideas?: IdeaRecord[]; disabledServiceIds?: number[]; description?: RoomDescription | null }
-interface NextParticipant { serviceIds?: number[] | null }
-interface NextOwn { showSeen?: boolean }
-
-/** Commands of the redesigned contract (all work in setup and while choosing; none restarts the round). */
-export type NextCommand =
-  | { type: 'add_idea'; text: string }
-  | { type: 'edit_idea'; ideaId: string; text: string }
-  | { type: 'remove_idea'; ideaId: string }
-  | { type: 'set_idea'; ideaId: string; on: boolean }
-  | { type: 'set_services'; serviceIds: number[] }
-  | { type: 'set_service_enabled'; serviceIds: number[]; enabled: boolean }
-  | { type: 'configure'; expectedContextVersion: number; country?: string; constraints?: RoomConstraints }
-  | { type: 'rename'; nickname: string }
-  | { type: 'set_show_seen'; show: boolean };
+import type { Candidate, RoomCommand, RoomConstraints, RoomIdea, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 
 export type Kind = 'movie' | 'show_start';
 export const IDEA_LIMITS = { min: 2, max: 200, perRoom: 8 } as const;
@@ -36,8 +14,8 @@ export interface RoomPerson {
   self: boolean;
   host: boolean;
   dropped: boolean;
-  /** Undefined: the server doesn't report per-person services. Null: not picked yet. */
-  serviceIds: number[] | null | undefined;
+  /** Null: not picked yet. */
+  serviceIds: number[] | null;
   /** Part of the current round (needed for matches and agreement). */
   inRound: boolean;
 }
@@ -84,8 +62,6 @@ export interface RoomView {
   canAddIdea: boolean;
   kinds: Kind[];
   country: string | null;
-  /** Per-person services are reported by the server. */
-  servicesKnown: boolean;
   myServiceIds: number[] | null;
   /** Everyone's services together, before the host's switches. */
   roomServiceIds: number[];
@@ -103,26 +79,13 @@ export interface RoomView {
   decision: Candidate | null;
 }
 
-type Shared = RoomSnapshot['shared'] & NextShared;
-type Participant = RoomSnapshot['shared']['participants'][number] & NextParticipant;
-
-/** Rooms from the current server carry one prompt; it reads as the host's one idea, switched on. */
-function ideaRecords(shared: Shared): IdeaRecord[] {
-  if (shared.ideas) return shared.ideas;
-  const prompt = shared.description?.prompt?.trim();
-  return prompt ? [{ id: 'description', text: prompt, authorId: shared.hostParticipantId, on: true, attributes: shared.description?.attributes ?? [] }] : [];
-}
-
 export function ideasLabel(active: readonly { text: string }[]) {
   return active.length === 0 ? 'Anything' : active.length === 1 ? active[0].text : `${active[0].text} +${active.length - 1}`;
 }
 
 export function roomView(snapshot: RoomSnapshot): RoomView {
-  const shared = snapshot.shared as Shared;
-  const own = snapshot.own as RoomSnapshot['own'] & NextOwn;
-  const participants = shared.participants as Participant[];
-  const servicesKnown = participants.some((p) => p.serviceIds !== undefined);
-  const all: RoomPerson[] = participants.map((p) => ({
+  const { shared, own } = snapshot;
+  const all: RoomPerson[] = shared.participants.map((p) => ({
     id: p.participantId,
     nickname: p.nickname.trim(),
     self: p.participantId === own.participantId,
@@ -131,20 +94,17 @@ export function roomView(snapshot: RoomSnapshot): RoomView {
     serviceIds: p.serviceIds,
     inRound: Boolean(p.screenId) && !p.dropped,
   }));
-  const me = all.find((p) => p.self) ?? { id: own.participantId, nickname: '', self: true, host: own.canHost, dropped: Boolean(own.left), serviceIds: undefined, inRound: false };
+  const me = all.find((p) => p.self) ?? { id: own.participantId, nickname: '', self: true, host: own.canHost, dropped: Boolean(own.left), serviceIds: null, inRound: false };
   const host = all.find((p) => p.host) ?? null;
   const people = all.filter((p) => !p.dropped);
   const isHost = own.canHost;
   const screen = shared.screens[0];
-  const disabled = shared.disabledServiceIds ?? [];
-  const roomServiceIds = servicesKnown
-    ? [...new Set(people.flatMap((p) => p.serviceIds ?? []))]
-    : [...new Set([...(screen?.serviceIds ?? []), ...disabled])];
+  const disabled = shared.disabledServiceIds;
+  const roomServiceIds = [...new Set(people.flatMap((p) => p.serviceIds ?? []))];
   const enabledServiceIds = roomServiceIds.filter((id) => !disabled.includes(id));
-  const myServiceIds = servicesKnown ? me.serviceIds ?? null : isHost ? screen?.serviceIds ?? [] : null;
-  const ideas = ideaRecords(shared).map((i): IdeaView => {
+  const ideas = shared.ideas.map((i: RoomIdea): IdeaView => {
     const author = all.find((p) => p.id === i.authorId) ?? null;
-    return { id: i.id, text: i.text, on: i.on, author, mine: i.authorId === own.participantId && i.id !== 'description', fresh: !i.on && i.authorId !== shared.hostParticipantId };
+    return { id: i.id, text: i.text, on: i.on, author, mine: i.authorId === own.participantId, fresh: !i.on && i.authorId !== shared.hostParticipantId };
   });
   const activeIdeas = ideas.filter((i) => i.on);
   const kinds = shared.constraints.kinds.filter((k): k is Kind => k === 'movie' || k === 'show_start');
@@ -170,16 +130,15 @@ export function roomView(snapshot: RoomSnapshot): RoomView {
     canAddIdea: ideas.length < IDEA_LIMITS.perRoom,
     kinds,
     country,
-    servicesKnown,
-    myServiceIds,
+    myServiceIds: me.serviceIds,
     roomServiceIds,
     disabledServiceIds: disabled,
     enabledServiceIds,
-    picking: servicesKnown ? people.filter((p) => !p.self && p.serviceIds === null) : [],
+    picking: people.filter((p) => !p.self && p.serviceIds === null),
     needName: !me.nickname,
     canStart: isHost && Boolean(me.nickname) && enabledServiceIds.length > 0 && kinds.length > 0 && Boolean(country),
     member,
-    showSeen: member ? own.showSeen ?? false : null,
+    showSeen: member ? own.showSeen : null,
     matches: shared.matches.map((m) => candidate(m.candidateId)).filter((c): c is Candidate => Boolean(c)),
     proposal: shared.proposal ? {
       candidateId: shared.proposal.candidateId,
@@ -226,19 +185,18 @@ type Send = (command: RoomCommand) => Promise<boolean>;
  * version guards are never stale.
  */
 export function roomCommands(send: Send, latest: () => RoomSnapshot | undefined) {
-  const next = (command: NextCommand) => send(command as unknown as RoomCommand);
   const at = <T,>(fn: (s: RoomSnapshot) => Promise<T>, fallback: T) => { const s = latest(); return s ? fn(s) : Promise.resolve(fallback); };
   return {
-    addIdea: (text: string) => next({ type: 'add_idea', text: text.trim() }),
-    editIdea: (ideaId: string, text: string) => next({ type: 'edit_idea', ideaId, text: text.trim() }),
-    removeIdea: (ideaId: string) => next({ type: 'remove_idea', ideaId }),
-    setIdea: (ideaId: string, on: boolean) => next({ type: 'set_idea', ideaId, on }),
-    setServices: (serviceIds: number[]) => next({ type: 'set_services', serviceIds: [...new Set(serviceIds)].sort((a, b) => a - b) }),
-    setServiceEnabled: (serviceIds: number[], enabled: boolean) => next({ type: 'set_service_enabled', serviceIds, enabled }),
-    rename: (nickname: string) => next({ type: 'rename', nickname: nickname.trim() }),
-    setShowSeen: (show: boolean) => next({ type: 'set_show_seen', show }),
+    addIdea: (text: string) => send({ type: 'add_idea', text: text.trim() }),
+    editIdea: (ideaId: string, text: string) => send({ type: 'edit_idea', ideaId, text: text.trim() }),
+    removeIdea: (ideaId: string) => send({ type: 'remove_idea', ideaId }),
+    setIdea: (ideaId: string, on: boolean) => send({ type: 'set_idea', ideaId, on }),
+    setServices: (serviceIds: number[]) => send({ type: 'set_services', serviceIds: [...new Set(serviceIds)].sort((a, b) => a - b) }),
+    setServiceEnabled: (serviceIds: number[], enabled: boolean) => send({ type: 'set_service_enabled', serviceIds, enabled }),
+    rename: (nickname: string) => send({ type: 'rename', nickname: nickname.trim() }),
+    setShowSeen: (show: boolean) => send({ type: 'set_show_seen', show }),
     configure: (patch: { country?: string; constraints?: RoomConstraints }) =>
-      at((s) => next({ type: 'configure', expectedContextVersion: s.shared.contextVersion, ...patch }), false),
+      at((s) => send({ type: 'configure', expectedContextVersion: s.shared.contextVersion, ...patch }), false),
     start: () => at((s) => send({ type: 'start', expectedRosterVersion: s.shared.rosterVersion, expectedContextVersion: s.shared.contextVersion, hostReady: true }), false),
     vote: (candidateId: string, yes: boolean, activeExposureMs: number | null) => at((s) => {
       const current = s.own.votes.find((v) => v.candidateId === candidateId);

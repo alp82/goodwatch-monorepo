@@ -1,8 +1,9 @@
 import { View } from 'react-native';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { developmentNotice } from '../../core/config';
 import { GText, glow } from '../glow/theme';
-import { toRooms } from './nav';
+import { IDEA_LIMITS } from './model';
+import { openPage, toRooms } from './nav';
 import { useRoom } from './RoomProvider';
 import { Button, Hero, Note, Screen } from './ui';
 
@@ -28,13 +29,19 @@ export function RoomStatus() {
 
 /** Connection, saved actions and errors, in one quiet line above the screen's content. */
 export function RoomNotes() {
-  const { state, entry, notice, setNotice } = useRoom();
+  const { id, view, state, entry, notice, setNotice } = useRoom();
+  const onServices = usePathname().endsWith('/services');
   if (!(state.error || state.privateError || entry.error || state.pending || state.connection !== 'live' || notice || developmentNotice)) return null;
+  // Nobody brings a service (or the last one would go): ask for services, not an error.
+  const noServices = state.errorCode === 'needs_context' && !state.pending;
+  const ideaLimit = state.errorCode === 'limit_reached' && !state.pending;
   const text = state.retrySeconds > 0 ? `Try again in ${state.retrySeconds}s. Your action is saved.`
     : notice || entry.error || (state.privateError ? 'Refresh to keep choosing.'
       : state.pending ? 'Your choice is awaiting confirmation.'
+      : noServices ? 'Pick a streaming service'
+      : ideaLimit ? ((view?.ideas.length ?? 0) >= IDEA_LIMITS.perRoom ? `Up to ${IDEA_LIMITS.perRoom} ideas. Remove one first.` : 'No more new ideas in this room')
       : state.error || (state.connection === 'background' ? 'Updates paused while away.' : state.connection !== 'live' ? 'Connecting…' : ''));
-  const label = state.retrySeconds > 0 ? `Retry in ${state.retrySeconds}s` : state.pending ? 'Retry' : entry.error ? 'Retry' : 'Refresh';
+  const label = state.retrySeconds > 0 ? `Retry in ${state.retrySeconds}s` : state.pending ? 'Retry' : entry.error ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';
   return (
     <View style={{ gap: 4 }}>
       {developmentNotice ? <GText size={11} color={glow.muted} style={{ textAlign: 'center' }}>{developmentNotice}</GText> : null}
@@ -45,6 +52,8 @@ export function RoomNotes() {
           onPress: () => {
             setNotice('');
             if (state.pending) void state.send();
+            else if (noServices) { state.clearError(); if (!onServices) openPage(id, 'services'); }
+            else if (ideaLimit) state.clearError();
             else if (entry.error) void entry.retry();
             else { void state.refetch().catch(() => undefined); state.reconnect(); }
           },

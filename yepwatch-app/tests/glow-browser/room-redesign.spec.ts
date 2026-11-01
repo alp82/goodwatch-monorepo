@@ -31,7 +31,10 @@ test('guest host: Create opens Mood at once, Back returns to the room page, name
   await shot(page, '03-your-services');
   await button(page, 'Done').click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
-  await expect.poll(() => f.sent()).toEqual(['add_idea', 'configure', 'set_services']);
+  // The room gets its country right after creation, before anyone picks services.
+  await expect.poll(() => [...f.sent()].sort()).toEqual(['add_idea', 'configure', 'set_services']);
+  expect(f.sent().indexOf('configure')).toBeLessThan(f.sent().indexOf('set_services'));
+  expect(f.commands.find((c) => c.command.type === 'configure')?.command).toMatchObject({ country: 'US' });
   await expect(button(page, 'Netflix, Prime Video, change')).toBeVisible();
   // The name, then Start.
   await page.getByLabel('Your name').fill('Alp');
@@ -186,4 +189,29 @@ test('a friend opens the link: name, Join, then their services, then the waiting
   await expect(page.getByTestId('waiting')).toBeVisible();
   await expect.poll(() => f.room.shared.participants.find((p) => p.participantId === 'guest')?.serviceIds).toEqual([1899]);
   await expect(button(page, 'HBO Max, change')).toBeVisible();
+});
+
+test('nobody brings a service: the room asks for services instead of showing an error', async ({ page }) => {
+  const room = choosingRoom();
+  room.shared.participants.forEach((p) => { p.serviceIds = []; });
+  const f = await fakeRoom(page, room);
+  await page.goto('/room/test-room');
+  await expect(page.getByText('Pick a streaming service', { exact: true })).toBeVisible();
+  await expect(page.getByText(/country|screen/i)).toHaveCount(0);
+  await shot(page, '14-pick-services');
+  await button(page, 'Your services').click();
+  await expect(page.getByTestId('services-page')).toBeVisible();
+  await page.getByRole('checkbox', { name: 'Netflix' }).click();
+  await button(page, 'Done').click();
+  await expect.poll(() => f.room.shared.participants[0].serviceIds).toEqual([8]);
+});
+
+test('the room’s idea budget is used up: a plain line, the idea isn’t added', async ({ page }) => {
+  const f = await fakeRoom(page, choosingRoom(), { interpretations: 24 });
+  await page.goto('/room/test-room/room');
+  await button(page, 'Add an idea').click();
+  await page.getByLabel('Mood').fill('space adventure');
+  await page.getByLabel('Mood').press('Enter');
+  await expect(page.getByText('No more new ideas in this room', { exact: true })).toBeVisible();
+  expect(f.room.shared.ideas.map((i) => i.text)).toEqual(['cheer me up']);
 });

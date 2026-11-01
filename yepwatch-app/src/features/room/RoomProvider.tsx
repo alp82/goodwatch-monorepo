@@ -15,6 +15,7 @@ import { RoomFailure } from '../../core/continuous/api';
 import type { CachedRoom } from '../../core/continuous/state';
 import { appInviteUrl } from '../../core/invites';
 import { guestOnly } from '../../core/config';
+import { deviceCountryHint } from '../../core/lobby';
 import { queryClient } from '../../core/providers';
 import { useLobbyEntry } from '../glow/useLobbyEntry';
 import { roomCommands, roomView, type RoomCommands, type RoomView } from './model';
@@ -86,6 +87,17 @@ export function RoomProvider({ id, children }: { id: string; children: ReactNode
       setMemberBusy(false);
     }
   }, [state, memberBusy]);
+  // A new room has no country yet, and services are only valid within one: the host sets it right away
+  // (member prefill, else the device's region), before anyone picks services.
+  const countryAsked = useRef(new Set<number>());
+  const needsCountry = Boolean(view && view.isHost && !view.country && view.phase === 'setup');
+  const contextVersion = snapshot?.shared.contextVersion;
+  const prefillCountry = snapshot?.own.member.prefill?.country;
+  useEffect(() => {
+    if (!needsCountry || contextVersion === undefined || state.busy || state.pending || countryAsked.current.has(contextVersion)) return;
+    countryAsked.current.add(contextVersion);
+    void cmd.configure({ country: prefillCountry ?? deviceCountryHint() ?? 'US' });
+  }, [needsCountry, contextVersion, prefillCountry, state.busy, state.pending, cmd]);
   // The deck never ends: refill in the background before anyone runs out.
   useEffect(() => {
     if (!snapshot || snapshot.shared.phase !== 'choosing' || state.busy || entry.required || state.pending || state.privateError || state.terminal) return;

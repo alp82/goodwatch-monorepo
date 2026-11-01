@@ -15,7 +15,8 @@ async function fixture(page: Page, setup = false) {
     if (url.pathname.endsWith('/catalog/metadata')) {
       const country = url.searchParams.get('country') || '';
       countries.push(country);
-      return route.fulfill({ json: { countries: [{ code: 'DE', name: 'Germany' }, { code: 'ME', name: 'Montenegro' }], moods: [], services: country === 'ME' ? [{ id: 8, name: 'Netflix', logoUrl: null }] : Array.from({ length: 65 }, (_, i) => ({ id: i + 1, name: `Service ${String(i + 1).padStart(2, '0')}`, logoUrl: null })) } });
+      const services = country === 'ME' ? [{ id: 8, name: 'Netflix', logoUrl: null }] : Array.from({ length: 65 }, (_, i) => ({ id: i + 1, name: `Service ${String(i + 1).padStart(2, '0')}`, logoUrl: null }));
+      return route.fulfill({ json: { countries: [{ code: 'DE', name: 'Germany' }, { code: 'ME', name: 'Montenegro' }], moods: [], services, providerGroups: services.map((s) => ({ ...s, selectionIds: [s.id], minor: false })) } });
     }
     if (url.pathname.endsWith('/resolve-invite')) return route.fulfill({ json: { roomId: 'test-room' } });
     if (url.pathname.endsWith('/invite')) return route.fulfill({ json: { code: 'ABC234', path: '/r/ABC234' } });
