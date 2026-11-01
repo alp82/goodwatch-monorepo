@@ -255,9 +255,12 @@ export function createProposalHandler(
 					throw new RoomError("invalid_request", "Invalid country", 400)
 				return reply(await service.catalog.metadata(country))
 			}
-			if (request.method === "POST" && url.pathname === paths.resolveInvite) {
+			if (request.method === "POST" &&
+				(url.pathname === paths.resolveInvite || url.pathname === paths.invitePreview)) {
 				const value = parse(resolveSchema, await body(request))
-				return reply(await service.resolveInvite(value.code))
+				return reply(await (url.pathname === paths.invitePreview
+					? service.invitePreview(value.code)
+					: service.resolveInvite(value.code)))
 			}
 			const match = url.pathname.match(
 				/^\/api\/yepwatch\/v1\/proposal\/rooms\/([A-Za-z0-9_-]{32})(?:\/(join|commands|preview|realtime-ticket|member(?:\/progress)?))?$/

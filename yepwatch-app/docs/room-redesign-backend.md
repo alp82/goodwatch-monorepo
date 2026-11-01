@@ -15,6 +15,20 @@ Implementation branch: `feat/yepwatch-room-redesign`. Contract 3 changed in plac
 
 ## Client API
 
+`await continuousApi.invitePreview(code)` reads a room before joining via public
+`POST /api/yepwatch/v1/proposal/invites/preview` with `{ code }`. It returns the
+shared `InvitePreview` contract: `{ roomId, hostName, ideas: {text}[], kinds,
+phase, people }`. `hostName` is null for an unnamed or absent host; `ideas` contains
+only switched-on ideas in room order; `kinds` uses `movie`, `show_start` and
+`show_continue`; `phase` is `setup`, `choosing` or `decided`; `people` counts
+participants who have not left, including disconnected participants. The client
+strictly validates the response, including each idea object. No participant IDs,
+services, votes, proposal or candidate data are exposed. The endpoint sets no
+room credential and makes no room changes. It shares resolve's request schema,
+code normalization, capability lookup, active-room guard and error handling;
+unknown codes return `not_found` and expired rooms return `expired`. Six-character,
+previous 16-character and legacy signed codes work as they do with resolve.
+
 The existing `useContinuousRoom(...).send(command)` supports the commands below. The lower-level method remains `continuousApi.command(access, {commandId, sequence, command})`; use the existing controller to serialize commands and preserve uncertain-command envelopes. Types are exported from `@goodwatch/yepwatch-contracts/proposal`.
 
 ```ts

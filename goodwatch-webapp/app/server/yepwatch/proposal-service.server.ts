@@ -17,7 +17,8 @@ import type {
 	RealtimeAttachment,
 	RealtimeTicket,
 	RealtimeViewResponse,
-	RoomInvalidation
+	RoomInvalidation,
+	InvitePreview
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import {
 	shortInvite,
@@ -385,6 +386,21 @@ export class ProposalService {
 		)
 	}
 	async resolveInvite(code: string) {
+		const room = await this.invitedRoom(code)
+		return { roomId: room.id }
+	}
+	async invitePreview(code: string): Promise<InvitePreview> {
+		const room = activeRoom(await this.invitedRoom(code))
+		return {
+			roomId: room.id,
+			hostName: room.participants.find((p) => p.id === room.hostId)?.nickname || null,
+			ideas: (room.ideas ?? []).filter((idea) => idea.on).map(({ text }) => ({ text })),
+			kinds: [...room.constraints.kinds],
+			phase: room.phase,
+			people: room.participants.length
+		}
+	}
+	private async invitedRoom(code: string): Promise<ProposalRoom> {
 		const short = normalizeShortInvite(code)
 		const [legacyId, proof, extra] = code.split(".")
 		const id = short
@@ -404,7 +420,7 @@ export class ProposalService {
 			"Invite unavailable",
 			404
 		)
-		return { roomId: id }
+		return room
 	}
 	async join(id: string, request: JoinRoomRequest) {
 		return this.write(id, () => this.joinRoom(id, request))

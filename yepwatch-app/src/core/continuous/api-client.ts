@@ -1,6 +1,7 @@
 import {
   paths,
   type ApiError,
+  type InvitePreview,
   type RoomPromptPreview,
   type CommandEnvelope,
   type CommandResult,
@@ -18,6 +19,7 @@ import {
 } from '@goodwatch/yepwatch-contracts/proposal';
 import { connectionDiagnostic, type ConnectionDiagnostic, type ConnectionStage } from './connection-diagnostic';
 import { apiUrl } from '../config';
+import { invitePreviewSchema } from './wire';
 import { parseRetryAfter } from './retry';
 import type { RoomAccess } from '../credentials';
 export class RoomFailure extends Error {
@@ -108,6 +110,8 @@ export class ContinuousApi {
   }
   create = (body: GuestAdmissionRequest) => this.request<GuestAdmission>(paths.rooms, body);
   resolve = (code: string) => this.request<{ roomId: string }>(paths.resolveInvite, { code });
+  invitePreview = async (code: string): Promise<InvitePreview> =>
+    invitePreviewSchema.parse(await this.request<unknown>(paths.invitePreview, { code }));
   join = (id: string, body: JoinRoomRequest, access?: RoomAccess) =>
     this.request<GuestAdmission>(paths.join(id), body, access);
   snapshot = (a: RoomAccess) => this.request<RoomSnapshot>(paths.snapshot(a.roomId), undefined, a);
