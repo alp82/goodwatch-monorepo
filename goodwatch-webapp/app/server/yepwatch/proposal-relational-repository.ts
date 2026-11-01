@@ -360,7 +360,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 					idea_id: i.id,
 					text: i.text,
 					author_id: i.authorId,
-					on: i.on,
+					enabled: i.on,
 					attributes: i.attributes,
 					ranked_keys: i.rankedKeys,
 					interpreted_at: i.interpretedAt
@@ -674,7 +674,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 					id: i.idea_id,
 					text: i.text,
 					authorId: i.author_id,
-					on: i.on,
+					on: i.enabled,
 					attributes: i.attributes,
 					rankedKeys: i.ranked_keys,
 					interpretedAt: i.interpreted_at

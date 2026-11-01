@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_idea (
   "idea_id" TEXT NOT NULL,
   "text" TEXT NOT NULL,
   "author_id" TEXT NOT NULL,
-  "on" BOOLEAN NOT NULL,
+  "enabled" BOOLEAN NOT NULL,
   "attributes" ARRAY(OBJECT(STRICT) AS ("text" TEXT,"kind" TEXT,"key" TEXT)) NOT NULL,
   "ranked_keys" ARRAY(BIGINT) NOT NULL,
   "interpreted_at" BIGINT NOT NULL

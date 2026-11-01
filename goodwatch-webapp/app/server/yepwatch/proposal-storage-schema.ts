@@ -224,7 +224,7 @@ export const tables = {
 		idea_id: text(128),
 		text: text(200),
 		author_id: text(128),
-		on: bool,
+		enabled: bool,
 		attributes: array(
 			object({
 				text: text(200),

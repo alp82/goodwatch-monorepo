@@ -91,7 +91,7 @@ test('Actual two-gateway proposal clients: scoped poster/lens/dice, action-only 
   // Queued inspection becomes ineligible when a confirmed late join removes its match.
   send(a, 32, { inspection: { kind: 'poster', candidateId: 'movie:1' } })
   api.state.shared.matches = []; api.state.shared.revision++
-  api.state.shared.participants.push({ participantId: 'late', nickname: 'Late', screenId: null, ready: false }); api.state.shared.proposal.requiredCount = 3
+  api.state.shared.participants.push({ participantId: 'late', nickname: 'Late', serviceIds: null, screenId: null, ready: false }); api.state.shared.proposal.requiredCount = 3
   buses.forEach(bus => bus.hint(api.state.shared.revision))
   await until(() => b.frames.some(f => f.type === 'room.updated' && f.snapshot.revision === 2))
   await sleep(300); assert(!events(b.frames).some(f => f.sequence === 32))
