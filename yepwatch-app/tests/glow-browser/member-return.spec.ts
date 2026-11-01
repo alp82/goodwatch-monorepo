@@ -23,10 +23,14 @@ test('GoodWatch return restores the member name and account state without replay
     await route.fulfill({contentType:'text/html',body:'<!doctype html><script>sessionStorage.setItem("test-linked","1");location.replace("/room/test-room")</script>'});
   });
   await page.goto('/');await page.getByRole('button',{name:'Continue with GoodWatch',exact:true}).click();
-  await expect.poll(()=>links).toBe(1);await page.waitForURL('**/room/test-room');
+  await expect.poll(()=>links).toBe(1);await page.waitForURL('**/room/test-room**');
   await expect.poll(()=>page.evaluate(()=>sessionStorage.getItem('test-linked'))).toBe('1');
-  await expect(page.getByRole('button',{name:'Back',exact:true})).toBeVisible();
+  // The new room still opens on its Mood step after the sign-in round trip; Back returns to the room.
+  await expect(page.getByLabel('Mood')).toBeVisible();
+  await expect(page).toHaveURL(/\/room\/test-room\/mood/);
   expect(await page.evaluate(()=>(window as unknown as {bootSeen:boolean}).bootSeen)).toBe(false);
+  await page.getByRole('button',{name:'Back',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Start',exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Back',exact:true}).click();
   await expect(page.getByText(/, Alex$/)).toBeVisible();
   await page.getByRole('button',{name:'Profile'}).click();

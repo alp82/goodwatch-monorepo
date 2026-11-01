@@ -1,8 +1,7 @@
 /** The room's sub-pages: Room (ideas, people, settings, leave), Streaming, Your services, Movies and shows. */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Image, View } from 'react-native';
 import { router } from 'expo-router';
-import type { RoomConstraints } from '@goodwatch/yepwatch-contracts/proposal';
 import { deviceCountryHint } from '../../core/lobby';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { Feedback } from '../beta/Feedback';
@@ -10,12 +9,13 @@ import { SoundToggle } from '../feedback/RoomFeedback';
 import { GoodWatchMark } from '../shell/marks';
 import { FaceStack } from '../shell/parts';
 import { GText, Icon, Press, glow } from '../glow/theme';
-import { bringers, type Kind, type RoomCommands } from './model';
+import { bringers } from './model';
 import { leavePage, openPage } from './nav';
 import { CountryLine, IdeaList, KindsPick, RoomLink, ServiceGrid } from './parts';
 import { useRoom } from './RoomProvider';
 import { RoomNotes, RoomStatus } from './RoomStatus';
 import { RoomRows } from './Setup';
+import { kindsOnLeave, servicesOnLeave, type DraftKey, type Drafts } from './settings-save';
 import { namesLine, servicesIn, toggleService } from './services';
 import { Button, Logos, Section, Screen, Small, Switch, T, TextLink, card, useServices } from './ui';
 
@@ -42,7 +42,11 @@ function SwitchRow({ label, on, onPress, disabled }: { label: string; on: boolea
 
 /** The room in one place: ideas, people and the link, movies and shows, streaming, leave. */
 export function RoomPage() {
-  const { id, view, cmd, disabled } = useRoom();
+  const { id, view, cmd, disabled, acknowledgeIdeas } = useRoom();
+  // Friend ideas shown here count as seen: NEW stays on them during this visit, then goes.
+  const shown = useRef(new Set<string>());
+  useEffect(() => { for (const i of view?.ideas ?? []) if (i.fresh) shown.current.add(i.id); }, [view]);
+  useEffect(() => () => acknowledgeIdeas([...shown.current]), [acknowledgeIdeas]);
   if (!view) return <RoomStatus />;
   const leave = () => void cmd.leave().then(async (ok) => {
     if (!ok) return;
@@ -106,39 +110,37 @@ export function StreamingPage() {
   );
 }
 
-/** Saves when the page closes (Done, Back, browser or system back): one command, never one per tap. */
-function useSaveOnLeave(save: () => void) {
-  const latest = useRef(save);
-  useEffect(() => { latest.current = save; });
-  useEffect(() => () => latest.current(), []);
-}
-
-async function saveServices(cmd: RoomCommands, patch: { country: string | null; picked: number[] | null }) {
-  if (patch.country && !(await cmd.configure({ country: patch.country }))) return;
-  if (patch.picked) await cmd.setServices(patch.picked);
+/**
+ * The page's draft lives in the room (not the page), so it outlives the page: it's held while the
+ * page is open and handed over to be saved when the page closes (Done, Back, browser or system back),
+ * one command per change, never one per tap.
+ */
+function useDraftPage<K extends DraftKey>(key: K, final: () => Drafts[K]) {
+  const { saves } = useRoom();
+  const { hold, release } = saves;
+  const latest = useRef(final);
+  useEffect(() => { latest.current = final; });
+  useEffect(() => {
+    hold(key);
+    return () => release(key, latest.current());
+  }, [key, hold, release]);
 }
 
 /** Your own services (per person) and, for the host, the room's country. */
 export function ServicesPage() {
-  const { view, cmd, snapshot } = useRoom();
-  const [country, setCountry] = useState<string | null>(null);
-  const [picked, setPicked] = useState<number[] | null>(null);
+  const { view, snapshot, saves } = useRoom();
+  // An unsaved change (from this visit or one still being saved) wins; otherwise the confirmed room.
+  const draft = saves.drafts.services;
   const fallback = snapshot?.own.member.prefill?.country ?? deviceCountryHint() ?? 'US';
-  const shown = country ?? view?.country ?? fallback;
+  const shown = draft?.country ?? view?.country ?? fallback;
   const { all, metadata } = useServices(shown);
-  const selected = picked ?? view?.myServiceIds ?? [];
-  useSaveOnLeave(() => {
-    if (!view) return;
-    const sorted = (a: number[]) => JSON.stringify([...a].sort((x, y) => x - y));
-    const servicesChanged = picked !== null && (view.myServiceIds === null || sorted(picked) !== sorted(view.myServiceIds));
-    const nextCountry = view.isHost && ((country !== null && country !== view.country) || (!view.country && servicesChanged)) ? shown : null;
-    if (nextCountry || servicesChanged) void saveServices(cmd, { country: nextCountry, picked: servicesChanged ? picked : null });
-  });
+  const selected = draft?.picked ?? view?.myServiceIds ?? [];
+  useDraftPage('services', () => (view ? servicesOnLeave(draft, view, shown) : draft));
   if (!view) return <RoomStatus />;
   return (
     <Page testID="services-page" title="Your services">
-      <CountryLine country={shown} countries={metadata.data?.countries ?? []} onChange={view.isHost ? (code) => { setCountry(code); setPicked([]); } : undefined} />
-      <ServiceGrid all={all} loading={metadata.isPending} selected={selected} toggle={(s) => setPicked(toggleService(selected, s))} />
+      <CountryLine country={shown} countries={metadata.data?.countries ?? []} onChange={view.isHost ? (code) => saves.edit('services', { country: code, picked: [] }) : undefined} />
+      <ServiceGrid all={all} loading={metadata.isPending} selected={selected} toggle={(s) => saves.edit('services', { country: draft?.country ?? null, picked: toggleService(selected, s) })} />
       {metadata.error ? <TextLink label="Retry" onPress={() => void metadata.refetch()} /> : null}
     </Page>
   );
@@ -146,19 +148,13 @@ export function ServicesPage() {
 
 /** Movies, shows, or both (host). */
 export function KindsPage() {
-  const { view, cmd, snapshot } = useRoom();
-  const [kinds, setKinds] = useState<Kind[] | null>(null);
-  useSaveOnLeave(() => {
-    const constraints = snapshot?.shared.constraints;
-    if (!kinds || !kinds.length || !constraints || !view || JSON.stringify([...kinds].sort()) === JSON.stringify([...view.kinds].sort())) return;
-    const others = constraints.kinds.filter((k) => k !== 'movie' && k !== 'show_start');
-    const next: RoomConstraints = { ...constraints, kinds: [...kinds, ...others] };
-    void cmd.configure({ constraints: next });
-  });
+  const { view, saves } = useRoom();
+  const draft = saves.drafts.kinds;
+  useDraftPage('kinds', () => (view ? kindsOnLeave(draft, view) : draft));
   if (!view) return <RoomStatus />;
   return (
     <Page testID="kinds-page" title="Movies and shows">
-      <KindsPick kinds={kinds ?? view.kinds} set={setKinds} />
+      <KindsPick kinds={draft ?? view.kinds} set={(k) => saves.edit('kinds', k)} />
     </Page>
   );
 }

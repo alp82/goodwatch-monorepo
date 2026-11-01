@@ -26,7 +26,7 @@ export interface IdeaView {
   on: boolean;
   author: RoomPerson | null;
   mine: boolean;
-  /** A friend's suggestion the host hasn't switched on (shown as NEW to the host). */
+  /** A friend's suggestion that is off and the host hasn't seen or switched yet (NEW for the host). */
   fresh: boolean;
 }
 export interface ProposalView {
@@ -83,7 +83,10 @@ export function ideasLabel(active: readonly { text: string }[]) {
   return active.length === 0 ? 'Anything' : active.length === 1 ? active[0].text : `${active[0].text} +${active.length - 1}`;
 }
 
-export function roomView(snapshot: RoomSnapshot): RoomView {
+const NONE: ReadonlySet<string> = new Set();
+
+/** `seenIdeas`: friend ideas the host already acknowledged on this device (opened the Room page or switched them). */
+export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> = NONE): RoomView {
   const { shared, own } = snapshot;
   const all: RoomPerson[] = shared.participants.map((p) => ({
     id: p.participantId,
@@ -104,7 +107,7 @@ export function roomView(snapshot: RoomSnapshot): RoomView {
   const enabledServiceIds = roomServiceIds.filter((id) => !disabled.includes(id));
   const ideas = shared.ideas.map((i: RoomIdea): IdeaView => {
     const author = all.find((p) => p.id === i.authorId) ?? null;
-    return { id: i.id, text: i.text, on: i.on, author, mine: i.authorId === own.participantId, fresh: !i.on && i.authorId !== shared.hostParticipantId };
+    return { id: i.id, text: i.text, on: i.on, author, mine: i.authorId === own.participantId, fresh: !i.on && i.authorId !== shared.hostParticipantId && !seenIdeas.has(i.id) };
   });
   const activeIdeas = ideas.filter((i) => i.on);
   const kinds = shared.constraints.kinds.filter((k): k is Kind => k === 'movie' || k === 'show_start');

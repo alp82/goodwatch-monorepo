@@ -217,8 +217,9 @@ export function Entrance({ invite }: { invite?: string }) {
       await writeAdmission(intent, null);
       setAdmission(null);
       await rememberName(saved.request.nickname);
-      // A new room opens on its Mood step, above the room page and the start page (Back returns through both).
-      const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(member ? { signin: '1' } : saved.code ? {} : { fresh: '1' }) } };
+      // A new room opens on its Mood step, above the room page and the start page (Back returns through both);
+      // a member's new room links the account first, then opens Mood.
+      const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(member ? { signin: '1' } : {}), ...(saved.code ? {} : { fresh: '1' }) } };
       if (saved.code) router.replace(target);
       else router.push(target);
     } catch (e) {

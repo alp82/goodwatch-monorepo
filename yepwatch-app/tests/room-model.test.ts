@@ -146,3 +146,19 @@ test('service tiles: the catalog’s groups, names and order; toggles select who
   assert.equal(namesLine(servicesIn(all, [8, 9, 50, 60])), 'Netflix, Prime Video +2');
   assert.equal(firstTiles(all, [60]).some((s) => s.id === 60), true, 'picked minor tiles stay visible');
 });
+
+test('room view: NEW is a friend idea that is off and not yet acknowledged on this device', () => {
+  const s = room();
+  assert.equal(roomView(s).newSuggestions, 1);
+  // Seen on the Room page (or switched): no longer NEW, even while still off.
+  assert.equal(roomView(s, new Set(['i2'])).newSuggestions, 0);
+  assert.equal(roomView(s, new Set(['i2'])).ideas[1].fresh, false);
+  // Accepted, then switched off again: the host has dealt with it; it doesn't come back as NEW.
+  s.shared.ideas[1].on = true;
+  assert.equal(roomView(s).newSuggestions, 0);
+  s.shared.ideas[1].on = false;
+  assert.equal(roomView(s, new Set(['i2'])).newSuggestions, 0);
+  // A different friend idea arriving later is NEW again.
+  s.shared.ideas.push({ id: 'i3', text: 'heist', authorId: 'sam', on: false, attributes: [] });
+  assert.deepEqual(roomView(s, new Set(['i2'])).ideas.filter((i) => i.fresh).map((i) => i.id), ['i3']);
+});

@@ -50,12 +50,19 @@ export function choosingRoom(): FakeSnapshot {
 
 const union = (s: FakeSnapshot) => [...new Set(s.shared.participants.filter((p) => !p.dropped).flatMap((p) => p.serviceIds ?? []))].filter((id) => !s.shared.disabledServiceIds.includes(id));
 
-export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail' } = {}) {
+/**
+ * `member: 'return'`: Continue with GoodWatch "signs in" at once: the account is linked and the
+ * browser comes straight back to the room (as the real round trip does, a full page load).
+ */
+export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' } = {}) {
   // The room's lifetime idea searches (24 on the server); removing an idea doesn't give one back.
   let interpretations = opts.interpretations ?? 0;
   const commands: CommandEnvelope[] = [];
   const receipts = new Set<string>();
   let loseNext = false;
+  let refuseRefills = 0;
+  /** Commands of these types wait for the test to release them (another command in flight). */
+  const gates = new Map<string, Promise<void>>();
   const me = () => room.shared.participants.find((p) => p.participantId === room.own.participantId)!;
   const bump = () => { room.shared.revision++; };
   const nextCard = () => room.shared.candidates.find((c) => !room.own.votes.some((v) => v.candidateId === c.id && v.value !== null))?.id ?? null;
@@ -131,6 +138,11 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     const url = new URL(route.request().url());
     const path = url.pathname;
     if (path.endsWith('/catalog/metadata')) return route.fulfill({ json: metadata });
+    if (path.endsWith('/member/start') && opts.member === 'return') {
+      room.own.member = { state: 'linked', prefill: null };
+      bump();
+      return route.fulfill({ json: { authorizeUrl: new URL(`/room/${room.shared.roomId}`, route.request().headers().referer ?? 'http://127.0.0.1:8097').href, state: 'fixture-state', expiresAt: Date.now() + 600_000 } });
+    }
     if (path.endsWith('/member/start') || path.endsWith('/realtime-ticket'))
       return route.fulfill({ status: 501, json: { error: { code: 'not_implemented', message: 'Not in this fixture', retryable: false } } });
     // The public invite preview, as the server builds it: switched-on ideas only, people who haven't left.
@@ -160,6 +172,12 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     if (path.endsWith('/commands')) {
       const body = route.request().postDataJSON() as CommandEnvelope;
       commands.push(body);
+      const gate = gates.get(body.command.type);
+      if (gate) await gate;
+      if (body.command.type === 'refill' && refuseRefills > 0 && !receipts.has(body.commandId)) {
+        refuseRefills--;
+        return route.fulfill({ status: 409, json: { error: { code: 'conflict', message: 'Try again', retryable: false }, snapshot: room } });
+      }
       const refused = receipts.has(body.commandId) ? null : refuse(body.command);
       if (refused) return route.fulfill({ status: refused.status, json: { error: { code: refused.code, message: refused.message, retryable: false }, snapshot: room } });
       if (!receipts.has(body.commandId)) { receipts.add(body.commandId); apply(body); }
@@ -180,5 +198,13 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     lose: () => { loseNext = true; },
     /** A friend's change: bump the revision; the page sees it on its next read. */
     push: () => bump(),
+    /** Holds commands of one type in flight until the returned release is called. */
+    hold: (type: string) => {
+      let release = () => {};
+      gates.set(type, new Promise<void>((r) => { release = () => { gates.delete(type); r(); }; }));
+      return () => release();
+    },
+    /** The next n refills are refused (the app's send returns false). */
+    refuseRefills: (n: number) => { refuseRefills = n; },
   };
 }

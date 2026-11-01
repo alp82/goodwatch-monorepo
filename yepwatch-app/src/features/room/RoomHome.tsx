@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { BackHandler, Platform } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { guestOnly } from '../../core/config';
+import { clearMoodStep, hasMoodStep, markMoodStep } from '../../core/continuous/room-local';
 import { showsProposal } from './model';
 import { openPage, toRooms } from './nav';
 import { useRoom } from './RoomProvider';
@@ -13,9 +14,18 @@ import { Tonight } from './Tonight';
 import { Voting } from './Voting';
 
 export function RoomHome() {
-  const { id, state, view, entry, dismissedProposal, signin } = useRoom();
+  const { id, state, view, entry, dismissedProposal, signin, memberBusy } = useRoom();
   const params = useLocalSearchParams<{ signin?: string; fresh?: string }>();
-  const steps = useRef({ signin: false, mood: false, services: false });
+  const steps = useRef({ signin: false, services: false });
+  // The two arrival steps are independent: a room created through Continue with GoodWatch links the
+  // account first, then opens Mood. The Mood step is noted on this device so it survives the sign-in
+  // round trip (a full page load on the web).
+  const signinWaiting = !guestOnly && params.signin === '1';
+  useEffect(() => {
+    if (params.fresh !== '1') return;
+    markMoodStep(id);
+    router.setParams({ fresh: undefined });
+  }, [params.fresh, id]);
   // Arriving through sign-in: link the account once the room is known.
   useEffect(() => {
     if (guestOnly || params.signin !== '1' || !state.access || !view || steps.current.signin) return;
@@ -23,13 +33,12 @@ export function RoomHome() {
     router.setParams({ signin: undefined });
     if (!view.member) void signin();
   }, [params.signin, state.access, view, signin]);
-  // A room that was just created opens on its Mood step (Back returns here).
+  // A room that was just created opens on its Mood step (Back returns here), after any sign-in.
   useEffect(() => {
-    if (params.fresh !== '1' || !view || steps.current.mood) return;
-    steps.current.mood = true;
-    router.setParams({ fresh: undefined });
+    if (!view || params.fresh === '1' || signinWaiting || memberBusy || !hasMoodStep(id)) return;
+    clearMoodStep(id);
     if (view.isHost && !view.ideas.length) openPage(id, 'mood', { idea: 'new' });
-  }, [params.fresh, view, id]);
+  }, [params.fresh, view, id, signinWaiting, memberBusy]);
   // Guests who just joined pick their services first.
   useEffect(() => {
     if (!view || steps.current.services || view.isHost || view.member || view.myServiceIds !== null || view.phase === 'decided') return;
