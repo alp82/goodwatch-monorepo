@@ -1,5 +1,13 @@
 import { z } from 'zod';
 import type { ServerRealtimeFrame } from '@goodwatch/yepwatch-contracts/proposal';
+export const invitePreviewSchema = z.object({
+  roomId: z.string().regex(/^[A-Za-z0-9_-]{32}$/),
+  hostName: z.string().min(1).max(40).nullable(),
+  ideas: z.array(z.object({ text: z.string().min(2).max(200) }).strict()).max(8),
+  kinds: z.array(z.enum(['movie', 'show_start', 'show_continue'])),
+  phase: z.enum(['setup', 'choosing', 'decided']),
+  people: z.number().int().nonnegative(),
+}).strict();
 const n = z.number().int().nonnegative();
 const id = z.string().min(1).max(512);
 const episode = z

@@ -1,6 +1,7 @@
 /** Hybrid shared-proposal protocol3. Continuous contract2 stays unchanged. */
 import type {
 	Candidate as BaseCandidate,
+	CandidateKind,
 	CatalogMetadata,
 	CommandReceipt,
 	EpisodeIdentity,
@@ -369,11 +370,20 @@ export interface MemberStatusResponse {
 	prefill: MemberPrefill | null
 }
 const room = (id: string) => `${API_PREFIX}/rooms/${encodeURIComponent(id)}`
+export interface InvitePreview {
+	roomId: string
+	hostName: string | null
+	ideas: { text: string }[]
+	kinds: CandidateKind[]
+	phase: "setup" | "choosing" | "decided"
+	people: number
+}
 export interface RoomPromptPreview { prompt: string; attributes: RoomDescription["attributes"] }
 export const paths = {
 	rooms: `${API_PREFIX}/rooms`,
 	metadata: `${API_PREFIX}/catalog/metadata`,
 	resolveInvite: `${API_PREFIX}/guest/resolve-invite`,
+	invitePreview: `${API_PREFIX}/invites/preview`,
 	memberStart: `${API_PREFIX}/member/start`,
 	memberCallback: `${API_PREFIX}/member/callback`,
 	memberExchange: `${API_PREFIX}/member/exchange`,
