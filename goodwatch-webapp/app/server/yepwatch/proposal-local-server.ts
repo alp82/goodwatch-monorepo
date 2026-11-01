@@ -2,10 +2,8 @@
 import { REVISION_CHANNEL } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
-import {
-	ProposalMemoryRepository,
-	proposalFixtureCatalog,
-} from "./proposal-test-support.ts"
+import { ProposalMemoryRepository } from "./proposal-test-support.ts"
+import { localFixture } from "./proposal-local-fixture.ts"
 import {
 	crateSql,
 	CrateRoomRepository,
@@ -56,7 +54,7 @@ const catalog: ProposalCatalog =
 					await import("./continuous-runtime.server.ts")
 				).continuousGoodwatchCatalog()
 		  )
-		: proposalFixtureCatalog
+		: localFixture.catalog
 const service = new ProposalService(
 	repository,
 	catalog,
@@ -64,7 +62,11 @@ const service = new ProposalService(
 	async (event) => {
 		if (!redis) throw new Error("Bus absent")
 		await redis.publish(REVISION_CHANNEL, JSON.stringify(event))
-	}
+	},
+	Date.now,
+	undefined,
+	// Ideas need the room search; synthetic runs use the local interpreter, never the search role.
+	mode === "goodwatch" ? undefined : localFixture.interpret
 )
 const server = await listenYepWatch(
 	createProposalHandler(service, {
