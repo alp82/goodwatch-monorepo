@@ -46,7 +46,7 @@ export function useHome() {
   );
   // Side effects of classification: forget ended rooms, keep decisions for History.
   const gone = classified.filter((x) => x.c?.kind === 'gone').map((x) => x.entry.roomId).join(',');
-  const decided = classified.flatMap((x) => (x.c?.kind === 'decided' ? [x.c.record] : []));
+  const decided = classified.flatMap((x) => (x.c?.kind === 'active' && x.c.record ? [x.c.record] : []));
   const decidedKey = decided.map((d) => d.id).join(',');
   useEffect(() => {
     if (!gone) return;

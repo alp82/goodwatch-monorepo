@@ -25,9 +25,9 @@ test('GoodWatch return restores the member name and account state without replay
   await page.goto('/');await page.getByRole('button',{name:'Continue with GoodWatch',exact:true}).click();
   await expect.poll(()=>links).toBe(1);await page.waitForURL('**/room/test-room');
   await expect.poll(()=>page.evaluate(()=>sessionStorage.getItem('test-linked'))).toBe('1');
-  await expect(page.getByRole('button',{name:'Back to Your rooms'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Back',exact:true})).toBeVisible();
   expect(await page.evaluate(()=>(window as unknown as {bootSeen:boolean}).bootSeen)).toBe(false);
-  await page.getByRole('button',{name:'Back to Your rooms'}).click();
+  await page.getByRole('button',{name:'Back',exact:true}).click();
   await expect(page.getByText(/, Alex$/)).toBeVisible();
   await page.getByRole('button',{name:'Profile'}).click();
   await expect(page.getByText('Signed in with GoodWatch',{exact:true})).toBeVisible();
@@ -46,7 +46,7 @@ test('an interrupted sign-in remains reachable from Profile and retries in the e
     return route.fulfill({json:{countries:[{code:'DE',name:'Germany'}],services:[{id:8,name:'Netflix',logoUrl:null}],moods:[]}});
   });
   await page.goto('/room/test-room');
-  await page.getByRole('button',{name:'Back to Your rooms'}).click();
+  await page.getByRole('button',{name:'Back',exact:true}).click();
   for(let attempt=1;attempt<=2;attempt++){
     await page.getByRole('button',{name:'Profile',exact:true}).click();
     await expect(page.getByText('Signed in with GoodWatch',{exact:true})).toHaveCount(0);
@@ -54,7 +54,7 @@ test('an interrupted sign-in remains reachable from Profile and retries in the e
     await expect.poll(()=>links).toBe(attempt);
     await expect(page.getByText('GoodWatch is temporarily unavailable',{exact:true})).toBeVisible();
     expect(new URL(page.url()).searchParams.has('signin')).toBe(false);
-    await page.getByRole('button',{name:'Back to Your rooms'}).click();
+    await page.getByRole('button',{name:'Back',exact:true}).click();
   }
   expect(admissions).toBe(0);
 });

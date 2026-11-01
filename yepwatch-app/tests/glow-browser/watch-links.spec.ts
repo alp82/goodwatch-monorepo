@@ -2,7 +2,7 @@ import { expect,test } from '@playwright/test';
 import { continuousFixture } from '../continuous-fixture';
 
 for (const [width,height] of [[320,568],[375,667],[390,844],[844,390],[1440,900]]) {
- test(`Tonight provider links and GoodWatch details fit ${width}x${height}`,async({page})=>{
+ test(`Tonight watch button fits ${width}x${height}`,async({page})=>{
   await page.setViewportSize({width,height});const room=continuousFixture();const writes:string[]=[];
   room.shared.phase='decided';room.shared.screens[0].serviceIds=[8,9,337,350];
   room.shared.candidates[0].title='Person of Interest';room.shared.candidates[0].year=2011;
@@ -20,25 +20,19 @@ for (const [width,height] of [[320,568],[375,667],[390,844],[844,390],[1440,900]
    if(path.endsWith('/commands'))writes.push(route.request().postData()!);
    return route.fulfill({json:room});
   });
-  await page.goto('/room/test-room');const netflix=page.getByRole('link',{name:'Watch on Netflix'});
+  await page.goto('/room/test-room');
+  // One watch button: the first switched-on service that has the title.
+  const netflix=page.getByRole('link',{name:'Watch on Netflix'});
   await expect(netflix).toHaveAttribute('href','https://www.netflix.com/title/70197057');await netflix.click({trial:true});
-  await expect(page.getByRole('img',{name:'Netflix logo'})).toBeVisible();
-  const logoBox=await page.getByRole('img',{name:'Netflix logo'}).boundingBox();const labelBox=await netflix.getByText('Netflix',{exact:true}).boundingBox();expect(Math.abs(logoBox!.y-labelBox!.y)).toBeLessThan(20);
-  await expect(page.getByRole('link',{name:'Watch on Unselected service'})).toHaveCount(0);
-  const last=page.getByRole('link',{name:'Watch on Apple TV'});await last.scrollIntoViewIfNeeded();await last.click({trial:true});
-  await expect(page.getByRole('link',{name:'Find on Disney+'})).toHaveAttribute('href','https://www.themoviedb.org/tv/1411/watch?locale=DE');
-  const details=page.getByRole('link',{name:'Full details on GoodWatch'});await expect(details).toHaveAttribute('href','https://goodwatch.app/show/1411');await details.click({trial:true});
+  await expect(page.getByRole('link',{name:/^(Watch on|Find on) (Prime Video|Apple TV|Disney\+|Unselected service)/})).toHaveCount(0);
   await page.getByRole('button',{name:'Start again',exact:true}).click({trial:true});
   expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true);
-  await netflix.scrollIntoViewIfNeeded();await page.screenshot({path:`.expo/tonight-links-${width}.png`});
+  await page.screenshot({path:`.expo/tonight-links-${width}.png`});
   if (width === 390) {
    await page.context().route('https://www.netflix.com/**', route => route.fulfill({body:'Provider destination'}));
-   await page.context().route('https://goodwatch.app/show/1411', route => route.fulfill({body:'GoodWatch title details'}));
    const providerOpened=page.waitForEvent('popup');await netflix.click();const provider=await providerOpened;
    await expect(provider).toHaveURL('https://www.netflix.com/title/70197057');await provider.close();
-   const detailsOpened=page.waitForEvent('popup');await details.focus();await page.keyboard.press('Enter');const full=await detailsOpened;
-   await expect(full).toHaveURL('https://goodwatch.app/show/1411');await full.close();
-   await expect(page.getByText('TONIGHT',{exact:true})).toBeVisible();
+   await expect(page.getByTestId('tonight')).toBeVisible();
   }
   expect(writes).toEqual([]);
  });

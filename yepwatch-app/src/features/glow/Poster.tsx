@@ -1,6 +1,6 @@
 import { playFeedback } from '../feedback/sounds';
 import { FadeImage } from './FadeImage';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GText, Icon, Press, Score, glow, s } from './theme';
@@ -19,6 +19,7 @@ export function Poster({
   onTrailer,
   onGesture,
   stampStyle,
+  services,
 }: {
   title: GlowTitle;
   width: number;
@@ -33,6 +34,8 @@ export function Poster({
   onGesture: (phase: GesturePhase) => void;
   /** Optional overrides for the YEP / NOPE stamps (shape only); omitted keeps the approved look. */
   stampStyle?: StyleProp<ViewStyle>;
+  /** The room's services this title is on (logos beside the meta line). */
+  services?: ReactNode;
 }) {
   const [detailsFocused, setDetailsFocused] = useState(false);
   const latch = useRef(false);
@@ -77,7 +80,7 @@ export function Poster({
       style={{
         width,
         height,
-        borderRadius: 24,
+        borderRadius: 12,
         backgroundColor: '#242424',
         shadowColor: '#000',
         shadowOpacity: 0.6,
@@ -100,7 +103,7 @@ export function Poster({
         style={{
           flex: 1,
           overflow: 'hidden',
-          borderRadius: 24,
+          borderRadius: 12,
           borderWidth: 1,
           borderColor: '#ffffff26',
         }}
@@ -143,7 +146,8 @@ export function Poster({
             <GText bold size={Math.min(30, width * 0.105)} lines={2}>
               {title.title}
             </GText>
-            <GText color="#dedede" size={13} style={{ marginTop: 5 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 }}>
+            <GText color="#dedede" size={13} style={{ flexShrink: 1 }}>
               {[
                 title.year,
                 title.kind === 'movie'
@@ -157,6 +161,8 @@ export function Poster({
                 .filter(Boolean)
                 .join(' · ')}
             </GText>
+              {services}
+            </View>
             <View
               style={{
                 flexDirection: 'row',
@@ -236,7 +242,7 @@ export function Poster({
             position: 'absolute',
             right: 16,
             top: 16,
-            borderRadius: 999,
+            borderRadius: 10,
             paddingHorizontal: 12,
             minHeight: 44,
             flexDirection: 'row',

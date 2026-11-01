@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Linking, Platform, View } from 'react-native';
 import Constants from 'expo-constants';
-import { GText, Pill, glow } from '../glow/theme';
+import { GText, Press, glow } from '../glow/theme';
 
 export function buildLabel() {
   const config = Constants.expoConfig;
@@ -16,10 +16,10 @@ export function Feedback() {
   const body = `What happened?\n\nWhat did you expect?\n\nSteps to repeat it:\n\nScreenshot: attach one if useful.\n\nYepWatch ${version}\nSystem: ${Platform.OS} ${Platform.Version ?? 'browser'}\n`;
   return (
     <View style={{ gap: 8 }}>
-      <Pill label="Send feedback" onPress={() => {
+      <Press label="Send feedback" style={{ alignSelf: 'flex-start', minHeight: 32 }} onPress={() => {
         setFailed(false);
         void Linking.openURL(`mailto:hello@goodwatch.app?subject=${encodeURIComponent('YepWatch beta feedback')}&body=${encodeURIComponent(body)}`).catch(() => setFailed(true));
-      }}>Send feedback</Pill>
+      }}><GText size={13} bold color={glow.soft}>Send feedback</GText></Press>
       <GText size={12} color={glow.muted}>YepWatch {version}</GText>
       {failed && <>
         <GText size={13}>Email hello@goodwatch.app, or copy these details into a message:</GText>

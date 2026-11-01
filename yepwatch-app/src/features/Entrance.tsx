@@ -21,21 +21,21 @@ import { retainRequest, retryDeadline } from '../core/continuous/retry';
 import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
 import { Landing } from './home/Landing';
 import { BootPageReady } from './home/boot-phase';
-import { BootReveal } from './home/BootReveal';
 import { greeting, type HomeRoom } from './rooms/home-model';
-import { Ledger } from './rooms/Ledger';
-import { HistoryPanel, JoinPanel, NamePanel, ProfilePanel } from './rooms/panels';
+import { YourRooms } from './rooms/YourRooms';
+import { HistoryPanel, JoinPanel, ProfilePanel, RetryPanel } from './rooms/panels';
 import { useHome } from './rooms/useHome';
 import { AppFrame, SubHeader, type BackTarget } from './shell/Frame';
-import { Avatar, RoundButton, CoveredBody } from './shell/parts';
+import { Avatar, CoveredBody } from './shell/parts';
 import { column } from './shell/tokens';
 
-type PanelKind = 'name-create' | 'join' | 'profile' | 'history';
+type PanelKind = 'create' | 'join' | 'profile' | 'history';
 
 /**
- * The entrance: first visit lands on the approved intro; returning people land on their active rooms.
- * Create, Join, the one-time name, Profile and History are panels in the same frame. Admission keeps
- * the existing recovery: the exact request is persisted before every submit and retried as-is.
+ * The entrance: first visit lands on the approved intro; returning people land on Your rooms.
+ * Create makes the room at once (a guest host names themselves on the room page); Join, Profile and
+ * History are panels in the same frame. Admission keeps the existing recovery: the exact request is
+ * persisted before every submit and retried as-is.
  */
 export function Entrance({ invite }: { invite?: string }) {
   const home = useHome();
@@ -208,10 +208,10 @@ export function Entrance({ invite }: { invite?: string }) {
       await writeAdmission(intent, null);
       setAdmission(null);
       await rememberName(saved.request.nickname);
-      router.replace({
-        pathname: '/room/[id]',
-        params: { id: result.credential.roomId, ...(member ? { signin: '1' } : {}) },
-      });
+      // A new room opens on its Mood step, above the room page and the start page (Back returns through both).
+      const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(member ? { signin: '1' } : saved.code ? {} : { fresh: '1' }) } };
+      if (saved.code) router.replace(target);
+      else router.push(target);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not join this room.');
       setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
@@ -246,10 +246,11 @@ export function Entrance({ invite }: { invite?: string }) {
   }
   const resumeAdmission = () => {
     if (!admission && !restoreFailed && !recoveryBlocked) return false;
-    setRecoveryDismissed(false); setPanel(admission ? (admission.code ? 'join' : 'name-create') : 'join');
+    setRecoveryDismissed(false); setPanel(admission ? (admission.code ? 'join' : 'create') : 'join');
     return true;
   };
-  const create = () => { setError(''); if (resumeAdmission()) return; if (known && !admission) void enter(false, Boolean(home.member), undefined, known); else setPanel('name-create'); };
+  // No name first: the room exists at once; a guest host names themselves on the room page.
+  const create = () => { setError(''); if (resumeAdmission()) return; void enter(false, Boolean(home.member), undefined, known ?? ''); };
   // GoodWatch supplies the name, so Continue with GoodWatch never asks for one first.
   const signIn = guestOnly ? undefined : () => {
     setError('');
@@ -258,11 +259,10 @@ export function Entrance({ invite }: { invite?: string }) {
     else void enter(false, true, undefined, known ?? '');
   };
   const returning = home.hasRooms || Boolean(known);
-  const pending = admission ? (admission.code ? 'join' : 'name-create') : null;
+  const pending = admission ? (admission.code ? 'join' : 'create') : null;
   const shown: PanelKind | null = panel ?? (recoveryDismissed ? null : pending ?? (restoreFailed || recoveryBlocked ? 'join' : null));
-  const titles: Record<PanelKind, string> = { 'name-create': 'New room', join: invite ? 'Join the room' : 'Join a room', profile: 'Profile', history: 'History' };
+  const titles: Record<PanelKind, string> = { create: 'New room', join: invite ? 'Join the room' : 'Join a room', profile: 'Profile', history: 'History' };
   const backTo: BackTarget | null = shown ? { label: returning ? 'Your rooms' : 'Start', short: returning ? 'Rooms' : 'Start', onPress: closePanel } : null;
-  const active = home.active.length;
   const actionLabel = (first: string, again: string) => (busy ? 'Connecting…' : retrySeconds > 0 ? `Retry in ${retrySeconds}s` : admission ? again : first);
   const notices = (
     <>
@@ -279,28 +279,28 @@ export function Entrance({ invite }: { invite?: string }) {
     <AppFrame
       onLogo={shown ? closePanel : undefined}
       people={<Press label="Profile" disabled={home.loadingRooms} onPress={() => { setError(''); setPanel('profile'); }} style={{ alignItems: 'flex-end' }}><Avatar name={known} /></Press>}
-      subheader={shown ? <SubHeader back={backTo} title={titles[shown]} /> : returning ? (
-        <BootReveal index={0}><SubHeader large title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
-          subtitle={<GText size={13} color={glow.muted}>{active ? `${active} ${active === 1 ? 'room' : 'rooms'} going` : 'No rooms going'}</GText>}
-          right={<RoundButton label="History" icon="clock" onPress={() => setPanel('history')} />} /></BootReveal>
-      ) : null}
+      subheader={shown ? <SubHeader back={backTo} title={titles[shown]} /> : null}
     >
       <CoveredBody covered={Boolean(shown)}>
       {returning ? (
-        <Ledger rooms={home.active} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create} join={() => { setError(''); if (!resumeAdmission()) setPanel('join'); }} retry={home.retry} disabled={busy || checkingInvite || restoring} />
+        <YourRooms title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
+          rooms={home.active} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create}
+          join={() => { setError(''); if (!resumeAdmission()) setPanel('join'); }} retry={home.retry}
+          history={home.decisions.length || home.left.length ? () => setPanel('history') : undefined}
+          disabled={busy || checkingInvite || restoring} />
       ) : (
         <Landing create={create} join={() => { setError(''); if (!resumeAdmission()) setPanel('join'); }} signIn={signIn} disabled={busy || checkingInvite || restoring} />
       )}
       </CoveredBody>
       {!shown && error ? <View style={{ ...column, paddingBottom: 8 }}><GText size={14} color="#fca5a5">{error}</GText></View> : null}
-      {shown === 'name-create' && (
-        <NamePanel initial={admission?.request.nickname ?? known ?? nickname} busy={locked} error={error} action={actionLabel('Create room', 'Retry room request')}
-          submit={(name) => void enter(false, false, undefined, name)} extra={notices} />
+      {shown === 'create' && (
+        <RetryPanel action={actionLabel('Create room', 'Retry room request')} busy={locked} error={error} retry={() => void enter(false, false, undefined, admission?.request.nickname ?? known ?? '')} extra={notices} />
       )}
       {shown === 'join' && (
-        <JoinPanel nickname={admission ? admission.request.nickname : known} initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error}
+        <JoinPanel invite={Boolean(invite)} nickname={admission ? admission.request.nickname || null : known} member={Boolean(home.member)} initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error}
           editName={() => setPanel('profile')}
-          submit={(c, name) => void enter(true, false, undefined, name, c)} extra={notices} />
+          signIn={guestOnly || home.member ? undefined : (c) => void enter(true, true, undefined, '', c)}
+          submit={(c, name) => void enter(true, Boolean(home.member), undefined, name, c)} extra={notices} />
       )}
       {shown === 'profile' && <ProfilePanel nickname={known} member={Boolean(home.member)} signIn={signIn} busy={locked || home.loadingRooms} error={error} save={(name) => { void home.setNickname(name).then(() => setPanel(invite ? 'join' : null)); }} />}
       {shown === 'history' && <HistoryPanel decisions={home.decisions} left={home.left} canOpen={(id) => home.decidedRooms.has(id)} openRoom={open} returnTo={returnTo} busy={locked} />}

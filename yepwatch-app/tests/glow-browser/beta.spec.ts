@@ -9,9 +9,6 @@ test('shared beta links redirect to the install-first home and both app links wo
   await expect(page.getByRole('link', { name: 'Install YepWatch on iPhone' })).toHaveAttribute('href', invitations.ios);
   await expect(page.getByRole('link', { name: 'Install YepWatch on Android' })).toHaveAttribute('href', invitations.android ?? invitations.androidApk);
   await expect(page.getByText('Coming soon', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Create a room', exact: true }).click();
-  await expect(page.getByLabel('Your name')).toBeVisible();
-  await page.getByRole('button', { name: 'Back to Start' }).click();
   await page.getByRole('button', { name: 'Join a room', exact: true }).click();
   await expect(page.getByLabel('Room code or invitation')).toBeVisible();
   expect(requests).toEqual([]);

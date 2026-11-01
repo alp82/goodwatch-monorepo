@@ -19,31 +19,10 @@ export interface GlowPerson {
   nickname: string;
   self: boolean;
 }
-export interface GlowMatch {
-  title: GlowTitle;
-  averageYepMs: number | null;
-}
-export type GlowView = 'voting' | 'matches';
 export type GesturePhase = 'reach' | 'handle' | 'release';
-/** UI receives only authenticated, unexpired ephemeral events through the realtime adapter. */
-export interface GlowActivity {
-  participantId: string;
-  sessionId: string;
-  sequence: number;
-  view: 'voting' | 'matches' | 'trailer' | 'away';
-  gesture?: GesturePhase;
-  beat?: 'answer';
-  expiresAt: number;
-  serverTime: number;
-}
 export function presentationSize(width: number, height: number, wide: boolean) {
   const ph = Math.max(80, Math.min(height - (wide ? 42 : 30), (width - (wide ? 156 : 96)) * 1.5));
   return { width: ph / 1.5, height: ph };
-}
-export function boundedMatch(ids: string[], active: string | null, pick: string | null) {
-  return (
-    (active && ids.includes(active) ? active : pick && ids.includes(pick) ? pick : ids[0]) ?? null
-  );
 }
 export function peerColor(id: string) {
   const hues = ['#a78bfa', '#38bdf8', '#fbbf24', '#f472b6', '#2dd4bf'];
