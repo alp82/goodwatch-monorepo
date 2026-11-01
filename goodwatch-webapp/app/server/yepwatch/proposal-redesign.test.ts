@@ -710,3 +710,36 @@ test("a deck waiting for answers reopens once a vote lets a card retire, so the 
 	full.stream = { ...room.stream, reason: "room_capacity" }
 	assert.equal(vote(vote(full, one.id), two.id).stream.state, "capacity")
 })
+test("a departed person's last answer still pins its card, so a full deck keeps waiting", async () => {
+	const f = await fixture()
+	await f.start()
+	const room = (await f.repo.read(f.id))!.room
+	const [one, two] = room.candidates
+	assert.ok(one && two)
+	const friend = room.participants.find((p) => p.id !== room.hostId)!
+	friend.votes[one.id] = { value: "pass", revision: 1 }
+	friend.votes[two.id] = { value: "pass", revision: 1 }
+	friend.lastVotedId = two.id
+	const gone = structuredClone(friend)
+	gone.id = "gone"
+	gone.leftAt = 1
+	gone.lastVotedId = one.id
+	room.participants.push(gone)
+	room.stream = {
+		version: room.stream.version + 1,
+		state: "capacity",
+		reason: "awaiting_answers"
+	}
+	const vote = (r: ProposalRoom, candidateId: string) =>
+		command(r, {
+			type: "vote",
+			generation: r.generation,
+			candidateId,
+			expectedVoteRevision: 0,
+			value: "pass"
+		})
+	// Card one is held by the departed person's last answer, card two by the others': nothing can
+	// retire, so the stream must not flip to ready (a refill would make no progress).
+	const next = vote(vote(room, one.id), two.id)
+	assert.deepEqual(next.stream, room.stream)
+})

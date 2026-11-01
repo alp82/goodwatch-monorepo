@@ -309,6 +309,7 @@ export function proposalTransition(
 			? { ...envelope.command, screenId: ROOM_CONTEXT }
 			: envelope.command
 	continuousLive(original, now)
+	let voted = false
 	const me = actor(original, actorId)
 	requireRoom(
 		me.leftAt == null || c.type === "leave",
@@ -540,24 +541,23 @@ export function proposalTransition(
 				!room.proposal.baseParticipantIds.includes(actorId)
 			)
 				room.proposal.baseParticipantIds.push(actorId)
-			// A full deck waits for the others' answers. Once a card can retire, open the stream again so
-			// the next refill makes room; nobody would otherwise ask and every deck would stay empty.
-			if (
-				room.stream.state === "capacity" &&
-				room.stream.reason === "awaiting_answers" &&
-				retirable(room).size > 0
-			)
-				room.stream = {
-					version: room.stream.version + 1,
-					state: "ready",
-					reason: null
-				}
+			voted = true
 		}
 	}
 	for (const departed of original.participants.filter((p) => p.leftAt != null))
 		if (!room.participants.some((p) => p.id === departed.id))
 			room.participants.push(structuredClone(departed))
 	reconcile(room, original)
+	// A full deck waits for the others' answers. Once a card can retire, open the stream again so the next
+	// refill makes room; nobody would otherwise ask and every deck would stay empty. Checked after departed
+	// people are restored, on the same room retire() will see.
+	if (
+		voted &&
+		room.stream.state === "capacity" &&
+		room.stream.reason === "awaiting_answers" &&
+		retirable(room).size > 0
+	)
+		room.stream = { version: room.stream.version + 1, state: "ready", reason: null }
 	return room
 }
 
