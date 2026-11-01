@@ -33,8 +33,8 @@ export function Lobby({ snapshot, disabled, send, invite, edit }: {
       <View style={{ gap: size.compact ? 12 : 22, flexDirection: size.compact ? 'row' : 'column', alignItems: size.compact ? 'center' : undefined }}>
         <View style={{ flex: size.compact ? 1 : undefined, gap: 10 }}>
           <GText size={size.compact ? 26 : size.big ? 42 : 34} bold style={{ letterSpacing: -0.8 }}>What are we watching?</GText>
-          <GText size={size.compact ? 13 : 16} color={glow.muted}>{shared.description?.prompt || 'A little inspiration. A choice for everyone.'}</GText>
-          {shared.description?.attributes.length ? <ReadAs attributes={shared.description.attributes} /> : null}
+          <GText size={size.compact ? 13 : 16} color={glow.muted}>{shared.ideas.map(i => i.text).join(' · ') || 'A little inspiration. A choice for everyone.'}</GText>
+          {shared.ideas[0]?.attributes.length ? <ReadAs attributes={shared.ideas[0].attributes} /> : null}
           {setup && (
             <GText size={14} color={glow.muted}>
               {flag(current!.country!)} {current!.country} · {providerCount} streaming {providerCount === 1 ? 'service' : 'services'}

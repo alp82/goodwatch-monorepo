@@ -18,6 +18,7 @@ export function continuousFixture(): RoomSnapshot {
   return {
     shared: {
       contractVersion: 3,
+      ideas: [],disabledServiceIds:[],
       roomId: 'test-room',
       revision: 1,
       phase: 'choosing',
@@ -26,7 +27,7 @@ export function continuousFixture(): RoomSnapshot {
       rosterVersion: 1,
       contextVersion: 1,
       generation: 1,
-      participants: [{ participantId: 'host', nickname: 'Host', screenId: 'tv', ready: true }],
+      participants: [{ participantId: 'host', nickname: 'Host', serviceIds:[8], screenId: 'tv', ready: true }],
       screens: [{ id: 'tv', label: 'Our screen', country: 'DE', serviceIds: [8], confirmed: true }],
       constraints: { kinds: ['movie', 'show_start'], maxMinutes: null, moods: [] },
       candidates: [candidate('c1'), candidate('c2')],
@@ -38,6 +39,7 @@ export function continuousFixture(): RoomSnapshot {
       decision: null,
     },
     own: {
+      showSeen:false,
       participantId: 'host',
       nextSequence: 1,
       canHost: true,

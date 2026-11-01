@@ -31,7 +31,7 @@ class MemoryActivity extends EventEmitter implements ActivityBus {
   close() {}
 }
 async function setup(t: test.TestContext, pointers = false, roomDetails = false, cheers = false) {
-  const api = await fixture('proposal'); api.state.shared = choosing(); if (roomDetails) { api.state.shared.savedServiceIds = [8,337]; api.state.shared.description = {prompt:'A cosy mystery',attributes:[{text:'Mystery',kind:'want'}]}; api.state.shared.participants.push({participantId:'person-3',nickname:'Dropped',screenId:'screen-1',ready:true,dropped:true}) }; api.state.leaseMs = 60_000
+  const api = await fixture('proposal'); api.state.shared = choosing(); if (roomDetails) { api.state.shared.disabledServiceIds = [337]; api.state.shared.ideas = [{id:'idea',text:'A cosy mystery',authorId:'person-1',on:true,attributes:[{text:'Mystery',kind:'want'}]}]; api.state.shared.participants.push({participantId:'person-3',nickname:'Dropped',serviceIds:null,screenId:'screen-1',ready:true,dropped:true}) }; api.state.leaseMs = 60_000
   const hub = new ActivityHub(), buses = [new FakeBus(), new FakeBus()], activities = [hub.bus(), hub.bus()]
   const gateways = buses.map((b, n) => createGateway(api.authority, b, { port: 0, auditMs: 1000 }, { activityBus: activities[n], proposal: true }))
   const addresses = await Promise.all(gateways.map(g => g.listen()))
@@ -52,7 +52,7 @@ const send = (client: Awaited<ReturnType<typeof connect<ServerRealtimeFrame>>>, 
 
 test('Proposal projection is strict, anonymous and accepts pending latejoin with honest missing timing', () => {
   const s = choosing(); assert.equal(proposalProjection(s, s.roomId).proposal?.agreeCount, 1)
-  const late = structuredClone(s); late.matches = []; late.participants.push({ participantId: 'late', nickname: 'Late', ready: false, screenId: null }); late.proposal!.requiredCount++
+  const late = structuredClone(s); late.matches = []; late.participants.push({ participantId: 'late', nickname: 'Late', serviceIds:null, ready: false, screenId: null }); late.proposal!.requiredCount++
   assert.equal(proposalProjection(late, late.roomId).proposal?.candidateId, 'movie:1')
   const changes = [
     (x: any) => { x.proposal.proposerParticipantId = 'person-1' }, (x: any) => { x.proposal.agreedBy = ['person-1'] },
@@ -132,21 +132,21 @@ test('two gateways relay bounded live pointers only to opted-in clients, never a
  await until(()=>events(modern.frames).some(f=>f.pointer===null));
 });
 
-test('Room descriptions reach capable clients without breaking older strict projections', async (t) => {
+test('All authenticated room clients receive ideas and disabled services; roomDetails includes dropped places', async (t) => {
   const {
     clients: [old, current],
   } = await setup(t, false, true)
   const before = old.frames.find((f) => f.type === 'room.snapshot')!
   const after = current.frames.find((f) => f.type === 'room.snapshot')!
   if (before.type !== 'room.snapshot' || after.type !== 'room.snapshot') throw new Error('Missing snapshots')
-  assert.equal(Object.hasOwn(before.snapshot, 'description'), false)
+  assert.deepEqual(before.snapshot.ideas,after.snapshot.ideas)
   assert.equal(Object.hasOwn(before.snapshot, 'savedServiceIds'), false)
-  assert.deepEqual(after.snapshot.savedServiceIds, [8,337])
-  assert.equal(after.snapshot.description?.prompt, 'A cosy mystery')
+  assert.deepEqual(after.snapshot.disabledServiceIds, [337])
+  assert.equal(after.snapshot.ideas[0]?.text, 'A cosy mystery')
   assert.equal(before.snapshot.participants.length, 2)
   assert.equal(after.snapshot.participants.length, 3)
   assert.equal(after.snapshot.participants[2].dropped, true)
-  assert.deepEqual(after.snapshot.description?.attributes, [
+  assert.deepEqual(after.snapshot.ideas[0]?.attributes, [
     { text: 'Mystery', kind: 'want' },
   ])
 })
@@ -217,4 +217,21 @@ test('Two gateways relay decision cheers to capable clients; stale and restarted
   hub.emit({ ...first, sequence: 24, serverTime: Date.now(), expiresAt: Date.now() + 3000 })
   await sleep(300)
   assert(!events(modern.frames).slice(before).some(f => f.cheer), 'no old decision cheer after restart')
+})
+
+test('ideas and per-person services project to every participant; private attribution never crosses the gateway', () => {
+ const s=choosing()
+ s.ideas=[{id:'idea',text:'Mystery',authorId:'person-1',on:true,attributes:[{text:'Mystery',kind:'want'}]}]
+ s.disabledServiceIds=[337]
+ s.participants[0].nickname=''
+ s.participants[0].serviceIds=[8,337]
+ s.participants[1].serviceIds=null
+ assert.deepEqual(proposalProjection(s,s.roomId).ideas,s.ideas)
+ assert.deepEqual(proposalProjection(s,s.roomId).participants.map(p=>p.serviceIds),[[8,337],null])
+ for (const mutation of [
+  (v:any)=>{v.ideas[0].rankedKeys=[1]},
+  (v:any)=>{v.candidates[0].ideaIds=['idea']},
+  (v:any)=>{v.participants[0].showSeen=true},
+  (v:any)=>{v.proposal.proposerId='person-1'},
+ ]) {const bad=structuredClone(s);mutation(bad);assert.throws(()=>proposalProjection(bad,s.roomId))}
 })

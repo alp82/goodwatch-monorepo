@@ -27,7 +27,7 @@ const ACCESS_ENDED = ['unauthorized', 'forbidden', 'not_found', 'expired'];
 
 /** A room has no name of its own: the mood prompt names it, otherwise its host does. */
 export function roomLabel(snapshot: RoomSnapshot) {
-  const prompt = snapshot.shared.description?.prompt?.trim();
+  const prompt = snapshot.shared.ideas.map(i => i.text).join(' · ').trim();
   if (prompt) return prompt.length > 48 ? `${prompt.slice(0, 47)}…` : prompt.charAt(0).toUpperCase() + prompt.slice(1);
   const host = snapshot.shared.participants.find((p) => p.participantId === snapshot.shared.hostParticipantId)?.nickname;
   return host ? `${host}’s room` : 'Your room';
@@ -72,7 +72,7 @@ export function homeRoom(entry: RegisteredRoom, snapshot: RoomSnapshot): HomeRoo
   return {
     roomId: shared.roomId,
     label: roomLabel(snapshot),
-    prompt: shared.description?.prompt?.trim() || null,
+    prompt: shared.ideas.map(i => i.text).join(' · ').trim() || null,
     phase: shared.phase === 'setup' ? 'setup' : 'choosing',
     people: shared.participants.map((p) => ({ id: p.participantId, nickname: p.nickname, dropped: Boolean(p.dropped), self: p.participantId === own.participantId })),
     hostNickname: shared.participants.find((p) => p.participantId === shared.hostParticipantId)?.nickname ?? null,

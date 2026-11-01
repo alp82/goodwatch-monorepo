@@ -40,7 +40,7 @@ import { COLUMN, R, column, stampStyle } from '../shell/tokens';
 import { roomLabel } from '../rooms/home-model';
 import { RoomSettings } from '../rooms/RoomSettings';
 import { GoodWatchButton } from '../home/Landing';
-import { showShuffle as readiness, startAgain as runStartAgain, type RoomSettingsValue } from '../rooms/round';
+import { showShuffle as readiness, startAgain as runStartAgain, saveRoomSettings, type RoomSettingsValue } from '../rooms/round';
 
 type RoomPanel = 'room' | 'details' | 'trailer' | 'settings' | 'restart';
 
@@ -231,7 +231,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   async function saveSettings(v: RoomSettingsValue) {
     const s = latest();
     if (!s) return false;
-    const ok = await send({ type: 'configure', expectedContextVersion: s.shared.contextVersion, country: v.country, serviceIds: v.serviceIds, constraints: v.constraints, prompt: v.prompt });
+    const ok = await saveRoomSettings({latest,send},v);
     if (ok) setPanel(null);
     return ok;
   }
@@ -468,12 +468,12 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       )}
       {panel === 'room' && (
         <Panel testID="room-panel">
-          {shared.description && (
+          {shared.ideas.length > 0 && (
             <View style={{ gap: 10 }}>
               <Label>What we’re looking for</Label>
-              <GText>{shared.description.prompt}</GText>
+              <GText>{shared.ideas.map(i => i.text).join(' · ')}</GText>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                {shared.description.attributes.map((a, i) => <Chip key={i} gold>{a.text}</Chip>)}
+                {shared.ideas[0].attributes.map((a, i) => <Chip key={i} gold>{a.text}</Chip>)}
               </View>
             </View>
           )}

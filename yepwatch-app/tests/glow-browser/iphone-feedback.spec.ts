@@ -32,7 +32,7 @@ async function fixture(page: Page, setup = false) {
       if (command.type === 'resume_voting') { room.shared.phase='choosing'; room.shared.decision=null; room.shared.proposal=null; room.shared.generation++; room.own.agreement.agreed=false; }
       if (command.type === 'leave') { left = true; room.own.left = true; }
       if (command.type === 'restart') { room.shared.phase = 'setup'; room.shared.generation++; room.shared.contextVersion++; room.shared.rosterVersion++; room.shared.decision = null; room.shared.proposal = null; room.own.votes = []; room.own.nextCandidateId = 'c1'; room.shared.stream = { version: 2, state: 'ready', reason: null }; }
-      if (command.type === 'configure') { room.shared.contextVersion++; room.shared.screens[0].serviceIds = command.serviceIds; room.shared.description = { prompt: command.prompt, attributes: [] }; }
+      if (command.type === 'configure') { room.shared.contextVersion++; if(command.country) room.shared.screens[0].country = command.country; }
       if (command.type === 'start') room.shared.phase = 'choosing';
       return route.fulfill({ json: { snapshot: room, receipt: {} } });
     }

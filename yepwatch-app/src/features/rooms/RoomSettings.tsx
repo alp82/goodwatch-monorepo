@@ -37,13 +37,13 @@ export function RoomSettings({ snapshot, preview, disabled, action, busyLabel, s
   const [customServices, setServices] = useState<number[]>(current?.serviceIds ?? []);
   const [useSavedProviders, setUseSavedProviders] = useState(!current?.confirmed);
   const [constraints, setConstraints] = useState(shared.constraints);
-  const [prompt, setPrompt] = useState(shared.description?.prompt ?? '');
+  const [prompt, setPrompt] = useState(shared.ideas.find(i => i.authorId === own.participantId)?.text ?? '');
   const [countryPicker, setCountryPicker] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const savedServiceIds = shared.savedServiceIds ?? own.member.prefill?.serviceIds ?? [];
+  const savedServiceIds = own.member.prefill?.serviceIds ?? [];
   const metadata = useQuery({ queryKey: ['continuous-metadata', country], queryFn: () => continuousApi.metadata(country || undefined) });
   const providerGroups = metadata.data?.providerGroups ?? metadata.data?.services.map((s) => ({ ...s, selectionIds: [s.id] })) ?? [];
   const availableProviders = new Set(metadata.data?.services.map((s) => s.id) ?? []);

@@ -92,7 +92,7 @@ test('home classifies active, left and decided rooms from the room’s own snaps
   assert.equal(c.kind, 'decided');
   assert.equal(c.kind === 'decided' && c.record.id, 'test-room:1:77');
   assert.equal(decisionRecord(decided)?.title, 'Isolated test c2');
-  s.shared.description = { prompt: 'a twisty thriller', attributes: [] } as unknown as RoomSnapshot['shared']['description'];
+  s.shared.ideas = [{id:'mood',text:'a twisty thriller',authorId:'host',on:true,attributes:[]}];
   assert.equal(roomLabel(s), 'A twisty thriller');
 });
 
@@ -153,7 +153,9 @@ function roomDriver(start: RoomSnapshot, fail?: RoomCommand['type']) {
       if (c.type === fail) return false;
       current = structuredClone(current);
       if (c.type === 'restart') { current.shared.phase = 'setup'; current.shared.generation++; current.shared.revision++; current.shared.contextVersion++; current.shared.rosterVersion++; current.shared.decision = null; }
-      if (c.type === 'configure') { current.shared.contextVersion++; current.shared.screens[0].serviceIds = c.serviceIds; }
+      if (c.type === 'configure') { current.shared.contextVersion++; if(c.country) current.shared.screens[0].country = c.country; if(c.constraints) current.shared.constraints=c.constraints; }
+      if(c.type==='set_services'){current.shared.participants[0].serviceIds=c.serviceIds;current.shared.contextVersion++;}
+      if(c.type==='add_idea')current.shared.ideas.push({id:'idea',text:c.text,authorId:current.own.participantId,on:true,attributes:[]});
       if (c.type === 'start') current.shared.phase = 'choosing';
       return true;
     },
@@ -166,7 +168,7 @@ const decidedRoom = () => {
   s.shared.decision = { candidateId: 'c1', decidedAt: 5, availability: [] } as unknown as RoomSnapshot['shared']['decision'];
   return s;
 };
-const same = (s: RoomSnapshot): RoomSettingsValue => ({ country: s.shared.screens[0].country!, serviceIds: [...s.shared.screens[0].serviceIds], constraints: s.shared.constraints, prompt: s.shared.description?.prompt ?? '' });
+const same = (s: RoomSnapshot): RoomSettingsValue => ({ country: s.shared.screens[0].country!, serviceIds: [...s.shared.screens[0].serviceIds], constraints: s.shared.constraints, prompt: s.shared.ideas.map(i => i.text).join(' · ') });
 
 test('Start again restarts, then starts with the latest versions; unchanged settings are not re-sent', async () => {
   const room = roomDriver(decidedRoom());
@@ -181,8 +183,8 @@ test('Start again saves changed settings between restart and start', async () =>
   const value = { ...same(room.latest()), serviceIds: [8, 9] };
   assert.ok(changedSettings(room.latest(), value));
   assert.equal(await startAgain(room, value), true);
-  assert.deepEqual(room.sent.map((c) => c.type), ['restart', 'configure', 'start']);
-  assert.equal((room.sent[1] as { expectedContextVersion: number }).expectedContextVersion, 2);
+  assert.deepEqual(room.sent.map((c) => c.type), ['restart', 'set_services', 'start']);
+  assert.deepEqual(room.sent[1],{type:'set_services',serviceIds:[8,9]});
   assert.equal((room.sent[2] as { expectedContextVersion: number }).expectedContextVersion, 3);
 });
 

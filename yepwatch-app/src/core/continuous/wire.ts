@@ -133,23 +133,8 @@ const details = z.union([
 export const sharedSchema = z
   .object({
     contractVersion: z.literal(3),
-    savedServiceIds: z.array(z.number().int().positive()).max(1200).optional(),
-    description: z
-      .object({
-        prompt: z.string(),
-        attributes: z.array(
-          z
-            .object({
-              text: z.string(),
-              kind: z.enum(['attribute', 'excluded', 'want', 'avoid', 'phrase']),
-              key: z.string().optional(),
-            })
-            .strict()
-        ),
-      })
-      .strict()
-      .nullable()
-      .optional(),
+    ideas: z.array(z.strictObject({id:z.string(),text:z.string().min(2).max(200),authorId:z.string(),on:z.boolean(),attributes:z.array(z.strictObject({text:z.string(),kind:z.enum(['attribute','excluded','want','avoid','phrase']),key:z.string().optional()})).max(100)})).max(8),
+    disabledServiceIds: z.array(z.number().int().positive()).max(1200),
     roomId: id,
     revision: n,
     phase: z.enum(['setup', 'choosing', 'decided', 'expired']),
@@ -163,6 +148,7 @@ export const sharedSchema = z
         .object({
           participantId: id,
           nickname: z.string(),
+          serviceIds: z.array(n).nullable(),
           screenId: id.nullable(),
           ready: z.boolean(),
           dropped: z.boolean().optional(),

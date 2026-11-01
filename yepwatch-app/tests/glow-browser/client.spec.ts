@@ -89,7 +89,7 @@ async function fixture(page: Page, setupGuest = false) {
         }
         if (c.type === 'setup') {
           room.shared.screens = c.screens;
-          room.shared.constraints = c.constraints;
+          if(c.constraints) room.shared.constraints = c.constraints;
           room.shared.contextVersion++;
         }
         if (c.type === 'configure') {
@@ -97,16 +97,12 @@ async function fixture(page: Page, setupGuest = false) {
             {
               id: 'room',
               label: 'Our room',
-              country: c.country,
-              serviceIds: c.serviceIds,
+              country: c.country ?? room.shared.screens[0]?.country ?? "DE",
+              serviceIds: room.shared.screens[0]?.serviceIds ?? [],
               confirmed: true,
             },
           ];
-          room.shared.constraints = c.constraints;
-          room.shared.description = {
-            prompt: c.prompt,
-            attributes: c.prompt ? [{ text: 'Funny', kind: 'want' }] : [],
-          };
+          if(c.constraints) room.shared.constraints = c.constraints;
           room.shared.contextVersion++;
         }
         if (c.type === 'assign_screen') {
@@ -755,7 +751,7 @@ test('live hover positions cross the poster, pressed swipes stay private, releas
   f.room.shared.participants.push({
     participantId: 'peer',
     nickname: 'Friend',
-    screenId: 'tv',
+    serviceIds:null, screenId: 'tv',
     ready: true,
   });
   const sent: any[] = [];
@@ -880,7 +876,7 @@ test('leaving the room sends one explicit command and returns to the entrance', 
 
  test('dropped people keep a visible place without inflating the active room count', async ({page}) => {
  const f = await fixture(page);
- f.room.shared.participants.push({participantId:'dropped-friend',nickname:'Sam',screenId:'tv',ready:true,dropped:true});
+ f.room.shared.participants.push({participantId:'dropped-friend',nickname:'Sam',serviceIds:null, screenId:'tv',ready:true,dropped:true});
  await page.reload();
  await expect(page.getByLabel('Sam, dropped', {exact:true})).toBeVisible();
  await expect(page.getByRole('button', {name:'Room, 1 person'})).toBeVisible();
@@ -893,7 +889,7 @@ test('shared saved-provider defaults preselect the union, filter unavailable pro
  const f = await fixture(page);
  f.room.shared.phase='setup';
  f.room.shared.screens=[{id:'room',label:'Our room',country:'DE',serviceIds:[],confirmed:false}];
- f.room.shared.savedServiceIds=[8,337,999];
+ f.room.own.member.prefill={country:"DE",serviceIds:[8,337,999],savedProgressAvailable:false};
  await page.reload();
  await page.getByRole('button',{name:'Set up our room'}).click();
  await expect(page.getByRole('checkbox',{name:'Netflix',exact:true})).toBeChecked();
@@ -996,7 +992,7 @@ test('prompt presets become live search picks and grouped providers retain every
 
 test('Tonight cheers send real activity: tap, renewed hold with one seed, all-hold Marquee, release on pointer up', async ({ page }) => {
   const f = await fixture(page);
-  f.room.shared.participants.push({ participantId: 'peer', nickname: 'Friend', screenId: 'tv', ready: true });
+  f.room.shared.participants.push({ participantId: 'peer', nickname: 'Friend', serviceIds:null, screenId: 'tv', ready: true });
   f.room.shared.phase = 'decided';
   f.room.shared.decision = { candidateId: 'c1', proposalVersion: 1, decidedAt: Date.now(), availability: [] };
   const sent: any[] = [];

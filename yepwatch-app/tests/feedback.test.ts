@@ -42,7 +42,7 @@ test("peer join/leave and fresh decisions have cues; snapshots, private answers 
   b.shared.participants.push({
     participantId: "friend",
     nickname: "Friend",
-    ready: true,
+    serviceIds:null, ready: true,
     screenId: "tv",
   });
   assert.deepEqual(roomFeedback(a, b), ["join"]);

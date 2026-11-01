@@ -151,7 +151,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
           if (!deliveryReady() || room.epoch !== epoch || result.snapshot.revision < room.target ||
               result.snapshot.revision < client.lastRevision) { degrade(client); continue }
           if (client.initial || client.degraded || result.snapshot.revision > client.lastRevision) {
-            if (send(client, { type: client.initial || client.degraded ? 'room.snapshot' : 'room.updated', snapshot: client.roomDetails ? result.snapshot : { ...Object.fromEntries(Object.entries(result.snapshot).filter(([key]) => key !== 'description' && key !== 'savedServiceIds')), participants: result.snapshot.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof result.snapshot })) {
+            if (send(client, { type: client.initial || client.degraded ? 'room.snapshot' : 'room.updated', snapshot: client.roomDetails ? result.snapshot : { ...result.snapshot, participants: result.snapshot.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof result.snapshot })) {
               client.lastRevision = result.snapshot.revision; client.initial = false; client.degraded = false
               client.participantIds = new Set(result.snapshot.participants.map(p => p.participantId))
               if ('matches' in result.snapshot) {

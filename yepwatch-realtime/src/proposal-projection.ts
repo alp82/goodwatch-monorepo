@@ -7,9 +7,9 @@ const count = z.number().int().nonnegative().safe()
 const average = z.number().finite().min(0).max(1_200_000).nullable()
 export const proposalSharedSchema = continuousSharedSchema.extend({
   contractVersion: z.literal(3),
-  savedServiceIds: z.array(z.number().int().positive()).max(1200).optional(),
-  participants: z.array(continuousSharedSchema.shape.participants.element.extend({ dropped: z.boolean().optional() })).max(12),
-  description: z.strictObject({prompt:z.string().max(1000),attributes:z.array(z.strictObject({text:z.string().max(200),kind:z.enum(['attribute','excluded','want','avoid','phrase']),key:z.string().max(100).optional()})).max(100)}).nullable().optional(),
+  ideas: z.array(z.strictObject({id:z.string(),text:z.string().min(2).max(200),authorId:z.string(),on:z.boolean(),attributes:z.array(z.strictObject({text:z.string(),kind:z.enum(['attribute','excluded','want','avoid','phrase']),key:z.string().optional()})).max(100)})).max(8),
+  disabledServiceIds: z.array(z.number().int().positive()).max(1200),
+  participants: z.array(continuousSharedSchema.shape.participants.element.extend({ nickname: z.string().max(40), serviceIds:z.array(z.number().int().positive()).max(100).nullable(), dropped:z.boolean().optional() })).max(12),
   candidates: z.array(continuousSharedSchema.shape.candidates.element.extend({
     viewingDuration: z.strictObject({ minutes: z.number().finite().positive(), scope: z.enum(['movie', 'episode']) }).nullable(),
   })).max(512),

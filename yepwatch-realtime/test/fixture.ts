@@ -33,7 +33,7 @@ export function continuousSnapshot(): ContinuousSnapshot {
     matches: [], stream: { version: 1, state: 'ready', reason: null }, agreement: { version: 1, state: 'none', error: null }, decision: null }
 }
 export function proposalSnapshot(): ProposalSnapshot {
-  return { ...continuousSnapshot(), contractVersion: 3, candidates: [], matches: [], proposalVersion: 0, proposal: null, decision: null }
+  return { ...continuousSnapshot(), ideas:[],disabledServiceIds:[],participants:continuousSnapshot().participants.map(p => ({...p,serviceIds:null})), contractVersion: 3, candidates: [], matches: [], proposalVersion: 0, proposal: null, decision: null }
 }
 export async function fixture(continuous: boolean | 'proposal' = false) {
   const routes = continuous === 'proposal' ? proposalPaths : continuous ? continuousPaths : paths
