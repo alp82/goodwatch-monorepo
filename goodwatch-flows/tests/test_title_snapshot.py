@@ -154,7 +154,7 @@ class FakeCrate:
                 aggregates.append(len(timestamps) if aggregate == "count" else sum(timestamps))
             return [[*self.marks[table], *aggregates]]
         if sql.startswith("SELECT tmdb_id, release_year"):
-            records = [r + [None] * 5 if len(r) == (6 if table == "movie" else 7) else r for r in self.facts.get(table, [])]
+            records = [r + [None] * 6 if len(r) == (6 if table == "movie" else 7) else r for r in self.facts.get(table, [])]
         else:
             records = self.ratings.get(table, []) if "age_certifications" in sql else self.tables[table]
         last = params[0]
@@ -436,7 +436,7 @@ class FactsTest(unittest.TestCase):
                 out = Path(directory)
                 field, chunks = ts.encode_facts(list(range(count)), {
                     0: {"year": 1999, "length": 136, "budget": 63_000_000,
-                        "box_office": 463_517_383, "countries": ["US", "AU"], "sources": [0, 70, 80, 90, 100]},
+                        "box_office": 463_517_383, "countries": ["US", "AU"], "sources": [0, 70, 80, 90, 100, 84.8]},
                     1: {"year": 2008, "length": 47, "seasons": 5, "episodes": 62,
                         "status": 2, "countries": ["DE"]},
                 })
@@ -453,7 +453,8 @@ class FactsTest(unittest.TestCase):
                 }.items():
                     self.assertEqual(checked[name], expected[:count])
                 self.assertEqual(checked["sources"], {key: [value, 255, 255][:count] for key, value in zip(
-                    ["imdb", "rtCritics", "rtAudience", "metacritic", "metacriticUsers"], [0, 70, 80, 90, 100])})
+                    ["imdb", "rtCritics", "rtAudience", "metacritic", "metacriticUsers", "letterboxd"],
+                    [0, 70, 80, 90, 100, 84])})
                 self.assertEqual(checked["countries"], field["countries"])
                 indexes = {c: i for i, c in enumerate(field["countries"])}
                 self.assertEqual(checked["countryIndexes"],
@@ -482,21 +483,28 @@ class FactsTest(unittest.TestCase):
             255, 255, 255,                       # slot 2
             255, 255, 255,                       # slot 3
         ])
-        expected += bytes([255] * 15)
+        expected += bytes([255] * 18)
         self.assertEqual(b"".join(chunks), expected)
-        self.assertEqual(field, {"format": 2, "chunks": 1, "countries": ["AU", "DE", "US"],
+        self.assertEqual(field, {"format": 3, "chunks": 1, "countries": ["AU", "DE", "US"],
                                  "sha256": sha256(expected).hexdigest()})
-        self.assertEqual(len(expected), 3 * 25)
+        self.assertEqual(len(expected), 3 * 26)
 
     def test_source_bytes_and_read_columns(self):
-        values = [0, 70.9, 100, None, float("nan")]
+        values = [0, 70.9, 100, None, float("nan"), 84.8]
         crate = FakeCrate({}, facts={"movie": [[1, 1999, ["US"], 90, 10000, 20000, *values]]})
         titles = ts.read_facts(crate.select, "movie")
         self.assertEqual(titles[ts.MOVIE_BASE + 1]["sources"][:4], values[:4])
-        for column in ts.SOURCE_SCORE_COLUMNS:
-            self.assertIn(column, crate.statements[0])
+        self.assertEqual(ts.SOURCE_SCORE_COLUMNS, [
+            "imdb_user_score_normalized_percent",
+            "rotten_tomatoes_tomato_score_normalized_percent",
+            "rotten_tomatoes_audience_score_normalized_percent",
+            "metacritic_meta_score_normalized_percent",
+            "metacritic_user_score_normalized_percent",
+            "letterboxd_user_score_normalized_percent",
+        ])
+        self.assertIn(", ".join(ts.SOURCE_SCORE_COLUMNS) + " FROM movie", crate.statements[0])
         _, chunks = ts.encode_facts([ts.MOVIE_BASE + 1, ts.MOVIE_BASE + 2], titles)
-        self.assertEqual(b"".join(chunks)[40:], bytes([0, 255, 70, 255, 100, 255, 255, 255, 255, 255]))
+        self.assertEqual(b"".join(chunks)[40:], bytes([0, 255, 70, 255, 100, 255, 255, 255, 255, 255, 84, 255]))
         for value, expected in [(None, 255), (float("inf"), 255), (-1, 0), (101, 100), (0, 0)]:
             self.assertEqual(ts._source_score(value), expected)
 
@@ -517,7 +525,7 @@ class FactsTest(unittest.TestCase):
         self.assertEqual(data[24:26], bytes([254, 0]))
         self.assertEqual(struct.unpack_from("<2H", data, 26), (65535, 0))
         self.assertEqual(data[30:32], bytes([0, 0]))
-        self.assertEqual(data[32:], bytes([255] * 18))
+        self.assertEqual(data[32:], bytes([255] * 20))
 
     def test_facts_have_separate_pages_and_first_air_year_and_first_episode_length(self):
         movies = [[i, 1999, ["US"], 136, 63_000_000, 463_517_383] for i in range(1, ts.PAGE_SIZE + 2)]
@@ -529,8 +537,10 @@ class FactsTest(unittest.TestCase):
         self.assertTrue(all("dna_updated_at IS NOT NULL AND tmdb_id > ?" in sql for sql in crate.statements))
         self.assertIn("episode_runtime[1]", crate.statements[-1])
         self.assertNotIn("last_air_date", crate.statements[-1])
+        self.assertNotIn("letterboxd_user_score_normalized_percent", crate.statements[-1])
+        self.assertIn("metacritic_user_score_normalized_percent, NULL FROM show", crate.statements[-1])
         self.assertEqual(facts[ts.SHOW_BASE + 2], {"year": 2008, "length": 47, "seasons": 5,
-                                                "episodes": 62, "status": 2, "countries": ["DE"], "sources": [None] * 5})
+                                                "episodes": 62, "status": 2, "countries": ["DE"], "sources": [None] * 6})
         self.assertNotIn("budget", facts[ts.SHOW_BASE + 2])
         self.assertNotIn("seasons", facts[ts.MOVIE_BASE + 1])
 
@@ -557,7 +567,7 @@ class FactsTest(unittest.TestCase):
 
     def test_chunks_are_at_most_one_megabyte_and_empty_catalog_has_one_chunk(self):
         field, chunks = ts.encode_facts(list(range(60_000)), {})
-        self.assertEqual([len(c) for c in chunks], [1024 * 1024, 60_000 * 25 - 1024 * 1024])
+        self.assertEqual([len(c) for c in chunks], [1024 * 1024, 60_000 * 26 - 1024 * 1024])
         self.assertEqual(field["chunks"], 2)
         self.assertEqual(field["sha256"], sha256(b"".join(chunks)).hexdigest())
         field, chunks = ts.encode_facts([], {})
@@ -602,7 +612,7 @@ class PublishingTest(unittest.TestCase):
         manifest, chunks = self.stored()
         self.assertTrue(result["published"])
         self.assertEqual((manifest["count"], result["count"], result["source"]), (3, 3, "crate"))
-        self.assertEqual(manifest["sourceMark"], {"movie": [1, 10, 1, 100], "show": [1, 20, 1, 200], "ratings": 1, "facts": 2})
+        self.assertEqual(manifest["sourceMark"], {"movie": [1, 10, 1, 100], "show": [1, 20, 1, 200], "ratings": 1, "facts": 3})
         self.assertEqual(len(decode(manifest, chunks, ts.KEY_ORDER)), 3)
         self.assertIsNone(self.redis.get(ts.LOCK_KEY))
 
@@ -693,10 +703,10 @@ class PublishingTest(unittest.TestCase):
         manifest, _ = self.stored()
         field = manifest["facts"]
         chunks = [self.redis.get(ts.facts_chunk_key(manifest["version"], n)) for n in range(field["chunks"])]
-        self.assertEqual(field["format"], 2)
-        self.assertEqual(len(b"".join(chunks)), manifest["count"] * 25)
+        self.assertEqual(field["format"], 3)
+        self.assertEqual(len(b"".join(chunks)), manifest["count"] * 26)
         self.assertEqual(field["sha256"], sha256(b"".join(chunks)).hexdigest())
-        self.assertEqual(result["facts"], {"countries": 5, "chunks": 1, "bytes": 3 * 25, "over_slots": 1})
+        self.assertEqual(result["facts"], {"countries": 5, "chunks": 1, "bytes": 3 * 26, "over_slots": 1})
 
     def test_details_refresh_without_analysis_does_not_move_the_mark(self):
         for media_type in ts.TABLES:
@@ -730,8 +740,8 @@ class PublishingTest(unittest.TestCase):
     def test_first_run_with_facts_over_an_older_publisher_publishes(self):
         self.run_once()
         older = self.stored()[0]
-        older["facts"]["format"] = 1
-        older["sourceMark"]["facts"] = 1
+        older["facts"]["format"] = 2
+        older["sourceMark"]["facts"] = 2
         self.redis.set(ts.CURRENT_KEY, json.dumps(older))
         self.assertTrue(self.run_once()["published"])
         self.assertIn("facts", self.stored()[0])

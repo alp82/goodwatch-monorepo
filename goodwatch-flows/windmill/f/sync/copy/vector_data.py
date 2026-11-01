@@ -270,6 +270,7 @@ def _build_payload(
     providers_all_rows: List[dict] | None,
     dna: dict | None,
     tropes: dict | None,
+    letterboxd: dict | None = None,
 ) -> Tuple[Dict[str, Any], Dict[str, List[float]]]:
     """
     Returns (payload, vectors). Will return empty vectors if no DNA vectors available.
@@ -301,8 +302,11 @@ def _build_payload(
         payload["tmdb_user_score_rating_count"] = vc if vc else None
         payload["tmdb_user_score_normalized_percent"] = (va * 10) if va else None
 
-    # --- Scores (imdb/meta/rotten/goodwatch combined like your score job)
-    if imdb or meta or rotten or details:
+    # Letterboxd is a movie-only audience source.
+    letterboxd = (letterboxd or {}) if media_type == "movie" else {}
+
+    # --- Scores (imdb/meta/rotten/letterboxd/goodwatch combined like your score job)
+    if imdb or meta or rotten or letterboxd or details:
         # Derive normalized fields (mirror your score script)
         def _avg(vals):
             vals = [v for v in vals if v is not None]
@@ -347,13 +351,15 @@ def _build_payload(
         )
 
         # Goodwatch aggregates (like your script)
-        goodwatch_user = _avg([tmdb_norm, imdb_norm, meta_user_norm, rotten_aud_norm])
+        goodwatch_user = _avg([tmdb_norm, imdb_norm, meta_user_norm, rotten_aud_norm,
+                               letterboxd.get("user_score_normalized_percent")])
         goodwatch_user_count = _sum(
             [
                 (details or {}).get("vote_count"),
                 (imdb or {}).get("user_score_vote_count"),
                 (meta or {}).get("user_score_vote_count"),
                 (rotten or {}).get("audience_score_vote_count"),
+                letterboxd.get("user_score_vote_count"),
             ]
         )
 
@@ -546,6 +552,7 @@ def copy_to_qdrant(
     c_rotten = (
         db.rotten_tomatoes_movie_rating if is_movie else db.rotten_tomatoes_tv_rating
     )
+    c_letterboxd = db.letterboxd_movie_rating if is_movie else None
     c_prov = db.tmdb_movie_providers if is_movie else db.tmdb_tv_providers
     c_dna = db.dna_movie if is_movie else db.dna_tv
     c_tropes = db.tv_tropes_movie_tags if is_movie else db.tv_tropes_tv_tags
@@ -597,6 +604,8 @@ def copy_to_qdrant(
         imdb_map = _fetch_map_by_ids(c_imdb, ids, projections.get('rating'))
         meta_map = _fetch_map_by_ids(c_meta, ids, projections.get('rating'))
         rotten_map = _fetch_map_by_ids(c_rotten, ids, projections.get('rating'))
+        letterboxd_map = (_fetch_map_by_ids(c_letterboxd, ids, projections.get('rating'))
+                          if is_movie else {})
         dna_map = _fetch_map_by_ids(c_dna, ids, projections.get('dna'))
         providers_multimap = {} if strict_writes else _fetch_multimap_by_ids(c_prov, ids)
         tropes_map = _fetch_map_by_ids(c_tropes, ids, projections.get('tropes'))
@@ -617,6 +626,7 @@ def copy_to_qdrant(
                 imdb=imdb_map.get(tmdb_id),
                 meta=meta_map.get(tmdb_id),
                 rotten=rotten_map.get(tmdb_id),
+                letterboxd=letterboxd_map.get(tmdb_id),
                 providers_from_tmdb=(d.get("watch_providers") or {}).get("results")
                 if d
                 else None,

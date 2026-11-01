@@ -48,8 +48,9 @@ The same columns are declared in the shared checked-in schema and `Movie` model:
 
 Every completed crawl batch publishes through `f/sync/copy/all_ratings`. Its existing scheduled catch-up also
 selects Letterboxd-only changes, so an interrupted publication is recoverable. Removed values explicitly clear
-their Crate columns. Show publication does not reference the movie-only columns. Letterboxd is stored as its
-own source; this change does not alter the GoodWatch aggregate formula or add a webapp score chip.
+their Crate columns. Show publication does not reference the movie-only columns. Letterboxd counts in the
+audience average of the GoodWatch score for movies in both `all_ratings` and `vector_data`. Discover carries
+Letterboxd as the sixth source in the snapshot facts sidecar (facts format 3).
 
 ## Schedules and operations
 

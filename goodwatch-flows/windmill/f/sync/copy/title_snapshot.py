@@ -35,9 +35,9 @@ columns occupy 20 bytes per title: release year (uint16), movie or first episode
 minutes (uint16), budget and revenue in USD thousands (2 x uint32), seasons (uint8), episodes
 (uint16), status (uint8), then four country index columns (uint8, 255 missing). Format 2
 appends five source percent columns (uint8, 255 unknown): IMDb, RT critics, RT audience,
-Metacritic and Metacritic users, bringing the total to 25 bytes per title. Numeric facts
-are 0 when unknown; amounts below $10,000 are unknown. See the Discover plan's Facts sidecar
-section for offsets and normalization. It is read and written independently of ratings and
+Metacritic and Metacritic users. Format 3 appends Letterboxd as the sixth source, bringing
+the total to 26 bytes per title. Numeric facts are 0 when unknown; amounts below $10,000
+are unknown. See the Discover plan's Facts sidecar section for offsets and normalization. It is read and written independently of ratings and
 the snapshot, and a failure leaves only facts out of the manifest.
 
 One run:
@@ -113,8 +113,8 @@ TABLES = {"movie": ("movie", "release_date", MOVIE_BASE), "show": ("show", "last
 
 assert len(KEY_ORDER) == FINGERPRINT_LENGTH
 
-FACTS_FORMAT = 2
-FACTS_BYTES_PER_TITLE = 25
+FACTS_FORMAT = 3
+FACTS_BYTES_PER_TITLE = 26
 FACTS_COUNTRY_SLOTS = 4
 SHOW_STATUSES = {"Returning Series": 1, "In Production": 1, "Ended": 2, "Canceled": 3}
 
@@ -472,6 +472,7 @@ SOURCE_SCORE_COLUMNS = [
     "rotten_tomatoes_audience_score_normalized_percent",
     "metacritic_meta_score_normalized_percent",
     "metacritic_user_score_normalized_percent",
+    "letterboxd_user_score_normalized_percent",
 ]
 
 
@@ -486,8 +487,9 @@ def read_facts(select: Callable[[str, list], list], media_type: str) -> dict[int
     table, _, base = TABLES[media_type]
     specific = ("runtime, budget, revenue" if media_type == "movie" else
                 "episode_runtime[1], number_of_seasons, number_of_episodes, status")
+    sources = SOURCE_SCORE_COLUMNS if media_type == "movie" else [*SOURCE_SCORE_COLUMNS[:-1], "NULL"]
     sql = (
-        f"SELECT tmdb_id, release_year, production_country_codes, {specific}, {', '.join(SOURCE_SCORE_COLUMNS)} FROM {table}"
+        f"SELECT tmdb_id, release_year, production_country_codes, {specific}, {', '.join(sources)} FROM {table}"
         f" WHERE dna_updated_at IS NOT NULL AND tmdb_id > ? ORDER BY tmdb_id LIMIT {PAGE_SIZE}"
     )
     titles = {}
@@ -499,8 +501,8 @@ def read_facts(select: Callable[[str, list], list], media_type: str) -> dict[int
             countries = list(dict.fromkeys(c.strip().upper() for c in countries or []
                                           if isinstance(c, str) and _COUNTRY.fullmatch(c.strip().upper())))
             facts = {"year": year, "length": length, "countries": countries,
-                     "sources": details[-5:]}
-            details = details[:-5]
+                     "sources": details[-6:]}
+            details = details[:-6]
             if media_type == "movie":
                 facts.update(budget=details[0], box_office=details[1])
             else:
@@ -512,7 +514,7 @@ def read_facts(select: Callable[[str, list], list], media_type: str) -> dict[int
 
 
 def encode_facts(point_ids: list[int], titles: dict[int, dict]) -> tuple[dict, list[bytes]]:
-    """Facts format 2: little-endian columns in the plan's order, without padding.
+    """Facts format 3: little-endian columns in the plan's order, without padding.
     Country slots are four columns (all slot 0 values, then all slot 1 values, etc.)."""
     if sys.byteorder != "little":
         raise RuntimeError("The title snapshot needs a little-endian machine")
@@ -531,8 +533,8 @@ def encode_facts(point_ids: list[int], titles: dict[int, dict]) -> tuple[dict, l
     for slot in range(FACTS_COUNTRY_SLOTS):
         columns.append(bytes(country_index[row["countries"][slot]]
                              if len(row.get("countries", [])) > slot else 255 for row in rows))
-    for source in range(5):
-        columns.append(bytes(_source_score(row.get("sources", [None] * 5)[source]) for row in rows))
+    for source in range(6):
+        columns.append(bytes(_source_score(row.get("sources", [None] * 6)[source]) for row in rows))
     data = b"".join(columns)
     assert len(data) == len(rows) * FACTS_BYTES_PER_TITLE
     chunks = [data[at:at + CHUNK_BYTES] for at in range(0, len(data), CHUNK_BYTES)] or [b""]

@@ -596,6 +596,9 @@ Tomatometer at 21N, RT audience at 22N, Metacritic at 23N and Metacritic users a
 per title). Each reads the corresponding `*_score_normalized_percent` SQL source column: finite
 values are floored and clamped to 0–100; missing or nonfinite values are 255. Zero is a known score.
 Format 1 remains readable with `sources: null`, using SQL sets for source and gap filtering.
+Format 3 (November 1, 2026) appends a sixth uint8 column, Letterboxd at 25N (26 bytes per title). Movies read
+`letterboxd_user_score_normalized_percent`; shows have no Letterboxd column and always store 255. The webapp reads
+formats 1, 2 and 3; in format 2 data the Letterboxd column is unknown.
 
 The publisher's change mark (`source_mark`) stores, per table, count and sum of `dna_updated_at` followed
 by count and sum of `tmdb_details_updated_at`, plus the ratings and facts format versions. The previous
@@ -988,7 +991,7 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
 
 **B12b. Source score step counts from facts**
 
-- Files: `goodwatch-flows/windmill/f/sync/copy/title_snapshot.py` (facts format 2: one byte per source with the
+- Files: `goodwatch-flows/windmill/f/sync/copy/title_snapshot.py` (facts format 3, since November 1, 2026; format 2 before: one byte per source with the
   normalized percent for IMDb, Tomatometer, RT audience, Metacritic and Metacritic users; 255 unknown), the webapp
   decoder (`title-snapshot/format.server.ts`, `facts.server.ts`), `passes.server.ts` (count `<source>:<step>` for
   `SCORE_STEPS` under the other filters, as `minScore` is counted; filter source scores and the critics vs
@@ -1135,7 +1138,7 @@ endpoint](#panel-endpoint)). Each part answers with p95 under 150 ms warm (Serve
 - Crate: B12 removes per-request SQL sets for years and runtime (and their Redis JSON parses) when facts are
   present, which is a net saving. Production countries keep their SQL set. Rest of the world adds one cached read per 30 minutes. People in
   results is two `GROUP BY` reads over at most 100 ids per kind, cached 30 minutes per list.
-- Facts sidecar memory: about 25 bytes per title per webapp process; the publisher keeps chunks at 1 MB.
+- Facts sidecar memory: about 26 bytes per title per webapp process (25 before format 3); the publisher keeps chunks at 1 MB.
 - Taste groups: `sideOf` per title costs a fingerprint distance; the first request after the 10-minute cache fills
   the member's row cache. Measure with the largest history (B4).
 - Cache keys: `discover-filters:v3` for the guest cache once `FilterResult` gains new count keys (in-process, but the

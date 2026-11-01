@@ -254,13 +254,13 @@ def copy_media(
                 valid_counts = [count for count in counts if count is not None]
                 return sum(valid_counts)
 
-            # Letterboxd is published as a separate source; the aggregate formula stays unchanged.
             # User score percents and counts
             user_score_percents = [
                 tmdb_user_score_normalized_percent,
                 imdb_rating.get("user_score_normalized_percent"),
                 meta_rating.get("user_score_normalized_percent"),
                 rotten_rating.get("audience_score_normalized_percent"),
+                letterboxd_rating.get("user_score_normalized_percent"),
             ]
             goodwatch_user_score_normalized_percent = calculate_average(
                 user_score_percents
@@ -271,6 +271,7 @@ def copy_media(
                 imdb_rating.get("user_score_vote_count"),
                 meta_rating.get("user_score_vote_count"),
                 rotten_rating.get("audience_score_vote_count"),
+                letterboxd_rating.get("user_score_vote_count"),
             ]
             goodwatch_user_score_rating_count = calculate_sum(user_score_counts)
 
