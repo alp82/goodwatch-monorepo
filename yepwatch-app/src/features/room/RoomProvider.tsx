@@ -89,15 +89,16 @@ export function RoomProvider({ id, children }: { id: string; children: ReactNode
   }, [state, memberBusy]);
   // A new room has no country yet, and services are only valid within one: the host sets it right away
   // (member prefill, else the device's region), before anyone picks services.
-  const countryAsked = useRef(new Set<number>());
+  // A command already in flight (room entry) makes the send a no-op: try again once it settles, a few times at most.
+  const countryTries = useRef(0);
   const needsCountry = Boolean(view && view.isHost && !view.country && view.phase === 'setup');
-  const contextVersion = snapshot?.shared.contextVersion;
   const prefillCountry = snapshot?.own.member.prefill?.country;
+  const blocked = state.busy || Boolean(state.pending) || state.privateError || entry.working;
   useEffect(() => {
-    if (!needsCountry || contextVersion === undefined || state.busy || state.pending || countryAsked.current.has(contextVersion)) return;
-    countryAsked.current.add(contextVersion);
+    if (!needsCountry || blocked || countryTries.current >= 3) return;
+    countryTries.current++;
     void cmd.configure({ country: prefillCountry ?? deviceCountryHint() ?? 'US' });
-  }, [needsCountry, contextVersion, prefillCountry, state.busy, state.pending, cmd]);
+  }, [needsCountry, blocked, prefillCountry, cmd]);
   // The deck never ends: refill in the background before anyone runs out.
   useEffect(() => {
     if (!snapshot || snapshot.shared.phase !== 'choosing' || state.busy || entry.required || state.pending || state.privateError || state.terminal) return;
