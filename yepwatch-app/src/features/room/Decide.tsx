@@ -7,6 +7,7 @@ import { BackHandler, Image, Platform, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { GText, Icon, Press, glow } from '../glow/theme';
+import { showsProposal } from './model';
 import { leavePage, toRooms } from './nav';
 import { RoomBar } from './parts';
 import { useRoom } from './RoomProvider';
@@ -86,10 +87,11 @@ export function MatchesPage() {
   const { id, view, cmd, disabled, reopenProposal, dismissedProposal, setActivityView } = useRoom();
   useFocusEffect(useCallback(() => { setActivityView('matches'); }, [setActivityView]));
   // Nobody stays on Matches once the round is decided or restarted: the room shows what's next.
+  // A proposal takes over on the room page underneath, so Back from it leaves the room.
   const phase = view?.phase;
-  useEffect(() => { if (phase && phase !== 'choosing') leavePage(id); }, [phase, id]);
+  const proposed = Boolean(view && showsProposal(view, dismissedProposal));
+  useEffect(() => { if ((phase && phase !== 'choosing') || proposed) leavePage(id); }, [phase, proposed, id]);
   if (!view) return <RoomStatus />;
-  if (view.proposal && view.me.inRound && dismissedProposal !== view.proposal.version) return <Proposal />;
   const proposal = view.proposal;
   return (
     <Screen testID="matches" back={() => leavePage(id)} right={<RoomBar />} footer={<Button secondary label="Keep swiping" onPress={() => leavePage(id)} />}>

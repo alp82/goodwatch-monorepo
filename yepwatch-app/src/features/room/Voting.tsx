@@ -118,7 +118,7 @@ export function Voting() {
   }
   const offered = card ? servicesIn(all, offeredOn(card, view.enabledServiceIds)) : [];
   return (
-    <Screen testID="voting" scroll={false} back={toRooms}
+    <Screen testID="voting" scroll={false} back={toRooms} covered={Boolean(panel)}
       right={<>
         <RoomBar faces={<LiveFaces people={view.people.map((p) => ({ id: p.id, nickname: p.nickname || '?', self: p.self }))} activity={activity} localReaction={localReaction} size={24} max={4} />} />
         <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (undoTarget) void cmd.undo(undoTarget); }} style={{ width: 40, height: 44, borderRadius: 10, backgroundColor: '#ffffff0a' }}>
@@ -153,7 +153,8 @@ export function Voting() {
         )}
       </>}>
       <RoomNotes />
-      <View onLayout={(e) => setStage({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+      {/* A page on top hides this one (zero size on the web): keep the last real size. */}
+      <View onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) setStage({ width, height }); }}
         style={{ flex: 1, minHeight: 80, alignItems: 'center', justifyContent: 'center', overflow: 'visible' }}>
         {title && card ? (
           <>

@@ -65,7 +65,7 @@ export function Tonight() {
       footer={<>
         <Link href={watchUrl as `https://${string}`} target="_blank" rel="noopener noreferrer" asChild>
           <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel={watch ? `${watch.action} ${watch.name}` : 'Where to watch'}
-            style={({ pressed }) => ({ height: 56, borderRadius: 10, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: glow.amber, opacity: pressed ? 0.78 : 1 })}>
+            style={{ height: 56, borderRadius: 10, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: glow.amber }}>
             {watch?.logoUrl ? <Image source={{ uri: watch.logoUrl }} accessible={false} style={{ width: 24, height: 24, borderRadius: 6 }} /> : null}
             <GText bold size={17} color="#201400">{watch ? `${watch.action} ${watch.name}` : 'Where to watch'}</GText>
           </Pressable>
@@ -77,8 +77,7 @@ export function Tonight() {
 >
       <RoomNotes />
       <View style={{ alignItems: 'center', gap: 14, paddingTop: 4 }}>
-        <Small bold color={glow.amber}>TONIGHT</Small>
-        <View onLayout={(e) => { const l = e.nativeEvent.layout; setPoster({ x: l.x, y: l.y + CLAPPER_HEIGHT, width: l.width, height: l.height - CLAPPER_HEIGHT }); }}>
+        <View onLayout={(e) => { const l = e.nativeEvent.layout; if (l.width > 0) setPoster({ x: l.x, y: l.y + CLAPPER_HEIGHT, width: l.width, height: l.height - CLAPPER_HEIGHT }); }}>
           <Pressable testID="tonight-poster" accessibilityRole="button" accessibilityLabel={`Cheer for ${c.title}`} accessibilityHint="Everyone in the room sees it. Hold to keep cheering."
             disabled={!enabled} {...gesture.pressHandlers} style={{ cursor: enabled ? 'pointer' : 'auto' } as object}>
             <Animated.View style={{ transform: [{ scale: spring.scale }] }}>

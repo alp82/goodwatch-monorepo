@@ -1,5 +1,5 @@
 /** Before Start: the host's room page, and the friends' waiting screen. */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { guestOnly } from '../../core/config';
 import { GoodWatchButton } from '../home/Landing';
@@ -40,19 +40,27 @@ export function RoomRows({ kindsEditable }: { kindsEditable: boolean }) {
 
 /** The host's room before Start: share card, the ideas (MOOD), quiet rows, the host's name. One action: Start. */
 export function RoomSetup() {
-  const { view, cmd, disabled, signin, memberBusy } = useRoom();
+  const { view, cmd, state, latest, disabled, signin, memberBusy } = useRoom();
   const [name, setName] = useState('');
+  // A name sent on blur may still be in flight when Start is pressed: Start waits for it.
+  const renaming = useRef<Promise<boolean> | null>(null);
   if (!view) return null;
   const typed = name.trim();
   const named = Boolean(view.me.nickname || typed);
-  const rename = () => { if (typed && typed !== view.me.nickname) void cmd.rename(typed); };
+  const rename = () => {
+    if (!typed || typed === view.me.nickname || renaming.current) return;
+    renaming.current = cmd.rename(typed).finally(() => { renaming.current = null; });
+  };
   const start = async () => {
-    if (view.needName && typed && !(await cmd.rename(typed))) return;
+    if (renaming.current) await renaming.current;
+    const s = latest();
+    const current = s?.shared.participants.find((p) => p.participantId === s.own.participantId)?.nickname.trim();
+    if (!current && typed && !(await cmd.rename(typed))) return;
     await cmd.start();
   };
   const ready = named && view.enabledServiceIds.length > 0 && view.kinds.length > 0 && Boolean(view.country);
   return (
-    <Screen testID="room-setup" back={toRooms} footer={<Button label="Start" disabled={!ready || disabled} onPress={() => void start()} />}>
+    <Screen testID="room-setup" back={toRooms} footer={<Button label="Start" disabled={!ready || Boolean(state.pending) || state.privateError} onPress={() => void start()} />}>
       <RoomNotes />
       <RoomLink />
       <View style={{ gap: 8, paddingVertical: 12 }}>

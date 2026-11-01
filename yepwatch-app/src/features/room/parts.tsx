@@ -26,7 +26,7 @@ export function IdeaList({ size }: { size?: number }) {
   const max = size ?? (view.ideas.length > 1 ? 28 : T.hero);
   const addLabel = view.isHost ? 'Add an idea' : 'Suggest an idea';
   return (
-    <View testID="idea-list" onLayout={(e) => setWidth(e.nativeEvent.layout.width)} style={{ gap: 8 }}>
+    <View testID="idea-list" onLayout={(e) => { if (e.nativeEvent.layout.width > 0) setWidth(e.nativeEvent.layout.width); }} style={{ gap: 8 }}>
       {!view.ideas.length && <GText bold size={max} color={glow.soft} style={{ letterSpacing: -max * 0.035, lineHeight: max * 1.05 }}>Anything</GText>}
       {view.ideas.map((i) => {
         const fs = fitSize(i.text, Math.max(120, width - 120), max);

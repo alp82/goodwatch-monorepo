@@ -12,6 +12,7 @@ import { continuousApi } from '../../core/continuous/api';
 import { useReducedMotion } from '../../components/ui';
 import { Backdrop } from '../glow/Backdrop';
 import { EdgeBack } from '../glow/EdgeBack';
+import { CoveredBody } from '../shell/parts';
 import { GText, Icon, Press, Wordmark, glow } from '../glow/theme';
 import type { Kind } from './model';
 import { rankServices, type ServiceChoice } from './services';
@@ -34,7 +35,7 @@ export function Section({ children }: { children: string }) {
 }
 
 /** The phone screen: backdrop, one top bar (Back or the wordmark, then the right side), a scrolling body and a pinned footer. */
-export function Screen({ back, right, children, footer, overlay, testID, scroll = true, wordmark = true }: {
+export function Screen({ back, right, children, footer, overlay, testID, scroll = true, wordmark = true, covered = false }: {
   back?: () => void;
   right?: ReactNode;
   children: ReactNode;
@@ -44,11 +45,14 @@ export function Screen({ back, right, children, footer, overlay, testID, scroll 
   /** Voting fills the body instead of scrolling it. */
   scroll?: boolean;
   wordmark?: boolean;
+  /** A page over this one (overlay): the screen underneath stays laid out but is inert. */
+  covered?: boolean;
 }) {
   const body = { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24, gap: 22 } as const;
   return (
     <SafeAreaView testID={testID} edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: glow.bg }}>
       <Backdrop />
+      <CoveredBody covered={covered}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, width: '100%', maxWidth: SCREEN_WIDTH, alignSelf: 'center' }}>
         <View style={{ height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>
           {back ? (
@@ -61,8 +65,9 @@ export function Screen({ back, right, children, footer, overlay, testID, scroll 
         ) : <View style={{ flex: 1, minHeight: 0, paddingHorizontal: 20, paddingTop: 8, gap: 12 }}>{children}</View>}
         {footer ? <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 18, gap: 10 }}>{footer}</View> : null}
       </KeyboardAvoidingView>
+      </CoveredBody>
       {overlay}
-      {back ? <EdgeBack back={back} /> : null}
+      {back && !covered ? <EdgeBack back={back} /> : null}
     </SafeAreaView>
   );
 }

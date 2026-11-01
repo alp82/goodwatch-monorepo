@@ -12,19 +12,32 @@ function EdgeBackGesture({ back }: { back: () => void }) {
   useEffect(() => {
     latest.current = back;
   }, [back]);
+  const gesture = useRef({ active: false, dx: 0, dy: 0, vx: 0 });
   // eslint-disable-next-line react-hooks/refs
-  const [responder] = useState(() =>
-    PanResponder.create({
+  const [responder] = useState(() => {
+    const finish = (g?: { dx: number; dy: number; vx: number }) => {
+      const state = gesture.current;
+      if (!state.active) return;
+      state.active = false;
+      const { dx, dy, vx } = g ?? state;
+      if (edgeBackComplete(dx, dy, vx)) latest.current();
+    };
+    // A control under the finger can swallow the release on the web; the window still sees it.
+    const up = () => finish();
+    return PanResponder.create({
       // Own only the reserved edge from touch-down; fast movement can leave this
       // narrow strip before a move-based responder has a chance to claim it.
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, g) => edgeBackIntent(g.dx, g.dy),
-      onPanResponderRelease: (_, g) => {
-        if (edgeBackComplete(g.dx, g.dy, g.vx)) latest.current();
+      onPanResponderGrant: () => {
+        gesture.current = { active: true, dx: 0, dy: 0, vx: 0 };
+        if (Platform.OS === "web") window.addEventListener("pointerup", up, { capture: true, once: true });
       },
+      onPanResponderMove: (_, g) => { Object.assign(gesture.current, { dx: g.dx, dy: g.dy, vx: g.vx }); },
+      onPanResponderRelease: (_, g) => finish(g),
       onPanResponderTerminationRequest: () => false,
-    })
-  );
+    });
+  });
   return (
     <View
       testID="back-gesture-edge"

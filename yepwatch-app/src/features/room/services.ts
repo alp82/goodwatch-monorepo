@@ -20,7 +20,7 @@ type Group = NonNullable<CatalogMetadata['providerGroups']>[number] & { minor?: 
  * without the flag fall back to the same name rules.
  */
 export function rankServices(meta: CatalogMetadata | undefined): ServiceChoice[] {
-  if (!meta) return [];
+  if (!meta || !Array.isArray(meta.services)) return [];
   const groups: Group[] = meta.providerGroups ?? meta.services.map((s) => ({ ...s, selectionIds: [s.id] }));
   const byId = new Map(meta.services.map((x) => [x.id, x]));
   const seen = new Set<number>(); // Only the first tier of a big service ranks as major (Paramount+ twice in the US).
