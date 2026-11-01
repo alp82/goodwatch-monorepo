@@ -1,6 +1,6 @@
 # Room redesign: ideas, per-person streaming, endless deck
 
-Status: building (2026-11-01). Owner-approved prototype: branch `prototype/yepwatch-room-create`, commit `9a2241e3e`, file `yepwatch-app/src/features/prototype-create/CreateLab.web.tsx` (read it with `git show 9a2241e3e:yepwatch-app/src/features/prototype-create/CreateLab.web.tsx`). The prototype is the source of truth for screens, wording, hierarchy and behavior. This document lists what the real app and server must do, and the decisions the prototype doesn't show.
+Status: deployed to main 2026-11-01 (a9d53fd91, fixes 005f89ddf and 2b113728f); OTA after the production run. Owner-approved prototype: branch `prototype/yepwatch-room-create`, commit `9a2241e3e`, file `yepwatch-app/src/features/prototype-create/CreateLab.web.tsx` (read it with `git show 9a2241e3e:yepwatch-app/src/features/prototype-create/CreateLab.web.tsx`). The prototype is the source of truth for screens, wording, hierarchy and behavior. This document lists what the real app and server must do, and the decisions the prototype doesn't show.
 
 ## Owner decisions
 
