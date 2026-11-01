@@ -5,53 +5,62 @@ import { parseInvite } from '../../core/invites';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { Action, Chip, FaceStack, Label, Panel } from '../shell/parts';
+import { GoodWatchMark } from '../shell/marks';
 import { R } from '../shell/tokens';
 import type { HomeRoom } from './home-model';
 
-const input = { color: glow.ink, backgroundColor: '#0f0f0f', borderWidth: 1, borderColor: '#595959', borderRadius: R.control, padding: 14, fontFamily: 'Gabarito', fontSize: 17 } as const;
+const input = { color: glow.ink, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: '#ffffff1f', borderRadius: 8, paddingHorizontal: 14, minHeight: 48, fontFamily: 'Gabarito', fontSize: 16 } as const;
 const MAX_NAME = 40;
 
-/** Asked once, before the first Create or Join. Every later room reuses it. */
-export function NamePanel({ initial = '', action, busy, error, submit, extra }: { initial?: string; action: string; busy: boolean; error?: string; submit: (name: string) => void; extra?: ReactNode }) {
-  const [value, setValue] = useState(initial);
-  const ok = value.trim().length > 0 && !busy;
-  const go = () => { if (ok) submit(value.trim()); };
+/** A room request that hasn't been confirmed yet: retry it as-is (same identity, same request). */
+export function RetryPanel({ action, busy, error, retry, extra }: { action: string; busy: boolean; error?: string; retry: () => void; extra?: ReactNode }) {
   return (
-    <Panel testID="name-panel" footer={<Action gold label={action} onPress={go} disabled={!ok} />}>
-      <Label>Your name</Label>
-      <TextInput autoFocus accessibilityLabel="Your name" value={value} onChangeText={setValue} maxLength={MAX_NAME} autoCapitalize="words" autoComplete="nickname"
-        placeholder="What friends call you" placeholderTextColor={glow.muted} returnKeyType="go" submitBehavior="blurAndSubmit" onSubmitEditing={go} style={input} />
-      <Chip>Asked once · Shown in every room</Chip>
+    <Panel testID="retry-panel" footer={<Action gold label={action} onPress={retry} disabled={busy} />}>
       {error ? <GText size={14} color="#fca5a5">{error}</GText> : null}
       {extra}
     </Panel>
   );
 }
 
-/** Join by code or invitation link, as the remembered name. The name is editable in Profile. */
-export function JoinPanel({ nickname, initialCode = '', action, busy, error, editName, submit, notice, extra }: { nickname: string | null; initialCode?: string; action: string; busy: boolean; error?: string; editName: () => void; submit: (code: string, nickname: string) => void; notice?: string; extra?: ReactNode }) {
+/**
+ * Join by link or code: your name (or Join as the remembered name), or Continue with GoodWatch.
+ * An invitation link carries its code, so only manual joins show the code field.
+ */
+export function JoinPanel({ invite, nickname, member = false, initialCode = '', action, busy, error, editName, submit, signIn, extra }: {
+  invite: boolean; nickname: string | null; member?: boolean; initialCode?: string; action: string; busy: boolean; error?: string;
+  editName: () => void; submit: (code: string, nickname: string) => void; signIn?: (code: string) => void; extra?: ReactNode;
+}) {
   const [code, setCode] = useState(initialCode);
-  const [name, setName] = useState(nickname ?? '');
-  const valid = Boolean(parseInvite(code)) && (nickname ?? name).trim().length > 0 && !busy;
+  const [name, setName] = useState('');
+  const validCode = Boolean(parseInvite(code));
+  const valid = validCode && (nickname ?? name).trim().length > 0 && !busy;
   const go = () => { if (valid) submit(code, (nickname ?? name).trim()); };
+  const label = nickname && action === 'Join' ? `Join as ${nickname}` : action;
   return (
-    <Panel testID="join-panel" footer={<Action gold label={action} onPress={go} disabled={!valid} />}>
-      <TextInput autoFocus={!initialCode} accessibilityLabel="Room code or invitation" value={code} onChangeText={setCode} placeholder="Code or link" placeholderTextColor={glow.muted}
-        autoCapitalize="characters" autoCorrect={false} returnKeyType={nickname ? 'go' : 'next'} submitBehavior="blurAndSubmit" onSubmitEditing={go}
-        style={[input, { fontSize: 22, letterSpacing: 3, textAlign: 'center' }]} />
+    <Panel testID="join-panel" footer={<Press label={label} onPress={go} disabled={!valid} style={{ height: 56, borderRadius: 10, flexDirection: 'row', gap: 10, backgroundColor: glow.amber }}>
+      {member ? <GoodWatchMark size={22} /> : null}
+      <GText bold size={17} color="#201400">{label}</GText>
+    </Press>}>
+      {!invite || !initialCode ? (
+        <TextInput autoFocus={!initialCode} accessibilityLabel="Room code or invitation" value={code} onChangeText={setCode} placeholder="Code or link" placeholderTextColor={glow.muted}
+          autoCapitalize="characters" autoCorrect={false} returnKeyType={nickname ? 'go' : 'next'} submitBehavior="blurAndSubmit" onSubmitEditing={go}
+          style={[input, { fontSize: 22, letterSpacing: 3, textAlign: 'center' }]} />
+      ) : null}
       {nickname ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Chip>Joining as {nickname}</Chip>
-          <Press label="Edit name" onPress={editName} style={{ minHeight: 44, paddingHorizontal: 8 }}><GText size={13} bold color={glow.amber}>Edit</GText></Press>
-        </View>
+        <Press label="Change name" onPress={editName} style={{ alignSelf: 'flex-start', minHeight: 32 }}><GText size={13} bold color={glow.muted}>Change name</GText></Press>
       ) : (
-        <>
-          <Label>Your name</Label>
-          <TextInput accessibilityLabel="Your name" value={name} onChangeText={setName} maxLength={MAX_NAME} autoCapitalize="words" placeholder="What friends call you" placeholderTextColor={glow.muted}
+        <View style={{ gap: 6 }}>
+          <GText size={13} color={glow.muted}>Your name</GText>
+          <TextInput autoFocus={Boolean(initialCode)} accessibilityLabel="Your name" value={name} onChangeText={setName} maxLength={MAX_NAME} autoCapitalize="words" autoComplete="nickname" placeholder="Your name" placeholderTextColor={glow.muted}
             returnKeyType="go" submitBehavior="blurAndSubmit" onSubmitEditing={go} style={input} />
-        </>
+          {signIn ? <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: '#ffffff14' }} /><GText size={13} color={glow.muted}>or</GText><View style={{ flex: 1, height: 1, backgroundColor: '#ffffff14' }} />
+            </View>
+            <GoodWatchButton disabled={busy || !validCode} onPress={() => signIn(code)} />
+          </> : null}
+        </View>
       )}
-      {notice ? <GText size={14} color={glow.muted}>{notice}</GText> : null}
       {error ? <GText size={14} color="#fca5a5">{error}</GText> : null}
       {extra}
     </Panel>

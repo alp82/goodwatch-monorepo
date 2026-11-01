@@ -1,10 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import type { RoomCommand, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
+import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { REGISTRY_LIMITS, decodeDecisions, decodeRooms, markLeft, migrateRecent, upsertRoom, type DecisionRecord } from '../src/core/continuous/room-registry-state';
 import { CHUNK_CHARS, REGISTRY_KEYS, chunkedKeyValue, createRegistry, type KeyValue } from '../src/core/continuous/room-registry-store';
 import { classify, decisionRecord, roomLabel } from '../src/features/rooms/home-model';
-import { changedSettings, showShuffle, startAgain, type RoomSettingsValue } from '../src/features/rooms/round';
 import { continuousFixture } from './continuous-fixture';
 
 const NOW = 1_800_000_000_000;
@@ -81,7 +80,9 @@ test('home classifies active, left and decided rooms from the room’s own snaps
   s.shared.expiresAt = NOW + 1000;
   const active = classify(entry, { snapshot: s }, NOW);
   assert.equal(active.kind, 'active');
-  assert.equal(active.kind === 'active' && active.room.label, 'Host’s room');
+  assert.equal(active.kind === 'active' && active.room.label, 'Anything');
+  assert.equal(active.kind === 'active' && active.room.live, true);
+  assert.equal(active.kind === 'active' && active.room.status, 'Choosing · 0 matches');
   const left = structuredClone(s);
   (left.own as { left?: boolean }).left = true;
   assert.equal(classify(entry, { snapshot: left }, NOW).kind, 'left');
@@ -89,11 +90,17 @@ test('home classifies active, left and decided rooms from the room’s own snaps
   decided.shared.phase = 'decided';
   decided.shared.decision = { candidateId: 'c2', decidedAt: 77, availability: [] } as unknown as RoomSnapshot['shared']['decision'];
   const c = classify(entry, { snapshot: decided }, NOW);
-  assert.equal(c.kind, 'decided');
-  assert.equal(c.kind === 'decided' && c.record.id, 'test-room:1:77');
+  assert.equal(c.kind, 'active', 'a decided room stays listed until it expires');
+  assert.equal(c.kind === 'active' && c.room.live, false);
+  assert.equal(c.kind === 'active' && c.room.status, 'Tonight: Isolated test c2');
+  assert.equal(c.kind === 'active' && c.record?.id, 'test-room:1:77');
   assert.equal(decisionRecord(decided)?.title, 'Isolated test c2');
-  s.shared.description = { prompt: 'a twisty thriller', attributes: [] } as unknown as RoomSnapshot['shared']['description'];
-  assert.equal(roomLabel(s), 'A twisty thriller');
+  (s.shared as unknown as { ideas: unknown[] }).ideas = [
+    { id: 'i1', text: 'a twisty thriller', authorId: 'host', on: true, attributes: [] },
+    { id: 'i2', text: 'space adventure', authorId: 'host', on: true, attributes: [] },
+    { id: 'i3', text: 'family night', authorId: 'friend', on: false, attributes: [] },
+  ];
+  assert.equal(roomLabel(s), 'a twisty thriller +1');
 });
 
 test('chunked device store keeps every item under 2048 bytes for a worst-case registry and reads it back', async () => {
@@ -140,69 +147,6 @@ test('decoded decisions reject non-https posters and cap people', () => {
   const [d] = decodeDecisions(raw);
   assert.equal(d.posterUrl, null);
   assert.deepEqual(d.people, ['a', 'b', 'c', 'd']);
-});
-
-function roomDriver(start: RoomSnapshot, fail?: RoomCommand['type']) {
-  let current = structuredClone(start);
-  const sent: RoomCommand[] = [];
-  return {
-    sent,
-    latest: () => current,
-    send: async (c: RoomCommand) => {
-      sent.push(c);
-      if (c.type === fail) return false;
-      current = structuredClone(current);
-      if (c.type === 'restart') { current.shared.phase = 'setup'; current.shared.generation++; current.shared.revision++; current.shared.contextVersion++; current.shared.rosterVersion++; current.shared.decision = null; }
-      if (c.type === 'configure') { current.shared.contextVersion++; current.shared.screens[0].serviceIds = c.serviceIds; }
-      if (c.type === 'start') current.shared.phase = 'choosing';
-      return true;
-    },
-  };
-}
-const decidedRoom = () => {
-  const s = continuousFixture();
-  s.shared.phase = 'decided';
-  s.shared.revision = 9;
-  s.shared.decision = { candidateId: 'c1', decidedAt: 5, availability: [] } as unknown as RoomSnapshot['shared']['decision'];
-  return s;
-};
-const same = (s: RoomSnapshot): RoomSettingsValue => ({ country: s.shared.screens[0].country!, serviceIds: [...s.shared.screens[0].serviceIds], constraints: s.shared.constraints, prompt: s.shared.description?.prompt ?? '' });
-
-test('Start again restarts, then starts with the latest versions; unchanged settings are not re-sent', async () => {
-  const room = roomDriver(decidedRoom());
-  assert.equal(await startAgain(room, same(room.latest())), true);
-  assert.deepEqual(room.sent.map((c) => c.type), ['restart', 'start']);
-  assert.deepEqual(room.sent[0], { type: 'restart', expectedRevision: 9 });
-  assert.deepEqual(room.sent[1], { type: 'start', expectedRosterVersion: 2, expectedContextVersion: 2, hostReady: true });
-});
-
-test('Start again saves changed settings between restart and start', async () => {
-  const room = roomDriver(decidedRoom());
-  const value = { ...same(room.latest()), serviceIds: [8, 9] };
-  assert.ok(changedSettings(room.latest(), value));
-  assert.equal(await startAgain(room, value), true);
-  assert.deepEqual(room.sent.map((c) => c.type), ['restart', 'configure', 'start']);
-  assert.equal((room.sent[1] as { expectedContextVersion: number }).expectedContextVersion, 2);
-  assert.equal((room.sent[2] as { expectedContextVersion: number }).expectedContextVersion, 3);
-});
-
-test('a failed restart keeps the decision and sends nothing else', async () => {
-  const room = roomDriver(decidedRoom(), 'restart');
-  assert.equal(await startAgain(room, same(room.latest())), false);
-  assert.deepEqual(room.sent.map((c) => c.type), ['restart']);
-  assert.equal(room.latest().shared.phase, 'decided');
-});
-
-test('readiness shuffle shows only while cards are on their way', () => {
-  const stream = { version: 1, state: 'ready', reason: null } as RoomSnapshot['shared']['stream'];
-  const base = { starting: false, phase: 'choosing' as const, hasCard: false, voting: true, stream, failed: false };
-  assert.equal(showShuffle({ ...base, starting: true, phase: 'setup' }), true);
-  assert.equal(showShuffle(base), true);
-  assert.equal(showShuffle({ ...base, hasCard: true }), false, 'a ready card shows at once');
-  assert.equal(showShuffle({ ...base, stream: { ...stream, reason: 'awaiting_answers' } }), false);
-  assert.equal(showShuffle({ ...base, stream: { ...stream, state: 'exhausted' } }), false);
-  assert.equal(showShuffle({ ...base, failed: true }), false, 'an error offers Try again instead');
-  assert.equal(showShuffle({ ...base, voting: false }), false);
 });
 
 test('explicit Leave keeps the room in History with Return; reopening clears it; Back never marks it', async () => {

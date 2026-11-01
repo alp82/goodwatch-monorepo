@@ -1,36 +1,36 @@
 import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import type { DecisionRecord, RegisteredRoom } from '../../core/continuous/room-registry-state';
+import { roomView, statusLine } from '../room/model';
 
 /** A room on the personal home. Everything comes from the room's own authoritative snapshot. */
 export interface HomeRoom {
   roomId: string;
+  /** The room's ideas ("cheer me up +1"), or "Anything". */
   label: string;
-  prompt: string | null;
-  phase: 'setup' | 'choosing';
+  /** Open right now (not yet decided). */
+  live: boolean;
+  /** "Setting up", "Choosing · 2 matches", "Proposed: Heat", "Tonight: Heat", "Left". */
+  status: string;
+  /** A proposal or Tonight: the status line is amber. */
+  hot: boolean;
+  /** Tonight's poster once decided. */
+  poster: string | null;
   people: { id: string; nickname: string; dropped: boolean; self: boolean }[];
   hostNickname: string | null;
   own: boolean;
-  matches: number;
-  proposal: { agree: number; required: number } | null;
-  posters: string[];
-  status: { key: 'setup' | 'proposal' | 'matches' | 'choosing'; label: string };
   openedAt: number;
 }
 export type Classified =
-  | { kind: 'active'; room: HomeRoom }
+  | { kind: 'active'; room: HomeRoom; record: DecisionRecord | null }
   | { kind: 'left'; room: HomeRoom }
-  | { kind: 'decided'; record: DecisionRecord }
   | { kind: 'gone' }
   | { kind: 'unavailable'; roomId: string; nickname: string };
 
 const ACCESS_ENDED = ['unauthorized', 'forbidden', 'not_found', 'expired'];
 
-/** A room has no name of its own: the mood prompt names it, otherwise its host does. */
+/** A room has no name of its own: its switched-on ideas name it. */
 export function roomLabel(snapshot: RoomSnapshot) {
-  const prompt = snapshot.shared.description?.prompt?.trim();
-  if (prompt) return prompt.length > 48 ? `${prompt.slice(0, 47)}…` : prompt.charAt(0).toUpperCase() + prompt.slice(1);
-  const host = snapshot.shared.participants.find((p) => p.participantId === snapshot.shared.hostParticipantId)?.nickname;
-  return host ? `${host}’s room` : 'Your room';
+  return roomView(snapshot).label;
 }
 
 export function decisionRecord(snapshot: RoomSnapshot): DecisionRecord | null {
@@ -52,35 +52,17 @@ export function decisionRecord(snapshot: RoomSnapshot): DecisionRecord | null {
 }
 
 export function homeRoom(entry: RegisteredRoom, snapshot: RoomSnapshot): HomeRoom {
-  const { shared, own } = snapshot;
-  const matches = shared.matches.length;
-  const proposal = shared.proposal ? { agree: shared.proposal.agreeCount, required: shared.proposal.requiredCount } : null;
-  const posters = [
-    ...(shared.proposal ? [shared.proposal.candidateId] : []),
-    ...shared.matches.map((m) => m.candidateId).filter((id) => id !== shared.proposal?.candidateId),
-  ]
-    .map((id) => shared.candidates.find((c) => c.id === id)?.posterUrl)
-    .filter((u): u is string => Boolean(u))
-    .slice(0, 3);
-  const status: HomeRoom['status'] = shared.phase === 'setup'
-    ? { key: 'setup', label: 'Setting up' }
-    : proposal
-    ? { key: 'proposal', label: `Proposal · ${proposal.agree} of ${proposal.required} agree` }
-    : matches
-    ? { key: 'matches', label: `${matches} ${matches === 1 ? 'match' : 'matches'}` }
-    : { key: 'choosing', label: 'Choosing' };
+  const view = roomView(snapshot);
   return {
-    roomId: shared.roomId,
-    label: roomLabel(snapshot),
-    prompt: shared.description?.prompt?.trim() || null,
-    phase: shared.phase === 'setup' ? 'setup' : 'choosing',
-    people: shared.participants.map((p) => ({ id: p.participantId, nickname: p.nickname, dropped: Boolean(p.dropped), self: p.participantId === own.participantId })),
-    hostNickname: shared.participants.find((p) => p.participantId === shared.hostParticipantId)?.nickname ?? null,
-    own: own.canHost,
-    matches,
-    proposal,
-    posters,
-    status,
+    roomId: view.roomId,
+    label: view.label,
+    live: view.phase !== 'decided',
+    status: statusLine(view),
+    hot: view.phase === 'decided' || Boolean(view.proposal),
+    poster: view.phase === 'decided' ? view.decision?.posterUrl ?? null : null,
+    people: snapshot.shared.participants.map((p) => ({ id: p.participantId, nickname: p.nickname, dropped: Boolean(p.dropped), self: p.participantId === snapshot.own.participantId })),
+    hostNickname: view.hostName || null,
+    own: view.isHost,
     openedAt: entry.openedAt,
   };
 }
@@ -88,9 +70,8 @@ export function homeRoom(entry: RegisteredRoom, snapshot: RoomSnapshot): HomeRoo
 /** A room you left: only what this device remembered, since the server no longer shows it to you. */
 export function leftRoom(entry: RegisteredRoom): HomeRoom {
   return {
-    roomId: entry.roomId, label: entry.left?.label || 'A room you left', prompt: null, phase: 'choosing',
-    people: [{ id: 'self', nickname: entry.nickname, dropped: true, self: true }], hostNickname: null, own: false,
-    matches: 0, proposal: null, posters: [], status: { key: 'choosing', label: 'Left' }, openedAt: entry.openedAt,
+    roomId: entry.roomId, label: entry.left?.label || 'A room you left', live: false, status: 'Left', hot: false, poster: null,
+    people: [{ id: 'self', nickname: entry.nickname, dropped: true, self: true }], hostNickname: null, own: false, openedAt: entry.openedAt,
   };
 }
 
@@ -106,15 +87,16 @@ export function classify(entry: RegisteredRoom, result: { snapshot?: RoomSnapsho
   const s = result.snapshot;
   if (!s) return { kind: 'unavailable', roomId: entry.roomId, nickname: entry.nickname };
   if (s.shared.phase === 'expired' || s.shared.expiresAt <= now) return { kind: 'gone' };
+  const room = homeRoom(entry, s);
+  if (s.own.left) return { kind: 'left', room };
   if (s.shared.phase === 'decided') {
     const record = decisionRecord(s);
-    return record ? { kind: 'decided', record } : { kind: 'gone' };
+    return record ? { kind: 'active', room, record } : { kind: 'gone' };
   }
-  const room = homeRoom(entry, s);
-  return s.own.left ? { kind: 'left', room } : { kind: 'active', room };
+  return { kind: 'active', room, record: null };
 }
 
-/** Time of day greeting for the home subheader. */
+/** Time of day greeting for the start page. */
 export function greeting(hour: number) {
-  return hour < 5 ? 'Late night' : hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
+  return hour < 5 ? 'Late night' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 }

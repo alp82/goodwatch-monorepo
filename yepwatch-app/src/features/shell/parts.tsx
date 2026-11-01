@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode, type ComponentRef } from 'react';
-import { Animated, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useReducedMotion } from '../../components/ui';
 import { peerColor } from '../glow/model';
 import { GText, Icon, Press, glow, native, type IconName } from '../glow/theme';
@@ -10,14 +10,6 @@ export function Chip({ children, gold = false }: { children: ReactNode; gold?: b
     <View style={{ alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: gold ? '#fbbf241f' : '#ffffff0d', borderWidth: 1, borderColor: gold ? '#fbbf2440' : '#ffffff14' }}>
       <GText size={12} color={gold ? glow.amber : glow.soft} lines={1}>{children}</GText>
     </View>
-  );
-}
-export function RoundButton({ label, icon, onPress, dot = false, disabled }: { label: string; icon: IconName; onPress: () => void; dot?: boolean; disabled?: boolean }) {
-  return (
-    <Press label={label} onPress={onPress} disabled={disabled} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#ffffff0d', borderWidth: 1, borderColor: '#ffffff14' }}>
-      <Icon name={icon} size={20} color={glow.soft} />
-      {dot && <View style={{ position: 'absolute', top: 8, right: 8, width: 9, height: 9, borderRadius: 5, backgroundColor: glow.amber, borderWidth: 2, borderColor: glow.bg }} />}
-    </Press>
   );
 }
 /** Your own avatar: amber initial once a nickname is known, a quiet outline before. */
@@ -38,13 +30,6 @@ export function FaceStack({ people, size = 24, max = 4 }: { people: { id: string
         </View>
       ))}
       {people.length > max && <GText size={12} color={glow.muted} style={{ marginLeft: 5 }}>+{people.length - max}</GText>}
-    </View>
-  );
-}
-export function Thumb({ uri, width = 34, style }: { uri: string; width?: number; style?: StyleProp<ViewStyle> }) {
-  return (
-    <View style={[{ width, height: width * 1.5, borderRadius: 6, overflow: 'hidden', backgroundColor: '#262626', borderWidth: 1, borderColor: '#ffffff1f' }, style]}>
-      <Image source={{ uri: uri.replace('/w500/', '/w185/') }} accessible={false} style={{ width: '100%', height: '100%' }} />
     </View>
   );
 }
