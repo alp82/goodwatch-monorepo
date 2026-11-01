@@ -1,0 +1,10 @@
+summary: Refresh bulk Letterboxd movie URL hints
+schedule: 0 0 3 * * MON
+timezone: UTC
+script_path: f/letterboxd/mappings
+is_flow: false
+args:
+  dry_run: false
+enabled: true
+no_flow_overlap: true
+cron_version: v2

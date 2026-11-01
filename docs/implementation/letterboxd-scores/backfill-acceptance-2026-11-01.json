@@ -1,0 +1,158 @@
+{
+  "checked_at": "2026-11-01T07:32:46.619248+00:00",
+  "workspace": "goodwatch",
+  "mapping_export": {
+    "query_source": "https://www.wikidata.org/wiki/Property:P6127",
+    "rows": 269755,
+    "unambiguous_candidates": 266537,
+    "initial_hints_added": 260498,
+    "reconciliation_hints_added": 3,
+    "sha256": "21f0edeca3bf87bcda4e9944b418051845560a05505cf18f5cbd789f2c747f86"
+  },
+  "source_pace_seconds": 2,
+  "handoff_catchup_published": 140,
+  "scripts": [
+    {
+      "path": "f/letterboxd/http",
+      "hash": "d07da4dde0fbf10c",
+      "local_content_matches": true
+    },
+    {
+      "path": "f/letterboxd/crawl",
+      "hash": "9aa07b309b5ba3eb",
+      "local_content_matches": true
+    },
+    {
+      "path": "f/letterboxd/mappings",
+      "hash": "278a5ae8a7b2131f",
+      "local_content_matches": true
+    },
+    {
+      "path": "f/letterboxd/backfill",
+      "hash": "a5c5136554faca1e",
+      "local_content_matches": true
+    }
+  ],
+  "schedules": [
+    {
+      "path": "f/letterboxd/seed",
+      "enabled": true,
+      "schedule": "0 40 2 * * *",
+      "args": {
+        "full": false
+      },
+      "timezone": "UTC",
+      "no_flow_overlap": true
+    },
+    {
+      "path": "f/letterboxd/crawl",
+      "enabled": true,
+      "schedule": "0 15,45 * * * *",
+      "args": {
+        "batch_size": 25,
+        "max_minutes": 25
+      },
+      "timezone": "UTC",
+      "no_flow_overlap": true
+    },
+    {
+      "path": "f/letterboxd/mappings",
+      "enabled": true,
+      "schedule": "0 0 3 * * MON",
+      "args": {
+        "dry_run": false
+      },
+      "timezone": "UTC",
+      "no_flow_overlap": true
+    },
+    {
+      "path": "f/letterboxd/backfill",
+      "enabled": true,
+      "schedule": "0 0 * * * *",
+      "args": {
+        "max_hours": 0.98,
+        "batch_size": 100
+      },
+      "timezone": "UTC",
+      "no_flow_overlap": true
+    }
+  ],
+  "running_job": {
+    "id": "01a195ff-e525-86ef-b164-7f1832e98d67",
+    "script_path": "f/letterboxd/backfill",
+    "running": true,
+    "started_at": "2026-11-01T07:25:37.979475Z",
+    "scheduled_for": "2026-11-01T07:25:37.954135Z",
+    "script_hash": "bfdfb4a5c09c9b8e"
+  },
+  "crawl_batches": [
+    {
+      "titles": 100,
+      "ok": 84,
+      "unrated": 15,
+      "not_found": 0,
+      "rejected": 0,
+      "unavailable": 0,
+      "error": 1,
+      "requests": 169,
+      "published": 99,
+      "blocked": null
+    }
+  ],
+  "queue_size": 710863,
+  "source_blocked_until": null,
+  "source_outcomes": [
+    {
+      "_id": "unrated",
+      "count": 22
+    },
+    {
+      "_id": "error",
+      "count": 2
+    },
+    {
+      "_id": "ok",
+      "count": 261
+    }
+  ],
+  "mapped_examples": [
+    {
+      "tmdb_id": 1340206,
+      "letterboxd_url": "https://letterboxd.com/film/tuner/",
+      "user_score_original": 3.74,
+      "user_score_vote_count": 207322
+    },
+    {
+      "tmdb_id": 1265609,
+      "letterboxd_url": "https://letterboxd.com/film/war-machine-2026/",
+      "user_score_original": 2.67,
+      "user_score_vote_count": 268223
+    },
+    {
+      "tmdb_id": 1560520,
+      "letterboxd_url": "https://letterboxd.com/film/batman-knightfall-part-1-knightfall/",
+      "user_score_original": 3.93,
+      "user_score_vote_count": 57354
+    }
+  ],
+  "published_mapped_examples": [
+    {
+      "tmdb_id": 1265609,
+      "letterboxd_url": "https://letterboxd.com/film/war-machine-2026/",
+      "letterboxd_user_score_original": 2.67,
+      "letterboxd_user_score_rating_count": 268223
+    },
+    {
+      "tmdb_id": 1340206,
+      "letterboxd_url": "https://letterboxd.com/film/tuner/",
+      "letterboxd_user_score_original": 3.74,
+      "letterboxd_user_score_rating_count": 207322
+    },
+    {
+      "tmdb_id": 1560520,
+      "letterboxd_url": "https://letterboxd.com/film/batman-knightfall-part-1-knightfall/",
+      "letterboxd_user_score_original": 3.93,
+      "letterboxd_user_score_rating_count": 57354
+    }
+  ]
+}

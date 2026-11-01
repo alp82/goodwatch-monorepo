@@ -1,0 +1,10 @@
+summary: Seed Letterboxd movie queue from TMDB
+schedule: 0 40 2 * * *
+timezone: UTC
+script_path: f/letterboxd/seed
+is_flow: false
+args:
+  full: false
+enabled: true
+no_flow_overlap: true
+cron_version: v2

@@ -1,0 +1,12 @@
+summary: Seed Letterboxd movie queue from TMDB
+description: ''
+lock: '!inline f/letterboxd/seed.script.lock'
+kind: script
+timeout: 3600
+schema:
+  type: object
+  properties:
+    full:
+      type: boolean
+      default: false
+  required: []

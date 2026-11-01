@@ -1,0 +1,11 @@
+summary: Continuous Letterboxd backfill
+schedule: 0 * * * * *
+timezone: UTC
+script_path: f/letterboxd/backfill
+is_flow: false
+args:
+  max_hours: 24
+  batch_size: 100
+enabled: true
+no_flow_overlap: true
+cron_version: v2

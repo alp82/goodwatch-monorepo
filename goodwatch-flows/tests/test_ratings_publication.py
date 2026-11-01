@@ -22,6 +22,37 @@ class RatingsPublicationTest(unittest.TestCase):
         self.connector.upsert_many.side_effect = lambda **kwargs: {
             'records_received': len(kwargs['records']), 'rows_upserted': len(kwargs['records'])}
 
+    def test_letterboxd_only_change_publishes_dedicated_fields_without_changing_aggregate(self):
+        old, now = datetime.utcnow() - timedelta(days=30), datetime.utcnow()
+        self.mongo.tmdb_movie_details.insert_one({'tmdb_id': 27205, 'updated_at': old,
+                                                 'vote_average': 8, 'vote_count': 100})
+        self.mongo.letterboxd_movie_rating.insert_one({
+            'tmdb_id': 27205, 'updated_at': now, 'letterboxd_url': 'https://letterboxd.com/film/inception/',
+            'letterboxd_id': '1skk', 'user_score_original': 4.24,
+            'user_score_normalized_percent': 84.8, 'user_score_vote_count': 4570122})
+        all_ratings.copy_media(self.connector, {}, 'movie')
+        call = self.connector.upsert_many.call_args.kwargs
+        published = call['records'][0]
+        self.assertEqual(published.letterboxd_user_score_original, 4.24)
+        self.assertEqual(published.letterboxd_user_score_rating_count, 4570122)
+        self.assertEqual(published.goodwatch_user_score_normalized_percent, 80)
+        self.assertEqual(published.goodwatch_user_score_rating_count, 100)
+        self.assertLessEqual(set(all_ratings.LETTERBOXD_COLUMNS), set(call['replace_null_columns']))
+
+    def test_removed_letterboxd_score_is_published_as_null(self):
+        self.mongo.letterboxd_movie_rating.insert_one({'tmdb_id': 27205, 'updated_at': datetime.utcnow(),
+                                                      'user_score_original': None, 'crawl_status': 'not_found'})
+        all_ratings.copy_media(self.connector, {}, 'movie')
+        call = self.connector.upsert_many.call_args.kwargs
+        self.assertIsNone(call['records'][0].letterboxd_user_score_original)
+        self.assertIn('letterboxd_user_score_original', call['replace_null_columns'])
+
+    def test_show_publication_does_not_reference_movie_only_columns(self):
+        self.mongo.tmdb_tv_details.insert_one({'tmdb_id': 1, 'updated_at': datetime.utcnow()})
+        all_ratings.copy_media(self.connector, {}, 'show')
+        call = self.connector.upsert_many.call_args.kwargs
+        self.assertFalse(set(all_ratings.LETTERBOXD_COLUMNS) & set(call['replace_null_columns']))
+
     def test_priority_publication_preserves_rating_without_updated_at(self):
         self.mongo.imdb_movie_rating.insert_one({
             'tmdb_id': 603, 'created_at': datetime(2026, 9, 14),

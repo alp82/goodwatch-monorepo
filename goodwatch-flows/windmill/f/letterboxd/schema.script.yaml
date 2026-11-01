@@ -1,0 +1,11 @@
+summary: Add Letterboxd movie columns
+description: ''
+lock: '!inline f/letterboxd/schema.script.lock'
+kind: script
+schema:
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+  required: []

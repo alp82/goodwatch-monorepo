@@ -1,0 +1,23 @@
+summary: Crawl and publish Letterboxd movie scores
+description: ''
+lock: '!inline f/letterboxd/crawl.script.lock'
+kind: script
+schema:
+  type: object
+  properties:
+    max_minutes:
+      type: number
+      default: 25
+      minimum: 0.01
+      maximum: 25
+    batch_size:
+      type: integer
+      default: 25
+      minimum: 1
+      maximum: 100
+    tmdb_ids:
+      type: array
+      items:
+        type: integer
+      description: Optional movie ids; seed then crawl these due titles only.
+  required: []

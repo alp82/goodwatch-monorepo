@@ -1,0 +1,209 @@
+{
+  "checked_at": "2026-11-01T07:14:45.433851+00:00",
+  "workspace": "goodwatch",
+  "scripts": [
+    {
+      "path": "f/letterboxd/pages",
+      "hash": "15649ba238e2f864",
+      "sha256": "2b4d0bafda79ecb968bb554784f75c57cf0b3e741d22abf9891bab4595d4b98e",
+      "local_content_matches": true,
+      "timeout": null
+    },
+    {
+      "path": "f/letterboxd/http",
+      "hash": "acceac5e6c8d359f",
+      "sha256": "99326270ea21ebb5e9ad68d807b450403ce6f6b3b041d4b81ba3f4d08ae15f14",
+      "local_content_matches": true,
+      "timeout": null
+    },
+    {
+      "path": "f/letterboxd/seed",
+      "hash": "a6925e13cde4c409",
+      "sha256": "bbf149c7a08a2dd809081cd2a611ca1a722bcd49d4dbae877c73381f77189249",
+      "local_content_matches": true,
+      "timeout": 3600
+    },
+    {
+      "path": "f/letterboxd/schema",
+      "hash": "469bc0e69dc8d9e3",
+      "sha256": "060c5744a7ab58512244febf53e7b5718cfd45c851d441b268fa31c797daaceb",
+      "local_content_matches": true,
+      "timeout": null
+    },
+    {
+      "path": "f/letterboxd/crawl",
+      "hash": "2d5b473d412daabc",
+      "sha256": "262d120c1528fade43c797cd5717e3e0f80c9f53a21a24fbfc219544e79d4b0b",
+      "local_content_matches": true,
+      "timeout": null
+    },
+    {
+      "path": "f/sync/copy/all_ratings",
+      "hash": "b99ed7466dcfef85",
+      "sha256": "0b2afa1eff985018c1c8b29bdab064ffc4168ad70a3eca475e6014fd7272fb7f",
+      "local_content_matches": true,
+      "timeout": null
+    },
+    {
+      "path": "f/sync/models/crate_models",
+      "hash": "52b046597146b389",
+      "note": "Letterboxd additions applied to live content; pre-existing live additions preserved."
+    },
+    {
+      "path": "f/sync/models/crate_schemas",
+      "hash": "309b3dad28c3e3d5",
+      "note": "Letterboxd additions applied to live content; pre-existing live additions preserved."
+    }
+  ],
+  "schedules": [
+    {
+      "path": "f/letterboxd/seed",
+      "script_path": "f/letterboxd/seed",
+      "schedule": "0 40 2 * * *",
+      "timezone": "UTC",
+      "enabled": true,
+      "args": {
+        "full": false
+      },
+      "no_flow_overlap": true,
+      "cron_version": "v2"
+    },
+    {
+      "path": "f/letterboxd/crawl",
+      "script_path": "f/letterboxd/crawl",
+      "schedule": "0 15,45 * * * *",
+      "timezone": "UTC",
+      "enabled": true,
+      "args": {
+        "batch_size": 25,
+        "max_minutes": 25
+      },
+      "no_flow_overlap": true,
+      "cron_version": "v2"
+    }
+  ],
+  "queue_size": 240101,
+  "source_blocked_until": null,
+  "seeded_through": null,
+  "published_movies": [
+    {
+      "tmdb_id": 129,
+      "letterboxd_url": "https://letterboxd.com/film/spirited-away/",
+      "letterboxd_id": "2b4m",
+      "letterboxd_user_score_original": 4.43,
+      "letterboxd_user_score_normalized_percent": 88.6,
+      "letterboxd_user_score_rating_count": 4114621,
+      "letterboxd_ratings_updated_at": 1793517008812
+    },
+    {
+      "tmdb_id": 603,
+      "letterboxd_url": "https://letterboxd.com/film/the-matrix/",
+      "letterboxd_id": "2a1m",
+      "letterboxd_user_score_original": 4.18,
+      "letterboxd_user_score_normalized_percent": 83.6,
+      "letterboxd_user_score_rating_count": 3178866,
+      "letterboxd_ratings_updated_at": 1793517015126
+    },
+    {
+      "tmdb_id": 27205,
+      "letterboxd_url": "https://letterboxd.com/film/inception/",
+      "letterboxd_id": "1skk",
+      "letterboxd_user_score_original": 4.24,
+      "letterboxd_user_score_normalized_percent": 84.8,
+      "letterboxd_user_score_rating_count": 4570149,
+      "letterboxd_ratings_updated_at": 1793517011182
+    }
+  ],
+  "jobs": [
+    {
+      "id": "01a195f0-6115-ab9c-da23-9b3a4c4cf54f",
+      "script_path": "f/letterboxd/schema",
+      "schedule_path": null,
+      "success": true,
+      "running": null,
+      "started_at": "2026-11-01T07:08:41.147898Z",
+      "scheduled_for": null,
+      "duration_ms": 791,
+      "result": {
+        "dry_run": true,
+        "missing_columns": [
+          "letterboxd_url",
+          "letterboxd_id",
+          "letterboxd_user_score_original",
+          "letterboxd_user_score_normalized_percent",
+          "letterboxd_user_score_rating_count",
+          "letterboxd_ratings_created_at",
+          "letterboxd_ratings_updated_at"
+        ]
+      }
+    },
+    {
+      "id": "01a195f0-7180-f62f-9c7a-9ca7c8961ec6",
+      "script_path": "f/letterboxd/schema",
+      "schedule_path": null,
+      "success": true,
+      "running": null,
+      "started_at": "2026-11-01T07:08:45.321260Z",
+      "scheduled_for": null,
+      "duration_ms": 1547,
+      "result": {
+        "dry_run": false,
+        "columns_added": [
+          "letterboxd_url",
+          "letterboxd_id",
+          "letterboxd_user_score_original",
+          "letterboxd_user_score_normalized_percent",
+          "letterboxd_user_score_rating_count",
+          "letterboxd_ratings_created_at",
+          "letterboxd_ratings_updated_at"
+        ]
+      }
+    },
+    {
+      "id": "01a195f1-ae85-6305-0199-64e2d007a443",
+      "script_path": "f/letterboxd/crawl",
+      "schedule_path": null,
+      "success": true,
+      "running": null,
+      "started_at": "2026-11-01T07:10:06.481765Z",
+      "scheduled_for": null,
+      "duration_ms": 13149,
+      "result": {
+        "ok": 3,
+        "error": 0,
+        "titles": 3,
+        "blocked": null,
+        "stopped": "nothing due",
+        "unrated": 0,
+        "rejected": 0,
+        "requests": 6,
+        "not_found": 0,
+        "published": 3,
+        "unavailable": 0
+      }
+    },
+    {
+      "id": "01a195f1-d44a-c52a-2db3-8257cc371db4",
+      "script_path": "f/letterboxd/seed",
+      "schedule_path": null,
+      "success": null,
+      "running": true,
+      "started_at": "2026-11-01T07:10:16.145030Z",
+      "scheduled_for": "2026-11-01T07:10:16.137627Z",
+      "duration_ms": null,
+      "result": null
+    },
+    {
+      "id": "01a195f2-5611-e617-5078-5b92479e7dff",
+      "script_path": "f/letterboxd/crawl",
+      "schedule_path": "f/letterboxd/crawl",
+      "success": null,
+      "running": true,
+      "started_at": "2026-11-01T07:15:00.027633Z",
+      "scheduled_for": "2026-11-01T07:15:00Z",
+      "duration_ms": null,
+      "result": null
+    }
+  ],
+  "scheduled_crawl_observed_at": "2026-11-01T07:15:52.398265+00:00"
+}

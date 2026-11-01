@@ -1,0 +1,21 @@
+summary: Continuous Letterboxd backfill
+description: >-
+  Keeps the existing globally paced popularity queue busy, reusing bulk URL hints.
+  Also honors due retries/refreshes, yields to an active crawler and stops on source blocks.
+lock: '!inline f/letterboxd/backfill.script.lock'
+kind: script
+timeout: 90000
+schema:
+  type: object
+  properties:
+    max_hours:
+      type: number
+      default: 0.98
+      exclusiveMinimum: 0
+      maximum: 24
+    batch_size:
+      type: integer
+      default: 100
+      minimum: 1
+      maximum: 100
+  required: []

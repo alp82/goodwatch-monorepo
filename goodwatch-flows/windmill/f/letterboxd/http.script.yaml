@@ -1,0 +1,8 @@
+summary: Polite Letterboxd HTTP with paced redirects
+description: ''
+lock: '!inline f/letterboxd/http.script.lock'
+kind: script
+schema:
+  type: object
+  properties: {}
+  required: []

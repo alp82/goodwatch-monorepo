@@ -237,6 +237,13 @@ class MediaBase(BaseModel):
 
 
 class Movie(MediaBase):
+    letterboxd_url: Optional[str] = None
+    letterboxd_id: Optional[str] = None
+    letterboxd_user_score_original: Optional[float] = None
+    letterboxd_user_score_normalized_percent: Optional[float] = None
+    letterboxd_user_score_rating_count: Optional[int] = None
+    letterboxd_ratings_created_at: Optional[float] = None
+    letterboxd_ratings_updated_at: Optional[float] = None
     release_date: Optional[float] = None  # Unix timestamp
     movie_series_id: Optional[int] = None
     runtime: Optional[int] = None

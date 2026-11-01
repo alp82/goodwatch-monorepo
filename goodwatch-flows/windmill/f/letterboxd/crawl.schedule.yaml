@@ -1,0 +1,11 @@
+summary: Crawl and publish Letterboxd movie scores
+schedule: 0 15,45 * * * *
+timezone: UTC
+script_path: f/letterboxd/crawl
+is_flow: false
+args:
+  max_minutes: 25
+  batch_size: 25
+enabled: true
+no_flow_overlap: true
+cron_version: v2

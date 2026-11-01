@@ -122,6 +122,13 @@ SCHEMAS = {
     # ============================
     "movie": {
         "columns": {
+            "letterboxd_url": "TEXT",
+            "letterboxd_id": "TEXT",
+            "letterboxd_user_score_original": "DOUBLE",
+            "letterboxd_user_score_normalized_percent": "DOUBLE",
+            "letterboxd_user_score_rating_count": "BIGINT",
+            "letterboxd_ratings_created_at": "TIMESTAMP",
+            "letterboxd_ratings_updated_at": "TIMESTAMP",
             "tmdb_id": "INTEGER",
             "title": "TEXT INDEX USING FULLTEXT",
             "original_title": "TEXT INDEX USING FULLTEXT",

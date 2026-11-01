@@ -54,6 +54,11 @@ CLEARED_COLUMNS = (
     "goodwatch_user_score_normalized_percent",
     "goodwatch_overall_score_normalized_percent",
 )
+LETTERBOXD_COLUMNS = (
+    "letterboxd_url", "letterboxd_id", "letterboxd_user_score_original",
+    "letterboxd_user_score_normalized_percent", "letterboxd_user_score_rating_count",
+    "letterboxd_ratings_created_at", "letterboxd_ratings_updated_at",
+)
 
 tmdb_details_projection = {
     "tmdb_id": 1,
@@ -140,8 +145,8 @@ def copy_media(
 ):
     """Copy the scores of the titles that match the selector to CrateDB.
 
-    A recent copy takes the titles whose TMDB details or IMDb, Metacritic or Rotten
-    Tomatoes rating changed since `since`, by default in the last HOURS_TO_FETCH hours.
+    A recent copy takes titles whose TMDB details or IMDb, Metacritic, Rotten Tomatoes
+    or Letterboxd movie rating changed since `since`, by default in the last HOURS_TO_FETCH hours.
     With recent_only=False it takes every title.
 
     A title flagged as deleted on TMDB is left out. Restoring it moves its details'
@@ -162,6 +167,7 @@ def copy_media(
         if is_movie
         else mongo_db.rotten_tomatoes_tv_rating
     )
+    mongo_letterboxd = mongo_db.letterboxd_movie_rating if is_movie else None
     media_table_name = "movie" if is_movie else "show"
     MediaClass = Movie if is_movie else Show
 
@@ -173,9 +179,10 @@ def copy_media(
     # Collect the changed titles of every source once, then read them in batches by id.
     # Paging each collection with skip rescanned it for every page and timed out on
     # large windows, such as the IMDb dataset ingest's first run.
-    all_tmdb_ids = changed_tmdb_ids(
-        [mongo_details, mongo_imdb, mongo_meta, mongo_rotten], query_selector | updated_at_filter
-    )
+    sources = [mongo_details, mongo_imdb, mongo_meta, mongo_rotten]
+    if mongo_letterboxd is not None:
+        sources.append(mongo_letterboxd)
+    all_tmdb_ids = changed_tmdb_ids(sources, query_selector | updated_at_filter)
     print(f"Total {media_type} titles to copy: {len(all_tmdb_ids)}", flush=True)
 
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
@@ -205,6 +212,7 @@ def copy_media(
         imdb_map = fetch_map_by_ids(mongo_imdb, tmdb_ids)
         meta_map = fetch_map_by_ids(mongo_meta, tmdb_ids)
         rotten_map = fetch_map_by_ids(mongo_rotten, tmdb_ids)
+        letterboxd_map = fetch_map_by_ids(mongo_letterboxd, tmdb_ids) if is_movie else {}
 
         for tmdb_id in tmdb_ids:
             if tmdb_id in flagged_ids:
@@ -214,12 +222,14 @@ def copy_media(
             imdb_rating = imdb_map.get(tmdb_id, {})
             meta_rating = meta_map.get(tmdb_id, {})
             rotten_rating = rotten_map.get(tmdb_id, {})
+            letterboxd_rating = letterboxd_map.get(tmdb_id, {})
 
             if (
                 not tmdb_details
                 and not imdb_rating
                 and not meta_rating
                 and not rotten_rating
+                and not letterboxd_rating
             ):
                 continue
             
@@ -244,6 +254,7 @@ def copy_media(
                 valid_counts = [count for count in counts if count is not None]
                 return sum(valid_counts)
 
+            # Letterboxd is published as a separate source; the aggregate formula stays unchanged.
             # User score percents and counts
             user_score_percents = [
                 tmdb_user_score_normalized_percent,
@@ -296,6 +307,15 @@ def copy_media(
             # Create Media document
             media = MediaClass(
                 tmdb_id=tmdb_id,
+                **({
+                    "letterboxd_url": letterboxd_rating.get("letterboxd_url"),
+                    "letterboxd_id": letterboxd_rating.get("letterboxd_id"),
+                    "letterboxd_user_score_original": letterboxd_rating.get("user_score_original"),
+                    "letterboxd_user_score_normalized_percent": letterboxd_rating.get("user_score_normalized_percent"),
+                    "letterboxd_user_score_rating_count": letterboxd_rating.get("user_score_vote_count"),
+                    "letterboxd_ratings_created_at": to_timestamp(letterboxd_rating.get("created_at")),
+                    "letterboxd_ratings_updated_at": to_timestamp(letterboxd_rating.get("updated_at")),
+                } if is_movie else {}),
                 # Scores
                 tmdb_url=tmdb_url,
                 tmdb_user_score_original=tmdb_user_score_original,
@@ -366,7 +386,7 @@ def copy_media(
             connector=connector,
             table=media_table_name,
             records=media_documents,
-            replace_null_columns=CLEARED_COLUMNS,
+            replace_null_columns=CLEARED_COLUMNS + (LETTERBOXD_COLUMNS if is_movie else ()),
         )
 
         media_type_key = "movies" if is_movie else "shows"

@@ -1,0 +1,25 @@
+{
+  "at": "2026-11-01T10:17:31.318405+00:00",
+  "before": {
+    "path": "f/letterboxd/backfill",
+    "schedule": "0 0 * * * *",
+    "args": {
+      "max_hours": 0.98,
+      "batch_size": 100
+    },
+    "enabled": true,
+    "no_flow_overlap": true
+  },
+  "after": {
+    "path": "f/letterboxd/backfill",
+    "schedule": "0 * * * * *",
+    "args": {
+      "max_hours": 24,
+      "batch_size": 100
+    },
+    "enabled": true,
+    "no_flow_overlap": true
+  },
+  "script_timeout_seconds": 90000,
+  "source_request_spacing_changed": false
+}

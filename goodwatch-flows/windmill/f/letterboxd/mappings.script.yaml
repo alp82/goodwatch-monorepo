@@ -1,0 +1,12 @@
+summary: Attach Wikidata Letterboxd movie URL hints
+description: One read-only Wikidata CSV export; conservative identity matching. Only dry_run=false writes wikidata_url hints to existing queue entries. Crawled URLs and scores are never changed.
+lock: '!inline f/letterboxd/mappings.script.lock'
+kind: script
+timeout: 1800
+schema:
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+  required: []

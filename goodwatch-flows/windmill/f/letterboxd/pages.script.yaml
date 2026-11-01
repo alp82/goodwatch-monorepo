@@ -1,0 +1,8 @@
+summary: Parse verified Letterboxd movie JSON-LD
+description: ''
+lock: '!inline f/letterboxd/pages.script.lock'
+kind: script
+schema:
+  type: object
+  properties: {}
+  required: []
