@@ -28,7 +28,7 @@ export default function Layout() {
   const hideNative = useCallback(() => { if (Platform.OS !== 'web') void SplashScreen.hideAsync().catch(() => undefined); }, []);
   return <BootPageReady.Provider value={markPageReady}><BootPhase.Provider value={booted ? 'ready' : arriving ? 'enter' : 'boot'}><Providers><StatusBar style="light" /><View style={{ flex: 1, backgroundColor: '#070707' }}>
     <View style={{ flex: 1 }} pointerEvents={booted || arriving ? 'auto' : 'none'} accessibilityElementsHidden={!(booted || arriving)} importantForAccessibility={booted || arriving ? 'auto' : 'no-hide-descendants'} aria-hidden={!(booted || arriving)}>
-      {showStack && fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }} />}
+      {showStack && fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }}><Stack.Screen name="room/[id]" options={{ gestureEnabled: false }} /></Stack>}
     </View>
     {Platform.OS === 'web' && !fontsReady && <View aria-hidden pointerEvents="none" style={{ position: 'absolute', opacity: 0 }}>
       <Text style={{ fontFamily: 'Gabarito' }}>YepWatch</Text><Text style={{ fontFamily: 'GabaritoBold' }}>YepWatch</Text>

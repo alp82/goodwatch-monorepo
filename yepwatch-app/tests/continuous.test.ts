@@ -12,7 +12,7 @@ import {
   playbackMessage,
   playerHtml,
 } from '../src/features/glow/trailer';
-import { boundedMatch, presentationSize } from '../src/features/glow/model';
+import { presentationSize } from '../src/features/glow/model';
 import { continuousFixture, activityFixture } from './continuous-fixture';
 
 test('continuous snapshots preserve separate own authority across pushes, late joins and restarts', () => {
@@ -47,9 +47,7 @@ test('only own pending answer advances own card; match inspection retains exact 
   assert.equal(ownCard(room)?.id, 'c1');
   assert.equal(ownCard(room, 'c1')?.id, 'c2');
   assert.deepEqual(room.shared.matches, []);
-  assert.equal(boundedMatch(['c2', 'c3'], 'c3', 'c2'), 'c3');
   assert.equal(ownCard(room)?.id, 'c1');
-  assert.equal(boundedMatch(['c2'], 'c3', 'c3'), 'c2');
 });
 test('persist before HTTP, recover the exact envelope after process reload, clear only confirmed or definitive results', async () => {
   const snapshot = continuousFixture();

@@ -9,7 +9,6 @@ import {
   type ViewStyle,
 } from 'react-native';
 import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
 export const glow = {
   bg: '#070707',
   panel: '#131313',
@@ -168,39 +167,6 @@ export function Press({
     </Pressable>
   );
 }
-export function Pill({
-  label,
-  onPress,
-  icon,
-  children,
-  disabled,
-  gold = false,
-  style,
-}: {
-  label: string;
-  onPress: () => void;
-  icon?: IconName;
-  children?: ReactNode;
-  disabled?: boolean;
-  gold?: boolean;
-  style?: StyleProp<ViewStyle>;
-}) {
-  return (
-    <Press
-      label={label}
-      onPress={onPress}
-      disabled={disabled}
-      style={[s.pill, gold && { backgroundColor: glow.amber, borderColor: glow.amber }, style]}
-    >
-      {icon && <Icon name={icon} color={gold ? '#201400' : glow.ink} />}
-      {children && (
-        <GText bold color={gold ? '#201400' : glow.ink}>
-          {children}
-        </GText>
-      )}
-    </Press>
-  );
-}
 export function Wordmark({ size = 24 }: { size?: number }) {
   return (
     <Text
@@ -211,58 +177,10 @@ export function Wordmark({ size = 24 }: { size?: number }) {
     </Text>
   );
 }
-export function VoteButton({
-  yes,
-  onPress,
-  disabled,
-  big,
-}: {
-  yes: boolean;
-  onPress: () => void;
-  disabled: boolean;
-  big: boolean;
-}) {
-  return (
-    <Press
-      label={yes ? 'Yep' : 'Nope'}
-      onPress={onPress}
-      disabled={disabled}
-      style={{ flex: 1, borderRadius: 22, overflow: 'hidden', minHeight: big ? 70 : 62 }}
-    >
-      <LinearGradient
-        colors={yes ? ['#4ade80', '#15803d'] : ['#f87171', '#b91c1c']}
-        style={{
-          flex: 1,
-          minHeight: big ? 70 : 62,
-          flexDirection: 'row',
-          gap: 10,
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-        }}
-      >
-        <Icon name={yes ? 'check' : 'close'} size={27} />
-        <GText size={25} bold>
-          {yes ? 'Yep' : 'Nope'}
-        </GText>
-      </LinearGradient>
-    </Press>
-  );
-}
 export const s = StyleSheet.create({
   statusPage: { flex: 1, backgroundColor: glow.bg, justifyContent: 'center', padding: 24 },
   statusContent: { width: '100%', maxWidth: 520, alignSelf: 'center', gap: 22 },
   press: { alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44 },
-  pill: {
-    borderRadius: 999,
-    backgroundColor: '#242424',
-    borderColor: glow.line,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 18,
-    minHeight: 48,
-  },
   absolute: { position: 'absolute', left: 0, top: 0, bottom: 0, right: 0 },
   row: { flexDirection: 'row', gap: 10, alignItems: 'center' },
 });

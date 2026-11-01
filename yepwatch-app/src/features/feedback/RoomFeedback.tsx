@@ -1,6 +1,8 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { RoomSnapshot } from "@goodwatch/yepwatch-contracts/proposal";
-import { Pill } from "../glow/theme";
+import { View } from "react-native";
+import { GText, glow } from "../glow/theme";
+import { Switch } from "../room/ui";
 import { roomFeedback } from "./room-events";
 import {
   playFeedback,
@@ -29,14 +31,13 @@ export function useRoomFeedback(
     }
   }, [snapshot]);
 }
+/** Sound effects on or off, as a switch row (Room page). */
 export function SoundToggle() {
   const enabled = useSyncExternalStore(subscribe, soundEnabled, () => true);
   return (
-    <Pill
-      label={`Sound effects ${enabled ? "on" : "off"}`}
-      onPress={() => setEnabled(!enabled)}
-    >
-      Sound effects · {enabled ? "On" : "Off"}
-    </Pill>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 44 }}>
+      <GText color={glow.soft} style={{ flex: 1 }}>Sound effects</GText>
+      <Switch label="Sound effects" on={enabled} onPress={() => setEnabled(!enabled)} />
+    </View>
   );
 }

@@ -1,80 +1,75 @@
 import { useEffect, useState } from 'react';
 import Svg, { Path } from 'react-native-svg';
-import { Animated, View, useWindowDimensions } from 'react-native';
+import { Animated, View } from 'react-native';
 import type { PeerActivity } from '../../core/continuous/activity';
 import type { GlowPerson } from './model';
 import { peerColor } from './model';
-import { GText, Icon, Press, native } from './theme';
+import { GText, Icon, native } from './theme';
 import { useReducedMotion } from '../../components/ui';
-export function Faces({
+/**
+ * Faces that react live: a friend's answer bounces their face, a swipe wiggles it, a press squashes
+ * it. Overlapping, in the room control (the control itself is the button).
+ */
+export function LiveFaces({
   people,
   activity,
-  open,
   localReaction,
+  size = 24,
+  max = 4,
 }: {
   people: GlowPerson[];
   activity: Map<string, PeerActivity>;
-  open: () => void;
   localReaction: { at: number; gesture?: string; answer?: boolean };
+  size?: number;
+  max?: number;
 }) {
-  const limit = useWindowDimensions().width < 480 ? 3 : 5;
   return (
-    <Press
-      label={`Room, ${people.filter((p) => !p.dropped).length} ${
-        people.filter((p) => !p.dropped).length === 1 ? 'person' : 'people'
-      }`}
-      onPress={open}
-      style={{
-        flexDirection: 'row',
-        backgroundColor: 'transparent',
-        borderWidth: 0,
-        borderRadius: 30,
-        paddingLeft: 0,
-        paddingRight: 0,
-        gap: 8,
-      }}
-    >
-      {people.slice(0, limit).map((p) => (
-        <Avatar
-          key={p.id}
-          person={p}
-          pulse={
-            p.self
-              ? localReaction.at
-              : activity.get(p.id)?.pointer?.serverTime ??
-                activity.get(p.id)?.pulse?.serverTime ??
-                0
-          }
-          action={
-            p.self
-              ? localReaction.answer !== undefined
-                ? localReaction.answer
-                  ? 'yep'
-                  : 'nope'
-                : localReaction.gesture
-              : activity.get(p.id)?.pointer?.pointer
-              ? activity.get(p.id)?.pointer?.pointer?.pressed
-                ? 'reach'
-                : 'handle'
-              : activity.get(p.id)?.pulse?.beat
-              ? 'answer'
-              : activity.get(p.id)?.pulse?.gesture
-          }
-          moving={!!activity.get(p.id)?.pointer?.pointer}
-          active={activity.has(p.id)}
-        />
+    <View accessible={false} style={{ flexDirection: 'row', alignItems: 'center' }}>
+      {people.slice(0, max).map((p, i) => (
+        <View key={p.id} style={{ marginLeft: i ? -size * 0.28 : 0 }}>
+          <Avatar
+            size={size}
+            person={p}
+            pulse={
+              p.self
+                ? localReaction.at
+                : activity.get(p.id)?.pointer?.serverTime ??
+                  activity.get(p.id)?.pulse?.serverTime ??
+                  0
+            }
+            action={
+              p.self
+                ? localReaction.answer !== undefined
+                  ? localReaction.answer
+                    ? 'yep'
+                    : 'nope'
+                  : localReaction.gesture
+                : activity.get(p.id)?.pointer?.pointer
+                ? activity.get(p.id)?.pointer?.pointer?.pressed
+                  ? 'reach'
+                  : 'handle'
+                : activity.get(p.id)?.pulse?.beat
+                ? 'answer'
+                : activity.get(p.id)?.pulse?.gesture
+            }
+            moving={!!activity.get(p.id)?.pointer?.pointer}
+            active={activity.has(p.id)}
+          />
+        </View>
       ))}
-      {people.length > limit && <GText size={12}>+{people.length - limit}</GText>}
-    </Press>
+      {people.length > max && <GText size={12} color="#a3a3a3" style={{ marginLeft: 5 }}>+{people.length - max}</GText>}
+    </View>
   );
 }
 function Avatar({
+  size,
   person,
   pulse,
   active,
   action,
   moving,
 }: {
+  size: number;
   person: GlowPerson;
   pulse: number;
   active: boolean;
@@ -175,18 +170,18 @@ function Avatar({
   }, [pulse, action, moving, reduced, y, squash, spark, wiggle]);
   const color = peerColor(person.id);
   return (
-    <View style={{ width: 44, height: 44, opacity: person.dropped ? 0.45 : 1 }}>
+    <View style={{ width: size, height: size, opacity: person.dropped ? 0.45 : 1 }}>
       <Animated.View
         accessibilityLabel={`${person.nickname}${person.self ? ', you' : ''}${
           person.dropped ? ', dropped' : ''
         }`}
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: 20,
+          width: size,
+          height: size,
+          borderRadius: size / 2,
           borderWidth: 2,
-          borderColor: person.self || active ? color : '#ffffff26',
-          backgroundColor: '#292929',
+          borderColor: active ? '#fff' : '#0d0d0d',
+          backgroundColor: person.self ? '#fbbf24' : color,
           alignItems: 'center',
           justifyContent: 'center',
           shadowColor: color,
@@ -211,8 +206,8 @@ function Avatar({
           ],
         }}
       >
-        <GText size={17} bold color={color}>
-          {person.nickname.slice(0, 1).toUpperCase()}
+        <GText size={size * 0.42} bold color="#141008">
+          {(person.nickname || '?').slice(0, 1).toUpperCase()}
         </GText>
       </Animated.View>
       {person.dropped && (
@@ -235,7 +230,7 @@ function Avatar({
           pointerEvents="none"
           style={{
             position: 'absolute',
-            left: side < 0 ? 0 : 37,
+            left: side < 0 ? 0 : size - 7,
             top: 0,
             opacity: spark.interpolate({
               inputRange: [0, 0.2, 1],
