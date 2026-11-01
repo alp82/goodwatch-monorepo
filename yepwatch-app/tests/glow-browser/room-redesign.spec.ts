@@ -215,3 +215,63 @@ test('the room’s idea budget is used up: a plain line, the idea isn’t added'
   await expect(page.getByText('No more new ideas in this room', { exact: true })).toBeVisible();
   expect(f.room.shared.ideas.map((i) => i.text)).toEqual(['cheer me up']);
 });
+
+test.describe('the join screen shows the room from the invite preview', () => {
+  /** A friend on the link before admission: the room itself can't be read yet. */
+  async function openInvite(page: Page, room = choosingRoom(), preview?: 'fail') {
+    room.shared.phase = 'setup';
+    const f = await fakeRoom(page, room, { preview });
+    await page.route('**/proposal/rooms/test-room', (route) => (f.room.shared.participants.some((p) => p.participantId === 'guest')
+      ? route.fallback()
+      : route.fulfill({ status: 401, json: { error: { code: 'unauthorized', message: 'Not a member yet', retryable: false } } })));
+    await page.goto('/r/K7QX');
+    return f;
+  }
+
+  test('one idea is the headline under the host’s room label', async ({ page }) => {
+    await openInvite(page);
+    const head = page.getByTestId('invite-head');
+    await expect(head.getByText('ALP’S ROOM')).toBeVisible();
+    await expect(head.getByTestId('invite-ideas')).toHaveText('cheer me up');
+    await expect(head.getByText('Movies and shows')).toBeVisible();
+    await expect(head.getByLabel('2 people')).toBeVisible();
+    await expect(page.getByTestId('subheader')).not.toContainText('Join the room');
+    await expect(page.getByLabel('Your name')).toBeVisible();
+    await shot(page, '13-join-one-idea');
+  });
+
+  test('several switched-on ideas stack; switched-off ones stay hidden; no name says your friend', async ({ page }) => {
+    const room = choosingRoom();
+    room.shared.participants[0].nickname = '';
+    room.shared.constraints.kinds = ['movie'];
+    room.shared.ideas.push(
+      { id: 'i2', text: 'rainy day whodunit', authorId: 'mia', on: true, attributes: [] },
+      { id: 'i3', text: 'something long and sad', authorId: 'mia', on: false, attributes: [] },
+    );
+    await openInvite(page, room);
+    const head = page.getByTestId('invite-head');
+    await expect(head.getByText('YOUR FRIEND’S ROOM')).toBeVisible();
+    const ideas = head.getByTestId('invite-ideas').locator('> *');
+    await expect(ideas).toHaveText(['cheer me up', 'rainy day whodunit']);
+    await expect(head.getByText('Movies', { exact: true })).toBeVisible();
+    await shot(page, '13-join-ideas');
+  });
+
+  test('no ideas reads Anything', async ({ page }) => {
+    const room = choosingRoom();
+    room.shared.ideas = [];
+    await openInvite(page, room);
+    await expect(page.getByTestId('invite-ideas')).toHaveText('Anything');
+  });
+
+  test('a failed preview keeps Join the room and the form still joins', async ({ page }) => {
+    const f = await openInvite(page, choosingRoom(), 'fail');
+    await expect(page.getByTestId('subheader')).toContainText('Join the room');
+    await expect(page.getByTestId('invite-head')).toHaveCount(0);
+    await expect(page.getByTestId('invite-head-pending')).toHaveCount(0);
+    await page.getByLabel('Your name').fill('Sam');
+    await button(page, 'Join').click();
+    await expect(page.getByTestId('services-page')).toBeVisible();
+    expect(f.room.shared.participants.some((p) => p.participantId === 'guest')).toBe(true);
+  });
+});

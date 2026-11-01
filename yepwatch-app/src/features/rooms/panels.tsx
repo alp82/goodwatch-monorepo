@@ -3,6 +3,9 @@ import { useState, type ReactNode } from 'react';
 import { Image, TextInput, View } from 'react-native';
 import { parseInvite } from '../../core/invites';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
+import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
+import { fitSize, type Kind } from '../room/model';
+import { Hero, KindIcons, Small, T, kindsLabel } from '../room/ui';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { Action, Chip, FaceStack, Label, Panel } from '../shell/parts';
 import { GoodWatchMark } from '../shell/marks';
@@ -22,13 +25,49 @@ export function RetryPanel({ action, busy, error, retry, extra }: { action: stri
   );
 }
 
+/** Room label, ideas and people take this much before the preview arrives, so the form doesn't move. */
+const HEAD_HEIGHT = 150;
+/** The host's possessive for the room label: "ALP’S ROOM", or "YOUR FRIEND’S ROOM" without a name. */
+export const roomLabel = (hostName: string | null) => `${(hostName || 'Your friend').toUpperCase()}’S ROOM`;
+
+/**
+ * What a friend sees before joining (owner-approved prototype 9a2241e3e, RoomHead): whose room it
+ * is, the switched-on ideas as the headline (one idea at hero size, several stacked and fitted,
+ * none "Anything"), then the people and the kinds. `undefined` is still loading: the space is kept.
+ */
+export function InviteHead({ preview }: { preview: InvitePreview | undefined }) {
+  const [width, setWidth] = useState(330);
+  if (!preview) return <View testID="invite-head-pending" style={{ minHeight: HEAD_HEIGHT }} />;
+  const kinds = preview.kinds.filter((k): k is Kind => k === 'movie' || k === 'show_start');
+  const many = preview.ideas.length > 1;
+  // Only the host has a name here; everyone else is a plain face.
+  const faces = Array.from({ length: Math.min(preview.people, 50) }, (_, i) => ({ id: `p${i}`, nickname: i === 0 && preview.hostName ? preview.hostName : ' ' }));
+  return (
+    <View testID="invite-head" onLayout={(e) => { if (e.nativeEvent.layout.width > 0) setWidth(e.nativeEvent.layout.width); }} style={{ minHeight: HEAD_HEIGHT, justifyContent: 'flex-end', gap: 10 }}>
+      <Small bold>{roomLabel(preview.hostName)}</Small>
+      <View testID="invite-ideas" style={{ gap: 6 }}>
+        {!preview.ideas.length ? <Hero color={glow.soft}>Anything</Hero> : preview.ideas.map((idea, i) => {
+          const fs = fitSize(idea.text, width, many ? 28 : T.hero);
+          return <GText key={i} bold size={fs} color={glow.ink} style={{ letterSpacing: -fs * 0.035, lineHeight: fs * 1.08 }}>{idea.text}</GText>;
+        })}
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {faces.length ? <FaceStack people={faces} size={24} max={6} /> : null}
+        {kinds.length ? <><KindIcons kinds={kinds} size={16} color={glow.muted} /><Small>{kindsLabel(kinds)}</Small></> : null}
+      </View>
+    </View>
+  );
+}
+
 /**
  * Join by link or code: your name (or Join as the remembered name), or Continue with GoodWatch.
  * An invitation link carries its code, so only manual joins show the code field.
  */
-export function JoinPanel({ invite, nickname, member = false, initialCode = '', action, busy, error, editName, submit, signIn, extra }: {
+export function JoinPanel({ invite, nickname, member = false, initialCode = '', action, busy, error, editName, submit, signIn, extra, head }: {
   invite: boolean; nickname: string | null; member?: boolean; initialCode?: string; action: string; busy: boolean; error?: string;
   editName: () => void; submit: (code: string, nickname: string) => void; signIn?: (code: string) => void; extra?: ReactNode;
+  /** The invited room's head (InviteHead) above the form. */
+  head?: ReactNode;
 }) {
   const [code, setCode] = useState(initialCode);
   const [name, setName] = useState('');
@@ -41,6 +80,7 @@ export function JoinPanel({ invite, nickname, member = false, initialCode = '', 
       {member ? <GoodWatchMark size={22} /> : null}
       <GText bold size={17} color="#201400">{label}</GText>
     </Press>}>
+      {head}
       {!invite || !initialCode ? (
         <TextInput autoFocus={!initialCode} accessibilityLabel="Room code or invitation" value={code} onChangeText={setCode} placeholder="Code or link" placeholderTextColor={glow.muted}
           autoCapitalize="characters" autoCorrect={false} returnKeyType={nickname ? 'go' : 'next'} submitBehavior="blurAndSubmit" onSubmitEditing={go}

@@ -23,7 +23,8 @@ import { Landing } from './home/Landing';
 import { BootPageReady } from './home/boot-phase';
 import { greeting, type HomeRoom } from './rooms/home-model';
 import { YourRooms } from './rooms/YourRooms';
-import { HistoryPanel, JoinPanel, ProfilePanel, RetryPanel } from './rooms/panels';
+import { HistoryPanel, InviteHead, JoinPanel, ProfilePanel, RetryPanel } from './rooms/panels';
+import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
 import { useHome } from './rooms/useHome';
 import { AppFrame, SubHeader, type BackTarget } from './shell/Frame';
 import { Avatar, CoveredBody } from './shell/parts';
@@ -51,6 +52,14 @@ export function Entrance({ invite }: { invite?: string }) {
   const [recoveryBlocked, setRecoveryBlocked] = useState(false);
   const [checkVersion, setCheckVersion] = useState(0);
   const intent = invite ?? '';
+  // The invited room's head: undefined while loading, null when the preview failed (the panel stays "Join the room").
+  const [preview, setPreview] = useState<InvitePreview | null | undefined>(undefined);
+  useEffect(() => {
+    if (!invite) return;
+    let active = true;
+    api.invitePreview(invite).then((p) => { if (active) setPreview(p); }, () => { if (active) setPreview(null); });
+    return () => { active = false; };
+  }, [invite]);
   const [admission, setAdmission] = useState<AdmissionRecovery | null>(null);
   // Keeping an uncertain request must not trap navigation inside its form.
   const [recoveryDismissed, setRecoveryDismissed] = useState(false);
@@ -261,7 +270,7 @@ export function Entrance({ invite }: { invite?: string }) {
   const returning = home.hasRooms || Boolean(known);
   const pending = admission ? (admission.code ? 'join' : 'create') : null;
   const shown: PanelKind | null = panel ?? (recoveryDismissed ? null : pending ?? (restoreFailed || recoveryBlocked ? 'join' : null));
-  const titles: Record<PanelKind, string> = { create: 'New room', join: invite ? 'Join the room' : 'Join a room', profile: 'Profile', history: 'History' };
+  const titles: Record<PanelKind, string> = { create: 'New room', join: invite ? (preview ? '' : 'Join the room') : 'Join a room', profile: 'Profile', history: 'History' };
   const backTo: BackTarget | null = shown ? { label: returning ? 'Your rooms' : 'Start', short: returning ? 'Rooms' : 'Start', onPress: closePanel } : null;
   const actionLabel = (first: string, again: string) => (busy ? 'Connecting…' : retrySeconds > 0 ? `Retry in ${retrySeconds}s` : admission ? again : first);
   const notices = (
@@ -297,7 +306,7 @@ export function Entrance({ invite }: { invite?: string }) {
         <RetryPanel action={actionLabel('Create room', 'Retry room request')} busy={locked} error={error} retry={() => void enter(false, false, undefined, admission?.request.nickname ?? known ?? '')} extra={notices} />
       )}
       {shown === 'join' && (
-        <JoinPanel invite={Boolean(invite)} nickname={admission ? admission.request.nickname || null : known} member={Boolean(home.member)} initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error}
+        <JoinPanel invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} nickname={admission ? admission.request.nickname || null : known} member={Boolean(home.member)} initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error}
           editName={() => setPanel('profile')}
           signIn={guestOnly || home.member ? undefined : (c) => void enter(true, true, undefined, '', c)}
           submit={(c, name) => void enter(true, Boolean(home.member), undefined, name, c)} extra={notices} />

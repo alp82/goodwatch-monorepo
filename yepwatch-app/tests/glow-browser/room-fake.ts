@@ -4,7 +4,7 @@
  * are participants the test edits directly (`f.room`, then `f.push()` to bump the revision).
  */
 import type { Page, Route } from '@playwright/test';
-import type { CatalogMetadata, CommandEnvelope, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
+import type { CatalogMetadata, CommandEnvelope, InvitePreview, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
 
 export type FakeSnapshot = RoomSnapshot;
@@ -50,7 +50,7 @@ export function choosingRoom(): FakeSnapshot {
 
 const union = (s: FakeSnapshot) => [...new Set(s.shared.participants.filter((p) => !p.dropped).flatMap((p) => p.serviceIds ?? []))].filter((id) => !s.shared.disabledServiceIds.includes(id));
 
-export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number } = {}) {
+export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail' } = {}) {
   // The room's lifetime idea searches (24 on the server); removing an idea doesn't give one back.
   let interpretations = opts.interpretations ?? 0;
   const commands: CommandEnvelope[] = [];
@@ -133,6 +133,19 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     if (path.endsWith('/catalog/metadata')) return route.fulfill({ json: metadata });
     if (path.endsWith('/member/start') || path.endsWith('/realtime-ticket'))
       return route.fulfill({ status: 501, json: { error: { code: 'not_implemented', message: 'Not in this fixture', retryable: false } } });
+    // The public invite preview, as the server builds it: switched-on ideas only, people who haven't left.
+    if (path.endsWith('/invites/preview')) {
+      if (opts.preview === 'fail') return route.fulfill({ status: 503, json: { error: { code: 'catalog_unavailable', message: 'Preview unavailable', retryable: false } } });
+      const preview: InvitePreview = {
+        roomId: room.shared.roomId.padEnd(32, '0').slice(0, 32),
+        hostName: room.shared.participants.find((p) => p.participantId === 'host')?.nickname || null,
+        ideas: room.shared.ideas.filter((i) => i.on).map((i) => ({ text: i.text })),
+        kinds: room.shared.constraints.kinds,
+        phase: room.shared.phase === 'setup' || room.shared.phase === 'decided' ? room.shared.phase : 'choosing',
+        people: room.shared.participants.filter((p) => !p.dropped).length,
+      };
+      return route.fulfill({ json: preview });
+    }
     if (path.endsWith('/guest/resolve-invite')) return route.fulfill({ json: { roomId: room.shared.roomId } });
     if (route.request().method() === 'POST' && (path.endsWith('/rooms') || path.endsWith('/join'))) {
       const body = route.request().postDataJSON() as { nickname: string };
