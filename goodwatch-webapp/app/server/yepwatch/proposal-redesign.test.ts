@@ -671,3 +671,42 @@ test("linked service picks accept the union of room and prefill countries; guest
 	})
 	await f.send({ type: "set_services", serviceIds: [2] })
 })
+test("a deck waiting for answers reopens once a vote lets a card retire, so the next refill can run", async () => {
+	const f = await fixture()
+	await f.start()
+	const room = (await f.repo.read(f.id))!.room
+	const [one, two] = room.candidates
+	assert.ok(one && two)
+	const friend = room.participants.find((p) => p.id !== room.hostId)!
+	friend.votes[one.id] = { value: "pass", revision: 1 }
+	friend.votes[two.id] = { value: "pass", revision: 1 }
+	friend.lastVotedId = two.id
+	room.stream = {
+		version: room.stream.version + 1,
+		state: "capacity",
+		reason: "awaiting_answers"
+	}
+	const vote = (r: ProposalRoom, candidateId: string) =>
+		command(r, {
+			type: "vote",
+			generation: r.generation,
+			candidateId,
+			expectedVoteRevision: 0,
+			value: "pass"
+		})
+	// The host's own last answer stays pinned: nothing can retire yet, the deck keeps waiting.
+	let next = vote(room, one.id)
+	assert.deepEqual(next.stream, room.stream)
+	// Now the first card is answered by everyone and no longer pinned: the stream is ready again.
+	next = vote(next, two.id)
+	assert.deepEqual(next.stream, {
+		version: room.stream.version + 1,
+		state: "ready",
+		reason: null
+	})
+	assert.ok(next.candidates.some((c) => c.id === one.id), "a vote does not retire cards itself")
+	// A full room (seen-title capacity) stays closed.
+	const full = structuredClone(room)
+	full.stream = { ...room.stream, reason: "room_capacity" }
+	assert.equal(vote(vote(full, one.id), two.id).stream.state, "capacity")
+})

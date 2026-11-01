@@ -540,6 +540,18 @@ export function proposalTransition(
 				!room.proposal.baseParticipantIds.includes(actorId)
 			)
 				room.proposal.baseParticipantIds.push(actorId)
+			// A full deck waits for the others' answers. Once a card can retire, open the stream again so
+			// the next refill makes room; nobody would otherwise ask and every deck would stay empty.
+			if (
+				room.stream.state === "capacity" &&
+				room.stream.reason === "awaiting_answers" &&
+				retirable(room).size > 0
+			)
+				room.stream = {
+					version: room.stream.version + 1,
+					state: "ready",
+					reason: null
+				}
 		}
 	}
 	for (const departed of original.participants.filter((p) => p.leftAt != null))
@@ -549,14 +561,14 @@ export function proposalTransition(
 	return room
 }
 
-/** Retain current proposal, matches, each actor's last answer, and anything still unanswered. */
-export function retire(room: ProposalRoom) {
+/** Cards everyone has answered that no match, proposal or last answer still holds. */
+function retirable(room: ProposalRoom) {
 	const pinned = new Set([
 		...matches(room).map((c) => c.id),
 		...(room.proposal ? [room.proposal.candidateId] : []),
 		...room.participants.flatMap((p) => (p.lastVotedId ? [p.lastVotedId] : []))
 	])
-	const remove = new Set(
+	return new Set(
 		room.candidates
 			.filter(
 				(c) =>
@@ -567,6 +579,10 @@ export function retire(room: ProposalRoom) {
 			)
 			.map((c) => c.id)
 	)
+}
+/** Retain current proposal, matches, each actor's last answer, and anything still unanswered. */
+export function retire(room: ProposalRoom) {
+	const remove = retirable(room)
 	room.candidates = room.candidates.filter((c) => !remove.has(c.id))
 	for (const p of room.participants) for (const id of remove) delete p.votes[id]
 }
