@@ -36,7 +36,7 @@ export const ESSENTIALS = [
 	{
 		id: "score",
 		title: "One score from all the big sites",
-		line: "IMDb, Rotten Tomatoes, Metacritic and TMDB in one score for every movie and show.",
+		line: "IMDb, Letterboxd, Rotten Tomatoes, Metacritic and TMDB in one score for every movie and show.",
 	},
 	{
 		id: "search",

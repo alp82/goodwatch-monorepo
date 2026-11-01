@@ -1,11 +1,17 @@
 import type React from "react"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
+import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
 import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { assetUrl } from "~/utils/asset-url"
+import {
+	letterboxdScore,
+	letterboxdStars,
+	letterboxdTitle,
+} from "~/utils/letterboxd"
 
-// IMDb, Metacritic (critics | audience), and Rotten Tomatoes (critics | audience) as compact
+// IMDb, Letterboxd (movies only), Metacritic (critics | audience), and Rotten Tomatoes (critics | audience) as compact
 // brand-colored chips in a wrapping row. A site with no score at all is left out.
 // `fill`: the chips share the row's whole width, for a row that has nothing else to end it.
 export default function RatingChips({
@@ -13,9 +19,12 @@ export default function RatingChips({
 	fill = false,
 }: { media: MovieResult | ShowResult; fill?: boolean }) {
 	const d = media.details
+	const lb = letterboxdScore(media)
 	return (
 		<RatingChipRow
 			fill={fill}
+			lb={lb && letterboxdStars(lb.stars)}
+			lbCount={lb?.count ?? null}
 			imdb={
 				d.imdb_user_score_original
 					? d.imdb_user_score_original.toFixed(1)
@@ -45,10 +54,14 @@ export default function RatingChips({
 				imdb: d.imdb_url,
 				mc: d.metacritic_url,
 				rt: d.rotten_tomatoes_url,
+				lb: lb?.url ?? undefined,
 			}}
 		/>
 	)
 }
+
+/** Wide logos: they sit lower than the square icons so that all chips look the same height. */
+const wordmark = new Set(["IMDb", "Letterboxd"])
 
 /** The chips from values. `small` is the size a popup uses: the season scores behind an episode list season's score. */
 export function RatingChipRow({
@@ -57,6 +70,8 @@ export function RatingChipRow({
 	mcUser,
 	rt,
 	rtUser,
+	lb = null,
+	lbCount = null,
 	urls = {},
 	fill = false,
 	small = false,
@@ -66,7 +81,11 @@ export function RatingChipRow({
 	mcUser: string | null
 	rt: string | null
 	rtUser: string | null
-	urls?: { imdb?: string; mc?: string; rt?: string }
+	/** Letterboxd's stars with one decimal. Movies only. */
+	lb?: string | null
+	/** How many members rated it on Letterboxd, for the tooltip. */
+	lbCount?: number | null
+	urls?: { imdb?: string; mc?: string; rt?: string; lb?: string }
 	fill?: boolean
 	small?: boolean
 }) {
@@ -74,6 +93,7 @@ export function RatingChipRow({
 		imdb_url: urls.imdb,
 		metacritic_url: urls.mc,
 		rotten_tomatoes_url: urls.rt,
+		letterboxd_url: urls.lb,
 	}
 
 	const pair = (critics: string | null, audience: string | null) => (
@@ -106,7 +126,13 @@ export function RatingChipRow({
 				src={assetUrl(logo)}
 				alt={alt}
 				className={
-					alt === "IMDb" ? (small ? "h-2.5" : "h-3") : small ? "h-3" : "h-3.5"
+					wordmark.has(alt)
+						? small
+							? "h-2.5"
+							: "h-3"
+						: small
+							? "h-3"
+							: "h-3.5"
 				}
 			/>
 			{value}
@@ -122,6 +148,19 @@ export function RatingChipRow({
 				imdb,
 				"bg-imdb text-black",
 				`IMDb: ${imdb}`,
+			),
+		lb &&
+			chip(
+				"lb",
+				d.letterboxd_url,
+				letterboxdLogo,
+				"Letterboxd",
+				<>
+					{lb}
+					<span className="font-medium opacity-60">/5</span>
+				</>,
+				"bg-letterboxd text-white",
+				letterboxdTitle(lb, lbCount),
 			),
 		(mc || mcUser) &&
 			chip(

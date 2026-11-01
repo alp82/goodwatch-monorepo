@@ -226,6 +226,11 @@ export const buildJsonLdDetail = (
 	const { details } = media
 	const isMovie = media.mediaType === "movie"
 	const actors = jsonLdPeople(media.credits.actors)
+	// The same title elsewhere: IMDb, then Letterboxd for a movie.
+	const sameAs = [
+		details.imdb_id ? `https://www.imdb.com/title/${details.imdb_id}/` : null,
+		media.mediaType === "movie" ? media.details.letterboxd_url : null,
+	].filter((url): url is string => Boolean(url))
 
 	const jsonLd: Record<string, unknown> = {
 		"@context": "https://schema.org",
@@ -251,9 +256,7 @@ export const buildJsonLdDetail = (
 					name: code,
 				}))
 			: undefined,
-		sameAs: details.imdb_id
-			? [`https://www.imdb.com/title/${details.imdb_id}/`]
-			: undefined,
+		sameAs: sameAs.length ? sameAs : undefined,
 		actor: actors.length ? actors : undefined,
 	}
 
@@ -290,7 +293,7 @@ export const buildJsonLdDetail = (
 
 	// No aggregateRating: Google only accepts ratings from this site's own
 	// users, and every GoodWatch score (user, official, overall) is built from
-	// TMDB, IMDb, Metacritic and Rotten Tomatoes votes.
+	// TMDB, IMDb, Letterboxd (movies only), Metacritic and Rotten Tomatoes votes.
 
 	return jsonLd
 }

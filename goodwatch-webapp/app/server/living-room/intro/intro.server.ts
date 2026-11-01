@@ -7,7 +7,7 @@ import { type ViewerContext, getViewerContext } from "~/server/viewer.server"
 import type { IntroCard } from "~/ui/living-room/intro/data"
 // The intro film's data (docs/implementation/home-intro.md), for /api/intro. Two parts:
 // - What is the same for everyone comes from content.json, a snapshot of the catalog taken when the film was made:
-//   the intro's titles and their feeling words, the five numbers behind the score chapter's title, the search phrase
+//   the intro's titles and their feeling words, the six numbers behind the score chapter's title, the search phrase
 //   with its reading and results, the streaming wall, the Explorer's islands and combination, the filter steps and
 //   their counts, the quiz's pick, popular modern shows for the For you, Use with AI and Discord bot chapters, and
 //   the For you chapter's pick. It never runs the site's search or other costly work per request.

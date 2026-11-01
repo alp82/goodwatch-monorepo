@@ -49,7 +49,7 @@ test("decodes publisher bytes, odd row count, missing facts and four country col
 
 test("rejects unknown formats, checksum, size, country tables and invalid values", () => {
 	assert.throws(
-		() => joinFactsChunks({ ...fixture(), format: 3 }, 3, [bytes]),
+		() => joinFactsChunks({ ...fixture(), format: 4 }, 3, [bytes]),
 		/format/,
 	)
 	assert.throws(
@@ -109,9 +109,9 @@ test("sample encoder matches publisher layout and money units", () => {
 		],
 	})
 	assert.deepEqual(encoded.chunks, [
-		new Uint8Array([...bytes, ...new Array(15).fill(255)]),
+		new Uint8Array([...bytes, ...new Array(18).fill(255)]),
 	])
-	assert.equal(encoded.manifest.format, 2)
+	assert.equal(encoded.manifest.format, 3)
 	for (const [value, expected] of [
 		[9999, 0],
 		[10000, 10],
@@ -130,7 +130,7 @@ test("sample encoder matches publisher layout and money units", () => {
 	}
 })
 
-test("retained storage grows by 25 bytes per title, with at most one alignment byte", () => {
+test("retained storage grows by 26 bytes per title, with at most one alignment byte", () => {
 	for (const count of [0, 1, 2, 10000, 10001]) {
 		const sample = encodeFacts({
 			rows: Array.from({ length: count }, (_, pointId) => ({ pointId })),
@@ -139,7 +139,7 @@ test("retained storage grows by 25 bytes per title, with at most one alignment b
 		const views = Object.values(columns).filter(ArrayBuffer.isView)
 		assert.equal(views.length, 8)
 		assert.equal(new Set(views.map((v) => v.buffer)).size, 1)
-		assert.equal(views[0].buffer.byteLength, count * 25 + (count % 2))
+		assert.equal(views[0].buffer.byteLength, count * 26 + (count % 2))
 	}
 })
 
@@ -191,7 +191,7 @@ test("optional reads log once and return null on missing chunks, Redis failure, 
 	assert.deepEqual(keys, ["title-snapshot:test:facts:0"])
 })
 
-test("format 2 appends source columns and rejects invalid source bytes", () => {
+test("format 3 appends six source columns and rejects invalid source bytes", () => {
 	for (const count of [0, 1, 2, 3]) {
 		const encoded = encodeFacts({
 			rows: Array.from({ length: count }, (_, i) => ({
@@ -202,6 +202,7 @@ test("format 2 appends source columns and rejects invalid source bytes", () => {
 					rtAudience: 80,
 					metacritic: 90,
 					metacriticUsers: 100,
+					letterboxd: 88,
 				},
 			})),
 		})
@@ -210,6 +211,10 @@ test("format 2 appends source columns and rejects invalid source bytes", () => {
 		assert.deepEqual(
 			[...decoded.sources!.metacriticUsers],
 			new Array(count).fill(100),
+		)
+		assert.deepEqual(
+			[...(decoded.sources?.letterboxd ?? [])],
+			new Array(count).fill(88),
 		)
 		if (!count) continue
 		for (let split = 0; split <= encoded.chunks[0].length; split++)
@@ -234,5 +239,42 @@ test("format 2 appends source columns and rejects invalid source bytes", () => {
 				),
 			/source score/,
 		)
+	}
+})
+
+test("format 2 has no Letterboxd column: it decodes as all unknown", () => {
+	for (const count of [0, 1, 2, 3]) {
+		const encoded = encodeFacts({
+			rows: Array.from({ length: count }, (_, i) => ({
+				pointId: 1e12 + i,
+				year: 2000 + i,
+				sources: { imdb: 70 + i, metacriticUsers: 80, letterboxd: 90 },
+			})),
+		})
+		// Format 2 is format 3 without its last column.
+		const wire = encoded.chunks[0].slice(0, 25 * count)
+		const manifest = {
+			...encoded.manifest,
+			format: 2,
+			sha256: createHash("sha256").update(wire).digest("hex"),
+		}
+		const decoded = joinFactsChunks(manifest, count, [wire])
+		const sources = decoded.sources
+		assert.ok(sources)
+		assert.deepEqual(
+			[...sources.imdb],
+			Array.from({ length: count }, (_, i) => 70 + i),
+		)
+		assert.deepEqual([...sources.metacriticUsers], new Array(count).fill(80))
+		assert.deepEqual([...sources.letterboxd], new Array(count).fill(255))
+		assert.deepEqual(
+			[...decoded.releaseYears],
+			Array.from({ length: count }, (_, i) => 2000 + i),
+		)
+		if (count)
+			assert.throws(
+				() => joinFactsChunks({ ...manifest, format: 3 }, count, [wire]),
+				/size/,
+			)
 	}
 })

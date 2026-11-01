@@ -208,7 +208,7 @@ export const discoverFilters = {
 		.partialRecord(z.enum(SOURCE_KEYS), z.number().int().min(0).max(100))
 		.optional()
 		.describe(
-			"Inclusive source minimums, all must pass: imdb, rtCritics, rtAudience, metacritic (critics), metacriticUsers. All values are normalized 0–100 integers: 70 means IMDb/Metacritic users 7.0, RT 70%, Metascore 70. Suggested steps: 60, 70, 80, 90. Missing scores do not pass, even at zero.",
+			"Inclusive source minimums, all must pass: imdb, rtCritics, rtAudience, metacritic (critics), metacriticUsers, letterboxd (movies only; shows never pass). All values are normalized 0–100 integers: 70 means IMDb/Metacritic users 7.0, RT 70%, Metascore 70, Letterboxd 3.5 stars. Suggested steps: 60, 70, 80, 90. Missing scores do not pass, even at zero.",
 		),
 	score_gap: z
 		.enum(SCORE_GAPS)

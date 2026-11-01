@@ -129,6 +129,7 @@ test("Compact title details preserve provider scales, five billed actors, linked
 	assert.equal(result.scores?.metacritic_critics.out_of, 100)
 	assert.equal(result.scores?.metacritic_audience.out_of, 10)
 	assert.equal(result.scores?.rotten_tomatoes_audience.score, null)
+	assert.ok(result.scores && !("letterboxd" in result.scores))
 	assert.equal(
 		result.trailer_url,
 		"https://www.youtube.com/watch?v=abcdefghijk",
@@ -232,5 +233,36 @@ test("Additional episodes keep their website label/order and accept their displa
 			include: ["episodes"],
 			season_number: -1,
 		}).success,
+	)
+})
+
+test("Movies carry Letterboxd on its five-star scale; shows leave the key out", () => {
+	const movie = {
+		mediaType: "movie",
+		details: {
+			imdb_user_score_original: 8.7,
+			letterboxd_url: "https://letterboxd.com/film/the-matrix/",
+			letterboxd_user_score_original: 4.18,
+			letterboxd_user_score_rating_count: 3178866,
+		},
+		credits: { actors: [], directors: [] },
+		videos: { trailers: [] },
+	} as unknown as MovieResult
+	assert.deepEqual(
+		compactTitleDetails(movie, "https://goodwatch.app", {}).scores?.letterboxd,
+		{
+			score: 4.18,
+			out_of: 5,
+			url: "https://letterboxd.com/film/the-matrix/",
+		},
+	)
+	const unmatched = {
+		...movie,
+		details: { imdb_user_score_original: 7 },
+	} as unknown as MovieResult
+	assert.deepEqual(
+		compactTitleDetails(unmatched, "https://goodwatch.app", {}).scores
+			?.letterboxd,
+		{ score: null, out_of: 5, url: null },
 	)
 })

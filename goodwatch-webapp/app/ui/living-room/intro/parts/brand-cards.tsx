@@ -1,4 +1,4 @@
-// The five score sources as cards in their brands' colours, for "One score".
+// The six score sources as cards in their brands' colours, for "One score".
 import type { CSSProperties } from "react"
 import type { Source } from "~/ui/living-room/intro/parts/score-kit"
 
@@ -24,6 +24,9 @@ const brandOf = (s: Source): Brand => {
 	switch (s.id) {
 		case "imdb":
 			return { bg: "#f5c518", fg: "#000", label: "IMDb", who: "Audience" }
+		// Letterboxd's slate, with the dots and no disc.
+		case "lb":
+			return { bg: "#2c3440", fg: "#fff", label: "Letterboxd", who: "Members" }
 		case "rt":
 			return {
 				bg: "#fa320a",

@@ -1,6 +1,7 @@
-// What the score and pick scenes share: the five numbers, the score title, the ring's end frame, timing helpers.
+// What the score and pick scenes share: the six numbers, the score title, the ring's end frame, timing helpers.
 import type { CSSProperties, ReactNode } from "react"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
+import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-icon-64.webp"
 import rottenLogo from "~/img/rotten-logo-icon-64.webp"
 import type { ScoreData } from "~/ui/living-room/intro/data"
@@ -93,7 +94,7 @@ export type Source = {
 	wide?: boolean
 }
 
-/** The score chapter's title: the best-known pool title other than the hero with all five numbers. */
+/** The score chapter's title: the best-known pool title other than the hero with all six numbers. */
 export function scoreTitle(data: IntroData) {
 	const extra = extraOf(data)
 	const full = (c: IntroCard) => {
@@ -104,7 +105,8 @@ export function scoreTitle(data: IntroData) {
 				s.tomatometer != null &&
 				s.rtAudience != null &&
 				s.metacritic != null &&
-				s.metacriticUser != null,
+				s.metacriticUser != null &&
+				s.letterboxd != null,
 		)
 	}
 	const card =
@@ -114,6 +116,9 @@ export function scoreTitle(data: IntroData) {
 	const s = extra?.sources.find((x) => x.key === card?.key) ?? null
 	const fmt = (v: number | null | undefined, unit = "") =>
 		v == null ? "–" : `${v}${unit}`
+	// Letterboxd shows one decimal: 4.5, not 4.50.
+	const stars = (x: number | null | undefined) =>
+		x == null ? "–" : x.toFixed(1)
 	const sources: Source[] = [
 		{
 			id: "imdb",
@@ -122,6 +127,13 @@ export function scoreTitle(data: IntroData) {
 			unit: "/10",
 			label: "IMDb",
 			wide: true,
+		},
+		{
+			id: "lb",
+			logo: letterboxdLogo,
+			n: stars(s?.letterboxd),
+			unit: "/5",
+			label: "Members",
 		},
 		{
 			id: "rt",

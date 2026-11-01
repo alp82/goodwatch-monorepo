@@ -12,19 +12,21 @@ const { DatabaseSync } = createRequire(import.meta.url)("node:sqlite")
 const db = new DatabaseSync(":memory:")
 db.exec(`CREATE TABLE titles (id INTEGER, release_year INTEGER, runtime INTEGER,
  imdb_user_score_normalized_percent REAL, rotten_tomatoes_tomato_score_normalized_percent REAL,
- rotten_tomatoes_audience_score_normalized_percent REAL, metacritic_meta_score_normalized_percent REAL, metacritic_user_score_normalized_percent REAL);
+ rotten_tomatoes_audience_score_normalized_percent REAL, metacritic_meta_score_normalized_percent REAL, metacritic_user_score_normalized_percent REAL,
+ letterboxd_user_score_normalized_percent REAL);
  INSERT INTO titles VALUES
- (1, 1990, 90, 80, 80, 95, 30, 70),
- (2, 2005, 120, 70, 85, NULL, 10, 69),
- (3, 2006, 121, 90, 75, NULL, 99, 80),
- (4, NULL, NULL, NULL, NULL, 80, 75, NULL),
- (5, 1989, 0, NULL, 90, NULL, 90, 0),
- (6, 2000, 100, 80, NULL, 90, NULL, 90),
- (7, 2000, 100, 65, 70, NULL, NULL, NULL),
- (8, 2000, 100, 69, 69, NULL, NULL, 65);`)
+ (1, 1990, 90, 80, 80, 95, 30, 70, 88),
+ (2, 2005, 120, 70, 85, NULL, 10, 69, 70),
+ (3, 2006, 121, 90, 75, NULL, 99, 80, NULL),
+ (4, NULL, NULL, NULL, NULL, 80, 75, NULL, 69),
+ (5, 1989, 0, NULL, 90, NULL, 90, 0, 0),
+ (6, 2000, 100, 80, NULL, 90, NULL, 90, NULL),
+ (7, 2000, 100, 65, 70, NULL, NULL, NULL, NULL),
+ (8, 2000, 100, 69, 69, NULL, NULL, 65, NULL);`)
 function selected(
 	fields: Partial<FilterState>,
 	group: Parameters<typeof rangeScoreConditions>[1],
+	type: "movie" | "show" = "movie",
 ) {
 	const sql = rangeScoreConditions(
 		{
@@ -32,7 +34,7 @@ function selected(
 			...fields,
 		},
 		group,
-		"movie",
+		type,
 	)
 	return db
 		.prepare(
@@ -147,5 +149,35 @@ test("episodeRuntime splits movie and show bounds, including explicitly unlimite
 			"movie",
 		),
 		{ conditions: [], params: [] },
+	)
+})
+
+test("Letterboxd minimums read the movie column and match no show", () => {
+	assert.deepEqual(
+		selected({ sourceScores: { letterboxd: 70 } }, "sourceScores"),
+		[1, 2],
+	)
+	assert.deepEqual(
+		selected({ sourceScores: { letterboxd: 0 } }, "sourceScores"),
+		[1, 2, 4, 5],
+	)
+	assert.deepEqual(
+		selected(
+			{ sourceScores: { letterboxd: 70, imdb: 80 } },
+			"sourceScores",
+		),
+		[1],
+	)
+	const state = {
+		...defaultFilterState({ onMyServices: false, notSeenYet: false }),
+		sourceScores: { imdb: 80, letterboxd: 70 },
+	}
+	assert.deepEqual(rangeScoreConditions(state, "sourceScores", "show"), {
+		conditions: ["imdb_user_score_normalized_percent >= ?", "FALSE"],
+		params: [80],
+	})
+	assert.deepEqual(
+		selected({ sourceScores: { letterboxd: 0 } }, "sourceScores", "show"),
+		[],
 	)
 })

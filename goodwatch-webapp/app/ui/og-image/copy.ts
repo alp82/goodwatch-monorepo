@@ -53,7 +53,9 @@ export const typeIndexCopy = (typeLabel: string): PageCopy => ({
 	tag: typeLabel,
 	title: `The best ${typeLabel.toLowerCase()} to watch right now`,
 	subtitle:
-		"By genre, mood, or streaming service. Scored from IMDb, Rotten Tomatoes, and Metacritic.",
+		typeLabel === "Movies"
+			? "By genre, mood, or streaming service. Scored from IMDb, Letterboxd, Rotten Tomatoes, and Metacritic."
+			: "By genre, mood, or streaming service. Scored from IMDb, Rotten Tomatoes, and Metacritic.",
 })
 
 // /movies/best and /shows/best.

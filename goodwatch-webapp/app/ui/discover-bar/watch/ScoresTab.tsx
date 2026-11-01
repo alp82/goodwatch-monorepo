@@ -18,6 +18,7 @@ import {
 	formatSourceStep,
 } from "~/domain/title-scales"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
+import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
 import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
 import { whiteMark } from "~/ui/brand/white-mark"
@@ -133,7 +134,7 @@ function ScoreTiles({ view }: { view: SubTabView }) {
 const SOURCE_LOOK: Record<
 	SourceKey,
 	{
-		site: "IMDb" | "Rotten Tomatoes" | "Metacritic"
+		site: "IMDb" | "Rotten Tomatoes" | "Metacritic" | "Letterboxd"
 		who: string
 		/** The brand color, for lit steps. */
 		hex: string
@@ -166,6 +167,13 @@ const SOURCE_LOOK: Record<
 		hex: "#facc15",
 		ink: "#000",
 	},
+	// Letterboxd's blue: its green and orange already mean Metacritic critics and RT audience here.
+	letterboxd: {
+		site: "Letterboxd",
+		who: "Members · movies only",
+		hex: "#40bcf4",
+		ink: "#000",
+	},
 }
 
 /** The short names the rows use; Find and the chips keep the full ones. */
@@ -186,6 +194,15 @@ function SourceLogo({ source, size }: { source: SourceKey; size: number }) {
 				style={{ width: size, height: size }}
 			>
 				<img src={assetUrl(imdbLogo)} alt="" className="w-[78%]" />
+			</span>
+		)
+	if (site === "Letterboxd")
+		return (
+			<span
+				className="grid shrink-0 place-items-center rounded-md bg-letterboxd"
+				style={{ width: size, height: size }}
+			>
+				<img src={assetUrl(letterboxdLogo)} alt="" className="w-[80%]" />
 			</span>
 		)
 	return (

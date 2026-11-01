@@ -53,3 +53,19 @@ test("the pick is an intro title", () => {
 		content.pool.some((t: { key: number }) => t.key === content.pick.pick),
 	)
 })
+
+test("the score chapter has Letterboxd stars for every movie and none for shows", () => {
+	for (const s of content.score.sources as {
+		key: number
+		letterboxd: number | null
+	}[]) {
+		if (s.key >= 2_000_000_000_000) assert.equal(s.letterboxd, null)
+		else
+			assert.ok(
+				typeof s.letterboxd === "number" &&
+					s.letterboxd >= 0.5 &&
+					s.letterboxd <= 5,
+				String(s.key),
+			)
+	}
+})

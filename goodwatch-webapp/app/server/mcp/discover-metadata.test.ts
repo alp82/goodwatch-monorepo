@@ -139,6 +139,13 @@ test("source scores keep normalized arguments and native display notation", () =
 			notation,
 		})),
 	)
+	const letterboxd = m.scores.source_scores.sources.find(
+		(source) => source.key === "letterboxd",
+	)
+	assert.deepEqual(
+		letterboxd?.steps.map(({ label }) => label),
+		["3.0+", "3.5+", "4.0+", "4.5+"],
+	)
 	for (const source of m.scores.source_scores.sources) {
 		assert.deepEqual(
 			source.steps.map(({ value }) => value),
@@ -150,7 +157,9 @@ test("source scores keep normalized arguments and native display notation", () =
 				? "7.0+"
 				: source.notation === "percent"
 					? "70%+"
-					: "70+",
+					: source.notation === "five"
+						? "3.5+"
+						: "70+",
 		)
 	}
 })

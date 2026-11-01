@@ -621,6 +621,7 @@ export function activeChips(
 			rtAudience: "RT audience",
 			metacritic: "Metacritic",
 			metacriticUsers: "Metacritic users",
+			letterboxd: "Letterboxd",
 		}[source]
 		const label = `${sourceName} ${scoreStepLabel(source, score)}`
 		chips.push({

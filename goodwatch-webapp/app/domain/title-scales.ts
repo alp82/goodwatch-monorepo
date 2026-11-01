@@ -19,6 +19,8 @@ export function scoreStepLabel(source: SourceKey, score: number): string {
 			return `${score}%+`
 		case "metacritic":
 			return `${score}+`
+		case "letterboxd":
+			return `${(score / 20).toFixed(1)}+`
 	}
 }
 
@@ -275,8 +277,8 @@ export type ScoreSource = SourceKey
 export interface ScoreSourceInfo {
 	key: ScoreSource
 	name: string
-	/** How the source writes its scores: out of 10 (8.0), as a percentage (80%), or out of 100 (80). */
-	notation: "ten" | "percent" | "hundred"
+	/** How the source writes its scores: out of 10 (8.0), as a percentage (80%), out of 100 (80), or out of 5 (4.0). */
+	notation: "ten" | "percent" | "hundred" | "five"
 	/** Further words Find finds the source by. */
 	words: string
 }
@@ -308,14 +310,22 @@ export const SCORE_SOURCES: readonly ScoreSourceInfo[] = [
 		notation: "ten",
 		words: "metacritic users audience",
 	},
+	// Movies only. Steps 60-90 read 3.0+ to 4.5+ stars.
+	{
+		key: "letterboxd",
+		name: "Letterboxd",
+		notation: "five",
+		words: "letterboxd stars members audience",
+	},
 ]
 
-/** A step in its source's notation, with the plus: "8.0+", "80%+", "80+". */
+/** A step in its source's notation, with the plus: "8.0+", "80%+", "80+", "4.0+". */
 export function formatSourceStep(
 	notation: ScoreSourceInfo["notation"],
 	step: number,
 ): string {
 	if (notation === "ten") return `${(step / 10).toFixed(1)}+`
+	if (notation === "five") return `${(step / 20).toFixed(1)}+`
 	if (notation === "percent") return `${step}%+`
 	return `${step}+`
 }

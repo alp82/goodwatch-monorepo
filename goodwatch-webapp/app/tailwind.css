@@ -86,6 +86,7 @@
 	--color-imdb: #f6c800;
 	--color-metacritic: #010101;
 	--color-rotten: #f83309;
+	--color-letterboxd: #2c3440;
 
 	--animate-gradient-x: gradient-move-x 5s ease infinite;
 	/* People in search results: the open person's drawer and its faded backdrop. */

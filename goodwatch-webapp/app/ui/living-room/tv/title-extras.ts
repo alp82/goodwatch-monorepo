@@ -1,6 +1,11 @@
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { TitleInput } from "~/ui/fingerprint/fingerprintText"
 import {
+	type LetterboxdFields,
+	letterboxdScore,
+	letterboxdStars,
+} from "~/utils/letterboxd"
+import {
 	brandName,
 	getShorterProviderLabel,
 	ignoredProviders,
@@ -22,6 +27,9 @@ export type TvSourceScores = {
 	mcUser: string | null
 	rt: string | null
 	rtUser: string | null
+	/** Letterboxd's stars with one decimal. Movies only. */
+	lb: string | null
+	lbCount: number | null
 }
 
 export type TvTitleExtras = {
@@ -46,8 +54,11 @@ export function sourceScores(
 		| "metacritic_user_score_original"
 		| "rotten_tomatoes_tomato_score_original"
 		| "rotten_tomatoes_audience_score_original"
-	>,
+	> &
+		LetterboxdFields,
+	mediaType: "movie" | "show",
 ): TvSourceScores {
+	const lb = letterboxdScore({ mediaType, details: d })
 	return {
 		imdb: d.imdb_user_score_original ? d.imdb_user_score_original.toFixed(1) : null,
 		mc: d.metacritic_meta_score_original
@@ -62,6 +73,8 @@ export function sourceScores(
 		rtUser: d.rotten_tomatoes_audience_score_original
 			? `${Math.floor(d.rotten_tomatoes_audience_score_original)}%`
 			: null,
+		lb: lb && letterboxdStars(lb.stars),
+		lbCount: lb?.count ?? null,
 	}
 }
 

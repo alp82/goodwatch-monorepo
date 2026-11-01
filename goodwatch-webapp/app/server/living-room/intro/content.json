@@ -242,7 +242,8 @@
 				"tomatometer": null,
 				"rtAudience": null,
 				"metacritic": 65,
-				"metacriticUser": 8.6
+				"metacriticUser": 8.6,
+				"letterboxd": 4.39
 			},
 			{
 				"key": 1000000000098,
@@ -250,7 +251,8 @@
 				"tomatometer": 80,
 				"rtAudience": 87,
 				"metacritic": 67,
-				"metacriticUser": 8.7
+				"metacriticUser": 8.7,
+				"letterboxd": 4.21
 			},
 			{
 				"key": 1000000000155,
@@ -258,7 +260,8 @@
 				"tomatometer": 94,
 				"rtAudience": 94,
 				"metacritic": 85,
-				"metacriticUser": 9.1
+				"metacriticUser": 9.1,
+				"letterboxd": 4.5
 			},
 			{
 				"key": 1000000157336,
@@ -266,7 +269,8 @@
 				"tomatometer": 73,
 				"rtAudience": 87,
 				"metacritic": 74,
-				"metacriticUser": 8.7
+				"metacriticUser": 8.7,
+				"letterboxd": 4.46
 			},
 			{
 				"key": 1000000000120,
@@ -274,7 +278,8 @@
 				"tomatometer": 91,
 				"rtAudience": 95,
 				"metacritic": 92,
-				"metacriticUser": 9.3
+				"metacriticUser": 9.3,
+				"letterboxd": 4.39
 			},
 			{
 				"key": 1000000000278,
@@ -282,7 +287,8 @@
 				"tomatometer": 89,
 				"rtAudience": 98,
 				"metacritic": 82,
-				"metacriticUser": 9.2
+				"metacriticUser": 9.2,
+				"letterboxd": 4.6
 			},
 			{
 				"key": 1000000027205,
@@ -290,7 +296,8 @@
 				"tomatometer": 86,
 				"rtAudience": 91,
 				"metacritic": 74,
-				"metacriticUser": 8.8
+				"metacriticUser": 8.8,
+				"letterboxd": 4.24
 			},
 			{
 				"key": 1000000068718,
@@ -298,7 +305,8 @@
 				"tomatometer": 87,
 				"rtAudience": 92,
 				"metacritic": 81,
-				"metacriticUser": 8.6
+				"metacriticUser": 8.6,
+				"letterboxd": 4.35
 			},
 			{
 				"key": 1000000000603,
@@ -306,7 +314,8 @@
 				"tomatometer": 83,
 				"rtAudience": 85,
 				"metacritic": 73,
-				"metacriticUser": 8.9
+				"metacriticUser": 8.9,
+				"letterboxd": 4.18
 			},
 			{
 				"key": 1000000000121,
@@ -314,7 +323,8 @@
 				"tomatometer": 95,
 				"rtAudience": 95,
 				"metacritic": 87,
-				"metacriticUser": 9.3
+				"metacriticUser": 9.3,
+				"letterboxd": 4.44
 			},
 			{
 				"key": 1000000000680,
@@ -322,7 +332,8 @@
 				"tomatometer": 92,
 				"rtAudience": 96,
 				"metacritic": 95,
-				"metacriticUser": 9
+				"metacriticUser": 9,
+				"letterboxd": 4.23
 			},
 			{
 				"key": 1000000000013,
@@ -330,7 +341,8 @@
 				"tomatometer": 75,
 				"rtAudience": 95,
 				"metacritic": 82,
-				"metacriticUser": 8.9
+				"metacriticUser": 8.9,
+				"letterboxd": 4.19
 			},
 			{
 				"key": 1000000049026,
@@ -338,7 +350,8 @@
 				"tomatometer": 87,
 				"rtAudience": 90,
 				"metacritic": 78,
-				"metacriticUser": 8.4
+				"metacriticUser": 8.4,
+				"letterboxd": 3.83
 			},
 			{
 				"key": 1000000000122,
@@ -346,7 +359,8 @@
 				"tomatometer": 94,
 				"rtAudience": 86,
 				"metacritic": 94,
-				"metacriticUser": 9.4
+				"metacriticUser": 9.4,
+				"letterboxd": 4.56
 			},
 			{
 				"key": 1000000000550,
@@ -354,7 +368,8 @@
 				"tomatometer": 81,
 				"rtAudience": 96,
 				"metacritic": 67,
-				"metacriticUser": 8.9
+				"metacriticUser": 8.9,
+				"letterboxd": 4.27
 			},
 			{
 				"key": 2000000001668,
@@ -362,7 +377,8 @@
 				"tomatometer": 78,
 				"rtAudience": 93,
 				"metacritic": 65,
-				"metacriticUser": 8.8
+				"metacriticUser": 8.8,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000001405,
@@ -370,7 +386,8 @@
 				"tomatometer": 71,
 				"rtAudience": 81,
 				"metacritic": 76,
-				"metacriticUser": 8.1
+				"metacriticUser": 8.1,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000066732,
@@ -378,7 +395,8 @@
 				"tomatometer": 90,
 				"rtAudience": 82,
 				"metacritic": 74,
-				"metacriticUser": 8
+				"metacriticUser": 8,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000001100,
@@ -386,7 +404,8 @@
 				"tomatometer": 85,
 				"rtAudience": 85,
 				"metacritic": 69,
-				"metacriticUser": 8
+				"metacriticUser": 8,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000060059,
@@ -394,7 +413,8 @@
 				"tomatometer": 98,
 				"rtAudience": 96,
 				"metacritic": 86,
-				"metacriticUser": 9
+				"metacriticUser": 9,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000001402,
@@ -402,7 +422,8 @@
 				"tomatometer": 79,
 				"rtAudience": 78,
 				"metacritic": 79,
-				"metacriticUser": 7.6
+				"metacriticUser": 7.6,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000087108,
@@ -410,7 +431,8 @@
 				"tomatometer": 95,
 				"rtAudience": 97,
 				"metacritic": 82,
-				"metacriticUser": 9.1
+				"metacriticUser": 9.1,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000076479,
@@ -418,7 +440,8 @@
 				"tomatometer": 92,
 				"rtAudience": 69,
 				"metacritic": 76,
-				"metacriticUser": 2.4
+				"metacriticUser": 2.4,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000002316,
@@ -426,7 +449,8 @@
 				"tomatometer": 81,
 				"rtAudience": 89,
 				"metacritic": 66,
-				"metacriticUser": 8.4
+				"metacriticUser": 8.4,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000001396,
@@ -434,7 +458,8 @@
 				"tomatometer": 96,
 				"rtAudience": 97,
 				"metacritic": 87,
-				"metacriticUser": 9.4
+				"metacriticUser": 9.4,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000001399,
@@ -442,7 +467,8 @@
 				"tomatometer": 89,
 				"rtAudience": 85,
 				"metacritic": 86,
-				"metacriticUser": 8.4
+				"metacriticUser": 8.4,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000093405,
@@ -450,7 +476,8 @@
 				"tomatometer": 85,
 				"rtAudience": 67,
 				"metacritic": 65,
-				"metacriticUser": 6.8
+				"metacriticUser": 6.8,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000001418,
@@ -458,7 +485,8 @@
 				"tomatometer": 81,
 				"rtAudience": 85,
 				"metacritic": 61,
-				"metacriticUser": 7.5
+				"metacriticUser": 7.5,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000019885,
@@ -466,7 +494,8 @@
 				"tomatometer": 78,
 				"rtAudience": 83,
 				"metacritic": 88,
-				"metacriticUser": 8.7
+				"metacriticUser": 8.7,
+				"letterboxd": null
 			},
 			{
 				"key": 2000000060574,
@@ -474,7 +503,8 @@
 				"tomatometer": 93,
 				"rtAudience": 93,
 				"metacritic": 77,
-				"metacriticUser": 8.6
+				"metacriticUser": 8.6,
+				"letterboxd": null
 			}
 		]
 	},

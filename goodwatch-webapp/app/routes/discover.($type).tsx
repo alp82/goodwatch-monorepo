@@ -57,7 +57,7 @@ export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
 	const pageMeta: PageMeta = {
 		title: "Discover Movies and TV Shows | GoodWatch",
 		description:
-			"Discover the best movies and tv shows to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find movies and TV shows by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.",
+			"Discover the best movies and tv shows to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find movies and TV shows by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, Letterboxd, Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.",
 		url: "https://goodwatch.app/discover",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",

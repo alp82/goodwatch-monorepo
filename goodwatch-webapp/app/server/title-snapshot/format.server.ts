@@ -542,17 +542,24 @@ export function encodeRatings(input: {
 	}
 }
 
-// Facts format 1 (format 2 adds the five source columns at 20N to 24N): column offsets are 0, 2N, 4N, 8N, 12N, 13N, 15N, 16N..19N.
-// Wire order is fixed across publisher and decoder.
+// Facts format 1: column offsets are 0, 2N, 4N, 8N, 12N, 13N, 15N, 16N..19N. Format 2 adds the first five source
+// columns at 20N to 24N, and format 3 adds Letterboxd at 25N. Wire order is fixed across publisher and decoder.
 export const FACTS_SOURCE_KEYS = [
 	"imdb",
 	"rtCritics",
 	"rtAudience",
 	"metacritic",
 	"metacriticUsers",
+	"letterboxd",
 ] as const satisfies readonly SourceKey[]
-export const FACTS_FORMAT = 2
-export const FACTS_BYTES_PER_TITLE = 25
+export const FACTS_FORMAT = 3
+export const FACTS_BYTES_PER_TITLE = 26
+/** Wire bytes per title of each format this webapp reads. */
+const FACTS_WIRE_BYTES: Readonly<Record<number, number>> = {
+	1: 20,
+	2: 25,
+	[FACTS_FORMAT]: FACTS_BYTES_PER_TITLE,
+}
 export const NO_COUNTRY = 255
 export const factsChunkKey = (version: string, n: number) =>
 	`title-snapshot:${version}:facts:${n}`
@@ -588,8 +595,8 @@ export function checkFactsManifest(value: unknown): FactsManifest {
 		throw new SnapshotRefused(`Title snapshot facts refused: ${why}`)
 	}
 	if (!m || typeof m !== "object") return fail("not an object")
-	if (m.format !== 1 && m.format !== FACTS_FORMAT)
-		return fail(`format ${m.format}, this webapp reads ${FACTS_FORMAT}`)
+	if (typeof m.format !== "number" || !FACTS_WIRE_BYTES[m.format])
+		return fail(`format ${m.format}, this webapp reads 1 to ${FACTS_FORMAT}`)
 	if (
 		!Number.isSafeInteger(m.chunks) ||
 		(m.chunks as number) < 1 ||
@@ -626,7 +633,7 @@ export function joinFactsChunks(
 	if (chunks.length !== manifest.chunks)
 		return fail("chunk count differs from manifest")
 	const total = chunks.reduce((n, c) => n + c.byteLength, 0)
-	if (total !== count * (manifest.format === 1 ? 20 : FACTS_BYTES_PER_TITLE))
+	if (total !== count * FACTS_WIRE_BYTES[manifest.format])
 		return fail(`bad size: ${total} bytes for ${count} titles`)
 	const hash = createHash("sha256")
 	for (const chunk of chunks) hash.update(chunk)
@@ -637,7 +644,11 @@ export function joinFactsChunks(
 	// aligned buffer; retaining a second copy of the wire bytes would double memory.
 	const pad = count % 2
 	const split = 13 * count
-	const bytes = new Uint8Array(total + pad)
+	// Format 2 has no Letterboxd column: its place after the wire bytes stays all unknown, so a Letterboxd minimum
+	// matches nothing.
+	const kept = manifest.format === 1 ? total : count * FACTS_BYTES_PER_TITLE
+	const bytes = new Uint8Array(kept + pad)
+	bytes.fill(UNKNOWN_SCORE, total + pad)
 	let offset = 0
 	for (const chunk of chunks) {
 		const before = Math.max(0, Math.min(chunk.length, split - offset))

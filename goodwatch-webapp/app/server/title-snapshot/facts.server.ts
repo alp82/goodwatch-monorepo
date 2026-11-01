@@ -1,5 +1,6 @@
 // Optional facts reads follow the ratings sidecar: failures are logged once per load.
-// Both formats decode here: format 1 exposes sources: null; format 2 exposes five source columns.
+// Every format decodes here: format 1 exposes sources: null; formats 2 and 3 expose six source columns, and format 2's
+// Letterboxd column is all unknown.
 import {
 	type FactColumns,
 	type FactsManifest,

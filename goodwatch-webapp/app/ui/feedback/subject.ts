@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { letterboxdScore, letterboxdStars } from "~/utils/letterboxd"
 import {
 	brandName,
 	getShorterProviderLabel,
@@ -139,6 +140,10 @@ export function titleSubject(
 		n ? n.toFixed(digits) : null
 	const whole = (n: number | null | undefined, unit = "") =>
 		n ? `${Math.floor(n)}${unit}` : null
+	const letterboxdOut = (m: MovieResult | ShowResult) => {
+		const lb = letterboxdScore(m)
+		return lb && `${letterboxdStars(lb.stars)}/5`
+	}
 	return {
 		kind: "title",
 		mediaType: media.mediaType,
@@ -168,6 +173,7 @@ export function titleSubject(
 				whole(d.goodwatch_overall_score_normalized_percent),
 			),
 			...score("imdb", "IMDb", fixed(d.imdb_user_score_original)),
+			...score("letterboxd", "Letterboxd", letterboxdOut(media)),
 			...score(
 				"metacritic",
 				"Metacritic critics",

@@ -19,7 +19,7 @@ export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
 		title: "How GoodWatch works | GoodWatch",
 		description:
-			"One score from IMDb, Rotten Tomatoes, Metacritic and TMDB, 325 streaming services, picks for your taste, your taste fingerprint, AI apps and the Discord bot.",
+			"One score from IMDb, Letterboxd, Rotten Tomatoes, Metacritic and TMDB, 325 streaming services, picks for your taste, your taste fingerprint, AI apps and the Discord bot.",
 		url: "https://goodwatch.app/how-it-works",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "How GoodWatch works",

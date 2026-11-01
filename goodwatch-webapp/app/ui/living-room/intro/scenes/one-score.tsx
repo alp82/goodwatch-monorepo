@@ -1,5 +1,5 @@
-// "One score": five real numbers behind one title's GoodWatch score (IMDb, Rotten Tomatoes critics and audience,
-// Metacritic critics and users) as a fanned hand of brand cards; the ring rises below, the cards fly into it one by
+// "One score": six real numbers behind one title's GoodWatch score (IMDb, Letterboxd, Rotten Tomatoes critics and
+// audience, Metacritic critics and users) as a fanned hand of brand cards; the ring rises below, the cards fly into it one by
 // one, it fills, and it moves to the centre with its verdict.
 import type { CSSProperties, ReactNode } from "react"
 import { BrandCard } from "~/ui/living-room/intro/parts/brand-cards"
@@ -11,10 +11,13 @@ import {
 } from "~/ui/living-room/intro/parts/score-kit"
 import type { SceneProps } from "~/ui/living-room/intro/scene"
 
+// Six cards: the middle of the fan falls between cards 2 and 3.
+const CARDS = 6
+const MID = (CARDS - 1) / 2
 const FAN_Y = 50 // cqh
-const fanRot = (i: number) => (i - 2) * 6 // deg
-const fanX = (i: number) => 50 + (i - 2) * 15 // cqw
-const fanLift = (i: number) => Math.abs(i - 2) * 2 // cqh
+const fanRot = (i: number) => (i - MID) * 5 // deg
+const fanX = (i: number) => 50 + (i - MID) * 13 // cqw
+const fanLift = (i: number) => Math.abs(i - MID) * 1.8 // cqh
 const HAND_UP = 8 // cqh
 const HAND_SCALE = 0.78
 const RING_Y = 74 // cqh
@@ -34,14 +37,15 @@ const T = {
 	verdictAt: 4800, // [7400]
 }
 const FAN_STEP = 150 // [160]
-const FLY_STEP = 300
+// 240 ms keeps the last of six cards landing with the ring's number: 2350 + 5 × 240 + 560 ≈ fillAt + 1100.
+const FLY_STEP = 240
 /** Ends 250 ms after "Excellent." has risen (850 ms): chapter 3 continues this exact frame (`enter: "cut"`). */
 export const ONE_SCORE_MS = T.verdictAt + 850 + 250
 /** The ring frame creeps toward the viewer from the end of the centring; chapter 3 starts at this scale. */
 export const RING_PUSH = 1.03
 const PUSH_AT = T.centerAt + 900
 
-const FLY_ORDER = [0, 4, 1, 3, 2]
+const FLY_ORDER = [0, 5, 1, 4, 2, 3]
 const flyAt = (i: number) => T.flyAt + FLY_ORDER.indexOf(i) * FLY_STEP
 
 const handPos = (i: number) => ({
@@ -95,10 +99,10 @@ export function OneScore({ data }: SceneProps) {
 				} as CSSProperties)}
 			>
 				<Head
-					text="Five opinions."
+					text="Six opinions."
 					inAt={T.headIn}
 					outAt={T.headOut}
-					amber="Five"
+					amber="Six"
 				/>
 				<RingEnd
 					card={card}
@@ -202,7 +206,7 @@ export function OneScore({ data }: SceneProps) {
 											left: `${x}cqw`,
 											top: `${y}cqh`,
 											transform: `rotate(${fanRot(i)}deg)`,
-											zIndex: 3 - Math.abs(i - 2),
+											zIndex: 6 - Math.round(Math.abs(i - MID) * 2),
 										}}
 									>
 										<BrandCard s={s} />

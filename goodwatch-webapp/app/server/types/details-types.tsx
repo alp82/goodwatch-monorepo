@@ -229,6 +229,11 @@ export interface BaseDetails
 export interface MovieDetails extends BaseDetails {
 	runtime: number | null
 	release_date: string
+	/** Letterboxd's film page. Movies only; null when Letterboxd has no match. */
+	letterboxd_url?: string | null
+	/** Letterboxd's average, 0.5-5 stars. */
+	letterboxd_user_score_original?: number | null
+	letterboxd_user_score_rating_count?: number | null
 }
 export interface ShowDetails extends BaseDetails {
 	number_of_seasons: number

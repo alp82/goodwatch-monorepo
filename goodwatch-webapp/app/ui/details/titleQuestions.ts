@@ -16,6 +16,7 @@ import { countriesWithOffers } from "~/ui/details/hero/countryOffers"
 import { list } from "~/ui/fingerprint/fingerprintText"
 import { languageName, regionName } from "~/utils/display-names"
 import { titlePath } from "~/utils/helpers"
+import { letterboxdScore, letterboxdStars } from "~/utils/letterboxd"
 import { goodwatchScoreDisplay } from "~/utils/ratings"
 import { streamingLinks } from "~/utils/streaming-links"
 
@@ -103,6 +104,8 @@ export function agreement(media: Media) {
 		d.rotten_tomatoes_audience_score_original,
 		d.metacritic_user_score_original ? d.metacritic_user_score_original * 10 : null,
 		d.imdb_user_score_original ? d.imdb_user_score_original * 10 : null,
+		// Letterboxd members are an audience too: 0.5-5 stars times 20.
+		(letterboxdScore(media)?.stars ?? 0) * 20,
 	])
 	return { critics, audience }
 }
@@ -115,8 +118,10 @@ function worthAnswer(media: Media) {
 	if (gw == null) return null
 	// The score as the page shows it everywhere, the ring beside the answer included.
 	const score = goodwatchScoreDisplay(gw)
+	const lb = letterboxdScore(media)
 	const others = [
 		d.imdb_user_score_original != null ? `IMDb ${d.imdb_user_score_original}` : "",
+		lb ? `Letterboxd ${letterboxdStars(lb.stars)} out of 5` : "",
 		d.rotten_tomatoes_tomato_score_original != null ? `Rotten Tomatoes ${d.rotten_tomatoes_tomato_score_original}%` : "",
 		d.metacritic_meta_score_original != null ? `Metacritic ${d.metacritic_meta_score_original}` : "",
 	].filter(Boolean)

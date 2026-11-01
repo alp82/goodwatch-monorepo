@@ -9,6 +9,7 @@ import { Link } from "@remix-run/react"
 import type { ComponentType, ReactNode } from "react"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import justwatchLogo from "~/img/justwatch-logo.svg"
+import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-96.webp"
 import rottenLogo from "~/img/rotten-logo-96.webp"
 import tmdbLogo from "~/img/tmdb-logo.svg"
@@ -119,6 +120,11 @@ export function Credits({ className = "" }: { className?: string }) {
 				className="h-[10px] w-[66px] opacity-80"
 			/>
 			<img src={assetUrl(imdbLogo)} alt="IMDb" className={`h-5 ${logo}`} />
+			<img
+				src={assetUrl(letterboxdLogo)}
+				alt="Letterboxd"
+				className={`h-3.5 ${logo}`}
+			/>
 			<img
 				src={assetUrl(rottenLogo)}
 				alt="Rotten Tomatoes"

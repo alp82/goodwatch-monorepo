@@ -28,7 +28,14 @@ export const COMMON_DETAILS_FIELDS = [
 	"rotten_tomatoes_audience_score_original",
 	"goodwatch_overall_score_normalized_percent",
 ] as const
-export const MOVIE_DETAILS_FIELDS = ["runtime", "release_date"] as const
+// Letterboxd scores exist on the movie table only.
+export const MOVIE_DETAILS_FIELDS = [
+	"runtime",
+	"release_date",
+	"letterboxd_url",
+	"letterboxd_user_score_original",
+	"letterboxd_user_score_rating_count",
+] as const
 export const SHOW_DETAILS_FIELDS = [
 	"number_of_seasons",
 	"number_of_episodes",

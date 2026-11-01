@@ -353,6 +353,24 @@ test("MCP Metacritic users share normalized bounds, page URLs and cache identity
 		)
 })
 
+test("MCP Letterboxd minimums are described, carried in page URLs and validated like other sources", () => {
+	assert.match(
+		discoverFilters.source_scores.description ?? "",
+		/letterboxd \(movies only; shows never pass\).*Letterboxd 3\.5 stars/,
+	)
+	const args = schema.parse({ source_scores: { letterboxd: 70 } })
+	const params = discoverParams(args, false)
+	assert.equal(params.get("sources"), "letterboxd:70")
+	assert.deepEqual(
+		filterStateFromParams(params, { onMyServices: false, notSeenYet: false }),
+		discoverView(args, false).state,
+	)
+	assert.equal(
+		schema.safeParse({ source_scores: { letterboxd: 101 } }).success,
+		false,
+	)
+})
+
 test("rating_country is normalized, carried in links, and separates view identities", () => {
 	assert.equal(schema.parse({ rating_country: " de " }).rating_country, "DE")
 	assert.equal(

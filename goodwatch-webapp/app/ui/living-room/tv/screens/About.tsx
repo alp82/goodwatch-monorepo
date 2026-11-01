@@ -43,8 +43,8 @@ export default function About({ items }: { items: readonly string[] }) {
 				<div
 					className={`text-white/80 ${P ? "mt-1.5 text-[17px] leading-[20px]" : "mt-3 text-[30px]"}`}
 				>
-					IMDb, Rotten Tomatoes and Metacritic in one number. Free, no account
-					needed.
+					IMDb, Letterboxd, Rotten Tomatoes and Metacritic in one number. Free,
+					no account needed.
 				</div>
 				<div
 					className={`grid grid-cols-2 ${P ? "mt-2.5 gap-2" : "mt-10 gap-5"}`}

@@ -127,9 +127,28 @@ assert.deepEqual(
 		metacritic_user_score_original: 8.25,
 		rotten_tomatoes_tomato_score_original: 88.4,
 		rotten_tomatoes_audience_score_original: 0,
-	} as never),
-	{ imdb: "8.7", mc: "73", mcUser: "8.3", rt: "88%", rtUser: null },
+	} as never, "show"),
+	{
+		imdb: "8.7",
+		mc: "73",
+		mcUser: "8.3",
+		rt: "88%",
+		rtUser: null,
+		lb: null,
+		lbCount: null,
+	},
 )
+
+// Letterboxd: one decimal for a movie, never for a show.
+const lbFields = {
+	imdb_user_score_original: 8.7,
+	letterboxd_url: "https://letterboxd.com/film/the-matrix/",
+	letterboxd_user_score_original: 4.18,
+	letterboxd_user_score_rating_count: 3178866,
+} as never
+assert.equal(sourceScores(lbFields, "movie").lb, "4.2")
+assert.equal(sourceScores(lbFields, "movie").lbCount, 3178866)
+assert.equal(sourceScores(lbFields, "show").lb, null)
 
 const title = {
 	key: "movie-603",

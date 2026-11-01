@@ -19,7 +19,10 @@ const SOURCE_COLUMNS: Record<SourceKey, string> = {
 	rtAudience: "rotten_tomatoes_audience_score_normalized_percent",
 	metacritic: "metacritic_meta_score_normalized_percent",
 	metacriticUsers: "metacritic_user_score_normalized_percent",
+	letterboxd: "letterboxd_user_score_normalized_percent",
 }
+/** Sources whose column exists on the movie table only. On the show table their minimum matches nothing. */
+const MOVIE_ONLY_SOURCES: ReadonlySet<SourceKey> = new Set(["letterboxd"])
 
 export function rangeScoreConditions(
 	state: FilterState,
@@ -57,10 +60,13 @@ export function rangeScoreConditions(
 	} else if (name === "sourceScores") {
 		for (const key of SOURCE_KEYS) {
 			const min = state.sourceScores?.[key]
-			if (min !== undefined) {
-				conditions.push(`${SOURCE_COLUMNS[key]} >= ?`)
-				params.push(min)
+			if (min === undefined) continue
+			if (type === "show" && MOVIE_ONLY_SOURCES.has(key)) {
+				conditions.push("FALSE")
+				continue
 			}
+			conditions.push(`${SOURCE_COLUMNS[key]} >= ?`)
+			params.push(min)
 		}
 	} else if (state.scoreGap) {
 		// SQL NULL comparisons fail, including when both fallback sources on either side are absent.

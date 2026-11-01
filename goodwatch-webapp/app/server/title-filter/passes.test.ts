@@ -2407,7 +2407,7 @@ test("year counts replacing Years and Released still respect taste picks", () =>
 	assert.deepEqual(result.optionCounts.years, { 1921: 1, 1923: 1, 1925: 1 })
 })
 
-test("format 2 source and gap filters match SQL, and counts match replacing each choice", async () => {
+test("format 3 source and gap filters match SQL, and counts match replacing each choice", async () => {
 	const { createRequire } = await import("node:module")
 	const { DatabaseSync } = createRequire(import.meta.url)("node:sqlite")
 	const { rangeScoreConditions } = await import(
@@ -2455,9 +2455,9 @@ test("format 2 source and gap filters match SQL, and counts match replacing each
 	}
 	const db = new DatabaseSync(":memory:")
 	db.exec(
-		`CREATE TABLE titles (id INTEGER, imdb_user_score_normalized_percent INTEGER, rotten_tomatoes_tomato_score_normalized_percent INTEGER, rotten_tomatoes_audience_score_normalized_percent INTEGER, metacritic_meta_score_normalized_percent INTEGER, metacritic_user_score_normalized_percent INTEGER)`,
+		`CREATE TABLE titles (id INTEGER, imdb_user_score_normalized_percent INTEGER, rotten_tomatoes_tomato_score_normalized_percent INTEGER, rotten_tomatoes_audience_score_normalized_percent INTEGER, metacritic_meta_score_normalized_percent INTEGER, metacritic_user_score_normalized_percent INTEGER, letterboxd_user_score_normalized_percent INTEGER)`,
 	)
-	const insert = db.prepare("INSERT INTO titles VALUES (?, ?, ?, ?, ?, ?)")
+	const insert = db.prepare("INSERT INTO titles VALUES (?, ?, ?, ?, ?, ?, ?)")
 	records.forEach((scores, row) =>
 		insert.run(row, ...SOURCE_KEYS.map((key) => scores[key])),
 	)
@@ -2492,6 +2492,8 @@ test("format 2 source and gap filters match SQL, and counts match replacing each
 		{ imdb: 70, metacriticUsers: 80 },
 		{ rtCritics: 90, rtAudience: 60 },
 		{ metacritic: 65 },
+		{ letterboxd: 70 },
+		{ imdb: 60, letterboxd: 85 },
 	]) {
 		for (const gapChoice of [
 			undefined,

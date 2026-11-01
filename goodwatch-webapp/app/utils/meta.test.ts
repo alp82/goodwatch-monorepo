@@ -103,6 +103,28 @@ test("movie JSON-LD keeps five director and composer credits", () => {
 	)
 })
 
+test("movie JSON-LD links IMDb, then Letterboxd; a show never links Letterboxd", () => {
+	const movie = (details: Record<string, unknown>) =>
+		buildJsonLdDetail(page, {
+			mediaType: "movie",
+			details: { title: "The Matrix", ...details },
+			credits: { actors: [], directors: [], composers: [] },
+		} as never) as { sameAs?: string[] }
+	const letterboxd_url = "https://letterboxd.com/film/the-matrix/"
+	assert.deepEqual(movie({ imdb_id: "tt0133093", letterboxd_url }).sameAs, [
+		"https://www.imdb.com/title/tt0133093/",
+		letterboxd_url,
+	])
+	assert.deepEqual(movie({ letterboxd_url }).sameAs, [letterboxd_url])
+	assert.equal(movie({ letterboxd_url: null }).sameAs, undefined)
+	const series = show([]) as { details: Record<string, unknown> }
+	series.details.letterboxd_url = letterboxd_url
+	const jsonLd = buildJsonLdDetail(page, series as never) as {
+		sameAs?: string[]
+	}
+	assert.equal(jsonLd.sameAs, undefined)
+})
+
 test("a title without actors has no actor property", () => {
 	const jsonLd = buildJsonLdDetail(page, show([])) as { actor?: unknown }
 	assert.equal(jsonLd.actor, undefined)

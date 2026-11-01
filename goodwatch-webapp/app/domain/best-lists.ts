@@ -100,8 +100,11 @@ export const listNoun = (kind: ListKind) => nouns[kind].noun
 /** The name of a list in a breadcrumb and a link. */
 export const listName = (kind: ListKind) => `Best ${nouns[kind].noun}`
 
-const SCORE_SOURCES =
-	"ranked by one score from IMDb, Rotten Tomatoes, Metacritic and TMDB"
+/** The sources of a kind's GoodWatch score, as a list in a sentence. Letterboxd scores movies only. */
+export const scoreSourceList = (kind: ListKind) =>
+	kind === "movies"
+		? "IMDb, Letterboxd, Rotten Tomatoes, Metacritic and TMDB"
+		: "IMDb, Rotten Tomatoes, Metacritic and TMDB"
 
 export interface ListCopy {
 	title: string
@@ -126,8 +129,8 @@ export function listCopy(
 			: `The best ${noun} of all time`,
 		intro: `${total} well-known ${noun}, ranked by GoodWatch score: the most-rated ${noun} on GoodWatch${popular ? `, plus ${popular} that are popular right now` : ""}. Updated monthly.`,
 		description: later
-			? `${Lead} ${first} to ${last} of the ${total} best-known ${noun}, ${SCORE_SOURCES}. See every score and where to stream it.`
-			: `The ${total} best-known ${noun}, ${SCORE_SOURCES}. See every score and where to stream it.`,
+			? `${Lead} ${first} to ${last} of the ${total} best-known ${noun}, ranked by one score from ${scoreSourceList(kind)}. See every score and where to stream it.`
+			: `The ${total} best-known ${noun}, ranked by one score from ${scoreSourceList(kind)}. See every score and where to stream it.`,
 	}
 }
 

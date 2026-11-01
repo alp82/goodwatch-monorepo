@@ -67,9 +67,10 @@ function ScorePicture({ data }: { data: IntroData }) {
 						className="hiw-pic-fan-card"
 						style={
 							{
-								"--r": `${(i - 2) * 7}deg`,
-								"--x": `${(i - 2) * 8.5}cqw`,
-								"--y": `${Math.abs(i - 2) * 1.6}cqw`,
+								// Six cards fanned around the middle, between cards 2 and 3.
+								"--r": `${(i - 2.5) * 6}deg`,
+								"--x": `${(i - 2.5) * 7.2}cqw`,
+								"--y": `${Math.abs(i - 2.5) * 1.4}cqw`,
 							} as CSSProperties
 						}
 					>

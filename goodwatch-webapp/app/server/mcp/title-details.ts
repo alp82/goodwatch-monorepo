@@ -22,11 +22,14 @@ export function personLink(
 	}
 }
 
-/** Scores retain their provider's own scale, including absent values. */
-export function titleScores(
-	details: MovieResult["details"] | ShowResult["details"],
-) {
-	const score = (value: number | undefined, out_of: number, url?: string) => ({
+/** Scores retain their provider's own scale, including absent values. Only movies carry a Letterboxd key. */
+export function titleScores(media: MovieResult | ShowResult) {
+	const { details } = media
+	const score = (
+		value: number | null | undefined,
+		out_of: number,
+		url?: string | null,
+	) => ({
 		score: present(value),
 		out_of,
 		url: url || null,
@@ -54,6 +57,15 @@ export function titleScores(
 			100,
 			details.rotten_tomatoes_url,
 		),
+		...(media.mediaType === "movie"
+			? {
+					letterboxd: score(
+						media.details.letterboxd_user_score_original,
+						5,
+						media.details.letterboxd_url,
+					),
+				}
+			: {}),
 	}
 }
 
@@ -177,8 +189,6 @@ export function compactTitleDetails(
 					),
 				}
 			: {}),
-		...(include.includes("scores")
-			? { scores: titleScores(media.details) }
-			: {}),
+		...(include.includes("scores") ? { scores: titleScores(media) } : {}),
 	}
 }

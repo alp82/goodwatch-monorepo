@@ -164,6 +164,7 @@ export function Outlines({
 
 const SCORE_ALT: Record<string, string> = {
 	imdb: "IMDb",
+	letterboxd: "Letterboxd",
 	metacritic: "Metacritic",
 	"metacritic-user": "Metacritic",
 	"rotten-tomatoes": "Rotten Tomatoes",

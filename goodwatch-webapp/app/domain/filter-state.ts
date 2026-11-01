@@ -142,6 +142,8 @@ export const SOURCE_KEYS = [
 	"rtAudience",
 	"metacritic",
 	"metacriticUsers",
+	// Movies only: a show never passes a Letterboxd minimum.
+	"letterboxd",
 ] as const
 export type SourceKey = (typeof SOURCE_KEYS)[number]
 export const SCORE_GAPS = ["agree", "critics", "audience"] as const

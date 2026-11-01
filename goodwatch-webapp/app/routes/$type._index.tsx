@@ -11,7 +11,7 @@ import { type NavType, navLabel } from "~/ui/explore/config"
 import { mainNavigation } from "~/ui/explore/main-nav"
 import { TileBackdrop, tilePriority } from "~/ui/explore/TileBackdrop"
 import { exploreHubCopy } from "~/ui/explore/page-copy"
-import { listNoun } from "~/domain/best-lists"
+import { listNoun, scoreSourceList } from "~/domain/best-lists"
 import {
 	type PageItem,
 	type PageMeta,
@@ -27,7 +27,7 @@ export const meta: MetaFunction = ({ params }) => {
 
 	const pageMeta: PageMeta = {
 		title: `Best ${typeLabel} and Where to Stream Them | GoodWatch`,
-		description: `Discover the best ${typeLabel} to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find ${typeLabel} by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.`,
+		description: `Discover the best ${typeLabel} to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find ${typeLabel} by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, ${type === "movies" ? "Letterboxd, " : ""}Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.`,
 		url: `https://goodwatch.app/${type}`,
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",
@@ -56,7 +56,7 @@ const canonicalLoader: LoaderFunction = async ({
 }
 
 const bestIntro = (type: NavType) =>
-	`The best-known ${listNoun(type)} on GoodWatch, ranked by one score from IMDb, Rotten Tomatoes, Metacritic and TMDB.`
+	`The best-known ${listNoun(type)} on GoodWatch, ranked by one score from ${scoreSourceList(type)}.`
 
 export default function Movies() {
 	const { type } = useLoaderData<LoaderData>()

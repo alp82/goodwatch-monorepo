@@ -40,7 +40,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		facts: {
 			synopsis: media.details.synopsis || null,
 			genres: media.details.genres ?? [],
-			scores: sourceScores(media.details),
+			scores: sourceScores(media.details, type),
 		},
 	}
 	return json(result, { headers: { "Cache-Control": "private, no-store" } })

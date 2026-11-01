@@ -161,17 +161,20 @@ export type PickData = {
 	rank: number | null
 }
 
-export type FiveScores = {
+/** The six numbers behind the score chapter's title. */
+export type ScoreNumbers = {
 	key: number
 	imdb: number | null
 	tomatometer: number | null
 	rtAudience: number | null
 	metacritic: number | null
 	metacriticUser: number | null
+	/** Letterboxd stars, 0.5-5; null for shows. Read 2026-11-01. */
+	letterboxd: number | null
 }
 
 export type ScoreData = {
-	sources: FiveScores[]
+	sources: ScoreNumbers[]
 }
 
 export type SourceScores = {

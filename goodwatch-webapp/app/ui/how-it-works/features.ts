@@ -3,7 +3,8 @@ import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // The /how-it-works rows: one feature each, in the start page intro's order, each with a picture made from the
 // intro's parts (pictures.tsx) or, for AI apps, the /use-with-ai chat demo. Facts checked on 2026-10-18:
 // - Score: goodwatch-flows/windmill/f/sync/copy/all_ratings.py (the mean of an audience average of TMDB, IMDb,
-//   Metacritic users and Rotten Tomatoes audience, and a critic average of Metascore and Tomatometer).
+//   Letterboxd, Metacritic users and Rotten Tomatoes audience, and a critic average of Metascore and Tomatometer).
+//   Letterboxd joined the audience average on 2026-11-01.
 // - 325 services, 139 countries, 1.5 million titles: server/living-room/intro/content.json (captured 2026-10-17).
 // - A 90% match is the top 1%: domain/taste-match.ts.
 
@@ -39,7 +40,7 @@ export const HOW_IT_WORKS_FEATURES: Feature[] = [
 		phone: "tall",
 		kicker: "Score",
 		title: "One score you can trust",
-		line: "IMDb, Rotten Tomatoes, Metacritic and TMDB in one number. Critics count half, audiences the other half.",
+		line: "IMDb, Letterboxd, Rotten Tomatoes, Metacritic and TMDB in one number. Critics count half, audiences the other half.",
 		link: { to: "/movies", label: "Browse movies" },
 	},
 	{

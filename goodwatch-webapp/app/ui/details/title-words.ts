@@ -3,6 +3,7 @@
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { money } from "~/ui/details/titleQuestions"
 import type * as F from "~/ui/fingerprint/fingerprintText"
+import { letterboxdScore, letterboxdStars } from "~/utils/letterboxd"
 import { goodwatchScoreDisplay, hasGoodwatchScore } from "~/utils/ratings"
 
 type Media = MovieResult | ShowResult
@@ -146,6 +147,9 @@ export function scoreLines(media: Media): ScoreLine[] {
 		})
 	if (d.imdb_user_score_original)
 		out.push({ label: "IMDb", value: d.imdb_user_score_original.toFixed(1) })
+	const lb = letterboxdScore(media)
+	if (lb)
+		out.push({ label: "Letterboxd", value: `${letterboxdStars(lb.stars)}/5` })
 	if (d.metacritic_meta_score_original)
 		out.push({
 			label: "Metacritic",

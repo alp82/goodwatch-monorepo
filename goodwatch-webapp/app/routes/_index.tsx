@@ -54,7 +54,7 @@ export const links: LinksFunction = () => [
 const HOME_URL = "https://goodwatch.app/"
 const HOME_TITLE = "GoodWatch - Find movies and TV shows to watch"
 const HOME_DESCRIPTION =
-	"Find your next movie or TV show by mood and taste. Compare IMDb, Rotten Tomatoes and Metacritic scores, explore titles, and check where they stream."
+	"Find your next movie or TV show by mood and taste. Compare IMDb, Letterboxd, Rotten Tomatoes and Metacritic scores, explore titles, and check where they stream."
 
 // Campaign parameters (and the old TV's `?tv=`) are views of the same page, not separate search results.
 // This metadata is shared by guests and members, on every device.

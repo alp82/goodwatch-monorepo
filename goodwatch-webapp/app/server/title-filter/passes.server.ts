@@ -508,7 +508,8 @@ export function factCounts(
 	const setCounts = origin ? new Uint32Array(sets.length) : null
 	const sourceColumns = sources ? SOURCE_KEYS.map((key) => sources[key]) : []
 	const minimums = SOURCE_KEYS.map((key) => input.sourceMinimums?.[key])
-	const perSource = sourceCounts ? new Uint32Array(5 * 101) : null
+	const sourceTotal = SOURCE_KEYS.length
+	const perSource = sourceCounts ? new Uint32Array(sourceTotal * 101) : null
 	let worldCount = 0
 	const count = facts.releaseYears.length
 	for (let i = 0; i < input.rows.length; i++) {
@@ -522,13 +523,13 @@ export function factCounts(
 		) {
 			// Replace one threshold, preserving each sibling source's selected minimum.
 			let failed = 0
-			for (let source = 0; source < 5; source++) {
+			for (let source = 0; source < sourceTotal; source++) {
 				const min = minimums[source],
 					value = sourceColumns[source][row]
 				if (min !== undefined && (value === UNKNOWN_SCORE || value < min))
 					failed |= 1 << source
 			}
-			for (let source = 0; source < 5; source++) {
+			for (let source = 0; source < sourceTotal; source++) {
 				if ((failed & ~(1 << source)) !== 0) continue
 				const value = sourceColumns[source][row]
 				if (value !== UNKNOWN_SCORE) perSource![source * 101 + value]++

@@ -10,6 +10,7 @@ import discordMark from "~/img/discord-mark-white.svg?no-inline"
 import disneyLogo from "~/img/disneyplus-logo-78.webp?no-inline"
 import fingerprintIcon from "~/img/fingerprint-156.webp?no-inline"
 import imdbLogo from "~/img/imdb-logo-78.webp?no-inline"
+import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-78.webp?no-inline"
 import netflixLogo from "~/img/netflix-logo.svg?no-inline"
 import primeLogo from "~/img/primevideo-logo.svg?no-inline"
@@ -62,12 +63,13 @@ const FEATURES: Feature[] = [
 	{
 		section: "score",
 		title: "One score you can trust",
-		text: "IMDb, Rotten Tomatoes, Metacritic and TMDB, critics and audiences alike, in one GoodWatch score for every movie and show.",
+		text: "IMDb, Letterboxd, Rotten Tomatoes, Metacritic and TMDB, critics and audiences alike, in one GoodWatch score for every movie and show.",
 		link: { to: "/how-it-works#score", label: "How the score works" },
 		visual: () => (
 			<div className="hgw-v-score">
 				<div className="hgw-v-sources">
 					<Img src={imdbLogo} alt="IMDb" w={56} h={28} />
+					<Img src={letterboxdLogo} alt="Letterboxd" w={52} h={19} />
 					<Img src={rottenLogo} alt="Rotten Tomatoes" w={28} h={28} />
 					<Img src={metacriticLogo} alt="Metacritic" w={28} h={28} />
 				</div>

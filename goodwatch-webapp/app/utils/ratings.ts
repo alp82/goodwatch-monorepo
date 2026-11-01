@@ -23,6 +23,13 @@ export interface AllRatings {
 	rotten_tomatoes_tomato_score_original: number
 	rotten_tomatoes_tomato_score_normalized_percent: number
 	rotten_tomatoes_tomato_score_review_count: number
+	// Letterboxd scores exist for movies only, so they stay out of getRatingKeys(): that list feeds SQL that
+	// runs on the show table too.
+	letterboxd_url?: string | null
+	letterboxd_id?: string | null
+	letterboxd_user_score_original?: number | null
+	letterboxd_user_score_normalized_percent?: number | null
+	letterboxd_user_score_rating_count?: number | null
 	goodwatch_user_score_normalized_percent: number
 	goodwatch_user_score_rating_count: number
 	goodwatch_official_score_normalized_percent: number
