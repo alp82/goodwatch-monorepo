@@ -343,6 +343,8 @@ export interface TabValue {
 	moods?: MoodKey[]
 	/** Watch: the services whose logos lead; "mine" for the viewer's saved services. */
 	services?: "mine" | number[] | null
+	/** PROTOTYPE (discover-easy): the Search segment as Titles & people, without the search text. */
+	plain?: boolean
 }
 
 export const SEARCH_PLACEHOLDER = "A mood, a title, or like Severance"

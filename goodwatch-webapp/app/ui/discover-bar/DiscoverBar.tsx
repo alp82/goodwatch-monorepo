@@ -50,7 +50,7 @@ export function TabBadge({
 }
 
 function SegmentLabel({ value }: { value: TabValue }) {
-	const search = value.tab === "search"
+	const search = value.tab === "search" && !value.plain
 	return (
 		<span
 			className={`flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] uppercase ${search ? "text-amber-300/90" : value.locked ? "text-gray-500" : "text-gray-400"}`}
@@ -122,7 +122,7 @@ function Lead({
 
 /** The value line's text: the search in large type, a value, the guest's "Sign up", or the placeholder. */
 function ValueText({ value, phone }: { value: TabValue; phone: boolean }) {
-	if (value.tab === "search" && (value.query || !value.value))
+	if (value.tab === "search" && !value.plain && (value.query || !value.value))
 		return (
 			<span
 				className={`brand-header truncate leading-tight ${phone ? "text-[19px]" : "text-[21px]"} ${value.query ? "text-white" : "text-gray-500"} ${PRIVATE}`}
@@ -273,9 +273,10 @@ export function PhoneDiscoverBar({
 	providers: BarProviders
 }) {
 	const search = values.search
+	const plain = !!search.plain
 	return (
 		<div className="overflow-hidden rounded-[22px] bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)]">
-			<div className="relative">
+			{!plain && <div className="relative">
 				<button
 					type="button"
 					data-tab="search"
@@ -293,9 +294,9 @@ export function PhoneDiscoverBar({
 						className="absolute top-1/2 right-2 h-9 w-9 -translate-y-1/2"
 					/>
 				)}
-			</div>
-			<div className="grid grid-cols-[1fr_1fr_0.8fr] border-t border-white/[0.08]">
-				{MAIN_TABS.filter((tab) => tab !== "search").map((tab, i) => {
+			</div>}
+			<div className={`grid ${plain ? "grid-cols-[1fr_1fr_1fr_0.8fr]" : "grid-cols-[1fr_1fr_0.8fr] border-t border-white/[0.08]"}`}>
+				{MAIN_TABS.filter((tab) => plain || tab !== "search").map((tab, i) => {
 					const value = values[tab]
 					return (
 						<motion.button

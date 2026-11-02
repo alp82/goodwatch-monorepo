@@ -4,13 +4,9 @@
 import { useState } from "react"
 import { WORDS } from "~/domain/taste-picker"
 import {
-	ChoiceChips,
-	Count,
 	type EasyContext,
-	Essentials,
 	FineTune,
 	MIXES,
-	ModeSwitch,
 	TIME_CHOICES,
 	activeMix,
 	backdrop,
@@ -52,13 +48,8 @@ export function VariantB({ ctx }: { ctx: EasyContext }) {
 		time: TIME_CHOICES.find((c) => c.key === timeKey(s))?.label ?? "Any length",
 	}
 	return (
-		<section>
-			<div className="flex items-center justify-between gap-3">
-				<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[30px]">Discover</h1>
-				<ModeSwitch />
-			</div>
-
-			<div className="mt-5 overflow-hidden rounded-3xl bg-gradient-to-b from-gray-800/80 to-gray-900/80 ring-1 ring-white/10">
+		<section className="mt-5">
+			<div className="overflow-hidden rounded-3xl bg-gradient-to-b from-gray-800/80 to-gray-900/80 ring-1 ring-white/10">
 				{/* Progress: each step is a pill with its answer; any pill reopens its step. */}
 				<ol className="flex flex-wrap items-center gap-2 border-b border-white/10 px-4 py-3 lg:px-6">
 					{STEPS.map((id, i) => (
@@ -78,9 +69,6 @@ export function VariantB({ ctx }: { ctx: EasyContext }) {
 							{i < STEPS.length - 1 && <span className="text-gray-600">›</span>}
 						</li>
 					))}
-					<li className="ml-auto flex items-center gap-3 text-sm text-gray-400">
-						<Count ctx={ctx} />
-					</li>
 				</ol>
 
 				<div className="px-4 py-6 lg:px-6 lg:py-8">
@@ -150,24 +138,16 @@ export function VariantB({ ctx }: { ctx: EasyContext }) {
 					)}
 					{step === "done" && (
 						<div className="flex flex-wrap items-center justify-between gap-4">
-							<div>
-								<p className="text-xl font-semibold text-white lg:text-2xl">Here's what fits.</p>
-								<div className="mt-3 flex flex-wrap gap-2">
-									<Essentials ctx={ctx} />
-								</div>
-							</div>
+							<p className="text-xl font-semibold text-white lg:text-2xl">Here's what fits.</p>
 							<div className="flex items-center gap-4 text-sm">
 								<button type="button" onClick={() => setStep("kind")} className="cursor-pointer font-semibold text-gray-300 hover:text-white">
 									Ask again
 								</button>
-								<FineTune label="More filters →" />
+								<FineTune label="Customize →" />
 							</div>
 						</div>
 					)}
 				</div>
-			</div>
-			<div className="mt-4">
-				<ChoiceChips ctx={ctx} />
 			</div>
 		</section>
 	)

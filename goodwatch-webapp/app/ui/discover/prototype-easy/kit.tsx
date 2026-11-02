@@ -91,7 +91,7 @@ export const TYPE_CHOICES = [
 export function useMode() {
 	const [params] = useSearchParams()
 	const navigate = useNavigate()
-	const mode = params.get("mode") === "advanced" ? "advanced" : "easy"
+	const mode: "easy" | "advanced" = params.get("mode") === "advanced" ? "advanced" : "easy"
 	const setMode = (next: "easy" | "advanced") => {
 		const out = new URLSearchParams(params)
 		if (next === "advanced") out.set("mode", "advanced")
@@ -116,7 +116,7 @@ export function ModeSwitch({ className = "" }: { className?: string }) {
 					role="radio"
 					aria-checked={mode === m}
 					onClick={() => setMode(m)}
-					className={`cursor-pointer rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+					className={`cursor-pointer rounded-full px-2.5 py-1 text-xs font-semibold transition lg:px-3.5 lg:py-1.5 lg:text-sm ${
 						mode === m ? "bg-white text-gray-950" : "text-gray-300 hover:text-white"
 					}`}
 				>

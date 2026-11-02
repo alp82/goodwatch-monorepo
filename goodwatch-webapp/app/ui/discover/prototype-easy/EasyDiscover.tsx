@@ -1,5 +1,6 @@
-// PROTOTYPE (discover-easy): Discover opens in Easy mode (variants A-C); Advanced (mode=advanced) is today's page.
-// Variant 0 is today's page with no easy mode at all. Both modes share the URL filters.
+// PROTOTYPE (discover-easy): Discover opens in Easy mode; Advanced (mode=advanced) is today's bar. Both share the
+// title row, the search field and the readout of how the search was read, and the same URL filters.
+// Variants A-C change only the easy content under the search; 0 is today's page unchanged.
 import { useSearchParams } from "@remix-run/react"
 import { DiscoverPage, type DiscoverPageProps } from "../DiscoverPage"
 import { ModeSwitch, useMode } from "./kit"
@@ -17,17 +18,19 @@ const VARIANTS = [
 
 export function EasyDiscover(props: DiscoverPageProps) {
 	const [params] = useSearchParams()
-	const { mode } = useMode()
+	const { mode, setMode } = useMode()
 	const v = VARIANTS.find((x) => x.key === params.get("variant")) ?? VARIANTS[0]
 	const Easy = v.C
 	return (
 		<>
-			{Easy && mode === "advanced" && (
-				<div className="mx-auto flex max-w-7xl justify-end px-4 pt-4">
-					<ModeSwitch />
-				</div>
-			)}
-			<DiscoverPage {...props} easy={Easy && mode === "easy" ? (ctx) => <Easy ctx={ctx} /> : undefined} />
+			<DiscoverPage
+				{...props}
+				proto={
+					Easy
+						? { mode, setMode, modeSwitch: <ModeSwitch />, easy: (ctx) => <Easy ctx={ctx} /> }
+						: undefined
+				}
+			/>
 			<PrototypeSwitcher variants={VARIANTS} />
 		</>
 	)

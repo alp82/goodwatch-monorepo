@@ -4,6 +4,7 @@
 // area's pages (PhoneBar.tsx draws it). For two pages after a person left the living room through its TV, the TV
 // button shows in a row above the keys. The dock's height is published as --nav-dock-height so full-screen pages
 // such as Explorer can keep clear of it.
+import { useNavLocation } from "./proto-location"
 import { HomeIcon } from "@heroicons/react/24/outline"
 import { HomeIcon as HomeSolid } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
@@ -59,7 +60,7 @@ function DockAreaKey({ area }: { area: AreaKeyView }) {
 /** Home · Watch · (the G's column) · Explore · Profile, with equal space for the four navigation keys. */
 function DockKeys() {
 	const areas = useAreaKeys()
-	const { pathname } = useLocation()
+	const { pathname } = useNavLocation()
 	const home = pathname === "/"
 	const Home = home ? HomeSolid : HomeIcon
 	const byKey = (key: string) => areas.find((a) => a.key === key)

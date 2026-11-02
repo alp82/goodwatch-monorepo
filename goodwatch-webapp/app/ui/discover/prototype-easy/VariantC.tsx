@@ -3,20 +3,10 @@
 // door turns the wall into one wide banner for that door with a few tweaks (type, length, essentials) and the results.
 import type { FilterState } from "~/domain/filter-state"
 import {
-	BigSearch,
-	ChoiceChips,
-	Count,
 	type EasyContext,
-	Essentials,
-	FineTune,
 	MIXES,
-	ModeSwitch,
-	Segmented,
-	TIME_CHOICES,
-	TYPE_CHOICES,
 	backdrop,
 	hasChoice,
-	timeKey,
 	usePictures,
 	wordHue,
 	wordsPatch,
@@ -77,101 +67,42 @@ export function VariantC({ ctx }: { ctx: EasyContext }) {
 		if (d.sort) ctx.filters.setSort(d.sort)
 	}
 	const surprise = () => enter(DOORS[Math.floor(Math.random() * DOORS.length)])
-	const leave = () => {
-		ctx.filters.update((s) => ({ ...s, ...RESET }))
-		ctx.filters.setSort("popular")
-	}
-	const wall = !door && !hasChoice(ctx)
+	const chosen = door || hasChoice(ctx)
 	return (
-		<section>
-			<div className="flex items-center justify-between gap-3">
-				<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[30px]">Discover</h1>
-				<ModeSwitch />
+		<section className="mt-5">
+			<div className="flex items-baseline justify-between">
+				<p className="text-[11px] font-bold tracking-[0.08em] text-gray-400 uppercase">{chosen ? "Other doors" : "Or pick a door"}</p>
+				<button type="button" onClick={surprise} className="cursor-pointer text-sm font-semibold text-amber-400 hover:text-amber-300">
+					Surprise me
+				</button>
 			</div>
-			<div className="mt-4">
-				<BigSearch ctx={ctx} placeholder="Or describe it in your words…" />
-			</div>
-
-			{wall ? (
-				<>
-					<div className="mt-6 flex items-baseline justify-between">
-						<p className="text-xl font-semibold text-white lg:text-2xl">Pick a door</p>
-						<button type="button" onClick={surprise} className="cursor-pointer text-sm font-semibold text-amber-400 hover:text-amber-300">
-							Surprise me
+			<div className={chosen ? "-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-1" : "mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"}>
+				{DOORS.map((d, i) => {
+					const big = !chosen && i < 2
+					const on = door?.id === d.id
+					return (
+						<button
+							key={d.id}
+							type="button"
+							aria-pressed={on}
+							onClick={() => enter(d)}
+							className={`group relative shrink-0 cursor-pointer overflow-hidden rounded-2xl text-left ring-2 transition hover:-translate-y-0.5 ${on ? "ring-amber-400" : "ring-white/10 hover:ring-white/40"} ${
+								chosen ? "h-16 w-48" : big ? "col-span-2 h-44 md:col-span-1 lg:col-span-2 lg:h-52" : "h-36 lg:h-40"
+							}`}
+							style={{ background: d.hue }}
+						>
+							{pictures[d.picture] && (
+								<img src={backdrop(pictures[d.picture], big ? "w1280" : chosen ? "w300" : "w780")} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-700 group-hover:scale-105 group-hover:opacity-95" />
+							)}
+							<span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+							<span className={`absolute right-0 bottom-0 left-0 ${chosen ? "p-2" : "p-4"}`}>
+								<span className={`block font-bold text-white ${big ? "text-xl lg:text-2xl" : chosen ? "text-[13px]" : "text-base lg:text-lg"}`}>{d.name}</span>
+								{!chosen && <span className="mt-0.5 block text-xs text-gray-300">{d.line}</span>}
+							</span>
 						</button>
-					</div>
-					<div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-						{DOORS.map((d, i) => (
-							<button
-								key={d.id}
-								type="button"
-								onClick={() => enter(d)}
-								className={`group relative cursor-pointer overflow-hidden rounded-2xl text-left ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:ring-white/40 ${
-									i < 2 ? "col-span-2 h-44 lg:h-56 md:col-span-1 lg:col-span-2" : "h-36 lg:h-44"
-								}`}
-								style={{ background: d.hue }}
-							>
-								{pictures[d.picture] && (
-									<img src={backdrop(pictures[d.picture], i < 2 ? "w1280" : "w780")} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-700 group-hover:scale-105 group-hover:opacity-95" />
-								)}
-								<span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-								<span className="absolute bottom-0 left-0 right-0 p-4">
-									<span className={`block font-bold text-white ${i < 2 ? "text-xl lg:text-2xl" : "text-base lg:text-lg"}`}>{d.name}</span>
-									<span className="mt-0.5 block text-xs text-gray-300">{d.line}</span>
-								</span>
-							</button>
-						))}
-					</div>
-					<p className="mb-2 mt-10 text-lg font-semibold text-white">Popular right now</p>
-				</>
-			) : (
-				<>
-					<div
-						className="relative mt-5 overflow-hidden rounded-3xl ring-1 ring-white/10"
-						style={{ background: door?.hue ?? "#1f2937" }}
-					>
-						{door && pictures[door.picture] && (
-							<img src={backdrop(pictures[door.picture], "w1280")} alt="" className="absolute inset-0 h-full w-full object-cover opacity-50" />
-						)}
-						<span className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/20" />
-						<div className="relative flex flex-col gap-4 p-5 lg:p-7">
-							<div className="flex flex-wrap items-start justify-between gap-3">
-								<div>
-									<button type="button" onClick={leave} className="cursor-pointer text-sm font-semibold text-gray-300 hover:text-white">
-										← All doors
-									</button>
-									<p className="mt-1 text-2xl font-bold text-white lg:text-4xl">
-										{door?.name ?? (ctx.q ? `“${ctx.q}”` : "Your picks")}
-									</p>
-									<p className="mt-1 text-sm text-gray-300">
-										<Count ctx={ctx} />
-										{door ? ` · ${door.line}` : ""}
-									</p>
-								</div>
-								<FineTune label="More filters →" />
-							</div>
-							<div className="flex flex-wrap items-center gap-2">
-								<Segmented label="Type" value={ctx.filters.state.type} options={TYPE_CHOICES} onChange={(type) => ctx.filters.set({ type })} />
-								<Segmented
-									label="Length"
-									value={timeKey(ctx.filters.state)}
-									options={TIME_CHOICES}
-									onChange={(k) => {
-										const c = TIME_CHOICES.find((t) => t.key === k)
-										ctx.filters.set({ runtime: c?.runtime ? { ...c.runtime } : undefined })
-									}}
-								/>
-								<Essentials ctx={ctx} />
-							</div>
-						</div>
-					</div>
-					{!door && (
-						<div className="mt-3">
-							<ChoiceChips ctx={ctx} />
-						</div>
-					)}
-				</>
-			)}
+					)
+				})}
+			</div>
 		</section>
 	)
 }

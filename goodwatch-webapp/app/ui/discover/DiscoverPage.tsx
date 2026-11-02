@@ -85,8 +85,13 @@ export interface DiscoverPageProps {
 	savedForYou: boolean
 	/** Where a search's On my services looks: the viewer's country and saved services (guests choose theirs). */
 	searchScope: SearchScope
-	/** PROTOTYPE (discover-easy): replaces the bar with an easy-mode header. */
-	easy?: (ctx: EasyContext) => ReactNode
+	/** PROTOTYPE (discover-easy): Easy/Advanced mode, the mode switch, and the easy content under the shared search. */
+	proto?: {
+		mode: "easy" | "advanced"
+		setMode: (mode: "easy" | "advanced") => void
+		modeSwitch: ReactNode
+		easy?: (ctx: EasyContext) => ReactNode
+	}
 }
 
 /** PROTOTYPE (discover-easy): what an easy-mode header can read and change. */
@@ -122,7 +127,7 @@ export function DiscoverPage({
 	member,
 	savedForYou,
 	searchScope,
-	easy,
+	proto,
 }: DiscoverPageProps) {
 	const [params, setParams] = useSearchParams()
 	const q = searchText(params.get("q"))
@@ -469,22 +474,29 @@ export function DiscoverPage({
 		<MotionConfig reducedMotion="user">
 			<div className="mx-auto max-w-7xl px-4 pt-5 lg:pt-8">
 				{/* Reaching for the bar starts loading the panel's content. */}
-				{easy ? (
-					easy({
-						filters,
-						q,
-						onSearch,
-						clearSearch,
-						total: first && answered && !stale ? first.total : null,
-						member,
-					})
-				) : (
 				<div onPointerEnter={warm} onTouchStart={warm} onFocus={warm}>
 					<DiscoverControls
 						heading={
-							<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
-								Discover movies and shows
-							</h1>
+							<div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+								<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
+									Discover movies and shows
+								</h1>
+								{proto?.modeSwitch}
+							</div>
+						}
+						proto={
+							proto && {
+								mode: proto.mode,
+								setMode: proto.setMode,
+								easy: proto.easy?.({
+									filters,
+									q,
+									onSearch,
+									clearSearch,
+									total: first && answered && !stale ? first.total : null,
+									member,
+								}),
+							}
 						}
 						className="mt-3 lg:mt-5"
 						bar={bar}
@@ -510,7 +522,6 @@ export function DiscoverPage({
 						}}
 					/>
 				</div>
-				)}
 				{/* Mounted for all of search mode with one line of height: the grid doesn't move when the text comes and
 				    goes, and a screen reader hears each change. */}
 				{searching && (

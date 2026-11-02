@@ -8,6 +8,8 @@
 // the panel closes it; Escape in Find clears Find first. Closing returns focus to the bar's segment for the tab that was
 // open (the Search segment after "/"), except after a press outside, which keeps focus where it landed. The phone sheet
 // returns focus to the control that opened it, and closing phone Find returns it to the magnifier.
+import { ProtoSearch } from "~/ui/discover/prototype-easy/ProtoSearch"
+import { Readout } from "~/ui/discover/prototype-easy/Readout"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, MotionConfig } from "framer-motion"
 import {
@@ -141,6 +143,12 @@ export interface DiscoverControlsProps {
 	/** The page's title; the count sits at its right. */
 	heading?: ReactNode
 	className?: string
+	/** PROTOTYPE (discover-easy): shared search + readout; easy mode shows `easy` instead of the bar. */
+	proto?: {
+		mode: "easy" | "advanced"
+		setMode: (mode: "easy" | "advanced") => void
+		easy?: ReactNode
+	}
 }
 
 /** The chips Ready to watch stands in for on the status line. */
@@ -171,6 +179,7 @@ function DiscoverControlsContent({
 	renderSubTab,
 	renderFind,
 	heading,
+	proto,
 	className = "",
 }: DiscoverControlsProps) {
 	const { state } = filters
@@ -367,6 +376,22 @@ function DiscoverControlsContent({
 		findButton.current?.focus({ preventScroll: true })
 	}
 
+	// PROTOTYPE (discover-easy): with the shared search on top, the bar's Search segment holds titles and people only.
+	const like = data.chips.filter((c) => c.kind === "steer" || c.kind === "person")
+	const barValues = proto
+		? {
+				...data.values,
+				search: {
+					...data.values.search,
+					plain: true,
+					query: null,
+					label: desktop ? "Titles & people" : "Like",
+					value: like.length ? like.map((c) => c.label).slice(0, 2).join(", ") + (like.length > 2 ? ` +${like.length - 2}` : "") : null,
+					placeholder: desktop ? "Like a title, with a person" : "Any",
+					badge: like.length,
+				},
+			}
+		: data.values
 	return (
 		<MotionConfig reducedMotion="user">
 			{/* Both combined controls at every size, for useControlSize; never seen or reached. */}
@@ -374,7 +399,7 @@ function DiscoverControlsContent({
 				ref={measureRef}
 				aria-hidden
 				{...{ inert: "" }}
-				className="pointer-events-none invisible fixed top-0 left-0 -z-10 flex flex-col items-start"
+				className="pointer-events-none invisible fixed top-0 right-full -z-10 flex flex-col items-start"
 			>
 				{([0, 1, 2] as ControlSize[]).map((at) => (
 					<div key={at} className="flex">
@@ -401,10 +426,39 @@ function DiscoverControlsContent({
 				</div>
 			)}
 			<div className={className}>
+				{proto && (
+					<>
+						<ProtoSearch query={query} onClear={onClearSearch} phone={!desktop} />
+						<Readout
+							query={query}
+							reading={reading}
+							chips={data.chips}
+							easy={proto.mode === "easy"}
+							onRemove={(chip) => (chip.remove ? filters.update(chip.remove) : onClearSearch())}
+							onOpen={(chip) => {
+								proto.setMode("advanced")
+								if (chip.opens) openTab(tabOfSubTab(chip.opens), chip.opens)
+							}}
+							onCustomize={() => {
+								proto.setMode("advanced")
+								openTab("mood")
+							}}
+						/>
+						{proto.mode === "easy" && (
+							<>
+								<div className="mt-3 flex">
+									<ReadyToWatch ready={ready} size={desktop ? size : 1} />
+								</div>
+								{proto.easy}
+							</>
+						)}
+					</>
+				)}
+				{(!proto || proto.mode === "advanced") && (<div className={proto ? "mt-3" : ""}>
 				<div className="hidden lg:block">
 					<div className="relative">
 						<DiscoverBar
-							values={data.values}
+							values={barValues}
 							active={desktop ? open : null}
 							onPick={(next) => (next === open ? close() : openTab(next))}
 							onClearSearch={onClearSearch}
@@ -412,7 +466,7 @@ function DiscoverControlsContent({
 							barRef={barRef}
 							panelId={panelId}
 							search={
-								desktop && open ? (
+								desktop && open && !proto ? (
 									<div className="flex items-center gap-2">
 										<SearchInput
 											value={text}
@@ -457,7 +511,7 @@ function DiscoverControlsContent({
 				</div>
 				<div className="lg:hidden">
 					<PhoneDiscoverBar
-						values={data.values}
+						values={barValues}
 						onPick={openTab}
 						onClearSearch={onClearSearch}
 						providers={providers}
@@ -501,6 +555,7 @@ function DiscoverControlsContent({
 								</FindOverlay>
 							}
 							top={
+								!proto &&
 								tab === "search" &&
 								!finding && (
 									<div className="mb-5 flex h-14 items-center gap-2.5 rounded-[14px] bg-white/[0.07] pr-2 pl-4 shadow-[inset_0_0_0_1.5px_rgba(251,191,36,0.6)]">
@@ -527,6 +582,7 @@ function DiscoverControlsContent({
 						/>
 					)}
 				</div>
+				</div>)}
 			</div>
 		</MotionConfig>
 	)

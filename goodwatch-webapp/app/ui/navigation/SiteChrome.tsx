@@ -1,6 +1,7 @@
 // The site's chrome around a page: the header, the Explore tab row on the Explore pages, the Profile row on the Profile
 // pages that have no profile layout of their own, the footer, the phone dock, the account menu and the search dialog.
 // The app (app.tsx) and the error page (root.tsx) both draw it, so the two can't drift apart.
+import { useNavLocation } from "./proto-location"
 import { GlobeAltIcon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import type { ReactNode } from "react"
@@ -37,7 +38,7 @@ export function exploreRowMode(pathname: string): "off" | "static" | "sticky" {
 
 /** Explore's tabs under the header. Guests' New goes to their country's page, as members' goes to their services. */
 function ExploreRow() {
-	const { pathname } = useLocation()
+	const { pathname } = useNavLocation()
 	const { user } = useUser()
 	const { locale } = useLocale()
 	const mode = exploreRowMode(pathname)
@@ -76,7 +77,7 @@ export function profileRowHere(pathname: string, member: boolean): boolean {
 
 /** The Profile row without a profile (Taste · Rate more · Lists), on the pages profileRowHere names. */
 function ProfileRow() {
-	const { pathname, search } = useLocation()
+	const { pathname, search } = useNavLocation()
 	const viewer = usePathViewer()
 	if (!profileRowHere(pathname, viewer.kind === "member")) return null
 	// A member's handle can still be loading: the page itself sends members with a handle on.

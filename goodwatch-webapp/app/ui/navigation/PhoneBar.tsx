@@ -1,6 +1,7 @@
 // The phone's top bar (below lg): a small area label over the big page title with a plain chevron, and search at the
 // right end. The title opens the sheet of the area's pages; the dock's area keys open the same sheet for their area. The bar slides away while the page scrolls
 // down and comes back on the way up (transform only). Which bar a page gets: ./phone-bar.ts.
+import { useNavLocation } from "./proto-location"
 import { ChevronDownIcon, ChevronLeftIcon } from "@heroicons/react/24/outline"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation, useNavigate } from "@remix-run/react"
@@ -50,7 +51,7 @@ function useScrollAway(enabled: boolean) {
 
 /** A detail page's own name, from its first heading, once that heading has scrolled under the bar. */
 function useHeadingTitle(enabled: boolean) {
-	const { pathname } = useLocation()
+	const { pathname } = useNavLocation()
 	const [title, setTitle] = useState("")
 	useEffect(() => {
 		setTitle("")
@@ -166,7 +167,7 @@ function useFitSnap(chrome: number) {
 /** Search mode: the bar is the search field, showing the query; it opens the search dialog to change it. */
 function SearchField() {
 	const navigation = useNavigation()
-	const { search } = useLocation()
+	const { search } = useNavLocation()
 	const q = new URLSearchParams(search).get("q") ?? ""
 	return (
 		<button
@@ -312,7 +313,7 @@ function TabsSheet({ bar }: { bar: Bar }) {
 
 /** The phone's top bar, below lg. */
 export function PhoneBar({ surface }: { surface: string }) {
-	const { pathname, search } = useLocation()
+	const { pathname, search } = useNavLocation()
 	const viewer = usePathViewer()
 	const bar = phoneBarOf({ pathname, search, viewer })
 	const navigation = useNavigation()

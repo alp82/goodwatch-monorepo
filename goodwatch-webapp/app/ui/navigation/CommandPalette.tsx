@@ -1,3 +1,4 @@
+import { useNavLocation } from "./proto-location"
 import useLocale from "~/utils/locale"
 import MediaText from "~/ui/media-text/MediaText"
 // The command palette: one field that goes anywhere. It opens empty, like a search field, with a line saying what
@@ -88,7 +89,7 @@ function usePaletteTitles(q: string): PaletteTitles {
 
 export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const navigate = useNavigate()
-	const { pathname } = useLocation()
+	const { pathname } = useNavLocation()
 	const { user } = useUser()
 	const { handle } = useAccountSummary()
 	const signUp = useSignUpHref()

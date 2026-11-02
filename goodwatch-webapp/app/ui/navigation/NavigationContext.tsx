@@ -1,6 +1,7 @@
 // State the site navigation shares between the header, the phone dock and the pages: whether the account menu (a
 // panel under the avatar on desktop, a bottom sheet on phones) or the search dialog is open, and how many pages ask
 // the dock to step back. Also who is looking, as the navigation's addresses need it (usePathViewer).
+import { useNavLocation } from "./proto-location"
 import { useLocation } from "@remix-run/react"
 import {
 	type ReactNode,
@@ -73,7 +74,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 		setTabsOpenState(true)
 	}, [])
 	const [phoneRow, setPhoneRow] = useState<PhoneRow | null>(null)
-	const { pathname, search } = useLocation()
+	const { pathname, search } = useNavLocation()
 
 	// Following a link closes whatever the navigation had open.
 	useEffect(() => {
