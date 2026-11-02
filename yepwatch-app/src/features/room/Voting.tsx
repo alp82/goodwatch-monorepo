@@ -4,7 +4,7 @@
  * refills in the background, and an empty deck shows "Finding more…", never an end.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BackHandler, Image, Platform, View } from 'react-native';
+import { BackHandler, Platform, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { playFeedback } from '../feedback/sounds';
 import { useRoomFeedback } from '../feedback/RoomFeedback';
@@ -16,7 +16,6 @@ import { LiveFaces, PeerStage } from '../glow/Peers';
 import { PointerSurface } from '../glow/PointerSurface';
 import { Poster } from '../glow/Poster';
 import { Trailer } from '../glow/Trailer';
-import { WatchLinks } from '../glow/WatchLinks';
 import { useActiveTime } from '../glow/useActiveTime';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { stampStyle } from '../shell/tokens';
@@ -25,7 +24,8 @@ import { RoomBar } from './parts';
 import { useRoom } from './RoomProvider';
 import { RoomNotes } from './RoomStatus';
 import { servicesIn } from './services';
-import { FindingMore, Logos, ScoreBadge, Screen, Small, card as cardStyle, useServices } from './ui';
+import { TitleDetails } from './TitleDetails';
+import { FindingMore, Logos, Screen, Small, card as cardStyle, useServices } from './ui';
 
 /** Service ids a candidate is offered on among the room's switched-on services. */
 export function offeredOn(c: { availability: { offers: { serviceId: number }[] }[] }, enabled: number[]) {
@@ -135,17 +135,7 @@ export function Voting() {
       overlay={<>
         {panel === 'details' && title && card && (
           <Sheet testID="details-panel" close={() => setPanel(null)}>
-            <GText bold size={28} style={{ letterSpacing: -0.8 }}>{title.title}</GText>
-            <View style={{ flexDirection: 'row', gap: 14 }}>
-              {title.posterUrl ? <Image source={{ uri: title.posterUrl.replace('/w500/', '/w185/') }} accessible={false} style={{ width: 92, height: 138, borderRadius: 10 }} /> : null}
-              <View style={{ flex: 1, gap: 8 }}>
-                <Small>{[title.year, title.episodeLabel, title.runtimeMinutes ? `${title.runtimeMinutes} min` : null].filter(Boolean).join(' · ')}</Small>
-                {title.genres.length ? <Small>{title.genres.join(' · ')}</Small> : null}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Logos services={offered} size={20} />{title.score !== null ? <ScoreBadge score={title.score} /> : null}</View>
-              </View>
-            </View>
-            <GText color={glow.soft}>{title.overview ?? 'No synopsis'}</GText>
-            <WatchLinks identity={card.identity} availability={card.availability} screens={shared.screens} />
+            <TitleDetails c={card} offered={offered} screens={shared.screens} />
           </Sheet>
         )}
         {panel === 'trailer' && title?.trailerUrl && (
