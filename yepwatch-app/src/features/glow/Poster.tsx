@@ -3,7 +3,8 @@ import { FadeImage } from './FadeImage';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GText, Icon, Press, Score, glow, s } from './theme';
+import { ScorePill } from './scores';
+import { GText, Icon, Press, glow, s } from './theme';
 import { useDrag } from './useDrag';
 import type { GesturePhase, GlowTitle } from './model';
 export function Poster({
@@ -172,7 +173,7 @@ export function Poster({
                 paddingRight: 2,
               }}
             >
-              {title.score !== null && <Score value={title.score} size={32} />}
+              <ScorePill score={title.score} size="L" />
               <GText size={11} bold lines={1} color={glow.soft} style={{ flex: 1 }}>
                 {title.genres.join(' · ').toUpperCase()}
               </GText>

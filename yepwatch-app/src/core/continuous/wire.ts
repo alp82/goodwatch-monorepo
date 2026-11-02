@@ -71,6 +71,21 @@ const candidate = z
     trailerUrl: z.string().nullable().optional(),
     goodwatchScore: z.number().nullable().optional(),
     genres: z.array(z.string()).optional(),
+    // GoodWatch title highlights for the details view. Absent or null is unknown and hidden; nested
+    // display objects aren't strict, so a new score source can't make a room unreadable.
+    tagline: z.string().nullable().optional(),
+    certification: z.string().nullable().optional(),
+    scores: z
+      .object({
+        imdb: z.number().nullable().optional(),
+        rtCritics: z.number().nullable().optional(),
+        rtAudience: z.number().nullable().optional(),
+        metacritic: z.number().nullable().optional(),
+      })
+      .nullable()
+      .optional(),
+    highlights: z.array(z.object({ key: z.string(), label: z.string() })).nullable().optional(),
+    people: z.object({ directors: z.array(z.string()), cast: z.array(z.string()) }).nullable().optional(),
   })
   .strict();
 const code = z.enum([

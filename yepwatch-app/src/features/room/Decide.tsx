@@ -13,7 +13,8 @@ import { RoomBar } from './parts';
 import { useRoom } from './RoomProvider';
 import { RoomNotes, RoomStatus } from './RoomStatus';
 import { servicesIn } from './services';
-import { Button, Logos, ScoreBadge, Screen, Small, T, TextLink, card, useServices } from './ui';
+import { ScorePill } from '../glow/scores';
+import { Button, Logos, Screen, Small, T, TextLink, card, useServices } from './ui';
 import { offeredOn } from './Voting';
 
 const thumb = (url: string | null, w: 185 | 500) => (url ? url.replace('/w500/', `/w${w}/`) : null);
@@ -27,7 +28,7 @@ function TitleFacts({ c }: { c: Candidate }) {
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
       <Small>{meta(c)}</Small>
       <Logos services={on} size={20} />
-      {c.goodwatchScore != null ? <ScoreBadge score={c.goodwatchScore} /> : null}
+      <ScorePill score={c.goodwatchScore} />
     </View>
   );
 }

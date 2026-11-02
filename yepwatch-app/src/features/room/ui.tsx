@@ -162,9 +162,6 @@ export function LiveBadge() {
     </View>
   );
 }
-export function ScoreBadge({ score }: { score: number }) {
-  return <View accessibilityLabel={`GoodWatch score ${Math.round(score)}`} style={{ height: 26, paddingHorizontal: 8, borderRadius: 8, backgroundColor: '#000000aa', borderWidth: 1, borderColor: '#fbbf2466', justifyContent: 'center' }}><GText bold size={13} color={glow.amber}>{Math.round(score)}</GText></View>;
-}
 /** The amber NEW badge: inline, the same height as the row's text, so nothing moves when it goes. */
 export function NewBadge() {
   return <View style={{ height: 20, paddingHorizontal: 6, borderRadius: 5, backgroundColor: '#fbbf2426', justifyContent: 'center' }}><GText bold size={11} color={glow.amber}>NEW</GText></View>;

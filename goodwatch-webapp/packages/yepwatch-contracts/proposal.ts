@@ -39,6 +39,16 @@ export interface Candidate extends BaseCandidate {
 	trailerUrl?: string | null
 	goodwatchScore?: number | null
 	genres?: string[]
+	tagline?: string | null
+	certification?: string | null            // age rating in the room's country, e.g. "FSK 16", "PG-13"
+	scores?: {                                // all 0-100 integers, like the GoodWatch MCP/website normalize them
+		imdb?: number | null                    // 78 means IMDb 7.8
+		rtCritics?: number | null               // Rotten Tomatoes critics %
+		rtAudience?: number | null              // Rotten Tomatoes audience %
+		metacritic?: number | null              // Metascore
+	} | null
+	highlights?: { key: string; label: string }[] | null   // up to 3 fingerprint highlights, `key` usable with getFingerprintMeta from @goodwatch/yepwatch-contracts/fingerprint for the website colors
+	people?: { directors: string[]; cast: string[] } | null // directors or show creators (max 2), top-billed cast (max 3)
 }
 export interface Match {
 	candidateId: string
