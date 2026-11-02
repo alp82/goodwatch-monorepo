@@ -1,7 +1,7 @@
 // PROTOTYPE (discover-easy): the one search field both modes share, in the same place. Enter runs the start page's
 // interpreter (/api/discover/interpret): the words it understands become Discover filters in the URL, the rest stays
 // the search text (q), so Advanced shows the same filters as controls.
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { ArrowRightIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { useNavigate } from "@remix-run/react"
 import { type ReactNode, useEffect, useState } from "react"
 import type { DiscoverInterpretation } from "~/server/discover-query.server"
@@ -53,12 +53,15 @@ export function ProtoSearch({
 	onClear,
 	phone,
 	inside,
+	side,
 }: {
 	query: string | null
 	onClear: () => void
 	phone: boolean
 	/** A line under the text, inside the field; the text line itself never moves. */
 	inside?: ReactNode
+	/** Controls at the bar's right end, after a line (For you over Sort, attached). */
+	side?: ReactNode
 }) {
 	const { run, busy } = useInterpretedSearch()
 	// The field shows what was typed, not only the part left as search text.
@@ -114,11 +117,12 @@ export function ProtoSearch({
 				type="submit"
 				disabled={busy}
 				className={`mr-2 shrink-0 cursor-pointer rounded-full bg-amber-400 font-bold text-gray-950 hover:bg-amber-300 disabled:opacity-70 ${
-					phone ? "px-3.5 py-2 text-sm" : "px-5 py-3 text-[15px]"
+					phone ? "flex h-10 w-10 items-center justify-center" : "px-5 py-3 text-[15px]"
 				}`}
 			>
-				{busy ? "Reading…" : "Search"}
+				{phone ? <ArrowRightIcon className="h-5 w-5" aria-label="Search" /> : busy ? "Reading…" : "Search"}
 			</button>
+			{side}
 			</div>
 			{inside && <div className={`-mt-2 pb-3.5 ${phone ? "pr-4" : "pr-7"}`}>{inside}</div>}
 		</form>

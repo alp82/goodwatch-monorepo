@@ -25,12 +25,6 @@ export function PrototypeSwitcher({ variants }: { variants: { key: string; name:
 	if (process.env.NODE_ENV === "production") return null
 	const v = variants[index]
 	const member = params.get("as") === "member"
-	const tabs = params.get("tabs") === "row" ? "row" : "title"
-	const toggleTabs = () => {
-		const out = new URLSearchParams(params)
-		out.set("tabs", tabs === "row" ? "title" : "row")
-		navigate({ search: `?${out}` }, { replace: true, preventScrollReset: true })
-	}
 	const toggleMember = () => {
 		const out = new URLSearchParams(params)
 		member ? out.delete("as") : out.set("as", "member")
@@ -41,9 +35,6 @@ export function PrototypeSwitcher({ variants }: { variants: { key: string; name:
 			<button type="button" onClick={() => go(-1)} className="cursor-pointer rounded-full px-3 py-1.5 hover:bg-white/20" aria-label="Previous variant">←</button>
 			<span className="text-center whitespace-nowrap lg:min-w-44">{v.key} · {v.name}</span>
 			<button type="button" onClick={() => go(1)} className="cursor-pointer rounded-full px-3 py-1.5 hover:bg-white/20" aria-label="Next variant">→</button>
-			<button type="button" onClick={toggleTabs} className="ml-1 cursor-pointer rounded-full bg-white/20 px-3 py-1.5 hover:bg-white/30" title="Where the Easy | Advanced tabs sit">
-				{tabs === "row" ? "Tabs: row" : "Tabs: title"}
-			</button>
 			<button type="button" onClick={toggleMember} className="ml-1 cursor-pointer rounded-full bg-white/20 px-3 py-1.5 hover:bg-white/30" title="Reloads the page">
 				{member ? "Member" : "Guest"}
 			</button>

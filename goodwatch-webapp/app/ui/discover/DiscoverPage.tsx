@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { EasyApi } from "~/ui/discover-bar/DiscoverControls"
+import type { StackStyle } from "~/ui/discover/prototype-easy/ForYouStack"
 import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
@@ -93,7 +94,7 @@ export interface DiscoverPageProps {
 		modeSwitch: ReactNode
 		reading?: (ctx: EasyContext & EasyApi) => ReactNode
 		inside?: (ctx: EasyContext & EasyApi) => ReactNode
-		tabsAt: "title" | "row"
+		stack: StackStyle
 	}
 }
 
@@ -494,7 +495,7 @@ export function DiscoverPage({
 								<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
 									{proto ? "Discover" : "Discover movies and shows"}
 								</h1>
-								{proto?.tabsAt === "title" && <div className="hidden lg:block">{proto.modeSwitch}</div>}
+								{proto && <div className="hidden lg:block">{proto.modeSwitch}</div>}
 							</div>
 						}
 						proto={
@@ -504,7 +505,7 @@ export function DiscoverPage({
 								modeTabs: proto.modeSwitch,
 								renderInside: proto.inside && ((api) => proto.inside?.(easyCtx(api))),
 								renderReading: proto.reading && ((api) => proto.reading?.(easyCtx(api))),
-								tabsAt: proto.tabsAt,
+								stack: proto.stack,
 							}
 						}
 						className="mt-3 lg:mt-5"

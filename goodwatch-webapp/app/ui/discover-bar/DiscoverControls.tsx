@@ -8,6 +8,7 @@
 // the panel closes it; Escape in Find clears Find first. Closing returns focus to the bar's segment for the tab that was
 // open (the Search segment after "/"), except after a press outside, which keeps focus where it landed. The phone sheet
 // returns focus to the control that opened it, and closing phone Find returns it to the magnifier.
+import { ForYouStack, type StackStyle } from "~/ui/discover/prototype-easy/ForYouStack"
 import { ProtoSearch } from "~/ui/discover/prototype-easy/ProtoSearch"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
@@ -164,8 +165,8 @@ export interface DiscoverControlsProps {
 		/** A line inside the search field, under the text, in both modes. */
 		renderInside?: (api: EasyApi) => ReactNode
 		modeTabs: ReactNode
-		/** Where the Easy | Advanced tabs sit: beside the title (the page draws them) or at the Ready row's end. */
-		tabsAt: "title" | "row"
+		/** How For you over Sort is drawn right of the search. */
+		stack: StackStyle
 	}
 }
 
@@ -411,6 +412,17 @@ function DiscoverControlsContent({
 		ready: <ReadyToWatch ready={{ ...ready, open: toAdvanced }} size={1} />,
 		phone: !desktop,
 	}
+	// PROTOTYPE (discover-easy): For you over Sort, right of the search in both modes.
+	const stack = proto && (
+		<ForYouStack
+			forYou={forYou}
+			sort={{ ...sort, portal: true }}
+			locked={!member}
+			onLocked={() => toAdvanced("you", "taste")}
+			phone={!desktop}
+			style={proto.stack}
+		/>
+	)
 	// PROTOTYPE (discover-easy): with the shared search on top, the bar's Search segment holds titles and people only.
 	const like = data.chips.filter((c) => c.kind === "steer" || c.kind === "person")
 	const barValues = proto
@@ -463,21 +475,17 @@ function DiscoverControlsContent({
 			<div className={className}>
 				{proto && (
 					<>
-						<ProtoSearch
-							query={query}
-							onClear={onClearSearch}
-							phone={!desktop}
-							inside={proto.renderInside?.(easyApi)}
-						/>
-						{/* Ready, the reading of the search and the row's tabs: one row, the same in both modes. */}
-						<div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 lg:flex-nowrap">
-							<ReadyToWatch
-								ready={{ ...ready, open: toAdvanced }}
-								size={proto.mode === "easy" ? 2 : desktop ? size : 0}
-								compact={proto.mode === "easy"}
-							/>
-							{(proto.tabsAt === "row" || !desktop) && <div className="ml-auto lg:order-3">{proto.modeTabs}</div>}
-							<div className="order-last flex min-w-0 basis-full lg:order-2 lg:flex-1 lg:basis-auto">{proto.renderReading?.(easyApi)}</div>
+						<div className="flex items-start gap-2 lg:gap-3">
+							<div className="min-w-0 flex-1">
+								<ProtoSearch
+									query={query}
+									onClear={onClearSearch}
+									phone={!desktop}
+									inside={proto.renderInside?.(easyApi)}
+									side={proto.stack === "attached" ? stack : undefined}
+								/>
+							</div>
+							{proto.stack !== "attached" && stack}
 						</div>
 					</>
 				)}
@@ -622,20 +630,18 @@ function DiscoverControlsContent({
 				</motion.div>)}
 				</AnimatePresence>
 				{proto && (
-					<AnimatePresence initial={false}>
-						{proto.mode === "advanced" && (
-							<motion.div
-								key="order"
-								className="mt-3 flex justify-end"
-								initial={{ opacity: 0, height: 0 }}
-								animate={{ opacity: 1, height: "auto" }}
-								exit={{ opacity: 0, height: 0 }}
-								transition={{ duration: 0.28 }}
-							>
-								{order(desktop ? size : (Math.min(size, 1) as ControlSize))}
-							</motion.div>
-						)}
-					</AnimatePresence>
+					<>
+						{/* Ready, the reading of the search and the row's tabs: one row, the same in both modes. */}
+						<motion.div layout="position" className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 lg:flex-nowrap">
+							<ReadyToWatch
+								ready={{ ...ready, open: toAdvanced }}
+								size={proto.mode === "easy" ? 2 : desktop ? size : 0}
+								compact={proto.mode === "easy"}
+							/>
+							{!desktop && <div className="ml-auto">{proto.modeTabs}</div>}
+							<div className="order-last flex min-w-0 basis-full lg:order-2 lg:flex-1 lg:basis-auto">{proto.renderReading?.(easyApi)}</div>
+						</motion.div>
+					</>
 				)}
 			</div>
 		</MotionConfig>
