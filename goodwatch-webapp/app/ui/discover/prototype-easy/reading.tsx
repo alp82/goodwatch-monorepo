@@ -1,7 +1,7 @@
 // PROTOTYPE (discover-easy): how a search was read, in the start page's style (search-interpretation.css): fingerprint
 // qualities as colored underlined words, filters as "Field Value" text. A filter opens Change in Advanced on press and
 // shows × on hover or focus to remove it.
-import { XMarkIcon } from "@heroicons/react/20/solid"
+import { LockClosedIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import type { CSSProperties } from "react"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { BarChip } from "~/ui/discover-bar/chips"
@@ -95,4 +95,15 @@ export function FilterList({
 
 export function Label({ children }: { children: React.ReactNode }) {
 	return <span className="shrink-0 text-[10px] font-semibold tracking-[0.075em] text-[#8395ae] uppercase">{children}</span>
+}
+
+/** A guest's Ready covers services only: Not seen yet waits for an account, said in the reading line. */
+export function LockedUnseen() {
+	return (
+		<a href="/sign-up" title="Sign up to hide what you've seen" className="sq-filter shrink-0 items-center! gap-1! rounded-md px-1 hover:bg-white/[0.05]">
+			<span className="text-[12px] text-[#92a5bf]">History</span>
+			<LockClosedIcon className="h-3 w-3 text-amber-500/70" />
+			<strong className="text-[12px] font-[650] text-amber-200/80">Not seen yet</strong>
+		</a>
+	)
 }

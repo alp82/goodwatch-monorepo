@@ -469,7 +469,16 @@ function DiscoverControlsContent({
 							phone={!desktop}
 							inside={proto.renderInside?.(easyApi)}
 						/>
-						{proto.renderReading?.(easyApi)}
+						{/* Ready, the reading of the search and the row's tabs: one row, the same in both modes. */}
+						<div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 lg:flex-nowrap">
+							<ReadyToWatch
+								ready={{ ...ready, open: toAdvanced }}
+								size={proto.mode === "easy" ? 2 : desktop ? size : 0}
+								compact={proto.mode === "easy"}
+							/>
+							{(proto.tabsAt === "row" || !desktop) && <div className="ml-auto lg:order-3">{proto.modeTabs}</div>}
+							<div className="order-last flex min-w-0 basis-full lg:order-2 lg:flex-1 lg:basis-auto">{proto.renderReading?.(easyApi)}</div>
+						</div>
 					</>
 				)}
 				<AnimatePresence initial={false}>
@@ -613,29 +622,20 @@ function DiscoverControlsContent({
 				</motion.div>)}
 				</AnimatePresence>
 				{proto && (
-					<motion.div layout="position" className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-						<ReadyToWatch
-							ready={{ ...ready, open: toAdvanced }}
-							size={proto.mode === "easy" ? 2 : desktop ? size : 0}
-							compact={proto.mode === "easy"}
-						/>
-						{(proto.tabsAt === "row" || !desktop) && <div className="ml-auto lg:order-2 lg:ml-0">{proto.modeTabs}</div>}
-						<AnimatePresence initial={false}>
-							{proto.mode === "advanced" && (
-								<motion.div
-									key="order"
-									className="flex basis-full justify-end lg:order-3 lg:basis-auto"
-									initial={{ opacity: 0, x: 12 }}
-									animate={{ opacity: 1, x: 0 }}
-									exit={{ opacity: 0, x: 12 }}
-									transition={{ duration: 0.25 }}
-								>
-									{order(desktop ? size : (Math.min(size, 1) as ControlSize))}
-								</motion.div>
-							)}
-						</AnimatePresence>
-						<span className="hidden lg:order-1 lg:block lg:flex-1" />
-					</motion.div>
+					<AnimatePresence initial={false}>
+						{proto.mode === "advanced" && (
+							<motion.div
+								key="order"
+								className="mt-3 flex justify-end"
+								initial={{ opacity: 0, height: 0 }}
+								animate={{ opacity: 1, height: "auto" }}
+								exit={{ opacity: 0, height: 0 }}
+								transition={{ duration: 0.28 }}
+							>
+								{order(desktop ? size : (Math.min(size, 1) as ControlSize))}
+							</motion.div>
+						)}
+					</AnimatePresence>
 				)}
 			</div>
 		</MotionConfig>
