@@ -13,6 +13,9 @@ const DROP_KEYS = ["q", "asked", "page", "allTitles", "sort", "layout"]
 /** Example searches for the field (round 10). */
 export type Examples = {
 	how: "menu" | "placeholder" | "chips" | "links" | "composer"
+	/** Round 15: show only two things: empty = placeholder + examples, filled = label + text. above: the small line over
+	 * the text swaps (Try examples, then the label); around: the label sits above, the examples below the text. */
+	two?: "above" | "around"
 	/** A text runs as is; a pair shows `label` and runs `query` (wording the interpreter reads right). */
 	list: readonly (string | { label: string; query: string })[]
 	extra?: ReactNode
@@ -108,6 +111,8 @@ export function ProtoSearch({
 	const how = examples?.how
 	const composer = how === "composer"
 	const tall = how === "chips" || how === "links" || composer
+	const two = examples?.two
+	const filled = text.trim().length > 0
 	const pick = (x: string) => {
 		setText(x)
 		run(x)
@@ -223,11 +228,28 @@ export function ProtoSearch({
 				}`}
 			>
 				<div className={`flex min-w-0 flex-1 flex-col justify-center ${phone ? "gap-1.5 py-3.5 pr-2" : "gap-2 py-[18px] pr-3"}`}>
-					<label className="flex min-w-0 cursor-text flex-col justify-center gap-0.5">
-						<span className="flex items-center gap-1 text-[10px] font-bold tracking-[0.1em] text-amber-300/80 uppercase">
+					{two === "above" && (
+						<div className="relative h-[18px]">
+							<span className={`absolute inset-0 flex items-center gap-1 text-[10px] font-bold tracking-[0.1em] text-amber-300/80 uppercase transition-opacity duration-150 ${filled ? "opacity-100" : "pointer-events-none opacity-0"}`}>
+								<MagnifyingGlassIcon className="h-3 w-3" aria-hidden />
+								Search
+							</span>
+							<div className={`absolute inset-0 flex transition-opacity duration-150 ${filled ? "pointer-events-none opacity-0" : "opacity-100"}`}>{tryRow}</div>
+						</div>
+					)}
+					{two === "around" && (
+						<span className={`flex h-[14px] items-center gap-1 text-[10px] font-bold tracking-[0.1em] text-amber-300/80 uppercase transition-opacity duration-150 ${filled ? "opacity-100" : "opacity-0"}`}>
 							<MagnifyingGlassIcon className="h-3 w-3" aria-hidden />
 							Search
 						</span>
+					)}
+					<label className="flex min-w-0 cursor-text flex-col justify-center gap-0.5">
+						{!two && (
+							<span className="flex items-center gap-1 text-[10px] font-bold tracking-[0.1em] text-amber-300/80 uppercase">
+								<MagnifyingGlassIcon className="h-3 w-3" aria-hidden />
+								Search
+							</span>
+						)}
 						<input
 							value={text}
 							onChange={(e) => setText(e.target.value)}
@@ -238,7 +260,12 @@ export function ProtoSearch({
 							}`}
 						/>
 					</label>
-					{tryRow}
+					{!two && tryRow}
+					{two === "around" && (
+						<div className={`flex h-[18px] transition-opacity duration-150 ${filled ? "pointer-events-none opacity-0" : "opacity-100"}`} aria-hidden={filled}>
+							{tryRow}
+						</div>
+					)}
 				</div>
 				{clearButton && <div className="flex shrink-0 items-center pr-3">{clearButton}</div>}
 				{trail && <span className="w-px shrink-0 self-stretch bg-white/10" aria-hidden />}
