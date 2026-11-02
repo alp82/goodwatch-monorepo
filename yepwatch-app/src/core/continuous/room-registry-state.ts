@@ -15,6 +15,8 @@ export interface RegisteredRoom {
   openedAt: number;
   /** Set by an explicit Leave on this device: the room moves to History with Return until it expires. */
   left?: { at: number; label: string };
+  /** Put away by this person on this device. The room itself and everyone in it carry on. */
+  archivedAt?: number;
 }
 /** A confirmed decision as this device saw it. Kept after the room moves on or expires. */
 export interface DecisionRecord {
@@ -47,9 +49,11 @@ export function decodeRooms(raw: string | null, now: number): RegisteredRoom[] {
     if (!roomId || nickname === null || expiresAt === null || expiresAt <= now || seen.has(roomId)) continue;
     seen.add(roomId);
     const leftAt = finite(item?.left?.at);
+    const archivedAt = finite(item?.archivedAt);
     rooms.push({
       roomId, nickname, expiresAt, joinedAt: finite(item?.joinedAt) ?? now, openedAt: finite(item?.openedAt) ?? now,
       ...(leftAt !== null ? { left: { at: leftAt, label: text(item?.left?.label, REGISTRY_LIMITS.label) ?? '' } } : {}),
+      ...(archivedAt !== null ? { archivedAt } : {}),
     });
   }
   return sortRooms(rooms).slice(0, REGISTRY_LIMITS.rooms);
@@ -59,13 +63,21 @@ export const sortRooms = (rooms: RegisteredRoom[]) => [...rooms].sort((a, b) => 
 /** Adds or refreshes a room. Opening it again moves it to the top; the first join time is kept. */
 export function upsertRoom(rooms: RegisteredRoom[], entry: { roomId: string; nickname: string; expiresAt: number }, now: number): RegisteredRoom[] {
   const old = rooms.find((r) => r.roomId === entry.roomId);
-  const next: RegisteredRoom = { roomId: entry.roomId, nickname: entry.nickname.slice(0, REGISTRY_LIMITS.nickname), expiresAt: entry.expiresAt, joinedAt: old?.joinedAt ?? now, openedAt: now };
+  const next: RegisteredRoom = { roomId: entry.roomId, nickname: entry.nickname.slice(0, REGISTRY_LIMITS.nickname), expiresAt: entry.expiresAt, joinedAt: old?.joinedAt ?? now, openedAt: now, ...(old?.archivedAt ? { archivedAt: old.archivedAt } : {}) };
   return sortRooms([next, ...rooms.filter((r) => r.roomId !== entry.roomId && r.expiresAt > now)]).slice(0, REGISTRY_LIMITS.rooms);
 }
 export const removeRoom = (rooms: RegisteredRoom[], roomId: string) => rooms.filter((r) => r.roomId !== roomId);
 /** Explicit Leave: keep the room (the server no longer shows it to you) so History can offer Return. */
 export const markLeft = (rooms: RegisteredRoom[], roomId: string, label: string, now: number) =>
   rooms.map((r) => (r.roomId === roomId ? { ...r, left: { at: now, label: label.slice(0, REGISTRY_LIMITS.label) } } : r));
+
+/** Archive or restore (null). Only this device's list changes; opening an archived room keeps it archived. */
+export const setArchived = (rooms: RegisteredRoom[], roomId: string, at: number | null) =>
+  rooms.map((r) => {
+    if (r.roomId !== roomId) return r;
+    const { archivedAt: _, ...rest } = r;
+    return at === null ? rest : { ...rest, archivedAt: at };
+  });
 
 /** The single recent room of earlier builds becomes the first registered room. */
 export function migrateRecent(rooms: RegisteredRoom[], recent: RecentRoom | null, now: number): RegisteredRoom[] {

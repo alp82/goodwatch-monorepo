@@ -94,7 +94,7 @@ test('commands carry the redesigned names and the latest versions', async () => 
   const s = room();
   s.shared.contextVersion = 7;
   const sent: RoomCommand[] = [];
-  const cmd = roomCommands(async (c) => { sent.push(c); return true; }, () => s);
+  const cmd = roomCommands(async (c) => { const command = typeof c === 'function' ? c(s) : c; if (command) sent.push(command); return true; }, () => s);
   await cmd.addIdea('  rainy day whodunit ');
   await cmd.setIdea('i2', true);
   await cmd.setServices([337, 8, 8]);
@@ -161,4 +161,20 @@ test('room view: NEW is a friend idea that is off and not yet acknowledged on th
   // A different friend idea arriving later is NEW again.
   s.shared.ideas.push({ id: 'i3', text: 'heist', authorId: 'sam', on: false, attributes: [] });
   assert.deepEqual(roomView(s, new Set(['i2'])).ideas.filter((i) => i.fresh).map((i) => i.id), ['i3']);
+});
+
+test('a queued tap keeps what it was aimed at: a new proposal or round drops it, own version bumps do not', async () => {
+  const s = room();
+  s.shared.phase = 'choosing';
+  s.shared.proposal = { candidateId: 'a', version: 2, previousCandidateId: null, agreeCount: 1, requiredCount: 2 } as typeof s.shared.proposal;
+  s.shared.proposalVersion = 2;
+  const queued: ((snapshot: RoomSnapshot) => RoomCommand | null)[] = [];
+  const cmd = roomCommands(async (c) => { if (typeof c === 'function') queued.push(c); return true; }, () => s);
+  await cmd.agree(true);
+  await cmd.vote('c1', true, null);
+  const agree = queued[0], vote = queued[1];
+  assert.equal(agree({ ...s, shared: { ...s.shared, contextVersion: 99 } })?.type, 'agree');
+  const replaced = { ...s, shared: { ...s.shared, proposalVersion: 3, proposal: { ...s.shared.proposal!, candidateId: 'b', version: 3 } } };
+  assert.equal(agree(replaced), null, 'never agrees to a title nobody tapped');
+  assert.equal(vote({ ...s, shared: { ...s.shared, generation: s.shared.generation + 1 } }), null);
 });

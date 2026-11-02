@@ -23,8 +23,8 @@ test.describe('settings pages keep their change until the server confirms it', (
     await button(page, 'Done').click();
     await expect(page.getByTestId('streaming-page')).toBeVisible();
     expect(f.sent()).not.toContain('set_services');
-    // Reopened before it's saved: the change is still there; leave with browser Back this time.
-    await button(page, 'Netflix, change').click();
+    // Reopened before it's saved: the change is already shown and still there; leave with browser Back this time.
+    await button(page, 'Netflix, Prime Video, change').click();
     await expect(page.getByRole('checkbox', { name: 'Prime Video' })).toHaveAttribute('aria-checked', 'true');
     await page.goBack();
     await expect(page.getByTestId('streaming-page')).toBeVisible();

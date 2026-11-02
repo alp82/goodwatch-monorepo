@@ -3,6 +3,7 @@
  * services, host switches, rename and seen titles, straight from contract 3.
  */
 import type { Candidate, RoomCommand, RoomConstraints, RoomIdea, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
+import type { CommandBuild } from '../../core/continuous/optimistic';
 
 export type Kind = 'movie' | 'show_start';
 export const IDEA_LIMITS = { min: 2, max: 200, perRoom: 8 } as const;
@@ -181,14 +182,17 @@ export function fitSize(text: string, width: number, max: number) {
   return Math.max(17, Math.min(26, Math.floor((width * 2) / (Math.max(1, text.length) * 0.56))));
 }
 
-type Send = (command: RoomCommand) => Promise<boolean>;
+type Send = (command: RoomCommand | CommandBuild) => Promise<boolean>;
 
 /**
- * Every command the redesigned screens send, built against the latest confirmed snapshot so
- * version guards are never stale.
+ * Every command the redesigned screens send. Commands wait their turn behind this device's earlier
+ * ones, which move the room's versions on, so version guards are read when they go out. What the
+ * person actually acted on is fixed at the tap: a vote belongs to this round, an agreement to this
+ * proposal. If that has moved on by then, the command is dropped, never re-aimed.
  */
 export function roomCommands(send: Send, latest: () => RoomSnapshot | undefined) {
-  const at = <T,>(fn: (s: RoomSnapshot) => Promise<T>, fallback: T) => { const s = latest(); return s ? fn(s) : Promise.resolve(fallback); };
+  /** The round this tap happened in. */
+  const round = () => latest()?.shared.generation;
   return {
     addIdea: (text: string) => send({ type: 'add_idea', text: text.trim() }),
     editIdea: (ideaId: string, text: string) => send({ type: 'edit_idea', ideaId, text: text.trim() }),
@@ -199,22 +203,38 @@ export function roomCommands(send: Send, latest: () => RoomSnapshot | undefined)
     rename: (nickname: string) => send({ type: 'rename', nickname: nickname.trim() }),
     setShowSeen: (show: boolean) => send({ type: 'set_show_seen', show }),
     configure: (patch: { country?: string; constraints?: RoomConstraints }) =>
-      at((s) => send({ type: 'configure', expectedContextVersion: s.shared.contextVersion, ...patch }), false),
-    start: () => at((s) => send({ type: 'start', expectedRosterVersion: s.shared.rosterVersion, expectedContextVersion: s.shared.contextVersion, hostReady: true }), false),
-    vote: (candidateId: string, yes: boolean, activeExposureMs: number | null) => at((s) => {
-      const current = s.own.votes.find((v) => v.candidateId === candidateId);
-      return send({ type: 'vote', generation: s.shared.generation, candidateId, expectedVoteRevision: current?.revision ?? 0, value: yes ? 'watch' : 'pass', activeExposureMs: yes ? activeExposureMs : null });
-    }, false),
-    undo: (target: { candidateId: string; revision: number }) =>
-      at((s) => send({ type: 'vote', generation: s.shared.generation, candidateId: target.candidateId, expectedVoteRevision: target.revision, value: null }), false),
-    propose: (candidateId: string) =>
-      at((s) => send({ type: 'propose', generation: s.shared.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: s.shared.proposalVersion, candidateId }), false),
-    agree: (agreed: boolean) => at((s) => s.shared.proposal
-      ? send({ type: 'agree', generation: s.shared.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: s.shared.proposalVersion, candidateId: s.shared.proposal.candidateId, expectedOwnAgreementRevision: s.own.agreement.revision, agreed })
-      : Promise.resolve(false), false),
-    retryAgreement: () => at((s) => send({ type: 'retry_agreement', generation: s.shared.generation, expectedAgreementVersion: s.shared.agreement.version, expectedProposalVersion: s.shared.proposalVersion }), false),
-    refill: () => at((s) => send({ type: 'refill', generation: s.shared.generation, expectedStreamVersion: s.shared.stream.version }), false),
-    restart: () => at((s) => send({ type: 'restart', expectedRevision: s.shared.revision }), false),
+      send((s) => ({ type: 'configure', expectedContextVersion: s.shared.contextVersion, ...patch })),
+    start: () => send((s) => ({ type: 'start', expectedRosterVersion: s.shared.rosterVersion, expectedContextVersion: s.shared.contextVersion, hostReady: true })),
+    vote: (candidateId: string, yes: boolean, activeExposureMs: number | null) => {
+      const generation = round();
+      return send((s) => (s.shared.generation !== generation ? null : {
+        type: 'vote', generation, candidateId, expectedVoteRevision: s.own.votes.find((v) => v.candidateId === candidateId)?.revision ?? 0,
+        value: yes ? 'watch' : 'pass', activeExposureMs: yes ? activeExposureMs : null,
+      }));
+    },
+    undo: (candidateId: string) => {
+      const generation = round();
+      return send((s) => (s.shared.generation !== generation ? null : { type: 'vote', generation, candidateId, expectedVoteRevision: s.own.votes.find((v) => v.candidateId === candidateId)?.revision ?? 0, value: null }));
+    },
+    propose: (candidateId: string) => {
+      const seen = latest()?.shared;
+      if (!seen) return Promise.resolve(false);
+      return send((s) => (s.shared.generation !== seen.generation ? null : { type: 'propose', generation: seen.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: seen.proposalVersion, candidateId }));
+    },
+    agree: (agreed: boolean) => {
+      const proposal = latest()?.shared.proposal;
+      if (!proposal) return Promise.resolve(false);
+      return send((s) => (s.shared.proposal?.version !== proposal.version || s.shared.proposal.candidateId !== proposal.candidateId ? null : {
+        type: 'agree', generation: s.shared.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: proposal.version, candidateId: proposal.candidateId, expectedOwnAgreementRevision: s.own.agreement.revision, agreed,
+      }));
+    },
+    retryAgreement: () => {
+      const seen = latest()?.shared;
+      if (!seen) return Promise.resolve(false);
+      return send((s) => ({ type: 'retry_agreement', generation: s.shared.generation, expectedAgreementVersion: seen.agreement.version, expectedProposalVersion: seen.proposalVersion }));
+    },
+    refill: () => send((s) => ({ type: 'refill', generation: s.shared.generation, expectedStreamVersion: s.shared.stream.version })),
+    restart: () => send((s) => ({ type: 'restart', expectedRevision: s.shared.revision })),
     leave: () => send({ type: 'leave' }),
   };
 }

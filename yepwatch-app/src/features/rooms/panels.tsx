@@ -65,8 +65,11 @@ export function InviteHead({ preview }: { preview: InvitePreview | undefined }) 
  * with GoodWatch. A full screen with its own Back: nothing from the start page shows underneath. An
  * invitation link carries its code, so only manual joins show the code field.
  */
-export function JoinScreen({ invite, nickname, member = false, initialCode = '', action, busy, error, back, editName, submit, signIn, extra, head }: {
-  invite: boolean; nickname: string | null; member?: boolean; initialCode?: string; action: string; busy: boolean; error?: string;
+export function JoinScreen({ invite, checking = false, nickname, member = false, initialCode = '', action, busy, error, back, editName, submit, signIn, extra, head }: {
+  invite: boolean;
+  /** Still finding out whether you're already in this room: the room shows, the form waits unseen in its place. */
+  checking?: boolean;
+  nickname: string | null; member?: boolean; initialCode?: string; action: string; busy: boolean; error?: string;
   back: () => void; editName: () => void; submit: (code: string, nickname: string) => void; signIn?: (code: string) => void; extra?: ReactNode;
   /** The invited room's head (InviteHead); without it the screen says what it is. */
   head?: ReactNode;
@@ -74,14 +77,15 @@ export function JoinScreen({ invite, nickname, member = false, initialCode = '',
   const [code, setCode] = useState(initialCode);
   const [name, setName] = useState('');
   const validCode = Boolean(parseInvite(code));
-  const valid = validCode && (nickname ?? name).trim().length > 0 && !busy;
-  const go = () => { if (valid) submit(code, (nickname ?? name).trim()); };
+  const filled = validCode && (nickname ?? name).trim().length > 0;
+  const go = () => { if (filled && !busy) submit(code, (nickname ?? name).trim()); };
   const label = nickname && action === 'Join' ? `Join as ${nickname}` : action;
   return (
-    <Screen testID="join-screen" back={back} footer={<Button label={label} onPress={go} disabled={!valid} icon={member ? <GoodWatchMark size={22} /> : undefined} />}>
+    <Screen testID="join-screen" back={back} footer={<View style={checking ? { opacity: 0 } : undefined} pointerEvents={checking ? 'none' : 'auto'}><Button label={label} onPress={go} disabled={!filled} quiet={busy} icon={member ? <GoodWatchMark size={22} /> : undefined} /></View>}>
       <View style={{ paddingTop: head ? 40 : 24, gap: 10 }}>
         {head ?? <Hero>{invite ? 'Join the room' : 'Join a room'}</Hero>}
       </View>
+      <View style={{ gap: 22, opacity: checking ? 0 : 1 }} pointerEvents={checking ? 'none' : 'auto'}>
       {!invite || !initialCode ? (
         <TextInput autoFocus={!initialCode} accessibilityLabel="Room code or invitation" value={code} onChangeText={setCode} placeholder="Code or link" placeholderTextColor={glow.muted}
           autoCapitalize="characters" autoCorrect={false} returnKeyType={nickname ? 'go' : 'next'} submitBehavior="blurAndSubmit" onSubmitEditing={go}
@@ -100,6 +104,7 @@ export function JoinScreen({ invite, nickname, member = false, initialCode = '',
           </> : null}
         </View>
       )}
+      </View>
       {error ? <GText size={14} color="#fca5a5">{error}</GText> : null}
       {extra}
     </Screen>
@@ -133,10 +138,22 @@ const ago = (at: number, now: number) => {
 };
 
 /** Past decisions are records; rooms you left can be returned to. */
-export function HistoryPanel({ decisions, left, openRoom, canOpen, returnTo, busy }: { decisions: DecisionRecord[]; left: HomeRoom[]; openRoom: (roomId: string) => void; canOpen: (roomId: string) => boolean; returnTo: (room: HomeRoom) => void; busy: boolean }) {
+export function HistoryPanel({ decisions, left, archived, restore, openRoom, canOpen, returnTo, busy }: { decisions: DecisionRecord[]; left: HomeRoom[]; archived: HomeRoom[]; restore: (roomId: string) => void; openRoom: (roomId: string) => void; canOpen: (roomId: string) => boolean; returnTo: (room: HomeRoom) => void; busy: boolean }) {
   const [now] = useState(() => Date.now());
   return (
     <Panel testID="history-panel">
+      {archived.length > 0 && <>
+        <Label>Archived rooms</Label>
+        {archived.map((r) => (
+          <View key={r.roomId} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: R.card, backgroundColor: '#ffffff08' }}>
+            <Press label={r.label} onPress={() => openRoom(r.roomId)} style={{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 4 }}>
+              <GText bold lines={1}>{r.label}</GText>
+              <GText size={13} color={glow.muted} lines={1}>{r.status}</GText>
+            </Press>
+            <Action small label="Restore" onPress={() => restore(r.roomId)} />
+          </View>
+        ))}
+      </>}
       {left.length > 0 && <>
         <Label>Left rooms</Label>
         {left.map((r) => (
@@ -149,8 +166,8 @@ export function HistoryPanel({ decisions, left, openRoom, canOpen, returnTo, bus
           </View>
         ))}
       </>}
-      <Label>Decided</Label>
-      {!decisions.length && <GText color={glow.muted}>Nothing decided yet</GText>}
+      {decisions.length > 0 || !archived.length ? <Label>Decided</Label> : null}
+      {!decisions.length && !archived.length && <GText color={glow.muted}>Nothing decided yet</GText>}
       {decisions.map((d) => {
         const body = (
           <>

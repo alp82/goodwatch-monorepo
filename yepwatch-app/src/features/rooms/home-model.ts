@@ -75,6 +75,14 @@ export function leftRoom(entry: RegisteredRoom): HomeRoom {
   };
 }
 
+/** A room whose read failed: only what this device remembered, enough to find it and put it back. */
+export function unreadRoom(entry: RegisteredRoom): HomeRoom {
+  return {
+    roomId: entry.roomId, label: 'A room', live: false, status: 'Didn’t load', hot: false, poster: null,
+    people: [{ id: 'self', nickname: entry.nickname, dropped: false, self: true }], hostNickname: null, own: false, openedAt: entry.openedAt,
+  };
+}
+
 /** Sorts each registered room into the home, History, or out of the registry. */
 export function classify(entry: RegisteredRoom, result: { snapshot?: RoomSnapshot; error?: { code?: string; status?: number } | null }, now: number): Classified {
   if (result.error) {

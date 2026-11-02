@@ -53,6 +53,7 @@ export function RoomPage() {
     await roomRegistry.markLeft(id, view.label).catch(() => undefined);
     router.replace('/');
   });
+  const archive = () => { void roomRegistry.archive(id).catch(() => undefined).then(() => router.replace('/')); };
   return (
     <Page testID="room-page" title="Room" done={false}>
       <View style={{ gap: 8 }}><Section>Ideas</Section><IdeaList size={26} /></View>
@@ -60,6 +61,7 @@ export function RoomPage() {
       <RoomRows kindsEditable={view.isHost} />
       {view.showSeen !== null && <SwitchRow label="Show titles I’ve seen" on={view.showSeen} disabled={disabled} onPress={() => void cmd.setShowSeen(!view.showSeen)} />}
       <SoundToggle />
+      <TextLink label="Archive room" color={glow.soft} onPress={archive} />
       <TextLink label="Leave room" color="#f87171" disabled={disabled} onPress={leave} />
       <Feedback />
     </Page>

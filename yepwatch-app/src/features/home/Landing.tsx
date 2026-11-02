@@ -65,11 +65,11 @@ function Divider({ text }: { text: string }) {
     </View>
   );
 }
-export interface LandingActions { create: () => void; join: () => void; signIn?: () => void; disabled: boolean }
+export interface LandingActions { create: () => void; join: () => void; signIn?: () => void; disabled: boolean; /** A room is opening: the buttons rest without dimming. */ quiet?: boolean }
 /** The approved Sign in with GoodWatch look (dark surface, GoodWatch mark), worded Continue with GoodWatch. */
-export function GoodWatchButton({ onPress, disabled, height = 50 }: { onPress: () => void; disabled?: boolean; height?: number }) {
+export function GoodWatchButton({ onPress, disabled, quiet, height = 50 }: { onPress: () => void; disabled?: boolean; quiet?: boolean; height?: number }) {
   return (
-    <Press label="Continue with GoodWatch" onPress={onPress} disabled={disabled} style={{ minHeight: height, borderRadius: R.control, flexDirection: 'row', gap: 10, backgroundColor: '#242424', borderWidth: 1, borderColor: glow.line }}>
+    <Press label="Continue with GoodWatch" onPress={onPress} disabled={disabled} quiet={quiet} style={{ minHeight: height, borderRadius: R.control, flexDirection: 'row', gap: 10, backgroundColor: '#242424', borderWidth: 1, borderColor: glow.line }}>
       <GoodWatchMark size={24} />
       <GText bold size={16}>Continue with GoodWatch</GText>
     </Press>
@@ -80,14 +80,14 @@ function WebChoices({ size, actions }: { size: 'wide' | 'compact' | 'stack'; act
   return (
     <View style={{ gap: size === 'compact' ? 8 : 10 }}>
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Press label="Create a room" onPress={actions.create} disabled={actions.disabled} style={{ flex: 1, minHeight: h, borderRadius: R.control, backgroundColor: glow.amber }}>
+        <Press label="Create a room" onPress={actions.create} disabled={actions.disabled} quiet={actions.quiet} style={{ flex: 1, minHeight: h, borderRadius: R.control, backgroundColor: glow.amber }}>
           <GText bold size={size === 'compact' ? 15 : 17} color="#201400">Create a room</GText>
         </Press>
-        <Press label="Join a room" onPress={actions.join} disabled={actions.disabled} style={{ flex: 1, minHeight: h, borderRadius: R.control, borderWidth: 1, borderColor: '#3a3a3a' }}>
+        <Press label="Join a room" onPress={actions.join} disabled={actions.disabled} quiet={actions.quiet} style={{ flex: 1, minHeight: h, borderRadius: R.control, borderWidth: 1, borderColor: '#3a3a3a' }}>
           <GText bold size={size === 'compact' ? 15 : 17}>Join a room</GText>
         </Press>
       </View>
-      {actions.signIn && <GoodWatchButton onPress={actions.signIn} disabled={actions.disabled} height={size === 'compact' ? 44 : 50} />}
+      {actions.signIn && <GoodWatchButton onPress={actions.signIn} disabled={actions.disabled} quiet={actions.quiet} height={size === 'compact' ? 44 : 50} />}
     </View>
   );
 }

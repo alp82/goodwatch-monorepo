@@ -6,7 +6,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import type { ActivityView, RoomCommand } from '@goodwatch/yepwatch-contracts/proposal';
+import type { ActivityView } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey, useContinuousRoom } from '../../core/continuous/useRoom';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { loadInvite, type StoredInvite } from '../../core/continuous/invite-store';
@@ -15,13 +15,17 @@ import { RoomFailure } from '../../core/continuous/api';
 import type { CachedRoom } from '../../core/continuous/state';
 import { appInviteUrl } from '../../core/invites';
 import { guestOnly } from '../../core/config';
+import { useLate } from '../../core/useLate';
 import { deviceCountryHint } from '../../core/lobby';
 import { queryClient } from '../../core/providers';
 import { readSeenIdeas, writeSeenIdeas } from '../../core/continuous/room-local';
 import { useLobbyEntry } from '../glow/useLobbyEntry';
 import { roomCommands, roomView, type RoomCommands, type RoomView } from './model';
 import { RefillGate } from './refill';
-import { useSettingsSaves, type SettingsSaves } from './settings-save';
+import { previewDrafts, useSettingsSaves, type SettingsSaves } from './settings-save';
+
+/** Opening a room connects within a moment; only a connection that stays away is worth a line. */
+const CONNECTION_QUIET_MS = 2_500;
 
 /** Proposals set aside with Keep swiping, per room and per device, for this app session. */
 const dismissed = new Map<string, number>();
@@ -30,16 +34,19 @@ export interface RoomContextValue {
   id: string;
   state: ReturnType<typeof useContinuousRoom>;
   entry: ReturnType<typeof useLobbyEntry>;
+  /** The room with this device's unconfirmed changes in it. */
   snapshot: CachedRoom | undefined;
   view: RoomView | null;
   cmd: RoomCommands;
   latest: () => CachedRoom | undefined;
-  /** A command is in flight, awaiting confirmation, or the private state needs a refresh. */
+  /** Only what really stops input: the server is deciding, a command awaits confirmation, or the private state needs a refresh. */
   disabled: boolean;
   invite: StoredInvite | null | undefined;
   inviteUrl: string | null;
   signin: () => Promise<void>;
   memberBusy: boolean;
+  /** The live connection has been missing long enough to mention. */
+  connectionLate: boolean;
   notice: string;
   setNotice: (text: string) => void;
   dismissedProposal: number | null;
@@ -62,7 +69,7 @@ export function RoomProvider({ id, children }: { id: string; children: ReactNode
   const state = useContinuousRoom(id);
   const entry = useLobbyEntry(state);
   const invitation = useQuery<StoredInvite | null>({ queryKey: ['continuous-invite', id], queryFn: () => loadInvite(id) });
-  const snapshot = state.room.data;
+  const confirmed = state.confirmed;
   const [memberBusy, setMemberBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [dismissedProposal, setDismissed] = useState<number | null>(() => dismissed.get(id) ?? null);
@@ -90,17 +97,21 @@ export function RoomProvider({ id, children }: { id: string; children: ReactNode
   const cmd = useMemo<RoomCommands>(() => {
     // Commands are only sent from handlers and effects, never while rendering.
     // eslint-disable-next-line react-hooks/refs
-    const base = roomCommands((command: RoomCommand) => sendRef.current(command), latest);
+    const base = roomCommands((command) => sendRef.current(command), latest);
     // Switching a friend's idea (either way) means the host has dealt with it: never NEW again.
     return { ...base, setIdea: (ideaId: string, on: boolean) => base.setIdea(ideaId, on).then((ok) => { if (ok) acknowledgeIdeas([ideaId]); return ok; }) };
   }, [latest, acknowledgeIdeas]);
-  const view = useMemo(() => (snapshot ? roomView(snapshot, seenIdeas) : null), [snapshot, seenIdeas]);
-  const disabled = state.busy || Boolean(state.pending) || state.privateError || entry.working;
+  const confirmedView = useMemo(() => (confirmed ? roomView(confirmed) : null), [confirmed]);
+  const disabled = state.working || Boolean(state.pending) || state.privateError || entry.working;
   const saveFailed = useCallback((key: 'services' | 'kinds') => {
     setNotice(key === 'services' ? 'Couldn’t save your services. Try again.' : 'Couldn’t save movies and shows. Try again.');
   }, []);
-  const saves = useSettingsSaves({ cmd, view, latest, blocked: disabled || state.retrySeconds > 0, failed: saveFailed });
+  const saves = useSettingsSaves({ cmd, view: confirmedView, latest, blocked: disabled || state.retrySeconds > 0, failed: saveFailed });
+  const display = state.display;
+  const snapshot = useMemo(() => (display ? previewDrafts(display, saves.saving) : undefined), [display, saves.saving]);
+  const view = useMemo(() => (snapshot ? roomView(snapshot, seenIdeas) : null), [snapshot, seenIdeas]);
 
+  const connectionLate = useLate(state.connection !== 'live', CONNECTION_QUIET_MS);
   const nickname = view?.me.nickname;
   const expiresAt = snapshot?.shared.expiresAt;
   useEffect(() => {
@@ -170,7 +181,7 @@ export function RoomProvider({ id, children }: { id: string; children: ReactNode
   let inviteUrl: string | null = null;
   try { inviteUrl = invite ? appInviteUrl(invite.path) : null; } catch { inviteUrl = null; }
   const value: RoomContextValue = {
-    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, notice, setNotice,
+    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, connectionLate, notice, setNotice,
     dismissedProposal, dismissProposal, reopenProposal, setActivityView: state.setView, saves, acknowledgeIdeas,
   };
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;

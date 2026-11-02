@@ -58,14 +58,16 @@ export class PersistentCommands {
   async send(
     command: RoomCommand | undefined,
     snapshot: RoomSnapshot,
-    submit: (body: CommandEnvelope) => Promise<{ snapshot: RoomSnapshot }>
+    submit: (body: CommandEnvelope) => Promise<{ snapshot: RoomSnapshot }>,
+    /** Known ahead when the screen already shows the command (a new idea's id is its command id). */
+    commandId?: string
   ) {
     if (Date.now() < this.retryAt) throw new Error('Wait before retrying this action.');
     if (this.busy || (this.pending && command))
       throw new Error('Reconcile the pending action first.');
     const envelope =
       this.pending ??
-      (command ? { commandId: this.id(), sequence: snapshot.own.nextSequence, command } : null);
+      (command ? { commandId: commandId ?? this.id(), sequence: snapshot.own.nextSequence, command } : null);
     if (!envelope) throw new Error('No action to retry.');
     this.busy = true;
     try {

@@ -4,11 +4,12 @@ import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousApi, RoomFailure } from '../../core/continuous/api';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import type { RegistrySnapshot } from '../../core/continuous/room-registry-store';
+import { setArchived } from '../../core/continuous/room-registry-state';
 import { mergeRoom, type CachedRoom } from '../../core/continuous/state';
 import { continuousKey, homeRoomKey } from '../../core/continuous/useRoom';
 import { loadAccess, nativeClient } from '../../core/credentials';
 import { queryClient } from '../../core/providers';
-import { classify, type HomeRoom } from './home-model';
+import { classify, unreadRoom, type HomeRoom } from './home-model';
 
 /**
  * The personal home: every room on this device, read from each room's own authoritative snapshot
@@ -58,9 +59,16 @@ export function useHome() {
       setRegistry((r) => (r ? { ...r, decisions: [...decided.filter((d) => !r.decisions.some((x) => x.id === d.id)), ...r.decisions].sort((a, b) => b.decidedAt - a.decidedAt) } : r))
     ).catch(() => undefined);
   }, [decidedKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  const active: HomeRoom[] = classified.flatMap((x) => (x.c?.kind === 'active' ? [x.c.room] : []));
+  const shelved = (x: (typeof classified)[number]) => x.entry.archivedAt !== undefined;
+  const active: HomeRoom[] = classified.flatMap((x) => (x.c?.kind === 'active' && !shelved(x) ? [x.c.room] : []));
+  const archived: HomeRoom[] = classified.flatMap((x) => (!shelved(x) ? [] : x.c?.kind === 'active' ? [x.c.room] : x.c?.kind === 'unavailable' ? [unreadRoom(x.entry)] : []));
   const left: HomeRoom[] = classified.flatMap((x) => (x.c?.kind === 'left' ? [x.c.room] : []));
-  const unavailable = classified.flatMap((x) => (x.c?.kind === 'unavailable' ? [x.c] : []));
+  const unavailable = classified.flatMap((x) => (x.c?.kind === 'unavailable' && !shelved(x) ? [x.c] : []));
+  /** The list changes at once; the device store catches up (a failed write re-reads it). */
+  const shelve = (roomId: string, at: number | null) => {
+    setRegistry((r) => (r ? { ...r, rooms: setArchived(r.rooms, roomId, at) } : r));
+    void (at === null ? roomRegistry.restore(roomId) : roomRegistry.archive(roomId)).catch(reload);
+  };
   const decidedRooms = new Set(decided.map((d) => d.roomId));
   // A remembered nickname is not proof of sign-in. Only fresh room reads establish it.
   const memberRoom = sorted.find(({ result }) => result?.data?.own.member.state === 'linked' && !result.data.own.left && !result.error);
@@ -76,6 +84,9 @@ export function useHome() {
     signInRoomId,
     hasRooms: (registry?.rooms.length ?? 0) > 0,
     active,
+    archived,
+    archive: (roomId: string) => shelve(roomId, Date.now()),
+    restore: (roomId: string) => shelve(roomId, null),
     left,
     unavailable,
     decisions: registry?.decisions ?? [],

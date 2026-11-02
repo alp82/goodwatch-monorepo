@@ -138,6 +138,7 @@ export function Press({
   onPress,
   children,
   disabled = false,
+  quiet = false,
   style,
   selected,
 }: {
@@ -145,6 +146,8 @@ export function Press({
   onPress: () => void;
   children: ReactNode;
   disabled?: boolean;
+  /** Inert for a moment without dimming: the next screen is about to take over. */
+  quiet?: boolean;
   style?: StyleProp<ViewStyle>;
   selected?: boolean;
 }) {
@@ -153,8 +156,8 @@ export function Press({
       {...(!native && selected !== undefined ? { 'aria-pressed': selected } : {})}
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled, selected }}
-      disabled={disabled}
+      accessibilityState={{ disabled: disabled || quiet, selected }}
+      disabled={disabled || quiet}
       onPress={onPress}
       style={({ pressed }) => [
         s.press,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
@@ -18,6 +18,7 @@ import { publicFailureMessage } from '../recovery';
 import { continuousRealtimeUrl } from '../config';
 import type { Connection } from '../realtime';
 import { mergeRoom, mergePublic, PersistentCommands, type CachedRoom } from './state';
+import { awaitsServer, overlayRoom, type CommandBuild, type QueuedCommand } from './optimistic';
 import { readCommandRecovery, writePending } from './storage';
 import { useRetryCountdown } from './useRetryCountdown';
 import { ContinuousRealtime, type ReconnectState } from './realtime';
@@ -28,6 +29,12 @@ export const continuousKey = (id: string) => ['proposal-room', id] as const;
 /** Your rooms keeps one query per room; room snapshots update it directly. */
 export const homeRoomKey = (roomId: string) => ['home-room', roomId] as const;
 const EMPTY_HOLDERS: ReadonlyMap<string, number> = new Map();
+/** A command waiting its turn: shown at once, sent in order, settled with the server's answer. */
+interface OutboxEntry extends QueuedCommand { foreground: boolean; settle: (ok: boolean) => void }
+/** Commands still unsent when their room's screen went away and a stuck command held them back. The next visit takes them. */
+const parked = new Map<string, OutboxEntry[]>();
+/** Automatic retries of one saved command once the connection is back. */
+const AUTO_RETRIES = 3;
 export function useContinuousRoom(roomId: string) {
   const [access, setAccess] = useState<RoomAccess | null>();
   const [connection, setConnection] = useState<Connection>('connecting');
@@ -42,6 +49,10 @@ export function useContinuousRoom(roomId: string) {
   const terminalRef = useRef<typeof terminal>(null);
   const [pending, setPending] = useState<CommandEnvelope | null>(null);
   const [retryAt, setRetryAt] = useState(0);
+  const outbox = useRef<OutboxEntry[]>([]);
+  const draining = useRef(false);
+  const mounted = useRef(false);
+  const [queued, setQueued] = useState<OutboxEntry[]>([]);
   const retrySeconds = useRetryCountdown(retryAt);
   const [activities, setActivities] = useState(new Map<string, PeerActivity>());
   const clock = useRef(0);
@@ -307,7 +318,7 @@ export function useContinuousRoom(roomId: string) {
     const timer = setTimeout(() => expired(), Math.max(1, deadline - Date.now()));
     return () => clearTimeout(timer);
   }, [room.data?.shared.expiresAt, terminal, expired]);
-  async function send(command?: RoomCommand) {
+  async function submit(command?: RoomCommand, commandId?: string) {
     const snapshot = cached();
     if (!access || !snapshot || expired() || privateError || queue.current.busy || Date.now() < queue.current.retryAt) return false;
     setBusy(true);
@@ -315,7 +326,7 @@ export function useContinuousRoom(roomId: string) {
     setErrorCode(null);
     try {
       const value = await queue.current.send(command, snapshot, (body) =>
-        api.command(access, body)
+        api.command(access, body), commandId
       );
       apply(value);
       return !terminalRef.current;
@@ -342,9 +353,81 @@ export function useContinuousRoom(roomId: string) {
       setPending(terminalRef.current ? null : queue.current.pending);
     }
   }
+  // The newest submit reads the newest access and state; a drain outlives the render (and the screen) it began in.
+  const submitRef = useRef(submit);
+  useEffect(() => { submitRef.current = submit; });
+  /** One command at a time, in the order they were made: the server refuses sequences out of order. */
+  const drain = useCallback(async () => {
+    if (draining.current) return;
+    draining.current = true;
+    const take = (entry: OutboxEntry, ok: boolean) => {
+      outbox.current = outbox.current.filter((e) => e !== entry);
+      setQueued(outbox.current);
+      entry.settle(ok);
+    };
+    try {
+      while (outbox.current.length && (!queue.current.pending || terminalRef.current)) {
+        const entry = outbox.current[0];
+        const snapshot = terminalRef.current ? undefined : cached();
+        const command = snapshot ? entry.build(snapshot) : null;
+        take(entry, command ? await submitRef.current(command, entry.commandId) : false);
+      }
+    } finally {
+      draining.current = false;
+      if (!mounted.current && outbox.current.length) { parked.set(roomId, outbox.current); outbox.current = []; }
+    }
+  }, [cached, roomId]);
+  useEffect(() => {
+    mounted.current = true;
+    const waiting = parked.get(roomId);
+    if (waiting) {
+      parked.delete(roomId);
+      outbox.current = [...waiting, ...outbox.current];
+      setQueued(outbox.current);
+    }
+    return () => { mounted.current = false; if (!draining.current && outbox.current.length) { parked.set(roomId, outbox.current); outbox.current = []; } };
+  }, [roomId]);
+  // A command stuck awaiting confirmation holds the rest back; they go when it clears or the room ends.
+  useEffect(() => {
+    if (terminal || !pending) void drain();
+  }, [pending, terminal, drain]);
+  /** With a command: shown at once and queued. Without: retries the command awaiting confirmation. */
+  function send(input?: RoomCommand | CommandBuild): Promise<boolean> {
+    if (!input) return submit();
+    const snapshot = cached();
+    if (!access || !snapshot || expired() || privateError) return Promise.resolve(false);
+    const build: CommandBuild = typeof input === 'function' ? input : () => input;
+    const command = build(snapshot);
+    if (!command) return Promise.resolve(false);
+    return new Promise<boolean>((settle) => {
+      outbox.current = [...outbox.current, { commandId: Crypto.randomUUID(), build, foreground: awaitsServer(command), settle }];
+      setQueued(outbox.current);
+      void drain();
+    });
+  }
+  // Back online: the saved command goes again by itself (same id, so it can only apply once).
+  const retryOnline = connection === 'live' && Boolean(pending) && !busy && retrySeconds === 0;
+  const retryRef = useRef(send);
+  useEffect(() => { retryRef.current = send; });
+  // Bounded: after a few tries the line with Retry stays, so a failing server isn't kept busy by this device.
+  const autoRetries = useRef({ commandId: '', tries: 0 });
+  useEffect(() => {
+    if (!retryOnline || !pending) return;
+    if (autoRetries.current.commandId !== pending.commandId) autoRetries.current = { commandId: pending.commandId, tries: 0 };
+    if (autoRetries.current.tries++ < AUTO_RETRIES) void retryRef.current();
+  }, [retryOnline, pending]);
+  // Read straight from the cache: a settled command leaves the queue in the same render its result shows.
+  const confirmed = cached() ?? room.data;
+  const display = useMemo(() => (confirmed ? overlayRoom(confirmed, pending, queued) : undefined), [confirmed, pending, queued]);
   const decided = room.data?.shared.phase === 'decided' ? room.data.shared.generation : null;
   return {
     room,
+    /** The room as the server last confirmed it: version guards and retries read this. */
+    confirmed,
+    /** The room with this device's unconfirmed commands applied: screens read this. */
+    display,
+    /** A command the server has to decide (Start, Propose, Leave…) is on its way. */
+    working: queued.some((e) => e.foreground),
     access,
     /** Peer participants (distinct, not sessions) currently holding for the shown decision, with their episode seed. */
     cheerHolders: decided !== null && cheerHolders.generation === decided ? cheerHolders.ids : EMPTY_HOLDERS,

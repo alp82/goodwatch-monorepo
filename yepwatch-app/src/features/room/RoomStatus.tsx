@@ -1,16 +1,22 @@
 import { View } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import { developmentNotice } from '../../core/config';
+import { useLate } from '../../core/useLate';
 import { GText, glow } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
 import { openPage, toRooms } from './nav';
 import { useRoom } from './RoomProvider';
 import { Button, Hero, Note, Screen } from './ui';
 
+/** While the room's first read is out, nothing but the page itself: most opens never need words. */
+const OPENING_WORDS_AFTER_MS = 900;
+
 /** Opening, unavailable, ended or expired: the room can't be shown. */
 export function RoomStatus() {
   const { state } = useRoom();
   const ended = Boolean(state.terminal) || state.access === null;
+  const late = useLate(!ended && !state.room.error, OPENING_WORDS_AFTER_MS);
+  const quiet = !ended && !state.room.error && !late;
   const title = ended
     ? state.terminal === 'expired' ? 'This room has expired' : state.access === null ? 'Reopen your invitation' : 'Your room access ended'
     : state.room.error ? 'Couldn’t load the room' : 'Opening the room…';
@@ -21,7 +27,7 @@ export function RoomStatus() {
         {ended || state.room.error ? <Button secondary={!ended} label="Your rooms" onPress={() => router.replace('/')} /> : null}
       </>}>
       <View style={{ paddingTop: 80, gap: 12 }}>
-        <Hero size={32} color={ended || state.room.error ? glow.ink : glow.soft}>{title}</Hero>
+        {quiet ? null : <Hero size={32} color={ended || state.room.error ? glow.ink : glow.soft}>{title}</Hero>}
       </View>
     </Screen>
   );
@@ -29,9 +35,9 @@ export function RoomStatus() {
 
 /** Connection, saved actions and errors, in one quiet line above the screen's content. */
 export function RoomNotes() {
-  const { id, view, state, entry, notice, setNotice } = useRoom();
+  const { id, view, state, entry, notice, setNotice, connectionLate } = useRoom();
   const onServices = usePathname().endsWith('/services');
-  if (!(state.error || state.privateError || entry.error || state.pending || state.connection !== 'live' || notice || developmentNotice)) return null;
+  if (!(state.error || state.privateError || entry.error || state.pending || connectionLate || notice || developmentNotice)) return null;
   // Nobody brings a service (or the last one would go): ask for services, not an error.
   const noServices = state.errorCode === 'needs_context' && !state.pending;
   const ideaLimit = state.errorCode === 'limit_reached' && !state.pending;
@@ -42,8 +48,8 @@ export function RoomNotes() {
       : ideaLimit ? ((view?.ideas.length ?? 0) >= IDEA_LIMITS.perRoom ? `Up to ${IDEA_LIMITS.perRoom} ideas. Remove one first.` : 'No more new ideas in this room')
       : state.error || connectionText());
   function connectionText() {
+    if (!connectionLate) return '';
     if (state.connection === 'background') return 'Updates paused while away.';
-    if (state.connection === 'live') return '';
     if (state.reconnecting) return state.connection === 'connecting' ? 'Connecting…' : 'Reconnecting…';
     if (state.reconnectSeconds > 0) return `Trying again in ${state.reconnectSeconds} s`;
     return state.connection === 'unavailable' ? 'Not connected.' : 'Connecting…';

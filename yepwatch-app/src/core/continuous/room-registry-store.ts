@@ -1,5 +1,5 @@
 import {
-  addDecision, decodeDecisions, decodeNickname, decodeRooms, markLeft, migrateRecent, removeRoom, upsertRoom,
+  addDecision, decodeDecisions, decodeNickname, decodeRooms, markLeft, migrateRecent, removeRoom, setArchived, upsertRoom,
   type DecisionRecord, type RegisteredRoom,
 } from './room-registry-state';
 
@@ -93,6 +93,8 @@ export function createRegistry(store: KeyValue, recent: () => Promise<{ roomId: 
     forget: (roomId: string) => serial(async () => { await writeRooms(removeRoom(await readRooms(), roomId)); }),
     /** After a confirmed Leave. Opening or rejoining the room (remember) clears it. */
     markLeft: (roomId: string, label: string) => serial(async () => { await writeRooms(markLeft(await readRooms(), roomId, label, now())); }),
+    archive: (roomId: string) => serial(async () => { await writeRooms(setArchived(await readRooms(), roomId, now())); }),
+    restore: (roomId: string) => serial(async () => { await writeRooms(setArchived(await readRooms(), roomId, null)); }),
     setNickname: (nickname: string) => serial(async () => { await store.write(REGISTRY_KEYS.profile, JSON.stringify({ nickname: nickname.trim() })); }),
     recordDecision: (record: DecisionRecord) => serial(async () => {
       const list = decodeDecisions(await store.read(REGISTRY_KEYS.decisions));

@@ -5,8 +5,9 @@
  * through, and dropped only when the confirmed room shows it. Pages show the draft while it
  * exists, the room's own state after that.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RoomConstraints, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
+import { previewCommand } from '../../core/continuous/optimistic';
 import { roomView, type Kind, type RoomCommands, type RoomView } from './model';
 
 export interface ServicesDraft {
@@ -59,12 +60,27 @@ export function nextSaveStep(key: DraftKey, drafts: Drafts, view: RoomView, snap
   return { type: 'kinds', constraints: { ...constraints, kinds: [...kinds, ...others] } };
 }
 
+/** The room with closed drafts already in it: a page's change shows everywhere the moment it closes. */
+export function previewDrafts<T extends RoomSnapshot>(room: T, drafts: Drafts): T {
+  let shown = room;
+  const { services, kinds } = drafts;
+  if (services?.country) shown = previewCommand(shown, '', { type: 'configure', expectedContextVersion: shown.shared.contextVersion, country: services.country });
+  if (services?.picked) shown = previewCommand(shown, '', { type: 'set_services', serviceIds: services.picked });
+  if (kinds?.length) {
+    const others = shown.shared.constraints.kinds.filter((k) => k !== 'movie' && k !== 'show_start');
+    shown = previewCommand(shown, '', { type: 'configure', expectedContextVersion: shown.shared.contextVersion, constraints: { ...shown.shared.constraints, kinds: [...kinds, ...others] } });
+  }
+  return shown;
+}
+
 /** Tries per draft before it is given up (each one waits a little longer). */
 export const SAVE_TRIES = 6;
 export const saveBackoffMs = (failures: number) => Math.min(5_000, 400 * 2 ** (failures - 1));
 
 export interface SettingsSaves {
   drafts: Drafts;
+  /** Drafts whose page has closed, on their way to the server. */
+  saving: Drafts;
   edit: <K extends DraftKey>(key: K, value: Drafts[K]) => void;
   /** A page opened: its draft waits until it closes. */
   hold: (key: DraftKey) => void;
@@ -142,5 +158,6 @@ export function useSettingsSaves(o: {
     }
   }, [drafts, open, view, blocked, tick, cmd, latest, failed]);
 
-  return { drafts, edit, hold, release };
+  const saving = useMemo(() => Object.fromEntries(KEYS.filter((key) => !open[key]).map((key) => [key, drafts[key]])) as Drafts, [drafts, open]);
+  return { drafts, saving, edit, hold, release };
 }

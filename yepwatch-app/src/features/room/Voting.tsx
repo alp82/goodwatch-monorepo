@@ -77,7 +77,6 @@ export function Voting() {
   const room = useRoom();
   const { id, state, snapshot, view, cmd, entry } = room;
   const [panel, setPanel] = useState<'details' | 'trailer' | null>(null);
-  const [optimistic, setOptimistic] = useState<string>();
   const [stage, setStage] = useState({ width: 360, height: 400 });
   const [focused, setFocused] = useState(true);
   const [localReaction, setLocalReaction] = useState<Reaction>({ at: 0 });
@@ -92,9 +91,9 @@ export function Voting() {
   useEffect(() => { if (focused) setActivityView(panel === 'trailer' ? 'trailer' : 'voting'); }, [focused, panel, setActivityView]);
   // A confirmed restart discards the previous round's local state.
   const generation = snapshot?.shared.generation;
-  useEffect(() => { setOptimistic(undefined); setPanel(null); }, [generation]); // eslint-disable-line react-hooks/set-state-in-effect
+  useEffect(() => { setPanel(null); }, [generation]); // eslint-disable-line react-hooks/set-state-in-effect
   useRoomFeedback(snapshot, panel === 'trailer');
-  const card = snapshot ? ownCard(snapshot, optimistic) : undefined;
+  const card = snapshot ? ownCard(snapshot) : undefined;
   const vote = card ? snapshot?.own.votes.find((v) => v.candidateId === card.id) : undefined;
   const disabled = room.disabled || entry.required;
   const activeTime = useActiveTime(id, snapshot && card ? `${snapshot.shared.generation}:${card.id}:${vote?.revision ?? 0}` : null,
@@ -107,29 +106,27 @@ export function Voting() {
     ? groupActivity(new Map([...state.activities].filter(([, a]) => shared.participants.some((p) => p.participantId === a.frame.participantId && !p.dropped))), state.activityNow())
     : new Map();
   const undoTarget = latestRetainedVote(snapshot);
-  async function choose(yes: boolean) {
+  function choose(yes: boolean) {
     if (!card || disabled) return;
     playFeedback('swipe');
-    setOptimistic(card.id);
     setLocalReaction(reaction({ answer: yes }));
     state.activity(undefined, 'answer');
-    await cmd.vote(card.id, yes, activeTime());
-    setOptimistic(undefined);
+    void cmd.vote(card.id, yes, activeTime());
   }
   const offered = card ? servicesIn(all, offeredOn(card, view.enabledServiceIds)) : [];
   return (
     <Screen testID="voting" scroll={false} back={toRooms} covered={Boolean(panel)}
       right={<>
         <RoomBar faces={<LiveFaces people={view.people.map((p) => ({ id: p.id, nickname: p.nickname || '?', self: p.self }))} activity={activity} localReaction={localReaction} size={24} max={4} />} />
-        <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (undoTarget) void cmd.undo(undoTarget); }} style={{ width: 40, height: 44, borderRadius: 10, backgroundColor: '#ffffff0a' }}>
+        <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (undoTarget) void cmd.undo(undoTarget.candidateId); }} style={{ width: 40, height: 44, borderRadius: 10, backgroundColor: '#ffffff0a' }}>
           <Icon name="undo" size={18} color={glow.soft} />
         </Press>
       </>}
       footer={<>
         <MatchesBar />
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <VoteKey yes={false} disabled={disabled || !card} onPress={() => void choose(false)} />
-          <VoteKey yes disabled={disabled || !card} onPress={() => void choose(true)} />
+          <VoteKey yes={false} disabled={disabled || !card} onPress={() => choose(false)} />
+          <VoteKey yes disabled={disabled || !card} onPress={() => choose(true)} />
         </View>
       </>}
       overlay={<>
@@ -158,7 +155,7 @@ export function Voting() {
             }}>
               <Poster showText={size.height >= 300} title={title} width={size.width} height={size.height} mode="voting" disabled={disabled}
                 services={offered.length ? <Logos services={offered} size={20} /> : undefined}
-                onVote={(yes) => void choose(yes)} onBrowse={() => undefined} onDetails={() => setPanel('details')} onTrailer={() => setPanel('trailer')}
+                onVote={choose} onBrowse={() => undefined} onDetails={() => setPanel('details')} onTrailer={() => setPanel('trailer')}
                 onGesture={(gesture) => { setLocalReaction(reaction({ gesture })); state.activity(gesture); }} stampStyle={stampStyle} />
             </PointerSurface>
             <PeerStage layer="front" activity={activity} width={size.width} height={size.height} desktop={false} />

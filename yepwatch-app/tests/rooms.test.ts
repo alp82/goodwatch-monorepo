@@ -166,3 +166,20 @@ test('explicit Leave keeps the room in History with Return; reopening clears it;
   assert.equal((await registry.load()).rooms[0].left, undefined, 'returning clears Left');
   assert.deepEqual(markLeft([], 'x', 'y', NOW), []);
 });
+
+test('archiving is this device’s list only: it survives reopening and restarts, and restore clears it', async () => {
+  const store = memory();
+  const registry = createRegistry(store, async () => null, () => NOW);
+  await registry.remember({ roomId: 'a', nickname: 'Mika', expiresAt: NOW + 1000 });
+  await registry.remember({ roomId: 'b', nickname: 'Mika', expiresAt: NOW + 1000 });
+  await registry.archive('a');
+  let { rooms } = await registry.load();
+  assert.equal(rooms.find((r) => r.roomId === 'a')?.archivedAt, NOW);
+  assert.equal(rooms.find((r) => r.roomId === 'b')?.archivedAt, undefined);
+  await registry.remember({ roomId: 'a', nickname: 'Mika', expiresAt: NOW + 2000 });
+  ({ rooms } = await registry.load());
+  assert.equal(rooms.find((r) => r.roomId === 'a')?.archivedAt, NOW, 'looking at an archived room leaves it archived');
+  await registry.restore('a');
+  ({ rooms } = await registry.load());
+  assert.equal(rooms.find((r) => r.roomId === 'a')?.archivedAt, undefined);
+});

@@ -1,16 +1,17 @@
 import { Image, ScrollView, View } from 'react-native';
 import { BootReveal } from '../home/BootReveal';
 import { GText, Icon, Press, glow } from '../glow/theme';
-import { Button, Hero, LiveBadge, Small, TextLink, card } from '../room/ui';
+import { Button, Hero, HeroIcon, LiveBadge, Note, Small, TextLink, card } from '../room/ui';
 import { FaceStack } from '../shell/parts';
 import { COLUMN } from '../shell/tokens';
 import type { HomeRoom } from './home-model';
 
 /** One room: Tonight's poster (or a ticket), its ideas, LIVE while open, its status and people. */
-function RoomRow({ room, open }: { room: HomeRoom; open: () => void }) {
+function RoomRow({ room, open, archive }: { room: HomeRoom; open: () => void; archive: () => void }) {
   return (
-    <Press label={room.label} onPress={open} style={{ ...card, alignSelf: 'stretch', minWidth: 0, flexDirection: 'row', justifyContent: 'flex-start', gap: 14, padding: 14 }}>
-      {room.poster
+    <View style={{ ...card, alignSelf: 'stretch', minWidth: 0, flexDirection: 'row', alignItems: 'center' }}>
+      <Press label={room.label} onPress={open} style={{ flex: 1, minWidth: 0, flexDirection: 'row', justifyContent: 'flex-start', gap: 14, padding: 14, paddingRight: 4 }}>
+        {room.poster
         ? <Image source={{ uri: room.poster.replace('/w500/', '/w185/') }} accessible={false} style={{ width: 44, height: 66, borderRadius: 8 }} />
         : <View style={{ width: 44, height: 66, borderRadius: 8, backgroundColor: '#ffffff0d', alignItems: 'center', justifyContent: 'center' }}><Icon name="tickets" size={20} color={glow.amber} /></View>}
       <View style={{ flex: 1, gap: 6, minWidth: 0 }}>
@@ -21,23 +22,30 @@ function RoomRow({ room, open }: { room: HomeRoom; open: () => void }) {
         <Small color={room.hot ? glow.amber : glow.muted} lines={1}>{room.status}</Small>
         <FaceStack people={room.people} size={20} max={5} />
       </View>
-      <Icon name="right" size={16} color={glow.muted} />
-    </Press>
+      </Press>
+      <Press label={`Archive ${room.label}`} onPress={archive} style={{ width: 48, height: 48, marginRight: 6, borderRadius: 10 }}><HeroIcon name="archive" size={20} color={glow.muted} /></Press>
+    </View>
   );
 }
 
 /** Returning visitors: greeting, Your rooms (LIVE while open), New room and Join a room pinned below. */
-export function YourRooms({ title, rooms, unavailable, loading, open, newRoom, join, retry, history, disabled }: {
+export function YourRooms({ title, rooms, unavailable, loading, open, archive, archivedRoom, undoArchive, newRoom, join, retry, history, disabled, quiet }: {
   title: string;
   rooms: HomeRoom[];
   unavailable: { roomId: string }[];
   loading: boolean;
   open: (roomId: string) => void;
+  archive: (roomId: string) => void;
+  /** Just archived: Undo stays offered for a moment. */
+  archivedRoom: boolean;
+  undoArchive: () => void;
   newRoom: () => void;
   join: () => void;
   retry: () => void;
   history?: () => void;
   disabled: boolean;
+  /** A room is opening: the buttons rest without dimming. */
+  quiet: boolean;
 }) {
   return (
     <View style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
@@ -46,17 +54,18 @@ export function YourRooms({ title, rooms, unavailable, loading, open, newRoom, j
         {rooms.length ? (
           <BootReveal index={1} style={{ gap: 10 }}>
             <Small bold>YOUR ROOMS</Small>
-            {rooms.map((r) => <RoomRow key={r.roomId} room={r} open={() => open(r.roomId)} />)}
+            {rooms.map((r) => <RoomRow key={r.roomId} room={r} open={() => open(r.roomId)} archive={() => archive(r.roomId)} />)}
           </BootReveal>
         ) : loading ? <Small>Opening your rooms…</Small> : null}
+        {archivedRoom ? <Note action={{ label: 'Undo', onPress: undoArchive }}>Room archived</Note> : null}
         {unavailable.length > 0 && (
           <TextLink color={glow.muted} onPress={retry} label={unavailable.length === 1 ? 'One room didn’t load. Retry' : `${unavailable.length} rooms didn’t load. Retry`} />
         )}
         {history ? <TextLink color={glow.muted} label="History" onPress={history} /> : null}
       </ScrollView>
       <BootReveal index={2} style={{ paddingHorizontal: COLUMN.inset + 4, paddingTop: 10, paddingBottom: 18, gap: 10 }}>
-        <Button label="New room" disabled={disabled} onPress={newRoom} />
-        <Button secondary label="Join a room" disabled={disabled} onPress={join} />
+        <Button label="New room" disabled={disabled} quiet={quiet} onPress={newRoom} />
+        <Button secondary label="Join a room" disabled={disabled} quiet={quiet} onPress={join} />
       </BootReveal>
     </View>
   );

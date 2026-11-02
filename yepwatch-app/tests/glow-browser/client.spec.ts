@@ -318,7 +318,9 @@ for (const error of [101, 150])
 
 test('authoritative Undo survives an accepted vote followed by a full reload', async ({ page }) => {
   const f = await fixture(page);
+  const accepted = page.waitForResponse((r) => r.url().endsWith('/commands'));
   await page.getByRole('button', { name: 'Nope', exact: true }).click();
+  await accepted;
   await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeEnabled();
   await page.reload();
   await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeEnabled();
