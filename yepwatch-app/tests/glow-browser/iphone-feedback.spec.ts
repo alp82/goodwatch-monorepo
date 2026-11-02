@@ -131,7 +131,7 @@ test('boot reveals YepWatch once, then stays absent during navigation', async ({
   await page.screenshot({ path: '.expo/feedback-boot.png' });
   await expect(boot).toHaveCount(0, { timeout: 5000 });
   await page.getByRole('button', { name: 'Join a room', exact: true }).click();
-  await page.getByRole('button', { name: 'Back to Start', exact: true }).click();
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
   await expect(boot).toHaveCount(0);
 });
 

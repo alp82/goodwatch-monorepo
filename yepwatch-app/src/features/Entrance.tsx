@@ -23,7 +23,7 @@ import { Landing } from './home/Landing';
 import { BootPageReady } from './home/boot-phase';
 import { greeting, type HomeRoom } from './rooms/home-model';
 import { YourRooms } from './rooms/YourRooms';
-import { HistoryPanel, InviteHead, JoinPanel, ProfilePanel, RetryPanel } from './rooms/panels';
+import { HistoryPanel, InviteHead, JoinScreen, ProfilePanel, RetryPanel } from './rooms/panels';
 import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
 import { useHome } from './rooms/useHome';
 import { AppFrame, SubHeader, type BackTarget } from './shell/Frame';
@@ -271,7 +271,7 @@ export function Entrance({ invite }: { invite?: string }) {
   const returning = home.hasRooms || Boolean(known);
   const pending = admission ? (admission.code ? 'join' : 'create') : null;
   const shown: PanelKind | null = panel ?? (recoveryDismissed ? null : pending ?? (restoreFailed || recoveryBlocked ? 'join' : null));
-  const titles: Record<PanelKind, string> = { create: 'New room', join: invite ? (preview ? '' : 'Join the room') : 'Join a room', profile: 'Profile', history: 'History' };
+  const titles: Record<PanelKind, string> = { create: 'New room', join: 'Join a room', profile: 'Profile', history: 'History' };
   const backTo: BackTarget | null = shown ? { label: returning ? 'Your rooms' : 'Start', short: returning ? 'Rooms' : 'Start', onPress: closePanel } : null;
   const actionLabel = (first: string, again: string) => (busy ? 'Connecting…' : retrySeconds > 0 ? `Retry in ${retrySeconds}s` : admission ? again : first);
   const notices = (
@@ -285,6 +285,13 @@ export function Entrance({ invite }: { invite?: string }) {
     </>
   );
   if (!home.ready) return <AppFrame>{null}</AppFrame>;
+  // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
+  if (shown === 'join') return (
+    <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} nickname={admission ? admission.request.nickname || null : known} member={Boolean(home.member)} initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error}
+      back={closePanel} editName={() => setPanel('profile')}
+      signIn={guestOnly || home.member ? undefined : (c) => void enter(true, true, undefined, '', c)}
+      submit={(c, name) => void enter(true, Boolean(home.member), undefined, name, c)} extra={notices} />
+  );
   return (
     <AppFrame
       onLogo={shown ? closePanel : undefined}
@@ -305,12 +312,6 @@ export function Entrance({ invite }: { invite?: string }) {
       {!shown && error ? <View style={{ ...column, paddingBottom: 8 }}><GText size={14} color="#fca5a5">{error}</GText></View> : null}
       {shown === 'create' && (
         <RetryPanel action={actionLabel('Create room', 'Retry room request')} busy={locked} error={error} retry={() => void enter(false, false, undefined, admission?.request.nickname ?? known ?? '')} extra={notices} />
-      )}
-      {shown === 'join' && (
-        <JoinPanel invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} nickname={admission ? admission.request.nickname || null : known} member={Boolean(home.member)} initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error}
-          editName={() => setPanel('profile')}
-          signIn={guestOnly || home.member ? undefined : (c) => void enter(true, true, undefined, '', c)}
-          submit={(c, name) => void enter(true, Boolean(home.member), undefined, name, c)} extra={notices} />
       )}
       {shown === 'profile' && <ProfilePanel nickname={known} member={Boolean(home.member)} signIn={signIn} busy={locked || home.loadingRooms} error={error} save={(name) => { void home.setNickname(name).then(() => setPanel(invite ? 'join' : null)); }} />}
       {shown === 'history' && <HistoryPanel decisions={home.decisions} left={home.left} canOpen={(id) => home.decidedRooms.has(id)} openRoom={open} returnTo={returnTo} busy={locked} />}

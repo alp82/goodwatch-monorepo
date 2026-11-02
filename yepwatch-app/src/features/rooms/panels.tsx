@@ -5,7 +5,7 @@ import { parseInvite } from '../../core/invites';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
 import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
 import { fitSize, type Kind } from '../room/model';
-import { Hero, KindIcons, Small, T, kindsLabel } from '../room/ui';
+import { Button, Hero, KindIcons, Or, Screen, Small, T, TextLink, fieldStyle, kindsLabel } from '../room/ui';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { Action, Chip, FaceStack, Label, Panel } from '../shell/parts';
 import { GoodWatchMark } from '../shell/marks';
@@ -60,13 +60,15 @@ export function InviteHead({ preview }: { preview: InvitePreview | undefined }) 
 }
 
 /**
- * Join by link or code: your name (or Join as the remembered name), or Continue with GoodWatch.
- * An invitation link carries its code, so only manual joins show the code field.
+ * Join by link or code, in the room screens' style (owner-approved prototype 9a2241e3e, JoinPage): the
+ * room's head as the headline, then your name and Join (or Join as the remembered name), or Continue
+ * with GoodWatch. A full screen with its own Back: nothing from the start page shows underneath. An
+ * invitation link carries its code, so only manual joins show the code field.
  */
-export function JoinPanel({ invite, nickname, member = false, initialCode = '', action, busy, error, editName, submit, signIn, extra, head }: {
+export function JoinScreen({ invite, nickname, member = false, initialCode = '', action, busy, error, back, editName, submit, signIn, extra, head }: {
   invite: boolean; nickname: string | null; member?: boolean; initialCode?: string; action: string; busy: boolean; error?: string;
-  editName: () => void; submit: (code: string, nickname: string) => void; signIn?: (code: string) => void; extra?: ReactNode;
-  /** The invited room's head (InviteHead) above the form. */
+  back: () => void; editName: () => void; submit: (code: string, nickname: string) => void; signIn?: (code: string) => void; extra?: ReactNode;
+  /** The invited room's head (InviteHead); without it the screen says what it is. */
   head?: ReactNode;
 }) {
   const [code, setCode] = useState(initialCode);
@@ -76,34 +78,31 @@ export function JoinPanel({ invite, nickname, member = false, initialCode = '', 
   const go = () => { if (valid) submit(code, (nickname ?? name).trim()); };
   const label = nickname && action === 'Join' ? `Join as ${nickname}` : action;
   return (
-    <Panel testID="join-panel" footer={<Press label={label} onPress={go} disabled={!valid} style={{ height: 56, borderRadius: 10, flexDirection: 'row', gap: 10, backgroundColor: glow.amber }}>
-      {member ? <GoodWatchMark size={22} /> : null}
-      <GText bold size={17} color="#201400">{label}</GText>
-    </Press>}>
-      {head}
+    <Screen testID="join-screen" back={back} footer={<Button label={label} onPress={go} disabled={!valid} icon={member ? <GoodWatchMark size={22} /> : undefined} />}>
+      <View style={{ paddingTop: head ? 40 : 24, gap: 10 }}>
+        {head ?? <Hero>{invite ? 'Join the room' : 'Join a room'}</Hero>}
+      </View>
       {!invite || !initialCode ? (
         <TextInput autoFocus={!initialCode} accessibilityLabel="Room code or invitation" value={code} onChangeText={setCode} placeholder="Code or link" placeholderTextColor={glow.muted}
           autoCapitalize="characters" autoCorrect={false} returnKeyType={nickname ? 'go' : 'next'} submitBehavior="blurAndSubmit" onSubmitEditing={go}
-          style={[input, { fontSize: 22, letterSpacing: 3, textAlign: 'center' }]} />
+          style={[fieldStyle, { height: 56, fontSize: 22, letterSpacing: 3, textAlign: 'center' }]} />
       ) : null}
       {nickname ? (
-        <Press label="Change name" onPress={editName} style={{ alignSelf: 'flex-start', minHeight: 32 }}><GText size={13} bold color={glow.muted}>Change name</GText></Press>
+        <TextLink label="Change name" color={glow.muted} onPress={editName} />
       ) : (
         <View style={{ gap: 6 }}>
-          <GText size={13} color={glow.muted}>Your name</GText>
+          <Small>Your name</Small>
           <TextInput autoFocus={Boolean(initialCode)} accessibilityLabel="Your name" value={name} onChangeText={setName} maxLength={MAX_NAME} autoCapitalize="words" autoComplete="nickname" placeholder="Your name" placeholderTextColor={glow.muted}
-            returnKeyType="go" submitBehavior="blurAndSubmit" onSubmitEditing={go} style={input} />
+            returnKeyType="go" submitBehavior="blurAndSubmit" onSubmitEditing={go} style={fieldStyle} />
           {signIn ? <>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#ffffff14' }} /><GText size={13} color={glow.muted}>or</GText><View style={{ flex: 1, height: 1, backgroundColor: '#ffffff14' }} />
-            </View>
+            <Or />
             <GoodWatchButton disabled={busy || !validCode} onPress={() => signIn(code)} />
           </> : null}
         </View>
       )}
       {error ? <GText size={14} color="#fca5a5">{error}</GText> : null}
       {extra}
-    </Panel>
+    </Screen>
   );
 }
 

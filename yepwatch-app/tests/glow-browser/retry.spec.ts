@@ -143,7 +143,8 @@ test('GoodWatch sign-in intent survives admission cooldown and reload without ch
 
 test('covered entrance controls are inert until the panel closes', async ({ page }) => {
   await common(page); await page.goto('/');
-  await page.getByRole('button', { name: 'Join a room', exact: true }).click();
+  // Joining is a full screen now; the profile is still a panel over the start page.
+  await page.getByRole('button', { name: 'Profile', exact: true }).click();
   const body = page.getByTestId('covered-body'); await expect(body).toHaveAttribute('inert', '');
   for (let i = 0; i < 12; i++) {
     await page.keyboard.press('Tab');
@@ -168,7 +169,8 @@ for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirme
   // Reload restores the pending form, but still allows Back.
   await page.reload();
   await expect(action).toBeEnabled();
-  await page.getByRole('button',{name:'Back to Start',exact:true}).click();
+  // Join is a full screen with the room screens' Back; create keeps its panel.
+  await page.getByRole('button',{name:mode==='join'?'Back':'Back to Start',exact:true}).click();
   await expect(page.getByRole('button',{name:'Create a room',exact:true})).toBeVisible();
   await expect(page.getByLabel('Your name')).toHaveCount(0);
   expect(bodies).toHaveLength(2);
