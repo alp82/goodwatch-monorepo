@@ -325,7 +325,7 @@ What it does, in order:
 
 The URL list covers a well-known movie and show, a title without a poster, without a backdrop, without cast, without a trailer, and without streaming data, a show with more than 3,300 cast rows, a person with and without a department, a filtered person URL without the cookie (403), with it (200), and from a crawler (301), home, Discover with and without a filter, the share list and its image, a missing share list and a missing title (404), a title's OG image, `robots.txt`, a script that the home page references, `/metrics` on the public port, and the GET endpoints that pages call. Each entry's `guards` field says which regression or edge it's for, and a failure prints it.
 
-To add a check after a regression, add an entry to `smoke/urls.json` or a pattern to `smoke/log-patterns.json`. Use public catalog entries only. The share list entries read `SHARE_LIST_PATH` and `SHARE_LIST_OG_PATH` from `config.env`, print a warning when they're unset, and never print the path.
+To add a check after a regression, add an entry to `smoke/urls.json` or a pattern to `smoke/log-patterns.json`. Use public catalog entries only. The share list page defaults to the public benchmark list configured in `bench.sh`; `SHARE_LIST_PATH` in `config.env` overrides it. The image check reads `SHARE_LIST_OG_PATH` and prints a warning when it is unset. Check output never prints these paths.
 
 #### Check one instance
 
@@ -439,7 +439,7 @@ Each entry contains `route`, `path`, `weight`, `client`, and optional `expect` (
 
 `/search?q=heist` expects 301. The script treats an unexpected status or transport error as a failure. It never follows a redirect. Person URLs with a query string require the `gw_browser=1` cookie.
 
-To include your share list, set `SHARE_LIST_PATH` to its page path and `SHARE_LIST_OG_PATH` to the `og:image` path from its HTML. Store these only in `config.env`. Do not commit a user's list URL. Missing placeholders are dropped with a warning. Remaining weights still apply. An anonymous request for a public share list is answered from the app's page store for 10 seconds, plus 10 seconds stale, and is `public` with a short `s-maxage` when the request carries the cache identity header (see [`docs/page-cache.md`](../docs/page-cache.md)). Hidden lists and member views stay `private, no-store`. Add your list to the ignored copy of a Lighthouse URL file when testing it with Lighthouse.
+The share-list page defaults to the public benchmark list in `bench.sh`, so `budget` runs without private configuration. To test a different list, set `SHARE_LIST_PATH` to its page path in `config.env`. The configured list must exist on the target being tested; local datasets can override it. Set `SHARE_LIST_OG_PATH` separately to the `og:image` path from that list's HTML to include its preview image. Apart from the public default, keep user list URLs in ignored `config.env`. Missing optional image placeholders are dropped with a warning. Remaining weights still apply. An anonymous request for a public share list is answered from the app's page store for 10 seconds, plus 10 seconds stale, and is `public` with a short `s-maxage` when the request carries the cache identity header (see [`docs/page-cache.md`](../docs/page-cache.md)). Hidden lists and member views stay `private, no-store`. Add your list to the ignored copy of a Lighthouse URL file when testing it with Lighthouse.
 
 ## Cache modes
 

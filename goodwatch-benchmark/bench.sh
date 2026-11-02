@@ -2,6 +2,8 @@
 set -euo pipefail
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 if [[ -f $ROOT/config.env ]]; then set -a; source "$ROOT/config.env"; set +a; fi
+# A public list already used by the benchmark; config.env or the environment can select another.
+export SHARE_LIST_PATH=${SHARE_LIST_PATH:-/u/alperortac/lists/o1H79d4fVu}
 export BENCH_SSH_JUMP=${BENCH_SSH_JUMP:-} BENCH_SSH_USER=${BENCH_SSH_USER:-root}
 export BENCH_GENERATOR=${BENCH_GENERATOR:-10.0.0.32} BENCH_TARGET_URL=${BENCH_TARGET_URL:-https://goodwatch.app}
 export BENCH_RESOLVE_IP=${BENCH_RESOLVE_IP:-10.0.0.21} BENCH_REMOTE_DIR=${BENCH_REMOTE_DIR:-/opt/goodwatch-benchmark}
@@ -210,7 +212,7 @@ export BROWSER_UA=${BROWSER_UA-'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWe
 export ACCEPT_ENCODING=${ACCEPT_ENCODING-'br, gzip'} REQUEST_TIMEOUT=${REQUEST_TIMEOUT:-30s}
 export ABORT_PAGE_P95_MS=${ABORT_PAGE_P95_MS:-10000} SLICE_SECONDS=${SLICE_SECONDS:-0}
 export ABORT_ERROR_RATE=${ABORT_ERROR_RATE:-0.02} ABORT_P95_MS=${ABORT_P95_MS:-3000} ABORT_DELAY=${ABORT_DELAY:-10s} ABORT_DROPPED=${ABORT_DROPPED:-$(((RATE_MAX*STEP_DURATION+19)/20))}
-export SHARE_LIST_PATH=${SHARE_LIST_PATH:-} SHARE_LIST_OG_PATH=${SHARE_LIST_OG_PATH:-}
+export SHARE_LIST_OG_PATH=${SHARE_LIST_OG_PATH:-}
 export TARGET_URL=$BENCH_TARGET_URL URLS_FILE=/work/urls.json OUT_DIR=/work
 # For a target whose certificate doesn't cover the name, such as one instance behind another host's proxy.
 export INSECURE_TLS=${BENCH_INSECURE_TLS:-0}
