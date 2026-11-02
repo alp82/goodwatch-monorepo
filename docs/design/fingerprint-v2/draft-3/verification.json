@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "schema_standard": "JSON Schema Draft 2020-12",
+  "focused_tests": 21,
+  "examples": "synthetic only; both valid including cross-part join",
+  "inference_calls": 0,
+  "deployment": false,
+  "checks": [
+    "self-contained schemas",
+    "fixed 274-field projection order",
+    "unknown response blocked from projection",
+    "integer-only range",
+    "requested coverage",
+    "evidence references and absence support",
+    "presence/centrality consistency including cross-part join",
+    "scope and series applicability",
+    "typed metadata",
+    "entity references",
+    "intervals",
+    "historical source hashes"
+  ],
+  "files": {
+    "METADATA-PROMPT.md": "e9f14349ac285d516eb8781a662fa155274331d2c474832275c91aabd9415b8a",
+    "README.md": "c56c1e75dea147af99f67e62233d522b38d32ef897522f9474b597585a4b04d8",
+    "SIMILARITY-PROMPT.md": "76b1e6ef30340c5ae353a09332fc95be6389f85abf99328ff59e3e5aad400e64",
+    "build.py": "5c486067689dc1486b44c38ad3c8f19ecc52f058692e3a08f41e4d63aff51e2e",
+    "checks.py": "f859f0e58c855d105a657d82e417a242d4ba768fec091915b57ab8602c0bc49e",
+    "definition.json": "ad9019d80926d120fd773c40330ba7bd438bb5e0f4198dd1b5d02a8d5ec1d8c7",
+    "examples/metadata.synthetic.json": "3e0d45872202b2afb0e3d92be4e8524bc8bd1003b829584b9577ec80072a22fd",
+    "examples/similarity.synthetic.json": "fa92172d82566e427f9fd49ee97ca0b8bb276093567c9fa5e9454d703c937678",
+    "indexing-contract.json": "219371fc07671acea5d47542864fa142289ca150e2b10149e21123d62f26ad5f",
+    "manifest.json": "97731fcfdad37640024c5e5d1c10684597dafd062b341d12a23958acf6000a12",
+    "mapping.json": "1576ee748ac9f196ae27b33777272fa6b158fe671c907c824659b9ea4052960d",
+    "metadata.schema.json": "ec471ec35f04386dc0ddc62b5dc876becda998115275bfe1ef2d61ee492bbc00",
+    "migration.json": "c067f19e7a3ed5b0b8ba8674382494c7db06be3f1592674e3db113df12d81471",
+    "schema-overview.md": "2451bdd72b256d2bbac2d9b913d38231d3bd7f5606756b6718e3cb957184418a",
+    "similarity.response.schema.json": "fe666fe473c3cbbba124fee42c379615081411df98ee04cde3e02570c1cf4cd3",
+    "similarity.schema.json": "f1af5dbef7753d89dfa5e2b227e8e53a5c045c5e080738319f14443780443dc4",
+    "validate.py": "2a3f0d12193fc30c8b727272c20f9b42fea45f2a935a7560cb2e616f5b8382d6"
+  }
+}

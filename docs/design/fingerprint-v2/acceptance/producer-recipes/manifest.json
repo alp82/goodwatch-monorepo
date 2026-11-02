@@ -1,0 +1,31 @@
+{
+  "status": "ACCEPTANCE COMPLETED \u2014 NOT APPROVED FOR UNATTENDED COLLECTION",
+  "canonical_version": "2.0.0-draft.8",
+  "projection_version": "similarity-v2.3",
+  "recipes": {
+    "vector": "draft8-ordinal-paired-r3",
+    "targeted": "draft8-ordinal-assessment-r1",
+    "facts": "draft8-facts-advisory-branches-r1"
+  },
+  "source_directory": "../../draft-8",
+  "source_hashes": {
+    "mapping.json": "1a980561231bb0b659b1d458907755575024a55b55c36b077f26778af22fb111",
+    "definition.json": "468f8f923677d0ea2d1d16e2852a4434ab040918f708d01dfa6f54154d5ff02c",
+    "request-contract.json": "a8dcac3c24d12dfd33746ead8110f382abccc8c8c6c4d2dd272af6b826e52c77",
+    "validate.py": "8627ba246d4da949a57df0989a09ff2be07816011ac76d0d6d65352329dd77cc",
+    "vector.schema.json": "9ad706ddacf765b5d66a6fb9791bc2e987d22afc514438a9a97193c403decee1",
+    "vector.response.schema.json": "0a87155d7436cecf7658a461540e7ae3c60db11079769b7c98a6eb4e9e809c2f",
+    "attributes.schema.json": "4e3f979c842b8aaf6077bc7daaba76fb63ee77ed116c2b42db66f29a34e2e370",
+    "requests/vector.schema.json": "b609f74811356743bb9a327f67e0c16676dbd1186a64a39afd8ba33b5f89a308",
+    "requests/vector.definition.json": "e0c73cc3d3f41013c201faa88af9354201f4309f256b9ef3e29962563ea16dcb",
+    "requests/vector.PROMPT.md": "20df3061719490614728c5ed338ae4fc7eeed7e30d7e8a1a41af78ab5b5dd5a5",
+    "requests/targeted.schema.json": "4b2ef941248f7fffcf3497779b5c301d3a38b42447779435c2d4a9530f559278",
+    "requests/targeted.definition.json": "0bbdb7a7bb1c147a83961418676d6c14b9d8d6cb2b0546f3596e286df95c784c",
+    "requests/targeted.PROMPT.md": "cd51cdc36079032350e7043c63eacf15042885075f0e313eed47e072c347da5d",
+    "requests/facts.schema.json": "f1e5f37f4c71d2706014bd446ebe62c6c0476c34cea75628ed22b383bc33210e",
+    "requests/facts.definition.json": "644fe3647c9b31b27cf72b2487aa346c2b139f594484ccea9a5efee7af3b4e72",
+    "requests/facts.PROMPT.md": "8d875ab93436a9c7459c1b0bff29d57b611a979fe9bcc89573db1d44e835df34"
+  },
+  "scope": "Offline renderer/decoders only. No inference, deployment, credentials, billing, retries or release authority.",
+  "acceptance_verdict": "../REPORT.md"
+}

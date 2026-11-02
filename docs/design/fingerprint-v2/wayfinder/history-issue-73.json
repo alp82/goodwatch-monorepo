@@ -1,0 +1,32 @@
+{
+  "body": "Part of [GoodWatch living roadmap](https://github.com/alp82/goodwatch-monorepo/issues/52).\n\nMode: HITL\n\n## Question\n\nWhich interactions make exploring connections, understanding individual titles, and discovering unfamiliar cinema worthwhile in their own right?\n\nUse the completed attribute assessment to choose concrete scenarios and create a cheap, throwaway prototype for live user feedback. Give this outcome equal investigation to watch selection; do not require every interaction to end in a viewing choice. Theme trails, comparisons, guides, graphs, and other visual formats are alternatives, not commitments. Ground displayed relationships in assessed data and clearly identify mock content.\n\nExplore whether the interactions reveal understandable, interesting connections, support deeper title understanding, and invite useful further exploration. Consider entry points and overlap with existing Search/Explore/Discover surfaces without assuming a new route or a broad navigation redesign. Resolve with user feedback, promising and deferred formats, data prerequisites, evidence limits, and a bounded next scope or focused-map destination. This is a decision prototype, not a production feature.\n\nStart from [Choose worthwhile discovery and Fingerprint directions](https://github.com/alp82/goodwatch-monorepo/issues/58#issuecomment-5688122796). Preserve equal investigation of watch selection and open-ended exploration. Cross-area priority remains with [Choose the next focus across the backlog](https://github.com/alp82/goodwatch-monorepo/issues/65). No production implementation is authorized by this ticket.\n",
+  "comments": [
+    {
+      "id": "IC_kwDOJCFabs8AAAABU77L5A",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Scope disposition \u2014 deferred beyond the living roadmap\n\nFollowing the user-approved scope audit, this ticket is closed as **not planned within the GoodWatch living roadmap**. It is not resolved on its merits, and its underlying idea is not rejected.\n\nThe roadmap exists to compare opportunities and choose what deserves attention next. This ticket goes into focused investigation, feature scope, or design before that cross-backlog choice. The relevant opportunity and preferences remain in the existing area resolution and backlog; this ticket is preserved as a reference in the [roadmap's Out of scope index](https://github.com/alp82/goodwatch-monorepo/issues/52).\n\nIf the effort is selected later, use this reference to chart fresh, appropriately scoped decisions in its own focused map. A narrower evidence question can separately become a roadmap prerequisite if its answer would change prioritization. This ticket is not a blocker of [Choose the next focus across the backlog](https://github.com/alp82/goodwatch-monorepo/issues/65).\n",
+      "createdAt": "2026-09-16T15:23:33Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/73#issuecomment-5699980260",
+      "viewerDidAuthor": true
+    }
+  ],
+  "labels": [
+    {
+      "id": "LA_kwDOJCFabs8AAAAC1KW5fA",
+      "name": "wayfinder:prototype",
+      "description": "Prototype reviewed with the human",
+      "color": "A2EEEF"
+    }
+  ],
+  "number": 73,
+  "state": "CLOSED",
+  "title": "Prototype open-ended discovery through Fingerprint",
+  "url": "https://github.com/alp82/goodwatch-monorepo/issues/73"
+}

@@ -1,0 +1,20 @@
+{
+  "title": {
+    "catalog_id": null,
+    "name": "Paterson",
+    "release_year": 2016,
+    "media_type": "movie"
+  },
+  "scope": {
+    "id": "paterson",
+    "kind": "movie",
+    "as_of": "2026-10-24",
+    "coverage_description": "Jim Jarmusch’s 2016 movie only. Edition/cut unspecified; excludes other works.",
+    "edition_id": null,
+    "season_number": null,
+    "episode_number": null,
+    "covered_seasons": null,
+    "covered_episode_ids": null
+  },
+  "synopsis": "A bus driver named Paterson lives in the New Jersey city of the same name. His daily routine includes driving, listening to passengers, writing poems, walking his dog and visiting a bar. At home he shares his life with Laura, whose changing creative projects contrast with his familiar habits."
+}

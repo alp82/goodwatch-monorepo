@@ -1,0 +1,22 @@
+# V2 draft.2 — separate content occurrence from importance
+
+Draft only, 2026-10-21. Production V1, CONTEXT.md and ADR0001 are unchanged: Qwen3.8 Flash remains primary with Qwen3.7 fallback; Sol low is supporting. These 30 registry **attribute groups** are not the five production display fingerprint families. This note records draft vocabulary without redefining production glossary terms.
+
+Later design direction, 2026-10-24: [select fingerprint dimensions for similarity](similarity-boundary.md). The 554-field inventory below is the broader assessment, not a decision to publish a 554-dimensional vector. Frozen draft.2 artifacts remain unchanged.
+
+The registry advances from `2.0.0-draft.1` (547 attributes) to `2.0.0-draft.2` (554: 544 descriptive, 10 evaluations). All integers retain 0–10 ranges; the eight show-only series fields retain applicability.
+
+- Retire `themes.technology_and_humanity`; independently assess `themes.technological_change` (effects of technological change, not gadget presence) and `themes.human_nature` (explicit exploration, not every human drama). No numeric conversion exists.
+- Add `themes.consumerism`, separate from capitalism; `themes.gender_roles`, separate from gender identity and sexism; and `themes.radicalization`, an ideological process, not secrecy or ordinary persuasion.
+- Add `activities.underground_fighting`, separate from boxing/MMA sport and action choreography; `characters.clandestine_groups` (alias: secret societies); and `relationships.coercive_group_control`, separate from interpersonal coercion and radicalization. These can coexist; none implies another. Existing conspiracy, hand-to-hand action, capitalism and gender identity remain separate concepts.
+- Clarify consequential inaccessible memories and missing periods in `tropes.memory_loss`; allow meaningful events or recurring humor in `tropes.doppelganger` without conflict; exclude psychological dissociation, mere influence and ownership of magical objects from `horror_modes.possession`.
+
+**Content presence** is a typed sidecar, not another numeric axis. Exactly 146 canonical IDs are covered: world (14), settings (36), occupations (14), activities (31), sports (24), entities (22), plus memory_loss, doppelganger, clandestine_groups, coercive_group_control and possession. The exact ordered IDs and occurrence predicates are in `definition.json` → `content_presence_contract.coverage` and each attribute's `presence_definition`; compact definitions carry the same fields. Other abstract themes, genre memberships, feelings, craft and evaluations are intentionally not converted into presence flags.
+
+Every sidecar entry has `presence: present | absent | unknown` and separate `applicability: applicable | not_applicable | unknown`. Unknown or not-applicable applicability requires unknown presence and a null/unassessed numeric value. Applicable absence is distinct from not applicable. Synopsis silence, lack of recall and a low score cannot certify absence. This is not a source-qualified content advisory.
+
+Centrality zero now means **no narrative importance**: present-but-unimportant content can score zero. Present with zero passes; absent with positive centrality fails. Other measurement anchors remain unchanged, and the former blanket “zero means absent” compact instruction is removed. Old and new zero semantics are not identical-route calibration evidence; preserve version identity in comparisons. No old score creates a sidecar state.
+
+The full envelope remains sparse: omission means not assessed. The bounded compact benchmark requests all 554 scores plus 146 sidecar entries so unknowns are visible; it does not claim complete title analysis or companion coverage. New/split/redefined example scores are null/unknown and all example presence states are unknown; examples are illustrative, not reassessed references, and are excluded from producer input. Aliases and the no-conversion migration map live in `definition.json` → `migration_map`.
+
+Private exact old bytes, updated snapshots, compact producer contract, schemas, deterministic raw writer and offline validator: `/home/alp/.local/share/goodwatch-benchmarks/v2-draft2-schema-v1/`. Focused validation checks five-file registry/definition/rubric parity, example validity, changed boundaries, missingness, movie applicability and raw preservation. No inference, production changes, staging, commit or push.

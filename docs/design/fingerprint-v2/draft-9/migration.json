@@ -1,0 +1,50 @@
+{
+  "from": "2.0.0-draft.8",
+  "to": "2.0.0-draft.9",
+  "projection_version": "similarity-v2.3",
+  "previous_projection_version": "similarity-v2.3",
+  "vector_order_unchanged": true,
+  "vector_definitions_unchanged": true,
+  "numeric_additions": [
+    "storytelling.character_emphasis",
+    "themes.ethical_dilemmas",
+    "themes.resilience",
+    "themes.voluntary_sacrifice",
+    "atmosphere.claustrophobia",
+    "themes.economic_precarity",
+    "music_styles.blues",
+    "music_styles.reggae",
+    "music_styles.gospel"
+  ],
+  "numeric_definition_changes": {},
+  "facet_additions": [
+    "relationships.family_dynamics",
+    "relationships.romantic_arc_patterns",
+    "speculative.supernatural_mechanisms"
+  ],
+  "enum_additions": {
+    "format_facts.presentation_modes": [
+      "stand_up",
+      "concert_performance",
+      "game_show",
+      "talk_show",
+      "variety_show",
+      "staged_performance",
+      "opera_performance",
+      "live_puppetry"
+    ],
+    "cultural.movements_and_traditions": [
+      "czechoslovak_new_wave",
+      "british_new_wave",
+      "new_german_cinema",
+      "french_poetic_realism"
+    ]
+  },
+  "facet_definition_changes": {
+    "format_facts.presentation_modes": "Observable presentation modes, not audience approval. Stand_up means a substantial stand-up comedy performance organizes the presentation; concert_performance means a substantial concert or musical performance constitutes the work or a substantial program segment, not simply a scene in a narrative film. Game_show uses a presented contestant game or quiz format, not competition as story subject; talk_show uses a presenter-led conversation/interview program, not documentary interviews alone; variety_show combines hosted entertainment segments. Staged_performance presents a substantial staged theatrical, dance or musical production; opera_performance presents an operatic performance tradition and does not imply Western classical music. Live_puppetry presents physically manipulated puppets performing in real time, not automatically stop-motion or puppet animation. These modes may overlap with each other and documentary modes when independently supported. Depicted toys or performers alone are insufficient.",
+    "cultural.movements_and_traditions": "Established artistic affiliation or substantial recognizable stylistic tradition. Country, language, slow pacing or production date alone is insufficient. This list is bounded; unlisted traditions require a future schema revision, not a guessed synonym. Bollywood industry affiliation does not establish masala or bollywood_masala style. French_poetic_realism names the established film movement, not any poetic or realistic treatment. New_german_cinema names the film movement, not German nationality or new-wave music. The British and Czechoslovak New Wave choices likewise require the artistic affiliation, not country or release decade alone."
+  },
+  "presence_definition_changes": [],
+  "conversion": "Vector order, rubrics and definitions retain similarity-v2.3. Do not relabel old full fingerprints as draft.9: new attributes require assessment. Earlier empty or other categorical results do not establish absence of newly listed choices. Preserve historical raw outputs and their original versions; no automatic conversion is implemented.",
+  "no_imputation": "Unknown stays null. Present with zero centrality is valid. New keys must not be backfilled with guessed zeros or empty selections."
+}

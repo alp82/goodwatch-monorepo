@@ -1,0 +1,1031 @@
+[
+  {
+    "id": "tv-001",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1tj2e53/looking_for_immersive_show_with_a_more_episodic/",
+    "title": "Looking for immersive show with a more episodic and less “serialized” structure",
+    "request_excerpt": "I don’t mind character and background storyline continuity, just not sustained narrative or plotline episode-to-episode suspense and stress",
+    "access_level": "post_and_comments",
+    "request_summary": "Looking for immersive show with a more episodic and less “serialized” structure",
+    "predicates": [
+      "immersive drama",
+      "low episode-to-episode suspense",
+      "character continuity allowed"
+    ],
+    "existing_fields": [
+      "series.episodic_independence",
+      "series.serialized_dependence",
+      "series.episode_cliffhangers",
+      "characters.transformation_arc",
+      "temporal_segments"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Aggregate independence and transformation do not bind case closure to episodes while permitting cumulative interpersonal development.",
+    "proposed_change": "Preserve separate plot-strand/episode closure and character progression evidence; scoped episode assessments and retrieval conjunctions before adding dimensions.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-002",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1vh36rc/shows_with_a_good_ending_tired_of_getting/",
+    "title": "Shows with a good ending? Tired of getting invested and then getting nothing",
+    "request_excerpt": "At this point I'd rather start something already finished. ... I just want a show where the last episode actually lands",
+    "access_level": "search_excerpt",
+    "request_summary": "Shows with a good ending? Tired of getting invested and then getting nothing",
+    "predicates": [
+      "already finished",
+      "no unresolved cliffhanger",
+      "satisfying last episode"
+    ],
+    "existing_fields": [
+      "ending.conflict_resolution",
+      "ending.emotional_closure",
+      "ending.cliffhanger",
+      "catalog_facts.show_status"
+    ],
+    "support": "partial",
+    "gap_kind": "catalog_join",
+    "failure_reason": "Narrative closure is represented; ended/cancelled production status is a separate catalog fact and must not substitute for it.",
+    "proposed_change": "Join verified production status to scoped ending assessments; distinguish cancellation, unresolved ending and finale opinion.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-003",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1vrqa38/what_are_some_series_that_did_not_have_a_proper/",
+    "title": "What are some series that did not have a proper finale/ending that should not be started?",
+    "request_excerpt": "I don't want to start a series that will leave you hanging without a proper ending. Any genre will do.",
+    "access_level": "search_excerpt",
+    "request_summary": "What are some series that did not have a proper finale/ending that should not be started?",
+    "predicates": [
+      "avoid unresolved ending",
+      "any genre"
+    ],
+    "existing_fields": [
+      "ending.conflict_resolution",
+      "ending.emotional_closure",
+      "ending.cliffhanger",
+      "catalog_facts.show_status"
+    ],
+    "support": "partial",
+    "gap_kind": "catalog_join",
+    "failure_reason": "Narrative closure is represented; ended/cancelled production status is a separate catalog fact and must not substitute for it.",
+    "proposed_change": "Join verified production status to scoped ending assessments; distinguish cancellation, unresolved ending and finale opinion.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-004",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1s7e050/shows_with_good_endings_and_no_loose_ends/",
+    "title": "Shows with good endings and no loose ends?",
+    "request_excerpt": "Has an interesting yet overall sensical ending ... Doesn't drag on for seasons and seasons until you've lost the original plot",
+    "access_level": "search_excerpt",
+    "request_summary": "Shows with good endings and no loose ends?",
+    "predicates": [
+      "sensical interesting ending",
+      "does not drag beyond original plot",
+      "action fantasy crime intrigue preferred"
+    ],
+    "existing_fields": [
+      "ending.conflict_resolution",
+      "ending.emotional_closure",
+      "ending.cliffhanger",
+      "evaluations.writing",
+      "evaluations.narrative_cohesion",
+      "reception",
+      "scope",
+      "catalog_facts.show_status"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Ending closure already has canonical fields. A satisfying finale additionally requires attributed, finale-scoped evaluation; production status alone cannot establish satisfaction.",
+    "proposed_change": "Join show status and finale-scoped ending assessments with attributed reception or evaluations. Preserve the stated finale and pacing preferences; do not infer a monotonic quality trajectory.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-005",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1teyfim/looking_for_some_good_shows_with_a_perfect_ending/",
+    "title": "Looking for some good shows with a perfect ending.",
+    "request_excerpt": "series that drop the ball in their final seasons or get abruptly canceled on a cliffhanger ... I'm really just looking for hidden gems now",
+    "access_level": "search_excerpt",
+    "request_summary": "Looking for some good shows with a perfect ending.",
+    "predicates": [
+      "strong final seasons",
+      "no abrupt cancellation cliffhanger",
+      "less mainstream preferred"
+    ],
+    "existing_fields": [
+      "ending.conflict_resolution",
+      "ending.emotional_closure",
+      "ending.cliffhanger",
+      "evaluations.writing",
+      "evaluations.narrative_cohesion",
+      "reception",
+      "scope",
+      "catalog_facts.show_status"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Ending closure already has canonical fields. A satisfying finale additionally requires attributed, finale-scoped evaluation; production status alone cannot establish satisfaction.",
+    "proposed_change": "Join show status and finale-scoped ending assessments with attributed reception or evaluations. Preserve the stated finale and pacing preferences; do not infer a monotonic quality trajectory.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-006",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1npl61q",
+    "title": "Intelligent Television Series with solely \"Standalone\" episodes",
+    "request_excerpt": "shows that do not have arcing plots connecting each episode, and are intelligently written. ... I do not want to be tempted in any way to start the next episode.",
+    "access_level": "search_excerpt",
+    "request_summary": "Intelligent Television Series with solely \"Standalone\" episodes",
+    "predicates": [
+      "standalone episode stories",
+      "no connecting plot arcs",
+      "intelligent writing",
+      "no next-episode temptation"
+    ],
+    "existing_fields": [
+      "series.episodic_independence",
+      "series.serialized_dependence",
+      "series.episode_cliffhangers",
+      "evaluations.writing"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "Existing episode independence and cliffhanger fields express standalone stories without next-episode compulsion; this request does not ask for cumulative character growth.",
+    "proposed_change": "Conjoin episode independence and low cliffhangers; calibrate intelligent writing from user examples.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-007",
+    "subreddit": "SchittsCreek",
+    "url": "https://www.reddit.com/r/SchittsCreek/comments/1xbnv3l/loved_schitts_creek_what_should_i_watch_next/",
+    "title": "Loved Schitt’s Creek -what should I watch next?",
+    "request_excerpt": "funny, feel-good, have lovable characters or character development ... Ideally something that isn’t too slow or overly depressing.",
+    "access_level": "search_excerpt",
+    "request_summary": "Loved Schitt’s Creek -what should I watch next?",
+    "predicates": [
+      "funny feel-good",
+      "lovable characters or growth",
+      "not too slow",
+      "not overly depressing"
+    ],
+    "existing_fields": [
+      "experience.warmth",
+      "experience.wholesomeness",
+      "experience.uplift",
+      "humor.overall",
+      "characters.transformation_arc",
+      "essence"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "Named-title similarity is underdetermined until the liked facets are extracted; these requests state enough facets for existing fields.",
+    "proposed_change": "Resolve title references and favor user-stated facets; retain seen exclusions and negative examples.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-008",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1c6nf0z",
+    "title": "Reasonably long shows with overarching plots and no revolving door cast?",
+    "request_excerpt": "more than 2 seasons ... actually have an overarching plot ... with a consistent cast. Preferably with an ending.",
+    "access_level": "search_excerpt",
+    "request_summary": "Reasonably long shows with overarching plots and no revolving door cast?",
+    "predicates": [
+      "more than two seasons",
+      "overarching plot",
+      "consistent cast",
+      "ending preferred"
+    ],
+    "existing_fields": [
+      "series.serialized_dependence",
+      "characters.ensemble",
+      "ending.conflict_resolution",
+      "catalog_facts.show_status"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "Ensemble size does not establish persistence of the same cast across seasons.",
+    "proposed_change": "Derive longitudinal cast continuity from credited cast catalog joins, scoped to core characters.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-009",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1vkehwc/need_something_light_to_watch_while_cooking/",
+    "title": "Need something light to watch while cooking dinner that doesn't require me to look at the screen.",
+    "request_excerpt": "Dialogue-driven rather than visual gags, no subtitles, and nothing with a plot I'll lose the thread of if I miss two minutes chopping onions. Half-hour episodes preferred.",
+    "access_level": "search_excerpt",
+    "request_summary": "Need something light to watch while cooking dinner that doesn't require me to look at the screen.",
+    "predicates": [
+      "follow by ear",
+      "dialogue over visual gags",
+      "no subtitles",
+      "tolerates missed minutes",
+      "half-hour preferred",
+      "many seasons"
+    ],
+    "existing_fields": [
+      "viewing_demands.visual_dependence",
+      "viewing_demands.attention",
+      "viewing_affordances.background_viewing",
+      "series.episodic_independence",
+      "catalog_facts.spoken_language_codes"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "Background comprehension has explicit affordances; low stakes alone is insufficient and runtime/count come from catalog.",
+    "proposed_change": "Intersect visual dependence, attention, language and runtime constraints; preserve explicit genre dislikes.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-010",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1pojuui/looking_for_nonsitcom_background_shows/",
+    "title": "Looking for non-sitcom background shows",
+    "request_excerpt": "I don't have to watch the screen 24/7 to understand what's going on, and the plot isn't overly complex.",
+    "access_level": "search_excerpt",
+    "request_summary": "Looking for non-sitcom background shows",
+    "predicates": [
+      "background while chores",
+      "low visual dependence",
+      "simple plot",
+      "non-sitcom preferred"
+    ],
+    "existing_fields": [
+      "viewing_demands.visual_dependence",
+      "viewing_demands.attention",
+      "viewing_affordances.background_viewing",
+      "series.episodic_independence",
+      "catalog_facts.spoken_language_codes"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "Background comprehension has explicit affordances; low stakes alone is insufficient and runtime/count come from catalog.",
+    "proposed_change": "Intersect visual dependence, attention, language and runtime constraints; preserve explicit genre dislikes.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-011",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1srey0w/can_someone_reccomend_me_anything_to_keep_my_mind/",
+    "title": "Can someone reccomend me anything to keep my mind away from my life. My best friend just died and I need something to help with the pain",
+    "request_excerpt": "Nothing with death in it please",
+    "access_level": "search_excerpt",
+    "request_summary": "Can someone reccomend me anything to keep my mind away from my life. My best friend just died and I need something to help with the pain",
+    "predicates": [
+      "no death occurrence",
+      "distraction after bereavement"
+    ],
+    "existing_fields": [
+      "themes.illness_and_dying",
+      "character_outcomes",
+      "advisories.violence",
+      "advisories.sexual_activity",
+      "advisories.nudity"
+    ],
+    "support": "partial",
+    "gap_kind": "negation_evidence",
+    "failure_reason": "Low death centrality is not evidence no death occurs, and violence absence does not cover natural or off-screen death.",
+    "proposed_change": "Canonical death occurrence with verified full-scope absence and surprise/depiction qualifier; retain advisory depiction modes.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-012",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1vq5jew/shows_so_i_dont_feel_alone_pls/",
+    "title": "Shows so i don't feel alone pls",
+    "request_excerpt": "I've been watching live news bc they talk to the viewer and it helps the loneliness in a way that scripted shows don't.",
+    "access_level": "search_excerpt",
+    "request_summary": "Shows so i don't feel alone pls",
+    "predicates": [
+      "feel less alone",
+      "programming addresses viewer",
+      "company beyond scripted drama"
+    ],
+    "existing_fields": [
+      "audience_contexts",
+      "viewing_affordances.background_viewing",
+      "essence"
+    ],
+    "support": "partial",
+    "gap_kind": "user_context",
+    "failure_reason": "Feeling addressed and accompanied is a situational preference; generic comforting content may fail.",
+    "proposed_change": "Keep the viewer's purpose explicit and rank direct-address/nonfiction company modes using grounded content evidence.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-013",
+    "subreddit": "netflix",
+    "url": "https://www.reddit.com/r/netflix/comments/1s37cey/recommendations_for_background_shows/",
+    "title": "Recommendations for \"Background\" shows?",
+    "request_excerpt": "English speaking (or my native language Arabic), that I don’t need subtitles to watch, and I really hates dubbing ... Complete!",
+    "access_level": "search_excerpt",
+    "request_summary": "Recommendations for \"Background\" shows?",
+    "predicates": [
+      "simple background comprehension",
+      "original English or Arabic",
+      "no dubbing",
+      "no subtitles required",
+      "new to viewer",
+      "complete"
+    ],
+    "existing_fields": [
+      "catalog_facts.original_language_codes",
+      "catalog_facts.spoken_language_codes",
+      "viewing_affordances.background_viewing",
+      "catalog_facts.show_status"
+    ],
+    "support": "partial",
+    "gap_kind": "catalog_join",
+    "failure_reason": "Work-level language does not establish availability of original audio, subtitles or audio description in a specific provider/region edition.",
+    "proposed_change": "Join offer-level audio/subtitle/AD language tracks and freshness; unknown availability must remain unknown.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-014",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1d8faod",
+    "title": "Odd request: Is there a TV show to counter the negative thoughts I have?",
+    "request_excerpt": "isn't made for kids but also doesn't show any unexpected deaths? I also don't want any nudity or sex scenes, but implications and talking about it are fine.",
+    "access_level": "search_excerpt",
+    "request_summary": "Odd request: Is there a TV show to counter the negative thoughts I have?",
+    "predicates": [
+      "not children's programming",
+      "no unexpected deaths",
+      "no nudity",
+      "no depicted sex",
+      "sexual discussion acceptable",
+      "action fantasy preferred"
+    ],
+    "existing_fields": [
+      "themes.illness_and_dying",
+      "character_outcomes",
+      "advisories.violence",
+      "advisories.sexual_activity",
+      "advisories.nudity"
+    ],
+    "support": "partial",
+    "gap_kind": "negation_evidence",
+    "failure_reason": "Low death centrality is not evidence no death occurs, and violence absence does not cover natural or off-screen death.",
+    "proposed_change": "Canonical death occurrence with verified full-scope absence and surprise/depiction qualifier; retain advisory depiction modes.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-015",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1pazus1/series_about_deathgrief/",
+    "title": "Series about death/grief",
+    "request_excerpt": "series recs about death and grief. Currently griefing the loss of a loved one",
+    "access_level": "search_excerpt",
+    "request_summary": "Series about death/grief",
+    "predicates": [
+      "death and grief subject",
+      "help process personal bereavement"
+    ],
+    "existing_fields": [
+      "themes.illness_and_dying",
+      "experience.uplift",
+      "experience.catharsis",
+      "experience.warmth",
+      "audience_contexts"
+    ],
+    "support": "represented",
+    "gap_kind": "user_context",
+    "failure_reason": "Existing affect and theme scores express grief plus uplift, but bereavement does not imply avoiding death for every viewer.",
+    "proposed_change": "Retain stated cope-through versus avoid-content intention; do not impose one universal grief suitability label.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-016",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/16zpkg8/shows_to_process_grief/",
+    "title": "Shows to process grief",
+    "request_excerpt": "Something that deals with grief, but still manages to be light-hearted and uplifting somehow?",
+    "access_level": "search_excerpt",
+    "request_summary": "Shows to process grief",
+    "predicates": [
+      "grief subject",
+      "light-hearted",
+      "uplifting",
+      "process bereavement"
+    ],
+    "existing_fields": [
+      "themes.illness_and_dying",
+      "experience.uplift",
+      "experience.catharsis",
+      "experience.warmth",
+      "audience_contexts"
+    ],
+    "support": "represented",
+    "gap_kind": "user_context",
+    "failure_reason": "Existing affect and theme scores express grief plus uplift, but bereavement does not imply avoiding death for every viewer.",
+    "proposed_change": "Retain stated cope-through versus avoid-content intention; do not impose one universal grief suitability label.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-017",
+    "subreddit": "PickMyNextShow",
+    "url": "https://www.reddit.com/r/PickMyNextShow/comments/1wstpec/looking_for_a_series_that_isnt_a_slow_burn_and/",
+    "title": "Looking for a series that ISN’T a slow burn and has likeable/interesting characters. No cliché or repetitive plots.",
+    "request_excerpt": "series that isn’t either a slow burn ... or that hasn’t had the same plot recycled over and over ... very character driven, with likeable characters",
+    "access_level": "search_excerpt",
+    "request_summary": "Looking for a series that ISN’T a slow burn and has likeable/interesting characters. No cliché or repetitive plots.",
+    "predicates": [
+      "engages without slow burn",
+      "nonrepetitive noncliche plots",
+      "likable interesting characters",
+      "character motivation depth"
+    ],
+    "existing_fields": [
+      "storytelling.plot_velocity",
+      "storytelling.gradual_development",
+      "series.formula_repetition",
+      "evaluations.characterization"
+    ],
+    "support": "represented",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "Existing pacing and repetition fields cover the explicit request. Likeable and interesting characters require user-relative calibration; the request does not establish a finale or season-quality requirement.",
+    "proposed_change": "Use plot velocity and gradual development to interpret fast engagement, constrain formula repetition, and rank characterization against positive and negative examples.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-018",
+    "subreddit": "tvsuggestions",
+    "url": "https://www.reddit.com/r/tvsuggestions/comments/1u62na8/seeking_for_best_shows_left_on_a/",
+    "title": "Seeking for best Shows Left on a Cliffhanger/deserved another season?",
+    "request_excerpt": "Seeking for best Shows Left on a Cliffhanger/deserved another season?",
+    "access_level": "search_excerpt",
+    "request_summary": "Title seeks shows left on a cliffhanger or deserving another season; body not obtained.",
+    "predicates": [
+      "seek unresolved cliffhanger shows",
+      "deserved further season"
+    ],
+    "existing_fields": [
+      "ending.cliffhanger",
+      "series.episode_cliffhangers"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "The title explicitly seeks cliffhangers, a useful counterexample to globally excluding cancelled/unresolved works.",
+    "proposed_change": "No schema addition; positive and negative preference operators must both work.",
+    "priority": "none"
+  },
+  {
+    "id": "tv-019",
+    "subreddit": "SchittsCreek",
+    "url": "https://www.reddit.com/r/SchittsCreek/comments/1vfv9y9/any_other_comparable_shows_to_schitts_creek/",
+    "title": "Any other comparable shows to Schitts creek?",
+    "request_excerpt": "I laugh, cry, and fall in love with all the characters every time I watch. ... other (non reality) shows",
+    "access_level": "search_excerpt",
+    "request_summary": "Any other comparable shows to Schitts creek?",
+    "predicates": [
+      "similar emotional attachment to Schitt's Creek",
+      "non-reality",
+      "humor and emotional engagement"
+    ],
+    "existing_fields": [
+      "experience.warmth",
+      "experience.wholesomeness",
+      "experience.uplift",
+      "humor.overall",
+      "characters.transformation_arc",
+      "essence"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "Named-title similarity is underdetermined until the liked facets are extracted; these requests state enough facets for existing fields.",
+    "proposed_change": "Resolve title references and favor user-stated facets; retain seen exclusions and negative examples.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-020",
+    "subreddit": "SchittsCreek",
+    "url": "https://www.reddit.com/r/SchittsCreek/comments/1s6mcc4/i_need_show_recommendations_of_shows_like_schitts/",
+    "title": "I need show recommendations of shows like Schitts Creek",
+    "request_excerpt": "Any suggestions? I need to binge.",
+    "access_level": "search_excerpt",
+    "request_summary": "I need show recommendations of shows like Schitts Creek",
+    "predicates": [
+      "similar to Schitt's Creek",
+      "bingeable"
+    ],
+    "existing_fields": [
+      "experience.warmth",
+      "experience.wholesomeness",
+      "experience.uplift",
+      "humor.overall",
+      "characters.transformation_arc",
+      "essence"
+    ],
+    "support": "partial",
+    "gap_kind": "query_execution",
+    "failure_reason": "The brief request gives a reference title and binge intent but no explicit similarity facets. A whole-vector neighbor may match undesired aspects.",
+    "proposed_change": "Treat title similarity as a ranked seed; ask for or infer provisional liked facets transparently, with easy refinement.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-021",
+    "subreddit": "SchittsCreek",
+    "url": "https://www.reddit.com/r/SchittsCreek/comments/1s701dw/other_shows_like_schitts_creek/",
+    "title": "Other shows like Schitt's Creek?",
+    "request_excerpt": "it's funny, the characters are fleshed out, and it's so wholesome that it literally made me cry multiple times",
+    "access_level": "search_excerpt",
+    "request_summary": "Other shows like Schitt's Creek?",
+    "predicates": [
+      "wholesome comedy",
+      "fleshed-out characters",
+      "tears from sweetness and laughter"
+    ],
+    "existing_fields": [
+      "experience.warmth",
+      "experience.wholesomeness",
+      "experience.uplift",
+      "humor.overall",
+      "characters.transformation_arc",
+      "essence"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "Named-title similarity is underdetermined until the liked facets are extracted; these requests state enough facets for existing fields.",
+    "proposed_change": "Resolve title references and favor user-stated facets; retain seen exclusions and negative examples.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-022",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1wnz0ae/low_stakes_casual_viewing_tv_shows/",
+    "title": "low stakes casual viewing tv shows",
+    "request_excerpt": "don't have super high stakes like death or violence, and i can watch without needing to do a whole lot of emotional labour",
+    "access_level": "search_excerpt",
+    "request_summary": "low stakes casual viewing tv shows",
+    "predicates": [
+      "low stakes",
+      "no death or violence preferred",
+      "low emotional labor",
+      "service availability"
+    ],
+    "existing_fields": [
+      "experience.stress",
+      "experience.tranquility",
+      "experience.emotional_intensity",
+      "experience.perceived_threat",
+      "viewing_demands.attention"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "Existing calm/stress measures fit the request, subject to personal calibration and catalog service join.",
+    "proposed_change": "Conjoin low stress with requested exclusions and available offers rather than assuming all comedies are calming.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-023",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1m3k7jy",
+    "title": "Right, so I’m sick of romance need something else",
+    "request_excerpt": "main female character that does not have romance, children, or sex as any character arc or plot device. And she has to be an adult.",
+    "access_level": "post_and_comments",
+    "request_summary": "Right, so I’m sick of romance need something else",
+    "predicates": [
+      "adult female lead",
+      "no romance children or sex as her narrative arc",
+      "no high-school protagonists",
+      "service availability"
+    ],
+    "existing_fields": [
+      "characters.female_protagonist",
+      "entities",
+      "character_relationships",
+      "character_outcomes",
+      "advisories.sexual_activity"
+    ],
+    "support": "partial",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Female lead plus low romance does not prove the adult protagonist has no romance/child/sex narrative arc, and absence coverage must be explicit.",
+    "proposed_change": "Bind role and age to the same character, then exclude scoped romantic/parenthood/sexual plot roles with assessed coverage.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-024",
+    "subreddit": "television",
+    "url": "https://www.reddit.com/r/television/comments/1t1fsvh/what_tv_shows_help_your_anxiety/",
+    "title": "What TV shows help your anxiety?",
+    "request_excerpt": "shows that feel so immersive I forget about what's going on in my life while watching them, even if the plot lines are \"heavier\"",
+    "access_level": "search_excerpt",
+    "request_summary": "What TV shows help your anxiety?",
+    "predicates": [
+      "anxiety relief",
+      "comfort or immersive distraction",
+      "heavier plots acceptable"
+    ],
+    "existing_fields": [
+      "experience.stress",
+      "experience.escapism",
+      "humor.cringe",
+      "audience_contexts"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "The user explicitly permits heavier immersive plots for anxiety relief, so low-stress-only filtering would contradict the request.",
+    "proposed_change": "Learn contextual user preferences and retain negative exemplars; avoid a universal mental-health suitability score.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-025",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1doh7at",
+    "title": "Shows that arenice, no violence or anxiety inducing things",
+    "request_excerpt": "Shows that arenice, no violence or anxiety inducing things",
+    "access_level": "search_excerpt",
+    "request_summary": "Shows that arenice, no violence or anxiety inducing things",
+    "predicates": [
+      "no violence",
+      "not anxiety inducing",
+      "avoid heartbreak"
+    ],
+    "existing_fields": [
+      "experience.stress",
+      "experience.tranquility",
+      "experience.emotional_intensity",
+      "experience.perceived_threat",
+      "viewing_demands.attention"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "Existing calm/stress measures fit the request, subject to personal calibration and catalog service join.",
+    "proposed_change": "Conjoin low stress with requested exclusions and available offers rather than assuming all comedies are calming.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-026",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1j2n8f0/low_stresscalming_shows_for_when_youre_feeling/",
+    "title": "Low stress/calming shows for when you’re feeling anxious?",
+    "request_excerpt": "binge watch relaxing tv shows. I just finished Abbott elementary ... It was very calming to me. I have Netflix, Hulu, hbo, and prime.",
+    "access_level": "search_excerpt",
+    "request_summary": "Low stress/calming shows for when you’re feeling anxious?",
+    "predicates": [
+      "relaxing low-stress binge",
+      "similar calming experience to Abbott Elementary",
+      "Netflix Hulu HBO or Prime"
+    ],
+    "existing_fields": [
+      "experience.stress",
+      "experience.escapism",
+      "humor.cringe",
+      "audience_contexts"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "The post asks for relaxing shows and states services; existing stress and affect measures support that intent. Comments show conflicting cringe reactions but do not establish a specific exclusion by this requester.",
+    "proposed_change": "Rank calm content with the Abbott Elementary example and join current offers; use feedback to personalize comfort.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-027",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1le27bd/completed_tv_shows_that_maintained_high_quality/",
+    "title": "Completed TV shows that maintained high quality from start to finish.",
+    "request_excerpt": "I'm looking for the few that maintained coherence and quality all the way through.",
+    "access_level": "search_excerpt",
+    "request_summary": "Completed TV shows that maintained high quality from start to finish.",
+    "predicates": [
+      "completed series",
+      "consistent coherence and quality throughout",
+      "no later-season quality collapse"
+    ],
+    "existing_fields": [
+      "evaluations.writing",
+      "evaluations.narrative_cohesion",
+      "evaluations.characterization",
+      "reception",
+      "temporal_segments",
+      "series.formula_repetition",
+      "series.conceptual_renewal",
+      "catalog_facts.show_status"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Whole-series evaluation hides quality trajectory, while quality itself needs attributed judgment and user calibration.",
+    "proposed_change": "Use season-scoped attributed evaluations and explicit aggregation for consistency; never infer strong finale from ended status.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-028",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1w6vmpw/bedtime_shows/",
+    "title": "Bedtime shows",
+    "request_excerpt": "it won't wake me up with lots of screaming. ... i love long running series. Laugh tracks are okay as long as they aren't obnoxious",
+    "access_level": "post_and_comments",
+    "request_summary": "Bedtime shows",
+    "predicates": [
+      "background bedtime viewing",
+      "little screaming",
+      "long-running",
+      "tolerable laugh track"
+    ],
+    "existing_fields": [
+      "sound.audio_startles",
+      "viewing_demands.sensory_intensity",
+      "viewing_affordances.background_viewing",
+      "experience.tranquility"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "Audio startles and sensory intensity cover much of intent, but sustained screaming/obnoxious laugh-track tolerance is not exactly the same acoustic property.",
+    "proposed_change": "Test existing audio-startles rubric first; only add evidence-backed sustained vocal loudness/laugh-track occurrence if judged cases require it.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-029",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1shqyrc/help_me_find_my_next_bedtime_show_please/",
+    "title": "help me find my next bedtime show. PLEASE.",
+    "request_excerpt": "its light , funny and an overall feel good show. short and sweet. perfect before bed.",
+    "access_level": "search_excerpt",
+    "request_summary": "help me find my next bedtime show. PLEASE.",
+    "predicates": [
+      "light funny feel-good",
+      "short episodes",
+      "before-bed context",
+      "similar to Rules of Engagement"
+    ],
+    "existing_fields": [
+      "experience.stress",
+      "experience.tranquility",
+      "experience.emotional_intensity",
+      "experience.perceived_threat",
+      "viewing_demands.attention"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "Existing calm/stress measures fit the request, subject to personal calibration and catalog service join.",
+    "proposed_change": "Conjoin low stress with requested exclusions and available offers rather than assuming all comedies are calming.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-030",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1cpdi0a",
+    "title": "TV show recommendations for couple with different tastes",
+    "request_excerpt": "My husband (32M) likes more serious/action shows ... Any recs for shows that would suit both our tastes? Eg, Better Call Saul was a perfect fit",
+    "access_level": "search_excerpt",
+    "request_summary": "TV show recommendations for couple with different tastes",
+    "predicates": [
+      "joint fit for two viewers",
+      "legal and relationship drama taste",
+      "serious action drama taste",
+      "Better Call Saul shared positive"
+    ],
+    "existing_fields": [
+      "audience_contexts",
+      "narrative_engines.legal_case",
+      "genres.action"
+    ],
+    "support": "non_schema",
+    "gap_kind": "user_context",
+    "failure_reason": "Two viewers' taste intersection is a recommendation policy, not an intrinsic property of a title.",
+    "proposed_change": "Resolve each viewer's desired facets, use shared positive examples, then optimize group fit transparently.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-031",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1r8ojsp/shows_to_watch_before_sleep/",
+    "title": "Shows to Watch Before Sleep",
+    "request_excerpt": "Something light and calming and good to watch.",
+    "access_level": "search_excerpt",
+    "request_summary": "Shows to Watch Before Sleep",
+    "predicates": [
+      "before sleep",
+      "light calming"
+    ],
+    "existing_fields": [
+      "experience.stress",
+      "experience.tranquility",
+      "experience.emotional_intensity",
+      "experience.perceived_threat",
+      "viewing_demands.attention"
+    ],
+    "support": "represented",
+    "gap_kind": "query_execution",
+    "failure_reason": "Existing calm/stress measures fit the request, subject to personal calibration and catalog service join.",
+    "proposed_change": "Conjoin low stress with requested exclusions and available offers rather than assuming all comedies are calming.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-032",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1w31hma/help_me_find_my_dad_on_hospice_with_dementia/",
+    "title": "Help me find my dad on hospice with dementia something to watch.",
+    "request_excerpt": "it can't be in black and white or visually a very dark series. Non-North-American Accents are a no-go",
+    "access_level": "post_and_comments",
+    "request_summary": "Help me find my dad on hospice with dementia something to watch.",
+    "predicates": [
+      "color required",
+      "no dark visuals",
+      "North American accents",
+      "low cognitive load",
+      "new to viewer"
+    ],
+    "existing_fields": [
+      "viewing_demands.attention",
+      "viewing_demands.visual_dependence",
+      "viewing_demands.auditory_dependence",
+      "audience_contexts",
+      "catalog_facts.spoken_language_codes"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "Language is not accent; simple narrative is not visual brightness. Broad audience fit prose cannot execute these constraints.",
+    "proposed_change": "Use existing color/attention/cutting fields plus evidence-backed accent and visibility descriptors; store individual tolerances without medical suitability inference.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-033",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1igp9zv",
+    "title": "Interesting, episodic stories, character development, not too serious, some light humour.",
+    "request_excerpt": "The last four shows I watched were (mostly) episodic, with interesting, gripping stories, great character development, and a decent amount t of humour to keep things light.",
+    "access_level": "search_excerpt",
+    "request_summary": "Interesting, episodic stories, character development, not too serious, some light humour.",
+    "predicates": [
+      "episodic stories",
+      "character development",
+      "light humor",
+      "not too serious"
+    ],
+    "existing_fields": [
+      "series.episodic_independence",
+      "series.serialized_dependence",
+      "series.episode_cliffhangers",
+      "characters.transformation_arc",
+      "temporal_segments"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Aggregate independence and transformation do not bind case closure to episodes while permitting cumulative interpersonal development.",
+    "proposed_change": "Preserve separate plot-strand/episode closure and character progression evidence; scoped episode assessments and retrieval conjunctions before adding dimensions.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-034",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1ms5cm5",
+    "title": "Good shows for Grandma?",
+    "request_excerpt": "struggles to follow super complex storylines. ... She prefers a minimal amount of swearing, sex, or violence. She really likes babies and little kids.",
+    "access_level": "search_excerpt",
+    "request_summary": "Good shows for Grandma?",
+    "predicates": [
+      "simple storylines",
+      "cheerful character drama",
+      "minimal swearing sex violence",
+      "babies or children preferred"
+    ],
+    "existing_fields": [
+      "viewing_demands.attention",
+      "experience.warmth",
+      "experience.wholesomeness",
+      "advisories.profanity",
+      "advisories.sexual_activity",
+      "advisories.violence",
+      "audience_contexts"
+    ],
+    "support": "represented",
+    "gap_kind": "user_context",
+    "failure_reason": "The post states simple cheerful character drama and low advisory tolerances, which existing fields can express. It does not specify accent or brightness constraints.",
+    "proposed_change": "Keep individual comprehension and content tolerances explicit; combine attention, affect and advisory assessments without inferring medical suitability.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-035",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1l8o53z/looking_for_a_series_with_amazing_character/",
+    "title": "Looking for a series with amazing character development, slow burn preferred",
+    "request_excerpt": "slow-burn arcs, flawed people, and emotional payoff ... Not really looking for another crime thriller or sitcom",
+    "access_level": "search_excerpt",
+    "request_summary": "Looking for a series with amazing character development, slow burn preferred",
+    "predicates": [
+      "slow character growth",
+      "flawed characters",
+      "emotional payoff",
+      "unique atmosphere",
+      "not crime thriller or sitcom"
+    ],
+    "existing_fields": [
+      "characters.transformation_arc",
+      "storytelling.gradual_development",
+      "experience.emotional_intensity",
+      "characters.morally_ambiguous_cast"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Existing transformation and gradual-development scores represent the broad request; character-specific growth and emotional payoff need scoped evidence and subjective calibration.",
+    "proposed_change": "Bind change/outcomes to characters and season scope; preserve emotional-payoff preference in ranking.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-036",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/oqatxi",
+    "title": "Looking for shows that are kind of episodic but with overall character development, preferably a great duo (e.g. Holmes & Watson) and not too much drama",
+    "request_excerpt": "One crime and one interpersonal issue each gets resolved ... the interpersonal aspect of small issues getting resolved at a time added up to a lot of character development",
+    "access_level": "search_excerpt",
+    "request_summary": "Looking for shows that are kind of episodic but with overall character development, preferably a great duo (e.g. Holmes & Watson) and not too much drama",
+    "predicates": [
+      "each episode resolves case and interpersonal issue",
+      "cumulative character growth",
+      "no ominous unresolved subplot",
+      "great duo preferred"
+    ],
+    "existing_fields": [
+      "series.episodic_independence",
+      "series.serialized_dependence",
+      "series.episode_cliffhangers",
+      "characters.transformation_arc",
+      "temporal_segments"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Aggregate independence and transformation do not bind case closure to episodes while permitting cumulative interpersonal development.",
+    "proposed_change": "Preserve separate plot-strand/episode closure and character progression evidence; scoped episode assessments and retrieval conjunctions before adding dimensions.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-037",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1sx55em/looking_for_characterdriven_sitcoms_with_strong/",
+    "title": "Looking for character-driven sitcoms with strong relationship arcs (like Friends, HIMYM, Big Bang Theory)",
+    "request_excerpt": "slow-burn relationships ... meaningful character progression ... light/comedy tone but with emotional depth",
+    "access_level": "search_excerpt",
+    "request_summary": "Looking for character-driven sitcoms with strong relationship arcs (like Friends, HIMYM, Big Bang Theory)",
+    "predicates": [
+      "sitcom",
+      "slow relationship arcs",
+      "meaningful character progression",
+      "emotional depth",
+      "not heavy drama crime"
+    ],
+    "existing_fields": [
+      "characters.transformation_arc",
+      "relationships.slow_burn_romance",
+      "series.serialized_dependence",
+      "experience.emotional_intensity"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Global transformation does not identify which characters or relationships grow or show enduring learning across seasons.",
+    "proposed_change": "Bind change/outcomes to characters and season scope; preserve emotional-payoff preference in ranking.",
+    "priority": "medium"
+  },
+  {
+    "id": "tv-038",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1ki6f5q",
+    "title": "What are the best shows that aren’t originally in English?",
+    "request_excerpt": "But have English subtitles available? The main genres I'm looking for are true crime, thriller, horror, mystery, and/or an interesting docuseries.",
+    "access_level": "search_excerpt",
+    "request_summary": "What are the best shows that aren’t originally in English?",
+    "predicates": [
+      "original language not English",
+      "English subtitles available",
+      "crime thriller horror mystery docuseries"
+    ],
+    "existing_fields": [
+      "catalog_facts.original_language_codes",
+      "catalog_facts.spoken_language_codes",
+      "viewing_affordances.background_viewing"
+    ],
+    "support": "partial",
+    "gap_kind": "catalog_join",
+    "failure_reason": "Work-level language does not establish availability of original audio, subtitles or audio description in a specific provider/region edition.",
+    "proposed_change": "Join offer-level audio/subtitle/AD language tracks and freshness; unknown availability must remain unknown.",
+    "priority": "high"
+  },
+  {
+    "id": "tv-039",
+    "subreddit": "netflix",
+    "url": "https://www.reddit.com/r/netflix/comments/g214l6",
+    "title": "Best Audio Description titles (movies or shows) ?",
+    "request_excerpt": "I thought it'd be interesting to listen to some audio description shows/movies.",
+    "access_level": "search_excerpt",
+    "request_summary": "Best Audio Description titles (movies or shows) ?",
+    "predicates": [
+      "audio-description track",
+      "listen during overnight work"
+    ],
+    "existing_fields": [
+      "catalog_facts.original_language_codes",
+      "catalog_facts.spoken_language_codes",
+      "viewing_affordances.background_viewing"
+    ],
+    "support": "partial",
+    "gap_kind": "catalog_join",
+    "failure_reason": "Work-level language does not establish availability of original audio, subtitles or audio description in a specific provider/region edition.",
+    "proposed_change": "Join offer-level audio/subtitle/AD language tracks and freshness; unknown availability must remain unknown.",
+    "priority": "high"
+  }
+]

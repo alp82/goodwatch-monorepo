@@ -1,0 +1,1012 @@
+[
+  {
+    "id": "niche-01",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1tiokt7/disturbing_horror_movies_with_no_sexual_violence/",
+    "title": "Disturbing horror movies with no sexual violence?",
+    "request_excerpt": "Basically the title. I want some upsetting movies that don't include or rely on sexual assault.\n\nI recently watched The Coffee Table and realized that I can still be genuinely disturbed by horror, so I would like more things like that. This is probably a narrow pool to choose from, but I'm hoping there's some decent stuff out there.",
+    "access_level": "search_excerpt",
+    "request_summary": "disturbing horror; exclude sexual assault",
+    "predicates": [
+      "disturbing horror",
+      "exclude sexual assault"
+    ],
+    "existing_fields": [
+      "experience.fear",
+      "experience.disgust",
+      "advisories.sexual_violence"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Independent fear/disgust and sexual-violence exclusion already express this request.",
+    "proposed_change": "Populate verified absence and preserve exclusion in query execution.",
+    "priority": "none",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-02",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1scpk1v/recommendations_of_movies_with_out_sexual_content/",
+    "title": "Recommendations of movies with out sexual content",
+    "request_excerpt": "So my daughter 12 loves horror but so many of them have very graphic sexual scenes which we avoid. Can you recommend some scary movies that don’t have it.\n\nShe loved the descent, jeepers creepers, the ring, no one will save you, original it movie, pet sematary, fnaf, child’s play",
+    "access_level": "search_excerpt",
+    "request_summary": "scary for a 12-year-old; exclude graphic sexual scenes",
+    "predicates": [
+      "scary for a 12-year-old",
+      "exclude graphic sexual scenes"
+    ],
+    "existing_fields": [
+      "experience.fear",
+      "advisories.sexual_activity.explicitness",
+      "audience_contexts"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "Age alone cannot establish this child's fear tolerance; explicitness is supported.",
+    "proposed_change": "Use liked-title calibration and explicit content tolerance.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-03",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/18e7gh0/good_horror_movies_without_sexual_violence/",
+    "title": "Good horror movies without sexual violence / violence against women?",
+    "request_excerpt": "This will probably get downvoted, but I'll try my luck anyway.As a long time horror fan, I always run into \"those kinds\" of movies and I'm *so* tired of it. It's difficult to find out in advance if oversexualisation and sexual violence are featured, so I end up reading spoilers and avoiding a lot of certain genre - for example splatter or home invasion type stuff, as it's often soaked with misogyny. It's alright if sv themes are implicated (rather than shown on-screen) and if the topic is treated with respect. To be clear, I don't mind brutality or gore, but you can tell when directors just like to see women suffer, and the audience it's intended for. I'm basically the opposite of that audience.So I'm looking for your favorite horror movies that make your skin crawl. The genre I'm into the most are sci-fi & found footage, but I generally like anything out of the ordinary. The more tension & atmosphere, the better !\n\n​\n\nEdit: Thank you for the recommendations so far, I've seen some of t",
+    "access_level": "post_and_comments",
+    "request_summary": "implied sexual violence acceptable; respectful treatment; gore acceptable; tension and atmosphere",
+    "predicates": [
+      "implied sexual violence acceptable",
+      "respectful treatment",
+      "gore acceptable",
+      "tension and atmosphere"
+    ],
+    "existing_fields": [
+      "advisories.sexual_violence.depiction_modes",
+      "advisories.gore",
+      "experience.tension"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "Depiction mode exists; respectful versus fetishized treatment is not captured by explicitness or global presence.",
+    "proposed_change": "Keep mode-specific exclusion and attributed portrayal evidence; do not invent objective respect score.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-04",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1e3gcgr/movies_with_no_animal_deaths_or_abuse/",
+    "title": "Movies with no animal deaths or abuse?",
+    "request_excerpt": "I love horror films, but I cannot watch any that has dead or abused animals. I feel like most horror nowadays has that to some extent; I can’t take it. Any recommendations?",
+    "access_level": "search_excerpt",
+    "request_summary": "no animal deaths; no animal abuse",
+    "predicates": [
+      "no animal deaths",
+      "no animal abuse"
+    ],
+    "existing_fields": [
+      "advisories.animal_harm",
+      "character_outcomes"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Verified broad animal-harm absence is already expressible.",
+    "proposed_change": "Populate absence with full-work evidence.",
+    "priority": "none",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-05",
+    "subreddit": "HorrorMovies",
+    "url": "https://www.reddit.com/r/HorrorMovies/comments/1edncal/i_want_to_see_a_horror_movie_where_the_pet_doesnt/",
+    "title": "I want to see a horror movie where the pet doesn’t die.",
+    "request_excerpt": "I am so tired of seeing a horror movie with a dog and knowing exactly what is gonna happen to it. Death. It’s cheap and it’s predictable.\n\n\nI want a horror movie with a dog (or a cat, for that matter, though it’s usually dogs) that perseveres through the movie. Maybe even be the “final girl”. I want to see it be written as if it’s actually a dog, with common traits of dogs like loyalty or protectiveness. I want it to push through and make it to atleast 3/4 of the movie, preferably until the end.\n\n\nOr, the complete opposite. A dog that has gone rogue and fights whoever or whatever gets in its way. Ruthless and unforgiving. Basically like Cujo, but if cujo survived. I wanted to see him live, after all that he did. His death seemed cheap to me.\n\n\n\nAnyway, enough ranting. Thoughts?",
+    "access_level": "post_and_comments",
+    "request_summary": "dog or cat has agency; survives at least three quarters; prefer survival to end; alternative ruthless surviving dog",
+    "predicates": [
+      "dog or cat has agency",
+      "survives at least three quarters",
+      "prefer survival to end",
+      "alternative ruthless surviving dog"
+    ],
+    "existing_fields": [
+      "entities",
+      "character_outcomes.items[].entity_id",
+      "character_outcomes.items[].outcome",
+      "temporal_segments"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Entity-bound survival exists, but surviving to a fraction and animal behavior/role are not typed together.",
+    "proposed_change": "Add outcome temporal extent only if recurring; preserve request alternatives and same-entity binding.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-06",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1tn56uf/horror_movie_without_jump_scares/",
+    "title": "Horror Movie without Jump Scares",
+    "request_excerpt": "I am looking for recommendations in the style of hereditary. Not so much the otherworldly theme (Demons, afterlife and such), but the general style of building a mood.. The horror movie does not rely on jumpscares (too much), but does a good job of keeping the tension high throughout. You can watch it without being uncomfortable that there will be another jump scare around the corner.\n\nI do not like jump scares. I think they are cheap and distracting and don't really give me what I am searching for in a horror movie.\n\nSo: what are your top picks for horror movies that do not rely on jump scares (too much).",
+    "access_level": "search_excerpt",
+    "request_summary": "Hereditary mood; not necessarily demons; sustained tension; few jumpscares",
+    "predicates": [
+      "Hereditary mood",
+      "not necessarily demons",
+      "sustained tension",
+      "few jumpscares"
+    ],
+    "existing_fields": [
+      "experience.tension",
+      "sound.audio_startles",
+      "horror_modes.psychological_horror"
+    ],
+    "support": "partial",
+    "gap_kind": "query_execution",
+    "failure_reason": "Title similarity may over-weight demons when user explicitly wants only mood; audio startles also omit visual-only jolts.",
+    "proposed_change": "Support facet-restricted seed similarity; distinguish visual and audio scare mechanisms if evidence warrants.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-07",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1tkwy2e/horror_without_jumpscares/",
+    "title": "Horror without jumpscares",
+    "request_excerpt": "Hello, I’m interested in exploring the horror/thriller genre but I hate jumpscares. What would you recommend that have little to no jumpscares but is still somewhat horrifying and or thrilling?Thanks!",
+    "access_level": "search_excerpt",
+    "request_summary": "little to no jumpscares; still horrifying",
+    "predicates": [
+      "little to no jumpscares",
+      "still horrifying"
+    ],
+    "existing_fields": [
+      "sound.audio_startles",
+      "experience.fear"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "Audio startles do not exhaust visually sudden scares.",
+    "proposed_change": "Clarify scare coverage before using audio_startles as total jumpscare count.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-08",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1no9l4n",
+    "title": "Horror media without jumpscares",
+    "request_excerpt": "I'm easily getting startled. And that's the only thing holding me back from going more into horror media.\n\nSo, that's why I'd like to get recommendations for horror media (movies, series, games etc) that have no or only very few jumpscares. (And little to no gore). Because in my opinion, the atmosphere can be much scarier than getting jumped by someone or something.",
+    "access_level": "search_excerpt",
+    "request_summary": "few jumpscares; little gore; scary atmosphere",
+    "predicates": [
+      "few jumpscares",
+      "little gore",
+      "scary atmosphere"
+    ],
+    "existing_fields": [
+      "sound.audio_startles",
+      "advisories.gore",
+      "experience.fear"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "Separate startle modality from sustained fear; exact total jumpscares not covered.",
+    "proposed_change": "Use existing fear/gore controls and calibrated startle evidence.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-09",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1wggpfn/if_youre_a_diehard_folk_horror_fan_these_are/",
+    "title": "If you're a die-hard Folk Horror fan, these are non-negotiable in my opinion. But where do I go next..",
+    "request_excerpt": "I like folk horror the isolated cults, uncomfortable rural​ rituals, and creeping dread. If anyone claims to be a true fan of the genre, I consider these are to be absolute mandatory viewing\n\nThe Wicker Man\n\nThe Witch.\n\nMidsommar.\n\nThe Ritual.\n\nNovember.\n\nYou Are Not My Mother\n\nThe Hallow\n\nLamb\n\nThe Borderlands\n\nThe Medium\n\nFréwaka\n\nLord of Misrule\n\nStarve Acre\n\nThe Hole in the Ground\n\nThe Devil's Doorway\n\nMen\n\nThe Blood on Satan's Claw\n\nI feel like I've already burned through the absolute top-tier masterpieces of the genre and hit a ceiling. Wha r the deep cuts, obscure indie films, or lesser-known foreign folk horror movies that actually live up to these? Put me on to the hidden gems I haven't seen yet.",
+    "access_level": "search_excerpt",
+    "request_summary": "folk horror; isolated cults; rural rituals; unseen deep cuts",
+    "predicates": [
+      "folk horror",
+      "isolated cults",
+      "rural rituals",
+      "unseen deep cuts"
+    ],
+    "existing_fields": [
+      "horror_modes.folk_horror",
+      "settings.rural",
+      "world.myth_and_folklore"
+    ],
+    "support": "partial",
+    "gap_kind": "user_context",
+    "failure_reason": "Subgenre and setting exist; unseen and obscure are user history/catalog operations.",
+    "proposed_change": "Retain seen exclusions and novelty ranking; no extra folk vector.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-10",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1tq8e7q/folk_horror_recommendations/",
+    "title": "Folk Horror Recommendations",
+    "request_excerpt": "Think…Midsommar, Hereditary, Feast (2021), The Ritual (2017), The VVITCH (2015), Lamb, Azrael, The Hallow, Hokum\n\nI love stories in nature or about folklore or parallels to mythology or religious gods.\n\nThanks for any and all suggestions!!",
+    "access_level": "search_excerpt",
+    "request_summary": "folk horror; nature; mythology or religious gods",
+    "predicates": [
+      "folk horror",
+      "nature",
+      "mythology or religious gods"
+    ],
+    "existing_fields": [
+      "horror_modes.folk_horror",
+      "world.myth_and_folklore"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Generic folk/myth request has canonical fields.",
+    "proposed_change": "Compose existing concepts; no expansion.",
+    "priority": "none",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-11",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1tr6l40/horror_that_takes_place_deep_underwater/",
+    "title": "Horror that takes place deep underwater?",
+    "request_excerpt": "Any good horror that involves diving or underwater facilities? Basically I'm looking for the movie equivalent of the game SOMA. Yapping to meet the minimum character requirement. Underwater horror is reminiscent of space horror I think",
+    "access_level": "search_excerpt",
+    "request_summary": "diving or underwater facilities; like SOMA",
+    "predicates": [
+      "diving or underwater facilities",
+      "like SOMA"
+    ],
+    "existing_fields": [
+      "settings.ocean",
+      "activities.diving",
+      "concept_assertions"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "Ocean is not specifically a submerged facility and game analogy requires facet interpretation.",
+    "proposed_change": "Canonicalize underwater-facility concept only after repeated demand; resolve seed features explicitly.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-12",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1v6dsos/finest_examples_of_folk_horror/",
+    "title": "Finest examples of folk horror?",
+    "request_excerpt": "Hi there! I have played \"The Excavation of Hob's Barrow\" and I've seen \"The Wicker Man\" (the good one, thank you).\n\nI'm keen to dig deeper into folk horror, and I'd appreciate your recommendations in any medium (books, movies, games, shows, etc.)\n\nIf you'd be willing to throw in your own definition of what \"folk horror\" means as well, that'd be welcome! I have an inkling, obviously, but I'd love to put a pin in it. Cheers!",
+    "access_level": "search_excerpt",
+    "request_summary": "folk horror; cross-medium recommendations",
+    "predicates": [
+      "folk horror",
+      "cross-medium recommendations"
+    ],
+    "existing_fields": [
+      "horror_modes.folk_horror"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Movie subset already representable; books/games are catalog scope.",
+    "proposed_change": "Use current movie/show catalog and explain scope.",
+    "priority": "none",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-13",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1su519g/i_need_all_gothic_horror_movies_and_especially/",
+    "title": "I need all Gothic horror movies and especially romance heavy horror movies please!",
+    "request_excerpt": "hello friends and enemies of the horror subreddit. I have a sort of ongoing double sided project that will either end up being a fanfiction of my two blorbos or a screenplay. I'm envisioning a very house of leaves-esque This House Wants You Dead tragic romance thing. but I feel like every time I sit down to work on it, I just can't like....get the Vibe right.\n\nso if anyone has any good recommendations for gothic horror, gothic romance, or just romance-heavy horror movies or books, that would be incredibly helpful! no content warnings needed, I need fucked up actual gothic stuff please and thank you 😄",
+    "access_level": "search_excerpt",
+    "request_summary": "gothic horror; romance heavy; tragic house romance inspiration",
+    "predicates": [
+      "gothic horror",
+      "romance heavy",
+      "tragic house romance inspiration"
+    ],
+    "existing_fields": [
+      "aesthetics.gothic",
+      "genres.horror",
+      "experience.romantic_feeling",
+      "ending.tragedy"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Gothic atmosphere, horror, romance and optional tragic affect compose existing canonical fields; a combined genre label is unnecessary.",
+    "proposed_change": "Compose existing scores and interpret seed similarity without adding vocabulary.",
+    "priority": "none",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-14",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1wqyx3h/looking_for_period_romances_andor_gothic_romances/",
+    "title": "Looking for Period Romances and/or Gothic Romances (Horror elements are welcome!)",
+    "request_excerpt": "Hello! I am looking for recommendations for period/gothic romance movies set entirely in the past.\n\nWhile I think it's obvious, I'll still state that I would prefer movies that are not Western, pioneer stories, or war movies whether they have a romance plotline or not.\n\nWhile I love eras ranging from the late 1700s to the early 1900s, I am open to going to eras such as the Renaissance or Medieval eras as well. I am open to the movie having horror elements in it as well. I'm also fine with endings that aren't \"happy\".\n\nHere are some examples of movies that I liked:\n\n* Pride & Prejudice\n* Anna Karenina\n* Crimson Peak\n\nI hope this makes sense, please let me know if you have any questions!",
+    "access_level": "search_excerpt",
+    "request_summary": "entirely past; period/gothic romance; no western/pioneer/war; unhappy ending acceptable",
+    "predicates": [
+      "entirely past",
+      "period/gothic romance",
+      "no western/pioneer/war",
+      "unhappy ending acceptable"
+    ],
+    "existing_fields": [
+      "world_contexts.items[].start_year",
+      "world_contexts.items[].end_year",
+      "world_contexts.items[].centrality",
+      "ending.happiness"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Dominant past setting does not guarantee entire-work past scope; optional horror must stay optional.",
+    "proposed_change": "Require full-scope temporal assessment and preserve hard/optional constraints.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-15",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1ms5hxb",
+    "title": "Favorite gothic/horror romance movies?",
+    "request_excerpt": "I was just rewatching Lisa Frankenstein, and was hoping to find similar recommendations!\n\nMy favorites are:\nHumanist vampire seeking consenting suicidal person, Your Monster, Love Witch, and fresh.\n\nDo yall have any other favorites?",
+    "access_level": "search_excerpt",
+    "request_summary": "gothic horror romance; similar to Lisa Frankenstein",
+    "predicates": [
+      "gothic horror romance",
+      "similar to Lisa Frankenstein"
+    ],
+    "existing_fields": [
+      "aesthetics.gothic",
+      "genres.horror",
+      "experience.romantic_feeling",
+      "ending.tragedy"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Gothic atmosphere, horror, romance and optional tragic affect compose existing canonical fields; a combined genre label is unnecessary.",
+    "proposed_change": "Compose existing scores and interpret seed similarity without adding vocabulary.",
+    "priority": "none",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-16",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1wa7crz/cosmic_horror_recommendations/",
+    "title": "Cosmic horror recommendations?",
+    "request_excerpt": "I got into cosmic horror by way of Event Horizon, and I must say I’m absolutely enthralled. Best fucking genre of anything ever. I’ve seen The Thing, The Endless, and maybe 1 or 2 others, but I want MORE. I’ll watch Annialation at some point, but I’m already acquainted with the premise. Any hidden gems out there? Oh how much I wish I could Men in Black flashy thing myself and watch Event Horizon again for the first time:",
+    "access_level": "search_excerpt",
+    "request_summary": "cosmic horror; unseen hidden gems",
+    "predicates": [
+      "cosmic horror",
+      "unseen hidden gems"
+    ],
+    "existing_fields": [
+      "horror_modes.cosmic_horror"
+    ],
+    "support": "partial",
+    "gap_kind": "user_context",
+    "failure_reason": "Cosmic horror is already canonical; novelty belongs to user history.",
+    "proposed_change": "Use seen exclusions and catalog discovery ranking.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-17",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1rvithz/whats_your_favorite_horror_movie_to_watch_on_a/",
+    "title": "What’s your favorite horror movie to watch on a rainy day?",
+    "request_excerpt": "It’s raining here in NYC and I wanna know which movies are your go to for a rainy day.\n\nMine:\n\nThe Autopsy of Jane Doe\n\nIdentify\n\nShutter Island (not specifically horror)\n\nFriday the 13th 6 Jason Lives\n\nGothika",
+    "access_level": "search_excerpt",
+    "request_summary": "horror for rainy day",
+    "predicates": [
+      "horror for rainy day"
+    ],
+    "existing_fields": [
+      "seasonal_contexts",
+      "audience_contexts"
+    ],
+    "support": "partial",
+    "gap_kind": "user_context",
+    "failure_reason": "Rain at viewing time is not depicted rain or a season.",
+    "proposed_change": "Retain current viewing context; avoid falsely requiring onscreen rain.",
+    "priority": "low",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-18",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1vomdcs/cosmic_horror_worth_seeing/",
+    "title": "Cosmic horror worth seeing?",
+    "request_excerpt": "I already watched Mist, In the mouth of madness, event horizon, etc. Is there some cosmic/Lovecraft style horror that is really disturbing? The one that has incomprehensible monsters, etc.",
+    "access_level": "search_excerpt",
+    "request_summary": "disturbing cosmic horror; incomprehensible monsters",
+    "predicates": [
+      "disturbing cosmic horror",
+      "incomprehensible monsters"
+    ],
+    "existing_fields": [
+      "horror_modes.cosmic_horror",
+      "experience.fear"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "The cosmic_horror definition explicitly includes human insignificance before incomprehensible forces; the visible request does not justify a distinct monster-trait field.",
+    "proposed_change": "Use existing cosmic-horror and disturbing-experience assessments; no expansion based on this request.",
+    "priority": "none",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-19",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1wyr1s7/obscure_cosmic_horror_movies/",
+    "title": "Obscure cosmic horror movies?",
+    "request_excerpt": "It always seems like we bring up the same ten or so cosmic horror movies when the topic comes up, and I love them all regardless of how many people recommend them. But what weird little movie brings existential dread to you, by way of insignificance? I need more inspiration for what I'm writing.\n\nI recently watched Aniara(Fuck.) and Strange Harvest(Cool movie, great visuals.). I'm about to watch YellowBrickRoad and have Man Finds Tape on the back-burner. So I'm thinking of odd ones like those that aren't brought up all the time.\n\nEDIT:\n\nFinished YellowBrickRoad. >!Sometimes the acting and dialogue took me out, but overall it did give me a sense of hopelessness for the characters. I kind of wanted a smaller cast so that we could explore them more as people. I love how they used sound, and it felt like they were stuck. I wish they used lyrics to make them do what they did instead of them just going insane and wanting to kill themselves or others. Maybe even personalize songs to each char",
+    "access_level": "search_excerpt",
+    "request_summary": "obscure cosmic horror; existential insignificance; sound motifs",
+    "predicates": [
+      "obscure cosmic horror",
+      "existential insignificance",
+      "sound motifs"
+    ],
+    "existing_fields": [
+      "horror_modes.cosmic_horror",
+      "sound.design_prominence",
+      "sound.ambient_soundscapes"
+    ],
+    "support": "partial",
+    "gap_kind": "user_context",
+    "failure_reason": "Cosmic insignificance is already explicit in horror_modes.cosmic_horror; obscurity requires catalog discovery and the desired sound response is calibrated to examples.",
+    "proposed_change": "Use existing cosmic and sound fields with novelty ranking and explained seed facets.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-20",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1qr0fcj/good_movie_with_happy_ending/",
+    "title": "Good movie with happy ending?",
+    "request_excerpt": "I’m looking for a recommendation for a well-done horror that has a genuinely happy ending, NO twist.\n\nNo scene in the credits that leaves mystery, no untied ends. Villain is served justice and the victims have a fairy tale ending.\n\nPlease help!",
+    "access_level": "search_excerpt",
+    "request_summary": "happy ending; no credit mystery; villain justice; victims happy; no loose ends",
+    "predicates": [
+      "happy ending",
+      "no credit mystery",
+      "villain justice",
+      "victims happy",
+      "no loose ends"
+    ],
+    "existing_fields": [
+      "ending.happiness",
+      "ending.conflict_resolution",
+      "ending.interpretive_openness",
+      "format_facts.post_credits_scene_present",
+      "character_outcomes"
+    ],
+    "support": "partial",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Global happy ending and credit-scene presence do not establish who receives justice or what a credit scene changes.",
+    "proposed_change": "Bind villain/victim outcomes and stinger function; retain global ending fields.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-21",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1qfr8du/horror_movies_with_happy_endings/",
+    "title": "Horror movies with happy endings",
+    "request_excerpt": "While I love a good dread-fueled misery fest, sometimes I feel like it’s actually kinda gutsy to have a horror film actually ends happily. You all know any good horrors that put you through it, but end in a decent place? I’d love a few thoughts on why you think your rec fits the bill, if you can.",
+    "access_level": "search_excerpt",
+    "request_summary": "dread throughout; ends in decent place",
+    "predicates": [
+      "dread throughout",
+      "ends in decent place"
+    ],
+    "existing_fields": [
+      "experience.fear",
+      "ending.happiness",
+      "temporal_segments"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Overall fear plus ending happiness approximates intent but not ordered emotional progression.",
+    "proposed_change": "Use ending-specific assessment; typed segment emotion only if needed.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-22",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1j6fh2y",
+    "title": "Any female revenge movies that aren't about SA?",
+    "request_excerpt": "It seems most revenge movies with a female MC are about avenging a s*xual assault. In the rare cases it isn't, she's usually the villain. Anyone know any vengeful lady who wants to avenge something (I'm fine if she's the villain, btw, I just want her to be the MC).",
+    "access_level": "post_and_comments",
+    "request_summary": "female main character; revenge; not avenging sexual assault; villain acceptable",
+    "predicates": [
+      "female main character",
+      "revenge",
+      "not avenging sexual assault",
+      "villain acceptable"
+    ],
+    "existing_fields": [
+      "characters.female_protagonist",
+      "tropes.revenge",
+      "advisories.sexual_violence",
+      "entities"
+    ],
+    "support": "gap",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Female presence plus revenge plus no sexual violence changes motive constraint into global censorship.",
+    "proposed_change": "Add protagonist-bound motive/cause assertion; do not globally ban sexual violence without clarification.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-23",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1vekhsm/horrors_with_strong_vengeful_women/",
+    "title": "Horrors with strong vengeful women",
+    "request_excerpt": "I need some horrors where woman is strong threat and maybe looks for revenge. Something like in: **Eden Lake, Ready Or Not, Jennifer’s Body, You’re Next, I Spit On Your Grave, Revenge, Bedeviled, The Witch (Korean), A Girl Walk Home Alone At Night, 31, American Mary, Blood Red Sky, They Will Kill You (2026)**\n\nWomen involved in revenge and becomes threat for enemies would be pleasure",
+    "access_level": "search_excerpt",
+    "request_summary": "woman becomes threat; female revenge",
+    "predicates": [
+      "woman becomes threat",
+      "female revenge"
+    ],
+    "existing_fields": [
+      "characters.female_protagonist",
+      "tropes.revenge",
+      "entities"
+    ],
+    "support": "partial",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Woman and revenge could belong to different characters; female threat may not be protagonist.",
+    "proposed_change": "Bind agency/revenge/threat to same entity.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-24",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1k7mb1a/horror_movies_with_happy_endings/",
+    "title": "Horror movies with HAPPY endings",
+    "request_excerpt": "There's a lot of people here who insist that horror movies should have sad or horrible endings because it's more realistic. But I absolutely ADORE happy endings. It can make me enjoy a movie so much more.\n\nYes, life sucks. And sad endings are great! But sometimes it's nice to see something uplifting.\n\nMy examples: Killer Klowns from Outer Space, Ready or Not, and Get Out.",
+    "access_level": "search_excerpt",
+    "request_summary": "uplifting horror ending",
+    "predicates": [
+      "uplifting horror ending"
+    ],
+    "existing_fields": [
+      "ending.happiness",
+      "experience.uplift"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Specific ending happiness already exists.",
+    "proposed_change": "Populate and calibrate existing fields.",
+    "priority": "none",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-25",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1jft1nl/women_getting_revenge/",
+    "title": "Women getting revenge?",
+    "request_excerpt": "Looking for recommendations on your favorite women getting vengeance movies? Going through a rough patch with my partner and this my what I do instead of sad songs and cry. The only one I have set on my list right now is my favorite badass, Asami from Audition. And I prefer nothing with strong SA. Revenge is the heaviest of those types I can handle. Thank you in advance and can't wait to watch any suggestions!",
+    "access_level": "search_excerpt",
+    "request_summary": "female vengeance; personal rough patch; SA tolerance bounded by Revenge",
+    "predicates": [
+      "female vengeance",
+      "personal rough patch",
+      "SA tolerance bounded by Revenge"
+    ],
+    "existing_fields": [
+      "characters.female_protagonist",
+      "tropes.revenge",
+      "advisories.sexual_violence.intensity",
+      "audience_contexts"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "Named tolerance example cannot be replaced with generic no-SA filter or average user fit.",
+    "proposed_change": "Calibrate advisory threshold against named title and preserve personal context.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-26",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1xdhvzh/what_is_your_favorite_j_horror/",
+    "title": "What is your favorite J Horror?",
+    "request_excerpt": "Hiya, horror fans! I recently watched The Grudge and its prequels after having them recommended to me, and I really enjoyed them! I'd love to hear what other J Horror you wonderful folks enjoy.\n\nSo far I've seen House (LOVE it, gives me the same uncomfortable feeling as something like Videodrome), Perfect Blue, One Missed Call and Exit 8. I'm sure I'm missing a few, but those were all the ones I've seen recently.\n\nThanks for any suggestions! Bonus points if you know where they're streaming. I do have a Shudder subscription, but I have a hard time searching for specific genres on the app.",
+    "access_level": "search_excerpt",
+    "request_summary": "J-horror; unseen titles; Shudder availability",
+    "predicates": [
+      "J-horror",
+      "unseen titles",
+      "Shudder availability"
+    ],
+    "existing_fields": [
+      "cultural_contexts.items[].relation",
+      "catalog_facts.original_language_codes"
+    ],
+    "support": "partial",
+    "gap_kind": "catalog_join",
+    "failure_reason": "Japanese language alone does not identify artistic tradition; streaming availability changes.",
+    "proposed_change": "Use cultural industry-tradition concept and country/service catalog join.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-27",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1wmehrg/jhorror_movie_suggestions/",
+    "title": "J-Horror movie suggestions?",
+    "request_excerpt": "Here's the thing, I already watched a bunch of j-horror movies like: ju-on, the ring, pulse and noroi (I do have Audition to watch, not sure if it's a j-horror movie tho)\n\nAny other suggestion to watch? (I don't mind violent movies but no shit like Grotesque please lol)",
+    "access_level": "search_excerpt",
+    "request_summary": "J-horror; violence okay; not Grotesque-like extremity",
+    "predicates": [
+      "J-horror",
+      "violence okay",
+      "not Grotesque-like extremity"
+    ],
+    "existing_fields": [
+      "cultural_contexts",
+      "advisories.gore.intensity",
+      "advisories.torture.intensity"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "Named negative exemplar specifies tolerance, not universal ban on violence.",
+    "proposed_change": "Ask/derive disliked facet and apply calibrated thresholds.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-28",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1wx45pf/horror_movies_that_arent_total_gore_fests/",
+    "title": "Horror movies that aren't total gore fests recommendations?",
+    "request_excerpt": "I enjoy horror and recently watched Caveat (2020) which was amazing, but I cannot watch movies with a ton of gore (which is odd because I enjoy gore in video games and art). Saw (2004) made me feel sick when I watched it as well as the first Final Destination movie. Any recommendations?",
+    "access_level": "search_excerpt",
+    "request_summary": "horror; not gore fest; Caveat positive Saw negative; game gore okay",
+    "predicates": [
+      "horror",
+      "not gore fest",
+      "Caveat positive Saw negative",
+      "game gore okay"
+    ],
+    "existing_fields": [
+      "advisories.gore.intensity",
+      "advisories.gore.explicitness",
+      "audience_contexts"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "Tolerance is medium-specific and anchored to examples.",
+    "proposed_change": "Use movie-specific personal thresholds; no extra vector.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-29",
+    "subreddit": "ifyoulikeblank",
+    "url": "https://www.reddit.com/r/ifyoulikeblank/comments/s6ab1z",
+    "title": "IIL dream-like or philosophical mystery movies (list below), WEWIL?",
+    "request_excerpt": "Mulholland Drive, Shutter Island, Under the Silver Lake, Groundhog Day, Truman Show, Barton Fink, Eyes Wide Shut, Memento, Space Odyssey, Predestination",
+    "access_level": "search_excerpt",
+    "request_summary": "dreamlike; philosophical mystery",
+    "predicates": [
+      "dreamlike",
+      "philosophical mystery"
+    ],
+    "existing_fields": [
+      "storytelling.dream_sequences",
+      "experience.thought_provocation",
+      "ending.interpretive_openness"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "Dreamlike atmosphere is not literal dream sequences.",
+    "proposed_change": "Keep oneiric formal concept distinct from depicted dreams.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-30",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/108hw8w",
+    "title": "Recommendations for horror with no direct child violence",
+    "request_excerpt": "Hello my fellow horror lovers! I had a rough October and essentially missed Halloween (which I look forward to every year). But with my birthday coming up, I have decided to plan a re-do and enjoy a month of horror movie greats.\n\nHowever, since becoming a new mom I have become overly sensitive when it comes to child violence in films. It ruins the whole movie for me. Any suggestions for recent films that don’t have anything involving kids? Much appreciated 🖤\n\n*Edit- I should say explicit violence involving kids. Think anything with abuse, kidnapping or “It”-style child stalking 😂 For example, I wish I had skipped The Black Phone",
+    "access_level": "search_excerpt",
+    "request_summary": "no explicit child violence; no abuse kidnapping stalking children; new parent",
+    "predicates": [
+      "no explicit child violence",
+      "no abuse kidnapping stalking children",
+      "new parent"
+    ],
+    "existing_fields": [
+      "advisories.child_endangerment",
+      "advisories.kidnapping_and_confinement",
+      "character_outcomes"
+    ],
+    "support": "partial",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Child advisory broadly covers threats; kidnapping must be bound to child and explicit depiction.",
+    "proposed_change": "Bind advisory event and target; retain verified absence semantics.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-31",
+    "subreddit": "HorrorMovies",
+    "url": "https://www.reddit.com/r/HorrorMovies/comments/1id3ken",
+    "title": "horror movies with no nudity/sex",
+    "request_excerpt": "heyy, im a horror movies fan and i want to watch some with my parents with NO SEX and NO NUDITY and if there are any, classic ones especially since theyre my fav",
+    "access_level": "search_excerpt",
+    "request_summary": "watch with parents; no sex; no nudity; classics preferred",
+    "predicates": [
+      "watch with parents",
+      "no sex",
+      "no nudity",
+      "classics preferred"
+    ],
+    "existing_fields": [
+      "advisories.sexual_activity",
+      "advisories.nudity"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Separate nudity/sex exclusions already exist.",
+    "proposed_change": "Use verified absence; classic preference is query/catalog ranking.",
+    "priority": "none",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-32",
+    "subreddit": "HorrorMovies",
+    "url": "https://www.reddit.com/r/HorrorMovies/comments/1hbj7nl",
+    "title": "My 10 year old son wants to watch more horror.",
+    "request_excerpt": "My 10 year old son wants to watch more horror, but is not sure what to watch next. He watched these all by himself without getting scared or mentally scarred. He’s watched M3gan, Five nights at Freddy’s, scary stories to tell in the dark, happy death day, A quiet place: day one, Texas Chainsaw Massacre (2022), Scream 1-6, and the exorcist. What should he watch next? Not looking for not scary movies like Tremors, jaws, jumanji, coraline etc.\n\nEdit: I forgot I also showed him Halloween kills. He didn’t get scared at all.",
+    "access_level": "search_excerpt",
+    "request_summary": "10-year-old wants scarier horror; exclude tame examples",
+    "predicates": [
+      "10-year-old wants scarier horror",
+      "exclude tame examples"
+    ],
+    "existing_fields": [
+      "experience.fear",
+      "audience_contexts"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "Age rating does not predict individual fear threshold.",
+    "proposed_change": "Use stated examples and explicit guardian context.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-33",
+    "subreddit": "HorrorMovies",
+    "url": "https://www.reddit.com/r/HorrorMovies/comments/1frraso",
+    "title": "For kids",
+    "request_excerpt": "9 year old wants to watch a horror movie. I want to watch one with her and not ruin her for life. But I also don’t want to watch hocus Pocus again.",
+    "access_level": "search_excerpt",
+    "request_summary": "horror for 9-year-old; not Hocus Pocus again",
+    "predicates": [
+      "horror for 9-year-old",
+      "not Hocus Pocus again"
+    ],
+    "existing_fields": [
+      "audience_contexts",
+      "experience.fear"
+    ],
+    "support": "partial",
+    "gap_kind": "user_context",
+    "failure_reason": "Fit requires specific tolerances and previous watches.",
+    "proposed_change": "Gather tolerances and apply seen exclusions.",
+    "priority": "low",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-34",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1w7m3kq/horror_movies_where_sound_plays_a_big_role/",
+    "title": "Horror movies where sound plays a big role?",
+    "request_excerpt": "I recently got hearing aids and I want to deep dive into my favorite genre. What movies masterfully use sound to terrify?\n\nI think I remember someone saying Annihilation did this very well?",
+    "access_level": "search_excerpt",
+    "request_summary": "masterful terrifying sound; new hearing aids",
+    "predicates": [
+      "masterful terrifying sound",
+      "new hearing aids"
+    ],
+    "existing_fields": [
+      "sound.design_prominence",
+      "sound.ambient_soundscapes",
+      "evaluations.sound_design"
+    ],
+    "support": "partial",
+    "gap_kind": "user_context",
+    "failure_reason": "Existing sound dimensions cover goal; device/listening context affects experience.",
+    "proposed_change": "Explain sound evidence; preserve listening circumstances without assuming capabilities.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-35",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1s8cymz/im_looking_for_horror_movies_where_sound_design/",
+    "title": "I’m looking for horror movies where sound design does most of the scaring.",
+    "request_excerpt": "I’m looking for horror movies where sound design does most of the scaring.\n\nI’ve got a proper home theatre setup (surround / Atmos), so I’m not just looking for “loud” movies — I want films that use spatial audio, silence, and subtle sounds to build tension.\n\nStuff like:\n\nCreaking floors behind you\n\nWhispering or movement in rear channels\n\nSudden directional sounds that make you turn your head\n\nAtmosphere where sound makes you feel like something is in the room\n\nBasically: sound-driven horror that creates dread and jump scares through audio, not just visuals\n\nWhat movies made you hear the fear?",
+    "access_level": "search_excerpt",
+    "request_summary": "spatial audio; rear-channel sounds; silence and subtle dread; Atmos setup",
+    "predicates": [
+      "spatial audio",
+      "rear-channel sounds",
+      "silence and subtle dread",
+      "Atmos setup"
+    ],
+    "existing_fields": [
+      "sound.design_prominence",
+      "sound.silence",
+      "sound.ambient_soundscapes",
+      "sound.audio_startles"
+    ],
+    "support": "partial",
+    "gap_kind": "catalog_join",
+    "failure_reason": "Sound prominence does not prove a particular available edition has surround/height mix.",
+    "proposed_change": "Join edition audio-format facts and retain spatial technique evidence.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-36",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1k6glht/what_are_some_horror_films_where_the_sound_design/",
+    "title": "What are some horror films where the sound design was part of what made the scene scary?",
+    "request_excerpt": "I'm not talking about a sharp violin note during a jumpscare or your standard issue anxiety instrumental. But films where the soundtrack / sound design felt like it was the accomplice of the monster, Demon, spirit, killer, etc...",
+    "access_level": "search_excerpt",
+    "request_summary": "sound as accomplice to threat; not violin jumpscare",
+    "predicates": [
+      "sound as accomplice to threat",
+      "not violin jumpscare"
+    ],
+    "existing_fields": [
+      "sound.design_prominence",
+      "sound.audio_startles",
+      "sound.ambient_soundscapes"
+    ],
+    "support": "partial",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Prominent sound does not bind motif to antagonist or its narrative function.",
+    "proposed_change": "Add evidence-backed sound motif/function assertions before numeric expansion.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-37",
+    "subreddit": "ifyoulikeblank",
+    "url": "https://www.reddit.com/r/ifyoulikeblank/comments/1ndhkmq/iil_psychological_horror_films_like_us_hereditary/",
+    "title": "[IIL] Psychological horror films like Us, Hereditary, and Midsommar",
+    "request_excerpt": "I'm in the mood to watch something that will make me sit there in silence for a good 10 minutes. I want something that will make me think and go over what I just watched and be like \"Ohhh that makes so much sense now!\"\n\nPlease, I haven't seen a good movie like this in awhile. And I did start I'm Thinking of Ending Things but the slow pace threw me off and I only got up to them waving at his mom in the window. If it gets better please let me know lol",
+    "access_level": "search_excerpt",
+    "request_summary": "psychological horror; retrospective realization; not too slow",
+    "predicates": [
+      "psychological horror",
+      "retrospective realization",
+      "not too slow"
+    ],
+    "existing_fields": [
+      "horror_modes.psychological_horror",
+      "experience.thought_provocation",
+      "ending.twist_impact"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "Thinking afterwards differs from confusion; pacing is a personal threshold.",
+    "proposed_change": "Combine interpretive payoff and pace with seed-based calibration.",
+    "priority": "medium",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-38",
+    "subreddit": "ifyoulikeblank",
+    "url": "https://www.reddit.com/r/ifyoulikeblank/comments/x4l2nv",
+    "title": "IIL melancholy but funny movies...",
+    "request_excerpt": "Things that are sad but funny with a healthy dose of whimsy or imagination. I'm thinking movies like Everything Is Illuminated, The Royal Tenenbaums, Amelie, Jojo Rabbit, The Fall and Pan's Labyrinth.",
+    "access_level": "search_excerpt",
+    "request_summary": "sad and funny; whimsy and imagination",
+    "predicates": [
+      "sad and funny",
+      "whimsy and imagination"
+    ],
+    "existing_fields": [
+      "experience.melancholy",
+      "humor.overall",
+      "experience.playfulness"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Independent experience/humor dimensions avoid false contradiction.",
+    "proposed_change": "Compose existing scores.",
+    "priority": "none",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-39",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1wyhke5/snowy_horror/",
+    "title": "Snowy Horror",
+    "request_excerpt": "Looking for horror films with that sort of \"The Shining\" closed-off, single-location snowy backdrop setting. I have already seen Misery, 30 Days of Night, The Thing, Let the Right One In, The Invisible Man, and The Wolf of Snow Hollow. Thanks! Also, doesn't have to be outright snowy weather as long as there is a gloomy atmosphere, like, for example, The Lighthouse.\n\nEDIT: Watched The Lodge, and it was certainly a movie; loved Riley Keough though.",
+    "access_level": "search_excerpt",
+    "request_summary": "isolated single location; snow optional if gloomy",
+    "predicates": [
+      "isolated single location",
+      "snow optional if gloomy"
+    ],
+    "existing_fields": [
+      "settings.polar",
+      "experience.bleakness",
+      "concept_assertions"
+    ],
+    "support": "partial",
+    "gap_kind": "query_execution",
+    "failure_reason": "Snow is optional and polar is not snow; hard weather filter loses allowed gloomy titles.",
+    "proposed_change": "Preserve OR alternatives and curated weather concepts.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-40",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1vygr9y/looking_for_horror_movie_in_snowy_weathersetting/",
+    "title": "looking for horror movie in snowy weather/setting",
+    "request_excerpt": "Hi yall im looking for movies (horror or thriller) where the movie is in a snowy location, like the Shining for example or anything similar, just needs to have snow/white and it being an obstacle in the plot . thank you so much!",
+    "access_level": "search_excerpt",
+    "request_summary": "snow white setting; snow obstructs plot",
+    "predicates": [
+      "snow white setting",
+      "snow obstructs plot"
+    ],
+    "existing_fields": [
+      "seasonal_contexts",
+      "world_contexts",
+      "concept_assertions"
+    ],
+    "support": "gap",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Winter or white palette cannot establish snow as causal obstacle.",
+    "proposed_change": "Represent weather event causing confinement/obstruction with evidence-backed relation.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  },
+  {
+    "id": "niche-41",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1w3dgs3/overlooked_winterisolated_horror_recommendations/",
+    "title": "Overlooked winter/isolated horror recommendations? Netflix, Hulu, Prime, Apple TV, Paramount+",
+    "request_excerpt": "Hi guys,\n\nLong story short, here are the streaming apps I've got right now:\n\n* Prime Video\n* Netflix\n* Hulu\n* Apple TV\n* Paramount+\n* The Roku Channel\n* Tubi\n\nI'm looking for a horror/thriller that people tend to overlook, or just missed because it didn't have a ton of mainstream buzz.\n\nSpecifically, I'd love something set in an isolated location, ideally during winter, with that \"trapped inside while a monster, ghost, or creature is outside trying to get in\" vibe.\n\nDoes anyone have good recommendations available on any of those platforms? If there's another free app I should get to watch your pick, let me know, I just don't want to pay for any more services or purchase anything.\n\nP.S. If some kind soul is willing to make a recommendation, that's fantastic, but please no found-footage-type movies. I just don't like the shaky camera, lol.",
+    "access_level": "search_excerpt",
+    "request_summary": "isolated winter; threat outside trying to enter; no shaky found footage; on listed services",
+    "predicates": [
+      "isolated winter",
+      "threat outside trying to enter",
+      "no shaky found footage",
+      "on listed services"
+    ],
+    "existing_fields": [
+      "visuals.handheld_motion",
+      "format_facts.presentation_modes",
+      "entities",
+      "world_contexts"
+    ],
+    "support": "partial",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Setting and creature co-occurrence cannot establish inside/outside siege relation; found footage and handheld are distinct.",
+    "proposed_change": "Bind threat to location/boundary; apply separate handheld/format constraints and service join.",
+    "priority": "high",
+    "accessed_at": "2026-10-24"
+  }
+]

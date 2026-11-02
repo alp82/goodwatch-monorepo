@@ -1,0 +1,26 @@
+[
+  {
+    "part": "vector",
+    "fixture": "truman.json",
+    "request_sha256": "96b940a0b14d9c879df9c8219790a042fb130c250fb05bbcee59d6ff2c86c2e3",
+    "messages_canonical_sha256": "de9d9cf17de44c3d36e739183354b864ae5cb5a897347988abd2f769e4f2db23",
+    "wire_schema_canonical_sha256": "0f9de3247579cd9a5d9308654c745083b1afd91210270ea8ed69e98f8e6d8094",
+    "request_canonical_sha256": "e6e99f71c06e5fdc527ad03003cbff6ff738b9caf1975d1f3251260fa95cdece"
+  },
+  {
+    "part": "targeted",
+    "fixture": "paterson.json",
+    "request_sha256": "bae8cbcfa24012e8e00a3831a042873957f9167c58a33103b3f232f6c549f09a",
+    "messages_canonical_sha256": "6b7670104411fa15fdb382eeb7671d8105842df96cf6bcb5b2a066f36f80c61e",
+    "wire_schema_canonical_sha256": "ddc63f066cdb3b40a15ba334ccf4dc7b9a0f4b81f9d2c94e906232b82081d48c",
+    "request_canonical_sha256": "2b077d76f0c461f160c19330219b8a140dedc2b096e1fd23e3862d7b102f5380"
+  },
+  {
+    "part": "facts",
+    "fixture": "code-geass.json",
+    "request_sha256": "15d2bb2cfae3c7f9efe6302ab57b6663a70e61ce55dafffe04b9ab746f084e79",
+    "messages_canonical_sha256": "89f4af2e7aee4f923ca32d72f478fe595297a9ff63c8f3c0aa8196f28e6b006b",
+    "wire_schema_canonical_sha256": "e1d1f00ccfcead3b8152edd79b6ffddc8b3077bc96f27adee0cafef7af190b18",
+    "request_canonical_sha256": "813afbb619d0e17d00706037bb372efa8659c0bc67bf6c070da6f1f547d4e750"
+  }
+]

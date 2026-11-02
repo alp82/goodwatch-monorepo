@@ -1,0 +1,991 @@
+{
+  "projection_version": "similarity-v2-proposal.1",
+  "registry_sha256": "d8ed4f9b3c069b0619ce84a1b17ac68d5c61812dd1324176bd98ce702a7d6496",
+  "mapping_sha256": "76fe05457bbec8f92afd7654ff2133ccab9acbfaad692150d3ad153ef015f5fc",
+  "scope": "Saved draft.2 assessments only. No new inference, imputation or semantic rejudging. Completeness is not correctness.",
+  "results": [
+    {
+      "label": "TYFS original",
+      "assessment_sha256": "3e9e49f64c567f77230fb6e8be00bb5bf3086ca8ab157c7a498e2b38655386d7",
+      "selected_count": 258,
+      "counts": {
+        "null": 144,
+        "numeric": 114
+      },
+      "numeric_complete": false,
+      "quality_accepted": false,
+      "per_group": {
+        "experience": {
+          "null": 14,
+          "numeric": 13
+        },
+        "humor": {
+          "numeric": 13
+        },
+        "themes": {
+          "numeric": 26,
+          "null": 42
+        },
+        "narrative_engines": {
+          "null": 11,
+          "numeric": 3
+        },
+        "relationships": {
+          "numeric": 6,
+          "null": 15
+        },
+        "characters": {
+          "numeric": 6,
+          "null": 5
+        },
+        "world": {
+          "null": 12
+        },
+        "world_treatment": {
+          "null": 4,
+          "numeric": 1
+        },
+        "storytelling": {
+          "numeric": 16,
+          "null": 6
+        },
+        "stakes": {
+          "numeric": 4,
+          "null": 1
+        },
+        "dialogue": {
+          "numeric": 6
+        },
+        "aesthetics": {
+          "null": 10,
+          "numeric": 3
+        },
+        "visuals": {
+          "numeric": 8,
+          "null": 3
+        },
+        "action": {
+          "null": 11
+        },
+        "horror_modes": {
+          "null": 5
+        },
+        "sound": {
+          "numeric": 3,
+          "null": 4
+        },
+        "ending": {
+          "numeric": 5,
+          "null": 1
+        },
+        "viewing_demands": {
+          "numeric": 1
+        }
+      },
+      "unavailable_selected_fields": [
+        {
+          "field": "experience.adrenaline",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.fear",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.romantic_feeling",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.sensuality",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.wonder",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.melancholy",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.uncanniness",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.catharsis",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.nostalgia",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.bleakness",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.uplift",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.emotional_restraint",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.escapism",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "experience.wish_fulfillment",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.mystery",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.war",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.radicalization",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.technological_change",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.faith_and_spirituality",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.environment",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.science",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.survival",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.adventure",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.hacking",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.artificial_intelligence",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.consciousness",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.existential_meaning",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.grief",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.trauma",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.recovery",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.mental_health",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.addiction_recovery",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.coming_out",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.sexuality",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.gender_identity",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.immigration",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.displacement",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.gentrification",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.surveillance",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.climate_change",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.inherited_wealth",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.social_media",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.forgiveness",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.belonging",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.loneliness",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.obsession",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.colonialism",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.racism",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.sexism",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.caregiving",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.aging",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.midlife",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.retirement",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.early_adulthood",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.education",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "themes.artistic_creation",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.investigation",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.pursuit",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.rescue",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.escape",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.quest",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.everyday_life",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.survival",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.heist",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.espionage",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.military_operation",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "narrative_engines.legal_case",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.breakup_or_divorce",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.partner_bereavement",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.love_triangle",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.forbidden_romance",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.mentor_mentee",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.forced_proximity",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.adversaries_cooperate",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.found_family",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.family_conflict",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.generational_trauma",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.siblings",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.caregiver_dependent",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.human_animal_companionship",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.coercive_relationship",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "relationships.coercive_group_control",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "characters.detective_lead",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "characters.family_business",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "characters.unaccompanied_children",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "characters.teen_peer_group",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "characters.clandestine_groups",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.advanced_technology",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.magic",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.simulation",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.virtual_reality",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.parallel_worlds",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.time_travel",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.time_loop",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.dystopian_society",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.post_apocalyptic",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.spacefaring",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.robots",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world.myth_and_folklore",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world_treatment.scientific_rigor",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world_treatment.speculative_freedom",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world_treatment.worldbuilding_depth",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "world_treatment.magic_rule_detail",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "storytelling.multiple_timelines",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "storytelling.unreliable_reality",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "storytelling.dream_sequences",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "storytelling.observational_mode",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "storytelling.slice_of_life",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "storytelling.information_withholding",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "stakes.community",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "aesthetics.gothic",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "aesthetics.noir",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "aesthetics.retro",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "aesthetics.minimalism",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "aesthetics.surrealism",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "aesthetics.psychedelia",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "aesthetics.grotesquerie",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "aesthetics.camp",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "aesthetics.intimacy",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "aesthetics.spectacle",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "visuals.long_takes",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "visuals.handheld_motion",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "visuals.symmetry",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.hand_to_hand",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.martial_arts_choreography",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.grappling",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.gunplay",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.blade_combat",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.superpowered_combat",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.chases",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.large_battles",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.gritty_combat",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.stylized_violence",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.realistic_violence",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "horror_modes.possession",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "horror_modes.body_horror",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "horror_modes.folk_horror",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "horror_modes.cosmic_horror",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "horror_modes.psychological_horror",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "sound.silence",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "sound.sparse_score",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "sound.audio_startles",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "sound.musical_numbers",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "ending.tragedy",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        }
+      ]
+    },
+    {
+      "label": "TYFS split",
+      "assessment_sha256": "e0d6538178f537eaaee739d4f2f07289a457f72bee1650bbbf060a604e0dcd10",
+      "selected_count": 258,
+      "counts": {
+        "numeric": 249,
+        "null": 9
+      },
+      "numeric_complete": false,
+      "quality_accepted": false,
+      "per_group": {
+        "experience": {
+          "numeric": 27
+        },
+        "humor": {
+          "numeric": 13
+        },
+        "themes": {
+          "numeric": 68
+        },
+        "narrative_engines": {
+          "numeric": 14
+        },
+        "relationships": {
+          "numeric": 21
+        },
+        "characters": {
+          "numeric": 11
+        },
+        "world": {
+          "numeric": 12
+        },
+        "world_treatment": {
+          "numeric": 5
+        },
+        "storytelling": {
+          "numeric": 22
+        },
+        "stakes": {
+          "numeric": 5
+        },
+        "dialogue": {
+          "numeric": 6
+        },
+        "aesthetics": {
+          "numeric": 13
+        },
+        "visuals": {
+          "numeric": 11
+        },
+        "action": {
+          "numeric": 2,
+          "null": 9
+        },
+        "horror_modes": {
+          "numeric": 5
+        },
+        "sound": {
+          "numeric": 7
+        },
+        "ending": {
+          "numeric": 6
+        },
+        "viewing_demands": {
+          "numeric": 1
+        }
+      },
+      "unavailable_selected_fields": [
+        {
+          "field": "action.martial_arts_choreography",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.grappling",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.gunplay",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.blade_combat",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.superpowered_combat",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.large_battles",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.gritty_combat",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.stylized_violence",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        },
+        {
+          "field": "action.realistic_violence",
+          "state": "null",
+          "retained_state": "explicit_null_unknown_or_unassessed"
+        }
+      ]
+    },
+    {
+      "label": "Truman",
+      "assessment_sha256": "f401605c74ad830f58ce676e39f30a721f816f623fbfa114eacebc9870f9325f",
+      "selected_count": 258,
+      "counts": {
+        "numeric": 258
+      },
+      "numeric_complete": true,
+      "quality_accepted": false,
+      "per_group": {
+        "experience": {
+          "numeric": 27
+        },
+        "humor": {
+          "numeric": 13
+        },
+        "themes": {
+          "numeric": 68
+        },
+        "narrative_engines": {
+          "numeric": 14
+        },
+        "relationships": {
+          "numeric": 21
+        },
+        "characters": {
+          "numeric": 11
+        },
+        "world": {
+          "numeric": 12
+        },
+        "world_treatment": {
+          "numeric": 5
+        },
+        "storytelling": {
+          "numeric": 22
+        },
+        "stakes": {
+          "numeric": 5
+        },
+        "dialogue": {
+          "numeric": 6
+        },
+        "aesthetics": {
+          "numeric": 13
+        },
+        "visuals": {
+          "numeric": 11
+        },
+        "action": {
+          "numeric": 11
+        },
+        "horror_modes": {
+          "numeric": 5
+        },
+        "sound": {
+          "numeric": 7
+        },
+        "ending": {
+          "numeric": 6
+        },
+        "viewing_demands": {
+          "numeric": 1
+        }
+      },
+      "unavailable_selected_fields": []
+    }
+  ]
+}

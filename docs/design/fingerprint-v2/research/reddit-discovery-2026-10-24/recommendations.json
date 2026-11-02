@@ -1,0 +1,88 @@
+[
+  {
+    "id": "R1",
+    "priority": "high",
+    "change": "Contextual assertions linking subject, event/action, object, motive and context",
+    "destination": "metadata",
+    "case_ids": [
+      "niche-22",
+      "niche-23",
+      "niche-30",
+      "niche-40",
+      "movies-09"
+    ],
+    "vector_change": false
+  },
+  {
+    "id": "R2",
+    "priority": "high",
+    "change": "Temporal attachment, ordered tone changes and scope-aware outcome/continuity queries",
+    "destination": "metadata and scoped aggregation",
+    "case_ids": [
+      "niche-05",
+      "niche-20",
+      "root-03",
+      "movies-21",
+      "movies-26",
+      "tv-001"
+    ],
+    "vector_change": false
+  },
+  {
+    "id": "R3",
+    "priority": "high",
+    "change": "Query plan preserving hard/soft predicates, OR alternatives, scoped negation and selected-facet similarity",
+    "destination": "query handling",
+    "case_ids": [
+      "niche-05",
+      "niche-39",
+      "tv-007",
+      "tv-011",
+      "tv-016",
+      "tv-030"
+    ],
+    "vector_change": false
+  },
+  {
+    "id": "R4",
+    "priority": "high",
+    "change": "Populate verified exclusions; distinguish event targets, depiction and subjective tolerance",
+    "destination": "metadata evidence and query policy",
+    "case_ids": [
+      "niche-03",
+      "niche-04",
+      "niche-30",
+      "tv-011"
+    ],
+    "vector_change": false
+  },
+  {
+    "id": "R5",
+    "priority": "high",
+    "change": "Edition/offer audio-description, subtitle and mix joins; scoped completion/finale/cast data",
+    "destination": "catalog and aggregation",
+    "case_ids": [
+      "tv-002",
+      "tv-008",
+      "tv-039",
+      "niche-35"
+    ],
+    "vector_change": false
+  },
+  {
+    "id": "R6",
+    "priority": "medium",
+    "change": "Curated cultural/form vocabulary and character-domain competence assertions before optional vector promotion",
+    "destination": "controlled metadata vocabulary",
+    "case_ids": [
+      "movies-01",
+      "movies-10",
+      "movies-12",
+      "movies-31",
+      "movies-32",
+      "root-01",
+      "root-02"
+    ],
+    "vector_change": "none now; competence is an untested candidate"
+  }
+]

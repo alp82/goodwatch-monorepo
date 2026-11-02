@@ -1,0 +1,881 @@
+[
+  {
+    "id": "movies-01",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1diyucm/",
+    "title": "Slow cinema for beginners",
+    "request_excerpt": "Slowly Paced or A Slow Burn",
+    "access_level": "post_and_comments",
+    "request_summary": "Accessible entry points to Slow Cinema, explicitly distinguished from ordinary slow movies.",
+    "predicates": [
+      "film movement=Slow Cinema",
+      "beginner accessible",
+      "relative to named favorites"
+    ],
+    "existing_fields": [
+      "concept_assertions.items[].facet",
+      "storytelling.observational_mode",
+      "visuals.long_takes",
+      "visuals.static_camera",
+      "storytelling.formal_challenge",
+      "viewing_demands.attention"
+    ],
+    "support": "partial",
+    "gap_kind": "data_population",
+    "failure_reason": "Movement facet exists but no evidence here of canonical Slow Cinema vocabulary or population; a low plot velocity score alone conflates traditions.",
+    "proposed_change": "Canonicalize movement aliases, populate evidence-backed membership and combine with user-relative viewing demands.",
+    "priority": "high"
+  },
+  {
+    "id": "movies-02",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1i620w9/",
+    "title": "Slow Cinema that's well written.",
+    "request_excerpt": "slow cinema that have exceptional writing",
+    "access_level": "search_excerpt",
+    "request_summary": "Movement plus strong writing evaluation.",
+    "predicates": [
+      "film movement=Slow Cinema",
+      "exceptional writing"
+    ],
+    "existing_fields": [
+      "concept_assertions.items[].facet",
+      "evaluations.writing",
+      "storytelling.observational_mode"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "Writing evaluation is present; exceptional and membership remain judgment-dependent. Indexed discussion explicitly disputes slow cinema versus slow burn.",
+    "proposed_change": "Use attributed movement membership and explain evaluation calibration; no new writing field.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-03",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1imf4m0/",
+    "title": "slow cinema movies that feel like a nightmare",
+    "request_excerpt": "slow cinema movies that feel like a nightmare",
+    "access_level": "search_excerpt",
+    "request_summary": "Slow Cinema combined with nightmare feeling.",
+    "predicates": [
+      "Slow Cinema",
+      "nightmarish atmosphere"
+    ],
+    "existing_fields": [
+      "concept_assertions.items[].facet",
+      "experience.uncanniness",
+      "experience.fear",
+      "aesthetics.surrealism"
+    ],
+    "support": "partial",
+    "gap_kind": "data_population",
+    "failure_reason": "Existing dimensions describe feeling but cannot establish movement membership without canonical claims.",
+    "proposed_change": "Reuse movement assertion plus weighted experience predicates.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-04",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1twtz0u/",
+    "title": "Looking for slow but engaging movies",
+    "request_excerpt": "slow, lazy summer feeling while still keeping the story going",
+    "access_level": "search_excerpt",
+    "request_summary": "Lingering shots like Call Me by Your Name while maintaining engagement.",
+    "predicates": [
+      "long lingering shots",
+      "lazy summer feeling",
+      "story keeps going"
+    ],
+    "existing_fields": [
+      "visuals.long_takes",
+      "storytelling.plot_velocity",
+      "experience.tranquility",
+      "seasonal_contexts",
+      "aesthetics.lyricism"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "Engaging is relative to viewer and examples; low velocity alone misses the desired sustained interest.",
+    "proposed_change": "Translate explanation into long-take and seasonal predicates plus user-relative ranking.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-05",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1rget29/",
+    "title": "Moody movies / semi-slow cinema",
+    "request_excerpt": "something not too experimental is best for now",
+    "access_level": "search_excerpt",
+    "request_summary": "Atmospheric dark movies with moderate accessibility and little action.",
+    "predicates": [
+      "gradual atmosphere",
+      "dark mood",
+      "limited experimentation",
+      "little action"
+    ],
+    "existing_fields": [
+      "storytelling.gradual_development",
+      "experience.bleakness",
+      "storytelling.formal_challenge",
+      "genres.action",
+      "viewing_demands.attention"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Combination is expressible; thresholds remain user-relative.",
+    "proposed_change": "Use composition of existing scores and seed-title comparisons.",
+    "priority": "none"
+  },
+  {
+    "id": "movies-06",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/16bwuc2/",
+    "title": "Hi guys, I need a slow watchable movie",
+    "request_excerpt": "I really like slow cinema, but only when they are watchable",
+    "access_level": "search_excerpt",
+    "request_summary": "Slow movies calibrated against positives and an unfinished negative.",
+    "predicates": [
+      "slow",
+      "watchable relative to favorites",
+      "negative example"
+    ],
+    "existing_fields": [
+      "storytelling.plot_velocity",
+      "viewing_demands.attention",
+      "storytelling.formal_challenge"
+    ],
+    "support": "non_schema",
+    "gap_kind": "user_context",
+    "failure_reason": "Watchable cannot be a universal title truth; examples are personal calibration.",
+    "proposed_change": "Capture positive and negative seed reasons and rank within their demand range.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-07",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1777kcf/",
+    "title": "Which films do you think fit perfectly into the genre of Magic Realism?",
+    "request_excerpt": "Magical Realism, not Fantasy",
+    "access_level": "search_excerpt",
+    "request_summary": "Magical realism rather than generic fantasy.",
+    "predicates": [
+      "magical realism",
+      "exclude generic fantasy"
+    ],
+    "existing_fields": [
+      "world_treatment.magical_realism",
+      "genres.fantasy",
+      "world_treatment.everyday_realism"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Explicit existing magical-realism field handles intent; genre exclusion needs care because genre membership can overlap.",
+    "proposed_change": "Map exact phrase to existing field and clarify hard exclusion interpretation.",
+    "priority": "none"
+  },
+  {
+    "id": "movies-08",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1g02fpt/",
+    "title": "Movies with magical realism?",
+    "request_excerpt": "Stranger Than Fiction, Ruby Sparks, and Midnight in Paris",
+    "access_level": "search_excerpt",
+    "request_summary": "Magical realism with the feel of named examples.",
+    "predicates": [
+      "magical realism",
+      "similar feel to three seeds"
+    ],
+    "existing_fields": [
+      "world_treatment.magical_realism",
+      "experience.playfulness",
+      "aesthetics.stylization"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Schema contains the core trait; similarity execution and seed weighting are separate.",
+    "proposed_change": "Rank on explicit magical realism plus seed experience contribution.",
+    "priority": "none"
+  },
+  {
+    "id": "movies-09",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1kow3co/",
+    "title": "Magical realism",
+    "request_excerpt": "Bonus points if it’s for comedic effect",
+    "access_level": "search_excerpt",
+    "request_summary": "Magical realism used for comedy, for writing research.",
+    "predicates": [
+      "magical realism",
+      "comedic use"
+    ],
+    "existing_fields": [
+      "world_treatment.magical_realism",
+      "humor.overall",
+      "concept_assertions"
+    ],
+    "support": "partial",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Co-occurring magical realism and humor do not prove the magical element causes the humor. Generic concepts could label it but no typed causal link exists.",
+    "proposed_change": "For recurring use-cases, add evidence-backed device-purpose relation; use textual rationale meanwhile.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-10",
+    "subreddit": "Letterboxd",
+    "url": "https://www.reddit.com/r/Letterboxd/comments/1reg67a/",
+    "title": "French New Wave film recommendations",
+    "request_excerpt": "early on/beginner friendly recommendations",
+    "access_level": "post_and_comments",
+    "request_summary": "Beginner French New Wave on UK services.",
+    "predicates": [
+      "French New Wave membership",
+      "beginner friendly",
+      "UK services"
+    ],
+    "existing_fields": [
+      "concept_assertions.items[].facet",
+      "cultural_contexts.items[].relation",
+      "viewing_demands.genre_knowledge",
+      "viewing_demands.attention"
+    ],
+    "support": "partial",
+    "gap_kind": "data_population",
+    "failure_reason": "Movement has an extension facet; UK offers belong to authoritative catalog. No canonical membership population is established.",
+    "proposed_change": "Canonicalize French New Wave with attributed membership and join current UK offers.",
+    "priority": "high"
+  },
+  {
+    "id": "movies-11",
+    "subreddit": "Letterboxd",
+    "url": "https://www.reddit.com/r/Letterboxd/comments/1jwdll2/",
+    "title": "What's you guys favourite French new wave films? Any recommendations?",
+    "request_excerpt": "Any recommendations?",
+    "access_level": "search_excerpt",
+    "request_summary": "Recommendations within French New Wave.",
+    "predicates": [
+      "French New Wave membership"
+    ],
+    "existing_fields": [
+      "concept_assertions.items[].facet",
+      "cultural_contexts.items[].relation"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "French production country does not entail movement membership; indexed replies explicitly debate false positives.",
+    "proposed_change": "Resolve movement concept and keep membership distinct from influence or nationality.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-12",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/ebm1l3/",
+    "title": "Italian Neorealism",
+    "request_excerpt": "most important example of Italian Neorealism",
+    "access_level": "search_excerpt",
+    "request_summary": "A third historically important movement example after two named works.",
+    "predicates": [
+      "Italian Neorealism",
+      "importance within movement",
+      "exclude two seeds"
+    ],
+    "existing_fields": [
+      "concept_assertions.items[].facet",
+      "cultural_contexts",
+      "reception"
+    ],
+    "support": "partial",
+    "gap_kind": "data_population",
+    "failure_reason": "Movement can be asserted; historical importance needs attributed reception, not everyday_realism alone.",
+    "proposed_change": "Populate movement and attributed historical reception; exclude seen titles.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-13",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ipefee/",
+    "title": "'Artsy' & OneShots",
+    "request_excerpt": "films with long continuous, un-cut shots",
+    "access_level": "search_excerpt",
+    "request_summary": "Arthouse or long continuous uncut shots.",
+    "predicates": [
+      "arthouse OR long takes"
+    ],
+    "existing_fields": [
+      "visuals.long_takes",
+      "storytelling.formal_challenge",
+      "concept_assertions",
+      "format_facts.single_take_presentation"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Disjunction and long-take score suffice for the visible request. Existing format_facts.single_take_presentation also covers whole-work continuous presentation if desired.",
+    "proposed_change": "Preserve OR instead of forcing both conditions.",
+    "priority": "none"
+  },
+  {
+    "id": "movies-14",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1cxzs19/",
+    "title": "What are some movies that were filmed all in one shot?",
+    "request_excerpt": "merely appears to be all one shot",
+    "access_level": "search_excerpt",
+    "request_summary": "Whole movie actual or simulated continuous take.",
+    "predicates": [
+      "whole movie single take OR simulated single take"
+    ],
+    "existing_fields": [
+      "format_facts.single_take_presentation",
+      "visuals.long_takes",
+      "concept_assertions.items[].facet",
+      "temporal_segments"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "format_facts.single_take_presentation already represents the requested actual OR simulated whole-work continuous presentation; correctness still depends on evidence-backed fact population.",
+    "proposed_change": "Use existing single_take_presentation fact; distinguish actual capture only when the viewer specifically requires it.",
+    "priority": "none"
+  },
+  {
+    "id": "movies-15",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1el8632/",
+    "title": "Movies with Little to No Dialogue",
+    "request_excerpt": "as little dialogue as possible",
+    "access_level": "search_excerpt",
+    "request_summary": "Atmosphere and soundtrack carry story with little dialogue.",
+    "predicates": [
+      "low dialogue density",
+      "atmosphere",
+      "soundtrack storytelling"
+    ],
+    "existing_fields": [
+      "dialogue.density",
+      "dialogue.dependence",
+      "sound.music_dependence",
+      "viewing_demands.visual_dependence"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "All requested traits have existing scores.",
+    "proposed_change": "Compose current fields; distinguish low from evidence-supported zero.",
+    "priority": "none"
+  },
+  {
+    "id": "movies-16",
+    "subreddit": "MovieRecommendations",
+    "url": "https://www.reddit.com/r/MovieRecommendations/comments/1jkr0ba/",
+    "title": "Movies that have no dialogue.",
+    "request_excerpt": "Movies that have no dialogue.",
+    "access_level": "search_excerpt",
+    "request_summary": "Strict no-dialogue movie request.",
+    "predicates": [
+      "no dialogue"
+    ],
+    "existing_fields": [
+      "dialogue.density",
+      "content_presence",
+      "concept_assertions"
+    ],
+    "support": "partial",
+    "gap_kind": "negation_evidence",
+    "failure_reason": "A low numeric score and omitted facts cannot prove zero spoken dialogue throughout.",
+    "proposed_change": "Require full-scope evidence for strict absence; offer minimal dialogue only as explicit relaxed alternative.",
+    "priority": "high"
+  },
+  {
+    "id": "movies-17",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/yuhu2e/",
+    "title": "What are the best movies with minimal dialogue, and interesting visuals?",
+    "request_excerpt": "minimal dialogue and interesting visuals",
+    "access_level": "search_excerpt",
+    "request_summary": "Quiet visually interesting viewing for calming anxiety.",
+    "predicates": [
+      "minimal dialogue",
+      "interesting visuals",
+      "calming for viewer"
+    ],
+    "existing_fields": [
+      "dialogue.density",
+      "experience.tranquility",
+      "experience.stress",
+      "visuals.vibrant_palette",
+      "audience_contexts"
+    ],
+    "support": "partial",
+    "gap_kind": "user_context",
+    "failure_reason": "Title calmness and a particular viewer anxiety response differ; visual interestingness is subjective.",
+    "proposed_change": "Rank existing traits with viewer context and avoid guaranteed therapeutic claims.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-18",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1p24qww/",
+    "title": "Suggest me some movies that are interestingly/weirdly shot",
+    "request_excerpt": "a weird ratio, continuous shot",
+    "access_level": "search_excerpt",
+    "request_summary": "Unusual aspect ratio or continuous-shot filmmaking.",
+    "predicates": [
+      "unusual ratio OR continuous shot"
+    ],
+    "existing_fields": [
+      "visuals.aspect_ratio_changes",
+      "visuals.long_takes",
+      "concept_assertions.items[].facet"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "Aspect-ratio changes do not describe a fixed unusual ratio. Production technique concepts can extend this.",
+    "proposed_change": "Populate canonical aspect-ratio and continuous-shot technique facts rather than add general weirdness score.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-19",
+    "subreddit": "Letterboxd",
+    "url": "https://www.reddit.com/r/Letterboxd/comments/1fy4i7w/",
+    "title": "favorite chinese/taiwanese films? looking for some cool recs besides the super obvious stuff",
+    "request_excerpt": "isn't extremely slow and contemplative",
+    "access_level": "search_excerpt",
+    "request_summary": "Chinese/Taiwanese films beyond obvious titles, calibrated to director likes/dislikes.",
+    "predicates": [
+      "Chinese/Taiwanese tradition",
+      "not extremely slow",
+      "unfamiliar"
+    ],
+    "existing_fields": [
+      "catalog_facts.production_country_codes",
+      "catalog_facts.original_language_codes",
+      "cultural_contexts",
+      "storytelling.plot_velocity",
+      "catalog_facts.director_person_ids"
+    ],
+    "support": "partial",
+    "gap_kind": "user_context",
+    "failure_reason": "Nationality/language/tradition and personal obscurity differ; negative director examples help calibration.",
+    "proposed_change": "Combine explicit country/tradition interpretation with watched-history and pace bounds.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-20",
+    "subreddit": "Letterboxd",
+    "url": "https://www.reddit.com/r/Letterboxd/comments/1ex1cqv/",
+    "title": "Taiwanese film recommendations that aren't Edward Yang",
+    "request_excerpt": "looking to learn more about the country’s film culture",
+    "access_level": "search_excerpt",
+    "request_summary": "Taiwanese films outside known auteur filmographies.",
+    "predicates": [
+      "Taiwanese",
+      "exclude Edward Yang and King Hu"
+    ],
+    "existing_fields": [
+      "catalog_facts.production_country_codes",
+      "catalog_facts.director_person_ids",
+      "cultural_contexts"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Country and director exclusion are existing catalog facts; culture intent may warrant tradition interpretation.",
+    "proposed_change": "Join catalog identity facts and exclude directors, preserving country/tradition distinction.",
+    "priority": "none"
+  },
+  {
+    "id": "movies-21",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1vc42qd/",
+    "title": "Time loop movies",
+    "request_excerpt": "still being able to age and die",
+    "access_level": "post_and_comments",
+    "request_summary": "Time loops where aging and death continue inside the loop.",
+    "predicates": [
+      "time loop",
+      "aging persists across resets",
+      "death possible"
+    ],
+    "existing_fields": [
+      "world.time_loop",
+      "themes.aging",
+      "character_outcomes",
+      "concept_assertions",
+      "temporal_segments"
+    ],
+    "support": "gap",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Time loop plus aging/death somewhere does not assert persistence across resets. Temporal segment descriptions lack typed mechanics relations.",
+    "proposed_change": "Add evidence-backed speculative-mechanic relation such as reset preserves aging, only if additional demand warrants; text retrieval can surface candidates but not verify.",
+    "priority": "high"
+  },
+  {
+    "id": "movies-22",
+    "subreddit": "MovieRecommendations",
+    "url": "https://www.reddit.com/r/MovieRecommendations/comments/1x2oghe/",
+    "title": "Time loop movies",
+    "request_excerpt": "stuck in a one-day loop and have to solve their way out",
+    "access_level": "search_excerpt",
+    "request_summary": "One-day repeated interval with deliberate escape.",
+    "predicates": [
+      "time loop interval=one day",
+      "solve escape"
+    ],
+    "existing_fields": [
+      "world.time_loop",
+      "narrative_engines.escape",
+      "tropes.single_night",
+      "temporal_segments"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Time-loop presence and single-night trope do not encode loop interval or escape-mechanic causality.",
+    "proposed_change": "Canonicalize loop interval facts and connect escape objective to loop mechanic.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-23",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1w95z62/",
+    "title": "Please Give Me Your Time-Loop Movie Recs!",
+    "request_excerpt": "prefer movies not in English",
+    "access_level": "search_excerpt",
+    "request_summary": "Time-loop movies with a non-English preference and seen exclusions.",
+    "predicates": [
+      "time loop",
+      "prefer non-English",
+      "exclude seen titles"
+    ],
+    "existing_fields": [
+      "world.time_loop",
+      "catalog_facts.original_language_codes",
+      "catalog_facts.spoken_language_codes"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Core constraints are expressible; preference is soft rather than strict exclusion.",
+    "proposed_change": "Keep non-English as preference and remove identified seen works.",
+    "priority": "none"
+  },
+  {
+    "id": "movies-24",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1hw18il/",
+    "title": "Movies about Unrequited Love !!",
+    "request_excerpt": "told from a male perspective",
+    "access_level": "post_and_comments",
+    "request_summary": "Adult male perspective unrequited love, excluding breakups or failed prior relationships.",
+    "predicates": [
+      "male subject loves female object",
+      "not reciprocated",
+      "adult protagonist",
+      "no prior breakup storyline"
+    ],
+    "existing_fields": [
+      "relationships.unrequited_love",
+      "character_relationships.items[].subject_entity_id",
+      "character_relationships.items[].object_entity_id",
+      "entities",
+      "relationships.breakup_or_divorce",
+      "concept_assertions"
+    ],
+    "support": "partial",
+    "gap_kind": "data_population",
+    "failure_reason": "Directed relationship scaffolding exists; populate subject traits, perspective, and scoped absence rather than treating all unrequited love as missing.",
+    "proposed_change": "Bind relationship to protagonist entities and verify prior-relationship exclusions.",
+    "priority": "high"
+  },
+  {
+    "id": "movies-25",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1wyclxp/",
+    "title": "Requesting movies where the Villain is actually right",
+    "request_excerpt": "villain actually turns out to be the good guy",
+    "access_level": "search_excerpt",
+    "request_summary": "Role reversal like Megamind with flawed apparent hero.",
+    "predicates": [
+      "apparent villain becomes good",
+      "apparent hero flawed"
+    ],
+    "existing_fields": [
+      "characters.antihero",
+      "characters.morally_ambiguous_cast",
+      "character_outcomes",
+      "entities",
+      "concept_assertions"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Static antihero traits do not distinguish apparent initial role and later moral revelation. Outcome other_concept can extend but needs canonical role-change claims.",
+    "proposed_change": "Use scoped initial/apparent versus revealed role concepts; avoid equating moral ambiguity with role inversion.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-26",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1g6lz5i/",
+    "title": "Can someone suggest movies where villain won?",
+    "request_excerpt": "actually won with no comebacks",
+    "access_level": "search_excerpt",
+    "request_summary": "Permanent villain victory that sequels do not undo.",
+    "predicates": [
+      "antagonist wins",
+      "no later reversal across franchise"
+    ],
+    "existing_fields": [
+      "character_outcomes.items[].other_concept",
+      "work_relations",
+      "catalog_facts.franchise_ids",
+      "ending.tragedy"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Outcome other supports victory concept but current title outcome does not establish permanence across related works.",
+    "proposed_change": "Resolve antagonist outcome plus explicit franchise scope; distinguish title ending from eventual series ending.",
+    "priority": "high"
+  },
+  {
+    "id": "movies-27",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1pqjx21/",
+    "title": "Is there a movie where villain actually won ?",
+    "request_excerpt": "The villain’s plan works",
+    "access_level": "search_excerpt",
+    "request_summary": "Genuine antagonist succeeds; no fake win, reversal, or misunderstood villain.",
+    "predicates": [
+      "antagonist plan succeeds",
+      "not moral reinterpretation",
+      "committed ending"
+    ],
+    "existing_fields": [
+      "character_outcomes.items[].other_concept",
+      "ending.tragedy",
+      "ending.interpretive_openness",
+      "characters.morally_ambiguous_cast"
+    ],
+    "support": "partial",
+    "gap_kind": "data_population",
+    "failure_reason": "Existing extensible outcome scaffold can express goal achievement, but tragedy is not synonymous with antagonist success.",
+    "proposed_change": "Canonicalize achieved-goal outcomes bound to role and preserve explicit exclusion evidence.",
+    "priority": "high"
+  },
+  {
+    "id": "movies-28",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1eyn46d/",
+    "title": "Thrillers / action movies where the villain wins",
+    "request_excerpt": "in the end the hero fails",
+    "access_level": "search_excerpt",
+    "request_summary": "Straight action/thriller ending in antagonist success rather than horror.",
+    "predicates": [
+      "action/thriller",
+      "villain achieves objective",
+      "hero fails"
+    ],
+    "existing_fields": [
+      "genres.action",
+      "genres.thriller",
+      "genres.horror",
+      "character_outcomes.items[].other_concept"
+    ],
+    "support": "partial",
+    "gap_kind": "data_population",
+    "failure_reason": "Genre composition works; protagonist failure and villain goal success need specific populated outcome concepts.",
+    "proposed_change": "Reuse typed outcome extension with role-bound canonical objective success; compose genre filters.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-29",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/u7m5a2/",
+    "title": "Films in reverse suggestions.",
+    "request_excerpt": "totally in reverse chronology, not “Memento”",
+    "access_level": "post_and_comments",
+    "request_summary": "Entire narrative shown in strict reverse chronological order.",
+    "predicates": [
+      "all scenes reverse story order",
+      "exclude mixed chronology"
+    ],
+    "existing_fields": [
+      "storytelling.nonlinearity",
+      "storytelling.multiple_timelines",
+      "concept_assertions.items[].facet",
+      "temporal_segments"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Nonlinearity cannot distinguish strict reversal from interleaved forward/backward threads; free-text segments do not guarantee sequence order.",
+    "proposed_change": "Canonicalize strict-reverse-chronology formal technique with whole-work evidence; broader temporal graph only if more use-cases justify.",
+    "priority": "high"
+  },
+  {
+    "id": "movies-30",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/g32v82/",
+    "title": "Movies with Rashomon effect?",
+    "request_excerpt": "Rashomon effect or that have unreliable narrators",
+    "access_level": "search_excerpt",
+    "request_summary": "Rashomon structure or unreliable narrators, preferably outside Hollywood.",
+    "predicates": [
+      "conflicting retellings OR unreliable narration",
+      "prefer non-Hollywood"
+    ],
+    "existing_fields": [
+      "storytelling.multiple_viewpoints",
+      "storytelling.unreliable_narration",
+      "concept_assertions",
+      "cultural_contexts"
+    ],
+    "support": "partial",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Multiple viewpoints need not retell the same event or contradict each other. Unreliable narration is already direct support for one branch of request.",
+    "proposed_change": "Resolve Rashomon aliases to same-event retelling technique and preserve OR interpretation.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-31",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ourrfg/",
+    "title": "Movies structured like Rashomon, where the same event is retold from multiple points of view",
+    "request_excerpt": "the same from each POV",
+    "access_level": "search_excerpt",
+    "request_summary": "Repeated perspectives of same event with complementary partial knowledge, not necessarily contradictions.",
+    "predicates": [
+      "same event retold",
+      "multiple POV",
+      "complementary information"
+    ],
+    "existing_fields": [
+      "storytelling.multiple_viewpoints",
+      "storytelling.information_withholding",
+      "concept_assertions",
+      "temporal_segments"
+    ],
+    "support": "partial",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Contradictory accounts and complementary puzzle pieces differ despite same multiple-viewpoint score.",
+    "proposed_change": "Canonicalize same-event retelling and distinguish contradictory/complementary accounts with evidence.",
+    "priority": "high"
+  },
+  {
+    "id": "movies-32",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1fyhmlj/",
+    "title": "I'm in the mood for some non-Hark wuxia! Hand them over!",
+    "request_excerpt": "NOT directed by (my goat) Tsui Hark",
+    "access_level": "search_excerpt",
+    "request_summary": "Goofy wuxia outside one favored director.",
+    "predicates": [
+      "wuxia",
+      "exclude Tsui Hark",
+      "prefer goofy"
+    ],
+    "existing_fields": [
+      "concept_assertions.items[].facet",
+      "catalog_facts.director_person_ids",
+      "humor.absurdist",
+      "aesthetics.camp",
+      "action.martial_arts_choreography"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "Wuxia genre/tradition extension exists but no dedicated canonical fixed field; martial arts alone overbroad.",
+    "proposed_change": "Canonicalize wuxia membership and alias it without conflating all martial arts movies.",
+    "priority": "high"
+  },
+  {
+    "id": "movies-33",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ocaum9/",
+    "title": "Beginner to wuxia — what classics and modern films should I see?",
+    "request_excerpt": "not really into horror",
+    "access_level": "search_excerpt",
+    "request_summary": "Wuxia genre entry points, era/subgenre examples, no horror.",
+    "predicates": [
+      "wuxia",
+      "beginner",
+      "historical and modern",
+      "exclude horror"
+    ],
+    "existing_fields": [
+      "concept_assertions.items[].facet",
+      "catalog_facts.release_date",
+      "genres.horror",
+      "viewing_demands.cultural_knowledge"
+    ],
+    "support": "partial",
+    "gap_kind": "data_population",
+    "failure_reason": "Extension handles wuxia but requires membership and subgenre population; release era is a catalog join.",
+    "proposed_change": "Populate traditional genres with evidence, and mix era examples within beginner demand limits.",
+    "priority": "medium"
+  },
+  {
+    "id": "movies-34",
+    "subreddit": "PakistaniCinephiles",
+    "url": "https://www.reddit.com/r/PakistaniCinephiles/comments/1wlq8oc/",
+    "title": "Movie recommendations",
+    "request_excerpt": "chill movies like lunch box or dear zindagi",
+    "access_level": "search_excerpt",
+    "request_summary": "Comfort viewing like named South Asian examples.",
+    "predicates": [
+      "comfort",
+      "chill",
+      "similar named seeds"
+    ],
+    "existing_fields": [
+      "experience.warmth",
+      "experience.tranquility",
+      "experience.stress",
+      "viewing_demands.attention"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Core emotional/demand dimensions exist; do not infer language restriction just from examples.",
+    "proposed_change": "Rank seed-aligned comfort traits and ask only if language becomes material.",
+    "priority": "none"
+  },
+  {
+    "id": "movies-35",
+    "subreddit": "PakistaniCinephiles",
+    "url": "https://www.reddit.com/r/PakistaniCinephiles/comments/1wrjs3c/",
+    "title": "suggest movie(s)",
+    "request_excerpt": "NO ROMCOM OR SAD SHI",
+    "access_level": "search_excerpt",
+    "request_summary": "Feel-good films excluding romantic comedy and sadness.",
+    "predicates": [
+      "feel good",
+      "exclude romantic comedy",
+      "exclude sadness"
+    ],
+    "existing_fields": [
+      "experience.uplift",
+      "experience.melancholy",
+      "experience.bleakness",
+      "genres.romantic_comedy"
+    ],
+    "support": "represented",
+    "gap_kind": "none",
+    "failure_reason": "Existing fields capture visible request; unclear sadness boundary needs calibration.",
+    "proposed_change": "Compose existing uplift, negative mood, and romcom exclusion with evidence.",
+    "priority": "none"
+  },
+  {
+    "id": "movies-36",
+    "subreddit": "LetterboxdLists",
+    "url": "https://www.reddit.com/r/LetterboxdLists/comments/1tgjczl/",
+    "title": "Movie Recs, please, pretty please",
+    "request_excerpt": "every time I open my watchlist I get either bored or overwhelmed",
+    "access_level": "search_excerpt",
+    "request_summary": "Help choosing from taste examples; comments distinguish personal favorites from high quality ratings.",
+    "predicates": [
+      "choice overload",
+      "personal attachment differs from craft rating"
+    ],
+    "existing_fields": [
+      "evaluations.writing",
+      "evaluations.direction",
+      "audience_contexts"
+    ],
+    "support": "non_schema",
+    "gap_kind": "user_context",
+    "failure_reason": "Initial favorites are in images not inspected; no claim about their content is justified. Visible author comments show hearts/ratings have personal meanings.",
+    "proposed_change": "Keep explicit favorite/enjoyment/quality semantics separate when importing taste; support smaller choice sets.",
+    "priority": "medium"
+  }
+]

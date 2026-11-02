@@ -1,0 +1,128 @@
+{
+  "body": "## Question\n\nWhat controlled comparison will fairly test the eligible models against the agreed benchmark and account for the full cost of usable fingerprints?\n\nWith the human, decide shortlist, comparison candidates, shared input metadata, prompt/schema policy (including any separate fingerprint-only experiment), generation settings, batching, repeated runs, retry/failure accounting, schema/range/title-association checks, blind review procedure, and reproducible raw-output capture. Report actual token usage and measured charges where available; label estimates separately. Keep essence-text embedding costs separate. Agree on cost per usable title, latency, validity, repeatability, quality metrics, and stop conditions within the benchmark budget. Account for unresolved billing evidence before inference.\n\nUse grilling and domain-modeling. This ticket defines the experiment; the following prototype ticket runs it.\n\n## Agreed prerequisites\n\nFollow [Define the benchmark and quality bar](https://github.com/alp82/goodwatch-monorepo/issues/30#issuecomment-5643029338) for the corpus, frozen input assets, independent review, repeat runs, and budget. Gemini must not be treated as a quality reference. Confirm exact Astra and Fable judge models and session access/cost before running the experiment. Settle remaining request and evaluation settings without reopening the agreed benchmark by default.\n",
+  "comments": [
+    {
+      "id": "IC_kwDOJCFabs8AAAABUBVh4Q",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "Research input: [Windmill fingerprint model screening](https://github.com/alp82/goodwatch-monorepo/blob/29c138c4ff54d85df7ab1f538387d4de2da3b58b/docs/research/windmill-fingerprint-models.md), resolved in [Identify eligible low-cost models](https://github.com/alp82/goodwatch-monorepo/issues/29).\n\nBefore fixing the shortlist, confirm whether \u201cLuna\u201d means OpenAI `gpt-5.6-luna` and \u201cMuse\u201d means Meta Muse Spark (and which version/tier). Muse lacks verified API model ID, prices, schema mode and account limits in the research evidence; capture those from official docs/console before admitting it. The documented shortlist can proceed independently.\n\nThe report also flags JSON-only versus strict-schema behavior, explicit reasoning settings and billing reconciliation, exact 74-key/range validation, and the need to decide scores-only versus the full production response. No paid inference has run.\n",
+      "createdAt": "2026-09-11T17:51:22Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5638545889",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUFqQfQ",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Protocol discussion update\n\nThe owner confirmed the full production response for the comparison and will run independent judge sessions in Codex and Claude Code using existing subscriptions. Exact model identifiers/settings must still be recorded when those sessions run; subscription judging is not an authorization for paid judge API calls.\n\nBefore selecting candidates, the owner requested extensive fresh research followed by grilling. Prioritize OpenRouter, for which an API key already exists. Screen a broad landscape including the named DeepSeek 4 Flash, Muse Spark, GPT Luna, Composer, and GLM 5.3 examples; establish exact models, provider routes, cost and output support rather than assuming the earlier shortlist is sufficient.\n\nResearch is being captured on `research/openrouter-fingerprint-candidates`. This ticket remains open; no shortlist or generation settings have been agreed and no inference has run.\n",
+      "createdAt": "2026-09-12T03:12:34Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643079805",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUFtUOQ",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Expanded OpenRouter research \u2014 ready for grilling\n\nPublished [OpenRouter candidates for Windmill fingerprinting](https://github.com/alp82/goodwatch-monorepo/blob/4990785/docs/research/openrouter-fingerprint-candidates.md), with a [38-option route/cost CSV](https://github.com/alp82/goodwatch-monorepo/blob/4990785/docs/research/openrouter-fingerprint-candidates.csv) and [public endpoint evidence](https://github.com/alp82/goodwatch-monorepo/blob/4990785/docs/research/openrouter-fingerprint-evidence.json), on `research/openrouter-fingerprint-candidates`, commit `4990785`.\n\nThe report independently verifies requested DeepSeek Flash, Muse Spark, GPT Luna, GLM and Composer identities, covers a broad low-cost landscape, and distinguishes model-level claims from exact provider/schema/precision/price evidence. Composer has Cursor SDK access but no public OpenRouter listing. Muse Contributor carries an explicit data-contribution condition. Some attractive prices depend on temporary discounts, and strict output support varies by host.\n\nA twelve-candidate lineup is proposed for discussion, not selected. Its illustrative first-pass-plus-repeat cost is $0.8022 at 6K input/2K total billed output per title, or $2.53344 at 12K/8K, before retries and other stages. These are assumptions, not measured costs or new spending authorization. The $5 target/$10 ceiling remains unchanged.\n\nNext live decisions: review breadth, acceptance of pinned third-party hosts/quantization, whether JSON-only routes may compete with measured validation/repair costs, and standard versus Contributor Muse. Then finalize exact candidates and protocol settings.\n\nAll 38 CSV rows were checked against preserved route prices and capability flags; cost calculations and source references were checked; `git diff --cached --check` passed. No inference or account changes were made. This protocol ticket remains open and claimed; no resolution is being recorded yet.\n",
+      "createdAt": "2026-09-12T03:22:39Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643129913",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUFuPww",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Selection policy agreed\n\nIn the live discussion, the owner answered \u201call yes\u201d to the four selection-policy questions:\n\n- Twelve candidates for the first comparison.\n- Explicitly pinned third-party hosts and disclosed quantization are acceptable.\n- Include a small JSON-only comparison, recording validation failures and repair costs.\n- Muse Contributor's disclosed use of prompts and outputs to improve Meta products is acceptable for this effort. This is acceptance of the Contributor condition, not selection of the standard offering that had been recommended as a conservative default.\n\nThe exact twelve configurations and remaining protocol settings are being drafted for the next discussion round. No inference has run; this is not yet the protocol resolution.\n",
+      "createdAt": "2026-09-12T03:25:56Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643145155",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUFvahA",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Concrete protocol draft for the next discussion round\n\n[Fingerprint comparison protocol draft](https://github.com/alp82/goodwatch-monorepo/blob/e0c0fbd/docs/benchmarks/fingerprint/protocol-draft.md) is published on `planning/fingerprint-protocol`, commit `e0c0fbd`.\n\nIt incorporates the accepted selection policies. Proposed exact lineup keeps twelve by replacing the older DeepSeek July comparison with JSON-only Qwen3.7 Flash and selecting Muse Contributor. The remaining proposed settings cover full-response prompt/schema adaptation, pinned providers, thinking modes, one-title requests, completion caps, bounded retries, validation, blind subscription reviews, actual-charge capture, a capped experiment allowance, and at most twenty finalist essence-embedding inputs.\n\nThree live decisions remain: exact lineup; cost-oriented generation/attempt settings; and the small finalist embedding sample. The budget and benchmark are unchanged. The document is explicitly a draft, not a resolution or an instruction to run inference. Arithmetic for the revised lineup was checked ($0.5574/$1.80984 under the two stated scenarios); staged whitespace checks passed.\n",
+      "createdAt": "2026-09-12T03:30:00Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643164292",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUF43pg",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Resolution\n\nThe owner confirmed the exact lineup, cost-oriented generation/attempt settings, and finalist embedding sample in the live discussion on September 12, 2026. The subsequent external critique was checked against primary sources; it adds useful calibration and lifecycle caveats but does not establish a reason to replace the approved pilot.\n\n### Agreed comparison\n\nThe complete [approved protocol](https://github.com/alp82/goodwatch-monorepo/blob/e7a2623/docs/benchmarks/fingerprint/protocol.md) is published on `planning/fingerprint-protocol`, commit `e7a2623`.\n\n- Twelve configurations: Gemini 2.5 Flash and 3.6 Flash; DeepSeek V4.1 Flash; GLM 5.3 Flash; GPT-5.6 Luna; Muse Spark 1.3 Contributor; Qwen3.8 Flash and JSON-only Qwen3.7 Flash; Mistral Small 4; MiniMax M3; MiMo V2.5; Nemotron 3.5 Lightning. Exact pinned OpenRouter routes and disclosed precision are specified in the linked protocol. Third-party hosts, quantization, and Muse Contributor's disclosed data-contribution condition were accepted.\n- Full production responses using the frozen ten-title corpus and a common versioned transport envelope. Preserve trait definitions and shared metadata. Keep the 74-score quality target separate from schema validity. No per-model web grounding or response healing.\n- Disable optional thinking where supported; otherwise request the lowest agreed supported level. One title per request, one request in flight, 8,192 total completion tokens per attempt, at most one retry. Preserve settings on the ten-title repeat pass for the two human-selected finalists. Adapter behavior must be observed; missing visible reasoning does not prove disabled computation.\n- Keep the agreed human/Astra/Fable independent blind review. Use existing subscription-authenticated Codex and Claude Code sessions, recording exact judge identities/settings. No paid judge API calls or automatic judge substitutions.\n- Measure at most twenty valid first-pass finalist essence descriptions through the existing embedding stage; keep its charges separate. No production writes.\n- Preserve the $5 target/$10 absolute ceiling, request reservations, bounded attempts, an isolated capped OpenRouter allowance, raw outputs and failures, native usage, actual-charge reconciliation, quality/coverage metrics, and repeat comparisons. Cost illustrations are not measured charges or guarantees.\n\n### Critique and limits\n\nThe [fact-check](https://github.com/alp82/goodwatch-monorepo/blob/e92a86b/docs/research/fingerprint-critique-fact-check.md), on `research/fingerprint-critique`, verifies DeepSeek V4.1's existence and the meaning of the AA conditional-hallucination statistic; corrects the proposed Gemini3.7 thinking-off configuration; scopes the Gemini3.8 cost result and promotional expiry; and distinguishes genuine additional candidates from unsupported movie-knowledge or honesty rankings.\n\nThis is a ten-title pilot, not catalog-wide validation. Review unsupported plot/series assertions and implausible traits explicitly. Larger holdouts, richer common grounding, higher-thinking variants, or additional candidates remain possible evidence-driven follow-ups, not new arms added silently.\n\n### Handoff\n\n[Compare candidate fingerprints](https://github.com/alp82/goodwatch-monorepo/issues/32) now has the agreed protocol. It owns the bounded execution, compatible transport implementation, actual access/cap checks, artifact capture, and live human review. No inference or account changes occurred during this planning decision. Document checks and cost arithmetic passed; no production code was changed. Closing this decision only; the map remains open.\n",
+      "createdAt": "2026-09-12T03:59:47Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643319206",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUF9GxA",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Resolution amendment \u2014 add Grok 4.6\n\nThe owner explicitly approved adding Grok 4.6 as a thirteenth candidate. The comparison now has thirteen candidates; this amends the lineup in the earlier resolution without changing its other decisions.\n\n- Model: `x-ai/grok-4.6` through OpenRouter.\n- Pinned provider: `xai`, standard service tier, no provider/model fallbacks.\n- Strict structured output and `reasoning.effort: low`; reasoning is mandatory.\n- Same ten frozen titles, full production response, 8,192 total completion-token cap, and at most one retry. First pass now contains 130 candidate/title pairs; the strongest two still receive ten-title repeats.\n- Existing $5 target/$10 absolute ceiling covers all thirteen candidates together. No new spending allowance.\n\nThe updated [approved protocol](https://github.com/alp82/goodwatch-monorepo/blob/f582e9d/docs/benchmarks/fingerprint/protocol.md) and [public Grok route snapshot](https://github.com/alp82/goodwatch-monorepo/blob/f582e9d/docs/benchmarks/fingerprint/grok-route-evidence.json) are on `planning/fingerprint-protocol`, commit `f582e9d`.\n\nAt the verified standard-route rate of $2/$6 per million input/output tokens, Grok's ten-title first-pass illustrations are $0.24 at 6K/2K tokens per title and $0.72 at 12K/8K. Updated thirteen-model totals, including illustrative repeats for the two most expensive candidates, are $0.9694 and $3.01384. These are estimates, excluding retries, embeddings, and exceptional charges; actual finalist selection follows quality review.\n\nChecked the exact route's advertised schema/reasoning support, thirteen model rows, request count, and arithmetic; `git diff --cached --check` passed. No inference or account changes were performed. [Compare candidate fingerprints](https://github.com/alp82/goodwatch-monorepo/issues/32) remains the next execution ticket.\n",
+      "createdAt": "2026-09-12T04:14:20Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643388612",
+      "viewerDidAuthor": true
+    }
+  ],
+  "labels": [
+    {
+      "id": "LA_kwDOJCFabs8AAAAC1KW5Sg",
+      "name": "wayfinder:grilling",
+      "description": "Decision made with the human",
+      "color": "D876E3"
+    },
+    {
+      "id": "LA_kwDOJCFabs8AAAAC1KW6eQ",
+      "name": "needs-info",
+      "description": "Requires additional information.",
+      "color": "D876E3"
+    }
+  ],
+  "number": 31,
+  "state": "CLOSED",
+  "title": "Choose the POC comparison protocol",
+  "url": "https://github.com/alp82/goodwatch-monorepo/issues/31"
+}

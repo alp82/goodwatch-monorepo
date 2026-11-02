@@ -1,0 +1,47 @@
+{
+  "started_at": "2026-10-19T05:43:08.308819+00:00",
+  "scope": "All published movie/show trope arrays and detailed trope table; SELECT-only catalog inventory.",
+  "counting": "Exact names preserved. Occurrences count array entries; title_count deduplicates repeated same-name entries within a title. Example title is lexicographically first and is not paired with an inferred ID.",
+  "queries": [
+    "SELECT count(*) AS catalog_titles,count(tropes) AS titles_with_nonnull_trope_array,sum(array_length(tropes,1)) AS array_associations FROM movie",
+    "SELECT name,count(*) AS occurrences,count(DISTINCT tmdb_id) AS title_count,min(title) AS example_title FROM (SELECT unnest(tropes) AS name,tmdb_id,title FROM movie WHERE tropes IS NOT NULL) t GROUP BY name ORDER BY occurrences DESC,name ASC LIMIT 1000000",
+    "SELECT count(*) AS catalog_titles,count(tropes) AS titles_with_nonnull_trope_array,sum(array_length(tropes,1)) AS array_associations FROM show",
+    "SELECT name,count(*) AS occurrences,count(DISTINCT tmdb_id) AS title_count,min(title) AS example_title FROM (SELECT unnest(tropes) AS name,tmdb_id,title FROM show WHERE tropes IS NOT NULL) t GROUP BY name ORDER BY occurrences DESC,name ASC LIMIT 1000000",
+    "SELECT url,count(*) AS associations,sum(CASE WHEN media_type='movie' THEN 1 ELSE 0 END) AS movie_associations,sum(CASE WHEN media_type='show' THEN 1 ELSE 0 END) AS show_associations FROM trope GROUP BY url ORDER BY associations DESC,url ASC LIMIT 1000000"
+  ],
+  "datasets": {
+    "tropes-inventory-movie.json": {
+      "rows": 36204,
+      "sha256": "34f19232673d004b5f6439cbec4080f58e7bc3b974eb4782c250dd8b803ed44b",
+      "occurrences": 2679783
+    },
+    "tropes-inventory-show.json": {
+      "rows": 37076,
+      "sha256": "82e2f685007287626b2bccd44fe3e43a6c161259a5e50938adcf1153fac9bac0",
+      "occurrences": 1125725
+    },
+    "tropes-inventory-all.json": {
+      "rows": 42936,
+      "sha256": "b95794512c13869a6a7444dbb0813bffe8d7780da5ed25f5ada2a8c36ad80f04",
+      "occurrences": 3805508
+    },
+    "tropes-url-inventory.json": {
+      "rows": 42142,
+      "sha256": "65baecb6c120cb649e2250bbae58360ca389c6e3da63a3d098fd2eaca347b81f",
+      "associations": 3830249
+    }
+  },
+  "totals": {
+    "movie": {
+      "catalog_titles": 1263314,
+      "titles_with_nonnull_trope_array": 55744,
+      "array_associations": 2679783
+    },
+    "show": {
+      "catalog_titles": 234885,
+      "titles_with_nonnull_trope_array": 13706,
+      "array_associations": 1125725
+    }
+  },
+  "finished_at": "2026-10-19T05:43:39.513616+00:00"
+}

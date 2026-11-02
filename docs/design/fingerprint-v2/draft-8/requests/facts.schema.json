@@ -1,0 +1,1831 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "facets": {
+      "type": "object",
+      "properties": {
+        "storytelling": {
+          "type": "object",
+          "properties": {
+            "chronology": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "chronological",
+                      "reverse_chronological",
+                      "interleaved_timelines",
+                      "non_temporal"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial presentation patterns within scope; select every pattern actually used. Chronological and reverse-chronological strands can coexist. Occasional memories do not establish interleaved timelines; a repeated time loop alone is not reverse chronology. Non-temporal applies to substantial passages not organized by story time.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "retelling_structure": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "same_events_complementary",
+                      "same_events_conflicting"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Ways substantially the same events are presented again from different accounts. Parallel storylines alone do not qualify. Complementary accounts add information; conflicting accounts disagree. Select both when both occur; [] when assessed with neither.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "tone_progression": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "broadly_stable",
+                      "increasingly_dark",
+                      "increasingly_light",
+                      "comic_to_horror",
+                      "horror_to_comic",
+                      "alternating_tones"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial tone patterns within scope, not an exact timeline or a claim about every episode. Select multiple directions if different arcs use them. Broadly stable applies to substantial stable stretches; alternating tones means repeated switching. Comedy and horror blended throughout do not alone establish comic_to_horror.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            }
+          },
+          "required": [
+            "chronology",
+            "retelling_structure",
+            "tone_progression"
+          ],
+          "additionalProperties": false
+        },
+        "characters": {
+          "type": "object",
+          "properties": {
+            "competence_basis": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "shown_training_or_practice",
+                      "established_professional_experience",
+                      "demonstrated_problem_solving",
+                      "claimed_but_not_demonstrated",
+                      "extraordinary_unexplained_mastery"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "How focal characters' demonstrated skill is established. These are whole-work categories, not claims that all tags describe the same person. Do not equate intelligence with competence.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "protagonist_motivations": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "wealth",
+                      "power",
+                      "status_recognition",
+                      "belonging",
+                      "love_attachment",
+                      "care_protection",
+                      "survival",
+                      "justice",
+                      "revenge",
+                      "ideological_commitment",
+                      "freedom",
+                      "curiosity",
+                      "self_realization",
+                      "duty"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial established motives of protagonists/co-protagonists, not every action or an inferred diagnosis. Whole-work set; wealth and power need not motivate the same person. Revenge is not automatically a tragic-backstory dependence.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "protagonist_behavioral_traits": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "cunning",
+                      "manipulative",
+                      "ruthless",
+                      "compassionate",
+                      "loyal",
+                      "impulsive",
+                      "self_destructive",
+                      "reckless",
+                      "principled",
+                      "opportunistic"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sustained behavior of protagonists/co-protagonists. Cunning means strategic guile; manipulative means steering others through calculated influence; ruthless means willingness to disregard others welfare for an aim. Self_destructive means repeatedly acting against own welfare. These do not follow automatically from competence, antihero status or identity. Tags may describe different leads.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "protagonist_arc_patterns": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "social_alienation",
+                      "accumulated_frustration",
+                      "destructive_rebellion",
+                      "disillusionment",
+                      "moral_compromise",
+                      "personal_reinvention"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial protagonist patterns, not inferred from a single mood or scene. Social_alienation is estrangement/exclusion; accumulated_frustration is sustained mounting dissatisfaction; destructive_rebellion is resistance through damaging or destructive acts. They need not co-occur in one protagonist. Other arc attributes remain independently assessed.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            }
+          },
+          "required": [
+            "competence_basis",
+            "protagonist_motivations",
+            "protagonist_behavioral_traits",
+            "protagonist_arc_patterns"
+          ],
+          "additionalProperties": false
+        },
+        "presentation": {
+          "type": "object",
+          "properties": {
+            "narration_sources": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "in_story_character",
+                      "external_narrator",
+                      "filmmaker",
+                      "participant_testimony",
+                      "expert_commentary",
+                      "archival_source_recordings",
+                      "onscreen_text"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sources of narration or explanatory speech, excluding ordinary dialogue. First-person character narration does not imply direct audience address. Source recordings are retained historical/archival speech rather than newly added explanation.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "laugh_track": {
+              "enum": [
+                "present",
+                "absent",
+                "unknown"
+              ],
+              "description": "Recorded or live audience laughter included in the soundtrack; ordinary characters laughing is excluded.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "sustained_screaming": {
+              "enum": [
+                "present",
+                "absent",
+                "unknown"
+              ],
+              "description": "Extended or repeatedly sustained screaming in the soundtrack, distinct from an isolated shout or startle.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "narration_sources",
+            "laugh_track",
+            "sustained_screaming"
+          ],
+          "additionalProperties": false
+        },
+        "ending": {
+          "type": "object",
+          "properties": {
+            "post_credits_function": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "comic_tag",
+                      "epilogue_or_resolution",
+                      "reopens_threat_or_mystery",
+                      "introduces_next_story",
+                      "tribute_or_non_narrative"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Functions of scenes during or after credits within the assessed edition. Select all that apply, including multiple functions in one scene. [] means no qualifying scene/functions; null means undetermined. A comic tag need not reopen a threat.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            }
+          },
+          "required": [
+            "post_credits_function"
+          ],
+          "additionalProperties": false
+        },
+        "series": {
+          "type": "object",
+          "properties": {
+            "case_resolution_pattern": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "within_episode",
+                      "multi_episode_arcs",
+                      "season_or_series_arc"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Recurring case/problem resolution patterns in the assessed episodes. Select all substantial patterns; [] when there is no case/problem structure. Not cancellation status, ending quality or a promise about unseen seasons.",
+              "x-applicability": "show",
+              "x-spoiler-sensitive": false
+            },
+            "character_continuity": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "episodic_reset",
+                      "cumulative_development",
+                      "independent_casts"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial continuity patterns for character relationships/development across the assessed episodes. Resetting some strands and developing others can coexist. Independently assessed from case resolution.",
+              "x-applicability": "show",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "case_resolution_pattern",
+            "character_continuity"
+          ],
+          "additionalProperties": false
+        },
+        "world_context": {
+          "type": "object",
+          "properties": {
+            "eras": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "prehistoric",
+                      "ancient",
+                      "medieval",
+                      "early_modern",
+                      "nineteenth_century",
+                      "early_twentieth_century",
+                      "late_twentieth_century",
+                      "twenty_first_century",
+                      "future",
+                      "timeless"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial depicted story eras, not production dates. A brief mention or prop does not establish a setting. Ancient/medieval are broad temporal labels, not a claim that all societies share one historical periodization.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "relative_periods": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "distant_past",
+                      "recent_past",
+                      "contemporary_at_release",
+                      "near_future",
+                      "far_future",
+                      "timeless"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial story periods relative to the title's original release, not today. Multiple selections describe the work overall, without pairing each period to an event.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "reality_layers": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "ordinary_physical",
+                      "physically_staged",
+                      "digital_simulation",
+                      "virtual_reality",
+                      "dream",
+                      "parallel_world",
+                      "afterlife"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Kinds of depicted reality that matter to the work. Physical staged reality (e.g. an elaborate set) is distinct from a digital simulation or virtual reality.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "environmental_obstacles": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "snow_or_ice",
+                      "extreme_heat",
+                      "storm",
+                      "flood_or_water",
+                      "drought",
+                      "fire",
+                      "rough_terrain",
+                      "darkness",
+                      "toxic_environment"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Environmental conditions that materially impede action or survival. Scenic weather alone does not qualify; these tags do not identify who is obstructed or when.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "depicted_weather": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "rain",
+                      "snow",
+                      "fog_mist",
+                      "humid",
+                      "dry_arid",
+                      "heat",
+                      "cold",
+                      "wind",
+                      "storm",
+                      "sunshine",
+                      "overcast"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial perceptible weather/atmospheric conditions, whether scenic or obstructive. Humid requires cues of damp heavy air; tropical geography or rain alone does not establish humidity. Do not infer conditions solely from season, production location or a storm-related plot reference.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "built_environment_character": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "old_historic",
+                      "decaying",
+                      "abandoned",
+                      "modern",
+                      "industrial",
+                      "ornate",
+                      "vernacular",
+                      "futuristic"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial depicted qualities of built surroundings. Old_historic denotes visibly/established older structures; decaying denotes deterioration, independently of age, poverty, haunting or visual beauty.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "depicted_regions": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "europe",
+                      "north_africa",
+                      "sub_saharan_africa",
+                      "west_asia",
+                      "central_asia",
+                      "south_asia",
+                      "east_asia",
+                      "southeast_asia",
+                      "north_america",
+                      "central_america",
+                      "caribbean",
+                      "south_america",
+                      "oceania",
+                      "antarctica"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Broad real-world geographical story settings substantially depicted, not filming locations, production countries, character ancestry or travel aspirations. Transregional stories can select multiple. Fictional or unidentified geography stays untagged/unknown rather than guessed; this bounded field does not supply country-level precision.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "predominant_eras": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "prehistoric",
+                      "ancient",
+                      "medieval",
+                      "early_modern",
+                      "nineteenth_century",
+                      "early_twentieth_century",
+                      "late_twentieth_century",
+                      "twenty_first_century",
+                      "future",
+                      "timeless"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main substantial story eras by narrative emphasis. Multiple selections require genuinely balanced major timelines; a brief flashback is insufficient. Select only eras also assessed in world_context.eras. Unknown remains null.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "depicted_decades": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "1800s",
+                      "1810s",
+                      "1820s",
+                      "1830s",
+                      "1840s",
+                      "1850s",
+                      "1860s",
+                      "1870s",
+                      "1880s",
+                      "1890s",
+                      "1900s",
+                      "1910s",
+                      "1920s",
+                      "1930s",
+                      "1940s",
+                      "1950s",
+                      "1960s",
+                      "1970s",
+                      "1980s",
+                      "1990s",
+                      "2000s",
+                      "2010s",
+                      "2020s",
+                      "2030s",
+                      "2040s",
+                      "2050s",
+                      "2060s",
+                      "2070s",
+                      "2080s",
+                      "2090s",
+                      "2100s",
+                      "2110s",
+                      "2120s",
+                      "2130s",
+                      "2140s",
+                      "2150s",
+                      "2160s",
+                      "2170s",
+                      "2180s",
+                      "2190s"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial established story decades normalized to real-world BCE/CE chronology, within the fixed 1800s–2190s vocabulary. Never substitute release decades or copy fictional calendar numbers. Use only when calendar correspondence is established. Null when undetermined; [] when assessed and no listed decade applies. Broad eras can remain known while exact decades/years remain unknown.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "predominant_decades": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "1800s",
+                      "1810s",
+                      "1820s",
+                      "1830s",
+                      "1840s",
+                      "1850s",
+                      "1860s",
+                      "1870s",
+                      "1880s",
+                      "1890s",
+                      "1900s",
+                      "1910s",
+                      "1920s",
+                      "1930s",
+                      "1940s",
+                      "1950s",
+                      "1960s",
+                      "1970s",
+                      "1980s",
+                      "1990s",
+                      "2000s",
+                      "2010s",
+                      "2020s",
+                      "2030s",
+                      "2040s",
+                      "2050s",
+                      "2060s",
+                      "2070s",
+                      "2080s",
+                      "2090s",
+                      "2100s",
+                      "2110s",
+                      "2120s",
+                      "2130s",
+                      "2140s",
+                      "2150s",
+                      "2160s",
+                      "2170s",
+                      "2180s",
+                      "2190s"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main story decades by narrative emphasis, normalized to real-world BCE/CE chronology. Each must occur in depicted_decades. Do not copy a fictional calendar number, release decade or aesthetic period. Null when correspondence or dominant decade is unknown; multiple choices require substantial major timelines.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "earliest_substantial_year": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "not": {
+                    "const": 0
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Earliest specifically established substantial story year normalized to real-world BCE/CE. -1 is 1 BCE and 1 is 1 CE; no year zero. Never use release years, costume/set aesthetics, broad era estimates or unconverted fictional-calendar numbers. Null unless this exact boundary and its calendar correspondence are known; a known decade need not imply known year bounds. Brief flashbacks do not set substantial bounds.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "latest_substantial_year": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "not": {
+                    "const": 0
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Latest specifically established substantial story year normalized to real-world BCE/CE. -1 is 1 BCE and 1 is 1 CE; no year zero. Never use release years, costume/set aesthetics, broad era estimates or unconverted fictional-calendar numbers. Null unless this exact boundary and its calendar correspondence are known; a known decade need not imply known year bounds. A range does not assert continuous coverage.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "calendar_systems": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "real_world_ce_bce",
+                      "other_real_world",
+                      "fictional"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Calendar systems or established chronology correspondence for substantial story settings. real_world_ce_bce means established correspondence with real-world historical chronology, including alternate histories retaining that calendar. other_real_world means an identified non-CE real-world calendar; fictional means an invented calendar or epoch. If a non-CE or fictional calendar has an explicitly known BCE/CE conversion, also select real_world_ce_bce. Multiple can coexist. Do not infer from a four-digit year, release date or contemporary appearance. Null if undetermined; [] if assessed with no established calendar. Numeric year/decade fields always require known BCE/CE correspondence; this field does not supply a conversion.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "eras",
+            "relative_periods",
+            "reality_layers",
+            "environmental_obstacles",
+            "depicted_weather",
+            "built_environment_character",
+            "depicted_regions",
+            "predominant_eras",
+            "depicted_decades",
+            "predominant_decades",
+            "earliest_substantial_year",
+            "latest_substantial_year",
+            "calendar_systems"
+          ],
+          "additionalProperties": false
+        },
+        "seasonal": {
+          "type": "object",
+          "properties": {
+            "depicted_seasons": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "spring",
+                      "summer",
+                      "autumn",
+                      "winter",
+                      "wet_season",
+                      "dry_season"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial seasons depicted, based on the setting's local climate/calendar. Release month and viewing associations are insufficient.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "depicted_holidays": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "christmas",
+                      "halloween",
+                      "new_year",
+                      "lunar_new_year",
+                      "thanksgiving",
+                      "easter",
+                      "hanukkah",
+                      "passover",
+                      "ramadan",
+                      "eid_al_fitr",
+                      "eid_al_adha",
+                      "diwali",
+                      "holi",
+                      "day_of_the_dead",
+                      "carnival",
+                      "valentines_day"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Named celebrations actually depicted or materially organizing the story. This bounded vocabulary is not exhaustive; do not invent a new label for an unlisted tradition.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "depicted_seasons",
+            "depicted_holidays"
+          ],
+          "additionalProperties": false
+        },
+        "cultural": {
+          "type": "object",
+          "properties": {
+            "movements_and_traditions": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "german_expressionism",
+                      "soviet_montage",
+                      "italian_neorealism",
+                      "french_new_wave",
+                      "new_hollywood",
+                      "cinema_novo",
+                      "third_cinema",
+                      "dogme_95",
+                      "mumblecore",
+                      "slow_cinema",
+                      "film_noir",
+                      "neo_noir",
+                      "giallo",
+                      "spaghetti_western",
+                      "wuxia",
+                      "jidaigeki",
+                      "chambara",
+                      "hong_kong_action",
+                      "j_horror",
+                      "korean_new_wave",
+                      "iranian_new_wave",
+                      "taiwan_new_cinema",
+                      "indian_parallel_cinema",
+                      "masala",
+                      "afrofuturism",
+                      "new_queer_cinema",
+                      "surrealist_cinema",
+                      "cinema_verite",
+                      "direct_cinema",
+                      "new_french_extremity",
+                      "berlin_school",
+                      "romanian_new_wave",
+                      "hong_kong_new_wave",
+                      "la_rebellion",
+                      "blaxploitation",
+                      "poliziotteschi",
+                      "ozploitation",
+                      "pinku_eiga",
+                      "heroic_bloodshed",
+                      "nollywood",
+                      "bollywood_masala",
+                      "k_drama",
+                      "telenovela"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Established artistic affiliation or substantial recognizable stylistic tradition. Country, language, slow pacing or production date alone is insufficient. This list is bounded; unlisted traditions require a future schema revision, not a guessed synonym.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "depicted_contexts": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "diaspora",
+                      "migration",
+                      "indigenous_community",
+                      "cross_cultural_encounter",
+                      "religious_community",
+                      "secular_community",
+                      "working_class",
+                      "aristocratic",
+                      "youth_subculture",
+                      "queer_community",
+                      "rural_community",
+                      "urban_community"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Social/cultural experiences substantially depicted, independently of the production industry or an actor's identity. Diaspora and indigenous contexts require established depiction, not inference from appearance.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "movements_and_traditions",
+            "depicted_contexts"
+          ],
+          "additionalProperties": false
+        },
+        "representation": {
+          "type": "object",
+          "properties": {
+            "established_protagonist_traits": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "woman",
+                      "man",
+                      "nonbinary",
+                      "transgender",
+                      "gay_or_lesbian",
+                      "bisexual",
+                      "asexual",
+                      "physical_disability",
+                      "sensory_disability",
+                      "neurodivergent",
+                      "child",
+                      "teenager",
+                      "older_adult",
+                      "nonhuman",
+                      "adult"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Explicitly established traits of protagonists/co-protagonists; tags need not describe the same person. Never infer from actor identity, appearance, names or stereotypes. Adult can overlap older_adult. Older_adult follows the score definition: established about 65+ or explicit late-life/elderly stage in the setting; middle age and parenthood alone do not qualify.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            }
+          },
+          "required": [
+            "established_protagonist_traits"
+          ],
+          "additionalProperties": false
+        },
+        "format_facts": {
+          "type": "object",
+          "properties": {
+            "production_method": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "live_action",
+                      "animation"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial production methods used. Select both for live-action/animation combinations; ordinary CGI visual effects alone do not make a live-action work animated.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "narrative_mode": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "fiction",
+                      "nonfiction"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Modes used in substantial passages; select fiction and nonfiction for an explicit hybrid. A fictional mockumentary is fiction, not nonfiction merely because it imitates a documentary.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "series_structure": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "limited",
+                      "serialized",
+                      "episodic",
+                      "anthology"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Show formats within the supplied scope. Limited means deliberately conceived as a bounded limited series/miniseries, not merely a show that eventually ended or has finitely many released seasons. It can coexist with episodic, serialized or anthology structure. Release/cancellation status does not establish limited format.",
+              "x-applicability": "show",
+              "x-spoiler-sensitive": false
+            },
+            "color_process": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "color",
+                      "black_and_white",
+                      "tinted"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial color presentation modes in the assessed edition. Select color and black_and_white if both occur; tinting can coexist with an underlying monochrome image.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "adaptation_type": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "original",
+                      "novel",
+                      "short_story",
+                      "play",
+                      "comic",
+                      "game",
+                      "folklore",
+                      "biography",
+                      "other"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Source-material types contributing substantially. Multiple sources may coexist; original refers to substantial independently originated material, not every small adaptation change. Do not invent source-work identifiers.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "factual_basis": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "fictional",
+                      "based_on_real_events",
+                      "biographical",
+                      "documentary",
+                      "disputed"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Relationships to real people/events within scope; multiple selections may apply. Disputed is supported factual controversy, not the model being unsure. No selection certifies accuracy.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "animation_techniques": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "traditional_2d",
+                      "digital_2d",
+                      "cgi_3d",
+                      "stop_motion",
+                      "rotoscoping",
+                      "cutout",
+                      "puppetry",
+                      "other"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Animation techniques actually used, not creatures depicted. Select each substantial technique instead of a generic mixed tag.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "presentation_modes": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "conventional_narrative",
+                      "mockumentary",
+                      "found_footage",
+                      "sketch",
+                      "observational_documentary",
+                      "expository_documentary",
+                      "participatory_documentary",
+                      "essay",
+                      "reality_competition",
+                      "reality_observational",
+                      "experimental",
+                      "non_narrative",
+                      "other"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Observable presentation modes, not audience approval.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "documentary_devices": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "interviews",
+                      "archive",
+                      "reenactment",
+                      "voiceover",
+                      "observation",
+                      "participation",
+                      "animation",
+                      "other"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Devices used in documentary-style presentation, including fictional mockumentary. Voiceover origin is captured separately.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "capture_media": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "8mm",
+                      "super_8",
+                      "16mm",
+                      "super_16",
+                      "35mm",
+                      "65mm",
+                      "digital",
+                      "analog_video",
+                      "other"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Known original capture media. Populate only from specific production knowledge or supplied evidence; otherwise null. A digital streaming release, animation, simulated grain, release date or assumed industry practice does not establish capture medium. Multiple known media may coexist; do not invent components of a mixed-format label.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "work_relation_types": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "adaptation",
+                      "remake",
+                      "reimagining",
+                      "sequel",
+                      "prequel",
+                      "spinoff",
+                      "homage",
+                      "parody",
+                      "shared_universe"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Known relation types to other works; these tags do not resolve target works or establish influence from resemblance alone.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "anime_tradition": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Affiliation with the anime production/artistic tradition; animation alone is insufficient.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "silent_or_intertitles": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Principally silent-film/intertitle presentation, not simply sparse dialogue.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "single_take_presentation": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whole work presented as one continuous take, real or simulated; an isolated long take is insufficient.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "real_time_presentation": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main narrative is presented approximately in real elapsed time; not merely rapid plot events.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "post_credits_scene_present": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A scene during/after credits in this edition, not ordinary credit text.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "alternate_endings_present": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Known alternative endings for this title/edition; do not invent them from narrative ambiguity.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            }
+          },
+          "required": [
+            "production_method",
+            "narrative_mode",
+            "series_structure",
+            "color_process",
+            "adaptation_type",
+            "factual_basis",
+            "animation_techniques",
+            "presentation_modes",
+            "documentary_devices",
+            "capture_media",
+            "work_relation_types",
+            "anime_tradition",
+            "silent_or_intertitles",
+            "single_take_presentation",
+            "real_time_presentation",
+            "post_credits_scene_present",
+            "alternate_endings_present"
+          ],
+          "additionalProperties": false
+        },
+        "visuals": {
+          "type": "object",
+          "properties": {
+            "dominant_colors": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "red",
+                      "orange",
+                      "yellow",
+                      "green",
+                      "cyan",
+                      "blue",
+                      "purple",
+                      "pink",
+                      "brown",
+                      "black",
+                      "white",
+                      "gray"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sustained visually dominant on-screen colors, from grading, lighting, costumes or design. Exclude a single prop or fleeting image, posters and assumed symbolism. Multiple selections need not appear together; black/white/gray describe tonal dominance, not automatically monochrome presentation.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "palette_patterns": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "monochromatic",
+                      "analogous",
+                      "complementary",
+                      "warm_cool_contrast",
+                      "selective_color",
+                      "changing_palettes"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial on-screen palette relationships, regardless of production technique. Monochromatic means a narrow hue family, not necessarily black-and-white. Analogous uses neighboring hues; complementary uses opposing hues; selective_color isolates colors against subdued/monochrome surroundings; changing_palettes requires substantial palette shifts.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "dominant_colors",
+            "palette_patterns"
+          ],
+          "additionalProperties": false
+        },
+        "groups": {
+          "type": "object",
+          "properties": {
+            "types": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "political",
+                      "ideological",
+                      "militant",
+                      "religious",
+                      "coercive_high_control",
+                      "criminal",
+                      "activist",
+                      "professional",
+                      "communal"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Kinds of substantially depicted organized groups. Militant requires endorsement or use of combative/coercive force in pursuit of aims, not merely strong beliefs. Ideological describes organizing shared doctrine; political describes political aims. Secrecy, religion, ethnicity or outsider unfamiliarity alone does not establish militancy or coercion.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "encounter_perspectives": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "newcomer",
+                      "journalist",
+                      "undercover",
+                      "visitor",
+                      "insider",
+                      "defector"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sustained focal perspectives through which an organized group is encountered: newcomer joins or enters its world; journalist investigates/reports; undercover conceals investigative identity; visitor remains outside; insider depicts established membership; defector leaves. Whole-work selections need not concern the same group or character.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "internal_dynamics": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "initiation",
+                      "ideological_instruction",
+                      "internal_dissent",
+                      "factional_conflict",
+                      "leadership_struggle",
+                      "operational_methods",
+                      "loyalty_testing",
+                      "coercive_control",
+                      "solidarity",
+                      "disillusionment"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantially depicted internal group processes. Operational_methods means showing how a group pursues its aims; mere group presence is insufficient. Select only established processes, not stereotypes about the group type.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            }
+          },
+          "required": [
+            "types",
+            "encounter_perspectives",
+            "internal_dynamics"
+          ],
+          "additionalProperties": false
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "friendship_dynamics": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "mutual_care",
+                      "recurring_friction",
+                      "repair_attempts",
+                      "destructive_enabling",
+                      "unresolved_strain"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial dynamics within depicted friendships: mutual care, recurring friction, attempted repair, enabling harmful choices, and unresolved strain. Repair does not imply success or complete resolution. Different tags may concern different friendships; not an assertion of realism or overall ending closure.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "romance_social_dynamics": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "secrecy",
+                      "social_disapproval",
+                      "public_scandal",
+                      "conflicting_loyalties"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substantial romantic relationship dynamics: concealment, social disapproval, public scandal or conflicting loyalties. Secrecy is not necessarily shame or infidelity; disapproval needs depiction, not the assessor judging identities. Whole-work tags need not concern the same romance.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            }
+          },
+          "required": [
+            "friendship_dynamics",
+            "romance_social_dynamics"
+          ],
+          "additionalProperties": false
+        },
+        "sound": {
+          "type": "object",
+          "properties": {
+            "ambient_sources": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "rain_water",
+                      "wind",
+                      "insects",
+                      "birds",
+                      "other_animals",
+                      "vegetation",
+                      "fire",
+                      "human_crowds",
+                      "traffic",
+                      "machinery",
+                      "domestic_activity"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sources with substantial audible environmental presence, independently of narrative importance. Do not infer audible sound from visible objects or setting. Natural ambience can be designed or recorded; this makes no recording-technique claim.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "ambient_sources"
+          ],
+          "additionalProperties": false
+        },
+        "advisory_details": {
+          "type": "object",
+          "properties": {
+            "animal_harm_types": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "deliberate_cruelty",
+                      "neglect",
+                      "threatened_harm",
+                      "accidental_injury",
+                      "predation",
+                      "hunting_slaughter",
+                      "natural_illness_or_death",
+                      "other_harm"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Kinds of threatened or actual animal harm depicted or explicitly referred to. Deliberate_cruelty denotes intentional abuse or torment, including neglect; it is distinct from an accidental injury or natural death. Threats can coexist with cruelty. Different tags need not concern the same animal. Unknown parent presence requires null; assessed absent parent requires []; none of these are independently verified exclusion guarantees.",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            }
+          },
+          "required": [
+            "animal_harm_types"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "storytelling",
+        "characters",
+        "presentation",
+        "ending",
+        "series",
+        "world_context",
+        "seasonal",
+        "cultural",
+        "representation",
+        "format_facts",
+        "visuals",
+        "groups",
+        "relationships",
+        "sound",
+        "advisory_details"
+      ],
+      "additionalProperties": false
+    },
+    "advisories": {
+      "type": "object",
+      "properties": {
+        "violence": {
+          "$ref": "#/$defs/advisory",
+          "description": "Physical violence or intentional bodily harm."
+        },
+        "gore": {
+          "$ref": "#/$defs/advisory",
+          "description": "Graphic wounds, blood, or bodily destruction."
+        },
+        "sexual_activity": {
+          "$ref": "#/$defs/advisory",
+          "description": "Depicted or discussed sexual activity."
+        },
+        "nudity": {
+          "$ref": "#/$defs/advisory",
+          "description": "Depicted nudity, independently of sexual activity."
+        },
+        "substance_use": {
+          "$ref": "#/$defs/advisory",
+          "description": "Use of intoxicating or addictive substances."
+        },
+        "profanity": {
+          "$ref": "#/$defs/advisory",
+          "description": "Strong or profane language."
+        },
+        "disturbing_imagery": {
+          "$ref": "#/$defs/advisory",
+          "description": "Imagery likely to be upsetting through its content rather than plot stakes alone."
+        },
+        "child_endangerment": {
+          "$ref": "#/$defs/advisory",
+          "description": "Threatened or actual harm to a child."
+        },
+        "animal_harm": {
+          "$ref": "#/$defs/advisory",
+          "description": "Threatened or actual injury, cruelty, or death affecting an animal."
+        },
+        "eating_disorders": {
+          "$ref": "#/$defs/advisory",
+          "description": "Eating-disorder behavior or discussion."
+        },
+        "self_harm": {
+          "$ref": "#/$defs/advisory",
+          "description": "Intentional self-injury, separately from suicidal behavior."
+        },
+        "suicide": {
+          "$ref": "#/$defs/advisory",
+          "description": "Suicidal ideation, attempts, or death by suicide."
+        },
+        "sexual_violence": {
+          "$ref": "#/$defs/advisory",
+          "description": "Sexual assault, coercive sexual conduct, or threats of such conduct."
+        },
+        "domestic_abuse": {
+          "$ref": "#/$defs/advisory",
+          "description": "Abuse within intimate or domestic relationships."
+        },
+        "police_brutality": {
+          "$ref": "#/$defs/advisory",
+          "description": "Abusive force or treatment by police."
+        },
+        "torture": {
+          "$ref": "#/$defs/advisory",
+          "description": "Deliberate infliction of severe suffering on a captive or controlled person."
+        },
+        "kidnapping_and_confinement": {
+          "$ref": "#/$defs/advisory",
+          "description": "Abduction or involuntary confinement."
+        },
+        "pregnancy_loss": {
+          "$ref": "#/$defs/advisory",
+          "description": "Miscarriage, stillbirth, or other loss of a pregnancy."
+        },
+        "childbirth": {
+          "$ref": "#/$defs/advisory",
+          "description": "Childbirth and related medical distress."
+        },
+        "discrimination": {
+          "$ref": "#/$defs/advisory",
+          "description": "Discriminatory abuse or exclusion. This bounded advisory records presence and depiction, not an identified target or a free-text note."
+        },
+        "flashing_imagery": {
+          "$ref": "#/$defs/advisory",
+          "description": "Flashing or strobing imagery; an editorial observation is not a technical accessibility certification."
+        },
+        "death": {
+          "$ref": "#/$defs/advisory",
+          "description": "Human or animal death occurring, shown, implied or explicitly discussed within the work, including natural/nonviolent and offscreen death. Ordinary mortality as an abstract theme alone is insufficient. Do not infer absence from low violence, low stakes or synopsis silence."
+        }
+      },
+      "required": [
+        "violence",
+        "gore",
+        "sexual_activity",
+        "nudity",
+        "substance_use",
+        "profanity",
+        "disturbing_imagery",
+        "child_endangerment",
+        "animal_harm",
+        "eating_disorders",
+        "self_harm",
+        "suicide",
+        "sexual_violence",
+        "domestic_abuse",
+        "police_brutality",
+        "torture",
+        "kidnapping_and_confinement",
+        "pregnancy_loss",
+        "childbirth",
+        "discrimination",
+        "flashing_imagery",
+        "death"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "facets",
+    "advisories"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "advisory": {
+      "type": "object",
+      "properties": {
+        "presence": {
+          "enum": [
+            "present",
+            "absent",
+            "unknown"
+          ]
+        },
+        "depiction_modes": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "on_screen",
+                  "off_screen",
+                  "implied",
+                  "verbal_reference"
+                ]
+              },
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "intensity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Perceived severity/force of the depicted topic, distinct from frequency and narrative importance."
+        },
+        "frequency": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10,
+          "description": "How recurrent the topic is across the assessed work, not an invented scene count."
+        },
+        "explicitness": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10,
+          "description": "How directly/detailed the topic is presented, including explicit verbal accounts. Not its narrative importance."
+        }
+      },
+      "required": [
+        "presence",
+        "depiction_modes",
+        "intensity",
+        "frequency",
+        "explicitness"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

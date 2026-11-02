@@ -1,0 +1,71 @@
+{
+  "status": "ACCEPTANCE COMPLETED \u2014 NOT APPROVED FOR UNATTENDED COLLECTION",
+  "tests_passed": 8,
+  "representative_request_reproductions": 3,
+  "exact_reproduction_scope": [
+    "system and user messages",
+    "wire schema",
+    "all remaining parsed request settings"
+  ],
+  "canonical_definitions_or_mapping_changed": false,
+  "reused_code_byte_identity": {
+    "code/transform.py": "2b769a7bdc9721b112c19b5498f7d7b429427a229ed7868f7ad77c3172b86399",
+    "code/paired.py": "9a98bfd4665a5d90b3b1f5f3def76c22eae50cb2ce21d422cc177b46f1333689",
+    "code/VECTOR-JUDGMENT-SUFFIX.md": "e6a16632a17b8807def0b93b414f77a8f7efb44070775fad4c39c7eb1d832f9a",
+    "code/advisories.py": "11b6a2eaa35ba85c5119e646758bc48578bcdc2417494dfe369e1b6f6efe6f55",
+    "code/json_support.py": "9a98bfd4665a5d90b3b1f5f3def76c22eae50cb2ce21d422cc177b46f1333689"
+  },
+  "draft8_source_hashes_verified": 16,
+  "vector_valid_pair_states_roundtripped": 390,
+  "vector_invalid_positive_absent_states_rejected": 150,
+  "launched": false,
+  "production_wiring": false,
+  "acceptance_verdict": "../REPORT.md",
+  "status_update": {
+    "scope": "Documentation/status metadata only. Producer code, prompts, settings, fixtures and renderer bytes preserved. No tests rerun and no model calls.",
+    "prior_manifest_sha256": "48db04407ee481b695ae5df8d4489b6bcec138d2225f293450585399d57f8d18",
+    "prior_readme_sha256": "fdc48379d74f7cb9531e7b09f05719f1d03df01851660cf3ac4b65a49cad4e3c",
+    "prior_verification_sha256": "4870bf0ea326163ca3efc6b08c0e4293e7b2630522f15825f4346fce22aae1eb",
+    "prior_seals_sha256": "6dc3608a60744e0becd92e9ea4c1d3c49803582183d0f5c36dfd3d17107bc0f5",
+    "substantive_tests_previously_passed": 8,
+    "protected_hashes_unchanged": {
+      "settings.json": "1db27d846e92dd80d7a2569b4979e99cfb47ab871548974d0de31ffe611de914",
+      "render.py": "411c0a16e4dac58edf349dafab60ff8172045240b528f1ce93a9d72779a82a9b",
+      "checks.py": "e52753c84d8203a0e24e0b3e92477a41c199e1e78cc2a62f07e5797da2f1b6a0",
+      "code/transform.py": "2b769a7bdc9721b112c19b5498f7d7b429427a229ed7868f7ad77c3172b86399",
+      "code/paired.py": "9a98bfd4665a5d90b3b1f5f3def76c22eae50cb2ce21d422cc177b46f1333689",
+      "code/VECTOR-JUDGMENT-SUFFIX.md": "e6a16632a17b8807def0b93b414f77a8f7efb44070775fad4c39c7eb1d832f9a",
+      "code/advisories.py": "11b6a2eaa35ba85c5119e646758bc48578bcdc2417494dfe369e1b6f6efe6f55",
+      "code/json_support.py": "9a98bfd4665a5d90b3b1f5f3def76c22eae50cb2ce21d422cc177b46f1333689",
+      "code/recipe_text.py": "f2c035b3ac530be08f376f94e0d2f98243c88409b2d895676ab369497e6f7b5f",
+      "fixtures/truman.json": "add7a55a77663009acb8a160a39b15ac7b382934ee0e2acd7a74c32988259d20",
+      "fixtures/paterson.json": "7fba02e8aab97e7427788bff5170a62e13175e0c288bae67b4fae2d7d967572a",
+      "fixtures/code-geass.json": "4a96d5ed541c006aa12508897c7e6523853c9ac08921f2f891fc1641b8d5ec02",
+      "fixtures/golden.json": "d1bb5fd6d7b6a7d20d1c6d2996bda8a5cbb88208ff2362a958d5260a0e0acf04"
+    },
+    "known_stale_test_assertion": "Resolved by the following status-expectation consistency fix."
+  },
+  "status_expectation_fix": {
+    "change": "Only expected manifest-status string changed to ACCEPTANCE COMPLETED \u2014 NOT APPROVED FOR UNATTENDED COLLECTION.",
+    "tests_passed": 8,
+    "test_runs": 1,
+    "previous_checks_sha256": "e52753c84d8203a0e24e0b3e92477a41c199e1e78cc2a62f07e5797da2f1b6a0",
+    "current_checks_sha256": "8310bb3af06c77dc82f917da2fabf1ee7c627e4932cc757b9081f4010ca9f9d1",
+    "producer_runtime_and_fixture_files_preserved": {
+      "settings.json": "1db27d846e92dd80d7a2569b4979e99cfb47ab871548974d0de31ffe611de914",
+      "render.py": "411c0a16e4dac58edf349dafab60ff8172045240b528f1ce93a9d72779a82a9b",
+      "code/transform.py": "2b769a7bdc9721b112c19b5498f7d7b429427a229ed7868f7ad77c3172b86399",
+      "code/paired.py": "9a98bfd4665a5d90b3b1f5f3def76c22eae50cb2ce21d422cc177b46f1333689",
+      "code/VECTOR-JUDGMENT-SUFFIX.md": "e6a16632a17b8807def0b93b414f77a8f7efb44070775fad4c39c7eb1d832f9a",
+      "code/advisories.py": "11b6a2eaa35ba85c5119e646758bc48578bcdc2417494dfe369e1b6f6efe6f55",
+      "code/json_support.py": "9a98bfd4665a5d90b3b1f5f3def76c22eae50cb2ce21d422cc177b46f1333689",
+      "code/recipe_text.py": "f2c035b3ac530be08f376f94e0d2f98243c88409b2d895676ab369497e6f7b5f",
+      "fixtures/truman.json": "add7a55a77663009acb8a160a39b15ac7b382934ee0e2acd7a74c32988259d20",
+      "fixtures/paterson.json": "7fba02e8aab97e7427788bff5170a62e13175e0c288bae67b4fae2d7d967572a",
+      "fixtures/code-geass.json": "4a96d5ed541c006aa12508897c7e6523853c9ac08921f2f891fc1641b8d5ec02",
+      "fixtures/golden.json": "d1bb5fd6d7b6a7d20d1c6d2996bda8a5cbb88208ff2362a958d5260a0e0acf04"
+    },
+    "model_calls": 0,
+    "all_substantive_test_logic_unchanged": true
+  }
+}

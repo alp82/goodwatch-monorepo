@@ -1,0 +1,5307 @@
+{
+  "version": "similarity-v2.3",
+  "registry_version": "2.0.0-draft.9",
+  "ordered_fields": [
+    "experience.adrenaline",
+    "experience.tension",
+    "experience.fear",
+    "experience.perceived_threat",
+    "experience.romantic_feeling",
+    "experience.sensuality",
+    "experience.warmth",
+    "experience.wholesomeness",
+    "experience.wonder",
+    "experience.pathos",
+    "experience.melancholy",
+    "experience.uncanniness",
+    "experience.catharsis",
+    "experience.nostalgia",
+    "experience.hopefulness",
+    "experience.bleakness",
+    "experience.emotional_intensity",
+    "experience.stress",
+    "experience.uplift",
+    "experience.thought_provocation",
+    "experience.playfulness",
+    "experience.sentimentality",
+    "experience.emotional_restraint",
+    "experience.bittersweetness",
+    "experience.absurdity",
+    "experience.escapism",
+    "experience.wish_fulfillment",
+    "experience.tranquility",
+    "experience.indignation",
+    "experience.disgust",
+    "humor.overall",
+    "humor.situational",
+    "humor.wit_wordplay",
+    "humor.physical",
+    "humor.cringe",
+    "humor.absurdist",
+    "humor.satire",
+    "humor.parody",
+    "humor.dark",
+    "humor.running_gags",
+    "humor.meta",
+    "humor.deadpan",
+    "humor.gross_out",
+    "themes.crime",
+    "themes.mystery",
+    "themes.war",
+    "themes.politics",
+    "themes.radicalization",
+    "themes.family",
+    "themes.psychology",
+    "themes.entertainment_industry",
+    "themes.social_critique",
+    "themes.class",
+    "themes.capitalism",
+    "themes.consumerism",
+    "themes.technological_change",
+    "themes.human_nature",
+    "themes.faith_and_spirituality",
+    "themes.business",
+    "themes.finance",
+    "themes.environment",
+    "themes.science",
+    "themes.popular_culture",
+    "themes.survival",
+    "themes.adventure",
+    "themes.hacking",
+    "themes.artificial_intelligence",
+    "themes.consciousness",
+    "themes.identity",
+    "themes.existential_meaning",
+    "themes.grief",
+    "themes.trauma",
+    "themes.recovery",
+    "themes.mental_health",
+    "themes.addiction",
+    "themes.addiction_recovery",
+    "themes.trust_and_betrayal",
+    "themes.coming_of_age",
+    "themes.coming_out",
+    "themes.sexuality",
+    "themes.gender_identity",
+    "themes.gender_roles",
+    "themes.immigration",
+    "themes.displacement",
+    "themes.gentrification",
+    "themes.surveillance",
+    "themes.disease_and_pandemics",
+    "themes.climate_change",
+    "themes.inherited_wealth",
+    "themes.social_media",
+    "themes.public_shaming",
+    "themes.justice",
+    "themes.guilt",
+    "themes.forgiveness",
+    "themes.loyalty",
+    "themes.belonging",
+    "themes.loneliness",
+    "themes.ambition",
+    "themes.obsession",
+    "themes.labor",
+    "themes.colonialism",
+    "themes.racism",
+    "themes.sexism",
+    "themes.caregiving",
+    "themes.parenthood",
+    "themes.aging",
+    "themes.midlife",
+    "themes.retirement",
+    "themes.early_adulthood",
+    "themes.education",
+    "themes.artistic_creation",
+    "themes.persuasion_and_propaganda",
+    "themes.illness_and_dying",
+    "themes.corruption",
+    "narrative_engines.investigation",
+    "narrative_engines.pursuit",
+    "narrative_engines.rescue",
+    "narrative_engines.escape",
+    "narrative_engines.quest",
+    "narrative_engines.competition",
+    "narrative_engines.relationship_development",
+    "narrative_engines.everyday_life",
+    "narrative_engines.survival",
+    "narrative_engines.heist",
+    "narrative_engines.espionage",
+    "narrative_engines.military_operation",
+    "narrative_engines.legal_case",
+    "narrative_engines.political_struggle",
+    "tropes.underdog_rise",
+    "tropes.revenge",
+    "tropes.fall_from_grace",
+    "tropes.redemption",
+    "relationships.romantic_development",
+    "relationships.established_couple",
+    "relationships.breakup_or_divorce",
+    "relationships.partner_bereavement",
+    "relationships.love_triangle",
+    "relationships.forbidden_romance",
+    "relationships.friendship",
+    "relationships.mentor_mentee",
+    "relationships.rivalry",
+    "relationships.forced_proximity",
+    "relationships.adversaries_cooperate",
+    "relationships.found_family",
+    "relationships.family_conflict",
+    "relationships.intergenerational",
+    "relationships.generational_trauma",
+    "relationships.parent_child",
+    "relationships.siblings",
+    "relationships.caregiver_dependent",
+    "relationships.human_animal_companionship",
+    "relationships.coercive_relationship",
+    "relationships.coercive_group_control",
+    "characters.ensemble",
+    "characters.antihero",
+    "characters.morally_ambiguous_cast",
+    "characters.transformation_arc",
+    "characters.intellectual_problem_solver",
+    "characters.detective_lead",
+    "characters.workplace_team",
+    "characters.family_business",
+    "characters.unaccompanied_children",
+    "characters.teen_peer_group",
+    "characters.clandestine_groups",
+    "world.advanced_technology",
+    "world.magic",
+    "world.simulation",
+    "world.virtual_reality",
+    "world.parallel_worlds",
+    "world.time_travel",
+    "world.time_loop",
+    "world.dystopian_society",
+    "world.post_apocalyptic",
+    "world.spacefaring",
+    "world.robots",
+    "world.myth_and_folklore",
+    "world_treatment.scientific_rigor",
+    "world_treatment.speculative_freedom",
+    "world_treatment.worldbuilding_depth",
+    "world_treatment.magic_rule_detail",
+    "world_treatment.everyday_realism",
+    "world_treatment.magical_realism",
+    "storytelling.plot_velocity",
+    "storytelling.gradual_development",
+    "storytelling.intrigue",
+    "storytelling.plot_complexity",
+    "storytelling.interpretive_ambiguity",
+    "storytelling.twist_frequency",
+    "storytelling.twist_impact",
+    "storytelling.nonlinearity",
+    "storytelling.multiple_timelines",
+    "storytelling.multiple_viewpoints",
+    "storytelling.unreliable_narration",
+    "storytelling.unreliable_reality",
+    "storytelling.self_reference",
+    "storytelling.fourth_wall_breaking",
+    "storytelling.voiceover",
+    "storytelling.dream_sequences",
+    "storytelling.observational_mode",
+    "storytelling.slice_of_life",
+    "storytelling.exposition_load",
+    "storytelling.information_withholding",
+    "storytelling.philosophical_inquiry",
+    "storytelling.formal_challenge",
+    "storytelling.didacticism",
+    "storytelling.confined_setting",
+    "stakes.personal",
+    "stakes.relationship",
+    "stakes.community",
+    "stakes.societal",
+    "stakes.urgency",
+    "dialogue.density",
+    "dialogue.dependence",
+    "dialogue.monologues",
+    "dialogue.overlap",
+    "dialogue.naturalistic_delivery",
+    "dialogue.theatrical_delivery",
+    "aesthetics.gothic",
+    "aesthetics.noir",
+    "aesthetics.retro",
+    "aesthetics.minimalism",
+    "aesthetics.stylization",
+    "aesthetics.surrealism",
+    "aesthetics.psychedelia",
+    "aesthetics.grotesquerie",
+    "aesthetics.camp",
+    "aesthetics.ironic_distance",
+    "aesthetics.intimacy",
+    "aesthetics.spectacle",
+    "aesthetics.immersion",
+    "aesthetics.lyricism",
+    "aesthetics.transgression",
+    "visuals.vibrant_palette",
+    "visuals.muted_palette",
+    "visuals.warm_color",
+    "visuals.cool_color",
+    "visuals.low_key_lighting",
+    "visuals.high_key_lighting",
+    "visuals.high_contrast",
+    "visuals.long_takes",
+    "visuals.handheld_motion",
+    "visuals.symmetry",
+    "visuals.production_design_detail",
+    "visuals.cutting_pace",
+    "action.hand_to_hand",
+    "action.martial_arts_choreography",
+    "action.grappling",
+    "action.gunplay",
+    "action.blade_combat",
+    "action.superpowered_combat",
+    "action.chases",
+    "action.large_battles",
+    "action.gritty_combat",
+    "action.stylized_violence",
+    "action.realistic_violence",
+    "horror_modes.possession",
+    "horror_modes.body_horror",
+    "horror_modes.folk_horror",
+    "horror_modes.cosmic_horror",
+    "horror_modes.psychological_horror",
+    "sound.design_prominence",
+    "sound.ambient_soundscapes",
+    "sound.silence",
+    "sound.sparse_score",
+    "sound.audio_startles",
+    "sound.music_dependence",
+    "sound.musical_numbers",
+    "ending.conflict_resolution",
+    "ending.interpretive_openness",
+    "ending.emotional_closure",
+    "ending.happiness",
+    "ending.tragedy",
+    "ending.bittersweetness",
+    "viewing_demands.sensory_intensity"
+  ],
+  "dimension_count": 274,
+  "counts": {
+    "vector": 274,
+    "content_attributes": 314,
+    "viewing_context": 21,
+    "series_attributes": 8,
+    "evaluations": 10
+  },
+  "presence_count": 171,
+  "fields": [
+    {
+      "field": "experience.adrenaline",
+      "destination": "vector",
+      "vector_index": 0,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.tension",
+      "destination": "vector",
+      "vector_index": 1,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.fear",
+      "destination": "vector",
+      "vector_index": 2,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.perceived_threat",
+      "destination": "vector",
+      "vector_index": 3,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.romantic_feeling",
+      "destination": "vector",
+      "vector_index": 4,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.sensuality",
+      "destination": "vector",
+      "vector_index": 5,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.warmth",
+      "destination": "vector",
+      "vector_index": 6,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.wholesomeness",
+      "destination": "vector",
+      "vector_index": 7,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.wonder",
+      "destination": "vector",
+      "vector_index": 8,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.pathos",
+      "destination": "vector",
+      "vector_index": 9,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.melancholy",
+      "destination": "vector",
+      "vector_index": 10,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.uncanniness",
+      "destination": "vector",
+      "vector_index": 11,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.catharsis",
+      "destination": "vector",
+      "vector_index": 12,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.nostalgia",
+      "destination": "vector",
+      "vector_index": 13,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.hopefulness",
+      "destination": "vector",
+      "vector_index": 14,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.bleakness",
+      "destination": "vector",
+      "vector_index": 15,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.emotional_intensity",
+      "destination": "vector",
+      "vector_index": 16,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.stress",
+      "destination": "vector",
+      "vector_index": 17,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.uplift",
+      "destination": "vector",
+      "vector_index": 18,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.thought_provocation",
+      "destination": "vector",
+      "vector_index": 19,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.playfulness",
+      "destination": "vector",
+      "vector_index": 20,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.sentimentality",
+      "destination": "vector",
+      "vector_index": 21,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.emotional_restraint",
+      "destination": "vector",
+      "vector_index": 22,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.bittersweetness",
+      "destination": "vector",
+      "vector_index": 23,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.absurdity",
+      "destination": "vector",
+      "vector_index": 24,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.escapism",
+      "destination": "vector",
+      "vector_index": 25,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.wish_fulfillment",
+      "destination": "vector",
+      "vector_index": 26,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.tranquility",
+      "destination": "vector",
+      "vector_index": 27,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.indignation",
+      "destination": "vector",
+      "vector_index": 28,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "experience.disgust",
+      "destination": "vector",
+      "vector_index": 29,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.overall",
+      "destination": "vector",
+      "vector_index": 30,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.situational",
+      "destination": "vector",
+      "vector_index": 31,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.wit_wordplay",
+      "destination": "vector",
+      "vector_index": 32,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.physical",
+      "destination": "vector",
+      "vector_index": 33,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.cringe",
+      "destination": "vector",
+      "vector_index": 34,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.absurdist",
+      "destination": "vector",
+      "vector_index": 35,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.satire",
+      "destination": "vector",
+      "vector_index": 36,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.parody",
+      "destination": "vector",
+      "vector_index": 37,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.dark",
+      "destination": "vector",
+      "vector_index": 38,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.running_gags",
+      "destination": "vector",
+      "vector_index": 39,
+      "measurement": "frequency",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.meta",
+      "destination": "vector",
+      "vector_index": 40,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.deadpan",
+      "destination": "vector",
+      "vector_index": 41,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.gross_out",
+      "destination": "vector",
+      "vector_index": 42,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "humor.raunchy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.crime",
+      "destination": "vector",
+      "vector_index": 43,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.mystery",
+      "destination": "vector",
+      "vector_index": 44,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.war",
+      "destination": "vector",
+      "vector_index": 45,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.politics",
+      "destination": "vector",
+      "vector_index": 46,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.radicalization",
+      "destination": "vector",
+      "vector_index": 47,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.family",
+      "destination": "vector",
+      "vector_index": 48,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.psychology",
+      "destination": "vector",
+      "vector_index": 49,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.entertainment_industry",
+      "destination": "vector",
+      "vector_index": 50,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.social_critique",
+      "destination": "vector",
+      "vector_index": 51,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.class",
+      "destination": "vector",
+      "vector_index": 52,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.capitalism",
+      "destination": "vector",
+      "vector_index": 53,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.consumerism",
+      "destination": "vector",
+      "vector_index": 54,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.technological_change",
+      "destination": "vector",
+      "vector_index": 55,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.human_nature",
+      "destination": "vector",
+      "vector_index": 56,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.faith_and_spirituality",
+      "destination": "vector",
+      "vector_index": 57,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.business",
+      "destination": "vector",
+      "vector_index": 58,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.finance",
+      "destination": "vector",
+      "vector_index": 59,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.environment",
+      "destination": "vector",
+      "vector_index": 60,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.science",
+      "destination": "vector",
+      "vector_index": 61,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.popular_culture",
+      "destination": "vector",
+      "vector_index": 62,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.survival",
+      "destination": "vector",
+      "vector_index": 63,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.adventure",
+      "destination": "vector",
+      "vector_index": 64,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.hacking",
+      "destination": "vector",
+      "vector_index": 65,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.artificial_intelligence",
+      "destination": "vector",
+      "vector_index": 66,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.consciousness",
+      "destination": "vector",
+      "vector_index": 67,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.identity",
+      "destination": "vector",
+      "vector_index": 68,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.existential_meaning",
+      "destination": "vector",
+      "vector_index": 69,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.grief",
+      "destination": "vector",
+      "vector_index": 70,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.trauma",
+      "destination": "vector",
+      "vector_index": 71,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.recovery",
+      "destination": "vector",
+      "vector_index": 72,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.mental_health",
+      "destination": "vector",
+      "vector_index": 73,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.addiction",
+      "destination": "vector",
+      "vector_index": 74,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.addiction_recovery",
+      "destination": "vector",
+      "vector_index": 75,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.trust_and_betrayal",
+      "destination": "vector",
+      "vector_index": 76,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.coming_of_age",
+      "destination": "vector",
+      "vector_index": 77,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.coming_out",
+      "destination": "vector",
+      "vector_index": 78,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.sexuality",
+      "destination": "vector",
+      "vector_index": 79,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.gender_identity",
+      "destination": "vector",
+      "vector_index": 80,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.gender_roles",
+      "destination": "vector",
+      "vector_index": 81,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.immigration",
+      "destination": "vector",
+      "vector_index": 82,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.displacement",
+      "destination": "vector",
+      "vector_index": 83,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.gentrification",
+      "destination": "vector",
+      "vector_index": 84,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.surveillance",
+      "destination": "vector",
+      "vector_index": 85,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.disease_and_pandemics",
+      "destination": "vector",
+      "vector_index": 86,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.climate_change",
+      "destination": "vector",
+      "vector_index": 87,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.inherited_wealth",
+      "destination": "vector",
+      "vector_index": 88,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.social_media",
+      "destination": "vector",
+      "vector_index": 89,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.public_shaming",
+      "destination": "vector",
+      "vector_index": 90,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.justice",
+      "destination": "vector",
+      "vector_index": 91,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.guilt",
+      "destination": "vector",
+      "vector_index": 92,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.forgiveness",
+      "destination": "vector",
+      "vector_index": 93,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.loyalty",
+      "destination": "vector",
+      "vector_index": 94,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.belonging",
+      "destination": "vector",
+      "vector_index": 95,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.loneliness",
+      "destination": "vector",
+      "vector_index": 96,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.ambition",
+      "destination": "vector",
+      "vector_index": 97,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.obsession",
+      "destination": "vector",
+      "vector_index": 98,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.labor",
+      "destination": "vector",
+      "vector_index": 99,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.colonialism",
+      "destination": "vector",
+      "vector_index": 100,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.racism",
+      "destination": "vector",
+      "vector_index": 101,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.sexism",
+      "destination": "vector",
+      "vector_index": 102,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.caregiving",
+      "destination": "vector",
+      "vector_index": 103,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.parenthood",
+      "destination": "vector",
+      "vector_index": 104,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.aging",
+      "destination": "vector",
+      "vector_index": 105,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.midlife",
+      "destination": "vector",
+      "vector_index": 106,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.retirement",
+      "destination": "vector",
+      "vector_index": 107,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.early_adulthood",
+      "destination": "vector",
+      "vector_index": 108,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.education",
+      "destination": "vector",
+      "vector_index": 109,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.artistic_creation",
+      "destination": "vector",
+      "vector_index": 110,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.persuasion_and_propaganda",
+      "destination": "vector",
+      "vector_index": 111,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.illness_and_dying",
+      "destination": "vector",
+      "vector_index": 112,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.corruption",
+      "destination": "vector",
+      "vector_index": 113,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.action",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.adventure",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.comedy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.drama",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.thriller",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.horror",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.science_fiction",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.fantasy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.romance",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.mystery",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.crime",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.western",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.neo_western",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.giallo",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.kaiju",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.disaster",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.superhero",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.zombie",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.slasher",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.creature_feature",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.neo_noir",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.space_western",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.sword_and_sorcery",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.cozy_mystery",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.romantic_comedy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.melodrama",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.musical",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.war",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.historical_drama",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.biographical",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.true_crime",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.psychological_thriller",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.conspiracy_thriller",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.survival_thriller",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.legal_thriller",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.police_procedural",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.gangster",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.whodunit",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.puzzle_box",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.space_opera",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.epic_fantasy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.urban_fantasy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "genres.dark_fantasy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "membership",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.investigation",
+      "destination": "vector",
+      "vector_index": 114,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.pursuit",
+      "destination": "vector",
+      "vector_index": 115,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.rescue",
+      "destination": "vector",
+      "vector_index": 116,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.escape",
+      "destination": "vector",
+      "vector_index": 117,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.quest",
+      "destination": "vector",
+      "vector_index": 118,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.competition",
+      "destination": "vector",
+      "vector_index": 119,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.relationship_development",
+      "destination": "vector",
+      "vector_index": 120,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.everyday_life",
+      "destination": "vector",
+      "vector_index": 121,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.survival",
+      "destination": "vector",
+      "vector_index": 122,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.heist",
+      "destination": "vector",
+      "vector_index": 123,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.espionage",
+      "destination": "vector",
+      "vector_index": 124,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.military_operation",
+      "destination": "vector",
+      "vector_index": 125,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.legal_case",
+      "destination": "vector",
+      "vector_index": 126,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "narrative_engines.political_struggle",
+      "destination": "vector",
+      "vector_index": 127,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "tropes.underdog_rise",
+      "destination": "vector",
+      "vector_index": 128,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.revenge",
+      "destination": "vector",
+      "vector_index": 129,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.vigilantism",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.rags_to_riches",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.fall_from_grace",
+      "destination": "vector",
+      "vector_index": 130,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.redemption",
+      "destination": "vector",
+      "vector_index": 131,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.mistaken_identity",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.memory_loss",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.body_swap",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.fish_out_of_water",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.secret_identity",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.road_trip",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.tournament",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.training",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.race_against_time",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.single_night",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.locked_room",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.conspiracy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.apocalypse_survival",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.haunted_house",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.chosen_one",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.prophecy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.macguffin_quest",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.final_survivor",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.apparent_death",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.mentor_death",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.doppelganger",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.hidden_antagonist_reveal",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "tropes.home_invasion",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.romantic_development",
+      "destination": "vector",
+      "vector_index": 132,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.established_couple",
+      "destination": "vector",
+      "vector_index": 133,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.marriage",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.breakup_or_divorce",
+      "destination": "vector",
+      "vector_index": 134,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.partner_bereavement",
+      "destination": "vector",
+      "vector_index": 135,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.love_triangle",
+      "destination": "vector",
+      "vector_index": 136,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.enemies_to_lovers",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.forbidden_romance",
+      "destination": "vector",
+      "vector_index": 137,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.slow_burn_romance",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.queer_romance",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.workplace_romance",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.age_gap_romance",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.friendship",
+      "destination": "vector",
+      "vector_index": 138,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.male_friendship",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.female_friendship",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.mentor_mentee",
+      "destination": "vector",
+      "vector_index": 139,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.student_teacher",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.rivalry",
+      "destination": "vector",
+      "vector_index": 140,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.forced_proximity",
+      "destination": "vector",
+      "vector_index": 141,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.adversaries_cooperate",
+      "destination": "vector",
+      "vector_index": 142,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.found_family",
+      "destination": "vector",
+      "vector_index": 143,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.family_conflict",
+      "destination": "vector",
+      "vector_index": 144,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.intergenerational",
+      "destination": "vector",
+      "vector_index": 145,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.generational_trauma",
+      "destination": "vector",
+      "vector_index": 146,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.parent_child",
+      "destination": "vector",
+      "vector_index": 147,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.siblings",
+      "destination": "vector",
+      "vector_index": 148,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.caregiver_dependent",
+      "destination": "vector",
+      "vector_index": 149,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.human_animal_companionship",
+      "destination": "vector",
+      "vector_index": 150,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.coercive_relationship",
+      "destination": "vector",
+      "vector_index": 151,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.coercive_group_control",
+      "destination": "vector",
+      "vector_index": 152,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.infidelity",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "relationships.unrequited_love",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.ensemble",
+      "destination": "vector",
+      "vector_index": 153,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.antihero",
+      "destination": "vector",
+      "vector_index": 154,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.morally_ambiguous_cast",
+      "destination": "vector",
+      "vector_index": 155,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.transformation_arc",
+      "destination": "vector",
+      "vector_index": 156,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.intellectual_problem_solver",
+      "destination": "vector",
+      "vector_index": 157,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.detective_lead",
+      "destination": "vector",
+      "vector_index": 158,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.female_protagonist",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.child_protagonist",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.teen_protagonist",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.older_adult_protagonist",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.child_agency",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.female_character_agency",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.workplace_team",
+      "destination": "vector",
+      "vector_index": 159,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.family_business",
+      "destination": "vector",
+      "vector_index": 160,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.unaccompanied_children",
+      "destination": "vector",
+      "vector_index": 161,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.teen_peer_group",
+      "destination": "vector",
+      "vector_index": 162,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.clandestine_groups",
+      "destination": "vector",
+      "vector_index": 163,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.nonhuman_protagonist",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.solo_protagonist",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "representation.lgbtq_characters",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "representation.neurodivergent_characters",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "representation.disabled_characters",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "representation.immigrant_characters",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.advanced_technology",
+      "destination": "vector",
+      "vector_index": 164,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.magic",
+      "destination": "vector",
+      "vector_index": 165,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.simulation",
+      "destination": "vector",
+      "vector_index": 166,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.virtual_reality",
+      "destination": "vector",
+      "vector_index": 167,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.parallel_worlds",
+      "destination": "vector",
+      "vector_index": 168,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.time_travel",
+      "destination": "vector",
+      "vector_index": 169,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.travel_to_past",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.travel_to_future",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.time_loop",
+      "destination": "vector",
+      "vector_index": 170,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.dystopian_society",
+      "destination": "vector",
+      "vector_index": 171,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.post_apocalyptic",
+      "destination": "vector",
+      "vector_index": 172,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.spacefaring",
+      "destination": "vector",
+      "vector_index": 173,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.robots",
+      "destination": "vector",
+      "vector_index": 174,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world.myth_and_folklore",
+      "destination": "vector",
+      "vector_index": 175,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world_treatment.scientific_rigor",
+      "destination": "vector",
+      "vector_index": 176,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world_treatment.speculative_freedom",
+      "destination": "vector",
+      "vector_index": 177,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world_treatment.worldbuilding_depth",
+      "destination": "vector",
+      "vector_index": 178,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world_treatment.lore_dependence",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world_treatment.magic_rule_detail",
+      "destination": "vector",
+      "vector_index": 179,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world_treatment.everyday_realism",
+      "destination": "vector",
+      "vector_index": 180,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "world_treatment.magical_realism",
+      "destination": "vector",
+      "vector_index": 181,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.urban",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.small_town",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.rural",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.frontier",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.polar",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.mountains",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.forest",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.desert",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.ocean",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.island",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.space_station",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.spacecraft",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.underground",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.bunker",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.mansion",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.home",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.school",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.university",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.office",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.hospital",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.restaurant",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.bar_or_club",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.hotel",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.factory",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.laboratory",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.prison",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.salon",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.subway",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.airport",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.amusement_park",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.circus",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.theater",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.museum",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.library_or_bookshop",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.religious_site",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.cemetery",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.courtroom",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.casino",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.suburban",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.jungle",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.coast_or_beach",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.military_base",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.engineering",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.computing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.healthcare",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.policing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.military",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.law",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.business",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.finance",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.service",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.arts",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.education",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.journalism",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.organized_crime",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.piracy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.government_and_politics",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.public_relations_and_advertising",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.science_research",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.clergy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.sex_work",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.agriculture",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "occupations.royalty_and_aristocracy",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.cooking",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.baking",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.dining",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.travel",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.backpacking",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.gardening",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.diving",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.vehicle_tuning",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.aviation",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.rail_enthusiasm",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.fitness",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.video_games",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.fashion",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.crafts",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.photography",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.filmmaking",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.reading",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.comics",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.anime_fandom",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.visual_art",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.theater",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.hiking",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.woodworking",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.home_improvement",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.language_learning",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.instrument_playing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.singing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.dancing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.stage_magic",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.animal_care",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.underground_fighting",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.gambling",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.writing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.hunting_and_fishing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.climbing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.sailing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.tabletop_games",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.ice_hockey",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.tennis",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.golf",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.association_football",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.basketball",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.baseball",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.american_football",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.boxing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.mixed_martial_arts",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.motorsport",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.skiing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.snowboarding",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.running",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.cycling",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.cricket",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.rugby",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.volleyball",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.swimming",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.diving",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.gymnastics",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.skateboarding",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.esports",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.professional_wrestling",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sports.surfing",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.dogs",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.cats",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.horses",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.farm_animals",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.wildlife",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.birds",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.reptiles",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.amphibians",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.marine_animals",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.arthropods",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.dinosaurs",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.mythical_creatures",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.vampires",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.werewolves",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.ghosts",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.demons",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.extraterrestrials",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.cars",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.trains",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.aircraft",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.watercraft",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.special_machinery",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "entities.toys_or_puppets",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.plot_velocity",
+      "destination": "vector",
+      "vector_index": 182,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.gradual_development",
+      "destination": "vector",
+      "vector_index": 183,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.intrigue",
+      "destination": "vector",
+      "vector_index": 184,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.plot_complexity",
+      "destination": "vector",
+      "vector_index": 185,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.interpretive_ambiguity",
+      "destination": "vector",
+      "vector_index": 186,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.twist_frequency",
+      "destination": "vector",
+      "vector_index": 187,
+      "measurement": "frequency",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.twist_impact",
+      "destination": "vector",
+      "vector_index": 188,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.nonlinearity",
+      "destination": "vector",
+      "vector_index": 189,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.multiple_timelines",
+      "destination": "vector",
+      "vector_index": 190,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.multiple_viewpoints",
+      "destination": "vector",
+      "vector_index": 191,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.unreliable_narration",
+      "destination": "vector",
+      "vector_index": 192,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.unreliable_reality",
+      "destination": "vector",
+      "vector_index": 193,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.self_reference",
+      "destination": "vector",
+      "vector_index": 194,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.fourth_wall_breaking",
+      "destination": "vector",
+      "vector_index": 195,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.voiceover",
+      "destination": "vector",
+      "vector_index": 196,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.dream_sequences",
+      "destination": "vector",
+      "vector_index": 197,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.observational_mode",
+      "destination": "vector",
+      "vector_index": 198,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.slice_of_life",
+      "destination": "vector",
+      "vector_index": 199,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.exposition_load",
+      "destination": "vector",
+      "vector_index": 200,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.information_withholding",
+      "destination": "vector",
+      "vector_index": 201,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.philosophical_inquiry",
+      "destination": "vector",
+      "vector_index": 202,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.educational_intent",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.formal_challenge",
+      "destination": "vector",
+      "vector_index": 203,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.homage",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.pastiche",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.didacticism",
+      "destination": "vector",
+      "vector_index": 204,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.confined_setting",
+      "destination": "vector",
+      "vector_index": 205,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.real_time",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.vignette_structure",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.narrativity",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "stakes.personal",
+      "destination": "vector",
+      "vector_index": 206,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "stakes.relationship",
+      "destination": "vector",
+      "vector_index": 207,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "stakes.community",
+      "destination": "vector",
+      "vector_index": 208,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "stakes.societal",
+      "destination": "vector",
+      "vector_index": 209,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "stakes.planetary",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "stakes.cosmic",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "stakes.urgency",
+      "destination": "vector",
+      "vector_index": 210,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "dialogue.density",
+      "destination": "vector",
+      "vector_index": 211,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "dialogue.dependence",
+      "destination": "vector",
+      "vector_index": 212,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "dialogue.monologues",
+      "destination": "vector",
+      "vector_index": 213,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "dialogue.technical_jargon",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "dialogue.overlap",
+      "destination": "vector",
+      "vector_index": 214,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "dialogue.naturalistic_delivery",
+      "destination": "vector",
+      "vector_index": 215,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "dialogue.theatrical_delivery",
+      "destination": "vector",
+      "vector_index": 216,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "dialogue.multilingual_exchange",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.cyberpunk",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.steampunk",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.gothic",
+      "destination": "vector",
+      "vector_index": 217,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.noir",
+      "destination": "vector",
+      "vector_index": 218,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.retro",
+      "destination": "vector",
+      "vector_index": 219,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.minimalism",
+      "destination": "vector",
+      "vector_index": 220,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.stylization",
+      "destination": "vector",
+      "vector_index": 221,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.surrealism",
+      "destination": "vector",
+      "vector_index": 222,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.psychedelia",
+      "destination": "vector",
+      "vector_index": 223,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.grotesquerie",
+      "destination": "vector",
+      "vector_index": 224,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.camp",
+      "destination": "vector",
+      "vector_index": 225,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.ironic_distance",
+      "destination": "vector",
+      "vector_index": 226,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.intimacy",
+      "destination": "vector",
+      "vector_index": 227,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.spectacle",
+      "destination": "vector",
+      "vector_index": 228,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.immersion",
+      "destination": "vector",
+      "vector_index": 229,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.lyricism",
+      "destination": "vector",
+      "vector_index": 230,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "aesthetics.transgression",
+      "destination": "vector",
+      "vector_index": 231,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.vibrant_palette",
+      "destination": "vector",
+      "vector_index": 232,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.muted_palette",
+      "destination": "vector",
+      "vector_index": 233,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.pastel_palette",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.neon_palette",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.restricted_palette",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.warm_color",
+      "destination": "vector",
+      "vector_index": 234,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.cool_color",
+      "destination": "vector",
+      "vector_index": 235,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.low_key_lighting",
+      "destination": "vector",
+      "vector_index": 236,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.high_key_lighting",
+      "destination": "vector",
+      "vector_index": 237,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.high_contrast",
+      "destination": "vector",
+      "vector_index": 238,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.diffused_light",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.long_takes",
+      "destination": "vector",
+      "vector_index": 239,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.handheld_motion",
+      "destination": "vector",
+      "vector_index": 240,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.aerial_viewpoints",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.closeups",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.wide_compositions",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.symmetry",
+      "destination": "vector",
+      "vector_index": 241,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.practical_effects",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.digital_effects",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.costume_emphasis",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.production_design_detail",
+      "destination": "vector",
+      "vector_index": 242,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.split_screen",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.aspect_ratio_changes",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.grain_texture",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.distressed_texture",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.cutting_pace",
+      "destination": "vector",
+      "vector_index": 243,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.slow_motion",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.static_camera",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.hand_to_hand",
+      "destination": "vector",
+      "vector_index": 244,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.martial_arts_choreography",
+      "destination": "vector",
+      "vector_index": 245,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.grappling",
+      "destination": "vector",
+      "vector_index": 246,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.gunplay",
+      "destination": "vector",
+      "vector_index": 247,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.gun_fu",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.blade_combat",
+      "destination": "vector",
+      "vector_index": 248,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.superpowered_combat",
+      "destination": "vector",
+      "vector_index": 249,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.chases",
+      "destination": "vector",
+      "vector_index": 250,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.large_battles",
+      "destination": "vector",
+      "vector_index": 251,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.environmental_choreography",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.gritty_combat",
+      "destination": "vector",
+      "vector_index": 252,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.stylized_violence",
+      "destination": "vector",
+      "vector_index": 253,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "action.realistic_violence",
+      "destination": "vector",
+      "vector_index": 254,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "horror_modes.possession",
+      "destination": "vector",
+      "vector_index": 255,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "horror_modes.body_horror",
+      "destination": "vector",
+      "vector_index": 256,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "horror_modes.folk_horror",
+      "destination": "vector",
+      "vector_index": 257,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "horror_modes.cosmic_horror",
+      "destination": "vector",
+      "vector_index": 258,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "horror_modes.psychological_horror",
+      "destination": "vector",
+      "vector_index": 259,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.design_prominence",
+      "destination": "vector",
+      "vector_index": 260,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.ambient_soundscapes",
+      "destination": "vector",
+      "vector_index": 261,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.silence",
+      "destination": "vector",
+      "vector_index": 262,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.sparse_score",
+      "destination": "vector",
+      "vector_index": 263,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.audio_startles",
+      "destination": "vector",
+      "vector_index": 264,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.audio_self_reference",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.music_dependence",
+      "destination": "vector",
+      "vector_index": 265,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.nonmusical_sound_dependence",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.diegetic_music",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.preexisting_recordings",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.live_performance",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "sound.musical_numbers",
+      "destination": "vector",
+      "vector_index": 266,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.orchestral",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.electronic",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.jazz",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.classical",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.rock",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.pop",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.metal",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.hip_hop",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.country",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.folk",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.soul_rnb",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.funk",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "ending.conflict_resolution",
+      "destination": "vector",
+      "vector_index": 267,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "ending.interpretive_openness",
+      "destination": "vector",
+      "vector_index": 268,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "ending.emotional_closure",
+      "destination": "vector",
+      "vector_index": 269,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "ending.happiness",
+      "destination": "vector",
+      "vector_index": 270,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "ending.tragedy",
+      "destination": "vector",
+      "vector_index": 271,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "ending.bittersweetness",
+      "destination": "vector",
+      "vector_index": 272,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "ending.twist_impact",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "ending.cliffhanger",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "ending.sequel_dependence",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "ending.cyclical_return",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "series.episodic_independence",
+      "destination": "series_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "show",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "series.serialized_dependence",
+      "destination": "series_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "show",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "series.anthology_independence",
+      "destination": "series_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "show",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "series.episode_cliffhangers",
+      "destination": "series_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "show",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "series.bottle_episode_pattern",
+      "destination": "series_attributes",
+      "vector_index": null,
+      "measurement": "frequency",
+      "applicability": "show",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "series.cold_open_hooks",
+      "destination": "series_attributes",
+      "vector_index": null,
+      "measurement": "frequency",
+      "applicability": "show",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "series.formula_repetition",
+      "destination": "series_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "show",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "series.conceptual_renewal",
+      "destination": "series_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "show",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.attention",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.visual_dependence",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.auditory_dependence",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.sensory_intensity",
+      "destination": "vector",
+      "vector_index": 273,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.franchise_knowledge",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.genre_knowledge",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.historical_knowledge",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.cultural_knowledge",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.onscreen_reading",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_affordances.background_viewing",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "suitability",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_affordances.drop_in_viewing",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "suitability",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_affordances.standalone_viewing",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "suitability",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_affordances.discussion",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "suitability",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_affordances.theorizing",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "suitability",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_affordances.repeat_discovery",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "suitability",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "evaluations.direction",
+      "destination": "evaluations",
+      "vector_index": null,
+      "measurement": "quality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "evaluations.acting",
+      "destination": "evaluations",
+      "vector_index": null,
+      "measurement": "quality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "evaluations.writing",
+      "destination": "evaluations",
+      "vector_index": null,
+      "measurement": "quality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "evaluations.dialogue",
+      "destination": "evaluations",
+      "vector_index": null,
+      "measurement": "quality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "evaluations.characterization",
+      "destination": "evaluations",
+      "vector_index": null,
+      "measurement": "quality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "evaluations.narrative_cohesion",
+      "destination": "evaluations",
+      "vector_index": null,
+      "measurement": "quality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "evaluations.cinematography",
+      "destination": "evaluations",
+      "vector_index": null,
+      "measurement": "quality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "evaluations.editing",
+      "destination": "evaluations",
+      "vector_index": null,
+      "measurement": "quality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "evaluations.original_score",
+      "destination": "evaluations",
+      "vector_index": null,
+      "measurement": "quality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "evaluations.sound_design",
+      "destination": "evaluations",
+      "vector_index": null,
+      "measurement": "quality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.demonstrated_competence",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.memory_load",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.inference_load",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_demands.information_rate",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "viewing_affordances.interruption_recovery",
+      "destination": "viewing_context",
+      "vector_index": null,
+      "measurement": "suitability",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "performance.dance_prominence",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "characters.traumatic_backstory_dependence",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "characters.charisma",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "characters.eccentricity",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "horror_elements.occult_rituals",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "settings.community_isolation",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "atmosphere.sustained_dread",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "visuals.scenic_landscape_prominence",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "atmosphere.environmental_sensory_emphasis",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "presentation.jump_scare_frequency",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "frequency",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "storytelling.narrative_escalation",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "speculative.superpowers",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "speculative.monster_focus",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "activities.supernatural_hunting",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "storytelling.character_emphasis",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": true
+    },
+    {
+      "field": "themes.ethical_dilemmas",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.resilience",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.voluntary_sacrifice",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "atmosphere.claustrophobia",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "intensity",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "themes.economic_precarity",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "centrality",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.blues",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.reggae",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    },
+    {
+      "field": "music_styles.gospel",
+      "destination": "content_attributes",
+      "vector_index": null,
+      "measurement": "prominence",
+      "applicability": "all",
+      "spoiler_sensitive": false
+    }
+  ]
+}

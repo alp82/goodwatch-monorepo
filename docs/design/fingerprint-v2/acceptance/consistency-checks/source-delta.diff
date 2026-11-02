@@ -1,0 +1,11 @@
+--- private-audit-v3/audit.py
++++ durable/audit.py
+@@ -70,7 +70,7 @@
+         pub=val.validate(v)
+         vp=val.coverage(v); ac=val.coverage(a)
+         extra=extra_checks(v,a); spots=spot_checks(v,a)
+-        rows.append({'title':key,'name':entry.get('name'), 'vector_coverage':vp,'attributes_coverage':ac,
++        rows.append({'title':key,'name':entry.get('name') or v.get('title',{}).get('name') or key, 'vector_coverage':vp,'attributes_coverage':ac,
+           'vector_publication_valid':not pub,'numeric_vector_complete':vp['numeric_scores']==274,'intake_pair_errors':errors,'extra_definition_contradictions':extra,
+           'semantic_spot_checks':spots,'advisory_unknown_topics':[k for k,x in a.get('advisories',{}).items() if x['presence']=='unknown'],
+           'source_paths':{'vector':str(vd),'attributes':str(ad)}})

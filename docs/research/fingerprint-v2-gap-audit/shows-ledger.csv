@@ -1,0 +1,1001 @@
+rank,tmdb_id,title,missing_tags,missing_synopsis,candidate_families,semantic_extra_observations,detailed_followup_evidence_reviewed,residual_all_tags_reviewed
+1,1399,Game of Thrones,False,False,creatures;royalty,,False,False
+2,1396,Breaking Bad,False,False,procedural_specialties;medical_specific,,False,False
+3,333439,海尼曼外教艾伦老师精讲,True,True,,"Catalog anomaly: unusually high vote ranking with no synopsis, essence text, tags or genres; retain identity and make no content inference.",False,True
+4,66732,Stranger Things,False,False,creatures;powers;art_movement;holidays_audience,,False,False
+5,1402,The Walking Dead,False,False,creatures,,False,False
+6,1668,Friends,False,False,sitcom_structure;family_forms,,False,False
+7,19885,Sherlock,False,False,,,False,True
+8,87108,Chernobyl,False,False,,"Nuclear accident, radiation exposure and institutional disaster response; disaster membership alone does not establish nuclear content.",False,True
+9,76479,The Boys,False,False,powers;social_specific,,False,False
+10,1405,Dexter,False,False,creatures;procedural_specialties,,False,False
+11,1418,The Big Bang Theory,False,False,sitcom_structure,,False,False
+12,60059,Better Call Saul,False,False,premise_scope,,False,False
+13,2316,The Office,False,False,sitcom_structure,,False,False
+14,60574,Peaky Blinders,False,False,social_specific,,False,False
+15,93405,Squid Game,False,False,unscripted_format;holidays_audience,,False,False
+16,1100,How I Met Your Mother,False,False,sitcom_structure;family_forms;holidays_audience,,False,False
+17,46648,True Detective,False,False,procedural_specialties;social_specific;premise_scope,,False,False
+18,100088,The Last of Us,False,False,bioengineering,,False,False
+19,42009,Black Mirror,False,False,unscripted_format;premise_scope,,False,False
+20,1429,Attack on Titan,False,False,creatures;powers,,False,False
+21,60625,Rick and Morty,False,False,sitcom_structure;holidays_audience,,False,False
+22,4607,Lost,False,False,,,False,True
+23,2288,Prison Break,False,False,procedural_specialties;social_specific,,False,False
+24,82856,The Mandalorian,False,False,bioengineering;work_specific;unscripted_format,,False,False
+25,87739,The Queen's Gambit,False,False,chess;family_forms;setting_specific,,True,False
+26,71912,The Witcher,False,False,creatures;bioengineering,,False,False
+27,44217,Vikings,False,False,royalty,,False,False
+28,71446,Money Heist,False,False,chess,,False,False
+29,1408,House,False,False,procedural_specialties;medical_specific,,False,False
+30,4613,Band of Brothers,False,False,unscripted_format,,False,False
+31,1398,The Sopranos,False,False,memory_mortality;medical_specific;setting_specific,,False,False
+32,94997,House of the Dragon,False,False,creatures;royalty;premise_scope,,True,False
+33,70523,Dark,False,False,religious_specific;memory_mortality;premise_scope,,False,False
+34,63247,Westworld,False,False,royalty;education_pressure,,False,False
+35,1425,House of Cards,False,False,social_specific,,False,False
+36,1622,Supernatural,False,False,creatures;religious_specific;memory_mortality;mystery_structure,,True,False
+37,61889,Marvel's Daredevil,False,False,afterlife;social_specific,,False,False
+38,37680,Suits,False,False,memory_mortality;mystery_structure;unscripted_format,,False,False
+39,1421,Modern Family,False,False,sitcom_structure;unscripted_format,,False,False
+40,63351,Narcos,False,False,social_specific,"Bilingual/dialect, historical context and cultural tradition; existing full annotations/catalog, not new generic nationality scores.",False,False
+41,119051,Wednesday,False,False,creatures;powers;setting_specific;holidays_audience;premise_scope,,False,False
+42,84958,Loki,False,False,memory_mortality;premise_scope,,False,False
+43,13916,Death Note,False,False,afterlife;royalty;procedural_specialties,"Supernatural rule/device centrality may be more useful than generic magic; inspect notebook mechanism in synopsis. Supernatural artifacts and rule-bound objects as searchable entities/mechanisms, not only a quest MacGuffin.",True,False
+44,62560,Mr. Robot,False,False,unscripted_format,,False,False
+45,60622,Fargo,False,False,premise_scope,,False,False
+46,456,The Simpsons,False,False,sitcom_structure;holidays_audience;premise_scope,,False,False
+47,1412,Arrow,False,False,social_specific,,False,False
+48,84773,The Lord of the Rings: The Rings of Power,False,False,creatures;royalty;premise_scope,,False,False
+49,97546,Ted Lasso,False,False,premise_scope,,False,False
+50,94605,Arcane,False,False,holidays_audience,,False,False
+51,246,Avatar: The Last Airbender,False,False,afterlife;work_specific;holidays_audience;premise_scope,,False,False
+52,2190,South Park,False,False,sitcom_structure;art_movement;holidays_audience,,False,False
+53,1438,The Wire,False,False,education_pressure;social_specific,,False,False
+54,85271,WandaVision,False,False,creatures;sitcom_structure;unscripted_format;setting_specific,,False,False
+55,48891,Brooklyn Nine-Nine,False,False,sitcom_structure,,False,False
+56,95396,Severance,False,False,memory_mortality;medical_specific;art_movement,Memory/identity manipulation deserves separate concept from ordinary amnesia; title tags explicitly say memory fragmentation.,True,False
+57,63174,Lucifer,False,False,afterlife;religious_specific,,False,False
+58,106379,Fallout,False,False,creatures;afterlife;bioengineering;alternate_history,,False,False
+59,81356,Sex Education,False,False,medical_specific;holidays_audience,,False,False
+60,67744,MINDHUNTER,False,False,procedural_specialties;unscripted_format,,False,False
+61,60735,The Flash,False,False,powers;procedural_specialties,,False,False
+62,69740,Ozark,False,False,,"Money laundering, con artistry, forgery/art theft and counterfeiting as specific criminal methods; avoid multiplying generic crime scores.",False,True
+63,18165,The Vampire Diaries,False,False,creatures;afterlife;holidays_audience,,False,False
+64,1434,Family Guy,False,False,sitcom_structure;holidays_audience,,False,False
+65,1407,Homeland,False,False,,,False,True
+66,1400,Seinfeld,False,False,sitcom_structure;unscripted_format,,False,False
+67,1416,Grey's Anatomy,False,False,medical_specific,,False,False
+68,1413,American Horror Story,False,False,creatures;religious_specific;procedural_specialties;work_specific;holidays_audience;premise_scope,,False,False
+69,78191,You,False,False,memory_mortality;procedural_specialties;unscripted_format;romance_patterns,,False,False
+70,76331,Succession,False,False,royalty;social_specific;premise_scope,,False,False
+71,37854,One Piece,False,False,powers,High-seas piracy has an occupation score; pirate crew premise can coexist with monster entities and episodic arcs.,False,False
+72,1409,Sons of Anarchy,False,False,social_specific,,False,False
+73,95557,INVINCIBLE,False,False,powers;unscripted_format;holidays_audience,,False,False
+74,66788,13 Reasons Why,False,False,social_specific;holidays_audience,,False,False
+75,4589,Arrested Development,False,False,sitcom_structure;documentary_format,,False,False
+76,1424,Orange Is the New Black,False,False,,,False,True
+77,34307,Shameless,False,False,family_forms;social_specific;holidays_audience,,False,False
+78,72844,The Haunting of Hill House,False,False,memory_mortality;holidays_audience;premise_scope,,False,False
+79,111803,The White Lotus,False,False,education_pressure;social_specific;premise_scope,,False,False
+80,85552,Euphoria,False,False,memory_mortality;unscripted_format;holidays_audience;identity_culture;premise_scope,,False,False
+81,136315,The Bear,False,False,procedural_specialties;medical_specific,,False,False
+82,75006,The Umbrella Academy,False,False,powers;alternate_history;holidays_audience,,False,False
+83,108978,Reacher,False,False,social_specific,,False,False
+84,73586,Yellowstone,False,False,royalty;education_pressure;social_specific,,False,False
+85,92749,Moon Knight,False,False,memory_mortality,"Egyptian mythology annotation is present in full design, but compact alone loses it.",True,False
+86,8592,Parks and Recreation,False,False,sitcom_structure,,False,False
+87,40008,Hannibal,False,False,religious_specific;procedural_specialties;medical_specific;social_specific,,False,False
+88,67178,Marvel's The Punisher,False,False,social_specific,,False,False
+89,18347,Community,False,False,sitcom_structure,,False,False
+90,48866,The 100,False,False,unscripted_format;holidays_audience,,False,False
+91,249042,Adolescence,False,False,social_specific;holidays_audience,,False,False
+92,124411,Aspirants,False,False,education_pressure,UPSC/competitive-exam preparation needs specific education activity/setting concepts.,True,False
+93,69478,The Handmaid's Tale,False,False,religious_specific;unscripted_format;social_specific,,False,False
+94,46952,The Blacklist,False,False,,,False,True
+95,1437,Firefly,False,False,religious_specific;work_specific,,False,False
+96,2691,Two and a Half Men,False,False,sitcom_structure;family_forms,,False,False
+97,88396,The Falcon and the Winter Soldier,False,False,education_pressure;premise_scope,,False,False
+98,1104,Mad Men,False,False,,"Advertising, news production, startup founding, counterfeiting, game development and sex industry as subjects; work taxonomy should permit industries.",False,True
+99,46296,Spartacus,False,False,social_specific,,False,False
+100,83867,Andor,False,False,premise_scope,,False,False
+101,65494,The Crown,False,False,royalty,,False,False
+102,57243,Doctor Who,False,False,,,False,True
+103,224372,A Knight of the Seven Kingdoms,False,False,creatures;royalty;memory_mortality;premise_scope,,False,False
+104,2710,It's Always Sunny in Philadelphia,False,False,religious_specific;sitcom_structure,,False,False
+105,4556,Scrubs,False,False,medical_specific;sitcom_structure,,False,False
+106,615,Futurama,False,False,religious_specific;sitcom_structure;holidays_audience,,False,False
+107,4087,The X-Files,False,False,creatures,Skeptic/believer partnership and paranormal investigation premise are not the same as conspiracy or ghost presence.,True,False
+108,92830,Obi-Wan Kenobi,False,False,premise_scope,,False,False
+109,1705,Fringe,False,False,unscripted_format,,False,False
+110,10545,True Blood,False,False,creatures;religious_specific;education_pressure,,False,False
+111,1639,Heroes,False,False,powers,,False,False
+112,1420,New Girl,False,False,sitcom_structure;romance_patterns;family_forms,,False,False
+113,77169,Cobra Kai,False,False,sport_specific;social_specific;premise_scope,,False,False
+114,60708,Gotham,False,False,powers;social_specific;premise_scope,,False,False
+115,5920,The Mentalist,False,False,powers;procedural_specialties,Mentalist/observational deduction as investigation technique; separate stage magic from claimed psychic mechanism.,True,False
+116,31911,Fullmetal Alchemist: Brotherhood,False,False,bioengineering,,False,False
+117,67070,Fleabag,False,False,religious_specific;sitcom_structure;unscripted_format,,False,False
+118,88329,Hawkeye,False,False,holidays_audience,,False,False
+119,126308,Shōgun,False,False,,"Bilingual/dialect, historical context and cultural tradition; existing full annotations/catalog, not new generic nationality scores.",False,True
+120,125988,Silo,False,False,social_specific,,False,False
+121,74577,The End of the F***ing World,False,False,holidays_audience,,False,False
+122,1920,Twin Peaks,False,False,procedural_specialties;holidays_audience,,False,False
+123,39272,Once Upon a Time,False,False,creatures;memory_mortality;frame_story,,False,False
+124,194764,The Penguin,False,False,sport_specific;social_specific;premise_scope,,False,False
+125,66292,Big Little Lies,False,False,sport_specific;medical_specific;romance_patterns;family_forms;setting_specific,,False,False
+126,1403,Marvel's Agents of S.H.I.E.L.D.,False,False,,,False,True
+127,33907,Downton Abbey,False,False,royalty,,False,False
+128,38472,Marvel's Jessica Jones,False,False,powers,,False,False
+129,61222,BoJack Horseman,False,False,sitcom_structure;holidays_audience,,False,False
+130,4057,Criminal Minds,False,False,procedural_specialties,,False,False
+131,91239,Bridgerton,False,False,alternate_history,,False,False
+132,85937,Demon Slayer: Kimetsu no Yaiba,False,False,premise_scope,,False,False
+133,31910,Naruto Shippūden,False,False,holidays_audience;premise_scope,,False,False
+134,86831,"Love, Death & Robots",False,False,holidays_audience;premise_scope,,False,False
+135,1044,Planet Earth,False,False,documentary_format;unscripted_format;holidays_audience,,False,False
+136,338676,Monster (2022),True,False,creatures;premise_scope,No tags: inspect synopsis before treating duplicate-looking Monster title as same work.,False,False
+137,63926,One-Punch Man,False,False,creatures;powers;sport_specific;first_contact,,False,False
+138,336273,Monster (2022),False,False,creatures;education_pressure;premise_scope,,False,False
+139,66573,The Good Place,False,False,afterlife;sitcom_structure,Afterlife cosmology and ethics distinct from generic spiritual tone.,True,False
+140,115004,Mare of Easttown,False,False,medical_specific,,False,False
+141,92783,She-Hulk: Attorney at Law,False,False,powers,,False,False
+142,95479,JUJUTSU KAISEN,False,False,,,False,True
+143,1621,Boardwalk Empire,False,False,social_specific,,False,False
+144,111110,ONE PIECE,False,False,powers,,False,False
+145,115036,The Book of Boba Fett,False,False,bioengineering;work_specific;premise_scope,,False,False
+146,1411,Person of Interest,False,False,memory_mortality;procedural_specialties;education_pressure,,False,False
+147,1395,Gossip Girl,False,False,sport_specific;social_specific;holidays_audience,,False,False
+148,90802,The Sandman,False,False,unscripted_format,,False,False
+149,124364,FROM,False,False,art_movement;holidays_audience,Potential evidence mismatch: selected tags describe synthwave/1980s/teen adventure; verify against synopsis before using trait suggestions. Collectively trapped community/micro-society premise; kidnapping advisory and a confined aesthetic are insufficient.,True,False
+150,107113,Only Murders in the Building,False,False,identity_culture,,False,False
+151,56570,Outlander,False,False,,,False,True
+152,68421,Altered Carbon,False,False,afterlife;bioengineering;unscripted_format,,False,False
+153,1973,24,False,False,mystery_structure,Real-time narrative design is not fast pacing; torture advisory already exists in full output.,True,False
+154,236235,The Gentlemen,False,False,royalty,,False,False
+155,63639,The Expanse,False,False,social_specific,,False,False
+156,1891,Rome,False,False,education_pressure,,False,False
+157,110492,Peacemaker,False,False,social_specific,,False,False
+158,46298,Hunter x Hunter,False,False,powers;work_specific;unscripted_format,,False,False
+159,66276,The Night Of,False,False,religious_specific,,False,False
+160,52,That '70s Show,False,False,sitcom_structure;holidays_audience,,False,False
+161,73375,Tom Clancy's Jack Ryan,False,False,,,False,True
+162,63333,The Last Kingdom,False,False,royalty;religious_specific;unscripted_format,,False,False
+163,241259,Baby Reindeer,False,False,education_pressure;unscripted_format,,False,False
+164,1215,Californication,False,False,education_pressure,,False,False
+165,1911,Bones,False,False,procedural_specialties;work_specific;mystery_structure;romance_patterns,,False,False
+166,31917,Pretty Little Liars,False,False,social_specific;setting_specific;holidays_audience,,False,False
+167,1419,Castle,False,False,procedural_specialties;romance_patterns;premise_scope,,False,False
+168,1972,Battlestar Galactica,False,False,religious_specific,,False,False
+169,60573,Silicon Valley,False,False,sitcom_structure,,False,False
+170,40075,Gravity Falls,False,False,creatures;family_forms;holidays_audience,,False,False
+171,34524,Teen Wolf,False,False,holidays_audience,,False,False
+172,108545,3 Body Problem,False,False,first_contact;unscripted_format,,False,False
+173,1940,Entourage,False,False,,,False,True
+174,79525,The Last Dance,False,False,royalty;documentary_format;unscripted_format,Biographical sport documentary uses sports plus format and people catalog; no Michael Jordan scalar.,False,False
+175,61056,How to Get Away with Murder,False,False,,,False,True
+176,154385,BEEF,False,False,premise_scope,,False,False
+177,225171,Pluribus,False,False,,,False,True
+178,69050,Riverdale,False,False,creatures;religious_specific;work_specific;family_forms;holidays_audience,,False,False
+179,10283,Archer,False,False,sitcom_structure;holidays_audience,,False,False
+180,95,Buffy the Vampire Slayer,False,False,creatures;religious_specific;holidays_audience;premise_scope,,False,False
+181,4614,NCIS,False,False,procedural_specialties;medical_specific;education_pressure;setting_specific,,False,False
+182,46260,Naruto,False,False,powers;family_forms;premise_scope,,False,False
+183,67136,This Is Us,False,False,family_forms,,False,False
+184,61664,Sense8,False,False,powers;identity_culture,,False,False
+185,61662,Schitt's Creek,False,False,sitcom_structure;holidays_audience,,False,False
+186,71914,The Wheel of Time,False,False,afterlife,,False,False
+187,2490,The IT Crowd,False,False,sitcom_structure,,False,False
+188,4586,Gilmore Girls,False,False,family_forms,,False,False
+189,250307,The Pitt,False,False,medical_specific;mystery_structure,Real-time/continuous-shift medical format should be distinguished from tag claim of one-shot production.,True,False
+190,68595,Planet Earth II,False,False,documentary_format,,False,False
+191,97400,Midnight Mass,False,False,religious_specific;premise_scope,Explicit religious institutions and dialogue inquiry; no new generic faith score needed.,False,False
+192,30991,Cowboy Bebop,False,False,religious_specific;work_specific,,False,False
+193,80307,Bodyguard,False,False,,,False,True
+194,111188,Scam 1992: The Harshad Mehta Story,False,False,,,False,True
+195,114479,The Acolyte,False,False,creatures;family_forms,,False,False
+196,79410,After Life,False,False,afterlife,,False,False
+197,1274,Six Feet Under,False,False,memory_mortality;work_specific,,False,False
+198,118357,1883,False,False,frame_story;unscripted_format;social_specific,,False,False
+199,91363,What If...?,False,False,unscripted_format;premise_scope,,False,False
+200,4546,Curb Your Enthusiasm,False,False,religious_specific;sitcom_structure,Improvisational performance is not just naturalistic dialogue.,True,False
+201,27745,The Heroes,False,False,holidays_audience,,False,False
+202,95480,Slow Horses,False,False,,,False,True
+203,225634,Monsters: The Lyle and Erik Menendez Story,False,False,creatures;memory_mortality,,False,False
+204,129552,The Night Agent,False,False,,,False,True
+205,2004,Malcolm in the Middle,False,False,sitcom_structure;holidays_audience,,False,False
+206,1426,Luther,False,False,royalty;procedural_specialties,,False,False
+207,65708,Taboo,False,False,social_specific,,False,False
+208,46896,The Originals,False,False,creatures;premise_scope,,False,False
+209,2382,Freaks and Geeks,False,False,religious_specific;sitcom_structure;holidays_audience,,False,False
+210,62286,Fear the Walking Dead,False,False,creatures;premise_scope,,False,False
+211,96677,Lupin,False,False,,,False,True
+212,62127,Marvel's Iron Fist,False,False,powers;sport_specific,,False,False
+213,1417,Glee,False,False,social_specific;holidays_audience,,False,False
+214,105,Sex and the City,False,False,sitcom_structure,,False,False
+215,131927,Dexter: New Blood,False,False,procedural_specialties;premise_scope,,False,False
+216,70796,The Marvelous Mrs. Maisel,False,False,religious_specific;unscripted_format;holidays_audience;identity_culture,Stand-up performance subject and religious/cultural identity require separate annotations.,True,False
+217,4604,Smallville,False,False,creatures;powers;mystery_structure;family_forms;holidays_audience;premise_scope,,False,False
+218,81355,When They See Us,False,False,procedural_specialties;holidays_audience;identity_culture,,False,False
+219,259909,Dexter: Resurrection,False,False,creatures;afterlife;procedural_specialties;premise_scope,,False,False
+220,67198,Star Trek: Discovery,False,False,premise_scope,,False,False
+221,205715,Gen V,False,False,powers;premise_scope,,False,False
+222,72750,Killing Eve,False,False,,,False,True
+223,113988,DAHMER - Monster: The Jeffrey Dahmer Story,False,False,creatures;procedural_specialties;education_pressure;identity_culture,,False,False
+224,33880,The Legend of Korra,False,False,social_specific;premise_scope,,False,False
+225,693,Desperate Housewives,False,False,setting_specific,,False,False
+226,90282,The Morning Show,False,False,,,False,True
+227,19614,It,False,False,creatures;memory_mortality;unscripted_format;holidays_audience,,False,False
+228,39852,The Sinner,False,False,religious_specific;memory_mortality;procedural_specialties;premise_scope,,False,False
+229,110316,Alice in Borderland,False,False,game_mechanics,Deadly-game/death-game premise and puzzle tasks are narrower than survival/competition.,True,False
+230,21510,White Collar,False,False,,"Money laundering, con artistry, forgery/art theft and counterfeiting as specific criminal methods; avoid multiplying generic crime scores.",False,True
+231,1404,Chuck,False,False,powers;sitcom_structure,,False,False
+232,1892,The Fresh Prince of Bel-Air,False,False,sitcom_structure;holidays_audience,,False,False
+233,71728,Young Sheldon,False,False,sitcom_structure;setting_specific;premise_scope,,False,False
+234,4194,Star Wars: The Clone Wars,False,False,bioengineering,,False,False
+235,62126,Marvel's Luke Cage,False,False,social_specific;identity_culture,,False,False
+236,79788,Watchmen,False,False,alternate_history;premise_scope,,False,False
+237,4327,Mr. Bean,False,False,sitcom_structure;holidays_audience;premise_scope,,False,False
+238,655,Star Trek: The Next Generation,False,False,premise_scope,"Utopian/optimistic future not equivalent to mere absence of dystopia. Diplomacy, negotiation and governance as narrative methods; politics and political struggle do not distinguish negotiation from armed revolution. Utopian social organization as an explicit world characteristic; low dystopia is not evidence of utopia.",True,False
+239,41727,Banshee,False,False,,,False,True
+240,88803,Vinland Saga,False,False,unscripted_format;social_specific,,False,False
+241,2734,Law & Order: Special Victims Unit,False,False,social_specific,,False,False
+242,114461,Ahsoka,False,False,premise_scope,,False,False
+243,73107,Barry,False,False,social_specific;setting_specific,,False,False
+244,155537,Black Bird,False,False,chess;procedural_specialties,,False,False
+245,109958,The Haunting of Bly Manor,False,False,family_forms;holidays_audience,,False,False
+246,1433,American Dad!,False,False,sitcom_structure;setting_specific;holidays_audience,,False,False
+247,16997,The Pacific,False,False,memory_mortality,,False,False
+248,82596,Emily in Paris,False,False,,"Bilingual/dialect, historical context and cultural tradition; existing full annotations/catalog, not new generic nationality scores.",False,True
+249,39351,Grimm,False,False,creatures;mystery_structure;frame_story,,False,False
+250,1427,Broadchurch,False,False,religious_specific,,False,False
+251,62688,Supergirl,False,False,,,False,True
+252,198004,King the Land,False,False,,,False,True
+253,71712,The Good Doctor,False,False,medical_specific;identity_culture,,False,False
+254,92782,Ms. Marvel,False,False,powers;holidays_audience;identity_culture;premise_scope,,False,False
+255,54671,Penny Dreadful,False,False,creatures;afterlife;holidays_audience;premise_scope,,False,False
+256,61859,The Night Manager,False,False,social_specific,,False,False
+257,70453,Sharp Objects,False,False,memory_mortality;premise_scope,,False,False
+258,58474,Cosmos,False,False,documentary_format,,False,False
+259,4608,30 Rock,False,False,religious_specific;sitcom_structure;unscripted_format,,False,False
+260,2098,Batman: The Animated Series,False,False,powers;art_movement,Art Deco is missing from finite aesthetics; use style concept rather than infer from noir.,True,False
+261,79744,The Rookie,False,False,,,False,True
+262,105248,Cyberpunk: Edgerunners,False,False,social_specific;premise_scope,,False,False
+263,91275,Unbelievable,False,False,holidays_audience,,False,False
+264,15260,Adventure Time,False,False,creatures;religious_specific;frame_story;premise_scope,,False,False
+265,54344,The Leftovers,False,False,,,False,True
+266,157065,The Fall of the House of Usher,False,False,royalty;premise_scope,,False,False
+267,222766,The Day of the Jackal,False,False,chess,,False,False
+268,45,Top Gear,False,False,unscripted_format,,False,False
+269,15621,The Newsroom,False,False,,"Advertising, news production, startup founding, counterfeiting, game development and sex industry as subjects; work taxonomy should permit industries.",False,True
+270,34415,The Killing,False,False,,,False,True
+271,8358,Lie to Me,False,False,procedural_specialties;mystery_structure,,False,False
+272,120911,The Terminal List,False,False,,,False,True
+273,93740,Foundation,False,False,bioengineering;memory_mortality;procedural_specialties,,False,False
+274,1436,Justified,False,False,,,False,True
+275,49010,The Fall,False,False,procedural_specialties,,False,False
+276,71915,Good Omens,False,False,creatures;afterlife;religious_specific;memory_mortality,,False,False
+277,2996,The Office,False,False,sitcom_structure;unscripted_format,,False,False
+278,247718,MobLand,False,False,procedural_specialties,,False,False
+279,62285,Marvel's The Defenders,False,False,premise_scope,,False,False
+280,69061,The OA,False,False,afterlife,Near-death experience mechanism differs from explicit afterlife fact.,True,False
+281,65930,My Hero Academia,False,False,powers;social_specific,,False,False
+282,83631,What We Do in the Shadows,False,False,afterlife;sitcom_structure;documentary_format,,False,False
+283,136311,Shrinking,False,False,medical_specific;unscripted_format;holidays_audience,,False,False
+284,387,SpongeBob SquarePants,False,False,holidays_audience,,False,False
+285,46533,The Americans,False,False,setting_specific,,False,False
+286,46786,Bates Motel,False,False,creatures;procedural_specialties;family_forms;premise_scope,,False,False
+287,1406,Deadwood,False,False,work_specific,,False,False
+288,39358,Revenge,False,False,social_specific,,False,False
+289,47665,Black Sails,False,False,premise_scope,,False,False
+290,1415,Elementary,False,False,,,False,True
+291,62017,The Man in the High Castle,False,False,alternate_history;memory_mortality;unscripted_format,Counterfactual history separate from parallel-world/time-travel mechanisms.,True,False
+292,56296,Orphan Black,False,False,bioengineering;memory_mortality;family_forms,Cloning is distinct from doppelganger and speculative technology.,True,False
+293,85720,Shadow and Bone,False,False,holidays_audience,,False,False
+294,79242,Chilling Adventures of Sabrina,False,False,creatures;holidays_audience;premise_scope,,False,False
+295,75450,Titans,False,False,creatures;holidays_audience,,False,False
+296,64464,11.22.63,False,False,alternate_history;memory_mortality,,False,False
+297,90669,1899,False,False,unscripted_format,,False,False
+298,275204,Dhindora,False,False,,,False,True
+299,186,Weeds,False,False,family_forms;setting_specific,,False,False
+300,200875,IT: Welcome to Derry,False,False,memory_mortality;holidays_audience;premise_scope,,False,False
+301,153312,Tulsa King,False,False,unscripted_format;setting_specific,,False,False
+302,111141,Maid,False,False,documentary_format;social_specific,,False,False
+303,202555,Daredevil: Born Again,False,False,social_specific;premise_scope,,False,False
+304,46331,Under the Dome,False,False,,Collectively trapped community/micro-society premise; kidnapping advisory and a confined aesthetic are insufficient.,False,True
+305,1447,Psych,False,False,powers,,False,False
+306,127532,Solo Leveling,False,False,creatures;powers;game_mechanics;unscripted_format,Dungeon/level progression world rules; gaming activity alone can be wrong.,True,False
+307,71738,The Orville,False,False,sitcom_structure,,False,False
+308,84661,The Outsider,False,False,,,False,True
+309,62852,Billions,False,False,,,False,True
+310,89905,Normal People,False,False,,,False,True
+311,117488,Yellowjackets,False,False,religious_specific;education_pressure;premise_scope,,False,False
+312,62643,DC's Legends of Tomorrow,False,False,afterlife;religious_specific;unscripted_format;premise_scope,,False,False
+313,157741,Landman,False,False,work_specific;unscripted_format,,False,False
+314,245703,Dept. Q,False,False,procedural_specialties,,False,False
+315,52814,Halo,False,False,,,False,True
+316,83851,The Undoing,False,False,,,False,True
+317,4239,Married... with Children,False,False,sitcom_structure;holidays_audience,,False,False
+318,84977,Russian Doll,False,False,memory_mortality;unscripted_format;social_specific,,False,False
+319,101352,Panchayat,False,False,,,False,True
+320,75758,Lost in Space,False,False,,,False,True
+321,3322,Oz,False,False,religious_specific,,False,False
+322,67026,Designated Survivor,False,False,royalty;social_specific,,False,False
+323,39340,2 Broke Girls,False,False,sitcom_structure,,False,False
+324,100757,Outer Banks,False,False,holidays_audience,,False,False
+325,135251,The Idol,False,False,,"Potential unreliable generated claim: tag Second-Season Syndrome requires episode/season source checking, not schema design.",True,True
+326,2317,My Name Is Earl,False,False,religious_specific;sitcom_structure,,False,False
+327,301507,Heated Rivalry,False,False,,,False,True
+328,71578,Atypical,False,False,sitcom_structure;holidays_audience;identity_culture,,False,False
+329,890,Neon Genesis Evangelion,False,False,creatures;religious_specific;mecha,Mecha is a subject/genre convention separate from generic robots.,True,False
+330,80752,See,False,False,royalty;family_forms;identity_culture,World-wide blindness premise and explicit representation need distinct levels.,True,False
+331,117581,Ginny & Georgia,False,False,family_forms;holidays_audience;premise_scope,,False,False
+332,114410,Chainsaw Man,False,False,unscripted_format,,False,False
+333,31295,Misfits,False,False,powers;holidays_audience,,False,False
+334,76669,Elite,False,False,religious_specific;romance_patterns;social_specific;holidays_audience,,False,False
+335,335660,Bleach: Thousand-Year Blood War – Part 1: The Blood Warfare,True,True,,,False,True
+336,93352,The Family Man,False,False,social_specific,,False,False
+337,157239,Alien: Earth,False,False,creatures;premise_scope,,False,False
+338,4629,Stargate SG-1,False,False,education_pressure,,False,False
+339,81357,Dead to Me,False,False,setting_specific,,False,False
+340,2207,Fawlty Towers,False,False,sitcom_structure,,False,False
+341,64439,Making a Murderer,False,False,procedural_specialties;education_pressure;documentary_format;social_specific,,False,False
+342,86423,Locke & Key,False,False,holidays_audience,,False,False
+343,6357,The Twilight Zone,False,False,unscripted_format;black_white;premise_scope,,False,False
+344,31724,Code Geass: Lelouch of the Rebellion,False,False,chess;mecha,,False,False
+345,12971,Dragon Ball Z,False,False,creatures;powers;game_mechanics;premise_scope,,False,False
+346,85949,Star Trek: Picard,False,False,premise_scope,,False,False
+347,79696,Manifest,False,False,,,False,True
+348,67195,Legion,False,False,powers;bioengineering;memory_mortality;procedural_specialties;medical_specific;unscripted_format,,False,False
+349,113962,Lioness,False,False,,"Undercover infiltration, double agents, assassins, ex-con impostors and intelligence occupations; participant roles matter.",False,True
+350,225180,BLUE EYE SAMURAI,False,False,holidays_audience,,False,False
+351,157744,1923,False,False,premise_scope,,False,False
+352,225969,Zemlja daleke proslosti,True,True,,"No tags; preserve original identity and review synopsis if present, no inferred premise.",True,True
+353,60694,Last Week Tonight with John Oliver,False,False,unscripted_format,,False,False
+354,64513,American Crime Story,False,False,unscripted_format;premise_scope,,False,False
+355,2673,The O.C.,False,False,unscripted_format;holidays_audience,,False,False
+356,32726,Bob's Burgers,False,False,sitcom_structure;holidays_audience;premise_scope,,False,False
+357,3452,Frasier,False,False,medical_specific;sitcom_structure;unscripted_format,,False,False
+358,1457,Pride and Prejudice,False,False,,,False,True
+359,80968,Narcos: Mexico,False,False,unscripted_format;social_specific,,False,False
+360,203857,The Diplomat,False,False,,"Diplomacy, negotiation and governance as narrative methods; politics and political struggle do not distinguish negotiation from armed revolution.",False,True
+361,1695,Monk,False,False,mystery_structure;identity_culture,,False,False
+362,253,Star Trek,False,False,bioengineering,,False,False
+363,74204,Big Mouth,False,False,sitcom_structure;holidays_audience,,False,False
+364,40417,Leyla and Mecnun,False,False,religious_specific;sitcom_structure,,False,False
+365,900,Skins,False,False,setting_specific;holidays_audience,,False,False
+366,65495,Atlanta,False,False,unscripted_format,,False,False
+367,1981,Charmed,False,False,creatures,,False,False
+368,7317,The Inbetweeners,False,False,sitcom_structure;family_forms;setting_specific;holidays_audience,,False,False
+369,124834,Heartstopper,False,False,holidays_audience;identity_culture,,False,False
+370,116799,The Lincoln Lawyer,False,False,,,False,True
+371,30984,Bleach,False,False,holidays_audience,,False,False
+372,1423,Ray Donovan,False,False,royalty;social_specific;premise_scope,,False,False
+373,46639,American Gods,False,False,,Gods/deities as entities and their intergenerational/ideological conflicts; general mythology does not establish personified deities.,False,True
+374,688,The West Wing,False,False,,"Diplomacy, negotiation and governance as narrative methods; politics and political struggle do not distinguish negotiation from armed revolution.",False,True
+375,34967,Falling Skies,False,False,first_contact,,False,False
+376,61550,Marvel's Agent Carter,False,False,,,False,True
+377,71024,Castlevania,False,False,,,False,True
+378,60585,Bosch,False,False,procedural_specialties;unscripted_format,,False,False
+379,99581,Unorthodox,False,False,religious_specific;romance_patterns,,False,False
+380,100883,Never Have I Ever,False,False,sitcom_structure;holidays_audience;identity_culture;premise_scope,,False,False
+381,1414,The Shield,False,False,procedural_specialties;social_specific,,False,False
+382,68507,His Dark Materials,False,False,creatures;religious_specific;memory_mortality;unscripted_format;family_forms;holidays_audience,,False,False
+383,79352,Sacred Games,False,False,social_specific,,False,False
+384,156933,Presumed Innocent,False,False,romance_patterns;social_specific,,False,False
+385,99966,All of Us Are Dead,False,False,creatures;education_pressure;social_specific;holidays_audience,,False,False
+386,138501,Agatha All Along,False,False,creatures;premise_scope,,False,False
+387,114472,Secret Invasion,False,False,first_contact,,False,False
+388,65942,Re:ZERO -Starting Life in Another World-,False,False,afterlife;game_mechanics,Isekai/reincarnation and time loop may coexist; avoid collapsing them.,True,False
+389,224387,Queen Cleopatra,False,False,royalty;documentary_format;unscripted_format,,False,False
+390,45094,The Following,False,False,religious_specific;procedural_specialties,,False,False
+391,67557,The Grand Tour,False,False,unscripted_format,,False,False
+392,97173,Behind Her Eyes,False,False,medical_specific;family_forms;setting_specific,,False,False
+393,82452,Avatar: The Last Airbender,False,False,afterlife;holidays_audience,,False,False
+394,47640,The Strain,False,False,,,False,True
+395,270476,Widow's Bay,False,False,social_specific,,False,False
+396,42509,Steins;Gate,False,False,education_pressure,,False,False
+397,290214,Criminal Justice: A Family Matter,False,False,,,False,True
+398,269,One Tree Hill,False,False,holidays_audience,,False,False
+399,87917,For All Mankind,False,False,alternate_history;work_specific;unscripted_format;premise_scope,Alternate-history space race demonstrates world relation and historical-event identifiers.,True,False
+400,4238,The King of Queens,False,False,sitcom_structure;setting_specific,,False,False
+401,259731,HIS & HERS,False,False,social_specific,,False,False
+402,198102,Hijack,False,False,,,False,True
+403,7225,Merlin,False,False,creatures;powers;royalty;premise_scope,,False,False
+404,1431,CSI: Crime Scene Investigation,False,False,procedural_specialties;education_pressure,,False,False
+405,208264,Untold: The Girlfriend Who Didn't Exist,False,False,religious_specific;documentary_format,Catfishing/media scandal is narrower than romance or social-media presence.,True,False
+406,231297,Untold: Swamp Kings,False,False,documentary_format,,False,False
+407,85723,Raised by Wolves,False,False,religious_specific,,False,False
+408,210232,The Watcher,False,False,procedural_specialties;setting_specific,,False,False
+409,73411,Maniac,False,False,medical_specific;unscripted_format,,False,False
+410,110695,Dopesick,False,False,medical_specific;work_specific;social_specific,,False,False
+411,84105,Mirzapur,False,False,,,False,True
+412,95403,The Peripheral,False,False,unscripted_format;social_specific,,False,False
+413,61617,Over the Garden Wall,False,False,art_movement;holidays_audience,Hand-drawn technique full design covers; Gothic Americana belongs to style/culture vocabulary.,False,False
+414,73467,Godless,False,False,work_specific,,False,False
+415,86248,Upload,False,False,afterlife;memory_mortality;unscripted_format,,False,False
+416,96580,Resident Alien,False,False,,,False,True
+417,89113,Kota Factory,False,False,education_pressure;black_white,Academic pressure and coaching institutions separate from general coming of age.,True,False
+418,253905,When the Phone Rings,False,False,romance_patterns,,False,False
+419,100698,Tiger King,False,False,religious_specific;documentary_format,,False,False
+420,245927,Paradise,False,False,unscripted_format,,False,False
+421,126725,Velma,False,False,procedural_specialties;setting_specific;holidays_audience;premise_scope,,False,False
+422,1435,The Good Wife,False,False,romance_patterns;social_specific,,False,False
+423,95665,Inventing Anna,False,False,,"Money laundering, con artistry, forgery/art theft and counterfeiting as specific criminal methods; avoid multiplying generic crime scores.",False,True
+424,90027,Carnival Row,False,False,creatures,,False,False
+425,117648,Clarkson's Farm,False,False,work_specific;documentary_format;unscripted_format,Farming/agriculture and rural observational reality distinct from gardening.,True,False
+426,64230,Preacher,False,False,creatures;religious_specific;memory_mortality,,False,False
+427,62264,Ash vs Evil Dead,False,False,creatures;holidays_audience;premise_scope,,False,False
+428,70785,Anne with an E,False,False,romance_patterns;family_forms;social_specific;setting_specific;holidays_audience,,False,False
+429,32754,Terra Nova,False,False,,,False,True
+430,2942,The Tudors,False,False,royalty;religious_specific,,False,False
+431,62710,Blindspot,False,False,memory_mortality,,False,False
+432,1410,Revolution,False,False,,"Electricity/infrastructure failure as catastrophic mechanism, distinct from generic apocalypse.",False,True
+433,215866,American Primeval,False,False,religious_specific;work_specific,,False,False
+434,62649,Superstore,False,False,sitcom_structure;unscripted_format,,False,False
+435,32962,Louie,False,False,sitcom_structure;unscripted_format;family_forms,,False,False
+436,849,Monty Python's Flying Circus,False,False,religious_specific;mystery_structure;unscripted_format,,False,False
+437,60699,Marco Polo,False,False,royalty;education_pressure,,False,False
+438,37863,Fullmetal Alchemist,False,False,bioengineering,Alchemy and restoration mechanism narrower than general magic; source annotation should not turn all alchemy into science.,False,False
+439,61374,Tokyo Ghoul,False,False,creatures;powers,,False,False
+440,61671,Unbreakable Kimmy Schmidt,False,False,religious_specific;sitcom_structure,,False,False
+441,1855,Star Trek: Voyager,False,False,,,False,True
+442,240983,Sapne vs Everyone,False,False,unscripted_format,,False,False
+443,90260,I Am Not Okay with This,False,False,powers;romance_patterns;holidays_audience,,False,False
+444,39269,Scandal,False,False,,,False,True
+445,209867,Frieren: Beyond Journey's End,False,False,creatures;afterlife;memory_mortality;game_mechanics;premise_scope,"Time, long lifespans, memory and aftermath of adventure can be distinctive beyond quest centrality.",True,False
+446,71365,Battlestar Galactica,False,False,religious_specific,,False,False
+447,42282,Girls,False,False,education_pressure;family_forms;premise_scope,,False,False
+448,32798,Hawaii Five-0,False,False,,,False,True
+449,250923,Nobody Wants This,False,False,religious_specific;sitcom_structure;romance_patterns;identity_culture,"Interfaith dating requires relation linking partners and beliefs, not generic Jewish context.",True,False
+450,45016,The Bridge,False,False,procedural_specialties;identity_culture,,False,False
+451,1432,Veronica Mars,False,False,holidays_audience,,False,False
+452,69470,Santa Clarita Diet,False,False,creatures;sitcom_structure;setting_specific,,False,False
+453,196322,Dark Matter,False,False,unscripted_format;holidays_audience,,False,False
+454,103516,Star Trek: Strange New Worlds,False,False,premise_scope,,False,False
+455,2919,Burn Notice,False,False,mystery_structure,,False,False
+456,2140,Everybody Loves Raymond,False,False,sitcom_structure;premise_scope,,False,False
+457,250504,The Beast in Me,False,False,setting_specific,,False,False
+458,35935,Berserk,False,False,religious_specific;memory_mortality,Free will/destiny philosophical conflict should not be reduced to prophecy trope alone.,True,False
+459,60866,iZombie,False,False,creatures;memory_mortality;procedural_specialties;medical_specific;education_pressure,,False,False
+460,73021,Disenchantment,False,False,creatures;royalty;frame_story;holidays_audience,,False,False
+461,87784,Defending Jacob,False,False,social_specific;setting_specific;holidays_audience,,False,False
+462,43982,Line of Duty,False,False,procedural_specialties;social_specific,,False,False
+463,64254,Master of None,False,False,,,False,True
+464,228305,Task,False,False,setting_specific,,False,False
+465,40293,Da Vinci's Demons,False,False,alternate_history;unscripted_format;art_movement,,False,False
+466,86430,Your Honor,False,False,social_specific,,False,False
+467,2426,Angel,False,False,creatures;afterlife;premise_scope,,False,False
+468,81354,Ratched,False,False,medical_specific;premise_scope,,False,False
+469,85077,The Chosen,False,False,religious_specific;frame_story;holidays_audience;identity_culture,Biblical retelling and faith audience distinct from spiritual intensity.,False,False
+470,103768,Sweet Tooth,False,False,unscripted_format,,False,False
+471,95350,Lanterns,False,False,powers,,False,False
+472,62704,Ballers,False,False,,,False,True
+473,196454,Queen Charlotte: A Bridgerton Story,False,False,royalty;premise_scope,,False,False
+474,4278,Friday Night Lights,False,False,education_pressure;social_specific;holidays_audience,,False,False
+475,4588,ER,False,False,medical_specific,,False,False
+476,76148,Derry Girls,False,False,religious_specific;sitcom_structure;holidays_audience,,False,False
+477,12609,Dragon Ball,False,False,creatures;powers;sport_specific;holidays_audience,,False,False
+478,580,Star Trek: Deep Space Nine,False,False,,,False,True
+479,194766,The Summer I Turned Pretty,False,False,medical_specific;holidays_audience,,False,False
+480,85922,Space Force,False,False,sitcom_structure;unscripted_format,,False,False
+481,63210,Shadowhunters,False,False,holidays_audience,,False,False
+482,63180,TVF Pitchers,False,False,,"Advertising, news production, startup founding, counterfeiting, game development and sex industry as subjects; work taxonomy should permit industries.",False,True
+483,713,Chappelle's Show,False,False,religious_specific;unscripted_format,,False,False
+484,31132,Regular Show,False,False,art_movement,,False,False
+485,79680,Snowpiercer,False,False,,Collectively trapped community/micro-society premise; kidnapping advisory and a confined aesthetic are insufficient.,False,True
+486,208939,Criminal Justice: Adhura Sach,False,False,,,False,True
+487,65249,ERASED,False,False,procedural_specialties,,False,False
+488,2290,Stargate Atlantis,False,False,,,False,True
+489,77236,A Discovery of Witches,False,False,creatures,,False,False
+490,225385,Black Doves,False,False,setting_specific;holidays_audience,,False,False
+491,97951,Mayor of Kingstown,False,False,social_specific,,False,False
+492,220102,Spider-Noir,False,False,black_white;social_specific,,False,False
+493,229429,Sandeep Bhaiya,False,False,education_pressure,,False,False
+494,30981,Monster,False,False,creatures;medical_specific;family_forms;setting_specific,,False,False
+495,62687,Limitless,False,False,powers;bioengineering,,False,False
+496,88989,Nine Perfect Strangers,False,False,medical_specific,,False,False
+497,67683,Travelers,False,False,memory_mortality,,False,False
+498,103051,Paatal Lok,False,False,social_specific,,False,False
+499,106590,Paranormal,False,False,religious_specific,,False,False
+500,114471,Ironheart,False,False,premise_scope,,False,False
+501,61244,Happy Valley,False,False,family_forms,,False,False
+502,65294,A Series of Unfortunate Events,False,False,family_forms;holidays_audience,,False,False
+503,815,Peep Show,False,False,religious_specific;medical_specific;sitcom_structure;family_forms;social_specific,Inner-thought access is supported by synopsis; first-person visual camera treatment is not established by the supplied excerpt and remains unconfirmed.,True,False
+504,60554,Star Wars Rebels,False,False,holidays_audience;premise_scope,,False,False
+505,44006,Chicago Fire,False,False,royalty;memory_mortality;work_specific;premise_scope,,False,False
+506,248852,UNTAMED,False,False,,,False,True
+507,2947,Veep,False,False,sitcom_structure;unscripted_format;social_specific,,False,False
+508,220564,The Perfect Couple,False,False,romance_patterns,,False,False
+509,116135,Vikings: Valhalla,False,False,royalty;religious_specific;premise_scope,,False,False
+510,67075,Mob Psycho 100,False,False,powers,,False,False
+511,46518,Masters of the Air,False,False,memory_mortality,,False,False
+512,60802,The Last Ship,False,False,creatures,,False,False
+513,219937,Dexter: Original Sin,False,False,procedural_specialties;premise_scope,,False,False
+514,105971,Star Wars: The Bad Batch,False,False,bioengineering,,False,False
+515,124101,Hacks,False,False,premise_scope,,False,False
+516,90228,Dune: Prophecy,False,False,religious_specific;premise_scope,,False,False
+517,8624,Eastbound & Down,False,False,social_specific,,False,False
+518,220801,Fool Me Once,False,False,,,False,True
+519,247767,The Studio,False,False,,,False,True
+520,100911,Asur,False,False,procedural_specialties,Mythological interpretation versus literal supernatural occurrence must remain distinct.,False,False
+521,96608,The Stranger,False,False,memory_mortality;setting_specific,,False,False
+522,96129,Don't F**k with Cats: Hunting an Internet Killer,False,False,documentary_format,,False,False
+523,61888,The Last Man on Earth,False,False,sitcom_structure,,False,False
+524,87689,Warrior Nun,False,False,creatures;powers;religious_specific;family_forms;holidays_audience,,False,False
+525,120998,Poker Face,False,False,powers,Howcatchem/inverted mystery and special ability need explicit evidence rather than broad whodunit assignment.,True,False
+526,94028,RIPLEY,False,False,black_white,Direct source evidence for black-and-white trait gap.,True,False
+527,233629,Bodies,False,False,memory_mortality,,False,False
+528,918,M*A*S*H,False,False,medical_specific;sitcom_structure,,False,False
+529,1877,Phineas and Ferb,False,False,setting_specific;holidays_audience,,False,False
+530,127865,The Chestnut Man,False,False,procedural_specialties,,False,False
+531,2742,Flight of the Conchords,False,False,religious_specific;sitcom_structure,,False,False
+532,71715,Good Girls,False,False,setting_specific,,False,False
+533,112314,Archive 81,False,False,religious_specific,,False,False
+534,141,Cheers,False,False,work_specific;sitcom_structure,,False,False
+535,241609,Your Friends & Neighbors,False,False,creatures;setting_specific,,False,False
+536,50825,Sleepy Hollow,False,False,afterlife;holidays_audience,,False,False
+537,2723,Samurai Jack,False,False,holidays_audience,,False,False
+538,97175,Fate: The Winx Saga,False,False,creatures;setting_specific;holidays_audience,,False,False
+539,93287,The Flight Attendant,False,False,memory_mortality,,False,False
+540,60797,Scorpion,False,False,identity_culture,,False,False
+541,75219,9-1-1,False,False,work_specific,,False,False
+542,4313,Full House,False,False,sitcom_structure;family_forms;premise_scope,Multi-camera sitcom is explicitly tagged; separate production/presentation from general comedy.,True,False
+543,129495,Clickbait,False,False,,,False,True
+544,278178,I Will Find You,False,False,procedural_specialties;education_pressure,,False,False
+545,82782,The Righteous Gemstones,False,False,religious_specific;romance_patterns,"Televangelism, religious commerce and institutional hypocrisy are narrower concepts than faith.",True,False
+546,93812,The Great,False,False,alternate_history;royalty,"Anachronistic historical satire is not necessarily historical inaccuracy or alternate history. Historical setting, factual biography, deliberate anachronism, counterfactual premise and documentary method need different relations.",True,False
+547,43020,Continuum,False,False,,,False,True
+548,72597,Manhunt,False,False,procedural_specialties;documentary_format;unscripted_format;premise_scope,,False,False
+549,240667,One Day,False,False,memory_mortality,,False,False
+550,79501,Doom Patrol,False,False,,,False,True
+551,64122,The Shannara Chronicles,False,False,creatures;royalty;holidays_audience,,False,False
+552,94664,Mushoku Tensei: Jobless Reincarnation,False,False,afterlife;game_mechanics;premise_scope,Reincarnation and isekai as premise mechanisms.,True,False
+553,60726,Forever,False,False,afterlife;procedural_specialties;medical_specific;education_pressure,Immortality and loneliness distinct from general aging.,True,False
+554,2122,King of the Hill,False,False,medical_specific;sitcom_structure;social_specific;setting_specific;holidays_audience,,False,False
+555,53425,Wayward Pines,False,False,unscripted_format;setting_specific;holidays_audience,,False,False
+556,202411,Monarch: Legacy of Monsters,False,False,creatures;royalty;premise_scope,,False,False
+557,216082,Zero Day,False,False,,,False,True
+558,120089,SPY x FAMILY,False,False,powers;family_forms,,False,False
+559,62816,Quantico,False,False,,,False,True
+560,83659,Guillermo del Toro's Cabinet of Curiosities,False,False,holidays_audience;premise_scope,,False,False
+561,70593,Kingdom,False,False,creatures;royalty;social_specific,,False,False
+562,61418,Jane the Virgin,False,False,religious_specific,,False,False
+563,314,Star Trek: Enterprise,False,False,premise_scope,,False,False
+564,433,Terminator: The Sarah Connor Chronicles,False,False,memory_mortality;holidays_audience,,False,False
+565,72,Only Fools and Horses,False,False,sitcom_structure;holidays_audience,,False,False
+566,45782,Sword Art Online,False,False,creatures;game_mechanics;unscripted_format;holidays_audience,VRMMORPG/death-game rules; avoid falsely establishing actual sport/esport.,True,False
+567,71769,The Alienist,False,False,procedural_specialties;social_specific,,False,False
+568,1620,CSI: Miami,False,False,procedural_specialties;premise_scope,,False,False
+569,210916,The Recruit,False,False,,,False,True
+570,61459,Parasyte -the maxim-,False,False,creatures;holidays_audience,,False,False
+571,242054,The Residence,False,False,premise_scope,,False,False
+572,67384,Goliath,False,False,procedural_specialties;social_specific,,False,False
+573,17035,Generation Kill,False,False,sitcom_structure;premise_scope,,False,False
+574,75191,The Terror,False,False,premise_scope,,False,False
+575,61986,Bloodline,False,False,medical_specific,,False,False
+576,4454,Will & Grace,False,False,sitcom_structure;identity_culture,,False,False
+577,1063,Samurai Champloo,False,False,religious_specific,Cross-tradition music/period mixture can be represented by scoped cultural/style annotations.,False,False
+578,67773,Dirk Gently's Holistic Detective Agency,False,False,powers,,False,False
+579,114796,Tandav,False,False,,,False,True
+580,903,Black Books,False,False,religious_specific;sitcom_structure,,False,False
+581,64432,The Magicians,False,False,creatures;powers;religious_specific;frame_story;holidays_audience,,False,False
+582,31941,Blue Mountain State,False,False,religious_specific;sitcom_structure;holidays_audience;premise_scope,,False,False
+583,111800,The Old Man,False,False,,,False,True
+584,814,Hornblower,False,False,royalty,,False,False
+585,1422,The Middle,False,False,sitcom_structure;holidays_audience,,False,False
+586,2693,Extras,False,False,sitcom_structure,,False,False
+587,83880,Our Planet,False,False,education_pressure;documentary_format,,False,False
+588,62320,Grace and Frankie,False,False,sitcom_structure;premise_scope,,False,False
+589,19092,FlashForward,False,False,religious_specific;memory_mortality,Foresight and determinism are distinct mechanisms/themes.,True,False
+590,72792,Safe,False,False,,,False,True
+591,45790,JoJo's Bizarre Adventure,False,False,premise_scope,,False,False
+592,90257,Little Fires Everywhere,False,False,family_forms;setting_specific,,False,False
+593,5639,Pushing Daisies,False,False,creatures;frame_story,,False,False
+594,4620,Eureka,False,False,sitcom_structure,,False,False
+595,3750,Nip/Tuck,False,False,religious_specific;medical_specific,"Plastic surgery, body image and medical ethics require finer subject concepts.",False,False
+596,83412,The Hook Up Plan,False,False,,,False,True
+597,15819,Warehouse 13,False,False,,"Supernatural artifacts and rule-bound objects as searchable entities/mechanisms, not only a quest MacGuffin.",False,True
+598,17610,NCIS: Los Angeles,False,False,premise_scope,,False,False
+599,138502,X-Men '97,False,False,powers;bioengineering;premise_scope,,False,False
+600,21494,V,False,False,first_contact,,False,False
+601,87083,Formula 1: Drive to Survive,False,False,sport_specific;documentary_format,Formula 1 and backstage sports documentary: existing motorsport plus taxonomy and format.,True,False
+602,111838,The Woman in the House Across the Street from the Girl in the Window,False,False,family_forms;setting_specific,,False,False
+603,54650,Power,False,False,,,False,True
+604,94796,Crash Landing on You,False,False,romance_patterns,,False,False
+605,365,Jericho,False,False,religious_specific,,False,False
+606,88324,Virgin River,False,False,medical_specific,,False,False
+607,48268,1 Man 1 Woman,False,False,sitcom_structure,,False,False
+608,76276,1 Man 1 Woman 2 Children,False,False,sitcom_structure;holidays_audience,,False,False
+609,1401,Hell on Wheels,False,False,afterlife;work_specific;social_specific,"Railroad construction is an industry/work subject, not merely trains appearing.",False,False
+610,745,Spaced,False,False,religious_specific;education_pressure;sitcom_structure;family_forms,,False,False
+611,83097,The Promised Neverland,False,False,chess;family_forms;setting_specific;holidays_audience,,False,False
+612,66025,Animal Kingdom,False,False,royalty,,False,False
+613,240411,Dan Da Dan,False,False,creatures;powers;holidays_audience,,False,False
+614,60743,Constantine,False,False,creatures;religious_specific;memory_mortality;social_specific,,False,False
+615,39279,Hart of Dixie,False,False,medical_specific,,False,False
+616,127235,Invasion,False,False,first_contact;mystery_structure;unscripted_format,,False,False
+617,71116,Castle Rock,False,False,holidays_audience;premise_scope,,False,False
+618,81349,Devs,False,False,memory_mortality,Determinism not synonymous with consciousness or technology.,True,False
+619,61929,The Jinx,False,False,royalty;documentary_format;unscripted_format,,False,False
+620,86850,Dracula,False,False,creatures;holidays_audience;premise_scope,,False,False
+621,790,Agatha Christie's Poirot,False,False,royalty,,False,False
+622,135934,The Legend of Vox Machina,False,False,creatures;royalty;game_mechanics,Actual-play source adaptation belongs to source relation; animated show is not an actual-play recording.,True,False
+623,155,3rd Rock from the Sun,False,False,first_contact;sitcom_structure;holidays_audience,,False,False
+624,273240,Off Campus,False,False,education_pressure,,False,False
+625,36994,Workaholics,False,False,sitcom_structure;family_forms,,False,False
+626,2085,Courage the Cowardly Dog,False,False,creatures;religious_specific;work_specific;art_movement;holidays_audience,,False,False
+627,60572,Pokémon,False,False,creatures;game_mechanics,Creature collection/bonding and tournament mechanics are distinctive.,True,False
+628,48865,Reign,False,False,royalty;romance_patterns;holidays_audience,,False,False
+629,1667,Saturday Night Live,False,False,sitcom_structure;unscripted_format,,False,False
+630,4229,Dexter's Laboratory,False,False,holidays_audience,,False,False
+631,79622,Hunters,False,False,alternate_history,,False,False
+632,2046,Alias,False,False,,"Undercover infiltration, double agents, assassins, ex-con impostors and intelligence occupations; participant roles matter.",False,True
+633,61014,The Knick,False,False,medical_specific;social_specific,,False,False
+634,3796,Trailer Park Boys,False,False,religious_specific;sitcom_structure;setting_specific,,False,False
+635,74313,Blue Planet II,False,False,documentary_format,,False,False
+636,91725,The Spy,False,False,,"Undercover infiltration, double agents, assassins, ex-con impostors and intelligence occupations; participant roles matter.",False,True
+637,107588,Aashram,False,False,religious_specific;social_specific,Coercive/corrupt spiritual group distinct from ordinary religious community.,True,False
+638,125910,Young Royals,False,False,sport_specific;royalty;setting_specific;holidays_audience;identity_culture,,False,False
+639,1618,Justice League,False,False,powers,,False,False
+640,201009,Indian Police Force,False,False,,,False,True
+641,222023,Jury Duty,False,False,documentary_format;unscripted_format,Hybrid unscripted staging/participant awareness differs from mockumentary fictional performance.,True,False
+642,60863,Haikyu!!,False,False,,,False,True
+643,103540,Percy Jackson and the Olympians,False,False,creatures;holidays_audience,,False,False
+644,7482,Leverage,False,False,social_specific,,False,False
+645,37606,The Amazing World of Gumball,False,False,sitcom_structure;family_forms;holidays_audience,,False,False
+646,33025,The Borgias,False,False,royalty;religious_specific;art_movement;social_specific,,False,False
+647,80350,New Amsterdam,False,False,medical_specific,,False,False
+648,90296,Tokyo Vice,False,False,social_specific,,False,False
+649,203832,Taaza Khabar,False,False,social_specific,,False,False
+650,245864,Ishq Aur Desire,True,False,,,False,True
+651,73223,Black Clover,False,False,family_forms;holidays_audience,,False,False
+652,1428,MythBusters,False,False,documentary_format;unscripted_format;holidays_audience,Scientific demonstrations and myth testing format; not only educational intent.,True,False
+653,32868,Nikita,False,False,,"Undercover infiltration, double agents, assassins, ex-con impostors and intelligence occupations; participant roles matter.",False,True
+654,60948,12 Monkeys,False,False,memory_mortality,,False,False
+655,132117,Farzi,False,False,,"Money laundering, con artistry, forgery/art theft and counterfeiting as specific criminal methods; avoid multiplying generic crime scores. Advertising, news production, startup founding, counterfeiting, game development and sex industry as subjects; work taxonomy should permit industries.",False,True
+656,117303,Lessons in Chemistry,False,False,,,False,True
+657,70573,GLOW,False,False,social_specific,,False,False
+658,5148,Stargate Universe,False,False,,,False,True
+659,77994,Persona,False,False,memory_mortality;procedural_specialties;medical_specific,"Specific memory condition should be sourced, not inferred from generic memory loss.",True,False
+660,46511,Utopia,False,False,religious_specific,,False,False
+661,125935,Abbott Elementary,False,False,sitcom_structure;holidays_audience;identity_culture,,False,False
+662,199318,Bad Sisters,False,False,religious_specific;social_specific,,False,False
+663,2352,The Nanny,False,False,creatures;sitcom_structure,Suspicious persona name in tags merits source review rather than automatic taxonomy inclusion.,True,False
+664,118642,Mr. & Mrs. Smith,False,False,unscripted_format,,False,False
+665,91557,Ragnarok,False,False,frame_story;holidays_audience,Norse myth retelling belongs to full cultural annotations; climate theme already present.,False,False
+666,124800,Love & Death,False,False,religious_specific,,False,False
+667,32692,Blue Bloods,False,False,procedural_specialties;social_specific;premise_scope,,False,False
+668,226637,High Potential,False,False,mystery_structure;family_forms,,False,False
+669,4574,X-Men,False,False,powers;bioengineering;social_specific;holidays_audience,,False,False
+670,88055,Servant,False,False,unscripted_format,,False,False
+671,81358,Mr Inbetween,False,False,setting_specific,,False,False
+672,81723,The Gilded Age,False,False,work_specific;family_forms;identity_culture,,False,False
+673,58841,Chicago P.D.,False,False,procedural_specialties;premise_scope,,False,False
+674,73544,Warrior,False,False,,,False,True
+675,86848,Evil,False,False,religious_specific;procedural_specialties,,True,False
+676,89247,Batwoman,False,False,identity_culture,,False,False
+677,93454,The Serpent,False,False,procedural_specialties,,False,False
+678,31497,The League,False,False,sport_specific;sitcom_structure;social_specific,"Fantasy sports/game activity and improvisational presentation, not actual football play.",True,False
+679,155421,All the Light We Cannot See,False,False,,,False,True
+680,47450,Into the Badlands,False,False,frame_story,,False,False
+681,85021,Gangs of London,False,False,,,False,True
+682,86165,Four More Shots Please!,False,False,,,False,True
+683,240518,Chamak,False,False,,"Bilingual/dialect, historical context and cultural tradition; existing full annotations/catalog, not new generic nationality scores.",False,True
+684,1606,Ghost Whisperer,False,False,powers;afterlife,Mediumship and communicating with dead as mechanism distinct from generic ghosts.,False,False
+685,61663,Your Lie in April,False,False,romance_patterns,,False,False
+686,95057,Superman & Lois,False,False,creatures;powers;family_forms;setting_specific;holidays_audience,,False,False
+687,106541,The Witcher: Blood Origin,False,False,creatures;premise_scope,,False,False
+688,51019,Almost Human,False,False,,Human-machine partnership/companionship with binding to machine type; cars+robots+friendship alone do not identify relation.,False,True
+689,1558,Home Improvement,False,False,sitcom_structure;social_specific;setting_specific,,False,False
+690,4598,Boston Legal,False,False,education_pressure;premise_scope,,False,False
+691,14956,Dollhouse,False,False,memory_mortality,Memory/identity replacement and coercion relation.,True,False
+692,61463,The Affair,False,False,memory_mortality;unscripted_format;romance_patterns;holidays_audience,Subjective multiple perspectives not always unreliable narration; distinguish structure from truth claim.,True,False
+693,4630,The Fairly OddParents,False,False,creatures;holidays_audience,,False,False
+694,122226,Echo,False,False,identity_culture,Indigenous tradition/identity and spiritual practice annotations; do not flatten into generic cultural intensity.,True,False
+695,1678,The Golden Girls,False,False,sitcom_structure;premise_scope,,False,False
+696,607,The Powerpuff Girls,False,False,creatures;powers;religious_specific;holidays_audience,,False,False
+697,108296,Resident Evil,False,False,creatures,,False,False
+698,33217,Young Justice,False,False,holidays_audience,,False,False
+699,4616,Xena: Warrior Princess,False,False,religious_specific,,False,False
+700,1430,Cosmos: A Personal Voyage,False,False,documentary_format;family_forms,,False,False
+701,71694,Snowfall,False,False,procedural_specialties;social_specific;premise_scope,,False,False
+702,62046,Scream Queens,False,False,procedural_specialties;medical_specific;unscripted_format;holidays_audience,,False,False
+703,249039,Black Rabbit,False,False,,,False,True
+704,74387,Final Space,False,False,creatures;work_specific,,False,False
+705,82816,Lovecraft Country,False,False,creatures;premise_scope,,False,False
+706,62699,The Young Pope,False,False,religious_specific,,False,False
+707,66786,Timeless,False,False,social_specific,,False,False
+708,126027,Ghosts,False,False,sitcom_structure,,False,False
+709,62715,Dragon Ball Super,False,False,creatures;game_mechanics;work_specific,,False,False
+710,62104,The Seven Deadly Sins,False,False,creatures;powers;afterlife;royalty,,False,False
+711,59186,Impractical Jokers,False,False,sitcom_structure;unscripted_format,Hidden-camera prank and participant awareness/consent are format qualifiers.,True,False
+712,246386,All Her Fault,False,False,,,False,True
+713,549,Law & Order,False,False,,,False,True
+714,206586,The Walking Dead: The Ones Who Live,False,False,creatures;romance_patterns;premise_scope,,False,False
+715,2458,CSI: NY,False,False,procedural_specialties;premise_scope,,False,False
+716,114068,The Offer,False,False,unscripted_format,,False,False
+717,5371,iCarly,False,False,sitcom_structure;holidays_audience,,False,False
+718,203744,Sugar,False,False,,,False,True
+719,61068,Gomorrah,False,False,documentary_format;unscripted_format;social_specific;identity_culture,"Bilingual/dialect, historical context and cultural tradition; existing full annotations/catalog, not new generic nationality scores.",False,False
+720,201834,ted,False,False,sitcom_structure;holidays_audience;premise_scope,,False,False
+721,58957,Nathan for You,False,False,documentary_format;unscripted_format,Staged reality and business intervention format distinct from ordinary observational documentary.,True,False
+722,68799,Gilmore Girls: A Year in the Life,False,False,premise_scope,,False,False
+723,13579,The Blue Planet,False,False,education_pressure;documentary_format,,False,False
+724,81292,Messiah,False,False,religious_specific,,False,False
+725,4626,Ugly Betty,False,False,,,False,True
+726,137893,Griselda,False,False,documentary_format,,False,False
+727,62823,Scream: The TV Series,False,False,procedural_specialties;setting_specific;holidays_audience,,False,False
+728,109939,Our Flag Means Death,False,False,romance_patterns,Friends-to-lovers may need separate relationship concept; piracy already covered.,False,False
+729,1777,Boy Meets World,False,False,sitcom_structure,,False,False
+730,102621,KAOS,False,False,social_specific,,False,False
+731,16946,Life,False,False,education_pressure;documentary_format,,False,False
+732,2706,Roseanne,False,False,sitcom_structure,,False,False
+733,321969,Blackadder the Third,True,False,,,False,True
+734,10159,The All-New Super Friends Hour,False,False,holidays_audience,,False,False
+735,10156,The Super Powers Team: Galactic Guardians,False,False,powers;memory_mortality,,False,False
+736,10610,Challenge of the Super Friends,False,False,holidays_audience;premise_scope,,False,False
+737,2719,Coupling,False,False,sitcom_structure,,False,False
+738,10157,Super Friends: The Legendary Super Powers Show,False,False,powers;holidays_audience;premise_scope,,False,False
+739,10158,The World's Greatest Super Friends,False,False,holidays_audience,,False,False
+740,64199,Sneaky Pete,False,False,,,False,True
+741,64684,And Then There Were None,False,False,,,False,True
+742,37664,The Secret Circle,False,False,creatures;religious_specific;holidays_audience;premise_scope,,False,False
+743,41889,Top Boy,False,False,social_specific,,False,False
+744,62425,Dark Matter,False,False,memory_mortality;work_specific;social_specific,,False,False
+745,185,Carnivàle,False,False,religious_specific;memory_mortality;unscripted_format,,False,False
+746,2224,The Daily Show,False,False,unscripted_format,,False,False
+747,53606,Love,False,False,unscripted_format,,False,False
+748,116450,And Just Like That…,False,False,unscripted_format;premise_scope,,False,False
+749,82728,Bluey,False,False,sitcom_structure;art_movement;holidays_audience,"Imaginative play, preschool audience and educational/social-emotional intent, with audience fit retained separately. Anthropomorphic protagonists, imaginary companions and imaginative play; animal presence alone does not imply talking/nonhuman viewpoint.",True,False
+750,84469,Cowboy Bebop,False,False,religious_specific;work_specific,,False,False
+751,2327,Dawson's Creek,False,False,setting_specific;holidays_audience;premise_scope,,False,False
+752,61018,Whose Line Is It Anyway?,False,False,sitcom_structure;unscripted_format,Improvisational game/performance format beyond scripted humor style.,True,False
+753,709,Robot Chicken,False,False,religious_specific;unscripted_format;art_movement;holidays_audience;premise_scope,,False,False
+754,156902,Kaleidoscope,False,False,,,False,True
+755,1481,The 4400,False,False,unscripted_format,,False,False
+756,873,Columbo,False,False,mystery_structure,Inverted detective procedural explicit source evidence for howcatchem.,True,False
+757,88236,How to Sell Drugs Online (Fast),False,False,holidays_audience,,False,False
+758,2038,Drake & Josh,False,False,sitcom_structure;family_forms;holidays_audience;premise_scope,Step-family structure and sibling chemistry distinct from generic parent-child/family conflict.,True,False
+759,926,"Scooby-Doo, Where Are You!",False,False,holidays_audience;premise_scope,,False,False
+760,232125,I Am Groot,False,False,holidays_audience,"Short-form episode duration is catalog/format metadata, not intensity.",False,False
+761,4610,Hannah Montana,False,False,sitcom_structure;holidays_audience,,False,False
+762,605,"Sabrina, the Teenage Witch",False,False,creatures;sitcom_structure;holidays_audience,,False,False
+763,82883,The Act,False,False,medical_specific;premise_scope,,False,False
+764,123192,The Crowded Room,False,False,,"Specific mental-health condition needs sourced annotations, no self-diagnosis.",False,True
+765,76719,The Rain,False,False,holidays_audience,,False,False
+766,18202,Cougar Town,False,False,sitcom_structure;family_forms,,False,False
+767,1813,Father Ted,False,False,religious_specific;sitcom_structure,,True,False
+768,245312,A Man on the Inside,False,False,sitcom_structure,,False,False
+769,128098,Interview with the Vampire,False,False,afterlife;memory_mortality;unscripted_format,,False,False
+770,72710,The Continental: From the World of John Wick,False,False,afterlife;premise_scope,,False,False
+771,578,Numb3rs,False,False,procedural_specialties;holidays_audience,Mathematical problem-solving applied to cases narrower than generic intellectual solver.,True,False
+772,221300,FUBAR,False,False,sitcom_structure;unscripted_format,,False,False
+773,96462,It's Okay to Not Be Okay,False,False,creatures;medical_specific;frame_story;identity_culture,,False,False
+774,113985,Outer Range,False,False,unscripted_format;premise_scope,,False,False
+775,81290,The Kominsky Method,False,False,memory_mortality;sitcom_structure,,False,False
+776,96481,Rise of Empires: Ottoman,False,False,documentary_format,"Historical campaign is supported; documentary reenactment method is not established by supplied excerpt, so remains unconfirmed.",True,False
+777,62822,Humans,False,False,,,False,True
+778,69557,Fauda,False,False,,,False,True
+779,136283,The Glory,False,False,social_specific,School bullying and revenge causality; bullying absent as direct subject concept.,True,False
+780,202879,Star Wars: Skeleton Crew,False,False,holidays_audience,,False,False
+781,39859,Awkward.,False,False,unscripted_format;social_specific;holidays_audience,,False,False
+782,252,Everybody Hates Chris,False,False,sitcom_structure;holidays_audience;identity_culture,,False,False
+783,51704,Defiance,False,False,first_contact,Alien coexistence is different from alien invasion or first contact.,True,False
+784,74440,Harley Quinn,False,False,holidays_audience;premise_scope,,False,False
+785,86031,Dr. STONE,False,False,,Rebuilding society/scientific rediscovery and art after catastrophe; distinguish civilization renewal from staying alive.,False,True
+786,203085,Star Wars: Tales of the Jedi,False,False,premise_scope,,False,False
+787,5917,90210,False,False,holidays_audience,,False,False
+788,2566,Dead Like Me,False,False,afterlife;religious_specific,Afterlife bureaucracy joins mechanism and workplace treatment.,True,False
+789,54155,Hanna,False,False,holidays_audience,,False,False
+790,61175,Steven Universe,False,False,holidays_audience;identity_culture;premise_scope,,False,False
+791,95555,Daisy Jones & the Six,False,False,,,False,True
+792,243316,The Four Seasons,False,False,,Recurring seasonal ritual structure not just season setting.,False,True
+793,110356,My Name,False,False,,"Undercover infiltration, double agents, assassins, ex-con impostors and intelligence occupations; participant roles matter.",False,True
+794,65493,The Ranch,False,False,sitcom_structure;premise_scope,,False,False
+795,1516,The A-Team,False,False,,,False,True
+796,72339,HAPPY!,False,False,,"Anthropomorphic protagonists, imaginary companions and imaginative play; animal presence alone does not imply talking/nonhuman viewpoint.",False,True
+797,424,Torchwood,False,False,premise_scope,,False,False
+798,66857,Shooter,False,False,,,False,True
+799,39525,Wilfred,False,False,unscripted_format;setting_specific,,False,False
+800,2875,MacGyver,False,False,sitcom_structure,Improvised engineering problem solving narrower than generic computers or crafts.,True,False
+801,79460,Legacies,False,False,creatures;family_forms;holidays_audience;premise_scope,,False,False
+802,74016,The Resident,False,False,medical_specific;social_specific,,False,False
+803,1466,Joey,False,False,sitcom_structure;premise_scope,,False,False
+804,42295,Hemlock Grove,False,False,holidays_audience,,False,False
+805,1996,The Flintstones,False,False,sitcom_structure;setting_specific,,False,False
+806,43901,Longmire,False,False,,,False,True
+807,604,Teen Titans,False,False,creatures;holidays_audience;premise_scope,,False,False
+808,63522,F is for Family,False,False,education_pressure;sitcom_structure;social_specific;setting_specific;holidays_audience,,False,False
+809,49011,Mom,False,False,sitcom_structure;unscripted_format;family_forms;holidays_audience,,False,False
+810,206912,NCR Days,False,False,education_pressure,MBA aspiration and relocation class dynamics need specific education concepts.,True,False
+811,322324,Der Medicus,True,True,medical_specific,Missing analysis; no unsupported inference from title alone.,True,False
+812,15632,The Cleveland Show,False,False,sitcom_structure;holidays_audience;premise_scope,,False,False
+813,5739,Dr. Horrible's Sing-Along Blog,False,False,religious_specific;romance_patterns,,False,False
+814,147050,Disclaimer,False,False,mystery_structure,,False,False
+815,49009,The Goldbergs,False,False,sitcom_structure;setting_specific;premise_scope,,False,False
+816,96648,Sweet Home,False,False,creatures;bioengineering,,False,False
+817,90972,Station Eleven,False,False,,Rebuilding society/scientific rediscovery and art after catastrophe; distinguish civilization renewal from staying alive.,False,True
+818,4500,The Wonder Years,False,False,memory_mortality;sitcom_structure;setting_specific,,False,False
+819,764,Midsomer Murders,False,False,,,False,True
+820,87050,Hollywood,False,False,alternate_history,,False,False
+821,21762,Parenthood,False,False,setting_specific;identity_culture;premise_scope,,False,False
+822,33001,Haven,False,False,,,False,True
+823,119988,The Innocent,False,False,religious_specific,,False,False
+824,122066,The Dropout,False,False,medical_specific;premise_scope,,False,False
+825,154825,Business Proposal,False,False,romance_patterns,Fake dating explicit tag: additional relationship pattern.,True,False
+826,93484,Jupiter's Legacy,False,False,powers;holidays_audience;premise_scope,,False,False
+827,114925,Pam & Tommy,False,False,education_pressure,,False,False
+828,136308,Stay Close,False,False,procedural_specialties,,False,False
+829,121710,Inside Man,False,False,,,False,True
+830,61345,Z Nation,False,False,creatures;sitcom_structure,,False,False
+831,241554,Murderbot,False,False,memory_mortality;social_specific;identity_culture,,False,False
+832,7246,Blackadder,False,False,sitcom_structure,,False,False
+833,39510,Touch,False,False,powers;family_forms;identity_culture,,False,False
+834,219246,When Life Gives You Tangerines,False,False,memory_mortality;identity_culture;premise_scope,,False,False
+835,67116,Lethal Weapon,False,False,,,False,True
+836,61733,Empire,False,False,royalty,,False,False
+837,128095,Under the Banner of Heaven,False,False,afterlife;religious_specific,Fundamentalism/coercive sect and attributed religious critique; do not equate faith presence with danger.,False,False
+838,84647,The Society,False,False,holidays_audience,,False,False
+839,606,"Ed, Edd n Eddy",False,False,setting_specific;holidays_audience,,False,False
+840,71790,S.W.A.T.,False,False,work_specific;black_white,,False,False
+841,100612,Special Ops,False,False,,,False,True
+842,32815,Raising Hope,False,False,procedural_specialties;sitcom_structure;family_forms,,False,False
+843,4658,ALF,False,False,sitcom_structure,,False,False
+844,3498,Wizards of Waverly Place,False,False,creatures;sitcom_structure;holidays_audience,,False,False
+845,2604,The Boondocks,False,False,medical_specific;education_pressure;sitcom_structure;setting_specific;holidays_audience;identity_culture,"Culturally specific humor requires tradition and perspective, not national-style score.",False,False
+846,32519,Ezel,False,False,education_pressure,,False,False
+847,71789,SEAL Team,False,False,,,False,True
+848,122196,The Staircase,False,False,education_pressure,,False,False
+849,75214,Violet Evergarden,False,False,frame_story;family_forms;premise_scope,"Epistolary storytelling explicitly tagged, distinct from ordinary voiceover.",True,False
+850,4271,Farscape,False,False,work_specific,,False,False
+851,146176,Berlin,False,False,premise_scope,,False,False
+852,4605,The Suite Life of Zack & Cody,False,False,sitcom_structure;family_forms;holidays_audience,Twin dynamics as relationship concept; hotel setting already covered.,False,False
+853,114922,Citadel,False,False,memory_mortality,,False,False
+854,79130,Another Life,False,False,first_contact,,False,False
+855,69629,The Gifted,False,False,powers;bioengineering;social_specific;setting_specific;holidays_audience,,False,False
+856,62858,Colony,False,False,first_contact,,False,False
+857,39331,Don't Trust the B---- in Apartment 23,False,False,sitcom_structure;family_forms,,False,False
+858,65320,SKAM,False,False,religious_specific;mystery_structure;holidays_audience,,False,False
+859,42671,Elfen Lied,False,False,creatures;powers;bioengineering;memory_mortality;social_specific;holidays_audience,,False,False
+860,117376,Vincenzo,False,False,social_specific,,False,False
+861,72615,Alias Grace,False,False,memory_mortality;medical_specific,,False,False
+862,32895,Rizzoli & Isles,False,False,procedural_specialties;medical_specific;education_pressure;sitcom_structure,,False,False
+863,217667,Eric,False,False,,,False,True
+864,121,Doctor Who,False,False,creatures;afterlife;royalty;religious_specific;unscripted_format;premise_scope,,False,False
+865,2405,Johnny Bravo,False,False,sport_specific,,False,False
+866,211684,The Walking Dead: Daryl Dixon,False,False,creatures;premise_scope,,False,False
+867,2384,Knight Rider,False,False,medical_specific,Sentient vehicle and human-machine companionship differ from cars and robots alone. Human-machine partnership/companionship with binding to machine type; cars+robots+friendship alone do not identify relation.,True,False
+868,66017,Resurrection: Ertugrul,False,False,afterlife;religious_specific;identity_culture,Nationalist perspective is an attributed narrative stance distinct from production country.,False,False
+869,63915,The Adventures of Sherlock Holmes and Dr. Watson,False,False,social_specific,,False,False
+870,224941,The Boroughs,False,False,memory_mortality;setting_specific,,False,False
+871,133748,Twisted Metal,False,False,memory_mortality,,False,False
+872,126254,The Midnight Club,False,False,memory_mortality;holidays_audience,,False,False
+873,100617,Transformers: War for Cybertron: Siege,False,False,mecha;premise_scope,,False,False
+874,3022,Rugrats,False,False,sitcom_structure;unscripted_format;holidays_audience,"Toddler viewpoint and imaginative interpretation differ from generic child agency. Anthropomorphic protagonists, imaginary companions and imaginative play; animal presence alone does not imply talking/nonhuman viewpoint.",True,False
+875,247043,The Ba***ds of Bollywood,False,False,unscripted_format,,False,False
+876,246992,Sirens,False,False,,,False,True
+877,32829,Happy Endings,False,False,sitcom_structure,,False,False
+878,2025,"Beverly Hills, 90210",False,False,education_pressure;unscripted_format;holidays_audience,,False,False
+879,160,Teenage Mutant Ninja Turtles,False,False,bioengineering;family_forms;holidays_audience,,False,False
+880,198178,Wonder Man,False,False,powers,,False,False
+881,9045,The Stand,False,False,identity_culture,,False,False
+882,197588,Man vs Bee,False,False,,,False,True
+883,62084,Poldark,False,False,work_specific;social_specific,Mining industry missing as specific occupation/subject.,True,False
+884,70485,Mr. Mercedes,False,False,procedural_specialties;work_specific,,False,False
+885,39297,Last Man Standing,False,False,sitcom_structure;setting_specific,,False,False
+886,58937,Masters of Sex,False,False,medical_specific;education_pressure,,False,False
+887,66023,Marcella,False,False,procedural_specialties,,False,False
+888,116174,It's a Sin,False,False,identity_culture,"HIV/AIDS as disease and community history, not generic pandemic presence.",False,False
+889,87049,Firefly Lane,False,False,,,False,True
+890,67915,Guardian: The Lonely and Great God,False,False,powers;afterlife;royalty;memory_mortality;family_forms,Immortality plus romance example.,True,False
+891,35339,Alcatraz,False,False,,,False,True
+892,888,Spider-Man,False,False,powers,,False,False
+893,91602,Modern Love,False,False,premise_scope,,False,False
+894,253777,Murder in Mahim,False,False,,,False,True
+895,111837,Willow,False,False,premise_scope,,False,False
+896,197067,Extraordinary Attorney Woo,False,False,identity_culture,Specific attorney representation and legal specialty require role-bound annotations.,True,False
+897,113984,Anatomy of a Scandal,False,False,,,False,True
+898,94954,Hazbin Hotel,False,False,afterlife;art_movement;holidays_audience,Afterlife setting and rehabilitation/redemption are separate components.,False,False
+899,153657,Bosch: Legacy,False,False,,,False,True
+900,46638,Top of the Lake,False,False,,,False,True
+901,80743,Insatiable,False,False,social_specific;holidays_audience,,False,False
+902,59659,Halt and Catch Fire,False,False,premise_scope,,False,False
+903,97727,Inside Job,False,False,holidays_audience,,False,False
+904,8724,Frozen Planet,False,False,documentary_format,Polar setting and climate theme already covered; documentary wildlife content through full format.,False,False
+905,15114,John Adams,False,False,,"Historical setting, factual biography, deliberate anachronism, counterfactual premise and documentary method need different relations.",False,True
+906,235345,Beckham,False,False,documentary_format,"Sport biography needs people/subject identifiers, no new person-specific trait.",False,False
+907,4345,Saved by the Bell,False,False,education_pressure;sitcom_structure;holidays_audience,,False,False
+908,537,Hey Arnold!,False,False,art_movement,,False,False
+909,60839,Broad City,False,False,sitcom_structure;social_specific,,False,False
+910,1739,According to Jim,False,False,sitcom_structure;setting_specific;holidays_audience,,False,False
+911,17287,Party Down,False,False,religious_specific;sitcom_structure;unscripted_format,,False,False
+912,4018,Quantum Leap,False,False,education_pressure;premise_scope,"Body inhabitation, time travel, moral intervention and episode format need distinct concepts.",False,False
+913,93811,Into the Night,False,False,,,False,True
+914,326,Red Dwarf,False,False,religious_specific;work_specific;sitcom_structure,,False,False
+915,61223,Akame ga Kill!,False,False,creatures;powers;royalty;social_specific,,False,False
+916,88052,Black Summer,False,False,creatures,,False,False
+917,156249,Das Boot,False,False,education_pressure;setting_specific,Submarine is a narrower watercraft setting with claustrophobic treatment.,True,False
+918,94951,Mythic Quest,False,False,sitcom_structure,"Game development industry and labor crunch separate from playing video games. Advertising, news production, startup founding, counterfeiting, game development and sex industry as subjects; work taxonomy should permit industries.",True,False
+919,87428,Why Women Kill,False,False,romance_patterns;setting_specific,,False,False
+920,65150,Vice Principals,False,False,,,False,True
+921,44606,Beauty and the Beast,False,False,creatures;frame_story;holidays_audience,,False,False
+922,4385,The Colbert Report,False,False,unscripted_format;premise_scope,Late-night satirical persona/news commentary format.,False,False
+923,77601,Wild Wild Country,False,False,religious_specific;documentary_format;unscripted_format,Coercive religious/social movement and community conflict concepts.,True,False
+924,1480,Ally McBeal,False,False,family_forms,,False,False
+925,1759,The Cosby Show,False,False,sitcom_structure;identity_culture,,False,False
+926,4686,Ben 10,False,False,powers;holidays_audience,,False,False
+927,204284,The Rehearsal,False,False,documentary_format;unscripted_format,Unscripted staged behavioral experiment/participant awareness as format relation.,True,False
+928,97645,Solar Opposites,False,False,sitcom_structure;holidays_audience,,False,False
+929,93870,SAS Rogue Heroes,False,False,,,False,True
+930,259265,Something Very Bad Is Going to Happen,False,False,unscripted_format,,False,False
+931,194583,The Walking Dead: Dead City,False,False,creatures;premise_scope,,False,False
+932,66676,Queen of the South,False,False,,,False,True
+933,226362,The Eternaut,False,False,first_contact;unscripted_format,,False,False
+934,44264,Endeavour,False,False,premise_scope,,False,False
+935,79084,POSE,False,False,identity_culture,"Ballroom culture is a specific community/art practice, not simply dancing or generic LGBTQ representation.",True,False
+936,720,DuckTales,False,False,holidays_audience;premise_scope,,False,False
+937,90462,Chucky,False,False,procedural_specialties;setting_specific;holidays_audience;premise_scope,,False,False
+938,87104,Years and Years,False,False,,,False,True
+939,48860,The Tomorrow People,False,False,powers;holidays_audience,Telekinetic powers explicit tag; not necessarily magic or combat.,True,False
+940,3137,Babylon 5,False,False,powers;mystery_structure,"Diplomacy and negotiated conflict broader than politics alone. Diplomacy, negotiation and governance as narrative methods; politics and political struggle do not distinguish negotiation from armed revolution.",False,False
+941,81532,Living with Yourself,False,False,bioengineering,Cloning/self-duplication mechanism should be reviewed in synopsis.,True,False
+942,13643,North & South,False,False,,,False,True
+943,204154,Scavengers Reign,False,False,holidays_audience,Alien ecology and speculative ecosystems beyond creature presence.,True,False
+944,82104,The Order,False,False,creatures;setting_specific;holidays_audience,,False,False
+945,31841,Episodes,False,False,sitcom_structure,Cross-national creative industry relationships not inferable from original language alone.,False,False
+946,62505,Unforgotten,False,False,procedural_specialties,,False,False
+947,60655,Derek,False,False,setting_specific,,False,False
+948,128876,The Beatles: Get Back,False,False,documentary_format,Archival creative-process documentary; existing artistic-creation theme and format extension.,True,False
+949,70881,Boruto: Naruto Next Generations,False,False,powers;premise_scope,,False,False
+950,2755,Rules of Engagement,False,False,sitcom_structure,,False,False
+951,79026,The Protector,False,False,,,False,True
+952,751,The World at War,False,False,documentary_format,"War archival documentary; factual event IDs and archival method. Historical setting, factual biography, deliberate anachronism, counterfactual premise and documentary method need different relations.",False,False
+953,7704,Legend of the Seeker,False,False,unscripted_format;social_specific,,False,False
+954,75208,Devilman Crybaby,False,False,creatures;afterlife;holidays_audience,,False,False
+955,328623,The Bugs Bunny Show,True,True,,Missing tags: preserve provided genres/synopsis; familiarity is not evidence.,True,True
+956,69158,The Good Fight,False,False,mystery_structure;social_specific,,False,False
+957,135868,The Patient,False,False,procedural_specialties;medical_specific;education_pressure,,False,False
+958,246862,New PANTY & STOCKING with GARTERBELT,False,False,creatures;afterlife;art_movement;premise_scope,Rock-punk style hierarchy; existing rock handles parent but not specific convention.,False,False
+959,46434,The Vietnam War,False,False,education_pressure;documentary_format;social_specific,,False,False
+960,83125,Cursed,False,False,frame_story;holidays_audience,,False,False
+961,93166,The Capture,False,False,unscripted_format,Deepfake manipulation and evidentiary truth narrower than general surveillance.,True,False
+962,44857,The Mindy Project,False,False,medical_specific;sitcom_structure,,False,False
+963,219971,The Agency,False,False,,"Undercover infiltration, double agents, assassins, ex-con impostors and intelligence occupations; participant roles matter.",False,True
+964,115678,As If,False,False,,,False,True
+965,282836,Ekaki,False,False,,,False,True
+966,76954,The Mechanism,False,False,social_specific,,False,False
+967,223530,Star Trek: Starfleet Academy,False,False,premise_scope,,False,False
+968,213306,Cross,False,False,procedural_specialties,,False,False
+969,65817,The Deuce,False,False,social_specific,"Sex industry and commodification of sexuality distinct from explicit sexual content. Advertising, news production, startup founding, counterfeiting, game development and sex industry as subjects; work taxonomy should permit industries.",True,False
+970,3797,Life,False,False,,,False,True
+971,72787,Patrick Melrose,False,False,medical_specific;premise_scope,,False,False
+972,13943,Beavis and Butt-Head,False,False,setting_specific;holidays_audience,,False,False
+973,2345,Kim Possible,False,False,powers;education_pressure;holidays_audience,,False,False
+974,31251,Victorious,False,False,sitcom_structure;holidays_audience,,False,False
+975,2407,Dark Angel,False,False,creatures;bioengineering,Genetic engineering/biopunk candidate requires source wording rather than familiarity.,True,False
+976,39793,Call the Midwife,False,False,medical_specific;social_specific,Midwifery and community healthcare role.,True,False
+977,128904,Dark Winds,False,False,identity_culture,"Specific Indigenous setting, beliefs and people remain sourced cultural annotations. Bilingual/dialect, historical context and cultural tradition; existing full annotations/catalog, not new generic nationality scores.",True,False
+978,88177,Criminal Justice,False,False,,,False,True
+979,63646,Counterpart,False,False,,,False,True
+980,73126,American Vandal,False,False,documentary_format,True-crime parody is format + humor; fictional premise differs from factual true crime.,False,False
+981,31078,Bored to Death,False,False,unscripted_format,,False,False
+982,62117,Younger,False,False,sitcom_structure;family_forms,,False,False
+983,99002,PIECES OF HER,False,False,,,False,True
+984,134373,The Sex Lives of College Girls,False,False,family_forms;holidays_audience,Questionable Crunchy Mom Comedy tag should not seed a confirmed premise.,True,False
+985,32573,Strike Back,False,False,unscripted_format,,False,False
+986,62650,Chicago Med,False,False,medical_specific;premise_scope,,False,False
+987,39176,Behzat Ç.: An Ankara Policeman,False,False,social_specific,,False,False
+988,126280,Sex/Life,False,False,romance_patterns;holidays_audience,,False,False
+989,235930,Devil May Cry,False,False,afterlife;holidays_audience,,False,False
+990,46849,Generation War,False,False,medical_specific;social_specific;premise_scope,,False,False
+991,105009,Tokyo Revengers,False,False,,Delinquent gangs and time travel causality as subject/relation.,False,True
+992,96658,Masters of the Universe: Revelation,False,False,holidays_audience;premise_scope,,False,False
+993,2228,Pinky and the Brain,False,False,bioengineering;holidays_audience;premise_scope,,False,False
+994,34014,An Idiot Abroad,False,False,royalty;documentary_format;unscripted_format;premise_scope,Reluctant presenter travelogue format.,True,False
+995,247769,The Great Indian Kapil Show,False,False,sitcom_structure;unscripted_format;holidays_audience,Variety/talk/sketch hybrid format.,True,False
+996,33234,The Pillars of the Earth,False,False,royalty;religious_specific,Architecture/construction and institution building rather than generic medieval drama.,True,False
+997,255661,Young Sherlock,False,False,premise_scope,,False,False
+998,67419,Victoria,False,False,royalty;holidays_audience,Royal biography and monarchy distinct from just historical setting.,False,False
+999,229221,Dear Child,False,False,procedural_specialties,,False,False
+1000,2171,Cold Case,False,False,procedural_specialties,Cold-case narrative and period-specific music relation.,False,False

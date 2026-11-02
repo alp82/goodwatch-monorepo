@@ -1,0 +1,20 @@
+{
+  "model": "qwen/qwen3.8-flash",
+  "provider": {
+    "only": [
+      "alibaba/us-east-1"
+    ],
+    "allow_fallbacks": false,
+    "require_parameters": true,
+    "max_price": {
+      "prompt": "0.15000000",
+      "completion": "0.47000000"
+    }
+  },
+  "reasoning": {
+    "enabled": false
+  },
+  "stream": false,
+  "max_tokens": 8192,
+  "plugins": []
+}

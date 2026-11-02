@@ -1,0 +1,274 @@
+{
+  "from": "2.0.0-draft.4",
+  "to": "2.0.0-draft.5",
+  "projection_version": "similarity-v2.2",
+  "vector_order_and_definitions_unchanged": true,
+  "numeric_additions": [],
+  "advisory_additions": [],
+  "part_names": {
+    "similarity": "vector",
+    "metadata": "attributes"
+  },
+  "destination_names": {
+    "fingerprint": "vector",
+    "content_metadata": "content_attributes",
+    "series_metadata": "series_attributes"
+  },
+  "scalar_to_multiselect": [
+    "storytelling.chronology",
+    "storytelling.retelling_structure",
+    "storytelling.tone_progression",
+    "ending.post_credits_function",
+    "series.case_resolution_pattern",
+    "series.character_continuity",
+    "format_facts.production_method",
+    "format_facts.narrative_mode",
+    "format_facts.series_structure",
+    "format_facts.color_process",
+    "format_facts.adaptation_type",
+    "format_facts.factual_basis"
+  ],
+  "vocabulary_changes": {
+    "storytelling.chronology": {
+      "before": [
+        "predominantly_chronological",
+        "predominantly_reverse",
+        "mixed_timelines",
+        "non_temporal"
+      ],
+      "after": [
+        "chronological",
+        "reverse_chronological",
+        "interleaved_timelines",
+        "non_temporal"
+      ]
+    },
+    "storytelling.retelling_structure": {
+      "before": [
+        "none",
+        "same_events_complementary",
+        "same_events_conflicting",
+        "same_events_complementary_and_conflicting"
+      ],
+      "after": [
+        "same_events_complementary",
+        "same_events_conflicting"
+      ]
+    },
+    "storytelling.tone_progression": {
+      "before": [
+        "broadly_stable",
+        "increasingly_dark",
+        "increasingly_light",
+        "comic_to_horror",
+        "horror_to_comic",
+        "mixed_without_dominant_direction"
+      ],
+      "after": [
+        "broadly_stable",
+        "increasingly_dark",
+        "increasingly_light",
+        "comic_to_horror",
+        "horror_to_comic",
+        "alternating_tones"
+      ]
+    },
+    "ending.post_credits_function": {
+      "before": [
+        "none",
+        "comic_tag",
+        "epilogue_or_resolution",
+        "reopens_threat_or_mystery",
+        "introduces_next_story",
+        "tribute_or_non_narrative",
+        "multiple_functions"
+      ],
+      "after": [
+        "comic_tag",
+        "epilogue_or_resolution",
+        "reopens_threat_or_mystery",
+        "introduces_next_story",
+        "tribute_or_non_narrative"
+      ]
+    },
+    "series.case_resolution_pattern": {
+      "before": [
+        "mostly_within_episode",
+        "mostly_multi_episode_arcs",
+        "mostly_season_or_series_arc",
+        "mixed",
+        "no_case_structure"
+      ],
+      "after": [
+        "within_episode",
+        "multi_episode_arcs",
+        "season_or_series_arc"
+      ]
+    },
+    "series.character_continuity": {
+      "before": [
+        "mostly_reset",
+        "cumulative_development",
+        "independent_casts",
+        "mixed"
+      ],
+      "after": [
+        "episodic_reset",
+        "cumulative_development",
+        "independent_casts"
+      ]
+    },
+    "format_facts.production_method": {
+      "before": [
+        "live_action",
+        "animation",
+        "mixed_media"
+      ],
+      "after": [
+        "live_action",
+        "animation"
+      ]
+    },
+    "format_facts.narrative_mode": {
+      "before": [
+        "fiction",
+        "nonfiction",
+        "hybrid"
+      ],
+      "after": [
+        "fiction",
+        "nonfiction"
+      ]
+    },
+    "format_facts.series_structure": {
+      "before": [
+        "limited",
+        "ongoing_serial",
+        "episodic",
+        "anthology",
+        "mixed"
+      ],
+      "after": [
+        "limited",
+        "serialized",
+        "episodic",
+        "anthology"
+      ]
+    },
+    "format_facts.color_process": {
+      "before": [
+        "color",
+        "black_and_white",
+        "mixed",
+        "tinted"
+      ],
+      "after": [
+        "color",
+        "black_and_white",
+        "tinted"
+      ]
+    },
+    "format_facts.adaptation_type": {
+      "before": [
+        "original",
+        "novel",
+        "short_story",
+        "play",
+        "comic",
+        "game",
+        "folklore",
+        "biography",
+        "mixed",
+        "other"
+      ],
+      "after": [
+        "original",
+        "novel",
+        "short_story",
+        "play",
+        "comic",
+        "game",
+        "folklore",
+        "biography",
+        "other"
+      ]
+    },
+    "format_facts.factual_basis": {
+      "before": [
+        "fictional",
+        "based_on_real_events",
+        "biographical",
+        "documentary",
+        "mixed",
+        "disputed"
+      ],
+      "after": [
+        "fictional",
+        "based_on_real_events",
+        "biographical",
+        "documentary",
+        "disputed"
+      ]
+    },
+    "format_facts.animation_techniques": {
+      "before": [
+        "traditional_2d",
+        "digital_2d",
+        "cgi_3d",
+        "stop_motion",
+        "rotoscoping",
+        "cutout",
+        "puppetry",
+        "mixed",
+        "other"
+      ],
+      "after": [
+        "traditional_2d",
+        "digital_2d",
+        "cgi_3d",
+        "stop_motion",
+        "rotoscoping",
+        "cutout",
+        "puppetry",
+        "other"
+      ]
+    },
+    "format_facts.capture_media": {
+      "before": [
+        "8mm",
+        "super_8",
+        "16mm",
+        "super_16",
+        "35mm",
+        "65mm",
+        "digital",
+        "analog_video",
+        "mixed",
+        "other"
+      ],
+      "after": [
+        "8mm",
+        "super_8",
+        "16mm",
+        "super_16",
+        "35mm",
+        "65mm",
+        "digital",
+        "analog_video",
+        "other"
+      ]
+    }
+  },
+  "retained": "All 600 numeric definitions, 171 presence concepts, 38 facet IDs and 22 advisory topics.",
+  "conversion": "No runtime adapter is applied. A retained scalar category can become a singleton list; unknown remains null. Removed combined/mixed labels require their actual components to be assessed, never expansion into every available option. Removed none/no_case_structure becomes [] only for a confirmed assessed-empty condition. Boolean and presence facts remain scalar.",
+  "scope_semantics": "Several formerly predominant/mostly categories now describe substantial overlapping patterns within scope. Old chronology, tone and series assessments need review against the new definitions.",
+  "no_imputation": "Do not convert unknown to [], zero or absence. Historical raw outputs remain unchanged.",
+  "not_implemented": [
+    "query planning",
+    "Jev integration",
+    "taste weights",
+    "Qdrant indexing",
+    "production migration",
+    "paid inference"
+  ]
+}

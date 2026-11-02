@@ -1,0 +1,24 @@
+{
+  "started_at": "2026-10-19T05:19:18.693579+00:00",
+  "ranking": "goodwatch_overall_score_voting_count DESC NULLS LAST, tmdb_id ASC",
+  "eligibility": "All catalog rows; no fingerprint/presentability filter, so missing-analysis coverage is visible.",
+  "queries": [
+    "SELECT tmdb_id,title,original_title,genres,synopsis,essence_text,essence_tags,keywords,goodwatch_overall_score_voting_count AS votes FROM movie ORDER BY goodwatch_overall_score_voting_count DESC NULLS LAST, tmdb_id ASC LIMIT 2000",
+    "SELECT tmdb_id,title,original_title,genres,synopsis,essence_text,essence_tags,keywords,goodwatch_overall_score_voting_count AS votes FROM show ORDER BY goodwatch_overall_score_voting_count DESC NULLS LAST, tmdb_id ASC LIMIT 1000"
+  ],
+  "datasets": {
+    "top-movies.json": {
+      "rows": 2000,
+      "sha256": "26507252462b557d28173a75f375352d131ba20c45dd09adcedebbe5fb80d6ff",
+      "without_essence_tags": 8,
+      "without_synopsis": 0
+    },
+    "top-shows.json": {
+      "rows": 1000,
+      "sha256": "816eeb52273c5e1609b2130f820f4fbe4313d13b5442dd5c963fb9f7ed83ff9e",
+      "without_essence_tags": 8,
+      "without_synopsis": 5
+    }
+  },
+  "finished_at": "2026-10-19T05:19:21.502663+00:00"
+}

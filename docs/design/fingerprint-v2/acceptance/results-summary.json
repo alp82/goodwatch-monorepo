@@ -1,0 +1,202 @@
+{
+  "date": "2026-10-24",
+  "decision": {
+    "field_inventory": "frozen_for_versioned_draft_collection",
+    "producer": "not_approved_for_unattended_trusted_collection",
+    "production_changed": false
+  },
+  "schema": "2.0.0-draft.8",
+  "projection": "similarity-v2.3",
+  "vector_dimensions": 274,
+  "attribute_entries": 686,
+  "distinct_titles": 12,
+  "all_three_parts_returned": 12,
+  "numeric_complete_vectors": 10,
+  "full_publication_pair_valid": 7,
+  "complete_and_consistent": 3,
+  "quality_note": "Automatic consistency is not factual acceptance. All three complete/consistent examples still have material factual or useful-coverage concerns. No gold ordinal accuracy or recommendation-quality claim.",
+  "titles": [
+    {
+      "title": "thank-you-for-smoking",
+      "name": "Thank You for Smoking",
+      "vector_numeric": 274,
+      "vector_unknown": 0,
+      "targeted_numeric": 336,
+      "targeted_unknown": 0,
+      "targeted_not_applicable": 8,
+      "pair_errors": 1,
+      "additional_consistency_errors": 0
+    },
+    {
+      "title": "the-truman-show",
+      "name": "The Truman Show",
+      "vector_numeric": 274,
+      "vector_unknown": 0,
+      "targeted_numeric": 336,
+      "targeted_unknown": 0,
+      "targeted_not_applicable": 8,
+      "pair_errors": 0,
+      "additional_consistency_errors": 1
+    },
+    {
+      "title": "breaking-bad",
+      "name": "Breaking Bad",
+      "vector_numeric": 274,
+      "vector_unknown": 0,
+      "targeted_numeric": 343,
+      "targeted_unknown": 1,
+      "targeted_not_applicable": 0,
+      "pair_errors": 3,
+      "additional_consistency_errors": 1
+    },
+    {
+      "title": "code-geass",
+      "name": "Code Geass: Lelouch of the Rebellion",
+      "vector_numeric": 274,
+      "vector_unknown": 0,
+      "targeted_numeric": 343,
+      "targeted_unknown": 1,
+      "targeted_not_applicable": 0,
+      "pair_errors": 0,
+      "additional_consistency_errors": 1
+    },
+    {
+      "title": "koyaanisqatsi",
+      "name": "Koyaanisqatsi",
+      "vector_numeric": 274,
+      "vector_unknown": 0,
+      "targeted_numeric": 333,
+      "targeted_unknown": 3,
+      "targeted_not_applicable": 8,
+      "pair_errors": 0,
+      "additional_consistency_errors": 3
+    },
+    {
+      "title": "daughters-of-the-dust",
+      "name": "Daughters of the Dust",
+      "vector_numeric": 274,
+      "vector_unknown": 0,
+      "targeted_numeric": 55,
+      "targeted_unknown": 281,
+      "targeted_not_applicable": 8,
+      "pair_errors": 0,
+      "additional_consistency_errors": 0
+    },
+    {
+      "title": "singin-in-the-rain",
+      "name": "Singin' in the Rain",
+      "vector_numeric": 274,
+      "vector_unknown": 0,
+      "targeted_numeric": 332,
+      "targeted_unknown": 4,
+      "targeted_not_applicable": 8,
+      "pair_errors": 1,
+      "additional_consistency_errors": 1
+    },
+    {
+      "title": "paterson",
+      "name": "Paterson",
+      "vector_numeric": 274,
+      "vector_unknown": 0,
+      "targeted_numeric": 335,
+      "targeted_unknown": 1,
+      "targeted_not_applicable": 8,
+      "pair_errors": 0,
+      "additional_consistency_errors": 0
+    },
+    {
+      "title": "the-witch",
+      "name": "The Witch",
+      "vector_numeric": 274,
+      "vector_unknown": 0,
+      "targeted_numeric": 1,
+      "targeted_unknown": 335,
+      "targeted_not_applicable": 8,
+      "pair_errors": 0,
+      "additional_consistency_errors": 0
+    },
+    {
+      "title": "persepolis",
+      "name": "Persepolis",
+      "vector_numeric": 273,
+      "vector_unknown": 1,
+      "targeted_numeric": 336,
+      "targeted_unknown": 0,
+      "targeted_not_applicable": 8,
+      "pair_errors": 0,
+      "additional_consistency_errors": 1
+    },
+    {
+      "title": "detectorists",
+      "name": "Detectorists",
+      "vector_numeric": 272,
+      "vector_unknown": 2,
+      "targeted_numeric": 343,
+      "targeted_unknown": 1,
+      "targeted_not_applicable": 0,
+      "pair_errors": 0,
+      "additional_consistency_errors": 0
+    },
+    {
+      "title": "mushishi",
+      "name": "Mushishi",
+      "vector_numeric": 274,
+      "vector_unknown": 0,
+      "targeted_numeric": 343,
+      "targeted_unknown": 1,
+      "targeted_not_applicable": 0,
+      "pair_errors": 0,
+      "additional_consistency_errors": 1
+    }
+  ],
+  "execution": {
+    "POSTs": 50,
+    "returned_projections": 44,
+    "HTTP429_attempts": 6,
+    "retry_POSTs": 6,
+    "known_experiment_spend_usd": "0.095605874",
+    "new_unknown_holds_usd": "0.90835584",
+    "final_global_cash_usd": "0.234978898",
+    "final_global_pending_usd": "4.118868352",
+    "cumulative_acceptance_cap_usd": "1.50",
+    "global_cap_usd": "5"
+  },
+  "repeats": [
+    {
+      "title": "the-truman-show",
+      "input_bytes_equal": true,
+      "request_sha256": "96b940a0b14d9c879df9c8219790a042fb130c250fb05bbcee59d6ff2c86c2e3",
+      "states": {
+        "numeric_to_numeric": 274,
+        "numeric_to_null": 0,
+        "null_to_numeric": 0,
+        "null_to_null": 0
+      },
+      "changed_numeric": 150,
+      "mean_absolute_change": 0.8102189781021898,
+      "median_absolute_change": 1.0,
+      "p90_absolute_change": 2,
+      "max_absolute_change": 10
+    },
+    {
+      "title": "mushishi",
+      "input_bytes_equal": true,
+      "request_sha256": "d6d3f24f6b3da7b0d049be432ba142ffb8f11d42e4930a3437bd6da0196fa571",
+      "states": {
+        "numeric_to_numeric": 274,
+        "numeric_to_null": 0,
+        "null_to_numeric": 0,
+        "null_to_null": 0
+      },
+      "changed_numeric": 158,
+      "mean_absolute_change": 0.6605839416058394,
+      "median_absolute_change": 1.0,
+      "p90_absolute_change": 1,
+      "max_absolute_change": 3
+    }
+  ],
+  "evidence": {
+    "/home/alp/.local/share/goodwatch-benchmarks/v2-acceptance-root-v1/final-consistency-v1/audit.json": "29401c53307d1d4ff78a0563c745dd1adfccd482f9958fb2af47024e6d60929e",
+    "/home/alp/.local/share/goodwatch-benchmarks/v2-acceptance-final-continuation-v1/cumulative/accounting-and-repeats.json": "02f9a09b0b42427c30fa0c51c9f3588b29e000d244be3b678409bba9e85374e6"
+  }
+}

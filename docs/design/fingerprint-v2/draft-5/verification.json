@@ -1,0 +1,53 @@
+{
+  "status": "passed",
+  "focused_tests": 43,
+  "schema_standard": "JSON Schema Draft 2020-12",
+  "synthetic_pair_cli": "passed; no real title generated",
+  "local_markdown_links_checked": 33,
+  "counts": {
+    "numeric_fields": 600,
+    "vector_dimensions": 274,
+    "attributes_scores": 326,
+    "presence_concepts": 171,
+    "fixed_facets": 38,
+    "multiselect_facets": 29,
+    "boolean_facets": 6,
+    "presence_state_facets": 3,
+    "advisory_topics": 22
+  },
+  "readable_key_value_counts": {
+    "vector": 274,
+    "attributes": 645
+  },
+  "historical_vector_order_definitions_rubrics": "unchanged; compared to draft.4",
+  "historical_draft4_sealed_files": "all preserved; checked against its previous verification receipt",
+  "inference_calls": 0,
+  "deployment": false,
+  "files": {
+    "ATTRIBUTES-PROMPT.md": "874a5a9fafd4d4233c99c9eb7706ce9c841eb52010470d1220ad685abb8a3c24",
+    "README.md": "843ba7bcf18b06b2962e64faeac26769b936ec9c68360443c9d30f735e59e94d",
+    "VECTOR-PROMPT.md": "492e1dc1edd4c1dd5680179ecb8eae577e849d38ebd44cdf5b53c208b2ab6fd3",
+    "attributes.definition.json": "7fbf2cfea24df7e8fa7aa4cb827f6c2986e50778afbc39abd4cc6eff05f9eebe",
+    "attributes.readable.json": "da4760bd90867b36ea439703de85e56c5a17d2cd4e9f1adbd08dca59475581aa",
+    "attributes.readable.md": "a010b81a79b434c964b9b934b2ac9f5cc736143a1623ec15600fbd041cb9a7f9",
+    "attributes.schema.json": "c6dbc2251efe8ea7f6eb79cb0804d890d09d7a19e4e7c416b16172fdeffee171",
+    "build.py": "496986943046afbf6a899ffcf2461f6b9fd4da47abfcd1b34bb58a9b8d4e95f3",
+    "catalog-ownership.json": "901e52df3e39a5060cd579e84ea3220a4da42c8a9b729db03a3d662d5c5d5825",
+    "checks.py": "b7b53ec12fbf5144c282215c0842ce297ac1f8825de44d5f0737ba05fea43520",
+    "definition.json": "8c032f683a37b288afa7e6d8d0ad448d8d9758eef0755397b29b8a832744e0cc",
+    "examples/attributes.synthetic.json": "56b0af5d54f4e2cd4f06728a4ed15eb84d64018c1cc8a45945026ede3361b8c8",
+    "examples/vector.synthetic.json": "105f07b7cceb013fd2227a8b77997f834099c5f65796f27a423312b7a49ce2a7",
+    "facets.py": "dbba7d02495426e8d56308152eccb0b783aec0eb38e6899d0f380599c3f2057a",
+    "field-catalog.json": "9a1f31b7df8f48d102e66efb72cc11929688696a2159510bd94dccee9ec082f7",
+    "manifest.json": "60a1368fa3c178a94b352f992fb67569d343b0b754e626e2eaa58b2faae99fa9",
+    "mapping.json": "b361bd9bd718812f1ee69ba36608c418abd75e99fe80238f8a6fec73f79d7111",
+    "migration.json": "500756447ff78b11cfd2b5aece4a4efbea6112661c8ec19f2978d86e1cdea064",
+    "schema-overview.md": "2514695036e17b17277a10280205a7c6f544a3557cd58a4a535196d09d8e0b9a",
+    "validate.py": "d404ff93c78f69de1cb78cc61bebb5d276b680950cdf1bf22c0a0414170c9ce3",
+    "vector.definition.json": "8dde5561f723afea81a5cd9e38f8a03734072ab5b810acba6e585af44978b2a1",
+    "vector.readable.json": "661d43bb0eb0d58fd6731513d2a9a8b98322bddd409d58180b4f431377979ea5",
+    "vector.readable.md": "43954660b2debe9b5ca196f5fdcbc36eed386f5e1e4f42d2bb946ddd6c66dddf",
+    "vector.response.schema.json": "9866dcca3f01494ee8c8ed6673565745da29602249df0414e0314ede7c7a8826",
+    "vector.schema.json": "c0eb727673769c9cd06d1a7571a06a27515b7b409f86fd01a5beceb2b20a7c72"
+  }
+}

@@ -1,0 +1,506 @@
+[
+  {
+    "query": "site:reddit.com/r/horror recommendations no sexual violence gore",
+    "engine": "Google direct",
+    "outcome": "HTTP 200 German consent page; no results; no bypass",
+    "date": "2026-10-24",
+    "useful_urls": []
+  },
+  {
+    "query": "site:reddit.com/r/horror recommendations \"sexual violence\" \"gore\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1tiokt7/disturbing_horror_movies_with_no_sexual_violence/",
+      "https://www.reddit.com/r/horror/comments/1scpk1v/recommendations_of_movies_with_out_sexual_content/",
+      "https://www.reddit.com/r/horror/comments/18e7gh0/good_horror_movies_without_sexual_violence/",
+      "https://www.reddit.com/r/horror/comments/1e3gcgr/movies_with_no_animal_deaths_or_abuse/",
+      "https://www.reddit.com/r/ExtremeHorrorLit/comments/1wd6xb9/looking_for_recommendations/",
+      "https://www.reddit.com/r/ifyoulikeblank/comments/xj0tpw",
+      "https://www.reddit.com/r/horror/comments/1tpecow/removed/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1edncal/i_want_to_see_a_horror_movie_where_the_pet_doesnt/",
+      "https://www.reddit.com/r/horror/comments/1kiqg58"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror recommendations \"animal\" \"death\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1tiokt7/disturbing_horror_movies_with_no_sexual_violence/",
+      "https://www.reddit.com/r/horror/comments/1scpk1v/recommendations_of_movies_with_out_sexual_content/",
+      "https://www.reddit.com/r/horror/comments/18e7gh0/good_horror_movies_without_sexual_violence/",
+      "https://www.reddit.com/r/horror/comments/1e3gcgr/movies_with_no_animal_deaths_or_abuse/",
+      "https://www.reddit.com/r/ExtremeHorrorLit/comments/1wd6xb9/looking_for_recommendations/",
+      "https://www.reddit.com/r/ifyoulikeblank/comments/xj0tpw",
+      "https://www.reddit.com/r/horror/comments/1tpecow/removed/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1edncal/i_want_to_see_a_horror_movie_where_the_pet_doesnt/",
+      "https://www.reddit.com/r/horror/comments/1kiqg58"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/ifyoulikeblank horror \"atmosphere\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1tiokt7/disturbing_horror_movies_with_no_sexual_violence/",
+      "https://www.reddit.com/r/horror/comments/1scpk1v/recommendations_of_movies_with_out_sexual_content/",
+      "https://www.reddit.com/r/horror/comments/18e7gh0/good_horror_movies_without_sexual_violence/",
+      "https://www.reddit.com/r/horror/comments/1e3gcgr/movies_with_no_animal_deaths_or_abuse/",
+      "https://www.reddit.com/r/ExtremeHorrorLit/comments/1wd6xb9/looking_for_recommendations/",
+      "https://www.reddit.com/r/ifyoulikeblank/comments/xj0tpw",
+      "https://www.reddit.com/r/horror/comments/1tpecow/removed/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1edncal/i_want_to_see_a_horror_movie_where_the_pet_doesnt/",
+      "https://www.reddit.com/r/horror/comments/1kiqg58"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror recommendations \"no animal\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/movies/comments/1x8iuxb/whats_a_good_horror_movie_that_doesnt_rely_on/",
+      "https://www.reddit.com/r/HorrorGaming/comments/1s5jk7m/horror_games_without_cheap_jumpscares_and_tons_of/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1vnlaf2/movie_or_series_recs_horror_thriller_with_no_or/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1tn56uf/horror_movie_without_jump_scares/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1tkwy2e/horror_without_jumpscares/",
+      "https://www.reddit.com/r/HorrorGaming/comments/178zdk9/horror_games_with_no_jumpscares/",
+      "https://www.reddit.com/r/horror/comments/1no9l4n"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror recommendations \"dog survives\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/movies/comments/1x8iuxb/whats_a_good_horror_movie_that_doesnt_rely_on/",
+      "https://www.reddit.com/r/HorrorGaming/comments/1s5jk7m/horror_games_without_cheap_jumpscares_and_tons_of/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1vnlaf2/movie_or_series_recs_horror_thriller_with_no_or/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1tn56uf/horror_movie_without_jump_scares/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1tkwy2e/horror_without_jumpscares/",
+      "https://www.reddit.com/r/HorrorGaming/comments/178zdk9/horror_games_with_no_jumpscares/",
+      "https://www.reddit.com/r/horror/comments/1no9l4n"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror recommendations \"no jumpscares\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/movies/comments/1x8iuxb/whats_a_good_horror_movie_that_doesnt_rely_on/",
+      "https://www.reddit.com/r/HorrorGaming/comments/1s5jk7m/horror_games_without_cheap_jumpscares_and_tons_of/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1vnlaf2/movie_or_series_recs_horror_thriller_with_no_or/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1tn56uf/horror_movie_without_jump_scares/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1tkwy2e/horror_without_jumpscares/",
+      "https://www.reddit.com/r/HorrorGaming/comments/178zdk9/horror_games_with_no_jumpscares/",
+      "https://www.reddit.com/r/horror/comments/1no9l4n"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/HorrorMovies recommendations \"atmosphere\" \"gore\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1wggpfn/if_youre_a_diehard_folk_horror_fan_these_are/",
+      "https://www.reddit.com/r/horror/comments/1tq8e7q/folk_horror_recommendations/",
+      "https://www.reddit.com/r/horror/comments/1tr6l40/horror_that_takes_place_deep_underwater/",
+      "https://www.reddit.com/r/horror/comments/1v6dsos/finest_examples_of_folk_horror/",
+      "https://www.reddit.com/r/horror/comments/1x9icj2/heavy_atmosphere_horror_movies_any_recommendations/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"folk horror\" \"non\" recommendations",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1wggpfn/if_youre_a_diehard_folk_horror_fan_these_are/",
+      "https://www.reddit.com/r/horror/comments/1tq8e7q/folk_horror_recommendations/",
+      "https://www.reddit.com/r/horror/comments/1tr6l40/horror_that_takes_place_deep_underwater/",
+      "https://www.reddit.com/r/horror/comments/1v6dsos/finest_examples_of_folk_horror/",
+      "https://www.reddit.com/r/horror/comments/1x9icj2/heavy_atmosphere_horror_movies_any_recommendations/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"underwater\" \"creature\" recommendations",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1wggpfn/if_youre_a_diehard_folk_horror_fan_these_are/",
+      "https://www.reddit.com/r/horror/comments/1tq8e7q/folk_horror_recommendations/",
+      "https://www.reddit.com/r/horror/comments/1tr6l40/horror_that_takes_place_deep_underwater/",
+      "https://www.reddit.com/r/horror/comments/1v6dsos/finest_examples_of_folk_horror/",
+      "https://www.reddit.com/r/horror/comments/1x9icj2/heavy_atmosphere_horror_movies_any_recommendations/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"snow\" \"vampire\" recommendations",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1su519g/i_need_all_gothic_horror_movies_and_especially/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1wqyx3h/looking_for_period_romances_andor_gothic_romances/",
+      "https://www.reddit.com/r/BooksThatFeelLikeThis/comments/1uggttr/gothic_horror_romance/",
+      "https://www.reddit.com/r/horrorlit/comments/1wih6d3/iso_gothic_horrorromance/",
+      "https://www.reddit.com/r/horror/comments/1ms5hxb",
+      "https://www.reddit.com/r/horrorlit/comments/1cy679z",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1wr5bj0/gothic_romance_movies/",
+      "https://www.reddit.com/r/horrorlit/comments/1hqc8rv",
+      "https://www.reddit.com/r/BooksThatFeelLikeThis/comments/1rnr25j/haunting_gothic_romances/",
+      "https://www.reddit.com/r/RomanceBooks/comments/1mugfbn/megathread_gothic_romances/",
+      "https://www.reddit.com/r/Romantasy/comments/1vhb1i6/looking_for_something_gothic_to_read/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"gothic\" \"romance\" recommendations",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1su519g/i_need_all_gothic_horror_movies_and_especially/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1wqyx3h/looking_for_period_romances_andor_gothic_romances/",
+      "https://www.reddit.com/r/BooksThatFeelLikeThis/comments/1uggttr/gothic_horror_romance/",
+      "https://www.reddit.com/r/horrorlit/comments/1wih6d3/iso_gothic_horrorromance/",
+      "https://www.reddit.com/r/horror/comments/1ms5hxb",
+      "https://www.reddit.com/r/horrorlit/comments/1cy679z",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1wr5bj0/gothic_romance_movies/",
+      "https://www.reddit.com/r/horrorlit/comments/1hqc8rv",
+      "https://www.reddit.com/r/BooksThatFeelLikeThis/comments/1rnr25j/haunting_gothic_romances/",
+      "https://www.reddit.com/r/RomanceBooks/comments/1mugfbn/megathread_gothic_romances/",
+      "https://www.reddit.com/r/Romantasy/comments/1vhb1i6/looking_for_something_gothic_to_read/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/ifyoulikeblank \"horror\" \"melancholy\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1su519g/i_need_all_gothic_horror_movies_and_especially/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1wqyx3h/looking_for_period_romances_andor_gothic_romances/",
+      "https://www.reddit.com/r/BooksThatFeelLikeThis/comments/1uggttr/gothic_horror_romance/",
+      "https://www.reddit.com/r/horrorlit/comments/1wih6d3/iso_gothic_horrorromance/",
+      "https://www.reddit.com/r/horror/comments/1ms5hxb",
+      "https://www.reddit.com/r/horrorlit/comments/1cy679z",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1wr5bj0/gothic_romance_movies/",
+      "https://www.reddit.com/r/horrorlit/comments/1hqc8rv",
+      "https://www.reddit.com/r/BooksThatFeelLikeThis/comments/1rnr25j/haunting_gothic_romances/",
+      "https://www.reddit.com/r/RomanceBooks/comments/1mugfbn/megathread_gothic_romances/",
+      "https://www.reddit.com/r/Romantasy/comments/1vhb1i6/looking_for_something_gothic_to_read/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/ifyoulikeblank \"horror\" \"sound design\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1wa7crz/cosmic_horror_recommendations/",
+      "https://www.reddit.com/r/horror/wiki/movieguide/?screen\\_view\\_count=2",
+      "https://www.reddit.com/r/horror/comments/1rvithz/whats_your_favorite_horror_movie_to_watch_on_a/",
+      "https://www.reddit.com/r/horror/comments/1386sgu/cosmic_horror_recommendations/",
+      "https://www.reddit.com/r/horror/comments/1vomdcs/cosmic_horror_worth_seeing/",
+      "https://www.reddit.com/r/horror/comments/1wyr1s7/obscure_cosmic_horror_movies/",
+      "https://www.reddit.com/r/horrorlit/comments/1ugc4y3/cosmic_horror_recs_that_are_actually_scary/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"recommend\" \"cosmic\" \"no\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1wa7crz/cosmic_horror_recommendations/",
+      "https://www.reddit.com/r/horror/wiki/movieguide/?screen\\_view\\_count=2",
+      "https://www.reddit.com/r/horror/comments/1rvithz/whats_your_favorite_horror_movie_to_watch_on_a/",
+      "https://www.reddit.com/r/horror/comments/1386sgu/cosmic_horror_recommendations/",
+      "https://www.reddit.com/r/horror/comments/1vomdcs/cosmic_horror_worth_seeing/",
+      "https://www.reddit.com/r/horror/comments/1wyr1s7/obscure_cosmic_horror_movies/",
+      "https://www.reddit.com/r/horrorlit/comments/1ugc4y3/cosmic_horror_recs_that_are_actually_scary/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"recommend\" \"rainy\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1wa7crz/cosmic_horror_recommendations/",
+      "https://www.reddit.com/r/horror/wiki/movieguide/?screen\\_view\\_count=2",
+      "https://www.reddit.com/r/horror/comments/1rvithz/whats_your_favorite_horror_movie_to_watch_on_a/",
+      "https://www.reddit.com/r/horror/comments/1386sgu/cosmic_horror_recommendations/",
+      "https://www.reddit.com/r/horror/comments/1vomdcs/cosmic_horror_worth_seeing/",
+      "https://www.reddit.com/r/horror/comments/1wyr1s7/obscure_cosmic_horror_movies/",
+      "https://www.reddit.com/r/horrorlit/comments/1ugc4y3/cosmic_horror_recs_that_are_actually_scary/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"recommend\" \"happy ending\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1qr0fcj/good_movie_with_happy_ending/",
+      "https://www.reddit.com/r/horror/comments/1neaooz",
+      "https://www.reddit.com/r/horror/comments/1qfr8du/horror_movies_with_happy_endings/",
+      "https://www.reddit.com/r/horror/comments/1j6fh2y",
+      "https://www.reddit.com/r/horror/comments/1vekhsm/horrors_with_strong_vengeful_women/",
+      "https://www.reddit.com/r/horror/comments/1k7mb1a/horror_movies_with_happy_endings/",
+      "https://www.reddit.com/r/horror/comments/1qbjyod/horror_films_with_happy_endings/",
+      "https://www.reddit.com/r/horror/comments/1jft1nl/women_getting_revenge/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1vk1fbd/iso_horrorthriller_about_women_turning_the/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"recommend\" \"competent\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1qr0fcj/good_movie_with_happy_ending/",
+      "https://www.reddit.com/r/horror/comments/1neaooz",
+      "https://www.reddit.com/r/horror/comments/1qfr8du/horror_movies_with_happy_endings/",
+      "https://www.reddit.com/r/horror/comments/1j6fh2y",
+      "https://www.reddit.com/r/horror/comments/1vekhsm/horrors_with_strong_vengeful_women/",
+      "https://www.reddit.com/r/horror/comments/1k7mb1a/horror_movies_with_happy_endings/",
+      "https://www.reddit.com/r/horror/comments/1qbjyod/horror_films_with_happy_endings/",
+      "https://www.reddit.com/r/horror/comments/1jft1nl/women_getting_revenge/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1vk1fbd/iso_horrorthriller_about_women_turning_the/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"recommend\" \"woman\" \"revenge\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1qr0fcj/good_movie_with_happy_ending/",
+      "https://www.reddit.com/r/horror/comments/1neaooz",
+      "https://www.reddit.com/r/horror/comments/1qfr8du/horror_movies_with_happy_endings/",
+      "https://www.reddit.com/r/horror/comments/1j6fh2y",
+      "https://www.reddit.com/r/horror/comments/1vekhsm/horrors_with_strong_vengeful_women/",
+      "https://www.reddit.com/r/horror/comments/1k7mb1a/horror_movies_with_happy_endings/",
+      "https://www.reddit.com/r/horror/comments/1qbjyod/horror_films_with_happy_endings/",
+      "https://www.reddit.com/r/horror/comments/1jft1nl/women_getting_revenge/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1vk1fbd/iso_horrorthriller_about_women_turning_the/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/HorrorMovies \"recommend\" \"no gore\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1xdhvzh/what_is_your_favorite_j_horror/",
+      "https://www.reddit.com/r/Giallo/comments/1wnq7qp/recommendations/",
+      "https://www.reddit.com/r/J_Horror/comments/1w3qsjf/what_jhorror_should_i_watch/",
+      "https://www.reddit.com/r/horror/comments/1wmehrg/jhorror_movie_suggestions/",
+      "https://www.reddit.com/r/horror/comments/1wx45pf/horror_movies_that_arent_total_gore_fests/",
+      "https://www.reddit.com/r/movies/comments/1vc7p5j/scary_horror_movies_without_gore/",
+      "https://www.reddit.com/r/J_Horror/comments/1u2yvrs/hi_as_someone_who_wants_to_get_into_j_horror_what/",
+      "https://www.reddit.com/r/horror/comments/15dpkhy/jhorror_recommendations/",
+      "https://www.reddit.com/r/J_Horror/comments/1t0kgjj/horror_films_recommendations/",
+      "https://www.reddit.com/r/J_Horror/comments/1kq9o9m",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1wctpjb/good_horror_movies_without_much_gore/",
+      "https://www.reddit.com/r/J_Horror/comments/1gwvt8s"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"recommend\" \"J-horror\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1xdhvzh/what_is_your_favorite_j_horror/",
+      "https://www.reddit.com/r/Giallo/comments/1wnq7qp/recommendations/",
+      "https://www.reddit.com/r/J_Horror/comments/1w3qsjf/what_jhorror_should_i_watch/",
+      "https://www.reddit.com/r/horror/comments/1wmehrg/jhorror_movie_suggestions/",
+      "https://www.reddit.com/r/horror/comments/1wx45pf/horror_movies_that_arent_total_gore_fests/",
+      "https://www.reddit.com/r/movies/comments/1vc7p5j/scary_horror_movies_without_gore/",
+      "https://www.reddit.com/r/J_Horror/comments/1u2yvrs/hi_as_someone_who_wants_to_get_into_j_horror_what/",
+      "https://www.reddit.com/r/horror/comments/15dpkhy/jhorror_recommendations/",
+      "https://www.reddit.com/r/J_Horror/comments/1t0kgjj/horror_films_recommendations/",
+      "https://www.reddit.com/r/J_Horror/comments/1kq9o9m",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1wctpjb/good_horror_movies_without_much_gore/",
+      "https://www.reddit.com/r/J_Horror/comments/1gwvt8s"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror \"recommend\" \"giallo\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1xdhvzh/what_is_your_favorite_j_horror/",
+      "https://www.reddit.com/r/Giallo/comments/1wnq7qp/recommendations/",
+      "https://www.reddit.com/r/J_Horror/comments/1w3qsjf/what_jhorror_should_i_watch/",
+      "https://www.reddit.com/r/horror/comments/1wmehrg/jhorror_movie_suggestions/",
+      "https://www.reddit.com/r/horror/comments/1wx45pf/horror_movies_that_arent_total_gore_fests/",
+      "https://www.reddit.com/r/movies/comments/1vc7p5j/scary_horror_movies_without_gore/",
+      "https://www.reddit.com/r/J_Horror/comments/1u2yvrs/hi_as_someone_who_wants_to_get_into_j_horror_what/",
+      "https://www.reddit.com/r/horror/comments/15dpkhy/jhorror_recommendations/",
+      "https://www.reddit.com/r/J_Horror/comments/1t0kgjj/horror_films_recommendations/",
+      "https://www.reddit.com/r/J_Horror/comments/1kq9o9m",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1wctpjb/good_horror_movies_without_much_gore/",
+      "https://www.reddit.com/r/J_Horror/comments/1gwvt8s"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/ifyoulikeblank \"dreamlike\" \"movie\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/ifyoulikeblank/comments/s6ab1z",
+      "https://www.reddit.com/r/movies/comments/1rx3hit/is_there_such_thing_im_looking_for_really_sad/",
+      "https://www.reddit.com/r/MoviesThatFeelLike/comments/1wz0gyc/movies_that_express_sadness_sorrow_but_are/",
+      "https://www.reddit.com/r/horror/comments/108hw8w",
+      "https://www.reddit.com/r/HorrorMovies/comments/1id3ken",
+      "https://www.reddit.com/r/HorrorMovies/comments/1r68ng2/as_a_dad_of_two_small_children_ive_been_trying_to/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1hbj7nl",
+      "https://www.reddit.com/r/MoviesThatFeelLike/comments/1s3xekj/depressed_hopeless_soul_crushing/",
+      "https://www.reddit.com/r/CasualConversation/comments/vemy9s/does_anyone_know_any_sad_but_kinda_hopeful_movies/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1eh4g6x",
+      "https://www.reddit.com/r/MovieRecommendations/comments/1uqfc0c/creepydreamlike_movies_where_not_much_happens/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1frraso"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/ifyoulikeblank \"sad\" \"hopeful\" \"movies\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/ifyoulikeblank/comments/s6ab1z",
+      "https://www.reddit.com/r/movies/comments/1rx3hit/is_there_such_thing_im_looking_for_really_sad/",
+      "https://www.reddit.com/r/MoviesThatFeelLike/comments/1wz0gyc/movies_that_express_sadness_sorrow_but_are/",
+      "https://www.reddit.com/r/horror/comments/108hw8w",
+      "https://www.reddit.com/r/HorrorMovies/comments/1id3ken",
+      "https://www.reddit.com/r/HorrorMovies/comments/1r68ng2/as_a_dad_of_two_small_children_ive_been_trying_to/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1hbj7nl",
+      "https://www.reddit.com/r/MoviesThatFeelLike/comments/1s3xekj/depressed_hopeless_soul_crushing/",
+      "https://www.reddit.com/r/CasualConversation/comments/vemy9s/does_anyone_know_any_sad_but_kinda_hopeful_movies/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1eh4g6x",
+      "https://www.reddit.com/r/MovieRecommendations/comments/1uqfc0c/creepydreamlike_movies_where_not_much_happens/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1frraso"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/MovieSuggestions \"horror\" \"no\" \"children\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/ifyoulikeblank/comments/s6ab1z",
+      "https://www.reddit.com/r/movies/comments/1rx3hit/is_there_such_thing_im_looking_for_really_sad/",
+      "https://www.reddit.com/r/MoviesThatFeelLike/comments/1wz0gyc/movies_that_express_sadness_sorrow_but_are/",
+      "https://www.reddit.com/r/horror/comments/108hw8w",
+      "https://www.reddit.com/r/HorrorMovies/comments/1id3ken",
+      "https://www.reddit.com/r/HorrorMovies/comments/1r68ng2/as_a_dad_of_two_small_children_ive_been_trying_to/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1hbj7nl",
+      "https://www.reddit.com/r/MoviesThatFeelLike/comments/1s3xekj/depressed_hopeless_soul_crushing/",
+      "https://www.reddit.com/r/CasualConversation/comments/vemy9s/does_anyone_know_any_sad_but_kinda_hopeful_movies/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1eh4g6x",
+      "https://www.reddit.com/r/MovieRecommendations/comments/1uqfc0c/creepydreamlike_movies_where_not_much_happens/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1frraso"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/degoogle movie recommendations privacy",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/degoogle/comments/1x4q9wa/degoogle_a_guide_part_1_privacy_security_and_you/",
+      "https://www.reddit.com/r/degoogle/comments/1j4bqlk",
+      "https://www.reddit.com/r/degoogle/comments/1sg08xk/new_to_degoogling_can_i_get_away_with/",
+      "https://www.reddit.com/r/degoogle/comments/1rns0kh/pros_and_cons_of_degoogling_an_extensive_personal/",
+      "https://www.reddit.com/r/YouShouldKnow/comments/1vwdoop/ysk_its_easier_you_think_to_degoogle_and_get_more/",
+      "https://www.reddit.com/r/degoogle/comments/1mo90ab/degoogling_your_life_master_post/",
+      "https://www.reddit.com/r/degoogle/comments/1t4434x/in_order_to_degoogle_how_do_you_completely_avoid/",
+      "https://www.reddit.com/r/degoogle/comments/1v6kswj/privacy_of_reddit_and_other_apps/",
+      "https://www.reddit.com/r/degoogle/comments/1tkufyz/how_do_i_start_degoogling/",
+      "https://www.reddit.com/r/degoogle/comments/1votex6/my_degoogle_plan/",
+      "https://www.reddit.com/r/ProtonMail/s/uSwGa3ciK7",
+      "https://www.reddit.com/r/YouShouldKnow/comments/1o8qtrk/ysk_its_easier_to_think_to_degoogle_and_get_more/",
+      "https://www.reddit.com/r/degoogle/comments/1p0olos/slightly_degoogling/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/ifyoulikeblank movies \"sound design\" horror",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1w7m3kq/horror_movies_where_sound_plays_a_big_role/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1s8cymz/im_looking_for_horror_movies_where_sound_design/",
+      "https://www.reddit.com/r/horror/comments/1k6glht/what_are_some_horror_films_where_the_sound_design/",
+      "https://www.reddit.com/r/hometheater/comments/1rzj6ta/im_looking_for_horror_movies_where_sound_design/",
+      "https://www.reddit.com/r/horror/comments/1wqzbyf/recomend_me_movies_with_impactful_sound_design/",
+      "https://www.reddit.com/r/horror/comments/1o7x7ff",
+      "https://www.reddit.com/r/horror/comments/1t3g94d/looking_for_sound_focused_horror_undertone/",
+      "https://www.reddit.com/r/horror/comments/1lu1yyr/what_horror_movie_has_the_best_or_most/",
+      "https://www.reddit.com/r/horror/comments/1svw7wk/what_horror_film_uses_sound_the_best/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/ifyoulikeblank movies \"melancholic\" \"horror\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/ifyoulikeblank/comments/1ndhkmq/iil_psychological_horror_films_like_us_hereditary/",
+      "https://www.reddit.com/r/ifyoulikeblank/comments/x4l2nv",
+      "https://www.reddit.com/r/ifyoulikeblank/comments/mslc2r",
+      "https://www.reddit.com/r/horrorfilms/comments/1v5i5ct/depressing_horror_movies/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1v5i295/depressing_horror_movies_pls/",
+      "https://www.reddit.com/r/MoviesThatFeelLike/comments/1tk393j/movies_with_this_kind_of_melancholia/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/qs0lth",
+      "https://www.reddit.com/r/horror/comments/1x4lc0c/similarities_and_recommendations_below/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/ifyoulikeblank movies \"sad\" \"hopeful\"",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/MoviesThatFeelLike/comments/1wz0gyc/movies_that_express_sadness_sorrow_but_are/",
+      "https://www.reddit.com/r/Cinema/comments/1x8peag/does_anyone_have_any_film_recommendations_for/",
+      "https://www.reddit.com/r/movies/comments/1rx3hit/is_there_such_thing_im_looking_for_really_sad/",
+      "https://www.reddit.com/r/MoviesThatFeelLike/comments/1w7g998/movies_that_end_tragically_but_still_hopeful/",
+      "https://www.reddit.com/r/MoviesThatFeelLike/comments/1s3xekj/depressed_hopeless_soul_crushing/",
+      "https://www.reddit.com/r/MovieSuggestions/comments/1tqo3y9/good_movie_to_snap_you_out_of_a_depressive_episode/",
+      "https://www.reddit.com/r/ifyoulikeblank/comments/101au3s",
+      "https://www.reddit.com/r/ifyoulikeblank/comments/17ryn4p",
+      "https://www.reddit.com/r/movies/comments/17zg32q",
+      "https://www.reddit.com/r/CasualConversation/comments/vemy9s/does_anyone_know_any_sad_but_kinda_hopeful_movies/",
+      "https://www.reddit.com/r/ifyoulikeblank/comments/18rk2nl",
+      "https://www.reddit.com/r/ifyoulikeblank/comments/16saz05"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/horror movies \"snow\" \"creature\" recommendations",
+    "engine": "web search fallback (provider not asserted to be Google)",
+    "date": "2026-10-24",
+    "outcome": "Search results retrieved; batch result URLs shared between batched queries",
+    "useful_urls": [
+      "https://www.reddit.com/r/horror/comments/1wyhke5/snowy_horror/",
+      "https://www.reddit.com/r/horror/comments/1vygr9y/looking_for_horror_movie_in_snowy_weathersetting/",
+      "https://www.reddit.com/r/horror/comments/1rcio8r/snowfilled_horror/",
+      "https://www.reddit.com/r/HorrorMovies/comments/1ixey2m",
+      "https://www.reddit.com/r/horror/comments/1w3dgs3/overlooked_winterisolated_horror_recommendations/",
+      "https://www.reddit.com/r/horror/comments/1plv8cu/looking_for_some_movies_with_snow/",
+      "https://www.reddit.com/r/horror/comments/17u4oxj/winter_horror_non_holiday/"
+    ]
+  }
+]

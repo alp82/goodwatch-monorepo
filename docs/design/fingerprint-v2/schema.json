@@ -1,0 +1,4524 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GoodWatch title analysis V2 draft 2",
+  "description": "Proposal only. Registry definitions live in definition.json. Omitted attributes are not assessed.",
+  "type": "object",
+  "properties": {
+    "format_version": {
+      "const": "2.0.0-draft.2"
+    },
+    "document_status": {
+      "enum": [
+        "illustrative",
+        "generated",
+        "reviewed"
+      ]
+    },
+    "title": {
+      "type": "object",
+      "properties": {
+        "catalog_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "release_year": {
+          "type": "integer"
+        },
+        "media_type": {
+          "enum": [
+            "movie",
+            "show"
+          ]
+        }
+      },
+      "required": [
+        "catalog_id",
+        "name",
+        "release_year",
+        "media_type"
+      ],
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rubric_version": {
+          "const": "2.0.0-draft.2"
+        },
+        "review_status": {
+          "enum": [
+            "unreviewed",
+            "editorial_reviewed",
+            "illustrative_only"
+          ]
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "generated_at",
+        "generator",
+        "rubric_version",
+        "review_status"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "catalog_refs": {
+      "type": "object",
+      "properties": {
+        "catalog_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "availability_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "catalog_snapshot_id",
+        "availability_snapshot_id"
+      ],
+      "additionalProperties": false
+    },
+    "analyses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/analysis"
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "format_version",
+    "document_status",
+    "title",
+    "provenance",
+    "evidence",
+    "catalog_refs",
+    "analyses"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "assessment": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "assessed",
+            "unknown",
+            "not_applicable",
+            "not_assessed"
+          ]
+        },
+        "value": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            null
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "status",
+        "value",
+        "confidence",
+        "evidence_refs"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "assessed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10
+              },
+              "confidence": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "null"
+              },
+              "confidence": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "description": "Integer assessment under the field-specific rubric in definition.json. Zero is not universal absence: centrality zero is no narrative importance; quality/suitability/explicitness/membership use their own anchors."
+    },
+    "fact": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "assessed",
+            "unknown",
+            "not_applicable",
+            "not_assessed"
+          ]
+        },
+        "value": {
+          "type": [
+            "string",
+            "boolean",
+            "number",
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "status",
+        "value",
+        "evidence_refs"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "assessed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "movie",
+            "whole_show",
+            "season",
+            "episode"
+          ]
+        },
+        "season_number": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "episode_number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date"
+        },
+        "coverage_description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "covered_seasons": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "covered_episode_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "edition_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "as_of",
+        "coverage_description",
+        "edition_id"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "season"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "season_number"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "episode"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "season_number",
+              "episode_number"
+            ]
+          }
+        }
+      ]
+    },
+    "advisory": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "assessed",
+            "unknown",
+            "not_applicable",
+            "not_assessed"
+          ]
+        },
+        "presence": {
+          "enum": [
+            "present",
+            "absent",
+            null
+          ]
+        },
+        "coverage": {
+          "enum": [
+            "full_work",
+            "targeted_verified",
+            "partial",
+            "insufficient"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            null
+          ]
+        },
+        "depiction_modes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "on_screen",
+              "off_screen",
+              "implied",
+              "verbal_reference"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "intensity": {
+          "$ref": "#/$defs/assessment"
+        },
+        "frequency": {
+          "$ref": "#/$defs/assessment"
+        },
+        "explicitness": {
+          "$ref": "#/$defs/assessment"
+        },
+        "centrality": {
+          "$ref": "#/$defs/assessment"
+        },
+        "duration_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spoiler_sensitive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "presence",
+        "coverage",
+        "confidence",
+        "depiction_modes",
+        "evidence_refs",
+        "spoiler_sensitive"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "assessed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "presence": {
+                "enum": [
+                  "present",
+                  "absent"
+                ]
+              },
+              "confidence": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "presence": {
+                "type": "null"
+              },
+              "confidence": {
+                "type": "null"
+              },
+              "depiction_modes": {
+                "maxItems": 0
+              },
+              "duration_seconds": {
+                "type": "null"
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "intensity"
+                  ]
+                },
+                {
+                  "required": [
+                    "frequency"
+                  ]
+                },
+                {
+                  "required": [
+                    "explicitness"
+                  ]
+                },
+                {
+                  "required": [
+                    "centrality"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "presence": {
+                "const": "absent"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "coverage": {
+                "enum": [
+                  "full_work",
+                  "targeted_verified"
+                ]
+              },
+              "depiction_modes": {
+                "maxItems": 0
+              },
+              "duration_seconds": {
+                "enum": [
+                  0,
+                  null
+                ]
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "intensity"
+                  ]
+                },
+                {
+                  "required": [
+                    "frequency"
+                  ]
+                },
+                {
+                  "required": [
+                    "explicitness"
+                  ]
+                },
+                {
+                  "required": [
+                    "centrality"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "presence": {
+                "const": "present"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "depiction_modes": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "user_draft",
+            "catalog",
+            "full_work_review",
+            "review",
+            "plot_summary",
+            "content_guide",
+            "creator_statement",
+            "critical_interpretation",
+            "editorial_assessment",
+            "model_prior"
+          ]
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessed_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "coverage_description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supports_verified_absence": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "locator",
+        "accessed_at",
+        "coverage_description",
+        "supports_verified_absence"
+      ],
+      "additionalProperties": false
+    },
+    "world_context": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layer_type": {
+          "enum": [
+            "primary",
+            "simulation",
+            "virtual",
+            "dream",
+            "parallel",
+            "nested",
+            "unspecified"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "era": {
+          "enum": [
+            "prehistoric",
+            "ancient",
+            "medieval",
+            "early_modern",
+            "nineteenth_century",
+            "early_twentieth_century",
+            "late_twentieth_century",
+            "twenty_first_century",
+            "future",
+            "timeless",
+            "mixed",
+            "unspecified"
+          ]
+        },
+        "calendar_system": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "start_year": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "end_year": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "relative_time": {
+          "enum": [
+            "distant_past",
+            "recent_past",
+            "contemporary_at_release",
+            "near_future",
+            "far_future",
+            "mixed",
+            "unspecified"
+          ]
+        },
+        "places": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "concept_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "concept_id",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "historical_contexts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "centrality": {
+          "$ref": "#/$defs/assessment"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "spoiler_sensitive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "layer_type",
+        "label",
+        "era",
+        "relative_time",
+        "evidence_refs",
+        "spoiler_sensitive"
+      ],
+      "additionalProperties": false
+    },
+    "cultural_context": {
+      "type": "object",
+      "properties": {
+        "relation": {
+          "enum": [
+            "depicted_culture",
+            "artistic_influence",
+            "industry_tradition",
+            "critical_interpretation"
+          ]
+        },
+        "concept_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attribution": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "centrality": {
+          "$ref": "#/$defs/assessment"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "spoiler_sensitive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "relation",
+        "concept_id",
+        "attribution",
+        "centrality",
+        "evidence_refs",
+        "spoiler_sensitive"
+      ],
+      "additionalProperties": false
+    },
+    "seasonal_context": {
+      "type": "object",
+      "properties": {
+        "relation": {
+          "enum": [
+            "depicted_season",
+            "depicted_holiday",
+            "holiday_theme",
+            "viewing_association"
+          ]
+        },
+        "concept_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "calendar": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hemisphere": {
+          "enum": [
+            "northern",
+            "southern",
+            "not_applicable",
+            "unspecified"
+          ]
+        },
+        "assessment": {
+          "$ref": "#/$defs/assessment"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "relation",
+        "concept_id",
+        "calendar",
+        "hemisphere",
+        "assessment",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "representation_annotation": {
+      "type": "object",
+      "properties": {
+        "concept_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "character_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "protagonist",
+            "co_protagonist",
+            "supporting",
+            "minor",
+            "ensemble"
+          ]
+        },
+        "establishment": {
+          "enum": [
+            "explicit_text",
+            "attributed_source"
+          ]
+        },
+        "portrayal_notes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "spoiler_sensitive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "concept_id",
+        "character_label",
+        "role",
+        "establishment",
+        "portrayal_notes",
+        "evidence_refs",
+        "spoiler_sensitive"
+      ],
+      "additionalProperties": false
+    },
+    "audience_context": {
+      "type": "object",
+      "properties": {
+        "context_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "audience": {
+          "type": "object",
+          "properties": {
+            "minimum_age": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "maximum_age": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "age_basis": {
+              "enum": [
+                "explicit_range",
+                "adults",
+                "mixed_ages",
+                "unspecified"
+              ]
+            },
+            "language_context": {
+              "type": "string",
+              "minLength": 1
+            },
+            "familiarity": {
+              "enum": [
+                "first_watch",
+                "rewatch",
+                "mixed",
+                "unspecified"
+              ]
+            },
+            "content_tolerances": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "required": [
+            "minimum_age",
+            "maximum_age",
+            "age_basis",
+            "language_context",
+            "familiarity",
+            "content_tolerances"
+          ],
+          "additionalProperties": false
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "fit": {
+          "$ref": "#/$defs/assessment"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "context_id",
+        "audience",
+        "assumptions",
+        "fit",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "reception_observation": {
+      "type": "object",
+      "properties": {
+        "concept_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observation_type": {
+          "enum": [
+            "measured_fact",
+            "attributed_judgment",
+            "editorial_hypothesis"
+          ]
+        },
+        "audience_or_critic_population": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "concept_id",
+        "claim",
+        "observation_type",
+        "audience_or_critic_population",
+        "observed_at",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "temporal_segment": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "end_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "spoiler_sensitive": {
+          "type": "boolean"
+        },
+        "experience": {
+          "type": "object",
+          "properties": {
+            "adrenaline": {
+              "$ref": "#/$defs/assessment"
+            },
+            "tension": {
+              "$ref": "#/$defs/assessment"
+            },
+            "fear": {
+              "$ref": "#/$defs/assessment"
+            },
+            "perceived_threat": {
+              "$ref": "#/$defs/assessment"
+            },
+            "romantic_feeling": {
+              "$ref": "#/$defs/assessment"
+            },
+            "sensuality": {
+              "$ref": "#/$defs/assessment"
+            },
+            "warmth": {
+              "$ref": "#/$defs/assessment"
+            },
+            "wholesomeness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "wonder": {
+              "$ref": "#/$defs/assessment"
+            },
+            "pathos": {
+              "$ref": "#/$defs/assessment"
+            },
+            "melancholy": {
+              "$ref": "#/$defs/assessment"
+            },
+            "uncanniness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "catharsis": {
+              "$ref": "#/$defs/assessment"
+            },
+            "nostalgia": {
+              "$ref": "#/$defs/assessment"
+            },
+            "hopefulness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "bleakness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "emotional_intensity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "stress": {
+              "$ref": "#/$defs/assessment"
+            },
+            "uplift": {
+              "$ref": "#/$defs/assessment"
+            },
+            "thought_provocation": {
+              "$ref": "#/$defs/assessment"
+            },
+            "playfulness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "sentimentality": {
+              "$ref": "#/$defs/assessment"
+            },
+            "emotional_restraint": {
+              "$ref": "#/$defs/assessment"
+            },
+            "bittersweetness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "absurdity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "escapism": {
+              "$ref": "#/$defs/assessment"
+            },
+            "wish_fulfillment": {
+              "$ref": "#/$defs/assessment"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "storytelling": {
+          "type": "object",
+          "properties": {
+            "plot_velocity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "gradual_development": {
+              "$ref": "#/$defs/assessment"
+            },
+            "intrigue": {
+              "$ref": "#/$defs/assessment"
+            },
+            "plot_complexity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "interpretive_ambiguity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "twist_frequency": {
+              "$ref": "#/$defs/assessment"
+            },
+            "twist_impact": {
+              "$ref": "#/$defs/assessment"
+            },
+            "nonlinearity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "multiple_timelines": {
+              "$ref": "#/$defs/assessment"
+            },
+            "multiple_viewpoints": {
+              "$ref": "#/$defs/assessment"
+            },
+            "unreliable_narration": {
+              "$ref": "#/$defs/assessment"
+            },
+            "unreliable_reality": {
+              "$ref": "#/$defs/assessment"
+            },
+            "self_reference": {
+              "$ref": "#/$defs/assessment"
+            },
+            "fourth_wall_breaking": {
+              "$ref": "#/$defs/assessment"
+            },
+            "voiceover": {
+              "$ref": "#/$defs/assessment"
+            },
+            "dream_sequences": {
+              "$ref": "#/$defs/assessment"
+            },
+            "observational_mode": {
+              "$ref": "#/$defs/assessment"
+            },
+            "slice_of_life": {
+              "$ref": "#/$defs/assessment"
+            },
+            "exposition_load": {
+              "$ref": "#/$defs/assessment"
+            },
+            "information_withholding": {
+              "$ref": "#/$defs/assessment"
+            },
+            "philosophical_inquiry": {
+              "$ref": "#/$defs/assessment"
+            },
+            "educational_intent": {
+              "$ref": "#/$defs/assessment"
+            },
+            "formal_challenge": {
+              "$ref": "#/$defs/assessment"
+            },
+            "homage": {
+              "$ref": "#/$defs/assessment"
+            },
+            "pastiche": {
+              "$ref": "#/$defs/assessment"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "label",
+        "start_fraction",
+        "end_fraction",
+        "spoiler_sensitive"
+      ],
+      "additionalProperties": false
+    },
+    "analysis": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "fingerprint": {
+          "type": "object",
+          "properties": {
+            "experience": {
+              "type": "object",
+              "properties": {
+                "adrenaline": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Excitement and visceral exhilaration during viewing."
+                },
+                "tension": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Suspense, dread, or anticipation of an uncertain outcome."
+                },
+                "fear": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Fright or horror experienced, independently of horror genre membership."
+                },
+                "perceived_threat": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Sense that characters face harm, including harm never shown."
+                },
+                "romantic_feeling": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Romantic affection or longing evoked in the viewer."
+                },
+                "sensuality": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Erotic atmosphere or sexual tension, independently of explicit sexual depiction."
+                },
+                "warmth": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Affectionate, kind, or emotionally welcoming tone."
+                },
+                "wholesomeness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Reassurance through care, kindness, and emotional safety."
+                },
+                "wonder": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Awe, amazement, or fascination with discovery."
+                },
+                "pathos": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Acute pity, sorrow, or tragic emotional impact."
+                },
+                "melancholy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Lingering, reflective sadness."
+                },
+                "uncanniness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Unease from the strangely familiar or almost natural."
+                },
+                "catharsis": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Emotional release after accumulated tension or feeling."
+                },
+                "nostalgia": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Longing for a remembered or imagined past evoked by the work; not release age."
+                },
+                "hopefulness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Optimistic outlook or belief in positive possibilities."
+                },
+                "bleakness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Pessimistic, despairing, or nihilistic outlook."
+                },
+                "emotional_intensity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Overall strength of emotional engagement, regardless of positive or negative tone."
+                },
+                "stress": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Sustained pressure, discomfort, or anxiety experienced during viewing."
+                },
+                "uplift": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Encouragement, joy, or improved spirits evoked."
+                },
+                "thought_provocation": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Invitation to reflect on ideas, ethics, or interpretations beyond the immediate plot."
+                },
+                "playfulness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Light, mischievous, or freely inventive tone."
+                },
+                "sentimentality": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Overt appeal to tender feelings and emotional attachment."
+                },
+                "emotional_restraint": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Understated expression and withholding of overt emotional display."
+                },
+                "bittersweetness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Positive and painful feelings intertwined rather than merely appearing separately."
+                },
+                "absurdity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Experience of incongruity, illogic, or strangeness, whether humorous or unsettling."
+                },
+                "escapism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Immersion away from everyday concerns; not limited to fantasy settings."
+                },
+                "wish_fulfillment": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Invitation to imagine desired powers, relationships, status, or ways of life."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "humor": {
+              "type": "object",
+              "properties": {
+                "overall": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Overall amount and strength of comedy, independently of individual humor styles."
+                },
+                "situational": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humor from circumstances, misunderstandings, and complications; no episodic-format requirement."
+                },
+                "wit_wordplay": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humor from verbal cleverness, puns, or linguistic ambiguity."
+                },
+                "physical": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humor from bodily action, slapstick, or visual physical mishaps."
+                },
+                "cringe": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humor from embarrassment or uncomfortable social situations."
+                },
+                "absurdist": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humor from nonsense, illogic, or bizarre juxtapositions."
+                },
+                "satire": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humorous critique of institutions, behavior, or social conventions."
+                },
+                "parody": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humorous imitation of a recognizable work, genre, or style."
+                },
+                "dark": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humor about death, suffering, taboo, or tragedy."
+                },
+                "running_gags": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "frequency rubric: Recurring jokes whose repetition or variation creates humor."
+                },
+                "meta": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humor about storytelling, production, audiences, or the work itself."
+                },
+                "deadpan": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humor delivered with apparent seriousness or minimal emotional reaction."
+                },
+                "gross_out": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Humor relying on bodily fluids, disgust, or vulgar physical material."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "themes": {
+              "type": "object",
+              "properties": {
+                "crime": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Criminal acts and their consequences as subject matter."
+                },
+                "mystery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Uncovering an important unknown as a central concern."
+                },
+                "war": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Armed conflict and its human or societal consequences."
+                },
+                "politics": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Governance, political institutions, and struggles for political power."
+                },
+                "radicalization": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A process of adopting increasingly extreme ideological commitments or endorsing extremist action. Distinct from existing political beliefs, ordinary persuasion, rebellion, group secrecy, and coercive group control; those alone do not establish radicalization."
+                },
+                "family": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Family bonds, conflict, obligations, and belonging."
+                },
+                "psychology": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Mental processes, internal conflict, or perception as subject matter."
+                },
+                "entertainment_industry": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: The business and practice of entertainment and celebrity."
+                },
+                "social_critique": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Examination or criticism of social arrangements and norms."
+                },
+                "class": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Social class, economic inequality, and mobility."
+                },
+                "capitalism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Economic systems organized around capital, profit, and ownership."
+                },
+                "consumerism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Exploration or critique of acquiring goods, consumption, brands, or possessions as a source of identity, status, or fulfillment. Distinct from capitalism as an economic system; buying or using a product alone is insufficient."
+                },
+                "technological_change": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Exploration of societal or personal effects of technological development, adoption, or displacement, including effects on work, relationships, institutions, and identity. Gadget presence, advanced technology, or science alone is insufficient."
+                },
+                "human_nature": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Explicit thematic exploration of what humans are like: capacities, impulses, morality, cooperation, cruelty, or tensions between nature and social conditioning. Ordinary human characters, emotion, or drama alone is insufficient; not a synonym for personal identity, consciousness, or existential meaning."
+                },
+                "faith_and_spirituality": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Religious belief, spiritual practice, or metaphysical meaning."
+                },
+                "business": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Commercial organizations, enterprise, and work decisions."
+                },
+                "finance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Money management, financial systems, investing, or debt."
+                },
+                "environment": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Relationships between human activity and ecosystems."
+                },
+                "science": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Scientific inquiry and its ideas, practice, or consequences."
+                },
+                "popular_culture": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Popular media, celebrity, fandom, or shared cultural trends."
+                },
+                "survival": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Meeting essential needs or overcoming threats to continued life."
+                },
+                "adventure": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Exploration, risk, and discovery outside ordinary life."
+                },
+                "hacking": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Intrusion into or manipulation of computer systems."
+                },
+                "artificial_intelligence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Artificial agents and their interaction with the world."
+                },
+                "consciousness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: The nature of subjective experience and personhood."
+                },
+                "identity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Formation, discovery, concealment, or change of personal identity."
+                },
+                "existential_meaning": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Purpose, freedom, mortality, and the meaning of existence."
+                },
+                "grief": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Responses to loss and mourning."
+                },
+                "trauma": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Lasting effects of overwhelming or harmful experiences."
+                },
+                "recovery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Processes of rebuilding after trauma, illness, or crisis."
+                },
+                "mental_health": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Mental health conditions, care, and lived experience."
+                },
+                "addiction": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Dependency and its effects on people and relationships."
+                },
+                "addiction_recovery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Attempts to overcome dependency and maintain recovery."
+                },
+                "trust_and_betrayal": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Reliance on others, deception, and broken trust."
+                },
+                "coming_of_age": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Development toward adult identity, agency, or responsibility."
+                },
+                "coming_out": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Disclosure or recognition of LGBTQ identity in a social context."
+                },
+                "sexuality": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Sexual identity, desire, and their social meaning."
+                },
+                "gender_identity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Gender identity and its personal or social implications. Distinct from social expectations about gender roles and from sexism; do not infer identity from conformity to or rejection of a role."
+                },
+                "gender_roles": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Exploration of social expectations, norms, or performances of masculinity, femininity, and gendered roles. Distinct from a person's gender identity and from sexism as discrimination; either may coexist without implying the other."
+                },
+                "immigration": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Migration across borders and the experience of settlement."
+                },
+                "displacement": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Loss of home or community through conflict, coercion, or other forces."
+                },
+                "gentrification": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Neighborhood change associated with investment and displacement."
+                },
+                "surveillance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Monitoring, privacy, and control through observation."
+                },
+                "disease_and_pandemics": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Disease, epidemics, or public-health responses."
+                },
+                "climate_change": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Climate processes, human causes, or consequences."
+                },
+                "inherited_wealth": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Inheritance, dynastic wealth, and intergenerational economic advantage."
+                },
+                "social_media": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Online social platforms and their effects on life."
+                },
+                "public_shaming": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Public condemnation, reputational punishment, or social exclusion."
+                },
+                "justice": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Fairness, accountability, punishment, and redress."
+                },
+                "guilt": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Responsibility, remorse, and moral burden."
+                },
+                "forgiveness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Letting go of blame or reconciling after harm."
+                },
+                "loyalty": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Commitment to people, groups, or principles under pressure."
+                },
+                "belonging": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Acceptance, community, and finding a place among others."
+                },
+                "loneliness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Isolation and unmet desire for connection."
+                },
+                "ambition": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Pursuit of achievement, status, or recognition."
+                },
+                "obsession": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Consuming fixation and its consequences."
+                },
+                "labor": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Working conditions, worker identity, organizing, and exploitation."
+                },
+                "colonialism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Colonial domination, resistance, and its legacies."
+                },
+                "racism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Racial discrimination and its personal or structural consequences."
+                },
+                "sexism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Discrimination or domination based on sex or gender."
+                },
+                "caregiving": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Responsibility for another person's everyday support and wellbeing."
+                },
+                "parenthood": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Becoming or being a parent and its consequences."
+                },
+                "aging": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Later life, changing capacities, and social experiences of aging."
+                },
+                "midlife": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Reassessment and transitions in middle adulthood."
+                },
+                "retirement": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Leaving paid work and adjusting to life afterward."
+                },
+                "early_adulthood": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Independence, work, and relationships in early adult life."
+                },
+                "education": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Learning, schooling, and educational institutions."
+                },
+                "artistic_creation": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Making art and the motivations or struggles involved."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "genres": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity organized substantially around physical action and conflict."
+                },
+                "adventure": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity organized around journeys, exploration, and peril."
+                },
+                "comedy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity organized around humor."
+                },
+                "drama": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity organized around sustained human conflict and emotional development."
+                },
+                "thriller": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity organized around suspense, danger, and escalating uncertainty."
+                },
+                "horror": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity organized around fear, dread, or horror."
+                },
+                "science_fiction": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity involving speculative science, technology, or societies."
+                },
+                "fantasy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity involving supernatural or magical premises."
+                },
+                "romance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity centered on a romantic relationship and its development."
+                },
+                "mystery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity centered on uncovering an unknown or solving a puzzle."
+                },
+                "crime": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity centered on crime, criminals, or criminal investigation."
+                },
+                "western": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity drawing on frontier-western conventions."
+                },
+                "neo_western": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Western conventions adapted to a modern setting."
+                },
+                "giallo": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity drawing on stylized Italian mystery-thriller and horror conventions."
+                },
+                "kaiju": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity centered on giant monsters and their impact."
+                },
+                "disaster": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity organized around a major catastrophe."
+                },
+                "superhero": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity drawing on superhero narrative conventions; powers alone do not establish membership."
+                },
+                "zombie": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity organized around zombies or zombie-like contagion."
+                },
+                "slasher": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Horror genre identity organized around a killer stalking and attacking victims."
+                },
+                "creature_feature": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity organized around encounters with threatening creatures."
+                },
+                "neo_noir": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Modern use of noir conventions such as fatalism, moral ambiguity, and criminal intrigue."
+                },
+                "space_western": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Combination of western conventions and a spacefaring setting."
+                },
+                "sword_and_sorcery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Fantasy adventure organized around personal peril, swordplay, and sorcery."
+                },
+                "cozy_mystery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Mystery conventions with a reassuring social setting and limited graphic menace."
+                },
+                "romantic_comedy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Romance and comedy jointly organize the work."
+                },
+                "melodrama": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre mode built around heightened emotional conflict and expressive plotting."
+                },
+                "musical": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity in which musical performance is integral to storytelling."
+                },
+                "war": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity substantially organized around warfare."
+                },
+                "historical_drama": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Dramatic genre identity grounded in a past historical setting."
+                },
+                "biographical": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Genre identity organized around the life of a real person."
+                },
+                "true_crime": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Factual treatment of actual crime; fictional crime is insufficient."
+                },
+                "psychological_thriller": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Thriller conventions organized around perception, manipulation, or mental conflict."
+                },
+                "conspiracy_thriller": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Thriller conventions organized around concealed coordination and institutional danger."
+                },
+                "survival_thriller": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Thriller conventions organized around immediate survival under sustained threat."
+                },
+                "legal_thriller": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Thriller conventions organized around legal conflict and proceedings."
+                },
+                "police_procedural": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Crime conventions emphasizing investigative procedure and institutional police work."
+                },
+                "gangster": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Crime conventions emphasizing organized criminal groups and their internal lives."
+                },
+                "whodunit": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Mystery conventions organized around identifying who committed a crime."
+                },
+                "puzzle_box": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Mystery conventions inviting reconstruction of deliberately concealed narrative rules or structure."
+                },
+                "space_opera": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Science-fiction conventions emphasizing large-scale space adventure and heightened conflict."
+                },
+                "epic_fantasy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Fantasy conventions emphasizing expansive worlds, large stakes, and extended quests or conflicts."
+                },
+                "urban_fantasy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Fantasy conventions combined with a recognizably urban, usually modern social environment."
+                },
+                "dark_fantasy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "membership rubric: Fantasy conventions combined with a threatening or macabre horror-inflected atmosphere."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "narrative_engines": {
+              "type": "object",
+              "properties": {
+                "investigation": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Characters gather evidence to explain an event or identify responsibility."
+                },
+                "pursuit": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An extended chase or hunt organizes the story."
+                },
+                "rescue": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Saving someone from captivity or danger organizes the story."
+                },
+                "escape": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Getting out of confinement or an unsafe situation organizes the story."
+                },
+                "quest": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A journey toward a defined objective organizes the story."
+                },
+                "competition": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A contest with rivals and an outcome organizes the story."
+                },
+                "relationship_development": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Changes in a relationship organize the story."
+                },
+                "everyday_life": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Ordinary routines and small events organize the story."
+                },
+                "survival": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Remaining alive under threatening conditions organizes the story."
+                },
+                "heist": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Planning, carrying out, or dealing with a theft organizes the story."
+                },
+                "espionage": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Secret intelligence gathering or covert state operations organize the story."
+                },
+                "military_operation": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An organized military mission structures the story."
+                },
+                "legal_case": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Legal proceedings or preparation for them structure the story."
+                },
+                "political_struggle": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Pursuit or exercise of political power structures the story."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "tropes": {
+              "type": "object",
+              "properties": {
+                "underdog_rise": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An initially disadvantaged character gains standing or succeeds against stronger opposition."
+                },
+                "revenge": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Retaliation for a perceived wrong drives an arc."
+                },
+                "vigilantism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Characters enforce their own justice outside formal authority."
+                },
+                "rags_to_riches": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A character moves from poverty to substantial wealth."
+                },
+                "fall_from_grace": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A character loses status, reputation, or moral standing."
+                },
+                "redemption": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A character attempts to make amends or change after wrongdoing."
+                },
+                "mistaken_identity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A character is consequentially taken to be someone else."
+                },
+                "memory_loss": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Consequential lost or inaccessible memories, missing periods of time, or inability to recall one's own actions. Includes such gaps without a clinical amnesia diagnosis; does not require permanent loss. Ordinary forgetfulness and information withheld only from the audience are insufficient."
+                },
+                "body_swap": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Characters exchange bodies or consciousness across bodies."
+                },
+                "fish_out_of_water": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An unfamiliar social or physical environment challenges a character."
+                },
+                "secret_identity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Concealing an identity or maintaining a double life drives the story."
+                },
+                "road_trip": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An overland journey with encounters along the way structures the story."
+                },
+                "tournament": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A sequence of competitive rounds structures an arc."
+                },
+                "training": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Learning or practice builds abilities toward a later challenge."
+                },
+                "race_against_time": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A consequential deadline structures the conflict."
+                },
+                "single_night": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: The main action is concentrated in one eventful night."
+                },
+                "locked_room": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An apparently inaccessible crime scene creates the central puzzle."
+                },
+                "conspiracy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Hidden coordination among powerful actors drives the plot."
+                },
+                "apocalypse_survival": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Surviving societal collapse or a world-ending event drives the plot."
+                },
+                "haunted_house": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An inhabited or visited dwelling is the focal site of a haunting."
+                },
+                "chosen_one": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A character is singled out for a special, consequential role."
+                },
+                "prophecy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Predictions of destiny shape choices and events."
+                },
+                "macguffin_quest": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Pursuit of an object whose plot function exceeds its intrinsic characterization."
+                },
+                "final_survivor": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A surviving focal character confronts a threat after others are eliminated."
+                },
+                "apparent_death": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A character appears to die but is later revealed to be alive."
+                },
+                "mentor_death": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A mentor dies and the death matters to the mentee's arc."
+                },
+                "doppelganger": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A double or lookalike produces meaningful events, identity confusion, recurring humor, or conflict. Antagonism or conflict is not required. Incidental resemblance without a narrative use is insufficient."
+                },
+                "hidden_antagonist_reveal": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A character's antagonistic role is concealed and later revealed."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "relationships": {
+              "type": "object",
+              "properties": {
+                "romantic_development": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Formation or deepening of a romantic relationship matters to the story."
+                },
+                "established_couple": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An existing romantic partnership matters to the story."
+                },
+                "marriage": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Marriage and its obligations or conflicts matter to the story."
+                },
+                "breakup_or_divorce": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Ending a partnership matters to the story."
+                },
+                "partner_bereavement": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Loss of a romantic partner matters to the story."
+                },
+                "love_triangle": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Competing romantic attachments among three people matter to the story."
+                },
+                "enemies_to_lovers": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An antagonistic relationship develops into romance."
+                },
+                "forbidden_romance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A romantic relationship faces a consequential social or institutional prohibition."
+                },
+                "slow_burn_romance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Romantic development unfolds gradually through delayed intimacy or commitment."
+                },
+                "queer_romance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An explicitly depicted LGBTQ romantic relationship matters to the story."
+                },
+                "workplace_romance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A romantic relationship between coworkers matters to the story."
+                },
+                "age_gap_romance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A substantial age difference is consequential to a romantic relationship."
+                },
+                "friendship": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Non-romantic bonds of friendship matter to the story."
+                },
+                "male_friendship": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Friendship among men matters to the story."
+                },
+                "female_friendship": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Friendship among women matters to the story."
+                },
+                "mentor_mentee": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Guidance and learning between mentor and mentee matter to the story."
+                },
+                "student_teacher": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A formal educational student-teacher relationship matters to the story; no romantic implication."
+                },
+                "rivalry": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Competition or mutual opposition between characters matters to the story."
+                },
+                "forced_proximity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Circumstances oblige characters to remain close or share space."
+                },
+                "adversaries_cooperate": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Opposing characters must work together."
+                },
+                "found_family": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Chosen bonds serve a family-like role in the story."
+                },
+                "family_conflict": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Sustained conflict or harmful dysfunction within a family matters to the story."
+                },
+                "intergenerational": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Relationships across generations matter to the story."
+                },
+                "generational_trauma": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Trauma transmitted or repeated across generations matters to the story."
+                },
+                "parent_child": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: The relationship between parent and child matters to the story."
+                },
+                "siblings": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Sibling relationships matter to the story."
+                },
+                "caregiver_dependent": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Care and dependence between characters matter to the story."
+                },
+                "human_animal_companionship": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An emotional bond between a person and animal matters to the story."
+                },
+                "coercive_relationship": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Manipulation, coercion, or control within an interpersonal relationship matters to the story. Systematic control of members by a group is assessed separately as coercive_group_control; neither automatically implies the other."
+                },
+                "coercive_group_control": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A group or leader systematically controls members through intimidation, isolation, dependency, punishment, or suppression of autonomy. Distinct from interpersonal coercion, voluntary discipline, secrecy, and radicalization; any of these may coexist but does not imply group control."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "characters": {
+              "type": "object",
+              "properties": {
+                "ensemble": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Several focal characters share narrative attention and agency."
+                },
+                "antihero": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A focal character departs substantially from conventional heroic ethics or behavior."
+                },
+                "morally_ambiguous_cast": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Moral ambiguity among multiple major characters matters to the work."
+                },
+                "transformation_arc": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Substantial change in a focal character's beliefs, identity, or behavior."
+                },
+                "intellectual_problem_solver": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A focal character's reasoning or specialized intellectual ability drives events."
+                },
+                "detective_lead": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A focal character acts as an investigator or detective."
+                },
+                "female_protagonist": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A woman or girl occupies a protagonist role, independently of competence or characterization quality."
+                },
+                "child_protagonist": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A child occupies a protagonist role."
+                },
+                "teen_protagonist": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A teenager occupies a protagonist role."
+                },
+                "older_adult_protagonist": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An older adult occupies a protagonist role."
+                },
+                "child_agency": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Children make consequential choices that affect events."
+                },
+                "female_character_agency": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Women or girls make consequential choices that affect events."
+                },
+                "workplace_team": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A team formed through work is a central social unit."
+                },
+                "family_business": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A family-run business is a central social unit."
+                },
+                "unaccompanied_children": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Children without their usual caregivers form a central social situation."
+                },
+                "teen_peer_group": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Teenage friendships and peer-group dynamics form a central social situation."
+                },
+                "clandestine_groups": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A secret society or organized group whose membership, meetings, activities, or aims are deliberately concealed. Secrecy is the defining feature, not coercion or extremist ideology; a secret held by one person, an ordinary private friendship, or crime alone is insufficient."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "representation": {
+              "type": "object",
+              "properties": {
+                "lgbtq_characters": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Explicitly established LGBTQ characters have narrative importance; do not infer from allegory or creator identity."
+                },
+                "neurodivergent_characters": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Explicitly established neurodivergent characters have narrative importance; do not diagnose from behavior."
+                },
+                "disabled_characters": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Explicitly established disabled characters have narrative importance."
+                },
+                "immigrant_characters": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Explicitly established immigrant characters have narrative importance."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "world": {
+              "type": "object",
+              "properties": {
+                "advanced_technology": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Technology substantially beyond the work's contemporary baseline shapes its world."
+                },
+                "magic": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Supernatural abilities or forces understood as magic shape the world."
+                },
+                "simulation": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An artificial simulation is an important layer of reality."
+                },
+                "virtual_reality": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Characters experience an interactive digitally mediated environment."
+                },
+                "parallel_worlds": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Coexisting alternative realities matter to the world."
+                },
+                "time_travel": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Movement across time outside ordinary chronological passage matters to the world."
+                },
+                "travel_to_past": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Travel to an earlier time matters to the world."
+                },
+                "travel_to_future": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Travel to a later time matters to the world."
+                },
+                "time_loop": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Repetition of a period of time matters to the world or narrative."
+                },
+                "dystopian_society": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Oppressive or deeply dysfunctional social arrangements define the world."
+                },
+                "post_apocalyptic": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Life after a civilization-scale catastrophe defines the world."
+                },
+                "spacefaring": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Travel or life beyond Earth is consequential to the world."
+                },
+                "robots": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Embodied artificial machines functioning as agents matter to the world; not synonymous with AI."
+                },
+                "myth_and_folklore": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Recognizable mythological or folkloric traditions shape the world."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "world_treatment": {
+              "type": "object",
+              "properties": {
+                "scientific_rigor": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Attention to scientific constraints and explanatory consistency; not an inverse of speculative freedom."
+                },
+                "speculative_freedom": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Freedom to use speculative premises without scientific elaboration."
+                },
+                "worldbuilding_depth": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Detail and interconnection in the world's institutions, history, and rules."
+                },
+                "lore_dependence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Importance of remembering mythology or lore to follow the work."
+                },
+                "magic_rule_detail": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Elaboration of rules and constraints governing magic."
+                },
+                "everyday_realism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Attention to plausible ordinary behavior and material conditions, independently of era."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "settings": {
+              "type": "object",
+              "properties": {
+                "urban": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A city environment is narratively important."
+                },
+                "small_town": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A small town environment is narratively important."
+                },
+                "rural": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A countryside or village environment is narratively important."
+                },
+                "frontier": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A frontier environment is narratively important."
+                },
+                "polar": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An Arctic, Antarctic, or comparable polar environment is narratively important."
+                },
+                "mountains": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Mountain landscapes are narratively important."
+                },
+                "forest": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Woodland environments are narratively important."
+                },
+                "desert": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Desert environments are narratively important."
+                },
+                "ocean": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Open sea or marine environments are narratively important."
+                },
+                "island": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Island environments are narratively important."
+                },
+                "space_station": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An orbital or deep-space station is narratively important."
+                },
+                "spacecraft": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A vehicle traveling through space is narratively important."
+                },
+                "underground": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Underground spaces are narratively important."
+                },
+                "bunker": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A protective or military bunker is narratively important."
+                },
+                "mansion": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A large private residence or estate is narratively important."
+                },
+                "home": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Domestic living spaces are narratively important."
+                },
+                "school": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A primary or secondary school is narratively important."
+                },
+                "university": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A university or college environment is narratively important."
+                },
+                "office": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An office workplace is narratively important."
+                },
+                "hospital": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A hospital or clinic is narratively important."
+                },
+                "restaurant": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A restaurant or cafe is narratively important."
+                },
+                "bar_or_club": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A bar, nightclub, or similar nightlife venue is narratively important."
+                },
+                "hotel": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A hotel or resort is narratively important."
+                },
+                "factory": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An industrial production site is narratively important."
+                },
+                "laboratory": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A research or testing laboratory is narratively important."
+                },
+                "prison": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A prison or detention facility is narratively important."
+                },
+                "salon": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A beauty or hair salon is narratively important."
+                },
+                "subway": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An underground urban rail system is narratively important."
+                },
+                "airport": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An airport is narratively important."
+                },
+                "amusement_park": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: An amusement park is narratively important."
+                },
+                "circus": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A circus or carnival is narratively important."
+                },
+                "theater": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A theater or performance stage is narratively important."
+                },
+                "museum": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A museum or gallery is narratively important."
+                },
+                "library_or_bookshop": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A library or bookshop is narratively important."
+                },
+                "religious_site": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A place of worship or religious practice is narratively important."
+                },
+                "cemetery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A cemetery or burial ground is narratively important."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "occupations": {
+              "type": "object",
+              "properties": {
+                "engineering": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Engineering work matters to the story."
+                },
+                "computing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Computing and information-technology work matter to the story."
+                },
+                "healthcare": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Healthcare work matters to the story."
+                },
+                "policing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Police work matters to the story; separate from military work."
+                },
+                "military": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Military service matters to the story."
+                },
+                "law": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Legal professional work matters to the story."
+                },
+                "business": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Business management or entrepreneurship matters to the story."
+                },
+                "finance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Financial professional work matters to the story."
+                },
+                "service": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Hospitality, retail, or other service work matters to the story."
+                },
+                "arts": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Artistic or entertainment work matters to the story."
+                },
+                "education": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Teaching or academic work matters to the story."
+                },
+                "journalism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Reporting and news production matter to the story."
+                },
+                "organized_crime": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Work within organized criminal enterprises matters to the story."
+                },
+                "piracy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Maritime piracy as an occupation or way of life matters to the story."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "activities": {
+              "type": "object",
+              "properties": {
+                "cooking": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Preparing food matters to the story; includes professional and domestic contexts."
+                },
+                "baking": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Baking matters to the story as a specific culinary activity."
+                },
+                "dining": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Eating out and food experiences matter to the story."
+                },
+                "travel": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Travel and encounters away from home matter to the story."
+                },
+                "backpacking": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Backpacking travel matters to the story."
+                },
+                "gardening": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Cultivating plants matters to the story."
+                },
+                "diving": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Underwater diving matters to the story."
+                },
+                "vehicle_tuning": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Modification or customization of vehicles matters to the story."
+                },
+                "aviation": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Flying and aviation activity matter to the story."
+                },
+                "rail_enthusiasm": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Enthusiasm for railways matters to the story."
+                },
+                "fitness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Physical training for fitness or bodybuilding matters to the story."
+                },
+                "video_games": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Playing or making video games matters to the story; virtual reality alone is insufficient."
+                },
+                "fashion": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Clothing and personal fashion practice matter to the story."
+                },
+                "crafts": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Handcraft and making activities matter to the story."
+                },
+                "photography": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Photography matters to the story."
+                },
+                "filmmaking": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Making movies or shows matters to the story."
+                },
+                "reading": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Reading and literary engagement matter to the story."
+                },
+                "comics": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Making, reading, or collecting comics matters to the story."
+                },
+                "anime_fandom": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Participation in anime or manga fandom matters to the story; visual influence alone is insufficient."
+                },
+                "visual_art": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Drawing, painting, or related visual-art practice matters to the story."
+                },
+                "theater": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Acting on stage or participating in theater matters to the story."
+                },
+                "hiking": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Hiking and walking in natural environments matter to the story."
+                },
+                "woodworking": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Woodworking matters to the story."
+                },
+                "home_improvement": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Renovating or repairing homes matters to the story."
+                },
+                "language_learning": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Learning languages matters to the story."
+                },
+                "instrument_playing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Playing musical instruments matters to the story."
+                },
+                "singing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Singing as an activity matters to the story."
+                },
+                "dancing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Dancing as an activity matters to the story."
+                },
+                "stage_magic": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Performance illusion and conjuring matter to the story; separate from supernatural magic."
+                },
+                "animal_care": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Caring for animals matters to the story."
+                },
+                "underground_fighting": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Clandestine or unsanctioned organized physical fights outside recognized regulated competition. Distinct from a spontaneous brawl, combat choreography, and boxing or MMA as sports; fists or hand-to-hand action alone do not establish a sport."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "sports": {
+              "type": "object",
+              "properties": {
+                "ice_hockey": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Ice hockey as sport matters to the story."
+                },
+                "tennis": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Tennis as sport matters to the story."
+                },
+                "golf": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Golf as sport matters to the story."
+                },
+                "association_football": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Association football or soccer as sport matters to the story."
+                },
+                "basketball": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Basketball as sport matters to the story."
+                },
+                "baseball": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Baseball as sport matters to the story."
+                },
+                "american_football": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: American football as sport matters to the story."
+                },
+                "boxing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Boxing as sport matters to the story; action choreography alone is insufficient."
+                },
+                "mixed_martial_arts": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: MMA as sport matters to the story; martial arts combat alone is insufficient."
+                },
+                "motorsport": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Competitive motor racing matters to the story."
+                },
+                "skiing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Skiing as sport matters to the story."
+                },
+                "snowboarding": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Snowboarding as sport matters to the story."
+                },
+                "running": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Competitive or recreational running matters to the story."
+                },
+                "cycling": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Cycling as sport matters to the story."
+                },
+                "cricket": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Cricket as sport matters to the story."
+                },
+                "rugby": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Rugby as sport matters to the story."
+                },
+                "volleyball": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Volleyball as sport matters to the story."
+                },
+                "swimming": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Swimming as sport matters to the story."
+                },
+                "diving": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Competitive diving matters to the story; separate from underwater diving."
+                },
+                "gymnastics": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Gymnastics as sport matters to the story."
+                },
+                "skateboarding": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Skateboarding as sport matters to the story."
+                },
+                "esports": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Competitive video gaming matters to the story."
+                },
+                "professional_wrestling": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Professional wrestling as performance and competition matters to the story."
+                },
+                "surfing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Surfing as sport matters to the story."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "entities": {
+              "type": "object",
+              "properties": {
+                "dogs": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Dogs matter to the story; not a count or mere-presence flag."
+                },
+                "cats": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Cats matter to the story."
+                },
+                "horses": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Horses matter to the story."
+                },
+                "farm_animals": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Farm animals matter to the story."
+                },
+                "wildlife": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Non-domesticated animals matter to the story."
+                },
+                "birds": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Birds matter to the story."
+                },
+                "reptiles": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Reptiles matter to the story."
+                },
+                "amphibians": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Amphibians matter to the story."
+                },
+                "marine_animals": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Marine animals matter to the story."
+                },
+                "arthropods": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Insects, spiders, or other arthropods matter to the story."
+                },
+                "dinosaurs": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Dinosaurs matter to the story."
+                },
+                "mythical_creatures": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Creatures from myth or fantasy matter to the story."
+                },
+                "vampires": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Vampires matter to the story, independently of genre membership."
+                },
+                "werewolves": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Werewolves matter to the story."
+                },
+                "ghosts": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Ghosts or spirits of the dead matter to the story."
+                },
+                "demons": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Demons matter to the story."
+                },
+                "extraterrestrials": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Extraterrestrial beings matter to the story."
+                },
+                "cars": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Cars matter to the story, independently of motorsport or enthusiasm for cars."
+                },
+                "trains": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Trains matter to the story."
+                },
+                "aircraft": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Aircraft operating within an atmosphere matter to the story."
+                },
+                "watercraft": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Boats and ships operating on water matter to the story."
+                },
+                "special_machinery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Special-purpose industrial or construction machinery matters to the story."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "storytelling": {
+              "type": "object",
+              "properties": {
+                "plot_velocity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Rate at which consequential plot events occur."
+                },
+                "gradual_development": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Deliberate accumulation of character, relationships, or tension over time; can coexist with rapid action."
+                },
+                "intrigue": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Strength of curiosity about what happens or what is concealed."
+                },
+                "plot_complexity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Interdependence of events, causes, and plot threads."
+                },
+                "interpretive_ambiguity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which meaning or events support multiple interpretations."
+                },
+                "twist_frequency": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "frequency rubric: Recurrence of major reversals or revelations over the work."
+                },
+                "twist_impact": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which revelations alter understanding or expectations."
+                },
+                "nonlinearity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Departure from chronological storytelling."
+                },
+                "multiple_timelines": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of distinct temporal strands; not necessarily time travel."
+                },
+                "multiple_viewpoints": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Distribution of storytelling across distinct character perspectives."
+                },
+                "unreliable_narration": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Uncertainty created by an unreliable narrator or viewpoint."
+                },
+                "unreliable_reality": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Uncertainty about which presented events or reality layers are real."
+                },
+                "self_reference": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Attention to the work's own storytelling or construction."
+                },
+                "fourth_wall_breaking": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Direct acknowledgment of the audience or representational frame."
+                },
+                "voiceover": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of spoken narration over images outside ordinary scene dialogue."
+                },
+                "dream_sequences": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of dreams or hallucinations as presented sequences."
+                },
+                "observational_mode": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Attention to behavior and environments without strong explanatory or plot intervention."
+                },
+                "slice_of_life": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Emphasis on ordinary experience rather than extraordinary plot escalation."
+                },
+                "exposition_load": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Amount of explanatory information the viewer must absorb."
+                },
+                "information_withholding": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Deliberate delay in supplying information needed to understand events."
+                },
+                "philosophical_inquiry": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Explicit exploration of philosophical questions."
+                },
+                "educational_intent": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Deliberate presentation of factual knowledge for learning."
+                },
+                "formal_challenge": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Departure from familiar formal conventions that demands adaptation."
+                },
+                "homage": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Recognizable tributes and references to other works."
+                },
+                "pastiche": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Imitation or combination of recognizable artistic styles."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "stakes": {
+              "type": "object",
+              "properties": {
+                "personal": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Consequences for an individual's life, identity, or goals."
+                },
+                "relationship": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Consequences for a central relationship or small social unit."
+                },
+                "community": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Consequences for a locality or community."
+                },
+                "societal": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Consequences for institutions, a society, or civilization."
+                },
+                "planetary": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Consequences extending to a planet or humanity as a whole."
+                },
+                "cosmic": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Consequences extending beyond planetary life to cosmic reality."
+                },
+                "urgency": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Time pressure on consequential decisions or events."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "dialogue": {
+              "type": "object",
+              "properties": {
+                "density": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Amount of spoken dialogue relative to the work's running time."
+                },
+                "dependence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Importance of understanding dialogue to follow the work."
+                },
+                "monologues": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of extended uninterrupted speeches."
+                },
+                "technical_jargon": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of specialized technical vocabulary."
+                },
+                "overlap": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of simultaneous or overlapping speech."
+                },
+                "naturalistic_delivery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Conversational delivery resembling spontaneous everyday speech."
+                },
+                "theatrical_delivery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Heightened, rhetorical, or explicitly performative speech."
+                },
+                "multilingual_exchange": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of multiple languages within the work; factual languages are catalog data."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "aesthetics": {
+              "type": "object",
+              "properties": {
+                "cyberpunk": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: High technology combined with alienation, social stratification, or countercultural urban imagery."
+                },
+                "steampunk": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Retro-industrial speculative imagery drawing on steam-age technology."
+                },
+                "gothic": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Ominous, decaying, or romantically macabre visual atmosphere."
+                },
+                "noir": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Shadowed, morally uneasy visual and atmospheric treatment, independently of crime plotting."
+                },
+                "retro": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Deliberately retrospective visual or sonic styling; not merely an older release."
+                },
+                "minimalism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Reduction of visual, sonic, or formal elements."
+                },
+                "stylization": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Departure from naturalistic presentation through a distinctive audiovisual treatment."
+                },
+                "surrealism": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Dreamlike or illogical relationships in presented images and events."
+                },
+                "psychedelia": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Hallucinatory, distorted, or perceptually altered sensory treatment."
+                },
+                "grotesquerie": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Emphasis on distorted, repulsive, or biologically unsettling forms."
+                },
+                "camp": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Theatrical excess and conspicuous artifice with an invitation to enjoy that excess."
+                },
+                "ironic_distance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Presentation that invites distance from its apparent surface meaning."
+                },
+                "intimacy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Presentation fostering closeness to characters' private experience."
+                },
+                "spectacle": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Emphasis on impressive scale, effects, and set pieces."
+                },
+                "immersion": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Strength of the sensory sense of inhabiting the work's world."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "visuals": {
+              "type": "object",
+              "properties": {
+                "vibrant_palette": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of strongly saturated colors."
+                },
+                "muted_palette": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of restrained or desaturated colors."
+                },
+                "pastel_palette": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of pale, soft colors."
+                },
+                "neon_palette": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of luminous, neon-like color accents."
+                },
+                "restricted_palette": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of a narrow or monochromatic color range."
+                },
+                "warm_color": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of warm hues and lighting."
+                },
+                "cool_color": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of cool hues and lighting."
+                },
+                "low_key_lighting": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Predominance of dark lighting with selective illumination."
+                },
+                "high_key_lighting": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Predominance of bright, evenly illuminated scenes."
+                },
+                "high_contrast": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Strong contrast between light and dark regions."
+                },
+                "diffused_light": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Soft illumination with gentle shadows."
+                },
+                "long_takes": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of extended shots without cuts; method of capture is irrelevant."
+                },
+                "handheld_motion": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of visibly handheld or unstable camera movement."
+                },
+                "aerial_viewpoints": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of aerial views, independently of capture technology."
+                },
+                "closeups": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of tight framing on faces or details."
+                },
+                "wide_compositions": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of broad spatial framing."
+                },
+                "symmetry": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of symmetrical composition."
+                },
+                "practical_effects": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of physical on-set effects; do not infer exact production method from appearance alone."
+                },
+                "digital_effects": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of digitally produced or altered imagery."
+                },
+                "costume_emphasis": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Expressive prominence of clothing and costume design."
+                },
+                "production_design_detail": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Density of expressive detail in constructed environments and props."
+                },
+                "split_screen": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of simultaneous images in separate screen regions."
+                },
+                "aspect_ratio_changes": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Expressive use of changes in frame proportions."
+                },
+                "grain_texture": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Visible grain-like image texture, independently of capture medium."
+                },
+                "distressed_texture": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Deliberate wear, damage, or degraded-image treatment."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "action": {
+              "type": "object",
+              "properties": {
+                "hand_to_hand": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Unarmed physical combat."
+                },
+                "martial_arts_choreography": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Combat organized around recognizable or stylized martial arts movement."
+                },
+                "grappling": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Combat involving holds, clinches, throws, or ground fighting."
+                },
+                "gunplay": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Firearms combat and shootouts."
+                },
+                "gun_fu": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Highly stylized choreography combining firearms and close-quarters movement."
+                },
+                "blade_combat": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Combat involving swords, knives, or similar blades."
+                },
+                "superpowered_combat": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Combat involving abilities beyond ordinary human capacities."
+                },
+                "chases": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Pursuits presented as action sequences."
+                },
+                "large_battles": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Combat involving many participants or military-scale engagement."
+                },
+                "environmental_choreography": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Creative use of surroundings and objects in action."
+                },
+                "gritty_combat": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Combat presented as physically punishing, messy, and effortful."
+                },
+                "stylized_violence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Violence presented through conspicuously aestheticized movement or imagery."
+                },
+                "realistic_violence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Violence presented with plausible physical consequences and vulnerability."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "horror_modes": {
+              "type": "object",
+              "properties": {
+                "possession": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: A supernatural entity inhabits or takes control of a person as a horror mechanism. Explicitly excludes psychological dissociation, an alternate personality without supernatural inhabitation, ordinary manipulation or influence, and merely owning or using a magical object."
+                },
+                "body_horror": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Transformation, violation, or instability of the body matters to the horror."
+                },
+                "folk_horror": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Folk belief, ritual, landscape, or insular tradition matters to the horror."
+                },
+                "cosmic_horror": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Human insignificance before incomprehensible forces matters to the horror."
+                },
+                "psychological_horror": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "centrality rubric: Perception, mental distress, or internal instability drives the horror."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "sound": {
+              "type": "object",
+              "properties": {
+                "design_prominence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Expressive prominence of non-musical sound design; not a quality judgment."
+                },
+                "ambient_soundscapes": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of environmental sound to create atmosphere."
+                },
+                "silence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Expressive use of silence or near silence."
+                },
+                "sparse_score": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Use of little or no non-diegetic score."
+                },
+                "audio_startles": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Abrupt sound events intended to startle."
+                },
+                "audio_self_reference": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Sound that acknowledges or plays with the work's representational frame."
+                },
+                "music_dependence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Importance of music to emotional or narrative understanding."
+                },
+                "nonmusical_sound_dependence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Importance of non-musical sound to emotional or narrative understanding."
+                },
+                "diegetic_music": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of music audible within the story world."
+                },
+                "preexisting_recordings": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of preexisting recorded songs or pieces placed in the soundtrack."
+                },
+                "live_performance": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of scenes depicting musical performance."
+                },
+                "musical_numbers": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Prominence of song or dance sequences functioning as narrative expression."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "music_styles": {
+              "type": "object",
+              "properties": {
+                "orchestral": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "prominence rubric: Orchestral music in the audible soundtrack."
+                },
+                "electronic": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "prominence rubric: Electronic music in the audible soundtrack."
+                },
+                "jazz": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "prominence rubric: Jazz in the audible soundtrack."
+                },
+                "classical": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "prominence rubric: Classical traditions in the audible soundtrack; can coexist with orchestral instrumentation."
+                },
+                "rock": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "prominence rubric: Rock in the audible soundtrack."
+                },
+                "pop": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "prominence rubric: Pop in the audible soundtrack."
+                },
+                "metal": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "prominence rubric: Metal in the audible soundtrack."
+                },
+                "hip_hop": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "prominence rubric: Hip-hop or rap in the audible soundtrack."
+                },
+                "country": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "prominence rubric: Country in the audible soundtrack."
+                },
+                "folk": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "prominence rubric: Folk traditions in the audible soundtrack; name specific traditions in cultural annotations."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "ending": {
+              "type": "object",
+              "properties": {
+                "conflict_resolution": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which central dramatic conflicts receive an outcome; independent of happiness."
+                },
+                "interpretive_openness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which the ending permits multiple interpretations."
+                },
+                "emotional_closure": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent of emotional completion or release at the ending."
+                },
+                "happiness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Positive emotional outcome for focal characters at the ending."
+                },
+                "tragedy": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Loss, defeat, or suffering defining the ending."
+                },
+                "bittersweetness": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Intertwined positive and painful outcomes at the ending."
+                },
+                "twist_impact": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which the ending reframes prior understanding."
+                },
+                "cliffhanger": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which the ending suspends an urgent unresolved event."
+                },
+                "sequel_dependence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which another installment is needed to resolve central conflicts."
+                },
+                "cyclical_return": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which the ending returns to or repeats the initial situation."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "series": {
+              "type": "object",
+              "properties": {
+                "episodic_independence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which episodes provide independently understandable stories."
+                },
+                "serialized_dependence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which episodes rely on ongoing arcs and prior episodes."
+                },
+                "anthology_independence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Extent to which episodes or seasons form distinct stories with separate continuity."
+                },
+                "episode_cliffhangers": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Strength of suspended outcomes at episode boundaries."
+                },
+                "bottle_episode_pattern": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "frequency rubric: Prominence of episodes deliberately limited in location or cast."
+                },
+                "cold_open_hooks": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "frequency rubric: Prominence of openings designed to generate curiosity before titles or setup."
+                },
+                "formula_repetition": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Recurrence of substantially similar plot patterns across episodes."
+                },
+                "conceptual_renewal": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Introduction of new situations, ideas, or narrative directions across episodes."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "viewing_demands": {
+              "type": "object",
+              "properties": {
+                "attention": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Sustained concentration needed to follow the work."
+                },
+                "visual_dependence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Importance of watching the image to understand events; distinct from spectacle."
+                },
+                "auditory_dependence": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Importance of hearing sound to follow events; accessibility version may alter this."
+                },
+                "sensory_intensity": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Strength and density of audiovisual stimulation."
+                },
+                "franchise_knowledge": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Need for familiarity with other installments to understand this work."
+                },
+                "genre_knowledge": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Need for familiarity with genre conventions to understand this work."
+                },
+                "historical_knowledge": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Need for historical background not explained in the work."
+                },
+                "cultural_knowledge": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Need for cultural background not explained in the work."
+                },
+                "onscreen_reading": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "intensity rubric: Importance of reading text embedded in the image; subtitle demand is derived separately per viewer and offer."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "viewing_affordances": {
+              "type": "object",
+              "properties": {
+                "background_viewing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "suitability rubric: Ease of following the work with intermittent attention; not inferred from pace alone."
+                },
+                "drop_in_viewing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "suitability rubric: Ease of joining after the start without significant confusion."
+                },
+                "standalone_viewing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "suitability rubric: Ease of understanding this work without other franchise installments."
+                },
+                "discussion": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "suitability rubric: Scope for discussion of ideas, characters, or interpretation after viewing."
+                },
+                "theorizing": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "suitability rubric: Scope for speculation about concealed information or unresolved mysteries."
+                },
+                "repeat_discovery": {
+                  "$ref": "#/$defs/assessment",
+                  "description": "suitability rubric: Scope for discovering additional details or interpretations on another viewing; distinct from personal desire to rewatch."
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "world_contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/world_context"
+          }
+        },
+        "cultural_contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cultural_context"
+          }
+        },
+        "seasonal_contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/seasonal_context"
+          }
+        },
+        "representation_annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/representation_annotation"
+          }
+        },
+        "format_facts": {
+          "type": "object",
+          "properties": {
+            "production_method": {
+              "$ref": "#/$defs/fact"
+            },
+            "animation_techniques": {
+              "$ref": "#/$defs/fact"
+            },
+            "narrative_mode": {
+              "$ref": "#/$defs/fact"
+            },
+            "presentation_modes": {
+              "$ref": "#/$defs/fact"
+            },
+            "series_structure": {
+              "$ref": "#/$defs/fact"
+            },
+            "post_credits_scene_present": {
+              "$ref": "#/$defs/fact"
+            },
+            "alternate_endings_present": {
+              "$ref": "#/$defs/fact"
+            },
+            "episode_runtime_min_minutes": {
+              "$ref": "#/$defs/fact"
+            },
+            "episode_runtime_max_minutes": {
+              "$ref": "#/$defs/fact"
+            },
+            "approximate_ensemble_size": {
+              "$ref": "#/$defs/fact"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "advisories": {
+          "type": "object",
+          "properties": {
+            "violence": {
+              "$ref": "#/$defs/advisory"
+            },
+            "gore": {
+              "$ref": "#/$defs/advisory"
+            },
+            "sexual_activity": {
+              "$ref": "#/$defs/advisory"
+            },
+            "nudity": {
+              "$ref": "#/$defs/advisory"
+            },
+            "substance_use": {
+              "$ref": "#/$defs/advisory"
+            },
+            "profanity": {
+              "$ref": "#/$defs/advisory"
+            },
+            "disturbing_imagery": {
+              "$ref": "#/$defs/advisory"
+            },
+            "child_endangerment": {
+              "$ref": "#/$defs/advisory"
+            },
+            "animal_harm": {
+              "$ref": "#/$defs/advisory"
+            },
+            "eating_disorders": {
+              "$ref": "#/$defs/advisory"
+            },
+            "self_harm": {
+              "$ref": "#/$defs/advisory"
+            },
+            "suicide": {
+              "$ref": "#/$defs/advisory"
+            },
+            "sexual_violence": {
+              "$ref": "#/$defs/advisory"
+            },
+            "domestic_abuse": {
+              "$ref": "#/$defs/advisory"
+            },
+            "police_brutality": {
+              "$ref": "#/$defs/advisory"
+            },
+            "torture": {
+              "$ref": "#/$defs/advisory"
+            },
+            "kidnapping_and_confinement": {
+              "$ref": "#/$defs/advisory"
+            },
+            "pregnancy_loss": {
+              "$ref": "#/$defs/advisory"
+            },
+            "childbirth": {
+              "$ref": "#/$defs/advisory"
+            },
+            "discrimination": {
+              "$ref": "#/$defs/advisory"
+            },
+            "flashing_imagery": {
+              "$ref": "#/$defs/advisory"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "audience_contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/audience_context"
+          }
+        },
+        "evaluations": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/assessment",
+              "description": "quality rubric: Assessment of coherence and execution of the creative vision."
+            },
+            "acting": {
+              "$ref": "#/$defs/assessment",
+              "description": "quality rubric: Assessment of performance execution, not the presence of live-action performers."
+            },
+            "writing": {
+              "$ref": "#/$defs/assessment",
+              "description": "quality rubric: Assessment of the overall writing."
+            },
+            "dialogue": {
+              "$ref": "#/$defs/assessment",
+              "description": "quality rubric: Assessment of dialogue writing as a component of writing."
+            },
+            "characterization": {
+              "$ref": "#/$defs/assessment",
+              "description": "quality rubric: Assessment of nuance and development in character writing."
+            },
+            "narrative_cohesion": {
+              "$ref": "#/$defs/assessment",
+              "description": "quality rubric: Assessment of causal, structural, and thematic coherence."
+            },
+            "cinematography": {
+              "$ref": "#/$defs/assessment",
+              "description": "quality rubric: Assessment of visual storytelling and photographic execution."
+            },
+            "editing": {
+              "$ref": "#/$defs/assessment",
+              "description": "quality rubric: Assessment of shot assembly, rhythm, and transitions."
+            },
+            "original_score": {
+              "$ref": "#/$defs/assessment",
+              "description": "quality rubric: Assessment of original musical composition, when present."
+            },
+            "sound_design": {
+              "$ref": "#/$defs/assessment",
+              "description": "quality rubric: Assessment of the execution of non-musical sound."
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "reception": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reception_observation"
+          }
+        },
+        "temporal_segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/temporal_segment"
+          }
+        },
+        "content_presence": {
+          "type": "object",
+          "properties": {
+            "tropes.memory_loss": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Lost or inaccessible memories or missing periods of a character's own experience occur, whether or not diagnosed as amnesia. Ordinary forgetfulness or withholding information only from the audience is insufficient."
+            },
+            "tropes.doppelganger": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A double or lookalike is presented as such; incidental resemblance alone is insufficient. Conflict is not required."
+            },
+            "relationships.coercive_group_control": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A group or leader systematically controls members through intimidation, isolation, dependency, punishment, or suppression of autonomy. Distinct from interpersonal coercion, voluntary discipline, secrecy, and radicalization; any of these may coexist but does not imply group control."
+            },
+            "characters.clandestine_groups": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A secret society or organized group whose membership, meetings, activities, or aims are deliberately concealed. Secrecy is the defining feature, not coercion or extremist ideology; a secret held by one person, an ordinary private friendship, or crime alone is insufficient."
+            },
+            "world.advanced_technology": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Technology substantially beyond the work's contemporary baseline occurs in its world."
+            },
+            "world.magic": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Supernatural abilities or forces understood as magic occur."
+            },
+            "world.simulation": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "An artificial simulation is presented as a layer of reality."
+            },
+            "world.virtual_reality": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Characters experience an interactive digitally mediated environment."
+            },
+            "world.parallel_worlds": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Coexisting alternative realities occur."
+            },
+            "world.time_travel": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Movement across time outside ordinary chronological passage occurs."
+            },
+            "world.travel_to_past": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Travel to an earlier time occurs."
+            },
+            "world.travel_to_future": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Travel to a later time occurs."
+            },
+            "world.time_loop": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A period of time repeats within the story world."
+            },
+            "world.dystopian_society": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "An oppressive or deeply dysfunctional society is depicted."
+            },
+            "world.post_apocalyptic": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Life after a civilization-scale catastrophe is depicted."
+            },
+            "world.spacefaring": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Travel or life beyond Earth occurs."
+            },
+            "world.robots": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Embodied artificial machines functioning as agents occur; AI without embodiment is insufficient."
+            },
+            "world.myth_and_folklore": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Recognizable mythological or folkloric beings, events, or practices occur in the story world; a passing idiom is insufficient."
+            },
+            "settings.urban": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A city environment is depicted as a location."
+            },
+            "settings.small_town": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A small town environment is depicted as a location."
+            },
+            "settings.rural": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A countryside or village environment is depicted as a location."
+            },
+            "settings.frontier": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A frontier environment is depicted as a location."
+            },
+            "settings.polar": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "An Arctic, Antarctic, or comparable polar environment is depicted as a location."
+            },
+            "settings.mountains": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Mountain landscapes are depicted as locations."
+            },
+            "settings.forest": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Woodland environments are depicted as locations."
+            },
+            "settings.desert": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Desert environments are depicted as locations."
+            },
+            "settings.ocean": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Open sea or marine environments are depicted as locations."
+            },
+            "settings.island": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Island environments are depicted as locations."
+            },
+            "settings.space_station": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "An orbital or deep-space station is depicted as a location."
+            },
+            "settings.spacecraft": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A vehicle traveling through space is depicted as a location."
+            },
+            "settings.underground": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Underground spaces are depicted as locations."
+            },
+            "settings.bunker": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A protective or military bunker is depicted as a location."
+            },
+            "settings.mansion": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A large private residence or estate is depicted as a location."
+            },
+            "settings.home": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Domestic living spaces are depicted as locations."
+            },
+            "settings.school": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A primary or secondary school is depicted as a location."
+            },
+            "settings.university": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A university or college environment is depicted as a location."
+            },
+            "settings.office": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "An office workplace is depicted as a location."
+            },
+            "settings.hospital": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A hospital or clinic is depicted as a location."
+            },
+            "settings.restaurant": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A restaurant or cafe is depicted as a location."
+            },
+            "settings.bar_or_club": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A bar, nightclub, or similar nightlife venue is depicted as a location."
+            },
+            "settings.hotel": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A hotel or resort is depicted as a location."
+            },
+            "settings.factory": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "An industrial production site is depicted as a location."
+            },
+            "settings.laboratory": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A research or testing laboratory is depicted as a location."
+            },
+            "settings.prison": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A prison or detention facility is depicted as a location."
+            },
+            "settings.salon": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A beauty or hair salon is depicted as a location."
+            },
+            "settings.subway": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "An underground urban rail system is depicted as a location."
+            },
+            "settings.airport": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "An airport is depicted as a location."
+            },
+            "settings.amusement_park": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "An amusement park is depicted as a location."
+            },
+            "settings.circus": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A circus or carnival is depicted as a location."
+            },
+            "settings.theater": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A theater or performance stage is depicted as a location."
+            },
+            "settings.museum": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A museum or gallery is depicted as a location."
+            },
+            "settings.library_or_bookshop": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A library or bookshop is depicted as a location."
+            },
+            "settings.religious_site": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A place of worship or religious practice is depicted as a location."
+            },
+            "settings.cemetery": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A cemetery or burial ground is depicted as a location."
+            },
+            "occupations.engineering": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Engineering work occurs."
+            },
+            "occupations.computing": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Computing and information-technology work occurs."
+            },
+            "occupations.healthcare": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Healthcare work occurs."
+            },
+            "occupations.policing": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Police work occurs; separate from military work."
+            },
+            "occupations.military": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Military service occurs."
+            },
+            "occupations.law": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Legal professional work occurs."
+            },
+            "occupations.business": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Business management or entrepreneurship occurs."
+            },
+            "occupations.finance": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Financial professional work occurs."
+            },
+            "occupations.service": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Hospitality, retail, or other service work occurs."
+            },
+            "occupations.arts": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Artistic or entertainment work occurs."
+            },
+            "occupations.education": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Teaching or academic work occurs."
+            },
+            "occupations.journalism": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Reporting and news production occurs."
+            },
+            "occupations.organized_crime": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Work within organized criminal enterprises occurs."
+            },
+            "occupations.piracy": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Maritime piracy as an occupation or way of life occurs."
+            },
+            "activities.cooking": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Preparing food occurs; includes professional and domestic contexts."
+            },
+            "activities.baking": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Baking occurs as a specific culinary activity."
+            },
+            "activities.dining": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Eating out and food experiences occurs."
+            },
+            "activities.travel": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Travel and encounters away from home occurs."
+            },
+            "activities.backpacking": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Backpacking travel occurs."
+            },
+            "activities.gardening": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Cultivating plants occurs."
+            },
+            "activities.diving": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Underwater diving occurs."
+            },
+            "activities.vehicle_tuning": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Modification or customization of vehicles occurs."
+            },
+            "activities.aviation": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Flying and aviation activity occurs."
+            },
+            "activities.rail_enthusiasm": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Enthusiasm for railways occurs."
+            },
+            "activities.fitness": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Physical training for fitness or bodybuilding occurs."
+            },
+            "activities.video_games": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Playing or making video games occurs; virtual reality alone is insufficient."
+            },
+            "activities.fashion": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Clothing and personal fashion practice occurs."
+            },
+            "activities.crafts": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Handcraft and making activities occurs."
+            },
+            "activities.photography": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Photography occurs."
+            },
+            "activities.filmmaking": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Making movies or shows occurs."
+            },
+            "activities.reading": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Reading and literary engagement occurs."
+            },
+            "activities.comics": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Making, reading, or collecting comics occurs."
+            },
+            "activities.anime_fandom": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Participation in anime or manga fandom occurs; visual influence alone is insufficient."
+            },
+            "activities.visual_art": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Drawing, painting, or related visual-art practice occurs."
+            },
+            "activities.theater": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Acting on stage or participating in theater occurs."
+            },
+            "activities.hiking": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Hiking and walking in natural environments occurs."
+            },
+            "activities.woodworking": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Woodworking occurs."
+            },
+            "activities.home_improvement": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Renovating or repairing homes occurs."
+            },
+            "activities.language_learning": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Learning languages occurs."
+            },
+            "activities.instrument_playing": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Playing musical instruments occurs."
+            },
+            "activities.singing": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Singing as an activity occurs."
+            },
+            "activities.dancing": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Dancing as an activity occurs."
+            },
+            "activities.stage_magic": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Performance illusion and conjuring occurs; separate from supernatural magic."
+            },
+            "activities.animal_care": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Caring for animals occurs."
+            },
+            "activities.underground_fighting": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Clandestine or unsanctioned organized physical fights outside recognized regulated competition. Distinct from a spontaneous brawl, combat choreography, and boxing or MMA as sports; fists or hand-to-hand action alone do not establish a sport."
+            },
+            "sports.ice_hockey": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Ice hockey as sport occurs."
+            },
+            "sports.tennis": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Tennis as sport occurs."
+            },
+            "sports.golf": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Golf as sport occurs."
+            },
+            "sports.association_football": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Association football or soccer as sport occurs."
+            },
+            "sports.basketball": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Basketball as sport occurs."
+            },
+            "sports.baseball": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Baseball as sport occurs."
+            },
+            "sports.american_football": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "American football as sport occurs."
+            },
+            "sports.boxing": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Boxing as sport occurs; action choreography alone is insufficient."
+            },
+            "sports.mixed_martial_arts": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "MMA as sport occurs; martial arts combat alone is insufficient."
+            },
+            "sports.motorsport": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Competitive motor racing occurs."
+            },
+            "sports.skiing": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Skiing as sport occurs."
+            },
+            "sports.snowboarding": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Snowboarding as sport occurs."
+            },
+            "sports.running": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Competitive or recreational running occurs."
+            },
+            "sports.cycling": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Cycling as sport occurs."
+            },
+            "sports.cricket": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Cricket as sport occurs."
+            },
+            "sports.rugby": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Rugby as sport occurs."
+            },
+            "sports.volleyball": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Volleyball as sport occurs."
+            },
+            "sports.swimming": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Swimming as sport occurs."
+            },
+            "sports.diving": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Competitive diving occurs; separate from underwater diving."
+            },
+            "sports.gymnastics": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Gymnastics as sport occurs."
+            },
+            "sports.skateboarding": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Skateboarding as sport occurs."
+            },
+            "sports.esports": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Competitive video gaming occurs."
+            },
+            "sports.professional_wrestling": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Professional wrestling as performance and competition occurs."
+            },
+            "sports.surfing": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Surfing as sport occurs."
+            },
+            "entities.dogs": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Dogs occurs."
+            },
+            "entities.cats": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Cats occurs."
+            },
+            "entities.horses": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Horses occurs."
+            },
+            "entities.farm_animals": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Farm animals occurs."
+            },
+            "entities.wildlife": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Non-domesticated animals occurs."
+            },
+            "entities.birds": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Birds occurs."
+            },
+            "entities.reptiles": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Reptiles occurs."
+            },
+            "entities.amphibians": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Amphibians occurs."
+            },
+            "entities.marine_animals": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Marine animals occurs."
+            },
+            "entities.arthropods": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Insects, spiders, or other arthropods occurs."
+            },
+            "entities.dinosaurs": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Dinosaurs occurs."
+            },
+            "entities.mythical_creatures": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Creatures from myth or fantasy occurs."
+            },
+            "entities.vampires": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Vampires occurs, independently of genre membership."
+            },
+            "entities.werewolves": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Werewolves occurs."
+            },
+            "entities.ghosts": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Ghosts or spirits of the dead occurs."
+            },
+            "entities.demons": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Demons occurs."
+            },
+            "entities.extraterrestrials": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Extraterrestrial beings occurs."
+            },
+            "entities.cars": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Cars occurs, independently of motorsport or enthusiasm for cars."
+            },
+            "entities.trains": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Trains occurs."
+            },
+            "entities.aircraft": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Aircraft operating within an atmosphere occurs."
+            },
+            "entities.watercraft": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Boats and ships operating on water occurs."
+            },
+            "entities.special_machinery": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "Special-purpose industrial or construction machinery occurs."
+            },
+            "horror_modes.possession": {
+              "$ref": "#/$defs/content_presence_entry",
+              "description": "A supernatural entity inhabits or takes control of a person. Psychological dissociation, alternate personality without supernatural inhabitation, mere influence, and owning a magical object do not qualify."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "scope",
+        "fingerprint"
+      ],
+      "additionalProperties": false
+    },
+    "content_presence_entry": {
+      "type": "object",
+      "properties": {
+        "presence": {
+          "enum": [
+            "present",
+            "absent",
+            "unknown"
+          ]
+        },
+        "applicability": {
+          "enum": [
+            "applicable",
+            "not_applicable",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "presence",
+        "applicability"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "applicability": {
+                "enum": [
+                  "not_applicable",
+                  "unknown"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "presence": {
+                "const": "unknown"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

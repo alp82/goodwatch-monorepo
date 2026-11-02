@@ -1,0 +1,986 @@
+[
+  {
+    "date": "2026-10-24",
+    "engine": "Google direct unauthenticated HTTP",
+    "query": "site:reddit.com/r/MovieSuggestions \"slow cinema\"",
+    "outcome": "HTTP 200 consent interstitial; no usable result list; did not bypass",
+    "useful_urls": [],
+    "access_details": "German consent page: Bevor Sie zu Google weitergehen."
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"slow cinema\"",
+    "batch": 1,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-01",
+      "movies-02",
+      "movies-03",
+      "movies-04",
+      "movies-05",
+      "movies-06",
+      "movies-07",
+      "movies-08",
+      "movies-09"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1diyucm/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1i620w9/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1imf4m0/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1twtz0u/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1rget29/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/16bwuc2/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1777kcf/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1g02fpt/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1kow3co/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"magical realism\"",
+    "batch": 1,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-01",
+      "movies-02",
+      "movies-03",
+      "movies-04",
+      "movies-05",
+      "movies-06",
+      "movies-07",
+      "movies-08",
+      "movies-09"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1diyucm/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1i620w9/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1imf4m0/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1twtz0u/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1rget29/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/16bwuc2/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1777kcf/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1g02fpt/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1kow3co/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/Letterboxd \"Iranian\" \"recommend\"",
+    "batch": 1,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-01",
+      "movies-02",
+      "movies-03",
+      "movies-04",
+      "movies-05",
+      "movies-06",
+      "movies-07",
+      "movies-08",
+      "movies-09"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1diyucm/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1i620w9/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1imf4m0/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1twtz0u/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1rget29/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/16bwuc2/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1777kcf/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1g02fpt/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1kow3co/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"one continuous shot\"",
+    "batch": 2,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-10",
+      "movies-11",
+      "movies-13",
+      "movies-14",
+      "movies-15",
+      "movies-16",
+      "movies-17",
+      "movies-18"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1reg67a/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1jwdll2/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ipefee/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1cxzs19/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1el8632/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieRecommendations/comments/1jkr0ba/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/yuhu2e/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1p24qww/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"no dialogue\" \"recommend\"",
+    "batch": 2,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-10",
+      "movies-11",
+      "movies-13",
+      "movies-14",
+      "movies-15",
+      "movies-16",
+      "movies-17",
+      "movies-18"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1reg67a/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1jwdll2/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ipefee/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1cxzs19/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1el8632/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieRecommendations/comments/1jkr0ba/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/yuhu2e/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1p24qww/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/Letterboxd \"French New Wave\" recommendations",
+    "batch": 2,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-10",
+      "movies-11",
+      "movies-13",
+      "movies-14",
+      "movies-15",
+      "movies-16",
+      "movies-17",
+      "movies-18"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1reg67a/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1jwdll2/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ipefee/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1cxzs19/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1el8632/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieRecommendations/comments/1jkr0ba/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/yuhu2e/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1p24qww/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"Italian neorealism\"",
+    "batch": 3,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-12",
+      "movies-19",
+      "movies-20"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/ebm1l3/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1fy4i7w/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1ex1cqv/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/Letterboxd \"Taiwanese\" \"recommendations\"",
+    "batch": 3,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-12",
+      "movies-19",
+      "movies-20"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/ebm1l3/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1fy4i7w/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1ex1cqv/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/PakistaniCinephiles \"Punjabi\" \"recommend\"",
+    "batch": 3,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-12",
+      "movies-19",
+      "movies-20"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/ebm1l3/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1fy4i7w/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/Letterboxd/comments/1ex1cqv/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"protagonist\" \"wrong\" \"villain\"",
+    "batch": 4,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-21",
+      "movies-22",
+      "movies-23",
+      "movies-24",
+      "movies-25"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1vc42qd/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieRecommendations/comments/1x2oghe/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1w95z62/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1hw18il/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1wyclxp/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"unrequited\" \"male\"",
+    "batch": 4,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-21",
+      "movies-22",
+      "movies-23",
+      "movies-24",
+      "movies-25"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1vc42qd/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieRecommendations/comments/1x2oghe/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1w95z62/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1hw18il/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1wyclxp/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"time loop\" \"not\"",
+    "batch": 4,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-21",
+      "movies-22",
+      "movies-23",
+      "movies-24",
+      "movies-25"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1vc42qd/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieRecommendations/comments/1x2oghe/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1w95z62/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1hw18il/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1wyclxp/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"reverse\" \"chronological\"",
+    "batch": 5,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-26",
+      "movies-27",
+      "movies-28"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1g6lz5i/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1pqjx21/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1eyn46d/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"villain wins\" \"no\"",
+    "batch": 5,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-26",
+      "movies-27",
+      "movies-28"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1g6lz5i/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1pqjx21/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1eyn46d/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/LetterboxdLists \"recommend\" \"niche\"",
+    "batch": 5,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-26",
+      "movies-27",
+      "movies-28"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1g6lz5i/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1pqjx21/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1eyn46d/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/PakistaniCinephiles recommendations slow movies",
+    "batch": 6,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-34",
+      "movies-35"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/PakistaniCinephiles/comments/1wlq8oc/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/PakistaniCinephiles/comments/1wrjs3c/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/Film recommend \"surreal\"",
+    "batch": 6,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-34",
+      "movies-35"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/PakistaniCinephiles/comments/1wlq8oc/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/PakistaniCinephiles/comments/1wrjs3c/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"Rashomon\" \"perspectives\"",
+    "batch": 6,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-34",
+      "movies-35"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/PakistaniCinephiles/comments/1wlq8oc/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/PakistaniCinephiles/comments/1wrjs3c/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"Rashomon effect\"",
+    "batch": 7,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-29",
+      "movies-30",
+      "movies-31",
+      "movies-32",
+      "movies-33"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/u7m5a2/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/g32v82/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ourrfg/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1fyhmlj/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ocaum9/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"reverse chronology\"",
+    "batch": 7,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-29",
+      "movies-30",
+      "movies-31",
+      "movies-32",
+      "movies-33"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/u7m5a2/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/g32v82/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ourrfg/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1fyhmlj/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ocaum9/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"wuxia\" \"not\"",
+    "batch": 7,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-29",
+      "movies-30",
+      "movies-31",
+      "movies-32",
+      "movies-33"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/u7m5a2/",
+        "access_level": "post_and_comments",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/g32v82/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ourrfg/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1fyhmlj/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      },
+      {
+        "url": "https://www.reddit.com/r/MovieSuggestions/comments/1ocaum9/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/Film \"recommendations\" \"experimental\"",
+    "batch": 8,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-36"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/LetterboxdLists/comments/1tgjczl/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/LetterboxdLists \"films\" \"recommendations\"",
+    "batch": 8,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-36"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/LetterboxdLists/comments/1tgjczl/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run search fallback (provider not identified as Google)",
+    "query": "site:reddit.com/r/MovieSuggestions \"diegetic\"",
+    "batch": 8,
+    "outcome": "Search executed; results returned at batch level, not attributable to each individual query. See batch_case_ids; absence of a case does not prove no results.",
+    "batch_case_ids": [
+      "movies-36"
+    ],
+    "access_details": "Search-index excerpts, including post text/comments where indexed. Only five cases additionally opened directly.",
+    "useful_urls": [
+      {
+        "url": "https://www.reddit.com/r/LetterboxdLists/comments/1tgjczl/",
+        "access_level": "search_excerpt",
+        "attribution": "Useful result within three-query batch; per-query attribution unavailable"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run open",
+    "query": null,
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1diyucm/",
+    "outcome": "Opened Reddit full post and comments; requested text confirmed",
+    "case_id": "movies-01"
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run open",
+    "query": null,
+    "url": "https://www.reddit.com/r/Letterboxd/comments/1reg67a/",
+    "outcome": "Opened Reddit full post and comments; requested text confirmed",
+    "case_id": "movies-10"
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run open",
+    "query": null,
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1vc42qd/",
+    "outcome": "Opened Reddit full post and comments; requested text confirmed",
+    "case_id": "movies-21"
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run open",
+    "query": null,
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/1hw18il/",
+    "outcome": "Opened Reddit full post and comments; requested text confirmed",
+    "case_id": "movies-24"
+  },
+  {
+    "date": "2026-10-24",
+    "engine": "web__run open",
+    "query": null,
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/u7m5a2/",
+    "outcome": "Opened Reddit full post and comments; requested text confirmed",
+    "case_id": "movies-29"
+  }
+]

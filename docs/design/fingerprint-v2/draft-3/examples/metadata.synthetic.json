@@ -1,0 +1,549 @@
+{
+  "format_version": "2.0.0-draft.3",
+  "title": {
+    "catalog_id": null,
+    "name": "Synthetic contract example \u2014 not a film assessment",
+    "release_year": 2026,
+    "media_type": "movie"
+  },
+  "scope": {
+    "id": "synthetic-movie",
+    "kind": "movie",
+    "as_of": "2026-10-24",
+    "coverage_description": "Illustrative contract only",
+    "edition_id": null
+  },
+  "provenance": {
+    "generated_at": "2026-10-24T00:00:00Z",
+    "generator": "checks.py",
+    "model": null,
+    "route": null,
+    "request_id": null,
+    "registry_version": "2.0.0-draft.3",
+    "review_status": "illustrative_only"
+  },
+  "evidence": [
+    {
+      "id": "example",
+      "kind": "editorial_assessment",
+      "locator": "synthetic:fixture",
+      "accessed_at": "2026-10-24",
+      "coverage_description": "Artificial test values, no real work described",
+      "supports_verified_absence": false
+    }
+  ],
+  "part": "metadata",
+  "requested_score_ids": [],
+  "requested_presence_ids": [],
+  "attribute_groups": {},
+  "content_presence": {},
+  "format_facts": {
+    "production_method": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "animation_techniques": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "narrative_mode": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "presentation_modes": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "documentary_devices": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "anime_tradition": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "series_structure": {
+      "status": "not_applicable",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "color_process": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "capture_media": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "release_formats": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "silent_or_intertitles": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "single_take_presentation": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "real_time_presentation": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "post_credits_scene_present": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "alternate_endings_present": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "episode_runtime_min_minutes": {
+      "status": "not_applicable",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "episode_runtime_max_minutes": {
+      "status": "not_applicable",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "approximate_ensemble_size": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    }
+  },
+  "catalog_facts": {
+    "original_language_codes": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "spoken_language_codes": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "signed_language_codes": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "production_country_codes": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "cast_person_ids": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "director_person_ids": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "writer_person_ids": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "source_author_person_ids": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "production_company_ids": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "distributor_ids": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "franchise_ids": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "collection_ids": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "adaptation_type": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "source_work_ids": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "factual_basis": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "runtime_minutes": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "release_date": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "show_status": {
+      "status": "not_applicable",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    }
+  },
+  "advisories": {
+    "violence": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "gore": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "sexual_activity": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "nudity": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "substance_use": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "profanity": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "disturbing_imagery": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "child_endangerment": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "animal_harm": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "eating_disorders": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "self_harm": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "suicide": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "sexual_violence": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "domestic_abuse": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "police_brutality": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "torture": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "kidnapping_and_confinement": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "pregnancy_loss": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "childbirth": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "discrimination": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    },
+    "flashing_imagery": {
+      "status": "not_assessed",
+      "presence": null,
+      "coverage": "insufficient",
+      "confidence": null,
+      "depiction_modes": [],
+      "evidence_refs": [],
+      "spoiler_sensitive": false
+    }
+  },
+  "world_contexts": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "cultural_contexts": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "seasonal_contexts": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "entities": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "representation_annotations": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "character_relationships": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "character_outcomes": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "work_relations": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "depicted_subjects": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "concept_assertions": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "audience_contexts": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "reception": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "temporal_segments": {
+    "status": "not_assessed",
+    "coverage": "unknown",
+    "items": [],
+    "evidence_refs": []
+  },
+  "essence": {
+    "text": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "tags": {
+      "status": "not_assessed",
+      "value": null,
+      "evidence_refs": [],
+      "notes": null
+    },
+    "highlights": {
+      "status": "not_assessed",
+      "coverage": "unknown",
+      "items": [],
+      "evidence_refs": []
+    }
+  }
+}

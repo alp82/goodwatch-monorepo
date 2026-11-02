@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0-draft.3",
+  "projection_version": "similarity-v2.2",
+  "counts": {
+    "fingerprint": 274,
+    "content_metadata": 290,
+    "viewing_context": 17,
+    "series_metadata": 8,
+    "evaluations": 10
+  },
+  "all_numeric_fields": 599,
+  "vector_dimensions": 274,
+  "presence_fields": 171,
+  "advisory_topics": 21,
+  "source_hashes": {
+    "definition.json": "d8ed4f9b3c069b0619ce84a1b17ac68d5c61812dd1324176bd98ce702a7d6496",
+    "schema.json": "1760f04ecf44a91d51bfc5aacbd7f5269df6d0eaeb67a0f57fe078e58e250360",
+    "similarity/mapping.json": "76fe05457bbec8f92afd7654ff2133ccab9acbfaad692150d3ad153ef015f5fc"
+  },
+  "files": {
+    "definition.json": "ad9019d80926d120fd773c40330ba7bd438bb5e0f4198dd1b5d02a8d5ec1d8c7",
+    "similarity.schema.json": "f1af5dbef7753d89dfa5e2b227e8e53a5c045c5e080738319f14443780443dc4",
+    "similarity.response.schema.json": "fe666fe473c3cbbba124fee42c379615081411df98ee04cde3e02570c1cf4cd3",
+    "metadata.schema.json": "ec471ec35f04386dc0ddc62b5dc876becda998115275bfe1ef2d61ee492bbc00",
+    "mapping.json": "1576ee748ac9f196ae27b33777272fa6b158fe671c907c824659b9ea4052960d",
+    "migration.json": "c067f19e7a3ed5b0b8ba8674382494c7db06be3f1592674e3db113df12d81471",
+    "indexing-contract.json": "219371fc07671acea5d47542864fa142289ca150e2b10149e21123d62f26ad5f"
+  }
+}

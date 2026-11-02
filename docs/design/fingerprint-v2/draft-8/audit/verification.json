@@ -1,0 +1,16 @@
+{
+  "producer_freeze_unchanged": true,
+  "field_count": 960,
+  "unique_ids": 960,
+  "vector": 274,
+  "attributes": 686,
+  "clusters": 18,
+  "files": {
+    "build_audit.py": "0139c3676d73803837c431208a5463324f65a734205ce975de71a9fbb3a97309",
+    "field-purpose.json": "915ec63333a9b6e1143c3a12a01d361d506196c2646a79bb031adff88f94e32c",
+    "field-purpose.csv": "cc5682ccae3fde218217309dd05110cc0b3ac7d3bf7f8fe982a7160972cbeaed",
+    "near-neighbors.json": "9c17e9c003769e5b1bc70e7157d3ee78629b0368cacfe9a75f68831b73c692dc",
+    "coverage.json": "5750b98467a4cc074c18ec3d5055ba0f7fccabfc02f4094a8613c59630bdc7cb",
+    "REPORT.md": "4ea7a2775582fbe36df078b41d90751876bbabf4be24406446fcb7594fadc2ac"
+  }
+}

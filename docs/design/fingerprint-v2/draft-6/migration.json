@@ -1,0 +1,31 @@
+{
+  "from": "2.0.0-draft.5",
+  "to": "2.0.0-draft.6",
+  "projection_version": "similarity-v2.2",
+  "vector_order_and_definitions_unchanged": true,
+  "numeric_additions": [
+    "viewing_demands.memory_load",
+    "viewing_demands.inference_load",
+    "viewing_demands.information_rate",
+    "viewing_affordances.interruption_recovery",
+    "performance.dance_prominence"
+  ],
+  "facet_additions": [
+    "performance.dance_styles",
+    "performance.dance_contexts"
+  ],
+  "advisory_additions": [],
+  "presence_additions": [],
+  "retained": "All 600 prior numeric definitions, 171 presence concepts, 38 facet IDs/options and 22 advisory topics.",
+  "conversion": "No runtime adapter is applied. Retain historical raw outputs. An explicit adapter can preserve same-scope existing values and mark the seven new required attributes null until assessed; do not infer them from correlated scores or fill with zero/empty lists.",
+  "dance_distinctions": "activities.dancing remains narrative centrality; presence.activities.dancing remains occurrence; sound.musical_numbers remains song-or-dance narrative expression. New dance prominence/styles/contexts are separate attributes.",
+  "no_imputation": "Unknown scores and facets remain null; an assessed empty selection is []. Higher interruption_recovery means easier recovery.",
+  "not_implemented": [
+    "query planning",
+    "Jev integration",
+    "taste weights",
+    "Qdrant indexing",
+    "production migration",
+    "paid inference"
+  ]
+}

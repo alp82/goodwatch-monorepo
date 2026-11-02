@@ -1,0 +1,20 @@
+{
+  "docs/design/fingerprint-v2/draft-3/METADATA-PROMPT.md": "e9f14349ac285d516eb8781a662fa155274331d2c474832275c91aabd9415b8a",
+  "docs/design/fingerprint-v2/draft-3/README.md": "c56c1e75dea147af99f67e62233d522b38d32ef897522f9474b597585a4b04d8",
+  "docs/design/fingerprint-v2/draft-3/SIMILARITY-PROMPT.md": "76b1e6ef30340c5ae353a09332fc95be6389f85abf99328ff59e3e5aad400e64",
+  "docs/design/fingerprint-v2/draft-3/build.py": "5c486067689dc1486b44c38ad3c8f19ecc52f058692e3a08f41e4d63aff51e2e",
+  "docs/design/fingerprint-v2/draft-3/checks.py": "f859f0e58c855d105a657d82e417a242d4ba768fec091915b57ab8602c0bc49e",
+  "docs/design/fingerprint-v2/draft-3/definition.json": "ad9019d80926d120fd773c40330ba7bd438bb5e0f4198dd1b5d02a8d5ec1d8c7",
+  "docs/design/fingerprint-v2/draft-3/examples/metadata.synthetic.json": "3e0d45872202b2afb0e3d92be4e8524bc8bd1003b829584b9577ec80072a22fd",
+  "docs/design/fingerprint-v2/draft-3/examples/similarity.synthetic.json": "fa92172d82566e427f9fd49ee97ca0b8bb276093567c9fa5e9454d703c937678",
+  "docs/design/fingerprint-v2/draft-3/indexing-contract.json": "219371fc07671acea5d47542864fa142289ca150e2b10149e21123d62f26ad5f",
+  "docs/design/fingerprint-v2/draft-3/manifest.json": "97731fcfdad37640024c5e5d1c10684597dafd062b341d12a23958acf6000a12",
+  "docs/design/fingerprint-v2/draft-3/mapping.json": "1576ee748ac9f196ae27b33777272fa6b158fe671c907c824659b9ea4052960d",
+  "docs/design/fingerprint-v2/draft-3/metadata.schema.json": "ec471ec35f04386dc0ddc62b5dc876becda998115275bfe1ef2d61ee492bbc00",
+  "docs/design/fingerprint-v2/draft-3/migration.json": "c067f19e7a3ed5b0b8ba8674382494c7db06be3f1592674e3db113df12d81471",
+  "docs/design/fingerprint-v2/draft-3/schema-overview.md": "2451bdd72b256d2bbac2d9b913d38231d3bd7f5606756b6718e3cb957184418a",
+  "docs/design/fingerprint-v2/draft-3/similarity.response.schema.json": "fe666fe473c3cbbba124fee42c379615081411df98ee04cde3e02570c1cf4cd3",
+  "docs/design/fingerprint-v2/draft-3/similarity.schema.json": "f1af5dbef7753d89dfa5e2b227e8e53a5c045c5e080738319f14443780443dc4",
+  "docs/design/fingerprint-v2/draft-3/validate.py": "2a3f0d12193fc30c8b727272c20f9b42fea45f2a935a7560cb2e616f5b8382d6",
+  "docs/design/fingerprint-v2/draft-3/verification.json": "02db4a9cb75675de484f87329bc23f40aa65152c1e28f29b770b3e0ad5ff0222"
+}

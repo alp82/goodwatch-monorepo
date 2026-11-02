@@ -1,0 +1,83 @@
+{
+  "google_attempts": [
+    {
+      "query": "site:reddit.com/r/MovieSuggestions/ \"specific\" \"movies\"",
+      "outcome": "HTTP200 HTML returned; subsequent visible-text probe was JS/redirect interstitial, no usable results",
+      "variants": [
+        "default",
+        "gbv=1&hl=en"
+      ]
+    }
+  ],
+  "fallback_queries": [
+    {
+      "query": "site:reddit.com/r/MovieSuggestions \"competent\" \"people\" \"working\"",
+      "engine": "web search tool; upstream engine unspecified",
+      "outcome": "queried; source-backed cases retained separately"
+    },
+    {
+      "query": "site:reddit.com/r/MovieSuggestions \"documentaries\" \"no narration\"",
+      "engine": "web search tool; upstream engine unspecified",
+      "outcome": "queried; source-backed cases retained separately"
+    },
+    {
+      "query": "site:reddit.com/r/televisionsuggestions \"season\" \"gets better\" \"recommend\"",
+      "engine": "web search tool; upstream engine unspecified",
+      "outcome": "queried; source-backed cases retained separately"
+    },
+    {
+      "query": "site:reddit.com/r/MovieSuggestions \"starts\" \"comedy\" \"turns\" \"horror\"",
+      "engine": "web search tool; upstream engine unspecified",
+      "outcome": "queried; source-backed cases retained separately"
+    },
+    {
+      "query": "site:reddit.com/r/MovieSuggestions \"competent people\"",
+      "engine": "web search tool; upstream engine unspecified",
+      "outcome": "queried; source-backed cases retained separately"
+    },
+    {
+      "query": "site:reddit.com/r/MovieSuggestions \"competence porn\"",
+      "engine": "web search tool; upstream engine unspecified",
+      "outcome": "queried; source-backed cases retained separately"
+    },
+    {
+      "query": "site:reddit.com/r/ifyoulikeblank \"movies\" \"but not\" \"vibe\"",
+      "engine": "web search tool; upstream engine unspecified",
+      "outcome": "queried; source-backed cases retained separately"
+    },
+    {
+      "query": "site:reddit.com/r/horror/comments/1j6fh2y \"revenge\"",
+      "engine": "web search tool; upstream engine unspecified",
+      "outcome": "Exact-ID audit search returned related threads, not the target; no new case retained"
+    },
+    {
+      "query": "site:reddit.com/r/MovieSuggestions/comments/1vc42qd \"age\"",
+      "engine": "web search tool; upstream engine unspecified",
+      "outcome": "Exact-ID audit search returned related threads, not the target; no new case retained"
+    },
+    {
+      "query": "site:reddit.com/r/horror/comments/1qr0fcj \"ending\"",
+      "engine": "web search tool; upstream engine unspecified",
+      "outcome": "Exact-ID audit search returned related threads, not the target; no new case retained"
+    }
+  ],
+  "method": "Root cross-check sample; request bodies/comments visible in indexed Reddit source text, not a claim of direct live Reddit HTML access. No recommended-film factual claims evaluated.",
+  "direct_opens": [
+    {
+      "thread_id": "1j6fh2y",
+      "outcome": "cache miss"
+    },
+    {
+      "thread_id": "1edncal",
+      "outcome": "post and comments visible; survival duration and alternative confirmed"
+    },
+    {
+      "thread_id": "1vc42qd",
+      "outcome": "cache miss"
+    },
+    {
+      "thread_id": "1vygr9y",
+      "outcome": "post and comments visible; snow as plot obstacle confirmed"
+    }
+  ]
+}

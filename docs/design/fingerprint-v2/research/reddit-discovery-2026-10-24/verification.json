@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "case_records": 121,
+  "unique_reddit_thread_ids": 121,
+  "checks": [
+    "unique case IDs and Reddit thread IDs",
+    "Reddit URL subreddit matches case",
+    "canonical existing field/path references resolve against draft.3",
+    "evidence access labels retained",
+    "nonempty request excerpt/predicates",
+    "all recommendation case references resolve",
+    "all 18 schema input hashes unchanged",
+    "JSON and CSV counts agree",
+    "local report links resolve"
+  ],
+  "local_links_checked": 12,
+  "schema_changes": false,
+  "production_changes": false,
+  "source_limits": "13 unique threads directly opened; others use indexed excerpts. This validates artifact structure and mappings, not source truth or retrieval accuracy.",
+  "files": {
+    "BRIEF.md": "48206eef614de391676732edb05867a52f45c5f867632c6477b643506cc0d5d9",
+    "REPORT.md": "4ed42666849e7423466ceac7fe6ede0b3640282620476bf3635f7b90b994ade3",
+    "cases.csv": "62382a92e3c304c82d998c5029db088c3b676e56736178447d2224046715de85",
+    "cases.json": "59bd67cacf3de162f5bfb8864c4f9c485fe573080f323569d59af6f2f370e3bb",
+    "consolidate.py": "54ec12961332a2c1885a88f740dc6d2452d88e638a44ebfe1ca4277d7eba68ce",
+    "movies-searches.json": "90939ecd1f5bd23b76e9bfbf0570b5d68c64dc1cfa1228646f3e0e69aaf7ded9",
+    "movies.json": "80f9293675310b0bb6b9a78ccfe20f24bd8152f72b2b3db78b6243aec46e6c24",
+    "movies.md": "278fb91ae5aaea13cc2c27f86f8ce1e18c2b1cfa5968bc55d2341c0273fff0c1",
+    "niche-searches.json": "ab2aa307cedde37be513d4a6c4644915f215226a329176329db7cdc2c6d2d866",
+    "niche.json": "1593f8b156e71f51e984080db8cf22f72f8e7876e45e52519640dd5a5e904882",
+    "niche.md": "cfad676e57e627b080f586c14ba8c365ff4b176a150e144acade5588d33c6a1a",
+    "recommendations.json": "3deb8dc90a4dedf2e21084afb4994c4f40e074b6d3c3c23175001cbef0d67247",
+    "root-searches.json": "9191496bcd80322e3bf6f84e76b0f0ac1e41eeb46b53cc88683c22b2e940031a",
+    "root.json": "b7a5c962b1fb83fcaf473bcb58218e100fbcc1e21a0bd7bc179f171523918c72",
+    "schema-bindings.json": "8a130704273bc3cb831b1cff250717b6cce02f163972733fb42b057e1a1fe0c1",
+    "summary.json": "29922980dfc81775884b8d7ed51a44fa585cc53466d65f744efd3ab761633520",
+    "tv-searches.json": "3d6540075eb134b819af9f6e18b92b6cbc902c4887c21bf0b38eb5affc47626e",
+    "tv.json": "eb0be8e724eba7d064b152e2ba594081c3e6abee28ca404c15b93b92c9506e6a",
+    "tv.md": "8b05f22ceb25cb10bdcca57b93116fd914100fbadf22a0e5bf4971b332b80d7e"
+  }
+}

@@ -1,0 +1,7426 @@
+{
+  "method": "Exhaustive lexical triage, not exhaustive semantic review. Clues overlap and do not establish coverage. Counts preserve source inventory scope; family title_count sums are not distinct-title counts across names.",
+  "counts": {
+    "all_names": 42936,
+    "all_array_entries": 3805508,
+    "with_baseline_clue": 2744,
+    "with_previous_recommendation_clue": 725,
+    "with_candidate_family": 1154,
+    "with_meta_or_catalog_clue": 585
+  },
+  "normalized_name_count": 42086,
+  "unresolved_count": 37937,
+  "families": {
+    "foreshadowing_setup_payoff": {
+      "exact_names": 77,
+      "array_entries": 64819,
+      "title_name_associations": 64272,
+      "top_examples": [
+        {
+          "name": "Foreshadowing",
+          "occurrences": 12322,
+          "title_count": 12133,
+          "movie_title_count": 9932,
+          "show_title_count": 2201,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"Opera.\""
+            },
+            {
+              "media_type": "show",
+              "title": "13 Reasons Why"
+            }
+          ]
+        },
+        {
+          "name": "Chekhov's Gun",
+          "occurrences": 10342,
+          "title_count": 10266,
+          "movie_title_count": 8640,
+          "show_title_count": 1626,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"GRADUATION\""
+            },
+            {
+              "media_type": "show",
+              "title": "'Allo 'Allo!"
+            }
+          ]
+        },
+        {
+          "name": "Bookends",
+          "occurrences": 6943,
+          "title_count": 6885,
+          "movie_title_count": 5306,
+          "show_title_count": 1579,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#AMFAD: All My Friends Are Dead"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Reasons Why"
+            }
+          ]
+        },
+        {
+          "name": "Call-Back",
+          "occurrences": 5440,
+          "title_count": 5358,
+          "movie_title_count": 3843,
+          "show_title_count": 1515,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "& More"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        },
+        {
+          "name": "Brick Joke",
+          "occurrences": 5335,
+          "title_count": 5306,
+          "movie_title_count": 4087,
+          "show_title_count": 1219,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'Big Game'"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Hours: Race Against Time"
+            }
+          ]
+        },
+        {
+          "name": "Ironic Echo",
+          "occurrences": 3729,
+          "title_count": 3716,
+          "movie_title_count": 3099,
+          "show_title_count": 617,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"Opera.\""
+            },
+            {
+              "media_type": "show",
+              "title": "'Allo 'Allo!"
+            }
+          ]
+        },
+        {
+          "name": "Arc Words",
+          "occurrences": 3429,
+          "title_count": 3385,
+          "movie_title_count": 2732,
+          "show_title_count": 653,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Para) Normal Activity"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "Chekhov's Skill",
+          "occurrences": 3390,
+          "title_count": 3361,
+          "movie_title_count": 2878,
+          "show_title_count": 483,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#MUTE"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        },
+        {
+          "name": "Chekhov's Gunman",
+          "occurrences": 3056,
+          "title_count": 3040,
+          "movie_title_count": 2422,
+          "show_title_count": 618,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Trucker"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "Meaningful Echo",
+          "occurrences": 2092,
+          "title_count": 2092,
+          "movie_title_count": 1765,
+          "show_title_count": 327,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#funnyFACE"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        },
+        {
+          "name": "Rule of Three",
+          "occurrences": 1702,
+          "title_count": 1697,
+          "movie_title_count": 1266,
+          "show_title_count": 431,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "10 Things I Hate About You"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Five-Second Foreshadowing",
+          "occurrences": 1429,
+          "title_count": 1429,
+          "movie_title_count": 1236,
+          "show_title_count": 193,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#SCREAMERS"
+            },
+            {
+              "media_type": "show",
+              "title": "9-1-1: Lone Star"
+            }
+          ]
+        },
+        {
+          "name": "Book Ends",
+          "occurrences": 1020,
+          "title_count": 1018,
+          "movie_title_count": 938,
+          "show_title_count": 80,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'Big Game'"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventures in Odyssey"
+            }
+          ]
+        },
+        {
+          "name": "Call-Forward",
+          "occurrences": 855,
+          "title_count": 852,
+          "movie_title_count": 597,
+          "show_title_count": 255,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Para) Normal Activity"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "Chekhov's Gag",
+          "occurrences": 804,
+          "title_count": 804,
+          "movie_title_count": 650,
+          "show_title_count": 154,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "127 Hours"
+            },
+            {
+              "media_type": "show",
+              "title": "After Midnight"
+            }
+          ]
+        }
+      ]
+    },
+    "character_and_opposition_roles": {
+      "exact_names": 37,
+      "array_entries": 29841,
+      "title_name_associations": 29635,
+      "top_examples": [
+        {
+          "name": "Big Bad",
+          "occurrences": 7859,
+          "title_count": 7753,
+          "movie_title_count": 6257,
+          "show_title_count": 1496,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"MANOS\" The Hands of Fate"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Villain Protagonist",
+          "occurrences": 2585,
+          "title_count": 2562,
+          "movie_title_count": 2247,
+          "show_title_count": 315,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Bucket of Blood"
+            },
+            {
+              "media_type": "show",
+              "title": "A Killer Paradox"
+            }
+          ]
+        },
+        {
+          "name": "Red Oni, Blue Oni",
+          "occurrences": 1903,
+          "title_count": 1899,
+          "movie_title_count": 1190,
+          "show_title_count": 709,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'Big Game'"
+            },
+            {
+              "media_type": "show",
+              "title": "A Murder at the End of the World"
+            }
+          ]
+        },
+        {
+          "name": "Decoy Protagonist",
+          "occurrences": 1819,
+          "title_count": 1802,
+          "movie_title_count": 1577,
+          "show_title_count": 225,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Alive"
+            },
+            {
+              "media_type": "show",
+              "title": "\"crash canyon\""
+            }
+          ]
+        },
+        {
+          "name": "Foil",
+          "occurrences": 1775,
+          "title_count": 1764,
+          "movie_title_count": 1279,
+          "show_title_count": 485,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "12 Years a Slave"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Reasons Why"
+            }
+          ]
+        },
+        {
+          "name": "Well-Intentioned Extremist",
+          "occurrences": 1762,
+          "title_count": 1759,
+          "movie_title_count": 1231,
+          "show_title_count": 528,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#c_училища"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Anti-Villain",
+          "occurrences": 1730,
+          "title_count": 1721,
+          "movie_title_count": 1349,
+          "show_title_count": 372,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Cathedral)"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Greater-Scope Villain",
+          "occurrences": 1723,
+          "title_count": 1720,
+          "movie_title_count": 1394,
+          "show_title_count": 326,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Para) Normal Activity"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Worthy Opponent",
+          "occurrences": 1546,
+          "title_count": 1544,
+          "movie_title_count": 1166,
+          "show_title_count": 378,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "12 Angry Men"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "No Antagonist",
+          "occurrences": 1473,
+          "title_count": 1473,
+          "movie_title_count": 1202,
+          "show_title_count": 271,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(an)Other"
+            },
+            {
+              "media_type": "show",
+              "title": "10 Things I Hate About You"
+            }
+          ]
+        },
+        {
+          "name": "Big Bad Ensemble",
+          "occurrences": 821,
+          "title_count": 821,
+          "movie_title_count": 561,
+          "show_title_count": 260,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "21 Jump Street"
+            },
+            {
+              "media_type": "show",
+              "title": "Akiba Maid War"
+            }
+          ]
+        },
+        {
+          "name": "Hero Antagonist",
+          "occurrences": 816,
+          "title_count": 816,
+          "movie_title_count": 667,
+          "show_title_count": 149,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Loud House Christmas"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Badass Normal",
+          "occurrences": 779,
+          "title_count": 768,
+          "movie_title_count": 431,
+          "show_title_count": 337,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Para) Normal Activity"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "Big Bad Duumvirate",
+          "occurrences": 666,
+          "title_count": 659,
+          "movie_title_count": 535,
+          "show_title_count": 124,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'Big Game'"
+            },
+            {
+              "media_type": "show",
+              "title": "Adrian"
+            }
+          ]
+        },
+        {
+          "name": "Big Bad Wannabe",
+          "occurrences": 439,
+          "title_count": 437,
+          "movie_title_count": 341,
+          "show_title_count": 96,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "8 Mile"
+            },
+            {
+              "media_type": "show",
+              "title": "Angel Sanctuary"
+            }
+          ]
+        }
+      ]
+    },
+    "symbolism_and_motifs": {
+      "exact_names": 74,
+      "array_entries": 18501,
+      "title_name_associations": 18409,
+      "top_examples": [
+        {
+          "name": "Meaningful Name",
+          "occurrences": 7156,
+          "title_count": 7105,
+          "movie_title_count": 5284,
+          "show_title_count": 1821,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#MUTE"
+            },
+            {
+              "media_type": "show",
+              "title": "'Allo 'Allo!"
+            }
+          ]
+        },
+        {
+          "name": "Rule of Symbolism",
+          "occurrences": 2261,
+          "title_count": 2259,
+          "movie_title_count": 2028,
+          "show_title_count": 231,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "10 Cloverfield Lane"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        },
+        {
+          "name": "Leitmotif",
+          "occurrences": 1813,
+          "title_count": 1805,
+          "movie_title_count": 1244,
+          "show_title_count": 561,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"MANOS\" The Hands of Fate"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Animal Motifs",
+          "occurrences": 1345,
+          "title_count": 1334,
+          "movie_title_count": 1044,
+          "show_title_count": 290,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Fistful of Dollars"
+            },
+            {
+              "media_type": "show",
+              "title": "A Korean Odyssey"
+            }
+          ]
+        },
+        {
+          "name": "Color-Coded for Your Convenience",
+          "occurrences": 960,
+          "title_count": 956,
+          "movie_title_count": 623,
+          "show_title_count": 333,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'Hood"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        },
+        {
+          "name": "Literal Metaphor",
+          "occurrences": 642,
+          "title_count": 642,
+          "movie_title_count": 431,
+          "show_title_count": 211,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Bride's Revenge"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Color-Coded Characters",
+          "occurrences": 555,
+          "title_count": 555,
+          "movie_title_count": 273,
+          "show_title_count": 282,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#c_училища"
+            },
+            {
+              "media_type": "show",
+              "title": "A Place Further than the Universe"
+            }
+          ]
+        },
+        {
+          "name": "Arc Symbol",
+          "occurrences": 528,
+          "title_count": 519,
+          "movie_title_count": 386,
+          "show_title_count": 133,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "2001: A Space Odyssey"
+            },
+            {
+              "media_type": "show",
+              "title": "A Kind of Spark"
+            }
+          ]
+        },
+        {
+          "name": "Colour-Coded for Your Convenience",
+          "occurrences": 517,
+          "title_count": 512,
+          "movie_title_count": 318,
+          "show_title_count": 194,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#AMFAD: All My Friends Are Dead"
+            },
+            {
+              "media_type": "show",
+              "title": "Ahsoka"
+            }
+          ]
+        },
+        {
+          "name": "Symbolic Blood",
+          "occurrences": 219,
+          "title_count": 219,
+          "movie_title_count": 191,
+          "show_title_count": 28,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Adventure Time"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventure Time"
+            }
+          ]
+        },
+        {
+          "name": "Animal Motif",
+          "occurrences": 212,
+          "title_count": 212,
+          "movie_title_count": 154,
+          "show_title_count": 58,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Cure for Wellness"
+            },
+            {
+              "media_type": "show",
+              "title": "Actually, I Am..."
+            }
+          ]
+        },
+        {
+          "name": "Symbolism",
+          "occurrences": 207,
+          "title_count": 207,
+          "movie_title_count": 196,
+          "show_title_count": 11,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Aagaman"
+            },
+            {
+              "media_type": "show",
+              "title": "Bluey"
+            }
+          ]
+        },
+        {
+          "name": "Environmental Symbolism",
+          "occurrences": 184,
+          "title_count": 184,
+          "movie_title_count": 165,
+          "show_title_count": 19,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": ".raw"
+            },
+            {
+              "media_type": "show",
+              "title": "Akudama Drive"
+            }
+          ]
+        },
+        {
+          "name": "Symbolic Serene Submersion",
+          "occurrences": 179,
+          "title_count": 179,
+          "movie_title_count": 170,
+          "show_title_count": 9,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A.I. Artificial Intelligence"
+            },
+            {
+              "media_type": "show",
+              "title": "Banshee"
+            }
+          ]
+        },
+        {
+          "name": "Symbolic Glass House",
+          "occurrences": 145,
+          "title_count": 145,
+          "movie_title_count": 134,
+          "show_title_count": 11,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Simple Favor"
+            },
+            {
+              "media_type": "show",
+              "title": "Apple Cider Vinegar"
+            }
+          ]
+        }
+      ]
+    },
+    "narrative_causality_and_consequence": {
+      "exact_names": 20,
+      "array_entries": 25727,
+      "title_name_associations": 25485,
+      "top_examples": [
+        {
+          "name": "Karma Houdini",
+          "occurrences": 6783,
+          "title_count": 6614,
+          "movie_title_count": 5345,
+          "show_title_count": 1269,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"MANOS\" The Hands of Fate"
+            },
+            {
+              "media_type": "show",
+              "title": "#martyisdead"
+            }
+          ]
+        },
+        {
+          "name": "Laser-Guided Karma",
+          "occurrences": 3908,
+          "title_count": 3885,
+          "movie_title_count": 3041,
+          "show_title_count": 844,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'Amal"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Reasons Why"
+            }
+          ]
+        },
+        {
+          "name": "Hoist by His Own Petard",
+          "occurrences": 3689,
+          "title_count": 3674,
+          "movie_title_count": 2871,
+          "show_title_count": 803,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Stealth"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Contrived Coincidence",
+          "occurrences": 2931,
+          "title_count": 2923,
+          "movie_title_count": 2282,
+          "show_title_count": 641,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'A Perfect World'"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Hours: Race Against Time"
+            }
+          ]
+        },
+        {
+          "name": "Anyone Can Die",
+          "occurrences": 2150,
+          "title_count": 2135,
+          "movie_title_count": 1474,
+          "show_title_count": 661,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'G' Men"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "All for Nothing",
+          "occurrences": 1847,
+          "title_count": 1845,
+          "movie_title_count": 1385,
+          "show_title_count": 460,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"Opera.\""
+            },
+            {
+              "media_type": "show",
+              "title": "13 Reasons Why"
+            }
+          ]
+        },
+        {
+          "name": "Deus ex Machina",
+          "occurrences": 1311,
+          "title_count": 1309,
+          "movie_title_count": 981,
+          "show_title_count": 328,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#c_училища"
+            },
+            {
+              "media_type": "show",
+              "title": "9-1-1: Lone Star"
+            }
+          ]
+        },
+        {
+          "name": "Status Quo Is God",
+          "occurrences": 874,
+          "title_count": 872,
+          "movie_title_count": 282,
+          "show_title_count": 590,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Very Brady Sequel"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        },
+        {
+          "name": "Diabolus ex Machina",
+          "occurrences": 659,
+          "title_count": 659,
+          "movie_title_count": 463,
+          "show_title_count": 196,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#SCREAMERS"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Reasons Why"
+            }
+          ]
+        },
+        {
+          "name": "Karma Houdini Warranty",
+          "occurrences": 632,
+          "title_count": 632,
+          "movie_title_count": 477,
+          "show_title_count": 155,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Christmas Story"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Plot Armor",
+          "occurrences": 392,
+          "title_count": 391,
+          "movie_title_count": 287,
+          "show_title_count": 104,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Alien³"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Reset Button",
+          "occurrences": 384,
+          "title_count": 384,
+          "movie_title_count": 162,
+          "show_title_count": 222,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "16 Wishes"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        },
+        {
+          "name": "Reset Button Ending",
+          "occurrences": 44,
+          "title_count": 44,
+          "movie_title_count": 20,
+          "show_title_count": 24,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Clannad: The Motion Picture"
+            },
+            {
+              "media_type": "show",
+              "title": "Clannad"
+            }
+          ]
+        },
+        {
+          "name": "Relationship Reset Button",
+          "occurrences": 37,
+          "title_count": 37,
+          "movie_title_count": 20,
+          "show_title_count": 17,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "50 First Dates"
+            },
+            {
+              "media_type": "show",
+              "title": "Angel"
+            }
+          ]
+        },
+        {
+          "name": "There Are No Global Consequences",
+          "occurrences": 35,
+          "title_count": 35,
+          "movie_title_count": 30,
+          "show_title_count": 5,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Stealth"
+            },
+            {
+              "media_type": "show",
+              "title": "Spiral Zone"
+            }
+          ]
+        }
+      ]
+    },
+    "tonal_or_genre_change": {
+      "exact_names": 13,
+      "array_entries": 18649,
+      "title_name_associations": 18504,
+      "top_examples": [
+        {
+          "name": "Mood Whiplash",
+          "occurrences": 5438,
+          "title_count": 5398,
+          "movie_title_count": 4099,
+          "show_title_count": 1299,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#MUTE"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        },
+        {
+          "name": "Darker and Edgier",
+          "occurrences": 3401,
+          "title_count": 3368,
+          "movie_title_count": 2130,
+          "show_title_count": 1238,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Cathedral)"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Hours: Race Against Time"
+            }
+          ]
+        },
+        {
+          "name": "Lighter and Softer",
+          "occurrences": 2776,
+          "title_count": 2755,
+          "movie_title_count": 1824,
+          "show_title_count": 931,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Alive"
+            },
+            {
+              "media_type": "show",
+              "title": "10 Things I Hate About You"
+            }
+          ]
+        },
+        {
+          "name": "Art Shift",
+          "occurrences": 1851,
+          "title_count": 1840,
+          "movie_title_count": 1055,
+          "show_title_count": 785,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "& More"
+            },
+            {
+              "media_type": "show",
+              "title": "'Twas the Night"
+            }
+          ]
+        },
+        {
+          "name": "Genre Shift",
+          "occurrences": 1310,
+          "title_count": 1291,
+          "movie_title_count": 983,
+          "show_title_count": 308,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "10 Cloverfield Lane"
+            },
+            {
+              "media_type": "show",
+              "title": "Actually, I Am..."
+            }
+          ]
+        },
+        {
+          "name": "Denser and Wackier",
+          "occurrences": 855,
+          "title_count": 852,
+          "movie_title_count": 424,
+          "show_title_count": 428,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "102 Dalmatians"
+            },
+            {
+              "media_type": "show",
+              "title": "101 Dalmatians: The Series"
+            }
+          ]
+        },
+        {
+          "name": "Cerebus Syndrome",
+          "occurrences": 796,
+          "title_count": 790,
+          "movie_title_count": 384,
+          "show_title_count": 406,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(witch)"
+            },
+            {
+              "media_type": "show",
+              "title": "A Centaur's Life"
+            }
+          ]
+        },
+        {
+          "name": "Knight of Cerebus",
+          "occurrences": 752,
+          "title_count": 743,
+          "movie_title_count": 437,
+          "show_title_count": 306,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "12 Years a Slave"
+            },
+            {
+              "media_type": "show",
+              "title": "9-1-1"
+            }
+          ]
+        },
+        {
+          "name": "Breather Episode",
+          "occurrences": 721,
+          "title_count": 719,
+          "movie_title_count": 264,
+          "show_title_count": 455,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(an)Other"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "Halfway Plot Switch",
+          "occurrences": 663,
+          "title_count": 662,
+          "movie_title_count": 584,
+          "show_title_count": 78,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Stealth"
+            },
+            {
+              "media_type": "show",
+              "title": "Anastasia"
+            }
+          ]
+        },
+        {
+          "name": "Reverse Cerebus Syndrome",
+          "occurrences": 78,
+          "title_count": 78,
+          "movie_title_count": 43,
+          "show_title_count": 35,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Army of Darkness"
+            },
+            {
+              "media_type": "show",
+              "title": "Bakuman"
+            }
+          ]
+        },
+        {
+          "name": "Mid-Development Genre Shift",
+          "occurrences": 7,
+          "title_count": 7,
+          "movie_title_count": 5,
+          "show_title_count": 2,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Singin' in the Rain"
+            },
+            {
+              "media_type": "show",
+              "title": "Cars on the Road"
+            }
+          ]
+        },
+        {
+          "name": "Darker And Edgier",
+          "occurrences": 1,
+          "title_count": 1,
+          "movie_title_count": 1,
+          "show_title_count": 0,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Matinee"
+            }
+          ]
+        }
+      ]
+    },
+    "social_institutions_and_premises": {
+      "exact_names": 125,
+      "array_entries": 10476,
+      "title_name_associations": 10460,
+      "top_examples": [
+        {
+          "name": "Precision F-Strike",
+          "occurrences": 3802,
+          "title_count": 3798,
+          "movie_title_count": 3151,
+          "show_title_count": 647,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Alive"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Obstructive Bureaucrat",
+          "occurrences": 1028,
+          "title_count": 1028,
+          "movie_title_count": 750,
+          "show_title_count": 278,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Stuck"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Hours: Race Against Time"
+            }
+          ]
+        },
+        {
+          "name": "Conspiracy Theorist",
+          "occurrences": 366,
+          "title_count": 365,
+          "movie_title_count": 200,
+          "show_title_count": 165,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "2012"
+            },
+            {
+              "media_type": "show",
+              "title": "9-1-1: Lone Star"
+            }
+          ]
+        },
+        {
+          "name": "Shovel Strike",
+          "occurrences": 364,
+          "title_count": 364,
+          "movie_title_count": 326,
+          "show_title_count": 38,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Cure for Wellness"
+            },
+            {
+              "media_type": "show",
+              "title": "Agatha Raisin"
+            }
+          ]
+        },
+        {
+          "name": "Patriotic Fervor",
+          "occurrences": 293,
+          "title_count": 293,
+          "movie_title_count": 231,
+          "show_title_count": 62,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "300"
+            },
+            {
+              "media_type": "show",
+              "title": "America's Next Top Model"
+            }
+          ]
+        },
+        {
+          "name": "Succession Crisis",
+          "occurrences": 240,
+          "title_count": 240,
+          "movie_title_count": 177,
+          "show_title_count": 63,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Man for All Seasons"
+            },
+            {
+              "media_type": "show",
+              "title": "A History of Scotland"
+            }
+          ]
+        },
+        {
+          "name": "Corrupt Bureaucrat",
+          "occurrences": 236,
+          "title_count": 235,
+          "movie_title_count": 211,
+          "show_title_count": 24,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Aelita"
+            },
+            {
+              "media_type": "show",
+              "title": "Bayan Ko"
+            }
+          ]
+        },
+        {
+          "name": "Technical Pacifist",
+          "occurrences": 212,
+          "title_count": 212,
+          "movie_title_count": 150,
+          "show_title_count": 62,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "After The Rain"
+            },
+            {
+              "media_type": "show",
+              "title": "AKB0048"
+            }
+          ]
+        },
+        {
+          "name": "The Revolution Will Not Be Civilized",
+          "occurrences": 208,
+          "title_count": 206,
+          "movie_title_count": 141,
+          "show_title_count": 65,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Cross the Universe"
+            },
+            {
+              "media_type": "show",
+              "title": "A French Village"
+            }
+          ]
+        },
+        {
+          "name": "Actual Pacifist",
+          "occurrences": 175,
+          "title_count": 175,
+          "movie_title_count": 135,
+          "show_title_count": 40,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Hidden Life"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventure Time"
+            }
+          ]
+        },
+        {
+          "name": "Celestial Bureaucracy",
+          "occurrences": 164,
+          "title_count": 164,
+          "movie_title_count": 117,
+          "show_title_count": 47,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Life Less Ordinary"
+            },
+            {
+              "media_type": "show",
+              "title": "A Korean Odyssey"
+            }
+          ]
+        },
+        {
+          "name": "Elective Monarchy",
+          "occurrences": 153,
+          "title_count": 153,
+          "movie_title_count": 143,
+          "show_title_count": 10,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Conclave"
+            },
+            {
+              "media_type": "show",
+              "title": "A History of Scotland"
+            }
+          ]
+        },
+        {
+          "name": "Badass Pacifist",
+          "occurrences": 153,
+          "title_count": 152,
+          "movie_title_count": 115,
+          "show_title_count": 37,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Argo"
+            },
+            {
+              "media_type": "show",
+              "title": "Ah! My Goddess"
+            }
+          ]
+        },
+        {
+          "name": "Unexpected Inheritance",
+          "occurrences": 155,
+          "title_count": 152,
+          "movie_title_count": 113,
+          "show_title_count": 39,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'Amal"
+            },
+            {
+              "media_type": "show",
+              "title": "Belgravia"
+            }
+          ]
+        },
+        {
+          "name": "Censorship by Spelling",
+          "occurrences": 139,
+          "title_count": 139,
+          "movie_title_count": 86,
+          "show_title_count": 53,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "102 Dalmatians"
+            },
+            {
+              "media_type": "show",
+              "title": "Alice in Wonderland"
+            }
+          ]
+        }
+      ]
+    },
+    "missing_settings_and_geography": {
+      "exact_names": 173,
+      "array_entries": 14741,
+      "title_name_associations": 14693,
+      "top_examples": [
+        {
+          "name": "What the Hell, Hero?",
+          "occurrences": 3791,
+          "title_count": 3779,
+          "movie_title_count": 2676,
+          "show_title_count": 1103,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"And So, It Goes\""
+            },
+            {
+              "media_type": "show",
+              "title": "10 Things I Hate About You"
+            }
+          ]
+        },
+        {
+          "name": "War Is Hell",
+          "occurrences": 1121,
+          "title_count": 1120,
+          "movie_title_count": 951,
+          "show_title_count": 169,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'A War'"
+            },
+            {
+              "media_type": "show",
+              "title": "Aldnoah.Zero"
+            }
+          ]
+        },
+        {
+          "name": "Where the Hell Is Springfield?",
+          "occurrences": 820,
+          "title_count": 820,
+          "movie_title_count": 471,
+          "show_title_count": 349,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'Twas the Night Before Christmas"
+            },
+            {
+              "media_type": "show",
+              "title": "'Twas the Night Before Christmas"
+            }
+          ]
+        },
+        {
+          "name": "Storming the Castle",
+          "occurrences": 671,
+          "title_count": 669,
+          "movie_title_count": 559,
+          "show_title_count": 110,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "- Mar -"
+            },
+            {
+              "media_type": "show",
+              "title": "AKB0048"
+            }
+          ]
+        },
+        {
+          "name": "What the Hell Is That Accent?",
+          "occurrences": 577,
+          "title_count": 577,
+          "movie_title_count": 431,
+          "show_title_count": 146,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Mighty Wind"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        },
+        {
+          "name": "Training from Hell",
+          "occurrences": 575,
+          "title_count": 573,
+          "movie_title_count": 334,
+          "show_title_count": 239,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "ALL YOU NEED IS KILL"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "Sophisticated as Hell",
+          "occurrences": 549,
+          "title_count": 549,
+          "movie_title_count": 419,
+          "show_title_count": 130,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Fish Called Wanda"
+            },
+            {
+              "media_type": "show",
+              "title": "A Black Lady Sketch Show"
+            }
+          ]
+        },
+        {
+          "name": "Your Princess Is in Another Castle!",
+          "occurrences": 445,
+          "title_count": 444,
+          "movie_title_count": 284,
+          "show_title_count": 160,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"Opera.\""
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Train-Station Goodbye",
+          "occurrences": 385,
+          "title_count": 385,
+          "movie_title_count": 361,
+          "show_title_count": 24,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Farewell to Arms"
+            },
+            {
+              "media_type": "show",
+              "title": "Agatha Christie's Poirot"
+            }
+          ]
+        },
+        {
+          "name": "Hell-Bent for Leather",
+          "occurrences": 316,
+          "title_count": 310,
+          "movie_title_count": 233,
+          "show_title_count": 77,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Christmas Carol"
+            },
+            {
+              "media_type": "show",
+              "title": "Ai no Kusabi"
+            }
+          ]
+        },
+        {
+          "name": "Hell Is That Noise",
+          "occurrences": 277,
+          "title_count": 277,
+          "movie_title_count": 239,
+          "show_title_count": 38,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "2001: A Space Odyssey"
+            },
+            {
+              "media_type": "show",
+              "title": "Alice in Borderland"
+            }
+          ]
+        },
+        {
+          "name": "Marshmallow Hell",
+          "occurrences": 218,
+          "title_count": 217,
+          "movie_title_count": 99,
+          "show_title_count": 118,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#c_училища"
+            },
+            {
+              "media_type": "show",
+              "title": "8 Simple Rules"
+            }
+          ]
+        },
+        {
+          "name": "Fire and Brimstone Hell",
+          "occurrences": 208,
+          "title_count": 208,
+          "movie_title_count": 175,
+          "show_title_count": 33,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Ace Attorney"
+            },
+            {
+              "media_type": "show",
+              "title": "Ace Lightning"
+            }
+          ]
+        },
+        {
+          "name": "Ironic Hell",
+          "occurrences": 201,
+          "title_count": 199,
+          "movie_title_count": 163,
+          "show_title_count": 36,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Case of Spring Fever"
+            },
+            {
+              "media_type": "show",
+              "title": "101 Dalmatians: The Series"
+            }
+          ]
+        },
+        {
+          "name": "See You in Hell",
+          "occurrences": 191,
+          "title_count": 191,
+          "movie_title_count": 154,
+          "show_title_count": 37,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#SCREAMERS"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventure Time"
+            }
+          ]
+        }
+      ]
+    },
+    "humor_not_yet_specific": {
+      "exact_names": 71,
+      "array_entries": 29886,
+      "title_name_associations": 29774,
+      "top_examples": [
+        {
+          "name": "Ironic Echo",
+          "occurrences": 3729,
+          "title_count": 3716,
+          "movie_title_count": 3099,
+          "show_title_count": 617,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"Opera.\""
+            },
+            {
+              "media_type": "show",
+              "title": "'Allo 'Allo!"
+            }
+          ]
+        },
+        {
+          "name": "Irony",
+          "occurrences": 3617,
+          "title_count": 3597,
+          "movie_title_count": 2750,
+          "show_title_count": 847,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"Opera.\""
+            },
+            {
+              "media_type": "show",
+              "title": "10 Things I Hate About You"
+            }
+          ]
+        },
+        {
+          "name": "Black Comedy",
+          "occurrences": 3136,
+          "title_count": 3126,
+          "movie_title_count": 2524,
+          "show_title_count": 602,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(MAD)²"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Hypocritical Humor",
+          "occurrences": 2930,
+          "title_count": 2914,
+          "movie_title_count": 2017,
+          "show_title_count": 897,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'Twas the Night Before Christmas"
+            },
+            {
+              "media_type": "show",
+              "title": "'Twas the Night Before Christmas"
+            }
+          ]
+        },
+        {
+          "name": "Dramatic Irony",
+          "occurrences": 2396,
+          "title_count": 2389,
+          "movie_title_count": 1888,
+          "show_title_count": 501,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Alive"
+            },
+            {
+              "media_type": "show",
+              "title": "A Centaur's Life"
+            }
+          ]
+        },
+        {
+          "name": "Stealth Pun",
+          "occurrences": 1950,
+          "title_count": 1946,
+          "movie_title_count": 1319,
+          "show_title_count": 627,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Stealth"
+            },
+            {
+              "media_type": "show",
+              "title": "'Allo 'Allo!"
+            }
+          ]
+        },
+        {
+          "name": "Visual Pun",
+          "occurrences": 1722,
+          "title_count": 1720,
+          "movie_title_count": 1230,
+          "show_title_count": 490,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(MAD)²"
+            },
+            {
+              "media_type": "show",
+              "title": "101 Dalmatians: The Series"
+            }
+          ]
+        },
+        {
+          "name": "Toilet Humor",
+          "occurrences": 973,
+          "title_count": 953,
+          "movie_title_count": 694,
+          "show_title_count": 259,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"Good Morning.\""
+            },
+            {
+              "media_type": "show",
+              "title": "'Til Death"
+            }
+          ]
+        },
+        {
+          "name": "Overly Long Gag",
+          "occurrences": 942,
+          "title_count": 940,
+          "movie_title_count": 612,
+          "show_title_count": 328,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#MUTE"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventure Time"
+            }
+          ]
+        },
+        {
+          "name": "Pun",
+          "occurrences": 939,
+          "title_count": 934,
+          "movie_title_count": 595,
+          "show_title_count": 339,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(MAD)²"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Death by Irony",
+          "occurrences": 932,
+          "title_count": 930,
+          "movie_title_count": 790,
+          "show_title_count": 140,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Haunting in Venice"
+            },
+            {
+              "media_type": "show",
+              "title": "A History of Scotland"
+            }
+          ]
+        },
+        {
+          "name": "Pun-Based Title",
+          "occurrences": 823,
+          "title_count": 819,
+          "movie_title_count": 490,
+          "show_title_count": 329,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Case of Spring Fever"
+            },
+            {
+              "media_type": "show",
+              "title": "A Scare at Bedtime"
+            }
+          ]
+        },
+        {
+          "name": "Ironic Name",
+          "occurrences": 685,
+          "title_count": 685,
+          "movie_title_count": 509,
+          "show_title_count": 176,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'elf"
+            },
+            {
+              "media_type": "show",
+              "title": "A Kind of Spark"
+            }
+          ]
+        },
+        {
+          "name": "Black Comedy Rape",
+          "occurrences": 506,
+          "title_count": 504,
+          "movie_title_count": 321,
+          "show_title_count": 183,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Cross the Universe"
+            },
+            {
+              "media_type": "show",
+              "title": "\"crash canyon\""
+            }
+          ]
+        },
+        {
+          "name": "Toilet Humour",
+          "occurrences": 435,
+          "title_count": 435,
+          "movie_title_count": 237,
+          "show_title_count": 198,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "2001: A Space Odyssey"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        }
+      ]
+    },
+    "visual_or_audio_techniques": {
+      "exact_names": 113,
+      "array_entries": 22221,
+      "title_name_associations": 22176,
+      "top_examples": [
+        {
+          "name": "Freeze-Frame Bonus",
+          "occurrences": 3204,
+          "title_count": 3179,
+          "movie_title_count": 2420,
+          "show_title_count": 759,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#c_училища"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Gilligan Cut",
+          "occurrences": 2117,
+          "title_count": 2116,
+          "movie_title_count": 1565,
+          "show_title_count": 551,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Alive"
+            },
+            {
+              "media_type": "show",
+              "title": "101 Dalmatians: The Series"
+            }
+          ]
+        },
+        {
+          "name": "The Oner",
+          "occurrences": 1850,
+          "title_count": 1850,
+          "movie_title_count": 1707,
+          "show_title_count": 143,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Blooper) Bunny!"
+            },
+            {
+              "media_type": "show",
+              "title": "Adolescence"
+            }
+          ]
+        },
+        {
+          "name": "Match Cut",
+          "occurrences": 1750,
+          "title_count": 1750,
+          "movie_title_count": 1637,
+          "show_title_count": 113,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"Good Morning.\""
+            },
+            {
+              "media_type": "show",
+              "title": "101 Dalmatians: The Series"
+            }
+          ]
+        },
+        {
+          "name": "Training Montage",
+          "occurrences": 929,
+          "title_count": 928,
+          "movie_title_count": 779,
+          "show_title_count": 149,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "17 Again"
+            },
+            {
+              "media_type": "show",
+              "title": "9-1-1: Lone Star"
+            }
+          ]
+        },
+        {
+          "name": "Answer Cut",
+          "occurrences": 837,
+          "title_count": 837,
+          "movie_title_count": 712,
+          "show_title_count": 125,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "*Footnote"
+            },
+            {
+              "media_type": "show",
+              "title": "'Twas the Night Before Christmas"
+            }
+          ]
+        },
+        {
+          "name": "Description Cut",
+          "occurrences": 712,
+          "title_count": 712,
+          "movie_title_count": 512,
+          "show_title_count": 200,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Bug's Life"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Hard-Work Montage",
+          "occurrences": 674,
+          "title_count": 674,
+          "movie_title_count": 587,
+          "show_title_count": 87,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "& After"
+            },
+            {
+              "media_type": "show",
+              "title": "A Kind of Spark"
+            }
+          ]
+        },
+        {
+          "name": "Dutch Angle",
+          "occurrences": 568,
+          "title_count": 567,
+          "movie_title_count": 485,
+          "show_title_count": 82,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Fish Called Wanda"
+            },
+            {
+              "media_type": "show",
+              "title": "Actually, I Am..."
+            }
+          ]
+        },
+        {
+          "name": "Time-Passes Montage",
+          "occurrences": 526,
+          "title_count": 526,
+          "movie_title_count": 476,
+          "show_title_count": 50,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "2001: A Space Odyssey"
+            },
+            {
+              "media_type": "show",
+              "title": "Aladdin"
+            }
+          ]
+        },
+        {
+          "name": "Lock-and-Load Montage",
+          "occurrences": 522,
+          "title_count": 522,
+          "movie_title_count": 456,
+          "show_title_count": 66,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "21 Jump Street"
+            },
+            {
+              "media_type": "show",
+              "title": "Abby Hatcher"
+            }
+          ]
+        },
+        {
+          "name": "Good-Times Montage",
+          "occurrences": 408,
+          "title_count": 408,
+          "movie_title_count": 360,
+          "show_title_count": 48,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "10 Cloverfield Lane"
+            },
+            {
+              "media_type": "show",
+              "title": "Argai: The Prophecy"
+            }
+          ]
+        },
+        {
+          "name": "Falling-in-Love Montage",
+          "occurrences": 404,
+          "title_count": 404,
+          "movie_title_count": 358,
+          "show_title_count": 46,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "50 First Dates"
+            },
+            {
+              "media_type": "show",
+              "title": "Aladdin"
+            }
+          ]
+        },
+        {
+          "name": "Mickey Mousing",
+          "occurrences": 376,
+          "title_count": 376,
+          "movie_title_count": 291,
+          "show_title_count": 85,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "2001: A Space Odyssey"
+            },
+            {
+              "media_type": "show",
+              "title": "Aaahh!!! Real Monsters"
+            }
+          ]
+        },
+        {
+          "name": "Sound-Effect Bleep",
+          "occurrences": 370,
+          "title_count": 370,
+          "movie_title_count": 169,
+          "show_title_count": 201,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Accepted"
+            },
+            {
+              "media_type": "show",
+              "title": "America's Game: The Super Bowl Champions"
+            }
+          ]
+        }
+      ]
+    },
+    "music_image_relationship": {
+      "exact_names": 9,
+      "array_entries": 7143,
+      "title_name_associations": 7128,
+      "top_examples": [
+        {
+          "name": "Soundtrack Dissonance",
+          "occurrences": 2628,
+          "title_count": 2625,
+          "movie_title_count": 2165,
+          "show_title_count": 460,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"MANOS\" The Hands of Fate"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Leitmotif",
+          "occurrences": 1813,
+          "title_count": 1805,
+          "movie_title_count": 1244,
+          "show_title_count": 561,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"MANOS\" The Hands of Fate"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Dark Reprise",
+          "occurrences": 908,
+          "title_count": 908,
+          "movie_title_count": 762,
+          "show_title_count": 146,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "102 Dalmatians"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Left the Background Music On",
+          "occurrences": 765,
+          "title_count": 765,
+          "movie_title_count": 559,
+          "show_title_count": 206,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"Pimpernel\" Smith"
+            },
+            {
+              "media_type": "show",
+              "title": "'Allo 'Allo!"
+            }
+          ]
+        },
+        {
+          "name": "Vocal Dissonance",
+          "occurrences": 695,
+          "title_count": 691,
+          "movie_title_count": 469,
+          "show_title_count": 222,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Car's Life: Sparky's Big Adventure"
+            },
+            {
+              "media_type": "show",
+              "title": "\"crash canyon\""
+            }
+          ]
+        },
+        {
+          "name": "Mood Dissonance",
+          "occurrences": 301,
+          "title_count": 301,
+          "movie_title_count": 203,
+          "show_title_count": 98,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Clockwork Orange"
+            },
+            {
+              "media_type": "show",
+              "title": "Air"
+            }
+          ]
+        },
+        {
+          "name": "Leitmotif upon Death",
+          "occurrences": 21,
+          "title_count": 21,
+          "movie_title_count": 18,
+          "show_title_count": 3,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Animal Farm"
+            },
+            {
+              "media_type": "show",
+              "title": "Pinocchio"
+            }
+          ]
+        },
+        {
+          "name": "Bootstrapped Leitmotif",
+          "occurrences": 11,
+          "title_count": 11,
+          "movie_title_count": 8,
+          "show_title_count": 3,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Dragon Ball Z: Broly - The Legendary Super Saiyan"
+            },
+            {
+              "media_type": "show",
+              "title": "Cubix: Robots for Everyone"
+            }
+          ]
+        },
+        {
+          "name": "Corrupted Leitmotif",
+          "occurrences": 1,
+          "title_count": 1,
+          "movie_title_count": 1,
+          "show_title_count": 0,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Wallace & Gromit: The Curse of the Were-Rabbit"
+            }
+          ]
+        }
+      ]
+    },
+    "dramatic_irony_and_knowledge": {
+      "exact_names": 5,
+      "array_entries": 6504,
+      "title_name_associations": 6485,
+      "top_examples": [
+        {
+          "name": "Foregone Conclusion",
+          "occurrences": 2452,
+          "title_count": 2446,
+          "movie_title_count": 1972,
+          "show_title_count": 474,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(500) Days of Summer"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Dramatic Irony",
+          "occurrences": 2396,
+          "title_count": 2389,
+          "movie_title_count": 1888,
+          "show_title_count": 501,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Alive"
+            },
+            {
+              "media_type": "show",
+              "title": "A Centaur's Life"
+            }
+          ]
+        },
+        {
+          "name": "Internal Reveal",
+          "occurrences": 861,
+          "title_count": 855,
+          "movie_title_count": 577,
+          "show_title_count": 278,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "50 First Dates"
+            },
+            {
+              "media_type": "show",
+              "title": "9-1-1: Lone Star"
+            }
+          ]
+        },
+        {
+          "name": "Locked Out of the Loop",
+          "occurrences": 794,
+          "title_count": 794,
+          "movie_title_count": 530,
+          "show_title_count": 264,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#AMFAD: All My Friends Are Dead"
+            },
+            {
+              "media_type": "show",
+              "title": "Agent X"
+            }
+          ]
+        },
+        {
+          "name": "Locked Out Of The Loop",
+          "occurrences": 1,
+          "title_count": 1,
+          "movie_title_count": 1,
+          "show_title_count": 0,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Independence Day"
+            }
+          ]
+        }
+      ]
+    },
+    "nested_frame_and_opening": {
+      "exact_names": 15,
+      "array_entries": 8436,
+      "title_name_associations": 8420,
+      "top_examples": [
+        {
+          "name": "How We Got Here",
+          "occurrences": 2342,
+          "title_count": 2337,
+          "movie_title_count": 1830,
+          "show_title_count": 507,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"GRADUATION\""
+            },
+            {
+              "media_type": "show",
+              "title": "#CasaDoCais"
+            }
+          ]
+        },
+        {
+          "name": "Show Within a Show",
+          "occurrences": 1872,
+          "title_count": 1871,
+          "movie_title_count": 1158,
+          "show_title_count": 713,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Entre nous)"
+            },
+            {
+              "media_type": "show",
+              "title": "'Til Death"
+            }
+          ]
+        },
+        {
+          "name": "Once More, with Clarity",
+          "occurrences": 1410,
+          "title_count": 1409,
+          "movie_title_count": 1144,
+          "show_title_count": 265,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#AMFAD: All My Friends Are Dead"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Reasons Why"
+            }
+          ]
+        },
+        {
+          "name": "Framing Device",
+          "occurrences": 1056,
+          "title_count": 1052,
+          "movie_title_count": 873,
+          "show_title_count": 179,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "3 Idiots"
+            },
+            {
+              "media_type": "show",
+              "title": "Acapulco"
+            }
+          ]
+        },
+        {
+          "name": "In Medias Res",
+          "occurrences": 842,
+          "title_count": 841,
+          "movie_title_count": 610,
+          "show_title_count": 231,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Guilty"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventures in Wonderland"
+            }
+          ]
+        },
+        {
+          "name": "\"Rashomon\"-Style",
+          "occurrences": 386,
+          "title_count": 384,
+          "movie_title_count": 227,
+          "show_title_count": 157,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "American Animals"
+            },
+            {
+              "media_type": "show",
+              "title": "Aaahh!!! Real Monsters"
+            }
+          ]
+        },
+        {
+          "name": "Perspective Flip",
+          "occurrences": 256,
+          "title_count": 255,
+          "movie_title_count": 178,
+          "show_title_count": 77,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Alien: Covenant"
+            },
+            {
+              "media_type": "show",
+              "title": "America's Game: The Super Bowl Champions"
+            }
+          ]
+        },
+        {
+          "name": "Forgotten Framing Device",
+          "occurrences": 70,
+          "title_count": 70,
+          "movie_title_count": 53,
+          "show_title_count": 17,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Hare Grows in Manhattan"
+            },
+            {
+              "media_type": "show",
+              "title": "Aladdin"
+            }
+          ]
+        },
+        {
+          "name": "Story Within a Story",
+          "occurrences": 51,
+          "title_count": 51,
+          "movie_title_count": 49,
+          "show_title_count": 2,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Disenchanted"
+            },
+            {
+              "media_type": "show",
+              "title": "Grimm's Fairy Tale Classics"
+            }
+          ]
+        },
+        {
+          "name": "Nested Story",
+          "occurrences": 49,
+          "title_count": 48,
+          "movie_title_count": 43,
+          "show_title_count": 5,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Asteroid City"
+            },
+            {
+              "media_type": "show",
+              "title": "How I Met Your Mother"
+            }
+          ]
+        },
+        {
+          "name": "The Rashomon",
+          "occurrences": 45,
+          "title_count": 45,
+          "movie_title_count": 14,
+          "show_title_count": 31,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "All Dogs Go to Heaven"
+            },
+            {
+              "media_type": "show",
+              "title": "A Different World"
+            }
+          ]
+        },
+        {
+          "name": "Nested Story Reveal",
+          "occurrences": 35,
+          "title_count": 35,
+          "movie_title_count": 14,
+          "show_title_count": 21,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Adventure Time"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventure Time"
+            }
+          ]
+        },
+        {
+          "name": "Creator's Show Within a Show",
+          "occurrences": 19,
+          "title_count": 19,
+          "movie_title_count": 11,
+          "show_title_count": 8,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "102 Dalmatians"
+            },
+            {
+              "media_type": "show",
+              "title": "Bamboo Blade"
+            }
+          ]
+        },
+        {
+          "name": "Rashomon Plot",
+          "occurrences": 2,
+          "title_count": 2,
+          "movie_title_count": 2,
+          "show_title_count": 0,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Ghost Dog: The Way of the Samurai"
+            }
+          ]
+        },
+        {
+          "name": "Show Within A Show",
+          "occurrences": 1,
+          "title_count": 1,
+          "movie_title_count": 1,
+          "show_title_count": 0,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Matinee"
+            }
+          ]
+        }
+      ]
+    },
+    "curses_bargains_and_spiritual_mechanisms": {
+      "exact_names": 80,
+      "array_entries": 8403,
+      "title_name_associations": 8395,
+      "top_examples": [
+        {
+          "name": "Be Careful What You Wish For",
+          "occurrences": 1987,
+          "title_count": 1982,
+          "movie_title_count": 1340,
+          "show_title_count": 642,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Para) Normal Activity"
+            },
+            {
+              "media_type": "show",
+              "title": "A Touch of Frost"
+            }
+          ]
+        },
+        {
+          "name": "Deal with the Devil",
+          "occurrences": 1040,
+          "title_count": 1040,
+          "movie_title_count": 699,
+          "show_title_count": 341,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#c_училища"
+            },
+            {
+              "media_type": "show",
+              "title": "A Korean Odyssey"
+            }
+          ]
+        },
+        {
+          "name": "Curse Cut Short",
+          "occurrences": 1014,
+          "title_count": 1014,
+          "movie_title_count": 696,
+          "show_title_count": 318,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Blooper) Bunny!"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Sealed Evil in a Can",
+          "occurrences": 912,
+          "title_count": 910,
+          "movie_title_count": 604,
+          "show_title_count": 306,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Ado: THE FIRST WORLD TOUR「Wish」"
+            },
+            {
+              "media_type": "show",
+              "title": "Adam Adamant Lives!"
+            }
+          ]
+        },
+        {
+          "name": "Cursed with Awesome",
+          "occurrences": 537,
+          "title_count": 537,
+          "movie_title_count": 354,
+          "show_title_count": 183,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Im)mortals"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "So Beautiful, It's a Curse",
+          "occurrences": 259,
+          "title_count": 259,
+          "movie_title_count": 190,
+          "show_title_count": 69,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "12 Years a Slave"
+            },
+            {
+              "media_type": "show",
+              "title": "Animaniacs"
+            }
+          ]
+        },
+        {
+          "name": "Soul Jar",
+          "occurrences": 220,
+          "title_count": 219,
+          "movie_title_count": 166,
+          "show_title_count": 53,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "- Mar -"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventure Time"
+            }
+          ]
+        },
+        {
+          "name": "Curse Escape Clause",
+          "occurrences": 193,
+          "title_count": 193,
+          "movie_title_count": 148,
+          "show_title_count": 45,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(an)Other"
+            },
+            {
+              "media_type": "show",
+              "title": "101 Dalmatians: The Series"
+            }
+          ]
+        },
+        {
+          "name": "Make a Wish",
+          "occurrences": 189,
+          "title_count": 189,
+          "movie_title_count": 137,
+          "show_title_count": 52,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "16 Wishes"
+            },
+            {
+              "media_type": "show",
+              "title": "Aladdin"
+            }
+          ]
+        },
+        {
+          "name": "Cartwright Curse",
+          "occurrences": 160,
+          "title_count": 160,
+          "movie_title_count": 61,
+          "show_title_count": 99,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Kiss Before Dying"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Curse",
+          "occurrences": 143,
+          "title_count": 143,
+          "movie_title_count": 71,
+          "show_title_count": 72,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(an)Other"
+            },
+            {
+              "media_type": "show",
+              "title": "A Wild Last Boss Appeared!"
+            }
+          ]
+        },
+        {
+          "name": "Suicide Pact",
+          "occurrences": 129,
+          "title_count": 129,
+          "movie_title_count": 109,
+          "show_title_count": 20,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "20,000 Leagues Under the Sea"
+            },
+            {
+              "media_type": "show",
+              "title": "CSI 소비자 탐사대"
+            }
+          ]
+        },
+        {
+          "name": "I Wished You Were Dead",
+          "occurrences": 118,
+          "title_count": 118,
+          "movie_title_count": 92,
+          "show_title_count": 26,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Bambi II"
+            },
+            {
+              "media_type": "show",
+              "title": "Another Life"
+            }
+          ]
+        },
+        {
+          "name": "Dying Curse",
+          "occurrences": 97,
+          "title_count": 97,
+          "movie_title_count": 80,
+          "show_title_count": 17,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "300"
+            },
+            {
+              "media_type": "show",
+              "title": "Battlestar Galactica"
+            }
+          ]
+        },
+        {
+          "name": "Quest for a Wish",
+          "occurrences": 85,
+          "title_count": 85,
+          "movie_title_count": 68,
+          "show_title_count": 17,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Ado: THE FIRST WORLD TOUR「Wish」"
+            },
+            {
+              "media_type": "show",
+              "title": "Doraemon"
+            }
+          ]
+        }
+      ]
+    },
+    "stalking_and_reproductive_topics": {
+      "exact_names": 56,
+      "array_entries": 10671,
+      "title_name_associations": 10598,
+      "top_examples": [
+        {
+          "name": "Stalker with a Crush",
+          "occurrences": 1794,
+          "title_count": 1791,
+          "movie_title_count": 1242,
+          "show_title_count": 549,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(500) Days of Summer"
+            },
+            {
+              "media_type": "show",
+              "title": "10 Things I Hate About You"
+            }
+          ]
+        },
+        {
+          "name": "Yandere",
+          "occurrences": 1143,
+          "title_count": 1141,
+          "movie_title_count": 766,
+          "show_title_count": 375,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(an)Other"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Arranged Marriage",
+          "occurrences": 856,
+          "title_count": 856,
+          "movie_title_count": 525,
+          "show_title_count": 331,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "3 Idiots"
+            },
+            {
+              "media_type": "show",
+              "title": "A History of Scotland"
+            }
+          ]
+        },
+        {
+          "name": "Brother–Sister Incest",
+          "occurrences": 853,
+          "title_count": 853,
+          "movie_title_count": 564,
+          "show_title_count": 289,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Cure for Wellness"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventures of Sonic the Hedgehog"
+            }
+          ]
+        },
+        {
+          "name": "Gaslighting",
+          "occurrences": 847,
+          "title_count": 844,
+          "movie_title_count": 677,
+          "show_title_count": 167,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Night at the Opera"
+            },
+            {
+              "media_type": "show",
+              "title": "2 Broke Girls"
+            }
+          ]
+        },
+        {
+          "name": "Good Girls Avoid Abortion",
+          "occurrences": 836,
+          "title_count": 829,
+          "movie_title_count": 584,
+          "show_title_count": 245,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Christmas Horror Story"
+            },
+            {
+              "media_type": "show",
+              "title": "7th Heaven"
+            }
+          ]
+        },
+        {
+          "name": "Parental Incest",
+          "occurrences": 660,
+          "title_count": 660,
+          "movie_title_count": 523,
+          "show_title_count": 137,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "17 Again"
+            },
+            {
+              "media_type": "show",
+              "title": "\"crash canyon\""
+            }
+          ]
+        },
+        {
+          "name": "Incest Subtext",
+          "occurrences": 658,
+          "title_count": 604,
+          "movie_title_count": 444,
+          "show_title_count": 160,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#c_училища"
+            },
+            {
+              "media_type": "show",
+              "title": "7th Heaven"
+            }
+          ]
+        },
+        {
+          "name": "Law of Inverse Fertility",
+          "occurrences": 538,
+          "title_count": 535,
+          "movie_title_count": 347,
+          "show_title_count": 188,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A New York Christmas Wedding"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Surprise Incest",
+          "occurrences": 338,
+          "title_count": 338,
+          "movie_title_count": 220,
+          "show_title_count": 118,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Funny Thing Happened on the Way to the Forum"
+            },
+            {
+              "media_type": "show",
+              "title": "A Thousand and One Nights"
+            }
+          ]
+        },
+        {
+          "name": "Stalking is Love",
+          "occurrences": 300,
+          "title_count": 300,
+          "movie_title_count": 261,
+          "show_title_count": 39,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Abel"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "Stalker Shrine",
+          "occurrences": 274,
+          "title_count": 274,
+          "movie_title_count": 181,
+          "show_title_count": 93,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Abducted in Plain Sight"
+            },
+            {
+              "media_type": "show",
+              "title": "A Touch of Cloth"
+            }
+          ]
+        },
+        {
+          "name": "Stalker Without a Crush",
+          "occurrences": 260,
+          "title_count": 260,
+          "movie_title_count": 202,
+          "show_title_count": 58,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Bride's Revenge"
+            },
+            {
+              "media_type": "show",
+              "title": "9-1-1"
+            }
+          ]
+        },
+        {
+          "name": "Villainous Incest",
+          "occurrences": 255,
+          "title_count": 255,
+          "movie_title_count": 214,
+          "show_title_count": 41,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Cure for Wellness"
+            },
+            {
+              "media_type": "show",
+              "title": "Adam Adamant Lives!"
+            }
+          ]
+        },
+        {
+          "name": "Abortion Fallout Drama",
+          "occurrences": 206,
+          "title_count": 206,
+          "movie_title_count": 142,
+          "show_title_count": 64,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "21 Grams"
+            },
+            {
+              "media_type": "show",
+              "title": "All My Children"
+            }
+          ]
+        }
+      ]
+    },
+    "deconstruction_and_convention": {
+      "exact_names": 23,
+      "array_entries": 7026,
+      "title_name_associations": 6941,
+      "top_examples": [
+        {
+          "name": "Lampshade Hanging",
+          "occurrences": 1497,
+          "title_count": 1491,
+          "movie_title_count": 922,
+          "show_title_count": 569,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(500) Days of Summer"
+            },
+            {
+              "media_type": "show",
+              "title": "'Allo 'Allo!"
+            }
+          ]
+        },
+        {
+          "name": "Genre Savvy",
+          "occurrences": 1331,
+          "title_count": 1328,
+          "movie_title_count": 936,
+          "show_title_count": 392,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "17 Again"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Hours: Race Against Time"
+            }
+          ]
+        },
+        {
+          "name": "Deconstruction",
+          "occurrences": 1240,
+          "title_count": 1234,
+          "movie_title_count": 978,
+          "show_title_count": 256,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "+X+=+"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Wrong Genre Savvy",
+          "occurrences": 1171,
+          "title_count": 1155,
+          "movie_title_count": 774,
+          "show_title_count": 381,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(500) Days of Summer"
+            },
+            {
+              "media_type": "show",
+              "title": "A Story"
+            }
+          ]
+        },
+        {
+          "name": "Genre Deconstruction",
+          "occurrences": 406,
+          "title_count": 406,
+          "movie_title_count": 338,
+          "show_title_count": 68,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'Amal"
+            },
+            {
+              "media_type": "show",
+              "title": "24"
+            }
+          ]
+        },
+        {
+          "name": "Playing with Fire",
+          "occurrences": 283,
+          "title_count": 278,
+          "movie_title_count": 133,
+          "show_title_count": 145,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Para) Normal Activity"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventure Time"
+            }
+          ]
+        },
+        {
+          "name": "Genre Blindness",
+          "occurrences": 250,
+          "title_count": 246,
+          "movie_title_count": 152,
+          "show_title_count": 94,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "300"
+            },
+            {
+              "media_type": "show",
+              "title": "\"crash canyon\""
+            }
+          ]
+        },
+        {
+          "name": "Reconstruction",
+          "occurrences": 221,
+          "title_count": 221,
+          "movie_title_count": 161,
+          "show_title_count": 60,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "10 Things I Hate About You"
+            },
+            {
+              "media_type": "show",
+              "title": "Adam Ruins Everything"
+            }
+          ]
+        },
+        {
+          "name": "Playing with Syringes",
+          "occurrences": 217,
+          "title_count": 202,
+          "movie_title_count": 166,
+          "show_title_count": 36,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Anatomy"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "Reality Show Genre Blindness",
+          "occurrences": 170,
+          "title_count": 140,
+          "movie_title_count": 2,
+          "show_title_count": 138,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Blue Lock"
+            },
+            {
+              "media_type": "show",
+              "title": "America's Next Top Model"
+            }
+          ]
+        },
+        {
+          "name": "Internal Deconstruction",
+          "occurrences": 84,
+          "title_count": 84,
+          "movie_title_count": 44,
+          "show_title_count": 40,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Aloha Scooby-Doo!"
+            },
+            {
+              "media_type": "show",
+              "title": "Blackadder"
+            }
+          ]
+        },
+        {
+          "name": "Contractual Genre Blindness",
+          "occurrences": 61,
+          "title_count": 61,
+          "movie_title_count": 54,
+          "show_title_count": 7,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Christmas Movie Christmas"
+            },
+            {
+              "media_type": "show",
+              "title": "Kaizoku Sentai Gokaiger"
+            }
+          ]
+        },
+        {
+          "name": "Crime Reconstruction",
+          "occurrences": 20,
+          "title_count": 20,
+          "movie_title_count": 6,
+          "show_title_count": 14,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Cop or Hood"
+            },
+            {
+              "media_type": "show",
+              "title": "America's Most Wanted"
+            }
+          ]
+        },
+        {
+          "name": "Death By Genre Savvy",
+          "occurrences": 15,
+          "title_count": 15,
+          "movie_title_count": 11,
+          "show_title_count": 4,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Cry Wolf"
+            },
+            {
+              "media_type": "show",
+              "title": "BLOOD-C"
+            }
+          ]
+        },
+        {
+          "name": "Deconstruction Crossover",
+          "occurrences": 15,
+          "title_count": 15,
+          "movie_title_count": 3,
+          "show_title_count": 12,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Turtles Forever"
+            },
+            {
+              "media_type": "show",
+              "title": "ALF"
+            }
+          ]
+        }
+      ]
+    },
+    "miscarriage_of_justice_and_blackmail": {
+      "exact_names": 12,
+      "array_entries": 5085,
+      "title_name_associations": 5073,
+      "top_examples": [
+        {
+          "name": "Blackmail",
+          "occurrences": 1368,
+          "title_count": 1365,
+          "movie_title_count": 1032,
+          "show_title_count": 333,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "\"Pimpernel\" Smith"
+            },
+            {
+              "media_type": "show",
+              "title": "#martyisdead"
+            }
+          ]
+        },
+        {
+          "name": "Frame-Up",
+          "occurrences": 1140,
+          "title_count": 1135,
+          "movie_title_count": 762,
+          "show_title_count": 373,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Guilty"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Reasons Why"
+            }
+          ]
+        },
+        {
+          "name": "Clear My Name",
+          "occurrences": 883,
+          "title_count": 883,
+          "movie_title_count": 600,
+          "show_title_count": 283,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Guilty"
+            },
+            {
+              "media_type": "show",
+              "title": "6teen"
+            }
+          ]
+        },
+        {
+          "name": "Kangaroo Court",
+          "occurrences": 667,
+          "title_count": 666,
+          "movie_title_count": 444,
+          "show_title_count": 222,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(MAD)²"
+            },
+            {
+              "media_type": "show",
+              "title": "101 Dalmatians: The Series"
+            }
+          ]
+        },
+        {
+          "name": "Miscarriage of Justice",
+          "occurrences": 371,
+          "title_count": 371,
+          "movie_title_count": 242,
+          "show_title_count": 129,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Guilty"
+            },
+            {
+              "media_type": "show",
+              "title": "Agatha Christie's Poirot"
+            }
+          ]
+        },
+        {
+          "name": "Blackmail Backfire",
+          "occurrences": 272,
+          "title_count": 272,
+          "movie_title_count": 204,
+          "show_title_count": 68,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Jolly Bad Fellow"
+            },
+            {
+              "media_type": "show",
+              "title": "Alfred Hitchcock Presents"
+            }
+          ]
+        },
+        {
+          "name": "\"Blackmail\" Is Such an Ugly Word",
+          "occurrences": 268,
+          "title_count": 265,
+          "movie_title_count": 164,
+          "show_title_count": 101,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Christmas Story Christmas"
+            },
+            {
+              "media_type": "show",
+              "title": "As Told by Ginger"
+            }
+          ]
+        },
+        {
+          "name": "Wrongly Accused",
+          "occurrences": 63,
+          "title_count": 63,
+          "movie_title_count": 45,
+          "show_title_count": 18,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Bonkers"
+            },
+            {
+              "media_type": "show",
+              "title": "Baantjer"
+            }
+          ]
+        },
+        {
+          "name": "Revenge Porn Blackmail",
+          "occurrences": 24,
+          "title_count": 24,
+          "movie_title_count": 14,
+          "show_title_count": 10,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Bandidas"
+            },
+            {
+              "media_type": "show",
+              "title": "FBI: International"
+            }
+          ]
+        },
+        {
+          "name": "Framed for Heroism",
+          "occurrences": 17,
+          "title_count": 17,
+          "movie_title_count": 11,
+          "show_title_count": 6,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Slight Case of Murder"
+            },
+            {
+              "media_type": "show",
+              "title": "Bad Boyes"
+            }
+          ]
+        },
+        {
+          "name": "Fabricated Blackmail",
+          "occurrences": 9,
+          "title_count": 9,
+          "movie_title_count": 7,
+          "show_title_count": 2,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Megalopolis"
+            },
+            {
+              "media_type": "show",
+              "title": "Burn Notice"
+            }
+          ]
+        },
+        {
+          "name": "FrameUp",
+          "occurrences": 3,
+          "title_count": 3,
+          "movie_title_count": 3,
+          "show_title_count": 0,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Ricochet"
+            }
+          ]
+        }
+      ]
+    },
+    "missing_species_and_objects": {
+      "exact_names": 143,
+      "array_entries": 6888,
+      "title_name_associations": 6849,
+      "top_examples": [
+        {
+          "name": "Insane Troll Logic",
+          "occurrences": 1250,
+          "title_count": 1248,
+          "movie_title_count": 870,
+          "show_title_count": 378,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Guilty"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Gentle Giant",
+          "occurrences": 872,
+          "title_count": 855,
+          "movie_title_count": 532,
+          "show_title_count": 323,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "'elf"
+            },
+            {
+              "media_type": "show",
+              "title": "9-1-1"
+            }
+          ]
+        },
+        {
+          "name": "Troll",
+          "occurrences": 535,
+          "title_count": 535,
+          "movie_title_count": 353,
+          "show_title_count": 182,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "8 Mile"
+            },
+            {
+              "media_type": "show",
+              "title": "A Korean Odyssey"
+            }
+          ]
+        },
+        {
+          "name": "Giant Flyer",
+          "occurrences": 248,
+          "title_count": 247,
+          "movie_title_count": 177,
+          "show_title_count": 70,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Aladdin"
+            },
+            {
+              "media_type": "show",
+              "title": "Animal Armageddon"
+            }
+          ]
+        },
+        {
+          "name": "Giant Spider",
+          "occurrences": 252,
+          "title_count": 247,
+          "movie_title_count": 149,
+          "show_title_count": 98,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "AVH: Alien vs. Hunter"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventure Time"
+            }
+          ]
+        },
+        {
+          "name": "Giant Wall of Watery Doom",
+          "occurrences": 193,
+          "title_count": 192,
+          "movie_title_count": 173,
+          "show_title_count": 19,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Armageddon"
+            },
+            {
+              "media_type": "show",
+              "title": "9-1-1"
+            }
+          ]
+        },
+        {
+          "name": "Giant Mook",
+          "occurrences": 177,
+          "title_count": 177,
+          "movie_title_count": 149,
+          "show_title_count": 28,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "300"
+            },
+            {
+              "media_type": "show",
+              "title": "Archer"
+            }
+          ]
+        },
+        {
+          "name": "Mummies at the Dinner Table",
+          "occurrences": 156,
+          "title_count": 156,
+          "movie_title_count": 117,
+          "show_title_count": 39,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Apartment Zero"
+            },
+            {
+              "media_type": "show",
+              "title": "30 Rock"
+            }
+          ]
+        },
+        {
+          "name": "Milking the Giant Cow",
+          "occurrences": 151,
+          "title_count": 151,
+          "movie_title_count": 125,
+          "show_title_count": 26,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Aelita"
+            },
+            {
+              "media_type": "show",
+              "title": "Batman: The Animated Series"
+            }
+          ]
+        },
+        {
+          "name": "All Trolls Are Different",
+          "occurrences": 124,
+          "title_count": 124,
+          "movie_title_count": 75,
+          "show_title_count": 49,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Troll in Central Park"
+            },
+            {
+              "media_type": "show",
+              "title": "Aqua Teen Hunger Force"
+            }
+          ]
+        },
+        {
+          "name": "Giant Squid",
+          "occurrences": 125,
+          "title_count": 124,
+          "movie_title_count": 95,
+          "show_title_count": 29,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "20,000 Leagues Under the Sea"
+            },
+            {
+              "media_type": "show",
+              "title": "Animal Face-Off"
+            }
+          ]
+        },
+        {
+          "name": "Golem",
+          "occurrences": 124,
+          "title_count": 124,
+          "movie_title_count": 83,
+          "show_title_count": 41,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Adventure Time"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventure Time"
+            }
+          ]
+        },
+        {
+          "name": "Our Goblins Are Different",
+          "occurrences": 110,
+          "title_count": 110,
+          "movie_title_count": 79,
+          "show_title_count": 31,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(witch)"
+            },
+            {
+              "media_type": "show",
+              "title": "Adventure Time"
+            }
+          ]
+        },
+        {
+          "name": "Giant Enemy Crab",
+          "occurrences": 107,
+          "title_count": 107,
+          "movie_title_count": 53,
+          "show_title_count": 54,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Aqua Man"
+            },
+            {
+              "media_type": "show",
+              "title": "Babylon 5"
+            }
+          ]
+        },
+        {
+          "name": "Giant Poofy Sleeves",
+          "occurrences": 106,
+          "title_count": 106,
+          "movie_title_count": 95,
+          "show_title_count": 11,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "AIR"
+            },
+            {
+              "media_type": "show",
+              "title": "Air"
+            }
+          ]
+        }
+      ]
+    },
+    "missing_powers_and_world_rules": {
+      "exact_names": 49,
+      "array_entries": 3918,
+      "title_name_associations": 3892,
+      "top_examples": [
+        {
+          "name": "Demonic Possession",
+          "occurrences": 807,
+          "title_count": 790,
+          "movie_title_count": 576,
+          "show_title_count": 214,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Para) Normal Activity"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "Super-Strength",
+          "occurrences": 591,
+          "title_count": 587,
+          "movie_title_count": 420,
+          "show_title_count": 167,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(Para) Normal Activity"
+            },
+            {
+              "media_type": "show",
+              "title": "Alice"
+            }
+          ]
+        },
+        {
+          "name": "Super-Speed",
+          "occurrences": 322,
+          "title_count": 322,
+          "movie_title_count": 194,
+          "show_title_count": 128,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "+ Turbo"
+            },
+            {
+              "media_type": "show",
+              "title": "Alphas"
+            }
+          ]
+        },
+        {
+          "name": "Space Whale Aesop",
+          "occurrences": 286,
+          "title_count": 286,
+          "movie_title_count": 174,
+          "show_title_count": 112,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#chainletter"
+            },
+            {
+              "media_type": "show",
+              "title": "13 Reasons Why"
+            }
+          ]
+        },
+        {
+          "name": "Elemental Powers",
+          "occurrences": 276,
+          "title_count": 274,
+          "movie_title_count": 109,
+          "show_title_count": 165,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(witch)"
+            },
+            {
+              "media_type": "show",
+              "title": "Ah! My Goddess"
+            }
+          ]
+        },
+        {
+          "name": "Super-Senses",
+          "occurrences": 201,
+          "title_count": 201,
+          "movie_title_count": 119,
+          "show_title_count": 82,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Barbie Mariposa"
+            },
+            {
+              "media_type": "show",
+              "title": "Abby Hatcher"
+            }
+          ]
+        },
+        {
+          "name": "Astral Projection",
+          "occurrences": 145,
+          "title_count": 145,
+          "movie_title_count": 93,
+          "show_title_count": 52,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Avengers: Endgame"
+            },
+            {
+              "media_type": "show",
+              "title": "Aggressive Retsuko"
+            }
+          ]
+        },
+        {
+          "name": "Prized Possession Giveaway",
+          "occurrences": 123,
+          "title_count": 122,
+          "movie_title_count": 90,
+          "show_title_count": 32,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Connected"
+            },
+            {
+              "media_type": "show",
+              "title": "A Thousand and One... Americas"
+            }
+          ]
+        },
+        {
+          "name": "Weather-Control Machine",
+          "occurrences": 117,
+          "title_count": 117,
+          "movie_title_count": 54,
+          "show_title_count": 63,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Austin Powers: International Man of Mystery"
+            },
+            {
+              "media_type": "show",
+              "title": "A for Andromeda"
+            }
+          ]
+        },
+        {
+          "name": "Transhuman Treachery",
+          "occurrences": 118,
+          "title_count": 116,
+          "movie_title_count": 90,
+          "show_title_count": 26,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Andromeda Stories"
+            },
+            {
+              "media_type": "show",
+              "title": "Archer"
+            }
+          ]
+        },
+        {
+          "name": "Power Nullifier",
+          "occurrences": 95,
+          "title_count": 95,
+          "movie_title_count": 49,
+          "show_title_count": 46,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Artemis Fowl"
+            },
+            {
+              "media_type": "show",
+              "title": "Ben 10: Ultimate Alien"
+            }
+          ]
+        },
+        {
+          "name": "Hostile Terraforming",
+          "occurrences": 77,
+          "title_count": 77,
+          "movie_title_count": 33,
+          "show_title_count": 44,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Annihilation"
+            },
+            {
+              "media_type": "show",
+              "title": "Andromeda"
+            }
+          ]
+        },
+        {
+          "name": "Space Whale",
+          "occurrences": 68,
+          "title_count": 68,
+          "movie_title_count": 46,
+          "show_title_count": 22,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Avatar: The Way of Water"
+            },
+            {
+              "media_type": "show",
+              "title": "Angel Links"
+            }
+          ]
+        },
+        {
+          "name": "Time Dilation",
+          "occurrences": 64,
+          "title_count": 64,
+          "movie_title_count": 44,
+          "show_title_count": 20,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Alimuom"
+            },
+            {
+              "media_type": "show",
+              "title": "Bakuage Sentai Boonboomger"
+            }
+          ]
+        },
+        {
+          "name": "Terraform",
+          "occurrences": 61,
+          "title_count": 61,
+          "movie_title_count": 41,
+          "show_title_count": 20,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Aliens"
+            },
+            {
+              "media_type": "show",
+              "title": "CAROLE & TUESDAY"
+            }
+          ]
+        }
+      ]
+    },
+    "animal_and_nonhuman_capabilities": {
+      "exact_names": 43,
+      "array_entries": 3353,
+      "title_name_associations": 3350,
+      "top_examples": [
+        {
+          "name": "Talking Animal",
+          "occurrences": 684,
+          "title_count": 684,
+          "movie_title_count": 401,
+          "show_title_count": 283,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Monster in Paris"
+            },
+            {
+              "media_type": "show",
+              "title": "AMAZING ANIMALS!"
+            }
+          ]
+        },
+        {
+          "name": "Animate Inanimate Object",
+          "occurrences": 498,
+          "title_count": 498,
+          "movie_title_count": 295,
+          "show_title_count": 203,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(witch)"
+            },
+            {
+              "media_type": "show",
+              "title": "A Little Curious"
+            }
+          ]
+        },
+        {
+          "name": "Animal Talk",
+          "occurrences": 275,
+          "title_count": 272,
+          "movie_title_count": 192,
+          "show_title_count": 80,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "101 Dalmatians"
+            },
+            {
+              "media_type": "show",
+              "title": "101 Dalmatians: The Series"
+            }
+          ]
+        },
+        {
+          "name": "Robotic Reveal",
+          "occurrences": 257,
+          "title_count": 257,
+          "movie_title_count": 173,
+          "show_title_count": 84,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#SCREAMERS"
+            },
+            {
+              "media_type": "show",
+              "title": "Archie's Weird Mysteries"
+            }
+          ]
+        },
+        {
+          "name": "Living Shadow",
+          "occurrences": 234,
+          "title_count": 234,
+          "movie_title_count": 162,
+          "show_title_count": 72,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(XX)"
+            },
+            {
+              "media_type": "show",
+              "title": "A Haunting"
+            }
+          ]
+        },
+        {
+          "name": "Animorphism",
+          "occurrences": 223,
+          "title_count": 223,
+          "movie_title_count": 148,
+          "show_title_count": 75,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Snow White Christmas"
+            },
+            {
+              "media_type": "show",
+              "title": "101 Dalmatians: The Series"
+            }
+          ]
+        },
+        {
+          "name": "Puppeteer Parasite",
+          "occurrences": 204,
+          "title_count": 204,
+          "movie_title_count": 138,
+          "show_title_count": 66,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Apollo 18"
+            },
+            {
+              "media_type": "show",
+              "title": "Angel"
+            }
+          ]
+        },
+        {
+          "name": "Hive Mind",
+          "occurrences": 174,
+          "title_count": 174,
+          "movie_title_count": 102,
+          "show_title_count": 72,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Alice's Birthday"
+            },
+            {
+              "media_type": "show",
+              "title": "A Certain Magical Index"
+            }
+          ]
+        },
+        {
+          "name": "Uplifted Animal",
+          "occurrences": 91,
+          "title_count": 91,
+          "movie_title_count": 75,
+          "show_title_count": 16,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "(MAD)²"
+            },
+            {
+              "media_type": "show",
+              "title": "Centaurworld"
+            }
+          ]
+        },
+        {
+          "name": "Sapient Eat Sapient",
+          "occurrences": 87,
+          "title_count": 87,
+          "movie_title_count": 63,
+          "show_title_count": 24,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "All Dogs Go to Heaven"
+            },
+            {
+              "media_type": "show",
+              "title": "All Dogs Go To Heaven: The Series"
+            }
+          ]
+        },
+        {
+          "name": "Sapient Ship",
+          "occurrences": 71,
+          "title_count": 71,
+          "movie_title_count": 47,
+          "show_title_count": 24,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "#Stealth"
+            },
+            {
+              "media_type": "show",
+              "title": "Andromeda"
+            }
+          ]
+        },
+        {
+          "name": "Sapient Steed",
+          "occurrences": 69,
+          "title_count": 69,
+          "movie_title_count": 51,
+          "show_title_count": 18,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "My Little Pony"
+            },
+            {
+              "media_type": "show",
+              "title": "Boo-Boom! The Long Way Home"
+            }
+          ]
+        },
+        {
+          "name": "Parasitic Horror",
+          "occurrences": 58,
+          "title_count": 58,
+          "movie_title_count": 53,
+          "show_title_count": 5,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "CABIN FEVER"
+            },
+            {
+              "media_type": "show",
+              "title": "Earth: Final Conflict"
+            }
+          ]
+        },
+        {
+          "name": "Power Parasite",
+          "occurrences": 53,
+          "title_count": 53,
+          "movie_title_count": 31,
+          "show_title_count": 22,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Casper's Scare School"
+            },
+            {
+              "media_type": "show",
+              "title": "Bunnicula"
+            }
+          ]
+        },
+        {
+          "name": "Parasite Zombie",
+          "occurrences": 48,
+          "title_count": 48,
+          "movie_title_count": 44,
+          "show_title_count": 4,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Nightwish"
+            },
+            {
+              "media_type": "show",
+              "title": "Cells at Work!"
+            }
+          ]
+        }
+      ]
+    },
+    "missing_sports_and_interests": {
+      "exact_names": 32,
+      "array_entries": 522,
+      "title_name_associations": 521,
+      "top_examples": [
+        {
+          "name": "The Board Game",
+          "occurrences": 63,
+          "title_count": 63,
+          "movie_title_count": 29,
+          "show_title_count": 34,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "A Nightmare on Elm Street"
+            },
+            {
+              "media_type": "show",
+              "title": "AMAZING ANIMALS!"
+            }
+          ]
+        },
+        {
+          "name": "Cosplay Otaku Girl",
+          "occurrences": 56,
+          "title_count": 56,
+          "movie_title_count": 31,
+          "show_title_count": 25,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "M M"
+            },
+            {
+              "media_type": "show",
+              "title": "A Centaur's Life"
+            }
+          ]
+        },
+        {
+          "name": "This Is No Time for Knitting",
+          "occurrences": 44,
+          "title_count": 44,
+          "movie_title_count": 25,
+          "show_title_count": 19,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Alvin and the Chipmunks Meet Frankenstein"
+            },
+            {
+              "media_type": "show",
+              "title": "Atomic Betty"
+            }
+          ]
+        },
+        {
+          "name": "Naughty Birdwatching",
+          "occurrences": 41,
+          "title_count": 41,
+          "movie_title_count": 29,
+          "show_title_count": 12,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Asterix & Obelix: Mission Cleopatra"
+            },
+            {
+              "media_type": "show",
+              "title": "Alas Smith and Jones"
+            }
+          ]
+        },
+        {
+          "name": "Fictional Board Game",
+          "occurrences": 39,
+          "title_count": 39,
+          "movie_title_count": 10,
+          "show_title_count": 29,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Arthur Christmas"
+            },
+            {
+              "media_type": "show",
+              "title": "Arthur"
+            }
+          ]
+        },
+        {
+          "name": "Cosplay Café",
+          "occurrences": 34,
+          "title_count": 34,
+          "movie_title_count": 10,
+          "show_title_count": 24,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Akiba Meido Sensō ~ Naniwa kui taore kyōsō-kyoku ~"
+            },
+            {
+              "media_type": "show",
+              "title": "Akiba Maid War"
+            }
+          ]
+        },
+        {
+          "name": "Pottery Barn Poor",
+          "occurrences": 31,
+          "title_count": 31,
+          "movie_title_count": 21,
+          "show_title_count": 10,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Barbie and the Three Musketeers"
+            },
+            {
+              "media_type": "show",
+              "title": "Community"
+            }
+          ]
+        },
+        {
+          "name": "Knitting Pregnancy Announcement",
+          "occurrences": 29,
+          "title_count": 29,
+          "movie_title_count": 27,
+          "show_title_count": 2,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "After the Thin Man"
+            },
+            {
+              "media_type": "show",
+              "title": "I Love Lucy"
+            }
+          ]
+        },
+        {
+          "name": "Instant Cosplay Surprise",
+          "occurrences": 26,
+          "title_count": 26,
+          "movie_title_count": 10,
+          "show_title_count": 16,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Beetlejuice"
+            },
+            {
+              "media_type": "show",
+              "title": "Anne Happy♪"
+            }
+          ]
+        },
+        {
+          "name": "LARP",
+          "occurrences": 25,
+          "title_count": 25,
+          "movie_title_count": 9,
+          "show_title_count": 16,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Looped"
+            },
+            {
+              "media_type": "show",
+              "title": "Fetch! with Ruff Ruffman"
+            }
+          ]
+        },
+        {
+          "name": "Black Belt in Origami",
+          "occurrences": 18,
+          "title_count": 18,
+          "movie_title_count": 5,
+          "show_title_count": 13,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Ella Enchanted"
+            },
+            {
+              "media_type": "show",
+              "title": "Camp Lazlo"
+            }
+          ]
+        },
+        {
+          "name": "Origami Gag",
+          "occurrences": 16,
+          "title_count": 16,
+          "movie_title_count": 7,
+          "show_title_count": 9,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Airplane!"
+            },
+            {
+              "media_type": "show",
+              "title": "Gravity Falls"
+            }
+          ]
+        },
+        {
+          "name": "Giant Board Game",
+          "occurrences": 15,
+          "title_count": 15,
+          "movie_title_count": 3,
+          "show_title_count": 12,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Flower Angel"
+            },
+            {
+              "media_type": "show",
+              "title": "Anne Happy♪"
+            }
+          ]
+        },
+        {
+          "name": "Decision Darts",
+          "occurrences": 13,
+          "title_count": 13,
+          "movie_title_count": 4,
+          "show_title_count": 9,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "Doctor Dolittle"
+            },
+            {
+              "media_type": "show",
+              "title": "Baywatch"
+            }
+          ]
+        },
+        {
+          "name": "Halloween Cosplay",
+          "occurrences": 11,
+          "title_count": 11,
+          "movie_title_count": 4,
+          "show_title_count": 7,
+          "examples": [
+            {
+              "media_type": "movie",
+              "title": "George's Island"
+            },
+            {
+              "media_type": "show",
+              "title": "AKBINGO!"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "top_unresolved": [
+    {
+      "name": "Oh, Crap!",
+      "occurrences": 8610,
+      "title_count": 8526,
+      "movie_title_count": 6944,
+      "show_title_count": 1582,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "What Happened to the Mouse?",
+      "occurrences": 6800,
+      "title_count": 6717,
+      "movie_title_count": 5383,
+      "show_title_count": 1334,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"MANOS\" The Hands of Fate"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Jerkass",
+      "occurrences": 6525,
+      "title_count": 6407,
+      "movie_title_count": 5010,
+      "show_title_count": 1397,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Asshole Victim",
+      "occurrences": 5937,
+      "title_count": 5871,
+      "movie_title_count": 5004,
+      "show_title_count": 867,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#AMFAD: All My Friends Are Dead"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Kick the Dog",
+      "occurrences": 5251,
+      "title_count": 5223,
+      "movie_title_count": 4441,
+      "show_title_count": 782,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Too Dumb to Live",
+      "occurrences": 5212,
+      "title_count": 5186,
+      "movie_title_count": 4324,
+      "show_title_count": 862,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"MANOS\" The Hands of Fate"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Butt-Monkey",
+      "occurrences": 5185,
+      "title_count": 5151,
+      "movie_title_count": 3132,
+      "show_title_count": 2019,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(((O)))"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Large Ham",
+      "occurrences": 5182,
+      "title_count": 5150,
+      "movie_title_count": 3904,
+      "show_title_count": 1246,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Jerk with a Heart of Gold",
+      "occurrences": 5155,
+      "title_count": 5106,
+      "movie_title_count": 3681,
+      "show_title_count": 1425,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Berserk Button",
+      "occurrences": 4704,
+      "title_count": 4674,
+      "movie_title_count": 3262,
+      "show_title_count": 1412,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Trucker"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Hope Spot",
+      "occurrences": 4726,
+      "title_count": 4671,
+      "movie_title_count": 3996,
+      "show_title_count": 675,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "My God, What Have I Done?",
+      "occurrences": 4653,
+      "title_count": 4631,
+      "movie_title_count": 3697,
+      "show_title_count": 934,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Alive"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Fanservice",
+      "occurrences": 4584,
+      "title_count": 4553,
+      "movie_title_count": 3406,
+      "show_title_count": 1147,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Stealth"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Establishing Character Moment",
+      "occurrences": 4406,
+      "title_count": 4398,
+      "movie_title_count": 3723,
+      "show_title_count": 675,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'Big Game'"
+        },
+        {
+          "media_type": "show",
+          "title": "2 Broke Girls"
+        }
+      ]
+    },
+    {
+      "name": "Even Evil Has Standards",
+      "occurrences": 4380,
+      "title_count": 4346,
+      "movie_title_count": 3331,
+      "show_title_count": 1015,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#MUTE"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Pet the Dog",
+      "occurrences": 4431,
+      "title_count": 4346,
+      "movie_title_count": 3415,
+      "show_title_count": 931,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Blooper) Bunny!"
+        },
+        {
+          "media_type": "show",
+          "title": "2 Broke Girls"
+        }
+      ]
+    },
+    {
+      "name": "\"The Reason You Suck\" Speech",
+      "occurrences": 4341,
+      "title_count": 4319,
+      "movie_title_count": 3317,
+      "show_title_count": 1002,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Pimpernel\" Smith"
+        },
+        {
+          "media_type": "show",
+          "title": "10 Things I Hate About You"
+        }
+      ]
+    },
+    {
+      "name": "Ms. Fanservice",
+      "occurrences": 4315,
+      "title_count": 4274,
+      "movie_title_count": 3304,
+      "show_title_count": 970,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "6teen"
+        }
+      ]
+    },
+    {
+      "name": "Mythology Gag",
+      "occurrences": 4189,
+      "title_count": 4117,
+      "movie_title_count": 2776,
+      "show_title_count": 1341,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(MAD)²"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Shown Their Work",
+      "occurrences": 4123,
+      "title_count": 4108,
+      "movie_title_count": 3126,
+      "show_title_count": 982,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Im)mortals"
+        },
+        {
+          "media_type": "show",
+          "title": "30 Rock"
+        }
+      ]
+    },
+    {
+      "name": "Bait-and-Switch",
+      "occurrences": 3994,
+      "title_count": 3966,
+      "movie_title_count": 2873,
+      "show_title_count": 1093,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#AMFAD: All My Friends Are Dead"
+        },
+        {
+          "media_type": "show",
+          "title": "#CasaDoCais"
+        }
+      ]
+    },
+    {
+      "name": "Scenery Porn",
+      "occurrences": 3974,
+      "title_count": 3947,
+      "movie_title_count": 3144,
+      "show_title_count": 803,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#MUTE"
+        },
+        {
+          "media_type": "show",
+          "title": "A Discovery of Witches"
+        }
+      ]
+    },
+    {
+      "name": "Nice Job Breaking It, Hero!",
+      "occurrences": 3896,
+      "title_count": 3859,
+      "movie_title_count": 2716,
+      "show_title_count": 1143,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Stealth"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Tempting Fate",
+      "occurrences": 3842,
+      "title_count": 3817,
+      "movie_title_count": 2871,
+      "show_title_count": 946,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Heroic BSoD",
+      "occurrences": 3782,
+      "title_count": 3781,
+      "movie_title_count": 2851,
+      "show_title_count": 930,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Alive"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Groin Attack",
+      "occurrences": 3803,
+      "title_count": 3776,
+      "movie_title_count": 3110,
+      "show_title_count": 666,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'A Perfect World'"
+        },
+        {
+          "media_type": "show",
+          "title": "2 Broke Girls"
+        }
+      ]
+    },
+    {
+      "name": "Noodle Incident",
+      "occurrences": 3753,
+      "title_count": 3740,
+      "movie_title_count": 2574,
+      "show_title_count": 1166,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#monalisa"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Disproportionate Retribution",
+      "occurrences": 3730,
+      "title_count": 3706,
+      "movie_title_count": 2845,
+      "show_title_count": 861,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'elf"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Take That!",
+      "occurrences": 3713,
+      "title_count": 3661,
+      "movie_title_count": 2333,
+      "show_title_count": 1328,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Police Are Useless",
+      "occurrences": 3680,
+      "title_count": 3657,
+      "movie_title_count": 3121,
+      "show_title_count": 536,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"MANOS\" The Hands of Fate"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Hours: Race Against Time"
+        }
+      ]
+    },
+    {
+      "name": "Fan Disservice",
+      "occurrences": 3667,
+      "title_count": 3624,
+      "movie_title_count": 3053,
+      "show_title_count": 571,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Be)loved"
+        },
+        {
+          "media_type": "show",
+          "title": "2 Broke Girls"
+        }
+      ]
+    },
+    {
+      "name": "No Name Given",
+      "occurrences": 3574,
+      "title_count": 3558,
+      "movie_title_count": 3077,
+      "show_title_count": 481,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Alive"
+        },
+        {
+          "media_type": "show",
+          "title": "'Twas the Night Before Christmas"
+        }
+      ]
+    },
+    {
+      "name": "Does This Remind You of Anything?",
+      "occurrences": 3547,
+      "title_count": 3532,
+      "movie_title_count": 2448,
+      "show_title_count": 1084,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Stealth"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Jerkass Has a Point",
+      "occurrences": 3528,
+      "title_count": 3523,
+      "movie_title_count": 2755,
+      "show_title_count": 768,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Trucker"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Hours: Race Against Time"
+        }
+      ]
+    },
+    {
+      "name": "Blatant Lies",
+      "occurrences": 3528,
+      "title_count": 3520,
+      "movie_title_count": 2735,
+      "show_title_count": 785,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#chainletter"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Big Damn Heroes",
+      "occurrences": 3511,
+      "title_count": 3488,
+      "movie_title_count": 2614,
+      "show_title_count": 874,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Expy",
+      "occurrences": 3459,
+      "title_count": 3429,
+      "movie_title_count": 2071,
+      "show_title_count": 1358,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'G' Men"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Disappeared Dad",
+      "occurrences": 3366,
+      "title_count": 3364,
+      "movie_title_count": 2465,
+      "show_title_count": 899,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "2 Broke Girls"
+        }
+      ]
+    },
+    {
+      "name": "Idiot Ball",
+      "occurrences": 3377,
+      "title_count": 3358,
+      "movie_title_count": 2550,
+      "show_title_count": 808,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"MANOS\" The Hands of Fate"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Eye Scream",
+      "occurrences": 3375,
+      "title_count": 3321,
+      "movie_title_count": 2728,
+      "show_title_count": 593,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "A Scare at Bedtime"
+        }
+      ]
+    },
+    {
+      "name": "Faux Affably Evil",
+      "occurrences": 3300,
+      "title_count": 3292,
+      "movie_title_count": 2942,
+      "show_title_count": 350,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#monalisa"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Ax-Crazy",
+      "occurrences": 3251,
+      "title_count": 3244,
+      "movie_title_count": 2810,
+      "show_title_count": 434,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Elephant)"
+        },
+        {
+          "media_type": "show",
+          "title": "9-1-1"
+        }
+      ]
+    },
+    {
+      "name": "Exact Words",
+      "occurrences": 3245,
+      "title_count": 3243,
+      "movie_title_count": 2363,
+      "show_title_count": 880,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Stealth"
+        },
+        {
+          "media_type": "show",
+          "title": "/DRIVE"
+        }
+      ]
+    },
+    {
+      "name": "Earn Your Happy Ending",
+      "occurrences": 3223,
+      "title_count": 3214,
+      "movie_title_count": 2528,
+      "show_title_count": 686,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Alive"
+        },
+        {
+          "media_type": "show",
+          "title": "30 Rock"
+        }
+      ]
+    },
+    {
+      "name": "Screw This, I'm Outta Here!",
+      "occurrences": 3184,
+      "title_count": 3169,
+      "movie_title_count": 2493,
+      "show_title_count": 676,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Be)loved"
+        },
+        {
+          "media_type": "show",
+          "title": "Adventure Time"
+        }
+      ]
+    },
+    {
+      "name": "Reasonable Authority Figure",
+      "occurrences": 3146,
+      "title_count": 3136,
+      "movie_title_count": 2470,
+      "show_title_count": 666,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Stealth"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Artistic License – History",
+      "occurrences": 3087,
+      "title_count": 3074,
+      "movie_title_count": 2576,
+      "show_title_count": 498,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"W\""
+        },
+        {
+          "media_type": "show",
+          "title": "A History of Scotland"
+        }
+      ]
+    },
+    {
+      "name": "Determinator",
+      "occurrences": 3113,
+      "title_count": 3071,
+      "movie_title_count": 2442,
+      "show_title_count": 629,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Alive"
+        },
+        {
+          "media_type": "show",
+          "title": "#martyisdead"
+        }
+      ]
+    },
+    {
+      "name": "Heel–Face Turn",
+      "occurrences": 3109,
+      "title_count": 3067,
+      "movie_title_count": 2154,
+      "show_title_count": 913,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Stuck"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Hours: Race Against Time"
+        }
+      ]
+    },
+    {
+      "name": "No Celebrities Were Harmed",
+      "occurrences": 3078,
+      "title_count": 3064,
+      "movie_title_count": 2051,
+      "show_title_count": 1013,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "13 Hours: Race Against Time"
+        }
+      ]
+    },
+    {
+      "name": "Curb-Stomp Battle",
+      "occurrences": 3060,
+      "title_count": 3029,
+      "movie_title_count": 2109,
+      "show_title_count": 920,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Hours: Race Against Time"
+        }
+      ]
+    },
+    {
+      "name": "Affably Evil",
+      "occurrences": 2991,
+      "title_count": 2989,
+      "movie_title_count": 2331,
+      "show_title_count": 658,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "...Watch Out, We're Mad"
+        },
+        {
+          "media_type": "show",
+          "title": "A Certain Scientific Railgun"
+        }
+      ]
+    },
+    {
+      "name": "Bilingual Bonus",
+      "occurrences": 2990,
+      "title_count": 2965,
+      "movie_title_count": 2243,
+      "show_title_count": 722,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"MANOS\" The Hands of Fate"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Gory Discretion Shot",
+      "occurrences": 2978,
+      "title_count": 2961,
+      "movie_title_count": 2598,
+      "show_title_count": 363,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#MUTE"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Red Herring",
+      "occurrences": 2971,
+      "title_count": 2947,
+      "movie_title_count": 2398,
+      "show_title_count": 549,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Missing Mom",
+      "occurrences": 2968,
+      "title_count": 2935,
+      "movie_title_count": 2194,
+      "show_title_count": 741,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Trucker"
+        },
+        {
+          "media_type": "show",
+          "title": "10 Things I Hate About You"
+        }
+      ]
+    },
+    {
+      "name": "Freudian Excuse",
+      "occurrences": 2941,
+      "title_count": 2934,
+      "movie_title_count": 2254,
+      "show_title_count": 680,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"W\""
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Cassandra Truth",
+      "occurrences": 2917,
+      "title_count": 2897,
+      "movie_title_count": 2190,
+      "show_title_count": 707,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'elf"
+        },
+        {
+          "media_type": "show",
+          "title": "10 Things I Hate About You"
+        }
+      ]
+    },
+    {
+      "name": "Bitch in Sheep's Clothing",
+      "occurrences": 2901,
+      "title_count": 2891,
+      "movie_title_count": 2146,
+      "show_title_count": 745,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'Big Game'"
+        },
+        {
+          "media_type": "show",
+          "title": "#martyisdead"
+        }
+      ]
+    },
+    {
+      "name": "Only Sane Man",
+      "occurrences": 2900,
+      "title_count": 2887,
+      "movie_title_count": 1932,
+      "show_title_count": 955,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(500) Days of Summer"
+        },
+        {
+          "media_type": "show",
+          "title": "#blackAF"
+        }
+      ]
+    },
+    {
+      "name": "Hypocrite",
+      "occurrences": 2847,
+      "title_count": 2834,
+      "movie_title_count": 2110,
+      "show_title_count": 724,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#AMFAD: All My Friends Are Dead"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Surprisingly Realistic Outcome",
+      "occurrences": 2824,
+      "title_count": 2811,
+      "movie_title_count": 1940,
+      "show_title_count": 871,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'A Perfect World'"
+        },
+        {
+          "media_type": "show",
+          "title": "#CasaDoCais"
+        }
+      ]
+    },
+    {
+      "name": "Funny Background Event",
+      "occurrences": 2813,
+      "title_count": 2810,
+      "movie_title_count": 2048,
+      "show_title_count": 762,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#MUTE"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Hidden Depths",
+      "occurrences": 2868,
+      "title_count": 2808,
+      "movie_title_count": 1856,
+      "show_title_count": 952,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"W\""
+        },
+        {
+          "media_type": "show",
+          "title": "#RichKids of Beverly Hills"
+        }
+      ]
+    },
+    {
+      "name": "Villainous Breakdown",
+      "occurrences": 2818,
+      "title_count": 2786,
+      "movie_title_count": 2298,
+      "show_title_count": 488,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Took a Level in Badass",
+      "occurrences": 2818,
+      "title_count": 2782,
+      "movie_title_count": 2121,
+      "show_title_count": 661,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Early-Installment Weirdness",
+      "occurrences": 2766,
+      "title_count": 2742,
+      "movie_title_count": 824,
+      "show_title_count": 1918,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "A Bug's Life"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Continuity Nod",
+      "occurrences": 2786,
+      "title_count": 2735,
+      "movie_title_count": 1502,
+      "show_title_count": 1233,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(MAD)²"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Big \"NO!\"",
+      "occurrences": 2718,
+      "title_count": 2714,
+      "movie_title_count": 2006,
+      "show_title_count": 708,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#chainletter"
+        },
+        {
+          "media_type": "show",
+          "title": "2 Broke Girls"
+        }
+      ]
+    },
+    {
+      "name": "Cruel and Unusual Death",
+      "occurrences": 2682,
+      "title_count": 2666,
+      "movie_title_count": 2425,
+      "show_title_count": 241,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#MUTE"
+        },
+        {
+          "media_type": "show",
+          "title": "9-1-1"
+        }
+      ]
+    },
+    {
+      "name": "Everyone Has Standards",
+      "occurrences": 2669,
+      "title_count": 2662,
+      "movie_title_count": 1969,
+      "show_title_count": 693,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Blooper) Bunny!"
+        },
+        {
+          "media_type": "show",
+          "title": "2 Broke Girls"
+        }
+      ]
+    },
+    {
+      "name": "Nice Guy",
+      "occurrences": 2667,
+      "title_count": 2653,
+      "movie_title_count": 2063,
+      "show_title_count": 590,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Papa Wolf",
+      "occurrences": 2663,
+      "title_count": 2639,
+      "movie_title_count": 2025,
+      "show_title_count": 614,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'elf"
+        },
+        {
+          "media_type": "show",
+          "title": "#martyisdead"
+        }
+      ]
+    },
+    {
+      "name": "Poor Communication Kills",
+      "occurrences": 2632,
+      "title_count": 2632,
+      "movie_title_count": 1928,
+      "show_title_count": 704,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'Amal"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Hate Sink",
+      "occurrences": 2630,
+      "title_count": 2626,
+      "movie_title_count": 2254,
+      "show_title_count": 372,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'elf"
+        },
+        {
+          "media_type": "show",
+          "title": "#martyisdead"
+        }
+      ]
+    },
+    {
+      "name": "Trailers Always Spoil",
+      "occurrences": 2623,
+      "title_count": 2600,
+      "movie_title_count": 2129,
+      "show_title_count": 471,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Para) Normal Activity"
+        },
+        {
+          "media_type": "show",
+          "title": "A Certain Scientific Railgun"
+        }
+      ]
+    },
+    {
+      "name": "Batman Gambit",
+      "occurrences": 2551,
+      "title_count": 2547,
+      "movie_title_count": 1780,
+      "show_title_count": 767,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Maybe Magic, Maybe Mundane",
+      "occurrences": 2554,
+      "title_count": 2544,
+      "movie_title_count": 2058,
+      "show_title_count": 486,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "13 Assassins"
+        },
+        {
+          "media_type": "show",
+          "title": "7th Heaven"
+        }
+      ]
+    },
+    {
+      "name": "Mama Bear",
+      "occurrences": 2536,
+      "title_count": 2509,
+      "movie_title_count": 1928,
+      "show_title_count": 581,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Trucker"
+        },
+        {
+          "media_type": "show",
+          "title": "#martyisdead"
+        }
+      ]
+    },
+    {
+      "name": "Even Evil Has Loved Ones",
+      "occurrences": 2513,
+      "title_count": 2501,
+      "movie_title_count": 2026,
+      "show_title_count": 475,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#MUTE"
+        },
+        {
+          "media_type": "show",
+          "title": "A Certain Magical Index"
+        }
+      ]
+    },
+    {
+      "name": "Time Skip",
+      "occurrences": 2496,
+      "title_count": 2484,
+      "movie_title_count": 1820,
+      "show_title_count": 664,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#MUTE"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Didn't Think This Through",
+      "occurrences": 2473,
+      "title_count": 2468,
+      "movie_title_count": 1755,
+      "show_title_count": 713,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#AMFAD: All My Friends Are Dead"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Demoted to Extra",
+      "occurrences": 2465,
+      "title_count": 2445,
+      "movie_title_count": 1647,
+      "show_title_count": 798,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Alive"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Cool Car",
+      "occurrences": 2442,
+      "title_count": 2430,
+      "movie_title_count": 1793,
+      "show_title_count": 637,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#monalisa"
+        },
+        {
+          "media_type": "show",
+          "title": "/DRIVE"
+        }
+      ]
+    },
+    {
+      "name": "Alliterative Name",
+      "occurrences": 2412,
+      "title_count": 2407,
+      "movie_title_count": 1628,
+      "show_title_count": 779,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#AMFAD: All My Friends Are Dead"
+        },
+        {
+          "media_type": "show",
+          "title": "2 Broke Girls"
+        }
+      ]
+    },
+    {
+      "name": "Composite Character",
+      "occurrences": 2407,
+      "title_count": 2400,
+      "movie_title_count": 1914,
+      "show_title_count": 486,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Alive"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Parental Abandonment",
+      "occurrences": 2415,
+      "title_count": 2397,
+      "movie_title_count": 1575,
+      "show_title_count": 822,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "9-1-1"
+        }
+      ]
+    },
+    {
+      "name": "Never My Fault",
+      "occurrences": 2359,
+      "title_count": 2352,
+      "movie_title_count": 1698,
+      "show_title_count": 654,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#AMFAD: All My Friends Are Dead"
+        },
+        {
+          "media_type": "show",
+          "title": "7th Heaven"
+        }
+      ]
+    },
+    {
+      "name": "Covers Always Lie",
+      "occurrences": 2342,
+      "title_count": 2335,
+      "movie_title_count": 2096,
+      "show_title_count": 239,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#MUTE"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Beware the Nice Ones",
+      "occurrences": 2335,
+      "title_count": 2331,
+      "movie_title_count": 1505,
+      "show_title_count": 826,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#MUTE"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Only Known by Their Nickname",
+      "occurrences": 2329,
+      "title_count": 2325,
+      "movie_title_count": 1734,
+      "show_title_count": 591,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Trucker"
+        },
+        {
+          "media_type": "show",
+          "title": "9-1-1"
+        }
+      ]
+    },
+    {
+      "name": "All There in the Manual",
+      "occurrences": 2329,
+      "title_count": 2319,
+      "movie_title_count": 1554,
+      "show_title_count": 765,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Extremely Short Timespan",
+      "occurrences": 2317,
+      "title_count": 2315,
+      "movie_title_count": 2162,
+      "show_title_count": 153,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Para) Normal Activity"
+        },
+        {
+          "media_type": "show",
+          "title": "A Certain Magical Index"
+        }
+      ]
+    },
+    {
+      "name": "Artistic License – Biology",
+      "occurrences": 2293,
+      "title_count": 2276,
+      "movie_title_count": 1767,
+      "show_title_count": 509,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "+ Turbo"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Failed a Spot Check",
+      "occurrences": 2300,
+      "title_count": 2276,
+      "movie_title_count": 1814,
+      "show_title_count": 462,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Blooper) Bunny!"
+        },
+        {
+          "media_type": "show",
+          "title": "A Series of Unfortunate Events"
+        }
+      ]
+    },
+    {
+      "name": "Crapsack World",
+      "occurrences": 2274,
+      "title_count": 2271,
+      "movie_title_count": 1795,
+      "show_title_count": 476,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "& More"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Anachronism Stew",
+      "occurrences": 2313,
+      "title_count": 2251,
+      "movie_title_count": 1738,
+      "show_title_count": 513,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Im)mortals"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Sanity Slippage",
+      "occurrences": 2237,
+      "title_count": 2228,
+      "movie_title_count": 1899,
+      "show_title_count": 329,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Break the Cutie",
+      "occurrences": 2221,
+      "title_count": 2217,
+      "movie_title_count": 1615,
+      "show_title_count": 602,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "'Til Death"
+        }
+      ]
+    },
+    {
+      "name": "Sequel Hook",
+      "occurrences": 2227,
+      "title_count": 2212,
+      "movie_title_count": 1660,
+      "show_title_count": 552,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"MANOS\" The Hands of Fate"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Ascended Extra",
+      "occurrences": 2227,
+      "title_count": 2208,
+      "movie_title_count": 1135,
+      "show_title_count": 1073,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(witch)"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "It's All About Me",
+      "occurrences": 2161,
+      "title_count": 2160,
+      "movie_title_count": 1519,
+      "show_title_count": 641,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"And So, It Goes\""
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Comically Missing the Point",
+      "occurrences": 2167,
+      "title_count": 2148,
+      "movie_title_count": 1392,
+      "show_title_count": 756,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(500) Days of Summer"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Ambiguous Situation",
+      "occurrences": 2123,
+      "title_count": 2120,
+      "movie_title_count": 1780,
+      "show_title_count": 340,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(witch)"
+        },
+        {
+          "media_type": "show",
+          "title": "A Spy Among Friends"
+        }
+      ]
+    },
+    {
+      "name": "Leaning on the Fourth Wall",
+      "occurrences": 2125,
+      "title_count": 2114,
+      "movie_title_count": 1350,
+      "show_title_count": 764,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "+X+=+"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Made of Iron",
+      "occurrences": 2108,
+      "title_count": 2098,
+      "movie_title_count": 1736,
+      "show_title_count": 362,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'elf"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Wham Episode",
+      "occurrences": 2141,
+      "title_count": 2095,
+      "movie_title_count": 460,
+      "show_title_count": 1635,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Nice Job Fixing It, Villain!",
+      "occurrences": 2092,
+      "title_count": 2070,
+      "movie_title_count": 1643,
+      "show_title_count": 427,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Im)mortals"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "The Ghost",
+      "occurrences": 2071,
+      "title_count": 2067,
+      "movie_title_count": 1429,
+      "show_title_count": 638,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"MANOS\" The Hands of Fate"
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "The Stinger",
+      "occurrences": 2053,
+      "title_count": 2036,
+      "movie_title_count": 1613,
+      "show_title_count": 423,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Stealth"
+        },
+        {
+          "media_type": "show",
+          "title": "\"crash canyon\""
+        }
+      ]
+    },
+    {
+      "name": "Despair Event Horizon",
+      "occurrences": 2031,
+      "title_count": 2022,
+      "movie_title_count": 1736,
+      "show_title_count": 286,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Alive"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Impaled with Extreme Prejudice",
+      "occurrences": 2030,
+      "title_count": 2017,
+      "movie_title_count": 1788,
+      "show_title_count": 229,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "6 Underground"
+        },
+        {
+          "media_type": "show",
+          "title": "9-1-1: Lone Star"
+        }
+      ]
+    },
+    {
+      "name": "Dirty Coward",
+      "occurrences": 2024,
+      "title_count": 2014,
+      "movie_title_count": 1750,
+      "show_title_count": 264,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'elf"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Hours: Race Against Time"
+        }
+      ]
+    },
+    {
+      "name": "Would Hit a Girl",
+      "occurrences": 2016,
+      "title_count": 2012,
+      "movie_title_count": 1694,
+      "show_title_count": 318,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"MANOS\" The Hands of Fate"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Betty and Veronica",
+      "occurrences": 2014,
+      "title_count": 2010,
+      "movie_title_count": 1491,
+      "show_title_count": 519,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "- Mar -"
+        },
+        {
+          "media_type": "show",
+          "title": "30 Rock"
+        }
+      ]
+    },
+    {
+      "name": "Imagine Spot",
+      "occurrences": 2007,
+      "title_count": 2007,
+      "movie_title_count": 1535,
+      "show_title_count": 472,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"W\""
+        },
+        {
+          "media_type": "show",
+          "title": "30 Rock"
+        }
+      ]
+    },
+    {
+      "name": "One-Steve Limit",
+      "occurrences": 2042,
+      "title_count": 1993,
+      "movie_title_count": 1013,
+      "show_title_count": 980,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Alive"
+        },
+        {
+          "media_type": "show",
+          "title": "30 Rock"
+        }
+      ]
+    },
+    {
+      "name": "Fingore",
+      "occurrences": 2016,
+      "title_count": 1987,
+      "movie_title_count": 1754,
+      "show_title_count": 233,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#chainletter"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Insistent Terminology",
+      "occurrences": 1981,
+      "title_count": 1976,
+      "movie_title_count": 1318,
+      "show_title_count": 658,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'A Perfect World'"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Nothing Is Scarier",
+      "occurrences": 2010,
+      "title_count": 1972,
+      "movie_title_count": 1813,
+      "show_title_count": 159,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"MANOS\" The Hands of Fate"
+        },
+        {
+          "media_type": "show",
+          "title": "Aaahh!!! Real Monsters"
+        }
+      ]
+    },
+    {
+      "name": "Broken Pedestal",
+      "occurrences": 1957,
+      "title_count": 1957,
+      "movie_title_count": 1347,
+      "show_title_count": 610,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'Twas the Night"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Dark and Troubled Past",
+      "occurrences": 1964,
+      "title_count": 1957,
+      "movie_title_count": 1429,
+      "show_title_count": 528,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#MUTE"
+        },
+        {
+          "media_type": "show",
+          "title": "A Discovery of Witches"
+        }
+      ]
+    },
+    {
+      "name": "Armor-Piercing Question",
+      "occurrences": 1942,
+      "title_count": 1940,
+      "movie_title_count": 1466,
+      "show_title_count": 474,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "10 Things I Hate About You"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "\"Not So Different\" Remark",
+      "occurrences": 1944,
+      "title_count": 1938,
+      "movie_title_count": 1402,
+      "show_title_count": 536,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Karmic Death",
+      "occurrences": 1949,
+      "title_count": 1937,
+      "movie_title_count": 1697,
+      "show_title_count": 240,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Stuck"
+        },
+        {
+          "media_type": "show",
+          "title": "A Million Little Things"
+        }
+      ]
+    },
+    {
+      "name": "Off with His Head!",
+      "occurrences": 1966,
+      "title_count": 1936,
+      "movie_title_count": 1699,
+      "show_title_count": 237,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Im)mortals"
+        },
+        {
+          "media_type": "show",
+          "title": "9-1-1"
+        }
+      ]
+    },
+    {
+      "name": "The Bad Guy Wins",
+      "occurrences": 1959,
+      "title_count": 1935,
+      "movie_title_count": 1542,
+      "show_title_count": 393,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"MANOS\" The Hands of Fate"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Very Loosely Based on a True Story",
+      "occurrences": 1936,
+      "title_count": 1930,
+      "movie_title_count": 1758,
+      "show_title_count": 172,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Be)loved"
+        },
+        {
+          "media_type": "show",
+          "title": "A League of Their Own"
+        }
+      ]
+    },
+    {
+      "name": "As You Know",
+      "occurrences": 1927,
+      "title_count": 1927,
+      "movie_title_count": 1572,
+      "show_title_count": 355,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Good Morning.\""
+        },
+        {
+          "media_type": "show",
+          "title": "'Allo 'Allo!"
+        }
+      ]
+    },
+    {
+      "name": "Arson, Murder, and Jaywalking",
+      "occurrences": 1930,
+      "title_count": 1926,
+      "movie_title_count": 1232,
+      "show_title_count": 694,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "101 Dalmatians"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Dirty Cop",
+      "occurrences": 1933,
+      "title_count": 1924,
+      "movie_title_count": 1415,
+      "show_title_count": 509,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "A Clockwork Orange"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Hours: Race Against Time"
+        }
+      ]
+    },
+    {
+      "name": "Big Eater",
+      "occurrences": 1904,
+      "title_count": 1895,
+      "movie_title_count": 968,
+      "show_title_count": 927,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(witch)"
+        },
+        {
+          "media_type": "show",
+          "title": "\"crash canyon\""
+        }
+      ]
+    },
+    {
+      "name": "Punny Name",
+      "occurrences": 1904,
+      "title_count": 1891,
+      "movie_title_count": 1063,
+      "show_title_count": 828,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "+ Turbo"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Ooh, Me Accent's Slipping",
+      "occurrences": 1882,
+      "title_count": 1880,
+      "movie_title_count": 1416,
+      "show_title_count": 464,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'Big Game'"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Those Two Guys",
+      "occurrences": 1858,
+      "title_count": 1855,
+      "movie_title_count": 1264,
+      "show_title_count": 591,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'elf"
+        },
+        {
+          "media_type": "show",
+          "title": "9-1-1: Lone Star"
+        }
+      ]
+    },
+    {
+      "name": "Corrupt Corporate Executive",
+      "occurrences": 1855,
+      "title_count": 1846,
+      "movie_title_count": 1391,
+      "show_title_count": 455,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'elf"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Green-Eyed Monster",
+      "occurrences": 1847,
+      "title_count": 1834,
+      "movie_title_count": 1299,
+      "show_title_count": 535,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "12 Years a Slave"
+        },
+        {
+          "media_type": "show",
+          "title": "9-1-1"
+        }
+      ]
+    },
+    {
+      "name": "Badass Boast",
+      "occurrences": 1832,
+      "title_count": 1830,
+      "movie_title_count": 1403,
+      "show_title_count": 427,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'elf"
+        },
+        {
+          "media_type": "show",
+          "title": "30 Rock"
+        }
+      ]
+    },
+    {
+      "name": "You Have Outlived Your Usefulness",
+      "occurrences": 1835,
+      "title_count": 1829,
+      "movie_title_count": 1394,
+      "show_title_count": 435,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(witch)"
+        },
+        {
+          "media_type": "show",
+          "title": "24"
+        }
+      ]
+    },
+    {
+      "name": "Central Theme",
+      "occurrences": 1836,
+      "title_count": 1827,
+      "movie_title_count": 1341,
+      "show_title_count": 486,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "A Very Royal Scandal"
+        }
+      ]
+    },
+    {
+      "name": "Stock Footage",
+      "occurrences": 1828,
+      "title_count": 1827,
+      "movie_title_count": 1287,
+      "show_title_count": 540,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "A Beautiful Day in the Neighborhood"
+        },
+        {
+          "media_type": "show",
+          "title": "30 Rock"
+        }
+      ]
+    },
+    {
+      "name": "Boom, Headshot!",
+      "occurrences": 1835,
+      "title_count": 1826,
+      "movie_title_count": 1605,
+      "show_title_count": 221,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "\"Opera.\""
+        },
+        {
+          "media_type": "show",
+          "title": "9-1-1"
+        }
+      ]
+    },
+    {
+      "name": "Mr. Fanservice",
+      "occurrences": 1827,
+      "title_count": 1825,
+      "movie_title_count": 1185,
+      "show_title_count": 640,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Im)mortals"
+        },
+        {
+          "media_type": "show",
+          "title": "2 Broke Girls"
+        }
+      ]
+    },
+    {
+      "name": "Unwitting Instigator of Doom",
+      "occurrences": 1825,
+      "title_count": 1825,
+      "movie_title_count": 1501,
+      "show_title_count": 324,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'Twas the Night Before Christmas"
+        },
+        {
+          "media_type": "show",
+          "title": "#martyisdead"
+        }
+      ]
+    },
+    {
+      "name": "The Sociopath",
+      "occurrences": 1835,
+      "title_count": 1822,
+      "movie_title_count": 1647,
+      "show_title_count": 175,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "'Big Game'"
+        },
+        {
+          "media_type": "show",
+          "title": "A Killer Among Friends"
+        }
+      ]
+    },
+    {
+      "name": "Politically Incorrect Villain",
+      "occurrences": 1822,
+      "title_count": 1813,
+      "movie_title_count": 1576,
+      "show_title_count": 237,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#monalisa"
+        },
+        {
+          "media_type": "show",
+          "title": "9-1-1"
+        }
+      ]
+    },
+    {
+      "name": "Rewatch Bonus",
+      "occurrences": 1823,
+      "title_count": 1813,
+      "movie_title_count": 1490,
+      "show_title_count": 323,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "(Para) Normal Activity"
+        },
+        {
+          "media_type": "show",
+          "title": "A Certain Magical Index"
+        }
+      ]
+    },
+    {
+      "name": "Cool Old Guy",
+      "occurrences": 1814,
+      "title_count": 1811,
+      "movie_title_count": 1284,
+      "show_title_count": 527,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#Alive"
+        },
+        {
+          "media_type": "show",
+          "title": "101 Dalmatians: The Series"
+        }
+      ]
+    },
+    {
+      "name": "Heterosexual Life-Partners",
+      "occurrences": 1799,
+      "title_count": 1799,
+      "movie_title_count": 1084,
+      "show_title_count": 715,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#monalisa"
+        },
+        {
+          "media_type": "show",
+          "title": "13 Reasons Why"
+        }
+      ]
+    },
+    {
+      "name": "Mind Screw",
+      "occurrences": 1810,
+      "title_count": 1799,
+      "movie_title_count": 1530,
+      "show_title_count": 269,
+      "examples": [
+        {
+          "media_type": "movie",
+          "title": "#c_училища"
+        },
+        {
+          "media_type": "show",
+          "title": "Adventure Time"
+        }
+      ]
+    }
+  ]
+}

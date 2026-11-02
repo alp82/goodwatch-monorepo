@@ -1,0 +1,341 @@
+[
+  {
+    "query": "site:reddit.com/r/televisionsuggestions shows no cliffhanger completed ending recommendations",
+    "engine": "Google direct HTTPS",
+    "outcome": "HTTP 200 consent page; no results read; no bypass attempted",
+    "date": "2026-10-24"
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions shows no cliffhanger completed ending recommendations",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 0,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1tj2e53/looking_for_immersive_show_with_a_more_episodic/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vh36rc/shows_with_a_good_ending_tired_of_getting/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vrqa38/what_are_some_series_that_did_not_have_a_proper/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1s7e050/shows_with_good_endings_and_no_loose_ends/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1teyfim/looking_for_some_good_shows_with_a_perfect_ending/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1npl61q",
+      "https://www.reddit.com/r/SchittsCreek/comments/1xbnv3l/loved_schitts_creek_what_should_i_watch_next/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1c6nf0z"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions episodic no overarching plot background",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 0,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1tj2e53/looking_for_immersive_show_with_a_more_episodic/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vh36rc/shows_with_a_good_ending_tired_of_getting/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vrqa38/what_are_some_series_that_did_not_have_a_proper/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1s7e050/shows_with_good_endings_and_no_loose_ends/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1teyfim/looking_for_some_good_shows_with_a_perfect_ending/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1npl61q",
+      "https://www.reddit.com/r/SchittsCreek/comments/1xbnv3l/loved_schitts_creek_what_should_i_watch_next/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1c6nf0z"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/SchittsCreek recommendations grief comfort show",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 0,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1tj2e53/looking_for_immersive_show_with_a_more_episodic/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vh36rc/shows_with_a_good_ending_tired_of_getting/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vrqa38/what_are_some_series_that_did_not_have_a_proper/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1s7e050/shows_with_good_endings_and_no_loose_ends/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1teyfim/looking_for_some_good_shows_with_a_perfect_ending/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1npl61q",
+      "https://www.reddit.com/r/SchittsCreek/comments/1xbnv3l/loved_schitts_creek_what_should_i_watch_next/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1c6nf0z"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions comfort grief no death",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 1,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vkehwc/need_something_light_to_watch_while_cooking/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1pojuui/looking_for_nonsitcom_background_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1srey0w/can_someone_reccomend_me_anything_to_keep_my_mind/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vq5jew/shows_so_i_dont_feel_alone_pls/",
+      "https://www.reddit.com/r/netflix/comments/1s37cey/recommendations_for_background_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1d8faod",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1pazus1/series_about_deathgrief/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/16zpkg8/shows_to_process_grief/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions background watching cooking no subtitles",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 1,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vkehwc/need_something_light_to_watch_while_cooking/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1pojuui/looking_for_nonsitcom_background_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1srey0w/can_someone_reccomend_me_anything_to_keep_my_mind/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vq5jew/shows_so_i_dont_feel_alone_pls/",
+      "https://www.reddit.com/r/netflix/comments/1s37cey/recommendations_for_background_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1d8faod",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1pazus1/series_about_deathgrief/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/16zpkg8/shows_to_process_grief/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions deaf subtitles audio description",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 1,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vkehwc/need_something_light_to_watch_while_cooking/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1pojuui/looking_for_nonsitcom_background_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1srey0w/can_someone_reccomend_me_anything_to_keep_my_mind/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1vq5jew/shows_so_i_dont_feel_alone_pls/",
+      "https://www.reddit.com/r/netflix/comments/1s37cey/recommendations_for_background_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1d8faod",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1pazus1/series_about_deathgrief/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/16zpkg8/shows_to_process_grief/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/tvsuggestions finished no cliffhanger",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 2,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/PickMyNextShow/comments/1wstpec/looking_for_a_series_that_isnt_a_slow_burn_and/",
+      "https://www.reddit.com/r/tvsuggestions/comments/1u62na8/seeking_for_best_shows_left_on_a/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/tvshow recommendation happy ending",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 2,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/PickMyNextShow/comments/1wstpec/looking_for_a_series_that_isnt_a_slow_burn_and/",
+      "https://www.reddit.com/r/tvsuggestions/comments/1u62na8/seeking_for_best_shows_left_on_a/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/PickMyNextShow slow burn character development",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 2,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/PickMyNextShow/comments/1wstpec/looking_for_a_series_that_isnt_a_slow_burn_and/",
+      "https://www.reddit.com/r/tvsuggestions/comments/1u62na8/seeking_for_best_shows_left_on_a/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/whattowatch parents no sex",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 3,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/SchittsCreek/comments/1vfv9y9/any_other_comparable_shows_to_schitts_creek/",
+      "https://www.reddit.com/r/SchittsCreek/comments/1s6mcc4/i_need_show_recommendations_of_shows_like_schitts/",
+      "https://www.reddit.com/r/SchittsCreek/comments/1s701dw/other_shows_like_schitts_creek/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/netflix dubbed English completed series",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 3,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/SchittsCreek/comments/1vfv9y9/any_other_comparable_shows_to_schitts_creek/",
+      "https://www.reddit.com/r/SchittsCreek/comments/1s6mcc4/i_need_show_recommendations_of_shows_like_schitts/",
+      "https://www.reddit.com/r/SchittsCreek/comments/1s701dw/other_shows_like_schitts_creek/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/SchittsCreek show recommendations similar wholesome",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 3,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/SchittsCreek/comments/1vfv9y9/any_other_comparable_shows_to_schitts_creek/",
+      "https://www.reddit.com/r/SchittsCreek/comments/1s6mcc4/i_need_show_recommendations_of_shows_like_schitts/",
+      "https://www.reddit.com/r/SchittsCreek/comments/1s701dw/other_shows_like_schitts_creek/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions no romance female lead",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 4,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1wnz0ae/low_stakes_casual_viewing_tv_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1m3k7jy",
+      "https://www.reddit.com/r/television/comments/1t1fsvh/what_tv_shows_help_your_anxiety/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1doh7at",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1j2n8f0/low_stresscalming_shows_for_when_youre_feeling/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions pregnancy miscarriage avoid",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 4,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1wnz0ae/low_stakes_casual_viewing_tv_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1m3k7jy",
+      "https://www.reddit.com/r/television/comments/1t1fsvh/what_tv_shows_help_your_anxiety/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1doh7at",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1j2n8f0/low_stresscalming_shows_for_when_youre_feeling/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions anxiety low stakes no cringe",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 4,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1wnz0ae/low_stakes_casual_viewing_tv_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1m3k7jy",
+      "https://www.reddit.com/r/television/comments/1t1fsvh/what_tv_shows_help_your_anxiety/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1doh7at",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1j2n8f0/low_stresscalming_shows_for_when_youre_feeling/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions consistent quality seasons",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 5,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1le27bd/completed_tv_shows_that_maintained_high_quality/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1w6vmpw/bedtime_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1shqyrc/help_me_find_my_next_bedtime_show_please/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1cpdi0a",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1r8ojsp/shows_to_watch_before_sleep/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions short episodes bedtime",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 5,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1le27bd/completed_tv_shows_that_maintained_high_quality/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1w6vmpw/bedtime_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1shqyrc/help_me_find_my_next_bedtime_show_please/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1cpdi0a",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1r8ojsp/shows_to_watch_before_sleep/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions couple different tastes",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 5,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1le27bd/completed_tv_shows_that_maintained_high_quality/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1w6vmpw/bedtime_shows/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1shqyrc/help_me_find_my_next_bedtime_show_please/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1cpdi0a",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1r8ojsp/shows_to_watch_before_sleep/"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions elderly dementia mother",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 6,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1w31hma/help_me_find_my_dad_on_hospice_with_dementia/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1igp9zv",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1ms5cm5",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1l8o53z/looking_for_a_series_with_amazing_character/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/oqatxi",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1sx55em/looking_for_characterdriven_sitcoms_with_strong/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1ki6f5q"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions subtitles UK netflix mystery",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 6,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1w31hma/help_me_find_my_dad_on_hospice_with_dementia/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1igp9zv",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1ms5cm5",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1l8o53z/looking_for_a_series_with_amazing_character/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/oqatxi",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1sx55em/looking_for_characterdriven_sitcoms_with_strong/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1ki6f5q"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/televisionsuggestions episodic character growth",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 6,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/televisionsuggestions/comments/1w31hma/help_me_find_my_dad_on_hospice_with_dementia/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1igp9zv",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1ms5cm5",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1l8o53z/looking_for_a_series_with_amazing_character/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/oqatxi",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1sx55em/looking_for_characterdriven_sitcoms_with_strong/",
+      "https://www.reddit.com/r/televisionsuggestions/comments/1ki6f5q"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/PickMyNextShow finished mystery",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 7,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/netflix/comments/g214l6"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/whattowatch comfort depressed",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 7,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/netflix/comments/g214l6"
+    ]
+  },
+  {
+    "query": "site:reddit.com/r/netflix recommendation blind audio description",
+    "engine": "web search fallback",
+    "outcome": "returned indexed Reddit results; per-query attribution unavailable because queries batched in threes",
+    "batch": 7,
+    "date": "2026-10-24",
+    "useful_urls": [
+      "https://www.reddit.com/r/netflix/comments/g214l6"
+    ]
+  }
+]

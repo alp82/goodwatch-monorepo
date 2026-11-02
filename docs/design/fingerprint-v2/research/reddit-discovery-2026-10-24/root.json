@@ -1,0 +1,132 @@
+[
+  {
+    "id": "root-01",
+    "subreddit": "MovieSuggestions",
+    "url": "https://www.reddit.com/r/MovieSuggestions/comments/14f1c6w/",
+    "title": "Looking for a list of suggested \"competency porn\" type movies",
+    "request_excerpt": "Movies with clear Mary Sue types excluded as I like the characters to at least seem reasonably likely to have earned their competence.",
+    "access_level": "search_excerpt",
+    "request_summary": "Highly competent characters demonstrating earned ability; exclude effortless implausible competence.",
+    "predicates": [
+      "demonstrated expertise",
+      "competence plausibly earned",
+      "exclude effortless Mary Sue characterization"
+    ],
+    "existing_fields": [
+      "characters.intellectual_problem_solver",
+      "characters.transformation_arc",
+      "tropes.training",
+      "world_treatment.everyday_realism",
+      "concept_assertions"
+    ],
+    "support": "partial",
+    "gap_kind": "vocabulary",
+    "failure_reason": "Intellectual problem solving does not cover practiced physical or professional expertise, and training presence does not establish earned competence. Generic realism is a different concept.",
+    "proposed_change": "Start with canonical demonstrated_competence and competence_basis concepts linked to character and domain; test usefulness before adding any vector score.",
+    "priority": "high"
+  },
+  {
+    "id": "root-02",
+    "subreddit": "movies",
+    "url": "https://www.reddit.com/r/movies/comments/1u4rtsc/looking_for_general_competency_porn/",
+    "title": "Looking for general Competency Porn",
+    "request_excerpt": "the majority of the plot isn't driven by emotional or irrational decision-making",
+    "access_level": "search_excerpt",
+    "request_summary": "A mostly competent ensemble whose plot does not depend on unreasonable decisions; open genre.",
+    "predicates": [
+      "most relevant characters competent in role",
+      "limited implausible decision making",
+      "genre flexible"
+    ],
+    "existing_fields": [
+      "characters.ensemble",
+      "characters.intellectual_problem_solver",
+      "evaluations.writing",
+      "concept_assertions"
+    ],
+    "support": "partial",
+    "gap_kind": "subjective_calibration",
+    "failure_reason": "A competent protagonist is not a mostly competent cast; writing quality does not specify decision plausibility. Meaning varies even between requests using the same label.",
+    "proposed_change": "Clarify the intended meaning of competence; model character-level domain/behavior and a cast quantifier rather than translating this automatically to writing quality.",
+    "priority": "high"
+  },
+  {
+    "id": "root-03",
+    "subreddit": "horror",
+    "url": "https://www.reddit.com/r/horror/comments/1ah1z6r/movies_that_start_out_funny_but_turn_into/",
+    "title": "Movies that start out funny, but turn into pure/legit horror? Not horror comedies",
+    "request_excerpt": "not movies like Tucker and Dale vs. Evil, or Deadstream, which are just horror comedies - but movies which turn into genuine horror.",
+    "access_level": "search_excerpt",
+    "request_summary": "Comedy/lighthearted opening transitions into genuine horror rather than simultaneous horror comedy.",
+    "predicates": [
+      "early comedy/lightheartedness",
+      "later horror",
+      "ordered tonal transition",
+      "exclude merely mixed genre"
+    ],
+    "existing_fields": [
+      "humor.overall",
+      "genres.horror",
+      "experience.fear",
+      "temporal_segments"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Whole-work humor and horror scores do not encode order. temporal_segments carries free text and fractions but no typed trait assertions or transition edges.",
+    "proposed_change": "Add segment-bound trait assertions and ordered transition queries; keep whole-title vector unchanged.",
+    "priority": "high"
+  },
+  {
+    "id": "root-04",
+    "subreddit": "movies",
+    "url": "https://www.reddit.com/r/movies/comments/15nyp8b/",
+    "title": "Recommend some documentaries that are done through audio/visuals instead of talking heads/narration?",
+    "request_excerpt": "the only narration you get is from the source not through talking heads (or no narration at all)",
+    "access_level": "search_excerpt",
+    "request_summary": "Audio/visual documentary without conventional explanatory talking heads; source audio/narration can be acceptable.",
+    "predicates": [
+      "documentary",
+      "no conventional talking-head explanation",
+      "source audio acceptable",
+      "visual/music storytelling"
+    ],
+    "existing_fields": [
+      "format_facts.narrative_mode",
+      "format_facts.documentary_devices",
+      "storytelling.voiceover",
+      "sound.diegetic_music",
+      "sound.design_prominence",
+      "concept_assertions"
+    ],
+    "support": "partial",
+    "gap_kind": "relation_binding",
+    "failure_reason": "Voiceover presence does not distinguish archival/source audio from external explanatory narration. Documentary devices are a whole-work list without device scope or source role.",
+    "proposed_change": "Canonical narration origin/function concepts and contextual device assertions. Require explicit absence support for forbidden device, not a missing array item.",
+    "priority": "medium"
+  },
+  {
+    "id": "root-05",
+    "subreddit": "televisionsuggestions",
+    "url": "https://www.reddit.com/r/televisionsuggestions/comments/1teufq7/shows_which_gets_better_as_they_go_on/",
+    "title": "Shows which gets better as they go on",
+    "request_excerpt": "shows which increases the quality of their writing, production value, budget, etc as they go on.",
+    "access_level": "search_excerpt",
+    "request_summary": "Series whose perceived quality improves across seasons; already watched list excludes titles.",
+    "predicates": [
+      "positive quality trajectory across seasons",
+      "exclude previously watched titles"
+    ],
+    "existing_fields": [
+      "evaluations.writing",
+      "evaluations.direction",
+      "scope",
+      "reception",
+      "temporal_segments"
+    ],
+    "support": "partial",
+    "gap_kind": "temporal_scope",
+    "failure_reason": "Separate season scopes can hold assessments but a whole-show vector does not encode trajectory. Budget and perceived quality are different, and commenters disagree.",
+    "proposed_change": "Join season-scoped assessment/reception snapshots with source and method; calculate attributed trajectories. Apply user history as query context.",
+    "priority": "medium"
+  }
+]

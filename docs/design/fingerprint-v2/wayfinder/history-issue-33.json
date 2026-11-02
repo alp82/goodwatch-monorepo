@@ -1,0 +1,53 @@
+{
+  "body": "## Question\n\nGiven the reviewed comparative evidence, which model/provider strategy should Windmill use, and what quality/cost tradeoffs and fallback rules are acceptable?\n\nDecide with the human: primary model/provider, any fallback or tiered routing, budget guardrails, failure/retry behavior, compatibility of the 74-score representation, and the concrete acceptance criteria and constraints for an implementation handoff. If the evidence is insufficient, identify the next focused decision/experiment rather than forcing a winner.\n\nUse grilling and domain-modeling. Finish with a recommendation and implementation-ready decisions; production implementation remains outside this map.\n\n## Comparison handoff from #32\n\nThe owner reviewed the completed ten-title human comparison and selected **F \u2014 Qwen3.8 Flash as primary**, **D \u2014 Qwen3.7 Flash as fallback**, both on the tested Alibaba routes. The owner then requested closure of the comparison ticket. The comparison is accepted on its first-pass generation evidence and human review; closure does not assert completion of the original protocol's remaining checks.\n\n- [Results, all-candidate costs and human verdicts](https://github.com/alp82/goodwatch-monorepo/blob/a7841d2/docs/benchmarks/fingerprint/poc/human-review/results.md)\n- [Owner selection and outstanding validation](https://github.com/alp82/goodwatch-monorepo/blob/a7841d2/docs/benchmarks/fingerprint/poc/human-review/selection.json)\n- Actual total inference charges: $0.3764186484. Cost extrapolations exclude embeddings.\n\nOutstanding validation carried here from #32: independent Astra/Fable first-pass reviews, ten-title repeatability runs for F/D, and separate embedding-stage cost measurement. These have not run. Resolve their disposition explicitly as part of this strategy handoff; they are not silently passed or waived.\n\nDefine production fallback triggers, bounded retries/repairs, budget guardrails and acceptance criteria. Preserve the exact 74-score contract and account for D's three full-response repairs in the pilot. Production rollout remains outside this map.\n",
+  "comments": [
+    {
+      "id": "IC_kwDOJCFabs8AAAABUHM52A",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "Owner selected **F (Qwen3.8 Flash) as primary and D (Qwen3.7 Flash) as fallback** after the completed human review and full cost table. This supersedes the assistant's earlier proposed F/A pair.\n\nBoth retain the tested Alibaba route and requested disabled reasoning. F uses strict schema; D uses JSON-object mode with local validation. D's three first-pass full-response repairs must inform the implementation's validation and bounded repair handling.\n\n[Recorded selection and validation status](https://github.com/alp82/goodwatch-monorepo/blob/a7841d2/docs/benchmarks/fingerprint/poc/human-review/selection.json). Updated results are in the same commit on prototype/fingerprint-comparison.\n\nIndependent Astra/Fable reviews, unchanged-configuration F/D repeat runs, and embedding-stage cost measurement remain pending. The choice does not waive these steps. Exact production fallback triggers, retry rules and implementation acceptance criteria remain part of the strategy handoff. No new inference or production changes were made; issues remain open for the outstanding work.\n",
+      "createdAt": "2026-09-12T08:20:40Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/33#issuecomment-5644696024",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUH7cVA",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Resolution: fingerprinting strategy\n\nDecided with the owner on September 12, 2026, using grilling and domain modeling. Glossary terms are recorded in `CONTEXT.md` at the repo root.\n\n### Models and route\n- Primary model **Qwen3.8 Flash** (`qwen/qwen3.8-flash`, strict schema). Fallback model **Qwen3.7 Flash** (`qwen/qwen3.7-flash`, JSON-object mode with local validation). Both via OpenRouter, `provider: {only: [\"alibaba\"], allow_fallbacks: false, require_parameters: true}`, `reasoning: {enabled: false}`, `max_tokens: 8192`.\n- OpenRouter stays for the handoff. List prices match Alibaba Model Studio International ($0.15/$0.47 and $0.03/$0.13 per 1M input/output); OpenRouter adds a 5.5% credit-purchase fee, and Alibaba's Global scope is about 25% cheaper. Direct DashScope is a later cost optimization, out of scope here.\n- Gemini is removed from generation and kept only for embeddings.\n\n### Tiers and fallback\n- **Premium tier** (TMDB popularity \u2265 1.0, or released within the last 12 months) goes to the primary model. **Economy tier** (everything else) goes to the fallback model.\n- Each tier falls back to the other model on transport failure or exhausted repairs. No quality-based switching.\n\n### Requests, retries, repairs\n- One title per request. Repeated system-prompt input is nearly free: 99% of F's prompt tokens were cache hits in the POC, so the measured $0.85 per 1,000 titles already includes it.\n- Per model: 1 generation plus 1 repair on validation failure, and up to 2 transport retries with backoff honoring `Retry-After`. Hard cap of 6 requests per title, then `failed_at` and `error_message` are written and the run continues. Failed titles return only via phase 2 of the completeness queue.\n\n### Budget and spend pause\n- OpenRouter key limits: **$1 per day, $30 per month**, controlled in OpenRouter. On 402 `payment_required`, the fetch step enters a **spend pause**: Redis block until the next UTC midnight, unprocessed titles released back to the queue, partial results returned. `next` returns an empty batch while blocked. The flow-level retry in `crawl_all_by_id` is removed.\n- Consequence: at $1 per day the premium backlog (about 212,000 never-selected premium titles) takes roughly 190 days. The cap sets the pace and is one number to change.\n\n### Queue\n- **No soft reset.** The completeness queue stays as is. Measured state on 2026-09-12: 689,936 movies and 17,140 shows never selected; 152,564 movies and 80,966 shows carry Gemini fingerprints; `failed_at` has never been written.\n\n### Contract and provenance\n- The 74-score fingerprint and `DNAAnalysis` schema stay byte-identical. `llm_model_name` records the full route, for example `openrouter:qwen/qwen3.8-flash@alibaba`.\n\n### Carried-over validation\n- F/D repeat runs and embedding-cost measurement run as a task ticket on the implementation map. Rule: flag attributes that move 3 or more points and any highlight-key change; the agent reviews flagged items against the owner's preferences.\n- **Independent Astra/Fable reviews are waived** as a gate: the owner reviewed all ten titles and made the selection.\n\n### Acceptance criteria for implementation\nTen benchmark titles through the real flow: 10 valid records with the provenance string, total cost under $0.05, essence vectors present, one injected primary failure lands on the fallback, one forced 402 produces a spend pause without a failed flow.\n\n### Follow-up tickets\nThe implementation moved to a new map, [Implement the Windmill fingerprinting strategy (#35)](https://github.com/alp82/goodwatch-monorepo/issues/35), whose fog is charting the embeddings follow-up map. Tickets created there:\n- #36 Provision the OpenRouter key and Windmill variable (unblocked)\n- #37 Replace the Gemini generation client with the tiered OpenRouter client (unblocked)\n- #38 Add the spend pause to the generation flow (blocked by #37)\n- #39 Run the acceptance criteria on the ten benchmark titles (blocked by #36, #37, #38)\n- #40 Run F/D repeat runs and measure embedding cost (unblocked; budget under $0.05 to confirm before running)\n\nThis was the last open ticket on the research map. Its route is complete.\n",
+      "createdAt": "2026-09-12T10:57:43Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/33#issuecomment-5645458516",
+      "viewerDidAuthor": true
+    }
+  ],
+  "labels": [
+    {
+      "id": "LA_kwDOJCFabs8AAAAC1KW5Sg",
+      "name": "wayfinder:grilling",
+      "description": "Decision made with the human",
+      "color": "D876E3"
+    },
+    {
+      "id": "LA_kwDOJCFabs8AAAAC1KW6eQ",
+      "name": "needs-info",
+      "description": "Requires additional information.",
+      "color": "D876E3"
+    }
+  ],
+  "number": 33,
+  "state": "CLOSED",
+  "title": "Choose the fingerprinting strategy",
+  "url": "https://github.com/alp82/goodwatch-monorepo/issues/33"
+}

@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-24",
+  "researchers": "three gpt-6.1-sol agents plus root synthesis",
+  "branch_case_counts": {
+    "movies": 36,
+    "tv": 39,
+    "niche": 41,
+    "root": 5
+  },
+  "case_records": 121,
+  "unique_threads": 121,
+  "duplicate_records": 0,
+  "subreddits": {
+    "HorrorMovies": 4,
+    "Letterboxd": 4,
+    "LetterboxdLists": 1,
+    "MovieRecommendations": 2,
+    "MovieSuggestions": 32,
+    "PakistaniCinephiles": 2,
+    "PickMyNextShow": 1,
+    "SchittsCreek": 4,
+    "horror": 31,
+    "ifyoulikeblank": 3,
+    "movies": 2,
+    "netflix": 2,
+    "television": 1,
+    "televisionsuggestions": 31,
+    "tvsuggestions": 1
+  },
+  "web_search_query_executions": 87,
+  "distinct_web_search_queries": 87,
+  "google_attempts": {
+    "agent_attempts": 3,
+    "root_http_probes": 2,
+    "outcome": "Consent or JavaScript redirect/interstitial; no usable search results"
+  },
+  "branch_access_counts": {
+    "post_and_comments": 12,
+    "search_excerpt": 109
+  },
+  "direct_open_unique_threads": 13,
+  "support_labels": {
+    "partial": 79,
+    "represented": 36,
+    "non_schema": 3,
+    "gap": 3
+  },
+  "gap_kinds": {
+    "data_population": 8,
+    "subjective_calibration": 12,
+    "none": 21,
+    "user_context": 15,
+    "relation_binding": 13,
+    "vocabulary": 11,
+    "negation_evidence": 3,
+    "temporal_scope": 17,
+    "catalog_join": 7,
+    "query_execution": 14
+  },
+  "interpretation": "Purposive request-intent audit, not representative prevalence, movie-fact verification or measured retrieval performance. Existing fields means schema support, not deployed capability."
+}

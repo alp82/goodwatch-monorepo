@@ -1,0 +1,13 @@
+{
+  "tests_passed": 11,
+  "source_delta": "Only title display-name fallback: summary.name or canonical title.name or title key. No semantic rule changes.",
+  "copied_checks_byte_identical": true,
+  "audit_source_sha256": "333ec4ca6470500502684814a9bc1e750beceb86b468d4ae7d3caa611d02b359",
+  "audit_current_sha256": "b9627e996eec2f219a26fb1b1c29bda7ea4a1da83e66693b4b05573884b63e87",
+  "checks_source_sha256": "b4799c05ebc54094cff26177d7c7a58bad8527a54f23c7eb06d82773505d2a73",
+  "smoke_complete_titles": 5,
+  "smoke_all_display_names_present": true,
+  "smoke_findings_unchanged": true,
+  "frozen_producer_hashes_unchanged": 38,
+  "model_calls": 0
+}

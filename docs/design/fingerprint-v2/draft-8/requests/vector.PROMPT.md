@@ -1,0 +1,7 @@
+Assess only the supplied work, adaptation, edition and whole scope. Use supplied information and specific knowledge of the work; recollection is not direct viewing. Return JSON only, with every requested key and no extras. No previous scores, member preferences or assessor findings are inputs.
+
+Use each field's rubric. Known zero is valid; 1 needs a supported trace, never an imaginable association. Unknown is null, never a guessed zero or midpoint. Present with zero narrative centrality is allowed. Absent with a positive score for that same concept/scope is not. Co-assess every requested score/presence pair in this response; never infer absence from synopsis silence or zero centrality. Whole-show values describe only the named seasons; every show-only movie value is null.
+
+All categories allow overlapping supported choices; null is unknown, [] is assessed with no listed choice. Never fill all choices to signal uncertainty. Tags across fields need not refer to the same character, scene or group. Keep sources of uncertainty visible. Return no evidence prose or invented citations. Follow the exact output schema.
+
+Produce the general-resemblance vector and its matching presence flags. Distinguish mood, subject, narrative mechanism and formal treatment. Physical staged reality is not simulation; criminal moral descent is not ideological radicalization. Do not guess to satisfy complete-vector publication: unknowns are retained but prevent publication.

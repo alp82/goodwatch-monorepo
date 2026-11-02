@@ -1,0 +1,4861 @@
+{
+  "version": "2.0.0-draft.8",
+  "projection_version": "similarity-v2.3",
+  "stored_parts": [
+    "vector",
+    "attributes"
+  ],
+  "policy": "Three disjoint initial calls; controller attaches supplied title/scope/version and merges exact returned keys. No score repair or imputation.",
+  "parts": {
+    "vector": {
+      "schema": "requests/vector.schema.json",
+      "definition": "requests/vector.definition.json",
+      "prompt": "requests/vector.PROMPT.md",
+      "counts": {
+        "scores": 274,
+        "presence": 15,
+        "facets": 0,
+        "advisory_leaves": 0
+      },
+      "fields": [
+        {
+          "id": "experience.adrenaline",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/adrenaline"
+        },
+        {
+          "id": "experience.tension",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/tension"
+        },
+        {
+          "id": "experience.fear",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/fear"
+        },
+        {
+          "id": "experience.perceived_threat",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/perceived_threat"
+        },
+        {
+          "id": "experience.romantic_feeling",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/romantic_feeling"
+        },
+        {
+          "id": "experience.sensuality",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/sensuality"
+        },
+        {
+          "id": "experience.warmth",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/warmth"
+        },
+        {
+          "id": "experience.wholesomeness",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/wholesomeness"
+        },
+        {
+          "id": "experience.wonder",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/wonder"
+        },
+        {
+          "id": "experience.pathos",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/pathos"
+        },
+        {
+          "id": "experience.melancholy",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/melancholy"
+        },
+        {
+          "id": "experience.uncanniness",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/uncanniness"
+        },
+        {
+          "id": "experience.catharsis",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/catharsis"
+        },
+        {
+          "id": "experience.nostalgia",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/nostalgia"
+        },
+        {
+          "id": "experience.hopefulness",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/hopefulness"
+        },
+        {
+          "id": "experience.bleakness",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/bleakness"
+        },
+        {
+          "id": "experience.emotional_intensity",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/emotional_intensity"
+        },
+        {
+          "id": "experience.stress",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/stress"
+        },
+        {
+          "id": "experience.uplift",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/uplift"
+        },
+        {
+          "id": "experience.thought_provocation",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/thought_provocation"
+        },
+        {
+          "id": "experience.playfulness",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/playfulness"
+        },
+        {
+          "id": "experience.sentimentality",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/sentimentality"
+        },
+        {
+          "id": "experience.emotional_restraint",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/emotional_restraint"
+        },
+        {
+          "id": "experience.bittersweetness",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/bittersweetness"
+        },
+        {
+          "id": "experience.absurdity",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/absurdity"
+        },
+        {
+          "id": "experience.escapism",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/escapism"
+        },
+        {
+          "id": "experience.wish_fulfillment",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/wish_fulfillment"
+        },
+        {
+          "id": "experience.tranquility",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/tranquility"
+        },
+        {
+          "id": "experience.indignation",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/indignation"
+        },
+        {
+          "id": "experience.disgust",
+          "stored_part": "vector",
+          "pointer": "/scores/experience/disgust"
+        },
+        {
+          "id": "humor.overall",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/overall"
+        },
+        {
+          "id": "humor.situational",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/situational"
+        },
+        {
+          "id": "humor.wit_wordplay",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/wit_wordplay"
+        },
+        {
+          "id": "humor.physical",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/physical"
+        },
+        {
+          "id": "humor.cringe",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/cringe"
+        },
+        {
+          "id": "humor.absurdist",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/absurdist"
+        },
+        {
+          "id": "humor.satire",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/satire"
+        },
+        {
+          "id": "humor.parody",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/parody"
+        },
+        {
+          "id": "humor.dark",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/dark"
+        },
+        {
+          "id": "humor.running_gags",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/running_gags"
+        },
+        {
+          "id": "humor.meta",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/meta"
+        },
+        {
+          "id": "humor.deadpan",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/deadpan"
+        },
+        {
+          "id": "humor.gross_out",
+          "stored_part": "vector",
+          "pointer": "/scores/humor/gross_out"
+        },
+        {
+          "id": "themes.crime",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/crime"
+        },
+        {
+          "id": "themes.mystery",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/mystery"
+        },
+        {
+          "id": "themes.war",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/war"
+        },
+        {
+          "id": "themes.politics",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/politics"
+        },
+        {
+          "id": "themes.radicalization",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/radicalization"
+        },
+        {
+          "id": "themes.family",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/family"
+        },
+        {
+          "id": "themes.psychology",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/psychology"
+        },
+        {
+          "id": "themes.entertainment_industry",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/entertainment_industry"
+        },
+        {
+          "id": "themes.social_critique",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/social_critique"
+        },
+        {
+          "id": "themes.class",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/class"
+        },
+        {
+          "id": "themes.capitalism",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/capitalism"
+        },
+        {
+          "id": "themes.consumerism",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/consumerism"
+        },
+        {
+          "id": "themes.technological_change",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/technological_change"
+        },
+        {
+          "id": "themes.human_nature",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/human_nature"
+        },
+        {
+          "id": "themes.faith_and_spirituality",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/faith_and_spirituality"
+        },
+        {
+          "id": "themes.business",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/business"
+        },
+        {
+          "id": "themes.finance",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/finance"
+        },
+        {
+          "id": "themes.environment",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/environment"
+        },
+        {
+          "id": "themes.science",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/science"
+        },
+        {
+          "id": "themes.popular_culture",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/popular_culture"
+        },
+        {
+          "id": "themes.survival",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/survival"
+        },
+        {
+          "id": "themes.adventure",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/adventure"
+        },
+        {
+          "id": "themes.hacking",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/hacking"
+        },
+        {
+          "id": "themes.artificial_intelligence",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/artificial_intelligence"
+        },
+        {
+          "id": "themes.consciousness",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/consciousness"
+        },
+        {
+          "id": "themes.identity",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/identity"
+        },
+        {
+          "id": "themes.existential_meaning",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/existential_meaning"
+        },
+        {
+          "id": "themes.grief",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/grief"
+        },
+        {
+          "id": "themes.trauma",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/trauma"
+        },
+        {
+          "id": "themes.recovery",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/recovery"
+        },
+        {
+          "id": "themes.mental_health",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/mental_health"
+        },
+        {
+          "id": "themes.addiction",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/addiction"
+        },
+        {
+          "id": "themes.addiction_recovery",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/addiction_recovery"
+        },
+        {
+          "id": "themes.trust_and_betrayal",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/trust_and_betrayal"
+        },
+        {
+          "id": "themes.coming_of_age",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/coming_of_age"
+        },
+        {
+          "id": "themes.coming_out",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/coming_out"
+        },
+        {
+          "id": "themes.sexuality",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/sexuality"
+        },
+        {
+          "id": "themes.gender_identity",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/gender_identity"
+        },
+        {
+          "id": "themes.gender_roles",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/gender_roles"
+        },
+        {
+          "id": "themes.immigration",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/immigration"
+        },
+        {
+          "id": "themes.displacement",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/displacement"
+        },
+        {
+          "id": "themes.gentrification",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/gentrification"
+        },
+        {
+          "id": "themes.surveillance",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/surveillance"
+        },
+        {
+          "id": "themes.disease_and_pandemics",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/disease_and_pandemics"
+        },
+        {
+          "id": "themes.climate_change",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/climate_change"
+        },
+        {
+          "id": "themes.inherited_wealth",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/inherited_wealth"
+        },
+        {
+          "id": "themes.social_media",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/social_media"
+        },
+        {
+          "id": "themes.public_shaming",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/public_shaming"
+        },
+        {
+          "id": "themes.justice",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/justice"
+        },
+        {
+          "id": "themes.guilt",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/guilt"
+        },
+        {
+          "id": "themes.forgiveness",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/forgiveness"
+        },
+        {
+          "id": "themes.loyalty",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/loyalty"
+        },
+        {
+          "id": "themes.belonging",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/belonging"
+        },
+        {
+          "id": "themes.loneliness",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/loneliness"
+        },
+        {
+          "id": "themes.ambition",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/ambition"
+        },
+        {
+          "id": "themes.obsession",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/obsession"
+        },
+        {
+          "id": "themes.labor",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/labor"
+        },
+        {
+          "id": "themes.colonialism",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/colonialism"
+        },
+        {
+          "id": "themes.racism",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/racism"
+        },
+        {
+          "id": "themes.sexism",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/sexism"
+        },
+        {
+          "id": "themes.caregiving",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/caregiving"
+        },
+        {
+          "id": "themes.parenthood",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/parenthood"
+        },
+        {
+          "id": "themes.aging",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/aging"
+        },
+        {
+          "id": "themes.midlife",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/midlife"
+        },
+        {
+          "id": "themes.retirement",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/retirement"
+        },
+        {
+          "id": "themes.early_adulthood",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/early_adulthood"
+        },
+        {
+          "id": "themes.education",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/education"
+        },
+        {
+          "id": "themes.artistic_creation",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/artistic_creation"
+        },
+        {
+          "id": "themes.persuasion_and_propaganda",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/persuasion_and_propaganda"
+        },
+        {
+          "id": "themes.illness_and_dying",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/illness_and_dying"
+        },
+        {
+          "id": "themes.corruption",
+          "stored_part": "vector",
+          "pointer": "/scores/themes/corruption"
+        },
+        {
+          "id": "narrative_engines.investigation",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/investigation"
+        },
+        {
+          "id": "narrative_engines.pursuit",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/pursuit"
+        },
+        {
+          "id": "narrative_engines.rescue",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/rescue"
+        },
+        {
+          "id": "narrative_engines.escape",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/escape"
+        },
+        {
+          "id": "narrative_engines.quest",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/quest"
+        },
+        {
+          "id": "narrative_engines.competition",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/competition"
+        },
+        {
+          "id": "narrative_engines.relationship_development",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/relationship_development"
+        },
+        {
+          "id": "narrative_engines.everyday_life",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/everyday_life"
+        },
+        {
+          "id": "narrative_engines.survival",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/survival"
+        },
+        {
+          "id": "narrative_engines.heist",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/heist"
+        },
+        {
+          "id": "narrative_engines.espionage",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/espionage"
+        },
+        {
+          "id": "narrative_engines.military_operation",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/military_operation"
+        },
+        {
+          "id": "narrative_engines.legal_case",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/legal_case"
+        },
+        {
+          "id": "narrative_engines.political_struggle",
+          "stored_part": "vector",
+          "pointer": "/scores/narrative_engines/political_struggle"
+        },
+        {
+          "id": "tropes.underdog_rise",
+          "stored_part": "vector",
+          "pointer": "/scores/tropes/underdog_rise"
+        },
+        {
+          "id": "tropes.revenge",
+          "stored_part": "vector",
+          "pointer": "/scores/tropes/revenge"
+        },
+        {
+          "id": "tropes.fall_from_grace",
+          "stored_part": "vector",
+          "pointer": "/scores/tropes/fall_from_grace"
+        },
+        {
+          "id": "tropes.redemption",
+          "stored_part": "vector",
+          "pointer": "/scores/tropes/redemption"
+        },
+        {
+          "id": "relationships.romantic_development",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/romantic_development"
+        },
+        {
+          "id": "relationships.established_couple",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/established_couple"
+        },
+        {
+          "id": "relationships.breakup_or_divorce",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/breakup_or_divorce"
+        },
+        {
+          "id": "relationships.partner_bereavement",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/partner_bereavement"
+        },
+        {
+          "id": "relationships.love_triangle",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/love_triangle"
+        },
+        {
+          "id": "relationships.forbidden_romance",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/forbidden_romance"
+        },
+        {
+          "id": "relationships.friendship",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/friendship"
+        },
+        {
+          "id": "relationships.mentor_mentee",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/mentor_mentee"
+        },
+        {
+          "id": "relationships.rivalry",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/rivalry"
+        },
+        {
+          "id": "relationships.forced_proximity",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/forced_proximity"
+        },
+        {
+          "id": "relationships.adversaries_cooperate",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/adversaries_cooperate"
+        },
+        {
+          "id": "relationships.found_family",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/found_family"
+        },
+        {
+          "id": "relationships.family_conflict",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/family_conflict"
+        },
+        {
+          "id": "relationships.intergenerational",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/intergenerational"
+        },
+        {
+          "id": "relationships.generational_trauma",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/generational_trauma"
+        },
+        {
+          "id": "relationships.parent_child",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/parent_child"
+        },
+        {
+          "id": "relationships.siblings",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/siblings"
+        },
+        {
+          "id": "relationships.caregiver_dependent",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/caregiver_dependent"
+        },
+        {
+          "id": "relationships.human_animal_companionship",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/human_animal_companionship"
+        },
+        {
+          "id": "relationships.coercive_relationship",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/coercive_relationship"
+        },
+        {
+          "id": "relationships.coercive_group_control",
+          "stored_part": "vector",
+          "pointer": "/scores/relationships/coercive_group_control"
+        },
+        {
+          "id": "presence.relationships.coercive_group_control",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/relationships.coercive_group_control"
+        },
+        {
+          "id": "characters.ensemble",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/ensemble"
+        },
+        {
+          "id": "characters.antihero",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/antihero"
+        },
+        {
+          "id": "characters.morally_ambiguous_cast",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/morally_ambiguous_cast"
+        },
+        {
+          "id": "characters.transformation_arc",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/transformation_arc"
+        },
+        {
+          "id": "characters.intellectual_problem_solver",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/intellectual_problem_solver"
+        },
+        {
+          "id": "characters.detective_lead",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/detective_lead"
+        },
+        {
+          "id": "characters.workplace_team",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/workplace_team"
+        },
+        {
+          "id": "characters.family_business",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/family_business"
+        },
+        {
+          "id": "characters.unaccompanied_children",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/unaccompanied_children"
+        },
+        {
+          "id": "characters.teen_peer_group",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/teen_peer_group"
+        },
+        {
+          "id": "characters.clandestine_groups",
+          "stored_part": "vector",
+          "pointer": "/scores/characters/clandestine_groups"
+        },
+        {
+          "id": "presence.characters.clandestine_groups",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/characters.clandestine_groups"
+        },
+        {
+          "id": "world.advanced_technology",
+          "stored_part": "vector",
+          "pointer": "/scores/world/advanced_technology"
+        },
+        {
+          "id": "presence.world.advanced_technology",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.advanced_technology"
+        },
+        {
+          "id": "world.magic",
+          "stored_part": "vector",
+          "pointer": "/scores/world/magic"
+        },
+        {
+          "id": "presence.world.magic",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.magic"
+        },
+        {
+          "id": "world.simulation",
+          "stored_part": "vector",
+          "pointer": "/scores/world/simulation"
+        },
+        {
+          "id": "presence.world.simulation",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.simulation"
+        },
+        {
+          "id": "world.virtual_reality",
+          "stored_part": "vector",
+          "pointer": "/scores/world/virtual_reality"
+        },
+        {
+          "id": "presence.world.virtual_reality",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.virtual_reality"
+        },
+        {
+          "id": "world.parallel_worlds",
+          "stored_part": "vector",
+          "pointer": "/scores/world/parallel_worlds"
+        },
+        {
+          "id": "presence.world.parallel_worlds",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.parallel_worlds"
+        },
+        {
+          "id": "world.time_travel",
+          "stored_part": "vector",
+          "pointer": "/scores/world/time_travel"
+        },
+        {
+          "id": "presence.world.time_travel",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.time_travel"
+        },
+        {
+          "id": "world.time_loop",
+          "stored_part": "vector",
+          "pointer": "/scores/world/time_loop"
+        },
+        {
+          "id": "presence.world.time_loop",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.time_loop"
+        },
+        {
+          "id": "world.dystopian_society",
+          "stored_part": "vector",
+          "pointer": "/scores/world/dystopian_society"
+        },
+        {
+          "id": "presence.world.dystopian_society",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.dystopian_society"
+        },
+        {
+          "id": "world.post_apocalyptic",
+          "stored_part": "vector",
+          "pointer": "/scores/world/post_apocalyptic"
+        },
+        {
+          "id": "presence.world.post_apocalyptic",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.post_apocalyptic"
+        },
+        {
+          "id": "world.spacefaring",
+          "stored_part": "vector",
+          "pointer": "/scores/world/spacefaring"
+        },
+        {
+          "id": "presence.world.spacefaring",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.spacefaring"
+        },
+        {
+          "id": "world.robots",
+          "stored_part": "vector",
+          "pointer": "/scores/world/robots"
+        },
+        {
+          "id": "presence.world.robots",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.robots"
+        },
+        {
+          "id": "world.myth_and_folklore",
+          "stored_part": "vector",
+          "pointer": "/scores/world/myth_and_folklore"
+        },
+        {
+          "id": "presence.world.myth_and_folklore",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.myth_and_folklore"
+        },
+        {
+          "id": "world_treatment.scientific_rigor",
+          "stored_part": "vector",
+          "pointer": "/scores/world_treatment/scientific_rigor"
+        },
+        {
+          "id": "world_treatment.speculative_freedom",
+          "stored_part": "vector",
+          "pointer": "/scores/world_treatment/speculative_freedom"
+        },
+        {
+          "id": "world_treatment.worldbuilding_depth",
+          "stored_part": "vector",
+          "pointer": "/scores/world_treatment/worldbuilding_depth"
+        },
+        {
+          "id": "world_treatment.magic_rule_detail",
+          "stored_part": "vector",
+          "pointer": "/scores/world_treatment/magic_rule_detail"
+        },
+        {
+          "id": "world_treatment.everyday_realism",
+          "stored_part": "vector",
+          "pointer": "/scores/world_treatment/everyday_realism"
+        },
+        {
+          "id": "world_treatment.magical_realism",
+          "stored_part": "vector",
+          "pointer": "/scores/world_treatment/magical_realism"
+        },
+        {
+          "id": "storytelling.plot_velocity",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/plot_velocity"
+        },
+        {
+          "id": "storytelling.gradual_development",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/gradual_development"
+        },
+        {
+          "id": "storytelling.intrigue",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/intrigue"
+        },
+        {
+          "id": "storytelling.plot_complexity",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/plot_complexity"
+        },
+        {
+          "id": "storytelling.interpretive_ambiguity",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/interpretive_ambiguity"
+        },
+        {
+          "id": "storytelling.twist_frequency",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/twist_frequency"
+        },
+        {
+          "id": "storytelling.twist_impact",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/twist_impact"
+        },
+        {
+          "id": "storytelling.nonlinearity",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/nonlinearity"
+        },
+        {
+          "id": "storytelling.multiple_timelines",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/multiple_timelines"
+        },
+        {
+          "id": "storytelling.multiple_viewpoints",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/multiple_viewpoints"
+        },
+        {
+          "id": "storytelling.unreliable_narration",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/unreliable_narration"
+        },
+        {
+          "id": "storytelling.unreliable_reality",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/unreliable_reality"
+        },
+        {
+          "id": "storytelling.self_reference",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/self_reference"
+        },
+        {
+          "id": "storytelling.fourth_wall_breaking",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/fourth_wall_breaking"
+        },
+        {
+          "id": "storytelling.voiceover",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/voiceover"
+        },
+        {
+          "id": "storytelling.dream_sequences",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/dream_sequences"
+        },
+        {
+          "id": "storytelling.observational_mode",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/observational_mode"
+        },
+        {
+          "id": "storytelling.slice_of_life",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/slice_of_life"
+        },
+        {
+          "id": "storytelling.exposition_load",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/exposition_load"
+        },
+        {
+          "id": "storytelling.information_withholding",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/information_withholding"
+        },
+        {
+          "id": "storytelling.philosophical_inquiry",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/philosophical_inquiry"
+        },
+        {
+          "id": "storytelling.formal_challenge",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/formal_challenge"
+        },
+        {
+          "id": "storytelling.didacticism",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/didacticism"
+        },
+        {
+          "id": "storytelling.confined_setting",
+          "stored_part": "vector",
+          "pointer": "/scores/storytelling/confined_setting"
+        },
+        {
+          "id": "stakes.personal",
+          "stored_part": "vector",
+          "pointer": "/scores/stakes/personal"
+        },
+        {
+          "id": "stakes.relationship",
+          "stored_part": "vector",
+          "pointer": "/scores/stakes/relationship"
+        },
+        {
+          "id": "stakes.community",
+          "stored_part": "vector",
+          "pointer": "/scores/stakes/community"
+        },
+        {
+          "id": "stakes.societal",
+          "stored_part": "vector",
+          "pointer": "/scores/stakes/societal"
+        },
+        {
+          "id": "stakes.urgency",
+          "stored_part": "vector",
+          "pointer": "/scores/stakes/urgency"
+        },
+        {
+          "id": "dialogue.density",
+          "stored_part": "vector",
+          "pointer": "/scores/dialogue/density"
+        },
+        {
+          "id": "dialogue.dependence",
+          "stored_part": "vector",
+          "pointer": "/scores/dialogue/dependence"
+        },
+        {
+          "id": "dialogue.monologues",
+          "stored_part": "vector",
+          "pointer": "/scores/dialogue/monologues"
+        },
+        {
+          "id": "dialogue.overlap",
+          "stored_part": "vector",
+          "pointer": "/scores/dialogue/overlap"
+        },
+        {
+          "id": "dialogue.naturalistic_delivery",
+          "stored_part": "vector",
+          "pointer": "/scores/dialogue/naturalistic_delivery"
+        },
+        {
+          "id": "dialogue.theatrical_delivery",
+          "stored_part": "vector",
+          "pointer": "/scores/dialogue/theatrical_delivery"
+        },
+        {
+          "id": "aesthetics.gothic",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/gothic"
+        },
+        {
+          "id": "aesthetics.noir",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/noir"
+        },
+        {
+          "id": "aesthetics.retro",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/retro"
+        },
+        {
+          "id": "aesthetics.minimalism",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/minimalism"
+        },
+        {
+          "id": "aesthetics.stylization",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/stylization"
+        },
+        {
+          "id": "aesthetics.surrealism",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/surrealism"
+        },
+        {
+          "id": "aesthetics.psychedelia",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/psychedelia"
+        },
+        {
+          "id": "aesthetics.grotesquerie",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/grotesquerie"
+        },
+        {
+          "id": "aesthetics.camp",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/camp"
+        },
+        {
+          "id": "aesthetics.ironic_distance",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/ironic_distance"
+        },
+        {
+          "id": "aesthetics.intimacy",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/intimacy"
+        },
+        {
+          "id": "aesthetics.spectacle",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/spectacle"
+        },
+        {
+          "id": "aesthetics.immersion",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/immersion"
+        },
+        {
+          "id": "aesthetics.lyricism",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/lyricism"
+        },
+        {
+          "id": "aesthetics.transgression",
+          "stored_part": "vector",
+          "pointer": "/scores/aesthetics/transgression"
+        },
+        {
+          "id": "visuals.vibrant_palette",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/vibrant_palette"
+        },
+        {
+          "id": "visuals.muted_palette",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/muted_palette"
+        },
+        {
+          "id": "visuals.warm_color",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/warm_color"
+        },
+        {
+          "id": "visuals.cool_color",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/cool_color"
+        },
+        {
+          "id": "visuals.low_key_lighting",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/low_key_lighting"
+        },
+        {
+          "id": "visuals.high_key_lighting",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/high_key_lighting"
+        },
+        {
+          "id": "visuals.high_contrast",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/high_contrast"
+        },
+        {
+          "id": "visuals.long_takes",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/long_takes"
+        },
+        {
+          "id": "visuals.handheld_motion",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/handheld_motion"
+        },
+        {
+          "id": "visuals.symmetry",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/symmetry"
+        },
+        {
+          "id": "visuals.production_design_detail",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/production_design_detail"
+        },
+        {
+          "id": "visuals.cutting_pace",
+          "stored_part": "vector",
+          "pointer": "/scores/visuals/cutting_pace"
+        },
+        {
+          "id": "action.hand_to_hand",
+          "stored_part": "vector",
+          "pointer": "/scores/action/hand_to_hand"
+        },
+        {
+          "id": "action.martial_arts_choreography",
+          "stored_part": "vector",
+          "pointer": "/scores/action/martial_arts_choreography"
+        },
+        {
+          "id": "action.grappling",
+          "stored_part": "vector",
+          "pointer": "/scores/action/grappling"
+        },
+        {
+          "id": "action.gunplay",
+          "stored_part": "vector",
+          "pointer": "/scores/action/gunplay"
+        },
+        {
+          "id": "action.blade_combat",
+          "stored_part": "vector",
+          "pointer": "/scores/action/blade_combat"
+        },
+        {
+          "id": "action.superpowered_combat",
+          "stored_part": "vector",
+          "pointer": "/scores/action/superpowered_combat"
+        },
+        {
+          "id": "action.chases",
+          "stored_part": "vector",
+          "pointer": "/scores/action/chases"
+        },
+        {
+          "id": "action.large_battles",
+          "stored_part": "vector",
+          "pointer": "/scores/action/large_battles"
+        },
+        {
+          "id": "action.gritty_combat",
+          "stored_part": "vector",
+          "pointer": "/scores/action/gritty_combat"
+        },
+        {
+          "id": "action.stylized_violence",
+          "stored_part": "vector",
+          "pointer": "/scores/action/stylized_violence"
+        },
+        {
+          "id": "action.realistic_violence",
+          "stored_part": "vector",
+          "pointer": "/scores/action/realistic_violence"
+        },
+        {
+          "id": "horror_modes.possession",
+          "stored_part": "vector",
+          "pointer": "/scores/horror_modes/possession"
+        },
+        {
+          "id": "presence.horror_modes.possession",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/horror_modes.possession"
+        },
+        {
+          "id": "horror_modes.body_horror",
+          "stored_part": "vector",
+          "pointer": "/scores/horror_modes/body_horror"
+        },
+        {
+          "id": "horror_modes.folk_horror",
+          "stored_part": "vector",
+          "pointer": "/scores/horror_modes/folk_horror"
+        },
+        {
+          "id": "horror_modes.cosmic_horror",
+          "stored_part": "vector",
+          "pointer": "/scores/horror_modes/cosmic_horror"
+        },
+        {
+          "id": "horror_modes.psychological_horror",
+          "stored_part": "vector",
+          "pointer": "/scores/horror_modes/psychological_horror"
+        },
+        {
+          "id": "sound.design_prominence",
+          "stored_part": "vector",
+          "pointer": "/scores/sound/design_prominence"
+        },
+        {
+          "id": "sound.ambient_soundscapes",
+          "stored_part": "vector",
+          "pointer": "/scores/sound/ambient_soundscapes"
+        },
+        {
+          "id": "sound.silence",
+          "stored_part": "vector",
+          "pointer": "/scores/sound/silence"
+        },
+        {
+          "id": "sound.sparse_score",
+          "stored_part": "vector",
+          "pointer": "/scores/sound/sparse_score"
+        },
+        {
+          "id": "sound.audio_startles",
+          "stored_part": "vector",
+          "pointer": "/scores/sound/audio_startles"
+        },
+        {
+          "id": "sound.music_dependence",
+          "stored_part": "vector",
+          "pointer": "/scores/sound/music_dependence"
+        },
+        {
+          "id": "sound.musical_numbers",
+          "stored_part": "vector",
+          "pointer": "/scores/sound/musical_numbers"
+        },
+        {
+          "id": "ending.conflict_resolution",
+          "stored_part": "vector",
+          "pointer": "/scores/ending/conflict_resolution"
+        },
+        {
+          "id": "ending.interpretive_openness",
+          "stored_part": "vector",
+          "pointer": "/scores/ending/interpretive_openness"
+        },
+        {
+          "id": "ending.emotional_closure",
+          "stored_part": "vector",
+          "pointer": "/scores/ending/emotional_closure"
+        },
+        {
+          "id": "ending.happiness",
+          "stored_part": "vector",
+          "pointer": "/scores/ending/happiness"
+        },
+        {
+          "id": "ending.tragedy",
+          "stored_part": "vector",
+          "pointer": "/scores/ending/tragedy"
+        },
+        {
+          "id": "ending.bittersweetness",
+          "stored_part": "vector",
+          "pointer": "/scores/ending/bittersweetness"
+        },
+        {
+          "id": "viewing_demands.sensory_intensity",
+          "stored_part": "vector",
+          "pointer": "/scores/viewing_demands/sensory_intensity"
+        }
+      ]
+    },
+    "targeted": {
+      "schema": "requests/targeted.schema.json",
+      "definition": "requests/targeted.definition.json",
+      "prompt": "requests/targeted.PROMPT.md",
+      "counts": {
+        "scores": 344,
+        "presence": 156,
+        "facets": 4,
+        "advisory_leaves": 0
+      },
+      "fields": [
+        {
+          "id": "humor.raunchy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/humor/raunchy"
+        },
+        {
+          "id": "genres.action",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/action"
+        },
+        {
+          "id": "genres.adventure",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/adventure"
+        },
+        {
+          "id": "genres.comedy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/comedy"
+        },
+        {
+          "id": "genres.drama",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/drama"
+        },
+        {
+          "id": "genres.thriller",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/thriller"
+        },
+        {
+          "id": "genres.horror",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/horror"
+        },
+        {
+          "id": "genres.science_fiction",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/science_fiction"
+        },
+        {
+          "id": "genres.fantasy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/fantasy"
+        },
+        {
+          "id": "genres.romance",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/romance"
+        },
+        {
+          "id": "genres.mystery",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/mystery"
+        },
+        {
+          "id": "genres.crime",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/crime"
+        },
+        {
+          "id": "genres.western",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/western"
+        },
+        {
+          "id": "genres.neo_western",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/neo_western"
+        },
+        {
+          "id": "genres.giallo",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/giallo"
+        },
+        {
+          "id": "genres.kaiju",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/kaiju"
+        },
+        {
+          "id": "genres.disaster",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/disaster"
+        },
+        {
+          "id": "genres.superhero",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/superhero"
+        },
+        {
+          "id": "genres.zombie",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/zombie"
+        },
+        {
+          "id": "genres.slasher",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/slasher"
+        },
+        {
+          "id": "genres.creature_feature",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/creature_feature"
+        },
+        {
+          "id": "genres.neo_noir",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/neo_noir"
+        },
+        {
+          "id": "genres.space_western",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/space_western"
+        },
+        {
+          "id": "genres.sword_and_sorcery",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/sword_and_sorcery"
+        },
+        {
+          "id": "genres.cozy_mystery",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/cozy_mystery"
+        },
+        {
+          "id": "genres.romantic_comedy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/romantic_comedy"
+        },
+        {
+          "id": "genres.melodrama",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/melodrama"
+        },
+        {
+          "id": "genres.musical",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/musical"
+        },
+        {
+          "id": "genres.war",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/war"
+        },
+        {
+          "id": "genres.historical_drama",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/historical_drama"
+        },
+        {
+          "id": "genres.biographical",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/biographical"
+        },
+        {
+          "id": "genres.true_crime",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/true_crime"
+        },
+        {
+          "id": "genres.psychological_thriller",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/psychological_thriller"
+        },
+        {
+          "id": "genres.conspiracy_thriller",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/conspiracy_thriller"
+        },
+        {
+          "id": "genres.survival_thriller",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/survival_thriller"
+        },
+        {
+          "id": "genres.legal_thriller",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/legal_thriller"
+        },
+        {
+          "id": "genres.police_procedural",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/police_procedural"
+        },
+        {
+          "id": "genres.gangster",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/gangster"
+        },
+        {
+          "id": "genres.whodunit",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/whodunit"
+        },
+        {
+          "id": "genres.puzzle_box",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/puzzle_box"
+        },
+        {
+          "id": "genres.space_opera",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/space_opera"
+        },
+        {
+          "id": "genres.epic_fantasy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/epic_fantasy"
+        },
+        {
+          "id": "genres.urban_fantasy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/urban_fantasy"
+        },
+        {
+          "id": "genres.dark_fantasy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/genres/dark_fantasy"
+        },
+        {
+          "id": "tropes.vigilantism",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/vigilantism"
+        },
+        {
+          "id": "tropes.rags_to_riches",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/rags_to_riches"
+        },
+        {
+          "id": "tropes.mistaken_identity",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/mistaken_identity"
+        },
+        {
+          "id": "tropes.memory_loss",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/memory_loss"
+        },
+        {
+          "id": "presence.tropes.memory_loss",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/tropes.memory_loss"
+        },
+        {
+          "id": "tropes.body_swap",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/body_swap"
+        },
+        {
+          "id": "tropes.fish_out_of_water",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/fish_out_of_water"
+        },
+        {
+          "id": "tropes.secret_identity",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/secret_identity"
+        },
+        {
+          "id": "tropes.road_trip",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/road_trip"
+        },
+        {
+          "id": "tropes.tournament",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/tournament"
+        },
+        {
+          "id": "tropes.training",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/training"
+        },
+        {
+          "id": "tropes.race_against_time",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/race_against_time"
+        },
+        {
+          "id": "tropes.single_night",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/single_night"
+        },
+        {
+          "id": "tropes.locked_room",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/locked_room"
+        },
+        {
+          "id": "tropes.conspiracy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/conspiracy"
+        },
+        {
+          "id": "tropes.apocalypse_survival",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/apocalypse_survival"
+        },
+        {
+          "id": "tropes.haunted_house",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/haunted_house"
+        },
+        {
+          "id": "tropes.chosen_one",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/chosen_one"
+        },
+        {
+          "id": "tropes.prophecy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/prophecy"
+        },
+        {
+          "id": "tropes.macguffin_quest",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/macguffin_quest"
+        },
+        {
+          "id": "tropes.final_survivor",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/final_survivor"
+        },
+        {
+          "id": "tropes.apparent_death",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/apparent_death"
+        },
+        {
+          "id": "tropes.mentor_death",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/mentor_death"
+        },
+        {
+          "id": "tropes.doppelganger",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/doppelganger"
+        },
+        {
+          "id": "presence.tropes.doppelganger",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/tropes.doppelganger"
+        },
+        {
+          "id": "tropes.hidden_antagonist_reveal",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/hidden_antagonist_reveal"
+        },
+        {
+          "id": "tropes.home_invasion",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/tropes/home_invasion"
+        },
+        {
+          "id": "presence.tropes.home_invasion",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/tropes.home_invasion"
+        },
+        {
+          "id": "relationships.marriage",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/marriage"
+        },
+        {
+          "id": "relationships.enemies_to_lovers",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/enemies_to_lovers"
+        },
+        {
+          "id": "relationships.slow_burn_romance",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/slow_burn_romance"
+        },
+        {
+          "id": "relationships.queer_romance",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/queer_romance"
+        },
+        {
+          "id": "relationships.workplace_romance",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/workplace_romance"
+        },
+        {
+          "id": "relationships.age_gap_romance",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/age_gap_romance"
+        },
+        {
+          "id": "relationships.male_friendship",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/male_friendship"
+        },
+        {
+          "id": "relationships.female_friendship",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/female_friendship"
+        },
+        {
+          "id": "relationships.student_teacher",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/student_teacher"
+        },
+        {
+          "id": "relationships.infidelity",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/infidelity"
+        },
+        {
+          "id": "presence.relationships.infidelity",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/relationships.infidelity"
+        },
+        {
+          "id": "relationships.unrequited_love",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/relationships/unrequited_love"
+        },
+        {
+          "id": "presence.relationships.unrequited_love",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/relationships.unrequited_love"
+        },
+        {
+          "id": "characters.female_protagonist",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/female_protagonist"
+        },
+        {
+          "id": "characters.child_protagonist",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/child_protagonist"
+        },
+        {
+          "id": "characters.teen_protagonist",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/teen_protagonist"
+        },
+        {
+          "id": "characters.older_adult_protagonist",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/older_adult_protagonist"
+        },
+        {
+          "id": "characters.child_agency",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/child_agency"
+        },
+        {
+          "id": "characters.female_character_agency",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/female_character_agency"
+        },
+        {
+          "id": "characters.nonhuman_protagonist",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/nonhuman_protagonist"
+        },
+        {
+          "id": "presence.characters.nonhuman_protagonist",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/characters.nonhuman_protagonist"
+        },
+        {
+          "id": "characters.solo_protagonist",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/solo_protagonist"
+        },
+        {
+          "id": "presence.characters.solo_protagonist",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/characters.solo_protagonist"
+        },
+        {
+          "id": "representation.lgbtq_characters",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/representation/lgbtq_characters"
+        },
+        {
+          "id": "representation.neurodivergent_characters",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/representation/neurodivergent_characters"
+        },
+        {
+          "id": "representation.disabled_characters",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/representation/disabled_characters"
+        },
+        {
+          "id": "representation.immigrant_characters",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/representation/immigrant_characters"
+        },
+        {
+          "id": "world.travel_to_past",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/world/travel_to_past"
+        },
+        {
+          "id": "presence.world.travel_to_past",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.travel_to_past"
+        },
+        {
+          "id": "world.travel_to_future",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/world/travel_to_future"
+        },
+        {
+          "id": "presence.world.travel_to_future",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/world.travel_to_future"
+        },
+        {
+          "id": "world_treatment.lore_dependence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/world_treatment/lore_dependence"
+        },
+        {
+          "id": "settings.urban",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/urban"
+        },
+        {
+          "id": "presence.settings.urban",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.urban"
+        },
+        {
+          "id": "settings.small_town",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/small_town"
+        },
+        {
+          "id": "presence.settings.small_town",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.small_town"
+        },
+        {
+          "id": "settings.rural",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/rural"
+        },
+        {
+          "id": "presence.settings.rural",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.rural"
+        },
+        {
+          "id": "settings.frontier",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/frontier"
+        },
+        {
+          "id": "presence.settings.frontier",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.frontier"
+        },
+        {
+          "id": "settings.polar",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/polar"
+        },
+        {
+          "id": "presence.settings.polar",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.polar"
+        },
+        {
+          "id": "settings.mountains",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/mountains"
+        },
+        {
+          "id": "presence.settings.mountains",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.mountains"
+        },
+        {
+          "id": "settings.forest",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/forest"
+        },
+        {
+          "id": "presence.settings.forest",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.forest"
+        },
+        {
+          "id": "settings.desert",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/desert"
+        },
+        {
+          "id": "presence.settings.desert",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.desert"
+        },
+        {
+          "id": "settings.ocean",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/ocean"
+        },
+        {
+          "id": "presence.settings.ocean",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.ocean"
+        },
+        {
+          "id": "settings.island",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/island"
+        },
+        {
+          "id": "presence.settings.island",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.island"
+        },
+        {
+          "id": "settings.space_station",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/space_station"
+        },
+        {
+          "id": "presence.settings.space_station",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.space_station"
+        },
+        {
+          "id": "settings.spacecraft",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/spacecraft"
+        },
+        {
+          "id": "presence.settings.spacecraft",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.spacecraft"
+        },
+        {
+          "id": "settings.underground",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/underground"
+        },
+        {
+          "id": "presence.settings.underground",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.underground"
+        },
+        {
+          "id": "settings.bunker",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/bunker"
+        },
+        {
+          "id": "presence.settings.bunker",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.bunker"
+        },
+        {
+          "id": "settings.mansion",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/mansion"
+        },
+        {
+          "id": "presence.settings.mansion",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.mansion"
+        },
+        {
+          "id": "settings.home",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/home"
+        },
+        {
+          "id": "presence.settings.home",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.home"
+        },
+        {
+          "id": "settings.school",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/school"
+        },
+        {
+          "id": "presence.settings.school",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.school"
+        },
+        {
+          "id": "settings.university",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/university"
+        },
+        {
+          "id": "presence.settings.university",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.university"
+        },
+        {
+          "id": "settings.office",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/office"
+        },
+        {
+          "id": "presence.settings.office",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.office"
+        },
+        {
+          "id": "settings.hospital",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/hospital"
+        },
+        {
+          "id": "presence.settings.hospital",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.hospital"
+        },
+        {
+          "id": "settings.restaurant",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/restaurant"
+        },
+        {
+          "id": "presence.settings.restaurant",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.restaurant"
+        },
+        {
+          "id": "settings.bar_or_club",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/bar_or_club"
+        },
+        {
+          "id": "presence.settings.bar_or_club",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.bar_or_club"
+        },
+        {
+          "id": "settings.hotel",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/hotel"
+        },
+        {
+          "id": "presence.settings.hotel",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.hotel"
+        },
+        {
+          "id": "settings.factory",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/factory"
+        },
+        {
+          "id": "presence.settings.factory",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.factory"
+        },
+        {
+          "id": "settings.laboratory",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/laboratory"
+        },
+        {
+          "id": "presence.settings.laboratory",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.laboratory"
+        },
+        {
+          "id": "settings.prison",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/prison"
+        },
+        {
+          "id": "presence.settings.prison",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.prison"
+        },
+        {
+          "id": "settings.salon",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/salon"
+        },
+        {
+          "id": "presence.settings.salon",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.salon"
+        },
+        {
+          "id": "settings.subway",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/subway"
+        },
+        {
+          "id": "presence.settings.subway",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.subway"
+        },
+        {
+          "id": "settings.airport",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/airport"
+        },
+        {
+          "id": "presence.settings.airport",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.airport"
+        },
+        {
+          "id": "settings.amusement_park",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/amusement_park"
+        },
+        {
+          "id": "presence.settings.amusement_park",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.amusement_park"
+        },
+        {
+          "id": "settings.circus",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/circus"
+        },
+        {
+          "id": "presence.settings.circus",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.circus"
+        },
+        {
+          "id": "settings.theater",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/theater"
+        },
+        {
+          "id": "presence.settings.theater",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.theater"
+        },
+        {
+          "id": "settings.museum",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/museum"
+        },
+        {
+          "id": "presence.settings.museum",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.museum"
+        },
+        {
+          "id": "settings.library_or_bookshop",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/library_or_bookshop"
+        },
+        {
+          "id": "presence.settings.library_or_bookshop",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.library_or_bookshop"
+        },
+        {
+          "id": "settings.religious_site",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/religious_site"
+        },
+        {
+          "id": "presence.settings.religious_site",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.religious_site"
+        },
+        {
+          "id": "settings.cemetery",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/cemetery"
+        },
+        {
+          "id": "presence.settings.cemetery",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.cemetery"
+        },
+        {
+          "id": "settings.courtroom",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/courtroom"
+        },
+        {
+          "id": "presence.settings.courtroom",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.courtroom"
+        },
+        {
+          "id": "settings.casino",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/casino"
+        },
+        {
+          "id": "presence.settings.casino",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.casino"
+        },
+        {
+          "id": "settings.suburban",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/suburban"
+        },
+        {
+          "id": "presence.settings.suburban",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.suburban"
+        },
+        {
+          "id": "settings.jungle",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/jungle"
+        },
+        {
+          "id": "presence.settings.jungle",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.jungle"
+        },
+        {
+          "id": "settings.coast_or_beach",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/coast_or_beach"
+        },
+        {
+          "id": "presence.settings.coast_or_beach",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.coast_or_beach"
+        },
+        {
+          "id": "settings.military_base",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/military_base"
+        },
+        {
+          "id": "presence.settings.military_base",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/settings.military_base"
+        },
+        {
+          "id": "occupations.engineering",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/engineering"
+        },
+        {
+          "id": "presence.occupations.engineering",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.engineering"
+        },
+        {
+          "id": "occupations.computing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/computing"
+        },
+        {
+          "id": "presence.occupations.computing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.computing"
+        },
+        {
+          "id": "occupations.healthcare",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/healthcare"
+        },
+        {
+          "id": "presence.occupations.healthcare",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.healthcare"
+        },
+        {
+          "id": "occupations.policing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/policing"
+        },
+        {
+          "id": "presence.occupations.policing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.policing"
+        },
+        {
+          "id": "occupations.military",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/military"
+        },
+        {
+          "id": "presence.occupations.military",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.military"
+        },
+        {
+          "id": "occupations.law",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/law"
+        },
+        {
+          "id": "presence.occupations.law",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.law"
+        },
+        {
+          "id": "occupations.business",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/business"
+        },
+        {
+          "id": "presence.occupations.business",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.business"
+        },
+        {
+          "id": "occupations.finance",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/finance"
+        },
+        {
+          "id": "presence.occupations.finance",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.finance"
+        },
+        {
+          "id": "occupations.service",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/service"
+        },
+        {
+          "id": "presence.occupations.service",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.service"
+        },
+        {
+          "id": "occupations.arts",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/arts"
+        },
+        {
+          "id": "presence.occupations.arts",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.arts"
+        },
+        {
+          "id": "occupations.education",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/education"
+        },
+        {
+          "id": "presence.occupations.education",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.education"
+        },
+        {
+          "id": "occupations.journalism",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/journalism"
+        },
+        {
+          "id": "presence.occupations.journalism",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.journalism"
+        },
+        {
+          "id": "occupations.organized_crime",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/organized_crime"
+        },
+        {
+          "id": "presence.occupations.organized_crime",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.organized_crime"
+        },
+        {
+          "id": "occupations.piracy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/piracy"
+        },
+        {
+          "id": "presence.occupations.piracy",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.piracy"
+        },
+        {
+          "id": "occupations.government_and_politics",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/government_and_politics"
+        },
+        {
+          "id": "presence.occupations.government_and_politics",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.government_and_politics"
+        },
+        {
+          "id": "occupations.public_relations_and_advertising",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/public_relations_and_advertising"
+        },
+        {
+          "id": "presence.occupations.public_relations_and_advertising",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.public_relations_and_advertising"
+        },
+        {
+          "id": "occupations.science_research",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/science_research"
+        },
+        {
+          "id": "presence.occupations.science_research",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.science_research"
+        },
+        {
+          "id": "occupations.clergy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/clergy"
+        },
+        {
+          "id": "presence.occupations.clergy",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.clergy"
+        },
+        {
+          "id": "occupations.sex_work",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/sex_work"
+        },
+        {
+          "id": "presence.occupations.sex_work",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.sex_work"
+        },
+        {
+          "id": "occupations.agriculture",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/agriculture"
+        },
+        {
+          "id": "presence.occupations.agriculture",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.agriculture"
+        },
+        {
+          "id": "occupations.royalty_and_aristocracy",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/occupations/royalty_and_aristocracy"
+        },
+        {
+          "id": "presence.occupations.royalty_and_aristocracy",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/occupations.royalty_and_aristocracy"
+        },
+        {
+          "id": "activities.cooking",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/cooking"
+        },
+        {
+          "id": "presence.activities.cooking",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.cooking"
+        },
+        {
+          "id": "activities.baking",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/baking"
+        },
+        {
+          "id": "presence.activities.baking",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.baking"
+        },
+        {
+          "id": "activities.dining",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/dining"
+        },
+        {
+          "id": "presence.activities.dining",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.dining"
+        },
+        {
+          "id": "activities.travel",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/travel"
+        },
+        {
+          "id": "presence.activities.travel",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.travel"
+        },
+        {
+          "id": "activities.backpacking",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/backpacking"
+        },
+        {
+          "id": "presence.activities.backpacking",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.backpacking"
+        },
+        {
+          "id": "activities.gardening",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/gardening"
+        },
+        {
+          "id": "presence.activities.gardening",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.gardening"
+        },
+        {
+          "id": "activities.diving",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/diving"
+        },
+        {
+          "id": "presence.activities.diving",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.diving"
+        },
+        {
+          "id": "activities.vehicle_tuning",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/vehicle_tuning"
+        },
+        {
+          "id": "presence.activities.vehicle_tuning",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.vehicle_tuning"
+        },
+        {
+          "id": "activities.aviation",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/aviation"
+        },
+        {
+          "id": "presence.activities.aviation",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.aviation"
+        },
+        {
+          "id": "activities.rail_enthusiasm",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/rail_enthusiasm"
+        },
+        {
+          "id": "presence.activities.rail_enthusiasm",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.rail_enthusiasm"
+        },
+        {
+          "id": "activities.fitness",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/fitness"
+        },
+        {
+          "id": "presence.activities.fitness",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.fitness"
+        },
+        {
+          "id": "activities.video_games",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/video_games"
+        },
+        {
+          "id": "presence.activities.video_games",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.video_games"
+        },
+        {
+          "id": "activities.fashion",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/fashion"
+        },
+        {
+          "id": "presence.activities.fashion",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.fashion"
+        },
+        {
+          "id": "activities.crafts",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/crafts"
+        },
+        {
+          "id": "presence.activities.crafts",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.crafts"
+        },
+        {
+          "id": "activities.photography",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/photography"
+        },
+        {
+          "id": "presence.activities.photography",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.photography"
+        },
+        {
+          "id": "activities.filmmaking",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/filmmaking"
+        },
+        {
+          "id": "presence.activities.filmmaking",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.filmmaking"
+        },
+        {
+          "id": "activities.reading",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/reading"
+        },
+        {
+          "id": "presence.activities.reading",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.reading"
+        },
+        {
+          "id": "activities.comics",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/comics"
+        },
+        {
+          "id": "presence.activities.comics",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.comics"
+        },
+        {
+          "id": "activities.anime_fandom",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/anime_fandom"
+        },
+        {
+          "id": "presence.activities.anime_fandom",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.anime_fandom"
+        },
+        {
+          "id": "activities.visual_art",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/visual_art"
+        },
+        {
+          "id": "presence.activities.visual_art",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.visual_art"
+        },
+        {
+          "id": "activities.theater",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/theater"
+        },
+        {
+          "id": "presence.activities.theater",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.theater"
+        },
+        {
+          "id": "activities.hiking",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/hiking"
+        },
+        {
+          "id": "presence.activities.hiking",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.hiking"
+        },
+        {
+          "id": "activities.woodworking",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/woodworking"
+        },
+        {
+          "id": "presence.activities.woodworking",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.woodworking"
+        },
+        {
+          "id": "activities.home_improvement",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/home_improvement"
+        },
+        {
+          "id": "presence.activities.home_improvement",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.home_improvement"
+        },
+        {
+          "id": "activities.language_learning",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/language_learning"
+        },
+        {
+          "id": "presence.activities.language_learning",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.language_learning"
+        },
+        {
+          "id": "activities.instrument_playing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/instrument_playing"
+        },
+        {
+          "id": "presence.activities.instrument_playing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.instrument_playing"
+        },
+        {
+          "id": "activities.singing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/singing"
+        },
+        {
+          "id": "presence.activities.singing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.singing"
+        },
+        {
+          "id": "activities.dancing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/dancing"
+        },
+        {
+          "id": "presence.activities.dancing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.dancing"
+        },
+        {
+          "id": "activities.stage_magic",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/stage_magic"
+        },
+        {
+          "id": "presence.activities.stage_magic",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.stage_magic"
+        },
+        {
+          "id": "activities.animal_care",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/animal_care"
+        },
+        {
+          "id": "presence.activities.animal_care",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.animal_care"
+        },
+        {
+          "id": "activities.underground_fighting",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/underground_fighting"
+        },
+        {
+          "id": "presence.activities.underground_fighting",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.underground_fighting"
+        },
+        {
+          "id": "activities.gambling",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/gambling"
+        },
+        {
+          "id": "presence.activities.gambling",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.gambling"
+        },
+        {
+          "id": "activities.writing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/writing"
+        },
+        {
+          "id": "presence.activities.writing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.writing"
+        },
+        {
+          "id": "activities.hunting_and_fishing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/hunting_and_fishing"
+        },
+        {
+          "id": "presence.activities.hunting_and_fishing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.hunting_and_fishing"
+        },
+        {
+          "id": "activities.climbing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/climbing"
+        },
+        {
+          "id": "presence.activities.climbing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.climbing"
+        },
+        {
+          "id": "activities.sailing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/sailing"
+        },
+        {
+          "id": "presence.activities.sailing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.sailing"
+        },
+        {
+          "id": "activities.tabletop_games",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/tabletop_games"
+        },
+        {
+          "id": "presence.activities.tabletop_games",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/activities.tabletop_games"
+        },
+        {
+          "id": "sports.ice_hockey",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/ice_hockey"
+        },
+        {
+          "id": "presence.sports.ice_hockey",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.ice_hockey"
+        },
+        {
+          "id": "sports.tennis",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/tennis"
+        },
+        {
+          "id": "presence.sports.tennis",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.tennis"
+        },
+        {
+          "id": "sports.golf",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/golf"
+        },
+        {
+          "id": "presence.sports.golf",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.golf"
+        },
+        {
+          "id": "sports.association_football",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/association_football"
+        },
+        {
+          "id": "presence.sports.association_football",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.association_football"
+        },
+        {
+          "id": "sports.basketball",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/basketball"
+        },
+        {
+          "id": "presence.sports.basketball",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.basketball"
+        },
+        {
+          "id": "sports.baseball",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/baseball"
+        },
+        {
+          "id": "presence.sports.baseball",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.baseball"
+        },
+        {
+          "id": "sports.american_football",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/american_football"
+        },
+        {
+          "id": "presence.sports.american_football",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.american_football"
+        },
+        {
+          "id": "sports.boxing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/boxing"
+        },
+        {
+          "id": "presence.sports.boxing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.boxing"
+        },
+        {
+          "id": "sports.mixed_martial_arts",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/mixed_martial_arts"
+        },
+        {
+          "id": "presence.sports.mixed_martial_arts",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.mixed_martial_arts"
+        },
+        {
+          "id": "sports.motorsport",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/motorsport"
+        },
+        {
+          "id": "presence.sports.motorsport",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.motorsport"
+        },
+        {
+          "id": "sports.skiing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/skiing"
+        },
+        {
+          "id": "presence.sports.skiing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.skiing"
+        },
+        {
+          "id": "sports.snowboarding",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/snowboarding"
+        },
+        {
+          "id": "presence.sports.snowboarding",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.snowboarding"
+        },
+        {
+          "id": "sports.running",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/running"
+        },
+        {
+          "id": "presence.sports.running",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.running"
+        },
+        {
+          "id": "sports.cycling",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/cycling"
+        },
+        {
+          "id": "presence.sports.cycling",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.cycling"
+        },
+        {
+          "id": "sports.cricket",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/cricket"
+        },
+        {
+          "id": "presence.sports.cricket",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.cricket"
+        },
+        {
+          "id": "sports.rugby",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/rugby"
+        },
+        {
+          "id": "presence.sports.rugby",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.rugby"
+        },
+        {
+          "id": "sports.volleyball",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/volleyball"
+        },
+        {
+          "id": "presence.sports.volleyball",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.volleyball"
+        },
+        {
+          "id": "sports.swimming",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/swimming"
+        },
+        {
+          "id": "presence.sports.swimming",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.swimming"
+        },
+        {
+          "id": "sports.diving",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/diving"
+        },
+        {
+          "id": "presence.sports.diving",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.diving"
+        },
+        {
+          "id": "sports.gymnastics",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/gymnastics"
+        },
+        {
+          "id": "presence.sports.gymnastics",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.gymnastics"
+        },
+        {
+          "id": "sports.skateboarding",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/skateboarding"
+        },
+        {
+          "id": "presence.sports.skateboarding",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.skateboarding"
+        },
+        {
+          "id": "sports.esports",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/esports"
+        },
+        {
+          "id": "presence.sports.esports",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.esports"
+        },
+        {
+          "id": "sports.professional_wrestling",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/professional_wrestling"
+        },
+        {
+          "id": "presence.sports.professional_wrestling",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.professional_wrestling"
+        },
+        {
+          "id": "sports.surfing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sports/surfing"
+        },
+        {
+          "id": "presence.sports.surfing",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/sports.surfing"
+        },
+        {
+          "id": "entities.dogs",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/dogs"
+        },
+        {
+          "id": "presence.entities.dogs",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.dogs"
+        },
+        {
+          "id": "entities.cats",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/cats"
+        },
+        {
+          "id": "presence.entities.cats",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.cats"
+        },
+        {
+          "id": "entities.horses",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/horses"
+        },
+        {
+          "id": "presence.entities.horses",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.horses"
+        },
+        {
+          "id": "entities.farm_animals",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/farm_animals"
+        },
+        {
+          "id": "presence.entities.farm_animals",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.farm_animals"
+        },
+        {
+          "id": "entities.wildlife",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/wildlife"
+        },
+        {
+          "id": "presence.entities.wildlife",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.wildlife"
+        },
+        {
+          "id": "entities.birds",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/birds"
+        },
+        {
+          "id": "presence.entities.birds",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.birds"
+        },
+        {
+          "id": "entities.reptiles",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/reptiles"
+        },
+        {
+          "id": "presence.entities.reptiles",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.reptiles"
+        },
+        {
+          "id": "entities.amphibians",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/amphibians"
+        },
+        {
+          "id": "presence.entities.amphibians",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.amphibians"
+        },
+        {
+          "id": "entities.marine_animals",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/marine_animals"
+        },
+        {
+          "id": "presence.entities.marine_animals",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.marine_animals"
+        },
+        {
+          "id": "entities.arthropods",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/arthropods"
+        },
+        {
+          "id": "presence.entities.arthropods",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.arthropods"
+        },
+        {
+          "id": "entities.dinosaurs",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/dinosaurs"
+        },
+        {
+          "id": "presence.entities.dinosaurs",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.dinosaurs"
+        },
+        {
+          "id": "entities.mythical_creatures",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/mythical_creatures"
+        },
+        {
+          "id": "presence.entities.mythical_creatures",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.mythical_creatures"
+        },
+        {
+          "id": "entities.vampires",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/vampires"
+        },
+        {
+          "id": "presence.entities.vampires",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.vampires"
+        },
+        {
+          "id": "entities.werewolves",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/werewolves"
+        },
+        {
+          "id": "presence.entities.werewolves",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.werewolves"
+        },
+        {
+          "id": "entities.ghosts",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/ghosts"
+        },
+        {
+          "id": "presence.entities.ghosts",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.ghosts"
+        },
+        {
+          "id": "entities.demons",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/demons"
+        },
+        {
+          "id": "presence.entities.demons",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.demons"
+        },
+        {
+          "id": "entities.extraterrestrials",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/extraterrestrials"
+        },
+        {
+          "id": "presence.entities.extraterrestrials",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.extraterrestrials"
+        },
+        {
+          "id": "entities.cars",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/cars"
+        },
+        {
+          "id": "presence.entities.cars",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.cars"
+        },
+        {
+          "id": "entities.trains",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/trains"
+        },
+        {
+          "id": "presence.entities.trains",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.trains"
+        },
+        {
+          "id": "entities.aircraft",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/aircraft"
+        },
+        {
+          "id": "presence.entities.aircraft",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.aircraft"
+        },
+        {
+          "id": "entities.watercraft",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/watercraft"
+        },
+        {
+          "id": "presence.entities.watercraft",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.watercraft"
+        },
+        {
+          "id": "entities.special_machinery",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/special_machinery"
+        },
+        {
+          "id": "presence.entities.special_machinery",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.special_machinery"
+        },
+        {
+          "id": "entities.toys_or_puppets",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/entities/toys_or_puppets"
+        },
+        {
+          "id": "presence.entities.toys_or_puppets",
+          "stored_part": "attributes",
+          "pointer": "/content_presence/entities.toys_or_puppets"
+        },
+        {
+          "id": "storytelling.educational_intent",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/storytelling/educational_intent"
+        },
+        {
+          "id": "storytelling.homage",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/storytelling/homage"
+        },
+        {
+          "id": "storytelling.pastiche",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/storytelling/pastiche"
+        },
+        {
+          "id": "storytelling.real_time",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/storytelling/real_time"
+        },
+        {
+          "id": "storytelling.vignette_structure",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/storytelling/vignette_structure"
+        },
+        {
+          "id": "storytelling.narrativity",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/storytelling/narrativity"
+        },
+        {
+          "id": "stakes.planetary",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/stakes/planetary"
+        },
+        {
+          "id": "stakes.cosmic",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/stakes/cosmic"
+        },
+        {
+          "id": "dialogue.technical_jargon",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/dialogue/technical_jargon"
+        },
+        {
+          "id": "dialogue.multilingual_exchange",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/dialogue/multilingual_exchange"
+        },
+        {
+          "id": "aesthetics.cyberpunk",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/aesthetics/cyberpunk"
+        },
+        {
+          "id": "aesthetics.steampunk",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/aesthetics/steampunk"
+        },
+        {
+          "id": "visuals.pastel_palette",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/pastel_palette"
+        },
+        {
+          "id": "visuals.neon_palette",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/neon_palette"
+        },
+        {
+          "id": "visuals.restricted_palette",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/restricted_palette"
+        },
+        {
+          "id": "visuals.diffused_light",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/diffused_light"
+        },
+        {
+          "id": "visuals.aerial_viewpoints",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/aerial_viewpoints"
+        },
+        {
+          "id": "visuals.closeups",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/closeups"
+        },
+        {
+          "id": "visuals.wide_compositions",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/wide_compositions"
+        },
+        {
+          "id": "visuals.practical_effects",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/practical_effects"
+        },
+        {
+          "id": "visuals.digital_effects",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/digital_effects"
+        },
+        {
+          "id": "visuals.costume_emphasis",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/costume_emphasis"
+        },
+        {
+          "id": "visuals.split_screen",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/split_screen"
+        },
+        {
+          "id": "visuals.aspect_ratio_changes",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/aspect_ratio_changes"
+        },
+        {
+          "id": "visuals.grain_texture",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/grain_texture"
+        },
+        {
+          "id": "visuals.distressed_texture",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/distressed_texture"
+        },
+        {
+          "id": "visuals.slow_motion",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/slow_motion"
+        },
+        {
+          "id": "visuals.static_camera",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/static_camera"
+        },
+        {
+          "id": "action.gun_fu",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/action/gun_fu"
+        },
+        {
+          "id": "action.environmental_choreography",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/action/environmental_choreography"
+        },
+        {
+          "id": "sound.audio_self_reference",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sound/audio_self_reference"
+        },
+        {
+          "id": "sound.nonmusical_sound_dependence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sound/nonmusical_sound_dependence"
+        },
+        {
+          "id": "sound.diegetic_music",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sound/diegetic_music"
+        },
+        {
+          "id": "sound.preexisting_recordings",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sound/preexisting_recordings"
+        },
+        {
+          "id": "sound.live_performance",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/sound/live_performance"
+        },
+        {
+          "id": "music_styles.orchestral",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/orchestral"
+        },
+        {
+          "id": "music_styles.electronic",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/electronic"
+        },
+        {
+          "id": "music_styles.jazz",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/jazz"
+        },
+        {
+          "id": "music_styles.classical",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/classical"
+        },
+        {
+          "id": "music_styles.rock",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/rock"
+        },
+        {
+          "id": "music_styles.pop",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/pop"
+        },
+        {
+          "id": "music_styles.metal",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/metal"
+        },
+        {
+          "id": "music_styles.hip_hop",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/hip_hop"
+        },
+        {
+          "id": "music_styles.country",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/country"
+        },
+        {
+          "id": "music_styles.folk",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/folk"
+        },
+        {
+          "id": "music_styles.soul_rnb",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/soul_rnb"
+        },
+        {
+          "id": "music_styles.funk",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/music_styles/funk"
+        },
+        {
+          "id": "ending.twist_impact",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/ending/twist_impact"
+        },
+        {
+          "id": "ending.cliffhanger",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/ending/cliffhanger"
+        },
+        {
+          "id": "ending.sequel_dependence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/ending/sequel_dependence"
+        },
+        {
+          "id": "ending.cyclical_return",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/ending/cyclical_return"
+        },
+        {
+          "id": "series.episodic_independence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/series/episodic_independence"
+        },
+        {
+          "id": "series.serialized_dependence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/series/serialized_dependence"
+        },
+        {
+          "id": "series.anthology_independence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/series/anthology_independence"
+        },
+        {
+          "id": "series.episode_cliffhangers",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/series/episode_cliffhangers"
+        },
+        {
+          "id": "series.bottle_episode_pattern",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/series/bottle_episode_pattern"
+        },
+        {
+          "id": "series.cold_open_hooks",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/series/cold_open_hooks"
+        },
+        {
+          "id": "series.formula_repetition",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/series/formula_repetition"
+        },
+        {
+          "id": "series.conceptual_renewal",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/series/conceptual_renewal"
+        },
+        {
+          "id": "viewing_demands.attention",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/attention"
+        },
+        {
+          "id": "viewing_demands.visual_dependence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/visual_dependence"
+        },
+        {
+          "id": "viewing_demands.auditory_dependence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/auditory_dependence"
+        },
+        {
+          "id": "viewing_demands.franchise_knowledge",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/franchise_knowledge"
+        },
+        {
+          "id": "viewing_demands.genre_knowledge",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/genre_knowledge"
+        },
+        {
+          "id": "viewing_demands.historical_knowledge",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/historical_knowledge"
+        },
+        {
+          "id": "viewing_demands.cultural_knowledge",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/cultural_knowledge"
+        },
+        {
+          "id": "viewing_demands.onscreen_reading",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/onscreen_reading"
+        },
+        {
+          "id": "viewing_affordances.background_viewing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_affordances/background_viewing"
+        },
+        {
+          "id": "viewing_affordances.drop_in_viewing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_affordances/drop_in_viewing"
+        },
+        {
+          "id": "viewing_affordances.standalone_viewing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_affordances/standalone_viewing"
+        },
+        {
+          "id": "viewing_affordances.discussion",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_affordances/discussion"
+        },
+        {
+          "id": "viewing_affordances.theorizing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_affordances/theorizing"
+        },
+        {
+          "id": "viewing_affordances.repeat_discovery",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_affordances/repeat_discovery"
+        },
+        {
+          "id": "evaluations.direction",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/evaluations/direction"
+        },
+        {
+          "id": "evaluations.acting",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/evaluations/acting"
+        },
+        {
+          "id": "evaluations.writing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/evaluations/writing"
+        },
+        {
+          "id": "evaluations.dialogue",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/evaluations/dialogue"
+        },
+        {
+          "id": "evaluations.characterization",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/evaluations/characterization"
+        },
+        {
+          "id": "evaluations.narrative_cohesion",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/evaluations/narrative_cohesion"
+        },
+        {
+          "id": "evaluations.cinematography",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/evaluations/cinematography"
+        },
+        {
+          "id": "evaluations.editing",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/evaluations/editing"
+        },
+        {
+          "id": "evaluations.original_score",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/evaluations/original_score"
+        },
+        {
+          "id": "evaluations.sound_design",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/evaluations/sound_design"
+        },
+        {
+          "id": "characters.demonstrated_competence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/demonstrated_competence"
+        },
+        {
+          "id": "viewing_demands.memory_load",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/memory_load"
+        },
+        {
+          "id": "viewing_demands.inference_load",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/inference_load"
+        },
+        {
+          "id": "viewing_demands.information_rate",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_demands/information_rate"
+        },
+        {
+          "id": "viewing_affordances.interruption_recovery",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/viewing_affordances/interruption_recovery"
+        },
+        {
+          "id": "performance.dance_prominence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/performance/dance_prominence"
+        },
+        {
+          "id": "characters.traumatic_backstory_dependence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/traumatic_backstory_dependence"
+        },
+        {
+          "id": "characters.charisma",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/charisma"
+        },
+        {
+          "id": "characters.eccentricity",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/characters/eccentricity"
+        },
+        {
+          "id": "horror_elements.occult_rituals",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/horror_elements/occult_rituals"
+        },
+        {
+          "id": "settings.community_isolation",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/settings/community_isolation"
+        },
+        {
+          "id": "atmosphere.sustained_dread",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/atmosphere/sustained_dread"
+        },
+        {
+          "id": "visuals.scenic_landscape_prominence",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/visuals/scenic_landscape_prominence"
+        },
+        {
+          "id": "atmosphere.environmental_sensory_emphasis",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/atmosphere/environmental_sensory_emphasis"
+        },
+        {
+          "id": "presentation.jump_scare_frequency",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/presentation/jump_scare_frequency"
+        },
+        {
+          "id": "storytelling.narrative_escalation",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/storytelling/narrative_escalation"
+        },
+        {
+          "id": "speculative.superpowers",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/speculative/superpowers"
+        },
+        {
+          "id": "speculative.monster_focus",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/speculative/monster_focus"
+        },
+        {
+          "id": "activities.supernatural_hunting",
+          "stored_part": "attributes",
+          "pointer": "/attribute_groups/activities/supernatural_hunting"
+        },
+        {
+          "id": "presentation.jump_scares",
+          "stored_part": "attributes",
+          "pointer": "/facets/presentation/jump_scares"
+        },
+        {
+          "id": "presentation.jump_scare_modalities",
+          "stored_part": "attributes",
+          "pointer": "/facets/presentation/jump_scare_modalities"
+        },
+        {
+          "id": "performance.dance_styles",
+          "stored_part": "attributes",
+          "pointer": "/facets/performance/dance_styles"
+        },
+        {
+          "id": "performance.dance_contexts",
+          "stored_part": "attributes",
+          "pointer": "/facets/performance/dance_contexts"
+        }
+      ]
+    },
+    "facts": {
+      "schema": "requests/facts.schema.json",
+      "definition": "requests/facts.definition.json",
+      "prompt": "requests/facts.PROMPT.md",
+      "counts": {
+        "scores": 0,
+        "presence": 0,
+        "facets": 57,
+        "advisory_leaves": 110
+      },
+      "fields": [
+        {
+          "id": "storytelling.chronology",
+          "stored_part": "attributes",
+          "pointer": "/facets/storytelling/chronology"
+        },
+        {
+          "id": "storytelling.retelling_structure",
+          "stored_part": "attributes",
+          "pointer": "/facets/storytelling/retelling_structure"
+        },
+        {
+          "id": "storytelling.tone_progression",
+          "stored_part": "attributes",
+          "pointer": "/facets/storytelling/tone_progression"
+        },
+        {
+          "id": "characters.competence_basis",
+          "stored_part": "attributes",
+          "pointer": "/facets/characters/competence_basis"
+        },
+        {
+          "id": "presentation.narration_sources",
+          "stored_part": "attributes",
+          "pointer": "/facets/presentation/narration_sources"
+        },
+        {
+          "id": "presentation.laugh_track",
+          "stored_part": "attributes",
+          "pointer": "/facets/presentation/laugh_track"
+        },
+        {
+          "id": "presentation.sustained_screaming",
+          "stored_part": "attributes",
+          "pointer": "/facets/presentation/sustained_screaming"
+        },
+        {
+          "id": "ending.post_credits_function",
+          "stored_part": "attributes",
+          "pointer": "/facets/ending/post_credits_function"
+        },
+        {
+          "id": "series.case_resolution_pattern",
+          "stored_part": "attributes",
+          "pointer": "/facets/series/case_resolution_pattern"
+        },
+        {
+          "id": "series.character_continuity",
+          "stored_part": "attributes",
+          "pointer": "/facets/series/character_continuity"
+        },
+        {
+          "id": "world_context.eras",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/eras"
+        },
+        {
+          "id": "world_context.relative_periods",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/relative_periods"
+        },
+        {
+          "id": "world_context.reality_layers",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/reality_layers"
+        },
+        {
+          "id": "world_context.environmental_obstacles",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/environmental_obstacles"
+        },
+        {
+          "id": "seasonal.depicted_seasons",
+          "stored_part": "attributes",
+          "pointer": "/facets/seasonal/depicted_seasons"
+        },
+        {
+          "id": "seasonal.depicted_holidays",
+          "stored_part": "attributes",
+          "pointer": "/facets/seasonal/depicted_holidays"
+        },
+        {
+          "id": "cultural.movements_and_traditions",
+          "stored_part": "attributes",
+          "pointer": "/facets/cultural/movements_and_traditions"
+        },
+        {
+          "id": "cultural.depicted_contexts",
+          "stored_part": "attributes",
+          "pointer": "/facets/cultural/depicted_contexts"
+        },
+        {
+          "id": "representation.established_protagonist_traits",
+          "stored_part": "attributes",
+          "pointer": "/facets/representation/established_protagonist_traits"
+        },
+        {
+          "id": "format_facts.production_method",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/production_method"
+        },
+        {
+          "id": "format_facts.narrative_mode",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/narrative_mode"
+        },
+        {
+          "id": "format_facts.series_structure",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/series_structure"
+        },
+        {
+          "id": "format_facts.color_process",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/color_process"
+        },
+        {
+          "id": "format_facts.adaptation_type",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/adaptation_type"
+        },
+        {
+          "id": "format_facts.factual_basis",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/factual_basis"
+        },
+        {
+          "id": "format_facts.animation_techniques",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/animation_techniques"
+        },
+        {
+          "id": "format_facts.presentation_modes",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/presentation_modes"
+        },
+        {
+          "id": "format_facts.documentary_devices",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/documentary_devices"
+        },
+        {
+          "id": "format_facts.capture_media",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/capture_media"
+        },
+        {
+          "id": "format_facts.work_relation_types",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/work_relation_types"
+        },
+        {
+          "id": "format_facts.anime_tradition",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/anime_tradition"
+        },
+        {
+          "id": "format_facts.silent_or_intertitles",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/silent_or_intertitles"
+        },
+        {
+          "id": "format_facts.single_take_presentation",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/single_take_presentation"
+        },
+        {
+          "id": "format_facts.real_time_presentation",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/real_time_presentation"
+        },
+        {
+          "id": "format_facts.post_credits_scene_present",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/post_credits_scene_present"
+        },
+        {
+          "id": "format_facts.alternate_endings_present",
+          "stored_part": "attributes",
+          "pointer": "/facets/format_facts/alternate_endings_present"
+        },
+        {
+          "id": "visuals.dominant_colors",
+          "stored_part": "attributes",
+          "pointer": "/facets/visuals/dominant_colors"
+        },
+        {
+          "id": "visuals.palette_patterns",
+          "stored_part": "attributes",
+          "pointer": "/facets/visuals/palette_patterns"
+        },
+        {
+          "id": "characters.protagonist_motivations",
+          "stored_part": "attributes",
+          "pointer": "/facets/characters/protagonist_motivations"
+        },
+        {
+          "id": "characters.protagonist_behavioral_traits",
+          "stored_part": "attributes",
+          "pointer": "/facets/characters/protagonist_behavioral_traits"
+        },
+        {
+          "id": "characters.protagonist_arc_patterns",
+          "stored_part": "attributes",
+          "pointer": "/facets/characters/protagonist_arc_patterns"
+        },
+        {
+          "id": "groups.types",
+          "stored_part": "attributes",
+          "pointer": "/facets/groups/types"
+        },
+        {
+          "id": "groups.encounter_perspectives",
+          "stored_part": "attributes",
+          "pointer": "/facets/groups/encounter_perspectives"
+        },
+        {
+          "id": "groups.internal_dynamics",
+          "stored_part": "attributes",
+          "pointer": "/facets/groups/internal_dynamics"
+        },
+        {
+          "id": "relationships.friendship_dynamics",
+          "stored_part": "attributes",
+          "pointer": "/facets/relationships/friendship_dynamics"
+        },
+        {
+          "id": "relationships.romance_social_dynamics",
+          "stored_part": "attributes",
+          "pointer": "/facets/relationships/romance_social_dynamics"
+        },
+        {
+          "id": "world_context.depicted_weather",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/depicted_weather"
+        },
+        {
+          "id": "world_context.built_environment_character",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/built_environment_character"
+        },
+        {
+          "id": "world_context.depicted_regions",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/depicted_regions"
+        },
+        {
+          "id": "sound.ambient_sources",
+          "stored_part": "attributes",
+          "pointer": "/facets/sound/ambient_sources"
+        },
+        {
+          "id": "advisory_details.animal_harm_types",
+          "stored_part": "attributes",
+          "pointer": "/facets/advisory_details/animal_harm_types"
+        },
+        {
+          "id": "world_context.predominant_eras",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/predominant_eras"
+        },
+        {
+          "id": "world_context.depicted_decades",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/depicted_decades"
+        },
+        {
+          "id": "world_context.predominant_decades",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/predominant_decades"
+        },
+        {
+          "id": "world_context.earliest_substantial_year",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/earliest_substantial_year"
+        },
+        {
+          "id": "world_context.latest_substantial_year",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/latest_substantial_year"
+        },
+        {
+          "id": "world_context.calendar_systems",
+          "stored_part": "attributes",
+          "pointer": "/facets/world_context/calendar_systems"
+        },
+        {
+          "id": "advisories.violence.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/violence/presence"
+        },
+        {
+          "id": "advisories.violence.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/violence/depiction_modes"
+        },
+        {
+          "id": "advisories.violence.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/violence/intensity"
+        },
+        {
+          "id": "advisories.violence.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/violence/frequency"
+        },
+        {
+          "id": "advisories.violence.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/violence/explicitness"
+        },
+        {
+          "id": "advisories.gore.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/gore/presence"
+        },
+        {
+          "id": "advisories.gore.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/gore/depiction_modes"
+        },
+        {
+          "id": "advisories.gore.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/gore/intensity"
+        },
+        {
+          "id": "advisories.gore.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/gore/frequency"
+        },
+        {
+          "id": "advisories.gore.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/gore/explicitness"
+        },
+        {
+          "id": "advisories.sexual_activity.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/sexual_activity/presence"
+        },
+        {
+          "id": "advisories.sexual_activity.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/sexual_activity/depiction_modes"
+        },
+        {
+          "id": "advisories.sexual_activity.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/sexual_activity/intensity"
+        },
+        {
+          "id": "advisories.sexual_activity.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/sexual_activity/frequency"
+        },
+        {
+          "id": "advisories.sexual_activity.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/sexual_activity/explicitness"
+        },
+        {
+          "id": "advisories.nudity.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/nudity/presence"
+        },
+        {
+          "id": "advisories.nudity.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/nudity/depiction_modes"
+        },
+        {
+          "id": "advisories.nudity.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/nudity/intensity"
+        },
+        {
+          "id": "advisories.nudity.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/nudity/frequency"
+        },
+        {
+          "id": "advisories.nudity.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/nudity/explicitness"
+        },
+        {
+          "id": "advisories.substance_use.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/substance_use/presence"
+        },
+        {
+          "id": "advisories.substance_use.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/substance_use/depiction_modes"
+        },
+        {
+          "id": "advisories.substance_use.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/substance_use/intensity"
+        },
+        {
+          "id": "advisories.substance_use.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/substance_use/frequency"
+        },
+        {
+          "id": "advisories.substance_use.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/substance_use/explicitness"
+        },
+        {
+          "id": "advisories.profanity.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/profanity/presence"
+        },
+        {
+          "id": "advisories.profanity.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/profanity/depiction_modes"
+        },
+        {
+          "id": "advisories.profanity.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/profanity/intensity"
+        },
+        {
+          "id": "advisories.profanity.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/profanity/frequency"
+        },
+        {
+          "id": "advisories.profanity.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/profanity/explicitness"
+        },
+        {
+          "id": "advisories.disturbing_imagery.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/disturbing_imagery/presence"
+        },
+        {
+          "id": "advisories.disturbing_imagery.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/disturbing_imagery/depiction_modes"
+        },
+        {
+          "id": "advisories.disturbing_imagery.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/disturbing_imagery/intensity"
+        },
+        {
+          "id": "advisories.disturbing_imagery.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/disturbing_imagery/frequency"
+        },
+        {
+          "id": "advisories.disturbing_imagery.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/disturbing_imagery/explicitness"
+        },
+        {
+          "id": "advisories.child_endangerment.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/child_endangerment/presence"
+        },
+        {
+          "id": "advisories.child_endangerment.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/child_endangerment/depiction_modes"
+        },
+        {
+          "id": "advisories.child_endangerment.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/child_endangerment/intensity"
+        },
+        {
+          "id": "advisories.child_endangerment.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/child_endangerment/frequency"
+        },
+        {
+          "id": "advisories.child_endangerment.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/child_endangerment/explicitness"
+        },
+        {
+          "id": "advisories.animal_harm.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/animal_harm/presence"
+        },
+        {
+          "id": "advisories.animal_harm.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/animal_harm/depiction_modes"
+        },
+        {
+          "id": "advisories.animal_harm.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/animal_harm/intensity"
+        },
+        {
+          "id": "advisories.animal_harm.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/animal_harm/frequency"
+        },
+        {
+          "id": "advisories.animal_harm.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/animal_harm/explicitness"
+        },
+        {
+          "id": "advisories.eating_disorders.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/eating_disorders/presence"
+        },
+        {
+          "id": "advisories.eating_disorders.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/eating_disorders/depiction_modes"
+        },
+        {
+          "id": "advisories.eating_disorders.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/eating_disorders/intensity"
+        },
+        {
+          "id": "advisories.eating_disorders.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/eating_disorders/frequency"
+        },
+        {
+          "id": "advisories.eating_disorders.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/eating_disorders/explicitness"
+        },
+        {
+          "id": "advisories.self_harm.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/self_harm/presence"
+        },
+        {
+          "id": "advisories.self_harm.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/self_harm/depiction_modes"
+        },
+        {
+          "id": "advisories.self_harm.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/self_harm/intensity"
+        },
+        {
+          "id": "advisories.self_harm.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/self_harm/frequency"
+        },
+        {
+          "id": "advisories.self_harm.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/self_harm/explicitness"
+        },
+        {
+          "id": "advisories.suicide.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/suicide/presence"
+        },
+        {
+          "id": "advisories.suicide.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/suicide/depiction_modes"
+        },
+        {
+          "id": "advisories.suicide.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/suicide/intensity"
+        },
+        {
+          "id": "advisories.suicide.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/suicide/frequency"
+        },
+        {
+          "id": "advisories.suicide.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/suicide/explicitness"
+        },
+        {
+          "id": "advisories.sexual_violence.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/sexual_violence/presence"
+        },
+        {
+          "id": "advisories.sexual_violence.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/sexual_violence/depiction_modes"
+        },
+        {
+          "id": "advisories.sexual_violence.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/sexual_violence/intensity"
+        },
+        {
+          "id": "advisories.sexual_violence.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/sexual_violence/frequency"
+        },
+        {
+          "id": "advisories.sexual_violence.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/sexual_violence/explicitness"
+        },
+        {
+          "id": "advisories.domestic_abuse.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/domestic_abuse/presence"
+        },
+        {
+          "id": "advisories.domestic_abuse.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/domestic_abuse/depiction_modes"
+        },
+        {
+          "id": "advisories.domestic_abuse.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/domestic_abuse/intensity"
+        },
+        {
+          "id": "advisories.domestic_abuse.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/domestic_abuse/frequency"
+        },
+        {
+          "id": "advisories.domestic_abuse.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/domestic_abuse/explicitness"
+        },
+        {
+          "id": "advisories.police_brutality.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/police_brutality/presence"
+        },
+        {
+          "id": "advisories.police_brutality.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/police_brutality/depiction_modes"
+        },
+        {
+          "id": "advisories.police_brutality.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/police_brutality/intensity"
+        },
+        {
+          "id": "advisories.police_brutality.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/police_brutality/frequency"
+        },
+        {
+          "id": "advisories.police_brutality.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/police_brutality/explicitness"
+        },
+        {
+          "id": "advisories.torture.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/torture/presence"
+        },
+        {
+          "id": "advisories.torture.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/torture/depiction_modes"
+        },
+        {
+          "id": "advisories.torture.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/torture/intensity"
+        },
+        {
+          "id": "advisories.torture.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/torture/frequency"
+        },
+        {
+          "id": "advisories.torture.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/torture/explicitness"
+        },
+        {
+          "id": "advisories.kidnapping_and_confinement.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/kidnapping_and_confinement/presence"
+        },
+        {
+          "id": "advisories.kidnapping_and_confinement.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/kidnapping_and_confinement/depiction_modes"
+        },
+        {
+          "id": "advisories.kidnapping_and_confinement.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/kidnapping_and_confinement/intensity"
+        },
+        {
+          "id": "advisories.kidnapping_and_confinement.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/kidnapping_and_confinement/frequency"
+        },
+        {
+          "id": "advisories.kidnapping_and_confinement.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/kidnapping_and_confinement/explicitness"
+        },
+        {
+          "id": "advisories.pregnancy_loss.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/pregnancy_loss/presence"
+        },
+        {
+          "id": "advisories.pregnancy_loss.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/pregnancy_loss/depiction_modes"
+        },
+        {
+          "id": "advisories.pregnancy_loss.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/pregnancy_loss/intensity"
+        },
+        {
+          "id": "advisories.pregnancy_loss.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/pregnancy_loss/frequency"
+        },
+        {
+          "id": "advisories.pregnancy_loss.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/pregnancy_loss/explicitness"
+        },
+        {
+          "id": "advisories.childbirth.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/childbirth/presence"
+        },
+        {
+          "id": "advisories.childbirth.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/childbirth/depiction_modes"
+        },
+        {
+          "id": "advisories.childbirth.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/childbirth/intensity"
+        },
+        {
+          "id": "advisories.childbirth.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/childbirth/frequency"
+        },
+        {
+          "id": "advisories.childbirth.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/childbirth/explicitness"
+        },
+        {
+          "id": "advisories.discrimination.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/discrimination/presence"
+        },
+        {
+          "id": "advisories.discrimination.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/discrimination/depiction_modes"
+        },
+        {
+          "id": "advisories.discrimination.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/discrimination/intensity"
+        },
+        {
+          "id": "advisories.discrimination.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/discrimination/frequency"
+        },
+        {
+          "id": "advisories.discrimination.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/discrimination/explicitness"
+        },
+        {
+          "id": "advisories.flashing_imagery.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/flashing_imagery/presence"
+        },
+        {
+          "id": "advisories.flashing_imagery.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/flashing_imagery/depiction_modes"
+        },
+        {
+          "id": "advisories.flashing_imagery.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/flashing_imagery/intensity"
+        },
+        {
+          "id": "advisories.flashing_imagery.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/flashing_imagery/frequency"
+        },
+        {
+          "id": "advisories.flashing_imagery.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/flashing_imagery/explicitness"
+        },
+        {
+          "id": "advisories.death.presence",
+          "stored_part": "attributes",
+          "pointer": "/advisories/death/presence"
+        },
+        {
+          "id": "advisories.death.depiction_modes",
+          "stored_part": "attributes",
+          "pointer": "/advisories/death/depiction_modes"
+        },
+        {
+          "id": "advisories.death.intensity",
+          "stored_part": "attributes",
+          "pointer": "/advisories/death/intensity"
+        },
+        {
+          "id": "advisories.death.frequency",
+          "stored_part": "attributes",
+          "pointer": "/advisories/death/frequency"
+        },
+        {
+          "id": "advisories.death.explicitness",
+          "stored_part": "attributes",
+          "pointer": "/advisories/death/explicitness"
+        }
+      ]
+    }
+  },
+  "hashes": {
+    "requests/facts.PROMPT.md": "8d875ab93436a9c7459c1b0bff29d57b611a979fe9bcc89573db1d44e835df34",
+    "requests/facts.definition.json": "644fe3647c9b31b27cf72b2487aa346c2b139f594484ccea9a5efee7af3b4e72",
+    "requests/facts.schema.json": "f1e5f37f4c71d2706014bd446ebe62c6c0476c34cea75628ed22b383bc33210e",
+    "requests/targeted.PROMPT.md": "cd51cdc36079032350e7043c63eacf15042885075f0e313eed47e072c347da5d",
+    "requests/targeted.definition.json": "0bbdb7a7bb1c147a83961418676d6c14b9d8d6cb2b0546f3596e286df95c784c",
+    "requests/targeted.schema.json": "4b2ef941248f7fffcf3497779b5c301d3a38b42447779435c2d4a9530f559278",
+    "requests/vector.PROMPT.md": "20df3061719490614728c5ed338ae4fc7eeed7e30d7e8a1a41af78ab5b5dd5a5",
+    "requests/vector.definition.json": "e0c73cc3d3f41013c201faa88af9354201f4309f256b9ef3e29962563ea16dcb",
+    "requests/vector.schema.json": "b609f74811356743bb9a327f67e0c16676dbd1186a64a39afd8ba33b5f89a308"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "from": "2.0.0-draft.6",
+  "to": "2.0.0-draft.7",
+  "projection_version": "similarity-v2.2",
+  "vector_order_and_definitions_unchanged": true,
+  "numeric_additions": [
+    "characters.traumatic_backstory_dependence",
+    "characters.charisma",
+    "characters.eccentricity",
+    "horror_elements.occult_rituals",
+    "settings.community_isolation",
+    "atmosphere.sustained_dread",
+    "visuals.scenic_landscape_prominence",
+    "atmosphere.environmental_sensory_emphasis",
+    "presentation.jump_scare_frequency",
+    "storytelling.narrative_escalation",
+    "speculative.superpowers",
+    "speculative.monster_focus",
+    "activities.supernatural_hunting"
+  ],
+  "facet_additions": [
+    "visuals.dominant_colors",
+    "visuals.palette_patterns",
+    "characters.protagonist_motivations",
+    "characters.protagonist_behavioral_traits",
+    "characters.protagonist_arc_patterns",
+    "groups.types",
+    "groups.encounter_perspectives",
+    "groups.internal_dynamics",
+    "relationships.friendship_dynamics",
+    "relationships.romance_social_dynamics",
+    "world_context.depicted_weather",
+    "world_context.built_environment_character",
+    "world_context.depicted_regions",
+    "sound.ambient_sources",
+    "advisory_details.animal_harm_types",
+    "world_context.predominant_eras",
+    "world_context.depicted_decades",
+    "world_context.predominant_decades",
+    "world_context.earliest_substantial_year",
+    "world_context.latest_substantial_year"
+  ],
+  "facet_extensions": {
+    "representation.established_protagonist_traits": [
+      "adult"
+    ]
+  },
+  "advisory_additions": [],
+  "presence_additions": [],
+  "retained": "All 605 prior numeric definitions and mapping rows, 171 presence concepts, 40 facet IDs and 22 advisory topics. Existing facet options preserved; adult option and its scope clarification added.",
+  "conversion": "No runtime adapter is applied. Preserve historical raw outputs. An explicit adapter can preserve same-scope values and mark newly required fields null until assessed. Do not derive new values from correlated scores, identity, production dates or setting stereotypes.",
+  "calendar": "Two nullable signed calendar-year integers are facts, not vector scores. No year zero; bounds need not imply continuous coverage.",
+  "no_imputation": "Unknown remains null, assessed empty selections remain []. Absence claims are not certified exclusion guarantees.",
+  "not_implemented": [
+    "query planning",
+    "Jev integration",
+    "taste weights",
+    "Qdrant indexing",
+    "production migration",
+    "paid inference"
+  ]
+}

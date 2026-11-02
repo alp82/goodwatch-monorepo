@@ -1,0 +1,3911 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:goodwatch:fingerprint:v2:draft4:similarity:response",
+  "title": "GoodWatch V2 draft.4 similarity response (unknowns allowed; incomplete responses cannot publish)",
+  "type": "object",
+  "properties": {
+    "format_version": {
+      "const": "2.0.0-draft.4"
+    },
+    "title": {
+      "$ref": "#/$defs/title"
+    },
+    "scope": {
+      "$ref": "#/$defs/scope"
+    },
+    "assessment_basis": {
+      "enum": [
+        "model_knowledge",
+        "supplied_sources",
+        "mixed",
+        "unknown"
+      ]
+    },
+    "part": {
+      "const": "similarity"
+    },
+    "projection_version": {
+      "const": "similarity-v2.2"
+    },
+    "scores": {
+      "type": "object",
+      "properties": {
+        "experience": {
+          "type": "object",
+          "properties": {
+            "adrenaline": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Excitement and visceral exhilaration during viewing.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "tension": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Suspense, dread, or anticipation of an uncertain outcome.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "fear": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Fright or horror experienced, independently of horror genre membership.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "perceived_threat": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Sense that characters face harm, including harm never shown.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "romantic_feeling": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Romantic affection or longing evoked in the viewer.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "sensuality": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Erotic atmosphere or sexual tension, independently of explicit sexual depiction.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "warmth": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Affectionate, kind, or emotionally welcoming tone.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "wholesomeness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Reassurance through care, kindness, and emotional safety.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "wonder": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Awe, amazement, or fascination with discovery.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "pathos": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Acute pity, sorrow, or tragic emotional impact.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "melancholy": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Lingering, reflective sadness.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "uncanniness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Unease from the strangely familiar or almost natural.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "catharsis": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Emotional release after accumulated tension or feeling.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "nostalgia": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Longing for a remembered or imagined past evoked by the work; not release age.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "hopefulness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Optimistic outlook or belief in positive possibilities.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "bleakness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Pessimistic, despairing, or nihilistic outlook.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "emotional_intensity": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Overall strength of emotional engagement, regardless of positive or negative tone.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "stress": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Sustained pressure, discomfort, or anxiety experienced during viewing.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "uplift": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Encouragement, joy, or improved spirits evoked.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "thought_provocation": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Invitation to reflect on ideas, ethics, or interpretations beyond the immediate plot.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "playfulness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Light, mischievous, or freely inventive tone.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "sentimentality": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Overt appeal to tender feelings and emotional attachment.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "emotional_restraint": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Understated expression and withholding of overt emotional display.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "bittersweetness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Positive and painful feelings intertwined rather than merely appearing separately.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "absurdity": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Experience of incongruity, illogic, or strangeness, whether humorous or unsettling.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "escapism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Immersion away from everyday concerns; not limited to fantasy settings.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "wish_fulfillment": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Invitation to imagine desired powers, relationships, status, or ways of life.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "tranquility": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Calm, restful or meditative feeling evoked; not merely absence of tension.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "indignation": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Moral outrage or righteous anger evoked in the viewer; distinct from anger depicted by characters.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "disgust": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Revulsion evoked, independently of comic gross-out, frightening threat or grotesque visual style.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "adrenaline",
+            "tension",
+            "fear",
+            "perceived_threat",
+            "romantic_feeling",
+            "sensuality",
+            "warmth",
+            "wholesomeness",
+            "wonder",
+            "pathos",
+            "melancholy",
+            "uncanniness",
+            "catharsis",
+            "nostalgia",
+            "hopefulness",
+            "bleakness",
+            "emotional_intensity",
+            "stress",
+            "uplift",
+            "thought_provocation",
+            "playfulness",
+            "sentimentality",
+            "emotional_restraint",
+            "bittersweetness",
+            "absurdity",
+            "escapism",
+            "wish_fulfillment",
+            "tranquility",
+            "indignation",
+            "disgust"
+          ],
+          "additionalProperties": false
+        },
+        "humor": {
+          "type": "object",
+          "properties": {
+            "overall": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Overall amount and strength of comedy, independently of individual humor styles.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "situational": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humor from circumstances, misunderstandings, and complications; no episodic-format requirement.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "wit_wordplay": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humor from verbal cleverness, puns, or linguistic ambiguity.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "physical": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humor from bodily action, slapstick, or visual physical mishaps.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "cringe": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humor from embarrassment or uncomfortable social situations.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "absurdist": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humor from nonsense, illogic, or bizarre juxtapositions.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "satire": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humorous critique of institutions, behavior, or social conventions.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "parody": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humorous imitation of a recognizable work, genre, or style.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "dark": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humor about death, suffering, taboo, or tragedy.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "running_gags": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Recurring jokes whose repetition or variation creates humor.",
+              "x-measurement": "frequency",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "meta": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humor about storytelling, production, audiences, or the work itself.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "deadpan": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humor delivered with apparent seriousness or minimal emotional reaction.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "gross_out": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Humor relying on bodily fluids, disgust, or vulgar physical material.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "overall",
+            "situational",
+            "wit_wordplay",
+            "physical",
+            "cringe",
+            "absurdist",
+            "satire",
+            "parody",
+            "dark",
+            "running_gags",
+            "meta",
+            "deadpan",
+            "gross_out"
+          ],
+          "additionalProperties": false
+        },
+        "themes": {
+          "type": "object",
+          "properties": {
+            "crime": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Criminal acts and their consequences as subject matter.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "mystery": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Uncovering an important unknown as a central concern.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "war": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Armed conflict and its human or societal consequences.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "politics": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Governance, political institutions, and struggles for political power.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "radicalization": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A process of adopting increasingly extreme ideological commitments or endorsing extremist action. Distinct from existing political beliefs, ordinary persuasion, rebellion, group secrecy, and coercive group control; those alone do not establish radicalization.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "family": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Family bonds, conflict, obligations, and belonging.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "psychology": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Mental processes, internal conflict, or perception as subject matter.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "entertainment_industry": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "The business and practice of entertainment and celebrity.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "social_critique": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Examination or criticism of social arrangements and norms.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "class": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Social class, economic inequality, and mobility.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "capitalism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Economic systems organized around capital, profit, and ownership.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "consumerism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Exploration or critique of acquiring goods, consumption, brands, or possessions as a source of identity, status, or fulfillment. Distinct from capitalism as an economic system; buying or using a product alone is insufficient.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "technological_change": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Exploration of societal or personal effects of technological development, adoption, or displacement, including effects on work, relationships, institutions, and identity. Gadget presence, advanced technology, or science alone is insufficient.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "human_nature": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Explicit thematic exploration of what humans are like: capacities, impulses, morality, cooperation, cruelty, or tensions between nature and social conditioning. Ordinary human characters, emotion, or drama alone is insufficient; not a synonym for personal identity, consciousness, or existential meaning.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "faith_and_spirituality": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Religious belief, spiritual practice, or metaphysical meaning.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "business": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Commercial organizations, enterprise, and work decisions.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "finance": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Money management, financial systems, investing, or debt.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "environment": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Relationships between human activity and ecosystems.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "science": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Scientific inquiry and its ideas, practice, or consequences.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "popular_culture": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Popular media, celebrity, fandom, or shared cultural trends.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "survival": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Meeting essential needs or overcoming threats to continued life.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "adventure": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Exploration, risk, and discovery outside ordinary life.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "hacking": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Intrusion into or manipulation of computer systems.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "artificial_intelligence": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Artificial agents and their interaction with the world.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "consciousness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "The nature of subjective experience and personhood.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "identity": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Formation, discovery, concealment, or change of personal identity.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "existential_meaning": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Purpose, freedom, mortality, and the meaning of existence.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "grief": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Responses to loss and mourning.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "trauma": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Lasting effects of overwhelming or harmful experiences.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "recovery": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Processes of rebuilding after trauma, illness, or crisis.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "mental_health": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Mental health conditions, care, and lived experience.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "addiction": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Dependency and its effects on people and relationships.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "addiction_recovery": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Attempts to overcome dependency and maintain recovery.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "trust_and_betrayal": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Reliance on others, deception, and broken trust.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "coming_of_age": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Development toward adult identity, agency, or responsibility.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "coming_out": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Disclosure or recognition of LGBTQ identity in a social context.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "sexuality": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Sexual identity, desire, and their social meaning.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "gender_identity": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Gender identity and its personal or social implications. Distinct from social expectations about gender roles and from sexism; do not infer identity from conformity to or rejection of a role.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "gender_roles": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Exploration of social expectations, norms, or performances of masculinity, femininity, and gendered roles. Distinct from a person's gender identity and from sexism as discrimination; either may coexist without implying the other.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "immigration": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Migration across borders and the experience of settlement.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "displacement": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Loss of home or community through conflict, coercion, or other forces.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "gentrification": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Neighborhood change associated with investment and displacement.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "surveillance": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Monitoring, privacy, and control through observation.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "disease_and_pandemics": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Population-level disease transmission, epidemics, pandemics or public-health response matter as subjects. Personal diagnosis, dying and care are assessed separately as illness_and_dying.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "climate_change": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Climate processes, human causes, or consequences.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "inherited_wealth": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Inheritance, dynastic wealth, and intergenerational economic advantage.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "social_media": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Online social platforms and their effects on life.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "public_shaming": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Public condemnation, reputational punishment, or social exclusion.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "justice": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Fairness, accountability, punishment, and redress.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "guilt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Responsibility, remorse, and moral burden.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "forgiveness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Letting go of blame or reconciling after harm.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "loyalty": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Commitment to people, groups, or principles under pressure.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "belonging": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Acceptance, community, and finding a place among others.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "loneliness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Isolation and unmet desire for connection.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "ambition": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Pursuit of achievement, status, or recognition.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "obsession": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Consuming fixation and its consequences.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "labor": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Working conditions, worker identity, organizing, and exploitation.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "colonialism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Colonial domination, resistance, and its legacies.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "racism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Racial discrimination and its personal or structural consequences.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "sexism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Discrimination or domination based on sex or gender.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "caregiving": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Responsibility for another person's everyday support and wellbeing.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "parenthood": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Becoming or being a parent and its consequences.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "aging": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Later life, changing capacities, and social experiences of aging.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "midlife": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Reassessment and transitions in middle adulthood.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "retirement": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Leaving paid work and adjusting to life afterward.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "early_adulthood": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Independence, work, and relationships in early adult life.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "education": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Learning, schooling, and educational institutions.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "artistic_creation": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Making art and the motivations or struggles involved.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "persuasion_and_propaganda": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Shaping public or interpersonal belief through persuasion, spin, PR, advertising, propaganda or disinformation is a subject of the work; do not label the work itself propaganda from this score.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "illness_and_dying": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Personal illness, diagnosis, living with illness, dying or end-of-life care is a subject; distinct from population-level epidemics.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "corruption": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Abuse of entrusted public, organizational or professional power for private gain is a subject; not all crime or ambition is corruption.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "crime",
+            "mystery",
+            "war",
+            "politics",
+            "radicalization",
+            "family",
+            "psychology",
+            "entertainment_industry",
+            "social_critique",
+            "class",
+            "capitalism",
+            "consumerism",
+            "technological_change",
+            "human_nature",
+            "faith_and_spirituality",
+            "business",
+            "finance",
+            "environment",
+            "science",
+            "popular_culture",
+            "survival",
+            "adventure",
+            "hacking",
+            "artificial_intelligence",
+            "consciousness",
+            "identity",
+            "existential_meaning",
+            "grief",
+            "trauma",
+            "recovery",
+            "mental_health",
+            "addiction",
+            "addiction_recovery",
+            "trust_and_betrayal",
+            "coming_of_age",
+            "coming_out",
+            "sexuality",
+            "gender_identity",
+            "gender_roles",
+            "immigration",
+            "displacement",
+            "gentrification",
+            "surveillance",
+            "disease_and_pandemics",
+            "climate_change",
+            "inherited_wealth",
+            "social_media",
+            "public_shaming",
+            "justice",
+            "guilt",
+            "forgiveness",
+            "loyalty",
+            "belonging",
+            "loneliness",
+            "ambition",
+            "obsession",
+            "labor",
+            "colonialism",
+            "racism",
+            "sexism",
+            "caregiving",
+            "parenthood",
+            "aging",
+            "midlife",
+            "retirement",
+            "early_adulthood",
+            "education",
+            "artistic_creation",
+            "persuasion_and_propaganda",
+            "illness_and_dying",
+            "corruption"
+          ],
+          "additionalProperties": false
+        },
+        "narrative_engines": {
+          "type": "object",
+          "properties": {
+            "investigation": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Characters gather evidence to explain an event or identify responsibility.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "pursuit": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "An extended chase or hunt organizes the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "rescue": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Saving someone from captivity or danger organizes the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "escape": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Getting out of confinement or an unsafe situation organizes the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "quest": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A journey toward a defined objective organizes the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "competition": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A contest with rivals and an outcome organizes the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "relationship_development": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Changes in a relationship organize the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "everyday_life": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Ordinary routines and small events organize the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "survival": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Remaining alive under threatening conditions organizes the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "heist": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Planning, carrying out, or dealing with a theft organizes the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "espionage": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Secret intelligence gathering or covert state operations organize the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "military_operation": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "An organized military mission structures the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "legal_case": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Court proceedings, formal adjudication or preparation for a legal case organize the story. Legislative debate or a political committee hearing alone belongs to political_struggle.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "political_struggle": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Pursuit or exercise of political power structures the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "investigation",
+            "pursuit",
+            "rescue",
+            "escape",
+            "quest",
+            "competition",
+            "relationship_development",
+            "everyday_life",
+            "survival",
+            "heist",
+            "espionage",
+            "military_operation",
+            "legal_case",
+            "political_struggle"
+          ],
+          "additionalProperties": false
+        },
+        "tropes": {
+          "type": "object",
+          "properties": {
+            "underdog_rise": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "An initially disadvantaged character gains standing or succeeds against stronger opposition.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "revenge": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Retaliation for a perceived wrong drives an arc.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "fall_from_grace": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A character loses status, reputation, or moral standing.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "redemption": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A character attempts to make amends or change after wrongdoing.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            }
+          },
+          "required": [
+            "underdog_rise",
+            "revenge",
+            "fall_from_grace",
+            "redemption"
+          ],
+          "additionalProperties": false
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "romantic_development": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Formation or deepening of a romantic relationship matters to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "established_couple": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "An ongoing romantic partnership matters to the story; former partners or separated co-parents alone belong to breakup_or_divorce or parent_child.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "breakup_or_divorce": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Ending a partnership matters to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "partner_bereavement": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Loss of a romantic partner matters to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "love_triangle": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Competing romantic attachments among three people matter to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "forbidden_romance": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A romantic relationship faces a consequential social or institutional prohibition.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "friendship": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Non-romantic bonds of friendship matter to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "mentor_mentee": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Guidance and learning between mentor and mentee matter to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "rivalry": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Competition or mutual opposition between characters matters to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "forced_proximity": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Circumstances oblige characters to remain close or share space.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "adversaries_cooperate": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Characters with genuinely opposing goals cooperate in a consequential shared undertaking; friendly peers in different industries are not automatically adversaries.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "found_family": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Chosen bonds serve a family-like role in the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "family_conflict": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Sustained conflict or harmful dysfunction within a family matters to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "intergenerational": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Relationships across generations matter to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "generational_trauma": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Trauma transmitted or repeated across generations matters to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "parent_child": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "The relationship between parent and child matters to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "siblings": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Sibling relationships matter to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "caregiver_dependent": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Care and dependence between characters matter to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "human_animal_companionship": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "An emotional bond between a person and animal matters to the story.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "coercive_relationship": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Manipulation, coercion, or control within an interpersonal relationship matters to the story. Systematic control of members by a group is assessed separately as coercive_group_control; neither automatically implies the other.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "coercive_group_control": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A group or leader systematically controls members through intimidation, isolation, dependency, punishment, or suppression of autonomy. Distinct from interpersonal coercion, voluntary discipline, secrecy, and radicalization; any of these may coexist but does not imply group control.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "romantic_development",
+            "established_couple",
+            "breakup_or_divorce",
+            "partner_bereavement",
+            "love_triangle",
+            "forbidden_romance",
+            "friendship",
+            "mentor_mentee",
+            "rivalry",
+            "forced_proximity",
+            "adversaries_cooperate",
+            "found_family",
+            "family_conflict",
+            "intergenerational",
+            "generational_trauma",
+            "parent_child",
+            "siblings",
+            "caregiver_dependent",
+            "human_animal_companionship",
+            "coercive_relationship",
+            "coercive_group_control"
+          ],
+          "additionalProperties": false
+        },
+        "characters": {
+          "type": "object",
+          "properties": {
+            "ensemble": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Several focal characters share narrative attention and agency.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "antihero": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A focal character departs substantially from conventional heroic ethics or behavior.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "morally_ambiguous_cast": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Moral ambiguity among multiple major characters matters to the work.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "transformation_arc": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Substantial change in a focal character's beliefs, identity, or behavior.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "intellectual_problem_solver": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A focal character's reasoning or specialized intellectual ability drives events.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "detective_lead": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A focal character acts as an investigator or detective.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "workplace_team": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A team formed through work is a central social unit.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "family_business": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A family-run business is a central social unit.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "unaccompanied_children": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Children without their usual caregivers form a central social situation.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "teen_peer_group": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Teenage friendships and peer-group dynamics form a central social situation.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "clandestine_groups": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A secret society or organized group whose membership, meetings, activities, or aims are deliberately concealed. Secrecy is the defining feature, not coercion or extremist ideology; a secret held by one person, an ordinary private friendship, or crime alone is insufficient.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "ensemble",
+            "antihero",
+            "morally_ambiguous_cast",
+            "transformation_arc",
+            "intellectual_problem_solver",
+            "detective_lead",
+            "workplace_team",
+            "family_business",
+            "unaccompanied_children",
+            "teen_peer_group",
+            "clandestine_groups"
+          ],
+          "additionalProperties": false
+        },
+        "world": {
+          "type": "object",
+          "properties": {
+            "advanced_technology": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Technology substantially beyond the work's contemporary baseline shapes its world.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "magic": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Supernatural abilities or forces understood as magic shape the world.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "simulation": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "An artificial simulation is an important layer of depicted reality. A physically staged real environment or social deception alone is not a simulation.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "virtual_reality": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Characters experience an interactive digitally mediated environment. A physical set, surveillance broadcast or deception alone is not virtual reality.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "parallel_worlds": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Coexisting alternative realities matter to the world.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "time_travel": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Movement across time outside ordinary chronological passage matters to the world.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "time_loop": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Repetition of a period of time matters to the world or narrative.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "dystopian_society": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Oppressive or deeply dysfunctional social arrangements define the world.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "post_apocalyptic": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Life after a civilization-scale catastrophe defines the world.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "spacefaring": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Travel or life beyond Earth is consequential to the world.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "robots": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Embodied artificial machines functioning as agents matter to the world; not synonymous with AI.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "myth_and_folklore": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Recognizable mythological or folkloric traditions shape the world.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "advanced_technology",
+            "magic",
+            "simulation",
+            "virtual_reality",
+            "parallel_worlds",
+            "time_travel",
+            "time_loop",
+            "dystopian_society",
+            "post_apocalyptic",
+            "spacefaring",
+            "robots",
+            "myth_and_folklore"
+          ],
+          "additionalProperties": false
+        },
+        "world_treatment": {
+          "type": "object",
+          "properties": {
+            "scientific_rigor": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Attention to scientific constraints and explanatory consistency; not an inverse of speculative freedom.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "speculative_freedom": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Freedom to use speculative premises without scientific elaboration.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "worldbuilding_depth": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Detail and interconnection in the world's institutions, history, and rules.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "magic_rule_detail": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Elaboration of rules and constraints governing magic.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "everyday_realism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Attention to plausible ordinary behavior and material conditions, independently of era.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "magical_realism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Impossible or supernatural events are treated as ordinary within an otherwise everyday world; distinct from an explicitly elaborated magic system.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "scientific_rigor",
+            "speculative_freedom",
+            "worldbuilding_depth",
+            "magic_rule_detail",
+            "everyday_realism",
+            "magical_realism"
+          ],
+          "additionalProperties": false
+        },
+        "storytelling": {
+          "type": "object",
+          "properties": {
+            "plot_velocity": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Rate at which consequential plot events occur.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "gradual_development": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Deliberate accumulation of character, relationships, or tension over time; can coexist with rapid action.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "intrigue": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Strength of curiosity about what happens or what is concealed.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "plot_complexity": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Interdependence of events, causes, and plot threads.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "interpretive_ambiguity": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Extent to which meaning or events support multiple interpretations.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "twist_frequency": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Recurrence of major reversals or revelations over the work.",
+              "x-measurement": "frequency",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "twist_impact": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Extent to which revelations alter understanding or expectations.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "nonlinearity": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Departure from chronological storytelling.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "multiple_timelines": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Use of distinct temporal strands; not necessarily time travel.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "multiple_viewpoints": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Distribution of storytelling across distinct character perspectives.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "unreliable_narration": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Uncertainty created by an unreliable narrator or viewpoint.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "unreliable_reality": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Uncertainty about which presented events or reality layers are real.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "self_reference": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Attention to the work's own storytelling or construction.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "fourth_wall_breaking": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Explicit acknowledgment of the audience or of the work as a presented fiction, including direct address. Voiceover alone is not sufficient.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "voiceover": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Use of spoken narration over images outside ordinary scene dialogue.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "dream_sequences": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Use of dreams or hallucinations as presented sequences.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "observational_mode": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Attention to behavior and environments without strong explanatory or plot intervention.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "slice_of_life": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Emphasis on ordinary experience rather than extraordinary plot escalation.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "exposition_load": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Amount of explanatory information the viewer must absorb.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "information_withholding": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Deliberate delay in supplying information needed to understand events.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "philosophical_inquiry": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Explicit exploration of philosophical questions.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "formal_challenge": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Departure from familiar formal conventions that demands adaptation.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "didacticism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "How explicitly the work states, teaches or argues a message; independent of intellectual stimulation or whether the viewer agrees.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "confined_setting": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Concentration of the work within a single location or tightly bounded connected spaces; distinct from small cast, low budget or confinement as a plot event.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "plot_velocity",
+            "gradual_development",
+            "intrigue",
+            "plot_complexity",
+            "interpretive_ambiguity",
+            "twist_frequency",
+            "twist_impact",
+            "nonlinearity",
+            "multiple_timelines",
+            "multiple_viewpoints",
+            "unreliable_narration",
+            "unreliable_reality",
+            "self_reference",
+            "fourth_wall_breaking",
+            "voiceover",
+            "dream_sequences",
+            "observational_mode",
+            "slice_of_life",
+            "exposition_load",
+            "information_withholding",
+            "philosophical_inquiry",
+            "formal_challenge",
+            "didacticism",
+            "confined_setting"
+          ],
+          "additionalProperties": false
+        },
+        "stakes": {
+          "type": "object",
+          "properties": {
+            "personal": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Consequences for an individual's life, identity, or goals.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "relationship": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Consequences for a central relationship or small social unit.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "community": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Consequences for a locality or community.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "societal": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Consequences for institutions, a society, or civilization.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "urgency": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Time pressure on consequential decisions or events.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "personal",
+            "relationship",
+            "community",
+            "societal",
+            "urgency"
+          ],
+          "additionalProperties": false
+        },
+        "dialogue": {
+          "type": "object",
+          "properties": {
+            "density": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Amount of spoken dialogue relative to the work's running time.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "dependence": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Importance of understanding dialogue to follow the work.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "monologues": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Use of extended uninterrupted speeches.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "overlap": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Use of simultaneous or overlapping speech.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "naturalistic_delivery": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Conversational delivery resembling spontaneous everyday speech.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "theatrical_delivery": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Heightened, rhetorical, or explicitly performative speech.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "density",
+            "dependence",
+            "monologues",
+            "overlap",
+            "naturalistic_delivery",
+            "theatrical_delivery"
+          ],
+          "additionalProperties": false
+        },
+        "aesthetics": {
+          "type": "object",
+          "properties": {
+            "gothic": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Ominous, decaying, or romantically macabre visual atmosphere.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "noir": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Shadowed, morally uneasy visual and atmospheric treatment, independently of crime plotting.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "retro": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Deliberately retrospective visual or sonic styling; not merely an older release.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "minimalism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Reduction of visual, sonic, or formal elements.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "stylization": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Departure from naturalistic presentation through a distinctive audiovisual treatment.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "surrealism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Dreamlike or illogical relationships in presented images and events.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "psychedelia": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Hallucinatory, distorted, or perceptually altered sensory treatment.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "grotesquerie": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Emphasis on distorted, repulsive, or biologically unsettling forms.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "camp": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Theatrical excess and conspicuous artifice with an invitation to enjoy that excess.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "ironic_distance": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Presentation that invites distance from its apparent surface meaning.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "intimacy": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Presentation fostering closeness to characters' private experience.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "spectacle": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Emphasis on impressive scale, effects, and set pieces.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "immersion": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Strength of the sensory sense of inhabiting the work's world.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "lyricism": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Poetic, associative presentation through image, language, sound or rhythm; not a synonym for slow pacing.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "transgression": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Perceptible aesthetic treatment that deliberately challenges taboos or conventions; do not infer a creator's private intent or equate explicit content alone with transgression.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "gothic",
+            "noir",
+            "retro",
+            "minimalism",
+            "stylization",
+            "surrealism",
+            "psychedelia",
+            "grotesquerie",
+            "camp",
+            "ironic_distance",
+            "intimacy",
+            "spectacle",
+            "immersion",
+            "lyricism",
+            "transgression"
+          ],
+          "additionalProperties": false
+        },
+        "visuals": {
+          "type": "object",
+          "properties": {
+            "vibrant_palette": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Use of strongly saturated colors.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "muted_palette": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Use of restrained or desaturated colors.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "warm_color": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Prominence of warm hues and lighting.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "cool_color": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Prominence of cool hues and lighting.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "low_key_lighting": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Predominance of dark lighting with selective illumination.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "high_key_lighting": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Predominance of bright, evenly illuminated scenes.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "high_contrast": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Strong contrast between light and dark regions.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "long_takes": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Prominence of extended shots without cuts; method of capture is irrelevant.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "handheld_motion": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Prominence of visibly handheld or unstable camera movement.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "symmetry": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Prominence of symmetrical composition.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "production_design_detail": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Density of expressive detail in constructed environments and props.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "cutting_pace": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Perceived rate of shot changes and editing transitions: 0 means virtually no cuts, not low quality. Distinct from rate of plot events.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "vibrant_palette",
+            "muted_palette",
+            "warm_color",
+            "cool_color",
+            "low_key_lighting",
+            "high_key_lighting",
+            "high_contrast",
+            "long_takes",
+            "handheld_motion",
+            "symmetry",
+            "production_design_detail",
+            "cutting_pace"
+          ],
+          "additionalProperties": false
+        },
+        "action": {
+          "type": "object",
+          "properties": {
+            "hand_to_hand": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Unarmed physical combat.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "martial_arts_choreography": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Combat organized around recognizable or stylized martial arts movement.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "grappling": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Combat involving holds, clinches, throws, or ground fighting.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "gunplay": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Firearms combat and shootouts.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "blade_combat": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Combat involving swords, knives, or similar blades.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "superpowered_combat": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Combat involving abilities beyond ordinary human capacities.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "chases": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Pursuits presented as action sequences.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "large_battles": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Combat involving many participants or military-scale engagement.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "gritty_combat": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Combat presented as physically punishing, messy, and effortful.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "stylized_violence": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Violence presented through conspicuously aestheticized movement or imagery.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "realistic_violence": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Violence presented with plausible physical consequences and vulnerability.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "hand_to_hand",
+            "martial_arts_choreography",
+            "grappling",
+            "gunplay",
+            "blade_combat",
+            "superpowered_combat",
+            "chases",
+            "large_battles",
+            "gritty_combat",
+            "stylized_violence",
+            "realistic_violence"
+          ],
+          "additionalProperties": false
+        },
+        "horror_modes": {
+          "type": "object",
+          "properties": {
+            "possession": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "A supernatural entity inhabits or takes control of a person as a horror mechanism. Explicitly excludes psychological dissociation, an alternate personality without supernatural inhabitation, ordinary manipulation or influence, and merely owning or using a magical object.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "body_horror": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Transformation, violation, or instability of the body matters to the horror.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "folk_horror": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Folk belief, ritual, landscape, or insular tradition matters to the horror.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "cosmic_horror": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Human insignificance before incomprehensible forces matters to the horror.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "psychological_horror": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Perception, mental distress, or internal instability drives the horror.",
+              "x-measurement": "centrality",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "possession",
+            "body_horror",
+            "folk_horror",
+            "cosmic_horror",
+            "psychological_horror"
+          ],
+          "additionalProperties": false
+        },
+        "sound": {
+          "type": "object",
+          "properties": {
+            "design_prominence": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Expressive prominence of non-musical sound design; not a quality judgment.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "ambient_soundscapes": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Use of environmental sound to create atmosphere.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "silence": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Expressive use of silence or near silence.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "sparse_score": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Use of little or no non-diegetic score.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "audio_startles": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Abrupt sound events intended to startle.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "music_dependence": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Importance of music to emotional or narrative understanding.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            },
+            "musical_numbers": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Prominence of song or dance sequences functioning as narrative expression.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "design_prominence",
+            "ambient_soundscapes",
+            "silence",
+            "sparse_score",
+            "audio_startles",
+            "music_dependence",
+            "musical_numbers"
+          ],
+          "additionalProperties": false
+        },
+        "ending": {
+          "type": "object",
+          "properties": {
+            "conflict_resolution": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Extent to which central dramatic conflicts receive an outcome; independent of happiness.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "interpretive_openness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Extent to which the ending permits multiple interpretations.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "emotional_closure": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Extent of emotional completion or release at the ending.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "happiness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Positive emotional outcome for focal characters at the ending.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "tragedy": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Loss, defeat, or suffering defining the ending.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            },
+            "bittersweetness": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Intertwined positive and painful outcomes at the ending.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": true
+            }
+          },
+          "required": [
+            "conflict_resolution",
+            "interpretive_openness",
+            "emotional_closure",
+            "happiness",
+            "tragedy",
+            "bittersweetness"
+          ],
+          "additionalProperties": false
+        },
+        "viewing_demands": {
+          "type": "object",
+          "properties": {
+            "sensory_intensity": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Strength and density of audiovisual stimulation.",
+              "x-measurement": "intensity",
+              "x-applicability": "all",
+              "x-spoiler-sensitive": false
+            }
+          },
+          "required": [
+            "sensory_intensity"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "experience",
+        "humor",
+        "themes",
+        "narrative_engines",
+        "tropes",
+        "relationships",
+        "characters",
+        "world",
+        "world_treatment",
+        "storytelling",
+        "stakes",
+        "dialogue",
+        "aesthetics",
+        "visuals",
+        "action",
+        "horror_modes",
+        "sound",
+        "ending",
+        "viewing_demands"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "format_version",
+    "title",
+    "scope",
+    "assessment_basis",
+    "part",
+    "projection_version",
+    "scores"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "title": {
+      "type": "object",
+      "properties": {
+        "catalog_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "release_year": {
+          "type": "integer"
+        },
+        "media_type": {
+          "enum": [
+            "movie",
+            "show"
+          ]
+        }
+      },
+      "required": [
+        "catalog_id",
+        "name",
+        "release_year",
+        "media_type"
+      ],
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "movie",
+            "whole_show",
+            "season",
+            "episode"
+          ]
+        },
+        "season_number": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "episode_number": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date"
+        },
+        "coverage_description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "covered_seasons": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "covered_episode_ids": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edition_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "season_number",
+        "episode_number",
+        "as_of",
+        "coverage_description",
+        "covered_seasons",
+        "covered_episode_ids",
+        "edition_id"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

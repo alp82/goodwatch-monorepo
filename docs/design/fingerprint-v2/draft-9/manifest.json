@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0-draft.9",
+  "projection_version": "similarity-v2.3",
+  "counts": {
+    "vector": 274,
+    "content_attributes": 314,
+    "viewing_context": 21,
+    "series_attributes": 8,
+    "evaluations": 10
+  },
+  "numeric_fields": 627,
+  "vector_dimensions": 274,
+  "attributes_scores": 353,
+  "presence_concepts": 171,
+  "fixed_facets": 64,
+  "multiselect_facets": 53,
+  "calendar_year_facets": 2,
+  "boolean_facets": 6,
+  "presence_state_facets": 3,
+  "advisory_topics": 22,
+  "field_catalog_entries": 972,
+  "source_hashes": {
+    "definition.json": "468f8f923677d0ea2d1d16e2852a4434ab040918f708d01dfa6f54154d5ff02c",
+    "mapping.json": "1a980561231bb0b659b1d458907755575024a55b55c36b077f26778af22fb111",
+    "attributes.schema.json": "4e3f979c842b8aaf6077bc7daaba76fb63ee77ed116c2b42db66f29a34e2e370",
+    "catalog-ownership.json": "c0f9b3ea0708cc9d650d3072145663c00aee4b7e00e8728c338331b7d10ed79f"
+  },
+  "output_hashes": {
+    "definition.json": "57a6471fb6917deed175ce97e4da0a1dea4957754ddf43d7e65b46c6c198d251",
+    "mapping.json": "de45620a9b7c2fff6bbc787ca7dadb0089551ac1219e8bfad0844eac78536c4c",
+    "vector.schema.json": "b25f69b6d35f89d22994659df02e32569cc79abafd437e5915f9cdb70a865312",
+    "vector.response.schema.json": "bd3d64d883af4d1cbdb636fe4ac029c0a6f40f8e27b4e50550737c8887ddf24b",
+    "attributes.schema.json": "ab51b543cabe12a23213e8081922bcea6c3ffdd9dc145d806f6c6ebb99bf0c6d",
+    "field-catalog.json": "7885b0cb7e452670844764aecba9bcaae3d52db6301d7d50bf8de415fa0c7739",
+    "vector.definition.json": "8503d0bed4aadb5c6d2bb7e11481ed385c7f19be405e2af98edddf766d04d17d",
+    "attributes.definition.json": "6174d627cfb39016e31bd23be3360bee01fe82ce2da4b09fce5b341f25f69cc8",
+    "catalog-ownership.json": "eda4ba55b689f30584b094f491a5ddcd3100ff15dca6cfd68a57b74be91ada2b",
+    "migration.json": "a2b2af4aea69052b56978a547ea54b5fcc5135a326a792fef4d3f8d640b06d7e",
+    "schema-overview.md": "48b83eca15bb962156b8b1b9f8ddc433a7f3aebec67de5e036ebd80b780ab9fd",
+    "examples/vector.synthetic.json": "e9fdeaf75265760f9c61ed90062dd0adcf9535fbc4a651a36c5c5302c1d99903",
+    "examples/attributes.synthetic.json": "93761a5d097709fd9045de6d013d4a0174908df791c8b60c2f67f9a3532cb7a0",
+    "vector.readable.json": "fc85656b1ce9988d29f870a67bc86458e939bd5337abf0634d2f4803e595cf6f",
+    "vector.readable.md": "40e7d975f289e03b3a8c0fb16932b2b0639375ab386ab36701e931418a4933be",
+    "attributes.readable.json": "1c3509d6923c8a547ef7b54096c8ccbadd1107dcc95d347b50213a3d9cc55965",
+    "attributes.readable.md": "9232c4350f7a16896b582cd7146d385f9fc032d1687c772383c7deed2b4f84bc"
+  }
+}

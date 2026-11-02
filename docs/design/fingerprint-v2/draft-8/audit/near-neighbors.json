@@ -1,0 +1,229 @@
+[
+  {
+    "id": "survival",
+    "fields": [
+      "themes.survival",
+      "narrative_engines.survival",
+      "genres.survival_thriller",
+      "tropes.apocalypse_survival"
+    ],
+    "decision": "Subject of staying alive versus events organized around immediate survival versus genre conventions versus collapse-specific arc. A retrospective survival drama need not have an ongoing survival engine. Two vector fields are close; retain provisionally and flag their contribution for judged-pair assessment.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "mystery",
+    "fields": [
+      "themes.mystery",
+      "narrative_engines.investigation",
+      "genres.mystery",
+      "storytelling.intrigue",
+      "viewing_affordances.theorizing"
+    ],
+    "decision": "Uncovering an important unknown can matter without characters gathering evidence. Intrigue is audience curiosity; theorizing is optional speculation. Mystery theme and investigation remain near-neighbors, not proven independent.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "adventure",
+    "fields": [
+      "themes.adventure",
+      "narrative_engines.quest",
+      "genres.adventure",
+      "experience.escapism",
+      "activities.travel"
+    ],
+    "decision": "Exploration/risk as subject differs from a defined-objective journey. Travel can be ordinary; escapism can occur without travel or adventure. Retain distinct meanings without assuming equal independent distance contributions.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "recovery",
+    "fields": [
+      "themes.addiction",
+      "themes.addiction_recovery",
+      "themes.recovery",
+      "themes.illness_and_dying",
+      "themes.trauma"
+    ],
+    "decision": "Dependency, attempts to overcome dependency, and rebuilding after any crisis are nested but distinguishable. A non-recovery addiction story and non-addiction recovery story differ. All three vector coordinates may overrepresent an addiction-recovery title; empirical redundancy remains open.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "belief",
+    "fields": [
+      "themes.faith_and_spirituality",
+      "world.myth_and_folklore",
+      "horror_modes.folk_horror",
+      "horror_elements.occult_rituals"
+    ],
+    "decision": "Faith/spiritual meaning need not manifest in world mythology, and mythology can be secular fantasy. Folk horror adds a horror mechanism; occult rituals require actual ceremonies rather than unfamiliar religion. No merge.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "simulation",
+    "fields": [
+      "world.simulation",
+      "world.virtual_reality",
+      "world_context.reality_layers",
+      "storytelling.unreliable_reality"
+    ],
+    "decision": "Simulated reality can operate without a character entering interactive VR; VR is a mediated experience. Physical staged reality and deceptive perception are different. Both numeric coordinates retained; simulation definition/presence clarified and versioned. A physically staged layer does not forbid another digital layer in the same work.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "startles",
+    "fields": [
+      "sound.audio_startles",
+      "presentation.jump_scare_frequency",
+      "presentation.jump_scares",
+      "presentation.jump_scare_modalities",
+      "atmosphere.sustained_dread",
+      "experience.fear"
+    ],
+    "decision": "Audio-startle intensity, recurrence of all audiovisual jump scares, occurrence and modality answer different questions. A single strong audio startle can differ from many weak visual startles. Dread/fear are not startle counts. Retain; co-generate frequency and its dependent facets.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "political_economy",
+    "fields": [
+      "themes.business",
+      "themes.capitalism",
+      "themes.consumerism",
+      "themes.finance",
+      "themes.politics",
+      "narrative_engines.political_struggle",
+      "occupations.business"
+    ],
+    "decision": "Enterprise subject, economic systems, consumption identity, finance, governance, plot engine and professional activity are distinguishable. The thematic cluster can receive disproportionate vector representation; do not count apparent name diversity as independence.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "crime_ideology",
+    "fields": [
+      "themes.radicalization",
+      "characters.transformation_arc",
+      "tropes.fall_from_grace",
+      "themes.crime",
+      "groups.types",
+      "groups.internal_dynamics"
+    ],
+    "decision": "Ideological adoption process differs from moral descent, crime and established group identity. Radicalization clarified; no cross-field auto-derivation.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "voice_and_address",
+    "fields": [
+      "storytelling.voiceover",
+      "storytelling.fourth_wall_breaking",
+      "presentation.narration_sources",
+      "humor.meta",
+      "storytelling.self_reference"
+    ],
+    "decision": "Narration can never acknowledge an audience; explicit address can occur without narration or comedy. Sources are categories rather than intensity. Existing boundaries retained.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "romance",
+    "fields": [
+      "relationships.romantic_development",
+      "narrative_engines.relationship_development",
+      "relationships.established_couple",
+      "relationships.marriage",
+      "relationships.breakup_or_divorce"
+    ],
+    "decision": "Romantic development is one relation type; the engine covers organizing change in any relationship. Existing partnership, marriage and separation can coexist across a whole work but not follow automatically from one another.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "dance",
+    "fields": [
+      "activities.dancing",
+      "performance.dance_prominence",
+      "performance.dance_styles",
+      "performance.dance_contexts",
+      "sound.musical_numbers"
+    ],
+    "decision": "Narrative centrality, perceptual prominence, style, context and expressive musical-number treatment differ. Occurrence can have zero plot centrality. Co-locate dance presence and dependent fields; no new coordinates.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "dependence",
+    "fields": [
+      "viewing_demands.franchise_knowledge",
+      "viewing_affordances.standalone_viewing",
+      "series.serialized_dependence",
+      "series.episodic_independence",
+      "viewing_affordances.drop_in_viewing",
+      "viewing_affordances.interruption_recovery"
+    ],
+    "decision": "Outside-installment knowledge, standalone comprehension, within-show continuity, joining midway and regaining a previously followed story differ. Franchise-knowledge/standalone is the strongest likely inverse pair: retain as attributes for acceptance, mark a merge candidate if judgments cannot distinguish them.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "visual_color",
+    "fields": [
+      "visuals.vibrant_palette",
+      "visuals.muted_palette",
+      "visuals.restricted_palette",
+      "visuals.warm_color",
+      "visuals.cool_color",
+      "visuals.dominant_colors",
+      "visuals.palette_patterns",
+      "format_facts.color_process"
+    ],
+    "decision": "Saturation, palette breadth, temperature, named colors, relationships and color/monochrome presentation differ. Warm and cool can coexist in different substantial sequences. No pixel-level precision or grading-process claim follows.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "time_setting",
+    "fields": [
+      "world_context.eras",
+      "world_context.predominant_eras",
+      "world_context.relative_periods",
+      "world_context.depicted_decades",
+      "world_context.predominant_decades",
+      "world_context.earliest_substantial_year",
+      "world_context.latest_substantial_year",
+      "world_context.calendar_systems"
+    ],
+    "decision": "Occurrence, dominance, release-relative period, numbered decades and exact boundaries offer different precision. New calendar correspondence prevents fictional epoch numbers from becoming CE facts. Partial known era with unknown dates is valid. Release date remains catalog-owned.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "age_identity",
+    "fields": [
+      "characters.older_adult_protagonist",
+      "characters.teen_protagonist",
+      "characters.child_protagonist",
+      "characters.female_protagonist",
+      "representation.established_protagonist_traits",
+      "themes.aging",
+      "themes.midlife"
+    ],
+    "decision": "Focal-role centrality differs from established categorical traits and subject matter. Older-adult anchor clarified to about65+/explicit late life; actor age and parenthood excluded. Whole-work tags do not bind all traits to the same protagonist.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "craft",
+    "fields": [
+      "evaluations.acting",
+      "evaluations.writing",
+      "evaluations.dialogue",
+      "evaluations.characterization",
+      "evaluations.narrative_cohesion",
+      "dialogue.naturalistic_delivery"
+    ],
+    "decision": "Quality of execution is distinct from amount/style. Writing contains several craft components intentionally exposed for enthusiast preferences; these are attributes, not added general-vector coordinates. Animation voice performance is explicitly eligible. Exact quality integers remain interpretive.",
+    "empirical_independence_established": false
+  },
+  {
+    "id": "harm",
+    "fields": [
+      "advisories.animal_harm.presence",
+      "advisories.death.presence",
+      "advisories.violence.presence",
+      "advisories.gore.presence",
+      "advisory_details.animal_harm_types"
+    ],
+    "decision": "Animal harm, death, violence and graphic detail are overlapping but not interchangeable. Natural death need not be violent; harm need not kill. Harm types support exclusions but unknown cannot satisfy absence. Depicted fictional harm is not a claim of harm during production.",
+    "empirical_independence_established": false
+  }
+]
