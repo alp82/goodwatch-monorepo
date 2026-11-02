@@ -52,7 +52,9 @@ Directions already established by the user's request:
   explicit requests. Assumptions such as a guessed audience age or the direction
   of controversial ratings are marked with ≈ and explained on inspection.
 
-Verdict: B's grouped hierarchy has potential per user feedback. Awaiting choice
-among its color/negation treatments; no production design has been promoted. Rewrite the selected design as production code; remove the DEV gate and
+Verdict: the user selected B2 (color notes), with applied filters shown last,
+after remaining search text and fingerprint preferences. Long-query editing,
+repeated query labels and empty-state treatment remain open design questions.
+No production design has been promoted. Rewrite the selected design as production code; remove the DEV gate and
 losing variations from main after selection. The prototype's capture branch is
 `prototype/search-interpretation-ui`, with context in issue #726.

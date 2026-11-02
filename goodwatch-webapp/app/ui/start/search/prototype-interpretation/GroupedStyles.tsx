@@ -113,7 +113,7 @@ export function ColorNotes({
 	const qualities = items.filter((t) => t.kind === "fingerprint")
 	return (
 		<div className="ir-grouped ir-notes">
-			<Filters items={items} open={open} />
+			<Filters items={items.filter((t) => t.kind === "text")} open={open} />
 			{qualities.length > 0 && (
 				<div className="ir-b-row">
 					<span className="ir-b-label">Fingerprint</span>
@@ -124,6 +124,7 @@ export function ColorNotes({
 					</div>
 				</div>
 			)}
+			<Filters items={items.filter((t) => t.kind === "filter")} open={open} />
 		</div>
 	)
 }
