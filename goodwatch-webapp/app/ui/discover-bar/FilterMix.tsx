@@ -187,11 +187,13 @@ export function FilterMix({
 				onClick={() => setOpen((o) => !o)}
 				className={`flex min-h-12 flex-col items-end justify-center gap-1 rounded-lg text-right cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[150px]" : "w-[188px]"}`}
 			>
-				<span className={`flex w-full items-baseline justify-between gap-x-2 ${phone ? "flex-wrap" : ""}`}>
+				<span className="flex w-full items-baseline justify-between gap-x-2">
 					<CountText counts={counts} searching={searching} />
-					<span className="text-[11px] whitespace-nowrap text-gray-500">
-						{hidden > 0 ? `${compactCount(hidden)} hidden` : ""}
-					</span>
+					{!phone && (
+						<span className="text-[11px] whitespace-nowrap text-gray-500">
+							{hidden > 0 ? `${compactCount(hidden)} hidden` : ""}
+						</span>
+					)}
 				</span>
 				<Stack shown={total} rows={rows} className="h-2 w-full" />
 			</button>
@@ -210,6 +212,12 @@ export function FilterMix({
 							{total.toLocaleString("en")} of{" "}
 							{(total + hidden).toLocaleString("en")}{" "}
 							{searching ? "candidate matches" : "titles"}
+							{phone && hidden > 0 && (
+								<span className="font-normal text-gray-500">
+									{" "}
+									· {compactCount(hidden)} hidden
+								</span>
+							)}
 						</p>
 
 						<Stack shown={total} rows={rows} className="mt-2.5 h-2.5 w-full" />
