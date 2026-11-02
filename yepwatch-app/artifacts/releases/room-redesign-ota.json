@@ -37,5 +37,24 @@
     }
   },
   "nativeFingerprints": "runtimes match installed build 16 on both platforms; no native inputs changed",
-  "rollback": "server and OTA together: build 16's embedded bundle cannot read the new snapshot"
+  "rollback": "server and OTA together: build 16's embedded bundle cannot read the new snapshot",
+  "followUps": [
+    {
+      "commit": "0b8ffd72a",
+      "what": "refused command no longer ends the room",
+      "ota": {
+        "ios": "01a199a4-592b-70d8-bb65-ddd90bee8329",
+        "android": "01a199a4-c582-7c8f-afaa-d0ea80756df1"
+      }
+    },
+    {
+      "commit": "f7c7fcb26..77bb78b72",
+      "what": "join screen rebuilt, title highlights (scores, fingerprint, people, certification, tagline), GoodWatch score display, Cheer button removed (poster still cheers), Watch on links direct (stream links up to 180 days), preload without member settings",
+      "ota": {
+        "ios": "01a199ce-984f-7679-820a-ecf99cf732d5",
+        "android": "01a199cf-06a7-711d-840e-59b2ad6c91c2"
+      },
+      "productionE2E": "passed 2026-11-02 01:12 UTC; Tonight link Watch on Disney+ via JustWatch click-through to disneyplus.com"
+    }
+  ]
 }
