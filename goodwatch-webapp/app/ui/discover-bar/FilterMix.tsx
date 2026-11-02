@@ -211,7 +211,7 @@ export function FilterMix({
 						<p className="text-sm font-bold text-white">
 							{total.toLocaleString("en")} of{" "}
 							{(total + hidden).toLocaleString("en")}{" "}
-							{searching ? "candidate matches" : "titles"}
+							{searching ? "matches" : "titles"}
 							{phone && hidden > 0 && (
 								<span className="font-normal text-gray-500">
 									{" "}
