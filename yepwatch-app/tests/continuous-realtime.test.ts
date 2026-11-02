@@ -55,7 +55,7 @@ function harness(overrides: Partial<RealtimeOptions> = {}) {
     },
     serverClock: () => undefined,
     authorityError: () => undefined,
-    random: () => 0.5,
+    random: () => 0,
     later: (fn, ms) => {
       const id = ++counter;
       jobs.set(id, { fn, ms });
@@ -205,7 +205,7 @@ test('rising revisions during own refresh are repaired again; a failed refresh r
   await tick();
   retry.sockets[0].frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
   await tick();
-  retry.run(500);
+  retry.run(1000);
   await tick();
   assert.equal(attempts, 2);
   assert.equal(
@@ -339,7 +339,7 @@ test('never gives up: after many failures it keeps trying every 15 s at most', a
   for (let i = 0; i < 30; i++) {
     const waits = [...h.jobs.values()].map((j) => j.ms);
     assert.equal(waits.length, 1);
-    assert.ok(waits[0] <= 15000);
+    assert.ok(waits[0] <= 19500);
     h.run(waits[0]);
     await tick();
   }
@@ -378,5 +378,63 @@ test('Refresh (reconnectNow) skips the wait, keeps a live socket, and restarts a
   h.client.reconnectNow();
   await tick();
   assert.equal(tickets, 3, 'a stopped channel starts again');
+  h.client.stop();
+});
+
+test('the resync read backs off with jitter and never reads before a server Retry-After, including 429', async () => {
+  let reads = 0;
+  const failures = [
+    new RoomFailure('limit_reached', 'Slow down', 429, undefined, undefined, true, 30),
+    new RoomFailure('busy', 'Service unavailable', 503, undefined, undefined, true, 2),
+  ];
+  let random = 0.5;
+  const h = harness({
+    random: () => random,
+    privateRead: async () => {
+      reads++;
+      const e = failures.shift();
+      if (e) throw e;
+    },
+  });
+  h.client.start();
+  await tick();
+  const s = h.sockets[0];
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  await tick();
+  assert.equal(reads, 1);
+  // 429 Retry-After 30 s is the floor, with jitter on top (×1.15 at random 0.5).
+  const repairWait = () => [...h.jobs.values()].map((j) => j.ms).filter((ms) => ms !== 3000 && ms !== 20000 && ms !== 35000 && ms !== 10000);
+  assert.deepEqual(repairWait(), [34500]);
+  // A newer revision during the wait does not read early.
+  s.frame({ type: 'room.updated', snapshot: { ...continuousFixture().shared, revision: 2 } });
+  await tick();
+  assert.equal(reads, 1);
+  assert.deepEqual(repairWait(), [34500]);
+  random = 0.2;
+  h.run(34500);
+  await tick();
+  assert.equal(reads, 2);
+  // 503 Retry-After 2 s beats the 2 s second step; jitter still applies (×1.06).
+  assert.deepEqual(repairWait(), [2120]);
+  h.run(2120);
+  await tick();
+  assert.equal(reads, 3);
+  assert.deepEqual(repairWait(), []);
+  h.client.stop();
+});
+test('a busy ticket answer with Retry-After is a floor for the reconnect wait', async () => {
+  let tickets = 0;
+  const h = harness({
+    ticket: async () => {
+      if (++tickets === 1) throw new RoomFailure('limit_reached', 'Slow down', 429, undefined, undefined, true, 8);
+      return { ticket: 'fresh', expiresAt: Date.now() + 10000, websocketPath: '/api/yepwatch/v1/proposal/realtime' };
+    },
+  });
+  h.client.start();
+  await tick();
+  assert.deepEqual([...h.jobs.values()].map((j) => j.ms), [8000]);
+  h.run(8000);
+  await tick();
+  assert.equal(tickets, 2);
   h.client.stop();
 });

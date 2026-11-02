@@ -17,11 +17,18 @@ interface Failure {
 function failure(error: unknown): Failure {
   return error instanceof Error ? error as Error & Failure : {};
 }
+/**
+ * Keep the saved request unless the API itself refused it. Only an API JSON error with a non-retryable
+ * code is a definitive refusal; anything else (no answer, a proxy or gateway page with any status,
+ * including 404 while the server restarts, a network error, exhausted retries) may hide a request that
+ * already succeeded, so dropping it could make a second room on the next try.
+ */
 export function retainRequest(error: unknown): boolean {
   const e = failure(error);
+  if (!e.code || e.code === 'outcome_unknown') return true;
   if ([401, 403, 404, 410].includes(Number(e.status)) ||
       ['unauthorized', 'forbidden', 'not_found', 'expired'].includes(String(e.code))) return false;
-  return !e.code || e.code === 'outcome_unknown' || e.code === 'busy' || e.retryable === true;
+  return e.code === 'busy' || e.retryable === true;
 }
 export function retryDeadline(error: unknown, now = Date.now()): number {
   if (!retainRequest(error)) return 0;

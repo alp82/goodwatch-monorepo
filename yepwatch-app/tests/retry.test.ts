@@ -55,6 +55,15 @@ test('terminal statuses override retryable while legacy busy/unknown remain comp
     assert.equal(retainRequest(e),false); assert.equal(retryDeadline(e,1000),0);
   }
   for (const code of ['busy','outcome_unknown']) assert.equal(retainRequest(new RoomFailure(code,'Legacy')),true);
+  // Only the API's own JSON refusal ends a saved request: proxy pages (any status, 404 included while the
+  // server restarts), network errors and exhausted retries may hide a request that already succeeded.
+  for (const status of [undefined,401,403,404,410,429,502,503]) {
+    const proxy=new RoomFailure('outcome_unknown','No API answer',status);
+    assert.equal(retainRequest(proxy),true,`proxy ${status}`); assert.ok(retryDeadline(proxy,1000)>1000);
+  }
+  assert.equal(retainRequest(new Error('Failed to fetch')),true);
+  for (const e of [new RoomFailure('not_found','Gone',404),new RoomFailure('invalid_request','Bad',400),new RoomFailure('catalog_unavailable','No',503)])
+    assert.equal(retainRequest(e),false,e.code);
   for (const retryable of [false,true]) {
     let saved: CommandEnvelope|null=null;
     const q=new PersistentCommands(()=> 'id',{write:async e=>{saved=e;}});

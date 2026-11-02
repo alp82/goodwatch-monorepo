@@ -12,7 +12,7 @@ import {
 import type { SocketLike, Connection } from '../realtime';
 import { RoomFailure } from './api-client';
 import { parseFrame } from './wire';
-import { backoffDelay, BACKOFF_MAX_MS } from './backoff';
+import { backoffDelay, serverWait } from './backoff';
 type Timer = ReturnType<typeof setTimeout> | number;
 export interface RealtimeOptions {
   roomId: string;
@@ -51,6 +51,8 @@ export class ContinuousRealtime {
   private repairTimer?: Timer;
   private failures = 0;
   private repairFailures = 0;
+  /** Epoch ms before which the resync read must not run again (backoff or server Retry-After). */
+  private repairAt = 0;
   private reading?: Promise<void>;
   private dirty = false;
   private session: string | null = null;
@@ -179,28 +181,46 @@ export class ContinuousRealtime {
   private repair() {
     this.dirty = true;
     if (this.reading) return;
+    // A failed read set a deadline: newer revisions (or a reconnect) wait for it instead of reading early.
+    const wait = this.repairAt - Date.now();
+    if (wait > 0) {
+      if (this.repairTimer === undefined) this.scheduleRepair(wait);
+      return;
+    }
     this.reading = (async () => {
       while (this.active && this.dirty) {
         this.dirty = false;
         try {
           await this.o.privateRead();
           this.repairFailures = 0;
+          this.repairAt = 0;
           this.clear(this.repairTimer);
           this.repairTimer = undefined;
-        } catch {
-          // The resync read keeps trying (backing off to 15 s) while the room is open, even if no later
-          // revision arrives: a restart can take the API down longer than the socket.
+        } catch (e) {
+          // The resync read keeps trying (backing off to 15 s, jittered) while the room is open, even if no
+          // later revision arrives: a restart can take the API down longer than the socket. A server
+          // Retry-After (busy, 429 rate limit) is a floor, never shortened.
           if (this.active) {
-            const delay = Math.min(BACKOFF_MAX_MS, 500 * 2 ** Math.min(5, this.repairFailures++));
-            this.clear(this.repairTimer);
-            this.repairTimer = this.later(() => this.repair(), delay);
+            const delay = backoffDelay(this.repairFailures++, this.o.random ?? Math.random, serverWait(e));
+            this.repairAt = Date.now() + delay;
+            this.scheduleRepair(delay);
           }
+          return;
         }
       }
     })().finally(() => {
       this.reading = undefined;
       if (this.active && this.dirty) this.repair();
     });
+  }
+  private scheduleRepair(ms: number) {
+    this.clear(this.repairTimer);
+    this.repairTimer = this.later(() => {
+      // The timer is the deadline's authority (tests and slow clocks alike).
+      this.repairTimer = undefined;
+      this.repairAt = 0;
+      this.repair();
+    }, ms);
   }
   private retry(epoch: number, minimum = 0) {
     if (!this.active || epoch !== this.epoch) return;
@@ -311,7 +331,7 @@ export class ContinuousRealtime {
         this.stop();
         this.o.authorityError(e);
         this.o.status(e.code === 'expired' || e.status === 410 ? 'expired' : 'unavailable');
-      } else this.retry(epoch);
+      } else this.retry(epoch, serverWait(e));
     }
   }
 }

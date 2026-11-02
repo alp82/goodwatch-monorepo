@@ -194,3 +194,75 @@ test('Back during admission cooldown allows reopening the saved request without 
   await page.getByRole('button',{name:'Create a room',exact:true}).click();
   await expect(action).toBeDisabled();await expect(action).toHaveText(/Retry in/);expect(posts).toBe(1);
 });
+
+test('a lost create response followed by proxy 404s keeps the saved request; the manual retry ends in the same room', async ({ page }) => {
+  // About 40 s of automatic retries (1-2-4-8-15 s with jitter, at least the 2 s fallback gate) before the error.
+  test.setTimeout(120_000);
+  const room = await common(page);
+  // A fake API that is idempotent per command id, like the real one: it counts rooms actually created.
+  const rooms = new Map<string, string>();
+  const bodies: GuestAdmissionRequest[] = [];
+  await page.route('**/proposal/rooms', async (route) => {
+    const body = route.request().postDataJSON() as GuestAdmissionRequest; bodies.push(body);
+    if (bodies.length >= 2 && bodies.length <= 6)
+      // The server is restarting: the proxy answers its own 404 page, never reaching the API.
+      return route.fulfill({ status: 404, contentType: 'text/html', body: '<html><body>404 page not found</body></html>' });
+    if (!rooms.has(body.commandId)) rooms.set(body.commandId, `room-${rooms.size + 1}`);
+    // The first answer is lost on the way back: the room exists, the app never hears of it.
+    if (bodies.length === 1) return route.abort('failed');
+    return route.fulfill({ json: { credential: { roomId: 'test-room', participantId: 'host', token: '', expiresAt: room.shared.expiresAt }, snapshot: room, invite: { code: 'fixture-invite', path: '/r/fixture-invite' } } });
+  });
+  const action = await open(page, 'create', '');
+  await action.click();
+  await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toBeVisible({ timeout: 90_000 });
+  expect(bodies).toHaveLength(6);
+  const stored = await page.evaluate(() => JSON.parse(sessionStorage.getItem('yepwatch.v3.admission.') ?? 'null'));
+  expect(stored?.request).toEqual(bodies[0]);
+  await expect(action).toBeEnabled();
+  await action.click();
+  await page.waitForURL('**/room/test-room**');
+  expect(bodies).toHaveLength(7);
+  for (const body of bodies) expect(body).toEqual(bodies[0]);
+  expect(rooms.size).toBe(1);
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('yepwatch.v3.admission.'))).toBeNull();
+});
+
+for (const leave of ['panel', 'background'] as const) test(`automatic admission retries stop when the ${leave === 'panel' ? 'panel is dismissed' : 'app goes to the background'}, keeping the saved request`, async ({ page }) => {
+  test.setTimeout(60_000);
+  await common(page);
+  const bodies: GuestAdmissionRequest[] = [];
+  await page.route('**/proposal/rooms', (route) => { bodies.push(route.request().postDataJSON()); return route.abort('failed'); });
+  const action = await open(page, 'create', '');
+  await action.click();
+  await expect(action).toHaveText('Connecting…');
+  await expect.poll(() => bodies.length).toBe(2);
+  if (leave === 'panel') {
+    await page.getByRole('button', { name: 'Back to Start', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Create a room', exact: true })).toBeVisible();
+  } else {
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+  }
+  const sent = bodies.length;
+  // Longer than the next two backoff steps (2 s + 4 s with jitter): nothing more goes out, nothing navigates.
+  await page.waitForTimeout(8_000);
+  expect(bodies).toHaveLength(sent);
+  expect(page.url()).not.toContain('/room/');
+  const stored = await page.evaluate(() => JSON.parse(sessionStorage.getItem('yepwatch.v3.admission.') ?? 'null'));
+  expect(stored?.request).toEqual(bodies[0]);
+  await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toHaveCount(0);
+  if (leave === 'background') await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  else await page.getByRole('button', { name: 'Create a room', exact: true }).click();
+  // The saved request comes back for a manual retry with the same identity.
+  await expect(action).toBeEnabled();
+  await expect(action).toHaveText(/Retry room request|Retry in \d+s/);
+  await expect(action).toHaveText('Retry room request');
+  await action.click();
+  await expect.poll(() => bodies.length).toBe(sent + 1);
+  expect(bodies[sent]).toEqual(bodies[0]);
+});

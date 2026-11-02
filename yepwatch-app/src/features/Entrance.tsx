@@ -3,7 +3,7 @@ import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnos
 import { EdgeBack } from './glow/EdgeBack';
 import { guestOnly } from '../core/config';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { BackHandler, Platform, View } from 'react-native';
+import { AppState, BackHandler, Platform, View } from 'react-native';
 import { GText, Press, glow } from './glow/theme';
 import { router, useFocusEffect } from 'expo-router';
 import * as Crypto from 'expo-crypto';
@@ -51,8 +51,17 @@ export function Entrance({ invite }: { invite?: string }) {
   const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
-  const mounted = useRef(true);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  // The running admission (with its automatic retries). Leaving the screen, closing its panel or sending
+  // the app to the background cancels it: pending waits end, no new attempt starts, nothing navigates
+  // afterwards, and the saved request stays for a manual retry.
+  const attempt = useRef<AbortController | null>(null);
+  const cancelAttempt = useCallback(() => { attempt.current?.abort(); attempt.current = null; }, []);
+  useEffect(() => cancelAttempt, [cancelAttempt]);
+  useFocusEffect(useCallback(() => cancelAttempt, [cancelAttempt]));
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => { if (state !== 'active') cancelAttempt(); });
+    return () => sub.remove();
+  }, [cancelAttempt]);
   const [error, setError] = useState('');
   const [diagnostic, setDiagnostic] = useState<ConnectionDiagnostic | undefined>();
   const [checkingInvite, setCheckingInvite] = useState(Boolean(invite));
@@ -145,6 +154,10 @@ export function Entrance({ invite }: { invite?: string }) {
   async function enter(join: boolean, member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string) {
     if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || waiting(admission)) return;
     inFlight.current = true;
+    attempt.current?.abort();
+    const controller = new AbortController();
+    attempt.current = controller;
+    const { signal } = controller;
     setRecoveryDismissed(false);
     setBusy(true);
     setError('');
@@ -174,8 +187,10 @@ export function Entrance({ invite }: { invite?: string }) {
       const request = saved;
       // A restart answers busy or not at all for a while: send the same saved request again by itself
       // (same command id and secret, so it can never make a second room), and only then show an error.
-      await retryTransient(() => admit(request), { retries: AUTO_RETRIES, retryAt: retryDeadline, alive: () => mounted.current });
+      await retryTransient(() => admit(request, signal), { retries: AUTO_RETRIES, retryAt: retryDeadline, signal });
     } catch (e) {
+      // Cancelled (the screen went away): the request saved before the submit stays for a manual retry.
+      if (signal.aborted) return;
       setError(transientFailure(e) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : e instanceof Error ? e.message : 'Could not join this room.');
       setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
       if (saved) {
@@ -185,12 +200,19 @@ export function Entrance({ invite }: { invite?: string }) {
         catch { setError('Your request is still awaiting confirmation, but storage is unavailable. Keep this screen open to retry.'); }
       }
     } finally {
+      if (attempt.current === controller) attempt.current = null;
       inFlight.current = false;
       setBusy(false);
     }
   }
   /** One admission submit of the saved request; on success it opens the room. */
-  async function admit(saved: AdmissionRecovery) {
+  async function admit(saved: AdmissionRecovery, signal: AbortSignal) {
+    /** Nothing opens once the person has left: the room (if made) waits in Your rooms. */
+    const go = (target: Parameters<typeof router.push>[0], replace: boolean) => {
+      if (signal.aborted) return;
+      if (replace) router.replace(target);
+      else router.push(target);
+    };
     const member = saved.member === true;
     // A prior failed write may have retained this request only in memory.
     // Persist the exact bootstrap before EVERY possible admission submit.
@@ -198,13 +220,13 @@ export function Entrance({ invite }: { invite?: string }) {
     setAdmission(saved);
     let result;
     if (saved.code) {
-      const { roomId } = await api.resolve(saved.code);
+      const { roomId } = await api.resolve(saved.code, signal);
       const stored = await loadAccess(roomId);
       // Manual code entry has the same recovery guard as a direct invitation.
       if (!nativeClient || stored) {
         try {
           const access = stored ?? { roomId, participantId: '', token: '', expiresAt: 0 };
-          const snapshot = await api.snapshot(access);
+          const snapshot = await api.snapshot(access, signal);
           await saveAccess({
             roomId,
             participantId: snapshot.own.participantId,
@@ -219,10 +241,11 @@ export function Entrance({ invite }: { invite?: string }) {
           });
           await writeAdmission(intent, null);
           await rememberName(saved.request.nickname);
-          router.replace({
+          setAdmission(null);
+          go({
             pathname: '/room/[id]',
             params: { id: roomId, ...(member ? { signin: '1' } : {}) },
-          });
+          }, true);
           return;
         } catch (e) {
           if (
@@ -232,8 +255,8 @@ export function Entrance({ invite }: { invite?: string }) {
             throw e;
         }
       }
-      result = await api.join(roomId, { ...saved.request, inviteCode: saved.code }, stored ?? undefined);
-    } else result = await api.create(saved.request);
+      result = await api.join(roomId, { ...saved.request, inviteCode: saved.code }, stored ?? undefined, signal);
+    } else result = await api.create(saved.request, signal);
     await saveAccess(result.credential);
     queryClient.setQueryData(
       roomKey(result.credential.roomId),
@@ -248,12 +271,11 @@ export function Entrance({ invite }: { invite?: string }) {
     // A new room opens on its Mood step, above the room page and the start page (Back returns through both);
     // a member's new room links the account first, then opens Mood.
     const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(member ? { signin: '1' } : {}), ...(saved.code ? {} : { fresh: '1' }) } };
-    if (saved.code) router.replace(target);
-    else router.push(target);
+    go(target, Boolean(saved.code));
   }
   const known = home.nickname;
   const locked = busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
-  const closePanel = useCallback(() => { setError(''); setRecoveryDismissed(true); setPanel(null); if (invite) router.replace('/'); }, [invite]);
+  const closePanel = useCallback(() => { cancelAttempt(); setError(''); setRecoveryDismissed(true); setPanel(null); if (invite) router.replace('/'); }, [invite, cancelAttempt]);
   const recoveryPanel = !recoveryDismissed && (admission || restoreFailed || recoveryBlocked);
   useFocusEffect(useCallback(() => {
     if (Platform.OS !== 'android' || (!panel && !recoveryPanel)) return;

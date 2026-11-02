@@ -107,13 +107,13 @@ export class ContinuousApi {
       signal?.removeEventListener('abort', abort);
     }
   }
-  create = (body: GuestAdmissionRequest) => this.request<GuestAdmission>(paths.rooms, body);
-  resolve = (code: string) => this.request<{ roomId: string }>(paths.resolveInvite, { code });
+  create = (body: GuestAdmissionRequest, signal?: AbortSignal) => this.request<GuestAdmission>(paths.rooms, body, undefined, signal);
+  resolve = (code: string, signal?: AbortSignal) => this.request<{ roomId: string }>(paths.resolveInvite, { code }, undefined, signal);
   invitePreview = async (code: string): Promise<InvitePreview> =>
     invitePreviewSchema.parse(await this.request<unknown>(paths.invitePreview, { code }));
-  join = (id: string, body: JoinRoomRequest, access?: RoomAccess) =>
-    this.request<GuestAdmission>(paths.join(id), body, access);
-  snapshot = (a: RoomAccess) => this.request<RoomSnapshot>(paths.snapshot(a.roomId), undefined, a);
+  join = (id: string, body: JoinRoomRequest, access?: RoomAccess, signal?: AbortSignal) =>
+    this.request<GuestAdmission>(paths.join(id), body, access, signal);
+  snapshot = (a: RoomAccess, signal?: AbortSignal) => this.request<RoomSnapshot>(paths.snapshot(a.roomId), undefined, a, signal);
   command = (a: RoomAccess, c: CommandEnvelope) =>
     this.request<CommandResult>(paths.commands(a.roomId), c, a);
   ticket = (a: RoomAccess) => this.request<RealtimeTicket>(paths.realtimeTicket(a.roomId), {}, a);
