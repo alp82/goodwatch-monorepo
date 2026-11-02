@@ -4,10 +4,10 @@ import { useNavigate, useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
 
 export const LOOKS = [
-	{ key: "A", name: "Left, links under the field" },
-	{ key: "B", name: "Center, links in the field" },
-	{ key: "C", name: "Center, pills under the field" },
-	{ key: "D", name: "Center, one example at a time" },
+	{ key: "A", name: "Links under the field" },
+	{ key: "B", name: "Links in the field" },
+	{ key: "C", name: "Pills under the field" },
+	{ key: "D", name: "One example under the field" },
 	{ key: "E", name: "Two decks" },
 ] as const
 export type Look = (typeof LOOKS)[number]["key"]

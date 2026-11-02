@@ -1,4 +1,5 @@
 // PROTOTYPE (discover-field): five looks for Discover's search field, chosen by ?variant= (see prototype-field-switcher).
+// Round 2: the text is always left-aligned and vertically centered; the looks differ in how the examples sit below it.
 // Easy never shows the Search label; Advanced shows it once there is text. Examples under the field hide in Advanced,
 // where the filter bar continues the field. Ready to watch stays inside the field on desktop.
 import {
@@ -54,7 +55,7 @@ function TryLinks({ run, center }: { run: (text: string) => void; center?: boole
 
 function TryPills({ run }: { run: (text: string) => void }) {
 	return (
-		<div className="flex items-center gap-2 overflow-x-auto px-px py-px whitespace-nowrap [scrollbar-width:none] lg:justify-center">
+		<div className="flex items-center gap-2 overflow-x-auto px-px py-px whitespace-nowrap [scrollbar-width:none]">
 			{TRY.map((item) => (
 				<button
 					key={item.label}
@@ -89,7 +90,7 @@ function TryOne({ run }: { run: (text: string) => void }) {
 					type="button"
 					tabIndex={i === index ? 0 : -1}
 					onClick={() => run(item.query ?? item.label)}
-					className={`absolute inset-x-0 cursor-pointer text-center text-[13px] text-gray-400 transition duration-500 outline-none hover:text-amber-300 focus-visible:text-amber-300 ${i === index ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"}`}
+					className={`absolute left-0 cursor-pointer text-left text-[13px] text-gray-400 transition duration-500 outline-none hover:text-amber-300 focus-visible:text-amber-300 ${i === index ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"}`}
 				>
 					Try “{item.label}”
 				</button>
@@ -126,9 +127,9 @@ export function DescribeField({
 		onSearch(value)
 	}
 
-	const centered = look !== "A"
-	const twoLines = look === "B" || look === "D"
-	const below = look === "A" || look === "C"
+	const centered = false
+	const twoLines = look === "B"
+	const below = look === "A" || look === "C" || look === "D"
 	const decks = look === "E"
 	const label = advanced && filled
 
@@ -215,10 +216,9 @@ export function DescribeField({
 						{twoLines && (
 							<div
 								className={`absolute inset-x-0 bottom-3 transition-opacity duration-150 lg:bottom-4 ${filled ? "pointer-events-none opacity-0" : "opacity-100"}`}
-								style={{ paddingLeft: Math.max(0, rightWidth - 16) }}
 								{...(filled ? { inert: "" } : {})}
 							>
-								{look === "B" ? <TryLinks run={run} center /> : <TryOne run={run} />}
+								<TryLinks run={run} />
 							</div>
 						)}
 						{filled && (
@@ -271,8 +271,14 @@ export function DescribeField({
 					{...(hideBelow ? { inert: "" } : {})}
 				>
 					<div className="overflow-hidden">
-						<div className={`pt-2.5 ${look === "A" ? "pl-4 lg:pl-8" : ""}`}>
-							{look === "A" ? <TryLinks run={run} /> : <TryPills run={run} />}
+						<div className="pt-2.5 pl-4 lg:pl-8">
+							{look === "A" ? (
+								<TryLinks run={run} />
+							) : look === "C" ? (
+								<TryPills run={run} />
+							) : (
+								<TryOne run={run} />
+							)}
 						</div>
 					</div>
 				</div>
