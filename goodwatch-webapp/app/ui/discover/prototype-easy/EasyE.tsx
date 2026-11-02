@@ -46,9 +46,6 @@ export function EasyE({ e, empty = "summary", after }: { e: Easy; empty?: EmptyK
 				className="shrink-0 flex-nowrap!"
 			/>
 			{locked && <LockedUnseen />}
-			<button type="button" onClick={e.customize} className="shrink-0 cursor-pointer pr-8 text-[12px] font-semibold text-amber-400 hover:text-amber-300">
-				More filters
-			</button>
 		</div>
 	)
 }

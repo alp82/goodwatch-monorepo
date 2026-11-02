@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import type { EasyApi } from "~/ui/discover-bar/DiscoverControls"
 import type { Attach } from "~/ui/discover/prototype-easy/attached"
 import type { Examples } from "~/ui/discover/prototype-easy/ProtoSearch"
+import type { BarLook } from "~/ui/discover/prototype-easy/BarLooks"
 import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
@@ -97,6 +98,7 @@ export interface DiscoverPageProps {
 		inside?: (ctx: EasyContext & EasyApi) => ReactNode
 		attach: Attach
 		examples?: Examples
+		barLook?: BarLook
 	}
 }
 
@@ -510,6 +512,7 @@ export function DiscoverPage({
 								renderReading: proto.reading && ((api) => proto.reading?.(easyCtx(api))),
 								attach: proto.attach,
 								examples: proto.examples,
+								barLook: proto.barLook ?? "today",
 							}
 						}
 						className="mt-3 lg:mt-5"

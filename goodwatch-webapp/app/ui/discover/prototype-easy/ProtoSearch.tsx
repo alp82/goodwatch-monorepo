@@ -67,6 +67,7 @@ export function ProtoSearch({
 	lead,
 	trail,
 	examples,
+	flatBottom,
 }: {
 	query: string | null
 	onClear: () => void
@@ -80,6 +81,8 @@ export function ProtoSearch({
 	trail?: ReactNode
 	/** Example searches: a small menu while the empty field has focus, or the placeholder cycling through them. */
 	examples?: Examples
+	/** Advanced with the tray look: the filter row continues the bar, so its bottom corners go square. */
+	flatBottom?: boolean
 }) {
 	const { run, busy } = useInterpretedSearch()
 	// The field shows what was typed, not only the part left as search text.
@@ -216,32 +219,30 @@ export function ProtoSearch({
 					submit()
 				}}
 				className={`group relative flex items-stretch bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition focus-within:bg-white/[0.07] focus-within:ring-2 focus-within:ring-amber-400/60 ${
-					phone ? "rounded-[22px] pl-4" : "rounded-[32px] pl-7"
+					phone ? "rounded-[22px] pl-4" : `pl-8 ${flatBottom ? "rounded-t-[32px] rounded-b-none" : "rounded-[32px]"}`
 				}`}
 			>
-				<div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 py-3.5 pr-3">
-					<div className="flex items-center">
-						<label className="flex min-w-0 flex-1 cursor-text flex-col justify-center">
-							<span className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-amber-300/90 uppercase">
-								<MagnifyingGlassIcon className="h-3.5 w-3.5" aria-hidden />
-								Search
-							</span>
-							<input
-								value={text}
-								onChange={(e) => setText(e.target.value)}
-								placeholder={placeholder}
-								aria-label="Search by mood, plot, or title"
-								className={`brand-header search-private w-full min-w-0 bg-transparent leading-tight text-white placeholder:text-gray-500 focus:outline-none ${
-									phone ? "text-[19px]" : "text-[21px]"
-								}`}
-							/>
-						</label>
-						{clearButton}
-					</div>
+				<div className={`flex min-w-0 flex-1 flex-col justify-center ${phone ? "gap-1.5 py-3.5 pr-2" : "gap-2 py-[18px] pr-3"}`}>
+					<label className="flex min-w-0 cursor-text flex-col justify-center gap-0.5">
+						<span className="flex items-center gap-1 text-[10px] font-bold tracking-[0.1em] text-amber-300/80 uppercase">
+							<MagnifyingGlassIcon className="h-3 w-3" aria-hidden />
+							Search
+						</span>
+						<input
+							value={text}
+							onChange={(e) => setText(e.target.value)}
+							placeholder={placeholder}
+							aria-label="Search by mood, plot, or title"
+							className={`brand-header search-private w-full min-w-0 bg-transparent leading-tight text-white placeholder:text-gray-500 focus:outline-none ${
+								phone ? "text-[20px]" : "text-[25px]"
+							}`}
+						/>
+					</label>
 					{tryRow}
 				</div>
+				{clearButton && <div className="flex shrink-0 items-center pr-3">{clearButton}</div>}
 				{trail && <span className="w-px shrink-0 self-stretch bg-white/10" aria-hidden />}
-				<div className="flex shrink-0 items-center gap-1 pr-2.5 pl-1">
+				<div className="flex shrink-0 items-center gap-1 pr-3 pl-1.5">
 					{trail}
 					{submitButton}
 				</div>

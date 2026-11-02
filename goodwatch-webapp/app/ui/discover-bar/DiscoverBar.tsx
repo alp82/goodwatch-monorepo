@@ -85,7 +85,7 @@ function MoodHues({ value, size }: { value: TabValue; size: number }) {
 }
 
 /** What leads a segment's value line. */
-function Lead({
+export function Lead({
 	value,
 	providers,
 	phone,
@@ -121,7 +121,7 @@ function Lead({
 }
 
 /** The value line's text: the search in large type, a value, the guest's "Sign up", or the placeholder. */
-function ValueText({ value, phone }: { value: TabValue; phone: boolean }) {
+export function ValueText({ value, phone }: { value: TabValue; phone: boolean }) {
 	if (value.tab === "search" && !value.plain && (value.query || !value.value))
 		return (
 			<span

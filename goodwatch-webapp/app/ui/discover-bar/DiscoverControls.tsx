@@ -9,6 +9,7 @@
 // open (the Search segment after "/"), except after a press outside, which keeps focus where it landed. The phone sheet
 // returns focus to the control that opened it, and closing phone Find returns it to the magnifier.
 import { type Attach, AttForYou, AttReady, AttSort, Divider } from "~/ui/discover/prototype-easy/attached"
+import { type BarLook, BarLookRow } from "~/ui/discover/prototype-easy/BarLooks"
 import { type Examples, ProtoSearch } from "~/ui/discover/prototype-easy/ProtoSearch"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
@@ -165,6 +166,8 @@ export interface DiscoverControlsProps {
 		/** A line inside the search field, under the text, in both modes. */
 		renderInside?: (api: EasyApi) => ReactNode
 		modeTabs: ReactNode
+		/** How Advanced's filter row is drawn on desktop. */
+		barLook: BarLook
 		/** How Ready to watch, Sort and (Advanced) For you attach to the search bar. */
 		attach: Attach
 		examples?: Examples
@@ -534,13 +537,14 @@ function DiscoverControlsContent({
 							lead={lead}
 							trail={trail}
 							examples={proto.examples}
+							flatBottom={proto.mode === "advanced" && proto.barLook === "tray" && desktop}
 						/>
 					</>
 				)}
 				<AnimatePresence initial={false}>
 				{(!proto || proto.mode === "advanced") && (<motion.div
 					key="advanced"
-					className={proto ? "mt-3" : ""}
+					className={proto ? (proto.barLook === "tray" && desktop ? "" : "mt-3") : ""}
 					initial={proto ? { height: 0, opacity: 0, overflow: "hidden" } : false}
 					animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
 					exit={{ height: 0, opacity: 0, overflow: "hidden" }}
@@ -548,36 +552,56 @@ function DiscoverControlsContent({
 				>
 				<div className="hidden lg:block">
 					<div className="relative">
+						{proto && proto.barLook !== "today" && proto.barLook !== "tray" ? (
+							<BarLookRow
+								look={proto.barLook}
+								values={barValues}
+								active={desktop ? open : null}
+								onPick={(next) => (next === open ? close() : openTab(next))}
+								providers={providers}
+								barRef={barRef}
+								panelId={panelId}
+							/>
+						) : (
+							<div
+								className={
+									proto?.barLook === "tray"
+										? "[&>[role=group]]:rounded-t-none [&>[role=group]]:rounded-b-[32px] [&>[role=group]]:border-t [&>[role=group]]:border-white/[0.06] [&>[role=group]]:bg-white/[0.03]"
+										: ""
+								}
+							>
 						<DiscoverBar
-							values={barValues}
-							active={desktop ? open : null}
-							onPick={(next) => (next === open ? close() : openTab(next))}
-							onClearSearch={onClearSearch}
-							providers={providers}
-							barRef={barRef}
-							panelId={panelId}
-							search={
-								desktop && open && !proto ? (
-									<div className="flex items-center gap-2">
-										<SearchInput
-											value={text}
-											onChange={(value) => {
-												setText(value)
-												toSearch()
-											}}
-											onFocus={toSearch}
-											onEnter={() => runSearch(text)}
-											onEscape={close}
-											inputRef={field}
-										/>
-										<SearchButton
-											onClick={() => runSearch(text)}
-											empty={!typed}
-										/>
+									values={barValues}
+									active={desktop ? open : null}
+									onPick={(next) => (next === open ? close() : openTab(next))}
+									onClearSearch={onClearSearch}
+									providers={providers}
+									barRef={barRef}
+									panelId={panelId}
+									search={
+										desktop && open && !proto ? (
+											<div className="flex items-center gap-2">
+												<SearchInput
+													value={text}
+													onChange={(value) => {
+														setText(value)
+														toSearch()
+													}}
+													onFocus={toSearch}
+													onEnter={() => runSearch(text)}
+													onEscape={close}
+													inputRef={field}
+												/>
+												<SearchButton
+													onClick={() => runSearch(text)}
+													empty={!typed}
+												/>
+											</div>
+										) : undefined
+									}
+								/>
 									</div>
-								) : undefined
-							}
-						/>
+						)}
 						<AnimatePresence>
 							{desktop && open !== null && (
 								<DiscoverPanel

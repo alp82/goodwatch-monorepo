@@ -5,11 +5,12 @@
 import { useSearchParams } from "@remix-run/react"
 import { DiscoverPage, type DiscoverPageProps } from "../DiscoverPage"
 import { EasyE } from "./EasyE"
+import type { BarLook } from "./BarLooks"
 import { ModeSwitch, useMode } from "./kit"
 import { PrototypeSwitcher } from "./Switcher"
 import type { Easy } from "./types"
 
-type V = { key: string; name: string; examples?: "chips" | "links" | "composer"; today?: boolean }
+type V = { key: string; name: string; barLook?: BarLook; today?: boolean }
 /** Example searches for a young audience; each runs through the interpreter like typed text. */
 const TRY = [
 	"cozy anime",
@@ -20,9 +21,11 @@ const TRY = [
 ]
 
 const VARIANTS: V[] = [
-	{ key: "T2", name: "Taller, links under the text", examples: "links" },
-	{ key: "T1", name: "Taller, chips under the text", examples: "chips" },
-	{ key: "D", name: "Round 11 (no examples)" },
+	{ key: "A", name: "Advanced: today's bar", barLook: "today" },
+	{ key: "B", name: "Advanced: tray under the search", barLook: "tray" },
+	{ key: "C", name: "Advanced: pills", barLook: "chips" },
+	{ key: "D", name: "Advanced: cards", barLook: "cards" },
+	{ key: "E", name: "Advanced: icon segments", barLook: "icons" },
 	{ key: "0", name: "Today", today: true },
 ]
 
@@ -46,7 +49,8 @@ export function EasyDiscover(props: DiscoverPageProps) {
 								modeSwitch: <ModeSwitch />,
 								attach: "rowsort",
 								reading: (e) => <EasyE e={e} empty="moods" />,
-								examples: v.examples && { how: v.examples, list: TRY },
+								examples: { how: "links", list: TRY },
+								barLook: v.barLook,
 							}
 				}
 			/>
