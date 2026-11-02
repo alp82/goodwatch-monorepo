@@ -2,13 +2,13 @@
 // interpreter (/api/discover/interpret): the words it understands become Discover filters in the URL, the rest stays
 // the search text (q), so Advanced shows the same filters as controls.
 import { ArrowRightIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
-import { useNavigate } from "@remix-run/react"
+import { useNavigate, useSearchParams } from "@remix-run/react"
 import { type ReactNode, useEffect, useState } from "react"
 import type { DiscoverInterpretation } from "~/server/discover-query.server"
 
 /** URL keys that aren't filters: kept through a search, left out of what the interpreter reads. */
-const PAGE_KEYS = ["mode", "variant"]
-const DROP_KEYS = ["q", "page", "allTitles", "sort", "layout"]
+const PAGE_KEYS = ["mode", "variant", "as"]
+const DROP_KEYS = ["q", "asked", "page", "allTitles", "sort", "layout"]
 
 /** The last interpretation per search text, so the readout can say which filters came from the words. */
 export const interpreted = new Map<string, { typed: string; result: DiscoverInterpretation }>()
@@ -32,6 +32,8 @@ export function useInterpretedSearch() {
 			const result = (await response.json()) as DiscoverInterpretation
 			for (const [k, v] of new URLSearchParams(result.params)) out.append(k, v)
 			interpreted.set(out.get("q") ?? "", { typed, result })
+			// What was typed stays in the field, also when every word became a filter and no search text is left.
+			out.set("asked", typed)
 		} catch {
 			// Without the interpreter the words are searched as they are.
 			for (const [k, v] of existing) out.append(k, v)
@@ -70,7 +72,8 @@ export function ProtoSearch({
 }) {
 	const { run, busy } = useInterpretedSearch()
 	// The field shows what was typed, not only the part left as search text.
-	const typed = query !== null ? (interpreted.get(query)?.typed ?? query) : ""
+	const [params] = useSearchParams()
+	const typed = params.get("asked") ?? (query !== null ? (interpreted.get(query)?.typed ?? query) : "")
 	const [text, setText] = useState(typed)
 	useEffect(() => setText(typed), [typed])
 	const submit = () => {

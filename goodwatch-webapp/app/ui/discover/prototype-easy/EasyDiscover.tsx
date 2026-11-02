@@ -1,21 +1,21 @@
-// PROTOTYPE (discover-easy): Easy and Advanced are one page. Round 8: Easy is the search, Ready to watch and Sort;
-// For you joins in Advanced, and the bar slides in under the search. Variants attach Ready and Sort to the search bar
-// in different ways (phones always use the lip). `as=member` shows the member state over the guest's data; variant 0 is today's page.
+// PROTOTYPE (discover-easy): Easy and Advanced are one page. Round 9 baseline (owner picked round 8 E): Ready to watch
+// attached to the search bar, Sort over the results at the reading line's end; For you joins in Advanced and the bar
+// slides in under the search. Variants change what the reading line shows while nothing is searched or filtered. `as=member` shows the member state over the guest's data; variant 0 is today's page.
 import { useSearchParams } from "@remix-run/react"
 import { DiscoverPage, type DiscoverPageProps } from "../DiscoverPage"
 import { EasyE } from "./EasyE"
-import type { Attach } from "./attached"
+import type { EmptyKind } from "./Empty"
 import { ModeSwitch, useMode } from "./kit"
 import { PrototypeSwitcher } from "./Switcher"
 import type { Easy } from "./types"
 
-type V = { key: string; name: string; attach?: Attach; today?: boolean }
+type V = { key: string; name: string; empty?: EmptyKind; today?: boolean }
 const VARIANTS: V[] = [
-	{ key: "A", name: "Bar end", attach: "end" },
-	{ key: "B", name: "Segments", attach: "segments" },
-	{ key: "C", name: "Lip", attach: "lip" },
-	{ key: "D", name: "Ready first", attach: "prefix" },
-	{ key: "E", name: "Sort over results", attach: "rowsort" },
+	{ key: "A", name: "Filters: none", empty: "summary" },
+	{ key: "B", name: "Try examples", empty: "examples" },
+	{ key: "C", name: "Quick adds", empty: "quick" },
+	{ key: "D", name: "Moods", empty: "moods" },
+	{ key: "E", name: "Type switch", empty: "type" },
 	{ key: "0", name: "Today", today: true },
 ]
 
@@ -37,8 +37,8 @@ export function EasyDiscover(props: DiscoverPageProps) {
 								mode,
 								setMode,
 								modeSwitch: <ModeSwitch />,
-								attach: v.attach ?? "end",
-								reading: (e) => <EasyE e={e} />,
+								attach: "rowsort",
+								reading: (e) => <EasyE e={e} empty={v.empty} />,
 							}
 				}
 			/>

@@ -211,6 +211,7 @@ export function DiscoverPage({
 			(previous) => {
 				const out = new URLSearchParams(previous)
 				out.delete("q")
+				out.delete("asked")
 				out.delete("allTitles")
 				out.delete("page")
 				if (sort && sort !== "relevance") out.set("sort", sort)

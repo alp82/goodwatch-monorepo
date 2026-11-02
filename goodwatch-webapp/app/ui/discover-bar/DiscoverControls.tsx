@@ -421,7 +421,7 @@ function DiscoverControlsContent({
 			const out = { ...s, onMyServices: on, anyService: undefined, services: undefined }
 			return member ? { ...out, notSeenYet: on, seenBefore: on ? undefined : out.seenBefore } : out
 		})
-	const attach: Attach | undefined = proto ? (desktop ? proto.attach : "lip") : undefined
+	const attach: Attach | undefined = proto ? (desktop || proto.attach === "rowsort" ? proto.attach : "lip") : undefined
 	const look = attach === "segments" ? "segment" : attach === "lip" ? "lip" : "inline"
 	const advanced = proto?.mode === "advanced"
 	const attReady = <AttReady on={readyOn} toggle={toggleReady} member={member} look={look} short={!desktop} />
@@ -454,7 +454,7 @@ function DiscoverControlsContent({
 				<Divider />
 				{attSort}
 			</div>
-		) : attach === "rowsort" ? (
+		) : attach === "rowsort" && desktop ? (
 			<div className="mr-2 flex h-full items-center">
 				<Divider />
 				{attReady}
@@ -673,6 +673,9 @@ function DiscoverControlsContent({
 						{/* The reading of the search (unless the lip holds it), Sort over the results (rowsort), and the phone tabs. */}
 						<motion.div layout="position" className="mt-3 flex min-h-8 flex-wrap items-center gap-x-5 gap-y-2 lg:flex-nowrap">
 							{(attach !== "lip" || !desktop) && <div className="order-last flex min-w-0 basis-full lg:order-1 lg:flex-1 lg:basis-auto">{readingLine}</div>}
+							{attach === "rowsort" && !desktop && (
+								<div className="flex h-10 items-center rounded-full ring-1 ring-white/10">{attReady}</div>
+							)}
 							{attach === "rowsort" && (
 								<div className="flex h-10 items-center rounded-full ring-1 ring-white/10 lg:order-2">
 									{attForYou}
