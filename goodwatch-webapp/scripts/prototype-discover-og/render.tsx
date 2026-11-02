@@ -53,11 +53,24 @@ for (const { key } of VARIANTS) {
 	console.log("drew", key)
 }
 
+// Round 2: B won; the same card with more popular searches (top results of each, odd ones left out).
+const popular: { q: string; posters: string[] }[] = JSON.parse(readFileSync("scripts/prototype-discover-og/popular-searches.json", "utf8"))
+const round2: { key: string; name: string }[] = []
+for (const [i, search] of popular.entries()) {
+	const key = `B${i + 1}`
+	const main = { q: search.q, chips: [], posters: await posters(search.posters) }
+	const element = createElement(PrototypeDiscoverCard, { variant: "B", content: { main, others: [] } })
+	const svg = await satori(resolveTree(element) as never, { width: 1200, height: 630, fonts: FONTS as never })
+	writeFileSync(join(OUT, `${key}.png`), new Resvg(svg, { fitTo: { mode: "width", value: 1200 } }).render().asPng())
+	round2.push({ key, name: search.q })
+	console.log("drew", key)
+}
+
 writeFileSync(join(OUT, "index.html"), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PROTOTYPE /discover card</title><style>
 body{margin:0;background:#111;color:#eee;font:15px/1.4 system-ui,sans-serif}main{max-width:1240px;margin:0 auto;padding:16px 16px 90px}
 h1{font-size:18px;margin:8px 0 4px}p{color:#aaa;margin:0 0 16px}section{margin:0 0 34px}h2{font-size:16px;color:#fbbf24;margin:0 0 8px}
 .big{width:100%;height:auto;border-radius:10px;display:block}.small{width:min(100%,400px);height:auto;border-radius:10px;display:block;margin-top:10px}
-</style></head><body><main><h1>Link-preview card for /discover (prototype)</h1><p>Each design at full size, then at about feed size. Every search, poster and chip is a real answer from the live search.</p>
-${VARIANTS.map((v) => `<section id="${v.key}"><h2>${v.key} — ${v.name}</h2><img class="big" src="${v.key}.png?v=${Date.now()}" alt="Design ${v.key}"><img class="small" src="${v.key}.png?v=${Date.now()}" alt="Design ${v.key} at feed size"></section>`).join("")}
+</style></head><body><main><h1>Link-preview card for /discover (prototype)</h1><p>Round 2: B with popular searches first (B1 to B3), round 1 below. Each design at full size, then at about feed size. Every search, poster and chip is a real answer from the live search.</p>
+${[...round2, ...VARIANTS].map((v) => `<section id="${v.key}"><h2>${v.key} — ${v.name}</h2><img class="big" src="${v.key}.png?v=${Date.now()}" alt="Design ${v.key}"><img class="small" src="${v.key}.png?v=${Date.now()}" alt="Design ${v.key} at feed size"></section>`).join("")}
 </main></body></html>`)

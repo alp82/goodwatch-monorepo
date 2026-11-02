@@ -127,7 +127,7 @@ function AmberCard({ main }: { main: Search }) {
 					<div>DESCRIBE IT.</div>
 					<div>WE FIND IT.</div>
 				</div>
-				<Field q={main.q} size={42} height={96} width={530} light />
+				<Field q={main.q} size={main.q.length > 20 ? 36 : 42} height={96} width={540} light />
 			</div>
 		</Frame>
 	)
