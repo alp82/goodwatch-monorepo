@@ -58,5 +58,7 @@ COPY --from=front-build /web /srv
 RUN setcap -r /usr/bin/caddy && test -s /srv/index.html && caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 USER 1000:1000
 EXPOSE 8080
-HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=12 CMD wget -q -O /dev/null http://127.0.0.1:8080/api/yepwatch/v1/proposal/health/ready || exit 1
+# Healthy as soon as Caddy serves the app itself: routing reaches the new front at once, and Caddy
+# holds API requests (lb_try_duration) while the api restarts during a deploy.
+HEALTHCHECK --interval=2s --timeout=2s --start-period=2s --retries=15 CMD wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1
 CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
