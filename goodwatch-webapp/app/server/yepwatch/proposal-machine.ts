@@ -172,7 +172,12 @@ function continuousSnapshotCandidate(
 ): Omit<Candidate, "viewingDuration"> {
 	return {
 		...projectCandidate(c),
-		...(c.backdropUrl === undefined ? {} : { backdropUrl: c.backdropUrl }),
+		...(c.tagline === undefined ? {} : { tagline: c.tagline }),
+        ...(c.certification === undefined ? {} : { certification: c.certification }),
+        ...(c.scores === undefined ? {} : { scores: c.scores == null ? null : { ...c.scores } }),
+        ...(c.highlights === undefined ? {} : { highlights: c.highlights == null ? null : c.highlights.map(h => ({ key: h.key, label: h.label })) }),
+        ...(c.people === undefined ? {} : { people: c.people == null ? null : { directors: [...c.people.directors], cast: [...c.people.cast] } }),
+        ...(c.backdropUrl === undefined ? {} : { backdropUrl: c.backdropUrl }),
 		...(c.trailerUrl === undefined ? {} : { trailerUrl: c.trailerUrl }),
 		...(c.goodwatchScore === undefined
 			? {}

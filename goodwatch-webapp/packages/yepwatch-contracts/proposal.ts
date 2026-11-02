@@ -1,6 +1,7 @@
 /** Hybrid shared-proposal protocol3. Continuous contract2 stays unchanged. */
 import type {
 	Candidate as BaseCandidate,
+	CandidateHighlights,
 	CandidateKind,
 	CatalogMetadata,
 	CommandReceipt,
@@ -13,6 +14,7 @@ import type {
 	ScreenContext,
 } from "./index.ts"
 export type {
+	CandidateHighlights,
 	CatalogMetadata,
 	CommandReceipt,
 	EpisodeIdentity,

@@ -33,7 +33,15 @@ export interface ScreenAvailability {
   checkedAt: number | null
   offers: ProviderLink[]
 }
-export interface Candidate {
+/** Compact, optional catalog facts. Scores use a 0–100 integer scale. */
+export interface CandidateHighlights {
+  tagline?: string | null
+  certification?: string | null
+  scores?: { imdb?: number | null; rtCritics?: number | null; rtAudience?: number | null; metacritic?: number | null } | null
+  highlights?: { key: string; label: string }[] | null
+  people?: { directors: string[]; cast: string[] } | null
+}
+export interface Candidate extends CandidateHighlights {
   id: string
   identity: CandidateIdentity
   title: string

@@ -48,7 +48,11 @@ export const goodwatchReads: CatalogReads = {
   episodes,
   async availability(titles, screens, fresh) {
     const { getAvailabilityEvidence, getAvailabilityEvidenceBatch } = await import('../availability.server')
-    return createAvailabilityAdapter({ batch: getAvailabilityEvidenceBatch, fresh: scope => getAvailabilityEvidence(scope, { bypassCache: true }), names: async () => new Map((await serviceCatalog()).map(s => [s.id, s.name])) })(titles, screens, fresh)
+    return createAvailabilityAdapter({ links: async scopes => {
+      const { readStreamLinks } = await import("./catalog-stream-links.ts")
+      const { searchQuery } = await import("../combined-search/catalog.server")
+      return readStreamLinks(scopes, searchQuery).catch(() => [])
+    }, batch: getAvailabilityEvidenceBatch, fresh: scope => getAvailabilityEvidence(scope, { bypassCache: true }), names: async () => new Map((await serviceCatalog()).map(s => [s.id, s.name])) })(titles, screens, fresh)
   },
 }
 const deck = createDeckAdapter(goodwatchReads)

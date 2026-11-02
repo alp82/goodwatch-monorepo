@@ -205,7 +205,15 @@ export function preloadAvailability(): void {
 				if (isCountryCode(country)) scheduleLoad(country)
 			}
 		},
-		(error) => console.error("Availability index: preload failed", error),
+		() => {
+			// Services without access to member settings (the YepWatch catalog user) warm a fixed list instead.
+			const fallback = (process.env.AVAILABILITY_PRELOAD_COUNTRIES ?? "US,DE,GB,FR,ES,IT,CA,AU,NL,BR")
+				.split(",")
+				.map((c) => c.trim().toUpperCase())
+				.slice(0, PRELOAD_COUNTRIES)
+			console.info(`Availability index: preloading ${fallback.join(",")} (member countries unavailable)`)
+			for (const country of fallback) if (isCountryCode(country)) scheduleLoad(country)
+		},
 	)
 }
 

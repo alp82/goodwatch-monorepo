@@ -11,6 +11,16 @@ export const proposalSharedSchema = continuousSharedSchema.extend({
   disabledServiceIds: z.array(z.number().int().positive()).max(1200),
   participants: z.array(continuousSharedSchema.shape.participants.element.extend({ nickname: z.string().max(40), serviceIds:z.array(z.number().int().positive()).max(100).nullable(), dropped:z.boolean().optional() })).max(12),
   candidates: z.array(continuousSharedSchema.shape.candidates.element.extend({
+    tagline: z.string().nullable().optional(),
+    certification: z.string().nullable().optional(),
+    scores: z.strictObject({
+      imdb: z.number().int().min(0).max(100).nullable().optional(),
+      rtCritics: z.number().int().min(0).max(100).nullable().optional(),
+      rtAudience: z.number().int().min(0).max(100).nullable().optional(),
+      metacritic: z.number().int().min(0).max(100).nullable().optional(),
+    }).nullable().optional(),
+    highlights: z.array(z.strictObject({ key: z.string(), label: z.string() })).max(3).nullable().optional(),
+    people: z.strictObject({ directors: z.array(z.string()).max(2), cast: z.array(z.string()).max(3) }).nullable().optional(),
     viewingDuration: z.strictObject({ minutes: z.number().finite().positive(), scope: z.enum(['movie', 'episode']) }).nullable(),
   })).max(512),
   matches: z.array(z.strictObject({ candidateId: id, averageYepMs: average })).max(512),
