@@ -57,16 +57,6 @@ const candidate = z
       .strict()
       .nullable(),
     availability: z.array(availability),
-    tagline: z.string().nullable().optional(),
-    certification: z.string().nullable().optional(),
-    scores: z.strictObject({
-      imdb: z.number().int().min(0).max(100).nullable().optional(),
-      rtCritics: z.number().int().min(0).max(100).nullable().optional(),
-      rtAudience: z.number().int().min(0).max(100).nullable().optional(),
-      metacritic: z.number().int().min(0).max(100).nullable().optional(),
-    }).nullable().optional(),
-    highlights: z.array(z.strictObject({ key: z.string(), label: z.string() })).max(3).nullable().optional(),
-    people: z.strictObject({ directors: z.array(z.string()).max(2), cast: z.array(z.string()).max(3) }).nullable().optional(),
     backdropUrl: z.string().nullable().optional(),
     trailerUrl: z.string().nullable().optional(),
     goodwatchScore: z.number().nullable().optional(),
