@@ -317,7 +317,10 @@ export function useContinuousRoom(roomId: string) {
       return !terminalRef.current;
     } catch (e) {
       if (e instanceof RoomFailure && e.snapshot) apply(e.snapshot);
-      authority(e);
+      // A refused command (not the host, not the author, an idea that's gone…) is not lost access: show why
+      // and re-read the room below. Only missing credentials or an expired room end it from here; a read
+      // that fails decides the rest.
+      if (expired(e) || (e instanceof RoomFailure && (e.status === 401 || e.code === 'unauthorized'))) authority(e);
       if (!terminalRef.current) setErrorCode(e instanceof RoomFailure ? e.code : null);
       if (!terminalRef.current)
         setError(

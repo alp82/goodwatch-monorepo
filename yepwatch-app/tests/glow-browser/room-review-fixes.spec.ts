@@ -154,3 +154,17 @@ test.describe('NEW is acknowledged per room on the host’s device', () => {
     await expect(button(page, 'cheer me up')).toBeVisible();
   });
 });
+
+test('a command the server refuses (403) does not end the room', async ({ page }) => {
+  const f = await fakeRoom(page, choosingRoom());
+  let refused = 0;
+  await page.route('**/api/yepwatch/v1/proposal/rooms/*/commands', async (route) => {
+    if (refused++ > 0) return route.fallback();
+    await route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: { code: 'forbidden', message: 'Only the host can change this setting', retryable: false } }) });
+  });
+  await page.goto('/room/test-room');
+  await expect.poll(() => refused).toBeGreaterThan(0);
+  await expect(page.getByTestId('voting')).toBeVisible();
+  await expect(page.getByText(/room access ended|room has expired/i)).toHaveCount(0);
+  expect(f.room.shared.phase).toBe('choosing');
+});
