@@ -425,6 +425,7 @@ function DiscoverControlsContent({
 	const attach: Attach | undefined = proto ? (desktop || proto.attach === "rowsort" ? proto.attach : "lip") : undefined
 	const look = attach === "segments" ? "segment" : attach === "lip" ? "lip" : "inline"
 	const advanced = proto?.mode === "advanced"
+	const tallSearch = proto?.examples?.how === "links" || proto?.examples?.how === "chips"
 	const attReady = <AttReady on={readyOn} toggle={toggleReady} member={member} look={look} short={!desktop} />
 	const attSort = <AttSort sort={sort} look={look} short={!desktop} />
 	const attForYou = (
@@ -456,10 +457,16 @@ function DiscoverControlsContent({
 				{attSort}
 			</div>
 		) : attach === "rowsort" && desktop ? (
-			<div className="mr-2 flex h-full items-center">
-				<Divider />
-				{attReady}
-			</div>
+			tallSearch ? (
+				<div className="flex h-14 items-center">
+					<AttReady on={readyOn} toggle={toggleReady} member={member} look="inline" big />
+				</div>
+			) : (
+				<div className="mr-2 flex h-full items-center">
+					<Divider />
+					{attReady}
+				</div>
+			)
 		) : undefined
 	const lead = attach === "prefix" ? (
 		<div className="-ml-3 mr-4 flex h-full items-center">

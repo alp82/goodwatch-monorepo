@@ -13,7 +13,8 @@ const DROP_KEYS = ["q", "asked", "page", "allTitles", "sort", "layout"]
 /** Example searches for the field (round 10). */
 export type Examples = {
 	how: "menu" | "placeholder" | "chips" | "links" | "composer"
-	list: readonly string[]
+	/** A text runs as is; a pair shows `label` and runs `query` (wording the interpreter reads right). */
+	list: readonly (string | { label: string; query: string })[]
 	extra?: ReactNode
 }
 
@@ -93,7 +94,8 @@ export function ProtoSearch({
 		const id = setInterval(() => setTick((n) => n + 1), 2600)
 		return () => clearInterval(id)
 	}, [examples?.how, text])
-	const cycling = examples?.how === "placeholder" ? examples.list[tick % examples.list.length] : null
+	const cyc = examples?.how === "placeholder" ? examples.list[tick % examples.list.length] : null
+	const cycling = cyc === null || cyc === undefined ? null : typeof cyc === "string" ? cyc : cyc.query
 	const submit = () => {
 		// An empty field with a cycling example searches that example.
 		const t = text.trim() || cycling || ""
@@ -114,11 +116,13 @@ export function ProtoSearch({
 			style={{ maskImage: "linear-gradient(to right, black 92%, transparent)" }}
 		>
 			<span className="mr-1 shrink-0 text-[10px] font-bold tracking-[0.08em] text-gray-500 uppercase">Try</span>
-			{examples.list.map((x, i) =>
-				how === "links" ? (
+			{examples.list.map((item, i) => {
+				const x = typeof item === "string" ? item : item.label
+				const q = typeof item === "string" ? item : item.query
+				return how === "links" ? (
 					<span key={x} className="flex shrink-0 items-center gap-1.5">
 						{i > 0 && <span className="text-gray-600">·</span>}
-						<button type="button" onClick={() => pick(x)} className="cursor-pointer text-[13px] text-gray-400 hover:text-white">
+						<button type="button" onClick={() => pick(q)} className="cursor-pointer text-[13px] text-gray-400 hover:text-white">
 							{x}
 						</button>
 					</span>
@@ -126,13 +130,13 @@ export function ProtoSearch({
 					<button
 						key={x}
 						type="button"
-						onClick={() => pick(x)}
+						onClick={() => pick(q)}
 						className="shrink-0 cursor-pointer rounded-full bg-white/[0.06] px-2.5 py-1 text-[12.5px] text-gray-300 ring-1 ring-white/[0.06] hover:bg-white/[0.12] hover:text-white"
 					>
 						{x}
 					</button>
-				),
-			)}
+				)
+			})}
 			<span className="w-6 shrink-0" />
 		</div>
 	)
@@ -154,7 +158,7 @@ export function ProtoSearch({
 			type="submit"
 			disabled={busy}
 			className={`mr-2 shrink-0 cursor-pointer rounded-full bg-amber-400 font-bold text-gray-950 hover:bg-amber-300 disabled:opacity-70 ${
-				phone ? "flex h-10 w-10 items-center justify-center" : "px-5 py-3 text-[15px]"
+				phone ? "flex h-11 w-11 items-center justify-center" : tall ? "px-6 py-3.5 text-base" : "px-5 py-3 text-[15px]"
 			}`}
 		>
 			{phone ? <ArrowRightIcon className="h-5 w-5" aria-label="Search" /> : busy ? "Reading…" : "Search"}
@@ -201,6 +205,48 @@ export function ProtoSearch({
 				{inside && <div className={`pb-3.5 ${phone ? "pr-4" : "pr-7"}`}>{inside}</div>}
 			</form>
 		)
+	// Round 13 (links, chips): two columns. Text and examples on the left stop at a full-height line; Ready and Search sit
+	// on the right, centered over the whole height.
+	if (tall)
+		return (
+			<form
+				role="search"
+				onSubmit={(e) => {
+					e.preventDefault()
+					submit()
+				}}
+				className={`group relative flex items-stretch bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition focus-within:bg-white/[0.07] focus-within:ring-2 focus-within:ring-amber-400/60 ${
+					phone ? "rounded-[22px] pl-4" : "rounded-[32px] pl-7"
+				}`}
+			>
+				<div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 py-3.5 pr-3">
+					<div className="flex items-center">
+						<label className="flex min-w-0 flex-1 cursor-text flex-col justify-center">
+							<span className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-amber-300/90 uppercase">
+								<MagnifyingGlassIcon className="h-3.5 w-3.5" aria-hidden />
+								Search
+							</span>
+							<input
+								value={text}
+								onChange={(e) => setText(e.target.value)}
+								placeholder={placeholder}
+								aria-label="Search by mood, plot, or title"
+								className={`brand-header search-private w-full min-w-0 bg-transparent leading-tight text-white placeholder:text-gray-500 focus:outline-none ${
+									phone ? "text-[19px]" : "text-[21px]"
+								}`}
+							/>
+						</label>
+						{clearButton}
+					</div>
+					{tryRow}
+				</div>
+				{trail && <span className="w-px shrink-0 self-stretch bg-white/10" aria-hidden />}
+				<div className="flex shrink-0 items-center gap-1 pr-2.5 pl-1">
+					{trail}
+					{submitButton}
+				</div>
+			</form>
+		)
 	return (
 		<form
 			role="search"
@@ -241,7 +287,7 @@ export function ProtoSearch({
 				<div className="absolute top-full right-0 left-0 z-40 mt-2 rounded-[22px] bg-gray-900 p-3 shadow-2xl shadow-black/70 ring-1 ring-white/10">
 					<p className="px-2 pb-1.5 text-[10px] font-bold tracking-[0.08em] text-gray-500 uppercase">Try</p>
 					<div className="flex flex-wrap gap-1.5">
-						{examples.list.map((x) => (
+						{examples.list.map((item) => typeof item === "string" ? item : item.label).map((x) => (
 							<button
 								key={x}
 								type="button"

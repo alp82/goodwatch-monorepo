@@ -26,7 +26,7 @@ function Shell({ look, children, onClick, label, role, checked }: {
 		look === "segment"
 			? "flex h-full min-w-0 shrink-0 cursor-pointer flex-col justify-center gap-0.5 px-5 text-left hover:bg-white/[0.04]"
 			: look === "inline"
-				? "flex h-full shrink-0 cursor-pointer items-center gap-2 px-4 hover:bg-white/[0.04]"
+				? "flex h-full shrink-0 cursor-pointer items-center gap-2.5 rounded-full px-4 hover:bg-white/[0.04]"
 				: "flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-2.5 hover:bg-white/[0.06]"
 	return onClick ? (
 		<button type="button" role={role} aria-checked={checked} aria-label={label} onClick={onClick} className={cls}>
@@ -37,9 +37,9 @@ function Shell({ look, children, onClick, label, role, checked }: {
 	)
 }
 
-export function AttReady({ on, toggle, member, look, short }: { on: boolean; toggle: () => void; member: boolean; look: AttachLook; short?: boolean }) {
-	const icon = <PlayCircleIcon className={`h-4 w-4 shrink-0 ${on ? "text-amber-400" : "text-gray-500"}`} />
-	const knob = <Knob on={on} />
+export function AttReady({ on, toggle, member, look, short, big }: { on: boolean; toggle: () => void; member: boolean; look: AttachLook; short?: boolean; big?: boolean }) {
+	const icon = <PlayCircleIcon className={`${big ? "h-5 w-5" : "h-4 w-4"} shrink-0 ${on ? "text-amber-400" : "text-gray-500"}`} />
+	const knob = <Knob on={on} size={big ? "lg" : "md"} />
 	if (look === "segment")
 		return (
 			<Shell look={look} onClick={toggle} role="switch" checked={on} label="Ready to watch">
@@ -55,7 +55,7 @@ export function AttReady({ on, toggle, member, look, short }: { on: boolean; tog
 	return (
 		<Shell look={look} onClick={toggle} role="switch" checked={on} label="Ready to watch">
 			{icon}
-			<span className={`${look === "lip" ? "text-[13px]" : "text-sm"} font-semibold whitespace-nowrap ${on ? "text-white" : "text-gray-400"}`}>
+			<span className={`${look === "lip" ? "text-[13px]" : big ? "text-[15px]" : "text-sm"} font-semibold whitespace-nowrap ${on ? "text-white" : "text-gray-400"}`}>
 				{short ? "Ready" : "Ready to watch"}
 			</span>
 			{knob}

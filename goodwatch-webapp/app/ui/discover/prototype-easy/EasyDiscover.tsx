@@ -12,18 +12,16 @@ import type { Easy } from "./types"
 type V = { key: string; name: string; examples?: "chips" | "links" | "composer"; today?: boolean }
 /** Example searches for a young audience; each runs through the interpreter like typed text. */
 const TRY = [
-	"cozy anime for a rainy day",
-	"like Severance but funny",
-	"feel-good K-drama",
-	"horror that's actually funny",
-	"mind-bending sci-fi",
-	"a short show to binge tonight",
+	"cozy anime",
+	// The interpreter reads "good" in "feel-good" as Score ≥ 70; this wording keeps the meaning.
+	{ label: "feel-good K-drama", query: "heartwarming korean drama" },
+	"funny horror",
+	"80+ last 5 years",
 ]
 
 const VARIANTS: V[] = [
-	{ key: "T1", name: "Taller, chips under the text", examples: "chips" },
 	{ key: "T2", name: "Taller, links under the text", examples: "links" },
-	{ key: "T3", name: "Composer, examples in the toolbar", examples: "composer" },
+	{ key: "T1", name: "Taller, chips under the text", examples: "chips" },
 	{ key: "D", name: "Round 11 (no examples)" },
 	{ key: "0", name: "Today", today: true },
 ]
