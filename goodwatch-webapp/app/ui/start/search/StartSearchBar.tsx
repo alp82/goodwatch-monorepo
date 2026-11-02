@@ -8,7 +8,17 @@
 //
 // Search text is private: the field is masked from session replay, as on Discover.
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
-import { type FocusEvent, useEffect, useMemo, useRef, useState } from "react"
+import {
+	type FocusEvent,
+	lazy,
+	Suspense,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react"
+import { UNSAFE_LocationContext } from "react-router-dom"
 import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
 import { WORD_BY_ID } from "~/domain/taste-picker"
 import { ReadAsChips, readAsChips } from "~/ui/discover/ReadAsChips"
@@ -22,6 +32,11 @@ import {
 	SEARCH_LABEL,
 	START_PRESETS,
 } from "./presets"
+
+// THROWAWAY: ?variant=A|B|C reviews interpretation UI on the actual start page.
+const ReadPrototype = import.meta.env.DEV
+	? lazy(() => import("./prototype-interpretation/PrototypeInterpretation"))
+	: null
 
 const PRIVATE = "search-private ph-no-capture sentry-mask"
 
@@ -58,6 +73,13 @@ export function StartSearchBar({
 	clearSearch: () => void
 	onAsk?: () => void
 }) {
+	const prototypeLocation = useContext(UNSAFE_LocationContext)
+	const prototypeParams = new URLSearchParams(
+		prototypeLocation?.location.search ?? "",
+	)
+	const prototypeVariant =
+		ReadPrototype &&
+		["A", "B", "C"].includes(prototypeParams.get("variant") ?? "")
 	const input = useRef<HTMLInputElement>(null)
 	const latest = useRef({ query, search, clearSearch })
 	latest.current = { query, search, clearSearch }
@@ -156,26 +178,52 @@ export function StartSearchBar({
 					</button>
 				</div>
 				<div className="mx-4 h-px bg-white/[0.08] sm:mx-6" />
-				<div className="start-bar-rows relative h-[42px] min-w-0 sm:h-[44px]">
-					<div
-						className="start-bar-row"
-						{...(searching ? { "data-off": "", inert: "" } : {})}
+				{prototypeVariant && ReadPrototype ? (
+					<Suspense
+						fallback={
+							<div className="px-6 py-3 text-sm text-gray-400">
+								Loading review…
+							</div>
+						}
 					>
-						<Presets
-							onPick={(phrase) => {
-								commit.preset(phrase)
+						<ReadPrototype
+							query={query.text || query.draft}
+							reading={
+								JSON.parse(results.signature)[0] === query.text
+									? results.reading
+									: null
+							}
+							onExample={(text) => {
+								setDraft(text)
+								search(text)
 								ask()
 							}}
 						/>
-					</div>
-					<div
-						className="start-bar-row"
-						aria-live="polite"
-						{...(searching ? {} : { "data-off": "", inert: "" })}
-					>
-						{searching ? <Reading query={query} results={results} /> : null}
-					</div>
-				</div>
+					</Suspense>
+				) : (
+					<>
+						<div className="start-bar-rows relative h-[42px] min-w-0 sm:h-[44px]">
+							<div
+								className="start-bar-row"
+								{...(searching ? { "data-off": "", inert: "" } : {})}
+							>
+								<Presets
+									onPick={(phrase) => {
+										commit.preset(phrase)
+										ask()
+									}}
+								/>
+							</div>
+							<div
+								className="start-bar-row"
+								aria-live="polite"
+								{...(searching ? {} : { "data-off": "", inert: "" })}
+							>
+								{searching ? <Reading query={query} results={results} /> : null}
+							</div>
+						</div>
+					</>
+				)}
 			</div>
 		</form>
 	)
