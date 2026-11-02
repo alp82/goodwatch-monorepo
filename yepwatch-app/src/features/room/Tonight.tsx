@@ -1,7 +1,7 @@
 /**
- * Tonight: the decided title, the watch button for the first switched-on service that has it, and
- * Cheer (tap or hold the poster or the Cheer button; everyone sees it, and the marquee lights when
- * everyone holds). The host can start again; everyone else sees who can.
+ * Tonight: the decided title with its scores and the watch button for the first switched-on service
+ * that has it. Tapping or holding the poster cheers (an easter egg, no button or hint: everyone sees
+ * it, and the marquee lights when everyone holds). The host can start again; everyone else sees who can.
  */
 import { useCallback, useState } from 'react';
 import { Animated, BackHandler, Image, Platform, Pressable, View } from 'react-native';
@@ -11,6 +11,8 @@ import { continuousApi } from '../../core/continuous/api';
 import { useReducedMotion } from '../../components/ui';
 import { CheerLayer, usePosterCheer, usePosterSpring, type PosterRect } from '../glow/cheer/CheerLayer';
 import { FadeImage } from '../glow/FadeImage';
+import { gwScore, sourceScores } from '../glow/score-format';
+import { ScorePill, SourceChips } from '../glow/scores';
 import { CLAPPER_HEIGHT, FilmReveal } from '../glow/Reveal';
 import { goodwatchTitleUrl, roomWatchLinks } from '../glow/watch-links';
 import { GText, Icon, Press, glow } from '../glow/theme';
@@ -78,7 +80,7 @@ export function Tonight() {
       <RoomNotes />
       <View style={{ alignItems: 'center', gap: 14, paddingTop: 4 }}>
         <View onLayout={(e) => { const l = e.nativeEvent.layout; if (l.width > 0) setPoster({ x: l.x, y: l.y + CLAPPER_HEIGHT, width: l.width, height: l.height - CLAPPER_HEIGHT }); }}>
-          <Pressable testID="tonight-poster" accessibilityRole="button" accessibilityLabel={`Cheer for ${c.title}`} accessibilityHint="Everyone in the room sees it. Hold to keep cheering."
+          <Pressable testID="tonight-poster" accessibilityRole="button" accessibilityLabel={`Cheer for ${c.title}`}
             disabled={!enabled} {...gesture.pressHandlers} style={{ cursor: enabled ? 'pointer' : 'auto' } as object}>
             <Animated.View style={{ transform: [{ scale: spring.scale }] }}>
               <FilmReveal width={ph / 1.5} height={ph} play={play} onPlay={onPlay}>
@@ -90,11 +92,13 @@ export function Tonight() {
         </View>
         <GText bold size={30} style={{ textAlign: 'center', letterSpacing: -0.8 }}>{c.title}</GText>
         <Small>{meta(c)}</Small>
+        {gwScore(c.goodwatchScore) !== null || sourceScores(c.scores) ? (
+          <View testID="tonight-scores" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <ScorePill score={c.goodwatchScore} size="L" />
+            <SourceChips scores={c.scores} />
+          </View>
+        ) : null}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><FaceStack people={view.faces} size={24} max={6} /><Small>Everyone agreed</Small></View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Cheer" disabled={!enabled} {...gesture.pressHandlers}
-          style={({ pressed }) => ({ height: 40, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff0f', borderWidth: 1, borderColor: '#ffffff1f', opacity: !enabled ? 0.42 : pressed ? 0.78 : 1 })}>
-          <GText bold size={14}>🎉 Cheer</GText>
-        </Pressable>
         {poster.width > 0 ? <CheerLayer poster={poster} events={state.cheerEvents} holders={holders} allHold={allHold} reduced={reduced} selfId={view.me.id} onBurst={() => spring.kick(0.006)} /> : null}
       </View>
     </Screen>
