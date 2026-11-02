@@ -91,8 +91,9 @@ export interface DiscoverPageProps {
 		mode: "easy" | "advanced"
 		setMode: (mode: "easy" | "advanced") => void
 		modeSwitch: ReactNode
-		easy?: (ctx: EasyContext & EasyApi) => ReactNode
+		reading?: (ctx: EasyContext & EasyApi) => ReactNode
 		inside?: (ctx: EasyContext & EasyApi) => ReactNode
+		tabsAt: "title" | "row"
 	}
 }
 
@@ -489,9 +490,12 @@ export function DiscoverPage({
 				<div onPointerEnter={warm} onTouchStart={warm} onFocus={warm}>
 					<DiscoverControls
 						heading={
-							<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
-								{proto ? "Discover" : "Discover movies and shows"}
-							</h1>
+							<div className="flex items-end gap-6 lg:gap-8">
+								<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
+									{proto ? "Discover" : "Discover movies and shows"}
+								</h1>
+								{proto?.tabsAt === "title" && <div className="hidden lg:block">{proto.modeSwitch}</div>}
+							</div>
 						}
 						proto={
 							proto && {
@@ -499,7 +503,8 @@ export function DiscoverPage({
 								setMode: proto.setMode,
 								modeTabs: proto.modeSwitch,
 								renderInside: proto.inside && ((api) => proto.inside?.(easyCtx(api))),
-								renderEasy: (api) => proto.easy?.(easyCtx(api)),
+								renderReading: proto.reading && ((api) => proto.reading?.(easyCtx(api))),
+								tabsAt: proto.tabsAt,
 							}
 						}
 						className="mt-3 lg:mt-5"

@@ -1,7 +1,7 @@
-// PROTOTYPE (discover-easy) round 4 F "In the field": the reading sits inside the search box on a second line under
-// the typed text (the text line stays where it is); nothing between the box and Ready.
+// PROTOTYPE (discover-easy) F "In the field": the reading sits inside the search box on a second line under the
+// typed text, in both modes; the text line stays where it is.
 import { FilterList, FingerprintList, qualitiesOf } from "./reading"
-import type { Easy } from "./bits"
+import type { Easy } from "./types"
 
 export const name = "In the field"
 
@@ -18,8 +18,4 @@ export function EasyFInside({ e }: { e: Easy }) {
 			</button>
 		</div>
 	)
-}
-
-export function EasyF({ e }: { e: Easy }) {
-	return <div className="mt-3 flex">{e.ready}</div>
 }

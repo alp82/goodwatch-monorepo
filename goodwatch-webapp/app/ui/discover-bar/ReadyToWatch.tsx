@@ -74,9 +74,12 @@ interface Part {
 export function ReadyToWatch({
 	ready,
 	size,
+	compact = false,
 }: {
 	ready: ReadyToWatchProps
 	size: ControlSize
+	/** PROTOTYPE (discover-easy): only the one switch; the parts slide out when it turns false. */
+	compact?: boolean
 }) {
 	const { state, update, mine, member, open } = ready
 	const canServices = mine.length > 0
@@ -170,15 +173,21 @@ export function ReadyToWatch({
 					aria-label="Ready to watch"
 					whileTap={TAP}
 					onClick={toggleAll}
-					className={`${SEGMENT} rounded-l-xl ${PILL_FOCUS} ${size === 0 ? "pr-2 pl-3" : "pr-2.5 pl-3.5"} ${all || some ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+					className={`${SEGMENT} rounded-l-xl ${compact ? "rounded-r-xl" : ""} ${PILL_FOCUS} ${size === 0 ? "pr-2 pl-3" : "pr-2.5 pl-3.5"} ${all || some ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
 				>
 					<PlayCircleIcon className={`h-4 w-4 shrink-0 ${iconTone}`} />
-					{size === 2 && <span className="text-sm">Ready to watch</span>}
-					{size === 1 && <span className="text-sm">Ready</span>}
+					{(size === 2 || compact) && <span className="text-sm">Ready to watch</span>}
+					{size === 1 && !compact && <span className="text-sm">Ready</span>}
 					<Knob on={all} />
 					<BaseLine on={all} color="bg-amber-400" />
 				</motion.button>
 			</Tip>
+			<motion.div
+				className="flex overflow-hidden"
+				initial={false}
+				animate={{ width: compact ? 0 : "auto", opacity: compact ? 0 : 1 }}
+				transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}
+			>
 			{parts.map((part, i) => (
 				<Tip
 					key={part.key}
@@ -208,6 +217,7 @@ export function ReadyToWatch({
 					</motion.button>
 				</Tip>
 			))}
+			</motion.div>
 		</div>
 	)
 }

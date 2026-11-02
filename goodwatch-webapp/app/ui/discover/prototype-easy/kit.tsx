@@ -105,7 +105,7 @@ export function useMode() {
 export function ModeSwitch() {
 	const { mode, setMode } = useMode()
 	return (
-		<div role="tablist" aria-label="Discover mode" className="mb-2 flex gap-5 pl-5 lg:pl-7">
+		<div role="tablist" aria-label="Discover mode" className="flex gap-5">
 			{(["easy", "advanced"] as const).map((m) => (
 				<button
 					key={m}

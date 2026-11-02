@@ -9,9 +9,8 @@
 // open (the Search segment after "/"), except after a press outside, which keeps focus where it landed. The phone sheet
 // returns focus to the control that opened it, and closing phone Find returns it to the magnifier.
 import { ProtoSearch } from "~/ui/discover/prototype-easy/ProtoSearch"
-import { Readout } from "~/ui/discover/prototype-easy/Readout"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
-import { AnimatePresence, MotionConfig } from "framer-motion"
+import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import {
 	type ReactNode,
 	useCallback,
@@ -160,10 +159,13 @@ export interface DiscoverControlsProps {
 	proto?: {
 		mode: "easy" | "advanced"
 		setMode: (mode: "easy" | "advanced") => void
-		renderEasy?: (api: EasyApi) => ReactNode
-		/** A line inside the search field, under the text (easy variants only). */
+		/** Under the search, in both modes. */
+		renderReading?: (api: EasyApi) => ReactNode
+		/** A line inside the search field, under the text, in both modes. */
 		renderInside?: (api: EasyApi) => ReactNode
 		modeTabs: ReactNode
+		/** Where the Easy | Advanced tabs sit: beside the title (the page draws them) or at the Ready row's end. */
+		tabsAt: "title" | "row"
 	}
 }
 
@@ -460,28 +462,24 @@ function DiscoverControlsContent({
 			<div className={className}>
 				{proto && (
 					<>
-						{proto.modeTabs}
 						<ProtoSearch
 							query={query}
 							onClear={onClearSearch}
 							phone={!desktop}
-							inside={proto.mode === "easy" ? proto.renderInside?.(easyApi) : undefined}
+							inside={proto.renderInside?.(easyApi)}
 						/>
-						{proto.mode === "easy" ? (
-							proto.renderEasy?.(easyApi)
-						) : (
-							<Readout
-								query={query}
-								reading={reading}
-								chips={data.chips}
-								onRemove={easyApi.remove}
-								onOpen={(chip) => chip.opens && openTab(tabOfSubTab(chip.opens), chip.opens)}
-								onCustomize={() => openTab("mood")}
-							/>
-						)}
+						{proto.renderReading?.(easyApi)}
 					</>
 				)}
-				{(!proto || proto.mode === "advanced") && (<div className={proto ? "mt-3" : ""}>
+				<AnimatePresence initial={false}>
+				{(!proto || proto.mode === "advanced") && (<motion.div
+					key="advanced"
+					className={proto ? "mt-3" : ""}
+					initial={proto ? { height: 0, opacity: 0, overflow: "hidden" } : false}
+					animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
+					exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+					transition={{ duration: 0.32, ease: [0.2, 0.7, 0.2, 1] }}
+				>
 				<div className="hidden lg:block">
 					<div className="relative">
 						<DiscoverBar
@@ -534,7 +532,7 @@ function DiscoverControlsContent({
 							)}
 						</AnimatePresence>
 					</div>
-					{statusLine(false)}
+					{!proto && statusLine(false)}
 				</div>
 				<div className="lg:hidden">
 					<PhoneDiscoverBar
@@ -543,10 +541,12 @@ function DiscoverControlsContent({
 						onClearSearch={onClearSearch}
 						providers={providers}
 					/>
-					<div className="mt-2">
-						<ReadyToWatch ready={ready} size={1} />
-					</div>
-					{statusLine(true)}
+					{!proto && (
+						<div className="mt-2">
+							<ReadyToWatch ready={ready} size={1} />
+						</div>
+					)}
+					{!proto && statusLine(true)}
 					{!desktop && (
 						<DiscoverSheet
 							open={open !== null}
@@ -609,7 +609,33 @@ function DiscoverControlsContent({
 						/>
 					)}
 				</div>
-				</div>)}
+				</motion.div>)}
+				</AnimatePresence>
+				{proto && (
+					<motion.div layout="position" className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+						<ReadyToWatch
+							ready={{ ...ready, open: toAdvanced }}
+							size={proto.mode === "easy" ? 2 : desktop ? size : 0}
+							compact={proto.mode === "easy"}
+						/>
+						{(proto.tabsAt === "row" || !desktop) && <div className="ml-auto lg:order-2 lg:ml-0">{proto.modeTabs}</div>}
+						<AnimatePresence initial={false}>
+							{proto.mode === "advanced" && (
+								<motion.div
+									key="order"
+									className="flex basis-full justify-end lg:order-3 lg:basis-auto"
+									initial={{ opacity: 0, x: 12 }}
+									animate={{ opacity: 1, x: 0 }}
+									exit={{ opacity: 0, x: 12 }}
+									transition={{ duration: 0.25 }}
+								>
+									{order(desktop ? size : (Math.min(size, 1) as ControlSize))}
+								</motion.div>
+							)}
+						</AnimatePresence>
+						<span className="hidden lg:order-1 lg:block lg:flex-1" />
+					</motion.div>
+				)}
 			</div>
 		</MotionConfig>
 	)

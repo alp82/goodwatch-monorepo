@@ -187,7 +187,7 @@ export function FilterMix({
 				onClick={() => setOpen((o) => !o)}
 				className={`flex min-h-12 flex-col items-end justify-center gap-1 rounded-lg px-1.5 text-right cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[150px]" : "w-[188px]"}`}
 			>
-				<span className="flex w-full flex-wrap items-baseline justify-between gap-x-2">
+				<span className={`flex w-full items-baseline justify-between gap-x-2 ${phone ? "flex-wrap" : ""}`}>
 					<CountText counts={counts} searching={searching} />
 					<span className="text-[11px] whitespace-nowrap text-gray-500">
 						{hidden > 0 ? `${compactCount(hidden)} hidden` : ""}
