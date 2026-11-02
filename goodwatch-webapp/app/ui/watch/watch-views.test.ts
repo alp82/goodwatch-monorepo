@@ -64,7 +64,9 @@ test("Next episodes | All shows, All shows current on each status page", () => {
 			["all-shows", false, "/watch/shows/watching", 6],
 		],
 	)
-	const onDropped = upNextSplit(upNextViews("/watch/shows/dropped", counts) ?? [])
+	const onDropped = upNextSplit(
+		upNextViews("/watch/shows/dropped", counts) ?? [],
+	)
 	assert.equal(onDropped[1].here, true)
 	assert.equal(
 		upNextSplit(upNextViews("/watch/shows", null) ?? [])[1].count,
@@ -95,4 +97,24 @@ test("the Seen tab's kinds keep the rest of the query", () => {
 	assert.equal(seenKinds("", null)[0].here, true)
 	assert.equal(seenKinds("", null)[0].href, "/watch/seen")
 	assert.equal(seenKinds("?type=nope", null)[0].here, true)
+})
+
+test("episode news follows My shows into Next episodes, including from another show view", () => {
+	const news = { badge: "2", label: "2 shows have new episodes" }
+	for (const path of [
+		"/watch/shows",
+		"/watch/shows/watching",
+		"/watch/shows/dropped",
+	]) {
+		const views = upNextViews(path, counts, news) ?? []
+		const split = upNextSplit(views)
+		assert.deepEqual(split[0].news, news)
+		assert.equal(split[1].news, undefined)
+		assert.ok(statusViews(views).every((view) => view.news === undefined))
+		assert.equal(split[1].count, 6)
+	}
+	assert.ok(
+		(upNextViews("/watch/shows", counts) ?? []).every((view) => !view.news),
+	)
+	assert.equal(upNextViews("/watch/movies", counts, news), null)
 })

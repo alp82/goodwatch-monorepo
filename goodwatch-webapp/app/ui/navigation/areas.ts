@@ -163,6 +163,7 @@ export interface AreaTab {
 
 /** One chip, or one side of a switch: the same shape. */
 export interface NavChoice {
+	news?: AreaTab["news"]
 	key: string
 	label: string
 	href: string

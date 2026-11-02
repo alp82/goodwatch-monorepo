@@ -26,8 +26,8 @@ import {
 } from "react"
 import { SnapSheet } from "~/ui/filter-bar"
 import { STICKY_SUBBAR } from "~/ui/layers"
-import { UNDER_TABS } from "./AreaTabs"
-import type { NavIcon } from "./areas"
+import { News, UNDER_TABS } from "./AreaTabs"
+import type { AreaTab, NavIcon } from "./areas"
 import {
 	SUBNAV_BAR,
 	SUBNAV_HERE_ICON,
@@ -48,6 +48,8 @@ export interface SubNavItem {
 	/** The current view. Sections work it out from the scroll position. */
 	here?: boolean
 	count?: number
+	/** News about the items reached through this view, separate from its total count. */
+	news?: AreaTab["news"]
 	/** A small icon before the label (Settings' pages); most rows have none. */
 	icon?: NavIcon
 	/** A thin divider before the item, between groups. */
@@ -254,6 +256,7 @@ export function SubNav({
 					/>
 				)}
 				<span className="relative">{it.label}</span>
+				<News news={it.news} />
 				{it.count != null && (
 					<span className="relative">
 						<Count n={it.count} here={on} />
@@ -301,7 +304,11 @@ export function SubNav({
 				sections={sections}
 				className={className}
 			/>
-			<div ref={sentinel} aria-hidden className={`max-lg:hidden ${className}`} />
+			<div
+				ref={sentinel}
+				aria-hidden
+				className={`max-lg:hidden ${className}`}
+			/>
 			<nav
 				ref={nav}
 				aria-label={label}
@@ -360,7 +367,11 @@ function QuietRow({
 		`shrink-0 py-2.5 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
 			on ? "font-bold text-white" : "text-gray-400 active:text-gray-200"
 		}`
-	const dot = <span aria-hidden className="shrink-0 text-gray-600">·</span>
+	const dot = (
+		<span aria-hidden className="shrink-0 text-gray-600">
+			·
+		</span>
+	)
 	if (sections)
 		return (
 			<nav
@@ -377,7 +388,10 @@ function QuietRow({
 							if (!plainClick(event) || !el) return
 							event.preventDefault()
 							const top =
-								el.getBoundingClientRect().top + window.scrollY - PHONE_BAR_PX - 12
+								el.getBoundingClientRect().top +
+								window.scrollY -
+								PHONE_BAR_PX -
+								12
 							window.scrollTo({
 								top: Math.max(0, top),
 								behavior: reducedMotion() ? "auto" : "smooth",
@@ -391,7 +405,10 @@ function QuietRow({
 				))}
 			</nav>
 		)
-	const head = items.slice(0, items.length > FREQUENT + 1 ? FREQUENT : items.length)
+	const head = items.slice(
+		0,
+		items.length > FREQUENT + 1 ? FREQUENT : items.length,
+	)
 	const rest = items.slice(head.length)
 	const restHere = rest.find((it) => it.here)
 	const link = (it: SubNavItem, extra = "") => (
@@ -402,9 +419,10 @@ function QuietRow({
 			preventScrollReset
 			prefetch="intent"
 			aria-current={it.here ? "page" : undefined}
-			className={`${word(!!it.here)} ${extra}`}
+			className={`inline-flex items-center gap-1.5 ${word(!!it.here)} ${extra}`}
 		>
 			{it.label}
+			<News news={it.news} />
 		</Link>
 	)
 	return (
@@ -447,10 +465,13 @@ function QuietRow({
 									onClick={() => setMore(false)}
 									aria-current={it.here ? "page" : undefined}
 									className={`flex items-center rounded-xl px-3 py-3 font-semibold ${
-										it.here ? "bg-amber-500/15 text-amber-100" : "text-white active:bg-white/[0.05]"
+										it.here
+											? "bg-amber-500/15 text-amber-100"
+											: "text-white active:bg-white/[0.05]"
 									}`}
 								>
 									<span className="flex-1">{it.label}</span>
+									<News news={it.news} />
 									{it.count != null && (
 										<span className="text-sm font-normal tabular-nums text-gray-500">
 											{count(it.count)}

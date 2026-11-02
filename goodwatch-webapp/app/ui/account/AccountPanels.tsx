@@ -35,9 +35,8 @@ import {
 	MENU_WATCH,
 	type Place,
 } from "~/ui/navigation/areas"
-import { NewEpisodesMark } from "~/ui/navigation/bits"
 import { guestMenuPages, palettePages } from "~/ui/navigation/palette-pages"
-import { useNewEpisodes } from "~/ui/navigation/useNewEpisodes"
+import { useWatchNews } from "~/ui/navigation/useWhatsNew"
 import { profilePath } from "~/ui/share-card/links"
 import { useUser } from "~/utils/auth"
 import { useAuthHref } from "~/utils/auth-href"
@@ -65,9 +64,15 @@ function feedbackFrom(close: () => void) {
 	}
 }
 
-/** My shows' new-episodes number; it reads the header's signal, so it sends no request of its own. */
-function NewEpisodesBadge() {
-	return <NewEpisodesMark words={useNewEpisodes()} />
+/** The menu uses the same per-page news as the Watch tabs and phone sheet. */
+function WatchBadge({ kind }: { kind: "shows" | "movies" }) {
+	const news = useWatchNews()[kind]
+	return news ? (
+		<span className="rounded-full bg-sky-400 px-1.5 text-[11px] font-black text-black">
+			<span aria-hidden>{news.badge}</span>
+			<span className="sr-only">{news.label}</span>
+		</span>
+	) : null
 }
 
 /** A place as a link, or as a button when it acts (Feedback). */
@@ -109,7 +114,8 @@ function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
 		>
 			<place.icon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
 			<span className="grow truncate">{place.label}</span>
-			{place.badge === "new-episodes" && <NewEpisodesBadge />}
+			{place.id === "my-shows" && <WatchBadge kind="shows" />}
+			{place.id === "my-movies" && <WatchBadge kind="movies" />}
 		</PlaceLink>
 	)
 }

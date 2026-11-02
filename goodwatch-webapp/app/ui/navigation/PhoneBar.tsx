@@ -13,6 +13,8 @@ import { useNavigation, usePathViewer } from "./NavigationContext"
 import { holdKeyboardForSearch } from "./Search"
 import { type AreaTab, areaKeys } from "./areas"
 import { type PhoneBar as Bar, areaSheetOf, phoneBarOf } from "./phone-bar"
+import { useWatchNews } from "./useWhatsNew"
+import { withWatchNews } from "./watch-news"
 
 /** The bar's height in px (h-16): the page starts under it, and it slides away by this much. */
 const BAR_PX = 64
@@ -286,7 +288,10 @@ function TabsSheet({ bar }: { bar: Bar }) {
 					return sheet && { label: def.label, tabs: sheet.tabs }
 				})()
 			: null
-	const tabs = other?.tabs ?? navigation.phoneRow?.tabs ?? bar.siblings
+	const news = useWatchNews()
+	const rawTabs = other?.tabs ?? navigation.phoneRow?.tabs ?? bar.siblings
+	const tabs =
+		(asked ?? bar.area) === "watch" ? withWatchNews(rawTabs, news) : rawTabs
 	const label = other?.label ?? (navigation.phoneRow?.label || bar.eyebrow)
 	const fit = useFitSnap(72)
 	return (

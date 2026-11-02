@@ -16,8 +16,8 @@ import {
 import { Link } from "@remix-run/react"
 import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react"
 import { STICKY_BAR } from "~/ui/layers"
-import type { AreaTab, NavIcon, TasteRow } from "./areas"
 import { useNavigation } from "./NavigationContext"
+import type { AreaTab, NavIcon, TasteRow } from "./areas"
 import { TAB_ROW } from "./bar-layers"
 
 /** The page width, as ui/my-pages/bits.tsx (kept here so the header chunk does not pull that module). */
@@ -85,7 +85,7 @@ function Mark({ mark }: { mark: AreaTab["mark"] }) {
 }
 
 /** The sky badge of something new behind a tab, as the new-episodes mark elsewhere. */
-function News({ news }: { news: AreaTab["news"] }) {
+export function News({ news }: { news: AreaTab["news"] }) {
 	if (!news) return null
 	return (
 		<span
@@ -274,7 +274,7 @@ export function AreaTabs({
 function usePhoneRow(label: string, tabs: AreaTab[], trailing?: AreaTab[]) {
 	const { setPhoneRow } = useNavigation()
 	const all = trailing ? [...tabs, ...trailing] : tabs
-	const key = `${label}|${all.map((t) => `${t.key}:${t.href}:${t.here}:${t.count ?? ""}`).join(",")}`
+	const key = `${label}|${all.map((t) => `${t.key}:${t.href}:${t.here}:${t.count ?? ""}:${t.news?.badge ?? ""}:${t.news?.label ?? ""}`).join(",")}`
 	const latest = useRef(all)
 	latest.current = all
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `key` stands for the tabs' content

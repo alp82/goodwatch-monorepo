@@ -63,21 +63,31 @@ export function watchTabsFor(pathname: string): AreaTab[] {
 export function upNextViews(
 	pathname: string,
 	counts?: WatchViewCounts | null,
+	news?: AreaTab["news"],
 ): NavChoice[] | null {
 	if (watchTabOf(pathname) !== "up-next") return null
 	return (
 		watchChips(WATCH_PATHS.nextEpisodes, counts?.chips)?.choices ?? []
-	).map((choice) => ({ ...choice, here: choice.href === trim(pathname) }))
+	).map((choice) => ({
+		...choice,
+		here: choice.href === trim(pathname),
+		...(choice.key === "next-episodes" && news ? { news } : {}),
+	}))
 }
 
 /** Ready to watch's views (Next Movie · Want to Watch). Null off Ready to watch. */
 export function readyViews(
 	pathname: string,
 	counts?: WatchViewCounts | null,
+	news?: AreaTab["news"],
 ): NavChoice[] | null {
 	if (watchTabOf(pathname) !== "ready") return null
 	return (watchChips(WATCH_PATHS.tonight, counts?.chips)?.choices ?? []).map(
-		(choice) => ({ ...choice, here: choice.href === trim(pathname) }),
+		(choice) => ({
+			...choice,
+			here: choice.href === trim(pathname),
+			...(choice.key === "tonight" && news ? { news } : {}),
+		}),
 	)
 }
 

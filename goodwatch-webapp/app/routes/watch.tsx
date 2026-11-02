@@ -10,7 +10,8 @@ import { PlayIcon } from "@heroicons/react/24/solid"
 import { Outlet, useLocation } from "@remix-run/react"
 import { AreaTabs } from "~/ui/navigation/AreaTabs"
 import { SubNav } from "~/ui/navigation/SubNav"
-import { useNewEpisodes } from "~/ui/navigation/useNewEpisodes"
+import { useWatchNews } from "~/ui/navigation/useWhatsNew"
+import { withWatchNews } from "~/ui/navigation/watch-news"
 import { useWatchCounts } from "~/ui/watch/useWatchCounts"
 import {
 	readyViews,
@@ -23,16 +24,12 @@ import {
 
 export default function WatchLayout() {
 	const { pathname, search } = useLocation()
-	const fresh = useNewEpisodes()
+	const news = useWatchNews()
 	const counts = useWatchCounts()
-	const tabs = watchTabsFor(pathname).map((tab) =>
-		tab.key === "up-next" && fresh
-			? { ...tab, news: { badge: fresh.badge, label: fresh.door } }
-			: tab,
-	)
+	const tabs = withWatchNews(watchTabsFor(pathname), news)
 	const history = seenTab(pathname)
-	const upNext = upNextViews(pathname, counts)
-	const ready = readyViews(pathname, counts)
+	const upNext = upNextViews(pathname, counts, news.shows)
+	const ready = readyViews(pathname, counts, news.movies)
 	const sub = history.here
 		? { label: "Seen: movies or shows", items: seenKinds(search, counts) }
 		: ready

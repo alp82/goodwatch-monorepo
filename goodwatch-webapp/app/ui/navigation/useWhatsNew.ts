@@ -10,6 +10,7 @@ import {
 } from "~/domain/newly-available-signal"
 import { useNewEpisodesData } from "./useNewEpisodes"
 import { useTonightsPick } from "./useTonightsPick"
+import { watchNews } from "./watch-news"
 
 export interface WhatsNew {
 	episodes: NewEpisodes | null
@@ -26,4 +27,10 @@ export function useWhatsNew(): WhatsNew {
 export function useOpenerSignal(): SignalWords | null {
 	const { episodes, landed } = useWhatsNew()
 	return useMemo(() => openerWords(episodes, landed), [episodes, landed])
+}
+
+/** News for each Watch page, shared by every way into it. */
+export function useWatchNews() {
+	const { episodes, landed } = useWhatsNew()
+	return useMemo(() => watchNews(episodes, landed), [episodes, landed])
 }
