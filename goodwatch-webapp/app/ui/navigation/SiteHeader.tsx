@@ -1,8 +1,9 @@
+import { useNavLocation } from "./proto-location"
 // The site header. Desktop: the wordmark, the three area keys (Watch · Explore · Profile, which wears the member's
 // avatar), the search field in the middle, and the Menu button that opens the account menu (Sign in and Sign up for
 // guests). Phones: the page's own bar (PhoneBar.tsx: area label, title, the area's pages in a sheet, search); the area
 // keys and the menu's G live in the dock.
-import { Link, useLocation } from "@remix-run/react"
+import { Link } from "@remix-run/react"
 import { useMemo } from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import {
@@ -30,7 +31,7 @@ export interface AreaKeyView extends AreaDef {
 /** The three area keys for this viewer and page, with the lit one and their marks. Shared with the dock. */
 export function useAreaKeys(): AreaKeyView[] {
 	const viewer = usePathViewer()
-	const { pathname } = useLocation()
+	const { pathname } = useNavLocation()
 	const fresh = useOpenerSignal()
 	const lit = litArea(pathname, viewer)
 	return useMemo(

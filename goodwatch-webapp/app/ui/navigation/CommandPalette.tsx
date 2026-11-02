@@ -1,3 +1,4 @@
+import { useNavLocation } from "./proto-location"
 import useLocale from "~/utils/locale"
 import MediaText from "~/ui/media-text/MediaText"
 // The command palette: one field that goes anywhere. It opens empty, like a search field, with a line saying what
@@ -8,7 +9,7 @@ import MediaText from "~/ui/media-text/MediaText"
 // leads. A combobox over a listbox: Up and Down move the active option, Enter runs it; Escape closes the dialog
 // around it.
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
-import { Link, useLocation, useNavigate } from "@remix-run/react"
+import { Link, useNavigate } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import {
 	type ComponentType,
@@ -88,7 +89,7 @@ function usePaletteTitles(q: string): PaletteTitles {
 
 export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const navigate = useNavigate()
-	const { pathname } = useLocation()
+	const { pathname } = useNavLocation()
 	const { user } = useUser()
 	const { handle } = useAccountSummary()
 	const signUp = useSignUpHref()

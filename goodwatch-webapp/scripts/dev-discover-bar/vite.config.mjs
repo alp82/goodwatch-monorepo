@@ -41,4 +41,4 @@ const proxy = Object.fromEntries(
 )
 
 export default async (env) =>
-	mergeConfig(await base(env), { server: { proxy } })
+	mergeConfig(await base(env), { server: { proxy, allowedHosts: ["alppc.tail3b99f1.ts.net"] } })

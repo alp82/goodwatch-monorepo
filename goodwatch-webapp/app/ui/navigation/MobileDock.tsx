@@ -1,3 +1,4 @@
+import { useNavLocation } from "./proto-location"
 // The phone dock (below the large breakpoint): Home and Watch on the left, Explore and Profile on the right.
 // The GoodWatch G is raised over the middle and opens the menu (the account menu for
 // members; search, the main pages and Sign in for guests). The area keys don't navigate: each opens the sheet of its
@@ -6,7 +7,7 @@
 // such as Explorer can keep clear of it.
 import { HomeIcon } from "@heroicons/react/24/outline"
 import { HomeIcon as HomeSolid } from "@heroicons/react/24/solid"
-import { Link, useLocation } from "@remix-run/react"
+import { Link } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef } from "react"
 import { DockMenuKey, ProfileKeyIcon } from "~/ui/account/AccountKey"
 import { TvBackDockKey, useTvWayBack } from "~/ui/living-room/TvWayBackHost"
@@ -59,7 +60,7 @@ function DockAreaKey({ area }: { area: AreaKeyView }) {
 /** Home · Watch · (the G's column) · Explore · Profile, with equal space for the four navigation keys. */
 function DockKeys() {
 	const areas = useAreaKeys()
-	const { pathname } = useLocation()
+	const { pathname } = useNavLocation()
 	const home = pathname === "/"
 	const Home = home ? HomeSolid : HomeIcon
 	const byKey = (key: string) => areas.find((a) => a.key === key)
