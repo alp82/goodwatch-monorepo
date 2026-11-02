@@ -702,7 +702,7 @@
 	gap: 8px;
 	margin: 8px 0;
 }
-.ir-relaxations a {
+.ir-relaxations button {
 	font-size: 12px;
 	padding: 8px 11px;
 	border: 1px solid #ffffff20;
@@ -711,7 +711,7 @@
 	text-decoration: none;
 	background: #ffffff05;
 }
-.ir-relaxations a:hover {
+.ir-relaxations button:hover {
 	background: #ffffff0d;
 	border-color: #fbbf2450;
 }
@@ -794,4 +794,62 @@
 	.start-stage:has([data-prototype-input]) .start-gap {
 		height: 24px;
 	}
+}
+.tap-panel[data-long-query] .tap-head {
+	height: auto;
+	min-height: 88px;
+	padding-block: 14px;
+	align-items: flex-start;
+}
+.tap-panel[data-long-query] .tap-title-row {
+	flex-wrap: wrap;
+	gap: 8px 12px;
+}
+.tap-panel[data-long-query] .tap-title {
+	font-size: 22px;
+	line-height: 1.25;
+	white-space: normal;
+}
+.tap-panel[data-long-query] .tap-line {
+	flex-wrap: wrap;
+	gap: 6px 14px;
+}
+.ir-pick-purpose {
+	font-size: 13px;
+	color: #9aabc2;
+}
+@media (max-width: 640px) {
+	.tap-panel[data-long-query] .tap-head {
+		flex-wrap: wrap;
+	}
+	.tap-panel[data-long-query] .tap-title {
+		font-size: 19px;
+	}
+	.tap-panel[data-long-query] .tap-progress {
+		margin-left: auto;
+	}
+	.ir-pick-purpose {
+		font-size: 12px;
+		white-space: normal;
+	}
+}
+.tap-panel[data-long-query] .tap-die-label {
+	display: inline;
+}
+.start-card:has(.tap-panel[data-long-query] .ir-empty) {
+	height: auto;
+	min-height: var(--start-card);
+}
+.tap-panel[data-long-query]:has(.ir-empty) {
+	height: auto;
+	min-height: var(--start-card);
+}
+.start-card:has(.tap-panel[data-long-query] .ir-empty)
+	:is(.start-ledge-clip, .start-ledge-inner, .start-ledge-card) {
+	position: relative;
+	inset: auto;
+	height: auto;
+	min-height: var(--start-card);
+	transform: none;
+	overflow: visible;
 }

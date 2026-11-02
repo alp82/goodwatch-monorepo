@@ -34,11 +34,17 @@ at five lines. Longer text scrolls inside the field. The prototype lets the
 start-page content flow vertically so the larger fields cannot overlap results.
 
 B2 now collapses more than six filters into a count plus Show all / Show less,
-leaving the fingerprint visible. The I-series replaces the repeated query badge
-with Your search and uses a concise empty state. Constraint-relaxation links
-open Discover with that constraint removed; they do not claim to find matches
-or predict which constraint caused zero results. Edit search returns focus to
-the field. The Empty state switcher button toggles an explicitly labeled preview
+leaving the fingerprint visible. The I-series uses a concise empty state. The
+redundant Your search badge is removed. Constraint-relaxation buttons remove
+the corresponding interpreted phrases from
+the current query, update the composer, and rerun the start-page search. They
+stay on `/`, clear the explicit preview, and preserve the other query text and
+mood picks. They do not predict which constraint caused zero results. The local
+interpretation response exposes `appliedPhrases: {parameter, phrase}[]` from the
+engine's applied proposals; the dense fixture supplies its own source phrases.
+Only constraints with available source phrases offer this action. Edit search
+returns focus to the field. The Empty state switcher button toggles an explicitly
+labeled preview
 (`&preview=empty`) without replacing the real query or results. Turn it off to
 see the host's actual results again. The chosen filters remain inspectable.
 
@@ -77,7 +83,11 @@ Directions already established by the user's request:
 Verdict: the user selected B2 (color notes), with applied filters shown last,
 after remaining search text and fingerprint preferences. The user requested
 implementation of long-query suggestions and an input comparison. I1/I2/I3
-are awaiting visual selection.
-No production design has been promoted. Rewrite the selected design as production code; remove the DEV gate and
-losing variations from main after selection. The prototype's capture branch is
+were compared; the user selected I3 (the composer).
+The user also removed Pick up to three. The recommendation panel now explains
+its purpose: Personalize your recommendations / Pick three titles you’ve seen
+and loved. Its randomization button explicitly says Random mood, including on
+phones. This action changes the search mood; it does not select loved titles.
+The chosen direction is captured here for the production rewrite. The comparison
+variants and switcher remain restricted to development. The prototype's capture branch is
 `prototype/search-interpretation-ui`, with context in issue #726.

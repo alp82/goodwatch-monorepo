@@ -52,29 +52,51 @@ export function TapThreePanel({
 	const n = results.total ?? results.cards.length
 	const ready = !previewEmpty && view === "results" && results.cards.length > 0
 	return (
-		<div className="tap-panel" style={{ "--tap-hue": hue } as CSSProperties}>
+		<div
+			className="tap-panel"
+			data-long-query={longQueryPrototype ? "" : undefined}
+			style={{ "--tap-hue": hue } as CSSProperties}
+		>
 			<div className="tap-head">
 				<div className="tap-words">
 					<div className="tap-title-row">
-						<h2 className="tap-title">{TAP_THREE}</h2>
+						<h2 className="tap-title">
+							{longQueryPrototype
+								? "Personalize your recommendations"
+								: TAP_THREE}
+						</h2>
 						<button
 							type="button"
 							onClick={onSurprise}
 							className="tap-die"
-							aria-label="Surprise me: a random mood"
-							title="Surprise me"
+							aria-label={
+								longQueryPrototype
+									? "Try a random mood"
+									: "Surprise me: a random mood"
+							}
+							title={
+								longQueryPrototype
+									? "Change the results to a random mood"
+									: "Surprise me"
+							}
 						>
 							<DieIcon className="h-[18px] w-[18px]" />
-							<span className="tap-die-label">Surprise me</span>
+							<span className="tap-die-label">
+								{longQueryPrototype ? "Random mood" : "Surprise me"}
+							</span>
 						</button>
 					</div>
 					<div className="tap-line">
-						<span className="tap-chip">
-							<i aria-hidden />
-							{longQueryPrototype && query.text
-								? "Your search"
-								: shownLabel(query)}
-						</span>
+						{longQueryPrototype ? (
+							<span className="ir-pick-purpose">
+								Pick three titles you’ve seen and loved.
+							</span>
+						) : (
+							<span className="tap-chip">
+								<i aria-hidden />
+								{shownLabel(query)}
+							</span>
+						)}
 						{view === "loading" && !previewEmpty ? (
 							<span className="tap-count">
 								{query.text ? "Reading your search…" : "Finding titles…"}
@@ -86,14 +108,13 @@ export function TapThreePanel({
 						) : null}
 					</div>
 				</div>
-				<Hearts loved={loved} />
+				{!longQueryPrototype || ready ? <Hearts loved={loved} /> : null}
 				{ready ? (
 					<SeeAll href={seeAllHref(query)} className="tap-see max-sm:hidden" />
 				) : null}
 			</div>
 			<div className="tap-body">
 				{longQueryPrototype &&
-				PrototypeEmpty &&
 				(previewEmpty ||
 					(view !== "loading" &&
 						results.status !== "error" &&

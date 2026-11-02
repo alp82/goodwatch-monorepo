@@ -86,11 +86,7 @@ test("the ledge is one big button, with My movies and My shows under it and as t
 
 test("a member searches with the mood picker under the bar, as a guest does", () => {
 	for (const [name, html] of all) {
-		assert.match(
-			html,
-			/class="start-moods"[\s\S]*?Any mood[\s\S]*?Pick up to three/,
-			name,
-		)
+		assert.match(html, /class="start-moods"[\s\S]*?Any mood/, name)
 	}
 })
 
