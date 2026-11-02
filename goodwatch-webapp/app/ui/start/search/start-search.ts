@@ -1,3 +1,5 @@
+import type { DiscoverInterpretation } from "~/server/discover-query.server"
+import type { SearchFilters } from "~/server/combined-search/search-filters"
 // What the start page asks for a query, and what it answers: the same two requests Discover makes, so a search plus
 // mood picks behaves as on Discover.
 //
@@ -24,6 +26,7 @@ import {
 	defaultFilterState,
 	filterQuery,
 	filterStateToParams,
+	filterStateFromParams,
 } from "~/domain/filter-state"
 import { picksOf } from "~/domain/taste-picker"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
@@ -166,10 +169,7 @@ export function createStartSearch({
 	const searches = new Map<string, Promise<Searched>>()
 	/** Readings streamed ahead of their ranked lists. */
 	const readings = new Map<string, ReadingChip[]>()
-	const filters = searchEligibility(
-		defaultFilterState(DISCOVER_DEFAULTS),
-		scope,
-	)
+	const interpretations = new Map<string, DiscoverInterpretation>()
 	let shown: StartResults = IDLE_RESULTS
 	let asked: {
 		query: Pick<StartQuery, "text" | "picks">
@@ -179,6 +179,7 @@ export function createStartSearch({
 	/** The search in flight, aborted when another text is searched. */
 	let searching: {
 		text: string
+		key: string
 		abort: AbortController
 		promise: Promise<Searched>
 	} | null = null
@@ -197,14 +198,20 @@ export function createStartSearch({
 	/** Stops the search in flight and forgets it now, not when its rejection settles, so its text can be asked anew. */
 	function stopSearching() {
 		if (!searching) return
-		if (searches.get(searching.text) === searching.promise)
-			searches.delete(searching.text)
+		if (searches.get(searching.key) === searching.promise)
+			searches.delete(searching.key)
 		searching.abort.abort()
 		searching = null
 	}
 
-	function search(text: string): Promise<Searched> {
-		const kept = searches.get(text)
+	function search(
+		text: string,
+		filters: SearchFilters,
+		original: string,
+		prefix: ReadingChip[],
+	): Promise<Searched> {
+		const key = JSON.stringify([text, filters])
+		const kept = searches.get(key)
 		if (kept) return kept
 		stopSearching()
 		const abort = new AbortController()
@@ -214,14 +221,14 @@ export function createStartSearch({
 			false,
 			abort.signal,
 			(chips) => {
-				readings.set(text, chips)
+				readings.set(original, chips)
 				// The reading shows as soon as it arrives, while the titles are still on their way.
 				if (
 					shown.status === "loading" &&
-					asked?.query.text === text &&
+					asked?.query.text === original &&
 					shown.signature === asked.signature
 				)
-					emit({ ...shown, reading: chips })
+					emit({ ...shown, reading: [...chips, ...prefix] })
 			},
 			undefined,
 			language,
@@ -232,21 +239,48 @@ export function createStartSearch({
 					ranked: answer.ranked,
 					reading: answer.reading.length
 						? answer.reading
-						: (readings.get(text) ?? []),
+						: (readings.get(original) ?? []),
 				}
 			},
 			(error: unknown) => {
 				if (searching?.abort === abort) searching = null
 				// A failed or aborted search is asked again next time.
-				if (searches.get(text) === promise) searches.delete(text)
+				if (searches.get(key) === promise) searches.delete(key)
 				throw error
 			},
 		)
-		searching = { text, abort, promise }
-		searches.set(text, promise)
+		searching = { text: original, key, abort, promise }
+		searches.set(key, promise)
 		while (searches.size > KEPT_SEARCHES)
 			searches.delete(searches.keys().next().value as string)
 		return promise
+	}
+
+	async function resolve(
+		text: string,
+		picks: readonly string[],
+		signal: AbortSignal,
+	) {
+		const existing = filterStateToParams(
+			pickedState(picks, "all", true),
+			WIDEST,
+		).toString()
+		const key = JSON.stringify([text, existing])
+		const kept = interpretations.get(key)
+		if (kept) return kept
+		const response = await fetch("/api/discover/interpret", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ query: text, existing }),
+			signal,
+		})
+		if (!response.ok) throw Error(RESULTS_ERROR)
+		const result: DiscoverInterpretation = await response.json()
+		signal.throwIfAborted()
+		interpretations.set(key, result)
+		while (interpretations.size > KEPT_SEARCHES)
+			interpretations.delete(interpretations.keys().next().value!)
+		return result
 	}
 
 	async function load(
@@ -268,22 +302,56 @@ export function createStartSearch({
 				optionCounts: null,
 				error,
 			})
-		let ranked: TitleKey[] | null = null
-		let reading: ReadingChip[] | null = null
+		let interpreted: DiscoverInterpretation | null = null
+		let remaining = text
+		let inferred: ReadingChip[] = []
 		if (text !== null) {
+			try {
+				interpreted = await resolve(text, picks, signal)
+			} catch (error) {
+				if (live()) fail(error instanceof Error ? error.message : RESULTS_ERROR)
+				return
+			}
+			if (!live()) return
+			remaining = searchText(interpreted.semanticQuery ?? interpreted.residual)
+			inferred = interpreted.labels.map((text) => ({ text, kind: "attribute" }))
+			emit({
+				...shown,
+				reading: inferred,
+				discoverHref: interpreted.href,
+				interpretation: interpreted,
+			})
+		}
+		let ranked: TitleKey[] | null = null
+		let reading: ReadingChip[] | null = interpreted ? inferred : null
+
+		if (remaining !== null) {
 			let answer: Searched
 			try {
-				answer = await search(text)
+				answer = await search(
+					remaining,
+					searchEligibility(
+						filterStateFromParams(
+							new URLSearchParams(interpreted?.params),
+							DISCOVER_DEFAULTS,
+						),
+						scope,
+					),
+					text!,
+					inferred,
+				)
 			} catch (error) {
 				if (live()) fail(error instanceof Error ? error.message : RESULTS_ERROR)
 				return
 			}
 			if (!live()) return
 			ranked = answer.ranked
-			reading = answer.reading
+			reading = [...answer.reading, ...inferred]
 			// The search found nothing: there is nothing to filter.
 			if (!ranked.length) {
 				emit({
+					discoverHref: interpreted?.href,
+					interpretation: interpreted ?? undefined,
 					status: "ready",
 					signature,
 					cards: [],
@@ -297,12 +365,21 @@ export function createStartSearch({
 			}
 		}
 		const viewer = guest()
-		const path = resultsPath({
+		let path = resultsPath({
 			picks,
 			scope: resultsScope(scope),
 			ranked,
 			language,
 		})
+		if (interpreted) {
+			const url = new URL(path, "http://start.internal")
+			url.searchParams.set("services", "all")
+			url.searchParams.set("unseen", "0")
+			for (const [key, value] of new URLSearchParams(interpreted.params))
+				if (key !== "q") url.searchParams.set(key, value)
+			path = url.pathname + url.search
+		}
+
 		let response: Response
 		try {
 			response = await discoverFetch(path, viewer, signal)
@@ -333,6 +410,8 @@ export function createStartSearch({
 		}
 		if (!live()) return
 		emit({
+			discoverHref: interpreted?.href,
+			interpretation: interpreted ?? undefined,
 			status: "ready",
 			signature,
 			cards: body.cards.slice(0, START_CARDS),

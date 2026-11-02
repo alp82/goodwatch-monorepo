@@ -109,3 +109,33 @@ test("reset empties the slots and tells the page once", () => {
 	three.reset()
 	assert.deepEqual(changes, [["movie:1"], []])
 })
+
+test("return snapshots restore the slots and original undo values without re-saving ratings", () => {
+	const { three, scores } = setup(20, { "movie:1": 6 })
+	three.toggle(title(1))
+	three.toggle(title(2))
+	three.toggle(title(3))
+	const saved = three.snapshot()
+	const restored = createLovedThree({
+		store: {
+			snapshot: () => undefined,
+			love: () => {
+				throw Error("restoring must not save ratings")
+			},
+			restore: (t, value: number | undefined) => {
+				if (value === undefined) scores.delete(`movie:${t.tmdb_id}`)
+				else scores.set(`movie:${t.tmdb_id}`, value)
+			},
+		},
+		onChange: () => {},
+	})
+	restored.restore(saved)
+	assert.deepEqual(
+		restored.loved().map((t) => t.tmdb_id),
+		[1, 2, 3],
+	)
+	restored.toggle(title(1))
+	assert.equal(scores.get("movie:1"), 6)
+	restored.toggle(title(2))
+	assert.equal(scores.has("movie:2"), false)
+})

@@ -1,0 +1,245 @@
+[
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like Brad Pitt style movies",
+		"expect": {
+			"people": "287",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like Brad Pitt movies style",
+		"expect": {
+			"people": "287",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like Tom Hanks movies style",
+		"expect": {
+			"people": "31",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like matrix vibes movies",
+		"expect": {
+			"similar": "1000000000603",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["people"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like The Matrix movies vibes",
+		"expect": {
+			"similar": "1000000000603",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["people"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "Nolan vibes",
+		"expect": {
+			"people": "525"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like Nolan",
+		"expect": {
+			"people": "525"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "Hanks style",
+		"expect": {
+			"people": "31"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like hanks movies",
+		"expect": {
+			"people": "31",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like zzznotarealtitlezzzz",
+		"expect": {},
+		"residualEquals": "like zzznotarealtitlezzzz",
+		"absent": ["similar", "people"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like \"Matrixxxyyyzz\"",
+		"expect": {},
+		"residualEquals": "like \"Matrixxxyyyzz\"",
+		"absent": ["similar", "people"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like \"Scary Movie\"",
+		"expect": {
+			"similar": "1000000004247"
+		},
+		"residualEquals": "",
+		"absent": ["type", "people"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like Scary Movie",
+		"expect": {
+			"similar": "1000000004247"
+		},
+		"residualEquals": "",
+		"absent": ["type", "people"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "matrix",
+		"expect": {},
+		"residualEquals": "matrix",
+		"absent": ["similar", "people"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "Facing Nolan",
+		"expect": {},
+		"residualEquals": "Facing Nolan",
+		"absent": ["similar", "people"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "Nolan vibes",
+		"expect": {
+			"people": "31"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"existing": "people=31",
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like Brad Pitt movies style",
+		"expect": {
+			"people": "287",
+			"type": "show"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"existing": "type=show",
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "LIKE BRAD PITT STYLE MOVIES",
+		"expect": {
+			"people": "287",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like Brad Pitt\u2019s style movies",
+		"expect": {
+			"people": "287",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like Christopher Nolan style",
+		"expect": {
+			"people": "525"
+		},
+		"residualEquals": "",
+		"absent": ["similar"],
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "with Catherine Zeta Jones",
+		"expect": {
+			"people": "1922"
+		},
+		"absent": ["similar"],
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like Leon The Professional",
+		"expect": {
+			"similar": "1000000000101"
+		},
+		"absent": ["people"],
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like La vita \u00e8 bella",
+		"expect": {
+			"similar": "1000000000637"
+		},
+		"absent": ["people"],
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Adversarial entity resolution",
+		"query": "like \"La vita \u00e8 bella\"",
+		"expect": {
+			"similar": "1000000000637"
+		},
+		"absent": ["people"],
+		"residualEquals": "",
+		"exact": true
+	}
+]

@@ -56,8 +56,12 @@ export function searchEligibility(
 	const filters: SearchFilters = {}
 	if (state.type !== "all") filters.type = state.type
 	if (state.anime !== "any") filters.anime = state.anime
+	if (state.people?.length)
+		filters.people = [...new Set(state.people)].slice(0, 20)
 	if (state.genres.length === 1) filters.genres = [...state.genres]
 	Object.assign(filters, releasedYears(state.released, now))
+	if (state.years?.min !== undefined) filters.minYear = state.years.min
+	if (state.years?.max !== undefined) filters.maxYear = state.years.max
 	const services = state.onMyServices ? scope.services : (state.services ?? [])
 	if (services.length && /^[A-Z]{2}$/.test(scope.country))
 		filters.streaming = {

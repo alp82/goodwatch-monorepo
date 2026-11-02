@@ -136,10 +136,10 @@ export function SpotlightCard({
 						<button
 							type="button"
 							onClick={loved.reset}
-							aria-label={`Back to ${TAP_THREE.toLowerCase()}`}
+							aria-label="Choose three different titles"
 							className="inline-flex h-9 shrink-0 cursor-pointer items-center rounded-lg px-2.5 text-sm font-semibold text-amber-400 hover:bg-amber-400/10 hover:text-amber-300 sm:px-3"
 						>
-							<span aria-hidden>←&nbsp;</span>Back
+							Change my picks
 						</button>
 					) : null}
 					<LovedSlots loved={loved.loved} onUndo={loved.toggle} />
@@ -157,7 +157,11 @@ export function SpotlightCard({
 					<Layer on={forYou} from="down">
 						{forYou ? (
 							<Suspense fallback={<ForYouSkeleton />}>
-								<ForYouPanel picks={loved.picks} onStartOver={loved.reset} />
+								<ForYouPanel
+									picks={loved.picks}
+									returnView={loved.returnView}
+									onOpenDetails={loved.saveForReturn}
+								/>
 							</Suspense>
 						) : null}
 					</Layer>
@@ -286,25 +290,30 @@ function EmptyFan({
 				{posters.map((t, i) => {
 					const d = i - FAN_HALF
 					return (
-						<img
-							key={`${t.media_type}:${t.tmdb_id}`}
-							src={tmdbImageUrl(t.poster_path as string, "w342")}
-							alt=""
-							loading="lazy"
-							decoding="async"
-							fetchPriority="low"
-							draggable={false}
-							className="spotlight-fan aspect-[2/3] rounded-lg object-cover shadow-[0_18px_40px_rgb(0_0_0/.6)] ring-1 ring-white/10"
-							style={
-								{
-									"--fan-x": `${d * 74}%`,
-									"--fan-y": `${48 - d * d * 1.9}%`,
-									"--fan-r": `${-d * 2.2}deg`,
-									zIndex: 10 - Math.abs(d),
-									opacity: d === 0 ? 0.4 : 0.5,
-								} as CSSProperties
-							}
-						/>
+						<picture key={`${t.media_type}:${t.tmdb_id}`}>
+							<source
+								media="(max-width: 639px)"
+								srcSet={tmdbImageUrl(t.poster_path as string, "w185")}
+							/>
+							<img
+								src={tmdbImageUrl(t.poster_path as string, "w342")}
+								alt=""
+								loading="lazy"
+								decoding="async"
+								fetchPriority="low"
+								draggable={false}
+								className="spotlight-fan aspect-[2/3] rounded-lg object-cover shadow-[0_18px_40px_rgb(0_0_0/.6)] ring-1 ring-white/10"
+								style={
+									{
+										"--fan-x": `${d * 74}%`,
+										"--fan-y": `${48 - d * d * 1.9}%`,
+										"--fan-r": `${-d * 2.2}deg`,
+										zIndex: 10 - Math.abs(d),
+										opacity: d === 0 ? 0.4 : 0.5,
+									} as CSSProperties
+								}
+							/>
+						</picture>
 					)
 				})}
 			</div>

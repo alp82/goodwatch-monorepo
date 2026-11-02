@@ -56,11 +56,27 @@ type Call = { url: string; init?: RequestInit }
 function stubFetch(
 	t: TestContext,
 	answer: (call: Call) => Response | Promise<Response>,
+	interpret?: (query: string, existing: string) => Record<string, unknown>,
 ) {
 	const calls: Call[] = []
 	const original = globalThis.fetch
 	globalThis.fetch = (async (url: string, init?: RequestInit) => {
 		const call = { url: String(url), init }
+		if (call.url === "/api/discover/interpret") {
+			const { query, existing } = JSON.parse(String(init?.body))
+			const params = new URLSearchParams(existing)
+			params.set("q", query)
+			return Response.json(
+				interpret?.(query, existing) ?? {
+					residual: query,
+					params: params.toString(),
+					href: `/discover?${params}`,
+					labels: [],
+					warnings: [],
+				},
+			)
+		}
+
 		calls.push(call)
 		return answer(call)
 	}) as typeof fetch
@@ -450,6 +466,7 @@ test("a newer text aborts the older search, and its late answer is dropped", asy
 	})
 	const p = page()
 	p.dispatch({ type: "search", text: "cheer me up" })
+	await until(() => net.searches().length === 1)
 	p.dispatch({ type: "search", text: "space adventure" })
 	await until(() => p.last()?.status === "ready")
 	assert.equal(net.searches().length, 2)
@@ -474,7 +491,9 @@ test("going back to a text whose search was aborted searches it anew (A, B, A)",
 	})
 	const p = page()
 	p.dispatch({ type: "search", text: "cheer me up" })
+	await until(() => net.searches().length === 1)
 	p.dispatch({ type: "search", text: "space adventure" })
+	await until(() => net.searches().length === 2)
 	p.dispatch({ type: "search", text: "cheer me up" })
 	await until(
 		() =>
@@ -623,3 +642,83 @@ test("start search and See all use Discover's identical filters, even with saved
 		}
 	}
 })
+
+test("filter-only phrases browse all matching titles and carry resolved filters into See all", async (t) => {
+	const net = stubFetch(t, server, () => ({
+		residual: "",
+		params: "people=31&services=337",
+		href: "/discover?people=31&services=337",
+		labels: ["Tom Hanks", "Disney+"],
+		warnings: [],
+	}))
+	const p = page()
+	t.after(() => p.search.dispose())
+	p.dispatch({ type: "search", text: "tom hanks disney" })
+	await until(() => p.last()?.status === "ready")
+	assert.equal(net.searches().length, 0)
+	const params = new URL(net.results()[0].url, "https://x.invalid").searchParams
+	assert.equal(params.get("people"), "31")
+	assert.equal(params.get("services"), "337")
+	assert.equal(params.has("ranked"), false)
+	assert.equal(p.last()?.discoverHref, "/discover?people=31&services=337")
+	assert.deepEqual(
+		p.last()?.reading?.map((c) => c.text),
+		["Tom Hanks", "Disney+"],
+	)
+})
+
+test("remaining text ranks within inferred People and streaming eligibility before Discover's score filter", async (t) => {
+	const net = stubFetch(t, server, () => ({
+		residual: "heist",
+		params: "q=heist&people=287&services=9&score=80",
+		href: "/discover?q=heist&people=287&services=9&score=80",
+		labels: ["Brad Pitt", "Prime Video", "Score ≥ 80"],
+		warnings: [],
+	}))
+	const p = page()
+	t.after(() => p.search.dispose())
+	p.dispatch({ type: "search", text: "heist brad pitt prime 80" })
+	await until(() => p.last()?.status === "ready")
+	const body = JSON.parse(String(net.searches()[0].init?.body))
+	assert.equal(body.q, "heist")
+	assert.deepEqual(body.filters.people, [287])
+	assert.deepEqual(body.filters.streaming, { country: "DE", providerIds: [9] })
+	assert.equal(
+		new URL(net.results()[0].url, "https://x.invalid").searchParams.get(
+			"score",
+		),
+		"80",
+	)
+})
+
+for (const text of ["scary", "scary dark", "scary horror"]) {
+	test(`${text}: fingerprint reading still runs after descriptive words become filters`, async (t) => {
+		const net = stubFetch(t, server, () => ({
+			residual: "",
+			semanticQuery: text,
+			params: "moods=scary",
+			href: `/discover?moods=scary&q=${encodeURIComponent(text)}`,
+			labels: ["scary", "horror", "dark", "other filter"],
+			warnings: ["A hidden parser warning"],
+		}))
+		const p = page()
+		t.after(() => p.search.dispose())
+		p.dispatch({ type: "search", text })
+		await until(() => p.last()?.status === "ready")
+		assert.equal(JSON.parse(String(net.searches()[0].init?.body)).q, text)
+		assert.equal(
+			p.last()?.reading?.[0].kind,
+			"want",
+			"fingerprint chips precede filter chips",
+		)
+		assert(
+			!p.last()?.reading?.some((c) => c.text === "A hidden parser warning"),
+		)
+		assert.equal(
+			new URL(net.results()[0].url, "https://x.invalid").searchParams.get(
+				"moods",
+			),
+			"scary",
+		)
+	})
+}

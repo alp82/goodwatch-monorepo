@@ -1,3 +1,4 @@
+import type { DiscoverInterpretation } from "~/server/discover-query.server"
 // What a guest asks the start page for, and what the stage shows for it. Pure, so the rules are tested without React
 // (start-query.test.ts); useStartQuery.ts holds the state in a component.
 //
@@ -99,6 +100,8 @@ export type StartResultsStatus = "idle" | "loading" | "ready" | "error"
 
 /** What the stage shows for one query: the titles, the search's reading, and how many titles match in all. */
 export type StartResults = {
+	discoverHref?: string
+	interpretation?: DiscoverInterpretation
 	status: StartResultsStatus
 	/** The querySignature these results answer. */
 	signature: string

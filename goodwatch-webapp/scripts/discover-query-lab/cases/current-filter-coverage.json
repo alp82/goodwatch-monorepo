@@ -1,0 +1,1183 @@
+[
+	{
+		"query": "IMDb 8+",
+		"expect": {
+			"sources": "imdb:80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 8.5+",
+		"expect": {
+			"sources": "imdb:85"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 80%",
+		"expect": {
+			"sources": "imdb:80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb above 8",
+		"expect": {
+			"sources": "imdb:81"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Letterboxd 4+",
+		"expect": {
+			"sources": "letterboxd:80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Letterboxd 4.5+",
+		"expect": {
+			"sources": "letterboxd:90"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Rotten Tomatoes 90%",
+		"expect": {
+			"sources": "rtCritics:90"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Rotten Tomatoes critics 90+",
+		"expect": {
+			"sources": "rtCritics:90"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Rotten Tomatoes audience 80+",
+		"expect": {
+			"sources": "rtAudience:80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "RT critics 75+",
+		"expect": {
+			"sources": "rtCritics:75"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "RT audience 90%",
+		"expect": {
+			"sources": "rtAudience:90"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Metacritic 70+",
+		"expect": {
+			"sources": "metacritic:70"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Metacritic users 8+",
+		"expect": {
+			"sources": "metacriticUsers:80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Metacritic user score 7.5+",
+		"expect": {
+			"sources": "metacriticUsers:75"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 8/10",
+		"expect": {
+			"sources": "imdb:80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Letterboxd 4/5",
+		"expect": {
+			"sources": "letterboxd:80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 8+ Letterboxd 4+",
+		"expect": {
+			"sources": "imdb:80,letterboxd:80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 9+ Letterboxd 4+",
+		"expect": {
+			"sources": "imdb:70,letterboxd:80"
+		},
+		"residualEquals": "",
+		"exact": true,
+		"existing": "sources=imdb:70"
+	},
+	{
+		"query": "IMDb 11+",
+		"expect": {},
+		"residualEquals": "IMDb 11+",
+		"exact": true
+	},
+	{
+		"query": "IMDb under 8",
+		"expect": {},
+		"residualEquals": "IMDb under 8",
+		"exact": true
+	},
+	{
+		"query": "Letterboxd 6+",
+		"expect": {},
+		"residualEquals": "Letterboxd 6+",
+		"exact": true
+	},
+	{
+		"query": "Metacritic 110+",
+		"expect": {},
+		"residualEquals": "Metacritic 110+",
+		"exact": true
+	},
+	{
+		"query": "2 seasons",
+		"expect": {
+			"seasons": "2-2"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "one season",
+		"expect": {
+			"seasons": "1-1"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "one-season show",
+		"expect": {
+			"seasons": "1-1",
+			"type": "show"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "at most three seasons",
+		"expect": {
+			"seasons": "-3"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "under 3 seasons",
+		"expect": {
+			"seasons": "-2"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "over 2 seasons",
+		"expect": {
+			"seasons": "3-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "3+ seasons",
+		"expect": {
+			"seasons": "3-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "two to three seasons",
+		"expect": {
+			"seasons": "2-3"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "between 2 and 4 seasons",
+		"expect": {
+			"seasons": "2-4"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "finished series",
+		"expect": {
+			"showStatus": "ended"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "completed shows",
+		"expect": {
+			"showStatus": "ended"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "still running shows",
+		"expect": {
+			"showStatus": "running",
+			"type": "show"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "ongoing series",
+		"expect": {
+			"showStatus": "running",
+			"type": "show"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "cancelled shows",
+		"expect": {
+			"showStatus": "canceled"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "canceled series",
+		"expect": {
+			"showStatus": "canceled"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "2 seasons",
+		"expect": {
+			"seasons": "4-7"
+		},
+		"residualEquals": "",
+		"exact": true,
+		"existing": "seasons=4-7"
+	},
+	{
+		"query": "episodes under 30 minutes",
+		"expect": {
+			"episodeRuntime": "-29"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "under 30 minutes per episode",
+		"expect": {
+			"episodeRuntime": "-29"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "30 minute episodes",
+		"expect": {
+			"episodeRuntime": "30-30"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episode length at most 45 mins",
+		"expect": {
+			"episodeRuntime": "-45"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episodes over 1 hour",
+		"expect": {
+			"episodeRuntime": "61-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episodes under 1 hour 30 minutes",
+		"expect": {
+			"episodeRuntime": "-89"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "unlimited episode runtime",
+		"expect": {
+			"episodeRuntime": "any"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episodes under 30 minutes",
+		"expect": {
+			"episodeRuntime": "40-60"
+		},
+		"residualEquals": "",
+		"exact": true,
+		"existing": "episodeRuntime=40-60"
+	},
+	{
+		"query": "budget under $20 million",
+		"expect": {
+			"budget": "-19.999"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "budget at most $20m",
+		"expect": {
+			"budget": "-20"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "budget over $50 million",
+		"expect": {
+			"budget": "50.001-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "budget between $5m and $20m",
+		"expect": {
+			"budget": "5-20"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "budget between 5 and 20 million",
+		"expect": {
+			"budget": "5-20"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "under $20m budget",
+		"expect": {
+			"budget": "-19.999"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "grossed over $100 million",
+		"expect": {
+			"boxOffice": "100.001-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "box office at least $1 billion",
+		"expect": {
+			"boxOffice": "1000-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "revenue between $100m and $1b",
+		"expect": {
+			"boxOffice": "100-1000"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "low budget",
+		"expect": {
+			"budget": "-4.999"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "high budget",
+		"expect": {
+			"budget": "50-99.999"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "blockbuster budget",
+		"expect": {
+			"budget": "100-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "flop",
+		"expect": {
+			"returns": "flop"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "box office flop",
+		"expect": {
+			"returns": "flop"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "commercial hit",
+		"expect": {
+			"returns": "hit"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "low budget flop",
+		"expect": {
+			"budget": "-4.999",
+			"returns": "flop"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "budget above $5m budget below $20m",
+		"expect": {
+			"budget": "5.001-19.999"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "budget under $20m",
+		"expect": {
+			"budget": "50-"
+		},
+		"residualEquals": "",
+		"exact": true,
+		"existing": "budget=50-"
+	},
+	{
+		"query": "at least 10,000 ratings",
+		"expect": {
+			"votes": "10000-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "over 100 votes",
+		"expect": {
+			"votes": "101-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "under 100 votes",
+		"expect": {
+			"votes": "-99"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "100k ratings",
+		"expect": {
+			"votes": "100000-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "1m votes",
+		"expect": {
+			"votes": "1000000-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "top 100",
+		"expect": {
+			"rank": "-100"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "top 100 most popular",
+		"expect": {
+			"rank": "-100"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "popularity rank 1000",
+		"expect": {
+			"rank": "-1000"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "rank over 1000",
+		"expect": {
+			"rank": "1001-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "hidden gems",
+		"expect": {
+			"votes": "-9999"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "under the radar",
+		"expect": {
+			"rank": "1001-10000"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "deep cuts",
+		"expect": {
+			"rank": "10001-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "critics and audiences agree",
+		"expect": {
+			"gap": "agree"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "universally acclaimed",
+		"expect": {
+			"gap": "agree"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "critics liked it more",
+		"expect": {
+			"gap": "critics"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "audiences liked it more",
+		"expect": {
+			"gap": "audience"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "critics loved it, audiences hated it",
+		"expect": {
+			"gap": "critics"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "audiences loved it, critics hated it",
+		"expect": {
+			"gap": "audience"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "controversial",
+		"expect": {
+			"gap": "audience"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "divisive",
+		"expect": {
+			"gap": "audience"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "polarizing",
+		"expect": {
+			"gap": "audience"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "controversial",
+		"expect": {
+			"gap": "critics"
+		},
+		"residualEquals": "",
+		"exact": true,
+		"existing": "gap=critics"
+	},
+	{
+		"query": "already seen",
+		"expect": {
+			"seen": "1"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "already watched",
+		"expect": {
+			"seen": "1"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "rewatch",
+		"expect": {
+			"seen": "1"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "on my wishlist",
+		"expect": {
+			"wishlist": "1"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "from my watchlist",
+		"expect": {
+			"wishlist": "1"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "available anywhere to stream",
+		"expect": {
+			"services": "any"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "on any streaming service",
+		"expect": {
+			"services": "any"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "sort by relevance",
+		"expect": {
+			"sort": "relevance"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "most relevant",
+		"expect": {
+			"sort": "relevance"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "without personalization",
+		"expect": {
+			"foryou": "0"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "not personalized",
+		"expect": {
+			"foryou": "0"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "for you off",
+		"expect": {
+			"foryou": "0"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "taste match at least 60%",
+		"expect": {
+			"match": "60"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "already seen",
+		"expect": {
+			"unseen": "1"
+		},
+		"residualEquals": "",
+		"exact": true,
+		"existing": "unseen=1"
+	},
+	{
+		"query": "both scary and funny",
+		"expect": {
+			"moods": "scary,funny",
+			"all": "moods"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "both horror and comedy",
+		"expect": {
+			"genres": "Horror,Comedy",
+			"all": "genres"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "all of scary, funny and dark",
+		"expect": {
+			"moods": "scary,funny,dark",
+			"all": "moods"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "both slow and animated",
+		"expect": {
+			"styles": "slow,animated",
+			"all": "styles"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Australian movies",
+		"expect": {
+			"type": "movie",
+			"productionCountries": "AU"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Dutch movies",
+		"expect": {
+			"type": "movie",
+			"productionCountries": "NL"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Brazilian shows",
+		"expect": {
+			"type": "show",
+			"productionCountries": "BR"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "made in Iceland",
+		"expect": {
+			"productionCountries": "IS"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "produced in South Africa",
+		"expect": {
+			"productionCountries": "ZA"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "available in Netherlands",
+		"expect": {
+			"streamingCountry": "NL"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "streaming in Brazil",
+		"expect": {
+			"streamingCountry": "BR"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "US age ratings",
+		"expect": {
+			"ratingCountry": "US"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "age ratings for Germany",
+		"expect": {
+			"ratingCountry": "DE"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "rest of the world",
+		"expect": {
+			"restOfWorld": "1"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "on Mubi",
+		"expect": {
+			"services": "11"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "on Peacock",
+		"expect": {
+			"services": "386"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Paramount Plus",
+		"expect": {
+			"services": "531"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "on Shudder",
+		"expect": {
+			"services": "99"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Crunchyroll",
+		"expect": {
+			"services": "283"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "BritBox",
+		"expect": {
+			"services": "151"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Discovery Plus",
+		"expect": {
+			"services": "524"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "not a flop",
+		"expect": {},
+		"residualEquals": "not a flop",
+		"exact": true
+	},
+	{
+		"query": "not controversial",
+		"expect": {},
+		"residualEquals": "not controversial",
+		"exact": true
+	},
+	{
+		"query": "not both scary and funny",
+		"expect": {},
+		"residualEquals": "not both scary and funny",
+		"exact": true
+	},
+	{
+		"query": "\"IMDb 8+\"",
+		"expect": {},
+		"residualEquals": "\"IMDb 8+\"",
+		"exact": true
+	},
+	{
+		"query": "\"2 seasons\"",
+		"expect": {},
+		"residualEquals": "\"2 seasons\"",
+		"exact": true
+	},
+	{
+		"query": "\"top 100\"",
+		"expect": {},
+		"residualEquals": "\"top 100\"",
+		"exact": true
+	},
+	{
+		"query": "on no service",
+		"expect": {},
+		"residualEquals": "on no service",
+		"exact": true
+	},
+	{
+		"query": "outside my usual taste",
+		"expect": {},
+		"residualEquals": "outside my usual taste",
+		"exact": true
+	},
+	{
+		"query": "a series I can finish in ten hours",
+		"expect": {
+			"type": "show"
+		},
+		"residualEquals": "a I can finish in ten hours",
+		"exact": true
+	},
+	{
+		"query": "ratings at least 100",
+		"expect": {
+			"votes": "100-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "between 10k and 100k votes",
+		"expect": {
+			"votes": "10000-100000"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "rank between 100 and 1000",
+		"expect": {
+			"rank": "100-1000"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episodes between 20 and 30 minutes",
+		"expect": {
+			"episodeRuntime": "20-30"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "at least 8 on IMDb",
+		"expect": {
+			"sources": "imdb:80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "4+ on Letterboxd",
+		"expect": {
+			"sources": "letterboxd:80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "90% on Rotten Tomatoes",
+		"expect": {
+			"sources": "rtCritics:90"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "budget under 20",
+		"expect": {
+			"budget": "-19.999"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "budget 50",
+		"expect": {
+			"budget": "50-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "complete series",
+		"expect": {
+			"showStatus": "ended"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "critics hated it, audiences loved it",
+		"expect": {
+			"gap": "audience"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "audiences hated it, critics loved it",
+		"expect": {
+			"gap": "critics"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "French age ratings",
+		"expect": {
+			"ratingCountry": "FR"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "without personalisation",
+		"expect": {
+			"foryou": "0"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "budget between 5 and 20",
+		"expect": {
+			"budget": "5-20"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "under 20 budget",
+		"expect": {
+			"budget": "-19.999"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "$20m budget",
+		"expect": {
+			"budget": "20-"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "-2 seasons",
+		"expect": {},
+		"residualEquals": "-2 seasons",
+		"exact": true
+	},
+	{
+		"query": "under 0 votes",
+		"expect": {},
+		"residualEquals": "under 0 votes",
+		"exact": true
+	}
+]

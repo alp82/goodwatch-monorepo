@@ -33,7 +33,10 @@ type Call = { path: string; params: URLSearchParams }
 
 /** Answers the two requests from tables; records every call. */
 function mockFetch(
-	recs: Record<string, { tmdb_id: number; match_percentage: number }[]>,
+	recs: Record<
+		string,
+		{ tmdb_id: number; match_percentage: number; fingerprint_keys?: string[] }[]
+	>,
 	cards: TitleCard[],
 ) {
 	const calls: Call[] = []
@@ -169,4 +172,31 @@ test("shownPick chooses again when the viewer answers a candidate", () => {
 	const again = shownPick(pick, new Set(["movie-1"]))
 	assert.equal(name(again.top), "movie:2")
 	assert.deepEqual(again.more.map(name), ["movie:3"])
+})
+
+test("title fingerprint descriptions stay attached to their recommendation through selection", async () => {
+	mockFetch(
+		{
+			movie: [
+				{
+					tmdb_id: 10,
+					match_percentage: 90,
+					fingerprint_keys: ["tension", "mystery"],
+				},
+			],
+			show: [
+				{ tmdb_id: 20, match_percentage: 80, fingerprint_keys: ["wonder"] },
+			],
+		},
+		[card("movie", 10), card("show", 20)],
+	)
+	const pick = await findPick(loved, [], new Set())
+	assert.deepEqual(pick.fingerprints, {
+		"movie-10": ["tension", "mystery"],
+		"show-20": ["wonder"],
+	})
+	assert.deepEqual(
+		shownPick(pick, new Set(["movie-10"])).fingerprints,
+		pick.fingerprints,
+	)
 })

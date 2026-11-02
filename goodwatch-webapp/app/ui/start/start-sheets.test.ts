@@ -22,14 +22,20 @@ test("every style sheet of the start page's first load is in START_SHEETS, none 
 	)
 	assert.match(
 		readFileSync("app/ui/start/start-sheets.ts", "utf8"),
-		/start\/start\.css\?url"/,
+		/start-page\.css\?url/,
 	)
+	const bundle = readFileSync("app/ui/start/start-page.css", "utf8")
+	for (const source of [
+		"./start.css",
+		"./spotlight/spotlight.css",
+		"../living-room/intro/boot.css",
+		"./opening/opening.css",
+		"./how/how-it-works.css",
+	])
+		assert.ok(bundle.includes(`@import "${source}"`), source)
 	// Nothing of the old TV home is in the start page's first load but its boot screen, which a guest's opening plays
 	// (opening/OpeningBoot.tsx).
 	for (const path of modules)
 		if (!/^app\/ui\/living-room\/intro\/boot\.(tsx|css)$/.test(path))
 			assert.doesNotMatch(path, /ui\/living-room\/(tv|intro)\//, path)
-	const sheets = readFileSync("app/ui/start/start-sheets.ts", "utf8")
-	assert.match(sheets, /intro\/boot\.css\?url"/)
-	assert.match(sheets, /start\/opening\/opening\.css\?url"/)
 })

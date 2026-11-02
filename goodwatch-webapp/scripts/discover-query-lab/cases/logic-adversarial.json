@@ -1,0 +1,449 @@
+[
+	{
+		"group": "Adversarial logic",
+		"query": "not very scary",
+		"absent": ["genres", "moods", "styles"],
+		"residualEquals": "not very scary"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "nothing scary",
+		"absent": ["genres", "moods", "styles"],
+		"residualEquals": "nothing scary"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "not too scary",
+		"absent": ["genres", "moods", "styles"],
+		"residualEquals": "not too scary"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "not a horror movie",
+		"absent": ["genres", "moods", "styles"],
+		"residualEquals": "not a horror movie"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no comedy or horror",
+		"absent": ["genres", "moods", "styles"],
+		"residualEquals": "no comedy or horror"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "anything except horror",
+		"absent": ["genres", "moods", "styles"],
+		"residualEquals": "anything except horror"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "anything but horror",
+		"absent": ["genres", "moods", "styles"],
+		"residualEquals": "anything but horror"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "don't want any horror",
+		"absent": ["genres", "moods", "styles"],
+		"residualEquals": "don't want any horror"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no slow burn",
+		"absent": ["genres", "moods", "styles"],
+		"residualEquals": "no slow burn"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "not animated",
+		"absent": ["genres", "moods", "styles"],
+		"residualEquals": "not animated"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "not funny but scary",
+		"expect": {
+			"moods": "scary"
+		},
+		"residualEquals": "not funny"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "funny and not scary",
+		"expect": {
+			"moods": "funny"
+		},
+		"residualEquals": "not scary"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "not only funny but scary",
+		"expect": {
+			"moods": "funny,scary"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no doubt funny",
+		"expect": {
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no Netflix or Disney+",
+		"expect": {
+			"services": "all"
+		},
+		"residualEquals": "no Netflix or Disney+"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "not on Netflix",
+		"expect": {
+			"services": "all"
+		},
+		"residualEquals": "not on Netflix"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no horror on Netflix",
+		"expect": {
+			"services": "8"
+		},
+		"absent": ["genres"],
+		"residualEquals": "no horror"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "without any violence",
+		"expect": {
+			"hide": "violence"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no swearing or drugs",
+		"expect": {
+			"hide": "language,drugs"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no violence and sex",
+		"expect": {
+			"hide": "violence,sex"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no violence and no sex",
+		"expect": {
+			"hide": "violence,sex"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "do not allow nudity",
+		"expect": {
+			"hide": "sex"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "nothing disturbing",
+		"expect": {
+			"hide": "disturbing"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no sex and allow violence",
+		"expect": {
+			"hide": "sex",
+			"ok": "violence"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no sex but allow sex",
+		"expect": {
+			"hide": "sex"
+		},
+		"absent": ["ok"],
+		"residualEquals": "",
+		"warningContains": "Conflicting content choices"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "allow sex but no sex",
+		"expect": {
+			"ok": "sex"
+		},
+		"absent": ["hide"],
+		"residualEquals": "",
+		"warningContains": "Conflicting content choices"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "not without sex",
+		"expect": {},
+		"absent": ["hide", "ok"],
+		"residualEquals": "not without sex"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "not anime",
+		"expect": {
+			"anime": "none"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no sex but allow sex",
+		"expect": {
+			"ok": "sex"
+		},
+		"absent": ["hide"],
+		"residualEquals": "",
+		"existing": "ok=sex"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "allow sex but no sex",
+		"expect": {
+			"hide": "sex"
+		},
+		"absent": ["ok"],
+		"residualEquals": "",
+		"existing": "hide=sex"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "funny scary romantic sad uplifting",
+		"expect": {
+			"moods": "funny,scary,romance"
+		},
+		"residualEquals": "",
+		"warningContains": "Only 3 moods can be applied"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "on my services and netflix",
+		"expect": {
+			"services": "mine"
+		},
+		"residualEquals": "",
+		"warningContains": "Conflicting service choices"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "netflix and on my services",
+		"expect": {
+			"services": "8"
+		},
+		"residualEquals": "",
+		"warningContains": "Conflicting services choices"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "movies on Netflix or funny",
+		"expect": {
+			"type": "movie",
+			"services": "all"
+		},
+		"absent": ["moods"],
+		"residualEquals": "on Netflix or funny",
+		"warningContains": "OR between different filter groups"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "funny or Netflix",
+		"expect": {
+			"services": "all"
+		},
+		"absent": ["moods"],
+		"residualEquals": "funny or Netflix",
+		"warningContains": "OR between different filter groups"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "funny or scary",
+		"expect": {
+			"moods": "funny,scary"
+		},
+		"residualEquals": "",
+		"noWarningContains": "OR between different filter groups"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "netflix or disney+",
+		"expect": {
+			"services": "8,337"
+		},
+		"residualEquals": "",
+		"noWarningContains": "OR between different filter groups"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "comedy or horror",
+		"expect": {
+			"genres": "Comedy,Horror"
+		},
+		"residualEquals": "",
+		"noWarningContains": "OR between different filter groups"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "funny",
+		"expect": {
+			"moods": "funny"
+		},
+		"residualEquals": "",
+		"existing": "moods=bogus",
+		"warningContains": "Ignored invalid existing moods"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "movies",
+		"expect": {
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"existing": "type=garbage",
+		"warningContains": "Ignored invalid existing type"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "excellent",
+		"expect": {
+			"score": "80"
+		},
+		"residualEquals": "",
+		"existing": "score=banana",
+		"warningContains": "Ignored invalid existing score"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "90s",
+		"expect": {
+			"minYear": "1990",
+			"maxYear": "1999"
+		},
+		"residualEquals": "",
+		"existing": "minYear=bad",
+		"warningContains": "Ignored invalid existing minYear"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "under 90 minutes",
+		"expect": {
+			"maxRuntime": "89"
+		},
+		"residualEquals": "",
+		"existing": "maxRuntime=abc",
+		"warningContains": "Ignored invalid existing maxRuntime"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "excellent",
+		"expect": {
+			"score": "80"
+		},
+		"residualEquals": "",
+		"existing": "maxScore=999",
+		"warningContains": "Ignored invalid existing maxScore"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "movies",
+		"expect": {
+			"type": "all"
+		},
+		"residualEquals": "",
+		"existing": "type=all"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "anime",
+		"expect": {
+			"anime": "any"
+		},
+		"residualEquals": "",
+		"existing": "anime=any"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "netflix",
+		"expect": {
+			"services": "all"
+		},
+		"residualEquals": "",
+		"existing": "services=all"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "excellent",
+		"expect": {
+			"score": "0"
+		},
+		"residualEquals": "",
+		"existing": "score=0"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "under 90 minutes",
+		"expect": {
+			"minRuntime": "0"
+		},
+		"absent": ["maxRuntime"],
+		"residualEquals": "",
+		"existing": "minRuntime=0"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "excellent",
+		"expect": {
+			"maxScore": "100"
+		},
+		"absent": ["score"],
+		"residualEquals": "",
+		"existing": "maxScore=100"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no sex, violence, or drugs",
+		"expect": {
+			"hide": "sex,violence,drugs"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "no gore or horror",
+		"expect": {
+			"hide": "violence"
+		},
+		"absent": ["genres"],
+		"residualEquals": "not horror"
+	},
+	{
+		"group": "Adversarial logic",
+		"query": "not anime or animation",
+		"expect": {
+			"anime": "none"
+		},
+		"absent": ["styles"],
+		"residualEquals": "not animation"
+	}
+]

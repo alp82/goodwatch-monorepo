@@ -1,0 +1,794 @@
+[
+	{
+		"query": "with Tom Hanks flop Netflix 80",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "with Tom Hanks flop 80 Netflix",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "with Tom Hanks Netflix flop 80",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "with Tom Hanks Netflix 80 flop",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "with Tom Hanks 80 flop Netflix",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "with Tom Hanks 80 Netflix flop",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "flop with Tom Hanks Netflix 80",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "flop with Tom Hanks 80 Netflix",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "flop Netflix with Tom Hanks 80",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "flop Netflix 80 with Tom Hanks",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "flop 80 with Tom Hanks Netflix",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "flop 80 Netflix with Tom Hanks",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Netflix with Tom Hanks flop 80",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Netflix with Tom Hanks 80 flop",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Netflix flop with Tom Hanks 80",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Netflix flop 80 with Tom Hanks",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Netflix 80 with Tom Hanks flop",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Netflix 80 flop with Tom Hanks",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "80 with Tom Hanks flop Netflix",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "80 with Tom Hanks Netflix flop",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "80 flop with Tom Hanks Netflix",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "80 flop Netflix with Tom Hanks",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "80 Netflix with Tom Hanks flop",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "80 Netflix flop with Tom Hanks",
+		"expect": {
+			"people": "31",
+			"returns": "flop",
+			"services": "8",
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "finished series one season IMDb 8+ Prime Video",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "finished series one season Prime Video IMDb 8+",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "finished series IMDb 8+ one season Prime Video",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "finished series IMDb 8+ Prime Video one season",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "finished series Prime Video one season IMDb 8+",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "finished series Prime Video IMDb 8+ one season",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "one season finished series IMDb 8+ Prime Video",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "one season finished series Prime Video IMDb 8+",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "one season IMDb 8+ finished series Prime Video",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "one season IMDb 8+ Prime Video finished series",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "one season Prime Video finished series IMDb 8+",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "one season Prime Video IMDb 8+ finished series",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 8+ finished series one season Prime Video",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 8+ finished series Prime Video one season",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 8+ one season finished series Prime Video",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 8+ one season Prime Video finished series",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 8+ Prime Video finished series one season",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "IMDb 8+ Prime Video one season finished series",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Prime Video finished series one season IMDb 8+",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Prime Video finished series IMDb 8+ one season",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Prime Video one season finished series IMDb 8+",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Prime Video one season IMDb 8+ finished series",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Prime Video IMDb 8+ finished series one season",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Prime Video IMDb 8+ one season finished series",
+		"expect": {
+			"showStatus": "ended",
+			"seasons": "1-1",
+			"sources": "imdb:80",
+			"services": "9"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episodes under 30 minutes controversial Shudder Japanese",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episodes under 30 minutes controversial Japanese Shudder",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episodes under 30 minutes Shudder controversial Japanese",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episodes under 30 minutes Shudder Japanese controversial",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episodes under 30 minutes Japanese controversial Shudder",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "episodes under 30 minutes Japanese Shudder controversial",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "controversial episodes under 30 minutes Shudder Japanese",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "controversial episodes under 30 minutes Japanese Shudder",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "controversial Shudder episodes under 30 minutes Japanese",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "controversial Shudder Japanese episodes under 30 minutes",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "controversial Japanese episodes under 30 minutes Shudder",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "controversial Japanese Shudder episodes under 30 minutes",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Shudder episodes under 30 minutes controversial Japanese",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Shudder episodes under 30 minutes Japanese controversial",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Shudder controversial episodes under 30 minutes Japanese",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Shudder controversial Japanese episodes under 30 minutes",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Shudder Japanese episodes under 30 minutes controversial",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Shudder Japanese controversial episodes under 30 minutes",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Japanese episodes under 30 minutes controversial Shudder",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Japanese episodes under 30 minutes Shudder controversial",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Japanese controversial episodes under 30 minutes Shudder",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Japanese controversial Shudder episodes under 30 minutes",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Japanese Shudder episodes under 30 minutes controversial",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"query": "Japanese Shudder controversial episodes under 30 minutes",
+		"expect": {
+			"episodeRuntime": "-29",
+			"gap": "audience",
+			"services": "99",
+			"productionCountries": "JP"
+		},
+		"residualEquals": "",
+		"exact": true
+	}
+]

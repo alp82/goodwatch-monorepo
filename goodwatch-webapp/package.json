@@ -25,7 +25,11 @@
 		"test:auth:maintenance": "bash scripts/auth-maintenance/run.sh",
 		"auth:maintenance": "node scripts/auth-maintenance/cli.ts",
 		"typecheck:auth-importer": "tsc -p scripts/auth-importer/tsconfig.json",
-		"test:auth-importer": "bash scripts/auth-importer/run.sh"
+		"test:auth-importer": "bash scripts/auth-importer/run.sh",
+		"lab:discover": "node scripts/discover-query-lab/server.mjs",
+		"lab:discover:check": "node scripts/discover-query-lab/evaluate-cli.mjs",
+		"lab:discover:browser": "node scripts/discover-query-lab/browser-check.mjs",
+		"lab:discover:assertions": "node --test scripts/discover-query-lab/evaluate.test.mjs"
 	},
 	"dependencies": {
 		"@faststats/web": "^0.13.2",

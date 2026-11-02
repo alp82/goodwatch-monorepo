@@ -85,7 +85,11 @@ export function MemberResults({
 						Try again
 					</button>
 				) : (
-					<Link to={seeAllHref(query)} prefetch="intent" className={ACTION}>
+					<Link
+						to={results.discoverHref ?? seeAllHref(query)}
+						prefetch="intent"
+						className={ACTION}
+					>
 						See all
 						<ArrowRightIcon className="h-4 w-4" aria-hidden />
 					</Link>

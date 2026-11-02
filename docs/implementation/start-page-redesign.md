@@ -29,7 +29,7 @@ The owner's final picks (October 28, 2026):
 |---|---|---|
 | Opening (guests) | Flow j | The old TV's boot drawn large in the empty band above the centered search. At the hand-off it fades out while the real site header slides down. Once per browser session; never for members. |
 | Stage (guests) | Stage m | The search block (H1, search bar, the "Any mood" button) centered over a near-black room that lights up step by step. |
-| Search bar | Bar d | Two-row bar: the field and an amber Search button with a ↵ key segment; under a divider, six lowercase presets or, while a search is on, Discover's "Read as" chips. |
+| Search bar | Selected composer and grouped readout | Growing textarea with actions below, six visible Try presets, color-coded wanted/avoided fingerprint preferences, and concise applied filters shown last. Long filter lists expand from a count. |
 | Mood choice | My movies' mood picker | "Any mood" opens the taste picker panel: eight mixes ("Start with a mix"), then Moods, Themes, and Styles. Up to three picks; a mix is its parts; one mix on at a time. |
 | Results | Spotlight card | "Tap three you loved": whole posters, paged by arrows at most once (two pages). Loved 0/3 slots. Then "For you": a featured title and "Also for you". |
 | Room | Scene `nook-r15-a` | The painted sofa nook, no dog, warm under-shelf LED strips. Phone version `nook-r15-a-portrait`. |
@@ -255,10 +255,22 @@ The open card for guests (`spotlight/SpotlightCard.tsx`):
   three hearts for the loved titles, and **See all**. The first loved dims the rest. Nothing found or an error says so
   in the panel with the way on (drop the moods, Retry, Surprise me). The guest's card wants 330, 380, 410 px (378 px
   on short desktops).
-- **For you:** the first recommendation with a backdrop, large on it (title, `ScoreRing`, "Because you loved A, B and
-  C", **Keep my taste** to `/sign-up`, Details), then "Also for you" (small posters; a tap features one) and **Start
-  over**. "Also for you" keeps whole posters per view by container queries (`poster-fit.ts`): 6 on phones, 3 at 768,
-  5 at 1024, 6 at 1440, 7 at 1920.
+- **For you:** recommendations form a horizontal accordion. Titles keep their original order;
+  clicking a poster expands that card in place and collapses the previous card. The open card
+  shows its backdrop, title, score, year/type, services and Details. Arrow keys, Home and End
+  move focus between poster buttons; Enter/Space opens one. Each expanded card shows a concise title fingerprint from snapshot scores;
+  actual personalized reason keys, when supplied, are labeled Why this fits instead.
+  Missing fingerprints use a plain explanation that the pick is based on the three loved titles.
+  The row scrolls to keep the active card visible and honors reduced motion. The active card fills the remaining row width.
+  **Change my picks** in the header returns to choosing three titles (saved ratings stay);
+  the duplicate Back and Start over controls are removed. A separate,
+  prominent account bar explains saving taste and loved titles, with **Create an account**
+  linking to `/sign-up`; the whole account bar is one clickable link. The card grows to fit the accordion and this action on phones.
+
+  Opening Details snapshots this browser-history entry's loved titles, recommendations,
+  expanded title and scroll positions. Back restores that exact recommendation session
+  without fetching a new set; new searches and Change my picks clear the saved return state.
+
 
 **Loved titles** (`useLovedThree`): tapping a poster saves it with `updateGuestInteraction(mediaType, tmdbId,
 "score", 9)` (owner, 2026-10-29: loved is a 9); undoing removes it. Fewer than three carry across searches. Once three are loved, any new choice (a
@@ -390,11 +402,11 @@ step 4 needs step 2; step 8 needs step 2; step 9 comes last.
 
 ### 2. Guest search
 
-- `StartSearchBar` (bar d), presets, debounce 800 ms, Enter and Search, reading row with `ReadAsChips`,
+- `StartSearchBar` composer, visible presets, debounce 800 ms, Enter and Search, a lazy interpretation readout,
   `useStartSearch` wired to `/api/combined-search` and `/api/discover/results`, See all URL, error and 503 handling.
 - Accept: unit tests with mocked `fetch`: typing searches once after the pause, presets search their exact phrase,
   changing picks re-filters without a new search, stale responses are dropped, See all carries text and picks; the
-  bar's box never changes height between presets and reading.
+  composer grows to five lines, Shift+Enter inserts a newline, and interpretation stays below the visible presets.
 
 ### 3. Mood picker and room lighting
 
@@ -520,3 +532,42 @@ HTTP/2 with 103 hints, fixtures for the shelf, Where to start and the members, s
    ratings.
 2. **Mix tile counts:** mix tiles show their parts line, and only single moods, themes, and styles show counts
    (owner, 2026-10-29).
+
+## Selected search and recommendation implementation (2026-11-02)
+
+The owner selected B2's grouped readout and I3's composer. The comparison and
+review fixtures are preserved at `prototype/search-interpretation-ui` (`ea8b36b53`),
+linked from issue #726; they are not part of the production route. The production
+readout consumes the same interpretation response that retrieval applies, rather
+than making a second request. Entity/service names come from lookup results.
+Empty-state buttons relax the corresponding query phrases in place. Search-derived
+text stays masked from replay. The local lab and adversarial phrases exercise the
+shared rules, including provider aliases, ranges, references and negation.
+
+The production-runtime smoke check exercises `remix-serve` as well as dev: lookup
+adapters use the Response constructor because Remix's installed fetch polyfill
+does not implement the native static Response.json helper.
+
+### Release validation
+
+- 235 focused interpreter, filter-label, retrieval-client, saved-result, recommendation,
+  stylesheet and SSR checks pass. The lab reports 704 expected rule matches; its one
+  explicitly model-dependent case remains marked as needing a fingerprint read.
+- Production-built browser checks use normal `/` without variant parameters. They
+  exercise real Tom Hanks/Disney/year filtering, inline relaxation, recommendations,
+  stable accordion ordering, readable labels, Details/Back restoration, and the
+  full-row account link on desktop and phone. No page errors or horizontal overflow.
+- Local production Lighthouse over TLS/HTTP2, median of three runs: 98 score,
+  2,329 ms LCP, 0 ms TBT, 0.003 CLS, 325.3 KiB script, 830.9 KiB images,
+  1,286.3 KiB total, and two render-blocking requests. The home budget passes.
+  This host is not the calibrated generator; timing values describe this local run.
+- The home script allowance covers its existing main baseline (329.7 KiB against
+  the previous 295 KiB allowance) and the needed composer/history behavior. The
+  selected build uses fewer script bytes than that baseline. Page styles share one
+  first-view bundle; the decorative mobile fan reuses w185 shelf images. Other home
+  byte/request and layout limits remain unchanged.
+- The broader retrieval suite has 76 passes and two `late-catalog-sibling` failures;
+  unchanged main reproduces both failures. Repository-wide type checking also has
+  pre-existing errors outside these changes. Discover's total-byte budget is already
+  exceeded on unchanged main; this change's measured total is lower. Those unrelated
+  failures and budget limits were not suppressed or weakened.

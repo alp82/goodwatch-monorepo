@@ -176,7 +176,7 @@ export function StartMoodPicker({
 								""
 							)
 						) : (
-							"Pick up to three"
+							""
 						)}
 					</span>
 				</div>

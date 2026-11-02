@@ -1,0 +1,161 @@
+[
+	{
+		"group": "Compound references",
+		"query": "with Tom Hanks and Brad Pitt",
+		"expect": {
+			"people": "31,287"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "Brad Pitt and Tom Hanks",
+		"expect": {
+			"people": "287,31"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "matrix vibes and inception vibes",
+		"expect": {
+			"similar": "1000000000603,1000000027205"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "like \"Toy Story\" and \"Shrek\"",
+		"expect": {
+			"similar": "1000000000862,1000000000808"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "like Toy Story and Shrek",
+		"expect": {
+			"similar": "1000000000862,1000000000808"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "with Tom Hanks and Brad Pitt",
+		"existing": "people=138",
+		"expect": {
+			"people": "138"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "like No Country for Old Men",
+		"expect": {
+			"similar": "1000000006977"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "like \"The Matrix\" movies",
+		"expect": {
+			"similar": "1000000000603",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "like \u201cThe Matrix\u201d movies",
+		"expect": {
+			"similar": "1000000000603",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "\u201cModern Family\u201d",
+		"expect": {},
+		"residualEquals": "\u201cModern Family\u201d",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "with Tom Hanks and not Brad Pitt",
+		"expect": {
+			"people": "31"
+		},
+		"residualContains": "not Brad Pitt",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "not like matrix",
+		"expect": {},
+		"residualEquals": "not like matrix",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "without Tom Hanks",
+		"expect": {},
+		"residualEquals": "without Tom Hanks",
+		"exact": true
+	},
+	{
+		"group": "Residual punctuation",
+		"query": "80+!",
+		"expect": {
+			"score": "80"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Residual punctuation",
+		"query": "Tom Hanks!",
+		"expect": {
+			"people": "31"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Residual punctuation",
+		"query": "\"!\"",
+		"expect": {},
+		"residualEquals": "\"!\"",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "like matrix and horror",
+		"expect": {
+			"similar": "1000000000603",
+			"genres": "Horror"
+		},
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Compound references",
+		"query": "with Tom Hanks and comedy",
+		"expect": {
+			"people": "31",
+			"genres": "Comedy"
+		},
+		"residualEquals": "",
+		"exact": true
+	}
+]
