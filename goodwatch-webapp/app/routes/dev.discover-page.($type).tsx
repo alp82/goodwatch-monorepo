@@ -6,7 +6,7 @@
 import { type LoaderFunctionArgs, json, redirect } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import type { BrowseLoaderData } from "~/routes/discover.($type)"
-import { DiscoverPage } from "~/ui/discover/DiscoverPage"
+import { EasyDiscover } from "~/ui/discover/prototype-easy/EasyDiscover"
 
 const LIVE = "https://goodwatch.app"
 const HERE = "/dev/discover-page"
@@ -48,5 +48,5 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export default function DevDiscoverPage() {
 	const data = useLoaderData<BrowseLoaderData>()
-	return <DiscoverPage {...data.browse} />
+	return <EasyDiscover {...data.browse} />
 }

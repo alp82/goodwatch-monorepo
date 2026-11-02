@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
@@ -84,6 +85,18 @@ export interface DiscoverPageProps {
 	savedForYou: boolean
 	/** Where a search's On my services looks: the viewer's country and saved services (guests choose theirs). */
 	searchScope: SearchScope
+	/** PROTOTYPE (discover-easy): replaces the bar with an easy-mode header. */
+	easy?: (ctx: EasyContext) => ReactNode
+}
+
+/** PROTOTYPE (discover-easy): what an easy-mode header can read and change. */
+export interface EasyContext {
+	filters: ReturnType<typeof useFilterState>
+	q: string | null
+	onSearch: (text: string) => void
+	clearSearch: () => void
+	total: number | null
+	member: boolean
 }
 
 // A For you flip in progress: where each title was before, and when the new order landed.
@@ -109,6 +122,7 @@ export function DiscoverPage({
 	member,
 	savedForYou,
 	searchScope,
+	easy,
 }: DiscoverPageProps) {
 	const [params, setParams] = useSearchParams()
 	const q = searchText(params.get("q"))
@@ -455,6 +469,16 @@ export function DiscoverPage({
 		<MotionConfig reducedMotion="user">
 			<div className="mx-auto max-w-7xl px-4 pt-5 lg:pt-8">
 				{/* Reaching for the bar starts loading the panel's content. */}
+				{easy ? (
+					easy({
+						filters,
+						q,
+						onSearch,
+						clearSearch,
+						total: first && answered && !stale ? first.total : null,
+						member,
+					})
+				) : (
 				<div onPointerEnter={warm} onTouchStart={warm} onFocus={warm}>
 					<DiscoverControls
 						heading={
@@ -486,6 +510,7 @@ export function DiscoverPage({
 						}}
 					/>
 				</div>
+				)}
 				{/* Mounted for all of search mode with one line of height: the grid doesn't move when the text comes and
 				    goes, and a screen reader hears each change. */}
 				{searching && (
