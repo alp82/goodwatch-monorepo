@@ -1,8 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 
-const { INTERACTION_EVENTS, isPageActivity, whenPageIsInteractive } =
-	await import("./load-trigger.ts")
+const {
+	INTERACTION_EVENTS,
+	isPageActivity,
+	landsOnFilteredPersonPage,
+	whenPageIsInteractive,
+} = await import("./load-trigger.ts")
 type LoadTriggerEnv = import("./load-trigger.ts").LoadTriggerEnv
 
 // A browser stand-in with a clock the test moves by hand.
@@ -312,6 +316,91 @@ test("a cancelled trigger never runs", () => {
 	browser.advance(60_000)
 	assert.deepEqual(reasons, [])
 	assert.equal(browser.leftovers(), 0)
+})
+
+function armInteractionOnly(browser: ReturnType<typeof fakeBrowser>) {
+	const reasons: string[] = []
+	const cancel = whenPageIsInteractive(
+		(reason) => reasons.push(reason),
+		browser.env,
+		{ ...waiting, interactionOnly: true },
+	)
+	return { reasons, cancel }
+}
+
+test("with interaction only, a page that nobody uses never runs the tools, quiet, loaded or hidden", () => {
+	const browser = fakeBrowser({ loaded: false })
+	const { reasons, cancel } = armInteractionOnly(browser)
+	browser.dispatch("load")
+	browser.activity()
+	browser.advance(60_000)
+	browser.hide()
+	browser.advance(60_000)
+	assert.deepEqual(reasons, [])
+	cancel()
+	assert.equal(browser.leftovers(), 0)
+})
+
+test("with interaction only, a page hidden from the start waits for the visitor", () => {
+	const browser = fakeBrowser({ hidden: true })
+	const { reasons } = armInteractionOnly(browser)
+	assert.deepEqual(reasons, [])
+	browser.dispatch("pointerdown")
+	browser.advance(1000)
+	assert.deepEqual(reasons, ["interaction"])
+	assert.equal(browser.leftovers(), 0)
+})
+
+test("with interaction only, an interaction runs the tools after the pause, and hiding the page ends the pause", () => {
+	const browser = fakeBrowser()
+	const { reasons } = armInteractionOnly(browser)
+	browser.dispatch("scroll")
+	browser.advance(999)
+	assert.deepEqual(reasons, [])
+	browser.advance(1)
+	assert.deepEqual(reasons, ["interaction"])
+
+	const leaving = fakeBrowser()
+	const left = armInteractionOnly(leaving)
+	leaving.dispatch("pointerdown")
+	leaving.advance(100)
+	leaving.hide()
+	assert.deepEqual(left.reasons, ["hidden"])
+	assert.equal(leaving.leftovers(), 0)
+})
+
+test("a person page with filters is a filtered landing, other pages are not", () => {
+	assert.equal(
+		landsOnFilteredPersonPage(
+			"https://goodwatch.app/person/72256-roy-marsden?role=Acting&genre=Horror",
+		),
+		true,
+	)
+	assert.equal(
+		landsOnFilteredPersonPage(
+			"https://goodwatch.app/person/72256-roy-marsden/?decade=1990",
+		),
+		true,
+	)
+	assert.equal(
+		landsOnFilteredPersonPage("https://goodwatch.app/person/72256-roy-marsden"),
+		false,
+	)
+	assert.equal(
+		landsOnFilteredPersonPage("https://goodwatch.app/person/72256-roy-marsden?"),
+		false,
+	)
+	assert.equal(
+		landsOnFilteredPersonPage("https://goodwatch.app/discover?genre=Horror"),
+		false,
+	)
+	assert.equal(
+		landsOnFilteredPersonPage(
+			"https://goodwatch.app/person/1/credits?role=Acting",
+		),
+		false,
+	)
+	assert.equal(landsOnFilteredPersonPage("not a url"), false)
 })
 
 test("long tasks, paints and finished requests are page activity, beacons are not", () => {
