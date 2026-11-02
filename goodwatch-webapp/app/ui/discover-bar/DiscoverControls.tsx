@@ -437,7 +437,7 @@ function DiscoverControlsContent({
 	const attReady = <AttReady on={readyOn} toggle={toggleReady} member={member} look={look} short={!desktop} />
 	const attSort = <AttSort sort={sort} look={look} short={!desktop} />
 	const attForYou = (
-		<AttForYou forYou={forYou} locked={!member} onLocked={() => toAdvanced("you", "taste")} look={look} shown={advanced} short={!desktop} />
+		<AttForYou forYou={forYou} locked={!member} onLocked={() => toAdvanced("you", "taste")} look={look} shown={advanced} />
 	)
 	const readingLine = proto?.renderReading?.(easyApi)
 	const lip = attach === "lip" && (
@@ -519,7 +519,7 @@ function DiscoverControlsContent({
 				))}
 			</div>
 			{heading && (
-				<div className="flex items-start justify-between gap-4">
+				<div className={`flex justify-between gap-4 ${proto ? "items-center" : "items-start"}`}>
 					<div className="min-w-0">{heading}</div>
 					{!countBelow && (
 						<FilterMix
@@ -529,6 +529,7 @@ function DiscoverControlsContent({
 							chips={data.chips}
 							update={filters.update}
 							phone={!desktop}
+							flush={!!proto}
 						/>
 					)}
 				</div>

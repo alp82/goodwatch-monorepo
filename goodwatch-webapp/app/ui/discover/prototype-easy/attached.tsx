@@ -27,7 +27,7 @@ function Shell({ look, children, onClick, label, role, checked }: {
 			? "flex h-full min-w-0 shrink-0 cursor-pointer flex-col justify-center gap-0.5 px-5 text-left hover:bg-white/[0.04]"
 			: look === "inline"
 				? "flex h-full shrink-0 cursor-pointer items-center gap-2.5 rounded-full px-4 hover:bg-white/[0.04]"
-				: "flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-2.5 hover:bg-white/[0.06]"
+				: "flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-2 hover:bg-white/[0.06]"
 	return onClick ? (
 		<button type="button" role={role} aria-checked={checked} aria-label={label} onClick={onClick} className={cls}>
 			{children}
@@ -38,7 +38,7 @@ function Shell({ look, children, onClick, label, role, checked }: {
 }
 
 export function AttReady({ on, toggle, member, look, short, big }: { on: boolean; toggle: () => void; member: boolean; look: AttachLook; short?: boolean; big?: boolean }) {
-	const icon = <PlayCircleIcon className={`${big ? "h-5 w-5" : "h-4 w-4"} shrink-0 ${on ? "text-amber-400" : "text-gray-500"}`} />
+	const icon = <PlayCircleIcon className={`${big ? "h-5 w-5" : "h-4 w-4"} shrink-0 max-[380px]:hidden ${on ? "text-amber-400" : "text-gray-500"}`} />
 	const knob = <Knob on={on} size={big ? "lg" : "md"} />
 	if (look === "segment")
 		return (
@@ -77,8 +77,8 @@ export function AttSort({ sort, look, short }: { sort: ComponentProps<typeof Sor
 		)
 	return (
 		<Shell look={look}>
-			<span className={`flex h-full items-center ${fill} ${look === "lip" ? "text-[13px] [&_[data-sort-button]]:h-8" : ""} ${short ? "[&_[data-sort-button]>span.text-gray-400]:hidden" : ""}`}>
-				<SortControl {...sort} bare modeIcon short={short} align="right" portal />
+			<span className={`flex h-full items-center ${fill} ${look === "lip" ? "text-[13px] [&_[data-sort-button]]:h-8" : ""} ${short ? "[&_[data-sort-button]>span.text-gray-400]:hidden [&_[data-sort-button]>svg:first-child]:hidden" : ""}`}>
+				<SortControl {...sort} bare modeIcon={!short} short={short} align="right" portal />
 			</span>
 		</Shell>
 	)
