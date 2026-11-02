@@ -1,21 +1,28 @@
 // PROTOTYPE (discover-easy): Easy and Advanced are one page. Round 9 baseline (owner picked round 8 E): Ready to watch
 // attached to the search bar, Sort over the results at the reading line's end; For you joins in Advanced and the bar
-// slides in under the search. Variants change what the reading line shows while nothing is searched or filtered. `as=member` shows the member state over the guest's data; variant 0 is today's page.
+// slides in under the search. Round 10: the type switch always leads the reading line; moods and example searches split between the empty line and
+// the search field. `as=member` shows the member state over the guest's data; variant 0 is today's page.
 import { useSearchParams } from "@remix-run/react"
 import { DiscoverPage, type DiscoverPageProps } from "../DiscoverPage"
+import { START_PRESETS } from "~/ui/start/search/presets"
 import { EasyE } from "./EasyE"
-import type { EmptyKind } from "./Empty"
+import { type EmptyAfterType, MoodMenuRow } from "./Empty"
 import { ModeSwitch, useMode } from "./kit"
 import { PrototypeSwitcher } from "./Switcher"
 import type { Easy } from "./types"
 
-type V = { key: string; name: string; empty?: EmptyKind; today?: boolean }
+type V = {
+	key: string
+	name: string
+	after?: EmptyAfterType
+	examples?: "menu" | "placeholder"
+	moodsInMenu?: boolean
+	today?: boolean
+}
 const VARIANTS: V[] = [
-	{ key: "A", name: "Filters: none", empty: "summary" },
-	{ key: "B", name: "Try examples", empty: "examples" },
-	{ key: "C", name: "Quick adds", empty: "quick" },
-	{ key: "D", name: "Moods", empty: "moods" },
-	{ key: "E", name: "Type switch", empty: "type" },
+	{ key: "F", name: "Moods, examples on focus", after: "moods", examples: "menu" },
+	{ key: "G", name: "Moods, cycling examples", after: "moods", examples: "placeholder" },
+	{ key: "H", name: "Examples, moods on focus", after: "examples", examples: "menu", moodsInMenu: true },
 	{ key: "0", name: "Today", today: true },
 ]
 
@@ -38,7 +45,12 @@ export function EasyDiscover(props: DiscoverPageProps) {
 								setMode,
 								modeSwitch: <ModeSwitch />,
 								attach: "rowsort",
-								reading: (e) => <EasyE e={e} empty={v.empty} />,
+								reading: (e) => <EasyE e={e} empty="type" after={v.after} />,
+								examples: v.examples && {
+									how: v.examples,
+									list: START_PRESETS,
+									extra: v.moodsInMenu ? <MoodMenuRow /> : undefined,
+								},
 							}
 				}
 			/>

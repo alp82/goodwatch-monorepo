@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import type { EasyApi } from "~/ui/discover-bar/DiscoverControls"
 import type { Attach } from "~/ui/discover/prototype-easy/attached"
+import type { Examples } from "~/ui/discover/prototype-easy/ProtoSearch"
 import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
@@ -95,6 +96,7 @@ export interface DiscoverPageProps {
 		reading?: (ctx: EasyContext & EasyApi) => ReactNode
 		inside?: (ctx: EasyContext & EasyApi) => ReactNode
 		attach: Attach
+		examples?: Examples
 	}
 }
 
@@ -507,6 +509,7 @@ export function DiscoverPage({
 								renderInside: proto.inside && ((api) => proto.inside?.(easyCtx(api))),
 								renderReading: proto.reading && ((api) => proto.reading?.(easyCtx(api))),
 								attach: proto.attach,
+								examples: proto.examples,
 							}
 						}
 						className="mt-3 lg:mt-5"

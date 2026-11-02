@@ -9,7 +9,7 @@
 // open (the Search segment after "/"), except after a press outside, which keeps focus where it landed. The phone sheet
 // returns focus to the control that opened it, and closing phone Find returns it to the magnifier.
 import { type Attach, AttForYou, AttReady, AttSort, Divider } from "~/ui/discover/prototype-easy/attached"
-import { ProtoSearch } from "~/ui/discover/prototype-easy/ProtoSearch"
+import { type Examples, ProtoSearch } from "~/ui/discover/prototype-easy/ProtoSearch"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import {
@@ -167,6 +167,7 @@ export interface DiscoverControlsProps {
 		modeTabs: ReactNode
 		/** How Ready to watch, Sort and (Advanced) For you attach to the search bar. */
 		attach: Attach
+		examples?: Examples
 	}
 }
 
@@ -525,6 +526,7 @@ function DiscoverControlsContent({
 							inside={lip || undefined}
 							lead={lead}
 							trail={trail}
+							examples={proto.examples}
 						/>
 					</>
 				)}

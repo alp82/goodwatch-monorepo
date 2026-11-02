@@ -10,6 +10,9 @@ import type { DiscoverInterpretation } from "~/server/discover-query.server"
 const PAGE_KEYS = ["mode", "variant", "as"]
 const DROP_KEYS = ["q", "asked", "page", "allTitles", "sort", "layout"]
 
+/** Example searches for the field (round 10). */
+export type Examples = { how: "menu" | "placeholder"; list: readonly string[]; extra?: ReactNode }
+
 /** The last interpretation per search text, so the readout can say which filters came from the words. */
 export const interpreted = new Map<string, { typed: string; result: DiscoverInterpretation }>()
 
@@ -58,6 +61,7 @@ export function ProtoSearch({
 	side,
 	lead,
 	trail,
+	examples,
 }: {
 	query: string | null
 	onClear: () => void
@@ -69,6 +73,8 @@ export function ProtoSearch({
 	/** Attached before the text and between the text and the Search button. */
 	lead?: ReactNode
 	trail?: ReactNode
+	/** Example searches: a small menu while the empty field has focus, or the placeholder cycling through them. */
+	examples?: Examples
 }) {
 	const { run, busy } = useInterpretedSearch()
 	// The field shows what was typed, not only the part left as search text.
@@ -76,8 +82,17 @@ export function ProtoSearch({
 	const typed = params.get("asked") ?? (query !== null ? (interpreted.get(query)?.typed ?? query) : "")
 	const [text, setText] = useState(typed)
 	useEffect(() => setText(typed), [typed])
+	const [focused, setFocused] = useState(false)
+	const [tick, setTick] = useState(0)
+	useEffect(() => {
+		if (examples?.how !== "placeholder" || text) return
+		const id = setInterval(() => setTick((n) => n + 1), 2600)
+		return () => clearInterval(id)
+	}, [examples?.how, text])
+	const cycling = examples?.how === "placeholder" ? examples.list[tick % examples.list.length] : null
 	const submit = () => {
-		const t = text.trim()
+		// An empty field with a cycling example searches that example.
+		const t = text.trim() || cycling || ""
 		if (t) run(t)
 		else onClear()
 	}
@@ -102,7 +117,9 @@ export function ProtoSearch({
 				<input
 					value={text}
 					onChange={(e) => setText(e.target.value)}
-					placeholder={phone ? "Mood, plot, title…" : "Describe it: “funny 90s movies on Netflix”"}
+					placeholder={cycling ? `Try “${cycling}”` : phone ? "Mood, plot, title…" : "Describe it: “funny 90s movies on Netflix”"}
+					onFocus={() => setFocused(true)}
+					onBlur={() => setTimeout(() => setFocused(false), 150)}
 					aria-label="Search by mood, plot, or title"
 					className={`brand-header search-private w-full min-w-0 bg-transparent leading-tight text-white placeholder:text-gray-500 focus:outline-none ${
 						phone ? "text-[19px]" : "text-[21px]"
@@ -134,6 +151,28 @@ export function ProtoSearch({
 			</button>
 			{side}
 			</div>
+			{examples?.how === "menu" && focused && !text && (
+				<div className="absolute top-full right-0 left-0 z-40 mt-2 rounded-[22px] bg-gray-900 p-3 shadow-2xl shadow-black/70 ring-1 ring-white/10">
+					<p className="px-2 pb-1.5 text-[10px] font-bold tracking-[0.08em] text-gray-500 uppercase">Try</p>
+					<div className="flex flex-wrap gap-1.5">
+						{examples.list.map((x) => (
+							<button
+								key={x}
+								type="button"
+								onMouseDown={(e) => e.preventDefault()}
+								onClick={() => {
+									setText(x)
+									run(x)
+								}}
+								className="cursor-pointer rounded-full bg-white/[0.06] px-3 py-1.5 text-[13px] text-gray-200 hover:bg-white/[0.12] hover:text-white"
+							>
+								{x}
+							</button>
+						))}
+					</div>
+					{examples.extra}
+				</div>
+			)}
 			{inside && <div className={`-mt-2 pb-3.5 ${phone ? "pr-4" : "pr-7"}`}>{inside}</div>}
 		</form>
 	)

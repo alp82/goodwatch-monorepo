@@ -1,12 +1,12 @@
 // PROTOTYPE (discover-easy) E "Strip": one fixed-height line beside Ready, under the search, in both modes, that never wraps:
 // fingerprint, then filters, scrolling sideways when long.
 import { FilterList, FingerprintList, LockedUnseen, qualitiesOf } from "./reading"
-import { EmptyReading, type EmptyKind, TypeSwitch } from "./Empty"
+import { type EmptyAfterType, EmptyReading, type EmptyKind, TypeSwitch } from "./Empty"
 import type { Easy } from "./types"
 
 export const name = "Strip"
 
-export function EasyE({ e, empty = "summary" }: { e: Easy; empty?: EmptyKind }) {
+export function EasyE({ e, empty = "summary", after }: { e: Easy; empty?: EmptyKind; after?: EmptyAfterType }) {
 	const locked = !e.member && e.filters.state.onMyServices
 	const typeLead = empty === "type"
 	const has = qualitiesOf(e.reading).length > 0 || e.chips.some((c) => c.kind !== "query" && !(typeLead && c.group === "type"))
@@ -16,7 +16,14 @@ export function EasyE({ e, empty = "summary" }: { e: Easy; empty?: EmptyKind }) 
 				{typeLead ? (
 					<>
 						<TypeSwitch e={e} />
-						<span className="text-[13px] text-gray-500">Search a mood above, or add a filter.</span>
+						{after ? (
+							<>
+								<span className="h-4 w-px shrink-0 bg-white/10" />
+								<EmptyReading e={e} kind={after} />
+							</>
+						) : (
+							<span className="text-[13px] text-gray-500">Search a mood above, or add a filter.</span>
+						)}
 					</>
 				) : (
 					<EmptyReading e={e} kind={empty} />

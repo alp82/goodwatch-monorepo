@@ -1,6 +1,7 @@
 // PROTOTYPE (discover-easy) round 9: what the reading line shows while nothing is searched or filtered. All of it in the
 // reading line's quiet style, left of Sort.
 import { PlusIcon } from "@heroicons/react/20/solid"
+import { useNavigate } from "@remix-run/react"
 import { Fragment } from "react"
 import { WORDS } from "~/domain/taste-picker"
 import { START_PRESETS } from "~/ui/start/search/presets"
@@ -9,6 +10,8 @@ import { Label } from "./reading"
 import type { Easy } from "./types"
 
 export type EmptyKind = "summary" | "examples" | "quick" | "moods" | "type"
+/** Round 10: what follows the type switch on an empty line. */
+export type EmptyAfterType = "moods" | "examples"
 
 const QUICK: { label: string; field: string; patch: (e: Easy) => void }[] = [
 	{ field: "Format", label: "Movies", patch: (e) => e.filters.set({ type: "movie" }) },
@@ -111,5 +114,35 @@ export function TypeSwitch({ e }: { e: Easy }) {
 				</button>
 			))}
 		</span>
+	)
+}
+
+/** Moods inside the search field's focus menu (variant H): a tap filters by that mood. */
+export function MoodMenuRow() {
+	const navigate = useNavigate()
+	const pick = (key: string) => {
+		const p = new URLSearchParams(window.location.search)
+		p.set("moods", key)
+		p.delete("page")
+		navigate({ search: `?${p}` }, { replace: true, preventScrollReset: true })
+	}
+	return (
+		<>
+			<p className="px-2 pt-3 pb-1.5 text-[10px] font-bold tracking-[0.08em] text-gray-500 uppercase">Or a mood</p>
+			<div className="flex flex-wrap gap-x-4 gap-y-2 px-2">
+				{MOODS.map((w) => (
+					<button
+						key={w.id}
+						type="button"
+						onMouseDown={(ev) => ev.preventDefault()}
+						onClick={() => pick(w.key)}
+						className="flex cursor-pointer items-center gap-1.5 text-[13px] text-gray-300 hover:text-white"
+					>
+						<span className="h-2 w-2 rounded-full" style={{ background: w.hue }} />
+						{w.name}
+					</button>
+				))}
+			</div>
+		</>
 	)
 }
