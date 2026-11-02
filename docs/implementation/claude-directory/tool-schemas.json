@@ -1,0 +1,1556 @@
+[
+  {
+    "name": "search_titles",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "all",
+            "movie",
+            "show"
+          ]
+        },
+        "genres": {
+          "description": "Exact genre names from get_discover_filters; a single name or an array, matching any selected genre.",
+          "anyOf": [
+            {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              }
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          ]
+        },
+        "min_year": {
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "max_year": {
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "min_runtime": {
+          "description": "Inclusive minutes; movie duration or usual episode length for shows. Unknown runtimes do not pass.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "max_runtime": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "minimum_score": {
+          "description": "GoodWatch score, 0\u2013100; inclusive minimum.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "on_my_services": {
+          "description": "Default false (everywhere). Uses saved country and services. Without saved services this does not narrow, as on the site.",
+          "type": "boolean"
+        },
+        "providers": {
+          "description": "Specific provider IDs from get_discover_filters, in your saved country. Matches any selected provider; mutually exclusive with on_my_services=true.",
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 999999999
+          }
+        },
+        "anime": {
+          "type": "string",
+          "enum": [
+            "any",
+            "only",
+            "none"
+          ]
+        },
+        "moods": {
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "funny",
+              "feelgood",
+              "romance",
+              "action",
+              "scary",
+              "crime",
+              "mind",
+              "heavy",
+              "worlds",
+              "history",
+              "growing"
+            ]
+          }
+        },
+        "themes": {
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "crime",
+              "mystery",
+              "war",
+              "politics",
+              "true",
+              "history",
+              "growing",
+              "family",
+              "mind",
+              "showbiz",
+              "sports",
+              "money",
+              "future",
+              "fantasy"
+            ]
+          }
+        },
+        "styles": {
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "animated",
+              "documentary",
+              "spectacle",
+              "stylized",
+              "music",
+              "slow",
+              "fast",
+              "talky",
+              "nonlinear",
+              "graphic"
+            ]
+          }
+        },
+        "minimum_match": {
+          "description": "GoodWatch taste match threshold; does not narrow when taste is unavailable, as on the site.",
+          "anyOf": [
+            {
+              "type": "number",
+              "const": 0
+            },
+            {
+              "type": "number",
+              "const": 70
+            },
+            {
+              "type": "number",
+              "const": 80
+            },
+            {
+              "type": "number",
+              "const": 90
+            }
+          ]
+        },
+        "released": {
+          "type": "string",
+          "enum": [
+            "any",
+            "recent",
+            "2010s",
+            "2000s",
+            "before2000"
+          ]
+        },
+        "age_limit": {
+          "description": "Uses the saved country's age-rating ladder, when available.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "hide_content": {
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "violence",
+              "sex",
+              "disturbing",
+              "language",
+              "drugs"
+            ]
+          }
+        },
+        "show_content": {
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "violence",
+              "sex",
+              "disturbing",
+              "language",
+              "drugs"
+            ]
+          }
+        },
+        "order": {
+          "description": "Default For you (popular with the site's taste adjustment). Other orders disable that adjustment unless for_you=true is explicitly supplied. Match uses the site's Best match order.",
+          "type": "string",
+          "enum": [
+            "for_you",
+            "popularity",
+            "newest",
+            "score",
+            "match"
+          ]
+        },
+        "query": {
+          "default": "",
+          "description": "A title name or descriptive query. Blank queries run discovery.",
+          "type": "string",
+          "maxLength": 120
+        },
+        "ranked": {
+          "default": false,
+          "description": "Use an optional smarter match for descriptive queries instead of name lookup. Costs one of 20 daily attempts unless cached; paging is free.",
+          "type": "boolean"
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^(offset:[0-9]{1,8}|ranked:[a-f0-9]{32}:[0-9]{1,8})$"
+        },
+        "limit": {
+          "default": 40,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 40
+        },
+        "for_you": {
+          "description": "Smarter matches: use the site's For you ordering (default true). Keep unchanged when paging; a cursor inherits its original filters.",
+          "type": "boolean"
+        },
+        "exclude_seen": {
+          "description": "Default false: include seen titles. True uses the site's Not seen yet rule: exclude rated, watched, in-progress, on-hold, dropped and quiz-skipped titles. Apply natively before paging.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "discover_titles",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "all",
+            "movie",
+            "show"
+          ]
+        },
+        "genres": {
+          "description": "Exact genre names from get_discover_filters; a single name or an array, matching any selected genre.",
+          "anyOf": [
+            {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              }
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          ]
+        },
+        "min_year": {
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "max_year": {
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "min_runtime": {
+          "description": "Inclusive minutes; movie duration or usual episode length for shows. Unknown runtimes do not pass.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "max_runtime": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "minimum_score": {
+          "description": "GoodWatch score, 0\u2013100; inclusive minimum.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "on_my_services": {
+          "description": "Default false (everywhere). Uses saved country and services. Without saved services this does not narrow, as on the site.",
+          "type": "boolean"
+        },
+        "providers": {
+          "description": "Specific provider IDs from get_discover_filters, in your saved country. Matches any selected provider; mutually exclusive with on_my_services=true.",
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 999999999
+          }
+        },
+        "anime": {
+          "type": "string",
+          "enum": [
+            "any",
+            "only",
+            "none"
+          ]
+        },
+        "moods": {
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "funny",
+              "feelgood",
+              "romance",
+              "action",
+              "scary",
+              "crime",
+              "mind",
+              "heavy",
+              "worlds",
+              "history",
+              "growing"
+            ]
+          }
+        },
+        "themes": {
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "crime",
+              "mystery",
+              "war",
+              "politics",
+              "true",
+              "history",
+              "growing",
+              "family",
+              "mind",
+              "showbiz",
+              "sports",
+              "money",
+              "future",
+              "fantasy"
+            ]
+          }
+        },
+        "styles": {
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "animated",
+              "documentary",
+              "spectacle",
+              "stylized",
+              "music",
+              "slow",
+              "fast",
+              "talky",
+              "nonlinear",
+              "graphic"
+            ]
+          }
+        },
+        "minimum_match": {
+          "description": "GoodWatch taste match threshold; does not narrow when taste is unavailable, as on the site.",
+          "anyOf": [
+            {
+              "type": "number",
+              "const": 0
+            },
+            {
+              "type": "number",
+              "const": 70
+            },
+            {
+              "type": "number",
+              "const": 80
+            },
+            {
+              "type": "number",
+              "const": 90
+            }
+          ]
+        },
+        "released": {
+          "type": "string",
+          "enum": [
+            "any",
+            "recent",
+            "2010s",
+            "2000s",
+            "before2000"
+          ]
+        },
+        "age_limit": {
+          "description": "Uses the saved country's age-rating ladder, when available.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "hide_content": {
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "violence",
+              "sex",
+              "disturbing",
+              "language",
+              "drugs"
+            ]
+          }
+        },
+        "show_content": {
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "violence",
+              "sex",
+              "disturbing",
+              "language",
+              "drugs"
+            ]
+          }
+        },
+        "order": {
+          "description": "Default For you (popular with the site's taste adjustment). Other orders disable that adjustment unless for_you=true is explicitly supplied. Match uses the site's Best match order.",
+          "type": "string",
+          "enum": [
+            "for_you",
+            "popularity",
+            "newest",
+            "score",
+            "match"
+          ]
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^offset:[0-9]{1,8}$"
+        },
+        "limit": {
+          "default": 40,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 40
+        },
+        "for_you": {
+          "type": "boolean"
+        },
+        "exclude_seen": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_discover_filters",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_title",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title_id": {
+          "type": "string",
+          "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+        },
+        "title_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "include": {
+          "default": [
+            "cast",
+            "scores",
+            "analysis"
+          ],
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "cast",
+              "scores",
+              "analysis",
+              "seasons",
+              "episodes"
+            ]
+          }
+        },
+        "season_number": {
+          "description": "Displayed season: 0 for Specials; -1 for Additional episodes in a reviewed presentation.",
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 10000
+        },
+        "episode_cursor": {
+          "type": "string",
+          "pattern": "^offset:[0-9]{1,8}$"
+        },
+        "episode_limit": {
+          "default": 20,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_similar_titles",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title_id": {
+          "type": "string",
+          "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+        },
+        "title_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^offset:[0-9]{1,8}$"
+        },
+        "limit": {
+          "default": 40,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 40
+        },
+        "for_you": {
+          "default": true,
+          "type": "boolean"
+        },
+        "exclude_seen": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kind": {
+          "default": "all",
+          "type": "string",
+          "enum": [
+            "all",
+            "movie",
+            "show"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_my_shows",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "pattern": "^offset:[0-9]{1,8}$"
+        },
+        "limit": {
+          "default": 20,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_show_progress",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title_id": {
+          "type": "string",
+          "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+        },
+        "title_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^offset:[0-9]{1,8}$"
+        },
+        "limit": {
+          "default": 20,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_tonight",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_library",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "filter": {
+          "default": "all",
+          "type": "string",
+          "enum": [
+            "all",
+            "want_to_see",
+            "seen",
+            "not_interested",
+            "rated",
+            "watching",
+            "on_hold",
+            "dropped",
+            "unrated"
+          ]
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^offset:[0-9]{1,8}$"
+        },
+        "limit": {
+          "default": 20,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "sort": {
+          "type": "string",
+          "enum": [
+            "added",
+            "waiting",
+            "last",
+            "score",
+            "title",
+            "match",
+            "runtime"
+          ]
+        },
+        "kind": {
+          "default": "all",
+          "type": "string",
+          "enum": [
+            "all",
+            "movie",
+            "show"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_taste",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "search_people",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^offset:[0-9]{1,8}$"
+        },
+        "limit": {
+          "default": 20,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_person",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "person_id": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 2000000000
+        },
+        "role": {
+          "default": "all",
+          "type": "string",
+          "enum": [
+            "all",
+            "acting",
+            "directing",
+            "writing"
+          ]
+        },
+        "sort": {
+          "default": "for_you",
+          "type": "string",
+          "enum": [
+            "for_you",
+            "newest",
+            "score"
+          ]
+        },
+        "exclude_seen": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^offset:[0-9]{1,8}$"
+        },
+        "limit": {
+          "default": 20,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "person_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_my_lists",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string",
+          "pattern": "^offset:[0-9]{1,8}$"
+        },
+        "limit": {
+          "default": 20,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_list",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "list_id": {
+          "type": "string",
+          "pattern": "^[0-9A-Za-z]{10}$"
+        }
+      },
+      "required": [
+        "list_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_settings",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "log_watch",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+        },
+        "title_id": {
+          "description": "Use this ID when available; it takes precedence over title_name and year.",
+          "type": "string",
+          "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+        },
+        "title_name": {
+          "description": "Required only without title_id. Ignored when an ID is supplied.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "year": {
+          "description": "Optional name disambiguation, used only without title_id.",
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "season": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "episode": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "episode_end": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "whole_season": {
+          "type": "boolean"
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+        },
+        "items": {
+          "description": "Up to 50 titles in one call, in place of title_id or title_name. Each item takes title_id, or title_name with an optional year, plus this tool's fields; a field given at the top level applies to every item that leaves it out.",
+          "minItems": 1,
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title_id": {
+                "description": "Use this ID when available; it takes precedence over title_name and year.",
+                "type": "string",
+                "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+              },
+              "title_name": {
+                "description": "Required only without title_id. Ignored when an ID is supplied.",
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 120
+              },
+              "year": {
+                "description": "Optional name disambiguation, used only without title_id.",
+                "type": "integer",
+                "minimum": 1800,
+                "maximum": 2100
+              },
+              "season": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "episode": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100000
+              },
+              "episode_end": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100000
+              },
+              "whole_season": {
+                "type": "boolean"
+              },
+              "date": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "action_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "rate_title",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+        },
+        "title_id": {
+          "description": "Use this ID when available; it takes precedence over title_name and year.",
+          "type": "string",
+          "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+        },
+        "title_name": {
+          "description": "Required only without title_id. Ignored when an ID is supplied.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "year": {
+          "description": "Optional name disambiguation, used only without title_id.",
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "score": {
+          "description": "Required for a single title. With items, give it per item, or once here for every item.",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "items": {
+          "description": "Up to 50 titles in one call, in place of title_id or title_name. Each item takes title_id, or title_name with an optional year, plus this tool's fields; a field given at the top level applies to every item that leaves it out.",
+          "minItems": 1,
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title_id": {
+                "description": "Use this ID when available; it takes precedence over title_name and year.",
+                "type": "string",
+                "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+              },
+              "title_name": {
+                "description": "Required only without title_id. Ignored when an ID is supplied.",
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 120
+              },
+              "year": {
+                "description": "Optional name disambiguation, used only without title_id.",
+                "type": "integer",
+                "minimum": 1800,
+                "maximum": 2100
+              },
+              "score": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "action_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_want_to_see",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+        },
+        "title_id": {
+          "description": "Use this ID when available; it takes precedence over title_name and year.",
+          "type": "string",
+          "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+        },
+        "title_name": {
+          "description": "Required only without title_id. Ignored when an ID is supplied.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "year": {
+          "description": "Optional name disambiguation, used only without title_id.",
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "want_to_see": {
+          "description": "Required for a single title. With items, give it per item, or once here for every item.",
+          "type": "boolean"
+        },
+        "items": {
+          "description": "Up to 50 titles in one call, in place of title_id or title_name. Each item takes title_id, or title_name with an optional year, plus this tool's fields; a field given at the top level applies to every item that leaves it out.",
+          "minItems": 1,
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title_id": {
+                "description": "Use this ID when available; it takes precedence over title_name and year.",
+                "type": "string",
+                "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+              },
+              "title_name": {
+                "description": "Required only without title_id. Ignored when an ID is supplied.",
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 120
+              },
+              "year": {
+                "description": "Optional name disambiguation, used only without title_id.",
+                "type": "integer",
+                "minimum": 1800,
+                "maximum": 2100
+              },
+              "want_to_see": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "action_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_not_interested",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+        },
+        "title_id": {
+          "description": "Use this ID when available; it takes precedence over title_name and year.",
+          "type": "string",
+          "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+        },
+        "title_name": {
+          "description": "Required only without title_id. Ignored when an ID is supplied.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "year": {
+          "description": "Optional name disambiguation, used only without title_id.",
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "not_interested": {
+          "description": "Required for a single title. With items, give it per item, or once here for every item.",
+          "type": "boolean"
+        },
+        "items": {
+          "description": "Up to 50 titles in one call, in place of title_id or title_name. Each item takes title_id, or title_name with an optional year, plus this tool's fields; a field given at the top level applies to every item that leaves it out.",
+          "minItems": 1,
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title_id": {
+                "description": "Use this ID when available; it takes precedence over title_name and year.",
+                "type": "string",
+                "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+              },
+              "title_name": {
+                "description": "Required only without title_id. Ignored when an ID is supplied.",
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 120
+              },
+              "year": {
+                "description": "Optional name disambiguation, used only without title_id.",
+                "type": "integer",
+                "minimum": 1800,
+                "maximum": 2100
+              },
+              "not_interested": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "action_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_show_status",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+        },
+        "title_id": {
+          "description": "Use this ID when available; it takes precedence over title_name and year.",
+          "type": "string",
+          "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+        },
+        "title_name": {
+          "description": "Required only without title_id. Ignored when an ID is supplied.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "year": {
+          "description": "Optional name disambiguation, used only without title_id.",
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "status": {
+          "description": "Required for a single title. With items, give it per item, or once here for every item.",
+          "type": "string",
+          "enum": [
+            "Not started",
+            "Watching",
+            "On hold",
+            "Dropped",
+            "Seen"
+          ]
+        },
+        "items": {
+          "description": "Up to 50 titles in one call, in place of title_id or title_name. Each item takes title_id, or title_name with an optional year, plus this tool's fields; a field given at the top level applies to every item that leaves it out.",
+          "minItems": 1,
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title_id": {
+                "description": "Use this ID when available; it takes precedence over title_name and year.",
+                "type": "string",
+                "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+              },
+              "title_name": {
+                "description": "Required only without title_id. Ignored when an ID is supplied.",
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 120
+              },
+              "year": {
+                "description": "Optional name disambiguation, used only without title_id.",
+                "type": "integer",
+                "minimum": 1800,
+                "maximum": 2100
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "Not started",
+                  "Watching",
+                  "On hold",
+                  "Dropped",
+                  "Seen"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "action_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "undo_watch",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+        },
+        "title_id": {
+          "description": "Use this ID when available; it takes precedence over title_name and year.",
+          "type": "string",
+          "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+        },
+        "title_name": {
+          "description": "Required only without title_id. Ignored when an ID is supplied.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "year": {
+          "description": "Optional name disambiguation, used only without title_id.",
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "watch_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "batch_id": {
+          "description": "The batch_id of a batch result. Alone (no title or watch_id), it takes back that whole call.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "action_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_my_services",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Za-z]{2}$"
+        },
+        "services": {
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "action_id",
+        "country",
+        "services"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_settings",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Za-z]{2}$"
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "browser",
+            "en",
+            "de",
+            "fr",
+            "es",
+            "it",
+            "pt-BR",
+            "pt-PT",
+            "ja",
+            "ko",
+            "zh-Hans",
+            "zh-Hant",
+            "pl",
+            "ru",
+            "ar"
+          ]
+        }
+      },
+      "required": [
+        "action_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "create_list",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+        },
+        "list_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "titles": {
+          "minItems": 5,
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title_id": {
+                "description": "Use this ID when available; it takes precedence over title_name and year.",
+                "type": "string",
+                "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+              },
+              "title_name": {
+                "description": "Required only without title_id. Ignored when an ID is supplied.",
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 120
+              },
+              "year": {
+                "description": "Optional name disambiguation, used only without title_id.",
+                "type": "integer",
+                "minimum": 1800,
+                "maximum": 2100
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "visibility": {
+          "default": "public",
+          "type": "string",
+          "enum": [
+            "public",
+            "unlisted"
+          ]
+        }
+      },
+      "required": [
+        "action_id",
+        "list_name",
+        "titles"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "update_list_titles",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+        },
+        "list_id": {
+          "type": "string",
+          "pattern": "^[0-9A-Za-z]{10}$"
+        },
+        "add_titles": {
+          "minItems": 1,
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title_id": {
+                "description": "Use this ID when available; it takes precedence over title_name and year.",
+                "type": "string",
+                "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+              },
+              "title_name": {
+                "description": "Required only without title_id. Ignored when an ID is supplied.",
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 120
+              },
+              "year": {
+                "description": "Optional name disambiguation, used only without title_id.",
+                "type": "integer",
+                "minimum": 1800,
+                "maximum": 2100
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "remove_title_ids": {
+          "minItems": 1,
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+          }
+        }
+      },
+      "required": [
+        "action_id",
+        "list_id",
+        "add_titles",
+        "remove_title_ids"
+      ],
+      "additionalProperties": false
+    }
+  }
+]

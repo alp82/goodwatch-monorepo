@@ -1,0 +1,31 @@
+{
+  "checked_at": "2026-10-20T13:46:34.501074+00:00",
+  "step": "Review and submit",
+  "submit_enabled": true,
+  "tool_count": 25,
+  "advisory": "Review contact hello@goodwatch.app differs from submitting login domain; updates go to the contact.",
+  "private_reviewer_access_entered": true,
+  "submitted": false,
+  "published": false,
+  "plugin_validation": {
+    "result": "passed",
+    "commit": "803901e",
+    "version": "1.0.1",
+    "checks": 7,
+    "warnings": 4,
+    "warning_fields": [
+      "icon",
+      "documentationUrl",
+      "privacyPolicyUrl",
+      "supportUrl"
+    ],
+    "warning_resolution": "Portal explicitly says directory reads these fields and no action is needed.",
+    "auto_publish": false,
+    "updates": "scheduled checks",
+    "repository_private": true,
+    "step": "Review and submit",
+    "submitted": false
+  },
+  "custom_icon_url": "https://goodwatch.app/mcp-icons/goodwatch-white-512.png",
+  "custom_icon_preview_verified": true
+}

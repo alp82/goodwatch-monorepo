@@ -1,0 +1,198 @@
+diff --git a/goodwatch-webapp/app/server/mcp/endpoint.test.ts b/goodwatch-webapp/app/server/mcp/endpoint.test.ts
+index 6d300a68..0a6fdf6c 100644
+--- a/goodwatch-webapp/app/server/mcp/endpoint.test.ts
++++ b/goodwatch-webapp/app/server/mcp/endpoint.test.ts
+@@ -308,6 +308,7 @@ test("A member sees separate catalog and personal read tools, with valid schemas
+ 		assert.deepEqual(tool._meta.securitySchemes, [
+ 			{ type: "oauth2", scopes: ["mcp:read"] },
+ 		])
++		assert.equal(tool.annotations.title, tool.title)
+ 		assert.equal(tool.annotations.readOnlyHint, true)
+ 		assert.equal(tool.annotations.idempotentHint, true)
+ 		assert.equal(tool.annotations.destructiveHint, false)
+@@ -462,6 +463,7 @@ test("Write scopes expose all writes with destructive hints on every write and n
+ 		],
+ 	)
+ 	for (const tool of writes) {
++		assert.equal(tool.annotations.title, tool.title)
+ 		assert.deepEqual(tool._meta.securitySchemes, [
+ 			{ type: "oauth2", scopes: ["mcp:read", "mcp:write"] },
+ 		])
+@@ -618,7 +620,7 @@ test("Search, library and Watch next expose the requested client contract", asyn
+ 	assert.equal(search.inputSchema.properties.exclude_seen.type, "boolean")
+ 	assert.match(
+ 		search.description,
+-		/exclude_seen=true filters seen titles before paging/,
++		/exclude_seen=true returns only unseen results, filtered before pagination/,
+ 	)
+ 	const library = tools.find(
+ 		(tool: { name: string }) => tool.name === "get_library",
+@@ -638,7 +640,7 @@ test("Search, library and Watch next expose the requested client contract", asyn
+ 	)
+ 	assert.equal(next.title, "Watch next")
+ 	assert.match(next.description, /next episode/)
+-	assert.match(next.description, /get_library/)
++	assert.match(next.description, /rather than the complete Wishlist/)
+ })
+ 
+ test("All read and write descriptions omit answer-formatting commands and retain native library sorting", async () => {
+@@ -716,7 +718,7 @@ test("Batch write tools list items up to 50, the file import for whole histories
+ 			/[Ff]ull history \(hundreds of titles or more\).*http:\/\/localhost:3336\/settings\/imports/,
+ 			name,
+ 		)
+-		assert.match(tool.description, /undo_watch with that batch_id/, name)
++		assert.match(tool.description, /batch_id identifies the complete reversible batch/, name)
+ 		assert.equal(tool.annotations.destructiveHint, true, name)
+ 	}
+ 	const undo = byName.get("undo_watch") as {
+diff --git a/goodwatch-webapp/app/server/mcp/poster-grid.server.ts b/goodwatch-webapp/app/server/mcp/poster-grid.server.ts
+index 3ffd4835..bec274eb 100644
+--- a/goodwatch-webapp/app/server/mcp/poster-grid.server.ts
++++ b/goodwatch-webapp/app/server/mcp/poster-grid.server.ts
+@@ -7,7 +7,7 @@ import type { ReadToolName } from "./tools.server.ts"
+ // support reads this resource and shows the tool result as posters next to the answer. Every other client ignores the
+ // metadata and gets the same text and structuredContent. Change the URI's version when the widget's data contract
+ // changes: hosts may cache the resource by URI.
+-export const POSTER_GRID_URI = "ui://goodwatch/posters-v3.html"
++export const POSTER_GRID_URI = "ui://goodwatch/posters-v4.html"
+ export const MCP_APP_MIME_TYPE = "text/html;profile=mcp-app"
+ export const POSTER_GRID_TOOLS: ReadonlySet<ReadToolName> = new Set([
+ 	"search_titles",
+@@ -43,7 +43,9 @@ export function posterGridHtml(origin: string): string {
+ export function registerPosterGrid(server: McpServer, origin: string) {
+ 	const site = new URL(origin).origin
+ 	const csp = posterGridCsp(site)
+-	const ui = { csp, domain: site, prefersBorder: false }
++	// Let each MCP Apps host choose its sandbox origin; stable domains are host-specific.
++	// This app makes no API requests and needs no CORS allowlist.
++	const ui = { csp, prefersBorder: false }
+ 	server.registerResource(
+ 		"goodwatch-posters",
+ 		POSTER_GRID_URI,
+diff --git a/goodwatch-webapp/app/server/mcp/poster-grid.test.ts b/goodwatch-webapp/app/server/mcp/poster-grid.test.ts
+index baf60eac..2c910362 100644
+--- a/goodwatch-webapp/app/server/mcp/poster-grid.test.ts
++++ b/goodwatch-webapp/app/server/mcp/poster-grid.test.ts
+@@ -146,7 +146,8 @@ test("The poster grid resource is listed and read as an MCP App with a tight CSP
+ 	const [content] = read.contents
+ 	assert.equal(content.uri, POSTER_GRID_URI)
+ 	assert.equal(content.mimeType, "text/html;profile=mcp-app")
+-	assert.equal(content._meta.ui.domain, "https://goodwatch.app")
++	assert.equal(Object.hasOwn(content._meta.ui, "domain"), false)
++	assert.equal(Object.hasOwn(listed._meta.ui, "domain"), false)
+ 	assert.equal(content._meta["openai/widgetDomain"], "https://goodwatch.app")
+ 	assert.deepEqual(content._meta.ui.csp, {
+ 		resourceDomains: ["https://image.tmdb.org", "https://goodwatch.app"],
+diff --git a/goodwatch-webapp/app/server/mcp/tools.server.ts b/goodwatch-webapp/app/server/mcp/tools.server.ts
+index a7984740..fa0fe07d 100644
+--- a/goodwatch-webapp/app/server/mcp/tools.server.ts
++++ b/goodwatch-webapp/app/server/mcp/tools.server.ts
+@@ -94,7 +94,7 @@ export const readToolDefinitions: {
+ 		name: "search_titles",
+ 		title: "Search titles by name",
+ 		description:
+-			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Defaults to everywhere and includes seen titles. Use the shared Discover filters to narrow by type, genres, years, runtime, score, services, moods and more; get_discover_filters lists genres/provider IDs. Repeat filters with offset cursors; ranked cursors inherit their view. Use discover_titles whenever no name or descriptive query is given. Except when paging with a ranked cursor, a missing, empty or whitespace-only query runs the same Discover path, filters and For you default as discover_titles; ranked is ignored and no smarter-match attempt is charged. exclude_seen=true filters seen titles before paging. Returns up to 40 results by default. Different works can share a name and year; runtime_minutes can distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
++			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Defaults to everywhere and includes seen titles. Use the shared Discover filters to narrow by type, genres, years, runtime, score, services, moods and more; filters accept catalog genre and provider IDs. Repeat filters with offset cursors; ranked cursors inherit their view. Except when paging with a ranked cursor, a missing, empty or whitespace-only query runs the native Discover path, filters and For you default; ranked is ignored and no smarter-match attempt is charged. exclude_seen=true returns only unseen results, filtered before pagination. Returns up to 40 results by default; limit bounds the page size. Different works can share a name and year: use runtime_minutes to distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
+ 		schema: z
+ 			.object({
+ 				...discoverFilters,
+@@ -104,7 +104,7 @@ export const readToolDefinitions: {
+ 					.max(120)
+ 					.default("")
+ 					.describe(
+-						"A title name or descriptive query. For recommendations without a query use discover_titles; blank queries run discovery.",
++						"A title name or descriptive query. Blank queries run discovery.",
+ 					),
+ 				ranked: z
+ 					.boolean()
+@@ -149,7 +149,7 @@ export const readToolDefinitions: {
+ 		name: "discover_titles",
+ 		title: "Discover movies and shows",
+ 		description:
+-			"Discover without a query using the same catalog, filters and ordering as GoodWatch Discover/Explore. For you by default; everywhere and seen titles included. Choose popularity, newest, score or match ordering. Use on_my_services=true for saved services, or providers for specific services, in your saved country. get_discover_filters lists valid genres and providers. Filters apply before pagination. Repeat filters when paging with offset cursors. Returns up to 40 titles and a matching Discover grid page_url.",
++			"Discover without a query using the same catalog, filters and ordering as GoodWatch Discover/Explore. For you by default; everywhere and seen titles included. Choose popularity, newest, score or match ordering. Use on_my_services=true for saved services, or providers for specific services, in your saved country. Filters apply before pagination. Repeat filters when paging with offset cursors. Returns up to 40 titles and a matching Discover grid page_url.",
+ 		schema: z
+ 			.object({
+ 				...discoverFilters,
+@@ -168,7 +168,7 @@ export const readToolDefinitions: {
+ 		name: "get_discover_filters",
+ 		title: "Get Discover filter options",
+ 		description:
+-			"List exact genre names, provider IDs/names available in your saved country (plus saved providers), and saved services for search_titles/discover_titles. Other filter choices are enumerated in those tools schemas. Reads existing settings without changing them.",
++			"List exact genre names, provider IDs/names available in your saved country (plus saved providers), and saved services for catalog discovery. Reads existing settings without changing them.",
+ 		schema: z.object({}).strict(),
+ 	},
+ 	{
+@@ -203,14 +203,14 @@ export const readToolDefinitions: {
+ 		name: "get_tonight",
+ 		title: "Watch next",
+ 		description:
+-			"Choose one thing to watch next, using your saved country and services: a next episode from a show you are watching, otherwise a Wishlist movie or show to start (or a suggestion if the Wishlist is empty). For the full Wishlist / Want to See list (including sorting by date added), use get_library with filter=want_to_see.",
++			"Choose one thing to watch next, using your saved country and services: a next episode from a show you are watching, otherwise a Wishlist movie or show to start (or a suggestion if the Wishlist is empty). Returns one recommendation rather than the complete Wishlist.",
+ 		schema: z.object({}).strict(),
+ 	},
+ 	{
+ 		name: "get_library",
+ 		title: "Get my library",
+ 		description:
+-			"Your marked titles, including scores, Wishlist / Want to See, watch progress and Not interested. Use filter=want_to_see for your Wishlist; get_tonight chooses one thing to watch next. Includes added_at (Wishlist date, null when absent), runtime_minutes (movie duration or usual show episode length), and GoodWatch match. Defaults to match (Best match by your taste) when taste is available, otherwise the usual date sort. Use sort=runtime for the longest titles first across your entire filtered library, without per-title lookups. Explicit sorts are preserved. Sorts match My library: added (last added), last (last watched), score (highest first), title (ignores leading articles); waiting puts the oldest Wishlist additions first. Separate from search_titles.",
++			"Your marked titles, including scores, Wishlist / Want to See, watch progress and Not interested. filter=want_to_see selects your Wishlist. Includes added_at (Wishlist date, null when absent), runtime_minutes (movie duration or usual show episode length), and GoodWatch match. Defaults to match (Best match by your taste) when taste is available, otherwise the usual date sort. Use sort=runtime for the longest titles first across your entire filtered library, without per-title lookups. Explicit sorts are preserved. Sorts match My library: added (last added), last (last watched), score (highest first), title (ignores leading articles); waiting puts the oldest Wishlist additions first.",
+ 		schema: z
+ 			.object({
+ 				filter: z
+@@ -253,7 +253,7 @@ export const readToolDefinitions: {
+ 		name: "search_people",
+ 		title: "Search people",
+ 		description:
+-			"Search cast and crew matching the name query, most popular first (TMDB popularity). Results include each person’s ready-made link. Use the returned person_id with get_person for their acting, directing and writing filmography.",
++			"Search cast and crew by name. Returns canonical person_id values and GoodWatch person links.",
+ 		schema: z
+ 			.object({ query: z.string().trim().min(2).max(120), ...paging })
+ 			.strict(),
+@@ -262,7 +262,7 @@ export const readToolDefinitions: {
+ 		name: "get_person",
+ 		title: "Get a person's filmography",
+ 		description:
+-			"A person's catalog credits with your GoodWatch taste match. Results include the subject’s ready-made person link and title links for credits. Includes every title, even without a poster or score. Defaults to For you, everywhere, including seen titles. Newest and score sort the whole filmography before paging; exclude_seen uses the site's Not seen yet rule. Links open the person's real GoodWatch page; its grouping can differ.",
++			"A person's catalog credits with your GoodWatch taste match. Returns the subject’s person link and a link for each credited title. Includes every title, even without a poster or score. Defaults to For you, everywhere, including seen titles. Newest and score sort the whole filmography before paging; exclude_seen uses the site's Not seen yet rule. Links open the person's real GoodWatch page; its grouping can differ.",
+ 		schema: z
+ 			.object({
+ 				person_id: z.number().int().positive().max(2_000_000_000),
+@@ -323,6 +323,7 @@ export function createToolServer(
+ 				description: tool.description,
+ 				inputSchema: tool.schema,
+ 				annotations: {
++					title: tool.title,
+ 					readOnlyHint: true,
+ 					destructiveHint: false,
+ 					idempotentHint: true,
+diff --git a/goodwatch-webapp/app/server/mcp/write-tools.server.ts b/goodwatch-webapp/app/server/mcp/write-tools.server.ts
+index c16b9084..19c4bc49 100644
+--- a/goodwatch-webapp/app/server/mcp/write-tools.server.ts
++++ b/goodwatch-webapp/app/server/mcp/write-tools.server.ts
+@@ -182,7 +182,7 @@ export const writeToolDefinitions: {
+ 		name: "log_watch",
+ 		title: "Log a watch",
+ 		description:
+-			"Log one movie or episode watch, an inclusive episode range (season, episode, episode_end), or a whole season (season, whole_season=true). Ranges use the catalog season/episode numbers from get_show_progress, mark only aired regular episodes missing in the current pass, never duplicate existing watches, and produce one receipt. Dates remain unknown unless explicitly supplied. Results report every added watch. Batch items are movies, episode ranges or whole seasons; to mark a whole show as watched, use set_show_status with Seen.",
++			"Log one movie or episode watch, an inclusive episode range (season, episode, episode_end), or a whole season (season, whole_season=true). Ranges use the catalog tracking season/episode numbers, mark only aired regular episodes missing in the current pass, never duplicate existing watches, and produce one receipt. Dates remain unknown unless explicitly supplied. Results report every added watch. Batch items are movies, episode ranges or whole seasons; whole-show status transitions are not supported by this tool.",
+ 		destructive: true,
+ 		schema: batchable(itemSchemas.log_watch, logWatchFields),
+ 	},
+@@ -352,7 +352,7 @@ const batchItems = counter(
+ 
+ /** How a batch tool's description explains items, the cap and the file import for whole histories. */
+ export const batchHint = (origin: string) =>
+-	`To change many titles at once, pass items instead of one title: up to ${MAX_BATCH_ITEMS} per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; undo_watch with that batch_id takes back the whole call. Full history (hundreds of titles or more) file import is available at: ${new URL(IMPORT_PATH, origin).href}`
++	`To change many titles at once, pass items instead of one title: up to ${MAX_BATCH_ITEMS} per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; batch_id identifies the complete reversible batch. Full history (hundreds of titles or more) file import is available at: ${new URL(IMPORT_PATH, origin).href}`
+ 
+ export function registerWriteTools(
+ 	server: McpServer,
+@@ -374,6 +374,7 @@ export function registerWriteTools(
+ 					],
+ 				},
+ 				annotations: {
++					title: tool.title,
+ 					readOnlyHint: false,
+ 					destructiveHint: tool.destructive,
+ 					idempotentHint: true,

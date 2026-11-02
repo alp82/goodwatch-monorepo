@@ -1,0 +1,23 @@
+{
+  "name": "goodwatch",
+  "version": "1.0.1",
+  "description": "Choose movies and shows for your taste and streaming services, and keep your GoodWatch watching progress up to date.",
+  "author": {
+    "name": "GoodWatch",
+    "url": "https://goodwatch.app"
+  },
+  "homepage": "https://goodwatch.app/use-with-ai",
+  "repository": "https://github.com/alp82/goodwatch-claude-plugin",
+  "license": "MIT",
+  "keywords": [
+    "movies",
+    "tv",
+    "recommendations",
+    "watching"
+  ],
+  "displayName": "GoodWatch",
+  "icon": "./assets/goodwatch-white-512.png",
+  "documentationUrl": "https://goodwatch.app/use-with-ai",
+  "supportUrl": "https://goodwatch.app/support",
+  "privacyPolicyUrl": "https://goodwatch.app/privacy"
+}

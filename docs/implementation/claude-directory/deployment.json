@@ -1,0 +1,76 @@
+{
+  "verified_at": "2026-10-20T12:49:06.843101+00:00",
+  "commit": "5faa836569a83c54f48c8490eb9e3a3b822730f9",
+  "release_scope": "MCP Apps host-selected sandbox domain, resource v4 cache key, factual batch metadata; preserves ChatGPT widgetDomain",
+  "clean_release_mcp_tests": {
+    "passed": 91,
+    "failed": 0
+  },
+  "page_release": "healthy, exact SOURCE_COMMIT verified",
+  "search_roles": {
+    "a": "healthy, query models ready, exact commit",
+    "b": "healthy, query models ready, exact commit"
+  },
+  "search_smoke": {
+    "a": {
+      "passed": 31,
+      "failed": 0,
+      "warnings": 0,
+      "skipped": 2
+    },
+    "b": {
+      "passed": 31,
+      "failed": 0,
+      "warnings": 0,
+      "skipped": 2
+    }
+  },
+  "page_smoke": {
+    "passed": 61,
+    "failed": 2,
+    "warnings": "private share-list fixtures not configured",
+    "skipped": 8,
+    "known_fixture_failures": [
+      "removed /api/related URL; current /api/related-map returned 200",
+      "static parser misses delayed home script loader; three actual current JS assets returned 200"
+    ]
+  },
+  "live_inspector": {
+    "tools": 25,
+    "matching_annotation_titles": 25,
+    "get_settings": "pass",
+    "temporary_grant_cleanup": "revoked",
+    "app_resource": "v4, no host-specific ui.domain, ChatGPT widgetDomain preserved"
+  },
+  "portal": {
+    "tools": 25,
+    "missing_title_suggestions": 0,
+    "draft": "retained in current browser tab; do not close",
+    "compliance_acknowledgements": "all seven checked; review reached, not submitted",
+    "submitted": false,
+    "published": false,
+    "final_review": "Submit for review enabled; one nonblocking contact-domain advisory; button not clicked",
+    "reviewer_credentials": "entered privately in test setup; excluded from repository"
+  },
+  "previous_commit": "5140bcc45188a38cfe35a31552dd886e0d09c85d",
+  "hosted": {
+    "read_tools": 15,
+    "write_tools": "10 completed receipt replay calls; nine replay flags directly visible, long update-list receipt truncated by hosted UI",
+    "fresh_write": "Wishlist false -> true -> false with confirmation and verification reads",
+    "apps": "all 8 rendered after refresh + full tab reload",
+    "plugin": "private ZIP installed; both skills invoked, existing connection reused; no duplicate tools",
+    "disconnect_reconnect": "Disconnect UI confirmed no access; reviewer identity checked on new consent; callback and subsequent get_settings passed"
+  },
+  "plugin_portal": "Passed seven checks at 803901e (1.0.1); four informational directory-field warnings require no action. Auto-publish off; private; not submitted.",
+  "icon_release": {
+    "commit": "e453628c76cd7f7ab20276edba971446b94e7721",
+    "base": "e149accb",
+    "scope": "Existing white logo assets and MCP identity URLs; preserves concurrent auth fix",
+    "identity_test": "1 passed",
+    "page": "healthy exact SOURCE_COMMIT",
+    "search_roles": "both healthy, query models ready, exact commit",
+    "public_icon": "https://goodwatch.app/mcp-icons/goodwatch-white-512.png",
+    "sha256": "421bbff723de02743dd5c6a63e5b8e4231ecd457b6d9d042f1e5a10691063dba",
+    "directory_custom_icon_preview": "verified white URL"
+  }
+}
