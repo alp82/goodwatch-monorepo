@@ -14,6 +14,7 @@
 		"test:imports:crate": "bash scripts/test-import-resolution-crate.sh",
 		"test:title-timeouts": "node --test scripts/title-page-timeouts.test.mjs",
 		"check:share-cards": "vite-node scripts/check-share-cards.tsx",
+		"prototype:discover-og": "bash scripts/prototype-discover-og/serve.sh",
 		"build:mcp-poster-grid": "node scripts/build-mcp-poster-grid.mjs",
 		"postinstall": "patch-package",
 		"test:auth": "bash scripts/auth-cratedb/run.sh",
