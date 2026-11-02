@@ -155,29 +155,35 @@ test('covered entrance controls are inert until the panel closes', async ({ page
 });
 
 for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirmed ${mode} without forgetting its exact retry`, async ({ page }) => {
+  // Unanswered requests are sent again by themselves (5 more times, about half a minute) before the error shows.
+  test.setTimeout(90_000);
   await common(page); const bodies: GuestAdmissionRequest[]=[];
   if(mode==='join') await page.route('**/proposal/rooms/test-room', route => route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership',retryable:false}}}));
   await page.route(mode==='create'?'**/proposal/rooms':'**/proposal/rooms/test-room/join', route => { bodies.push(route.request().postDataJSON()); return route.abort('failed'); });
   const action=await open(page,mode,'Connection check');
   await action.click();
-  await expect(page.getByText('Your action has not been confirmed. Retry the same action to reconcile it.',{exact:true})).toBeVisible();
+  await expect(action).toHaveText('Connecting…');
+  await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.',{exact:true})).toBeVisible({ timeout: 45_000 });
+  expect(bodies).toHaveLength(6);
+  for (const body of bodies) expect(body).toEqual(bodies[0]);
   await page.getByRole('button',{name:'Connection details',exact:true}).click();
   await expect(page.getByText(/web · network · request/)).toBeVisible();
   await expect(page.getByText(/No HTTP response/)).toBeVisible();
   await expect(action).toBeEnabled();
-  await action.click();await expect.poll(()=>bodies.length).toBe(2);expect(bodies[1]).toEqual(bodies[0]);
-  // Reload restores the pending form, but still allows Back.
+  await action.click();await expect.poll(()=>bodies.length).toBe(7);expect(bodies[6]).toEqual(bodies[0]);
+  // Reload restores the pending form (ending the automatic retries), but still allows Back.
   await page.reload();
+  const sent = bodies.length;
   await expect(action).toBeEnabled();
   // Join is a full screen with the room screens' Back; create keeps its panel.
   await page.getByRole('button',{name:mode==='join'?'Back':'Back to Start',exact:true}).click();
   await expect(page.getByRole('button',{name:'Create a room',exact:true})).toBeVisible();
   await expect(page.getByLabel('Your name')).toHaveCount(0);
-  expect(bodies).toHaveLength(2);
+  expect(bodies).toHaveLength(sent);
   // Even the other entry action resumes the original operation, without replacing its identity.
   await page.getByRole('button',{name:mode==='create'?'Join a room':'Create a room',exact:true}).click();
   await expect(action).toBeEnabled();await action.click();
-  await expect.poll(()=>bodies.length).toBe(3);expect(bodies[2]).toEqual(bodies[0]);
+  await expect.poll(()=>bodies.length).toBe(sent + 1);expect(bodies[sent]).toEqual(bodies[0]);
 });
 
 test('Back during admission cooldown allows reopening the saved request without a new POST',async({page})=>{

@@ -91,9 +91,10 @@ export function Or() {
   );
 }
 /** One quiet message where something else would be: errors, connection, saved actions. */
-export function Note({ children, action }: { children: ReactNode; action?: { label: string; onPress: () => void; disabled?: boolean } }) {
+export function Note({ children, action, busy = false }: { children: ReactNode; action?: { label: string; onPress: () => void; disabled?: boolean }; busy?: boolean }) {
   return (
-    <View accessibilityLiveRegion="polite" style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: '#201c13' }}>
+    <View accessibilityLiveRegion="polite" aria-busy={busy} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: '#201c13' }}>
+      {busy ? <ActivityIndicator testID="note-spinner" size="small" color={glow.amber} /> : null}
       <GText size={12} lines={2} style={{ flex: 1 }}>{children}</GText>
       {action ? <Press label={action.label} onPress={action.onPress} disabled={action.disabled} style={{ minHeight: 32 }}><GText size={12} bold>{action.label}</GText></Press> : null}
     </View>

@@ -19,6 +19,7 @@ import { readAdmission, writeAdmission } from '../core/continuous/storage';
 import type { AdmissionRecovery } from '../core/continuous/recovery-state';
 import { retainRequest, retryDeadline } from '../core/continuous/retry';
 import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
+import { retryTransient, transientFailure } from '../core/continuous/backoff';
 import { Landing } from './home/Landing';
 import { BootPageReady } from './home/boot-phase';
 import { greeting, type HomeRoom } from './rooms/home-model';
@@ -31,6 +32,10 @@ import { Avatar, CoveredBody } from './shell/parts';
 import { column } from './shell/tokens';
 
 type PanelKind = 'create' | 'join' | 'profile' | 'history';
+/** Automatic retries of the same saved request while the server restarts (about half a minute in all). */
+const AUTO_RETRIES = 5;
+/** The saved request's manual retry gate is still closed. */
+const waiting = (saved: AdmissionRecovery | null) => Date.now() < (saved?.retryAt ?? 0);
 
 /**
  * The entrance: first visit lands on the approved intro; returning people land on Your rooms.
@@ -46,6 +51,8 @@ export function Entrance({ invite }: { invite?: string }) {
   const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const [error, setError] = useState('');
   const [diagnostic, setDiagnostic] = useState<ConnectionDiagnostic | undefined>();
   const [checkingInvite, setCheckingInvite] = useState(Boolean(invite));
@@ -136,7 +143,7 @@ export function Entrance({ invite }: { invite?: string }) {
   /** The name is remembered once admitted, for every later room on this device. */
   const rememberName = (name: string) => (name && name !== 'Guest' ? roomRegistry.setNickname(name).catch(() => undefined) : Promise.resolve());
   async function enter(join: boolean, member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string) {
-    if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || Date.now() < (admission?.retryAt ?? 0)) return;
+    if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || waiting(admission)) return;
     inFlight.current = true;
     setRecoveryDismissed(false);
     setBusy(true);
@@ -164,66 +171,12 @@ export function Entrance({ invite }: { invite?: string }) {
           retryAt: 0,
         };
       }
-      // A prior failed write may have retained this request only in memory.
-      // Persist the exact bootstrap before EVERY possible admission submit.
-      await writeAdmission(intent, saved);
-      setAdmission(saved);
-      let result;
-      if (saved.code) {
-        const { roomId } = await api.resolve(saved.code);
-        const stored = await loadAccess(roomId);
-        // Manual code entry has the same recovery guard as a direct invitation.
-        if (!nativeClient || stored) {
-          try {
-            const access = stored ?? { roomId, participantId: '', token: '', expiresAt: 0 };
-            const snapshot = await api.snapshot(access);
-            await saveAccess({
-              roomId,
-              participantId: snapshot.own.participantId,
-              token: access.token,
-              expiresAt: snapshot.shared.expiresAt,
-            });
-            queryClient.setQueryData(roomKey(roomId), mergeRoom(undefined, snapshot));
-            await saveInvite(roomId, { code: saved.code, path: inviteIntent(saved.code) });
-            queryClient.setQueryData(['continuous-invite', roomId], {
-              code: saved.code,
-              path: inviteIntent(saved.code),
-            });
-            await writeAdmission(intent, null);
-            await rememberName(saved.request.nickname);
-            router.replace({
-              pathname: '/room/[id]',
-              params: { id: roomId, ...(member ? { signin: '1' } : {}) },
-            });
-            return;
-          } catch (e) {
-            if (
-              !(e instanceof ApiFailure) ||
-              !['unauthorized', 'not_found', 'expired', 'forbidden'].includes(e.code)
-            )
-              throw e;
-          }
-        }
-        result = await api.join(roomId, { ...saved.request, inviteCode: saved.code }, stored ?? undefined);
-      } else result = await api.create(saved.request);
-      await saveAccess(result.credential);
-      queryClient.setQueryData(
-        roomKey(result.credential.roomId),
-        mergeRoom(undefined, result.snapshot)
-      );
-      // Retain the invitation across OAuth navigation without exposing it to activity or telemetry.
-      await saveInvite(result.credential.roomId, result.invite);
-      queryClient.setQueryData(['continuous-invite', result.credential.roomId], result.invite);
-      await writeAdmission(intent, null);
-      setAdmission(null);
-      await rememberName(saved.request.nickname);
-      // A new room opens on its Mood step, above the room page and the start page (Back returns through both);
-      // a member's new room links the account first, then opens Mood.
-      const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(member ? { signin: '1' } : {}), ...(saved.code ? {} : { fresh: '1' }) } };
-      if (saved.code) router.replace(target);
-      else router.push(target);
+      const request = saved;
+      // A restart answers busy or not at all for a while: send the same saved request again by itself
+      // (same command id and secret, so it can never make a second room), and only then show an error.
+      await retryTransient(() => admit(request), { retries: AUTO_RETRIES, retryAt: retryDeadline, alive: () => mounted.current });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not join this room.');
+      setError(transientFailure(e) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : e instanceof Error ? e.message : 'Could not join this room.');
       setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
       if (saved) {
         const next = retainRequest(e) ? { ...saved, retryAt: retryDeadline(e) } : null;
@@ -235,6 +188,68 @@ export function Entrance({ invite }: { invite?: string }) {
       inFlight.current = false;
       setBusy(false);
     }
+  }
+  /** One admission submit of the saved request; on success it opens the room. */
+  async function admit(saved: AdmissionRecovery) {
+    const member = saved.member === true;
+    // A prior failed write may have retained this request only in memory.
+    // Persist the exact bootstrap before EVERY possible admission submit.
+    await writeAdmission(intent, saved);
+    setAdmission(saved);
+    let result;
+    if (saved.code) {
+      const { roomId } = await api.resolve(saved.code);
+      const stored = await loadAccess(roomId);
+      // Manual code entry has the same recovery guard as a direct invitation.
+      if (!nativeClient || stored) {
+        try {
+          const access = stored ?? { roomId, participantId: '', token: '', expiresAt: 0 };
+          const snapshot = await api.snapshot(access);
+          await saveAccess({
+            roomId,
+            participantId: snapshot.own.participantId,
+            token: access.token,
+            expiresAt: snapshot.shared.expiresAt,
+          });
+          queryClient.setQueryData(roomKey(roomId), mergeRoom(undefined, snapshot));
+          await saveInvite(roomId, { code: saved.code, path: inviteIntent(saved.code) });
+          queryClient.setQueryData(['continuous-invite', roomId], {
+            code: saved.code,
+            path: inviteIntent(saved.code),
+          });
+          await writeAdmission(intent, null);
+          await rememberName(saved.request.nickname);
+          router.replace({
+            pathname: '/room/[id]',
+            params: { id: roomId, ...(member ? { signin: '1' } : {}) },
+          });
+          return;
+        } catch (e) {
+          if (
+            !(e instanceof ApiFailure) ||
+            !['unauthorized', 'not_found', 'expired', 'forbidden'].includes(e.code)
+          )
+            throw e;
+        }
+      }
+      result = await api.join(roomId, { ...saved.request, inviteCode: saved.code }, stored ?? undefined);
+    } else result = await api.create(saved.request);
+    await saveAccess(result.credential);
+    queryClient.setQueryData(
+      roomKey(result.credential.roomId),
+      mergeRoom(undefined, result.snapshot)
+    );
+    // Retain the invitation across OAuth navigation without exposing it to activity or telemetry.
+    await saveInvite(result.credential.roomId, result.invite);
+    queryClient.setQueryData(['continuous-invite', result.credential.roomId], result.invite);
+    await writeAdmission(intent, null);
+    setAdmission(null);
+    await rememberName(saved.request.nickname);
+    // A new room opens on its Mood step, above the room page and the start page (Back returns through both);
+    // a member's new room links the account first, then opens Mood.
+    const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(member ? { signin: '1' } : {}), ...(saved.code ? {} : { fresh: '1' }) } };
+    if (saved.code) router.replace(target);
+    else router.push(target);
   }
   const known = home.nickname;
   const locked = busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;

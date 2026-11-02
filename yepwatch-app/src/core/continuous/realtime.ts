@@ -12,6 +12,7 @@ import {
 import type { SocketLike, Connection } from '../realtime';
 import { RoomFailure } from './api-client';
 import { parseFrame } from './wire';
+import { backoffDelay, BACKOFF_MAX_MS } from './backoff';
 type Timer = ReturnType<typeof setTimeout> | number;
 export interface RealtimeOptions {
   roomId: string;
@@ -29,6 +30,13 @@ export interface RealtimeOptions {
   later?: (fn: () => void, ms: number) => Timer;
   cancel?: (timer: Timer) => void;
   random?: () => number;
+  /** Reconnect progress for the banner: an attempt is running, or the next one starts at `retryAt`. */
+  attempt?: (state: ReconnectState) => void;
+}
+export interface ReconnectState {
+  attempting: boolean;
+  /** Epoch ms of the next automatic attempt; 0 when none is waiting. */
+  retryAt: number;
 }
 /** One-use authentication, reactive private repair, fresh tickets on reconnect. No HTTP polling. */
 export class ContinuousRealtime {
@@ -48,9 +56,14 @@ export class ContinuousRealtime {
   private session: string | null = null;
   private sequence = 0;
   private view: ActivityView = 'voting';
+  private attempting = false;
   constructor(private readonly o: RealtimeOptions) {}
   private later(fn: () => void, ms: number) {
     return (this.o.later ?? setTimeout)(fn, ms);
+  }
+  private report(attempting: boolean, retryAt = 0) {
+    this.attempting = attempting;
+    this.o.attempt?.({ attempting, retryAt });
   }
   private clear(timer?: Timer) {
     if (timer !== undefined) (this.o.cancel ?? clearTimeout)(timer);
@@ -81,6 +94,18 @@ export class ContinuousRealtime {
     this.dirty = false;
     ++this.epoch;
     this.detach();
+    this.report(false);
+  }
+  /** Refresh: try now instead of waiting for the next automatic attempt. A live or running attempt is kept. */
+  reconnectNow() {
+    if (!this.active) {
+      this.start();
+      return;
+    }
+    if (this.live || this.attempting) return;
+    this.detach();
+    const epoch = ++this.epoch;
+    void this.connect(epoch);
   }
   pause() {
     this.sendActivity('away');
@@ -163,9 +188,10 @@ export class ContinuousRealtime {
           this.clear(this.repairTimer);
           this.repairTimer = undefined;
         } catch {
-          // A bounded retry repairs one failed reconnect read even if no later revision arrives.
-          if (this.active && this.repairFailures < 3) {
-            const delay = 500 * 2 ** this.repairFailures++;
+          // The resync read keeps trying (backing off to 15 s) while the room is open, even if no later
+          // revision arrives: a restart can take the API down longer than the socket.
+          if (this.active) {
+            const delay = Math.min(BACKOFF_MAX_MS, 500 * 2 ** Math.min(5, this.repairFailures++));
             this.clear(this.repairTimer);
             this.repairTimer = this.later(() => this.repair(), delay);
           }
@@ -180,11 +206,8 @@ export class ContinuousRealtime {
     if (!this.active || epoch !== this.epoch) return;
     this.detach();
     this.o.status('reconnecting');
-    const ms = Math.max(
-      Math.min(minimum, 30000),
-      Math.min(30000, 500 * 2 ** Math.min(6, this.failures++)) *
-        (0.75 + (this.o.random ?? Math.random)() * 0.5)
-    );
+    const ms = backoffDelay(this.failures++, this.o.random ?? Math.random, minimum);
+    this.report(false, Date.now() + ms);
     this.retryTimer = this.later(() => {
       void this.connect(epoch);
     }, ms);
@@ -198,6 +221,7 @@ export class ContinuousRealtime {
   private async connect(epoch: number) {
     if (!this.active || epoch !== this.epoch) return;
     this.o.status(this.failures ? 'reconnecting' : 'connecting');
+    this.report(true);
     try {
       const ticket = await this.o.ticket();
       if (!this.active || epoch !== this.epoch) return;
@@ -242,6 +266,7 @@ export class ContinuousRealtime {
           }
           this.live = true;
           this.failures = 0;
+          this.report(false);
           this.o.status('live');
           this.heartbeat(epoch);
         } else if (frame.type === 'activity.session') {

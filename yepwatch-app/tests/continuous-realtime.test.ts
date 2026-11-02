@@ -158,7 +158,8 @@ test('degraded transport clears peer activity; reconnect rotates one-use ticket 
   const count = s.sent.length;
   h.client.sendActivity('trailer');
   assert.equal(s.sent.length, count);
-  h.run(500);
+  // The server's 500 ms is a floor; the first backoff step is 1 s.
+  h.run(1000);
   await tick();
   const next = h.sockets[1];
   next.open();
@@ -174,7 +175,7 @@ test('degraded transport clears peer activity; reconnect rotates one-use ticket 
   assert.equal(JSON.parse(next.sent[1]).sessionId, 's2');
   h.client.stop();
 });
-test('rising revisions during own refresh are repaired again; a single failed refresh gets bounded retry without polling', async () => {
+test('rising revisions during own refresh are repaired again; a failed refresh retries with backoff until it succeeds, without polling', async () => {
   let reads = 0;
   const releases: (() => void)[] = [];
   const h = harness({
@@ -287,4 +288,95 @@ test('decision cheers go out as one matches frame, are rate limited, and the 3 s
   assert.equal(cheers.length, 4);
   assert.equal(h.client.sendCheer({ kind: 'release', generation: 2, seed: 99 }), true);
   assert.equal(JSON.parse(s.sent.at(-1)!).cheer.kind, 'release');
+});
+
+test('server restart: busy and network ticket failures back off 1-2-4-8-15 s, report each wait, and reconnect with a resync read', async () => {
+  let reads = 0;
+  let failing = 6;
+  const states: { attempting: boolean; retryAt: number }[] = [];
+  const h = harness({
+    ticket: async () => {
+      if (failing-- > 0)
+        throw failing % 2 ? new RoomFailure('busy', 'Service unavailable', 503, undefined, undefined, true) : new RoomFailure('outcome_unknown', 'offline');
+      return { ticket: 'fresh', expiresAt: Date.now() + 10000, websocketPath: '/api/yepwatch/v1/proposal/realtime' };
+    },
+    privateRead: async () => {
+      reads++;
+    },
+    attempt: (s) => states.push(s),
+  });
+  h.client.start();
+  await tick();
+  for (const ms of [1000, 2000, 4000, 8000, 15000, 15000]) {
+    assert.equal(h.statuses.at(-1), 'reconnecting');
+    assert.equal(states.at(-1)?.attempting, false);
+    assert.ok(states.at(-1)!.retryAt > Date.now(), 'the wait is announced');
+    h.run(ms);
+    await tick();
+  }
+  const s = h.sockets[0];
+  assert.ok(s, 'reconnected after six failures');
+  assert.equal(states.at(-1)?.attempting, true);
+  s.open();
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  await tick();
+  assert.equal(h.statuses.at(-1), 'live');
+  assert.deepEqual(states.at(-1), { attempting: false, retryAt: 0 });
+  assert.equal(reads, 1, 'the snapshot is read again after reconnecting');
+  // Success resets the backoff: the next drop waits 1 s again.
+  s.onclose?.(new Event('close') as CloseEvent);
+  assert.ok([...h.jobs.values()].some((j) => j.ms === 1000));
+  h.client.stop();
+});
+test('never gives up: after many failures it keeps trying every 15 s at most', async () => {
+  const h = harness({
+    ticket: async () => {
+      throw new RoomFailure('outcome_unknown', 'offline');
+    },
+  });
+  h.client.start();
+  await tick();
+  for (let i = 0; i < 30; i++) {
+    const waits = [...h.jobs.values()].map((j) => j.ms);
+    assert.equal(waits.length, 1);
+    assert.ok(waits[0] <= 15000);
+    h.run(waits[0]);
+    await tick();
+  }
+  assert.equal(h.statuses.at(-1), 'reconnecting');
+  h.client.stop();
+  assert.equal(h.jobs.size, 0);
+});
+test('Refresh (reconnectNow) skips the wait, keeps a live socket, and restarts a stopped channel', async () => {
+  let tickets = 0;
+  const states: { attempting: boolean; retryAt: number }[] = [];
+  const h = harness({
+    ticket: async () => {
+      if (++tickets === 1) throw new RoomFailure('busy', 'Service unavailable', 503, undefined, undefined, true);
+      return { ticket: `t${tickets}`, expiresAt: Date.now() + 10000, websocketPath: '/api/yepwatch/v1/proposal/realtime' };
+    },
+    attempt: (s) => states.push(s),
+  });
+  h.client.start();
+  await tick();
+  assert.equal(h.jobs.size, 1);
+  h.client.reconnectNow();
+  assert.equal(states.at(-1)?.attempting, true, 'Refresh shows an attempt at once');
+  assert.equal([...h.jobs.values()].some((j) => j.ms === 1000), false, 'the waiting timer is cancelled');
+  await tick();
+  assert.equal(tickets, 2);
+  const s = h.sockets[0];
+  h.client.reconnectNow();
+  await tick();
+  assert.equal(tickets, 2, 'a running attempt is not doubled');
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  h.client.reconnectNow();
+  await tick();
+  assert.equal(tickets, 2, 'a live socket is kept');
+  assert.equal(s.closed, false);
+  h.client.stop();
+  h.client.reconnectNow();
+  await tick();
+  assert.equal(tickets, 3, 'a stopped channel starts again');
+  h.client.stop();
 });

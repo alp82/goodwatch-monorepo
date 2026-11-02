@@ -40,7 +40,16 @@ export function RoomNotes() {
       : state.pending ? 'Your choice is awaiting confirmation.'
       : noServices ? 'Pick a streaming service'
       : ideaLimit ? ((view?.ideas.length ?? 0) >= IDEA_LIMITS.perRoom ? `Up to ${IDEA_LIMITS.perRoom} ideas. Remove one first.` : 'No more new ideas in this room')
-      : state.error || (state.connection === 'background' ? 'Updates paused while away.' : state.connection !== 'live' ? 'Connecting…' : ''));
+      : state.error || connectionText());
+  function connectionText() {
+    if (state.connection === 'background') return 'Updates paused while away.';
+    if (state.connection === 'live') return '';
+    if (state.reconnecting) return state.connection === 'connecting' ? 'Connecting…' : 'Reconnecting…';
+    if (state.reconnectSeconds > 0) return `Trying again in ${state.reconnectSeconds} s`;
+    return state.connection === 'unavailable' ? 'Not connected.' : 'Connecting…';
+  }
+  // Only the connection line itself spins; saved actions and errors keep their own words.
+  const spinning = state.reconnecting && text === connectionText();
   const label = state.retrySeconds > 0 ? `Retry in ${state.retrySeconds}s` : state.pending ? 'Retry' : entry.error ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';
   return (
     <View style={{ gap: 4 }}>
@@ -48,7 +57,7 @@ export function RoomNotes() {
       {text ? (
         <Note action={{
           label,
-          disabled: state.busy || state.retrySeconds > 0,
+          disabled: state.busy || state.retrySeconds > 0 || spinning,
           onPress: () => {
             setNotice('');
             if (state.pending) void state.send();
@@ -57,7 +66,7 @@ export function RoomNotes() {
             else if (entry.error) void entry.retry();
             else { void state.refetch().catch(() => undefined); state.reconnect(); }
           },
-        }}>{text}</Note>
+        }} busy={spinning}>{text}</Note>
       ) : null}
     </View>
   );

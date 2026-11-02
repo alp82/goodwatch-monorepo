@@ -37,7 +37,7 @@ export function Explainer({ obscured }: { obscured: boolean }) {
       onPointerDown={(e) => {
         if (e.pointerType !== "mouse") revealTouch();
       }}
-      aria-label="Swipe your picks. Find a shared match. Agree and watch together."
+      aria-label="Swipe your picks. Find a shared match. Agree, then watch and enjoy."
     >
       <style>{introCss}</style>
       <div

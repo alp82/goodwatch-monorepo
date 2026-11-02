@@ -20,7 +20,7 @@ import type { Connection } from '../realtime';
 import { mergeRoom, mergePublic, PersistentCommands, type CachedRoom } from './state';
 import { readCommandRecovery, writePending } from './storage';
 import { useRetryCountdown } from './useRetryCountdown';
-import { ContinuousRealtime } from './realtime';
+import { ContinuousRealtime, type ReconnectState } from './realtime';
 import { applyActivity, pruneActivity, type PeerActivity } from './activity';
 import { applyCheerFrame, emptyCheers, freshCheerEvents, holderSeeds, nextCheerExpiry, pruneCheers, type CheerEvent, type CheerState } from './cheers';
 import { ACTIVITY_LIMITS } from '@goodwatch/yepwatch-contracts/proposal';
@@ -31,6 +31,8 @@ const EMPTY_HOLDERS: ReadonlyMap<string, number> = new Map();
 export function useContinuousRoom(roomId: string) {
   const [access, setAccess] = useState<RoomAccess | null>();
   const [connection, setConnection] = useState<Connection>('connecting');
+  const [reconnect, setReconnect] = useState<ReconnectState>({ attempting: false, retryAt: 0 });
+  const reconnectSeconds = useRetryCountdown(reconnect.retryAt);
   const [error, setError] = useState('');
   /** The last command failure's code, for screens that answer it in place (needs_context, limit_reached). */
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -85,7 +87,8 @@ export function useContinuousRoom(roomId: string) {
   const authority = useCallback(
     (e: unknown) => {
       if (expired(e)) return;
-      if (e instanceof RoomFailure && ([401, 403, 404].includes(e.status ?? 0) || ['unauthorized', 'forbidden', 'not_found'].includes(e.code)))
+      // A status without the API's own answer (a proxy page while the server restarts) is not lost access.
+      if (e instanceof RoomFailure && ((e.code !== 'outcome_unknown' && [401, 403, 404].includes(e.status ?? 0)) || ['unauthorized', 'forbidden', 'not_found'].includes(e.code)))
         end('access');
     },
     [end, expired]
@@ -204,6 +207,7 @@ export function useContinuousRoom(roomId: string) {
       },
       privateRead: refetch,
       authorityError: authority,
+      attempt: setReconnect,
       serverClock: (offset) => {
         clock.current = offset;
       },
@@ -361,6 +365,10 @@ export function useContinuousRoom(roomId: string) {
       }
     },
     connection,
+    /** An automatic or Refresh reconnect is running right now. */
+    reconnecting: reconnect.attempting,
+    /** Seconds until the next automatic reconnect; 0 when none is waiting. */
+    reconnectSeconds,
     error,
     errorCode,
     clearError: () => { setError(''); setErrorCode(null); },
@@ -372,7 +380,7 @@ export function useContinuousRoom(roomId: string) {
     send,
     refetch,
     reconnect: () => {
-      if (!expired()) channel.current?.start();
+      if (!expired()) channel.current?.reconnectNow();
     },
     activities,
     activityNow: () => Date.now() + clock.current,
