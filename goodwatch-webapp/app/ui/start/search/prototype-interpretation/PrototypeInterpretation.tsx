@@ -14,6 +14,9 @@ const names: Record<string, string> = {
 	B1: "Soft color chips",
 	B2: "Color notes",
 	B3: "Two directions",
+	I1: "Original input",
+	I2: "Expanding input",
+	I3: "Search composer",
 }
 export default function PrototypeInterpretation({
 	query,
@@ -54,6 +57,8 @@ export default function PrototypeInterpretation({
 			const existing = new URLSearchParams(params)
 			existing.delete("q")
 			existing.delete("variant")
+			existing.delete("example")
+			existing.delete("preview")
 			const r = await fetch("/api/discover/interpret", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -128,13 +133,17 @@ export default function PrototypeInterpretation({
 		filters: fields,
 		remaining,
 		fingerprint,
+		inputStyle: variant.startsWith("I") ? names[variant] : "Original input",
+		emptyStatePreview: params.get("preview") === "empty",
 		fingerprintSource: actual.length
 			? "Live reading"
 			: "Illustrative review fixture",
 		display: items,
 	}
 	function cycle(step: number) {
-		const keys = ["B1", "B2", "B3"]
+		const keys = variant.startsWith("I")
+			? ["I1", "I2", "I3"]
+			: ["B1", "B2", "B3"]
 		const next = new URLSearchParams(params)
 		next.set("variant", keys[(keys.indexOf(variant) + step + 3) % 3])
 		setParams(next, { replace: true, preventScrollReset: true })
@@ -156,7 +165,11 @@ export default function PrototypeInterpretation({
 		setInspect(true)
 	}
 	const Component =
-		variant === "B2" ? ColorNotes : variant === "B3" ? TwoDirections : SoftChips
+		variant === "B2" || variant.startsWith("I")
+			? ColorNotes
+			: variant === "B3"
+				? TwoDirections
+				: SoftChips
 	const portaled = !mounted
 		? null
 		: createPortal(
@@ -180,6 +193,21 @@ export default function PrototypeInterpretation({
 						>
 							→
 						</button>
+						{variant.startsWith("I") && (
+							<button
+								type="button"
+								className="ir-switch-action"
+								aria-pressed={params.get("preview") === "empty"}
+								onClick={() => {
+									const next = new URLSearchParams(params)
+									if (next.get("preview") === "empty") next.delete("preview")
+									else next.set("preview", "empty")
+									setParams(next, { replace: true, preventScrollReset: true })
+								}}
+							>
+								Empty state
+							</button>
+						)}
 						<span className="ir-switch-divider" />
 						<select
 							aria-label="Example phrase"

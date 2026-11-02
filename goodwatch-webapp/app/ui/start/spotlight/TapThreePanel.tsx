@@ -3,7 +3,8 @@
 // first pick's color with the count, three hearts for the loved titles, and See all; the posters are the loved
 // toggles. A search that found nothing or failed says so in the panel, with the way on.
 import { HeartIcon } from "@heroicons/react/20/solid"
-import type { CSSProperties } from "react"
+import { type CSSProperties, useContext, lazy, Suspense } from "react"
+import { UNSAFE_LocationContext } from "react-router-dom"
 import { WORD_BY_ID } from "~/domain/taste-picker"
 import type { TitleCard } from "~/server/title-cards.server"
 import { shownLabel } from "../moods/mixes"
@@ -19,6 +20,9 @@ import { DieIcon, LovedToggle, SeeAll, TAP_THREE } from "./card-parts"
 import type { LovedThreeState } from "./useLovedThree"
 
 /** At most this many posters in the row, then See all. */
+const PrototypeEmpty = import.meta.env.DEV
+	? lazy(() => import("../search/prototype-interpretation/PrototypeEmpty"))
+	: null
 const ROW_MAX = 24
 
 export function TapThreePanel({
@@ -35,11 +39,18 @@ export function TapThreePanel({
 	onSurprise: () => void
 }) {
 	const { query } = start
+	const location = useContext(UNSAFE_LocationContext)
+	const prototypeParams = new URLSearchParams(location?.location.search ?? "")
+	const longQueryPrototype =
+		!!PrototypeEmpty &&
+		["I1", "I2", "I3"].includes(prototypeParams.get("variant") ?? "")
+	const previewEmpty =
+		longQueryPrototype && prototypeParams.get("preview") === "empty"
 	const hue = query.picks.length
 		? (WORD_BY_ID[query.picks[0]]?.hue ?? "#fbbf24")
 		: "#fbbf24"
 	const n = results.total ?? results.cards.length
-	const ready = view === "results" && results.cards.length > 0
+	const ready = !previewEmpty && view === "results" && results.cards.length > 0
 	return (
 		<div className="tap-panel" style={{ "--tap-hue": hue } as CSSProperties}>
 			<div className="tap-head">
@@ -60,9 +71,11 @@ export function TapThreePanel({
 					<div className="tap-line">
 						<span className="tap-chip">
 							<i aria-hidden />
-							{shownLabel(query)}
+							{longQueryPrototype && query.text
+								? "Your search"
+								: shownLabel(query)}
 						</span>
-						{view === "loading" ? (
+						{view === "loading" && !previewEmpty ? (
 							<span className="tap-count">
 								{query.text ? "Reading your search…" : "Finding titles…"}
 							</span>
@@ -79,7 +92,20 @@ export function TapThreePanel({
 				) : null}
 			</div>
 			<div className="tap-body">
-				{view === "loading" ? (
+				{longQueryPrototype &&
+				PrototypeEmpty &&
+				(previewEmpty ||
+					(view !== "loading" &&
+						results.status !== "error" &&
+						!results.cards.length)) ? (
+					<Suspense
+						fallback={
+							<div className="tap-message">No matches with these filters</div>
+						}
+					>
+						<PrototypeEmpty query={query.text} preview={previewEmpty} />
+					</Suspense>
+				) : view === "loading" ? (
 					<Skeleton />
 				) : results.status === "error" ? (
 					<Message

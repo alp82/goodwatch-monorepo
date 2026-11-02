@@ -534,3 +534,264 @@
 		grid-template-columns: 65px 1fr;
 	}
 }
+
+/* Round 3: same B2 interpretation, different query editors. */
+.ir-input {
+	padding: 18px 24px;
+	color: #e8edf6;
+}
+.ir-input-main {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	min-width: 0;
+}
+.ir-input-icon {
+	width: 21px;
+	height: 21px;
+	color: #fbbf24;
+	flex-shrink: 0;
+	margin-top: 8px;
+}
+.ir-input textarea {
+	font-family: inherit;
+	font-size: 24px;
+	line-height: 34px;
+	font-weight: 600;
+	flex: 1;
+	width: 100%;
+	min-width: 0;
+	resize: none;
+	border: 0;
+	box-shadow: none;
+	background: none;
+	color: #f1f5f9;
+	padding: 0;
+	outline: none;
+	overflow-y: auto;
+	scrollbar-width: thin;
+}
+.ir-input textarea:focus {
+	box-shadow: none;
+}
+.ir-input textarea::placeholder {
+	color: #6b7280;
+	font-weight: 500;
+}
+.ir-input-actions {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-shrink: 0;
+}
+.ir-input-actions button {
+	border: 0;
+	border-radius: 10px;
+	background: none;
+	color: #a8b5c9;
+	padding: 10px 5px;
+	font-size: 13px;
+	cursor: pointer;
+}
+.ir-input-actions button svg {
+	width: 18px;
+	height: 18px;
+}
+.ir-input-actions button[type="submit"] {
+	background: #fbbf24;
+	color: #121820;
+	font-size: 14px;
+	font-weight: 700;
+	padding: 11px 16px;
+	box-shadow: 0 4px 14px #fbbf2420;
+}
+.ir-input-actions button[type="submit"] span {
+	margin-left: 9px;
+	opacity: 0.55;
+}
+.ir-input-label {
+	display: block;
+	font-size: 11px;
+	letter-spacing: .03em;
+	color: #98a9c0;
+	margin-bottom: 13px;
+}
+.ir-input-I3 textarea {
+	font-size: 20px;
+	line-height: 30px;
+	max-height: 156px;
+}
+.ir-input-I3 .ir-input-icon {
+	width: 18px;
+	height: 18px;
+	margin-top: 6px;
+}
+.ir-composer-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+	margin: 16px 0 0 30px;
+}
+.ir-composer-footer > span {
+	font-size: 11px;
+	color: #788aa4;
+}
+.ir-composer-footer i {
+	font-style: normal;
+	padding: 0 5px;
+}
+.ir-filter-details {
+	border-top: 1px solid #ffffff0b;
+	padding-top: 10px;
+}
+.ir-filter-details summary {
+	cursor: pointer;
+	color: #afbdd0;
+	font-size: 12px;
+	list-style: none;
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	width: fit-content;
+}
+.ir-filter-details summary::-webkit-details-marker {
+	display: none;
+}
+.ir-filter-details summary span {
+	font-size: 11px;
+	color: #d5b878;
+}
+.ir-filter-details .ir-b-row {
+	margin-top: 12px;
+}
+.ir-filter-details:not([open]) .ir-show-less,
+.ir-filter-details[open] .ir-show-all {
+	display: none;
+}
+.ir-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	justify-content: center;
+	gap: 12px;
+	min-height: 260px;
+	padding: 32px 24px;
+}
+.ir-empty > small {
+	font-size: 9px;
+	letter-spacing: .1em;
+	color: #d5b878;
+}
+.ir-empty h3 {
+	font-size: 20px;
+	font-weight: 650;
+	color: #eef2f8;
+	margin: 0;
+}
+.ir-empty p {
+	font-size: 13px;
+	color: #99abc1;
+	margin: 0;
+}
+.ir-relaxations {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 8px;
+	margin: 8px 0;
+}
+.ir-relaxations a {
+	font-size: 12px;
+	padding: 8px 11px;
+	border: 1px solid #ffffff20;
+	border-radius: 7px;
+	color: #d6dfed;
+	text-decoration: none;
+	background: #ffffff05;
+}
+.ir-relaxations a:hover {
+	background: #ffffff0d;
+	border-color: #fbbf2450;
+}
+.ir-relaxations span {
+	color: #8b9db6;
+	margin-left: 5px;
+}
+.ir-empty > button {
+	padding: 9px 17px;
+	border-radius: 8px;
+	background: #fbbf24;
+	color: #111827;
+	font-weight: 650;
+	border: 0;
+	font-size: 12px;
+}
+@media (max-width: 640px) {
+	.ir-input {
+		padding: 14px 16px;
+	}
+	.ir-input-main {
+		gap: 9px;
+	}
+	.ir-input textarea {
+		font-size: 17px;
+		line-height: 26px;
+	}
+	.ir-input-I2 textarea {
+		max-height: 78px;
+	}
+	.ir-input-icon {
+		width: 17px;
+		height: 17px;
+		margin-top: 5px;
+	}
+	.ir-input-actions {
+		gap: 5px;
+	}
+	.ir-input-actions button[type="submit"] {
+		padding: 9px 12px;
+		font-size: 12px;
+	}
+	.ir-input-actions button[type="submit"] span {
+		display: none;
+	}
+	.ir-composer-footer {
+		margin-left: 26px;
+		margin-top: 12px;
+	}
+	.ir-composer-footer > span {
+		max-width: 140px;
+		font-size: 10px;
+	}
+	.ir-input-I3 textarea {
+		font-size: 17px;
+		line-height: 26px;
+	}
+	.ir-empty h3 {
+		font-size: 18px;
+	}
+}
+/* The real landing page reserves a fixed block for its original field. These
+   explicit prototype variants need normal document flow when the field grows. */
+.start-stage:has([data-prototype-input]) .start-block {
+	height: auto;
+	transform: none;
+	transition: none;
+}
+.start-stage:has([data-prototype-input]) .start-gap {
+	height: 32px;
+}
+.start-stage:has([data-prototype-input]) .start-card-wrap {
+	padding-bottom: 150px;
+}
+.ir-switch-action[aria-pressed="true"] {
+	background: #fbbf2426;
+	box-shadow: inset 0 0 0 1px #b7892f66;
+}
+@media (max-width: 640px) {
+	.start-stage:has([data-prototype-input]) .start-gap {
+		height: 24px;
+	}
+}

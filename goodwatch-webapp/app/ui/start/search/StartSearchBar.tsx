@@ -38,6 +38,10 @@ const ReadPrototype = import.meta.env.DEV
 	? lazy(() => import("./prototype-interpretation/PrototypeInterpretation"))
 	: null
 
+const PrototypeInput = import.meta.env.DEV
+	? lazy(() => import("./prototype-interpretation/PrototypeInput"))
+	: null
+
 const PRIVATE = "search-private ph-no-capture sentry-mask"
 
 /** The field's id, for whatever brings the guest back to the search (the intro's Try it). */
@@ -79,7 +83,7 @@ export function StartSearchBar({
 	)
 	const prototypeVariant =
 		ReadPrototype &&
-		["A", "B", "C", "B1", "B2", "B3"].includes(
+		["A", "B", "C", "B1", "B2", "B3", "I1", "I2", "I3"].includes(
 			prototypeParams.get("variant") ?? "",
 		)
 	const input = useRef<HTMLInputElement>(null)
@@ -110,6 +114,12 @@ export function StartSearchBar({
 			// biome-ignore lint/a11y/useSemanticElements: React 18 has no <search> element; the form is the search landmark
 			role="search"
 			className="start-bar relative mx-auto w-full"
+			data-prototype-input={
+				prototypeVariant &&
+				["I1", "I2", "I3"].includes(prototypeParams.get("variant") ?? "")
+					? ""
+					: undefined
+			}
 			onSubmit={(event) => {
 				event.preventDefault()
 				if (!commit.submit(query.draft)) return
@@ -122,63 +132,90 @@ export function StartSearchBar({
 			<span aria-hidden className="start-bar-shadow" />
 			<span aria-hidden className="start-bar-glow" />
 			<div className="relative overflow-hidden rounded-2xl bg-gray-900 ring-1 ring-white/12 sm:rounded-[22px]">
-				<div className="flex h-[58px] items-center gap-2 pl-4 pr-2 sm:h-[70px] sm:gap-3 sm:pl-6 sm:pr-3 lg:h-[74px]">
-					<div
-						className={`flex h-full min-w-0 flex-1 items-center gap-2.5 sm:gap-3 ${PRIVATE}`}
+				{prototypeVariant &&
+				PrototypeInput &&
+				["I2", "I3"].includes(prototypeParams.get("variant") ?? "") ? (
+					<Suspense
+						fallback={
+							<div className="px-6 py-5 text-gray-400">Loading input…</div>
+						}
 					>
-						<MagnifyingGlassIcon
-							className={`h-5 w-5 shrink-0 ${query.draft ? "text-amber-400" : "text-gray-400"}`}
-							aria-hidden
-						/>
-						<input
-							ref={input}
-							id={START_SEARCH_INPUT}
-							type="search"
-							aria-label={SEARCH_LABEL}
+						<PrototypeInput
+							variant={prototypeParams.get("variant")!}
 							value={query.draft}
-							autoComplete="off"
-							enterKeyHint="search"
-							maxLength={SEARCH_MAX_CHARS}
-							data-ph-no-capture
 							placeholder={placeholder}
 							onFocus={preloadSearchRequest}
-							onChange={(event) => {
-								const draft = event.target.value
+							onChange={(draft) => {
 								setDraft(draft)
 								commit.type(draft)
 							}}
-							className="brand-header h-full w-full min-w-0 flex-1 border-0 bg-transparent p-0 text-[20px] leading-tight text-white outline-none placeholder:text-gray-500 focus:ring-0 sm:text-[28px] lg:text-[34px] [&::-webkit-search-cancel-button]:hidden"
-						/>
-						<button
-							type="button"
-							onMouseDown={(event) => event.preventDefault()}
-							onClick={() => {
+							onClear={() => {
 								commit.cancel()
 								clearSearch()
-								input.current?.focus()
 							}}
-							aria-label="Clear the search"
-							tabIndex={filled ? 0 : -1}
-							className={`inline-flex h-8 min-w-8 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md px-2 text-sm font-semibold text-amber-400 outline-none transition-opacity hover:bg-amber-400/10 hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400 ${filled ? "opacity-100" : "pointer-events-none opacity-0"}`}
-						>
-							<XMarkIcon className="h-4 w-4" aria-hidden />
-							<span className="hidden lg:inline">Clear</span>
-						</button>
-					</div>
-					{/* The action and its key, two joined segments. */}
-					<button
-						type="submit"
-						aria-label="Search"
-						className="group flex h-10 shrink-0 cursor-pointer items-stretch overflow-hidden rounded-xl font-bold text-gray-950 shadow-[0_6px_18px_-6px_rgb(251_191_36/.6)] outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 sm:h-12"
-					>
-						<span className="flex items-center bg-amber-400 px-3.5 text-sm group-hover:bg-amber-300 sm:px-5 sm:text-base">
-							Search
-						</span>
-						<span className="flex items-center border-l border-amber-600/40 bg-amber-500 px-2.5 group-hover:bg-amber-400 max-sm:hidden">
-							<EnterKey />
-						</span>
-					</button>
-				</div>
+						/>
+					</Suspense>
+				) : (
+					<>
+						<div className="flex h-[58px] items-center gap-2 pl-4 pr-2 sm:h-[70px] sm:gap-3 sm:pl-6 sm:pr-3 lg:h-[74px]">
+							<div
+								className={`flex h-full min-w-0 flex-1 items-center gap-2.5 sm:gap-3 ${PRIVATE}`}
+							>
+								<MagnifyingGlassIcon
+									className={`h-5 w-5 shrink-0 ${query.draft ? "text-amber-400" : "text-gray-400"}`}
+									aria-hidden
+								/>
+								<input
+									ref={input}
+									id={START_SEARCH_INPUT}
+									type="search"
+									aria-label={SEARCH_LABEL}
+									value={query.draft}
+									autoComplete="off"
+									enterKeyHint="search"
+									maxLength={SEARCH_MAX_CHARS}
+									data-ph-no-capture
+									placeholder={placeholder}
+									onFocus={preloadSearchRequest}
+									onChange={(event) => {
+										const draft = event.target.value
+										setDraft(draft)
+										commit.type(draft)
+									}}
+									className="brand-header h-full w-full min-w-0 flex-1 border-0 bg-transparent p-0 text-[20px] leading-tight text-white outline-none placeholder:text-gray-500 focus:ring-0 sm:text-[28px] lg:text-[34px] [&::-webkit-search-cancel-button]:hidden"
+								/>
+								<button
+									type="button"
+									onMouseDown={(event) => event.preventDefault()}
+									onClick={() => {
+										commit.cancel()
+										clearSearch()
+										input.current?.focus()
+									}}
+									aria-label="Clear the search"
+									tabIndex={filled ? 0 : -1}
+									className={`inline-flex h-8 min-w-8 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md px-2 text-sm font-semibold text-amber-400 outline-none transition-opacity hover:bg-amber-400/10 hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400 ${filled ? "opacity-100" : "pointer-events-none opacity-0"}`}
+								>
+									<XMarkIcon className="h-4 w-4" aria-hidden />
+									<span className="hidden lg:inline">Clear</span>
+								</button>
+							</div>
+							{/* The action and its key, two joined segments. */}
+							<button
+								type="submit"
+								aria-label="Search"
+								className="group flex h-10 shrink-0 cursor-pointer items-stretch overflow-hidden rounded-xl font-bold text-gray-950 shadow-[0_6px_18px_-6px_rgb(251_191_36/.6)] outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 sm:h-12"
+							>
+								<span className="flex items-center bg-amber-400 px-3.5 text-sm group-hover:bg-amber-300 sm:px-5 sm:text-base">
+									Search
+								</span>
+								<span className="flex items-center border-l border-amber-600/40 bg-amber-500 px-2.5 group-hover:bg-amber-400 max-sm:hidden">
+									<EnterKey />
+								</span>
+							</button>
+						</div>
+					</>
+				)}
 				<div className="mx-4 h-px bg-white/[0.08] sm:mx-6" />
 				{prototypeVariant && ReadPrototype ? (
 					<Suspense

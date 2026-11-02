@@ -124,7 +124,24 @@ export function ColorNotes({
 					</div>
 				</div>
 			)}
-			<Filters items={items.filter((t) => t.kind === "filter")} open={open} />
+			{items.filter((t) => t.kind === "filter").length > 6 ? (
+				<details
+					className="ir-filter-details"
+					key={JSON.stringify(items.filter((t) => t.kind === "filter"))}
+				>
+					<summary>
+						{items.filter((t) => t.kind === "filter").length} filters{" "}
+						<span className="ir-show-all">Show all</span>
+						<span className="ir-show-less">Show less</span>
+					</summary>
+					<Filters
+						items={items.filter((t) => t.kind === "filter")}
+						open={open}
+					/>
+				</details>
+			) : (
+				<Filters items={items.filter((t) => t.kind === "filter")} open={open} />
+			)}
 		</div>
 	)
 }
