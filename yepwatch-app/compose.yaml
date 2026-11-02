@@ -24,9 +24,11 @@ services:
     expose: ["8080"]
     mem_limit: 128m
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
+    # Starts with the others: Caddy holds requests until api/gateway answer (lb_try_duration), so a
+    # deploy shows a short wait instead of errors.
     depends_on:
-      api: {condition: service_healthy}
-      gateway: {condition: service_healthy}
+      api: {condition: service_started}
+      gateway: {condition: service_started}
   api:
     <<: *common
     build:
@@ -87,4 +89,4 @@ services:
       YEPWATCH_VALKEY_USER: ${YEPWATCH_REDIS_USER:-default}
       YEPWATCH_VALKEY_PASSWORD: ${YEPWATCH_REDIS_PASSWORD}
     depends_on:
-      api: {condition: service_healthy}
+      api: {condition: service_started}

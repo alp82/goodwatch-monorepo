@@ -21,6 +21,8 @@
   }
   handle /api/yepwatch/v1/proposal/realtime {
     reverse_proxy gateway:4311 {
+      lb_try_duration 30s
+      lb_try_interval 500ms
       stream_close_delay 30s
     }
   }
@@ -29,49 +31,77 @@
     path /api/yepwatch/v1/proposal/catalog/metadata /api/yepwatch/v1/proposal/health/live /api/yepwatch/v1/proposal/health/ready
   }
   handle @read {
-    reverse_proxy api:3000
+    reverse_proxy api:3000 {
+      # During a deploy the api restarts: hold the request and retry instead of failing it.
+      lb_try_duration 30s
+      lb_try_interval 500ms
+    }
   }
   @snapshot {
     method GET
     path_regexp snapshot ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}$
   }
   handle @snapshot {
-    reverse_proxy api:3000
+    reverse_proxy api:3000 {
+      # During a deploy the api restarts: hold the request and retry instead of failing it.
+      lb_try_duration 30s
+      lb_try_interval 500ms
+    }
   }
   @admission {
     method POST
     path /api/yepwatch/v1/proposal/rooms /api/yepwatch/v1/proposal/guest/resolve-invite /api/yepwatch/v1/proposal/invites/preview
   }
   handle @admission {
-    reverse_proxy api:3000
+    reverse_proxy api:3000 {
+      # During a deploy the api restarts: hold the request and retry instead of failing it.
+      lb_try_duration 30s
+      lb_try_interval 500ms
+    }
   }
   @commands {
     method POST
     path_regexp command ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/(join|commands|preview|realtime-ticket)$
   }
   handle @commands {
-    reverse_proxy api:3000
+    reverse_proxy api:3000 {
+      # During a deploy the api restarts: hold the request and retry instead of failing it.
+      lb_try_duration 30s
+      lb_try_interval 500ms
+    }
   }
   @member_callback {
     method GET
     path /api/yepwatch/v1/proposal/member/callback
   }
   handle @member_callback {
-    reverse_proxy api:3000
+    reverse_proxy api:3000 {
+      # During a deploy the api restarts: hold the request and retry instead of failing it.
+      lb_try_duration 30s
+      lb_try_interval 500ms
+    }
   }
   @member_write {
     method POST
     path /api/yepwatch/v1/proposal/member/start /api/yepwatch/v1/proposal/member/exchange
   }
   handle @member_write {
-    reverse_proxy api:3000
+    reverse_proxy api:3000 {
+      # During a deploy the api restarts: hold the request and retry instead of failing it.
+      lb_try_duration 30s
+      lb_try_interval 500ms
+    }
   }
   @member_read {
     method GET
     path_regexp member ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/member(/progress)?$
   }
   handle @member_read {
-    reverse_proxy api:3000
+    reverse_proxy api:3000 {
+      # During a deploy the api restarts: hold the request and retry instead of failing it.
+      lb_try_duration 30s
+      lb_try_interval 500ms
+    }
   }
   @unknown_api path /api /api/*
   handle @unknown_api {
