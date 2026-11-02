@@ -1,5 +1,13 @@
 # Discover redesign: production build
 
+> **Update, November 2, 2026:** Discover is now one page with two modes; parts of this plan are superseded. Easy is the
+> default: the title "Discover", a search field with Try examples and Ready to watch, and one line with how the search
+> was read (fingerprint qualities and filters, or moods when there's nothing to read), with Sort at its end. Advanced
+> (`mode=advanced`, switched only by the Easy | Advanced tabs) slides the filter bar in as the field's lower half and adds
+> For you beside Sort. The bar's first segment is now Titles & people. Searches go through the discovery query
+> interpreter: filters land in the URL, the rest stays `q`, and `asked` keeps the words as typed. Search progress text is
+> gone; only errors show. Design history: branch `prototype/discover-easy`.
+
 Owner decision (2026-10-29), after 23 prototype rounds: "lock all changes in, ship to main". This spec describes what
 ships, what production is missing for it, and the order of small steps that build it on main.
 

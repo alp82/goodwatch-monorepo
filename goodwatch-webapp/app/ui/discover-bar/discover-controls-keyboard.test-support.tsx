@@ -183,7 +183,7 @@ await act(async () => {
 			{ client },
 			h(
 				MemoryRouter,
-				{ initialEntries: ["/dev/discover-bar"] },
+				{ initialEntries: ["/dev/discover-bar?mode=advanced"] },
 				h(Page),
 				h(QuickTitlesProbe),
 			),

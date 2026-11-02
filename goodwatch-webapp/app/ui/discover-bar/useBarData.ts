@@ -1,4 +1,4 @@
-// What the bar, the status line and the panel footer show beyond the filter state: the names of services, titles and
+// What the bar, the reading line and the panel footer show beyond the filter state: the names of services, titles and
 // people (useFilterData), the rating ladder of the last answer, the chips in their order, each tab's value line and
 // badge, and the Clear all count.
 import { useMemo, useRef } from "react"

@@ -1,6 +1,6 @@
 // Shareable URLs intentionally contain the query; telemetry must not retain it.
-const queryParam = /([?&](?:q|query)=)[^&#\s"<>]*/gi;
-const privateKey = /^(q|query|search_term)$/i;
+const queryParam = /([?&](?:q|query|asked)=)[^&#\s"<>]*/gi;
+const privateKey = /^(q|query|asked|search_term)$/i;
 let lastLargeInput = "";
 let lastLargeOutput = "";
 

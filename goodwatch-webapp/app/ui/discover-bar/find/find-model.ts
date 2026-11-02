@@ -1,7 +1,7 @@
 // What Find finds in every tab and how its results group, without React. useFind gathers the sources (the filter
 // state, the title and person searches, the Mood rows, the services, the taste groups) and the setters the tabs use;
 // findHits turns typed text into results that each know their sub-tab, whether they are on, and how to toggle with the
-// tab's own setter, so the tab, badges, status line and footer agree. groupHits lays them out as FindResults draws
+// tab's own setter, so the tab, badges, reading line and footer agree. groupHits lays them out as FindResults draws
 // them: columns in tab order, sub-tabs in their order, titles and people as rows that grow with More.
 import { type LadderStep, ladderStepFor } from "~/domain/age-content"
 import {

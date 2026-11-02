@@ -1,6 +1,6 @@
 // Old Discover links on the Discover bar: each URL goes the way the page takes it (the loader's redirect of old
 // parameter names and type paths, then the filter state the page reads from the URL), and every choice it carries
-// shows as a chip in the status line and in the value lines of the bar's tabs.
+// shows as a chip in the reading line and in the value lines of the bar's tabs.
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../server/title-filter/test-alias.ts"

@@ -1,4 +1,4 @@
-// The search state as removable chips, in the order the status line and the panel footer show them: the query,
+// The search state as removable chips, in the order the reading line and the panel footer show them: the query,
 // steering (More like, Less like, Like), people, On my services and the picked services, Not seen yet, You's choices,
 // every other filter, then popularity, budget and show choices. Pure, no React.
 //

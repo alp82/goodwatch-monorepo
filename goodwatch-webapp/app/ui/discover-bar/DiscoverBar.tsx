@@ -1,11 +1,7 @@
-// The Discover bar: the four main tabs as one row of segments (desktop) or Search over a row of three (phones). Each
+// The Discover bar: the four main tabs as one row of segments, Advanced's filter row under the search field. Each
 // segment shows its label with a badge and its value line (tabs.ts tabValues), led by mood hues, service logos, or You's
-// fingerprint (a lock for guests). While the desktop panel is open, the Search segment turns into the search field.
-import {
-	LockClosedIcon,
-	MagnifyingGlassIcon,
-	XMarkIcon,
-} from "@heroicons/react/20/solid"
+// fingerprint (a lock for guests). While the desktop panel is open, the first segment turns into a field that finds titles and people.
+import { LockClosedIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
 import type { ReactNode, Ref } from "react"
@@ -50,12 +46,10 @@ export function TabBadge({
 }
 
 function SegmentLabel({ value }: { value: TabValue }) {
-	const search = value.tab === "search"
 	return (
 		<span
-			className={`flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] uppercase ${search ? "text-amber-300/90" : value.locked ? "text-gray-500" : "text-gray-400"}`}
+			className={`flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] uppercase ${value.locked ? "text-gray-500" : "text-gray-400"}`}
 		>
-			{search && <MagnifyingGlassIcon className="h-3.5 w-3.5" aria-hidden />}
 			{value.label}
 			<TabBadge n={value.badge} />
 		</span>
@@ -120,16 +114,8 @@ function Lead({
 	return null
 }
 
-/** The value line's text: the search in large type, a value, the guest's "Sign up", or the placeholder. */
+/** The value line's text: a value, the guest's "Sign up", or the placeholder. */
 function ValueText({ value, phone }: { value: TabValue; phone: boolean }) {
-	if (value.tab === "search" && (value.query || !value.value))
-		return (
-			<span
-				className={`brand-header truncate leading-tight ${phone ? "text-[19px]" : "text-[21px]"} ${value.query ? "text-white" : "text-gray-500"} ${PRIVATE}`}
-			>
-				{value.query ?? value.placeholder}
-			</span>
-		)
 	const shown = value.value ?? value.placeholder
 	const tone = value.value
 		? "font-semibold text-white"
@@ -145,31 +131,11 @@ function ValueText({ value, phone }: { value: TabValue; phone: boolean }) {
 	)
 }
 
-function ClearSearch({
-	onClick,
-	className,
-}: {
-	onClick: () => void
-	className: string
-}) {
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			aria-label="Clear the search"
-			className={`grid place-items-center rounded-full text-gray-400 cursor-pointer outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400 ${className}`}
-		>
-			<XMarkIcon className="h-4 w-4" />
-		</button>
-	)
-}
-
 /** Desktop: one row, 76 px, the segments sized by MAIN_TAB_FLEX. */
 export function DiscoverBar({
 	values,
 	active,
 	onPick,
-	onClearSearch,
 	providers,
 	search,
 	barRef,
@@ -179,7 +145,6 @@ export function DiscoverBar({
 	/** The open tab; null while the panel is closed. */
 	active: MainTab | null
 	onPick: (tab: MainTab) => void
-	onClearSearch: () => void
 	providers: BarProviders
 	/** The search field, in the Search segment while the panel is open. */
 	search?: ReactNode
@@ -192,10 +157,10 @@ export function DiscoverBar({
 			ref={barRef}
 			role="group"
 			aria-label="Discover filters"
-			className={`relative flex h-[76px] items-stretch rounded-full p-1.5 ring-1 ${
+			className={`relative flex h-[76px] items-stretch rounded-b-[22px] p-1.5 ring-1 lg:rounded-b-[32px] ${
 				active
 					? "bg-gray-900 ring-white/15"
-					: "bg-white/[0.045] ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_20px_50px_-30px_rgba(0,0,0,.9)]"
+					: "bg-white/[0.03] ring-white/10 shadow-[0_20px_50px_-30px_rgba(0,0,0,.9)]"
 			}`}
 		>
 			{MAIN_TABS.map((tab, i) => {
@@ -241,12 +206,6 @@ export function DiscoverBar({
 								</span>
 							</motion.button>
 						)}
-						{isSearch && value.query && !search && (
-							<ClearSearch
-								onClick={onClearSearch}
-								className="absolute top-1/2 right-3 h-8 w-8 -translate-y-1/2"
-							/>
-						)}
 						{i < MAIN_TABS.length - 1 && (
 							<span
 								aria-hidden
@@ -260,61 +219,37 @@ export function DiscoverBar({
 	)
 }
 
-/** Phones: Search on its own 62 px row, then Mood, Watch and You on a 52 px row. */
+/** Phones: the four tabs on one 52 px row, closing the search field's card. */
 export function PhoneDiscoverBar({
 	values,
 	onPick,
-	onClearSearch,
 	providers,
 }: {
 	values: Record<MainTab, TabValue>
 	onPick: (tab: MainTab) => void
-	onClearSearch: () => void
 	providers: BarProviders
 }) {
-	const search = values.search
 	return (
-		<div className="overflow-hidden rounded-[22px] bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)]">
-			<div className="relative">
-				<button
-					type="button"
-					data-tab="search"
-					onClick={() => onPick("search")}
-					className="flex h-[62px] w-full cursor-pointer flex-col justify-center px-4 pr-12 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400"
-				>
-					<SegmentLabel value={search} />
-					<span className="mt-0.5 flex min-w-0">
-						<ValueText value={search} phone />
-					</span>
-				</button>
-				{search.query && (
-					<ClearSearch
-						onClick={onClearSearch}
-						className="absolute top-1/2 right-2 h-9 w-9 -translate-y-1/2"
-					/>
-				)}
-			</div>
-			<div className="grid grid-cols-[1fr_1fr_0.8fr] border-t border-white/[0.08]">
-				{MAIN_TABS.filter((tab) => tab !== "search").map((tab, i) => {
-					const value = values[tab]
-					return (
-						<motion.button
-							key={tab}
-							type="button"
-							data-tab={tab}
-							whileTap={TAP}
-							onClick={() => onPick(tab)}
-							className={`flex h-[52px] min-w-0 cursor-pointer flex-col justify-center px-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${i ? "border-l border-white/[0.08]" : ""}`}
-						>
-							<SegmentLabel value={value} />
-							<span className="flex min-w-0 items-center gap-1.5">
-								<Lead value={value} providers={providers} phone />
-								<ValueText value={value} phone />
-							</span>
-						</motion.button>
-					)
-				})}
-			</div>
+		<div className="grid grid-cols-[1fr_1fr_1fr_0.8fr] overflow-hidden rounded-b-[22px] bg-white/[0.03] ring-1 ring-white/10">
+			{MAIN_TABS.map((tab, i) => {
+				const value = values[tab]
+				return (
+					<motion.button
+						key={tab}
+						type="button"
+						data-tab={tab}
+						whileTap={TAP}
+						onClick={() => onPick(tab)}
+						className={`flex h-[52px] min-w-0 cursor-pointer flex-col justify-center px-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${i ? "border-l border-white/[0.08]" : ""}`}
+					>
+						<SegmentLabel value={value} />
+						<span className="flex min-w-0 items-center gap-1.5">
+							<Lead value={value} providers={providers} phone />
+							<ValueText value={value} phone />
+						</span>
+					</motion.button>
+				)
+			})}
 		</div>
 	)
 }

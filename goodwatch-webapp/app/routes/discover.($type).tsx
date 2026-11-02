@@ -49,7 +49,8 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
 	// Discover's search mode: not indexed.
-	if (data && searchText(new URLSearchParams(location.search).get("q")))
+	const params = new URLSearchParams(location.search)
+	if (data && (searchText(params.get("q")) || params.has("asked")))
 		return [
 			{ title: "Search movies and shows · GoodWatch" },
 			{ name: "robots", content: "noindex, follow" },

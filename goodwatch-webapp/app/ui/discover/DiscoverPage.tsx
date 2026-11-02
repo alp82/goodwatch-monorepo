@@ -1,11 +1,11 @@
 import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
-// Discover, browsing and searching on one page: the static title, the Discover bar with the status line under it (and
-// the panel or phone sheet it opens), and the grid of title cards, loaded 40 at a time as the person scrolls. The grid
+// Discover, browsing and searching on one page: the static title, the controls in Easy or Advanced (DiscoverControls,
+// with the panel or phone sheet the filter bar opens), and the grid of title cards, loaded 40 at a time as the person scrolls. The grid
 // is never replaced between browsing and searching: titles in both lists glide to their new places.
 //
-// Searching, the status line's query chip shows how the search read the query, Relevance joins the sorts and is
+// Searching, the reading line shows how the search read the query, Relevance joins the sorts and is
 // chosen, and the counts and recoveries cover the search's frozen candidate set. Clearing the search returns to the sort used
 // before it.
 //
@@ -51,6 +51,7 @@ import { NextPageLink } from "~/ui/explore/GridUtils"
 import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
 import { BestMatchSignUp } from "~/ui/filter-bar/SignUpPanel"
 import type { ForYouControl } from "~/ui/filter-bar/types"
+import { useDescribedSearch } from "~/ui/discover-bar/useDescribedSearch"
 import { useFilterState } from "~/ui/filter-bar/useFilterState"
 import { SearchPeople } from "~/ui/search/SearchPeople"
 import { Spinner } from "~/ui/wait/Spinner"
@@ -165,31 +166,21 @@ export function DiscoverPage({
 	// Entering a search chooses Relevance; clearing it returns to the sort used before.
 	const browseSort = useRef<string | null>(null)
 	const navigation = useNavigation()
-	const onSearch = (text: string) => {
+	const describe = useDescribedSearch()
+	const onSearch = async (text: string) => {
 		if (!text) return clearSearch()
-		const entering = !searching
+		const entering = !searching && !params.has("asked")
+		const next = await describe.search(text, entering)
+		if (!next) return
 		if (entering) browseSort.current = params.get("sort")
-		setParams(
-			(previous) => {
-				const out = new URLSearchParams(previous)
-				out.set("q", text)
-				if (entering) out.delete("sort")
-				out.delete("allTitles")
-				out.delete("page")
-				return out
-			},
-			{ replace: !entering, preventScrollReset: true },
-		)
+		setParams(next, { replace: !entering, preventScrollReset: true })
 	}
 	const clearSearch = () => {
 		const sort = browseSort.current
 		browseSort.current = null
 		setParams(
 			(previous) => {
-				const out = new URLSearchParams(previous)
-				out.delete("q")
-				out.delete("allTitles")
-				out.delete("page")
+				const out = describe.clear(previous)
 				if (sort && sort !== "relevance") out.set("sort", sort)
 				else out.delete("sort")
 				return out
@@ -459,7 +450,7 @@ export function DiscoverPage({
 					<DiscoverControls
 						heading={
 							<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
-								Discover movies and shows
+								Discover
 							</h1>
 						}
 						className="mt-3 lg:mt-5"
@@ -486,35 +477,21 @@ export function DiscoverPage({
 						}}
 					/>
 				</div>
-				{/* Mounted for all of search mode with one line of height: the grid doesn't move when the text comes and
-				    goes, and a screen reader hears each change. */}
-				{searching && (
-					<div
-						role="status"
-						className="mt-1 flex min-h-5 flex-wrap items-center gap-3 text-sm text-gray-400 lg:mt-4"
-					>
-						{search.error ? (
-							<>
-								<span>{search.error}</span>
-								<button
-									type="button"
-									onClick={() => search.retry()}
-									className="font-bold text-amber-400 underline-offset-2 hover:text-amber-300 hover:underline cursor-pointer"
-								>
-									Retry
-								</button>
-							</>
-						) : search.pendingRanking ? (
-							<span>
-								{search.pendingTitleLookup
-									? "Still ranking and checking title matches."
-									: "Still ranking results."}
-							</span>
-						) : search.partial ? (
-							<span>Still checking title matches.</span>
-						) : null}
+				{/* A failed search says so; progress shows nothing, so the grid never moves. */}
+				<div role="status">
+					{searching && search.error && (
+					<div className="mt-1 flex min-h-5 flex-wrap items-center gap-3 text-sm text-gray-400 lg:mt-4">
+						<span>{search.error}</span>
+						<button
+							type="button"
+							onClick={() => search.retry()}
+							className="font-bold text-amber-400 underline-offset-2 hover:text-amber-300 hover:underline cursor-pointer"
+						>
+							Retry
+						</button>
 					</div>
-				)}
+					)}
+				</div>
 				{found && found.people.length > 0 && (
 					<div className="search-private ph-no-capture sentry-mask mt-5">
 						<SearchPeople

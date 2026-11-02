@@ -1,15 +1,17 @@
-// Discover's controls above the grid: the page heading with the count at its right (FilterMix), the Discover bar, the
-// status line (Ready to watch, the chips, For you + Sort), and the panel that opens from the bar (desktop) or the sheet
-// (phones). On phones Ready to watch takes its own row under the bar. Both combined controls shrink to short labels or
-// icons when the chips need the room (useControlSize). The page owns the data: it binds the filter state (useFilterState), keeps the bar's state
-// (useDiscoverBar, whose `counts` go into its results request), runs the search, and passes the results' counts in.
+// Discover's controls above the grid, one page in two modes. Both show the page heading with the count at its right
+// (FilterMix), the search field with Ready to watch, and one line with how the search was read and Sort. Advanced
+// (mode=advanced) slides the filter bar in under the field, as its lower half, adds For you beside Sort, and opens the
+// panel from the bar (desktop) or the sheet (phones). Only the Easy | Advanced tabs change the mode. The page owns the
+// data: it binds the filter state (useFilterState) and the bar's state (useDiscoverBar, whose `counts` go into its
+// results request), runs the search, and passes the results' counts in.
 //
-// Keyboard: "/" opens Search from anywhere outside a text field. On desktop, Escape or a press outside the bar and
-// the panel closes it; Escape in Find clears Find first. Closing returns focus to the bar's segment for the tab that was
-// open (the Search segment after "/"), except after a press outside, which keeps focus where it landed. The phone sheet
-// returns focus to the control that opened it, and closing phone Find returns it to the magnifier.
+// Keyboard: "/" goes to the search field from anywhere outside a text field. On desktop, Escape or a press outside the
+// bar and the panel closes it; Escape in Find clears Find first. Closing returns focus to the bar's segment for the tab
+// that was open, except after a press outside, which keeps focus where it landed. The phone sheet returns focus to the
+// control that opened it, and closing phone Find returns it to the magnifier.
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
-import { AnimatePresence, MotionConfig } from "framer-motion"
+import { useSearchParams } from "@remix-run/react"
+import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import {
 	type ReactNode,
 	useCallback,
@@ -21,7 +23,7 @@ import {
 import type { SearchScope } from "~/domain/discover-search"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { TitleCard } from "~/server/title-cards.server"
-import { SortControl } from "~/ui/filter-bar/controls"
+import type { MoodKey } from "~/domain/moods"
 import type { FilterBarCounts, ForYouControl } from "~/ui/filter-bar/types"
 import type { FilterStateBinding } from "~/ui/filter-bar/useFilterState"
 import type { TitleKey } from "~/utils/title-key"
@@ -38,10 +40,8 @@ import {
 	SubTabSlot,
 } from "./DiscoverPanel"
 import { FilterMix } from "./FilterMix"
-import { ForYouSort } from "./ForYouSort"
 import { PanelFooter } from "./PanelFooter"
-import { ReadyToWatch, type ReadyToWatchProps } from "./ReadyToWatch"
-import { type SortChoice, StatusLine } from "./StatusLine"
+import { ReadingLine } from "./ReadingLine"
 import type { BarChip } from "./chips"
 import {
 	type FindControls,
@@ -50,7 +50,17 @@ import {
 	FindOpenButton,
 	FindOverlay,
 } from "./find/FindField"
-import { type ControlSize, useControlSize } from "./control-size"
+import { DescribeField } from "./DescribeField"
+import { ModeTabs } from "./ModeTabs"
+import {
+	ForYouSwitch,
+	ReadySwitch,
+	type SortChoice,
+	SortInPill,
+	isReady,
+	readyTo,
+} from "./OrderControls"
+import { type DiscoverMode, useDiscoverMode } from "./mode"
 import { shownSubTab } from "./panel-state"
 import { FindComboboxProvider, SearchComboboxProvider } from "./search/combobox"
 import {
@@ -61,6 +71,7 @@ import {
 	subTabBadge,
 	subTabsOf,
 	tabOfSubTab,
+	titlesAndPeople,
 } from "./tabs"
 import { type BarData, useBarData } from "./useBarData"
 import {
@@ -143,8 +154,6 @@ export interface DiscoverControlsProps {
 	className?: string
 }
 
-/** The chips Ready to watch stands in for on the status line. */
-const READY_CHIPS = new Set(["on-my-services", "not-seen-yet"])
 
 export function DiscoverControls(props: DiscoverControlsProps) {
 	return (
@@ -181,7 +190,9 @@ function DiscoverControlsContent({
 	const open = panel.open
 	const searching = Boolean(query?.trim())
 
-	// The bar's search text while the panel is open: the running search when it opens.
+	// The text of the field that finds titles and people; it starts empty each time the panel opens.
+	const [params] = useSearchParams()
+	const asked = params.get("asked") ?? query ?? ""
 	const [text, setText] = useState("")
 	const field = useRef<HTMLInputElement>(null)
 	const sheetField = useRef<HTMLInputElement>(null)
@@ -189,10 +200,10 @@ function DiscoverControlsContent({
 	const panelRef = useRef<HTMLDivElement>(null)
 	const openTab = useCallback(
 		(tab: MainTab, sub?: SubTabId) => {
-			if (!open) setText(query ?? "")
+			if (!open) setText("")
 			bar.open(tab, sub)
 		},
-		[open, query, bar.open],
+		[open, bar.open],
 	)
 	// Desktop: once the panel has closed, focus goes back to the bar's segment for the tab that was open.
 	const [refocus, setRefocus] = useState<MainTab | null>(null)
@@ -214,25 +225,27 @@ function DiscoverControlsContent({
 		close()
 	}
 	const clearAllNow = useClearAll({
-		query,
+		query: asked || query,
 		clearSearch: onClearSearch,
 		clearFilters: () => filters.update(clearAll),
 	})
 	const openChip = (chip: BarChip) =>
 		chip.opens && openTab(tabOfSubTab(chip.opens), chip.opens)
+	const { mode, setMode } = useDiscoverMode()
+	const advanced = mode === "advanced"
+	const changeMode = (next: DiscoverMode) => {
+		if (next === "easy") bar.close()
+		setMode(next)
+	}
 
-	// "/" opens Search; desktop focuses the bar's field, phones the sheet's.
-	const [slashed, setSlashed] = useState(0)
-	useSlashKey(() => {
-		openTab("search")
-		setSlashed((n) => n + 1)
-	})
+	// "/" goes to the search field.
+	const describeField = useRef<HTMLInputElement>(null)
+	useSlashKey(() => describeField.current?.focus({ preventScroll: true }))
 	const finding = panel.find.trim() !== ""
 	useEffect(() => {
 		if (open !== "search" || finding) return
 		if (desktop) field.current?.focus({ preventScroll: true })
-		else if (slashed) sheetField.current?.focus({ preventScroll: true })
-	}, [open, slashed, desktop])
+	}, [open, desktop])
 	useOutsideClose(
 		desktop && open !== null,
 		(how) => (how === "escape" ? close() : bar.close()),
@@ -302,47 +315,14 @@ function DiscoverControlsContent({
 			phone={phone}
 		/>
 	)
-	const ready: ReadyToWatchProps = {
-		state,
-		update: filters.update,
-		mine: data.myProviders,
-		member,
-		open: openTab,
+	const readyOn = isReady(state, member)
+	const setReady = (on: boolean) => filters.update(readyTo(on, member))
+	const removeChip = (chip: BarChip) =>
+		chip.remove ? filters.update(chip.remove) : onClearSearch()
+	const values = {
+		...data.values,
+		search: titlesAndPeople(data.values.search, data.chips, desktop),
 	}
-	const chipKey = `${data.chips.map((chip) => `${chip.key}:${chip.label}`).join(",")}|${reading?.map((chip) => chip.text).join(",") ?? ""}`
-	const { size, rowRef, measureRef } = useControlSize({
-		desktop,
-		chipKey,
-		maxSize: data.chips.some((chip) => !READY_CHIPS.has(chip.key)) ? 1 : 2,
-	})
-	const order = (at: ControlSize) =>
-		forYou ? (
-			<ForYouSort
-				forYou={forYou}
-				sort={sort}
-				size={at}
-				locked={!member}
-				onLocked={() => openTab("you", "taste")}
-			/>
-		) : (
-			<SortControl {...sort} size="sm" align="right" />
-		)
-	// Desktop: Ready to watch leads the line; phones give it its own row above.
-	const statusLine = (phone: boolean) => (
-		<StatusLine
-			chips={data.chips.filter((chip) => !READY_CHIPS.has(chip.key))}
-			reading={reading}
-			clearCount={data.clearCount}
-			onOpen={openChip}
-			onChange={filters.update}
-			onClearSearch={onClearSearch}
-			onClearAll={clearAllNow}
-			lead={phone ? undefined : <ReadyToWatch ready={ready} size={size} />}
-			end={order(phone ? (Math.min(size, 1) as ControlSize) : size)}
-			rowRef={rowRef}
-			className="mt-2 lg:mt-3"
-		/>
-	)
 	const providers = { mine: data.myProviders, country: data.countryProviders }
 	const typed = text.trim()
 	// Typing or focusing the bar's field on another tab moves to Search, Titles.
@@ -369,27 +349,14 @@ function DiscoverControlsContent({
 
 	return (
 		<MotionConfig reducedMotion="user">
-			{/* Both combined controls at every size, for useControlSize; never seen or reached. */}
-			<div
-				ref={measureRef}
-				aria-hidden
-				{...{ inert: "" }}
-				className="pointer-events-none invisible fixed top-0 left-0 -z-10 flex flex-col items-start"
-			>
-				{([0, 1, 2] as ControlSize[]).map((at) => (
-					<div key={at} className="flex">
-						<div data-size={`ready-${at}`} className="flex">
-							<ReadyToWatch ready={ready} size={at} />
-						</div>
-						<div data-size={`order-${at}`} className="flex">
-							{order(at)}
+			{heading && (
+				<div className="flex items-center justify-between gap-4">
+					<div className="flex min-w-0 items-end gap-6 lg:gap-8">
+						{heading}
+						<div className="hidden lg:block">
+							<ModeTabs mode={mode} onChange={changeMode} />
 						</div>
 					</div>
-				))}
-			</div>
-			{heading && (
-				<div className="flex items-start justify-between gap-4">
-					<div className="min-w-0">{heading}</div>
 					<FilterMix
 						counts={counts}
 						searching={searching}
@@ -401,13 +368,36 @@ function DiscoverControlsContent({
 				</div>
 			)}
 			<div className={className}>
+				<div className="mb-2 lg:hidden">
+					<ModeTabs mode={mode} onChange={changeMode} wide />
+				</div>
+				<DescribeField
+					typed={asked}
+					onSearch={onSearch}
+					onClear={onClearSearch}
+					flatBottom={advanced}
+					ready={<ReadySwitch on={readyOn} onChange={setReady} field />}
+					inputRef={describeField}
+				/>
+				<AnimatePresence initial={false}>
+					{advanced && (
+						<motion.div
+							key="filters"
+							initial={{ height: 0, opacity: 0, overflow: "hidden" }}
+							animate={{
+								height: "auto",
+								opacity: 1,
+								transitionEnd: { overflow: "visible" },
+							}}
+							exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+							transition={{ duration: 0.32, ease: [0.2, 0.7, 0.2, 1] }}
+						>
 				<div className="hidden lg:block">
 					<div className="relative">
 						<DiscoverBar
-							values={data.values}
+							values={values}
 							active={desktop ? open : null}
 							onPick={(next) => (next === open ? close() : openTab(next))}
-							onClearSearch={onClearSearch}
 							providers={providers}
 							barRef={barRef}
 							panelId={panelId}
@@ -453,19 +443,13 @@ function DiscoverControlsContent({
 							)}
 						</AnimatePresence>
 					</div>
-					{statusLine(false)}
 				</div>
 				<div className="lg:hidden">
 					<PhoneDiscoverBar
-						values={data.values}
+						values={values}
 						onPick={openTab}
-						onClearSearch={onClearSearch}
 						providers={providers}
 					/>
-					<div className="mt-2">
-						<ReadyToWatch ready={ready} size={1} />
-					</div>
-					{statusLine(true)}
 					{!desktop && (
 						<DiscoverSheet
 							open={open !== null}
@@ -477,9 +461,6 @@ function DiscoverControlsContent({
 							}
 							onPickTab={openTab}
 							onClose={close}
-							initialFocus={
-								slashed && open === "search" ? sheetField : undefined
-							}
 							find={
 								<FindOpenButton
 									onClick={() => setPhoneFind(true)}
@@ -526,6 +507,37 @@ function DiscoverControlsContent({
 							footer={footer(true)}
 						/>
 					)}
+				</div>
+						</motion.div>
+					)}
+				</AnimatePresence>
+				<div className="mt-3 flex flex-wrap items-center justify-between gap-x-5 gap-y-2 lg:flex-nowrap">
+					<div className="flex h-10 items-center rounded-full ring-1 ring-white/10 lg:hidden">
+						<ReadySwitch on={readyOn} onChange={setReady} />
+					</div>
+					<div className="order-last flex min-w-0 basis-full lg:order-none lg:flex-1 lg:basis-auto">
+						<ReadingLine
+							state={state}
+							chips={data.chips}
+							reading={reading}
+							member={member}
+							onOpen={advanced ? openChip : undefined}
+							onRemove={removeChip}
+							onType={(type) => filters.set({ type })}
+							onMood={(mood) => filters.set({ moods: [mood as MoodKey] })}
+						/>
+					</div>
+					<div className="flex h-10 shrink-0 items-center rounded-full ring-1 ring-white/10">
+						{forYou && (
+							<ForYouSwitch
+								forYou={forYou}
+								locked={!member}
+								onLocked={() => openTab("you", "taste")}
+								shown={advanced}
+							/>
+						)}
+						<SortInPill sort={sort} short={!desktop} />
+					</div>
 				</div>
 			</div>
 		</MotionConfig>

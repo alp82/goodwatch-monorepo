@@ -25,7 +25,7 @@ export type MainTab = "search" | "mood" | "watch" | "you"
 export const MAIN_TABS: readonly MainTab[] = ["search", "mood", "watch", "you"]
 
 export const MAIN_TAB_LABELS: Record<MainTab, string> = {
-	search: "Search",
+	search: "Like",
 	mood: "Mood",
 	watch: "Watch",
 	you: "You",
@@ -345,7 +345,7 @@ export interface TabValue {
 	services?: "mine" | number[] | null
 }
 
-export const SEARCH_PLACEHOLDER = "A mood, a title, or like Severance"
+export const SEARCH_PLACEHOLDER = "Like a title, with a person"
 
 /** "A", "A, B", "A, B +3". */
 export function headPlus(labels: readonly string[]): string | null {
@@ -416,6 +416,22 @@ function servicesPart(
  * Each main tab's segment in the bar: label, value line, placeholder, badge and lead. `names` resolves services,
  * titles, people and the age step, as for activeChips.
  */
+/** The first segment holds steering and people; the search itself has its own field. */
+export function titlesAndPeople(
+	value: TabValue,
+	chips: readonly { kind: string }[],
+	desktop: boolean,
+): TabValue {
+	return {
+		...value,
+		query: null,
+		label: desktop ? "Titles & people" : value.label,
+		placeholder: desktop ? value.placeholder : "Any",
+		badge: chips.filter((chip) => chip.kind === "steer" || chip.kind === "person")
+			.length,
+	}
+}
+
 export function tabValues(
 	state: FilterState,
 	context: TabContext,

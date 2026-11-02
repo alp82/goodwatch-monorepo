@@ -1,4 +1,4 @@
-// Development only: the Discover bar, its panel, the status line and the panel footer on the real catalog, before
+// Development only: the Discover bar, its panel, the reading line and the panel footer on the real catalog, before
 // Discover uses them. The state binds to this page's URL (`q` is the search), counts come from /api/discover/results
 // with the open sub-tab's `counts=` flags, and the first page of titles shows as cards. Sub-tabs come from
 // ~/ui/discover-bar/sub-tabs; the ones without content yet show their empty slots. Returns 404 in production.

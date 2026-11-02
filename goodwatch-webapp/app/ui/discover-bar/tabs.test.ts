@@ -24,6 +24,7 @@ const {
 	subTabsOf,
 	tabBadge,
 	tabValues,
+	titlesAndPeople,
 } = await import("./tabs.ts")
 
 type State = ReturnType<typeof defaultFilterState>
@@ -216,7 +217,7 @@ test("value lines read the choices, and empty tabs show their placeholders", () 
 	assert.deepEqual(
 		MAIN_TABS.map((tab) => [blank[tab].value, blank[tab].placeholder]),
 		[
-			[null, "A mood, a title, or like Severance"],
+			[null, "Like a title, with a person"],
 			[null, "Any mood, any genre"],
 			[null, "Everywhere"],
 			[null, "Any match"],
@@ -367,4 +368,22 @@ test("resolved taste-group picks count in the You badge and Clear all", () => {
 		tabBadge("you", selected, { ...guest, tasteGroup: named.tasteGroup }),
 		0,
 	)
+})
+
+test("the first segment counts steering and people, not the search", () => {
+	const value = {
+		tab: "search" as const,
+		label: "Like",
+		value: "Severance",
+		placeholder: "Like a title, with a person",
+		badge: 3,
+		locked: false,
+		query: "space",
+	}
+	const chips = [{ kind: "query" }, { kind: "steer" }, { kind: "person" }, { kind: "filter" }]
+	const shown = titlesAndPeople(value, chips, true)
+	assert.equal(shown.query, null)
+	assert.equal(shown.label, "Titles & people")
+	assert.equal(shown.badge, 2)
+	assert.equal(titlesAndPeople(value, chips, false).label, "Like")
 })
