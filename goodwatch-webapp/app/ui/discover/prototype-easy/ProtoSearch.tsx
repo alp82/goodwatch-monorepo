@@ -117,7 +117,7 @@ export function ProtoSearch({
 				<input
 					value={text}
 					onChange={(e) => setText(e.target.value)}
-					placeholder={cycling ? `Try “${cycling}”` : phone ? "Mood, plot, title…" : "Describe it: “funny 90s movies on Netflix”"}
+					placeholder={cycling ? `Try “${cycling}”` : phone ? "Describe it: “cozy anime”" : "Describe it: “Wednesday vibes, but darker”"}
 					onFocus={() => setFocused(true)}
 					onBlur={() => setTimeout(() => setFocused(false), 150)}
 					aria-label="Search by mood, plot, or title"

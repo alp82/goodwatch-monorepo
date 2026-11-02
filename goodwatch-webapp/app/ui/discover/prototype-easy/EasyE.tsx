@@ -8,7 +8,8 @@ export const name = "Strip"
 
 export function EasyE({ e, empty = "summary", after }: { e: Easy; empty?: EmptyKind; after?: EmptyAfterType }) {
 	const locked = !e.member && e.filters.state.onMyServices
-	const typeLead = empty === "type"
+	// The type picker shows when the search set a type (or always, for the "type" empty state); it replaces the Format chip.
+	const typeLead = empty === "type" || e.filters.state.type !== "all"
 	const has = qualitiesOf(e.reading).length > 0 || e.chips.some((c) => c.kind !== "query" && !(typeLead && c.group === "type"))
 	if (!has)
 		return (
@@ -16,10 +17,10 @@ export function EasyE({ e, empty = "summary", after }: { e: Easy; empty?: EmptyK
 				{typeLead ? (
 					<>
 						<TypeSwitch e={e} />
-						{after ? (
+						{after || empty !== "type" ? (
 							<>
 								<span className="h-4 w-px shrink-0 bg-white/10" />
-								<EmptyReading e={e} kind={after} />
+								<EmptyReading e={e} kind={after ?? empty} />
 							</>
 						) : (
 							<span className="text-[13px] text-gray-500">Search a mood above, or add a filter.</span>
