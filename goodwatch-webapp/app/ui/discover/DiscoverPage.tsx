@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { EasyApi } from "~/ui/discover-bar/DiscoverControls"
-import type { StackStyle } from "~/ui/discover/prototype-easy/ForYouStack"
+import type { Attach } from "~/ui/discover/prototype-easy/attached"
 import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
@@ -94,7 +94,7 @@ export interface DiscoverPageProps {
 		modeSwitch: ReactNode
 		reading?: (ctx: EasyContext & EasyApi) => ReactNode
 		inside?: (ctx: EasyContext & EasyApi) => ReactNode
-		stack: StackStyle
+		attach: Attach
 	}
 }
 
@@ -505,7 +505,7 @@ export function DiscoverPage({
 								modeTabs: proto.modeSwitch,
 								renderInside: proto.inside && ((api) => proto.inside?.(easyCtx(api))),
 								renderReading: proto.reading && ((api) => proto.reading?.(easyCtx(api))),
-								stack: proto.stack,
+								attach: proto.attach,
 							}
 						}
 						className="mt-3 lg:mt-5"

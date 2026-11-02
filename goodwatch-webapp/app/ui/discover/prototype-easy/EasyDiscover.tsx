@@ -1,25 +1,21 @@
-// PROTOTYPE (discover-easy): Easy and Advanced are one page. Baseline (owner, round 7): the Easy | Advanced tabs
-// beside the title; For you over Sort right of the search in both modes; Advanced slides the bar in right under the
-// search, above the row of Ready and the reading. Variants change how For you over Sort is drawn and where the reading
-// sits. `as=member` shows the member state over the guest's data; variant 0 is today's page.
+// PROTOTYPE (discover-easy): Easy and Advanced are one page. Round 8: Easy is the search, Ready to watch and Sort;
+// For you joins in Advanced, and the bar slides in under the search. Variants attach Ready and Sort to the search bar
+// in different ways (phones always use the lip). `as=member` shows the member state over the guest's data; variant 0 is today's page.
 import { useSearchParams } from "@remix-run/react"
-import type { ReactNode } from "react"
 import { DiscoverPage, type DiscoverPageProps } from "../DiscoverPage"
 import { EasyE } from "./EasyE"
-import { EasyFInside } from "./EasyF"
-import type { StackStyle } from "./ForYouStack"
+import type { Attach } from "./attached"
 import { ModeSwitch, useMode } from "./kit"
 import { PrototypeSwitcher } from "./Switcher"
 import type { Easy } from "./types"
 
-type Part = (p: { e: Easy }) => ReactNode
-type V = { key: string; name: string; stack?: StackStyle; Reading?: Part; Inside?: Part; today?: boolean }
+type V = { key: string; name: string; attach?: Attach; today?: boolean }
 const VARIANTS: V[] = [
-	{ key: "A", name: "Card", stack: "card", Reading: EasyE },
-	{ key: "B", name: "Attached", stack: "attached", Reading: EasyE },
-	{ key: "C", name: "Labels", stack: "labels", Reading: EasyE },
-	{ key: "D", name: "Pills", stack: "pills", Reading: EasyE },
-	{ key: "E", name: "Card, reading in the field", stack: "card", Inside: EasyFInside },
+	{ key: "A", name: "Bar end", attach: "end" },
+	{ key: "B", name: "Segments", attach: "segments" },
+	{ key: "C", name: "Lip", attach: "lip" },
+	{ key: "D", name: "Ready first", attach: "prefix" },
+	{ key: "E", name: "Sort over results", attach: "rowsort" },
 	{ key: "0", name: "Today", today: true },
 ]
 
@@ -28,7 +24,6 @@ export function EasyDiscover(props: DiscoverPageProps) {
 	const { mode, setMode } = useMode()
 	const v = VARIANTS.find((x) => x.key === params.get("variant")) ?? VARIANTS[0]
 	const member = params.get("as") === "member"
-	const { Reading, Inside } = v
 	return (
 		<>
 			<DiscoverPage
@@ -42,9 +37,8 @@ export function EasyDiscover(props: DiscoverPageProps) {
 								mode,
 								setMode,
 								modeSwitch: <ModeSwitch />,
-								stack: v.stack ?? "card",
-								reading: Reading && ((e) => <Reading e={e} />),
-								inside: Inside && ((e) => <Inside e={e} />),
+								attach: v.attach ?? "end",
+								reading: (e) => <EasyE e={e} />,
 							}
 				}
 			/>

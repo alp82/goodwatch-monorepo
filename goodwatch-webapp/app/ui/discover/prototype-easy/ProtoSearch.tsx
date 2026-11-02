@@ -54,6 +54,8 @@ export function ProtoSearch({
 	phone,
 	inside,
 	side,
+	lead,
+	trail,
 }: {
 	query: string | null
 	onClear: () => void
@@ -62,6 +64,9 @@ export function ProtoSearch({
 	inside?: ReactNode
 	/** Controls at the bar's right end, after a line (For you over Sort, attached). */
 	side?: ReactNode
+	/** Attached before the text and between the text and the Search button. */
+	lead?: ReactNode
+	trail?: ReactNode
 }) {
 	const { run, busy } = useInterpretedSearch()
 	// The field shows what was typed, not only the part left as search text.
@@ -81,10 +86,11 @@ export function ProtoSearch({
 				submit()
 			}}
 			className={`group relative bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition focus-within:bg-white/[0.07] focus-within:ring-2 focus-within:ring-amber-400/60 ${
-				phone ? "rounded-[22px] pl-4" : inside ? "rounded-[38px] pl-7" : "rounded-full pl-7"
+				phone ? "rounded-[22px] pl-4" : inside ? "rounded-[32px] pl-7" : "rounded-full pl-7"
 			}`}
 		>
 			<div className={`flex items-center ${phone ? "h-[62px]" : "h-[76px]"}`}>
+			{lead}
 			<label className="flex min-w-0 flex-1 cursor-text flex-col justify-center">
 				<span className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-amber-300/90 uppercase">
 					<MagnifyingGlassIcon className="h-3.5 w-3.5" aria-hidden />
@@ -113,6 +119,7 @@ export function ProtoSearch({
 					<XMarkIcon className="h-5 w-5" />
 				</button>
 			)}
+			{trail}
 			<button
 				type="submit"
 				disabled={busy}

@@ -8,7 +8,7 @@
 // the panel closes it; Escape in Find clears Find first. Closing returns focus to the bar's segment for the tab that was
 // open (the Search segment after "/"), except after a press outside, which keeps focus where it landed. The phone sheet
 // returns focus to the control that opened it, and closing phone Find returns it to the magnifier.
-import { ForYouStack, type StackStyle } from "~/ui/discover/prototype-easy/ForYouStack"
+import { type Attach, AttForYou, AttReady, AttSort, Divider } from "~/ui/discover/prototype-easy/attached"
 import { ProtoSearch } from "~/ui/discover/prototype-easy/ProtoSearch"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
@@ -165,8 +165,8 @@ export interface DiscoverControlsProps {
 		/** A line inside the search field, under the text, in both modes. */
 		renderInside?: (api: EasyApi) => ReactNode
 		modeTabs: ReactNode
-		/** How For you over Sort is drawn right of the search. */
-		stack: StackStyle
+		/** How Ready to watch, Sort and (Advanced) For you attach to the search bar. */
+		attach: Attach
 	}
 }
 
@@ -412,17 +412,60 @@ function DiscoverControlsContent({
 		ready: <ReadyToWatch ready={{ ...ready, open: toAdvanced }} size={1} />,
 		phone: !desktop,
 	}
-	// PROTOTYPE (discover-easy): For you over Sort, right of the search in both modes.
-	const stack = proto && (
-		<ForYouStack
-			forYou={forYou}
-			sort={{ ...sort, portal: true }}
-			locked={!member}
-			onLocked={() => toAdvanced("you", "taste")}
-			phone={!desktop}
-			style={proto.stack}
-		/>
+	// PROTOTYPE (discover-easy) round 8: Ready to watch and Sort attach to the search bar; For you joins in Advanced.
+	// Phones always use the lip (the strip along the bar's bottom edge).
+	const readyOn = state.onMyServices && (!member || state.notSeenYet)
+	const toggleReady = () =>
+		filters.update((s) => {
+			const on = !readyOn
+			const out = { ...s, onMyServices: on, anyService: undefined, services: undefined }
+			return member ? { ...out, notSeenYet: on, seenBefore: on ? undefined : out.seenBefore } : out
+		})
+	const attach: Attach | undefined = proto ? (desktop ? proto.attach : "lip") : undefined
+	const look = attach === "segments" ? "segment" : attach === "lip" ? "lip" : "inline"
+	const advanced = proto?.mode === "advanced"
+	const attReady = <AttReady on={readyOn} toggle={toggleReady} member={member} look={look} short={!desktop} />
+	const attSort = <AttSort sort={sort} look={look} short={!desktop} />
+	const attForYou = (
+		<AttForYou forYou={forYou} locked={!member} onLocked={() => toAdvanced("you", "taste")} look={look} shown={advanced} short={!desktop} />
 	)
+	const readingLine = proto?.renderReading?.(easyApi)
+	const lip = attach === "lip" && (
+		<div className="flex min-w-0 items-center gap-1 border-t border-white/[0.07] pt-2 max-lg:justify-between">
+			{attReady}
+			<Divider tall={false} />
+			<div className="flex min-w-0 flex-1 px-2">{desktop ? readingLine : null}</div>
+			{attForYou}
+			{attSort}
+		</div>
+	)
+	const trail =
+		attach === "end" || attach === "segments" ? (
+			<div className="mr-2 flex h-full items-center">
+				<Divider />
+				{attReady}
+				{attForYou}
+				<Divider />
+				{attSort}
+			</div>
+		) : attach === "prefix" ? (
+			<div className="mr-2 flex h-full items-center">
+				{attForYou}
+				<Divider />
+				{attSort}
+			</div>
+		) : attach === "rowsort" ? (
+			<div className="mr-2 flex h-full items-center">
+				<Divider />
+				{attReady}
+			</div>
+		) : undefined
+	const lead = attach === "prefix" ? (
+		<div className="-ml-3 mr-4 flex h-full items-center">
+			{attReady}
+			<Divider />
+		</div>
+	) : undefined
 	// PROTOTYPE (discover-easy): with the shared search on top, the bar's Search segment holds titles and people only.
 	const like = data.chips.filter((c) => c.kind === "steer" || c.kind === "person")
 	const barValues = proto
@@ -475,18 +518,14 @@ function DiscoverControlsContent({
 			<div className={className}>
 				{proto && (
 					<>
-						<div className="flex items-start gap-2 lg:gap-3">
-							<div className="min-w-0 flex-1">
-								<ProtoSearch
-									query={query}
-									onClear={onClearSearch}
-									phone={!desktop}
-									inside={proto.renderInside?.(easyApi)}
-									side={proto.stack === "attached" ? stack : undefined}
-								/>
-							</div>
-							{proto.stack !== "attached" && stack}
-						</div>
+						<ProtoSearch
+							query={query}
+							onClear={onClearSearch}
+							phone={!desktop}
+							inside={lip || undefined}
+							lead={lead}
+							trail={trail}
+						/>
 					</>
 				)}
 				<AnimatePresence initial={false}>
@@ -631,15 +670,16 @@ function DiscoverControlsContent({
 				</AnimatePresence>
 				{proto && (
 					<>
-						{/* Ready, the reading of the search and the row's tabs: one row, the same in both modes. */}
-						<motion.div layout="position" className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 lg:flex-nowrap">
-							<ReadyToWatch
-								ready={{ ...ready, open: toAdvanced }}
-								size={proto.mode === "easy" ? 2 : desktop ? size : 0}
-								compact={proto.mode === "easy"}
-							/>
+						{/* The reading of the search (unless the lip holds it), Sort over the results (rowsort), and the phone tabs. */}
+						<motion.div layout="position" className="mt-3 flex min-h-8 flex-wrap items-center gap-x-5 gap-y-2 lg:flex-nowrap">
+							{(attach !== "lip" || !desktop) && <div className="order-last flex min-w-0 basis-full lg:order-1 lg:flex-1 lg:basis-auto">{readingLine}</div>}
+							{attach === "rowsort" && (
+								<div className="flex h-10 items-center rounded-full ring-1 ring-white/10 lg:order-2">
+									{attForYou}
+									{attSort}
+								</div>
+							)}
 							{!desktop && <div className="ml-auto">{proto.modeTabs}</div>}
-							<div className="order-last flex min-w-0 basis-full lg:order-2 lg:flex-1 lg:basis-auto">{proto.renderReading?.(easyApi)}</div>
 						</motion.div>
 					</>
 				)}
