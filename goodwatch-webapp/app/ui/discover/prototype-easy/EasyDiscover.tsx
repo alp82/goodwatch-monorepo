@@ -5,11 +5,12 @@
 import { useSearchParams } from "@remix-run/react"
 import { DiscoverPage, type DiscoverPageProps } from "../DiscoverPage"
 import { EasyE } from "./EasyE"
+import type { PhoneLayout } from "./BarLooks"
 import { ModeSwitch, useMode } from "./kit"
 import { PrototypeSwitcher } from "./Switcher"
 import type { Easy } from "./types"
 
-type V = { key: string; name: string; two?: "above" | "around"; today?: boolean }
+type V = { key: string; name: string; phone?: PhoneLayout; today?: boolean }
 /** Example searches for a young audience; each runs through the interpreter like typed text. */
 const TRY = [
 	"cozy anime",
@@ -20,9 +21,9 @@ const TRY = [
 ]
 
 const VARIANTS: V[] = [
-	{ key: "B1", name: "Two at a time: small line swaps", two: "above" },
-	{ key: "B2", name: "Two at a time: label above, examples below", two: "around" },
-	{ key: "B", name: "Round 14 B (all at once)" },
+	{ key: "M1", name: "Phone: tabs by the title", phone: "title" },
+	{ key: "M2", name: "Phone: all in one card", phone: "card" },
+	{ key: "M3", name: "Phone: tabs on the search", phone: "folder" },
 	{ key: "0", name: "Today", today: true },
 ]
 
@@ -46,8 +47,9 @@ export function EasyDiscover(props: DiscoverPageProps) {
 								modeSwitch: <ModeSwitch />,
 								attach: "rowsort",
 								reading: (e) => <EasyE e={e} empty="moods" />,
-								examples: { how: "links", list: TRY, two: v.two },
+								examples: { how: "links", list: TRY, two: "above" },
 								barLook: "tray",
+								phoneLayout: v.phone,
 							}
 				}
 			/>

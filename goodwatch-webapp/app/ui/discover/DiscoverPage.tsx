@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import type { EasyApi } from "~/ui/discover-bar/DiscoverControls"
 import type { Attach } from "~/ui/discover/prototype-easy/attached"
 import type { Examples } from "~/ui/discover/prototype-easy/ProtoSearch"
-import type { BarLook } from "~/ui/discover/prototype-easy/BarLooks"
+import type { BarLook, PhoneLayout } from "~/ui/discover/prototype-easy/BarLooks"
 import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
@@ -99,6 +99,7 @@ export interface DiscoverPageProps {
 		attach: Attach
 		examples?: Examples
 		barLook?: BarLook
+		phoneLayout?: PhoneLayout
 	}
 }
 
@@ -500,7 +501,7 @@ export function DiscoverPage({
 								<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
 									{proto ? "Discover" : "Discover movies and shows"}
 								</h1>
-								{proto && <div className="hidden lg:block">{proto.modeSwitch}</div>}
+								{proto && <div className={proto.phoneLayout === "folder" ? "hidden lg:block" : ""}>{proto.modeSwitch}</div>}
 							</div>
 						}
 						proto={
@@ -513,6 +514,7 @@ export function DiscoverPage({
 								attach: proto.attach,
 								examples: proto.examples,
 								barLook: proto.barLook ?? "today",
+								phoneLayout: proto.phoneLayout ?? "title",
 							}
 						}
 						className="mt-3 lg:mt-5"

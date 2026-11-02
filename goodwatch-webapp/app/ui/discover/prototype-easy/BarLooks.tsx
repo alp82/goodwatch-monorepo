@@ -7,6 +7,7 @@ import type { ComponentType, Ref } from "react"
 import { type BarProviders, Lead, TabBadge, ValueText } from "~/ui/discover-bar/DiscoverBar"
 import { MAIN_TABS, type MainTab, type TabValue } from "~/ui/discover-bar/tabs"
 
+export type PhoneLayout = "title" | "card" | "folder"
 export type BarLook = "today" | "tray" | "chips" | "cards" | "icons"
 
 const ICON: Record<MainTab, { Icon: ComponentType<{ className?: string }>; tint: string; text: string }> = {

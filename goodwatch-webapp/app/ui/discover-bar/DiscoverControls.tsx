@@ -9,7 +9,7 @@
 // open (the Search segment after "/"), except after a press outside, which keeps focus where it landed. The phone sheet
 // returns focus to the control that opened it, and closing phone Find returns it to the magnifier.
 import { type Attach, AttForYou, AttReady, AttSort, Divider } from "~/ui/discover/prototype-easy/attached"
-import { type BarLook, BarLookRow } from "~/ui/discover/prototype-easy/BarLooks"
+import { type BarLook, BarLookRow, type PhoneLayout } from "~/ui/discover/prototype-easy/BarLooks"
 import { type Examples, ProtoSearch } from "~/ui/discover/prototype-easy/ProtoSearch"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
@@ -168,6 +168,8 @@ export interface DiscoverControlsProps {
 		modeTabs: ReactNode
 		/** How Advanced's filter row is drawn on desktop. */
 		barLook: BarLook
+		/** Phone layout: title (tabs by the title, count over the grid), card (the same, controls inside the search card), folder (tabs on the search). */
+		phoneLayout: PhoneLayout
 		/** How Ready to watch, Sort and (Advanced) For you attach to the search bar. */
 		attach: Attach
 		examples?: Examples
@@ -426,8 +428,11 @@ function DiscoverControlsContent({
 			return member ? { ...out, notSeenYet: on, seenBefore: on ? undefined : out.seenBefore } : out
 		})
 	const attach: Attach | undefined = proto ? (desktop || proto.attach === "rowsort" ? proto.attach : "lip") : undefined
-	const look = attach === "segments" ? "segment" : attach === "lip" ? "lip" : "inline"
+	const look = attach === "segments" ? "segment" : attach === "lip" || !desktop ? "lip" : "inline"
 	const advanced = proto?.mode === "advanced"
+	const layout = !desktop ? proto?.phoneLayout : undefined
+	const countBelow = layout === "title" || layout === "card"
+	const card = layout === "card"
 	const tallSearch = proto?.examples?.how === "links" || proto?.examples?.how === "chips"
 	const attReady = <AttReady on={readyOn} toggle={toggleReady} member={member} look={look} short={!desktop} />
 	const attSort = <AttSort sort={sort} look={look} short={!desktop} />
@@ -516,19 +521,26 @@ function DiscoverControlsContent({
 			{heading && (
 				<div className="flex items-start justify-between gap-4">
 					<div className="min-w-0">{heading}</div>
-					<FilterMix
-						counts={counts}
-						searching={searching}
-						state={state}
-						chips={data.chips}
-						update={filters.update}
-						phone={!desktop}
-					/>
+					{!countBelow && (
+						<FilterMix
+							counts={counts}
+							searching={searching}
+							state={state}
+							chips={data.chips}
+							update={filters.update}
+							phone={!desktop}
+						/>
+					)}
 				</div>
 			)}
 			<div className={className}>
 				{proto && (
 					<>
+						{layout === "folder" && (
+							<div className="mb-2 [&>div]:grid [&>div]:grid-cols-2 [&>div]:gap-0 [&>div>button]:h-9 [&>div>button]:border-b [&>div>button]:border-white/10 [&>div>button]:text-sm">
+								{proto.modeTabs}
+							</div>
+						)}
 						<ProtoSearch
 							query={query}
 							onClear={onClearSearch}
@@ -537,14 +549,14 @@ function DiscoverControlsContent({
 							lead={lead}
 							trail={trail}
 							examples={proto.examples}
-							flatBottom={proto.mode === "advanced" && proto.barLook === "tray" && desktop}
+							flatBottom={card || (proto.mode === "advanced" && proto.barLook === "tray")}
 						/>
 					</>
 				)}
 				<AnimatePresence initial={false}>
 				{(!proto || proto.mode === "advanced") && (<motion.div
 					key="advanced"
-					className={proto ? (proto.barLook === "tray" && desktop ? "" : "mt-3") : ""}
+					className={proto ? (proto.barLook === "tray" ? "" : "mt-3") : ""}
 					initial={proto ? { height: 0, opacity: 0, overflow: "hidden" } : false}
 					animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
 					exit={{ height: 0, opacity: 0, overflow: "hidden" }}
@@ -625,12 +637,14 @@ function DiscoverControlsContent({
 					{!proto && statusLine(false)}
 				</div>
 				<div className="lg:hidden">
-					<PhoneDiscoverBar
-						values={barValues}
-						onPick={openTab}
-						onClearSearch={onClearSearch}
-						providers={providers}
-					/>
+					<div className={proto ? `[&>div]:rounded-t-none ${card ? "[&>div]:rounded-b-none [&>div]:border-b-0" : ""}` : ""}>
+						<PhoneDiscoverBar
+							values={barValues}
+							onPick={openTab}
+							onClearSearch={onClearSearch}
+							providers={providers}
+						/>
+					</div>
 					{!proto && (
 						<div className="mt-2">
 							<ReadyToWatch ready={ready} size={1} />
@@ -704,6 +718,30 @@ function DiscoverControlsContent({
 				{proto && (
 					<>
 						{/* The reading of the search (unless the lip holds it), Sort over the results (rowsort), and the phone tabs. */}
+						{layout ? (
+							<>
+								<motion.div
+									layout="position"
+									className={`flex h-12 items-center justify-between ${
+										card
+											? "rounded-b-[22px] border-t border-white/[0.07] bg-white/[0.03] px-1 ring-1 ring-white/10"
+											: "mt-2.5"
+									}`}
+								>
+									<div className={`flex h-10 items-center rounded-full ${card ? "" : "ring-1 ring-white/10"}`}>{attReady}</div>
+									<div className={`flex h-10 items-center rounded-full ${card ? "" : "ring-1 ring-white/10"}`}>
+										{attForYou}
+										{attSort}
+									</div>
+								</motion.div>
+								<div className="mt-2 flex min-w-0">{readingLine}</div>
+								{countBelow && (
+									<div className="mt-1">
+										<FilterMix counts={counts} searching={searching} state={state} chips={data.chips} update={filters.update} phone full />
+									</div>
+								)}
+							</>
+						) : (
 						<motion.div layout="position" className="mt-3 flex min-h-8 flex-wrap items-center gap-x-5 gap-y-2 lg:flex-nowrap">
 							{(attach !== "lip" || !desktop) && <div className="order-last flex min-w-0 basis-full lg:order-1 lg:flex-1 lg:basis-auto">{readingLine}</div>}
 							{attach === "rowsort" && !desktop && (
@@ -715,8 +753,9 @@ function DiscoverControlsContent({
 									{attSort}
 								</div>
 							)}
-							{!desktop && <div className="ml-auto">{proto.modeTabs}</div>}
+							
 						</motion.div>
+						)}
 					</>
 				)}
 			</div>

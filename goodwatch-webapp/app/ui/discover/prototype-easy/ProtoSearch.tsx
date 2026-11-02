@@ -128,12 +128,14 @@ export function ProtoSearch({
 				const x = typeof item === "string" ? item : item.label
 				const q = typeof item === "string" ? item : item.query
 				return how === "links" ? (
-					<span key={x} className="flex shrink-0 items-center gap-1.5">
-						{i > 0 && <span className="text-gray-600">·</span>}
-						<button type="button" onClick={() => pick(q)} className="cursor-pointer text-[13px] text-gray-400 hover:text-white">
-							{x}
-						</button>
-					</span>
+					<button
+						key={x}
+						type="button"
+						onClick={() => pick(q)}
+						className={`shrink-0 cursor-pointer text-[13px] text-gray-300 underline decoration-white/30 decoration-dotted underline-offset-[3px] transition hover:text-amber-300 hover:decoration-amber-400 focus-visible:text-amber-300 focus-visible:outline-none ${i > 0 ? "ml-2" : ""}`}
+					>
+						{x}
+					</button>
 				) : (
 					<button
 						key={x}
@@ -224,7 +226,7 @@ export function ProtoSearch({
 					submit()
 				}}
 				className={`group relative flex items-stretch bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition focus-within:bg-white/[0.07] focus-within:ring-2 focus-within:ring-amber-400/60 ${
-					phone ? "rounded-[22px] pl-4" : `pl-8 ${flatBottom ? "rounded-t-[32px] rounded-b-none" : "rounded-[32px]"}`
+					phone ? `pl-4 ${flatBottom ? "rounded-t-[22px] rounded-b-none" : "rounded-[22px]"}` : `pl-8 ${flatBottom ? "rounded-t-[32px] rounded-b-none" : "rounded-[32px]"}`
 				}`}
 			>
 				<div className={`flex min-w-0 flex-1 flex-col justify-center ${phone ? "gap-1.5 py-3.5 pr-2" : "gap-2 py-[18px] pr-3"}`}>
