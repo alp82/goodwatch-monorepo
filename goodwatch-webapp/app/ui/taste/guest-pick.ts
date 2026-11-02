@@ -13,7 +13,10 @@ import { excludeIdsFor } from "./answered.ts"
 /** A title as the requests name it. */
 export type PickTitle = { tmdb_id: number; media_type: "movie" | "show" }
 
-export type Rec = PickTitle & { match_percentage: number }
+export type Rec = PickTitle & {
+	match_percentage: number
+	fingerprint_keys?: string[]
+}
 
 /**
  * The pick and the ones after it; `top` null when nothing was left to pick. `cards` keeps every candidate in order, so
@@ -23,6 +26,8 @@ export type GuestPick<C extends TitleCard = TitleCard> = {
 	top: C | null
 	more: C[]
 	fallback: boolean
+	/** Strong title attributes, not personalized match attribution. */
+	fingerprints?: Record<string, string[]>
 	cards?: C[]
 }
 
@@ -138,7 +143,14 @@ export async function findPick<C extends TitleCard = TitleCard>(
 			more,
 		)
 		if (!found.top) throw new Error("no card with a picture")
-		return found
+		return {
+			...found,
+			fingerprints: Object.fromEntries(
+				recs
+					.filter((r) => r.fingerprint_keys?.length)
+					.map((r) => [answerKey(r), r.fingerprint_keys!]),
+			),
+		}
 	} catch (error) {
 		if (!signal?.aborted) console.error("Guest pick: none found", error)
 		return { top: null, more: [], fallback: true }

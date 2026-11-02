@@ -218,27 +218,41 @@ export function StartSearchBar({
 				)}
 				<div className="mx-4 h-px bg-white/[0.08] sm:mx-6" />
 				{prototypeVariant && ReadPrototype ? (
-					<Suspense
-						fallback={
-							<div className="px-6 py-3 text-sm text-gray-400">
-								Loading review…
-							</div>
-						}
-					>
-						<ReadPrototype
-							query={query.text || query.draft}
-							reading={
-								JSON.parse(results.signature)[0] === query.text
-									? results.reading
-									: null
+					<>
+						<div
+							role="group"
+							aria-label="Search presets"
+							className="overflow-x-auto px-4 py-3 sm:px-6 [scrollbar-width:thin]"
+						>
+							<Presets
+								onPick={(phrase) => {
+									commit.preset(phrase)
+									ask()
+								}}
+							/>
+						</div>
+						<Suspense
+							fallback={
+								<div className="px-6 py-3 text-sm text-gray-400">
+									Loading review…
+								</div>
 							}
-							onExample={(text) => {
-								setDraft(text)
-								search(text)
-								ask()
-							}}
-						/>
-					</Suspense>
+						>
+							<ReadPrototype
+								query={query.text || query.draft}
+								reading={
+									JSON.parse(results.signature)[0] === query.text
+										? results.reading
+										: null
+								}
+								onExample={(text) => {
+									setDraft(text)
+									search(text)
+									ask()
+								}}
+							/>
+						</Suspense>
+					</>
 				) : (
 					<>
 						<div className="start-bar-rows relative h-[42px] min-w-0 sm:h-[44px]">

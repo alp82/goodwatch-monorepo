@@ -14,6 +14,12 @@ import {
 	restoreGuestInteractions,
 	updateGuestInteraction,
 } from "~/utils/guest-progress"
+import {
+	readStartReturn,
+	clearStartReturn,
+	saveStartReturn,
+	type RecommendationView,
+} from "./start-return"
 import { LOVED_NEEDED } from "../stage/start-query"
 import { LOVED_SCORE, type LovedStore, createLovedThree } from "./loved-three"
 
@@ -63,9 +69,20 @@ export function useLovedThree() {
 		null,
 	)
 
+	const [returnView, setReturnView] = useState<RecommendationView | null>(null)
+	useEffect(() => {
+		const saved = readStartReturn()
+		if (!saved) return
+		const key = `0:${saved.loved.loved.map((t) => t.key).join(",")}`
+		three.restore(saved.loved)
+		setFound({ key, pick: saved.pick })
+		setBeat(key)
+		setReturnView(saved.view)
+	}, [three])
+
 	// lovedKey names the loved titles and their round.
 	useEffect(() => {
-		if (!full) return
+		if (!full || found?.key === lovedKey) return
 		const abort = new AbortController()
 		const timer = setTimeout(() => setBeat(lovedKey), FOR_YOU_BEAT_MS)
 		const answered = new Set(readGuestInteractions().map(answerKey))
@@ -88,18 +105,40 @@ export function useLovedThree() {
 			? { status: "ready", pick: found.pick }
 			: { status: "loading" }
 
-	const toggle = useCallback((card: TitleCard) => three.toggle(card), [three])
+	const toggle = useCallback(
+		(card: TitleCard) => {
+			clearStartReturn()
+			setReturnView(null)
+			return three.toggle(card)
+		},
+		[three],
+	)
+	const reset = useCallback(() => {
+		clearStartReturn()
+		setReturnView(null)
+		three.reset()
+	}, [three])
+	const onChoice = useCallback(() => {
+		clearStartReturn()
+		setReturnView(null)
+		three.choice()
+	}, [three])
 	return {
 		loved,
+		returnView,
+		saveForReturn: (view: RecommendationView) => {
+			if (found?.key === lovedKey)
+				saveStartReturn({ loved: three.snapshot(), pick: found.pick, view })
+		},
 		/** Three are loved and the beat is over: the card shows For you. */
 		done,
 		picks,
 		isLoved: three.isLoved,
 		toggle,
 		/** Back and Start over: the slots empty, the scores stay. */
-		reset: three.reset,
+		reset,
 		/** For useStartQuery's `onChoice`: a new choice starts over once three are loved. */
-		onChoice: three.choice,
+		onChoice,
 	}
 }
 

@@ -1,0 +1,1446 @@
+[
+	{
+		"group": "Combined",
+		"query": "funny movies from the 90s for my kids under 90 minutes",
+		"expect": {
+			"type": "movie",
+			"minYear": "1990",
+			"maxYear": "1999",
+			"age": "12",
+			"maxRuntime": "89",
+			"moods": "funny"
+		}
+	},
+	{
+		"group": "Combined",
+		"query": "Korean thrillers after 2015 on Netflix",
+		"expect": {
+			"productionCountries": "KR",
+			"genres": "Thriller",
+			"minYear": "2016",
+			"services": "8"
+		}
+	},
+	{
+		"group": "Years",
+		"query": "20s",
+		"expect": {
+			"minYear": "2020",
+			"maxYear": "2029"
+		}
+	},
+	{
+		"group": "Years",
+		"query": "movies from the 1920s",
+		"expect": {
+			"minYear": "1920",
+			"maxYear": "1929"
+		}
+	},
+	{
+		"group": "Years",
+		"query": "series from 2010",
+		"expect": {
+			"type": "show",
+			"minYear": "2010",
+			"maxYear": "2010"
+		}
+	},
+	{
+		"group": "Years",
+		"query": "between 1980 and 1990",
+		"expect": {
+			"minYear": "1980",
+			"maxYear": "1990"
+		}
+	},
+	{
+		"group": "Years",
+		"query": "this year",
+		"date": "2026-11-01",
+		"expect": {
+			"minYear": "2026",
+			"maxYear": "2026"
+		}
+	},
+	{
+		"group": "Years",
+		"query": "last five years",
+		"expect": {
+			"minYear": "2022",
+			"maxYear": "2026"
+		},
+		"note": "Spelled-out relative year count.",
+		"date": "2026-11-01"
+	},
+	{
+		"group": "Years",
+		"query": "last 5 years",
+		"date": "2026-11-01",
+		"expect": {
+			"minYear": "2022",
+			"maxYear": "2026"
+		}
+	},
+	{
+		"group": "Audience",
+		"query": "for my kids",
+		"expect": {
+			"age": "12"
+		}
+	},
+	{
+		"group": "Audience",
+		"query": "for a 7-year-old",
+		"expect": {
+			"age": "7"
+		}
+	},
+	{
+		"group": "Audience",
+		"query": "for 8 and 12 year olds",
+		"expect": {
+			"age": "8"
+		}
+	},
+	{
+		"group": "Audience",
+		"query": "family drama",
+		"expect": {
+			"genres": "Family,Drama"
+		},
+		"absent": [
+			"age"
+		]
+	},
+	{
+		"group": "Content",
+		"query": "no gore and no sex but allow swearing",
+		"expect": {
+			"hide": "violence,sex",
+			"ok": "language"
+		}
+	},
+	{
+		"group": "Runtime",
+		"query": "at most 2 hours",
+		"expect": {
+			"maxRuntime": "120"
+		}
+	},
+	{
+		"group": "Runtime",
+		"query": "a short comedy",
+		"expect": {
+			"maxRuntime": "90",
+			"genres": "Comedy"
+		}
+	},
+	{
+		"group": "Format",
+		"query": "anime series",
+		"expect": {
+			"anime": "only",
+			"type": "show"
+		}
+	},
+	{
+		"group": "Format",
+		"query": "movies without anime",
+		"expect": {
+			"anime": "none",
+			"type": "movie"
+		}
+	},
+	{
+		"group": "Mood & style",
+		"query": "something uplifting and slow burn",
+		"expect": {
+			"moods": "feelgood",
+			"styles": "slow"
+		}
+	},
+	{
+		"group": "Mood & style",
+		"query": "political documentaries",
+		"expect": {
+			"themes": "politics",
+			"styles": "documentary"
+		}
+	},
+	{
+		"group": "Mood & style",
+		"query": "make me laugh",
+		"expect": {
+			"moods": "funny"
+		}
+	},
+	{
+		"group": "Availability",
+		"query": "on Netflix available in Germany",
+		"expect": {
+			"services": "8",
+			"streamingCountry": "DE"
+		}
+	},
+	{
+		"group": "Personal",
+		"query": "excellent movies new to me",
+		"expect": {
+			"score": "80",
+			"type": "movie",
+			"unseen": "1"
+		}
+	},
+	{
+		"group": "Personal",
+		"query": "taste match at least 80%",
+		"expect": {
+			"match": "80"
+		}
+	},
+	{
+		"group": "Personal",
+		"query": "highest rated sci-fi",
+		"expect": {
+			"sort": "top",
+			"genres": "Science Fiction"
+		}
+	},
+	{
+		"group": "Existing wins",
+		"query": "shows from the 20s for my kids",
+		"existing": "type=movie&minYear=1980&maxYear=1989&age=6",
+		"expect": {
+			"type": "movie",
+			"minYear": "1980",
+			"maxYear": "1989",
+			"age": "6"
+		}
+	},
+	{
+		"group": "Existing wins",
+		"query": "on Netflix no sex",
+		"existing": "services=all&ok=sex",
+		"expect": {
+			"services": "all",
+			"ok": "sex"
+		},
+		"absent": [
+			"hide"
+		]
+	},
+	{
+		"group": "Existing wins",
+		"query": "funny comedy",
+		"existing": "moods=scary&genres=Drama",
+		"expect": {
+			"moods": "scary",
+			"genres": "Drama"
+		}
+	},
+	{
+		"group": "Titles",
+		"query": "\"Modern Family\"",
+		"expect": {},
+		"absent": [
+			"age",
+			"genres"
+		]
+	},
+	{
+		"group": "Titles",
+		"query": "like \"Arrival\"",
+		"note": "Real TMDB lookup; inspect the selected title and Discover similarity results.",
+		"expect": {
+			"similar": "1000000329865"
+		}
+	},
+	{
+		"group": "Titles",
+		"query": "with Tom Hanks",
+		"note": "Real person lookup; today's filter combines cast and crew.",
+		"expect": {
+			"people": "31"
+		}
+	},
+	{
+		"group": "Limits",
+		"query": "a flop from the 90s",
+		"expect": {
+			"minYear": "1990",
+			"returns": "flop"
+		},
+		"note": "Current Discover has a commercial-performance filter.",
+		"residualEquals": ""
+	},
+	{
+		"group": "Limits",
+		"query": "no horror",
+		"expect": {},
+		"absent": [
+			"genres"
+		],
+		"residualContains": "no horror"
+	},
+	{
+		"group": "Limits",
+		"query": "movies set in the 20s",
+		"expect": {
+			"type": "movie"
+		},
+		"absent": [
+			"minYear",
+			"maxYear"
+		],
+		"residualContains": "set in"
+	},
+	{
+		"group": "Fingerprint read",
+		"query": "something that won't give my children nightmares",
+		"expect": {
+			"age": "12"
+		},
+		"semantic": true,
+		"note": "Semantic probe: can the read infer audience age without a literal kids phrase?"
+	},
+	{
+		"group": "Availability",
+		"query": "on Netflix or Disney+",
+		"expect": {
+			"services": "8,337"
+		}
+	},
+	{
+		"group": "Limits",
+		"query": "movies in German",
+		"expect": {
+			"type": "movie"
+		},
+		"absent": [
+			"productionCountries"
+		],
+		"residualContains": "in German"
+	},
+	{
+		"group": "Existing wins",
+		"query": "series under 90 minutes",
+		"existing": "type=all&maxRuntime=120",
+		"expect": {
+			"type": "all",
+			"maxRuntime": "120"
+		}
+	},
+	{
+		"group": "Mood & style",
+		"query": "other worlds",
+		"expect": {
+			"moods": "worlds"
+		}
+	},
+	{
+		"group": "Limits",
+		"query": "movies set in the 20s released after 2000",
+		"expect": {
+			"type": "movie",
+			"minYear": "2001"
+		},
+		"absent": [
+			"maxYear"
+		],
+		"residualContains": "set in"
+	},
+	{
+		"group": "Similarity + modifiers",
+		"query": "like matrix but funnier",
+		"expect": {
+			"similar": "1000000000603",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Similarity + modifiers",
+		"query": "like the matrix but funnier",
+		"expect": {
+			"similar": "1000000000603",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Similarity + modifiers",
+		"query": "like \"The Matrix\" but funnier",
+		"expect": {
+			"similar": "1000000000603",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Similarity + modifiers",
+		"query": "like matrix and funnier",
+		"expect": {
+			"similar": "1000000000603",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Similarity + modifiers",
+		"query": "like matrix but scarier",
+		"expect": {
+			"similar": "1000000000603",
+			"moods": "scary"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Similarity + modifiers",
+		"query": "like matrix but funnier on Netflix under 2 hours",
+		"expect": {
+			"similar": "1000000000603",
+			"moods": "funny",
+			"services": "8",
+			"maxRuntime": "119"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Similarity + modifiers",
+		"query": "like matrix but funnier",
+		"existing": "moods=scary",
+		"expect": {
+			"similar": "1000000000603",
+			"moods": "scary"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Titles",
+		"query": "like \"Dumb and Dumber\"",
+		"expect": {
+			"similar": "1000000008467"
+		}
+	},
+	{
+		"group": "Bare years",
+		"query": "matrix 1999",
+		"expect": {
+			"minYear": "1999",
+			"maxYear": "1999"
+		},
+		"residualEquals": "matrix"
+	},
+	{
+		"group": "Bare years",
+		"query": "1999 matrix",
+		"expect": {
+			"minYear": "1999",
+			"maxYear": "1999"
+		},
+		"residualEquals": "matrix"
+	},
+	{
+		"group": "Bare years",
+		"query": "matrix 1999",
+		"existing": "released=2010s",
+		"expect": {
+			"released": "2010s"
+		},
+		"absent": [
+			"minYear",
+			"maxYear"
+		],
+		"residualEquals": "matrix"
+	},
+	{
+		"group": "Bare years",
+		"query": "\"Blade Runner 2049\"",
+		"expect": {},
+		"absent": [
+			"minYear",
+			"maxYear"
+		],
+		"residualEquals": "\"Blade Runner 2049\""
+	},
+	{
+		"group": "Bare years",
+		"query": "movies set in 1999",
+		"expect": {
+			"type": "movie"
+		},
+		"absent": [
+			"minYear",
+			"maxYear"
+		],
+		"residualEquals": "set in 1999"
+	},
+	{
+		"group": "Residual meaning",
+		"query": "similar like fight club but funnier",
+		"expect": {
+			"similar": "1000000000550",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Residual meaning",
+		"query": "similar to fight club but funnier",
+		"expect": {
+			"similar": "1000000000550",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Residual meaning",
+		"query": "similar like fight club but funnier on Netflix",
+		"expect": {
+			"similar": "1000000000550",
+			"moods": "funny",
+			"services": "8"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Residual meaning",
+		"query": "like matrix but about robots",
+		"expect": {
+			"similar": "1000000000603"
+		},
+		"residualEquals": "about robots"
+	},
+	{
+		"group": "Residual meaning",
+		"query": "funny and about robots",
+		"expect": {
+			"moods": "funny"
+		},
+		"residualEquals": "about robots"
+	},
+	{
+		"group": "Residual meaning",
+		"query": "about robots but funny",
+		"expect": {
+			"moods": "funny"
+		},
+		"residualEquals": "about robots"
+	},
+	{
+		"group": "Residual meaning",
+		"query": "\"War and Peace\" and funny",
+		"expect": {
+			"moods": "funny"
+		},
+		"residualEquals": "\"War and Peace\""
+	},
+	{
+		"group": "Residual meaning",
+		"query": "robots and aliens 1999",
+		"expect": {
+			"minYear": "1999",
+			"maxYear": "1999"
+		},
+		"residualEquals": "robots and aliens"
+	},
+	{
+		"group": "Implicit similarity",
+		"query": "fight club but funnier",
+		"expect": {
+			"similar": "1000000000550",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Implicit similarity",
+		"query": "The Matrix but funnier",
+		"expect": {
+			"similar": "1000000000603",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Implicit similarity",
+		"query": "\"Fight Club\" but funnier",
+		"expect": {
+			"similar": "1000000000550",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Implicit similarity",
+		"query": "fight club, but funnier on Netflix",
+		"expect": {
+			"similar": "1000000000550",
+			"moods": "funny",
+			"services": "8"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Implicit similarity",
+		"query": "fight club but scarier",
+		"expect": {
+			"similar": "1000000000550",
+			"moods": "scary"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Implicit similarity",
+		"query": "fight club but funnier",
+		"existing": "similar=1000000000603",
+		"expect": {
+			"similar": "1000000000603",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Implicit similarity",
+		"query": "comedy but funnier",
+		"expect": {
+			"genres": "Comedy",
+			"moods": "funny"
+		},
+		"absent": [
+			"similar"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Implicit similarity",
+		"query": "something but funnier",
+		"expect": {
+			"moods": "funny"
+		},
+		"absent": [
+			"similar"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Implicit similarity",
+		"query": "fight club but much funnier",
+		"expect": {
+			"similar": "1000000000550",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Implicit similarity",
+		"query": "fight club but a bit slower",
+		"expect": {
+			"similar": "1000000000550",
+			"styles": "slow"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "With attributes versus people",
+		"query": "fight club bad with bad scores",
+		"expect": {
+			"maxScore": "50"
+		},
+		"absent": [
+			"people"
+		],
+		"residualEquals": "fight club bad",
+		"noWarningContains": "Unresolved person"
+	},
+	{
+		"group": "With attributes versus people",
+		"query": "with bad scores",
+		"expect": {
+			"maxScore": "50"
+		},
+		"absent": [
+			"people"
+		],
+		"residualEquals": "",
+		"noWarningContains": "Unresolved person"
+	},
+	{
+		"group": "With attributes versus people",
+		"query": "with good scores",
+		"expect": {
+			"score": "70"
+		},
+		"absent": [
+			"people"
+		],
+		"residualEquals": "",
+		"noWarningContains": "Unresolved person"
+	},
+	{
+		"group": "With attributes versus people",
+		"query": "with strong female leads",
+		"absent": [
+			"people"
+		],
+		"residualEquals": "with strong female leads",
+		"noWarningContains": "Unresolved person"
+	},
+	{
+		"group": "With attributes versus people",
+		"query": "with Tom Hanks and good scores",
+		"expect": {
+			"people": "31",
+			"score": "70"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "With attributes versus people",
+		"query": "fight club but funnier with bad scores",
+		"expect": {
+			"similar": "1000000000550",
+			"moods": "funny",
+			"maxScore": "50"
+		},
+		"absent": [
+			"people"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "With attributes versus people",
+		"query": "with bad scores",
+		"existing": "score=80",
+		"expect": {
+			"score": "80"
+		},
+		"absent": [
+			"maxScore",
+			"people"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "With attributes versus people",
+		"query": "excellent movies",
+		"existing": "maxScore=50",
+		"expect": {
+			"maxScore": "50",
+			"type": "movie"
+		},
+		"absent": [
+			"score"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "With attributes versus people",
+		"query": "with score under 50",
+		"expect": {
+			"maxScore": "49"
+		},
+		"absent": [
+			"people"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "People versus title references",
+		"query": "like brad pitt movies",
+		"expect": {
+			"people": "287",
+			"type": "movie"
+		},
+		"absent": [
+			"similar"
+		],
+		"residualEquals": "",
+		"noWarningContains": "Unresolved"
+	},
+	{
+		"group": "People versus title references",
+		"query": "like Brad Pitt",
+		"expect": {
+			"people": "287"
+		},
+		"absent": [
+			"similar"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "People versus title references",
+		"query": "like Brad Pitt's movies",
+		"expect": {
+			"people": "287",
+			"type": "movie"
+		},
+		"absent": [
+			"similar"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "People versus title references",
+		"query": "like Tom Hanks movies",
+		"expect": {
+			"people": "31",
+			"type": "movie"
+		},
+		"absent": [
+			"similar"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "People versus title references",
+		"query": "like fight club movies",
+		"expect": {
+			"similar": "1000000000550",
+			"type": "movie"
+		},
+		"absent": [
+			"people"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "People versus title references",
+		"query": "fight club movies but funnier",
+		"expect": {
+			"similar": "1000000000550",
+			"type": "movie",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "People versus title references",
+		"query": "like Scary Movie",
+		"expect": {
+			"similar": "1000000004247"
+		},
+		"absent": [
+			"people",
+			"type"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "People versus title references",
+		"query": "like \"Scary Movie\"",
+		"expect": {
+			"similar": "1000000004247"
+		},
+		"absent": [
+			"people",
+			"type"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "People versus title references",
+		"query": "like brad pitt movies",
+		"existing": "people=31",
+		"expect": {
+			"people": "31",
+			"type": "movie"
+		},
+		"absent": [
+			"similar"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare people and style",
+		"query": "brad pitt",
+		"expect": {
+			"people": "287"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare people and style",
+		"query": "brad pitt style",
+		"expect": {
+			"people": "287"
+		},
+		"absent": [
+			"styles"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare people and style",
+		"query": "Brad Pitt Style",
+		"expect": {
+			"people": "287"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare people and style",
+		"query": "Brad Pitt's style",
+		"expect": {
+			"people": "287"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare people and style",
+		"query": "tom hanks",
+		"expect": {
+			"people": "31"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare people and style",
+		"query": "brad pitt movies",
+		"expect": {
+			"people": "287",
+			"type": "movie"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare people and style",
+		"query": "funny brad pitt movies",
+		"expect": {
+			"people": "287",
+			"type": "movie",
+			"moods": "funny"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare people and style",
+		"query": "brad pitt style with bad scores",
+		"expect": {
+			"people": "287",
+			"maxScore": "50"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare people and style",
+		"query": "brad pitt",
+		"existing": "people=31",
+		"expect": {
+			"people": "31"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare people and style",
+		"query": "about robots",
+		"absent": [
+			"people"
+		],
+		"residualEquals": "about robots"
+	},
+	{
+		"group": "Vibe references",
+		"query": "brad pitt vibes",
+		"expect": {
+			"people": "287"
+		},
+		"absent": [
+			"similar"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Vibe references",
+		"query": "brad pitt vibe",
+		"expect": {
+			"people": "287"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Vibe references",
+		"query": "matrix vibes",
+		"expect": {
+			"similar": "1000000000603"
+		},
+		"absent": [
+			"people"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Vibe references",
+		"query": "matrix style",
+		"expect": {
+			"similar": "1000000000603"
+		},
+		"absent": [
+			"people"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Vibe references",
+		"query": "like matrix vibes",
+		"expect": {
+			"similar": "1000000000603"
+		},
+		"absent": [
+			"people"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Vibe references",
+		"query": "brad pitt vibes movies",
+		"expect": {
+			"people": "287",
+			"type": "movie"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Vibe references",
+		"query": "matrix vibes under 90 minutes",
+		"expect": {
+			"similar": "1000000000603",
+			"maxRuntime": "89"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Vibe references",
+		"query": "matrix vibes",
+		"existing": "similar=1000000000550",
+		"expect": {
+			"similar": "1000000000550"
+		},
+		"absent": [
+			"people"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Combined references",
+		"query": "tom hanks vibes like matrix",
+		"expect": {
+			"people": "31",
+			"similar": "1000000000603"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Combined references",
+		"query": "matrix vibes with tom hanks",
+		"expect": {
+			"people": "31",
+			"similar": "1000000000603"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Combined references",
+		"query": "brad pitt vibes like matrix",
+		"expect": {
+			"people": "287",
+			"similar": "1000000000603"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Combined references",
+		"query": "matrix vibes with brad pitt",
+		"expect": {
+			"people": "287",
+			"similar": "1000000000603"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Combined references",
+		"query": "tom hanks vibes like matrix under 90 minutes",
+		"expect": {
+			"people": "31",
+			"similar": "1000000000603",
+			"maxRuntime": "89"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Combined references",
+		"query": "matrix vibes with tom hanks and good scores",
+		"expect": {
+			"people": "31",
+			"similar": "1000000000603",
+			"score": "70"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Combined references",
+		"query": "tom hanks vibes like matrix",
+		"existing": "people=287",
+		"expect": {
+			"people": "287",
+			"similar": "1000000000603"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Combined references",
+		"query": "matrix vibes with tom hanks",
+		"existing": "similar=1000000000550",
+		"expect": {
+			"people": "31",
+			"similar": "1000000000550"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "90s tom hanks style netflix",
+		"expect": {
+			"minYear": "1990",
+			"maxYear": "1999",
+			"people": "31",
+			"services": "8"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "netflix tom hanks style 90s",
+		"expect": {
+			"minYear": "1990",
+			"maxYear": "1999",
+			"people": "31",
+			"services": "8"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "tom hanks style netflix 90s",
+		"expect": {
+			"minYear": "1990",
+			"maxYear": "1999",
+			"people": "31",
+			"services": "8"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "brad pitt netflix",
+		"expect": {
+			"people": "287",
+			"services": "8"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "netflix",
+		"expect": {
+			"services": "8"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "disney+",
+		"expect": {
+			"services": "337"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "apple tv+",
+		"expect": {
+			"services": "350"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "netflix or disney+",
+		"expect": {
+			"services": "8,337"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "netflix with tom hanks",
+		"expect": {
+			"services": "8",
+			"people": "31"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "netflix",
+		"existing": "services=all",
+		"expect": {
+			"services": "all"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare services and composition",
+		"query": "\"Netflix\"",
+		"expect": {
+			"services": "all"
+		},
+		"residualEquals": "\"Netflix\""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "80 brad pitt vibes",
+		"expect": {
+			"score": "80",
+			"people": "287"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "80+ brad pitt vibes",
+		"expect": {
+			"score": "80",
+			"people": "287"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "brad pitt vibes 80+",
+		"expect": {
+			"score": "80",
+			"people": "287"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "80+ matrix vibes",
+		"expect": {
+			"score": "80",
+			"similar": "1000000000603"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "80s brad pitt vibes",
+		"expect": {
+			"minYear": "1980",
+			"maxYear": "1989",
+			"people": "287"
+		},
+		"absent": [
+			"score"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "1980 brad pitt vibes",
+		"expect": {
+			"minYear": "1980",
+			"maxYear": "1980",
+			"people": "287"
+		},
+		"absent": [
+			"score"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "under 80 minutes brad pitt vibes",
+		"expect": {
+			"maxRuntime": "79",
+			"people": "287"
+		},
+		"absent": [
+			"score"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "for an 8-year-old",
+		"expect": {
+			"age": "8"
+		},
+		"absent": [
+			"score"
+		]
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "taste match at least 80%",
+		"expect": {
+			"match": "80"
+		},
+		"absent": [
+			"score"
+		],
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "80+ brad pitt vibes",
+		"existing": "score=70",
+		"expect": {
+			"score": "70",
+			"people": "287"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "\"80\"",
+		"absent": [
+			"score"
+		],
+		"residualEquals": "\"80\""
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "101",
+		"absent": [
+			"score"
+		],
+		"residualEquals": "101"
+	},
+	{
+		"group": "Bare score shorthand",
+		"query": "80.5",
+		"absent": [
+			"score"
+		],
+		"residualEquals": "80.5"
+	},
+	{
+		"group": "Unknown numbers preserve people",
+		"query": "tom hanks 200",
+		"expect": {
+			"people": "31"
+		},
+		"absent": [
+			"score",
+			"minRuntime",
+			"maxRuntime"
+		],
+		"residualEquals": "200"
+	},
+	{
+		"group": "Unknown numbers preserve people",
+		"query": "tom hanks 200 million",
+		"expect": {
+			"people": "31"
+		},
+		"absent": [
+			"score",
+			"minRuntime",
+			"maxRuntime"
+		],
+		"residualEquals": "200 million"
+	},
+	{
+		"group": "Unknown numbers preserve people",
+		"query": "200 million tom hanks",
+		"expect": {
+			"people": "31"
+		},
+		"absent": [
+			"score",
+			"minYear"
+		],
+		"residualEquals": "200 million"
+	},
+	{
+		"group": "Unknown numbers preserve people",
+		"query": "tom hanks 80 million",
+		"expect": {
+			"people": "31"
+		},
+		"absent": [
+			"score"
+		],
+		"residualEquals": "80 million"
+	},
+	{
+		"group": "Unknown numbers preserve people",
+		"query": "tom hanks 2000 million",
+		"expect": {
+			"people": "31"
+		},
+		"absent": [
+			"score",
+			"minYear",
+			"maxYear"
+		],
+		"residualEquals": "2000 million"
+	},
+	{
+		"group": "Unknown numbers preserve people",
+		"query": "tom hanks $200 million",
+		"expect": {
+			"people": "31"
+		},
+		"absent": [
+			"score"
+		],
+		"residualEquals": "$200 million"
+	},
+	{
+		"group": "Unknown numbers preserve people",
+		"query": "tom hanks under 200 minutes",
+		"expect": {
+			"people": "31",
+			"maxRuntime": "199"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Unknown numbers preserve people",
+		"query": "\"Tom Hanks 200 million\"",
+		"absent": [
+			"people",
+			"score"
+		],
+		"residualEquals": "\"Tom Hanks 200 million\""
+	},
+	{
+		"group": "Unknown numbers preserve people",
+		"query": "tom hanks with $200 million",
+		"expect": {
+			"people": "31"
+		},
+		"absent": [
+			"score"
+		],
+		"residualContains": "$200 million",
+		"noWarningContains": "Unresolved person"
+	},
+	{
+		"group": "Unknown numbers preserve people",
+		"query": "tom hanks 200 million netflix",
+		"expect": {
+			"people": "31",
+			"services": "8"
+		},
+		"absent": [
+			"score"
+		],
+		"residualEquals": "200 million"
+	}
+]

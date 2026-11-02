@@ -34,9 +34,13 @@ export interface LovedStore<S> {
 
 export type ToggleResult = "loved" | "undone" | "full" | "refused"
 
-export interface LovedThree<T extends LovedTitle> {
+export type LovedSnapshot<T, S> = { loved: readonly T[]; before: [number, S][] }
+
+export interface LovedThree<T extends LovedTitle, S = unknown> {
 	/** The loved titles, in the order they were loved. */
 	loved(): readonly T[]
+	snapshot(): LovedSnapshot<T, S>
+	restore(snapshot: LovedSnapshot<T, S>): void
 	isLoved(title: Pick<LovedTitle, "key">): boolean
 	/** Loves the title, or undoes it when it's loved. */
 	toggle(title: T): ToggleResult
@@ -52,7 +56,7 @@ export function createLovedThree<T extends LovedTitle, S>({
 }: {
 	store: LovedStore<S>
 	onChange: (loved: readonly T[]) => void
-}): LovedThree<T> {
+}): LovedThree<T, S> {
 	let loved: readonly T[] = []
 	const before = new Map<number, S>()
 	const set = (next: readonly T[]) => {
@@ -65,6 +69,12 @@ export function createLovedThree<T extends LovedTitle, S>({
 	}
 	return {
 		loved: () => loved,
+		snapshot: () => ({ loved: [...loved], before: [...before] }),
+		restore(snapshot) {
+			before.clear()
+			for (const [key, value] of snapshot.before) before.set(key, value)
+			set([...snapshot.loved].slice(0, LOVED_NEEDED))
+		},
 		isLoved: (title) => loved.some((t) => t.key === title.key),
 		toggle(title) {
 			if (loved.some((t) => t.key === title.key)) {

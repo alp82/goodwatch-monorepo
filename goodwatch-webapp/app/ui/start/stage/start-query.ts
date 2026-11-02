@@ -99,6 +99,7 @@ export type StartResultsStatus = "idle" | "loading" | "ready" | "error"
 
 /** What the stage shows for one query: the titles, the search's reading, and how many titles match in all. */
 export type StartResults = {
+	discoverHref?: string
 	status: StartResultsStatus
 	/** The querySignature these results answer. */
 	signature: string

@@ -1,0 +1,58 @@
+[
+	{
+		"group": "Score comparison composition",
+		"query": "at least 80",
+		"expect": { "score": "80" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Score comparison composition",
+		"query": "over 80 Tom Hanks",
+		"expect": { "score": "81", "people": "31" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Score comparison composition",
+		"query": "under 80 Tom Hanks",
+		"expect": { "maxScore": "79", "people": "31" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Score comparison composition",
+		"query": "at most 80",
+		"expect": { "maxScore": "80" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Score comparison composition",
+		"query": "not under 80",
+		"expect": {},
+		"residualEquals": "not under 80",
+		"exact": true
+	},
+	{
+		"group": "Score comparison composition",
+		"query": "under 80 minutes",
+		"expect": { "maxRuntime": "79" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Score comparison composition",
+		"query": "age under 12",
+		"expect": { "age": "11" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Score comparison composition",
+		"query": "\"Over 80\"",
+		"expect": {},
+		"residualEquals": "\"Over 80\"",
+		"exact": true
+	}
+]

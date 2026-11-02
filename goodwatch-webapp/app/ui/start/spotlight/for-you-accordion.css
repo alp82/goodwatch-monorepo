@@ -1,0 +1,351 @@
+/* Loaded with the recommendation panel after three loved titles. */
+.fy-accordion {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding-top: 10px;
+	padding-bottom: 16px;
+	min-width: 0;
+}
+.fy-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-shrink: 0;
+}
+.fy-toolbar > span {
+	font-size: 11px;
+	letter-spacing: .06em;
+	color: #96a5bc;
+	font-weight: 600;
+}
+.fy-toolbar > div {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+.fy-toolbar > div > button {
+	padding: 3px 0;
+	background: none;
+	border: 0;
+	color: #9ba9be;
+	font-size: 12px;
+	cursor: pointer;
+}
+.fy-toolbar > div > button:hover {
+	color: white;
+}
+.fy-row {
+	--fy-open: min(620px, calc(100% - 240px));
+	--fy-closed: 76px;
+	display: flex;
+	flex: 1;
+	gap: 10px;
+	min-height: 0;
+	min-width: 0;
+	margin: 0;
+	padding: 2px 2px 7px;
+	list-style: none;
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scrollbar-width: thin;
+	scrollbar-color: #56647b66 transparent;
+}
+.fy-card {
+	position: relative;
+	flex: 0 0 var(--fy-closed);
+	min-width: 0;
+	border-radius: 12px;
+	overflow: hidden;
+	background: #182131;
+	box-shadow: inset 0 0 0 1px #ffffff24;
+	transition: flex-basis 480ms cubic-bezier(0.22, 0.8, 0.26, 1), flex-grow 480ms
+		cubic-bezier(0.22, 0.8, 0.26, 1);
+	isolation: isolate;
+}
+.fy-card[data-expanded="true"] {
+	flex-basis: var(--fy-open);
+	flex-grow: 1;
+}
+.fy-poster,
+.fy-backdrop {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.fy-poster {
+	object-position: center;
+	opacity: 1;
+	transition: opacity 350ms ease;
+}
+.fy-backdrop {
+	opacity: 0;
+	transition: opacity 350ms ease;
+}
+.fy-card[data-expanded="true"]:has(.fy-backdrop) .fy-poster {
+	opacity: 0;
+}
+.fy-card[data-expanded="true"] .fy-backdrop {
+	opacity: 1;
+}
+.fy-shade {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: linear-gradient(0deg, #020610f2, transparent 80%);
+	opacity: 0.7;
+	transition: opacity 350ms ease;
+}
+.fy-card[data-expanded="true"] .fy-shade {
+	opacity: 1;
+	background: linear-gradient(0deg, #020610fa 0%, #020610b3 48%, #02061015 100%);
+}
+.fy-trigger {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	display: flex;
+	align-items: flex-end;
+	padding: 10px 7px;
+	border: 0;
+	border-radius: 12px;
+	background: none;
+	cursor: pointer;
+	color: white;
+	text-align: left;
+}
+.fy-trigger:focus-visible {
+	outline: 3px solid #fbbf24;
+	outline-offset: -3px;
+}
+.fy-card:not([data-expanded="true"]):hover {
+	box-shadow: inset 0 0 0 2px #fbbf24;
+}
+.fy-collapsed-title {
+	font-size: 11px;
+	line-height: 1.3;
+	font-weight: 650;
+	display: block;
+	width: 100%;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	text-shadow: 0 2px 5px black;
+}
+.fy-card[data-expanded="true"] .fy-collapsed-title {
+	display: none;
+}
+.fy-details {
+	position: absolute;
+	left: 20px;
+	right: 20px;
+	bottom: 16px;
+	z-index: 2;
+}
+.fy-details[hidden] {
+	display: none;
+}
+.fy-details h3 {
+	margin: 0 0 8px;
+	font-size: clamp(20px, 2vw, 28px);
+	line-height: 1.1;
+	font-weight: 750;
+	letter-spacing: -.02em;
+	color: white;
+	text-wrap: balance;
+}
+.fy-meta {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 12px;
+	color: #cbd5e1;
+}
+.fy-details p {
+	margin: 8px 0 0;
+	color: #cbd5e1;
+	font-size: 12px;
+}
+.fy-details-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 10px;
+	padding: 6px 10px;
+	border: 1px solid #ffffff3d;
+	border-radius: 8px;
+	font-size: 12px;
+	font-weight: 600;
+	color: white;
+	background: #03071255;
+}
+.fy-details-link:hover {
+	border-color: #fbbf24;
+	color: #fbbf24;
+}
+.fy-save {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+	padding: 13px 16px;
+	border: 1px solid #fbbf2445;
+	border-radius: 12px;
+	background: linear-gradient(100deg, #fbbf2412, #fbbf2404);
+	flex-shrink: 0;
+}
+.fy-save h3 {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 650;
+	color: #f3f5fa;
+}
+.fy-save p {
+	margin: 3px 0 0;
+	font-size: 12px;
+	color: #a8b6cb;
+}
+.fy-save-cta {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	flex-shrink: 0;
+	min-height: 46px;
+	padding: 10px 22px;
+	border-radius: 10px;
+	background: #fbbf24;
+	color: #101725;
+	font-size: 15px;
+	font-weight: 750;
+	box-shadow: 0 5px 24px #fbbf2426;
+}
+.fy-save-cta:hover {
+	background: #fcd34d;
+}
+.fy-save-cta:focus-visible,
+.fy-details-link:focus-visible {
+	outline: 2px solid #fbbf24;
+	outline-offset: 4px;
+}
+.start-card:has(.fy-accordion) {
+	height: max(var(--start-card), 480px);
+}
+@media (max-width: 639px) {
+	.fy-accordion {
+		gap: 10px;
+		padding-bottom: 14px;
+	}
+	.fy-row {
+		--fy-open: calc(100% - 64px);
+		--fy-closed: 58px;
+		gap: 8px;
+	}
+	.fy-toolbar > span {
+		font-size: 10px;
+		letter-spacing: 0;
+	}
+	.fy-toolbar > div {
+		gap: 8px;
+	}
+	.fy-toolbar > div > button {
+		font-size: 11px;
+	}
+	.fy-details {
+		left: 14px;
+		right: 14px;
+		bottom: 14px;
+	}
+	.fy-details h3 {
+		font-size: 22px;
+	}
+	.fy-save {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
+		padding: 12px;
+	}
+	.fy-save h3 {
+		font-size: 14px;
+	}
+	.fy-save p {
+		font-size: 11px;
+	}
+	.fy-save-cta {
+		width: 100%;
+		min-height: 44px;
+		font-size: 14px;
+	}
+	.start-card:has(.fy-accordion) {
+		height: max(var(--start-card), 560px);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.fy-card,
+	.fy-poster,
+	.fy-backdrop,
+	.fy-shade {
+		transition: none;
+	}
+}
+
+.fy-save[href] {
+	text-decoration: none;
+	cursor: pointer;
+}
+.fy-save[href]:hover {
+	border-color: #fbbf2488;
+	background: linear-gradient(100deg, #fbbf241c, #fbbf2409);
+}
+.fy-save[href]:hover .fy-save-cta {
+	background: #fcd34d;
+}
+.fy-save[href]:focus-visible {
+	outline: 2px solid #fbbf24;
+	outline-offset: 3px;
+}
+.fy-why {
+	margin-top: 10px;
+}
+.fy-why > span {
+	font-size: 10px;
+	font-weight: 650;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	color: #c4cfdf;
+}
+.fy-why > div {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px 12px;
+	margin-top: 4px;
+}
+.fy-why > div > span {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 12px;
+	font-weight: 650;
+	line-height: 1.5;
+	color: color-mix(in oklab, var(--fy-quality) 35%, #f1f5f9);
+	border-bottom: 1px solid
+		color-mix(in oklab, var(--fy-quality) 32%, transparent);
+	padding: 3px 6px;
+	background: #050b17a6;
+	border-radius: 4px;
+}
+.fy-why i {
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: currentColor;
+}
+.fy-why p {
+	font-size: 11px;
+	color: #a6b5c9;
+}

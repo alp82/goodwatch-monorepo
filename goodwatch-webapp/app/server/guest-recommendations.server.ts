@@ -1,3 +1,6 @@
+import { getTitleSnapshot } from "./title-snapshot/index.server"
+import { titleKey } from "~/utils/title-key"
+import { recommendationFingerprint } from "./recommendation-fingerprint"
 import type { Score } from "~/server/scores.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { cached } from "~/utils/cache"
@@ -41,6 +44,7 @@ interface QdrantMediaPayload {
 }
 
 export interface GuestRecommendation extends AllRatings {
+	fingerprint_keys?: string[]
 	tmdb_id: number
 	media_type: "movie" | "show"
 	title: string
@@ -322,6 +326,7 @@ function toGuestRecommendation(
 			payload.goodwatch_overall_score_voting_count ?? 0,
 		goodwatch_overall_score_normalized_percent:
 			payload.goodwatch_overall_score_normalized_percent ?? 0,
+		fingerprint_keys: recommendationFingerprint(getTitleSnapshot()?.fingerprint(titleKey(mediaType, payload.tmdb_id)) ?? null),
 		ann_score: annScore,
 		genre_score: genreScoreOf(payload),
 		match_percentage: matchPercentage,

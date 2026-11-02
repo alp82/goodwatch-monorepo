@@ -1,0 +1,677 @@
+[
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "90 minute movies",
+		"expect": {
+			"maxRuntime": "90",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "90-minute movies",
+		"expect": {
+			"maxRuntime": "90",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "90 minutes tom hanks",
+		"expect": {
+			"maxRuntime": "90",
+			"people": "31"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "under two hours",
+		"expect": {
+			"maxRuntime": "119"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "at most two hours",
+		"expect": {
+			"maxRuntime": "120"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "under 1 hour 30 minutes",
+		"expect": {
+			"maxRuntime": "89"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "under 1h30m",
+		"expect": {
+			"maxRuntime": "89"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "at most 1 hour and thirty minutes",
+		"expect": {
+			"maxRuntime": "90"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "over 1.5 hours",
+		"expect": {
+			"minRuntime": "91"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "under 90.5 minutes",
+		"expect": {
+			"maxRuntime": "90"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "between 90 and 120 minutes",
+		"expect": {
+			"minRuntime": "90",
+			"maxRuntime": "120"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "90-120 minutes",
+		"expect": {
+			"minRuntime": "90",
+			"maxRuntime": "120"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "from 1 to 2 hours",
+		"expect": {
+			"minRuntime": "60",
+			"maxRuntime": "120"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "between 120 and 90 minutes",
+		"expect": {},
+		"residualEquals": "between 120 and 90 minutes",
+		"absent": ["score", "minRuntime", "maxRuntime"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "under 0 minutes",
+		"expect": {},
+		"residualEquals": "under 0 minutes",
+		"absent": ["score", "maxRuntime"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "at most 10001 minutes",
+		"expect": {},
+		"residualEquals": "at most 10001 minutes",
+		"absent": ["score", "maxRuntime"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "2000 minutes",
+		"expect": {
+			"maxRuntime": "2000"
+		},
+		"residualEquals": "",
+		"absent": ["score", "minYear", "maxYear"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "between 2000 and 2020 minutes",
+		"expect": {
+			"minRuntime": "2000",
+			"maxRuntime": "2020"
+		},
+		"residualEquals": "",
+		"absent": ["minYear", "maxYear", "score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "1990-1999 movies",
+		"expect": {
+			"minYear": "1990",
+			"maxYear": "1999",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "1990\u20131999 movies",
+		"expect": {
+			"minYear": "1990",
+			"maxYear": "1999",
+			"type": "movie"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "from 2020 to 2010",
+		"expect": {},
+		"residualEquals": "from 2020 to 2010",
+		"absent": ["score", "minYear", "maxYear"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "after 1999 and before 2010",
+		"expect": {
+			"minYear": "2000",
+			"maxYear": "2009"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "last 0 years",
+		"expect": {},
+		"residualEquals": "last 0 years",
+		"absent": ["score", "minYear", "maxYear", "released"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "last 5000 years",
+		"expect": {},
+		"residualEquals": "last 5000 years",
+		"absent": ["score", "minYear", "maxYear", "released"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "last five years",
+		"expect": {
+			"minYear": "2027",
+			"maxYear": "2031"
+		},
+		"residualEquals": "",
+		"date": "2031-01-01"
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "30s",
+		"expect": {
+			"minYear": "2030",
+			"maxYear": "2039"
+		},
+		"residualEquals": "",
+		"date": "2031-01-01"
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "30s",
+		"expect": {
+			"minYear": "1930",
+			"maxYear": "1939"
+		},
+		"residualEquals": "",
+		"date": "2026-11-01"
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "for kids aged 8",
+		"expect": {
+			"age": "8"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "for kids aged 8 and 12",
+		"expect": {
+			"age": "8"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "for kids aged 8 to 12",
+		"expect": {
+			"age": "8"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "for ages 8-12",
+		"expect": {
+			"age": "8"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "for an 8 year old",
+		"expect": {
+			"age": "8"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "age under 12",
+		"expect": {
+			"age": "11"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "age at most 12",
+		"expect": {
+			"age": "12"
+		},
+		"residualEquals": "",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "age under 0",
+		"expect": {},
+		"residualEquals": "age under 0",
+		"absent": ["age", "score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "80% tom hanks",
+		"expect": {
+			"score": "80",
+			"people": "31"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "score over 80",
+		"expect": {
+			"score": "81"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "score at least 80",
+		"expect": {
+			"score": "80"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "score over 100",
+		"expect": {},
+		"residualEquals": "score over 100",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "score below 0",
+		"expect": {},
+		"residualEquals": "score below 0",
+		"absent": ["score", "maxScore"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "8.5 brad pitt vibes",
+		"expect": {
+			"people": "287"
+		},
+		"residualEquals": "8.5",
+		"absent": ["score"],
+		"note": "Decimal values are deliberately not converted to an integer score without an explicit supported scale."
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "2000000 dollars tom hanks",
+		"expect": {
+			"people": "31"
+		},
+		"residualEquals": "2000000 dollars",
+		"absent": ["score", "minYear", "maxYear"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "80 dollars tom hanks",
+		"expect": {
+			"people": "31"
+		},
+		"residualEquals": "80 dollars",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "USD 80 million tom hanks",
+		"expect": {
+			"people": "31"
+		},
+		"residualEquals": "USD 80 million",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "$80m tom hanks",
+		"expect": {
+			"people": "31"
+		},
+		"residualEquals": "$80m",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "\"90 Minutes\"",
+		"expect": {},
+		"residualEquals": "\"90 Minutes\"",
+		"absent": ["score", "maxRuntime", "minYear", "maxYear"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "\"2000 minutes\"",
+		"expect": {},
+		"residualEquals": "\"2000 minutes\"",
+		"absent": ["maxRuntime", "minYear", "maxYear"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "\"80 dollars\"",
+		"expect": {},
+		"residualEquals": "\"80 dollars\"",
+		"absent": ["score"]
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "under two hours",
+		"existing": "maxRuntime=150",
+		"expect": {
+			"maxRuntime": "150"
+		},
+		"absent": ["score"],
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial numeric specificity",
+		"query": "1990-1999",
+		"existing": "released=2010s",
+		"expect": {
+			"released": "2010s"
+		},
+		"absent": ["minYear", "maxYear"],
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial negated numeric fallback",
+		"query": "without age under 12",
+		"expect": {},
+		"absent": [
+			"age",
+			"score",
+			"minYear",
+			"maxYear",
+			"minRuntime",
+			"maxRuntime"
+		],
+		"residualEquals": "without age under 12"
+	},
+	{
+		"group": "Adversarial negated numeric fallback",
+		"query": "not age under 12",
+		"expect": {},
+		"absent": [
+			"age",
+			"score",
+			"minYear",
+			"maxYear",
+			"minRuntime",
+			"maxRuntime"
+		],
+		"residualEquals": "not age under 12"
+	},
+	{
+		"group": "Adversarial negated numeric fallback",
+		"query": "not score over 80",
+		"expect": {},
+		"absent": [
+			"age",
+			"score",
+			"minYear",
+			"maxYear",
+			"minRuntime",
+			"maxRuntime"
+		],
+		"residualEquals": "not score over 80"
+	},
+	{
+		"group": "Adversarial negated numeric fallback",
+		"query": "not for kids aged 8",
+		"expect": {},
+		"absent": [
+			"age",
+			"score",
+			"minYear",
+			"maxYear",
+			"minRuntime",
+			"maxRuntime"
+		],
+		"residualEquals": "not for kids aged 8"
+	},
+	{
+		"group": "Adversarial negated numeric fallback",
+		"query": "not under 1 hour 30 minutes",
+		"expect": {},
+		"absent": [
+			"age",
+			"score",
+			"minYear",
+			"maxYear",
+			"minRuntime",
+			"maxRuntime"
+		],
+		"residualEquals": "not under 1 hour 30 minutes"
+	},
+	{
+		"group": "Adversarial negated numeric fallback",
+		"query": "not from 1990 to 1999",
+		"expect": {},
+		"absent": [
+			"age",
+			"score",
+			"minYear",
+			"maxYear",
+			"minRuntime",
+			"maxRuntime"
+		],
+		"residualEquals": "not from 1990 to 1999"
+	},
+	{
+		"group": "Adversarial negated numeric fallback",
+		"query": "without last 5 years",
+		"expect": {},
+		"absent": [
+			"age",
+			"score",
+			"minYear",
+			"maxYear",
+			"minRuntime",
+			"maxRuntime"
+		],
+		"residualEquals": "without last 5 years"
+	},
+	{
+		"group": "Adversarial negated numeric fallback",
+		"query": "without 90-120 minutes",
+		"expect": {},
+		"absent": [
+			"age",
+			"score",
+			"minYear",
+			"maxYear",
+			"minRuntime",
+			"maxRuntime"
+		],
+		"residualEquals": "without 90-120 minutes"
+	},
+	{
+		"group": "Adversarial numeric label leakage",
+		"query": "score 80 tom hanks",
+		"expect": {
+			"score": "80",
+			"people": "31"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial numeric label leakage",
+		"query": "rated 80 tom hanks",
+		"expect": {
+			"score": "80",
+			"people": "31"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial numeric label leakage",
+		"query": "runtime 90 minutes tom hanks",
+		"expect": {
+			"maxRuntime": "90",
+			"people": "31"
+		},
+		"absent": ["score"],
+		"residualEquals": ""
+	},
+	{
+		"group": "Adversarial numeric label leakage",
+		"query": "released 1999 tom hanks",
+		"expect": {
+			"minYear": "1999",
+			"maxYear": "1999",
+			"people": "31"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Numeric labels and literal titles",
+		"query": "\"Score 80\"",
+		"expect": {},
+		"absent": ["score", "people"],
+		"residualEquals": "\"Score 80\""
+	},
+	{
+		"group": "Numeric labels and literal titles",
+		"query": "\"rated 80\"",
+		"expect": {},
+		"absent": ["score", "people"],
+		"residualEquals": "\"rated 80\""
+	},
+	{
+		"group": "Numeric labels and literal titles",
+		"query": "\"runtime 90 minutes\"",
+		"expect": {},
+		"absent": ["maxRuntime", "score", "people"],
+		"residualEquals": "\"runtime 90 minutes\""
+	},
+	{
+		"group": "Numeric labels and literal titles",
+		"query": "\"released 1999\"",
+		"expect": {},
+		"absent": ["minYear", "maxYear", "people"],
+		"residualEquals": "\"released 1999\""
+	},
+	{
+		"group": "Numeric labels and literal titles",
+		"query": "runtime under two hours",
+		"expect": {
+			"maxRuntime": "119"
+		},
+		"absent": ["score", "people"],
+		"residualEquals": ""
+	},
+	{
+		"group": "Numeric labels and literal titles",
+		"query": "running time 90-120 minutes",
+		"expect": {
+			"minRuntime": "90",
+			"maxRuntime": "120"
+		},
+		"absent": ["score"],
+		"residualEquals": ""
+	},
+	{
+		"group": "Numeric labels and literal titles",
+		"query": "duration of 90 minutes",
+		"expect": {
+			"maxRuntime": "90"
+		},
+		"absent": ["score"],
+		"residualEquals": ""
+	},
+	{
+		"group": "Numeric labels and literal titles",
+		"query": "released 1990-1999",
+		"expect": {
+			"minYear": "1990",
+			"maxYear": "1999"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Numeric labels and literal titles",
+		"query": "release year 1999",
+		"expect": {
+			"minYear": "1999",
+			"maxYear": "1999"
+		},
+		"residualEquals": ""
+	},
+	{
+		"group": "Numeric labels and literal titles",
+		"query": "released last year",
+		"date": "2026-11-01",
+		"expect": {
+			"minYear": "2025",
+			"maxYear": "2025"
+		},
+		"residualEquals": ""
+	}
+]

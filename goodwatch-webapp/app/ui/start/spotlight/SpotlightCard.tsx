@@ -136,10 +136,10 @@ export function SpotlightCard({
 						<button
 							type="button"
 							onClick={loved.reset}
-							aria-label={`Back to ${TAP_THREE.toLowerCase()}`}
+							aria-label="Choose three different titles"
 							className="inline-flex h-9 shrink-0 cursor-pointer items-center rounded-lg px-2.5 text-sm font-semibold text-amber-400 hover:bg-amber-400/10 hover:text-amber-300 sm:px-3"
 						>
-							<span aria-hidden>←&nbsp;</span>Back
+							Change my picks
 						</button>
 					) : null}
 					<LovedSlots loved={loved.loved} onUndo={loved.toggle} />
@@ -157,7 +157,11 @@ export function SpotlightCard({
 					<Layer on={forYou} from="down">
 						{forYou ? (
 							<Suspense fallback={<ForYouSkeleton />}>
-								<ForYouPanel picks={loved.picks} onStartOver={loved.reset} />
+								<ForYouPanel
+									picks={loved.picks}
+									returnView={loved.returnView}
+									onOpenDetails={loved.saveForReturn}
+								/>
 							</Suspense>
 						) : null}
 					</Layer>

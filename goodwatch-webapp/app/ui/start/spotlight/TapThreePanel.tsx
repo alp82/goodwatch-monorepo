@@ -110,7 +110,10 @@ export function TapThreePanel({
 				</div>
 				{!longQueryPrototype || ready ? <Hearts loved={loved} /> : null}
 				{ready ? (
-					<SeeAll href={seeAllHref(query)} className="tap-see max-sm:hidden" />
+					<SeeAll
+						href={results.discoverHref ?? seeAllHref(query)}
+						className="tap-see max-sm:hidden"
+					/>
 				) : null}
 			</div>
 			<div className="tap-body">
@@ -158,7 +161,7 @@ export function TapThreePanel({
 						key={results.signature}
 						cards={results.cards}
 						loved={loved}
-						seeAll={seeAllHref(query)}
+						seeAll={results.discoverHref ?? seeAllHref(query)}
 					/>
 				)}
 			</div>

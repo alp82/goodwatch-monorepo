@@ -1,3 +1,5 @@
+import { peopleSearchFilters } from "./people-filter.server";
+import { withTitleScope } from "./search-filters";
 import { fetch } from "undici";
 import { withBackendTimeout } from "../../utils/backend-timeout.ts";
 import {
@@ -677,17 +679,16 @@ export async function combinedSearch(
 	};
 	// Names inside a longer phrase ("funny brad pitt movies") narrow the search to the titles of those people, ranked
 	// by the words left over ("funny movies"). From here on, q is the text that is searched.
-	const people = await readPeople(query, !options.allTitles).catch(
+	const explicitPeople = Boolean(eligibility.filters?.people?.length);
+	const inferredPeople = await readPeople(query, !options.allTitles && !explicitPeople).catch(
 		(): PeopleReading => ({ named: [], offered: [], scope: null }),
 	);
+	const people = explicitPeople ? { ...inferredPeople, scope: null } : inferredPeople;
 	lap("people");
 	const q = people.scope?.text ?? query;
-	const policy: Eligibility = people.scope
-		? {
-				...eligibility,
-				filters: { ...eligibility.filters, onlyTitles: people.scope.titles },
-			}
-		: eligibility;
+	const scopedFilters = withTitleScope(await peopleSearchFilters(eligibility.filters, signal), people.scope?.titles);
+	const policy: Eligibility = scopedFilters === eligibility.filters ? eligibility : { ...eligibility, filters: scopedFilters };
+
 	let titleSettled = false;
 	const titlePromise = titles(q, policy, signal)
 		.then(

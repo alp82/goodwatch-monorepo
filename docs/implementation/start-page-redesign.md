@@ -255,10 +255,22 @@ The open card for guests (`spotlight/SpotlightCard.tsx`):
   three hearts for the loved titles, and **See all**. The first loved dims the rest. Nothing found or an error says so
   in the panel with the way on (drop the moods, Retry, Surprise me). The guest's card wants 330, 380, 410 px (378 px
   on short desktops).
-- **For you:** the first recommendation with a backdrop, large on it (title, `ScoreRing`, "Because you loved A, B and
-  C", **Keep my taste** to `/sign-up`, Details), then "Also for you" (small posters; a tap features one) and **Start
-  over**. "Also for you" keeps whole posters per view by container queries (`poster-fit.ts`): 6 on phones, 3 at 768,
-  5 at 1024, 6 at 1440, 7 at 1920.
+- **For you:** recommendations form a horizontal accordion. Titles keep their original order;
+  clicking a poster expands that card in place and collapses the previous card. The open card
+  shows its backdrop, title, score, year/type, services and Details. Arrow keys, Home and End
+  move focus between poster buttons; Enter/Space opens one. Each expanded card shows a concise title fingerprint from snapshot scores;
+  actual personalized reason keys, when supplied, are labeled Why this fits instead.
+  Missing fingerprints use a plain explanation that the pick is based on the three loved titles.
+  The row scrolls to keep the active card visible and honors reduced motion. The active card fills the remaining row width.
+  **Change my picks** in the header returns to choosing three titles (saved ratings stay);
+  the duplicate Back and Start over controls are removed. A separate,
+  prominent account bar explains saving taste and loved titles, with **Create an account**
+  linking to `/sign-up`; the whole account bar is one clickable link. The card grows to fit the accordion and this action on phones.
+
+  Opening Details snapshots this browser-history entry's loved titles, recommendations,
+  expanded title and scroll positions. Back restores that exact recommendation session
+  without fetching a new set; new searches and Change my picks clear the saved return state.
+
 
 **Loved titles** (`useLovedThree`): tapping a poster saves it with `updateGuestInteraction(mediaType, tmdbId,
 "score", 9)` (owner, 2026-10-29: loved is a 9); undoing removes it. Fewer than three carry across searches. Once three are loved, any new choice (a

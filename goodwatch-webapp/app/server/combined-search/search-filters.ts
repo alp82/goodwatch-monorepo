@@ -9,6 +9,9 @@ export interface SearchFilters {
 	minYear?: number;
 	maxYear?: number;
 	streaming?: { country: string; providerIds: number[] };
+	// Discover's People selection: matches ANY selected person's cast or crew credits.
+	// The server resolves these IDs before retrieving/ranking candidates.
+	people?: number[];
 	// Only these titles ("movie:550"): the credits of the people a search names. Set by the server only;
 	// parseSearchFilters never reads it from a request.
 	onlyTitles?: string[];
@@ -30,6 +33,12 @@ export const parseSearchFilters = (input: unknown): SearchFilters => {
 	const filters: SearchFilters = {};
 	if (raw.type === "movie" || raw.type === "show") filters.type = raw.type;
 	if (raw.anime === "only" || raw.anime === "none") filters.anime = raw.anime;
+	if (Array.isArray(raw.people)) {
+		const people = [...new Set(raw.people.filter((id): id is number =>
+			typeof id === "number" && Number.isSafeInteger(id) && id > 0 && id < 1e9,
+		))].slice(0, 20);
+		if (people.length) filters.people = people;
+	}
 	if (Array.isArray(raw.genres)) {
 		const genres = [
 			...new Set(
@@ -75,12 +84,27 @@ export const searchFiltersKey = (filters: SearchFilters | undefined) => {
 	if (filters.genres?.length) parts.push(`g=${[...filters.genres].sort().join(",")}`);
 	if (filters.minYear !== undefined) parts.push(`min=${filters.minYear}`);
 	if (filters.maxYear !== undefined) parts.push(`max=${filters.maxYear}`);
+	if (filters.people?.length)
+		parts.push(`p=${[...new Set(filters.people)].sort((a, b) => a - b).join(",")}`);
 	if (filters.streaming?.providerIds.length)
 		parts.push(
 			`s=${filters.streaming.country}:${[...filters.streaming.providerIds].sort((a, b) => a - b).join(",")}`,
 		);
 	return parts.join(";");
 };
+
+/** Independent title restrictions combine as an intersection; [] means no eligible titles. */
+export function withTitleScope(
+	filters: SearchFilters | undefined,
+	titles: readonly string[] | undefined,
+): SearchFilters | undefined {
+	if (titles === undefined) return filters;
+	const permitted = filters?.onlyTitles === undefined ? null : new Set(filters.onlyTitles);
+	return {
+		...filters,
+		onlyTitles: [...new Set(titles)].filter(key => permitted === null || permitted.has(key)),
+	};
+}
 
 const yearRange = (filters: SearchFilters) =>
 	filters.minYear !== undefined || filters.maxYear !== undefined

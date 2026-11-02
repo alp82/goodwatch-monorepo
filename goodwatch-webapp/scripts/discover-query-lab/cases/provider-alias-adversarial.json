@@ -1,0 +1,115 @@
+[
+	{
+		"group": "Provider shorthand",
+		"query": "tom hanks disney",
+		"expect": { "people": "31", "services": "337" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "tom hanks disney+",
+		"expect": { "people": "31", "services": "337" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "tom hanks disney plus",
+		"expect": { "people": "31", "services": "337" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "tom hanks prime",
+		"expect": { "people": "31", "services": "9" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "tom hanks prime video",
+		"expect": { "people": "31", "services": "9" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "tom hanks amazon prime video",
+		"expect": { "people": "31", "services": "9" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "on Disney with Tom Hanks",
+		"expect": { "people": "31", "services": "337" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "on Prime with Tom Hanks",
+		"expect": { "people": "31", "services": "9" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "with Tom Hanks and prime",
+		"expect": { "people": "31", "services": "9" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "with Tom Hanks and disney",
+		"expect": { "people": "31", "services": "337" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "Disney or Prime",
+		"expect": { "services": "337,9" },
+		"residualEquals": "",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "no Disney",
+		"expect": {},
+		"residualEquals": "no Disney",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "without Prime",
+		"expect": {},
+		"residualEquals": "without Prime",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "\"Prime\"",
+		"expect": {},
+		"residualEquals": "\"Prime\"",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "\"Disney\"",
+		"expect": {},
+		"residualEquals": "\"Disney\"",
+		"exact": true
+	},
+	{
+		"group": "Provider shorthand",
+		"query": "tom hanks disney",
+		"existing": "services=all",
+		"expect": { "people": "31", "services": "all" },
+		"residualEquals": "",
+		"exact": true
+	}
+]
