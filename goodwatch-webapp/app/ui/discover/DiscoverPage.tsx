@@ -538,7 +538,8 @@ export function DiscoverPage({
 				</div>
 				{/* Mounted for all of search mode with one line of height: the grid doesn't move when the text comes and
 				    goes, and a screen reader hears each change. */}
-				{searching && (
+				{/* PROTOTYPE (discover-easy): no progress line (it opened a growing gap); only an error shows. */}
+				{searching && (!proto || search.error) && (
 					<div
 						role="status"
 						className="mt-1 flex min-h-5 flex-wrap items-center gap-3 text-sm text-gray-400 lg:mt-4"

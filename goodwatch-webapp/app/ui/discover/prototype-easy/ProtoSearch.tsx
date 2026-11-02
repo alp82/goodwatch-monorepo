@@ -11,7 +11,11 @@ const PAGE_KEYS = ["mode", "variant", "as"]
 const DROP_KEYS = ["q", "asked", "page", "allTitles", "sort", "layout"]
 
 /** Example searches for the field (round 10). */
-export type Examples = { how: "menu" | "placeholder"; list: readonly string[]; extra?: ReactNode }
+export type Examples = {
+	how: "menu" | "placeholder" | "chips" | "links" | "composer"
+	list: readonly string[]
+	extra?: ReactNode
+}
 
 /** The last interpretation per search text, so the readout can say which filters came from the words. */
 export const interpreted = new Map<string, { typed: string; result: DiscoverInterpretation }>()
@@ -96,6 +100,107 @@ export function ProtoSearch({
 		if (t) run(t)
 		else onClear()
 	}
+	const how = examples?.how
+	const composer = how === "composer"
+	const tall = how === "chips" || how === "links" || composer
+	const pick = (x: string) => {
+		setText(x)
+		run(x)
+	}
+	// Round 12: small example searches inside the bar, under the text (chips, links) or in its bottom toolbar (composer).
+	const tryRow = tall && examples && (
+		<div
+			className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none]"
+			style={{ maskImage: "linear-gradient(to right, black 92%, transparent)" }}
+		>
+			<span className="mr-1 shrink-0 text-[10px] font-bold tracking-[0.08em] text-gray-500 uppercase">Try</span>
+			{examples.list.map((x, i) =>
+				how === "links" ? (
+					<span key={x} className="flex shrink-0 items-center gap-1.5">
+						{i > 0 && <span className="text-gray-600">·</span>}
+						<button type="button" onClick={() => pick(x)} className="cursor-pointer text-[13px] text-gray-400 hover:text-white">
+							{x}
+						</button>
+					</span>
+				) : (
+					<button
+						key={x}
+						type="button"
+						onClick={() => pick(x)}
+						className="shrink-0 cursor-pointer rounded-full bg-white/[0.06] px-2.5 py-1 text-[12.5px] text-gray-300 ring-1 ring-white/[0.06] hover:bg-white/[0.12] hover:text-white"
+					>
+						{x}
+					</button>
+				),
+			)}
+			<span className="w-6 shrink-0" />
+		</div>
+	)
+	const clearButton = (text || query) && (
+		<button
+			type="button"
+			aria-label="Clear the search"
+			onClick={() => {
+				setText("")
+				onClear()
+			}}
+			className="mr-1 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-400 hover:bg-white/10 hover:text-white"
+		>
+			<XMarkIcon className="h-5 w-5" />
+		</button>
+	)
+	const submitButton = (
+		<button
+			type="submit"
+			disabled={busy}
+			className={`mr-2 shrink-0 cursor-pointer rounded-full bg-amber-400 font-bold text-gray-950 hover:bg-amber-300 disabled:opacity-70 ${
+				phone ? "flex h-10 w-10 items-center justify-center" : "px-5 py-3 text-[15px]"
+			}`}
+		>
+			{phone ? <ArrowRightIcon className="h-5 w-5" aria-label="Search" /> : busy ? "Reading…" : "Search"}
+		</button>
+	)
+	const placeholder = cycling
+		? `Try “${cycling}”`
+		: phone
+			? "Describe it: “cozy anime”"
+			: "Describe it: “Wednesday vibes, but darker”"
+	if (composer)
+		return (
+			<form
+				role="search"
+				onSubmit={(e) => {
+					e.preventDefault()
+					submit()
+				}}
+				className={`group relative bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition focus-within:bg-white/[0.07] focus-within:ring-2 focus-within:ring-amber-400/60 ${
+					phone ? "rounded-[22px] pl-4" : "rounded-[30px] pl-7"
+				}`}
+			>
+				<label className="flex cursor-text flex-col pt-4 pr-6">
+					<span className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-amber-300/90 uppercase">
+						<MagnifyingGlassIcon className="h-3.5 w-3.5" aria-hidden />
+						Search
+					</span>
+					<input
+						value={text}
+						onChange={(e) => setText(e.target.value)}
+						placeholder={placeholder}
+						aria-label="Search by mood, plot, or title"
+						className={`brand-header search-private mt-1 w-full min-w-0 bg-transparent leading-tight text-white placeholder:text-gray-500 focus:outline-none ${
+							phone ? "text-[20px]" : "text-[26px]"
+						}`}
+					/>
+				</label>
+				<div className={`flex items-center gap-2 ${phone ? "h-14" : "h-16"}`}>
+					{tryRow}
+					{clearButton}
+					{trail}
+					{submitButton}
+				</div>
+				{inside && <div className={`pb-3.5 ${phone ? "pr-4" : "pr-7"}`}>{inside}</div>}
+			</form>
+		)
 	return (
 		<form
 			role="search"
@@ -104,7 +209,7 @@ export function ProtoSearch({
 				submit()
 			}}
 			className={`group relative bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition focus-within:bg-white/[0.07] focus-within:ring-2 focus-within:ring-amber-400/60 ${
-				phone ? "rounded-[22px] pl-4" : inside ? "rounded-[32px] pl-7" : "rounded-full pl-7"
+				phone ? "rounded-[22px] pl-4" : inside || tall ? "rounded-[32px] pl-7" : "rounded-full pl-7"
 			}`}
 		>
 			<div className={`flex items-center ${phone ? "h-[62px]" : "h-[76px]"}`}>
@@ -117,7 +222,7 @@ export function ProtoSearch({
 				<input
 					value={text}
 					onChange={(e) => setText(e.target.value)}
-					placeholder={cycling ? `Try “${cycling}”` : phone ? "Describe it: “cozy anime”" : "Describe it: “Wednesday vibes, but darker”"}
+					placeholder={placeholder}
 					onFocus={() => setFocused(true)}
 					onBlur={() => setTimeout(() => setFocused(false), 150)}
 					aria-label="Search by mood, plot, or title"
@@ -126,31 +231,12 @@ export function ProtoSearch({
 					}`}
 				/>
 			</label>
-			{(text || query) && (
-				<button
-					type="button"
-					aria-label="Clear the search"
-					onClick={() => {
-						setText("")
-						onClear()
-					}}
-					className="mr-1 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-400 hover:bg-white/10 hover:text-white"
-				>
-					<XMarkIcon className="h-5 w-5" />
-				</button>
-			)}
+			{clearButton}
 			{trail}
-			<button
-				type="submit"
-				disabled={busy}
-				className={`mr-2 shrink-0 cursor-pointer rounded-full bg-amber-400 font-bold text-gray-950 hover:bg-amber-300 disabled:opacity-70 ${
-					phone ? "flex h-10 w-10 items-center justify-center" : "px-5 py-3 text-[15px]"
-				}`}
-			>
-				{phone ? <ArrowRightIcon className="h-5 w-5" aria-label="Search" /> : busy ? "Reading…" : "Search"}
-			</button>
+			{submitButton}
 			{side}
 			</div>
+			{tall && <div className={`-mt-1 flex pb-3.5 ${phone ? "pr-2" : "pr-6"}`}>{tryRow}</div>}
 			{examples?.how === "menu" && focused && !text && (
 				<div className="absolute top-full right-0 left-0 z-40 mt-2 rounded-[22px] bg-gray-900 p-3 shadow-2xl shadow-black/70 ring-1 ring-white/10">
 					<p className="px-2 pb-1.5 text-[10px] font-bold tracking-[0.08em] text-gray-500 uppercase">Try</p>
