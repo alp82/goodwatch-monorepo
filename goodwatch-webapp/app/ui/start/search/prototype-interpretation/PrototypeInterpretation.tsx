@@ -1,195 +1,19 @@
 // THROWAWAY UI question: three structurally different interpretation readouts
-// on the real start page, switchable by ?variant=A|B|C. No saved state/mutations.
+// on the real start page, switchable by ?variant=B1|B2|B3. No saved state/mutations.
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { useSearchParams } from "@remix-run/react"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
-import { catalog, examples, tokens, type Token } from "./data"
+import { catalog, examples, denseExample, tokens, type Token } from "./data"
+import { SoftChips, ColorNotes, TwoDirections } from "./GroupedStyles"
 import "./prototype.css"
 
 const names: Record<string, string> = {
-	A: "Typed chips",
-	B: "Grouped readout",
-	C: "Expandable summary",
-}
-const filterIcon = (
-	<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
-		<path
-			d="M2 4h12M2 8h12M2 12h12M5 2v4M11 6v4M7 10v4"
-			stroke="currentColor"
-			strokeWidth="1.6"
-			strokeLinecap="round"
-		/>
-	</svg>
-)
-const fingerprintIcon = (
-	<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
-		<path
-			d="M3 11V8a5 5 0 0110 0v3M5 13V8a3 3 0 016 0v5M7 14V8a1 1 0 012 0v6M1 7a7 7 0 0114 0"
-			stroke="currentColor"
-			strokeWidth="1.3"
-			strokeLinecap="round"
-		/>
-	</svg>
-)
-function Capsule({
-	token,
-	onClick,
-}: { token: Token; onClick?: (t: Token) => void }) {
-	return (
-		<button
-			type="button"
-			className={`ir-chip ir-${token.kind} ${token.avoid ? "ir-avoid" : ""}`}
-			onClick={() => onClick?.(token)}
-			title={
-				token.note ??
-				`${token.kind === "filter" ? "Applied filter" : "Fingerprint reading"}: ${token.field} ${token.value}`
-			}
-		>
-			{token.kind === "filter" ? (
-				filterIcon
-			) : token.kind === "fingerprint" ? (
-				fingerprintIcon
-			) : (
-				<span>⌕</span>
-			)}
-			{token.kind === "filter" && <span className="ir-key">{token.field}</span>}
-			<strong>{token.value}</strong>
-			{token.assumed && (
-				<span className="ir-assumption" aria-label="Assumed">
-					≈
-				</span>
-			)}
-		</button>
-	)
-}
-export function VariantA({
-	items,
-	open,
-}: { items: Token[]; open: (t: Token) => void }) {
-	return (
-		<div className="ir-variant-a">
-			<span className="ir-lead">Understood</span>
-			<div className="ir-chip-line">
-				{items.map((t, i) => (
-					<Capsule key={i} token={t} onClick={open} />
-				))}
-			</div>
-		</div>
-	)
-}
-export function VariantB({
-	items,
-	open,
-}: { items: Token[]; open: (t: Token) => void }) {
-	const groups = [
-		["Filters", "filter"],
-		["Fingerprint", "fingerprint"],
-		["Search text", "text"],
-	]
-	return (
-		<div className="ir-variant-b">
-			{groups.map(([label, kind]) => {
-				const row = items.filter((t) => t.kind === kind)
-				if (!row.length) return null
-				return (
-					<div className="ir-reading-row" key={kind}>
-						<span className="ir-row-label">
-							{kind === "filter"
-								? filterIcon
-								: kind === "fingerprint"
-									? fingerprintIcon
-									: null}
-							{label}
-						</span>
-						<div className="ir-plain-values">
-							{row.map((t, i) => (
-								<button
-									type="button"
-									className={`ir-plain ir-${t.kind} ${t.avoid ? "ir-avoid" : ""}`}
-									key={i}
-									onClick={() => open(t)}
-								>
-									<span>{t.kind === "filter" ? t.field : ""}</span>{" "}
-									<strong>{t.value}</strong>
-									{t.assumed && <span className="ir-assumption">≈</span>}
-								</button>
-							))}
-						</div>
-					</div>
-				)
-			})}
-		</div>
-	)
-}
-export function VariantC({
-	items,
-	open,
-	expandedByDefault = false,
-}: { items: Token[]; open: (t: Token) => void; expandedByDefault?: boolean }) {
-	const [expanded, setExpanded] = useState(expandedByDefault)
-	const f = items.filter((t) => t.kind === "filter"),
-		s = items.filter((t) => t.kind === "fingerprint"),
-		q = items.find((t) => t.kind === "text")
-	return (
-		<div className="ir-variant-c">
-			<button
-				type="button"
-				className="ir-summary"
-				onClick={() => setExpanded(!expanded)}
-				aria-expanded={expanded}
-			>
-				{filterIcon}
-				<strong>
-					{f.length ? `${f.length} filters applied` : "No filters"}
-				</strong>
-				{s.length > 0 && <span> + {s.length} fingerprint qualities</span>}
-				{q && <span> · Search “{q.value}”</span>}
-				<span className="ir-summary-more">
-					{expanded ? "Hide details ↑" : "Show interpretation ↓"}
-				</span>
-			</button>
-			{expanded && (
-				<div className="ir-summary-panel">
-					{items.map((t, i) => (
-						<button
-							type="button"
-							className="ir-receipt-row"
-							key={i}
-							onClick={() => open(t)}
-						>
-							<span>
-								{t.kind === "filter"
-									? filterIcon
-									: t.kind === "fingerprint"
-										? fingerprintIcon
-										: "⌕"}{" "}
-								{t.kind === "filter"
-									? t.field
-									: t.kind === "fingerprint"
-										? "Fingerprint"
-										: "Search text"}
-							</span>
-							<strong>
-								{t.value}
-								{t.assumed ? " ≈" : ""}
-							</strong>
-							<small>
-								{t.note ??
-									(t.kind === "filter"
-										? "Applied constraint"
-										: t.kind === "fingerprint"
-											? "Soft preference"
-											: "Literal query")}
-							</small>
-						</button>
-					))}
-				</div>
-			)}
-		</div>
-	)
+	B1: "Soft color chips",
+	B2: "Color notes",
+	B3: "Two directions",
 }
 export default function PrototypeInterpretation({
 	query,
@@ -203,7 +27,15 @@ export default function PrototypeInterpretation({
 	const [params, setParams] = useSearchParams()
 	const [mounted, setMounted] = useState(false)
 	useEffect(() => setMounted(true), [])
-	const variant = params.get("variant") ?? "A"
+	const rawVariant = params.get("variant") ?? "B1"
+	const variant =
+		({ A: "B1", B: "B1", C: "B3" } as Record<string, string>)[rawVariant] ??
+		rawVariant
+	const dense = query === denseExample.query
+	useEffect(() => {
+		if (params.get("example") === "dense" && !params.has("q"))
+			onExample(denseExample.query)
+	}, [])
 	const [gallery, setGallery] = useState(false),
 		[inspect, setInspect] = useState(false),
 		[selected, setSelected] = useState<Token | null>(null),
@@ -217,7 +49,7 @@ export default function PrototypeInterpretation({
 		labels: string[]
 	}>({
 		queryKey: ["prototype-interpretation", query],
-		enabled: query.length > 1,
+		enabled: query.length > 1 && !dense,
 		queryFn: async ({ signal }) => {
 			const existing = new URLSearchParams(params)
 			existing.delete("q")
@@ -234,15 +66,19 @@ export default function PrototypeInterpretation({
 		retry: false,
 	})
 	const fallback =
-		query && query.toLowerCase() !== example.query.toLowerCase()
+		!query || query.toLowerCase() !== example.query.toLowerCase()
 			? { filters: {}, residual: query, fingerprint: [] }
 			: example
-	const fields = result.data
-		? Object.fromEntries(new URLSearchParams(result.data.params))
-		: fallback.filters
-	const remaining = result.data?.residual ?? fallback.residual ?? ""
+	const fields = dense
+		? denseExample.filters
+		: result.data
+			? Object.fromEntries(new URLSearchParams(result.data.params))
+			: fallback.filters
+	const remaining = dense
+		? ""
+		: (result.data?.residual ?? fallback.residual ?? "")
 	const filterTokens = tokens(fields, query)
-	const actual = (reading ?? []).filter(
+	const actual = (dense ? [] : (reading ?? [])).filter(
 		(t) => (t.kind === "want" || t.kind === "avoid") && t.key,
 	)
 	const fingerprint: Token[] = actual.length
@@ -284,9 +120,11 @@ export default function PrototypeInterpretation({
 	const state = {
 		variant,
 		query,
-		source: result.data
-			? "Live interpretation + available fingerprint read"
-			: "Review fixture",
+		source: dense
+			? "Dense review fixture"
+			: result.data
+				? "Live interpretation + available fingerprint read"
+				: "Review fixture",
 		filters: fields,
 		remaining,
 		fingerprint,
@@ -296,7 +134,7 @@ export default function PrototypeInterpretation({
 		display: items,
 	}
 	function cycle(step: number) {
-		const keys = ["A", "B", "C"]
+		const keys = ["B1", "B2", "B3"]
 		const next = new URLSearchParams(params)
 		next.set("variant", keys[(keys.indexOf(variant) + step + 3) % 3])
 		setParams(next, { replace: true, preventScrollReset: true })
@@ -318,7 +156,7 @@ export default function PrototypeInterpretation({
 		setInspect(true)
 	}
 	const Component =
-		variant === "B" ? VariantB : variant === "C" ? VariantC : VariantA
+		variant === "B2" ? ColorNotes : variant === "B3" ? TwoDirections : SoftChips
 	const portaled = !mounted
 		? null
 		: createPortal(
@@ -390,7 +228,11 @@ export default function PrototypeInterpretation({
 							{selected && (
 								<p>
 									{selected.note ??
-										"The displayed value is the interpreted filter, not the original search phrase."}
+										(selected.kind === "fingerprint"
+											? selected.avoid
+												? "An avoided fingerprint preference, not a verified hard exclusion."
+												: "A soft fingerprint preference used in ranking."
+											: "The displayed value is the interpreted filter, not the original search phrase.")}
 									{selected.assumed ? " This involves an assumption." : ""}
 								</p>
 							)}
@@ -461,15 +303,7 @@ export default function PrototypeInterpretation({
 													<p>“{c.query}”</p>
 												</div>
 												<div>
-													{variant === "C" ? (
-														<VariantC
-															items={ts}
-															open={open}
-															expandedByDefault
-														/>
-													) : (
-														<Component items={ts} open={open} />
-													)}
+													<Component items={ts} open={open} />
 												</div>
 											</div>
 										)
@@ -486,6 +320,15 @@ export default function PrototypeInterpretation({
 			)
 	return (
 		<div className="ir-prototype ir-inline">
+			{dense && (
+				<div className="ir-density-note">
+					Density example{" "}
+					<span>
+						{filterTokens.length} filters · {fingerprint.length} fingerprint
+						qualities
+					</span>
+				</div>
+			)}
 			<Component items={items} open={open} />
 			{portaled}
 		</div>

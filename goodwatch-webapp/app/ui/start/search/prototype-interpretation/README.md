@@ -4,9 +4,9 @@ Question: how should a person distinguish applied Discover filters, fingerprint
 preferences, remaining search text and assumptions without reading the original
 query back as a row of ambiguous chips?
 
-Three structurally different variants run on the current start page, with its
+Three variants of the grouped B direction run on the current start page, with its
 existing query, auth and results. The component is lazy-loaded behind a DEV-only
-`?variant=A|B|C` gate. It saves nothing.
+`?variant=B1|B2|B3` gate. It saves nothing.
 
 With the project's normal local development environment, run:
 
@@ -16,13 +16,22 @@ npm run dev -- --host 127.0.0.1 --port 3003
 
 Open:
 
-- A: <http://127.0.0.1:3003/?variant=A&q=low+budget+scary+dark>
-- B: <http://127.0.0.1:3003/?variant=B&q=low+budget+scary+dark>
-- C: <http://127.0.0.1:3003/?variant=C&q=low+budget+scary+dark>
+- B1, soft color chips: <http://127.0.0.1:3003/?variant=B1&example=dense>
+- B2, colored dots and underlines: <http://127.0.0.1:3003/?variant=B2&example=dense>
+- B3, separate Lean toward / Avoid groups: <http://127.0.0.1:3003/?variant=B3&example=dense>
 
-A uses typed constraint capsules and different fingerprint/text shapes.
-B separates filters, fingerprint and search text into labelled rows.
-C starts as a compact summary and expands into a receipt of interpreted values.
+The user preferred B's grouped hierarchy. This round restores the existing
+fingerprint dimension colors, softened with muted backgrounds and text mixing.
+Negation has a minus marker and strike-through; B1 and B2 additionally say Not,
+while B3 separates avoided qualities under its own heading.
+
+The dense review fixture contains 17 filters and 16 fingerprint qualities,
+including four avoided qualities. It is deliberately illustrative: it tests
+wrapping and hierarchy rather than parser accuracy or recommendation quality.
+The readout labels it Density example and State exposes the fixture source.
+On small screens the crowded readout scrolls within the search panel.
+Legacy A and B links map to B1; C maps to B3. The original round is captured in
+commit 7ec33acc5.
 
 The floating bar changes the variant (or use left/right arrow keys outside fields),
 selects example phrases, opens the searchable 58-example catalog of every current
@@ -43,7 +52,7 @@ Directions already established by the user's request:
   explicit requests. Assumptions such as a guessed audience age or the direction
   of controversial ratings are marked with ≈ and explained on inspection.
 
-Verdict: awaiting the user's visual review. No variant has been selected or
-promoted. Rewrite the selected design as production code; remove the DEV gate and
+Verdict: B's grouped hierarchy has potential per user feedback. Awaiting choice
+among its color/negation treatments; no production design has been promoted. Rewrite the selected design as production code; remove the DEV gate and
 losing variations from main after selection. The prototype's capture branch is
 `prototype/search-interpretation-ui`, with context in issue #726.

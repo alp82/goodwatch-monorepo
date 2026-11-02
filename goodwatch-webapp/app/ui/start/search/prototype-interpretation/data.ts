@@ -15,7 +15,49 @@ export type Example = {
 	residual?: string
 	note?: string
 }
+export const denseExample: Example = {
+	name: "Lots at once · 17 filters + 16 qualities",
+	query:
+		"scary dark funny Japanese animated movies from the 90s under 2 hours Netflix or Prime IMDb 7+ Letterboxd 3.5+ budget under $20m at least 10k ratings top 1000 for my kids no drugs no sex similar to The Matrix",
+	filters: {
+		type: "movie",
+		styles: "animated",
+		moods: "scary,dark,funny",
+		productionCountries: "JP",
+		years: "1990-1999",
+		runtime: "-119",
+		services: "8,9",
+		sources: "imdb:70,letterboxd:70",
+		budget: "-19.999",
+		votes: "10000-",
+		rank: "-1000",
+		age: "12",
+		hide: "drugs,sex",
+		similar: "1000000000603",
+		unseen: "1",
+	},
+	fingerprint: [
+		"Scare",
+		"Tension",
+		"Bleakness",
+		"Uncanny",
+		"Dark Humor",
+		"Wit & Wordplay",
+		"Nostalgia",
+		"Wonder",
+		"Visual Stylization",
+		"Slow Burn",
+		"Adrenaline",
+		"Satire & Parody",
+		"Avoid Wholesome",
+		"Avoid Hopefulness",
+		"Avoid Violence",
+		"Avoid Eroticism",
+	],
+	note: "Deliberately dense review fixture. This tests the readout's hierarchy and wrapping, not recommendation quality.",
+}
 export const examples: Example[] = [
+	denseExample,
 	{
 		name: "Seasons + decade",
 		query: "7+ seasons from the 90s",

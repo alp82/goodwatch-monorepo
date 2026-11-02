@@ -79,7 +79,9 @@ export function StartSearchBar({
 	)
 	const prototypeVariant =
 		ReadPrototype &&
-		["A", "B", "C"].includes(prototypeParams.get("variant") ?? "")
+		["A", "B", "C", "B1", "B2", "B3"].includes(
+			prototypeParams.get("variant") ?? "",
+		)
 	const input = useRef<HTMLInputElement>(null)
 	const latest = useRef({ query, search, clearSearch })
 	latest.current = { query, search, clearSearch }
