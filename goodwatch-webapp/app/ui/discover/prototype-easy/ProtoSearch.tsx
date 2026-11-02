@@ -3,7 +3,7 @@
 // the search text (q), so Advanced shows the same filters as controls.
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { useNavigate } from "@remix-run/react"
-import { useEffect, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import type { DiscoverInterpretation } from "~/server/discover-query.server"
 
 /** URL keys that aren't filters: kept through a search, left out of what the interpreter reads. */
@@ -52,10 +52,13 @@ export function ProtoSearch({
 	query,
 	onClear,
 	phone,
+	inside,
 }: {
 	query: string | null
 	onClear: () => void
 	phone: boolean
+	/** A line under the text, inside the field; the text line itself never moves. */
+	inside?: ReactNode
 }) {
 	const { run, busy } = useInterpretedSearch()
 	// The field shows what was typed, not only the part left as search text.
@@ -74,10 +77,11 @@ export function ProtoSearch({
 				e.preventDefault()
 				submit()
 			}}
-			className={`group relative flex items-center bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition focus-within:bg-white/[0.07] focus-within:ring-2 focus-within:ring-amber-400/60 ${
-				phone ? "h-[62px] rounded-[22px] pl-4" : "h-[76px] rounded-full pl-7"
+			className={`group relative bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition focus-within:bg-white/[0.07] focus-within:ring-2 focus-within:ring-amber-400/60 ${
+				phone ? "rounded-[22px] pl-4" : inside ? "rounded-[38px] pl-7" : "rounded-full pl-7"
 			}`}
 		>
+			<div className={`flex items-center ${phone ? "h-[62px]" : "h-[76px]"}`}>
 			<label className="flex min-w-0 flex-1 cursor-text flex-col justify-center">
 				<span className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-amber-300/90 uppercase">
 					<MagnifyingGlassIcon className="h-3.5 w-3.5" aria-hidden />
@@ -115,6 +119,8 @@ export function ProtoSearch({
 			>
 				{busy ? "Reading…" : "Search"}
 			</button>
+			</div>
+			{inside && <div className={`-mt-2 pb-3.5 ${phone ? "pr-4" : "pr-7"}`}>{inside}</div>}
 		</form>
 	)
 }

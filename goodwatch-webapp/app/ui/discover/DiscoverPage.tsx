@@ -92,6 +92,7 @@ export interface DiscoverPageProps {
 		setMode: (mode: "easy" | "advanced") => void
 		modeSwitch: ReactNode
 		easy?: (ctx: EasyContext & EasyApi) => ReactNode
+		inside?: (ctx: EasyContext & EasyApi) => ReactNode
 	}
 }
 
@@ -471,6 +472,16 @@ export function DiscoverPage({
 		return `${pathname}?${next}`
 	}, [pathname, locationSearch])
 
+	// PROTOTYPE (discover-easy): what an easy variant reads.
+	const easyCtx = (api: EasyApi) => ({
+		...api,
+		filters,
+		q,
+		onSearch,
+		clearSearch,
+		total: first && answered && !stale ? first.total : null,
+		member,
+	})
 	return (
 		<MotionConfig reducedMotion="user">
 			<div className="mx-auto max-w-7xl px-4 pt-5 lg:pt-8">
@@ -478,27 +489,17 @@ export function DiscoverPage({
 				<div onPointerEnter={warm} onTouchStart={warm} onFocus={warm}>
 					<DiscoverControls
 						heading={
-							<div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-								<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
-									Discover movies and shows
-								</h1>
-								{proto?.modeSwitch}
-							</div>
+							<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
+								{proto ? "Discover" : "Discover movies and shows"}
+							</h1>
 						}
 						proto={
 							proto && {
 								mode: proto.mode,
 								setMode: proto.setMode,
-								renderEasy: (api) =>
-									proto.easy?.({
-										...api,
-										filters,
-										q,
-										onSearch,
-										clearSearch,
-										total: first && answered && !stale ? first.total : null,
-										member,
-									}),
+								modeTabs: proto.modeSwitch,
+								renderInside: proto.inside && ((api) => proto.inside?.(easyCtx(api))),
+								renderEasy: (api) => proto.easy?.(easyCtx(api)),
 							}
 						}
 						className="mt-3 lg:mt-5"

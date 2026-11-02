@@ -101,26 +101,24 @@ export function useMode() {
 	return { mode, setMode }
 }
 
-export function ModeSwitch({ className = "" }: { className?: string }) {
+/** Easy | Advanced as small tabs on top of the search field, left-aligned with it. */
+export function ModeSwitch() {
 	const { mode, setMode } = useMode()
 	return (
-		<div
-			role="radiogroup"
-			aria-label="Discover mode"
-			className={`inline-flex rounded-full bg-gray-900 p-1 ring-1 ring-white/10 ${className}`}
-		>
+		<div role="tablist" aria-label="Discover mode" className="mb-2 flex gap-5 pl-5 lg:pl-7">
 			{(["easy", "advanced"] as const).map((m) => (
 				<button
 					key={m}
 					type="button"
-					role="radio"
-					aria-checked={mode === m}
+					role="tab"
+					aria-selected={mode === m}
 					onClick={() => setMode(m)}
-					className={`cursor-pointer rounded-full px-2.5 py-1 text-xs font-semibold transition lg:px-3.5 lg:py-1.5 lg:text-sm ${
-						mode === m ? "bg-white text-gray-950" : "text-gray-300 hover:text-white"
+					className={`relative cursor-pointer pb-1.5 text-[13px] font-semibold transition ${
+						mode === m ? "text-white" : "text-gray-500 hover:text-gray-300"
 					}`}
 				>
 					{m === "easy" ? "Easy" : "Advanced"}
+					{mode === m && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-amber-400" />}
 				</button>
 			))}
 		</div>

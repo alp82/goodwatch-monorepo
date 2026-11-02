@@ -24,11 +24,20 @@ export function PrototypeSwitcher({ variants }: { variants: { key: string; name:
 	})
 	if (process.env.NODE_ENV === "production") return null
 	const v = variants[index]
+	const member = params.get("as") === "member"
+	const toggleMember = () => {
+		const out = new URLSearchParams(params)
+		member ? out.delete("as") : out.set("as", "member")
+		window.location.search = `?${out}`
+	}
 	return (
 		<div className="fixed bottom-4 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-1 rounded-full bg-fuchsia-600 p-1 text-sm font-bold text-white shadow-2xl shadow-black/60">
 			<button type="button" onClick={() => go(-1)} className="cursor-pointer rounded-full px-3 py-1.5 hover:bg-white/20" aria-label="Previous variant">←</button>
 			<span className="min-w-44 text-center">{v.key} · {v.name}</span>
 			<button type="button" onClick={() => go(1)} className="cursor-pointer rounded-full px-3 py-1.5 hover:bg-white/20" aria-label="Next variant">→</button>
+			<button type="button" onClick={toggleMember} className="ml-1 cursor-pointer rounded-full bg-white/20 px-3 py-1.5 hover:bg-white/30" title="Reloads the page">
+				{member ? "Member" : "Guest"}
+			</button>
 		</div>
 	)
 }

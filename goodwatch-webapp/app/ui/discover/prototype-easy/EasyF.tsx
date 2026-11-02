@@ -1,0 +1,25 @@
+// PROTOTYPE (discover-easy) round 4 F "In the field": the reading sits inside the search box on a second line under
+// the typed text (the text line stays where it is); nothing between the box and Ready.
+import { FilterList, FingerprintList, qualitiesOf } from "./reading"
+import type { Easy } from "./bits"
+
+export const name = "In the field"
+
+export function EasyFInside({ e }: { e: Easy }) {
+	const filters = e.chips.filter((c) => c.kind !== "query")
+	if (!qualitiesOf(e.reading).length && !filters.length) return null
+	return (
+		<div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-white/[0.07] pt-2.5">
+			<FingerprintList reading={e.reading} />
+			{qualitiesOf(e.reading).length > 0 && filters.length > 0 && <span className="hidden h-3.5 w-px bg-white/10 lg:block" />}
+			<FilterList chips={e.chips} onOpen={e.open} onRemove={e.remove} />
+			<button type="button" onClick={e.customize} className="cursor-pointer text-[12px] font-semibold text-amber-400 hover:text-amber-300">
+				More filters
+			</button>
+		</div>
+	)
+}
+
+export function EasyF({ e }: { e: Easy }) {
+	return <div className="mt-3 flex">{e.ready}</div>
+}

@@ -161,6 +161,9 @@ export interface DiscoverControlsProps {
 		mode: "easy" | "advanced"
 		setMode: (mode: "easy" | "advanced") => void
 		renderEasy?: (api: EasyApi) => ReactNode
+		/** A line inside the search field, under the text (easy variants only). */
+		renderInside?: (api: EasyApi) => ReactNode
+		modeTabs: ReactNode
 	}
 }
 
@@ -389,6 +392,22 @@ function DiscoverControlsContent({
 		findButton.current?.focus({ preventScroll: true })
 	}
 
+	// PROTOTYPE (discover-easy): what the easy content reads. In easy mode anything that opens a panel goes to Advanced.
+	const toAdvanced = (tab: MainTab, sub?: SubTabId) => {
+		proto?.setMode("advanced")
+		openTab(tab, sub)
+	}
+	const easyApi: EasyApi = {
+		query,
+		reading,
+		chips: data.chips,
+		remove: (chip) => (chip.remove ? filters.update(chip.remove) : onClearSearch()),
+		open: (chip) => (chip.opens ? toAdvanced(tabOfSubTab(chip.opens), chip.opens) : proto?.setMode("advanced")),
+		customize: () => toAdvanced("mood"),
+		clearSearch: onClearSearch,
+		ready: <ReadyToWatch ready={{ ...ready, open: toAdvanced }} size={1} />,
+		phone: !desktop,
+	}
 	// PROTOTYPE (discover-easy): with the shared search on top, the bar's Search segment holds titles and people only.
 	const like = data.chips.filter((c) => c.kind === "steer" || c.kind === "person")
 	const barValues = proto
@@ -439,36 +458,27 @@ function DiscoverControlsContent({
 				</div>
 			)}
 			<div className={className}>
-				{proto && proto.mode === "easy" &&
-					proto.renderEasy?.({
-						query,
-						reading,
-						chips: data.chips,
-						remove: (chip) => (chip.remove ? filters.update(chip.remove) : onClearSearch()),
-						open: (chip) => {
-							proto.setMode("advanced")
-							if (chip.opens) openTab(tabOfSubTab(chip.opens), chip.opens)
-						},
-						customize: () => {
-							proto.setMode("advanced")
-							openTab("mood")
-						},
-						clearSearch: onClearSearch,
-						ready: <ReadyToWatch ready={ready} size={1} />,
-						phone: !desktop,
-					})}
-				{proto && proto.mode === "advanced" && (
+				{proto && (
 					<>
-						<ProtoSearch query={query} onClear={onClearSearch} phone={!desktop} />
-						<Readout
+						{proto.modeTabs}
+						<ProtoSearch
 							query={query}
-							reading={reading}
-							chips={data.chips}
-							easy={false}
-							onRemove={(chip) => (chip.remove ? filters.update(chip.remove) : onClearSearch())}
-							onOpen={(chip) => chip.opens && openTab(tabOfSubTab(chip.opens), chip.opens)}
-							onCustomize={() => openTab("mood")}
+							onClear={onClearSearch}
+							phone={!desktop}
+							inside={proto.mode === "easy" ? proto.renderInside?.(easyApi) : undefined}
 						/>
+						{proto.mode === "easy" ? (
+							proto.renderEasy?.(easyApi)
+						) : (
+							<Readout
+								query={query}
+								reading={reading}
+								chips={data.chips}
+								onRemove={easyApi.remove}
+								onOpen={(chip) => chip.opens && openTab(tabOfSubTab(chip.opens), chip.opens)}
+								onCustomize={() => openTab("mood")}
+							/>
+						)}
 					</>
 				)}
 				{(!proto || proto.mode === "advanced") && (<div className={proto ? "mt-3" : ""}>
