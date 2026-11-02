@@ -1,5 +1,5 @@
 // PROTOTYPE (discover-field): five looks for Discover's search field, chosen by ?variant= (see prototype-field-switcher).
-// Round 2: the text is always left-aligned and vertically centered; the looks differ in how the examples sit below it.
+// Round 3: the text is left-aligned and the examples always sit inside the field; the looks differ in how they sit there.
 // Easy never shows the Search label; Advanced shows it once there is text. Examples under the field hide in Advanced,
 // where the filter bar continues the field. Ready to watch stays inside the field on desktop.
 import {
@@ -128,8 +128,10 @@ export function DescribeField({
 	}
 
 	const centered = false
-	const twoLines = look === "B"
-	const below = look === "A" || look === "C" || look === "D"
+	const twoLines = look !== "E"
+	const inline = look === "B"
+	const pills = look === "C"
+	const below = false
 	const decks = look === "E"
 	const label = advanced && filled
 
@@ -147,7 +149,11 @@ export function DescribeField({
 	const lift = label
 		? "translate-y-2"
 		: twoLines && !filled
-			? "-translate-y-[13px]"
+			? pills
+				? "-translate-y-[19px]"
+				: inline
+					? "-translate-y-[13px] xl:translate-y-0"
+					: "-translate-y-[13px]"
 			: "translate-y-0"
 
 	const search = (
@@ -185,7 +191,11 @@ export function DescribeField({
 							decks
 								? "min-h-[66px] lg:min-h-[76px]"
 								: twoLines
-									? "min-h-[92px] lg:min-h-[108px]"
+									? pills
+										? "min-h-[104px] lg:min-h-[120px]"
+										: inline
+											? "min-h-[92px] lg:min-h-[108px] xl:min-h-[88px]"
+											: "min-h-[92px] lg:min-h-[108px]"
 									: "min-h-[70px] lg:min-h-[88px]"
 						}`}
 						style={
@@ -215,7 +225,21 @@ export function DescribeField({
 						/>
 						{twoLines && (
 							<div
-								className={`absolute inset-x-0 bottom-3 transition-opacity duration-150 lg:bottom-4 ${filled ? "pointer-events-none opacity-0" : "opacity-100"}`}
+								className={`absolute inset-x-0 bottom-3 transition-opacity duration-150 lg:bottom-4 ${inline ? "xl:hidden" : ""} ${filled ? "pointer-events-none opacity-0" : "opacity-100"}`}
+								{...(filled ? { inert: "" } : {})}
+							>
+								{look === "C" ? (
+									<TryPills run={run} />
+								) : look === "D" ? (
+									<TryOne run={run} />
+								) : (
+									<TryLinks run={run} />
+								)}
+							</div>
+						)}
+						{inline && (
+							<div
+								className={`absolute top-1/2 right-4 hidden -translate-y-1/2 transition-opacity duration-150 xl:block ${filled ? "pointer-events-none opacity-0" : "opacity-100"}`}
 								{...(filled ? { inert: "" } : {})}
 							>
 								<TryLinks run={run} />
