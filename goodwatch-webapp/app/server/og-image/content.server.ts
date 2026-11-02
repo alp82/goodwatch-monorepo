@@ -380,12 +380,36 @@ const toPoster = ({
 	score,
 })
 
-async function discoverCardContent(): Promise<OgContent> {
-	const posters = await scoredPosters()
+// The answer to the card's search (DISCOVERY_COPY.discover.search) from the live search on November 2, 2026, its
+// less known titles left out. Fixed, since a search costs money and a card is drawn without a visitor asking for one.
+const DISCOVER_SEARCH_POSTERS = [
+	"/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg", // Game of Thrones
+	"/yaGt4GIutpbXHsv48tWceWg6s56.jpg", // Avatar: The Last Airbender
+	"/zjQTSYZEmy0GVnK1aFLvNiAwluo.jpg", // The Legend of Vox Machina
+	"/m3ru6JG7qQ8nZQiZeviYZWPjsl.jpg", // Masters of the Universe: Revolution
+	"/bMXWXKM9ydUmMTNvDnYo9QtCBRt.jpg", // The Lord of the Rings: The Rings of Power
+	"/7V0Ebks0GgpKvQ7QbLAIdX5dos4.jpg", // House of the Dragon
+	"/k8yARbD9iYn2nRX2HvsopfKDN2r.jpg", // A Knight of the Seven Kingdoms
+	"/g6tIKGc3f1H5QMz1dcgCwADKpZ7.jpg", // His Dark Materials
+	"/ihBi24EIr5kwAeY2PqmsgAcCj4n.jpg", // The Wheel of Time
+	"/gxTojpKEOtue85EEFlozwRbDXwJ.jpg", // The Seven Deadly Sins
+	"/d7PIRa6ez7ZEl9D4JUrnSsmcnVD.jpg", // The Dragon Prince
+	"/qJTZanXDiJKABLNGRM9LmSg8YT7.jpg", // The Mighty Nein
+]
+
+function discoverCardContent(): OgContent {
 	return {
 		kind: "discovery",
 		feature: "discover",
-		groups: [{ label: "", posters: posters.slice(0, 12).map(toPoster) }],
+		groups: [
+			{
+				label: "",
+				posters: DISCOVER_SEARCH_POSTERS.map((path) => ({
+					src: tmdbImage("w342", path),
+					score: null,
+				})),
+			},
+		],
 	}
 }
 

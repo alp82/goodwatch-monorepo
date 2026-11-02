@@ -204,9 +204,9 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 // /discover and /map: headline lines are set as written, one per line.
 export const DISCOVERY_COPY = {
 	discover: {
-		tag: "Discover",
-		lines: ["What’s good", "next?"],
-		subtitle: "Only the good stuff, on the services you have.",
+		lines: ["Describe it.", "We find it."],
+		// The wall under it is this search's answer: DISCOVER_SEARCH_POSTERS in server/og-image/content.server.ts.
+		search: "epic fantasy shows",
 	},
 	explorer: {
 		tag: "Explorer",

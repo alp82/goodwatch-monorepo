@@ -9,6 +9,8 @@ export const CARD_VERSIONS: Readonly<Record<string, number>> = {
 	[WATCH_PATHS.nextEpisodes]: 1,
 	[WATCH_PATHS.tonight]: 1,
 	[WATCH_PATHS.forYou]: 1,
+	// The search card (owner, November 2, 2026).
+	"/discover": 1,
 	// Explorer prints the renamed Trippy mood; its preview needs a new image address.
 	"/map": 2,
 	// 2: the lit taste bar (owner, October 28, 2026).

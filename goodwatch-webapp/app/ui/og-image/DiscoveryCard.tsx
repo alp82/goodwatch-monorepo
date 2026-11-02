@@ -1,19 +1,9 @@
-// Discover and Explorer cards: the pitch on the amber panel, real top-scored posters on a
-// dark panel. Discover shows a wall of scored posters; Explorer shows two islands and the
-// bridge that forms between them.
+// Discover and Explorer cards: the pitch on the amber panel, real posters on a dark panel.
+// Discover shows a search and the wall of posters that answers it; Explorer shows two islands
+// and the bridge that forms between them.
 import type { OgDiscoveryContent, OgPoster } from "~/ui/og-image/OgCard"
 import { DISCOVERY_COPY } from "~/ui/og-image/copy"
-import {
-	AMBER,
-	Brand,
-	Frame,
-	INK,
-	Tag,
-	col,
-	row,
-	vibeColor,
-} from "~/ui/og-image/parts"
-import { goodwatchScoreDisplay, hasGoodwatchScore } from "~/utils/ratings"
+import { AMBER, Brand, Frame, INK, Tag, col, row } from "~/ui/og-image/parts"
 
 export type DiscoveryFeature = "explorer" | "discover"
 
@@ -24,8 +14,7 @@ const SLATE = "#151b1c"
 function Poster({
 	poster,
 	width,
-	showScore = false,
-}: { poster: OgPoster | undefined; width: number; showScore?: boolean }) {
+}: { poster: OgPoster | undefined; width: number }) {
 	const height = Math.round(width * 1.5)
 	return (
 		<div
@@ -48,47 +37,132 @@ function Poster({
 					style={{ objectFit: "cover" }}
 				/>
 			)}
-			{showScore && hasGoodwatchScore(poster?.score) && (
-				<div
-					style={{
-						display: "flex",
-						position: "absolute",
-						left: 12,
-						bottom: 12,
-						padding: "2px 12px 4px",
-						borderRadius: 10,
-						backgroundColor: vibeColor(poster.score),
-						fontFamily: "Anton",
-						fontSize: 34,
-						color: "#fff",
-					}}
-				>
-					{String(goodwatchScoreDisplay(poster.score))}
-				</div>
-			)}
 		</div>
 	)
 }
 
-// Three staggered columns of scored posters that run off the top and bottom of the panel.
+// Three staggered columns of posters that run off the top and bottom of the panel.
 function PosterWall({ posters }: { posters: OgPoster[] }) {
-	const width = 190
-	const offsets = [-150, -40, -205]
+	const width = 170
+	const offsets = [-120, -30, -170]
 	return (
-		<div style={row({ position: "absolute", left: 22, top: 0, gap: 18 })}>
+		<div style={row({ position: "absolute", left: 20, top: 0, gap: 16 })}>
 			{offsets.map((offset, c) => (
-				<div key={offset} style={col({ marginTop: offset, gap: 18 })}>
+				<div key={offset} style={col({ marginTop: offset, gap: 16 })}>
 					{[0, 1, 2, 3].map((r) => (
 						<Poster
 							key={r}
 							poster={posters[(r * 3 + c) % Math.max(posters.length, 1)]}
 							width={width}
-							showScore
 						/>
 					))}
 				</div>
 			))}
 		</div>
+	)
+}
+
+// The search field, with the words as if just typed.
+function SearchField({ text }: { text: string }) {
+	return (
+		<div
+			style={row({
+				alignItems: "center",
+				gap: 18,
+				width: 540,
+				height: 96,
+				padding: "0 30px",
+				borderRadius: 16,
+				backgroundColor: "#fff",
+				border: `4px solid ${INK}`,
+			})}
+		>
+			<svg
+				aria-hidden="true"
+				width="38"
+				height="38"
+				viewBox="0 0 24 24"
+				fill="none"
+			>
+				<circle cx="10.5" cy="10.5" r="7" stroke={INK} strokeWidth="3" />
+				<path
+					d="M16 16 L22 22"
+					stroke={INK}
+					strokeWidth="3.4"
+					strokeLinecap="round"
+				/>
+			</svg>
+			<div
+				style={{
+					display: "flex",
+					fontSize: 42,
+					fontWeight: 700,
+					color: INK,
+					whiteSpace: "nowrap",
+				}}
+			>
+				{text}
+			</div>
+			<div
+				style={{
+					display: "flex",
+					width: 5,
+					height: 46,
+					marginLeft: -12,
+					backgroundColor: INK,
+				}}
+			/>
+		</div>
+	)
+}
+
+function DiscoverCard({ posters }: { posters: OgPoster[] }) {
+	const copy = DISCOVERY_COPY.discover
+	const left = 620
+	return (
+		<Frame>
+			<div
+				style={{
+					display: "flex",
+					position: "absolute",
+					left,
+					top: 0,
+					width: 1200 - left,
+					height: 630,
+					backgroundColor: INK,
+					overflow: "hidden",
+				}}
+			>
+				<PosterWall posters={posters} />
+			</div>
+			<div style={{ display: "flex", position: "absolute", left: 48, top: 40 }}>
+				<Brand dark />
+			</div>
+			<div
+				style={col({
+					position: "absolute",
+					left: 48,
+					bottom: 48,
+					width: 540,
+					gap: 26,
+				})}
+			>
+				<div
+					style={col({
+						fontFamily: "Anton",
+						fontSize: 104,
+						lineHeight: 1,
+						color: INK,
+						whiteSpace: "nowrap",
+					})}
+				>
+					{copy.lines.map((line) => (
+						<div key={line}>{line.toUpperCase()}</div>
+					))}
+				</div>
+				<SearchField text={copy.search} />
+			</div>
+		</Frame>
 	)
 }
 
@@ -191,7 +265,9 @@ function ExplorerMap({ groups }: { groups: OgDiscoveryContent["groups"] }) {
 }
 
 export function DiscoveryCard({ content }: { content: OgDiscoveryContent }) {
-	const copy = DISCOVERY_COPY[content.feature]
+	if (content.feature === "discover")
+		return <DiscoverCard posters={content.groups[0]?.posters ?? []} />
+	const copy = DISCOVERY_COPY.explorer
 	return (
 		<Frame>
 			<div
@@ -206,11 +282,7 @@ export function DiscoveryCard({ content }: { content: OgDiscoveryContent }) {
 					overflow: "hidden",
 				}}
 			>
-				{content.feature === "explorer" ? (
-					<ExplorerMap groups={content.groups} />
-				) : (
-					<PosterWall posters={content.groups[0]?.posters ?? []} />
-				)}
+				<ExplorerMap groups={content.groups} />
 			</div>
 			<div style={{ display: "flex", position: "absolute", left: 56, top: 44 }}>
 				<Brand dark />
