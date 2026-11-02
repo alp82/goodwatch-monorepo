@@ -49,9 +49,12 @@ export const goodwatchReads: CatalogReads = {
   async availability(titles, screens, fresh) {
     const { getAvailabilityEvidence, getAvailabilityEvidenceBatch } = await import('../availability.server')
     return createAvailabilityAdapter({ links: async scopes => {
-      const { readStreamLinks } = await import("./catalog-stream-links.ts")
-      const { searchQuery } = await import("../combined-search/catalog.server")
-      return readStreamLinks(scopes, searchQuery).catch(() => [])
+      // Direct links are an extra: any failure here leaves the TMDB fallback, never an empty page.
+      try {
+        const { readStreamLinks } = await import("./catalog-stream-links.ts")
+        const { searchQuery } = await import("../combined-search/catalog.server")
+        return await readStreamLinks(scopes, searchQuery)
+      } catch { return [] }
     }, batch: getAvailabilityEvidenceBatch, fresh: scope => getAvailabilityEvidence(scope, { bypassCache: true }), names: async () => new Map((await serviceCatalog()).map(s => [s.id, s.name])) })(titles, screens, fresh)
   },
 }

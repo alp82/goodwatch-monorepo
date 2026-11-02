@@ -207,7 +207,7 @@ export function preloadAvailability(): void {
 		},
 		() => {
 			// Services without access to member settings (the YepWatch catalog user) warm a fixed list instead.
-			const fallback = (process.env.AVAILABILITY_PRELOAD_COUNTRIES ?? "US,DE,GB,FR,ES,IT,CA,AU,NL,BR")
+			const fallback = (process.env.AVAILABILITY_PRELOAD_COUNTRIES ?? "US,DE,GB,FR")
 				.split(",")
 				.map((c) => c.trim().toUpperCase())
 				.slice(0, PRELOAD_COUNTRIES)

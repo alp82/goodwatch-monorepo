@@ -17,7 +17,9 @@ const score = (n: number | null, scale = 100) => typeof n === 'number' && Number
 /** Bounded page reads over granted catalog tables, never one full details query per card. */
 export async function enrichContinuousCandidates(candidates: Candidate[], country: string, read?: CatalogQuery): Promise<Candidate[]> {
   if (!candidates.length) return candidates
-  const query = read ?? (await import('../combined-search/catalog.server')).searchQuery
+  // Highlights are extras: if the reader can't load, cards go out unenriched.
+  let query: CatalogQuery
+  try { query = read ?? (await import('../combined-search/catalog.server')).searchQuery } catch { return candidates }
   const updates = new Map<string, Partial<Candidate>>()
   await Promise.all((['movie', 'show'] as const).map(async mediaType => {
     const ids = [...new Set(candidates.filter(c => (c.identity.kind === 'movie' ? 'movie' : 'show') === mediaType).map(c => c.identity.tmdbId))]
@@ -27,8 +29,8 @@ export async function enrichContinuousCandidates(candidates: Candidate[], countr
     const [titles, crew, cast, videos] = await Promise.all([
       query<TitleRow>(`SELECT ${fields} FROM doc.${mediaType} WHERE tmdb_id IN (${placeholders}) LIMIT 512`, ids).catch(() => null),
       query<Credit>(`SELECT DISTINCT media_tmdb_id, person_tmdb_id FROM doc.person_worked_on WHERE media_type = ? AND media_tmdb_id IN (${placeholders}) AND job = ? ORDER BY media_tmdb_id, person_tmdb_id LIMIT 10000`, [mediaType, ...ids, mediaType === 'movie' ? 'Director' : 'Creator']).catch(() => null),
-      query<Credit>(`SELECT media_tmdb_id, person_tmdb_id FROM doc.person_appeared_in WHERE media_type = ? AND media_tmdb_id IN (${placeholders}) ORDER BY media_tmdb_id, order_default ASC, person_tmdb_id ASC LIMIT 10000`, [mediaType, ...ids]).catch(() => null),
-      query<Video>(`SELECT media_tmdb_id, site_key FROM doc.media_video WHERE media_type = ? AND media_tmdb_id IN (${placeholders}) AND site = 'YouTube' AND video_type = 'Trailer' ORDER BY official DESC, published_at DESC, tmdb_id ASC LIMIT 10000`, [mediaType, ...ids]).catch(() => null),
+      query<Credit>(`SELECT media_tmdb_id, person_tmdb_id FROM doc.person_appeared_in WHERE media_type = ? AND media_tmdb_id IN (${placeholders}) AND order_default < 20 ORDER BY media_tmdb_id, order_default ASC, person_tmdb_id ASC LIMIT 10000`, [mediaType, ...ids]).catch(() => null),
+      query<Video>(`SELECT media_tmdb_id, site_key FROM doc.media_video WHERE media_type = ? AND media_tmdb_id IN (${placeholders}) AND site = 'YouTube' AND video_type = 'Trailer' ORDER BY official DESC NULLS LAST, published_at DESC NULLS LAST, tmdb_id ASC LIMIT 10000`, [mediaType, ...ids]).catch(() => null),
     ])
     const personIds = [...new Set([...(crew ?? []), ...(cast ?? [])].map(c => c.person_tmdb_id))]
     const people = personIds.length ? await query<{ tmdb_id: number; name: string }>(`SELECT tmdb_id, name FROM doc.person WHERE tmdb_id IN (${personIds.map(() => '?').join(',')}) LIMIT 10000`, personIds).catch(() => null) : []
