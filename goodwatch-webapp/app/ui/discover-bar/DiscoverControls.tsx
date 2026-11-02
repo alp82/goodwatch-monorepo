@@ -120,7 +120,7 @@ export interface EasyApi {
 	reading: ReadingChip[] | undefined
 	chips: readonly BarChip[]
 	remove: (chip: BarChip) => void
-	open: (chip: BarChip) => void
+	open?: (chip: BarChip) => void
 	customize: () => void
 	clearSearch: () => void
 	ready: ReactNode
@@ -404,7 +404,8 @@ function DiscoverControlsContent({
 		reading,
 		chips: data.chips,
 		remove: (chip) => (chip.remove ? filters.update(chip.remove) : onClearSearch()),
-		open: (chip) => (chip.opens ? toAdvanced(tabOfSubTab(chip.opens), chip.opens) : proto?.setMode("advanced")),
+		// Easy never switches by itself: a filter's name opens its panel only in Advanced.
+		open: proto?.mode === "advanced" ? (chip) => chip.opens && openTab(tabOfSubTab(chip.opens), chip.opens) : undefined,
 		customize: () => toAdvanced("mood"),
 		clearSearch: onClearSearch,
 		ready: <ReadyToWatch ready={{ ...ready, open: toAdvanced }} size={1} />,

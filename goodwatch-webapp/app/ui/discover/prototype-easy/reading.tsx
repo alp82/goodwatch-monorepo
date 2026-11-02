@@ -45,13 +45,20 @@ export function FingerprintList({ reading, className = "" }: { reading: ReadingC
 	)
 }
 
-export function FilterItem({ chip, onOpen, onRemove }: { chip: BarChip; onOpen: () => void; onRemove: () => void }) {
+export function FilterItem({ chip, onOpen, onRemove }: { chip: BarChip; onOpen?: () => void; onRemove: () => void }) {
 	return (
 		<span className="group/f sq-filter relative shrink-0 items-center! rounded-md pr-0.5 hover:bg-white/[0.05]">
-			<button type="button" onClick={onOpen} title="Change" className="flex cursor-pointer items-baseline gap-[5px] pl-1 text-left">
-				<span className="text-[12px] text-[#92a5bf]">{fieldOf(chip)}</span>
-				<strong className="text-[12px] font-[650] text-white">{chip.label}</strong>
-			</button>
+			{onOpen ? (
+				<button type="button" onClick={onOpen} title="Change" className="flex cursor-pointer items-baseline gap-[5px] pl-1 text-left">
+					<span className="text-[12px] text-[#92a5bf]">{fieldOf(chip)}</span>
+					<strong className="text-[12px] font-[650] text-white">{chip.label}</strong>
+				</button>
+			) : (
+				<span className="flex items-baseline gap-[5px] pl-1">
+					<span className="text-[12px] text-[#92a5bf]">{fieldOf(chip)}</span>
+					<strong className="text-[12px] font-[650] text-white">{chip.label}</strong>
+				</span>
+			)}
 			<button
 				type="button"
 				aria-label={`Remove ${chip.label}`}
@@ -71,7 +78,7 @@ export function FilterList({
 	className = "",
 }: {
 	chips: readonly BarChip[]
-	onOpen: (c: BarChip) => void
+	onOpen?: (c: BarChip) => void
 	onRemove: (c: BarChip) => void
 	className?: string
 }) {
@@ -80,7 +87,7 @@ export function FilterList({
 	return (
 		<span className={`flex flex-wrap items-center gap-x-2 gap-y-1 ${className}`}>
 			{filters.map((c) => (
-				<FilterItem key={c.key} chip={c} onOpen={() => onOpen(c)} onRemove={() => onRemove(c)} />
+				<FilterItem key={c.key} chip={c} onOpen={onOpen && (() => onOpen(c))} onRemove={() => onRemove(c)} />
 			))}
 		</span>
 	)

@@ -90,6 +90,13 @@ export function ReadyToWatch({
 		(!canServices || services) &&
 		(!member || notSeen)
 	const some = services || notSeen
+	// PROTOTYPE (discover-easy): Easy's one switch only toggles; it never opens a panel, also without services.
+	const easyOn = state.onMyServices && (!member || state.notSeenYet)
+	const toggleEasy = () =>
+		update((s) => {
+			const out = servicesSet(!easyOn)(s)
+			return member ? notSeenSet(out, !easyOn) : out
+		})
 	const toggleAll = () => {
 		if (!canServices && !member) return open("watch", "services")
 		const next = !all
@@ -148,7 +155,7 @@ export function ReadyToWatch({
 				member ? update((s) => notSeenSet(s, !notSeen)) : open("you", "taste"),
 		},
 	]
-	const iconTone = all
+	const iconTone = (compact ? easyOn : all)
 		? "text-amber-400"
 		: some
 			? "text-amber-400/60"
@@ -169,17 +176,17 @@ export function ReadyToWatch({
 				<motion.button
 					type="button"
 					role="switch"
-					aria-checked={all}
+					aria-checked={compact ? easyOn : all}
 					aria-label="Ready to watch"
 					whileTap={TAP}
-					onClick={toggleAll}
+					onClick={compact ? toggleEasy : toggleAll}
 					className={`${SEGMENT} rounded-l-xl ${compact ? "rounded-r-xl" : ""} ${PILL_FOCUS} ${size === 0 ? "pr-2 pl-3" : "pr-2.5 pl-3.5"} ${all || some ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
 				>
 					<PlayCircleIcon className={`h-4 w-4 shrink-0 ${iconTone}`} />
 					{(size === 2 || compact) && <span className="text-sm">Ready to watch</span>}
 					{size === 1 && !compact && <span className="text-sm">Ready</span>}
-					<Knob on={all} />
-					<BaseLine on={all} color="bg-amber-400" />
+					<Knob on={compact ? easyOn : all} />
+					<BaseLine on={compact ? easyOn : all} color="bg-amber-400" />
 				</motion.button>
 			</Tip>
 			<motion.div
