@@ -376,7 +376,7 @@ function DiscoverControlsContent({
 					onSearch={onSearch}
 					onClear={onClearSearch}
 					flatBottom={advanced}
-					ready={<ReadySwitch on={readyOn} onChange={setReady} field />}
+					ready={<ReadySwitch on={readyOn} onChange={setReady} member={member} field />}
 					inputRef={describeField}
 				/>
 				<AnimatePresence initial={false}>
@@ -513,7 +513,7 @@ function DiscoverControlsContent({
 				</AnimatePresence>
 				<div className="mt-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-2 lg:flex-nowrap lg:gap-x-5">
 					<div className="flex h-10 items-center rounded-full ring-1 ring-white/10 lg:hidden">
-						<ReadySwitch on={readyOn} onChange={setReady} />
+						<ReadySwitch on={readyOn} onChange={setReady} member={member} />
 					</div>
 					<div className="order-last flex min-w-0 basis-full lg:order-none lg:flex-1 lg:basis-auto">
 						<ReadingLine
