@@ -14,9 +14,11 @@ test('watch links require checked room-selected offers, preserve destinations an
  assert.deepEqual(roomWatchLinks([{...availability[0],state:'unknown'}],screens,metadata),[]);
  assert.deepEqual(roomWatchLinks([{...availability[0],screenId:'other'}],screens,metadata),[]);
 });
-test('fallback links stay honest and GoodWatch details use the title identity, not episode id', () => {
+test('every service link reads Watch on and keeps the offer target; GoodWatch details use the title identity, not episode id', () => {
  const screens=continuousFixture().shared.screens;
  const links=roomWatchLinks([{screenId:'tv',state:'watchable',scope:'title',checkedAt:1,offers:[{serviceId:8,name:'Netflix',url:'https://www.themoviedb.org/tv/1411/watch?locale=DE',kind:'where_to_watch',offerType:'flatrate'}]}],screens);
- assert.equal(links[0].action,'Find on');assert.equal(links[0].note,'Availability page');
+ assert.equal(`${links[0].action} ${links[0].name}`,'Watch on Netflix');assert.equal(links[0].url,'https://www.themoviedb.org/tv/1411/watch?locale=DE');assert.equal(links[0].note,'Streaming');
+ const search=roomWatchLinks([{screenId:'tv',state:'watchable',scope:'title',checkedAt:1,offers:[{serviceId:8,name:'Netflix',url:'https://www.netflix.com/search?q=x',kind:'search',offerType:'ads'}]}],screens);
+ assert.equal(search[0].action,'Watch on');assert.equal(search[0].note,'With ads');
  assert.equal(goodwatchTitleUrl({kind:'show_start',tmdbId:1411,episode:{tmdbId:123,season:1,number:1}}),'https://goodwatch.app/show/1411');
 });

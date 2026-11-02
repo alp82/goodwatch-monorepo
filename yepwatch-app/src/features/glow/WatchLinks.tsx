@@ -38,7 +38,7 @@ export function WatchLinks({ identity, availability, screens, compact = false }:
             <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel={`${o.action} ${o.name}`} onHoverIn={() => setHighlighted(o.id)} onHoverOut={() => setHighlighted(null)} onFocus={() => setHighlighted(o.id)} onBlur={() => setHighlighted(null)} onPressIn={() => setHighlighted(o.id)} onPressOut={() => setHighlighted(null)} style={{ minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 7, paddingRight: 14, borderRadius: R.control, borderWidth: 1, borderColor: highlighted === o.id ? glow.amber : '#ffffff24', backgroundColor: highlighted === o.id ? '#fbbf2418' : '#ffffff0d' }}>
               <ProviderLogo url={o.logoUrl} name={o.name} />
               <View style={{ flex: 1, minWidth: 0 }}>
-                <GText bold size={16} lines={1}>{o.name}</GText>
+                <GText bold size={16} lines={1}>{`${o.action} ${o.name}`}</GText>
                 <GText size={12} color={glow.muted}>{o.note === 'Streaming' && identity.kind !== 'movie' && availability.some(a => a.scope === 'title') ? 'Series availability' : o.note}</GText>
               </View>
               <Icon name="external" size={18} color={glow.amber} />
