@@ -12,7 +12,7 @@ export const LOOKS = [
 ] as const
 export type Look = (typeof LOOKS)[number]["key"]
 
-let last: Look = "A"
+let last: Look = "D"
 
 export function useLook(): Look {
 	const [params] = useSearchParams()

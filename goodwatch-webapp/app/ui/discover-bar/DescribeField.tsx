@@ -12,12 +12,40 @@ import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
 import { PRIVATE } from "./DiscoverBar"
 import { type Look, useLook } from "./prototype-field-switcher"
 
-/** Example searches. `query` is the wording the interpreter reads right, where it isn't the label. */
+/** Example searches, each run through the real field and checked for relevant results. */
 const TRY: { label: string; query?: string }[] = [
 	{ label: "cozy anime" },
-	{ label: "feel-good K-drama", query: "heartwarming korean drama" },
+	{ label: "Timothée Chalamet movies" },
+	{ label: "mind-bending sci-fi" },
+	{ label: "korean thrillers" },
 	{ label: "funny horror" },
+	{ label: "Studio Ghibli" },
+	{ label: "A24 horror" },
 	{ label: "80+ last 5 years" },
+	{ label: "slow burn thrillers" },
+	{ label: "Ryan Gosling movies" },
+	{ label: "japanese revenge thrillers" },
+	{ label: "Wednesday vibes, but darker" },
+	{ label: "folk horror" },
+	{ label: "anime from the last 3 years" },
+	{ label: "romcoms from the 2000s" },
+	{ label: "vampires but funny" },
+	{ label: "Christopher Nolan films" },
+	{ label: "nordic noir" },
+	{ label: "post-apocalyptic shows" },
+	{ label: "horror from the last 3 years" },
+	{ label: "food documentaries" },
+	{ label: "spy thrillers from the 70s" },
+	{ label: "hong kong action" },
+	{ label: "Florence Pugh movies" },
+	{ label: "survival in the wilderness" },
+	{ label: "sports underdog stories" },
+	{ label: "one-location thrillers" },
+	{ label: "dystopian thrillers" },
+	{ label: "cyberpunk" },
+	{ label: "heartwarming show for a rainy day" },
+	{ label: "courtroom drama" },
+	{ label: "funny and under 90 minutes" },
 ]
 
 const PLACEHOLDER: Record<Look, string> = {
@@ -27,6 +55,9 @@ const PLACEHOLDER: Record<Look, string> = {
 	D: "Describe what you want to watch",
 	E: "What do you feel like watching?",
 }
+
+const TYPING_PAUSE_MS = 400
+const MIN_CHARS = 2
 
 const linkStyle =
 	"shrink-0 cursor-pointer text-[13px] text-gray-300 underline decoration-white/30 decoration-dotted underline-offset-[3px] transition outline-none hover:text-amber-300 hover:decoration-amber-400 focus-visible:text-amber-300"
@@ -39,7 +70,7 @@ function TryLinks({ run, center }: { run: (text: string) => void; center?: boole
 			<span className="shrink-0 text-[10px] font-bold tracking-[0.08em] text-gray-500 uppercase">
 				Try
 			</span>
-			{TRY.map((item) => (
+			{TRY.slice(0, 4).map((item) => (
 				<button
 					key={item.label}
 					type="button"
@@ -56,7 +87,7 @@ function TryLinks({ run, center }: { run: (text: string) => void; center?: boole
 function TryPills({ run }: { run: (text: string) => void }) {
 	return (
 		<div className="flex items-center gap-2 overflow-x-auto px-px py-px whitespace-nowrap [scrollbar-width:none]">
-			{TRY.map((item) => (
+			{TRY.slice(0, 4).map((item) => (
 				<button
 					key={item.label}
 					type="button"
@@ -73,6 +104,7 @@ function TryPills({ run }: { run: (text: string) => void }) {
 function TryOne({ run }: { run: (text: string) => void }) {
 	const [index, setIndex] = useState(0)
 	const [paused, setPaused] = useState(false)
+	useEffect(() => setIndex(Math.floor(Math.random() * TRY.length)), [])
 	useEffect(() => {
 		if (paused) return
 		const timer = setInterval(() => setIndex((i) => (i + 1) % TRY.length), 3200)
@@ -120,11 +152,35 @@ export function DescribeField({
 	const look = useLook()
 	const advanced = flatBottom
 	const [text, setText] = useState(typed)
-	useEffect(() => setText(typed), [typed])
+	// What this field last sent: its answer coming back must not overwrite what is being typed.
+	const sent = useRef(typed)
+	const timer = useRef<ReturnType<typeof setTimeout>>()
+	useEffect(() => {
+		if (typed === sent.current) return
+		clearTimeout(timer.current)
+		sent.current = typed
+		setText(typed)
+	}, [typed])
+	useEffect(() => () => clearTimeout(timer.current), [])
 	const filled = text.trim().length > 0
+	const send = (value: string) => {
+		clearTimeout(timer.current)
+		if (value === sent.current) return
+		sent.current = value
+		if (value) onSearch(value)
+		else onClear()
+	}
+	const type = (value: string) => {
+		setText(value)
+		clearTimeout(timer.current)
+		const words = value.trim()
+		if (!words) return send("")
+		if (words.length >= MIN_CHARS)
+			timer.current = setTimeout(() => send(words), TYPING_PAUSE_MS)
+	}
 	const run = (value: string) => {
 		setText(value)
-		onSearch(value)
+		send(value)
 	}
 
 	const centered = false
@@ -175,9 +231,7 @@ export function DescribeField({
 				role="search"
 				onSubmit={(event) => {
 					event.preventDefault()
-					const value = text.trim()
-					if (value) onSearch(value)
-					else onClear()
+					send(text.trim())
 				}}
 				className={`relative bg-white/[0.045] ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition focus-within:bg-white/[0.07] focus-within:ring-2 focus-within:ring-amber-400/60 ${
 					flatBottom
@@ -205,7 +259,7 @@ export function DescribeField({
 						}
 					>
 						<span
-							className={`absolute top-2.5 flex items-center gap-1 text-[10px] font-bold tracking-[0.1em] text-amber-300/80 uppercase transition-opacity duration-150 lg:top-3 ${label ? "opacity-100" : "opacity-0"} ${centered ? "inset-x-0 justify-center" : ""}`}
+							className={`absolute top-[25px] flex h-[15px] items-center gap-1 text-[10px] font-bold tracking-[0.1em] text-amber-300/80 uppercase transition-opacity duration-150 lg:top-[30px] ${label ? "opacity-100" : "opacity-0"} ${centered ? "inset-x-0 justify-center" : ""}`}
 							aria-hidden={!label}
 						>
 							<MagnifyingGlassIcon className="h-3 w-3" aria-hidden />
@@ -220,7 +274,7 @@ export function DescribeField({
 							enterKeyHint="search"
 							aria-label="Search by mood, plot, or title"
 							placeholder={PLACEHOLDER[look]}
-							onChange={(event) => setText(event.target.value)}
+							onChange={(event) => type(event.target.value)}
 							className={`brand-header w-full min-w-0 border-0 bg-transparent p-0 pr-10 text-[20px] leading-tight text-white transition-transform duration-200 outline-none placeholder:text-[18px] placeholder:text-gray-500 focus:ring-0 lg:text-[25px] lg:placeholder:text-[25px] [&::-webkit-search-cancel-button]:hidden ${lift} ${centered ? "pl-10 text-center" : ""} ${PRIVATE}`}
 						/>
 						{twoLines && (
@@ -250,8 +304,7 @@ export function DescribeField({
 								type="button"
 								aria-label="Clear the search"
 								onClick={() => {
-									setText("")
-									onClear()
+									run("")
 								}}
 								className="absolute top-1/2 right-1 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-gray-400 hover:bg-white/10 hover:text-white lg:right-2"
 							>
