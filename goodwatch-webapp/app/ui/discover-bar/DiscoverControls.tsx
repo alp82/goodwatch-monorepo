@@ -511,7 +511,7 @@ function DiscoverControlsContent({
 						</motion.div>
 					)}
 				</AnimatePresence>
-				<div className="mt-3 flex flex-wrap items-center justify-between gap-x-5 gap-y-2 lg:flex-nowrap">
+				<div className="mt-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-2 lg:flex-nowrap lg:gap-x-5">
 					<div className="flex h-10 items-center rounded-full ring-1 ring-white/10 lg:hidden">
 						<ReadySwitch on={readyOn} onChange={setReady} />
 					</div>
