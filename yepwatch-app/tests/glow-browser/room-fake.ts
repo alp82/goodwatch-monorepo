@@ -45,6 +45,13 @@ export function choosingRoom(): FakeSnapshot {
     { participantId: 'mia', nickname: 'Mia', screenId: 'room', ready: true, serviceIds: [8, 337] },
   ];
   s.shared.ideas = [{ id: 'i1', text: 'cheer me up', authorId: 'host', on: true, attributes: [] }];
+  // The first card carries every optional GoodWatch highlight; the second none (its details hide them).
+  Object.assign(s.shared.candidates[0], {
+    goodwatchScore: 84, genres: ['Comedy', 'Drama'], tagline: 'A perfect holiday without leaving the lobby.', certification: 'FSK 12',
+    scores: { imdb: 81, rtCritics: 92, rtAudience: 86, metacritic: 88 },
+    highlights: [{ key: 'wit_wordplay', label: 'Wit & Wordplay' }, { key: 'visual_stylization', label: 'Visual Stylization' }, { key: 'eccentricity', label: 'Eccentricity' }],
+    people: { directors: ['Wes Anderson'], cast: ['Ralph Fiennes', 'Tony Revolori', 'Saoirse Ronan'] },
+  });
   return s;
 }
 

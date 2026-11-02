@@ -138,7 +138,7 @@ test('matches, proposal for everyone (no names), Keep swiping per version, match
   await expect(page.getByTestId('proposal').filter({ visible: true })).toBeVisible();
 });
 
-test('Tonight: watch button for the first switched-on service, Cheer, host Start again', async ({ page }) => {
+test('Tonight: scores, watch button for the first switched-on service, no Cheer button, host Start again', async ({ page }) => {
   const room = choosingRoom();
   room.shared.phase = 'decided';
   room.shared.candidates[0].posterUrl = null;
@@ -150,7 +150,11 @@ test('Tonight: watch button for the first switched-on service, Cheer, host Start
   await page.goto('/room/test-room');
   await expect(page.getByTestId('tonight')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Watch on Netflix' })).toHaveAttribute('href', 'https://www.netflix.com/title/1');
-  await expect(button(page, 'Cheer')).toBeVisible();
+  // Cheering is the poster's easter egg: no button, no hint.
+  await expect(button(page, 'Cheer')).toHaveCount(0);
+  await expect(page.getByText(/hold|tap the poster|🎉/i)).toHaveCount(0);
+  await expect(page.getByTestId('tonight-scores').getByLabel('GoodWatch score 84')).toBeVisible();
+  await expect(page.getByTestId('tonight-scores').getByLabel('IMDb 8.1')).toBeVisible();
   await shot(page, '11-tonight');
   await button(page, 'Start again').click();
   await expect.poll(() => f.sent()).toEqual(['restart']);
@@ -235,7 +239,7 @@ test.describe('the join screen shows the room from the invite preview', () => {
     await expect(head.getByTestId('invite-ideas')).toHaveText('cheer me up');
     await expect(head.getByText('Movies and shows')).toBeVisible();
     await expect(head.getByLabel('2 people')).toBeVisible();
-    await expect(page.getByTestId('subheader')).not.toContainText('Join the room');
+    await expect(page.getByText('Join the room', { exact: true })).toHaveCount(0);
     await expect(page.getByLabel('Your name')).toBeVisible();
     await shot(page, '13-join-one-idea');
   });
@@ -266,7 +270,7 @@ test.describe('the join screen shows the room from the invite preview', () => {
 
   test('a failed preview keeps Join the room and the form still joins', async ({ page }) => {
     const f = await openInvite(page, choosingRoom(), 'fail');
-    await expect(page.getByTestId('subheader')).toContainText('Join the room');
+    await expect(page.getByTestId('join-screen').getByText('Join the room', { exact: true })).toBeVisible();
     await expect(page.getByTestId('invite-head')).toHaveCount(0);
     await expect(page.getByTestId('invite-head-pending')).toHaveCount(0);
     await page.getByLabel('Your name').fill('Sam');
