@@ -5,14 +5,14 @@ import { useSearchParams } from "@remix-run/react"
 import { DiscoverPage, type DiscoverPageProps } from "../DiscoverPage"
 import { ModeSwitch, useMode } from "./kit"
 import { PrototypeSwitcher } from "./Switcher"
-import { VariantA, name as nameA } from "./VariantA"
-import { VariantB, name as nameB } from "./VariantB"
-import { VariantC, name as nameC } from "./VariantC"
+import { EasyA, name as nameA } from "./EasyA"
+import { EasyB, name as nameB } from "./EasyB"
+import { EasyC, name as nameC } from "./EasyC"
 
 const VARIANTS = [
-	{ key: "A", name: nameA, C: VariantA },
-	{ key: "B", name: nameB, C: VariantB },
-	{ key: "C", name: nameC, C: VariantC },
+	{ key: "A", name: nameA, C: EasyA },
+	{ key: "B", name: nameB, C: EasyB },
+	{ key: "C", name: nameC, C: EasyC },
 	{ key: "0", name: "Today", C: null },
 ]
 
@@ -27,7 +27,7 @@ export function EasyDiscover(props: DiscoverPageProps) {
 				{...props}
 				proto={
 					Easy
-						? { mode, setMode, modeSwitch: <ModeSwitch />, easy: (ctx) => <Easy ctx={ctx} /> }
+						? { mode, setMode, modeSwitch: <ModeSwitch />, easy: (e) => <Easy e={e} /> }
 						: undefined
 				}
 			/>

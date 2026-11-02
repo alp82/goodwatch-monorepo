@@ -115,6 +115,19 @@ export interface SubTabView {
 	forYou?: ForYouControl
 }
 
+/** PROTOTYPE (discover-easy): what the easy content reads from the bar. */
+export interface EasyApi {
+	query: string | null
+	reading: ReadingChip[] | undefined
+	chips: readonly BarChip[]
+	remove: (chip: BarChip) => void
+	open: (chip: BarChip) => void
+	customize: () => void
+	clearSearch: () => void
+	ready: ReactNode
+	phone: boolean
+}
+
 export interface DiscoverControlsProps {
 	bar: DiscoverBarState
 	filters: FilterStateBinding
@@ -147,7 +160,7 @@ export interface DiscoverControlsProps {
 	proto?: {
 		mode: "easy" | "advanced"
 		setMode: (mode: "easy" | "advanced") => void
-		easy?: ReactNode
+		renderEasy?: (api: EasyApi) => ReactNode
 	}
 }
 
@@ -426,32 +439,36 @@ function DiscoverControlsContent({
 				</div>
 			)}
 			<div className={className}>
-				{proto && (
+				{proto && proto.mode === "easy" &&
+					proto.renderEasy?.({
+						query,
+						reading,
+						chips: data.chips,
+						remove: (chip) => (chip.remove ? filters.update(chip.remove) : onClearSearch()),
+						open: (chip) => {
+							proto.setMode("advanced")
+							if (chip.opens) openTab(tabOfSubTab(chip.opens), chip.opens)
+						},
+						customize: () => {
+							proto.setMode("advanced")
+							openTab("mood")
+						},
+						clearSearch: onClearSearch,
+						ready: <ReadyToWatch ready={ready} size={1} />,
+						phone: !desktop,
+					})}
+				{proto && proto.mode === "advanced" && (
 					<>
 						<ProtoSearch query={query} onClear={onClearSearch} phone={!desktop} />
 						<Readout
 							query={query}
 							reading={reading}
 							chips={data.chips}
-							easy={proto.mode === "easy"}
+							easy={false}
 							onRemove={(chip) => (chip.remove ? filters.update(chip.remove) : onClearSearch())}
-							onOpen={(chip) => {
-								proto.setMode("advanced")
-								if (chip.opens) openTab(tabOfSubTab(chip.opens), chip.opens)
-							}}
-							onCustomize={() => {
-								proto.setMode("advanced")
-								openTab("mood")
-							}}
+							onOpen={(chip) => chip.opens && openTab(tabOfSubTab(chip.opens), chip.opens)}
+							onCustomize={() => openTab("mood")}
 						/>
-						{proto.mode === "easy" && (
-							<>
-								<div className="mt-3 flex">
-									<ReadyToWatch ready={ready} size={desktop ? size : 1} />
-								</div>
-								{proto.easy}
-							</>
-						)}
 					</>
 				)}
 				{(!proto || proto.mode === "advanced") && (<div className={proto ? "mt-3" : ""}>

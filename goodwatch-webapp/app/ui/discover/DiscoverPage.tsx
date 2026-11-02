@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { EasyApi } from "~/ui/discover-bar/DiscoverControls"
 import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
@@ -90,7 +91,7 @@ export interface DiscoverPageProps {
 		mode: "easy" | "advanced"
 		setMode: (mode: "easy" | "advanced") => void
 		modeSwitch: ReactNode
-		easy?: (ctx: EasyContext) => ReactNode
+		easy?: (ctx: EasyContext & EasyApi) => ReactNode
 	}
 }
 
@@ -488,14 +489,16 @@ export function DiscoverPage({
 							proto && {
 								mode: proto.mode,
 								setMode: proto.setMode,
-								easy: proto.easy?.({
-									filters,
-									q,
-									onSearch,
-									clearSearch,
-									total: first && answered && !stale ? first.total : null,
-									member,
-								}),
+								renderEasy: (api) =>
+									proto.easy?.({
+										...api,
+										filters,
+										q,
+										onSearch,
+										clearSearch,
+										total: first && answered && !stale ? first.total : null,
+										member,
+									}),
 							}
 						}
 						className="mt-3 lg:mt-5"
