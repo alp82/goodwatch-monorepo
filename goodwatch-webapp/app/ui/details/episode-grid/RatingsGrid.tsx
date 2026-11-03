@@ -167,10 +167,13 @@ export default function RatingsGrid({
 		const cell = wrapped
 			? Math.min(MAX_CELL, (avail - GAP * (perLine - 1)) / perLine)
 			: fitCell
-		// The chart spans the same width as the grid's widest row, so dots stay over where the tiles were.
-		const plotW = wrapped
-			? avail
-			: Math.max(cell * most + GAP * (most - 1), Math.min(avail, 560))
+		// The chart spans the same width as the grid's widest row, so dots stay over where the tiles were, and the
+		// season score sits right after the tiles: wrapped lines stop at their capped cell size, not at the edge.
+		const across = wrapped ? perLine : most
+		const plotW = Math.min(
+			avail,
+			Math.max(cell * across + GAP * (across - 1), Math.min(avail, 560)),
+		)
 		const pad = width < 520 ? 34 : 52
 		const { x, ticks } = consistencyScale(plotW, pad)
 		const all = stats.flatMap((s) => s.rated)
