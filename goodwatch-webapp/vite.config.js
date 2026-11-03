@@ -15,9 +15,7 @@ import tsconfigPaths from "vite-tsconfig-paths"
 // The esbuild that Vite itself depends on: npm nests it under Vite, because another package pins an older one at the
 // top level.
 const require = createRequire(import.meta.url)
-const { build: bundleWorker } = createRequire(require.resolve("vite"))(
-	"esbuild",
-)
+const { build: bundleWorker } = createRequire(require.resolve("vite"))("esbuild")
 
 installGlobals()
 
@@ -40,11 +38,7 @@ const BUNDLED_WORKERS = [
 // name like Vite's own files, so that it is served, compressed, cached for a year, and kept for other builds the same
 // way. A title page loads it before hydration. The server reads its address from a small file next to the server
 // bundle (app/server/related-map.server.ts).
-const RELATED_MAP_SCRIPT = {
-	entry: "app/ui/related-map/inline.ts",
-	name: "related-map",
-	list: "related-map.assets.json",
-}
+const RELATED_MAP_SCRIPT = { entry: "app/ui/related-map/inline.ts", name: "related-map", list: "related-map.assets.json" }
 function separateEntryFiles() {
 	let root
 	let outDir
@@ -84,22 +78,14 @@ function separateEntryFiles() {
 				tsconfig: join(root, "tsconfig.json"),
 			})
 			const script = built.outputFiles[0].contents
-			const hash = createHash("sha256")
-				.update(script)
-				.digest("base64url")
-				.slice(0, 8)
+			const hash = createHash("sha256").update(script).digest("base64url").slice(0, 8)
 			// The client build's files are next to the server's: build/client/assets and build/server.
 			const assets = resolve(root, outDir, "../client/assets")
 			mkdirSync(assets, { recursive: true })
-			writeFileSync(
-				join(assets, `${RELATED_MAP_SCRIPT.name}-${hash}.js`),
-				script,
-			)
+			writeFileSync(join(assets, `${RELATED_MAP_SCRIPT.name}-${hash}.js`), script)
 			writeFileSync(
 				resolve(root, outDir, RELATED_MAP_SCRIPT.list),
-				JSON.stringify({
-					script: `/assets/${RELATED_MAP_SCRIPT.name}-${hash}.js`,
-				}),
+				JSON.stringify({ script: `/assets/${RELATED_MAP_SCRIPT.name}-${hash}.js` }),
 			)
 		},
 	}
@@ -111,32 +97,9 @@ function separateEntryFiles() {
 // class names that only they use (about a quarter of its rules).
 const PROTOTYPES = {
 	// Files in app/routes.
-	routes: [
-		"prototype.media-language-ui*",
-		"prototype.rec-*",
-		"prototype.share-list*",
-		"prototype.title-actions*",
-		"prototype.watch-log*",
-		"prototype.episode-list*",
-		"prototype.episode-tracking*",
-		"prototype.tracking*",
-		"prototype.my-library*",
-		"prototype.import-preview*",
-	],
+	routes: ["prototype.media-language-ui*", "prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.episode-tracking*", "prototype.tracking*", "prototype.my-library*", "prototype.import-preview*"],
 	// Directories in app/ui that only those routes import.
-	ui: [
-		"prototype-rec-*",
-		"prototype-share-list",
-		"prototype-title-actions",
-		"prototype-watch-log",
-		"prototype-episode-list",
-		"prototype-episode-list-2",
-		"prototype-episode-list-3",
-		"prototype-episode-list-4",
-		"prototype-episode-tracking",
-		"prototype-tracking-hub",
-		"prototype-my-library",
-	],
+	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-episode-list-3", "prototype-episode-list-4", "prototype-episode-tracking", "prototype-tracking-hub", "prototype-my-library"],
 }
 const PROTOTYPE_SOURCES = [
 	...PROTOTYPES.routes.map((name) => `./routes/${name}`),
@@ -144,7 +107,10 @@ const PROTOTYPE_SOURCES = [
 ]
 const PROTOTYPE_MODULE = new RegExp(
 	`/app/(${PROTOTYPE_SOURCES.map((source) =>
-		source.slice(2).replace(/[.]/g, "\\.").replace(/\*/g, "[^/]*"),
+		source
+			.slice(2)
+			.replace(/[.]/g, "\\.")
+			.replace(/\*/g, "[^/]*"),
 	).join("|")})(/|\\.[^/]*$|$)`,
 )
 const TAILWIND_ENTRY = /\/app\/tailwind\.css$/
@@ -343,8 +309,7 @@ function clientChunks() {
 		for (const [name, pattern] of LATE_CHUNKS) if (pattern.test(id)) return name
 		if (TITLE_PAGE_MODULE.test(id)) return undefined
 		// A group's modules stay in their group even when small and shared (rule 3 would put them into the shell).
-		for (const [name, pattern] of FEATURE_CHUNKS)
-			if (pattern.test(id)) return name
+		for (const [name, pattern] of FEATURE_CHUNKS) if (pattern.test(id)) return name
 		if (isSharedSmallModule(id, graph)) return "shell"
 		return undefined
 	}
