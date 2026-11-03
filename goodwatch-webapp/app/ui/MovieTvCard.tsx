@@ -7,21 +7,21 @@
 //
 // What shows depends on the card's own width (`@container/card`, so the server's HTML is already right), and no part
 // covers more than ~40% of it, except the pill: GoodWatch's number always stands beside the viewer's.
-// | width            | pill                          | owner's square            | logos | actions                 |
+// | width            | pill                          | owner's square            | logos | pointer panel           |
 // | from 11rem/176px | GoodWatch + you (or + icon)   | top left, under the badge | 2     | full                    |
 // | 7.5rem-11rem     | GoodWatch + you (or + icon)   | top left, under the badge | 1     | full                    |
 // | 6rem-7.5rem      | GoodWatch + you, else GW      | top right, instead of it  | 1     | score row as a number   |
 // | 4.5rem-6rem      | GoodWatch + you, else GW      | top right, instead of it  | 0     | no score row            |
-// | under 4.5rem     | GoodWatch + you, else GW      | top right, instead of it  | 0     | none: a tap opens it    |
+// | under 4.5rem     | GoodWatch + you, else GW      | top right, instead of it  | 0     | none: a click opens it  |
 // The age badge sits top left, under 4.5rem in the band above the title (beside the score it wouldn't fit).
 // The pill's rules are in ui/poster-card/ScorePill.tsx.
 //
 // The title actions (ui/poster-card/CardActions.tsx) load as their own chunk at the first interaction with the page
-// and mount on the first hover, focus or tap: a panel on hover for a pointer, tiles over the art after a first tap on
-// a touch screen (a second tap, or Open, goes to the title page). A page with its own view of the title (a quick view,
-// a why sheet) passes `onOpen`: a click on the poster with a pointer, the Open tile, a tap on the bare art above the
-// tiles, and any tap on a card too narrow for actions open that view instead; the poster stays a link to the title
-// page for a middle-click or a new tab. After Not interested the card keeps its place, greyed, with Undo, until the
+// and mount on the first hover, focus or tap: a panel on hover for a pointer; on a touch screen, at any card width, the
+// first tap lays a band of actions under the card (ui/poster-card/TapBand.tsx), the second tap closes it, and only its
+// Open details goes to the title page. A page with its own view of the title (a quick view, a why sheet) passes
+// `onOpen`: a click on the poster with a pointer and Open details open that view instead; the poster stays a link to
+// the title page for a middle-click or a new tab. After Not interested the card keeps its place, greyed, with Undo, until the
 // list is next loaded. A title already hidden (the Hidden titles page) starts under that cover, and its Undo is the
 // page's.
 import { Link } from "@remix-run/react"
@@ -141,8 +141,7 @@ interface MovieTvCardProps {
 	actions?: ActionsPlacement | false
 	/**
 	 * The page's own view of the title (a quick view, a why sheet), opened in place of the title page by a pointer's
-	 * click on the poster, the Open tile, a tap on the bare art above the tiles, or a tap on a card too narrow for
-	 * actions. The touch screen's first tap still lays out the tiles.
+	 * click on the poster and by the touch band's Open details. The touch screen's first tap still lays out the band.
 	 */
 	onOpen?: () => void
 	/** The service the title is new on for the viewer (#489), by id: its logo leads, ringed. */
@@ -159,9 +158,6 @@ interface MovieTvCardProps {
 	/** Whose `ownerScore` it is, for the tooltip and screen readers. */
 	ownerName?: string | null
 }
-
-/** Under this width (4.5rem) the card has no actions: a tap opens the title. */
-const NO_ACTIONS_PX = 72
 
 /** A plain left click, which a page's own view may take; a modified one opens the link as the browser does. */
 const plainClick = (event: React.MouseEvent) =>
@@ -251,20 +247,14 @@ export function MovieTvCard({
 					if (!plainClick(event)) return
 					// Enter or a screen reader's activation opens straight away: tiles are for a finger.
 					if (onOpen && event.detail === 0) return opens()
-					// Touch: the first tap shows the actions over the art, the second opens the title.
 					if (!actions || tile) return opens()
-					// Too narrow for tiles: the tap opens the title.
-					if ((frame.current?.offsetWidth ?? NO_ACTIONS_PX) < NO_ACTIONS_PX)
-						return opens()
 					if (!touch) {
 						if (!touchPointerNow()) return opens()
 						setTouchNow(true)
 					}
-					if (revealed) {
-						setRevealed(null)
-						return opens()
-					}
+					// Touch: the first tap lays out the band, the second closes it. Its Open details opens the title.
 					event.preventDefault()
+					if (revealed) return setRevealed(null)
 					setArmed(true)
 					setRevealed(cardKey)
 				}}

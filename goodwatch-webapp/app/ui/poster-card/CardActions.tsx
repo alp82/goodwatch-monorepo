@@ -2,10 +2,10 @@
 // - pointer devices: the panel over the poster's foot on hover or keyboard focus: Want to See, Seen (a show: its
 //   status), Not interested, and the score under them (its label from 7.5rem, the number alone under it, no score row
 //   under 6rem, and no panel at all under 4.5rem, where the poster is only a link);
-// - touch screens, after the first tap on the poster: tiles over the lower art (Seen | Score, Want | Not for me) and
-//   an Open bar; a card under 7.5rem has Open and Actions, which opens the phone sheet. Open and a tap on the bare art
-//   go to the title page, or open the page's own view of the title where the card has one (`onOpen`);
-// - the score picker, the phone sheet (the picker with the whole action set and Open details), a show's status menu;
+// - touch screens, after the first tap on the poster: the band under the card, the page dimmed around it (TapBand: its
+//   tiles, the Seen and score drawers inside it, and Open details, the only way to the title or the page's own view of
+//   it, `onOpen`); a second tap on the poster, a tap on the dim, or Escape closes it;
+// - the score picker, a show's status menu (pointer devices);
 // - the Not interested cover with Undo.
 // The rules are the title page's: Seen on an unscored title asks for the score (useTitleActions.toggleSeen), a seen
 // movie's Seen opens its watch log, a show's status goes through its tracking, a guest's Seen asks to sign in.
@@ -21,7 +21,7 @@ import {
 	StarIcon,
 	XMarkIcon,
 } from "@heroicons/react/20/solid"
-import { Link, useNavigate } from "@remix-run/react"
+import { Link } from "@remix-run/react"
 import {
 	type ReactNode,
 	type RefObject,
@@ -34,6 +34,7 @@ import {
 	useState,
 } from "react"
 import UserAction from "~/ui/auth/UserAction"
+import { NESTED_OVERLAY_SELECTOR } from "~/ui/overlay"
 import TitleScoreDialog from "~/ui/scoring/TitleScoreDialog"
 import { TitleActionSet } from "~/ui/title-actions/TitleActionSet"
 import { HideFeedbackContext } from "~/ui/title-actions/hide-feedback"
@@ -52,9 +53,11 @@ import {
 } from "~/utils/ratings"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { HiddenCover } from "./HiddenCover"
+import { BAND_LEAVE_MS, TapBand, bandOverlayOpen } from "./TapBand"
 import { DARK, FOCUS, OFF } from "./look"
 import { type WatchStatus, useTitleMarks } from "./marks"
 import { getRevealed, setRevealed } from "./reveal"
+import { seenFaceOf } from "./seen-face"
 
 const loadShowStatus = () => import("./ShowStatus")
 const ShowStatus = lazy(reloadOnStaleChunk(loadShowStatus))
@@ -69,20 +72,13 @@ const HowFar = lazy(
 /** Where the actions sit: along the poster's foot, or raised above something else there (Worth adding's pill). */
 export type ActionsPlacement = "bottom" | "raised"
 
-/** What the card has open: the score picker (after Seen it offers to skip), or the phone sheet. */
-export type OpenActions = "score" | "seen-score" | "sheet" | null
+/** What the card has open: the score picker (after Seen it offers to skip). */
+export type OpenActions = "score" | "seen-score" | null
 
 const PANEL_AT: Record<ActionsPlacement, string> = {
 	bottom:
 		"inset-x-1 bottom-1 @min-[11rem]/card:inset-x-2 @min-[11rem]/card:bottom-2",
 	raised: "inset-x-1 bottom-14 @min-[11rem]/card:inset-x-2",
-}
-
-const STATUS_ICON: Record<WatchStatus, typeof PlayIcon> = {
-	watching: PlayIcon,
-	on_hold: PauseIcon,
-	dropped: XMarkIcon,
-	seen: EyeIcon,
 }
 
 export default function CardActions({
@@ -128,7 +124,6 @@ export default function CardActions({
 		onOpen?.()
 	}
 	const a = useTitleActions(media)
-	const navigate = useNavigate()
 	const { status } = useTitleMarks(media.mediaType, media.details.tmdb_id)
 	const { user } = useUser()
 	const isShow = media.mediaType === "show"
@@ -144,6 +139,25 @@ export default function CardActions({
 	const [trackingUsed, setTrackingUsed] = useState(false)
 	const [howFar, setHowFar] = useState(false)
 	const undo = useRef<() => void>(() => {})
+
+	// The band fades out after the card lets go of it (BAND_LEAVE_MS), then unmounts.
+	const [shownRevealed, setShownRevealed] = useState(revealed)
+	const [leaving, setLeaving] = useState(false)
+	if (shownRevealed !== revealed) {
+		setShownRevealed(revealed)
+		setLeaving(touch && !revealed)
+	}
+	useEffect(() => {
+		if (!leaving) return
+		// The focus goes back to the poster when the band took it (a tap on the dim, Open details into a view).
+		const active = document.activeElement
+		if (active === document.body || active?.closest("[data-card-popout]"))
+			frame.current
+				?.querySelector<HTMLElement>(":scope > a")
+				?.focus({ preventScroll: true })
+		const timer = setTimeout(() => setLeaving(false), BAND_LEAVE_MS + 20)
+		return () => clearTimeout(timer)
+	}, [leaving, frame])
 
 	const closeDialog = () => {
 		setOpen(null)
@@ -204,14 +218,15 @@ export default function CardActions({
 			if (
 				frame.current?.contains(target) ||
 				target.closest?.(
-					"[data-score-dialog], [data-card-popout], [role=dialog]",
+					`[data-score-dialog], [data-card-popout], [data-card-dim], [role=dialog], [role=alertdialog], ${NESTED_OVERLAY_SELECTOR}`,
 				)
 			)
 				return
 			if (getRevealed() === cardKey) setRevealed(null)
 		}
 		const onKey = (event: KeyboardEvent) => {
-			if (event.key !== "Escape" || open || statusAt) return
+			if (event.key !== "Escape" || open || statusAt || bandOverlayOpen())
+				return
 			setRevealed(null)
 			frame.current
 				?.querySelector<HTMLElement>("a")
@@ -236,7 +251,7 @@ export default function CardActions({
 			/>
 		)
 
-	const seenFace = faceOf(isShow, status, a.seen)
+	const seenFace = seenFaceOf(isShow, status, a.seen)
 	const seenName = isShow
 		? `Status: ${status ? STATUS_LOOK[status].word : "Not started"}. Change it`
 		: a.seenLog?.opensLog
@@ -358,100 +373,20 @@ export default function CardActions({
 				</div>
 			)}
 
-			{touch && revealed && (
-				<TapTiles
-					title={media.details.title}
+			{touch && (revealed || leaving) && (
+				<TapBand
+					media={media}
 					href={href}
 					discover={discover}
 					onOpen={onOpen && openView}
-					onArt={() => {
-						// The second tap on the art opens the title, as the Open bar does.
-						if (onOpen) return openView()
-						setRevealed(null)
-						navigate(href)
+					frame={frame}
+					leaving={leaving}
+					onHide={onHide}
+					onTracking={() => {
+						void loadShowStatus().catch(() => {})
+						setTrackingUsed(true)
 					}}
-					onSheet={(event) => {
-						opener.current = event.currentTarget
-						setOpen("sheet")
-					}}
-				>
-					<UserAction instructions={SEEN_INSTRUCTIONS}>
-						<button
-							type="button"
-							{...seenProps}
-							className={`${TILE} ${seenFace.on ? seenFace.cls : DARK}`}
-						>
-							<seenFace.Icon
-								className={`shrink-0 ${seenFace.on ? "" : seenFace.tint}`}
-								aria-hidden
-							/>
-							<span className="inline-flex items-center">
-								{isShow
-									? status
-										? STATUS_LOOK[status].word
-										: "Not seen"
-									: a.seen
-										? "Seen"
-										: "Seen?"}
-								{tracked && (
-									<ChevronDownIcon
-										className="!size-3 hidden opacity-70 @min-[9rem]/card:inline"
-										aria-hidden
-									/>
-								)}
-							</span>
-						</button>
-					</UserAction>
-					<button
-						type="button"
-						aria-haspopup="dialog"
-						aria-label={
-							a.score
-								? `Your score: ${a.score}, ${scoreLabels[a.score]}. Change it`
-								: "Score it"
-						}
-						onClick={(event) => openScore(event.currentTarget)}
-						className={`${TILE} tabular-nums ${a.score ? "text-white" : DARK}`}
-						style={a.score ? selectedScoreStyle(a.score) : undefined}
-					>
-						{a.score ? (
-							<span className="shrink-0 text-base font-black leading-none @min-[9rem]/card:text-xl">
-								{a.score}
-							</span>
-						) : (
-							<StarIcon className="shrink-0 text-yellow-300" aria-hidden />
-						)}
-						<span>Score</span>
-					</button>
-					<button
-						type="button"
-						aria-pressed={a.want}
-						aria-label={wantName}
-						disabled={a.wantPending}
-						onClick={a.toggleWant}
-						className={`${TILE} ${a.want ? "bg-amber-500 text-black" : DARK}`}
-					>
-						<BookmarkIcon
-							className={`shrink-0 ${a.want ? "" : "text-amber-300"}`}
-							aria-hidden
-						/>
-						<span>{a.seen ? "Rewatch" : "Want"}</span>
-					</button>
-					<button
-						type="button"
-						aria-pressed={a.hidden}
-						aria-label={hideName}
-						disabled={(!a.canHide && !a.hidden) || a.hidePending}
-						onClick={pressHide}
-						className={`${TILE} ${a.hidden ? "bg-pink-500 text-black" : DARK}`}
-					>
-						<NoSymbolIcon
-							className={`shrink-0 ${a.hidden ? "" : "text-pink-300"}`}
-							aria-hidden
-						/>
-						<span>Not for me</span>
-					</button>
-				</TapTiles>
+				/>
 			)}
 
 			{open !== null && (
@@ -462,11 +397,11 @@ export default function CardActions({
 					opener={opener}
 					onRated={() => {
 						// A first score on a show that isn't started asks how far, as on the title page.
-						if (tracked && !status && a.score === null && open !== "sheet") {
+						if (tracked && !status && a.score === null) {
 							void loadShowStatus().catch(() => {})
 							setTrackingUsed(true)
 							setHowFar(true)
-						} else if (open !== "sheet") closeDialog()
+						} else closeDialog()
 					}}
 					step={
 						howFar ? (
@@ -476,28 +411,7 @@ export default function CardActions({
 						) : undefined
 					}
 					footer={
-						open === "sheet" ? (
-							<>
-								<TitleActionSet
-									media={media}
-									scoring={false}
-									onHide={onHide}
-									onOpenLog={closeDialog}
-								/>
-								<Link
-									to={href}
-									discover={discover}
-									onClick={() => {
-										closeDialog()
-										setRevealed(null)
-									}}
-									className={`mt-2 flex h-11 w-full items-center justify-center gap-1 rounded-lg bg-white/5 text-sm font-semibold text-amber-300 hover:bg-white/10 ${FOCUS}`}
-								>
-									Open details
-									<ChevronRightIcon className="h-4 w-4" aria-hidden />
-								</Link>
-							</>
-						) : open === "seen-score" ? (
+						open === "seen-score" ? (
 							<AfterSeen
 								movie={!isShow}
 								onChangeDate={() => {
@@ -529,128 +443,6 @@ export default function CardActions({
 /** A panel button without its display, for the score row that a narrow card leaves out. */
 const PANEL_KEY = `h-7 min-w-0 cursor-pointer items-center justify-center gap-1 rounded-md font-semibold transition-colors @min-[6.5rem]/card:h-8 [&_svg]:size-4 [&_svg]:shrink-0 disabled:cursor-not-allowed disabled:opacity-40 ${FOCUS}`
 const PANEL_BTN = `inline-flex ${PANEL_KEY}`
-
-const TILE = `inline-flex h-11 min-w-0 cursor-pointer flex-col items-center justify-center gap-1 whitespace-nowrap rounded-md text-[9px] font-semibold leading-none tracking-tight @min-[7.5rem]/card:text-[10.5px] [&_svg]:size-4 @min-[9rem]/card:h-[52px] @min-[9rem]/card:text-xs @min-[9rem]/card:[&_svg]:size-5 disabled:opacity-40 ${FOCUS}`
-
-/** Seen's face: a show's status (or not started), else Seen. */
-function faceOf(isShow: boolean, status: WatchStatus | null, seen: boolean) {
-	if (isShow && status)
-		return {
-			Icon: STATUS_ICON[status],
-			tint: "",
-			on: true,
-			cls: STATUS_LOOK[status].pill,
-		}
-	if (isShow)
-		return { Icon: EyeSlashIcon, tint: "text-gray-400", on: false, cls: "" }
-	return {
-		Icon: EyeIcon,
-		tint: "text-green-300",
-		on: seen,
-		cls: STATUS_LOOK.seen.pill,
-	}
-}
-
-/** Rises a few px and fades in; transform and opacity only. */
-function useRise<T extends HTMLElement>() {
-	const ref = useRef<T>(null)
-	useLayoutEffect(() => {
-		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
-		ref.current?.animate(
-			[
-				{ transform: "translateY(10px)", opacity: 0 },
-				{ transform: "none", opacity: 1 },
-			],
-			{ duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" },
-		)
-	}, [])
-	return ref
-}
-
-/**
- * The tap actions over the art: from a 7.5rem card the four tiles and an Open bar, the top of the art and the pill
- * left bare; a narrower card has Open and Actions (the phone sheet), each 44 px high. A tap on the bare art opens
- * the title too; a tap outside the card closes them. Open goes to the title page, or opens the page's own view
- * (`onOpen`) on a plain tap, its link kept for a new tab.
- */
-function TapTiles({
-	title,
-	href,
-	discover,
-	onOpen,
-	onArt,
-	onSheet,
-	children,
-}: {
-	title: string
-	href: string
-	discover?: "none"
-	onOpen?: () => void
-	/** A tap on the bare art above the tiles. */
-	onArt: () => void
-	onSheet: (event: { currentTarget: HTMLElement }) => void
-	/** The four tiles: Seen, Score, Want, Not for me. */
-	children: ReactNode
-}) {
-	const rise = useRise<HTMLDivElement>()
-	const open = (
-		<Link
-			to={href}
-			discover={discover}
-			onClick={(event) => {
-				setRevealed(null)
-				if (!onOpen || event.button !== 0) return
-				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-					return
-				event.preventDefault()
-				onOpen()
-			}}
-			aria-label={`Open ${title}`}
-			className={`flex w-full shrink-0 items-center justify-center gap-0.5 rounded-md bg-amber-400 font-black text-gray-950 ${FOCUS}`}
-		>
-			Open
-			<ChevronRightIcon className="-mr-0.5 size-4" aria-hidden />
-		</Link>
-	)
-	return (
-		// biome-ignore lint/a11y/useKeyWithClickEvents: the bare art is the poster's second tap; the Open bar is the keyboard's way.
-		<div
-			data-tap-overlay=""
-			onClick={(event) => {
-				const target = event.target as HTMLElement
-				if (
-					target === event.currentTarget ||
-					target.dataset.backdrop !== undefined
-				)
-					onArt()
-			}}
-			className="absolute inset-0 z-20 hidden flex-col @min-[4.5rem]/card:flex justify-end overflow-hidden rounded-lg bg-linear-to-t from-gray-950/90 via-gray-950/60 to-gray-950/10 p-0.5"
-		>
-			<div
-				ref={rise}
-				data-backdrop=""
-				className="hidden min-h-0 flex-1 flex-col justify-end gap-1 @min-[7.5rem]/card:flex"
-			>
-				<div className="grid grid-cols-2 gap-1">{children}</div>
-				<div className="h-6 text-[11px] @min-[9rem]/card:h-11 @min-[9rem]/card:text-sm [&>a]:h-full">
-					{open}
-				</div>
-			</div>
-			<div className="mt-auto flex flex-col gap-1 @min-[7.5rem]/card:hidden">
-				<div className="h-11 text-xs [&>a]:h-full">{open}</div>
-				<button
-					type="button"
-					aria-haspopup="dialog"
-					aria-label={`Actions for ${title}`}
-					onClick={onSheet}
-					className={`inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-md text-xs font-semibold ${DARK} ${FOCUS}`}
-				>
-					Actions
-				</button>
-			</div>
-		</div>
-	)
-}
 
 /** Under the picker opened by Seen: the watch is now, it can be dated, and the score can wait. */
 function AfterSeen({

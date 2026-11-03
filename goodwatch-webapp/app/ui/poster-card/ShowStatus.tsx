@@ -2,7 +2,8 @@
 // (ui/tracking/HeroStatus.tsx). Not started: Watching (which asks for the last episode seen), Seen, and Not
 // interested. Started: the status menu. A show without an episode list, or whose tracking can't be read, has Seen for
 // the whole show. Loaded the first time a card's status button is pressed or its score asks How far; it stays mounted
-// afterwards, menu closed, because it hosts the toasts (with Undo) that tracking answers with.
+// afterwards, menu closed, because it hosts the toasts (with Undo) that tracking answers with. `inline` gives the menu's
+// body alone, for the touch band's drawer (TapBand); the card's own instance hosts the toasts then.
 import { NoSymbolIcon } from "@heroicons/react/20/solid"
 import {
 	type ReactNode,
@@ -27,7 +28,10 @@ export default function ShowStatus({
 	anchor,
 	onClose,
 	onHide,
+	inline = false,
 }: {
+	/** The menu's body in place (the touch band's drawer), without the popout and the toasts. */
+	inline?: boolean
 	media: ScoredMedia
 	/** The button that opened the menu; null while it is closed. */
 	anchor: HTMLElement | null
@@ -106,6 +110,7 @@ export default function ShowStatus({
 		)
 	}
 
+	if (inline) return body
 	return (
 		<>
 			{anchor && (
