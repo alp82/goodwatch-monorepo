@@ -1,12 +1,12 @@
 // The score pill in a poster's top-right corner, in list rows and in the quick view's header: one dark pill holding the
 // GoodWatch score (its block in the score's colour), the viewer's own score ("you 8", the number in its score colour),
-// and one state icon after a hairline (Wishlist, Seen, or a show's status). A fixed size shows all three (S: one
-// number, no icon).
+// and one state icon after a hairline (Wishlist, Seen, or a show's status). A fixed size shows all three (S:
+// no icon). The viewer's score never shows alone: GoodWatch's number is always beside it.
 //
-// In a poster card ("auto") the pill keeps under ~40% of the card's width, by the card's own width:
-// - from 11rem (176 px): two numbers, GoodWatch and yours; without your score, GoodWatch and the state icon;
-// - 7.5rem to 11rem: one number, yours; without your score, GoodWatch and the state icon;
-// - under 7.5rem: one number, yours, else GoodWatch's; no icon. "you" goes under 6.5rem (104 px);
+// In a poster card ("auto"), by the card's own width:
+// - with your score: GoodWatch and yours at every width, no icon;
+// - without it: GoodWatch, and the state icon from 7.5rem;
+// - "you" goes under 6.5rem (104 px), read out only;
 // - the M look from 6.5rem, the S look under it (never the L look); the GoodWatch logo only beside a lone GoodWatch
 //   number, from 8rem.
 import {

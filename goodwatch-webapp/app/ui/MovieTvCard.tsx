@@ -6,13 +6,13 @@
 // (`ownerScore`).
 //
 // What shows depends on the card's own width (`@container/card`, so the server's HTML is already right), and no part
-// covers more than ~40% of it:
+// covers more than ~40% of it, except the pill: GoodWatch's number always stands beside the viewer's.
 // | width            | pill                          | owner's square            | logos | actions                 |
 // | from 11rem/176px | GoodWatch + you (or + icon)   | top left, under the badge | 2     | full                    |
-// | 7.5rem-11rem     | you (or GoodWatch + icon)     | top left, under the badge | 1     | full                    |
-// | 6rem-7.5rem      | yours, else GoodWatch         | top right, instead of it  | 1     | score row as a number   |
-// | 4.5rem-6rem      | bare number                   | top right, instead of it  | 0     | no score row            |
-// | under 4.5rem     | bare number                   | top right, instead of it  | 0     | none: a tap opens it    |
+// | 7.5rem-11rem     | GoodWatch + you (or + icon)   | top left, under the badge | 1     | full                    |
+// | 6rem-7.5rem      | GoodWatch + you, else GW      | top right, instead of it  | 1     | score row as a number   |
+// | 4.5rem-6rem      | GoodWatch + you, else GW      | top right, instead of it  | 0     | no score row            |
+// | under 4.5rem     | GoodWatch + you, else GW      | top right, instead of it  | 0     | none: a tap opens it    |
 // The age badge sits top left, under 4.5rem in the band above the title (beside the score it wouldn't fit).
 // The pill's rules are in ui/poster-card/ScorePill.tsx.
 //

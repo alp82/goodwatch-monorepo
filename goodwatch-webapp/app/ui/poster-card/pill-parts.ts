@@ -21,9 +21,9 @@ export interface PillParts {
 }
 
 /**
- * A fixed size shows every part (S: one number, no icon). In a card ("auto"), with the viewer's score GoodWatch's
- * number shows only from 11rem and the icon never; without it the icon shows from 7.5rem; "you" is read out but not
- * shown under 6.5rem; the logo only beside a lone GoodWatch number, from 8rem.
+ * GoodWatch's number shows at every size: the viewer's score never stands alone. A fixed size shows every part (S: no
+ * icon). In a card ("auto"), with the viewer's score the icon never shows; without it the icon shows from 7.5rem;
+ * "you" is read out but not shown under 6.5rem; the logo only beside a lone GoodWatch number, from 8rem.
  */
 export function pillParts(
 	size: PartSize,
@@ -34,7 +34,7 @@ export function pillParts(
 	if (size !== "auto") {
 		const fromM = size === "S" ? "hidden" : ""
 		return {
-			gw: scored ? fromM : "",
+			gw: "",
 			mark: fromM,
 			label: "",
 			logo: LOGO[size],
@@ -42,7 +42,7 @@ export function pillParts(
 		}
 	}
 	return {
-		gw: scored ? "hidden @min-[11rem]/card:inline-flex" : "",
+		gw: "",
 		mark: scored ? "hidden" : "hidden @min-[7.5rem]/card:inline-flex",
 		label: "sr-only @min-[6.5rem]/card:not-sr-only",
 		logo: !scored && !mark ? "hidden h-3 @min-[8rem]/card:inline" : "hidden",

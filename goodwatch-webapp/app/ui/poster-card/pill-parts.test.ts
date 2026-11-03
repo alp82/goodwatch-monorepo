@@ -2,9 +2,11 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { pillParts } from "./pill-parts.ts"
 
-test("in a card, your score alone below 11rem, GoodWatch beside it from there", () => {
+test("your score never shows alone: GoodWatch beside it at every size", () => {
 	const parts = pillParts("auto", true, true, false)
-	assert.equal(parts.gw, "hidden @min-[11rem]/card:inline-flex")
+	assert.equal(parts.gw, "")
+	for (const size of ["S", "M", "L"] as const)
+		assert.equal(pillParts(size, true, true, true).gw, "")
 	assert.equal(parts.mark, "hidden")
 	assert.equal(parts.logo, "hidden")
 })
@@ -36,7 +38,7 @@ test("a card hides the you label visually under 6.5rem, a fixed size never", () 
 	assert.equal(pillParts("M", true, true, true).label, "")
 })
 
-test("fixed sizes keep every part, S one number and no icon", () => {
+test("fixed sizes keep every part, S no icon", () => {
 	assert.deepEqual(pillParts("L", true, true, true), {
 		gw: "",
 		mark: "",
@@ -45,6 +47,6 @@ test("fixed sizes keep every part, S one number and no icon", () => {
 		pill: "",
 	})
 	const s = pillParts("S", true, true, true)
-	assert.equal(s.gw, "hidden")
+	assert.equal(s.gw, "")
 	assert.equal(s.mark, "hidden")
 })
