@@ -6,7 +6,7 @@ import { applyCorrections } from "./feedback/apply-corrections.server"
 // Every query is keyed by show_id. imdb_episode, imdb_season, rotten_tomatoes_season and
 // metacritic_season are CLUSTERED BY (show_id), so each read touches one shard.
 import { getEpisodePresentation } from "~/server/episode-presentation.server"
-import { identifyGridEpisodes, type CanonicalGridEpisode } from "~/domain/tracking/episode-grid-identity"
+import { identifyGridEpisodes, matchSameSizeSeasons, type CanonicalGridEpisode } from "~/domain/tracking/episode-grid-identity"
 import { alignEpisodeRun, runSeasonScores } from "~/domain/tracking/episode-run-alignment"
 import { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
 export { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
@@ -179,7 +179,7 @@ export const getEpisodeGrid = async ({ showId }: { showId: string }) => {
 	const presentation = await getEpisodePresentation(Number(showId))
 	if (presentation) return applyCorrections({ kind: "show", id: Number(showId) }, presentationGrid(Number(showId), presentation))
 	return applyCorrections({ kind: "show", id: Number(showId) }, await cached<{ showId: string }, EpisodeGrid>({
-		name: "episode-grid-media-v4",
+		name: "episode-grid-media-v5",
 		target: _getEpisodeGrid,
 		params: { showId },
 		// The IMDb ingest runs daily and the critic crawls weekly per airing show.
@@ -237,11 +237,39 @@ const _getEpisodeGrid = async ({
 	// IMDb's one long season (Naruto) put into TMDB's seasons; IMDb's own season score then covers no TMDB season.
 	const run = alignEpisodeRun(identified, canonicalEpisodes)
 	return buildEpisodeGrid(id, {
-		episodes: run ?? identified,
+		episodes: run ?? sameSizeSeasons(identified, canonicalEpisodes),
 		imdbSeasons: run ? runSeasonScores(run) : imdbSeasons,
 		tmdbSeasons,
 		rottenSeasons,
 		metacriticSeasons,
+	})
+}
+
+/**
+ * The import's rule 3 for the grid: in a regular season where IMDb and TMDB list the same episode numbers and no
+ * episode identified otherwise sits under another number, IMDb's episode is TMDB's at its number, even when the
+ * titles differ (Code Geass: romanized Japanese on IMDb, English on TMDB). Grid numbering is unchanged.
+ */
+export function sameSizeSeasons<
+	T extends EpisodeRow & { tmdbId?: number; canonicalSeason?: number; canonicalNumber?: number },
+>(rows: T[], canonical: readonly CanonicalGridEpisode[]): T[] {
+	const placed = new Map<string, number>()
+	for (const row of rows) if (row.tmdbId !== undefined) placed.set(row.imdb_episode_id, row.tmdbId)
+	const found = matchSameSizeSeasons(rows, canonical, placed)
+	if (!found.size) return rows
+	const byId = new Map(canonical.map((e) => [e.tmdb_id, e]))
+	return rows.map((row) => {
+		const tmdbId = found.get(row.imdb_episode_id)
+		const episode = tmdbId === undefined ? undefined : byId.get(tmdbId)
+		return episode
+			? {
+					...row,
+					tmdbId: episode.tmdb_id,
+					canonicalSeason: episode.season_number,
+					canonicalNumber: episode.episode_number,
+					nameLanguage: row.nameLanguage ?? "und",
+				}
+			: row
 	})
 }
 

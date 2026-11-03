@@ -23,6 +23,7 @@ import type { TitleSides } from "~/server/title-sides.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import { EpisodesSection } from "~/ui/details/EpisodesSection"
+import { EpisodeViewToggle } from "~/ui/details/episode-grid/episode-view"
 import { FactsList, TropesList } from "~/ui/details/FactsSection"
 import { RelatedSection } from "~/ui/details/RelatedSection"
 import { StorySection } from "~/ui/details/StorySection"
@@ -63,6 +64,8 @@ export interface TitleSection {
 	body: () => ReactNode
 	/** Classes for the body wrapper. */
 	bodyClass?: string
+	/** Controls at the right of the section header row. */
+	aside?: ReactNode
 }
 
 /** Headings of a section's own component become subheadings under the section's header. */
@@ -185,6 +188,13 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 							media={media}
 							episodeGrid={episodeGrid}
 							episodeLayout={input.episodeLayout}
+						/>
+					),
+					// The Grid / Consistency switch sits in the header row from sm up; a phone keeps it above the grid.
+					aside: (
+						<EpisodeViewToggle
+							showId={media.details.tmdb_id}
+							className="hidden shrink-0 self-start sm:flex"
 						/>
 					),
 					// The grid's and the list's own titles repeat the section's.

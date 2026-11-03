@@ -5,6 +5,7 @@ import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.serve
 import { HEADER_HEIGHT } from "~/ui/details/header-height"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import RatingsGrid, { type GridModel } from "./RatingsGrid"
+import { EpisodeViewToggle, useEpisodeChart } from "./episode-view"
 import { gridSeasons } from "./grid-seasons"
 import { FOCUS, seasonTitle } from "./presentation"
 import { EPISODE_GRID_ANCHOR } from "./scale"
@@ -17,7 +18,7 @@ export default function EpisodeGrid({
 	notice,
 }: { grid: EpisodeGridData; notice?: ReactNode }) {
 	const seasons = useMemo(() => gridSeasons(grid), [grid])
-	const [chart, setChart] = useState(false)
+	const chart = useEpisodeChart(grid.showId)
 	const [open, setOpen] = useState<number | null>(null)
 	const [selected, setSelected] = useState<number | null>(null)
 	const specials = seasons.find((s) => s.number === 0)
@@ -49,7 +50,8 @@ export default function EpisodeGrid({
 			aria-labelledby="episode-grid-title"
 			style={{ scrollMarginTop: `calc(${HEADER_HEIGHT} + 80px)` }}
 		>
-			<div className="flex flex-wrap items-center gap-2">
+			{/* From sm up the switch is in the section header (episode-view.tsx). */}
+			<div className="flex flex-wrap items-center gap-2 sm:h-0 sm:overflow-hidden">
 				<h2
 					id="episode-grid-title"
 					tabIndex={-1}
@@ -57,26 +59,7 @@ export default function EpisodeGrid({
 				>
 					Episodes
 				</h2>
-				<div
-					role="radiogroup"
-					aria-label="Show the episodes as"
-					data-view-toggle
-					className="flex items-center gap-1"
-				>
-					{[false, true].map((on) => (
-						<button
-							key={String(on)}
-							type="button"
-							// biome-ignore lint/a11y/useSemanticElements: matches the member's two-button switch
-							role="radio"
-							aria-checked={chart === on}
-							onClick={() => setChart(on)}
-							className={`inline-flex h-10 cursor-pointer items-center rounded-lg px-3 text-xs font-semibold lg:h-8 ${FOCUS} ${chart === on ? "bg-white text-gray-900" : "bg-white/10 text-gray-100 hover:bg-white/20"}`}
-						>
-							{on ? "Consistency" : "Grid"}
-						</button>
-					))}
-				</div>
+				<EpisodeViewToggle showId={grid.showId} className="flex sm:hidden" />
 			</div>
 			{grid.note && <p className="mt-2 text-sm text-gray-400">{grid.note}</p>}
 			{notice}

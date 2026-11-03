@@ -37,6 +37,7 @@ import {
 } from "~/domain/tracking/episode-layout"
 import EpisodeSkeleton from "~/ui/details/episode-grid/EpisodeSkeleton"
 import EpisodeHeading from "~/ui/details/episode-grid/EpisodeHeading"
+import { useEpisodeChart } from "~/ui/details/episode-grid/episode-view"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { useBelowFold } from "~/ui/details/below-fold"
 import RatingsGrid from "~/ui/details/episode-grid/RatingsGrid"
@@ -129,6 +130,7 @@ export default function EpisodeList({
 			actions={actions}
 			grid={grid}
 			showTitle={media.details.title}
+			showId={media.details.tmdb_id}
 		/>
 	)
 }
@@ -352,12 +354,14 @@ function List({
 	actions,
 	grid,
 	showTitle,
+	showId,
 }: {
 	tracking: ShowTracking
 	view: ShowView
 	actions: TrackingActions
 	grid: EpisodeGrid | null
 	showTitle: string
+	showId: number
 }) {
 	const { seasons } = tracking
 	const { layOutAll } = useBelowFold()
@@ -365,7 +369,7 @@ function List({
 	const model = useModel(tracking, view, actions, showTitle)
 	const nav = useNav(model)
 	const desktop = useIsDesktop()
-	const [shown, setShown] = useState<View>("grid")
+	const shown: View = useEpisodeChart(showId) ? "consistency" : "grid"
 	const regular = model.seasons.filter((season) => season.number !== 0)
 	const specials = model.seasons.find((season) => season.number === 0)
 	const next =
@@ -431,8 +435,7 @@ function List({
 				}
 			</style>
 			<EpisodeHeading
-				chart={shown === "consistency"}
-				onChart={(on) => setShown(on ? "consistency" : "grid")}
+				showId={showId}
 				next={
 					next
 						? { label: episodeLabel(next), title: next.name ?? undefined }

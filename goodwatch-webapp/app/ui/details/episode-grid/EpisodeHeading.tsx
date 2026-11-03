@@ -1,23 +1,26 @@
+import { EpisodeViewToggle } from "./episode-view"
 import { FOCUS } from "./presentation"
 
 /** The skeleton and the interactive overview reserve the same controls, including a future Next episode. */
 export default function EpisodeHeading({
-	chart = false,
-	onChart,
+	showId = 0,
 	next,
 	onNext,
 	loading,
 	onRetry,
 }: {
-	chart?: boolean
-	onChart?: (chart: boolean) => void
+	/** The show whose view the switch sets; the switch sits in the section header from sm up (episode-view.tsx). */
+	showId?: number
 	next?: { label: string; title?: string }
 	onNext?: () => void
 	loading?: "loading" | "failed" | "changed"
 	onRetry?: () => void
 }) {
 	return (
-		<div className="flex flex-wrap items-center gap-2">
+		// From sm up the switch is in the section header, so a row with nothing else in it goes.
+		<div
+			className={`flex flex-wrap items-center gap-2 ${!next && !loading ? "sm:hidden" : ""}`}
+		>
 			<h2
 				id="episode-list-title"
 				tabIndex={-1}
@@ -49,26 +52,11 @@ export default function EpisodeHeading({
 					className={`inline-block h-10 w-32 shrink-0 rounded-lg lg:h-8 ${loading ? "bg-white/[0.07] animate-pulse motion-reduce:animate-none" : "invisible"}`}
 				/>
 			)}
-			<div
-				role="radiogroup"
-				aria-label="Show the episodes as"
-				data-view-toggle
-				className="flex items-center gap-1"
-			>
-				{[false, true].map((on) => (
-					<button
-						key={String(on)}
-						type="button"
-						role="radio"
-						aria-checked={chart === on}
-						disabled={Boolean(loading)}
-						onClick={() => onChart?.(on)}
-						className={`inline-flex h-10 cursor-pointer items-center rounded-lg px-3 text-xs font-semibold lg:h-8 ${FOCUS} ${loading ? "text-transparent bg-white/[0.07] animate-pulse motion-reduce:animate-none" : chart === on ? "bg-white text-gray-900" : "bg-white/10 text-gray-100 hover:bg-white/20"}`}
-					>
-						{on ? "Consistency" : "Grid"}
-					</button>
-				))}
-			</div>
+			<EpisodeViewToggle
+				showId={showId}
+				loading={Boolean(loading)}
+				className="flex sm:hidden"
+			/>
 		</div>
 	)
 }

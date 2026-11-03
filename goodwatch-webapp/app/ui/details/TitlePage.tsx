@@ -556,6 +556,7 @@ export function TitlePage(props: TitlePageProps) {
 										icon={s.icon}
 										title={s.label}
 										subtitle={s.subtitle}
+										aside={s.aside}
 									/>
 									<div className={`mt-6 min-w-0 lg:mt-8 ${s.bodyClass ?? ""}`}>
 										{s.body()}

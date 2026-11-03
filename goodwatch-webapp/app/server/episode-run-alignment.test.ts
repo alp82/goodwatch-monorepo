@@ -143,3 +143,40 @@ test("specials pass through, and season scores are vote-weighted per TMDB season
 		{ season_number: 2, score: 5, votes: 30, max_episode_number: 1 },
 	])
 })
+
+test("same-size seasons: IMDb's episode is TMDB's at its number though the titles differ (Code Geass)", async () => {
+	const { sameSizeSeasons } = await import("./episode-grid.server.ts")
+	const tmdb: CanonicalGridEpisode[] = [
+		{ tmdb_id: 11, imdb_id: null, season_number: 1, episode_number: 1, name: "The Day a New Demon was Born" },
+		{ tmdb_id: 12, imdb_id: null, season_number: 1, episode_number: 2, name: "Zero" },
+		{ tmdb_id: 21, imdb_id: null, season_number: 2, episode_number: 1, name: "Alpha" },
+		{ tmdb_id: 22, imdb_id: null, season_number: 2, episode_number: 2, name: "Beta" },
+		{ tmdb_id: 23, imdb_id: null, season_number: 2, episode_number: 3, name: "Gamma" },
+	]
+	const imdb: ImdbRow[] = [
+		{ imdb_episode_id: "tt1", season_number: 1, episode_number: 1, name: "Majin ga umareta hi", score: 7.8, votes: 9 },
+		{ imdb_episode_id: "tt2", season_number: 1, episode_number: 2, name: "Zero", score: 9.4, votes: 9 },
+		// Season 2: IMDb has "Alpha" at number 2, so its numbers can't be trusted.
+		{ imdb_episode_id: "tt3", season_number: 2, episode_number: 1, name: "Uno", score: 7, votes: 9 },
+		{ imdb_episode_id: "tt4", season_number: 2, episode_number: 2, name: "Alpha", score: 8, votes: 9 },
+		{ imdb_episode_id: "tt5", season_number: 2, episode_number: 3, name: "Tres", score: 6, votes: 9 },
+	]
+	const rows = sameSizeSeasons(identifyGridEpisodes(imdb, tmdb), tmdb)
+	assert.deepEqual(
+		rows.map((r) => [r.imdb_episode_id, r.tmdbId]),
+		[
+			["tt1", 11],
+			["tt2", 12],
+			["tt3", undefined],
+			["tt4", 21],
+			["tt5", undefined],
+		],
+	)
+	const grid = buildEpisodeGrid(31724, { episodes: rows, imdbSeasons: [], tmdbSeasons: [], rottenSeasons: [], metacriticSeasons: [] })
+	const found = matchEpisodeRatings(
+		tmdb.map((e) => ({ id: e.tmdb_id, season: e.season_number, number: e.episode_number, name: e.name })),
+		grid.seasons,
+	)
+	assert.equal(found.byEpisode.get(11)?.score, 7.8)
+	assert.equal(found.byEpisode.has(22), false)
+})

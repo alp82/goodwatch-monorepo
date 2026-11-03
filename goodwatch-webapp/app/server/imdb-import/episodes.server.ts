@@ -15,6 +15,7 @@
 import {
 	type CanonicalGridEpisode,
 	identifyGridEpisodes,
+	matchSameSizeSeasons,
 } from "~/domain/tracking/episode-grid-identity"
 import { isMissingEpisodeScoreTable } from "../episode-scores.server.ts"
 import { chunks, marks, run, select } from "./store.server"
@@ -58,68 +59,8 @@ const AMBIGUOUS =
 const UNPLACED =
 	"GoodWatch couldn't tell which episode this is: IMDb numbers or names it differently from the episode list."
 
-/**
- * Rule 3: IMDb episodes that rules 1 and 2 left unplaced, matched by number in the regular seasons where IMDb and
- * TMDB list the same episodes. A season qualifies when both lists have as many episodes, every one numbered, each
- * number once and the same numbers on both sides, and no episode placed by rules 1 and 2 sits under another number.
- * A TMDB episode already placed, or one that stores another IMDb ID, isn't matched again.
- */
-export function matchSameSizeSeasons(
-	imdb: readonly {
-		imdb_episode_id: string
-		season_number: number | null
-		episode_number: number | null
-	}[],
-	canonical: readonly CanonicalGridEpisode[],
-	placed: ReadonlyMap<string, number>,
-): Map<string, number> {
-	const found = new Map<string, number>()
-	const claimed = new Set(placed.values())
-	const listings = new Map<string, number>()
-	for (const row of imdb)
-		listings.set(row.imdb_episode_id, (listings.get(row.imdb_episode_id) ?? 0) + 1)
-	const seasons = new Set(
-		imdb.flatMap((row) =>
-			row.season_number !== null && row.season_number > 0
-				? [row.season_number]
-				: [],
-		),
-	)
-	const numbersOf = (list: readonly (number | null)[]) =>
-		list.every((n) => n !== null) && new Set(list).size === list.length
-			? [...list].sort((a, b) => Number(a) - Number(b)).join(",")
-			: null
-	for (const season of seasons) {
-		const imdbSeason = imdb.filter((row) => row.season_number === season)
-		const tmdbSeason = canonical.filter((row) => row.season_number === season)
-		const imdbNumbers = numbersOf(imdbSeason.map((row) => row.episode_number))
-		if (
-			imdbSeason.length !== tmdbSeason.length ||
-			imdbNumbers === null ||
-			imdbNumbers !== numbersOf(tmdbSeason.map((row) => row.episode_number))
-		)
-			continue
-		const byNumber = new Map(tmdbSeason.map((row) => [row.episode_number, row]))
-		const disagrees = imdbSeason.some((row) => {
-			const tmdbId = placed.get(row.imdb_episode_id)
-			return (
-				tmdbId !== undefined &&
-				byNumber.get(row.episode_number ?? -1)?.tmdb_id !== tmdbId
-			)
-		})
-		if (disagrees) continue
-		for (const row of imdbSeason) {
-			if (placed.has(row.imdb_episode_id)) continue
-			if (listings.get(row.imdb_episode_id) !== 1) continue
-			const episode = byNumber.get(row.episode_number ?? -1)
-			if (!episode || claimed.has(episode.tmdb_id)) continue
-			if (episode.imdb_id && episode.imdb_id !== row.imdb_episode_id) continue
-			found.set(row.imdb_episode_id, episode.tmdb_id)
-			claimed.add(episode.tmdb_id)
-		}
-	}
-	return found
-}
+// Rule 3 lives beside rules 1 and 2, where the episode grid uses it too.
+export { matchSameSizeSeasons } from "~/domain/tracking/episode-grid-identity"
 
 /** The GoodWatch episode of each IMDb episode ID, or why there is none. */
 export async function resolveImdbEpisodes(
