@@ -47,6 +47,39 @@ export interface EpisodeRatings {
 const norm = (name: string | null) =>
 	(name ?? "").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "")
 
+const TRAILING_NOTE = /\s*[([][^)\]]*[)\]]$/u
+/** A title without accents, modifier letters (Hawaiian ʻokina), punctuation or a leading article. */
+const loose = (name: string, dropNote: boolean) =>
+	(dropNote ? name.trim().replace(TRAILING_NOTE, "") : name)
+		.normalize("NFKD")
+		.replace(/[\p{Mn}\p{Lm}]/gu, "")
+		.toLowerCase()
+		.replace(/^(the|a|an)\s+/u, "")
+		.replace(/[^\p{L}\p{N}]/gu, "")
+
+/**
+ * The two sites name the episode at the same place alike: the same title, or one written slightly differently
+ * ("The Freelancer (No. 145)", "Ko‘olauloa" and "Koʻolauloa", "Pilot" and "The Pilot").
+ * Only for the episode at the same season and number, where a near match can't pick a neighbour. A trailing note
+ * is dropped only when one side has it and it isn't a part ("(1)", "(Part 2)"), and the longer title may add only
+ * words without digits, so "Opener (1)" never matches "Opener", nor "Finale" "Finale, Part 2".
+ */
+const sameTitle = (a: string | null, b: string | null) => {
+	if (norm(a) === norm(b)) return true
+	if (!a || !b) return false
+	// A part note such as "(1)" or "(Part 2)" names half an episode and is never dropped.
+	const note = (t: string) => t.trim().match(TRAILING_NOTE)?.[0] ?? null
+	const part = (n: string | null) => n !== null && /^\s*[([]\s*(part\s*)?\d+\s*[)\]]$/iu.test(n)
+	const [na, nb] = [note(a), note(b)]
+	const drop = (na === null) !== (nb === null) && !part(na) && !part(nb)
+	const x = loose(a, drop)
+	const y = loose(b, drop)
+	if (!x || !y) return false
+	if (x === y) return true
+	const [short, long] = x.length <= y.length ? [x, y] : [y, x]
+	return short.length >= 5 && long.includes(short) && !/\d/u.test(long.replace(short, ""))
+}
+
 /** No name, or a placeholder such as "Episode 3" and IMDb's "Episode #1.3". */
 const generic = (name: string | null) => /^(episode\d*|\d+)$/.test(norm(name))
 
@@ -54,7 +87,7 @@ const generic = (name: string | null) => /^(episode\d*|\d+)$/.test(norm(name))
  * IMDb's rating for each listed episode, or none.
  *
  * 0. The episode the grid already proved to be this one (its `tmdbId`), in any season.
- * 1. The episode IMDb has at the same season and number, when the titles agree.
+ * 1. The episode IMDb has at the same season and number, when the titles agree (`sameTitle`).
  * 2. Otherwise the one episode of that season with the same title.
  * 3. Otherwise the episode at the same number when one of the two has no real title and both sites list the same
  *    number of episodes for the season.
@@ -119,7 +152,7 @@ export function matchEpisodeRatings(
 		const left: ListedName[] = []
 		for (const episode of own) {
 			const at = atNumber.get(episode.number)
-			if (at && norm(at.name) === norm(episode.name) && !generic(at.name)) {
+			if (at && sameTitle(at.name, episode.name) && !generic(at.name)) {
 				byEpisode.set(episode.id, {
 					score: at.score,
 					how: "number",

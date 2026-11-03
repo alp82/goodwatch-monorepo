@@ -174,3 +174,25 @@ test("specials take no rating", () => {
 	])
 	assert.deepEqual(scores(found), {})
 })
+
+test("at the same number, a title written slightly differently still matches; a different part never does", () => {
+	const found = matchEpisodeRatings(
+		listed(1, ["The Freelancer", "Ko‘olauloa (North Shore of Oʻahu)", "The Pilot", "Finale (1)", "Finale", "Fifteen Minutes"]),
+		[
+			imdb(1, [
+				[1, "The Freelancer (No. 145)", 7.8],
+				[2, "Ko'olauloa (North Shore of O'ahu)", 7.7],
+				[3, "Pilot", 7],
+				[4, "Finale (2)", 8],
+				[5, "Finale, Part 2", 8.5],
+				[6, "15 Minutes", 6],
+				[7, "Extra", 5],
+			]),
+		],
+	)
+	assert.deepEqual(scores(found), {
+		101: "7.8 by number",
+		102: "7.7 by number",
+		103: "7 by number",
+	})
+})
