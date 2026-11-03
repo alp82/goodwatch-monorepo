@@ -1,4 +1,3 @@
-import type { TitleKey } from "~/utils/title-key"
 // Discover's search mode: which filter bar choices go into the search ranking as eligibility, and the query limits.
 // Pure and shared by the server and the browser.
 //
@@ -7,7 +6,10 @@ import type { TitleKey } from "~/utils/title-key"
 // several genres, Similar to, cast and crew, legacy filters) runs in memory over the ranked list, with its counts and
 // recoveries. The in-memory pass also checks the ranking's choices again, which changes nothing but keeps one code path.
 import type { SearchFilters } from "~/server/combined-search/search-filters"
-import type { FilterState, Released } from "./filter-state"
+import type { FilterHides } from "~/server/search-ranking/search-filter.server"
+import type { FilterBarCounts } from "~/ui/filter-bar/types"
+import type { TitleKey } from "~/utils/title-key"
+import type { FilterName, FilterState, Released } from "./filter-state"
 
 /** Discover starts with the whole catalog, including seen titles, for every viewer. */
 export const DISCOVER_DEFAULTS = { onMyServices: false, notSeenYet: false }
@@ -69,6 +71,54 @@ export function searchEligibility(
 			providerIds: [...new Set(services)].slice(0, 50),
 		}
 	return filters
+}
+
+/** Discover's filters that the search applies itself (searchEligibility), which the results' counts can't see. */
+export function searchAppliedFilters(
+	state: FilterState,
+	scope: SearchScope,
+): FilterName[] {
+	const out: FilterName[] = []
+	if (state.type !== "all") out.push("type")
+	if (state.anime !== "any") out.push("anime")
+	if (state.people?.length) out.push("people")
+	if (state.genres.length === 1) out.push("genres")
+	if (state.years?.min !== undefined || state.years?.max !== undefined)
+		out.push("years")
+	else if (state.released !== "any") out.push("released")
+	if (searchEligibility(state, scope).streaming) out.push("services")
+	return out
+}
+
+/**
+ * Search mode's counts with the filters the search applies itself: the titles each one keeps out of a topic
+ * (the search's filterHides) join the recoveries and the hidden total; the others are marked `inSearch`, so the
+ * breakdown says they are set in the search instead of "no effect".
+ */
+export function withSearchFilters(
+	counts: FilterBarCounts,
+	state: FilterState,
+	scope: SearchScope,
+	hides: FilterHides | undefined,
+): FilterBarCounts {
+	const applied = searchAppliedFilters(state, scope)
+	if (!applied.length) return counts
+	const counted = new Map<FilterName, number>()
+	for (const name of applied) {
+		const key = name === "released" ? "years" : name
+		const titles = hides?.[key as Exclude<keyof FilterHides, "hidden">]
+		if (titles !== undefined) counted.set(name, titles)
+	}
+	const extra = [...counted].map(([filter, titles]) => ({ filter, titles }))
+	return {
+		...counts,
+		hidden: counts.hidden + (counted.size ? (hides?.hidden ?? 0) : 0),
+		recoveries: [
+			...counts.recoveries.filter((r) => !counted.has(r.filter)),
+			...extra.filter((r) => r.titles > 0),
+		].sort((a, b) => b.titles - a.titles),
+		inSearch: applied.filter((name) => !counted.has(name)),
+	}
 }
 
 /** The query as the search reads it, or null when it's too short to search. */

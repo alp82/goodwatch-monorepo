@@ -16,9 +16,9 @@ import type {
 	ReadingFields,
 } from "../combined-search/reading-retrieval.server.ts"
 import {
-	queryBatch,
 	type QdrantQuery,
 	type ScoredPoint,
+	queryBatch,
 } from "./qdrant-http.server.ts"
 import { type QueryVectors, encodeQueryTexts } from "./query-encoder.server.ts"
 import {
@@ -31,6 +31,7 @@ import {
 	spell,
 	splitNegation,
 } from "./query-parsing.server.ts"
+import { RankingProgress } from "./ranking-progress.server.ts"
 import {
 	COVERAGE_BM25,
 	COVERAGE_MAX_TOKENS,
@@ -58,20 +59,27 @@ import {
 	nearestIntent,
 	resolveReference,
 } from "./references.server.ts"
-import { searchFilter } from "./search-filter.server.ts"
+import {
+	type FilterHides,
+	filterHides,
+	searchFilter,
+} from "./search-filter.server.ts"
 import {
 	type QuantizedVectors,
 	type SearchIndex,
 	getSearchIndex,
 } from "./search-index.server.ts"
 import {
-	type BlendedTitle,
-	type TitleFacts,
-	type TitleLookupRow,
-} from "./title-blend.server.ts"
-import { createSearchReblend, topicPhrases } from "./search-reblend.server.ts"
+	createSearchReblend,
+	discoverTopic,
+	topicPhrases,
+} from "./search-reblend.server.ts"
 import { queryTerms, tokens } from "./text-rules.server.ts"
-import { RankingProgress } from "./ranking-progress.server.ts"
+import type {
+	BlendedTitle,
+	TitleFacts,
+	TitleLookupRow,
+} from "./title-blend.server.ts"
 
 const COLLECTION = "media_fingerprint_v1"
 const PROFILES = "search_reference_profiles"
@@ -123,6 +131,10 @@ export interface RankedSearch {
 	results: BlendedTitle[]
 	/** Blend a later title lookup into these same scored candidates; no encoding, retrieval or scoring repeats. */
 	reblend: (titles: TitleLookupRow[]) => BlendedTitle[]
+	/** For Discover's topic searches: what each of the search's own filters keeps out of the topic (filterHides). */
+	filterHides: FilterHides | null
+	/** filterHides for a later title lookup, beside reblend. */
+	hidesFor: (titles: TitleLookupRow[]) => FilterHides | null
 	/** general, non_english or reference. */
 	route: "general" | "non_english" | "reference"
 	reference: {
@@ -1060,6 +1072,7 @@ export async function rankSearch(
 	// The top HEAD_LENGTH is blended and bounded from the top HEAD_LENGTH candidates alone, as when the list was that
 	// long, and the longer list only continues after it: candidates further down neither outscore a weak title-lookup
 	// match in the top nor get pulled up into it as own titles.
+	const topics = topicPhrases(query, phrases, negated, Boolean(found))
 	const reblend = createSearchReblend(
 		index,
 		query,
@@ -1069,9 +1082,18 @@ export async function rankSearch(
 		outsideFacts,
 		ref,
 		resultLimit,
-		topicPhrases(query, phrases, negated, Boolean(found)),
+		topics,
 	)
 	const results = reblend(request.titleLookup)
+	// Discover's counts for the filters the search applies itself, from the topic's titles; again for a later title
+	// lookup, which can make the query a title's name and end the topic.
+	const hidesFor = (titles: TitleLookupRow[]) => {
+		if (resultLimit <= RESULT_LENGTH) return null
+		const topic = discoverTopic(index, query, topics, titles)
+		return topic
+			? filterHides(t, topic, eligibility, reading.flags, filter.era)
+			: null
+	}
 	lap("blend")
 	// The trace is for checks, not part of the ranking: keep it out of the total
 	timings.total = performance.now() - started - (timings.trace ?? 0)
@@ -1081,6 +1103,8 @@ export async function rankSearch(
 		buildId: index.buildId,
 		results,
 		reblend,
+		filterHides: hidesFor(request.titleLookup),
+		hidesFor,
 		route: ref ? "reference" : nonEnglish ? "non_english" : "general",
 		reference: ref
 			? {

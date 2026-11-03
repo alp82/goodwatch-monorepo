@@ -12,6 +12,8 @@ export interface DiscoverSearchResult {
 	q: string
 	/** The ranked list in the ranking's order. */
 	ranked: TitleKey[]
+	/** For a topic search: what each of the search's own filters keeps out of the topic. */
+	filterHides?: SearchBatch["filterHides"]
 	/** Shared server snapshot; absent when the shared cache is unavailable. */
 	searchSet?: string
 	reading: ReadingChip[]
@@ -41,6 +43,7 @@ const resultFor = (q: string, batch: SearchBatch): DiscoverSearchResult => ({
 		? (batch.searchKeys as TitleKey[])
 		: rankedKeys(batch),
 	...(batch.searchSet ? { searchSet: batch.searchSet } : {}),
+	...(batch.filterHides ? { filterHides: batch.filterHides } : {}),
 	reading: batch.reading ?? [],
 	people: batch.people ?? [],
 	creditScope: batch.creditScope ?? null,

@@ -5,6 +5,9 @@
 //
 // "Hides" is an estimate: the server counts only titles that one filter alone hides (recoveries); titles that several
 // filters keep out are shared among those filters by their sole-hide counts, so the rows add up to the hidden total.
+// In search mode the search applies some filters itself (year, type, anime, a genre, people, services): for a topic
+// search it counts what they keep out of the topic; otherwise their rows say "set in search" (`inSearch`), not
+// "no effect", and take no share of the hidden total.
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { useEffect, useId, useRef, useState } from "react"
@@ -22,6 +25,8 @@ interface Row {
 	hides: number
 	chips: BarChip[]
 	off: boolean
+	/** The search applies it and couldn't count what it hides. */
+	inSearch?: boolean
 }
 
 const removeAll = (chips: BarChip[], s: FilterState) =>
@@ -125,9 +130,10 @@ export function FilterMix({
 		if (at) at.chips.push(chip)
 		else groups.push({ group: chip.group, chips: [chip] })
 	}
+	const inSearch = new Set<string>(counts?.inSearch ?? [])
 	const soleSum = groups.reduce((sum, g) => sum + (sole.get(g.group) ?? 0), 0)
 	const shared = Math.max(0, hidden - soleSum)
-	const weight = (g: string) => (sole.get(g) ?? 0) + 1
+	const weight = (g: string) => (inSearch.has(g) ? 0 : (sole.get(g) ?? 0) + 1)
 	const weights = groups.reduce((sum, g) => sum + weight(g.group), 0)
 	const live: Row[] = groups.map((g) => ({
 		group: g.group,
@@ -139,6 +145,7 @@ export function FilterMix({
 		),
 		chips: g.chips,
 		off: false,
+		inSearch: inSearch.has(g.group),
 	}))
 	const unsorted: Row[] = [
 		...live,
@@ -256,9 +263,11 @@ export function FilterMix({
 										<span className="shrink-0 text-xs tabular-nums text-gray-500">
 											{row.off
 												? "off"
-												: row.hides < 1
-													? "no effect"
-													: `hides ~${compactCount(row.hides)}`}
+												: row.inSearch
+													? "set in search"
+													: row.hides < 1
+														? "no effect"
+														: `hides ~${compactCount(row.hides)}`}
 										</span>
 										<span
 											className="shrink-0 origin-center scale-75"

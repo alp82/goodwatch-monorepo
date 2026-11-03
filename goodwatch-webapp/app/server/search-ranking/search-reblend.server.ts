@@ -9,18 +9,18 @@
 // rated" over "pirates 2020" sorted Folklore and The Owl House first. Several such phrases keep the titles of any.
 import { conceptTitles } from "./concept-query.server.ts"
 import {
-	boundOwn,
-	foldCuts,
 	HEAD_LENGTH,
 	RESULT_LENGTH,
+	boundOwn,
+	foldCuts,
 } from "./ranking.server.ts"
 import type { Reference } from "./references.server.ts"
 import type { SearchIndex } from "./search-index.server.ts"
 import { normalized, words } from "./text-rules.server.ts"
 import {
-	blend,
 	type TitleFacts,
 	type TitleLookupRow,
+	blend,
 } from "./title-blend.server.ts"
 
 /** How many titles of a concept search's Discover list stay whether or not they carry the label. */
@@ -79,6 +79,24 @@ export function topicPhrases(
 	]
 }
 
+/**
+ * Discover's topic for a search: discoverConcept, except that a query that is a title's name ("Funny Games") is that
+ * title's search, and its words make no topic of the phrases.
+ */
+export function discoverTopic(
+	index: Pick<SearchIndex, "negationLabels">,
+	query: string,
+	phrases: readonly string[],
+	titles: readonly TitleLookupRow[],
+): Set<number> | null {
+	const named = titles.some((row) =>
+		[row.title, row.original].some(
+			(n) => normalized(n ?? "") === normalized(query),
+		),
+	)
+	return discoverConcept(index, query, named ? [] : phrases)
+}
+
 export function createSearchReblend(
 	index: SearchIndex,
 	query: string,
@@ -110,15 +128,9 @@ export function createSearchReblend(
 			),
 		)
 	return (titles: TitleLookupRow[]) => {
-		// A query that is a title's name ("Funny Games") is that title's search: its words make no topic.
-		const named = titles.some((row) =>
-			[row.title, row.original].some(
-				(n) => normalized(n ?? "") === normalized(query),
-			),
-		)
 		const concept =
 			limit > RESULT_LENGTH
-				? discoverConcept(index, query, named ? [] : phrases)
+				? discoverTopic(index, query, phrases, titles)
 				: null
 		let head = blended(ranked.slice(0, HEAD_LENGTH), titles)
 		if (ref) head = boundOwn(head, ref)

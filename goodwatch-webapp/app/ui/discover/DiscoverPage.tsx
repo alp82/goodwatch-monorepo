@@ -1,6 +1,3 @@
-import { DISCOVER_DEFAULTS } from "~/domain/discover-search"
-import { useProductExposure } from "~/telemetry/useProductAnalytics"
-import { discoveryProperties } from "~/telemetry/product-events"
 // Discover, browsing and searching on one page: the static title, the controls in Easy or Advanced (DiscoverControls,
 // with the panel or phone sheet the filter bar opens), and the grid of title cards, loaded 40 at a time as the person scrolls. The grid
 // is never replaced between browsing and searching: titles in both lists glide to their new places.
@@ -25,9 +22,11 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useInView } from "react-intersection-observer"
 import { withSides } from "~/domain/discover-layout"
 import {
+	DISCOVER_DEFAULTS,
 	type SearchScope,
 	searchEligibility,
 	searchText,
+	withSearchFilters,
 } from "~/domain/discover-search"
 import {
 	type SortKey,
@@ -37,6 +36,8 @@ import {
 import { groupsByTaste } from "~/domain/side-rows"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
 import type { DiscoverResults } from "~/server/discover-results.server"
+import { discoveryProperties } from "~/telemetry/product-events"
+import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import {
 	DiscoverControls,
 	type DiscoverPageContext,
@@ -46,12 +47,12 @@ import {
 	preloadSubTabs,
 	useSubTabContent,
 } from "~/ui/discover-bar/sub-tabs/lazy"
+import { useDescribedSearch } from "~/ui/discover-bar/useDescribedSearch"
 import { useDesktop, useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
 import { NextPageLink } from "~/ui/explore/GridUtils"
-import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
 import { BestMatchSignUp } from "~/ui/filter-bar/SignUpPanel"
+import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
 import type { ForYouControl } from "~/ui/filter-bar/types"
-import { useDescribedSearch } from "~/ui/discover-bar/useDescribedSearch"
 import { useFilterState } from "~/ui/filter-bar/useFilterState"
 import { SearchPeople } from "~/ui/search/SearchPeople"
 import { Spinner } from "~/ui/wait/Spinner"
@@ -389,8 +390,22 @@ export function DiscoverPage({
 		enabled:
 			bar.counts.length > 0 && guest !== undefined && (!searching || !!ranked),
 	})
-	const extraShown = bar.counts.length > 0 && extra.data ? extra.data : null
-	const counts = stale ? null : (extraShown ?? first)
+	// Not the last query's counts while this one's load: the search's own filter counts are this query's.
+	const extraShown =
+		bar.counts.length > 0 && extra.data && !extra.isPlaceholderData
+			? extra.data
+			: null
+	const listCounts = stale ? null : (extraShown ?? first)
+	// The filters the search applies itself: their counts come from the search (a topic's), else "set in search".
+	const counts =
+		listCounts && searching && ranked
+			? withSearchFilters(
+					listCounts,
+					filters.state,
+					scope,
+					search.current?.filterHides,
+				)
+			: listCounts
 	const page = useMemo<DiscoverPageContext>(
 		() => ({
 			scope,
@@ -480,16 +495,16 @@ export function DiscoverPage({
 				{/* A failed search says so; progress shows nothing, so the grid never moves. */}
 				<div role="status">
 					{searching && search.error && (
-					<div className="mt-1 flex min-h-5 flex-wrap items-center gap-3 text-sm text-gray-400 lg:mt-4">
-						<span>{search.error}</span>
-						<button
-							type="button"
-							onClick={() => search.retry()}
-							className="font-bold text-amber-400 underline-offset-2 hover:text-amber-300 hover:underline cursor-pointer"
-						>
-							Retry
-						</button>
-					</div>
+						<div className="mt-1 flex min-h-5 flex-wrap items-center gap-3 text-sm text-gray-400 lg:mt-4">
+							<span>{search.error}</span>
+							<button
+								type="button"
+								onClick={() => search.retry()}
+								className="font-bold text-amber-400 underline-offset-2 hover:text-amber-300 hover:underline cursor-pointer"
+							>
+								Retry
+							</button>
+						</div>
 					)}
 				</div>
 				{found && found.people.length > 0 && (

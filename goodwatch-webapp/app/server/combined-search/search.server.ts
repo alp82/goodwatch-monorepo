@@ -55,7 +55,7 @@ import { readingsConfigured } from "../search-runtime/limits.server";
 import { searchAdmission } from "../search-runtime/admission.server";
 import { HEAD_LENGTH } from "../search-ranking/ranking.server";
 import { STOPWORDS, words } from "../search-ranking/text-rules.server";
-import { ELIGIBLE_VOTES } from "../search-ranking/search-filter.server";
+import { ELIGIBLE_VOTES, type FilterHides } from "../search-ranking/search-filter.server";
 import {
 	type CreditScope,
 	type LookupPerson,
@@ -90,6 +90,8 @@ export interface SearchBatch {
 	rows: Row[];
 	/** Frozen candidate keys for Discover; cards are fetched separately, 40 at a time. */
 	searchKeys?: number[];
+	/** With searchKeys, for a topic search: what each of the search's own filters keeps out (filterHides). */
+	filterHides?: FilterHides;
 	searchSet?: string;
 	// The interpretation the search used; empty when it ran as a basic search.
 	reading: ReadingChip[];
@@ -409,6 +411,7 @@ async function titleMatches(
 interface ServedList {
 	rows: Row[];
 	searchKeys?: number[];
+	filterHides?: FilterHides;
 	metadata: Metadata[];
 	rankerVersion: string;
 	titleError: boolean;
@@ -497,7 +500,11 @@ async function rankedList(
 	);
 	const rankStarted = performance.now();
 	const ranked = reuse
-		? { ...reuse.ranked, results: reuse.ranked.reblend(allowedTitles) }
+		? {
+				...reuse.ranked,
+				results: reuse.ranked.reblend(allowedTitles),
+				filterHides: reuse.ranked.hidesFor?.(allowedTitles) ?? null,
+			}
 		: await rankForServing(
 				fields,
 				{
@@ -642,7 +649,10 @@ async function rankedList(
 			),
 		rows,
 		...(length > 100
-			? { searchKeys: ranked.results.map((row) => row.id) }
+			? {
+					searchKeys: ranked.results.map((row) => row.id),
+					...(ranked.filterHides ? { filterHides: ranked.filterHides } : {}),
+				}
 			: {}),
 		metadata: [...responseMetadataKeys].flatMap((key) =>
 			meta.has(key) ? [meta.get(key)!] : [],
@@ -1217,6 +1227,7 @@ export async function combinedSearch(
 				rows = refreshed.rows;
 				metadata = refreshed.metadata;
 				served.searchKeys = refreshed.searchKeys;
+				served.filterHides = refreshed.filterHides;
 				served.titleError = refreshed.titleError;
 				if (
 					refreshed.titleError &&
@@ -1243,6 +1254,9 @@ export async function combinedSearch(
 		// failed, the search records nothing.
 		const batch: SearchBatch = {
 			...(served?.searchKeys ? { searchKeys: served.searchKeys } : {}),
+			...(served?.searchKeys && served.filterHides
+				? { filterHides: served.filterHides }
+				: {}),
 			q: query,
 			rows,
 			reading,

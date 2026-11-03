@@ -15,6 +15,8 @@ export interface FilterBarCounts {
 	hidden: number
 	/** Titles only that filter hides, largest first. */
 	recoveries: { filter: FilterName; titles: number }[]
+	/** Search mode: filters the search applies itself and couldn't count (domain/discover-search withSearchFilters). */
+	inSearch?: FilterName[]
 	/** What each option would leave, the others unchanged. Taste groups count membership before taste picks. */
 	optionCounts: FilterOptionCounts
 	/** Per-service counts are missing while the viewer's country loads. */
