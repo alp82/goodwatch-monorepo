@@ -127,7 +127,7 @@ export function buildFindIndex({
 				})
 	for (const tag of media.fingerprint?.essenceTags ?? [])
 		add({
-			section: "story",
+			section: "summary",
 			title: tag,
 			context: "Essence",
 			needle: tag,

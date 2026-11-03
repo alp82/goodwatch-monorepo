@@ -71,8 +71,6 @@ function bodyHeight(
 			return { phone: 1058, desktop: 691 }
 		case "episodes":
 			return episodeGrid ? episodeGridHeight(episodeGrid) : same(0)
-		case "story":
-			return { phone: 400, desktop: 320 }
 		case "cast": {
 			// Search and tiers, then 24 people: 12 rows of two on a phone, 8 rows of three on a desktop.
 			const rows = (perRow: number) =>

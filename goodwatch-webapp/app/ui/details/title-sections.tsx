@@ -2,7 +2,6 @@
 // a name, an icon, a one-line gist for "On this page" (and as the header's muted line where the section doesn't show
 // the same), the words find also knows it by, and its body. A new topic later is one more entry here.
 import {
-	BookOpenIcon,
 	FingerPrintIcon,
 	InformationCircleIcon,
 	QuestionMarkCircleIcon,
@@ -23,11 +22,10 @@ import type { TitleSides } from "~/server/title-sides.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import { EpisodesSection } from "~/ui/details/EpisodesSection"
-import { EpisodeViewToggle } from "~/ui/details/episode-grid/episode-view"
 import { FactsList, TropesList } from "~/ui/details/FactsSection"
 import { RelatedSection } from "~/ui/details/RelatedSection"
-import { StorySection } from "~/ui/details/StorySection"
 import { WatchSection } from "~/ui/details/WatchSection"
+import { EpisodeViewToggle } from "~/ui/details/episode-grid/episode-view"
 import { FingerprintSection } from "~/ui/details/fingerprint-section/FingerprintSection"
 import { CastSection } from "~/ui/details/people/CastSection"
 import { CrewSection } from "~/ui/details/people/CrewSection"
@@ -42,7 +40,6 @@ import {
 	tropeNames,
 } from "~/ui/details/title-words"
 import type { TitleQuestion } from "~/ui/details/titleQuestions"
-import { summary } from "~/ui/fingerprint/fingerprintText"
 import { useRelatedMap } from "~/ui/related-map/RelatedMap"
 import { useEpisodeTracking } from "~/ui/tracking/gate"
 
@@ -140,7 +137,6 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 		.filter(Boolean)
 		.join(", ")
 
-	const firstSentence = (d.synopsis || "").split(/(?<=[.!?])\s/)[0]
 	const essence = media.fingerprint?.essenceTags ?? []
 	// The crew lines the page has; a show's creators come with the section's own request.
 	const hasCrew = Object.values(media.crew).some((people) => people.length > 0)
@@ -170,7 +166,7 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 					id: "fingerprint",
 					label: "Fingerprint",
 					icon: FingerPrintIcon,
-					peek: summary(t),
+					peek: shortList(essence, 3) || null,
 					aliases: "about title analysis",
 					body: () => <FingerprintSection media={media} sides={input.sides} />,
 				}
@@ -199,18 +195,6 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 					),
 					// The grid's and the list's own titles repeat the section's.
 					bodyClass: `${DEMOTE} [&_#episode-grid-title]:sr-only [&_#episode-list-title]:sr-only`,
-				}
-			: null,
-		// Any of the tagline, the synopsis, or the essence tags makes the story.
-		d.synopsis || d.tagline || essence.length
-			? {
-					id: "story",
-					oldId: "about",
-					label: "Story",
-					icon: BookOpenIcon,
-					peek: d.tagline || firstSentence || shortList(essence, 3),
-					aliases: "about plot synopsis",
-					body: () => <StorySection media={media} />,
 				}
 			: null,
 		media.cast?.length

@@ -1,6 +1,6 @@
 // The movie and show page, one page for both:
-// - The opener: the backdrop band with the trailer card (every video plays on its stage), the poster, title and meta,
-//   then the verdict (scores, the fingerprint's summary, who it's for).
+// - The opener: the backdrop band with the trailer card (every video plays on its stage), the poster, title, meta and
+//   scores, then the Summary section (the synopsis, the essence tags, who it's for and who should skip it).
 // - On a desktop, a right rail that sticks: the "You" block (Seen and score, Want to See, Not interested, where to
 //   watch), find in title, and "On this page" with a line per section that fills as it's read (every section on
 //   screen is highlighted). On a phone, a bar at the top that sticks, with the index and find in its own flow.
@@ -8,6 +8,7 @@
 // - Every section in full (title-sections.tsx), each below the first screen skipping its layout until it's near
 //   (below-fold.tsx).
 // Keys: "/" finds in the title, J and K step through the sections, W goes to where to watch, S to your score, T to the top.
+import { DocumentTextIcon, PlayIcon } from "@heroicons/react/24/outline"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
@@ -21,6 +22,7 @@ import Genres from "~/ui/details/Genres"
 import { PhoneBar } from "~/ui/details/PhoneBar"
 import { type IndexItem, ProgressIndex } from "~/ui/details/ProgressIndex"
 import { TitleBar } from "~/ui/details/TitleBar"
+import { TitleSummary } from "~/ui/details/TitleSummary"
 import { YouBlock } from "~/ui/details/YouBlock"
 import {
 	NearSection,
@@ -31,7 +33,7 @@ import { FindField, FindResults, useFindItems } from "~/ui/details/find/Find"
 import { FindBus, useFindBusValue } from "~/ui/details/find/find-bus"
 import { type FindHit, buildFindIndex } from "~/ui/details/find/find-index"
 import { flash, locate } from "~/ui/details/find/highlight"
-import { GoodForLine } from "~/ui/details/fingerprint/AreaDetails"
+import { goodFor } from "~/ui/details/fingerprint/area-details"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { HeroPoster } from "~/ui/details/hero/Trailer"
@@ -41,9 +43,10 @@ import {
 	openerHeaderClass,
 } from "~/ui/details/opener/TrailerBand"
 import { CAPTION, Kbd, SectionHeader } from "~/ui/details/page-ui"
-import { useJump, useReading } from "~/ui/details/reading"
+import { scrollToTop, useJump, useReading } from "~/ui/details/reading"
 import { sectionHeight } from "~/ui/details/section-heights"
 import { useStreamNames } from "~/ui/details/streaming"
+import { splitLead } from "~/ui/details/synopsis-fold"
 import { scoresEntry, useTitleSections } from "~/ui/details/title-sections"
 import {
 	ageRating,
@@ -52,7 +55,7 @@ import {
 } from "~/ui/details/title-words"
 import type { TitleQuestion } from "~/ui/details/titleQuestions"
 import ExploreBar from "~/ui/explore/ExploreBar"
-import { skipIf, summary } from "~/ui/fingerprint/fingerprintText"
+import { skipIf } from "~/ui/fingerprint/fingerprintText"
 import PreferencePair from "~/ui/media-preference/PreferencePair"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
@@ -86,16 +89,62 @@ const DESKTOP = "(min-width: 1024px)"
 /** The opener's header (poster and title): leaving the screen shows the title bar. */
 const OPENER = "title-opener"
 const YOU = "you"
+/** What the band plays, for the index's Trailer entry: "2 trailers, 3 clips, 1 featurette". */
+function videoPeek(media: MovieResult | ShowResult) {
+	const v = media.videos
+	const parts = (
+		[
+			[v?.trailers?.length ?? 0, "trailer"],
+			[v?.clips?.length ?? 0, "clip"],
+			[v?.featurettes?.length ?? 0, "featurette"],
+		] as const
+	)
+		.filter(([n]) => n > 0)
+		.map(([n, w]) => `${n} ${w}${n === 1 ? "" : "s"}`)
+	return parts.length ? parts.join(", ") : "Back to the top"
+}
+
 /** Something over the page that has the keys: a modal (quick view, score picker, country dialog) or the video stage. */
 const OVER_PAGE = '[aria-modal="true"], dialog[open], [data-video-stage]'
 
 export function TitlePage(props: TitlePageProps) {
 	const { media, country } = props
 	const { details } = media
-	const jump = useJump()
+	const jumpTo = useJump()
+	// The index starts with the trailer, which takes you back to the top of the page. The scores sit in the opener
+	// too, so find's score lines go there as well.
+	const jump = (id: string) => {
+		if (id !== "trailer" && id !== "scores") return jumpTo(id)
+		scrollToTop()
+		history.replaceState(
+			history.state,
+			"",
+			window.location.pathname + window.location.search,
+		)
+	}
 	const sections = useTitleSections({ ...props, onCrew: () => jump("crew") })
 	const scores = scoresEntry(media)
-	const items: IndexItem[] = [scores, ...sections]
+	const synopsisPeek = details.synopsis ? splitLead(details.synopsis)[0] : null
+	const summaryEntry = {
+		id: "summary",
+		label: "Summary",
+		icon: DocumentTextIcon,
+		peek: synopsisPeek || scores.peek,
+		aliases: "synopsis plot story about essence tags good for skip",
+	}
+	const trailer: IndexItem | null = hasVideo(media)
+		? {
+				id: "trailer",
+				label: "Trailer",
+				icon: PlayIcon,
+				peek: videoPeek(media),
+			}
+		: null
+	const items: IndexItem[] = [
+		...(trailer ? [trailer] : []),
+		summaryEntry,
+		...sections,
+	]
 	const ids = items.map((i) => i.id)
 
 	const [desktop, setDesktop] = useState(true)
@@ -120,7 +169,7 @@ export function TitlePage(props: TitlePageProps) {
 				? buildFindIndex({
 						media,
 						country,
-						sections: [scores, ...sections],
+						sections: [scores, summaryEntry, ...sections],
 						questions: props.questions,
 						grid: props.episodeGrid,
 						stream,
@@ -269,15 +318,19 @@ export function TitlePage(props: TitlePageProps) {
 	const pageBackdrop = details.backdrop_path
 		? tmdbImageUrl(details.backdrop_path, "w300")
 		: ""
-	const fit = t && (
-		<div className="flex flex-col gap-1.5 text-sm">
-			<GoodForLine t={t} />
-			{skip.length > 0 && (
-				<p className="text-gray-300">
-					<span className="font-semibold text-rose-200">Skip it if</span>{" "}
-					{skip.join(" · ")}
-				</p>
-			)}
+	// The score ring and the sites' chips, beside the poster from lg up and full width under the header on a phone.
+	const ratings = (className: string) => (
+		<div
+			data-hero-ratings
+			className={`flex flex-wrap items-center gap-x-5 gap-y-3 ${className}`}
+		>
+			<ScoreRing media={media} size={44} />
+			<div
+				data-hero-sites
+				className="flex min-w-0 flex-wrap items-center gap-2"
+			>
+				<RatingChips media={media} fill={false} />
+			</div>
 		</div>
 	)
 	const findPlaceholder = `Find in ${details.title}`
@@ -367,18 +420,21 @@ export function TitlePage(props: TitlePageProps) {
 				</TitleBar>
 
 				<div className="mx-auto max-w-[88rem] px-4 lg:mt-4 lg:px-8">
-					<TrailerBand
-						media={media}
-						controls={
-							<>
-								<PreferencePair media={media} />
-								<ShareButton />
-							</>
-						}
-					/>
+					{/* The index's Trailer entry tracks the band. */}
+					<div id="trailer">
+						<TrailerBand
+							media={media}
+							controls={
+								<>
+									<PreferencePair media={media} />
+									<ShareButton />
+								</>
+							}
+						/>
+					</div>
 
 					<div className="lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-x-12 xl:grid-cols-[minmax(0,1fr)_19.5rem] xl:gap-x-16">
-						{/* Who it is, and the verdict: how good, what it is, who it's for. */}
+						{/* Who it is and how good, then the Summary: what it is, who it's for. */}
 						<div className="min-w-0 lg:col-start-1 lg:row-start-1 lg:pl-6">
 							<header
 								id={OPENER}
@@ -424,36 +480,39 @@ export function TitlePage(props: TitlePageProps) {
 											compact={true}
 										/>
 									</div>
+									{ratings("mt-2 max-lg:hidden")}
 								</div>
 							</header>
+							{/* On a phone the title column is narrow: the scores go full width under the header. */}
+							{ratings("mt-5 lg:hidden")}
 
 							<section
-								id={scores.id}
-								aria-label="Verdict"
+								id="summary"
+								aria-labelledby="summary-h"
 								data-feedback-area="scores"
-								className="mt-6 scroll-mt-44 lg:mt-8 lg:scroll-mt-32"
+								className="mt-8 scroll-mt-44 border-t border-white/10 pt-8 lg:mt-10 lg:scroll-mt-32 lg:pt-10"
 							>
-								<div
-									data-hero-ratings
-									className="flex flex-wrap items-center gap-x-5 gap-y-3"
-								>
-									<ScoreRing media={media} size={52} />
-									<div
-										data-hero-sites
-										className="flex min-w-0 flex-wrap items-center gap-2"
-									>
-										<RatingChips media={media} fill={false} />
-									</div>
+								{/* Old links: the verdict was #scores, the story further down #story and before that #about. */}
+								{["scores", "story", "about"].map((id) => (
+									<span
+										key={id}
+										id={id}
+										aria-hidden="true"
+										className="block scroll-mt-[208px] lg:scroll-mt-[168px]"
+									/>
+								))}
+								<SectionHeader
+									anchor="summary"
+									icon={DocumentTextIcon}
+									title="Summary"
+								/>
+								<div className="mt-6 lg:mt-8">
+									<TitleSummary
+										media={media}
+										goodFor={t ? goodFor(t) : []}
+										skip={skip}
+									/>
 								</div>
-								{t && (
-									<p className="mt-5 max-w-3xl text-pretty text-lg leading-snug text-gray-100 lg:mt-6 lg:text-xl">
-										{summary(t)}
-									</p>
-								)}
-								{/* Who it's for. On a phone it follows your actions, so where to watch stays in the first screen. */}
-								{fit && (
-									<div className="mt-3 max-w-3xl max-lg:hidden">{fit}</div>
-								)}
 							</section>
 						</div>
 
@@ -474,7 +533,6 @@ export function TitlePage(props: TitlePageProps) {
 									onWatch={() => jump("watch")}
 								/>
 							</section>
-							{fit && <div className="mt-5 lg:hidden">{fit}</div>}
 
 							<div className="mt-6 hidden min-h-0 flex-1 flex-col border-t border-white/10 pt-5 lg:flex">
 								<FindField

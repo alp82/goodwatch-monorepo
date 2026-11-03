@@ -4,6 +4,7 @@ import { Link } from "@remix-run/react"
 import { useMemo } from "react"
 import { tropeByName, tropeRecsPath } from "~/domain/trope-recs"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { discoverQueryPath } from "~/ui/details/TitleSummary"
 import { titleFacts, tropeNames } from "~/ui/details/title-words"
 import { useMyTropes } from "~/ui/trope-recs/api"
 
@@ -53,7 +54,14 @@ export function TropesList({ media }: { media: Media }) {
 									{name}
 								</Link>
 							) : (
-								<span className="block px-2 py-1">{name}</span>
+								<Link
+									to={discoverQueryPath(name)}
+									prefetch="intent"
+									title={`Search Discover for “${name}”`}
+									className="block px-2 py-1 hover:text-white"
+								>
+									{name}
+								</Link>
 							)}
 						</li>
 					)
