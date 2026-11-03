@@ -1,4 +1,11 @@
 // The final title lookup may arrive after the scored candidates. Keep the original head/tail blend unchanged.
+//
+// In Discover's longer list (past RESULT_LENGTH), a concept search (concept-query.server.ts) keeps its first
+// CONCEPT_HEAD titles and after them only the titles that carry the concept's label: the ranked pool is wide (its top
+// lists reach 500 deep), and Discover's other sorts and counts read the whole list, so "Best rated" for "time travel"
+// listed every well-rated title the pool held (The Godfather Part II at 423) ahead of the time travel films. The search
+// page's list (RESULT_LENGTH or shorter) is unchanged.
+import { conceptTitles } from "./concept-query.server.ts"
 import {
 	boundOwn,
 	foldCuts,
@@ -12,6 +19,9 @@ import {
 	type TitleFacts,
 	type TitleLookupRow,
 } from "./title-blend.server.ts"
+
+/** How many titles of a concept search's Discover list stay whether or not they carry the label. */
+export const CONCEPT_HEAD = 30
 
 export function createSearchReblend(
 	index: SearchIndex,
@@ -41,6 +51,7 @@ export function createSearchReblend(
 				length,
 			),
 		)
+	const concept = limit > RESULT_LENGTH ? conceptTitles(index, query) : null
 	return (titles: TitleLookupRow[]) => {
 		let head = blended(ranked.slice(0, HEAD_LENGTH), titles)
 		if (ref) head = boundOwn(head, ref)
@@ -55,9 +66,14 @@ export function createSearchReblend(
 		].slice(0, RESULT_LENGTH)
 		if (limit <= RESULT_LENGTH) return first
 		const seen = new Set(first.map((row) => row.id))
-		return [
+		const list = [
 			...first,
 			...blended(ranked, titles, limit).filter((row) => !seen.has(row.id)),
-		].slice(0, limit)
+		]
+		return (
+			concept
+				? list.filter((row, i) => i < CONCEPT_HEAD || concept.has(row.id))
+				: list
+		).slice(0, limit)
 	}
 }

@@ -35,6 +35,7 @@ const probe = {
 		collocations: new Set(),
 		titleNames: [],
 		alternateCuts: new Map(),
+		negationLabels: { titles: [], labelsWithStem: new Map() },
 	},
 	async block(name: string) {
 		this.calls.push(name)

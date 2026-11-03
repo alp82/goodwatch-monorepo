@@ -1126,6 +1126,50 @@ input tokens ($0.000319 against $0.000330 a reading). It changed the answers mor
 do: the reading chips matched on 14% of runs against 40% between two separate runs, and the top 10 shared 8.5 titles
 against 9.1. Keep two requests.
 
+## Follow-up: concept searches and cited years (November 2026)
+
+A tester reported that "Time travel movies" listed films called "Time Travel" first, and that "Best rated" lost the
+time travel part. The ranker's own order was right (Twelve Monkeys first). Two later steps broke it:
+
+- **The title blend.** An exact title scores 3 and a phrase match 1.05, against at most 0.9 for the ranked list, so
+  42 title-word matches (six films called "Time Travel", documentaries, shorts) came before Twelve Monkeys at 43.
+- **Discover's list.** Discover asks for up to 5,000 titles and gets the whole candidate pool (987 for "time travel").
+  "Best rated" sorts that pool by GoodWatch score, so The Godfather Part II (pool rank 423) and Citizen Kane led.
+
+The rules (`concept-query.server.ts`, `title-blend.server.ts`, `search-reblend.server.ts`, `app/domain/cited-year.ts`):
+
+- **Concept search.** The query's content words are exactly the words of a keyword or tag label (the index's negation
+  labels) that at least 15 titles carry, format words aside ("time travel movies", "heist", "zombies"). Not when the
+  query starts with an article ("the witches") or has a one-letter word ("hunter x hunter"). There a title match lifts
+  a title only when it is the exact title with at least 500,000 votes (Alien, Titanic, Parasite; not Submarine at
+  113k, which isn't about submarines). Other title matches keep their ranked place, and unranked ones aren't listed.
+  The early title batch follows the same rule.
+- **Discover's list of a concept search** keeps its first 30 titles and after them only the titles that carry the
+  label. Its count and its other sorts read that list. The search page's list (100) is unchanged.
+- **Cited year.** A year after a title's words ("dune 1984", "Time Travel (2011)") asks for that title. The Discover
+  interpreter keeps it in the search text instead of a year filter, unless the words before it were filters ("netflix
+  1999", "horror 1999", "movies from 2011", "80s"). The title lookups search the words without the year. The blend lifts
+  the exact title of that year (a leading article may be left out: "matrix 1999"), a year off at 0.75 ("dune 1985"
+  finds Dune 1984 in the catalog), and no title match of another year. A whole title with a number in it ("wonder
+  woman 1984") stays a title.
+
+Check (`scripts/search-concept-eval/`: `capture.ts` records Jev readings and title lookups read-only, `run.ts` ranks
+recorded searches against the live index, `compare.py` compares two runs), 61 new queries plus the arena's 168:
+
+- Concept queries: the share of the top 20 that carries the concept's label went from 36% to 65% on average ("time
+  travel" 25% to 95%, "serial killer" 0% to 95%, "time loop" 40% to 90%).
+- Title lookups (Inception, Dune, Alien, Jaws, Heat, The Thing, The Witches, Hunter x Hunter, Zombieland) keep their
+  title first.
+- Arena anchors: must-titles in the top 10 233 to 236 of 581, in the top 20 305 to 309, avoid-titles in the top 10
+  unchanged at 7. The other changed arena queries are mood words that are labels ("epic", "furious", "wholesome"),
+  which no longer start with films named Epic, Furious or Wholesome.
+- Best rated over Discover's list for "time travel movies": Papanasam, AlphaGo, The Godfather Part II, Citizen Kane
+  before; Justice League: The Flashpoint Paradox, World of Tomorrow, Back to the Future, Your Name. after.
+
+Known gaps: a broad query that names no label ("mind-bending movies") still lets "Best rated" read the whole pool; a
+title of fewer than 500,000 votes named exactly like a label ("Heist", 2001) no longer leads its own name's search;
+label coverage decides what Discover keeps past 30.
+
 ## Prerequisites
 
 1. **Fix the Qdrant recommendation load.** Since Qdrant restarted on September 22, 2026, it has handled about 47,000

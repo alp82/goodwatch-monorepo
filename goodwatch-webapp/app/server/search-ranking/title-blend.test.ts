@@ -23,8 +23,10 @@ const index = {
 		],
 		years: [2001, 2002, 2003, 2004, 2005, 2006],
 		popularity: [0, 0, 0, 0, 0, 0],
+		votes: [0, 0, 0, 0, 0, 0],
 		imdbIds: ["k", "c", "cr", "t", "s", "kd"],
 	},
+	negationLabels: { titles: [], labelsWithStem: new Map() },
 	words: {
 		df: new Map(["lord", "of", "star", "w", "dark"].map((w) => [w, 1])),
 	},
@@ -204,4 +206,190 @@ test("with the ranked list mixed in, an alias match stays below the title matche
 	assert.equal(order[1].matchedAlias?.text, "Kastell der Ritter Teil 3")
 	// Rows of a lower kind aren't capped by it: the ranked titles without a match keep their fusion scores.
 	assert.equal(order.find((row) => row.id === movie(2))?.score, 0.8182)
+})
+
+// A catalog where "time travel" is a label of 15 titles (ids 101-115) and three titles carry the words in their name.
+const conceptIds = Array.from({ length: 15 }, (_, i) => movie(101 + i))
+const named = [movie(201), movie(202), movie(203)]
+const conceptKeys = [...conceptIds, ...named]
+const conceptIndex = {
+	titleTable: {
+		pointIds: conceptKeys,
+		rowOf: new Map(conceptKeys.map((id, row) => [id, row])),
+		titles: [
+			...conceptIds.map((_, i) => `Film ${i}`),
+			"Time Travel",
+			"Time Travel",
+			"The Time Travel Hills",
+		],
+		originalTitles: conceptKeys.map(() => ""),
+		years: [...conceptIds.map(() => 2000), 2011, 2018, 2024],
+		popularity: conceptKeys.map(() => 0),
+		votes: [...conceptIds.map(() => 50_000), 120, 900_000, 300],
+		imdbIds: conceptKeys.map((id) => `tt${id}`),
+	},
+	words: {
+		df: new Map([
+			["time", 1],
+			["travel", 1],
+			["film", 1],
+		]),
+	},
+	titleNames: [
+		{ name: "time travel", row: 15 },
+		{ name: "time travel", row: 16 },
+		{ name: "the time travel hills", row: 17 },
+	],
+	aliases: aliasTable({ version: 1, rows: [], names: [], languages: [] }, 18),
+	negationLabels: {
+		titles: [conceptIds],
+		labelsWithStem: new Map([
+			["time", [0]],
+			["travel", [0]],
+		]),
+	},
+} as unknown as SearchIndex
+const everyRow = new Uint8Array(conceptKeys.length).fill(1)
+const namedLookup = [
+	{ id: 201, title: "Time Travel", type: "movie", year: "2011", popularity: 5 },
+	{ id: 202, title: "Time Travel", type: "movie", year: "2018", popularity: 1 },
+	{
+		id: 203,
+		title: "The Time Travel Hills",
+		type: "movie",
+		year: "2024",
+		popularity: 9,
+	},
+]
+
+test("a concept search keeps titles named after the concept in their ranked place, unless one is well known", () => {
+	const order = blend(
+		conceptIndex,
+		"time travel",
+		namedLookup,
+		[...conceptIds.slice(0, 5), movie(201), ...conceptIds.slice(5)],
+		new Set(),
+		everyRow,
+	).map((row) => row.id)
+	// The well-known exact title still leads; the obscure exact title keeps its ranked place (6th of the ranked list);
+	// the unranked partial match isn't listed.
+	assert.equal(order[0], movie(202))
+	assert.deepEqual(order.slice(1, 6), conceptIds.slice(0, 5))
+	assert.equal(order[6], movie(201))
+	assert.equal(order.includes(movie(203)), false)
+})
+
+test("a query written as a title is no concept search", () => {
+	const order = blend(
+		conceptIndex,
+		"the time travel hills",
+		namedLookup,
+		conceptIds,
+		new Set(),
+		everyRow,
+	)
+	assert.equal(order[0].id, movie(203))
+})
+
+test("a cited year lifts that year's exact title, a year off a step lower, and no other year's", () => {
+	const ranked = conceptIds.slice(0, 5)
+	const exact = blend(
+		conceptIndex,
+		"time travel 2011",
+		namedLookup,
+		ranked,
+		new Set(),
+		everyRow,
+	)
+	assert.equal(exact[0].id, movie(201))
+	assert.equal(
+		exact.find((row) => row.id === movie(202)),
+		undefined,
+	)
+	// Not in the lookup (it searched the words with the year): found in the catalog, a year off.
+	const near = blend(
+		conceptIndex,
+		"time travel 2012",
+		[],
+		ranked,
+		new Set(),
+		everyRow,
+	)
+	assert.equal(near[0].id, movie(201))
+	assert.ok(
+		near[0].score >
+			blend(conceptIndex, "time travel", [], ranked, new Set(), everyRow)[0]
+				.score,
+	)
+	const other = blend(
+		conceptIndex,
+		"time travel 2015",
+		[],
+		ranked,
+		new Set(),
+		everyRow,
+	)
+	assert.deepEqual(
+		other.map((row) => row.id),
+		ranked,
+	)
+})
+
+test("a one-letter word makes the query a name, not a concept", () => {
+	const order = blend(
+		conceptIndex,
+		"time x travel",
+		namedLookup,
+		conceptIds,
+		new Set(),
+		everyRow,
+	)
+	assert.notEqual(
+		order.find((row) => row.id === movie(203)),
+		undefined,
+	)
+})
+
+test("a cited title may leave out its article", () => {
+	const lookupRows = [
+		{
+			id: 203,
+			title: "The Time Travel Hills",
+			type: "movie",
+			year: "2024",
+			popularity: 0,
+		},
+	]
+	const order = blend(
+		conceptIndex,
+		"time travel hills 2024",
+		lookupRows,
+		conceptIds,
+		new Set(),
+		everyRow,
+	)
+	assert.equal(order[0].id, movie(203))
+	assert.equal(order[0].score, 3)
+})
+
+test("a concept search lists no unranked title without a title match", () => {
+	const lookupRows = [
+		{
+			id: 203,
+			title: "The Time Travel Hills",
+			type: "movie",
+			year: "2024",
+			popularity: 0,
+		},
+		{ id: 1, title: "Knights", type: "movie", year: "2001", popularity: 0 },
+	]
+	const ids = blend(
+		conceptIndex,
+		"time travel",
+		lookupRows,
+		conceptIds,
+		new Set(),
+		everyRow,
+	).map((row) => row.id)
+	assert.deepEqual(ids, conceptIds)
 })

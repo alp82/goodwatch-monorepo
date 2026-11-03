@@ -284,6 +284,11 @@ export function loadedTitleTable(): TitleTable | null {
 	return current?.titleTable ?? null
 }
 
+/** The loaded index, or null before the first build has loaded; never starts a load. */
+export function loadedSearchIndex(): SearchIndex | null {
+	return current ?? null
+}
+
 /** The id of the loaded build, or null before the first build has loaded. */
 export function loadedSearchIndexBuild(): string | null {
 	return current?.buildId ?? null

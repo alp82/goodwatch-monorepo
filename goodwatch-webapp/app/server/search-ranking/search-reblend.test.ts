@@ -12,10 +12,11 @@ const index = {
 		pointIds: ids, rowOf: new Map(ids.map((id, row) => [id, row])),
 		titles: ["Earth", "Moon", "Moon director cut", "Moon"],
 		originalTitles: ["Earth", "Moon", "Moon", "Moon"],
-		years: [1990, 1995, 1995, 2020], popularity: [0, 2, 1, 0],
+		years: [1990, 1995, 1995, 2020], popularity: [0, 2, 1, 0], votes: [0, 0, 0, 0],
 		imdbIds: ["earth", "moon-movie", "moon-movie", "moon-show"],
 	},
 	words: { df: new Map([["moon", 1]]) }, titleNames: [], alternateCuts: new Map([[movie(3), [movie(2)]]]),
+	negationLabels: { titles: [], labelsWithStem: new Map() },
 } as unknown as SearchIndex
 const lookup = { id: 99, title: "A remake", original: "Moon", type: "movie", year: "2025", popularity: 0 }
 
@@ -47,6 +48,7 @@ test("Discover continues past 100 while preserving every position in the origina
 		originalTitles: keys.map((_, i) => `Candidate ${i}`),
 		years: keys.map(() => 2000),
 		popularity: keys.map(() => 0),
+		votes: keys.map(() => 0),
 		imdbIds: keys.map((_, i) => `tt${i}`),
 	}
 	const large = {
@@ -89,4 +91,36 @@ test("Discover continues past 100 while preserving every position in the origina
 		5000,
 	)
 	assert.deepEqual(next([]), expanded, "later pages use one frozen order")
+})
+
+test("past its first 30, a concept search's Discover list keeps only the titles that carry the concept", () => {
+	const keys = Array.from({ length: 300 }, (_, i) => movie(i + 1))
+	// Every third title carries the "heist" label.
+	const labeled = keys.filter((_, i) => i % 3 === 0)
+	const large = {
+		...index,
+		words: { df: new Map(["film", "heist", "tense", "movies"].map((w) => [w, 1])) },
+		titleTable: {
+			pointIds: keys,
+			rowOf: new Map(keys.map((key, row) => [key, row])),
+			titles: keys.map((_, i) => `Film ${i}`),
+			originalTitles: keys.map(() => ""),
+			years: keys.map(() => 2000),
+			popularity: keys.map(() => 0),
+			votes: keys.map(() => 0),
+			imdbIds: keys.map((_, i) => `tt${i}`),
+		},
+		alternateCuts: new Map(),
+		negationLabels: { titles: [labeled], labelsWithStem: new Map([["heist", [0]]]) },
+	} as unknown as SearchIndex
+	const mask = new Uint8Array(keys.length).fill(1)
+	const list = (query: string) =>
+		createSearchReblend(large, query, keys, new Set(), mask, new Map(), null, 5000)([])
+	const concept = list("heist movies")
+	assert.deepEqual(concept.slice(0, 30).map((row) => row.id), keys.slice(0, 30))
+	assert.deepEqual(
+		concept.slice(30).map((row) => row.id),
+		labeled.filter((id) => !keys.slice(0, 30).includes(id)),
+	)
+	assert.equal(list("tense heist").length, 300, "words beyond the label's are no concept search")
 })

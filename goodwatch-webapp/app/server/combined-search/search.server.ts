@@ -67,7 +67,12 @@ import {
 } from "../search-people/people.server";
 import { runsSearch } from "../role.server";
 import { paletteLookupTitles } from "../command-palette.server";
-import { loadedAliasVersion } from "../search-ranking/search-index.server";
+import { citedYear } from "~/domain/cited-year";
+import {
+	loadedAliasVersion,
+	loadedSearchIndex,
+} from "../search-ranking/search-index.server";
+import { earlyTitleRule } from "../search-ranking/concept-query.server";
 import { titleLookupKey } from "./title-lookup-key.server";
 
 // A page instance loads none of it (see role.server.ts).
@@ -138,9 +143,12 @@ function titles(
 	if (!flight) {
 		// The shared lookup ignores caller signals: one caller leaving must not fail
 		// the others. Only successes are kept; failures are retried by the next call.
+		// A cited year ("dune 1984") is the blend's to match: the lookups search the title's words, which they'd miss
+		// with the year (see cited-year.ts).
+		const words = citedYear(q)?.title ?? q;
 		flight = Promise.all([
-			lookupTitles(q, policy),
-			paletteLookupTitles(q, PALETTE_LOOKUP_TITLES),
+			lookupTitles(words, policy),
+			paletteLookupTitles(words, PALETTE_LOOKUP_TITLES),
 		]).then(([tmdb, palette]) => {
 			const value = {
 				...tmdb,
@@ -930,6 +938,9 @@ export async function combinedSearch(
 				const identities = new Set<string>();
 				// The ranking's own stopwords: a search without a content word is no evidence for a title it only occurs in.
 				const onlyStopwords = words(q).every((word) => STOPWORDS.has(word));
+				// A concept search ("time travel") shows no titles merely named after it (concept-query.server.ts).
+				const index = loadedSearchIndex();
+				const conceptRule = index ? earlyTitleRule(index, q) : null;
 				const rows = blend(
 					matches.allowedTitles,
 					{ results: [] },
@@ -938,6 +949,15 @@ export async function combinedSearch(
 				).filter((r) => {
 					if (r.lexical < EARLY_TITLE_MATCH) return false;
 					if (onlyStopwords && r.lexical < EXACT_TITLE_MATCH) return false;
+					if (
+						conceptRule &&
+						!conceptRule(
+							(r.key.startsWith("show:") ? 2 : 1) * TMDB_ID_RANGE +
+								Number(r.key.split(":")[1]),
+							r.lexical,
+						)
+					)
+						return false;
 					const m = matches.meta.get(r.key),
 						identity = m?.imdb_id?.trim() ? `imdb:${m.imdb_id.trim()}` : r.key;
 					if (identities.has(identity)) return false;

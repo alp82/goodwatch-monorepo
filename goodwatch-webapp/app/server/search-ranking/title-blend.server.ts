@@ -5,6 +5,12 @@
 // words that a title starts with is the start of that title, as the command palette's preview reads it ("lord of"),
 // and spaces don't count ("spiderman" is the exact title "Spider-Man"; see title-prefix.server.ts).
 //
+// A concept search ("time travel", "heist", see concept-query.server.ts) asks for the subject, not for titles named after
+// it: there a title match lifts a title only when it is the exact title of a well-known one (CONCEPT_TITLE_VOTES), and
+// other title matches keep only their place in the ranked list. A query that cites a year after the title ("dune 1984")
+// matches the words before the year, lifts the exact titles of that year, a year off a step lower (the year may be
+// misremembered), and no title match of another year.
+//
 // Localized names (aliases.server.ts) add recall one step below the title: a lookup row the palette found by an alias
 // scores its alias match ALIAS_STEP below a title match of the same kind, and the fuzzy match tries the aliases only
 // when no title or original title is close enough.
@@ -20,9 +26,11 @@ import {
 	matchedAlias,
 	squashedFold,
 } from "./aliases.server.ts"
+import { citedYear } from "../../domain/cited-year.ts"
+import { CONCEPT_TITLE_VOTES, conceptTitles } from "./concept-query.server.ts"
 import type { SearchIndex } from "./search-index.server.ts"
 import { normalized, words } from "./text-rules.server.ts"
-import { sameName, startsTitle } from "./title-prefix.server.ts"
+import { sameName, squash, startsTitle } from "./title-prefix.server.ts"
 
 // A partial title match needs this similarity to the query (also the cutoff of fuzzy titles).
 const STRICT = 0.9
@@ -31,6 +39,8 @@ const CONCRETE_CAP = 0.65
 // A title that starts with a query of two or more words: level with the ranked list's first title, ahead of the rest.
 const PREFIX = 0.9
 const BLEND_LENGTH = 100
+// A cited year a year off: the title's match counts this share.
+const NEAR_YEAR = 0.75
 const SHOW_POINT_IDS = 2_000_000_000_000
 const TMDB_ID_RANGE = 1_000_000_000_000
 
@@ -251,8 +261,50 @@ interface Row {
 	matchedAlias?: MatchedAlias
 	/** Matched or found by a localized name only: after the titles of the same score. */
 	byAlias: boolean
+	/** Its title match didn't count (see gate in blend): without a place in the ranked list it isn't listed. */
+	gatedOut?: boolean
 	rank: number | null
 	score: number
+}
+
+/** A normalized name without its leading article. */
+const bare = (name: string) => name.replace(/^(?:the|a|an) /, "")
+
+/** Whether a title of the lookup or the catalog is named exactly this (normalized) text. */
+function isTitle(
+	index: SearchIndex,
+	titleLookup: TitleLookupRow[],
+	text: string,
+): boolean {
+	if (
+		titleLookup.some((row) =>
+			[row.title, row.original].some((n) =>
+				sameName(normalized(n ?? ""), text),
+			),
+		)
+	)
+		return true
+	return namedRows(index, text, false).length > 0
+}
+
+// The catalog rows named exactly so, per index build and text (cited-year searches only; a scan of every name costs
+// tens of milliseconds, and one search blends several times).
+const namedCache = new WeakMap<SearchIndex, Map<string, number[]>>()
+function namedRows(index: SearchIndex, text: string, withoutArticle: boolean) {
+	let cache = namedCache.get(index)
+	if (!cache) namedCache.set(index, (cache = new Map()))
+	const key = `${withoutArticle ? 1 : 0}:${text}`
+	let found = cache.get(key)
+	if (!found) {
+		const name = (n: string) => squash(withoutArticle ? bare(n) : n).text
+		const wanted = name(text)
+		found = []
+		for (const { name: n, row } of index.titleNames)
+			if (name(n) === wanted) found.push(row)
+		if (cache.size >= 256) cache.delete(cache.keys().next().value as string)
+		cache.set(key, found)
+	}
+	return found
 }
 
 /**
@@ -270,12 +322,31 @@ export function blend(
 	limit = BLEND_LENGTH,
 ): BlendedTitle[] {
 	const t = index.titleTable
-	const q = normalized(query)
-	const queryWords = new Set(words(query))
+	// A cited year, unless the whole query is a title with a year in it ("Wonder Woman 1984", "Blade Runner 2049").
+	const cited = citedYear(query)
+	const year =
+		cited && !isTitle(index, titleLookup, normalized(query)) ? cited.year : null
+	const titleQuery = year && cited ? cited.title : query
+	const concept = year ? null : conceptTitles(index, query)
+	const concrete = year
+		? new Set([...concreteWords].filter((w) => !/^\p{Nd}+$/u.test(w)))
+		: concreteWords
+	// The title match that may lift a title (see the top of the file): the cited year, else the concept rule.
+	const gate = (lex: number, titleYear: number, votes: number) => {
+		if (!lex) return 0
+		if (year) {
+			const off = Math.abs(titleYear - year)
+			return !titleYear || off > 1 ? 0 : off ? lex * NEAR_YEAR : lex
+		}
+		if (concept) return lex >= 2 && votes >= CONCEPT_TITLE_VOTES ? lex : 0
+		return lex
+	}
+	const q = normalized(titleQuery)
+	const queryWords = new Set(words(titleQuery))
 	const strictLexical = (title: string, original: string | undefined) => {
-		let lex = titleMatch(title, query)
+		let lex = titleMatch(title, titleQuery)
 		let source = title
-		const originalLex = titleMatch(original ?? "", query)
+		const originalLex = titleMatch(original ?? "", titleQuery)
 		if (originalLex > lex) {
 			lex = originalLex
 			source = original ?? ""
@@ -287,10 +358,10 @@ export function blend(
 		if (lex && lex < 2 && close < STRICT) {
 			// A partial match that isn't close to the whole title: kept (capped) only when it has every concrete word
 			const sourceWords = new Set(words(source))
-			const all = [...concreteWords].every(
+			const all = [...concrete].every(
 				(w) => queryWords.has(w) && sourceWords.has(w),
 			)
-			if (concreteWords.size && all) return Math.min(lex, CONCRETE_CAP)
+			if (concrete.size && all) return Math.min(lex, CONCRETE_CAP)
 			return 0
 		}
 		return lex
@@ -298,6 +369,9 @@ export function blend(
 	const canonical = (title: string, original: string | undefined) => {
 		const names = [normalized(title), normalized(original ?? "")]
 		if (names.some((name) => sameName(name, q))) return 2
+		// A cited title may leave out its article: "matrix 1999" is The Matrix.
+		if (year && names.some((name) => name && sameName(bare(name), bare(q))))
+			return 2
 		const strict = strictLexical(title, original)
 		return names.some((name) => startsTitle(name, q))
 			? Math.max(strict, PREFIX)
@@ -321,27 +395,35 @@ export function blend(
 		row: number,
 		popularity: number,
 		{ lex, alias }: { lex: number; alias?: MatchedAlias },
-	): Row => ({
-		id: t.pointIds[row],
-		title: t.titles[row],
-		mediaType: t.pointIds[row] >= SHOW_POINT_IDS ? "show" : "movie",
-		year: t.years[row] ? String(t.years[row]) : "",
-		popularity,
-		lexical: lex,
-		matchedAlias: alias,
-		byAlias: Boolean(alias),
-		rank: null,
-		score: 0,
-	})
+	): Row => {
+		const gated = gate(lex, t.years[row], t.votes[row])
+		return {
+			id: t.pointIds[row],
+			title: t.titles[row],
+			mediaType: t.pointIds[row] >= SHOW_POINT_IDS ? "show" : "movie",
+			year: t.years[row] ? String(t.years[row]) : "",
+			popularity,
+			lexical: gated,
+			matchedAlias: gated ? alias : undefined,
+			byAlias: Boolean(gated && alias),
+			gatedOut: gated < lex,
+			rank: null,
+			score: 0,
+		}
+	}
 	const rows = new Map<number, Row>()
 	for (const title of titleLookup) {
 		if (title.type !== "movie" && title.type !== "tv") continue
 		const id = pointId(title.type, title.id)
-		const { lex, alias, byAlias } = lexical(
-			title.title,
-			title.original,
-			title.matchedAlias,
+		const matched = lexical(title.title, title.original, title.matchedAlias)
+		const tableRow = t.rowOf.get(id)
+		const lex = gate(
+			matched.lex,
+			Number(title.year) || (tableRow === undefined ? 0 : t.years[tableRow]),
+			tableRow === undefined ? 0 : t.votes[tableRow],
 		)
+		const alias = lex === matched.lex ? matched.alias : undefined
+		const byAlias = matched.byAlias
 		rows.set(id, {
 			id,
 			title: title.title,
@@ -351,11 +433,21 @@ export function blend(
 			lexical: lex,
 			matchedAlias: alias,
 			byAlias: Boolean(byAlias),
+			gatedOut: lex < matched.lex,
 			rank: null,
 			score: 0,
 		})
 	}
-	const fuzzy = fuzzyTitle(index, query, filterRows)
+	// A cited year: the catalog's titles of that name a year either side, which the lookup can miss ("dune 1985").
+	if (year) {
+		for (const row of namedRows(index, q, true)) {
+			if (!filterRows[row] || Math.abs(t.years[row] - year) > 1) continue
+			const id = t.pointIds[row]
+			const found = fromTable(row, t.popularity[row], { lex: 2 })
+			if ((rows.get(id)?.lexical ?? -1) < found.lexical) rows.set(id, found)
+		}
+	}
+	const fuzzy = fuzzyTitle(index, titleQuery, filterRows)
 	if (fuzzy !== null) {
 		const id = t.pointIds[fuzzy.row]
 		const existing = rows.get(id)
@@ -377,14 +469,17 @@ export function blend(
 				row = fromTable(r, 0, lexical(t.titles[r], t.originalTitles[r]))
 			else {
 				const facts = outside.get(id) as TitleFacts
+				const lex = lexical(facts.title, facts.originalTitle).lex
+				const gated = gate(lex, facts.year, facts.votes)
 				row = {
 					id,
 					title: facts.title,
 					mediaType: id >= SHOW_POINT_IDS ? "show" : "movie",
 					year: facts.year ? String(facts.year) : "",
 					popularity: 0,
-					lexical: lexical(facts.title, facts.originalTitle).lex,
+					lexical: gated,
 					byAlias: false,
+					gatedOut: gated < lex,
 					rank: null,
 					score: 0,
 				}
@@ -404,6 +499,16 @@ export function blend(
 	keepAliasesBelowTitles(rows.values())
 	const key = (row: Row) => `${row.mediaType}:${row.id % TMDB_ID_RANGE}`
 	const ordered = [...rows.values()]
+		// A title match that doesn't count leaves an unranked row nothing: in a concept or cited-year search none is
+		// listed.
+		.filter(
+			(row) =>
+				!(
+					row.rank === null &&
+					!row.lexical &&
+					(row.gatedOut || concept || year)
+				),
+		)
 		.sort(
 			(a, b) =>
 				b.score - a.score ||

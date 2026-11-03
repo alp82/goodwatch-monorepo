@@ -1,3 +1,4 @@
+import { citedYear } from "./cited-year"
 import { addDiscoverRules, type QueryProvider } from "./discover-query-rules"
 // Shared natural-language Discover filter rules. Entity lookups run only on the server.
 import {
@@ -112,6 +113,30 @@ export function interpret(
 	now = new Date(),
 	additions: Proposal[] = [],
 	providers: readonly QueryProvider[] = [],
+	// Internal: false once a kept cited year turned out to follow only filter words ("netflix 1999").
+	keepCitedYear = true,
+): ReturnType<typeof interpretOnce> {
+	const view = interpretOnce(
+		query,
+		existing,
+		now,
+		additions,
+		providers,
+		keepCitedYear,
+	)
+	const kept = keepCitedYear ? citedYear(query.trim().slice(0, 512), now) : null
+	if (kept && citedYear(view.residual, now)?.year !== kept.year)
+		return interpret(query, existing, now, additions, providers, false)
+	return view
+}
+
+function interpretOnce(
+	query: string,
+	existing: string,
+	now: Date,
+	additions: Proposal[],
+	providers: readonly QueryProvider[],
+	keepCitedYear: boolean,
 ) {
 	query = query.trim().slice(0, 512)
 	const proposals: Proposal[] = []
@@ -507,11 +532,17 @@ export function interpret(
 							]
 		},
 	)
-	// A year does not need an introductory word: "matrix 1999" keeps "matrix" for search.
+	// A year does not need an introductory word: "horror 1999" filters by year. A year cited after a title's words
+	// ("dune 1984", see cited-year.ts) stays in the search text, where the search matches the title of that year.
 	// Entity clauses and quotes were protected before this pass.
+	const cited = keepCitedYear ? citedYear(query, now) : null
 	scan(
 		/\b(?:(?:released|release(?: year)?)\s+)?((?:18|19|20)\d{2})\b/gi,
 		(m) =>
+			(cited &&
+				!m[0].includes(" ") &&
+				Number(m[1]) === cited.year &&
+				!query.slice(m.index! + m[0].length).replace(/[\s.!?)]/g, "")) ||
 			/^(?:[- ]*(?:minutes?|mins?|hours?|hrs?|h|m)\b|\s*(?:and|to|[-–—])\s*\d+(?:\.\d+)?\s*(?:minutes?|mins?|hours?|hrs?|h|m)\b)/i.test(
 				query.slice(m.index! + m[0].length),
 			)
