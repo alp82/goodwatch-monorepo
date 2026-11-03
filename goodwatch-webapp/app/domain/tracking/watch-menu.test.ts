@@ -49,43 +49,19 @@ test("opening the menu marks only this episode, just now; Undo takes exactly tha
 	assert.deepEqual(undo(marked, plan).log, [])
 })
 
-test("everything up to here on a day dates the whole group that day", () => {
-	const plan = markPlan(
-		E3,
-		{ upTo: true, when: { precision: "day", day: "2026-10-30" } },
-		"group-000001",
-		TODAY,
-	)
-	assert.deepEqual(rows(mark(EMPTY, plan, "group-000001")), [
-		[1, Date.UTC(2026, 9, 30), "day"],
-		[2, Date.UTC(2026, 9, 30), "day"],
-		[3, Date.UTC(2026, 9, 30), "day"],
-	])
-})
-
-test("a group has no time of day: just now is today, not sure leaves the date unknown", () => {
-	const now = markPlan(
-		E3,
-		{ upTo: true, when: { precision: "moment" } },
-		"group-000001",
-		TODAY,
-	)
-	assert.deepEqual(now.after, {
-		type: "setGroupDate",
-		group: "group-000001",
-		day: TODAY,
-	})
-	const unknown = markPlan(
-		E3,
-		{ upTo: true, when: { precision: "unknown" } },
-		"group-000002",
-		TODAY,
-	)
-	assert.equal(unknown.after, null)
-	assert.deepEqual(
-		rows(mark(EMPTY, unknown, "group-000002")).map((r) => r[2]),
-		["unknown", "unknown", "unknown"],
-	)
+test("everything up to here is saved without a date, whatever the menu's when says", () => {
+	for (const when of [
+		{ precision: "moment" },
+		{ precision: "day", day: TODAY },
+		{ precision: "unknown" },
+	] as const) {
+		const plan = markPlan(E3, { upTo: true, when }, "group-000002", TODAY)
+		assert.equal(plan.after, null)
+		assert.deepEqual(
+			rows(mark(EMPTY, plan, "group-000002")).map((r) => r[2]),
+			["unknown", "unknown", "unknown"],
+		)
+	}
 })
 
 test("a change takes the previous mark back first, so the log holds only what the menu shows", () => {

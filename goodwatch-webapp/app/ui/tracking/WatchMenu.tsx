@@ -262,6 +262,9 @@ export default function WatchMenu({
 	const change = (patch: Partial<WatchChoice>) => {
 		if (!choice) return
 		const next = { ...choice, ...patch }
+		// Up to here has no date (watch-menu.ts); going back to one episode starts again at just now.
+		if (patch.upTo === true) next.when = { precision: "unknown" }
+		if (patch.upTo === false && choice.upTo) next.when = { precision: "moment" }
 		setChoice(next)
 		run(async () => {
 			if (mark.current) await actions.unmarkFromMenu(mark.current)
@@ -353,61 +356,64 @@ export default function WatchMenu({
 							current.upTo,
 							<QueueListIcon className="h-5 w-5 shrink-0 text-violet-300" />,
 							"Everything up to here",
-							`${reach} episodes, this one included`,
+							`${reach} episodes, saved without a date`,
 							() => !current.upTo && change({ upTo: true }),
 						)}
 					</div>
 				</div>
 			)}
-			<div role="radiogroup" aria-label="When">
-				{question("When did you watch?")}
-				<div className="flex flex-col gap-2">
-					{card(
-						kind === "moment",
-						<ClockIcon className="h-5 w-5 shrink-0 text-amber-300" />,
-						"Just now",
-						"Today, at this time",
-						() =>
-							kind !== "moment" && change({ when: { precision: "moment" } }),
-					)}
-					{card(
-						kind === "day",
-						<CalendarDaysIcon className="h-5 w-5 shrink-0 text-emerald-300" />,
-						"On a date",
-						current.when.precision === "day"
-							? dayWords(current.when.day)
-							: "Pick the day",
-						() =>
-							kind !== "day" &&
-							change({ when: { precision: "day", day: model.today } }),
-						current.when.precision === "day" && (
-							<div className="px-3 pb-3">
-								<input
-									type="date"
-									value={current.when.day}
-									max={model.today}
-									onChange={(event) =>
-										event.target.value &&
-										change({
-											when: { precision: "day", day: event.target.value },
-										})
-									}
-									aria-label="The day you watched it"
-									className="h-10 w-full rounded-lg bg-white/[0.06] px-3 text-sm text-white ring-1 ring-inset ring-white/10 [color-scheme:dark]"
-								/>
-							</div>
-						),
-					)}
-					{card(
-						kind === "unknown",
-						<QuestionMarkCircleIcon className="h-5 w-5 shrink-0 text-gray-400" />,
-						"Not sure when",
-						"Saved without a date",
-						() =>
-							kind !== "unknown" && change({ when: { precision: "unknown" } }),
-					)}
+			{!current.upTo && (
+				<div role="radiogroup" aria-label="When">
+					{question("When did you watch?")}
+					<div className="flex flex-col gap-2">
+						{card(
+							kind === "moment",
+							<ClockIcon className="h-5 w-5 shrink-0 text-amber-300" />,
+							"Just now",
+							"Today, at this time",
+							() =>
+								kind !== "moment" && change({ when: { precision: "moment" } }),
+						)}
+						{card(
+							kind === "day",
+							<CalendarDaysIcon className="h-5 w-5 shrink-0 text-emerald-300" />,
+							"On a date",
+							current.when.precision === "day"
+								? dayWords(current.when.day)
+								: "Pick the day",
+							() =>
+								kind !== "day" &&
+								change({ when: { precision: "day", day: model.today } }),
+							current.when.precision === "day" && (
+								<div className="px-3 pb-3">
+									<input
+										type="date"
+										value={current.when.day}
+										max={model.today}
+										onChange={(event) =>
+											event.target.value &&
+											change({
+												when: { precision: "day", day: event.target.value },
+											})
+										}
+										aria-label="The day you watched it"
+										className="h-10 w-full rounded-lg bg-white/[0.06] px-3 text-sm text-white ring-1 ring-inset ring-white/10 [color-scheme:dark]"
+									/>
+								</div>
+							),
+						)}
+						{card(
+							kind === "unknown",
+							<QuestionMarkCircleIcon className="h-5 w-5 shrink-0 text-gray-400" />,
+							"Not sure when",
+							"Saved without a date",
+							() =>
+								kind !== "unknown" &&
+								change({ when: { precision: "unknown" } }),
+						)}
+					</div>
 				</div>
-			</div>
+			)}
 			<div className="flex items-center gap-2 border-t border-white/[0.08] px-1 pt-2">
 				<button
 					type="button"

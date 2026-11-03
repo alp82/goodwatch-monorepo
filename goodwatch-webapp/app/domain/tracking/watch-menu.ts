@@ -22,8 +22,8 @@ export interface MarkPlan {
 }
 
 /**
- * The plan for marking `episode` with `choice` under the action id `id` (the watch's id, or the group's). A group has
- * no time of day: "just now" gives it today.
+ * The plan for marking `episode` with `choice` under the action id `id` (the watch's id, or the group's). A group is
+ * always saved without a date, whatever `choice.when` says.
  */
 export function markPlan(
 	episode: { season: number; number: number },
@@ -42,12 +42,8 @@ export function markPlan(
 			after: null,
 			undo: { type: "deleteWatch", watchId: id },
 		}
-	const day =
-		choice.when.precision === "day"
-			? choice.when.day
-			: choice.when.precision === "moment"
-				? today
-				: null
+	// Everything up to here, like Seen and a season's mark, is saved without a date: the member can't tell when
+	// each of those episodes was watched.
 	return {
 		first: {
 			type: "watchUpTo",
@@ -55,7 +51,7 @@ export function markPlan(
 			number: episode.number,
 			today,
 		},
-		after: day ? { type: "setGroupDate", group: id, day } : null,
+		after: null,
 		undo: { type: "undoGroup", group: id },
 	}
 }
