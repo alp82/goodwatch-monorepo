@@ -88,7 +88,7 @@ test("the description leads with the synopsis's first sentence and two essence t
 	);
 	assert.equal(
 		metaLead(item),
-		"A band of assassins comes together to kill a sadistic lord before he rises to power. Feels like Samurai Epic and Heroic Last Stand.",
+		"A band of assassins comes together to kill a sadistic lord before he rises to power. In short: Samurai Epic, Heroic Last Stand.",
 	);
 	assert.match(
 		detailsPageMeta(item).description,
@@ -103,6 +103,6 @@ test("either half stands alone", () => {
 	);
 	assert.equal(
 		metaLead(described(null, ["Gut Punch"])),
-		"Feels like Gut Punch.",
+		"In short: Gut Punch.",
 	);
 });

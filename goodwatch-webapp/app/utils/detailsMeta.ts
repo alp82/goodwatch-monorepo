@@ -35,7 +35,7 @@ export function detailsMetaTags(
 
 /**
  * What the description says the title is, as the page's Summary does: the synopsis's first sentence, then its first
- * two essence tags as a short pulse ("Feels like Samurai Epic and Heroic Last Stand."). Only a title with neither falls
+ * two essence tags as a short pulse ("In short: Samurai Epic, Heroic Last Stand."). Only a title with neither falls
  * back to the fingerprint's template sentence.
  */
 export function metaLead(media: MovieResult | ShowResult): string {
@@ -44,7 +44,7 @@ export function metaLead(media: MovieResult | ShowResult): string {
 		? clip(splitLead(details.synopsis)[0], 160)
 		: "";
 	const tags = (media.fingerprint?.essenceTags ?? []).slice(0, 2);
-	const pulse = tags.length ? `Feels like ${tags.join(" and ")}.` : "";
+	const pulse = tags.length ? `In short: ${tags.join(", ")}.` : "";
 	if (first || pulse) return [first, pulse].filter(Boolean).join(" ");
 	return media.fingerprint
 		? summary({
