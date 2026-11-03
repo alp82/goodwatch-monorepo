@@ -86,6 +86,7 @@ const TABLES: Record<string, Table> = {
 		columns: [
 			"show_id",
 			"tmdb_id",
+			"imdb_id",
 			"season_number",
 			"episode_number",
 			"name",

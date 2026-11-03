@@ -4,8 +4,7 @@
 // their own, half the width each. Beside the season score, the member's own score for the season (#759); under the
 // head, a line for each part score an import brought whose episodes are in this season. Then the season's rows.
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/solid"
-import { episodeScoreLabel } from "~/domain/episode-scores"
-import { isWholeTmdbSeason } from "~/domain/episode-scores"
+import { isWholeTmdbSeason, scoredEpisodes, shownScoreLabel } from "~/domain/episode-scores"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { ScoreTile } from "~/ui/details/episode-grid/ScoreTile"
 import { formatScore } from "~/ui/details/episode-grid/scale"
@@ -86,20 +85,26 @@ export default function OpenSeason({
 			season.episodes,
 			model.seasons.flatMap((each) => each.episodes),
 		)
-	const parts = model.scores
-		.parts()
-		.filter(
-			(part) =>
-				part.scope === "part" &&
-				part.ranges.some((range) =>
-					season.episodes.some(
-						(episode) =>
-							episode.season === range.season &&
-							episode.number >= range.firstEpisode &&
-							episode.number <= range.lastEpisode,
-					),
-				),
-		)
+	const everyEpisode = model.seasons.flatMap((each) => each.episodes)
+	const inThisSeason = (part: Parameters<typeof scoredEpisodes>[0]) => {
+		const here = new Set(season.episodes.map((episode) => episode.id))
+		return scoredEpisodes(part, everyEpisode).some((episode) => here.has(episode.id))
+	}
+	// Part scores, and season scores of a TMDB season the page doesn't draw whole under its number (a show drawn in
+	// IMDb's seasons): those show as a line in each drawn season that holds their episodes.
+	const parts = [
+		...model.scores.parts().filter((part) => part.scope === "part" && inThisSeason(part)),
+		...model.scores
+			.seasons()
+			.filter(
+				(score) =>
+					score.scope === "season" &&
+					!model.seasons.some(
+						(each) => each.number === score.season && isWholeTmdbSeason(each.number, each.episodes, everyEpisode),
+					) &&
+					inThisSeason(score),
+			),
+	]
 	const mark = (
 		<button
 			type="button"
@@ -204,8 +209,8 @@ export default function OpenSeason({
 					target={part}
 					scoreKey={part.key}
 					part={part}
-					name={episodeScoreLabel(part)}
-					title={`${episodeScoreLabel(part)} · ${part.label ?? model.showTitle}`}
+					name={shownScoreLabel(part, everyEpisode)}
+					title={`${shownScoreLabel(part, everyEpisode)} · ${part.label ?? model.showTitle}`}
 				/>
 			))}
 			<Rows

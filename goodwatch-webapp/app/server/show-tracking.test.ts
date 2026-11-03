@@ -162,9 +162,10 @@ const grid = async (): Promise<EpisodeGrid> => ({
 		{
 			number: 1,
 			episodes: [
-				{ number: 1, name: "Pilot", score: 8.6, votes: 900 },
-				{ number: 2, name: "Third", score: 7.1, votes: 800 },
-				{ number: 3, name: "Second", score: 9.3, votes: 700 },
+				// The grid carries the TMDB episode each IMDb episode is (episode-alignment.ts).
+				{ number: 1, name: "Pilot", score: 8.6, votes: 900, tmdbId: 101 },
+				{ number: 2, name: "Third", score: 7.1, votes: 800, tmdbId: 103 },
+				{ number: 3, name: "Second", score: 9.3, votes: 700, tmdbId: 102 },
 			],
 			maxEpisodeNumber: 3,
 			scores: { ...none, imdb: { score: 8.4, count: 2400 } },
@@ -227,9 +228,9 @@ test("the read gives the state row, the log rows, and the episode list with air 
 		]),
 		[
 			[100, 0, 1, "Making Of", "2020-01-01", null, null],
-			[101, 1, 1, "Pilot", "2020-01-01", 8.6, "number"],
-			[102, 1, 2, "Second", "2020-01-01", 9.3, "title"],
-			[103, 1, 3, "Third", "2020-01-01", 7.1, "title"],
+			[101, 1, 1, "Pilot", "2020-01-01", 8.6, "id"],
+			[102, 1, 2, "Second", "2020-01-01", 9.3, "id"],
+			[103, 1, 3, "Third", "2020-01-01", 7.1, "id"],
 			[201, 2, 1, "Return", "2020-01-01", null, null],
 			[202, 2, 2, "Tomorrow", iso(midnight(1)), null, null],
 		],
@@ -244,7 +245,8 @@ test("the read gives the state row, the log rows, and the episode list with air 
 	)
 	assert.equal(page.running, true)
 	assert.deepEqual(page.seasonScores, { "1": 8.3 })
-	assert.deepEqual(page.notes, { "1": { byTitle: 2, missing: 0 } })
+	// Every episode of season 1 has its proven rating, so the page shows no dash and no note.
+	assert.deepEqual(page.notes, {})
 })
 
 test("the read of a show the member never touched has no row and no watch, and an ended show is not running", async () => {

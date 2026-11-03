@@ -72,6 +72,7 @@ export default function SeasonDetails({
 									<EpisodeTip
 										season={season.number || null}
 										episode={original}
+										tmdbNumbers={grid.tmdbNumbers}
 									/>
 								</div>
 							)}

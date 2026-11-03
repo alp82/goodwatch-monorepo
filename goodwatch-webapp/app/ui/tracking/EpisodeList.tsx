@@ -526,7 +526,7 @@ function RatingChip({
 		<span data-chip="rated" className="flex shrink-0">
 			<ScoreTile
 				score={episode.rating}
-				title={`IMDb ${formatScore(episode.rating)}${episode.ratedBy === "title" ? ", matched by title" : ""}`}
+				title={`IMDb ${formatScore(episode.rating)}`}
 				className="h-[18px] w-8 text-[11px]"
 			/>
 		</span>
@@ -685,7 +685,7 @@ function RowDetail({
 							: "No air date"}
 						{episode.runtime ? ` · ${episode.runtime} min` : ""}
 						{episode.rating !== null
-							? ` · IMDb ${formatScore(episode.rating)}${episode.ratedBy === "title" ? " (matched by title)" : ""}`
+							? ` · IMDb ${formatScore(episode.rating)}`
 							: ""}
 					</p>
 					{episode.overview &&

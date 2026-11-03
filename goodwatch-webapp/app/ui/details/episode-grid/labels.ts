@@ -5,12 +5,14 @@ import { formatCount, formatScore, isLowVotes } from "./scale.ts"
 export const episodeWhere = (
 	season: number | null,
 	episode: GridEpisode | GridSpecial,
+	/** The grid is drawn in TMDB's seasons by place: the label is TMDB's number (EpisodeGrid.tmdbNumbers). */
+	tmdbNumbers = false,
 ) =>
 	season === null
 		? "Special"
 		: season < 0
 			? (episode.canonicalLabel ?? "Additional episode")
-			: `Season ${season}, episode ${episode.canonicalSeason === season && episode.canonicalNumber ? episode.canonicalNumber : (episode as GridEpisode).number}`
+			: `Season ${season}, episode ${tmdbNumbers && episode.canonicalNumber ? episode.canonicalNumber : (episode as GridEpisode).number}`
 
 /** The accessible name of an episode cell: everything the tip shows. */
 export const episodeLabel = (

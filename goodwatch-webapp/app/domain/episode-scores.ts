@@ -64,6 +64,40 @@ export function episodeScoreLabel(target: EpisodeScoreTarget): string {
 		.join(", ")
 }
 
+/** An episode as the page shows it: TMDB's season and number, and the drawn ones when a presentation has them. */
+interface ShownEpisode {
+	season: number
+	number: number
+	displaySeason?: number
+	displayNumber?: number
+}
+
+/** The episodes a season or part score covers, in TMDB's order. */
+export function scoredEpisodes<T extends ShownEpisode>(target: EpisodeScoreTarget, episodes: readonly T[]): T[] {
+	const covered = (e: T) =>
+		target.scope === "season"
+			? e.season === target.season
+			: target.scope === "part"
+				? target.ranges.some((r) => e.season === r.season && e.number >= r.firstEpisode && e.number <= r.lastEpisode)
+				: false
+	return episodes.filter(covered).sort((a, b) => a.season - b.season || a.number - b.number)
+}
+
+/**
+ * A season or part score's name in the numbering the page draws: on a show drawn in other seasons than TMDB's
+ * (a presentation), the covered episodes' drawn range, such as "S1 E1 – S16 E26"; otherwise episodeScoreLabel's.
+ */
+export function shownScoreLabel(target: EpisodeScoreTarget, episodes: readonly ShownEpisode[]): string {
+	const covered = scoredEpisodes(target, episodes)
+	const drawn = (e: ShownEpisode) => [e.displaySeason ?? e.season, e.displayNumber ?? e.number] as const
+	const presented = episodes.some((e) => drawn(e)[0] !== e.season || drawn(e)[1] !== e.number)
+	if (!presented || !covered.length || target.scope === "episode") return episodeScoreLabel(target)
+	const [s1, n1] = drawn(covered[0])
+	const [s2, n2] = drawn(covered[covered.length - 1])
+	if (s1 === s2) return n1 === n2 ? `S${s1} E${n1}` : `S${s1} E${n1}–${n2}`
+	return `S${s1} E${n1} – S${s2} E${n2}`
+}
+
 /** Whether a part's range has episodes in this season. */
 export const partCoversSeason = (
 	target: Extract<EpisodeScoreTarget, { scope: "part" }>,

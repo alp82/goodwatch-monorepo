@@ -47,10 +47,10 @@ export function seasonSummary(grid: EpisodeGrid | null | undefined, title: strin
 	const episodes = numbered.flatMap((season) =>
 		season.episodes
 			.filter((ep) => !ep.unrated && ep.number > 0)
-			// TMDB's number where the grid knows it: a grid aligned from IMDb's one long season counts places, not numbers.
+			// A grid drawn in TMDB's seasons by place labels each episode with TMDB's number (S2 E53, not E1).
 			.map((ep) => ({
 				season: season.number,
-				episode: ep.canonicalSeason === season.number && ep.canonicalNumber ? ep.canonicalNumber : ep.number,
+				episode: grid.tmdbNumbers && ep.canonicalNumber ? ep.canonicalNumber : ep.number,
 				name: ep.name,
 				score: ep.score,
 				votes: ep.votes,

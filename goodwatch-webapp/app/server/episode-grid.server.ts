@@ -6,8 +6,9 @@ import { applyCorrections } from "./feedback/apply-corrections.server"
 // Every query is keyed by show_id. imdb_episode, imdb_season, rotten_tomatoes_season and
 // metacritic_season are CLUSTERED BY (show_id), so each read touches one shard.
 import { getEpisodePresentation } from "~/server/episode-presentation.server"
-import { identifyGridEpisodes, matchSameSizeSeasons, type CanonicalGridEpisode } from "~/domain/tracking/episode-grid-identity"
-import { alignEpisodeRun, runSeasonScores } from "~/domain/tracking/episode-run-alignment"
+import type { EpisodePresentation } from "~/domain/tracking/episode-presentation"
+import type { CanonicalGridEpisode } from "~/domain/tracking/episode-grid-identity"
+import { drawnSeasonScores, gridRows } from "~/domain/tracking/episode-grid-rows"
 import { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
 export { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
 import { cached } from "~/utils/cache"
@@ -86,6 +87,8 @@ export type EpisodeGrid = {
 	hasEpisodeZero: boolean
 	/** Which providers have a score for at least one season. */
 	providers: (keyof SeasonScores)[]
+	/** Drawn in TMDB's seasons by place (IMDb listed fewer seasons): an episode's label is TMDB's number, not its place. */
+	tmdbNumbers?: boolean
 	/** Set when this is the show page's first part of a longer grid (see ui/details/episode-grid/window.ts). */
 	window?: GridWindow
 }
@@ -162,6 +165,8 @@ interface MetacriticSeasonRow {
 }
 
 export interface EpisodeGridRows {
+	/** The rows are placed in TMDB's seasons (episode-grid-rows.ts). */
+	tmdbNumbers?: boolean
 	episodes: EpisodeRow[]
 	imdbSeasons: ImdbSeasonRow[]
 	tmdbSeasons: TmdbSeasonRow[]
@@ -177,9 +182,19 @@ const TMDB_EPISODE_COUNT_TOLERANCE = 1
 export const getEpisodeGrid = async ({ showId }: { showId: string }) => {
 	if (!/^\d+$/.test(showId)) return null
 	const presentation = await getEpisodePresentation(Number(showId))
-	if (presentation) return applyCorrections({ kind: "show", id: Number(showId) }, presentationGrid(Number(showId), presentation))
+	if (presentation) {
+		const id = Number(showId)
+		const providers = await cached<{ id: number }, ProviderSeasons>({
+			name: "episode-grid-provider-seasons-v1",
+			target: ({ id }) => providerSeasons(id),
+			params: { id },
+			ttlMinutes: 6 * 60,
+		}).catch(() => null)
+		const grid = presentationGrid(id, presentation)
+		return applyCorrections({ kind: "show", id }, providers ? withProviderSeasons(grid, presentation, providers) : grid)
+	}
 	return applyCorrections({ kind: "show", id: Number(showId) }, await cached<{ showId: string }, EpisodeGrid>({
-		name: "episode-grid-media-v5",
+		name: "episode-grid-media-v6",
 		target: _getEpisodeGrid,
 		params: { showId },
 		// The IMDb ingest runs daily and the critic crawls weekly per airing show.
@@ -187,11 +202,81 @@ export const getEpisodeGrid = async ({ showId }: { showId: string }) => {
 	}))
 }
 
+/** Every provider's season scores of a show, each in that provider's own season numbering. */
+type ProviderSeasons = Pick<EpisodeGridRows, "tmdbSeasons" | "rottenSeasons" | "metacriticSeasons">
+async function providerSeasons(id: number): Promise<ProviderSeasons> {
+	const [tmdbSeasons, rottenSeasons, metacriticSeasons] = await Promise.all([
+		query<TmdbSeasonRow>(
+			"SELECT season_number, vote_average, episode_count FROM season WHERE show_id = ?",
+			[id],
+		),
+		query<RottenSeasonRow>(
+			`SELECT season_number, rotten_tomatoes_url AS url,
+			rotten_tomatoes_tomato_score_original AS tomato,
+			rotten_tomatoes_tomato_score_review_count AS tomato_count,
+			rotten_tomatoes_audience_score_original AS audience,
+			rotten_tomatoes_audience_score_rating_count AS audience_count
+			FROM rotten_tomatoes_season WHERE show_id = ?`,
+			[id],
+		),
+		query<MetacriticSeasonRow>(
+			`SELECT season_number, metacritic_url AS url,
+			metacritic_meta_score_original AS meta,
+			metacritic_meta_score_review_count AS meta_count,
+			metacritic_user_score_original AS user_score,
+			metacritic_user_score_rating_count AS user_count
+			FROM metacritic_season WHERE show_id = ?`,
+			[id],
+		),
+	])
+	return { tmdbSeasons, rottenSeasons, metacriticSeasons }
+}
+
+/**
+ * A presentation's grid (its seasons drawn as a reviewed mapping or IMDb's breaks say) with the providers' season
+ * scores. A provider numbers seasons as the broadcaster does, like TMDB, so its season N is shown on a drawn season
+ * only when that season holds exactly TMDB season N's episodes.
+ */
+export function withProviderSeasons(
+	grid: EpisodeGrid,
+	presentation: EpisodePresentation,
+	providers: ProviderSeasons,
+): EpisodeGrid {
+	const tmdbMembers = new Map<number, Set<number>>()
+	for (const e of presentation.episodes)
+		if (e.season > 0) tmdbMembers.set(e.season, (tmdbMembers.get(e.season) ?? new Set()).add(e.id))
+	const tmdbSeasonOf = (ids: readonly number[]) => {
+		const first = presentation.episodes.find((e) => e.id === ids[0])?.season
+		const members = first === undefined ? undefined : tmdbMembers.get(first)
+		return members && members.size === ids.length && ids.every((id) => members.has(id)) ? first : undefined
+	}
+	const seasons = grid.seasons.map((season) => {
+		const ids = presentation.seasons.find((s) => s.number === season.number)?.ids ?? []
+		const n = season.number > 0 && ids.length ? tmdbSeasonOf(ids) : undefined
+		if (n === undefined) return season
+		const tmdb = providers.tmdbSeasons.find((r) => r.season_number === n)
+		const rotten = providers.rottenSeasons.find((r) => r.season_number === n)
+		const metacritic = providers.metacriticSeasons.find((r) => r.season_number === n)
+		return {
+			...season,
+			scores: {
+				...season.scores,
+				tmdb: tmdb ? providerScore(tmdb.vote_average, null) : null,
+				tomatometer: rotten ? providerScore(rotten.tomato, rotten.tomato_count, rotten.url) : null,
+				popcornmeter: rotten ? providerScore(rotten.audience, rotten.audience_count, rotten.url) : null,
+				metascore: metacritic ? providerScore(metacritic.meta, metacritic.meta_count, metacritic.url) : null,
+				metacriticUser: metacritic ? providerScore(metacritic.user_score, metacritic.user_count, metacritic.url) : null,
+			},
+		}
+	})
+	return { ...grid, seasons, providers: PROVIDER_ORDER.filter((key) => seasons.some((s) => s.scores[key] !== null)) }
+}
+
 const _getEpisodeGrid = async ({
 	showId,
 }: { showId: string }): Promise<EpisodeGrid> => {
 	const id = Number(showId)
-	const [episodes, imdbSeasons, tmdbSeasons, rottenSeasons, metacriticSeasons, canonicalEpisodes] =
+	const [episodes, imdbSeasons, { tmdbSeasons, rottenSeasons, metacriticSeasons }, canonicalEpisodes] =
 		await Promise.all([
 			query<EpisodeRow>(
 				`SELECT imdb_episode_id, season_number, episode_number, name,
@@ -205,71 +290,22 @@ const _getEpisodeGrid = async ({
 			FROM imdb_season WHERE show_id = ?`,
 				[id],
 			),
-			query<TmdbSeasonRow>(
-				"SELECT season_number, vote_average, episode_count FROM season WHERE show_id = ?",
-				[id],
-			),
-			query<RottenSeasonRow>(
-				`SELECT season_number, rotten_tomatoes_url AS url,
-				rotten_tomatoes_tomato_score_original AS tomato,
-				rotten_tomatoes_tomato_score_review_count AS tomato_count,
-				rotten_tomatoes_audience_score_original AS audience,
-				rotten_tomatoes_audience_score_rating_count AS audience_count
-			FROM rotten_tomatoes_season WHERE show_id = ?`,
-				[id],
-			),
-			query<MetacriticSeasonRow>(
-				`SELECT season_number, metacritic_url AS url,
-				metacritic_meta_score_original AS meta,
-				metacritic_meta_score_review_count AS meta_count,
-				metacritic_user_score_original AS user_score,
-				metacritic_user_score_rating_count AS user_count
-			FROM metacritic_season WHERE show_id = ?`,
-				[id],
-			),
+			providerSeasons(id),
 			// Bounded to this show, not one query per grid cell. Identity failures keep the rated grid usable.
 			query<CanonicalGridEpisode>(
 				"SELECT tmdb_id, imdb_id, season_number, episode_number, name FROM episode WHERE show_id = ? AND removed_at IS NULL",
 				[id],
 			).catch(() => []),
 		])
-	const identified = identifyGridEpisodes(episodes, canonicalEpisodes)
-	// IMDb's one long season (Naruto) put into TMDB's seasons; IMDb's own season score then covers no TMDB season.
-	const run = alignEpisodeRun(identified, canonicalEpisodes)
+	// Which TMDB episode each IMDb row is (episode-alignment.ts); IMDb's own season scores only fit IMDb's seasons.
+	const drawn = gridRows(episodes, canonicalEpisodes)
 	return buildEpisodeGrid(id, {
-		episodes: run ?? sameSizeSeasons(identified, canonicalEpisodes),
-		imdbSeasons: run ? runSeasonScores(run) : imdbSeasons,
+		tmdbNumbers: drawn.reshaped,
+		episodes: drawn.rows,
+		imdbSeasons: drawn.reshaped ? drawnSeasonScores(drawn.rows) : imdbSeasons,
 		tmdbSeasons,
 		rottenSeasons,
 		metacriticSeasons,
-	})
-}
-
-/**
- * The import's rule 3 for the grid: in a regular season where IMDb and TMDB list the same episode numbers and no
- * episode identified otherwise sits under another number, IMDb's episode is TMDB's at its number, even when the
- * titles differ (Code Geass: romanized Japanese on IMDb, English on TMDB). Grid numbering is unchanged.
- */
-export function sameSizeSeasons<
-	T extends EpisodeRow & { tmdbId?: number; canonicalSeason?: number; canonicalNumber?: number },
->(rows: T[], canonical: readonly CanonicalGridEpisode[]): T[] {
-	const placed = new Map<string, number>()
-	for (const row of rows) if (row.tmdbId !== undefined) placed.set(row.imdb_episode_id, row.tmdbId)
-	const found = matchSameSizeSeasons(rows, canonical, placed)
-	if (!found.size) return rows
-	const byId = new Map(canonical.map((e) => [e.tmdb_id, e]))
-	return rows.map((row) => {
-		const tmdbId = found.get(row.imdb_episode_id)
-		const episode = tmdbId === undefined ? undefined : byId.get(tmdbId)
-		return episode
-			? {
-					...row,
-					tmdbId: episode.tmdb_id,
-					canonicalSeason: episode.season_number,
-					canonicalNumber: episode.episode_number,
-					nameLanguage: row.nameLanguage ?? "und",
-				}
-			: row
 	})
 }
 
@@ -393,6 +429,7 @@ export const buildEpisodeGrid = (
 		specials: specials.map(({ order, ...special }) => special),
 		maxEpisodeNumber: Math.max(0, ...seasons.map((s) => s.maxEpisodeNumber)),
 		hasEpisodeZero: seasons.some((s) => s.episodes[0]?.number === 0),
+		...(rows.tmdbNumbers ? { tmdbNumbers: true } : {}),
 		providers: PROVIDER_ORDER.filter((key) =>
 			seasons.some((s) => s.scores[key] !== null),
 		),

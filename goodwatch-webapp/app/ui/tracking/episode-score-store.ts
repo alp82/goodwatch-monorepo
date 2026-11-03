@@ -91,6 +91,16 @@ export class EpisodeScoreStore {
 	isSaving(key: string) {
 		return this.pending.has(key)
 	}
+	/** Every season score, as shown. */
+	seasons(): MemberEpisodeScore[] {
+		const keys = new Set([...this.confirmed.keys(), ...this.pending.keys()])
+		return [...keys]
+			.filter((key) => /^s\d+$/.test(key))
+			.flatMap((key) => {
+				const score = this.get(key)
+				return score ? [score] : []
+			})
+	}
 	/** Every part score, as shown. */
 	parts(): MemberEpisodeScore[] {
 		const keys = new Set([...this.confirmed.keys(), ...this.pending.keys()])

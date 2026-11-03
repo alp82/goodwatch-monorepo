@@ -201,7 +201,8 @@ export function FloatLayer({
 export function EpisodeTip({
 	season,
 	episode,
-}: { season: number | null; episode: GridEpisode | GridSpecial }) {
+	tmdbNumbers = false,
+}: { season: number | null; episode: GridEpisode | GridSpecial; tmdbNumbers?: boolean }) {
 	const vibe = imdbVibe(episode.score)
 	const low = isLowVotes(episode.votes)
 	return (
@@ -223,7 +224,7 @@ export function EpisodeTip({
 					/>
 				</span>
 				<span className="block text-xs text-gray-400">
-					{episodeWhere(season, episode)} ·{" "}
+					{episodeWhere(season, episode, tmdbNumbers)} ·{" "}
 					{episode.unrated
 						? "No IMDb rating"
 						: `${formatCount(episode.votes)} votes`}

@@ -12,11 +12,8 @@
 //    puts an episode under another number (owner decision, #759 follow-up). IMDb and TMDB number some seasons
 //    differently, and a season whose lists differ is where they do.
 // Anything else stays unmatched, with the reason, and is listed in the skipped rows file.
-import {
-	type CanonicalGridEpisode,
-	identifyGridEpisodes,
-	matchSameSizeSeasons,
-} from "~/domain/tracking/episode-grid-identity"
+import type { CanonicalGridEpisode } from "~/domain/tracking/episode-grid-identity"
+import { episodeIdentities } from "~/domain/tracking/episode-grid-rows"
 import { isMissingEpisodeScoreTable } from "../episode-scores.server.ts"
 import { chunks, marks, run, select } from "./store.server"
 
@@ -58,9 +55,6 @@ const AMBIGUOUS =
 	"This IMDb episode ID belongs to more than one GoodWatch episode, so it can't be matched safely."
 const UNPLACED =
 	"GoodWatch couldn't tell which episode this is: IMDb numbers or names it differently from the episode list."
-
-// Rule 3 lives beside rules 1 and 2, where the episode grid uses it too.
-export { matchSameSizeSeasons } from "~/domain/tracking/episode-grid-identity"
 
 /** The GoodWatch episode of each IMDb episode ID, or why there is none. */
 export async function resolveImdbEpisodes(
@@ -147,11 +141,8 @@ export async function resolveImdbEpisodes(
 			episode_number:
 				row.episode_number === null ? null : Number(row.episode_number),
 		}))
-		const placed = new Map<string, number>()
-		for (const row of identifyGridEpisodes(imdbRows, numbers))
-			if (row.tmdbId !== undefined) placed.set(row.imdb_episode_id, row.tmdbId)
-		for (const [id, tmdbId] of matchSameSizeSeasons(imdbRows, numbers, placed))
-			placed.set(id, tmdbId)
+		// The same identity the episode grid uses (episode-alignment.ts).
+		const placed = episodeIdentities(imdbRows, numbers)
 		for (const id of wanted) {
 			const tmdbId = placed.get(id)
 			const episode =
