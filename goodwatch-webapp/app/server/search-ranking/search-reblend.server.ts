@@ -16,6 +16,7 @@ import {
 } from "./ranking.server.ts"
 import type { Reference } from "./references.server.ts"
 import type { SearchIndex } from "./search-index.server.ts"
+import { normalized, words } from "./text-rules.server.ts"
 import {
 	blend,
 	type TitleFacts,
@@ -43,6 +44,39 @@ export function discoverConcept(
 		for (const id of titles) out.add(id)
 	}
 	return out
+}
+
+// Discover's mood words (discover-query.ts, the "moods" rows): Discover applies them as filters and keeps them in the
+// search text ("funny pirates"), where they aren't the topic.
+const MOOD_WORDS =
+	/\b(?:funny|funnier|more humorous|make me laugh|hilarious|feel[- ]good|uplifting|comfort(?:ing)?|cozy|scary|scarier|frightening|mind[- ]bending|make me think|a good cry|melancholic|sad|romantic|coming[- ]of[- ]age)\b/gi
+
+/**
+ * The phrases that may name a Discover topic (discoverConcept): the reading's searched phrases, and the query and
+ * each phrase without Discover's mood words ("funny pirates" → "pirates"). None that is negated ("funny no heist"),
+ * and none when the query names a reference (a person, a studio, "like X").
+ */
+export function topicPhrases(
+	query: string,
+	phrases: readonly string[],
+	negated: readonly string[],
+	reference: boolean,
+): string[] {
+	if (reference) return []
+	const banned = new Set(negated.flatMap((n) => words(n)))
+	const withoutMoods = (text: string) => {
+		const rest = normalized(text.replace(MOOD_WORDS, " "))
+		return rest && rest !== normalized(text) ? [rest] : []
+	}
+	return [
+		...new Set(
+			[
+				...phrases,
+				...withoutMoods(query),
+				...phrases.flatMap(withoutMoods),
+			].filter((f) => !words(f).some((w) => banned.has(w))),
+		),
+	]
 }
 
 export function createSearchReblend(
@@ -75,9 +109,17 @@ export function createSearchReblend(
 				length,
 			),
 		)
-	const concept =
-		limit > RESULT_LENGTH ? discoverConcept(index, query, phrases) : null
 	return (titles: TitleLookupRow[]) => {
+		// A query that is a title's name ("Funny Games") is that title's search: its words make no topic.
+		const named = titles.some((row) =>
+			[row.title, row.original].some(
+				(n) => normalized(n ?? "") === normalized(query),
+			),
+		)
+		const concept =
+			limit > RESULT_LENGTH
+				? discoverConcept(index, query, named ? [] : phrases)
+				: null
 		let head = blended(ranked.slice(0, HEAD_LENGTH), titles)
 		if (ref) head = boundOwn(head, ref)
 		head = head.slice(0, HEAD_LENGTH)

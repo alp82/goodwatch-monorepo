@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { createSearchReblend } from "./search-reblend.server.ts"
+import { createSearchReblend, topicPhrases } from "./search-reblend.server.ts"
 import type { SearchIndex } from "./search-index.server.ts"
 import type { Reference } from "./references.server.ts"
 const movie = (id: number) => 1e12 + id
@@ -128,6 +128,22 @@ test("past its first 30, a concept search's Discover list keeps only the titles 
 	assert.deepEqual(list("tense heist", ["heist", "tense heist"]).map((row) => row.id), concept.map((row) => row.id))
 	assert.equal(list("tense heist", ["tense heist"]).length, 300)
 	assert.equal(list("the tense heist", ["heist"]).length, 300, "a query written as a title stays whole")
+	const funnyHeist = createSearchReblend(large, "funny heist", keys, new Set(), mask, new Map(), null, 5000, ["heist"])
+	assert.equal(funnyHeist([]).length, concept.length)
+	assert.equal(
+		funnyHeist([{ key: "movie:9", title: "Funny Heist" } as never]).length,
+		300,
+		"a query that names a title makes no topic",
+	)
 	const search = createSearchReblend(large, "tense heist", keys, new Set(), mask, new Map(), null, 100, ["heist"])([])
 	assert.equal(search.length, 100, "the search page's list is unchanged")
+})
+
+test("topic phrases: also without Discover's mood words, never a negated one, none for a reference", () => {
+	assert.deepEqual(topicPhrases("funny pirates", ["funny pirates"], [], false), ["funny pirates", "pirates"])
+	assert.deepEqual(topicPhrases("pirates", ["pirates"], [], false), ["pirates"])
+	assert.deepEqual(topicPhrases("love actually", ["love actually"], [], false), ["love actually"])
+	assert.deepEqual(topicPhrases("time travel romance", ["time travel romance"], [], false), ["time travel romance"])
+	assert.deepEqual(topicPhrases("funny no heist", ["heist"], ["heist"], false), [])
+	assert.deepEqual(topicPhrases("films like heat", ["heist"], [], true), [])
 })
