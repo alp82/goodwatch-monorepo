@@ -55,3 +55,32 @@ test("a year cited after a title's words stays in the search text; a year after 
 	)
 	assert.equal(phrase.get("minYear"), "2011")
 })
+
+test("a negation ends with the filter it went to: the next words are a new request", () => {
+	const pirates = interpret("pirates 2020 no anime funny")
+	assert.equal(pirates.filters.anime, "none")
+	assert.equal(pirates.filters.moods, "funny")
+	assert.equal(pirates.residual, "pirates")
+	assert.equal(interpret("netflix no anime scary").filters.moods, "scary")
+	assert.equal(
+		interpret("no anime funny or romantic").filters.moods,
+		"funny,romance",
+	)
+	assert.equal(interpret("no anime and no gore funny").filters.moods, "funny")
+})
+test("a negation still reaches words joined to its phrase, and descriptive wording", () => {
+	for (const query of [
+		"no comedy or horror",
+		"nothing scary or sad",
+		"not very scary",
+	])
+		assert(!interpret(query).filters.moods, query)
+	assert.match(interpret("no comedy or horror").residual, /no comedy or horror/)
+	const both = interpret("no anime, no gore")
+	assert.equal(both.filters.anime, "none")
+	assert.equal(both.filters.hide, "violence")
+})
+test("quoted text after a negated filter keeps the negation's end in place", () => {
+	assert.equal(interpret('no anime "a very long title" scary').filters.moods, "scary")
+	assert.equal(interpret('no anime "x" scary').filters.moods, "scary")
+})

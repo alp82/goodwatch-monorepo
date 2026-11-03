@@ -111,11 +111,12 @@ test("past its first 30, a concept search's Discover list keeps only the titles 
 			imdbIds: keys.map((_, i) => `tt${i}`),
 		},
 		alternateCuts: new Map(),
+		aliases: new Map(),
 		negationLabels: { titles: [labeled], labelsWithStem: new Map([["heist", [0]]]) },
 	} as unknown as SearchIndex
 	const mask = new Uint8Array(keys.length).fill(1)
-	const list = (query: string) =>
-		createSearchReblend(large, query, keys, new Set(), mask, new Map(), null, 5000)([])
+	const list = (query: string, phrases: string[] = []) =>
+		createSearchReblend(large, query, keys, new Set(), mask, new Map(), null, 5000, phrases)([])
 	const concept = list("heist movies")
 	assert.deepEqual(concept.slice(0, 30).map((row) => row.id), keys.slice(0, 30))
 	assert.deepEqual(
@@ -123,4 +124,10 @@ test("past its first 30, a concept search's Discover list keeps only the titles 
 		labeled.filter((id) => !keys.slice(0, 30).includes(id)),
 	)
 	assert.equal(list("tense heist").length, 300, "words beyond the label's are no concept search")
+	// ...unless a phrase the reading searches for is the label.
+	assert.deepEqual(list("tense heist", ["heist", "tense heist"]).map((row) => row.id), concept.map((row) => row.id))
+	assert.equal(list("tense heist", ["tense heist"]).length, 300)
+	assert.equal(list("the tense heist", ["heist"]).length, 300, "a query written as a title stays whole")
+	const search = createSearchReblend(large, "tense heist", keys, new Set(), mask, new Map(), null, 100, ["heist"])([])
+	assert.equal(search.length, 100, "the search page's list is unchanged")
 })

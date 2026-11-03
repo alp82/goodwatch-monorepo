@@ -153,11 +153,15 @@ function interpretOnce(
 	function isNegatedAt(start: number): boolean {
 		// Negation scopes a coordinated clause, not just the immediately previous
 		// word: "not very scary", "no comedy or horror", "anything except X".
+		// Each rewrite keeps the length, so a place in the clause is the same place in the query.
+		const blank = (m: string) => " ".repeat(m.length)
 		const prefix = query
 			.slice(0, start)
-			.replace(/"[^"]*"|“[^”]*”/g, " ")
-			.replace(/\b(?:anything|everything)\s+but\b/gi, " except ")
-			.replace(/\bnot\s+only\b|\bno\s+doubt\b/gi, " ")
+			.replace(/"[^"]*"|“[^”]*”/g, blank)
+			.replace(/\b(?:anything|everything)\s+but\b/gi, (m) =>
+				"except".padStart(m.length),
+			)
+			.replace(/\bnot\s+only\b|\bno\s+doubt\b/gi, blank)
 		const clause =
 			prefix.split(/[.!?;,]|\b(?:but|however|yet|instead)\b/i).at(-1) ?? ""
 		const negators = [
@@ -168,6 +172,17 @@ function interpretOnce(
 		const last = negators.at(-1)
 		if (!last) return false
 		const tail = clause.slice(last.index! + last[0].length)
+		// The negation ends with the first phrase it already went to ("no anime"): later words are a new request ("no
+		// anime funny"), unless a joining word follows that phrase ("no anime or horror", "no anime, horror").
+		const negatorEnd = start - tail.length
+		let first = negatorEnd
+		while (first < start && !used[first]) first++
+		if (first < start) {
+			let end = first
+			while (end < start && used[end]) end++
+			if (!/^\s*(?:[,/&+]|(?:or|and|nor)\b)/i.test(query.slice(end, start)))
+				return false
+		}
 		const meaningful = (text: string) =>
 			text
 				.replace(

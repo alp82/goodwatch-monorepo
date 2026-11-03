@@ -70,7 +70,7 @@ import {
 	type TitleLookupRow,
 } from "./title-blend.server.ts"
 import { createSearchReblend } from "./search-reblend.server.ts"
-import { queryTerms, tokens } from "./text-rules.server.ts"
+import { queryTerms, tokens, words } from "./text-rules.server.ts"
 import { RankingProgress } from "./ranking-progress.server.ts"
 
 const COLLECTION = "media_fingerprint_v1"
@@ -1069,6 +1069,13 @@ export async function rankSearch(
 		outsideFacts,
 		ref,
 		resultLimit,
+		// A phrase names the topic only when it isn't negated ("funny no heist") and the query isn't a reference.
+		found
+			? []
+			: phrases.filter(
+					(f) =>
+						!words(f).some((w) => negated.some((n) => words(n).includes(w))),
+				),
 	)
 	const results = reblend(request.titleLookup)
 	lap("blend")

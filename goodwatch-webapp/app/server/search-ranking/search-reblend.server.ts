@@ -4,7 +4,9 @@
 // CONCEPT_HEAD titles and after them only the titles that carry the concept's label: the ranked pool is wide (its top
 // lists reach 500 deep), and Discover's other sorts and counts read the whole list, so "Best rated" for "time travel"
 // listed every well-rated title the pool held (The Godfather Part II at 423) ahead of the time travel films. The search
-// page's list (RESULT_LENGTH or shorter) is unchanged.
+// page's list (RESULT_LENGTH or shorter) is unchanged. A query with more words than a label ("funny pirates", "pirates
+// not funny") is a concept search too when a phrase the reading searches for is one ("pirates"): without it, "Top
+// rated" over "pirates 2020" sorted Folklore and The Owl House first. Several such phrases keep the titles of any.
 import { conceptTitles } from "./concept-query.server.ts"
 import {
 	boundOwn,
@@ -23,6 +25,26 @@ import {
 /** How many titles of a concept search's Discover list stay whether or not they carry the label. */
 export const CONCEPT_HEAD = 30
 
+/** The titles of the query's concept, else of the searched phrases' concepts together; null when there is none. */
+export function discoverConcept(
+	index: Pick<SearchIndex, "negationLabels">,
+	query: string,
+	phrases: readonly string[],
+): Set<number> | null {
+	const whole = conceptTitles(index, query)
+	if (whole) return whole
+	// "The witches" is written as a title: its words found in a phrase don't make it a topic.
+	if (/^(?:the|a|an)\s/i.test(query.trim())) return null
+	let out: Set<number> | null = null
+	for (const phrase of phrases) {
+		const titles = conceptTitles(index, phrase)
+		if (!titles) continue
+		out ??= new Set()
+		for (const id of titles) out.add(id)
+	}
+	return out
+}
+
 export function createSearchReblend(
 	index: SearchIndex,
 	query: string,
@@ -32,6 +54,8 @@ export function createSearchReblend(
 	outsideFacts: Map<number, TitleFacts>,
 	ref: Reference | null,
 	limit = RESULT_LENGTH,
+	/** The phrases the reading searches for (reading-retrieval's searchedPhrases). */
+	phrases: readonly string[] = [],
 ) {
 	const blended = (
 		list: number[],
@@ -51,7 +75,8 @@ export function createSearchReblend(
 				length,
 			),
 		)
-	const concept = limit > RESULT_LENGTH ? conceptTitles(index, query) : null
+	const concept =
+		limit > RESULT_LENGTH ? discoverConcept(index, query, phrases) : null
 	return (titles: TitleLookupRow[]) => {
 		let head = blended(ranked.slice(0, HEAD_LENGTH), titles)
 		if (ref) head = boundOwn(head, ref)
