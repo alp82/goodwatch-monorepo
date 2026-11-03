@@ -47,7 +47,14 @@ export function seasonSummary(grid: EpisodeGrid | null | undefined, title: strin
 	const episodes = numbered.flatMap((season) =>
 		season.episodes
 			.filter((ep) => !ep.unrated && ep.number > 0)
-			.map((ep) => ({ season: season.number, episode: ep.number, name: ep.name, score: ep.score, votes: ep.votes })),
+			// TMDB's number where the grid knows it: a grid aligned from IMDb's one long season counts places, not numbers.
+			.map((ep) => ({
+				season: season.number,
+				episode: ep.canonicalSeason === season.number && ep.canonicalNumber ? ep.canonicalNumber : ep.number,
+				name: ep.name,
+				score: ep.score,
+				votes: ep.votes,
+			})),
 	)
 	// Episodes with few votes swing far; they don't count as the best or the lowest.
 	const votes = episodes.map((ep) => ep.votes).sort((a, b) => a - b)

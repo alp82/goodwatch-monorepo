@@ -82,7 +82,7 @@ beforeEach(() => {
 test("ordinary Breaking Bad grid proves Pilot identity in one show-scoped query and overlays afterwards", async () => {
 	const grid = await getEpisodeGrid({ showId: "1396" })
 	assert.ok(grid)
-	assert.equal(state.cacheName, "episode-grid-media-v3")
+	assert.equal(state.cacheName, "episode-grid-media-v4")
 	assert.equal(state.queries.length, 6)
 	assert.equal(
 		state.queries.filter((sql) => sql.includes("FROM episode WHERE")).length,

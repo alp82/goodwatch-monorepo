@@ -7,6 +7,7 @@ import { applyCorrections } from "./feedback/apply-corrections.server"
 // metacritic_season are CLUSTERED BY (show_id), so each read touches one shard.
 import { getEpisodePresentation } from "~/server/episode-presentation.server"
 import { identifyGridEpisodes, type CanonicalGridEpisode } from "~/domain/tracking/episode-grid-identity"
+import { alignEpisodeRun, runSeasonScores } from "~/domain/tracking/episode-run-alignment"
 import { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
 export { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
 import { cached } from "~/utils/cache"
@@ -178,7 +179,7 @@ export const getEpisodeGrid = async ({ showId }: { showId: string }) => {
 	const presentation = await getEpisodePresentation(Number(showId))
 	if (presentation) return applyCorrections({ kind: "show", id: Number(showId) }, presentationGrid(Number(showId), presentation))
 	return applyCorrections({ kind: "show", id: Number(showId) }, await cached<{ showId: string }, EpisodeGrid>({
-		name: "episode-grid-media-v3",
+		name: "episode-grid-media-v4",
 		target: _getEpisodeGrid,
 		params: { showId },
 		// The IMDb ingest runs daily and the critic crawls weekly per airing show.
@@ -232,9 +233,12 @@ const _getEpisodeGrid = async ({
 				[id],
 			).catch(() => []),
 		])
+	const identified = identifyGridEpisodes(episodes, canonicalEpisodes)
+	// IMDb's one long season (Naruto) put into TMDB's seasons; IMDb's own season score then covers no TMDB season.
+	const run = alignEpisodeRun(identified, canonicalEpisodes)
 	return buildEpisodeGrid(id, {
-		episodes: identifyGridEpisodes(episodes, canonicalEpisodes),
-		imdbSeasons,
+		episodes: run ?? identified,
+		imdbSeasons: run ? runSeasonScores(run) : imdbSeasons,
 		tmdbSeasons,
 		rottenSeasons,
 		metacriticSeasons,

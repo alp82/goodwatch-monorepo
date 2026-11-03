@@ -21,6 +21,8 @@ export interface RatedSeason {
 		score: number
 		votes?: number
 		unrated?: boolean
+		/** The TMDB episode the grid proved this to be, by id or by the run alignment (episode-run-alignment.ts). */
+		tmdbId?: number
 	}[]
 }
 
@@ -28,8 +30,8 @@ export interface EpisodeRating {
 	/** IMDb's rating, 0 to 10. */
 	score: number
 	votes?: number
-	/** Found at the same season and number, or elsewhere in the season under the same title. */
-	how: "number" | "title"
+	/** Found by the grid's proven TMDB episode, at the same season and number, or elsewhere in the season under the same title. */
+	how: "id" | "number" | "title"
 }
 
 export interface EpisodeRatings {
@@ -51,6 +53,7 @@ const generic = (name: string | null) => /^(episode\d*|\d+)$/.test(norm(name))
 /**
  * IMDb's rating for each listed episode, or none.
  *
+ * 0. The episode the grid already proved to be this one (its `tmdbId`), in any season.
  * 1. The episode IMDb has at the same season and number, when the titles agree.
  * 2. Otherwise the one episode of that season with the same title.
  * 3. Otherwise the episode at the same number when one of the two has no real title and both sites list the same
@@ -71,7 +74,27 @@ export function matchEpisodeRatings(
 		if (list) list.push(episode)
 		else listed.set(episode.season, [episode])
 	}
-	for (const [season, own] of listed) {
+	// Proven identities first; an IMDb episode proven for one listed episode is taken by no other.
+	const proven = new Map<number, { season: number; episode: RatedSeason["episodes"][number] }>()
+	for (const s of seasons)
+		for (const e of s.episodes)
+			if (e.tmdbId !== undefined && !e.unrated) proven.set(e.tmdbId, { season: s.number, episode: e })
+	const provenTaken = new Set(
+		[...proven.values()].map((p) => `${p.season}:${p.episode.number}`),
+	)
+	for (const [season, all] of listed) {
+		const own: ListedName[] = []
+		for (const episode of all) {
+			const p = proven.get(episode.id)
+			if (p)
+				byEpisode.set(episode.id, {
+					score: p.episode.score,
+					how: "id",
+					...(p.episode.votes === undefined ? {} : { votes: p.episode.votes }),
+				})
+			else own.push(episode)
+		}
+		if (!own.length) continue
 		const source = seasons.find((s) => s.number === season)
 		const imdb = source
 			? { ...source, episodes: source.episodes.filter((e) => !e.unrated) }
@@ -87,8 +110,12 @@ export function matchEpisodeRatings(
 		}
 		const sameLength =
 			Math.max(...imdb.episodes.map((e) => e.number)) ===
-			Math.max(...own.map((e) => e.number))
-		const taken = new Set<number>()
+			Math.max(...all.map((e) => e.number))
+		const taken = new Set<number>(
+			imdb.episodes
+				.filter((e) => provenTaken.has(`${season}:${e.number}`))
+				.map((e) => e.number),
+		)
 		const left: ListedName[] = []
 		for (const episode of own) {
 			const at = atNumber.get(episode.number)

@@ -10,7 +10,7 @@ export const episodeWhere = (
 		? "Special"
 		: season < 0
 			? (episode.canonicalLabel ?? "Additional episode")
-			: `Season ${season}, episode ${(episode as GridEpisode).number}`
+			: `Season ${season}, episode ${episode.canonicalSeason === season && episode.canonicalNumber ? episode.canonicalNumber : (episode as GridEpisode).number}`
 
 /** The accessible name of an episode cell: everything the tip shows. */
 export const episodeLabel = (

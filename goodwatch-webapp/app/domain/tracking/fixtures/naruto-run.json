@@ -1,0 +1,3321 @@
+{
+"source": "Crate imdb_episode + episode for show 46260 (Naruto), 2026-11-03",
+"imdb": [
+{
+"imdb_episode_id": "tt0841699",
+"season_number": 1,
+"episode_number": 1,
+"name": "He Appears! Naruto Uzumaki",
+"score": 7.9,
+"votes": 4106
+},
+{
+"imdb_episode_id": "tt0845325",
+"season_number": 1,
+"episode_number": 2,
+"name": "My Name is Konohamaru!",
+"score": 7.0,
+"votes": 2911
+},
+{
+"imdb_episode_id": "tt0851300",
+"season_number": 1,
+"episode_number": 3,
+"name": "Shukuteki!? Sasuke to Sakura",
+"score": 7.2,
+"votes": 2756
+},
+{
+"imdb_episode_id": "tt0851299",
+"season_number": 1,
+"episode_number": 4,
+"name": "Shiren! Sabaibaru enshû",
+"score": 7.8,
+"votes": 2616
+},
+{
+"imdb_episode_id": "tt0851298",
+"season_number": 1,
+"episode_number": 5,
+"name": "Shikkaku? Kakashi no ketsuron",
+"score": 8.1,
+"votes": 2726
+},
+{
+"imdb_episode_id": "tt0852484",
+"season_number": 1,
+"episode_number": 6,
+"name": "Jûyô ninmu! Nami no kuni e chô shuppatsu!",
+"score": 7.3,
+"votes": 2438
+},
+{
+"imdb_episode_id": "tt0852485",
+"season_number": 1,
+"episode_number": 7,
+"name": "Kiri no asashin!",
+"score": 7.7,
+"votes": 2410
+},
+{
+"imdb_episode_id": "tt0852483",
+"season_number": 1,
+"episode_number": 8,
+"name": "Itami ni chikau ketsui",
+"score": 8.0,
+"votes": 2455
+},
+{
+"imdb_episode_id": "tt0852487",
+"season_number": 1,
+"episode_number": 9,
+"name": "Sharingan no Kakashi",
+"score": 7.9,
+"votes": 2443
+},
+{
+"imdb_episode_id": "tt1302455",
+"season_number": 1,
+"episode_number": 10,
+"name": "Chakura no mori",
+"score": 7.1,
+"votes": 2212
+},
+{
+"imdb_episode_id": "tt0852482",
+"season_number": 1,
+"episode_number": 11,
+"name": "Eiyû no ita kuni",
+"score": 7.1,
+"votes": 2193
+},
+{
+"imdb_episode_id": "tt0852486",
+"season_number": 1,
+"episode_number": 12,
+"name": "Kyôjô kessen! Zabuza futatabi!!",
+"score": 7.3,
+"votes": 2167
+},
+{
+"imdb_episode_id": "tt0858970",
+"season_number": 1,
+"episode_number": 13,
+"name": "Haku no hijutsu: Makyô hyôshô",
+"score": 7.7,
+"votes": 2198
+},
+{
+"imdb_episode_id": "tt0858971",
+"season_number": 1,
+"episode_number": 14,
+"name": "Igaisei No.1, Naruto sansen!",
+"score": 7.1,
+"votes": 2145
+},
+{
+"imdb_episode_id": "tt0858973",
+"season_number": 1,
+"episode_number": 15,
+"name": "Shikai zero no tatakai Sharingan kuzushi",
+"score": 7.6,
+"votes": 2119
+},
+{
+"imdb_episode_id": "tt0858972",
+"season_number": 1,
+"episode_number": 16,
+"name": "Kaihôsareta fûin",
+"score": 8.4,
+"votes": 2407
+},
+{
+"imdb_episode_id": "tt0858975",
+"season_number": 1,
+"episode_number": 17,
+"name": "Shiroi kako: Himeta omoi",
+"score": 8.2,
+"votes": 2387
+},
+{
+"imdb_episode_id": "tt0858974",
+"season_number": 1,
+"episode_number": 18,
+"name": "Shinobi to iu na no dôgu",
+"score": 8.1,
+"votes": 2216
+},
+{
+"imdb_episode_id": "tt0873734",
+"season_number": 1,
+"episode_number": 19,
+"name": "The Demon in the Snow",
+"score": 9.1,
+"votes": 3954
+},
+{
+"imdb_episode_id": "tt0874138",
+"season_number": 1,
+"episode_number": 20,
+"name": "Shinshô totsunyû! Chûnin shiken dattebayo",
+"score": 6.9,
+"votes": 2023
+},
+{
+"imdb_episode_id": "tt0878183",
+"season_number": 1,
+"episode_number": 21,
+"name": "Nanore! Arawareta kyôteki tachi!!",
+"score": 7.2,
+"votes": 1948
+},
+{
+"imdb_episode_id": "tt0886614",
+"season_number": 1,
+"episode_number": 22,
+"name": "Kiai 120% nau de Rokku na chôsen-jô!",
+"score": 7.5,
+"votes": 1964
+},
+{
+"imdb_episode_id": "tt0886613",
+"season_number": 1,
+"episode_number": 23,
+"name": "Kechirase raibaru! Rûkî 9 zenin shûgô",
+"score": 7.2,
+"votes": 1858
+},
+{
+"imdb_episode_id": "tt0886612",
+"season_number": 1,
+"episode_number": 24,
+"name": "Ikinari shikkaku? Chô nankan no dai ichi shiken",
+"score": 7.8,
+"votes": 1973
+},
+{
+"imdb_episode_id": "tt0886608",
+"season_number": 1,
+"episode_number": 25,
+"name": "Deta toko shôbu! Funbari dokoro no 10 monme",
+"score": 7.9,
+"votes": 1966
+},
+{
+"imdb_episode_id": "tt0886621",
+"season_number": 1,
+"episode_number": 26,
+"name": "Zettai hikken! Shi no mori chokuzen rupo! Konoha no gakkyû shinbun da kore!",
+"score": 4.3,
+"votes": 1666
+},
+{
+"imdb_episode_id": "tt0886606",
+"season_number": 1,
+"episode_number": 27,
+"name": "Daini shiken sutâto! Mawari wa min'na teki darake!",
+"score": 7.3,
+"votes": 1811
+},
+{
+"imdb_episode_id": "tt0886615",
+"season_number": 1,
+"episode_number": 28,
+"name": "Kû ka kuwareru ka! Esa ni natta Naruto",
+"score": 8.0,
+"votes": 1962
+},
+{
+"imdb_episode_id": "tt0886617",
+"season_number": 1,
+"episode_number": 29,
+"name": "Naruto hangeki! Nigenên dattebayo!",
+"score": 8.2,
+"votes": 2027
+},
+{
+"imdb_episode_id": "tt0886620",
+"season_number": 1,
+"episode_number": 30,
+"name": "Yomigaere Sharingan! Hissatsu: Katon - Ryûka no jutsu!",
+"score": 8.5,
+"votes": 2207
+},
+{
+"imdb_episode_id": "tt0886610",
+"season_number": 1,
+"episode_number": 31,
+"name": "Geki mayu puratonikku! Boku wa shinu made anata o mamoru!!",
+"score": 7.6,
+"votes": 1816
+},
+{
+"imdb_episode_id": "tt0886619",
+"season_number": 1,
+"episode_number": 32,
+"name": "Sakura saku! Ketsui no ushirosugata",
+"score": 7.9,
+"votes": 1932
+},
+{
+"imdb_episode_id": "tt0886616",
+"season_number": 1,
+"episode_number": 33,
+"name": "Muteki no fômêshon! InoShikaChô!!",
+"score": 8.3,
+"votes": 1993
+},
+{
+"imdb_episode_id": "tt0886604",
+"season_number": 1,
+"episode_number": 34,
+"name": "Akamaru bikkuri! Gaara, kyôi no jitsuryoku",
+"score": 7.7,
+"votes": 1823
+},
+{
+"imdb_episode_id": "tt0886618",
+"season_number": 1,
+"episode_number": 35,
+"name": "Nozoki mi genkin! Maki mono no himitsu",
+"score": 7.0,
+"votes": 1753
+},
+{
+"imdb_episode_id": "tt0886605",
+"season_number": 1,
+"episode_number": 36,
+"name": "Bunshin taiketsu! Ore ga shuyaku dattebayo!",
+"score": 7.4,
+"votes": 1735
+},
+{
+"imdb_episode_id": "tt0886607",
+"season_number": 1,
+"episode_number": 37,
+"name": "Dai ni shiken toppa! Seizoroi rûkî nainu!",
+"score": 6.8,
+"votes": 1735
+},
+{
+"imdb_episode_id": "tt0886611",
+"season_number": 1,
+"episode_number": 38,
+"name": "Gôkaku-sha nibun no ichi!? Ikinari shiai dattebayo!!",
+"score": 7.2,
+"votes": 1710
+},
+{
+"imdb_episode_id": "tt0886609",
+"season_number": 1,
+"episode_number": 39,
+"name": "Geji mayu jerashî! \"Shishi rendan\" tanjô!",
+"score": 7.8,
+"votes": 1796
+},
+{
+"imdb_episode_id": "tt0889828",
+"season_number": 1,
+"episode_number": 40,
+"name": "Isshoku sokuhatsu!! Kakashi VS Orochimaru",
+"score": 7.5,
+"votes": 1753
+},
+{
+"imdb_episode_id": "tt0889829",
+"season_number": 1,
+"episode_number": 41,
+"name": "Raibaru gekitotsu! Otome kokoro wa honki môdo",
+"score": 6.5,
+"votes": 1855
+},
+{
+"imdb_episode_id": "tt0889827",
+"season_number": 1,
+"episode_number": 42,
+"name": "Besuto batoru wa Shânnarô!!",
+"score": 6.7,
+"votes": 1831
+},
+{
+"imdb_episode_id": "tt0889830",
+"season_number": 1,
+"episode_number": 43,
+"name": "Shikamaru tajitaji!? Kunoichi-tachi no atsuki tatakai",
+"score": 7.4,
+"votes": 1732
+},
+{
+"imdb_episode_id": "tt0898197",
+"season_number": 1,
+"episode_number": 44,
+"name": "Akamaru sansen!! Makeinu wa dotchi da?",
+"score": 7.7,
+"votes": 1796
+},
+{
+"imdb_episode_id": "tt0898201",
+"season_number": 1,
+"episode_number": 45,
+"name": "Hinata sekimen! Kankyaku anguri, Naruto no okunote",
+"score": 7.9,
+"votes": 1867
+},
+{
+"imdb_episode_id": "tt0898199",
+"season_number": 1,
+"episode_number": 46,
+"name": "Byakugan kaigan!! Uchiki na Hinata no daitan ketsui!",
+"score": 7.7,
+"votes": 1818
+},
+{
+"imdb_episode_id": "tt0898198",
+"season_number": 1,
+"episode_number": 47,
+"name": "Akogare no hito no me no maede!!",
+"score": 8.2,
+"votes": 1938
+},
+{
+"imdb_episode_id": "tt0898200",
+"season_number": 1,
+"episode_number": 48,
+"name": "Gaara funsai!! Wakasa da! Pawâ da! Bakuhatsu da!",
+"score": 9.3,
+"votes": 4603
+},
+{
+"imdb_episode_id": "tt0898202",
+"season_number": 1,
+"episode_number": 49,
+"name": "Nekketsu ochikobore! Tsuini sakuretsu, kindan no ôgi!",
+"score": 9.0,
+"votes": 3157
+},
+{
+"imdb_episode_id": "tt0898196",
+"season_number": 1,
+"episode_number": 50,
+"name": "Aa Rokku Rî! Kore ga otoko no ikizama yo!!",
+"score": 9.4,
+"votes": 3804
+},
+{
+"imdb_episode_id": "tt0903090",
+"season_number": 1,
+"episode_number": 51,
+"name": "Yami ni ugomeku kage Sasuke ni semaru kiki!",
+"score": 7.2,
+"votes": 1643
+},
+{
+"imdb_episode_id": "tt0903088",
+"season_number": 1,
+"episode_number": 52,
+"name": "Ebisu futatabi! Harenchi wa watashi ga yurushimasen zo!",
+"score": 6.8,
+"votes": 1651
+},
+{
+"imdb_episode_id": "tt0903087",
+"season_number": 1,
+"episode_number": 53,
+"name": "Aiya shibaraku! Ero-Sen'nin tôjô!",
+"score": 7.4,
+"votes": 1689
+},
+{
+"imdb_episode_id": "tt0903089",
+"season_number": 1,
+"episode_number": 54,
+"name": "Ero-Sen'nin jikiden kuchiyose no jutsu dattebayo!!",
+"score": 7.3,
+"votes": 1605
+},
+{
+"imdb_episode_id": "tt1198373",
+"season_number": 1,
+"episode_number": 55,
+"name": "Setsunai omoi negai o kometa ichirin",
+"score": 7.0,
+"votes": 1591
+},
+{
+"imdb_episode_id": "tt1209040",
+"season_number": 1,
+"episode_number": 56,
+"name": "Sei ka shi ka!? Menkyo kaiden wa inochi gake!",
+"score": 7.7,
+"votes": 1713
+},
+{
+"imdb_episode_id": "tt1202656",
+"season_number": 1,
+"episode_number": 57,
+"name": "Tonda! Haneta! Mogutta! Gama oyabun tôjô!!",
+"score": 7.6,
+"votes": 1639
+},
+{
+"imdb_episode_id": "tt1302503",
+"season_number": 1,
+"episode_number": 58,
+"name": "Shinobi yoru ma no te! Nerawareta byôshitsu",
+"score": 7.6,
+"votes": 1632
+},
+{
+"imdb_episode_id": "tt1302484",
+"season_number": 1,
+"episode_number": 59,
+"name": "Môretsu môtsui môdasshu honsen kaishi dattebayo",
+"score": 6.8,
+"votes": 1588
+},
+{
+"imdb_episode_id": "tt1308503",
+"season_number": 1,
+"episode_number": 60,
+"name": "Byakugan vs Kage bunshin! Ore wa zettê katsu!!",
+"score": 7.6,
+"votes": 1644
+},
+{
+"imdb_episode_id": "tt1308518",
+"season_number": 1,
+"episode_number": 61,
+"name": "Shikaku zero! Mouhitotsu no zettai bougyo",
+"score": 7.9,
+"votes": 1719
+},
+{
+"imdb_episode_id": "tt1308515",
+"season_number": 1,
+"episode_number": 62,
+"name": "Ochikobore no sokojikara!",
+"score": 8.8,
+"votes": 2417
+},
+{
+"imdb_episode_id": "tt1308519",
+"season_number": 1,
+"episode_number": 63,
+"name": "Shikkaku!? Kiken! Maedaoshi! Haran bukumi no daihonsen!",
+"score": 7.3,
+"votes": 1581
+},
+{
+"imdb_episode_id": "tt1308511",
+"season_number": 1,
+"episode_number": 64,
+"name": "Kumo wa ii naa... yaruki zero no otoko",
+"score": 8.2,
+"votes": 1830
+},
+{
+"imdb_episode_id": "tt1308505",
+"season_number": 1,
+"episode_number": 65,
+"name": "Gekitotsu! Konoha mai suna ugomeku toki",
+"score": 7.1,
+"votes": 1545
+},
+{
+"imdb_episode_id": "tt1308500",
+"season_number": 1,
+"episode_number": 66,
+"name": "\"1 jikan buchi nuki de Sasuke ga ô abare dattebayo supesharu\": Arashi o yobu otoko!! Sasuke no gejimayu-ryû taijutsu!",
+"score": 7.9,
+"votes": 1725
+},
+{
+"imdb_episode_id": "tt1308504",
+"season_number": 1,
+"episode_number": 67,
+"name": "\"1 jikan buchi nuki de Sasuke ga ô abare dattebayo supesharu\": Date ni okureta wake janai! Kyûkyoku ôgi - Chidori tanjô!!",
+"score": 8.3,
+"votes": 1841
+},
+{
+"imdb_episode_id": "tt1308499",
+"season_number": 1,
+"episode_number": 68,
+"name": "\"Konoha kuzushi\" shidô!",
+"score": 8.1,
+"votes": 1687
+},
+{
+"imdb_episode_id": "tt1308513",
+"season_number": 1,
+"episode_number": 69,
+"name": "Matte mashita! A ranku ninmu dattebayo!!",
+"score": 7.9,
+"votes": 1635
+},
+{
+"imdb_episode_id": "tt1308514",
+"season_number": 1,
+"episode_number": 70,
+"name": "Nigegoshi No.1 Mendokuse~ ga yarukkya nê!!",
+"score": 7.7,
+"votes": 1571
+},
+{
+"imdb_episode_id": "tt1308510",
+"season_number": 1,
+"episode_number": 71,
+"name": "Kokon musô! \"Hokage\" toiu reberu no tatakai",
+"score": 8.5,
+"votes": 1831
+},
+{
+"imdb_episode_id": "tt1308508",
+"season_number": 1,
+"episode_number": 72,
+"name": "Hokage no ayamachi Kamen ni shita no sugao",
+"score": 8.3,
+"votes": 1715
+},
+{
+"imdb_episode_id": "tt1308509",
+"season_number": 1,
+"episode_number": 73,
+"name": "Kinjutsu ôgi! \"Shiki fûjin\"",
+"score": 8.0,
+"votes": 1615
+},
+{
+"imdb_episode_id": "tt1308512",
+"season_number": 1,
+"episode_number": 74,
+"name": "Kyôkaku! Gaara no shôtai",
+"score": 8.0,
+"votes": 1598
+},
+{
+"imdb_episode_id": "tt1308506",
+"season_number": 1,
+"episode_number": 75,
+"name": "Genkai o koete... Sasuke no ketsudan!!",
+"score": 8.0,
+"votes": 1621
+},
+{
+"imdb_episode_id": "tt1308520",
+"season_number": 1,
+"episode_number": 76,
+"name": "Tsukiyo no ansatsusha",
+"score": 8.2,
+"votes": 1734
+},
+{
+"imdb_episode_id": "tt1308507",
+"season_number": 1,
+"episode_number": 77,
+"name": "Hikari to yami Gaara to iu na",
+"score": 8.1,
+"votes": 1672
+},
+{
+"imdb_episode_id": "tt1308502",
+"season_number": 1,
+"episode_number": 78,
+"name": "Bakuhatsu! Korezo Naruto ninpouchô",
+"score": 9.1,
+"votes": 2612
+},
+{
+"imdb_episode_id": "tt1308516",
+"season_number": 1,
+"episode_number": 79,
+"name": "Rimitto bucchigiri!: Hikari to yami",
+"score": 9.2,
+"votes": 2889
+},
+{
+"imdb_episode_id": "tt1308517",
+"season_number": 1,
+"episode_number": 80,
+"name": "Sandaime yo, towa ni......!!",
+"score": 8.7,
+"votes": 1999
+},
+{
+"imdb_episode_id": "tt1308501",
+"season_number": 1,
+"episode_number": 81,
+"name": "Asagiri no kikyou",
+"score": 8.1,
+"votes": 1603
+},
+{
+"imdb_episode_id": "tt1299122",
+"season_number": 1,
+"episode_number": 82,
+"name": "Sharingan vs Sharingan!!",
+"score": 8.4,
+"votes": 1914
+},
+{
+"imdb_episode_id": "tt1299120",
+"season_number": 1,
+"episode_number": 83,
+"name": "Oo, nô! Jiraiya no jonan, Naruto no sainan",
+"score": 7.7,
+"votes": 1538
+},
+{
+"imdb_episode_id": "tt1299123",
+"season_number": 1,
+"episode_number": 84,
+"name": "Unare Chidori Hoero Sasuke",
+"score": 8.7,
+"votes": 1901
+},
+{
+"imdb_episode_id": "tt1299121",
+"season_number": 1,
+"episode_number": 85,
+"name": "Orokanaru otouto yo urame, nikume!",
+"score": 8.1,
+"votes": 1575
+},
+{
+"imdb_episode_id": "tt1304209",
+"season_number": 1,
+"episode_number": 86,
+"name": "Shugyou kaishi Ore wa zettê tsuyokunaru!",
+"score": 7.1,
+"votes": 1448
+},
+{
+"imdb_episode_id": "tt1304210",
+"season_number": 1,
+"episode_number": 87,
+"name": "Konjou!!! Warero mizufuusen",
+"score": 7.2,
+"votes": 1426
+},
+{
+"imdb_episode_id": "tt1304211",
+"season_number": 1,
+"episode_number": 88,
+"name": "Konoha mâku to hitai ate",
+"score": 7.3,
+"votes": 1413
+},
+{
+"imdb_episode_id": "tt1259446",
+"season_number": 1,
+"episode_number": 89,
+"name": "Hamon",
+"score": 7.2,
+"votes": 1406
+},
+{
+"imdb_episode_id": "tt1302468",
+"season_number": 1,
+"episode_number": 90,
+"name": "Ikari bakuhatsu! Yurusanêttebayo",
+"score": 7.8,
+"votes": 1462
+},
+{
+"imdb_episode_id": "tt1259447",
+"season_number": 1,
+"episode_number": 91,
+"name": "Shodai Hokage no isan Shi o yobu kubikazari",
+"score": 7.6,
+"votes": 1433
+},
+{
+"imdb_episode_id": "tt1304212",
+"season_number": 1,
+"episode_number": 92,
+"name": "YES ka! NO ka! Tsunade no kaitô",
+"score": 7.6,
+"votes": 1432
+},
+{
+"imdb_episode_id": "tt1304213",
+"season_number": 1,
+"episode_number": 93,
+"name": "Kôshô ketsuretsu!!",
+"score": 8.1,
+"votes": 1518
+},
+{
+"imdb_episode_id": "tt1304214",
+"season_number": 1,
+"episode_number": 94,
+"name": "Kurae! Ikari no Rasengan",
+"score": 8.8,
+"votes": 1861
+},
+{
+"imdb_episode_id": "tt1304215",
+"season_number": 1,
+"episode_number": 95,
+"name": "The Fifth Hokage! A Life on the Line",
+"score": 8.4,
+"votes": 1616
+},
+{
+"imdb_episode_id": "tt1304216",
+"season_number": 1,
+"episode_number": 96,
+"name": "Sansukumi no tatakai",
+"score": 8.4,
+"votes": 1649
+},
+{
+"imdb_episode_id": "tt1304217",
+"season_number": 1,
+"episode_number": 97,
+"name": "Naruto no yukemuri chin dôchû",
+"score": 6.2,
+"votes": 1178
+},
+{
+"imdb_episode_id": "tt1304218",
+"season_number": 1,
+"episode_number": 98,
+"name": "Tsunade's Warning: Ninja No More!",
+"score": 7.1,
+"votes": 1368
+},
+{
+"imdb_episode_id": "tt1304219",
+"season_number": 1,
+"episode_number": 99,
+"name": "Hi no ishi o tsugumono",
+"score": 6.7,
+"votes": 1295
+},
+{
+"imdb_episode_id": "tt1302488",
+"season_number": 1,
+"episode_number": 100,
+"name": "Nekketsu shitei no kizuna ~ otoko ga nindô o tsuranuku toki ~",
+"score": 7.7,
+"votes": 1451
+},
+{
+"imdb_episode_id": "tt1302482",
+"season_number": 1,
+"episode_number": 101,
+"name": "Mitai, shiritai, tashikametai Kakashi sensei no sugao",
+"score": 7.4,
+"votes": 1368
+},
+{
+"imdb_episode_id": "tt1302472",
+"season_number": 1,
+"episode_number": 102,
+"name": "Iza shinninmu Giri to jinjou to chakoku o sukue!",
+"score": 6.4,
+"votes": 1026
+},
+{
+"imdb_episode_id": "tt1302487",
+"season_number": 1,
+"episode_number": 103,
+"name": "Naruto gekichin!? Inbou uzumaku daiunabara",
+"score": 6.3,
+"votes": 1019
+},
+{
+"imdb_episode_id": "tt1302466",
+"season_number": 1,
+"episode_number": 104,
+"name": "Hashire Idate! Arashi o yobu haran no Nagishima!!",
+"score": 6.5,
+"votes": 1007
+},
+{
+"imdb_episode_id": "tt1302465",
+"season_number": 1,
+"episode_number": 105,
+"name": "Gôru chokuzen! Raimei todoroku daigekitou",
+"score": 6.7,
+"votes": 994
+},
+{
+"imdb_episode_id": "tt1302509",
+"season_number": 1,
+"episode_number": 106,
+"name": "Todokuka Idate! Shinnen no rasuto supâto",
+"score": 6.7,
+"votes": 1007
+},
+{
+"imdb_episode_id": "tt1302491",
+"season_number": 1,
+"episode_number": 107,
+"name": "Omae to tatakaitai! Tsui ni gekitotsu, Sasuke vs Naruto",
+"score": 8.2,
+"votes": 1530
+},
+{
+"imdb_episode_id": "tt1302481",
+"season_number": 1,
+"episode_number": 108,
+"name": "Mienai kiretsu",
+"score": 7.9,
+"votes": 1442
+},
+{
+"imdb_episode_id": "tt1302492",
+"season_number": 1,
+"episode_number": 109,
+"name": "Oto no sasoi",
+"score": 8.1,
+"votes": 1491
+},
+{
+"imdb_episode_id": "tt1302474",
+"season_number": 1,
+"episode_number": 110,
+"name": "Kessei! Teppeki no fômêshon",
+"score": 8.0,
+"votes": 1427
+},
+{
+"imdb_episode_id": "tt1302500",
+"season_number": 1,
+"episode_number": 111,
+"name": "Sesshoku Otoyoninshuu no jitsuryoku",
+"score": 7.7,
+"votes": 1363
+},
+{
+"imdb_episode_id": "tt1302469",
+"season_number": 1,
+"episode_number": 112,
+"name": "Ikinari nakamaware? Shikamaru shoutai pinchi",
+"score": 7.7,
+"votes": 1351
+},
+{
+"imdb_episode_id": "tt1302493",
+"season_number": 1,
+"episode_number": 113,
+"name": "Pawâ zenkai! Moero chouji",
+"score": 7.7,
+"votes": 1370
+},
+{
+"imdb_episode_id": "tt1302497",
+"season_number": 1,
+"episode_number": 114,
+"name": "Saraba tomo yo...! Sore demo ore wa shinjiteru",
+"score": 8.8,
+"votes": 1867
+},
+{
+"imdb_episode_id": "tt1302490",
+"season_number": 1,
+"episode_number": 115,
+"name": "Omae no aite wa kono ore da!",
+"score": 7.8,
+"votes": 1382
+},
+{
+"imdb_episode_id": "tt1302501",
+"season_number": 1,
+"episode_number": 116,
+"name": "Shikai 360 do Byakugan no shikaku",
+"score": 8.0,
+"votes": 1424
+},
+{
+"imdb_episode_id": "tt1302480",
+"season_number": 1,
+"episode_number": 117,
+"name": "Makerarenai riyuu",
+"score": 8.8,
+"votes": 2101
+},
+{
+"imdb_episode_id": "tt1302458",
+"season_number": 1,
+"episode_number": 118,
+"name": "Dakkan: Ma ni awanakatta utsuwa",
+"score": 7.6,
+"votes": 1334
+},
+{
+"imdb_episode_id": "tt1302505",
+"season_number": 1,
+"episode_number": 119,
+"name": "Shissaku! Aratanaru teki",
+"score": 7.6,
+"votes": 1330
+},
+{
+"imdb_episode_id": "tt1302511",
+"season_number": 1,
+"episode_number": 120,
+"name": "Unare! Hoero! Kyuukyoku no taggu",
+"score": 7.5,
+"votes": 1336
+},
+{
+"imdb_episode_id": "tt1302507",
+"season_number": 1,
+"episode_number": 121,
+"name": "Sorezore no tatakai",
+"score": 7.5,
+"votes": 1322
+},
+{
+"imdb_episode_id": "tt1302461",
+"season_number": 1,
+"episode_number": 122,
+"name": "Feiku! Otoko Shikamaru Kishi kaisei no kake",
+"score": 8.0,
+"votes": 1381
+},
+{
+"imdb_episode_id": "tt1302478",
+"season_number": 1,
+"episode_number": 123,
+"name": "Konoha no aoki yajuu kenzan!",
+"score": 8.1,
+"votes": 1421
+},
+{
+"imdb_episode_id": "tt1302512",
+"season_number": 1,
+"episode_number": 124,
+"name": "Yajuu sakuretsu! Hajikero futtobe tsukinukero!",
+"score": 8.9,
+"votes": 2055
+},
+{
+"imdb_episode_id": "tt1302477",
+"season_number": 1,
+"episode_number": 125,
+"name": "Konoha doumeikoku Suna no shinobi",
+"score": 8.5,
+"votes": 1606
+},
+{
+"imdb_episode_id": "tt1302494",
+"season_number": 1,
+"episode_number": 126,
+"name": "Saikyou taiketsu! Gaara vs Kimimaro!!",
+"score": 8.3,
+"votes": 1463
+},
+{
+"imdb_episode_id": "tt1302506",
+"season_number": 1,
+"episode_number": 127,
+"name": "Shuunen no ichigeki! Sawarabi no mai",
+"score": 8.3,
+"votes": 1454
+},
+{
+"imdb_episode_id": "tt1302508",
+"season_number": 1,
+"episode_number": 128,
+"name": "Todokanai sakebi",
+"score": 8.0,
+"votes": 1431
+},
+{
+"imdb_episode_id": "tt1302471",
+"season_number": 1,
+"episode_number": 129,
+"name": "Itachi to Sasuke Toosugiru sonzai",
+"score": 8.1,
+"votes": 1457
+},
+{
+"imdb_episode_id": "tt1302456",
+"season_number": 1,
+"episode_number": 130,
+"name": "Chichi to ko Hibiwareta kamon",
+"score": 7.8,
+"votes": 1386
+},
+{
+"imdb_episode_id": "tt1302473",
+"season_number": 1,
+"episode_number": 131,
+"name": "Kaigen Mangekyou sharingan no himitsu",
+"score": 8.1,
+"votes": 1471
+},
+{
+"imdb_episode_id": "tt1302510",
+"season_number": 1,
+"episode_number": 132,
+"name": "Tomoyo!",
+"score": 9.0,
+"votes": 2395
+},
+{
+"imdb_episode_id": "tt1302485",
+"season_number": 1,
+"episode_number": 133,
+"name": "Namida no houkou! Omae wa ore no tomodachi da",
+"score": 9.5,
+"votes": 4225
+},
+{
+"imdb_episode_id": "tt1302486",
+"season_number": 1,
+"episode_number": 134,
+"name": "Namidaame no ketsumatsu",
+"score": 9.2,
+"votes": 2683
+},
+{
+"imdb_episode_id": "tt1299119",
+"season_number": 1,
+"episode_number": 135,
+"name": "Mamorenakatta yakusoku",
+"score": 8.2,
+"votes": 1453
+},
+{
+"imdb_episode_id": "tt1302499",
+"season_number": 1,
+"episode_number": 136,
+"name": "Deep Cover?! A Super S-Ranked Mission",
+"score": 6.4,
+"votes": 881
+},
+{
+"imdb_episode_id": "tt1302453",
+"season_number": 1,
+"episode_number": 137,
+"name": "Bugaisha no machi Fuuma ichizoku no kage",
+"score": 6.5,
+"votes": 849
+},
+{
+"imdb_episode_id": "tt1302475",
+"season_number": 1,
+"episode_number": 138,
+"name": "Kiyoki uragiri Hakanaki negai",
+"score": 6.5,
+"votes": 829
+},
+{
+"imdb_episode_id": "tt1302479",
+"season_number": 1,
+"episode_number": 139,
+"name": "Kyoufu! Orochimaru no yakata",
+"score": 6.9,
+"votes": 839
+},
+{
+"imdb_episode_id": "tt1302462",
+"season_number": 1,
+"episode_number": 140,
+"name": "Futatsu no kodou Kabuto no wana",
+"score": 6.8,
+"votes": 837
+},
+{
+"imdb_episode_id": "tt1302495",
+"season_number": 1,
+"episode_number": 141,
+"name": "Sakura no ketsui",
+"score": 6.9,
+"votes": 912
+},
+{
+"imdb_episode_id": "tt1302463",
+"season_number": 1,
+"episode_number": 142,
+"name": "The Three Villains from the Maximum Security Prison",
+"score": 6.3,
+"votes": 865
+},
+{
+"imdb_episode_id": "tt1302467",
+"season_number": 1,
+"episode_number": 143,
+"name": "Hashire Tonton! Omae no hana ga tayori dattebayo",
+"score": 6.2,
+"votes": 782
+},
+{
+"imdb_episode_id": "tt1302504",
+"season_number": 1,
+"episode_number": 144,
+"name": "Shinsei sanningumi Futari to ippiki!",
+"score": 6.0,
+"votes": 786
+},
+{
+"imdb_episode_id": "tt1302496",
+"season_number": 1,
+"episode_number": 145,
+"name": "Sakuretsu! Nyû fômêshon inoshikachou",
+"score": 6.2,
+"votes": 777
+},
+{
+"imdb_episode_id": "tt1302489",
+"season_number": 1,
+"episode_number": 146,
+"name": "Nokosareta yabou Orochimaru no kage",
+"score": 6.2,
+"votes": 769
+},
+{
+"imdb_episode_id": "tt1302470",
+"season_number": 1,
+"episode_number": 147,
+"name": "Innen no taiketsu! Omae ni ore wa taosanee",
+"score": 6.4,
+"votes": 774
+},
+{
+"imdb_episode_id": "tt1302457",
+"season_number": 1,
+"episode_number": 148,
+"name": "The Search for the Rare Bikochu Beetle!",
+"score": 6.8,
+"votes": 804
+},
+{
+"imdb_episode_id": "tt1302460",
+"season_number": 1,
+"episode_number": 149,
+"name": "What's the Difference? Don't All Insects Look Alike?",
+"score": 6.9,
+"votes": 824
+},
+{
+"imdb_episode_id": "tt1302459",
+"season_number": 1,
+"episode_number": 150,
+"name": "A Battle of the Bugs! The Deceivers and the Deceived!",
+"score": 6.7,
+"votes": 778
+},
+{
+"imdb_episode_id": "tt1302483",
+"season_number": 1,
+"episode_number": 151,
+"name": "Blaze Away, Byakugan! This Is My Ninja Way!",
+"score": 7.1,
+"votes": 807
+},
+{
+"imdb_episode_id": "tt1302498",
+"season_number": 1,
+"episode_number": 152,
+"name": "Sei aru mono e no sousoukyoku",
+"score": 6.2,
+"votes": 764
+},
+{
+"imdb_episode_id": "tt1302476",
+"season_number": 1,
+"episode_number": 153,
+"name": "Kokoro ni todoke! Ai no tekken",
+"score": 6.1,
+"votes": 752
+},
+{
+"imdb_episode_id": "tt1302454",
+"season_number": 1,
+"episode_number": 154,
+"name": "Byakugan no tenteki",
+"score": 6.4,
+"votes": 762
+},
+{
+"imdb_episode_id": "tt1302502",
+"season_number": 1,
+"episode_number": 155,
+"name": "Shinobi yoru an'un",
+"score": 6.1,
+"votes": 741
+},
+{
+"imdb_episode_id": "tt1302464",
+"season_number": 1,
+"episode_number": 156,
+"name": "Gyakushuu no raiga",
+"score": 6.0,
+"votes": 750
+},
+{
+"imdb_episode_id": "tt1282123",
+"season_number": 1,
+"episode_number": 157,
+"name": "Hashire!!! Seimei no karê",
+"score": 6.4,
+"votes": 759
+},
+{
+"imdb_episode_id": "tt1310192",
+"season_number": 1,
+"episode_number": 158,
+"name": "Follow My Lead! The Great Survival Challenge",
+"score": 6.3,
+"votes": 745
+},
+{
+"imdb_episode_id": "tt1310206",
+"season_number": 1,
+"episode_number": 159,
+"name": "The Bounty Hunter from the Wilderness",
+"score": 6.1,
+"votes": 734
+},
+{
+"imdb_episode_id": "tt1310182",
+"season_number": 1,
+"episode_number": 160,
+"name": "Eru ka erareru ka!? Okkêdera no kettou",
+"score": 5.9,
+"votes": 741
+},
+{
+"imdb_episode_id": "tt1310200",
+"season_number": 1,
+"episode_number": 161,
+"name": "Sankyaku kenzan Ao no Yajuu? Moujuu? ...Chinjuu?",
+"score": 5.5,
+"votes": 782
+},
+{
+"imdb_episode_id": "tt1310203",
+"season_number": 1,
+"episode_number": 162,
+"name": "Shiroki noroi no musha",
+"score": 5.7,
+"votes": 730
+},
+{
+"imdb_episode_id": "tt1310199",
+"season_number": 1,
+"episode_number": 163,
+"name": "Sakushi Koumei no omowaku",
+"score": 5.9,
+"votes": 720
+},
+{
+"imdb_episode_id": "tt1310197",
+"season_number": 1,
+"episode_number": 164,
+"name": "Ososugita suketto",
+"score": 5.9,
+"votes": 719
+},
+{
+"imdb_episode_id": "tt1310194",
+"season_number": 1,
+"episode_number": 165,
+"name": "Naruto shisu",
+"score": 6.2,
+"votes": 716
+},
+{
+"imdb_episode_id": "tt1310207",
+"season_number": 1,
+"episode_number": 166,
+"name": "Todomatta mama no jikan",
+"score": 6.1,
+"votes": 713
+},
+{
+"imdb_episode_id": "tt1310202",
+"season_number": 1,
+"episode_number": 167,
+"name": "Shirasagi no habataku jikan",
+"score": 5.9,
+"votes": 714
+},
+{
+"imdb_episode_id": "tt1310193",
+"season_number": 1,
+"episode_number": 168,
+"name": "Moero Zundou! Mazete nobashite yude agero!",
+"score": 5.8,
+"votes": 735
+},
+{
+"imdb_episode_id": "tt1310189",
+"season_number": 1,
+"episode_number": 169,
+"name": "Kioku Ushinawareta pêji",
+"score": 6.5,
+"votes": 716
+},
+{
+"imdb_episode_id": "tt1310205",
+"season_number": 1,
+"episode_number": 170,
+"name": "Shougeki Tozasareta doa",
+"score": 6.4,
+"votes": 714
+},
+{
+"imdb_episode_id": "tt1310201",
+"season_number": 1,
+"episode_number": 171,
+"name": "Sennyuu Shikumareta torappu",
+"score": 6.4,
+"votes": 706
+},
+{
+"imdb_episode_id": "tt1310209",
+"season_number": 1,
+"episode_number": 172,
+"name": "Zetsubou Hikisakareta hâto",
+"score": 6.3,
+"votes": 706
+},
+{
+"imdb_episode_id": "tt1310188",
+"season_number": 1,
+"episode_number": 173,
+"name": "Kaisen Tokihanatareta pawâ",
+"score": 6.7,
+"votes": 717
+},
+{
+"imdb_episode_id": "tt1310180",
+"season_number": 1,
+"episode_number": 174,
+"name": "Arienêttebayo! Serebu ninpou Kinton no jutsu",
+"score": 5.0,
+"votes": 740
+},
+{
+"imdb_episode_id": "tt1310190",
+"season_number": 1,
+"episode_number": 175,
+"name": "The Treasure Hunt Is On!",
+"score": 6.2,
+"votes": 695
+},
+{
+"imdb_episode_id": "tt1310204",
+"season_number": 1,
+"episode_number": 176,
+"name": "Run, Dodge, Zigzag! Chase or Be Chased!",
+"score": 6.2,
+"votes": 702
+},
+{
+"imdb_episode_id": "tt1310196",
+"season_number": 1,
+"episode_number": 177,
+"name": "Oh!? Purîzu Misutâ Posutoman",
+"score": 5.9,
+"votes": 710
+},
+{
+"imdb_episode_id": "tt1310181",
+"season_number": 1,
+"episode_number": 178,
+"name": "Deai 'Hoshi' no na o motsu shounen",
+"score": 5.9,
+"votes": 691
+},
+{
+"imdb_episode_id": "tt1310195",
+"season_number": 1,
+"episode_number": 179,
+"name": "The Remembered Lullaby!",
+"score": 5.9,
+"votes": 690
+},
+{
+"imdb_episode_id": "tt1310183",
+"season_number": 1,
+"episode_number": 180,
+"name": "Hidden Jutsu! The Price of Ninja Art: Kujaku",
+"score": 6.1,
+"votes": 690
+},
+{
+"imdb_episode_id": "tt1310185",
+"season_number": 1,
+"episode_number": 181,
+"name": "Hoshikage: The Buried Truth",
+"score": 6.0,
+"votes": 689
+},
+{
+"imdb_episode_id": "tt1310198",
+"season_number": 1,
+"episode_number": 182,
+"name": "Reunion: The Remaining Time",
+"score": 6.2,
+"votes": 683
+},
+{
+"imdb_episode_id": "tt1310184",
+"season_number": 1,
+"episode_number": 183,
+"name": "The Star's Radiance",
+"score": 6.0,
+"votes": 689
+},
+{
+"imdb_episode_id": "tt1310186",
+"season_number": 1,
+"episode_number": 184,
+"name": "Kiba's Long Day",
+"score": 5.8,
+"votes": 686
+},
+{
+"imdb_episode_id": "tt1310191",
+"season_number": 1,
+"episode_number": 185,
+"name": "A Legend from the Hidden Leaf: The Onbaa!",
+"score": 5.9,
+"votes": 694
+},
+{
+"imdb_episode_id": "tt1310208",
+"season_number": 1,
+"episode_number": 186,
+"name": "Warau Shino",
+"score": 6.1,
+"votes": 707
+},
+{
+"imdb_episode_id": "tt1310187",
+"season_number": 1,
+"episode_number": 187,
+"name": "Open for Business! The Leaf Moving Service",
+"score": 5.8,
+"votes": 657
+},
+{
+"imdb_episode_id": "tt1217863",
+"season_number": 1,
+"episode_number": 188,
+"name": "Mystery of the Targeted Merchants",
+"score": 5.7,
+"votes": 668
+},
+{
+"imdb_episode_id": "tt1217860",
+"season_number": 1,
+"episode_number": 189,
+"name": "Limitless Supply of Ninja Tools",
+"score": 5.9,
+"votes": 659
+},
+{
+"imdb_episode_id": "tt1217859",
+"season_number": 1,
+"episode_number": 190,
+"name": "The Byakugan Sees the Blind Spot!",
+"score": 6.4,
+"votes": 664
+},
+{
+"imdb_episode_id": "tt1217867",
+"season_number": 1,
+"episode_number": 191,
+"name": "Shi no senkoku 'Kumori tokidoki hare'",
+"score": 5.8,
+"votes": 658
+},
+{
+"imdb_episode_id": "tt1217864",
+"season_number": 1,
+"episode_number": 192,
+"name": "Ino Screams! Chubby Passion!",
+"score": 5.5,
+"votes": 703
+},
+{
+"imdb_episode_id": "tt1217858",
+"season_number": 1,
+"episode_number": 193,
+"name": "Viva Dojo Challenge! Youth Is All About Passion!",
+"score": 6.1,
+"votes": 677
+},
+{
+"imdb_episode_id": "tt1217865",
+"season_number": 1,
+"episode_number": 194,
+"name": "The Mysterious Curse of the Haunted Castle",
+"score": 5.6,
+"votes": 662
+},
+{
+"imdb_episode_id": "tt1217862",
+"season_number": 1,
+"episode_number": 195,
+"name": "Daisan no choujuu, saidai no raibaru",
+"score": 6.4,
+"votes": 658
+},
+{
+"imdb_episode_id": "tt1217866",
+"season_number": 1,
+"episode_number": 196,
+"name": "Hot-Blooded Confrontation: Student vs. Sensei",
+"score": 6.5,
+"votes": 664
+},
+{
+"imdb_episode_id": "tt1217861",
+"season_number": 1,
+"episode_number": 197,
+"name": "Crisis: The Hidden Leaf 11 Gather!",
+"score": 6.6,
+"votes": 676
+},
+{
+"imdb_episode_id": "tt1217857",
+"season_number": 1,
+"episode_number": 198,
+"name": "The Anbu Gives Up? Naruto's Recollection",
+"score": 6.8,
+"votes": 677
+},
+{
+"imdb_episode_id": "tt1202557",
+"season_number": 1,
+"episode_number": 199,
+"name": "The Missed Target",
+"score": 7.0,
+"votes": 688
+},
+{
+"imdb_episode_id": "tt0943075",
+"season_number": 1,
+"episode_number": 200,
+"name": "The Powerful Helper",
+"score": 7.0,
+"votes": 694
+},
+{
+"imdb_episode_id": "tt0943082",
+"season_number": 1,
+"episode_number": 201,
+"name": "Tajuu torappu Hokai no kauntodaun",
+"score": 7.3,
+"votes": 715
+},
+{
+"imdb_episode_id": "tt0943080",
+"season_number": 1,
+"episode_number": 202,
+"name": "Honjitsu happyou! Ase to namida no besuto 5! Otanoshimi no bangai-hen mo aru-ttebayo supesharu",
+"score": 4.6,
+"votes": 703
+},
+{
+"imdb_episode_id": "tt0943078",
+"season_number": 1,
+"episode_number": 203,
+"name": "Kurenai no ketsudan Torinokosareta dai 8-han",
+"score": 6.2,
+"votes": 652
+},
+{
+"imdb_episode_id": "tt0943079",
+"season_number": 1,
+"episode_number": 204,
+"name": "Nerawareta Yakumo Fuuin sareta nouryoku",
+"score": 6.3,
+"votes": 654
+},
+{
+"imdb_episode_id": "tt0943077",
+"season_number": 1,
+"episode_number": 205,
+"name": "Kurenai no gokuhi ninmu: San-daime tono yakusoku",
+"score": 6.4,
+"votes": 651
+},
+{
+"imdb_episode_id": "tt0943076",
+"season_number": 1,
+"episode_number": 206,
+"name": "Genjutsu-ka genjitsu-ka Gokan wo seisuru mono",
+"score": 6.5,
+"votes": 655
+},
+{
+"imdb_episode_id": "tt0943074",
+"season_number": 1,
+"episode_number": 207,
+"name": "Fujirareta hazu no nouryoku",
+"score": 6.6,
+"votes": 662
+},
+{
+"imdb_episode_id": "tt1209039",
+"season_number": 1,
+"episode_number": 208,
+"name": "Meiki Kachou fuugetsu no omosa",
+"score": 5.3,
+"votes": 675
+},
+{
+"imdb_episode_id": "tt1193920",
+"season_number": 1,
+"episode_number": 209,
+"name": "Teki wa 'Shinobazu'",
+"score": 5.8,
+"votes": 652
+},
+{
+"imdb_episode_id": "tt1193919",
+"season_number": 1,
+"episode_number": 210,
+"name": "Mayoi no mori",
+"score": 6.1,
+"votes": 649
+},
+{
+"imdb_episode_id": "tt1304201",
+"season_number": 1,
+"episode_number": 211,
+"name": "Honoo no kioku",
+"score": 6.0,
+"votes": 647
+},
+{
+"imdb_episode_id": "tt1304202",
+"season_number": 1,
+"episode_number": 212,
+"name": "Sorezore no michi",
+"score": 6.1,
+"votes": 650
+},
+{
+"imdb_episode_id": "tt1304203",
+"season_number": 1,
+"episode_number": 213,
+"name": "Ushinawareta kioku",
+"score": 6.3,
+"votes": 670
+},
+{
+"imdb_episode_id": "tt1304204",
+"season_number": 1,
+"episode_number": 214,
+"name": "Torimodoshita genjitsu",
+"score": 6.3,
+"votes": 676
+},
+{
+"imdb_episode_id": "tt1304205",
+"season_number": 1,
+"episode_number": 215,
+"name": "Keshisaritai kako",
+"score": 6.7,
+"votes": 706
+},
+{
+"imdb_episode_id": "tt1304206",
+"season_number": 1,
+"episode_number": 216,
+"name": "Kieta takumi Nerawareta Shukaku",
+"score": 7.1,
+"votes": 739
+},
+{
+"imdb_episode_id": "tt1304207",
+"season_number": 1,
+"episode_number": 217,
+"name": "Suna no doumeikoku Konoha no shinobi",
+"score": 7.2,
+"votes": 743
+},
+{
+"imdb_episode_id": "tt1304208",
+"season_number": 1,
+"episode_number": 218,
+"name": "Fuujiwareta suna Suiko no hangeki",
+"score": 7.3,
+"votes": 745
+},
+{
+"imdb_episode_id": "tt0943083",
+"season_number": 1,
+"episode_number": 219,
+"name": "Yomigaetta kyuukyoku heiki",
+"score": 7.2,
+"votes": 756
+},
+{
+"imdb_episode_id": "tt0943081",
+"season_number": 1,
+"episode_number": 220,
+"name": "Tabidachi",
+"score": 8.0,
+"votes": 1305
+}
+],
+"tmdb": [
+{
+"tmdb_id": 908161,
+"imdb_id": null,
+"season_number": 0,
+"episode_number": 1,
+"name": "Find the Crimson Four-Leaf Clover!"
+},
+{
+"tmdb_id": 908166,
+"imdb_id": null,
+"season_number": 0,
+"episode_number": 2,
+"name": "Finally a Clash! Jounin VS. Genin!! Indiscriminate Grand Melee Tournament!!"
+},
+{
+"tmdb_id": 1059121,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 1,
+"name": "Enter: Naruto Uzumaki!"
+},
+{
+"tmdb_id": 1059122,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 2,
+"name": "My Name Is Konohamaru!"
+},
+{
+"tmdb_id": 1059123,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 3,
+"name": "Sasuke and Sakura: Friends or Foes?"
+},
+{
+"tmdb_id": 1059124,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 4,
+"name": "Pass or Fail: Survival Test"
+},
+{
+"tmdb_id": 1059125,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 5,
+"name": "You Failed! Kakashi's Final Decision"
+},
+{
+"tmdb_id": 1059126,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 6,
+"name": "A Dangerous Mission! Journey to the Land of Waves!"
+},
+{
+"tmdb_id": 1059127,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 7,
+"name": "The Assassin of the Mist!"
+},
+{
+"tmdb_id": 1059128,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 8,
+"name": "The Oath of Pain"
+},
+{
+"tmdb_id": 1059129,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 9,
+"name": "Kakashi: Sharingan Warrior"
+},
+{
+"tmdb_id": 908135,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 10,
+"name": "The Forest of Chakra"
+},
+{
+"tmdb_id": 908136,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 11,
+"name": "The Land Where a Hero Once Lived"
+},
+{
+"tmdb_id": 908137,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 12,
+"name": "Battle on the Bridge! Zabuza Returns!"
+},
+{
+"tmdb_id": 908138,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 13,
+"name": "Haku's Secret Jutsu: Crystal Ice Mirrors"
+},
+{
+"tmdb_id": 908139,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 14,
+"name": "The Number One Hyperactive, Knucklehead Ninja Joins the Fight!"
+},
+{
+"tmdb_id": 908140,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 15,
+"name": "Zero Visibility: The Sharingan Shatters"
+},
+{
+"tmdb_id": 908141,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 16,
+"name": "The Broken Seal"
+},
+{
+"tmdb_id": 908142,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 17,
+"name": "White Past: Hidden Ambition"
+},
+{
+"tmdb_id": 908143,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 18,
+"name": "The Weapons Known as Shinobi"
+},
+{
+"tmdb_id": 908144,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 19,
+"name": "The Demon in the Snow"
+},
+{
+"tmdb_id": 908145,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 20,
+"name": "A New Chapter Begins: The Chunin Exam!"
+},
+{
+"tmdb_id": 908146,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 21,
+"name": "Identify Yourself: Powerful New Rivals"
+},
+{
+"tmdb_id": 908147,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 22,
+"name": "Chunin Challenge: Rock Lee vs. Sasuke!"
+},
+{
+"tmdb_id": 908148,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 23,
+"name": "Genin Takedown! All Nine Rookies Face Off!"
+},
+{
+"tmdb_id": 908149,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 24,
+"name": "Start Your Engines: The Chunin Exam Begins!"
+},
+{
+"tmdb_id": 908150,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 25,
+"name": "The Tenth Question: All or Nothing!"
+},
+{
+"tmdb_id": 908151,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 26,
+"name": "Special Report: Live from the Forest of Death!"
+},
+{
+"tmdb_id": 908152,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 27,
+"name": "The Chunin Exam Stage 2: The Forest of Death"
+},
+{
+"tmdb_id": 908153,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 28,
+"name": "Eat or Be Eaten: Panic in the Forest"
+},
+{
+"tmdb_id": 908154,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 29,
+"name": "Naruto's Counterattack: Never Give In!"
+},
+{
+"tmdb_id": 908155,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 30,
+"name": "The Sharingan Revived: Dragon-Flame Jutsu!"
+},
+{
+"tmdb_id": 908156,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 31,
+"name": "Bushy Brow's Pledge: Undying Love and Protection!"
+},
+{
+"tmdb_id": 908157,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 32,
+"name": "Sakura Blossoms!"
+},
+{
+"tmdb_id": 908158,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 33,
+"name": "Battle Formation: Ino-Shika-Cho!"
+},
+{
+"tmdb_id": 908159,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 34,
+"name": "Akamaru Trembles: Gaara's Cruel Strength!"
+},
+{
+"tmdb_id": 908160,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 35,
+"name": "The Scroll's Secret: No Peeking Allowed"
+},
+{
+"tmdb_id": 1144958,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 36,
+"name": "Clone vs. Clone: Mine Are Better Than Yours!"
+},
+{
+"tmdb_id": 1144961,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 37,
+"name": "Surviving the Cut! The Rookie Nine Together Again!"
+},
+{
+"tmdb_id": 1145015,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 38,
+"name": "Narrowing the Field: Sudden Death Elimination!"
+},
+{
+"tmdb_id": 1145016,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 39,
+"name": "Bushy Brow's Jealousy: Barrage of Lions Unleashed!"
+},
+{
+"tmdb_id": 1145020,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 40,
+"name": "Kakashi and Orochimaru: Face-to-Face!"
+},
+{
+"tmdb_id": 1145021,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 41,
+"name": "Kunoichi Rumble: The Rivals Get Serious!"
+},
+{
+"tmdb_id": 1145022,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 42,
+"name": "The Ultimate Battle: Cha!"
+},
+{
+"tmdb_id": 1145023,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 43,
+"name": "Killer Kunoichi and a Shaky Shikamaru"
+},
+{
+"tmdb_id": 1145527,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 44,
+"name": "Akamaru Unleashed! Who's Top Dog Now?"
+},
+{
+"tmdb_id": 1145528,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 45,
+"name": "Surprise Attack! Naruto's Secret Weapon!"
+},
+{
+"tmdb_id": 1145529,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 46,
+"name": "Byakugan Battle: Hinata Grows Bold!"
+},
+{
+"tmdb_id": 1145530,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 47,
+"name": "A Failure Stands Tall!"
+},
+{
+"tmdb_id": 1145531,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 48,
+"name": "Gaara vs. Rock Lee: The Power of Youth Explodes!"
+},
+{
+"tmdb_id": 1145540,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 49,
+"name": "Lee's Hidden Strength: Forbidden Secret Jutsu!"
+},
+{
+"tmdb_id": 1145541,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 50,
+"name": "The Fifth Gate: A Splendid Ninja Is Born"
+},
+{
+"tmdb_id": 1145542,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 51,
+"name": "A Shadow in the Darkness: Danger Approaches Sasuke"
+},
+{
+"tmdb_id": 1145543,
+"imdb_id": null,
+"season_number": 1,
+"episode_number": 52,
+"name": "Ebisu Returns: Naruto's Toughest Training Yet!"
+},
+{
+"tmdb_id": 908117,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 53,
+"name": "Long Time No See: Jiraiya Returns!"
+},
+{
+"tmdb_id": 908118,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 54,
+"name": "The Summoning Jutsu: Wisdom of the Toad Sage!"
+},
+{
+"tmdb_id": 908119,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 55,
+"name": "A Feeling of Yearning, a Flower Full of Hope"
+},
+{
+"tmdb_id": 908120,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 56,
+"name": "Live or Die: Risk It All to Win It All!"
+},
+{
+"tmdb_id": 908121,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 57,
+"name": "He Flies! He Jumps! He Lurks! Chief Toad Appears!"
+},
+{
+"tmdb_id": 908122,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 58,
+"name": "Hospital Besieged: The Evil Hand Revealed!"
+},
+{
+"tmdb_id": 908123,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 59,
+"name": "The Final Rounds: Rush to the Battle Arena!"
+},
+{
+"tmdb_id": 908124,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 60,
+"name": "Byakugan vs. Shadow Clone Jutsu!"
+},
+{
+"tmdb_id": 908125,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 61,
+"name": "Ultimate Defense: Zero Blind Spot!"
+},
+{
+"tmdb_id": 957891,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 62,
+"name": "A Failure's True Power"
+},
+{
+"tmdb_id": 959697,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 63,
+"name": "Hit It or Quit It: The Final Rounds Get Complicated!"
+},
+{
+"tmdb_id": 959698,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 64,
+"name": "Zero Motivation: The Guy with Cloud Envy!"
+},
+{
+"tmdb_id": 957892,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 65,
+"name": "Dancing Leaf, Squirming Sand"
+},
+{
+"tmdb_id": 957893,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 66,
+"name": "Bushy Brow's Jutsu: Sasuke Style!"
+},
+{
+"tmdb_id": 960130,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 67,
+"name": "Late for the Show, But Ready to Go! The Ultimate Secret Technique is Born!"
+},
+{
+"tmdb_id": 960131,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 68,
+"name": "Zero Hour! The Destruction of the Hidden Leaf Village Begins!"
+},
+{
+"tmdb_id": 959699,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 69,
+"name": "Village in Distress: A New A-Ranked Mission!"
+},
+{
+"tmdb_id": 957894,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 70,
+"name": "A Shirker's Call to Action: Layabout No More!"
+},
+{
+"tmdb_id": 957895,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 71,
+"name": "An Unrivaled Match: Hokage Battle Royale!"
+},
+{
+"tmdb_id": 959700,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 72,
+"name": "A Mistake from the Past: A Face Revealed!"
+},
+{
+"tmdb_id": 957896,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 73,
+"name": "Forbidden Secret Technique: Reaper Death Seal!"
+},
+{
+"tmdb_id": 957897,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 74,
+"name": "Astonishing Truth! Gaara's Identity Emerges!"
+},
+{
+"tmdb_id": 957898,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 75,
+"name": "Sasuke's Decision: Pushed to the Edge!"
+},
+{
+"tmdb_id": 957899,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 76,
+"name": "Assassin of the Moonlit Night"
+},
+{
+"tmdb_id": 957900,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 77,
+"name": "Light vs. Dark: The Two Faces of Gaara"
+},
+{
+"tmdb_id": 960132,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 78,
+"name": "Naruto's Ninja Handbook"
+},
+{
+"tmdb_id": 957901,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 79,
+"name": "Beyond the Limit of Darkness and Light"
+},
+{
+"tmdb_id": 957902,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 80,
+"name": "The Third Hokage, Forever..."
+},
+{
+"tmdb_id": 960133,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 81,
+"name": "Return of the Morning Mist"
+},
+{
+"tmdb_id": 960134,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 82,
+"name": "Eye to Eye: Sharingan vs. Sharingan!"
+},
+{
+"tmdb_id": 959701,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 83,
+"name": "Jiraiya: Naruto's Potential Disaster!"
+},
+{
+"tmdb_id": 1145544,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 84,
+"name": "Roar, Chidori! Brother vs. Brother!"
+},
+{
+"tmdb_id": 1146872,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 85,
+"name": "Hate Among the Uchihas: The Last of the Clan"
+},
+{
+"tmdb_id": 1146873,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 86,
+"name": "A New Training Begins: I Will Be Strong"
+},
+{
+"tmdb_id": 1146874,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 87,
+"name": "Keep on Training: Pop Goes the Water Balloon!"
+},
+{
+"tmdb_id": 1146875,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 88,
+"name": "Focal Point: The Mark of the Leaf"
+},
+{
+"tmdb_id": 1146876,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 89,
+"name": "An Impossible Choice: The Pain Within Tsunade's Heart"
+},
+{
+"tmdb_id": 1146877,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 90,
+"name": "Unforgivable! A Total Lack of Respect!"
+},
+{
+"tmdb_id": 1146878,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 91,
+"name": "Inheritance! The Necklace of Death!"
+},
+{
+"tmdb_id": 1146879,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 92,
+"name": "A Dubious Offer! Tsunade's Choice!"
+},
+{
+"tmdb_id": 1146880,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 93,
+"name": "Breakdown! The Deal is Off!"
+},
+{
+"tmdb_id": 1151742,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 94,
+"name": "Attack! Fury of the Rasengan!"
+},
+{
+"tmdb_id": 1151743,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 95,
+"name": "The Fifth Hokage! A Life on the Line!"
+},
+{
+"tmdb_id": 1151744,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 96,
+"name": "Deadlock! Sannin Showdown!"
+},
+{
+"tmdb_id": 1151745,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 97,
+"name": "Kidnapped! Naruto's Hot Spring Adventure!"
+},
+{
+"tmdb_id": 1151746,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 98,
+"name": "Tsunade's Warning: Ninja No More!"
+},
+{
+"tmdb_id": 1151747,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 99,
+"name": "The Will of Fire Still Burns!"
+},
+{
+"tmdb_id": 1151749,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 100,
+"name": "Sensei and Student: The Bond of a Shinobi!"
+},
+{
+"tmdb_id": 1151750,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 101,
+"name": "Gotta See! Gotta Know! Kakashi-Sensei's True Face!"
+},
+{
+"tmdb_id": 1151751,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 102,
+"name": "Mission: Help an Old Friend in the Land of Tea"
+},
+{
+"tmdb_id": 1151752,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 103,
+"name": "The Race is On! Trouble on the High Seas!"
+},
+{
+"tmdb_id": 1151754,
+"imdb_id": null,
+"season_number": 2,
+"episode_number": 104,
+"name": "Run Idate, Run! Nagi Island Awaits!"
+},
+{
+"tmdb_id": 908082,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 105,
+"name": "A Fierce Battle of Rolling Thunder!"
+},
+{
+"tmdb_id": 908083,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 106,
+"name": "The Last Leg: A Final Act of Desperation"
+},
+{
+"tmdb_id": 908084,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 107,
+"name": "The Battle Begins: Naruto vs. Sasuke"
+},
+{
+"tmdb_id": 908085,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 108,
+"name": "Bitter Rivals and Broken Bonds"
+},
+{
+"tmdb_id": 908086,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 109,
+"name": "An Invitation from the Sound"
+},
+{
+"tmdb_id": 908087,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 110,
+"name": "Formation! The Sasuke Retrieval Squad"
+},
+{
+"tmdb_id": 908088,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 111,
+"name": "Sound vs. Leaf"
+},
+{
+"tmdb_id": 908089,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 112,
+"name": "Squad Mutiny: Everything Falls Apart!"
+},
+{
+"tmdb_id": 908090,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 113,
+"name": "Full Throttle Power! Choji, Ablaze!"
+},
+{
+"tmdb_id": 908091,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 114,
+"name": "Good-bye Old Friend...! I'll Always Believe in You!"
+},
+{
+"tmdb_id": 908092,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 115,
+"name": "Your Opponent Is Me!"
+},
+{
+"tmdb_id": 908093,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 116,
+"name": "360 Degrees of Vision: The Byakugan's Blind Spot"
+},
+{
+"tmdb_id": 908094,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 117,
+"name": "Losing is Not an Option!"
+},
+{
+"tmdb_id": 908095,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 118,
+"name": "The Vessel Arrives Too Late"
+},
+{
+"tmdb_id": 908096,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 119,
+"name": "Miscalculation: A New Enemy Appears!"
+},
+{
+"tmdb_id": 908097,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 120,
+"name": "Roar and Howl! The Ultimate Tag-Team!"
+},
+{
+"tmdb_id": 908098,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 121,
+"name": "To Each His Own Battle"
+},
+{
+"tmdb_id": 908099,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 122,
+"name": "Fakeout: Shikamaru's Comeback!"
+},
+{
+"tmdb_id": 908100,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 123,
+"name": "The Leaf's Handsome Devil!"
+},
+{
+"tmdb_id": 908101,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 124,
+"name": "The Beast Within"
+},
+{
+"tmdb_id": 908102,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 125,
+"name": "The Sand Shinobi: Allies of the Leaf"
+},
+{
+"tmdb_id": 908103,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 126,
+"name": "Showdown: Gaara vs. Kimimaro"
+},
+{
+"tmdb_id": 908104,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 127,
+"name": "Vengeful Strike! The Bracken Dance!"
+},
+{
+"tmdb_id": 908105,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 128,
+"name": "A Cry on Deaf Ears"
+},
+{
+"tmdb_id": 908106,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 129,
+"name": "Brothers: Distance Among the Uchihas"
+},
+{
+"tmdb_id": 908107,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 130,
+"name": "Father and Son, the Broken Crest"
+},
+{
+"tmdb_id": 908108,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 131,
+"name": "The Secrets of the Mangekyo Sharingan!"
+},
+{
+"tmdb_id": 1152618,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 132,
+"name": "For a Friend"
+},
+{
+"tmdb_id": 1152619,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 133,
+"name": "A Plea from a Friend"
+},
+{
+"tmdb_id": 1152620,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 134,
+"name": "The End of Tears"
+},
+{
+"tmdb_id": 1152621,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 135,
+"name": "The Promise That Could Not Be Kept"
+},
+{
+"tmdb_id": 1152622,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 136,
+"name": "Deep Cover?! A Super S-Ranked Mission!"
+},
+{
+"tmdb_id": 1152623,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 137,
+"name": "A Town of Outlaws, The Shadow of the Fuma Clan"
+},
+{
+"tmdb_id": 1152624,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 138,
+"name": "Pure Betrayal, and a Fleeting Plea!"
+},
+{
+"tmdb_id": 1152625,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 139,
+"name": "Pure Terror! The House of Orochimaru"
+},
+{
+"tmdb_id": 1152626,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 140,
+"name": "Two Heartbeats: Kabuto's Trap"
+},
+{
+"tmdb_id": 1152627,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 141,
+"name": "Sakura's Determination"
+},
+{
+"tmdb_id": 1152628,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 142,
+"name": "The Three Villains from the Maximum Security Prison"
+},
+{
+"tmdb_id": 1152629,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 143,
+"name": "Tonton! I'm Counting on You!"
+},
+{
+"tmdb_id": 1152630,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 144,
+"name": "A New Squad! Two People and a Dog?!"
+},
+{
+"tmdb_id": 1152631,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 145,
+"name": "A New Formation: Ino-Shika-Cho!"
+},
+{
+"tmdb_id": 1152632,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 146,
+"name": "Orochimaru's Shadow"
+},
+{
+"tmdb_id": 1152633,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 147,
+"name": "A Clash of Fate: You Can't Bring Me Down!"
+},
+{
+"tmdb_id": 1152634,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 148,
+"name": "Search for the Rare Bikochu Beetle"
+},
+{
+"tmdb_id": 1152635,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 149,
+"name": "What's the Difference? Don't All Insects Look Alike?"
+},
+{
+"tmdb_id": 1152636,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 150,
+"name": "A Battle of Bugs: The Deceivers and the Deceived"
+},
+{
+"tmdb_id": 1152637,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 151,
+"name": "Blaze Away, Byakugan! This is My Ninja Way!"
+},
+{
+"tmdb_id": 1152638,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 152,
+"name": "Funeral March for the Living"
+},
+{
+"tmdb_id": 1152639,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 153,
+"name": "A Lesson Learned: The Iron Fist of Love!"
+},
+{
+"tmdb_id": 1152640,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 154,
+"name": "The Enemy of the Byakugan"
+},
+{
+"tmdb_id": 1152641,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 155,
+"name": "The Dark Creeping Clouds"
+},
+{
+"tmdb_id": 1152642,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 156,
+"name": "Raiga's Counterattack"
+},
+{
+"tmdb_id": 1152643,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 157,
+"name": "Run! The Curry of Life"
+},
+{
+"tmdb_id": 1152644,
+"imdb_id": null,
+"season_number": 3,
+"episode_number": 158,
+"name": "Follow My Lead! The Great Survival Challenge"
+},
+{
+"tmdb_id": 908014,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 159,
+"name": "Bounty Hunter from the Wilderness"
+},
+{
+"tmdb_id": 908015,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 160,
+"name": "Hunt or Be Hunted?! Showdown at the O.K. Temple!"
+},
+{
+"tmdb_id": 908016,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 161,
+"name": "The Appearance of Strange Visitors"
+},
+{
+"tmdb_id": 908017,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 162,
+"name": "The Cursed Warrior"
+},
+{
+"tmdb_id": 908018,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 163,
+"name": "The Tactician's Intent"
+},
+{
+"tmdb_id": 908019,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 164,
+"name": "Too Late for Help"
+},
+{
+"tmdb_id": 908020,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 165,
+"name": "The Death of Naruto"
+},
+{
+"tmdb_id": 908021,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 166,
+"name": "When Time Stands Still"
+},
+{
+"tmdb_id": 908022,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 167,
+"name": "When Egrets Flap Their Wings"
+},
+{
+"tmdb_id": 908023,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 168,
+"name": "Mix It, Stretch It, Boil It Up! Burn, Copper Pot, Burn!"
+},
+{
+"tmdb_id": 908024,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 169,
+"name": "Remembrance: The Lost Page"
+},
+{
+"tmdb_id": 908025,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 170,
+"name": "The Closed Door"
+},
+{
+"tmdb_id": 908026,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 171,
+"name": "Infiltration: The Set-Up!"
+},
+{
+"tmdb_id": 908027,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 172,
+"name": "Despair: A Fractured Heart"
+},
+{
+"tmdb_id": 908028,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 173,
+"name": "The Battle at Sea: The Power Unleashed!"
+},
+{
+"tmdb_id": 908029,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 174,
+"name": "Impossible! Celebrity Ninja Art - Money Style Jutsu!"
+},
+{
+"tmdb_id": 908030,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 175,
+"name": "The Treasure Hunt is On!"
+},
+{
+"tmdb_id": 908031,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 176,
+"name": "Run, Dodge, Zigzag! Chase or Be Chased!"
+},
+{
+"tmdb_id": 908032,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 177,
+"name": "Please, Mr. Postman!!"
+},
+{
+"tmdb_id": 908033,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 178,
+"name": "Encounter! The Boy with a Star's Name"
+},
+{
+"tmdb_id": 908034,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 179,
+"name": "The Remembered Lullaby"
+},
+{
+"tmdb_id": 1161597,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 180,
+"name": "Hidden Jutsu! The Price of the Ninja Art: Kujaku"
+},
+{
+"tmdb_id": 1161598,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 181,
+"name": "Hoshikage: The Buried Truth"
+},
+{
+"tmdb_id": 1161599,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 182,
+"name": "Reunion, The Remaining Time"
+},
+{
+"tmdb_id": 1161600,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 183,
+"name": "The Star's Radiance"
+},
+{
+"tmdb_id": 1161601,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 184,
+"name": "Kiba's Long Day!"
+},
+{
+"tmdb_id": 1161602,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 185,
+"name": "A Legend from the Hidden Leaf: The Onbaa!"
+},
+{
+"tmdb_id": 1161603,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 186,
+"name": "Laughing Shino"
+},
+{
+"tmdb_id": 1161604,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 187,
+"name": "Open for Business! The Leaf Moving Service"
+},
+{
+"tmdb_id": 1161605,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 188,
+"name": "Mystery of the Targeted Merchants"
+},
+{
+"tmdb_id": 1161606,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 189,
+"name": "A Limitless Supply of Ninja Tools"
+},
+{
+"tmdb_id": 1161607,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 190,
+"name": "The Byakugan Sees the Blind Spot!"
+},
+{
+"tmdb_id": 1161608,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 191,
+"name": "Forecast: Death! Cloudy with Chance of Sun!"
+},
+{
+"tmdb_id": 1161609,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 192,
+"name": "Ino Screams! Chubby Paradise!"
+},
+{
+"tmdb_id": 1161610,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 193,
+"name": "Viva Dojo Challenge! Youth is All About Passion!"
+},
+{
+"tmdb_id": 1161611,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 194,
+"name": "The Mysterious Curse of the Haunted Castle"
+},
+{
+"tmdb_id": 1161612,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 195,
+"name": "The Third Super-Beast!"
+},
+{
+"tmdb_id": 1161613,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 196,
+"name": "Hot-Blooded Confrontation: Student vs. Sensei"
+},
+{
+"tmdb_id": 1161614,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 197,
+"name": "Crisis: The Hidden Leaf 11 Gather!"
+},
+{
+"tmdb_id": 1161615,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 198,
+"name": "The ANBU Gives Up? Naruto's Recollection"
+},
+{
+"tmdb_id": 1161616,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 199,
+"name": "The Missed Target"
+},
+{
+"tmdb_id": 1161617,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 200,
+"name": "The Powerful Helper"
+},
+{
+"tmdb_id": 1161618,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 201,
+"name": "Multiple Traps! Countdown to Destruction"
+},
+{
+"tmdb_id": 1161619,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 202,
+"name": "The Top 5 Ninja Battles!"
+},
+{
+"tmdb_id": 1161620,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 203,
+"name": "Kurenai's Decision: Squad 8 Left Behind"
+},
+{
+"tmdb_id": 1161621,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 204,
+"name": "Yakumo's Sealed Ability"
+},
+{
+"tmdb_id": 1161622,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 205,
+"name": "Kurenai's Top Secret Mission: The Promise with the Third Hokage"
+},
+{
+"tmdb_id": 1161623,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 206,
+"name": "Genjutsu or Reality?"
+},
+{
+"tmdb_id": 1161624,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 207,
+"name": "The Supposed Sealed Ability"
+},
+{
+"tmdb_id": 1161625,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 208,
+"name": "The Weight of the Prized Artifact!"
+},
+{
+"tmdb_id": 1161626,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 209,
+"name": "The Enemy: Ninja Dropouts"
+},
+{
+"tmdb_id": 1161627,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 210,
+"name": "The Bewildering Forest"
+},
+{
+"tmdb_id": 1161628,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 211,
+"name": "Memory of Flames"
+},
+{
+"tmdb_id": 1161629,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 212,
+"name": "To Each His Own Path"
+},
+{
+"tmdb_id": 1161630,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 213,
+"name": "Vanished Memories"
+},
+{
+"tmdb_id": 1161631,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 214,
+"name": "Bringing Back Reality"
+},
+{
+"tmdb_id": 1161632,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 215,
+"name": "A Past to Be Erased"
+},
+{
+"tmdb_id": 1161634,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 216,
+"name": "The Targeted Shukaku"
+},
+{
+"tmdb_id": 1161635,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 217,
+"name": "Sand Alliance With The Leaf Shinobi"
+},
+{
+"tmdb_id": 1161636,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 218,
+"name": "The Counterattack!"
+},
+{
+"tmdb_id": 1161637,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 219,
+"name": "The Ultimate Weapon Reborn"
+},
+{
+"tmdb_id": 1161638,
+"imdb_id": null,
+"season_number": 4,
+"episode_number": 220,
+"name": "Departure"
+}
+]
+}
