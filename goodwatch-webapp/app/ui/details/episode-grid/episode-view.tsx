@@ -1,5 +1,5 @@
-// Which view the episodes section shows, Grid or Consistency, shared by the switch in the section header (sm and up)
-// and the one above the grid on a phone. One show at a time: another show starts on the grid again.
+// Which view the episodes section shows, Grid or Spread, set by the switch in the section header. One show at a
+// time: another show starts on the grid again.
 import { useSyncExternalStore } from "react"
 import { FOCUS } from "./presentation"
 
@@ -11,7 +11,7 @@ export function setEpisodeChart(showId: number, chart: boolean) {
 	for (const listener of listeners) listener()
 }
 
-/** Whether the show's episodes are drawn as the Consistency chart. */
+/** Whether the show's episodes are drawn as the Spread chart. */
 export function useEpisodeChart(showId: number): boolean {
 	const chart = useSyncExternalStore(
 		(listener) => {
@@ -24,7 +24,35 @@ export function useEpisodeChart(showId: number): boolean {
 	return chart
 }
 
-/** The Grid / Consistency switch. */
+const GridIcon = () => (
+	<svg
+		viewBox="0 0 14 14"
+		aria-hidden="true"
+		className="h-3.5 w-3.5"
+		fill="currentColor"
+	>
+		<rect x="1" y="1" width="5" height="5" rx="1.2" />
+		<rect x="8" y="1" width="5" height="5" rx="1.2" />
+		<rect x="1" y="8" width="5" height="5" rx="1.2" />
+		<rect x="8" y="8" width="5" height="5" rx="1.2" />
+	</svg>
+)
+const SpreadIcon = () => (
+	<svg
+		viewBox="0 0 14 14"
+		aria-hidden="true"
+		className="h-3.5 w-3.5"
+		fill="currentColor"
+	>
+		<rect x="0.5" y="6.4" width="13" height="1.2" rx="0.6" opacity="0.45" />
+		<circle cx="2.6" cy="7" r="1.6" />
+		<circle cx="6.4" cy="4.4" r="1.6" />
+		<circle cx="8.6" cy="9.4" r="1.6" />
+		<circle cx="11.6" cy="5.6" r="1.6" />
+	</svg>
+)
+
+/** The Grid / Spread switch: Grid shows every episode as a square, Spread places them on the score axis. */
 export function EpisodeViewToggle({
 	showId,
 	loading = false,
@@ -40,20 +68,26 @@ export function EpisodeViewToggle({
 			role="radiogroup"
 			aria-label="Show the episodes as"
 			data-view-toggle
-			className={`items-center gap-1 ${className}`}
+			className={`items-center rounded-lg bg-white/[0.05] p-0.5 ring-1 ring-inset ring-white/10 ${className}`}
 		>
 			{[false, true].map((on) => (
 				<button
 					key={String(on)}
 					type="button"
-					// biome-ignore lint/a11y/useSemanticElements: a two-button switch styled as pills
+					// biome-ignore lint/a11y/useSemanticElements: a two-button switch styled as a segmented control
 					role="radio"
 					aria-checked={chart === on}
 					disabled={loading}
+					title={
+						on ? "Each episode on the score scale" : "Each episode as a square"
+					}
 					onClick={() => setEpisodeChart(showId, on)}
-					className={`inline-flex h-10 cursor-pointer items-center rounded-lg px-3 text-xs font-semibold lg:h-8 ${FOCUS} ${loading ? "text-transparent bg-white/[0.07] animate-pulse motion-reduce:animate-none" : chart === on ? "bg-white text-gray-900" : "bg-white/10 text-gray-100 hover:bg-white/20"}`}
+					className={`inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2 sm:px-2.5 text-xs font-semibold transition-colors ${FOCUS} ${chart === on ? "bg-white/[0.14] text-white shadow-sm shadow-black/40" : "text-gray-400 hover:text-gray-100"}`}
 				>
-					{on ? "Consistency" : "Grid"}
+					{on ? <SpreadIcon /> : <GridIcon />}
+					<span className="sr-only sm:not-sr-only">
+						{on ? "Spread" : "Grid"}
+					</span>
 				</button>
 			))}
 		</div>

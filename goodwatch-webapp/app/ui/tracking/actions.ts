@@ -13,6 +13,11 @@ import type {
 	PageEpisode,
 } from "~/domain/tracking/show-page"
 import { seasonRestore, seenPressRestore } from "~/domain/tracking/storage"
+import {
+	type WatchChoice,
+	existingUndo,
+	markPlan,
+} from "~/domain/tracking/watch-menu"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import { type UserData, createMediaKey } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
@@ -41,6 +46,12 @@ const localDay = (at: number) => {
 }
 
 export type TrackingActions = ReturnType<typeof useTrackingActions>
+
+/** A mark the episode watch menu made, and the action that takes exactly it back. */
+export interface MenuMark {
+	undo: PageAction
+	done: Promise<ActionAnswer | null>
+}
 
 export function useTrackingActions(store: ShowStore, title: string) {
 	const queryClient = useQueryClient()
@@ -288,13 +299,17 @@ export function useTrackingActions(store: ShowStore, title: string) {
 				const seasons = [
 					...new Set(
 						before.log
-							.filter((row) => row.pass === pass && (row.season_number ?? 0) > 0)
+							.filter(
+								(row) => row.pass === pass && (row.season_number ?? 0) > 0,
+							)
 							.map((row) => row.season_number as number),
 					),
 				]
-				for (const season of seasons) store.act({ type: "unmarkSeason", season })
+				for (const season of seasons)
+					store.act({ type: "unmarkSeason", season })
 				const now = stateOf(store)
-				if (now === "on_hold" || now === "dropped") store.act({ type: "resume" })
+				if (now === "on_hold" || now === "dropped")
+					store.act({ type: "resume" })
 				const kept = new Set(
 					(store.snapshot.copy?.log ?? []).map((row) => row.watch_id),
 				)
@@ -447,6 +462,46 @@ export function useTrackingActions(store: ShowStore, title: string) {
 				when: Exclude<WatchedWhen, { precision: "moment" }>,
 			) {
 				store.act({ type: "editWatchDate", watchId, when })
+			},
+
+			/**
+			 * The episode watch menu's mark (watch-menu.ts): no toast, the menu shows it. Returns what takes exactly this
+			 * mark back, or null when the page refused it.
+			 */
+			markFromMenu(episode: PageEpisode, choice: WatchChoice): MenuMark | null {
+				const id = newActionId()
+				const plan = markPlan(episode, choice, id, today())
+				const acted = store.act(plan.first, { actionId: id })
+				if (!acted.ok) return null
+				if (plan.after) store.act(plan.after)
+				return { undo: plan.undo, done: acted.done }
+			},
+
+			/** Takes a menu mark back, and puts the show back on the Wishlist when it was the show's first watch. */
+			async unmarkFromMenu(mark: MenuMark) {
+				const answer = await mark.done
+				const taken = store.act(
+					mark.undo,
+					answer ? { restore: answer.cleared } : {},
+				)
+				const result = await taken.done
+				if (
+					answer &&
+					result &&
+					(result.state?.state ?? "not_started") === "not_started"
+				)
+					putBack(answer.cleared)
+			},
+
+			/** What takes back a watch the member already had when the menu opened; null when there is none. */
+			existingMark(episode: PageEpisode): MenuMark | null {
+				const copy = store.snapshot.copy
+				const undo = existingUndo(
+					copy?.log ?? [],
+					episode,
+					copy?.state?.pass ?? 1,
+				)
+				return undo ? { undo, done: Promise.resolve(null) } : null
 			},
 
 			/** Removes one watch from an episode's log, in any pass. */

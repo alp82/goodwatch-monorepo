@@ -1,11 +1,12 @@
-// Everyone gets the same wrapping ratings tiles and Grid / Consistency view. Members add
-// their watch history through EpisodeList; this read-only view also serves its first paint.
+// Everyone gets the same season overview, in Grid or Spread (SeasonOverview.tsx). Members add their watch history
+// through EpisodeList; this read-only view also serves its first paint.
 import { type ReactNode, Suspense, lazy, useMemo, useState } from "react"
 import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
 import { HEADER_HEIGHT } from "~/ui/details/header-height"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
-import RatingsGrid, { type GridModel } from "./RatingsGrid"
-import { EpisodeViewToggle, useEpisodeChart } from "./episode-view"
+import SeasonOverview, { needsTiles, useWidth } from "./SeasonOverview"
+import { useEpisodeChart } from "./episode-view"
+import type { GridModel } from "./grid-model"
 import { gridSeasons } from "./grid-seasons"
 import { FOCUS, seasonTitle } from "./presentation"
 import { EPISODE_GRID_ANCHOR } from "./scale"
@@ -44,14 +45,23 @@ export default function EpisodeGrid({
 		setOpen(open === number ? null : number)
 		setSelected(null)
 	}
+	const regular = useMemo(
+		() => seasons.filter((s) => s.number !== 0),
+		[seasons],
+	)
+	const { ref: box, width } = useWidth()
+	const step = (delta: -1 | 1) => {
+		const to = regular[regular.findIndex((s) => s.number === open) + delta]
+		if (to) toggle(to.number)
+	}
 	return (
 		<section
 			id={EPISODE_GRID_ANCHOR}
 			aria-labelledby="episode-grid-title"
 			style={{ scrollMarginTop: `calc(${HEADER_HEIGHT} + 80px)` }}
 		>
-			{/* From sm up the switch is in the section header (episode-view.tsx). */}
-			<div className="flex flex-wrap items-center gap-2 sm:h-0 sm:overflow-hidden">
+			{/* The switch is in the section header (episode-view.tsx); this title is for screen readers. */}
+			<div className="h-0 overflow-hidden">
 				<h2
 					id="episode-grid-title"
 					tabIndex={-1}
@@ -59,42 +69,39 @@ export default function EpisodeGrid({
 				>
 					Episodes
 				</h2>
-				<EpisodeViewToggle showId={grid.showId} className="flex sm:hidden" />
 			</div>
 			{grid.note && <p className="mt-2 text-sm text-gray-400">{grid.note}</p>}
 			{notice}
-			<div className="mt-4">
-				<RatingsGrid
+			<div ref={box} className="mt-4">
+				<SeasonOverview
 					model={model}
-					seasons={seasons.filter((s) => s.number !== 0)}
+					seasons={regular}
 					chart={chart}
-					selectedSeason={open}
-					selectedEpisode={selected}
-					onSeason={(s) => toggle(s.number)}
-					onEpisode={(e) => {
-						setOpen(e.season)
-						setSelected(e.id)
-					}}
-					seasonScores
-					afterRow={(season) =>
-						open === season.number && (
-							<Suspense
-								fallback={
-									<output className="block p-3 text-sm text-gray-400">
-										Loading episodes…
-									</output>
-								}
-							>
-								<SeasonDetails
-									grid={grid}
-									season={season}
-									selected={selected}
-									onSelect={setSelected}
-									onClose={() => setOpen(null)}
-								/>
-							</Suspense>
-						)
-					}
+					open={open}
+					selected={selected}
+					onToggle={(s) => toggle(s.number)}
+					renderOpen={(season) => (
+						<Suspense
+							fallback={
+								<output className="block p-3 text-sm text-gray-400">
+									Loading episodes…
+								</output>
+							}
+						>
+							<SeasonDetails
+								grid={grid}
+								model={model}
+								season={season}
+								selected={selected}
+								onSelect={setSelected}
+								onClose={() => setOpen(null)}
+								onStep={step}
+								first={regular[0]?.number === season.number}
+								last={regular.at(-1)?.number === season.number}
+								tiles={needsTiles(regular, width)}
+							/>
+						</Suspense>
+					)}
 				/>
 				{specials && (
 					<>
@@ -111,6 +118,7 @@ export default function EpisodeGrid({
 							<Suspense fallback={<output>Loading specials…</output>}>
 								<SeasonDetails
 									grid={grid}
+									model={model}
 									season={specials}
 									selected={selected}
 									onSelect={setSelected}

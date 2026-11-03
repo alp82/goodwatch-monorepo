@@ -1,4 +1,3 @@
-import { EpisodeViewToggle } from "./episode-view"
 import { FOCUS } from "./presentation"
 
 /** The skeleton and the interactive overview reserve the same controls, including a future Next episode. */
@@ -17,9 +16,10 @@ export default function EpisodeHeading({
 	onRetry?: () => void
 }) {
 	return (
-		// From sm up the switch is in the section header, so a row with nothing else in it goes.
+		// The switch is in the section header, so a row with nothing else in it goes; while loading the grid starts at the
+		// top, as it does once loaded.
 		<div
-			className={`flex flex-wrap items-center gap-2 ${!next && !loading ? "sm:hidden" : ""}`}
+			className={`flex flex-wrap items-center gap-2 ${!next && (!loading || loading === "loading") ? "hidden" : ""}`}
 		>
 			<h2
 				id="episode-list-title"
@@ -52,11 +52,6 @@ export default function EpisodeHeading({
 					className={`inline-block h-10 w-32 shrink-0 rounded-lg lg:h-8 ${loading ? "bg-white/[0.07] animate-pulse motion-reduce:animate-none" : "invisible"}`}
 				/>
 			)}
-			<EpisodeViewToggle
-				showId={showId}
-				loading={Boolean(loading)}
-				className="flex sm:hidden"
-			/>
 		</div>
 	)
 }

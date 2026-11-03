@@ -77,14 +77,16 @@ test("a sparse soap renders only its 162 cataloged episodes", () => {
 })
 
 test("an extreme show keeps its newest seasons or its latest episodes, and offers the rest", () => {
-	assert.equal(rendered.lateNight.kept, false)
-	assert.equal(rendered.lateNight.seasons.at(-1), 31)
+	assert.equal(rendered.dailyNews.kept, false)
+	assert.equal(rendered.dailyNews.seasons.at(-1), 40)
 	assert.equal(
-		rendered.lateNight.notice,
-		`Showing the latest ${rendered.lateNight.seasons.length} of 31 seasons`,
+		rendered.dailyNews.notice,
+		`Showing the latest ${rendered.dailyNews.seasons.length} of 40 seasons`,
 	)
-	assert.equal(rendered.lateNight.button, "Show all 31 seasons")
-	// The single shared grid is small enough to render this run whole, too.
+	assert.equal(rendered.dailyNews.button, "Show all 40 seasons")
+	// A season a row makes thirty seasons of late night small enough to render whole, and a soap too.
+	assert.equal(rendered.lateNight.kept, true)
+	assert.equal(rendered.lateNight.shownEpisodes, 31 * 140)
 	assert.equal(rendered.ratedSoap.kept, true)
 	assert.equal(rendered.ratedSoap.shownEpisodes, 1572)
 })

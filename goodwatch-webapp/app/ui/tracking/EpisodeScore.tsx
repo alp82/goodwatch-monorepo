@@ -2,7 +2,8 @@
 // looks like the score half of the title page's Seen and score control (ui/details/hero/seen-score-faces.tsx) and
 // opens the same score picker (ui/scoring/ScoreDialog.tsx), which loads on first use. A score here never records a
 // watch, never changes the show's status, and never changes taste.
-import { Suspense, lazy, type ReactNode, useRef, useState } from "react"
+import { StarIcon as StarOutline } from "@heroicons/react/24/outline"
+import { type ReactNode, Suspense, lazy, useRef, useState } from "react"
 import type { MemberEpisodeScore } from "~/domain/episode-scores"
 import type { Score } from "~/server/scores.server"
 import { HALF_FOCUS, ScoreFace } from "~/ui/details/hero/seen-score-faces"
@@ -26,13 +27,17 @@ const asScore = (value: number | null | undefined) =>
 	value != null && value >= 1 && value <= 10 ? (value as Score) : null
 
 /** A small star (Heroicons 20 solid, MIT): the mark of the member's own score beside IMDb's. */
-function StarMark({ className = "" }: { className?: string }) {
+function StarMark({
+	className = "",
+	style,
+}: { className?: string; style?: React.CSSProperties }) {
 	return (
 		<svg
 			viewBox="0 0 20 20"
 			fill="currentColor"
 			aria-hidden="true"
 			className={className}
+			style={style}
 		>
 			<path
 				fillRule="evenodd"
@@ -180,6 +185,68 @@ export function EpisodeScoreFrame(props: ControlProps & { ask: string }) {
 					<ScoreFace score={value} ask={props.ask} />
 				</button>
 			</div>
+			<Picker
+				open={picker.open}
+				title={props.title}
+				value={value}
+				opener={picker.opener}
+				onRate={picker.rate}
+				onClear={picker.clear}
+				onClose={picker.close}
+			/>
+		</>
+	)
+}
+
+/**
+ * An episode's score in its detail, centred under the watch button and as tall: "Rate it" with an outlined star, or
+ * once scored the star, the number and its word on the score's colour. Pressing it opens the score picker.
+ */
+export function EpisodeScoreButton(props: ControlProps) {
+	const picker = usePicker(props)
+	const { value } = picker
+	const color = value ? getVibeColorValue(value) : ""
+	return (
+		<>
+			<button
+				ref={picker.opener}
+				type="button"
+				data-episode-score={value ?? "none"}
+				aria-haspopup="dialog"
+				aria-expanded={picker.open}
+				aria-label={
+					value
+						? `Your score for ${props.name}: ${value}, ${scoreLabels[value]}. Change it`
+						: `Rate ${props.name}`
+				}
+				onClick={picker.press}
+				onPointerEnter={preload}
+				onTouchStart={preload}
+				onFocus={preload}
+				className={`flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors ${FOCUS} ${value ? "text-white" : "bg-white/[0.06] text-gray-300 ring-1 ring-inset ring-white/[0.08] hover:bg-white/[0.1] hover:text-white"}`}
+				style={
+					value
+						? {
+								background: `${color}26`,
+								boxShadow: `inset 0 0 0 1.5px ${color}`,
+							}
+						: undefined
+				}
+			>
+				{value ? (
+					<>
+						<StarMark className="h-4 w-4" style={{ color }} />
+						<span className="tabular-nums">{value}</span>
+						<span className="font-medium text-gray-300">
+							{scoreLabels[value]}
+						</span>
+					</>
+				) : (
+					<>
+						<StarOutline className="h-4 w-4 text-amber-300" /> Rate it
+					</>
+				)}
+			</button>
 			<Picker
 				open={picker.open}
 				title={props.title}

@@ -81,8 +81,10 @@ const shapes: Record<string, EpisodeGridData> = {
 	soap: show([[162, 11_599]], { every: 70 }),
 	// A soap with most of its episodes rated.
 	ratedSoap: show([[1572, 7_399]], { every: 4 }),
-	// Late night: thirty seasons of about 160 episodes.
+	// Late night: thirty seasons of about 140 episodes, small enough now to render whole.
 	lateNight: show(seasonsOf(31, () => 140)),
+	// Daily news: forty seasons of 250 episodes, over the budget.
+	dailyNews: show(seasonsOf(40, () => 250)),
 	// A short show with specials, kept whole.
 	short: show(
 		seasonsOf(5, () => 10),

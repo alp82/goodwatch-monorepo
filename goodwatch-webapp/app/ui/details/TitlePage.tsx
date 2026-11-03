@@ -612,7 +612,7 @@ export function TitlePage(props: TitlePageProps) {
 									<SectionHeader
 										anchor={s.id}
 										icon={s.icon}
-										title={s.label}
+										title={s.heading ?? s.label}
 										subtitle={s.subtitle}
 										aside={s.aside}
 									/>

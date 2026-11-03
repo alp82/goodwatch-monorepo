@@ -1,10 +1,11 @@
-// The episode list of a show page (#369, #384; redesigned in #699), for a member with tracking. One ratings grid is
-// both the overview and the way in: a row per season, a tile per episode in its IMDb rating's colour with the score
-// inside, watched episodes marked and the Next episode ringed (RatingsGrid.tsx). A Consistency view draws the same
-// episodes as dots on one score axis. Pressing a season, or one of its tiles, opens the season under its row
-// (OpenSeason.tsx): its head, then one-line rows with tick, name and rating; a press on a row opens it for the
-// still, the description and the watch's date. An unwatched episode's still and description stay covered until
-// asked for. The specials are one line under the grid.
+// The episode list of a show page (#369, #384; redesigned in #699), for a member with tracking. The season overview
+// (SeasonOverview.tsx) is both the overview and the way in: a row per season, every row as tall as the next, its
+// episodes as squares in their IMDb rating's colour with the watched ones marked and the Next episode ringed, or in
+// the Spread view as dots on one score axis. Pressing a season opens it in place under its row (OpenSeason.tsx): its
+// head, its episodes as tiles when the squares are too small to read, then one-line rows with tick, name and rating;
+// a press on a row opens it for the still, the description, when it was watched (WatchMenu.tsx) and its score. An
+// unwatched episode's still and description stay covered until asked for. The specials are one line under the
+// overview.
 //
 // Loaded when the member comes near the section or asks for it; a show without an episode list keeps today's grid.
 import {
@@ -23,24 +24,28 @@ import {
 	useState,
 } from "react"
 import {
+	type EpisodeLayout,
+	episodeLayoutOf,
+	sameEpisodeLayout,
+} from "~/domain/tracking/episode-layout"
+import {
 	displayNumber,
 	displaySeason,
 	episodeLabel,
 } from "~/domain/tracking/machine"
 import { seenPressLine } from "~/domain/tracking/seen-press"
 import type { PageEpisode, ShowView } from "~/domain/tracking/show-page"
-import type { LogRow } from "~/domain/tracking/storage"
-import {
-	episodeLayoutOf,
-	sameEpisodeLayout,
-	type EpisodeLayout,
-} from "~/domain/tracking/episode-layout"
-import EpisodeSkeleton from "~/ui/details/episode-grid/EpisodeSkeleton"
-import EpisodeHeading from "~/ui/details/episode-grid/EpisodeHeading"
-import { useEpisodeChart } from "~/ui/details/episode-grid/episode-view"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { useBelowFold } from "~/ui/details/below-fold"
-import RatingsGrid from "~/ui/details/episode-grid/RatingsGrid"
+import EpisodeHeading from "~/ui/details/episode-grid/EpisodeHeading"
+import EpisodeSkeleton from "~/ui/details/episode-grid/EpisodeSkeleton"
+import SeasonOverview, {
+	needsTiles,
+	useWidth,
+} from "~/ui/details/episode-grid/SeasonOverview"
+import SeasonTiles from "~/ui/details/episode-grid/SeasonTiles"
+import { useEpisodeChart } from "~/ui/details/episode-grid/episode-view"
+import { seasonAverage } from "~/ui/details/episode-grid/grid-model"
 import {
 	EPISODE_GRID_ANCHOR,
 	formatScore,
@@ -51,31 +56,30 @@ import { HEADER_HEIGHT } from "~/ui/details/header-height"
 import MediaText from "~/ui/media-text/MediaText"
 import { episodeText } from "~/ui/media-text/media-text"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { EpisodeScoreFrame, OwnScoreChip } from "./EpisodeScore"
+import { EpisodeScoreButton, OwnScoreChip } from "./EpisodeScore"
 import OpenSeason from "./OpenSeason"
-import type { EpisodeScoreStore } from "./episode-score-store"
-import { useEpisodeScores } from "./useEpisodeScores"
 import {
 	ConfirmPanel,
 	TAKE_BACK_LOOK,
 	TrackingToastHost,
 	useDismiss,
 } from "./TrackingToast"
+import WatchMenu from "./WatchMenu"
 import { type TrackingActions, useTrackingActions } from "./actions"
+import type { EpisodeScoreStore } from "./episode-score-store"
 import type { TrackedMedia } from "./gate"
 import {
 	FOCUS,
-	LOCALE_DATES,
 	SURFACE,
 	type Season,
 	type ShowTracking,
-	dayOfWatch,
 	formatDay,
 	formatWatched,
 	plural,
 	seasonTitle,
 	useShowTracking,
 } from "./store"
+import { useEpisodeScores } from "./useEpisodeScores"
 
 export default function EpisodeList({
 	media,
@@ -194,6 +198,8 @@ interface Target {
 	quiet?: boolean
 	/** The request came from outside the list: bring the row to the middle of the screen. */
 	page?: boolean
+	/** Open the row's detail too: a press on the episode's tile. */
+	expand?: boolean
 }
 
 export interface Nav {
@@ -346,8 +352,6 @@ function useModel(
 	return model
 }
 
-type View = "grid" | "consistency"
-
 function List({
 	tracking,
 	view,
@@ -368,8 +372,7 @@ function List({
 	const section = useRef<HTMLElement>(null)
 	const model = useModel(tracking, view, actions, showTitle)
 	const nav = useNav(model)
-	const desktop = useIsDesktop()
-	const shown: View = useEpisodeChart(showId) ? "consistency" : "grid"
+	const chart = useEpisodeChart(showId)
 	const regular = model.seasons.filter((season) => season.number !== 0)
 	const specials = model.seasons.find((season) => season.number === 0)
 	const next =
@@ -378,17 +381,34 @@ function List({
 			: (model.seasons
 					.flatMap((season) => season.episodes)
 					.find((episode) => episode.id === model.nextId) ?? null)
-	// The open season is as wide as the grid's rows at their widest, so its ratings line up under the tiles.
-	const most = Math.max(1, ...regular.map((season) => season.episodes.length))
-	const openWidth = Math.max(672, 44 + most * 40 + 36 + (most + 1) * 3)
+	// The specials' open season is as wide as a readable season, so its ratings line up as the seasons' do.
+	const openWidth = 672
+	const { ref: box, width } = useWidth()
+	const tiles = needsTiles(regular, width)
+	const step = (delta: -1 | 1) => {
+		const to =
+			regular[regular.findIndex((season) => season.number === nav.open) + delta]
+		if (to) nav.toggle(to)
+	}
 	const open = (season: Season) =>
 		nav.open === season.number ? (
-			<div
-				className="my-2"
-				style={{ maxWidth: openWidth }}
-				data-open-season={season.number}
-			>
-				<OpenSeason nav={nav} model={model} grid={grid} />
+			<div data-open-season={season.number}>
+				<OpenSeason
+					nav={nav}
+					model={model}
+					grid={grid}
+					onStep={season.number === 0 ? undefined : step}
+					tiles={
+						season.number !== 0 && tiles ? (
+							<SeasonTiles
+								season={season}
+								model={model}
+								selected={nav.selected}
+								onPress={(episode) => nav.goEpisode(episode, { expand: true })}
+							/>
+						) : undefined
+					}
+				/>
 			</div>
 		) : null
 
@@ -448,18 +468,20 @@ function List({
 					{tracking.page.presentation.note}
 				</p>
 			)}
-			<div className="mt-4">
+			<div ref={box} className="mt-4">
 				{regular.length > 0 && (
-					<RatingsGrid
+					<SeasonOverview
 						model={model}
 						seasons={regular}
-						chart={shown === "consistency"}
-						selectedSeason={nav.open}
-						selectedEpisode={nav.selected}
-						onSeason={(season) => nav.toggle(season)}
-						onEpisode={(episode) => nav.goEpisode(episode, {}, true)}
-						afterRow={open}
-						seasonScores={desktop}
+						chart={chart}
+						open={nav.open}
+						selected={nav.selected}
+						onToggle={(season) => nav.toggle(season)}
+						renderOpen={(season) => open(season)}
+						chipScore={(season) =>
+							grid?.seasons.find((each) => each.number === season.number)
+								?.scores.imdb?.score ?? seasonAverage(model, season)
+						}
 					/>
 				)}
 				{specials && (
@@ -533,51 +555,6 @@ function RatingChip({
 	)
 }
 
-/** The date of a watch: a day, or that nobody knows it. */
-function DateChoice({
-	watch,
-	today,
-	onDay,
-	onUnknown,
-}: {
-	watch: LogRow | null
-	today: string
-	onDay: (day: string) => void
-	onUnknown: () => void
-}) {
-	const on = "bg-green-500 text-black"
-	const day = watch ? dayOfWatch(watch) : null
-	return (
-		<>
-			<label
-				className={`${WHEN} min-w-0 gap-2 !px-1.5 lg:!px-3 ${day ? on : WHEN_OFF}`}
-			>
-				<span className="hidden shrink-0 lg:inline">On</span>
-				<input
-					type="date"
-					data-watch-day
-					max={today}
-					value={day ?? ""}
-					onChange={(event) => event.target.value && onDay(event.target.value)}
-					className="min-w-0 flex-1 rounded bg-black/30 px-1 py-1 text-base text-white [color-scheme:dark] lg:w-32 lg:flex-none lg:text-xs"
-				/>
-			</label>
-			<button
-				type="button"
-				data-watch-unknown
-				onClick={onUnknown}
-				className={`${WHEN} ${watch && watch.watched_at === null ? on : WHEN_OFF}`}
-			>
-				Don't know
-			</button>
-		</>
-	)
-}
-
-/** The buttons of a watch's date. */
-const WHEN = `inline-flex h-11 items-center justify-center rounded-lg px-3 text-xs font-semibold cursor-pointer lg:h-9 ${FOCUS}`
-const WHEN_OFF = "bg-white/10 text-gray-100 hover:bg-white/20"
-
 // The icons only tracking draws (Heroicons 24 solid, MIT), written out here: imported from the icon package, or kept
 // in a small module of their own, they would be added to a chunk that every page loads.
 const icon = (paths: string[]) =>
@@ -612,19 +589,15 @@ const COVER = `flex cursor-pointer flex-col items-center justify-center gap-1 ro
 function RowDetail({
 	episode,
 	model,
-	close,
 }: {
 	episode: PageEpisode
 	model: Model
-	close: () => void
 }) {
 	const { view, actions, today } = model
 	const special = episode.season === 0
 	const aired = model.aired(episode)
 	const watched = view.watched.has(episode.id)
-	const pass = view.derived.pass
 	const watches = view.watchesOf.get(episode.id) ?? []
-	const current = watches.find((row) => row.pass === pass) ?? null
 	// A rewatcher has seen it: a watch in any pass uncovers everything.
 	const seenIt = watches.length > 0
 	const [uncovered, setUncovered] = useState({ image: false, text: false })
@@ -634,9 +607,9 @@ function RowDetail({
 		// The cover that had the focus is gone; keep the keyboard in the row.
 		detail.current?.focus({ preventScroll: true })
 	}
-	// Aired regular episodes up to and including this one that are not watched in this pass.
-	const upTo =
-		special || watched || !aired
+	// Aired regular episodes before this one that are not watched in this pass: "Everything up to here" marks them too.
+	const before =
+		special || !aired
 			? 0
 			: model.seasons
 					.filter((season) => season.number !== 0)
@@ -645,7 +618,7 @@ function RowDetail({
 						(each) =>
 							(each.season < episode.season ||
 								(each.season === episode.season &&
-									each.number <= episode.number)) &&
+									each.number < episode.number)) &&
 							model.aired(each) &&
 							!view.watched.has(each.id),
 					).length
@@ -656,162 +629,96 @@ function RowDetail({
 			tabIndex={-1}
 			className="mx-2 mb-2 rounded-lg bg-black/25 p-2.5 focus:outline-none lg:ml-10"
 		>
-			<div className="flex flex-col gap-2.5 sm:flex-row">
-				{episode.still &&
-					(seenIt || uncovered.image ? (
-						<img
-							src={tmdbImageUrl(episode.still, "w300")}
-							alt=""
-							loading="lazy"
-							className="aspect-video w-full rounded-md bg-white/[0.06] object-cover sm:w-40 sm:shrink-0"
-						/>
-					) : (
-						<button
-							type="button"
-							data-cover="image"
-							onClick={() => uncover("image")}
-							className={`${COVER} aspect-video w-full sm:w-40 sm:shrink-0`}
-						>
-							<EyeSlashIcon className="h-4 w-4" />
-							Show image
-						</button>
-					))}
-				<div className="min-w-0 flex-1">
-					<p className="text-xs text-gray-500">
-						{episode.airDate
-							? aired
-								? formatDay(episode.airDate)
-								: `Airs ${formatDay(episode.airDate)}`
-							: "No air date"}
-						{episode.runtime ? ` · ${episode.runtime} min` : ""}
-						{episode.rating !== null
-							? ` · IMDb ${formatScore(episode.rating)}`
-							: ""}
-					</p>
-					{episode.overview &&
-						(seenIt || uncovered.text ? (
-							<MediaText
-								as="p"
-								data-overview
-								value={episodeText(episode, "overview")}
-								className="mt-1 text-sm leading-relaxed text-gray-300"
+			<div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_15rem]">
+				<div className="flex min-w-0 flex-col gap-2.5 sm:flex-row">
+					{episode.still &&
+						(seenIt || uncovered.image ? (
+							<img
+								src={tmdbImageUrl(episode.still, "w300")}
+								alt=""
+								loading="lazy"
+								className="aspect-video w-full rounded-md bg-white/[0.06] object-cover sm:w-40 sm:shrink-0"
 							/>
 						) : (
-							<div className="relative mt-1 min-h-10">
-								{/* The text holds its place under the cover, unseen and unread. */}
+							<button
+								type="button"
+								data-cover="image"
+								onClick={() => uncover("image")}
+								className={`${COVER} aspect-video w-full sm:w-40 sm:shrink-0`}
+							>
+								<EyeSlashIcon className="h-4 w-4" />
+								Show image
+							</button>
+						))}
+					<div className="min-w-0 flex-1">
+						<p className="text-xs text-gray-500">
+							{episode.airDate
+								? aired
+									? formatDay(episode.airDate)
+									: `Airs ${formatDay(episode.airDate)}`
+								: "No air date"}
+							{episode.runtime ? ` · ${episode.runtime} min` : ""}
+							{episode.rating !== null
+								? ` · IMDb ${formatScore(episode.rating)}`
+								: ""}
+						</p>
+						{episode.overview &&
+							(seenIt || uncovered.text ? (
 								<MediaText
 									as="p"
-									aria-hidden="true"
+									data-overview
 									value={episodeText(episode, "overview")}
-									className="invisible select-none text-sm leading-relaxed"
+									className="mt-1 text-sm leading-relaxed text-gray-300"
 								/>
-								<button
-									type="button"
-									data-cover="text"
-									onClick={() => uncover("text")}
-									className={`${COVER} absolute inset-0 w-full flex-row gap-1.5`}
-								>
-									<EyeSlashIcon className="h-4 w-4" />
-									Show description
-								</button>
-							</div>
-						))}
-				</div>
-			</div>
-			{aired && (
-				<div className="mt-3">
-					<EpisodeScoreFrame
-						store={model.scores}
-						target={{
-							scope: "episode",
-							season: episode.season,
-							episode: episode.number,
-							episodeTmdbId: episode.id,
-						}}
-						scoreKey={`e${episode.id}`}
-						name={episodeLabel(episode)}
-						title={`${episodeLabel(episode)}${episode.name ? ` · ${episode.name}` : ""}`}
-						ask="Rate this episode"
-					/>
-				</div>
-			)}
-			{aired ? (
-				// A label line, then when (Now, a day, or unknown) as one even row, then the bigger actions on a row of their own.
-				<div className="mt-3.5 flex flex-col gap-2.5 text-xs text-gray-400">
-					<p data-watched-when>
-						{current
-							? `Watched ${formatWatched(current, today)}${special ? ", not counted" : ""}`
-							: "When did you watch it?"}
-					</p>
-					<div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-1.5 lg:flex lg:gap-2">
-						<button
-							type="button"
-							data-watch-now
-							disabled={!!current}
-							onClick={() => actions.watch(episode)}
-							className={`${WHEN} ${current ? "pointer-events-none opacity-40" : WHEN_OFF}`}
-						>
-							Now
-						</button>
-						<DateChoice
-							watch={current}
-							today={today}
-							onDay={(day) =>
-								current
-									? actions.setWatchDate(current.watch_id, {
-											precision: "day",
-											day,
-										})
-									: actions.watch(episode, { precision: "day", day })
-							}
-							onUnknown={() =>
-								current
-									? actions.setWatchDate(current.watch_id, {
-											precision: "unknown",
-										})
-									: actions.watch(episode, { precision: "unknown" })
-							}
-						/>
-					</div>
-					{(upTo > 1 || current) && (
-						<div className="flex flex-wrap items-center justify-between gap-2">
-							{upTo > 1 ? (
-								<button
-									type="button"
-									data-up-to-here
-									onClick={() => {
-										actions.watchUpTo(episode)
-										close()
-									}}
-									className={`${WHEN} gap-1.5 bg-white/10 text-green-300 ring-1 ring-green-400/40 hover:bg-white/20`}
-								>
-									<CheckIcon className="h-3.5 w-3.5" />
-									Watched up to here ({upTo})
-								</button>
 							) : (
-								<span />
-							)}
-							{current && (
-								<button
-									type="button"
-									data-remove-watch
-									onClick={() => {
-										actions.unwatch(episode)
-										close()
-									}}
-									className={`${WHEN} text-pink-300 hover:bg-white/10`}
-								>
-									Remove watch
-								</button>
-							)}
-						</div>
-					)}
+								<div className="relative mt-1 min-h-10">
+									{/* The text holds its place under the cover, unseen and unread. */}
+									<MediaText
+										as="p"
+										aria-hidden="true"
+										value={episodeText(episode, "overview")}
+										className="invisible select-none text-sm leading-relaxed"
+									/>
+									<button
+										type="button"
+										data-cover="text"
+										onClick={() => uncover("text")}
+										className={`${COVER} absolute inset-0 w-full flex-row gap-1.5`}
+									>
+										<EyeSlashIcon className="h-4 w-4" />
+										Show description
+									</button>
+								</div>
+							))}
+					</div>
 				</div>
-			) : (
-				<p className="mt-2 text-xs text-gray-500">
-					It can be marked from the day it airs.
-				</p>
-			)}
+				{aired ? (
+					<div className="flex flex-col gap-2">
+						<WatchMenu e={episode} model={model} before={before} />
+						<EpisodeScoreButton
+							store={model.scores}
+							target={{
+								scope: "episode",
+								season: episode.season,
+								episode: episode.number,
+								episodeTmdbId: episode.id,
+							}}
+							scoreKey={`e${episode.id}`}
+							name={episodeLabel(episode)}
+							title={`${episodeLabel(episode)}${episode.name ? ` · ${episode.name}` : ""}`}
+						/>
+						{special && watched && (
+							<p className="text-center text-xs text-gray-500">
+								Specials don't count toward your progress.
+							</p>
+						)}
+					</div>
+				) : (
+					<p className="text-xs text-gray-500">
+						It can be marked from the day it airs.
+					</p>
+				)}
+			</div>
 			{watches.length > 1 && (
 				<ul
 					data-episode-log
@@ -890,7 +797,7 @@ function Row({
 				/>
 			)}
 			<div
-				className={`flex h-11 items-center pr-1.5 lg:h-9 lg:pointer-coarse:h-11 ${aired ? "" : "opacity-50"}`}
+				className={`flex h-11 items-center pr-3 lg:h-9 lg:pointer-coarse:h-11 ${aired ? "" : "opacity-50"}`}
 			>
 				<button
 					type="button"
@@ -959,7 +866,7 @@ function Row({
 					{!special && aired && (
 						<RatingChip episode={episode} missing={missing} />
 					)}
-					<span className="hidden w-28 shrink-0 whitespace-nowrap text-right text-xs tabular-nums text-gray-500 lg:block">
+					<span className="hidden w-24 shrink-0 whitespace-nowrap text-right text-xs tabular-nums text-gray-500 sm:block">
 						{episode.airDate
 							? aired
 								? formatDay(episode.airDate)
@@ -968,7 +875,7 @@ function Row({
 					</span>
 				</button>
 			</div>
-			{open && <RowDetail episode={episode} model={model} close={onToggle} />}
+			{open && <RowDetail episode={episode} model={model} />}
 		</li>
 	)
 }
@@ -1020,6 +927,7 @@ export function Rows({
 		// The window moves to the row; a season change (quiet) then leaves the page where it is.
 		setRange((now) => (i >= now[0] && i < now[1] ? now : around(i)))
 		const id = target.id
+		if (target.expand) setOpenId(id)
 		const timer = setTimeout(() => {
 			const row = root.current?.querySelector<HTMLElement>(
 				`[data-episode="${id}"]`,

@@ -89,7 +89,8 @@ test("a newest season over the budget on its own keeps its latest episodes, pres
 	const part = windowEpisodeGrid(whole, estimateGridBytes(whole) / 3)
 	const kept = part.seasons[0].episodes.map((e) => e.number)
 	assert.equal(kept.at(-1), 150)
-	assert.ok(kept.length > 30 && kept.length < 60, `${kept.length}`)
+	// About a third of the season, less its row's own share of the budget.
+	assert.ok(kept.length > 15 && kept.length < 60, `${kept.length}`)
 	assert.equal(part.window?.firstEpisodeNumber, kept[0])
 	assert.equal(part.window?.hiddenSeasons, 0)
 	assert.equal(part.window?.hiddenEpisodes, 150 - kept.length)

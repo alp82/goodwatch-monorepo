@@ -1,12 +1,20 @@
-// An opened season of the episode list (#699), under its row of the ratings grid. The head is one pressable line
-// that closes the season: its name and when it aired, Mark season and Unmark season, and the season score, which
-// opens every site's season score as the hero's rating chips. On a phone the two season actions take a line of
-// their own, half the width each. Beside the season score, the member's own score for the season (#759); under the
-// head, a line for each part score an import brought whose episodes are in this season. Then the season's rows.
+// An opened season of the episode list (#699), in place under its row of the season overview. The head is one
+// pressable line that closes the season: the arrows to the season before and after on either side of its name and
+// when it aired, Mark season and Unmark season, the member's own score for the season (#759), and the season score,
+// which opens every site's season score as the hero's rating chips and sits above the episodes' scores. On a phone
+// the two season actions take a line of their own, half the width each. Under the head, a line for each part score
+// an import brought whose episodes are in this season; then, when the overview's squares are too small to read, the
+// season's episodes as tiles; then its rows.
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/solid"
-import { isWholeTmdbSeason, scoredEpisodes, shownScoreLabel } from "~/domain/episode-scores"
+import type { ReactNode } from "react"
+import {
+	isWholeTmdbSeason,
+	scoredEpisodes,
+	shownScoreLabel,
+} from "~/domain/episode-scores"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { ScoreTile } from "~/ui/details/episode-grid/ScoreTile"
+import { SeasonStep } from "~/ui/details/episode-grid/SeasonOverview"
 import { formatScore } from "~/ui/details/episode-grid/scale"
 import { FloatLayer, useFloat } from "~/ui/details/episode-grid/shared"
 import { stickyHeadersBottom } from "~/ui/details/header-height"
@@ -52,13 +60,23 @@ export default function OpenSeason({
 	nav,
 	model,
 	grid,
+	tiles,
+	onStep,
 }: {
 	nav: Nav
 	model: Model
 	/** The ratings grid's data, for every site's season score; null for a show without one. */
 	grid: EpisodeGrid | null
+	/** The season's episodes as tiles over its rows, when the overview's squares are too small to read. */
+	tiles?: ReactNode
+	/** Steps to the season before or after, from the arrows on either side of the title. */
+	onStep?: (delta: -1 | 1) => void
 }) {
 	const season = nav.season
+	const regular = model.seasons.filter((each) => each.number !== 0)
+	const at = regular.findIndex((each) => each.number === season.number)
+	const first = at <= 0
+	const last = at === regular.length - 1
 	const special = season.number === 0
 	const count = model.count(season)
 	const left = count.aired - count.watched
@@ -88,19 +106,25 @@ export default function OpenSeason({
 	const everyEpisode = model.seasons.flatMap((each) => each.episodes)
 	const inThisSeason = (part: Parameters<typeof scoredEpisodes>[0]) => {
 		const here = new Set(season.episodes.map((episode) => episode.id))
-		return scoredEpisodes(part, everyEpisode).some((episode) => here.has(episode.id))
+		return scoredEpisodes(part, everyEpisode).some((episode) =>
+			here.has(episode.id),
+		)
 	}
 	// Part scores, and season scores of a TMDB season the page doesn't draw whole under its number (a show drawn in
 	// IMDb's seasons): those show as a line in each drawn season that holds their episodes.
 	const parts = [
-		...model.scores.parts().filter((part) => part.scope === "part" && inThisSeason(part)),
+		...model.scores
+			.parts()
+			.filter((part) => part.scope === "part" && inThisSeason(part)),
 		...model.scores
 			.seasons()
 			.filter(
 				(score) =>
 					score.scope === "season" &&
 					!model.seasons.some(
-						(each) => each.number === score.season && isWholeTmdbSeason(each.number, each.episodes, everyEpisode),
+						(each) =>
+							each.number === score.season &&
+							isWholeTmdbSeason(each.number, each.episodes, everyEpisode),
 					) &&
 					inThisSeason(score),
 			),
@@ -145,16 +169,29 @@ export default function OpenSeason({
 				onClick={nav.close}
 				className="cursor-pointer bg-white/[0.04] hover:bg-white/[0.07]"
 			>
-				<div className="flex min-h-12 items-center gap-1.5 py-1.5 pl-3 pr-1.5">
-					<h3 className="min-w-0 flex-1 truncate text-sm">
+				<div className="flex min-h-12 items-center gap-1.5 py-1.5 pl-3 pr-2 sm:pr-1.5">
+					{onStep && <SeasonStep delta={-1} onStep={onStep} disabled={first} />}
+					<h3 className="min-w-0 truncate text-sm">
 						<span className="font-bold text-white">{title}</span>
 						{aired && <span className="text-gray-400"> · {aired}</span>}
 					</h3>
+					{onStep && <SeasonStep delta={1} onStep={onStep} disabled={last} />}
+					<span className="flex-1" />
 					{desktop && !special && (
 						<>
 							{left > 0 && mark}
 							{count.watched > 0 && unmark}
 						</>
+					)}
+					{scorable && (
+						<SeasonScoreButton
+							store={model.scores}
+							target={{ scope: "season", season: season.number }}
+							scoreKey={`s${season.number}`}
+							name={title}
+							title={`${title} · ${model.showTitle}`}
+							onPress={own}
+						/>
 					)}
 					{!special && score != null && (
 						<button
@@ -171,28 +208,21 @@ export default function OpenSeason({
 							<ScoreTile score={score} className="h-6 min-w-9 text-[12.5px]" />
 						</button>
 					)}
-					{scorable && (
-						<SeasonScoreButton
-							store={model.scores}
-							target={{ scope: "season", season: season.number }}
-							scoreKey={`s${season.number}`}
-							name={title}
-							title={`${title} · ${model.showTitle}`}
-							onPress={own}
-						/>
-					)}
-					<button
-						type="button"
-						aria-label={`Close ${title}`}
-						onClick={(event) => {
-							own(event)
-							nav.close()
-						}}
-						// A phone presses the whole head to close; the arrow is for a pointer and the keyboard.
-						className={`h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-gray-400 hover:bg-white/10 hover:text-white ${desktop ? "flex" : "sr-only"} ${FOCUS}`}
-					>
-						<ChevronDownIcon className="h-4 w-4 rotate-180" />
-					</button>
+					{/* As wide as the rows' date column, so the season score sits above the episodes' scores. */}
+					<span className="flex shrink-0 justify-end sm:w-[102px]">
+						<button
+							type="button"
+							aria-label={`Close ${title}`}
+							onClick={(event) => {
+								own(event)
+								nav.close()
+							}}
+							// A phone presses the whole head to close; the arrow is for a pointer and the keyboard.
+							className={`h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-gray-400 hover:bg-white/10 hover:text-white ${desktop ? "flex" : "sr-only"} ${FOCUS}`}
+						>
+							<ChevronDownIcon className="h-4 w-4 rotate-180" />
+						</button>
+					</span>
 				</div>
 				{!desktop && !special && (
 					// Both actions are always in place, a button with nothing to do dimmed, so nothing moves.
@@ -213,12 +243,13 @@ export default function OpenSeason({
 					title={`${shownScoreLabel(part, everyEpisode)} · ${part.label ?? model.showTitle}`}
 				/>
 			))}
+			{tiles}
 			<Rows
 				key={season.number}
 				season={season}
 				nav={nav}
 				model={model}
-				limit={8}
+				limit={special ? 8 : 20}
 			/>
 			<FloatLayer
 				state={float.state}

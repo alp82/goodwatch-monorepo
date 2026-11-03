@@ -56,6 +56,8 @@ export interface TitleSection {
 	peek: string | null
 	/** The header's muted line; none where the section shows the same. */
 	subtitle?: string | null
+	/** The section heading when it says more than the label (the index and nav keep the label). */
+	heading?: string
 	/** More words find knows the section by. */
 	aliases: string
 	body: () => ReactNode
@@ -115,15 +117,7 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 				)}`
 			: `Not available in ${countryName(country)}`
 
-	const best = media.mediaType === "show" ? media.season_summary?.best : null
-	const episodesPeek = [
-		lengthWords(media),
-		best
-			? `best: S${best.season}E${best.episode} "${best.name}" ${best.score.toFixed(1)}`
-			: null,
-	]
-		.filter(Boolean)
-		.join(" · ")
+	const episodesPeek = lengthWords(media) ?? ""
 
 	const castNames = (media.cast || []).slice(0, 3).map((c) => c.name)
 	const director = media.crew.directors[0]?.name
@@ -176,6 +170,7 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 					id: "episodes",
 					label: "Episodes",
 					icon: Squares2X2Icon,
+					heading: `${media.details.title} episodes`,
 					peek: episodesPeek || null,
 					subtitle: episodesPeek || null,
 					aliases: "seasons",
@@ -186,11 +181,11 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 							episodeLayout={input.episodeLayout}
 						/>
 					),
-					// The Grid / Consistency switch sits in the header row from sm up; a phone keeps it above the grid.
+					// The Grid / Spread switch sits in the header row on every screen.
 					aside: (
 						<EpisodeViewToggle
 							showId={media.details.tmdb_id}
-							className="hidden shrink-0 self-start sm:flex"
+							className="flex shrink-0"
 						/>
 					),
 					// The grid's and the list's own titles repeat the section's.
