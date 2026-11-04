@@ -141,11 +141,9 @@ export function TasteQuizCard({ content }: { content: OgTasteQuizContent }) {
 				<Tag text={copy.tag} />
 				<Headline
 					text={copy.title}
-					sizes={[
-						[22, 112],
-						[34, 92],
-						[999, 64],
-					]}
+					width={1088}
+					height={630 - 350 - 2 * 18 - 44 - 14}
+					max={112}
 				/>
 			</div>
 		</Frame>

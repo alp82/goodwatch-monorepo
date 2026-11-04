@@ -14,8 +14,12 @@ import {
 	Subtext,
 	Tag,
 	col,
-	fitFontSize,
-	headlineText,
+	HEIGHT,
+	Headline,
+	SUBTEXT_HEIGHT,
+	TAG_HEIGHT,
+	TEXT_TOP,
+	showsSubtext,
 	row,
 } from "~/ui/og-image/parts"
 
@@ -289,26 +293,28 @@ export function NewServicesCard({
 				<Brand dark />
 			</div>
 			<div
-				style={at({ left: 56, bottom: 52, width: 560, ...col({ gap: 16 }) })}
+				style={at({
+					left: 56,
+					top: TEXT_TOP,
+					bottom: 52,
+					width: 560,
+					overflow: "hidden",
+					...col({ gap: 16, justifyContent: "flex-end" }),
+				})}
 			>
 				{content.tag && <Tag text={content.tag} />}
-				<div
-					style={{
-						display: "flex",
-						fontFamily: "Anton",
-						fontSize: fitFontSize(content.headline, [
-							[8, 150],
-							[12, 120],
-							[18, 96],
-							[999, 76],
-						]),
-						lineHeight: 0.95,
-						letterSpacing: 1,
-						color: INK,
-					}}
-				>
-					{headlineText(content.headline)}
-				</div>
+				<Headline
+					text={content.headline}
+					width={560}
+					height={
+						HEIGHT -
+						TEXT_TOP -
+						52 -
+						(content.tag ? TAG_HEIGHT + 16 : 0) -
+						(showsSubtext(content.tally) ? SUBTEXT_HEIGHT + 16 : 0)
+					}
+					max={150}
+				/>
 				<Subtext text={content.tally} />
 			</div>
 		</Frame>

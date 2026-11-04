@@ -20,8 +20,9 @@ import { cardVersionSuffix } from "../../ui/og-image/card-versions.ts"
 // v5: member profile cards (the fingerprint card, one card per profile tab).
 // v6: the /for-you card (a v5 render repeated posters).
 // v7: the /for-you card shows each poster picture once.
+// v9: headlines are measured to fit under the brand (a wrapped title ran into it).
 // A change to one card bumps that card's own version instead (ui/og-image/card-versions.ts, `cardKey` below).
-export const CACHE_PREFIX = "og-card:v8:"
+export const CACHE_PREFIX = "og-card:v9:"
 /** The Valkey key of a card: the prefix, its canonical path, and the card's own version when it has one ("@2"). */
 export const cardKey = (path: string) =>
 	`${CACHE_PREFIX}${path}${cardVersionSuffix(path, "@")}`

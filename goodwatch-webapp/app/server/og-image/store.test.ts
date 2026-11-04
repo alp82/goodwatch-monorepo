@@ -63,8 +63,8 @@ test("versioned key, binary header, expiry, store hit fills memory", async () =>
 	const first = await createOgStore(deps).getOgImage(path)
 	assert.equal(first.status, "ok")
 	if (first.status === "ok") assert.equal(first.source, "rendered")
-	assert.equal(CACHE_PREFIX + path, "og-card:v8:/movie/603")
-	assert.equal(f.writes[0].key, "og-card:v8:/movie/603")
+	assert.equal(CACHE_PREFIX + path, "og-card:v9:/movie/603")
+	assert.equal(f.writes[0].key, "og-card:v9:/movie/603")
 	assert.equal(f.writes.length, 1)
 	assert.equal(f.writes[0].seconds, 1800)
 	assert.deepEqual(f.expires, [])
@@ -239,10 +239,10 @@ test("memory keeps a card once and only touches versioned keys", async () => {
 	assert.deepEqual(second, { ...first, source: "memory", kept: true })
 	await store.getOgImage(path)
 	assert.deepEqual(f.expires, [
-		{ key: "og-card:v8:/movie/603", seconds: 604800 },
+		{ key: "og-card:v9:/movie/603", seconds: 604800 },
 	])
 	assert.equal(f.writes.length, 1)
-	assert.ok(f.keys.every((key) => key.startsWith("og-card:v8:")))
+	assert.ok(f.keys.every((key) => key.startsWith("og-card:v9:")))
 })
 
 test("keeping an evicted card writes the same bytes with the long lifetime", async () => {
@@ -397,13 +397,13 @@ test("share list images keep their own key and lifetime", async () => {
 })
 
 test("a card with its own version has a key of its own; every other card keeps its key", async () => {
-	assert.equal(cardKey("/movie/603"), "og-card:v8:/movie/603")
-	assert.equal(cardKey("/taste/quiz"), "og-card:v8:/taste/quiz@2")
+	assert.equal(cardKey("/movie/603"), "og-card:v9:/movie/603")
+	assert.equal(cardKey("/taste/quiz"), "og-card:v9:/taste/quiz@2")
 	const f = fixture()
 	await createOgStore({
 		redis: () => f.redis,
 		canonical,
 		render: async () => image,
 	}).getOgImage("/taste/quiz")
-	assert.equal(f.writes[0].key, "og-card:v8:/taste/quiz@2")
+	assert.equal(f.writes[0].key, "og-card:v9:/taste/quiz@2")
 })

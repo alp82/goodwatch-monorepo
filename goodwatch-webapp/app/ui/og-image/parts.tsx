@@ -167,27 +167,193 @@ export const Tag = ({ text }: { text: string }) => (
 	</div>
 )
 
+// Anton advance widths in em for the characters titles use (from the font's hmtx table). Anything else falls back to
+// an average letter scaled by characterWidth, which covers the wider fallback fonts for other scripts.
+const ANTON_EM: Record<string, number> = {
+	" ": 0.234,
+	"!": 0.229,
+	"#": 0.546,
+	$: 0.462,
+	"%": 1.057,
+	"&": 0.52,
+	"'": 0.214,
+	"(": 0.291,
+	")": 0.291,
+	"*": 0.452,
+	"+": 0.355,
+	",": 0.236,
+	"-": 0.311,
+	".": 0.229,
+	"/": 0.405,
+	"0": 0.494,
+	"1": 0.331,
+	"2": 0.494,
+	"3": 0.494,
+	"4": 0.494,
+	"5": 0.494,
+	"6": 0.494,
+	"7": 0.494,
+	"8": 0.494,
+	"9": 0.494,
+	":": 0.242,
+	";": 0.245,
+	"?": 0.492,
+	"@": 0.864,
+	A: 0.485,
+	B: 0.479,
+	C: 0.474,
+	D: 0.493,
+	E: 0.412,
+	F: 0.399,
+	G: 0.485,
+	H: 0.499,
+	I: 0.227,
+	J: 0.466,
+	K: 0.472,
+	L: 0.397,
+	M: 0.746,
+	N: 0.498,
+	O: 0.486,
+	P: 0.472,
+	Q: 0.494,
+	R: 0.477,
+	S: 0.461,
+	T: 0.396,
+	U: 0.474,
+	V: 0.469,
+	W: 0.712,
+	X: 0.484,
+	Y: 0.446,
+	Z: 0.41,
+}
+const charEm = (char: string) =>
+	ANTON_EM[char] ??
+	ANTON_EM[char.normalize("NFD")[0]] ??
+	0.5 * characterWidth(char)
+
+// CJK has no spaces, and satori breaks it between any two characters.
+const BREAKS_ANYWHERE = /[\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/
+const tokens = (text: string) =>
+	text
+		.split(/\s+/)
+		.filter(Boolean)
+		.flatMap((word) => (BREAKS_ANYWHERE.test(word) ? [...word] : [word]))
+
+const HEADLINE_LINE_HEIGHT = 0.95
+const HEADLINE_LETTER_SPACING = 1
+// The width of a run of text in px at a font size, with a 3% margin for kerning and rounding.
+const runWidth = (text: string, fontSize: number) =>
+	[...text].reduce(
+		(sum, char) => sum + charEm(char) * fontSize + HEADLINE_LETTER_SPACING,
+		0,
+	) * 1.03
+
+// Greedy word wrap, as satori does it. Returns the lines, or null when a single word is wider than the box.
+const wrap = (words: string[], fontSize: number, width: number) => {
+	const lines: string[] = []
+	for (const word of words) {
+		if (runWidth(word, fontSize) > width) return null
+		const last = lines[lines.length - 1]
+		if (last !== undefined && runWidth(`${last} ${word}`, fontSize) <= width)
+			lines[lines.length - 1] = `${last} ${word}`
+		else lines.push(word)
+	}
+	return lines
+}
+
+export type HeadlineFit = { fontSize: number; text: string }
+/**
+ * The largest font size, from `max` down to `min`, at which the uppercase headline wraps inside a `width` x `height`
+ * box. At `min`, a headline that still doesn't fit keeps the lines that do and ends with an ellipsis, and a word that
+ * is too wide on its own is cut, so the text never leaves its box.
+ */
+export const fitHeadline = (
+	text: string,
+	box: { width: number; height: number; max: number; min?: number },
+): HeadlineFit => {
+	const upper = headlineText(text)
+	const words = tokens(upper)
+	const min = box.min ?? 44
+	for (let size = box.max; size >= min; size -= 2) {
+		const lines = wrap(words, size, box.width)
+		if (lines && lines.length * size * HEADLINE_LINE_HEIGHT <= box.height)
+			return { fontSize: size, text: upper }
+	}
+	const maxLines = Math.max(
+		1,
+		Math.floor(box.height / (min * HEADLINE_LINE_HEIGHT)),
+	)
+	const lines: string[] = []
+	for (const word of words) {
+		let piece = word
+		while (piece.length > 1 && runWidth(piece, min) > box.width)
+			piece = piece.slice(0, -1)
+		const last = lines[lines.length - 1]
+		if (last !== undefined && runWidth(`${last} ${piece}`, min) <= box.width)
+			lines[lines.length - 1] = `${last} ${piece}`
+		else lines.push(piece)
+		if (lines.length > maxLines) break
+	}
+	if (
+		lines.length <= maxLines &&
+		lines.join(" ").length === words.join(" ").length
+	)
+		return { fontSize: min, text: lines.join(" ") }
+	const kept = lines.slice(0, maxLines)
+	let lastLine = `${kept[kept.length - 1]}…`
+	while (lastLine.length > 1 && runWidth(lastLine, min) > box.width)
+		lastLine = `${lastLine.slice(0, -2)}…`
+	kept[kept.length - 1] = lastLine
+	return { fontSize: min, text: kept.join(" ") }
+}
+
+// The headline in Anton, sized by fitHeadline to its box. The box also clips, so nothing can spill onto the brand.
 export const Headline = ({
 	text,
-	sizes,
-}: { text: string; sizes: FontSizes }) => (
-	<div
-		style={{
-			display: "flex",
-			fontFamily: "Anton",
-			fontSize: fitFontSize(text, sizes),
-			lineHeight: 0.95,
-			letterSpacing: 1,
-			color: INK,
-		}}
-	>
-		{headlineText(text)}
-	</div>
-)
+	width,
+	height,
+	max,
+	min,
+}: {
+	text: string
+	width: number
+	height: number
+	max: number
+	min?: number
+}) => {
+	const fit = fitHeadline(text, { width, height, max, min })
+	return (
+		<div
+			style={{
+				display: "flex",
+				maxWidth: width,
+				maxHeight: height,
+				overflow: "hidden",
+				fontFamily: "Anton",
+				fontSize: fit.fontSize,
+				lineHeight: HEADLINE_LINE_HEIGHT,
+				letterSpacing: HEADLINE_LETTER_SPACING,
+				color: INK,
+			}}
+		>
+			{fit.text}
+		</div>
+	)
+}
+
+// Fixed heights the text columns reserve, so the headline's box is what is left between them.
+// TEXT_TOP is just under the brand (top 44, about 60 tall).
+export const TEXT_TOP = 120
+export const TAG_HEIGHT = 44
+export const SCORE_HEIGHT = 156
+// Two lines at 30 px, as a 40-character subtext can wrap in a narrow column.
+export const SUBTEXT_HEIGHT = 76
 
 // A subtext only shows when it is short enough to read at a glance.
+export const showsSubtext = (text: string | null): text is string =>
+	!!text && text.length <= SUBTEXT_MAX_LENGTH
 export const Subtext = ({ text }: { text: string | null }) =>
-	text && text.length <= SUBTEXT_MAX_LENGTH ? (
+	showsSubtext(text) ? (
 		<div
 			style={{
 				display: "flex",

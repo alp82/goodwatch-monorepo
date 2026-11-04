@@ -40,16 +40,19 @@ import {
 import {
 	Brand,
 	Frame,
+	HEIGHT,
 	Headline,
-	INK,
+	SCORE_HEIGHT,
+	SUBTEXT_HEIGHT,
 	PROVIDER_LOGOS,
 	Picture,
 	ScoreBlock,
 	Subtext,
+	TAG_HEIGHT,
+	TEXT_TOP,
 	Tag,
 	col,
-	fitFontSize,
-	headlineText,
+	showsSubtext,
 } from "~/ui/og-image/parts"
 import type {
 	OgProfileEveryoneContent,
@@ -147,22 +150,27 @@ function TitleCard({ content }: { content: OgTitleContent }) {
 				style={col({
 					position: "absolute",
 					left: 56,
+					top: TEXT_TOP,
 					bottom: 52,
 					width: 670,
 					gap: 18,
+					justifyContent: "flex-end",
+					overflow: "hidden",
 				})}
 			>
 				<Tag text={content.tag} />
 				<Headline
 					text={content.title}
-					sizes={[
-						[9, 176],
-						[11, 140],
-						[16, 112],
-						[24, 88],
-						[30, 76],
-						[999, 58],
-					]}
+					width={670}
+					height={
+						HEIGHT -
+						TEXT_TOP -
+						52 -
+						TAG_HEIGHT -
+						18 -
+						(hasGoodwatchScore(content.score) ? SCORE_HEIGHT + 18 : 0)
+					}
+					max={176}
 				/>
 				{hasGoodwatchScore(content.score) && (
 					<ScoreBlock score={content.score} />
@@ -217,21 +225,29 @@ function SplitCard({
 				style={col({
 					position: "absolute",
 					left: 616,
+					top: TEXT_TOP,
 					bottom: 52,
 					width: 540,
 					gap: 16,
+					justifyContent: "flex-end",
+					overflow: "hidden",
 				})}
 			>
 				<Tag text={content.tag} />
 				<Headline
 					text={isPerson ? content.name : content.title}
-					sizes={[
-						[8, 156],
-						[12, 124],
-						[18, 98],
-						[28, 76],
-						[999, 58],
-					]}
+					width={540}
+					height={
+						HEIGHT -
+						TEXT_TOP -
+						52 -
+						TAG_HEIGHT -
+						16 -
+						(!isPerson && showsSubtext(content.subtitle)
+							? SUBTEXT_HEIGHT + 16
+							: 0)
+					}
+					max={156}
 				/>
 				<Subtext text={isPerson ? null : content.subtitle} />
 			</div>
@@ -270,25 +286,23 @@ function BandCard({ content }: { content: OgPageContent }) {
 					bottom: 0,
 					justifyContent: "center",
 					gap: 14,
+					overflow: "hidden",
 				})}
 			>
 				<Tag text={content.tag} />
-				<div
-					style={{
-						display: "flex",
-						fontFamily: "Anton",
-						fontSize: fitFontSize(content.title, [
-							[14, 136],
-							[22, 108],
-							[34, 80],
-							[999, 60],
-						]),
-						lineHeight: 0.95,
-						color: INK,
-					}}
-				>
-					{headlineText(content.title)}
-				</div>
+				<Headline
+					text={content.title}
+					width={1088}
+					height={
+						HEIGHT -
+						340 -
+						2 * 18 -
+						TAG_HEIGHT -
+						14 -
+						(showsSubtext(content.subtitle) ? SUBTEXT_HEIGHT + 14 : 0)
+					}
+					max={136}
+				/>
 				<Subtext text={content.subtitle} />
 			</div>
 		</Frame>
