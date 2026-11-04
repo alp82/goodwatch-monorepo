@@ -78,7 +78,7 @@ import {
 	setOff,
 	useInterpretedFilters,
 } from "./prototype-preferences/interpretation"
-import { MatchesRead } from "./prototype-preferences/read-parts"
+import { MatchesRead, readColor } from "./prototype-preferences/read-parts"
 import { ReadStrip } from "./prototype-preferences/ReadVariants"
 import { titleKey } from "~/utils/title-key"
 import { usePreferencePrototype } from "./prototype-preferences/usePreferencePrototype"
@@ -510,6 +510,12 @@ export function DiscoverPage({
 	const keepChip = (chip: { key: string }) => !readChipKeys.has(chip.key)
 	// Hard filters' hide counts come with the answer on screen (the words read now), so they follow every switch.
 	const hardHides = new Map((proto.answer?.hardHides ?? []).map((h) => [h.phrase.toLowerCase(), h.hides]))
+	// The same read filters for the Matches meter: only hard filters that are on, with a count from the answer on screen.
+	const readRows = readItems.flatMap((item) => {
+		const hides = hardHides.get(item.phrase.toLowerCase())
+		if (!item.on || item.aside || item.soft || item.words || !hides) return []
+		return [{ group: `read:${item.phrase}`, label: `${item.field} ${item.label}`.trim(), color: readColor(item), hides }]
+	})
 	const toggleRead = (item: (typeof readItems)[number]) => {
 		if (item.aside) return
 		setParams(
@@ -628,6 +634,7 @@ export function DiscoverPage({
 							) : undefined
 						}
 						prototypeHideShown={protoOn}
+						prototypeReadRows={protoOn ? readRows : undefined}
 						prototypeKeepChip={protoOn ? keepChip : undefined}
 						sort={{
 							options: discoverSorts(searching, taste),

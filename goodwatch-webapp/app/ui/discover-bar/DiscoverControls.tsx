@@ -164,6 +164,7 @@ export interface DiscoverControlsProps {
 	prototypeMatchesRead?: ReactNode
 	prototypeKeepChip?: (chip: BarChip) => boolean
 	prototypeHideShown?: boolean
+	prototypeReadRows?: { group: string; label: string; color: string; hides: number }[]
 	/** PROTOTYPE - throwaway: replaces the search field; gets Ready to watch for its desktop slot. */
 	prototypeField?: (ready: ReactNode) => ReactNode
 }
@@ -201,6 +202,7 @@ function DiscoverControlsContent({
 	prototypeMatchesRead,
 	prototypeKeepChip,
 	prototypeHideShown,
+	prototypeReadRows,
 }: DiscoverControlsProps) {
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
@@ -388,6 +390,7 @@ function DiscoverControlsContent({
 						readSection={prototypeMatchesRead}
 						keepChip={prototypeKeepChip}
 						hideShown={prototypeHideShown}
+						readRows={prototypeReadRows}
 					/>
 				</div>
 			)}

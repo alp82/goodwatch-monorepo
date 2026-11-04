@@ -70,6 +70,19 @@ strikethrough, with no visible "Not". A switched-off value is gray and dimmed.
   answer on screen, so they follow every switch. With "epic" or Dark off, the same filter hides 33 or 30, because the
   words differ. Your own filters keep Discover's native rows and counts.
 
+### Round 6: the meter counts the read hard filters
+
+- **One meter:** the compact bar under the count, the popout bar and the "X of Y" heading all use the same inputs:
+  shown titles, Discover's own hides for your filters, and each read hard filter's hide count. A read filter's count
+  covers titles every other filter keeps, read or your own, so no title is in two counts. The counts add up: "32 of
+  124 matches" for pirates: 32 shown, 86 hidden by Released 2017–2026, 6 by No anime.
+- **What doesn't count:** preferences, words, switched-off filters and set-aside words add nothing.
+- **Colors:** a read hard filter's dot in Matches has its meter segment's color.
+- **White numbers:** hide numbers are white, both for read filters ("hides **86**") and for your own filters'
+  rows. The "hides" word stays muted.
+- **Scope:** read counts come from the candidate pool the same words retrieve without that filter, not the whole
+  catalog (see round 5).
+
 ### Matches, set-aside words, and the fingerprint marks (from round 3)
 
 - **Fingerprint qualities:** a colored dot for a favored quality. For one ranked lower: a minus mark and a strong
@@ -178,27 +191,25 @@ and the frozen study build (`20261103T051503Z`) is reported separately as `froze
   - `routes/discover.($type).tsx`: the prototype loader.
   - Job guards in `entry.server.tsx`, `root.tsx`, the availability, search and people index modules.
 
-## Verification (manual, November 4, 2026; build `20261104T051503Z`, snapshot `20261104T083439Z`)
+## Verification (manual, November 4, 2026; build `20261104T051503Z`)
 
-Playwright at 1440 × 1000 and iPhone 13 (DOM loaded plus the target state), no new test suites.
+Playwright at 1440 × 1000 and iPhone 13 (DOM loaded plus the target state), no new test suites. Meter fractions are the
+measured segment widths of both bars; the small differences from exact fractions are the 1 px gaps between segments.
 
 | Check | Result |
 | --- | --- |
-| "funny 90s dark scary epic" | 40 matches |
-| Matches | No Shown row, the Filters heading, "Search based on". Order: Released 1990–1999 "hides 49" · Mood Funny / Dark / Scary "Preferred" · “epic” "Preferred". |
-| Independent proof of 49 | The service's counterfactual pool (51 keys, retrieved without the year filter), sent as `ranked` to goodwatch.app's guest results endpoint, counts 51 without the year filter and 2 with it: 51 − 2 = 49. |
-| Freshness | Released off: 51 matches, row "off". On again: "hides 49", 40. “epic” off: "hides 33", 39. Dark off: "hides 30", 32. |
-| Manual 1985–1999 (Advanced) | Your own row stays (Discover's "set in search"); the read 1990–1999 shows "set aside by your Released"; 37 matches. |
-| Advanced Dark off / on | 32, bar Mood 2; then 40, bar Mood 3 |
-| Motion, normal | Expanding: opacity 0.95 at 20 ms, 0.99 at 100 ms; settled by 160 ms. Back (Escape): 0.83 at 60 ms, settled by 160 ms; focus on "+5 more". |
-| Motion, reduced | No transform at all; a short fade only |
-| Weights | Values and qualities 650 |
-| Phone | Matches popout and line without horizontal overflow |
+| "pirates last 10 years no anime" (your screenshot) | 32 matches. Released 2017–2026 "hides 86", Anime No anime "hides 6", “pirates” "Preferred". Heading "32 of 124 matches", compact "92 hidden". Both bars 0.255 / 0.686 / 0.048 (expected 0.258 / 0.694 / 0.048). |
+| "funny 90s dark scary epic" | "40 of 89 matches", "49 hidden", bars 0.447 / 0.548 (expected 0.449 / 0.551) |
+| Released off / on | "51 of 51", all gold, no hidden. On again: "40 of 89". |
+| Dark off | "32 of 62", "30 hidden", both bars updated |
+| Manual 1985–1999 | "37 of 37", all gold. Your own row keeps Discover's "set in search"; the read years show "set aside"; nothing counted twice. |
+| White numbers | Number `rgb(255,255,255)`; "hides" prefix muted gray-400 |
+| Phone | Popout and bars consistent, no horizontal overflow |
 
 - Page errors: none.
-- Type check: scoped `npx tsc` clean for the touched files and the preview service.
-- Budget: one bounded local attempt (`… ./bench.sh budget --where local --runs 1 --label discover-read-strip-motion`)
-  gave `Budget: FAIL` for every surface with no report. Docker's Chrome can't reach the host's loopback-only prototype
+- Type check: scoped `npx tsc` clean for the touched files.
+- Budget: one bounded local attempt (`… ./bench.sh budget --where local --runs 1 --label discover-read-meter`) gave
+  `Budget: FAIL` for every surface with no report. Docker's Chrome can't reach the host's loopback-only prototype
   server. I changed no budget and didn't expose the server; this is no performance claim.
 
 ## Limits

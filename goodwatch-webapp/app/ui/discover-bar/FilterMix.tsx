@@ -91,7 +91,14 @@ export function FilterMix({
 	readSection,
 	keepChip,
 	hideShown = false,
+	readRows = [],
 }: {
+	/**
+	 * PROTOTYPE - throwaway: hard filters the search read from the words, with what each keeps out on its own. Their
+	 * titles pass every other filter, so they share no title with each other or with the rows above: the meter, the
+	 * hidden count and the "of" total add them as they are.
+	 */
+	readRows?: { group: string; label: string; color: string; hides: number }[]
 	/** PROTOTYPE - throwaway: no "Shown" row (the heading already says how many show). */
 	hideShown?: boolean
 	/** PROTOTYPE - throwaway: every part the search read, with its switch, listed after the filter rows. */
@@ -132,6 +139,9 @@ export function FilterMix({
 	const seen = useRef<string[]>([])
 	const total = counts?.total ?? 0
 	const hidden = counts?.hidden ?? 0
+	// PROTOTYPE - throwaway: the read hard filters' hides join the native ones for everything shown here.
+	const readHidden = readRows.reduce((sum, r) => sum + Math.max(0, r.hides), 0)
+	const allHidden = hidden + readHidden
 	const sole = new Map(
 		(counts?.recoveries ?? []).map((r) => [r.filter as string, r.titles]),
 	)
@@ -178,6 +188,11 @@ export function FilterMix({
 	const rows = [...unsorted].sort(
 		(a, b) => seen.current.indexOf(a.group) - seen.current.indexOf(b.group),
 	)
+	// One meter for the compact bar and the popout: the native rows, then the read hard filters.
+	const meterRows: Row[] = [
+		...rows,
+		...readRows.map((r) => ({ ...r, chips: [], off: false })),
+	]
 
 	const switchOff = (row: Row) => {
 		const restore = diff(state, removeAll(row.chips, state))
@@ -211,11 +226,11 @@ export function FilterMix({
 					<CountText counts={counts} searching={searching} />
 					{!phone && (
 						<span className="text-[11px] whitespace-nowrap text-gray-500">
-							{hidden > 0 ? `${compactCount(hidden)} hidden` : ""}
+							{allHidden > 0 ? `${compactCount(allHidden)} hidden` : ""}
 						</span>
 					)}
 				</span>
-				<Stack shown={total} rows={rows} className="h-2 w-full" />
+				<Stack shown={total} rows={meterRows} className="h-2 w-full" />
 			</button>
 			<AnimatePresence>
 				{open && counts && (
@@ -230,17 +245,17 @@ export function FilterMix({
 					>
 						<p className="text-sm font-bold text-white">
 							{total.toLocaleString("en")} of{" "}
-							{(total + hidden).toLocaleString("en")}{" "}
+							{(total + allHidden).toLocaleString("en")}{" "}
 							{searching ? "matches" : "titles"}
-							{phone && hidden > 0 && (
+							{phone && allHidden > 0 && (
 								<span className="font-normal text-gray-500">
 									{" "}
-									· {compactCount(hidden)} hidden
+									· {compactCount(allHidden)} hidden
 								</span>
 							)}
 						</p>
 
-						<Stack shown={total} rows={rows} className="mt-2.5 h-2.5 w-full" />
+						<Stack shown={total} rows={meterRows} className="mt-2.5 h-2.5 w-full" />
 						<ul className="mt-3 flex flex-col gap-1">
 							{!hideShown && <li className="flex h-8 items-center gap-2.5">
 								<span
@@ -281,7 +296,11 @@ export function FilterMix({
 													? "set in search"
 													: row.hides < 1
 														? "no effect"
-														: `hides ~${compactCount(row.hides)}`)}
+														: (
+															<>
+																hides ~<span className="font-semibold text-white">{compactCount(row.hides)}</span>
+															</>
+														))}
 										</span>
 										<span
 											className="shrink-0 origin-center scale-75"

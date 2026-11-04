@@ -7,12 +7,18 @@
 // - MatchesRead: the Matches popout's list of every read part, each with the same switch as the line, then the
 //   fingerprint qualities as an explanation of what the switched-on words read as.
 import { CalendarDaysIcon, ChatBubbleBottomCenterTextIcon, MinusIcon } from "@heroicons/react/20/solid"
-import { type CSSProperties, useState } from "react"
+import { type CSSProperties, type ReactNode, useState } from "react"
 import { MOODS } from "~/domain/moods"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { Knob } from "~/ui/filter-bar/motion"
+import { filterColor } from "~/ui/discover-bar/PanelFooter"
 import type { Item } from "./interpretation"
+
+/** A read hard filter's meter color: the same one Discover gives that filter group's segment. */
+export function readColor(item: Item) {
+	return filterColor(item.group ?? "")
+}
 
 export const switchable = (items: readonly Item[]) => items.filter((item) => !item.aside)
 
@@ -70,12 +76,17 @@ export function itemTitle(item: Item) {
 }
 
 /** The Matches note: a hard filter's real hide count, one short word for everything that only ranks. */
-export function itemNote(item: Item, hides?: number) {
+export function itemNote(item: Item, hides?: number): ReactNode {
 	if (item.aside) return `set aside by your ${item.aside}`
 	if (!item.on) return "off"
 	if (item.soft || item.words) return "Preferred"
 	if (hides === undefined) return "…"
-	return hides === 0 ? "hides none" : `hides ${hides.toLocaleString("en")}`
+	if (hides === 0) return "hides none"
+	return (
+		<>
+			hides <span className="font-semibold text-white">{hides.toLocaleString("en")}</span>
+		</>
+	)
 }
 
 export const PREFERRED_TITLE = "Preferred: titles that fit rank higher; none are hidden."
@@ -211,7 +222,10 @@ export function MatchesRead({
 								onClick={() => onToggle(item)}
 								className="-ml-2 flex h-full min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-lg pr-1 pl-2 text-left outline-none hover:bg-white/[0.05] focus-visible:ring-2 focus-visible:ring-amber-400"
 							>
-								<span className={`grid w-2.5 shrink-0 place-items-center ${item.on ? "" : "opacity-40"}`}><ItemMarker item={item} /></span>
+								<span className={`grid w-2.5 shrink-0 place-items-center ${item.on ? "" : "opacity-40"}`}>
+									{/* A hard filter's dot is its segment's color in the meter above. */}
+									{item.soft || item.words ? <ItemMarker item={item} /> : <span className={`h-2.5 w-2.5 rounded-full ${readColor(item)}`} aria-hidden />}
+								</span>
 								<span className={`min-w-0 flex-1 truncate ${item.on ? "text-gray-200" : "text-gray-400 line-through decoration-gray-300 decoration-2"}`}>
 									{item.field && <span className="text-gray-500">{item.field} </span>}
 									{item.label}
