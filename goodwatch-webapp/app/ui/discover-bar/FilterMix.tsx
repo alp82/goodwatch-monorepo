@@ -90,7 +90,10 @@ export function FilterMix({
 	rowNote,
 	readSection,
 	keepChip,
+	hideShown = false,
 }: {
+	/** PROTOTYPE - throwaway: no "Shown" row (the heading already says how many show). */
+	hideShown?: boolean
 	/** PROTOTYPE - throwaway: every part the search read, with its switch, listed after the filter rows. */
 	readSection?: ReactNode
 	/** PROTOTYPE - throwaway: which chips get rows of their own (manual filters; read parts are in readSection). */
@@ -239,7 +242,7 @@ export function FilterMix({
 
 						<Stack shown={total} rows={rows} className="mt-2.5 h-2.5 w-full" />
 						<ul className="mt-3 flex flex-col gap-1">
-							<li className="flex h-8 items-center gap-2.5">
+							{!hideShown && <li className="flex h-8 items-center gap-2.5">
 								<span
 									className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500"
 									aria-hidden
@@ -249,7 +252,7 @@ export function FilterMix({
 									{total.toLocaleString("en")}
 								</span>
 								<span className="w-[86px]" aria-hidden />
-							</li>
+							</li>}
 							{rows.map((row) => (
 								<li key={row.group} className="flex h-9 items-center gap-1">
 									<motion.button

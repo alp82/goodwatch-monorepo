@@ -86,7 +86,7 @@ const server = createHttpServer(async (req, res) => {
         return json(res, 400, { error: "Enter a search between 2 and 512 characters." })
       busy = true
       try {
-        return json(res, 200, await engine.search({ query: data.query.trim(), existing: data.existing || "" }))
+        return json(res, 200, await engine.search({ query: data.query.trim(), existing: data.existing || "", debug: data.debug === true }))
       } finally {
         busy = false
       }

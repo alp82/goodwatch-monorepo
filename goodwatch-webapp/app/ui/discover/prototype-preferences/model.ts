@@ -38,6 +38,8 @@ export interface V7Answer {
 	catalogue: boolean
 	/** Display only: every applied interpretation with its phrase, and the reading as Discover's search shows it. */
 	proposals?: Proposal[]
+	/** Display only: each hard filter read from the words, and how many titles it keeps out (see the README). */
+	hardHides?: { phrase: string; params: [string, string][]; hides: number; universe: "search" | "catalog" }[]
 	readingChips?: import("~/server/combined-search/reading-retrieval.server").ReadingChip[]
 	timing: Record<string, unknown>
 	source: Record<string, unknown>

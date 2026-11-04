@@ -508,6 +508,8 @@ export function DiscoverPage({
 	// by your own choice aren't switches. The Matches rows keep only your own filters; read parts are listed there too.
 	const readChipKeys = new Set(readItems.filter((item) => item.on).flatMap((item) => item.chipKeys))
 	const keepChip = (chip: { key: string }) => !readChipKeys.has(chip.key)
+	// Hard filters' hide counts come with the answer on screen (the words read now), so they follow every switch.
+	const hardHides = new Map((proto.answer?.hardHides ?? []).map((h) => [h.phrase.toLowerCase(), h.hides]))
 	const toggleRead = (item: (typeof readItems)[number]) => {
 		if (item.aside) return
 		setParams(
@@ -621,9 +623,11 @@ export function DiscoverPage({
 									reading={proto.answer?.readingChips ?? []}
 									onToggle={toggleRead}
 									onAll={allRead}
+									hides={hardHides}
 								/>
 							) : undefined
 						}
+						prototypeHideShown={protoOn}
 						prototypeKeepChip={protoOn ? keepChip : undefined}
 						sort={{
 							options: discoverSorts(searching, taste),

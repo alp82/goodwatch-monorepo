@@ -11,6 +11,7 @@
 // 3. Your own filters, with their ×.
 // Clear (or Restore) stays at the row's end, outside the part that scrolls.
 import { ArrowLeftIcon, FingerPrintIcon } from "@heroicons/react/20/solid"
+import { motion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { BarChip } from "~/ui/discover-bar/chips"
@@ -80,7 +81,17 @@ function FingerprintLabel() {
 export function ReadStrip(p: ReadProps) {
 	const qualities = qualitiesOf(p.reading)
 	const manual = manualChips(p.items, p.chips)
-	const [expanded, setExpanded] = useState(false)
+	const [expanded, setOpen] = useState(false)
+	// Animate only a switch between the two rows, never the first paint: a quick fade and a short slide (transform and
+	// opacity only; MotionConfig's reducedMotion="user" on the page drops the slide for reduced motion).
+	const switched = useRef(false)
+	const setExpanded = (open: boolean) => {
+		switched.current = true
+		setOpen(open)
+	}
+	const enter = (from: number) =>
+		switched.current ? { opacity: 0, x: from } : false
+	const SWAP = { duration: 0.14, ease: [0.22, 1, 0.36, 1] } as const
 	const row = useRef<HTMLDivElement>(null)
 	const back = useRef<HTMLButtonElement>(null)
 	const more = useRef<HTMLButtonElement>(null)
@@ -109,13 +120,17 @@ export function ReadStrip(p: ReadProps) {
 	}, [expanded])
 	// Fewer qualities than the fold (words switched off): nothing to unfold.
 	useEffect(() => {
-		if (expanded && hidden <= 0) setExpanded(false)
+		if (expanded && hidden <= 0) setOpen(false)
 	}, [expanded, hidden])
 	if (!p.items.length && !qualities.length && !manual.length && !p.pending) return <div className="h-9 flex-1" />
 
 	if (expanded)
 		return (
-			<div
+			<motion.div
+				key="expanded"
+				initial={enter(12)}
+				animate={{ opacity: 1, x: 0 }}
+				transition={SWAP}
 				ref={row}
 				id="fingerprint-read"
 				role="region"
@@ -138,11 +153,18 @@ export function ReadStrip(p: ReadProps) {
 				{qualities.map((chip, i) => (
 					<QualityMark key={`${chip.key}:${i}`} chip={chip} />
 				))}
-			</div>
+			</motion.div>
 		)
 
 	return (
-		<div ref={row} className="search-private ph-no-capture sentry-mask flex h-9 min-w-0 flex-1 items-center gap-2">
+		<motion.div
+			key="folded"
+			initial={enter(-12)}
+			animate={{ opacity: 1, x: 0 }}
+			transition={SWAP}
+			ref={row}
+			className="search-private ph-no-capture sentry-mask flex h-9 min-w-0 flex-1 items-center gap-2"
+		>
 			<div className="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto [scrollbar-width:none]">
 				{p.pending && !p.items.length && !qualities.length && (
 					<span className="flex shrink-0 items-center gap-2 text-[12px] text-gray-500">
@@ -184,6 +206,6 @@ export function ReadStrip(p: ReadProps) {
 				)}
 			</div>
 			<ClearRead items={p.items} onAll={p.onAll} />
-		</div>
+		</motion.div>
 	)
 }

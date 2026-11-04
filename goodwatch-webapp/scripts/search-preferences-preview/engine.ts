@@ -42,6 +42,7 @@ export type SearchResult = {
   identityRepairs: { identity: string; alias: number; preferred: number }[]
   transportAction: string; catalogue: boolean
   proposals: Proposal[]; readingChips: unknown[]
+  hardHides: { phrase: string; params: [string, string][]; hides: number; universe: 'search' | 'catalog' }[]
 }
 export type Card = {
   key: number; title: string; year: number | null; type: 'movie' | 'show'
@@ -308,7 +309,7 @@ function policy(policy: string, params: URLSearchParams, rel: number[], top: num
   return { policy, params: params.toString(), error, total: rel.length, relevance: { keys: rel, total: rel.length }, bestRated: { keys: top, total: top.length } }
 }
 
-export async function search(input: { query: string; existing?: string }): Promise<SearchResult> {
+export async function search(input: { query: string; existing?: string; debug?: boolean }): Promise<SearchResult> {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const rt = await runtime()
@@ -321,7 +322,7 @@ export async function search(input: { query: string; existing?: string }): Promi
   }
   throw new Error('Preview comparison could not capture a stable catalog snapshot.')
 }
-async function searchOnce(rt: Runtime, input: { query: string; existing?: string }): Promise<SearchResult> {
+async function searchOnce(rt: Runtime, input: { query: string; existing?: string; debug?: boolean }): Promise<SearchResult> {
   const start = performance.now(), query = input.query.trim(), existing = input.existing ?? ''
   if (!query || query.length > 2000) throw new Error('Enter a search between 1 and 2,000 characters.')
   const view = rt.app.interpret(query, existing, clock()), text = normalize(view.semanticQuery), manual = new URLSearchParams(existing), baseParams = new URLSearchParams(view.filters)
@@ -364,8 +365,32 @@ async function searchOnce(rt: Runtime, input: { query: string; existing?: string
       candidate = policy(config.policy, params, rel, top, broadRank?.error ?? null)
     }
   }
+  // Display only: what each hard filter read from the words keeps out. Universe: the same words and reading retrieved
+  // without that one filter (same build and snapshot); hides = titles in that pool every other filter keeps, minus
+  // those that remain with it. Catalogue answers count on the catalog. The ranking and results above are unchanged.
+  const hardHides: { phrase: string; params: [string, string][]; hides: number; universe: 'search' | 'catalog'; poolKeys?: number[]; without?: string }[] = []
+  if (branch !== 'title-guard' && transportAction !== 'exact-baseline') {
+    const used = new URLSearchParams(candidate.params), groupsList = ['genres', 'themes', 'moods', 'styles']
+    const byPhrase = new Map<string, [string, string][]>()
+    for (const p of view.proposals as Proposal[]) {
+      if (p.status !== 'applied' || manual.get(p.parameter) === p.value) continue
+      const inUse = groupsList.includes(p.parameter) ? (used.get(p.parameter) || '').split(',').includes(p.value) : used.get(p.parameter) === p.value
+      if (!inUse) continue
+      const at = byPhrase.get(p.phrase as string) ?? []; at.push([p.parameter, p.value]); byPhrase.set(p.phrase as string, at)
+    }
+    for (const [phrase, pairs] of byPhrase) {
+      const without = new URLSearchParams(used)
+      for (const [key, value] of pairs) {
+        if (groupsList.includes(key)) { const kept = (without.get(key) || '').split(',').filter(v => v && v !== value); if (kept.length) without.set(key, kept.join(',')); else without.delete(key) }
+        else without.delete(key)
+      }
+      const pool = reading ? (await retrieve(rt, text, view.semanticQuery, without, reading, lookup, foreign)).keys : 'catalog'
+      const wide = (await filtered(rt, pool, without, 'relevance')).length, narrow = (await filtered(rt, pool, used, 'relevance')).length
+      hardHides.push({ phrase, params: pairs, hides: Math.max(0, wide - narrow), universe: reading ? 'search' : 'catalog', ...(input.debug && pool !== 'catalog' ? { poolKeys: pool, without: without.toString() } : {}) })
+    }
+  }
   assertPinned(rt)
-  return { query, semanticQuery: view.semanticQuery, existing, branch, source: rt.source, baseline, v7: candidate, policies: [baseline, candidate], prefs, retainedHard, recognized, negativeClauses, params: { baseline: baseline.params, v7: candidate.params }, identityRepairs: repairs, transportAction, catalogue: !reading,
+  return { query, semanticQuery: view.semanticQuery, existing, branch, source: rt.source, baseline, v7: candidate, hardHides, policies: [baseline, candidate], prefs, retainedHard, recognized, negativeClauses, params: { baseline: baseline.params, v7: candidate.params }, identityRepairs: repairs, transportAction, catalogue: !reading,
     // Display only: every applied interpretation (with its phrase), and the reading as Discover's search shows it.
     proposals: view.proposals.filter((p: Proposal) => p.status === 'applied' || p.status === 'existing wins'), readingChips: cap ? rt.app.summarizeReading(text, cap.raw, foreign) : [],
     timing: { totalMs: performance.now() - start, readingMs, baselineMs, candidateMs: performance.now() - candidateStart, readingCacheHit: cap?.cacheHit ?? null, baselineRetrieval: baseRank ? { cacheHit: baseRank.cacheHit, actualMs: baseRank.elapsedMs } : null, broadRetrieval: broadRank ? { cacheHit: broadRank.cacheHit, actualMs: broadRank.elapsedMs } : null } }

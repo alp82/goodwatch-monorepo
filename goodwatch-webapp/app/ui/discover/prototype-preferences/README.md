@@ -40,6 +40,36 @@ Clear (or Restore) stays at the row's end. Fingerprint quality labels now use th
 preference values. A favored quality has a dot. A quality ranked lower has a minus mark and a strong colored
 strikethrough, with no visible "Not". A switched-off value is gray and dimmed.
 
+### Round 5: motion, contrast, Matches copy and real hide counts
+
+- **Motion:** the switch between the folded row and the full-row qualities is a 140 ms fade plus a 12 px slide, on
+  transform and opacity only, with no height animation. It runs only after a toggle, never on first paint.
+  `MotionConfig reducedMotion="user"` on the page drops the slide for reduced motion, leaving only the fade. Toggles
+  and results aren't delayed. Back, a press outside, Escape, focus return, and the fold rule (0–3 all, 4 → 2 and "+2",
+  5 or more → 3 and the rest) are unchanged.
+- **Contrast:** favored qualities have brighter text (55% of the quality color with white) and a lightened dot.
+  Qualities ranked lower get a stronger minus mark, lighter text, and a 2.5 px strikethrough in the quality's color,
+  lightened. A switched-off value is gray-400 with a 2 px gray-300 strikethrough at 80% opacity: readable, plainly
+  off, and never colored. Every label keeps weight 650.
+- **Matches popout:**
+  - The Shown row is gone; the "N of N matches" heading and the bar stay.
+  - The section is called **Filters**. Hard filters come first, with their real hide count ("hides 49"), then read
+    preferences, then the query words, then words your own choice set aside.
+  - Preferences and words share one short label, **Preferred**, whose tooltip says titles that fit rank higher and
+    none are hidden.
+  - The fingerprint box is titled **Search based on**.
+- **Hide counts:** shown only for hard filters read from the words, such as Released 1990–1999. V7 applies them as
+  retrieval eligibility, so the native results endpoint never sees them; original Discover's search mode said "set in
+  search" without a count. The preview computes them on the answer's own build and snapshot:
+  - **Universe:** the same words and reading, retrieved without that one filter.
+  - **Hides:** the titles in that pool every other filter keeps, minus those that remain with the filter. A catalogue
+    answer counts on the catalog.
+
+  This doesn't change the ranking or the results, and it doesn't subtract the totals of two different searches.
+  Switching the filter off shows "off"; a manual choice that takes over shows "set aside". The counts arrive with the
+  answer on screen, so they follow every switch. With "epic" or Dark off, the same filter hides 33 or 30, because the
+  words differ. Your own filters keep Discover's native rows and counts.
+
 ### Matches, set-aside words, and the fingerprint marks (from round 3)
 
 - **Fingerprint qualities:** a colored dot for a favored quality. For one ranked lower: a minus mark and a strong
@@ -148,29 +178,36 @@ and the frozen study build (`20261103T051503Z`) is reported separately as `froze
   - `routes/discover.($type).tsx`: the prototype loader.
   - Job guards in `entry.server.tsx`, `root.tsx`, the availability, search and people index modules.
 
-## Verification (manual, November 4, 2026; build `20261104T051503Z`)
+## Verification (manual, November 4, 2026; build `20261104T051503Z`, snapshot `20261104T083439Z`)
 
 Playwright at 1440 × 1000 and iPhone 13 (DOM loaded plus the target state), no new test suites.
 
 | Check | Result |
 | --- | --- |
-| "funny 90s dark scary epic" | 40 matches, A only, no switcher |
-| Hover on Funny | The button holds only "Funny", and the Mood label isn't inside it. The hover lights only the value. |
-| Mood label | Funny off (others on): label stays `rgb(146,165,191)`, 42 matches. Funny, Dark and Scary all off: label dims to gray-600, 33 matches. All back on: label normal, 40. |
-| Fold | 8 qualities: 3 and "+5 more". "funny" (4): 2 and "+2 more". "scary" (6): 3 and "+3 more". "Historical Action" with Comedy (3): all 3, no "more". After Clear (0): no fingerprint group, and Restore gives 40. |
-| Expanded | All 8 across the row (1,042 px desktop; 358 × 79 px wrapped on phone, no overflow). Back has focus. An inside click stays open. Outside click, Escape and Back each return, with focus on "+5 more". |
-| Weights | Value 650; favored quality 650; quality ranked lower 650 |
-| Regression | Advanced Mood panel, Dark off: 32, bar Mood 2. Matches lists all five parts; Mood Dark on there gives 40. |
+| "funny 90s dark scary epic" | 40 matches |
+| Matches | No Shown row, the Filters heading, "Search based on". Order: Released 1990–1999 "hides 49" · Mood Funny / Dark / Scary "Preferred" · “epic” "Preferred". |
+| Independent proof of 49 | The service's counterfactual pool (51 keys, retrieved without the year filter), sent as `ranked` to goodwatch.app's guest results endpoint, counts 51 without the year filter and 2 with it: 51 − 2 = 49. |
+| Freshness | Released off: 51 matches, row "off". On again: "hides 49", 40. “epic” off: "hides 33", 39. Dark off: "hides 30", 32. |
+| Manual 1985–1999 (Advanced) | Your own row stays (Discover's "set in search"); the read 1990–1999 shows "set aside by your Released"; 37 matches. |
+| Advanced Dark off / on | 32, bar Mood 2; then 40, bar Mood 3 |
+| Motion, normal | Expanding: opacity 0.95 at 20 ms, 0.99 at 100 ms; settled by 160 ms. Back (Escape): 0.83 at 60 ms, settled by 160 ms; focus on "+5 more". |
+| Motion, reduced | No transform at all; a short fade only |
+| Weights | Values and qualities 650 |
+| Phone | Matches popout and line without horizontal overflow |
 
 - Page errors: none.
-- Type check: scoped `npx tsc` clean for the touched files.
-- Budget: one bounded local attempt (`… ./bench.sh budget --where local --runs 1 --label discover-read-strip`) gave
-  `Budget: FAIL` for every surface with no report. Docker's Chrome can't reach the host's loopback-only prototype
+- Type check: scoped `npx tsc` clean for the touched files and the preview service.
+- Budget: one bounded local attempt (`… ./bench.sh budget --where local --runs 1 --label discover-read-strip-motion`)
+  gave `Budget: FAIL` for every surface with no report. Docker's Chrome can't reach the host's loopback-only prototype
   server. I changed no budget and didn't expose the server; this is no performance claim.
 
 ## Limits
 
 - With every item switched off, the field still shows the words and the count still says "matches".
+- A hard filter's hide count covers the candidate pool the same words retrieve without that filter. That pool is
+  wider than the result list, but it's not the whole catalog, so the count isn't "titles in all of GoodWatch the
+  filter excludes" (except for catalogue answers). Each count costs one more retrieval on the preview, which the
+  rank cache keeps.
 - Moods are capped at three, as on Discover. With three read moods, a fourth mood can't be added until one is
   switched off, as when the original Discover wrote the read moods into the URL.
 - Panel counts in Advanced count your own filters against V7's result list. Decades outside the read years show 0

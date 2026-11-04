@@ -163,6 +163,7 @@ export interface DiscoverControlsProps {
 	/** PROTOTYPE - throwaway: the Matches popout's list of read parts, and which chips keep rows of their own. */
 	prototypeMatchesRead?: ReactNode
 	prototypeKeepChip?: (chip: BarChip) => boolean
+	prototypeHideShown?: boolean
 	/** PROTOTYPE - throwaway: replaces the search field; gets Ready to watch for its desktop slot. */
 	prototypeField?: (ready: ReactNode) => ReactNode
 }
@@ -199,6 +200,7 @@ function DiscoverControlsContent({
 	prototypeRowNote,
 	prototypeMatchesRead,
 	prototypeKeepChip,
+	prototypeHideShown,
 }: DiscoverControlsProps) {
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
@@ -385,6 +387,7 @@ function DiscoverControlsContent({
 						rowNote={prototypeRowNote}
 						readSection={prototypeMatchesRead}
 						keepChip={prototypeKeepChip}
+						hideShown={prototypeHideShown}
 					/>
 				</div>
 			)}
