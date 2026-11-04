@@ -70,6 +70,28 @@ strikethrough, with no visible "Not". A switched-off value is gray and dimmed.
   answer on screen, so they follow every switch. With "epic" or Dark off, the same filter hides 33 or 30, because the
   words differ. Your own filters keep Discover's native rows and counts.
 
+### Round 10: hide counts in buckets
+
+Hide numbers read in buckets, always rounded down (`hide-count.tsx`):
+
+| Raw count | Shown as |
+| --- | --- |
+| 0–9 | As is |
+| 10–99 | Tens (86 → 80) |
+| 100–999 | Hundreds (880 → 800) |
+| 1,000 and up | Whole thousands as "k" (21,672 → 21k, 23,753 → 23k, not 24k); millions as "M" |
+
+"~" marks a number that is an estimate or that the bucket made less precise:
+
+- Estimated 86 → ~80; estimated 6 → ~6.
+- Exact 21,674 → ~21k; exact 880 → ~800.
+- Exact 1,000 → 1k, with no ~.
+- An estimated zero shows ~0; only an exact zero reads "hides none".
+
+The bucketed form applies to every hide number: read rows, your own filters' rows (always ~), and the compact
+"hidden" label. The tooltip on a number holds the raw count. Sorting, the meter and the "X of Y" heading keep the raw
+counts, so the heading still reads "32 of ~21,798".
+
 ### Round 9: estimates marked, rows sorted by count
 
 The owner switched No anime off and the list went from 32 to 33, while the row said "hides 6". That count is an
@@ -266,20 +288,21 @@ and the frozen study build (`20261103T051503Z`) is reported separately as `froze
 
 ## Verification (manual, November 4, 2026; build `20261104T051503Z`)
 
-Playwright at 1440 × 1000 and iPhone 13, no new test suites.
+Playwright at 1440 × 1000 and iPhone 13, no new test suites. The live catalog refreshed during the checks, so pirates
+now has 21,674 outside instead of 21,672.
 
 | Check | Result |
 | --- | --- |
-| Pirates | "32 of ~21,796 matches", "~22k hidden". Rows in order: “pirates” hides 21,672 · Released 2017–2026 hides ~86 · Anime No anime hides ~6. "~6" is white (`rgb(255,255,255)`). Bar segments in the same order. |
-| No anime off / on | 33 shown (not 38): "33 of ~22,688", Released ~104, “pirates” 22,551, No anime off. On again: back to 32 / 21,672 / ~86 / ~6. |
-| "pirates" off / on | Catalogue answer: "21,704 of 107,692", Released hides 41,501, No anime hides 880, no ~ anywhere. On again: restored. |
-| "funny 90s dark scary epic" | "40 of ~5,747", “epic” hides 5,658 · Released hides ~49 · Funny / Dark / Scary Preferred (after the counted rows) |
-| "funny epic dark pirates" | "134 of 65,311", no ~ (no estimate in the total). “epic” hides 65,177, one scope segment, “pirates” without a number. |
-| Phone | No horizontal overflow; no page errors |
+| Formatter | 0 → 0, est. 0 → ~0, est. 6 → ~6, 9 → 9, 10 → 10, est. 86 → ~80, 99 → ~90, 100 → 100, 432 → ~400, 880 → ~800, 999 → ~900, 1,000 → 1k, 9,999 → ~9k, 21,672 → ~21k, 23,753 → ~23k, 1,000,000 → 1M |
+| Pirates | Rows in raw order: “pirates” hides ~21k · Released 2017–2026 hides ~80 · Anime No anime hides ~6. White numbers; tooltips 21,674 / "86, an estimate" / "6, an estimate". Heading "32 of ~21,798", compact "~21k hidden", bar fractions unchanged (0.019 / 0.935 / 0.019 / 0.019). |
+| No anime off / on | 33: “pirates” ~22k, Released ~100, No anime off. On again: ~21k / ~80 / ~6. |
+| "pirates" off | Exact catalogue counts: Released ~41k (raw 41,505), No anime ~800 (raw 880) |
+| "funny 90s dark scary epic" | “epic” ~5k · Released ~40 · Funny / Dark / Scary Preferred |
+| Phone | No overflow; no page errors |
 
 - Type check: one scoped `npx tsc` after the last change, clean.
-- Budget: one bounded local attempt (`… --label discover-read-estimates`) gave `Budget: FAIL` for every surface with
-  no report. Docker's Chrome can't reach the host's loopback-only prototype server. I changed no budget.
+- Budget: one bounded local attempt (`… --label discover-read-buckets`) gave `Budget: FAIL` for every surface with no
+  report. Docker's Chrome can't reach the host's loopback-only prototype server. I changed no budget.
 
 ## Limits
 

@@ -13,6 +13,7 @@ import type { ReadingChip } from "~/server/combined-search/reading-retrieval.ser
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { Knob } from "~/ui/filter-bar/motion"
 import { filterColor } from "~/ui/discover-bar/PanelFooter"
+import { HideNumber } from "./hide-count"
 import type { Item } from "./interpretation"
 
 /** A read hard filter's meter color: the same one Discover gives that filter group's segment. */
@@ -89,14 +90,11 @@ export function itemNote(item: Item, count?: HideCount): ReactNode {
 	if (item.words) return ""
 	if (item.soft) return "Preferred"
 	if (hides === undefined) return "…"
-	if (hides === 0) return "hides none"
+	// An exact zero hides none; an estimated zero is still only about zero.
+	if (hides === 0 && !count?.approx) return "hides none"
 	return (
 		<>
-			hides{" "}
-			<span className="font-semibold text-white">
-				{count?.approx ? "~" : ""}
-				{hides.toLocaleString("en")}
-			</span>
+			hides <HideNumber n={hides} approx={count?.approx} />
 		</>
 	)
 }
@@ -241,7 +239,7 @@ export function MatchesRead({
 	const noteOf = (item: Item) =>
 		item.phrase === owner && outside ? (
 			<>
-				hides <span className="font-semibold text-white">{outside.toLocaleString("en")}</span>
+				hides <HideNumber n={outside} />
 			</>
 		) : (
 			itemNote(item, hides.get(item.phrase.toLowerCase()))

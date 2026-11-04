@@ -12,9 +12,9 @@ import { XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, useEffect, useId, useRef, useState } from "react"
 import type { FilterState } from "~/domain/filter-state"
-import { compactCount } from "~/ui/filter-bar/labels"
 import { Knob, MENU, METER_TRANSITION, TAP } from "~/ui/filter-bar/motion"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
+import { HideNumber, hideText } from "~/ui/discover/prototype-preferences/hide-count"
 import { CountText, filterColor } from "./PanelFooter"
 import type { BarChip } from "./chips"
 
@@ -228,7 +228,7 @@ export function FilterMix({
 					<CountText counts={counts} searching={searching} />
 					{!phone && (
 						<span className="text-[11px] whitespace-nowrap text-gray-500">
-							{allHidden > 0 ? `${about}${compactCount(allHidden)} hidden` : ""}
+							{allHidden > 0 ? `${hideText(allHidden, about === "~")} hidden` : ""}
 						</span>
 					)}
 				</span>
@@ -253,8 +253,7 @@ export function FilterMix({
 							{phone && allHidden > 0 && (
 								<span className="font-normal text-gray-500">
 									{" "}
-									· {about}
-									{compactCount(allHidden)} hidden
+									· {hideText(allHidden, about === "~")} hidden
 								</span>
 							)}
 						</p>
@@ -302,7 +301,7 @@ export function FilterMix({
 														? "no effect"
 														: (
 															<>
-																hides ~<span className="font-semibold text-white">{compactCount(row.hides)}</span>
+																hides <HideNumber n={row.hides} approx />
 															</>
 														))}
 										</span>
