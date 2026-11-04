@@ -70,6 +70,38 @@ strikethrough, with no visible "Not". A switched-off value is gray and dimmed.
   answer on screen, so they follow every switch. With "epic" or Dark off, the same filter hides 33 or 30, because the
   words differ. Your own filters keep Discover's native rows and counts.
 
+### Round 7: search scope vs. preferences
+
+The words the search reads aren't preferences. With "pirates last 10 years no anime", "pirates" isn't a soft lean:
+it decides which titles the search finds at all. Switching it off brought back 21,672 titles that the old popout
+called "Preferred, none hidden". Now:
+
+- **Preferred** stays only for the read genre, theme, mood and style preferences. Within your search, titles that fit
+  rank higher, and none are hidden by them (the tooltip says "within your search").
+- **Search** is the label for the words the search reads as they are, such as “pirates” and “epic”. They get no
+  number of their own: removing a word changes what the search reads, so a per-word difference isn't a hide count.
+- **Outside your search** is one row and one slate meter segment for the whole search, before the words, with a
+  white number. It counts catalog titles that pass every hard filter in use (read and your own), on the answer's
+  snapshot, but aren't in the results:
+
+  `outside = |catalog with the same hard filters| − |results|`
+
+  The service returns it as `scope`. It can't overlap the hard-filter hides (those titles fail a filter) or the
+  results. A catalogue answer (no search words left) has no scope. The tooltip says this is a scope, not a judgment of
+  each title.
+
+The pirates numbers on snapshot `20261104T083439Z`:
+
+| Case | Numbers |
+| --- | --- |
+| "pirates" on | 32 shown + 86 (Released) + 6 (No anime) + 21,672 (outside) = "32 of 21,796" |
+| "pirates" off | 21,704 results = 32 + 21,672 |
+| Native check | goodwatch.app's guest results endpoint with `minYear=2017&maxYear=2026&anime=none` also counts 21,704 |
+
+With "pirates" off, the answer is a catalogue answer, so the hard filters count on the catalog (41,493 and 880) and
+the heading reads "21,704 of 107,676". If the scope count fails, the answer stays and only the row and segment are
+missing; a refresh during the count retries like any comparison.
+
 ### Round 6: the meter counts the read hard filters
 
 - **One meter:** the compact bar under the count, the popout bar and the "X of Y" heading all use the same inputs:
@@ -191,30 +223,32 @@ and the frozen study build (`20261103T051503Z`) is reported separately as `froze
   - `routes/discover.($type).tsx`: the prototype loader.
   - Job guards in `entry.server.tsx`, `root.tsx`, the availability, search and people index modules.
 
-## Verification (manual, November 4, 2026; build `20261104T051503Z`)
+## Verification (manual, November 4, 2026; build `20261104T051503Z`, snapshot `20261104T083439Z`)
 
-Playwright at 1440 × 1000 and iPhone 13 (DOM loaded plus the target state), no new test suites. Meter fractions are the
-measured segment widths of both bars; the small differences from exact fractions are the 1 px gaps between segments.
+Playwright at 1440 × 1000 and iPhone 13 (DOM loaded plus the target state), no new test suites.
 
 | Check | Result |
 | --- | --- |
-| "pirates last 10 years no anime" (your screenshot) | 32 matches. Released 2017–2026 "hides 86", Anime No anime "hides 6", “pirates” "Preferred". Heading "32 of 124 matches", compact "92 hidden". Both bars 0.255 / 0.686 / 0.048 (expected 0.258 / 0.694 / 0.048). |
-| "funny 90s dark scary epic" | "40 of 89 matches", "49 hidden", bars 0.447 / 0.548 (expected 0.449 / 0.551) |
-| Released off / on | "51 of 51", all gold, no hidden. On again: "40 of 89". |
-| Dark off | "32 of 62", "30 hidden", both bars updated |
-| Manual 1985–1999 | "37 of 37", all gold. Your own row keeps Discover's "set in search"; the read years show "set aside"; nothing counted twice. |
-| White numbers | Number `rgb(255,255,255)`; "hides" prefix muted gray-400 |
-| Phone | Popout and bars consistent, no horizontal overflow |
+| Pirates, "pirates" on | "32 of 21,796 matches", "22k hidden". Rows: Released 2017–2026 hides 86, Anime No anime hides 6, Outside your search hides 21,672, “pirates” Search. Both bars agree. |
+| "pirates" off, then reload | `off=pirates`; 21,704 shown; year and anime filters kept; "21,704 of 107,676"; reload keeps it |
+| "pirates" on again | Back to "32 of 21,796", the same rows, no stale values |
+| Released off / on | 99 shown, No anime hides 24, outside 63,098. On again: back to 32 / 86 / 6 / 21,672. |
+| "funny 90s dark scary epic" | "40 of 5,747": Released hides 49, Funny / Dark / Scary Preferred, outside 5,658, “epic” Search. "epic" off: 39, outside 5,659, no per-word number. Dark off: 32, Released hides 30, outside 5,666. |
+| "The Big Short" | Outside your search hides 64,062; “The Big Short” Search |
+| "historical action without warfare" | History hides 46, Action hides 11, outside 479, “without warfare” Search |
+| White numbers | `rgb(255,255,255)`; phone without overflow |
 
 - Page errors: none.
-- Type check: scoped `npx tsc` clean for the touched files.
-- Budget: one bounded local attempt (`… ./bench.sh budget --where local --runs 1 --label discover-read-meter`) gave
-  `Budget: FAIL` for every surface with no report. Docker's Chrome can't reach the host's loopback-only prototype
-  server. I changed no budget and didn't expose the server; this is no performance claim.
+- Type check: one scoped `npx tsc` after the last change, clean.
+- Budget: one bounded local attempt (`… --label discover-read-scope`) gave `Budget: FAIL` for every surface with no
+  report. Docker's Chrome can't reach the host's loopback-only prototype server. I changed no budget; this is no
+  performance claim.
 
 ## Limits
 
 - With every item switched off, the field still shows the words and the count still says "matches".
+- "Outside your search" is a catalog count against a search that ranks at most its retrieved candidates. It says
+  which titles the search doesn't bring in, not that each one fails to match the words.
 - A hard filter's hide count covers the candidate pool the same words retrieve without that filter. That pool is
   wider than the result list, but it's not the whole catalog, so the count isn't "titles in all of GoodWatch the
   filter excludes" (except for catalogue answers). Each count costs one more retrieval on the preview, which the

@@ -70,8 +70,8 @@ export function ItemMarker({ item }: { item: Item }) {
 export function itemTitle(item: Item) {
 	if (item.aside) return `Set aside: your ${item.aside} choice takes over, so these words aren't read. Remove that choice to read them again.`
 	if (!item.on) return "Switched off: the search doesn't read these words. Press to switch on."
-	if (item.words) return "Read as words: they shape the text and fingerprint ranking. Press to switch off."
-	if (item.soft) return "Read from your search. Titles that fit rank higher; others still show. Press to switch off."
+	if (item.words) return "Searched: these words choose which titles the search finds and how they rank. Press to switch off."
+	if (item.soft) return "Read from your search. Within the search, titles that fit rank higher; none are hidden by it. Press to switch off."
 	return "Read from your search. Only matching titles show. Press to switch off."
 }
 
@@ -79,7 +79,8 @@ export function itemTitle(item: Item) {
 export function itemNote(item: Item, hides?: number): ReactNode {
 	if (item.aside) return `set aside by your ${item.aside}`
 	if (!item.on) return "off"
-	if (item.soft || item.words) return "Preferred"
+	if (item.words) return "Search"
+	if (item.soft) return "Preferred"
 	if (hides === undefined) return "…"
 	if (hides === 0) return "hides none"
 	return (
@@ -89,7 +90,12 @@ export function itemNote(item: Item, hides?: number): ReactNode {
 	)
 }
 
-export const PREFERRED_TITLE = "Preferred: titles that fit rank higher; none are hidden."
+export const PREFERRED_TITLE = "Preferred: within your search, titles that fit rank higher; this hides none of them."
+export const SEARCH_TITLE =
+	"Search: these words choose which titles the search finds and how they rank. What they leave out is counted in Outside your search."
+export const SCOPE_TITLE =
+	"Titles that pass every filter here but aren't in this search's results: the words decide what the search finds. Counted on the whole catalog, so it isn't a judgment of each title."
+export const SCOPE_COLOR = "bg-slate-400"
 export const HIDES_TITLE =
 	"Titles this filter keeps out: the same words searched without it, counted with every other filter."
 
@@ -177,7 +183,10 @@ export function MatchesRead({
 	onToggle,
 	onAll,
 	hides,
+	outside,
 }: {
+	/** Titles outside this search's results that pass every filter (the answer's scope); null without one. */
+	outside: number | null
 	items: readonly Item[]
 	reading: readonly ReadingChip[]
 	onToggle: (item: Item) => void
@@ -191,7 +200,26 @@ export function MatchesRead({
 	const shown = all ? ordered : ordered.slice(0, SHOW_FIRST)
 	const noteOf = (item: Item) => itemNote(item, hides.get(item.phrase.toLowerCase()))
 	const titleOf = (item: Item) =>
-		item.on && !item.aside ? (item.soft || item.words ? PREFERRED_TITLE : HIDES_TITLE) : itemTitle(item)
+		item.on && !item.aside ? (item.words ? SEARCH_TITLE : item.soft ? PREFERRED_TITLE : HIDES_TITLE) : itemTitle(item)
+	// One row for the whole search's scope, before the words: never a number per word.
+	const scopeAt = (() => {
+		const i = shown.findIndex((item) => item.words || item.aside)
+		return i === -1 ? shown.length : i
+	})()
+	const scopeRow = outside !== null && outside > 0 && (
+		<li key="scope" className="flex h-9 items-center" title={SCOPE_TITLE}>
+			<span className="flex h-full min-w-0 flex-1 items-center gap-2.5 text-left">
+				<span className="grid w-2.5 shrink-0 place-items-center">
+					<span className={`h-2.5 w-2.5 rounded-full ${SCOPE_COLOR}`} aria-hidden />
+				</span>
+				<span className="min-w-0 flex-1 truncate text-gray-200">Outside your search</span>
+				<span className="shrink-0 text-xs tabular-nums text-gray-400">
+					hides <span className="font-semibold text-white">{outside.toLocaleString("en")}</span>
+				</span>
+				<span className="w-[42px]" aria-hidden />
+			</span>
+		</li>
+	)
 	const qualities = qualitiesOf(reading)
 	return (
 		<li className="mt-1">
@@ -200,7 +228,8 @@ export function MatchesRead({
 				<ClearRead items={items} onAll={onAll} className="-mr-2" />
 			</div>
 			<ul className="mt-1 flex flex-col">
-				{shown.map((item) => (
+				{shown.map((item, index) => [
+					index === scopeAt ? scopeRow : null,
 					<li key={item.phrase} className="flex h-9 items-center">
 						{item.aside ? (
 							<span className="flex h-full min-w-0 flex-1 items-center gap-2.5 pl-0 text-left" title={itemTitle(item)}>
@@ -236,8 +265,9 @@ export function MatchesRead({
 								</span>
 							</button>
 						)}
-					</li>
-				))}
+					</li>,
+				])}
+				{scopeAt === shown.length && scopeRow}
 			</ul>
 			{items.length > SHOW_FIRST && (
 				<button type="button" onClick={() => setAll(!all)} className="mt-0.5 cursor-pointer text-xs font-semibold text-amber-400 hover:text-amber-300">

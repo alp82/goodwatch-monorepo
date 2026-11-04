@@ -42,6 +42,7 @@ export type SearchResult = {
   identityRepairs: { identity: string; alias: number; preferred: number }[]
   transportAction: string; catalogue: boolean
   proposals: Proposal[]; readingChips: unknown[]
+  scope: { eligible: number; outside: number; universe: 'catalog' } | null
   hardHides: { phrase: string; params: [string, string][]; hides: number; universe: 'search' | 'catalog' }[]
 }
 export type Card = {
@@ -389,8 +390,21 @@ async function searchOnce(rt: Runtime, input: { query: string; existing?: string
       hardHides.push({ phrase, params: pairs, hides: Math.max(0, wide - narrow), universe: reading ? 'search' : 'catalog', ...(input.debug && pool !== 'catalog' ? { poolKeys: pool, without: without.toString() } : {}) })
     }
   }
+  // Display only: the search's own scope. Universe: the catalog titles passing every hard filter in use (read and your
+  // own), on this snapshot; outside = those not in the results. Disjoint from hardHides (those fail a filter) and
+  // from the results. A catalogue answer (no search words) has no scope: every eligible title is a result.
+  let scope: { eligible: number; outside: number; universe: 'catalog' } | null = null
+  if (reading && transportAction !== 'exact-baseline') {
+    try {
+      const eligible = await filtered(rt, 'catalog', new URLSearchParams(candidate.params), 'relevance'), inScope = new Set(eligible)
+      scope = { eligible: eligible.length, outside: eligible.length - candidate.relevance.keys.filter(key => inScope.has(key)).length, universe: 'catalog' }
+    } catch (error) {
+      if (error instanceof SnapshotChangedError) throw error
+      scope = null // A count that can't be made leaves the answer as it is.
+    }
+  }
   assertPinned(rt)
-  return { query, semanticQuery: view.semanticQuery, existing, branch, source: rt.source, baseline, v7: candidate, hardHides, policies: [baseline, candidate], prefs, retainedHard, recognized, negativeClauses, params: { baseline: baseline.params, v7: candidate.params }, identityRepairs: repairs, transportAction, catalogue: !reading,
+  return { query, semanticQuery: view.semanticQuery, existing, branch, source: rt.source, baseline, v7: candidate, hardHides, scope, policies: [baseline, candidate], prefs, retainedHard, recognized, negativeClauses, params: { baseline: baseline.params, v7: candidate.params }, identityRepairs: repairs, transportAction, catalogue: !reading,
     // Display only: every applied interpretation (with its phrase), and the reading as Discover's search shows it.
     proposals: view.proposals.filter((p: Proposal) => p.status === 'applied' || p.status === 'existing wins'), readingChips: cap ? rt.app.summarizeReading(text, cap.raw, foreign) : [],
     timing: { totalMs: performance.now() - start, readingMs, baselineMs, candidateMs: performance.now() - candidateStart, readingCacheHit: cap?.cacheHit ?? null, baselineRetrieval: baseRank ? { cacheHit: baseRank.cacheHit, actualMs: baseRank.elapsedMs } : null, broadRetrieval: broadRank ? { cacheHit: broadRank.cacheHit, actualMs: broadRank.elapsedMs } : null } }

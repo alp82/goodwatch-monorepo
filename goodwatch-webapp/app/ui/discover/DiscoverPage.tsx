@@ -78,7 +78,7 @@ import {
 	setOff,
 	useInterpretedFilters,
 } from "./prototype-preferences/interpretation"
-import { MatchesRead, readColor } from "./prototype-preferences/read-parts"
+import { MatchesRead, SCOPE_COLOR, readColor } from "./prototype-preferences/read-parts"
 import { ReadStrip } from "./prototype-preferences/ReadVariants"
 import { titleKey } from "~/utils/title-key"
 import { usePreferencePrototype } from "./prototype-preferences/usePreferencePrototype"
@@ -516,6 +516,9 @@ export function DiscoverPage({
 		if (!item.on || item.aside || item.soft || item.words || !hides) return []
 		return [{ group: `read:${item.phrase}`, label: `${item.field} ${item.label}`.trim(), color: readColor(item), hides }]
 	})
+	// The search's own scope: eligible titles the words don't bring in. One segment, whatever the number of words.
+	const outside = proto.answer?.scope?.outside ?? null
+	if (outside) readRows.push({ group: "read:scope", label: "Outside your search", color: SCOPE_COLOR, hides: outside })
 	const toggleRead = (item: (typeof readItems)[number]) => {
 		if (item.aside) return
 		setParams(
@@ -630,6 +633,7 @@ export function DiscoverPage({
 									onToggle={toggleRead}
 									onAll={allRead}
 									hides={hardHides}
+									outside={proto.answer?.scope?.outside ?? null}
 								/>
 							) : undefined
 						}

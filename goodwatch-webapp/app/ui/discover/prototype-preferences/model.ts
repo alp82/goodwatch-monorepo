@@ -39,6 +39,8 @@ export interface V7Answer {
 	/** Display only: every applied interpretation with its phrase, and the reading as Discover's search shows it. */
 	proposals?: Proposal[]
 	/** Display only: each hard filter read from the words, and how many titles it keeps out (see the README). */
+	/** Display only: catalog titles passing every hard filter in use, and how many of them aren't in the results. */
+	scope?: { eligible: number; outside: number; universe: "catalog" } | null
 	hardHides?: { phrase: string; params: [string, string][]; hides: number; universe: "search" | "catalog" }[]
 	readingChips?: import("~/server/combined-search/reading-retrieval.server").ReadingChip[]
 	timing: Record<string, unknown>
