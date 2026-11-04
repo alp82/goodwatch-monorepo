@@ -98,7 +98,7 @@ export function FilterMix({
 	 * titles pass every other filter, so they share no title with each other or with the rows above: the meter, the
 	 * hidden count and the "of" total add them as they are.
 	 */
-	readRows?: { group: string; label: string; color: string; hides: number }[]
+	readRows?: { group: string; label: string; color: string; hides: number; approx?: boolean }[]
 	/** PROTOTYPE - throwaway: no "Shown" row (the heading already says how many show). */
 	hideShown?: boolean
 	/** PROTOTYPE - throwaway: every part the search read, with its switch, listed after the filter rows. */
@@ -142,6 +142,8 @@ export function FilterMix({
 	// PROTOTYPE - throwaway: the read hard filters' hides join the native ones for everything shown here.
 	const readHidden = readRows.reduce((sum, r) => sum + Math.max(0, r.hides), 0)
 	const allHidden = hidden + readHidden
+	// A total that includes an estimated read count is itself about: "~".
+	const about = readRows.some((r) => r.approx && r.hides > 0) ? "~" : ""
 	const sole = new Map(
 		(counts?.recoveries ?? []).map((r) => [r.filter as string, r.titles]),
 	)
@@ -226,7 +228,7 @@ export function FilterMix({
 					<CountText counts={counts} searching={searching} />
 					{!phone && (
 						<span className="text-[11px] whitespace-nowrap text-gray-500">
-							{allHidden > 0 ? `${compactCount(allHidden)} hidden` : ""}
+							{allHidden > 0 ? `${about}${compactCount(allHidden)} hidden` : ""}
 						</span>
 					)}
 				</span>
@@ -245,12 +247,14 @@ export function FilterMix({
 					>
 						<p className="text-sm font-bold text-white">
 							{total.toLocaleString("en")} of{" "}
+							{about}
 							{(total + allHidden).toLocaleString("en")}{" "}
 							{searching ? "matches" : "titles"}
 							{phone && allHidden > 0 && (
 								<span className="font-normal text-gray-500">
 									{" "}
-									· {compactCount(allHidden)} hidden
+									· {about}
+									{compactCount(allHidden)} hidden
 								</span>
 							)}
 						</p>

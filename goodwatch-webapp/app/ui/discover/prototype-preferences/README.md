@@ -70,6 +70,26 @@ strikethrough, with no visible "Not". A switched-off value is gray and dimmed.
   answer on screen, so they follow every switch. With "epic" or Dark off, the same filter hides 33 or 30, because the
   words differ. Your own filters keep Discover's native rows and counts.
 
+### Round 9: estimates marked, rows sorted by count
+
+The owner switched No anime off and the list went from 32 to 33, while the row said "hides 6". That count is an
+estimate. The prototype now marks estimates from their provenance in the answer, not from the numbers:
+
+| Count | Provenance | Shown as |
+| --- | --- | --- |
+| Read hard filter, search answer | `universe: "search"`: counted in the pool the same words find without the filter, so switching it changes what is found | **~** (white, like the number) |
+| Read hard filter, catalogue answer | `universe: "catalog"`: an exact count on the catalog with the same filters | no ~ |
+| The search's own count (on its query row) | catalog with the same hard filters minus the actual results | no ~ |
+
+A total that includes an estimate gets "~" too: "32 of ~21,796 matches", "~22k hidden". The shown count (32) never
+does. Your own filters keep Discover's native "hides ~N" rows. The estimate's tooltip says that switching the filter
+also changes what the search finds.
+
+**Sort:** Matches rows with a count come first, highest first, with ties in their old order. Rows without a number
+(Preferred, off, set aside, word units without the search's count) follow in their old order. The row that carries
+the search's count is chosen before sorting, so sorting never moves the count. The meter's read segments follow the
+same order. Pirates: “pirates” 21,672, Released ~86, No anime ~6.
+
 ### Round 8: the search's count sits on its words
 
 The owner rejected the separate "Outside your search" row. The search's scope count (catalog titles passing every
@@ -250,14 +270,15 @@ Playwright at 1440 × 1000 and iPhone 13, no new test suites.
 
 | Check | Result |
 | --- | --- |
-| Pirates, "pirates" on | Rows: Released 2017–2026 hides 86, Anime No anime hides 6, “pirates” hides 21,672. 3 switches. No "Outside your search" or "Search" copy. "32 of 21,796", "22k hidden". Both bars 0.019 / 0.019 / 0.019 / 0.928–0.935 (the 2% minimum width for small segments). |
-| "pirates" off, then reload | `off=pirates`; 21,704 shown; year and anime kept; “pirates” off; reload keeps it |
-| "pirates" on again | Back to 86 / 6 / 21,672, "32 of 21,796" |
-| "funny epic dark pirates" | "134 of 65,311". Funny and Dark Preferred. “epic” hides 65,177; “pirates” no number, with a tooltip pointing to “epic”. 4 switches, one scope segment. With “epic” off: 1,889 shown, “pirates” hides 63,423. |
+| Pirates | "32 of ~21,796 matches", "~22k hidden". Rows in order: “pirates” hides 21,672 · Released 2017–2026 hides ~86 · Anime No anime hides ~6. "~6" is white (`rgb(255,255,255)`). Bar segments in the same order. |
+| No anime off / on | 33 shown (not 38): "33 of ~22,688", Released ~104, “pirates” 22,551, No anime off. On again: back to 32 / 21,672 / ~86 / ~6. |
+| "pirates" off / on | Catalogue answer: "21,704 of 107,692", Released hides 41,501, No anime hides 880, no ~ anywhere. On again: restored. |
+| "funny 90s dark scary epic" | "40 of ~5,747", “epic” hides 5,658 · Released hides ~49 · Funny / Dark / Scary Preferred (after the counted rows) |
+| "funny epic dark pirates" | "134 of 65,311", no ~ (no estimate in the total). “epic” hides 65,177, one scope segment, “pirates” without a number. |
 | Phone | No horizontal overflow; no page errors |
 
 - Type check: one scoped `npx tsc` after the last change, clean.
-- Budget: one bounded local attempt (`… --label discover-read-scope-row`) gave `Budget: FAIL` for every surface with
+- Budget: one bounded local attempt (`… --label discover-read-estimates`) gave `Budget: FAIL` for every surface with
   no report. Docker's Chrome can't reach the host's loopback-only prototype server. I changed no budget.
 
 ## Limits

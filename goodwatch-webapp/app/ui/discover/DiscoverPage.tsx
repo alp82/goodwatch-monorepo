@@ -509,19 +509,24 @@ export function DiscoverPage({
 	const readChipKeys = new Set(readItems.filter((item) => item.on).flatMap((item) => item.chipKeys))
 	const keepChip = (chip: { key: string }) => !readChipKeys.has(chip.key)
 	// Hard filters' hide counts come with the answer on screen (the words read now), so they follow every switch.
-	const hardHides = new Map((proto.answer?.hardHides ?? []).map((h) => [h.phrase.toLowerCase(), h.hides]))
+	// A search-pool count is an estimate (switching the filter changes what the words find); a catalog count is exact.
+	const hardHides = new Map(
+		(proto.answer?.hardHides ?? []).map((h) => [h.phrase.toLowerCase(), { n: h.hides, approx: h.universe === "search" }]),
+	)
 	// The same read filters for the Matches meter: only hard filters that are on, with a count from the answer on screen.
 	const readRows = readItems.flatMap((item) => {
-		const hides = hardHides.get(item.phrase.toLowerCase())
-		if (!item.on || item.aside || item.soft || item.words || !hides) return []
-		return [{ group: `read:${item.phrase}`, label: `${item.field} ${item.label}`.trim(), color: readColor(item), hides }]
+		const count = hardHides.get(item.phrase.toLowerCase())
+		if (!item.on || item.aside || item.soft || item.words || !count?.n) return []
+		return [{ group: `read:${item.phrase}`, label: `${item.field} ${item.label}`.trim(), color: readColor(item), hides: count.n, approx: count.approx }]
 	})
 	// The search's own scope: eligible titles the words don't bring in. One segment, whatever the number of words.
 	const outside = proto.answer?.scope?.outside ?? null
 	// Its meter segment carries the name of the row that shows the count.
 	const owner = outside ? scopeOwner(readItems) : null
 	if (outside && owner)
-		readRows.push({ group: "read:scope", label: readItems.find((i) => i.phrase === owner)?.label ?? owner, color: SCOPE_COLOR, hides: outside })
+		readRows.push({ group: "read:scope", label: readItems.find((i) => i.phrase === owner)?.label ?? owner, color: SCOPE_COLOR, hides: outside, approx: false })
+	// The meter's read segments in the same order as the rows: highest count first.
+	readRows.sort((a, b) => b.hides - a.hides)
 	const toggleRead = (item: (typeof readItems)[number]) => {
 		if (item.aside) return
 		setParams(

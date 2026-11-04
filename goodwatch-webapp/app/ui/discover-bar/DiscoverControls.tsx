@@ -164,7 +164,7 @@ export interface DiscoverControlsProps {
 	prototypeMatchesRead?: ReactNode
 	prototypeKeepChip?: (chip: BarChip) => boolean
 	prototypeHideShown?: boolean
-	prototypeReadRows?: { group: string; label: string; color: string; hides: number }[]
+	prototypeReadRows?: { group: string; label: string; color: string; hides: number; approx?: boolean }[]
 	/** PROTOTYPE - throwaway: replaces the search field; gets Ready to watch for its desktop slot. */
 	prototypeField?: (ready: ReactNode) => ReactNode
 }

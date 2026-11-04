@@ -76,7 +76,14 @@ export function itemTitle(item: Item) {
 }
 
 /** The Matches note: a hard filter's real hide count, one short word for everything that only ranks. */
-export function itemNote(item: Item, hides?: number): ReactNode {
+/** A hide count and whether it's an estimate (a search-pool count: switching the filter changes what is found). */
+export interface HideCount {
+	n: number
+	approx: boolean
+}
+
+export function itemNote(item: Item, count?: HideCount): ReactNode {
+	const hides = count?.n
 	if (item.aside) return `set aside by your ${item.aside}`
 	if (!item.on) return "off"
 	if (item.words) return ""
@@ -85,7 +92,11 @@ export function itemNote(item: Item, hides?: number): ReactNode {
 	if (hides === 0) return "hides none"
 	return (
 		<>
-			hides <span className="font-semibold text-white">{hides.toLocaleString("en")}</span>
+			hides{" "}
+			<span className="font-semibold text-white">
+				{count?.approx ? "~" : ""}
+				{hides.toLocaleString("en")}
+			</span>
 		</>
 	)
 }
@@ -102,6 +113,8 @@ export function scopeOwner(items: readonly Item[]): string | null {
 	return (live.find((item) => item.words) ?? live.find((item) => item.soft))?.phrase ?? null
 }
 export const SCOPE_COLOR = "bg-slate-400"
+export const ESTIMATE_TITLE =
+	"About this many: titles this filter alone keeps out of what your words find without it. Switching it also changes what the search finds, so the list can change by a different number."
 export const HIDES_TITLE =
 	"Titles this filter keeps out: the same words searched without it, counted with every other filter."
 
@@ -198,11 +211,32 @@ export function MatchesRead({
 	onToggle: (item: Item) => void
 	onAll: (off: boolean) => void
 	/** Hard filters' hide counts by phrase (lowercase), from the answer that is on screen. */
-	hides: ReadonlyMap<string, number>
+	hides: ReadonlyMap<string, HideCount>
 }) {
 	const [all, setAll] = useState(false)
 	if (!items.length) return null
+	// The search's count belongs to one row, chosen before sorting, so sorting never moves it to another row.
+	const owner = outside !== null && outside > 0 ? scopeOwner(items) : null
+	const ownerLabel = owner ? (items.find((item) => item.phrase === owner)?.label ?? owner) : null
+	// Rows with a count first, highest first (stable); the rest keep their order after them.
+	const countOf = (item: Item): number | undefined =>
+		item.phrase === owner && outside
+			? outside
+			: item.on && !item.aside && !item.soft && !item.words
+				? hides.get(item.phrase.toLowerCase())?.n
+				: undefined
 	const ordered = matchesOrder(items)
+		.map((item, index) => ({ item, index, n: countOf(item) }))
+		.sort((a, b) =>
+			a.n !== undefined && b.n !== undefined
+				? b.n - a.n || a.index - b.index
+				: a.n !== undefined
+					? -1
+					: b.n !== undefined
+						? 1
+						: a.index - b.index,
+		)
+		.map(({ item }) => item)
 	const shown = all ? ordered : ordered.slice(0, SHOW_FIRST)
 	const noteOf = (item: Item) =>
 		item.phrase === owner && outside ? (
@@ -222,12 +256,12 @@ export function MatchesRead({
 						: itemTitle(item)
 					: item.soft
 						? PREFERRED_TITLE
-						: HIDES_TITLE
+						: hides.get(item.phrase.toLowerCase())?.approx
+							? ESTIMATE_TITLE
+							: HIDES_TITLE
 				: itemTitle(item)
 	// The search's scope (titles it doesn't bring in) is one count for the whole search: it sits on one row, the first
 	// plain word switched on, else the first read preference switched on. Other words keep their switch, no number.
-	const owner = outside !== null && outside > 0 ? scopeOwner(items) : null
-	const ownerLabel = owner ? (items.find((item) => item.phrase === owner)?.label ?? owner) : null
 	const qualities = qualitiesOf(reading)
 	return (
 		<li className="mt-1">
