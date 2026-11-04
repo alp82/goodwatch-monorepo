@@ -48,6 +48,9 @@ import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 import { heroHints } from "~/server/hero-hints.server"
 import { heroBackdropFiles } from "~/ui/details/hero/Trailer"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
+import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
+import { similarShelfWithin } from "~/ui/details/more-like-this/similar-shelf.server"
+import { tropesTeaserState } from "~/ui/details/tropes/title-tropes.server"
 
 export { pageHeaders as headers } from "~/utils/headers"
 // The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts). A tap
@@ -73,6 +76,11 @@ export type LoaderData = {
 	breadcrumb: Crumb[]
 	/** Eight titles of the breadcrumb's genre (genre-row.server.ts); missing without one. */
 	genreRow?: GenreRow
+	/**
+	 * More like this's Similar shelf from the related map's lookup: none for a title without related titles, missing
+	 * when the lookup was late (the shelf then asks in the browser).
+	 */
+	similar?: ShelfTitle[]
 	/** The brands with a page of new arrivals in the country, for where to watch's "More new on" (#489). */
 	newPages?: NewPagesHere
 }
@@ -107,6 +115,10 @@ const titleLoader = async ({
 			getDetailsForMovie({ movieId, country, language }, { canonical: canonicalContent })),
 	)
 	const relatedWork = relatedMapLookup({ type: "movie", id: Number(movieId), budgetMs, language: canonicalContent ? undefined : language })
+	// More like this's Similar shelf is the related map's nearest titles, with their cards.
+	const similarWork = similarShelfWithin(relatedWork, "movie", Number(movieId), budgetMs, canonicalContent ? undefined : language)
+	// The Tropes section's two cards, within the same budget.
+	const tropesWork = tropesTeaserState("movie", Number(movieId), budgetMs)
 	const parts = Promise.all([
 		details,
 		relatedWork,
@@ -166,7 +178,8 @@ const titleLoader = async ({
 		media.details.title,
 		canonicalContent ? undefined : language,
 	)
-	const dehydratedState = mergeDehydratedStates(extrasState)
+	const [similar, tropes] = await Promise.all([similarWork, tropesWork])
+	const dehydratedState = mergeDehydratedStates(extrasState, tropes.state)
 
 	const [sides, genre] = await Promise.all([
 		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),
@@ -190,12 +203,15 @@ const titleLoader = async ({
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
 		...(genre && genre !== "late" && { genreRow: genre }),
+		...(similar && { similar }),
 		...(newPages && { newPages }),
 	}
 	// Without the related titles or an extra (a lookup ran out of its budget or failed) the page is incomplete:
 	// no cache may keep it. The page cache and a cache in front follow this header.
 	const complete =
 		related.complete &&
+		similar !== undefined &&
+		tropes.complete &&
 		genre !== "late" &&
 		titleExtrasEmbedded(extrasState, {
 			genres: media.details.genres,
@@ -209,7 +225,7 @@ const titleLoader = async ({
 export const loader: LoaderFunction = withRequestTiming(titleLoader)
 
 export default function DetailsMovie() {
-	const { media, params, countryIsFallback, talkedAboutNow, sides, breadcrumb, genreRow, newPages } = useLoaderData<LoaderData>()
+	const { media, params, countryIsFallback, talkedAboutNow, sides, breadcrumb, genreRow, similar, newPages } = useLoaderData<LoaderData>()
 	const { country } = params
 
 	// return (
@@ -243,7 +259,7 @@ export default function DetailsMovie() {
 		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 
-	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} newPages={newPages} />
+	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} similar={similar} newPages={newPages} />
 }
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).

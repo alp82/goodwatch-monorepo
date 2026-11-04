@@ -2,11 +2,10 @@
 // out yet (see below-fold.tsx). An estimate only has to be close: a section gets its real height before it scrolls
 // into view, and the browser remembers it from then on.
 //
-// Measured on phones (390 px wide) and desktops (1,440 px wide) on the saved titles. Keep them in step with the
-// sections' markup (title-sections.tsx).
+// Measured on phones (390 px wide) and desktops (1,440 px wide) on Dune: Part Two, Severance, Breaking Bad and Past
+// Lives. Keep them in step with the sections' markup (title-sections.tsx).
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import type { TitleQuestion } from "~/ui/details/titleQuestions"
 
 type Media = MovieResult | ShowResult
 
@@ -51,10 +50,7 @@ function episodeGridHeight(grid: EpisodeGrid): ReservedHeight {
 function bodyHeight(
 	id: string,
 	media: Media,
-	{
-		episodeGrid,
-		questions,
-	}: { episodeGrid: EpisodeGrid | null; questions: TitleQuestion[] },
+	{ episodeGrid }: { episodeGrid: EpisodeGrid | null },
 ): ReservedHeight {
 	switch (id) {
 		case "watch": {
@@ -67,36 +63,21 @@ function bodyHeight(
 			return same(70 + Math.min(5, Math.max(1, services)) * 64 + 60)
 		}
 		case "fingerprint":
-			// The drawing, the dials, and the results; the same height on every saved title (1,128-1,184 px on a phone).
-			return { phone: 1058, desktop: 691 }
+			// The effect lines and the print (beside them from md up); the same on every saved title.
+			return { phone: 548, desktop: 387 }
+		case "at-a-glance":
+			// Four closed rows: Facts, Content, Starring, Made by.
+			return { phone: 500, desktop: 282 }
+		case "tropes":
+			// Two trope cards and the way to every trope.
+			return { phone: 420, desktop: 242 }
 		case "episodes":
 			return episodeGrid ? episodeGridHeight(episodeGrid) : same(0)
-		case "cast": {
-			// Search and tiers, then 24 people: 12 rows of two on a phone, 8 rows of three on a desktop.
-			const rows = (perRow: number) =>
-				Math.ceil(Math.min(24, media.cast.length) / perRow)
-			return { phone: 200 + rows(2) * 52, desktop: 160 + rows(3) * 52 }
+		case "more-like-this": {
+			// A row of posters a shelf (Feels the same, Most like it, the people, the genre), a movie's series first.
+			const series = media.mediaType === "movie" && media.movie_series ? 300 : 0
+			return { phone: 4 * 330 + series, desktop: 4 * 345 + series }
 		}
-		case "crew":
-			return { phone: 520, desktop: 320 }
-		case "related": {
-			// The related map and the genre row, and a movie's series as a list.
-			const films =
-				media.mediaType === "movie"
-					? (media.movie_series?.movie_ids?.length ?? 0)
-					: 0
-			const series = films ? 80 + films * 81 : 0
-			return { phone: 974 + series, desktop: 858 + series }
-		}
-		case "facts":
-			return { phone: 330, desktop: 300 }
-		case "tropes":
-			return { phone: 280, desktop: 115 }
-		case "faq":
-			return {
-				phone: 60 + questions.length * 290,
-				desktop: 60 + questions.length * 160,
-			}
 	}
 	return same(0)
 }
@@ -105,7 +86,7 @@ function bodyHeight(
 export function sectionHeight(
 	id: string,
 	media: Media,
-	data: { episodeGrid: EpisodeGrid | null; questions: TitleQuestion[] },
+	data: { episodeGrid: EpisodeGrid | null },
 ): ReservedHeight {
 	return add(FRAME, bodyHeight(id, media, data))
 }

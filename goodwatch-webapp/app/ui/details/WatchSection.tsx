@@ -21,6 +21,7 @@ import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { TmdbImage } from "~/ui/TmdbImage"
+import { SegmentedTabs } from "~/ui/details/SegmentedTabs"
 import { UNDER_HEADERS } from "~/ui/details/header-height"
 import { LogoStack } from "~/ui/details/hero/LogoStack"
 import {
@@ -183,44 +184,21 @@ export function WatchSection({
 			{arrival.rules}
 			{/* What kind of offer, and where; one row on a phone too. */}
 			<div className="flex flex-wrap items-center gap-x-1.5 gap-y-3 sm:gap-x-3">
-				<div
-					role="tablist"
-					aria-label="Offer type"
-					className="flex rounded-lg bg-white/[0.05] p-0.5 ring-1 ring-white/10"
-				>
-					{OFFER_TABS.map((t) => {
-						const count = byTab[t].length
-						const on = t === type
-						return (
-							<button
-								key={t}
-								type="button"
-								role="tab"
-								aria-selected={on}
-								aria-label={`${TAB_LABEL[t]} ${plural(count, "service", "services")}`}
-								data-replay-tap={`offer:${t}`}
-								onClick={() => {
-									setType(t)
-									setAll(false)
-								}}
-								className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-colors duration-150 sm:px-3 ${
-									on
-										? "bg-white/[0.12] font-semibold text-white"
-										: count
-											? "text-gray-300 hover:text-white"
-											: "text-gray-500 hover:text-gray-300"
-								}`}
-							>
-								{TAB_LABEL[t]}{" "}
-								<span
-									className={`text-xs tabular-nums ${on ? "text-amber-300" : "text-gray-500"}`}
-								>
-									{count}
-								</span>
-							</button>
-						)
-					})}
-				</div>
+				<SegmentedTabs
+					label="Offer type"
+					value={type}
+					onChange={(t) => {
+						setType(t as typeof type)
+						setAll(false)
+					}}
+					tabs={OFFER_TABS.map((t) => ({
+						key: t,
+						label: TAB_LABEL[t],
+						count: byTab[t].length,
+						ariaLabel: `${TAB_LABEL[t]} ${plural(byTab[t].length, "service", "services")}`,
+						replayTap: `offer:${t}`,
+					}))}
+				/>
 				<button
 					type="button"
 					data-country

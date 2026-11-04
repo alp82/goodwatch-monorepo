@@ -58,6 +58,17 @@ function peopleUrl(
 export const episodesWords = (n: number | null | undefined) =>
 	n ? `${n.toLocaleString("en-US")} episode${n === 1 ? "" : "s"}` : null
 
+/** The query cache's key of one people list; a loader that puts a list into the document uses it too. */
+export const peopleQueryKey = ({
+	mediaType,
+	tmdbId,
+	kind,
+	q = "",
+	group = "",
+	pageSize = 60,
+}: Omit<PeopleQuery, "enabled">) =>
+	["title-people", mediaType, tmdbId, kind, q, group, pageSize] as const
+
 export function usePeople(query: PeopleQuery) {
 	const {
 		mediaType,
@@ -70,7 +81,7 @@ export function usePeople(query: PeopleQuery) {
 	const typed = (query.q ?? "").trim()
 	const q = useDebounced(typed, 220)
 	const result = useInfiniteQuery({
-		queryKey: ["title-people", mediaType, tmdbId, kind, q, group, pageSize],
+		queryKey: peopleQueryKey({ mediaType, tmdbId, kind, q, group, pageSize }),
 		queryFn: async ({ pageParam, signal }) => {
 			const r = await fetch(
 				peopleUrl({ mediaType, tmdbId, kind, q, group }, pageParam, pageSize),

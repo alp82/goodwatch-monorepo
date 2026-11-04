@@ -6,12 +6,12 @@
 // their row is ringed. Two columns on a phone, three on a desktop.
 import { useEffect, useRef, useState } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { useSectionNear } from "~/ui/details/below-fold"
 import {
 	RINGED,
 	useFindRequests,
 	useRingPerson,
 } from "~/ui/details/find/find-bus"
-import { useSectionNear } from "~/ui/details/below-fold"
 import { FilterChips, MoreRow, SearchField, fmt } from "~/ui/details/page-ui"
 import { PersonRow } from "~/ui/details/people/PersonRow"
 import { type PeopleRow, usePeople } from "~/ui/details/people/usePeople"
@@ -21,7 +21,7 @@ type Media = MovieResult | ShowResult
 /** Rows shown first and added by every "Show more". */
 const STEP = 24
 /** Rows per request: two steps, so the next step is already in when it is pressed. */
-const FETCH = 48
+export const CAST_PAGE_SIZE = 48
 
 /** `onCrew`: goes to the Crew section, offered when a search finds no one in the cast. */
 export function CastSection({
@@ -39,7 +39,7 @@ export function CastSection({
 		kind: "cast",
 		q,
 		group,
-		pageSize: FETCH,
+		pageSize: CAST_PAGE_SIZE,
 		// The page's own first people fill the rows until then.
 		enabled: near,
 	})

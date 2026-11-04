@@ -63,6 +63,9 @@ import { heroHints } from "~/server/hero-hints.server"
 import { heroBackdropFiles } from "~/ui/details/hero/Trailer"
 import { mergeDehydratedStates } from "~/utils/title-extras"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
+import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
+import { similarShelfWithin } from "~/ui/details/more-like-this/similar-shelf.server"
+import { tropesTeaserState } from "~/ui/details/tropes/title-tropes.server"
 import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
 import { getEpisodeLayout } from "~/server/episode-layout.server"
 
@@ -93,6 +96,11 @@ type LoaderData = {
 	breadcrumb: Crumb[]
 	/** Eight titles of the breadcrumb's genre (genre-row.server.ts); missing without one. */
 	genreRow?: GenreRow
+	/**
+	 * More like this's Similar shelf from the related map's lookup: none for a title without related titles, missing
+	 * when the lookup was late (the shelf then asks in the browser).
+	 */
+	similar?: ShelfTitle[]
 	/** The brands with a page of new arrivals in the country, for where to watch's "More new on" (#489). */
 	newPages?: NewPagesHere
 }
@@ -137,7 +145,17 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		id: Number(showId),
 		budgetMs,
 		language: canonicalContent ? undefined : language,
-	})
+	})	// More like this's Similar shelf is the related map's nearest titles, with their cards.
+	const similarWork = similarShelfWithin(
+		relatedWork,
+		"show",
+		Number(showId),
+		budgetMs,
+		canonicalContent ? undefined : language,
+	)
+	// The Tropes section's two cards, within the same budget.
+	const tropesWork = tropesTeaserState("show", Number(showId), budgetMs)
+
 	const parts = Promise.all([
 		details,
 		// Bound the whole grid read, including localized labels. A failed or late read hides the grid and prevents
@@ -242,7 +260,8 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		media.details.title,
 		canonicalContent ? undefined : language,
 	)
-	const dehydratedState = mergeDehydratedStates(extrasState)
+	const [similar, tropes] = await Promise.all([similarWork, tropesWork])
+	const dehydratedState = mergeDehydratedStates(extrasState, tropes.state)
 
 	const [sides, genre] = await Promise.all([
 		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),
@@ -272,6 +291,7 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
 		...(genre && genre !== "late" && { genreRow: genre }),
+		...(similar && { similar }),
 		...(newPages && { newPages }),
 	}
 	// A failed grid read or missing related titles or a missing extra makes the page incomplete.
@@ -279,6 +299,8 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	const complete =
 		!episodeGridFailed &&
 		related.complete &&
+		similar !== undefined &&
+		tropes.complete &&
 		genre !== "late" &&
 		titleExtrasEmbedded(extrasState, { genres: media.details.genres })
 	return complete ? data : json(data, { headers: INCOMPLETE_PAGE_HEADERS })
@@ -297,6 +319,7 @@ export default function DetailsTV() {
 		sides,
 		breadcrumb,
 		genreRow,
+		similar,
 		newPages,
 	} = useLoaderData<LoaderData>()
 	const { country } = params
@@ -351,6 +374,7 @@ export default function DetailsTV() {
 			sides={sides}
 			breadcrumb={breadcrumb}
 			genreRow={genreRow}
+			similar={similar}
 			newPages={newPages}
 		/>
 	)

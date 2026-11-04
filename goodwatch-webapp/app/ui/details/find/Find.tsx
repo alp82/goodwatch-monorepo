@@ -8,7 +8,13 @@ import {
 	UserIcon,
 	XMarkIcon,
 } from "@heroicons/react/24/outline"
-import { type ComponentType, Fragment, type RefObject } from "react"
+import {
+	type ComponentType,
+	Fragment,
+	type ReactNode,
+	type RefObject,
+	useEffect,
+} from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
 import {
@@ -16,12 +22,14 @@ import {
 	type FindHit,
 	findIn,
 } from "~/ui/details/find/find-index"
+import { type Span, contextLine, matchSpans } from "~/ui/details/find/snippet"
 import { CAPTION, Kbd, fmt, initials } from "~/ui/details/page-ui"
 import {
 	type PeopleRow,
 	episodesWords,
 	usePeople,
 } from "~/ui/details/people/usePeople"
+import { MARK, ensureMarkCss } from "./mark-style"
 
 type Media = MovieResult | ShowResult
 
@@ -37,6 +45,12 @@ export interface FindItem {
 	/** A person's photo path; `null` shows initials; undefined shows the icon. */
 	photo?: string | null
 	pick: () => void
+	/** Groups with the same heading stay apart by this (a section and its sub-page). */
+	groupKey?: string
+	/** A muted word after the group's heading ("here": the sub-page find is on). */
+	groupNote?: string
+	/** Long text it was found by (a trope's write-up): the second line shows it around the match. */
+	body?: string
 }
 
 const TIER: Record<string, string> = {
@@ -94,6 +108,7 @@ export function useFindItems({
 			icon: section?.icon ?? MagnifyingGlassIcon,
 			title: hit.entry.title,
 			context: hit.entry.context,
+			body: hit.entry.body,
 			at: hit.at,
 			pick: () => onHit(hit),
 		}
@@ -166,7 +181,10 @@ export function FindField({
 	active,
 	onActive,
 	listId,
+	onFocus,
 }: {
+	/** The field was focused (find loads the sub-pages' index then). */
+	onFocus?: () => void
 	inputRef: RefObject<HTMLInputElement>
 	query: string
 	onQuery: (q: string) => void
@@ -186,6 +204,7 @@ export function FindField({
 				ref={inputRef}
 				type="search"
 				value={query}
+				onFocus={onFocus}
 				onChange={(e) => {
 					onQuery(e.target.value)
 					onActive(0)
@@ -234,14 +253,31 @@ export function FindField({
 	)
 }
 
-function Marked({ text, at }: { text: string; at: [number, number] | null }) {
-	if (!at) return <>{text}</>
+/** The matched words, marked as the page marks them (mark-style.ts). */
+function Marked({ text, spans }: { text: string; spans: Span[] }) {
+	if (!spans.length) return <>{text}</>
+	const out: ReactNode[] = []
+	let at = 0
+	for (const [a, b] of spans) {
+		if (a > at) out.push(text.slice(at, a))
+		out.push(
+			<mark key={a} className={MARK}>
+				{text.slice(a, b)}
+			</mark>,
+		)
+		at = b
+	}
+	out.push(text.slice(at))
+	return <>{out}</>
+}
+
+/** The second line around its first match (its context, else the text it was found by). */
+function ContextLine({ item, query }: { item: FindItem; query: string }) {
+	const line = contextLine(item.context, item.body, query)
 	return (
-		<>
-			{text.slice(0, at[0])}
-			<span className="text-amber-300">{text.slice(at[0], at[1])}</span>
-			{text.slice(at[1])}
-		</>
+		<span className="block truncate text-xs text-gray-500">
+			<Marked text={line.text} spans={line.spans} />
+		</span>
 	)
 }
 
@@ -265,6 +301,8 @@ export function FindResults({
 	example: string
 	onClear: () => void
 }) {
+	// The marks' stylesheet (the list's marks look like the page's).
+	useEffect(ensureMarkCss, [])
 	if (!items.length)
 		return (
 			<div id={listId} className="px-2.5 py-3 text-sm text-gray-400">
@@ -296,13 +334,22 @@ export function FindResults({
 		// biome-ignore lint/a11y/useFocusableInteractive: the field holds the focus
 		<ul id={listId} role="listbox" aria-label="Matches">
 			{items.map((item, i) => {
-				const first = i === 0 || items[i - 1].group !== item.group
+				const first =
+					i === 0 ||
+					(items[i - 1].groupKey ?? items[i - 1].group) !==
+						(item.groupKey ?? item.group)
 				const Icon = item.icon
 				return (
 					<Fragment key={item.key}>
 						{first && item.group && (
 							<li className={`${CAPTION} px-2.5 pb-1 ${i ? "pt-3" : "pt-1"}`}>
 								{item.group}
+								{item.groupNote && (
+									<span className="normal-case tracking-normal text-gray-600">
+										{" "}
+										· {item.groupNote}
+									</span>
+								)}
 								{busy && (item.group === "Cast" || item.group === "Crew") && (
 									<span className="normal-case tracking-normal text-gray-600">
 										{" "}
@@ -345,13 +392,12 @@ export function FindResults({
 							)}
 							<span className="min-w-0 flex-1">
 								<span className="block truncate text-sm font-medium text-gray-100">
-									<Marked text={item.title} at={item.at} />
+									<Marked
+										text={item.title}
+										spans={matchSpans(item.title, query)}
+									/>
 								</span>
-								{item.context && (
-									<span className="block truncate text-xs text-gray-500">
-										{item.context}
-									</span>
-								)}
+								{item.context && <ContextLine item={item} query={query} />}
 							</span>
 						</li>
 					</Fragment>

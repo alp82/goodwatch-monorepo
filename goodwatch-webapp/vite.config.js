@@ -236,11 +236,11 @@ const FEATURE_CHUNKS = [
 	],
 ]
 
-// Rule 3a: the title page's small modules that its lazy parts share too (the reading line, the video list, the find
-// bus, the people query, the service links) stay with the title page's own code. Rule 3 would put them into every
-// page's shell.
+// Rule 3a: the title page's small modules that its lazy parts and its sub-pages share too (the reading line, the video
+// list, the find bus and marks, the people query, the service links, the rail's stores, the sub-pages' paths, the
+// tropes' data) stay with the title page's own code. Rule 3 would put them into every page's shell.
 const TITLE_PAGE_MODULE =
-	/\/app\/ui\/details\/(ProgressIndex|opener\/(Bars|stage-geometry|videos)|find\/(find-bus|highlight)|people\/usePeople|streaming)\.tsx?$/
+	/\/app\/ui\/details\/(ProgressIndex|SegmentedTabs|opener\/(Bars|stage-geometry|videos)|find\/(find-bus|highlight|mark-style)|fingerprint-section\/styles|people\/usePeople|rail\/(rail-model|spy)|streaming|sub-page\/paths|tropes\/tropes-data)\.tsx?$/
 
 // Rule 5: small modules that several late parts share and that must not ride with every page. Rule 3 would put them
 // into the shell, being small and shared. The words of "newly available" (#456) are needed by the hub, home's doors,

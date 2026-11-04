@@ -1,12 +1,15 @@
 // The movie and show page, one page for both:
-// - The opener: the backdrop band with the trailer card (every video plays on its stage), the poster, title, meta and
-//   scores, then the Summary section (the synopsis, the essence tags, who it's for and who should skip it).
+// - The opener: the backdrop band with the trailer card (every video plays on its stage), the poster, title, meta
+//   (a show's seasons and episodes link to its Episodes, its status beside the age box) and scores, then the Summary
+//   section (the synopsis, the essence tags, who it's for and who should skip it).
 // - On a desktop, a right rail that sticks: the "You" block (Seen and score, Want to See, Not interested, where to
-//   watch), find in title, and "On this page" with a line per section that fills as it's read (every section on
-//   screen is highlighted). On a phone, a bar at the top that sticks, with the index and find in its own flow.
+//   watch), find in this title (the page and its sub-pages), and "On this page" with a line per section that fills as
+//   it's read (every section on screen is highlighted, and a section with a sub-page shows the way in). On a phone, a
+//   bar at the top that sticks, with the index and find in its own flow.
 // - The thin title bar once the opener's title has left the screen.
-// - Every section in full (title-sections.tsx), each below the first screen skipping its layout until it's near
-//   (below-fold.tsx).
+// - Every section (title-sections.tsx), each below the first screen skipping its layout until it's near
+//   (below-fold.tsx). Fingerprint, At a glance and Tropes each open into a sub-page at its own address
+//   (sub-page/), and Back from one lands where the page was left.
 // Keys: "/" finds in the title, J and K step through the sections, W goes to where to watch, S to your score, T to the top.
 import { DocumentTextIcon, PlayIcon } from "@heroicons/react/24/outline"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -20,7 +23,8 @@ import ShareButton from "~/ui/button/ShareButton"
 import AgeRating from "~/ui/details/AgeRating"
 import Genres from "~/ui/details/Genres"
 import { PhoneBar } from "~/ui/details/PhoneBar"
-import { type IndexItem, ProgressIndex } from "~/ui/details/ProgressIndex"
+import type { IndexItem } from "~/ui/details/ProgressIndex"
+import { ShowStatus } from "~/ui/details/ShowStatus"
 import { TitleBar } from "~/ui/details/TitleBar"
 import { TitleSummary } from "~/ui/details/TitleSummary"
 import { YouBlock } from "~/ui/details/YouBlock"
@@ -30,27 +34,54 @@ import {
 	useBelowFold,
 } from "~/ui/details/below-fold"
 import { FindField, FindResults, useFindItems } from "~/ui/details/find/Find"
-import { FindBus, useFindBusValue } from "~/ui/details/find/find-bus"
-import { type FindHit, buildFindIndex } from "~/ui/details/find/find-index"
+import {
+	FindBus,
+	type FindRequest,
+	useFindBusValue,
+} from "~/ui/details/find/find-bus"
+import {
+	type FindEntry,
+	type FindSection,
+	buildFindIndex,
+} from "~/ui/details/find/find-index"
 import { flash, locate } from "~/ui/details/find/highlight"
+import { type PageGo, goSub, takePageGo } from "~/ui/details/find/landing"
+import { markHl, useHlParam } from "~/ui/details/find/marks"
+import { shelfEntries } from "~/ui/details/find/sub-page-index"
+import {
+	keepPageIndex,
+	titleKey,
+	useCrossFind,
+} from "~/ui/details/find/useSubPageFind"
 import { goodFor } from "~/ui/details/fingerprint/area-details"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { HeroPoster } from "~/ui/details/hero/Trailer"
+import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
 import {
 	TrailerBand,
 	hasVideo,
 	openerHeaderClass,
 } from "~/ui/details/opener/TrailerBand"
-import { CAPTION, Kbd, SectionHeader } from "~/ui/details/page-ui"
+import { CAPTION, SectionHeader } from "~/ui/details/page-ui"
+import { TitleRail } from "~/ui/details/rail/TitleRail"
+import { usePublishPageMeta } from "~/ui/details/rail/rail-model"
 import { scrollToTop, useJump, useReading } from "~/ui/details/reading"
 import { sectionHeight } from "~/ui/details/section-heights"
 import { useStreamNames } from "~/ui/details/streaming"
-import { splitLead } from "~/ui/details/synopsis-fold"
-import { scoresEntry, useTitleSections } from "~/ui/details/title-sections"
+import { SubPageLinks } from "~/ui/details/sub-page/SubPageLinks"
+import { AT_A_GLANCE, subPagePath } from "~/ui/details/sub-page/paths"
+import { stopRestore, useKeptState } from "~/ui/details/sub-page/way-in"
+import {
+	FIND_ONLY_SECTIONS,
+	scoresEntry,
+	summaryEntry,
+	useTitleSections,
+} from "~/ui/details/title-sections"
 import {
 	ageRating,
 	fingerprintInput,
+	fitMeta,
 	metaItems,
 } from "~/ui/details/title-words"
 import type { TitleQuestion } from "~/ui/details/titleQuestions"
@@ -77,6 +108,8 @@ export interface TitlePageProps {
 	episodeLayout?: EpisodeLayout | null
 	questions: TitleQuestion[]
 	genreRow?: GenreRow
+	/** More like this's Similar shelf, when the loader had it in time. */
+	similar?: ShelfTitle[]
 	newPages?: NewPagesHere
 	sides: TitleSides | null
 	/** Whether the viewer gets "Talked about now". */
@@ -104,17 +137,58 @@ function videoPeek(media: MovieResult | ShowResult) {
 	return parts.length ? parts.join(", ") : "Back to the top"
 }
 
+/** The meta line's separator. */
+const Dot = () => (
+	<span aria-hidden="true" className="pl-1.5 text-gray-500">
+		&middot;
+	</span>
+)
+
 /** Something over the page that has the keys: a modal (quick view, score picker, country dialog) or the video stage. */
 const OVER_PAGE = '[aria-modal="true"], dialog[open], [data-video-stage]'
+
+/**
+ * Where find's and the rail's section ids are on this page: the people and the facts are rows of At a glance (opened
+ * on the way); old links to the questions land on At a glance, to the related titles on More like this.
+ */
+const GLANCE_ROW: Record<string, string> = {
+	cast: "glance-cast",
+	crew: "glance-crew",
+	facts: "glance-facts",
+}
+const MOVED: Record<string, string> = {
+	faq: "at-a-glance",
+	related: "more-like-this",
+}
 
 export function TitlePage(props: TitlePageProps) {
 	const { media, country } = props
 	const { details } = media
 	const jumpTo = useJump()
+	// At a glance's open rows, kept per history entry: Back from a sub-page finds them open.
+	const [openRows, setOpenRows] = useKeptState<string[]>("at-a-glance", [])
+	const toggleRow = (id: string) =>
+		setOpenRows((o) =>
+			o.includes(id) ? o.filter((x) => x !== id) : [...o, id],
+		)
+	/** Opens what holds section `id` and says where to scroll. */
+	const reveal = (id: string): string => {
+		const row = GLANCE_ROW[id]
+		if (row) {
+			setOpenRows((o) => (o.includes(row) ? o : [...o, row]))
+			return row
+		}
+		return MOVED[id] ?? id
+	}
 	// The index starts with the trailer, which takes you back to the top of the page. The scores sit in the opener
 	// too, so find's score lines go there as well.
 	const jump = (id: string) => {
-		if (id !== "trailer" && id !== "scores") return jumpTo(id)
+		if (id !== "trailer" && id !== "scores") {
+			const target = reveal(id)
+			// An At a glance row opens first, so the jump waits for it to be there.
+			requestAnimationFrame(() => requestAnimationFrame(() => jumpTo(target)))
+			return
+		}
 		scrollToTop()
 		history.replaceState(
 			history.state,
@@ -122,16 +196,12 @@ export function TitlePage(props: TitlePageProps) {
 			window.location.pathname + window.location.search,
 		)
 	}
-	const sections = useTitleSections({ ...props, onCrew: () => jump("crew") })
+	const sections = useTitleSections({
+		...props,
+		glance: { open: openRows, onToggle: toggleRow },
+	})
 	const scores = scoresEntry(media)
-	const synopsisPeek = details.synopsis ? splitLead(details.synopsis)[0] : null
-	const summaryEntry = {
-		id: "summary",
-		label: "Summary",
-		icon: DocumentTextIcon,
-		peek: synopsisPeek || scores.peek,
-		aliases: "synopsis plot story about essence tags good for skip",
-	}
+	const summary = summaryEntry(media)
 	const trailer: IndexItem | null = hasVideo(media)
 		? {
 				id: "trailer",
@@ -142,10 +212,12 @@ export function TitlePage(props: TitlePageProps) {
 		: null
 	const items: IndexItem[] = [
 		...(trailer ? [trailer] : []),
-		summaryEntry,
+		summary,
 		...sections,
 	]
 	const ids = items.map((i) => i.id)
+	// The bar's meta line, for the header of More like this's expanded view.
+	usePublishPageMeta(fitMeta(media, country))
 
 	const [desktop, setDesktop] = useState(true)
 	useEffect(() => {
@@ -158,69 +230,175 @@ export function TitlePage(props: TitlePageProps) {
 	// The site header (64), the title bar (48 desktop, 52 phone), and on a phone the section bar (48).
 	const { visible, current } = useReading(ids, { offset: desktop ? 128 : 164 })
 
-	// Find in this title: a match scrolls to its section and rings the words.
+	// Find in this title: a match scrolls to its section and rings the words. The people, the facts and the related
+	// titles are find's own sections too (where they are is reveal's).
 	const { stream, rentBuy } = useStreamNames(media, country)
 	const [query, setQuery] = useState("")
 	const [active, setActive] = useState(0)
 	const searching = query.trim().length > 0
+	const findSections: FindSection[] = [
+		scores,
+		summary,
+		...sections,
+		...FIND_ONLY_SECTIONS,
+	]
+	const buildIndex = (): FindEntry[] =>
+		buildFindIndex({
+			media,
+			country,
+			sections: findSections,
+			// The questions' answers aren't on the page.
+			questions: [],
+			grid: props.episodeGrid,
+			stream,
+			rentBuy,
+		})
 	const findIndex = useMemo(
-		() =>
-			searching
-				? buildFindIndex({
-						media,
-						country,
-						sections: [scores, summaryEntry, ...sections],
-						questions: props.questions,
-						grid: props.episodeGrid,
-						stream,
-						rentBuy,
-					})
-				: [],
+		() => (searching ? [...buildIndex(), ...shelfEntries()] : []),
 		[searching, media, country],
 	)
+	// Find also searches the sub-pages, from the first focus on.
+	const [findArmed, setFindArmed] = useState(false)
+	const armFind = () => setFindArmed(true)
+	// The page's own index, kept for its sub-pages' find, once the page has settled.
+	useEffect(() => {
+		const t = window.setTimeout(
+			() =>
+				keepPageIndex(titleKey(media), {
+					entries: buildIndex(),
+					sections: findSections.map((x) => ({ id: x.id, label: x.label })),
+				}),
+			1200,
+		)
+		return () => window.clearTimeout(t)
+	}, [media.details.tmdb_id, stream.length, rentBuy.length])
 	const example = media.mediaType === "show" ? "“S1E3”" : "“budget”"
 	const railFind = useRef<HTMLInputElement>(null)
 	const phoneFind = useRef<HTMLInputElement>(null)
 	const [phonePanel, setPhonePanel] = useState<"index" | "find" | null>(null)
 	const { layOutAll } = useBelowFold()
 
-	const open = (hit: FindHit) => {
+	const open = (entry: Pick<FindEntry, "section" | "needle" | "selector">) => {
 		setQuery("")
 		setPhonePanel(null)
 		layOutAll()
-		const id = hit.entry.section
-		const needle = hit.entry.needle
-		requestAnimationFrame(() => {
-			const section = document.getElementById(id)
-			const el = needle && section ? locate(section, needle) : null
-			if (el) flash(el)
-			else jump(id)
-		})
+		const id = reveal(entry.section)
+		const { needle, selector } = entry
+		requestAnimationFrame(() =>
+			requestAnimationFrame(() => {
+				const section = document.getElementById(id)
+				const picked =
+					selector && section
+						? section.querySelector<HTMLElement>(selector)
+						: null
+				// A poster on a shelf that scrolls sideways: into the row's view first.
+				picked?.scrollIntoView({
+					block: "nearest",
+					inline: "center",
+					behavior: "instant",
+				})
+				const el =
+					picked ?? (needle && section ? locate(section, needle) : null)
+				if (el) flash(el)
+				else jumpTo(id)
+			}),
+		)
 	}
-	// People come from the server: picking one sends them to Cast or Crew, which search for them and ring their row.
+	// People come from the server: picking someone from the cast sends them to Starring's cast list, which searches for
+	// them and rings their row. It sits in At a glance's row and only listens once the row is open, so the request goes
+	// again once it is. Made by's credits list the whole crew: the name is rung there once the list is in.
 	const bus = useFindBusValue()
+	const askPeople = (r: FindRequest, kind: "cast" | "crew") => {
+		requestAnimationFrame(() => jump(kind))
+		if (r.type === "person" && kind === "crew") {
+			let tries = 0
+			const ring = () => {
+				const credits = document.getElementById("glance-crew")
+				const el = credits ? locate(credits, r.name) : null
+				if (el) flash(el)
+				else if (++tries < 12) window.setTimeout(ring, 250)
+			}
+			window.setTimeout(ring, 450)
+			return
+		}
+		bus.send(r)
+		window.setTimeout(() => bus.send(r), 450)
+	}
+	useHlParam()
 	const leave = () => {
+		// The picked words are marked where it lands (?hl=).
+		markHl(query)
 		setQuery("")
 		setPhonePanel(null)
 		;(document.activeElement as HTMLElement | null)?.blur?.()
 	}
+	// Find's own sections are At a glance's rows: their matches are grouped under it.
+	const findGroups = [
+		...items,
+		...FIND_ONLY_SECTIONS.map(({ id }) => ({
+			id,
+			label: AT_A_GLANCE,
+			icon: DocumentTextIcon,
+		})),
+	]
 	const { items: findItems, busy: findBusy } = useFindItems({
 		media,
 		query,
 		index: findIndex,
-		sections: items,
-		onHit: open,
+		sections: findGroups,
+		onHit: (hit) => {
+			markHl(query)
+			const e = hit.entry
+			// A section found by its gist (no words of its own to ring): ring where the words are in it.
+			open(
+				e.needle || e.selector
+					? e
+					: { section: e.section, needle: query.trim() },
+			)
+		},
 		onPerson: (kind, row) => {
 			leave()
-			bus.send({ type: "person", kind, id: row.id, name: row.name })
-			requestAnimationFrame(() => jump(kind))
+			askPeople({ type: "person", kind, id: row.id, name: row.name }, kind)
 		},
 		onCastSearch: (q) => {
 			leave()
-			bus.send({ type: "cast-search", q })
-			requestAnimationFrame(() => jump("cast"))
+			askPeople({ type: "cast-search", q }, "cast")
 		},
 	})
+	// The sub-pages' matches, after the page's own; picking one goes in through its link.
+	const cross = useCrossFind({
+		media,
+		country,
+		questions: props.questions,
+		query,
+		armed: findArmed || searching,
+		here: "page",
+		onPick: (e) => {
+			leave()
+			goSub(
+				subPagePath(e.sub, media),
+				e.go,
+				document.querySelector('aside[aria-label="You and this page"]'),
+			)
+		},
+	})
+	const allFindItems = [...findItems, ...cross.items]
+	const allFindBusy = findBusy || cross.busy
+	// A match on this page picked on a sub-page: land on it once the page is back (and has put its place back).
+	const landPage = (go: PageGo) => {
+		stopRestore()
+		if (go.person) askPeople({ type: "person", ...go.person }, go.person.kind)
+		else if (go.castSearch)
+			askPeople({ type: "cast-search", q: go.castSearch }, "cast")
+		else open(go)
+	}
+	const landRef = useRef(landPage)
+	landRef.current = landPage
+	useEffect(() => {
+		// Taken once and never cancelled (an effect that runs twice must not lose it).
+		const go = takePageGo(window.location.pathname)
+		if (go) window.setTimeout(() => landRef.current(go), 320)
+	}, [])
 	const clearFind = (input: HTMLInputElement | null) => {
 		setQuery("")
 		setActive(0)
@@ -295,7 +473,11 @@ export function TitlePage(props: TitlePageProps) {
 		if (!box || searching || !current) return
 		const entry = box.querySelector<HTMLElement>(`[aria-current="location"]`)
 		if (!entry) return
-		const top = entry.offsetTop - box.offsetTop
+		// Measured on screen: the list's own children put the entry's offsetParent elsewhere.
+		const top =
+			entry.getBoundingClientRect().top -
+			box.getBoundingClientRect().top +
+			box.scrollTop
 		if (top < box.scrollTop + 8)
 			box.scrollTo({ top: top - 8, behavior: "smooth" })
 		else if (top + entry.offsetHeight > box.scrollTop + box.clientHeight - 24)
@@ -312,6 +494,13 @@ export function TitlePage(props: TitlePageProps) {
 	const skip = t ? skipIf(t) : []
 	const age = ageRating(media, country)
 	const meta = metaItems(media)
+	// A show's seasons and episodes are one link to its Episodes section.
+	const isEpisodes = (m: string) =>
+		media.mediaType === "show" && /^\d[\d,]* (season|episode)s?$/.test(m)
+	const metaHead = meta.filter((m) => !isEpisodes(m))
+	const metaEpisodes = meta.filter(isEpisodes)
+	const status = <ShowStatus media={media} />
+	const hasStatus = media.mediaType === "show" && Boolean(media.details.status)
 	const title = presentedText(details, "title", details.title)
 	const withCard = hasVideo(media)
 	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
@@ -387,10 +576,11 @@ export function TitlePage(props: TitlePageProps) {
 							<>
 								<FindField
 									inputRef={phoneFind}
+									onFocus={armFind}
 									query={query}
 									onQuery={setQuery}
 									placeholder={findPlaceholder}
-									items={findItems}
+									items={allFindItems}
 									active={active}
 									onActive={setActive}
 									listId="find-phone"
@@ -400,8 +590,8 @@ export function TitlePage(props: TitlePageProps) {
 										<FindResults
 											listId="find-phone"
 											query={query}
-											items={findItems}
-											busy={findBusy}
+											items={allFindItems}
+											busy={allFindBusy}
 											active={active}
 											onActive={setActive}
 											example={example}
@@ -409,8 +599,8 @@ export function TitlePage(props: TitlePageProps) {
 										/>
 									) : (
 										<p className="px-2.5 py-2 text-xs text-gray-500">
-											Anyone in the cast or crew, episodes, questions, facts,
-											tropes and services.
+											Anyone in the cast or crew, episodes, facts, the
+											fingerprint, tropes and services.
 										</p>
 									)}
 								</div>
@@ -455,23 +645,48 @@ export function TitlePage(props: TitlePageProps) {
 										className="text-balance text-2xl font-semibold leading-[1.1] tracking-tight text-white sm:text-3xl lg:text-[2.75rem]"
 									/>
 									<p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-gray-300 lg:text-base">
-										{meta.map((item, i) => (
+										{metaHead.map((item, i) => (
 											<span
 												key={item}
 												className={`whitespace-nowrap ${i === 0 ? "font-semibold text-white" : ""}`}
 											>
 												{item}
-												{(i < meta.length - 1 || age) && (
-													<span
-														aria-hidden="true"
-														className="pl-1.5 text-gray-500"
-													>
-														&middot;
-													</span>
-												)}
+												{(i < metaHead.length - 1 ||
+													metaEpisodes.length > 0 ||
+													age ||
+													hasStatus) && <Dot />}
 											</span>
 										))}
+										{metaEpisodes.length > 0 && (
+											<span className="whitespace-nowrap">
+												{ids.includes("episodes") ? (
+													// biome-ignore lint/a11y/useValidAnchor: a real link to the section, also before the page's scripts run
+													<a
+														href="#episodes"
+														onClick={(e) => {
+															if (
+																e.button !== 0 ||
+																e.metaKey ||
+																e.ctrlKey ||
+																e.shiftKey ||
+																e.altKey
+															)
+																return
+															e.preventDefault()
+															jump("episodes")
+														}}
+														className="rounded-sm underline decoration-white/25 decoration-1 underline-offset-[5px] transition-colors hover:text-amber-200 hover:decoration-amber-300/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+													>
+														{metaEpisodes.join(" · ")}
+													</a>
+												) : (
+													metaEpisodes.join(" · ")
+												)}
+												{(age || hasStatus) && <Dot />}
+											</span>
+										)}
 										{age && <AgeRating ageRating={age} />}
+										{status}
 									</p>
 									<div className="max-sm:hidden">
 										<Genres
@@ -537,10 +752,11 @@ export function TitlePage(props: TitlePageProps) {
 							<div className="mt-6 hidden min-h-0 flex-1 flex-col border-t border-white/10 pt-5 lg:flex">
 								<FindField
 									inputRef={railFind}
+									onFocus={armFind}
 									query={query}
 									onQuery={setQuery}
 									placeholder={findPlaceholder}
-									items={findItems}
+									items={allFindItems}
 									active={active}
 									onActive={setActive}
 									listId="find-rail"
@@ -548,43 +764,31 @@ export function TitlePage(props: TitlePageProps) {
 								<h2 className={`${CAPTION} mt-5 px-2.5`}>
 									{searching ? "Matches" : "On this page"}
 								</h2>
+								{/* The box reaches into the page's right margin, so the rail's side tabs show. */}
 								<div
 									ref={indexBox}
-									className="relative mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4 [mask-image:linear-gradient(to_bottom,black_calc(100%-1.25rem),transparent)] [scrollbar-width:none]"
+									className="relative mt-2 min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pb-4 [mask-image:linear-gradient(to_bottom,black_calc(100%-1.25rem),transparent)] [scrollbar-width:none] lg:-mr-8 lg:pr-8"
 								>
 									{searching ? (
 										<FindResults
 											listId="find-rail"
 											query={query}
-											items={findItems}
-											busy={findBusy}
+											items={allFindItems}
+											busy={allFindBusy}
 											active={active}
 											onActive={setActive}
 											example={example}
 											onClear={() => clearFind(railFind.current)}
 										/>
 									) : (
-										<ProgressIndex
+										<TitleRail
 											items={items}
 											visible={visible}
 											onJump={jump}
+											media={media}
 										/>
 									)}
 								</div>
-								<p className="flex shrink-0 flex-wrap gap-x-3 gap-y-1 border-t border-white/10 px-2.5 pt-2.5 text-[11px] text-gray-500">
-									<span>
-										<Kbd>/</Kbd> find
-									</span>
-									<span>
-										<Kbd>J</Kbd> <Kbd>K</Kbd> sections
-									</span>
-									<span>
-										<Kbd>W</Kbd> watch
-									</span>
-									<span>
-										<Kbd>T</Kbd> top
-									</span>
-								</p>
 							</div>
 						</aside>
 
@@ -601,14 +805,15 @@ export function TitlePage(props: TitlePageProps) {
 										"scroll-mt-44 border-t border-white/10 pt-8 lg:scroll-mt-32 lg:pt-10",
 									)}
 								>
-									{s.oldId && (
+									{s.oldIds?.map((id) => (
 										// Lands where the section does: its scroll margin plus its top padding.
 										<span
-											id={s.oldId}
+											key={id}
+											id={id}
 											aria-hidden="true"
 											className="block scroll-mt-[208px] lg:scroll-mt-[168px]"
 										/>
-									)}
+									))}
 									<SectionHeader
 										anchor={s.id}
 										icon={s.icon}
@@ -627,6 +832,7 @@ export function TitlePage(props: TitlePageProps) {
 					</div>
 				</div>
 			</div>
+			<SubPageLinks />
 		</FindBus.Provider>
 	)
 }

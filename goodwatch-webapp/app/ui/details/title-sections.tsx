@@ -1,17 +1,15 @@
-// The title page's sections in reading order, quick answers first. Sections without content are left out. Each has
-// a name, an icon, a one-line gist for "On this page" (and as the header's muted line where the section doesn't show
-// the same), the words find also knows it by, and its body. A new topic later is one more entry here.
+// The title page's sections after the Summary, in reading order: Where to watch, Fingerprint, At a glance, Tropes,
+// Episodes (shows), More like this. Sections without content are left out. Each has a name, an icon, a one-line gist
+// for "On this page" (and as the header's muted line where the section doesn't show the same), the words find also
+// knows it by, and its body. The sub-pages' find builds the title page's index from the same list, without bodies.
 import {
+	DocumentTextIcon,
 	FingerPrintIcon,
-	InformationCircleIcon,
-	QuestionMarkCircleIcon,
 	SparklesIcon,
 	Squares2X2Icon,
 	StarIcon,
 	TagIcon,
 	TvIcon,
-	UserGroupIcon,
-	VideoCameraIcon,
 } from "@heroicons/react/24/outline"
 import type { ComponentType, ReactNode } from "react"
 import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
@@ -20,27 +18,26 @@ import type { GenreRow } from "~/server/genre-row/genre-row.server"
 import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import type { TitleSides } from "~/server/title-sides.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import { EpisodesSection } from "~/ui/details/EpisodesSection"
-import { FactsList, TropesList } from "~/ui/details/FactsSection"
-import { RelatedSection } from "~/ui/details/RelatedSection"
 import { WatchSection } from "~/ui/details/WatchSection"
+import { AtAGlance, glanceRowLabels } from "~/ui/details/at-a-glance/AtAGlance"
 import { EpisodeViewToggle } from "~/ui/details/episode-grid/episode-view"
 import { FingerprintSection } from "~/ui/details/fingerprint-section/FingerprintSection"
-import { CastSection } from "~/ui/details/people/CastSection"
-import { CrewSection } from "~/ui/details/people/CrewSection"
+import { MoreLikeThis } from "~/ui/details/more-like-this/MoreLikeThis"
+import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
 import { useStreamNames } from "~/ui/details/streaming"
+import { AT_A_GLANCE, subPagePath } from "~/ui/details/sub-page/paths"
+import { splitLead } from "~/ui/details/synopsis-fold"
 import {
 	countryName,
 	fingerprintInput,
 	lengthWords,
 	scoreLines,
 	shortList,
-	titleFacts,
 	tropeNames,
 } from "~/ui/details/title-words"
 import type { TitleQuestion } from "~/ui/details/titleQuestions"
-import { useRelatedMap } from "~/ui/related-map/RelatedMap"
+import { TropesSection } from "~/ui/details/tropes/TropesSection"
 import { useEpisodeTracking } from "~/ui/tracking/gate"
 
 type Media = MovieResult | ShowResult
@@ -48,8 +45,8 @@ type Media = MovieResult | ShowResult
 export interface TitleSection {
 	/** The section element's id (an address with #id lands on it). */
 	id: string
-	/** The id the section had on the page before, so old links still land on it. */
-	oldId?: string
+	/** The ids the section's content had on the page before, so old links still land on it. */
+	oldIds?: string[]
 	label: string
 	icon: ComponentType<{ className?: string }>
 	/** The gist in one line, for "On this page". */
@@ -79,10 +76,12 @@ export interface TitleSectionsInput {
 	episodeLayout?: EpisodeLayout | null
 	questions: TitleQuestion[]
 	genreRow?: GenreRow
+	/** More like this's Similar shelf, when the loader had it in time. */
+	similar?: ShelfTitle[]
 	newPages?: NewPagesHere
 	sides: TitleSides | null
-	/** Goes to the Crew section (offered by a cast search that finds no one). */
-	onCrew: () => void
+	/** At a glance's open rows and how one opens or closes (the title page keeps them per history entry). */
+	glance?: { open: string[]; onToggle: (id: string) => void }
 }
 
 /** The verdict under the opener: in "On this page" and find, but not a section of its own. */
@@ -97,11 +96,39 @@ export function scoresEntry(media: Media) {
 	}
 }
 
+/** The Summary under the opener, as "On this page" and find know it. */
+export function summaryEntry(media: Media) {
+	const lead = media.details.synopsis
+		? splitLead(media.details.synopsis)[0]
+		: null
+	return {
+		id: "summary",
+		label: "Summary",
+		icon: DocumentTextIcon,
+		peek: lead || scoresEntry(media).peek,
+		aliases: "synopsis plot story about essence tags good for skip",
+	}
+}
+
+/**
+ * Find's own sections that aren't sections of the page: the facts and the people, which are At a glance's rows (the
+ * title page opens the row on the way).
+ */
+export const FIND_ONLY_SECTIONS = [
+	{ id: "facts", label: "Facts", peek: null, aliases: "details" },
+	{ id: "cast", label: "Cast", peek: null, aliases: "people actors" },
+	{
+		id: "crew",
+		label: "Crew",
+		peek: null,
+		aliases: "people director writer",
+	},
+]
+
 export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
-	const { media, country, questions, genreRow, episodeGrid } = input
+	const { media, country, questions, genreRow, episodeGrid, glance } = input
 	const d = media.details
 	const { stream, rentBuy } = useStreamNames(media, country)
-	const relatedMap = Boolean(useRelatedMap())
 	const tracking = useEpisodeTracking(media)
 	const t = fingerprintInput(media)
 
@@ -118,25 +145,9 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 			: `Not available in ${countryName(country)}`
 
 	const episodesPeek = lengthWords(media) ?? ""
-
-	const castNames = (media.cast || []).slice(0, 3).map((c) => c.name)
-	const director = media.crew.directors[0]?.name
-	const writer = media.crew.writers[0]?.name
-	const crewPeek = [
-		director
-			? `${media.mediaType === "movie" ? "Directed by" : "Directors"} ${director}`
-			: null,
-		writer ? `written by ${writer}` : null,
-	]
-		.filter(Boolean)
-		.join(", ")
-
 	const essence = media.fingerprint?.essenceTags ?? []
-	// The crew lines the page has; a show's creators come with the section's own request.
-	const hasCrew = Object.values(media.crew).some((people) => people.length > 0)
-	const tropes = tropeNames(media).names
-	const facts = titleFacts(media, country)
-	const series = media.mediaType === "movie" && Boolean(media.movie_series)
+	const tropes = tropeNames(media)
+	const glanceRows = glanceRowLabels(media, country, questions)
 
 	const sections: (TitleSection | null)[] = [
 		{
@@ -161,8 +172,44 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 					label: "Fingerprint",
 					icon: FingerPrintIcon,
 					peek: shortList(essence, 3) || null,
-					aliases: "about title analysis",
-					body: () => <FingerprintSection media={media} sides={input.sides} />,
+					aliases: "about title analysis feels effects",
+					body: () => (
+						<FingerprintSection
+							media={media}
+							href={subPagePath("fingerprint", media)}
+						/>
+					),
+				}
+			: null,
+		glanceRows.length
+			? {
+					id: "at-a-glance",
+					// Old links to the facts, the questions and the people land here.
+					oldIds: ["facts", "faq", "actors_and_crew"],
+					label: AT_A_GLANCE,
+					icon: DocumentTextIcon,
+					peek: glanceRows.join(", "),
+					aliases:
+						"facts content age rating cast crew starring made by director",
+					body: () => (
+						<AtAGlance
+							media={media}
+							country={country}
+							questions={questions}
+							open={glance?.open ?? []}
+							onToggle={glance?.onToggle ?? (() => {})}
+						/>
+					),
+				}
+			: null,
+		tropes.total
+			? {
+					id: "tropes",
+					label: "Tropes",
+					icon: TagIcon,
+					peek: shortList(tropes.names, 3) || null,
+					aliases: "about tv tropes",
+					body: () => <TropesSection media={media} />,
 				}
 			: null,
 		media.mediaType === "show" && (episodeGrid || tracking)
@@ -170,7 +217,7 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 					id: "episodes",
 					label: "Episodes",
 					icon: Squares2X2Icon,
-					heading: `${media.details.title} episodes`,
+					heading: `${d.title} episodes`,
 					peek: episodesPeek || null,
 					subtitle: episodesPeek || null,
 					aliases: "seasons",
@@ -192,86 +239,22 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 					bodyClass: `${DEMOTE} [&_#episode-grid-title]:sr-only [&_#episode-list-title]:sr-only`,
 				}
 			: null,
-		media.cast?.length
-			? {
-					id: "cast",
-					oldId: "actors_and_crew",
-					label: "Cast",
-					icon: UserGroupIcon,
-					peek: castNames.length ? `With ${castNames.join(", ")}` : null,
-					aliases: "people actors",
-					body: () => <CastSection media={media} onCrew={input.onCrew} />,
-				}
-			: null,
-		hasCrew
-			? {
-					id: "crew",
-					label: "Crew",
-					icon: VideoCameraIcon,
-					peek: crewPeek || "Everyone behind the camera",
-					aliases: "people director writer",
-					body: () => <CrewSection media={media} />,
-				}
-			: null,
-		relatedMap || genreRow || series
-			? {
-					id: "related",
-					label: "Related",
-					icon: SparklesIcon,
-					peek: [`Titles like ${d.title}`, genreRow?.heading]
-						.filter(Boolean)
-						.join(" · "),
-					aliases: "similar",
-					body: () => <RelatedSection media={media} genreRow={genreRow} />,
-				}
-			: null,
-		facts.length
-			? {
-					id: "facts",
-					label: "Facts",
-					icon: InformationCircleIcon,
-					peek: facts
-						.slice(0, 3)
-						.map((f) => f.value)
-						.join(" · "),
-					subtitle: facts
-						.slice(0, 3)
-						.map((f) => f.value)
-						.join(" · "),
-					aliases: "details",
-					body: () => <FactsList media={media} country={country} />,
-				}
-			: null,
-		tropes.length
-			? {
-					id: "tropes",
-					label: "Tropes",
-					icon: TagIcon,
-					peek: shortList(tropes, 3),
-					subtitle: shortList(tropes, 3),
-					aliases: "about",
-					body: () => <TropesList media={media} />,
-				}
-			: null,
-		questions.length
-			? {
-					id: "faq",
-					label: "Q&A",
-					icon: QuestionMarkCircleIcon,
-					peek: `${questions.length} questions, like "${questions[0].q}"`,
-					subtitle: `${questions.length} questions, like "${questions[0].q}"`,
-					aliases: "questions details",
-					body: () => (
-						<DetailsQuestions
-							media={media}
-							country={country}
-							questions={questions}
-						/>
-					),
-					// Its own first heading repeats the section's.
-					bodyClass: `${DEMOTE} [&>section>h2:first-child]:hidden`,
-				}
-			: null,
+		{
+			id: "more-like-this",
+			// Old links to the related titles land here.
+			oldIds: ["related"],
+			label: "More like this",
+			icon: SparklesIcon,
+			peek: `Titles like ${d.title}`,
+			aliases: "similar related series sequel director genre",
+			body: () => (
+				<MoreLikeThis
+					media={media}
+					genreRow={genreRow}
+					similar={input.similar}
+				/>
+			),
+		},
 	]
 	return sections.filter((s): s is TitleSection => Boolean(s))
 }

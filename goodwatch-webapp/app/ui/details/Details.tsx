@@ -8,6 +8,7 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TitlePage } from "~/ui/details/TitlePage"
 import { BelowFoldProvider } from "~/ui/details/below-fold"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
+import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
 import { useTitleQuestions } from "~/ui/details/useTitleQuestions"
 import { usePublishTitleSubject } from "~/ui/feedback/subject"
 import {
@@ -33,6 +34,8 @@ export interface DetailsProps {
 	breadcrumb?: readonly Crumb[]
 	/** Eight titles of the breadcrumb's genre, after the related titles. */
 	genreRow?: GenreRow
+	/** More like this's Similar shelf, when the loader had it in time. */
+	similar?: ShelfTitle[]
 	/** The brands with a page of new arrivals in the loaded country, for where to watch (#489). */
 	newPages?: NewPagesHere
 }
@@ -62,6 +65,7 @@ function DetailsPage({
 	sides,
 	breadcrumb = [],
 	genreRow,
+	similar,
 	newPages,
 }: DetailsProps) {
 	// The header pair's country and language, picked or saved, over the ones the page loaded with. Until their data
@@ -78,7 +82,7 @@ function DetailsPage({
 	// Fix mode's questions read the page as shown (ui/feedback).
 	usePublishTitleSubject(media, country, episodeGrid)
 	const { details } = media
-	// Q&A is listed when the title has questions.
+	// The questions' answers: At a glance's verdict for kids, and what find on the sub-pages knows.
 	const questions = useTitleQuestions(media, country)
 
 	const trail = titleTrail(
@@ -102,6 +106,7 @@ function DetailsPage({
 				episodeLayout={episodeLayout}
 				questions={questions}
 				genreRow={genreRow}
+				similar={similar}
 				newPages={newPages}
 				sides={sides ?? null}
 				talkedAboutNow={Boolean(talkedAboutNow)}

@@ -54,12 +54,18 @@ export function SectionHeader({
 	title,
 	subtitle,
 	aside,
+	as: Heading = "h2",
+	context,
 }: {
 	anchor: string
 	icon: ComponentType<{ className?: string }>
 	title: string
 	subtitle?: ReactNode
 	aside?: ReactNode
+	/** The heading's level: a sub-page's heading is its page's h1. */
+	as?: "h1" | "h2"
+	/** Read before the title by screen readers and crawlers only (a sub-page's h1 names its title). */
+	context?: string
 }) {
 	const [copied, setCopied] = useState(false)
 	const copy = async () => {
@@ -82,12 +88,13 @@ export function SectionHeader({
 			</span>
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-1.5">
-					<h2
+					<Heading
 						id={`${anchor}-h`}
 						className="text-xl font-semibold tracking-tight text-white sm:text-2xl"
 					>
+						{context && <span className="sr-only">{context} </span>}
 						{title}
-					</h2>
+					</Heading>
 					<button
 						type="button"
 						onClick={copy}

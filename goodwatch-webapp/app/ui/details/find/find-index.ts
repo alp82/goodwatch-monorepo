@@ -15,6 +15,19 @@ import type { StreamingLink } from "~/utils/streaming-links"
 
 type Media = MovieResult | ShowResult
 
+/** What find reads of the episode grid (a sub-page's loader sends only this). */
+export interface FindGrid {
+	seasons: {
+		number: number
+		episodes: {
+			number: number
+			name: string
+			score: number
+			unrated?: boolean
+		}[]
+	}[]
+}
+
 /** A section as find knows it: its id, its name, its gist, and other words that should find it. */
 export interface FindSection {
 	id: string
@@ -35,6 +48,10 @@ export interface FindEntry {
 	needle?: string
 	/** Extra words that should match (episode codes, kinds). */
 	aliases?: string
+	/** The element to ring, before `needle` is tried (a poster on a More like this shelf). */
+	selector?: string
+	/** Long text that also finds it (a trope's write-up), ranked like a context match. */
+	body?: string
 	/** Sections sort first; the rest keep index order. */
 	rank: number
 }
@@ -63,7 +80,7 @@ export function buildFindIndex({
 	country: string
 	sections: FindSection[]
 	questions: TitleQuestion[]
-	grid: EpisodeGrid | null
+	grid: EpisodeGrid | FindGrid | null
 	stream: StreamingLink[]
 	rentBuy: StreamingLink[]
 }): FindEntry[] {
@@ -188,37 +205,55 @@ export function buildFindIndex({
 	return out
 }
 
-export interface FindHit {
-	entry: FindEntry
+export interface FindHit<E extends FindEntry = FindEntry> {
+	entry: E
 	/** Where the query sits in the title, for the amber part. */
 	at: [number, number] | null
 }
 
+/** Each entry's words, normalized once (an index lives as long as its page; the sub-pages' can be long). */
+const words = new WeakMap<
+	FindEntry,
+	{ title: string; named: string; hay: string }
+>()
+function wordsOf(entry: FindEntry) {
+	let w = words.get(entry)
+	if (!w) {
+		const title = normalize(entry.title)
+		const named = `${title} ${normalize(entry.aliases ?? "")}`
+		w = {
+			title,
+			named,
+			hay: `${named} ${normalize(entry.context)} ${entry.body ? normalize(entry.body) : ""}`,
+		}
+		words.set(entry, w)
+	}
+	return w
+}
+
 /** Every word of the query must appear; title matches beat context matches, word starts beat the middle. */
-export function findIn(
-	index: FindEntry[],
+export function findIn<E extends FindEntry>(
+	index: E[],
 	query: string,
 	limit = 40,
-): FindHit[] {
+): FindHit<E>[] {
 	const q = normalize(query)
 	if (!q) return []
-	const words = q.split(" ")
+	const qs = q.split(" ")
 	// Short words count only at a word's start ("we" finds "The We We Are", not "Sweet" or "Lower").
 	const hit = (text: string, w: string) =>
 		w.length < 3 ? ` ${text}`.includes(` ${w}`) : text.includes(w)
-	const scored: { hit: FindHit; score: number }[] = []
+	const scored: { hit: FindHit<E>; score: number }[] = []
 	for (const entry of index) {
-		const title = normalize(entry.title)
-		const hay = `${title} ${normalize(entry.context)} ${normalize(entry.aliases ?? "")}`
-		if (!words.every((w) => hit(hay, w))) continue
+		const { title, named, hay } = wordsOf(entry)
+		if (!qs.every((w) => hit(hay, w))) continue
 		let score = entry.rank * 10
 		// A match only in the context line (a section's gist) ranks under direct matches.
-		const named = `${title} ${normalize(entry.aliases ?? "")}`
-		if (!words.every((w) => hit(named, w))) score += 45
+		if (!qs.every((w) => hit(named, w))) score += 45
 		if (title.startsWith(q)) score -= 30
 		else if (title.includes(` ${q}`)) score -= 20
 		else if (title.includes(q)) score -= 10
-		else if (words.every((w) => title.includes(w))) score -= 5
+		else if (qs.every((w) => title.includes(w))) score -= 5
 		const i = entry.title.toLowerCase().indexOf(query.trim().toLowerCase())
 		scored.push({
 			hit: { entry, at: i >= 0 ? [i, i + query.trim().length] : null },

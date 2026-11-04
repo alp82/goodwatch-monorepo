@@ -26,7 +26,7 @@ import { useTitleActions } from "~/ui/title-actions/useTitleActions"
 type Media = MovieResult | ShowResult
 
 /** Shows the first of `options` that fits its box on one line (measured, again on resize and font load). */
-function FitLine({
+export function FitLine({
 	options,
 	className = "",
 }: { options: string[]; className?: string }) {
