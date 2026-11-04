@@ -31,8 +31,11 @@ Open http://127.0.0.1:5220/discover?q=Historical+Action&variant=A (also `variant
 
 To run it, you need:
 
-- The read-only V7 preview service on `127.0.0.1:5219` (`/tmp/goodwatch-preference-eval/.../search-preferences-preview`).
-  The prototype doesn't change that service.
+- The read-only V7 preview service on `127.0.0.1:5219`. Its source is captured on this branch in
+  `goodwatch-webapp/scripts/search-preferences-preview/`, a copy of the running service. It runs from the experiment
+  worktree `/tmp/goodwatch-preference-eval/goodwatch-webapp` (branch `experiment/broad-preference-20261104`), whose
+  app modules it imports: `GOODWATCH_PREVIEW_ENV_DIR=<webapp dir> node scripts/search-preferences-preview/server.mjs`.
+  It does only read-only production reads (see its README). The prototype doesn't change the ranking policy.
 - `node_modules` in this worktree. It's an ignored symlink to another worktree's install with the same dependencies.
 
 ### Useful links
@@ -164,6 +167,33 @@ Checked with Playwright from `yepwatch-app/node_modules` at 1440 × 1000 and iPh
   instead of an empty result. The raw error stays out of the page. The inspector shows the policy and the HTTP status
   only. A what-if count whose request fails says "unavailable", not 0. Real zeros, such as Require History alone,
   still say 0 titles. Rechecked: "Historical Action" still gives 78.
+
+- **Index refresh (November 4, 2026):** your search "funny 90s dark scary epic" failed with
+  `Live ranker index drift: 20261104T051503Z`. The preview had pinned the study's frozen search index build
+  (`20261103T051503Z`), while the app's index module had loaded the newer build that `rankSearch` always uses.
+  - The preview now ranks on the current build and builds its identity folding from that same build.
+  - Rank caches are keyed by build, so old-build ranks are never reused as current.
+  - A refresh of the index or catalog during a comparison is retried, up to three attempts.
+  - `/api/config` reports both `index` (current) and `frozenIndex` (study), plus the current identity tables' sha1
+    values. The state inspector shows them under `previewConfig`.
+  - If the refresh outlasts the retries, the page says "The catalog just updated. Try again in a moment." with Retry,
+    never an empty result.
+
+  Observed on build `20261104T051503Z`, snapshot `20261104T043549Z`:
+
+  | Search | Result |
+  | --- | --- |
+  | "funny 90s dark scary epic" | 40 titles (31 original). Preferences Funny, Dark and Scary. Released 1990–1999 stays a filter. First answer 11.9 s, repeat 36 ms (cached). |
+  | "Historical Action" | 78 titles (8 original). Repeat 8 ms. |
+  | Both Historical Action words pinned | 497 titles |
+  | "The Big Short" | Title guard, recognized title first, 1,278 titles |
+  | "1917" | Title guard, 11 titles |
+
+  Browser: A, B and C show 40 titles for the query. B's ledger fills all three Require counts and the structural
+  row. "Historical Action" shows 78 titles, also after reload. The title guard works in C.
+
+  The study's measured numbers belong to the frozen build. These answers are live previews under the same ranking
+  policy.
 
 ## Unresolved decisions (for the owner)
 

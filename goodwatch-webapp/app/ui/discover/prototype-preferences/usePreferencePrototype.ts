@@ -62,8 +62,13 @@ async function send(query: string, existing: string, signal?: AbortSignal): Prom
 			continue
 		}
 		const body = await response.json().catch(() => null)
-		if (!response.ok || !body || body.error)
-			throw new Error(body?.error ?? `The V7 preview answered ${response.status}`)
+		if (!response.ok || !body || body.error) {
+			const message: string = body?.error ?? `The V7 preview answered ${response.status}`
+			// The preview's index or catalog refreshed more often than it retries: say so plainly, keep Retry.
+			if (/refreshed during|index drift|snapshot is unavailable|still loading/i.test(message))
+				throw new RetrievalFailed("The catalog just updated. Try again in a moment.", message.slice(0, 160))
+			throw new Error(message)
+		}
 		// HTTP 200 can still carry a failed retrieval (policy error, total 0): that's not an empty result. The raw
 		// error (vector search JSON, hosts) stays out of the page; the inspector shows the policy and the kind.
 		const failed = (body as V7Answer).v7?.error

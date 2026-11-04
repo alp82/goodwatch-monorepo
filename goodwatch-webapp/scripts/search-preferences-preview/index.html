@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GoodWatch · Search preview</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+<main>
+  <header><a class="brand" href="/">GoodWatch<span>Search preview</span></a><span class="local">Local · Read only</span></header>
+  <section class="intro"><h1>Find more of what you mean.</h1><p>Compare the current search with the tested preference setup.</p></section>
+  <form id="search-form">
+    <label class="sr-only" for="query">Search for movies and shows</label>
+    <div class="search-line"><input id="query" name="query" autocomplete="off" maxlength="512" value="Historical Action" placeholder="A title, a genre, a story…" required><button id="search" type="submit" disabled>Loading catalog…</button></div>
+    <div id="examples" class="examples" aria-label="Example searches"></div>
+    <details id="manual-details"><summary>Manual filters <span id="filter-summary">Any type · Any year · Any length</span></summary>
+      <div class="filters">
+        <label>Type<select id="type"><option value="">Movies &amp; shows</option><option value="movie">Movies</option><option value="show">Shows</option></select></label>
+        <label>From year<input id="minYear" type="number" min="1880" max="2100" placeholder="Any"></label>
+        <label>To year<input id="maxYear" type="number" min="1880" max="2100" placeholder="Any"></label>
+        <label>Max. runtime (minutes)<input id="maxRuntime" type="number" min="1" max="1500" placeholder="Any"></label>
+        <label>Genre<select id="genre"><option value="">Any genre</option><option>Action</option><option>Adventure</option><option>Animation</option><option>Comedy</option><option>Crime</option><option>Documentary</option><option>Drama</option><option>Family</option><option>Fantasy</option><option>History</option><option>Horror</option><option>Music</option><option>Mystery</option><option>Romance</option><option>Science Fiction</option><option>Thriller</option><option>War</option><option>Western</option></select></label>
+        <label>About<select id="theme"><option value="">Any theme</option><option value="history">History</option><option value="true">True stories</option></select></label>
+      </div>
+      <p class="hint">Selections here are required in both versions. Descriptions inferred from your search can become preferences in the updated version.</p>
+      <label class="advanced">Other manual filter parameters<input id="other" placeholder="e.g. productionCountries=JP" spellcheck="false"></label>
+    </details>
+  </form>
+  <p id="status" class="status" role="status" aria-live="polite">Loading the tested catalog…</p>
+  <div id="result-controls" class="result-controls" hidden><div><strong id="result-query"></strong><p id="interpretation"></p></div><label>Sort<select id="sort"><option value="relevance">Relevance</option><option value="bestRated">Best rated</option></select></label></div>
+  <div class="comparison" id="comparison" hidden>
+    <section class="column" id="baseline"><div class="column-head"><div><span class="eyebrow">Current</span><h2>Hard inferred filters</h2></div><strong class="count"></strong></div><p class="behavior">The existing interpretation and ranking.</p><div class="chips"></div><p class="policy-error" hidden></p><div class="results"></div><button class="more" type="button" hidden>Show more</button></section>
+    <section class="column updated" id="v7"><div class="column-head"><div><span class="eyebrow">Updated</span><h2>Prefer, then broaden</h2></div><strong class="count"></strong></div><p class="behavior">Automatic descriptions guide Relevance. Best rated puts original matches first, then broader results.</p><div class="chips"></div><p class="policy-error" hidden></p><div class="results"></div><button class="more" type="button" hidden>Show more</button></section>
+  </div>
+  <footer>Changes stay in this preview. No watch history, ratings, lists or saved settings are written. The tested ranking rules use a current catalog snapshot for both columns. Reference date for relative phrases: 3 November 2026. Repeated queries can reuse recorded readings.</footer>
+</main>
+<template id="card-template"><article class="card"><span class="rank"></span><a class="poster-link" target="_blank" rel="noreferrer"><img loading="lazy" alt=""><span class="poster-placeholder">GoodWatch</span></a><div class="card-body"><div class="card-title-line"><a class="card-title" target="_blank" rel="noreferrer"></a><span class="score"></span></div><p class="meta"></p><p class="genres"></p><p class="synopsis"></p><span class="overlap"></span></div></article></template>
+</body>
+</html>
