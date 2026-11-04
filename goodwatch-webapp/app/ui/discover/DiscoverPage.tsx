@@ -51,9 +51,8 @@ import { useDescribedSearch } from "~/ui/discover-bar/useDescribedSearch"
 import { useDesktop, useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
 import { NextPageLink } from "~/ui/explore/GridUtils"
 import { BestMatchSignUp } from "~/ui/filter-bar/SignUpPanel"
-import { activeChips, discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
-import type { FilterBarCounts, ForYouControl } from "~/ui/filter-bar/types"
-import type { FilterName } from "~/domain/filter-state"
+import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
+import type { ForYouControl } from "~/ui/filter-bar/types"
 import { useFilterState } from "~/ui/filter-bar/useFilterState"
 import { SearchPeople } from "~/ui/search/SearchPeople"
 import { Spinner } from "~/ui/wait/Spinner"
@@ -79,7 +78,10 @@ import {
 	setOff,
 	useInterpretedFilters,
 } from "./prototype-preferences/interpretation"
-import { ReadLine } from "./prototype-preferences/ReadLine"
+import { MatchesRead } from "./prototype-preferences/read-parts"
+import { ReadView, VARIANTS, type ReadVariant } from "./prototype-preferences/ReadVariants"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+import { useDiscoverMode } from "~/ui/discover-bar/mode"
 import { titleKey } from "~/utils/title-key"
 import { usePreferencePrototype } from "./prototype-preferences/usePreferencePrototype"
 
@@ -138,6 +140,9 @@ export function DiscoverPage({
 	const off = protoOn ? params.getAll("off") : []
 	const q = protoOn ? readText(qTyped, off) : qTyped
 	const proto = usePreferencePrototype(protoOn, qTyped, q)
+	const rawVariant = params.get("variant")
+	const readVariant: ReadVariant = rawVariant === "B" || rawVariant === "C" ? rawVariant : "A"
+	const { mode } = useDiscoverMode()
 	const searching = q !== null
 	const allTitles = params.get("allTitles") === "1"
 	const side = params.get("side")
@@ -504,21 +509,25 @@ export function DiscoverPage({
 					search.current?.filterHides,
 				)
 			: listCounts
-	// PROTOTYPE - throwaway: the Matches list shows the read items as rows. They take no share of what's hidden
-	// (the search applies them, the results endpoint only filters the manual ones): a filter says "set in search", a
-	// preference "ranks higher", since it hides nothing.
-	const itemGroups = readItems.filter((item) => item.on && item.group).map((item) => item.group as string)
-	const manualGroups = new Set(activeChips(filters.state).map((chip) => chip.group as string))
-	const protoCounts =
-		protoOn && counts && itemGroups.length
-			? ({ ...counts, inSearch: [...new Set([...((counts as FilterBarCounts).inSearch ?? []), ...itemGroups])] as FilterName[] } as FilterBarCounts)
-			: counts
-	const rowNote = (group: string) => {
-		if (manualGroups.has(group)) return undefined
-		const read = readItems.filter((item) => item.on && item.group === group)
-		if (!read.length) return undefined
-		return read.every((item) => item.soft) ? "ranks higher" : "set in search"
+	// PROTOTYPE - throwaway: one way to switch read parts, for the line and the Matches popout alike. Words set aside
+	// by your own choice aren't switches. The Matches rows keep only your own filters; read parts are listed there too.
+	const readChipKeys = new Set(readItems.filter((item) => item.on).flatMap((item) => item.chipKeys))
+	const keepChip = (chip: { key: string }) => !readChipKeys.has(chip.key)
+	const toggleRead = (item: (typeof readItems)[number]) => {
+		if (item.aside) return
+		setParams(
+			setOff(
+				params,
+				item.on ? [...off, item.phrase] : off.filter((o) => o.toLowerCase() !== item.phrase.toLowerCase()),
+			),
+			{ replace: true, preventScrollReset: true },
+		)
 	}
+	const allRead = (allOff: boolean) =>
+		setParams(
+			setOff(params, allOff ? readItems.filter((item) => !item.aside).map((item) => item.phrase) : []),
+			{ replace: true, preventScrollReset: true },
+		)
 	const page = useMemo<DiscoverPageContext>(
 		() => ({
 			scope,
@@ -584,7 +593,7 @@ export function DiscoverPage({
 						className="mt-3 lg:mt-5"
 						bar={bar}
 						filters={shownFilters}
-						counts={protoCounts}
+						counts={counts}
 						member={member}
 						query={protoOn ? qTyped : q}
 						reading={search.reading ?? undefined}
@@ -597,35 +606,32 @@ export function DiscoverPage({
 						prototypeReading={
 							protoOn && qTyped !== null
 								? ({ chips, onRemove, onOpen }) => (
-										<ReadLine
+										<ReadView
+											variant={readVariant}
 											items={readItems}
 											reading={proto.answer?.readingChips ?? []}
 											chips={chips}
 											pending={proto.reading || proto.loading}
-											onToggle={(item) =>
-												setParams(
-													setOff(
-														params,
-														item.on
-															? [...off, item.phrase]
-															: off.filter((o) => o.toLowerCase() !== item.phrase.toLowerCase()),
-													),
-													{ replace: true, preventScrollReset: true },
-												)
-											}
-											onAll={(allOff) =>
-												setParams(setOff(params, allOff ? readItems.map((item) => item.phrase) : []), {
-													replace: true,
-													preventScrollReset: true,
-												})
-											}
+											advanced={mode === "advanced"}
+											onToggle={toggleRead}
+											onAll={allRead}
 											onRemoveChip={onRemove}
 											onOpenChip={onOpen}
 										/>
 									)
 								: undefined
 						}
-						prototypeRowNote={protoOn ? rowNote : undefined}
+						prototypeMatchesRead={
+							protoOn && qTyped !== null ? (
+								<MatchesRead
+									items={readItems}
+									reading={proto.answer?.readingChips ?? []}
+									onToggle={toggleRead}
+									onAll={allRead}
+								/>
+							) : undefined
+						}
+						prototypeKeepChip={protoOn ? keepChip : undefined}
 						sort={{
 							options: discoverSorts(searching, taste),
 							value: sortShown(filters.sort, searching, taste),
@@ -774,9 +780,11 @@ export function DiscoverPage({
 						tagged={(key) => prototypeTierLine(proto.readout, key)}
 						why={proto.readout?.how ?? null}
 					/>
+					<PrototypeSwitcher variants={VARIANTS} position="bottom-28 lg:bottom-6 left-1/2 -translate-x-1/2" />
 					<Inspector
 						proto={proto}
 						items={readItems}
+						variant={`${readVariant} (${VARIANTS[readVariant]})`}
 						page={{
 							cardsLoaded: cards.length,
 							pagesLoaded: pages.length,

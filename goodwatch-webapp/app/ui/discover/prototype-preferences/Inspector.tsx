@@ -11,7 +11,8 @@ export function Inspector({
 	proto,
 	page,
 	items,
-}: { proto: PrototypeSearch; page: Record<string, unknown>; items: readonly Item[] }) {
+	variant,
+}: { proto: PrototypeSearch; page: Record<string, unknown>; items: readonly Item[]; variant: string }) {
 	const params = useParams()
 	const go = useGo()
 	const location = useLocation()
@@ -36,7 +37,7 @@ export function Inspector({
 	const a = proto.answer
 	const r = proto.readout
 	const state = {
-		prototype: { design: "A, one read line (B and C retired)", model: "claude-opus-5-5 (medium)", fixtures: "none: results are the live V7 preview service's" },
+		prototype: { variant, design: "read line variants A/B/C (round 3; earlier B/C ledger and words-in-field retired)", model: "claude-opus-5-5 (medium)", fixtures: "none: results are the live V7 preview service's" },
 		url: {
 			path: location.pathname,
 			q: params.get("q"),
@@ -72,7 +73,7 @@ export function Inspector({
 					: "(browsing: no search)",
 		readItems: items.map(
 			(item) =>
-				`${item.on ? "on " : "off"} ${item.soft ? "preference" : "filter    "} “${item.phrase}” → ${item.params.map(([k, v]) => `${k}=${v}`).join("&")} (${item.field} ${item.label})`,
+				`${item.aside ? "aside" : item.on ? "on " : "off"} ${item.words ? "words     " : item.soft ? "preference" : "filter    "} “${item.phrase}” → ${item.params.map(([k, v]) => `${k}=${v}`).join("&")} (${item.field} ${item.label})`,
 		),
 		readout: r
 			? {

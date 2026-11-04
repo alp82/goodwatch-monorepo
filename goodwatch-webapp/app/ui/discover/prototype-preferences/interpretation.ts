@@ -7,7 +7,7 @@
 // - a switched-off item the change brings back is switched on again;
 // - anything else the change adds is a manual choice, as on Discover today.
 import { useSearchParams } from "@remix-run/react"
-import { useCallback, useMemo } from "react"
+import { useCallback, useMemo, useRef } from "react"
 import {
 	type FilterDefaults,
 	type FilterName,
@@ -35,6 +35,8 @@ export interface Item {
 	 * such as "epic". The fingerprint qualities on the line come from all the words switched on together.
 	 */
 	words?: boolean
+	/** Your own choice in the same group takes over (manual wins): not read, not switchable. Names that choice. */
+	aside?: string
 	on: boolean
 	/** Discover's filter group and words for it, as the bar and the Matches list name them. */
 	group: FilterName | null
@@ -83,8 +85,15 @@ export function applyItem(state: FilterState, item: Item, defaults: FilterDefaul
 }
 
 export function hasItem(state: FilterState, item: Item, defaults: FilterDefaults): boolean {
+	// Group values by membership: adding a fourth mood to a full set of three changes nothing (Discover keeps three),
+	// which a compare-after-adding test would misread as "already there".
+	const groups = item.params.filter(([key]) => GROUPS.has(key))
+	if (groups.some(([key, value]) => !((state as unknown as Record<string, string[]>)[key] ?? []).includes(value)))
+		return false
+	const rest = { ...item, params: item.params.filter(([key]) => !GROUPS.has(key)) }
+	if (!rest.params.length) return true
 	return (
-		filterQuery(applyItem(state, item, defaults), "popular", defaults) ===
+		filterQuery(applyItem(state, rest, defaults), "popular", defaults) ===
 		filterQuery(state, "popular", defaults)
 	)
 }
@@ -133,7 +142,14 @@ export function itemsOf(answer: V7Answer | null, off: readonly string[], default
 		soft.has(`${key}=${value}`) ||
 		(GROUPS.has(key) ? list(v7.get(key)).includes(value) : v7.get(key) === value)
 	const byPhrase = new Map<string, [string, string][]>()
+	const asidePhrases = new Map<string, [string, string][]>()
 	for (const p of answer.proposals) {
+		if (p.status === "existing wins") {
+			const at = asidePhrases.get(p.phrase) ?? []
+			at.push([p.parameter, p.value])
+			asidePhrases.set(p.phrase, at)
+			continue
+		}
 		if (!applied(p.parameter, p.value)) continue
 		if (manual.get(p.parameter) === p.value || list(manual.get(p.parameter)).includes(p.value)) continue
 		const at = byPhrase.get(p.phrase) ?? []
@@ -164,6 +180,23 @@ export function itemsOf(answer: V7Answer | null, off: readonly string[], default
 		}
 		items.push(item)
 	}
+	// Words your own choice sets aside, shown so they don't just vanish: the field of that choice says which.
+	for (const [phrase, params] of asidePhrases) {
+		if (byPhrase.has(phrase)) continue
+		const chips = activeChips(applyItem(base, { params } as Item, defaults), {})
+		const field = FIELDS[chips[0]?.group ?? ""] ?? ""
+		items.push({
+			phrase,
+			params,
+			soft: true,
+			on: false,
+			aside: field || "your filter",
+			group: null,
+			field,
+			label: chips.map((c) => c.label).join(" · ") || phrase,
+			chipKeys: [],
+		})
+	}
 	// The rest of the words: each run of words no item took is one switch, so Clear really switches off everything the
 	// search reads. A named title is read as one piece.
 	const typed = answer.query
@@ -172,6 +205,7 @@ export function itemsOf(answer: V7Answer | null, off: readonly string[], default
 	)
 	const taken: [number, number][] = []
 	for (const item of items) {
+		// (set-aside words included: they aren't plain words either)
 		const at = typed.toLowerCase().indexOf(item.phrase.toLowerCase())
 		if (at >= 0) taken.push([at, at + item.phrase.length])
 	}
@@ -229,37 +263,47 @@ export function useInterpretedFilters(
 		() =>
 			enabled
 				? items
-						.filter((item) => item.on && !item.words && !hasItem(real.state, item, defaults))
+						.filter((item) => item.on && !item.words && !item.aside && !hasItem(real.state, item, defaults))
 						.reduce((state, item) => applyItem(state, item, defaults), real.state)
 				: real.state,
 		[enabled, items, real.state, defaults],
 	)
+	// The latest state, read at call time: a panel's content can keep a callback from an earlier render.
+	const latest = useRef({ shown, items, real })
+	latest.current = { shown, items, real }
 	const update = useCallback(
 		(change: (state: FilterState) => FilterState) => {
+			const { shown, items, real } = latest.current
 			if (!enabled) return real.update(change)
 			const next = resolveFilterChange(shown, change(shown))
 			let manual = next
-			const off = new Set(items.filter((item) => !item.on).map((item) => item.phrase))
+			// Only what this change switches: added to or taken from the URL's own `off` at the moment of writing.
+			const switchOff = new Set<string>()
+			const switchOn = new Set<string>()
 			for (const item of items) {
-				if (item.words) continue
+				if (item.words || item.aside) continue
 				const inNext = hasItem(next, item, defaults)
 				const inManual = hasItem(real.state, item, defaults)
-				if (item.on && !inNext && !inManual) off.add(item.phrase)
-				if (!item.on && inNext && !inManual) off.delete(item.phrase)
+				if (item.on && !inNext && !inManual) switchOff.add(item.phrase.toLowerCase())
+				if (!item.on && inNext && !inManual) switchOn.add(item.phrase.toLowerCase())
 				if (inNext && !inManual) manual = stripItem(manual, item, defaults)
 			}
 			setParams(
 				(previous) => {
+					const offNow = previous.getAll("off").filter((phrase) => !switchOn.has(phrase.toLowerCase()))
+					for (const item of items)
+						if (switchOff.has(item.phrase.toLowerCase()) && !offNow.some((o) => o.toLowerCase() === item.phrase.toLowerCase()))
+							offNow.push(item.phrase)
 					const out = filterStateToParams(manual, defaults, new URLSearchParams(previous))
 					out.delete("off")
-					for (const phrase of off) out.append("off", phrase)
+					for (const phrase of offNow) out.append("off", phrase)
 					out.delete("page")
 					return out
 				},
 				{ replace: true, preventScrollReset: true },
 			)
 		},
-		[enabled, shown, items, real, defaults, setParams],
+		[enabled, defaults, setParams],
 	)
 	return useMemo(
 		() =>

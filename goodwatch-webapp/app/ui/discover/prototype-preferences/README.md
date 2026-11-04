@@ -9,56 +9,74 @@ The selected search policy (V7) reads inferred genre, theme, mood and style word
 as strict filters. How should the real Discover page show what the search read, keep it simple, and still let you
 switch parts of it off?
 
-## Current design: one read line (direction A, iteration 2)
+## Round 3 question: how best to scan and control the full read
 
-The owner rejected B (results ledger) and C (words in the field) because they show too much complexity. A's first
-version lost Discover's own information, and its Must have / Leaning toward groups said too much. This iteration
-follows the owner's direction: **a single fingerprint mark and one read line for everything**, with each part
-switchable and one Clear.
+The owner kept the direction of one fingerprint mark and switchable read parts, and asked for three things:
+- A nicer, better-aligned fingerprint read, with no visible "Not".
+- Every switchable part also in the Matches popout.
+- Three structurally different ways to scan and control the read, with progressive disclosure and an Easy/Advanced
+  adaptation.
 
-There's no variant switcher; `/discover?q=…` shows this design. The earlier variants are preserved in the branch
-history: A/B/C at `e63b2238f`, then `590a1a4cd` and `36ebf88d8`.
+Three variants are mounted on the real `/discover` route as `?variant=A|B|C`. You switch them with the floating DEV
+switcher or the Left and Right arrow keys, which don't switch while a text field has focus. These are new reading-line
+designs; the earlier ledger (B) and words-in-the-field (C) designs stay retired, as do Must have / Leaning toward /
+Require.
 
-### The read line (Easy and Advanced)
+| Key | Name | Hierarchy and disclosure | Easy / Advanced |
+| --- | --- | --- | --- |
+| A | Read strip | One line: read items, the fingerprint qualities, your filters. It scrolls sideways when long, and Clear sits outside the scroll. | Same in both |
+| B | Summary + details | One short sentence, "Read as Funny · Dark · Scary · 1990–1999 · “epic”", where each part is a switch. **Details** unfolds the fingerprint qualities, words your choices set aside, and your filters on wrapped rows (`read=open\|shut`). | Easy starts folded, Advanced unfolded |
+| C | Adaptive tokens | Each read part is a marked token: a mood's own color, a calendar for years, a speech mark for plain words. The fingerprint qualities sit behind the fingerprint button (count 8) with their descriptions. | In Advanced, what the bar above already shows (Mood, Watch) leaves the line ("+1 in the bar above"). Plain words and set-aside words stay. |
 
-After the fingerprint mark, the line shows, in Discover's own chip styling:
+### Shared across A, B and C
 
-1. **Everything read from your words**, each item a switch:
-   - Filters the search applies, such as `Released 1990–1999`.
-   - Preferences, such as `Mood Funny · Dark · Scary`. A dotted underline marks them, and their tooltip says titles that
-     fit rank higher while others still show.
-   - The rest of the words the search reads as they are, such as `“epic”`, `“without warfare”`, or a named title
-     (`“The Big Short”`, as one piece).
-2. **The fingerprint qualities** those switched-on words read as (Scare, Dark Humor, Not Wholesome…). This is
-   Discover's own reading, now taken from the V7 preview's reading of the same words.
-3. **Your own filters**, with their ×.
-4. **Clear** at the end, outside the scrolling part, so it reads as applying to the whole line. Clear switches off
-   everything read; the words stay in the field, and the line shows them struck through. **Restore** brings them back.
+- **Fingerprint qualities:** a colored dot for a favored quality. For one ranked lower: a minus mark and a strong
+  strikethrough in the quality's color, with no visible "Not". Screen readers hear "Ranked lower:", and the tooltip
+  gives the description. Mark and word are centered on one line. A switched-off read item is gray, dimmed and struck
+  through in gray, never colored, so it can't be mistaken for a quality ranked lower.
+- **Matches popout:** below your own filter rows, "Read from your search" lists **every** read part separately, each
+  with its switch:
+  - Each mood, such as Mood Funny, Mood Dark and Mood Scary.
+  - Released 1990–1999.
+  - The plain words, such as “epic”.
+  - Words set aside by your own choice.
 
-A press on an item switches it off: it's struck through and dimmed, and its words are left out of what the search
-reads. The fingerprint qualities can't be switched one by one, because the ranker reads them from the words as a
-whole; they follow the words that are on. A word your own filter overrides (with `genres=Comedy`, "Action") isn't
-offered, because the search doesn't read it.
+  Notes say "ranks higher" for a preference, "set in search" for a filter, "words, ranking" for plain words, and
+  "set aside by your Mood" for set-aside words. Clear and Restore are there too. More than six parts fold behind
+  "Show all". The fingerprint qualities follow as "The words switched on read as…". Switching here and on the line
+  changes the same `off` state, so both update together. Read parts don't take a share of the "hidden" count, and
+  only your own filters get count rows.
+- **Words set aside:** V7 keeps its manual-wins rule. If you choose a Mood yourself, the query's mood words aren't read,
+  and with your own range of years, "90s" isn't read. Those words now stay visible, struck through, with
+  "set aside by your Mood". Remove your choice and they come back as they were.
 
-### Advanced and Matches
+### Advanced binding fixes (round 3)
 
-- **Advanced:** the bar shows the read selections as if chosen: Mood (3) Funny, Dark +1, and Watch 1990–1999. They
-  aren't written into the URL as manual filters. A change made through the panel, the bar or Matches is translated
-  back (`interpretation.ts`):
-  - A read item you remove is switched off.
-  - A switched-off item you bring back is switched on.
-  - Anything else you choose is a manual filter, as on Discover today.
+What was wrong:
+1. A switched-off read item and a set-aside word both count as "not on", so the next panel change wrote them into
+   `off`. Adding then removing a manual mood switched the query's moods off.
+2. The membership test added the item and compared the result. Discover keeps at most three moods, so adding Dark to
+   [Funny, Scary, Trippy] changed nothing and looked like "already there", which switched Dark back on.
+3. Panel content can call an update callback from an earlier render.
+4. While a manual change read the words again, the controls showed no read items for a moment.
 
-  Switching between Easy and Advanced never changes the ranking or turns a preference into a restriction.
-- **Matches:** the popout lists the read items as rows next to your own filters. A read filter says "set in search"
-  and a preference says "ranks higher", because preferences hide nothing. Neither takes a share of the "hidden" count.
-  Their switches use the same off/on as the line.
+Now:
+1. A change applies only what it switches, onto the URL's own `off` at the moment of writing.
+2. Membership for genres, themes, moods and styles is a value check.
+3. The callback reads the latest state.
+4. The last reading of the same words stays on screen until the new one arrives.
+
+Manual choices stay manual (hard). Read preferences are never written as manual filters, and switching between Easy
+and Advanced doesn't change the ranking.
 
 ### URL state
 
-`q` holds the words as typed. Manual filters use Discover's own parameters, and `off=<phrase>` (repeated) marks the
-items that are switched off. Reload and sharing restore everything. Switching items replaces the history entry, as
-Discover's filter changes do. A new search starts with everything switched on.
+- `q` holds the words as typed. Manual filters use Discover's own parameters.
+- `off=<phrase>` (repeated) marks the switched-off parts.
+- `variant` selects A, B or C.
+- `read=open|shut` folds or unfolds B's Details.
+
+Reload and sharing restore everything. Switches replace the history entry, as Discover's filter changes do.
 
 ## Run
 
@@ -67,7 +85,7 @@ cd goodwatch-webapp
 npm run prototype:discover-preferences
 ```
 
-Open http://127.0.0.1:5220/discover?q=funny+90s+dark+scary+epic. It needs the read-only V7 preview on
+Open http://127.0.0.1:5220/discover?q=funny+90s+dark+scary+epic&variant=A (also `variant=B`, `variant=C`). It needs the read-only V7 preview on
 `127.0.0.1:5219`. That service's source is captured on this branch in `goodwatch-webapp/scripts/search-preferences-preview/`, a copy of the
 running service; it runs from `/tmp/goodwatch-preference-eval/goodwatch-webapp` (branch
 `experiment/broad-preference-20261104`), whose app modules it imports. For display only, it now also returns its
@@ -102,16 +120,17 @@ and the frozen study build (`20261103T051503Z`) is reported separately as `froze
 ## Files
 
 - `prototype-preferences/`:
-  - `interpretation.ts`: read items, `off`, and the translated filter binding.
-  - `ReadLine.tsx`: the read line.
+  - `interpretation.ts`: read items, `off`, set-aside words, and the translated filter binding.
+  - `ReadVariants.tsx`: variants A, B and C.
+  - `read-parts.tsx`: the shared quality mark, read switch, Clear, and the Matches list.
   - `usePreferencePrototype.ts`: the V7 client, queue and catalogue parameters.
   - `model.ts`: tiers and readout.
   - `PrototypeGrid.tsx`: the Top rated divider.
   - `Inspector.tsx`, `DetailsStandIn.tsx` and `parts.tsx`.
 - Hooks in real modules, all marked PROTOTYPE:
   - `DiscoverPage.tsx`.
-  - `DiscoverControls.tsx`: the read line slot and the Matches row note.
-  - `FilterMix.tsx`: the row note.
+  - `DiscoverControls.tsx`: the read line slot and the Matches section.
+  - `FilterMix.tsx`: the Matches section and manual-only rows.
   - `ReadingLine.tsx`: exports its chips.
   - `DiscoverGrid.tsx`: the badge.
   - `routes/discover.($type).tsx`: the prototype loader.
@@ -119,30 +138,34 @@ and the frozen study build (`20261103T051503Z`) is reported separately as `froze
 
 ## Verification (manual, November 4, 2026; build `20261104T051503Z`)
 
-Playwright at 1440 × 1000 and iPhone 13, no new test suites.
+Playwright at 1440 × 1000 and iPhone 13 (DOM loaded plus the target state), no new test suites.
 
 | Check | Result |
 | --- | --- |
-| "funny 90s dark scary epic" | 40 matches. Line: Mood Funny · Dark · Scary, Released 1990–1999, “epic”, then the fingerprint qualities and Clear. |
-| Dark off | 32; on again: 40 |
-| “epic” off | 39. The inspector shows the read text "funny 90s dark scary". The qualities change (Uncanny appears; Spectacle and Adrenaline drop out). Reload keeps it. |
-| Clear | `off` for all five items. No fingerprint qualities. Discover's unfiltered list (65,276 titles, Popular). Restore: 40. |
-| Matches | "1990–1999 · set in search" and "Funny · Dark · Scary · ranks higher". Switching that row off sets `off=funny&off=dark&off=scary` (33); on again gives 40. |
-| Advanced | Mood (3) and Watch 1990–1999 preselected. The URL stays `q` only; reload keeps 40. |
-| "Historical Action" | 78. With `genres=Comedy`: 55. Line: About History plus the manual Genre Comedy. Matches lists Comedy and "History · ranks higher". |
-| Exclusion | "historical action without warfare": History and Action as filters, plus “without warfare” as words |
-| Named title | "The Big Short": one “The Big Short” item; named-title mark on the card |
+| "funny 90s dark scary epic", A/B/C | 40 matches. All parts visible: B lists them in its summary, and C shows them as tokens. |
+| Matches | Mood Funny, Mood Dark, Mood Scary, Released 1990–1999 and “epic”, each with a switch and a note, plus the fingerprint read. |
+| Two-way switching | “epic” off in Matches gives 39, and the line shows it off. Dark off on the line shows off in Matches; with both off, about 1,000 (V7 returns 1,000 for "funny 90s scary"). |
+| Clear / Restore | Every part off; Discover's plain list (65,303 on the current catalog). Restore gives 40. |
+| Advanced, Mood panel | Dark off gives 32, and the bar shows Mood 2 (Funny, Scary). Dark on gives 40. |
+| Manual Trippy (after Dark off) | `moods=mind&off=dark`, 2 matches. Funny, Dark and Scary set aside. Removing Trippy gives 32 with Dark still off; Dark on gives 40. |
+| Manual theme and year | Manual theme The mind gives 3; removing it gives 33. Manual 1985–1999 shows the read "90s" as set aside, and the bar says Watch 1985–1999. Easy round trip keeps the URL. |
+| "Historical Action" with `genres=Comedy` | 55. Matches: Comedy (manual), About History "ranks higher", Genre Action "set aside by your Genre". |
+| Exclusion and named title | "historical action without warfare": About History and Genre Action as filters, plus “without warfare” (18). "The Big Short": one “The Big Short” part. |
+| Phone, A/B/C | No horizontal overflow. The switcher sits above the bottom navigation and below State. |
 
 - Page errors: none.
-- Phone: no horizontal overflow, and Clear is visible.
 - Type check: scoped `npx tsc` clean for the touched files.
-- Budget: one bounded local attempt (`BENCH_TARGET_URL=http://127.0.0.1:5220 … ./bench.sh budget --where local --runs 1`)
-  gave `Budget: FAIL` for every surface with no Lighthouse report, as in the earlier attempt. Chrome runs in a Docker
-  container, where `127.0.0.1` isn't the host's loopback-only server. I didn't change any budget or expose the server.
+- Budget: one bounded local attempt (`… ./bench.sh budget --where local --runs 1 --label discover-read-variants`) gave
+  `Budget: FAIL` for every surface with no report. Chrome runs in Docker, where `127.0.0.1` isn't the host's
+  loopback-only server. I changed no budget and didn't expose the server.
 
 ## Limits
 
-- With every item switched off, the field still shows the words and the count still says "matches". The list is
+- With every item switched off, the field still shows the words and the count still says "matches".
+- Moods are capped at three, as on Discover. With three read moods, a fourth mood can't be added until one is
+  switched off, as when the original Discover wrote the read moods into the URL.
+- Panel counts in Advanced count your own filters against V7's result list. Decades outside the read years show 0
+  there. The list is
   Discover's own browse list with your filters.
 - Fingerprint qualities can't be switched one by one (see the read line section).
 - Word toggles are runs of words between read items, so "historical films about musicians" offers
@@ -153,4 +176,4 @@ Playwright at 1440 × 1000 and iPhone 13, no new test suites.
 
 ## Verdict
 
-Awaiting the owner's review of this iteration. Nothing is promoted to `main`.
+Awaiting the owner's choice among A, B and C. Nothing is promoted to `main`.

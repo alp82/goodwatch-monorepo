@@ -160,6 +160,9 @@ export interface DiscoverControlsProps {
 	}) => ReactNode
 	/** PROTOTYPE - throwaway: the Matches list's words for a row the search applies itself. */
 	prototypeRowNote?: (group: string) => string | undefined
+	/** PROTOTYPE - throwaway: the Matches popout's list of read parts, and which chips keep rows of their own. */
+	prototypeMatchesRead?: ReactNode
+	prototypeKeepChip?: (chip: BarChip) => boolean
 	/** PROTOTYPE - throwaway: replaces the search field; gets Ready to watch for its desktop slot. */
 	prototypeField?: (ready: ReactNode) => ReactNode
 }
@@ -194,6 +197,8 @@ function DiscoverControlsContent({
 	prototypeReading,
 	prototypeField,
 	prototypeRowNote,
+	prototypeMatchesRead,
+	prototypeKeepChip,
 }: DiscoverControlsProps) {
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
@@ -378,6 +383,8 @@ function DiscoverControlsContent({
 						update={filters.update}
 						phone={!desktop}
 						rowNote={prototypeRowNote}
+						readSection={prototypeMatchesRead}
+						keepChip={prototypeKeepChip}
 					/>
 				</div>
 			)}

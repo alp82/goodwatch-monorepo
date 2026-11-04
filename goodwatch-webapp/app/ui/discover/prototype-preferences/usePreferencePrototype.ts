@@ -133,7 +133,10 @@ export function usePreferencePrototype(on: boolean, typed: string | null, read: 
 	const query = useV7(read, existing, on && read !== null, true)
 	const fresh = query.data && !query.isPlaceholderData ? query.data : null
 	const answer = on && read !== null ? (fresh ?? null) : null
-	const full = on && typed !== null && fullQuery.data && !fullQuery.isPlaceholderData ? fullQuery.data : null
+	// While a manual change reads the words again, the last reading of the same words stays on screen, so the
+	// controls don't drop every read item for a moment.
+	const fullData = fullQuery.data
+	const full = on && typed !== null && fullData && fullData.query === typed.trim() ? fullData : null
 	const sort = params.get("sort")
 	const view = useMemo(() => (answer ? readout(answer, params) : null), [answer, params])
 	const ranked = useMemo(() => {

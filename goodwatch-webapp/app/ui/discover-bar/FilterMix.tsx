@@ -10,7 +10,7 @@
 // "no effect", and take no share of the hidden total.
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
-import { useEffect, useId, useRef, useState } from "react"
+import { type ReactNode, useEffect, useId, useRef, useState } from "react"
 import type { FilterState } from "~/domain/filter-state"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { Knob, MENU, METER_TRANSITION, TAP } from "~/ui/filter-bar/motion"
@@ -88,7 +88,13 @@ export function FilterMix({
 	update,
 	phone,
 	rowNote,
+	readSection,
+	keepChip,
 }: {
+	/** PROTOTYPE - throwaway: every part the search read, with its switch, listed after the filter rows. */
+	readSection?: ReactNode
+	/** PROTOTYPE - throwaway: which chips get rows of their own (manual filters; read parts are in readSection). */
+	keepChip?: (chip: BarChip) => boolean
 	/** PROTOTYPE - throwaway (prototype-preferences): the words for a row the search applies itself. */
 	rowNote?: (group: string) => string | undefined
 	counts: FilterBarCounts | null
@@ -129,6 +135,7 @@ export function FilterMix({
 	const groups: { group: string; chips: BarChip[] }[] = []
 	for (const chip of chips) {
 		if (chip.kind === "query" || !chip.group) continue
+		if (keepChip && !keepChip(chip)) continue
 		const at = groups.find((g) => g.group === chip.group)
 		if (at) at.chips.push(chip)
 		else groups.push({ group: chip.group, chips: [chip] })
@@ -290,9 +297,10 @@ export function FilterMix({
 									</button>
 								</li>
 							))}
-							{rows.length === 0 && (
+							{rows.length === 0 && !readSection && (
 								<li className="text-xs text-gray-500">No filters.</li>
 							)}
+							{readSection}
 						</ul>
 					</motion.section>
 				)}
