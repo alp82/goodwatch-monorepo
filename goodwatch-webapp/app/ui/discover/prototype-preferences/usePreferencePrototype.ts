@@ -38,6 +38,16 @@ function pump() {
 }
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+/** The V7 policy answered, but its retrieval failed: unknown, not zero. */
+export class RetrievalFailed extends Error {
+	constructor(
+		message: string,
+		readonly detail: string,
+	) {
+		super(message)
+	}
+}
+
 async function send(query: string, existing: string, signal?: AbortSignal): Promise<V7Answer> {
 	for (let attempt = 0; ; attempt++) {
 		signal?.throwIfAborted()
@@ -54,6 +64,16 @@ async function send(query: string, existing: string, signal?: AbortSignal): Prom
 		const body = await response.json().catch(() => null)
 		if (!response.ok || !body || body.error)
 			throw new Error(body?.error ?? `The V7 preview answered ${response.status}`)
+		// HTTP 200 can still carry a failed retrieval (policy error, total 0): that's not an empty result. The raw
+		// error (vector search JSON, hosts) stays out of the page; the inspector shows the policy and the kind.
+		const failed = (body as V7Answer).v7?.error
+		if (failed) {
+			const status = /HTTP (\d{3})/.exec(failed)?.[1]
+			throw new RetrievalFailed(
+				"Search couldn't finish for these words. Try again, or change the words.",
+				`${(body as V7Answer).v7.policy}: retrieval failed${status ? ` (HTTP ${status})` : ""}`,
+			)
+		}
 		return body as V7Answer
 	}
 }
@@ -99,6 +119,8 @@ export interface PrototypeSearch {
 	catalogueParams: string | null
 	loading: boolean
 	error: string | null
+	/** Short, for the inspector: the policy and the kind of failure, never the raw service error. */
+	errorDetail: string | null
 	retry: () => void
 	existing: string
 }
@@ -131,6 +153,8 @@ export function usePreferencePrototype(on: boolean, q: string | null): Prototype
 		catalogueParams: answer?.catalogue ? answer.params.v7 : null,
 		loading: on && q !== null && (query.isFetching || query.isPlaceholderData),
 		error: query.isError && !query.isFetching ? (query.error as Error).message : null,
+		errorDetail:
+			query.isError && !query.isFetching && query.error instanceof RetrievalFailed ? query.error.detail : null,
 		retry: () => void query.refetch(),
 		existing,
 	}
@@ -141,10 +165,11 @@ export function useWhatIf(next: URLSearchParams | null, enabled: boolean) {
 	const q = next?.get("q") ?? null
 	const query = useV7(q, next ? manualExisting(next) : "", enabled && next !== null)
 	if (!next) return null
-	if (!q) return { total: null as number | null, loading: false, browse: true }
+	if (!q) return { total: null as number | null, loading: false, browse: true, failed: false }
 	return {
 		total: query.data && !query.isPlaceholderData ? query.data.v7.total : null,
 		loading: query.isFetching,
 		browse: false,
+		failed: query.isError && !query.isFetching,
 	}
 }

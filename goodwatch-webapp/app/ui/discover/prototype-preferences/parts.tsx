@@ -106,6 +106,7 @@ export function WhatIf({ next, shown = true }: { next: URLSearchParams | null; s
 	const result = useWhatIf(next, shown)
 	if (!result) return null
 	if (result.browse) return <span className="text-gray-500 tabular-nums">browse</span>
+	if (result.failed) return <span className="text-gray-500" title="The search couldn't finish for this change">unavailable</span>
 	if (result.total === null) return <span className="text-gray-500 tabular-nums">…</span>
 	return (
 		<span className="tabular-nums text-gray-300">

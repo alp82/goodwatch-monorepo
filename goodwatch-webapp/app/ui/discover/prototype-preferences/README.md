@@ -65,7 +65,8 @@ To run it, you need:
   manual filter that your words also say. Manual-only picks stay.
 - **Clearing the search** removes `q` and keeps manual filters, which then act as ordinary Discover filters.
 - **Counts on actions** ("Require Action: 46 titles") come from asking the same V7 service with the action's URL. They
-  are exact for that service and catalog snapshot.
+  are exact for that service and catalog snapshot. When the service reports a policy error, the count says
+  "unavailable", and the main search shows a retrieval failure with Retry, never an empty result.
 - **Requiring both words gives more titles, not fewer.** With History and Action both required, every word has
   become a filter. V7 then uses Discover's catalogue list for those filters (497 titles), not a search ranking (78) or
   the old 8. Requiring History alone gives 0 titles on the current data. The prototype shows both counts instead of
@@ -148,9 +149,21 @@ Checked with Playwright from `yepwatch-app/node_modules` at 1440 × 1000 and iPh
 - The server log shows `[prototype harness] background jobs are off`, with no background database attempts after
   startup.
 - `npx tsc` reports no errors in the touched files. The repository's existing errors elsewhere are unchanged.
-- `./bench.sh budget` wasn't run. It measures a production build backed by production data, which this DEV-only
-  throwaway branch must not boot. The prototype modules are imported statically by `DiscoverPage`, so a production
-  build of this branch would carry them. That's one more reason this branch must never ship.
+- **Budget:** one bounded local attempt, on November 4, 2026, from `goodwatch-benchmark`:
+  `BENCH_TARGET_URL=http://127.0.0.1:5220 BENCH_RESOLVE_IP=127.0.0.1 BENCH_METRIC_HOSTS='' timeout 120 ./bench.sh budget --where local --runs 1 --label discover-preferences-prototype`.
+  `bench.sh budget` doesn't build or start the app. It runs Lighthouse against `BENCH_TARGET_URL`. In local mode,
+  that's a Docker container on this machine, with no SSH and no metric sampling (those belong to the load path). The
+  outcome was **Budget: FAIL** for every surface, with no Lighthouse report: "Chrome prevented page load with an
+  interstitial". Chrome runs inside the container, where `127.0.0.1` is the container itself, so it can't reach the
+  prototype server, which listens only on the host's loopback. I didn't expose the server more widely, change any
+  budget, or change the benchmark. A DEV-mode prototype server can't demonstrate a production budget result anyway.
+  The prototype modules are imported statically by `DiscoverPage`, so a production build of this branch would carry
+  them. That's one more reason this branch must never ship.
+- **Retrieval failure:** "fantasy series without dragons" makes the V7 preview answer HTTP 200 with total 0 and a
+  policy error (a vector-search 422). The page now shows "Search couldn't finish for these words" with **Retry**,
+  instead of an empty result. The raw error stays out of the page. The inspector shows the policy and the HTTP status
+  only. A what-if count whose request fails says "unavailable", not 0. Real zeros, such as Require History alone,
+  still say 0 titles. Rechecked: "Historical Action" still gives 78.
 
 ## Unresolved decisions (for the owner)
 

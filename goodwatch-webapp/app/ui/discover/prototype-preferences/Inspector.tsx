@@ -61,7 +61,9 @@ export function Inspector({ proto, page }: { proto: PrototypeSearch; page: Recor
 				}
 			: proto.loading
 				? "loading…"
-				: proto.error ?? "(browsing: no search)",
+				: proto.error
+					? { error: proto.error, detail: proto.errorDetail ?? "request failed" }
+					: "(browsing: no search)",
 		readout: r
 			? {
 					preferences: r.prefs.map((w) => `${w.param}=${w.value}`),

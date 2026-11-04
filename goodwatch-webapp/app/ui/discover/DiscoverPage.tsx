@@ -654,7 +654,7 @@ export function DiscoverPage({
 						<p className="py-16 text-center text-gray-400">
 							Discover couldn't load right now. Try again in a moment.
 						</p>
-					) : !first || layoutPending ? (
+					) : protoOn && searching && proto.error && !first ? null : !first || layoutPending ? (
 						<div className="flex justify-center py-16">
 							<Spinner size="large" />
 						</div>
