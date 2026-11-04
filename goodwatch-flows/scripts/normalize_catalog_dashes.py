@@ -24,6 +24,7 @@ from f.tvtropes_catalog.description_docs import validate_description_doc
 
 MAX_ROWS = 1_000_000
 BATCH_SIZE = 200
+READ_BATCH_SIZE = 1000
 
 
 class LongReadCrate(Crate):
@@ -37,6 +38,22 @@ class LongReadCrate(Crate):
                 return json.load(response)
         except Exception as error:
             raise RuntimeError(f'Crate request failed ({type(error).__name__}); inspect the journal and rerun') from None
+
+
+    def run_many(self, sql, params):
+        response = self._sql(sql, params, bulk=True)
+        results = response.get('results', [])
+        if len(results) != len(params):
+            raise RuntimeError('Incomplete bulk response; inspect state before rerunning')
+        for item in results:
+            error = item.get('error') or item.get('error_message')
+            message = str(error or '')
+            # Crate can return a per-item exception rather than zero for a stale CAS/deleted row.
+            if any(name in message for name in ('VersionConflictEngineException', 'DocumentMissingException')):
+                item['rowcount'] = 0
+            elif error or item.get('rowcount') not in (0, 1):
+                raise RuntimeError(f'Bulk update failed: {message[:600]} (rowcount={item.get("rowcount")})')
+        return response
 
 
 def predicate(fields):
@@ -96,6 +113,33 @@ def journal(output, value):
     print(json.dumps(value), flush=True)
 
 
+def candidate_rows(db, table, fields, where, args, output=None):
+    keys = SCHEMAS[table]['primary_key']
+    key_object = '{' + ','.join(f'"{k}"="{k}"' for k in keys) + '}'
+    candidates = db.select(
+        f'SELECT array_agg({key_object}) FILTER (WHERE {where}) AS candidates FROM "{table}"', args,
+    )[0]['candidates'] or []
+    if len(candidates) >= MAX_ROWS:
+        raise RuntimeError('Candidate read reached its limit')
+    columns = list(dict.fromkeys([*keys, *fields, *(['description_hash'] if 'description' in fields else [])]))
+    projection = ','.join(f'"{c}"' for c in columns) + ',_seq_no,_primary_term'
+    rows = []
+    # Aggregation filters source prose on the shards. Numeric-ID lookups avoid the
+    # expensive compound-key OR plans; the full requested keys still scope the result.
+    lookup_key = next((k for k in ('tmdb_id', 'media_tmdb_id') if k in keys), keys[0])
+    for offset in range(0, len(candidates), READ_BATCH_SIZE):
+        batch = candidates[offset:offset+READ_BATCH_SIZE]
+        requested = {tuple(r[k] for k in keys) for r in batch}
+        values = list(dict.fromkeys(r[lookup_key] for r in batch))
+        fetched = db.select(f'SELECT {projection} FROM "{table}" WHERE "{lookup_key}"=ANY(?) LIMIT {MAX_ROWS}', [values])
+        if len(fetched) >= MAX_ROWS:
+            raise RuntimeError('Keyed source read reached its limit')
+        rows.extend(r for r in fetched if tuple(r[k] for k in keys) in requested)
+        if offset % 10_000 == 0 or offset+READ_BATCH_SIZE >= len(candidates):
+            journal(output, {'table': table, 'read': len(rows), 'candidate_keys': len(candidates)})
+    return rows
+
+
 def run_crate(db, tables, output=None, *, apply=False):
     report = {}
     for table in tables:
@@ -108,12 +152,7 @@ def run_crate(db, tables, output=None, *, apply=False):
             continue
         if count >= MAX_ROWS:
             raise RuntimeError('Too many candidates; raise the reviewed bound before proceeding')
-        keys = SCHEMAS[table]['primary_key']
-        columns = list(dict.fromkeys([*keys, *fields, *(['description_hash'] if 'description' in fields else [])]))
-        projection = ','.join(f'"{c}"' for c in columns) + ',_seq_no,_primary_term'
-        rows = db.select(f'SELECT {projection} FROM "{table}" WHERE {where} LIMIT {MAX_ROWS}', args)
-        if len(rows) >= MAX_ROWS:
-            raise RuntimeError('Candidate read reached its limit')
+        rows = candidate_rows(db, table, fields, where, args, output)
         # Validate every document before any update to this table.
         plans = [(row, correction(table, row)) for row in rows]
         preimages(output / (table + '.before.jsonl.gz'), rows)

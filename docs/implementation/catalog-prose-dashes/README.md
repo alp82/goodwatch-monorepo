@@ -26,13 +26,16 @@ The script defaults to a read-only count preview. Each invocation requires a new
 outside the repository: it contains full catalog preimages. `--tables` can restrict a retry to selected Crate
 tables. Omit `--mongo` to run only the Crate portion.
 
-Before writing each table/collection, the script durably saves a compressed JSON-lines preimage file. Crate
+The Crate scan first selects matching primary keys, then reads current source fields and version metadata through small
+indexed ID lookups, retaining only the exact requested primary keys. Before writing each table/collection, the script durably saves a compressed JSON-lines
+preimage file. Crate
 updates use the full primary key and `_seq_no`/`_primary_term`; Mongo updates match the `_id` and original
 `dna.essence_text`. Neither path replaces an entire record. The backfill corrects description hashes and validates
 structured spans before writing. It never changes generation times, vectors, identities or provenance.
 The journal records confirmed batches. An uncertain write stops rather than being replayed automatically.
 
 Each Crate table is refreshed and recounted after application; Mongo is recounted after each collection. A nonzero
-remaining count fails the invocation. Retry conflicts with a fresh output directory after examining the journal.
+remaining count fails the invocation. Crate stale-CAS and missing-document bulk exceptions count as conflicts;
+other database errors remain fatal. Retry conflicts with a fresh output directory after examining the journal.
 Any restoration should also compare the current normalized fields before restoring preimages, to preserve later
 crawler edits. Do not blindly restore whole saved records.

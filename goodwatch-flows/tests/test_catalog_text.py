@@ -17,7 +17,7 @@ from f.media_language.episode_translations import publish_rows
 from f.tvtropes_catalog.catalog import normalize_record
 from f.tvtropes_catalog.pages import normalize_page
 from f.tvtropes_catalog.description_docs import validate_description_doc, utf16_length
-from normalize_catalog_dashes import correction, update_statement
+from normalize_catalog_dashes import LongReadCrate, candidate_rows, correction, update_statement
 
 URL = 'https://tvtropes.org/pmwiki/pmwiki.php/Main/RedHerring'
 TEXT = 'A clue—😀—leads away from the truth.'
@@ -97,6 +97,31 @@ class CatalogTextTests(unittest.TestCase):
         self.assertEqual(args[-4:], [1,2,8,1])
         done = {**row, **changes}
         self.assertEqual(correction('trope_catalog', done), {})
+
+    def test_backfill_counts_crate_cas_exceptions_as_conflicts_and_keeps_other_failures_visible(self):
+        db = LongReadCrate.__new__(LongReadCrate)
+        db._sql = Mock(return_value={'results': [
+            {'rowcount': 1}, {'rowcount': -2, 'error': {'code': 4092,
+                'message': 'VersionConflictEngineException[version conflict]'}},
+            {'rowcount': -2, 'error': {'code': 40411, 'message': 'DocumentMissingException[missing]'}},
+        ]})
+        result = db.run_many('UPDATE example', [[],[],[]])
+        self.assertEqual([r['rowcount'] for r in result['results']], [1,0,0])
+        db._sql.return_value = {'results': [{'rowcount': -2, 'error': {'message': 'IOException[failed]'}}]}
+        with self.assertRaisesRegex(RuntimeError, 'IOException'):
+            db.run_many('UPDATE example', [[]])
+
+    def test_backfill_fetches_current_routed_rows_after_key_scan_and_tolerates_deletions(self):
+        latest = {'show_id': 1, 'tmdb_id': 2, 'overview': 'Changed—since scan',
+                  '_seq_no': 99, '_primary_term': 3}
+        db = SimpleNamespace(select=Mock(side_effect=[
+            [{'candidates': [{'show_id': 1, 'tmdb_id': 2}, {'show_id': 2, 'tmdb_id': 3}]}],
+            [latest, {**latest, 'show_id': 99}]]))
+        rows = candidate_rows(db, 'episode', ('overview',), 'strpos(overview, ?) > 0', ['—'])
+        self.assertEqual(rows, [latest])
+        lookup, args = db.select.call_args.args
+        self.assertIn('WHERE "tmdb_id"=ANY(?)', lookup)
+        self.assertEqual(args, [[2,3]])
 
     def test_other_punctuation_nulls_keys_and_unrelated_tables_are_preserved(self):
         row = {'synopsis': None, 'tagline': 'a–b--c-d', 'title': 'Name—stays'}
