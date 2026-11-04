@@ -283,7 +283,7 @@ export default function DiscoverRoute() {
 // scripts/prototype-discover-preferences.sh, a development server without databases: the page's loader data is the live
 // site's guest answer for the same filters, without the search words (no search runs or is recorded there), so the
 // real page renders with real counts. Never in production.
-const PROTOTYPE_ONLY_KEYS = ["q", "asked", "variant", "open", "inspect", "page", "strict"]
+const PROTOTYPE_ONLY_KEYS = ["q", "asked", "variant", "open", "inspect", "page", "strict", "off"]
 async function prototypePreferencesLoader({ request }: LoaderFunctionArgs) {
 	if (process.env.NODE_ENV === "production")
 		throw new Response("Not found", { status: 404 })

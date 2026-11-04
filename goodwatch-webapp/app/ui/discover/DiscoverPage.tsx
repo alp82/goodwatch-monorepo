@@ -51,8 +51,9 @@ import { useDescribedSearch } from "~/ui/discover-bar/useDescribedSearch"
 import { useDesktop, useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
 import { NextPageLink } from "~/ui/explore/GridUtils"
 import { BestMatchSignUp } from "~/ui/filter-bar/SignUpPanel"
-import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
-import type { ForYouControl } from "~/ui/filter-bar/types"
+import { activeChips, discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
+import type { FilterBarCounts, ForYouControl } from "~/ui/filter-bar/types"
+import type { FilterName } from "~/domain/filter-state"
 import { useFilterState } from "~/ui/filter-bar/useFilterState"
 import { SearchPeople } from "~/ui/search/SearchPeople"
 import { Spinner } from "~/ui/wait/Spinner"
@@ -69,18 +70,18 @@ import {
 } from "./useDiscoverBrowse"
 import { type DiscoverSearchResult, useDiscoverSearch } from "./useDiscoverSearch"
 // PROTOTYPE - throwaway (discover search preferences): see prototype-preferences/README.md.
-import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { DetailsStandIn } from "./prototype-preferences/DetailsStandIn"
 import { Inspector } from "./prototype-preferences/Inspector"
 import { PrototypeGrid, prototypeTierLine } from "./prototype-preferences/PrototypeGrid"
-import { VariantAReading } from "./prototype-preferences/VariantA"
-import { VariantBLedger } from "./prototype-preferences/VariantB"
-import { VariantCField, VariantCReading } from "./prototype-preferences/VariantC"
-import { titleKey } from "~/utils/title-key"
 import {
-	PROTOTYPE_VARIANTS,
-	usePreferencePrototype,
-} from "./prototype-preferences/usePreferencePrototype"
+	itemsOf,
+	readText,
+	setOff,
+	useInterpretedFilters,
+} from "./prototype-preferences/interpretation"
+import { ReadLine } from "./prototype-preferences/ReadLine"
+import { titleKey } from "~/utils/title-key"
+import { usePreferencePrototype } from "./prototype-preferences/usePreferencePrototype"
 
 /**
  * Everything, on any service, seen or not: Ready to watch turns on My services and Not seen yet in one tap. The same
@@ -129,11 +130,14 @@ export function DiscoverPage({
 	prototypePreferences,
 }: DiscoverPageProps) {
 	const [params, setParams] = useSearchParams()
-	const q = searchText(params.get("q"))
-	// PROTOTYPE - throwaway: the V7 preview answers the search; never in production.
+	// PROTOTYPE - throwaway: the V7 preview answers the search; never in production. `qTyped` is the query as typed
+	// (the field shows it); `q` is what the search reads: without the phrases switched off on the read line (`off`).
 	const protoOn =
 		prototypePreferences === true && process.env.NODE_ENV !== "production"
-	const proto = usePreferencePrototype(protoOn, q)
+	const qTyped = searchText(params.get("q"))
+	const off = protoOn ? params.getAll("off") : []
+	const q = protoOn ? readText(qTyped, off) : qTyped
+	const proto = usePreferencePrototype(protoOn, qTyped, q)
 	const searching = q !== null
 	const allTitles = params.get("allTitles") === "1"
 	const side = params.get("side")
@@ -144,6 +148,13 @@ export function DiscoverPage({
 		member,
 		searching,
 	})
+	// PROTOTYPE - throwaway: what the whole query read, and the filter state the controls show (manual + read items).
+	const readItems = useMemo(
+		() => (protoOn ? itemsOf(proto.full, off, filters.defaults) : []),
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[protoOn, proto.full, off.join("\u0000"), filters.defaults],
+	)
+	const shownFilters = useInterpretedFilters(filters, readItems, protoOn && qTyped !== null)
 	const forYou = useForYou({ member, saved: savedForYou })
 	const bar = useDiscoverBar(filters.state)
 	const desktop = useDesktop()
@@ -239,7 +250,7 @@ export function DiscoverPage({
 				(previous) => {
 					const out = new URLSearchParams(previous)
 					out.set("q", text)
-					for (const key of ["asked", "page", "strict", "open"]) out.delete(key)
+					for (const key of ["asked", "page", "strict", "open", "off"]) out.delete(key)
 					if (entering) {
 						browseSort.current = previous.get("sort")
 						out.delete("sort")
@@ -262,7 +273,7 @@ export function DiscoverPage({
 		setParams(
 			(previous) => {
 				const out = protoOn ? new URLSearchParams(previous) : describe.clear(previous)
-				if (protoOn) for (const key of ["q", "asked", "page", "strict", "open"]) out.delete(key)
+				if (protoOn) for (const key of ["q", "asked", "page", "strict", "open", "off"]) out.delete(key)
 				if (sort && sort !== "relevance") out.set("sort", sort)
 				else out.delete("sort")
 				return out
@@ -493,6 +504,21 @@ export function DiscoverPage({
 					search.current?.filterHides,
 				)
 			: listCounts
+	// PROTOTYPE - throwaway: the Matches list shows the read items as rows. They take no share of what's hidden
+	// (the search applies them, the results endpoint only filters the manual ones): a filter says "set in search", a
+	// preference "ranks higher", since it hides nothing.
+	const itemGroups = readItems.filter((item) => item.on && item.group).map((item) => item.group as string)
+	const manualGroups = new Set(activeChips(filters.state).map((chip) => chip.group as string))
+	const protoCounts =
+		protoOn && counts && itemGroups.length
+			? ({ ...counts, inSearch: [...new Set([...((counts as FilterBarCounts).inSearch ?? []), ...itemGroups])] as FilterName[] } as FilterBarCounts)
+			: counts
+	const rowNote = (group: string) => {
+		if (manualGroups.has(group)) return undefined
+		const read = readItems.filter((item) => item.on && item.group === group)
+		if (!read.length) return undefined
+		return read.every((item) => item.soft) ? "ranks higher" : "set in search"
+	}
 	const page = useMemo<DiscoverPageContext>(
 		() => ({
 			scope,
@@ -557,10 +583,10 @@ export function DiscoverPage({
 						}
 						className="mt-3 lg:mt-5"
 						bar={bar}
-						filters={filters}
-						counts={counts}
+						filters={shownFilters}
+						counts={protoCounts}
 						member={member}
-						query={q}
+						query={protoOn ? qTyped : q}
 						reading={search.reading ?? undefined}
 						onSearch={onSearch}
 						onClearSearch={clearSearch}
@@ -569,29 +595,37 @@ export function DiscoverPage({
 						renderSubTab={renderSubTab}
 						renderFind={renderFind}
 						prototypeReading={
-							protoOn && searching && proto.readout && proto.variant !== "B"
-								? ({ chips, onRemove }) =>
-										proto.variant === "A" ? (
-											<VariantAReading r={proto.readout!} chips={chips} onRemoveChip={onRemove} />
-										) : (
-											<VariantCReading r={proto.readout!} chips={chips} onRemoveChip={onRemove} />
-										)
-								: undefined
-						}
-						prototypeField={
-							protoOn && proto.variant === "C"
-								? (ready) => (
-										<VariantCField
-											r={proto.readout}
-											typed={q ?? ""}
-											onSearch={onSearch}
-											onClear={clearSearch}
-											ready={ready}
-											loading={proto.loading}
+							protoOn && qTyped !== null
+								? ({ chips, onRemove, onOpen }) => (
+										<ReadLine
+											items={readItems}
+											reading={proto.answer?.readingChips ?? []}
+											chips={chips}
+											pending={proto.reading || proto.loading}
+											onToggle={(item) =>
+												setParams(
+													setOff(
+														params,
+														item.on
+															? [...off, item.phrase]
+															: off.filter((o) => o.toLowerCase() !== item.phrase.toLowerCase()),
+													),
+													{ replace: true, preventScrollReset: true },
+												)
+											}
+											onAll={(allOff) =>
+												setParams(setOff(params, allOff ? readItems.map((item) => item.phrase) : []), {
+													replace: true,
+													preventScrollReset: true,
+												})
+											}
+											onRemoveChip={onRemove}
+											onOpenChip={onOpen}
 										/>
 									)
 								: undefined
 						}
+						prototypeRowNote={protoOn ? rowNote : undefined}
 						sort={{
 							options: discoverSorts(searching, taste),
 							value: sortShown(filters.sort, searching, taste),
@@ -618,9 +652,6 @@ export function DiscoverPage({
 						</div>
 					)}
 				</div>
-				{protoOn && proto.variant === "B" && searching && proto.readout && (
-					<VariantBLedger r={proto.readout} sort={filters.sort} />
-				)}
 				{found && found.people.length > 0 && (
 					<div className="search-private ph-no-capture sentry-mask mt-5">
 						<SearchPeople
@@ -668,9 +699,7 @@ export function DiscoverPage({
 							<PrototypeGrid
 								on={protoOn && searching}
 								readout={proto.readout}
-								variant={proto.variant}
 								sort={filters.sort}
-								strict={proto.strict}
 								cards={first.total === 0 && !stale ? [] : cards}
 								marks={marks}
 								flipping={Boolean(flip)}
@@ -747,6 +776,7 @@ export function DiscoverPage({
 					/>
 					<Inspector
 						proto={proto}
+						items={readItems}
 						page={{
 							cardsLoaded: cards.length,
 							pagesLoaded: pages.length,
@@ -766,7 +796,6 @@ export function DiscoverPage({
 							forYouSentToResults: forYouSent,
 						}}
 					/>
-					<PrototypeSwitcher variants={PROTOTYPE_VARIANTS} position="bottom-28 lg:bottom-6 left-1/2 -translate-x-1/2" />
 				</>
 			)}
 		</MotionConfig>

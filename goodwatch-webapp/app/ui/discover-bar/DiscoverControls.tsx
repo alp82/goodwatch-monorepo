@@ -153,7 +153,13 @@ export interface DiscoverControlsProps {
 	heading?: ReactNode
 	className?: string
 	/** PROTOTYPE - throwaway (ui/discover/prototype-preferences): replaces the reading line. */
-	prototypeReading?: (bar: { chips: readonly BarChip[]; onRemove: (chip: BarChip) => void }) => ReactNode
+	prototypeReading?: (bar: {
+		chips: readonly BarChip[]
+		onRemove: (chip: BarChip) => void
+		onOpen?: (chip: BarChip) => void
+	}) => ReactNode
+	/** PROTOTYPE - throwaway: the Matches list's words for a row the search applies itself. */
+	prototypeRowNote?: (group: string) => string | undefined
 	/** PROTOTYPE - throwaway: replaces the search field; gets Ready to watch for its desktop slot. */
 	prototypeField?: (ready: ReactNode) => ReactNode
 }
@@ -187,6 +193,7 @@ function DiscoverControlsContent({
 	className = "",
 	prototypeReading,
 	prototypeField,
+	prototypeRowNote,
 }: DiscoverControlsProps) {
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
@@ -370,6 +377,7 @@ function DiscoverControlsContent({
 						chips={data.chips}
 						update={filters.update}
 						phone={!desktop}
+						rowNote={prototypeRowNote}
 					/>
 				</div>
 			)}
@@ -528,7 +536,7 @@ function DiscoverControlsContent({
 						<ReadySwitch on={readyOn} onChange={setReady} member={member} />
 					</div>
 					<div className="order-last flex min-w-0 basis-full lg:order-none lg:flex-1 lg:basis-auto">
-						{prototypeReading ? prototypeReading({ chips: data.chips, onRemove: removeChip }) : <ReadingLine
+						{prototypeReading ? prototypeReading({ chips: data.chips, onRemove: removeChip, onOpen: advanced ? openChip : undefined }) : <ReadingLine
 							state={state}
 							chips={data.chips}
 							reading={reading}

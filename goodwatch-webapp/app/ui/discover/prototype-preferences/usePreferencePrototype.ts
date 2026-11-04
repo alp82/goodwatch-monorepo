@@ -9,13 +9,6 @@ import { useMemo } from "react"
 import type { TitleKey } from "~/utils/title-key"
 import { type Readout, type V7Answer, manualExisting, readout } from "./model"
 
-export const PROTOTYPE_VARIANTS = {
-	A: "Reading line pins",
-	B: "Results ledger",
-	C: "Words in the field",
-} as const
-export type PrototypeVariant = keyof typeof PROTOTYPE_VARIANTS
-
 const ENDPOINT = "/__prototype-v7/api/search"
 
 // The preview answers one request at a time (429 while busy). Every call goes through this queue; the selected
@@ -109,20 +102,22 @@ export function useV7(query: string | null, existing: string, enabled = true, ma
 
 export interface PrototypeSearch {
 	on: boolean
-	variant: PrototypeVariant
+	/** The answer for the words the search reads (the query without switched-off phrases): the results. */
 	answer: V7Answer | null
+	/** The answer for the whole query: what it read, so switched-off items stay visible. */
+	full: V7Answer | null
 	readout: Readout | null
 	/** The keys the grid gets, in the order the chosen sort needs. */
 	ranked: TitleKey[] | null
-	/** Only exact matches (B's strict view): the original tier alone, in the same order. */
-	strict: boolean
 	/**
 	 * Every word became a filter (V7's catalogue flow, which can be tens of thousands of titles): the page asks the
 	 * results endpoint for Discover's list with these hard parameters instead of sending a ranked list. They join the
-	 * request only, never the URL, so they stay "from your words" and leave with the words.
+	 * request only, never the URL, so they stay "read from your words" and leave with the words.
 	 */
 	catalogueParams: string | null
 	loading: boolean
+	/** The whole query's reading is still on its way. */
+	reading: boolean
 	error: string | null
 	/** Short, for the inspector: the policy and the kind of failure, never the raw service error. */
 	errorDetail: string | null
@@ -130,51 +125,34 @@ export interface PrototypeSearch {
 	existing: string
 }
 
-export function usePreferencePrototype(on: boolean, q: string | null): PrototypeSearch {
+/** `typed`: the query as typed; `read`: the words the search reads (null when every read item is off). */
+export function usePreferencePrototype(on: boolean, typed: string | null, read: string | null): PrototypeSearch {
 	const [params] = useSearchParams()
-	const raw = params.get("variant")
-	const variant: PrototypeVariant = raw === "B" || raw === "C" ? raw : "A"
 	const existing = manualExisting(params)
-	const query = useV7(q, existing, on, true)
+	const fullQuery = useV7(typed, existing, on, true)
+	const query = useV7(read, existing, on && read !== null, true)
 	const fresh = query.data && !query.isPlaceholderData ? query.data : null
-	const answer = on && q !== null ? (fresh ?? null) : null
+	const answer = on && read !== null ? (fresh ?? null) : null
+	const full = on && typed !== null && fullQuery.data && !fullQuery.isPlaceholderData ? fullQuery.data : null
 	const sort = params.get("sort")
-	const strict = variant === "B" && params.get("strict") === "1"
 	const view = useMemo(() => (answer ? readout(answer, params) : null), [answer, params])
 	const ranked = useMemo(() => {
 		if (!answer || answer.catalogue) return null
-		const keys = sort === "top" ? answer.v7.bestRated.keys : answer.v7.relevance.keys
-		if (!strict) return keys
-		const original = new Set(answer.baseline.relevance.keys)
-		return keys.filter((k) => original.has(k))
-	}, [answer, sort, strict])
+		return sort === "top" ? answer.v7.bestRated.keys : answer.v7.relevance.keys
+	}, [answer, sort])
+	const failed = query.isError && !query.isFetching ? query.error : null
 	return {
 		on,
-		variant,
 		answer,
+		full,
 		readout: view,
 		ranked,
-		strict,
 		catalogueParams: answer?.catalogue ? answer.params.v7 : null,
-		loading: on && q !== null && (query.isFetching || query.isPlaceholderData),
-		error: query.isError && !query.isFetching ? (query.error as Error).message : null,
-		errorDetail:
-			query.isError && !query.isFetching && query.error instanceof RetrievalFailed ? query.error.detail : null,
+		loading: on && read !== null && (query.isFetching || query.isPlaceholderData),
+		reading: on && typed !== null && (fullQuery.isFetching || fullQuery.isPlaceholderData),
+		error: failed ? (failed as Error).message : null,
+		errorDetail: failed instanceof RetrievalFailed ? failed.detail : null,
 		retry: () => void query.refetch(),
 		existing,
-	}
-}
-
-/** What the count would be after an action: the same service, asked with the action's URL. Exact for that service. */
-export function useWhatIf(next: URLSearchParams | null, enabled: boolean) {
-	const q = next?.get("q") ?? null
-	const query = useV7(q, next ? manualExisting(next) : "", enabled && next !== null)
-	if (!next) return null
-	if (!q) return { total: null as number | null, loading: false, browse: true, failed: false }
-	return {
-		total: query.data && !query.isPlaceholderData ? query.data.v7.total : null,
-		loading: query.isFetching,
-		browse: false,
-		failed: query.isError && !query.isFetching,
 	}
 }

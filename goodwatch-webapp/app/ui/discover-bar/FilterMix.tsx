@@ -87,7 +87,10 @@ export function FilterMix({
 	state,
 	update,
 	phone,
+	rowNote,
 }: {
+	/** PROTOTYPE - throwaway (prototype-preferences): the words for a row the search applies itself. */
+	rowNote?: (group: string) => string | undefined
 	counts: FilterBarCounts | null
 	searching: boolean
 	state: FilterState
@@ -263,11 +266,12 @@ export function FilterMix({
 										<span className="shrink-0 text-xs tabular-nums text-gray-500">
 											{row.off
 												? "off"
-												: row.inSearch
+												: rowNote?.(row.group) ??
+													(row.inSearch
 													? "set in search"
 													: row.hides < 1
 														? "no effect"
-														: `hides ~${compactCount(row.hides)}`}
+														: `hides ~${compactCount(row.hides)}`)}
 										</span>
 										<span
 											className="shrink-0 origin-center scale-75"

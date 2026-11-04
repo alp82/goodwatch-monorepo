@@ -36,6 +36,9 @@ export interface V7Answer {
 	identityRepairs: unknown[]
 	transportAction: string
 	catalogue: boolean
+	/** Display only: every applied interpretation with its phrase, and the reading as Discover's search shows it. */
+	proposals?: Proposal[]
+	readingChips?: import("~/server/combined-search/reading-retrieval.server").ReadingChip[]
 	timing: Record<string, unknown>
 	source: Record<string, unknown>
 }
@@ -249,67 +252,8 @@ export function readout(answer: V7Answer, url: URLSearchParams): Readout {
 	}
 }
 
-// URL changes. Each returns the next search parameters; none touches the query unless it says so.
-
-const withValue = (params: URLSearchParams, key: string, value: string, on: boolean) => {
-	const values = new Set(list(params.get(key)))
-	if (on) values.add(value)
-	else values.delete(value)
-	if (values.size) params.set(key, [...values].join(","))
-	else params.delete(key)
-}
-
-/** Require: the preference becomes a manual filter (in the URL), which outlasts the query. */
-export function requireWord(current: URLSearchParams, word: Word): URLSearchParams {
-	const next = new URLSearchParams(current)
-	withValue(next, word.param, word.value, true)
-	next.delete("page")
-	next.delete("strict")
-	return next
-}
-
-/** Back to a preference: drops the filter; the word goes into the query when it isn't there, so it is read again. */
-export function relaxWord(current: URLSearchParams, word: Word): URLSearchParams {
-	const next = new URLSearchParams(current)
-	withValue(next, word.param, word.value, false)
-	const q = next.get("q")?.trim() ?? ""
-	if (!mentions(q, word.label, word.phrase)) next.set("q", q ? `${q} ${word.label.toLowerCase()}` : word.label.toLowerCase())
-	next.delete("page")
-	next.delete("strict")
-	return next
-}
-
-/** Remove a word from the query (a preference or a search-strict word): the search reads the rest. */
-export function removeWord(current: URLSearchParams, phrase: string): URLSearchParams {
-	const next = new URLSearchParams(current)
-	const q = next.get("q") ?? ""
-	const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-	const rest = q.replace(new RegExp(`\\b${escaped}\\b`, "i"), " ").replace(/\s+/g, " ").trim()
-	if (rest) next.set("q", rest)
-	else next.delete("q")
-	next.delete("page")
-	next.delete("strict")
-	return next
-}
-
-/** Drop a manual filter (no word added back). */
-export function dropFilter(current: URLSearchParams, word: Word): URLSearchParams {
-	const next = new URLSearchParams(current)
-	withValue(next, word.param, word.value, false)
-	next.delete("page")
-	return next
-}
-
-/** Reset: every filter pinned from the query's own words goes back to being a preference. Manual-only picks stay. */
-export function resetToWords(current: URLSearchParams, r: Readout): URLSearchParams {
-	let next = new URLSearchParams(current)
-	for (const word of r.pinned) if (word.phrase) next = dropFilter(next, word)
-	next.delete("strict")
-	return next
-}
-
 /** The manual filters the V7 service gets as `existing`: the URL without search, view and prototype keys. */
-const NOT_FILTERS = ["q", "asked", "page", "allTitles", "sort", "layout", "side", "mode", "variant", "open", "inspect", "strict", "foryou"]
+const NOT_FILTERS = ["q", "asked", "page", "allTitles", "sort", "layout", "side", "mode", "variant", "open", "inspect", "strict", "foryou", "off"]
 export function manualExisting(params: URLSearchParams): string {
 	const out = new URLSearchParams(params)
 	for (const key of NOT_FILTERS) out.delete(key)

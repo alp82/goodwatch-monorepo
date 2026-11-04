@@ -4,9 +4,14 @@ import { useLocation } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { useGo, useParams } from "./parts"
+import type { Item } from "./interpretation"
 import type { PrototypeSearch } from "./usePreferencePrototype"
 
-export function Inspector({ proto, page }: { proto: PrototypeSearch; page: Record<string, unknown> }) {
+export function Inspector({
+	proto,
+	page,
+	items,
+}: { proto: PrototypeSearch; page: Record<string, unknown>; items: readonly Item[] }) {
 	const params = useParams()
 	const go = useGo()
 	const location = useLocation()
@@ -31,13 +36,14 @@ export function Inspector({ proto, page }: { proto: PrototypeSearch; page: Recor
 	const a = proto.answer
 	const r = proto.readout
 	const state = {
-		prototype: { variant: proto.variant, model: "claude-opus-5-5 (medium)", fixtures: "none: results are the live V7 preview service's" },
+		prototype: { design: "A, one read line (B and C retired)", model: "claude-opus-5-5 (medium)", fixtures: "none: results are the live V7 preview service's" },
 		url: {
 			path: location.pathname,
 			q: params.get("q"),
 			manualFilters_sentAsExisting: proto.existing || "(none)",
 			sort: params.get("sort") ?? "(default: relevance while searching)",
-			strictView_B: params.get("strict") === "1",
+			off_switchedOffPhrases: params.getAll("off"),
+			readText_sentToV7: proto.answer?.query ?? "(nothing left to read: Discover's list with your filters)",
 			open_details: params.get("open"),
 			mode: params.get("mode") ?? "easy",
 			historyLength: typeof window === "undefined" ? null : window.history.length,
@@ -64,6 +70,10 @@ export function Inspector({ proto, page }: { proto: PrototypeSearch; page: Recor
 				: proto.error
 					? { error: proto.error, detail: proto.errorDetail ?? "request failed" }
 					: "(browsing: no search)",
+		readItems: items.map(
+			(item) =>
+				`${item.on ? "on " : "off"} ${item.soft ? "preference" : "filter    "} “${item.phrase}” → ${item.params.map(([k, v]) => `${k}=${v}`).join("&")} (${item.field} ${item.label})`,
+		),
 		readout: r
 			? {
 					preferences: r.prefs.map((w) => `${w.param}=${w.value}`),

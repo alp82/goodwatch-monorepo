@@ -41,6 +41,7 @@ export type SearchResult = {
   params: { baseline: string; v7: string }; timing: Record<string, unknown>
   identityRepairs: { identity: string; alias: number; preferred: number }[]
   transportAction: string; catalogue: boolean
+  proposals: Proposal[]; readingChips: unknown[]
 }
 export type Card = {
   key: number; title: string; year: number | null; type: 'movie' | 'show'
@@ -365,6 +366,8 @@ async function searchOnce(rt: Runtime, input: { query: string; existing?: string
   }
   assertPinned(rt)
   return { query, semanticQuery: view.semanticQuery, existing, branch, source: rt.source, baseline, v7: candidate, policies: [baseline, candidate], prefs, retainedHard, recognized, negativeClauses, params: { baseline: baseline.params, v7: candidate.params }, identityRepairs: repairs, transportAction, catalogue: !reading,
+    // Display only: every applied interpretation (with its phrase), and the reading as Discover's search shows it.
+    proposals: view.proposals.filter((p: Proposal) => p.status === 'applied'), readingChips: cap ? rt.app.summarizeReading(text, cap.raw, foreign) : [],
     timing: { totalMs: performance.now() - start, readingMs, baselineMs, candidateMs: performance.now() - candidateStart, readingCacheHit: cap?.cacheHit ?? null, baselineRetrieval: baseRank ? { cacheHit: baseRank.cacheHit, actualMs: baseRank.elapsedMs } : null, broadRetrieval: broadRank ? { cacheHit: broadRank.cacheHit, actualMs: broadRank.elapsedMs } : null } }
 }
 

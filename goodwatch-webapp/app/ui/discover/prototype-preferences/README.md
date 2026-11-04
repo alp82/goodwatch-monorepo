@@ -5,20 +5,60 @@ updated only by Claude Opus 5.5 (`claude-opus-5-5`) at medium effort, using the 
 
 ## Question
 
-The selected search policy (V7) turns inferred genre, theme, mood and style words into preferences under Relevance,
-instead of strict filters. How should that show up on the real Discover page? Specifically, how should Discover
-distinguish preferences from required filters, let you require or relax a word, and explain the counts, tiers and
-sorts honestly?
+The selected search policy (V7) reads inferred genre, theme, mood and style words as preferences under Relevance, not
+as strict filters. How should the real Discover page show what the search read, keep it simple, and still let you
+switch parts of it off?
 
-Three variants are mounted on the real `/discover` route, the real app shell, the real Discover controls and the real
-poster grid. You switch them with `?variant=A|B|C`, the floating switcher, or the Left and Right arrow keys. The arrow
-keys don't switch while a text field has focus.
+## Current design: one read line (direction A, iteration 2)
 
-| Variant | Name | Where preferences live | How the Top rated tiers show |
-| --- | --- | --- | --- |
-| A | Reading line pins | The line under the search field: **Must have** (solid, locked) and **Leaning toward** (dashed) chips. Each chip opens a dialog with its actions and counts. | A thin full-width divider |
-| B | Results ledger | A panel above the grid: a total, a view switch between **Fits your words** and **Tagged History + Action**, and one row per word with **Prefer \| Require**, the count each gives, and Remove. | Two shelves with headings. Under Relevance, tagged cards get a small check mark. |
-| C | Words in the field | The search text itself: dashed underline for a preference, solid underline with a lock for a required word, strikethrough for a word your own filter overrides. Filters picked elsewhere sit at the end of the field as locked chips. Tap a word for its choices. | One grid cell after the last tagged title |
+The owner rejected B (results ledger) and C (words in the field) because they show too much complexity. A's first
+version lost Discover's own information, and its Must have / Leaning toward groups said too much. This iteration
+follows the owner's direction: **a single fingerprint mark and one read line for everything**, with each part
+switchable and one Clear.
+
+There's no variant switcher; `/discover?q=…` shows this design. The earlier variants are preserved in the branch
+history: A/B/C at `e63b2238f`, then `590a1a4cd` and `36ebf88d8`.
+
+### The read line (Easy and Advanced)
+
+After the fingerprint mark, the line shows, in Discover's own chip styling:
+
+1. **Everything read from your words**, each item a switch:
+   - Filters the search applies, such as `Released 1990–1999`.
+   - Preferences, such as `Mood Funny · Dark · Scary`. A dotted underline marks them, and their tooltip says titles that
+     fit rank higher while others still show.
+   - The rest of the words the search reads as they are, such as `“epic”`, `“without warfare”`, or a named title
+     (`“The Big Short”`, as one piece).
+2. **The fingerprint qualities** those switched-on words read as (Scare, Dark Humor, Not Wholesome…). This is
+   Discover's own reading, now taken from the V7 preview's reading of the same words.
+3. **Your own filters**, with their ×.
+4. **Clear** at the end, outside the scrolling part, so it reads as applying to the whole line. Clear switches off
+   everything read; the words stay in the field, and the line shows them struck through. **Restore** brings them back.
+
+A press on an item switches it off: it's struck through and dimmed, and its words are left out of what the search
+reads. The fingerprint qualities can't be switched one by one, because the ranker reads them from the words as a
+whole; they follow the words that are on. A word your own filter overrides (with `genres=Comedy`, "Action") isn't
+offered, because the search doesn't read it.
+
+### Advanced and Matches
+
+- **Advanced:** the bar shows the read selections as if chosen: Mood (3) Funny, Dark +1, and Watch 1990–1999. They
+  aren't written into the URL as manual filters. A change made through the panel, the bar or Matches is translated
+  back (`interpretation.ts`):
+  - A read item you remove is switched off.
+  - A switched-off item you bring back is switched on.
+  - Anything else you choose is a manual filter, as on Discover today.
+
+  Switching between Easy and Advanced never changes the ranking or turns a preference into a restriction.
+- **Matches:** the popout lists the read items as rows next to your own filters. A read filter says "set in search"
+  and a preference says "ranks higher", because preferences hide nothing. Neither takes a share of the "hidden" count.
+  Their switches use the same off/on as the line.
+
+### URL state
+
+`q` holds the words as typed. Manual filters use Discover's own parameters, and `off=<phrase>` (repeated) marks the
+items that are switched off. Reload and sharing restore everything. Switching items replaces the history entry, as
+Discover's filter changes do. A new search starts with everything switched on.
 
 ## Run
 
@@ -27,77 +67,13 @@ cd goodwatch-webapp
 npm run prototype:discover-preferences
 ```
 
-Open http://127.0.0.1:5220/discover?q=Historical+Action&variant=A (also `variant=B` and `variant=C`).
-
-To run it, you need:
-
-- The read-only V7 preview service on `127.0.0.1:5219`. Its source is captured on this branch in
-  `goodwatch-webapp/scripts/search-preferences-preview/`, a copy of the running service. It runs from the experiment
-  worktree `/tmp/goodwatch-preference-eval/goodwatch-webapp` (branch `experiment/broad-preference-20261104`), whose
-  app modules it imports: `GOODWATCH_PREVIEW_ENV_DIR=<webapp dir> node scripts/search-preferences-preview/server.mjs`.
-  It does only read-only production reads (see its README). The prototype doesn't change the ranking policy.
-- `node_modules` in this worktree. It's an ignored symlink to another worktree's install with the same dependencies.
-
-### Useful links
-
-| Case | URL (append `&variant=B` or `C` as needed) |
-| --- | --- |
-| Free text, two preferences | `/discover?q=Historical+Action` |
-| Action required by you | `/discover?q=Historical+Action&genres=Action` |
-| Both required (catalogue flow, 497) | `/discover?q=Historical+Action&genres=Action&themes=history` |
-| Your filter overrides a word | `/discover?q=Historical+Action&genres=Comedy` |
-| Structural words only (18,937, catalogue flow) | `/discover?q=before+2000` |
-| Exclusion | `/discover?q=historical+action+without+warfare` |
-| Named title | `/discover?q=The+Big+Short` |
-| Kept form and provenance | `/discover?q=true+stories+horror`, `/discover?q=animated+historical` |
-| State inspector open | add `&inspect=1` |
-
-## How state behaves
-
-- **URL is the discovery context.** It holds `q` (your words as typed), manual filters (`genres=`, `themes=` and so
-  on), `sort`, `variant`, B's `strict=1` view, `open=<title key>` for the details stand-in, and `inspect=1`. Reload,
-  sharing and Back/Forward restore all of it. Nothing is saved to an account.
-- **Inferred words never enter the URL.** V7 reads `q` again on every change. A query change can't leave the previous
-  words' preferences behind as manual filters. This differs from today's described search, which writes the
-  interpreted filters into the URL.
-- **Require** adds the value to the URL as a manual filter. It survives query changes. Manual filters win conflicts:
-  with `genres=Comedy`, the word "Action" is set aside and shown struck through.
-- **Back to a preference** removes the filter. If your words don't already say it, the label joins `q`, so V7 reads it
-  as a preference again. This works for a filter picked in the Mood tab too.
-- **Remove word** edits `q`. **Turn required words back into preferences** (A: **Read my words again**) removes every
-  manual filter that your words also say. Manual-only picks stay.
-- **Clearing the search** removes `q` and keeps manual filters, which then act as ordinary Discover filters.
-- **Counts on actions** ("Require Action: 46 titles") come from asking the same V7 service with the action's URL. They
-  are exact for that service and catalog snapshot. When the service reports a policy error, the count says
-  "unavailable", and the main search shows a retrieval failure with Retry, never an empty result.
-- **Requiring both words gives more titles, not fewer.** With History and Action both required, every word has
-  become a filter. V7 then uses Discover's catalogue list for those filters (497 titles), not a search ranking (78) or
-  the old 8. Requiring History alone gives 0 titles on the current data. The prototype shows both counts instead of
-  hiding them.
-- **Catalogue answers** (every word became a filter, including structural-only searches such as "before 2000" with
-  18,937 titles) don't send a ranked list, because the results API caps it at 5,000. The answer's hard parameters
-  (`answer.params.v7`) join the results request only, not the URL, so they stay "read from your words" and leave with
-  the words. Under Relevance, Discover's list is by popularity there, and the readout says so.
-- **Top rated** sends V7's tiered order: the original search's matches by rating first, then the broader titles by
-  rating. The results endpoint is asked to keep that order (`sort=relevance` in the request) while the sort control
-  says Top rated. Popular and Newest sort the whole eligible set globally, with no tiers claimed.
-- **For you** is sent as off for prototype searches, so V7's order and tiers arrive unchanged. The harness is a guest
-  without taste. No member taste is read, and none is simulated.
-- **Card click** opens a stand-in for the title page (`open=<key>`, a new history entry). The real title page needs
-  production databases. Back returns to the same results, sort, scroll position and variant. The stand-in links to the
-  real page on goodwatch.app in a new tab.
-
-## Honest limits of the wording
-
-- "Tagged History and Action" means the title's data carries the filters the words were read as. The tighter view in
-  B (`strict=1`) is the original search's matching tier, a view of the same list. It doesn't verify that a title is
-  about every word. For example, "historical films about musicians" can tag high-rated history titles that aren't
-  about musicians.
-- Exclusions ("without warfare") keep the existing handling. Leaving something out relies on title data, so the
-  readout says it isn't guaranteed. It doesn't claim verified absence, and it doesn't claim every word became strict.
-- A named title comes first. The titles after it are other results for the words, not necessarily like it.
-- Kept form and provenance (Animated, Documentary, True stories) stay filters read from title data. Those data proxies
-  are imperfect.
+Open http://127.0.0.1:5220/discover?q=funny+90s+dark+scary+epic. It needs the read-only V7 preview on
+`127.0.0.1:5219`. That service's source is captured on this branch in `goodwatch-webapp/scripts/search-preferences-preview/`, a copy of the
+running service; it runs from `/tmp/goodwatch-preference-eval/goodwatch-webapp` (branch
+`experiment/broad-preference-20261104`), whose app modules it imports. For display only, it now also returns its
+applied interpretation with phrases (`proposals`) and its reading chips (`readingChips`, from Discover's
+`summarizeReading`). The ranking is unchanged. It follows the current search index build. Rank caches are per build,
+and the frozen study build (`20261103T051503Z`) is reported separately as `frozenIndex`.
 
 ## Safety
 
@@ -125,85 +101,56 @@ To run it, you need:
 
 ## Files
 
-- `app/ui/discover/prototype-preferences/`: `usePreferencePrototype.ts` (V7 client with a one-at-a-time queue, sort
-  orders, catalogue parameters), `model.ts` (readout and URL actions), `parts.tsx` (shared chips, counts, dialog),
-  `VariantA.tsx`, `VariantB.tsx`, `VariantC.tsx`, `PrototypeGrid.tsx`, `Inspector.tsx`, `DetailsStandIn.tsx`.
-- Hooks in real modules, all marked PROTOTYPE: `DiscoverPage.tsx`, `DiscoverControls.tsx` (reading line and field
-  slots), `DiscoverGrid.tsx` (badge), `routes/discover.($type).tsx` (prototype loader), `entry.server.tsx`,
-  `root.tsx`, `availability-index.server.ts`, `search-index.server.ts` and `people.server.ts` (job guards).
-- `app/ui/prototype/PrototypeSwitcher.tsx` is the existing shared switcher. It's DEV-only.
+- `prototype-preferences/`:
+  - `interpretation.ts`: read items, `off`, and the translated filter binding.
+  - `ReadLine.tsx`: the read line.
+  - `usePreferencePrototype.ts`: the V7 client, queue and catalogue parameters.
+  - `model.ts`: tiers and readout.
+  - `PrototypeGrid.tsx`: the Top rated divider.
+  - `Inspector.tsx`, `DetailsStandIn.tsx` and `parts.tsx`.
+- Hooks in real modules, all marked PROTOTYPE:
+  - `DiscoverPage.tsx`.
+  - `DiscoverControls.tsx`: the read line slot and the Matches row note.
+  - `FilterMix.tsx`: the row note.
+  - `ReadingLine.tsx`: exports its chips.
+  - `DiscoverGrid.tsx`: the badge.
+  - `routes/discover.($type).tsx`: the prototype loader.
+  - Job guards in `entry.server.tsx`, `root.tsx`, the availability, search and people index modules.
 
-## Verification (manual, November 4, 2026)
+## Verification (manual, November 4, 2026; build `20261104T051503Z`)
 
-Checked with Playwright from `yepwatch-app/node_modules` at 1440 × 1000 and iPhone 13. No new test suites.
+Playwright at 1440 × 1000 and iPhone 13, no new test suites.
 
-- All three variants render on the real page with 78 V7 titles for "Historical Action", with no page errors and no
-  horizontal overflow on phone.
-- A: Require Action gives 46 titles, then Require History gives 497. Reload keeps 497, **Read my words again**
-  returns to 78, Back gives 497 again. The switcher button and the Right arrow key change the variant and keep the URL.
-- B: both what-if counts appear together (0 and 46). The view switch gives 8, then 78. Top rated shows the two
-  shelves (8, then 70).
-- C: `genres=Comedy` shows "Action" struck through with "Comedy wins" (55 titles). Word dialogs show counts. The
-  exclusion search shows 18 titles with the retained-handling wording.
-- "before 2000" shows 18,937 titles with the year filter applied, in all variants. There's no 400, and the URL stays
-  `q` only. Scrolling loads more pages.
-- "The Big Short" puts the named title first, with a **You named this** mark. Card → stand-in → Back keeps the
-  results and scroll position.
-- The server log shows `[prototype harness] background jobs are off`, with no background database attempts after
-  startup.
-- `npx tsc` reports no errors in the touched files. The repository's existing errors elsewhere are unchanged.
-- **Budget:** one bounded local attempt, on November 4, 2026, from `goodwatch-benchmark`:
-  `BENCH_TARGET_URL=http://127.0.0.1:5220 BENCH_RESOLVE_IP=127.0.0.1 BENCH_METRIC_HOSTS='' timeout 120 ./bench.sh budget --where local --runs 1 --label discover-preferences-prototype`.
-  `bench.sh budget` doesn't build or start the app. It runs Lighthouse against `BENCH_TARGET_URL`. In local mode,
-  that's a Docker container on this machine, with no SSH and no metric sampling (those belong to the load path). The
-  outcome was **Budget: FAIL** for every surface, with no Lighthouse report: "Chrome prevented page load with an
-  interstitial". Chrome runs inside the container, where `127.0.0.1` is the container itself, so it can't reach the
-  prototype server, which listens only on the host's loopback. I didn't expose the server more widely, change any
-  budget, or change the benchmark. A DEV-mode prototype server can't demonstrate a production budget result anyway.
-  The prototype modules are imported statically by `DiscoverPage`, so a production build of this branch would carry
-  them. That's one more reason this branch must never ship.
-- **Retrieval failure:** "fantasy series without dragons" makes the V7 preview answer HTTP 200 with total 0 and a
-  policy error (a vector-search 422). The page now shows "Search couldn't finish for these words" with **Retry**,
-  instead of an empty result. The raw error stays out of the page. The inspector shows the policy and the HTTP status
-  only. A what-if count whose request fails says "unavailable", not 0. Real zeros, such as Require History alone,
-  still say 0 titles. Rechecked: "Historical Action" still gives 78.
+| Check | Result |
+| --- | --- |
+| "funny 90s dark scary epic" | 40 matches. Line: Mood Funny · Dark · Scary, Released 1990–1999, “epic”, then the fingerprint qualities and Clear. |
+| Dark off | 32; on again: 40 |
+| “epic” off | 39. The inspector shows the read text "funny 90s dark scary". The qualities change (Uncanny appears; Spectacle and Adrenaline drop out). Reload keeps it. |
+| Clear | `off` for all five items. No fingerprint qualities. Discover's unfiltered list (65,276 titles, Popular). Restore: 40. |
+| Matches | "1990–1999 · set in search" and "Funny · Dark · Scary · ranks higher". Switching that row off sets `off=funny&off=dark&off=scary` (33); on again gives 40. |
+| Advanced | Mood (3) and Watch 1990–1999 preselected. The URL stays `q` only; reload keeps 40. |
+| "Historical Action" | 78. With `genres=Comedy`: 55. Line: About History plus the manual Genre Comedy. Matches lists Comedy and "History · ranks higher". |
+| Exclusion | "historical action without warfare": History and Action as filters, plus “without warfare” as words |
+| Named title | "The Big Short": one “The Big Short” item; named-title mark on the card |
 
-- **Index refresh (November 4, 2026):** your search "funny 90s dark scary epic" failed with
-  `Live ranker index drift: 20261104T051503Z`. The preview had pinned the study's frozen search index build
-  (`20261103T051503Z`), while the app's index module had loaded the newer build that `rankSearch` always uses.
-  - The preview now ranks on the current build and builds its identity folding from that same build.
-  - Rank caches are keyed by build, so old-build ranks are never reused as current.
-  - A refresh of the index or catalog during a comparison is retried, up to three attempts.
-  - `/api/config` reports both `index` (current) and `frozenIndex` (study), plus the current identity tables' sha1
-    values. The state inspector shows them under `previewConfig`.
-  - If the refresh outlasts the retries, the page says "The catalog just updated. Try again in a moment." with Retry,
-    never an empty result.
+- Page errors: none.
+- Phone: no horizontal overflow, and Clear is visible.
+- Type check: scoped `npx tsc` clean for the touched files.
+- Budget: one bounded local attempt (`BENCH_TARGET_URL=http://127.0.0.1:5220 … ./bench.sh budget --where local --runs 1`)
+  gave `Budget: FAIL` for every surface with no Lighthouse report, as in the earlier attempt. Chrome runs in a Docker
+  container, where `127.0.0.1` isn't the host's loopback-only server. I didn't change any budget or expose the server.
 
-  Observed on build `20261104T051503Z`, snapshot `20261104T043549Z`:
+## Limits
 
-  | Search | Result |
-  | --- | --- |
-  | "funny 90s dark scary epic" | 40 titles (31 original). Preferences Funny, Dark and Scary. Released 1990–1999 stays a filter. First answer 11.9 s, repeat 36 ms (cached). |
-  | "Historical Action" | 78 titles (8 original). Repeat 8 ms. |
-  | Both Historical Action words pinned | 497 titles |
-  | "The Big Short" | Title guard, recognized title first, 1,278 titles |
-  | "1917" | Title guard, 11 titles |
-
-  Browser: A, B and C show 40 titles for the query. B's ledger fills all three Require counts and the structural
-  row. "Historical Action" shows 78 titles, also after reload. The title guard works in C.
-
-  The study's measured numbers belong to the frozen build. These answers are live previews under the same ranking
-  policy.
-
-## Unresolved decisions (for the owner)
-
-- Which variant, or which parts of each (for example, A's chips with B's ledger counts).
-- Whether requiring every word should switch to the catalogue list (497) or keep the search ranking, and how to
-  explain that jump.
-- Whether B's tighter view belongs in the product at all, given that tags aren't a check of meaning.
-- Production needs its own V7 retrieval path. Latency and capacity aren't validated (about twice the retrieval
-  work). This prototype only borrows the local preview service.
+- With every item switched off, the field still shows the words and the count still says "matches". The list is
+  Discover's own browse list with your filters.
+- Fingerprint qualities can't be switched one by one (see the read line section).
+- Word toggles are runs of words between read items, so "historical films about musicians" offers
+  “films about musicians” as one piece.
+- Results and counts come from the local V7 preview through Discover's guest results endpoint. Production has no V7
+  path yet, and latency and capacity aren't validated.
+- The study's measured numbers belong to the frozen build. These are live previews under the same ranking policy.
 
 ## Verdict
 
-Awaiting the owner's visual choice. No variant is selected or promoted.
+Awaiting the owner's review of this iteration. Nothing is promoted to `main`.

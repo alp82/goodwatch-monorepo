@@ -1,6 +1,6 @@
 // PROTOTYPE - throwaway. A stand-in for the title page: the real one needs production databases, which this harness
 // doesn't have. A card click adds `open=<key>` to the URL (a new history entry), so Back returns to the same results,
-// sort, scroll and variant; reload keeps it open. Its text comes from the V7 preview's read-only card endpoint.
+// sort, scroll and read items; reload keeps it open. Its text comes from the V7 preview's read-only card endpoint.
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { useNavigate } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
