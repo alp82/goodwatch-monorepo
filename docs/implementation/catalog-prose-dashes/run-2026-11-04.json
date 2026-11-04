@@ -1,0 +1,122 @@
+{
+  "finished_at": "2026-11-04T21:57:34.328843+00:00",
+  "replacement": {
+    "from": "U+2014",
+    "to": "U+002D",
+    "preserve_whitespace": true
+  },
+  "pipeline_commit": "b747a57b755fb665824af4d28c7939e6d1aa6269",
+  "backfill_commit": "2a0f09e7c5b221a6f777d65ce1e491b5360b8738",
+  "deployment": "https://github.com/alp82/goodwatch-monorepo/actions/runs/41913193494",
+  "latest_workspace_sync": "https://github.com/alp82/goodwatch-monorepo/actions/runs/41917517789",
+  "deployed_modules": [
+    {
+      "path": "f/sync/catalog_text",
+      "hash": "459388deb0bb6387",
+      "matches": true
+    },
+    {
+      "path": "f/db/cratedb",
+      "hash": "8ceaab064c167af7",
+      "matches": true
+    },
+    {
+      "path": "f/dna/generate/fetch",
+      "hash": "c79c8bec5f630fa3",
+      "matches": true
+    },
+    {
+      "path": "f/media_language/episode_translations",
+      "hash": "191a9382d2f3fd33",
+      "matches": true
+    },
+    {
+      "path": "f/tvtropes_catalog/catalog",
+      "hash": "cf43f7a39896fe17",
+      "matches": true
+    },
+    {
+      "path": "f/tvtropes_catalog/pages",
+      "hash": "3f3f5e95ca3b2855",
+      "matches": true
+    },
+    {
+      "path": "f/tvtropes_catalog/description_docs",
+      "hash": "fd307bc7e9ed7796",
+      "matches": true
+    }
+  ],
+  "crate": {
+    "translation": {
+      "updated": 89506,
+      "remaining": 0
+    },
+    "season": {
+      "updated": 1354,
+      "remaining": 0
+    },
+    "episode": {
+      "updated": 18239,
+      "remaining": 0
+    },
+    "season_translation": {
+      "updated": 359,
+      "remaining": 0
+    },
+    "episode_translation": {
+      "updated": 3208,
+      "remaining": 0
+    },
+    "trope_catalog": {
+      "updated": 11228,
+      "remaining": 0
+    },
+    "trope_catalog_page": {
+      "updated": 9162,
+      "remaining": 0
+    },
+    "movie": {
+      "updated": 23187,
+      "remaining": 0
+    },
+    "show": {
+      "updated": 5115,
+      "remaining": 0
+    }
+  },
+  "crate_rows_updated": 161358,
+  "mongo": {
+    "dna_movie": {
+      "before": 296,
+      "applied": 296,
+      "remaining": 0
+    },
+    "dna_tv": {
+      "before": 134,
+      "applied": 134,
+      "remaining": 0
+    }
+  },
+  "mongo_documents_updated": 430,
+  "verification": "Each targeted table/collection was recounted after its updates; all remaining counts are zero. This is not a single transactional snapshot.",
+  "offline_tests": {
+    "passed": 483,
+    "skipped": 6,
+    "patterns": [
+      "test_catalog_text.py",
+      "test_trope*.py",
+      "test_dna_*.py",
+      "test_crate_bulk.py",
+      "test_media_language_text.py",
+      "test_episode*.py"
+    ]
+  },
+  "preimages_and_journals": "~/.cache/goodwatch/catalog-prose-dashes/apply-20261104*",
+  "notes": [
+    "Crate stale-CAS exceptions were counted as conflicts; conflicted rows were reread in later passes.",
+    "The first partial bulk batch was reconciled before resuming.",
+    "Movie/show passes completed before the final pass over the other seven tables.",
+    "Read plans were changed to aggregate matching keys on shards and fetch source rows through indexed ID lookups.",
+    "Names, titles, keys, source captures/provenance, vectors and generation timestamps were preserved."
+  ]
+}

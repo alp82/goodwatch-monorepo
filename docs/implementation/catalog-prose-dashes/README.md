@@ -39,3 +39,14 @@ remaining count fails the invocation. Crate stale-CAS and missing-document bulk 
 other database errors remain fatal. Retry conflicts with a fresh output directory after examining the journal.
 Any restoration should also compare the current normalized fields before restoring preimages, to preserve later
 crawler edits. Do not blindly restore whole saved records.
+
+## Production result, 2026-11-04
+
+The updated writers were deployed before the backfill. Corrected 161,358 CrateDB rows across
+nine catalog tables and 430 generated DNA records in MongoDB. Every targeted table/collection
+finished with zero remaining matches. Description hashes were updated and structured document spans validated.
+Offline validation: 483 tests passed, six optional tests skipped.
+
+See [the run report](run-2026-11-04.json) for per-table counts, deployed module hashes, deployment links and
+preimage/journal locations. Concurrent updates were preserved and remaining movie conflicts were reread before
+completion. A few records were normalized by the deployed writers during the backfill and needed no backfill write.
