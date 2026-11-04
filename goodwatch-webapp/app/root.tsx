@@ -1,4 +1,5 @@
 import { isCrawler } from "~/server/crawlers.server"
+import { prototypeHarness } from "~/server/prototype-harness.server"
 import { authMaintenanceOn } from "~/server/auth/cutover-notice.server"
 import { TelemetryBoot } from "~/telemetry/TelemetryBoot"
 import { EARLY_TELEMETRY_SCRIPT } from "~/telemetry/early"
@@ -145,9 +146,12 @@ export const loader: LoaderFunction = withRequestTiming(async ({
 }: LoaderFunctionArgs) => {
 	// The title snapshot loads in the background from the server's first page request on.
 	capLogLines()
-	startTitleSnapshot()
-	startProcessStats()
-	startMetrics()
+	// PROTOTYPE - throwaway: no background job in the isolated prototype server (prototype-harness.server.ts).
+	if (!prototypeHarness) {
+		startTitleSnapshot()
+		startProcessStats()
+		startMetrics()
+	}
 	startBrowserGate()
 	const { user, headers } = await getAuthFromRequest({ request })
 	const { effectiveContext, setCookie } = await resolveMediaContext(

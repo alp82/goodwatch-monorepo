@@ -32,7 +32,12 @@ export function DiscoverGrid({
 	marks,
 	flipping = false,
 	children,
+	badge,
+	className = DISCOVER_GRID,
 }: {
+	/** PROTOTYPE - throwaway (prototype-preferences): a mark over a card's corner, and another grid class. */
+	badge?: (card: TitleCard, index: number) => ReactNode
+	className?: string
 	cards: TitleCard[]
 	/**
 	 * How far each title moved when For you last flipped (positive: up); null when no marks show. Turned on, it is the
@@ -49,7 +54,7 @@ export function DiscoverGrid({
 	// place, as its "Hidden" tile with Undo, until the list changes after that.
 	const { cards, keeper } = useKeptCards(listed)
 	return (
-		<div className={DISCOVER_GRID}>
+		<div className={className}>
 			<HiddenTileContext.Provider value={keeper}>
 			<AnimatePresence initial={false} mode="popLayout">
 				{cards.map((card, index) => {
@@ -82,6 +87,7 @@ export function DiscoverGrid({
 								skipOffscreen={priority === "lazy"}
 							/>
 							<MoveMark delta={delta} reduce={reduce} />
+							{badge?.(card, index)}
 						</motion.div>
 					)
 				})}

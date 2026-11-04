@@ -270,11 +270,50 @@ export function ErrorBoundary() {
 }
 
 export default function DiscoverRoute() {
-	const data = useLoaderData<BrowseLoaderData>()
-	return <DiscoverPage {...data.browse} />
+	const data = useLoaderData<BrowseLoaderData & { prototypePreferences?: true }>()
+	return (
+		<DiscoverPage
+			{...data.browse}
+			prototypePreferences={data.prototypePreferences === true}
+		/>
+	)
 }
 
-export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+// PROTOTYPE - throwaway (discover search preferences, ui/discover/prototype-preferences/README.md). Only under
+// scripts/prototype-discover-preferences.sh, a development server without databases: the page's loader data is the live
+// site's guest answer for the same filters, without the search words (no search runs or is recorded there), so the
+// real page renders with real counts. Never in production.
+const PROTOTYPE_ONLY_KEYS = ["q", "asked", "variant", "open", "inspect", "page", "strict"]
+async function prototypePreferencesLoader({ request }: LoaderFunctionArgs) {
+	if (process.env.NODE_ENV === "production")
+		throw new Response("Not found", { status: 404 })
+	const url = new URL(request.url)
+	const live = new URL("/discover", "https://goodwatch.app")
+	const params = new URLSearchParams(url.search)
+	for (const key of PROTOTYPE_ONLY_KEYS) params.delete(key)
+	params.set("_data", "routes/discover.($type)")
+	live.search = params.toString()
+	const response = await fetch(live, {
+		redirect: "manual",
+		headers: { "user-agent": "goodwatch-prototype-discover-preferences" },
+	})
+	const browse: BrowseLoaderData["browse"] = response.ok
+		? ((await response.json()) as BrowseLoaderData).browse
+		: {
+				initial: null,
+				member: false,
+				hasServices: false,
+				savedForYou: true,
+				searchScope: { country: "US", services: [] },
+			}
+	return json({ browse: { ...browse, member: false }, prototypePreferences: true as const })
+}
+
+export const loader =
+	process.env.NODE_ENV !== "production" &&
+	process.env.GW_PROTOTYPE_DISCOVER_PREFERENCES === "1"
+		? prototypePreferencesLoader
+		: presentCatalogLoader(canonicalLoader, { live: true })
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
 export const clientLoader = cachedClientLoader("routes/discover.($type)")

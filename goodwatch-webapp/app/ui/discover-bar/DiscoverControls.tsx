@@ -152,6 +152,10 @@ export interface DiscoverControlsProps {
 	/** The page's title; the count sits at its right. */
 	heading?: ReactNode
 	className?: string
+	/** PROTOTYPE - throwaway (ui/discover/prototype-preferences): replaces the reading line. */
+	prototypeReading?: (bar: { chips: readonly BarChip[]; onRemove: (chip: BarChip) => void }) => ReactNode
+	/** PROTOTYPE - throwaway: replaces the search field; gets Ready to watch for its desktop slot. */
+	prototypeField?: (ready: ReactNode) => ReactNode
 }
 
 
@@ -181,6 +185,8 @@ function DiscoverControlsContent({
 	renderFind,
 	heading,
 	className = "",
+	prototypeReading,
+	prototypeField,
 }: DiscoverControlsProps) {
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
@@ -371,14 +377,20 @@ function DiscoverControlsContent({
 				<div className="mb-2 lg:hidden">
 					<ModeTabs mode={mode} onChange={changeMode} wide />
 				</div>
-				<DescribeField
-					typed={asked}
-					onSearch={onSearch}
-					onClear={onClearSearch}
-					flatBottom={advanced}
-					ready={<ReadySwitch on={readyOn} onChange={setReady} member={member} field />}
-					inputRef={describeField}
-				/>
+				{prototypeField ? (
+					prototypeField(
+						<ReadySwitch on={readyOn} onChange={setReady} member={member} field />,
+					)
+				) : (
+					<DescribeField
+						typed={asked}
+						onSearch={onSearch}
+						onClear={onClearSearch}
+						flatBottom={advanced}
+						ready={<ReadySwitch on={readyOn} onChange={setReady} member={member} field />}
+						inputRef={describeField}
+					/>
+				)}
 				<AnimatePresence initial={false}>
 					{advanced && (
 						<motion.div
@@ -516,7 +528,7 @@ function DiscoverControlsContent({
 						<ReadySwitch on={readyOn} onChange={setReady} member={member} />
 					</div>
 					<div className="order-last flex min-w-0 basis-full lg:order-none lg:flex-1 lg:basis-auto">
-						<ReadingLine
+						{prototypeReading ? prototypeReading({ chips: data.chips, onRemove: removeChip }) : <ReadingLine
 							state={state}
 							chips={data.chips}
 							reading={reading}
@@ -525,7 +537,7 @@ function DiscoverControlsContent({
 							onRemove={removeChip}
 							onType={(type) => filters.set({ type })}
 							onMood={(mood) => filters.set({ moods: [mood as MoodKey] })}
-						/>
+						/>}
 					</div>
 					<div className="flex h-10 shrink-0 items-center rounded-full ring-1 ring-white/10">
 						{forYou && (

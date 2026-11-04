@@ -12,6 +12,7 @@
 // same build code runs on the main thread.
 //
 // Nothing loads on import. Formats: "Index files" in docs/implementation/search-ranking/README.md.
+import { prototypeHarness } from "~/server/prototype-harness.server"
 import { runsSearch } from "../role.server.ts"
 import { existsSync } from "node:fs"
 import { Worker } from "node:worker_threads"
@@ -301,6 +302,8 @@ export function loadedAliasVersion(): number {
 
 /** Starts loading the index in the background, so the first search doesn't wait for it. */
 export function startSearchIndex(): void {
+	// PROTOTYPE - throwaway: no background load in the isolated prototype server.
+	if (prototypeHarness) return
 	if (!runsSearch()) return
 	// Readiness waits for the first load so the command palette and search have their index for the first requests.
 	addReadinessCheck(

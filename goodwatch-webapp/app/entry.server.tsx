@@ -47,6 +47,7 @@ import { logProcessRole, processRole } from "~/server/role.server"
 import { startStaticFiles } from "~/server/static-files.server"
 import { startHotOnSocialsWarmup } from "~/server/talked-about-now/startup.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
+import { prototypeHarness } from "~/server/prototype-harness.server"
 import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
 import {
 	registerAuthCluster,
@@ -67,20 +68,24 @@ registerSessionUserObserver(identifyProductUser)
 // cap starts here for every role, so that it also covers the lines of the start.
 capLogLines()
 logProcessRole()
-startCrateDiagnostics()
+// PROTOTYPE - throwaway: the isolated prototype server starts no background job (prototype-harness.server.ts).
+if (prototypeHarness) console.log("[prototype harness] background jobs are off")
+else {
+	startCrateDiagnostics()
+	startTmdbConnectionCleanup()
+	startImportResolutionReconciler()
+	startPlexConnectionCleanup()
+	startMetrics()
+	// The per-minute "Process:" line starts here only in a search role, which has no first page to start it. The other
+	// roles keep the root loader's start, so they log what they did before roles.
+	if (processRole() === "search") startProcessStats()
+	startTitleSnapshot()
+	if (processRole() !== "search") startFingerprintPopulation()
+	startHotOnSocialsWarmup()
+	// The title pages' "What's new on" links read the links of the /new pages that this keeps loaded (#489).
+	if (processRole() !== "search") startNewPagesRefresh()
+}
 startLifecycle()
-startTmdbConnectionCleanup()
-startImportResolutionReconciler()
-startPlexConnectionCleanup()
-startMetrics()
-// The per-minute "Process:" line starts here only in a search role, which has no first page to start it. The other
-// roles keep the root loader's start, so they log what they did before roles.
-if (processRole() === "search") startProcessStats()
-startTitleSnapshot()
-if (processRole() !== "search") startFingerprintPopulation()
-startHotOnSocialsWarmup()
-// The title pages' "What's new on" links read the links of the /new pages that this keeps loaded (#489).
-if (processRole() !== "search") startNewPagesRefresh()
 // The page cache answers repeated anonymous pages before Express (see page-cache.server.ts). It starts before the
 // static files, so that the static handler is the outer one and its requests never reach the cache. The first call
 // of the route labeler starts loading the route list for the cache's metrics.
@@ -97,7 +102,7 @@ startEarlyHints()
 startStaticFiles()
 // Hot cards answer before Express and route matching (see og-image/hot-cards.server.ts).
 // The routes keep complete answers here briefly after a successful card request.
-startHotCards()
+if (!prototypeHarness) startHotCards()
 
 const ABORT_DELAY = 5_000
 

@@ -67,7 +67,20 @@ import {
 	useForYou,
 	useGuestBody,
 } from "./useDiscoverBrowse"
-import { useDiscoverSearch } from "./useDiscoverSearch"
+import { type DiscoverSearchResult, useDiscoverSearch } from "./useDiscoverSearch"
+// PROTOTYPE - throwaway (discover search preferences): see prototype-preferences/README.md.
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+import { DetailsStandIn } from "./prototype-preferences/DetailsStandIn"
+import { Inspector } from "./prototype-preferences/Inspector"
+import { PrototypeGrid, prototypeTierLine } from "./prototype-preferences/PrototypeGrid"
+import { VariantAReading } from "./prototype-preferences/VariantA"
+import { VariantBLedger } from "./prototype-preferences/VariantB"
+import { VariantCField, VariantCReading } from "./prototype-preferences/VariantC"
+import { titleKey } from "~/utils/title-key"
+import {
+	PROTOTYPE_VARIANTS,
+	usePreferencePrototype,
+} from "./prototype-preferences/usePreferencePrototype"
 
 /**
  * Everything, on any service, seen or not: Ready to watch turns on My services and Not seen yet in one tap. The same
@@ -86,6 +99,8 @@ export interface DiscoverPageProps {
 	savedForYou: boolean
 	/** Where a search's On my services looks: the viewer's country and saved services (guests choose theirs). */
 	searchScope: SearchScope
+	/** PROTOTYPE - throwaway: set only by the isolated prototype server's loader. */
+	prototypePreferences?: boolean
 }
 
 // A For you flip in progress: where each title was before, and when the new order landed.
@@ -111,9 +126,14 @@ export function DiscoverPage({
 	member,
 	savedForYou,
 	searchScope,
+	prototypePreferences,
 }: DiscoverPageProps) {
 	const [params, setParams] = useSearchParams()
 	const q = searchText(params.get("q"))
+	// PROTOTYPE - throwaway: the V7 preview answers the search; never in production.
+	const protoOn =
+		prototypePreferences === true && process.env.NODE_ENV !== "production"
+	const proto = usePreferencePrototype(protoOn, q)
 	const searching = q !== null
 	const allTitles = params.get("allTitles") === "1"
 	const side = params.get("side")
@@ -141,25 +161,66 @@ export function DiscoverPage({
 		() => searchEligibility(filters.state, scope),
 		[filters.state, scope],
 	)
-	const search = useDiscoverSearch({
+	const realSearch = useDiscoverSearch({
 		q,
 		filters: eligibility,
 		allTitles,
-		enabled: guest !== undefined,
+		enabled: guest !== undefined && !protoOn,
 	})
+	// PROTOTYPE - throwaway: the same shape as the real search, from V7's order for the chosen sort.
+	const protoCurrent = useMemo<DiscoverSearchResult | null>(
+		() =>
+			proto.ranked && q
+				? { q, ranked: proto.ranked, reading: [], people: [], creditScope: null, errors: [] }
+				: null,
+		[proto.ranked, q],
+	)
+	const search = protoOn
+		? {
+				...realSearch,
+				current: protoCurrent,
+				last: protoCurrent,
+				partial: false,
+				pendingTitleLookup: false,
+				pendingRanking: false,
+				reading: null,
+				loading: proto.loading,
+				error: proto.error,
+				retry: proto.retry,
+			}
+		: realSearch
+	// PROTOTYPE - throwaway: Top rated over V7 is its tiered order as sent, so the results endpoint keeps the order.
+	// A catalogue answer (every word became a filter, up to tens of thousands of titles) sends no ranked list: its hard
+	// parameters join the results request, not the URL, and Discover's own list and sorts answer it.
+	const protoCatalogue = protoOn && searching && proto.catalogueParams !== null
+	const protoTop = protoOn && searching && !protoCatalogue && filters.sort === "top"
+	const keepOrder = (query: string) => {
+		if (!protoTop && !protoCatalogue) return query
+		const next = new URLSearchParams(query)
+		if (protoCatalogue)
+			for (const [key, value] of new URLSearchParams(proto.catalogueParams ?? "")) next.set(key, value)
+		else next.set("sort", "relevance")
+		return next.toString()
+	}
 
 	const browseQuery = withSides(
-		filters.query,
+		keepOrder(filters.query),
 		side,
 		params.get("layout") !== "grid",
 	)
+	// PROTOTYPE - throwaway: For you stays off for prototype searches, so V7's order and Top rated tiers arrive as sent.
+	const forYouSent = protoOn && searching ? false : forYou.on
 	const browse = useDiscoverBrowse({
 		query: browseQuery,
-		forYou: forYou.on,
+		forYou: forYouSent,
 		member,
 		guest,
 		initial,
-		ranked: searching ? (search.current?.ranked ?? null) : undefined,
+		ranked: searching
+			? protoCatalogue
+				? undefined
+				: (search.current?.ranked ?? null)
+			: undefined,
 		searchSet: searching ? search.current?.searchSet : undefined,
 		provisional: searching && search.partial,
 	})
@@ -170,6 +231,25 @@ export function DiscoverPage({
 	const describe = useDescribedSearch()
 	const onSearch = async (text: string) => {
 		if (!text) return clearSearch()
+		if (protoOn) {
+			// PROTOTYPE - throwaway: only the words go into the URL; V7 reads them on every change, so nothing the
+			// last words implied can stay behind as a manual filter. Manual filters (pins) stay as they are.
+			const entering = !searching
+			setParams(
+				(previous) => {
+					const out = new URLSearchParams(previous)
+					out.set("q", text)
+					for (const key of ["asked", "page", "strict", "open"]) out.delete(key)
+					if (entering) {
+						browseSort.current = previous.get("sort")
+						out.delete("sort")
+					}
+					return out
+				},
+				{ replace: !entering, preventScrollReset: true },
+			)
+			return
+		}
 		const entering = !searching && !params.has("asked")
 		const next = await describe.search(text, entering)
 		if (!next) return
@@ -181,7 +261,8 @@ export function DiscoverPage({
 		browseSort.current = null
 		setParams(
 			(previous) => {
-				const out = describe.clear(previous)
+				const out = protoOn ? new URLSearchParams(previous) : describe.clear(previous)
+				if (protoOn) for (const key of ["q", "asked", "page", "strict", "open"]) out.delete(key)
 				if (sort && sort !== "relevance") out.set("sort", sort)
 				else out.delete("sort")
 				return out
@@ -194,7 +275,11 @@ export function DiscoverPage({
 	const first: DiscoverResults | null = pages[0] ?? null
 	const cards = useMemo(() => pages.flatMap((page) => page.cards), [pages])
 	const answered = !browse.isPlaceholderData && Boolean(first)
-	const stale = searching ? !first?.searching || !answered : false
+	const stale = searching
+		? protoCatalogue
+			? !answered
+			: !first?.searching || !answered
+		: false
 	useProductExposure(
 		"discovery results shown",
 		answered && !stale
@@ -377,18 +462,20 @@ export function DiscoverPage({
 	// no counts of their own) and narrowed to the side the grid shows.
 	const ranked = searching ? (search.current?.ranked ?? null) : null
 	const searchSet = searching ? search.current?.searchSet : undefined
-	const countsQuery = withSides(filters.query, side, false)
+	const countsQuery = withSides(keepOrder(filters.query), side, false)
 	const extra = useDiscoverResults({
 		query: searchSet
 			? `${countsQuery}&searchSet=${searchSet}`
 			: ranked
 				? `${countsQuery}&ranked=${ranked.join(",")}`
 				: countsQuery,
-		forYou: forYou.on,
+		forYou: forYouSent,
 		guest: guest ?? null,
 		counts: bar.counts,
 		enabled:
-			bar.counts.length > 0 && guest !== undefined && (!searching || !!ranked),
+			bar.counts.length > 0 &&
+			guest !== undefined &&
+			(!searching || !!ranked || protoCatalogue),
 	})
 	// Not the last query's counts while this one's load: the search's own filter counts are this query's.
 	const extraShown =
@@ -481,6 +568,30 @@ export function DiscoverPage({
 						forYou={forYouControl}
 						renderSubTab={renderSubTab}
 						renderFind={renderFind}
+						prototypeReading={
+							protoOn && searching && proto.readout && proto.variant !== "B"
+								? ({ chips, onRemove }) =>
+										proto.variant === "A" ? (
+											<VariantAReading r={proto.readout!} chips={chips} onRemoveChip={onRemove} />
+										) : (
+											<VariantCReading r={proto.readout!} chips={chips} onRemoveChip={onRemove} />
+										)
+								: undefined
+						}
+						prototypeField={
+							protoOn && proto.variant === "C"
+								? (ready) => (
+										<VariantCField
+											r={proto.readout}
+											typed={q ?? ""}
+											onSearch={onSearch}
+											onClear={clearSearch}
+											ready={ready}
+											loading={proto.loading}
+										/>
+									)
+								: undefined
+						}
 						sort={{
 							options: discoverSorts(searching, taste),
 							value: sortShown(filters.sort, searching, taste),
@@ -507,6 +618,9 @@ export function DiscoverPage({
 						</div>
 					)}
 				</div>
+				{protoOn && proto.variant === "B" && searching && proto.readout && (
+					<VariantBLedger r={proto.readout} sort={filters.sort} />
+				)}
 				{found && found.people.length > 0 && (
 					<div className="search-private ph-no-capture sentry-mask mt-5">
 						<SearchPeople
@@ -516,7 +630,25 @@ export function DiscoverPage({
 						/>
 					</div>
 				)}
-				<div className="relative mt-3 lg:mt-5" aria-busy={busy}>
+				<div
+					className="relative mt-3 lg:mt-5"
+					aria-busy={busy}
+					onClickCapture={
+						protoOn
+							? (event) => {
+									// PROTOTYPE - throwaway: a card opens the details stand-in (open=<key>), a new history entry.
+									if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) return
+									const link = (event.target as HTMLElement).closest("a[href]")
+									const match = link?.getAttribute("href")?.match(/^\/(movie|show)\/(\d+)/)
+									if (!match) return
+									event.preventDefault()
+									const next = new URLSearchParams(params)
+									next.set("open", String(titleKey(match[1] as "movie" | "show", Number(match[2]))))
+									setParams(next, { preventScrollReset: true })
+								}
+							: undefined
+					}
+				>
 					<GridDim on={desktop && bar.panel.open !== null} />
 					{browse.isError && !first ? (
 						<p className="py-16 text-center text-gray-400">
@@ -533,7 +665,12 @@ export function DiscoverPage({
 							{narrowed && (
 								<SideBanner side={narrowed} onAll={() => goToSide(null)} />
 							)}
-							<DiscoverGrid
+							<PrototypeGrid
+								on={protoOn && searching}
+								readout={proto.readout}
+								variant={proto.variant}
+								sort={filters.sort}
+								strict={proto.strict}
 								cards={first.total === 0 && !stale ? [] : cards}
 								marks={marks}
 								flipping={Boolean(flip)}
@@ -563,7 +700,7 @@ export function DiscoverPage({
 											searching={searching}
 										/>
 									)}
-							</DiscoverGrid>
+							</PrototypeGrid>
 						</>
 					)}
 					<div
@@ -602,6 +739,36 @@ export function DiscoverPage({
 					<NextPageLink url={nextPageUrl} />
 				</div>
 			</div>
+			{protoOn && (
+				<>
+					<DetailsStandIn
+						tagged={(key) => prototypeTierLine(proto.readout, key)}
+						why={proto.readout?.how ?? null}
+					/>
+					<Inspector
+						proto={proto}
+						page={{
+							cardsLoaded: cards.length,
+							pagesLoaded: pages.length,
+							hasNextPage: browse.hasNextPage ?? false,
+							resultsEndpointTotal: first?.total ?? null,
+							v7Total: proto.readout?.total ?? null,
+							totalsAgree: first && proto.readout ? first.total === proto.readout.total : null,
+							sortShown: sortShown(filters.sort, searching, taste),
+							sortSentToResults: protoTop
+								? "relevance (keeps V7's tiered Top rated order)"
+								: protoCatalogue
+									? `${filters.sort === "relevance" ? "popular (catalogue: no ranking)" : filters.sort}`
+									: filters.sort,
+							catalogueParamsSentToResults_notInUrl: proto.catalogueParams,
+							firstKeys: cards.slice(0, 10).map((c) => c.key),
+							forYouSwitch: forYou.on,
+							forYouSentToResults: forYouSent,
+						}}
+					/>
+					<PrototypeSwitcher variants={PROTOTYPE_VARIANTS} position="bottom-28 lg:bottom-6 left-1/2 -translate-x-1/2" />
+				</>
+			)}
 		</MotionConfig>
 	)
 }

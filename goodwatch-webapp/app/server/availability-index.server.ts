@@ -1,4 +1,5 @@
 import { correctedAvailability } from "./feedback/availability-corrections.server"
+import { prototypeHarness } from "~/server/prototype-harness.server"
 import type { Sql } from "./feedback/correction-store.server"
 import {
 	type FirstSeen,
@@ -191,6 +192,8 @@ export function availabilityIndexStats(): AvailabilityIndexStats[] {
 
 /** Loads the countries of the most members in the background. Called once when this module first loads. */
 export function preloadAvailability(): void {
+	// PROTOTYPE - throwaway: no background load in the isolated prototype server.
+	if (prototypeHarness) return
 	query<{ country: string }>(
 		`SELECT value AS country, count(*) AS members
 		 FROM user_setting
