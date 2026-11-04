@@ -88,6 +88,8 @@ export function usePanelPeople(
 	const params = new URLSearchParams(filters.query)
 	if (page.searchSet) params.set("searchSet", page.searchSet)
 	else if (page.ranked) params.set("ranked", page.ranked.join(","))
+	if (page.originalSet) params.set("originalSet", page.originalSet)
+	if (page.identitySet) params.set("identitySet", page.identitySet)
 	// While a search is still ranking, its people wait for the ranked list.
 	const panel = usePanelPart(
 		"people",

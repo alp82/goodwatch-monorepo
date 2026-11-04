@@ -5,7 +5,12 @@ import {
 } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
 import { z } from "zod"
-import { discoverSearchKeys } from "~/server/discover-search-set.server"
+import { preferencesFromParam } from "~/domain/search-preferences"
+import {
+	discoverIdentityPairs,
+	discoverOriginalKeys,
+	discoverSearchKeys,
+} from "~/server/discover-search-set.server"
 import { filterStateFromParams, sortFromParams } from "~/domain/filter-state"
 import {
 	type DiscoverResults,
@@ -63,7 +68,12 @@ async function respond(
 
 	const params = new URL(request.url).searchParams
 	if (bodyRanked) params.set("ranked", bodyRanked.join(","))
-	const ranked = await discoverSearchKeys(params)
+	const [ranked, original, identities] = await Promise.all([
+		discoverSearchKeys(params),
+		discoverOriginalKeys(params),
+		discoverIdentityPairs(params),
+	])
+	const preferences = preferencesFromParam(params.get("prefer"))
 	const counts = params.get("counts")?.split(",")
 	let response: DiscoverResults
 	try {
@@ -78,6 +88,8 @@ async function respond(
 			state: filterStateFromParams(params, discoverFilterDefaults(ctx)),
 			sort: sortFromParams(params, ranked !== undefined),
 			ranked,
+			preferences: preferences.length ? { list: preferences, original, identities } : undefined,
+			scope: ranked !== undefined && params.get("scope") === "1",
 			tasteCounts: counts?.includes("taste"),
 			forYou: forYouFromParams(params, ctx),
 			sides: {

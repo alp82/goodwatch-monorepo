@@ -9,7 +9,7 @@ import {
 	json,
 } from "@remix-run/node"
 import { z } from "zod"
-import { discoverSearchKeys } from "~/server/discover-search-set.server"
+import { discoverSearchPool } from "~/server/discover-search-set.server"
 import { filterStateFromParams, sortFromParams } from "~/domain/filter-state"
 import { getDiscoverPanel, isPanelPart } from "~/server/discover-panel.server"
 import {
@@ -53,7 +53,7 @@ async function respond(
 	const contextMs = performance.now() - startedAt
 	const ranked =
 		part === "people" || part === "released"
-			? await discoverSearchKeys(params)
+			? await discoverSearchPool(params)
 			: undefined
 	try {
 		const response = await getDiscoverPanel(ctx, part, {

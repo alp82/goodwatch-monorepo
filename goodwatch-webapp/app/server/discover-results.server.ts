@@ -7,6 +7,8 @@ import { inlineTaste } from "~/server/taste/inline.server"
 // While For you is on (Best match counts as on), a member with Sides of you gets a row per side instead of the first
 // page, when the page asks for rows (discover-sides.server.ts).
 import type { FilterState, SortKey } from "~/domain/filter-state"
+import type { Preference } from "~/domain/search-preferences"
+import { preferenceList } from "~/server/discover-preference-order.server"
 import { groupInListOrder, groupsByTaste } from "~/domain/side-rows"
 import { availabilityLoadedAt } from "~/server/availability-index.server"
 import {
@@ -87,6 +89,11 @@ export interface DiscoverResults
 	 * titles, which are then empty; `side` when the list is narrowed to one side's titles. Null otherwise.
 	 */
 	sides: DiscoverSides | null
+	/**
+	 * A search's scope, when asked on its first page: the catalog's titles that pass every filter (`eligible`) and how
+	 * many of them the search's results don't hold (`outside`). Exact, unlike the counts the search streams.
+	 */
+	scope?: { eligible: number; outside: number }
 }
 
 export type DiscoverSides =
@@ -163,6 +170,18 @@ export async function getDiscoverResults(
 		tasteCounts?: boolean
 		/** Whether a member's page is recorded as a Discover list exposure (default true); false for another surface's read. */
 		exposure?: boolean
+		/**
+		 * A search's read preferences (domain/search-preferences.ts): they order the list instead of filtering it
+		 * (discover-preference-order.server.ts). `original` is the original reading's pool when it differs from `ranked`.
+		 */
+		preferences?: {
+			list: Preference[]
+			original?: TitleKey[]
+			/** `[ranked key, original key]`: one title under two keys. */
+			identities?: readonly (readonly [TitleKey, TitleKey])[]
+		}
+		/** A search's first page: also count the titles outside its results that pass every filter (`scope`). */
+		scope?: boolean
 	},
 ): Promise<DiscoverResults> {
 	const { state, sort, ranked } = input
@@ -195,6 +214,21 @@ export async function getDiscoverResults(
 		groupsForTaste,
 		state.tasteGroups,
 	)
+	// A search's read preferences order its list (the composed order, served under "relevance") instead of filtering
+	// it. The composition sees the same hard rules as the list below.
+	const served =
+		ranked && input.preferences?.list.length
+			? await preferenceList(ctx, {
+					ranked,
+					original: input.preferences.original,
+					identities: input.preferences.identities,
+					preferences: input.preferences.list,
+					state,
+					sort,
+					taste: savedTaste,
+					tasteGroups: tasteFilter,
+				})
+			: { universe: ranked, state, sort }
 	const compute = (keep?: (key: TitleKey) => boolean) =>
 		filterTitles({
 			budgetCounts: input.budgetCounts,
@@ -204,10 +238,10 @@ export async function getDiscoverResults(
 			lengthCounts: input.lengthCounts,
 			originCounts: input.originCounts,
 			scoresCounts: input.scoresCounts,
-			universe: searching ? ranked : "catalog",
+			universe: served.universe ?? "catalog",
 			includeNotInterested: searching,
-			state,
-			sort,
+			state: served.state,
+			sort: served.sort,
 			taste: savedTaste,
 			forYou: input.forYou ? (searching ? "search" : "browse") : null,
 			viewer: ctx,
@@ -233,11 +267,28 @@ export async function getDiscoverResults(
 				year: new Date().getUTCFullYear(),
 			})
 		: null
-	const result = await (searching
-		? compute()
-		: discoverFilterCache.run(key, () => compute()))
+	const [computed, eligible] = await Promise.all([
+		searching ? compute() : discoverFilterCache.run(key, () => compute()),
+		// The scope: the catalog under every hard rule the list applies (no For you: it only orders).
+		searching && input.scope && page === 1
+			? filterTitles({
+					universe: "catalog",
+					includeNotInterested: true,
+					state: served.state,
+					sort: "popular",
+					taste: savedTaste,
+					tasteGroups: tasteFilter,
+					forYou: null,
+					viewer: ctx,
+				}).then((r) => r.keys)
+			: null,
+	])
+	// Top rated served as the composed order still reads as Top rated.
+	const result =
+		served.sort === sort ? computed : { ...computed, sortUsed: computed.sortUsed === "relevance" ? sort : computed.sortUsed }
 	// With Best match the order is the taste match already: For you has nothing to blend.
 	const applied = result.moved !== undefined
+	const scope = eligible ? scopeOf(eligible, result.keys) : undefined
 	const { keys: all, moved, personalOrder } = result
 	let counts = countsOf(result)
 	// Cards show rating badges only while an age limit is on, in the filter's resolved rating country.
@@ -386,7 +437,15 @@ export async function getDiscoverResults(
 		explanation,
 		searching,
 		sides,
+		...(scope ? { scope } : {}),
 	}
+}
+
+function scopeOf(eligible: readonly TitleKey[], results: readonly TitleKey[]) {
+	const found = new Set(results)
+	let outside = 0
+	for (const key of eligible) if (!found.has(key)) outside++
+	return { eligible: eligible.length, outside }
 }
 
 /**

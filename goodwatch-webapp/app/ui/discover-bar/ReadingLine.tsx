@@ -110,7 +110,7 @@ function Quality({ chip }: { chip: ReadingChip }) {
 	)
 }
 
-function Filter({
+export function Filter({
 	chip,
 	onOpen,
 	onRemove,
@@ -150,7 +150,7 @@ function Filter({
 	)
 }
 
-const Divider = () => (
+export const Divider = () => (
 	<span className="h-4 w-px shrink-0 bg-white/10" aria-hidden />
 )
 

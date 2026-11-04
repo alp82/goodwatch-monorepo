@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { describedParams, filtersToKeep } from "./described-search.ts"
+import { filtersToKeep } from "./described-search.ts"
 
 const params = (text: string) => new URLSearchParams(text)
 
@@ -21,37 +21,9 @@ test("without a last search every filter stays", () => {
 	)
 })
 
-test("the typed words stay in the URL, also when no search text is left", () => {
-	const out = describedParams(
-		params(""),
-		"netflix movies",
-		params(""),
-		{ params: "services=8&type=movie" },
-		true,
-	)
-	assert.equal(out.get("asked"), "netflix movies")
-	assert.equal(out.has("q"), false)
-	assert.equal(out.get("services"), "8")
-})
-
-test("without the interpreter the words are searched as they are, on the kept filters", () => {
-	const out = describedParams(params(""), "space", params("type=show"), null, true)
-	assert.equal(out.toString(), "type=show&q=space&asked=space")
-})
-
-test("the mode stays; the sort stays only for a search after a search", () => {
-	const current = params("mode=advanced&sort=top")
+test("the switched-off phrases and an older link's typed words aren't filters", () => {
 	assert.equal(
-		describedParams(current, "a", params(""), { params: "q=a" }, true).has("sort"),
-		false,
+		filtersToKeep(params("q=funny+90s&off=90s&asked=funny+90s&moods=dark"), undefined).toString(),
+		"moods=dark",
 	)
-	const again = describedParams(current, "a", params(""), { params: "q=a" }, false)
-	assert.equal(again.get("sort"), "top")
-	assert.equal(again.get("mode"), "advanced")
-})
-
-test("how the list shows outlasts a search", () => {
-	const out = describedParams(params("layout=grid&side=movie"), "a", params(""), { params: "q=a" }, false)
-	assert.equal(out.get("layout"), "grid")
-	assert.equal(out.get("side"), "movie")
 })

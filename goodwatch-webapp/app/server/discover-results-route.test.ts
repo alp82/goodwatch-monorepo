@@ -93,3 +93,24 @@ test("member and guest results fetches consume the query abort signal", async ()
 		globalThis.fetch = original
 	}
 })
+
+test("a search's read preferences and scope reach the results; junk preferences and a browse scope don't", async () => {
+	const url = new URL("https://goodwatch.test/api/discover/results")
+	url.searchParams.set("ranked", "1000000000001,1000000000002")
+	url.searchParams.set("prefer", "moods:funny,themes:history,type:movie")
+	url.searchParams.set("scope", "1")
+	const response = await loader(args(new Request(url)))
+	const { input } = JSON.parse(await response.text())
+	assert.deepEqual(input.preferences, {
+		list: [
+			{ group: "moods", value: "funny" },
+			{ group: "themes", value: "history" },
+		],
+		identities: [],
+	})
+	assert.equal(input.scope, true)
+
+	const browse = new URL("https://goodwatch.test/api/discover/results?prefer=moods:funny&scope=1")
+	const plain = JSON.parse(await (await loader(args(new Request(browse)))).text()).input
+	assert.equal(plain.scope, false)
+})

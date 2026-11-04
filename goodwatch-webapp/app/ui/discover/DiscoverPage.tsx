@@ -18,7 +18,7 @@
 // the URL) until "All of your taste", For you turned off, or a search.
 import { useLocation, useNavigation, useSearchParams } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react"
 import { useInView } from "react-intersection-observer"
 import { withSides } from "~/domain/discover-layout"
 import {
@@ -30,9 +30,12 @@ import {
 } from "~/domain/discover-search"
 import {
 	type SortKey,
+	filterQuery,
+	filterStateFromParams,
 	secondaryFilterCount,
 	stateAsApplied,
 } from "~/domain/filter-state"
+import { preferencesParam } from "~/domain/search-preferences"
 import { groupsByTaste } from "~/domain/side-rows"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
 import type { DiscoverResults } from "~/server/discover-results.server"
@@ -47,12 +50,13 @@ import {
 	preloadSubTabs,
 	useSubTabContent,
 } from "~/ui/discover-bar/sub-tabs/lazy"
-import { useDescribedSearch } from "~/ui/discover-bar/useDescribedSearch"
+import { filtersToKeep } from "~/ui/discover-bar/described-search"
+import type { ReadRow } from "~/ui/discover-bar/FilterMix"
 import { useDesktop, useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
 import { NextPageLink } from "~/ui/explore/GridUtils"
 import { BestMatchSignUp } from "~/ui/filter-bar/SignUpPanel"
 import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
-import type { ForYouControl } from "~/ui/filter-bar/types"
+import type { FilterBarCounts, ForYouControl } from "~/ui/filter-bar/types"
 import { useFilterState } from "~/ui/filter-bar/useFilterState"
 import { SearchPeople } from "~/ui/search/SearchPeople"
 import { Spinner } from "~/ui/wait/Spinner"
@@ -68,6 +72,29 @@ import {
 	useGuestBody,
 } from "./useDiscoverBrowse"
 import { useDiscoverSearch } from "./useDiscoverSearch"
+import { type ReadItem, readText, scopeOwner, withOff } from "./search-reading/read-items"
+import { SCOPE_COLOR, readColor } from "./search-reading/read-colors"
+import type { HideCount } from "./search-reading/read-parts"
+import { useReadFilters, useSearchReading } from "./search-reading/useSearchReading"
+import { useHydrated } from "~/utils/hydrated"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+
+// The Matches popout's read parts: loaded when the popout first shows them.
+const MatchesRead = lazy(reloadOnStaleChunk(() => import("./search-reading/MatchesRead")))
+// The read strip shows only while searching: browsing never loads it. Its reading comes from the browser, so it mounts
+// after hydration (a lazy boundary that hydrates while the reading streams in would throw away the page's HTML).
+const ReadStrip = lazy(
+	reloadOnStaleChunk(() => import("./search-reading/ReadStrip").then((m) => ({ default: m.ReadStrip }))),
+)
+
+/** Which streamed count belongs to a read filter (preference-pools.server.ts counts years, type and anime). */
+function countedName(item: ReadItem) {
+	const keys = item.params.map(([key]) => key)
+	if (keys.includes("minYear") || keys.includes("maxYear")) return "years"
+	if (keys.includes("type")) return "type"
+	if (keys.includes("anime")) return "anime"
+	return null
+}
 
 /**
  * Everything, on any service, seen or not: Ready to watch turns on My services and Not seen yet in one tap. The same
@@ -113,8 +140,12 @@ export function DiscoverPage({
 	searchScope,
 }: DiscoverPageProps) {
 	const [params, setParams] = useSearchParams()
-	const q = searchText(params.get("q"))
-	const searching = q !== null
+	const hydrated = useHydrated()
+	// The words as typed. An older link keeps them in `asked`, with what they read as the person's own filters.
+	const typed = searchText(params.get("asked") ?? params.get("q"))
+	// The phrases switched off on the read strip: left out of what the search reads.
+	const off = useMemo(() => params.getAll("off"), [params])
+	const searching = typed !== null
 	const allTitles = params.get("allTitles") === "1"
 	const side = params.get("side")
 
@@ -124,6 +155,35 @@ export function DiscoverPage({
 		member,
 		searching,
 	})
+	// What the search reads from the words, and how it uses it (docs/implementation/search-preferences.md).
+	const existing = useMemo(() => {
+		const own = filtersToKeep(params, undefined)
+		own.delete("off")
+		return own.toString()
+	}, [params])
+	const [named, setNamed] = useState<string | null>(null)
+	const switchedOn = readText(typed, off)
+	const reading = useSearchReading({
+		typed,
+		off,
+		existing,
+		namedTitle: named !== null && named === switchedOn,
+		defaults: filters.defaults,
+		enabled: searching,
+	})
+	// While the words are read again, the last plan stays, so its list stays too.
+	const lastPlan = useRef(reading.plan ? reading : null)
+	if (reading.plan) lastPlan.current = reading
+	const settled = searching ? (reading.plan ? reading : lastPlan.current) : null
+	const plan = settled?.plan ?? null
+	// Every word became a filter: Discover's list for those filters, no search.
+	const catalogue = plan?.branch === "catalogue"
+	// The filters the list uses: the person's own and the hard ones read from the words (preferences only order it).
+	const listState = useMemo(
+		() => (plan ? filterStateFromParams(plan.filters, filters.defaults) : filters.state),
+		[plan, filters.state, filters.defaults],
+	)
+	const q = !plan || catalogue ? null : plan.branch === "title" ? settled?.text ?? null : settled?.words || null
 	const forYou = useForYou({ member, saved: savedForYou })
 	const bar = useDiscoverBar(filters.state)
 	const desktop = useDesktop()
@@ -138,18 +198,53 @@ export function DiscoverPage({
 		[member, guest?.country, guest?.services, searchScope],
 	)
 	const eligibility = useMemo(
-		() => searchEligibility(filters.state, scope),
-		[filters.state, scope],
+		() => searchEligibility(listState, scope),
+		[listState, scope],
 	)
+	// A single genre read as a preference widens what the search finds: the original reading's pool comes along, and
+	// each read filter the search applies itself gets a count of what it keeps out.
+	const preferences = useMemo(() => {
+		if (!plan || plan.branch !== "positive") return undefined
+		const original = searchEligibility(filterStateFromParams(plan.original, filters.defaults), scope)
+		const own = searchEligibility(filters.state, scope)
+		const differs = (a: unknown, b: unknown) => JSON.stringify(a ?? null) !== JSON.stringify(b ?? null)
+		const counted: string[] = []
+		if (differs([own.minYear, own.maxYear], [eligibility.minYear, eligibility.maxYear])) counted.push("years")
+		if (differs(own.type, eligibility.type)) counted.push("type")
+		if (differs(own.anime, eligibility.anime)) counted.push("anime")
+		return {
+			originalGenres: differs(original.genres, eligibility.genres) ? original.genres : undefined,
+			counted,
+			named: settled?.text ?? undefined,
+		}
+	}, [plan, settled?.text, filters.defaults, filters.state, eligibility, scope])
 	const search = useDiscoverSearch({
 		q,
 		filters: eligibility,
 		allTitles,
-		enabled: guest !== undefined,
+		enabled: guest !== undefined && reading.plan !== null,
+		preferences,
 	})
+	// The words name a title: read again with only the person's own filters.
+	const namesTitle = Boolean(search.current?.namedTitle) && plan !== null && plan.branch !== "title"
+	useEffect(() => {
+		if (namesTitle && switchedOn) setNamed(switchedOn)
+	}, [namesTitle, switchedOn])
+
+	// The results: the list's filters, the read preferences that order it, the original pool, and the search's scope.
+	const listQuery = useMemo(() => {
+		if (!searching || !plan) return filters.query
+		const out = new URLSearchParams(filterQuery(listState, filters.sort, filters.defaults))
+		if (!catalogue && plan.preferences.length) out.set("prefer", preferencesParam(plan.preferences))
+		if (!catalogue && search.current?.originalSet) out.set("originalSet", search.current.originalSet)
+		if (!catalogue && search.current?.identitySet) out.set("identitySet", search.current.identitySet)
+		if (!catalogue) out.set("scope", "1")
+		return out.toString()
+	}, [searching, plan, catalogue, filters.query, filters.sort, filters.defaults, listState, search.current?.originalSet, search.current?.identitySet])
+	const shownFilters = useReadFilters(filters, reading.items, searching, listQuery)
 
 	const browseQuery = withSides(
-		filters.query,
+		listQuery,
 		side,
 		params.get("layout") !== "grid",
 	)
@@ -159,29 +254,38 @@ export function DiscoverPage({
 		member,
 		guest,
 		initial,
-		ranked: searching ? (search.current?.ranked ?? null) : undefined,
-		searchSet: searching ? search.current?.searchSet : undefined,
-		provisional: searching && search.partial,
+		ranked: searching && !catalogue ? (search.current?.ranked ?? null) : undefined,
+		searchSet: searching && !catalogue ? search.current?.searchSet : undefined,
+		provisional: searching && !catalogue && search.partial,
 	})
 
 	// Entering a search chooses Relevance; clearing it returns to the sort used before.
 	const browseSort = useRef<string | null>(null)
 	const navigation = useNavigation()
-	const describe = useDescribedSearch()
-	const onSearch = async (text: string) => {
+	// Only the words go into the URL: what they read is read again on every change, so nothing the last words implied
+	// stays behind as the person's own filter. Entering a search chooses Relevance.
+	const onSearch = (text: string) => {
 		if (!text) return clearSearch()
-		const entering = !searching && !params.has("asked")
-		const next = await describe.search(text, entering)
-		if (!next) return
+		const entering = !searching
 		if (entering) browseSort.current = params.get("sort")
-		setParams(next, { replace: !entering, preventScrollReset: true })
+		setParams(
+			(previous) => {
+				const out = new URLSearchParams(previous)
+				out.set("q", text)
+				for (const key of ["asked", "page", "off"]) out.delete(key)
+				if (entering) out.delete("sort")
+				return out
+			},
+			{ replace: !entering, preventScrollReset: true },
+		)
 	}
 	const clearSearch = () => {
 		const sort = browseSort.current
 		browseSort.current = null
 		setParams(
 			(previous) => {
-				const out = describe.clear(previous)
+				const out = new URLSearchParams(previous)
+				for (const key of ["q", "asked", "page", "off"]) out.delete(key)
 				if (sort && sort !== "relevance") out.set("sort", sort)
 				else out.delete("sort")
 				return out
@@ -194,7 +298,11 @@ export function DiscoverPage({
 	const first: DiscoverResults | null = pages[0] ?? null
 	const cards = useMemo(() => pages.flatMap((page) => page.cards), [pages])
 	const answered = !browse.isPlaceholderData && Boolean(first)
-	const stale = searching ? !first?.searching || !answered : false
+	const stale = searching
+		? catalogue
+			? !answered
+			: !first?.searching || !answered
+		: false
 	useProductExposure(
 		"discovery results shown",
 		answered && !stale
@@ -375,9 +483,9 @@ export function DiscoverPage({
 
 	// The open sub-tab's extra counts: the first page again with its `counts=` flag, laid out as a grid (rows carry
 	// no counts of their own) and narrowed to the side the grid shows.
-	const ranked = searching ? (search.current?.ranked ?? null) : null
-	const searchSet = searching ? search.current?.searchSet : undefined
-	const countsQuery = withSides(filters.query, side, false)
+	const ranked = searching && !catalogue ? (search.current?.ranked ?? null) : null
+	const searchSet = searching && !catalogue ? search.current?.searchSet : undefined
+	const countsQuery = withSides(listQuery, side, false)
 	const extra = useDiscoverResults({
 		query: searchSet
 			? `${countsQuery}&searchSet=${searchSet}`
@@ -388,7 +496,9 @@ export function DiscoverPage({
 		guest: guest ?? null,
 		counts: bar.counts,
 		enabled:
-			bar.counts.length > 0 && guest !== undefined && (!searching || !!ranked),
+			bar.counts.length > 0 &&
+			guest !== undefined &&
+			(!searching || !!ranked || catalogue),
 	})
 	// Not the last query's counts while this one's load: the search's own filter counts are this query's.
 	const extraShown =
@@ -401,15 +511,67 @@ export function DiscoverPage({
 		listCounts && searching && ranked
 			? withSearchFilters(
 					listCounts,
-					filters.state,
+					listState,
 					scope,
 					search.current?.filterHides,
 				)
 			: listCounts
+	// The read parts' switches, on the strip and in Matches alike. Words set aside by the person's own choice aren't
+	// switches. Matches keeps rows only for the person's own filters; the read parts are listed after them.
+	const items = reading.items
+	const readChipKeys = new Set(items.filter((item) => item.on).flatMap((item) => item.chipKeys))
+	const keepChip = (chip: { key: string }) => !readChipKeys.has(chip.key)
+	// What each read filter keeps out: the search's streamed count for one it applies itself (an estimate: switching
+	// it changes what the search finds), else the results' own count (exact on the catalog when no words are left).
+	const hides = new Map<string, HideCount & { inHidden?: boolean }>()
+	for (const item of items) {
+		if (!item.on || item.aside || item.soft || item.words) continue
+		const name = countedName(item)
+		const streamed = name ? search.counts?.find((c) => c.filter === name) : undefined
+		const own = counts?.recoveries.find((r) => r.filter === item.group)
+		if (streamed) hides.set(item.phrase.toLowerCase(), { n: streamed.hides, approx: true })
+		else if (own && !(counts as FilterBarCounts | null)?.inSearch?.includes(own.filter))
+			hides.set(item.phrase.toLowerCase(), { n: own.titles, approx: !catalogue, inHidden: true })
+	}
+	const readRows: ReadRow[] = items.flatMap((item) => {
+		const count = hides.get(item.phrase.toLowerCase())
+		if (!count?.n) return []
+		return [{ group: `read:${item.phrase}`, label: `${item.field} ${item.label}`.trim(), color: readColor(item), hides: count.n, approx: count.approx, inHidden: count.inHidden }]
+	})
+	// The search's scope: titles that pass every filter but that the words don't bring in. One count, on one row.
+	const outside = !stale && first?.scope ? first.scope.outside : null
+	const owner = outside ? scopeOwner(items) : null
+	if (outside && owner)
+		readRows.push({
+			group: "read:scope",
+			label: items.find((item) => item.phrase === owner)?.label ?? owner,
+			color: SCOPE_COLOR,
+			hides: outside,
+			approx: false,
+		})
+	// The meter's read segments in the order of the rows: highest count first.
+	readRows.sort((a, b) => b.hides - a.hides)
+	const toggleRead = (item: ReadItem) => {
+		if (item.aside) return
+		setParams(
+			withOff(
+				params,
+				item.on ? [...off, item.phrase] : off.filter((o) => o.toLowerCase() !== item.phrase.toLowerCase()),
+			),
+			{ replace: true, preventScrollReset: true },
+		)
+	}
+	const allRead = (allOff: boolean) =>
+		setParams(withOff(params, allOff ? items.filter((item) => !item.aside).map((item) => item.phrase) : []), {
+			replace: true,
+			preventScrollReset: true,
+		})
 	const page = useMemo<DiscoverPageContext>(
 		() => ({
 			scope,
 			searchSet,
+			originalSet: searching && !catalogue ? search.current?.originalSet : undefined,
+			identitySet: searching && !catalogue ? search.current?.identitySet : undefined,
 			ranked: searching && !search.partial ? ranked : null,
 			cards,
 			countsFresh: extraShown
@@ -420,6 +582,9 @@ export function DiscoverPage({
 		[
 			scope,
 			searchSet,
+			catalogue,
+			search.current?.originalSet,
+			search.current?.identitySet,
 			searching,
 			search.partial,
 			ranked,
@@ -433,6 +598,7 @@ export function DiscoverPage({
 	)
 	const busy =
 		search.loading ||
+		(searching && reading.plan === null) ||
 		(browse.isFetching && !browse.isFetchingNextPage) ||
 		(navigation.state === "loading" &&
 			navigation.location?.pathname === "/discover")
@@ -470,10 +636,11 @@ export function DiscoverPage({
 						}
 						className="mt-3 lg:mt-5"
 						bar={bar}
-						filters={filters}
+						filters={shownFilters}
 						counts={counts}
 						member={member}
 						query={q}
+						typedQuery={typed}
 						reading={search.reading ?? undefined}
 						onSearch={onSearch}
 						onClearSearch={clearSearch}
@@ -481,6 +648,42 @@ export function DiscoverPage({
 						forYou={forYouControl}
 						renderSubTab={renderSubTab}
 						renderFind={renderFind}
+						readStrip={
+							searching
+								? ({ chips, onRemove, onOpen }) => !hydrated ? (
+										<div className="h-9 flex-1" />
+									) : (
+										<Suspense fallback={<div className="h-9 flex-1" />}>
+										<ReadStrip
+											items={items}
+											reading={search.reading ?? []}
+											chips={chips}
+											pending={reading.pending || search.loading}
+											onToggle={toggleRead}
+											onAll={allRead}
+											onRemoveChip={onRemove}
+											onOpenChip={onOpen}
+										/>
+										</Suspense>
+									)
+								: undefined
+						}
+						matchesRead={
+							searching && items.length ? (
+								<Suspense fallback={null}>
+									<MatchesRead
+										items={items}
+										reading={search.reading ?? []}
+										onToggle={toggleRead}
+										onAll={allRead}
+										hides={hides}
+										outside={outside}
+									/>
+								</Suspense>
+							) : undefined
+						}
+						keepChip={searching ? keepChip : undefined}
+						readRows={searching ? readRows : undefined}
 						sort={{
 							options: discoverSorts(searching, taste),
 							value: sortShown(filters.sort, searching, taste),

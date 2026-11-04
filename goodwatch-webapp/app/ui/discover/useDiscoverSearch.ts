@@ -7,6 +7,7 @@ import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { useRef, useState } from "react"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
+import type { ReadCount } from "~/server/combined-search/search.server"
 import {
 	type SearchFilters,
 	searchFiltersKey,
@@ -21,7 +22,10 @@ export function useDiscoverSearch({
 	filters,
 	allTitles,
 	enabled,
+	preferences,
 }: {
+	/** Read preferences: the original reading's single genre and the read filters to count (search-preferences.ts). */
+	preferences?: { originalGenres?: string[]; counted?: string[]; named?: string }
 	/** The query, or null while browsing. */
 	q: string | null
 	filters: SearchFilters
@@ -37,7 +41,9 @@ export function useDiscoverSearch({
 	const generation = useRef(0)
 	const liveKey = useRef("")
 	const { locale } = useLocale()
-	const key = `${locale.language}:${q ?? ""}|${searchFiltersKey(filters)}|${allTitles ? 1 : 0}`
+	const key = `${locale.language}:${q ?? ""}|${searchFiltersKey(filters)}|${allTitles ? 1 : 0}|${preferences?.originalGenres?.join(",") ?? ""}|${preferences?.counted?.join(",") ?? ""}|${preferences?.named ?? ""}`
+	// What the read filters keep out, for this search only: they arrive after its results.
+	const [counts, setCounts] = useState<{ key: string; counts: ReadCount[] } | null>(null)
 	liveKey.current = enabled && q !== null ? key : ""
 	const result = useQuery({
 		queryKey: ["discover-search", key],
@@ -51,7 +57,9 @@ export function useDiscoverSearch({
 				if (current()) setStreamed({ key, chips })
 			}, (answer) => {
 				if (current()) setProvisional({ key, result: answer })
-			}, locale.language)
+			}, locale.language, preferences, (found) => {
+				if (current()) setCounts({ key, counts: found })
+			})
 			// The completed answer replaces its partial list for good.
 			if (generation.current === attempt)
 				setProvisional((old) => (old?.key === key ? null : old))
@@ -104,5 +112,7 @@ export function useDiscoverSearch({
 					: (result.error?.message ?? null)
 			: null,
 		retry: result.refetch,
+		/** The read filters' hides for this search; null until they arrive (or when none were asked for). */
+		counts: counts?.key === key ? counts.counts : null,
 	}
 }

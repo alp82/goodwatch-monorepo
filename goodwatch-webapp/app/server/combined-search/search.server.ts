@@ -51,7 +51,7 @@ import {
 	type RankedSearch,
 	prepareSearch,
 } from "../search-ranking/rank-search.server";
-import { readingsConfigured } from "../search-runtime/limits.server";
+import { readingsConfigured, searchInFlightLimit } from "../search-runtime/limits.server";
 import { searchAdmission } from "../search-runtime/admission.server";
 import { HEAD_LENGTH } from "../search-ranking/ranking.server";
 import { STOPWORDS, words } from "../search-ranking/text-rules.server";
@@ -74,6 +74,19 @@ import {
 } from "../search-ranking/search-index.server";
 import { earlyTitleRule } from "../search-ranking/concept-query.server";
 import { titleLookupKey } from "./title-lookup-key.server";
+import {
+	type CountedFilter,
+	identityPairs,
+	keptOut,
+	namedTitleKeys,
+	withoutFilter,
+} from "./preference-pools.server";
+
+/** What a filter read from the words keeps out (preference-pools.server.ts). */
+export interface ReadCount {
+	filter: CountedFilter;
+	hides: number;
+}
 
 // A page instance loads none of it (see role.server.ts).
 if (runsSearch()) {
@@ -93,6 +106,17 @@ export interface SearchBatch {
 	/** With searchKeys, for a topic search: what each of the search's own filters keeps out (filterHides). */
 	filterHides?: FilterHides;
 	searchSet?: string;
+	/**
+	 * Discover with read preferences: the original reading's pool (its single genre as a filter), when it differs from
+	 * the wider one. The page folds the two to one key per title (identityPairs).
+	 */
+	originalKeys?: number[];
+	originalSet?: string;
+	/** With originalKeys: the keys of the two pools that are one title, as flattened pairs (identityPairs). */
+	identityPairs?: number[];
+	identitySet?: string;
+	/** Discover: the query is a title's name, so only the person's own filters apply. */
+	namedTitle?: boolean;
 	// The interpretation the search used; empty when it ran as a basic search.
 	reading: ReadingChip[];
 	metadata: Metadata[];
@@ -678,6 +702,13 @@ export async function combinedSearch(
 		rows?: number;
 		onProgress?: (batch: SearchBatch) => BatchDelivery | Promise<BatchDelivery>;
 		onComplete?: (batch: SearchBatch) => BatchDelivery | Promise<BatchDelivery>;
+		/** Discover with read preferences: the original reading's single genre, when it was read as a preference. */
+		originalGenres?: string[];
+		/** Discover: the filters read from the words whose hides are counted after the results (in that order). */
+		counted?: CountedFilter[];
+		onCounts?: (counts: ReadCount[]) => void | Promise<unknown>;
+		/** Discover: the words as typed (switched-on parts), to tell whether they name a title; else the query. */
+		named?: string;
 	} = {},
 ): Promise<SearchBatch> {
 	const started = Date.now(),
@@ -815,6 +846,7 @@ export async function combinedSearch(
 	let read: JevOutcome | undefined;
 	let fallback: ServingFallback | null = null;
 	let served: ServedList | null = null;
+	let originalKeys: number[] | undefined;
 	let historyQueued = false;
 	const queueHistory = (elapsedMs: number) => {
 		if (historyQueued) return;
@@ -1059,6 +1091,31 @@ export async function combinedSearch(
 		});
 		if (!fallback && outcome.kind !== "basic") {
 			const attempt = performance.now();
+			// The original reading's pool, when a single genre read from the words widened this search: its titles
+			// are admitted beside the wider pool's (Discover's results compose the two). Keys only, no display, ranked
+			// beside the wider pool so it adds no wait of its own; a failure leaves the wider pool to serve alone.
+			const originalPool = options.originalGenres?.length
+				? (async () => {
+						const started = performance.now();
+						const lookup = await early.titles;
+						const ranked = await rankForServing(
+							readingFields(readText, outcome.readings, language.policy.mode === "native-vector-only"),
+							{
+								resultLimit: options.rows ?? HEAD_LENGTH,
+								query: q,
+								text: language.text,
+								nonEnglish: language.policy.mode !== "english",
+								titleLookup: lookup.allowedTitles,
+							},
+							{ ...policy, filters: { ...policy.filters, genres: options.originalGenres } },
+						);
+						stageMs.originalPool = round1(performance.now() - started);
+						return ranked.results.map((row) => row.id);
+					})().catch(() => {
+						console.error("Original search pool failed", { reason: "ranking" });
+						return undefined;
+					})
+				: undefined;
 			try {
 				served = await rankedList(
 					q,
@@ -1073,6 +1130,7 @@ export async function combinedSearch(
 					late,
 				);
 				Object.assign(stageMs, served.stageMs, deadlineStageMs);
+				if (originalPool && served.searchKeys) originalKeys = await originalPool;
 			} catch (error) {
 				if (lateState.window) {
 					// The early batch stays what the person has: no basic search replaces it. The ranking never served,
@@ -1252,8 +1310,19 @@ export async function combinedSearch(
 		stageMs.total = elapsedMs;
 		// The history row is written after the response: nothing in the results depends on it. When the session check
 		// failed, the search records nothing.
+		const index = loadedSearchIndex();
+		const namedTitle =
+			served?.searchKeys && index && options.rows && options.rows > HEAD_LENGTH
+				? (await namedTitleKeys(index, options.named ?? query).catch(() => [])).length > 0
+				: undefined;
+		const discoverKeys = served?.searchKeys;
+		const pairs =
+			discoverKeys && originalKeys && index ? identityPairs(index, discoverKeys, originalKeys) : [];
 		const batch: SearchBatch = {
-			...(served?.searchKeys ? { searchKeys: served.searchKeys } : {}),
+			...(discoverKeys ? { searchKeys: discoverKeys } : {}),
+			...(discoverKeys && originalKeys ? { originalKeys } : {}),
+			...(pairs.length ? { identityPairs: pairs } : {}),
+			...(discoverKeys && namedTitle !== undefined ? { namedTitle } : {}),
 			...(served?.searchKeys && served.filterHides
 				? { filterHides: served.filterHides }
 				: {}),
@@ -1285,6 +1354,37 @@ export async function combinedSearch(
 			? Date.now() - started
 			: elapsedMs;
 		queueHistory(elapsedMs);
+		// After the results: what each filter read from the words keeps out of the candidates the same reading finds
+		// without it. One more ranking per filter (the reading is reused, no model call), so it waits until the person
+		// has the list, and a failed or skipped count is left out (the list never depends on it).
+		if (options.counted?.length && options.onCounts && served && index && outcome.kind !== "basic") {
+			const counts: ReadCount[] = [];
+			const lookup = await early.titles;
+			const fields = readingFields(readText, outcome.readings, language.policy.mode === "native-vector-only");
+			for (const name of options.counted.slice(0, 3)) {
+				// Extras: they give way when every place in line is taken, so they never turn another search away.
+				if (signal.aborted || searchAdmission.inFlight() >= searchInFlightLimit()) break;
+				const filters = policy.filters ?? {};
+				try {
+					const ranked = await rankForServing(
+						fields,
+						{
+							resultLimit: options.rows ?? HEAD_LENGTH,
+							query: q,
+							text: language.text,
+							nonEnglish: language.policy.mode !== "english",
+							titleLookup: lookup.allowedTitles,
+						},
+						{ ...policy, filters: withoutFilter(filters, name) },
+					);
+					const pool = ranked.results.map((row) => row.id);
+					counts.push({ filter: name, hides: keptOut(index, pool, name, filters) });
+				} catch {
+					// No number for this filter.
+				}
+			}
+			if (counts.length && !signal.aborted) await options.onCounts(counts);
+		}
 		return batch;
 	} catch (error) {
 		// The caller frees its place in line when this search rejects. The work this search tracks as its own is accounted

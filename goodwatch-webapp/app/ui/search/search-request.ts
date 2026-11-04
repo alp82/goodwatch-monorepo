@@ -9,7 +9,7 @@ import { mediaLanguageUrl } from "~/utils/media-presentation"
 //
 // The pages call this through search-client.ts, which loads this module with the first search.
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
-import type { SearchBatch } from "~/server/combined-search/search.server"
+import type { ReadCount, SearchBatch } from "~/server/combined-search/search.server"
 
 import { SEARCH_BUSY_MESSAGE, SEARCH_LIMITED_MESSAGE } from "./search-client"
 
@@ -52,8 +52,14 @@ export async function requestSearch({
 	signal,
 	onReading,
 	onProgress,
+	onCounts,
 	unavailable,
 }: {
+	/**
+	 * Discover: what the filters read from the words keep out, which can follow the batch. With it, the batch returns
+	 * as soon as it arrives and the rest of the stream is read after it.
+	 */
+	onCounts?: (counts: ReadCount[]) => void
 	/** The JSON body of the search request. */
 	body: unknown
 	language?: string
@@ -95,6 +101,7 @@ export async function requestSearch({
 			kind?: string
 			reading?: ReadingChip[]
 			batch?: SearchBatch
+			counts?: ReadCount[]
 			error?: string
 		} | null
 		try {
@@ -108,11 +115,18 @@ export async function requestSearch({
 		else if (message?.kind === "provisional" && message.batch && !batch)
 			onProgress?.(message.batch)
 		else if (message?.kind === "batch" && !batch) batch = message.batch
+		else if (message?.kind === "counts" && batch) onCounts?.(message.counts ?? [])
+		else if (message?.kind === "error" && batch) return
 		else if (message?.kind === "error")
 			throw new Error(message.error ?? unavailable)
 	}
-	try {
-		while (true) {
+	const close = async () => {
+		await reader.cancel().catch(() => {})
+		reader.releaseLock()
+	}
+	// Reads lines until the stream ends, or (with `until`) until that returns true.
+	const read = async (until?: () => boolean) => {
+		while (!until?.()) {
 			if (signal.aborted) throw signal.reason ?? new DOMException("Search interrupted", "AbortError")
 			let chunk: Awaited<ReturnType<typeof reader.read>>
 			try {
@@ -120,17 +134,31 @@ export async function requestSearch({
 			} catch (error) {
 				throw lost(error)
 			}
-			if (chunk.done) break
+			if (chunk.done) {
+				handle(buffered + decoder.decode())
+				buffered = ""
+				return true
+			}
 			buffered += decoder.decode(chunk.value, { stream: true })
 			const lines = buffered.split("\n")
 			buffered = lines.pop() ?? ""
 			for (const line of lines) handle(line)
 		}
-		handle(buffered + decoder.decode())
-		if (!batch) throw new Error(unavailable)
-		return batch
-	} finally {
-		await reader.cancel().catch(() => {})
-		reader.releaseLock()
+		return false
 	}
+	let ended = false
+	try {
+		ended = await read(onCounts ? () => batch !== undefined : undefined)
+		if (!batch) throw new Error(unavailable)
+	} catch (error) {
+		await close()
+		throw error
+	}
+	if (ended || !onCounts) await close()
+	// The counts come after the batch: read them without holding the results back. A failure there loses only them.
+	else
+		void read()
+			.catch(() => {})
+			.finally(close)
+	return batch
 }

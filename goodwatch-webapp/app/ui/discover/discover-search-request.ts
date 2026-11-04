@@ -2,7 +2,7 @@
 // (useDiscoverSearch.ts), so that a test can run it without React.
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { SearchFilters } from "~/server/combined-search/search-filters"
-import type { SearchBatch } from "~/server/combined-search/search.server"
+import type { ReadCount, SearchBatch } from "~/server/combined-search/search.server"
 import { requestSearch } from "~/ui/search/search-client"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
@@ -16,6 +16,12 @@ export interface DiscoverSearchResult {
 	filterHides?: SearchBatch["filterHides"]
 	/** Shared server snapshot; absent when the shared cache is unavailable. */
 	searchSet?: string
+	/** With read preferences: the original reading's pool, when a read single genre widened the search. */
+	originalSet?: string
+	/** With originalSet: the two pools' keys that are one title (server/combined-search/preference-pools.server.ts). */
+	identitySet?: string
+	/** The query is a title's name: only the person's own filters apply. */
+	namedTitle?: boolean
 	reading: ReadingChip[]
 	people: SearchBatch["people"]
 	creditScope: SearchBatch["creditScope"]
@@ -43,6 +49,9 @@ const resultFor = (q: string, batch: SearchBatch): DiscoverSearchResult => ({
 		? (batch.searchKeys as TitleKey[])
 		: rankedKeys(batch),
 	...(batch.searchSet ? { searchSet: batch.searchSet } : {}),
+	...(batch.originalSet ? { originalSet: batch.originalSet } : {}),
+	...(batch.identitySet ? { identitySet: batch.identitySet } : {}),
+	...(batch.namedTitle ? { namedTitle: true } : {}),
 	...(batch.filterHides ? { filterHides: batch.filterHides } : {}),
 	reading: batch.reading ?? [],
 	people: batch.people ?? [],
@@ -64,14 +73,27 @@ export async function runDiscoverSearch(
 	onReading: (chips: ReadingChip[]) => void,
 	onProgress?: (result: DiscoverSearchResult) => void,
 	language?: string,
+	// Read preferences (domain/search-preferences.ts): the original reading's single genre, and which read filters
+	// to count; the counts come after the results.
+	preferences?: { originalGenres?: string[]; counted?: string[]; named?: string },
+	onCounts?: (counts: ReadCount[]) => void,
 ): Promise<DiscoverSearchResult> {
 	const batch = await requestSearch({
 		language,
 		// discover: the frozen ranked candidate set, which the results endpoint filters and counts.
-		body: { q, filters, allTitles, discover: true },
+		body: {
+			q,
+			filters,
+			allTitles,
+			discover: true,
+			...(preferences?.originalGenres?.length ? { originalGenres: preferences.originalGenres } : {}),
+			...(preferences?.counted?.length ? { counted: preferences.counted } : {}),
+			...(preferences?.named ? { named: preferences.named } : {}),
+		},
 		signal,
 		onReading,
 		onProgress: (batch) => onProgress?.(resultFor(q, batch)),
+		onCounts,
 		unavailable: UNAVAILABLE,
 	})
 	return resultFor(q, batch)

@@ -4,6 +4,7 @@ import { createEntityResolver } from "./discover-query-entities.server.js"
 import { getCast } from "./cast.server"
 import { getPaletteTitles } from "./command-palette.server"
 import { getSearchResults } from "./search.server"
+import { splitNegation } from "./search-ranking/query-parsing.server"
 
 // Reuse the lab's tested resolver with direct server lookups rather than self HTTP.
 const resolveEntity = createEntityResolver(async (input: URL) => {
@@ -99,6 +100,14 @@ export async function interpretDiscoverQuery(
 		residual: view.residual,
 		semanticQuery: view.semanticQuery,
 		params: params.toString(),
+		// What Discover's search needs to tell read preferences from read filters (domain/search-preferences.ts):
+		// each applied or set-aside reading with its phrase, and the clauses the query leaves out.
+		proposals: view.proposals.flatMap((p) =>
+			p.status === "applied" || p.status === "existing wins"
+				? [{ parameter: p.parameter, value: p.value, phrase: p.phrase, status: p.status }]
+				: [],
+		),
+		negated: splitNegation(query).negated,
 		href: `/discover?${params}`,
 		labels: [...new Set(labels)],
 		display: {

@@ -327,6 +327,8 @@ export function ReleasedTab({ view }: { view: SubTabView }) {
 	if (view.page.searchSet) params.set("searchSet", view.page.searchSet)
 	else if (view.page.ranked !== null)
 		params.set("ranked", view.page.ranked.join(","))
+	if (view.page.originalSet) params.set("originalSet", view.page.originalSet)
+	if (view.page.identitySet) params.set("identitySet", view.page.identitySet)
 	const tops = useReleasedTops(
 		params.toString(),
 		view.data.context.member,

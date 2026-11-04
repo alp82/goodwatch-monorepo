@@ -242,3 +242,37 @@ test("aborted requests do not deliver queued provisional packets and cancel thei
 	assert.deepEqual(progress, [])
 	assert.equal(cancelled, 1)
 })
+
+test("Discover's read-filter counts after the batch reach onCounts; the batch doesn't wait for them", async (t) => {
+	const batch = { q: "pirates", rows: [], reading: [], metadata: [] }
+	stubFetch(t, () =>
+		streamAnswer(
+			{ kind: "batch", batch },
+			{ kind: "counts", counts: [{ filter: "years", hides: 86 }] },
+		),
+	)
+	const { requestSearch: direct } = await import("./search-request.ts")
+	const counted = new Promise<unknown>((resolve) => {
+		void direct({
+			body: { q: "pirates" },
+			signal: new AbortController().signal,
+			onReading: () => {},
+			onCounts: resolve,
+			unavailable: UNAVAILABLE,
+		}).then((answer) => assert.equal(answer.q, "pirates"))
+	})
+	assert.deepEqual(await counted, [{ filter: "years", hides: 86 }])
+})
+
+test("an error after the batch leaves the batch standing", async (t) => {
+	const batch = { q: "pirates", rows: [], reading: [], metadata: [] }
+	stubFetch(t, () => streamAnswer({ kind: "batch", batch }, { kind: "error", error: "late" }))
+	const { requestSearch: direct } = await import("./search-request.ts")
+	const answer = await direct({
+		body: { q: "pirates" },
+		signal: new AbortController().signal,
+		onReading: () => {},
+		unavailable: UNAVAILABLE,
+	})
+	assert.equal(answer.q, "pirates")
+})

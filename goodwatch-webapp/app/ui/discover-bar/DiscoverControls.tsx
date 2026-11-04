@@ -39,7 +39,7 @@ import {
 	type PanelTab,
 	SubTabSlot,
 } from "./DiscoverPanel"
-import { FilterMix } from "./FilterMix"
+import { FilterMix, type ReadRow } from "./FilterMix"
 import { PanelFooter } from "./PanelFooter"
 import { ReadingLine } from "./ReadingLine"
 import type { BarChip } from "./chips"
@@ -89,6 +89,10 @@ export interface DiscoverPageContext {
 	/** The running search's ranked list, once it ranks; null while browsing. */
 	ranked: readonly TitleKey[] | null
 	searchSet?: string
+	/** With read preferences: the original reading's pool (server/discover-search-set.server.ts). */
+	originalSet?: string
+	/** With originalSet: the keys of the two pools that are one title. */
+	identitySet?: string
 	/** The grid's first titles. */
 	cards: readonly TitleCard[]
 	/** False while the counts are still the previous answer's, or the search hasn't ranked yet. */
@@ -152,6 +156,21 @@ export interface DiscoverControlsProps {
 	/** The page's title; the count sits at its right. */
 	heading?: ReactNode
 	className?: string
+	/**
+	 * While searching, the read strip (ui/discover/search-reading) in place of the reading line: what the search read,
+	 * with the bar's own chips.
+	 */
+	readStrip?: (bar: {
+		chips: readonly BarChip[]
+		onRemove: (chip: BarChip) => void
+		onOpen?: (chip: BarChip) => void
+	}) => ReactNode
+	/** While searching: the Matches popout's read parts, which chips keep rows of their own, and the read filters' rows. */
+	matchesRead?: ReactNode
+	keepChip?: (chip: BarChip) => boolean
+	readRows?: ReadRow[]
+	/** The words as typed, for the search field; `query` otherwise. */
+	typedQuery?: string | null
 }
 
 
@@ -181,6 +200,11 @@ function DiscoverControlsContent({
 	renderFind,
 	heading,
 	className = "",
+	readStrip,
+	matchesRead,
+	keepChip,
+	readRows,
+	typedQuery,
 }: DiscoverControlsProps) {
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
@@ -192,7 +216,7 @@ function DiscoverControlsContent({
 
 	// The text of the field that finds titles and people; it starts empty each time the panel opens.
 	const [params] = useSearchParams()
-	const asked = params.get("asked") ?? query ?? ""
+	const asked = typedQuery ?? params.get("asked") ?? query ?? ""
 	const [text, setText] = useState("")
 	const field = useRef<HTMLInputElement>(null)
 	const sheetField = useRef<HTMLInputElement>(null)
@@ -364,6 +388,9 @@ function DiscoverControlsContent({
 						chips={data.chips}
 						update={filters.update}
 						phone={!desktop}
+						readSection={matchesRead}
+						keepChip={keepChip}
+						readRows={readRows}
 					/>
 				</div>
 			)}
@@ -516,7 +543,7 @@ function DiscoverControlsContent({
 						<ReadySwitch on={readyOn} onChange={setReady} member={member} />
 					</div>
 					<div className="order-last flex min-w-0 basis-full lg:order-none lg:flex-1 lg:basis-auto">
-						<ReadingLine
+						{readStrip ? readStrip({ chips: data.chips, onRemove: removeChip, onOpen: advanced ? openChip : undefined }) : <ReadingLine
 							state={state}
 							chips={data.chips}
 							reading={reading}
@@ -525,7 +552,7 @@ function DiscoverControlsContent({
 							onRemove={removeChip}
 							onType={(type) => filters.set({ type })}
 							onMood={(mood) => filters.set({ moods: [mood as MoodKey] })}
-						/>
+						/>}
 					</div>
 					<div className="flex h-10 shrink-0 items-center rounded-full ring-1 ring-white/10">
 						{forYou && (

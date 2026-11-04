@@ -1,7 +1,7 @@
-// A described search: the words a person types in Discover's field. The interpreter (/api/discover/interpret) turns the
-// words it understands into Discover's filters and leaves the rest as the search text, so both land in the URL and the
-// filter bar shows them as its own. `asked` keeps the words as typed: a sentence that became filters only has no `q`
-// left, and the field still shows it. Pure, so the rules are tested without React (described-search.test.ts).
+// A described search: the words a person types in Discover's field. The URL keeps the words as typed (`q`); what the
+// interpreter reads from them is read again on every change and never written as the person's own filters
+// (ui/discover/search-reading). Older links kept the words in `asked` and what they read as Discover's filters.
+// Pure, so the rules are tested without React (described-search.test.ts).
 
 /** The parameters of the interpretation that matter here. */
 export interface Interpretation {
@@ -13,6 +13,7 @@ export interface Interpretation {
 const SEARCH_KEYS = [
 	"q",
 	"asked",
+	"off",
 	"page",
 	"allTitles",
 	"sort",
@@ -38,26 +39,5 @@ export function filtersToKeep(
 	const before = new URLSearchParams(lastExisting)
 	for (const key of new URLSearchParams(last.params).keys())
 		if (!before.has(key)) out.delete(key)
-	return out
-}
-
-/** The URL of a described search. Without an interpretation the words are searched as they are. */
-export function describedParams(
-	current: URLSearchParams,
-	typed: string,
-	kept: URLSearchParams,
-	interpretation: Interpretation | null,
-	entering: boolean,
-): URLSearchParams {
-	const out = new URLSearchParams(interpretation?.params ?? kept)
-	if (!interpretation) out.set("q", typed)
-	out.set("asked", typed)
-	for (const key of VIEW_KEYS) {
-		const value = current.get(key)
-		if (value) out.set(key, value)
-	}
-	// Entering a search chooses Relevance; a search after a search keeps the chosen sort.
-	const sort = current.get("sort")
-	if (sort && !entering) out.set("sort", sort)
 	return out
 }

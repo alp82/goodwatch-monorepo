@@ -375,10 +375,12 @@ else
   if [[ $WHERE == local ]]; then
     docker image inspect "$image" >/dev/null 2>&1 || docker build -t "$image" "$ROOT/lighthouse"
     cp "$urls" "$run/lighthouse-urls.txt"
+    # An instance that listens on the Docker host itself is reached through the host's network, as for tap.
+    lh_network=(); [[ ! $BENCH_TARGET_URL =~ ^https?://(127\.0\.0\.1|localhost)(:|$) ]] || lh_network=(--network host)
     local_container=1
     node "$ROOT/scripts/run-meta.mjs" start "$run/meta.json"
     set +e
-    docker run --rm --name "$container" --shm-size=1g -v "$run/lighthouse:/out" -v "$run/lighthouse-urls.txt:/work/urls.txt:ro" -e LH_RUNS -e LH_CPU_SLOWDOWN -e LH_RESOLVE_IP -e LH_EXTRA_CHROME_FLAGS -e LH_BLOCKED_URL_PATTERNS "$image" 2>&1 | tee "$run/lighthouse.log"
+    docker run --rm --name "$container" "${lh_network[@]}" --shm-size=1g -v "$run/lighthouse:/out" -v "$run/lighthouse-urls.txt:/work/urls.txt:ro" -e LH_RUNS -e LH_CPU_SLOWDOWN -e LH_RESOLVE_IP -e LH_EXTRA_CHROME_FLAGS -e LH_BLOCKED_URL_PATTERNS "$image" 2>&1 | tee "$run/lighthouse.log"
     RUN_EXIT=${PIPESTATUS[0]}
     set -e
     local_container=0

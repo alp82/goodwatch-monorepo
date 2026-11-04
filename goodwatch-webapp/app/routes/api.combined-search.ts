@@ -12,6 +12,7 @@ import {
 } from "~/server/search-runtime/admission.server";
 import { SEARCH_RESULTS } from "~/domain/discover-search";
 import { saveSearchSet } from "~/server/discover-search-set.server";
+import type { CountedFilter } from "~/server/combined-search/preference-pools.server";
 import { beginSearchTelemetry, recordSearchRejection } from "~/server/search-runtime/telemetry.server";
 import { checkSearchRate, trustedClientAddress } from "~/server/search-runtime/rate-limit.server";
 import {
@@ -99,6 +100,17 @@ export async function action({ request }: ActionFunctionArgs) {
 		taste.catch(() => {});
 		const forYou = body.forYou === true;
 		const fullList = body.discover === true;
+		// Discover with read preferences (domain/search-preferences.ts): the original reading's single genre, and which
+		// read filters to count. Validated like the filters; ignored outside Discover.
+		const originalGenres = fullList
+			? parseSearchFilters({ genres: body.originalGenres }).genres?.slice(0, 1)
+			: undefined;
+		const counted = fullList && Array.isArray(body.counted)
+			? [...new Set(body.counted)].filter(
+					(name): name is CountedFilter => name === "years" || name === "type" || name === "anime",
+				)
+			: [];
+		const named = fullList && typeof body.named === "string" ? body.named.slice(0, 512) : undefined;
 		// Newline-delimited JSON: a "reading" line as soon as the interpretation is known,
 		// then the "batch" line with the results. "no-transform" keeps the compression
 		// middleware from holding the first line back until the response ends.
@@ -117,8 +129,21 @@ export async function action({ request }: ActionFunctionArgs) {
 				};
 				const sendBatch = async (kind: "provisional" | "batch", batch: SearchBatch) => {
 					if (fullList && kind === "batch" && batch.searchKeys) {
-						const token = await saveSearchSet(batch.searchKeys);
+						const [token, original, identity] = await Promise.all([
+							saveSearchSet(batch.searchKeys),
+							batch.originalKeys ? saveSearchSet(batch.originalKeys) : null,
+							batch.originalKeys && batch.identityPairs ? saveSearchSet(batch.identityPairs) : null,
+						]);
 						if (token) batch = { ...batch, searchSet: token };
+						// The original pool and its identity pairs travel only as tokens beside the search's own: without
+						// them the results use the search's list alone, as before.
+						batch = {
+							...batch,
+							originalKeys: undefined,
+							identityPairs: undefined,
+							...(token && original ? { originalSet: original } : {}),
+							...(token && original && identity ? { identitySet: identity } : {}),
+						};
 					}
 					const memberTaste = await taste;
 					const displayed = await localizeApiTitlePayload(memberTaste
@@ -147,6 +172,12 @@ export async function action({ request }: ActionFunctionArgs) {
 							allTitles: body.allTitles === true,
 							// Discover's search mode filters and counts over the whole ranked list.
 							rows: fullList ? SEARCH_RESULTS : undefined,
+							originalGenres,
+							counted,
+							named,
+							onCounts: (counts) => {
+								send({ kind: "counts", counts });
+							},
 						},
 					);
 					completed = true;
