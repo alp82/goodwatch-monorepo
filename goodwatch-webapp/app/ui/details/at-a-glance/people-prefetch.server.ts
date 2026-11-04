@@ -1,16 +1,19 @@
 // Puts the people the At a glance sub-page shows into its document: the cast list of Starring, the crew of Made by,
 // and a show's creators, under the query keys the page's own lists read (people/usePeople.ts). So the sub-page's
 // first HTML holds every name it shows, and the browser requests none of them. A list that fails or outlasts the
-// budget is left out; the browser then requests it as before.
+// budget is left out; the browser then requests it as before. The title page, whose rows are closed at first, puts
+// only what the rows show into its document (`shown`): the cast's first rows and each department's first people; the
+// rest come when a list grows.
 import {
 	type DehydratedState,
 	QueryClient,
 	dehydrate,
 } from "@tanstack/react-query"
 import { getTitlePeoplePage } from "~/server/title-people.server"
-import { CAST_PAGE_SIZE } from "~/ui/details/people/CastSection"
+import { CAST_PAGE_SIZE, CAST_STEP } from "~/ui/details/people/CastSection"
 import { type PeopleQuery, peopleQueryKey } from "~/ui/details/people/usePeople"
 import { CREW_PAGE_SIZE } from "./rows"
+import { shownPage } from "./shown-people"
 
 /** The lists At a glance reads for a title, as usePeople asks for them. */
 export function glancePeopleQueries(
@@ -31,11 +34,14 @@ export async function prefetchGlancePeople({
 	type,
 	id,
 	budgetMs,
+	shown = false,
 }: {
 	type: "movie" | "show"
 	id: number
 	/** How long the document waits for the lists. */
 	budgetMs: number
+	/** Only what the rows show at first (shownPage). */
+	shown?: boolean
 }): Promise<{ state: DehydratedState; complete: boolean }> {
 	const client = new QueryClient()
 	let failed = false
@@ -53,7 +59,7 @@ export async function prefetchGlancePeople({
 		})
 			.then((page) =>
 				client.setQueryData(peopleQueryKey(query), {
-					pages: [page],
+					pages: [shown ? shownPage(query, page, CAST_STEP) : page],
 					pageParams: [0],
 				}),
 			)

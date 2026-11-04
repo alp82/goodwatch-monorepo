@@ -340,6 +340,7 @@ function ScoreLine({
 				<img
 					src={assetUrl(site.logo)}
 					alt={row.name}
+					loading="lazy"
 					className={site.wordmark ? "max-h-3 max-w-8" : "h-4"}
 				/>
 			</a>

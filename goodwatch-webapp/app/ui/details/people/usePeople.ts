@@ -7,6 +7,7 @@
 //   people.total       everyone (ignores q and group); people.matched: matches for q and group
 //   people.loadMore()  the next page; people.hasMore, people.loadingMore
 //   people.busy        a new q or group is on its way (the previous rows stay on screen meanwhile)
+//   people.partial     the first page holds fewer rows than it would (a document's cut of it); people.loadAll()
 import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 
@@ -114,6 +115,17 @@ export function usePeople(query: PeopleQuery) {
 		loadMore: () => {
 			if (result.hasNextPage && !result.isFetchingNextPage)
 				void result.fetchNextPage()
+		},
+		/**
+		 * The first page holds fewer rows than a request gives: the document brought only the rows its page showed at
+		 * first (at-a-glance/people-prefetch.server.ts).
+		 */
+		partial:
+			Boolean(first) &&
+			first.rows.length < Math.min(first.matched - first.offset, pageSize),
+		/** Asks for the first page whole again, and the pages after it. */
+		loadAll: () => {
+			if (!result.isFetching) void result.refetch()
 		},
 		/** The q the rows answer (lags the typed one by the pause). */
 		q,

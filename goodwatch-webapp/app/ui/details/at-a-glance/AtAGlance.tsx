@@ -1,17 +1,19 @@
 // The title page's At a glance: one card of rows (glance-rows.tsx) that each already say their answer. Pressing a
 // row anywhere unfolds its detail right under it; another press folds it. Which rows are open is the page's to keep
-// (TitlePage.tsx keeps them per history entry, so Back from a sub-page finds them open).
+// (TitlePage.tsx keeps them per history entry, so Back from a sub-page finds them open). Every row's detail is in the
+// server's HTML, a closed one hidden: the page's loader puts the people the rows show into the document
+// (people-prefetch.server.ts), and opening a row only shows what is already there.
 import { ChevronDownIcon } from "@heroicons/react/24/outline"
-import { Suspense, lazy } from "react"
+import { memo } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { TitleQuestion } from "~/ui/details/titleQuestions"
-import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import GlanceDetailContent from "./GlanceDetail"
 import { useGlanceRows } from "./glance-rows"
 
-// Every row is closed at first: a row's content loads when one opens (or comes back open on Back).
-const GlanceDetail = lazy(reloadOnStaleChunk(() => import("./GlanceDetail")))
-
 export { glanceRowLabels } from "./rows"
+
+// A press re-renders the rows, not the details: their props stay the same while the page is open.
+const GlanceDetail = memo(GlanceDetailContent)
 
 type Media = MovieResult | ShowResult
 
@@ -48,6 +50,7 @@ export function AtAGlance({
 							<button
 								type="button"
 								aria-expanded={isOpen}
+								aria-controls={`${row.id}-detail`}
 								onClick={() => onToggle(row.id)}
 								className={`group flex w-full cursor-pointer items-start gap-3 px-4 py-3 text-left hover:bg-white/[0.03] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-amber-300 ${isOpen ? "bg-white/[0.03]" : ""}`}
 							>
@@ -63,20 +66,19 @@ export function AtAGlance({
 									className={`mt-0.5 h-4 w-4 shrink-0 text-gray-500 transition-transform group-hover:text-amber-300 motion-reduce:transition-none ${isOpen ? "rotate-180 text-amber-300" : ""}`}
 								/>
 							</button>
-							{isOpen && (
-								<div className="min-w-0 border-t border-white/[0.06] px-4 pt-5 pb-7 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-gray-100">
-									<Suspense
-										fallback={<div aria-busy="true" className="h-40" />}
-									>
-										<GlanceDetail
-											id={row.id}
-											media={media}
-											country={country}
-											questions={questions}
-										/>
-									</Suspense>
-								</div>
-							)}
+							{/* A closed row's detail stays in the document, hidden; it fades in as it opens. */}
+							<div
+								id={`${row.id}-detail`}
+								hidden={!isOpen}
+								className="min-w-0 border-t border-white/[0.06] px-4 pt-5 pb-7 motion-safe:animate-fade-in [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-gray-100"
+							>
+								<GlanceDetail
+									id={row.id}
+									media={media}
+									country={country}
+									questions={questions}
+								/>
+							</div>
 						</li>
 					)
 				})}

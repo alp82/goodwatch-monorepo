@@ -1,6 +1,6 @@
 // The opened content of an At a glance row: the facts panel, the content guide (the age ratings, how strong each kind
-// of content is, the viewing guide), the whole cast, the crew as credits. The sub-page draws every one in its HTML;
-// the title page loads this on the first row it opens (LazyGlanceDetail), since every row is closed at first.
+// of content is, the viewing guide), the whole cast, the crew as credits. The sub-page and the title page both draw
+// every one in their HTML; the title page hides a closed row's.
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { CAPTION } from "~/ui/details/page-ui"
 import { CastSection } from "~/ui/details/people/CastSection"

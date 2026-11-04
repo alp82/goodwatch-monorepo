@@ -1,7 +1,3 @@
-import { timeRequestWork, withRequestTiming } from "~/utils/request-work"
-import { canonicalMediaTitle } from "~/utils/media-presentation"
-import { normalizeCountry } from "~/utils/media-language"
-import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
 import { json, redirect } from "@remix-run/node"
 import type {
 	LoaderFunction,
@@ -11,46 +7,54 @@ import type {
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
-import { resolveMediaContext } from "~/server/media-context.server"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie } from "~/server/details.server"
-import { titleDetailsWithin } from "~/server/title-page-budget"
+import {
+	type GenreRow,
+	genreRow,
+	relatedMapKeys,
+} from "~/server/genre-row/genre-row.server"
+import { heroHints } from "~/server/hero-hints.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
-import { newPagesNow } from "~/server/new-on-services.server"
+import { resolveMediaContext } from "~/server/media-context.server"
 import type { NewPagesHere } from "~/server/new-on-services-page.server"
+import { newPagesNow } from "~/server/new-on-services.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
-import { relatedMapLookup, relatedSectionData } from "~/server/related-map.server"
+import {
+	relatedMapLookup,
+	relatedSectionData,
+} from "~/server/related-map.server"
+import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
+import { titleBreadcrumb } from "~/server/title-breadcrumb.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
-import type { MovieQueryResult } from "~/server/types/details-types"
-import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
+import { titleDetailsWithin } from "~/server/title-page-budget"
 import {
 	TITLE_BUDGET_MS,
 	type TitleSides,
 	titleSides,
 	titleSidesWithin,
 } from "~/server/title-sides.server"
+import type { MovieQueryResult } from "~/server/types/details-types"
 import Details from "~/ui/details/Details"
-import type { Crumb } from "~/ui/nav/breadcrumb-trail"
-import { titleBreadcrumb } from "~/server/title-breadcrumb.server"
-import {
-	type GenreRow,
-	genreRow,
-	relatedMapKeys,
-} from "~/server/genre-row/genre-row.server"
-import { getUserIdFromRequest } from "~/utils/auth"
-import { detailsMetaTags } from "~/utils/detailsMeta"
-import { titleRedirectPath } from "~/utils/helpers"
-import { mergeDehydratedStates } from "~/utils/title-extras"
-import { canonicalTitleId } from "~/utils/title-identity"
-import { titleKey } from "~/utils/title-key"
-import { START_AFTER_PAINT } from "~/utils/start-after-paint"
-import { heroHints } from "~/server/hero-hints.server"
+import { prefetchGlancePeople } from "~/ui/details/at-a-glance/people-prefetch.server"
 import { heroBackdropFiles } from "~/ui/details/hero/Trailer"
-import { cachedClientLoader } from "~/navigation/instant-navigation"
 import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
 import { similarShelfWithin } from "~/ui/details/more-like-this/similar-shelf.server"
 import { tropesTeaserState } from "~/ui/details/tropes/title-tropes.server"
+import type { Crumb } from "~/ui/nav/breadcrumb-trail"
+import { getUserIdFromRequest } from "~/utils/auth"
+import { detailsMetaTags } from "~/utils/detailsMeta"
+import { titleRedirectPath } from "~/utils/helpers"
+import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
+import { normalizeCountry } from "~/utils/media-language"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { timeRequestWork, withRequestTiming } from "~/utils/request-work"
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
+import { mergeDehydratedStates } from "~/utils/title-extras"
+import { canonicalTitleId } from "~/utils/title-identity"
+import { titleKey } from "~/utils/title-key"
 
 export { pageHeaders as headers } from "~/utils/headers"
 // The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts). A tap
@@ -85,10 +89,7 @@ export type LoaderData = {
 	newPages?: NewPagesHere
 }
 
-const titleLoader = async ({
-	params,
-	request,
-}: LoaderFunctionArgs) => {
+const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	const movieId = (params.movieKey || "").split("-")[0]
 
 	const canonicalId = canonicalTitleId("movie", Number(movieId))
@@ -112,13 +113,35 @@ const titleLoader = async ({
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
 	const details = titleDetailsWithin(
 		timeRequestWork(request, "data", () =>
-			getDetailsForMovie({ movieId, country, language }, { canonical: canonicalContent })),
+			getDetailsForMovie(
+				{ movieId, country, language },
+				{ canonical: canonicalContent },
+			),
+		),
 	)
-	const relatedWork = relatedMapLookup({ type: "movie", id: Number(movieId), budgetMs, language: canonicalContent ? undefined : language })
+	const relatedWork = relatedMapLookup({
+		type: "movie",
+		id: Number(movieId),
+		budgetMs,
+		language: canonicalContent ? undefined : language,
+	})
 	// More like this's Similar shelf is the related map's nearest titles, with their cards.
-	const similarWork = similarShelfWithin(relatedWork, "movie", Number(movieId), budgetMs, canonicalContent ? undefined : language)
+	const similarWork = similarShelfWithin(
+		relatedWork,
+		"movie",
+		Number(movieId),
+		budgetMs,
+		canonicalContent ? undefined : language,
+	)
 	// The Tropes section's two cards, within the same budget.
 	const tropesWork = tropesTeaserState("movie", Number(movieId), budgetMs)
+	// At a glance's cast and crew lists, so its rows hold their people in the first HTML.
+	const glanceWork = prefetchGlancePeople({
+		type: "movie",
+		id: Number(movieId),
+		budgetMs,
+		shown: true,
+	})
 	const parts = Promise.all([
 		details,
 		relatedWork,
@@ -178,8 +201,16 @@ const titleLoader = async ({
 		media.details.title,
 		canonicalContent ? undefined : language,
 	)
-	const [similar, tropes] = await Promise.all([similarWork, tropesWork])
-	const dehydratedState = mergeDehydratedStates(extrasState, tropes.state)
+	const [similar, tropes, glance] = await Promise.all([
+		similarWork,
+		tropesWork,
+		glanceWork,
+	])
+	const dehydratedState = mergeDehydratedStates(
+		extrasState,
+		tropes.state,
+		glance.state,
+	)
 
 	const [sides, genre] = await Promise.all([
 		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),
@@ -190,7 +221,10 @@ const titleLoader = async ({
 	const newPages = newPagesNow(country)
 	// The page's next 103 Early Hints response names its hero (server/hero-hints.ts).
 	if (media.details.backdrop_path)
-		heroHints.remember(new URL(request.url).pathname, heroBackdropFiles(media.details.backdrop_path))
+		heroHints.remember(
+			new URL(request.url).pathname,
+			heroBackdropFiles(media.details.backdrop_path),
+		)
 	const data = {
 		media,
 		params: {
@@ -212,20 +246,29 @@ const titleLoader = async ({
 		related.complete &&
 		similar !== undefined &&
 		tropes.complete &&
+		glance.complete &&
 		genre !== "late" &&
 		titleExtrasEmbedded(extrasState, {
 			genres: media.details.genres,
 			movieSeries: media.movie_series,
 		})
-	return complete
-		? data
-		: json(data, { headers: INCOMPLETE_PAGE_HEADERS })
+	return complete ? data : json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 }
 
 export const loader: LoaderFunction = withRequestTiming(titleLoader)
 
 export default function DetailsMovie() {
-	const { media, params, countryIsFallback, talkedAboutNow, sides, breadcrumb, genreRow, similar, newPages } = useLoaderData<LoaderData>()
+	const {
+		media,
+		params,
+		countryIsFallback,
+		talkedAboutNow,
+		sides,
+		breadcrumb,
+		genreRow,
+		similar,
+		newPages,
+	} = useLoaderData<LoaderData>()
 	const { country } = params
 
 	// return (
@@ -253,13 +296,27 @@ export default function DetailsMovie() {
 		} catch {}
 		if (!stored || !/^[A-Z]{2}$/.test(stored) || stored === country) return
 		const controller = new AbortController()
-		void mayAdoptLegacyCountry(stored, country, controller.signal).then(allowed => {
-			if (allowed && !controller.signal.aborted) updateParams({ ...currentParams, country: stored! }, true)
-		}).catch(() => {})
+		void mayAdoptLegacyCountry(stored, country, controller.signal)
+			.then((allowed) => {
+				if (allowed && !controller.signal.aborted)
+					updateParams({ ...currentParams, country: stored! }, true)
+			})
+			.catch(() => {})
 		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 
-	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} similar={similar} newPages={newPages} />
+	return (
+		<Details
+			media={media}
+			country={country}
+			talkedAboutNow={talkedAboutNow}
+			sides={sides}
+			breadcrumb={breadcrumb}
+			genreRow={genreRow}
+			similar={similar}
+			newPages={newPages}
+		/>
+	)
 }
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).

@@ -1,28 +1,30 @@
 // At a glance's Made by, opened: the crew as credits you can read. Every department with its people and their jobs,
-// key jobs first, nothing behind chips; a long department shows six and "+N more" opens it in place.
+// key jobs first, nothing behind chips; a long department shows six and "+N more" opens it in place. The title page's
+// document brings only each department's first six: opening one asks for the whole list.
 import { Link } from "@remix-run/react"
 import { useState } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { useSectionNear } from "~/ui/details/below-fold"
 import { CAPTION } from "~/ui/details/page-ui"
 import { type PeopleRow, usePeople } from "~/ui/details/people/usePeople"
 import { personPath } from "~/utils/helpers"
-import { CREW_PAGE_SIZE } from "./rows"
+import { CREW_PAGE_SIZE, DEPARTMENT_SHOWS } from "./rows"
 
 type Media = MovieResult | ShowResult
-
-/** A department's first people; the rest open in place. */
-const DEPARTMENT_SHOWS = 6
 
 /** Department-sized boxes while the crew loads. */
 const PLACEHOLDERS = ["a", "b", "c", "d", "e", "f"]
 
 /** The crew as readable credits: every department, its people and their jobs. */
 export function CrewCredits({ media }: { media: Media }) {
+	const near = useSectionNear()
 	const crew = usePeople({
 		mediaType: media.mediaType,
 		tmdbId: media.details.tmdb_id,
 		kind: "crew",
 		pageSize: CREW_PAGE_SIZE,
+		// The document brings the list; a late one is asked for once the section is near.
+		enabled: near,
 	})
 	const [open, setOpen] = useState<string[]>([])
 	if (!crew.ready)
@@ -44,6 +46,7 @@ export function CrewCredits({ media }: { media: Media }) {
 		byDept.set(r.group, [...(byDept.get(r.group) ?? []), r])
 	const depts = crew.groups
 		.map((g) => ({
+			// g.count: everyone in the department, also while only its first people are in.
 			...g,
 			rows: (byDept.get(g.key) ?? []).sort(
 				(a, b) => Number(b.key ?? false) - Number(a.key ?? false),
@@ -66,7 +69,7 @@ export function CrewCredits({ media }: { media: Media }) {
 								{d.label === "Crew" ? "Other crew" : d.label}
 								<span className="normal-case tracking-normal text-gray-600">
 									{" "}
-									· {d.rows.length}
+									· {d.count}
 								</span>
 							</h4>
 							<ul className="flex flex-col gap-1.5">
@@ -84,18 +87,21 @@ export function CrewCredits({ media }: { media: Media }) {
 									</li>
 								))}
 							</ul>
-							{d.rows.length > DEPARTMENT_SHOWS && (
+							{d.count > DEPARTMENT_SHOWS && (
 								<button
 									type="button"
 									aria-expanded={all}
-									onClick={() =>
+									onClick={() => {
+										// Opening a department asks for the people of it that aren't in yet.
+										if (!all && crew.partial) crew.loadAll()
+										else if (!all && d.rows.length < d.count) crew.loadMore()
 										setOpen((o) =>
 											all ? o.filter((x) => x !== d.key) : [...o, d.key],
 										)
-									}
+									}}
 									className="mt-1.5 cursor-pointer text-[13px] font-semibold text-amber-300/90 hover:text-amber-300"
 								>
-									{all ? "Fewer" : `+${d.rows.length - DEPARTMENT_SHOWS} more`}
+									{all ? "Fewer" : `+${d.count - DEPARTMENT_SHOWS} more`}
 								</button>
 							)}
 						</section>

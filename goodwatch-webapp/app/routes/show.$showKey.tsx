@@ -1,8 +1,3 @@
-import { timeRequestWork, withRequestTiming } from "~/utils/request-work"
-import { overlayAlignedGrid } from "~/server/episode-text-overlay.server"
-import { canonicalMediaTitle } from "~/utils/media-presentation"
-import { normalizeCountry } from "~/utils/media-language"
-import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -12,42 +7,54 @@ import {
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect, useMemo } from "react"
+import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
-import { resolveMediaContext } from "~/server/media-context.server"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
-import {
-	optionalTitlePart,
-	titleDetailsWithin,
-	TITLE_EPISODES_BUDGET_MS,
-} from "~/server/title-page-budget"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
+import { getEpisodeLayout } from "~/server/episode-layout.server"
+import { overlayAlignedGrid } from "~/server/episode-text-overlay.server"
+import {
+	type GenreRow,
+	genreRow,
+	relatedMapKeys,
+} from "~/server/genre-row/genre-row.server"
+import { heroHints } from "~/server/hero-hints.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
-import { newPagesNow } from "~/server/new-on-services.server"
+import { resolveMediaContext } from "~/server/media-context.server"
 import type { NewPagesHere } from "~/server/new-on-services-page.server"
+import { newPagesNow } from "~/server/new-on-services.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import {
 	relatedMapLookup,
 	relatedSectionData,
 } from "~/server/related-map.server"
+import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
+import { titleBreadcrumb } from "~/server/title-breadcrumb.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
-import type { ShowQueryResult } from "~/server/types/details-types"
-import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
+import {
+	TITLE_EPISODES_BUDGET_MS,
+	optionalTitlePart,
+	titleDetailsWithin,
+} from "~/server/title-page-budget"
 import {
 	TITLE_BUDGET_MS,
 	type TitleSides,
 	titleSides,
 	titleSidesWithin,
 } from "~/server/title-sides.server"
+import type { ShowQueryResult } from "~/server/types/details-types"
 import Details from "~/ui/details/Details"
+import { prefetchGlancePeople } from "~/ui/details/at-a-glance/people-prefetch.server"
+import { windowEpisodeGrid } from "~/ui/details/episode-grid/window"
+import { heroBackdropFiles } from "~/ui/details/hero/Trailer"
+import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
+import { similarShelfWithin } from "~/ui/details/more-like-this/similar-shelf.server"
+import { seasonSummary } from "~/ui/details/season-summary"
+import { tropesTeaserState } from "~/ui/details/tropes/title-tropes.server"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
-import { titleBreadcrumb } from "~/server/title-breadcrumb.server"
-import {
-	type GenreRow,
-	genreRow,
-	relatedMapKeys,
-} from "~/server/genre-row/genre-row.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsMetaTags } from "~/utils/detailsMeta"
 import {
@@ -56,18 +63,12 @@ import {
 	unpackEpisodeGrid,
 } from "~/utils/episode-grid-wire"
 import { titleRedirectPath } from "~/utils/helpers"
-import { windowEpisodeGrid } from "~/ui/details/episode-grid/window"
-import { seasonSummary } from "~/ui/details/season-summary"
+import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
+import { normalizeCountry } from "~/utils/media-language"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { timeRequestWork, withRequestTiming } from "~/utils/request-work"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
-import { heroHints } from "~/server/hero-hints.server"
-import { heroBackdropFiles } from "~/ui/details/hero/Trailer"
 import { mergeDehydratedStates } from "~/utils/title-extras"
-import { cachedClientLoader } from "~/navigation/instant-navigation"
-import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
-import { similarShelfWithin } from "~/ui/details/more-like-this/similar-shelf.server"
-import { tropesTeaserState } from "~/ui/details/tropes/title-tropes.server"
-import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
-import { getEpisodeLayout } from "~/server/episode-layout.server"
 
 export { pageHeaders as headers } from "~/utils/headers"
 // The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts). A tap
@@ -156,6 +157,13 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	)
 	// The Tropes section's two cards, within the same budget.
 	const tropesWork = tropesTeaserState("show", Number(showId), budgetMs)
+	// At a glance's cast and crew lists, so its rows hold their people in the first HTML.
+	const glanceWork = prefetchGlancePeople({
+		type: "show",
+		id: Number(showId),
+		budgetMs,
+		shown: true,
+	})
 
 	const parts = Promise.all([
 		details,
@@ -261,8 +269,16 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		media.details.title,
 		canonicalContent ? undefined : language,
 	)
-	const [similar, tropes] = await Promise.all([similarWork, tropesWork])
-	const dehydratedState = mergeDehydratedStates(extrasState, tropes.state)
+	const [similar, tropes, glance] = await Promise.all([
+		similarWork,
+		tropesWork,
+		glanceWork,
+	])
+	const dehydratedState = mergeDehydratedStates(
+		extrasState,
+		tropes.state,
+		glance.state,
+	)
 
 	const [sides, genre] = await Promise.all([
 		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),
@@ -302,6 +318,7 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		related.complete &&
 		similar !== undefined &&
 		tropes.complete &&
+		glance.complete &&
 		genre !== "late" &&
 		titleExtrasEmbedded(extrasState, { genres: media.details.genres })
 	return complete ? data : json(data, { headers: INCOMPLETE_PAGE_HEADERS })

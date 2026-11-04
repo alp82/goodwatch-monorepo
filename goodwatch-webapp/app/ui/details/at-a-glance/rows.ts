@@ -46,3 +46,6 @@ export const glanceRowLabels = (
 
 /** One request for the whole crew list (the API's largest page); the sub-page's loader fills the same one. */
 export const CREW_PAGE_SIZE = 200
+
+/** Made by's people per department before it opens in place (CrewCredits). */
+export const DEPARTMENT_SHOWS = 6

@@ -19,7 +19,8 @@ import { type PeopleRow, usePeople } from "~/ui/details/people/usePeople"
 type Media = MovieResult | ShowResult
 
 /** Rows shown first and added by every "Show more". */
-const STEP = 24
+export const CAST_STEP = 24
+const STEP = CAST_STEP
 /** Rows per request: two steps, so the next step is already in when it is pressed. */
 export const CAST_PAGE_SIZE = 48
 
