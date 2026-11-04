@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from urllib3 import Timeout
 import wmill
 
-from f.catalog_text import normalize_row
+from f.sync.catalog_text import normalize_row
 
 
 # Seconds to wait before each retry of rows that failed with a transient error.

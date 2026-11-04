@@ -3,7 +3,7 @@ import json
 import re
 from urllib.parse import urljoin, urlsplit
 
-from f.catalog_text import normalize_description_doc
+from f.sync.catalog_text import normalize_description_doc
 
 
 def wiki_link(value):

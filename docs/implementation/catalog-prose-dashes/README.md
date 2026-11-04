@@ -4,7 +4,7 @@ Published synopses, overviews, taglines, essence text and trope descriptions rep
 Existing whitespace stays as supplied. Names, titles, keys, URLs, raw source captures and provenance stay exact.
 This is a text-publication rule, not a global character replacement in application code or source archives.
 
-`f/catalog_text` owns the field allowlist and transformation. The shared Crate upsert boundary covers TMDB title,
+`f/sync/catalog_text` owns the field allowlist and transformation. The shared Crate upsert boundary covers TMDB title,
 season and episode publishing, translated title text, and DNA copying. The direct episode/season translation SQL
 writer uses the same rule. Both trope import libraries normalize plain text before hashing, and normalize only
 text nodes in the structured document. The replacement keeps the same UTF-16 length, preserving link, emphasis

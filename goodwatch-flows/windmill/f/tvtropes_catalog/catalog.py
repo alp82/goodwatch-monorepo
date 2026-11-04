@@ -9,7 +9,7 @@ import hashlib
 import re
 from urllib.parse import unquote, urlsplit
 
-from f.catalog_text import normalize_text
+from f.sync.catalog_text import normalize_text
 from f.sync.models.crate_schemas import ARCHIVE_COLUMN_TYPES
 from f.tvtropes_catalog.description_docs import serialize_description_doc
 

@@ -7,7 +7,7 @@ from pydantic import ValidationError
 import requests
 import wmill
 
-from f.catalog_text import normalize_text
+from f.sync.catalog_text import normalize_text
 from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.dna.models import (

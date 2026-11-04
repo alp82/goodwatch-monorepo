@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'windmill'), str(ROOT/'scripts')]
 from pydantic import BaseModel
 from f.db.cratedb import CrateConnector
-from f.catalog_text import normalize_row
+from f.sync.catalog_text import normalize_row
 from f.media_language.episode_translations import publish_rows
 from f.tvtropes_catalog.catalog import normalize_record
 from f.tvtropes_catalog.pages import normalize_page

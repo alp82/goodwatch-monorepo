@@ -5,7 +5,7 @@ No source requests. Legacy exact-name records are independent. Writers never ret
 from datetime import datetime, timezone
 from urllib.parse import urlsplit
 
-from f.catalog_text import normalize_text
+from f.sync.catalog_text import normalize_text
 import hashlib
 import json
 import re

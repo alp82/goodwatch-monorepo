@@ -18,7 +18,7 @@ from urllib.request import Request, urlopen
 FLOWS = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(FLOWS / 'windmill'), str(FLOWS / 'scripts')]
 from import_trope_catalog import Crate, settings
-from f.catalog_text import PROSE_FIELDS, normalize_row, normalize_text
+from f.sync.catalog_text import PROSE_FIELDS, normalize_row, normalize_text
 from f.sync.models.crate_schemas import SCHEMAS
 from f.tvtropes_catalog.description_docs import validate_description_doc
 

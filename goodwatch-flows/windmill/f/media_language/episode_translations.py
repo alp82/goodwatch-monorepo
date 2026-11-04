@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import time
 
-from f.catalog_text import normalize_row
+from f.sync.catalog_text import normalize_row
 
 LAUNCH_LOCALES = ('en', 'de', 'fr', 'es', 'it', 'pt-BR', 'pt-PT', 'ja', 'ko', 'zh-Hans', 'zh-Hant', 'pl', 'ru', 'ar')
 BASES = {'en', 'de', 'fr', 'es', 'it', 'pt', 'ja', 'ko', 'zh', 'pl', 'ru', 'ar'}
