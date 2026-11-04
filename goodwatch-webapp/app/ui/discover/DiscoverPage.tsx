@@ -87,6 +87,13 @@ const ReadStrip = lazy(
 	reloadOnStaleChunk(() => import("./search-reading/ReadStrip").then((m) => ({ default: m.ReadStrip }))),
 )
 
+/** The read filters' counts as the meter shows them (a share of the results' hidden titles where it applies). */
+function withShownCounts(hides: ReadonlyMap<string, HideCount>, shown: ReadonlyMap<string, number>) {
+	const out = new Map<string, HideCount>()
+	for (const [phrase, count] of hides) out.set(phrase, { ...count, n: shown.get(`read:${phrase}`) ?? count.n })
+	return out
+}
+
 /** Which streamed count belongs to a read filter (preference-pools.server.ts counts years, type and anime). */
 function countedName(item: ReadItem) {
 	const keys = item.params.map(([key]) => key)
@@ -519,6 +526,8 @@ export function DiscoverPage({
 	// The read parts' switches, on the strip and in Matches alike. Words set aside by the person's own choice aren't
 	// switches. Matches keeps rows only for the person's own filters; the read parts are listed after them.
 	const items = reading.items
+	// The fingerprint the search ranks by: none while no words are searched (every part off, or no words left).
+	const fingerprint = q !== null ? (search.reading ?? []) : []
 	const readChipKeys = new Set(items.filter((item) => item.on).flatMap((item) => item.chipKeys))
 	const keepChip = (chip: { key: string }) => !readChipKeys.has(chip.key)
 	// What each read filter keeps out: the search's streamed count for one it applies itself (an estimate: switching
@@ -529,14 +538,16 @@ export function DiscoverPage({
 		const name = countedName(item)
 		const streamed = name ? search.counts?.find((c) => c.filter === name) : undefined
 		const own = counts?.recoveries.find((r) => r.filter === item.group)
+		const inSearch = (counts as FilterBarCounts | null)?.inSearch?.includes(item.group as never)
 		if (streamed) hides.set(item.phrase.toLowerCase(), { n: streamed.hides, approx: true })
-		else if (own && !(counts as FilterBarCounts | null)?.inSearch?.includes(own.filter))
-			hides.set(item.phrase.toLowerCase(), { n: own.titles, approx: !catalogue, inHidden: true })
+		// One the results apply: its share of their hidden titles (FilterMix shares them out, hidden-allocation.ts).
+		else if (counts && item.group && !inSearch)
+			hides.set(item.phrase.toLowerCase(), { n: own?.titles ?? 0, approx: !catalogue, inHidden: true })
 	}
 	const readRows: ReadRow[] = items.flatMap((item) => {
 		const count = hides.get(item.phrase.toLowerCase())
-		if (!count?.n) return []
-		return [{ group: `read:${item.phrase}`, label: `${item.field} ${item.label}`.trim(), color: readColor(item), hides: count.n, approx: count.approx, inHidden: count.inHidden }]
+		if (!count || (!count.inHidden && !count.n)) return []
+		return [{ group: `read:${item.phrase.toLowerCase()}`, label: `${item.field} ${item.label}`.trim(), color: readColor(item), hides: count.n, approx: count.approx, inHidden: count.inHidden, nativeGroup: item.group ?? undefined }]
 	})
 	// The search's scope: titles that pass every filter but that the words don't bring in. One count, on one row.
 	const outside = !stale && first?.scope ? first.scope.outside : null
@@ -549,8 +560,6 @@ export function DiscoverPage({
 			hides: outside,
 			approx: false,
 		})
-	// The meter's read segments in the order of the rows: highest count first.
-	readRows.sort((a, b) => b.hides - a.hides)
 	const toggleRead = (item: ReadItem) => {
 		if (item.aside) return
 		setParams(
@@ -656,7 +665,7 @@ export function DiscoverPage({
 										<Suspense fallback={<div className="h-9 flex-1" />}>
 										<ReadStrip
 											items={items}
-											reading={search.reading ?? []}
+											reading={fingerprint}
 											chips={chips}
 											pending={reading.pending || search.loading}
 											onToggle={toggleRead}
@@ -669,18 +678,20 @@ export function DiscoverPage({
 								: undefined
 						}
 						matchesRead={
-							searching && items.length ? (
-								<Suspense fallback={null}>
-									<MatchesRead
-										items={items}
-										reading={search.reading ?? []}
-										onToggle={toggleRead}
-										onAll={allRead}
-										hides={hides}
-										outside={outside}
-									/>
-								</Suspense>
-							) : undefined
+							searching && items.length
+								? (shown) => (
+										<Suspense fallback={null}>
+											<MatchesRead
+												items={items}
+												reading={fingerprint}
+												onToggle={toggleRead}
+												onAll={allRead}
+												hides={withShownCounts(hides, shown)}
+												outside={outside}
+											/>
+										</Suspense>
+									)
+								: undefined
 						}
 						keepChip={searching ? keepChip : undefined}
 						readRows={searching ? readRows : undefined}

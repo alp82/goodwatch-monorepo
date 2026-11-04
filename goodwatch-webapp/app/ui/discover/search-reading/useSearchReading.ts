@@ -7,10 +7,10 @@ import { useSearchParams } from "@remix-run/react"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo, useRef } from "react"
 import { type FilterState, resolveFilterChange } from "~/domain/filter-state"
-import { type ReadPlan, type ReadProposal, readPlan } from "~/domain/search-preferences"
+import type { ReadPlan } from "~/domain/search-preferences"
 import { filterStateToParams } from "~/domain/filter-state"
 import type { FilterStateBinding } from "~/ui/filter-bar/useFilterState"
-import { type ReadItem, type Reading, readFilterChange, readItems, readText, shownState } from "./read-items"
+import { type ReadItem, type Reading, readFilterChange, readText, searchReadingState, shownState } from "./read-items"
 
 const INTERPRET_LIMIT = 512
 
@@ -49,25 +49,13 @@ function useReading(text: string | null, existing: string, enabled: boolean) {
 	return { reading, shown, pending: enabled && text !== null && !reading }
 }
 
-const applied = (reading: Reading) =>
-	reading.proposals.filter(
-		(p): p is ReadProposal => p.status === "applied" || p.status === "existing wins",
-	)
-
-function planOf(reading: Reading, existing: string, namedTitle: boolean): ReadPlan {
-	return readPlan({
-		params: reading.params,
-		existing,
-		proposals: applied(reading),
-		negated: reading.negated,
-		namedTitle,
-	})
-}
-
 export interface SearchReading {
 	/** What the whole query read, with the switched-off items. */
 	items: ReadItem[]
-	/** The search's plan for the words switched on; null while it's read, or with every word switched off. */
+	/**
+	 * The search's plan for the words switched on; null while they're read. With every part switched off, the plan
+	 * of the person's own filters alone (no search).
+	 */
 	plan: ReadPlan | null
 	/** The words switched on, as the search reads them. */
 	text: string | null
@@ -99,30 +87,19 @@ export function useSearchReading({
 	const read = useReading(text, existing, enabled)
 	const offKey = off.join("\u0000")
 	return useMemo(() => {
-		const plan = read.reading ? planOf(read.reading, existing, namedTitle) : null
-		const shown = whole.shown
-		let items: ReadItem[] = []
-		if (shown) {
-			const full = planOf(shown, existing, namedTitle)
-			// Every read filter strict (a search that leaves something out, or no words left to rank): no preferences.
-			const strict = plan && (plan.branch === "exclusion" || plan.branch === "catalogue")
-			items = readItems({
-				reading: shown,
-				existing,
-				plan: strict ? { ...full, preferences: [], filters: full.original } : full,
-				off,
-				defaults,
-			})
-		}
-		return {
-			items,
-			plan,
+		const state = searchReadingState({
+			typed,
 			text,
-			words: read.reading ? (new URLSearchParams(read.reading.params).get("q")?.trim() ?? "") : null,
-			pending: whole.pending,
-		}
+			read: read.reading,
+			whole: whole.shown,
+			existing,
+			namedTitle,
+			off,
+			defaults,
+		})
+		return { ...state, text, pending: whole.pending }
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [read.reading, whole.shown, whole.pending, existing, namedTitle, offKey, defaults, text])
+	}, [read.reading, whole.shown, whole.pending, existing, namedTitle, offKey, defaults, text, typed])
 }
 
 /**

@@ -166,7 +166,7 @@ export interface DiscoverControlsProps {
 		onOpen?: (chip: BarChip) => void
 	}) => ReactNode
 	/** While searching: the Matches popout's read parts, which chips keep rows of their own, and the read filters' rows. */
-	matchesRead?: ReactNode
+	matchesRead?: (counts: ReadonlyMap<string, number>) => ReactNode
 	keepChip?: (chip: BarChip) => boolean
 	readRows?: ReadRow[]
 	/** The words as typed, for the search field; `query` otherwise. */

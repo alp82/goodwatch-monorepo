@@ -36,6 +36,10 @@ The URL keeps the words as typed (`q`) and the phrases switched off (`off=<phras
    - The pools' titles that fail a filter follow the composed order, so the filter bar still counts them.
    - One title snapshot serves the pools, the fit, and the rating order; a refresh during the work is read again once.
 
+## Switching everything off
+
+With every part switched off, the plan settles at once on the person's own filters: no search, no preferences, no fingerprint, and Discover's list for those filters. The parts stay listed, off, and Restore reads the words again (`searchReadingState` in `read-items.ts`).
+
 ## Counts and what they mean
 
 | Count | Where it comes from | Shown as |
@@ -43,6 +47,8 @@ The URL keeps the words as typed (`q`) and the phrases switched off (`off=<phras
 | A read filter the search applies itself (years, type, anime) | The same reading ranked without that filter, minus what passes with it | An estimate, `~` |
 | A read filter the results apply (runtime, scores, country) | The results' own count of what that filter alone hides | `~`, as for the person's own filters; exact on the catalog when no words are left |
 | The search's scope, on the first plain words switched on (else the first preference) | The catalog under every hard rule the list applies, minus the results | Exact |
+
+The results' hidden titles are shared out once among every filter group that hides them: the person's own rows and the read filters the results apply (`app/ui/discover-bar/hidden-allocation.ts`). Each group gets what it alone hides plus a weighted share of the titles several filters hide, in integers that add up to the total. Read parts in one group split that group's count. The search's estimates and its scope aren't part of the results' hidden titles, so the total adds them once. The header, both meters, and the Matches rows use the same numbers.
 
 Hide numbers read in floor buckets (`app/ui/discover-bar/hide-count.ts`): 0–9 as they are, tens, hundreds, then whole thousands as "k". `~` marks an estimate or a bucket that lost precision. Sorting, the meter, and the totals use the raw numbers.
 
@@ -73,12 +79,12 @@ The read strip and the Matches popout's read parts load only while searching. `.
 
 | Line | Base | This change | Limit |
 | --- | --- | --- | --- |
-| Script bytes | 407.3 KB | 411.9 KB | 464.0 KB |
+| Script bytes | 407.3 KB | 412.6 KB | 464.0 KB |
 | Scripts | 36 | 36 | 45 |
-| Total bytes | 890.7 KB | 895.5 KB | 860.0 KB |
-| LCP | 5,283 ms | 5,431 ms | 5,650 ms |
-| TBT | 12 ms | 12 ms | 200 ms |
-| Score | 72 | 71 | 65 |
+| Total bytes | 890.7 KB | 896.2 KB | 860.0 KB |
+| LCP | 5,283 ms | 4,382 ms | 5,650 ms |
+| TBT | 12 ms | 9 ms | 200 ms |
+| Score | 72 | 76 | 65 |
 
 Total bytes fails on the base too, on this local fixture setup. The budget is unchanged. Home and show measure the same on both builds (home passes on both; show's script and image bytes fail on both). The fixture can't serve the movie, person, and share list surfaces.
 
@@ -91,6 +97,17 @@ Total bytes fails on the base too, on this local fixture setup. The budget is un
 - `app/server/combined-search/preference-pools.test.ts`: identity pairs, kept-out counts, and the named-title guard.
 - `app/ui/search/search-request.test.ts`: the counts line after the batch.
 - `app/ui/discover-bar/hide-count.test.ts`: the formatter.
+- `app/ui/discover-bar/hidden-allocation.test.ts`: the share-out: the person's own and read filters together, overlap, read filters alone, several read parts in one group, and conservation of the total.
+- `read-items.test.ts` also runs the page's flow through `searchReadingState`: the last part off, Clear, and Restore.
+
+The focused suite for these areas has 280 tests, all passing. In the wider suite, `late-catalog-sibling.test.ts` fails twice at the base too, and other failures there are unrelated to Discover (auth, Qdrant listeners, the start page render).
+
+## Review fixes
+
+Root review of a45f51c3a found two problems, fixed in the following commit:
+
+1. Clear (or switching off the last part) left the page waiting for a reading that never came, with the last search's results and fingerprint on screen. The all-off plan is now settled at once.
+2. A read filter the results apply was counted twice in the meter: once inside the person's own rows' share, and again as a read row. The hidden titles are now shared out once across both.
 
 ## Known limits
 

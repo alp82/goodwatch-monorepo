@@ -7,7 +7,7 @@ const { interpret } = await import("~/domain/discover-query")
 const { DISCOVER_DEFAULTS } = await import("~/domain/discover-search")
 const { filterStateFromParams } = await import("~/domain/filter-state")
 const { readPlan } = await import("~/domain/search-preferences")
-const { hasItem, readFilterChange, readItems, readText, scopeOwner, shownState, withOff } = await import(
+const { hasItem, readFilterChange, readItems, readText, scopeOwner, searchReadingState, shownState, withOff } = await import(
 	"./read-items.ts"
 )
 
@@ -113,4 +113,55 @@ test("a change that brings a switched-off item back switches it on", () => {
 test("withOff writes only the off list and goes back to page one", () => {
 	const out = withOff(new URLSearchParams("q=a&off=x&page=3"), ["y", "z"])
 	assert.equal(out.toString(), "q=a&off=y&off=z")
+})
+
+// The page's flow through the state the hook returns: the whole query's reading, the reading of the words switched
+// on (null when none are), and the plan the search and the results use.
+function stateFor(query: string, off: string[], existing = "") {
+	const text = readText(query, off)
+	return searchReadingState({
+		typed: query,
+		text,
+		read: text === null ? null : reading(text, existing),
+		whole: reading(query, existing),
+		existing,
+		namedTitle: false,
+		off,
+		defaults,
+	})
+}
+
+test("switching off the last part settles on the person's own filters: no search, no preferences", () => {
+	const all = stateFor("epic pirates", [])
+	assert.equal(all.plan?.branch, "positive")
+	const phrases = all.items.map((item) => item.phrase)
+	const cleared = stateFor("epic pirates", phrases, "type=movie")
+	assert.equal(cleared.plan?.branch, "catalogue", "settled, not waiting for a reading")
+	assert.deepEqual(cleared.plan?.preferences, [])
+	assert.equal(cleared.plan?.filters.toString(), "type=movie", "only the person's own filter")
+	assert.equal(cleared.words, "", "no words to search")
+	assert.ok(cleared.items.length > 0 && cleared.items.every((item) => !item.on), "the parts stay listed, off")
+})
+
+test("Clear on a mood, years and words query keeps nothing read; Restore reads it all again", () => {
+	const query = "funny 90s dark scary epic"
+	const phrases = stateFor(query, []).items.filter((item) => !item.aside).map((item) => item.phrase)
+	const cleared = stateFor(query, phrases)
+	assert.equal(cleared.plan?.branch, "catalogue")
+	assert.equal(cleared.plan?.filters.toString(), "")
+	// Shown on the controls: nothing read (the moods and years are off).
+	const own = filterStateFromParams(new URLSearchParams(), defaults)
+	const shown = shownState(own, cleared.items, defaults)
+	assert.equal(shown.years, undefined)
+	assert.ok(!shown.moods?.length)
+	const restored = stateFor(query, [])
+	assert.equal(restored.plan?.branch, "positive")
+	assert.deepEqual(restored.plan?.preferences.map((p) => p.value).sort(), ["dark", "funny", "scary"])
+	assert.equal(restored.plan?.filters.get("minYear"), "1990")
+})
+
+test("the last plain word off, with a read filter still on: Discover's list for that filter", () => {
+	const state = stateFor("pirates last 10 years", ["pirates"])
+	assert.equal(state.plan?.branch, "catalogue")
+	assert.equal(state.plan?.filters.get("minYear"), "2017")
 })

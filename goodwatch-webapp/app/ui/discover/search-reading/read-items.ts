@@ -23,6 +23,7 @@ import {
 	PREFERENCE_GROUPS,
 	type ReadPlan,
 	type ReadProposal,
+	readPlan,
 } from "~/domain/search-preferences"
 import { activeChips } from "~/ui/filter-bar/labels"
 
@@ -313,4 +314,73 @@ export function withOff(params: URLSearchParams, phrases: readonly string[]): UR
 export function scopeOwner(items: readonly ReadItem[]): string | null {
 	const live = items.filter((item) => item.on && !item.aside)
 	return (live.find((item) => item.words) ?? live.find((item) => item.soft))?.phrase ?? null
+}
+
+const applied = (reading: Reading) =>
+	reading.proposals.filter(
+		(p): p is ReadProposal => p.status === "applied" || p.status === "existing wins",
+	)
+
+export function planOf(reading: Reading, existing: string, namedTitle: boolean): ReadPlan {
+	return readPlan({
+		params: reading.params,
+		existing,
+		proposals: applied(reading),
+		negated: reading.negated,
+		namedTitle,
+	})
+}
+
+/** Every part switched off: the person's own filters alone, Discover's list without a search. */
+export function ownFiltersPlan(existing: string): ReadPlan {
+	return {
+		branch: "catalogue",
+		preferences: [],
+		filters: new URLSearchParams(existing),
+		original: new URLSearchParams(existing),
+	}
+}
+
+/**
+ * The search's state from its two readings (useSearchReading): the plan for the words switched on and the whole
+ * query's items. `read` is the reading of `text` (null while it's on its way), `whole` the whole query's.
+ * - With every part switched off (`text` null), the plan is settled at once: the person's own filters, no search, no
+ *   preferences; the items stay listed, off, so Restore brings them back.
+ * - A plan that keeps every read filter strict shows its items as filters.
+ */
+export function searchReadingState({
+	typed,
+	text,
+	read,
+	whole,
+	existing,
+	namedTitle,
+	off,
+	defaults,
+}: {
+	typed: string | null
+	text: string | null
+	read: Reading | null
+	whole: Reading | null
+	existing: string
+	namedTitle: boolean
+	off: readonly string[]
+	defaults: FilterDefaults
+}): { plan: ReadPlan | null; items: ReadItem[]; words: string | null } {
+	const allOff = typed !== null && text === null
+	const plan = allOff ? ownFiltersPlan(existing) : read ? planOf(read, existing, namedTitle) : null
+	let items: ReadItem[] = []
+	if (whole) {
+		const full = planOf(whole, existing, namedTitle)
+		const strict = !allOff && plan && (plan.branch === "exclusion" || plan.branch === "catalogue")
+		items = readItems({
+			reading: whole,
+			existing,
+			plan: strict ? { ...full, preferences: [], filters: full.original } : full,
+			off,
+			defaults,
+		})
+	}
+	const words = allOff ? "" : read ? (new URLSearchParams(read.params).get("q")?.trim() ?? "") : null
+	return { plan, items, words }
 }

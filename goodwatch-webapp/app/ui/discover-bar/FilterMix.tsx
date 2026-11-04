@@ -15,6 +15,7 @@ import type { FilterState } from "~/domain/filter-state"
 import { Knob, MENU, METER_TRANSITION, TAP } from "~/ui/filter-bar/motion"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
 import { HideNumber } from "./HideNumber"
+import { allocateHidden } from "./hidden-allocation"
 import { hideText } from "./hide-count"
 import { CountText, filterColor } from "./PanelFooter"
 import type { BarChip } from "./chips"
@@ -37,8 +38,12 @@ export interface ReadRow {
 	color: string
 	hides: number
 	approx?: boolean
-	/** Counted by the results themselves, so already in their hidden total: the meter shows it, the sum doesn't add it. */
+	/**
+	 * Applied by the results themselves (`nativeGroup` is its filter group), so part of their hidden total: its count
+	 * is its share of that total (hidden-allocation.ts), never added on top.
+	 */
 	inHidden?: boolean
+	nativeGroup?: string
 }
 
 const removeAll = (chips: BarChip[], s: FilterState) =>
@@ -109,8 +114,11 @@ export function FilterMix({
 	 * the hidden count and the "of" total add them as they are.
 	 */
 	readRows?: ReadRow[]
-	/** While searching: every part the search read, with its switch, after the filter rows. Then no "Shown" row. */
-	readSection?: ReactNode
+	/**
+	 * While searching: every part the search read, with its switch, after the filter rows (then no "Shown" row). It
+	 * gets the read rows' counts as the meter shows them, by row group.
+	 */
+	readSection?: (counts: ReadonlyMap<string, number>) => ReactNode
 	/** Which chips get rows of their own: the person's own filters (the read parts are in `readSection`). */
 	keepChip?: (chip: BarChip) => boolean
 	counts: FilterBarCounts | null
@@ -145,11 +153,6 @@ export function FilterMix({
 	const seen = useRef<string[]>([])
 	const total = counts?.total ?? 0
 	const hidden = counts?.hidden ?? 0
-	// The read filters' hides join the filter rows' for everything shown here.
-	const readHidden = readRows.reduce((sum, r) => sum + (r.inHidden ? 0 : Math.max(0, r.hides)), 0)
-	const allHidden = hidden + readHidden
-	// A total that includes an estimated read count is itself about: "~".
-	const about = readRows.some((r) => r.approx && r.hides > 0) ? "~" : ""
 	const sole = new Map(
 		(counts?.recoveries ?? []).map((r) => [r.filter as string, r.titles]),
 	)
@@ -162,18 +165,37 @@ export function FilterMix({
 		else groups.push({ group: chip.group, chips: [chip] })
 	}
 	const inSearch = new Set<string>(counts?.inSearch ?? [])
-	const soleSum = groups.reduce((sum, g) => sum + (sole.get(g.group) ?? 0), 0)
-	const shared = Math.max(0, hidden - soleSum)
-	const weight = (g: string) => (inSearch.has(g) ? 0 : (sole.get(g) ?? 0) + 1)
-	const weights = groups.reduce((sum, g) => sum + weight(g.group), 0)
+	// One share-out of the results' hidden titles among every filter group that hides them: the person's own rows
+	// and the read filters the results apply (each group once, split among its members).
+	const members = new Map<string, string[]>()
+	const join = (group: string, member: string) => members.set(group, [...(members.get(group) ?? []), member])
+	for (const g of groups) join(g.group, `own:${g.group}`)
+	for (const r of readRows) if (r.inHidden && r.nativeGroup) join(r.nativeGroup, r.group)
+	const allocated = allocateHidden(
+		hidden,
+		[...members].map(([group, keys]) => ({
+			group,
+			sole: sole.get(group) ?? 0,
+			inSearch: inSearch.has(group),
+			members: keys,
+		})),
+	)
+	// The read rows as the meter and Matches show them: shares of the hidden titles, or the search's own counts
+	// (estimates and its scope, which the results can't see and the total adds once). Highest first, stable.
+	const readShown = readRows
+		.map((r, index) => ({ row: r.inHidden ? { ...r, hides: allocated.get(r.group) ?? 0 } : r, index }))
+		.sort((a, b) => b.row.hides - a.row.hides || a.index - b.index)
+		.map(({ row }) => row)
+	const readCounts = new Map(readShown.map((r) => [r.group, r.hides]))
+	const readHidden = readShown.reduce((sum, r) => sum + (r.inHidden ? 0 : Math.max(0, r.hides)), 0)
+	const allHidden = hidden + readHidden
+	// A total that includes an estimated read count is itself about: "~".
+	const about = readShown.some((r) => r.approx && r.hides > 0) ? "~" : ""
 	const live: Row[] = groups.map((g) => ({
 		group: g.group,
 		label: g.chips.map((c) => c.label).join(" · "),
 		color: filterColor(g.group),
-		hides: Math.round(
-			(sole.get(g.group) ?? 0) +
-				(weights ? (shared * weight(g.group)) / weights : 0),
-		),
+		hides: allocated.get(`own:${g.group}`) ?? 0,
 		chips: g.chips,
 		off: false,
 		inSearch: inSearch.has(g.group),
@@ -199,7 +221,7 @@ export function FilterMix({
 	// One meter for the compact bar and the popout: the native rows, then the read hard filters.
 	const meterRows: Row[] = [
 		...rows,
-		...readRows.map((r) => ({ ...r, chips: [], off: false })),
+		...readShown.map((r) => ({ ...r, chips: [], off: false })),
 	]
 
 	const switchOff = (row: Row) => {
@@ -330,7 +352,7 @@ export function FilterMix({
 							{rows.length === 0 && !readSection && (
 								<li className="text-xs text-gray-500">No filters.</li>
 							)}
-							{readSection}
+							{readSection?.(readCounts)}
 						</ul>
 					</motion.section>
 				)}
