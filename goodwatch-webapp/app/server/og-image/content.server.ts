@@ -75,6 +75,9 @@ const positiveId = (segment: string | undefined) => {
 	return Number.isSafeInteger(id) && id > 0 ? id : null
 }
 
+/** The last segment of a title's sub-page address (ui/details/sub-page/paths.ts). */
+const TITLE_SUB_PAGES = ["fingerprint", "tropes", "at-a-glance"]
+
 /**
  * Turns any page path into the canonical path its card is cached under, such as
  * "/movie/27205" for "/movie/27205-inception". Returns null for paths that can't have a card.
@@ -86,7 +89,10 @@ export function canonicalOgPath(path: string): string | null {
 
 	if (first === "movie" || first === "show" || first === "tv") {
 		const id = positiveId(second)
-		if (!id || segments.length > 2) return null
+		// A title's sub-page (its fingerprint, tropes, at a glance) shares the title's card.
+		const subPage =
+			segments.length === 3 && TITLE_SUB_PAGES.includes(third ?? "")
+		if (!id || (segments.length > 2 && !subPage)) return null
 		return first === "movie"
 			? `/movie/${canonicalTitleId("movie", id)}`
 			: `/show/${id}`

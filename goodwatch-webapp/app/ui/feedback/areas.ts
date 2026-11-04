@@ -345,6 +345,52 @@ export const PAGE_TYPES: PageType[] = [
 		note: "The season and episode view is the Episodes part of a show's page; there is no separate season page.",
 	},
 	{
+		id: "title-sub-page",
+		name: "Title sub-page (fingerprint, tropes, at a glance)",
+		routes: [
+			"movie.$movieKey_.fingerprint.tsx",
+			"movie.$movieKey_.tropes.tsx",
+			"movie.$movieKey_.at-a-glance.tsx",
+			"show.$showKey_.fingerprint.tsx",
+			"show.$showKey_.tropes.tsx",
+			"show.$showKey_.at-a-glance.tsx",
+		],
+		example: "/movie/693134-dune-part-two/fingerprint",
+		match: re(/^\/(movie|show)\/[^/]+\/(fingerprint|tropes|at-a-glance)\/?$/),
+		areas: [
+			{
+				id: "analysis",
+				name: "Title analysis",
+				selector: '[data-feedback-area="analysis"]',
+				chips: [
+					flag("An effect doesn't fit"),
+					flag("A scale is off (pace, tone, …)"),
+					flag("A rank looks wrong"),
+				],
+			},
+			{
+				id: "details",
+				name: "Details",
+				selector: '[data-feedback-area="details"]',
+				chips: [
+					fix("Wrong year or date"),
+					flag("An age rating or content level looks wrong"),
+					flag("A number looks wrong"),
+				],
+			},
+			{
+				id: "cast",
+				name: "Cast and crew",
+				selector: '[data-feedback-area="cast"]',
+				chips: [
+					fix("Wrong character name"),
+					fix("Someone isn't in it"),
+					fix("Someone is missing"),
+				],
+			},
+		],
+	},
+	{
 		id: "person",
 		name: "Person page",
 		routes: ["person.$personKey.tsx"],

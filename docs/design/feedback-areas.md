@@ -114,6 +114,20 @@ The season and episode view is the Episodes part of a show's page; there is no s
 | Similar titles | Flag only | A title isn't similar (flag); A title is for a different audience (flag); Something else |
 | Media | Flag only | A trailer is for another title; A video doesn't play; A video or image doesn't fit; Something else |
 
+### Title sub-page (fingerprint, tropes, at a glance)
+
+Routes: `movie.$movieKey_.fingerprint.tsx`, `movie.$movieKey_.tropes.tsx`, `movie.$movieKey_.at-a-glance.tsx`,
+`show.$showKey_.fingerprint.tsx`, `show.$showKey_.tropes.tsx`, `show.$showKey_.at-a-glance.tsx`. Try it at
+`/movie/693134-dune-part-two/fingerprint`.
+
+Each sub-page is one section of the title page at its own address; only the areas its content has are listed.
+
+| Area | Type | Chips |
+| --- | --- | --- |
+| Title analysis | Flag only | An effect doesn't fit (flag); A scale is off (pace, tone, …) (flag); A rank looks wrong (flag); Something else |
+| Details | Fix and flag | Wrong year or date; An age rating or content level looks wrong (flag); A number looks wrong (flag); Something else (staff review) |
+| Cast and crew | Fix | Wrong character name; Someone isn't in it; Someone is missing; Something else (staff review) |
+
 ### Person page
 
 Routes: `person.$personKey.tsx`. Try it at `/person/287-brad-pitt`.

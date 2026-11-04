@@ -7,6 +7,13 @@
 export const CACHED_ROUTE_IDS = [
 	"routes/movie.$movieKey",
 	"routes/show.$showKey",
+	// A title's sub-pages (its fingerprint, tropes, at a glance).
+	"routes/movie.$movieKey_.fingerprint",
+	"routes/movie.$movieKey_.tropes",
+	"routes/movie.$movieKey_.at-a-glance",
+	"routes/show.$showKey_.fingerprint",
+	"routes/show.$showKey_.tropes",
+	"routes/show.$showKey_.at-a-glance",
 	"routes/person.$personKey",
 	"routes/$type._index",
 	"routes/$type.best",
