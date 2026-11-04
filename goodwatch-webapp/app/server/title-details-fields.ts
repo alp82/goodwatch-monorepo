@@ -42,6 +42,8 @@ export const SHOW_DETAILS_FIELDS = [
 	"first_air_date",
 	"last_air_date",
 	"in_production",
+	// TMDB's status ("Returning Series", "Ended", "Canceled", ...): the title page's status chip.
+	"status",
 	// The length answer of the title page's questions reads the first value.
 	"episode_runtime",
 ] as const

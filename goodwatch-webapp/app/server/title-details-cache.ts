@@ -8,9 +8,10 @@ import { type RawTitleDetails, trimTitleDetails } from "./title-details-shape"
 
 // The names are part of the cache keys. These versions select exact crew jobs before department
 // fallback, so entries holding the previous department-wide selection must never be reused. Movie v4
-// adds the Letterboxd score fields.
+// adds the Letterboxd score fields. Show v5 adds the show's status (the title page's status chip): a v4
+// entry has none, so the chip would be missing for up to a day after a deploy.
 export const DETAILS_MOVIE_CACHE_NAME = "details-movie-v4"
-export const DETAILS_SHOW_CACHE_NAME = "details-show-v4"
+export const DETAILS_SHOW_CACHE_NAME = "details-show-v5"
 // Title data may be up to 24 hours old. A value is fresh for 12 hours, and for 12 more hours it is
 // served while one refresh runs. So a title that is requested often is at most 12 hours behind, the
 // data cache keeps every value for 24 hours, and nothing older than that is served. The value holds

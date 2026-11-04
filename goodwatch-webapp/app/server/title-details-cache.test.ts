@@ -69,7 +69,7 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 		)
 		assert.ok(
 			[...store.keys()].some((key) =>
-				key.startsWith("cached-details-show-v4:"),
+				key.startsWith("cached-details-show-v5:"),
 			),
 		)
 		assert.ok(
@@ -79,7 +79,8 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 					!key.startsWith("cached-details-show:") &&
 					!key.startsWith("cached-details-movie-v2:") &&
 					!key.startsWith("cached-details-movie-v3:") &&
-					!key.startsWith("cached-details-show-v3:"),
+					!key.startsWith("cached-details-show-v3:") &&
+					!key.startsWith("cached-details-show-v4:"),
 			),
 		)
 		for (const value of store.values()) {

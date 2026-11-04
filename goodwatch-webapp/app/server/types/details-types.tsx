@@ -241,6 +241,11 @@ export interface ShowDetails extends BaseDetails {
 	first_air_date: string
 	last_air_date: string
 	in_production: boolean
+	/**
+	 * TMDB's status: "Returning Series", "In Production", "Planned", "Pilot", "Ended" or "Canceled". The title page's
+	 * header shows it as a chip (ui/details/show-status.ts). Null when TMDB has none.
+	 */
+	status?: string | null
 	/** Episode lengths in minutes. Missing on values cached before the field was read, and on many shows. */
 	episode_runtime?: number[] | null
 }
