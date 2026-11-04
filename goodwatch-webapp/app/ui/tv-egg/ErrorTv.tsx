@@ -104,7 +104,7 @@ export default function ErrorTv() {
 					<div className="absolute inset-x-0 top-[12%] flex justify-center">
 						<div className="flex flex-col items-center rounded-[1.4cqw] bg-black/85 px-[4cqw] py-[3cqh] text-center shadow-2xl">
 							<Wordmark size="7cqw" />
-							<div className="mt-[1.6cqh] text-[4.6cqw] font-bold leading-none">We'll be right back</div>
+							<div className="mt-[1.6cqh] text-[4.6cqw] font-bold leading-none text-white">We'll be right back</div>
 							<div className="mt-[1.2cqh] text-[2cqw] text-white/65">Technical difficulties on our side</div>
 						</div>
 					</div>
