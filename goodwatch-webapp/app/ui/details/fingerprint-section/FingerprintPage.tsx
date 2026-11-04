@@ -3,8 +3,8 @@
 //   explains it;
 // - the print with the detail beside it: the section, line or scale pointed at (the strongest section when nothing
 //   is), its value on a 0-10 track and where that ranks among popular titles (ranks.server.ts, "Stronger than 9 in 10
-//   popular movies"; nothing when the ranks aren't there), and a section's effects. The detail's box is as tall as the
-//   tallest thing it can show, so pointing never moves the page;
+//   popular movies"; nothing when the ranks aren't there), and a section's effects. The detail's box keeps the
+//   height of the tallest thing it can show (DETAIL_HEIGHT), so pointing never moves the page;
 // - the twelve scales in their groups, which answer a pointer the way the lines do;
 // - for a signed-in member, where it sits in their taste.
 // Pointing works by mouse, focus and tap. Find in this title can point at a line, a section or a scale
@@ -61,6 +61,12 @@ import {
 } from "./print-model"
 
 const DISPLAY = '"Gabarito", ui-sans-serif, system-ui, sans-serif'
+
+/**
+ * The detail box's height: its tallest explanation's, a section with four effects with every line at its largest size,
+ * a meaning on two lines and a rank. The effect lines grow at 420 px of the page's column (EffectLines.tsx's "sm").
+ */
+const DETAIL_HEIGHT = "min-h-[358px] @min-[420px]/deep:min-h-[380px]"
 
 export function FingerprintPage({
 	media,
@@ -215,17 +221,6 @@ function FeelingAndPrint({
 		: rowEffect
 			? lightOf([rowEffect.effect.id], reading)
 			: null
-	// Every explanation the detail can show, laid in one grid cell unseen: the panel takes the tallest one's height, so
-	// pointing at another part never moves the page.
-	const candidates = useMemo<Shown[]>(
-		() => [
-			...sections.map((sec) => ({ kind: "section" as const, sec })),
-			...reading.rows.map((p) => ({ kind: "effect" as const, r: p.r })),
-			...reading.scales.map((s) => ({ kind: "scale" as const, s })),
-		],
-		[sections, reading],
-	)
-
 	// The print's ridges are drawn once the page is up: they have no words, and their coordinates would be a large
 	// share of the page's HTML.
 	const hydrated = useHydrated()
@@ -283,18 +278,11 @@ function FeelingAndPrint({
 				<div ref={printBox}>
 					<div className="grid items-center gap-x-10 gap-y-8 @min-[760px]/deep:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
 						<div className="mx-auto w-full max-w-[30rem]">{print}</div>
-						<div aria-live="polite" className="grid min-w-0">
-							{candidates.map((c) => (
-								<div
-									key={shownKey(c)}
-									aria-hidden="true"
-									className="invisible pointer-events-none [grid-area:1/1]"
-								>
-									<Detail shown={c} type={type} ranks={ranks} still />
-								</div>
-							))}
+						{/* The box keeps the height of the tallest explanation it can show (a section with four effects at
+						    their largest), so pointing at another part never moves the page. */}
+						<div aria-live="polite" className={`min-w-0 ${DETAIL_HEIGHT}`}>
 							{shown && (
-								<div data-fp-shown="" className="self-start [grid-area:1/1]">
+								<div data-fp-shown="">
 									<Detail
 										key={shownKey(shown)}
 										shown={shown}
@@ -365,14 +353,12 @@ function Detail({
 	shown,
 	type,
 	ranks,
-	still = false,
 }: {
 	shown: Shown
 	type: "movie" | "show"
 	ranks: FpRanks | null
-	still?: boolean
 }) {
-	if (shown.kind === "scale") return <ScaleDetail s={shown.s} still={still} />
+	if (shown.kind === "scale") return <ScaleDetail s={shown.s} />
 	const x = explain(shown)
 	const rank = rankLine(
 		ranks?.ranks[
@@ -383,7 +369,7 @@ function Detail({
 		type,
 	)
 	return (
-		<div className={`${still ? "" : "fp-in "}grid gap-7`}>
+		<div className="fp-in grid gap-7">
 			<div>
 				<div className="flex flex-wrap items-baseline gap-x-3">
 					<span
@@ -402,7 +388,9 @@ function Detail({
 						{x.word}
 					</span>
 				</div>
-				<p className="mt-2 text-[15px] text-gray-300">{x.meaning}</p>
+				<p className="mt-2 line-clamp-2 text-[15px] text-gray-300">
+					{x.meaning}
+				</p>
 				<Track value={x.value} color={x.color} rank={rank} />
 			</div>
 			{x.effects.length > 0 && (
@@ -416,10 +404,10 @@ function Detail({
 }
 
 /** A scale pointed at: its word, where the title sits between the two ends, and the scores it's read from. */
-function ScaleDetail({ s, still }: { s: ScaleReading; still: boolean }) {
+function ScaleDetail({ s }: { s: ScaleReading }) {
 	const at = s.position * 100
 	return (
-		<div className={`${still ? "" : "fp-in "}grid gap-7`}>
+		<div className="fp-in grid gap-7">
 			<div>
 				<div className="flex flex-wrap items-baseline gap-x-3">
 					<span
@@ -508,7 +496,9 @@ function Track({
 				<span>10</span>
 			</div>
 			{rank && (
-				<p className="mt-2 text-[14px] font-medium text-gray-300">{rank}.</p>
+				<p className="mt-2 truncate text-[14px] font-medium text-gray-300">
+					{rank}.
+				</p>
 			)}
 		</div>
 	)
@@ -564,7 +554,10 @@ function Scales({
 										onPointerEnter={(e) =>
 											e.pointerType === "mouse" && onHover(id)
 										}
-										onFocus={() => onHover(id)}
+										// Keyboard focus points; a tap's focus leaves it to the click, which would else take it back at once.
+										onFocus={(e) =>
+											e.currentTarget.matches(":focus-visible") && onHover(id)
+										}
 										onBlur={() => onHover(null)}
 										onClick={() => onHover(active === id ? null : id)}
 										aria-pressed={active === id}

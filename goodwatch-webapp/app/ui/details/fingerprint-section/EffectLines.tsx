@@ -94,7 +94,10 @@ export function Lines({
 									onPointerEnter={(e) =>
 										e.pointerType === "mouse" && onHover(id)
 									}
-									onFocus={() => onHover(id)}
+									// Keyboard focus points; a tap's focus leaves it to the click, which would else take it back at once.
+									onFocus={(e) =>
+										e.currentTarget.matches(":focus-visible") && onHover(id)
+									}
 									onBlur={() => onHover(null)}
 									onClick={() => onHover(active === id ? null : id)}
 									aria-pressed={active === id}
