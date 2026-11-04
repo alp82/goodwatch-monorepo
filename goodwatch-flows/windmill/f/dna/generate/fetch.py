@@ -7,6 +7,7 @@ from pydantic import ValidationError
 import requests
 import wmill
 
+from f.catalog_text import normalize_text
 from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.dna.models import (
@@ -160,7 +161,7 @@ export type CoreScores = {
 1.  **`scores`**: All 74 scores are required. Each must be an integer from 0–10 (0=not present/irrelevant; 1=minimal presence; 10=defining attribute).
 2.  **`highlight_keys`**: Provide 4–8 of the most defining score keys, ordered by relevance, most defining first. Favor emotional/thematic keys unless production aspects are truly defining.
 3.  **`essence_tags`**: Provide 8–10 distinct and descriptive tags, ordered by importance. Tags must not be near-duplicates and more detailed than a simple Genre.
-4.  **`essence_text`**: Write 4–5 evocative sentences focusing on audience experience, emotional tone, and distinctive qualities. Do not write a plot summary.
+4.  **`essence_text`**: Write 4–5 evocative sentences focusing on audience experience, emotional tone, and distinctive qualities. Do not write a plot summary. Use ASCII hyphens (-), never em dashes.
 5.  **`social_suitability` & `viewing_context`**: Set booleans to `true` for all applicable contexts. Apply age-related contexts conservatively (e.g., set `kids: true` only if broadly suitable for children under 10).
 6.  **`content_advisories`**: Use only tags from the `ContentAdvisory` type. If none apply, return an empty array `[]`.
 7.  **`sound_centrality`**: Refers to the use of non-musical soundscape and audio effects to drive immersion or narrative impact. Do not conflate with `music_centrality`.
@@ -217,8 +218,8 @@ export type CoreScores = {
 * **`spiritual`**: The exploration of faith, religion, or metaphysical concepts.
 
 **Cognitive & Structural**
-* **`narrative_structure`**: The quality of the story's construction—coherence, pacing, and setup/payoff.
-* **`dialogue_quality`**: The quality of the writing itself—how sharp, realistic, or poetic the dialogue is.
+* **`narrative_structure`**: The quality of the story's construction - coherence, pacing, and setup/payoff.
+* **`dialogue_quality`**: The quality of the writing itself - how sharp, realistic, or poetic the dialogue is.
 * **`character_depth`**: The nuance, development, and psychological realism of the characters.
 * **`slow_burn`**: A deliberately paced narrative that builds tension and character gradually.
 * **`fast_pace`**: A narrative with high-energy, rapid plot progression.
@@ -613,6 +614,7 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
         entry.failed_at = None
         entry.error_message = None
         entry.llm_model_name = f"openrouter:{model}@alibaba"
+        dna["essence_text"] = normalize_text(dna["essence_text"])
         entry.dna = dna
         entry.dna_generated_at = generated_at
         entry.vector_fingerprint = create_fingerprint(dna["fingerprint"]["scores"])

@@ -3,6 +3,8 @@ import json
 import re
 from urllib.parse import urljoin, urlsplit
 
+from f.catalog_text import normalize_description_doc
+
 
 def wiki_link(value):
     """Keep wiki targets only, removing query/fragment and excluding site meta pages."""
@@ -94,6 +96,7 @@ def serialize_description_doc(value, description):
         except (ValueError, TypeError):
             raise ValueError('Invalid description document JSON') from None
     validate_description_doc(value)
+    value = normalize_description_doc(value)
     return json.dumps(value, ensure_ascii=False, separators=(',', ':'), sort_keys=True)
 
 

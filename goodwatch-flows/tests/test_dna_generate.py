@@ -72,6 +72,16 @@ class OpenRouterGenerationTest(unittest.TestCase):
         self.assertTrue(payload['response_format']['json_schema']['strict'])
         self.assertIn('0.001', self.output.getvalue())
 
+    def test_generated_essence_is_normalized_before_mongo_save_and_return(self):
+        movie = self.title()
+        self.dna['essence_text'] = 'A strange world—tense and funny.'
+        self.post.return_value = self.success()
+        result = fetch.generate_dna([movie])
+        self.assertEqual(DnaMovie.objects.get(id=movie.id).dna['essence_text'],
+                         'A strange world-tense and funny.')
+        self.assertEqual(result[0]['dna']['essence_text'], 'A strange world-tense and funny.')
+        self.assertEqual(movie.vector_fingerprint, create_fingerprint(self.dna['fingerprint']['scores']))
+
     def test_economy_title_uses_json_object_fallback(self):
         movie = self.title(popularity=0.99)
         self.post.return_value = self.success()

@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 import hashlib
 import re
 from urllib.parse import unquote, urlsplit
+
+from f.catalog_text import normalize_text
 from f.sync.models.crate_schemas import ARCHIVE_COLUMN_TYPES
 from f.tvtropes_catalog.description_docs import serialize_description_doc
 
@@ -152,7 +154,7 @@ def normalize_record(row, *, evidence=None):
     if not isinstance(name, str) or not name.strip() or name != name.strip() or len(name) > 300 or any(ord(c) < 32 for c in name):
         raise ValueError("Trope name must be nonempty, exact, and at most 300 characters")
     url = canonical_url(row.get("url"))
-    text = row.get("description", row.get("text"))
+    text = normalize_text(row.get("description", row.get("text")))
     if text is not None:
         if not isinstance(text, str) or not text.strip() or len(text) > 100_000:
             raise ValueError(f"{name}: description must be nonempty plain text")

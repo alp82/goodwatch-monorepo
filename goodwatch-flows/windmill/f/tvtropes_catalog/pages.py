@@ -4,6 +4,8 @@ No source requests. Legacy exact-name records are independent. Writers never ret
 """
 from datetime import datetime, timezone
 from urllib.parse import urlsplit
+
+from f.catalog_text import normalize_text
 import hashlib
 import json
 import re
@@ -78,7 +80,7 @@ def normalize_page(row):
     if (not isinstance(title, str) or not title or title != title.strip() or len(title) > 500
             or _corrupt_controls(title) or _has_unquoted_html(title)):
         raise ValueError('Page title must be the actual nonempty plain-text heading')
-    description = row.get('description')
+    description = normalize_text(row.get('description'))
     if description is not None and (not isinstance(description, str) or not description.strip()
                                     or len(description.encode('utf-8')) > 100_000 or _corrupt_controls(description, whitespace=True)
                                     or _has_unquoted_html(description)):

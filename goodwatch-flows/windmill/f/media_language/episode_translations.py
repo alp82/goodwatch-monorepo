@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import time
 
+from f.catalog_text import normalize_row
+
 LAUNCH_LOCALES = ('en', 'de', 'fr', 'es', 'it', 'pt-BR', 'pt-PT', 'ja', 'ko', 'zh-Hans', 'zh-Hant', 'pl', 'ru', 'ar')
 BASES = {'en', 'de', 'fr', 'es', 'it', 'pt', 'ja', 'ko', 'zh', 'pl', 'ru', 'ar'}
 KEY = ('show_id', 'tmdb_id', 'language_code', 'country_code')
@@ -60,6 +62,7 @@ def publish_rows(connector, table, rows, *, preserve_existing=False):
     # partial response cannot overwrite an existing overview with NULL or empty text.
     groups = {}
     for row in rows:
+        row = normalize_row(table, row)
         columns = tuple(column for column in (*KEY, 'name', 'overview') if column in row)
         groups.setdefault(columns, []).append(tuple(row[column] for column in columns))
     for columns, values in groups.items():

@@ -1,0 +1,9 @@
+summary: Normalize published catalog prose punctuation
+description: Pure helpers; keeps names, identifiers, source captures and structured text offsets intact.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

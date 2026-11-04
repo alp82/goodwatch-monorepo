@@ -8,6 +8,8 @@ from pydantic import BaseModel
 from urllib3 import Timeout
 import wmill
 
+from f.catalog_text import normalize_row
+
 
 # Seconds to wait before each retry of rows that failed with a transient error.
 RETRY_DELAYS = (1, 4, 10)
@@ -131,7 +133,7 @@ class CrateConnector:
         # ── 1) Make mutable copies & basic cleaning ──────────────────────────────────
         cleaned: list[dict] = []
         for rec in records:
-            d = rec.model_dump()  # flat dict
+            d = normalize_row(table, rec.model_dump())
             cleaned.append(d)
 
         # ── 2) Detect duplicates inside this batch on the conflict key ──────────────
