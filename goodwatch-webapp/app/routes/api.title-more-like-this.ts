@@ -21,6 +21,11 @@ import { titleKey } from "~/utils/title-key"
 
 const SHELF = 24
 const headers = { "Cache-Control": "public, max-age=300" }
+/** A shelf that couldn't be read in time is not kept by any cache, so a short outage isn't remembered. */
+const send = (answer: ShelfAnswer, missed = answer.unavailable === true) =>
+	json(answer, {
+		headers: missed ? { "Cache-Control": "no-store" } : headers,
+	})
 
 async function similar(
 	type: "movie" | "show",
@@ -85,7 +90,8 @@ async function genre(
 		later: Promise.resolve([]),
 		budgetMs: 4000,
 	})
-	if (!row || row === "late") return { titles: [] }
+	if (row === "late") return { titles: [], unavailable: true }
+	if (!row) return { titles: [] }
 	return {
 		heading: row.heading,
 		path: row.path,
@@ -108,7 +114,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if ((type !== "movie" && type !== "show") || !Number.isInteger(id) || id < 1)
 		return json({ error: "type=movie|show and id=<tmdb id>" }, { status: 400 })
 	try {
-		if (part === "similar") return json(await similar(type, id), { headers })
+		if (part === "similar") return send(await similar(type, id))
 		if (part === "person") {
 			const personId = Number(q.get("person"))
 			const as = q.get("as") ?? "Directing"
@@ -116,7 +122,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				return json({ error: "person=<tmdb person id>" }, { status: 400 })
 			if (!ROLES.includes(as as As))
 				return json({ error: `as=${ROLES.join("|")}` }, { status: 400 })
-			return json(await person(personId, as as As, type, id), { headers })
+			return send(await person(personId, as as As, type, id))
 		}
 		if (part === "genre") {
 			const name = q.get("genre") ?? ""
@@ -125,7 +131,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				.split(",")
 				.map(Number)
 				.filter((x) => Number.isInteger(x) && x > 0)
-			return json(await genre(type, id, name, exclude), { headers })
+				.slice(0, 100)
+			return send(await genre(type, id, name, exclude))
 		}
 		return json({ error: "part=similar|person|genre" }, { status: 400 })
 	} catch (error) {

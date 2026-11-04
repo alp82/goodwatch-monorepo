@@ -3,9 +3,10 @@
 // "N titles have it" counts. Per media type one statement picks the trope's titles with a poster from the movie or
 // show table, most voted first; then the well-scored ones lead (score 70+), so a common trope shows its classics and
 // a rare one shows whatever has it. The title itself is skipped.
+import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 
-export interface AlsoInTitle {
+export type AlsoInTitle = {
 	type: "movie" | "show"
 	tmdb_id: number
 	title: string
@@ -35,16 +36,13 @@ async function ofType(type: "movie" | "show", url: string) {
 	)
 }
 
-export async function loadAlsoIn(
-	url: string,
-	skip: { type: "movie" | "show"; id: number } | null,
-	n = 8,
-): Promise<AlsoIn> {
+/** Both types' titles for one trope, most voted first. A failed read throws, so no empty row is cached. */
+async function readTrope({ url }: { url: string }): Promise<AlsoInTitle[]> {
 	const [movies, shows] = await Promise.all([
-		ofType("movie", url).catch(() => []),
-		ofType("show", url).catch(() => []),
+		ofType("movie", url),
+		ofType("show", url),
 	])
-	const all: AlsoInTitle[] = [
+	return [
 		...movies.map((t) => ({
 			...t,
 			type: "movie" as const,
@@ -55,7 +53,23 @@ export async function loadAlsoIn(
 			type: "show" as const,
 			votes: Number(t.votes),
 		})),
-	].filter((t) => !(skip && t.type === skip.type && t.tmdb_id === skip.id))
+	]
+}
+
+export async function loadAlsoIn(
+	url: string,
+	skip: { type: "movie" | "show"; id: number } | null,
+	n = 8,
+): Promise<AlsoIn> {
+	const read = await cached({
+		name: "trope-also-in-v1",
+		target: readTrope,
+		params: { url },
+		ttlMinutes: 60 * 12,
+	})
+	const all = read.filter(
+		(t) => !(skip && t.type === skip.type && t.tmdb_id === skip.id),
+	)
 	// Popular and well scored first: votes weighed up for a high score, so a much-voted mediocre title steps back.
 	const weight = (t: AlsoInTitle) => {
 		const score = t.goodwatch_overall_score_normalized_percent ?? 50

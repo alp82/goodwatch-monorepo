@@ -145,7 +145,8 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		id: Number(showId),
 		budgetMs,
 		language: canonicalContent ? undefined : language,
-	})	// More like this's Similar shelf is the related map's nearest titles, with their cards.
+	})
+	// More like this's Similar shelf is the related map's nearest titles, with their cards.
 	const similarWork = similarShelfWithin(
 		relatedWork,
 		"show",

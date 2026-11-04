@@ -27,12 +27,19 @@ export async function fingerprintPageLoader(
 	type: Type,
 ) {
 	const data = await loadSubPage(args, type, "fingerprint")
+	// A title without a fingerprint has no page here (the title page doesn't link one).
+	if (!data.media.fingerprint) throw new Response("Not found", { status: 404 })
 	// Where each feeling ranks among popular titles; none when the population isn't there in time.
 	const ranks = await fingerprintRanks(
 		data.media.mediaType,
 		data.media.fingerprint?.scores,
 	)
-	return answer<FingerprintPageData>({ ...data, ranks })
+	// Without the ranks the page shows less than it should: no cache keeps it.
+	return answer<FingerprintPageData>({
+		...data,
+		ranks,
+		complete: data.complete && ranks !== null,
+	})
 }
 
 /** The title's id as its address names it (loadSubPage checks it and moves a wrong one). */
@@ -52,6 +59,9 @@ export async function tropesPageLoader(args: LoaderFunctionArgs, type: Type) {
 	const data = await loadSubPage(args, type, "tropes")
 	const tropes = await (tropesWork ??
 		tropesPageState(data.media.mediaType, data.media.details.tmdb_id))
+	// A title known to have no tropes has no page here (the title page doesn't link one).
+	if (tropes.complete && tropes.total === 0)
+		throw new Response("Not found", { status: 404 })
 	return answer<TropesPageData & { dehydratedState: unknown }>({
 		...data,
 		tropes: tropes.total,
