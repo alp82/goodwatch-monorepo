@@ -79,9 +79,7 @@ import {
 	useInterpretedFilters,
 } from "./prototype-preferences/interpretation"
 import { MatchesRead } from "./prototype-preferences/read-parts"
-import { ReadView, VARIANTS, type ReadVariant } from "./prototype-preferences/ReadVariants"
-import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
-import { useDiscoverMode } from "~/ui/discover-bar/mode"
+import { ReadStrip } from "./prototype-preferences/ReadVariants"
 import { titleKey } from "~/utils/title-key"
 import { usePreferencePrototype } from "./prototype-preferences/usePreferencePrototype"
 
@@ -140,9 +138,6 @@ export function DiscoverPage({
 	const off = protoOn ? params.getAll("off") : []
 	const q = protoOn ? readText(qTyped, off) : qTyped
 	const proto = usePreferencePrototype(protoOn, qTyped, q)
-	const rawVariant = params.get("variant")
-	const readVariant: ReadVariant = rawVariant === "B" || rawVariant === "C" ? rawVariant : "A"
-	const { mode } = useDiscoverMode()
 	const searching = q !== null
 	const allTitles = params.get("allTitles") === "1"
 	const side = params.get("side")
@@ -606,13 +601,11 @@ export function DiscoverPage({
 						prototypeReading={
 							protoOn && qTyped !== null
 								? ({ chips, onRemove, onOpen }) => (
-										<ReadView
-											variant={readVariant}
+										<ReadStrip
 											items={readItems}
 											reading={proto.answer?.readingChips ?? []}
 											chips={chips}
 											pending={proto.reading || proto.loading}
-											advanced={mode === "advanced"}
 											onToggle={toggleRead}
 											onAll={allRead}
 											onRemoveChip={onRemove}
@@ -780,11 +773,10 @@ export function DiscoverPage({
 						tagged={(key) => prototypeTierLine(proto.readout, key)}
 						why={proto.readout?.how ?? null}
 					/>
-					<PrototypeSwitcher variants={VARIANTS} position="bottom-28 lg:bottom-6 left-1/2 -translate-x-1/2" />
 					<Inspector
 						proto={proto}
 						items={readItems}
-						variant={`${readVariant} (${VARIANTS[readVariant]})`}
+						variant="A (Read strip), selected"
 						page={{
 							cardsLoaded: cards.length,
 							pagesLoaded: pages.length,

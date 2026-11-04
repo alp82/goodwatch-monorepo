@@ -9,26 +9,38 @@ The selected search policy (V7) reads inferred genre, theme, mood and style word
 as strict filters. How should the real Discover page show what the search read, keep it simple, and still let you
 switch parts of it off?
 
-## Round 3 question: how best to scan and control the full read
+## Selected: A, Read strip (round 4 refinements)
 
-The owner kept the direction of one fingerprint mark and switchable read parts, and asked for three things:
-- A nicer, better-aligned fingerprint read, with no visible "Not".
-- Every switchable part also in the Matches popout.
-- Three structurally different ways to scan and control the read, with progressive disclosure and an Easy/Advanced
-  adaptation.
+The owner chose **A, Read strip**. Round 3's B (Summary + details) and C (Adaptive tokens) live in the branch history
+(`eaa8a6b03`). The review URL shows A only, with no variant switcher.
 
-Three variants are mounted on the real `/discover` route as `?variant=A|B|C`. You switch them with the floating DEV
-switcher or the Left and Right arrow keys, which don't switch while a text field has focus. These are new reading-line
-designs; the earlier ledger (B) and words-in-the-field (C) designs stay retired, as do Must have / Leaning toward /
-Require.
+One row under the search field, in groups:
 
-| Key | Name | Hierarchy and disclosure | Easy / Advanced |
-| --- | --- | --- | --- |
-| A | Read strip | One line: read items, the fingerprint qualities, your filters. It scrolls sideways when long, and Clear sits outside the scroll. | Same in both |
-| B | Summary + details | One short sentence, "Read as Funny · Dark · Scary · 1990–1999 · “epic”", where each part is a switch. **Details** unfolds the fingerprint qualities, words your choices set aside, and your filters on wrapped rows (`read=open\|shut`). | Easy starts folded, Advanced unfolded |
-| C | Adaptive tokens | Each read part is a marked token: a mood's own color, a calendar for years, a speech mark for plain words. The fingerprint qualities sit behind the fingerprint button (count 8) with their descriptions. | In Advanced, what the bar above already shows (Mood, Watch) leaves the line ("+1 in the bar above"). Plain words and set-aside words stay. |
+1. **Read from the words, by field.** The field label ("Mood", "Released") stands outside its values, once per group.
+   A hover or focus lights only the value. The label stays normal while any value of the group is on, and dims only
+   once every value is switched off. Each value keeps its own switch and accessible name ("Funny, ranks higher").
+   Plain words ("epic") have no label.
+2. **Fingerprint group.** The fingerprint mark sits at the start of this group, after the read groups, as its label.
+   Folded, it shows at most three qualities:
 
-### Shared across A, B and C
+   | Qualities | Folded row shows |
+   | --- | --- |
+   | 0 | No group |
+   | 1–3 | All of them |
+   | 4 | 2 qualities and "+2 more" |
+   | 5 or more | 3 qualities and "+(N−3) more" |
+
+   It never shows "+1": four qualities fold to two and "+2", because a "+1" hides almost nothing. "+N more" lays every
+   quality across the **whole read row**, with Back first; on a phone the row wraps. Back, a press outside the row, or
+   Escape returns to the grouped row and puts focus back on "+N more". A press inside the expanded row keeps it open,
+   and the press that opens it can't close it. The open state lives in memory only.
+3. **Your own filters**, with their ×.
+
+Clear (or Restore) stays at the row's end. Fingerprint quality labels now use the same 650 weight as the filter and
+preference values. A favored quality has a dot. A quality ranked lower has a minus mark and a strong colored
+strikethrough, with no visible "Not". A switched-off value is gray and dimmed.
+
+### Matches, set-aside words, and the fingerprint marks (from round 3)
 
 - **Fingerprint qualities:** a colored dot for a favored quality. For one ranked lower: a minus mark and a strong
   strikethrough in the quality's color, with no visible "Not". Screen readers hear "Ranked lower:", and the tooltip
@@ -73,8 +85,8 @@ and Advanced doesn't change the ranking.
 
 - `q` holds the words as typed. Manual filters use Discover's own parameters.
 - `off=<phrase>` (repeated) marks the switched-off parts.
-- `variant` selects A, B or C.
-- `read=open|shut` folds or unfolds B's Details.
+- The fingerprint row's unfolded state isn't in the URL; it lives in memory. `variant` and `read` are ignored now that A
+  is selected.
 
 Reload and sharing restore everything. Switches replace the history entry, as Discover's filter changes do.
 
@@ -85,7 +97,7 @@ cd goodwatch-webapp
 npm run prototype:discover-preferences
 ```
 
-Open http://127.0.0.1:5220/discover?q=funny+90s+dark+scary+epic&variant=A (also `variant=B`, `variant=C`). It needs the read-only V7 preview on
+Open http://127.0.0.1:5220/discover?q=funny+90s+dark+scary+epic. It needs the read-only V7 preview on
 `127.0.0.1:5219`. That service's source is captured on this branch in `goodwatch-webapp/scripts/search-preferences-preview/`, a copy of the
 running service; it runs from `/tmp/goodwatch-preference-eval/goodwatch-webapp` (branch
 `experiment/broad-preference-20261104`), whose app modules it imports. For display only, it now also returns its
@@ -121,7 +133,7 @@ and the frozen study build (`20261103T051503Z`) is reported separately as `froze
 
 - `prototype-preferences/`:
   - `interpretation.ts`: read items, `off`, set-aside words, and the translated filter binding.
-  - `ReadVariants.tsx`: variants A, B and C.
+  - `ReadVariants.tsx`: the read strip (A), its groups, the fold and the expansion.
   - `read-parts.tsx`: the shared quality mark, read switch, Clear, and the Matches list.
   - `usePreferencePrototype.ts`: the V7 client, queue and catalogue parameters.
   - `model.ts`: tiers and readout.
@@ -142,22 +154,19 @@ Playwright at 1440 × 1000 and iPhone 13 (DOM loaded plus the target state), no 
 
 | Check | Result |
 | --- | --- |
-| "funny 90s dark scary epic", A/B/C | 40 matches. All parts visible: B lists them in its summary, and C shows them as tokens. |
-| Matches | Mood Funny, Mood Dark, Mood Scary, Released 1990–1999 and “epic”, each with a switch and a note, plus the fingerprint read. |
-| Two-way switching | “epic” off in Matches gives 39, and the line shows it off. Dark off on the line shows off in Matches; with both off, about 1,000 (V7 returns 1,000 for "funny 90s scary"). |
-| Clear / Restore | Every part off; Discover's plain list (65,303 on the current catalog). Restore gives 40. |
-| Advanced, Mood panel | Dark off gives 32, and the bar shows Mood 2 (Funny, Scary). Dark on gives 40. |
-| Manual Trippy (after Dark off) | `moods=mind&off=dark`, 2 matches. Funny, Dark and Scary set aside. Removing Trippy gives 32 with Dark still off; Dark on gives 40. |
-| Manual theme and year | Manual theme The mind gives 3; removing it gives 33. Manual 1985–1999 shows the read "90s" as set aside, and the bar says Watch 1985–1999. Easy round trip keeps the URL. |
-| "Historical Action" with `genres=Comedy` | 55. Matches: Comedy (manual), About History "ranks higher", Genre Action "set aside by your Genre". |
-| Exclusion and named title | "historical action without warfare": About History and Genre Action as filters, plus “without warfare” (18). "The Big Short": one “The Big Short” part. |
-| Phone, A/B/C | No horizontal overflow. The switcher sits above the bottom navigation and below State. |
+| "funny 90s dark scary epic" | 40 matches, A only, no switcher |
+| Hover on Funny | The button holds only "Funny", and the Mood label isn't inside it. The hover lights only the value. |
+| Mood label | Funny off (others on): label stays `rgb(146,165,191)`, 42 matches. Funny, Dark and Scary all off: label dims to gray-600, 33 matches. All back on: label normal, 40. |
+| Fold | 8 qualities: 3 and "+5 more". "funny" (4): 2 and "+2 more". "scary" (6): 3 and "+3 more". "Historical Action" with Comedy (3): all 3, no "more". After Clear (0): no fingerprint group, and Restore gives 40. |
+| Expanded | All 8 across the row (1,042 px desktop; 358 × 79 px wrapped on phone, no overflow). Back has focus. An inside click stays open. Outside click, Escape and Back each return, with focus on "+5 more". |
+| Weights | Value 650; favored quality 650; quality ranked lower 650 |
+| Regression | Advanced Mood panel, Dark off: 32, bar Mood 2. Matches lists all five parts; Mood Dark on there gives 40. |
 
 - Page errors: none.
 - Type check: scoped `npx tsc` clean for the touched files.
-- Budget: one bounded local attempt (`… ./bench.sh budget --where local --runs 1 --label discover-read-variants`) gave
-  `Budget: FAIL` for every surface with no report. Chrome runs in Docker, where `127.0.0.1` isn't the host's
-  loopback-only server. I changed no budget and didn't expose the server.
+- Budget: one bounded local attempt (`… ./bench.sh budget --where local --runs 1 --label discover-read-strip`) gave
+  `Budget: FAIL` for every surface with no report. Docker's Chrome can't reach the host's loopback-only prototype
+  server. I changed no budget and didn't expose the server; this is no performance claim.
 
 ## Limits
 
@@ -176,4 +185,4 @@ Playwright at 1440 × 1000 and iPhone 13 (DOM loaded plus the target state), no 
 
 ## Verdict
 
-Awaiting the owner's choice among A, B and C. Nothing is promoted to `main`.
+A is selected. Awaiting the owner's review of these refinements. Nothing is promoted to `main`.

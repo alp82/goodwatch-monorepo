@@ -41,8 +41,8 @@ export function QualityMark({ chip, size = "md" }: { chip: ReadingChip; size?: "
 			<span
 				className={
 					avoid
-						? "font-[550] text-[color-mix(in_oklab,var(--quality)_30%,#aebaca)] line-through decoration-[color-mix(in_oklab,var(--quality)_75%,transparent)] decoration-2"
-						: "font-[600] text-[color-mix(in_oklab,var(--quality)_45%,#eef2f7)]"
+						? "font-[650] text-[color-mix(in_oklab,var(--quality)_30%,#aebaca)] line-through decoration-[color-mix(in_oklab,var(--quality)_75%,transparent)] decoration-2"
+						: "font-[650] text-[color-mix(in_oklab,var(--quality)_45%,#eef2f7)]"
 				}
 			>
 				{meta.label}
@@ -100,7 +100,7 @@ export function ReadToggle({
 				className={
 					live
 						? `font-[650] text-white ${item.soft && !item.words ? "underline decoration-white/35 decoration-dotted underline-offset-[4px]" : ""}`
-						: "font-[600] text-gray-500 line-through decoration-gray-500"
+						: "font-[650] text-gray-500 line-through decoration-gray-500"
 				}
 			>
 				{item.label}
