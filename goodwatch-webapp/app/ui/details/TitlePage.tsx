@@ -57,6 +57,7 @@ import { goodFor } from "~/ui/details/fingerprint/area-details"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { HeroPoster } from "~/ui/details/hero/Trailer"
+import { PhoneShelfNav } from "~/ui/details/more-like-this/PhoneShelfNav"
 import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
 import {
 	TrailerBand,
@@ -561,52 +562,55 @@ export function TitlePage(props: TitlePageProps) {
 					watchId={OPENER}
 					youId={YOU}
 				>
-					<PhoneBar
-						items={items}
-						visible={visible}
-						panel={phonePanel}
-						onJump={jump}
-						setPanel={(p) => {
-							setPhonePanel(p)
-							if (p === "find")
-								requestAnimationFrame(() => phoneFind.current?.focus())
-							if (p !== "find") setQuery("")
-						}}
-						find={
-							<>
-								<FindField
-									inputRef={phoneFind}
-									onFocus={armFind}
-									query={query}
-									onQuery={setQuery}
-									placeholder={findPlaceholder}
-									items={allFindItems}
-									active={active}
-									onActive={setActive}
-									listId="find-phone"
-								/>
-								<div className="mt-2">
-									{searching ? (
-										<FindResults
-											listId="find-phone"
-											query={query}
-											items={allFindItems}
-											busy={allFindBusy}
-											active={active}
-											onActive={setActive}
-											example={example}
-											onClear={() => clearFind(phoneFind.current)}
-										/>
-									) : (
-										<p className="px-2.5 py-2 text-xs text-gray-500">
-											Anyone in the cast or crew, episodes, facts, the
-											fingerprint, tropes and services.
-										</p>
-									)}
-								</div>
-							</>
-						}
-					/>
+					{/* While More like this is expanded, the row holds its shelves. */}
+					<PhoneShelfNav>
+						<PhoneBar
+							items={items}
+							visible={visible}
+							panel={phonePanel}
+							onJump={jump}
+							setPanel={(p) => {
+								setPhonePanel(p)
+								if (p === "find")
+									requestAnimationFrame(() => phoneFind.current?.focus())
+								if (p !== "find") setQuery("")
+							}}
+							find={
+								<>
+									<FindField
+										inputRef={phoneFind}
+										onFocus={armFind}
+										query={query}
+										onQuery={setQuery}
+										placeholder={findPlaceholder}
+										items={allFindItems}
+										active={active}
+										onActive={setActive}
+										listId="find-phone"
+									/>
+									<div className="mt-2">
+										{searching ? (
+											<FindResults
+												listId="find-phone"
+												query={query}
+												items={allFindItems}
+												busy={allFindBusy}
+												active={active}
+												onActive={setActive}
+												example={example}
+												onClear={() => clearFind(phoneFind.current)}
+											/>
+										) : (
+											<p className="px-2.5 py-2 text-xs text-gray-500">
+												Anyone in the cast or crew, episodes, facts, the
+												fingerprint, tropes and services.
+											</p>
+										)}
+									</div>
+								</>
+							}
+						/>
+					</PhoneShelfNav>
 				</TitleBar>
 
 				<div className="mx-auto max-w-[88rem] px-4 lg:mt-4 lg:px-8">

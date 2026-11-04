@@ -9,6 +9,7 @@ import type { MouseEvent, ReactNode } from "react"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { FitLine } from "~/ui/details/TitleBar"
 import { usePageMeta } from "~/ui/details/rail/rail-model"
+import { FOLLOW_PHONE_BAR } from "~/ui/layers"
 
 /** Where the screen starts below the site header (64 px) and the bar (48 px on a desktop). */
 export const SUB_HEADER_BOTTOM = 64 + 48
@@ -79,7 +80,8 @@ export function SubPageHeader({
 	return (
 		<div
 			data-sub-bar=""
-			className="fixed inset-x-0 top-16 z-[31] border-b border-white/10 bg-stone-950 shadow-[0_8px_24px_rgba(0,0,0,.45)]"
+			// On a phone it moves with the top bar as that slides away, as the title bar under it does.
+			className={`${FOLLOW_PHONE_BAR} fixed inset-x-0 top-16 z-[31] border-b border-white/10 bg-stone-950 shadow-[0_8px_24px_rgba(0,0,0,.45)]`}
 		>
 			<div className="mx-auto flex h-[52px] max-w-[88rem] items-center pr-2 pl-1 lg:h-12 lg:px-8">
 				{"to" in back ? (
