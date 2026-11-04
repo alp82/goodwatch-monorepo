@@ -70,6 +70,27 @@ strikethrough, with no visible "Not". A switched-off value is gray and dimmed.
   answer on screen, so they follow every switch. With "epic" or Dark off, the same filter hides 33 or 30, because the
   words differ. Your own filters keep Discover's native rows and counts.
 
+### Round 8: the search's count sits on its words
+
+The owner rejected the separate "Outside your search" row. The search's scope count (catalog titles passing every
+hard filter but not in the results) now sits on the query's own row, and the "Search" label is gone. For pirates,
+the rows are Released 2017–2026 hides 86, Anime No anime hides 6, and “pirates” hides **21,672**, each with its
+switch. The “pirates” dot has the scope segment's slate color, and the meter segment carries its name. The numbers
+and the meter are unchanged: "32 of 21,796".
+
+It's one count for the whole search, not a per-word effect:
+
+- **Which row:** the count sits on one row, the first plain word switched on. With no plain words, it sits on the
+  first read preference switched on.
+- **Other word units:** they keep their switch, show no number, and say in the tooltip where the count is ("counted
+  once, on “epic”").
+- **Tooltip on the counting row:** titles your current search doesn't bring in, counted on the whole catalog, not
+  proof that each title fails to match.
+
+For example, "funny epic dark pirates" shows 134 of 65,311, and “epic” carries 65,177 while “pirates” has no
+number. With “epic” off, the search finds 1,889 titles, and “pirates” carries 63,423. That's why a per-word
+difference isn't a hide count.
+
 ### Round 7: search scope vs. preferences
 
 The words the search reads aren't preferences. With "pirates last 10 years no anime", "pirates" isn't a soft lean:
@@ -223,26 +244,21 @@ and the frozen study build (`20261103T051503Z`) is reported separately as `froze
   - `routes/discover.($type).tsx`: the prototype loader.
   - Job guards in `entry.server.tsx`, `root.tsx`, the availability, search and people index modules.
 
-## Verification (manual, November 4, 2026; build `20261104T051503Z`, snapshot `20261104T083439Z`)
+## Verification (manual, November 4, 2026; build `20261104T051503Z`)
 
-Playwright at 1440 × 1000 and iPhone 13 (DOM loaded plus the target state), no new test suites.
+Playwright at 1440 × 1000 and iPhone 13, no new test suites.
 
 | Check | Result |
 | --- | --- |
-| Pirates, "pirates" on | "32 of 21,796 matches", "22k hidden". Rows: Released 2017–2026 hides 86, Anime No anime hides 6, Outside your search hides 21,672, “pirates” Search. Both bars agree. |
-| "pirates" off, then reload | `off=pirates`; 21,704 shown; year and anime filters kept; "21,704 of 107,676"; reload keeps it |
-| "pirates" on again | Back to "32 of 21,796", the same rows, no stale values |
-| Released off / on | 99 shown, No anime hides 24, outside 63,098. On again: back to 32 / 86 / 6 / 21,672. |
-| "funny 90s dark scary epic" | "40 of 5,747": Released hides 49, Funny / Dark / Scary Preferred, outside 5,658, “epic” Search. "epic" off: 39, outside 5,659, no per-word number. Dark off: 32, Released hides 30, outside 5,666. |
-| "The Big Short" | Outside your search hides 64,062; “The Big Short” Search |
-| "historical action without warfare" | History hides 46, Action hides 11, outside 479, “without warfare” Search |
-| White numbers | `rgb(255,255,255)`; phone without overflow |
+| Pirates, "pirates" on | Rows: Released 2017–2026 hides 86, Anime No anime hides 6, “pirates” hides 21,672. 3 switches. No "Outside your search" or "Search" copy. "32 of 21,796", "22k hidden". Both bars 0.019 / 0.019 / 0.019 / 0.928–0.935 (the 2% minimum width for small segments). |
+| "pirates" off, then reload | `off=pirates`; 21,704 shown; year and anime kept; “pirates” off; reload keeps it |
+| "pirates" on again | Back to 86 / 6 / 21,672, "32 of 21,796" |
+| "funny epic dark pirates" | "134 of 65,311". Funny and Dark Preferred. “epic” hides 65,177; “pirates” no number, with a tooltip pointing to “epic”. 4 switches, one scope segment. With “epic” off: 1,889 shown, “pirates” hides 63,423. |
+| Phone | No horizontal overflow; no page errors |
 
-- Page errors: none.
 - Type check: one scoped `npx tsc` after the last change, clean.
-- Budget: one bounded local attempt (`… --label discover-read-scope`) gave `Budget: FAIL` for every surface with no
-  report. Docker's Chrome can't reach the host's loopback-only prototype server. I changed no budget; this is no
-  performance claim.
+- Budget: one bounded local attempt (`… --label discover-read-scope-row`) gave `Budget: FAIL` for every surface with
+  no report. Docker's Chrome can't reach the host's loopback-only prototype server. I changed no budget.
 
 ## Limits
 

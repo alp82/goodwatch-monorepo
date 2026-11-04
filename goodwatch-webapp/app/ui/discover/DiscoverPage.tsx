@@ -78,7 +78,7 @@ import {
 	setOff,
 	useInterpretedFilters,
 } from "./prototype-preferences/interpretation"
-import { MatchesRead, SCOPE_COLOR, readColor } from "./prototype-preferences/read-parts"
+import { MatchesRead, SCOPE_COLOR, readColor, scopeOwner } from "./prototype-preferences/read-parts"
 import { ReadStrip } from "./prototype-preferences/ReadVariants"
 import { titleKey } from "~/utils/title-key"
 import { usePreferencePrototype } from "./prototype-preferences/usePreferencePrototype"
@@ -518,7 +518,10 @@ export function DiscoverPage({
 	})
 	// The search's own scope: eligible titles the words don't bring in. One segment, whatever the number of words.
 	const outside = proto.answer?.scope?.outside ?? null
-	if (outside) readRows.push({ group: "read:scope", label: "Outside your search", color: SCOPE_COLOR, hides: outside })
+	// Its meter segment carries the name of the row that shows the count.
+	const owner = outside ? scopeOwner(readItems) : null
+	if (outside && owner)
+		readRows.push({ group: "read:scope", label: readItems.find((i) => i.phrase === owner)?.label ?? owner, color: SCOPE_COLOR, hides: outside })
 	const toggleRead = (item: (typeof readItems)[number]) => {
 		if (item.aside) return
 		setParams(

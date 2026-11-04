@@ -79,7 +79,7 @@ export function itemTitle(item: Item) {
 export function itemNote(item: Item, hides?: number): ReactNode {
 	if (item.aside) return `set aside by your ${item.aside}`
 	if (!item.on) return "off"
-	if (item.words) return "Search"
+	if (item.words) return ""
 	if (item.soft) return "Preferred"
 	if (hides === undefined) return "…"
 	if (hides === 0) return "hides none"
@@ -91,10 +91,16 @@ export function itemNote(item: Item, hides?: number): ReactNode {
 }
 
 export const PREFERRED_TITLE = "Preferred: within your search, titles that fit rank higher; this hides none of them."
-export const SEARCH_TITLE =
-	"Search: these words choose which titles the search finds and how they rank. What they leave out is counted in Outside your search."
 export const SCOPE_TITLE =
-	"Titles that pass every filter here but aren't in this search's results: the words decide what the search finds. Counted on the whole catalog, so it isn't a judgment of each title."
+	"Titles your current search doesn't bring in: they pass every filter here but aren't in the results. One count for the whole search, on the whole catalog; it doesn't mean each title fails to match."
+export const sharedTitle = (owner: string) =>
+	`Part of your search. What the whole search leaves out is counted once, on ${owner}.`
+
+/** Which row shows the search's scope count: the first plain word switched on, else the first read preference on. */
+export function scopeOwner(items: readonly Item[]): string | null {
+	const live = items.filter((item) => item.on && !item.aside)
+	return (live.find((item) => item.words) ?? live.find((item) => item.soft))?.phrase ?? null
+}
 export const SCOPE_COLOR = "bg-slate-400"
 export const HIDES_TITLE =
 	"Titles this filter keeps out: the same words searched without it, counted with every other filter."
@@ -134,7 +140,7 @@ export function ReadToggle({
 			>
 				{item.label}
 			</span>
-			<span className="sr-only">, {itemNote(item)}</span>
+			<span className="sr-only">, {item.words && item.on && !item.aside ? "searched" : itemNote(item)}</span>
 		</>
 	)
 	const base = `inline-flex shrink-0 items-center gap-1.5 rounded-md px-1.5 leading-none ${live ? "" : "opacity-80"} ${className}`
@@ -198,28 +204,30 @@ export function MatchesRead({
 	if (!items.length) return null
 	const ordered = matchesOrder(items)
 	const shown = all ? ordered : ordered.slice(0, SHOW_FIRST)
-	const noteOf = (item: Item) => itemNote(item, hides.get(item.phrase.toLowerCase()))
+	const noteOf = (item: Item) =>
+		item.phrase === owner && outside ? (
+			<>
+				hides <span className="font-semibold text-white">{outside.toLocaleString("en")}</span>
+			</>
+		) : (
+			itemNote(item, hides.get(item.phrase.toLowerCase()))
+		)
 	const titleOf = (item: Item) =>
-		item.on && !item.aside ? (item.words ? SEARCH_TITLE : item.soft ? PREFERRED_TITLE : HIDES_TITLE) : itemTitle(item)
-	// One row for the whole search's scope, before the words: never a number per word.
-	const scopeAt = (() => {
-		const i = shown.findIndex((item) => item.words || item.aside)
-		return i === -1 ? shown.length : i
-	})()
-	const scopeRow = outside !== null && outside > 0 && (
-		<li key="scope" className="flex h-9 items-center" title={SCOPE_TITLE}>
-			<span className="flex h-full min-w-0 flex-1 items-center gap-2.5 text-left">
-				<span className="grid w-2.5 shrink-0 place-items-center">
-					<span className={`h-2.5 w-2.5 rounded-full ${SCOPE_COLOR}`} aria-hidden />
-				</span>
-				<span className="min-w-0 flex-1 truncate text-gray-200">Outside your search</span>
-				<span className="shrink-0 text-xs tabular-nums text-gray-400">
-					hides <span className="font-semibold text-white">{outside.toLocaleString("en")}</span>
-				</span>
-				<span className="w-[42px]" aria-hidden />
-			</span>
-		</li>
-	)
+		item.phrase === owner
+			? SCOPE_TITLE
+			: item.on && !item.aside
+				? item.words
+					? ownerLabel
+						? sharedTitle(ownerLabel)
+						: itemTitle(item)
+					: item.soft
+						? PREFERRED_TITLE
+						: HIDES_TITLE
+				: itemTitle(item)
+	// The search's scope (titles it doesn't bring in) is one count for the whole search: it sits on one row, the first
+	// plain word switched on, else the first read preference switched on. Other words keep their switch, no number.
+	const owner = outside !== null && outside > 0 ? scopeOwner(items) : null
+	const ownerLabel = owner ? (items.find((item) => item.phrase === owner)?.label ?? owner) : null
 	const qualities = qualitiesOf(reading)
 	return (
 		<li className="mt-1">
@@ -228,8 +236,7 @@ export function MatchesRead({
 				<ClearRead items={items} onAll={onAll} className="-mr-2" />
 			</div>
 			<ul className="mt-1 flex flex-col">
-				{shown.map((item, index) => [
-					index === scopeAt ? scopeRow : null,
+				{shown.map((item) => [
 					<li key={item.phrase} className="flex h-9 items-center">
 						{item.aside ? (
 							<span className="flex h-full min-w-0 flex-1 items-center gap-2.5 pl-0 text-left" title={itemTitle(item)}>
@@ -253,7 +260,13 @@ export function MatchesRead({
 							>
 								<span className={`grid w-2.5 shrink-0 place-items-center ${item.on ? "" : "opacity-40"}`}>
 									{/* A hard filter's dot is its segment's color in the meter above. */}
-									{item.soft || item.words ? <ItemMarker item={item} /> : <span className={`h-2.5 w-2.5 rounded-full ${readColor(item)}`} aria-hidden />}
+									{item.phrase === owner ? (
+										<span className={`h-2.5 w-2.5 rounded-full ${SCOPE_COLOR}`} aria-hidden />
+									) : item.soft || item.words ? (
+										<ItemMarker item={item} />
+									) : (
+										<span className={`h-2.5 w-2.5 rounded-full ${readColor(item)}`} aria-hidden />
+									)}
 								</span>
 								<span className={`min-w-0 flex-1 truncate ${item.on ? "text-gray-200" : "text-gray-400 line-through decoration-gray-300 decoration-2"}`}>
 									{item.field && <span className="text-gray-500">{item.field} </span>}
@@ -267,7 +280,6 @@ export function MatchesRead({
 						)}
 					</li>,
 				])}
-				{scopeAt === shown.length && scopeRow}
 			</ul>
 			{items.length > SHOW_FIRST && (
 				<button type="button" onClick={() => setAll(!all)} className="mt-0.5 cursor-pointer text-xs font-semibold text-amber-400 hover:text-amber-300">
