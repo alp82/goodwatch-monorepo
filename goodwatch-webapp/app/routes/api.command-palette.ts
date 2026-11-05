@@ -1,25 +1,24 @@
-import { presentCatalogLoader } from "~/server/media-payload.server"
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
-import { getPaletteTitles } from "~/server/command-palette.server"
-import type { PaletteTitles } from "~/utils/command-palette"
+import { getPaletteAnswer } from "~/server/command-palette.server"
+import { presentCatalogLoader } from "~/server/media-payload.server"
+import type { PaletteAnswer } from "~/utils/command-palette"
 
-// The command palette's matching titles: GET /api/command-palette?q=rea returns { titles, more } with up to eight movies
-// and shows and about how many more match (see command-palette.server.ts). The palette matches its destinations in the
-// browser.
+// Grouped matches, plus the unchanged legacy title fields for tabs opened before this deployment.
+// Page destinations remain matched in the browser.
 
 const headers = { "Cache-Control": "private, no-store" }
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const started = performance.now()
 	const q = new URL(request.url).searchParams.get("q") ?? ""
-	let answer: PaletteTitles = { titles: [], more: 0 }
+	let answer: PaletteAnswer = { titles: [], more: 0, groups: [] }
 	try {
-		answer = await getPaletteTitles(q)
+		answer = await getPaletteAnswer(q)
 	} catch (error) {
 		// The palette still offers "Search for …" and the destinations without titles.
 		console.error("Command palette title lookup failed:", error)
 	}
-	return json<PaletteTitles>(answer, {
+	return json<PaletteAnswer>(answer, {
 		headers: {
 			...headers,
 			"Server-Timing": `titles;dur=${(performance.now() - started).toFixed(1)}`,

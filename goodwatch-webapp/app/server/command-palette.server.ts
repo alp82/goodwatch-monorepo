@@ -163,3 +163,70 @@ async function tmdbTitles(prefix: string): Promise<PaletteTitles> {
 		more: Math.max(0, titles.length - PALETTE_TITLES),
 	}
 }
+
+// Grouped answers have their own version: old tabs retain precisely the legacy title lookup and count.
+// Cold background snapshots are never stored for six hours; short lifetimes also bound member visibility changes.
+export async function getPaletteAnswer(
+	text: string,
+): Promise<import("~/utils/command-palette").PaletteAnswer> {
+	const prefix = normalizePrefix(text)
+	if (prefix.length < MIN_PREFIX_CHARS) return { ...NONE, groups: [] }
+	const { catalogVersion, startPaletteCatalog } = await import(
+		"./command-palette/catalog.server"
+	)
+	const { indexGroups, ordered, titleGroups, vocabularyGroups } = await import(
+		"./command-palette/groups.server"
+	)
+	startPaletteCatalog()
+	const quick = vocabularyGroups(prefix)
+	const fallback = { ...NONE, groups: quick }
+	return within(
+		cached({
+			name: "command-palette-answer-v6",
+			params: {
+				prefix,
+				aliases: loadedAliasVersion(),
+				build: loadedSearchIndexBuild(),
+				catalog: catalogVersion(),
+				minute: Math.floor(Date.now() / 60_000),
+				search: runsSearch(),
+			},
+			ttlMinutes: 1,
+			staleMinutes: 0,
+			target: async () => {
+				const [legacy, groups] = await Promise.all([
+					within(getPaletteTitles(prefix), NONE, 220),
+					within(indexGroups(prefix), [], 220),
+				])
+				return {
+					...legacy,
+					groups: ordered([
+						...(groups.length ? groups : titleGroups(prefix, legacy.titles)),
+						...quick,
+					]),
+				}
+			},
+		}),
+		fallback,
+		270,
+	)
+}
+
+/** Bound optional work, including Redis failures; clear the timer when it wins and handle late rejections. */
+export async function within<T>(
+	work: Promise<T>,
+	fallback: T,
+	ms: number,
+): Promise<T> {
+	let timer: ReturnType<typeof setTimeout> | undefined
+	try {
+		return await Promise.race([
+			work.catch(() => fallback),
+			new Promise<T>((resolve) => {
+				timer = setTimeout(() => resolve(fallback), ms)
+			}),
+		])
+	} finally {
+		clearTimeout(timer)
+	}
+}

@@ -1,9 +1,9 @@
+import { query } from "~/utils/crate"
+import { searchStatement } from "../combined-search/catalog.server"
 // People in search results. Keeps the index of popular people in memory, loads the credits a named person narrows a
 // search to, and the known-for titles of people the title lookup didn't return. Every query is keyed by person id;
 // search text never reaches Crate here.
 import { runsSearch } from "../role.server"
-import { query } from "~/utils/crate"
-import { searchStatement } from "../combined-search/catalog.server"
 import {
 	type IndexedPerson,
 	type PeopleIndex,
@@ -59,6 +59,12 @@ const CACHE_ENTRIES = 1000
 
 let index: { value: PeopleIndex; at: number } | null = null
 let indexLoad: Promise<void> | null = null
+let palettePeople: IndexedPerson[] = []
+/** Snapshot of all popular, non-adult people; callers never wait for the background read. */
+export function palettePeopleSnapshot(): readonly IndexedPerson[] {
+	startPeopleIndex()
+	return palettePeople
+}
 
 /** Loads the index, or replaces an old one, in the background. Searches don't wait for it. */
 export function startPeopleIndex() {
@@ -71,20 +77,17 @@ export function startPeopleIndex() {
 		WHERE popularity >= ${INDEX_MIN_POPULARITY} AND NOT coalesce(adult, false) LIMIT 200000`,
 	)
 		.then(({ rows }) => {
-			index = {
-				value: buildPeopleIndex(
-					(
-						rows as [number, string, number, string | null, string | null][]
-					).map(([id, name, popularity, profile, department]) => ({
-						id,
-						name,
-						popularity,
-						profile,
-						department: department ?? "",
-					})),
-				),
-				at: Date.now(),
-			}
+			palettePeople = (
+				rows as [number, string, number, string | null, string | null][]
+			).map(([id, name, popularity, profile, department]) => ({
+				id,
+				name,
+				popularity,
+				profile,
+				department: department ?? "",
+			}))
+			index = { value: buildPeopleIndex(palettePeople), at: Date.now() }
+
 			console.log(
 				`People index ready: ${rows.length} people in ${Math.round(performance.now() - started)} ms`,
 			)

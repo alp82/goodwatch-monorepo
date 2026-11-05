@@ -15,8 +15,7 @@ import {
 	type ProfileWishlistPage,
 	SEEN_MAX,
 	type ShowGroup,
-	canSee,
-	owesProfilesStrip,
+	type canSee,
 	seesPart,
 } from "~/domain/profile"
 import { isOnServices } from "~/server/availability-index.server"
@@ -50,8 +49,8 @@ import {
 import { getProfileSettings } from "./settings.server"
 import { round1 } from "./taste-stats-model"
 
-/** A profile with at least this many public scores may be indexed (owner decision Q5). */
-export const INDEX_MIN_SCORES = 20
+export { INDEX_MIN_SCORES } from "./search-eligibility.server"
+import { publicProfileSearchable } from "./search-eligibility.server"
 
 // A profile can come back (a handle claimed later), so never cache a missing one.
 const notFound = () =>
@@ -190,10 +189,12 @@ async function readProfileShell(
 				? scoreSpread(scores)
 				: Array.from({ length: 10 }, () => 0),
 			// Members whose profile went public with the release stay out of search until they confirm Who sees what.
-			indexable:
-				canSee(visibility, "scores", "guest") &&
-				library.scored.size >= INDEX_MIN_SCORES &&
-				!owesProfilesStrip(profile.claimedAt ?? null, settings.noticeSeen),
+			indexable: publicProfileSearchable(
+				visibility,
+				library.scored.size,
+				profile.claimedAt ?? null,
+				settings.noticeSeen,
+			),
 			dismissedImports: viewer === "owner" ? settings.dismissedImports : [],
 		},
 	}

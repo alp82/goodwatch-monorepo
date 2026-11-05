@@ -10,7 +10,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
 	type DecodedPool,
 	FAMILY_ORDER,
-	FP_KEYS,
 	type FamilyId,
 	type ForYouTaste,
 } from "~/domain/for-you-page/contract"
@@ -25,9 +24,12 @@ import {
 	type Ranked,
 	rankPool,
 } from "~/domain/for-you-page/rank"
+import {
+	recipeFitCounts,
+	recipeFitScores,
+} from "~/domain/for-you-page/recipe-fit"
 import { LIBRARY, MIN_FIT, ownRecipes } from "~/domain/for-you-page/recipes"
 import {
-	type Bundle,
 	FAMILY_WORD,
 	FLAT,
 	type Level,
@@ -44,9 +46,6 @@ import {
 } from "~/domain/for-you-page/shape"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 
-const N = FP_KEYS.length
-/** A title fits a recipe when its weighted z-score average over the recipe is at least this. */
-const FIT = 0.7
 /** A recipe is picked by itself when the handles come within this drift of its shape. */
 const AUTO = 1
 /** Desktop tiles shown at 1024-1279 px; wider screens show all DESK_SIZE. */
@@ -111,32 +110,12 @@ export function useSteering({
 	const n = pool.keys.length
 
 	// ---------- per recipe: how well each title fits, how many fit, how much your taste likes it ----------
-	const fitScore = useMemo(() => {
-		const scoreOf = (b: Bundle) => {
-			const ks = Object.entries(b).map(
-				([k, w]) =>
-					[FP_KEYS.indexOf(k as (typeof FP_KEYS)[number]), w] as const,
-			)
-			const tot = ks.reduce((s, [, w]) => s + Math.abs(w), 0) || 1
-			const out = new Float32Array(n)
-			for (let i = 0; i < n; i++) {
-				let s = 0
-				for (const [k, w] of ks) if (k >= 0) s += w * stats.z[i * N + k]
-				out[i] = s / tot
-			}
-			return out
-		}
-		return Object.fromEntries(library.map((m) => [m.id, scoreOf(m.attrs)]))
-	}, [library, n, stats])
-	const count = useMemo(() => {
-		const out: Record<string, number> = {}
-		for (const m of library) {
-			let c = 0
-			for (const s of fitScore[m.id]) if (s >= FIT) c++
-			out[m.id] = c
-		}
-		return out
-	}, [library, fitScore])
+	const fitScore = useMemo(
+		() => recipeFitScores(library, n, stats),
+		[library, n, stats],
+	)
+	const count = useMemo(() => recipeFitCounts(fitScore), [fitScore])
+
 	const like = useMemo(() => {
 		const out: Record<string, number> = {}
 		for (const m of library) {
