@@ -14,6 +14,6 @@ exec env -i PATH="$PATH" HOME="$HOME" TERM=xterm NODE_ENV=development POSTHOG_DI
 	TITLE_SNAPSHOT_REDIS_URL= TASTE_REDIS_URL= TITLE_CARDS_REDIS_URL= TITLE_FILTER_REDIS_URL= QDRANT_URL= \
 	SUPABASE_URL= SUPABASE_ANON_KEY= POSTHOG_HOST= TMDB_API_KEY= TMDB_CONNECT_KEY= OPENROUTER_API_KEY= \
 	TYPESAFE_API_KEY= POSTHOG_API_KEY= SEARCH_STORAGE_KEY= SENTRY_DSN= SENTRY_DISABLE_AUTO_UPLOAD=true \
-	APP_ORIGIN="http://127.0.0.1:$PORT" \
+	APP_ORIGIN="${APP_ORIGIN:-http://127.0.0.1:$PORT}" \
 	NODE_OPTIONS="--import $PWD/scripts/dev-discover-bar/block-egress.mjs" \
 	npx remix vite:dev --config scripts/dev-discover-bar/vite.config.mjs --host 127.0.0.1 --port "$PORT" --strictPort

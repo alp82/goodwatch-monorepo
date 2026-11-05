@@ -116,7 +116,10 @@ export function FilterMix({
 	keepChip,
 	readRows = [],
 	onClearAll,
+	menuLeft = false,
 }: {
+	/** PROTOTYPE: the menu opens from the left edge (count on the left). */
+	menuLeft?: boolean
 	/**
 	 * While searching: the filters the search read from the words, with what each keeps out on its own (read-parts.tsx).
 	 * Their titles pass every other filter, so they share no title with each other or with the rows above: the meter,
@@ -354,7 +357,7 @@ export function FilterMix({
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -4 }}
 						transition={{ duration: 0.14 }}
-						className={`absolute top-full right-0 z-50 mt-2 p-3.5 text-[13px] ${phone ? "w-[min(340px,calc(100vw-32px))]" : "w-[360px]"} ${MENU}`}
+						className={`absolute top-full ${menuLeft ? "left-0" : "right-0"} z-50 mt-2 p-3.5 text-[13px] ${phone ? "w-[min(340px,calc(100vw-32px))]" : "w-[360px]"} ${MENU}`}
 					>
 						<p className="text-sm font-bold text-white">
 							{total.toLocaleString("en")} of {about}

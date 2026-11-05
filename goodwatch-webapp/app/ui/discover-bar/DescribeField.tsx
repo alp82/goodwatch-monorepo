@@ -98,7 +98,10 @@ export function DescribeField({
 	flatBottom,
 	ready,
 	inputRef,
+	squareTopRight = false,
 }: {
+	/** PROTOTYPE: folder tabs grow out of the top-right corner. */
+	squareTopRight?: boolean
 	/** What the running search shows in the field. */
 	typed: string
 	onSearch: (text: string) => void
@@ -152,7 +155,7 @@ export function DescribeField({
 				flatBottom
 					? "rounded-t-[22px] lg:rounded-t-[32px]"
 					: "rounded-[22px] lg:rounded-[32px]"
-			}`}
+			} ${squareTopRight ? "max-lg:rounded-tr-none" : ""}`}
 		>
 			<div className="relative flex min-h-[92px] min-w-0 flex-1 flex-col justify-center pr-2 lg:min-h-[108px] lg:pr-3">
 				<span

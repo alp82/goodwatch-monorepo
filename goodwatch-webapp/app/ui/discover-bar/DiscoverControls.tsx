@@ -52,6 +52,7 @@ import {
 } from "./find/FindField"
 import { DescribeField } from "./DescribeField"
 import { ModeTabs } from "./ModeTabs"
+import { PhoneTitleRow, TitleVariantSwitcher, useTitleVariant } from "./prototype-title-row"
 import {
 	ForYouSwitch,
 	ReadySwitch,
@@ -213,6 +214,8 @@ function DiscoverControlsContent({
 	const { panel } = bar
 	const open = panel.open
 	const searching = Boolean(query?.trim())
+	const titleVariant = useTitleVariant()
+	const protoRow = !desktop && titleVariant !== "0"
 
 	// The text of the field that finds titles and people; it starts empty each time the panel opens.
 	const [params] = useSearchParams()
@@ -375,7 +378,28 @@ function DiscoverControlsContent({
 
 	return (
 		<MotionConfig reducedMotion="user">
-			{heading && (
+			<TitleVariantSwitcher />
+			{heading && protoRow && (
+				<PhoneTitleRow
+					variant={titleVariant}
+					mode={mode}
+					onChange={changeMode}
+					count={<FilterMix
+						counts={counts}
+						searching={searching}
+						state={state}
+						chips={data.chips}
+						update={filters.update}
+						phone={!desktop}
+						readSection={matchesRead}
+						onClearAll={clearAllNow}
+						keepChip={keepChip}
+						readRows={readRows}
+						menuLeft
+					/>}
+				/>
+			)}
+			{heading && !protoRow && (
 				<div className="flex items-center justify-between gap-4">
 					<div className="flex min-w-0 items-end gap-6 lg:gap-8">
 						{heading}
@@ -397,8 +421,8 @@ function DiscoverControlsContent({
 					/>
 				</div>
 			)}
-			<div className={className}>
-				<div className="mb-2 lg:hidden">
+			<div className={protoRow && titleVariant === "B" ? "" : protoRow ? "mt-2" : className}>
+				<div className={`mb-2 lg:hidden ${protoRow ? "hidden" : ""}`}>
 					<ModeTabs mode={mode} onChange={changeMode} wide />
 				</div>
 				<DescribeField
@@ -408,6 +432,7 @@ function DiscoverControlsContent({
 					flatBottom={advanced}
 					ready={<ReadySwitch on={readyOn} onChange={setReady} member={member} field />}
 					inputRef={describeField}
+					squareTopRight={protoRow && titleVariant === "B"}
 				/>
 				<AnimatePresence initial={false}>
 					{advanced && (
