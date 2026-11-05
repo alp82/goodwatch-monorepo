@@ -164,7 +164,9 @@ export function ReadStrip(p: ReadProps) {
 			ref={row}
 			className="search-private ph-no-capture sentry-mask flex h-9 min-w-0 flex-1 items-center gap-2"
 		>
-			<div className="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+			{/* relative: the scroller is the containing block of the marks' sr-only labels (absolute), so they are
+			    clipped with the strip; otherwise a long strip's labels widened the whole page on phones. */}
+			<div className="relative flex min-w-0 flex-1 items-center gap-3 overflow-x-auto [scrollbar-width:none]">
 				{p.pending && !p.items.length && !qualities.length && (
 					<span className="flex shrink-0 items-center gap-2 text-[12px] text-gray-500">
 						<FingerPrintIcon className="h-4 w-4 animate-pulse text-amber-300/60" aria-hidden />
