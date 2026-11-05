@@ -1,8 +1,8 @@
 // The command palette: one field that goes anywhere. Typed, it shows every kind of match in groups (movies, shows,
 // people, tropes, moods, genres, sequels, services, lists, pages, members, blog posts): the server's groups
 // (/api/command-palette) and the site's pages, matched here in the browser (palette-pages.ts). Before typing it shows
-// the member's For you picks (or the For you page's call to action), trending titles, moods, and pages to go to
-// (/api/command-palette-start). How each answer is laid out lives in palette-layout.ts.
+// the member's For you picks (or the For you page's call to action), trending titles, moods, popular tropes, and pages
+// to go to (/api/command-palette-start). How each answer is laid out lives in palette-layout.ts.
 //
 // The "Search ↵" button at the field's end searches Discover for the text: it is the active option while nothing
 // else is, so Enter with nothing chosen runs it. A combobox over a listbox: focus stays in the field, Up and Down move
@@ -20,6 +20,7 @@ import {
 	useMemo,
 	useRef,
 	useState,
+	useSyncExternalStore,
 } from "react"
 import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { useAccountSummary } from "~/ui/account/useAccountSummary"
@@ -30,6 +31,7 @@ import {
 	MIN_PREFIX_CHARS,
 	PALETTE_GROUP_ORDER,
 	type PaletteGroup,
+	type PaletteItem,
 	normalizePrefix,
 } from "~/utils/command-palette"
 import useLocale from "~/utils/locale"
@@ -114,21 +116,36 @@ function usePaletteGroups(q: string) {
 	)
 }
 
+/** The panel's width rule (Tailwind's lg): the rail beside the results and two columns only from here. */
+const WIDE = "(min-width: 1024px)"
+const watchWide = (change: () => void) => {
+	const list = window.matchMedia(WIDE)
+	list.addEventListener("change", change)
+	return () => list.removeEventListener("change", change)
+}
+/** Whether the panel is wide; the palette only renders in the browser (LazyDialogs), so the server's guess is moot. */
+const useWide = () =>
+	useSyncExternalStore(
+		watchWide,
+		() => window.matchMedia(WIDE).matches,
+		() => true,
+	)
+
+const itemOption = (item: PaletteItem, group: PanelGroupKey): Option =>
+	item.title
+		? { ...titleOption(item.title), key: item.key }
+		: {
+				key: item.key,
+				label: item.label,
+				sub: item.sub,
+				href: item.href,
+				image: item.image,
+				group,
+			}
+
 const serverGroup = (group: PaletteGroup): PanelGroup => ({
 	...group,
-	items: group.items.map(
-		(item): Option =>
-			item.title
-				? { ...titleOption(item.title), key: item.key }
-				: {
-						key: item.key,
-						label: item.label,
-						sub: item.sub,
-						href: item.href,
-						image: item.image,
-						group: group.key,
-					},
-	),
+	items: group.items.map((item) => itemOption(item, group.key)),
 })
 
 export function CommandPalette({ onDone }: { onDone: () => void }) {
@@ -138,6 +155,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const { handle } = useAccountSummary()
 	const signUp = useSignUpHref()
 	const { pick } = useTonightsPick()
+	const wide = useWide()
 	// Opens empty: Discover's own field already shows the search on screen.
 	const [q, setQ] = useState("")
 	const [tabKey, setTabKey] = useState("")
@@ -194,6 +212,10 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		() => (start.data?.trending ?? []).map(titleOption),
 		[start.data],
 	)
+	const tropes = useMemo(
+		() => (start.data?.tropes ?? []).map((item) => itemOption(item, "tropes")),
+		[start.data],
+	)
 
 	const plan = useMemo((): Plan => {
 		if (!trimmed) {
@@ -203,6 +225,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				failed: start.isError,
 				trending,
 				moods: MOODS.map((mood) => moodOption(mood)),
+				tropes,
 				pages: keys.flatMap((key) => {
 					const page = pages.find((p) => p.key === key)
 					return page ? [pageOption(page, false)] : []
@@ -223,7 +246,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 					.map(({ page }) => pageOption(page, true)),
 			})
 		const groups = PANEL_ORDER.flatMap((key) => byKey.get(key) ?? [])
-		if (groups.length) return resultsPlan(groups)
+		if (groups.length) return resultsPlan(groups, wide)
 		if (!server.settled) return searchingPlan
 		return nothingPlan(
 			trimmed,
@@ -237,9 +260,11 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		start.data,
 		start.isError,
 		trending,
+		tropes,
 		pages,
 		pageOption,
 		server,
+		wide,
 	])
 
 	const tab: Tab = plan.tabs.find((t) => t.key === tabKey) ?? plan.tabs[0]

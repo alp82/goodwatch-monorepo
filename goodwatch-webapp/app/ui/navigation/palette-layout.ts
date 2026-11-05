@@ -6,10 +6,11 @@
 //   - one group: no rail, that group alone (titles as a grid of poster cards, everything else one column of rows)
 //   - 2+ groups: a rail with All first, then each group with its count. All shows every group: under 5 groups one
 //     column in the fixed order; 5 or more put Movies and Shows on top as rows of poster cards and the rest in two
-//     balanced columns. A group's header row opens its tab; in its own tab the header opens its page on the site.
+//     balanced columns (phones keep one column in the fixed order). A group's header row opens its tab; in its own
+//     tab the header opens its page on the site.
 //   - nothing: the text, the Search action, moods and trending titles to start from.
 // Before typing: For you (the member's taste tiles, or the For you page's call to action and trending), Trending,
-// Moods, and Go to.
+// Moods, Tropes, and Go to. When the picks are unavailable, For you is left out and Trending comes first.
 import type { ComponentType, SVGProps } from "react"
 import type { Mood } from "~/domain/moods"
 import type {
@@ -234,8 +235,11 @@ function balance(sections: Section[]): [Section[], Section[]] {
 /** Five or more groups split into columns. */
 const COLUMNS_FROM = 5
 
-/** The panel for typed text that matched. `groups` are in the fixed order and not empty. */
-export function resultsPlan(groups: PanelGroup[]): Plan {
+/**
+ * The panel for typed text that matched. `groups` are in the fixed order and not empty. `wide` is a desktop panel,
+ * the only one with room for two columns; a phone's one column keeps the fixed order.
+ */
+export function resultsPlan(groups: PanelGroup[], wide = true): Plan {
 	if (groups.length === 1)
 		return {
 			rail: false,
@@ -253,7 +257,7 @@ export function resultsPlan(groups: PanelGroup[]): Plan {
 		0,
 	)
 	const all: Layout =
-		groups.length < COLUMNS_FROM
+		groups.length < COLUMNS_FROM || !wide
 			? { top: groups.map(allSection) }
 			: {
 					top: groups.filter(isTitleGroup).map(allSection),
@@ -342,29 +346,12 @@ export const searchingPlan: Plan = {
 /** The For you tab: the member's taste tiles, or the page's call to action and the trending titles. */
 function forYouLayout(
 	start: PaletteStart | undefined,
-	failed: boolean,
 	trending: Option[],
 ): Layout {
-	if (!start) {
-		if (!failed)
-			return {
-				top: [{ kind: "note", key: "loading", text: "Loading your picks…" }],
-			}
+	if (!start)
 		return {
-			top: [
-				{
-					kind: "cta",
-					key: "cta",
-					text: "Your picks didn't load.",
-					option: {
-						key: "for-you-cta",
-						label: "Open For you",
-						href: "/watch/for-you",
-					},
-				},
-			],
+			top: [{ kind: "note", key: "loading", text: "Loading your picks…" }],
 		}
-	}
 	const { forYou } = start
 	if (forYou.state === "picks" && forYou.tiles.length)
 		return {
@@ -384,7 +371,7 @@ function forYouLayout(
 			})),
 		}
 	const top: Section[] = []
-	if (forYou.state !== "picks")
+	if (forYou.state !== "picks" && forYou.state !== "unavailable")
 		top.push({
 			kind: "cta",
 			key: "cta",
@@ -415,15 +402,19 @@ function forYouLayout(
 	return { top }
 }
 
-/** Before typing: For you, Trending, Moods, Go to. */
+/**
+ * Before typing: For you, Trending, Moods, Tropes, Go to. Picks that are unavailable (the start answer says so, or
+ * didn't load) leave For you out, with no call to action, so Trending comes first.
+ */
 export function startPlan(args: {
 	start: PaletteStart | undefined
 	failed: boolean
 	trending: Option[]
 	moods: Option[]
+	tropes: Option[]
 	pages: Option[]
 }): Plan {
-	const { start, failed, trending, moods, pages } = args
+	const { start, failed, trending, moods, tropes, pages } = args
 	const list = (
 		key: string,
 		label: string,
@@ -445,13 +436,16 @@ export function startPlan(args: {
 			],
 		},
 	})
-	const tabs: Tab[] = [
-		{
-			key: "for-you",
-			label: "For you",
-			layout: forYouLayout(start, failed, trending),
-		},
-	]
+	const unavailable = failed || start?.forYou.state === "unavailable"
+	const tabs: Tab[] = unavailable
+		? []
+		: [
+				{
+					key: "for-you",
+					label: "For you",
+					layout: forYouLayout(start, trending),
+				},
+			]
 	if (trending.length)
 		tabs.push({
 			key: "trending",
@@ -470,6 +464,8 @@ export function startPlan(args: {
 				],
 			},
 		})
-	tabs.push(list("moods", "Moods", moods), list("go", "Go to", pages, true))
+	tabs.push(list("moods", "Moods", moods))
+	if (tropes.length) tabs.push(list("tropes", "Tropes", tropes))
+	tabs.push(list("go", "Go to", pages, true))
 	return { rail: true, tabs }
 }

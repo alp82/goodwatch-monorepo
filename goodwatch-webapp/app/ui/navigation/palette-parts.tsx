@@ -13,7 +13,9 @@ import {
 } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import type { CSSProperties, MouseEvent, ReactNode } from "react"
+import type { AvatarColor } from "~/domain/profile"
 import { type CardTitle, MovieTvCard } from "~/ui/MovieTvCard"
+import { AccountAvatar } from "~/ui/account/AccountAvatar"
 import { Portrait } from "~/ui/person/Portrait"
 import type { PaletteTitle } from "~/utils/command-palette"
 import type { SizeRule } from "~/utils/tmdb-image"
@@ -153,6 +155,7 @@ const iconOf = (option: Option): Icon | undefined =>
 	option.icon ?? (option.group ? GROUP_ICON[option.group] : undefined)
 
 const ROUND = { sm: "h-8 w-8", md: "h-11 w-11" }
+const ROUND_PX = { sm: 32, md: 44 }
 
 /** The picture a row carries: a poster, a portrait, a logo, a member's photo, a mood's hue, or an icon. */
 function Thumb({ option, size }: { option: Option; size: "sm" | "md" }) {
@@ -191,19 +194,17 @@ function Thumb({ option, size }: { option: Option; size: "sm" | "md" }) {
 				<span className={`shrink-0 rounded-lg bg-white/10 ${round}`} />
 			)
 		case "avatar":
-			return image.path ? (
-				<img
-					src={image.path}
-					alt=""
-					loading="lazy"
-					className={`shrink-0 rounded-full object-cover ${round}`}
+			// The member's picture as the account menu and profile draw it: their photo, else the initial on their colour.
+			return (
+				<AccountAvatar
+					url={image.path ?? null}
+					color={(image.hue ?? "amber") as AvatarColor}
+					initial={
+						image.initial ??
+						option.label.replace(/^@/, "").slice(0, 1).toUpperCase()
+					}
+					size={ROUND_PX[size]}
 				/>
-			) : (
-				<span
-					className={`flex shrink-0 items-center justify-center rounded-full bg-gray-800 text-sm font-bold text-gray-400 ${round}`}
-				>
-					{option.label.slice(0, 1).toUpperCase()}
-				</span>
 			)
 		case "hue":
 			return (
@@ -279,6 +280,7 @@ const cardOf = (title: PaletteTitle): CardTitle => ({
 	title: title.title,
 	release_year: title.year || null,
 	poster_path: title.posterPath,
+	goodwatch_overall_score_normalized_percent: title.score ?? null,
 	canonical_title: title.canonical_title,
 	presentation: title.presentation,
 })
