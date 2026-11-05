@@ -36,6 +36,11 @@ the rating; a 404/410 or rejected identity clears both the source URL and score.
 outcomes are backed up in `letterboxd_rating_history`. No match, unrated, temporarily blocked and failed parsing
 are distinct statuses.
 
+Letterboxd also returns HTTP 200 for a missing IMDb lookup. The crawler recognizes this only when the exact
+lookup URL, Open Graph title `IMDb ID Not found` and heading containing that requested IMDb ID all agree.
+It records `not_found` with the normal 90-day negative cache. Such misses do not contribute to the three-error
+site pause. Unknown pages and genuine HTTP/challenge blocks still stop or back off as before.
+
 ## Publication
 
 `f/letterboxd/schema` adds only the seven Letterboxd columns on the Crate `movie` table; its default is a dry run.

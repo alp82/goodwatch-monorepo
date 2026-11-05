@@ -23,6 +23,10 @@ class Document(HTMLParser):
         self.scripts, self.links = [], []
         self.canonical = None
         self.og_url = None
+        self.raw_og_url = None
+        self.og_title = None
+        self.headings = []
+        self.heading = None
         self.lid = None
         self.script = None
         self.feed(html)
@@ -36,7 +40,12 @@ class Document(HTMLParser):
         if tag == "link" and "canonical" in attrs.get("rel", "").split():
             self.canonical = movie_url(attrs.get("href"))
         if tag == "meta" and attrs.get("property") == "og:url":
+            self.raw_og_url = attrs.get("content")
             self.og_url = movie_url(attrs.get("content"))
+        if tag == "meta" and attrs.get("property") == "og:title":
+            self.og_title = attrs.get("content")
+        if tag == "h1":
+            self.heading = []
         if tag == "meta" and attrs.get("name") == "production:identifier":
             try:
                 identifier = json.loads(attrs.get("content", ""))
@@ -48,11 +57,16 @@ class Document(HTMLParser):
     def handle_data(self, data):
         if self.script is not None:
             self.script.append(data)
+        if self.heading is not None:
+            self.heading.append(data)
 
     def handle_endtag(self, tag):
         if tag == "script" and self.script is not None:
             self.scripts.append("".join(self.script))
             self.script = None
+        if tag == "h1" and self.heading is not None:
+            self.headings.append(" ".join("".join(self.heading).split()))
+            self.heading = None
 
 
 def nodes(value):
@@ -80,6 +94,15 @@ def parse(html: str, final_url: str, tmdb_id: int, imdb_id: str | None) -> Movie
     """
     final = movie_url(final_url)
     doc = Document(html)
+    # Letterboxd returns a branded HTTP 200 page for absent IMDb IDs. Require
+    # the exact lookup URL, metadata and ID-specific heading before accepting a
+    # normal miss; unknown/challenge markup must remain an error or source block.
+    if imdb_id:
+        lookup = f"https://letterboxd.com/imdb/{imdb_id}"
+        if (final_url.rstrip("/") == lookup and (doc.raw_og_url or "").rstrip("/") == lookup
+                and (doc.og_title or "").casefold() == "imdb id not found"
+                and f"No-one has added ‘{imdb_id}’ yet." in doc.headings):
+            raise LookupNotFound("Letterboxd has no movie for this IMDb ID")
     if not final or (doc.canonical or doc.og_url) != final:
         raise ValueError("not a canonical Letterboxd movie page")
     imdb, tmdb, lids = set(), set(), set()
@@ -131,6 +154,10 @@ def parse(html: str, final_url: str, tmdb_id: int, imdb_id: str | None) -> Movie
 
 class IdentityMismatch(ValueError):
     pass
+
+
+class LookupNotFound(ValueError):
+    """A positively identified missing IMDb lookup, even though its HTTP status is 200."""
 
 
 def main():

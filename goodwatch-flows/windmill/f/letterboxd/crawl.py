@@ -16,7 +16,7 @@ from pymongo.errors import DuplicateKeyError
 from f.critic_sites import polite_http
 from f.external_ids.imdb_ids import effective_imdb_id
 from f.letterboxd.http import Client, SITE
-from f.letterboxd.pages import IdentityMismatch, movie_url, parse
+from f.letterboxd.pages import IdentityMismatch, LookupNotFound, movie_url, parse
 from f.letterboxd.seed import COLLECTION, ensure_indexes, seed
 
 SCORE_FIELDS = ("user_score_original", "user_score_normalized_percent", "user_score_vote_count")
@@ -92,6 +92,9 @@ def crawl_one(db, client, doc, now):
             if page.status != 200:
                 raise polite_http.FetchError(f"HTTP {page.status}")
             rating = parse(page.text, page.url, doc["tmdb_id"], imdb_id)
+    except LookupNotFound as error:
+        clear(db, doc, now, "not_found", str(error))
+        return "not_found"
     except IdentityMismatch as error:
         clear(db, doc, now, "rejected", str(error))
         return "rejected"

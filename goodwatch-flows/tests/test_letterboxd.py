@@ -233,6 +233,59 @@ class BackfillTests(unittest.TestCase):
         self.assertEqual(result["seconds"], 15)
 
 
+class MissingLookupRegressionTests(unittest.TestCase):
+    def test_missing_lookup_is_identified_on_the_exact_requested_imdb_page(self):
+        body = (Path(__file__).parent / "fixtures/letterboxd/imdb-id-not-found.html").read_text()
+        with self.assertRaises(pages.LookupNotFound):
+            pages.parse(body, "https://letterboxd.com/imdb/tt0382358/", 1, "tt0382358")
+
+    def test_unverified_missing_markup_remains_a_parse_error(self):
+        body = (Path(__file__).parent / "fixtures/letterboxd/imdb-id-not-found.html").read_text()
+        cases = [
+            (body.replace("og:title", "unknown-title"), "https://letterboxd.com/imdb/tt0382358/", "tt0382358"),
+            (body.replace("No-one has added ‘tt0382358’ yet.", "Verify you are human"),
+             "https://letterboxd.com/imdb/tt0382358/", "tt0382358"),
+            (body, "https://letterboxd.com/imdb/tt9999999/", "tt9999999"),
+            (body, URL, "tt0382358"),
+        ]
+        for markup, final, imdb_id in cases:
+            with self.subTest(final=final), self.assertRaises(ValueError) as caught:
+                pages.parse(markup, final, 1, imdb_id)
+            self.assertNotIsInstance(caught.exception, pages.LookupNotFound)
+
+    def test_three_unmatched_imdb_ids_do_not_pause_crawling_the_next_movie(self):
+        db = mongomock.MongoClient().db
+        seed.ensure_indexes(db)
+        missing = (Path(__file__).parent / "fixtures/letterboxd/imdb-id-not-found.html").read_text()
+        identities = {1: "tt0382358", 2: "tt0366197", 3: "tt24685434", 27205: "tt1375666"}
+        for rank, (tmdb_id, imdb_id) in enumerate(identities.items()):
+            db.tmdb_movie_details.insert_one({"tmdb_id": tmdb_id, "imdb_id": imdb_id})
+            db[seed.COLLECTION].insert_one({"tmdb_id": tmdb_id, "popularity": 100 - rank,
+                                           "next_crawl_at": seed.EPOCH})
+
+        class LookupClient:
+            requests = 0
+
+            def get(self, url):
+                self.requests += 1
+                if url == LOOKUP:
+                    return polite_http.Page(200, URL, html(), url)
+                imdb_id = url.rstrip("/").rsplit("/", 1)[-1]
+                return polite_http.Page(200, url, missing.replace("tt0382358", imdb_id), url)
+
+        published = Mock()
+        result = crawl.run(db, LookupClient(), clock=lambda: NOW, publish=published)
+        self.assertEqual(result["titles"], 4, "Missing titles must not prevent the next valid title from being crawled")
+        self.assertEqual((result["not_found"], result["ok"], result["error"]), (3, 1, 0))
+        self.assertIsNone(result["blocked"])
+        published.assert_called_once_with(list(identities))
+        for tmdb_id in (1, 2, 3):
+            doc = db[seed.COLLECTION].find_one({"tmdb_id": tmdb_id})
+            self.assertEqual(doc["crawl_status"], "not_found")
+            self.assertEqual(doc["next_crawl_at"], NOW + timedelta(days=90))
+        self.assertEqual(db[seed.COLLECTION].find_one({"tmdb_id": 27205})["user_score_original"], 4.24)
+
+
 class SeedTests(unittest.TestCase):
     def test_interrupted_initial_scan_resumes_after_last_committed_batch(self):
         db = mongomock.MongoClient().db
