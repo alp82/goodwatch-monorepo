@@ -18,17 +18,14 @@ import { ModeTabs } from "./ModeTabs"
 
 export const TITLE_VARIANTS = {
 	"0": "Today",
-	C: "Underline",
-	B: "Folder tabs (smooth)",
-	D: "Switch",
+	D5: "Mode word 28 px",
+	D5s: "Mode word 24 px",
+	D5l: "Mode word 32 px",
 	D1: "Bare switch",
-	D2: "Icon thumb",
-	D3: "Labeled track",
-	D4: "Chip",
-	D5: "Mode word",
 } as const
-// Round 1 (A Pill) are still rendered by key but out of the cycle.
-type AnyVariant = keyof typeof TITLE_VARIANTS | "A"
+// Earlier rounds' variants still render by URL key but are out of the cycle.
+type AnyVariant = keyof typeof TITLE_VARIANTS | (typeof OUT_OF_CYCLE)[number]
+const OUT_OF_CYCLE = ["A", "B", "C", "D", "D2", "D3", "D4"] as const
 export type TitleVariant = AnyVariant
 const KEY = "proto-discover-title-variant"
 
@@ -37,7 +34,7 @@ export function useTitleVariant(): TitleVariant {
 	const fromUrl = params.get("variant") as TitleVariant | null
 	const [stored, setStored] = useState<TitleVariant | null>(null)
 	useEffect(() => {
-		if (fromUrl && (fromUrl in TITLE_VARIANTS || fromUrl === "A")) {
+		if (fromUrl && (fromUrl in TITLE_VARIANTS || (OUT_OF_CYCLE as readonly string[]).includes(fromUrl))) {
 			try {
 				sessionStorage.setItem(KEY, fromUrl)
 			} catch {}
@@ -55,8 +52,8 @@ export function useTitleVariant(): TitleVariant {
 			setParams(next, { replace: true, preventScrollReset: true })
 		}
 	}, [fromUrl, params, setParams])
-	if (fromUrl && (fromUrl in TITLE_VARIANTS || fromUrl === "A")) return fromUrl
-	return stored ?? "C"
+	if (fromUrl && (fromUrl in TITLE_VARIANTS || (OUT_OF_CYCLE as readonly string[]).includes(fromUrl))) return fromUrl
+	return stored ?? "D5"
 }
 
 export function TitleVariantSwitcher() {
@@ -247,23 +244,33 @@ function Chip({ mode, onChange }: ModeProps) {
 	)
 }
 
-// D5: a small "Mode" caption over the current mode's name, tiny switch beside it.
-function ModeWord({ mode, onChange }: ModeProps) {
+// D5: a small "Mode" caption over the current mode's name, a switch beside it. Round 3: the text block is exactly the
+// switch's height (caption on its top edge, word on its bottom edge), in three sizes.
+type Size = { track: number; width: number; knob: number; cap: number; word: number }
+const SIZES: Record<string, Size> = {
+	D5: { track: 28, width: 48, knob: 24, cap: 9, word: 13 },
+	D5s: { track: 24, width: 42, knob: 20, cap: 8, word: 12 },
+	D5l: { track: 32, width: 54, knob: 28, cap: 9, word: 15 },
+}
+function ModeWord({ mode, onChange, size }: ModeProps & { size: Size }) {
 	const on = mode === "advanced"
+	const wordBox = size.track - size.cap - 2
 	return (
-		<button type="button" role="switch" aria-checked={on} aria-label="Advanced" onClick={() => onChange(flip(mode))} className={`flex shrink-0 items-center gap-2.5 rounded-lg px-1 py-0.5 ${SW}`}>
-			<span className="flex flex-col items-end leading-none">
-				<span className="text-[9px] font-bold tracking-[0.14em] text-gray-500 uppercase">Mode</span>
-				<span className="relative mt-1 h-4 w-[62px] overflow-hidden text-right text-[13px] font-bold text-white">
+		<button type="button" role="switch" aria-checked={on} aria-label="Advanced" onClick={() => onChange(flip(mode))} className={`flex shrink-0 items-center gap-2.5 rounded-lg px-1 py-1 ${SW}`}>
+			<span className="flex flex-col items-end justify-between" style={{ height: size.track }}>
+				<span className="font-bold tracking-[0.14em] text-gray-500 uppercase" style={{ fontSize: size.cap, lineHeight: `${size.cap}px` }}>
+					Mode
+				</span>
+				<span className="relative overflow-hidden text-right font-bold text-white" style={{ fontSize: size.word, lineHeight: `${wordBox}px`, height: wordBox, width: size.word * 4.9 }}>
 					<AnimatePresence initial={false}>
-						<motion.span key={mode} initial={{ y: on ? 14 : -14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: on ? -14 : 14, opacity: 0 }} transition={{ duration: 0.2 }} className="absolute inset-0">
+						<motion.span key={mode} initial={{ y: on ? wordBox : -wordBox, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: on ? -wordBox : wordBox, opacity: 0 }} transition={{ duration: 0.2 }} className="absolute inset-0">
 							{on ? "Advanced" : "Easy"}
 						</motion.span>
 					</AnimatePresence>
 				</span>
 			</span>
-			<span className={`flex h-5 w-9 items-center rounded-full p-0.5 transition-colors duration-200 ${on ? "bg-amber-500" : "bg-white/15"}`}>
-				<motion.span animate={{ x: on ? 16 : 0 }} transition={SPRING} className="h-4 w-4 rounded-full bg-white shadow" />
+			<span className={`flex items-center rounded-full p-0.5 transition-colors duration-200 ${on ? "bg-amber-500" : "bg-white/15"}`} style={{ height: size.track, width: size.width }}>
+				<motion.span animate={{ x: on ? size.width - size.knob - 4 : 0 }} transition={SPRING} className="rounded-full bg-white shadow" style={{ height: size.knob, width: size.knob }} />
 			</span>
 		</button>
 	)
@@ -299,7 +306,7 @@ export function PhoneTitleRow({
 			{variant === "D2" && <IconThumb mode={mode} onChange={onChange} />}
 			{variant === "D3" && <LabeledTrack mode={mode} onChange={onChange} />}
 			{variant === "D4" && <Chip mode={mode} onChange={onChange} />}
-			{variant === "D5" && <ModeWord mode={mode} onChange={onChange} />}
+			{variant in SIZES && <ModeWord mode={mode} onChange={onChange} size={SIZES[variant]} />}
 		</div>
 	)
 }
