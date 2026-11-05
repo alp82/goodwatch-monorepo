@@ -331,7 +331,7 @@ export function FilterMix({
 				aria-expanded={open}
 				aria-controls={id}
 				onClick={() => setOpen((o) => !o)}
-				className={`flex min-h-12 flex-col items-end justify-center gap-1 rounded-lg text-right cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[150px]" : "w-[188px]"}`}
+				className={`flex min-h-12 flex-col items-end justify-center gap-1 rounded-lg text-right cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400 ${phone ? "w-[150px]" : "w-[240px]"}`}
 			>
 				<span className="flex w-full items-baseline justify-between gap-x-2">
 					<CountText counts={counts} searching={searching} />
