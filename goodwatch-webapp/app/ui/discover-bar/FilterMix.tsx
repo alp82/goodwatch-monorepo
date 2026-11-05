@@ -46,6 +46,14 @@ export interface ReadRow {
 	nativeGroup?: string
 }
 
+/** One of the person's own filter rows, handed to `readSection` so it orders them with the read parts in one list. */
+export interface OwnRow {
+	key: string
+	/** What it hides, when that is a count; rows with a count sort first, highest first. */
+	n?: number
+	node: ReactNode
+}
+
 const removeAll = (chips: BarChip[], s: FilterState) =>
 	chips.reduce((acc, chip) => (chip.remove ? chip.remove(acc) : acc), s)
 
@@ -107,6 +115,7 @@ export function FilterMix({
 	readSection,
 	keepChip,
 	readRows = [],
+	onClearAll,
 }: {
 	/**
 	 * While searching: the filters the search read from the words, with what each keeps out on its own (read-parts.tsx).
@@ -118,7 +127,12 @@ export function FilterMix({
 	 * While searching: every part the search read, with its switch, after the filter rows (then no "Shown" row). It
 	 * gets the read rows' counts as the meter shows them, by row group.
 	 */
-	readSection?: (counts: ReadonlyMap<string, number>) => ReactNode
+	readSection?: (
+		counts: ReadonlyMap<string, number>,
+		own: OwnRow[],
+	) => ReactNode
+	/** Removes the search and every filter: the Filters header's Clear. */
+	onClearAll?: () => void
 	/** Which chips get rows of their own: the person's own filters (the read parts are in `readSection`). */
 	keepChip?: (chip: BarChip) => boolean
 	counts: FilterBarCounts | null
@@ -168,9 +182,11 @@ export function FilterMix({
 	// One share-out of the results' hidden titles among every filter group that hides them: the person's own rows
 	// and the read filters the results apply (each group once, split among its members).
 	const members = new Map<string, string[]>()
-	const join = (group: string, member: string) => members.set(group, [...(members.get(group) ?? []), member])
+	const join = (group: string, member: string) =>
+		members.set(group, [...(members.get(group) ?? []), member])
 	for (const g of groups) join(g.group, `own:${g.group}`)
-	for (const r of readRows) if (r.inHidden && r.nativeGroup) join(r.nativeGroup, r.group)
+	for (const r of readRows)
+		if (r.inHidden && r.nativeGroup) join(r.nativeGroup, r.group)
 	const allocated = allocateHidden(
 		hidden,
 		[...members].map(([group, keys]) => ({
@@ -183,11 +199,17 @@ export function FilterMix({
 	// The read rows as the meter and Matches show them: shares of the hidden titles, or the search's own counts
 	// (estimates and its scope, which the results can't see and the total adds once). Highest first, stable.
 	const readShown = readRows
-		.map((r, index) => ({ row: r.inHidden ? { ...r, hides: allocated.get(r.group) ?? 0 } : r, index }))
+		.map((r, index) => ({
+			row: r.inHidden ? { ...r, hides: allocated.get(r.group) ?? 0 } : r,
+			index,
+		}))
 		.sort((a, b) => b.row.hides - a.row.hides || a.index - b.index)
 		.map(({ row }) => row)
 	const readCounts = new Map(readShown.map((r) => [r.group, r.hides]))
-	const readHidden = readShown.reduce((sum, r) => sum + (r.inHidden ? 0 : Math.max(0, r.hides)), 0)
+	const readHidden = readShown.reduce(
+		(sum, r) => sum + (r.inHidden ? 0 : Math.max(0, r.hides)),
+		0,
+	)
 	const allHidden = hidden + readHidden
 	// A total that includes an estimated read count is itself about: "~".
 	const about = readShown.some((r) => r.approx && r.hides > 0) ? "~" : ""
@@ -243,6 +265,65 @@ export function FilterMix({
 		seen.current = seen.current.filter((g) => g !== row.group)
 	}
 
+	const ownRow = (row: Row) => (
+		<li key={row.group} className="flex h-9 items-center gap-1">
+			<motion.button
+				type="button"
+				role="switch"
+				aria-checked={!row.off}
+				aria-label={row.label}
+				whileTap={{ scale: 0.985 }}
+				onClick={() => (row.off ? switchOn(row) : switchOff(row))}
+				className="-ml-2 flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-lg pr-1 pl-2 text-left cursor-pointer outline-none hover:bg-white/[0.05] focus-visible:ring-2 focus-visible:ring-amber-400"
+			>
+				<span
+					className={`h-2.5 w-2.5 shrink-0 rounded-full ${row.color} ${row.off ? "opacity-40" : ""}`}
+					aria-hidden
+				/>
+				<span
+					className={`min-w-0 flex-1 truncate ${row.off ? "text-gray-500 line-through decoration-gray-600" : "text-gray-200"}`}
+				>
+					{row.label}
+				</span>
+				<span className="shrink-0 text-xs tabular-nums text-gray-500">
+					{row.off ? (
+						"off"
+					) : row.inSearch ? (
+						"set in search"
+					) : row.hides < 1 ? (
+						"no effect"
+					) : (
+						<>
+							hides <HideNumber n={row.hides} approx />
+						</>
+					)}
+				</span>
+				<span className="shrink-0 origin-center scale-75" aria-hidden>
+					<Knob on={!row.off} />
+				</span>
+			</motion.button>
+			<button
+				type="button"
+				aria-label={`Remove ${row.label}`}
+				onClick={() => remove(row)}
+				className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-gray-500 cursor-pointer outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
+			>
+				<XMarkIcon className="h-4 w-4" />
+			</button>
+		</li>
+	)
+	const own: OwnRow[] = rows.map((row) => ({
+		key: `own:${row.group}`,
+		n: !row.off && !row.inSearch && row.hides >= 1 ? row.hides : undefined,
+		node: ownRow(row),
+	}))
+	const clearEverything = () => {
+		setParked([])
+		seen.current = []
+		onClearAll?.()
+	}
+	const listed = rows.length > 0 || Boolean(readSection)
+
 	return (
 		<div ref={ref} className="relative shrink-0">
 			<button
@@ -256,7 +337,9 @@ export function FilterMix({
 					<CountText counts={counts} searching={searching} />
 					{!phone && (
 						<span className="text-[11px] whitespace-nowrap text-gray-500">
-							{allHidden > 0 ? `${hideText(allHidden, about === "~")} hidden` : ""}
+							{allHidden > 0
+								? `${hideText(allHidden, about === "~")} hidden`
+								: ""}
 						</span>
 					)}
 				</span>
@@ -274,8 +357,7 @@ export function FilterMix({
 						className={`absolute top-full right-0 z-50 mt-2 p-3.5 text-[13px] ${phone ? "w-[min(340px,calc(100vw-32px))]" : "w-[360px]"} ${MENU}`}
 					>
 						<p className="text-sm font-bold text-white">
-							{total.toLocaleString("en")} of{" "}
-							{about}
+							{total.toLocaleString("en")} of {about}
 							{(total + allHidden).toLocaleString("en")}{" "}
 							{searching ? "matches" : "titles"}
 							{phone && allHidden > 0 && (
@@ -286,74 +368,53 @@ export function FilterMix({
 							)}
 						</p>
 
-						<Stack shown={total} rows={meterRows} className="mt-2.5 h-2.5 w-full" />
-						<ul className="mt-3 flex flex-col gap-1">
-							{!readSection && <li className="flex h-8 items-center gap-2.5">
-								<span
-									className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500"
-									aria-hidden
-								/>
-								<span className="flex-1 font-bold text-white">Shown</span>
-								<span className="tabular-nums text-gray-300">
-									{total.toLocaleString("en")}
+						<Stack
+							shown={total}
+							rows={meterRows}
+							className="mt-2.5 h-2.5 w-full"
+						/>
+						{!readSection && (
+							<ul className="mt-3 flex flex-col">
+								<li className="flex h-8 items-center gap-2.5">
+									<span
+										className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500"
+										aria-hidden
+									/>
+									<span className="flex-1 font-bold text-white">Shown</span>
+									<span className="tabular-nums text-gray-300">
+										{total.toLocaleString("en")}
+									</span>
+									<span className="w-[86px]" aria-hidden />
+								</li>
+							</ul>
+						)}
+						{listed && (
+							<div className="mt-3 flex items-center justify-between">
+								<span className="text-[11px] font-semibold tracking-[0.06em] text-gray-500 uppercase">
+									Filters
 								</span>
-								<span className="w-[86px]" aria-hidden />
-							</li>}
-							{rows.map((row) => (
-								<li key={row.group} className="flex h-9 items-center gap-1">
-									<motion.button
-										type="button"
-										role="switch"
-										aria-checked={!row.off}
-										aria-label={row.label}
-										whileTap={{ scale: 0.985 }}
-										onClick={() => (row.off ? switchOn(row) : switchOff(row))}
-										className="-ml-2 flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-lg pr-1 pl-2 text-left cursor-pointer outline-none hover:bg-white/[0.05] focus-visible:ring-2 focus-visible:ring-amber-400"
-									>
-										<span
-											className={`h-2.5 w-2.5 shrink-0 rounded-full ${row.color} ${row.off ? "opacity-40" : ""}`}
-											aria-hidden
-										/>
-										<span
-											className={`min-w-0 flex-1 truncate ${row.off ? "text-gray-500 line-through decoration-gray-600" : "text-gray-200"}`}
-										>
-											{row.label}
-										</span>
-										<span className="shrink-0 text-xs tabular-nums text-gray-500">
-											{row.off
-												? "off"
-												: (row.inSearch
-													? "set in search"
-													: row.hides < 1
-														? "no effect"
-														: (
-															<>
-																hides <HideNumber n={row.hides} approx />
-															</>
-														))}
-										</span>
-										<span
-											className="shrink-0 origin-center scale-75"
-											aria-hidden
-										>
-											<Knob on={!row.off} />
-										</span>
-									</motion.button>
+								{onClearAll && (
 									<button
 										type="button"
-										aria-label={`Remove ${row.label}`}
-										onClick={() => remove(row)}
-										className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-gray-500 cursor-pointer outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
+										onClick={clearEverything}
+										title="Remove the search and every filter"
+										className="-mr-2 shrink-0 cursor-pointer rounded-md px-2 py-1 text-[12px] font-semibold text-gray-400 hover:bg-white/[0.06] hover:text-white"
 									>
-										<XMarkIcon className="h-4 w-4" />
+										Clear
 									</button>
-								</li>
-							))}
-							{rows.length === 0 && !readSection && (
-								<li className="text-xs text-gray-500">No filters.</li>
-							)}
-							{readSection?.(readCounts)}
-						</ul>
+								)}
+							</div>
+						)}
+						{readSection ? (
+							readSection(readCounts, own)
+						) : (
+							<ul className="mt-1 flex flex-col">
+								{rows.map(ownRow)}
+								{rows.length === 0 && (
+									<li className="text-xs text-gray-500">No filters.</li>
+								)}
+							</ul>
+						)}
 					</motion.section>
 				)}
 			</AnimatePresence>

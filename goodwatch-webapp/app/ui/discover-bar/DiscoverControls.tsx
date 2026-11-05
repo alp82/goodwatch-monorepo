@@ -39,7 +39,7 @@ import {
 	type PanelTab,
 	SubTabSlot,
 } from "./DiscoverPanel"
-import { FilterMix, type ReadRow } from "./FilterMix"
+import { FilterMix, type OwnRow, type ReadRow } from "./FilterMix"
 import { PanelFooter } from "./PanelFooter"
 import { ReadingLine } from "./ReadingLine"
 import type { BarChip } from "./chips"
@@ -166,7 +166,7 @@ export interface DiscoverControlsProps {
 		onOpen?: (chip: BarChip) => void
 	}) => ReactNode
 	/** While searching: the Matches popout's read parts, which chips keep rows of their own, and the read filters' rows. */
-	matchesRead?: (counts: ReadonlyMap<string, number>) => ReactNode
+	matchesRead?: (counts: ReadonlyMap<string, number>, own: OwnRow[]) => ReactNode
 	keepChip?: (chip: BarChip) => boolean
 	readRows?: ReadRow[]
 	/** The words as typed, for the search field; `query` otherwise. */
@@ -248,6 +248,8 @@ function DiscoverControlsContent({
 		if (trimmed) onSearch(trimmed)
 		close()
 	}
+	// Clear all, the Filters list's Clear, the field's clear button and emptying the field: the search and its filters
+	// go (On my services and Not seen yet stay), so no filter left from an earlier search narrows the next one.
 	const clearAllNow = useClearAll({
 		query: asked || query,
 		clearSearch: onClearSearch,
@@ -342,7 +344,7 @@ function DiscoverControlsContent({
 	const readyOn = isReady(state, member)
 	const setReady = (on: boolean) => filters.update(readyTo(on, member))
 	const removeChip = (chip: BarChip) =>
-		chip.remove ? filters.update(chip.remove) : onClearSearch()
+		chip.remove ? filters.update(chip.remove) : clearAllNow()
 	const values = {
 		...data.values,
 		search: titlesAndPeople(data.values.search, data.chips, desktop),
@@ -389,6 +391,7 @@ function DiscoverControlsContent({
 						update={filters.update}
 						phone={!desktop}
 						readSection={matchesRead}
+						onClearAll={clearAllNow}
 						keepChip={keepChip}
 						readRows={readRows}
 					/>
@@ -401,7 +404,7 @@ function DiscoverControlsContent({
 				<DescribeField
 					typed={asked}
 					onSearch={onSearch}
-					onClear={onClearSearch}
+					onClear={clearAllNow}
 					flatBottom={advanced}
 					ready={<ReadySwitch on={readyOn} onChange={setReady} member={member} field />}
 					inputRef={describeField}

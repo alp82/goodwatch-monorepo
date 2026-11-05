@@ -679,13 +679,13 @@ export function DiscoverPage({
 						}
 						matchesRead={
 							searching && items.length
-								? (shown) => (
+								? (shown, own) => (
 										<Suspense fallback={null}>
 											<MatchesRead
+												own={own}
 												items={items}
 												reading={fingerprint}
 												onToggle={toggleRead}
-												onAll={allRead}
 												hides={withShownCounts(hides, shown)}
 												outside={outside}
 											/>
