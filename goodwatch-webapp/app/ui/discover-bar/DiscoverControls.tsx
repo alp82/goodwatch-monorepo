@@ -52,7 +52,7 @@ import {
 } from "./find/FindField"
 import { DescribeField } from "./DescribeField"
 import { ModeTabs } from "./ModeTabs"
-import { PhoneTitleRow, TitleVariantSwitcher, useTitleVariant } from "./prototype-title-row"
+import { DesktopTitleRow, PhoneTitleRow, TitleVariantSwitcher, useTitleVariant } from "./prototype-title-row"
 import {
 	ForYouSwitch,
 	ReadySwitch,
@@ -215,7 +215,8 @@ function DiscoverControlsContent({
 	const open = panel.open
 	const searching = Boolean(query?.trim())
 	const titleVariant = useTitleVariant()
-	const protoRow = !desktop && titleVariant !== "0"
+	const protoRow = !desktop && titleVariant !== "0" && titleVariant !== "W0"
+	const deskRow = desktop && ["W1", "W3", "W4"].includes(titleVariant)
 
 	// The text of the field that finds titles and people; it starts empty each time the panel opens.
 	const [params] = useSearchParams()
@@ -399,7 +400,27 @@ function DiscoverControlsContent({
 					/>}
 				/>
 			)}
-			{heading && !protoRow && (
+			{heading && deskRow && (
+				<DesktopTitleRow
+					variant={titleVariant}
+					heading={heading}
+					mode={mode}
+					onChange={changeMode}
+					count={<FilterMix
+						counts={counts}
+						searching={searching}
+						state={state}
+						chips={data.chips}
+						update={filters.update}
+						phone={!desktop}
+						readSection={matchesRead}
+						onClearAll={clearAllNow}
+						keepChip={keepChip}
+						readRows={readRows}
+					/>}
+				/>
+			)}
+			{heading && !protoRow && !deskRow && (
 				<div className="flex items-center justify-between gap-4">
 					<div className="flex min-w-0 items-end gap-6 lg:gap-8">
 						{heading}

@@ -17,15 +17,14 @@ import type { DiscoverMode } from "./mode"
 import { ModeTabs } from "./ModeTabs"
 
 export const TITLE_VARIANTS = {
-	"0": "Today",
-	D5: "Mode word 28 px",
-	D5s: "Mode word 24 px",
-	D5l: "Mode word 32 px",
-	D1: "Bare switch",
+	W0: "Desktop today",
+	W1: "Switch by the count",
+	W3: "Switch by the title",
+	W4: "Count by the title",
 } as const
 // Earlier rounds' variants still render by URL key but are out of the cycle.
 type AnyVariant = keyof typeof TITLE_VARIANTS | (typeof OUT_OF_CYCLE)[number]
-const OUT_OF_CYCLE = ["A", "B", "C", "D", "D2", "D3", "D4"] as const
+const OUT_OF_CYCLE = ["0", "A", "B", "C", "D", "D1", "D2", "D3", "D4", "D5", "D5l", "D5s"] as const
 export type TitleVariant = AnyVariant
 const KEY = "proto-discover-title-variant"
 
@@ -53,7 +52,7 @@ export function useTitleVariant(): TitleVariant {
 		}
 	}, [fromUrl, params, setParams])
 	if (fromUrl && (fromUrl in TITLE_VARIANTS || (OUT_OF_CYCLE as readonly string[]).includes(fromUrl))) return fromUrl
-	return stored ?? "D5"
+	return stored ?? "W1"
 }
 
 export function TitleVariantSwitcher() {
@@ -289,6 +288,8 @@ export function PhoneTitleRow({
 	count: React.ReactNode
 }) {
 	if (variant === "0") return null
+	// Round 4: every desktop variant keeps the phone pick, D5s.
+	if (variant.startsWith("W")) variant = "D5s"
 	return (
 		<div
 			className={`flex justify-between gap-3 lg:hidden ${variant === "B" ? "items-end" : "items-center"}`}
@@ -309,4 +310,53 @@ export function PhoneTitleRow({
 			{variant in SIZES && <ModeWord mode={mode} onChange={onChange} size={SIZES[variant]} />}
 		</div>
 	)
+}
+
+/** Round 4: desktop heading rows with the D5 switch (28 px); null for today's desktop row. */
+export function DesktopTitleRow({
+	variant,
+	heading,
+	mode,
+	onChange,
+	count,
+}: {
+	variant: TitleVariant
+	heading: React.ReactNode
+	mode: DiscoverMode
+	onChange: (m: DiscoverMode) => void
+	count: React.ReactNode
+}) {
+	const toggle = <ModeWord mode={mode} onChange={onChange} size={SIZES.D5} />
+	if (variant === "W1")
+		return (
+			<div className="flex items-center justify-between gap-6">
+				{heading}
+				<div className="flex items-center gap-5">
+					{toggle}
+					<span aria-hidden className="h-8 w-px bg-white/10" />
+					{count}
+				</div>
+			</div>
+		)
+	if (variant === "W3")
+		return (
+			<div className="flex items-center justify-between gap-6">
+				<div className="flex items-center gap-7">
+					{heading}
+					<span className="translate-y-0.5">{toggle}</span>
+				</div>
+				{count}
+			</div>
+		)
+	if (variant === "W4")
+		return (
+			<div className="flex items-center justify-between gap-6">
+				<div className="flex items-center gap-8">
+					{heading}
+					<span className="translate-y-0.5">{count}</span>
+				</div>
+				{toggle}
+			</div>
+		)
+	return null
 }
