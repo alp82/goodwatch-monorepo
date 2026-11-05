@@ -165,31 +165,6 @@ function useFitSnap(chrome: number) {
 	return { ref, snaps: useMemo(() => [snap], [snap]) }
 }
 
-/** Search mode: the bar is the search field, showing the query; it opens the search dialog to change it. */
-function SearchField() {
-	const navigation = useNavigation()
-	const { search } = useLocation()
-	const q = new URLSearchParams(search).get("q") ?? ""
-	return (
-		<button
-			type="button"
-			onClick={() => {
-				holdKeyboardForSearch()
-				navigation.setSearchOpen(true)
-			}}
-			aria-haspopup="dialog"
-			aria-label={`Search: ${q}`}
-			className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl bg-white/[0.06] px-3 text-left"
-		>
-			<MagnifyingGlassIcon
-				className="size-5 shrink-0 text-amber-300"
-				aria-hidden
-			/>
-			<span className="truncate text-[16px] text-gray-100">{q}</span>
-		</button>
-	)
-}
-
 /** The label over the title and the title, with the chevron when it opens the sheet. */
 function TitleBlock({ bar, title }: { bar: Bar; title: string }) {
 	const navigation = useNavigation()
@@ -354,8 +329,6 @@ export function PhoneBar({ surface }: { surface: string }) {
 						<span className="flex-1" />
 						<EndKey />
 					</>
-				) : bar.kind === "search" ? (
-					<SearchField />
 				) : (
 					<>
 						{bar.back && (

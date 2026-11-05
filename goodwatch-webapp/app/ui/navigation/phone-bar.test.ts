@@ -41,7 +41,8 @@ test("someone else's profile: @handle over the tab, visitors' tabs; settings hom
 })
 
 test("search, detail, settings and plain pages", () => {
-	assert.equal(bar("/discover", me, "?q=heist").kind, "search")
+	// A search keeps Discover's own bar: its search field is right below.
+	assert.deepEqual(bar("/discover", me, "?q=heist"), bar("/discover", me))
 	for (const path of [
 		"/movie/550-fight-club",
 		"/show/1396-breaking-bad",

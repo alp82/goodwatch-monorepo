@@ -9,7 +9,6 @@
 // Kinds:
 // - home: the start page keeps the wordmark.
 // - area: Watch, Explore and Profile pages: "WATCH" over "My shows ▾"; the title opens the area's tabs.
-// - search: Discover in search mode (?q=): the bar is the search field.
 // - detail: a title, a person, a list or a blog post: back, and the page's own name once its heading scrolled away.
 // - settings: a settings page: "‹ Settings" and its name; this bar never hides.
 // - page: everything else (help, apps, sign-in): "GOODWATCH" over the page's name, no menu.
@@ -28,7 +27,6 @@ import { seenTab, watchTabsFor } from "../watch/watch-views.ts"
 export type PhoneBarKind =
 	| "home"
 	| "area"
-	| "search"
 	| "detail"
 	| "settings"
 	| "page"
@@ -99,7 +97,8 @@ function detailOf(
 	return null
 }
 
-/** The bar for a page. `search` is the query string (Discover's ?q= turns it into the search field). */
+/** The bar for a page. `search` is the query string. A Discover search keeps Discover's own bar: the page's search
+ * field is right below it. */
 export function phoneBarOf({
 	pathname,
 	search = "",
@@ -126,9 +125,6 @@ export function phoneBarOf({
 		}
 
 	const area = areaOf(path)
-	if (path.startsWith("/discover") && new URLSearchParams(search).get("q"))
-		return { ...base, kind: "search", area, eyebrow: "Search", title: "" }
-
 	if (path.startsWith(`${SETTINGS_PATHS.home}/`)) {
 		const place = SETTINGS_COLUMN.flatMap((g) => g.places).find((p) =>
 			placeHere(p, path),
