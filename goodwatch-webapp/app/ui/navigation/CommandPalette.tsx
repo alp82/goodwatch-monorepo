@@ -6,8 +6,8 @@
 //
 // The "Search ↵" button at the field's end searches Discover for the text: it is the active option while nothing
 // else is, so Enter with nothing chosen runs it. A combobox over a listbox: focus stays in the field, Up and Down move
-// the active option (group headers, cards, rows), Enter runs it; Tab and Shift+Tab (or Alt+Left and Alt+Right) switch
-// the rail's tabs when the rail shows; Escape closes the dialog around it.
+// the active option (group headers, cards, rows), Enter runs it; Alt+Left and Alt+Right switch the rail's tabs when the
+// rail shows, and Tab moves through the Search button, the rail and the cards' own buttons as usual; Escape closes the dialog around it.
 import { ArrowTurnDownLeftIcon } from "@heroicons/react/20/solid"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { useLocation, useNavigate } from "@remix-run/react"
@@ -26,14 +26,17 @@ import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { useAccountSummary } from "~/ui/account/useAccountSummary"
 import { openFeedback } from "~/ui/feedback/FeedbackTab"
 import { DiscordMark } from "~/ui/footer/links"
+import { isReady, tally } from "~/ui/rating-flow/flow"
 import { useUser } from "~/utils/auth"
 import {
 	MIN_PREFIX_CHARS,
 	PALETTE_GROUP_ORDER,
 	type PaletteGroup,
 	type PaletteItem,
+	type PaletteStart,
 	normalizePrefix,
 } from "~/utils/command-palette"
+import { useGuestInteractions } from "~/utils/guest-progress"
 import useLocale from "~/utils/locale"
 import { useSignUpHref } from "./bits"
 import { currentDestination, searchHref } from "./destinations"
@@ -174,6 +177,28 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const server = usePaletteGroups(q)
 	// Trending fills the no-match state too, so it loads with the panel whatever is typed first.
 	const start = useQuery(paletteStartQuery(user?.id ?? "visitor"))
+	// A guest whose ratings in this browser already make a taste gets the For you page's "Sign up" instead of
+	// "Rate titles" (GuestLock does the same).
+	const guestInteractions = useGuestInteractions()
+	const guestReady =
+		!member &&
+		isReady(
+			tally(
+				guestInteractions.map((i) => (i.type === "score" ? i.score : null)),
+			),
+		)
+	const startData = useMemo((): PaletteStart | undefined => {
+		const data = start.data
+		if (!data || !guestReady || data.forYou.state !== "guest") return data
+		return {
+			...data,
+			forYou: {
+				state: "guest",
+				message: "Your picks are ready. Sign up free to see them.",
+				cta: { label: "Sign up", href: signUp },
+			},
+		}
+	}, [start.data, guestReady, signUp])
 	const pages = useMemo(
 		() => palettePages({ member, handle, signUpHref: signUp }),
 		[member, handle, signUp],
@@ -221,7 +246,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		if (!trimmed) {
 			const keys = member ? GO_TO.member : GO_TO.visitor
 			return startPlan({
-				start: start.data,
+				start: startData,
 				failed: start.isError,
 				trending,
 				moods: MOODS.map((mood) => moodOption(mood)),
@@ -257,7 +282,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	}, [
 		trimmed,
 		member,
-		start.data,
+		startData,
 		start.isError,
 		trending,
 		tropes,
@@ -326,10 +351,8 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		showTab(plan.tabs[(index + by + count) % count].key)
 	}
 	const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-		if (showRail && event.key === "Tab") {
-			event.preventDefault()
-			step(event.shiftKey ? -1 : 1)
-		} else if (
+		// Tab keeps its usual job (the Search button, the rail, the cards' own buttons); Alt+Left/Right switch groups.
+		if (
 			showRail &&
 			event.altKey &&
 			(event.key === "ArrowLeft" || event.key === "ArrowRight")
@@ -468,8 +491,6 @@ function Rail({
 						type="button"
 						aria-pressed={on}
 						aria-controls={listId}
-						// Tab and Shift+Tab in the field switch these; focus stays in the field.
-						tabIndex={-1}
 						onClick={() => open(t.key)}
 						className={`flex shrink-0 items-center justify-between gap-2 rounded-full border px-3 py-1.5 text-[13px] font-semibold whitespace-nowrap lg:relative lg:rounded-xl lg:border-0 lg:py-2 ${on ? "border-amber-400/60 bg-white/[0.08] text-white" : "border-white/10 text-gray-400 hover:text-gray-200"}`}
 					>

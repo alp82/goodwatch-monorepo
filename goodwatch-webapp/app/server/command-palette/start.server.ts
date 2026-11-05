@@ -34,7 +34,7 @@ function titleOf(d: TitleDisplay): PaletteTitle {
 }
 const guest: PaletteStart["forYou"] = {
 	state: "guest",
-	message: "Picks steered by your taste",
+	message: "Rate a few titles you love to get picks.",
 	cta: { label: "Rate titles", href: "/taste/quiz" },
 }
 const rate: PaletteStart["forYou"] = {

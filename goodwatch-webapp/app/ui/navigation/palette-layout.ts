@@ -366,7 +366,11 @@ function forYouLayout(
 						href: tile.href,
 					},
 				},
-				items: tile.titles.slice(0, CARDS_ACROSS).map(titleOption),
+				// A title can sit in two tiles: each card is its own option, so the key names the tile too.
+				items: tile.titles.slice(0, CARDS_ACROSS).map((title) => ({
+					...titleOption(title),
+					key: `tile-${index}-title-${title.mediaType}-${title.tmdbId}`,
+				})),
 				cols: CARDS_ACROSS,
 			})),
 		}
