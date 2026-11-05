@@ -354,7 +354,7 @@ export function FilterMix({
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -4 }}
 						transition={{ duration: 0.14 }}
-						className={`absolute top-full right-0 z-50 mt-2 p-3.5 text-[13px] ${phone ? "w-[min(340px,calc(100vw-32px))]" : "w-[360px]"} ${MENU}`}
+						className={`absolute top-full left-0 z-50 mt-2 p-3.5 text-[13px] ${phone ? "w-[min(340px,calc(100vw-32px))]" : "w-[360px]"} ${MENU}`}
 					>
 						<p className="text-sm font-bold text-white">
 							{total.toLocaleString("en")} of {about}

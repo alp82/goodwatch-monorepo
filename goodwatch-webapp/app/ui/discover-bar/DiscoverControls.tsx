@@ -1,9 +1,10 @@
-// Discover's controls above the grid, one page in two modes. Both show the page heading with the count at its right
-// (FilterMix), the search field with Ready to watch, and one line with how the search was read and Sort. Advanced
-// (mode=advanced) slides the filter bar in under the field, as its lower half, adds For you beside Sort, and opens the
-// panel from the bar (desktop) or the sheet (phones). Only the Easy | Advanced tabs change the mode. The page owns the
-// data: it binds the filter state (useFilterState) and the bar's state (useDiscoverBar, whose `counts` go into its
-// results request), runs the search, and passes the results' counts in.
+// Discover's controls above the grid, one page in two modes. Both show the title row: the page heading (screen readers
+// only on phones) and the count (FilterMix) at the left, the Easy | Advanced switch (ModeSwitch) at the right; then
+// the search field with Ready to watch, and one line with how the search was read and Sort. Advanced (mode=advanced)
+// slides the filter bar in under the field, as its lower half, adds For you beside Sort, and opens the panel from the
+// bar (desktop) or the sheet (phones). Only the Easy | Advanced switch changes the mode. The page owns the data: it
+// binds the filter state (useFilterState) and the bar's state (useDiscoverBar, whose `counts` go into its results
+// request), runs the search, and passes the results' counts in.
 //
 // Keyboard: "/" goes to the search field from anywhere outside a text field. On desktop, Escape or a press outside the
 // bar and the panel closes it; Escape in Find clears Find first. Closing returns focus to the bar's segment for the tab
@@ -51,7 +52,7 @@ import {
 	FindOverlay,
 } from "./find/FindField"
 import { DescribeField } from "./DescribeField"
-import { ModeTabs } from "./ModeTabs"
+import { ModeSwitch } from "./ModeSwitch"
 import {
 	ForYouSwitch,
 	ReadySwitch,
@@ -377,30 +378,26 @@ function DiscoverControlsContent({
 		<MotionConfig reducedMotion="user">
 			{heading && (
 				<div className="flex items-center justify-between gap-4">
-					<div className="flex min-w-0 items-end gap-6 lg:gap-8">
-						{heading}
-						<div className="hidden lg:block">
-							<ModeTabs mode={mode} onChange={changeMode} />
-						</div>
+					<div className="flex min-w-0 items-center gap-8">
+						{/* Phones: the nav bar already names the page, so the title is only for screen readers. */}
+						<div className="max-lg:sr-only">{heading}</div>
+						<FilterMix
+							counts={counts}
+							searching={searching}
+							state={state}
+							chips={data.chips}
+							update={filters.update}
+							phone={!desktop}
+							readSection={matchesRead}
+							onClearAll={clearAllNow}
+							keepChip={keepChip}
+							readRows={readRows}
+						/>
 					</div>
-					<FilterMix
-						counts={counts}
-						searching={searching}
-						state={state}
-						chips={data.chips}
-						update={filters.update}
-						phone={!desktop}
-						readSection={matchesRead}
-						onClearAll={clearAllNow}
-						keepChip={keepChip}
-						readRows={readRows}
-					/>
+					<ModeSwitch mode={mode} onChange={changeMode} large={desktop} />
 				</div>
 			)}
 			<div className={className}>
-				<div className="mb-2 lg:hidden">
-					<ModeTabs mode={mode} onChange={changeMode} wide />
-				</div>
 				<DescribeField
 					typed={asked}
 					onSearch={onSearch}
