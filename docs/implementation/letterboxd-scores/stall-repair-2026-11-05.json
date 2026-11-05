@@ -1,0 +1,84 @@
+{
+  "selected": [
+    792237,
+    1294911,
+    327618,
+    9372,
+    340485,
+    337556
+  ],
+  "fresh_movies": [
+    {
+      "tmdb_id": 9372,
+      "title": "Super Size Me",
+      "vote_count": 1855
+    },
+    {
+      "tmdb_id": 340485,
+      "title": "American Honey",
+      "vote_count": 965
+    },
+    {
+      "tmdb_id": 337556,
+      "title": "Emerald Green",
+      "vote_count": 896
+    }
+  ],
+  "before": {
+    "scored": 22508,
+    "attempted": 43013
+  },
+  "false_pause_cleared_at": "2026-11-05T08:01:35.445664",
+  "schedules": {
+    "backfill": true,
+    "crawl": true
+  },
+  "job_id": "01a1aaba-4b62-1f7c-ca65-744a9464db32",
+  "cause": "HTTP 200 IMDb ID Not found pages were classified as parser errors. Repeated missing titles at the front of the queue triggered six-hour pauses.",
+  "fix_commit": "059891a44",
+  "deployed_hashes": {
+    "pages": "e10892675dbd1982",
+    "crawl": "23204980a6b33c3f"
+  },
+  "classification_guard": "Exact requested IMDb lookup final URL, matching OG URL, IMDb ID Not found OG title, and matching no-one-has-added h1. Unknown markup still fails closed.",
+  "regression": "Three missing IMDb lookups followed by a valid movie: previously stopped after three, now processes all four without a global pause. All 44 Letterboxd tests pass.",
+  "acceptance_result": {
+    "ok": 3,
+    "error": 0,
+    "titles": 6,
+    "blocked": null,
+    "not_found": 3,
+    "published": 6
+  },
+  "resumed_backfill_job": "01a1aabc-8788-e89f-db0e-0791372e28cf",
+  "after": {
+    "checked_at": "2026-11-05T08:04:13.583442+00:00",
+    "mongo": {
+      "queued": 711801,
+      "attempted": 43016,
+      "scored": 22511,
+      "attempted_last_two_hours": 10,
+      "latest_crawl_at": "2026-11-05T08:04:11.276000",
+      "unrated": 20061,
+      "error": 355,
+      "blocked": 0,
+      "not_found": 7,
+      "rejected": 82,
+      "unavailable": 0
+    },
+    "crate": {
+      "with_url": 42571,
+      "scored": 22510,
+      "with_vote_count": 22510,
+      "latest_source_update": 1793865708320
+    },
+    "source_block": null,
+    "score_count_gap": 1
+  },
+  "schedules_restored": {
+    "backfill": true,
+    "crawl": true
+  },
+  "reporting": "Unchanged: once daily at 07:45 Europe/Berlin.",
+  "recovery": "Cleared only the exact application pause after individually confirming its three lookups returned ordinary HTTP 200 missing-ID pages. Upstream rate-limit/challenge handling and shared request pacing remain in place."
+}
