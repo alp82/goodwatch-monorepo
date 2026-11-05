@@ -53,7 +53,7 @@ export function readyTo(on: boolean, member: boolean) {
 const SWITCH =
 	"flex shrink-0 cursor-pointer items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 
-/** `field`: in the search field on desktop; otherwise in the row with Sort, as "Ready". */
+/** `field`: in the search field on desktop; otherwise in the row with Sort (phones). */
 export function ReadySwitch({
 	on,
 	onChange,
@@ -98,7 +98,7 @@ export function ReadySwitch({
 				<span
 					className={`font-semibold whitespace-nowrap ${field ? "text-[15px]" : "text-[13px]"} ${on ? "text-white" : "text-gray-400"}`}
 				>
-					{field ? "Ready to watch" : "Ready"}
+					Ready to watch
 				</span>
 				<Knob on={on} size={field ? "lg" : "md"} />
 			</button>
@@ -226,11 +226,11 @@ export function SortInPill({
 	short: boolean
 }) {
 	return (
-		<div className="flex h-8 shrink-0 items-center px-2 text-[13px] lg:h-full lg:px-4 lg:text-sm [&_[data-sort-button]]:h-full [&_[data-sort-button]]:rounded-none [&_[data-sort-button]]:bg-transparent [&_[data-sort-button]]:px-0 [&_[data-sort-button]:hover]:bg-transparent max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden max-lg:[&_[data-sort-button]>svg:first-child]:hidden">
+		<div className="flex h-8 shrink-0 items-center px-2 text-[13px] lg:h-full lg:px-4 lg:text-sm [&_[data-sort-button]]:h-full [&_[data-sort-button]]:rounded-none [&_[data-sort-button]]:bg-transparent [&_[data-sort-button]]:px-0 [&_[data-sort-button]:hover]:bg-transparent max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden">
 			<SortControl
 				{...sort}
 				bare
-				modeIcon={!short}
+				modeIcon
 				short={short}
 				align="right"
 				portal

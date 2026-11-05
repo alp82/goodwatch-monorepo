@@ -1,7 +1,8 @@
 // The movie and show page, one page for both:
 // - The opener: the backdrop band with the trailer card (every video plays on its stage), the poster, title, meta
 //   (a show's seasons and episodes link to its Episodes, its status beside the age box) and scores, then the Summary
-//   section (the synopsis, the essence tags, who it's for and who should skip it).
+//   section (the synopsis, the essence tags, who it's for and who should skip it). On a phone the "You" block comes
+//   between the scores and the Summary.
 // - On a desktop, a right rail that sticks: the "You" block (Seen and score, Want to See, Not interested, where to
 //   watch), find in this title (the page and its sub-pages), and "On this page" with a line per section that fills as
 //   it's read (every section on screen is highlighted, and a section with a sub-page shows the way in). On a phone, a
@@ -627,9 +628,10 @@ export function TitlePage(props: TitlePageProps) {
 						/>
 					</div>
 
-					<div className="lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-x-12 xl:grid-cols-[minmax(0,1fr)_19.5rem] xl:gap-x-16">
-						{/* Who it is and how good, then the Summary: what it is, who it's for. */}
-						<div className="min-w-0 lg:col-start-1 lg:row-start-1 lg:pl-6">
+					<div className="max-lg:flex max-lg:flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-x-12 xl:grid-cols-[minmax(0,1fr)_19.5rem] xl:gap-x-16">
+						{/* Who it is and how good, then the Summary: what it is, who it's for. On a phone this column dissolves
+						    (contents), so "You" sits between the scores and the Summary. */}
+						<div className="min-w-0 max-lg:contents lg:col-start-1 lg:row-start-1 lg:pl-6">
 							<header
 								id={OPENER}
 								className={`relative z-10 flex items-end gap-4 lg:gap-6 ${openerHeaderClass(withCard)}`}
@@ -709,7 +711,7 @@ export function TitlePage(props: TitlePageProps) {
 								id="summary"
 								aria-labelledby="summary-h"
 								data-feedback-area="scores"
-								className="mt-8 scroll-mt-44 border-t border-white/10 pt-8 lg:mt-10 lg:scroll-mt-32 lg:pt-10"
+								className="mt-8 scroll-mt-44 border-t max-lg:order-2 border-white/10 pt-8 lg:mt-10 lg:scroll-mt-32 lg:pt-10"
 							>
 								{/* Old links: the verdict was #scores, the story further down #story and before that #about. */}
 								{["scores", "story", "about"].map((id) => (
@@ -738,7 +740,7 @@ export function TitlePage(props: TitlePageProps) {
 						{/* The margin: what you do, then find and the index (desktop). On a phone only "You" shows here. */}
 						<aside
 							aria-label="You and this page"
-							className="mt-7 min-w-0 lg:sticky lg:top-32 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:flex lg:max-h-[calc(100dvh-9rem)] lg:flex-col lg:self-start lg:pt-6"
+							className="mt-7 min-w-0 max-lg:order-1 lg:sticky lg:top-32 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:flex lg:max-h-[calc(100dvh-9rem)] lg:flex-col lg:self-start lg:pt-6"
 						>
 							<section
 								id={YOU}
@@ -797,7 +799,7 @@ export function TitlePage(props: TitlePageProps) {
 						</aside>
 
 						{/* Every section in full. */}
-						<div className="mt-10 flex min-w-0 flex-col gap-14 lg:col-start-1 lg:row-start-2 lg:mt-14 lg:gap-16 lg:pl-6">
+						<div className="mt-10 flex min-w-0 flex-col gap-14 max-lg:order-3 lg:col-start-1 lg:row-start-2 lg:mt-14 lg:gap-16 lg:pl-6">
 							{sections.map((s) => (
 								<NearSection
 									key={s.id}

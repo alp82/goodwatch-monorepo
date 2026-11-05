@@ -441,7 +441,9 @@ function Band({
 			const el = panel.current
 			const card = frame.current?.getBoundingClientRect()
 			if (!el || !card || !openRow.current) return
-			const vw = window.innerWidth
+			// The screen's width: innerWidth grows past it on a phone when the page overflows sideways, which put the
+			// band's right part (Not for me) off screen and Open details off center.
+			const vw = Math.min(window.innerWidth, document.documentElement.clientWidth || window.innerWidth)
 			const vh = window.innerHeight
 			const phone = vw < 640
 			const width = phone ? vw : 420
