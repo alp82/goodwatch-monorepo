@@ -14,7 +14,8 @@ import {
 } from "~/server/search-people/people.server"
 import { parseMediaKey } from "~/types/user-data"
 import { backgroundStatement, scheduleCatalog } from "./background.server"
-import { type Entry, discover, excerpt } from "./matching.server"
+import { type Entry, discover } from "./matching.server"
+import { tropeEntries } from "./tropes.server"
 
 /** SELECT only; the catalog transport avoids logging row contents or queries per request. */
 export async function rows<T extends unknown[]>(sql: string): Promise<T[]> {
@@ -34,38 +35,18 @@ async function backgroundRows<T extends unknown[]>(sql: string): Promise<T[]> {
 }
 const loaders = {
 	async tropes(): Promise<Entry[]> {
-		const [catalog, totals] = [
+		const [catalog, totals, pages] = [
 			await backgroundRows<[string, string, string | null]>(
 				"SELECT name, url, substr(description, 1, 300) FROM trope_catalog LIMIT 100000",
 			),
 			await backgroundRows<[string, number]>(
 				"SELECT url, count(*) FROM trope WHERE url IS NOT NULL GROUP BY url LIMIT 200000",
 			),
+			await backgroundRows<[string, string | null]>(
+				"SELECT url, title FROM trope_catalog_page LIMIT 100000",
+			),
 		]
-		const counts = new Map(totals)
-		const seen = new Set<string>()
-		return catalog.flatMap(([name, url, description]) => {
-			const count = counts.get(url) ?? 0
-			if (!count || seen.has(url)) return []
-			seen.add(url)
-			return [
-				{
-					names: [name],
-					popularity: count,
-					item: {
-						key: `trope-${url}`,
-						label: name,
-						sub: [
-							excerpt(description),
-							`${count.toLocaleString("en-US")} titles`,
-						]
-							.filter(Boolean)
-							.join(" · "),
-						href: discover({ q: name }),
-					},
-				},
-			]
-		})
+		return tropeEntries(catalog, new Map(totals), new Map(pages))
 	},
 	async genres(): Promise<Entry[]> {
 		const found = await backgroundRows<[string, string]>(

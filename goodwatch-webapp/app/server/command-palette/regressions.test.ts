@@ -41,6 +41,93 @@ async function fixture(
 }
 const fold = "export const fold = text => text.toLowerCase()"
 
+test("trope names prefer verified headings, then exact slug folds and closest names; proper aliases still match", async () => {
+	const { tropeEntries, matchGroup } = await fixture(
+		"command-palette/tropes.server.ts",
+		{ "text-rules.server": fold },
+		'export { matchGroup } from "./app/server/command-palette/matching.server.ts"',
+	)
+	const gun = "https://tvtropes.org/pmwiki/pmwiki.php/Main/ChekhovsGun"
+	const ending = "https://tvtropes.org/pmwiki/pmwiki.php/Main/BittersweetEnding"
+	const catalog = [
+		["[1]", gun, null],
+		["Miller's reaction to reading this will be important later...", gun, null],
+		["Chekhov's Axe", gun, "Wrong row"],
+		["Chekhov’s Gun", gun, "A setup pays off."],
+		["Bittersweet Endings", ending, "A mixed ending."],
+		["Mixed Ending", ending, null],
+	]
+	const counts = new Map([
+		[gun, 17870],
+		[ending, 11949],
+	])
+	const entries = tropeEntries(catalog, counts, new Map())
+	assert.equal(entries[0].item.label, "Chekhov’s Gun")
+	assert.equal(entries[0].item.sub, "A setup pays off. · 17,870 titles")
+	assert.equal(entries[1].item.label, "Bittersweet Endings")
+	assert.equal(
+		entries[0].item.href,
+		`/discover?${new URLSearchParams({ q: "Chekhov’s Gun" })}`,
+	)
+	assert.deepEqual(entries[0].names, ["Chekhov's Axe", "Chekhov’s Gun"])
+	assert.equal(
+		matchGroup("tropes", "Tropes", entries, "mixed").items[0].label,
+		"Bittersweet Endings",
+	)
+	assert.equal(matchGroup("tropes", "Tropes", entries, "miller"), undefined)
+	assert.deepEqual(
+		tropeEntries([...catalog].reverse(), counts, new Map()),
+		[...entries].reverse(),
+	)
+
+	const verified = tropeEntries(
+		catalog,
+		counts,
+		new Map([[gun, "The Loaded Gun"]]),
+	)
+	assert.equal(verified[0].item.label, "The Loaded Gun")
+	assert.equal(matchGroup("tropes", "Tropes", verified, "the loaded").total, 1)
+	assert.equal(
+		matchGroup("tropes", "Tropes", verified, "chekhov").items[0].label,
+		"The Loaded Gun",
+	)
+})
+
+test("trope URLs with only markers, fragments, sentences or oversized names are dropped", async () => {
+	const { tropeEntries } = await fixture("command-palette/tropes.server.ts", {
+		"text-rules.server": fold,
+	})
+	const invalid = [
+		"[1]",
+		"[note]",
+		"This will matter later...",
+		"This will matter later…",
+		"Miller's reaction to reading this will be important later",
+		"A".repeat(71),
+		"  ",
+	]
+	const catalog = invalid.map((name, i) => [
+		name,
+		`https://tvtropes.org/pmwiki/pmwiki.php/Main/Page${i}`,
+		null,
+	])
+	const counts = new Map(catalog.map(([, url]) => [url, 100]))
+	assert.deepEqual(tropeEntries(catalog, counts, new Map()), [])
+	const url = "https://tvtropes.org/pmwiki/pmwiki.php/Main/LoveIsADrug"
+	assert.equal(
+		tropeEntries(
+			[["Love Is a Drug", url, null]],
+			new Map([[url, 1]]),
+			new Map(),
+		)[0].item.label,
+		"Love Is a Drug",
+	)
+	assert.deepEqual(
+		tropeEntries([["Love Is a Drug", url, null]], new Map(), new Map()),
+		[],
+	)
+})
+
 test("descriptions match only their opening; plain punctuation survives excerpt cleanup", async () => {
 	const { excerpt, matchGroup } = await fixture(
 		"command-palette/matching.server.ts",
@@ -198,46 +285,53 @@ test("slow legacy titles survive group timeout; failed targets stay uncached and
 })
 
 test("member snapshots batch avatar reads, retain content revisions, and expire stale privacy decisions", async (t) => {
-	const { catalogEntries, catalogVersion, probe } = await fixture(
-		"command-palette/catalog.server.ts",
-		{
-			probe:
-				"export const probe = { jobs: new Map(), queries: [], fail: false }",
-			"background.server": `import {probe} from 'probe';
+	const { catalogEntries, catalogVersion, popularTropes, probe } =
+		await fixture(
+			"command-palette/catalog.server.ts",
+			{
+				probe:
+					"export const probe = { jobs: new Map(), queries: [], fail: false }",
+				"background.server": `import {probe} from 'probe';
 		 export const scheduleCatalog = (key, interval, load) => { if(!probe.jobs.has(key)) probe.jobs.set(key,{interval,load}) };
 		 export const backgroundStatement = async sql => {
 		 probe.queries.push(sql); if(probe.fail) throw Error('offline');
 		 const rows = sql.includes('FROM user_profile WHERE') && sql.startsWith('SELECT user_id, handle') ? [['id','member',0]]
 		 : sql.includes('FROM user_setting') ? [['id','profile_avatar','{"kind":"initial","color":"teal"}']]
-		 : sql.includes('FROM user_score') ? [['id',20]] : sql.includes('FROM doc.user_avatar') ? [['id','version']] : [];
+		 : sql.includes('FROM user_score') ? [['id',20]] : sql.includes('FROM doc.user_avatar') ? [['id','version']]
+		 : sql.includes('FROM trope_catalog_page') ? [['https://tvtropes.org/pmwiki/pmwiki.php/Main/Gun','Verified Gun']]
+		 : sql.includes('FROM trope_catalog') ? [['[1]','https://tvtropes.org/pmwiki/pmwiki.php/Main/Gun',null],['Gun','https://tvtropes.org/pmwiki/pmwiki.php/Main/Gun',null]]
+		 : sql.includes('FROM trope WHERE') ? [['https://tvtropes.org/pmwiki/pmwiki.php/Main/Gun',17870]] : [];
 		 return {rows};
 		 }`,
-			"new-on-services": "export const BRANDS = []",
-			profile: "export const parseVisibility = v => v",
-			"profile-settings":
-				"export const parseAvatarChoice = v => v; export const asMediaKey = v => v",
-			"user-data":
-				"export const parseMediaKey = () => ({mediaType:'movie',tmdbId:1})",
-			"catalog.server":
-				"export const searchStatement = async () => ({rows:[]})",
-			"avatar-choice.server":
-				"export const resolveAvatar = async (_id,_handle,choice,_photo,loaded) => { if(!loaded) throw Error('unbatched'); return {url:null,color:choice.color} }",
-			"search-eligibility.server":
-				"export const publicProfileSearchable = () => true",
-			"role.server": "export const runsSearch = () => true",
-			"people.server":
-				"export const palettePeopleSnapshot = () => []; export const startPeopleIndex = () => {}",
-			"matching.server":
-				"export const discover = () => '/discover'; export const excerpt = text => text",
-		},
-		'export { probe } from "probe"',
-	)
+				"new-on-services": "export const BRANDS = []",
+				profile: "export const parseVisibility = v => v",
+				"profile-settings":
+					"export const parseAvatarChoice = v => v; export const asMediaKey = v => v",
+				"user-data":
+					"export const parseMediaKey = () => ({mediaType:'movie',tmdbId:1})",
+				"catalog.server":
+					"export const searchStatement = async () => ({rows:[]})",
+				"avatar-choice.server":
+					"export const resolveAvatar = async (_id,_handle,choice,_photo,loaded) => { if(!loaded) throw Error('unbatched'); return {url:null,color:choice.color} }",
+				"search-eligibility.server":
+					"export const publicProfileSearchable = () => true",
+				"role.server": "export const runsSearch = () => true",
+				"people.server":
+					"export const palettePeopleSnapshot = () => []; export const startPeopleIndex = () => {}",
+				"matching.server":
+					"export const discover = () => '/discover'; export const excerpt = text => text",
+			},
+			'export { probe } from "probe"',
+		)
 	let now = 100_000
 	t.mock.method(Date, "now", () => now)
 	const members = probe.jobs.get("members")
 	assert.equal(members.interval, 5 * 60_000)
 	assert.equal(probe.jobs.get("genres").interval, 60 * 60_000)
 	assert.equal(probe.jobs.get("tropes").interval, 6 * 60 * 60_000)
+	await probe.jobs.get("tropes").load()
+	assert.equal(popularTropes()[0].label, "Verified Gun")
+	assert.deepEqual(catalogEntries("tropes")[0].names, ["Gun", "Verified Gun"])
 	await members.load()
 	assert.deepEqual(catalogEntries("members")[0].item.image, {
 		kind: "avatar",
