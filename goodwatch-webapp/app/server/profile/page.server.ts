@@ -49,8 +49,9 @@ import {
 import { getProfileSettings } from "./settings.server"
 import { round1 } from "./taste-stats-model"
 
-export { INDEX_MIN_SCORES } from "./search-eligibility.server"
 import { publicProfileSearchable } from "./search-eligibility.server"
+
+export { INDEX_MIN_SCORES } from "./search-eligibility.server"
 
 // A profile can come back (a handle claimed later), so never cache a missing one.
 const notFound = () =>

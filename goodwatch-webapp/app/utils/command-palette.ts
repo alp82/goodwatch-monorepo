@@ -1,9 +1,9 @@
-import { canonicalMediaTitle } from "./media-presentation"
-import type { PresentedMedia } from "~/utils/media-presentation"
 // What the command palette's server lookup and the palette in the browser share: the title row, and how typed text
 // becomes the prefix the lookup (and its cache) keys on.
 import type { MediaType } from "~/types/user-data"
 import { titleToDashed } from "~/utils/helpers"
+import type { PresentedMedia } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "./media-presentation"
 
 /** Shorter text matches too much to be useful; the palette still offers "Search for …". */
 export const MIN_PREFIX_CHARS = 2
@@ -15,6 +15,8 @@ export interface PaletteTitle extends PresentedMedia {
 	title: string
 	year: string
 	posterPath: string | null
+	/** GoodWatch overall score, normalized to percent, as displayed on poster cards. */
+	score?: number | null
 	/** The localized name the text matched, when it matched by one and not by the title. */
 	matchedAlias?: { text: string; language: string }
 }
@@ -69,6 +71,8 @@ export interface PaletteItem {
 		kind: "poster" | "portrait" | "logo" | "avatar" | "hue"
 		path?: string
 		hue?: string
+		/** Letter drawn on the avatar colour when no photo or poster path is available. */
+		initial?: string
 	}
 	/** Movies and shows: everything the poster card needs. */
 	title?: PaletteTitle
@@ -99,9 +103,10 @@ export interface PaletteStart {
 				tiles: { label: string; href: string; titles: PaletteTitle[] }[]
 		  }
 		| {
-				state: "rate" | "warming" | "guest"
+				state: "rate" | "warming" | "guest" | "unavailable"
 				message: string
 				cta: { label: string; href: string }
 		  }
 	trending: PaletteTitle[]
+	tropes: PaletteItem[]
 }

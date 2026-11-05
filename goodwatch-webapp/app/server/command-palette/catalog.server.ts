@@ -1,6 +1,9 @@
+import { createHash } from "node:crypto"
+// Whole palette catalog snapshots, refreshed serially in the background; requests only read memory.
+// Spec: docs/implementation/grouped-search-panel.md
 import { BRANDS } from "~/domain/new-on-services"
 import { parseVisibility } from "~/domain/profile"
-import { parseAvatarChoice } from "~/domain/profile-settings"
+import { asMediaKey, parseAvatarChoice } from "~/domain/profile-settings"
 import { searchStatement } from "~/server/combined-search/catalog.server"
 import { resolveAvatar } from "~/server/profile/avatar-choice.server"
 import { publicProfileSearchable } from "~/server/profile/search-eligibility.server"
@@ -9,6 +12,8 @@ import {
 	palettePeopleSnapshot,
 	startPeopleIndex,
 } from "~/server/search-people/people.server"
+import { parseMediaKey } from "~/types/user-data"
+import { backgroundStatement, scheduleCatalog } from "./background.server"
 import { type Entry, discover, excerpt } from "./matching.server"
 
 /** SELECT only; the catalog transport avoids logging row contents or queries per request. */
@@ -24,16 +29,19 @@ function json(raw: string | undefined): unknown {
 		return undefined
 	}
 }
+async function backgroundRows<T extends unknown[]>(sql: string): Promise<T[]> {
+	return (await backgroundStatement(sql)).rows as T[]
+}
 const loaders = {
 	async tropes(): Promise<Entry[]> {
-		const [catalog, totals] = await Promise.all([
-			rows<[string, string, string | null]>(
-				"SELECT name, url, substr(description, 1, 1000) FROM trope_catalog LIMIT 100000",
+		const [catalog, totals] = [
+			await backgroundRows<[string, string, string | null]>(
+				"SELECT name, url, substr(description, 1, 300) FROM trope_catalog LIMIT 100000",
 			),
-			rows<[string, number]>(
+			await backgroundRows<[string, number]>(
 				"SELECT url, count(*) FROM trope WHERE url IS NOT NULL GROUP BY url LIMIT 200000",
 			),
-		])
+		]
 		const counts = new Map(totals)
 		const seen = new Set<string>()
 		return catalog.flatMap(([name, url, description]) => {
@@ -60,7 +68,7 @@ const loaders = {
 		})
 	},
 	async genres(): Promise<Entry[]> {
-		const found = await rows<[string, string]>(
+		const found = await backgroundRows<[string, string]>(
 			"SELECT name, media_type FROM genre LIMIT 1000",
 		)
 		const types = new Map<string, Set<string>>()
@@ -83,7 +91,9 @@ const loaders = {
 		}))
 	},
 	async services(): Promise<Entry[]> {
-		const found = await rows<[number, string, string | null, number | null]>(
+		const found = await backgroundRows<
+			[number, string, string | null, number | null]
+		>(
 			"SELECT tmdb_id, name, logo_path, order_default FROM streaming_service LIMIT 10000",
 		)
 		const byId = new Map<
@@ -122,14 +132,14 @@ const loaders = {
 		return entries
 	},
 	async sequels(): Promise<Entry[]> {
-		const [series, films] = await Promise.all([
-			rows<[number, string, string | null]>(
+		const [series, films] = [
+			await backgroundRows<[number, string, string | null]>(
 				"SELECT tmdb_id, name, poster_path FROM movie_series LIMIT 50000",
 			),
-			rows<[number, string, number | null]>(
+			await backgroundRows<[number, string, number | null]>(
 				"SELECT movie_series_id, title, release_year FROM movie WHERE movie_series_id IS NOT NULL ORDER BY release_year, tmdb_id LIMIT 200000",
 			),
-		])
+		]
 		const byId = new Map<number, { title: string; year: number | null }[]>()
 		for (const [id, title, year] of films) {
 			const list = byId.get(id) ?? []
@@ -162,17 +172,21 @@ const loaders = {
 		})
 	},
 	async members(): Promise<Entry[]> {
-		const [profiles, settings, totals] = await Promise.all([
-			rows<[string, string, string | number | null]>(
+		const [profiles, settings, totals, versions] = [
+			await backgroundRows<[string, string, string | number | null]>(
 				"SELECT user_id, handle, created_at FROM user_profile WHERE handle IS NOT NULL AND deleted_at IS NULL LIMIT 100000",
 			),
-			rows<[string, string, string]>(
+			await backgroundRows<[string, string, string]>(
 				"SELECT user_id, key, value FROM user_setting WHERE key IN ('profile_visibility', 'profile_public_notice_seen', 'profile_avatar', 'profile_provider_photo') LIMIT 500000",
 			),
-			rows<[string, number]>(
-				"SELECT user_id, count(*) FROM user_score GROUP BY user_id LIMIT 100000",
+			await backgroundRows<[string, number]>(
+				"SELECT user_id, count(*) FROM user_score WHERE user_id IN (SELECT user_id FROM user_profile WHERE handle IS NOT NULL) GROUP BY user_id LIMIT 100000",
 			),
-		])
+			await backgroundRows<[string, string]>(
+				"SELECT user_id, version FROM doc.user_avatar LIMIT 100000",
+			),
+		]
+		const avatarVersions = new Map(versions)
 		const byUser = new Map<string, Record<string, string>>()
 		for (const [id, key, value] of settings) {
 			const map = byUser.get(id) ?? {}
@@ -194,6 +208,27 @@ const loaders = {
 				return []
 			return [{ id, handle, stored }]
 		})
+		const posterChoices = eligible.flatMap(({ stored }) => {
+			const choice = parseAvatarChoice(json(stored.profile_avatar))
+			const key = choice?.kind === "poster" ? asMediaKey(choice.title) : null
+			return key ? [parseMediaKey(key)] : []
+		})
+		const posters = new Map<string, string>()
+		for (const type of ["movie", "show"] as const) {
+			const ids = [
+				...new Set(
+					posterChoices
+						.filter((k) => k.mediaType === type)
+						.map((k) => k.tmdbId),
+				),
+			]
+			if (!ids.length) continue
+			const found = await backgroundRows<[number, string | null]>(
+				`SELECT tmdb_id, poster_path FROM ${type} WHERE tmdb_id IN (${ids.join(",")}) LIMIT ${ids.length}`,
+			)
+			for (const [id, poster] of found)
+				if (poster) posters.set(`${type}-${id}`, poster)
+		}
 		return Promise.all(
 			eligible.map(async ({ id, handle, stored }): Promise<Entry> => {
 				const choice = parseAvatarChoice(json(stored.profile_avatar)) ?? {
@@ -205,6 +240,13 @@ const loaders = {
 					handle,
 					choice,
 					stored.profile_provider_photo ?? null,
+					{
+						photoVersion: avatarVersions.get(id) ?? null,
+						poster:
+							choice.kind === "poster"
+								? (posters.get(choice.title) ?? null)
+								: null,
+					},
 				)
 				return {
 					names: [handle, handle.replace(/_/g, " ")],
@@ -213,7 +255,12 @@ const loaders = {
 						key: `member-${handle}`,
 						label: `@${handle}`,
 						href: `/u/${handle}`,
-						image: { kind: "avatar", path: avatar.url ?? undefined },
+						image: {
+							kind: "avatar",
+							path: avatar.url ?? undefined,
+							hue: avatar.color,
+							initial: handle[0]?.toUpperCase(),
+						},
 					},
 				}
 			}),
@@ -223,57 +270,71 @@ const loaders = {
 export type CatalogKey = keyof typeof loaders
 const state = new Map<
 	CatalogKey,
-	{ entries: Entry[]; at: number; pending?: Promise<void>; retryAt: number }
+	{ entries: Entry[]; at: number; digest: string }
 >()
-let revision = 0
-export const catalogVersion = () =>
-	`${revision}:${palettePeopleSnapshot().length}:${[...state]
-		.filter(([, value]) => value.at > 0)
-		.map(([key]) => key)
+const digest = (value: unknown) =>
+	createHash("sha256").update(JSON.stringify(value)).digest("hex")
+let peopleSnapshot: ReturnType<typeof palettePeopleSnapshot> | undefined
+let peopleDigest = ""
+export function catalogVersion() {
+	const people = palettePeopleSnapshot()
+	if (people !== peopleSnapshot) {
+		peopleSnapshot = people
+		peopleDigest = digest(people)
+	}
+	return `${peopleDigest}:${[...state]
+		.map(
+			([key, value]) =>
+				`${key}:${key === "members" && Date.now() - value.at > 10 * 60_000 ? "expired" : value.digest}`,
+		)
 		.sort()
 		.join(",")}`
-/** No request waits on a catalog read. Replace whole snapshots, retaining old data on transient failures. */
+}
+/** Requests never launch or wait for a catalog read. Old member privacy decisions expire after ten minutes. */
 export function catalogEntries(key: CatalogKey): Entry[] {
-	let entry = state.get(key)
-	if (!entry) {
-		entry = { entries: [], at: 0, retryAt: 0 }
-		state.set(key, entry)
-	}
-	const age = key === "members" ? 60_000 : 6 * 60 * 60_000
-	if (
-		runsSearch() &&
-		!entry.pending &&
-		Date.now() - entry.at > age &&
-		Date.now() >= entry.retryAt
-	) {
-		const current = entry
-		entry.pending = loaders[key]()
-			.then((entries) => {
-				current.entries = entries
-				current.at = Date.now()
-				revision++
-			})
-			.catch(() => {
-				console.warn(
-					`Palette ${key} index refresh failed; retrying in one minute`,
-				)
-				current.retryAt = Date.now() + 60_000
-			})
-			.finally(() => {
-				current.pending = undefined
-			})
-	}
-	// Fail closed when a member snapshot cannot refresh; don't keep exposing stale privacy decisions.
-	return key === "members" && Date.now() - entry.at > 120_000
+	const snapshot = state.get(key)
+	return !snapshot ||
+		(key === "members" && Date.now() - snapshot.at > 10 * 60_000)
 		? []
-		: entry.entries
+		: snapshot.entries
+}
+export function popularTropes() {
+	return [...catalogEntries("tropes")]
+		.sort(
+			(a, b) =>
+				b.popularity - a.popularity || a.item.key.localeCompare(b.item.key),
+		)
+		.slice(0, 12)
+		.map((entry) => ({ ...entry.item, match: 1 }))
 }
 export function startPaletteCatalog() {
+	for (const key of [
+		"genres",
+		"services",
+		"members",
+		"tropes",
+		"sequels",
+	] as const) {
+		// Page roles need only the before-typing Tropes tab.
+		if (!runsSearch() && key !== "tropes") continue
+		const interval =
+			key === "members"
+				? 5 * 60_000
+				: key === "genres" || key === "services"
+					? 60 * 60_000
+					: 6 * 60 * 60_000
+		scheduleCatalog(key, interval, async () => {
+			const entries = await loaders[key]()
+			entries.sort((a, b) => a.item.key.localeCompare(b.item.key))
+			const content = digest(entries)
+			const old = state.get(key)
+			state.set(key, {
+				entries: old?.digest === content ? old.entries : entries,
+				digest: content,
+				at: Date.now(),
+			})
+		})
+	}
 	startPeopleIndex()
-	for (const key of Object.keys(loaders) as CatalogKey[]) catalogEntries(key)
 }
-if (runsSearch()) {
-	startPaletteCatalog()
-	const timer = setInterval(startPaletteCatalog, 60_000)
-	timer.unref()
-}
+startPaletteCatalog()

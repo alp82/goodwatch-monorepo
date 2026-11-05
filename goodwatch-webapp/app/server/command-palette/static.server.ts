@@ -1,3 +1,4 @@
+// Published blog posts, discovery vocabularies and navigation lists available without catalog reads.
 import posts from "~/content/blog/posts.json"
 import { MOODS } from "~/domain/moods"
 import { STYLES, THEMES } from "~/domain/themes-styles"
@@ -83,7 +84,8 @@ export const blog: Entry[] = (
 			post.published <= new Date().toISOString().slice(0, 10),
 	)
 	.map((post) => ({
-		names: [post.title, post.description, "blog"],
+		names: [post.title, "blog"],
+		textPrefix: post.description,
 		popularity: 1,
 		item: {
 			key: `blog-${post.slug}`,

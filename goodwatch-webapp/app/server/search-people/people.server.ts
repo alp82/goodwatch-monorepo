@@ -1,5 +1,8 @@
 import { query } from "~/utils/crate"
-import { searchStatement } from "../combined-search/catalog.server"
+import {
+	backgroundStatement,
+	scheduleCatalog,
+} from "../command-palette/background.server"
 // People in search results. Keeps the index of popular people in memory, loads the credits a named person narrows a
 // search to, and the known-for titles of people the title lookup didn't return. Every query is keyed by person id;
 // search text never reaches Crate here.
@@ -49,7 +52,7 @@ export interface PeopleReading {
 // About 55k people pass. Below this TMDB popularity a name is too obscure to take over a search.
 const INDEX_MIN_POPULARITY = 1
 // Popularity drifts and new people arrive daily; an older index is replaced in the background.
-const INDEX_MAX_AGE_MS = 24 * 60 * 60 * 1000
+const INDEX_MAX_AGE_MS = 6 * 60 * 60 * 1000
 // A known-for title: a role billed this high, or one of these jobs.
 const LEAD_BILLING = 4
 const KEY_JOBS = new Set(["Director", "Screenplay", "Writer", "Creator"])
@@ -58,44 +61,38 @@ const CACHE_TTL_MS = 60 * 60 * 1000
 const CACHE_ENTRIES = 1000
 
 let index: { value: PeopleIndex; at: number } | null = null
-let indexLoad: Promise<void> | null = null
 let palettePeople: IndexedPerson[] = []
 /** Snapshot of all popular, non-adult people; callers never wait for the background read. */
 export function palettePeopleSnapshot(): readonly IndexedPerson[] {
-	startPeopleIndex()
 	return palettePeople
 }
 
 /** Loads the index, or replaces an old one, in the background. Searches don't wait for it. */
 export function startPeopleIndex() {
 	if (!runsSearch()) return
-	if (indexLoad || (index && Date.now() - index.at < INDEX_MAX_AGE_MS)) return
-	const started = performance.now()
-	// Row arrays straight from Crate's HTTP endpoint: the general client turns 55k rows into objects and logs them.
-	indexLoad = searchStatement(
-		`SELECT tmdb_id, name, popularity, profile_path, known_for_department FROM person
-		WHERE popularity >= ${INDEX_MIN_POPULARITY} AND NOT coalesce(adult, false) LIMIT 200000`,
-	)
-		.then(({ rows }) => {
-			palettePeople = (
-				rows as [number, string, number, string | null, string | null][]
-			).map(([id, name, popularity, profile, department]) => ({
-				id,
-				name,
-				popularity,
-				profile,
-				department: department ?? "",
-			}))
-			index = { value: buildPeopleIndex(palettePeople), at: Date.now() }
-
-			console.log(
-				`People index ready: ${rows.length} people in ${Math.round(performance.now() - started)} ms`,
-			)
-		})
-		.catch((error) => console.error("People index failed to load", error))
-		.finally(() => {
-			indexLoad = null
-		})
+	scheduleCatalog("people", INDEX_MAX_AGE_MS, async () => {
+		const started = performance.now()
+		const { rows } = await backgroundStatement(
+			`SELECT tmdb_id, name, popularity, profile_path, known_for_department FROM person
+			WHERE popularity >= ${INDEX_MIN_POPULARITY} AND NOT coalesce(adult, false) LIMIT 200000`,
+		)
+		const next = (
+			rows as [number, string, number, string | null, string | null][]
+		).map(([id, name, popularity, profile, department]) => ({
+			id,
+			name,
+			popularity,
+			profile,
+			department: department ?? "",
+		}))
+		next.sort((a, b) => a.id - b.id)
+		const value = buildPeopleIndex(next)
+		palettePeople = next
+		index = { value, at: Date.now() }
+		console.log(
+			`People index ready: ${rows.length} people in ${Math.round(performance.now() - started)} ms`,
+		)
+	})
 }
 
 /** A small in-process cache: entries expire after CACHE_TTL_MS, the least recently used go first. */

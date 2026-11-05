@@ -1,3 +1,4 @@
+// Shared word matching and plain-text excerpts for palette vocabulary snapshots.
 import { fold } from "~/server/search-ranking/text-rules.server"
 import type {
 	PaletteGroup,
@@ -7,6 +8,8 @@ import type {
 
 export interface Entry {
 	names: string[]
+	/** Additional text may match its opening only, never arbitrary words. */
+	textPrefix?: string
 	popularity: number
 	item: Omit<PaletteItem, "match">
 }
@@ -42,8 +45,12 @@ export function matchGroup(
 				names = entry.names.map(fold)
 				foldedNames.set(entry, names)
 			}
-			const best = Math.max(...names.map((name) => strength(name, q)))
-			const match = key === "members" && best === 0.4 ? 0 : best
+			const best = Math.max(
+				...names.map((name) => strength(name, q)),
+				entry.textPrefix && fold(entry.textPrefix).startsWith(q) ? 0.6 : 0,
+			)
+			const match =
+				(key === "members" || key === "blog") && best === 0.4 ? 0 : best
 			return match
 				? [{ ...entry.item, match, popularity: entry.popularity }]
 				: []
@@ -68,10 +75,13 @@ export function matchGroup(
 export function excerpt(text: string | null, max = 110): string | undefined {
 	if (!text) return
 	const plain = text
-		.replace(/<[^>]*>/g, " ")
+		.replace(/<\/?[A-Za-z][^>]*>/g, " ")
 		.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "$2")
 		.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-		.replace(/\[\[|\]\]|\{\{|\}\}|'{2,}|[*_#>]/g, "")
+		.replace(/\[\[([^\]]+)\]\]/g, "$1")
+		.replace(/(\*{1,2}|_{1,2})(\S(?:.*?\S)?)\1/g, "$2")
+		.replace(/'{2,3}(.+?)'{2,3}/g, "$1")
+		.replace(/^\s*(?:#{1,6}\s+|>\s+)/gm, "")
 		.replace(/&nbsp;/g, " ")
 		.replace(/&amp;/g, "&")
 		.replace(/&quot;/g, '"')

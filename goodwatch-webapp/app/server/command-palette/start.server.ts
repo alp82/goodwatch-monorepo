@@ -1,3 +1,4 @@
+// Before-typing picks reuse the For You ranking; trending and popular tropes complete the guest view.
 import { decodeFingerprints } from "~/domain/for-you-page/contract"
 import { DESK_SIZE, drawerOrder } from "~/domain/for-you-page/rail"
 import { poolStats, rankPool } from "~/domain/for-you-page/rank"
@@ -16,7 +17,8 @@ import { getUserIdFromRequest } from "~/utils/auth"
 import { cached } from "~/utils/cache"
 import type { PaletteStart, PaletteTitle } from "~/utils/command-palette"
 import { titleKey } from "~/utils/title-key"
-import { rows } from "./catalog.server"
+import { popularTropes, rows } from "./catalog.server"
+import { paletteFailure } from "./failures.server"
 
 function titleOf(d: TitleDisplay): PaletteTitle {
 	return {
@@ -25,6 +27,7 @@ function titleOf(d: TitleDisplay): PaletteTitle {
 		title: d.title,
 		year: d.release_year ? String(d.release_year) : "",
 		posterPath: d.poster_path,
+		score: d.goodwatch_overall_score_normalized_percent,
 		canonical_title: d.canonical_title,
 		presentation: d.presentation,
 	}
@@ -39,15 +42,16 @@ const rate: PaletteStart["forYou"] = {
 	message: "Rate a few titles you love to get picks.",
 	cta: { label: "Rate titles", href: "/taste/quiz" },
 }
-const warming: PaletteStart["forYou"] = {
-	state: "warming",
-	message: "For you is warming up. Try again in a minute.",
+const unavailable: PaletteStart["forYou"] = {
+	state: "unavailable",
+	message: "For you is unavailable. Try again in a minute.",
 	cta: { label: "Try again", href: "/watch/for-you" },
 }
 async function picks(request: Request): Promise<PaletteStart["forYou"]> {
 	const page = await loadForYouPage(request)
 	if (page.kind === "guest") return guest
-	if (page.status !== "ready") return page.status === "empty" ? rate : warming
+	if (page.status !== "ready")
+		return page.status === "empty" ? rate : unavailable
 	const { taste } = page
 	const pool = {
 		...page.pool,
@@ -128,7 +132,7 @@ async function picks(request: Request): Promise<PaletteStart["forYou"]> {
 }
 async function trending(): Promise<PaletteTitle[]> {
 	const result = await cached({
-		name: "command-palette-trending-v1",
+		name: "command-palette-trending-v2",
 		params: {},
 		ttlMinutes: 2,
 		staleMinutes: 0,
@@ -157,14 +161,20 @@ export async function getPaletteStart(request: Request): Promise<PaletteStart> {
 	const [forYou, titles] = await Promise.all([
 		userId
 			? cached({
-					name: "command-palette-start-v1",
+					name: "command-palette-start-v2",
 					params: { userId },
 					ttlMinutes: 1,
 					staleMinutes: 0,
 					target: () => picks(request),
-				}).catch(() => warming)
+				}).catch((error) => {
+					paletteFailure("start-picks", error)
+					return unavailable
+				})
 			: Promise.resolve(guest),
-		trending().catch(() => []),
+		trending().catch((error) => {
+			paletteFailure("start-trending", error)
+			return []
+		}),
 	])
-	return { forYou, trending: titles }
+	return { forYou, trending: titles, tropes: popularTropes() }
 }

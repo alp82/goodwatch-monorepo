@@ -21,6 +21,8 @@ export async function resolveAvatar(
 	handle: string | null,
 	choice: AvatarChoice,
 	providerPhoto: string | null,
+	/** Supplied by bulk readers so resolving each member does not issue another query. */
+	loaded?: { photoVersion: string | null; poster: string | null },
 ): Promise<ResolvedAvatar> {
 	const initial = (color: AvatarColor = "amber"): ResolvedAvatar => ({
 		url: null,
@@ -31,7 +33,7 @@ export async function resolveAvatar(
 		return providerPhoto ? { url: providerPhoto, color: "amber" } : initial()
 	if (choice.kind === "photo") {
 		if (!handle) return initial()
-		const version = await avatarVersion(userId)
+		const version = loaded ? loaded.photoVersion : await avatarVersion(userId)
 		return version
 			? { url: avatarPath(handle, version), color: "amber" }
 			: initial()
@@ -40,7 +42,9 @@ export async function resolveAvatar(
 	if (!key) return initial()
 	const { mediaType, tmdbId } = parseMediaKey(key)
 	const tk = titleKey(mediaType, tmdbId)
-	const poster = (await titleDisplays([tk])).get(tk)?.poster
+	const poster = loaded
+		? loaded.poster
+		: (await titleDisplays([tk])).get(tk)?.poster
 	return poster
 		? { url: `${TMDB_POSTER_W185}${poster}`, color: "amber" }
 		: initial()

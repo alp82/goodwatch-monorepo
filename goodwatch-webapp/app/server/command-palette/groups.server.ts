@@ -1,3 +1,4 @@
+// In-memory vocabulary matches and search-index title groups for the command palette.
 import { runsSearch } from "~/server/role.server"
 import { palettePeopleSnapshot } from "~/server/search-people/people.server"
 import { matchedAlias } from "~/server/search-ranking/aliases.server"
@@ -16,11 +17,11 @@ import {
 } from "~/utils/command-palette"
 import { personPath } from "~/utils/helpers"
 import { catalogEntries, startPaletteCatalog } from "./catalog.server"
-import { discover, matchGroup } from "./matching.server"
+import { type Entry, discover, matchGroup } from "./matching.server"
 import { blog, lists, moods } from "./static.server"
 
 let peopleSnapshot: ReturnType<typeof palettePeopleSnapshot> | undefined
-let peopleEntries: import("./matching.server").Entry[] = []
+let peopleEntries: Entry[] = []
 export function vocabularyGroups(prefix: string): PaletteGroup[] {
 	startPaletteCatalog()
 	const snapshot = palettePeopleSnapshot()
@@ -137,6 +138,7 @@ export async function indexGroups(prefix: string): Promise<PaletteGroup[]> {
 			title: d.title,
 			year: d.release_year ? String(d.release_year) : "",
 			posterPath: d.poster_path,
+			score: d.goodwatch_overall_score_normalized_percent,
 			canonical_title: d.canonical_title,
 			presentation: d.presentation,
 			...(alias === undefined

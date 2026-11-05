@@ -22,11 +22,23 @@ import type { Title } from "~/ui/search/search-model"
 import { cached } from "~/utils/cache"
 import {
 	MIN_PREFIX_CHARS,
+	type PaletteAnswer,
 	type PaletteTitle,
 	type PaletteTitles,
 	normalizePrefix,
 } from "~/utils/command-palette"
 import { titleKey } from "~/utils/title-key"
+import {
+	catalogVersion,
+	startPaletteCatalog,
+} from "./command-palette/catalog.server"
+import { paletteFailure } from "./command-palette/failures.server"
+import {
+	indexGroups,
+	ordered,
+	titleGroups,
+	vocabularyGroups,
+} from "./command-palette/groups.server"
 import { runsSearch } from "./role.server"
 
 export const PALETTE_TITLES = 8
@@ -51,6 +63,7 @@ export async function getPaletteTitles(text: string): Promise<PaletteTitles> {
 	}
 	return cached({
 		...paletteCacheEntry(prefix, loadedAliasVersion()),
+		name: "command-palette-titles-v6",
 		ttlMinutes: CACHE_MINUTES,
 		target: () => indexTitles(prefix),
 	})
@@ -78,6 +91,9 @@ async function indexTitles(prefix: string): Promise<PaletteTitles> {
 			title: display.title,
 			year: display.release_year ? String(display.release_year) : "",
 			posterPath: display.poster_path,
+			score: display.goodwatch_overall_score_normalized_percent,
+			canonical_title: display.canonical_title,
+			presentation: display.presentation,
 			...withAlias(index, aliases.get(rows[at])),
 		})
 		if (titles.length === PALETTE_TITLES) break
@@ -126,7 +142,8 @@ export async function paletteLookupTitles(
 				...withAlias(index, aliases.get(row)),
 			}
 		})
-	} catch {
+	} catch (error) {
+		paletteFailure("title-lookup", error)
 		return []
 	}
 }
@@ -151,6 +168,13 @@ async function tmdbTitles(prefix: string): Promise<PaletteTitles> {
 			}
 		})
 		.filter((title) => title.title)
+	const displays = await getDisplayFields(
+		titles.map((t) => titleKey(t.mediaType, t.tmdbId)),
+	)
+	for (const title of titles)
+		title.score =
+			displays.get(titleKey(title.mediaType, title.tmdbId))
+				?.goodwatch_overall_score_normalized_percent ?? null
 	const snapshot = getTitleSnapshot()
 	if (snapshot) {
 		const known = (title: PaletteTitle) =>
@@ -166,64 +190,72 @@ async function tmdbTitles(prefix: string): Promise<PaletteTitles> {
 
 // Grouped answers have their own version: old tabs retain precisely the legacy title lookup and count.
 // Cold background snapshots are never stored for six hours; short lifetimes also bound member visibility changes.
-export async function getPaletteAnswer(
-	text: string,
-): Promise<import("~/utils/command-palette").PaletteAnswer> {
+export async function getPaletteAnswer(text: string): Promise<PaletteAnswer> {
 	const prefix = normalizePrefix(text)
 	if (prefix.length < MIN_PREFIX_CHARS) return { ...NONE, groups: [] }
-	const { catalogVersion, startPaletteCatalog } = await import(
-		"./command-palette/catalog.server"
-	)
-	const { indexGroups, ordered, titleGroups, vocabularyGroups } = await import(
-		"./command-palette/groups.server"
-	)
 	startPaletteCatalog()
-	const quick = vocabularyGroups(prefix)
-	const fallback = { ...NONE, groups: quick }
-	return within(
-		cached({
-			name: "command-palette-answer-v6",
-			params: {
-				prefix,
-				aliases: loadedAliasVersion(),
-				build: loadedSearchIndexBuild(),
-				catalog: catalogVersion(),
-				minute: Math.floor(Date.now() / 60_000),
-				search: runsSearch(),
-			},
-			ttlMinutes: 1,
-			staleMinutes: 0,
-			target: async () => {
-				const [legacy, groups] = await Promise.all([
-					within(getPaletteTitles(prefix), NONE, 220),
-					within(indexGroups(prefix), [], 220),
-				])
-				return {
-					...legacy,
-					groups: ordered([
-						...(groups.length ? groups : titleGroups(prefix, legacy.titles)),
-						...quick,
-					]),
-				}
-			},
-		}),
-		fallback,
-		270,
-	)
+	const legacy = getPaletteTitles(prefix)
+	// Handle failures immediately, including while a Redis hit is being read.
+	const safeLegacy = legacy.catch((error) => {
+		paletteFailure("legacy-titles", error)
+		return NONE
+	})
+	const fallbackGroups = (titles: PaletteTitles) =>
+		titleGroups(prefix, titles.titles).map((group) => ({
+			...group,
+			estimated: titles.more > 0 || undefined,
+		}))
+	try {
+		return await deadline(
+			cached({
+				name: "command-palette-answer-v7",
+				params: {
+					prefix,
+					aliases: loadedAliasVersion(),
+					build: loadedSearchIndexBuild(),
+					catalog: catalogVersion(),
+					search: runsSearch(),
+				},
+				ttlMinutes: 1,
+				staleMinutes: 0,
+				target: async () => {
+					// Reject rather than cache an empty timeout answer. Vocabulary work is lazy on Redis hits.
+					const [titles, groups] = await Promise.all([
+						legacy,
+						deadline(indexGroups(prefix), 220),
+					])
+					return {
+						...titles,
+						groups: ordered([
+							...(groups.length ? groups : fallbackGroups(titles)),
+							...vocabularyGroups(prefix),
+						]),
+					}
+				},
+			}),
+			270,
+		)
+	} catch (error) {
+		paletteFailure("grouped-lookup", error)
+		const titles = await safeLegacy
+		return {
+			...titles,
+			groups: ordered([...fallbackGroups(titles), ...vocabularyGroups(prefix)]),
+		}
+	}
 }
 
-/** Bound optional work, including Redis failures; clear the timer when it wins and handle late rejections. */
-export async function within<T>(
-	work: Promise<T>,
-	fallback: T,
-	ms: number,
-): Promise<T> {
+/** Reject optional work on timeout so cached targets cannot mistake a deadline for a successful empty result. */
+export async function deadline<T>(work: Promise<T>, ms: number): Promise<T> {
 	let timer: ReturnType<typeof setTimeout> | undefined
 	try {
 		return await Promise.race([
-			work.catch(() => fallback),
-			new Promise<T>((resolve) => {
-				timer = setTimeout(() => resolve(fallback), ms)
+			work,
+			new Promise<never>((_, reject) => {
+				timer = setTimeout(
+					() => reject(new Error("Palette lookup timed out")),
+					ms,
+				)
 			}),
 		])
 	} finally {
