@@ -566,7 +566,7 @@ function DiscoverControlsContent({
 								shown={advanced}
 							/>
 						)}
-						<SortInPill sort={sort} short={!desktop} />
+						<SortInPill sort={sort} />
 					</div>
 				</div>
 			</div>

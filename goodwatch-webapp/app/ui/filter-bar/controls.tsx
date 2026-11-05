@@ -485,7 +485,8 @@ export function SortControl<K extends string>({
 				align === "right"
 					? {
 							top: r.bottom + 8,
-							right: Math.max(8, window.innerWidth - r.right),
+							// clientWidth, not innerWidth: a fixed box's right is measured from inside the scrollbar.
+							right: Math.max(8, document.documentElement.clientWidth - r.right),
 						}
 					: { top: r.bottom + 8, left: Math.max(8, r.left) },
 			)

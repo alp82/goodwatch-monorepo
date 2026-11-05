@@ -217,24 +217,16 @@ export function ForYouSwitch({
 	)
 }
 
-/** The sort in the pill: on phones its short name, without an icon. */
+/** The sort in the pill: the up/down arrows and the sort's full name ("Sort" itself only from desktop). The button
+ * fills the pill, so its menu lines up with the pill's right edge. */
 export function SortInPill({
 	sort,
-	short,
 }: {
 	sort: ComponentProps<typeof SortControl>
-	short: boolean
 }) {
 	return (
-		<div className="flex h-8 shrink-0 items-center px-2 text-[13px] lg:h-full lg:px-4 lg:text-sm [&_[data-sort-button]]:h-full [&_[data-sort-button]]:rounded-none [&_[data-sort-button]]:bg-transparent [&_[data-sort-button]]:px-0 [&_[data-sort-button]:hover]:bg-transparent max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden">
-			<SortControl
-				{...sort}
-				bare
-				modeIcon
-				short={short}
-				align="right"
-				portal
-			/>
+		<div className="flex h-8 shrink-0 items-center text-[13px] lg:h-full lg:text-sm [&_[data-sort-button]]:h-full [&_[data-sort-button]]:rounded-none [&_[data-sort-button]]:bg-transparent [&_[data-sort-button]]:px-2 lg:[&_[data-sort-button]]:px-4 [&_[data-sort-button]:hover]:bg-transparent max-lg:[&_[data-sort-button]>span.text-gray-400]:hidden">
+			<SortControl {...sort} bare align="right" portal />
 		</div>
 	)
 }
