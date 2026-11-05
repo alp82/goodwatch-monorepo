@@ -1,5 +1,6 @@
 // The search dialog's panel. Its code loads with the dialog's first opening (see LazyDialogs.tsx), and the command
-// palette's code next to it. On phones it's a drawer that can be dragged down to close.
+// palette's code next to it. On phones it's a drawer that can be dragged down to close. On desktop it is as wide as
+// the palette inside needs: 640 px, or wider while the palette shows its rail of groups.
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react"
 import { Suspense, lazy } from "react"
 import { useOpenAfterMount } from "~/utils/first-use"
@@ -39,13 +40,15 @@ export function SearchPanel() {
 				<DialogPanel
 					ref={panel}
 					transition
-					className="flex h-[92%] flex-col overflow-hidden rounded-t-3xl bg-[#0b1120] pt-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.09)] transition duration-200 ease-out data-closed:translate-y-9 data-closed:opacity-0 motion-reduce:transition-opacity motion-reduce:data-closed:translate-y-0 lg:h-auto lg:max-h-[70vh] lg:w-[640px] lg:rounded-[18px] lg:pt-0 lg:data-closed:-translate-y-3"
+					className="flex h-[92%] flex-col overflow-hidden rounded-t-3xl bg-[#0b1120] pt-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.09)] transition duration-200 ease-out data-closed:translate-y-9 data-closed:opacity-0 motion-reduce:transition-opacity motion-reduce:data-closed:translate-y-0 lg:h-auto lg:max-h-[80vh] lg:w-auto lg:max-w-[94vw] lg:rounded-[18px] lg:pt-0 lg:data-closed:-translate-y-3"
 				>
 					<span
 						aria-hidden
 						className="mx-auto mb-3 block h-[5px] w-10 shrink-0 rounded-full bg-white/25 lg:hidden"
 					/>
-					<Suspense fallback={<div className="h-64" aria-busy="true" />}>
+					<Suspense
+						fallback={<div className="h-64 lg:w-[640px]" aria-busy="true" />}
+					>
 						<CommandPalette onDone={close} />
 					</Suspense>
 				</DialogPanel>
