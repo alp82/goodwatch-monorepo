@@ -1,7 +1,8 @@
 // Discover with a cast filter on (?people=<id>; the first person counts): above the grid, a strip of the characters
 // that person plays among the results, TheTVDB's portraits with arrows on a wide screen. A press scrolls to that title's
 // card and rings it for a moment, with "as Walter White" under it. Without a cast filter, or without portraits among
-// the results, nothing shows.
+// the results, nothing shows. The first view gets the roles from Discover's loader; while another person's roles load
+// in the page, a placeholder holds the strip's place, so the grid moves only when the strip turns out empty.
 import { useSearchParams } from "@remix-run/react"
 import {
 	type ReactNode,
@@ -60,7 +61,11 @@ export function DiscoverRoles({
 	}, [personId, roles, ringed])
 	return (
 		<RolesContext.Provider value={value}>
-			{value && <RolesStrip cards={cards} />}
+			{value ? (
+				<RolesStrip cards={cards} />
+			) : (
+				roles.loading && <RolesStripPlaceholder />
+			)}
 			{children}
 		</RolesContext.Provider>
 	)
@@ -96,6 +101,36 @@ export function DiscoverCardRole({
 	)
 }
 
+/** The strip's classes, shared with its placeholder so both take the same room. */
+const STRIP =
+	"mb-5 w-full min-w-0 max-w-full overflow-hidden [contain:inline-size]"
+const STRIP_ROW = "flex gap-2.5 overflow-hidden pb-2"
+const TILE = "w-20 shrink-0 sm:w-24"
+const TILE_PICTURE =
+	"relative block aspect-[2/3] overflow-hidden rounded-lg border-2 border-gray-800 bg-gray-900"
+
+/** The strip's room while a person's roles load: the same header, tiles and credit lines, empty. */
+function RolesStripPlaceholder() {
+	return (
+		<div aria-hidden className={STRIP}>
+			<div className="mb-2 flex h-5 items-center lg:h-8">
+				<span className="h-4 w-56 max-w-full animate-pulse rounded bg-white/[0.04]" />
+			</div>
+			<div className={STRIP_ROW}>
+				{Array.from({ length: 10 }, (_, i) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: placeholders
+					<span key={i} className={TILE}>
+						<span className={`${TILE_PICTURE} animate-pulse`} />
+						<span className="mt-1 block text-xs">&nbsp;</span>
+						<span className="block text-[0.6875rem]">&nbsp;</span>
+					</span>
+				))}
+			</div>
+			<p className="text-[11px]">&nbsp;</p>
+		</div>
+	)
+}
+
 function RolesStrip({ cards }: { cards: Card[] }) {
 	const ctx = useContext(RolesContext)
 	const shown = ctx
@@ -109,18 +144,16 @@ function RolesStrip({ cards }: { cards: Card[] }) {
 	const go = (card: Card) => {
 		const key = cardKey(card)
 		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-		document
-			.querySelector(`[data-role-card="${key}"]`)
-			?.scrollIntoView({
-				behavior: reduce ? "auto" : "smooth",
-				block: "center",
-			})
+		document.querySelector(`[data-role-card="${key}"]`)?.scrollIntoView({
+			behavior: reduce ? "auto" : "smooth",
+			block: "center",
+		})
 		ctx.ring(key)
 	}
 	// contain: inline-size keeps the strip from widening the results column; it scrolls inside it instead.
 	return (
 		<section
-			className="mb-5 w-full min-w-0 max-w-full overflow-hidden [contain:inline-size]"
+			className={STRIP}
 			aria-label={`${ctx.name}'s characters in these results`}
 		>
 			<div className="mb-2 flex items-center gap-3">
@@ -141,9 +174,11 @@ function RolesStrip({ cards }: { cards: Card[] }) {
 						key={cardKey(card)}
 						type="button"
 						onClick={() => go(card)}
-						className="group w-20 shrink-0 cursor-pointer snap-start text-left sm:w-24"
+						className={`group ${TILE} cursor-pointer snap-start text-left`}
 					>
-						<span className="relative block aspect-[2/3] overflow-hidden rounded-lg border-2 border-gray-800 bg-gray-900 can-hover:group-hover:border-amber-700/50">
+						<span
+							className={`${TILE_PICTURE} can-hover:group-hover:border-amber-700/50`}
+						>
 							<PortraitImg
 								src={role.image}
 								alt={`${ctx.name} as ${role.character}`}

@@ -10,6 +10,7 @@ import {
 	useLoaderData,
 	useRouteError,
 } from "@remix-run/react"
+import type { DehydratedState } from "@tanstack/react-query"
 import { searchText } from "~/domain/discover-search"
 import {
 	filterQuery,
@@ -19,8 +20,8 @@ import {
 	typeOfDiscoverPath,
 } from "~/domain/filter-state"
 import { groupsByTaste } from "~/domain/side-rows"
-import { DISCOVER_MAX_PAGE } from "~/utils/constants"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
+import { discoverRolesState } from "~/server/character-portraits.server"
 import { legacyDiscoverRedirect } from "~/server/discover-legacy-params.server"
 import {
 	type DiscoverResults as BrowseResults,
@@ -42,6 +43,7 @@ import {
 	withSides,
 } from "~/ui/discover/useDiscoverBrowse"
 import { getUserIdFromRequest } from "~/utils/auth"
+import { DISCOVER_MAX_PAGE } from "~/utils/constants"
 import { personPath } from "~/utils/helpers"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 
@@ -145,6 +147,8 @@ export interface BrowseLoaderData {
 		savedForYou: boolean
 		searchScope: { country: string; services: number[] }
 	}
+	/** With a cast filter: the first person's roles for the strip above the grid (DiscoverRoles.tsx). */
+	dehydratedState?: DehydratedState
 }
 
 async function browseLoader(
@@ -168,6 +172,11 @@ async function browseLoader(
 	const sides = { rows: params.get("layout") !== "grid", side }
 	let snapshotNotLoaded = false
 	let pages: BrowseResults[] | null = null
+	// The cast filter's first person: their characters lead the grid, read alongside the results.
+	const rolesPerson = state.people?.[0]
+	const rolesWork = rolesPerson
+		? discoverRolesState(rolesPerson, getPersonName)
+		: undefined
 	try {
 		if (!searching) {
 			// Probe only when page one could replace the window with a member's side rows.
@@ -216,7 +225,9 @@ async function browseLoader(
 		if (!(error instanceof SnapshotNotLoaded)) throw error
 		snapshotNotLoaded = true
 	}
+	const roles = await rolesWork
 	const data: BrowseLoaderData = {
+		...(roles && { dehydratedState: roles.state }),
 		browse: {
 			initial: pages
 				? {
@@ -235,7 +246,8 @@ async function browseLoader(
 			searchScope: { country: ctx.country, services: ctx.services },
 		},
 	}
-	return snapshotNotLoaded
+	// Right after a restart, or without the strip's roles (a failed or slow read), the page is incomplete.
+	return snapshotNotLoaded || (roles && !roles.complete)
 		? json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 		: data
 }

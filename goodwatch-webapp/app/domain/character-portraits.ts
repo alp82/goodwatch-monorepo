@@ -28,6 +28,16 @@ export type CharacterRole = CharacterPortrait & {
 	votes: number
 }
 
+/** Every role of a person that the browser asks for at once (Discover's strip): the server's whole list. */
+export const ALL_PERSON_ROLES = 200
+
+/**
+ * The query key of a person's roles in the browser's cache (ui/character-quick-view/portraits.ts). Discover's loader
+ * fills it for the page's first view (server/character-portraits.server.ts).
+ */
+export const personRolesKey = (personId: number, name: string) =>
+	["character-person-roles", personId, name] as const
+
 /** TheTVDB portraits are 2:3. */
 export const PORTRAIT_WIDTH = 300
 export const PORTRAIT_HEIGHT = 450

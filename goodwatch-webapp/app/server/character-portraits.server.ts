@@ -1,8 +1,11 @@
 // Reads TheTVDB character portraits (Crate `tvdb_character`, see docs/tvdb-pipelines.md) for the title page's cast,
 // the character quick view, the person page, Discover and the search panel. A title's or a person's read is one small
 // statement over the table, then one lookup of the titles' display fields; a name search is one statement that joins
-// the matching titles and ranks in SQL before its cutoff. Every answer is cached in Redis. The matching and ranking rules are domain/character-portraits.ts.
+// the matching titles and ranks in SQL before its cutoff. Every answer is cached in Redis. The matching and ranking
+// rules are domain/character-portraits.ts.
+import { QueryClient, dehydrate } from "@tanstack/react-query"
 import {
+	ALL_PERSON_ROLES,
 	type CharacterPortrait,
 	type CharacterRole,
 	byRenown,
@@ -12,6 +15,7 @@ import {
 	isSelfRole,
 	matchBoostPatterns,
 	onePerTitle,
+	personRolesKey,
 	rankCharacterMatches,
 } from "~/domain/character-portraits"
 import { cached } from "~/utils/cache"
@@ -243,4 +247,42 @@ async function readPersonRoles({
 		.filter((p) => foldName(p.character) !== "" && !isSelfRole(p.character))
 	const roles = (await withTitles(own)).sort(byRenown)
 	return { roles: onePerTitle(roles).slice(0, PERSON_ROLES_LIMIT) }
+}
+
+/** How long Discover's first view waits for the strip's roles; after that the browser asks for them. */
+const DISCOVER_ROLES_MS = 800
+
+/**
+ * Discover's roles strip for its first view (ui/discover/DiscoverRoles.tsx): a person's roles in the browser cache's
+ * shape, under the key the strip reads (its address carries only the id, so the name is ""). `complete` is false when
+ * the read failed or ran out of time: the page then leaves the strip to the browser, and no cache may keep it.
+ */
+export async function discoverRolesState(
+	personId: number,
+	personName: (id: number) => Promise<string | null | undefined>,
+) {
+	const client = new QueryClient()
+	let timer: ReturnType<typeof setTimeout> | undefined
+	const complete = await Promise.race([
+		(async () => {
+			const name = (await personName(personId)) ?? ""
+			const roles = await getPersonRoles({ personId, name })
+			client.setQueryData(personRolesKey(personId, ""), {
+				name,
+				characters: roles.slice(0, ALL_PERSON_ROLES),
+			})
+			return true
+		})().catch((error) => {
+			console.error("Discover roles failed:", error)
+			return false
+		}),
+		new Promise<false>((resolve) => {
+			timer = setTimeout(
+				() => setImmediate(() => resolve(false)),
+				DISCOVER_ROLES_MS,
+			)
+		}),
+	])
+	clearTimeout(timer)
+	return { state: dehydrate(client), complete }
 }

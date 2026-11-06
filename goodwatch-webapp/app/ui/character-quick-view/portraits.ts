@@ -7,8 +7,10 @@
 import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import {
+	ALL_PERSON_ROLES,
 	type CharacterPortrait,
 	type CharacterRole,
+	personRolesKey,
 	pickRole,
 	portraitLookup,
 } from "~/domain/character-portraits"
@@ -68,6 +70,8 @@ export function fetchPersonRoles(
 
 export interface PersonRoles {
 	ready: boolean
+	/** The read is under way (a person is asked for and nothing is known yet). */
+	loading: boolean
 	name: string
 	list: CharacterRole[]
 	/** That title's character, preferring the one named in `characters`. */
@@ -85,8 +89,8 @@ export function usePersonRoles(
 	enabled = true,
 ): PersonRoles {
 	const q = useQuery({
-		queryKey: ["character-person-roles", personId ?? 0, name],
-		queryFn: () => fetchPersonRoles(personId, name, 200),
+		queryKey: personRolesKey(personId ?? 0, name),
+		queryFn: () => fetchPersonRoles(personId, name, ALL_PERSON_ROLES),
 		enabled: enabled && Boolean(personId),
 	})
 	return useMemo(() => {
@@ -98,12 +102,13 @@ export function usePersonRoles(
 		}
 		return {
 			ready: q.isSuccess,
+			loading: Boolean(personId) && enabled && q.isPending,
 			name: q.data?.name ?? name,
 			list,
 			of: (mediaType, tmdbId, characters) =>
 				pickRole(byTitle.get(`${mediaType}-${tmdbId}`) ?? [], characters),
 		}
-	}, [q.data, q.isSuccess, name])
+	}, [q.data, q.isSuccess, q.isPending, personId, enabled, name])
 }
 
 /** Characters whose name, or a word of it, starts with the text, most popular titles first. */
