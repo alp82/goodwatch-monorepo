@@ -14,6 +14,7 @@
 // - Awards pages: the hub and a category have a row of winners' posters under the headline, a ceremony its year as a
 //   giant number beside the top winner's poster (AwardsCard.tsx); a body and a one-winner category use the movie card.
 // - Hot on socials: amber headline beside the ranking's top five on ink, each with its daily reads (HotCard.tsx).
+// - By your tropes: a cloud of twelve trope names in three sizes on amber, the same for every link (TropesCard.tsx).
 // - Blog posts: the collections' split, the first linked title's backdrop beside the post's headline.
 // - Every other page: backdrop across the top, amber band with the headline below.
 // Image fields hold data URIs, so satori never fetches anything itself.
@@ -43,6 +44,7 @@ import {
 	type OgTasteQuizContent,
 	TasteQuizCard,
 } from "~/ui/og-image/TasteQuizCard"
+import { type OgTropesContent, TropesCard } from "~/ui/og-image/TropesCard"
 import {
 	Brand,
 	Frame,
@@ -120,6 +122,7 @@ export interface OgChatContent {
 export type {
 	OgAwardsContent,
 	OgHotContent,
+	OgTropesContent,
 	OgTasteQuizContent,
 	OgNewServicesContent,
 	OgProfileContent,
@@ -131,6 +134,7 @@ export type {
 export type OgContent =
 	| OgAwardsContent
 	| OgHotContent
+	| OgTropesContent
 	| OgTasteQuizContent
 	| OgNewServicesContent
 	| OgForYouContent
@@ -326,6 +330,7 @@ export function OgCard({ content }: { content: OgContent }) {
 	if (content.kind === "taste-quiz") return <TasteQuizCard content={content} />
 	if (content.kind === "awards") return <AwardsCard content={content} />
 	if (content.kind === "hot") return <HotCard content={content} />
+	if (content.kind === "tropes") return <TropesCard />
 	if (content.kind === "new-services")
 		return <NewServicesCard content={content} />
 	if (content.kind === "profile") return <ProfileCard content={content} />

@@ -157,6 +157,15 @@ export function canonicalOgPath(path: string): string | null {
 		return "/hot"
 	if (first === "discover") return "/discover"
 	if (first === "for-you" && segments.length === 1) return WATCH_PATHS.forYou
+	// By your tropes, and its old address /for-you/tropes.
+	if (
+		(first === "for-you" && second === "tropes" && segments.length === 2) ||
+		(first === "watch" &&
+			second === "for-you" &&
+			third === "tropes" &&
+			segments.length === 3)
+	)
+		return WATCH_PATHS.forYouTropes
 	if (first === "watch") {
 		if (second === "for-you" && segments.length === 2) return WATCH_PATHS.forYou
 		if (second === "movies") return WATCH_PATHS.tonight
@@ -532,6 +541,7 @@ async function forYouCardContent(): Promise<OgContent> {
 async function staticPageContent(path: string): Promise<OgContent> {
 	if (path === "/discover") return discoverCardContent()
 	if (path === WATCH_PATHS.forYou) return forYouCardContent()
+	if (path === WATCH_PATHS.forYouTropes) return { kind: "tropes" }
 	if (path === "/use-with-ai") return chatCardContent()
 	if (path === "/map") return explorerCardContent()
 	const page = STATIC_PAGE_COPY[path] ?? HOME_COPY

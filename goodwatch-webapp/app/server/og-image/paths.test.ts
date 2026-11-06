@@ -117,3 +117,14 @@ test("Hot on socials and its old address share one card", () => {
 	assert.equal(canonicalOgPath("/hot"), "/hot")
 	assert.equal(canonicalOgPath("/hot-on-socials"), "/hot")
 })
+
+test("By your tropes and its old address share one card", () => {
+	for (const address of [
+		"/watch/for-you/tropes",
+		"/watch/for-you/tropes/",
+		"/for-you/tropes",
+	])
+		assert.equal(canonicalOgPath(address), "/watch/for-you/tropes", address)
+	assert.equal(canonicalOgPath("/watch/for-you"), "/watch/for-you")
+	assert.equal(canonicalOgPath("/for-you"), "/watch/for-you")
+})

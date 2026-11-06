@@ -334,3 +334,27 @@ export const HOT_CARD_COPY = {
 	headline: "Hot on socials",
 	rank: (rank: number) => `#${rank}`,
 } as const
+
+// The card of By your tropes (/watch/for-you/tropes, TropesCard.tsx): a cloud of trope names in three sizes. A shared
+// link has no viewer, so the cloud is a fixed set: four epic, four hilarious and four relatable tropes, in the order
+// they sit in the cloud. `weight` 3 sets largest; weight 1 sets smallest, in a lighter ink.
+export const TROPES_CARD_COPY = {
+	tag: "By your tropes",
+	tropes: [
+		{ name: "Heroic Sacrifice", weight: 3 },
+		{ name: "Deadpan Snarker", weight: 2 },
+		{ name: "Oh, Crap!", weight: 2 },
+		{ name: "Leeroy Jenkins", weight: 1 },
+		{ name: "Cringe Comedy", weight: 2 },
+		{ name: "The Chosen One", weight: 1 },
+		{ name: "Too Dumb to Live", weight: 2 },
+		{ name: "Large Ham", weight: 1 },
+		{ name: "Mundane Made Awesome", weight: 3 },
+		{ name: "Rousing Speech", weight: 1 },
+		{ name: "I Need a Freaking Drink", weight: 1 },
+		{ name: "Big Damn Heroes", weight: 2 },
+	],
+} as const satisfies {
+	tag: string
+	tropes: { name: string; weight: 1 | 2 | 3 }[]
+}

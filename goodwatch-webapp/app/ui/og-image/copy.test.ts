@@ -42,14 +42,23 @@ test("the Explorer share card uses the shared mood names", () => {
 	assert.equal(copy.bridge?.label, "Trippy + Funny")
 })
 
-
 test("Watch entry pages have their own card copy and versions; guest Taste cards stay", async () => {
- const { cardVersion } = await import("./card-versions.ts")
- for (const path of ["/watch/shows", "/watch/movies", "/watch/for-you"]) {
-  assert.ok(STATIC_PAGE_COPY[path]?.title, path)
-  assert.equal(cardVersion(path), 1)
- }
- assert.ok(STATIC_PAGE_COPY["/taste"])
- assert.ok(STATIC_PAGE_COPY["/taste/quiz"])
- assert.equal(cardVersion("/taste/quiz"), 2)
+	const { cardVersion } = await import("./card-versions.ts")
+	for (const path of ["/watch/shows", "/watch/movies", "/watch/for-you"]) {
+		assert.ok(STATIC_PAGE_COPY[path]?.title, path)
+		assert.equal(cardVersion(path), 1)
+	}
+	assert.ok(STATIC_PAGE_COPY["/taste"])
+	assert.ok(STATIC_PAGE_COPY["/taste/quiz"])
+	assert.equal(cardVersion("/taste/quiz"), 2)
+})
+
+test("the By your tropes cloud holds twelve different tropes in three sizes", async () => {
+	const { TROPES_CARD_COPY } = await import("./copy.ts")
+	const names = TROPES_CARD_COPY.tropes.map((trope) => trope.name)
+	assert.equal(new Set(names).size, 12)
+	assert.deepEqual(
+		[...new Set(TROPES_CARD_COPY.tropes.map((trope) => trope.weight))].sort(),
+		[1, 2, 3],
+	)
 })

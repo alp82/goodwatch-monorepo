@@ -138,6 +138,7 @@ async function inlineImages(content: OgContent): Promise<OgContent> {
 		case "person":
 			return { ...content, photo: await toDataUri(content.photo) }
 		case "hot":
+		case "tropes":
 			return content
 		default:
 			return { ...content, backdrop: await toDataUri(content.backdrop) }
