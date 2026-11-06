@@ -4,7 +4,7 @@ The `f/tvdb` Windmill scripts enrich the GoodWatch catalog with character portra
 
 ## Jobs and schedules
 
-All schedules use UTC, independent script entry points and overlap guards. They are enabled in source.
+All schedules use UTC, independent script entry points and overlap guards. They are enabled in source. The deployment workflow explicitly syncs only `f/tvdb/*.schedule.yaml` with `--include-schedules`, because the normal workspace push skips schedules by default; unrelated schedules keep their existing deployment behavior.
 
 | Job | Schedule | Work |
 | --- | --- | --- |

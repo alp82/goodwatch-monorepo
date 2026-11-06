@@ -65,3 +65,21 @@ jobs:
             --workspace "$WMILL_WORKSPACE" \
             --token "$WMILL_TOKEN" \
             --base-url "$WMILL_URL"
+
+      - name: Push TVDB schedules
+        working-directory: goodwatch-flows/windmill
+        env:
+          WMILL_TOKEN: ${{ secrets.WMILL_TOKEN }}
+        run: |
+          npx --yes "windmill-cli@${WMILL_CLI_VERSION}" sync push \
+            --yes \
+            --keep-deleted \
+            --skip-variables \
+            --skip-secrets \
+            --skip-resources \
+            --skip-resource-types \
+            --include-schedules \
+            --includes 'f/tvdb/*.schedule.yaml' \
+            --workspace "$WMILL_WORKSPACE" \
+            --token "$WMILL_TOKEN" \
+            --base-url "$WMILL_URL"
