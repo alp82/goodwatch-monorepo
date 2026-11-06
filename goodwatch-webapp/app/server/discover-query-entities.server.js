@@ -191,7 +191,17 @@ export function createEntityResolver(fetch, origin) {
 				const exact = choices.filter((row) =>
 					names(row).some((name) => normalized(name) === wanted),
 				)
-				if (e.bare && kind === "title" && exact.length && !candidate.style) {
+				// Bare title prefixes remain searches too: "furiosa" names a title
+				// with a subtitle, even when a person is named exactly "Furiosa".
+				// Only explicit references should turn those words into a filter.
+				if (
+					e.bare &&
+					kind === "title" &&
+					!candidate.style &&
+					choices.some((row) =>
+						names(row).some((name) => normalized(name).startsWith(wanted)),
+					)
+				) {
 					cache.set(lookupKey, null)
 					return null
 				}
