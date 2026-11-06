@@ -14,6 +14,8 @@
 // | 4.5rem-6rem      | GoodWatch + you, else GW      | top right, instead of it  | 0     | no score row            |
 // | under 4.5rem     | GoodWatch + you, else GW      | top right, instead of it  | 0     | none: a click opens it  |
 // The age badge sits top left, under 4.5rem in the band above the title (beside the score it wouldn't fit).
+// A title with a reported award win says the top body beside the year (ui/awards/AwardMarks.tsx); the marks load once
+// per session after the page is up (ui/awards/marks-store.ts).
 // The pill's rules are in ui/poster-card/ScorePill.tsx.
 //
 // The title actions (ui/poster-card/CardActions.tsx) load as their own chunk at the first interaction with the page
@@ -49,6 +51,8 @@ import type {
 	ActionsPlacement,
 	OpenActions,
 } from "~/ui/poster-card/CardActions"
+import { BandAward } from "~/ui/awards/AwardMarks"
+import { useAwardMark } from "~/ui/awards/marks-store"
 import { HiddenCover } from "~/ui/poster-card/HiddenCover"
 import { OwnerScore } from "~/ui/poster-card/OwnerScore"
 import { TitleScorePill } from "~/ui/poster-card/ScorePill"
@@ -220,6 +224,8 @@ export function MovieTvCard({
 		return () => keeper.release(kept)
 	}, [tileShown, keeper, mediaType, tmdbId, title])
 
+	const award = useAwardMark(mediaType, details.tmdb_id)
+
 	const href = `/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`
 	const offers = (details as CardDetails).streaming_links
 	return (
@@ -299,6 +305,7 @@ export function MovieTvCard({
 							/>
 						}
 						year={details.release_year}
+						yearEnd={award ? <BandAward mark={award} /> : undefined}
 						top={
 							<>
 								{rating && (
