@@ -78,7 +78,7 @@ export function DiscoverRoles({
 	)
 }
 
-/** Around one result card (in the grid or a row): the place the strip scrolls to, and its ring with "as …" while ringed. */
+/** Around one result card (in the grid or a row): the place the strip scrolls to, and its ring with "as …" over it while ringed. */
 export function DiscoverCardRole({
 	card,
 	inset = false,
@@ -111,9 +111,10 @@ export function DiscoverCardRole({
 			) : (
 				children
 			)}
+			{/* Over the card's top, never under it: a caption under the card would grow the row and move what follows. */}
 			{ringed && (
 				<p
-					className="mt-1 truncate px-1 text-xs text-gray-400"
+					className="pointer-events-none absolute inset-x-1.5 top-1.5 z-20 truncate rounded-md bg-gray-950/85 px-2 py-1 text-xs font-medium text-amber-300"
 					title={role.character}
 				>
 					as {role.character}
