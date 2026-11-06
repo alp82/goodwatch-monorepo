@@ -1,3 +1,5 @@
+import type { TitleAwardResult } from "../domain/title-award-list.ts"
+
 /** Source-independent reported observations; partial coverage cannot establish historical totals. */
 export type AwardSource = "TVDB" | "Wikidata"
 export interface AwardResult {
@@ -105,6 +107,23 @@ export function summarizeTitleAwards(
 		nominations: nominations.slice(0, 25).map(entry),
 		...(wins.length > 25 || nominations.length > 25 ? { truncated: true } : {}),
 	}
+}
+
+/**
+ * Every reported result of the title, uncapped (the view holds at most about 100 per title), for the title page's
+ * "N awards" link and At a glance's Awards row. Rows reported as neither won nor nominated are left out.
+ */
+export function awardResults(
+	rows: readonly AwardDisplayRow[],
+): TitleAwardResult[] {
+	return rows
+		.filter((row) => row.has_win || row.has_nomination)
+		.map((row) => ({
+			award: String(row.award_name ?? ""),
+			category: String(row.category_name ?? ""),
+			year: String(row.ceremony_year ?? ""),
+			won: Boolean(row.has_win),
+		}))
 }
 
 /** Title page loader data: only the wins its JSON-LD lists, so the page payload stays small. */

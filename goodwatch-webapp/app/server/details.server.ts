@@ -1,5 +1,5 @@
 import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
-import { readTitleAwards } from "./title-awards-read"
+import { readTitleAwardData } from "./title-awards-read"
 import type { AwardDisplayRow } from "./title-awards"
 import { applyCorrections } from "./feedback/apply-corrections.server"
 import { overlayTitles } from "./media-overlay.server.ts"
@@ -36,7 +36,7 @@ const _fetchFromDB = async (
 	const mediaTable = mediaType === "movie" ? "movie" : "show"
 	const fields = getFieldsByMediaType(mediaType).join(", ")
 	const mediaFieldAssignments = generateMediaFieldAssignments(mediaType)
-	const awards = readTitleAwards(
+	const awards = readTitleAwardData(
 		(sql, args, signal) => query<AwardDisplayRow>(sql, args, { signal }),
 		mediaType,
 		Number(mediaId),
@@ -316,7 +316,10 @@ const _fetchFromDB = async (
 	if (!result[0]) return null
 	const { media } = result[0]
 	const reportedAwards = await awards
-	if (reportedAwards) media.awards = reportedAwards
+	if (reportedAwards) {
+		media.awards = reportedAwards.awards
+		media.award_results = reportedAwards.results
+	}
 	if (!media.details.title) {
 		media.details.title = media.details.original_title || ""
 	}

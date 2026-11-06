@@ -62,6 +62,7 @@ export interface CastRow {
 }
 export interface RawTitleDetails {
 	awards?: ResultBase["awards"]
+	award_results?: ResultBase["award_results"]
 	details: Partial<MovieDetails & ShowDetails> &
 		Partial<DNAAnalysis> & {
 			original_title?: string
@@ -228,6 +229,7 @@ export function trimTitleDetails(
 	])
 	const common: ResultBase = {
 		...(raw.awards ? { awards: raw.awards } : {}),
+		...(raw.award_results?.length ? { award_results: raw.award_results } : {}),
 		fingerprint,
 		cast: documentCast(toCastMembers(raw.cast_rows), raw.cast_total ?? 0),
 		cast_total: raw.cast_total ?? 0,

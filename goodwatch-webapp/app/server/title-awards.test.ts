@@ -1,8 +1,10 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { readTitleAwards } from "./title-awards-read.ts"
+import { awardWinCount } from "../domain/title-award-list.ts"
+import { readTitleAwardData, readTitleAwards } from "./title-awards-read.ts"
 import {
 	type AwardDisplayRow,
+	awardResults,
 	pageAwards,
 	summarizeTitleAwards,
 } from "./title-awards.ts"
@@ -215,4 +217,25 @@ test("combined results retain per-result provenance and never attribute Wikidata
 		"https://www.wikidata.org/wiki/Q108839994",
 	])
 	assert.equal(awards.wins[0].ceremony, "96th Academy Awards")
+})
+
+test("every reported result is kept uncapped, past the summary's 25 wins, and its wins count", async () => {
+	const wins = Array.from({ length: 37 }, (_, i) => row("Primetime Emmy Awards", `C${i}`))
+	const noms = Array.from({ length: 30 }, (_, i) => row("Golden Globe Awards", `N${i}`, "2020", false))
+	const neither = { ...row("BAFTA Awards", "Ghost"), has_win: false, has_nomination: false }
+	const data = await readTitleAwardData(async () => [...wins, ...noms, neither], "show", 76331)
+	assert.equal(data?.awards.wins.length, 25)
+	assert.equal(data?.awards.truncated, true)
+	assert.equal(data?.results.length, 67)
+	assert.equal(awardWinCount(data?.results ?? []), 37)
+	assert.deepEqual(awardResults([row("Academy Awards", "Directing", "2024", false)]), [
+		{ award: "Academy Awards", category: "Directing", year: "2024", won: false },
+	])
+	assert.equal(await readTitleAwardData(async () => [], "show", 1), undefined)
+	// The summary the details cache keeps for JSON-LD and MCP is unchanged.
+	assert.deepEqual(data?.awards, summarizeTitleAwards([...wins, ...noms, neither]))
+	assert.deepEqual(
+		await readTitleAwards(async () => [...wins, ...noms], "show", 1),
+		summarizeTitleAwards([...wins, ...noms]),
+	)
 })

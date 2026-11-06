@@ -26,7 +26,8 @@ const BODIES: readonly (readonly [award: string, short: string])[] = [
 	["Genie Awards", "Genie"],
 ]
 
-const prestigeOf = (award: string) => {
+/** The body's place in prestige order (lower is more notable); any other body ranks after the known ones. */
+export const awardPrestige = (award: string) => {
 	const i = BODIES.findIndex(([name]) => name === award)
 	return i < 0 ? BODIES.length : i
 }
@@ -69,7 +70,7 @@ export function topWin(rows: readonly AwardMarkRow[]): string | null {
 	let bestRank = Number.POSITIVE_INFINITY
 	for (const row of rows) {
 		if (!row.has_win) continue
-		const rank = prestigeOf(row.award_name)
+		const rank = awardPrestige(row.award_name)
 		if (
 			rank < bestRank ||
 			(rank === bestRank && best != null && row.award_name < best)
@@ -94,7 +95,7 @@ export function notableAwards(
 	const pool = wins.length ? wins : rows.filter((r) => r.has_nomination)
 	const sorted = [...pool].sort(
 		(a, b) =>
-			prestigeOf(a.award_name) - prestigeOf(b.award_name) ||
+			awardPrestige(a.award_name) - awardPrestige(b.award_name) ||
 			a.award_name.localeCompare(b.award_name, "en") ||
 			Number(HEADLINE.test(b.category_name)) -
 				Number(HEADLINE.test(a.category_name)) ||

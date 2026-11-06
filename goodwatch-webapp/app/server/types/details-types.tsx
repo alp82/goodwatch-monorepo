@@ -334,6 +334,8 @@ export interface TitleFingerprint
 }
 export interface ResultBase {
 	awards?: import("../title-awards").TitleAwards
+	/** Every reported award result, uncapped: the title page's "N awards" link and At a glance's Awards row. */
+	award_results?: import("../../domain/title-award-list").TitleAwardResult[]
 	streaming_availabilities: Pick<
 		StreamingAvailability,
 		"streaming_service_id" | "streaming_type" | "stream_url"

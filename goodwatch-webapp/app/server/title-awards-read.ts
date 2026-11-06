@@ -1,5 +1,11 @@
 import { optionalTitlePart } from "./title-page-budget.ts"
-import { summarizeTitleAwards, type AwardDisplayRow } from "./title-awards.ts"
+import type { TitleAwardResult } from "../domain/title-award-list.ts"
+import {
+	type AwardDisplayRow,
+	type TitleAwards,
+	awardResults,
+	summarizeTitleAwards,
+} from "./title-awards.ts"
 
 type AwardQuery = (
 	sql: string,
@@ -7,8 +13,15 @@ type AwardQuery = (
 	signal: AbortSignal,
 ) => Promise<AwardDisplayRow[]>
 
+export interface TitleAwardData {
+	/** The bounded summary that JSON-LD and MCP read. */
+	awards: TitleAwards
+	/** Every result, for the title page and At a glance. */
+	results: TitleAwardResult[]
+}
+
 /** One indexed title scope, inside the details cache fill. Bound even a reader that ignores abort. */
-export async function readTitleAwards(
+export async function readTitleAwardData(
 	query: AwardQuery,
 	mediaType: "movie" | "show",
 	tmdbId: number,
@@ -22,8 +35,17 @@ export async function readTitleAwards(
 		 FROM doc.award_title_display WHERE media_type = ? AND media_tmdb_id = ?`,
 				[mediaType, tmdbId],
 				signal,
-			).then(summarizeTitleAwards),
+			).then((rows): TitleAwardData | undefined => {
+				const awards = summarizeTitleAwards(rows)
+				return awards ? { awards, results: awardResults(rows) } : undefined
+			}),
 		budgetMs,
 	)
 	return result.complete ? result.value : undefined
 }
+
+/** The bounded summary alone. */
+export const readTitleAwards = (
+	...args: Parameters<typeof readTitleAwardData>
+): Promise<TitleAwards | undefined> =>
+	readTitleAwardData(...args).then((data) => data?.awards)

@@ -40,12 +40,17 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 		],
 		nominations: [],
 	}
+	const award_results = [
+		{ award: "Academy Awards", category: "Cinematography", year: "2024", won: true },
+		{ award: "BAFTA Awards", category: "Editing", year: "2024", won: false },
+	]
 	const seen: unknown[] = []
 	const getters = createTitleDetailsGetters(async (...args) => {
 		fetches++
 		seen.push(args)
 		return {
 			awards,
+			award_results,
 			details: { tmdb_id: 42, title: "Title", tropes: [], keywords: ["junk"] },
 			cast_rows: [],
 			videos: { clips: null, trailers: [], featurettes: [] },
@@ -74,12 +79,12 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 		assert.equal(store.size, 2)
 		assert.ok(
 			[...store.keys()].some((key) =>
-				key.startsWith("cached-details-movie-v7:"),
+				key.startsWith("cached-details-movie-v8:"),
 			),
 		)
 		assert.ok(
 			[...store.keys()].some((key) =>
-				key.startsWith("cached-details-show-v8:"),
+				key.startsWith("cached-details-show-v9:"),
 			),
 		)
 		assert.ok(
@@ -90,12 +95,17 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 					!key.startsWith("cached-details-movie-v2:") &&
 					!key.startsWith("cached-details-movie-v3:") &&
 					!key.startsWith("cached-details-show-v3:") &&
-					!key.startsWith("cached-details-show-v4:"),
+					!key.startsWith("cached-details-show-v4:") &&
+					!key.startsWith("cached-details-movie-v6:") &&
+					!key.startsWith("cached-details-show-v7:") &&
+					!key.startsWith("cached-details-movie-v7:") &&
+					!key.startsWith("cached-details-show-v8:"),
 			),
 		)
 		for (const value of store.values()) {
 			const stored = JSON.parse(value)
 			assert.deepEqual(stored.data.awards, awards)
+			assert.deepEqual(stored.data.award_results, award_results)
 			assert.ok(!value.includes("availability_evidence"))
 			assert.ok(!value.includes("cast_rows"))
 			assert.ok(value.includes('"cast":[]'))
@@ -107,6 +117,7 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 						trimTitleDetails(
 							{
 								awards,
+								award_results,
 								details: {
 									tmdb_id: 42,
 									title: "Title",
