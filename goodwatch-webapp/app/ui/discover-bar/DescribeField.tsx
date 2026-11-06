@@ -8,43 +8,9 @@ import {
 } from "@heroicons/react/20/solid"
 import { type ReactNode, type Ref, useEffect, useRef, useState } from "react"
 import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
+import { SEARCH_EXAMPLES as TRY } from "~/ui/search/search-examples"
 import { PRIVATE } from "./DiscoverBar"
 
-/** Example searches. Each one was run through this field and checked for relevant results; rerun new ones the same way. */
-const TRY = [
-	"cozy anime",
-	"Timothée Chalamet movies",
-	"mind-bending sci-fi",
-	"korean thrillers",
-	"funny horror",
-	"Studio Ghibli",
-	"A24 horror",
-	"80+ last 5 years",
-	"slow burn thrillers",
-	"Ryan Gosling movies",
-	"japanese revenge thrillers",
-	"Wednesday vibes, but darker",
-	"folk horror",
-	"anime from the last 3 years",
-	"romcoms from the 2000s",
-	"vampires but funny",
-	"Christopher Nolan films",
-	"nordic noir",
-	"post-apocalyptic shows",
-	"horror from the last 3 years",
-	"food documentaries",
-	"spy thrillers from the 70s",
-	"hong kong action",
-	"Florence Pugh movies",
-	"survival in the wilderness",
-	"sports underdog stories",
-	"one-location thrillers",
-	"dystopian thrillers",
-	"cyberpunk",
-	"heartwarming show for a rainy day",
-	"courtroom drama",
-	"funny and under 90 minutes",
-]
 const TRY_MS = 3200
 const PLACEHOLDER = "Describe what you want to watch"
 const TYPING_PAUSE_MS = 500

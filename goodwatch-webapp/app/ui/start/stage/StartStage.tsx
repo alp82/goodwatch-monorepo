@@ -1,5 +1,5 @@
 // The start page's first screen: the room, and over it a column of the search block (the H1, then the search bar and
-// the mood button in their slots), a gap that shows the room's window and sofa, and the card's box, whose bottom stands
+// the mood button in their slots), a gap with an OR that shows the room's window and sofa, and the card's box, whose bottom stands
 // on the floor in front of the sofa. Every box has its size from start.css before anything arrives, so nothing shifts
 // (stage/placement.ts has the numbers).
 //
@@ -78,7 +78,13 @@ export function StartStage({
 						</div>
 					</div>
 				</div>
-				<div aria-hidden className="start-gap" />
+				<div aria-hidden className="start-gap">
+					<div className="start-or">
+						<i />
+						<span>or</span>
+						<i />
+					</div>
+				</div>
 				<div className="start-card-wrap">
 					<div id="start-card" className="start-card" data-start-obstacle="">
 						{card}

@@ -317,18 +317,43 @@
 	margin: 16px auto 0;
 }
 
-/* The search bar (search/StartSearchBar.tsx): lifted off the room by a deep shadow, an amber glow while focused. */
+/* The search bar (search/StartSearchBar.tsx): a pill that echoes the Choose button under it (.start-ledge-go): the same
+   heights, an amber disc, Gabarito. Lifted off the room by a deep shadow and a quiet amber floor glow, an amber ring
+   while focused. */
+.start-bar-floor,
 .start-bar-shadow,
 .start-bar-glow {
 	position: absolute;
-	inset: 0;
-	border-radius: 1rem;
 	pointer-events: none;
+}
+
+.start-bar-shadow,
+.start-bar-glow {
+	inset: 0;
+	height: var(--start-pill-h);
+	border-radius: 999px;
+}
+
+.start-bar {
+	--start-pill-h: 68px;
+}
+
+.start-bar-floor {
+	left: 50%;
+	top: calc(var(--start-pill-h) * 0.3);
+	width: 110%;
+	height: calc(var(--start-pill-h) * 1.4);
+	translate: -50% 0;
+	background: radial-gradient(
+		ellipse 50% 40% at 50% 50%,
+		rgb(251 191 36 / 0.12),
+		rgb(251 191 36 / 0.04) 55%,
+		transparent 75%
+	);
 }
 
 .start-bar-shadow {
 	box-shadow:
-		inset 0 1px 0 rgb(255 255 255 / 0.06),
 		0 2px 4px rgb(0 0 0 / 0.45),
 		0 10px 22px rgb(0 0 0 / 0.45),
 		0 28px 56px rgb(0 0 0 / 0.55),
@@ -336,9 +361,10 @@
 }
 
 .start-bar-glow {
+	z-index: 1;
 	opacity: 0;
-	box-shadow: 0 0 0 2px rgb(251 191 36 / 0.8), 0 0 0 6px rgb(251 191 36 / 0.12),
-		0 0 70px 10px rgb(251 191 36 / 0.28);
+	box-shadow: 0 0 0 2px rgb(251 191 36 / 0.9), 0 0 0 6px rgb(251 191 36 / 0.14),
+		0 0 70px 10px rgb(251 191 36 / 0.3);
 	transition: opacity 0.25s ease-out;
 }
 
@@ -346,42 +372,241 @@
 	opacity: 1;
 }
 
-/* The bar's second row: the presets and the reading, one over the other in the same box, swapped by opacity. Scrolls
-   sideways when its content doesn't fit, its end fading out. */
-.start-bar-row {
-	position: absolute;
-	inset: 0;
+.start-pill {
+	position: relative;
 	display: flex;
 	align-items: center;
-	padding-inline: 16px;
-	overflow-x: auto;
-	overscroll-behavior-x: contain;
-	scrollbar-width: none;
-	mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
-	transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+	gap: 12px;
+	height: var(--start-pill-h);
+	padding: 0 10px;
+	border-radius: 999px;
+	background: rgb(3 7 18 / 0.92);
+	box-shadow: inset 0 0 0 1.5px rgb(251 191 36 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.08);
+	backdrop-filter: blur(12px);
 }
 
-.start-bar-row::-webkit-scrollbar {
+/* The Choose button's icon disc, colours swapped. */
+.start-pill-disc {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	color: rgb(3 7 18);
+	background: linear-gradient(to bottom, rgb(252 211 77), rgb(245 158 11));
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+
+/* The text sits a little high while the example shows under it, centred once typed. */
+.start-pill-field {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-width: 0;
+	flex-direction: column;
+	justify-content: center;
+	align-self: stretch;
+}
+
+.start-pill-field input {
+	width: 100%;
+	min-width: 0;
+	padding: 0;
+	border: 0;
+	outline: none;
+	box-shadow: none;
+	background: transparent;
+	color: #fff;
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-size: 18px;
+	font-weight: 800;
+	line-height: 1.2;
+	letter-spacing: -0.01em;
+	translate: 0 -10px;
+	transition: translate 0.2s ease-out;
+}
+
+.start-pill-field input:focus {
+	box-shadow: none;
+}
+
+.start-pill-field input::placeholder {
+	color: rgb(156 163 175);
+	font-weight: 700;
+}
+
+.start-pill-field input::-webkit-search-cancel-button {
 	display: none;
 }
 
-.start-bar-row[data-off] {
+.start-pill-field[data-filled] input {
+	translate: 0 0;
+}
+
+.start-pill-examples {
+	position: absolute;
+	inset-inline: 0;
+	bottom: 10px;
+	transition: opacity 0.15s ease-out;
+}
+
+.start-pill-field[data-filled] .start-pill-examples {
 	opacity: 0;
-	transform: translateY(4px);
 	pointer-events: none;
 }
 
-.start-bar-row + .start-bar-row[data-off] {
-	transform: translateY(-4px);
+.start-example {
+	position: relative;
+	height: 20px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 20px;
+	color: rgb(156 163 175);
+}
+
+.start-example > * {
+	position: absolute;
+	left: 0;
+	white-space: nowrap;
+	animation: start-example-in 0.5s ease-out both;
+}
+
+.start-example button {
+	cursor: pointer;
+	outline: none;
+}
+
+.start-example button:hover,
+.start-example button:focus-visible {
+	color: rgb(252 211 77);
+}
+
+.start-example [data-out] {
+	pointer-events: none;
+	animation-name: start-example-out;
+}
+
+@keyframes start-example-in {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+}
+
+@keyframes start-example-out {
+	to {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+}
+
+.start-pill-clear {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 999px;
+	cursor: pointer;
+	color: rgb(156 163 175);
+}
+
+.start-pill-clear:hover {
+	color: #fff;
+	background: rgb(255 255 255 / 0.1);
+}
+
+.start-pill-go {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	cursor: pointer;
+	color: rgb(3 7 18);
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-size: 18px;
+	font-weight: 900;
+	background: linear-gradient(to bottom, rgb(252 211 77), rgb(245 158 11));
+	box-shadow: 0 8px 24px rgb(251 191 36 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.5);
+	outline: none;
+	transition: scale 0.2s ease-out;
+}
+
+.start-pill-go:hover {
+	scale: 1.03;
+}
+
+.start-pill-clear:focus-visible,
+.start-pill-go:focus-visible {
+	box-shadow: 0 0 0 3px #fff;
+}
+
+/* The search's reading, in its own box under the pill. */
+.start-reading {
+	margin-top: 8px;
+	overflow: hidden;
+	border-radius: 16px;
+	background: rgb(3 7 18 / 0.9);
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.15);
+	backdrop-filter: blur(12px);
 }
 
 @media (min-width: 640px) {
-	.start-bar-shadow,
-	.start-bar-glow {
+	.start-bar {
+		--start-pill-h: 84px;
+	}
+	.start-pill {
+		gap: 16px;
+		padding: 0 14px;
+	}
+	.start-pill-disc {
+		width: 56px;
+		height: 56px;
+	}
+	.start-pill-field input {
+		font-size: 24px;
+		translate: 0 -12px;
+	}
+	.start-pill-examples {
+		bottom: 14px;
+	}
+	.start-example {
+		font-size: 14px;
+	}
+	.start-pill-go {
+		width: auto;
+		height: 56px;
+		padding: 0 28px;
+		font-size: 20px;
+	}
+	.start-reading {
 		border-radius: 22px;
 	}
-	.start-bar-row {
-		padding-inline: 24px;
+}
+
+@media (min-width: 1024px) {
+	.start-bar {
+		--start-pill-h: 92px;
+	}
+	.start-pill-field input {
+		font-size: 26px;
+	}
+	.start-pill-examples {
+		bottom: 16px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.start-example > * {
+		animation: none;
+	}
+	.start-example [data-out] {
+		display: none;
 	}
 }
 
@@ -2242,166 +2467,57 @@
 	}
 }
 
-/* Search composer and its actions. */
-.sq-input {
-	padding: 18px 24px;
-	color: #e8edf6;
-}
-.sq-input-main {
-	display: flex;
-	align-items: flex-start;
-	gap: 12px;
-	min-width: 0;
-}
-.sq-input-icon {
-	width: 21px;
-	height: 21px;
-	color: #fbbf24;
-	flex-shrink: 0;
-	margin-top: 8px;
-}
-.sq-input textarea {
-	font-family: inherit;
-	font-size: 24px;
-	line-height: 34px;
-	font-weight: 600;
-	flex: 1;
-	width: 100%;
-	min-width: 0;
-	resize: none;
-	border: 0;
-	box-shadow: none;
-	background: none;
-	color: #f1f5f9;
-	padding: 0;
-	outline: none;
-	overflow-y: auto;
-	scrollbar-width: thin;
-}
-.sq-input textarea:focus {
-	box-shadow: none;
-}
-.sq-input textarea::placeholder {
-	color: #6b7280;
-	font-weight: 500;
-}
-.sq-input-actions {
-	display: flex;
-	gap: 10px;
-	align-items: center;
-	flex-shrink: 0;
-}
-.sq-input-actions button {
-	border: 0;
-	border-radius: 10px;
-	background: none;
-	color: #a8b5c9;
-	padding: 10px 5px;
-	font-size: 13px;
-	cursor: pointer;
-}
-.sq-input-actions button svg {
-	width: 18px;
-	height: 18px;
-}
-.sq-input-actions button[type="submit"] {
-	background: #fbbf24;
-	color: #121820;
-	font-size: 14px;
-	font-weight: 700;
-	padding: 11px 16px;
-	box-shadow: 0 4px 14px #fbbf2420;
-}
-.sq-input-actions button[type="submit"] span {
-	margin-left: 9px;
-	opacity: 0.55;
-}
-.sq-input-label {
-	display: block;
-	font-size: 11px;
-	letter-spacing: .03em;
-	color: #98a9c0;
-	margin-bottom: 13px;
-}
-.sq-composer textarea {
-	font-size: 20px;
-	line-height: 30px;
-	max-height: 156px;
-}
-.sq-composer .sq-input-icon {
-	width: 18px;
-	height: 18px;
-	margin-top: 6px;
-}
-.sq-composer-footer {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 12px;
-	margin: 16px 0 0 30px;
-}
-.sq-composer-footer > span {
-	font-size: 11px;
-	color: #788aa4;
-}
-.sq-composer-footer i {
-	font-style: normal;
-	padding: 0 5px;
-}
-
-.sq-input-actions button:focus-visible,
-.sq-input textarea:focus-visible {
-	outline: 2px solid #fbbf24;
-	outline-offset: 3px;
-}
-.start-stage:has([data-search-composer]) .start-block {
+/* The search block takes its content's height, and the OR between it and the ledge sets the gap. */
+.start-stage:has(.start-bar) .start-block {
 	height: auto;
 	transform: none;
 	transition: none;
 }
-.start-stage:has([data-search-composer]) .start-gap {
-	height: 32px;
+.start-stage:has(.start-bar) .start-gap {
+	height: auto;
+	padding: 18px 0 6px;
 }
-.start-stage:has([data-search-composer]) .start-card-wrap {
+.start-stage:has(.start-bar) .start-card-wrap {
 	padding-bottom: max(var(--start-foot), 24px);
 }
-@media (max-width: 640px) {
-	.sq-input {
-		padding: 14px 16px;
-	}
-	.sq-input-main {
-		gap: 9px;
-	}
-	.sq-input-icon {
-		width: 17px;
-		height: 17px;
-		margin-top: 5px;
-	}
-	.sq-composer textarea {
-		font-size: 17px;
-		line-height: 26px;
-	}
-	.sq-input-actions {
-		gap: 5px;
-	}
-	.sq-input-actions button[type="submit"] {
-		padding: 9px 12px;
-		font-size: 12px;
-	}
-	.sq-input-actions button[type="submit"] span {
-		display: none;
-	}
-	.sq-composer-footer {
-		margin-left: 26px;
-		margin-top: 12px;
-	}
-	.sq-composer-footer > span {
-		max-width: 140px;
-		font-size: 10px;
-	}
-	.start-stage:has([data-search-composer]) .start-gap {
-		height: 24px;
-	}
+
+/* The OR (stage/StartStage.tsx): a dark disc with an amber ring, like the Choose button's icon, between two fading
+   lines. It fades out when the card opens. */
+.start-or {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	width: min(420px, calc(100% - 64px));
+	margin-inline: auto;
+	transition: opacity 0.3s ease-out;
+}
+.start-stage[data-open] .start-or {
+	opacity: 0;
+}
+.start-or i {
+	flex: 1;
+	height: 1px;
+	background: linear-gradient(to right, transparent, rgb(255 255 255 / 0.35));
+}
+.start-or i:last-child {
+	background: linear-gradient(to left, transparent, rgb(255 255 255 / 0.35));
+}
+.start-or span {
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-size: 13px;
+	font-weight: 900;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: rgb(252 211 77);
+	background: rgb(3 7 18 / 0.9);
+	box-shadow: inset 0 0 0 1.5px rgb(251 191 36 / 0.45), 0 8px 24px rgb(0 0 0 / 0.5);
+	text-shadow: 0 2px 8px rgb(0 0 0 / 0.9);
 }
 
 /* Search-card content follows the expanded composer and empty state. */

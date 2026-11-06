@@ -8,7 +8,6 @@ import { streamAnswer } from "../../search/search-test-answers.ts"
 // Loaded ahead, so the search's lazily loaded request code is ready when a test's first search starts.
 await import("../../search/search-request.ts")
 const { createFieldCommit, SEARCH_PAUSE_MS } = await import("./field-commit.ts")
-const { START_PRESETS } = await import("./presets.ts")
 const {
 	RESULTS_ERROR,
 	START_CARDS,
@@ -246,7 +245,7 @@ test("text shorter than two characters is never searched; emptying the field cle
 	assert.deepEqual(p.query, { draft: "", text: "", picks: ["m:funny"] })
 })
 
-test("a preset searches its exact phrase at once and drops a pending pause", async (t) => {
+test("an example searches its exact phrase at once and drops a pending pause", async (t) => {
 	t.mock.timers.enable({ apis: ["setTimeout"] })
 	const net = stubFetch(t, server)
 	const p = page()
@@ -263,18 +262,6 @@ test("a preset searches its exact phrase at once and drops a pending pause", asy
 		"rainy day whodunit",
 		"the field shows the phrase",
 	)
-})
-
-test("the presets are the owner's six phrases, lower case and without hyphens", () => {
-	assert.deepEqual(START_PRESETS, [
-		"cheer me up",
-		"rainy day whodunit",
-		"severance but funny",
-		"twist ending",
-		"space adventure",
-		"grown up cartoons",
-	])
-	for (const phrase of START_PRESETS) assert.match(phrase, /^[a-z ]+$/)
 })
 
 test("the reading shows while the titles are on their way, then the titles (two views at most)", async (t) => {
