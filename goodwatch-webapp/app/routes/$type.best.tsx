@@ -14,6 +14,7 @@ import {
 	titleKindOf,
 } from "~/domain/best-lists"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
+import { awardMarksOf } from "~/server/award-marks.server"
 import { getRankedList } from "~/server/best-lists.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { rowServices } from "~/server/row-services.server"
@@ -38,6 +39,14 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	if (page > pages) throw notFound()
 	const { first, last } = pageRange(page, total)
 	const shown = titles.slice(first - 1, last)
+	const keys = shown.map((t) => ({
+		mediaType: t.media_type,
+		tmdbId: t.tmdb_id,
+	}))
+	const [services, awards] = await Promise.all([
+		rowServices(request, keys),
+		awardMarksOf(keys),
+	])
 	return {
 		kind,
 		page,
@@ -47,10 +56,9 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		first,
 		titles: shown,
 		// A member's own services per title, for the logos in the rows; null for a guest, whose page is shared.
-		services: await rowServices(
-			request,
-			shown.map((t) => ({ mediaType: t.media_type, tmdbId: t.tmdb_id })),
-		),
+		services,
+		// The top body each listed title won ("Oscar"), from memory: a line under the row's meta.
+		awards,
 	}
 }
 
@@ -78,7 +86,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 }
 
 export default function BestList() {
-	const { kind, page, pages, total, popular, first, titles, services } =
+	const { kind, page, pages, total, popular, first, titles, services, awards } =
 		useLoaderData<typeof loader>()
 	const copy = listCopy(kind, { total, popular, page })
 	const links = (
@@ -89,7 +97,12 @@ export default function BestList() {
 			<ListHead heading={copy.heading} intro={copy.intro}>
 				<div className="mt-3">{links}</div>
 			</ListHead>
-			<RankedTitles titles={titles} first={first} services={services} />
+			<RankedTitles
+				titles={titles}
+				first={first}
+				services={services}
+				awards={awards}
+			/>
 			<div className="mx-auto mt-6 max-w-7xl px-4">{links}</div>
 		</div>
 	)

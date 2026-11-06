@@ -3,10 +3,13 @@
 // HTML, to the sitemap's address of its page. The page is the same for every visitor: the server's HTML shows the
 // GoodWatch score in the pill, and a member's own score, state and services join it from their data.
 import { Link } from "@remix-run/react"
+import { useId } from "react"
 import { type ListKind, pagePath, pageRange } from "~/domain/best-lists"
 import type { ListTitle } from "~/server/best-lists.server"
 import type { RowServices } from "~/server/row-services.server"
 import { createMediaKey } from "~/types/user-data"
+import { awardKey } from "~/domain/award-marks"
+import { RowAward, RowAwardSymbol } from "~/ui/awards/AwardMarks"
 import { TmdbImage } from "~/ui/TmdbImage"
 import {
 	RowLogos,
@@ -55,70 +58,83 @@ export function RankedTitles({
 	titles,
 	first,
 	services,
+	awards = {},
 }: {
 	titles: ListTitle[]
 	first: number
+	/** The top body each title won ("Oscar"), by `awardKey`; titles without a win are left out. */
+	awards?: Record<string, string>
 	/** The member's own services per title; null for a guest. */
 	services?: RowServices | null
 }) {
 	const marksOf = useRowMarks()
+	// A plain id: it goes into a `<use href="#...">`.
+	const trophy = `award-trophy${useId().replace(/[^\w-]/g, "")}`
+	const anyAward = titles.some((t) => awards[awardKey(t.media_type, t.tmdb_id)])
 	return (
-		<ol
-			start={first}
-			className="mx-auto mt-6 grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-x-8 px-4 lg:grid-cols-2"
-		>
-			{titles.map((t, i) => {
-				const marks = marksOf(t.media_type, t.tmdb_id)
-				return (
-					<li
-						key={t.tmdb_id}
-						className="border-b border-white/5 hover:bg-white/[0.02]"
-					>
-						<Link
-							to={t.path}
-							prefetch="intent"
-							className="group flex items-center gap-3 py-1.5 pl-1"
+		<>
+			{anyAward && <RowAwardSymbol id={trophy} />}
+			<ol
+				start={first}
+				className="mx-auto mt-6 grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-x-8 px-4 lg:grid-cols-2"
+			>
+				{titles.map((t, i) => {
+					const marks = marksOf(t.media_type, t.tmdb_id)
+					return (
+						<li
+							key={t.tmdb_id}
+							className="border-b border-white/5 hover:bg-white/[0.02]"
 						>
-							<span className="w-6 shrink-0 text-right text-sm font-bold tabular-nums text-gray-500 group-hover:text-amber-300 sm:w-9">
-								{first + i}
-							</span>
-							{t.poster_path ? (
-								<TmdbImage
-									kind="poster"
-									path={t.poster_path}
-									width={40}
-									priority={i < EAGER_ROWS ? "eager" : "lazy"}
-									className="h-12 w-8 shrink-0 rounded-sm bg-white/5 object-cover sm:h-15 sm:w-10"
-								/>
-							) : (
-								<span className="block h-12 w-8 shrink-0 rounded-sm bg-white/10 sm:h-15 sm:w-10" />
-							)}
-							<span className="min-w-0 flex-1">
-								<span className="block truncate text-sm font-semibold text-white sm:text-base">
-									<MediaText value={presentedText(t, "title", t.title)} />
+							<Link
+								to={t.path}
+								prefetch="intent"
+								className="group flex items-center gap-3 py-1.5 pl-1"
+							>
+								<span className="w-6 shrink-0 text-right text-sm font-bold tabular-nums text-gray-500 group-hover:text-amber-300 sm:w-9">
+									{first + i}
 								</span>
-								<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-500">
-									<RowLogos
-										services={
-											services?.[createMediaKey(t.media_type, t.tmdb_id)]
-										}
+								{t.poster_path ? (
+									<TmdbImage
+										kind="poster"
+										path={t.poster_path}
+										width={40}
+										priority={i < EAGER_ROWS ? "eager" : "lazy"}
+										className="h-12 w-8 shrink-0 rounded-sm bg-white/5 object-cover sm:h-15 sm:w-10"
 									/>
-									<span className="truncate">
-										{[t.release_year, t.genres.join(", ")]
-											.filter(Boolean)
-											.join(" · ")}
+								) : (
+									<span className="block h-12 w-8 shrink-0 rounded-sm bg-white/10 sm:h-15 sm:w-10" />
+								)}
+								<span className="min-w-0 flex-1">
+									<span className="block truncate text-sm font-semibold text-white sm:text-base">
+										<MediaText value={presentedText(t, "title", t.title)} />
 									</span>
+									<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-500">
+										<RowLogos
+											services={
+												services?.[createMediaKey(t.media_type, t.tmdb_id)]
+											}
+										/>
+										<span className="truncate">
+											{[t.release_year, t.genres.join(", ")]
+												.filter(Boolean)
+												.join(" · ")}
+										</span>
+									</span>
+									<RowAward
+										mark={awards[awardKey(t.media_type, t.tmdb_id)]}
+										icon={trophy}
+									/>
 								</span>
-							</span>
-							<RowScores
-								goodwatch={t.goodwatch_overall_score_normalized_percent}
-								score={marks.score}
-								mark={rowMark(marks)}
-							/>
-						</Link>
-					</li>
-				)
-			})}
-		</ol>
+								<RowScores
+									goodwatch={t.goodwatch_overall_score_normalized_percent}
+									score={marks.score}
+									mark={rowMark(marks)}
+								/>
+							</Link>
+						</li>
+					)
+				})}
+			</ol>
+		</>
 	)
 }
