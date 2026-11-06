@@ -12,10 +12,9 @@ import type {
 import { initials } from "~/ui/details/page-ui"
 import { type PeopleRow, episodesWords } from "~/ui/details/people/usePeople"
 import { personPath } from "~/utils/helpers"
+import { tmdbImageUrl } from "~/utils/tmdb-image"
 
 type Media = MovieResult | ShowResult
-
-const TMDB = "https://image.tmdb.org/t/p"
 
 const TIER: Record<string, string> = {
 	main: "Main cast",
@@ -51,7 +50,7 @@ export function castCharacter(
 	const character = portrait?.character || row.roles[0] || ""
 	const image =
 		portrait?.image ??
-		(row.profilePath ? `${TMDB}/w342${row.profilePath}` : null)
+		(row.profilePath ? tmdbImageUrl(row.profilePath, "h632") : null)
 	const eps = media.mediaType === "show" ? episodesWords(row.episodes) : null
 	return {
 		row,

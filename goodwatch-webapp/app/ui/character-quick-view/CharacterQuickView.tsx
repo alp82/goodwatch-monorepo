@@ -25,6 +25,7 @@ import {
 	useQuickViewFrame,
 } from "~/ui/quick-view/QuickView"
 import { personPath, titlePath } from "~/utils/helpers"
+import { tmdbImageUrl } from "~/utils/tmdb-image"
 import type { CharacterEntry, OpenCharacter } from "./context"
 import { TvdbCredit } from "./parts"
 import {
@@ -33,21 +34,28 @@ import {
 	useTitlePortraits,
 } from "./portraits"
 
-const TMDB = "https://image.tmdb.org/t/p"
 const EASE = [0.22, 1, 0.36, 1] as const
 /** The wide view: the portrait (340 × 510) with Previous / Next under it, and the card beside it at that height. */
 const STAGE = { w: 800, h: 570 }
 const DRAWER_HEIGHT = 580
 
-/** The actor's picture: the TMDB profile when known (2:3 at w342), else TheTVDB's photo. */
-const actorSrc = (e: CharacterEntry) =>
-	e.actorProfilePath
-		? `${TMDB}/w342${e.actorProfilePath}`
-		: (e.actorImage ?? undefined)
+/**
+ * The actor's pictures, best first: the TMDB profile when known (a stored profile path can also be a full TheTVDB
+ * URL, which tmdbImageUrl passes through as it is), then TheTVDB's actor photo.
+ */
+const actorSources = (e: CharacterEntry): string[] =>
+	unique([
+		e.actorProfilePath ? tmdbImageUrl(e.actorProfilePath, "h632") : null,
+		e.actorImage,
+	])
+
+const unique = (list: (string | null | undefined)[]): string[] => [
+	...new Set(list.filter((x): x is string => Boolean(x))),
+]
 
 /** The character has a portrait of their own: not missing, and not the actor's photo again. */
 const hasPortrait = (e: CharacterEntry) =>
-	Boolean(e.image) && e.image !== actorSrc(e) && e.image !== e.actorImage
+	Boolean(e.image) && !actorSources(e).includes(e.image)
 
 const titleHref = (e: CharacterEntry) =>
 	e.title ? titlePath(e.title.mediaType, e.title.tmdbId, e.title.name) : null
@@ -278,34 +286,29 @@ function Stage({
 
 // --- the pictures and the names ---------------------------------------------------------------------------------
 
-/** The actor's photo, 2:3, a link to their page. */
+/** The actor's photo, 2:3, a link to their page; initials when no picture loads. */
 function ActorFrame({
 	entry,
 	className = "",
 }: { entry: CharacterEntry; className?: string }) {
-	const src = actorSrc(entry)
 	return (
 		<Link
 			to={actorHref(entry)}
 			aria-label={`${entry.personName}, open their page`}
 			className={`group relative block aspect-[2/3] shrink-0 overflow-hidden rounded-xl bg-gray-800 ring-1 ring-white/15 ${className}`}
 		>
-			{src ? (
-				<Img
-					src={src}
-					alt={entry.personName}
-					className="transition-transform duration-200 group-hover:scale-[1.04]"
-				/>
-			) : (
-				<span className="absolute inset-0 grid place-items-center text-2xl font-bold text-gray-500">
-					{initials(entry.personName)}
-				</span>
-			)}
+			<Img
+				key={entry.anchor}
+				sources={actorSources(entry)}
+				alt={entry.personName}
+				className="transition-transform duration-200 group-hover:scale-[1.04]"
+				fallback={<Initials name={entry.personName} />}
+			/>
 		</Link>
 	)
 }
 
-/** The character's portrait, 2:3. */
+/** The character's portrait, 2:3; the actor's photo, then initials, when it doesn't load. */
 function CharacterFrame({
 	entry,
 	className = "",
@@ -315,10 +318,23 @@ function CharacterFrame({
 			className={`relative aspect-[2/3] shrink-0 overflow-hidden rounded-xl bg-gray-800 ring-1 ring-white/15 ${className}`}
 		>
 			<Img
-				src={entry.image}
+				key={entry.anchor}
+				sources={unique([entry.image, ...actorSources(entry)])}
 				alt={`${entry.personName} as ${entry.character}`}
+				fallback={<Initials name={entry.character} />}
 			/>
 		</div>
+	)
+}
+
+function Initials({ name, small = false }: { name: string; small?: boolean }) {
+	return (
+		<span
+			aria-hidden
+			className={`absolute inset-0 grid place-items-center font-bold text-gray-500 ${small ? "text-xs" : "text-2xl"}`}
+		>
+			{initials(name)}
+		</span>
 	)
 }
 
@@ -484,18 +500,35 @@ function CloseButton() {
 	)
 }
 
+/**
+ * A picture from the first of `sources` that loads: a failed one gives way to the next, and with none left the
+ * `fallback` shows (nothing by default), so the view never draws a broken image.
+ */
 function Img({
-	src,
+	sources,
 	alt = "",
 	className = "",
-}: { src?: string; alt?: string; className?: string }) {
-	if (!src) return null
+	fallback = null,
+	lazy = false,
+}: {
+	sources: string[]
+	alt?: string
+	className?: string
+	fallback?: ReactNode
+	lazy?: boolean
+}) {
+	const [failed, setFailed] = useState(0)
+	const src = sources[failed]
+	if (!src) return <>{fallback}</>
 	return (
 		<img
+			key={src}
 			src={src}
 			alt={alt}
+			loading={lazy ? "lazy" : undefined}
 			decoding="async"
 			draggable={false}
+			onError={() => setFailed((n) => n + 1)}
 			className={`size-full object-cover object-top ${className}`}
 		/>
 	)
@@ -514,7 +547,9 @@ function InTitle({ entry }: { entry: CharacterEntry }) {
 				className="group -mx-1.5 flex items-center gap-3 rounded-lg px-1.5 py-1 hover:bg-white/[0.05]"
 			>
 				<span className="aspect-[2/3] w-9 shrink-0 overflow-hidden rounded-md bg-gray-800 ring-1 ring-white/10">
-					{t.posterPath && <Img src={`${TMDB}/w92${t.posterPath}`} />}
+					{t.posterPath && (
+						<Img sources={[tmdbImageUrl(t.posterPath, "w92")]} />
+					)}
 				</span>
 				<span className="min-w-0">
 					<span className="block truncate text-sm font-semibold text-gray-100 group-hover:text-amber-300">
@@ -561,7 +596,8 @@ function MoreCharacters(props: {
 
 type Tile = {
 	key: string
-	image: string
+	/** The character's portrait, then the actor's photo. */
+	sources: string[]
 	caption: string
 	hint: string
 	pick: () => void
@@ -585,16 +621,12 @@ function Grid({ label, tiles }: { label: string; tiles: Tile[] | null }) {
 								title={t.hint}
 								className="group min-w-0 cursor-pointer text-left"
 							>
-								<span className="block aspect-[2/3] overflow-hidden rounded-md bg-gray-800 ring-1 ring-white/10 transition-transform duration-150 group-hover:scale-[1.04]">
-									<img
-										src={t.image}
+								<span className="relative block aspect-[2/3] overflow-hidden rounded-md bg-gray-800 ring-1 ring-white/10 transition-transform duration-150 group-hover:scale-[1.04]">
+									<Img
+										sources={t.sources}
 										alt={t.hint}
-										width={300}
-										height={450}
-										loading="lazy"
-										decoding="async"
-										draggable={false}
-										className="size-full object-cover object-top"
+										lazy
+										fallback={<Initials name={t.caption} small />}
 									/>
 								</span>
 								<span className="mt-1 block truncate text-[11px] text-gray-400 group-hover:text-white">
@@ -698,7 +730,7 @@ function MoreFromTitle({
 				ready
 					? list.map(({ p, i }) => ({
 							key: `${p.personName}-${p.character}`,
-							image: p.image,
+							sources: unique([p.image, p.actorImage]),
 							caption: p.character,
 							hint: `${p.personName} as ${p.character}`,
 							pick: () => onRole(toEntry(p, i)),
@@ -742,7 +774,7 @@ function ActorRoles({
 				q.isSuccess
 					? roles.map((r) => ({
 							key: `${r.mediaType}-${r.tmdbId}`,
-							image: r.image,
+							sources: unique([r.image, r.actorImage]),
 							caption: r.character,
 							hint: `${entry.personName} as ${r.character} in ${r.title}`,
 							pick: () => onRole(roleEntry(entry, r)),
