@@ -28,7 +28,7 @@ export function ShowStatus({ media }: { media: MovieResult | ShowResult }) {
 		>
 			<span
 				aria-hidden="true"
-				className="relative -top-[0.07em] flex size-1.5 shrink-0"
+				className="relative flex size-1.5 shrink-0"
 			>
 				{status.tone === "live" && (
 					<span
