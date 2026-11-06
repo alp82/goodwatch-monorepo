@@ -691,7 +691,12 @@ export function TitlePage(props: TitlePageProps) {
 												{(age || hasStatus) && <Dot />}
 											</span>
 										)}
-										{age && <AgeRating ageRating={age} />}
+										{age && (
+											<span className="whitespace-nowrap">
+												<AgeRating ageRating={age} />
+												{hasStatus && <Dot />}
+											</span>
+										)}
 										{status}
 									</p>
 									<div className="max-sm:hidden">
