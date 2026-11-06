@@ -213,3 +213,76 @@ export function portraitLookup(portraits: CharacterPortrait[]) {
 		return list?.length ? pickRole(list, member.roles) : undefined
 	}
 }
+
+/**
+ * A character to open on a title page: the search panel's Characters group links the title page with
+ * `?character=Walter White&actor=Bryan Cranston`; the page opens Starring, scrolls to the row and opens the character
+ * quick view, then takes the parameters off the address. The canonical address leaves them out (utils/meta.ts), and
+ * the page reads them in the browser only, so the server's HTML stays the same for every character.
+ */
+export interface CharacterAsk {
+	character: string
+	/** The actor's name; empty when unknown. */
+	actor: string
+}
+
+const CHARACTER_PARAM = "character"
+const ACTOR_PARAM = "actor"
+
+/** The title page's address that opens a character (`path` is the title's path). */
+export function characterHref(path: string, ask: CharacterAsk): string {
+	const params = new URLSearchParams({ [CHARACTER_PARAM]: ask.character })
+	if (ask.actor) params.set(ACTOR_PARAM, ask.actor)
+	return `${path}?${params}`
+}
+
+/** The character a title page's search asks for, and the search without it; null when it asks for none. */
+export function readCharacterAsk(
+	search: string,
+): { ask: CharacterAsk; rest: string } | null {
+	const params = new URLSearchParams(search)
+	const character = (params.get(CHARACTER_PARAM) ?? "").trim()
+	if (!character) return null
+	const actor = (params.get(ACTOR_PARAM) ?? "").trim()
+	params.delete(CHARACTER_PARAM)
+	params.delete(ACTOR_PARAM)
+	const rest = params.toString()
+	return { ask: { character, actor }, rest: rest ? `?${rest}` : "" }
+}
+
+/**
+ * The cast row a character ask means, by index, or -1. In order: the actor with that exact character, the actor with
+ * a character that contains it or is contained by it ("Walter White" in "Walter White / Heisenberg"), anyone with that
+ * exact character, anyone with a containing one when no actor is known, then the actor alone. Names compare folded,
+ * so "Walter White Jr." never takes Walter White's place while Walter White is in the rows.
+ */
+export function pickCastRow(
+	rows: { name: string; characters: string[] }[],
+	ask: CharacterAsk,
+): number {
+	const character = foldName(ask.character)
+	const actor = foldName(ask.actor)
+	const exact = (r: { characters: string[] }) =>
+		r.characters.some((c) => foldName(c) === character)
+	const loose = (r: { characters: string[] }) =>
+		r.characters.some((c) => {
+			const name = foldName(c)
+			return (
+				Boolean(name) && (name.includes(character) || character.includes(name))
+			)
+		})
+	const by = (r: { name: string }) =>
+		Boolean(actor) && foldName(r.name) === actor
+	const tests: ((r: { name: string; characters: string[] }) => boolean)[] = [
+		(r) => by(r) && exact(r),
+		(r) => by(r) && loose(r),
+		exact,
+		(r) => !actor && loose(r),
+		by,
+	]
+	for (const t of tests) {
+		const at = rows.findIndex(t)
+		if (at >= 0) return at
+	}
+	return -1
+}

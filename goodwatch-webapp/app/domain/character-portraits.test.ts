@@ -4,6 +4,7 @@ import {
 	type CharacterPortrait,
 	type CharacterRole,
 	byRenown,
+	characterHref,
 	characterNamePatterns,
 	characterQuery,
 	escapeLike,
@@ -13,9 +14,11 @@ import {
 	matchBoostPatterns,
 	matchName,
 	onePerTitle,
+	pickCastRow,
 	pickRole,
 	portraitLookup,
 	rankCharacterMatches,
+	readCharacterAsk,
 } from "./character-portraits.ts"
 
 const portrait = (p: Partial<CharacterPortrait>): CharacterPortrait => ({
@@ -208,4 +211,45 @@ test("a person's roles keep one per title, best known first", () => {
 		onePerTitle(roles).map((r) => r.character),
 		["B", "A"],
 	)
+})
+
+test("a character link carries the character and the actor, and reading it takes both off", () => {
+	const href = characterHref("/show/1396-breaking-bad", {
+		character: "Walter White",
+		actor: "Bryan Cranston",
+	})
+	assert.equal(
+		href,
+		"/show/1396-breaking-bad?character=Walter+White&actor=Bryan+Cranston",
+	)
+	assert.deepEqual(readCharacterAsk(href.slice(href.indexOf("?"))), {
+		ask: { character: "Walter White", actor: "Bryan Cranston" },
+		rest: "",
+	})
+	assert.deepEqual(readCharacterAsk("?hl=meth&character=Jesse%20Pinkman"), {
+		ask: { character: "Jesse Pinkman", actor: "" },
+		rest: "?hl=meth",
+	})
+	assert.equal(readCharacterAsk("?hl=meth"), null)
+	assert.equal(readCharacterAsk("?character=%20"), null)
+})
+
+test("the cast row of a character: actor and character first, a son's name never wins over the father's", () => {
+	const rows = [
+		{ name: "RJ Mitte", characters: ["Walter White Jr."] },
+		{ name: "Bryan Cranston", characters: ["Walter White"] },
+		{ name: "Aaron Paul", characters: ["Jesse Pinkman"] },
+		{ name: "Bob Odenkirk", characters: ["Saul Goodman / Jimmy McGill"] },
+	]
+	const pick = (character: string, actor = "") =>
+		pickCastRow(rows, { character, actor })
+	assert.equal(pick("Walter White", "Bryan Cranston"), 1)
+	assert.equal(pick("Walter White"), 1)
+	assert.equal(pick("Walter White Jr.", "RJ Mitte"), 0)
+	assert.equal(pick("Saul Goodman", "Bob Odenkirk"), 3)
+	assert.equal(pick("Saul Goodman"), 3)
+	// The cast credit names the character differently: the actor still finds the row.
+	assert.equal(pick("Jesse", "Aaron Paul"), 2)
+	assert.equal(pick("Captain Jesse", "Aaron Paul"), 2)
+	assert.equal(pick("Gus Fring", "Giancarlo Esposito"), -1)
 })

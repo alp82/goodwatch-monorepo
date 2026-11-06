@@ -7,9 +7,12 @@
 // empty state with ways out, and paging in place: 24 first, and every "Show more" adds 24. The next part is fetched
 // ahead, so a press shows it at once. Before the endpoint answers, the page's own first people fill the same rows, so
 // the server's HTML has them and nothing jumps. Find can ask for a person: the search takes their name and their row is
-// ringed. The title page's opened Starring row and the At a glance sub-page draw this same list.
+// ringed. A search pick of a character (?character=, see find/character-param.ts) finds their row the same way and
+// opens its quick view, with the rows on screen as its steps. The title page's opened Starring row and the At a glance
+// sub-page draw this same list.
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { type ReactNode, useEffect, useRef, useState } from "react"
+import { type CharacterAsk, pickCastRow } from "~/domain/character-portraits"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import {
 	type CharacterEntry,
@@ -67,6 +70,7 @@ export function CastSection({
 	const siblings = people
 		.map((p) => p.entry)
 		.filter((e): e is CharacterEntry => e !== null)
+	useOpenAskedCharacter(list, people, portraits.ready || portraits.failed)
 	const show = media.mediaType === "show"
 	return (
 		<div
@@ -156,7 +160,18 @@ function useCastList(media: Media, enabled: boolean) {
 
 	// Find asked for someone in the cast: search for them, then ring their row once it is in.
 	const ring = useRingPerson(top, people.ready && !people.busy)
+	// A character asked for (a search pick): looked for among the first rows, then by a search (useOpenAskedCharacter).
+	const [asked, setAsked] = useState<CharacterAsked | null>(null)
+	const answered = useRef(new Set<number>())
 	useFindRequests((r) => {
+		if (r.type === "character") {
+			if (answered.current.has(r.nonce)) return
+			answered.current.add(r.nonce)
+			setGroup("")
+			setQ("")
+			setAsked({ character: r.character, actor: r.actor, searched: null })
+			return
+		}
 		if (r.type === "person" && r.kind === "cast") {
 			setGroup("")
 			setQ(r.name)
@@ -203,6 +218,9 @@ function useCastList(media: Media, enabled: boolean) {
 		tabs,
 		groupLabel: people.groups.find((g) => g.key === group)?.label,
 		top,
+		ring,
+		asked,
+		setAsked,
 		more: () => {
 			const next = limit + STEP
 			setLimit(next)
@@ -218,6 +236,55 @@ function useCastList(media: Media, enabled: boolean) {
 	}
 }
 type CastList = ReturnType<typeof useCastList>
+
+type CharacterAsked = CharacterAsk & {
+	/** The search made for them when the first rows didn't hold them; null before. */
+	searched: string | null
+}
+
+/**
+ * Opens the asked character's quick view once the rows (and the portraits that name the characters) are in: their
+ * row is rung and scrolled to, then its link is pressed, so the view gets the rows on screen as its steps. A character
+ * not among the first rows is searched for by the actor's name (else the character's), once; without a row then, or
+ * with a row that has no picture to show bigger, the ring is all.
+ */
+function useOpenAskedCharacter(
+	list: CastList,
+	people: CastCharacter[],
+	portraitsIn: boolean,
+) {
+	const { asked, setAsked, ring, top } = list
+	const ready =
+		list.people.ready && !list.people.busy && list.people.q === list.q.trim()
+	useEffect(() => {
+		if (!asked || !ready || !portraitsIn) return
+		const at = pickCastRow(
+			people.map((p) => ({
+				name: p.row.name,
+				characters: [p.character, ...p.row.roles],
+			})),
+			asked,
+		)
+		if (at < 0) {
+			if (asked.searched === null) {
+				const q = asked.actor || asked.character
+				list.setQ(q)
+				setAsked({ ...asked, searched: q })
+			} else setAsked(null)
+			return
+		}
+		setAsked(null)
+		const id = people[at].row.id
+		ring(id)
+		// After the ring's scroll has mostly landed. Not cleared when `asked` resets just above.
+		window.setTimeout(() => {
+			const link = top.current?.querySelector<HTMLElement>(
+				`[data-person-id="${id}"][data-character-anchor]`,
+			)
+			link?.click()
+		}, 450)
+	}, [asked, ready, portraitsIn, people])
+}
 
 // --- the controls -------------------------------------------------------------------------------------------------
 

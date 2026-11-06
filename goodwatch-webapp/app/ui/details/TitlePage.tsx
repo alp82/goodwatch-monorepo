@@ -35,6 +35,7 @@ import {
 	useBelowFold,
 } from "~/ui/details/below-fold"
 import { FindField, FindResults, useFindItems } from "~/ui/details/find/Find"
+import { useCharacterParam } from "~/ui/details/find/character-param"
 import {
 	FindBus,
 	type FindRequest,
@@ -327,6 +328,14 @@ export function TitlePage(props: TitlePageProps) {
 		window.setTimeout(() => bus.send(r), 450)
 	}
 	useHlParam()
+	// A search pick of a character (?character=): Starring opens, its cast list finds the row and opens the quick view.
+	// The cast list listens only once the row is open, so the ask goes again a few times; the nonce makes it count once.
+	useCharacterParam((ask) => {
+		const r: FindRequest = { type: "character", ...ask, nonce: Date.now() }
+		requestAnimationFrame(() => jump("cast"))
+		for (const ms of [0, 450, 1200, 2500])
+			window.setTimeout(() => bus.send(r), ms)
+	})
 	const leave = () => {
 		// The picked words are marked where it lands (?hl=).
 		markHl(query)

@@ -14,6 +14,8 @@ import { flash } from "~/ui/details/find/highlight"
 export type FindRequest =
 	| { type: "person"; kind: "cast" | "crew"; id: number; name: string }
 	| { type: "cast-search"; q: string }
+	/** Open a character's quick view from their cast row (a search pick, ?character=); `nonce` tells repeats apart. */
+	| { type: "character"; character: string; actor: string; nonce: number }
 
 export interface FindBusValue {
 	send: (r: FindRequest) => void
