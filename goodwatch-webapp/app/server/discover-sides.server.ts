@@ -1,19 +1,13 @@
-// Sides of you on Discover (#671, decided in #658): while For you is on, a signed-in member's list as a row per side,
-// plus a row of the titles that fit no side ("More for you"). Rows sit where their first title sits in the list and
-// keep the list's order inside, so the list's order decides both (personal order under Best match): sides group, the
-// list ranks. A row's "More like this" narrows the list to that side's titles (`side=<id>`, or `side=none`), still in
-// the list's order.
+// A member's taste groups (the Taste page's sides) and each title's group, for Watch next's taste picker
+// (watch-next-taste-picker.server.ts) and Discover's taste panel (discover-panel.server.ts).
 //
 // The sides are the Taste page's (taste-portrait/sides.server.ts), and a title belongs to a side by the same rule as
-// a loved title: its nearest side, when at least 0.3 close to its center and the side's name describes it.
-//
-// A side shows as its trait name with the loved titles that stand for it, and no summary line. Names are words: the
-// rows ship only once the words test (#656) passes.
+// a loved title: its nearest side, when at least 0.3 close to its center and the side's name describes it. A side
+// shows as its trait name with the loved titles that stand for it.
 //
 // Per member, the sides and each title's side are kept in process memory for 10 minutes, keyed by everything the
 // grouping reads (ratings, seen, Want to See, skipped) and the snapshot version.
 import { createHash } from "node:crypto"
-import type { MoodKey } from "~/domain/moods"
 import { titleDisplays } from "~/server/taste-portrait/display.server"
 import { portraitInput } from "~/server/taste-portrait/index.server"
 import { readPerson, titleZ } from "~/server/taste-portrait/person.server"
@@ -22,7 +16,6 @@ import {
 	franchiseOf,
 	namedSides,
 	sideHere,
-	sideMoods,
 	sideOfTitle,
 } from "~/server/taste-portrait/sides.server"
 import type { Taste } from "~/server/taste/index.server"
@@ -30,36 +23,24 @@ import type { TitleSnapshot } from "~/server/title-snapshot/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
 import type { TitleKey } from "~/utils/title-key"
 
-/** The id of the titles that fit no side, in `side=` and in a row's id. */
-export const NO_SIDE = "none"
-/** The titles a row shows; "See all" opens the rest. */
-export const ROW_TITLES = 24
 /** The loved titles that stand for a side in its header. */
 const HERE = 4
 const KEEP_MS = 10 * 60_000
 // Each member kept holds one byte per snapshot title (about 250 KB at 250,000 titles).
 const MAX_KEPT = 100
 
-/** A side as Discover shows it, or (id "none") the titles that fit no side. */
-export interface DiscoverSide {
-	/** "side-1", "side-2", and so on as on the Taste page; "none" for the titles that fit no side. */
-	id: string
-	/** The side's place by size (1 is the largest), for its hue; null for the titles that fit no side. */
-	number: number | null
-	/** The side's trait name ("Bleak, tense stories"); null for the titles that fit no side. */
-	name: string | null
-	/** Its titles in this list. */
-	total: number
-	/** The moods Watch next opens the side with. */
-	moods: MoodKey[]
+/** A side as the taste picker and panel show it. */
+export interface MemberSide {
+	/** The side's trait name ("Bleak, tense stories"). */
+	name: string
 	/** The loved titles that stand for the side, with their posters. */
 	here: { key: TitleKey; title: string; poster: string }[]
 }
 
-/** A member's sides with what Discover needs of them, and each title's side once asked. */
+/** A member's sides with what the picker and panel need of them, and each title's side once asked. */
 export interface MemberSides {
 	named: NamedSides
-	sides: Omit<DiscoverSide, "total">[]
+	sides: MemberSide[]
 	/** The side of the title at each snapshot row: -2 not worked out yet, -1 no side, else the side's index. */
 	fits: Int8Array
 	snapshot: TitleSnapshot
@@ -113,10 +94,10 @@ async function build(
 	if (!named) return null
 	const here = named.sides.map((side) => sideHere(person, side))
 	const displays = await titleDisplays(new Set(here.flat()))
-	const sides = named.sides.map((side, i) => {
+	const sides = named.sides.map((side, i): MemberSide => {
 		// One title per franchise: a franchise's posters read alike.
 		const franchises = new Set<string>()
-		const shown: DiscoverSide["here"] = []
+		const shown: MemberSide["here"] = []
 		for (const key of here[i]) {
 			const display = displays.get(key)
 			if (!display?.poster || shown.length >= HERE) continue
@@ -125,13 +106,7 @@ async function build(
 			franchises.add(franchise)
 			shown.push({ key, title: display.title, poster: display.poster })
 		}
-		return {
-			id: side.id,
-			number: i + 1,
-			name: side.name,
-			moods: sideMoods(side.members),
-			here: shown,
-		}
+		return { name: side.name, here: shown }
 	})
 	return {
 		named,
@@ -153,33 +128,4 @@ export function sideOf(member: MemberSides, key: TitleKey): number | null {
 	}
 	const side = member.fits[row]
 	return side < 0 ? null : side
-}
-
-/** The side `side=` names: its index, null for the titles that fit no side, undefined when it names none. */
-export function requestedGroup(
-	member: MemberSides,
-	id: string | null | undefined,
-): number | null | undefined {
-	if (!id) return undefined
-	if (id === NO_SIDE) return null
-	const index = member.sides.findIndex((side) => side.id === id)
-	return index < 0 ? undefined : index
-}
-
-/** A group as Discover shows it. */
-export function discoverSide(
-	member: MemberSides,
-	side: number | null,
-	total: number,
-): DiscoverSide {
-	if (side === null)
-		return {
-			id: NO_SIDE,
-			number: null,
-			name: null,
-			total,
-			moods: [],
-			here: [],
-		}
-	return { ...member.sides[side], total }
 }

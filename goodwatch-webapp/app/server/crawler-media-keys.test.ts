@@ -12,7 +12,7 @@ import { test } from "node:test"
 import "./title-filter/test-alias.ts"
 
 const browseCalls: { page: number; exposure?: boolean }[] = []
-const browseViewer = { member: false, rows: false }
+const browseViewer = { member: false }
 Object.assign(globalThis, {
 	__browseCalls: browseCalls,
 	__browseViewer: browseViewer,
@@ -44,7 +44,7 @@ registerHooks({
 			source = "export const legacyDiscoverRedirect=async()=>null"
 		else if (url.endsWith("/server/discover-results.server.ts"))
 			source =
-				'export class SnapshotNotLoaded extends Error {}; export const discoverFilterDefaults=()=>({onMyServices:false,notSeenYet:false});export const forYouFromParams=(params)=>params.get("foryou")!=="0";export const getDiscoverResults=async(_ctx,input)=>{globalThis.__browseCalls.push(input);return {sides:globalThis.__browseViewer.rows?{layout:"rows",rows:[]}:null,cards:[{title:"The Matrix",media_type:"movie",tmdb_id:603}],page:input.page,pageSize:40,total:40000}}'
+				'export class SnapshotNotLoaded extends Error {}; export const discoverFilterDefaults=()=>({onMyServices:false,notSeenYet:false});export const forYouFromParams=(params)=>params.get("foryou")!=="0";export const getDiscoverResults=async(_ctx,input)=>{globalThis.__browseCalls.push(input);return {cards:[{title:"The Matrix",media_type:"movie",tmdb_id:603}],page:input.page,pageSize:40,total:40000}}'
 		else if (url.endsWith("/ui/discover/DiscoverPage.tsx"))
 			source = "export const DiscoverPage=()=>null"
 		else if (url.endsWith("/ui/ErrorPage.tsx"))
@@ -191,7 +191,7 @@ test("Discover pagination advances its bounded window and stops at the page cap"
 	for (const page of [2, 3, 6, 12, 250, 251, 999]) {
 		const result = await loader({
 			request: new Request(
-				`https://goodwatch.test/discover?layout=grid&page=${page}`,
+				`https://goodwatch.test/discover?page=${page}`,
 				{ headers: { "User-Agent": "Googlebot" } },
 			),
 			params: {},
@@ -202,7 +202,7 @@ test("Discover pagination advances its bounded window and stops at the page cap"
 		const tags = discoverMeta({
 			data,
 			location: new URL(
-				`https://goodwatch.test/discover?layout=grid&page=${page}`,
+				`https://goodwatch.test/discover?page=${page}`,
 			),
 		} as any)
 		assert.ok(
@@ -256,52 +256,31 @@ async function browse(search: string) {
 	})
 }
 
-test("guests load only the requested window without a page-one probe", async () => {
-	browseViewer.member = false
-	for (const search of ["page=6", "page=12&layout=grid"]) {
-		await browse(search)
-		assert.deepEqual(
-			browseCalls.map((p) => p.page),
-			search.startsWith("page=6") ? [2, 3, 4, 5, 6] : [8, 9, 10, 11, 12],
-		)
-	}
-})
-
-test("members probe side rows without exposure and skip the probe for grids or sides", async () => {
-	browseViewer.member = true
+test("guests and members load only the requested window; old side and layout params are ignored", async () => {
 	try {
-		await browse("page=12")
-		assert.deepEqual(
-			browseCalls.map((p) => p.page),
-			[1, 8, 9, 10, 11, 12],
-		)
-		assert.equal(browseCalls[0].exposure, false)
-		assert.ok(browseCalls.slice(1).every((p) => p.exposure !== false))
-		for (const search of [
-			"page=12&layout=grid",
-			"page=12&side=one",
-			"page=12&foryou=0",
-		]) {
-			await browse(search)
+		for (const member of [false, true]) {
+			browseViewer.member = member
+			for (const search of [
+				"page=12",
+				"page=12&layout=grid",
+				"page=12&layout=rows",
+				"page=12&side=one",
+				"page=12&foryou=0",
+			]) {
+				await browse(search)
+				assert.deepEqual(
+					browseCalls.map((p) => p.page),
+					[8, 9, 10, 11, 12],
+				)
+				assert.ok(browseCalls.every((p) => p.exposure !== false))
+			}
+			await browse("page=6")
 			assert.deepEqual(
 				browseCalls.map((p) => p.page),
-				[8, 9, 10, 11, 12],
+				[2, 3, 4, 5, 6],
 			)
 		}
-		browseViewer.rows = true
-		const result = await browse("page=12")
-		const data = result instanceof Response ? await result.json() : result
-		assert.deepEqual(
-			data.browse.initial?.pages.map((p: any) => p.page),
-			[1],
-		)
-		assert.deepEqual(
-			browseCalls.map((p) => p.page),
-			[1],
-		)
-		assert.equal(browseCalls[0].exposure, false)
 	} finally {
 		browseViewer.member = false
-		browseViewer.rows = false
 	}
 })

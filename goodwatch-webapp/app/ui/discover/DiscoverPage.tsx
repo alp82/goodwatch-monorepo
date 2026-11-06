@@ -12,15 +12,10 @@
 //
 // Best match (the sort by taste match) and the Taste match filter need taste; the bar hears from the results whether
 // the viewer has it. For you sits in You's Order block.
-//
-// Sides of you: while For you is on (with any sort; Best match counts as on), a member with sides sees a row per group
-// of their taste instead of the grid (SideRows). A row's "More like this" narrows the grid to that group (`side` in
-// the URL) until "All of your taste", For you turned off, or a search.
 import { useLocation, useNavigation, useSearchParams } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react"
 import { useInView } from "react-intersection-observer"
-import { withSides } from "~/domain/discover-layout"
 import {
 	DISCOVER_DEFAULTS,
 	type SearchScope,
@@ -36,7 +31,6 @@ import {
 	stateAsApplied,
 } from "~/domain/filter-state"
 import { preferencesParam } from "~/domain/search-preferences"
-import { groupsByTaste } from "~/domain/side-rows"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import { discoveryProperties } from "~/telemetry/product-events"
@@ -64,7 +58,6 @@ import type { TitleKey } from "~/utils/title-key"
 import { DiscoverGrid } from "./DiscoverGrid"
 import { DiscoverRoles } from "./DiscoverRoles"
 import { HiddenTitles } from "./HiddenTitles"
-import { SideBanner, SideRows, sideRowsOf } from "./SideRows"
 import {
 	type InitialBrowse,
 	browseKey,
@@ -159,7 +152,6 @@ export function DiscoverPage({
 	const off = useMemo(() => params.getAll("off"), [params])
 	const searching = typed !== null
 	const allTitles = params.get("allTitles") === "1"
-	const side = params.get("side")
 
 	const guest = useGuestBody(member)
 	const filters = useFilterState({
@@ -255,13 +247,8 @@ export function DiscoverPage({
 	}, [searching, plan, catalogue, filters.query, filters.sort, filters.defaults, listState, search.current?.originalSet, search.current?.identitySet])
 	const shownFilters = useReadFilters(filters, reading.items, searching, listQuery)
 
-	const browseQuery = withSides(
-		listQuery,
-		side,
-		params.get("layout") !== "grid",
-	)
 	const browse = useDiscoverBrowse({
-		query: browseQuery,
+		query: listQuery,
 		forYou: forYou.on,
 		member,
 		guest,
@@ -343,7 +330,7 @@ export function DiscoverPage({
 			on,
 			from: browse.key,
 			key: browseKey(
-				browseQuery,
+				listQuery,
 				on,
 				searching ? (search.current?.ranked ?? undefined) : undefined,
 				new URLSearchParams(browse.key).get("displayLanguage") ?? undefined,
@@ -438,64 +425,10 @@ export function DiscoverPage({
 	const status = first?.forYou.status ?? (member ? "ready" : "signUp")
 	const taste = tasteStateOf(first)
 
-	// Sides of you: the rows, or the side the grid is narrowed to, while the grouping applies (For you on, or Best match
-	// as shown). While the last answer, laid out with rows, stands in for a grid, a spinner waits for the new one.
-	// Turning For you off, a search, or Best match falling back leaves the side.
-	const grouped = groupsByTaste({
-		searching,
-		forYou: forYou.on,
-		sort: sortShown(filters.sort, searching, taste),
-	})
-	// Browsing only: while searching, the last answer is stale and hidden anyway, and the status line speaks for the search.
-	const layoutPending =
-		!searching && !grouped && Boolean(first?.sides) && browse.isPlaceholderData
-	const rows = stale || layoutPending ? null : sideRowsOf(first)
-	// The cards on screen in their order, for the characters strip: every taste row's ("More for you" last, as
-	// SideRows draws them), or the grid's.
-	const roleCards = useMemo(
-		() =>
-			rows
-				? [
-						...rows.filter((row) => row.number !== null),
-						...rows.filter((row) => row.number === null),
-					].flatMap((row) => row.cards)
-				: first && first.total === 0 && !stale
-					? []
-					: cards,
-		[rows, first, stale, cards],
-	)
-	const narrowed =
-		!stale && !layoutPending && first?.sides?.layout === "side"
-			? first.sides.side
-			: null
-	const goToSide = (id: string | null) => {
-		setParams(
-			(previous) => {
-				const out = new URLSearchParams(previous)
-				if (id) out.set("side", id)
-				else out.delete("side")
-				out.delete("page")
-				return out
-			},
-			{ preventScrollReset: true },
-		)
-		window.scrollTo({ top: 0 })
-	}
-	useEffect(() => {
-		if (side === null || grouped || !first || stale) return
-		setParams(
-			(previous) => {
-				const out = new URLSearchParams(previous)
-				out.delete("side")
-				return out
-			},
-			{ replace: true, preventScrollReset: true },
-		)
-	}, [side, grouped, first, stale, setParams])
+	// The cards on screen in their order, for the characters strip.
+	const roleCards = first && first.total === 0 && !stale ? [] : cards
 	const applied = Boolean(first?.forYou.applied) && forYou.on
-	// "↑N moved" describes the whole list's order: rows, and a list narrowed to one group, have no movement to show.
-	const noMoves = Boolean(rows || narrowed)
-	const movedUp = applied && !stale && !noMoves ? (first?.movedUp ?? 0) : 0
+	const movedUp = applied && !stale ? (first?.movedUp ?? 0) : 0
 	const forYouControl: ForYouControl = {
 		on: forYou.on,
 		onChange: flipTo,
@@ -510,17 +443,15 @@ export function DiscoverPage({
 		explanation: null,
 	}
 
-	// The open sub-tab's extra counts: the first page again with its `counts=` flag, laid out as a grid (rows carry
-	// no counts of their own) and narrowed to the side the grid shows.
+	// The open sub-tab's extra counts: the first page again with its `counts=` flag.
 	const ranked = searching && !catalogue ? (search.current?.ranked ?? null) : null
 	const searchSet = searching && !catalogue ? search.current?.searchSet : undefined
-	const countsQuery = withSides(listQuery, side, false)
 	const extra = useDiscoverResults({
 		query: searchSet
-			? `${countsQuery}&searchSet=${searchSet}`
+			? `${listQuery}&searchSet=${searchSet}`
 			: ranked
-				? `${countsQuery}&ranked=${ranked.join(",")}`
-				: countsQuery,
+				? `${listQuery}&ranked=${ranked.join(",")}`
+				: listQuery,
 		forYou: forYou.on,
 		guest: guest ?? null,
 		counts: bar.counts,
@@ -754,23 +685,17 @@ export function DiscoverPage({
 				)}
 				<div className="relative mt-3 lg:mt-5" aria-busy={busy}>
 					<GridDim on={desktop && bar.panel.open !== null} />
-					{/* A cast filter's characters strip leads every layout of the results: the taste rows and the grid. */}
+					{/* A cast filter's characters strip leads the results. */}
 					<DiscoverRoles cards={roleCards}>
 						{browse.isError && !first ? (
 							<p className="py-16 text-center text-gray-400">
 								Discover couldn't load right now. Try again in a moment.
 							</p>
-						) : !first || layoutPending ? (
+						) : !first ? (
 							<div className="flex justify-center py-16">
 								<Spinner size="large" />
 							</div>
-						) : rows ? (
-							<SideRows rows={rows} onSeeAll={goToSide} />
 						) : (
-							<>
-								{narrowed && (
-									<SideBanner side={narrowed} onAll={() => goToSide(null)} />
-								)}
 								<DiscoverGrid
 									cards={first.total === 0 && !stale ? [] : cards}
 									marks={marks}
@@ -802,7 +727,6 @@ export function DiscoverPage({
 											/>
 										)}
 								</DiscoverGrid>
-							</>
 						)}
 					</DiscoverRoles>
 					<div

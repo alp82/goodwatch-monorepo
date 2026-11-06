@@ -19,7 +19,6 @@ import {
 	sortFromParams,
 	typeOfDiscoverPath,
 } from "~/domain/filter-state"
-import { groupsByTaste } from "~/domain/side-rows"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { discoverRolesState } from "~/server/character-portraits.server"
 import { legacyDiscoverRedirect } from "~/server/discover-legacy-params.server"
@@ -40,7 +39,6 @@ import { DiscoverPage } from "~/ui/discover/DiscoverPage"
 import {
 	type InitialBrowse,
 	browseKey,
-	withSides,
 } from "~/ui/discover/useDiscoverBrowse"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { DISCOVER_MAX_PAGE } from "~/utils/constants"
@@ -172,8 +170,6 @@ async function browseLoader(
 	const words = searchText(params.get("q"))
 	const awardWords = words && params.get("awards") ? readAwardWords(words) : null
 	const searching = (awardWords ? searchText(awardWords.rest) : words) !== null
-	const side = params.get("side")
-	const sides = { rows: params.get("layout") !== "grid", side }
 	let snapshotNotLoaded = false
 	let pages: BrowseResults[] | null = null
 	// The cast filter's first person: their characters lead the grid, read alongside the results.
@@ -183,46 +179,17 @@ async function browseLoader(
 		: undefined
 	try {
 		if (!searching) {
-			// Probe only when page one could replace the window with a member's side rows.
-			const canShowRows =
-				ctx.viewer.kind === "member" &&
-				sides.rows &&
-				!side &&
-				!state.loved?.length &&
-				!state.disliked?.length &&
-				groupsByTaste({ searching, forYou, sort })
-			const first =
-				firstPage === 1 || canShowRows
-					? await getBrowseResults(ctx, {
-							state,
-							tasteCounts: counts?.includes("taste"),
-							sort,
-							forYou,
-							sides,
-							page: 1,
-							exposure: firstPage === 1,
-						})
-					: null
-			const start = firstPage === 1 ? 2 : firstPage
-			const rest =
-				first?.sides?.layout === "rows"
-					? []
-					: await Promise.all(
-							Array.from({ length: lastPage - start + 1 }, (_, i) =>
-								getBrowseResults(ctx, {
-									state,
-									tasteCounts: counts?.includes("taste"),
-									sort,
-									forYou,
-									sides,
-									page: start + i,
-								}),
-							),
-						)
-			pages =
-				first && (first.sides?.layout === "rows" || firstPage === 1)
-					? [first, ...rest]
-					: rest
+			pages = await Promise.all(
+				Array.from({ length: lastPage - firstPage + 1 }, (_, i) =>
+					getBrowseResults(ctx, {
+						state,
+						tasteCounts: counts?.includes("taste"),
+						sort,
+						forYou,
+						page: firstPage + i,
+					}),
+				),
+			)
 		}
 	} catch (error) {
 		// Right after a restart: the browser asks /api/discover/results once the snapshot has loaded.
@@ -236,7 +203,7 @@ async function browseLoader(
 			initial: pages
 				? {
 						key: browseKey(
-							withSides(filterQuery(state, sort, defaults), side, sides.rows),
+							filterQuery(state, sort, defaults),
 							forYou,
 							undefined,
 							ctx.language ?? "en",

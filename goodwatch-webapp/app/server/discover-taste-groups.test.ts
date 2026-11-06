@@ -30,7 +30,6 @@ let member = {
 	},
 	sides: [
 		{
-			id: "crime",
 			name: "Dark thrillers",
 			here: [
 				{ key: 1e12 + 4, title: "Near the center", poster: "/near.jpg" },
@@ -38,7 +37,6 @@ let member = {
 			],
 		},
 		{
-			id: "comedy",
 			name: "Gentle comedy",
 			here: [{ key: 1e12 + 2, title: "Comedy", poster: "/comedy.jpg" }],
 		},
@@ -72,9 +70,7 @@ stubModules({
 	"../personal-order/reader.server.ts":
 		"export const loadPersonalOrder = () => {}; export const logPersonalOrder = () => {}; export const orderPersonalOrder = () => {}; export const personalOrderExposure = () => {}",
 	"~/server/discover-sides.server": `export const memberSides = async ctx => globalThis.discoverTasteMember(ctx);
-		export const sideOf = (member, key) => globalThis.discoverTasteSide(member, key);
-		export const requestedGroup = (member, id) => id === 'none' ? null : id === 'crime' ? 0 : id === 'comedy' ? 1 : undefined;
-		export const discoverSide = (member, index, total) => ({...member.sides[index], total}); export const ROW_TITLES = 8;`,
+		export const sideOf = (member, key) => globalThis.discoverTasteSide(member, key);`,
 	"~/server/taste-portrait/index.server":
 		"export const portraitInput = () => { throw new Error('Unexpected portrait read') }",
 	"~/server/taste-portrait/person.server":
@@ -161,13 +157,9 @@ const results = (
 		...options,
 	})
 
-test("stable taste key returns the same member titles as side=, across search, sorts and For you settings", async () => {
-	const side = await results("", {
-		forYou: true,
-		sides: { rows: false, side: "crime" },
-	})
-	assert.equal(side.sides?.layout, "side")
-	assert.ok(side.keys.length > 0 && side.keys.length < keys.length)
+test("stable taste key returns the group's member titles across search, sorts and For you settings", async () => {
+	const inGroup = keys.filter((key) => membership(key) === 0)
+	assert.ok(inGroup.length > 0 && inGroup.length < keys.length)
 	for (const sort of [
 		"popular",
 		"top",
@@ -178,9 +170,9 @@ test("stable taste key returns the same member titles as side=, across search, s
 		for (const forYou of [true, false]) {
 			for (const ranked of [undefined, [...keys].reverse()]) {
 				const out = await results("taste=movie-1", { sort, forYou, ranked })
-				assert.deepEqual([...out.keys].sort(), [...side.keys].sort())
+				assert.deepEqual([...out.keys].sort(), [...inGroup].sort())
 				assert.equal(out.tasteGroups?.names["movie-1"], "Dark thrillers")
-				assert.equal(out.optionCounts.tasteGroups["movie-1"], side.keys.length)
+				assert.equal(out.optionCounts.tasteGroups["movie-1"], inGroup.length)
 			}
 		}
 	}

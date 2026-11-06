@@ -28,7 +28,7 @@ test("page links use existing website filters and encode search text", () => {
 	assert.equal(new URL(String(link.page_url)).searchParams.get("q"), query)
 	assert.equal(
 		withPageLink(origin, "search_titles", {}, data).page_url,
-		`${origin}/discover?services=all&unseen=0&sort=popular&foryou=1&layout=grid`,
+		`${origin}/discover?services=all&unseen=0&sort=popular&foryou=1`,
 	)
 	assert.deepEqual(withPageLink(origin, "get_title", {}, data), data)
 })
@@ -127,7 +127,6 @@ test("Discover options link to the real filter view", () => {
 	assert.equal(url.pathname, "/discover")
 	assert.equal(url.searchParams.get("services"), "all")
 	assert.equal(url.searchParams.get("unseen"), "0")
-	assert.equal(url.searchParams.get("layout"), "grid")
 	assert.equal(result.page_note, undefined)
 })
 

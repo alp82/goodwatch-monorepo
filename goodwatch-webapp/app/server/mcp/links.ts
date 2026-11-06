@@ -69,10 +69,7 @@ export function withPageLink(
 			)
 			if (!params.has("foryou"))
 				params.set("foryou", (data.for_you ?? args.for_you ?? true) ? "1" : "0")
-			if (!searching) {
-				params.delete("q")
-				params.set("layout", "grid")
-			}
+			if (!searching) params.delete("q")
 			path = `/discover?${params}`
 			note = !searching
 				? undefined

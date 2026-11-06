@@ -61,11 +61,9 @@ test("every Discover parameter uses the site's URL codec and preserves its meani
 	)
 	const url = new URL(String(result.page_url))
 	assert.equal(url.pathname, "/discover")
-	assert.equal(url.searchParams.get("layout"), "grid")
 	assert.equal(url.searchParams.get("services"), "8,9")
 	assert.equal(url.searchParams.get("ratingCountry"), "DE")
 	assert.equal(result.page_note, undefined)
-	url.searchParams.delete("layout")
 	assert.deepEqual(url.searchParams, params)
 })
 test("default discovery and every ordering use site semantics", () => {

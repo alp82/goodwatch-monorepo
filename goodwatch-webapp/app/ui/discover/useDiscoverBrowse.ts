@@ -43,8 +43,6 @@ export const browseKey = (
 ) =>
 	`${query}${query ? "&" : ""}foryou=${forYou ? 1 : 0}${searchSet ? `&searchSet=${searchSet}` : ranked ? `&ranked=${ranked.join(",")}` : ""}${language ? `&displayLanguage=${encodeURIComponent(language)}` : ""}`
 
-export { withSides } from "~/domain/discover-layout"
-
 /**
  * A guest's progress and chosen country and services, read after hydration (the server can't see them); null for a
  * member, undefined until read.
@@ -148,9 +146,7 @@ export function useDiscoverBrowse({
 		queryFn: ({ pageParam, signal }) =>
 			fetchPage(key, pageParam, guest ?? null, signal, ranked ?? undefined),
 		initialPageParam: 1,
-		// A row per side is the whole first view: "See all" narrows the list to a side, which pages again.
 		getNextPageParam: (last) =>
-			last.sides?.layout !== "rows" &&
 			last.page < DISCOVER_MAX_PAGE &&
 			last.page * last.pageSize < last.total
 				? last.page + 1

@@ -7,7 +7,6 @@ import {
 } from "~/domain/filter-state"
 import { GUEST_MIXES, type MoodMix } from "~/domain/mood-mixes"
 import { MOOD_KEYS } from "~/domain/moods"
-import { groupsByTaste } from "~/domain/side-rows"
 import { picksOf, type Word } from "~/domain/taste-picker"
 import { STYLE_KEYS, THEME_KEYS, maskOfKeys } from "~/domain/themes-styles"
 import { availabilityLoadedAt } from "~/server/availability-index.server"
@@ -41,7 +40,6 @@ interface PanelInput {
 	sort: SortKey
 	ranked?: TitleKey[]
 	forYou?: boolean
-	side?: string | null
 }
 
 export interface PanelMix extends MoodMix {
@@ -178,8 +176,7 @@ async function titles(ctx: ViewerContext, _input: PanelInput) {
 async function people(ctx: ViewerContext, input: PanelInput) {
 	const searching = input.ranked !== undefined
 	const filtered =
-		filterStateToParams(input.state, discoverFilterDefaults(ctx)).size > 0 ||
-		Boolean(input.side)
+		filterStateToParams(input.state, discoverFilterDefaults(ctx)).size > 0
 	const unavailable = (error: unknown) => {
 		console.warn("Discover panel: people unavailable", error)
 		return {
@@ -240,20 +237,7 @@ async function panelTitles(ctx: ViewerContext, input: PanelInput) {
 			tasteGroups: tasteFilter,
 		}),
 	)
-	let keys = result.keys
-	if (
-		input.side &&
-		!input.state.loved?.length &&
-		!input.state.disliked?.length &&
-		groupsByTaste({ searching, forYou, sort: result.sortUsed })
-	) {
-		const engine = await import("~/server/discover-sides.server")
-		const member = await engine.memberSides(ctx, taste, snapshot)
-		const group = member ? engine.requestedGroup(member, input.side) : undefined
-		if (member && group !== undefined)
-			keys = keys.filter((key) => engine.sideOf(member, key) === group)
-	}
-	return { keys, taste, result, snapshot }
+	return { keys: result.keys, taste, result, snapshot }
 }
 
 /** First title in list order for each Released choice; a show's first air year comes from facts. */

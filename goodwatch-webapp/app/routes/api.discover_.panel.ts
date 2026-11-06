@@ -61,7 +61,6 @@ async function respond(
 			sort: sortFromParams(params, ranked !== undefined),
 			ranked,
 			forYou: forYouFromParams(params, ctx),
-			side: params.get("side"),
 		})
 		const totalMs = performance.now() - startedAt
 		return json(response, {

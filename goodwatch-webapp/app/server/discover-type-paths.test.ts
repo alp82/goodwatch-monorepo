@@ -26,7 +26,7 @@ stubModules({
 		"export const ErrorPage = () => null; export const errorPageProps = () => ({})",
 	"~/ui/discover/DiscoverPage": "export const DiscoverPage = () => null",
 	"~/ui/discover/useDiscoverBrowse":
-		"export const browseKey = () => ''; export const withSides = () => ''",
+		"export const browseKey = () => ''",
 	"~/utils/meta": "export const buildMeta = () => []",
 })
 

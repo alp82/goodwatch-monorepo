@@ -158,7 +158,7 @@ export interface FilterInput {
 	viewer: ViewerContext
 	/**
 	 * Narrows the universe before anything is counted, like the viewer's hidden titles: no filter brings back a title
-	 * it leaves out (Discover narrowed to one Side of you).
+	 * it leaves out (YepWatch's presentable titles).
 	 */
 	keep?: (key: TitleKey) => boolean
 }
