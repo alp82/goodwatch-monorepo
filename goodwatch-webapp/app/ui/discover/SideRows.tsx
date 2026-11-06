@@ -14,6 +14,7 @@ import type {
 import type { DiscoverSide } from "~/server/discover-sides.server"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { gridPosterPriority, tmdbImageUrl } from "~/utils/tmdb-image"
+import { DiscoverCardRole } from "./DiscoverRoles"
 import { sideHue } from "./side-hues"
 import { SIDE_ROWS_COPY as COPY } from "./side-rows-copy"
 
@@ -71,11 +72,13 @@ export function SideRows({
 									key={card.key}
 									className="w-[40%] shrink-0 snap-start xs:w-[30%] sm:w-[23%] md:w-[19%] lg:w-[15.5%]"
 								>
-									<TitlePosterCard
-										card={card}
-										posterPriority={priority}
-										skipOffscreen={priority === "lazy"}
-									/>
+									<DiscoverCardRole card={card} inset>
+										<TitlePosterCard
+											card={card}
+											posterPriority={priority}
+											skipOffscreen={priority === "lazy"}
+										/>
+									</DiscoverCardRole>
 								</div>
 							)
 						})}

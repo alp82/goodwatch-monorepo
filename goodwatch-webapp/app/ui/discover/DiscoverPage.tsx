@@ -62,6 +62,7 @@ import { SearchPeople } from "~/ui/search/SearchPeople"
 import { Spinner } from "~/ui/wait/Spinner"
 import type { TitleKey } from "~/utils/title-key"
 import { DiscoverGrid } from "./DiscoverGrid"
+import { DiscoverRoles } from "./DiscoverRoles"
 import { HiddenTitles } from "./HiddenTitles"
 import { SideBanner, SideRows, sideRowsOf } from "./SideRows"
 import {
@@ -442,6 +443,20 @@ export function DiscoverPage({
 	const layoutPending =
 		!searching && !grouped && Boolean(first?.sides) && browse.isPlaceholderData
 	const rows = stale || layoutPending ? null : sideRowsOf(first)
+	// The cards on screen in their order, for the characters strip: every taste row's ("More for you" last, as
+	// SideRows draws them), or the grid's.
+	const roleCards = useMemo(
+		() =>
+			rows
+				? [
+						...rows.filter((row) => row.number !== null),
+						...rows.filter((row) => row.number === null),
+					].flatMap((row) => row.cards)
+				: first && first.total === 0 && !stale
+					? []
+					: cards,
+		[rows, first, stale, cards],
+	)
 	const narrowed =
 		!stale && !layoutPending && first?.sides?.layout === "side"
 			? first.sides.side
@@ -732,54 +747,57 @@ export function DiscoverPage({
 				)}
 				<div className="relative mt-3 lg:mt-5" aria-busy={busy}>
 					<GridDim on={desktop && bar.panel.open !== null} />
-					{browse.isError && !first ? (
-						<p className="py-16 text-center text-gray-400">
-							Discover couldn't load right now. Try again in a moment.
-						</p>
-					) : !first || layoutPending ? (
-						<div className="flex justify-center py-16">
-							<Spinner size="large" />
-						</div>
-					) : rows ? (
-						<SideRows rows={rows} onSeeAll={goToSide} />
-					) : (
-						<>
-							{narrowed && (
-								<SideBanner side={narrowed} onAll={() => goToSide(null)} />
-							)}
-							<DiscoverGrid
-								cards={first.total === 0 && !stale ? [] : cards}
-								marks={marks}
-								flipping={Boolean(flip)}
-							>
-								{/* A partial list without a title is not a search that found nothing: the status line above says what
+					{/* A cast filter's characters strip leads every layout of the results: the taste rows and the grid. */}
+					<DiscoverRoles cards={roleCards}>
+						{browse.isError && !first ? (
+							<p className="py-16 text-center text-gray-400">
+								Discover couldn't load right now. Try again in a moment.
+							</p>
+						) : !first || layoutPending ? (
+							<div className="flex justify-center py-16">
+								<Spinner size="large" />
+							</div>
+						) : rows ? (
+							<SideRows rows={rows} onSeeAll={goToSide} />
+						) : (
+							<>
+								{narrowed && (
+									<SideBanner side={narrowed} onAll={() => goToSide(null)} />
+								)}
+								<DiscoverGrid
+									cards={first.total === 0 && !stale ? [] : cards}
+									marks={marks}
+									flipping={Boolean(flip)}
+								>
+									{/* A partial list without a title is not a search that found nothing: the status line above says what
 							    it still waits for, and the people it names show above the grid. */}
-								{!browse.hasNextPage &&
-									!browse.isPlaceholderData &&
-									!stale &&
-									!(search.partial && first.total === 0) && (
-										<HiddenTitles
-											counts={first}
-											state={filters.state}
-											onDrop={filters.drop}
-											onClear={filters.clearSecondary}
-											canClear={
-												secondaryFilterCount(
-													stateAsApplied(
-														filters.state,
-														first.ladder,
-														member,
-														scope.country,
-														first.facts,
-													),
-												) > 0
-											}
-											searching={searching}
-										/>
-									)}
-							</DiscoverGrid>
-						</>
-					)}
+									{!browse.hasNextPage &&
+										!browse.isPlaceholderData &&
+										!stale &&
+										!(search.partial && first.total === 0) && (
+											<HiddenTitles
+												counts={first}
+												state={filters.state}
+												onDrop={filters.drop}
+												onClear={filters.clearSecondary}
+												canClear={
+													secondaryFilterCount(
+														stateAsApplied(
+															filters.state,
+															first.ladder,
+															member,
+															scope.country,
+															first.facts,
+														),
+													) > 0
+												}
+												searching={searching}
+											/>
+										)}
+								</DiscoverGrid>
+							</>
+						)}
+					</DiscoverRoles>
 					<div
 						ref={moreRef}
 						className="flex min-h-24 items-center justify-center gap-3 text-sm text-gray-400"

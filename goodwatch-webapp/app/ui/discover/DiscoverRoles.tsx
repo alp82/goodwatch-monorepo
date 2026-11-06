@@ -1,7 +1,8 @@
-// Discover with a cast filter on (?people=<id>; the first person counts): above the grid, a strip of the characters
-// that person plays among the results, TheTVDB's portraits with arrows on a wide screen. A press scrolls to that title's
-// card and rings it for a moment, with "as Walter White" under it. Without a cast filter, or without portraits among
-// the results, nothing shows. The first view gets the roles from Discover's loader; while another person's roles load
+// Discover with a cast filter on (?people=<id>; the first person counts): above the results, a strip of the characters
+// that person plays among them, TheTVDB's portraits with arrows on a wide screen. It leads every layout: the plain grid
+// and the rows of a member's taste groups alike (DiscoverPage.tsx wraps both). A press scrolls to that title's first
+// card and rings it for a moment, with "as Walter White" under it; a title without a card on the page opens the
+// character quick view instead. Without a cast filter, or without portraits among the results, nothing shows. The first view gets the roles from Discover's loader; while another person's roles load
 // in the page, a placeholder holds the strip's place, so the grid moves only when the strip turns out empty.
 import { useSearchParams } from "@remix-run/react"
 import {
@@ -12,13 +13,15 @@ import {
 	useState,
 } from "react"
 import type { CharacterRole } from "~/domain/character-portraits"
+import { useCharacterQuickView } from "~/ui/character-quick-view/context"
 import { PortraitImg, TvdbCredit } from "~/ui/character-quick-view/parts"
-import { usePersonRoles } from "~/ui/character-quick-view/portraits"
+import { roleEntry, usePersonRoles } from "~/ui/character-quick-view/portraits"
 import { RowArrows, useStepRow } from "~/ui/row-arrows"
 
 type Card = { media_type: string; tmdb_id: number }
 
 interface Roles {
+	personId: number
 	name: string
 	of: (card: Card) => CharacterRole | undefined
 	ringed: string | null
@@ -32,7 +35,10 @@ const cardKey = (card: Card) => `${card.media_type}-${card.tmdb_id}`
 /** How long a card stays ringed after the strip pointed at it. */
 const RING_MS = 1800
 
-/** Wraps Discover's grid: the strip above it, and the ring around a card the strip pointed at. */
+/**
+ * Wraps Discover's results (the grid or the taste rows): the strip above them, and the ring around a card the strip
+ * pointed at. `cards` are the results in screen order.
+ */
 export function DiscoverRoles({
 	cards,
 	children,
@@ -47,6 +53,7 @@ export function DiscoverRoles({
 	const value = useMemo<Roles | null>(() => {
 		if (!personId || !roles.ready || !roles.list.length) return null
 		return {
+			personId,
 			name: roles.name,
 			of: (card) => roles.of(card.media_type, card.tmdb_id),
 			ringed,
@@ -71,12 +78,15 @@ export function DiscoverRoles({
 	)
 }
 
-/** Around one grid card: the place the strip scrolls to, and its ring with "as …" while ringed. */
+/** Around one result card (in the grid or a row): the place the strip scrolls to, and its ring with "as …" while ringed. */
 export function DiscoverCardRole({
 	card,
+	inset = false,
 	children,
 }: {
 	card: Card
+	/** In a row that scrolls sideways (which clips anything outside it): the ring drawn inside the card. */
+	inset?: boolean
 	children: ReactNode
 }) {
 	const ctx = useContext(RolesContext)
@@ -86,9 +96,21 @@ export function DiscoverCardRole({
 	return (
 		<div
 			data-role-card={cardKey(card)}
-			className={`relative scroll-mt-40 rounded-lg transition-shadow duration-300 ${ringed ? "ring-4 ring-amber-400 ring-offset-2 ring-offset-gray-950" : ""}`}
+			className={`relative scroll-mt-40 rounded-lg transition-shadow duration-300 ${ringed && !inset ? "ring-4 ring-amber-400 ring-offset-2 ring-offset-gray-950" : ""}`}
 		>
-			{children}
+			{inset ? (
+				<div className="relative">
+					{children}
+					{ringed && (
+						<span
+							aria-hidden
+							className="pointer-events-none absolute inset-0 z-10 rounded-lg ring-4 ring-amber-400 ring-inset"
+						/>
+					)}
+				</div>
+			) : (
+				children
+			)}
 			{ringed && (
 				<p
 					className="mt-1 truncate px-1 text-xs text-gray-400"
@@ -133,20 +155,38 @@ function RolesStripPlaceholder() {
 
 function RolesStrip({ cards }: { cards: Card[] }) {
 	const ctx = useContext(RolesContext)
+	// A title in more than one taste row shows once, at its first place.
+	const seen = new Set<string>()
 	const shown = ctx
 		? cards.flatMap((card) => {
 				const role = ctx.of(card)
-				return role ? [{ card, role }] : []
+				if (!role || seen.has(cardKey(card))) return []
+				seen.add(cardKey(card))
+				return [{ card, role }]
 			})
 		: []
 	const row = useStepRow<HTMLDivElement>([shown.length])
+	const view = useCharacterQuickView()
 	if (!ctx || !shown.length) return null
-	const go = (card: Card) => {
+	const person = { id: ctx.personId, name: ctx.name }
+	const go = (card: Card, role: CharacterRole, from: HTMLElement) => {
 		const key = cardKey(card)
+		// The first card of the title on the page (a title can sit in more than one taste row).
+		const target = document.querySelector(`[data-role-card="${key}"]`)
+		if (!target) {
+			view?.open(
+				roleEntry(role, person),
+				from,
+				shown.map((s) => roleEntry(s.role, person)),
+			)
+			return
+		}
 		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-		document.querySelector(`[data-role-card="${key}"]`)?.scrollIntoView({
+		target.scrollIntoView({
 			behavior: reduce ? "auto" : "smooth",
 			block: "center",
+			// A card in a row that scrolls sideways comes into that row's view too.
+			inline: "nearest",
 		})
 		ctx.ring(key)
 	}
@@ -174,7 +214,7 @@ function RolesStrip({ cards }: { cards: Card[] }) {
 					<button
 						key={cardKey(card)}
 						type="button"
-						onClick={() => go(card)}
+						onClick={(e) => go(card, role, e.currentTarget)}
 						className={`group ${TILE} cursor-pointer snap-start text-left`}
 					>
 						<span
