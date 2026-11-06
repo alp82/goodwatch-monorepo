@@ -150,13 +150,14 @@ function RolesStrip({ cards }: { cards: Card[] }) {
 		})
 		ctx.ring(key)
 	}
-	// contain: inline-size keeps the strip from widening the results column; it scrolls inside it instead.
+	// contain: inline-size keeps the strip from widening the results column; it scrolls inside it instead. The head
+	// keeps the arrows' height from the first paint, as the placeholder does, so they never push the grid down.
 	return (
 		<section
 			className={STRIP}
 			aria-label={`${ctx.name}'s characters in these results`}
 		>
-			<div className="mb-2 flex items-center gap-3">
+			<div className="mb-2 flex min-h-5 items-center gap-3 lg:min-h-8">
 				<p className="min-w-0 flex-1 text-sm text-gray-400">
 					<span className="font-semibold text-gray-200">{ctx.name}</span> plays{" "}
 					{shown.length === 1 ? "one character" : `${shown.length} characters`}{" "}
