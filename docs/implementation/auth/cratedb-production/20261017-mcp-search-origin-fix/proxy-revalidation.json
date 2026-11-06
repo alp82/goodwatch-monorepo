@@ -1,0 +1,29 @@
+{
+  "checked_at_utc": "2026-10-17T02:01:10.825640+00:00",
+  "files": [
+    {
+      "host": "abio",
+      "file": "/data/coolify/proxy/dynamic/goodwatch-balance.yaml",
+      "sha256": "9b549738d948168526b93f4669429a6ca030044a1759f36db6b671803f621b34",
+      "byte_identical_to_tested_live_capture": true
+    },
+    {
+      "host": "abio",
+      "file": "/data/coolify/proxy/dynamic/goodwatch-search.yaml",
+      "sha256": "fa52284f7676d7a97ba1428d2b45379cec1864d84c0b47db9d5665f02fef22b9",
+      "byte_identical_to_tested_live_capture": true
+    },
+    {
+      "host": "vector1",
+      "file": "/data/coolify/proxy/dynamic/goodwatch-instance.yaml",
+      "sha256": "dd09afa6bc64dc0dcd7b5081030a7380c01ff5930a5231752603772e12e8c1b6",
+      "byte_identical_to_tested_live_capture": true
+    },
+    {
+      "host": "vector1",
+      "file": "/data/coolify/proxy/dynamic/goodwatch-search-instance.yaml",
+      "sha256": "b170689bdf246d3946f3b75eeb72377ac179e590822b15c054bfce0dd86a875e",
+      "byte_identical_to_tested_live_capture": true
+    }
+  ]
+}

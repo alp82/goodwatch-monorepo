@@ -1,0 +1,28 @@
+http:
+  routers:
+    gw-search-from-abio:
+      entryPoints:
+        - http
+      rule: 'Host(`goodwatch.app`) && ClientIP(`10.0.0.21`) && Header(`X-Gw-Role`, `search`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`))'
+      priority: 1100
+      middlewares:
+        - gw-search-retry
+      service: gw-search-local
+  middlewares:
+    gw-search-retry:
+      retry:
+        attempts: 2
+        initialInterval: 100ms
+  services:
+    gw-search-local:
+      loadBalancer:
+        passHostHeader: true
+        healthCheck:
+          path: /health/ready
+          interval: 2s
+          timeout: 1s
+        servers:
+          -
+            url: 'http://goodwatch-search-a:3000'
+          -
+            url: 'http://goodwatch-search-b:3000'

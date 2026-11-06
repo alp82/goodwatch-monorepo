@@ -1,0 +1,15 @@
+http:
+  routers:
+    gw-webapp-from-abio:
+      entryPoints:
+        - http
+      rule: 'Host(`goodwatch.app`) && ClientIP(`10.0.0.21`)'
+      priority: 1000
+      service: gw-webapp-local
+  services:
+    gw-webapp-local:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          -
+            url: 'http://goodwatch-webapp:3000'

@@ -1,0 +1,121 @@
+{
+  "checked_at_utc": "2026-10-17T01:46:18.012848+00:00",
+  "roles": [
+    {
+      "container": "goodwatch-search-a",
+      "exit_code": 0,
+      "checks": {
+        "valkey_ping": "PONG",
+        "auth_database": [
+          {
+            "query": "SELECT current_user",
+            "status": 200,
+            "current_user_matches_runtime": true
+          },
+          {
+            "query": "SELECT * FROM doc.auth_jwks LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          },
+          {
+            "query": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          },
+          {
+            "query": "SELECT current_user",
+            "status": 200,
+            "current_user_matches_runtime": true
+          },
+          {
+            "query": "SELECT * FROM doc.auth_jwks LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          },
+          {
+            "query": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          },
+          {
+            "query": "SELECT current_user",
+            "status": 200,
+            "current_user_matches_runtime": true
+          },
+          {
+            "query": "SELECT * FROM doc.auth_jwks LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          },
+          {
+            "query": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          }
+        ],
+        "catalog_receipt_select": {
+          "status": 200,
+          "allowed": true
+        }
+      }
+    },
+    {
+      "container": "goodwatch-search-b",
+      "exit_code": 0,
+      "checks": {
+        "valkey_ping": "PONG",
+        "auth_database": [
+          {
+            "query": "SELECT current_user",
+            "status": 200,
+            "current_user_matches_runtime": true
+          },
+          {
+            "query": "SELECT * FROM doc.auth_jwks LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          },
+          {
+            "query": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          },
+          {
+            "query": "SELECT current_user",
+            "status": 200,
+            "current_user_matches_runtime": true
+          },
+          {
+            "query": "SELECT * FROM doc.auth_jwks LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          },
+          {
+            "query": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          },
+          {
+            "query": "SELECT current_user",
+            "status": 200,
+            "current_user_matches_runtime": true
+          },
+          {
+            "query": "SELECT * FROM doc.auth_jwks LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          },
+          {
+            "query": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+            "status": 200,
+            "rowcount": 0
+          }
+        ],
+        "catalog_receipt_select": {
+          "status": 200,
+          "allowed": true
+        }
+      }
+    }
+  ]
+}
