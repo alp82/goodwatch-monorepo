@@ -179,6 +179,7 @@ export function compactTitleDetails(
 		trailer_url: trailer
 			? `https://www.youtube.com/watch?v=${trailer.key}`
 			: null,
+		...(media.awards ? { awards: media.awards } : {}),
 		...(include.includes("cast")
 			? {
 					cast: media.credits.actors

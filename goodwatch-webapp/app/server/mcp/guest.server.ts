@@ -97,6 +97,7 @@ export async function readGuestTool(
 				...summary(title, origin),
 				synopsis: media.details.synopsis ?? null,
 				genres: media.details.genres,
+				...(media.awards ? { awards: media.awards } : {}),
 				runtime_minutes: display?.runtime ?? null,
 				poster_url: display?.poster_path
 					? `https://image.tmdb.org/t/p/w342${display.poster_path}`

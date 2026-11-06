@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../server/title-filter/test-alias.ts"
+import { summarizeTitleAwards } from "../server/title-awards.ts"
 
 const { buildJsonLdDetail, buildMeta, jsonLdPeople, ogImageUrl, pagedUrl } =
 	await import("./meta.ts")
@@ -37,6 +38,53 @@ const show = (actors: { id: number; name: string }[]) =>
 			],
 		},
 	}) as never
+
+test("Movie and TVSeries award structured data contains only ordered reported wins, capped at 20", () => {
+	const awards = summarizeTitleAwards([
+		{
+			award_name: "BAFTA Awards",
+			category_name: "Sound",
+			ceremony_year: "2025",
+			has_win: false,
+			has_nomination: true,
+		},
+		...Array.from({ length: 26 }, (_, i) => ({
+			award_name: "Academy Awards",
+			category_name: `Category ${String(i).padStart(2, "0")}`,
+			ceremony_year: "2024",
+			has_win: true,
+			has_nomination: true,
+		})).reverse(),
+	])
+	for (const mediaType of ["movie", "show"] as const) {
+		const media = { ...Object(show([])), mediaType, awards }
+		const jsonLd = buildJsonLdDetail(page, media as never)
+		assert.equal(jsonLd["@type"], mediaType === "movie" ? "Movie" : "TVSeries")
+		assert.deepEqual(
+			jsonLd.award,
+			Array.from(
+				{ length: 20 },
+				(_, i) =>
+					`Academy Awards – Category ${String(i).padStart(2, "0")} (2024)`,
+			),
+		)
+		assert.ok(
+			!(
+				"award" in
+				buildJsonLdDetail(page, { ...media, awards: undefined } as never)
+			),
+		)
+		assert.ok(
+			!(
+				"award" in
+				buildJsonLdDetail(page, {
+					...media,
+					awards: { ...awards, wins: [] },
+				} as never)
+			),
+		)
+	}
+})
 
 test("a person with two credits is named once, at the first position", () => {
 	assert.deepEqual(

@@ -1,4 +1,32 @@
 import * as z from "zod4"
+
+const awardResult = z.object({
+	award: z.string(),
+	category: z.string(),
+	year: z.string().regex(/^\d{4}$/),
+})
+export const titleAwardsOutput = z.object({
+	coverage: z.literal("partial"),
+	note: z
+		.string()
+		.describe(
+			"Reported results from TVDB. Coverage is incomplete, so these results don't establish award totals.",
+		),
+	source: z.literal("TVDB"),
+	wins: z.array(awardResult).max(25),
+	nominations: z.array(awardResult).max(25),
+	truncated: z.literal(true).optional(),
+})
+// Preserve existing catalog/member fields and non-title responses (disambiguation, unavailable).
+export const titleDetailsOutput = z
+	.object({
+		title: z
+			.object({ awards: titleAwardsOutput.optional() })
+			.passthrough()
+			.optional(),
+	})
+	.passthrough()
+
 export const paging = {
 	cursor: z
 		.string()

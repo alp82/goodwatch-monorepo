@@ -1,4 +1,5 @@
 import type { MovieDetails, TVDetails } from "~/server/details.server"
+import { jsonLdAwards } from "~/server/title-awards"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { OG_IMAGE } from "~/ui/og-image/format"
 import { type Crumb, breadcrumbJsonLd } from "~/ui/nav/breadcrumb-trail"
@@ -224,6 +225,7 @@ export const buildJsonLdDetail = (
 	country?: string,
 ) => {
 	const { details } = media
+	const awards = jsonLdAwards(media.awards)
 	const isMovie = media.mediaType === "movie"
 	const actors = jsonLdPeople(media.credits.actors)
 	// The same title elsewhere: IMDb, then Letterboxd for a movie.
@@ -235,6 +237,7 @@ export const buildJsonLdDetail = (
 	const jsonLd: Record<string, unknown> = {
 		"@context": "https://schema.org",
 		"@type": isMovie ? "Movie" : "TVSeries",
+		...(awards.length ? { award: awards } : {}),
 		name: details.title,
 		url: data.url,
 		description: data.description,

@@ -24,7 +24,13 @@ import {
 	registerPosterGrid,
 } from "./poster-grid.server.ts"
 import type { RankedSearch } from "./ranked.server.ts"
-import { paging, selected, similarTitles, titleDetails } from "./schemas.ts"
+import {
+	paging,
+	selected,
+	similarTitles,
+	titleDetails,
+	titleDetailsOutput,
+} from "./schemas.ts"
 import type { enrichTitleResults } from "./title-results.server.ts"
 import {
 	registerWriteTools,
@@ -184,7 +190,7 @@ export const readToolDefinitions: {
 		name: "get_title",
 		title: "Get a title",
 		description:
-			"Catalog details, trailer, availability evidence and your marks. Default include=[cast,scores,analysis] adds five top-billed people and directors/creators, each with a ready-made person link, provider scores on labelled scales, and title analysis (moods, themes, tags, featured tropes). Pass include=[] for the smallest answer, or add seasons/episodes for the website’s season/episode ratings. Episodes use the website’s displayed numbering, which can differ from tracking; page with episode_cursor/episode_limit and optionally season_number. Unknown scores and watch dates stay unknown.",
+			"Catalog details, trailer, availability evidence, reported TVDB awards when available, and your marks. Awards have partial coverage, so they don't establish totals, and an omitted awards field doesn't mean a title has none. Wins and nominations are capped separately; truncated=true means some results were left out. Default include=[cast,scores,analysis] adds five top-billed people and directors/creators, each with a ready-made person link, provider scores on labelled scales, and title analysis (moods, themes, tags, featured tropes). Pass include=[] for the smallest answer, or add seasons/episodes for the website’s season/episode ratings. Episodes use the website’s displayed numbering, which can differ from tracking; page with episode_cursor/episode_limit and optionally season_number. Unknown scores and watch dates stay unknown.",
 		schema: titleDetails,
 	},
 	{
@@ -332,6 +338,9 @@ export function createToolServer(
 				title: tool.title,
 				description: tool.description,
 				inputSchema: tool.schema,
+				...(tool.name === "get_title"
+					? { outputSchema: titleDetailsOutput }
+					: {}),
 				annotations: {
 					title: tool.title,
 					readOnlyHint: true,

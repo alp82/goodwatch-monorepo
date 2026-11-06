@@ -61,6 +61,7 @@ export interface CastRow {
 	order_default: number
 }
 export interface RawTitleDetails {
+	awards?: ResultBase["awards"]
 	details: Partial<MovieDetails & ShowDetails> &
 		Partial<DNAAnalysis> & {
 			original_title?: string
@@ -226,6 +227,7 @@ export function trimTitleDetails(
 		...Object.values(countries.top).flatMap((top) => top.flatMap((c) => c.ids)),
 	])
 	const common: ResultBase = {
+		...(raw.awards ? { awards: raw.awards } : {}),
 		fingerprint,
 		cast: documentCast(toCastMembers(raw.cast_rows), raw.cast_total ?? 0),
 		cast_total: raw.cast_total ?? 0,

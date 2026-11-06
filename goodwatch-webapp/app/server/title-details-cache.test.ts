@@ -31,11 +31,21 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 		del: async (key) => Number(store.delete(key)),
 	})
 	let fetches = 0
+	const awards = {
+		coverage: "partial" as const,
+		source: "TVDB" as const,
+		note: "Reported results from TVDB. Coverage is incomplete, so these results don't establish award totals.",
+		wins: [
+			{ award: "Academy Awards", category: "Cinematography", year: "2024" },
+		],
+		nominations: [],
+	}
 	const seen: unknown[] = []
 	const getters = createTitleDetailsGetters(async (...args) => {
 		fetches++
 		seen.push(args)
 		return {
+			awards,
 			details: { tmdb_id: 42, title: "Title", tropes: [], keywords: ["junk"] },
 			cast_rows: [],
 			videos: { clips: null, trailers: [], featurettes: [] },
@@ -64,12 +74,12 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 		assert.equal(store.size, 2)
 		assert.ok(
 			[...store.keys()].some((key) =>
-				key.startsWith("cached-details-movie-v4:"),
+				key.startsWith("cached-details-movie-v6:"),
 			),
 		)
 		assert.ok(
 			[...store.keys()].some((key) =>
-				key.startsWith("cached-details-show-v5:"),
+				key.startsWith("cached-details-show-v7:"),
 			),
 		)
 		assert.ok(
@@ -85,6 +95,7 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 		)
 		for (const value of store.values()) {
 			const stored = JSON.parse(value)
+			assert.deepEqual(stored.data.awards, awards)
 			assert.ok(!value.includes("availability_evidence"))
 			assert.ok(!value.includes("cast_rows"))
 			assert.ok(value.includes('"cast":[]'))
@@ -95,6 +106,7 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 					JSON.stringify(
 						trimTitleDetails(
 							{
+								awards,
 								details: {
 									tmdb_id: 42,
 									title: "Title",

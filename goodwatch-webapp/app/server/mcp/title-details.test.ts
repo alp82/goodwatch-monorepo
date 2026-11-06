@@ -7,7 +7,8 @@ import {
 	personLink,
 	titleSeasons,
 } from "./title-details.ts"
-import { similarTitles, titleDetails } from "./schemas.ts"
+import { similarTitles, titleDetails, titleDetailsOutput } from "./schemas.ts"
+import { summarizeTitleAwards } from "../title-awards.ts"
 
 const media = {
 	mediaType: "show",
@@ -121,6 +122,44 @@ test("Similar tool params default to For you everywhere, seen included; selector
 	])
 		assert.equal(similarTitles.safeParse(args).success, false)
 })
+test("get_title includes partial awards even with include=[], and omits them without observations", () => {
+	const awards = summarizeTitleAwards([
+		{
+			award_name: "Academy Awards",
+			category_name: "Cinematography",
+			ceremony_year: "2024",
+			has_win: true,
+			has_nomination: true,
+		},
+	])
+	const title = compactTitleDetails(
+		{ ...media, awards },
+		"https://goodwatch.app",
+		{ include: [] },
+	)
+	assert.deepEqual(title.awards, awards)
+	assert.ok(
+		!("awards" in compactTitleDetails(media, "https://goodwatch.app", {})),
+	)
+	assert.deepEqual(titleDetailsOutput.parse({ title, member: {} }), {
+		title,
+		member: {},
+	})
+	assert.ok(
+		titleDetailsOutput.safeParse({ status: "data_unavailable" }).success,
+	)
+	assert.ok(
+		!titleDetailsOutput.safeParse({
+			title: { awards: { ...awards, coverage: "complete" } },
+		}).success,
+	)
+	assert.ok(
+		!titleDetailsOutput.safeParse({
+			title: { awards: { ...awards, wins: Array(26).fill(awards!.wins[0]) } },
+		}).success,
+	)
+})
+
 test("Compact title details preserve provider scales, five billed actors, linked crew and safe trailer", () => {
 	const result = compactTitleDetails(media, "https://goodwatch.app", {})
 	assert.equal(result.cast?.length, 5)

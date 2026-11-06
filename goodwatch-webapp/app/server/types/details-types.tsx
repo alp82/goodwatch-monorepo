@@ -333,6 +333,7 @@ export interface TitleFingerprint
 	viewingContext: { name: string }[]
 }
 export interface ResultBase {
+	awards?: import("../title-awards").TitleAwards
 	streaming_availabilities: Pick<
 		StreamingAvailability,
 		"streaming_service_id" | "streaming_type" | "stream_url"
