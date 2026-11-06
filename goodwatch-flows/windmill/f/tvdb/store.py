@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 
 from f.sync.copy.sync_state import utc_now
-from pymongo import ReturnDocument
+from pymongo import ReturnDocument, UpdateOne
 from pymongo.errors import DuplicateKeyError
 
 
@@ -46,6 +46,29 @@ def enqueue(collection, key, fields, priority=0):
         },
         upsert=True,
     )
+
+
+def enqueue_many(collection, entries):
+    """Deduplicate an API batch before one Mongo request; avoid a round trip per nominee/actor."""
+    now = utc_now()
+    unique = {key: (fields, priority) for key, fields, priority in entries}
+    operations = [
+        UpdateOne(
+            {"_id": key},
+            {
+                "$set": fields,
+                "$setOnInsert": {
+                    "due_at": EPOCH,
+                    "priority": priority,
+                    "created_at": now,
+                },
+            },
+            upsert=True,
+        )
+        for key, (fields, priority) in unique.items()
+    ]
+    for offset in range(0, len(operations), 1000):
+        collection.bulk_write(operations[offset : offset + 1000], ordered=False)
 
 
 def claim(collection, now, lease_minutes=10):

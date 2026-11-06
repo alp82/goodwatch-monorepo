@@ -14,7 +14,15 @@ from urllib.parse import quote
 
 from f.sync.copy.sync_state import utc_now
 from f.tvdb.api import ApiError, Deferred
-from f.tvdb.store import claim, enqueue, exclusive, finish, record_run, runtime
+from f.tvdb.store import (
+    claim,
+    enqueue,
+    enqueue_many,
+    exclusive,
+    finish,
+    record_run,
+    runtime,
+)
 
 
 class IdentityError(ValueError):
@@ -87,15 +95,19 @@ def title_data(db, api, doc):
         ) not in (None, tvdb if kind == "show" else None):
             raise IdentityError("Character belongs to another title")
         actors.append(c)
-    for c in actors:
-        # Map portraits first. A null portrait needs no actor API request yet.
-        if c.get("image"):
-            enqueue(
-                db.tvdb_entities,
+    # Map only roles with portraits, and deduplicate actors across this title.
+    enqueue_many(
+        db.tvdb_entities,
+        [
+            (
                 f"person:{c['peopleId']}",
                 {"kind": "person", "tvdb_id": c["peopleId"]},
                 doc.get("priority", 0),
             )
+            for c in actors
+            if c.get("image")
+        ],
+    )
     return {
         "tvdb_id": tvdb,
         "name": data.get("name"),

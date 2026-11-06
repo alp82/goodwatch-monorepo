@@ -14,7 +14,15 @@ from time import monotonic
 from f.sync.copy.sync_state import utc_now
 from f.tvdb.api import ApiError, Deferred
 from f.tvdb.crawl import checked_id
-from f.tvdb.store import claim, enqueue, exclusive, finish, record_run, runtime
+from f.tvdb.store import (
+    claim,
+    enqueue,
+    enqueue_many,
+    exclusive,
+    finish,
+    record_run,
+    runtime,
+)
 
 
 def discover(db, api, now):
@@ -88,7 +96,7 @@ def fetch_category(db, api, doc):
         raise ValueError("Unexpected nomination pagination; refuse partial snapshot")
     if (data.get("award") or {}).get("id") != doc["award_id"]:
         raise ValueError("TVDB award category mismatch")
-    ids = set()
+    ids, entities = set(), []
     for n in data["nominees"]:
         if not checked_id(n.get("id")) or type(n.get("isWinner")) is not bool:
             raise ValueError("Malformed TVDB nomination")
@@ -101,20 +109,15 @@ def fetch_category(db, api, doc):
                 tvdb = checked_id(target.get("id"))
                 if not tvdb:
                     raise ValueError("Malformed TVDB nominee title")
-                enqueue(
-                    db.tvdb_entities,
-                    f"{kind}:{tvdb}",
-                    {"kind": kind, "tvdb_id": tvdb},
-                    1000000,
+                entities.append(
+                    (f"{kind}:{tvdb}", {"kind": kind, "tvdb_id": tvdb}, 1000000)
                 )
         if n.get("character") and checked_id(n["character"].get("peopleId")):
             person = n["character"]["peopleId"]
-            enqueue(
-                db.tvdb_entities,
-                f"person:{person}",
-                {"kind": "person", "tvdb_id": person},
-                1000000,
+            entities.append(
+                (f"person:{person}", {"kind": "person", "tvdb_id": person}, 1000000)
             )
+    enqueue_many(db.tvdb_entities, entities)
     return data["nominees"]
 
 

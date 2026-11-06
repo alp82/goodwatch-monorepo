@@ -4,7 +4,7 @@ import sys
 import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import mongomock
 
@@ -48,6 +48,17 @@ class TvdbTests(unittest.TestCase):
     def setUp(self):
         self.db = mongomock.MongoClient().db
         self.client = Mock(requests=0)
+
+        # mongomock has not adopted PyMongo's UpdateOne sort keyword yet.
+        def bulk(operations, **kwargs):
+            for op in operations:
+                self.db.tvdb_entities.update_one(op._filter, op._doc, upsert=op._upsert)
+
+        compatibility = patch.object(
+            self.db.tvdb_entities, "bulk_write", side_effect=bulk
+        )
+        compatibility.start()
+        self.addCleanup(compatibility.stop)
 
     def test_title_requires_external_identity_and_filters_crew(self):
         self.client.get.return_value = {"data": title()}
