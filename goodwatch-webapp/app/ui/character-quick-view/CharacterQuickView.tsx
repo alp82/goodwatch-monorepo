@@ -317,6 +317,23 @@ function Stage({
 			hidden.current = null
 		}
 	}, [closing])
+	// The view is gone: the picture in the page shows again, and then focus goes back to the opener (a hidden element
+	// can't take focus, so the focus scope's own return, when closing starts, can miss it).
+	const finish = () => {
+		if (hidden.current) hidden.current.style.visibility = ""
+		hidden.current = null
+		const to = open.from
+		const now = document.activeElement
+		if (
+			to.isConnected &&
+			(!now ||
+				now === document.body ||
+				!now.isConnected ||
+				layer.current?.contains(now))
+		)
+			to.focus({ preventScroll: true })
+		onClose()
+	}
 	const step = useCallback(
 		(d: -1 | 1) => onIndex((open.index + d + count) % count),
 		[open.index, count, onIndex],
@@ -376,7 +393,7 @@ function Stage({
 					animate={{ opacity: closing ? 0 : 1 }}
 					transition={{ duration: closing ? 0.18 : 0.22, ease: "easeOut" }}
 					onAnimationComplete={() => {
-						if (closing && !ghost?.back) onClose()
+						if (closing && !ghost?.back) finish()
 					}}
 				>
 					<FrameContext.Provider value={{ form: "card", steps, close }}>
@@ -410,7 +427,7 @@ function Stage({
 					animate={ghost.to}
 					transition={ghost.back ? BACK : LIFT}
 					onAnimationComplete={() => {
-						if (ghost.back) return onClose()
+						if (ghost.back) return finish()
 						ghost.slot.style.visibility = ""
 						setGhost(null)
 					}}
