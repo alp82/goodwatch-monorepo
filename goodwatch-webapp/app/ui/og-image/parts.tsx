@@ -322,12 +322,18 @@ export const Headline = ({
 	min?: number
 }) => {
 	const fit = fitHeadline(text, { width, height, max, min })
+	// PROTOTYPE (awards-og): accented capitals ("CÉSAR") reach above the 0.95 line box, and the box's clip cut the
+	// accent off. Room above the first line keeps it.
+	const accentRoom = /[\u00c0-\u00de\u0100-\u017f]/.test(fit.text)
+		? Math.round(fit.fontSize * 0.14)
+		: 0
 	return (
 		<div
 			style={{
 				display: "flex",
+				paddingTop: accentRoom,
 				maxWidth: width,
-				maxHeight: height,
+				maxHeight: height + accentRoom,
 				overflow: "hidden",
 				fontFamily: "Anton",
 				fontSize: fit.fontSize,
