@@ -16,6 +16,7 @@ import { ReleasedTab } from "../watch/ReleasedTab"
 import { ScoresTab } from "../watch/ScoresTab"
 import { ServicesTab } from "../watch/ServicesTab"
 import { ShowsTab } from "../watch/ShowsTab"
+import { AwardsTab } from "../watch/AwardsTab"
 import { YouTab } from "../you/YouTab"
 
 type SubTabContent = (props: { view: SubTabView }) => ReactNode
@@ -25,6 +26,7 @@ const SUB_TAB_CONTENT: Partial<Record<SubTabId, SubTabContent>> = {
 	people: PeopleTab,
 	services: ServicesTab,
 	scores: ScoresTab,
+	awards: AwardsTab,
 	popularity: PopularityTab,
 	shows: ShowsTab,
 	madeIn: MadeInTab,

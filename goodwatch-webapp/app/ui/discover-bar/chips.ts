@@ -52,6 +52,7 @@ const RANK: Partial<Record<string, number>> = {
 	wishlist: 5,
 	minMatch: 5,
 	tasteGroups: 5,
+	awards: 5,
 	popularity: 7,
 	budget: 7,
 	shows: 7,

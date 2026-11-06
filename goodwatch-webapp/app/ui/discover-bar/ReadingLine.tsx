@@ -38,6 +38,7 @@ const FIELDS: Record<string, string> = {
 	shows: "Shows",
 	tasteGroups: "Taste",
 	legacy: "Other",
+	awards: "Awards",
 }
 const fieldOf = (chip: BarChip) =>
 	chip.prefix ?? (chip.group ? (FIELDS[chip.group] ?? chip.group) : "Search")

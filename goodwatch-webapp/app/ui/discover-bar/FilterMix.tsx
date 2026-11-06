@@ -10,7 +10,15 @@
 // "no effect", and take no share of the hidden total.
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
-import { type ReactNode, useEffect, useId, useRef, useState } from "react"
+import {
+	type ReactNode,
+	Suspense,
+	lazy,
+	useEffect,
+	useId,
+	useRef,
+	useState,
+} from "react"
 import type { FilterState } from "~/domain/filter-state"
 import { Knob, MENU, METER_TRANSITION, TAP } from "~/ui/filter-bar/motion"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
@@ -19,6 +27,14 @@ import { allocateHidden } from "./hidden-allocation"
 import { hideText } from "./hide-count"
 import { CountText, filterColor } from "./PanelFooter"
 import type { BarChip } from "./chips"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+
+// The awards row's picker shows only in the open popout: it loads then.
+const AwardsRowPicker = lazy(
+	reloadOnStaleChunk(() =>
+		import("./AwardsRowPicker").then((m) => ({ default: m.AwardsRowPicker })),
+	),
+)
 
 interface Row {
 	group: string
@@ -265,7 +281,19 @@ export function FilterMix({
 		seen.current = seen.current.filter((g) => g !== row.group)
 	}
 
-	const ownRow = (row: Row) => (
+	// The awards row carries its picker under it: won or nominated, and which awards.
+	const ownRow = (row: Row) =>
+		row.group === "awards" && !row.off ? (
+			<li key={row.group} className="flex flex-col">
+				<ul>{plainRow(row)}</ul>
+				<Suspense fallback={null}>
+					<AwardsRowPicker state={state} update={update} />
+				</Suspense>
+			</li>
+		) : (
+			plainRow(row)
+		)
+	const plainRow = (row: Row) => (
 		<li key={row.group} className="flex h-9 items-center gap-1">
 			<motion.button
 				type="button"

@@ -78,6 +78,7 @@ import { SCOPE_COLOR, readColor } from "./search-reading/read-colors"
 import type { HideCount } from "./search-reading/read-parts"
 import { useReadFilters, useSearchReading } from "./search-reading/useSearchReading"
 import { useHydrated } from "~/utils/hydrated"
+import { awardParam, readAwardWords } from "~/domain/award-filter"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 // The Matches popout's read parts: loaded when the popout first shows them.
@@ -150,7 +151,10 @@ export function DiscoverPage({
 	const [params, setParams] = useSearchParams()
 	const hydrated = useHydrated()
 	// The words as typed. An older link keeps them in `asked`, with what they read as the person's own filters.
-	const typed = searchText(params.get("asked") ?? params.get("q"))
+	const fullTyped = searchText(params.get("asked") ?? params.get("q"))
+	// Award words that became the awards filter ("oscar winners") leave the search: only the rest is searched.
+	const awardWords = fullTyped && params.get("awards") ? readAwardWords(fullTyped) : null
+	const typed = awardWords ? searchText(awardWords.rest) : fullTyped
 	// The phrases switched off on the read strip: left out of what the search reads.
 	const off = useMemo(() => params.getAll("off"), [params])
 	const searching = typed !== null
@@ -281,6 +285,9 @@ export function DiscoverPage({
 				const out = new URLSearchParams(previous)
 				out.set("q", text)
 				for (const key of ["asked", "page", "off"]) out.delete(key)
+				// Award words in the search become the awards filter right away.
+				const awards = readAwardWords(text)
+				if (awards) out.set("awards", awardParam(awards.filter) ?? "won")
 				if (entering) out.delete("sort")
 				return out
 			},
@@ -664,7 +671,7 @@ export function DiscoverPage({
 						counts={counts}
 						member={member}
 						query={q}
-						typedQuery={typed}
+						typedQuery={fullTyped}
 						reading={search.reading ?? undefined}
 						onSearch={onSearch}
 						onClearSearch={clearSearch}

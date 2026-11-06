@@ -44,6 +44,7 @@ import {
 } from "~/ui/discover/useDiscoverBrowse"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { DISCOVER_MAX_PAGE } from "~/utils/constants"
+import { readAwardWords } from "~/domain/award-filter"
 import { personPath } from "~/utils/helpers"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 
@@ -166,8 +167,11 @@ async function browseLoader(
 	const requested = Number.parseInt(params.get("page") ?? "1", 10) || 1
 	const lastPage = Math.min(DISCOVER_MAX_PAGE, Math.max(1, requested))
 	const firstPage = Math.max(1, lastPage - MAX_INITIAL_PAGES + 1)
-	// Search mode: the browser runs the search (its reading streams in), so the first view has no results yet.
-	const searching = searchText(params.get("q")) !== null
+	// Search mode: the browser runs the search (its reading streams in), so the first view has no results yet. Award
+	// words that became the awards filter ("oscar winners") aren't searched, as in DiscoverPage.
+	const words = searchText(params.get("q"))
+	const awardWords = words && params.get("awards") ? readAwardWords(words) : null
+	const searching = (awardWords ? searchText(awardWords.rest) : words) !== null
 	const side = params.get("side")
 	const sides = { rows: params.get("layout") !== "grid", side }
 	let snapshotNotLoaded = false
