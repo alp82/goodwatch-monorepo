@@ -1,10 +1,12 @@
 // The quick view's content, one layout for every place: a head (backdrop, the poster on phones, the place's eyebrow,
 // title, year and kind, the score pill and the taste match, Details and close), the place's reason line with its
-// chips, the viewer's own services, the story, and the title's own control as the footer (TitleControl, the title
-// page's). Every part keeps its height whatever the title has, so a step never moves anything.
+// chips, the title's most notable award results, the viewer's own services, the story, and the title's own control as
+// the footer (TitleControl, the title page's). Every part keeps its height whatever the title has, so a step never
+// moves anything, except the awards: a title without reported results has no awards part at all.
 import { ArrowsPointingOutIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { type ReactNode, useLayoutEffect, useRef } from "react"
+import { QuickViewAwards } from "~/ui/awards/AwardMarks"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { TitleScorePill } from "~/ui/poster-card/ScorePill"
 import {
@@ -223,6 +225,10 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 						</div>
 					)}
 				</section>
+				<QuickViewAwards
+					mediaType={t.media.mediaType}
+					tmdbId={t.media.details.tmdb_id}
+				/>
 				{t.services !== undefined && <Services offers={t.services} />}
 				{"story" in t && (
 					<section className="py-3">
