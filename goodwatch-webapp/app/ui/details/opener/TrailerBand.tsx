@@ -56,10 +56,12 @@ export const hasVideo = (media: Media) => videosOf(media).length > 0
 
 /**
  * Classes for the opener's header (poster and title) under the band. With a card it doesn't overlap the band on a
- * phone (the screen is full width there) and keeps clear of the card on a desktop; without one it overlaps the band.
+ * phone (the screen is full width there); on a desktop the card sits over the right rail (at most about 21rem from
+ * the band's right edge, the rail and its gap are 21rem at lg and 23.5rem at xl), so the header keeps the title
+ * column's full width. Without a card it overlaps the band.
  */
 export const openerHeaderClass = (withCard: boolean) =>
-	withCard ? "mt-5 lg:-mt-28 lg:mr-48 xl:mr-52" : "-mt-16 sm:-mt-20 lg:-mt-28"
+	withCard ? "mt-5 lg:-mt-28 lg:mr-4" : "-mt-16 sm:-mt-20 lg:-mt-28"
 
 export function TrailerBand({
 	media,

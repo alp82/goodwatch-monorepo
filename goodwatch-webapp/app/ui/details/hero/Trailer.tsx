@@ -26,11 +26,11 @@ export function HeroBackdropImage({ media, className }: { media: Media; classNam
 	return <TmdbImage kind="backdrop" path={heroBackdropPath(media.details.backdrop_path)} sizes={HERO_BACKDROP_SIZES} maxWidth={HERO_BACKDROP_MAX_WIDTH} priority="high" className={className} crossOrigin="anonymous" {...HERO_TIMING} />
 }
 
-// The opener's poster: 80 to 96 px wide on a phone, 112 px from sm, 144 px from lg (ui/details/TitlePage.tsx).
+// The opener's poster: 96 to 112 px wide on a phone, 128 px from sm, 176 px from lg (ui/details/TitlePage.tsx).
 const HERO_POSTER_SIZES: SizeRule[] = [
-	["(min-width: 1024px)", "144px"],
-	["(min-width: 640px)", "112px"],
-	[null, "96px"],
+	["(min-width: 1024px)", "176px"],
+	["(min-width: 640px)", "128px"],
+	[null, "112px"],
 ]
 
 // The poster over the whole screen. Its code loads when a visitor reaches for the poster, or at the latest with
@@ -66,7 +66,7 @@ export function HeroPoster({ media, className = "" }: { media: Media; className?
 					lang={media.details.presentation?.title.language ?? "en"}
 					path={media.details.poster_path}
 					sizes={HERO_POSTER_SIZES}
-					maxWidth={144}
+					maxWidth={176}
 					alt={`Poster for ${media.details.title}`}
 					className="h-full w-full object-cover"
 					draggable={false}

@@ -518,13 +518,14 @@ export function TitlePage(props: TitlePageProps) {
 	const pageBackdrop = details.backdrop_path
 		? tmdbImageUrl(details.backdrop_path, "w300")
 		: ""
-	// The score ring and the sites' chips, beside the poster from lg up and full width under the header on a phone.
-	const ratings = (className: string) => (
+	// The score ring on its own row above the sites' chips, beside the poster from lg up and full width under the
+	// header on a phone.
+	const ratings = (className: string, ringSize: number) => (
 		<div
 			data-hero-ratings
-			className={`flex flex-wrap items-center gap-x-5 gap-y-3 ${className}`}
+			className={`flex flex-col items-start gap-4 ${className}`}
 		>
-			<ScoreRing media={media} size={44} />
+			<ScoreRing media={media} size={ringSize} />
 			<div
 				data-hero-sites
 				className="flex min-w-0 flex-wrap items-center gap-2"
@@ -648,78 +649,81 @@ export function TitlePage(props: TitlePageProps) {
 								<HeroPoster
 									media={media}
 									className={
-										withCard ? "w-20 sm:w-28 lg:w-36" : "w-24 sm:w-28 lg:w-36"
+										withCard ? "w-24 sm:w-32 lg:w-44" : "w-28 sm:w-32 lg:w-44"
 									}
 								/>
-								<div className="flex min-w-0 flex-1 flex-col gap-2 pb-1">
-									<MediaText
-										as="h1"
-										value={title}
-										aria-busy={props.textPreview === "loading" || undefined}
-										data-text-preview={props.textPreview ?? undefined}
-										className="text-balance text-2xl font-semibold leading-[1.1] tracking-tight text-white sm:text-3xl lg:text-[2.75rem]"
-									/>
-									<p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-gray-300 lg:text-base">
-										{metaHead.map((item, i) => (
-											<span
-												key={item}
-												className={`whitespace-nowrap ${i === 0 ? "font-semibold text-white" : ""}`}
-											>
-												{item}
-												{(i < metaHead.length - 1 ||
-													metaEpisodes.length > 0 ||
-													age ||
-													hasStatus) && <Dot />}
-											</span>
-										))}
-										{metaEpisodes.length > 0 && (
-											<span className="whitespace-nowrap">
-												{ids.includes("episodes") ? (
-													// biome-ignore lint/a11y/useValidAnchor: a real link to the section, also before the page's scripts run
-													<a
-														href="#episodes"
-														onClick={(e) => {
-															if (
-																e.button !== 0 ||
-																e.metaKey ||
-																e.ctrlKey ||
-																e.shiftKey ||
-																e.altKey
-															)
-																return
-															e.preventDefault()
-															jump("episodes")
-														}}
-														className="rounded-sm underline decoration-white/25 decoration-1 underline-offset-[5px] transition-colors hover:text-amber-200 hover:decoration-amber-300/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
-													>
-														{metaEpisodes.join(" · ")}
-													</a>
-												) : (
-													metaEpisodes.join(" · ")
-												)}
-												{(age || hasStatus) && <Dot />}
-											</span>
-										)}
-										{age && (
-											<span className="whitespace-nowrap">
-												<AgeRating ageRating={age} />
-												{hasStatus && <Dot />}
-											</span>
-										)}
-										{status}
-									</p>
-									<div className="max-sm:hidden">
-										<Genres
-											genres={details.genres.slice(0, HEADER_GENRE_COUNT)}
-											type={media.mediaType === "movie" ? "movie" : "show"}
-											compact={true}
+								<div className="flex min-w-0 flex-1 flex-col gap-6 pb-1">
+									{/* Who it is: the title, the meta row and the genres, closer together than the scores below. */}
+									<div className="flex flex-col gap-2.5">
+										<MediaText
+											as="h1"
+											value={title}
+											aria-busy={props.textPreview === "loading" || undefined}
+											data-text-preview={props.textPreview ?? undefined}
+											className="text-balance text-2xl font-semibold leading-[1.1] tracking-tight text-white sm:text-3xl lg:text-[2.75rem]"
 										/>
+										<p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-gray-300 lg:text-base">
+											{metaHead.map((item, i) => (
+												<span
+													key={item}
+													className={`whitespace-nowrap ${i === 0 ? "font-semibold text-white" : ""}`}
+												>
+													{item}
+													{(i < metaHead.length - 1 ||
+														metaEpisodes.length > 0 ||
+														age ||
+														hasStatus) && <Dot />}
+												</span>
+											))}
+											{metaEpisodes.length > 0 && (
+												<span className="whitespace-nowrap">
+													{ids.includes("episodes") ? (
+														// biome-ignore lint/a11y/useValidAnchor: a real link to the section, also before the page's scripts run
+														<a
+															href="#episodes"
+															onClick={(e) => {
+																if (
+																	e.button !== 0 ||
+																	e.metaKey ||
+																	e.ctrlKey ||
+																	e.shiftKey ||
+																	e.altKey
+																)
+																	return
+																e.preventDefault()
+																jump("episodes")
+															}}
+															className="rounded-sm underline decoration-white/25 decoration-1 underline-offset-[5px] transition-colors hover:text-amber-200 hover:decoration-amber-300/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+														>
+															{metaEpisodes.join(" · ")}
+														</a>
+													) : (
+														metaEpisodes.join(" · ")
+													)}
+													{(age || hasStatus) && <Dot />}
+												</span>
+											)}
+											{age && (
+												<span className="whitespace-nowrap">
+													<AgeRating ageRating={age} />
+													{hasStatus && <Dot />}
+												</span>
+											)}
+											{status}
+										</p>
+										<div className="max-sm:hidden">
+											<Genres
+												genres={details.genres.slice(0, HEADER_GENRE_COUNT)}
+												type={media.mediaType === "movie" ? "movie" : "show"}
+												compact={true}
+											/>
+										</div>
 									</div>
-									{ratings("mt-2 max-lg:hidden")}
+									{ratings("max-lg:hidden", 64)}
 								</div>
 							</header>
 							{/* On a phone the title column is narrow: the scores go full width under the header. */}
-							{ratings("mt-5 lg:hidden")}
+							{ratings("mt-6 lg:hidden", 52)}
 
 							<section
 								id="summary"
