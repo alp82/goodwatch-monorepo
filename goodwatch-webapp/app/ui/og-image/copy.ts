@@ -316,3 +316,17 @@ export const PROFILE_CARD_COPY = {
 	movies: "Movies",
 	shows: "Shows",
 } as const
+
+// The cards of the awards pages (/awards). Category names, body names and titles come from the award data
+// (domain/award-pages.ts). No counts: a card never says how many awards a title won.
+export const AWARDS_CARD_COPY = {
+	hubTag: "Film and TV awards",
+	hub: "Award winners",
+	/** The hub's row: these bodies in this order, each with its latest top winner. Slugs from AWARD_BODIES. */
+	hubBodies: ["oscars", "emmys", "golden-globes", "bafta", "cesars"],
+	body: (name: string) => `${name} winners`,
+	/** A body's tag when its official name is its page name ("César Awards"), from its kind ("Film"). */
+	kindTag: (kind: string) => `${kind} awards`,
+	/** Under the year on a ceremony's card. */
+	yearLine: "Winners",
+} as const

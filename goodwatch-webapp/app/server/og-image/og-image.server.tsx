@@ -120,6 +120,18 @@ async function inlineImages(content: OgContent): Promise<OgContent> {
 				logos: await Promise.all(content.logos.map(inline)),
 			}
 		}
+		case "awards":
+			return content.layout === "year"
+				? { ...content, poster: await toDataUri(content.poster) }
+				: {
+						...content,
+						posters: await Promise.all(
+							content.posters.map(async (poster) => ({
+								...poster,
+								src: await toDataUri(poster.src),
+							})),
+						),
+					}
 		case "person":
 			return { ...content, photo: await toDataUri(content.photo) }
 		default:

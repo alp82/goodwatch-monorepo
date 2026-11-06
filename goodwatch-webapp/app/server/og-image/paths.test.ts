@@ -23,9 +23,12 @@ const result = await build({
 			setup(builder) {
 				builder.onResolve({ filter: /^~\// }, (args) => {
 					if (
-						["~/ui/og-image/copy", "~/ui/og-image/profile-card-model"].includes(
-							args.path,
-						)
+						[
+							"~/ui/og-image/copy",
+							"~/ui/og-image/profile-card-model",
+							"~/server/og-image/awards-content.server",
+							"~/domain/award-pages",
+						].includes(args.path)
 					)
 						return
 					return { path: args.path, namespace: "fixture" }
@@ -58,4 +61,35 @@ test("a title's sub-pages share the title's card", () => {
 	assert.equal(canonicalOgPath("/show/95396/fingerprint"), "/show/95396")
 	assert.equal(canonicalOgPath("/show/95396/at-a-glance"), "/show/95396")
 	assert.equal(canonicalOgPath("/show/95396/cast"), null)
+})
+
+test("each kind of awards page has its own card path", () => {
+	const paths: [string, string | null][] = [
+		["/awards", "/awards"],
+		["/AWARDS", "/awards"],
+		["/awards/", "/awards"],
+		["/awards/oscars", "/awards/oscars"],
+		["/Awards/cesars/2026", "/awards/cesars/2026"],
+		["/awards/oscars/1973", "/awards/oscars/1973"],
+		["/awards/bafta/category/best-film", "/awards/bafta/category/best-film"],
+		[
+			"/awards/emmys/CATEGORY/outstanding-drama-series",
+			"/awards/emmys/category/outstanding-drama-series",
+		],
+	]
+	for (const [address, expected] of paths)
+		assert.equal(canonicalOgPath(address), expected, address)
+})
+
+test("awards addresses without a page have no card", () => {
+	for (const address of [
+		"/awards/nope",
+		"/awards/Oscars",
+		"/awards/oscars/26",
+		"/awards/oscars/category",
+		"/awards/oscars/2026/best-picture",
+		"/awards/oscars/category/best-picture/2026",
+		`/awards/oscars/category/${"a".repeat(121)}`,
+	])
+		assert.equal(canonicalOgPath(address), null, address)
 })

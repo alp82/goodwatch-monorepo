@@ -11,8 +11,11 @@
 // - For you: amber bar with the logo, the example taste print over a wall of top-scored posters (ForYouCard.tsx).
 // - Rate titles (/taste/quiz): the page card's backdrop and band, with the rating flow's taste bar lit across the
 //   seam (TasteQuizCard.tsx).
+// - Awards pages: the hub and a category have a row of winners' posters under the headline, a ceremony its year as a
+//   giant number beside the top winner's poster (AwardsCard.tsx); a body and a one-winner category use the movie card.
 // - Every other page: backdrop across the top, amber band with the headline below.
 // Image fields hold data URIs, so satori never fetches anything itself.
+import { AwardsCard, type OgAwardsContent } from "~/ui/og-image/AwardsCard"
 import { ChatCard } from "~/ui/og-image/ChatCard"
 import {
 	DiscoveryCard,
@@ -112,6 +115,7 @@ export interface OgChatContent {
 }
 
 export type {
+	OgAwardsContent,
 	OgTasteQuizContent,
 	OgNewServicesContent,
 	OgProfileContent,
@@ -121,6 +125,7 @@ export type {
 }
 
 export type OgContent =
+	| OgAwardsContent
 	| OgTasteQuizContent
 	| OgNewServicesContent
 	| OgForYouContent
@@ -314,6 +319,7 @@ export function OgCard({ content }: { content: OgContent }) {
 	if (content.kind === "chat") return <ChatCard posters={content.posters} />
 	if (content.kind === "for-you") return <ForYouCard content={content} />
 	if (content.kind === "taste-quiz") return <TasteQuizCard content={content} />
+	if (content.kind === "awards") return <AwardsCard content={content} />
 	if (content.kind === "new-services")
 		return <NewServicesCard content={content} />
 	if (content.kind === "profile") return <ProfileCard content={content} />

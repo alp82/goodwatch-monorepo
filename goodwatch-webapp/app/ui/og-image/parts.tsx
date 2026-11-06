@@ -261,7 +261,17 @@ const wrap = (words: string[], fontSize: number, width: number) => {
 	return lines
 }
 
-export type HeadlineFit = { fontSize: number; text: string }
+// An accented capital ("CÉSAR") reaches above Anton's 0.95 line box, so a headline whose first line has one keeps this
+// much of its font size free above that line; otherwise the box's clip cuts the accent off.
+const ACCENT_ROOM = 0.14
+const accentRoom = (firstLine: string, fontSize: number) =>
+	[...firstLine].some(
+		(char) => /\p{Lu}/u.test(char) && char.normalize("NFD").length > 1,
+	)
+		? Math.round(fontSize * ACCENT_ROOM)
+		: 0
+
+export type HeadlineFit = { fontSize: number; text: string; accentRoom: number }
 /**
  * The largest font size, from `max` down to `min`, at which the uppercase headline wraps inside a `width` x `height`
  * box. At `min`, a headline that still doesn't fit keeps the lines that do and ends with an ellipsis, and a word that
@@ -276,12 +286,16 @@ export const fitHeadline = (
 	const min = box.min ?? 44
 	for (let size = box.max; size >= min; size -= 2) {
 		const lines = wrap(words, size, box.width)
-		if (lines && lines.length * size * HEADLINE_LINE_HEIGHT <= box.height)
-			return { fontSize: size, text: upper }
+		if (!lines) continue
+		const room = accentRoom(lines[0], size)
+		if (lines.length * size * HEADLINE_LINE_HEIGHT + room <= box.height)
+			return { fontSize: size, text: upper, accentRoom: room }
 	}
+	// At the smallest size the room comes off the box first, then the lines that still fit are kept.
+	const room = accentRoom(upper, min)
 	const maxLines = Math.max(
 		1,
-		Math.floor(box.height / (min * HEADLINE_LINE_HEIGHT)),
+		Math.floor((box.height - room) / (min * HEADLINE_LINE_HEIGHT)),
 	)
 	const lines: string[] = []
 	for (const word of words) {
@@ -298,13 +312,13 @@ export const fitHeadline = (
 		lines.length <= maxLines &&
 		lines.join(" ").length === words.join(" ").length
 	)
-		return { fontSize: min, text: lines.join(" ") }
+		return { fontSize: min, text: lines.join(" "), accentRoom: room }
 	const kept = lines.slice(0, maxLines)
 	let lastLine = `${kept[kept.length - 1]}…`
 	while (lastLine.length > 1 && runWidth(lastLine, min) > box.width)
 		lastLine = `${lastLine.slice(0, -2)}…`
 	kept[kept.length - 1] = lastLine
-	return { fontSize: min, text: kept.join(" ") }
+	return { fontSize: min, text: kept.join(" "), accentRoom: room }
 }
 
 // The headline in Anton, sized by fitHeadline to its box. The box also clips, so nothing can spill onto the brand.
@@ -326,6 +340,7 @@ export const Headline = ({
 		<div
 			style={{
 				display: "flex",
+				paddingTop: fit.accentRoom,
 				maxWidth: width,
 				maxHeight: height,
 				overflow: "hidden",

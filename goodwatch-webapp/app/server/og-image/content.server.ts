@@ -2,6 +2,11 @@ import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Maps a page path to what its Open Graph card shows. Image fields hold remote URLs here;
 // the renderer inlines them.
+import {
+	getAwardBody,
+	getAwardCategory,
+	getAwardCeremony,
+} from "~/server/award-pages.server"
 import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
 import {
 	type CombinationType,
@@ -10,6 +15,10 @@ import {
 	type WatchedType,
 	getDiscoverResults,
 } from "~/server/discover.server"
+import {
+	awardsContent,
+	canonicalAwardsPath,
+} from "~/server/og-image/awards-content.server"
 import {
 	canonicalNewPath,
 	newServicesContent,
@@ -128,6 +137,7 @@ export function canonicalOgPath(path: string): string | null {
 		return tab ? `/u/${handle}/${tab}` : `/u/${handle}`
 	}
 	if (first === "new") return canonicalNewPath(segments)
+	if (first?.toLowerCase() === "awards") return canonicalAwardsPath(segments)
 	if (first === "discover") return "/discover"
 	if (first === "for-you" && segments.length === 1) return WATCH_PATHS.forYou
 	if (first === "watch") {
@@ -532,5 +542,11 @@ export async function resolveOgContent(
 	if (first === "u") return profileCardContent(second, third, fourth)
 	if (first === "movies" || first === "shows") return browseContent(path)
 	if (first === "new") return newServicesContent(path, newDeps)
+	if (first === "awards")
+		return awardsContent(path, {
+			body: getAwardBody,
+			ceremony: getAwardCeremony,
+			category: getAwardCategory,
+		})
 	return staticPageContent(path)
 }
