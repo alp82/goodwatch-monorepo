@@ -71,11 +71,14 @@ export function AwardsList({ results }: { results: TitleAwardResult[] }) {
 	)
 }
 
-/** One body's results; a body with many folds its nominations into one line that opens them. */
+/**
+ * One body's results; a body with many folds its nominations into one line that opens them. The line stays once
+ * opened (it hides them again), so the keyboard's focus isn't lost with it.
+ */
 function BodyResults({ group: g }: { group: BodyGroup }) {
 	const [open, setOpen] = useState(false)
-	const folded = !open && foldsNominations(g)
-	const shown = folded ? g.results.filter((r) => r.won) : g.results
+	const folds = foldsNominations(g)
+	const shown = folds && !open ? g.results.filter((r) => r.won) : g.results
 	return (
 		<div>
 			<h4 className="flex items-baseline gap-2 text-[15px] font-semibold text-white">
@@ -97,14 +100,15 @@ function BodyResults({ group: g }: { group: BodyGroup }) {
 						<Result won={r.won} />
 					</li>
 				))}
-				{folded && (
+				{folds && (
 					<li>
 						<button
 							type="button"
-							onClick={() => setOpen(true)}
+							aria-expanded={open}
+							onClick={() => setOpen((o) => !o)}
 							className="col-span-full cursor-pointer justify-self-start rounded-sm text-[15px] font-semibold text-amber-300/90 hover:text-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
 						>
-							{nominationsLabel(g.nominations)}
+							{open ? "Hide nominations" : nominationsLabel(g.nominations)}
 						</button>
 					</li>
 				)}
