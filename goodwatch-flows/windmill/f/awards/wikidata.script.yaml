@@ -1,0 +1,18 @@
+summary: Shared awards wikidata
+description: Source-independent award observations, identities and serving data.
+kind: script
+lock: '!inline f/awards/wikidata.script.lock'
+schema:
+  type: object
+  properties:
+    max_minutes:
+      type: integer
+      default: 10
+    max_categories:
+      type: integer
+      default: 100
+    discovery:
+      type: boolean
+      default: false
+  required: []
+timeout: 1800

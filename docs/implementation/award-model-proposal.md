@@ -1,6 +1,6 @@
 # Source-independent awards model and migration proposal
 
-Status: draft for the 2026-11-06 design discussion. This proposes model and pipeline changes; it does not apply a database migration or change running schedules.
+Status: approved and implemented on 2026-11-06. See [the shared awards runbook](shared-awards.md) for deployment, source checkpoints and rollout validation.
 
 ## Recommendation
 

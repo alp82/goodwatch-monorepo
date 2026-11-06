@@ -1,0 +1,12 @@
+summary: Shared awards tvdb
+description: Source-independent award observations, identities and serving data.
+kind: script
+lock: '!inline f/awards/tvdb.script.lock'
+schema:
+  type: object
+  properties:
+    limit:
+      type: integer
+      default: 1000
+  required: []
+timeout: 1800

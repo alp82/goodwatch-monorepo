@@ -14,6 +14,8 @@ def assess(db, now=None):
     now = now or utc_now()
     problems = []
     for name in ["tvdb_titles", "tvdb_categories", "tvdb_entities"]:
+        if name == 'tvdb_categories' and (db.award_state.find_one({'_id':'legacy-publication'}) or {}).get('disabled'):
+            continue
         pending = {"publish_pending": True}
         if name == "tvdb_entities":
             pending.update(

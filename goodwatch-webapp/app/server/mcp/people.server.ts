@@ -1,17 +1,18 @@
 import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 import { personPath } from "../../utils/helpers"
+import { titlePath } from "../../utils/helpers"
 import { canonicalTitleId } from "../../utils/title-identity"
 import { titleKey } from "../../utils/title-key"
+import { tmdbImageUrl } from "../../utils/tmdb-image"
 import { searchQuery } from "../combined-search/catalog.server"
+import { getPersonAwards } from "../person-awards.server"
 import { getPersonCredits } from "../person.server"
 import { knownForOf } from "../search-people/people.server"
 import { loadTaste } from "../taste/index.server"
 import { type ViewerContext, getMemberViewerContext } from "../viewer.server"
 import { page, summary } from "./data.server"
-import { titlePath } from "../../utils/helpers"
-import { tmdbImageUrl } from "../../utils/tmdb-image"
 import { titleLink } from "./links"
-import { filmographyView, type Person, personSummary } from "./people"
+import { type Person, filmographyView, personSummary } from "./people"
 
 /** A known-for title as the site's people search reads it (search-people/people.server.ts). */
 export interface KnownFor {
@@ -77,6 +78,7 @@ export async function readPeople(
 		return {
 			items: shown.map((person) => ({
 				...personSummary(person, origin),
+
 				...personCardFields(person, known.get(person.tmdb_id) ?? [], origin),
 			})),
 			next_cursor: rows.length > limit ? `offset:${offset + limit}` : null,
@@ -98,11 +100,13 @@ export async function readPeople(
 			status: "person_not_found",
 			message: "No matching catalog person",
 		}
+	const awards = await getPersonAwards(person.tmdb_id)
 	if (guest) {
 		const known = await knownFor([person.tmdb_id])
 		return {
 			person: {
 				...personSummary(person, origin),
+				...(awards ? { awards } : {}),
 				...personCardFields(person, known.get(person.tmdb_id) ?? [], origin),
 				known_for: (known.get(person.tmdb_id) ?? []).slice(0, 10).map((t) => ({
 					id: `${t.type}:${canonicalTitleId(t.type, t.id)}`,
@@ -135,7 +139,7 @@ export async function readPeople(
 						)}`,
 						percentiles?.[i] ?? null,
 					]),
-			  )
+				)
 			: new Map<string, number | null>()
 	const items = filmographyView(
 		credits,
@@ -148,6 +152,7 @@ export async function readPeople(
 		...selected,
 		person: {
 			...personSummary(person, origin),
+			...(awards ? { awards } : {}),
 			...personCardFields(person, known.get(person.tmdb_id) ?? [], origin),
 		},
 		items: selected.items.map((credit) => ({

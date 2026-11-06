@@ -18,8 +18,8 @@ export async function readTitleAwards(
 		"awards",
 		(signal) =>
 			query(
-				`SELECT award_name, category_name, ceremony_year, has_win, has_nomination
-		 FROM doc.tvdb_award_display WHERE media_type = ? AND media_tmdb_id = ?`,
+				`SELECT award_name, category_name, ceremony_year, has_win, has_nomination, source_names, reference_urls, ceremony_label
+		 FROM doc.award_title_display WHERE media_type = ? AND media_tmdb_id = ?`,
 				[mediaType, tmdbId],
 				signal,
 			).then(summarizeTitleAwards),

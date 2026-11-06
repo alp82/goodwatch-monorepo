@@ -1,0 +1,12 @@
+summary: Discover Wikidata award categories
+schedule: 0 20 2 * * SUN
+timezone: UTC
+script_path: f/awards/wikidata
+is_flow: false
+args:
+  discovery: true
+  max_minutes: 12
+  max_categories: 100
+enabled: true
+no_flow_overlap: true
+cron_version: v2

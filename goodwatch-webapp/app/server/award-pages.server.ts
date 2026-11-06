@@ -1,6 +1,6 @@
-// The data of the awards pages (domain/award-pages.ts): `doc.tvdb_award_display` grouped into ceremonies, and the
+// The data of the awards pages (domain/award-pages.ts): `doc.award_title_display` grouped into ceremonies, and the
 // display fields of every title a published page can show. Both are read once and kept in memory, so a page view
-// reads no Crate; the page cache in front keeps the pages themselves. The award rows change only when the TVDB crawl
+// reads no Crate; the page cache in front keeps the pages themselves. The award rows change only when a source import
 // runs, and scores move daily at most.
 import {
 	type AwardIndex,
@@ -59,12 +59,43 @@ async function readTitles(kind: AwardMediaKind, ids: number[]) {
 }
 
 async function readAwardData(): Promise<AwardData> {
-	const rows = await query<AwardRow>(
-		`SELECT media_type, media_tmdb_id, award_id, category_id, category_name, ceremony_year, has_win, has_nomination
-		   FROM doc.tvdb_award_display LIMIT 200000`,
+	const sourceRows = await query<
+		Omit<AwardRow, "award_id" | "category_id"> & {
+			program_key: string
+			category_key: string
+		}
+	>(
+		`SELECT media_type, media_tmdb_id, program_key, category_key, category_name, ceremony_year, has_win, has_nomination
+           FROM doc.award_title_display LIMIT 200001`,
 	)
-	// An empty view (a crawl that hasn't run, a view being rebuilt) is a failure, not a result to keep for 6 hours.
-	if (!rows.length) throw new Error("doc.tvdb_award_display is empty")
+	if (!sourceRows.length || sourceRows.length > 200000)
+		throw new Error("Shared award view is empty or exceeds its read bound")
+	// Public family route identities stay stable across provider changes.
+	const families: Record<string, number> = {
+		oscars: 1,
+		globes: 2,
+		mtv: 3,
+		critics: 4,
+		emmys: 5,
+		sag: 6,
+		wga: 7,
+		pga: 8,
+		dga: 9,
+		daytime: 10,
+		bafta: 11,
+		bijou: 12,
+		"canadian-film": 13,
+		genie: 14,
+		gemini: 15,
+		canadian: 16,
+		nta: 18,
+		cesars: 19,
+		baeksang: 21,
+	}
+	const rows: AwardRow[] = sourceRows.flatMap((row) => {
+		const award_id = families[row.program_key.split(".")[0]]
+		return award_id ? [{ ...row, award_id, category_id: row.category_key }] : []
+	})
 	const index = buildAwardIndex(rows)
 	const ids = { movie: [] as number[], show: [] as number[] }
 	for (const ref of publishedTitleRefs(index))

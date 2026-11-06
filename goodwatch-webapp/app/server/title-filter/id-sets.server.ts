@@ -1,6 +1,6 @@
 // The filters that aren't facts in the title snapshot resolve to sets of title keys before filtering: Similar to (the
 // similar-titles recommend path), cast and crew (a Crate credit read), the legacy Discover filters (today's Discover
-// SQL conditions), award results (the `tvdb_award_display` view), and On my services while the country's
+// SQL conditions), award results (the `award_title_display` view), and On my services while the country's
 // availability index loads (the titles' `streaming_availabilities` column, as Discover filters today). Each set is
 // cached in Redis for 30 minutes per parameter set.
 //
@@ -23,7 +23,7 @@ import {
 
 const KEEP_SECONDS = 30 * 60
 // Bump when a set's meaning changes, so cached sets of the old meaning are never read.
-const CACHE_PREFIX = "title-filter:v2"
+const CACHE_PREFIX = "title-filter:v3"
 const SIMILAR_LIMIT = 5000
 const CREDITS_LIMIT = 5000
 const LEGACY_LIMIT = 100_000

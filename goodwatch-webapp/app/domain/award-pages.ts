@@ -1,9 +1,11 @@
 // The public awards pages: /awards, /awards/<body>, /awards/<body>/<year> and /awards/<body>/category/<slug>. They are
-// built from the rows of `doc.tvdb_award_display` (docs/tvdb-pipelines.md, "Award quality and display contract").
+// built from the rows of `doc.award_title_display` (docs/tvdb-pipelines.md, "Award quality and display contract").
 //
 // Coverage is partial, so a density check decides what a page shows: a category counts when it reads as a complete
 // result (a winner and nominees beside it), and a ceremony is published when enough of its categories count. A held
 // ceremony isn't linked and its address answers 404. Results belong to titles: no people, no totals.
+
+export type AwardCategoryId = string | number
 
 export type AwardMediaKind = "movie" | "show"
 
@@ -19,7 +21,7 @@ export interface AwardBody {
 	headline?: number
 }
 
-/** The bodies TVDB reports, by TVDB award id, in the order the hub lists them. */
+/** The public award families, with retained routing identities, in the order the hub lists them. */
 export const AWARD_BODIES: readonly AwardBody[] = [
 	{
 		id: 1,
@@ -190,12 +192,12 @@ export const CEREMONY_RULE = {
 
 export type CeremonyTier = "full" | "partial" | "held"
 
-/** One row of `doc.tvdb_award_display`, the columns these pages read. */
+/** One row of `doc.award_title_display`, the columns these pages read. */
 export interface AwardRow {
 	media_type: AwardMediaKind
 	media_tmdb_id: number
 	award_id: number
-	category_id: number
+	category_id: AwardCategoryId
 	category_name: string
 	ceremony_year: string
 	has_win: boolean
@@ -208,7 +210,7 @@ export interface TitleRef {
 }
 
 export interface AwardCategory {
-	id: number
+	id: AwardCategoryId
 	name: string
 	winners: TitleRef[]
 	nominees: TitleRef[]
@@ -231,10 +233,10 @@ export interface AwardIndex {
 	/** Newest first. */
 	byBody: Map<number, Ceremony[]>
 	/** Per body: category slug to category id. */
-	categorySlugs: Map<number, Map<string, number>>
+	categorySlugs: Map<number, Map<string, AwardCategoryId>>
 	/** Per body: category id to category slug. */
-	slugOfCategory: Map<number, Map<number, string>>
-	categoryNames: Map<number, string>
+	slugOfCategory: Map<number, Map<AwardCategoryId, string>>
+	categoryNames: Map<AwardCategoryId, string>
 }
 
 const ceremonyKey = (award: number, year: number) => `${award}:${year}`
@@ -265,7 +267,7 @@ export function ceremonyTier(
 export const isPublished = (tier: CeremonyTier) => tier !== "held"
 
 // Picture or series first, then directing, acting, writing, then the crafts; inside a group, by category id.
-function categoryRank(body: AwardBody, id: number, name: string) {
+function categoryRank(body: AwardBody, id: AwardCategoryId, name: string) {
 	if (id === body.headline) return 0
 	const n = name.toLowerCase()
 	if (
@@ -285,8 +287,8 @@ function categoryRank(body: AwardBody, id: number, name: string) {
 
 /** Groups the rows into ceremonies and categories (winners, then nominees) and runs the density check. */
 export function buildAwardIndex(rows: readonly AwardRow[]): AwardIndex {
-	const grouped = new Map<string, Map<number, AwardCategory>>()
-	const categoryNames = new Map<number, string>()
+	const grouped = new Map<string, Map<AwardCategoryId, AwardCategory>>()
+	const categoryNames = new Map<AwardCategoryId, string>()
 	for (const row of rows) {
 		if (!/^\d{4}$/.test(String(row.ceremony_year))) continue
 		const year = Number(row.ceremony_year)
@@ -326,7 +328,7 @@ export function buildAwardIndex(rows: readonly AwardRow[]): AwardIndex {
 		categories.sort(
 			(a, b) =>
 				categoryRank(body, a.id, a.name) - categoryRank(body, b.id, b.name) ||
-				a.id - b.id,
+				String(a.id).localeCompare(String(b.id)),
 		)
 		const ceremony: Ceremony = {
 			award,
@@ -354,15 +356,17 @@ export function buildAwardIndex(rows: readonly AwardRow[]): AwardIndex {
 	}
 
 	// Slugs come from the names; two categories of one body with the same slug keep it apart with the id.
-	const categorySlugs = new Map<number, Map<string, number>>()
-	const slugOfCategory = new Map<number, Map<number, string>>()
+	const categorySlugs = new Map<number, Map<string, AwardCategoryId>>()
+	const slugOfCategory = new Map<number, Map<AwardCategoryId, string>>()
 	for (const body of AWARD_BODIES) {
-		const ids = new Set<number>()
+		const ids = new Set<AwardCategoryId>()
 		for (const c of byBody.get(body.id) ?? [])
 			for (const cat of c.categories) ids.add(cat.id)
-		const slugs = new Map<string, number>()
-		const back = new Map<number, string>()
-		for (const id of [...ids].sort((a, b) => a - b)) {
+		const slugs = new Map<string, AwardCategoryId>()
+		const back = new Map<AwardCategoryId, string>()
+		for (const id of [...ids].sort((a, b) =>
+			String(a).localeCompare(String(b)),
+		)) {
 			let slug = slugify(categoryNames.get(id) ?? "") || String(id)
 			if (slugs.has(slug)) slug = `${slug}-${id}`
 			slugs.set(slug, id)
@@ -464,8 +468,12 @@ export function bodyPage<T>(
 	if (!body) return null
 	const published = publishedOf(index, body)
 	if (!published.length) return null
-	const slugs = index.slugOfCategory.get(body.id) ?? new Map<number, string>()
-	const yearsOf = new Map<number, { year: number; winner: TitleRef }[]>()
+	const slugs =
+		index.slugOfCategory.get(body.id) ?? new Map<AwardCategoryId, string>()
+	const yearsOf = new Map<
+		AwardCategoryId,
+		{ year: number; winner: TitleRef }[]
+	>()
 	for (const c of published)
 		for (const cat of c.categories)
 			if (cat.passes) {
@@ -511,7 +519,7 @@ export function bodyPage<T>(
 }
 
 export interface CategoryResult<T> {
-	id: number
+	id: AwardCategoryId
 	slug: string
 	name: string
 	winners: T[]
@@ -531,7 +539,8 @@ export function ceremonyPage<T>(
 	const ceremony = index.ceremonies.get(ceremonyKey(body.id, year))
 	if (!ceremony || !isPublished(ceremony.tier)) return null
 	const years = publishedOf(index, body).map((c) => c.year)
-	const slugs = index.slugOfCategory.get(body.id) ?? new Map<number, string>()
+	const slugs =
+		index.slugOfCategory.get(body.id) ?? new Map<AwardCategoryId, string>()
 	const categories: CategoryResult<T>[] = ceremony.categories
 		.filter((c) => c.passes)
 		.map((c) => ({

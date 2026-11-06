@@ -1,7 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { pageAwards, summarizeTitleAwards, type AwardDisplayRow } from "./title-awards.ts"
 import { readTitleAwards } from "./title-awards-read.ts"
+import {
+	type AwardDisplayRow,
+	pageAwards,
+	summarizeTitleAwards,
+} from "./title-awards.ts"
 
 const row = (
 	award = "Academy Awards",
@@ -108,7 +112,7 @@ test("reader scopes one display-view query by type and TMDB id and forwards canc
 			calls++
 			assert.match(
 				sql,
-				/FROM doc\.tvdb_award_display WHERE media_type = \? AND media_tmdb_id = \?/,
+				/FROM doc\.award_title_display WHERE media_type = \? AND media_tmdb_id = \?/,
 			)
 			assert.doesNotMatch(
 				sql,
@@ -173,10 +177,42 @@ test("missing text fields neither throw while reading nor escape as a rejection"
 })
 
 test("title page data keeps only the wins its JSON-LD lists", () => {
-	const wins = Array.from({ length: 30 }, (_, i) => row("Academy Awards", `C${i}`))
-	const page = pageAwards(summarizeTitleAwards([...wins, row("BAFTA Awards", "X", "2024", false)]))
+	const wins = Array.from({ length: 30 }, (_, i) =>
+		row("Academy Awards", `C${i}`),
+	)
+	const page = pageAwards(
+		summarizeTitleAwards([...wins, row("BAFTA Awards", "X", "2024", false)]),
+	)
 	assert.equal(page?.wins.length, 20)
 	assert.deepEqual(page?.nominations, [])
-	assert.equal(pageAwards(summarizeTitleAwards([row("BAFTA Awards", "X", "2024", false)])), undefined)
+	assert.equal(
+		pageAwards(summarizeTitleAwards([row("BAFTA Awards", "X", "2024", false)])),
+		undefined,
+	)
 	assert.equal(pageAwards(undefined), undefined)
+})
+
+test("combined results retain per-result provenance and never attribute Wikidata results to TVDB", () => {
+	const awards = summarizeTitleAwards([
+		{
+			...row(),
+			source_names: ["Wikidata"],
+			reference_urls: [
+				"https://www.wikidata.org/wiki/Q108839994",
+				"javascript:alert(1)",
+			],
+			ceremony_label: "96th Academy Awards",
+		},
+		{
+			...row("Critics' Choice Awards", "Best Picture"),
+			source_names: ["TVDB"],
+		},
+	])!
+	assert.equal(awards.source, "multiple")
+	assert.deepEqual(awards.sources, ["TVDB", "Wikidata"])
+	assert.deepEqual(awards.wins[0].sources, ["Wikidata"])
+	assert.deepEqual(awards.wins[0].references, [
+		"https://www.wikidata.org/wiki/Q108839994",
+	])
+	assert.equal(awards.wins[0].ceremony, "96th Academy Awards")
 })

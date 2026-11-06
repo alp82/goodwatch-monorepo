@@ -41,6 +41,7 @@ TITLE_KEYED_TABLES = (
     "person_worked_on",
     "tvdb_character",
     "tvdb_nomination",
+    "award_title_result",
     "streaming_evidence",
     "streaming_availability",
 )
@@ -57,6 +58,7 @@ ROW_KEY_COLUMNS = {
     "person_worked_on": ("person_tmdb_id", "credit_id"),
     "tvdb_character": ("tvdb_character_id",),
     "tvdb_nomination": ("category_id", "nominee_id"),
+    "award_title_result": ("generation", "result_id"),
     "streaming_evidence": ("country_code",),
 }
 MEDIA_TABLES = {"movie": "movie", "show": "show"}

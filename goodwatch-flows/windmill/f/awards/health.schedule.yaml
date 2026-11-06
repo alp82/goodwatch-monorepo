@@ -1,0 +1,9 @@
+summary: Shared awards health
+schedule: 0 9/15 * * * *
+timezone: UTC
+script_path: f/awards/health
+is_flow: false
+args: {}
+enabled: true
+no_flow_overlap: true
+cron_version: v2

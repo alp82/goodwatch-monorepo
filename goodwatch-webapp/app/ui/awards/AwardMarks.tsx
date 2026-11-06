@@ -86,7 +86,7 @@ export function QuickViewAwards({
 	tmdbId,
 }: { mediaType: AwardMediaType; tmdbId: number }) {
 	const { data: results } = useQuery({
-		queryKey: ["title-awards", mediaType, tmdbId],
+		queryKey: ["title-awards-v2", mediaType, tmdbId],
 		queryFn: () => fetchAwards(mediaType, tmdbId),
 		staleTime: 60 * 60 * 1000,
 	})
@@ -112,6 +112,11 @@ export function QuickViewAwards({
 						</span>
 						<span className="min-w-0 truncate text-gray-400">
 							{r.category}, {r.year}
+							{r.sources?.length ? (
+								<span className="ml-1 text-[10px] text-gray-500">
+									({r.sources.join(", ")})
+								</span>
+							) : null}
 						</span>
 						<span
 							className={`ml-auto shrink-0 text-xs ${r.won ? "text-amber-300/90" : "text-gray-500"}`}
@@ -121,6 +126,9 @@ export function QuickViewAwards({
 					</li>
 				))}
 			</ul>
+			<p className="mt-2 text-[10px] text-gray-500">
+				Reported results; coverage is incomplete.
+			</p>
 		</section>
 	)
 }

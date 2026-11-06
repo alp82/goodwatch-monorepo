@@ -17,6 +17,60 @@ ARCHIVE_COLUMN_TYPES = {key: "TEXT" for key in (
 ARCHIVE_OBJECT_SQL = "OBJECT(DYNAMIC) AS (" + ", ".join(f"{key} {kind}" for key, kind in ARCHIVE_COLUMN_TYPES.items()) + ")"
 
 SCHEMAS = {
+    "award_publication": {
+        "columns": {"name": "TEXT", "generation": "TEXT", "published_at": "TIMESTAMP"},
+        "primary_key": ["name"], "shards": 1, "timestamps": False,
+    },
+    "award_title_result": {
+        "columns": {
+            "award_name": "TEXT",
+            "category_key": "TEXT",
+            "category_name": "TEXT",
+            "ceremony_key": "TEXT",
+            "ceremony_label": "TEXT",
+            "ceremony_year": "TEXT",
+            "coverage_status": "TEXT",
+            "generation": "TEXT",
+            "has_nomination": "BOOLEAN",
+            "has_win": "BOOLEAN",
+            "media_tmdb_id": "INTEGER",
+            "media_type": "TEXT",
+            "program_key": "TEXT",
+            "reference_urls": "ARRAY(TEXT)",
+            "result_id": "TEXT",
+            "source_names": "ARRAY(TEXT)",
+            "source_row_count": "INTEGER",
+            "totals_available": "BOOLEAN",
+        },
+        "primary_key": ["media_tmdb_id", "media_type", "generation", "result_id"],
+        "shards": 3, "timestamps": False,
+    },
+    "award_person_result": {
+        "columns": {
+            "award_name": "TEXT",
+            "category_key": "TEXT",
+            "category_name": "TEXT",
+            "ceremony_key": "TEXT",
+            "ceremony_label": "TEXT",
+            "ceremony_year": "TEXT",
+            "coverage_status": "TEXT",
+            "entry_id": "TEXT",
+            "generation": "TEXT",
+            "has_nomination": "BOOLEAN",
+            "has_win": "BOOLEAN",
+            "person_tmdb_id": "INTEGER",
+            "program_key": "TEXT",
+            "reference_urls": "ARRAY(TEXT)",
+            "result_id": "TEXT",
+            "source_names": "ARRAY(TEXT)",
+            "source_row_count": "INTEGER",
+            "totals_available": "BOOLEAN",
+            "works_json": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "portrayals_json": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+        },
+        "primary_key": ["generation", "result_id"],
+        "shards": 3, "timestamps": False,
+    },
     # TVDB owns these enrichment snapshots; TMDB cast replacement never clears them.
     "tvdb_character": {
         "columns": {

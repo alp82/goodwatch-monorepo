@@ -86,10 +86,10 @@ def role_rows(db, connector, doc):
     return rows
 
 
-def nomination_rows(db, doc, connector=None):
+def nomination_rows(db, doc, connector=None, links=None):
     from f.tvdb.links import NominationLinks
 
-    links = NominationLinks(db, doc["nominees"], connector)
+    links = links or NominationLinks(db, doc["nominees"], connector)
     rows = []
     for n in doc["nominees"]:
         kind, tvdb, tmdb, title_status = links.title(n)
@@ -279,6 +279,8 @@ def _publish(db, connector, limit=100):
         ("tvdb_titles", "tvdb_character", "titles"),
         ("tvdb_categories", "tvdb_nomination", "categories"),
     ]:
+        if name == 'tvdb_categories' and (db.award_state.find_one({'_id':'legacy-publication'}) or {}).get('disabled'):
+            continue
         col = db[name]
         query = {
             "publish_pending": True,

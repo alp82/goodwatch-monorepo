@@ -1,10 +1,3 @@
-import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { PersonFilterButton } from "~/ui/person/filter-button"
-import { normalizePersonQuery } from "~/server/person-query.server"
-import MediaText from "~/ui/media-text/MediaText"
-import { presentedText } from "~/ui/media-text/media-text"
-import { canonicalMediaTitle } from "~/utils/media-presentation"
-import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
@@ -35,18 +28,24 @@ import {
 } from "@remix-run/react"
 import type React from "react"
 import { useMemo } from "react"
-import {
-	type PersonSubject,
-	usePublishFeedbackSubject,
-} from "~/ui/feedback/subject"
 import { personMetaText, titleCounts } from "~/domain/person-meta"
 import {
 	type TitleTypeFilter,
 	isAllTitleTypes,
 	titleTypeParams,
 } from "~/domain/title-type"
-import { whiteMark } from "~/ui/brand/white-mark"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
+import {
+	countCrawlerTurnedAway,
+	countFilteredView,
+	hasBrowserCookie,
+	isCrawler,
+	toUnfiltered,
+} from "~/server/crawlers.server"
 import type { DiscoverResult } from "~/server/discover.server"
+import { presentCatalogLoader } from "~/server/media-payload.server"
+import { getPersonAwards } from "~/server/person-awards.server"
+import { normalizePersonQuery } from "~/server/person-query.server"
 import {
 	type GridFilters,
 	type PersonCredit,
@@ -56,25 +55,28 @@ import {
 	parseGridFilters,
 } from "~/server/person.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
-import { CharactersShelf } from "~/ui/person/CharactersShelf"
-import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
-import { Portrait } from "~/ui/person/Portrait"
-import { PERSON_GRID_POSTER, PERSON_PORTRAIT } from "~/ui/person/person-images"
-import {
-	countCrawlerTurnedAway,
-	hasBrowserCookie,
-	isCrawler,
-	countFilteredView,
-	toUnfiltered,
-} from "~/server/crawlers.server"
 import { TmdbImage } from "~/ui/TmdbImage"
+import { whiteMark } from "~/ui/brand/white-mark"
+import {
+	type PersonSubject,
+	usePublishFeedbackSubject,
+} from "~/ui/feedback/subject"
+import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
+import MediaText from "~/ui/media-text/MediaText"
+import { presentedText } from "~/ui/media-text/media-text"
+import { AwardsShelf } from "~/ui/person/AwardsShelf"
+import { CharactersShelf } from "~/ui/person/CharactersShelf"
+import { Portrait } from "~/ui/person/Portrait"
+import { PersonFilterButton } from "~/ui/person/filter-button"
+import { PERSON_GRID_POSTER, PERSON_PORTRAIT } from "~/ui/person/person-images"
 import { NoTitlesOfType, TypeFilter } from "~/ui/type-filter"
 import { personPath, pluralize, titleToDashed } from "~/utils/helpers"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { buildMeta } from "~/utils/meta"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
 import { scoreBandWordsFor } from "~/utils/score-bands"
+import { tmdbImageUrl } from "~/utils/tmdb-image"
 import type { SizeRule } from "~/utils/tmdb-image"
-import { cachedClientLoader } from "~/navigation/instant-navigation"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -86,8 +88,7 @@ const PER_GROUP = 12
 
 async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	const id = Number((params.personKey ?? "").split("-")[0])
-	if (!validPersonId(id))
-		throw new Response("Not found", { status: 404 })
+	if (!validPersonId(id)) throw new Response("Not found", { status: 404 })
 
 	// Crawlers only get the unfiltered page, and get sent there before the profile is loaded.
 	const url = new URL(request.url)
@@ -135,7 +136,10 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	})
 		.items.filter((c) => c.weight >= 0.6 && c.poster_path)
 		.slice(0, 4)
-	const characters = await personCharacters(profile.tmdb_id, profile.name)
+	const [characters, awards] = await Promise.all([
+		personCharacters(profile.tmdb_id, profile.name),
+		getPersonAwards(profile.tmdb_id),
+	])
 	const { credits, ...rest } = profile
 	const data = {
 		profile: rest,
@@ -146,9 +150,10 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 		groups,
 		knownFor: knownFor.map(slim),
 		characters: characters ?? [],
+		awards: awards ?? undefined,
 	}
 	// Without the Characters shelf (a failed read) the page is incomplete: no cache may keep it (ADR 0007).
-	return characters
+	return characters && awards !== null
 		? json(data)
 		: json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 }
@@ -182,9 +187,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		hasPortrait: !!p.profile_path,
 	})
 	const url = `https://goodwatch.app${personPath(p.tmdb_id, p.name)}` // filtered views share the unfiltered canonical
-	const image = p.profile_path
-		? tmdbImageUrl(p.profile_path, "h632")
-		: ""
+	const image = p.profile_path ? tmdbImageUrl(p.profile_path, "h632") : ""
 	const tags = buildMeta({
 		pageMeta: {
 			title: text.title,
@@ -261,6 +264,7 @@ export default function PersonPage() {
 				<Facts data={data} />
 			</Hero>
 			<div className="mx-auto max-w-7xl space-y-12 px-4 pt-4">
+				<AwardsShelf awards={data.awards} />
 				<CharactersShelf
 					person={{
 						id: data.profile.tmdb_id,

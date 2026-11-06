@@ -1,4 +1,4 @@
-// Discover's awards filter: titles with a reported award result, from TVDB's `tvdb_award_display` view
+// Discover's awards filter: titles with a reported award result, from the shared `award_title_display` view
 // (docs/tvdb-pipelines.md, "Award quality and display contract"). Pure, shared by the server and the browser.
 //
 // URL: `awards=won` (any reported win), `awards=won:oscars,emmys` (a win at one of these), `awards=nominated:globes`
@@ -15,7 +15,7 @@ export interface AwardFilter {
 
 export interface AwardBody {
 	id: string
-	/** The name in tvdb_award_display.award_name. */
+	/** The name in award_title_display.award_name. */
 	award: string
 	/** The picker's name. */
 	name: string
@@ -224,7 +224,7 @@ export function awardTitlesQuery(
 			: []),
 	]
 	return {
-		sql: `SELECT media_type, media_tmdb_id FROM doc.tvdb_award_display${
+		sql: `SELECT media_type, media_tmdb_id FROM doc.award_title_display${
 			where.length ? ` WHERE ${where.join(" AND ")}` : ""
 		} GROUP BY media_type, media_tmdb_id LIMIT ${limit}`,
 		params: names,

@@ -1,0 +1,12 @@
+summary: Shared awards wikidata
+schedule: 0 2/15 * * * *
+timezone: UTC
+script_path: f/awards/wikidata
+is_flow: false
+args:
+  max_minutes: 12
+  max_categories: 100
+  discovery: false
+enabled: true
+no_flow_overlap: true
+cron_version: v2

@@ -1,0 +1,12 @@
+summary: Shared awards reconcile
+description: Source-independent award observations, identities and serving data.
+kind: script
+lock: '!inline f/awards/reconcile.script.lock'
+schema:
+  type: object
+  properties:
+    force:
+      type: boolean
+      default: false
+  required: []
+timeout: 1800

@@ -1,0 +1,9 @@
+summary: Shared awards identities
+description: Source-independent award observations, identities and serving data.
+kind: script
+lock: '!inline f/awards/identities.script.lock'
+schema:
+  type: object
+  properties: {}
+  required: []
+timeout: 1800

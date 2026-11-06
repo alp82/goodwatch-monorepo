@@ -1,0 +1,10 @@
+summary: Shared awards tvdb
+schedule: 0 0/15 * * * *
+timezone: UTC
+script_path: f/awards/tvdb
+is_flow: false
+args:
+  limit: 1000
+enabled: true
+no_flow_overlap: true
+cron_version: v2

@@ -10,8 +10,8 @@ import { type RawTitleDetails, trimTitleDetails } from "./title-details-shape"
 // fallback, so entries holding the previous department-wide selection must never be reused. Movie v4
 // adds the Letterboxd score fields. Show v5 adds the show's status (the title page's status chip): a v4
 // entry has none, so the chip would be missing for up to a day after a deploy.
-export const DETAILS_MOVIE_CACHE_NAME = "details-movie-v6"
-export const DETAILS_SHOW_CACHE_NAME = "details-show-v7"
+export const DETAILS_MOVIE_CACHE_NAME = "details-movie-v7"
+export const DETAILS_SHOW_CACHE_NAME = "details-show-v8"
 // Movie v6 and show v7 include bounded, partial TVDB title award observations.
 // Movie v5 and show v6 prefer the primary TVDB actor photo, keeping TMDB as fallback.
 // Title data may be up to 24 hours old. A value is fresh for 12 hours, and for 12 more hours it is

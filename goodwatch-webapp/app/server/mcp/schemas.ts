@@ -1,6 +1,10 @@
 import * as z from "zod4"
 
+const awardSource = z.enum(["TVDB", "Wikidata"])
 const awardResult = z.object({
+	sources: z.array(awardSource).optional(),
+	references: z.array(z.string().url()).optional(),
+	ceremony: z.string().optional(),
 	award: z.string(),
 	category: z.string(),
 	year: z.string().regex(/^\d{4}$/),
@@ -10,9 +14,10 @@ export const titleAwardsOutput = z.object({
 	note: z
 		.string()
 		.describe(
-			"Reported results from TVDB. Coverage is incomplete, so these results don't establish award totals.",
+			"Reported award results with source attribution. Coverage is incomplete, so these results don't establish award totals.",
 		),
-	source: z.literal("TVDB"),
+	source: z.enum(["TVDB", "Wikidata", "multiple"]),
+	sources: z.array(awardSource).optional(),
 	wins: z.array(awardResult).max(25),
 	nominations: z.array(awardResult).max(25),
 	truncated: z.literal(true).optional(),

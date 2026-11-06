@@ -101,7 +101,7 @@ test("award titles read the display view once per filter, wins by has_win and bo
 	const { sql, params } = reads.at(-1)!
 	assert.equal(
 		sql,
-		"SELECT media_type, media_tmdb_id FROM doc.tvdb_award_display WHERE has_win AND award_name IN (?, ?) GROUP BY media_type, media_tmdb_id LIMIT 100000",
+		"SELECT media_type, media_tmdb_id FROM doc.award_title_display WHERE has_win AND award_name IN (?, ?) GROUP BY media_type, media_tmdb_id LIMIT 100000",
 	)
 	assert.deepEqual(params, ["Academy Awards", "Primetime Emmy Awards"])
 	// The stub's row has no media type, so it isn't a title.
@@ -111,7 +111,7 @@ test("award titles read the display view once per filter, wins by has_win and bo
 	await awardTitles({ outcome: "nominated", bodies: [] })
 	assert.equal(
 		reads.at(-1)!.sql,
-		"SELECT media_type, media_tmdb_id FROM doc.tvdb_award_display GROUP BY media_type, media_tmdb_id LIMIT 100000",
+		"SELECT media_type, media_tmdb_id FROM doc.award_title_display GROUP BY media_type, media_tmdb_id LIMIT 100000",
 	)
 	assert.deepEqual(reads.at(-1)!.params, [])
 })

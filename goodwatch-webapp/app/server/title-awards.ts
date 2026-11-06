@@ -1,5 +1,9 @@
-/** Title-level observations only; TVDB coverage cannot establish historical totals. */
+/** Source-independent reported observations; partial coverage cannot establish historical totals. */
+export type AwardSource = "TVDB" | "Wikidata"
 export interface AwardResult {
+	sources?: AwardSource[]
+	references?: string[]
+	ceremony?: string
 	award: string
 	category: string
 	year: string
@@ -8,13 +12,17 @@ export interface AwardResult {
 export interface TitleAwards {
 	coverage: "partial"
 	note: string
-	source: "TVDB"
+	source: AwardSource | "multiple"
+	sources?: AwardSource[]
 	wins: AwardResult[]
 	nominations: AwardResult[]
 	truncated?: true
 }
 
 export interface AwardDisplayRow {
+	source_names?: string[]
+	reference_urls?: string[]
+	ceremony_label?: string | null
 	award_name: string
 	category_name: string
 	ceremony_year: string
@@ -46,16 +54,43 @@ export function summarizeTitleAwards(
 			ceremony_year: String(row.ceremony_year ?? ""),
 		}))
 		.sort(
-		(a, b) =>
-			compareName(b.ceremony_year, a.ceremony_year) ||
-			rank(a.award_name) - rank(b.award_name) ||
-			compareName(a.award_name, b.award_name) ||
-			compareName(a.category_name, b.category_name),
-	)
+			(a, b) =>
+				compareName(b.ceremony_year, a.ceremony_year) ||
+				rank(a.award_name) - rank(b.award_name) ||
+				compareName(a.award_name, b.award_name) ||
+				compareName(a.category_name, b.category_name),
+		)
+	const sourcesOf = (row: AwardDisplayRow): AwardSource[] =>
+		row.source_names
+			? row.source_names.filter(
+					(s): s is AwardSource => s === "TVDB" || s === "Wikidata",
+				)
+			: ["TVDB"]
+	const sources = [...new Set(ordered.flatMap(sourcesOf))].sort()
+	const metadata = ordered.some((r) => r.source_names !== undefined)
+	const safeReference = (value: string) => {
+		try {
+			const url = new URL(value)
+			return (
+				["https:", "http:"].includes(url.protocol) &&
+				!url.username &&
+				!url.password
+			)
+		} catch {
+			return false
+		}
+	}
 	const entry = (row: AwardDisplayRow): AwardResult => ({
 		award: row.award_name,
 		category: row.category_name,
 		year: row.ceremony_year,
+		...(row.source_names
+			? {
+					sources: sourcesOf(row),
+					references: (row.reference_urls ?? []).filter(safeReference),
+					...(row.ceremony_label ? { ceremony: row.ceremony_label } : {}),
+				}
+			: {}),
 	})
 	const wins = ordered.filter((row) => row.has_win)
 	const nominations = ordered.filter(
@@ -63,8 +98,9 @@ export function summarizeTitleAwards(
 	)
 	return {
 		coverage: "partial",
-		note: "Reported results from TVDB. Coverage is incomplete, so these results don't establish award totals.",
-		source: "TVDB",
+		note: `Reported results from ${sources.join(" and ") || "available sources"}. Coverage is incomplete, so these results don't establish award totals.`,
+		source: sources.length === 1 ? sources[0] : "multiple",
+		...(metadata ? { sources } : {}),
 		wins: wins.slice(0, 25).map(entry),
 		nominations: nominations.slice(0, 25).map(entry),
 		...(wins.length > 25 || nominations.length > 25 ? { truncated: true } : {}),

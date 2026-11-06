@@ -76,7 +76,7 @@ test("every chip shows up to 30 options; above 30 the limit applies", () => {
 
 test("the view query: wins need has_win, nominations need nothing, bodies bind their award names", () => {
 	assert.deepEqual(awardTitlesQuery({ outcome: "won", bodies: [] }, 10), {
-		sql: "SELECT media_type, media_tmdb_id FROM doc.tvdb_award_display WHERE has_win GROUP BY media_type, media_tmdb_id LIMIT 10",
+		sql: "SELECT media_type, media_tmdb_id FROM doc.award_title_display WHERE has_win GROUP BY media_type, media_tmdb_id LIMIT 10",
 		params: [],
 	})
 	assert.deepEqual(
@@ -85,7 +85,7 @@ test("the view query: wins need has_win, nominations need nothing, bodies bind t
 			10,
 		),
 		{
-			sql: "SELECT media_type, media_tmdb_id FROM doc.tvdb_award_display WHERE award_name IN (?, ?) GROUP BY media_type, media_tmdb_id LIMIT 10",
+			sql: "SELECT media_type, media_tmdb_id FROM doc.award_title_display WHERE award_name IN (?, ?) GROUP BY media_type, media_tmdb_id LIMIT 10",
 			params: ["Golden Globe Awards", "César Awards"],
 		},
 	)

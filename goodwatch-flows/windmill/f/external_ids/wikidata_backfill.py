@@ -353,11 +353,14 @@ def main(dry_run: bool = False):
     from f.db.cratedb import CrateConnector
     from f.db.mongodb import close_mongodb, init_mongodb
 
-    # Fetch first: a 429 or a partial export stops the run before anything is read or written.
-    exports = fetch_exports()
+    from f.awards.client import BudgetedHTTP
+
     init_mongodb()
-    connector = None if dry_run else CrateConnector()
+    connector = None
     try:
+        # Fetch before catalog changes, using the query budget shared with awards.
+        exports = fetch_exports(http=BudgetedHTTP(get_db()))
+        connector = None if dry_run else CrateConnector()
         report = backfill(get_db(), connector, exports, datetime.utcnow(), dry_run=dry_run)
     finally:
         if connector:

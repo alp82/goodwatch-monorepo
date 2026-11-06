@@ -27,6 +27,9 @@ export function AwardsHead({
 			<ListHead heading={heading} intro={intro}>
 				{children}
 			</ListHead>
+			<p className="mb-5 text-xs text-gray-400">
+				Reported results from TVDB and Wikidata. Coverage is incomplete.
+			</p>
 		</>
 	)
 }

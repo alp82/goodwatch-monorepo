@@ -1,5 +1,5 @@
 // Every title's award mark and notable results, held in this process's memory. One SELECT reads the whole view
-// doc.tvdb_award_display (about 22,000 rows) when first asked and again after REFRESH_MS; until a refresh lands, the
+// doc.award_title_display (about 22,000 rows) when first asked and again after REFRESH_MS; until a refresh lands, the
 // previous index keeps answering, and a failed read keeps it too and is retried after RETRY_MS. So a page, a card or a
 // quick view never waits on Crate once the index is loaded: best-of rows, the one-per-session marks payload
 // (/api/award-marks) and the quick view's results (/api/title-awards) are lookups in memory.
@@ -101,12 +101,14 @@ export function createAwardIndexCache(
 
 const readAll = async () => {
 	const { query } = await import("~/utils/crate")
-	return query<AwardIndexRow>(
-		`SELECT media_type, media_tmdb_id, award_name, category_name, ceremony_year, has_win, has_nomination
-		FROM doc.tvdb_award_display LIMIT 200000`,
+	const rows = await query<AwardIndexRow>(
+		`SELECT media_type, media_tmdb_id, award_name, category_name, ceremony_year, has_win, has_nomination, source_names, reference_urls, ceremony_label
+		FROM doc.award_title_display LIMIT 200001`,
 		[],
 		{ timeoutMs: 20_000 },
 	)
+	if (rows.length > 200000) throw new Error("Award index exceeds its row limit")
+	return rows
 }
 
 export const awardIndex = createAwardIndexCache(readAll)

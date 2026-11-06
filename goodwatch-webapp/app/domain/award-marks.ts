@@ -1,4 +1,4 @@
-// A title's award mark, from TVDB's reported results (view doc.tvdb_award_display; contract in docs/tvdb-pipelines.md,
+// A title's award mark, from reported results from TVDB and Wikidata (view doc.award_title_display; contract in docs/tvdb-pipelines.md,
 // "Award quality and display contract"). Coverage is partial, so a mark never counts: a poster card and a best-of row
 // say the most notable body the title has a reported win at ("Oscar winner"), and the quick view lists a few of the
 // title's most notable results. A title without a win gets no mark; a title without rows gets nothing at all. Results
@@ -39,6 +39,9 @@ const HEADLINE =
 	/picture|best film|feature film|(drama|comedy|limited|anthology|television|tv|new) series|^outstanding (drama|comedy|limited)|series –/i
 
 export interface AwardMarkRow {
+	source_names?: string[]
+	reference_urls?: string[]
+	ceremony_label?: string | null
 	award_name: string
 	category_name: string
 	ceremony_year: string
@@ -48,6 +51,8 @@ export interface AwardMarkRow {
 
 /** One reported result of the title, as the quick view lists it. */
 export interface NotableAward {
+	sources?: string[]
+	ceremony?: string
 	/** The body's short name: "Oscar". */
 	award: string
 	category: string
@@ -111,6 +116,12 @@ export function notableAwards(
 		category: r.category_name,
 		year: String(r.ceremony_year),
 		won: r.has_win,
+		...(r.source_names
+			? {
+					sources: r.source_names,
+					...(r.ceremony_label ? { ceremony: r.ceremony_label } : {}),
+				}
+			: {}),
 	}))
 }
 

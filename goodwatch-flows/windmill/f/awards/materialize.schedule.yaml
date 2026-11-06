@@ -1,0 +1,10 @@
+summary: Shared awards materialize
+schedule: 0 3/5 * * * *
+timezone: UTC
+script_path: f/awards/materialize
+is_flow: false
+args:
+  force: false
+enabled: true
+no_flow_overlap: true
+cron_version: v2

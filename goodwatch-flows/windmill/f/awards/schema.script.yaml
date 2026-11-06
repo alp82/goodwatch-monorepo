@@ -1,0 +1,12 @@
+summary: Shared awards schema
+description: Source-independent award observations, identities and serving data.
+kind: script
+lock: '!inline f/awards/schema.script.lock'
+schema:
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+  required: []
+timeout: 1800
