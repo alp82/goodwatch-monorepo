@@ -8,18 +8,23 @@ type Media = MovieResult | ShowResult
 
 export type GlanceRowId =
 	| "glance-facts"
+	| "glance-awards"
 	| "glance-content"
 	| "glance-cast"
 	| "glance-crew"
 
 export const GLANCE_LABEL: Record<GlanceRowId, string> = {
 	"glance-facts": "Facts",
+	"glance-awards": "Awards",
 	"glance-content": "Content",
 	"glance-cast": "Starring",
 	"glance-crew": "Made by",
 }
 
-/** The rows the title's data gives it: Facts always, Content with a rating or advisories, then the people. */
+/**
+ * The rows the title's data gives it: Facts always, Awards with a reported result, Content with a rating or
+ * advisories, then the people.
+ */
 export function glanceRowIds(
 	media: Media,
 	country: string,
@@ -27,6 +32,7 @@ export function glanceRowIds(
 ): GlanceRowId[] {
 	return [
 		"glance-facts" as const,
+		...(media.award_results?.length ? ["glance-awards" as const] : []),
 		...(contentSummary(media, country, questions)
 			? ["glance-content" as const]
 			: []),

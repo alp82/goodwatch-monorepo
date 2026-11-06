@@ -14,6 +14,7 @@
 // Keys: "/" finds in the title, J and K step through the sections, W goes to where to watch, S to your score, T to the top.
 import { DocumentTextIcon, PlayIcon } from "@heroicons/react/24/outline"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { awardWinCount } from "~/domain/title-award-list"
 import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { GenreRow } from "~/server/genre-row/genre-row.server"
@@ -29,6 +30,7 @@ import { ShowStatus } from "~/ui/details/ShowStatus"
 import { TitleBar } from "~/ui/details/TitleBar"
 import { TitleSummary } from "~/ui/details/TitleSummary"
 import { YouBlock } from "~/ui/details/YouBlock"
+import { AwardsLink } from "~/ui/details/at-a-glance/AwardsList"
 import {
 	NearSection,
 	belowFoldProps,
@@ -71,6 +73,7 @@ import { TitleRail } from "~/ui/details/rail/TitleRail"
 import { usePublishPageMeta } from "~/ui/details/rail/rail-model"
 import { scrollToTop, useJump, useReading } from "~/ui/details/reading"
 import { sectionHeight } from "~/ui/details/section-heights"
+import { showStatusOf } from "~/ui/details/show-status"
 import { useStreamNames } from "~/ui/details/streaming"
 import { SubPageLinks } from "~/ui/details/sub-page/SubPageLinks"
 import { AT_A_GLANCE, subPagePath } from "~/ui/details/sub-page/paths"
@@ -158,6 +161,7 @@ const GLANCE_ROW: Record<string, string> = {
 	cast: "glance-cast",
 	crew: "glance-crew",
 	facts: "glance-facts",
+	awards: "glance-awards",
 }
 const MOVED: Record<string, string> = {
 	faq: "at-a-glance",
@@ -511,7 +515,10 @@ export function TitlePage(props: TitlePageProps) {
 	const metaHead = meta.filter((m) => !isEpisodes(m))
 	const metaEpisodes = meta.filter(isEpisodes)
 	const status = <ShowStatus media={media} />
-	const hasStatus = media.mediaType === "show" && Boolean(media.details.status)
+	const hasStatus = Boolean(showStatusOf(media))
+	// The reported award wins: an "N awards" link ends the meta row (none without a win).
+	const awardWins = awardWinCount(media.award_results ?? [])
+	const hasAwards = awardWins > 0
 	const title = presentedText(details, "title", details.title)
 	const withCard = hasVideo(media)
 	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
@@ -662,7 +669,9 @@ export function TitlePage(props: TitlePageProps) {
 											data-text-preview={props.textPreview ?? undefined}
 											className="text-balance text-2xl font-semibold leading-[1.1] tracking-tight text-white sm:text-3xl lg:text-[2.75rem]"
 										/>
-										<p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-gray-300 lg:text-base">
+										<p
+											className={`flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-gray-300 ${hasAwards ? "lg:text-[15px]" : "lg:text-base"}`}
+										>
 											{metaHead.map((item, i) => (
 												<span
 													key={item}
@@ -672,7 +681,8 @@ export function TitlePage(props: TitlePageProps) {
 													{(i < metaHead.length - 1 ||
 														metaEpisodes.length > 0 ||
 														age ||
-														hasStatus) && <Dot />}
+														hasStatus ||
+														hasAwards) && <Dot />}
 												</span>
 											))}
 											{metaEpisodes.length > 0 && (
@@ -700,16 +710,25 @@ export function TitlePage(props: TitlePageProps) {
 													) : (
 														metaEpisodes.join(" · ")
 													)}
-													{(age || hasStatus) && <Dot />}
+													{(age || hasStatus || hasAwards) && <Dot />}
 												</span>
 											)}
 											{age && (
 												<span className="whitespace-nowrap">
 													<AgeRating ageRating={age} />
-													{hasStatus && <Dot />}
+													{(hasStatus || hasAwards) && <Dot />}
 												</span>
 											)}
-											{status}
+											{hasStatus && (
+												<span className="inline-flex items-center whitespace-nowrap">
+													{status}
+													{hasAwards && <Dot />}
+												</span>
+											)}
+											<AwardsLink
+												wins={awardWins}
+												onOpen={() => jump("awards")}
+											/>
 										</p>
 										<div className="max-sm:hidden">
 											<Genres

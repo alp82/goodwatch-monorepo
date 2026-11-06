@@ -157,3 +157,21 @@ test("the rows a title has, in order", () => {
 		"Made by",
 	])
 })
+
+test("a title with a reported award result, a win or a nomination, has the Awards row after Facts", () => {
+	const nominated = movie(
+		{},
+		{
+			award_results: [
+				{ award: "BAFTA Awards", category: "Editing", year: "2024", won: false },
+			],
+		},
+	)
+	assert.deepEqual(glanceRowIds(nominated, "US", []), [
+		"glance-facts",
+		"glance-awards",
+	])
+	assert.deepEqual(glanceRowIds(movie({}, { award_results: [] }), "US", []), [
+		"glance-facts",
+	])
+})

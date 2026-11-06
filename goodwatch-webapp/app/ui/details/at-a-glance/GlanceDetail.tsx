@@ -1,4 +1,4 @@
-// The opened content of an At a glance row: the facts panel, the content guide (the age ratings, how strong each kind
+// The opened content of an At a glance row: the facts panel, the award results by body, the content guide (the age ratings, how strong each kind
 // of content is, the viewing guide), the whole cast, the crew as credits. The sub-page and the title page both draw
 // every one in their HTML; the title page hides a closed row's.
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -6,6 +6,7 @@ import { CAPTION } from "~/ui/details/page-ui"
 import { CastSection } from "~/ui/details/people/CastSection"
 import { ageWord, countryName } from "~/ui/details/title-words"
 import type { TitleQuestion } from "~/ui/details/titleQuestions"
+import { AwardsList } from "./AwardsList"
 import { CrewCredits } from "./CrewCredits"
 import { FactsPanel } from "./FactsPanel"
 import { contentLevels, ratings, severity, viewingGuide } from "./content"
@@ -25,6 +26,8 @@ export default function GlanceDetail({
 	questions: TitleQuestion[]
 }) {
 	if (id === "glance-facts") return <FactsPanel media={media} />
+	if (id === "glance-awards")
+		return <AwardsList results={media.award_results ?? []} />
 	if (id === "glance-content")
 		return (
 			<ContentGuide media={media} country={country} questions={questions} />

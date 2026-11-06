@@ -190,7 +190,7 @@ export function useTitleSections(input: TitleSectionsInput): TitleSection[] {
 					icon: DocumentTextIcon,
 					peek: glanceRows.join(", "),
 					aliases:
-						"facts content age rating cast crew starring made by director",
+						"facts awards content age rating cast crew starring made by director",
 					body: () => (
 						<AtAGlance
 							media={media}

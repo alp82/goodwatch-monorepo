@@ -1,8 +1,9 @@
-// At a glance's rows, in order: Facts, Content, Starring, Made by. Each row has a closed line that already answers
+// At a glance's rows, in order: Facts, Awards, Content, Starring, Made by. Each row has a closed line that already answers
 // (its value, and a quieter teaser of what opening it gives you); its opened content is GlanceDetail.tsx's. The title
 // page's section (AtAGlance.tsx) opens one row at a time; the sub-page (AtAGlancePage.tsx) shows every row opened. A
 // row shows only when the title has its data.
 import type { ReactNode } from "react"
+import { awardsRowValue } from "~/domain/title-award-list"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
 import {
@@ -76,6 +77,17 @@ export function useGlanceRows({
 				teaser: numbers ? <span className={TEASE}>{numbers}</span> : undefined,
 			}
 		}
+		if (id === "glance-awards")
+			return {
+				id,
+				label,
+				value: (
+					<span className="text-white">
+						{awardsRowValue(media.award_results ?? [])}
+					</span>
+				),
+				teaser: <span className={TEASE}>Wins and nominations by award</span>,
+			}
 		if (id === "glance-content") {
 			const content = contentSummary(media, country, questions)
 			return {
