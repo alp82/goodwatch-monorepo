@@ -17,9 +17,13 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import {
 	type CharacterEntry,
 	CharacterLink,
+	useCharacterQuickView,
 } from "~/ui/character-quick-view/context"
 import { TvdbCredit } from "~/ui/character-quick-view/parts"
-import { useTitlePortraits } from "~/ui/character-quick-view/portraits"
+import {
+	type TitlePortraits,
+	useTitlePortraits,
+} from "~/ui/character-quick-view/portraits"
 import { SegmentedTabs } from "~/ui/details/SegmentedTabs"
 import { useSectionNear } from "~/ui/details/below-fold"
 import {
@@ -70,7 +74,7 @@ export function CastSection({
 	const siblings = people
 		.map((p) => p.entry)
 		.filter((e): e is CharacterEntry => e !== null)
-	useOpenAskedCharacter(list, people, portraits.ready || portraits.failed)
+	useOpenAskedCharacter(list, people, portraits, siblings)
 	const show = media.mediaType === "show"
 	return (
 		<div
@@ -246,13 +250,17 @@ type CharacterAsked = CharacterAsk & {
  * Opens the asked character's quick view once the rows (and the portraits that name the characters) are in: their
  * row is rung and scrolled to, then its link is pressed, so the view gets the rows on screen as its steps. A character
  * not among the first rows is searched for by the actor's name (else the character's), once; without a row then, or
- * with a row that has no picture to show bigger, the ring is all.
+ * with a row that has no picture to show bigger, the ring is all. An actor with several roles here opens the asked
+ * role's portrait, not the one their row shows.
  */
 function useOpenAskedCharacter(
 	list: CastList,
 	people: CastCharacter[],
-	portraitsIn: boolean,
+	portraits: TitlePortraits,
+	siblings: CharacterEntry[],
 ) {
+	const view = useCharacterQuickView()
+	const portraitsIn = portraits.ready || portraits.failed
 	const { asked, setAsked, ring, top } = list
 	const ready =
 		list.people.ready && !list.people.busy && list.people.q === list.q.trim()
@@ -274,14 +282,25 @@ function useOpenAskedCharacter(
 			return
 		}
 		setAsked(null)
-		const id = people[at].row.id
+		const person = people[at]
+		const id = person.row.id
 		ring(id)
+		const role = portraits.of({
+			id,
+			name: person.row.name,
+			roles: [asked.character],
+		})
+		const entry =
+			person.entry && role && role.image !== person.entry.image
+				? { ...person.entry, character: role.character, image: role.image }
+				: person.entry
+		const steps = siblings.map((e) => (e.anchor === entry?.anchor ? entry : e))
 		// After the ring's scroll has mostly landed. Not cleared when `asked` resets just above.
 		window.setTimeout(() => {
 			const link = top.current?.querySelector<HTMLElement>(
 				`[data-person-id="${id}"][data-character-anchor]`,
 			)
-			link?.click()
+			if (link && entry) view?.open(entry, link, steps)
 		}, 450)
 	}, [asked, ready, portraitsIn, people])
 }
