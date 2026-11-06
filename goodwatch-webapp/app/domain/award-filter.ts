@@ -231,8 +231,10 @@ export function awardTitlesQuery(
 	}
 }
 
-// Award words in a search: a body name or "award(s)", with an optional outcome word ("winning", "winners", "won",
-// "nominated", "nominees"), in any order. An outcome word alone ("winning") isn't enough.
+// Award words in a search: a body name or "award(s)", with an outcome word ("winning", "winners", "won", "nominated",
+// "nominees"), in any order. An outcome word alone ("winning") isn't enough, and neither is a body's name alone: "oscar
+// isaac", "emmy rossum", "pga tour" and the film "Oscar" are searches. "award(s)" alone or inside the body's name
+// ("academy awards", "emmy award") is enough.
 const OUTCOME_WON = "(?:won(?: an?| the)?|wins?|winners?|winning|-winning)"
 const OUTCOME_NOMINATED =
 	"(?:nominated(?: for(?: an?| the)?)?|nominees?|nominations?|-nominated)"
@@ -256,24 +258,31 @@ export function readAwardWords(text: string): AwardReading | null {
 	const lower = text.toLowerCase()
 	const bodies: string[] = []
 	const spans: [number, number][] = []
-	const take = (source: string) => {
+	/** The matched words, in order, that don't overlap an earlier match. */
+	const take = (source: string): string[] => {
 		const re = new RegExp(`(?<![\\p{L}\\d])(?:${source})(?![\\p{L}\\d])`, "giu")
-		let found = false
+		const found: string[] = []
 		for (const m of lower.matchAll(re)) {
 			const start = m.index ?? 0
 			const end = start + m[0].length
 			if (spans.some(([a, b]) => start < b && end > a)) continue
 			spans.push([start, end])
-			found = true
+			found.push(m[0])
 		}
 		return found
 	}
-	for (const body of BODIES_LONGEST_FIRST)
-		if (take(body.words.join("|"))) bodies.push(body.id)
-	const awardWord = take(AWARD_WORD)
+	let named = false
+	for (const body of BODIES_LONGEST_FIRST) {
+		const hits = take(body.words.join("|"))
+		if (!hits.length) continue
+		bodies.push(body.id)
+		if (hits.some((hit) => hit.includes("award"))) named = true
+	}
+	const awardWord = take(AWARD_WORD).length > 0
 	if (!bodies.length && !awardWord) return null
-	const nominated = take(OUTCOME_NOMINATED)
-	const won = take(OUTCOME_WON)
+	const nominated = take(OUTCOME_NOMINATED).length > 0
+	const won = take(OUTCOME_WON).length > 0
+	if (!awardWord && !named && !nominated && !won) return null
 	const outcome: AwardOutcome = nominated && !won ? "nominated" : "won"
 	spans.sort((a, b) => a[0] - b[0])
 	let rest = ""

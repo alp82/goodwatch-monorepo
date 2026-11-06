@@ -104,9 +104,17 @@ test("award words in a search read as the filter and leave the rest to search", 
 		filter: { outcome: "nominated", bodies: ["globes"] },
 		rest: "2024",
 	})
-	assert.deepEqual(readAwardWords("daytime emmy shows"), {
+	assert.deepEqual(readAwardWords("daytime emmy winning shows"), {
 		filter: { outcome: "won", bodies: ["daytime"] },
 		rest: "shows",
+	})
+	assert.deepEqual(readAwardWords("academy awards dramas"), {
+		filter: { outcome: "won", bodies: ["oscars"] },
+		rest: "dramas",
+	})
+	assert.deepEqual(readAwardWords("emmy award comedies"), {
+		filter: { outcome: "won", bodies: ["emmys"] },
+		rest: "comedies",
 	})
 	assert.deepEqual(readAwardWords("bafta and cesar nominees"), {
 		filter: { outcome: "nominated", bodies: ["bafta", "cesars"] },
@@ -118,4 +126,10 @@ test("award words in a search read as the filter and leave the rest to search", 
 	})
 	assert.equal(readAwardWords("winning streak"), null)
 	assert.equal(readAwardWords("space westerns"), null)
+	// A body's name alone is a search: people, places and the film "Oscar".
+	assert.equal(readAwardWords("oscar isaac"), null)
+	assert.equal(readAwardWords("emmy rossum movies"), null)
+	assert.equal(readAwardWords("pga tour"), null)
+	assert.equal(readAwardWords("sag harbor"), null)
+	assert.equal(readAwardWords("oscar"), null)
 })
