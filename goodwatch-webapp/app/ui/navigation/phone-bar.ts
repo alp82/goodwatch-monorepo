@@ -9,7 +9,8 @@
 // Kinds:
 // - home: the start page keeps the wordmark.
 // - area: Watch, Explore and Profile pages: "WATCH" over "My shows ▾"; the title opens the area's tabs.
-// - detail: a title, a person, a list or a blog post: back, and the page's own name once its heading scrolled away.
+// - detail: a title, a person, a list or a blog post: back, and the page's own name once its heading scrolled away
+//   (a title page names itself from the start, with its hub and genre over the name: page-name.ts).
 // - settings: a settings page: "‹ Settings" and its name; this bar never hides.
 // - page: everything else (help, apps, sign-in): "GOODWATCH" over the page's name, no menu.
 import { SETTINGS_PATHS, type PathViewer } from "../../domain/member-paths.ts"

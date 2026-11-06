@@ -3,7 +3,7 @@
 // down and comes back on the way up (transform only). Which bar a page gets: ./phone-bar.ts.
 import { ChevronDownIcon, ChevronLeftIcon } from "@heroicons/react/24/outline"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
-import { Link, useLocation, useNavigate } from "@remix-run/react"
+import { Link, useLocation, useMatches, useNavigate } from "@remix-run/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { SnapSheet } from "~/ui/filter-bar"
@@ -12,6 +12,7 @@ import { useAuthHref } from "~/utils/auth-href"
 import { useNavigation, usePathViewer } from "./NavigationContext"
 import { holdKeyboardForSearch } from "./Search"
 import { type AreaTab, areaKeys } from "./areas"
+import { type PageName, pageNameOf } from "./page-name"
 import { type PhoneBar as Bar, areaSheetOf, phoneBarOf } from "./phone-bar"
 import { useWatchNews } from "./useWhatsNew"
 import { withWatchNews } from "./watch-news"
@@ -48,6 +49,36 @@ function useScrollAway(enabled: boolean) {
 		}
 	}, [enabled])
 	return away
+}
+
+/** A page that names itself (a title page): the pages above it as small links, over its name. */
+function NameBlock({ page }: { page: PageName }) {
+	return (
+		<div className="flex min-w-0 flex-1 flex-col justify-center self-stretch leading-tight">
+			{page.trail.length > 0 && (
+				<nav
+					aria-label="Breadcrumb"
+					className="flex min-w-0 items-center gap-1 text-[11px] font-semibold tracking-wide text-gray-500 uppercase"
+				>
+					{page.trail.map((crumb, i) => (
+						<span key={crumb.path} className="flex min-w-0 items-center gap-1">
+							{i > 0 && <span aria-hidden>›</span>}
+							<Link
+								to={crumb.path}
+								prefetch="intent"
+								className="truncate active:text-gray-300"
+							>
+								{crumb.label}
+							</Link>
+						</span>
+					))}
+				</nav>
+			)}
+			<span className="truncate text-xl font-black text-white">
+				{page.name}
+			</span>
+		</div>
+	)
 }
 
 /** A detail page's own name, from its first heading, once that heading has scrolled under the bar. */
@@ -305,7 +336,9 @@ export function PhoneBar({ surface }: { surface: string }) {
 		() => () => document.documentElement.removeAttribute("data-phone-bar-away"),
 		[],
 	)
-	const heading = useHeadingTitle(bar.kind === "detail")
+	const named = pageNameOf(useMatches())
+	const page = bar.kind === "detail" ? named : null
+	const heading = useHeadingTitle(bar.kind === "detail" && !page)
 	const title = bar.kind === "detail" ? heading : bar.title
 
 	return (
@@ -334,7 +367,11 @@ export function PhoneBar({ surface }: { surface: string }) {
 						{bar.back && (
 							<BackKey href={bar.back.href} label={bar.back.label} />
 						)}
-						<TitleBlock bar={bar} title={title} />
+						{page ? (
+							<NameBlock page={page} />
+						) : (
+							<TitleBlock bar={bar} title={title} />
+						)}
 						{bar.kind !== "settings" && <EndKey />}
 					</>
 				)}

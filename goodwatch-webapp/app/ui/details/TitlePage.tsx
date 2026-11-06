@@ -560,9 +560,10 @@ export function TitlePage(props: TitlePageProps) {
 					/>
 				)}
 				{props.trail.length > 0 && (
+					// Phones: the top bar shows the trail over the title (ui/navigation/page-name.ts).
 					<Breadcrumbs
 						items={props.trail}
-						className="relative [&>ol]:max-w-[88rem] lg:[&>ol]:px-8"
+						className="relative max-lg:hidden [&>ol]:max-w-[88rem] lg:[&>ol]:px-8"
 					/>
 				)}
 				<ExploreBar

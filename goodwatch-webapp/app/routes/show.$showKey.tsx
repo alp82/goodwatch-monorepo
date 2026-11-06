@@ -56,6 +56,7 @@ import { similarShelfWithin } from "~/ui/details/more-like-this/similar-shelf.se
 import { seasonSummary } from "~/ui/details/season-summary"
 import { tropesTeaserState } from "~/ui/details/tropes/title-tropes.server"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
+import { type PageNameHandle, titlePageName } from "~/ui/navigation/page-name"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsMetaTags } from "~/utils/detailsMeta"
 import {
@@ -74,7 +75,11 @@ import { mergeDehydratedStates } from "~/utils/title-extras"
 export { pageHeaders as headers } from "~/utils/headers"
 // The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts). A tap
 // before then waits for its control (utils/replay-tap.ts).
-export const handle = START_AFTER_PAINT
+// The phone's top bar names the title from the start (ui/navigation/page-name.ts).
+export const handle = {
+	...START_AFTER_PAINT,
+	pageName: titlePageName,
+} satisfies PageNameHandle
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) return [{ title: "Not Found | GoodWatch" }]
