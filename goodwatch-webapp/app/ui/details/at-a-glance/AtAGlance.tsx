@@ -47,25 +47,37 @@ export function AtAGlance({
 							id={row.id}
 							className="scroll-mt-44 lg:scroll-mt-32"
 						>
-							<button
-								type="button"
-								aria-expanded={isOpen}
-								aria-controls={`${row.id}-detail`}
-								onClick={() => onToggle(row.id)}
-								className={`group flex w-full cursor-pointer items-start gap-3 px-4 py-3 text-left hover:bg-white/[0.03] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-amber-300 ${isOpen ? "bg-white/[0.03]" : ""}`}
+							{/* The row's head is one element: one hover, one outline and one press target over the label,
+							    the value and the teaser. The button's ::after covers the whole head; a teaser with links of its
+							    own sits on top of it and lets presses through, except on its links (Starring's faces). */}
+							<div
+								className={`group relative px-4 py-3 hover:bg-white/[0.03] has-[>button:focus-visible]:outline-2 has-[>button:focus-visible]:-outline-offset-2 has-[>button:focus-visible]:outline-amber-300 ${isOpen ? "bg-white/[0.03]" : ""}`}
 							>
-								<span className="w-24 shrink-0 pt-px text-[13px] text-gray-400 sm:w-28">
-									{row.label}
-								</span>
-								<span className="min-w-0 flex-1 text-[15px] leading-snug text-gray-300">
-									{row.value}
-									{row.teaser}
-								</span>
-								<ChevronDownIcon
-									aria-hidden="true"
-									className={`mt-0.5 h-4 w-4 shrink-0 text-gray-500 transition-transform group-hover:text-amber-300 motion-reduce:transition-none ${isOpen ? "rotate-180 text-amber-300" : ""}`}
-								/>
-							</button>
+								<button
+									type="button"
+									aria-expanded={isOpen}
+									aria-controls={`${row.id}-detail`}
+									onClick={() => onToggle(row.id)}
+									className="flex w-full cursor-pointer items-start gap-3 text-left outline-none after:absolute after:inset-0 after:content-['']"
+								>
+									<span className="w-24 shrink-0 pt-px text-[13px] text-gray-400 sm:w-28">
+										{row.label}
+									</span>
+									<span className="min-w-0 flex-1 text-[15px] leading-snug text-gray-300">
+										{row.value}
+										{!row.teaserHasLinks && row.teaser}
+									</span>
+									<ChevronDownIcon
+										aria-hidden="true"
+										className={`mt-0.5 h-4 w-4 shrink-0 text-gray-500 transition-transform group-hover:text-amber-300 motion-reduce:transition-none ${isOpen ? "rotate-180 text-amber-300" : ""}`}
+									/>
+								</button>
+								{row.teaserHasLinks && !isOpen && (
+									<div className="pointer-events-none relative pr-7 pl-[6.75rem] text-[15px] sm:pl-[7.75rem] [&_a]:pointer-events-auto">
+										{row.teaser}
+									</div>
+								)}
+							</div>
 							{/* A closed row's detail stays in the document, hidden; it fades in as it opens. */}
 							<div
 								id={`${row.id}-detail`}
