@@ -13,14 +13,19 @@ from f.sync.copy.sync_state import utc_now
 def assess(db, now=None):
     now = now or utc_now()
     problems = []
-    for name in ["tvdb_titles", "tvdb_categories"]:
+    for name in ["tvdb_titles", "tvdb_categories", "tvdb_entities"]:
+        pending = {"publish_pending": True}
+        if name == "tvdb_entities":
+            pending.update(
+                kind="person",
+                status="ok",
+                image_url={"$exists": True},
+                tmdb_id={"$gt": 0, "$lte": 2**31 - 1},
+                photo_waiting_for_person={"$ne": True},
+            )
         col = db[name]
         oldest = next(
-            iter(
-                col.find({"publish_pending": True}, {"updated_at": 1})
-                .sort("updated_at", 1)
-                .limit(1)
-            ),
+            iter(col.find(pending, {"updated_at": 1}).sort("updated_at", 1).limit(1)),
             None,
         )
         state = db.tvdb_state.find_one({"_id": "publication-progress:" + name}) or {}
@@ -29,9 +34,7 @@ def assess(db, now=None):
             oldest.get("updated_at", now), advanced or oldest.get("updated_at", now)
         ) > timedelta(minutes=30):
             problems.append(f"{name}: publication stalled for over 30 minutes")
-        if col.find_one(
-            {"publish_pending": True, "publish_failures": {"$gte": 3}}, {"_id": 1}
-        ):
+        if col.find_one(pending | {"publish_failures": {"$gte": 3}}, {"_id": 1}):
             problems.append(f"{name}: a scope failed publication at least three times")
     return {"checked_at": now, "problems": problems, "healthy": not problems}
 

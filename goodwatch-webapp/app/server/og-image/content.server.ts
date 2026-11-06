@@ -1,3 +1,4 @@
+import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Maps a page path to what its Open Graph card shows. Image fields hold remote URLs here;
 // the renderer inlines them.
@@ -49,11 +50,8 @@ import { canonicalTitleId } from "~/utils/title-identity"
 
 type Category = keyof typeof mainHierarchy
 
-const TMDB_IMAGES = "https://image.tmdb.org/t/p"
 const tmdbImage = (size: string, path?: string | null) =>
-	path
-		? `${TMDB_IMAGES}/${size}${path.startsWith("/") ? "" : "/"}${path}`
-		: null
+	path ? tmdbImageUrl(path, size) : null
 // Some pages use local .webp backdrops, which satori can't decode.
 const tmdbBackdrop = (path?: string | null) =>
 	path?.startsWith("/images/") ? null : tmdbImage("w1280", path)

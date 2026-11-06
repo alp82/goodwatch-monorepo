@@ -1,3 +1,4 @@
+import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 
@@ -23,7 +24,7 @@ export interface CastParams {
 
 export const getCast = async (params: CastParams) => {
 	return await cached<CastParams, CastResults>({
-		name: "cast",
+		name: "cast-tvdb-v1",
 		target: _getCast,
 		params,
 		ttlMinutes: 60 * 24,
@@ -44,7 +45,7 @@ export async function _getCast({
 		const withCastArray = withCast.split(",").map(id => parseInt(id.trim()))
 		if (withCastArray.length > 0) {
 			const withCastQuery = `
-				SELECT tmdb_id, name, profile_path, known_for_department, popularity
+				SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN}, known_for_department, popularity
 				FROM person
 				WHERE tmdb_id IN (${withCastArray.map(() => '?').join(', ')})
 				ORDER BY popularity DESC
@@ -60,14 +61,14 @@ export async function _getCast({
 		
 		const searchQuery = withCastArray.length > 0 
 			? `
-				SELECT tmdb_id, name, profile_path, known_for_department, popularity
+				SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN}, known_for_department, popularity
 				FROM person
 				WHERE MATCH(name, ?) using phrase_prefix AND tmdb_id NOT IN (${withCastArray.map(() => '?').join(', ')})
 				ORDER BY popularity DESC
 				LIMIT ?
 			`
 			: `
-				SELECT tmdb_id, name, profile_path, known_for_department, popularity
+				SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN}, known_for_department, popularity
 				FROM person
 				WHERE MATCH(name, ?) using phrase_prefix
 				ORDER BY popularity DESC

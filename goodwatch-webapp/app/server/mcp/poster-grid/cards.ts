@@ -64,6 +64,7 @@ export interface PosterView {
 }
 
 export const TMDB_IMAGE_ORIGIN = "https://image.tmdb.org"
+export const TVDB_IMAGE_ORIGIN = "https://artworks.thetvdb.com"
 const IMAGE_PATH =
 	/^\/t\/p\/(w45|w92|w154|w185|w300|w342|w500|w780|w1280|h632)\/[A-Za-z0-9_-]{1,80}\.(?:jpg|jpeg|png|webp|svg)$/
 // The statuses a successful tool answer can carry; any other status string is an error answer.
@@ -137,6 +138,27 @@ export function safeImageUrl(
 	}
 }
 
+/** A primary actor photo from either supported image provider. */
+export function safeProfileUrl(value: unknown): string | null {
+	const tmdb = safeImageUrl(value, ["w45", "w185", "h632"])
+	if (tmdb) return tmdb
+	if (typeof value !== "string") return null
+	try {
+		const url = new URL(value)
+		return url.origin === TVDB_IMAGE_ORIGIN &&
+			!url.username &&
+			!url.password &&
+			!url.search &&
+			!url.hash &&
+			url.pathname.startsWith("/banners/") &&
+			/\.(?:jpe?g|png|webp)$/i.test(url.pathname)
+			? url.href
+			: null
+	} catch {
+		return null
+	}
+}
+
 /** A poster file, or null. */
 export const safePosterUrl = (value: unknown) =>
 	safeImageUrl(value, ["w92", "w154", "w185", "w342", "w500"])
@@ -192,7 +214,7 @@ function personCard(value: unknown, origin: string): PersonCard | null {
 	const name = text(row.name)
 	const url = safePageUrl(row.url, origin)
 	if (!name || !url) return null
-	const profile = safeImageUrl(row.profile_url, ["w45", "w185", "h632"])
+	const profile = safeProfileUrl(row.profile_url)
 	const backdrop = safeImageUrl(row.backdrop_url, ["w300", "w780", "w1280"])
 	const knownFor = (Array.isArray(row.known_for) ? row.known_for : [])
 		.slice(0, 2)

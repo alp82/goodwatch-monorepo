@@ -1,3 +1,4 @@
+import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 import { query } from "~/utils/crate"
 import {
 	backgroundStatement,
@@ -73,7 +74,7 @@ export function startPeopleIndex() {
 	scheduleCatalog("people", INDEX_MAX_AGE_MS, async () => {
 		const started = performance.now()
 		const { rows } = await backgroundStatement(
-			`SELECT tmdb_id, name, popularity, profile_path, known_for_department FROM person
+			`SELECT tmdb_id, name, popularity, ${PERSON_PHOTO_COLUMN}, known_for_department FROM person
 			WHERE popularity >= ${INDEX_MIN_POPULARITY} AND NOT coalesce(adult, false) LIMIT 200000`,
 		)
 		const next = (

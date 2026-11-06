@@ -15,6 +15,8 @@ All schedules use UTC, independent script entry points and overlap guards. They 
 | `awards` | Hourly at minute 4 | Up to 12 minutes / 1,000 categories. Discover all award/category indexes daily and refresh category snapshots daily. |
 | `changes` | Hourly at minute 12 | Four-minute paginated update-feed reader; resume unfinished pages next hour. |
 | `health` | Every 15 minutes, minute 7 modulo 15 | Fail visibly on a table stalled for 30 minutes or a scope rejected three times. Existing schedule monitoring delivers incident/recovery notifications. |
+| `photos` | Every 5 minutes, minute 4 modulo 5 | Resume primary actor-photo seeding from stored cast snapshots in four-minute slices; after catching up, scan changes at most hourly. No TVDB requests. |
+| `actor_photos` | Every 5 minutes, minute 1 modulo 5 | Publish up to 1,000 primary actor photos onto existing, verified local people. |
 
 One shared API budget caps requests across all jobs at four per second. HTTP 429 establishes a shared cooldown honoring Retry-After; 401 refreshes authentication once, persistent 401/403 fails visibly, and network/server failures preserve successful snapshots. Leases recover work left by a terminated worker. The title reconciliation interval is 30 days; actor/title identity mappings refresh after 180 days or relevant update events.
 
@@ -31,7 +33,7 @@ CrateDB has two source-owned tables, registered in `f/sync/models/crate_schemas.
 
 Each successful source snapshot marks publication pending. Publishing batches upserts before one table refresh and scope reconciliation, then acknowledges the exact source revision. Failed writes or source revisions arriving during publication remain pending. A global publication lease prevents an older publisher from deleting newer rows. TMDB cast replacement does not own either TVDB table. Both are registered for catalog title deletion; source nominations remain in MongoDB and can be republished with an unknown local link on the next category sweep. Source catalog removals are published as empty character snapshots when seen by the seed job.
 
-Character images are stored as external URLs; this pipeline does not download all image binaries. These are portrayals within titles, not a global fictional-character identity or biography. Application UI integration is separate.
+Character images are stored as external URLs; this pipeline does not download all image binaries. These are portrayals within titles, not a global fictional-character identity or biography. Character-specific UI integration is separate from primary actor photos.
 
 ## Update limits
 
@@ -74,3 +76,13 @@ Run `f/tvdb/repair` with `dry_run: true` to preview invalid saved joins, then `d
 The 2026-11-06 incident was one saved actor mapping (`person:9088514`) with TMDB ID `29028252902825`. Its value exceeds the local INTEGER contract. The original source fields are retained so a later upstream correction can restore a verified link.
 
 Recovery regression tests: `python -m unittest discover -s goodwatch-flows/tests -p 'test_tvdb*.py'`.
+
+## Primary actor photos and default selection
+
+All actors in a verified cast snapshot now enter the globally deduplicated person queue, including actors with no character portrait. The person API's `image` is stored as `tvdb_entities.image_url`, independently from a role's `image`. Existing `characters.personImgURL` values seed primary actor-photo candidates without another API request. A candidate never overwrites a canonical person-API observation, including an explicit absence.
+
+`actor_photos` publishes the validated primary URL into `person.tvdb_profile_url`, alongside `tvdb_id` and its observation timestamp. It never writes `person.profile_path`: TMDB still owns that original fallback. An older observation cannot replace a newer primary photo; one duplicate TVDB identity with no photo cannot clear a photo owned by another identity. Missing local people stay pending with an hourly retry until the TMDB catalog supplies them. Unmapped or invalid external IDs remain unlinked.
+
+Production person, cast, search, discovery, profile-statistics and MCP readers use the shared `PERSON_PHOTO_COLUMN`: the primary TVDB actor URL when nonempty, otherwise the TMDB profile path. Person/title/cast cache versions change with the rollout so older TMDB-only responses are refreshed. Newly populated photos subsequently follow the normal data-cache refresh intervals. Image helpers pass TVDB URLs directly to its CDN, without inventing TMDB size variants; MCP's image allowlist and CSP also permit that CDN for actor portraits. Character-specific images are not used as generic actor headshots.
+
+The 2026-11-06 actor-photo backfill reuses stored TVDB cast data and runs independently of title crawling. Actor-photo publication has its own lease and progress/health monitoring. The app uses TMDB when no usable primary TVDB URL has been published. As with other external images, the source URL is fetched by the browser rather than downloaded into the pipeline's metadata stores.

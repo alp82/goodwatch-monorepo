@@ -15,10 +15,10 @@ from urllib.parse import quote
 from f.sync.copy.sync_state import utc_now
 from f.tvdb.api import ApiError, Deferred
 from f.tvdb.ids import checked_id, tmdb_id
+from f.tvdb.photos import photo_url, seed_actors
 from f.tvdb.store import (
     claim,
     enqueue,
-    enqueue_many,
     exclusive,
     finish,
     record_run,
@@ -91,19 +91,7 @@ def title_data(db, api, doc):
         ) not in (None, tvdb if kind == "show" else None):
             raise IdentityError("Character belongs to another title")
         actors.append(c)
-    # Map only roles with portraits, and deduplicate actors across this title.
-    enqueue_many(
-        db.tvdb_entities,
-        [
-            (
-                f"person:{c['peopleId']}",
-                {"kind": "person", "tvdb_id": c["peopleId"]},
-                doc.get("priority", 0),
-            )
-            for c in actors
-            if c.get("image")
-        ],
-    )
+    seed_actors(db, actors, utc_now(), doc.get("priority", 0))
     return {
         "tvdb_id": tvdb,
         "name": data.get("name"),
@@ -133,6 +121,12 @@ def entity_data(db, api, doc):
         "name": data.get("name"),
         "status": "ok",
     }
+    if kind == "person":
+        fields.update(
+            image_url=photo_url(data.get("image")),
+            image_source="person",
+            image_observed_at=utc_now(),
+        )
     if kind != "person" and tmdb:
         source = "tmdb_movie_details" if kind == "movie" else "tmdb_tv_details"
         local = db[source].find_one({"tmdb_id": tmdb, "tmdb_deleted": {"$ne": True}})

@@ -1,0 +1,9 @@
+summary: TVDB photos
+schedule: 0 4/5 * * * *
+timezone: UTC
+script_path: f/tvdb/photos
+is_flow: false
+args: {}
+enabled: true
+no_flow_overlap: true
+cron_version: v2

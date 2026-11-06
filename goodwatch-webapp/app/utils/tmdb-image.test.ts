@@ -227,3 +227,25 @@ describe("which images are eager", () => {
 		])
 	})
 })
+
+describe("preferred TVDB actor photos", () => {
+	const photo = "https://artworks.thetvdb.com/banners/person/30/primary.jpg"
+	it("uses the TVDB primary photo directly without a TMDB prefix", () => {
+		assert.equal(tmdbImageUrl(photo, "h632"), photo)
+	})
+	it("does not invent TMDB size variants for a TVDB actor photo", () => {
+		assert.deepEqual(tmdbFixedImage("profile", photo, 40), { src: photo })
+		assert.deepEqual(
+			tmdbFluidImage("profile", photo, [[null, "120px"]], {
+				fallbackWidth: 120,
+			}),
+			{ src: photo },
+		)
+	})
+	it("retains TMDB size selection for the fallback photo", () => {
+		assert.equal(
+			tmdbFixedImage("profile", "/fallback.jpg", 40).src,
+			`${BASE}/w45/fallback.jpg`,
+		)
+	})
+})

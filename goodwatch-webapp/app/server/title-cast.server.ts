@@ -1,3 +1,4 @@
+import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 import { applyCorrections } from "./feedback/apply-corrections.server"
 import { cached } from "~/utils/cache"
 import {
@@ -23,7 +24,7 @@ export async function getTitleCastPage(params: TitleCastParams) {
 	return applyCorrections(
 		{ kind: params.mediaType, id: tmdbId },
 		await cached({
-			name: "title-cast-v1",
+			name: "title-cast-v2",
 			params: {
 				mediaType: params.mediaType,
 				tmdbId: String(tmdbId),
@@ -42,7 +43,7 @@ async function fetchCastPage({ mediaType, tmdbId, offset }: TitleCastParams) {
   WHERE media_tmdb_id = ${tmdbId} AND media_type = '${mediaType}'
  ),
  person_ids AS (SELECT array_agg(person_tmdb_id) AS ids FROM appeared_in_data),
- people_data AS (SELECT tmdb_id, name, profile_path FROM person WHERE tmdb_id = ANY((SELECT ids FROM person_ids))),
+ people_data AS (SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN} FROM person WHERE tmdb_id = ANY((SELECT ids FROM person_ids))),
  ${castRowsCTEs},
  page_cast AS (SELECT array_agg(id) AS ids FROM (SELECT id FROM cast_people ORDER BY ord ASC, id ASC LIMIT ${CAST_PAGE_SIZE} OFFSET ${offset}) AS t)
  SELECT {cast_total = (SELECT count(*) FROM cast_people), cast_rows = ${selectedCastRows("page_cast")}} AS page

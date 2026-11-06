@@ -26,6 +26,20 @@ def main(dry_run: bool = True):
         if not dry_run:
             for name in missing:
                 connector.run(create_table_sql(name, SCHEMAS[name]))
-        return {"dry_run": dry_run, "missing_tables": missing}
+        # Photo ownership stays separate: the TMDB details copy continues to own profile_path.
+        columns = connector.get_existing_columns("person")
+        additions = {
+            name: SCHEMAS["person"]["columns"][name]
+            for name in ("tvdb_id", "tvdb_profile_url", "tvdb_profile_updated_at")
+            if name not in columns
+        }
+        if not dry_run:
+            for name, kind in additions.items():
+                connector.run(f"ALTER TABLE person ADD COLUMN {name} {kind}")
+        return {
+            "dry_run": dry_run,
+            "missing_tables": missing,
+            "missing_person_columns": list(additions),
+        }
     finally:
         connector.disconnect()

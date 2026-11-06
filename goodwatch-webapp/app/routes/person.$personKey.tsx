@@ -1,3 +1,4 @@
+import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { PersonFilterButton } from "~/ui/person/filter-button"
 import { normalizePersonQuery } from "~/server/person-query.server"
 import MediaText from "~/ui/media-text/MediaText"
@@ -161,7 +162,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	})
 	const url = `https://goodwatch.app${personPath(p.tmdb_id, p.name)}` // filtered views share the unfiltered canonical
 	const image = p.profile_path
-		? `https://image.tmdb.org/t/p/h632${p.profile_path}`
+		? tmdbImageUrl(p.profile_path, "h632")
 		: ""
 	const tags = buildMeta({
 		pageMeta: {

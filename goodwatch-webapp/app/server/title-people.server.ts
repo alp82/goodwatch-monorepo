@@ -1,3 +1,4 @@
+import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 import { canonicalTitleId } from "../utils/title-identity"
 import {
 	type CastRaw,
@@ -64,7 +65,7 @@ export async function fetchPeopleByIds(ids: number[], query = readPeopleQuery) {
 	const people = new Map<number, Person>()
 	for (let offset = 0; offset < distinct.length; offset += 5000) {
 		const rows = await query<Person>(
-			"SELECT tmdb_id, name, profile_path, popularity FROM person WHERE tmdb_id = ANY(?) LIMIT 100000",
+			`SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN}, popularity FROM person WHERE tmdb_id = ANY(?) LIMIT 100000`,
 			// Crate accepts an array parameter, though the query helper's type omits it.
 			[distinct.slice(offset, offset + 5000) as never],
 		)

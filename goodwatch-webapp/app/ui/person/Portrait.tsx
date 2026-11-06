@@ -1,6 +1,6 @@
 import { TmdbImage, type TmdbImageProps } from "~/ui/TmdbImage"
 
-// A person's portrait from TMDB, or their initial when there is none. Shared by the person page and search.
+// A person's preferred portrait, or their initial when there is none. Shared by the person page and search.
 export function Portrait({
 	path,
 	name,

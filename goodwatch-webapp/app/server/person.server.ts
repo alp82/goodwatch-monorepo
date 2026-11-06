@@ -1,3 +1,4 @@
+import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 import { createPersonProfileCache } from "./person-profile-cache.server.ts"
 import { applyCorrections } from "./feedback/apply-corrections.server"
 import { personBestCredit } from "../utils/person-best.ts"
@@ -443,7 +444,7 @@ async function collaborators(
 		name: string
 		profile_path: string | null
 	}>(
-		`SELECT tmdb_id, name, profile_path FROM person WHERE tmdb_id IN (${inList(top.map(([pid]) => pid))})`,
+		`SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN} FROM person WHERE tmdb_id IN (${inList(top.map(([pid]) => pid))})`,
 		top.map(([pid]) => pid),
 	)
 	const byId = new Map(people.map((p) => [p.tmdb_id, p]))
@@ -514,7 +515,7 @@ async function getCachedPersonProfile(
 		{ profile: PersonProfile | null }
 	>({
 		// v2: credits carry `anime`.
-		name: "person-profile-v2",
+		name: "person-profile-v3",
 		target: async ({ personId }) => ({
 			profile: await load(),
 		}),
@@ -532,7 +533,7 @@ async function loadPersonProfile(id: number): Promise<PersonProfile | null> {
 			profile_path: string | null
 			known_for_department: string | null
 		}>(
-			"SELECT tmdb_id, name, profile_path, known_for_department FROM person WHERE tmdb_id = ?",
+			`SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN}, known_for_department FROM person WHERE tmdb_id = ?`,
 			[id],
 		),
 		getPersonCredits(id),

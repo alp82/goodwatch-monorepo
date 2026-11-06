@@ -52,8 +52,13 @@ const STEPS: Record<TmdbImageKind, Step[]> = {
 /** Pixel ratios above this one request the same file as this one. */
 export const MAX_PIXEL_RATIO = 2
 
+/** Primary actor photos use TVDB's own CDN rather than TMDB size variants. */
+export const isTvdbPhoto = (path: string) =>
+	path.startsWith("https://artworks.thetvdb.com/banners/")
+
 /** The URL of one size. Paths are stored with or without a leading slash. */
 export function tmdbImageUrl(path: string, size: string): string {
+	if (isTvdbPhoto(path)) return path
 	return `${TMDB_IMAGE_BASE}/${size}/${path.replace(/^\/+/, "")}`
 }
 
@@ -82,6 +87,7 @@ export function tmdbFixedImage(
 	path: string,
 	displayWidth: number,
 ): TmdbImageSource {
+	if (isTvdbPhoto(path)) return { src: path }
 	const one = tmdbSizeFor(kind, displayWidth, 1)
 	const two = tmdbSizeFor(kind, displayWidth, 2)
 	const src = tmdbImageUrl(path, one)
@@ -154,6 +160,7 @@ export function tmdbFluidImage(
 		maxWidth = Number.POSITIVE_INFINITY,
 	}: { fallbackWidth: number; minWidth?: number; maxWidth?: number },
 ): TmdbImageSource {
+	if (isTvdbPhoto(path)) return { src: path }
 	const steps = STEPS[kind]
 	const first = Math.max(
 		0,

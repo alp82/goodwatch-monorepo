@@ -1,3 +1,4 @@
+import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 import { personPath } from "../../utils/helpers"
 import { canonicalTitleId } from "../../utils/title-identity"
 import { titleKey } from "../../utils/title-key"
@@ -68,7 +69,7 @@ export async function readPeople(
 		const offset = Number(args.cursor?.slice(7) ?? 0)
 		const limit = args.limit ?? 20
 		const rows = await searchQuery<Person>(
-			`SELECT tmdb_id, name, known_for_department, profile_path FROM person WHERE MATCH(name, ?) USING best_fields WITH (operator = 'and') ORDER BY popularity DESC NULLS LAST, tmdb_id LIMIT ? OFFSET ?`,
+			`SELECT tmdb_id, name, known_for_department, ${PERSON_PHOTO_COLUMN} FROM person WHERE MATCH(name, ?) USING best_fields WITH (operator = 'and') ORDER BY popularity DESC NULLS LAST, tmdb_id LIMIT ? OFFSET ?`,
 			[args.query, limit + 1, offset],
 		)
 		const shown = rows.slice(0, limit)
@@ -89,7 +90,7 @@ export async function readPeople(
 		}
 	}
 	const [person] = await searchQuery<Person>(
-		"SELECT tmdb_id, name, known_for_department, profile_path FROM person WHERE tmdb_id = ?",
+		`SELECT tmdb_id, name, known_for_department, ${PERSON_PHOTO_COLUMN} FROM person WHERE tmdb_id = ?`,
 		[args.person_id],
 	)
 	if (!person)

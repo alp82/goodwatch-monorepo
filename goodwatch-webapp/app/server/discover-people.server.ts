@@ -1,3 +1,4 @@
+import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 // Discover people: sitemap actors and adult-safe credit aggregates for featured crew and filtered results.
 // Public credit results share a best-effort Redis cache; viewer state stays in the panel.
 import { createHash } from "node:crypto"
@@ -135,7 +136,7 @@ async function readCreditPeople(
 	const ids = [...new Set([...actors, ...crew].map((row) => row.id))]
 	const people = ids.length
 		? await run<Person>(
-				`SELECT tmdb_id, name, profile_path, known_for_department FROM person WHERE adult = false AND tmdb_id IN (${ids.join(",")}) LIMIT ${ids.length}`,
+				`SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN}, known_for_department FROM person WHERE adult = false AND tmdb_id IN (${ids.join(",")}) LIMIT ${ids.length}`,
 			)
 		: []
 	const byId = new Map(people.map((person) => [Number(person.tmdb_id), person]))
@@ -242,7 +243,7 @@ function readFeaturedActors(): Promise<DiscoverPeople> {
 		// Equivalent to getListPeople's cohort and ordering, without loading titles and known-for credits.
 		const ids = [...parsePeopleSitemap(peopleSitemap).keys()]
 		const people = await query<Person>(
-			`SELECT tmdb_id, name, profile_path, known_for_department FROM person WHERE adult = false AND tmdb_id IN (${ids.join(",")}) LIMIT ${ids.length}`,
+			`SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN}, known_for_department FROM person WHERE adult = false AND tmdb_id IN (${ids.join(",")}) LIMIT ${ids.length}`,
 		)
 		const byId = new Map(
 			people.map((person) => [Number(person.tmdb_id), person]),

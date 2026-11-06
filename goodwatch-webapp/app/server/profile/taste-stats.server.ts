@@ -1,3 +1,4 @@
+import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 // The numbers of a profile's Taste tab: genres, people, eras, world, tags, facts, rating style and badges, from the
 // member's own data and the catalog (taste-stats-model.ts does the counting).
 //
@@ -358,7 +359,7 @@ async function readPeople(
 			name: string
 			profile_path: string | null
 		}>(
-			`SELECT tmdb_id, name, profile_path FROM person WHERE tmdb_id IN (${placeholders(batch.length)}) LIMIT ${batch.length}`,
+			`SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN} FROM person WHERE tmdb_id IN (${placeholders(batch.length)}) LIMIT ${batch.length}`,
 			batch,
 		)
 		for (const row of rows)

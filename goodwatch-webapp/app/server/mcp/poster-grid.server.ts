@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server"
-import { TMDB_IMAGE_ORIGIN } from "./poster-grid/cards.ts"
+import { TMDB_IMAGE_ORIGIN, TVDB_IMAGE_ORIGIN } from "./poster-grid/cards.ts"
 import { POSTER_GRID_TEMPLATE } from "./poster-grid/html.generated.ts"
 import type { ReadToolName } from "./tools.server.ts"
 
@@ -30,7 +30,7 @@ export const posterGridToolMeta = {
 /** Posters from TMDB; the font and the title pages from the site. No fetch, XHR or WebSocket destinations. */
 export function posterGridCsp(origin: string) {
 	return {
-		resourceDomains: [TMDB_IMAGE_ORIGIN, origin],
+		resourceDomains: [TMDB_IMAGE_ORIGIN, TVDB_IMAGE_ORIGIN, origin],
 		connectDomains: [] as string[],
 	}
 }

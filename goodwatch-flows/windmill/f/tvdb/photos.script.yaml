@@ -1,0 +1,9 @@
+summary: TVDB photos
+description: ''
+lock: '!inline f/tvdb/photos.script.lock'
+kind: script
+timeout: 600
+schema:
+  type: object
+  properties: {}
+  required: []

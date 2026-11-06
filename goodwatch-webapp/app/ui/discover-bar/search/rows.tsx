@@ -1,3 +1,4 @@
+import { tmdbImageUrl } from "~/utils/tmdb-image"
 // Rows the Search tab shares: a title row with its steering toggles (More like, Less like, Like this), a person row
 // whose plus turns into a tick, group headings, the More line, and the picked people as face chips joined by "or".
 import {
@@ -18,7 +19,6 @@ import { type TitleKey, parseTitleKey } from "~/utils/title-key"
 import type { Steer } from "./search-tab"
 
 const POSTER = "https://image.tmdb.org/t/p/w92"
-const PROFILE = "https://image.tmdb.org/t/p/w185"
 
 /** A title as the Search tab lists it. */
 export interface TitleItem {
@@ -171,7 +171,7 @@ export function Face({
 		>
 			{src ? (
 				<img
-					src={`${PROFILE}${src}`}
+					src={tmdbImageUrl(src, "w185")}
 					alt=""
 					loading="lazy"
 					className="h-full w-full object-cover"

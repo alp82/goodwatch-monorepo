@@ -150,12 +150,20 @@ test("The poster grid resource is listed and read as an MCP App with a tight CSP
 	assert.equal(Object.hasOwn(listed._meta.ui, "domain"), false)
 	assert.equal(content._meta["openai/widgetDomain"], "https://goodwatch.app")
 	assert.deepEqual(content._meta.ui.csp, {
-		resourceDomains: ["https://image.tmdb.org", "https://goodwatch.app"],
+		resourceDomains: [
+			"https://image.tmdb.org",
+			"https://artworks.thetvdb.com",
+			"https://goodwatch.app",
+		],
 		connectDomains: [],
 	})
 	assert.deepEqual(content._meta["openai/widgetCSP"], {
 		connect_domains: [],
-		resource_domains: ["https://image.tmdb.org", "https://goodwatch.app"],
+		resource_domains: [
+			"https://image.tmdb.org",
+			"https://artworks.thetvdb.com",
+			"https://goodwatch.app",
+		],
 	})
 	const html: string = content.text
 	assert.match(html, /^<!doctype html>/)
@@ -631,4 +639,18 @@ test("The other card tools get their own eyebrow, and people get person cards", 
 		],
 	)
 	assert.equal(people.cards.length, 0)
+})
+
+test("actor photos accept the TVDB CDN while retaining the image allowlist", async () => {
+	const { safeProfileUrl } = await import("./poster-grid/cards.ts")
+	const photo = "https://artworks.thetvdb.com/banners/person/30/primary.jpg"
+	assert.equal(safeProfileUrl(photo), photo)
+	for (const url of [
+		photo.replace("https:", "http:"),
+		photo.replace("artworks.thetvdb.com", "example.com"),
+		photo + "?track=1",
+		"https://user@artworks.thetvdb.com/banners/photo.jpg",
+	]) {
+		assert.equal(safeProfileUrl(url), null)
+	}
 })

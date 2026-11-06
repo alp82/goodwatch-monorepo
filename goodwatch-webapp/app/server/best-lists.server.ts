@@ -1,3 +1,4 @@
+import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 import {
 	type TitleKind,
 	parsePeopleSitemap,
@@ -134,7 +135,7 @@ async function readPeople(
 			profile_path: string | null
 			known_for_department: string | null
 		}>(
-			"SELECT tmdb_id, name, profile_path, known_for_department FROM person WHERE tmdb_id = ANY(?)",
+			`SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN}, known_for_department FROM person WHERE tmdb_id = ANY(?)`,
 			[ids as never],
 		),
 		query<{ pid: number; media_type: string; mid: number }>(

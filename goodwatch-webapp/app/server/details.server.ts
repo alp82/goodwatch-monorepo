@@ -1,3 +1,4 @@
+import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 import { applyCorrections } from "./feedback/apply-corrections.server"
 import { overlayTitles } from "./media-overlay.server.ts"
 import { CREW_ROLES } from "~/ui/details/crew-roles"
@@ -167,7 +168,7 @@ const _fetchFromDB = async (
 						) as sub
 				),
 				people_data AS (
-						SELECT tmdb_id, name, popularity, profile_path
+						SELECT tmdb_id, name, popularity, ${PERSON_PHOTO_COLUMN}
 						FROM person
 						WHERE tmdb_id = ANY((SELECT ids FROM person_ids))
 				),

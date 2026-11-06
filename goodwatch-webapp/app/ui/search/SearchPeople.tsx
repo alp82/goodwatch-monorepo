@@ -1,3 +1,4 @@
+import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { canonicalMediaTitle, mediaFieldLanguage } from "~/utils/media-presentation"
 // The people a search names, above the title grid. From sm up, a horizontal accordion: every person keeps a fixed
 // place as a narrow photo strip, and the open one shows the full photo with a drawer (backdrop, name, known-for
@@ -18,8 +19,7 @@ const CLOSED_WIDTH = "3.5rem"
 const PHOTO_WIDTH = "10rem"
 const GAP = "0.375rem"
 
-const image = (path: string, size: string) =>
-	`https://image.tmdb.org/t/p/${size}${path}`
+const image = tmdbImageUrl
 const backdropOf = (p: SearchPerson) =>
 	p.knownFor.find((t) => t.backdrop)?.backdrop ?? null
 const noMotion = "motion-reduce:animate-none motion-reduce:transition-none"
