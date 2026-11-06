@@ -56,6 +56,7 @@ import {
 	parseGridFilters,
 } from "~/server/person.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
+import { CharactersShelf } from "~/ui/person/CharactersShelf"
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
 import { Portrait } from "~/ui/person/Portrait"
 import { PERSON_GRID_POSTER, PERSON_PORTRAIT } from "~/ui/person/person-images"
@@ -77,6 +78,7 @@ import { cachedClientLoader } from "~/navigation/instant-navigation"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
+import { getPersonRoles } from "~/server/character-portraits.server"
 import { validPersonId } from "~/server/person-id"
 
 const PER_GROUP = 12
@@ -132,6 +134,7 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	})
 		.items.filter((c) => c.weight >= 0.6 && c.poster_path)
 		.slice(0, 4)
+	const characters = await personCharacters(profile.tmdb_id, profile.name)
 	const { credits, ...rest } = profile
 	return json({
 		profile: rest,
@@ -141,7 +144,20 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 		ofAnyType,
 		groups,
 		knownFor: knownFor.map(slim),
+		characters,
 	})
+}
+
+/** The Characters shelf's roles. Without them (a failed read) the page shows no shelf. */
+const SHELF_ROLES = 60
+async function personCharacters(personId: number, name: string) {
+	try {
+		const roles = await getPersonRoles({ personId, name })
+		return roles.slice(0, SHELF_ROLES)
+	} catch (error) {
+		console.error("Person characters failed:", error)
+		return []
+	}
 }
 
 type Data = ReturnType<typeof useLoaderData<typeof loader>>
@@ -240,6 +256,14 @@ export default function PersonPage() {
 				<Facts data={data} />
 			</Hero>
 			<div className="mx-auto max-w-7xl space-y-12 px-4 pt-4">
+				<CharactersShelf
+					person={{
+						id: data.profile.tmdb_id,
+						name: data.profile.name,
+						profilePath: data.profile.profile_path,
+					}}
+					roles={data.characters}
+				/>
 				{/* Fewer than three rated titles give no signature, so there is nothing to compare. */}
 				{data.profile.signature.pillars.length > 0 && (
 					<Section
