@@ -272,24 +272,31 @@ def run(db, force=False):
                 for r in rows
             ],
         )
+    coverage_updates = []
     for program, category, ceremony in {
         (o["program_key"], o["category_key"], o.get("ceremony_key"))
         for o in observations
     }:
-        db.award_coverage.update_one(
-            {"_id": digest([program, category, ceremony])},
-            {
-                "$setOnInsert": {
-                    "program_key": program,
-                    "category_key": category,
-                    "ceremony_key": ceremony,
-                    "entry_slate": "unknown",
-                    "recipients": "unknown",
-                    "outcomes": "unknown",
-                    "evidence": [],
-                }
-            },
-            upsert=True,
+        coverage_updates.append(
+            UpdateOne(
+                {"_id": digest([program, category, ceremony])},
+                {
+                    "$setOnInsert": {
+                        "program_key": program,
+                        "category_key": category,
+                        "ceremony_key": ceremony,
+                        "entry_slate": "unknown",
+                        "recipients": "unknown",
+                        "outcomes": "unknown",
+                        "evidence": [],
+                    }
+                },
+                upsert=True,
+            )
+        )
+    for offset in range(0, len(coverage_updates), 500):
+        db.award_coverage.bulk_write(
+            coverage_updates[offset : offset + 500], ordered=False
         )
     report = {
         "changed": True,

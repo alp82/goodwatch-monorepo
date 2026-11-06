@@ -65,6 +65,7 @@ class DatabaseTests(unittest.TestCase):
             "award_source_identities",
             "award_title_projection",
             "award_person_projection",
+            "award_coverage",
         ]:
             col = self.db[name]
 
