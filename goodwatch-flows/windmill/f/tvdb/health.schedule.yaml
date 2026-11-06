@@ -1,0 +1,9 @@
+summary: TVDB publication health
+schedule: 0 7/15 * * * *
+timezone: UTC
+script_path: f/tvdb/health
+is_flow: false
+args: {}
+enabled: true
+no_flow_overlap: true
+cron_version: v2

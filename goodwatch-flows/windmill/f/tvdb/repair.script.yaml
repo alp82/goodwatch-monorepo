@@ -1,0 +1,12 @@
+summary: TVDB repair
+description: ''
+lock: '!inline f/tvdb/repair.script.lock'
+kind: script
+timeout: 600
+schema:
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+  required: []

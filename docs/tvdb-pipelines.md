@@ -14,6 +14,7 @@ All schedules use UTC, independent script entry points and overlap guards. They 
 | `publish` | Every 5 minutes, minute 3 modulo 5 | Retry up to 1,000 pending title scopes and 1,000 pending award category scopes. Crawlers also publish batches. |
 | `awards` | Hourly at minute 4 | Up to 12 minutes / 1,000 categories. Discover all award/category indexes daily and refresh category snapshots daily. |
 | `changes` | Hourly at minute 12 | Four-minute paginated update-feed reader; resume unfinished pages next hour. |
+| `health` | Every 15 minutes, minute 7 modulo 15 | Fail visibly on a table stalled for 30 minutes or a scope rejected three times. Existing schedule monitoring delivers incident/recovery notifications. |
 
 One shared API budget caps requests across all jobs at four per second. HTTP 429 establishes a shared cooldown honoring Retry-After; 401 refreshes authentication once, persistent 401/403 fails visibly, and network/server failures preserve successful snapshots. Leases recover work left by a terminated worker. The title reconciliation interval is 30 days; actor/title identity mappings refresh after 180 days or relevant update events.
 
@@ -59,3 +60,17 @@ Offline tests: `python -m unittest discover -s goodwatch-flows/tests -p test_tvd
 The tests exercise external identity mismatches, malformed/partial snapshots, pagination checkpoints, lease recovery, shared rate limits, missing award recipients, apparent duplicates, failed publication replay, concurrent source revisions and resumable catalog seeding. Run the existing sync state, stale child-row and deleted-title tests when changing shared schemas or publication behavior.
 
 The existing deleted-title ownership test currently fails on the three social tables (`social_title_link`, `social_relevance`, `social_link_report`). This identical failure was reproduced with the unchanged `origin/main` schema and deletion helper. TVDB tables are covered by the deletion registry; the remaining social ownership discrepancy is outside this change.
+
+## Invalid ID recovery and publication isolation
+
+TMDB join IDs are positive signed 32-bit integers, matching our catalog columns. TVDB source IDs have a separate positive signed 64-bit contract. Booleans, non-ASCII digit strings, fractions, and oversized values are rejected. Invalid optional local joins become NULL; portraits, role names and original `remote_ids` remain intact. `mapping_error` and `rejected_tmdb_id` make this visible in MongoDB.
+
+The publisher applies the same contracts to saved legacy mappings and validates complete scopes before writes. A deterministic bad-data scope remains pending with `publish_error`, `publish_failures`, and a retry time (15 minutes, then exponential backoff up to six hours). It is not acknowledged or reconciled. Healthy scopes continue; unexpected database row rejections are isolated by bisecting the batch. Infrastructure/schema failures remain visible in `run:publish` metrics and are not mislabeled as bad source records. The awards table is attempted even if character publication fails.
+
+Crawler publication callbacks record errors without losing successful fetch metrics or aborting further crawling. The dedicated publisher records partial success before failing visibly when necessary. Publication progress is tracked independently per source table. `f/tvdb/health` runs every 15 minutes and feeds the existing enabled `f/monitoring/failing_schedules` monitor, which checks every ten minutes and alerts after three consecutive failing runs. Quarantined scopes remain visible to health checks between retry times.
+
+Run `f/tvdb/repair` with `dry_run: true` to preview invalid saved joins, then `dry_run: false` to clear only their normalized IDs, keep an audit in `tvdb_repairs`, and mark affected source snapshots for replay. It performs no TVDB requests. Repeated execution is idempotent. Then run `f/tvdb/publish`; no catalog-wide recrawl is needed.
+
+The 2026-11-06 incident was one saved actor mapping (`person:9088514`) with TMDB ID `29028252902825`. Its value exceeds the local INTEGER contract. The original source fields are retained so a later upstream correction can restore a verified link.
+
+Recovery regression tests: `python -m unittest discover -s goodwatch-flows/tests -p 'test_tvdb*.py'`.

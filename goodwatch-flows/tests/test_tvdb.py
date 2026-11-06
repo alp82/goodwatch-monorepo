@@ -183,8 +183,11 @@ class TvdbTests(unittest.TestCase):
         )
         connector = Mock()
         connector.run_many.side_effect = RuntimeError("unavailable")
-        with self.assertRaises(RuntimeError):
-            publish.publish(self.db, connector)
+        result = publish.publish(self.db, connector)
+        self.assertEqual(
+            result["system_errors"],
+            [{"table": "tvdb_nomination", "type": "RuntimeError"}],
+        )
         connector.run.assert_not_called()
         self.assertNotIn("published_at", self.db.tvdb_categories.find_one({}))
         connector.run_many.side_effect = None

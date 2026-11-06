@@ -26,6 +26,8 @@ def indexes(db):
         db[name].create_index([("due_at", 1), ("priority", -1)])
         db[name].create_index("updated_at")
         db[name].create_index([("publish_pending", 1), ("updated_at", 1)])
+        db[name].create_index([("publish_pending", 1), ("publish_retry_at", 1)])
+        db[name].create_index("publish_failures")
     db.tvdb_titles.create_index([("media_type", 1), ("tvdb_id", 1)])
     db.tvdb_titles.create_index("characters.peopleId")
     db.tvdb_titles.create_index("characters.id")
@@ -95,7 +97,7 @@ def claim(collection, now, lease_minutes=10):
 
 def finish(collection, doc, fields):
     if "updated_at" in fields:
-        fields = fields | {"publish_pending": True}
+        fields = fields | {"publish_pending": True, "publish_retry_at": EPOCH}
     result = collection.update_one(
         {"_id": doc["_id"], "lease_token": doc["lease_token"]},
         {"$set": fields, "$unset": {"lease_token": "", "lease_until": ""}},
@@ -151,3 +153,18 @@ def record_run(db, name, report):
         {"_id": "run:" + name}, {"$set": {"at": now, "report": report}}, upsert=True
     )
     return report
+
+
+def safe_publish(callback, report):
+    """Publishing cannot discard a crawler's otherwise successful progress/metrics."""
+    try:
+        result = callback() or {}
+        report["publication_errors"] = (
+            report.get("publication_errors", 0)
+            + result.get("failed_scopes", 0)
+            + len(result.get("system_errors", []))
+        )
+    except Exception as error:  # noqa: BLE001 -- callback boundary retains successful crawl progress
+        report["publication_errors"] = report.get("publication_errors", 0) + 1
+        report["publication_error_type"] = type(error).__name__
+        print(f"TVDB publication deferred: {type(error).__name__}", flush=True)

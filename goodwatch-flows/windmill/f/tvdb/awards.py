@@ -22,6 +22,7 @@ from f.tvdb.store import (
     finish,
     record_run,
     runtime,
+    safe_publish,
 )
 
 
@@ -166,11 +167,11 @@ def run(db, api, max_seconds=240, max_categories=500, publish=None, timer=monoto
                 report["errors"] += 1
                 # Failed categories move out of the due queue before the next iteration.
             if publish and report["categories"] and report["categories"] % 10 == 0:
-                publish()
+                safe_publish(publish, report)
     except Deferred:
         report["deferred"] = True
     if publish:
-        publish()
+        safe_publish(publish, report)
     report["requests"] = api.requests - initial
     report["elapsed_seconds"] = round(timer() - start, 2)
     return report

@@ -1,0 +1,9 @@
+summary: TVDB health
+description: ''
+lock: '!inline f/tvdb/health.script.lock'
+kind: script
+timeout: 600
+schema:
+  type: object
+  properties: {}
+  required: []

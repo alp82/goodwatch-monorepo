@@ -14,6 +14,7 @@ from urllib.parse import quote
 
 from f.sync.copy.sync_state import utc_now
 from f.tvdb.api import ApiError, Deferred
+from f.tvdb.ids import checked_id, tmdb_id
 from f.tvdb.store import (
     claim,
     enqueue,
@@ -22,6 +23,7 @@ from f.tvdb.store import (
     finish,
     record_run,
     runtime,
+    safe_publish,
 )
 
 
@@ -40,16 +42,10 @@ def remote_id(data, source_type):
     return next(iter(ids), None)
 
 
-def checked_id(value):
-    if type(value) is int and value > 0:
-        return value
-    if isinstance(value, str) and value.isdecimal() and int(value) > 0:
-        return int(value)
-    return None
-
-
 def title_data(db, api, doc):
     kind = doc["media_type"]
+    if tmdb_id(doc.get("tmdb_id")) is None:
+        raise IdentityError("Invalid local TMDB title ID")
     tvdb = checked_id(doc.get("source_tvdb_id")) or checked_id(doc.get("tvdb_id"))
     if not tvdb:
         imdb = doc.get("imdb_id")
@@ -125,9 +121,14 @@ def entity_data(db, api, doc):
     )["data"]
     if not isinstance(data, dict) or data.get("id") != tvdb:
         raise IdentityError("TVDB entity identity mismatch")
-    tmdb = checked_id(remote_id(data, {"person": 15, "movie": 10, "show": 12}[kind]))
+    raw_tmdb = remote_id(data, {"person": 15, "movie": 10, "show": 12}[kind])
+    tmdb = tmdb_id(raw_tmdb)
     fields = {
         "tmdb_id": tmdb,
+        "mapping_error": "invalid_tmdb_id"
+        if raw_tmdb is not None and tmdb is None
+        else None,
+        "rejected_tmdb_id": raw_tmdb if raw_tmdb is not None and tmdb is None else None,
         "remote_ids": data.get("remoteIds") or [],
         "name": data.get("name"),
         "status": "ok",
@@ -174,6 +175,8 @@ def run(
         "not_found": 0,
         "errors": 0,
         "requests": 0,
+        "invalid_mappings": 0,
+        "publication_errors": 0,
     }
     start, initial = timer(), api.requests
     while timer() - start < max_seconds and report["processed"] < max_items:
@@ -217,6 +220,7 @@ def run(
                     {"$set": {"updated_at": utc_now(), "publish_pending": True}},
                 )
             report["ok"] += 1
+            report["invalid_mappings"] += bool(fields.get("mapping_error"))
         except Deferred:
             finish(col, doc, {"due_at": now + timedelta(minutes=5)})
             report["deferred"] = True
@@ -243,9 +247,9 @@ def run(
             report["not_found" if missing else "errors"] += 1
         report["processed"] += 1
         if publish and report["processed"] % 25 == 0:
-            publish()
+            safe_publish(publish, report)
     if publish:
-        publish()
+        safe_publish(publish, report)
     report["requests"] = api.requests - initial
     report["elapsed_seconds"] = round(timer() - start, 2)
     return report

@@ -9,8 +9,10 @@
 
 import hashlib
 import json
+from datetime import timedelta
 
-from f.tvdb.crawl import checked_id
+from f.sync.copy.sync_state import utc_now
+from f.tvdb.ids import checked_id, tmdb_id
 
 
 def upsert(connector, table, rows, keys):
@@ -62,7 +64,7 @@ def role_rows(db, connector, doc):
     rows = []
     for c in doc.get("characters") or []:
         person = people.get(f"person:{c['peopleId']}", {})
-        tmdb = person.get("tmdb_id")
+        tmdb = tmdb_id(person.get("tmdb_id"))
         rows.append(
             {
                 "media_type": doc["media_type"],
@@ -96,7 +98,9 @@ def nomination_rows(db, doc):
         for r in db.tvdb_entities.find({"_id": {"$in": entity_keys}, "status": "ok"})
     }
     local_keys = [
-        f"{r['kind']}:{r['tmdb_id']}" for r in entities.values() if r.get("tmdb_id")
+        f"{r['kind']}:{r['tmdb_id']}"
+        for r in entities.values()
+        if tmdb_id(r.get("tmdb_id"))
     ]
     local_titles = {
         r["_id"]
@@ -116,7 +120,7 @@ def nomination_rows(db, doc):
         )
         tvdb = checked_id(title.get("id"))
         mapped = entities.get(f"{kind}:{tvdb}", {})
-        tmdb = mapped.get("tmdb_id")
+        tmdb = tmdb_id(mapped.get("tmdb_id"))
         local = f"{kind}:{tmdb}" in local_titles
         character = n.get("character") or {}
         signature = [
@@ -157,50 +161,197 @@ def nomination_rows(db, doc):
     return rows
 
 
+class ScopeError(ValueError):
+    pass
+
+
+def validate_rows(table, rows):
+    """Validate a complete scope before writing any of its rows."""
+    from f.sync.models.crate_schemas import SCHEMAS
+
+    spec = SCHEMAS[table]
+    for row in rows:
+        for name, kind in spec["columns"].items():
+            value = row.get(name)
+            if value is None:
+                if name in spec["primary_key"]:
+                    raise ScopeError(f"Missing {name}")
+                continue
+            if kind in ("INTEGER", "BIGINT"):
+                parsed = checked_id(
+                    value, 2**31 - 1 if kind == "INTEGER" else 2**63 - 1
+                )
+                if parsed is None:
+                    raise ScopeError(f"Invalid {name}")
+                row[name] = parsed
+        if row.get("media_type") not in (None, "movie", "show"):
+            raise ScopeError("Invalid media type")
+
+
+def data_error(error):
+    if isinstance(error, (ScopeError, ValueError, TypeError, KeyError, AttributeError)):
+        return True
+    from crate.client.exceptions import ProgrammingError
+
+    return isinstance(error, ProgrammingError) and any(
+        text in str(error)
+        for text in ("Cannot cast value", "ColumnValidationException")
+    )
+
+
+def quarantine(col, doc, error, now, result):
+    # A concurrent source refresh must not inherit the old revision's quarantine.
+    failures = doc.get("publish_failures", 0) + 1
+    retry = now + timedelta(minutes=min(360, 15 * 2 ** min(failures - 1, 5)))
+    col.update_one(
+        {"_id": doc["_id"], "updated_at": doc["updated_at"]},
+        {
+            "$set": {
+                "publish_error": {
+                    "type": type(error).__name__,
+                    "at": now,
+                    "reason": str(error)
+                    if isinstance(error, ScopeError)
+                    else "source data rejected by database",
+                },
+                "publish_retry_at": retry,
+                "publish_failures": failures,
+            }
+        },
+    )
+    result["failed_scopes"] += 1
+    if len(result["failures"]) < 10:
+        result["failures"].append(
+            {
+                "collection": col.name,
+                "id": str(doc["_id"]),
+                "type": type(error).__name__,
+            }
+        )
+
+
+def write_scopes(connector, table, col, scopes, keys, scope_sql, now, result, counter):
+    """Keep healthy batches fast, bisect only deterministic bad-data failures."""
+    if not scopes:
+        return
+    try:
+        upsert(connector, table, [row for _, _, rows in scopes for row in rows], keys)
+        connector.run(f"REFRESH TABLE {table}")
+        connector.run_many(
+            f"DELETE FROM {table} WHERE {scope_sql} AND revision != ?",
+            [list(params) + [doc["updated_at"]] for doc, params, _ in scopes],
+        )
+    except Exception as error:
+        if not data_error(error):
+            raise  # An outage/schema/programming failure must stay visible, not quarantine all titles.
+        if len(scopes) == 1:
+            quarantine(col, scopes[0][0], error, now, result)
+        else:
+            middle = len(scopes) // 2
+            write_scopes(
+                connector,
+                table,
+                col,
+                scopes[:middle],
+                keys,
+                scope_sql,
+                now,
+                result,
+                counter,
+            )
+            write_scopes(
+                connector,
+                table,
+                col,
+                scopes[middle:],
+                keys,
+                scope_sql,
+                now,
+                result,
+                counter,
+            )
+        return
+    for doc, _, rows in scopes:
+        col.update_one(
+            {"_id": doc["_id"], "updated_at": doc["updated_at"]},
+            {
+                "$set": {"published_at": doc["updated_at"], "publish_pending": False},
+                "$unset": {
+                    "publish_retry_at": "",
+                    "publish_error": "",
+                    "publish_failures": "",
+                },
+            },
+        )
+        result[counter] += 1
+        result["rows"] += len(rows)
+    col.database.tvdb_state.update_one(
+        {"_id": "publication-progress:" + col.name}, {"$set": {"at": now}}, upsert=True
+    )
+
+
 def _publish(db, connector, limit=100):
-    result = {"titles": 0, "categories": 0, "rows": 0}
+    now = utc_now()
+    result = {
+        "titles": 0,
+        "categories": 0,
+        "rows": 0,
+        "failed_scopes": 0,
+        "failures": [],
+        "system_errors": [],
+    }
     for name, table, counter in [
         ("tvdb_titles", "tvdb_character", "titles"),
         ("tvdb_categories", "tvdb_nomination", "categories"),
     ]:
         col = db[name]
-        query = {"publish_pending": True}
-        pending, all_rows = [], []
-        for doc in col.find(query).sort("updated_at", 1).limit(limit):
-            if name == "tvdb_titles":
-                if "characters" not in doc:
-                    continue
-                rows = role_rows(db, connector, doc)
-                keys = ["media_type", "media_tmdb_id", "tvdb_character_id"]
-                scope = "media_type = ? AND media_tmdb_id = ?"
-                params = (doc["media_type"], doc["tmdb_id"])
-            else:
-                if "nominees" not in doc:
-                    continue
-                rows = nomination_rows(db, doc)
-                keys, scope, params = (
-                    ["category_id", "nominee_id"],
-                    "category_id = ?",
-                    (doc["_id"],),
+        query = {
+            "publish_pending": True,
+            "$or": [
+                {"publish_retry_at": {"$exists": False}},
+                {"publish_retry_at": {"$lte": now}},
+            ],
+        }
+        scopes = []
+        try:
+            for doc in col.find(query).sort("updated_at", 1).limit(limit):
+                try:
+                    if name == "tvdb_titles":
+                        if (
+                            "characters" not in doc
+                            or tmdb_id(doc.get("tmdb_id")) is None
+                        ):
+                            raise ScopeError("Incomplete or invalid local title scope")
+                        rows = role_rows(db, connector, doc)
+                        keys = ["media_type", "media_tmdb_id", "tvdb_character_id"]
+                        scope_sql, params = (
+                            "media_type = ? AND media_tmdb_id = ?",
+                            (doc["media_type"], doc["tmdb_id"]),
+                        )
+                    else:
+                        if "nominees" not in doc:
+                            raise ScopeError("Incomplete nomination scope")
+                        rows = nomination_rows(db, doc)
+                        keys = ["category_id", "nominee_id"]
+                        scope_sql, params = "category_id = ?", (doc["_id"],)
+                    validate_rows(table, rows)
+                    scopes.append((doc, params, rows))
+                except Exception as error:
+                    if not data_error(error):
+                        raise
+                    quarantine(col, doc, error, now, result)
+            if scopes:
+                write_scopes(
+                    connector, table, col, scopes, keys, scope_sql, now, result, counter
                 )
-            pending.append((doc, params))
-            all_rows.extend(rows)
-        if not pending:
-            continue
-        upsert(connector, table, all_rows, keys)
-        # One refresh per table and batch, rather than one per title/category.
-        connector.run(f"REFRESH TABLE {table}")
-        delete_sql = f"DELETE FROM {table} WHERE {scope} AND revision != ?"
-        connector.run_many(
-            delete_sql, [list(params) + [doc["updated_at"]] for doc, params in pending]
-        )
-        for doc, _ in pending:
-            col.update_one(
-                {"_id": doc["_id"], "updated_at": doc["updated_at"]},
-                {"$set": {"published_at": doc["updated_at"], "publish_pending": False}},
+        except Exception as error:  # noqa: BLE001 -- table boundary records failures and continues the independent table
+            result["system_errors"].append(
+                {"table": table, "type": type(error).__name__}
             )
-        result[counter] += len(pending)
-        result["rows"] += len(all_rows)
+    if result["titles"] or result["categories"]:
+        db.tvdb_state.update_one(
+            {"_id": "publication-progress"}, {"$set": {"at": now}}, upsert=True
+        )
     return result
 
 
@@ -217,6 +368,7 @@ def publish(db, connector, limit=100):
 def main(limit: int = 1000):
     from f.db.cratedb import CrateConnector
     from f.db.mongodb import close_mongodb, init_mongodb
+    from f.tvdb.store import record_run
     from mongoengine import get_db
 
     if not 1 <= limit <= 10000:
@@ -226,7 +378,12 @@ def main(limit: int = 1000):
     try:
         db = get_db()
         connector = CrateConnector()
-        return publish(db, connector, limit)
+        report = record_run(db, "publish", publish(db, connector, limit))
+        if report.get("system_errors") or report.get("failed_scopes"):
+            raise RuntimeError(
+                "TVDB publication incomplete; see run:publish metrics and quarantined scopes"
+            )
+        return report
     finally:
         if connector:
             connector.disconnect()

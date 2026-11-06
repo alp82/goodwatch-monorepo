@@ -1,0 +1,9 @@
+summary: TVDB ids
+description: ''
+lock: '!inline f/tvdb/ids.script.lock'
+kind: script
+timeout: 600
+schema:
+  type: object
+  properties: {}
+  required: []
