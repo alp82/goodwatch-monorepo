@@ -22,8 +22,8 @@ export async function readTitleAwards(
 		 FROM doc.tvdb_award_display WHERE media_type = ? AND media_tmdb_id = ?`,
 				[mediaType, tmdbId],
 				signal,
-			),
+			).then(summarizeTitleAwards),
 		budgetMs,
 	)
-	return result.complete ? summarizeTitleAwards(result.value) : undefined
+	return result.complete ? result.value : undefined
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { summarizeTitleAwards, type AwardDisplayRow } from "./title-awards.ts"
+import { pageAwards, summarizeTitleAwards, type AwardDisplayRow } from "./title-awards.ts"
 import { readTitleAwards } from "./title-awards-read.ts"
 
 const row = (
@@ -151,4 +151,32 @@ test("failed and stalled reads degrade to no awards", async () => {
 		undefined,
 	)
 	assert.equal(signal?.aborted, true)
+})
+
+test("missing text fields neither throw while reading nor escape as a rejection", async () => {
+	const broken = {
+		...row(),
+		award_name: null,
+		category_name: null,
+	} as unknown as AwardDisplayRow
+	assert.doesNotThrow(() => summarizeTitleAwards([broken, row()]))
+	const read = await readTitleAwards(async () => [broken], "movie", 1)
+	assert.equal(read?.wins.length, 1)
+	const failing = await readTitleAwards(
+		async () => {
+			throw new Error("down")
+		},
+		"movie",
+		1,
+	)
+	assert.equal(failing, undefined)
+})
+
+test("title page data keeps only the wins its JSON-LD lists", () => {
+	const wins = Array.from({ length: 30 }, (_, i) => row("Academy Awards", `C${i}`))
+	const page = pageAwards(summarizeTitleAwards([...wins, row("BAFTA Awards", "X", "2024", false)]))
+	assert.equal(page?.wins.length, 20)
+	assert.deepEqual(page?.nominations, [])
+	assert.equal(pageAwards(summarizeTitleAwards([row("BAFTA Awards", "X", "2024", false)])), undefined)
+	assert.equal(pageAwards(undefined), undefined)
 })

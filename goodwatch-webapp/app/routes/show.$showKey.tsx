@@ -1,3 +1,4 @@
+import { pageAwards } from "~/server/title-awards"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -296,7 +297,7 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		)
 	const data = {
 		episodeLayout,
-		media,
+		media: { ...media, awards: pageAwards(media.awards) },
 		episodeGrid,
 		params: {
 			country,

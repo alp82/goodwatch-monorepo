@@ -38,7 +38,14 @@ export function summarizeTitleAwards(
 	rows: readonly AwardDisplayRow[],
 ): TitleAwards | undefined {
 	if (!rows.length) return undefined
-	const ordered = [...rows].sort(
+	const ordered = rows
+		.map((row) => ({
+			...row,
+			award_name: String(row.award_name ?? ""),
+			category_name: String(row.category_name ?? ""),
+			ceremony_year: String(row.ceremony_year ?? ""),
+		}))
+		.sort(
 		(a, b) =>
 			compareName(b.ceremony_year, a.ceremony_year) ||
 			rank(a.award_name) - rank(b.award_name) ||
@@ -63,6 +70,14 @@ export function summarizeTitleAwards(
 		...(wins.length > 25 || nominations.length > 25 ? { truncated: true } : {}),
 	}
 }
+
+/** Title page loader data: only the wins its JSON-LD lists, so the page payload stays small. */
+export const pageAwards = (
+	awards: TitleAwards | undefined,
+): TitleAwards | undefined =>
+	awards?.wins.length
+		? { ...awards, wins: awards.wins.slice(0, 20), nominations: [] }
+		: undefined
 
 export const jsonLdAwards = (awards: TitleAwards | undefined): string[] =>
 	(awards?.wins ?? [])

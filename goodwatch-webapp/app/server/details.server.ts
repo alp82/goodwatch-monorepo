@@ -40,7 +40,7 @@ const _fetchFromDB = async (
 		(sql, args, signal) => query<AwardDisplayRow>(sql, args, { signal }),
 		mediaType,
 		Number(mediaId),
-	)
+	).catch(() => undefined)
 
 	const result = (await query(`
 		WITH

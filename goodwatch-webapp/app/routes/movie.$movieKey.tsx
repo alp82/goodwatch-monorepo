@@ -1,4 +1,5 @@
 import { json, redirect } from "@remix-run/node"
+import { pageAwards } from "~/server/title-awards"
 import type {
 	LoaderFunction,
 	LoaderFunctionArgs,
@@ -226,7 +227,7 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 			heroBackdropFiles(media.details.backdrop_path),
 		)
 	const data = {
-		media,
+		media: { ...media, awards: pageAwards(media.awards) },
 		params: {
 			country,
 		},
