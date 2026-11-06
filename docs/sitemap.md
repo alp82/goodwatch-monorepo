@@ -35,7 +35,7 @@ The command takes about 50 minutes and does three things:
 - `goodwatch-webapp/scripts/.env` (or `goodwatch-webapp/.env`) with `CRATE_HOSTS`, `CRATE_PORT`, `CRATE_USER`, and `CRATE_PASS` for the production database. The generator only reads.
 - Network access to the database and to https://goodwatch.app.
 
-The static landing URLs include `/hot` and `/map`. Change the generator and committed static XML together; the live check rejects redirect sources. `/watch/*` stays out of the sitemap and carries `noindex, follow`.
+The static landing URLs include `/hot`, `/map` and `/awards`. Only the awards hub is listed: which ceremonies get a page depends on a density check over the TVDB rows (`app/domain/award-pages.ts`), and the hub links the body pages, which link their ceremonies and categories. Change the generator and committed static XML together; the live check rejects redirect sources. `/watch/*` stays out of the sitemap and carries `noindex, follow`.
 
 ## Publishing
 
