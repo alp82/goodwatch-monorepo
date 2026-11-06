@@ -17,6 +17,7 @@ import {
 } from "react"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { CAPTION } from "~/ui/details/page-ui"
+import { StepButton } from "~/ui/row-arrows"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import type { SizeRule } from "~/utils/tmdb-image"
 import { ExpandPortal, useExpand } from "./expanded-view"
@@ -312,29 +313,5 @@ export function Shelf({
 				</Suspense>
 			)}
 		</section>
-	)
-}
-
-function StepButton({
-	label,
-	disabled,
-	onClick,
-	children,
-}: {
-	label: string
-	disabled: boolean
-	onClick: () => void
-	children: ReactNode
-}) {
-	return (
-		<button
-			type="button"
-			aria-label={label}
-			disabled={disabled}
-			onClick={onClick}
-			className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-300 ring-1 ring-white/15 transition-colors duration-150 hover:bg-white/[0.06] hover:text-white focus-visible:outline-2 focus-visible:outline-amber-300 disabled:cursor-default disabled:text-gray-700 disabled:ring-white/[0.06] disabled:hover:bg-transparent"
-		>
-			{children}
-		</button>
 	)
 }

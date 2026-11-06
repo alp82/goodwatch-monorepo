@@ -121,8 +121,13 @@ const TOP_INSET = 72
 const DIM = "bg-black/75"
 
 const TMDB = "https://image.tmdb.org/t/p"
+// A full URL (a TheTVDB character portrait in the character quick view's drawer) is used as it is.
 const src = (path: string | null, size: string) =>
-	path ? `${TMDB}/${size}${path}` : undefined
+	path?.startsWith("https://")
+		? path
+		: path
+			? `${TMDB}/${size}${path}`
+			: undefined
 
 const clamp = (v: number, lo: number, hi: number) =>
 	Math.max(lo, Math.min(hi, v))
@@ -791,7 +796,7 @@ function Chevron({ dir, small = false }: { dir: -1 | 1; small?: boolean }) {
 /** Previous and next under the lifted poster: two halves of its width, each showing its arrow key. */
 export function StepButtons({ onStep, canPrev, canNext }: Steps) {
 	const button =
-		"group/step flex h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gray-900/85 px-3 text-[13px] font-semibold text-gray-200 ring-1 ring-white/15 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-amber-300 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-gray-900/85"
+		"group/step flex h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gray-900/85 px-3 text-[13px] font-semibold text-gray-200 ring-1 ring-white/15 hover:bg-gray-800 hover:text-white hover:ring-white/25 focus-visible:outline-2 focus-visible:outline-amber-300 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-gray-900/85"
 	const key =
 		"grid h-[22px] min-w-[22px] place-items-center rounded-md border border-white/20 border-b-[3px] bg-white/[0.06] px-1 text-gray-300 group-hover/step:text-white"
 	return (

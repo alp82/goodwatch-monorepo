@@ -1,4 +1,5 @@
 import { isCrawler } from "~/server/crawlers.server"
+import { CharacterQuickViewProvider } from "~/ui/character-quick-view/context"
 import { authMaintenanceOn } from "~/server/auth/cutover-notice.server"
 import { TelemetryBoot } from "~/telemetry/TelemetryBoot"
 import { EARLY_TELEMETRY_SCRIPT } from "~/telemetry/early"
@@ -411,7 +412,10 @@ function Root() {
 						>
 							<HydrationBoundary state={dehydratedState}>
 								<DiscoveryContinuity />
-								<App />
+								{/* The character quick view, for any page that shows characters. */}
+								<CharacterQuickViewProvider>
+									<App />
+								</CharacterQuickViewProvider>
 								{/* <CookieConsent /> */}
 								<ToastContainer />
 								{/* The Feedback tab; its drawer and fix mode load after the page settles. */}
