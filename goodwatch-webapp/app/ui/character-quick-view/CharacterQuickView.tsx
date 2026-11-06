@@ -3,22 +3,15 @@
 //
 // Wide screens: a card on the left and the character's portrait big on its right, Previous / Next under the portrait,
 // both columns one height. The card leads with the actor's small photo, "Bryan Cranston plays" and the character's
-// name; without a portrait of its own the big picture is the actor's photo and the small one is left out. The clicked
-// picture lifts from its place in the page into the portrait's place (transform and opacity only), ← / → step, Escape
-// or a tap outside closes, and closing flies the picture back. Phones: the poster quick view's bottom drawer.
+// name; without a portrait of its own the big picture is the actor's photo and the small one is left out. The view
+// fades in with a slight scale (transform and opacity only) and the page behind stays as it is: nothing in it hides
+// or moves. ← / → step, Escape or a tap outside closes. Phones: the poster quick view's bottom drawer.
 // The grid of more characters is the actor's other roles, or on the person page the title's other top characters.
 import { XMarkIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
-import {
-	type ReactNode,
-	useCallback,
-	useEffect,
-	useLayoutEffect,
-	useRef,
-	useState,
-} from "react"
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { foldName } from "~/domain/character-portraits"
 import { useFocusScope } from "~/ui/for-you/focus"
@@ -42,8 +35,6 @@ import {
 
 const TMDB = "https://image.tmdb.org/t/p"
 const EASE = [0.22, 1, 0.36, 1] as const
-const LIFT = { duration: 0.3, ease: EASE } as const
-const BACK = { duration: 0.24, ease: EASE } as const
 /** The wide view: the portrait (340 × 510) with Previous / Next under it, and the card beside it at that height. */
 const STAGE = { w: 800, h: 570 }
 const DRAWER_HEIGHT = 580
@@ -109,52 +100,6 @@ function anchorEl(open: OpenCharacter, i: number): HTMLElement | null {
 	return e.anchor === open.first && open.from.isConnected ? open.from : null
 }
 
-/** The biggest picture in an element (the anchor's image), or the element itself. */
-function pictureIn(el: HTMLElement): HTMLElement {
-	if (el instanceof HTMLImageElement) return el
-	let best: HTMLImageElement | null = null
-	let area = 0
-	for (const img of el.querySelectorAll("img")) {
-		const b = img.getBoundingClientRect()
-		if (b.width * b.height > area) {
-			area = b.width * b.height
-			best = img
-		}
-	}
-	return best ?? el
-}
-
-type Box = { x: number; y: number; w: number; h: number }
-const boxOf = (el: Element): Box => {
-	const b = el.getBoundingClientRect()
-	return { x: b.left, y: b.top, w: b.width, h: b.height }
-}
-const inView = (b: Box) =>
-	b.w > 0 &&
-	b.y + b.h > 0 &&
-	b.y < window.innerHeight &&
-	b.x + b.w > 0 &&
-	b.x < window.innerWidth
-
-/** The view's picture drawn over box `b` (relative to its home box `t`). */
-const over = (b: Box, t: Box) => ({
-	x: b.x - t.x,
-	y: b.y - t.y,
-	scaleX: b.w / t.w,
-	scaleY: b.h / t.h,
-	opacity: 1,
-})
-const HOME = { x: 0, y: 0, scaleX: 1, scaleY: 1, opacity: 1 }
-
-/** Which of the view's pictures the clicked one lifts into: a TMDB photo the actor's, a portrait the character's. */
-function slotFor(open: OpenCharacter): "actor" | "character" {
-	const entry = open.list[open.index]
-	if (!entry || !hasPortrait(entry)) return "actor"
-	const pic = pictureIn(open.from)
-	const src = pic instanceof HTMLImageElement ? pic.currentSrc || pic.src : ""
-	return src.includes("image.tmdb.org") ? "actor" : "character"
-}
-
 export default function CharacterQuickView({
 	open,
 	onIndex,
@@ -194,17 +139,7 @@ export default function CharacterQuickView({
 	)
 }
 
-// --- the wide view: the clicked picture lifting into the view over the dimmed page ------------------------------
-
-interface Ghost {
-	id: number
-	src: string
-	home: Box
-	from: ReturnType<typeof over>
-	to: ReturnType<typeof over>
-	back: boolean
-	slot: HTMLElement
-}
+// --- the wide view: a card over the dimmed page, the page behind left as it is -------------------------------
 
 /** The card surface, as the poster quick view's. */
 const SURFACE =
@@ -222,59 +157,9 @@ function Stage({
 	children: (i: number) => ReactNode
 }) {
 	const [closing, setClosing] = useState(false)
-	const [ghost, setGhost] = useState<Ghost | null>(null)
 	const view = useRef<HTMLDivElement>(null)
 	const layer = useRef<HTMLDivElement>(null)
 	const count = open.list.length
-	const latestOpen = useRef(open)
-	latestOpen.current = open
-	const slot = useRef(slotFor(open))
-
-	/** The open entry's picture in the view (the newest layer, when a step is crossfading). */
-	const slotEl = () => {
-		const mine = view.current?.querySelectorAll<HTMLElement>(
-			`[data-view-slot="${slot.current}"]`,
-		)
-		const any = view.current?.querySelectorAll<HTMLElement>("[data-view-slot]")
-		return mine?.[mine.length - 1] ?? any?.[any.length - 1] ?? null
-	}
-
-	// Opening: the clicked picture flies from its place in the page into its place in the view.
-	useLayoutEffect(() => {
-		const a = anchorEl(open, open.index)
-		const s = slotEl()
-		if (!a || !s) return
-		const pic = pictureIn(a)
-		const src = pic instanceof HTMLImageElement ? pic.currentSrc || pic.src : ""
-		if (!src) return
-		const home = boxOf(s)
-		s.style.visibility = "hidden"
-		setGhost({
-			id: 1,
-			src,
-			home,
-			from: over(boxOf(pic), home),
-			to: HOME,
-			back: false,
-			slot: s,
-		})
-	}, [])
-
-	// The open entry's picture in the page hides while it is in the view.
-	const hidden = useRef<HTMLElement | null>(null)
-	useEffect(() => {
-		const el = anchorEl(open, open.index)
-		if (hidden.current && hidden.current !== el)
-			hidden.current.style.visibility = ""
-		if (el) el.style.visibility = "hidden"
-		hidden.current = el
-	}, [open])
-	useEffect(
-		() => () => {
-			if (hidden.current) hidden.current.style.visibility = ""
-		},
-		[],
-	)
 
 	// The page behind doesn't scroll by wheel; the view's own scrolling region does.
 	useEffect(() => {
@@ -291,37 +176,9 @@ function Stage({
 		return () => el.removeEventListener("wheel", onWheel)
 	}, [])
 
-	const close = useCallback(() => {
-		if (closing) return
-		setClosing(true)
-		const o = latestOpen.current
-		const a = anchorEl(o, o.index)
-		const s = slotEl()
-		const img = s?.querySelector("img")
-		const back = a ? boxOf(pictureIn(a)) : null
-		if (s && img && back && inView(back)) {
-			// Closing: the view's picture flies back into its place in the page.
-			const home = boxOf(s)
-			s.style.visibility = "hidden"
-			setGhost({
-				id: 2,
-				src: img.currentSrc || img.src,
-				home,
-				from: HOME,
-				to: over(back, home),
-				back: true,
-				slot: s,
-			})
-		} else if (hidden.current) {
-			hidden.current.style.visibility = ""
-			hidden.current = null
-		}
-	}, [closing])
-	// The view is gone: the picture in the page shows again, and then focus goes back to the opener (a hidden element
-	// can't take focus, so the focus scope's own return, when closing starts, can miss it).
+	const close = useCallback(() => setClosing(true), [])
+	// The view is gone: focus goes back to the opener when it is still in the view or lost.
 	const finish = () => {
-		if (hidden.current) hidden.current.style.visibility = ""
-		hidden.current = null
 		const to = open.from
 		const now = document.activeElement
 		if (
@@ -388,12 +245,14 @@ function Stage({
 					}
 					className="relative max-h-[calc(100dvh-6rem)] max-w-full outline-none"
 					style={{ width: STAGE.w, height: STAGE.h }}
-					// Opacity only: the lifting picture is the motion, and the place it lands in must not move.
-					initial={{ opacity: 0 }}
-					animate={{ opacity: closing ? 0 : 1 }}
-					transition={{ duration: closing ? 0.18 : 0.22, ease: "easeOut" }}
+					// The view itself appears (opacity and a slight scale); the page behind stays as it is.
+					initial={{ opacity: 0, scale: 0.97 }}
+					animate={
+						closing ? { opacity: 0, scale: 0.98 } : { opacity: 1, scale: 1 }
+					}
+					transition={{ duration: closing ? 0.16 : 0.22, ease: EASE }}
 					onAnimationComplete={() => {
-						if (closing && !ghost?.back) finish()
+						if (closing) finish()
 					}}
 				>
 					<FrameContext.Provider value={{ form: "card", steps, close }}>
@@ -412,34 +271,6 @@ function Stage({
 					</FrameContext.Provider>
 				</motion.div>
 			</div>
-			{ghost && (
-				<motion.div
-					key={ghost.id}
-					aria-hidden
-					className="pointer-events-none absolute origin-top-left overflow-hidden rounded-xl bg-gray-800 shadow-2xl"
-					style={{
-						left: ghost.home.x,
-						top: ghost.home.y,
-						width: ghost.home.w,
-						height: ghost.home.h,
-					}}
-					initial={ghost.from}
-					animate={ghost.to}
-					transition={ghost.back ? BACK : LIFT}
-					onAnimationComplete={() => {
-						if (ghost.back) return finish()
-						ghost.slot.style.visibility = ""
-						setGhost(null)
-					}}
-				>
-					<img
-						src={ghost.src}
-						alt=""
-						draggable={false}
-						className="size-full object-cover object-top"
-					/>
-				</motion.div>
-			)}
 		</div>,
 		document.body,
 	)
@@ -457,7 +288,6 @@ function ActorFrame({
 		<Link
 			to={actorHref(entry)}
 			aria-label={`${entry.personName}, open their page`}
-			data-view-slot="actor"
 			className={`group relative block aspect-[2/3] shrink-0 overflow-hidden rounded-xl bg-gray-800 ring-1 ring-white/15 ${className}`}
 		>
 			{src ? (
@@ -482,7 +312,6 @@ function CharacterFrame({
 }: { entry: CharacterEntry; className?: string }) {
 	return (
 		<div
-			data-view-slot="character"
 			className={`relative aspect-[2/3] shrink-0 overflow-hidden rounded-xl bg-gray-800 ring-1 ring-white/15 ${className}`}
 		>
 			<Img

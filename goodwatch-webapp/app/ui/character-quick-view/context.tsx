@@ -58,7 +58,7 @@ export interface CharacterEntry {
 export interface OpenCharacter {
 	list: CharacterEntry[]
 	index: number
-	/** A wide screen lifts the picture into a centered view; a phone gets the bottom drawer. */
+	/** A wide screen gets the centered view; a phone gets the bottom drawer. */
 	wide: boolean
 	/** The element clicked: focus goes back to it, and it is the first entry's slot when it has no anchor. */
 	from: HTMLElement
