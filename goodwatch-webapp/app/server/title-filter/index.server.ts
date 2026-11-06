@@ -246,7 +246,14 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 					"scoreGap",
 					universeKeys === "catalog" ? undefined : universeKeys,
 				),
-		state.awards ? awardTitles(state.awards) : null,
+		// Without the award view (Crate down, read timed out) the filter keeps no title rather than failing the page: an
+		// empty result never claims a title has awards.
+		state.awards
+			? awardTitles(state.awards).catch((error: unknown) => {
+					console.error("Title filter: award titles unavailable", error)
+					return new Set<TitleKey>()
+				})
+			: null,
 	])
 
 	const contextualTaste = inlineTaste(input.taste, state, snapshot)

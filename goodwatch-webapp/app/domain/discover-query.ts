@@ -1645,11 +1645,11 @@ export const ruleInventory = {
 		"all-of tags / any streaming service",
 		"rating country / rest-of-world production",
 		"relevance sorting / personalization off",
+		"award results (won / nominated, award body; read before the search, domain/award-filter.ts)",
 	],
 	notInScope: ["total viewing hours", "taste exploration"],
 	unsupported: [
 		"spoken language/dubs/subtitles",
-		"awards",
 		"negative genres",
 		"cast versus crew role",
 		"story period as release year",
