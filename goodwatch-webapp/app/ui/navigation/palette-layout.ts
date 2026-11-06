@@ -22,7 +22,8 @@ import { type PaletteGroupKey, paletteTitlePath } from "~/utils/command-palette"
 import type { PalettePage } from "./palette-pages"
 
 export type Icon = ComponentType<SVGProps<SVGSVGElement>>
-export type PanelGroupKey = PaletteGroupKey | "pages"
+/** The server's groups, the site's own pages, and the characters (palette-characters.ts). */
+export type PanelGroupKey = PaletteGroupKey | "pages" | "characters"
 
 /** One thing Up and Down can land on: a row, a poster card, a chip, a group's header, or a call to action. */
 export interface Option {
@@ -40,6 +41,8 @@ export interface Option {
 	action?: PalettePage["action"]
 	/** A group's header in the All tab: shows that tab instead of following `href`. */
 	opens?: string
+	/** A character: TheTVDB's portrait (a full URL) as the picture, 2:3 like a poster. */
+	characterImage?: string
 }
 
 export interface PanelGroup {
@@ -161,7 +164,9 @@ const pageHead = (group: PanelGroup): Head => ({
 })
 
 const isPeople = (group: PanelGroup) =>
-	group.key === "people" || group.key === "members"
+	group.key === "people" ||
+	group.key === "members" ||
+	group.key === "characters"
 
 /** A group by itself: everything it has. */
 function groupSection(

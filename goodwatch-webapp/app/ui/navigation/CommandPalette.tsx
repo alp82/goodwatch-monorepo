@@ -26,6 +26,7 @@ import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { useAccountSummary } from "~/ui/account/useAccountSummary"
 import { openFeedback } from "~/ui/feedback/FeedbackTab"
 import { DiscordMark } from "~/ui/footer/links"
+import { useCharacterGroup } from "~/ui/navigation/palette-characters"
 import { isReady, tally } from "~/ui/rating-flow/flow"
 import { useUser } from "~/utils/auth"
 import {
@@ -70,9 +71,13 @@ const DEBOUNCE_MS = 150
 const FEEDBACK_AFTER_MS = 250
 /** The most pages the Pages group carries, like the server's groups. */
 const MAX_PAGES = 12
-/** The groups in the panel's order: the server's, with the pages between Lists and Members. */
+/** The groups in the panel's order: the server's, with the pages between Lists and Members and Characters after People. */
 const PANEL_ORDER: PanelGroupKey[] = PALETTE_GROUP_ORDER.flatMap((key) =>
-	key === "lists" ? [key, "pages" as const] : [key],
+	key === "lists"
+		? [key, "pages" as const]
+		: key === "people"
+			? [key, "characters" as const]
+			: [key],
 )
 /** The moods to start from when nothing matched. */
 const QUICK_MOODS: MoodKey[] = [
@@ -175,6 +180,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const trimmed = q.trim()
 	const member = Boolean(user)
 	const server = usePaletteGroups(q)
+	const characters = useCharacterGroup(q)
 	// Trending fills the no-match state too, so it loads with the panel whatever is typed first.
 	const start = useQuery(paletteStartQuery(user?.id ?? "visitor"))
 	// A guest whose ratings in this browser already make a taste gets the For you page's "Sign up" instead of
@@ -261,6 +267,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		const byKey = new Map<PanelGroupKey, PanelGroup>(
 			server.groups.map((group) => [group.key, serverGroup(group)]),
 		)
+		if (characters) byKey.set("characters", characters)
 		if (matched.length)
 			byKey.set("pages", {
 				key: "pages",
@@ -290,6 +297,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		pageOption,
 		server,
 		wide,
+		characters,
 	])
 
 	const tab: Tab = plan.tabs.find((t) => t.key === tabKey) ?? plan.tabs[0]

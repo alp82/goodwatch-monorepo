@@ -157,10 +157,22 @@ const iconOf = (option: Option): Icon | undefined =>
 const ROUND = { sm: "h-8 w-8", md: "h-11 w-11" }
 const ROUND_PX = { sm: 32, md: 44 }
 
-/** The picture a row carries: a poster, a portrait, a logo, a member's photo, a mood's hue, or an icon. */
+/** The picture a row carries: a poster, a portrait, a character, a logo, a member's photo, a mood's hue, or an icon. */
 function Thumb({ option, size }: { option: Option; size: "sm" | "md" }) {
 	const image = option.image
 	const round = ROUND[size]
+	if (option.characterImage)
+		return (
+			<img
+				src={option.characterImage}
+				alt=""
+				width={300}
+				height={450}
+				loading="lazy"
+				decoding="async"
+				className={`shrink-0 bg-white/10 object-cover object-top ${size === "md" ? "h-[60px] w-10 rounded-md" : "h-[42px] w-7 rounded-[5px]"}`}
+			/>
+		)
 	switch (image?.kind) {
 		case "poster":
 			return image.path ? (
