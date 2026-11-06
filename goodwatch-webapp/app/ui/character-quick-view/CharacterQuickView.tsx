@@ -815,9 +815,11 @@ function MoreFromTitle({
 				limit: "96",
 			})
 			const r = await fetch(`/api/title-people?${p}`)
+			if (!r.ok) throw new Error(`Title people answered ${r.status}`)
 			return ((await r.json()) as { rows: CastRow[] }).rows
 		},
 	})
+	// Without the cast (a failed read) the portraits keep their own order; without the portraits there is no grid.
 	const ready = portraits.ready && !cast.isPending
 	const rows = cast.data ?? []
 	const at = new Map(rows.map((r, i) => [foldName(r.name), i]))
@@ -841,7 +843,7 @@ function MoreFromTitle({
 		seen.add(k)
 		return true
 	})
-	if (ready && !list.length) return null
+	if (portraits.failed || (ready && !list.length)) return null
 	const toEntry = (
 		p: (typeof list)[number]["p"],
 		i: number,
@@ -902,7 +904,8 @@ function ActorRoles({
 				r.tmdbId === entry.title.tmdbId
 			),
 	)
-	if (q.isSuccess && !roles.length) return null
+	// A failed read leaves the optional grid out rather than pulsing on.
+	if (q.isError || (q.isSuccess && !roles.length)) return null
 	return (
 		<Grid
 			label={`More roles of ${entry.personName}`}

@@ -27,6 +27,8 @@ async function read<T>(params: Record<string, string>): Promise<T> {
 
 export interface TitlePortraits {
 	ready: boolean
+	/** The read failed for good (after its retries): nothing will load. */
+	failed: boolean
 	all: CharacterPortrait[]
 	of: ReturnType<typeof portraitLookup>
 }
@@ -47,7 +49,7 @@ export function useTitlePortraits(
 	})
 	const all = q.data ?? []
 	const of = useMemo(() => portraitLookup(q.data ?? []), [q.data])
-	return { ready: q.isSuccess, all, of }
+	return { ready: q.isSuccess, failed: q.isError, all, of }
 }
 
 /** A person's characters, one per title, best known first (`limit` of them). */
