@@ -1,0 +1,9 @@
+summary: TVDB award_quality
+description: ''
+lock: '!inline f/tvdb/award_quality.script.lock'
+kind: script
+timeout: 600
+schema:
+  type: object
+  properties: {}
+  required: []

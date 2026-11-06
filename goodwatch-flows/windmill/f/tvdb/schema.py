@@ -7,6 +7,7 @@
 
 from f.sync.init.cratedb import create_table_sql
 from f.sync.models.crate_schemas import SCHEMAS
+from f.tvdb.award_quality import DISPLAY_VIEW_SQL
 
 TABLES = ("tvdb_character", "tvdb_nomination")
 
@@ -49,11 +50,14 @@ def main(dry_run: bool = True):
         if not dry_run:
             for name, kind in nomination_additions.items():
                 connector.run(f"ALTER TABLE tvdb_nomination ADD COLUMN {name} {kind}")
+        if not dry_run:
+            connector.run(DISPLAY_VIEW_SQL)
         return {
             "dry_run": dry_run,
             "missing_tables": missing,
             "missing_person_columns": list(additions),
             "missing_nomination_columns": list(nomination_additions),
+            "display_view": "tvdb_award_display",
         }
     finally:
         connector.disconnect()

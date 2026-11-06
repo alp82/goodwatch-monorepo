@@ -131,7 +131,9 @@ def nomination_rows(db, doc, connector=None):
                 "revision": doc["updated_at"],
             }
         )
-    return rows
+    from f.tvdb.award_quality import annotate
+
+    return annotate(rows)
 
 
 class ScopeError(ValueError):

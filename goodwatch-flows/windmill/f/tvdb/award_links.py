@@ -8,7 +8,7 @@
 from f.sync.copy.sync_state import utc_now
 from f.tvdb.store import EPOCH, exclusive, indexes, record_run
 
-VERSION = 1
+VERSION = 2
 
 
 def run(db, dry_run=True):
