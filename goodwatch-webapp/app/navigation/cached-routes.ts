@@ -21,6 +21,11 @@ export const CACHED_ROUTE_IDS = [
 	"routes/$type.$category.$page",
 	"routes/discover.($type)",
 	"routes/people",
+	// The awards pages: the hub, a body, a ceremony, a category.
+	"routes/awards._index",
+	"routes/awards.$body._index",
+	"routes/awards.$body.$year",
+	"routes/awards.$body.category.$category",
 	"routes/hot",
 	"routes/blog._index",
 	"routes/blog.$slug",
