@@ -88,7 +88,8 @@ export function isSelfRole(character: string): boolean {
 /**
  * How much a name's match counts in search, on top of how well known its title is: 4 when the text is a whole word of
  * the name ("jon" → Jon Snow, "snow" → Jon Snow), 2 when the name starts with it ("jon" → Jonathan Byers), 1 when only
- * a later word does ("jon" → Morgan Jones). Folded name and folded text.
+ * a later word does ("jon" → Morgan Jones). Takes the name as SQL sees it (matchName) and the lookup text
+ * (characterQuery), so it scores exactly like matchBoostPatterns does before the read's cutoff.
  */
 export function matchBoost(name: string, query: string): number {
 	if (
@@ -117,6 +118,9 @@ export function matchBoostPatterns(query: string): {
 	}
 }
 
+/** A name as the SQL ranking compares it: trimmed, case ignored, punctuation and accents kept. */
+export const matchName = (character: string) => character.trim().toLowerCase()
+
 /** A match's search score: how well known its title is (IMDb ratings), times how well the name matches. */
 export const matchScore = (votes: number, boost: number) => boost * (votes + 1)
 
@@ -129,7 +133,7 @@ export function rankCharacterMatches(
 	query: string,
 	limit: number,
 ): CharacterRole[] {
-	const q = foldName(query)
+	const q = characterQuery(query) ?? ""
 	const seen = new Set<string>()
 	const kept: { role: CharacterRole; score: number }[] = []
 	for (const role of matches) {
@@ -138,7 +142,10 @@ export function rankCharacterMatches(
 		const key = `${role.mediaType}-${role.tmdbId}-${name}`
 		if (seen.has(key)) continue
 		seen.add(key)
-		kept.push({ role, score: matchScore(role.votes, matchBoost(name, q)) })
+		kept.push({
+			role,
+			score: matchScore(role.votes, matchBoost(matchName(role.character), q)),
+		})
 	}
 	return kept
 		.sort((a, b) => b.score - a.score || b.role.popularity - a.role.popularity)

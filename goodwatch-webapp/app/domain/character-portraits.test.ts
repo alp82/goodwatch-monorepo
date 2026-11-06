@@ -11,6 +11,7 @@ import {
 	isSelfRole,
 	matchBoost,
 	matchBoostPatterns,
+	matchName,
 	onePerTitle,
 	pickRole,
 	portraitLookup,
@@ -123,6 +124,46 @@ test("a name's match: a whole word counts 4, the name's start 2, a later word's 
 		start: "jon%",
 	})
 	assert.deepEqual(matchBoostPatterns("5_%").start, "5\\_\\%%")
+})
+
+/** ILIKE with the patterns' escapes, as Crate runs it. */
+const ilike = (text: string, pattern: string) => {
+	const re = pattern.replace(/\\(.)|%|_|[.*+?^${}()|[\]]/g, (m, esc) =>
+		esc !== undefined
+			? esc.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+			: m === "%"
+				? ".*"
+				: m === "_"
+					? "."
+					: `\\${m}`,
+	)
+	return new RegExp(`^${re}$`, "is").test(text)
+}
+
+test("the SQL ranking scores names exactly like matchBoost, so its cutoff keeps the final top", () => {
+	const sqlBoost = (character: string, q: string) => {
+		const name = character.trim()
+		const p = matchBoostPatterns(q)
+		if (p.word.some((w) => ilike(name, w))) return 4
+		return ilike(name, p.start) ? 2 : 1
+	}
+	const names = [
+		"Jon-Snow",
+		"Jon Snow",
+		" Jon Snow",
+		"Jonathan Byers",
+		"Morgan Jones",
+		"JON",
+		"Zoë Jon",
+		"Mr. Jon Arbuckle",
+	]
+	for (const q of ["jon", "snow", "jon snow", "zoë"])
+		for (const name of names)
+			assert.equal(
+				matchBoost(matchName(name), characterQuery(q) ?? ""),
+				sqlBoost(name, q),
+				`${name} / ${q}`,
+			)
 })
 
 test("of several portraits in one title, the one matching the credit's character wins", () => {

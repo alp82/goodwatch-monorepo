@@ -194,7 +194,7 @@ async function readCharacterMatches({ q }: { q: string }) {
 	// Ranked before the cutoff, with a total order, so the same text always gets the same candidates.
 	const rows = await query<MatchRow>(
 		`${matchesOf("movie")} UNION ALL ${matchesOf("show")}
-		  ORDER BY score DESC, media_type, media_tmdb_id, character_name, image_url
+		  ORDER BY score DESC, popularity DESC NULLS LAST, media_type, media_tmdb_id, character_name, image_url
 		  LIMIT ${SEARCH_CANDIDATES}`,
 		[...one, ...one],
 	)
