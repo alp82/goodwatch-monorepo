@@ -17,6 +17,7 @@ import {
 	type MissingPageType,
 	type MissingPoster,
 	PrototypeMissingCard,
+	type TropeMood,
 	VARIANTS,
 } from "~/ui/og-image/PrototypeMissingCards"
 
@@ -84,6 +85,14 @@ interface TitleArt {
 
 async function movie(id: number): Promise<TitleArt> {
 	const d = (await pageData(`/movie/${id}`, "routes/movie.$movieKey")).media.details
+	return {
+		poster: { title: d.title, src: await image(d.poster_path ? `${TMDB}/w342${d.poster_path}` : null) },
+		backdrop: await image(d.backdrop_path ? `${TMDB}/w1280${d.backdrop_path}` : null),
+	}
+}
+
+async function show(id: number): Promise<TitleArt> {
+	const d = (await pageData(`/show/${id}`, "routes/show.$showKey")).media.details
 	return {
 		poster: { title: d.title, src: await image(d.poster_path ? `${TMDB}/w342${d.poster_path}` : null) },
 		backdrop: await image(d.backdrop_path ? `${TMDB}/w1280${d.backdrop_path}` : null),
@@ -167,15 +176,58 @@ const TROPE_SINGLES = [
 	{ label: "Running Gag", id: 105 },
 ]
 
-async function checkTropes() {
-	for (const { label, ids } of [...TROPE_ROWS, ...TROPE_SINGLES.map((s) => ({ label: s.label, ids: [s.id] }))]) {
-		for (const id of ids) {
-			const raw = await cached(`tropes${id}`, () => fetchBuffer(`${SITE}/api/title-tropes?type=movie&id=${id}`))
-			const names = (JSON.parse(raw.toString()).tropes as { name: string }[]).map((t) => t.name)
-			if (!names.includes(label)) gaps.push(`tropes: movie ${id} lacks "${label}"`)
-		}
-	}
+// Round 2: tropes in focus, picked to be epic, hilarious or relatable. "show:2316" is a show, a bare number a movie.
+// Every title listed has the trope (checked against /api/title-tropes, see checkTropes); the cloud, chips and bingo
+// show names alone, but each still names a title that has it, so no trope is made up.
+type Ref = number | `show:${number}`
+const TROPE_PICKS: { name: string; mood: TropeMood; ids: Ref[] }[] = [
+	{ name: "Heroic Sacrifice", mood: "Epic", ids: [299534, 95, 280] },
+	{ name: "Deadpan Snarker", mood: "Hilarious", ids: [808, 137, 10625] },
+	{ name: "Mundane Made Awesome", mood: "Relatable", ids: [1542, 8193, 14160] },
+]
+const TROPE_COLUMNS: { name: string; mood: TropeMood; ids: Ref[] }[] = [
+	{ name: "Big Damn Heroes", mood: "Epic", ids: [11] },
+	{ name: "Too Dumb to Live", mood: "Hilarious", ids: [329] },
+	{ name: "Cringe Comedy", mood: "Relatable", ids: ["show:2316"] },
+]
+const TROPE_WORDS: { name: string; mood: TropeMood; weight: number; id: Ref }[] = [
+	{ name: "Heroic Sacrifice", mood: "Epic", weight: 3, id: 299534 },
+	{ name: "Deadpan Snarker", mood: "Hilarious", weight: 2, id: 808 },
+	{ name: "Oh, Crap!", mood: "Relatable", weight: 2, id: 105 },
+	{ name: "Leeroy Jenkins", mood: "Hilarious", weight: 1, id: 762 },
+	{ name: "Cringe Comedy", mood: "Relatable", weight: 2, id: "show:2316" },
+	{ name: "The Chosen One", mood: "Epic", weight: 1, id: "show:246" },
+	{ name: "Too Dumb to Live", mood: "Hilarious", weight: 2, id: 329 },
+	{ name: "Large Ham", mood: "Hilarious", weight: 1, id: 155 },
+	{ name: "Mundane Made Awesome", mood: "Relatable", weight: 3, id: 1542 },
+	{ name: "Rousing Speech", mood: "Epic", weight: 1, id: 122 },
+	{ name: "I Need a Freaking Drink", mood: "Relatable", weight: 1, id: 597 },
+	{ name: "Big Damn Heroes", mood: "Epic", weight: 2, id: 11 },
+]
+
+const art = (ref: Ref) => (typeof ref === "number" ? movie(ref) : show(Number(ref.slice(5))))
+
+async function hasTrope(ref: Ref, label: string) {
+	const [type, id] = typeof ref === "number" ? ["movie", ref] : ["show", Number(ref.slice(5))]
+	const raw = await cached(`tropes${type === "movie" ? "" : "-show"}${id}`, () =>
+		fetchBuffer(`${SITE}/api/title-tropes?type=${type}&id=${id}`),
+	)
+	const names = (JSON.parse(raw.toString()).tropes as { name: string }[]).map((t) => t.name)
+	if (!names.includes(label)) gaps.push(`tropes: ${type} ${id} lacks "${label}"`)
 }
+
+async function checkTropes() {
+	const pairs: [Ref, string][] = [
+		...TROPE_ROWS.flatMap((r) => r.ids.map((id) => [id, r.label] as [Ref, string])),
+		...TROPE_SINGLES.map((s) => [s.id, s.label] as [Ref, string]),
+		...[...TROPE_PICKS, ...TROPE_COLUMNS].flatMap((p) => p.ids.map((id) => [id, p.name] as [Ref, string])),
+		...TROPE_WORDS.map((w) => [w.id, w.name] as [Ref, string]),
+	]
+	for (const [ref, label] of pairs) await hasTrope(ref, label)
+}
+
+const picksOf = (list: typeof TROPE_PICKS) =>
+	Promise.all(list.map(async (p) => ({ name: p.name, mood: p.mood, posters: (await Promise.all(p.ids.map(art))).map((a) => a.poster) })))
 
 async function tropesContent(): Promise<MissingCardContent> {
 	await checkTropes()
@@ -194,6 +246,9 @@ async function tropesContent(): Promise<MissingCardContent> {
 		wall: groups.flatMap((g) => g.posters),
 		entries,
 		groups,
+		tropePicks: await picksOf(TROPE_PICKS),
+		tropeColumns: await picksOf(TROPE_COLUMNS),
+		tropeWords: TROPE_WORDS.map(({ name, mood, weight }) => ({ name, mood, weight })),
 	}
 }
 
@@ -264,7 +319,7 @@ async function liveCard(path: string, file: string) {
 	writeFileSync(join(OUT, file), data)
 }
 
-const cards: { page: string; type: MissingPageType; variant: string; file: string }[] = []
+const cards: { page: string; type: MissingPageType; variant: string; file: string; label?: string }[] = []
 const notes: Record<string, string> = {}
 for (const s of SAMPLES) {
 	notes[s.path] = s.note ?? ""
@@ -299,13 +354,19 @@ for (const s of SAMPLES) {
 			cards.push({ page: s.path, type: s.type, variant: v.key, file })
 			continue
 		}
-		const element = createElement(PrototypeMissingCard, { variant: v.key, content })
-		const svg = await satori(resolveTree(element) as never, { width: 1200, height: 630, fonts: FONTS as never })
-		const png = new Resvg(svg, { fitTo: { mode: "width", value: 1200 } }).render().asPng()
-		const file = `${safe(s.path.slice(1))}-${v.key}.png`
-		writeFileSync(join(OUT, file), png)
-		cards.push({ page: s.path, type: s.type, variant: v.key, file })
-		console.log("drew", s.path, v.key)
+		for (let set = 0; set < (v.sets ?? 1); set++) {
+			// Each set leads with the next pick.
+			const picks = content.tropePicks ?? []
+			const rotated = { ...content, tropePicks: [...picks.slice(set), ...picks.slice(0, set)] }
+			const element = createElement(PrototypeMissingCard, { variant: v.key, content: rotated })
+			const svg = await satori(resolveTree(element) as never, { width: 1200, height: 630, fonts: FONTS as never })
+			const png = new Resvg(svg, { fitTo: { mode: "width", value: 1200 } }).render().asPng()
+			const file = `${safe(s.path.slice(1))}-${v.key}${v.sets ? `-${set + 1}` : ""}.png`
+			writeFileSync(join(OUT, file), png)
+			const label = v.sets ? `set ${set + 1}: ${rotated.tropePicks[0]?.name}` : undefined
+			cards.push({ page: s.path, type: s.type, variant: v.key, file, label })
+			console.log("drew", s.path, v.key, label ?? "")
+		}
 	}
 }
 
@@ -331,7 +392,7 @@ figure{margin:0} img{width:100%;height:auto;border-radius:10px;display:block;bac
 figcaption{margin-top:6px;color:#bbb} figcaption a{color:#fbbf24;text-decoration:none} .note{color:#888}
 </style></head><body><main>
 <h1>Link-preview cards for pages without their own (prototype)</h1>
-<p>Each page type has its own variants, keyed A–D. "Today" is the card a preview of that page shows now. Pick "By variant" to compare one design across pages, or a page to see every design for it.</p>
+<p>Each page type has its own variants, keyed A–D (By your tropes adds E–I in round 2, tropes in focus). "Today" is the card a preview of that page shows now. Pick "By variant" to compare one design across pages, or a page to see every design for it.</p>
 <div class="tabs" id="mode"></div>
 <div id="out"></div>
 </main>
@@ -346,10 +407,10 @@ function render(){const s=q();const page=s.get("page");
 const pages=[...new Set(CARDS.map(c=>c.page))];
 document.getElementById("mode").innerHTML='<a href="?" class="'+(page?"":"on")+'">By variant</a>'+pages.map(p=>'<a href="?page='+encodeURIComponent(p)+'" class="'+(p===page?"on":"")+'">'+p+'</a>').join("");
 let h="";
-if(page){h+='<h2>'+link(page)+'</h2><div class="grid">'+CARDS.filter(c=>c.page===page).map(c=>fig(c,'<b>'+c.variant+'</b> — '+vname(c.type,c.variant))).join("")+'</div>';}
+if(page){h+='<h2>'+link(page)+'</h2><div class="grid">'+CARDS.filter(c=>c.page===page).map(c=>fig(c,'<b>'+c.variant+'</b> — '+vname(c.type,c.variant)+(c.label?' <span class="note">· '+c.label+'</span>':''))).join("")+'</div>';}
 else for(const t of Object.keys(TYPES)){h+='<h2>'+TYPES[t]+'</h2>';
 for(const k of ["today",...VARIANTS[t].map(v=>v.key)]){const cs=CARDS.filter(c=>c.type===t&&c.variant===k);if(!cs.length||(k==="today"&&(t==="taste"||t==="explore")))continue;
-h+='<p><b style="color:#fbbf24">'+k+'</b> — '+vname(t,k)+'</p><div class="grid">'+cs.map(c=>fig(c,link(c.page))).join("")+'</div><br>';}}
+h+='<p><b style="color:#fbbf24">'+k+'</b> — '+vname(t,k)+'</p><div class="grid">'+cs.map(c=>fig(c,link(c.page)+(c.label?' <span class="note">· '+c.label+'</span>':''))).join("")+'</div><br>';}}
 document.getElementById("out").innerHTML=h}
 render();
 </script></body></html>`

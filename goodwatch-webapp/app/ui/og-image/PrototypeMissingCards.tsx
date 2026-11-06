@@ -49,6 +49,19 @@ export interface MissingCardContent {
 	entries: MissingEntry[]
 	/** Trope rows: a trope and the titles that have it. */
 	groups: { label: string; posters: MissingPoster[] }[]
+	/** Round 2, tropes in focus. Each pick is a trope and titles that have it; `mood` says why it was picked. */
+	tropePicks?: TropePick[]
+	/** One epic, one hilarious, one relatable trope with one title each. */
+	tropeColumns?: TropePick[]
+	/** Trope names alone, for the cloud, chips and bingo; `weight` 1 to 3 sets the size in the cloud. */
+	tropeWords?: { name: string; mood: TropeMood; weight: number }[]
+}
+
+export type TropeMood = "Epic" | "Hilarious" | "Relatable"
+export interface TropePick {
+	name: string
+	mood: TropeMood
+	posters: MissingPoster[]
 }
 
 export interface Variant {
@@ -56,6 +69,8 @@ export interface Variant {
 	name: string
 	/** Not drawn: the gallery shows production's card for this canonical path. */
 	live?: string
+	/** Drawn this many times, each with the trope picks rotated by one, to show the layout holds other tropes. */
+	sets?: number
 }
 
 export const VARIANTS: Record<MissingPageType, Variant[]> = {
@@ -70,6 +85,11 @@ export const VARIANTS: Record<MissingPageType, Variant[]> = {
 		{ key: "B", name: "Band split: a top title's backdrop, amber band with For you tag and By your tropes" },
 		{ key: "C", name: "Trope ledger: amber headline left, ink panel with three example tropes and four titles each" },
 		{ key: "D", name: "Labelled row: headline across the top, five posters each named by one trope it has" },
+		{ key: "E", name: "One trope, giant: the trope name as the Anton headline, three small posters that have it", sets: 3 },
+		{ key: "F", name: "Trope cloud: twelve trope names in three sizes, no posters" },
+		{ key: "G", name: "Trope chips: amber headline left, ink panel with seven tropes as the title page's essence chips" },
+		{ key: "H", name: "Epic, hilarious, relatable: three columns, each one trope and one title that has it" },
+		{ key: "I", name: "Trope bingo: a 3x3 card of tropes, one diagonal marked through the free square" },
 	],
 	hot: [
 		{ key: "A", name: "Band split: the top title's backdrop, amber band with the headline" },
@@ -333,6 +353,257 @@ function RowCard({ c, labels }: { c: MissingCardContent; labels: "rank" | "name"
 	)
 }
 
+// --- Round 2: tropes in focus ---------------------------------------------------------------------------------------
+
+const MUTED_INK = "rgba(10,10,10,0.62)"
+
+const Kicker = ({ text, color = MUTED_INK }: { text: string; color?: string }) => (
+	<div style={{ display: "flex", fontSize: 24, fontWeight: 900, letterSpacing: 3, color, lineHeight: 1 }}>
+		{text.toUpperCase()}
+	</div>
+)
+
+// E: the trope is the headline; the posters only say "like these".
+function GiantTropeCard({ c }: { c: MissingCardContent }) {
+	const pick = c.tropePicks?.[0]
+	if (!pick) throw new Error("no trope picks")
+	const width = 92
+	return (
+		<Frame>
+			<div style={{ position: "absolute", top: 44, left: 56, display: "flex" }}>
+				<Brand dark />
+			</div>
+			<div style={{ position: "absolute", top: 54, right: 56, display: "flex" }}>
+				<Kicker text={pick.mood} />
+			</div>
+			<div style={col({ position: "absolute", left: 56, top: 140, width: 1088, height: 290, justifyContent: "flex-end" })}>
+				<Headline text={pick.name} width={1088} height={290} max={190} min={90} />
+			</div>
+			<div style={row({ position: "absolute", left: 56, right: 56, bottom: 44, alignItems: "flex-end", justifyContent: "space-between" })}>
+				<Tag text="By your tropes" />
+				<div style={row({ gap: 12 })}>
+					{pick.posters.slice(0, 3).map((p) => (
+						<Poster key={p.title} poster={p} width={width} />
+					))}
+				</div>
+			</div>
+		</Frame>
+	)
+}
+
+// F: names only, sized by how much they carry the card.
+function TropeCloudCard({ c }: { c: MissingCardContent }) {
+	const words = c.tropeWords ?? []
+	const size = { 3: 84, 2: 56, 1: 38 } as Record<number, number>
+	return (
+		<Frame>
+			<div style={{ position: "absolute", top: 44, left: 56, display: "flex" }}>
+				<Brand dark />
+			</div>
+			<div style={{ position: "absolute", top: 44, right: 56, display: "flex" }}>
+				<Tag text="By your tropes" />
+			</div>
+			<div
+				style={{
+					display: "flex",
+					flexWrap: "wrap",
+					position: "absolute",
+					left: 56,
+					top: 140,
+					width: 1088,
+					height: 446,
+					alignItems: "center",
+					alignContent: "center",
+					justifyContent: "center",
+					columnGap: 30,
+					rowGap: 8,
+				}}
+			>
+				{words.map((w) => (
+					<div
+						key={w.name}
+						style={{
+							display: "flex",
+							fontFamily: "Anton",
+							fontSize: size[w.weight],
+							lineHeight: 1.05,
+							letterSpacing: 1,
+							color: w.weight === 1 ? MUTED_INK : INK,
+							whiteSpace: "nowrap",
+						}}
+					>
+						{w.name.toUpperCase()}
+					</div>
+				))}
+			</div>
+		</Frame>
+	)
+}
+
+// G: the essence chip from the title page (ui/details/TitleSummary.tsx EssenceTags), drawn at card scale.
+function Chip({ name, lit }: { name: string; lit: boolean }) {
+	return (
+		<div
+			style={row({
+				alignItems: "center",
+				gap: 14,
+				padding: "12px 22px 12px 18px",
+				borderRadius: 14,
+				backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.035))",
+				border: "2px solid rgba(255,255,255,0.1)",
+				fontSize: 32,
+				lineHeight: 1.15,
+				color: "#e5e7eb",
+				whiteSpace: "nowrap",
+			})}
+		>
+			<div style={{ display: "flex", width: 12, height: 12, borderRadius: 6, backgroundColor: lit ? AMBER : "rgba(252,211,77,0.5)" }} />
+			{name}
+		</div>
+	)
+}
+
+function TropeChipsCard({ c }: { c: MissingCardContent }) {
+	// The bigger names only, one chip a line: seven fit the card's height.
+	const words = (c.tropeWords ?? []).filter((w) => w.weight >= 2).slice(0, 7)
+	return (
+		<LeftHeadline c={{ ...c, tag: "For you" }} width={420}>
+			<div
+				style={col({
+					position: "absolute",
+					top: 0,
+					left: 536,
+					width: 664,
+					height: HEIGHT,
+					backgroundColor: INK,
+					padding: "0 56px",
+					justifyContent: "center",
+					alignItems: "flex-start",
+					gap: 14,
+				})}
+			>
+				{words.map((w) => (
+					<Chip key={w.name} name={w.name} lit={w.weight === 3} />
+				))}
+			</div>
+		</LeftHeadline>
+	)
+}
+
+// H: one trope per kind of fun, each with a title that has it.
+function MoodColumnsCard({ c }: { c: MissingCardContent }) {
+	const picks = (c.tropeColumns ?? []).slice(0, 3)
+	const width = 330
+	const posterWidth = 132
+	return (
+		<Frame>
+			<div style={{ position: "absolute", top: 44, left: 56, display: "flex" }}>
+				<Brand dark />
+			</div>
+			<div style={{ position: "absolute", top: 44, right: 56, display: "flex" }}>
+				<Tag text="By your tropes" />
+			</div>
+			<div style={row({ position: "absolute", left: 56, top: 156, width: 1088, justifyContent: "space-between" })}>
+				{picks.map((p) => (
+					<div key={p.name} style={col({ width, gap: 14 })}>
+						<Kicker text={p.mood} />
+						<div style={col({ height: 136, justifyContent: "flex-end" })}>
+							<Headline text={p.name} width={width} height={136} max={68} min={40} />
+						</div>
+						<div style={row({ gap: 16, alignItems: "flex-end", marginTop: 10 })}>
+							<Poster poster={p.posters[0]} width={posterWidth} />
+							<div
+								style={{
+									display: "flex",
+									width: width - posterWidth - 16,
+									fontSize: 24,
+									fontWeight: 700,
+									lineHeight: 1.15,
+									color: INK,
+								}}
+							>
+								{clip(p.posters[0]?.title ?? "", 40)}
+							</div>
+						</div>
+					</div>
+				))}
+			</div>
+		</Frame>
+	)
+}
+
+const BINGO = [
+	"Heroic Sacrifice",
+	"Deadpan Snarker",
+	"Oh, Crap!",
+	"Leeroy Jenkins",
+	"Cringe Comedy",
+	"The Chosen One",
+	"Too Dumb to Live",
+	"Mundane Made Awesome",
+]
+
+// I: a bingo card. Marked squares are ink with amber text; the middle is free.
+function TropeBingoCard({ c }: { c: MissingCardContent }) {
+	const names = (c.tropeWords ?? []).map((w) => w.name).filter((n) => BINGO.includes(n))
+	const ordered = BINGO.filter((n) => names.includes(n))
+	const cells: (string | null)[] = [...ordered.slice(0, 4), null, ...ordered.slice(4, 8)]
+	// One diagonal: epic corner to relatable corner through the free square.
+	const marked = new Set([0, 4, 8])
+	const cell = 168
+	const gap = 10
+	return (
+		<Frame>
+			<div style={{ position: "absolute", top: 44, left: 56, display: "flex" }}>
+				<Brand dark />
+			</div>
+			<div style={col({ position: "absolute", left: 56, bottom: 52, width: 460, gap: 18 })}>
+				<Tag text="By your tropes" />
+				<Headline text="Trope bingo" width={460} height={260} max={140} />
+			</div>
+			<div
+				style={{
+					display: "flex",
+					flexWrap: "wrap",
+					position: "absolute",
+					right: 56,
+					top: (HEIGHT - (3 * cell + 2 * gap)) / 2,
+					width: 3 * cell + 2 * gap,
+					gap,
+				}}
+			>
+				{cells.map((name, i) => {
+					const on = marked.has(i)
+					return (
+						<div
+							key={name ?? "free"}
+							style={{
+								display: "flex",
+								width: cell,
+								height: cell,
+								borderRadius: 12,
+								border: `4px solid ${INK}`,
+								backgroundColor: on ? INK : "transparent",
+								color: on ? AMBER : INK,
+								alignItems: "center",
+								justifyContent: "center",
+								textAlign: "center",
+								padding: 12,
+								fontFamily: name ? "Gabarito" : "Anton",
+								fontSize: name ? 26 : 56,
+								fontWeight: 900,
+								lineHeight: 1.1,
+							}}
+						>
+							{name ?? "FREE"}
+						</div>
+					)
+				})}
+			</div>
+		</Frame>
+	)
+}
+
 export function PrototypeMissingCard({ variant, content: c }: { variant: string; content: MissingCardContent }) {
 	switch (`${c.type}-${variant}`) {
 		case "blog-A":
@@ -349,6 +620,16 @@ export function PrototypeMissingCard({ variant, content: c }: { variant: string;
 			return <TropeLedgerCard c={c} />
 		case "tropes-D":
 			return <RowCard c={{ ...c, headline: "Picks by your tropes" }} labels="name" />
+		case "tropes-E":
+			return <GiantTropeCard c={c} />
+		case "tropes-F":
+			return <TropeCloudCard c={c} />
+		case "tropes-G":
+			return <TropeChipsCard c={c} />
+		case "tropes-H":
+			return <MoodColumnsCard c={c} />
+		case "tropes-I":
+			return <TropeBingoCard c={c} />
 		case "hot-A":
 			return bandCard({ ...c, tag: "Hot on socials", headline: "What everyone's talking about" })
 		case "hot-B":
