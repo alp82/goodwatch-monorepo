@@ -17,8 +17,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const index = await awardIndex()
 	if (!index)
 		return json(
-			{ results: [] as NotableAward[] },
-			{ headers: { "Cache-Control": "no-store" } },
+			{ error: "Award results are loading" },
+			// An error, not an empty answer, so the quick view asks again instead of keeping "no results".
+			{ status: 503, headers: { "Cache-Control": "no-store" } },
 		)
 	return json(
 		{ results: index.notable.get(`${type}:${id}`) ?? [] },
