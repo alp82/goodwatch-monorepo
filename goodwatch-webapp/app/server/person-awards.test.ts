@@ -39,9 +39,33 @@ test("missing optional work data does not erase the supported person result", ()
 	assert.equal(summarizePersonAwards([]), undefined)
 })
 test("only verified exact character credits are exposed with person awards", () => {
- const awards = summarizePersonAwards([{ ...row(), portrayals_json: JSON.stringify([
-  { link_status: "unverified", character_name: "Guess", credit_id: "guess", media_type: "movie", media_tmdb_id: 872585 },
-  { link_status: "verified", character_name: "J. Robert Oppenheimer", credit_id: "exact-credit", media_type: "movie", media_tmdb_id: 872585 },
- ]) }])!
- assert.deepEqual(awards.results[0].portrayals, [{ character_name: "J. Robert Oppenheimer", credit_id: "exact-credit", media_type: "movie", media_tmdb_id: 872585 }])
+	const awards = summarizePersonAwards([
+		{
+			...row(),
+			portrayals_json: JSON.stringify([
+				{
+					link_status: "unverified",
+					character_name: "Guess",
+					credit_id: "guess",
+					media_type: "movie",
+					media_tmdb_id: 872585,
+				},
+				{
+					link_status: "verified",
+					character_name: "J. Robert Oppenheimer",
+					credit_id: "exact-credit",
+					media_type: "movie",
+					media_tmdb_id: 872585,
+				},
+			]),
+		},
+	])!
+	assert.deepEqual(awards.results[0].portrayals, [
+		{
+			character_name: "J. Robert Oppenheimer",
+			credit_id: "exact-credit",
+			media_type: "movie",
+			media_tmdb_id: 872585,
+		},
+	])
 })

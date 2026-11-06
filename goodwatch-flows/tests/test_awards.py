@@ -198,6 +198,21 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual((len(entries), len(unknown)), (1, 0))
         self.assertEqual(entries[0]["result_status"], "won")
 
+    def test_year_only_title_highlight_is_withheld_when_exact_ceremony_supports_same_fact(
+        self,
+    ):
+        exact = observation(basis="work", people=[])
+        coarse = observation(record="coarse", basis="work", people=[], ceremony=None)
+        entries, unresolved = models.reconcile_observations([exact, coarse])
+        self.assertEqual((len(entries), len(unresolved)), (1, 1))
+        titles, _ = reconcile.projections([exact, coarse], entries)
+        self.assertEqual(len(titles), 1)
+        self.assertEqual(titles[0]["source_row_count"], 1)
+        # A coarse win is still useful when the precise statement only confirms nomination.
+        exact["outcome"] = "unknown"
+        entries, _ = models.reconcile_observations([exact, coarse])
+        self.assertEqual(len(reconcile.projections([exact, coarse], entries)[0]), 2)
+
     def test_two_actors_in_one_film_category_are_different_entries(self):
         a = observation()
         b = observation(

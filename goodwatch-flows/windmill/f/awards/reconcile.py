@@ -15,7 +15,7 @@ from f.sync.copy.sync_state import utc_now
 from f.tvdb.store import exclusive
 from pymongo import UpdateOne
 
-VERSION = 2
+VERSION = 3
 
 
 def public_observation(o, year):
@@ -32,7 +32,33 @@ def projections(observations, entries, year=None):
     # and work have a fully identified ceremony nearby. This is display withholding,
     # not a claim that the coarse observation identified that exact entry.
     precise = defaultdict(set)
+    precise_titles = defaultdict(dict)
+    precise_people = defaultdict(dict)
     for e in entries:
+        if e["result_status"] == "disputed":
+            continue
+        for w in e["works"]:
+            precise_titles[
+                (e["program_key"], e["category_key"], e["year"], w["identity"])
+            ][e["ceremony_key"]] = e["result_status"] == "won" or precise_titles[
+                (e["program_key"], e["category_key"], e["year"], w["identity"])
+            ].get(e["ceremony_key"], False)
+        for r in e["recipients"]:
+            precise_people[
+                (
+                    e["program_key"],
+                    e["category_key"],
+                    e["year"],
+                    r["identity"],
+                    tuple(
+                        sorted(
+                            w["identity"]
+                            for w in e["works"]
+                            if w.get("role") == "recognized_work"
+                        )
+                    ),
+                )
+            ][e["ceremony_key"]] = e["result_status"] == "won"
         for r in e["recipients"]:
             for w in e["works"]:
                 precise[
@@ -109,6 +135,18 @@ def projections(observations, entries, year=None):
         for w in o.get("works", []):
             if w.get("link_status") != "verified" or not w.get("media_tmdb_id"):
                 continue
+            known = precise_titles.get(
+                (o["program_key"], o["category_key"], o["year"], w["identity"]), {}
+            )
+            # Redundant year-only highlights add no display fact when one exact
+            # ceremony already supports the same result. Their evidence remains
+            # unresolved; this does not merge them into an exact entry.
+            if (
+                not o.get("ceremony_key")
+                and len(known) == 1
+                and (o["outcome"] != "won" or any(known.values()))
+            ):
+                continue
             key = digest(
                 [
                     w["media_type"],
@@ -128,6 +166,29 @@ def projections(observations, entries, year=None):
                 r.get("kind") != "person"
                 or r.get("link_status") != "verified"
                 or not r.get("person_tmdb_id")
+            ):
+                continue
+            known = precise_people.get(
+                (
+                    o["program_key"],
+                    o["category_key"],
+                    o["year"],
+                    r["identity"],
+                    tuple(
+                        sorted(
+                            w["identity"]
+                            for w in o.get("works", [])
+                            if w.get("role") == "recognized_work"
+                        )
+                    ),
+                ),
+                {},
+            )
+            if (
+                not o.get("ceremony_key")
+                and not o.get("portrayals")
+                and len(known) == 1
+                and (o["outcome"] != "won" or any(known.values()))
             ):
                 continue
             # Title observations never create recipients. Only explicit source people reach this projection.
