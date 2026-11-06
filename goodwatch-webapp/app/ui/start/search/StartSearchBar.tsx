@@ -15,6 +15,7 @@ import { preloadSearchRequest } from "~/ui/search/search-client"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import type { StartQuery, StartResults } from "../stage/start-query"
 import { createFieldCommit } from "./field-commit"
+import { PrototypeSearchBox, useBoxVariant } from "./prototype-search-box"
 import {
 	PLACEHOLDER_NARROW,
 	PLACEHOLDER_WIDE,
@@ -36,7 +37,22 @@ function usePlaceholder() {
 	}, [])
 	return value
 }
-export function StartSearchBar({
+// PROTOTYPE: ?variant=0 keeps today's composer, A/B/C are prototype-search-box.tsx.
+export function StartSearchBar(
+	props: Parameters<typeof TodaySearchBar>[0] & { moods?: React.ReactNode },
+) {
+	const variant = useBoxVariant()
+	if (variant === "0") return <TodaySearchBar {...props} />
+	return (
+		<PrototypeSearchBox
+			{...props}
+			variant={variant}
+			moods={variant === "C" ? props.moods : undefined}
+		/>
+	)
+}
+
+function TodaySearchBar({
 	query,
 	results,
 	setDraft,

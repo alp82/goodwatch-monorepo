@@ -2463,3 +2463,186 @@
 		white-space: normal;
 	}
 }
+
+/* PROTOTYPE prototype/start-search-box (search/prototype-search-box.tsx). Never merge. */
+.psb-a-round {
+	border-radius: 22px;
+}
+@media (min-width: 1024px) {
+	.psb-a-round {
+		border-radius: 32px;
+	}
+}
+.psb-pill-round {
+	border-radius: 999px;
+}
+/* Same height steps as the Choose button (.start-ledge-go). */
+.psb-pill {
+	height: 68px;
+	background: rgb(3 7 18 / 0.92);
+	box-shadow: inset 0 0 0 1.5px rgb(251 191 36 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.08);
+	backdrop-filter: blur(12px);
+}
+.psb-pill-c {
+	height: 60px;
+}
+@media (min-width: 640px) {
+	.psb-pill {
+		height: 84px;
+	}
+	.psb-pill-c {
+		height: 72px;
+	}
+}
+@media (min-width: 1024px) {
+	.psb-pill {
+		height: 92px;
+	}
+	.psb-pill-c {
+		height: 76px;
+	}
+}
+/* The Choose button's floor glow, quieter. */
+.psb-pill-glow {
+	position: absolute;
+	left: 50%;
+	top: 30%;
+	width: 110%;
+	height: 140%;
+	translate: -50% 0;
+	pointer-events: none;
+	background: radial-gradient(ellipse 50% 40% at 50% 50%, rgb(251 191 36 / 0.12), rgb(251 191 36 / 0.04) 55%, transparent 75%);
+}
+/* Mirrors the Choose button's icon disc, colours swapped. */
+.psb-disc {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	color: rgb(3 7 18);
+	background: linear-gradient(to bottom, rgb(252 211 77), rgb(245 158 11));
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+@media (min-width: 640px) {
+	.psb-disc {
+		width: 56px;
+		height: 56px;
+	}
+}
+.psb-pill-text {
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-size: 18px;
+	font-weight: 800;
+	line-height: 1.2;
+	letter-spacing: -0.01em;
+}
+.psb-pill-text::placeholder {
+	color: rgb(156 163 175);
+	font-weight: 700;
+}
+.psb-pill-text-c {
+	font-size: 17px;
+}
+@media (min-width: 640px) {
+	.psb-pill-text {
+		font-size: 24px;
+	}
+	.psb-pill-text-c {
+		font-size: 21px;
+	}
+}
+@media (min-width: 1024px) {
+	.psb-pill-text {
+		font-size: 26px;
+	}
+	.psb-pill-text-c {
+		font-size: 22px;
+	}
+}
+.psb-go {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	cursor: pointer;
+	color: rgb(3 7 18);
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-weight: 900;
+	font-size: 18px;
+	background: linear-gradient(to bottom, rgb(252 211 77), rgb(245 158 11));
+	box-shadow: 0 8px 24px rgb(251 191 36 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.5);
+	outline: none;
+	transition: scale 0.2s ease-out;
+}
+.psb-go:hover {
+	scale: 1.03;
+}
+.psb-go:focus-visible {
+	box-shadow: 0 0 0 3px #fff;
+}
+@media (min-width: 640px) {
+	.psb-go {
+		width: auto;
+		height: 56px;
+		padding: 0 28px;
+		font-size: 20px;
+	}
+	.psb-pill-c .psb-go {
+		height: 52px;
+		padding: 0 24px;
+	}
+}
+.start-stage:has([data-proto-box]) .start-bar:has(.psb-pill-round) .start-bar-glow {
+	box-shadow: 0 0 0 2px rgb(251 191 36 / 0.9), 0 0 0 6px rgb(251 191 36 / 0.14), 0 0 70px 10px rgb(251 191 36 / 0.3);
+}
+/* The OR between the search block and the ledge, in the gap. */
+.start-stage:has([data-proto-box]) .start-gap {
+	height: auto;
+	padding: 18px 0 6px;
+}
+.start-or {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	width: min(420px, calc(100% - 64px));
+	margin-inline: auto;
+	transition: opacity 0.3s ease-out;
+}
+.start-stage[data-open] .start-or {
+	opacity: 0;
+}
+.start-or i {
+	flex: 1;
+	height: 1px;
+	background: linear-gradient(to var(--or-dir, right), transparent, rgb(255 255 255 / 0.35));
+}
+.start-or i:last-child {
+	--or-dir: left;
+}
+.start-or span {
+	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
+	font-size: 13px;
+	font-weight: 900;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: rgb(229 231 235);
+	text-shadow: 0 2px 8px rgb(0 0 0 / 0.9);
+}
+/* B and C: a dark disc with an amber ring, like the Choose button's icon. */
+.start-or:not([data-variant="A"]) span {
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	letter-spacing: 0.05em;
+	color: rgb(252 211 77);
+	background: rgb(3 7 18 / 0.9);
+	box-shadow: inset 0 0 0 1.5px rgb(251 191 36 / 0.45), 0 8px 24px rgb(0 0 0 / 0.5);
+}

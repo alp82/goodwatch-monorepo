@@ -11,7 +11,7 @@ import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
 import { PRIVATE } from "./DiscoverBar"
 
 /** Example searches. Each one was run through this field and checked for relevant results; rerun new ones the same way. */
-const TRY = [
+export const TRY = [
 	"cozy anime",
 	"Timothée Chalamet movies",
 	"mind-bending sci-fi",

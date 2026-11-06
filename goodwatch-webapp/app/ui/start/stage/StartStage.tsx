@@ -12,6 +12,11 @@ import type { ShelfTitle } from "../room/ShelfCovers"
 import { StartRoom } from "../room/StartRoom"
 import { START_ROOM, START_ROOM_PHONE } from "../room/scene"
 import { sceneStyle } from "./placement"
+import {
+	SearchBoxSwitcher,
+	SearchOr,
+	useBoxVariant,
+} from "../search/prototype-search-box"
 
 /** The page's one H1. */
 export const START_HEADING = "Find something to watch"
@@ -45,6 +50,7 @@ export function StartStage({
 	/** A guest's opening (opening/OpeningBoot.tsx): first in the stage, so its gate runs before the rest paints. */
 	opening?: ReactNode
 }) {
+	const variant = useBoxVariant()
 	return (
 		<section
 			aria-labelledby="start-heading"
@@ -71,14 +77,19 @@ export function StartStage({
 						<div className="start-search" data-start-obstacle="">
 							{search}
 						</div>
-						<div className="start-moods">
-							<div className="mx-auto w-fit max-w-full" data-start-obstacle="">
-								{moods}
+						{variant !== "C" && (
+							<div className="start-moods">
+								<div className="mx-auto w-fit max-w-full" data-start-obstacle="">
+									{moods}
+								</div>
 							</div>
-						</div>
+						)}
 					</div>
 				</div>
-				<div aria-hidden className="start-gap" />
+				<div aria-hidden className="start-gap">
+					<SearchOr variant={variant} />
+				</div>
+				<SearchBoxSwitcher />
 				<div className="start-card-wrap">
 					<div id="start-card" className="start-card" data-start-obstacle="">
 						{card}

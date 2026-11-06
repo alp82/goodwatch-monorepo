@@ -79,6 +79,17 @@ export function MemberStart({
 						search={start.search}
 						clearSearch={start.clearSearch}
 						onAsk={card.show}
+						moods={
+					<StartMoodPicker
+						query={start.query}
+						results={results}
+						scope={results.scope}
+						setPicks={start.setPicks}
+						clearPicks={start.clearPicks}
+						member
+						onDone={card.show}
+					/>
+						}
 					/>
 				}
 				moods={

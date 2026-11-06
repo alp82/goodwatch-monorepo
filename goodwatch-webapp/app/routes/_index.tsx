@@ -196,6 +196,17 @@ function GuestStart({
 						search={start.search}
 						clearSearch={start.clearSearch}
 						onAsk={card.show}
+						moods={
+					<StartMoodPicker
+						query={start.query}
+						results={results}
+						scope={results.scope}
+						setPicks={start.setPicks}
+						clearPicks={start.clearPicks}
+						member={false}
+						onDone={card.show}
+					/>
+						}
 					/>
 				}
 				moods={
