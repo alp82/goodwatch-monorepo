@@ -523,12 +523,13 @@ async function cacheSet<CacheData extends JsonData>(
 	key: string,
 	data: CacheData,
 	ttl: number,
+	timestamp = Date.now(),
 ): Promise<boolean> {
 	const redis = getRedisCluster()
 	if (!redis) return false
 
 	try {
-		const jsonData = serializeCacheEntry(data)
+		const jsonData = serializeCacheEntry(data, timestamp)
 		await withRedisDeadline(redis.setex(key, ttl || 1, jsonData))
 		return true
 	} catch (e) {
@@ -610,6 +611,12 @@ export interface CachedParams<Params, Return> {
 	ttlMinutes: number
 	// Catalog data uses the default; caches whose params or result depend on a member (user id) pass 0.
 	staleMinutes?: number
+	/**
+	 * How long this value is fresh when that is less than ttlMinutes: a value the target reports as incomplete (an
+	 * optional part missed its budget) turns stale sooner, so a later request serves it and refreshes it in the
+	 * background, instead of keeping it for the whole lifetime. The entry's physical lifetime is unchanged.
+	 */
+	freshMinutes?: (data: Return) => number | undefined
 }
 
 // A Response body can be read only once.
@@ -629,6 +636,7 @@ export const cached = async <
 	metricName,
 	ttlMinutes,
 	staleMinutes = Math.min(ttlMinutes, DEFAULT_MAX_STALE_MINUTES),
+	freshMinutes,
 }: CachedParams<Params, Return>): Promise<Return> => {
 	const label = metricName ?? name
 	const declaration = declarations.get(name)
@@ -658,6 +666,13 @@ export const cached = async <
 
 	staleMinutes = Number.isFinite(staleMinutes) ? Math.max(0, staleMinutes) : 0
 	const physicalTtl = cachePhysicalTtlSeconds(ttlMinutes, staleMinutes)
+	// A value fresh for less than ttlMinutes is stored as if it were older: the lookup's age test needs no new field.
+	const storedAt = (data: Return) => {
+		const fresh = freshMinutes?.(data)
+		return fresh !== undefined && fresh < ttlMinutes
+			? Date.now() - (ttlMinutes - Math.max(0, fresh)) * 60_000
+			: Date.now()
+	}
 	const startRun = (background: boolean): Promise<Return> => {
 		if (inFlight.size >= MAX_IN_FLIGHT) {
 			return runTarget()
@@ -699,14 +714,19 @@ export const cached = async <
 											cacheResetMarkerKey(cacheKey),
 											entry.marker ?? "",
 											physicalTtl,
-											serializeCacheEntry(data),
+											serializeCacheEntry(data, storedAt(data)),
 										),
 									)
 									outcome = stored === 1 ? "ok" : "discarded"
 									if (stored === 0) resetGuard.inc([label, "store_rejected"])
 								}
 							} else {
-								outcome = (await cacheSet(cacheKey, data, physicalTtl))
+								outcome = (await cacheSet(
+									cacheKey,
+									data,
+									physicalTtl,
+									storedAt(data),
+								))
 									? "ok"
 									: "error"
 							}

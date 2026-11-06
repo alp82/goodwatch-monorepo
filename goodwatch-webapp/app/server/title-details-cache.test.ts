@@ -8,6 +8,7 @@ const originalConnect = Redis.Cluster.prototype.connect
 Redis.Cluster.prototype.connect = async () => {}
 const {
 	createTitleDetailsGetters,
+	DETAILS_AWARDS_LATE_MINUTES,
 	DETAILS_TTL_MINUTES,
 	DETAILS_STALE_MINUTES,
 } = await import("./title-details-cache.ts")
@@ -177,4 +178,55 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 test("title details are fresh for 12 hours and never served older than 24 hours", () => {
 	assert.equal(DETAILS_TTL_MINUTES, 12 * 60)
 	assert.equal(DETAILS_TTL_MINUTES + DETAILS_STALE_MINUTES, 24 * 60)
+})
+
+test("a title whose award read was late is stored for the same lifetime but fresh for 10 minutes only", async () => {
+	const store = new Map<string, string>()
+	const ttls: number[] = []
+	setRedisClusterForTest({
+		get: async (key) => store.get(key) ?? null,
+		setex: async (key, ttl, value) => {
+			store.set(key, value)
+			ttls.push(ttl)
+		},
+		del: async (key) => Number(store.delete(key)),
+	})
+	const raw = (awards_late: boolean) => ({
+		...(awards_late ? { awards_late } : {}),
+		details: { tmdb_id: 7, title: "Title", tropes: [] },
+		cast_rows: [],
+		videos: { clips: null, trailers: [], featurettes: [] },
+		mediaType: "movie" as const,
+	})
+	try {
+		const late = createTitleDetailsGetters(async () => raw(true))
+		const before = Date.now()
+		await late.getDetailsForMovie({ movieId: "7", country: "US", language: "en" })
+		const [stored] = [...store.values()].map((v) => JSON.parse(v))
+		assert.ok(!("awards_late" in stored.data), "the stored shape is unchanged")
+		const backdated = (DETAILS_TTL_MINUTES - DETAILS_AWARDS_LATE_MINUTES) * 60_000
+		assert.ok(before - stored.timestamp >= backdated - 1000)
+		assert.ok(before - stored.timestamp < backdated + 5000)
+		assert.deepEqual(ttls, [(DETAILS_TTL_MINUTES + DETAILS_STALE_MINUTES) * 60])
+		// A hit inside the 10 minutes serves it without a fetch; after them the lookup is stale and refreshes.
+		let fetches = 0
+		const complete = createTitleDetailsGetters(async () => {
+			fetches++
+			return raw(false)
+		})
+		await complete.getDetailsForMovie({ movieId: "7", country: "US", language: "en" })
+		assert.equal(fetches, 0)
+		const key = [...store.keys()][0]
+		const entry = JSON.parse(store.get(key) ?? "")
+		entry.timestamp -= (DETAILS_AWARDS_LATE_MINUTES + 1) * 60_000
+		store.set(key, JSON.stringify(entry))
+		await complete.getDetailsForMovie({ movieId: "7", country: "US", language: "en" })
+		for (let i = 0; i < 20 && fetches === 0; i++) await new Promise((r) => setTimeout(r, 5))
+		assert.equal(fetches, 1)
+		await new Promise((r) => setTimeout(r, 20))
+		const refreshed = JSON.parse(store.get(key) ?? "")
+		assert.ok(Date.now() - refreshed.timestamp < 5000, "a complete refresh is fresh for the lifetime")
+	} finally {
+		setRedisClusterForTest(null)
+	}
 })

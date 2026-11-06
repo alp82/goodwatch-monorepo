@@ -20,13 +20,17 @@ export interface TitleAwardData {
 	results: TitleAwardResult[]
 }
 
-/** One indexed title scope, inside the details cache fill. Bound even a reader that ignores abort. */
+/**
+ * One indexed title scope, inside the details cache fill. Bound even a reader that ignores abort. A title without
+ * rows reads undefined; a read that missed its budget or failed is "late", so the cache can keep the title for less
+ * than its lifetime and fill the awards in on a later refresh (title-details-cache.ts).
+ */
 export async function readTitleAwardData(
 	query: AwardQuery,
 	mediaType: "movie" | "show",
 	tmdbId: number,
 	budgetMs = 200,
-) {
+): Promise<TitleAwardData | undefined | "late"> {
 	const result = await optionalTitlePart(
 		"awards",
 		(signal) =>
@@ -41,11 +45,13 @@ export async function readTitleAwardData(
 			}),
 		budgetMs,
 	)
-	return result.complete ? result.value : undefined
+	return result.complete ? result.value : "late"
 }
 
-/** The bounded summary alone. */
+/** The bounded summary alone; a late read is no summary. */
 export const readTitleAwards = (
 	...args: Parameters<typeof readTitleAwardData>
 ): Promise<TitleAwards | undefined> =>
-	readTitleAwardData(...args).then((data) => data?.awards)
+	readTitleAwardData(...args).then((data) =>
+		data === "late" ? undefined : data?.awards,
+	)

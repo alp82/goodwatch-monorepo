@@ -22,6 +22,10 @@ export const DETAILS_SHOW_CACHE_NAME = "details-show-v9"
 // the country's streaming offers and the scores: this is how far behind the imports they can be.
 export const DETAILS_TTL_MINUTES = 12 * 60
 export const DETAILS_STALE_MINUTES = 12 * 60
+// The award read is optional with a 200 ms budget inside the fill. A title whose awards were late is stored all the
+// same (the page needs no second Crate round trip), but it is fresh for this long only: the next request after that
+// serves it and one background refresh reads the title again, awards included. Its physical lifetime is unchanged.
+export const DETAILS_AWARDS_LATE_MINUTES = 10
 
 // A title that doesn't exist gets a marker under its own cache name, so that a burst of requests
 // for one dead link sends one statement to Crate per minute instead of one per request. The
@@ -101,26 +105,28 @@ export function createTitleDetailsGetters(fetchDetails: FetchDetails) {
 		}
 		return details
 	}
+	// The trimmed values whose award read was late; the cache keeps them fresh for less than the lifetime.
+	const awardsLate = new WeakSet<object>()
+	const freshMinutes = (value: object) =>
+		awardsLate.has(value) ? DETAILS_AWARDS_LATE_MINUTES : undefined
 	const movieTarget = async (
 		{ movieId, country, language }: DetailsMovieParams,
 		useMarker = true,
-	) => ({
-		...trimTitleDetails(
-			await fetchExisting("movie", movieId, country, language, useMarker),
-			"movie",
-			country,
-		),
-	})
+	) => {
+		const raw = await fetchExisting("movie", movieId, country, language, useMarker)
+		const value = { ...trimTitleDetails(raw, "movie", country) }
+		if (raw.awards_late) awardsLate.add(value)
+		return value
+	}
 	const showTarget = async (
 		{ showId, country, language }: DetailsShowParams,
 		useMarker = true,
-	) => ({
-		...trimTitleDetails(
-			await fetchExisting("show", showId, country, language, useMarker),
-			"show",
-			country,
-		),
-	})
+	) => {
+		const raw = await fetchExisting("show", showId, country, language, useMarker)
+		const value = { ...trimTitleDetails(raw, "show", country) }
+		if (raw.awards_late) awardsLate.add(value)
+		return value
+	}
 	return {
 		async getDetailsForMovie(
 			params: DetailsMovieParams,
@@ -141,6 +147,7 @@ export function createTitleDetailsGetters(fetchDetails: FetchDetails) {
 							params: clean,
 							ttlMinutes: DETAILS_TTL_MINUTES,
 							staleMinutes: DETAILS_STALE_MINUTES,
+							freshMinutes,
 						})
 			).catch(notFound)
 		},
@@ -163,6 +170,7 @@ export function createTitleDetailsGetters(fetchDetails: FetchDetails) {
 							params: clean,
 							ttlMinutes: DETAILS_TTL_MINUTES,
 							staleMinutes: DETAILS_STALE_MINUTES,
+							freshMinutes,
 						})
 			).catch(notFound)
 		},

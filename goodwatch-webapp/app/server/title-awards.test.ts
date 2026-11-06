@@ -157,6 +157,21 @@ test("failed and stalled reads degrade to no awards", async () => {
 		undefined,
 	)
 	assert.equal(signal?.aborted, true)
+	// The data reader says so, so the details cache keeps such a title fresh for less than its lifetime.
+	assert.equal(
+		await readTitleAwardData(
+			async () => {
+				throw new Error("unavailable")
+			},
+			"movie",
+			1,
+		),
+		"late",
+	)
+	assert.equal(
+		await readTitleAwardData(async () => new Promise(() => {}), "show", 1, 10),
+		"late",
+	)
 })
 
 test("missing text fields neither throw while reading nor escape as a rejection", async () => {
@@ -223,7 +238,8 @@ test("every reported result is kept uncapped, past the summary's 25 wins, and it
 	const wins = Array.from({ length: 37 }, (_, i) => row("Primetime Emmy Awards", `C${i}`))
 	const noms = Array.from({ length: 30 }, (_, i) => row("Golden Globe Awards", `N${i}`, "2020", false))
 	const neither = { ...row("BAFTA Awards", "Ghost"), has_win: false, has_nomination: false }
-	const data = await readTitleAwardData(async () => [...wins, ...noms, neither], "show", 76331)
+	const read = await readTitleAwardData(async () => [...wins, ...noms, neither], "show", 76331)
+	const data = read === "late" ? undefined : read
 	assert.equal(data?.awards.wins.length, 25)
 	assert.equal(data?.awards.truncated, true)
 	assert.equal(data?.results.length, 67)

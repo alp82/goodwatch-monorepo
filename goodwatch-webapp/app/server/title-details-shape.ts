@@ -63,6 +63,8 @@ export interface CastRow {
 export interface RawTitleDetails {
 	awards?: ResultBase["awards"]
 	award_results?: ResultBase["award_results"]
+	/** The award read missed its budget: the title is complete but for its awards (not part of the trimmed shape). */
+	awards_late?: boolean
 	details: Partial<MovieDetails & ShowDetails> &
 		Partial<DNAAnalysis> & {
 			original_title?: string

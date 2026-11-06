@@ -316,7 +316,8 @@ const _fetchFromDB = async (
 	if (!result[0]) return null
 	const { media } = result[0]
 	const reportedAwards = await awards
-	if (reportedAwards) {
+	if (reportedAwards === "late") media.awards_late = true
+	else if (reportedAwards) {
 		media.awards = reportedAwards.awards
 		media.award_results = reportedAwards.results
 	}
