@@ -218,3 +218,26 @@ class RecoveryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CursorRevisionTests(unittest.TestCase):
+    def test_repeated_cursor_scope_is_reconciled_only_once_at_latest_revision(self):
+        db = mongomock.MongoClient().db
+        newer = category(1) | {"updated_at": NOW + timedelta(seconds=1)}
+        db.tvdb_categories.insert_one(newer)
+        connector = Mock()
+        # Simulate a document moving in the updated_at index during cursor traversal.
+        with patch.object(db.tvdb_categories, "find") as find:
+            find.return_value.sort.return_value.limit.return_value = [
+                category(1),
+                newer,
+            ]
+            result = publish.publish(db, connector)
+        self.assertEqual(result["categories"], 1)
+        deletes = [
+            c
+            for c in connector.run_many.call_args_list
+            if c.args[0].startswith("DELETE")
+        ]
+        self.assertEqual(deletes[0].args[1], [[1, newer["updated_at"]]])
+        self.assertFalse(db.tvdb_categories.find_one({})["publish_pending"])

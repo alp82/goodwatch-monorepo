@@ -312,9 +312,12 @@ def _publish(db, connector, limit=100):
                 {"publish_retry_at": {"$lte": now}},
             ],
         }
-        scopes = []
+        scopes, seen = {}, {}
         try:
             for doc in col.find(query).sort("updated_at", 1).limit(limit):
+                if doc["_id"] in seen and seen[doc["_id"]] >= doc["updated_at"]:
+                    continue
+                seen[doc["_id"]] = doc["updated_at"]
                 try:
                     if name == "tvdb_titles":
                         if (
@@ -335,14 +338,30 @@ def _publish(db, connector, limit=100):
                         keys = ["category_id", "nominee_id"]
                         scope_sql, params = "category_id = ?", (doc["_id"],)
                     validate_rows(table, rows)
-                    scopes.append((doc, params, rows))
+                    # Mongo can yield an indexed document twice when its sort key changes.
+                    # Reconcile each scope only once, using its newest observed snapshot.
+                    previous = scopes.get(doc["_id"])
+                    if (
+                        previous is None
+                        or previous[0]["updated_at"] <= doc["updated_at"]
+                    ):
+                        scopes[doc["_id"]] = (doc, params, rows)
                 except Exception as error:
                     if not data_error(error):
                         raise
+                    scopes.pop(doc["_id"], None)
                     quarantine(col, doc, error, now, result)
             if scopes:
                 write_scopes(
-                    connector, table, col, scopes, keys, scope_sql, now, result, counter
+                    connector,
+                    table,
+                    col,
+                    list(scopes.values()),
+                    keys,
+                    scope_sql,
+                    now,
+                    result,
+                    counter,
                 )
         except Exception as error:  # noqa: BLE001 -- table boundary records failures and continues the independent table
             result["system_errors"].append(
