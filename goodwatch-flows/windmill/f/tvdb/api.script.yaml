@@ -1,0 +1,8 @@
+summary: TVDB api
+description: ''
+lock: '!inline f/tvdb/api.script.lock'
+kind: script
+schema:
+  type: object
+  properties: {}
+  required: []

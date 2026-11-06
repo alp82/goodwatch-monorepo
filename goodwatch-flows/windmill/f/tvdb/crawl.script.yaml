@@ -1,0 +1,25 @@
+summary: TVDB crawl
+description: ''
+lock: '!inline f/tvdb/crawl.script.lock'
+kind: script
+schema:
+  type: object
+  properties:
+    mode:
+      type: string
+      enum:
+      - titles
+      - mappings
+      default: titles
+    max_minutes:
+      type: number
+      default: 4
+      minimum: 0.02
+      maximum: 25
+    max_items:
+      type: integer
+      default: 1000
+      minimum: 1
+      maximum: 5000
+  required: []
+timeout: 1800

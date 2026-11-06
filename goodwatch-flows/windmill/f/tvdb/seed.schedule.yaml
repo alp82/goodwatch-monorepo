@@ -1,0 +1,9 @@
+summary: TVDB seed
+schedule: 0 1/5 * * * *
+timezone: UTC
+script_path: f/tvdb/seed
+is_flow: false
+args: {}
+enabled: true
+no_flow_overlap: true
+cron_version: v2

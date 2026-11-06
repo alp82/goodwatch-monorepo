@@ -17,6 +17,29 @@ ARCHIVE_COLUMN_TYPES = {key: "TEXT" for key in (
 ARCHIVE_OBJECT_SQL = "OBJECT(DYNAMIC) AS (" + ", ".join(f"{key} {kind}" for key, kind in ARCHIVE_COLUMN_TYPES.items()) + ")"
 
 SCHEMAS = {
+    # TVDB owns these enrichment snapshots; TMDB cast replacement never clears them.
+    "tvdb_character": {
+        "columns": {
+            "media_type": "TEXT", "media_tmdb_id": "INTEGER", "tvdb_character_id": "BIGINT",
+            "tvdb_title_id": "BIGINT", "tvdb_person_id": "BIGINT", "person_tmdb_id": "INTEGER",
+            "credit_id": "TEXT", "character_name": "TEXT", "person_name": "TEXT",
+            "image_url": "TEXT", "actor_image_url": "TEXT", "source_url": "TEXT",
+            "source_fetched_at": "TIMESTAMP", "revision": "TIMESTAMP",
+        },
+        "primary_key": ["media_type", "media_tmdb_id", "tvdb_character_id"],
+        "shards": 6, "timestamps": False,
+    },
+    "tvdb_nomination": {
+        "columns": {
+            "category_id": "BIGINT", "nominee_id": "BIGINT", "award_id": "BIGINT",
+            "award_name": "TEXT", "category_name": "TEXT", "ceremony_year": "TEXT", "is_winner": "BOOLEAN",
+            "media_type": "TEXT", "media_tmdb_id": "INTEGER", "tvdb_title_id": "BIGINT",
+            "tvdb_episode_id": "BIGINT", "tvdb_character_id": "BIGINT", "recipient_name": "TEXT",
+            "details": "TEXT", "dedupe_key": "TEXT", "raw_json": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "source_fetched_at": "TIMESTAMP", "revision": "TIMESTAMP",
+        },
+        "primary_key": ["category_id", "nominee_id"], "shards": 3, "timestamps": False,
+    },
     "crawl_priority": {
         "columns": {
             "media_type": "TEXT CHECK (media_type IN ('movie','show'))",

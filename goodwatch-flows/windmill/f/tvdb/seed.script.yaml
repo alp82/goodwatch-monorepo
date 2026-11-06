@@ -1,0 +1,9 @@
+summary: TVDB seed
+description: ''
+lock: '!inline f/tvdb/seed.script.lock'
+kind: script
+schema:
+  type: object
+  properties: {}
+  required: []
+timeout: 600

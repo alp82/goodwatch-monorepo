@@ -142,3 +142,10 @@ main, because that push deploys the writer. See the report for the full sequence
 The [daily service-list job](../docs/implementation/daily-provider-lists/README.md)
 adds scoped daily evidence to that same history writer. It defaults to a preview with only an operational Mongo run lease, monitors the research's big brands in every country, and never writes
 current offers. Its new schedule is an owner-applied proposal after review.
+
+## TVDB character portraits and awards
+
+`f/tvdb` crawls verified character portrayals, award categories and nominations,
+resolves external identities, and publishes separate CrateDB enrichment tables.
+See [TVDB pipelines](../docs/tvdb-pipelines.md) for schedules, source limitations,
+rollout validation and the initial population estimate.

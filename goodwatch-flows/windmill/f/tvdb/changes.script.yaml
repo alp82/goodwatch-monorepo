@@ -1,0 +1,14 @@
+summary: TVDB update feed into queues
+description: ''
+lock: '!inline f/tvdb/changes.script.lock'
+kind: script
+schema:
+  type: object
+  properties:
+    max_minutes:
+      type: number
+      default: 4
+      minimum: 0.02
+      maximum: 4
+  required: []
+timeout: 600

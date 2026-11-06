@@ -1,0 +1,12 @@
+summary: TVDB schema
+description: ''
+lock: '!inline f/tvdb/schema.script.lock'
+kind: script
+schema:
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+  required: []
+timeout: 300

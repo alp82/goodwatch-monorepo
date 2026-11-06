@@ -1,0 +1,10 @@
+summary: TVDB publish
+schedule: 0 3/5 * * * *
+timezone: UTC
+script_path: f/tvdb/publish
+is_flow: false
+args:
+  limit: 1000
+enabled: true
+no_flow_overlap: true
+cron_version: v2

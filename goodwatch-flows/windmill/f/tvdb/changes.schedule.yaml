@@ -1,0 +1,10 @@
+summary: TVDB incremental updates
+schedule: 0 12 * * * *
+timezone: UTC
+script_path: f/tvdb/changes
+is_flow: false
+args:
+  max_minutes: 4
+enabled: true
+no_flow_overlap: true
+cron_version: v2

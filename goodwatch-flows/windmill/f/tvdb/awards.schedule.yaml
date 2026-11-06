@@ -1,0 +1,11 @@
+summary: TVDB awards
+schedule: 0 4 * * * *
+timezone: UTC
+script_path: f/tvdb/awards
+is_flow: false
+args:
+  max_minutes: 12
+  max_categories: 1000
+enabled: true
+no_flow_overlap: true
+cron_version: v2

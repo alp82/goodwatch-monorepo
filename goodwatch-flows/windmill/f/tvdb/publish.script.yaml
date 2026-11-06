@@ -1,0 +1,14 @@
+summary: TVDB publish
+description: ''
+lock: '!inline f/tvdb/publish.script.lock'
+kind: script
+schema:
+  type: object
+  properties:
+    limit:
+      type: integer
+      default: 1000
+      minimum: 1
+      maximum: 10000
+  required: []
+timeout: 1800

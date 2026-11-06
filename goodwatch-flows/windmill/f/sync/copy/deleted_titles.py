@@ -39,6 +39,8 @@ TITLE_KEYED_TABLES = (
     "release_event",
     "person_appeared_in",
     "person_worked_on",
+    "tvdb_character",
+    "tvdb_nomination",
     "streaming_evidence",
     "streaming_availability",
 )
@@ -53,6 +55,8 @@ ROW_KEY_COLUMNS = {
     "release_event": ("country_code", "release_date", "release_type", "certification"),
     "person_appeared_in": ("person_tmdb_id", "credit_id"),
     "person_worked_on": ("person_tmdb_id", "credit_id"),
+    "tvdb_character": ("tvdb_character_id",),
+    "tvdb_nomination": ("category_id", "nominee_id"),
     "streaming_evidence": ("country_code",),
 }
 MEDIA_TABLES = {"movie": "movie", "show": "show"}

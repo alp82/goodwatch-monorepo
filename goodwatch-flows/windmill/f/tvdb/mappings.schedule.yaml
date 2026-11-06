@@ -1,0 +1,11 @@
+summary: TVDB mappings
+schedule: 0 2/5 * * * *
+timezone: UTC
+script_path: f/tvdb/mappings
+is_flow: false
+args:
+  max_minutes: 4
+  max_items: 1000
+enabled: true
+no_flow_overlap: true
+cron_version: v2
