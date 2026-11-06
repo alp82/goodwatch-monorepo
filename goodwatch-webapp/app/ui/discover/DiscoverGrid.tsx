@@ -1,7 +1,8 @@
 // Discover's grid of title cards. The grid is never replaced: titles in both the old and the new list glide to their
 // new places, new ones scale in, leaving ones fade out. After For you flips, each moved card shows how far it moved
 // ("↑4", "↓2", "↑1.2k" for a title For you brought from far down the sort) for a moment. With reduced motion, only short opacity fades run: MotionConfig alone still let the
-// layout glide run, so the grid turns layout animation off itself.
+// layout glide run, so the grid turns layout animation off itself. With a cast filter, the person's characters among
+// the results lead the grid (DiscoverRoles.tsx).
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/20/solid"
 import {
 	AnimatePresence,
@@ -11,6 +12,7 @@ import {
 } from "framer-motion"
 import type { ReactNode } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
+import { DiscoverCardRole, DiscoverRoles } from "~/ui/discover/DiscoverRoles"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { SPRING } from "~/ui/filter-bar/motion"
 import { HiddenTileContext, useKeptCards } from "~/ui/title-actions/hide-feedback"
@@ -49,6 +51,7 @@ export function DiscoverGrid({
 	// place, as its "Hidden" tile with Undo, until the list changes after that.
 	const { cards, keeper } = useKeptCards(listed)
 	return (
+		<DiscoverRoles cards={cards}>
 		<div className={DISCOVER_GRID}>
 			<HiddenTileContext.Provider value={keeper}>
 			<AnimatePresence initial={false} mode="popLayout">
@@ -76,11 +79,13 @@ export function DiscoverGrid({
 						>
 							{/* A browser requests a lazy image up to 3,000 px ahead, which is ten rows of posters on a
 							    phone. A skipped card holds its poster back until it is about one and a half screens away. */}
-							<TitlePosterCard
-								card={card}
-								posterPriority={priority}
-								skipOffscreen={priority === "lazy"}
-							/>
+							<DiscoverCardRole card={card}>
+								<TitlePosterCard
+									card={card}
+									posterPriority={priority}
+									skipOffscreen={priority === "lazy"}
+								/>
+							</DiscoverCardRole>
 							<MoveMark delta={delta} reduce={reduce} />
 						</motion.div>
 					)
@@ -89,6 +94,7 @@ export function DiscoverGrid({
 			</HiddenTileContext.Provider>
 			{children}
 		</div>
+		</DiscoverRoles>
 	)
 }
 
