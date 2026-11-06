@@ -135,6 +135,15 @@ export function Credits({ className = "" }: { className?: string }) {
 				alt="Metacritic"
 				className={`h-5 ${logo}`}
 			/>
+			{/* Character images; TheTVDB asks for a credit with a link. */}
+			<a
+				href="https://thetvdb.com"
+				target="_blank"
+				rel="noreferrer"
+				className="font-semibold text-gray-300 opacity-80 hover:opacity-100"
+			>
+				TheTVDB
+			</a>
 		</div>
 	)
 }
