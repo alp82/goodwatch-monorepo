@@ -376,6 +376,33 @@ The vote-weighted mean of the IMDb ratings of a season's rated episodes. A seaso
 **Season critic score**:
 A season's Tomatometer or Metascore as Rotten Tomatoes or Metacritic publish it, in that site's season numbering. It is distinct from the season score, which GoodWatch computes from IMDb episode ratings.
 
+### Awards
+
+**Award program**:
+A recurring set of awards, such as the Academy Awards or BAFTA Film Awards. Programs sharing an organization or brand can still recognize different work and have separate ceremonies.
+
+**Award category**:
+A specific recognition within an award program, such as Actor in a Leading Role. A renamed category can retain its identity; a material change to what is recognized can create a different category.
+
+**Award ceremony**:
+An edition of an award program. Its edition, award-year label, eligibility period and presentation date are distinct; a calendar year can contain multiple editions.
+
+**Award entry**:
+One selection recognized within a category at a ceremony, potentially crediting multiple recipients and works. A nomination followed by a win is one entry with a known outcome.
+_Avoid_: Award row, nominee (when referring to the entry rather than a person)
+
+**Award recipient**:
+A person, organization or credited group recognized by an award entry. Appearing in an associated title does not establish that someone is a recipient.
+
+**Award work**:
+A creative work recognized by an award entry, such as a film, episode or song. An associated catalog title can provide context without being the recognized work itself; a career honor can have no associated work.
+
+**Award observation**:
+A source's report of an award entry or some of its facts. Several observations can describe the same entry, while incomplete observations can leave its recipient or exact identity unresolved.
+
+**Award coverage**:
+The established extent of known entries, recipients and results for an explicitly bounded award scope. Importing everything a source provides does not establish complete coverage.
+
 ## YepWatch rooms
 
 A YepWatch room shares one country and up to eight authored ideas. The host controls which ideas and services are enabled; present people contribute their own services to the room's union. A person without a service pick still counts for voting and agreement. Jev interprets each added/edited idea once, and the deck interleaves ideas with popularity fallback. Settings edits preserve the round's answers. Explicit Leave removes someone from the active group and transfers hosting if necessary; a disconnected participant still counts. See [the room-ideas decision](docs/adr/yepwatch-room-ideas.md).
