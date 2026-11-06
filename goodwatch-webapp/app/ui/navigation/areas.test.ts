@@ -1,7 +1,8 @@
-// The navigation's areas: which area each page belongs to, the tabs and which one is current, Watch's chips and its
-// To watch | Seen switch, the Taste row for owners, visitors and members without a handle, and the places list.
 import assert from "node:assert/strict"
 import { test } from "node:test"
+// The navigation's areas: which area each page belongs to, the tabs and which one is current, Watch's chips and its
+// To watch | Seen switch, the Taste row for owners, visitors and members without a handle, and the places list.
+import { CheckBadgeIcon, TrophyIcon } from "@heroicons/react/24/outline"
 import {
 	GUEST,
 	RATE_FALLBACK_PATH,
@@ -103,6 +104,16 @@ test("the third key says Profile, and every tab of every area has an icon", () =
 	}
 })
 
+test("Awards sits after Best in Explore with the trophy; Best has the check badge", () => {
+	const tabs = exploreTabs("/awards")
+	const keys = tabs.map((t) => t.key)
+	assert.equal(keys.indexOf("awards"), keys.indexOf("best") + 1)
+	const icon = (key: string) => tabs.find((t) => t.key === key)?.icon
+	assert.equal(icon("awards"), TrophyIcon)
+	assert.equal(icon("best"), CheckBadgeIcon)
+	assert.equal(areaOf("/awards/emmys/2025"), "explore")
+})
+
 test("Watch: tabs, the To watch | Seen switch and the chips for every page", () => {
 	const cases: [string, string, "to-watch" | "seen" | null, string | null][] = [
 		["/watch/shows", "up-next", "to-watch", "next-episodes"],
@@ -167,6 +178,10 @@ test("Explore tabs: one current tab per page; Best covers both kinds; guests' Ne
 		["/shows", ["shows"]],
 		["/people", ["people"]],
 		["/map", ["map"]],
+		["/awards", ["awards"]],
+		["/awards/oscars", ["awards"]],
+		["/awards/oscars/2024", ["awards"]],
+		["/awards/oscars/category/directing", ["awards"]],
 	]
 	for (const [path, here] of cases)
 		assert.deepEqual(hereOf(exploreTabs(path)), here, path)

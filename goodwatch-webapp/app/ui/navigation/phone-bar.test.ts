@@ -1,6 +1,7 @@
-// The phone's top bar for every kind of page: members and guests, each archetype of the B3 design.
 import assert from "node:assert/strict"
 import { test } from "node:test"
+// The phone's top bar for every kind of page: members and guests, each archetype of the B3 design.
+import { CheckBadgeIcon, TrophyIcon } from "@heroicons/react/24/outline"
 import { GUEST, member } from "../../domain/member-paths.ts"
 import { phoneBarOf } from "./phone-bar.ts"
 
@@ -30,6 +31,16 @@ test("area pages: area label over the current tab, siblings in the sheet", () =>
 	assert.ok(scores.siblings.some((t) => t.key === "rate"))
 	assert.equal(bar("/u/alp/scores/rate").title, "Rate more")
 	assert.equal(bar("/taste").title, "Taste")
+})
+
+test("the awards pages: Explore over Awards with the trophy; Best keeps the check badge", () => {
+	const awards = bar("/awards/oscars/2024", GUEST)
+	assert.equal(awards.eyebrow, "Explore")
+	assert.equal(awards.title, "Awards")
+	assert.equal(awards.icon, TrophyIcon)
+	const keys = awards.siblings.map((t) => t.key)
+	assert.equal(keys.indexOf("awards"), keys.indexOf("best") + 1)
+	assert.equal(bar("/movies/best").icon, CheckBadgeIcon)
 })
 
 test("someone else's profile: @handle over the tab, visitors' tabs; settings home is Settings", () => {

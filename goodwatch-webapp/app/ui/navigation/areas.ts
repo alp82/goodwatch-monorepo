@@ -14,6 +14,7 @@ import {
 	CalendarDaysIcon,
 	ChartBarIcon,
 	ChatBubbleLeftEllipsisIcon,
+	CheckBadgeIcon,
 	ClockIcon,
 	Cog6ToothIcon,
 	EyeIcon,
@@ -117,6 +118,7 @@ const EXPLORE_PREFIXES = [
 	"/people",
 	"/map",
 	"/explore",
+	"/awards",
 ]
 const TASTE_PREFIXES = ["/u", "/settings", "/taste", "/lists"]
 
@@ -288,6 +290,7 @@ export type ExploreTabKey =
 	| "new"
 	| "hot"
 	| "best"
+	| "awards"
 	| "movies"
 	| "shows"
 	| "people"
@@ -328,8 +331,15 @@ const EXPLORE_TABS: {
 		key: "best",
 		label: "Best",
 		href: "/movies/best",
-		icon: TrophyIcon,
+		icon: CheckBadgeIcon,
 		here: isBest,
+	},
+	{
+		key: "awards",
+		label: "Awards",
+		href: "/awards",
+		icon: TrophyIcon,
+		here: (p) => under(p, "/awards"),
 	},
 	{
 		key: "movies",

@@ -14,6 +14,7 @@ import {
 	CalendarDaysIcon,
 	ChartBarIcon,
 	ChatBubbleLeftEllipsisIcon,
+	CheckBadgeIcon,
 	Cog6ToothIcon,
 	CpuChipIcon,
 	DocumentTextIcon,
@@ -329,12 +330,16 @@ const PAGES: Entry[] = [
 				words: ["just added", "new arrivals", "recently added", "arrived"],
 			},
 		),
-	page("bestMovies", "Best movies", "/movies/best", TrophyIcon, {
+	page("bestMovies", "Best movies", "/movies/best", CheckBadgeIcon, {
 		words: ["top movies", "best films", "top rated", "ranking", "greatest"],
 	}),
-	page("bestShows", "Best TV shows", "/shows/best", TrophyIcon, {
+	page("bestShows", "Best TV shows", "/shows/best", CheckBadgeIcon, {
 		names: ["best shows"],
 		words: ["top shows", "best series", "top rated", "ranking", "greatest"],
+	}),
+	page("awards", "Awards", "/awards", TrophyIcon, {
+		names: ["award winners", "oscars", "emmys", "golden globes"],
+		words: ["winners", "nominees", "academy awards", "bafta", "ceremony"],
 	}),
 	page("people", "People", "/people", UserGroupIcon, {
 		words: ["actors", "actresses", "cast", "directors", "stars", "celebrities"],
