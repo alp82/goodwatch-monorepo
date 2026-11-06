@@ -36,10 +36,24 @@ def main(dry_run: bool = True):
         if not dry_run:
             for name, kind in additions.items():
                 connector.run(f"ALTER TABLE person ADD COLUMN {name} {kind}")
+        nomination_columns = (
+            connector.get_existing_columns("tvdb_nomination")
+            if "tvdb_nomination" in existing
+            else SCHEMAS["tvdb_nomination"]["columns"]
+        )
+        nomination_additions = {
+            name: kind
+            for name, kind in SCHEMAS["tvdb_nomination"]["columns"].items()
+            if name not in nomination_columns
+        }
+        if not dry_run:
+            for name, kind in nomination_additions.items():
+                connector.run(f"ALTER TABLE tvdb_nomination ADD COLUMN {name} {kind}")
         return {
             "dry_run": dry_run,
             "missing_tables": missing,
             "missing_person_columns": list(additions),
+            "missing_nomination_columns": list(nomination_additions),
         }
     finally:
         connector.disconnect()

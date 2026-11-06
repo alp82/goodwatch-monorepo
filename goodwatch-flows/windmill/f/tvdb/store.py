@@ -32,6 +32,16 @@ def indexes(db):
     db.tvdb_titles.create_index("characters.peopleId")
     db.tvdb_titles.create_index("characters.id")
     db.tvdb_categories.create_index("nominees.id")
+    for field in (
+        "movie.id",
+        "series.id",
+        "character.id",
+        "character.peopleId",
+        "character.movieId",
+        "character.seriesId",
+        "episode.seriesId",
+    ):
+        db.tvdb_categories.create_index("nominees." + field)
     db.tvdb_entities.create_index([("kind", 1), ("tmdb_id", 1)])
 
 

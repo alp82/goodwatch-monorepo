@@ -35,6 +35,8 @@ SCHEMAS = {
             "award_name": "TEXT", "category_name": "TEXT", "ceremony_year": "TEXT", "is_winner": "BOOLEAN",
             "media_type": "TEXT", "media_tmdb_id": "INTEGER", "tvdb_title_id": "BIGINT",
             "tvdb_episode_id": "BIGINT", "tvdb_character_id": "BIGINT", "recipient_name": "TEXT",
+            "tvdb_person_id": "BIGINT", "person_tmdb_id": "INTEGER", "credit_id": "TEXT",
+            "title_link_status": "TEXT", "actor_link_status": "TEXT", "character_link_status": "TEXT",
             "details": "TEXT", "dedupe_key": "TEXT", "raw_json": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
             "source_fetched_at": "TIMESTAMP", "revision": "TIMESTAMP",
         },

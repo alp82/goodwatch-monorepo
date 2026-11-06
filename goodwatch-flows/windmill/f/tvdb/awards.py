@@ -13,7 +13,8 @@ from time import monotonic
 
 from f.sync.copy.sync_state import utc_now
 from f.tvdb.api import ApiError, Deferred
-from f.tvdb.crawl import checked_id
+from f.tvdb.ids import checked_id
+from f.tvdb.links import title_target
 from f.tvdb.store import (
     claim,
     enqueue,
@@ -104,15 +105,11 @@ def fetch_category(db, api, doc):
         if n["id"] in ids:
             raise ValueError("Repeated nomination ID within category")
         ids.add(n["id"])
-        for field, kind in [("movie", "movie"), ("series", "show")]:
-            target = n.get(field)
-            if target:
-                tvdb = checked_id(target.get("id"))
-                if not tvdb:
-                    raise ValueError("Malformed TVDB nominee title")
-                entities.append(
-                    (f"{kind}:{tvdb}", {"kind": kind, "tvdb_id": tvdb}, 1000000)
-                )
+        kind, tvdb, error = title_target(n)
+        if tvdb and not error:
+            entities.append(
+                (f"{kind}:{tvdb}", {"kind": kind, "tvdb_id": tvdb}, 1000000)
+            )
         if n.get("character") and checked_id(n["character"].get("peopleId")):
             person = n["character"]["peopleId"]
             entities.append(

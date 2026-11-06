@@ -86,42 +86,14 @@ def role_rows(db, connector, doc):
     return rows
 
 
-def nomination_rows(db, doc):
-    entity_keys = [
-        f"{kind}:{n[field]['id']}"
-        for n in doc["nominees"]
-        for field, kind in [("movie", "movie"), ("series", "show")]
-        if isinstance(n.get(field), dict) and n[field].get("id")
-    ]
-    entities = {
-        r["_id"]: r
-        for r in db.tvdb_entities.find({"_id": {"$in": entity_keys}, "status": "ok"})
-    }
-    local_keys = [
-        f"{r['kind']}:{r['tmdb_id']}"
-        for r in entities.values()
-        if tmdb_id(r.get("tmdb_id"))
-    ]
-    local_titles = {
-        r["_id"]
-        for r in db.tvdb_titles.find(
-            {"_id": {"$in": local_keys}, "tmdb_deleted": {"$ne": True}}, {"_id": 1}
-        )
-    }
+def nomination_rows(db, doc, connector=None):
+    from f.tvdb.links import NominationLinks
+
+    links = NominationLinks(db, doc["nominees"], connector)
     rows = []
     for n in doc["nominees"]:
-        kind, title = next(
-            (
-                (kind, n[field])
-                for field, kind in [("movie", "movie"), ("series", "show")]
-                if isinstance(n.get(field), dict)
-            ),
-            (None, {}),
-        )
-        tvdb = checked_id(title.get("id"))
-        mapped = entities.get(f"{kind}:{tvdb}", {})
-        tmdb = tmdb_id(mapped.get("tmdb_id"))
-        local = f"{kind}:{tmdb}" in local_titles
+        kind, tvdb, tmdb, title_status = links.title(n)
+        recipient = links.recipient(n, kind, tvdb, tmdb)
         character = n.get("character") or {}
         signature = [
             doc["_id"],
@@ -144,10 +116,11 @@ def nomination_rows(db, doc):
                 "ceremony_year": str(n.get("year") or ""),
                 "is_winner": n["isWinner"],
                 "media_type": kind,
-                "media_tmdb_id": tmdb if local else None,
+                "media_tmdb_id": tmdb,
+                "title_link_status": title_status,
                 "tvdb_title_id": tvdb,
                 "tvdb_episode_id": (n.get("episode") or {}).get("id"),
-                "tvdb_character_id": character.get("id"),
+                **recipient,
                 "recipient_name": n.get("name") or character.get("personName"),
                 "details": n.get("details"),
                 "dedupe_key": hashlib.sha256(
@@ -334,7 +307,7 @@ def _publish(db, connector, limit=100):
                     else:
                         if "nominees" not in doc:
                             raise ScopeError("Incomplete nomination scope")
-                        rows = nomination_rows(db, doc)
+                        rows = nomination_rows(db, doc, connector)
                         keys = ["category_id", "nominee_id"]
                         scope_sql, params = "category_id = ?", (doc["_id"],)
                     validate_rows(table, rows)

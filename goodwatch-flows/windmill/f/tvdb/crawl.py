@@ -15,6 +15,7 @@ from urllib.parse import quote
 from f.sync.copy.sync_state import utc_now
 from f.tvdb.api import ApiError, Deferred
 from f.tvdb.ids import checked_id, tmdb_id
+from f.tvdb.links import category_title_query
 from f.tvdb.photos import photo_url, seed_actors
 from f.tvdb.store import (
     claim,
@@ -204,15 +205,43 @@ def run(
                     {"characters.peopleId": doc["tvdb_id"]},
                     {"$set": {"updated_at": utc_now(), "publish_pending": True}},
                 )
-            if mode == "mappings" and fields.get("tmdb_id") and doc["kind"] != "person":
-                db.tvdb_categories.update_many(
-                    {
-                        "nominees."
-                        + ("movie" if doc["kind"] == "movie" else "series")
-                        + ".id": doc["tvdb_id"]
-                    },
-                    {"$set": {"updated_at": utc_now(), "publish_pending": True}},
+            # Revisit awards when any dependency changes, including a mapping being cleared.
+            replay = {
+                "$set": {
+                    "updated_at": utc_now(),
+                    "publish_pending": True,
+                    "publish_retry_at": utc_now(),
+                }
+            }
+            if mode == "titles" or doc["kind"] != "person":
+                kind = doc["media_type"] if mode == "titles" else doc["kind"]
+                tvdb = (
+                    (fields.get("tvdb_id") or doc.get("tvdb_id"))
+                    if mode == "titles"
+                    else doc["tvdb_id"]
                 )
+                if tvdb:
+                    db.tvdb_categories.update_many(
+                        category_title_query(kind, tvdb), replay
+                    )
+            else:
+                db.tvdb_categories.update_many(
+                    {"nominees.character.peopleId": doc["tvdb_id"]}, replay
+                )
+                # Some nominations carry only a character ID; resolve its actor through the saved cast.
+                for title in db.tvdb_titles.find(
+                    {"characters.peopleId": doc["tvdb_id"]},
+                    {"characters.id": 1, "characters.peopleId": 1},
+                ):
+                    ids = [
+                        c["id"]
+                        for c in title.get("characters") or []
+                        if c.get("peopleId") == doc["tvdb_id"] and c.get("id")
+                    ]
+                    if ids:
+                        db.tvdb_categories.update_many(
+                            {"nominees.character.id": {"$in": ids}}, replay
+                        )
             report["ok"] += 1
             report["invalid_mappings"] += bool(fields.get("mapping_error"))
         except Deferred:
