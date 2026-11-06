@@ -45,6 +45,8 @@ interface AwardData {
 }
 
 const LIFETIME_MS = 6 * 60 * 60 * 1000
+/** After a failed refresh the old data stays, and the next refresh waits this long instead of running per request. */
+const RETRY_MS = 60 * 1000
 
 async function readTitles(kind: AwardMediaKind, ids: number[]) {
 	if (!ids.length) return []
@@ -61,6 +63,8 @@ async function readAwardData(): Promise<AwardData> {
 		`SELECT media_type, media_tmdb_id, award_id, category_id, category_name, ceremony_year, has_win, has_nomination
 		   FROM doc.tvdb_award_display LIMIT 200000`,
 	)
+	// An empty view (a crawl that hasn't run, a view being rebuilt) is a failure, not a result to keep for 6 hours.
+	if (!rows.length) throw new Error("doc.tvdb_award_display is empty")
 	const index = buildAwardIndex(rows)
 	const ids = { movie: [] as number[], show: [] as number[] }
 	for (const ref of publishedTitleRefs(index))
@@ -91,12 +95,15 @@ async function readAwardData(): Promise<AwardData> {
 let current: { at: number; value: Promise<AwardData> } | null = null
 let refreshing = false
 
-/** The kept data. Past its lifetime, pages keep the old data while one read in the background replaces it. */
+/**
+ * The kept data. The first read is shared by every request that arrives while it runs; a failed first read is tried
+ * again on the next request. Past its lifetime, pages keep the old data while one read in the background replaces it;
+ * when that read fails the old data stays and the next try waits RETRY_MS.
+ */
 function awardData() {
 	if (!current) {
 		const value = readAwardData()
 		current = { at: Date.now(), value }
-		// A failed first read is tried again on the next request.
 		value.catch(() => {
 			if (current?.value === value) current = null
 		})
@@ -104,11 +111,15 @@ function awardData() {
 	}
 	if (Date.now() - current.at > LIFETIME_MS && !refreshing) {
 		refreshing = true
+		const kept = current
 		readAwardData()
 			.then((data) => {
 				current = { at: Date.now(), value: Promise.resolve(data) }
 			})
-			.catch((error) => console.error("[award-pages] refresh failed", error))
+			.catch((error) => {
+				console.error("[award-pages] refresh failed", error)
+				if (current === kept) kept.at = Date.now() - LIFETIME_MS + RETRY_MS
+			})
 			.finally(() => {
 				refreshing = false
 			})
