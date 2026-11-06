@@ -54,7 +54,7 @@ import React from "react"
 import { ToastContainer } from "react-toastify"
 import { useDehydratedState } from "use-dehydrated-state"
 
-import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
+import { ErrorDetail, ErrorPage, errorPageProps } from "~/ui/ErrorPage"
 import { LazyTv } from "~/ui/tv-egg/LazyTv"
 import { SiteChrome } from "~/ui/navigation"
 import { LocaleContext } from "~/utils/locale"
@@ -269,8 +269,12 @@ export function ErrorBoundary() {
 						path={location.pathname}
 						plain={<ErrorPage status={status} />}
 					/>
-					{/* A development build also shows what went wrong. */}
-					{detail && <ErrorPage status={status} detail={detail} />}
+					{/* A development build also shows what went wrong, under the page drawn once. */}
+					{detail && (
+						<div className="mx-auto w-full max-w-xl px-4 pb-16">
+							<ErrorDetail detail={detail} />
+						</div>
+					)}
 				</div>
 			</SiteChrome>
 			{/* Send feedback only: an error page has no parts to fix. */}

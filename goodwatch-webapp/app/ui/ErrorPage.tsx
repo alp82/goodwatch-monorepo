@@ -90,11 +90,24 @@ export function ErrorPage({
 					Search
 				</button>
 			</div>
-			{detail && (
-				<pre className="mt-10 max-h-48 w-full overflow-auto rounded-xl bg-gray-950 p-4 text-left text-xs text-gray-400 whitespace-pre-wrap break-words">
-					{detail}
-				</pre>
-			)}
+			{detail && <ErrorDetail detail={detail} className="mt-10" />}
 		</div>
+	)
+}
+
+/** What went wrong, for development builds. Root's boundary shows it under the error page it already drew. */
+export function ErrorDetail({
+	detail,
+	className = "",
+}: {
+	detail: string
+	className?: string
+}) {
+	return (
+		<pre
+			className={`max-h-48 w-full overflow-auto rounded-xl bg-gray-950 p-4 text-left text-xs text-gray-400 whitespace-pre-wrap break-words ${className}`}
+		>
+			{detail}
+		</pre>
 	)
 }
