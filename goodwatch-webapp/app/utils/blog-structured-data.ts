@@ -20,8 +20,17 @@ export type BlogPost = {
 	 * feed and the sitemap (see blog-posts.ts and scripts/sitemap_blog.py).
 	 */
 	draft?: boolean
-	/** How /blog shows the post. Without it, the card uses the title and the description. */
-	card?: { dek?: string; date_label?: string; link_label?: string }
+	/**
+	 * How /blog shows the post; without it, /blog uses the title and the description. `preview_line` is the line under
+	 * the headline on the post's link preview, 40 characters at most; without it, the preview has the description
+	 * when that is as short, or no line.
+	 */
+	card?: {
+		dek?: string
+		date_label?: string
+		link_label?: string
+		preview_line?: string
+	}
 }
 
 export const blogPostUrl = (slug: string) => `${SITE}/blog/${slug}`

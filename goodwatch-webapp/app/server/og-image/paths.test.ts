@@ -28,6 +28,10 @@ const result = await build({
 							"~/ui/og-image/profile-card-model",
 							"~/server/og-image/awards-content.server",
 							"~/domain/award-pages",
+							"~/server/og-image/blog-content.server",
+							"~/server/blog/posts.server",
+							"~/content/blog/posts.json",
+							"~/utils/blog-posts",
 						].includes(args.path)
 					)
 						return
@@ -92,4 +96,24 @@ test("awards addresses without a page have no card", () => {
 		`/awards/oscars/category/${"a".repeat(121)}`,
 	])
 		assert.equal(canonicalOgPath(address), null, address)
+})
+
+test("each blog post has its own card path; an address without a post has none", async () => {
+	const { default: posts } = await import("../../content/blog/posts.json", {
+		with: { type: "json" },
+	})
+	assert.ok(posts.length > 0)
+	for (const { slug } of posts) {
+		assert.equal(canonicalOgPath(`/blog/${slug}`), `/blog/${slug}`)
+		assert.equal(canonicalOgPath(`/blog/${slug}/`), `/blog/${slug}`)
+		assert.equal(canonicalOgPath(`/blog/${slug}/more`), null)
+	}
+	assert.equal(canonicalOgPath("/blog"), "/blog")
+	for (const address of ["/blog/no-such-post", "/blog/rss.xml"])
+		assert.equal(canonicalOgPath(address), null, address)
+})
+
+test("Hot on socials and its old address share one card", () => {
+	assert.equal(canonicalOgPath("/hot"), "/hot")
+	assert.equal(canonicalOgPath("/hot-on-socials"), "/hot")
 })

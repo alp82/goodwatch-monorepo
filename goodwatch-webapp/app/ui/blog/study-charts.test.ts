@@ -1,10 +1,8 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import posts from "../../content/blog/posts.json" with { type: "json" }
 import data from "../../content/blog/streaming-by-country-2026/data.json" with {
 	type: "json",
 }
-import { STATIC_PAGE_COPY, SUBTEXT_MAX_LENGTH } from "../og-image/copy.ts"
 import {
 	CHART_WIDTH,
 	LABEL_WIDTH,
@@ -124,17 +122,4 @@ test("the Netflix chart highlights the United States", () => {
 		spec.rows.filter((r) => r.highlight).map((r) => r.code),
 		["US"],
 	)
-})
-
-test("every post has its own Open Graph card copy", () => {
-	for (const post of posts) {
-		const copy = STATIC_PAGE_COPY[`/blog/${post.slug}`]
-		assert.ok(copy, post.slug)
-		assert.ok(
-			copy.subtitle.length <= SUBTEXT_MAX_LENGTH,
-			`${post.slug} subtitle fits`,
-		)
-		assert.equal(copy.title, post.title, "the card says the post's title")
-	}
-	assert.ok(STATIC_PAGE_COPY["/blog"])
 })

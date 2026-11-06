@@ -1,5 +1,3 @@
-import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Maps a page path to what its Open Graph card shows. Image fields hold remote URLs here;
 // the renderer inlines them.
 import {
@@ -7,6 +5,8 @@ import {
 	getAwardCategory,
 	getAwardCeremony,
 } from "~/server/award-pages.server"
+import { postLinkedTitles } from "~/server/blog/linked-titles.server"
+import { blogPosts, findBlogPost } from "~/server/blog/posts.server"
 import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
 import {
 	type CombinationType,
@@ -15,17 +15,23 @@ import {
 	type WatchedType,
 	getDiscoverResults,
 } from "~/server/discover.server"
+import { newDeps } from "~/server/new-on-services.server"
 import {
 	awardsContent,
 	canonicalAwardsPath,
 } from "~/server/og-image/awards-content.server"
 import {
+	blogCardContent,
+	canonicalBlogPath,
+} from "~/server/og-image/blog-content.server"
+import { hotCardContent } from "~/server/og-image/hot-content.server"
+import {
 	canonicalNewPath,
 	newServicesContent,
 } from "~/server/og-image/new-services-content.server"
 import { profileCardContent } from "~/server/og-image/profile-content.server"
-import { newDeps } from "~/server/new-on-services.server"
 import { getPersonProfile } from "~/server/person.server"
+import { talkedAboutNowMode } from "~/server/talked-about-now/flags.server"
 import { moods } from "~/ui/explore/category/moods"
 import {
 	type NavType,
@@ -56,6 +62,8 @@ import {
 } from "~/ui/og-image/profile-card-model"
 import { hasGoodwatchScore } from "~/utils/ratings"
 import { canonicalTitleId } from "~/utils/title-identity"
+import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 
 type Category = keyof typeof mainHierarchy
 
@@ -122,10 +130,15 @@ export function canonicalOgPath(path: string): string | null {
 		// card addresses already shared under /taste get the Stats cards.
 		const handle = second?.toLowerCase() ?? ""
 		if (!/^[a-z][a-z0-9_]{2,29}$/.test(handle)) return null
-		const tab = third === "taste" ? "stats" : third === "want" ? "wishlist" : third
+		const tab =
+			third === "taste" ? "stats" : third === "want" ? "wishlist" : third
 		// The Tropes tab has no card of its own yet: its link preview is the profile's card.
 		if (tab === "tropes" && !fourth) return `/u/${handle}`
-		if (tab === "scores" && (fourth === "not-rated" || fourth === "rate") && segments.length === 4)
+		if (
+			tab === "scores" &&
+			(fourth === "not-rated" || fourth === "rate") &&
+			segments.length === 4
+		)
 			return `/u/${handle}/scores`
 		if (fourth)
 			return segments.length === 4 &&
@@ -138,6 +151,10 @@ export function canonicalOgPath(path: string): string | null {
 	}
 	if (first === "new") return canonicalNewPath(segments)
 	if (first?.toLowerCase() === "awards") return canonicalAwardsPath(segments)
+	if (first === "blog") return canonicalBlogPath(segments, blogPosts)
+	// /hot-on-socials moves to /hot.
+	if ((first === "hot" || first === "hot-on-socials") && segments.length === 1)
+		return "/hot"
 	if (first === "discover") return "/discover"
 	if (first === "for-you" && segments.length === 1) return WATCH_PATHS.forYou
 	if (first === "watch") {
@@ -145,7 +162,8 @@ export function canonicalOgPath(path: string): string | null {
 		if (second === "movies") return WATCH_PATHS.tonight
 		return WATCH_PATHS.nextEpisodes
 	}
-	if ((first === "explorer" || first === "map") && segments.length === 1) return "/map"
+	if ((first === "explorer" || first === "map") && segments.length === 1)
+		return "/map"
 
 	const clean = `/${segments.join("/")}`
 	return hasKey(STATIC_PAGE_COPY, clean) ? clean : "/"
@@ -528,6 +546,32 @@ async function staticPageContent(path: string): Promise<OgContent> {
 	return { kind: "page", ...page, backdrop: backdrop ?? null }
 }
 
+// A blog post's card: the backdrop of a title it links to, else a top-scored movie's.
+function blogContent(path: string) {
+	return blogCardContent(path, {
+		post: findBlogPost,
+		linkedTitles: postLinkedTitles,
+		backdrop: async (type, id) =>
+			tmdbBackdrop((await loadDetails(type, id))?.details.backdrop_path),
+		fallbackBackdrop: async () =>
+			rotateByPath(
+				await discoverBackdrops({ type: "movie", minScore: "80" }, "w1280"),
+				path,
+			)[0] ?? null,
+	})
+}
+
+// The Hot on socials card: the page's own ranking, while the page is on for guests.
+async function hotContent() {
+	const { getHotOnSocials } = await import(
+		"~/server/talked-about-now/start-row.server"
+	)
+	return hotCardContent({
+		enabled: () => talkedAboutNowMode("row") === "on",
+		ranking: () => getHotOnSocials(),
+	})
+}
+
 /**
  * What the card for a canonical path (see canonicalOgPath) shows, or null when the page has
  * no data. Throws when the data can't be loaded.
@@ -542,6 +586,8 @@ export async function resolveOgContent(
 	if (first === "u") return profileCardContent(second, third, fourth)
 	if (first === "movies" || first === "shows") return browseContent(path)
 	if (first === "new") return newServicesContent(path, newDeps)
+	if (first === "blog" && second) return blogContent(path)
+	if (first === "hot") return hotContent()
 	if (first === "awards")
 		return awardsContent(path, {
 			body: getAwardBody,

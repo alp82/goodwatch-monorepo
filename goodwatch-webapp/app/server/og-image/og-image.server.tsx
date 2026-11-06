@@ -6,7 +6,10 @@ import {
 	resolveOgContent,
 } from "~/server/og-image/content.server"
 import { renderOgCard, toDataUri } from "~/server/og-image/render.server"
-import { createOgStore } from "~/server/og-image/store.server"
+import {
+	type CardFreshness,
+	createOgStore,
+} from "~/server/og-image/store.server"
 import { OgCard, type OgContent } from "~/ui/og-image/OgCard"
 import { HOME_COPY } from "~/ui/og-image/copy"
 import { getRedisCluster } from "~/utils/cache"
@@ -134,6 +137,8 @@ async function inlineImages(content: OgContent): Promise<OgContent> {
 					}
 		case "person":
 			return { ...content, photo: await toDataUri(content.photo) }
+		case "hot":
+			return content
 		default:
 			return { ...content, backdrop: await toDataUri(content.backdrop) }
 	}
@@ -176,6 +181,11 @@ function lifetime(value: string | undefined) {
 	const seconds = Number(value)
 	return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined
 }
+// The Hot on socials ranking is made once a day. A request more than an hour after its card's render redraws it in the
+// background, and a card more than a day old isn't shown: it is drawn again while the request waits.
+const DAILY_CARDS: Record<string, CardFreshness> = {
+	"/hot": { freshMs: 60 * 60 * 1000, maxAgeMs: 24 * 60 * 60 * 1000 },
+}
 const store = createOgStore({
 	firstSeconds: lifetime(process.env.OG_CARD_FIRST_SECONDS),
 	keptSeconds: lifetime(process.env.OG_CARD_KEPT_SECONDS),
@@ -183,6 +193,7 @@ const store = createOgStore({
 	render,
 	canonical: canonicalOgPath,
 	count: countOgCard,
+	freshness: (path) => DAILY_CARDS[path],
 	// A member's profile card shows only what they make public, so it must go when they change that.
 	resettable: (path) => /^\/(u|movie|show|person)\//.test(path),
 })

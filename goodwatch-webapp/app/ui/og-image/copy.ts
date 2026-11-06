@@ -9,6 +9,7 @@ import { MOOD_BY_KEY } from "../../domain/moods.ts"
 //   app/ui/explore/main-nav.ts (shared with the pages themselves).
 // - Score words such as "Masterpiece": scoreLabels in app/utils/ratings.ts.
 // - Titles, names, years, and runtimes: the database.
+// - A blog post's kind, headline and preview line: app/content/blog/posts.json.
 
 // Relative with the extension, because copy.test.ts runs this file in plain Node.
 import { type ListKind, listName, listNoun } from "../../domain/best-lists.ts"
@@ -115,16 +116,11 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "Why GoodWatch exists",
 		subtitle: "Made by people who watch too much.",
 	},
-	// The blog and one entry per post in app/content/blog/posts.json (copy.test.ts checks that each has one).
+	// A post's card takes its text from app/content/blog/posts.json (server/og-image/blog-content.server.ts).
 	"/blog": {
 		tag: "Blog",
 		title: "Studies and notes",
 		subtitle: "Data studies and how GoodWatch is built.",
-	},
-	"/blog/streaming-by-country-2026": {
-		tag: "Data study",
-		title: "Spirited Away has a better passport than you",
-		subtitle: "On Netflix in 129 countries. Not Japan.",
 	},
 	"/taste": {
 		tag: "Taste profile",
@@ -329,4 +325,12 @@ export const AWARDS_CARD_COPY = {
 	kindTag: (kind: string) => `${kind} awards`,
 	/** Under the year on a ceremony's card. */
 	yearLine: "Winners",
+} as const
+
+// The card of the Hot on socials page (/hot, HotCard.tsx): the headline beside the ranking's top five, each with its
+// rank, its name and its daily reads. The names come from the ranking.
+export const HOT_CARD_COPY = {
+	tag: "Talked about now",
+	headline: "Hot on socials",
+	rank: (rank: number) => `#${rank}`,
 } as const

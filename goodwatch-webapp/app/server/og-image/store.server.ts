@@ -5,7 +5,9 @@
 // a first render lives for thirty minutes, and a second request keeps it for seven days. Link previews of shared pages
 // are requested again. Requests sharing a pending render all count as the first request. After one day a kept card
 // is still served, and one redraw runs in the background, so title data that changed reaches the card within a day
-// of its next request. A card that isn't stored is rendered while the request waits, for a few seconds at most:
+// of its next request. A card whose data changes every day can have a shorter time to its redraw and a limit to its age
+// (`freshness`): a card past that limit is drawn again while the request waits, as if it weren't stored. A card that
+// isn't stored is rendered while the request waits, for a few seconds at most:
 // link-preview bots give up after a few seconds, so a late answer is worth less than a generic one.
 //
 // This module has no JSX and takes its Redis client, its renderer, and its clock as arguments, so it runs in tests.
@@ -55,6 +57,7 @@ type Redis = {
 	expire(key: string, seconds: number): Promise<number>
 	setex(key: string, seconds: number, value: Buffer): Promise<unknown>
 }
+export type CardFreshness = { freshMs: number; maxAgeMs: number }
 type Dependencies = {
 	redis: () => Redis | null | undefined
 	render: (path: string) => Promise<Buffer | null>
@@ -64,6 +67,9 @@ type Dependencies = {
 	redisTimeoutMs?: number
 	firstSeconds?: number
 	keptSeconds?: number
+	/** A card's own freshness: after `freshMs` it is redrawn in the background, and after `maxAgeMs` it isn't served.
+	 * Without it, FRESH_MS and no limit. */
+	freshness?: (path: string) => CardFreshness | undefined
 	/** Paths whose cards can be forgotten (forget below). A memory hit for one of them checks the reset mark first, so
 	 * a card forgotten on one instance isn't served from the other's memory. */
 	resettable?: (path: string) => boolean
@@ -302,9 +308,23 @@ export function createOgStore(deps: Dependencies) {
 		const path = deps.canonical(pagePath)
 		if (!path) return finish("missing", { status: "missing" })
 		const rendering = pending.get(path)
-		const cached = rendering && !memory.has(path) ? null : await read(path)
+		let cached = rendering && !memory.has(path) ? null : await read(path)
+		const freshness = deps.freshness?.(path)
+		// Too old to serve: drawn again like a card that isn't stored, and kept like the card it replaces.
+		const expired =
+			!!cached &&
+			!!freshness &&
+			now() - cached.card.renderedAt > freshness.maxAgeMs
+		if (expired && cached) {
+			if (memory.get(path) === cached.card) {
+				bytes -= cached.card.image.length
+				memory.delete(path)
+			}
+			cached = null
+		}
 		if (cached) {
-			const stale = now() - cached.card.renderedAt > FRESH_MS
+			const stale =
+				now() - cached.card.renderedAt > (freshness?.freshMs ?? FRESH_MS)
 			keep(path, cached.card)
 			if (stale) renderAndStore(path, true).catch(() => {})
 			return finish(stale ? "stale" : cached.source, {
@@ -315,7 +335,7 @@ export function createOgStore(deps: Dependencies) {
 		}
 		try {
 			const card = await bounded<CachedCard | null | undefined>(
-				rendering ?? renderAndStore(path),
+				rendering ?? renderAndStore(path, expired),
 				waitMs,
 				undefined,
 			)

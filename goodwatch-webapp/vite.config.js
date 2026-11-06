@@ -11,6 +11,7 @@ import remarkGfm from "remark-gfm"
 import { defineConfig } from "vite"
 // import { remixDevTools } from "remix-development-tools/vite";
 import tsconfigPaths from "vite-tsconfig-paths"
+import { remarkLinkedTitles } from "./app/utils/blog-linked-titles.js"
 
 // The esbuild that Vite itself depends on: npm nests it under Vite, because another package pins an older one at the
 // top level.
@@ -340,10 +341,11 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 		// Blog posts (app/content/blog/*/post.mdx) become React at build time; nothing of MDX runs in the browser. It
 		// comes before Remix, which only reads JavaScript.
 		// A footnote's link back is the arrow as text (U+FE0E): without it, phones draw the arrow as a colored emoji.
+		// Each post also exports the titles it links to, for its link-preview card (app/utils/blog-linked-titles.js).
 		{
 			enforce: "pre",
 			...mdx({
-				remarkPlugins: [remarkGfm],
+				remarkPlugins: [remarkGfm, remarkLinkedTitles],
 				remarkRehypeOptions: {
 					footnoteBackContent: "↩︎",
 					footnoteBackLabel: (n) => `Back to note ${n + 1} in the text`,

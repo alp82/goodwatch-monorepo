@@ -407,3 +407,49 @@ test("a card with its own version has a key of its own; every other card keeps i
 	}).getOgImage("/taste/quiz")
 	assert.equal(f.writes[0].key, "og-card:v9:/taste/quiz@2")
 })
+
+test("a card with its own freshness is redrawn sooner and never served past its age limit", async () => {
+	const f = fixture()
+	let now = 100
+	let version = 0
+	const hour = 60 * 60 * 1000
+	const daily = "/hot"
+	const store = createOgStore({
+		redis: () => f.redis,
+		canonical,
+		now: () => now,
+		render: async () => Buffer.from(`card ${++version}`),
+		freshness: (p) =>
+			p === daily ? { freshMs: hour, maxAgeMs: 24 * hour } : undefined,
+	})
+	const answer = async (p: string) => {
+		const result = await store.getOgImage(p)
+		await new Promise((r) => setImmediate(r))
+		assert.equal(result.status, "ok")
+		return result.status === "ok"
+			? `${result.source}: ${result.image.toString()}`
+			: ""
+	}
+	assert.equal(await answer(daily), "rendered: card 1")
+	now += hour + 1
+	assert.equal(await answer(daily), "stale: card 1")
+	assert.equal(await answer(daily), "memory: card 2")
+	// A day without requests: the old card isn't served, a new one is drawn while the request waits.
+	now += 24 * hour + 1
+	assert.equal(await answer(daily), "rendered: card 3")
+	assert.equal(f.writes.at(-1)?.seconds, STORE_SECONDS)
+	// The same day in the other instance, which still holds card 3 in Valkey only.
+	const other = createOgStore({
+		redis: () => f.redis,
+		canonical,
+		now: () => now + 24 * hour + 1,
+		render: async () => Buffer.from("card 4"),
+		freshness: () => ({ freshMs: hour, maxAgeMs: 24 * hour }),
+	})
+	const late = await other.getOgImage(daily)
+	assert.equal(late.status === "ok" && late.image.toString(), "card 4")
+	// Every other card keeps the store's day.
+	assert.equal(await answer(path), "rendered: card 4")
+	now += hour + 1
+	assert.equal(await answer(path), "memory: card 4")
+})
