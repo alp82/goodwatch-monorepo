@@ -79,6 +79,7 @@ import { cachedClientLoader } from "~/navigation/instant-navigation"
 export { pageHeaders as headers } from "~/utils/headers"
 
 import { getPersonRoles } from "~/server/character-portraits.server"
+import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { validPersonId } from "~/server/person-id"
 
 const PER_GROUP = 12
@@ -136,7 +137,7 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 		.slice(0, 4)
 	const characters = await personCharacters(profile.tmdb_id, profile.name)
 	const { credits, ...rest } = profile
-	return json({
+	const data = {
 		profile: rest,
 		filters,
 		facets,
@@ -144,11 +145,15 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 		ofAnyType,
 		groups,
 		knownFor: knownFor.map(slim),
-		characters,
-	})
+		characters: characters ?? [],
+	}
+	// Without the Characters shelf (a failed read) the page is incomplete: no cache may keep it (ADR 0007).
+	return characters
+		? json(data)
+		: json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 }
 
-/** The Characters shelf's roles. Without them (a failed read) the page shows no shelf. */
+/** The Characters shelf's roles, or null when the read failed (the page then shows no shelf). */
 const SHELF_ROLES = 60
 async function personCharacters(personId: number, name: string) {
 	try {
@@ -156,7 +161,7 @@ async function personCharacters(personId: number, name: string) {
 		return roles.slice(0, SHELF_ROLES)
 	} catch (error) {
 		console.error("Person characters failed:", error)
-		return []
+		return null
 	}
 }
 
