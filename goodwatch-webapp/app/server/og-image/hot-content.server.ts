@@ -1,5 +1,5 @@
 // What the card of the Hot on socials page (/hot, and /hot-on-socials, which moves there) shows: the top five of the
-// page's ranking with their ranks (HotCard.tsx), a title without a poster or without posts too. The ranking is made
+// page's list with their ranks (HotCard.tsx): like the page (HotPage.tsx), only titles with posts, with or without a poster. The ranking is made
 // once a day, so the card store redraws this card when it is an hour old and never serves one older than a day
 // (og-image.server.tsx).
 import type { TalkedRow } from "~/domain/talked-about-now"
@@ -21,7 +21,8 @@ export async function hotCardContent(
 ): Promise<OgHotContent | null> {
 	if (!deps.enabled()) return null
 	const row = await deps.ranking()
-	const titles = [...(row?.titles ?? [])]
+	const titles = (row?.titles ?? [])
+		.filter((title) => title.items.length > 0)
 		.sort((a, b) => a.rank - b.rank)
 		.slice(0, HOT_CARD_TITLES)
 	if (!titles.length) return null

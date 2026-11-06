@@ -1,4 +1,4 @@
-// The Hot on socials card: the top five of the page's ranking, with their ranks.
+// The Hot on socials card: the top five of the page's list (titles with posts), with their ranks.
 import "react"
 import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
@@ -34,7 +34,7 @@ const deps = (ranking: TalkedRow | null, enabled = true) => ({
 	ranking: async () => ranking,
 })
 
-test("the card lists the ranking's top five with their ranks and reads, titles without a poster or posts too", async () => {
+test("the card lists the page's top five with their ranks and reads: titles with posts, with or without a poster", async () => {
 	const titles = [7, 6, 5, 4, 3, 2, 1].map((rank) =>
 		title(rank, rank !== 2, rank === 1 ? null : "/p.jpg"),
 	)
@@ -42,7 +42,7 @@ test("the card lists the ranking's top five with their ranks and reads, titles w
 	assert.equal(content?.kind, "hot")
 	assert.deepEqual(
 		content?.titles.map((t) => t.rank),
-		[1, 2, 3, 4, 5],
+		[1, 3, 4, 5, 6],
 	)
 	assert.deepEqual(content?.titles[0], {
 		rank: 1,
