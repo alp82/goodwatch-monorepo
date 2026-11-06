@@ -9,6 +9,8 @@ import {
 	escapeLike,
 	foldName,
 	isSelfRole,
+	matchBoost,
+	matchBoostPatterns,
 	onePerTitle,
 	pickRole,
 	portraitLookup,
@@ -62,24 +64,65 @@ test("self and narrator roles are no characters", () => {
 	assert.equal(isSelfRole("Walter White"), false)
 })
 
-test("search matches drop self roles and duplicates, then rank popular titles and name starts first", () => {
+test("search matches drop self roles and duplicates, then rank by fame times the name's match", () => {
 	const ranked = rankCharacterMatches(
 		[
-			role({ character: "Skyler White", popularity: 150 }),
-			role({ character: "Walter White", popularity: 150 }),
-			role({ character: "walter white", popularity: 150 }),
-			role({ character: "Himself", popularity: 900 }),
-			role({ tmdbId: 2, character: "White Goodman", popularity: 100 }),
+			role({ character: "Skyler White", votes: 150 }),
+			role({ character: "Walter White", votes: 150, popularity: 2 }),
+			role({ character: "walter white", votes: 150 }),
+			role({ character: "Himself", votes: 900 }),
+			role({ tmdbId: 2, character: "White Goodman", votes: 100 }),
+			role({ tmdbId: 3, character: "Whitey Bulger", votes: 120 }),
 		],
 		"white",
 		10,
 	)
 	assert.deepEqual(
 		ranked.map((r) => r.character),
-		// White Goodman starts with the text: 100 × 2 beats 150.
-		["White Goodman", "Skyler White", "Walter White"],
+		// Whole words: White Goodman 101 × 4 is below 151 × 4 (popularity breaks the tie); Whitey only starts with it.
+		["Walter White", "Skyler White", "White Goodman", "Whitey Bulger"],
 	)
 	assert.equal(rankCharacterMatches(ranked, "white", 1).length, 1)
+})
+
+test("jon finds Jon Snow before Jonathan and the Joneses, and fame still leads within a kind of match", () => {
+	const ranked = rankCharacterMatches(
+		[
+			role({ tmdbId: 1, character: "Indiana Jones", votes: 1_100_000 }),
+			role({ tmdbId: 2, character: "Morgan Jones", votes: 1_200_000 }),
+			role({ tmdbId: 3, character: "Jonathan Byers", votes: 1_700_000 }),
+			role({ tmdbId: 4, character: "Jon Snow", votes: 2_600_000 }),
+			role({ tmdbId: 5, character: "Jon Arbuckle", votes: 40_000 }),
+		],
+		"Jon",
+		10,
+	)
+	assert.deepEqual(
+		ranked.map((r) => r.character),
+		[
+			"Jon Snow",
+			"Jonathan Byers",
+			"Morgan Jones",
+			"Indiana Jones",
+			"Jon Arbuckle",
+		],
+	)
+})
+
+test("a name's match: a whole word counts 4, the name's start 2, a later word's start 1", () => {
+	assert.equal(matchBoost("jon snow", "jon"), 4)
+	assert.equal(matchBoost("jon snow", "snow"), 4)
+	assert.equal(matchBoost("jon", "jon"), 4)
+	assert.equal(matchBoost("lord jon snow", "jon"), 4)
+	assert.equal(matchBoost("walter white jr", "walter white"), 4)
+	assert.equal(matchBoost("jonathan byers", "jon"), 2)
+	assert.equal(matchBoost("walter white", "walter wh"), 2)
+	assert.equal(matchBoost("morgan jones", "jon"), 1)
+	assert.deepEqual(matchBoostPatterns("jon"), {
+		word: ["jon", "jon %", "% jon", "% jon %"],
+		start: "jon%",
+	})
+	assert.deepEqual(matchBoostPatterns("5_%").start, "5\\_\\%%")
 })
 
 test("of several portraits in one title, the one matching the credit's character wins", () => {

@@ -76,8 +76,43 @@ export function isSelfRole(character: string): boolean {
 }
 
 /**
- * Search matches, best first: no self roles, one row per character and title, the most popular titles first, with a
- * name that starts with the text counting double over one that only has a word starting with it.
+ * How much a name's match counts in search, on top of how well known its title is: 4 when the text is a whole word of
+ * the name ("jon" → Jon Snow, "snow" → Jon Snow), 2 when the name starts with it ("jon" → Jonathan Byers), 1 when only
+ * a later word does ("jon" → Morgan Jones). Folded name and folded text.
+ */
+export function matchBoost(name: string, query: string): number {
+	if (
+		name === query ||
+		name.startsWith(`${query} `) ||
+		name.endsWith(` ${query}`) ||
+		name.includes(` ${query} `)
+	)
+		return 4
+	return name.startsWith(query) ? 2 : 1
+}
+
+/**
+ * The SQL twin of matchBoost over the trimmed name, so that the read ranks before its cutoff
+ * (character-portraits.server.ts): the ILIKE patterns of a whole word (the name itself, its first, last or a middle
+ * word), then of the name's start.
+ */
+export function matchBoostPatterns(query: string): {
+	word: [string, string, string, string]
+	start: string
+} {
+	const text = escapeLike(query)
+	return {
+		word: [text, `${text} %`, `% ${text}`, `% ${text} %`],
+		start: `${text}%`,
+	}
+}
+
+/** A match's search score: how well known its title is (IMDb ratings), times how well the name matches. */
+export const matchScore = (votes: number, boost: number) => boost * (votes + 1)
+
+/**
+ * Search matches, best first: no self roles, one row per character and title, then by matchScore (the best known
+ * titles first, a whole-word match counting four times and a name start twice), then the most popular.
  */
 export function rankCharacterMatches(
 	matches: CharacterRole[],
@@ -93,10 +128,10 @@ export function rankCharacterMatches(
 		const key = `${role.mediaType}-${role.tmdbId}-${name}`
 		if (seen.has(key)) continue
 		seen.add(key)
-		kept.push({ role, score: role.popularity * (name.startsWith(q) ? 2 : 1) })
+		kept.push({ role, score: matchScore(role.votes, matchBoost(name, q)) })
 	}
 	return kept
-		.sort((a, b) => b.score - a.score || b.role.votes - a.role.votes)
+		.sort((a, b) => b.score - a.score || b.role.popularity - a.role.popularity)
 		.slice(0, limit)
 		.map((k) => k.role)
 }

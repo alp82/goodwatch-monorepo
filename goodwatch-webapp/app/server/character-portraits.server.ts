@@ -1,7 +1,7 @@
 // Reads TheTVDB character portraits (Crate `tvdb_character`, see docs/tvdb-pipelines.md) for the title page's cast,
-// the character quick view, the person page, Discover and the search panel. Each read is one small statement over the
-// table (a title's rows, a person's rows, or the names that start with a text), then one lookup of the titles' display
-// fields; every answer is cached in Redis. The matching and ranking rules are domain/character-portraits.ts.
+// the character quick view, the person page, Discover and the search panel. A title's or a person's read is one small
+// statement over the table, then one lookup of the titles' display fields; a name search is one statement that joins
+// the matching titles and ranks in SQL before its cutoff. Every answer is cached in Redis. The matching and ranking rules are domain/character-portraits.ts.
 import {
 	type CharacterPortrait,
 	type CharacterRole,
@@ -10,6 +10,7 @@ import {
 	characterQuery,
 	foldName,
 	isSelfRole,
+	matchBoostPatterns,
 	onePerTitle,
 	rankCharacterMatches,
 } from "~/domain/character-portraits"
@@ -47,8 +48,11 @@ const toPortrait = (r: PortraitRow): CharacterPortrait => ({
 const TTL_MINUTES = 6 * 60
 /** The most portraits a title has: a long-running show lists a few thousand guest roles. */
 const TITLE_LIMIT = 3000
-/** Name matches a lookup ranks: enough for a three-letter text, before the titles' popularity orders them. */
-const SEARCH_CANDIDATES = 1000
+/**
+ * The best scored name matches a lookup keeps (they arrive ranked): room for the self roles and duplicates that
+ * ranking drops before the first SEARCH_LIMIT.
+ */
+const SEARCH_CANDIDATES = 400
 export const SEARCH_LIMIT = 12
 /** A person's roles kept, one per title. */
 export const PERSON_ROLES_LIMIT = 200
@@ -134,14 +138,14 @@ async function withTitles(
 // ---------------------------------------------------------------- search
 
 /**
- * Characters whose name, or a word of it, starts with the text ("walter", "white", "walter wh"), from the most popular
- * titles first. Nothing for text shorter than two characters.
+ * Characters whose name, or a word of it, starts with the text ("walter", "white", "walter wh"), the best known titles
+ * first with whole-word matches ahead (rankCharacterMatches). Nothing for text shorter than two characters.
  */
 export async function searchCharacters(text: string): Promise<CharacterRole[]> {
 	const q = characterQuery(text)
 	if (!q) return []
 	const { characters } = await cached({
-		name: "character-search-v1",
+		name: "character-search-v2",
 		params: { q },
 		ttlMinutes: TTL_MINUTES,
 		target: readCharacterMatches,
@@ -149,15 +153,57 @@ export async function searchCharacters(text: string): Promise<CharacterRole[]> {
 	return characters
 }
 
+type MatchRow = PortraitRow &
+	Omit<TitleRow, "tmdb_id" | "imdb_user_score_rating_count"> & {
+		votes: number
+	}
+
+/**
+ * The matching names of one media type with their titles' display fields, scored as matchScore in SQL. The titles are
+ * the ones that have a matching name (a semi-join): joining the whole movie table costs about a second, this about
+ * a tenth of that.
+ */
+const MATCH_COLUMNS = COLUMNS.split(", ")
+	.map((col) => `c.${col}`)
+	.join(", ")
+
+function matchesOf(type: MediaType) {
+	const match =
+		"c.image_url IS NOT NULL AND (c.character_name ILIKE ? OR c.character_name ILIKE ?)"
+	const name = "trim(c.character_name)"
+	return `SELECT ${MATCH_COLUMNS}, t.title, t.release_year, t.poster_path, t.popularity, t.votes,
+	         CASE WHEN ${name} ILIKE ? OR ${name} ILIKE ? OR ${name} ILIKE ? OR ${name} ILIKE ? THEN 4
+	              WHEN ${name} ILIKE ? THEN 2 ELSE 1 END * (t.votes + 1) AS score
+	    FROM tvdb_character c
+	    JOIN (SELECT tmdb_id, title, release_year, poster_path, popularity,
+	                 coalesce(imdb_user_score_rating_count, 0) AS votes
+	            FROM ${type}
+	           WHERE tmdb_id IN (SELECT c.media_tmdb_id FROM tvdb_character c WHERE c.media_type = '${type}' AND ${match})) t
+	      ON t.tmdb_id = c.media_tmdb_id
+	   WHERE c.media_type = '${type}' AND ${match}`
+}
+
 async function readCharacterMatches({ q }: { q: string }) {
-	const [start, word] = characterNamePatterns(q)
-	const rows = await query<PortraitRow>(
-		`SELECT ${COLUMNS} FROM tvdb_character
-		  WHERE image_url IS NOT NULL AND (character_name ILIKE ? OR character_name ILIKE ?)
+	const names = characterNamePatterns(q)
+	const boost = matchBoostPatterns(q)
+	const one = [...boost.word, boost.start, ...names, ...names]
+	// Ranked before the cutoff, with a total order, so the same text always gets the same candidates.
+	const rows = await query<MatchRow>(
+		`${matchesOf("movie")} UNION ALL ${matchesOf("show")}
+		  ORDER BY score DESC, media_type, media_tmdb_id, character_name, image_url
 		  LIMIT ${SEARCH_CANDIDATES}`,
-		[start, word],
+		[...one, ...one],
 	)
-	const roles = await withTitles(rows.map(toPortrait))
+	const roles = rows.map(
+		(r): CharacterRole => ({
+			...toPortrait(r),
+			title: r.title,
+			year: r.release_year,
+			posterPath: r.poster_path,
+			popularity: r.popularity ?? 0,
+			votes: r.votes,
+		}),
+	)
 	return { characters: rankCharacterMatches(roles, q, SEARCH_LIMIT) }
 }
 
