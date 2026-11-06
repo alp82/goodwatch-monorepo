@@ -960,3 +960,22 @@ test("taste picks stay in guest URLs but are omitted from applied chips", () => 
 	assert.equal(stateAsApplied(state, null, false).tasteGroups, undefined)
 	assert.deepEqual(state.tasteGroups, ["movie-603"])
 })
+
+test("the awards filter round trips through the URL, clears, drops and counts as one", () => {
+	const s = parse("awards=nominated:emmys,oscars,nope,oscars")
+	assert.deepEqual(s.awards, { outcome: "nominated", bodies: ["oscars", "emmys"] })
+	const query = filterStateToParams(s, defaults)
+	assert.equal(query.get("awards"), "nominated:oscars,emmys")
+	assert.deepEqual(parse(query.toString()), s)
+	assert.deepEqual(parse("awards=won").awards, { outcome: "won", bodies: [] })
+	assert.equal(filterQuery(s, "popular", defaults).includes("awards="), true)
+	assert.equal(secondaryFilterCount(s), 1)
+	assert.equal(dropFilter(s, "awards").awards, undefined)
+	assert.equal(clearSecondaryFilters(s).awards, undefined)
+	assert.ok(FILTER_NAMES.includes("awards"))
+	for (const query of ["", "awards=", "awards=lost", "awards=winners:oscars"]) {
+		const state = parse(query)
+		assert.equal(Object.prototype.hasOwnProperty.call(state, "awards"), false, query)
+		assert.equal(filterStateToParams(state, defaults).has("awards"), false, query)
+	}
+})

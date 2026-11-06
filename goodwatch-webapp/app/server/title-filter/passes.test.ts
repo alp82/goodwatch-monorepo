@@ -65,6 +65,7 @@ function passes(
 		scoreGap?: PassInput["scoreGap"]
 		services?: PassInput["services"]
 		ratings?: RatingsFilter
+		awards?: PassInput["awards"]
 	},
 ) {
 	const input: PassInput = {
@@ -103,6 +104,7 @@ function passes(
 		sourceScores: filters.sourceScores,
 		scoreGap: filters.scoreGap,
 		legacy: null,
+		awards: filters.awards,
 		ratings: filters.ratings ?? null,
 	}
 	const out = runPasses(input)
@@ -919,11 +921,12 @@ test("a fail mask has room for every filter group, the last one included", () =>
 		"budget",
 		"shows",
 		"tasteGroups",
+		"awards",
 	])
 	assert.equal(FILTER_NAMES[18], "content")
 	assert.equal(FILTER_NAMES[23], "wishlist")
-	assert.equal(FILTER_NAMES.at(-1), "tasteGroups")
-	assert.equal(FILTER_NAMES.length, 28)
+	assert.equal(FILTER_NAMES.at(-1), "awards")
+	assert.equal(FILTER_NAMES.length, 29)
 	const ratings: RatingsFilter = {
 		content: Uint8Array.from(everyRow, (row) => (row === 3 ? 1 : 0)),
 		ages: null,
@@ -956,6 +959,22 @@ test("a fail mask has room for every filter group, the last one included", () =>
 	assert.deepEqual(last.recoveries, [
 		{ filter: "tasteGroups", titles: everyRow.length },
 	])
+})
+
+test("the awards filter keeps the titles in its set, recovers what it alone hides, and counts on and off", () => {
+	const awards = {
+		keys: new Set([0, 2, 4].map((row) => columns.pointIds[row])),
+		rows: Uint8Array.from(plain, (row) => ([0, 2, 4].includes(row) ? 1 : 0)),
+	}
+	const alone = passes(plain, { awards, taste: false })
+	assert.deepEqual(alone.rows, [0, 2, 4])
+	assert.deepEqual(alone.recoveries, [{ filter: "awards", titles: 3 }])
+	assert.deepEqual(alone.optionCounts.awards, { on: 3, off: 6 })
+	// With the taste match filter: off counts what every other filter keeps.
+	const both = passes(plain, { awards, minMatch: 90 })
+	assert.deepEqual(both.rows, [])
+	assert.deepEqual(both.optionCounts.awards, { on: 0, off: 2 })
+	assert.deepEqual(passes(plain, { taste: false }).optionCounts.awards, {})
 })
 
 test("production countries combine with OR, count co-productions once, and recover independently", () => {

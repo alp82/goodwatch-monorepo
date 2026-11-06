@@ -47,7 +47,7 @@ registerHooks({
 			: next(url, context)
 	},
 })
-const { rangeScoreTitles } = await import("./id-sets.server.ts")
+const { awardTitles, rangeScoreTitles } = await import("./id-sets.server.ts")
 const { defaultFilterState } = await import("~/domain/filter-state")
 
 test("runtime cache includes both predicates, supports episode-only filters and unrestricted kinds", async () => {
@@ -92,4 +92,26 @@ test("runtime cache includes both predicates, supports episode-only filters and 
 	const count = reads.length
 	await rangeScoreTitles({ ...base, episodeRuntime: { max: 35 } }, "runtime")
 	assert.equal(reads.length, count)
+})
+
+test("award titles read the display view once per filter, wins by has_win and bodies by bound award names", async () => {
+	const before = reads.length
+	const keys = await awardTitles({ outcome: "won", bodies: ["emmys", "oscars"] })
+	assert.equal(reads.length, before + 1)
+	const { sql, params } = reads.at(-1)!
+	assert.equal(
+		sql,
+		"SELECT media_type, media_tmdb_id FROM doc.tvdb_award_display WHERE has_win AND award_name IN (?, ?) GROUP BY media_type, media_tmdb_id LIMIT 100000",
+	)
+	assert.deepEqual(params, ["Academy Awards", "Primetime Emmy Awards"])
+	// The stub's row has no media type, so it isn't a title.
+	assert.equal(keys.size, 0)
+	await awardTitles({ outcome: "won", bodies: ["oscars", "emmys"] })
+	assert.equal(reads.length, before + 1)
+	await awardTitles({ outcome: "nominated", bodies: [] })
+	assert.equal(
+		reads.at(-1)!.sql,
+		"SELECT media_type, media_tmdb_id FROM doc.tvdb_award_display GROUP BY media_type, media_tmdb_id LIMIT 100000",
+	)
+	assert.deepEqual(reads.at(-1)!.params, [])
 })

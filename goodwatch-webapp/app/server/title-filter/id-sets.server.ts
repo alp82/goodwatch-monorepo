@@ -1,13 +1,14 @@
 // The filters that aren't facts in the title snapshot resolve to sets of title keys before filtering: Similar to (the
 // similar-titles recommend path), cast and crew (a Crate credit read), the legacy Discover filters (today's Discover
-// SQL conditions), and On my services while the country's availability index loads (the titles'
-// `streaming_availabilities` column, as Discover filters today). Each set is cached in Redis for 30 minutes per
-// parameter set.
+// SQL conditions), award results (the `tvdb_award_display` view), and On my services while the country's
+// availability index loads (the titles' `streaming_availabilities` column, as Discover filters today). Each set is
+// cached in Redis for 30 minutes per parameter set.
 //
 // TITLE_FILTER_REDIS_URL points the cache at a single Redis (for development); without it, it uses the webapp's Redis
 // cluster, and without a connected cluster nothing is cached.
 import { createHash } from "node:crypto"
 import Redis from "ioredis"
+import { type AwardFilter, awardParam, awardTitlesQuery } from "~/domain/award-filter"
 import type { FilterState, LegacyFilters } from "~/domain/filter-state"
 import { fingerprintFilterConditions } from "~/server/discover.server"
 import { query } from "~/utils/crate"
@@ -26,6 +27,7 @@ const CACHE_PREFIX = "title-filter:v2"
 const SIMILAR_LIMIT = 5000
 const CREDITS_LIMIT = 5000
 const LEGACY_LIMIT = 100_000
+const AWARDS_LIMIT = 100_000
 
 interface CacheRedis {
 	get(key: string): Promise<string | null>
@@ -147,6 +149,24 @@ export function personTitles(personId: number): Promise<Set<TitleKey>> {
 				),
 			),
 		]
+	})
+}
+
+/** Titles with a reported award result that the filter keeps (domain/award-filter.ts). */
+export function awardTitles(filter: AwardFilter): Promise<Set<TitleKey>> {
+	return cachedKeys("awards", awardParam(filter), async () => {
+		const { sql, params } = awardTitlesQuery(filter, AWARDS_LIMIT)
+		const rows = await query<{ media_type: string; media_tmdb_id: number }>(
+			sql,
+			params,
+		)
+		if (rows.length >= AWARDS_LIMIT)
+			throw new Error("Award title set exceeds its read limit")
+		return rows.flatMap((row) =>
+			row.media_type === "movie" || row.media_type === "show"
+				? [titleKey(row.media_type, Number(row.media_tmdb_id))]
+				: [],
+		)
 	})
 }
 

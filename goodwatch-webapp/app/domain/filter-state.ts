@@ -4,7 +4,8 @@
 // URL parameters (defaults are omitted): services=mine|all|any|<ids>, unseen=0|1, type, anime=only|none, moods=funny,scary,
 // themes=war,future, styles=animated,slow, genres, score, match, released, similar, people, sort, foryou=0|1. Type and anime are the type filter every page shares. The parameters of old Discover filters the sheet doesn't offer keep
 // their old names and apply as legacy filters. The age and content filter: age=12 (the age of a ladder step),
-// hide=disturbing,drugs and ok=violence (the person's choices per kind of content, kept as given).
+// hide=disturbing,drugs and ok=violence (the person's choices per kind of content, kept as given). Awards:
+// awards=won|nominated[:oscars,emmys] (domain/award-filter.ts).
 import {
 	CONTENT_KINDS,
 	type ContentKind,
@@ -14,6 +15,7 @@ import {
 	changedContent,
 	showAllContent,
 } from "~/domain/age-content"
+import { type AwardFilter, awardParam, parseAwardParam } from "~/domain/award-filter"
 import { MAX_MOODS, MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import {
 	MAX_STYLES,
@@ -66,6 +68,7 @@ export const FILTER_NAMES = [
 	"budget",
 	"shows",
 	"tasteGroups",
+	"awards",
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
@@ -158,6 +161,8 @@ export interface FilterState {
 	budget?: FilterRange
 	boxOffice?: FilterRange
 	returns?: "hit" | "flop"
+	/** Titles with a reported award result (TVDB); off when absent. */
+	awards?: AwardFilter
 	seasons?: FilterRange
 	showStatus?: "running" | "ended" | "canceled"
 	/** Total episodes × usual episode length, in hours. */
@@ -389,6 +394,8 @@ export function filterStateFromParams(
 	}
 	const returns = oneOf(["hit", "flop"] as const, params.get("returns"))
 	if (returns) state.returns = returns
+	const awards = parseAwardParam(params.get("awards"))
+	if (awards) state.awards = awards
 	const showStatus = oneOf(
 		["running", "ended", "canceled"] as const,
 		params.get("showStatus"),
@@ -558,6 +565,7 @@ export function filterStateToParams(
 		)
 	}
 	set("returns", state.returns ?? null)
+	set("awards", awardParam(state.awards))
 	set("showStatus", state.showStatus ?? null)
 	set("restOfWorld", state.restOfWorld ? "1" : null)
 	for (const name of ["minYear", "maxYear", "minRuntime", "maxRuntime"])
@@ -717,6 +725,8 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 			return { ...state, people: undefined }
 		case "legacy":
 			return { ...state, legacy: undefined }
+		case "awards":
+			return { ...state, awards: undefined }
 		// The content overrides stay, so the limit switched on again finds them.
 		case "ageLimit":
 			return { ...state, ageLimit: undefined }
@@ -737,6 +747,7 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	budget: undefined,
 	boxOffice: undefined,
 	returns: undefined,
+	awards: undefined,
 	seasons: undefined,
 	showStatus: undefined,
 	hours: undefined,
@@ -780,6 +791,7 @@ export function secondaryFilterCount(state: FilterState): number {
 			state.budget,
 			state.boxOffice,
 			state.returns,
+			state.awards,
 			state.seasons,
 			state.showStatus,
 			state.hours,

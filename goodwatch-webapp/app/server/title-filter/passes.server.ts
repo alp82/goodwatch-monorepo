@@ -278,6 +278,8 @@ export interface PassInput {
 	sourceScores?: TitleSet | null
 	scoreGap?: TitleSet | null
 	legacy: TitleSet | null
+	/** Titles with a reported award result the awards filter keeps; null when it is off. */
+	awards?: TitleSet | null
 	/** Null when the snapshot has no ratings (or the age filter is off for the viewer): then neither group narrows. */
 	ratings: RatingsFilter | null
 }
@@ -739,6 +741,7 @@ export function runPasses(input: PassInput): PassOutput {
 	]
 	const people = input.people
 	const legacy = input.legacy
+	const awards = input.awards ?? null
 	const notSeen = input.notSeen
 	const ratings = input.ratings
 	const ageLimit = ratings ? ratings.limit : -1
@@ -948,6 +951,7 @@ export function runPasses(input: PassInput): PassOutput {
 			mask |= BIT.productionCountries
 		if (people.length && !inAny(people, i)) mask |= BIT.people
 		if (legacy && !inSet(legacy, i)) mask |= BIT.legacy
+		if (awards && !inSet(awards, i)) mask |= BIT.awards
 		if (columns.facts) {
 			const facts = columns.facts
 			if (
@@ -1405,6 +1409,12 @@ export function runPasses(input: PassInput): PassOutput {
 		let off = 0
 		for (let i = 0; i < n; i++) if (passesOthers(i, BIT.legacy)) off++
 		optionCounts.legacy = { on: total, off }
+	}
+	// Awards: on or off as one.
+	if (awards) {
+		let off = 0
+		for (let i = 0; i < n; i++) if (passesOthers(i, BIT.awards)) off++
+		optionCounts.awards = { on: total, off }
 	}
 
 	// Age limit and content. A step changes what content hides, so the age limit's options are counted over the titles

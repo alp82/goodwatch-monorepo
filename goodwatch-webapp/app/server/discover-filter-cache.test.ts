@@ -399,6 +399,19 @@ test("production-country selections never reuse another country's anonymous resu
 	assert.notEqual(us, discoverFilterKey(base))
 })
 
+test("each awards filter has its own anonymous cache entry, whatever the body order", () => {
+	const base = input()
+	const key = (awards: FilterState["awards"]) =>
+		discoverFilterKey({ ...base, state: { ...base.state, awards } })
+	const won = key({ outcome: "won", bodies: [] })
+	const nominated = key({ outcome: "nominated", bodies: [] })
+	const oscars = key({ outcome: "won", bodies: ["oscars"] })
+	const both = key({ outcome: "won", bodies: ["oscars", "emmys"] })
+	assert.equal(new Set([discoverFilterKey(base), won, nominated, oscars, both]).size, 5)
+	assert.equal(key({ outcome: "won", bodies: ["emmys", "oscars"] }), both)
+	assert.equal(key(undefined), discoverFilterKey(base))
+})
+
 test("manual streaming countries have different anonymous filter cache entries", () => {
 	const base = input()
 	assert.notEqual(

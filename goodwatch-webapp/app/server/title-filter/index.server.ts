@@ -35,6 +35,7 @@ import type { ViewerContext } from "~/server/viewer.server"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 import type { TitleKey } from "~/utils/title-key"
 import {
+	awardTitles,
 	legacyTitles,
 	rangeScoreTitles,
 	titlesOnAnyService,
@@ -190,6 +191,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		runtime,
 		sourceScores,
 		scoreGap,
+		awards,
 	] = await Promise.all([
 		Promise.all(
 			(state.similarTo ?? []).map(async (seed) => ({
@@ -244,6 +246,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 					"scoreGap",
 					universeKeys === "catalog" ? undefined : universeKeys,
 				),
+		state.awards ? awardTitles(state.awards) : null,
 	])
 
 	const contextualTaste = inlineTaste(input.taste, state, snapshot)
@@ -387,6 +390,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		productionCountries: sets(productionCountries),
 		restOfWorld: state.restOfWorld ? restOfWorldColumn(snapshot) : undefined,
 		legacy: legacy && titleSet(legacy, snapshot),
+		awards: awards && titleSet(awards, snapshot),
 		ratings:
 			ladder && snapshot.columns.ratings
 				? ratingsFilter(snapshot.columns.ratings, ladder, state)

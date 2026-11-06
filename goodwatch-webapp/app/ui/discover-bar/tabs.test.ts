@@ -79,6 +79,7 @@ test("four main tabs, each with its sub-tabs", () => {
 	assert.deepEqual(shownIds("watch", empty, member), [
 		"services",
 		"scores",
+		"awards",
 		"popularity",
 		"shows",
 		"madeIn",

@@ -54,6 +54,7 @@ export type SubTabId =
 	| "budget"
 	| "age"
 	| "taste"
+	| "awards"
 
 export interface SubTab {
 	id: SubTabId
@@ -75,6 +76,7 @@ export const SUB_TABS: readonly SubTab[] = [
 	{ id: "everything", tab: "mood", label: "Everything" },
 	{ id: "services", tab: "watch", label: "Services" },
 	{ id: "scores", tab: "watch", label: "Scores" },
+	{ id: "awards", tab: "watch", label: "Awards" },
 	{ id: "popularity", tab: "watch", label: "Popularity" },
 	{ id: "shows", tab: "watch", label: "Shows", kind: "show" },
 	{ id: "madeIn", tab: "watch", label: "Made in" },
@@ -122,20 +124,21 @@ export const GROUP_PLACES: Record<
 	themes: { subTab: "everything", line: 1 },
 	styles: { subTab: "everything", line: 1 },
 	genres: { subTab: "everything", line: 2 },
-	// Watch: services lead, then Made in, length, score, sources and gap, popularity, years, age, shows, budget.
+	// Watch: services lead, then Made in, length, score, sources and gap, awards, popularity, years, age, shows, budget.
 	services: { subTab: "services", line: 0 },
-	popularity: { subTab: "popularity", line: 5 },
-	shows: { subTab: "shows", line: 8 },
-	budget: { subTab: "budget", line: 9 },
+	awards: { subTab: "awards", line: 5 },
+	popularity: { subTab: "popularity", line: 6 },
+	shows: { subTab: "shows", line: 9 },
+	budget: { subTab: "budget", line: 10 },
 	productionCountries: { subTab: "madeIn", line: 1 },
 	runtime: { subTab: "length", line: 2 },
 	minScore: { subTab: "scores", line: 3 },
 	sourceScores: { subTab: "scores", line: 4 },
 	scoreGap: { subTab: "scores", line: 4 },
-	years: { subTab: "released", line: 6 },
-	released: { subTab: "released", line: 6 },
-	ageLimit: { subTab: "age", line: 7 },
-	content: { subTab: "age", line: 7 },
+	years: { subTab: "released", line: 7 },
+	released: { subTab: "released", line: 7 },
+	ageLimit: { subTab: "age", line: 8 },
+	content: { subTab: "age", line: 8 },
 	// You: the match step leads (line 0), then the other choices.
 	minMatch: { subTab: "taste", line: 0 },
 	tasteGroups: { subTab: "taste", line: 1 },

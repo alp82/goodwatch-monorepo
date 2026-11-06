@@ -7,6 +7,7 @@ import {
 	HOURS_PRESETS,
 	scoreStepLabel,
 } from "~/domain/title-scales"
+import { awardLabel } from "~/domain/award-filter"
 import { productionCountryName } from "~/domain/production-country"
 import {
 	ClockIcon,
@@ -274,6 +275,7 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		legacy: { dot: "bg-gray-400", bar: "bg-gray-500" },
 		ageLimit: { dot: "bg-violet-400", bar: "bg-violet-500" },
 		content: { dot: "bg-sky-400", bar: "bg-sky-500" },
+		awards: { dot: "bg-yellow-300", bar: "bg-yellow-500" },
 	}
 
 /**
@@ -378,6 +380,8 @@ export function recoveryLabel(
 			return `${n} above the age limit`
 		case "content":
 			return `${n} with hidden content`
+		case "awards":
+			return `${n} outside the awards filter`
 	}
 }
 
@@ -525,6 +529,13 @@ export function activeChips(
 			group: "budget",
 			label: state.returns === "hit" ? "Box office hit" : "Box office flop",
 			remove: (s) => ({ ...s, returns: undefined }),
+		})
+	if (state.awards)
+		chips.push({
+			key: "awards",
+			group: "awards",
+			label: awardLabel(state.awards),
+			remove: (s) => ({ ...s, awards: undefined }),
 		})
 	if (state.showStatus)
 		chips.push({

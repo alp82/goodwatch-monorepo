@@ -35,7 +35,7 @@ stubModules({
 		"export const tasteGroupsFor = async () => { if (globalThis.panelGroupsFail) throw new Error('groups unavailable'); return {groups: [{carries: ['m:funny', 't:crime']}]}; }",
 	"./id-sets.server": `export const rangeScoreTitles = async (state, name) => globalThis.panelRange(state, name);
 		export const similarTitles = async () => new Set(); export const personTitles = similarTitles;
-		export const legacyTitles = similarTitles; export const productionCountryTitles = country => globalThis.panelCountries(country);
+		export const legacyTitles = similarTitles; export const awardTitles = similarTitles; export const productionCountryTitles = country => globalThis.panelCountries(country);
 		export const titlesOnAnyService = similarTitles; export const titlesOnServicesByColumn = similarTitles;`,
 	"../personal-order/reader.server.ts":
 		"export const loadPersonalOrder = () => {}; export const logPersonalOrder = () => {}; export const orderPersonalOrder = () => {}; export const personalOrderExposure = () => {}",

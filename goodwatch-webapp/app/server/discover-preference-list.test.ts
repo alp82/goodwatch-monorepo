@@ -21,7 +21,7 @@ stubModules({
 	"~/server/watch-next-taste-picker.server": "export const tasteGroupsFor = async () => ({groups: []})",
 	"./id-sets.server": `export const rangeScoreTitles = async () => null;
 		export const similarTitles = async () => new Set(); export const personTitles = similarTitles;
-		export const legacyTitles = similarTitles; export const productionCountryTitles = similarTitles;
+		export const legacyTitles = similarTitles; export const awardTitles = similarTitles; export const productionCountryTitles = similarTitles;
 		export const titlesOnAnyService = similarTitles; export const titlesOnServicesByColumn = similarTitles;`,
 	"../personal-order/reader.server.ts":
 		"export const loadPersonalOrder = () => {}; export const logPersonalOrder = () => {}; export const orderPersonalOrder = () => {}; export const personalOrderExposure = () => {}",

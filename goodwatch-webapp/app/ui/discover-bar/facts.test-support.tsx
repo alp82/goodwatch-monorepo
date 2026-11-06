@@ -139,6 +139,7 @@ const response = (facts?: boolean): FilterBarCounts => ({
 		content: {},
 		wishlist: {},
 		tasteGroups: {},
+		awards: {},
 	},
 })
 const check = (available: boolean) => {

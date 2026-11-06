@@ -4,6 +4,7 @@
 // crew, and legacy filters. A new snapshot version or reloaded availability index gives new keys; old entries age
 // out. The bounds are 300 entries and 3,000,000 title keys, about 24 MB. DISCOVER_FILTER_CACHE=off plus a restart
 // turns it off.
+import { awardParam } from "../domain/award-filter.ts"
 import type { FilterState, SortKey } from "~/domain/filter-state"
 import type { Taste } from "~/server/taste/taste.server"
 import type { FilterResult } from "~/server/title-filter/index.server"
@@ -66,6 +67,7 @@ export function discoverFilterKey(input: {
 		budget: state.budget && [state.budget.min, state.budget.max],
 		boxOffice: state.boxOffice && [state.boxOffice.min, state.boxOffice.max],
 		returns: state.returns,
+		awards: awardParam(state.awards) ?? undefined,
 		seasons: state.seasons && [state.seasons.min, state.seasons.max],
 		showStatus: state.showStatus,
 		hours: state.hours && [state.hours.min, state.hours.max],
