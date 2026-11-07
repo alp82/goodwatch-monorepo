@@ -4,16 +4,16 @@
  * Gabarito, amber, 6-12 px corners (faces and switches stay round), plain labels.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Animated, Easing, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Animated, Easing, Image, Platform, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useQuery } from '@tanstack/react-query';
 import { continuousApi } from '../../core/continuous/api';
 import { useReducedMotion } from '../../components/ui';
-import { Backdrop } from '../glow/Backdrop';
-import { EdgeBack } from '../glow/EdgeBack';
-import { CoveredBody } from '../shell/parts';
-import { GText, Icon, Press, Wordmark, glow } from '../glow/theme';
+import { AppFrame, type AppFrameProps, type FrameRooms } from '../shell/Frame';
+import type { HeaderMe, HeaderPill } from '../shell/Header';
+import { GText, Press, glow } from '../glow/theme';
+import { openPage } from './nav';
+import { useOptionalRoom } from './RoomProvider';
 import type { Kind } from './model';
 import { rankServices, type ServiceChoice } from './services';
 
@@ -34,41 +34,53 @@ export function Section({ children }: { children: string }) {
   return <GText size={T.small} bold color={glow.muted}>{children.toUpperCase()}</GText>;
 }
 
-/** The phone screen: backdrop, one top bar (Back or the wordmark, then the right side), a scrolling body and a pinned footer. */
-export function Screen({ back, right, children, footer, overlay, testID, scroll = true, wordmark = true, covered = false }: {
+/**
+ * A room screen in the shared frame: the sticky app header (wordmark, Back, the room switcher pill,
+ * avatar) and the body in the centered column. Inside a room the pill, Your rooms and the avatar come
+ * from the room itself; pass `pill`, `rooms` or `me` to say otherwise (null hides the pill). The main
+ * action (`footer`) is pinned on phones and sits in the content on bigger windows.
+ */
+export function Screen({ back, right, children, footer, footerPlacement, overlay, sheet, testID, scroll = true, covered = false, pill, rooms, me, onProfile, width = SCREEN_WIDTH, gap }: {
   back?: () => void;
+  /**
+   * A row above the content (RoomBar, Undo). Transitional: the header pill now switches rooms and its
+   * Your rooms sheet opens the Room page.
+   */
   right?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
+  footerPlacement?: AppFrameProps['footerPlacement'];
   overlay?: ReactNode;
+  /** A Sheet over the body (header stays usable). */
+  sheet?: ReactNode;
   testID?: string;
   /** Voting fills the body instead of scrolling it. */
   scroll?: boolean;
-  wordmark?: boolean;
   /** A page over this one (overlay): the screen underneath stays laid out but is inert. */
   covered?: boolean;
+  /** The header pill; derived from the room when absent, hidden when null. */
+  pill?: HeaderPill | null;
+  rooms?: FrameRooms;
+  me?: HeaderMe;
+  onProfile?: () => void;
+  /** The content column's widest size ('page' is the shared container). */
+  width?: number | 'page';
+  gap?: number;
 }) {
-  const body = { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24, gap: 22 } as const;
+  const room = useOptionalRoom();
+  const view = room?.view ?? null;
+  const roomId = room?.id;
+  const derived: HeaderPill | null = view ? { label: view.label, state: view.phase === 'decided' ? 'decided' : 'live', fresh: view.newSuggestions } : null;
+  const current = view && roomId ? { roomId, label: view.label, decided: view.phase === 'decided', openRoomPage: () => openPage(roomId, 'room') } : undefined;
+  const scrollGap = gap ?? (scroll ? 22 : 12);
   return (
-    <SafeAreaView testID={testID} edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: glow.bg }}>
-      <Backdrop />
-      <CoveredBody covered={covered}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, width: '100%', maxWidth: SCREEN_WIDTH, alignSelf: 'center' }}>
-        <View style={{ height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>
-          {back ? (
-            <Press label="Back" onPress={back} style={{ width: 40, height: 44, borderRadius: 10, backgroundColor: '#ffffff0d' }}><Icon name="left" size={18} color={glow.soft} /></Press>
-          ) : wordmark ? <Wordmark size={20} /> : <View />}
-          {right ? <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginLeft: 10 }}>{right}</View> : null}
-        </View>
-        {scroll ? (
-          <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={body}>{children}</ScrollView>
-        ) : <View style={{ flex: 1, minHeight: 0, paddingHorizontal: 20, paddingTop: 8, gap: 12 }}>{children}</View>}
-        {footer ? <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 18, gap: 10 }}>{footer}</View> : null}
-      </KeyboardAvoidingView>
-      </CoveredBody>
-      {overlay}
-      {back && !covered ? <EdgeBack back={back} /> : null}
-    </SafeAreaView>
+    <AppFrame testID={testID} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet} width={width} gap={scrollGap}
+      header={{ back, pill: pill === undefined ? derived : pill, me: me ?? (view ? { name: view.me.nickname || null, member: view.member } : undefined), onProfile }}
+      rooms={rooms ?? (current ? { current } : undefined)}
+      footer={footer} footerPlacement={footerPlacement}>
+      {right ? <View testID="screen-bar" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>{right}</View> : null}
+      {children}
+    </AppFrame>
   );
 }
 

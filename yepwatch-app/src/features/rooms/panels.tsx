@@ -1,27 +1,59 @@
-import { GoodWatchButton } from '../home/Landing';
+/**
+ * The start page's sheets (New room retry, Profile, History) and the Join screen, in the shared
+ * layout (direction D).
+ */
 import { useState, type ReactNode } from 'react';
-import { Image, TextInput, View } from 'react-native';
+import { Image, Platform, Pressable, TextInput, View, type TextStyle } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { parseInvite } from '../../core/invites';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
 import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
+import { GoodWatchButton } from '../home/Landing';
+import { Or } from '../home/start-parts';
 import { fitSize, type Kind } from '../room/model';
-import { Button, Hero, KindIcons, Or, Screen, Small, T, TextLink, fieldStyle, kindsLabel } from '../room/ui';
+import { KindIcons, Screen, kindsLabel } from '../room/ui';
 import { GText, Icon, Press, glow } from '../glow/theme';
-import { Action, Chip, FaceStack, Label, Panel } from '../shell/parts';
+import type { HeaderMe } from '../shell/Header';
+import { Action, Avatar, FaceStack } from '../shell/parts';
 import { GoodWatchMark } from '../shell/marks';
-import { R } from '../shell/tokens';
-import type { HomeRoom } from './home-model';
+import { Sheet } from '../shell/Sheet';
+import { useLayout } from '../shell/layout';
+import { R, warm } from '../shell/tokens';
+import { posterAt, timeAgo, type HomeRoom } from './home-model';
 
-const input = { color: glow.ink, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: '#ffffff1f', borderRadius: 8, paddingHorizontal: 14, minHeight: 48, fontFamily: 'Gabarito', fontSize: 16 } as const;
 const MAX_NAME = 40;
+/** Browsers draw their own focus outline and caret; the amber border and caret replace them. */
+const webField = (Platform.OS === 'web' ? { outlineStyle: 'none', caretColor: glow.amber } : {}) as TextStyle;
+
+function Label({ children, color = glow.muted }: { children: string; color?: string }) {
+  const { z } = useLayout();
+  return <GText bold size={z(12)} color={color} style={{ letterSpacing: 1.4, textTransform: 'uppercase' }}>{children}</GText>;
+}
+/** A warm text field: amber caret and focus line. */
+function Field({ label, value, onChange, placeholder, big = false, code = false, autoFocus, onSubmit, returnKey = 'go', autoComplete }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder: string; big?: boolean; code?: boolean; autoFocus?: boolean; onSubmit?: () => void;
+  returnKey?: 'go' | 'next' | 'done'; autoComplete?: 'nickname';
+}) {
+  const { z } = useLayout();
+  const [focus, setFocus] = useState(false);
+  return (
+    <TextInput accessibilityLabel={label} value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={warm.placeholder} autoFocus={autoFocus}
+      onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} autoCapitalize={code ? 'characters' : 'words'} autoCorrect={false} autoComplete={autoComplete}
+      maxLength={code ? undefined : MAX_NAME} returnKeyType={returnKey} submitBehavior="blurAndSubmit" onSubmitEditing={onSubmit} selectionColor={glow.amber}
+      style={{ height: z(big ? 64 : 52), borderRadius: 12, paddingHorizontal: 16, backgroundColor: warm.faint, borderWidth: 1, borderColor: focus ? glow.amber : warm.lineStrong, color: glow.ink, fontFamily: code ? 'GabaritoBold' : 'Gabarito', fontSize: z(big ? 26 : 17), letterSpacing: code ? 6 : 0, textAlign: code ? 'center' : 'left', ...webField } as TextStyle} />
+  );
+}
+function ErrorText({ children }: { children?: string }) {
+  return children ? <GText size={14} color="#fca5a5">{children}</GText> : null;
+}
 
 /** A room request that hasn't been confirmed yet: retry it as-is (same identity, same request). */
-export function RetryPanel({ action, busy, error, retry, extra }: { action: string; busy: boolean; error?: string; retry: () => void; extra?: ReactNode }) {
+export function RetrySheet({ action, busy, error, retry, extra, onClose }: { action: string; busy: boolean; error?: string; retry: () => void; extra?: ReactNode; onClose: () => void }) {
   return (
-    <Panel testID="retry-panel" footer={<Action gold label={action} onPress={retry} disabled={busy} />}>
-      {error ? <GText size={14} color="#fca5a5">{error}</GText> : null}
+    <Sheet testID="retry-panel" title="New room" onClose={onClose} actions={<Action gold label={action} onPress={retry} disabled={busy} style={{ flex: 1 }} />}>
+      <ErrorText>{error}</ErrorText>
       {extra}
-    </Panel>
+    </Sheet>
   );
 }
 
@@ -31,165 +63,205 @@ const HEAD_HEIGHT = 150;
 export const roomLabel = (hostName: string | null) => `${(hostName || 'Your friend').toUpperCase()}’S ROOM`;
 
 /**
- * What a friend sees before joining (owner-approved prototype 9a2241e3e, RoomHead): whose room it
- * is, the switched-on ideas as the headline (one idea at hero size, several stacked and fitted,
- * none "Anything"), then the people and the kinds. `undefined` is still loading: the space is kept.
+ * What a friend sees before joining: whose room it is, the switched-on ideas as the headline (one
+ * idea big, several stacked and fitted, none "Anything"), then the people and the kinds. `undefined`
+ * is still loading: the space is kept.
  */
 export function InviteHead({ preview }: { preview: InvitePreview | undefined }) {
+  const { phone, z } = useLayout();
   const [width, setWidth] = useState(330);
   if (!preview) return <View testID="invite-head-pending" style={{ minHeight: HEAD_HEIGHT }} />;
   const kinds = preview.kinds.filter((k): k is Kind => k === 'movie' || k === 'show_start');
   const many = preview.ideas.length > 1;
+  const hero = phone ? 52 : z(80);
   // Only the host has a name here; everyone else is a plain face.
   const faces = Array.from({ length: Math.min(preview.people, 50) }, (_, i) => ({ id: `p${i}`, nickname: i === 0 && preview.hostName ? preview.hostName : ' ' }));
   return (
-    <View testID="invite-head" onLayout={(e) => { if (e.nativeEvent.layout.width > 0) setWidth(e.nativeEvent.layout.width); }} style={{ minHeight: HEAD_HEIGHT, justifyContent: 'flex-end', gap: 10 }}>
-      <Small bold>{roomLabel(preview.hostName)}</Small>
-      <View testID="invite-ideas" style={{ gap: 6 }}>
-        {!preview.ideas.length ? <Hero color={glow.soft}>Anything</Hero> : preview.ideas.map((idea, i) => {
-          const fs = fitSize(idea.text, width, many ? 28 : T.hero);
-          return <GText key={i} bold size={fs} color={glow.ink} style={{ letterSpacing: -fs * 0.035, lineHeight: fs * 1.08 }}>{idea.text}</GText>;
+    <View testID="invite-head" onLayout={(e) => { if (e.nativeEvent.layout.width > 0) setWidth(e.nativeEvent.layout.width); }} style={{ minHeight: HEAD_HEIGHT, justifyContent: 'flex-end', alignItems: 'center', gap: z(12) }}>
+      <Label color={glow.amber}>{roomLabel(preview.hostName)}</Label>
+      <View testID="invite-ideas" style={{ gap: 6, alignItems: 'center' }}>
+        {!preview.ideas.length ? <GText bold size={hero} color={glow.soft} style={{ letterSpacing: -1.5, lineHeight: hero * 1.04 }}>Anything</GText> : preview.ideas.map((idea, i) => {
+          const fs = fitSize(idea.text, width, many ? hero * 0.6 : hero);
+          return <GText key={i} bold size={fs} style={{ textAlign: 'center', letterSpacing: -fs * 0.03, lineHeight: fs * 1.04 }}>{idea.text}</GText>;
         })}
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        {faces.length ? <FaceStack people={faces} size={24} max={6} /> : null}
-        {kinds.length ? <><KindIcons kinds={kinds} size={16} color={glow.muted} /><Small>{kindsLabel(kinds)}</Small></> : null}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        {faces.length ? <FaceStack people={faces} size={z(26)} max={6} /> : null}
+        {kinds.length ? <><KindIcons kinds={kinds} size={z(16)} color={glow.muted} /><GText size={z(14)} color={glow.muted}>{kindsLabel(kinds)}</GText></> : null}
       </View>
     </View>
   );
 }
 
 /**
- * Join by link or code, in the room screens' style (owner-approved prototype 9a2241e3e, JoinPage): the
- * room's head as the headline, then your name and Join (or Join as the remembered name), or Continue
- * with GoodWatch. A full screen with its own Back: nothing from the start page shows underneath. An
- * invitation link carries its code, so only manual joins show the code field.
+ * Join by link or code: by invitation, the room's head is the headline; by code, a big spaced code
+ * field. Guests type their name (or Continue with GoodWatch); members join as their GoodWatch name.
+ * A saved, unconfirmed request keeps its name (Change name edits it in Profile).
  */
-export function JoinScreen({ invite, checking = false, nickname, member = false, initialCode = '', action, busy, error, back, editName, submit, signIn, extra, head }: {
+export function JoinScreen({ invite, checking = false, nickname, nameLocked = false, member = false, initialCode = '', action, busy, error, back, editName, submit, signIn, extra, head, me }: {
   invite: boolean;
   /** Still finding out whether you're already in this room: the room shows, the form waits unseen in its place. */
   checking?: boolean;
-  nickname: string | null; member?: boolean; initialCode?: string; action: string; busy: boolean; error?: string;
+  /** The remembered name: members join with it, guests start with it in the field. */
+  nickname: string | null;
+  /** A saved request's name: it can't change in the form. */
+  nameLocked?: boolean;
+  member?: boolean; initialCode?: string; action: string; busy: boolean; error?: string;
   back: () => void; editName: () => void; submit: (code: string, nickname: string) => void; signIn?: (code: string) => void; extra?: ReactNode;
   /** The invited room's head (InviteHead); without it the screen says what it is. */
   head?: ReactNode;
+  me?: HeaderMe;
 }) {
+  const { phone, z } = useLayout();
   const [code, setCode] = useState(initialCode);
-  const [name, setName] = useState('');
+  const [typed, setTyped] = useState(nickname ?? '');
+  const fixedName = (member || nameLocked) && nickname ? nickname : null;
+  const name = (fixedName ?? typed).trim();
   const validCode = Boolean(parseInvite(code));
-  const filled = validCode && (nickname ?? name).trim().length > 0;
-  const go = () => { if (filled && !busy) submit(code, (nickname ?? name).trim()); };
-  const label = nickname && action === 'Join' ? `Join as ${nickname}` : action;
+  const filled = validCode && name.length > 0;
+  const go = () => { if (filled && !busy) submit(code, name); };
+  const label = fixedName && action === 'Join' ? `Join as ${fixedName}` : action;
+  const showCode = !invite || !initialCode;
+  const join = (
+    <View style={{ flexDirection: 'row' }}>
+      <Press label={label} onPress={go} disabled={!filled} quiet={busy} style={{ flex: 1, minHeight: z(54), borderRadius: 12, flexDirection: 'row', gap: 9, backgroundColor: glow.amber }}>
+        {member ? <GoodWatchMark size={22} /> : null}
+        <GText bold size={z(17)} color={warm.ink}>{label}</GText>
+      </Press>
+    </View>
+  );
   return (
-    <Screen testID="join-screen" back={back} footer={<View style={checking ? { opacity: 0 } : undefined} pointerEvents={checking ? 'none' : 'auto'}><Button label={label} onPress={go} disabled={!filled} quiet={busy} icon={member ? <GoodWatchMark size={22} /> : undefined} /></View>}>
-      <View style={{ paddingTop: head ? 40 : 24, gap: 10 }}>
-        {head ?? <Hero>{invite ? 'Join the room' : 'Join a room'}</Hero>}
-      </View>
-      <View style={{ gap: 22, opacity: checking ? 0 : 1 }} pointerEvents={checking ? 'none' : 'auto'}>
-      {!invite || !initialCode ? (
-        <TextInput autoFocus={!initialCode} accessibilityLabel="Room code or invitation" value={code} onChangeText={setCode} placeholder="Code or link" placeholderTextColor={glow.muted}
-          autoCapitalize="characters" autoCorrect={false} returnKeyType={nickname ? 'go' : 'next'} submitBehavior="blurAndSubmit" onSubmitEditing={go}
-          style={[fieldStyle, { height: 56, fontSize: 22, letterSpacing: 3, textAlign: 'center' }]} />
-      ) : null}
-      {nickname ? (
-        <TextLink label="Change name" color={glow.muted} onPress={editName} />
-      ) : (
-        <View style={{ gap: 6 }}>
-          <Small>Your name</Small>
-          <TextInput autoFocus={Boolean(initialCode)} accessibilityLabel="Your name" value={name} onChangeText={setName} maxLength={MAX_NAME} autoCapitalize="words" autoComplete="nickname" placeholder="Your name" placeholderTextColor={glow.muted}
-            returnKeyType="go" submitBehavior="blurAndSubmit" onSubmitEditing={go} style={fieldStyle} />
-          {signIn ? <>
-            <Or />
-            <GoodWatchButton disabled={busy || !validCode} onPress={() => signIn(code)} />
-          </> : null}
-        </View>
+    <Screen testID="join-screen" back={back} pill={null} me={me} onProfile={editName} width={z(640)} gap={phone ? 28 : z(36)}>
+      {head ?? (
+        <GText bold size={phone ? 40 : z(56)} style={{ textAlign: 'center', letterSpacing: -1.4 }}>{invite ? 'Join the room' : 'Join a room'}</GText>
       )}
+      <View style={{ gap: z(18), opacity: checking ? 0 : 1 }} pointerEvents={checking ? 'none' : 'auto'}>
+        {showCode ? (
+          <Field big code autoFocus={!initialCode} label="Room code or invitation" value={code} onChange={setCode} placeholder="Code or link" returnKey={fixedName ? 'go' : 'next'} onSubmit={go} />
+        ) : null}
+        {fixedName ? (
+          <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+              <Avatar name={fixedName} size={z(28)} /><GText size={z(16)} color={glow.soft}>{fixedName}</GText>{member ? <GoodWatchMark size={z(16)} /> : null}
+            </View>
+            {join}
+            {nameLocked && !member ? <Press label="Change name" onPress={editName} style={{ alignSelf: 'center', minHeight: 36 }}><GText size={13} bold color={glow.muted}>Change name</GText></Press> : null}
+          </>
+        ) : (
+          <>
+            <View style={{ gap: 8 }}>
+              <Label>Your name</Label>
+              <Field label="Your name" value={typed} onChange={setTyped} placeholder="Your name" autoFocus={Boolean(initialCode)} autoComplete="nickname" onSubmit={go} />
+            </View>
+            {join}
+            {signIn ? <>
+              <Or />
+              <GoodWatchButton height={z(50)} disabled={busy || !validCode} onPress={() => signIn(code)} />
+            </> : null}
+          </>
+        )}
       </View>
-      {error ? <GText size={14} color="#fca5a5">{error}</GText> : null}
+      <ErrorText>{error}</ErrorText>
       {extra}
     </Screen>
   );
 }
 
 /** Edits the remembered name for future rooms. Names inside existing rooms don't change. */
-export function ProfilePanel({ nickname, save, member = false, signIn, busy, error }: { nickname: string | null; save: (name: string) => void; member?: boolean; signIn?: () => void; busy?: boolean; error?: string }) {
+export function ProfileSheet({ nickname, save, member = false, signIn, busy, error, onClose }: { nickname: string | null; save: (name: string) => void; member?: boolean; signIn?: () => void; busy?: boolean; error?: string; onClose: () => void }) {
+  const { z } = useLayout();
   const [value, setValue] = useState(nickname ?? '');
   const ok = value.trim().length > 0;
   const go = () => { if (ok) save(value.trim()); };
   return (
-    <Panel testID="profile-panel" footer={<Action gold label="Save" onPress={go} disabled={!ok} />}>
-      <Label>Your name</Label>
-      <TextInput accessibilityLabel="Your name" value={value} onChangeText={setValue} maxLength={MAX_NAME} autoCapitalize="words" returnKeyType="done" submitBehavior="blurAndSubmit" onSubmitEditing={go} style={input} />
-      <Chip>Used for new rooms</Chip>
-      {member ? <Chip>Signed in with GoodWatch</Chip> : signIn ? <GoodWatchButton onPress={signIn} disabled={busy} /> : null}
-      {error ? <GText size={14} color="#fca5a5">{error}</GText> : null}
-    </Panel>
+    <Sheet testID="profile-panel" title="Profile" onClose={onClose} actions={<Action gold label="Save" onPress={go} disabled={!ok} style={{ flex: 1 }} />}>
+      <View style={{ alignItems: 'center', gap: 10, paddingTop: 4 }}>
+        <Avatar name={value.trim() || null} size={z(72)} />
+        {member ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><GoodWatchMark size={18} /><GText size={14} color={glow.soft}>Signed in with GoodWatch</GText></View> : null}
+      </View>
+      <View style={{ gap: 8 }}>
+        <Label>Your name</Label>
+        <Field label="Your name" value={value} onChange={setValue} placeholder="Your name" returnKey="done" onSubmit={go} />
+        <GText size={13} color={glow.muted}>Used for new rooms</GText>
+      </View>
+      {!member && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton onPress={signIn} disabled={busy} /></View> : null}
+      <ErrorText>{error}</ErrorText>
+    </Sheet>
   );
 }
 
-const ago = (at: number, now: number) => {
-  const m = Math.round((now - at) / 60000);
-  if (m < 2) return 'now';
-  if (m < 60) return `${m} min ago`;
-  const h = Math.round(m / 60);
-  if (h < 24) return `${h} h ago`;
-  const d = Math.round(h / 24);
-  return d === 1 ? 'yesterday' : `${d} days ago`;
-};
+/** A decided room: Tonight's poster, large, with when, the title, the room and its people. */
+function DecidedCard({ record, width, now, open }: { record: DecisionRecord; width: number; now: number; open?: () => void }) {
+  const { z } = useLayout();
+  const name = `${record.title}, ${record.roomLabel}`;
+  const body = (
+    <>
+      <View style={{ width, height: width * 1.5, backgroundColor: warm.well, alignItems: 'center', justifyContent: 'center' }}>
+        {record.posterUrl ? <Image source={{ uri: posterAt(record.posterUrl, width > 200 ? 500 : 342) }} accessible={false} style={{ width: '100%', height: '100%' }} /> : <Icon name="tickets" size={32} color={glow.amber} />}
+      </View>
+      <LinearGradient pointerEvents="none" colors={['#07070700', '#070707e6', '#070707']} locations={[0, 0.6, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: width * 0.9 }} />
+      <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: z(12), gap: 3 }}>
+        <GText bold size={z(12)} color={glow.amber} style={{ letterSpacing: 0.4 }}>{`Tonight · ${timeAgo(record.decidedAt, now)}`}</GText>
+        <GText bold size={width > 200 ? z(20) : 16} lines={2} style={{ letterSpacing: -0.4 }}>{record.title}{record.year ? ` (${record.year})` : ''}</GText>
+        <GText size={z(13)} color={glow.soft} lines={1}>{record.roomLabel}</GText>
+        {record.people.length ? <GText size={z(12)} color={glow.muted} lines={1}>{record.people.join(', ')}</GText> : null}
+      </View>
+    </>
+  );
+  const box = { width, borderRadius: R.card, overflow: 'hidden', backgroundColor: warm.panel } as const;
+  return open
+    ? <Pressable accessibilityRole="button" accessibilityLabel={name} onPress={open} style={({ pressed }) => ({ ...box, opacity: pressed ? 0.85 : 1 })}>{body}</Pressable>
+    : <View accessible accessibilityLabel={name} style={box}>{body}</View>;
+}
 
-/** Past decisions are records; rooms you left can be returned to. */
-export function HistoryPanel({ decisions, left, archived, restore, openRoom, canOpen, returnTo, busy }: { decisions: DecisionRecord[]; left: HomeRoom[]; archived: HomeRoom[]; restore: (roomId: string) => void; openRoom: (roomId: string) => void; canOpen: (roomId: string) => boolean; returnTo: (room: HomeRoom) => void; busy: boolean }) {
+/** Past decisions as poster cards; archived rooms can be restored, rooms you left returned to. */
+export function HistorySheet({ decisions, left, archived, restore, openRoom, canOpen, returnTo, busy, onClose }: { decisions: readonly DecisionRecord[]; left: readonly HomeRoom[]; archived: readonly HomeRoom[]; restore: (roomId: string) => void; openRoom: (roomId: string) => void; canOpen: (roomId: string) => boolean; returnTo: (room: HomeRoom) => void; busy: boolean; onClose: () => void }) {
+  const { phone, width, z } = useLayout();
   const [now] = useState(() => Date.now());
+  const inner = (phone ? width : Math.min(z(680), width - 64)) - z(20) * 2 - 2;
+  const cols = phone ? 2 : 3;
+  const gap = phone ? 12 : z(16);
+  const cardWidth = Math.floor((inner - gap * (cols - 1)) / cols);
+  const row = { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: R.card, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.line } as const;
   return (
-    <Panel testID="history-panel">
-      {archived.length > 0 && <>
-        <Label>Archived rooms</Label>
-        {archived.map((r) => (
-          <View key={r.roomId} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: R.card, backgroundColor: '#ffffff08' }}>
-            <Press label={r.label} onPress={() => openRoom(r.roomId)} style={{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 4 }}>
-              <GText bold lines={1}>{r.label}</GText>
-              <GText size={13} color={glow.muted} lines={1}>{r.status}</GText>
-            </Press>
-            <Action small label="Restore" onPress={() => restore(r.roomId)} />
+    <Sheet testID="history-panel" title="History" onClose={onClose}>
+      {decisions.length > 0 || (!archived.length && !left.length) ? (
+        <View style={{ gap: 12 }}>
+          <Label>Decided</Label>
+          {!decisions.length ? <GText color={glow.muted}>Nothing decided yet</GText> : null}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap }}>
+            {decisions.map((d) => <DecidedCard key={d.id} record={d} width={cardWidth} now={now} open={canOpen(d.roomId) ? () => openRoom(d.roomId) : undefined} />)}
           </View>
-        ))}
-      </>}
-      {left.length > 0 && <>
-        <Label>Left rooms</Label>
-        {left.map((r) => (
-          <View key={r.roomId} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: R.card, backgroundColor: '#ffffff08' }}>
-            <View style={{ flex: 1, gap: 4 }}>
-              <GText bold lines={1}>{r.label}</GText>
-              <FaceStack people={r.people} size={22} />
+        </View>
+      ) : null}
+      {archived.length > 0 && (
+        <View style={{ gap: 8 }}>
+          <Label>Archived rooms</Label>
+          {archived.map((r) => (
+            <View key={r.roomId} style={row}>
+              <Press label={r.label} onPress={() => openRoom(r.roomId)} style={{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 4 }}>
+                <GText bold lines={1}>{r.label}</GText>
+                <GText size={13} color={glow.muted} lines={1}>{r.status}</GText>
+              </Press>
+              <Action small label="Restore" onPress={() => restore(r.roomId)} />
             </View>
-            <Action small label="Return" onPress={() => returnTo(r)} disabled={busy} />
-          </View>
-        ))}
-      </>}
-      {decisions.length > 0 || !archived.length ? <Label>Decided</Label> : null}
-      {!decisions.length && !archived.length && <GText color={glow.muted}>Nothing decided yet</GText>}
-      {decisions.map((d) => {
-        const body = (
-          <>
-            <View style={{ width: 46, height: 69, borderRadius: 8, overflow: 'hidden', backgroundColor: '#262626' }}>
-              {d.posterUrl ? <Image source={{ uri: d.posterUrl.replace('/w500/', '/w185/') }} accessible={false} style={{ width: '100%', height: '100%' }} /> : null}
+          ))}
+        </View>
+      )}
+      {left.length > 0 && (
+        <View style={{ gap: 8 }}>
+          <Label>Left rooms</Label>
+          {left.map((r) => (
+            <View key={r.roomId} style={row}>
+              <View style={{ flex: 1, gap: 4 }}>
+                <GText bold lines={1}>{r.label}</GText>
+                <FaceStack people={r.people} size={22} />
+              </View>
+              <Action small label="Return" onPress={() => returnTo(r)} disabled={busy} />
             </View>
-            <View style={{ flex: 1, gap: 3 }}>
-              <GText bold lines={1}>{d.title}{d.year ? ` (${d.year})` : ''}</GText>
-              <GText size={13} color={glow.soft} lines={1}>{d.roomLabel}{d.people.length ? ` · ${d.people.join(', ')}` : ''}</GText>
-              <GText size={12} color={glow.muted}>{ago(d.decidedAt, now)}</GText>
-            </View>
-          </>
-        );
-        return canOpen(d.roomId) ? (
-          <Press key={d.id} label={`${d.title}, ${d.roomLabel}`} onPress={() => openRoom(d.roomId)} style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', gap: 14, padding: 10, borderRadius: R.card, backgroundColor: '#ffffff06' }}>
-            {body}
-            <Icon name="right" size={16} color={glow.muted} />
-          </Press>
-        ) : (
-          <View key={d.id} accessibilityLabel={`${d.title}, ${d.roomLabel}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 10, borderRadius: R.card, backgroundColor: '#ffffff06' }}>{body}</View>
-        );
-      })}
-    </Panel>
+          ))}
+        </View>
+      )}
+    </Sheet>
   );
 }

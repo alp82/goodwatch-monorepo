@@ -1,9 +1,8 @@
 import { ConnectionDetails } from './rooms/ConnectionDetails';
 import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnostic';
-import { EdgeBack } from './glow/EdgeBack';
 import { guestOnly } from '../core/config';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { AppState, BackHandler, Platform, View } from 'react-native';
+import { AppState, BackHandler, Platform } from 'react-native';
 import { GText, Press, glow } from './glow/theme';
 import { router, useFocusEffect } from 'expo-router';
 import * as Crypto from 'expo-crypto';
@@ -24,14 +23,14 @@ import { Landing } from './home/Landing';
 import { BootPageReady } from './home/boot-phase';
 import { greeting, type HomeRoom } from './rooms/home-model';
 import { YourRooms } from './rooms/YourRooms';
-import { HistoryPanel, InviteHead, JoinScreen, ProfilePanel, RetryPanel } from './rooms/panels';
+import { HistorySheet, InviteHead, JoinScreen, ProfileSheet, RetrySheet } from './rooms/panels';
 import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
 import { useHome } from './rooms/useHome';
-import { AppFrame, SubHeader, type BackTarget } from './shell/Frame';
-import { Avatar, CoveredBody } from './shell/parts';
-import { column } from './shell/tokens';
+import { AppFrame } from './shell/Frame';
 
 type PanelKind = 'create' | 'join' | 'profile' | 'history';
+/** What another screen can open on the start page (`/?open=…`). */
+export type StartRequest = 'profile' | 'history' | 'join' | 'new';
 /** Automatic retries of the same saved request while the server restarts (about half a minute in all). */
 const AUTO_RETRIES = 5;
 /** How long Your rooms offers Undo after an archive. */
@@ -45,10 +44,10 @@ const waiting = (saved: AdmissionRecovery | null) => Date.now() < (saved?.retryA
  * History are panels in the same frame. Admission keeps the existing recovery: the exact request is
  * persisted before every submit and retried as-is.
  */
-export function Entrance({ invite }: { invite?: string }) {
+export function Entrance({ invite, open: request }: { invite?: string; /** A start page action another screen asked for. */ open?: StartRequest }) {
   const home = useHome();
   useFocusEffect(useCallback(() => { home.reload(); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
-  const [panel, setPanel] = useState<PanelKind | null>(invite ? 'join' : null);
+  const [panel, setPanel] = useState<PanelKind | null>(invite ? 'join' : request && request !== 'new' ? request : null);
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false);
@@ -288,7 +287,14 @@ export function Entrance({ invite }: { invite?: string }) {
   }
   const known = home.nickname;
   const locked = busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
-  const closePanel = useCallback(() => { cancelAttempt(); setError(''); setRecoveryDismissed(true); setPanel(null); if (invite) router.replace('/'); }, [invite, cancelAttempt]);
+  // A panel asked for from another screen (a room's header) closes back to that screen.
+  const requestedFrom = useRef(Boolean(request && request !== 'new'));
+  const closePanel = useCallback(() => {
+    cancelAttempt(); setError(''); setRecoveryDismissed(true); setPanel(null);
+    if (requestedFrom.current && router.canGoBack()) { requestedFrom.current = false; router.back(); return; }
+    requestedFrom.current = false;
+    if (invite) router.replace('/');
+  }, [invite, cancelAttempt]);
   const recoveryPanel = !recoveryDismissed && (admission || restoreFailed || recoveryBlocked);
   useFocusEffect(useCallback(() => {
     if (Platform.OS !== 'android' || (!panel && !recoveryPanel)) return;
@@ -318,11 +324,19 @@ export function Entrance({ invite }: { invite?: string }) {
     if (home.signInRoomId) router.push({ pathname: '/room/[id]', params: { id: home.signInRoomId, signin: '1' } });
     else void enter(false, true, undefined, known ?? '');
   };
+  const openJoin = () => { setError(''); if (!resumeAdmission()) setPanel('join'); };
+  // Another screen's header asked for New room: it starts once the saved request is known.
+  const handled = useRef(false);
+  useEffect(() => {
+    if (!request || handled.current || !home.ready || restoring) return;
+    handled.current = true;
+    router.setParams({ open: undefined });
+    // Starting the admission is the point of this request (it runs once, like a press of New room).
+    if (request === 'new') create(); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [request, home.ready, restoring]); // eslint-disable-line react-hooks/exhaustive-deps
   const returning = home.hasRooms || Boolean(known);
   const pending = admission ? (admission.code ? 'join' : 'create') : null;
   const shown: PanelKind | null = panel ?? (recoveryDismissed ? null : pending ?? (restoreFailed || recoveryBlocked ? 'join' : null));
-  const titles: Record<PanelKind, string> = { create: 'New room', join: 'Join a room', profile: 'Profile', history: 'History' };
-  const backTo: BackTarget | null = shown ? { label: returning ? 'Your rooms' : 'Start', short: returning ? 'Rooms' : 'Start', onPress: closePanel } : null;
   const actionLabel = (first: string, again: string) => (busy ? 'Connecting…' : retrySeconds > 0 ? `Retry in ${retrySeconds}s` : admission ? again : first);
   const notices = (
     <>
@@ -334,40 +348,45 @@ export function Entrance({ invite }: { invite?: string }) {
     </>
   );
   // The saved-request check takes a moment on every visit: the page appears once, already usable.
-  if (!home.ready || restoring) return <AppFrame>{null}</AppFrame>;
+  const me = { name: known, member: Boolean(home.member) };
+  const openProfile = () => { setError(''); setPanel('profile'); };
+  if (!home.ready || restoring) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
   if (shown === 'join') return (
-    <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite} nickname={admission ? admission.request.nickname || null : known} member={Boolean(home.member)} initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error}
-      back={closePanel} editName={() => setPanel('profile')}
+    <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite}
+      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname)} member={Boolean(home.member)} me={me}
+      initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error}
+      back={closePanel} editName={openProfile}
       signIn={guestOnly || home.member ? undefined : (c) => void enter(true, true, undefined, '', c)}
       submit={(c, name) => void enter(true, Boolean(home.member), undefined, name, c)} extra={notices} />
   );
+  const openCount = home.active.filter((r) => r.live).length;
+  const history = home.decisions.length || home.left.length || home.archived.length ? () => setPanel('history') : undefined;
+  const sheet = shown === 'create' ? (
+    <RetrySheet action={actionLabel('Create room', 'Retry room request')} busy={locked} error={error} retry={() => void enter(false, false, undefined, admission?.request.nickname ?? known ?? '')} extra={notices} onClose={closePanel} />
+  ) : shown === 'profile' ? (
+    <ProfileSheet nickname={known} member={Boolean(home.member)} signIn={signIn} busy={locked || home.loadingRooms} error={error} onClose={closePanel}
+      save={(name) => { void home.setNickname(name).then(() => { if (invite) setPanel('join'); else closePanel(); }); }} />
+  ) : shown === 'history' ? (
+    <HistorySheet decisions={home.decisions} left={home.left} archived={home.archived} restore={home.restore} canOpen={(id) => home.decidedRooms.has(id)} openRoom={open} returnTo={returnTo} busy={locked} onClose={closePanel} />
+  ) : null;
   return (
     <AppFrame
-      onLogo={shown ? closePanel : undefined}
-      people={<Press label="Profile" quiet={home.loadingRooms} onPress={() => { setError(''); setPanel('profile'); }} style={{ alignItems: 'flex-end' }}><Avatar name={known} /></Press>}
-      subheader={shown ? <SubHeader back={backTo} title={titles[shown]} /> : null}
+      header={{ me, onProfile: openProfile, profileQuiet: home.loadingRooms, onLogo: shown ? closePanel : undefined, pill: returning && openCount ? { label: `${openCount} open`, state: 'rooms' } : null }}
+      rooms={{ rooms: home.active, loading: home.loadingRooms, actions: { open, newRoom: create, join: openJoin } }}
+      sheet={sheet}
     >
-      <CoveredBody covered={Boolean(shown)}>
       {returning ? (
         <YourRooms title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
-          rooms={home.active} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create}
-          join={() => { setError(''); if (!resumeAdmission()) setPanel('join'); }} retry={home.retry}
-          history={home.decisions.length || home.left.length || home.archived.length ? () => setPanel('history') : undefined}
+          rooms={home.active} decisions={home.decisions} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create}
+          join={openJoin} retry={home.retry} history={history} signIn={home.member ? undefined : signIn}
           archive={(roomId) => { home.archive(roomId); setJustArchived(roomId); }}
           archivedRoom={Boolean(justArchived)} undoArchive={() => { if (justArchived) home.restore(justArchived); setJustArchived(null); }}
           disabled={checkingInvite} quiet={busy} />
       ) : (
-        <Landing create={create} join={() => { setError(''); if (!resumeAdmission()) setPanel('join'); }} signIn={signIn} disabled={checkingInvite} quiet={busy} />
+        <Landing newRoom={create} join={openJoin} signIn={signIn} disabled={checkingInvite} quiet={busy} />
       )}
-      </CoveredBody>
-      {!shown && error ? <View style={{ ...column, paddingBottom: 8 }}><GText size={14} color="#fca5a5">{error}</GText></View> : null}
-      {shown === 'create' && (
-        <RetryPanel action={actionLabel('Create room', 'Retry room request')} busy={locked} error={error} retry={() => void enter(false, false, undefined, admission?.request.nickname ?? known ?? '')} extra={notices} />
-      )}
-      {shown === 'profile' && <ProfilePanel nickname={known} member={Boolean(home.member)} signIn={signIn} busy={locked || home.loadingRooms} error={error} save={(name) => { void home.setNickname(name).then(() => setPanel(invite ? 'join' : null)); }} />}
-      {shown === 'history' && <HistoryPanel decisions={home.decisions} left={home.left} archived={home.archived} restore={home.restore} canOpen={(id) => home.decidedRooms.has(id)} openRoom={open} returnTo={returnTo} busy={locked} />}
-      {shown && <EdgeBack back={closePanel} />}
+      {!shown && error ? <GText size={14} color="#fca5a5">{error}</GText> : null}
     </AppFrame>
   );
 }

@@ -1,17 +1,10 @@
 import { useCallback, useEffect, useState, type ReactNode, type ComponentRef } from 'react';
-import { Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Easing, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useReducedMotion } from '../../components/ui';
 import { peerColor } from '../glow/model';
 import { GText, Icon, Press, glow, native, type IconName } from '../glow/theme';
-import { COLUMN, R } from './tokens';
+import { R } from './tokens';
 
-export function Chip({ children, gold = false }: { children: ReactNode; gold?: boolean }) {
-  return (
-    <View style={{ alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: gold ? '#fbbf241f' : '#ffffff0d', borderWidth: 1, borderColor: gold ? '#fbbf2440' : '#ffffff14' }}>
-      <GText size={12} color={gold ? glow.amber : glow.soft} lines={1}>{children}</GText>
-    </View>
-  );
-}
 /** Your own avatar: amber initial once a nickname is known, a quiet outline before. */
 export function Avatar({ name, size = 36 }: { name: string | null; size?: number }) {
   return (
@@ -33,6 +26,23 @@ export function FaceStack({ people, size = 24, max = 4 }: { people: { id: string
     </View>
   );
 }
+/** The pulsing green dot of an open room. */
+export function LiveDot({ size = 8 }: { size?: number }) {
+  const reduced = useReducedMotion();
+  const [pulse] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduced) return;
+    const loop = Animated.loop(Animated.timing(pulse, { toValue: 1, duration: 1500, easing: Easing.out(Easing.quad), useNativeDriver: native }));
+    loop.start();
+    return () => loop.stop();
+  }, [pulse, reduced]);
+  return (
+    <View accessible={false} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      {!reduced && <Animated.View style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green, opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 2.8] }) }] }} />}
+      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green }} />
+    </View>
+  );
+}
 /** Primary (amber) and secondary (outlined) actions; flat, 10 px corners. */
 export function Action({ label, name, onPress, gold = false, icon, style, disabled, small = false, testID }: { label: string; /** Accessible name when it differs from the visible label. */ name?: string; onPress: () => void; gold?: boolean; icon?: IconName; style?: StyleProp<ViewStyle>; disabled?: boolean; small?: boolean; testID?: string }) {
   return (
@@ -43,46 +53,10 @@ export function Action({ label, name, onPress, gold = false, icon, style, disabl
     </Press>
   );
 }
-export function Label({ children }: { children: string }) {
-  return <GText bold size={13} color={glow.muted} style={{ letterSpacing: 1.2 }}>{children.toUpperCase()}</GText>;
-}
-
-/**
- * A panel takes over the body below the subheader (the view underneath stays mounted), so the
- * header and Back stay usable. The footer never scrolls away. Drag the list, tap outside a field,
- * or press the keyboard's Done to dismiss the keyboard.
- */
-export function Panel({ children, footer, testID }: { children: ReactNode; footer?: ReactNode; testID?: string }) {
-  const reduced = useReducedMotion();
-  const [y] = useState(() => new Animated.Value(reduced ? 0 : 1));
-  useEffect(() => { Animated.timing(y, { toValue: 0, duration: reduced ? 0 : 180, useNativeDriver: native }).start(); }, [y, reduced]);
-  return (
-    <Animated.View testID={testID} role="dialog" accessibilityViewIsModal style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 50, backgroundColor: glow.bg, opacity: y.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), transform: [{ translateY: y.interpolate({ inputRange: [0, 1], outputRange: [0, 16] }) }] }}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, width: '100%', maxWidth: COLUMN.maxWidth, alignSelf: 'center', borderTopWidth: 1, borderTopColor: glow.line }}>
-        <Pressable
-          accessible={false}
-          onPress={(e) => {
-            // Web clicks inside a field bubble here; only taps outside fields dismiss.
-            const target = e.nativeEvent.target as unknown as { closest?: (q: string) => unknown };
-            if (Platform.OS === 'web' && target?.closest?.('input,textarea,button,a,[role=button],[role=checkbox],[role=link]')) return;
-            Keyboard.dismiss();
-          }}
-          style={{ flex: 1, minHeight: 0, cursor: 'auto' } as ViewStyle}
-        >
-          <ScrollView style={{ flex: 1, minHeight: 0 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingHorizontal: COLUMN.inset, paddingTop: 16, paddingBottom: 20, gap: 16 }}>
-            {children}
-          </ScrollView>
-        </Pressable>
-        {footer && <View style={{ flexShrink: 0, paddingHorizontal: COLUMN.inset, paddingTop: 12, paddingBottom: 12, borderTopWidth: 1, borderTopColor: glow.line, gap: 8 }}>{footer}</View>}
-      </KeyboardAvoidingView>
-    </Animated.View>
-  );
-}
-
 /** Preserve layout under panels, while excluding covered controls from focus and touches. */
-export function CoveredBody({ covered, children }: { covered: boolean; children: ReactNode }) {
+export function CoveredBody({ covered, children, style, testID = 'covered-body' }: { covered: boolean; children: ReactNode; style?: StyleProp<ViewStyle>; testID?: string }) {
   const attach = useCallback((node: ComponentRef<typeof View> | null) => {
     if (Platform.OS === 'web' && node) (node as unknown as HTMLElement).inert = covered;
   }, [covered]);
-  return <View ref={attach} testID="covered-body" pointerEvents={covered ? 'none' : 'auto'} aria-hidden={covered} importantForAccessibility={covered ? 'no-hide-descendants' : 'auto'} accessibilityElementsHidden={covered} style={{ flex: 1, minHeight: 0 }}>{children}</View>;
+  return <View ref={attach} testID={testID} pointerEvents={covered ? 'none' : 'auto'} aria-hidden={covered} importantForAccessibility={covered ? 'no-hide-descendants' : 'auto'} accessibilityElementsHidden={covered} style={style ?? { flex: 1, minHeight: 0 }}>{children}</View>;
 }

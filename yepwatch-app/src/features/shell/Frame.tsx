@@ -1,84 +1,117 @@
-import type { ReactNode } from 'react';
-import { Platform, Text, View, useWindowDimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+/**
+ * The page frame of every screen (direction D): one background, the sticky app header, and the body
+ * in the centered container, top-aligned right under the header. The screen's main action (`footer`)
+ * is pinned at the bottom on phones and sits at the end of the content on bigger windows. Sheets open
+ * over the body while the header stays usable.
+ */
+import { useState, type ReactNode } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BootReveal } from '../home/BootReveal';
 import { Backdrop } from '../glow/Backdrop';
-import { GText, Icon, Press, glow } from '../glow/theme';
-import { FRAME, R, column } from './tokens';
+import { EdgeBack } from '../glow/EdgeBack';
+import { glow } from '../glow/theme';
+import type { HomeRoom } from '../rooms/home-model';
+import { HomeRoomsSheet, YourRoomsSheet, type CurrentRoom, type RoomsSheetActions } from '../rooms/RoomsSheet';
+import { AppHeader, type AppHeaderProps } from './Header';
+import { useLayout } from './layout';
+import { CoveredBody } from './parts';
+import { warm } from './tokens';
 
-/** Three header sizes: big on desktop, regular on phones and tablets, compact on short windows. */
-export function useFrameSize() {
-  const { width, height } = useWindowDimensions();
-  const compact = height < 480;
-  const big = !compact && width >= 900 && height >= 640;
-  return {
-    big, compact,
-    bar: big ? 80 : compact ? 46 : 56,
-    brand: big ? 30 : compact ? 20 : 22,
-    people: big ? 44 : compact ? 30 : 36,
-    faces: big ? 38 : compact ? 28 : 32,
-    edge: big ? 32 : 16,
-    sub: compact ? 48 : big ? 72 : 64,
-  };
+export { BrandMark } from './Header';
+
+/** What the header's room pill opens: Your rooms. */
+export interface FrameRooms {
+  /** The room this screen belongs to. */
+  current?: CurrentRoom;
+  /** The open rooms when the page already has them (the start page); otherwise the sheet reads them. */
+  rooms?: readonly HomeRoom[];
+  loading?: boolean;
+  /** Defaults: open the room, New room and Join a room on the start page. */
+  actions?: Partial<RoomsSheetActions>;
 }
 
-/**
- * The header wordmark. During the startup dissolve it appears after the boot word is gone (header
- * role), so the two never share the screen.
- */
-export function BrandMark({ size }: { size: number }) {
-  const font = { fontFamily: 'GabaritoBold', fontSize: size, lineHeight: size * 1.2, letterSpacing: (-0.8 * size) / 64, color: glow.ink } as const;
-  const web = Platform.OS === 'web' ? ({ dataSet: { homeBrand: '' } } as object) : {};
-  return (
-    <BootReveal part="header" index={0} {...web} accessibilityLabel="YepWatch" style={{ flexDirection: 'row', alignSelf: 'center' }}>
-      <Text style={font}>Y</Text>
-      <Text style={font}>ep</Text>
-      <Text style={[font, { color: glow.amber }]}>Watch</Text>
-    </BootReveal>
+export interface AppFrameProps {
+  header?: AppHeaderProps;
+  rooms?: FrameRooms;
+  children: ReactNode;
+  /** The screen's main action: pinned on phones and short windows ('auto'), at the end of the content on bigger windows. */
+  footer?: ReactNode;
+  footerPlacement?: 'auto' | 'pinned' | 'content';
+  /** A Sheet over the body; the page underneath becomes inert, the header stays usable. */
+  sheet?: ReactNode;
+  /** A page over everything, header included (title details, cheers). */
+  overlay?: ReactNode;
+  /** The overlay covers this screen: header and body stay laid out but are inert. */
+  covered?: boolean;
+  /** The body scrolls (default); voting fills it instead. */
+  scroll?: boolean;
+  /** The content column's widest size; 'page' (default) is the shared container. */
+  width?: number | 'page';
+  /** Space between the body's children. */
+  gap?: number;
+  testID?: string;
+}
+
+/** Where the header's defaults lead: the start page does the rest (it owns admission and recovery). */
+export const startPage = {
+  open: (roomId: string) => router.push({ pathname: '/room/[id]', params: { id: roomId } }),
+  newRoom: () => router.push({ pathname: '/', params: { open: 'new' } }),
+  join: () => router.push({ pathname: '/', params: { open: 'join' } }),
+  profile: () => router.push({ pathname: '/', params: { open: 'profile' } }),
+};
+
+export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, covered = false, scroll = true, width = 'page', gap = 0, testID }: AppFrameProps) {
+  const layout = useLayout();
+  const { phone, short, gutter, max, z } = layout;
+  const insets = useSafeAreaInsets();
+  const [roomsOpen, setRoomsOpen] = useState(false);
+  const pinned = footer ? (footerPlacement === 'pinned' || (footerPlacement === 'auto' && (phone || short))) : false;
+  const column = { width: '100%', maxWidth: width === 'page' ? max : Math.min(width, max), alignSelf: 'center' } as const;
+  const actions: RoomsSheetActions = { open: startPage.open, newRoom: startPage.newRoom, join: startPage.join, ...rooms?.actions };
+  const closeRooms = () => setRoomsOpen(false);
+  const roomsSheet = roomsOpen ? (rooms?.rooms
+    ? <YourRoomsSheet current={rooms.current} rooms={rooms.rooms} loading={rooms.loading} actions={actions} onClose={closeRooms} />
+    : <HomeRoomsSheet current={rooms?.current} actions={actions} onClose={closeRooms} />) : null;
+  const shownSheet = sheet ?? roomsSheet;
+  const top = scroll ? (phone ? 22 : z(40)) : (phone ? 12 : z(24));
+  const bottom = (scroll ? (phone ? 32 : z(56)) : (phone ? 12 : z(32))) + (pinned ? 0 : insets.bottom);
+  const content = (
+    <>
+      {children}
+      {footer && !pinned ? <View testID="frame-actions" style={{ gap: 10, paddingTop: z(8) }}>{footer}</View> : null}
+    </>
   );
-}
-
-/**
- * The page frame used by every screen: one background, a constant top bar (logo left, people right),
- * an optional subheader, and the body. Phones use the full height; large windows center the content
- * inside invisible 1120 × 920 bounds.
- */
-export function AppFrame({ people, onLogo, subheader, children, testID }: { people?: ReactNode; onLogo?: () => void; subheader?: ReactNode; children: ReactNode; testID?: string }) {
-  const size = useFrameSize();
   return (
-    <SafeAreaView testID={testID} edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: glow.bg }}>
+    <View testID={testID} style={{ flex: 1, backgroundColor: glow.bg }}>
       <BootReveal part="backdrop" pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></BootReveal>
-      <View style={{ flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' }}>
-        <View style={{ flex: 1, width: '100%', minHeight: 0, maxWidth: FRAME.maxWidth, maxHeight: FRAME.maxHeight }}>
-          <View style={{ height: size.bar, flexShrink: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: size.edge }}>
-            {onLogo ? <Press label="Your rooms" onPress={onLogo} style={{ alignItems: 'flex-start', paddingRight: 8 }}><BrandMark size={size.brand} /></Press> : <BrandMark size={size.brand} />}
-            {people ? <BootReveal part="header" index={1}>{people}</BootReveal> : null}
-          </View>
-          {subheader}
-          <View style={{ flex: 1, minHeight: 0 }}>{children}</View>
-        </View>
+      <CoveredBody covered={covered} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
+        <AppHeader {...header} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? startPage.profile} />
+      </CoveredBody>
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <CoveredBody covered={covered || Boolean(shownSheet)}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, minHeight: 0 }}>
+            {scroll ? (
+              <ScrollView testID="frame-body" style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: gutter, paddingTop: top, paddingBottom: bottom }}>
+                <View style={{ ...column, gap }}>{content}</View>
+              </ScrollView>
+            ) : (
+              <View testID="frame-body" style={{ flex: 1, minHeight: 0, paddingHorizontal: gutter, paddingTop: top, paddingBottom: bottom }}>
+                <View style={{ ...column, flex: 1, minHeight: 0, gap }}>{content}</View>
+              </View>
+            )}
+            {pinned ? (
+              <View testID="frame-dock" style={{ borderTopWidth: 1, borderTopColor: warm.line, backgroundColor: 'rgba(10,9,8,0.9)', paddingHorizontal: gutter, paddingTop: 12, paddingBottom: 14 + insets.bottom }}>
+                <View style={{ ...column, gap: 10 }}>{footer}</View>
+              </View>
+            ) : null}
+          </KeyboardAvoidingView>
+        </CoveredBody>
+        {shownSheet}
       </View>
-    </SafeAreaView>
-  );
-}
-
-export interface BackTarget { label: string; short: string; onPress: () => void }
-/** Back and context live below the constant top bar. Back always names the view it returns to. */
-export function SubHeader({ back, title, subtitle, right, large = false }: { back?: BackTarget | null; title: string; subtitle?: ReactNode; right?: ReactNode; large?: boolean }) {
-  const size = useFrameSize();
-  return (
-    <View testID="subheader" style={{ height: size.sub, flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 10, ...column }}>
-      {back && (
-        <Press label={`Back to ${back.label}`} onPress={back.onPress} style={{ flexDirection: 'row', gap: 2, height: 40, paddingLeft: 6, paddingRight: 12, borderRadius: R.control, backgroundColor: '#ffffff0d', borderWidth: 1, borderColor: '#ffffff14' }}>
-          <Icon name="left" size={18} color={glow.soft} />
-          <GText size={13} bold color={glow.soft} lines={1} style={{ maxWidth: 110 }}>{back.short}</GText>
-        </Press>
-      )}
-      <View style={{ flex: 1, minWidth: 0, gap: size.compact ? 0 : 2 }}>
-        <GText size={large ? (size.compact ? 20 : size.big ? 32 : 26) : size.big ? 22 : 18} bold lines={1} style={{ letterSpacing: large ? -0.7 : -0.2 }}>{title}</GText>
-        {!size.compact || !back ? subtitle : null}
-      </View>
-      {right}
+      {overlay}
+      {header.back && !covered && !shownSheet ? <EdgeBack back={header.back} /> : null}
     </View>
   );
 }

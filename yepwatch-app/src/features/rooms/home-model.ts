@@ -15,6 +15,8 @@ export interface HomeRoom {
   hot: boolean;
   /** Tonight's poster once decided. */
   poster: string | null;
+  /** Up to three posters from the room's deck, for the start page's poster fan (none before Start). */
+  posters: string[];
   people: { id: string; nickname: string; dropped: boolean; self: boolean }[];
   hostNickname: string | null;
   own: boolean;
@@ -51,6 +53,14 @@ export function decisionRecord(snapshot: RoomSnapshot): DecisionRecord | null {
   };
 }
 
+/** The first posters of the room's deck: your own next cards first, then the rest of the candidates. */
+export function deckPosters(snapshot: RoomSnapshot, count = 3): string[] {
+  const { shared, own } = snapshot;
+  const voted = new Set(own.votes.map((v) => v.candidateId));
+  const ordered = [...shared.candidates.filter((c) => !voted.has(c.id)), ...shared.candidates.filter((c) => voted.has(c.id))];
+  return [...new Set(ordered.flatMap((c) => (c.posterUrl ? [c.posterUrl] : [])))].slice(0, count);
+}
+
 export function homeRoom(entry: RegisteredRoom, snapshot: RoomSnapshot): HomeRoom {
   const view = roomView(snapshot);
   return {
@@ -60,6 +70,7 @@ export function homeRoom(entry: RegisteredRoom, snapshot: RoomSnapshot): HomeRoo
     status: statusLine(view),
     hot: view.phase === 'decided' || Boolean(view.proposal),
     poster: view.phase === 'decided' ? view.decision?.posterUrl ?? null : null,
+    posters: deckPosters(snapshot),
     people: snapshot.shared.participants.map((p) => ({ id: p.participantId, nickname: p.nickname, dropped: Boolean(p.dropped), self: p.participantId === snapshot.own.participantId })),
     hostNickname: view.hostName || null,
     own: view.isHost,
@@ -70,7 +81,7 @@ export function homeRoom(entry: RegisteredRoom, snapshot: RoomSnapshot): HomeRoo
 /** A room you left: only what this device remembered, since the server no longer shows it to you. */
 export function leftRoom(entry: RegisteredRoom): HomeRoom {
   return {
-    roomId: entry.roomId, label: entry.left?.label || 'A room you left', live: false, status: 'Left', hot: false, poster: null,
+    roomId: entry.roomId, label: entry.left?.label || 'A room you left', live: false, status: 'Left', hot: false, poster: null, posters: [],
     people: [{ id: 'self', nickname: entry.nickname, dropped: true, self: true }], hostNickname: null, own: false, openedAt: entry.openedAt,
   };
 }
@@ -78,7 +89,7 @@ export function leftRoom(entry: RegisteredRoom): HomeRoom {
 /** A room whose read failed: only what this device remembered, enough to find it and put it back. */
 export function unreadRoom(entry: RegisteredRoom): HomeRoom {
   return {
-    roomId: entry.roomId, label: 'A room', live: false, status: 'Didn’t load', hot: false, poster: null,
+    roomId: entry.roomId, label: 'A room', live: false, status: 'Didn’t load', hot: false, poster: null, posters: [],
     people: [{ id: 'self', nickname: entry.nickname, dropped: false, self: true }], hostNickname: null, own: false, openedAt: entry.openedAt,
   };
 }
@@ -102,6 +113,20 @@ export function classify(entry: RegisteredRoom, result: { snapshot?: RoomSnapsho
     return record ? { kind: 'active', room, record } : { kind: 'gone' };
   }
   return { kind: 'active', room, record: null };
+}
+
+/** A TMDB poster at another rendition width (smaller files for small posters). */
+export const posterAt = (url: string, size: 185 | 342 | 500) => url.replace(/\/w\d+\//, `/w${size}/`);
+
+/** "now", "12 min ago", "3 h ago", "yesterday", "4 days ago". */
+export function timeAgo(at: number, now: number) {
+  const m = Math.round((now - at) / 60000);
+  if (m < 2) return 'now';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} h ago`;
+  const d = Math.round(h / 24);
+  return d === 1 ? 'yesterday' : `${d} days ago`;
 }
 
 /** Time of day greeting for the start page. */

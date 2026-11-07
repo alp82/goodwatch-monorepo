@@ -59,6 +59,10 @@ export interface RoomContextValue {
   acknowledgeIdeas: (ids: readonly string[]) => void;
 }
 const RoomContext = createContext<RoomContextValue | null>(null);
+/** The room when the screen is inside one (the shared frame derives its header from it), else null. */
+export function useOptionalRoom() {
+  return useContext(RoomContext);
+}
 export function useRoom() {
   const value = useContext(RoomContext);
   if (!value) throw new Error('useRoom outside a room');
