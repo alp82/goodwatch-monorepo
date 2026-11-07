@@ -114,6 +114,8 @@ for (const [width, height] of [[320,568], [375,667], [390,844], [844,390], [1440
     await expect(page).toHaveURL(/\/$/);
     const back = page.getByRole('button', { name: 'Anything', exact: true });
     await expect(back).toBeVisible();
+    // The room's card sits under the start tiles; it fits the window once scrolled to.
+    await back.evaluate((el) => el.scrollIntoView({ block: 'center' }));
     const bounds = await back.boundingBox();
     expect(bounds!.y).toBeGreaterThanOrEqual(0);
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(height);
@@ -162,9 +164,11 @@ for (const navigation of ['button', 'edge'] as const) test(`Tonight ${navigation
   if (navigation === 'button') await page.getByRole('button',{name:'Back',exact:true}).click();
   else { await page.mouse.move(5,350);await page.mouse.down();await page.mouse.move(125,355,{steps:12});await page.mouse.up(); }
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText('Tonight: Isolated test c1',{exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'History',exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'Anything',exact:true}).click();
+  // A decided room leaves the open rooms for the Decided row, which opens History.
+  await expect(page.getByRole('button',{name:'Anything',exact:true})).toHaveCount(0);
+  await page.getByRole('button',{name:'Decided, 1, open History',exact:true}).click();
+  await expect(page.getByTestId('history-panel').getByText('Isolated test c1 (2020)',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Isolated test c1, Anything',exact:true}).click();
   await expect(page.getByTestId('tonight')).toBeVisible();
   expect(f.writes).toEqual([]);expect(f.room.shared.decision?.candidateId).toBe('c1');
 });

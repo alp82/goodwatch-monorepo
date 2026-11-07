@@ -80,7 +80,7 @@ test('Create during a restart: two 503s are retried with the same request, showi
     return bodies.length <= 2 ? busy(route) : route.fallback();
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Create a room', exact: true }).click();
+  await page.getByRole('button', { name: 'New room', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Connecting…', exact: true })).toBeVisible();
   await expect(page).toHaveURL(/\/room\/test-room\/mood/, { timeout: 15_000 });
   expect(bodies).toHaveLength(3);

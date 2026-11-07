@@ -51,7 +51,7 @@ for (const [width, height] of [[375, 667], [390, 844], [1440, 900]]) test(`boot 
   await expect(page.getByTestId('yepwatch-boot')).toBeVisible();
   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0, { timeout: 6000 });
   await expectOneLogoInPlace(page);
-  await expect(page.getByRole('button', { name: 'Create a room', exact: true })).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'New room', exact: true })).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
 });
 

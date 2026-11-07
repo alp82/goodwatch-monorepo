@@ -7,7 +7,7 @@ const button = (page: Page, name: string | RegExp) => page.getByRole('button', {
 test('guest host: Create opens Mood at once, Back returns to the room page, name and services before Start', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
   await page.goto('/');
-  await button(page, 'Create a room').click();
+  await button(page, 'New room').click();
   await expect(page.getByLabel('Mood')).toBeVisible();
   await expect(page).toHaveURL(/\/room\/test-room\/mood/);
   expect(f.room.shared.participants[0].nickname).toBe('');
@@ -47,7 +47,7 @@ test('guest host: Create opens Mood at once, Back returns to the room page, name
   await shot(page, '04-voting');
   // Browser back from the room returns to the start page, where the room stays listed with LIVE.
   await page.goBack();
-  await expect(page.getByText('YOUR ROOMS', { exact: true })).toBeVisible();
+  await expect(page.getByText('Open', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Live')).toBeVisible();
   await shot(page, '05-your-rooms');
 });

@@ -31,12 +31,12 @@ test('create: the start page goes straight to Mood, the room page never shows on
   await fakeRoom(page, newRoom());
   await latency(page, 150);
   await page.goto('/');
-  await button(page, 'Create a room').click();
+  await button(page, 'New room').click();
   await expect(page.getByLabel('Mood')).toBeVisible();
   await page.waitForTimeout(500);
   const seen = await paints(page);
   // The start page's own film shows rooms too: only what paints after it counts.
-  expect(seen.filter((p) => !/Create a room/.test(p.text) && /Just you|MOOD|Connecting|Not connected/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
+  expect(seen.filter((p) => !/New room/.test(p.text) && /Just you|MOOD|Connecting|Not connected/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
   // Back shows the room that was waiting underneath.
   await button(page, 'Back').click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
@@ -90,7 +90,7 @@ test('sign-in: back from GoodWatch straight to Mood', async ({ page }) => {
   await button(page, 'Continue with GoodWatch').click();
   await expect(page.getByLabel('Mood')).toBeVisible();
   await page.waitForTimeout(300);
-  expect((await paints(page)).filter((p) => !/Create a room/.test(p.text) && /Just you|MOOD|Your name/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
+  expect((await paints(page)).filter((p) => !/New room/.test(p.text) && /Just you|MOOD|Your name/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
 });
 
 test('editing an idea shows at once, nothing dims, the room stays usable, and it goes out in order', async ({ page }) => {
@@ -102,11 +102,11 @@ test('editing an idea shows at once, nothing dims, the room stays usable, and it
   await page.getByLabel('Mood').fill('something funny');
   await page.evaluate(() => { (window as unknown as { paints: Paint[] }).paints.length = 0; });
   await button(page, 'Next').click();
-  await expect(page.getByTestId('room-setup').getByText('something funny')).toBeVisible();
+  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('something funny')).toBeVisible();
   // While the search runs: add another idea and switch one off. All of it shows, none of it dims.
   await button(page, 'Add an idea').click();
   await button(page, 'space adventure').click();
-  await expect(page.getByTestId('room-setup').getByText('space adventure')).toBeVisible();
+  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('space adventure')).toBeVisible();
   await page.getByRole('switch', { name: 'Use something funny' }).click();
   await expect(page.getByRole('switch', { name: 'Use something funny' })).toHaveAttribute('aria-checked', 'false');
   expect(f.room.shared.ideas[0].text).toBe('cheer me up');
@@ -115,7 +115,7 @@ test('editing an idea shows at once, nothing dims, the room stays usable, and it
   release();
   await expect.poll(() => f.sent().filter((t) => t !== 'configure')).toEqual(['edit_idea', 'add_idea', 'set_idea']);
   await expect.poll(() => f.room.shared.ideas.map((i) => [i.text, i.on])).toEqual([['something funny', false], ['space adventure', true]]);
-  await expect(page.getByTestId('room-setup').getByText('space adventure')).toBeVisible();
+  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('space adventure')).toBeVisible();
 });
 
 test('a refused change goes back and says why', async ({ page }) => {
@@ -124,7 +124,7 @@ test('a refused change goes back and says why', async ({ page }) => {
   await button(page, 'cheer me up, edit').click();
   await page.getByLabel('Mood').fill('something funny');
   await button(page, 'Next').click();
-  await expect(page.getByTestId('room-setup').getByText('cheer me up')).toBeVisible();
+  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('cheer me up')).toBeVisible();
   await expect(page.getByText('No more new ideas in this room')).toBeVisible();
   expect(f.room.shared.ideas[0].text).toBe('cheer me up');
 });
@@ -171,7 +171,7 @@ test('archive: a room moves to History at once, Undo and Restore bring it back, 
   await button(page, 'History').click();
   await expect(page.getByText('Archived rooms')).toBeVisible();
   await button(page, 'Restore').click();
-  await page.getByRole('button', { name: 'Back to Your rooms' }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(button(page, 'cheer me up')).toBeVisible();
   // From the Room page too.
   await button(page, 'cheer me up').click();

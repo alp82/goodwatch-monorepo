@@ -38,15 +38,15 @@ test('the join screen is a room screen: Back, the room as the headline, name and
   const f = await openInvite(page);
   const screen = page.getByTestId('join-screen');
   await expect(screen.getByTestId('invite-head').getByText('ALP’S ROOM')).toBeVisible();
-  // One short idea is the hero headline.
+  // One short idea is the hero headline (52 px on phones).
   const idea = screen.getByTestId('invite-ideas').getByText('cheer me up');
-  expect(await idea.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBe(40);
+  expect(await idea.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBe(52);
   await expect(screen.getByLabel('Your name')).toBeVisible();
   await expect(button(page, 'Continue with GoodWatch')).toBeVisible();
   // The old panel shell and the start page are gone.
   await expect(page.getByTestId('subheader')).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Create a room', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'New room', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /^Back to / })).toHaveCount(0);
   await expect(button(page, 'Join')).toBeDisabled();
   await shot(page, 'join-phone');
@@ -62,13 +62,13 @@ test('the join screen on a desktop window: one centered column, no dark box', as
   const field = page.getByLabel('Your name');
   await expect(field).toBeVisible();
   const box = (await field.boundingBox())!;
-  expect(box.width).toBeLessThanOrEqual(560);
+  expect(box.width).toBeLessThanOrEqual(640);
   expect(Math.abs(box.x + box.width / 2 - 640)).toBeLessThan(4);
   await shot(page, 'join-desktop');
   // Back returns to the start page.
   await button(page, 'Back').click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole('button', { name: 'Create a room', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'New room', exact: true })).toBeVisible();
 });
 
 test('details show GoodWatch highlights: scores, fingerprint chips, credits, age rating, tagline; Watch on every service', async ({ page }) => {
