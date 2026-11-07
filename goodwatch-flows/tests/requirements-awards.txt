@@ -1,0 +1,2 @@
+# SPARQL regression evaluator; install alongside the existing pipeline test environment.
+rdflib==7.1.4

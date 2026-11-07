@@ -22,7 +22,7 @@ Wikidata reads incoming P166/P1411 and category-owned P1346/P2453 statements, pr
 | `f/awards/materialize` | Every 5 minutes, minute 3 | Reconcile committed scope revisions and atomically publish a serving generation. |
 | `f/awards/health` | Every 15 minutes, minute 9 | Fail on stalled normalization, reconciliation/publication or repeated category failures. |
 
-Discovery and ingestion have independent leases, so weekly discovery can run while a historical category import is active. The Wikidata query service also shares a database query budget with the existing external-ID backfill. Queries honor cooldowns/429s and identify GoodWatch. Statement identities are paged before qualifier details; completed detail batches are checkpointed, so a deferred run resumes without publishing a partial category. Metadata is cached for seven days. A complete fetched scope remains staged while normalization finishes. Operational runs expire after 90 days; source evidence does not.
+Discovery and ingestion have independent leases, so weekly discovery can run while a historical category import is active. The Wikidata query service also shares a database query budget with the existing external-ID backfill. Queries honor cooldowns/429s and identify GoodWatch. Explicit Wikidata no-value statements (such as a category with no winner) are fetched through their matching `wdno:` type and retained in the raw snapshot without inventing recipients or wins. Missing statement details without that explicit type still fail completeness validation. Statement identities are paged before qualifier details; completed detail batches are checkpointed, so a deferred run resumes without publishing a partial category. Metadata is cached for seven days. A complete fetched scope remains staged while normalization finishes. Operational runs expire after 90 days; source evidence does not.
 
 ## Rollout and recovery
 
@@ -35,3 +35,13 @@ Discovery and ingestion have independent leases, so weekly discovery can run whi
 For rollback, the old TVDB tables and raw snapshots remain intact. Deploy the prior application read path and clear the legacy-publication flag if resuming its award publisher. A serving-only rollback can set the single Crate publication pointer to the retained previous published generation and refresh that table. Do not delete/rewrite source observations to repair a read model: replay the adapter or reconcile a new generation instead.
 
 The read-model publisher retains the current and one prior successful generation and prunes older serving rows. Source withdrawal only replaces that source's active scope. Unmapped works, people and uncertain categories remain evidence for later resolution rather than guessed links. Coverage stays partial until a separately validated complete slate, recipients and outcomes justify changing it.
+
+## Offline regression checks
+
+Install `goodwatch-flows/tests/requirements-awards.txt` alongside the pipeline test environment, then run:
+
+```sh
+python goodwatch-flows/tests/offline_unittest.py discover -s goodwatch-flows/tests -p 'test_awards*.py'
+```
+
+The SPARQL tests execute the actual importer queries against minimized Wikibase RDF, including the three no-winner statements that previously blocked BAFTA TV and SAG category imports.

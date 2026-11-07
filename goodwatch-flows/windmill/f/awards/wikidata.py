@@ -146,16 +146,24 @@ def fetch_category(client, category, max_pages=50, db=None):
         ):
             raise ValueError("Invalid statement identity")
         final_page = checkpoint.get("final_page", len(statements) < PAGE_SIZE)
+        # Explicit no-value claims have a wdno: type instead of a ps: value.
+        # Fetch them too so completeness checks distinguish them from lost rows;
+        # normalization retains the raw evidence without inventing a recipient.
         for offset in range(0, len(statements), 100):
             iris = " ".join("<" + s + ">" for s in statements[offset : offset + 100])
             batch = client.query(
-                """SELECT ?statement ?subject ?property ?object ?work ?date ?ceremony ?winner ?nominee ?character ?rank ?reference WHERE {
+                """SELECT ?statement ?subject ?property ?object ?no_value ?work ?date ?ceremony ?winner ?nominee ?character ?rank ?reference WHERE {
  VALUES ?statement { """
                 + iris
                 + """ }
  ?subject ?property ?statement .
- VALUES (?property ?ps) { (p:P166 ps:P166) (p:P1411 ps:P1411) (p:P1346 ps:P1346) (p:P2453 ps:P2453) }
- ?statement ?ps ?object . ?statement wikibase:rank ?rank .
+ VALUES (?property ?ps ?no_value_class) {
+  (p:P166 ps:P166 wdno:P166) (p:P1411 ps:P1411 wdno:P1411)
+  (p:P1346 ps:P1346 wdno:P1346) (p:P2453 ps:P2453 wdno:P2453)
+ }
+ { ?statement ?ps ?object . } UNION { ?statement a ?no_value . }
+ FILTER(BOUND(?object) || ?no_value = ?no_value_class)
+ ?statement wikibase:rank ?rank .
  OPTIONAL { ?statement pq:P1686 ?work }
  OPTIONAL { ?statement pq:P585 ?date }
  OPTIONAL { ?statement pq:P805 ?ceremony }
