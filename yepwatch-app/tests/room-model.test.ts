@@ -147,19 +147,22 @@ test('service tiles: the catalog’s groups, names and order; toggles select who
   assert.equal(firstTiles(all, [60]).some((s) => s.id === 60), true, 'picked minor tiles stay visible');
 });
 
-test('room view: NEW is a friend idea that is off and not yet acknowledged on this device', () => {
+test('room view: NEW is a friend idea not yet acknowledged on this device, switched on or off', () => {
   const s = room();
+  s.shared.ideas[1].on = true;
+  // Friend ideas arrive switched on: still NEW for the host until seen.
+  assert.equal(roomView(s).ideas[1].on, true);
   assert.equal(roomView(s).newSuggestions, 1);
-  // Seen on the Room page (or switched): no longer NEW, even while still off.
+  // Seen in the room (or switched): no longer NEW.
   assert.equal(roomView(s, new Set(['i2'])).newSuggestions, 0);
   assert.equal(roomView(s, new Set(['i2'])).ideas[1].fresh, false);
-  // Accepted, then switched off again: the host has dealt with it; it doesn't come back as NEW.
-  s.shared.ideas[1].on = true;
-  assert.equal(roomView(s).newSuggestions, 0);
+  // Switched off by the host: dealt with, it doesn't come back as NEW.
   s.shared.ideas[1].on = false;
   assert.equal(roomView(s, new Set(['i2'])).newSuggestions, 0);
-  // A different friend idea arriving later is NEW again.
-  s.shared.ideas.push({ id: 'i3', text: 'heist', authorId: 'sam', on: false, attributes: [] });
+  // An idea that is off and unseen (older rooms) is NEW too.
+  assert.equal(roomView(s).newSuggestions, 1);
+  // A different friend idea arriving later is NEW again; the host's own ideas never are.
+  s.shared.ideas.push({ id: 'i3', text: 'heist', authorId: 'sam', on: true, attributes: [] });
   assert.deepEqual(roomView(s, new Set(['i2'])).ideas.filter((i) => i.fresh).map((i) => i.id), ['i3']);
 });
 
