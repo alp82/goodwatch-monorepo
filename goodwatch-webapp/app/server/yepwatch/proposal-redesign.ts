@@ -134,7 +134,8 @@ export function redesignTransition(
 			id: envelope.commandId,
 			text: c.text,
 			authorId: actorId,
-			on: room.hostId === actorId,
+			// Every idea arrives switched on; the host can switch a friend's idea off.
+			on: true,
 			attributes: [],
 			rankedKeys: [],
 			interpretedAt: now

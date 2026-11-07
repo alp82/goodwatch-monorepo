@@ -213,7 +213,7 @@ test("idea authors, host switches, editing, removing, no resets, and unchanged t
 	s = (await f.send({ type: "add_idea", text: "Friend idea" }, f.b)).snapshot
 	const friend = s.shared.ideas[1]
 	assert.equal(hostIdea.on, true)
-	assert.equal(friend.on, false)
+	assert.equal(friend.on, true)
 	assert.equal(friend.authorId, f.b.credential.participantId)
 	await assert.rejects(
 		f.send({ type: "set_idea", ideaId: friend.id, on: true }, f.b),
