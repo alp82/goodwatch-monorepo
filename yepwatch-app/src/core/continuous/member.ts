@@ -64,6 +64,8 @@ export function finishAccount(raw: string): Promise<AccountStatus> {
     // A new account replaces this device's session: answers asked under the old one are outdated.
     authEpoch.advance();
     await saveSession(status.session);
+    // Again after the save, like Log out: a read that started during the save may hold the old session.
+    authEpoch.advance();
     await SecureStore.deleteItemAsync(accountIntentKey);
     return { state: status.state, displayName: status.displayName };
   })();
