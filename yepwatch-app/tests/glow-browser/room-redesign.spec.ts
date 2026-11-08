@@ -4,7 +4,7 @@ import { choosingRoom, fakeRoom, newRoom } from './room-fake';
 const shot = (page: Page, name: string) => page.screenshot({ path: `artifacts/room-redesign/${name}.png` });
 const button = (page: Page, name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' });
 
-test('guest host: Create opens Mood at once, Back returns to the room page, name and services before Start', async ({ page }) => {
+test('guest host: New room opens Mood at once, a preset then Create room, name and services before Start', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
   await page.goto('/');
   await button(page, 'New room').click();
@@ -12,12 +12,18 @@ test('guest host: Create opens Mood at once, Back returns to the room page, name
   await expect(page).toHaveURL(/\/room\/test-room\/mood/);
   expect(f.room.shared.participants[0].nickname).toBe('');
   await shot(page, '01-mood');
-  // Typing shows Next; a preset continues.
-  await expect(button(page, 'Next')).toHaveCount(0);
+  // Create room waits for a mood; a preset fills the field (and shows it picked), Create room continues.
+  // Moods, themes and plots (not titles): two balanced lines on a phone.
+  await expect(page.getByText('Describe a mood,', { exact: true })).toBeVisible();
+  await expect(page.getByText('a theme, or a plot…', { exact: true })).toBeVisible();
+  await expect(button(page, 'Create room')).toBeDisabled();
   await page.getByLabel('Mood').fill('cheer me up');
-  await expect(button(page, 'Next')).toBeVisible();
+  await expect(button(page, 'Create room')).toBeEnabled();
   await page.getByLabel('Mood').fill('');
   await button(page, 'cheer me up').click();
+  await expect(page.getByLabel('Mood')).toHaveValue('cheer me up');
+  await expect(button(page, 'cheer me up')).toHaveAttribute('aria-pressed', 'true');
+  await button(page, 'Create room').click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
   await expect(page).toHaveURL(/\/room\/test-room$/);
   await expect.poll(() => f.room.shared.ideas.map((i) => [i.text, i.on])).toEqual([['cheer me up', true]]);
@@ -25,12 +31,12 @@ test('guest host: Create opens Mood at once, Back returns to the room page, name
   await shot(page, '02-room-setup');
   // Streaming: pick yours (the room gets a country), back on the room page.
   await button(page, 'Streaming services, add').click();
-  await expect(page.getByTestId('services-page')).toBeVisible();
+  await expect(page.getByTestId('services-sheet')).toBeVisible();
   await page.getByRole('checkbox', { name: 'Netflix' }).click();
   await page.getByRole('checkbox', { name: 'Prime Video' }).click();
   await shot(page, '03-your-services');
   await button(page, 'Done').click();
-  await expect(page.getByTestId('room-setup')).toBeVisible();
+  await expect(page.getByTestId('services-sheet')).toHaveCount(0);
   // The room gets its country right after creation, before anyone picks services.
   await expect.poll(() => [...f.sent()].sort()).toEqual(['add_idea', 'configure', 'set_services']);
   expect(f.sent().indexOf('configure')).toBeLessThan(f.sent().indexOf('set_services'));
@@ -52,29 +58,66 @@ test('guest host: Create opens Mood at once, Back returns to the room page, name
   await shot(page, '05-your-rooms');
 });
 
-test('host switches a friend’s suggestion on from the Room page; NEW and the badge go, nothing moves', async ({ page }) => {
+test('Mood on a desktop window: the placeholder on one row, the underline never narrower than the words', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await fakeRoom(page, newRoom());
+  await page.goto('/room/test-room/mood?idea=new');
+  const placeholder = page.getByText('Describe a mood, a theme, or a plot…', { exact: true });
+  await expect(placeholder).toBeVisible();
+  const line = page.getByTestId('mood-underline');
+  const words = (await placeholder.boundingBox())!;
+  expect(words.height).toBeLessThan(100);
+  expect((await line.boundingBox())!.width).toBeGreaterThanOrEqual(words.width);
+  // Create room sits in the content (no phone dock) and the presets are two rows of four.
+  await expect(page.getByTestId('frame-dock')).toHaveCount(0);
+  const tops = new Set(await Promise.all(['cheer me up', 'family night', 'space adventure', 'something short'].map(async (n) => Math.round((await button(page, n).boundingBox())!.y))));
+  expect(tops.size).toBe(2);
+});
+
+test('a friend’s idea arrives on with NEW for the host; the Room sheet switches it off, NEW goes, nothing moves', async ({ page }) => {
   const room = choosingRoom();
-  room.shared.ideas.push({ id: 'i2', text: 'space adventure', authorId: 'mia', on: false, attributes: [] });
+  room.shared.phase = 'setup';
+  room.shared.ideas.push({ id: 'i2', text: 'space adventure', authorId: 'mia', on: true, attributes: [] });
   const f = await fakeRoom(page, room);
   await page.goto('/room/test-room');
-  const control = button(page, 'cheer me up, 1 new');
-  await expect(control).toBeVisible();
-  await control.click();
-  await expect(page.getByTestId('room-page')).toBeVisible();
-  await expect(page.getByText('NEW', { exact: true })).toBeVisible();
-  await shot(page, '06-room-page');
-  const row = page.getByText('space adventure', { exact: true });
+  // The ideas are the headline; the friend's carries its author and NEW.
+  const ideas = page.getByTestId('room-setup').getByTestId('idea-list');
+  await expect(ideas.getByLabel('space adventure, from Mia, new')).toBeVisible();
+  await expect(page.getByTestId('room-setup').getByRole('switch', { name: 'Use space adventure' })).toHaveAttribute('aria-checked', 'true');
+  // The header pill counts it; its Your rooms sheet opens the Room sheet.
+  await button(page, 'cheer me up +1, 1 new, switch room').click();
+  await button(page, 'cheer me up +1, Room page').click();
+  const sheet = page.getByTestId('room-sheet');
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByText('NEW', { exact: true })).toBeVisible();
+  await shot(page, '06-room-sheet');
+  const row = sheet.getByText('space adventure', { exact: true });
   const before = await row.boundingBox();
-  const sw = page.getByRole('switch', { name: 'Use space adventure' });
-  await expect(sw).toHaveAttribute('aria-checked', 'false');
+  const sw = sheet.getByRole('switch', { name: 'Use space adventure' });
   await sw.click();
-  await expect(sw).toHaveAttribute('aria-checked', 'true');
-  await expect(page.getByText('NEW', { exact: true })).toHaveCount(0);
+  await expect(sw).toHaveAttribute('aria-checked', 'false');
+  await expect(sheet.getByText('NEW', { exact: true })).toHaveCount(0);
   const after = await row.boundingBox();
   expect(after!.y).toBe(before!.y);
-  expect(f.commands.at(-1)?.command).toEqual({ type: 'set_idea', ideaId: 'i2', on: true });
+  expect(f.commands.at(-1)?.command).toEqual({ type: 'set_idea', ideaId: 'i2', on: false });
+  await button(page, 'Close').click();
+  await expect(sheet).toHaveCount(0);
+  await expect(button(page, 'cheer me up, switch room')).toBeVisible();
+  // The duplicated room label row is gone from the room page.
+  await expect(page.getByTestId('screen-bar')).toHaveCount(0);
+});
+
+test('NEW stays while the host looks at the room and is gone the next time', async ({ page }) => {
+  const room = choosingRoom();
+  room.shared.phase = 'setup';
+  room.shared.ideas.push({ id: 'i2', text: 'space adventure', authorId: 'mia', on: true, attributes: [] });
+  await fakeRoom(page, room);
+  await page.goto('/room/test-room');
+  await expect(page.getByText('NEW', { exact: true })).toBeVisible();
   await button(page, 'Back').click();
-  await expect(button(page, 'cheer me up +1')).toBeVisible();
+  await button(page, 'cheer me up +1').click();
+  await expect(page.getByTestId('room-setup')).toBeVisible();
+  await expect(page.getByText('NEW', { exact: true })).toHaveCount(0);
 });
 
 test('friends see the same ideas with disabled switches and can suggest one', async ({ page }) => {
@@ -94,14 +137,17 @@ test('friends see the same ideas with disabled switches and can suggest one', as
   await page.getByLabel('Mood').fill('rainy day whodunit');
   await page.getByLabel('Mood').press('Enter');
   await expect(page.getByTestId('waiting')).toBeVisible();
-  await expect.poll(() => f.room.shared.ideas.map((i) => [i.text, i.on])).toEqual([['cheer me up', true], ['rainy day whodunit', false]]);
+  // A friend's idea arrives switched on (the host can switch it off).
+  await expect.poll(() => f.room.shared.ideas.map((i) => [i.text, i.on])).toEqual([['cheer me up', true], ['rainy day whodunit', true]]);
   await expect(button(page, 'rainy day whodunit, edit')).toBeVisible();
 });
 
 test('streaming: yours and the room’s, who brings what, host switches off', async ({ page }) => {
   const f = await fakeRoom(page, choosingRoom());
+  // The old address opens the room with the Streaming sheet over it.
   await page.goto('/room/test-room/streaming');
-  await expect(page.getByTestId('streaming-page')).toBeVisible();
+  await expect(page.getByTestId('streaming-sheet')).toBeVisible();
+  await expect(page).toHaveURL(/\/room\/test-room$/);
   await expect(page.getByText('Disney+', { exact: true })).toBeVisible();
   await shot(page, '08-streaming');
   // Netflix is the last switched-on... no: Disney+ is on too, so Netflix can go off.
@@ -187,12 +233,14 @@ test('a friend opens the link: name, Join, then their services, then the waiting
   await page.getByLabel('Your name').fill('Sam');
   await shot(page, '13-join');
   await button(page, 'Join').click();
-  await expect(page.getByTestId('services-page')).toBeVisible();
+  await expect(page.getByTestId('services-sheet')).toBeVisible();
+  await expect(page.getByTestId('waiting')).toBeVisible();
   await page.getByRole('checkbox', { name: 'HBO Max' }).click();
   await button(page, 'Done').click();
-  await expect(page.getByTestId('waiting')).toBeVisible();
+  await expect(page.getByTestId('services-sheet')).toHaveCount(0);
   await expect.poll(() => f.room.shared.participants.find((p) => p.participantId === 'guest')?.serviceIds).toEqual([1899]);
-  await expect(button(page, 'HBO Max, change')).toBeVisible();
+  await button(page, 'Your services').click();
+  await expect(page.getByTestId('services-sheet').getByRole('checkbox', { name: 'HBO Max' })).toHaveAttribute('aria-checked', 'true');
 });
 
 test('nobody brings a service: the room asks for services instead of showing an error', async ({ page }) => {
@@ -204,7 +252,7 @@ test('nobody brings a service: the room asks for services instead of showing an 
   await expect(page.getByText(/country|screen/i)).toHaveCount(0);
   await shot(page, '14-pick-services');
   await button(page, 'Your services').click();
-  await expect(page.getByTestId('services-page')).toBeVisible();
+  await expect(page.getByTestId('services-sheet')).toBeVisible();
   await page.getByRole('checkbox', { name: 'Netflix' }).click();
   await button(page, 'Done').click();
   await expect.poll(() => f.room.shared.participants[0].serviceIds).toEqual([8]);
@@ -275,7 +323,7 @@ test.describe('the join screen shows the room from the invite preview', () => {
     await expect(page.getByTestId('invite-head-pending')).toHaveCount(0);
     await page.getByLabel('Your name').fill('Sam');
     await button(page, 'Join').click();
-    await expect(page.getByTestId('services-page')).toBeVisible();
+    await expect(page.getByTestId('services-sheet')).toBeVisible();
     expect(f.room.shared.participants.some((p) => p.participantId === 'guest')).toBe(true);
   });
 });

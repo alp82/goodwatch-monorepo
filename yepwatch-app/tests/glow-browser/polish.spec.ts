@@ -52,7 +52,7 @@ test('the join screen is a room screen: Back, the room as the headline, name and
   await shot(page, 'join-phone');
   await page.getByLabel('Your name').fill('Sam');
   await button(page, 'Join').click();
-  await expect(page.getByTestId('services-page')).toBeVisible();
+  await expect(page.getByTestId('services-sheet')).toBeVisible();
   expect(f.room.shared.participants.find((p) => p.participantId === 'guest')?.nickname).toBe('Sam');
 });
 

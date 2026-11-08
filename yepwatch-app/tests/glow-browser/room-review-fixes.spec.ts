@@ -10,24 +10,24 @@ const backgroundAndBack = (page: Page) => page.evaluate(() => {
   }
 });
 
-test.describe('settings pages keep their change until the server confirms it', () => {
-  test('Your services: changed while a refill is in flight, Done, then browser Back; saved after the refill', async ({ page }) => {
+test.describe('settings sheets keep their change until the server confirms it', () => {
+  test('Your services: changed while a refill is in flight, Done, then Escape; saved after the refill', async ({ page }) => {
     const f = await fakeRoom(page, choosingRoom());
     const release = f.hold('refill');
     await page.goto('/room/test-room/streaming');
     // The background refill is in flight (the deck is nearly empty).
     await expect.poll(() => f.sent()).toContain('refill');
     await button(page, 'Netflix, change').click();
-    await expect(page.getByTestId('services-page')).toBeVisible();
+    await expect(page.getByTestId('services-sheet')).toBeVisible();
     await page.getByRole('checkbox', { name: 'Prime Video' }).click();
     await button(page, 'Done').click();
-    await expect(page.getByTestId('streaming-page')).toBeVisible();
+    await expect(page.getByTestId('streaming-sheet')).toBeVisible();
     expect(f.sent()).not.toContain('set_services');
-    // Reopened before it's saved: the change is already shown and still there; leave with browser Back this time.
+    // Reopened before it's saved: the change is already shown and still there; close it with Escape this time.
     await button(page, 'Netflix, Prime Video, change').click();
     await expect(page.getByRole('checkbox', { name: 'Prime Video' })).toHaveAttribute('aria-checked', 'true');
-    await page.goBack();
-    await expect(page.getByTestId('streaming-page')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('streaming-sheet')).toBeVisible();
     expect(f.sent()).not.toContain('set_services');
     release();
     await expect.poll(() => f.room.shared.participants[0].serviceIds).toEqual([8, 9]);
@@ -43,16 +43,16 @@ test.describe('settings pages keep their change until the server confirms it', (
     await expect(page.getByRole('checkbox', { name: 'Disney+' })).toHaveAttribute('aria-checked', 'true');
   });
 
-  test('Movies and shows: changed while a refill is in flight, browser Back; saved after it', async ({ page }) => {
+  test('Movies and shows: changed while a refill is in flight, closed with the shade’s Close; saved after it', async ({ page }) => {
     const f = await fakeRoom(page, choosingRoom());
     const release = f.hold('refill');
     await page.goto('/room/test-room/room');
     await expect.poll(() => f.sent()).toContain('refill');
     await button(page, 'Movies and shows, change').click();
-    await expect(page.getByTestId('kinds-page')).toBeVisible();
+    await expect(page.getByTestId('kinds-sheet')).toBeVisible();
     await page.getByRole('checkbox', { name: 'Shows' }).click();
-    await page.goBack();
-    await expect(page.getByTestId('room-page')).toBeVisible();
+    await page.getByTestId('kinds-sheet').getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(page.getByTestId('room-sheet')).toBeVisible();
     expect(f.sent()).not.toContain('configure');
     release();
     await expect.poll(() => f.room.shared.constraints.kinds).toEqual(['movie']);
@@ -104,6 +104,7 @@ test.describe('Continue with GoodWatch creates a room that still opens on Mood',
     await expect(page).toHaveURL(/\/room\/test-room\/mood/);
     expect(f.room.own.member.state).toBe('linked');
     await button(page, 'cheer me up').click();
+    await button(page, 'Create room').click();
     await expect(page.getByTestId('room-setup')).toBeVisible();
     // Opening the room again doesn't bring Mood back.
     await page.reload();
@@ -127,17 +128,18 @@ test.describe('NEW is acknowledged per room on the host’s device', () => {
     return room;
   };
 
-  test('opening the Room page acknowledges a friend’s idea, also after a reload', async ({ page }) => {
+  test('opening the Room sheet acknowledges a friend’s idea, also after a reload', async ({ page }) => {
     await fakeRoom(page, withSuggestion());
     await page.goto('/room/test-room');
-    await button(page, 'cheer me up, 1 new').click();
-    await expect(page.getByTestId('room-page')).toBeVisible();
+    await button(page, 'cheer me up, 1 new, switch room').click();
+    await button(page, 'cheer me up, Room page').click();
+    await expect(page.getByTestId('room-sheet')).toBeVisible();
     await expect(page.getByText('NEW', { exact: true })).toBeVisible();
-    await button(page, 'Back').click();
-    await expect(button(page, 'cheer me up')).toBeVisible();
+    await button(page, 'Close').click();
+    await expect(button(page, 'cheer me up, switch room')).toBeVisible();
     await page.reload();
-    await expect(button(page, 'cheer me up')).toBeVisible();
-    await expect(button(page, 'cheer me up, 1 new')).toHaveCount(0);
+    await expect(button(page, 'cheer me up, switch room')).toBeVisible();
+    await expect(button(page, 'cheer me up, 1 new, switch room')).toHaveCount(0);
   });
 
   test('an idea switched on and off again is not NEW again', async ({ page }) => {
@@ -150,8 +152,8 @@ test.describe('NEW is acknowledged per room on the host’s device', () => {
     await expect(sw).toHaveAttribute('aria-checked', 'false');
     await expect.poll(() => f.room.shared.ideas.find((i) => i.id === 'i2')?.on).toBe(false);
     await expect(page.getByText('NEW', { exact: true })).toHaveCount(0);
-    await button(page, 'Back').click();
-    await expect(button(page, 'cheer me up')).toBeVisible();
+    await button(page, 'Close').click();
+    await expect(button(page, 'cheer me up, switch room')).toBeVisible();
   });
 });
 

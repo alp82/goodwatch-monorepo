@@ -196,7 +196,7 @@ for (const input of ['mouse', 'touch'] as const) {
     await expect(page.getByTestId('poster')).toBeVisible();
     expect(f.writes).toEqual([]);
     await page.getByRole('button', { name: 'Anything', exact: true }).click();
-    await expect(page.getByTestId('room-page')).toBeVisible();
+    await expect(page.getByTestId('room-sheet')).toBeVisible();
     const edge = page.getByTestId('back-gesture-edge').filter({ visible: true });
     await expect(edge).toBeVisible(); const box = await edge.boundingBox();
     await swipe(box!.x+5,box!.y+70,box!.x+115,box!.y+73);
@@ -286,7 +286,8 @@ test('device region suggests the country only for a room without one; a saved co
   await expect(page.getByRole('button', { name: /Montenegro/ })).toBeVisible();
   f.room.shared.screens[0].country = 'DE';
   f.room.shared.screens[0].confirmed = true;
-  await page.reload();
+  // The address opens the room with the sheet; a reload shows the room, so open the sheet again.
+  await page.goto('/room/test-room/services');
   await expect(page.getByRole('button', { name: /Germany/ })).toBeVisible();
 });
 
