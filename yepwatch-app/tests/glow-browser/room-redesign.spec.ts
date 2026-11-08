@@ -27,10 +27,9 @@ test('guest host: New room opens Mood at once, a preset then Create room, name a
   await expect(page.getByTestId('room-setup')).toBeVisible();
   await expect(page).toHaveURL(/\/room\/test-room$/);
   await expect.poll(() => f.room.shared.ideas.map((i) => [i.text, i.on])).toEqual([['cheer me up', true]]);
-  await expect(button(page, 'Start')).toBeDisabled();
   await shot(page, '02-room-setup');
-  // Streaming: pick yours (the room gets a country), back on the room page.
-  await button(page, 'Streaming services, add').click();
+  // Streaming: Start without services opens the picker (the room gets a country), back on the room page.
+  await button(page, 'Start').click();
   await expect(page.getByTestId('services-sheet')).toBeVisible();
   await page.getByRole('checkbox', { name: 'Netflix' }).click();
   await page.getByRole('checkbox', { name: 'Prime Video' }).click();

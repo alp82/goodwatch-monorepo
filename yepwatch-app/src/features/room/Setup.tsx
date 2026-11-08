@@ -3,7 +3,7 @@
  * the share row, people, movies and shows, streaming and the action beside them (below on phones).
  * The host starts; friends wait for the host.
  */
-import { useRef, useState, type ReactNode } from 'react';
+import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { TextInput, View } from 'react-native';
 import { guestOnly } from '../../core/config';
 import { GoodWatchButton } from '../home/Landing';
@@ -99,6 +99,7 @@ export function RoomSetup() {
   const [focus, setFocus] = useState(false);
   // A name sent on blur may still be in flight when Start is pressed: Start waits for it.
   const renaming = useRef<Promise<boolean> | null>(null);
+  const nameInput = useRef<ComponentRef<typeof TextInput>>(null);
   useAcknowledgeShownIdeas();
   if (!view) return null;
   const typed = name.trim();
@@ -114,17 +115,23 @@ export function RoomSetup() {
     if (!current && typed && !(await cmd.rename(typed))) return;
     await cmd.start();
   };
-  const ready = named && view.enabledServiceIds.length > 0 && view.kinds.length > 0 && Boolean(view.country);
+  // Start stays tappable while a step is missing and opens that step, so it never looks dead.
+  const missing = !view.enabledServiceIds.length ? 'services' : !view.kinds.length ? 'kinds' : !named ? 'name' : null;
+  const onStart = () => {
+    if (missing === 'services' || missing === 'kinds') openSheet(missing);
+    else if (missing === 'name') nameInput.current?.focus();
+    else void start();
+  };
   const actions = (
     <Actions>
       <RoomButton onPress={() => openSheet('room')} />
-      <Button label="Start" icon={<Icon name="play" size={16} color={warm.ink} />} disabled={!ready || Boolean(state.pending) || state.privateError} onPress={() => void start()} />
+      <Button label="Start" icon={<Icon name="play" size={16} color={warm.ink} />} disabled={!view.country || Boolean(state.pending) || state.privateError} onPress={onStart} />
     </Actions>
   );
   const nameField = view.needName ? (
     <View style={{ gap: z(10) }}>
       <Small>Your name</Small>
-      <TextInput accessibilityLabel="Your name" value={name} onChangeText={setName} onFocus={() => setFocus(true)} onBlur={() => { setFocus(false); rename(); }} onSubmitEditing={rename}
+      <TextInput ref={nameInput} accessibilityLabel="Your name" value={name} onChangeText={setName} onFocus={() => setFocus(true)} onBlur={() => { setFocus(false); rename(); }} onSubmitEditing={rename}
         maxLength={NAME_MAX} autoCapitalize="words" autoComplete="nickname" placeholder="Your name" placeholderTextColor={warm.placeholder} returnKeyType="done" selectionColor={glow.amber}
         style={fieldStyleFor(z, focus)} />
       {!guestOnly && <><Or /><GoodWatchButton disabled={memberBusy || disabled} onPress={() => void signin()} /></>}
