@@ -8,11 +8,13 @@
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type ViewStyle } from 'react-native';
+import { useIsFocused } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '../../components/ui';
 import { EdgeBack } from '../glow/EdgeBack';
 import { GText, Icon, Press, glow, native } from '../glow/theme';
 import { useLayout } from './layout';
+import { isTopSheet, registerSheet } from './sheet-stack';
 import { R, warm } from './tokens';
 
 export interface SheetProps {
@@ -36,16 +38,20 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
   }, [enter, reduced]);
   const close = useRef(onClose);
   useEffect(() => { close.current = onClose; }, [onClose]);
+  // Open over the screen in front: the screen knows it's covered (voting holds its answers and clock).
+  const focused = useIsFocused();
   useEffect(() => {
+    if (!focused) return;
+    const { entry, remove } = registerSheet(() => close.current());
     if (Platform.OS === 'android') {
       const sub = BackHandler.addEventListener('hardwareBackPress', () => { close.current(); return true; });
-      return () => sub.remove();
+      return () => { sub.remove(); remove(); };
     }
-    if (Platform.OS !== 'web') return;
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') close.current(); };
+    if (Platform.OS !== 'web') return remove;
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape' && isTopSheet(entry)) close.current(); };
     document.addEventListener('keydown', key);
-    return () => document.removeEventListener('keydown', key);
-  }, []);
+    return () => { document.removeEventListener('keydown', key); remove(); };
+  }, [focused]);
   const panelWidth = phone ? windowWidth : Math.min(z(width), windowWidth - 64);
   const rise = enter.interpolate({ inputRange: [0, 1], outputRange: [phone ? 60 : 16, 0] });
   return (

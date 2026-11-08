@@ -19,6 +19,7 @@ import { Trailer } from '../glow/Trailer';
 import { useActiveTime } from '../glow/useActiveTime';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { useLayout } from '../shell/layout';
+import { useSheetOpen } from '../shell/sheet-stack';
 import { warm } from '../shell/tokens';
 import { openPage, toRooms } from './nav';
 import { useRoom } from './RoomProvider';
@@ -112,8 +113,11 @@ export function Voting() {
   const card = snapshot ? ownCard(snapshot) : undefined;
   const vote = card ? snapshot?.own.votes.find((v) => v.candidateId === card.id) : undefined;
   const disabled = room.disabled || entry.required;
+  // A sheet over the card (the room's or the header's Your rooms): no answers, and the time doesn't count as seeing the title.
+  const covered = useSheetOpen();
+  const answering = !disabled && !covered;
   const activeTime = useActiveTime(id, snapshot && card ? `${snapshot.shared.generation}:${card.id}:${vote?.revision ?? 0}` : null,
-    Boolean(card) && focused && !panel && !disabled && !state.terminal && snapshot?.shared.phase === 'choosing');
+    Boolean(card) && focused && !panel && answering && !state.terminal && snapshot?.shared.phase === 'choosing');
   const endMoment = useCallback((key: string) => setMoment((m) => (m?.key === key ? null : m)), []);
   if (!snapshot || !view) return null;
   const { shared } = snapshot;
@@ -134,7 +138,7 @@ export function Voting() {
     : new Map();
   const undoTarget = latestRetainedVote(snapshot);
   function choose(yes: boolean): Promise<boolean> {
-    if (!card || disabled || !look) return Promise.resolve(false);
+    if (!card || !answering || !look) return Promise.resolve(false);
     setLocalReaction(reaction({ answer: yes }));
     state.activity(undefined, 'answer');
     if (yes) setYep(yepRecord((yep?.serial ?? 0) + 1, shared, card.id, look));
@@ -146,8 +150,8 @@ export function Voting() {
     <Screen testID="voting" scroll={false} back={toRooms} covered={Boolean(panel)} width="page"
       footer={
         <View style={{ flexDirection: 'row', gap: 12, width: phone ? '100%' : rowWidth, alignSelf: 'center' }}>
-          <VoteKey yes={false} disabled={disabled || !card} onPress={() => controls.current?.commit(false)} />
-          <VoteKey yes disabled={disabled || !card} onPress={() => controls.current?.commit(true)} />
+          <VoteKey yes={false} disabled={!answering || !card} onPress={() => controls.current?.commit(false)} />
+          <VoteKey yes disabled={!answering || !card} onPress={() => controls.current?.commit(true)} />
         </View>
       }
       overlay={<>
@@ -173,7 +177,7 @@ export function Voting() {
       {/* A page on top hides this one (zero size on the web): keep the last real size. */}
       <View onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) setArea({ width, height }); }}
         style={{ flex: 1, minHeight: 80, zIndex: 2 }}>
-        <VoteStage geo={geo} controls={controls} reduced={reduced} disabled={disabled} keys={focused && !panel && !disabled}
+        <VoteStage geo={geo} controls={controls} reduced={reduced} disabled={!answering} keys={focused && !panel && answering}
           card={card && title && look ? { key: `${shared.generation}:${card.id}`, title, look } : null}
           next={nextCard ? titlePresentation(nextCard) : null}
           empty={<FindingMore style={{ flex: 1 }} />}
