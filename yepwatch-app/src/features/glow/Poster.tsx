@@ -1,271 +1,110 @@
+/**
+ * The voting card: poster, score and services, title and meta, Details and Trailer. It follows the
+ * stage's drag (`x`, `y`) and tilts with it; the look's layers slot in around the poster: `halo`
+ * behind the card, `under` between the poster and the title gradient, `over` above everything.
+ */
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { Animated, Pressable, View, type GestureResponderHandlers } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { playFeedback } from '../feedback/sounds';
 import { FadeImage } from './FadeImage';
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ScorePill } from './scores';
-import { GText, Icon, Press, glow, s } from './theme';
-import { useDrag } from './useDrag';
-import type { GesturePhase, GlowTitle } from './model';
-export function Poster({
-  title,
-  width,
-  height,
-  mode,
-  showText = true,
-  disabled,
-  onVote,
-  onBrowse,
-  onDetails,
-  onTrailer,
-  onGesture,
-  stampStyle,
-  services,
-}: {
+import { GText, Icon, Press, glow, native, s } from './theme';
+import type { GlowTitle } from './model';
+
+export const titleMeta = (title: GlowTitle) => [
+  title.year,
+  title.kind === 'movie' ? 'Movie' : title.kind === 'show_start' ? 'New series' : 'Continue series',
+  title.episodeLabel,
+  title.runtimeMinutes ? `${title.runtimeMinutes} min` : null,
+].filter(Boolean).join(' · ');
+
+export function Poster({ title, width, height, phone, z, showText = true, x, y, pan, halo, under, over, look, services, onDetails, onTrailer }: {
   title: GlowTitle;
   width: number;
   height: number;
-  mode: 'voting' | 'matches' | 'decided';
+  phone: boolean;
+  z: (n: number) => number;
   showText?: boolean;
-  disabled: boolean;
-  onVote: (yes: boolean) => void;
-  onBrowse: (direction: number) => void;
+  /** The drag: the card follows it and tilts. */
+  x: Animated.Value;
+  y: Animated.Value;
+  pan: GestureResponderHandlers;
+  halo?: ReactNode;
+  under?: ReactNode;
+  over?: ReactNode;
+  /** The card's look (exposed on the web for checks). */
+  look?: string;
+  /** The room's services this title is on. */
+  services?: ReactNode;
   onDetails: () => void;
   onTrailer: () => void;
-  onGesture: (phase: GesturePhase) => void;
-  /** Optional overrides for the YEP / NOPE stamps (shape only); omitted keeps the approved look. */
-  stampStyle?: StyleProp<ViewStyle>;
-  /** The room's services this title is on (logos beside the meta line). */
-  services?: ReactNode;
 }) {
   const [detailsFocused, setDetailsFocused] = useState(false);
-  const latch = useRef(false);
-  const [animating, setAnimating] = useState(false);
-  const drag = useDrag({
-    disabled: disabled || animating || mode === 'decided',
-    onTap: onDetails,
-    onGesture,
-    onRelease: (dx, velocity) => {
-      if (Math.abs(dx) < width * 0.18 && Math.abs(velocity) < 0.5) {
-        drag.recenter();
-        return;
-      }
-      if (latch.current) {
-        drag.recenter();
-        return;
-      }
-      latch.current = true;
-      setAnimating(true);
-      if (mode === 'voting') playFeedback('swipe');
-      drag.transition(Math.sign(dx), width, () => {
-        if (mode === 'voting') onVote(dx > 0);
-        else onBrowse(dx < 0 ? 1 : -1);
-        latch.current = false;
-        setAnimating(false);
-      });
-    },
-  });
-  const previousTitle = useRef(title.id);
-  useLayoutEffect(() => { if (previousTitle.current !== title.id && mode === 'voting') playFeedback('poster'); previousTitle.current = title.id; }, [title.id, mode]);
-  const reset = drag.reset;
-  // A server card replacement must cancel the prior external animation.
+  const previous = useRef(title.id);
   useLayoutEffect(() => {
-    latch.current = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAnimating(false);
-    reset();
-  }, [title.id, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (previous.current !== title.id) playFeedback('poster');
+    previous.current = title.id;
+  }, [title.id]);
   return (
     <Animated.View
       testID="poster"
+      {...(native ? null : ({ dataSet: { look } } as object))}
       style={{
         width,
         height,
-        borderRadius: 12,
-        backgroundColor: '#242424',
-        shadowColor: '#000',
-        shadowOpacity: 0.6,
-        shadowRadius: 32,
-        shadowOffset: { width: 0, height: 16 },
         transform: [
-          { translateX: drag.x },
-          {
-            rotate: drag.x.interpolate({
-              inputRange: [-width, 0, width],
-              outputRange: ['-10deg', '0deg', '10deg'],
-            }),
-          },
+          { translateX: x },
+          { translateY: y },
+          { rotate: x.interpolate({ inputRange: [-width, 0, width], outputRange: ['-16deg', '0deg', '16deg'] }) },
         ],
       }}
     >
+      {halo}
       <View
-        {...drag.pan}
+        {...pan}
         accessibilityLabel={`${title.title}. Swipe or use the choice buttons.`}
-        style={{
+        style={[{
           flex: 1,
           overflow: 'hidden',
-          borderRadius: 12,
+          borderRadius: 14,
+          backgroundColor: '#1a1610',
           borderWidth: 1,
-          borderColor: '#ffffff26',
-        }}
+          borderColor: '#ffffff24',
+          boxShadow: '0 16px 32px #00000099',
+        }, native ? null : ({ cursor: 'grab', touchAction: 'none', userSelect: 'none' } as object)]}
       >
         {title.posterUrl ? (
-          <FadeImage
-            testID="poster-art"
-            source={{ uri: title.posterUrl }}
-            resizeMode="cover"
-            style={s.absolute}
-            accessibilityIgnoresInvertColors
-          />
+          <FadeImage testID="poster-art" source={{ uri: title.posterUrl }} resizeMode="cover" style={s.absolute} accessibilityIgnoresInvertColors />
         ) : (
-          <View
-            style={[s.absolute, { alignItems: 'center', justifyContent: 'center', padding: 24 }]}
-          >
+          <View style={[s.absolute, { alignItems: 'center', justifyContent: 'center', padding: 24 }]}>
             <Icon name="tickets" size={48} color={glow.muted} />
-            <GText size={24} bold style={{ textAlign: 'center', marginTop: 12 }}>
-              {title.title}
-            </GText>
+            <GText size={24} bold style={{ textAlign: 'center', marginTop: 12 }}>{title.title}</GText>
           </View>
         )}
-        <LinearGradient
-          colors={['transparent', '#00000030', '#000000ed']}
-          locations={[0, 0.5, 1]}
-          style={s.absolute}
-          pointerEvents="none"
-        />
+        {under}
+        <LinearGradient colors={['transparent', '#000000d9']} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: height * 0.42 }} pointerEvents="none" />
         {showText && (
-          <View
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              left: 18,
-              right: 18,
-              bottom: 16,
-              gap: 5,
-            }}
-          >
-            <GText bold size={Math.min(30, width * 0.105)} lines={2}>
-              {title.title}
-            </GText>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 }}>
-            <GText color="#dedede" size={13} style={{ flexShrink: 1 }}>
-              {[
-                title.year,
-                title.kind === 'movie'
-                  ? 'Movie'
-                  : title.kind === 'show_start'
-                  ? 'New series'
-                  : 'Continue series',
-                title.episodeLabel,
-                title.runtimeMinutes ? `${title.runtimeMinutes} min` : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </GText>
+          <View pointerEvents="none" style={{ position: 'absolute', left: 16, right: 16, bottom: 16, gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <ScorePill score={title.score} size={phone ? 'M' : 'L'} />
               {services}
             </View>
-            <View
-              style={{
-                flexDirection: 'row',
-                gap: 9,
-                alignItems: 'center',
-                height: 44,
-                paddingRight: 2,
-              }}
-            >
-              <ScorePill score={title.score} size="L" />
-              <GText size={11} bold lines={1} color={glow.soft} style={{ flex: 1 }}>
-                {title.genres.join(' · ').toUpperCase()}
-              </GText>
-            </View>
+            <GText bold size={phone ? Math.min(26, width * 0.09) : z(32)} lines={2} style={{ letterSpacing: -0.7 }}>{title.title}</GText>
+            <GText size={z(14)} color={glow.soft} lines={1}>{titleMeta(title)}</GText>
           </View>
         )}
-        {mode === 'voting' && (
-          <>
-            <Animated.View
-              testID="stamp-yep"
-              pointerEvents="none"
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-              style={[{
-                position: 'absolute',
-                top: 82,
-                left: 18,
-                backgroundColor: '#15803d',
-                borderRadius: 12,
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                transform: [{ rotate: '-14deg' }],
-                opacity: drag.x.interpolate({
-                  inputRange: [0, 25, 85],
-                  outputRange: [0, 0.35, 1],
-                  extrapolate: 'clamp',
-                }),
-              }, stampStyle]}
-            >
-              <GText size={40} bold>
-                YEP
-              </GText>
-            </Animated.View>
-            <Animated.View
-              testID="stamp-nope"
-              pointerEvents="none"
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-              style={[{
-                position: 'absolute',
-                top: 82,
-                right: 18,
-                backgroundColor: '#dc2626',
-                borderRadius: 12,
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                transform: [{ rotate: '14deg' }],
-                opacity: drag.x.interpolate({
-                  inputRange: [-85, -25, 0],
-                  outputRange: [1, 0.35, 0],
-                  extrapolate: 'clamp',
-                }),
-              }, stampStyle]}
-            >
-              <GText size={40} bold>
-                NOPE
-              </GText>
-            </Animated.View>
-          </>
-        )}
+        {over}
+        {/* Catches the pointer above the image so the browser never starts an image drag. */}
+        <View style={s.absolute} />
       </View>
       {title.trailerUrl && (
-        <Press
-          label="Watch trailer"
-          onPress={onTrailer}
-          style={{
-            position: 'absolute',
-            right: 16,
-            top: 16,
-            borderRadius: 10,
-            paddingHorizontal: 12,
-            minHeight: 44,
-            flexDirection: 'row',
-            gap: 8,
-            backgroundColor: '#fff',
-          }}
-        >
-          <View
-            style={{
-              width: showText ? 30 : 34,
-              height: showText ? 30 : 34,
-              borderRadius: 20,
-              backgroundColor: '#dc2626',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
+        <Press label="Watch trailer" onPress={onTrailer}
+          style={{ position: 'absolute', right: 16, top: 16, borderRadius: 10, paddingHorizontal: 12, minHeight: 44, flexDirection: 'row', gap: 8, backgroundColor: '#fff' }}>
+          <View style={{ width: 30, height: 30, borderRadius: 20, backgroundColor: '#dc2626', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="play" size={16} color="#fff" />
           </View>
-          <GText bold color="#151515" size={14}>
-            Trailer
-          </GText>
+          <GText bold color="#151515" size={14}>Trailer</GText>
         </Press>
       )}
       <Pressable
@@ -275,17 +114,8 @@ export function Poster({
         onFocus={() => setDetailsFocused(true)}
         onBlur={() => setDetailsFocused(false)}
         style={{
-          position: 'absolute',
-          left: 16,
-          top: 16,
-          minWidth: 44,
-          height: 44,
-          borderRadius: 12,
-          paddingHorizontal: 10,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: detailsFocused ? '#fbbf24' : '#fbbf24df',
-          borderWidth: 1, borderColor: '#fff5', flexDirection: 'row', gap: 5,
+          position: 'absolute', left: 16, top: 16, minWidth: 44, height: 44, borderRadius: 12, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center',
+          backgroundColor: detailsFocused ? '#fbbf24' : '#fbbf24df', borderWidth: 1, borderColor: '#fff5', flexDirection: 'row', gap: 5,
         }}
       >
         <GText size={14} bold color="#18130a">Details ↗</GText>
