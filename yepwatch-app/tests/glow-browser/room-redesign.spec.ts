@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { choosingRoom, fakeRoom, newRoom } from './room-fake';
+import { choosingRoom, fakeRoom, newRoom, openRoomPage } from './room-fake';
 
 const shot = (page: Page, name: string) => page.screenshot({ path: `artifacts/room-redesign/${name}.png` });
 const button = (page: Page, name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' });
@@ -57,9 +57,8 @@ test('host switches a friend’s suggestion on from the Room page; NEW and the b
   room.shared.ideas.push({ id: 'i2', text: 'space adventure', authorId: 'mia', on: false, attributes: [] });
   const f = await fakeRoom(page, room);
   await page.goto('/room/test-room');
-  const control = button(page, 'cheer me up, 1 new');
-  await expect(control).toBeVisible();
-  await control.click();
+  await expect(button(page, 'cheer me up, 1 new, switch room')).toBeVisible();
+  await openRoomPage(page, 'cheer me up', 1);
   await expect(page.getByTestId('room-page')).toBeVisible();
   await expect(page.getByText('NEW', { exact: true })).toBeVisible();
   await shot(page, '06-room-page');
@@ -74,7 +73,7 @@ test('host switches a friend’s suggestion on from the Room page; NEW and the b
   expect(after!.y).toBe(before!.y);
   expect(f.commands.at(-1)?.command).toEqual({ type: 'set_idea', ideaId: 'i2', on: true });
   await button(page, 'Back').click();
-  await expect(button(page, 'cheer me up +1')).toBeVisible();
+  await expect(button(page, 'cheer me up +1, switch room')).toBeVisible();
 });
 
 test('friends see the same ideas with disabled switches and can suggest one', async ({ page }) => {

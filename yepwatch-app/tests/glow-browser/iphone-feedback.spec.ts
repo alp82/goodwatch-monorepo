@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { continuousFixture } from '../continuous-fixture';
+import { openRoomPage } from './room-fake';
 
 async function fixture(page: Page, setup = false) {
   const room = continuousFixture();
@@ -85,7 +86,7 @@ test('Back closes matches, returns to Your rooms without leaving, and reopens th
 
 test('explicit Leave moves the room to History; Return rejoins with the existing identity', async ({ page }) => {
   const f = await fixture(page);
-  await page.getByRole('button', { name: 'Anything', exact: true }).click();
+  await openRoomPage(page, 'Anything');
   await page.getByRole('button', { name: 'Leave room', exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText('YOUR ROOMS', { exact: true })).toHaveCount(0);
@@ -195,7 +196,7 @@ for (const input of ['mouse', 'touch'] as const) {
     await swipe(4,350,110,353);
     await expect(page.getByTestId('poster')).toBeVisible();
     expect(f.writes).toEqual([]);
-    await page.getByRole('button', { name: 'Anything', exact: true }).click();
+    await openRoomPage(page, 'Anything');
     await expect(page.getByTestId('room-page')).toBeVisible();
     const edge = page.getByTestId('back-gesture-edge').filter({ visible: true });
     await expect(edge).toBeVisible(); const box = await edge.boundingBox();

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { choosingRoom, fakeRoom, newRoom } from './room-fake';
+import { choosingRoom, fakeRoom, newRoom, openRoomPage } from './room-fake';
 
 const button = (page: Page, name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' });
 /** The app goes to the background and comes back: a re-render and a fresh read of the room. */
@@ -130,14 +130,14 @@ test.describe('NEW is acknowledged per room on the host’s device', () => {
   test('opening the Room page acknowledges a friend’s idea, also after a reload', async ({ page }) => {
     await fakeRoom(page, withSuggestion());
     await page.goto('/room/test-room');
-    await button(page, 'cheer me up, 1 new').click();
+    await openRoomPage(page, 'cheer me up', 1);
     await expect(page.getByTestId('room-page')).toBeVisible();
     await expect(page.getByText('NEW', { exact: true })).toBeVisible();
     await button(page, 'Back').click();
-    await expect(button(page, 'cheer me up')).toBeVisible();
+    await expect(button(page, 'cheer me up, switch room')).toBeVisible();
     await page.reload();
-    await expect(button(page, 'cheer me up')).toBeVisible();
-    await expect(button(page, 'cheer me up, 1 new')).toHaveCount(0);
+    await expect(button(page, 'cheer me up, switch room')).toBeVisible();
+    await expect(button(page, 'cheer me up, 1 new, switch room')).toHaveCount(0);
   });
 
   test('an idea switched on and off again is not NEW again', async ({ page }) => {
@@ -151,7 +151,7 @@ test.describe('NEW is acknowledged per room on the host’s device', () => {
     await expect.poll(() => f.room.shared.ideas.find((i) => i.id === 'i2')?.on).toBe(false);
     await expect(page.getByText('NEW', { exact: true })).toHaveCount(0);
     await button(page, 'Back').click();
-    await expect(button(page, 'cheer me up')).toBeVisible();
+    await expect(button(page, 'cheer me up, switch room')).toBeVisible();
   });
 });
 

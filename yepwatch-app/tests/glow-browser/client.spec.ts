@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { CommandEnvelope, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
+import { openRoomPage } from './room-fake';
 
 async function fixture(page: Page, setupGuest = false) {
   const room: RoomSnapshot = continuousFixture();
@@ -278,7 +279,7 @@ test('the creator invitation survives a full navigation/reload without bearer st
     )
   );
   await page.reload();
-  await page.getByRole('button', { name: 'Anything', exact: true }).click();
+  await openRoomPage(page, 'Anything');
   await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeEnabled();
   await expect(
     page.getByText(`${new URL(page.url()).host}/r/isolated-invite`, { exact: true })
@@ -581,7 +582,7 @@ test('leaving the room sends one explicit command and returns to the entrance', 
   page,
 }) => {
   const f = await fixture(page);
-  await page.getByRole('button', { name: 'Anything', exact: true }).click();
+  await openRoomPage(page, 'Anything');
   await page.getByRole('button', { name: 'Leave room', exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
   expect(f.commands.filter((e) => e.command.type === 'leave')).toHaveLength(1);
@@ -592,7 +593,7 @@ test('dropped people do not count as in the room', async ({page}) => {
   const f = await fixture(page);
   f.room.shared.participants.push({participantId:'dropped-friend',nickname:'Sam',serviceIds:null,screenId:'tv',ready:true,dropped:true});
   await page.reload();
-  await page.getByRole('button',{name:'Anything',exact:true}).click();
+  await openRoomPage(page, 'Anything');
   await expect(page.getByText('Just you',{exact:true})).toBeVisible();
   await expect(page.getByText('2 people',{exact:true})).toHaveCount(0);
 });
@@ -610,7 +611,7 @@ for (const mode of ['no-share', 'rejected', 'cancelled', 'manual'] as const) {
       } } });
     }, mode);
     await fixture(page);
-    await page.getByRole('button', { name: 'Anything', exact: true }).click();
+    await openRoomPage(page, 'Anything');
     await page.getByRole('button', { name: 'Share', exact: true }).click();
     if (mode === 'no-share' || mode === 'rejected') {
       await expect(page.getByRole('button', { name: 'Copied', exact: true })).toBeVisible();
