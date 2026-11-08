@@ -19,9 +19,10 @@ import { R } from '../shell/tokens';
 /** The approved Sign in with GoodWatch look (dark surface, GoodWatch mark), worded Continue with GoodWatch. */
 export function GoodWatchButton({ onPress, disabled, quiet, height = 50 }: { onPress: () => void; disabled?: boolean; quiet?: boolean; height?: number }) {
   return (
-    <Press label="Continue with GoodWatch" onPress={onPress} disabled={disabled} quiet={quiet} style={{ minHeight: height, borderRadius: R.control, flexDirection: 'row', gap: 10, backgroundColor: '#242424', borderWidth: 1, borderColor: glow.line }}>
-      <GoodWatchMark size={24} />
-      <GText bold size={16}>Continue with GoodWatch</GText>
+    <Press label="Continue with GoodWatch" onPress={onPress} disabled={disabled} quiet={quiet} style={{ alignSelf: 'stretch', minHeight: height, borderRadius: R.control, flexDirection: 'row', gap: 10, backgroundColor: '#242424', borderWidth: 1, borderColor: glow.line }}>
+      {/* Scales with the button, so a tall button beside big tiles doesn't carry small words. */}
+      <GoodWatchMark size={Math.max(24, Math.round(height * 0.42))} />
+      <GText bold size={Math.max(16, Math.round(height * 0.3))}>Continue with GoodWatch</GText>
     </Press>
   );
 }

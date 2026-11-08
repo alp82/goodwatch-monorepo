@@ -70,18 +70,16 @@ export function useHome() {
     void (at === null ? roomRegistry.restore(roomId) : roomRegistry.archive(roomId)).catch(reload);
   };
   const decidedRooms = new Set(decided.map((d) => d.roomId));
-  // A remembered nickname is not proof of sign-in. Only fresh room reads establish it.
+  // A name a linked room gave you, for a device that hasn't remembered one. Sign-in itself is the device's
+  // GoodWatch session (useAccount), never a room's.
   const memberRoom = sorted.find(({ result }) => result?.data?.own.member.state === 'linked' && !result.data.own.left && !result.error);
   const memberSnapshot = memberRoom?.result.data;
   const memberName = memberSnapshot?.shared.participants.find(p => p.participantId === memberSnapshot.own.participantId)?.nickname;
-  const signInRoomId = sorted.find(({ result }) => result?.data && !result.data.own.left && !result.error)?.entry.roomId;
 
   return {
     ready: registry !== null,
     loadingRooms: classified.some((x) => x.c === null),
     nickname: registry?.nickname && registry.nickname !== 'Guest' ? registry.nickname : memberName ?? registry?.nickname ?? null,
-    member: memberRoom ? { roomId: memberRoom.entry.roomId } : null,
-    signInRoomId,
     hasRooms: (registry?.rooms.length ?? 0) > 0,
     active,
     archived,

@@ -37,5 +37,30 @@
     <noscript> You need to enable JavaScript to run this app. </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
+    <!-- Back from GoodWatch sign-in: the GoodWatch cover paints before the script loads, so the return
+         never shows a blank page. MemberTransition takes it over (same look) and fades it out. -->
+    <style>
+      #yw-member-cover{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:radial-gradient(60% 50% at 50% 46%,#fbbf2422 0%,#fbbf2408 38%,transparent 70%),#070707}
+      #yw-member-cover .s{display:grid;justify-items:center;gap:22px}
+      #yw-member-cover .m{position:relative;width:112px;height:112px;display:grid;place-items:center}
+      #yw-member-cover .r{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0deg,#fbbf24 300deg,transparent 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));animation:yw-spin 1.4s linear infinite}
+      #yw-member-cover .c{width:88px;height:88px;border-radius:50%;background:#141210;display:grid;place-items:center;box-shadow:0 0 48px #fbbf241f}
+      #yw-member-cover img{width:48px;height:48px;border-radius:11px}
+      #yw-member-cover .t{font:600 18px system-ui,sans-serif;color:#d4d4d4;letter-spacing:-.2px}
+      @keyframes yw-spin{to{transform:rotate(360deg)}}
+      @media (prefers-reduced-motion:reduce){#yw-member-cover .r{animation:none;opacity:.6}}
+    </style>
+    <script>
+      try {
+        var hint = JSON.parse(sessionStorage.getItem('yepwatch.member-return') || 'null');
+        if (hint && typeof hint.path === 'string' && hint.path.split('?')[0] === location.pathname && hint.until > Date.now()) {
+          var cover = document.createElement('div');
+          cover.id = 'yw-member-cover';
+          cover.setAttribute('aria-hidden', 'true');
+          cover.innerHTML = '<div class="s"><div class="m"><div class="r"></div><div class="c"><img src="/goodwatch-mark.png" alt=""></div></div><div class="t">Signed in with GoodWatch</div></div>';
+          document.body.appendChild(cover);
+        }
+      } catch (e) { /* Presentation only. */ }
+    </script>
   </body>
 </html>

@@ -8,6 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { Providers } from '../core/providers';
 import { Boot } from '../features/glow/Boot';
+import { MemberTransition } from '../features/shell/MemberTransition';
 if (Platform.OS !== 'web') void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 export default function Layout() {
   const [loaded, error] = useFonts({ Gabarito: require('../../assets/Gabarito-Regular.ttf'), GabaritoBold: require('../../assets/Gabarito-Bold.ttf') });
@@ -34,5 +35,6 @@ export default function Layout() {
       <Text style={{ fontFamily: 'Gabarito' }}>YepWatch</Text><Text style={{ fontFamily: 'GabaritoBold' }}>YepWatch</Text>
     </View>}
     {!booted && <Boot ready={fontsReady} pageReady={!home || pageReady} buildsIn={home} done={done} onLayout={hideNative} onRevealed={revealed} />}
+    <MemberTransition />
   </View></Providers></BootPhase.Provider></BootPageReady.Provider>;
 }

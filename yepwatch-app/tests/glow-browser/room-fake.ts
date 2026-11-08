@@ -64,10 +64,12 @@ export function choosingRoom(): FakeSnapshot {
 const union = (s: FakeSnapshot) => [...new Set(s.shared.participants.filter((p) => !p.dropped).flatMap((p) => p.serviceIds ?? []))].filter((id) => !s.shared.disabledServiceIds.includes(id));
 
 /**
- * `member: 'return'`: Continue with GoodWatch "signs in" at once: the account is linked and the
- * browser comes straight back to the room (as the real round trip does, a full page load).
+ * `member: 'return'`: Continue with GoodWatch "signs in" at once: this browser's account becomes a
+ * member and comes straight back to the page it left (as the real round trip does, a full page load).
+ * Rooms opened while signed in link to it. `member: 'signed-in'` starts signed in.
  */
-export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' } = {}) {
+export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' } = {}) {
+  const account = { member: opts.member === 'signed-in', starts: 0, links: 0, logouts: 0 };
   // The room's lifetime idea searches (24 on the server); removing an idea doesn't give one back.
   let interpretations = opts.interpretations ?? 0;
   const commands: CommandEnvelope[] = [];
@@ -151,12 +153,28 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     const url = new URL(route.request().url());
     const path = url.pathname;
     if (path.endsWith('/catalog/metadata')) return route.fulfill({ json: metadata });
-    if (path.endsWith('/member/start') && opts.member === 'return') {
-      room.own.member = { state: 'linked', prefill: null };
-      bump();
-      return route.fulfill({ json: { authorizeUrl: new URL(`/room/${room.shared.roomId}`, route.request().headers().referer ?? 'http://127.0.0.1:8097').href, state: 'fixture-state', expiresAt: Date.now() + 600_000 } });
+    if (path.endsWith('/account/start') && opts.member) {
+      account.starts++;
+      account.member = true;
+      const { returnTo } = route.request().postDataJSON() as { returnTo: string };
+      return route.fulfill({ json: { authorizeUrl: returnTo, state: 'acct.fixture', expiresAt: Date.now() + 600_000 } });
     }
-    if (path.endsWith('/member/start') || path.endsWith('/realtime-ticket'))
+    if (path.endsWith('/account/logout')) { account.logouts++; account.member = false; return route.fulfill({ json: { state: 'guest', displayName: null } }); }
+    if (path.endsWith('/proposal/account')) return route.fulfill({ json: account.member ? { state: 'member', displayName: 'Alex' } : { state: 'guest', displayName: null } });
+    if (path.endsWith('/member/link')) {
+      account.links++;
+      if (!account.member) return route.fulfill({ status: 403, json: { error: { code: 'member_required', message: 'Sign in with GoodWatch again', retryable: false } } });
+      const prefill = { country: 'DE', serviceIds: [8], savedProgressAvailable: false };
+      if (room.own.member.state !== 'linked') {
+        room.own.member = { state: 'linked', prefill };
+        const self = me();
+        if (!self.nickname || self.nickname === 'Guest') self.nickname = 'Alex';
+        if (self.serviceIds === null) self.serviceIds = [8];
+        bump();
+      }
+      return route.fulfill({ json: { state: 'linked', prefill } });
+    }
+    if (path.endsWith('/member/start') || path.endsWith('/account/start') || path.endsWith('/realtime-ticket'))
       return route.fulfill({ status: 501, json: { error: { code: 'not_implemented', message: 'Not in this fixture', retryable: false } } });
     // The public invite preview, as the server builds it: switched-on ideas only, people who haven't left.
     if (path.endsWith('/invites/preview')) {
@@ -203,10 +221,14 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     }
     return route.fulfill({ status: 404, json: { error: { code: 'not_found', message: 'Not in this fixture', retryable: false } } });
   };
+  // A browser that signed in before remembers that it may hold a session (the cookie itself is HttpOnly).
+  if (opts.member === 'signed-in') await page.addInitScript(() => localStorage.setItem('yepwatch.member-hint', '1'));
   await page.route('**/api/yepwatch/v1/proposal/**', handler);
   return {
     room,
     commands,
+    /** This browser's GoodWatch sign-in as the fake API sees it. */
+    account,
     sent: () => commands.map((c) => c.command.type as string),
     lose: () => { loseNext = true; },
     /** A friend's change: bump the revision; the page sees it on its next read. */

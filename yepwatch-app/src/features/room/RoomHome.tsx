@@ -1,7 +1,6 @@
 /** /room/<id>: the screen for where the room is (setup, choosing, a proposal, Tonight); `?sheet=` opens one of its sheets. */
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { guestOnly } from '../../core/config';
 import { clearMoodStep, hasMoodStep, markMoodStep } from '../../core/continuous/room-local';
 import { showsProposal } from './model';
 import { openPage, toRooms } from './nav';
@@ -15,7 +14,7 @@ import { Screen } from './ui';
 import { Voting } from './Voting';
 
 export function RoomHome() {
-  const { id, state, view, entry, dismissedProposal, signin, memberBusy, openSheet } = useRoom();
+  const { id, state, view, entry, dismissedProposal, memberBusy, openSheet } = useRoom();
   const params = useLocalSearchParams<{ signin?: string; fresh?: string; sheet?: string }>();
   // An address with a sheet (/room/<id>/services and the like): open it over the room, once.
   useEffect(() => {
@@ -23,48 +22,39 @@ export function RoomHome() {
     if (isRoomSheet(params.sheet)) openSheet(params.sheet);
     router.setParams({ sheet: undefined });
   }, [params.sheet, openSheet]);
-  const steps = useRef({ signin: false });
   // The page this arrival opens takes the first paint, not the room underneath. A push lands a frame
   // or so after it's sent, so the placeholder stays until that page has taken over.
   const [opened, setOpened] = useState(false);
   const [opening, setOpening] = useState(false);
   useFocusEffect(useCallback(() => () => setOpening(false), []));
-  // The two arrival steps are independent: a room created through Continue with GoodWatch links the
-  // account first, then opens Mood. The Mood step is noted on this device so it survives the sign-in
-  // round trip (a full page load on the web).
-  const signinWaiting = !guestOnly && params.signin === '1';
+  // The Mood step is noted on this device, so a reload of the arrival still opens it.
   useEffect(() => {
     if (params.fresh !== '1') return;
     markMoodStep(id);
     router.setParams({ fresh: undefined });
   }, [params.fresh, id]);
-  // Arriving through sign-in: link the account once the room is known.
+  // Older sign-in addresses (?signin=1) only drop the marker: GoodWatch sign-in no longer starts in a room.
+  useEffect(() => { if (params.signin) router.setParams({ signin: undefined }); }, [params.signin]);
+  // A room that was just created opens on its Mood step (Back returns here).
   useEffect(() => {
-    if (guestOnly || params.signin !== '1' || !state.access || !view || steps.current.signin) return;
-    steps.current.signin = true;
-    router.setParams({ signin: undefined });
-    if (!view.member) void signin();
-  }, [params.signin, state.access, view, signin]);
-  // A room that was just created opens on its Mood step (Back returns here), after any sign-in.
-  useEffect(() => {
-    if (!view || params.fresh === '1' || signinWaiting || memberBusy || !hasMoodStep(id)) return;
+    if (!view || params.fresh === '1' || !hasMoodStep(id)) return;
     clearMoodStep(id);
     if (view.isHost && !view.ideas.length) { setOpening(true); openPage(id, 'mood', { idea: 'new', arrival: '1' }); } // eslint-disable-line react-hooks/set-state-in-effect
     setOpened(true);
-  }, [params.fresh, view, id, signinWaiting, memberBusy]);
+  }, [params.fresh, view, id]);
   // Guests who just joined pick their services first: the room opens with Your services over it,
   // from its first paint.
   const picksServices = Boolean(view && !view.isHost && !view.member && view.myServiceIds === null && view.phase !== 'decided');
   useLayoutEffect(() => {
-    if (!picksServices || opened || signinWaiting || memberBusy) return;
+    if (!picksServices || opened || memberBusy) return;
     setOpened(true); // eslint-disable-line react-hooks/set-state-in-effect
     openSheet('services');
-  }, [picksServices, opened, signinWaiting, memberBusy, openSheet]);
+  }, [picksServices, opened, memberBusy, openSheet]);
   const setup = view?.phase === 'setup' || (view?.phase === 'choosing' && !view.me.inRound);
   useBackAction(toRooms, setup);
   if (state.terminal || state.access === null || !view) return <RoomStatus />;
   const moodNext = view.isHost && !view.ideas.length && (params.fresh === '1' || hasMoodStep(id));
-  if (opening || (!opened && (moodNext || signinWaiting))) return <Screen testID="room-arriving" back={toRooms}>{null}</Screen>;
+  if (opening || (!opened && moodNext)) return <Screen testID="room-arriving" back={toRooms}>{null}</Screen>;
   if (view.phase === 'decided') return <Tonight />;
   if (showsProposal(view, dismissedProposal)) return <Proposal />;
   if (view.phase === 'choosing' && view.me.inRound && !entry.required) return <Voting />;

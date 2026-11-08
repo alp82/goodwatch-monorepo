@@ -1,6 +1,6 @@
 /**
  * One live room for every room screen (the room, Mood and Matches are routes under /room/<id>; they
- * share this one connection). Owns the room's side effects: registry, member sign-in, protocol
+ * share this one connection). Owns the room's side effects: registry, GoodWatch link, protocol
  * entry, background refill, this device's "Keep swiping" choice, and the room's open sheets.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -10,7 +10,9 @@ import type { ActivityView } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey, useContinuousRoom } from '../../core/continuous/useRoom';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { loadInvite, type StoredInvite } from '../../core/continuous/invite-store';
-import { beginMember } from '../../core/continuous/member';
+import { linkRoom, useAccount } from '../../core/continuous/account';
+import { returnPath } from '../../core/continuous/member-state';
+import { memberTransition } from '../../core/continuous/member-transition';
 import { RoomFailure } from '../../core/continuous/api';
 import type { CachedRoom } from '../../core/continuous/state';
 import { appInviteUrl } from '../../core/invites';
@@ -87,7 +89,7 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
   const entry = useLobbyEntry(state);
   const invitation = useQuery<StoredInvite | null>({ queryKey: ['continuous-invite', id], queryFn: () => loadInvite(id) });
   const confirmed = state.confirmed;
-  const [memberBusy, setMemberBusy] = useState(false);
+  const account = useAccount();
   const [notice, setNotice] = useState('');
   const [sheets, setSheets] = useState<readonly RoomSheet[]>([]);
   const openSheet = useCallback((sheet: RoomSheet) => setSheets((list) => (list.at(-1) === sheet ? list : [...list.filter((s) => s !== sheet), sheet])), []);
@@ -140,27 +142,43 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
   }, [id, nickname, expiresAt]);
   useEffect(() => { if (snapshot?.own.left) router.replace('/'); }, [snapshot?.own.left]);
 
+  // Continue with GoodWatch in a room signs this device in and comes back to this room, which then links.
+  const { signIn: accountSignIn } = account;
   const signin = useCallback(async () => {
-    if (guestOnly || !state.access || memberBusy) return;
-    setMemberBusy(true);
-    try {
-      await beginMember(state.access);
-      await state.refetch();
-    } catch (e) {
-      setNotice(e instanceof RoomFailure && e.code === 'not_implemented'
-        ? 'GoodWatch sign-in isn’t connected yet.'
-        : e instanceof Error ? e.message : 'Sign-in could not start.');
-    } finally {
-      setMemberBusy(false);
-    }
-  }, [state, memberBusy]);
+    if (guestOnly || account.busy) return;
+    await accountSignIn(returnPath(`/room/${id}`));
+  }, [account.busy, accountSignIn, id]);
+  // Signed in on this device: your place in this room links to it (rooms you create, join or open, and
+  // rooms whose earlier link has run out). Once per participant and link state, so a refusal can't loop.
+  const own = snapshot?.own;
+  const linkKey = own && !own.left ? `${own.participantId}:${own.member.state}` : null;
+  const [linked, setLinked] = useState<string | null>(null);
+  const linkTried = useRef<string | null>(null);
+  const wantsLink = !guestOnly && account.member && Boolean(state.access) && own?.member.state !== 'linked' && Boolean(linkKey);
+  const refetch = state.refetch;
+  useEffect(() => {
+    if (!wantsLink || !linkKey || !state.access || linkTried.current === linkKey) return;
+    linkTried.current = linkKey;
+    void linkRoom(state.access)
+      .then(() => refetch())
+      .catch((e) => {
+        if (e instanceof RoomFailure && e.code === 'member_required') void queryClient.invalidateQueries({ queryKey: ['yepwatch-account'] });
+        else if (e instanceof RoomFailure && e.code === 'conflict') setNotice('You joined this room with another GoodWatch account.');
+      })
+      .finally(() => setLinked(linkKey));
+  }, [wantsLink, linkKey, state.access, refetch]);
+  // Until the account is known and any link has settled, the room doesn't ask for a country or services.
+  const linking = !guestOnly && (!account.ready || (wantsLink && linked !== linkKey));
+  const memberBusy = account.busy || linking;
+  // Back from GoodWatch in this room: the cover lifts once the room is on screen.
+  useEffect(() => { if (view) memberTransition.arrived(); }, [view]);
   // A new room has no country yet, and services are only valid within one: the host sets it right away
   // (member prefill, else the device's region), before anyone picks services.
   // A command already in flight (room entry) makes the send a no-op: try again once it settles, a few times at most.
   const countryTries = useRef(0);
   const needsCountry = Boolean(view && view.isHost && !view.country && view.phase === 'setup');
   const prefillCountry = snapshot?.own.member.prefill?.country;
-  const blocked = state.busy || Boolean(state.pending) || state.privateError || entry.working;
+  const blocked = state.busy || Boolean(state.pending) || state.privateError || entry.working || linking;
   useEffect(() => {
     if (!needsCountry || blocked || countryTries.current >= 3) return;
     countryTries.current++;
@@ -202,7 +220,7 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
   let inviteUrl: string | null = null;
   try { inviteUrl = invite ? appInviteUrl(invite.path) : null; } catch { inviteUrl = null; }
   const value: RoomContextValue = {
-    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, connectionLate, notice, setNotice,
+    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, connectionLate, notice: notice || account.error, setNotice,
     dismissedProposal, dismissProposal, reopenProposal, setActivityView: state.setView, saves, acknowledgeIdeas,
     sheet: sheets.at(-1) ?? null, openSheet, closeSheet, closeSheets, renderSheet,
   };

@@ -6,7 +6,7 @@
  */
 import { useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BootReveal } from '../home/BootReveal';
 import { Backdrop } from '../glow/Backdrop';
@@ -62,11 +62,13 @@ export const startPage = {
   open: (roomId: string) => router.push({ pathname: '/room/[id]', params: { id: roomId } }),
   newRoom: () => router.push({ pathname: '/', params: { open: 'new' } }),
   join: () => router.push({ pathname: '/', params: { open: 'join' } }),
-  profile: () => router.push({ pathname: '/', params: { open: 'profile' } }),
+  /** Profile on the start page; signing in there comes back to `from` (the room that asked). */
+  profile: (from?: string) => router.push({ pathname: '/', params: { open: 'profile', ...(from && from.startsWith('/room/') ? { from } : {}) } }),
 };
 
 export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID }: AppFrameProps) {
   const layout = useLayout();
+  const pathname = usePathname();
   const { phone, short, gutter, max, z } = layout;
   const insets = useSafeAreaInsets();
   const [roomsOpen, setRoomsOpen] = useState(false);
@@ -95,7 +97,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
       <BootReveal part="backdrop" pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></BootReveal>
       {backdrop}
       <CoveredBody covered={covered} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
-        <AppHeader {...header} back={back} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? startPage.profile} />
+        <AppHeader {...header} back={back} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? (() => startPage.profile(pathname))} />
       </CoveredBody>
       <View style={{ flex: 1, minHeight: 0 }}>
         <CoveredBody covered={covered || Boolean(shownSheet)}>

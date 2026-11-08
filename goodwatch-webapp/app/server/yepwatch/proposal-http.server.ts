@@ -2,8 +2,10 @@ import { z } from "zod"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import {
 	API_PREFIX,
+	MEMBER_SESSION_HEADER,
 	paths,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
+import { isAccountState, type MemberSession } from "./continuous-members.server.ts"
 import { equal, random } from "./crypto.server.ts"
 import { RoomError } from "./errors.ts"
 import { ProposalService } from "./proposal-service.server.ts"
@@ -15,6 +17,9 @@ import {
 	proposalCommandSchema as commandSchema,
 	proposalPreviewSchema,
 } from "./proposal-validation.ts"
+/** This browser's GoodWatch sign-in (sealed, HttpOnly) and its short-lived sign-in intent. */
+export const MEMBER_COOKIE = "yepwatch3_member"
+export const MEMBER_INTENT_COOKIE = "yepwatch3_member_intent"
 export interface HttpOptions {
 	serviceSecret: string
 	allowedOrigins: string[]
@@ -70,6 +75,30 @@ export function createProposalHandler(
 		}
 		const reply = (data: unknown, status = 200) =>
 			new Response(JSON.stringify(data), { status, headers })
+		const cookie = (name: string) =>
+			(request.headers.get("cookie") ?? "")
+				.split(";")
+				.map((v) => v.trim())
+				.find((v) => v.startsWith(`${name}=`))
+				?.slice(name.length + 1) ?? null
+		const setCookie = (name: string, value: string, maxAge: number) =>
+			headers.append(
+				"set-cookie",
+				`${name}=${value}; Path=${API_PREFIX}; HttpOnly; SameSite=Lax; Max-Age=${Math.max(0, maxAge)}${
+					options.secureCookies === false ? "" : "; Secure"
+				}`
+			)
+		const nativeRequest = () => request.headers.has(MEMBER_SESSION_HEADER) || request.headers.get("x-yepwatch-client") === "native"
+		/** The device session: native apps send it in a header, browsers in the cookie. */
+		const memberSession = () => request.headers.get(MEMBER_SESSION_HEADER) ?? cookie(MEMBER_COOKIE)
+		/** Browsers get a renewed or ended session as a cookie; apps get the renewed session in the body. */
+		const keepSession = (session: MemberSession | null, changed: boolean) => {
+			if (!changed || !options.members) return undefined
+			if (nativeRequest()) return session ? options.members.sealSession(session) : undefined
+			if (session) setCookie(MEMBER_COOKIE, options.members.sealSession(session), options.members.sessionMaxAge(session))
+			else setCookie(MEMBER_COOKIE, "", 0)
+			return undefined
+		}
 		const originCheck = (required: boolean) => {
 			if (origin ? !allowed.has(origin) : required)
 				throw new RoomError("forbidden", "Allowed Origin required", 403)
@@ -102,7 +131,7 @@ export function createProposalHandler(
 				headers.set("access-control-allow-methods", "GET,POST,OPTIONS")
 				headers.set(
 					"access-control-allow-headers",
-					"content-type,authorization,x-yepwatch-participant,x-yepwatch-client"
+					`content-type,authorization,x-yepwatch-participant,x-yepwatch-client,${MEMBER_SESSION_HEADER}`
 				)
 				return new Response(null, { status: 204, headers })
 			}
@@ -137,6 +166,69 @@ export function createProposalHandler(
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
 			}
 			if (request.method === "POST") originCheck(false)
+			if (url.pathname === paths.account || url.pathname.startsWith(`${paths.account}/`)) {
+				const members = options.members
+				if (!members)
+					throw new RoomError(
+						"not_implemented",
+						"GoodWatch sign-in is not configured on this runtime",
+						501
+					)
+				if (request.method === "GET" && url.pathname === paths.account) {
+					const result = await members.account(memberSession())
+					const session = keepSession(result.session, result.changed)
+					return reply({ ...result.status, ...(session ? { session } : {}) })
+				}
+				if (request.method === "POST" && url.pathname === paths.accountStart) {
+					const value = parse(
+						z
+							.object({
+								returnTo: z.string().url().max(1000),
+								client: z.enum(["browser", "native"]),
+								codeChallenge: z
+									.string()
+									.regex(/^[A-Za-z0-9_-]{43}$/)
+									.optional(),
+							})
+							.strict(),
+						await body(request)
+					)
+					if (value.client === "browser") originCheck(true)
+					const started = members.startAccount(value)
+					if (started.intent) setCookie(MEMBER_INTENT_COOKIE, started.intent, 600)
+					return reply({
+						authorizeUrl: started.authorizeUrl,
+						expiresAt: started.expiresAt,
+						state: started.state,
+					})
+				}
+				if (request.method === "POST" && url.pathname === paths.accountExchange) {
+					const value = parse(
+						z
+							.object({
+								state: z.string().min(40).max(160),
+								code: z.string().min(1).max(4096),
+								codeVerifier: z.string().regex(/^[A-Za-z0-9_-]{43,128}$/),
+							})
+							.strict(),
+						await body(request)
+					)
+					const session = await members.accountExchange(value)
+					return reply({
+						state: "member",
+						displayName: session.displayName,
+						session: members.sealSession(session),
+					})
+				}
+				if (request.method === "POST" && url.pathname === paths.accountLogout) {
+					originCheck(!nativeRequest())
+					// Ends this device's sign-in for YepWatch only. GoodWatch's own session is untouched.
+					setCookie(MEMBER_COOKIE, "", 0)
+					setCookie(MEMBER_INTENT_COOKIE, "", 0)
+					return reply({ state: "guest", displayName: null })
+				}
+				throw new RoomError("not_found", "Endpoint unavailable", 404)
+			}
 			if (url.pathname.startsWith(`${API_PREFIX}/member/`)) {
 				const members = options.members
 				if (!members)
@@ -206,9 +298,16 @@ export function createProposalHandler(
 							401
 						)
 					const id = state.split(".")[0]
-					const kind = await members.callbackClient(state)
+					const account = isAccountState(state)
+					const kind = account ? members.accountClient(state) : await members.callbackClient(state)
 					let destination
-					if (kind === "native")
+					if (account && kind === "native") destination = members.accountNativeReturn(state, code)
+					else if (account) {
+						const signedIn = await members.accountCallback(state, code, cookie(MEMBER_INTENT_COOKIE))
+						setCookie(MEMBER_INTENT_COOKIE, "", 0)
+						setCookie(MEMBER_COOKIE, members.sealSession(signedIn.session), members.sessionMaxAge(signedIn.session))
+						destination = signedIn.returnTo
+					} else if (kind === "native")
 						destination = await members.nativeReturn(state, code)
 					else {
 						const own = await service.read(id, credential(id))
@@ -263,7 +362,7 @@ export function createProposalHandler(
 					: service.resolveInvite(value.code)))
 			}
 			const match = url.pathname.match(
-				/^\/api\/yepwatch\/v1\/proposal\/rooms\/([A-Za-z0-9_-]{32})(?:\/(join|commands|preview|realtime-ticket|member(?:\/progress)?))?$/
+				/^\/api\/yepwatch\/v1\/proposal\/rooms\/([A-Za-z0-9_-]{32})(?:\/(join|commands|preview|realtime-ticket|member(?:\/progress|\/link)?))?$/
 			)
 			if (
 				request.method === "POST" &&
@@ -348,6 +447,15 @@ export function createProposalHandler(
 							parse(commandSchema, await body(request))
 						)
 					)
+				if (request.method === "POST" && operation === "member/link") {
+					if (!options.members)
+						throw new RoomError("not_implemented", "GoodWatch sign-in not configured", 501)
+					const own = await service.read(id, actor)
+					const linked = await options.members.linkRoom(id, own.own.participantId, memberSession())
+					await service.notify(id)
+					const session = keepSession(linked.session, linked.renewed)
+					return reply({ ...linked.status, ...(session ? { session } : {}) })
+				}
 				if (request.method === "POST" && operation === "realtime-ticket")
 					return reply(await service.ticket(id, actor))
 			}

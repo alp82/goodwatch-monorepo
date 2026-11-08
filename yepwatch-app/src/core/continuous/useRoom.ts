@@ -198,11 +198,18 @@ export function useContinuousRoom(roomId: string) {
       })
       .catch(() => setError('Room storage is unavailable. Keep this tab open.'));
   }, [access, room.data]);
+  // One live channel per room credential. Learning this browser's participant ID (the first read of a
+  // room opened without saved access) changes `access` but not the credential: the channel stays, so a
+  // fresh open doesn't take a second ticket and socket.
+  const accessRef = useRef(access);
+  const refetchRef = useRef(refetch);
+  useEffect(() => { accessRef.current = access; refetchRef.current = refetch; });
+  const credential = access ? `${access.roomId}\u0000${access.token}` : null;
   useEffect(() => {
-    if (!access || terminalRef.current) return;
+    if (!credential || !accessRef.current || terminalRef.current) return;
     const realtime = new ContinuousRealtime({
       roomId,
-      ticket: () => api.ticket(access),
+      ticket: () => api.ticket(accessRef.current!),
       socket: (path) => new WebSocket(continuousRealtimeUrl(path)),
       revision: () => cached()?.shared.revision ?? null,
       expiresAt: () => cached()?.shared.expiresAt ?? null,
@@ -216,7 +223,7 @@ export function useContinuousRoom(roomId: string) {
             mergePublic(old, shared)
           );
       },
-      privateRead: refetch,
+      privateRead: () => refetchRef.current(),
       authorityError: authority,
       attempt: setReconnect,
       serverClock: (offset) => {
@@ -267,7 +274,7 @@ export function useContinuousRoom(roomId: string) {
     else realtime.pause();
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active' && !expired()) {
-        void refetch().catch(() => undefined);
+        void refetchRef.current().catch(() => undefined);
         realtime.start();
       } else realtime.pause();
     });
@@ -276,7 +283,7 @@ export function useContinuousRoom(roomId: string) {
       realtime.stop();
       channel.current = null;
     };
-  }, [access, roomId, cached, end, expired, refetch, authority]);
+  }, [credential, roomId, cached, end, expired, authority]);
   useEffect(() => {
     if (!activities.size) return;
     const next = Math.min(

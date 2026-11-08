@@ -8,7 +8,12 @@ import type {
 	MemberStatusResponse,
 	MemberProgressResponse,
 } from "../../../packages/yepwatch-contracts/continuous.ts"
-import { random, hash, equal } from "./crypto.server.ts"
+import { random, hash, equal, codec } from "./crypto.server.ts"
+import type {
+	AccountExchangeRequest,
+	AccountStartRequest,
+	AccountStatus,
+} from "../../../packages/yepwatch-contracts/proposal.ts"
 import { RoomError, requireRoom } from "./errors.ts"
 import { actor, continuousLive } from "./continuous-machine.ts"
 import type {
@@ -18,6 +23,8 @@ import type {
 export interface MemberTokens {
 	accessToken: string
 	expiresAt: number
+	/** Present only when the issuer grants offline access to this client. */
+	refreshToken?: string | null
 }
 export interface MemberIssuer {
 	authorize(input: {
@@ -31,6 +38,8 @@ export interface MemberIssuer {
 		redirectUri: string
 	}): Promise<MemberTokens>
 	verify(token: string): Promise<{ userId: string; expiresAt: number; displayName?: string | null }>
+	/** Renews a device session; issuers without offline access leave it out. */
+	refresh?(input: { refreshToken: string }): Promise<MemberTokens>
 }
 export interface MemberReads {
  seen?(userId: string, accessToken?: string): Promise<string[]>
@@ -42,7 +51,34 @@ export interface MemberFlowConfig {
 	browserOrigins: string[]
 	nativeReturnUri: string
 	nativeReturnUris?: string[]
+	/** Seals device sessions and browser sign-in intents. Without it, account sign-in is unavailable. */
+	sessionSecret?: string
 }
+/** One device's GoodWatch sign-in, sealed by the server: browsers keep it in an HttpOnly cookie, apps in secure storage. */
+export interface MemberSession {
+	v: 1
+	userId: string
+	displayName: string | null
+	accessToken: string
+	expiresAt: number
+	refreshToken: string | null
+}
+interface AccountIntent {
+	v: 1
+	nonce: string
+	verifier: string
+	returnTo: string
+	expiresAt: number
+}
+/** Account sign-in states never look like a room ID (32 characters). */
+const BROWSER_STATE = "acct."
+const NATIVE_STATE = "acctn."
+const SESSION_AAD = "yepwatch-member-session"
+const INTENT_AAD = "yepwatch-member-intent"
+/** A renewable session lasts as long as the issuer's refresh grant; otherwise only as long as its access token. */
+export const RENEWABLE_SESSION_MS = 90 * 86_400_000
+export const isAccountState = (state: string) =>
+	state.startsWith(BROWSER_STATE) || state.startsWith(NATIVE_STATE)
 export interface MemberIntent {
 	stateHash: string
 	participantId: string
@@ -57,9 +93,11 @@ export interface MemberIntent {
 }
 export const pkce = (verifier: string) =>
 	createHash("sha256").update(verifier).digest("base64url")
+const cleanName = (name?: string | null) =>
+	name?.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 40) || null
 /** Never replace a chosen nickname or fall back to an email address. */
 function linkedNickname(current: string, name?: string | null) {
-	const clean = name?.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 40)
+	const clean = cleanName(name)
 	return (current === "Guest" || current === "") && clean ? clean : current
 }
 export class ContinuousMembers {
@@ -319,23 +357,14 @@ export class ContinuousMembers {
 				"conflict",
 				"This participant is linked to another account; do not replace its identity",
 			)
-			p.nickname = linkedNickname(p.nickname, grant.displayName)
-			p.memberUserId = grant.userId
-			p.member = { state: "linked", prefill }
-            if ((room as import("./proposal-types.ts").ProposalRoom).flowVersion === 3) {
-              (p as import("./proposal-types.ts").ProposalParticipant).serviceIds = [...prefill.serviceIds]
-              refreshServices(room as import("./proposal-types.ts").ProposalRoom)
-              room.contextVersion++
-              room.stream = {version:room.stream.version+1,state:"ready",reason:null}
-            }
-			p.memberGrant = {
+			this.applyLink(room, old.room, p, {
+				userId: grant.userId,
+				displayName: grant.displayName,
+				prefill,
+				seen,
 				accessToken: tokens.accessToken,
 				expiresAt: Math.min(tokens.expiresAt, grant.expiresAt),
-			}
-			if ((room as import("./proposal-types.ts").ProposalRoom).flowVersion === 3 && this.reads.seen) {
-              retireIneligible(room as import("./proposal-types.ts").ProposalRoom, new Set(seen))
-            }
-            if ((room as import("./proposal-types.ts").ProposalRoom).flowVersion === 3) reconcileProposal(room as import("./proposal-types.ts").ProposalRoom,old.room as import("./proposal-types.ts").ProposalRoom)
+			})
             intent.status = "linked"
 			intent.verifier = null
 			room.revision++
@@ -351,6 +380,266 @@ export class ContinuousMembers {
 			503,
 			true,
 		)
+	}
+	/**
+	 * Links one participant to a verified GoodWatch account. A first link applies the account's name
+	 * (only over a placeholder) and saved services; a renewed link of the same account only replaces
+	 * the grant, so services chosen in the room stay.
+	 */
+	private applyLink(
+		room: ContinuousRoom,
+		previous: ContinuousRoom,
+		p: ReturnType<typeof actor>,
+		link: {
+			userId: string
+			displayName?: string | null
+			prefill: MemberPrefill
+			seen?: string[]
+			accessToken: string
+			expiresAt: number
+		},
+	) {
+		type Room = import("./proposal-types.ts").ProposalRoom
+		type Person = import("./proposal-types.ts").ProposalParticipant
+		const v3 = (room as Room).flowVersion === 3
+		const renewal = p.memberUserId === link.userId && p.member.state === "linked"
+		p.nickname = linkedNickname(p.nickname, link.displayName)
+		p.memberUserId = link.userId
+		p.member = { state: "linked", prefill: link.prefill }
+		if (v3 && !renewal) {
+			;(p as Person).serviceIds = [...link.prefill.serviceIds]
+			refreshServices(room as Room)
+			room.contextVersion++
+			room.stream = { version: room.stream.version + 1, state: "ready", reason: null }
+		}
+		p.memberGrant = { accessToken: link.accessToken, expiresAt: link.expiresAt }
+		if (v3 && this.reads.seen && link.seen)
+			retireIneligible(room as Room, new Set(link.seen))
+		if (v3) reconcileProposal(room as Room, previous as Room)
+	}
+	private sealer() {
+		const secret = this.config.sessionSecret
+		requireRoom(
+			secret && secret.length >= 32,
+			"not_implemented",
+			"GoodWatch sign-in is not configured on this runtime",
+			501,
+		)
+		return codec(`member-session\0${secret}`)
+	}
+	sealSession(session: MemberSession) {
+		return this.sealer().encode(session, SESSION_AAD)
+	}
+	/** A session this server sealed, or null for anything else (tampered, foreign, malformed). */
+	openSession(raw: string | null | undefined): MemberSession | null {
+		if (!raw || raw.length > 12_000) return null
+		try {
+			const s = this.sealer().decode<MemberSession>(raw, SESSION_AAD)
+			return s?.v === 1 &&
+				typeof s.userId === "string" &&
+				typeof s.accessToken === "string" &&
+				Number.isFinite(s.expiresAt)
+				? s
+				: null
+		} catch (e) {
+			if (e instanceof RoomError) throw e
+			return null
+		}
+	}
+	/** Browser returns stay on an approved app origin; any page of it (the screen you signed in from). */
+	private accountReturn(value: string) {
+		const u = new URL(value)
+		requireRoom(
+			this.config.browserOrigins.includes(u.origin) &&
+				!u.username &&
+				!u.password &&
+				!u.hash &&
+				u.pathname.startsWith("/") &&
+				!u.pathname.startsWith("//") &&
+				!u.pathname.startsWith("/api/"),
+			"invalid_request",
+			"Return must be a page of an approved app",
+			400,
+		)
+		return u.href
+	}
+	/** Starts GoodWatch sign-in for this device. Browsers keep the sealed intent in a cookie bound to this browser. */
+	startAccount(input: AccountStartRequest) {
+		const expiresAt = this.now() + 10 * 60_000
+		const authorize = (state: string, challenge: string) =>
+			this.issuer.authorize({ state, challenge, redirectUri: this.config.callbackUrl })
+		if (input.client === "browser") {
+			const returnTo = this.accountReturn(input.returnTo)
+			const nonce = random()
+			const verifier = random()
+			const state = `${BROWSER_STATE}${nonce}`
+			const intent: AccountIntent = { v: 1, nonce, verifier, returnTo, expiresAt }
+			return {
+				authorizeUrl: authorize(state, pkce(verifier)),
+				expiresAt,
+				state,
+				intent: this.sealer().encode(intent, INTENT_AAD),
+			}
+		}
+		const uris = [this.config.nativeReturnUri, ...(this.config.nativeReturnUris ?? [])]
+		const index = uris.indexOf(input.returnTo)
+		requireRoom(index >= 0, "invalid_request", "Native return destination not allowed", 400)
+		requireRoom(
+			input.codeChallenge && /^[A-Za-z0-9_-]{43}$/.test(input.codeChallenge),
+			"invalid_request",
+			"S256 challenge required",
+			400,
+		)
+		this.sealer()
+		const state = `${NATIVE_STATE}${index}.${random()}`
+		return { authorizeUrl: authorize(state, input.codeChallenge), expiresAt, state }
+	}
+	accountClient(state: string): "browser" | "native" {
+		return state.startsWith(NATIVE_STATE) ? "native" : "browser"
+	}
+	/** Native: hand the one-use code back to the app's fixed link; the app's verifier redeems it. */
+	accountNativeReturn(state: string, code: string) {
+		const [index] = state.slice(NATIVE_STATE.length).split(".")
+		const uris = [this.config.nativeReturnUri, ...(this.config.nativeReturnUris ?? [])]
+		const uri = uris[Number(index)]
+		requireRoom(/^\d+$/.test(index ?? "") && uri, "unauthorized", "Sign-in state unavailable", 401)
+		const u = new URL(uri)
+		u.searchParams.set("state", state)
+		u.searchParams.set("code", code)
+		return u.href
+	}
+	/** Browser callback: only the browser that started sign-in holds the matching sealed intent. */
+	async accountCallback(state: string, code: string, intentRaw: string | null) {
+		let intent: AccountIntent | null = null
+		try {
+			intent = intentRaw ? this.sealer().decode<AccountIntent>(intentRaw, INTENT_AAD) : null
+		} catch (e) {
+			if (e instanceof RoomError) throw e
+		}
+		requireRoom(
+			intent &&
+				intent.v === 1 &&
+				state === `${BROWSER_STATE}${intent.nonce}` &&
+				intent.expiresAt > this.now(),
+			"unauthorized",
+			"Sign-in did not complete in this browser; start again",
+			401,
+		)
+		const tokens = await this.issuer.exchange({
+			code,
+			verifier: intent.verifier,
+			redirectUri: this.config.callbackUrl,
+		})
+		return { session: await this.sessionFrom(tokens), returnTo: intent.returnTo }
+	}
+	/** Native: the issuer checks the app's PKCE verifier against the challenge it started with. */
+	async accountExchange(input: AccountExchangeRequest) {
+		requireRoom(input.state.startsWith(NATIVE_STATE), "invalid_request", "Invalid callback", 400)
+		this.sealer()
+		const tokens = await this.issuer.exchange({
+			code: input.code,
+			verifier: input.codeVerifier,
+			redirectUri: this.config.callbackUrl,
+		})
+		return this.sessionFrom(tokens)
+	}
+	private async sessionFrom(tokens: MemberTokens, previous?: MemberSession): Promise<MemberSession> {
+		const grant = await this.issuer.verify(tokens.accessToken)
+		requireRoom(
+			!previous || previous.userId === grant.userId,
+			"unauthorized",
+			"GoodWatch account changed",
+			401,
+		)
+		return {
+			v: 1,
+			userId: grant.userId,
+			displayName: cleanName(grant.displayName) ?? previous?.displayName ?? null,
+			accessToken: tokens.accessToken,
+			expiresAt: Math.min(tokens.expiresAt, grant.expiresAt),
+			refreshToken: tokens.refreshToken ?? previous?.refreshToken ?? null,
+		}
+	}
+	/** A usable session: the same one while its access token lasts, a renewed one when it can be renewed, else null. */
+	async freshSession(session: MemberSession | null): Promise<{ session: MemberSession; renewed: boolean } | null> {
+		if (!session) return null
+		if (session.expiresAt > this.now() + 30_000) return { session, renewed: false }
+		if (!session.refreshToken || !this.issuer.refresh) return null
+		try {
+			const tokens = await this.issuer.refresh({ refreshToken: session.refreshToken })
+			return { session: await this.sessionFrom(tokens, session), renewed: true }
+		} catch (e) {
+			// GoodWatch unavailable: keep the session for a later try. Anything else ended it.
+			if (e instanceof RoomError && e.code === "busy") throw e
+			return null
+		}
+	}
+	/** How long a browser keeps the session cookie. */
+	sessionMaxAge(session: MemberSession) {
+		const until = session.refreshToken ? this.now() + RENEWABLE_SESSION_MS : session.expiresAt
+		return Math.max(0, Math.floor((until - this.now()) / 1000))
+	}
+	/** This device's sign-in, without calling GoodWatch while the session is current. */
+	async account(raw: string | null | undefined): Promise<{ status: AccountStatus; session: MemberSession | null; changed: boolean }> {
+		const opened = this.openSession(raw)
+		const fresh = await this.freshSession(opened)
+		if (!fresh) return { status: { state: "guest", displayName: null }, session: null, changed: Boolean(raw) }
+		return {
+			status: { state: "member", displayName: fresh.session.displayName },
+			session: fresh.session,
+			changed: fresh.renewed,
+		}
+	}
+	/**
+	 * Links your participant in a room to this device's sign-in: rooms you create, join or open while
+	 * signed in. The live grant is checked with GoodWatch before it is copied into the room.
+	 */
+	async linkRoom(id: string, participantId: string, raw: string | null | undefined) {
+		const fresh = await this.freshSession(this.openSession(raw))
+		requireRoom(fresh, "member_required", "Sign in with GoodWatch again", 403)
+		const session = fresh.session
+		{
+			const { room } = await this.get(id)
+			const p = actor(room, participantId)
+			requireRoom(
+				!p.memberUserId || p.memberUserId === session.userId,
+				"conflict",
+				"You joined this room with another GoodWatch account",
+			)
+			if (
+				p.memberUserId === session.userId &&
+				p.member.state === "linked" &&
+				p.memberGrant?.accessToken === session.accessToken &&
+				p.memberGrant.expiresAt > this.now()
+			)
+				return { status: { state: "linked" as const, prefill: p.member.prefill }, session, renewed: fresh.renewed }
+		}
+		const grant = await this.issuer.verify(session.accessToken)
+		requireRoom(grant.userId === session.userId, "unauthorized", "GoodWatch account changed", 401)
+		const prefill = await this.reads.prefill(grant.userId, session.accessToken)
+		const seen = await this.reads.seen?.(grant.userId, session.accessToken)
+		for (let attempt = 0; attempt < 6; attempt++) {
+			const old = await this.get(id)
+			const room = structuredClone(old.room)
+			const p = actor(room, participantId)
+			requireRoom(
+				!p.memberUserId || p.memberUserId === grant.userId,
+				"conflict",
+				"You joined this room with another GoodWatch account",
+			)
+			this.applyLink(room, old.room, p, {
+				userId: grant.userId,
+				displayName: grant.displayName ?? session.displayName,
+				prefill,
+				seen,
+				accessToken: session.accessToken,
+				expiresAt: Math.min(session.expiresAt, grant.expiresAt),
+			})
+			room.revision++
+			if (await this.repo.compareAndSwap(old, room, true))
+				return { status: { state: "linked" as const, prefill }, session, renewed: fresh.renewed }
+		}
+		throw new RoomError("busy", "Room busy; try again", 503, true)
 	}
 	private async verifiedIdentity(room: ContinuousRoom, participantId: string) {
 		const p = actor(room, participantId)

@@ -26,6 +26,8 @@ import { YourRooms } from './rooms/YourRooms';
 import { HistorySheet, InviteHead, JoinScreen, ProfileSheet, RetrySheet } from './rooms/panels';
 import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
 import { useHome } from './rooms/useHome';
+import { useAccount } from '../core/continuous/account';
+import { memberTransition } from '../core/continuous/member-transition';
 import { AppFrame } from './shell/Frame';
 
 type PanelKind = 'create' | 'join' | 'profile' | 'history';
@@ -44,8 +46,15 @@ const waiting = (saved: AdmissionRecovery | null) => Date.now() < (saved?.retryA
  * History are panels in the same frame. Admission keeps the existing recovery: the exact request is
  * persisted before every submit and retried as-is.
  */
-export function Entrance({ invite, open: request }: { invite?: string; /** A start page action another screen asked for. */ open?: StartRequest }) {
+export function Entrance({ invite, open: request, from }: {
+  invite?: string;
+  /** A start page action another screen asked for. */
+  open?: StartRequest;
+  /** The screen that asked (a room), where signing in from its Profile returns to. */
+  from?: string;
+}) {
   const home = useHome();
+  const account = useAccount();
   useFocusEffect(useCallback(() => { home.reload(); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
   const [panel, setPanel] = useState<PanelKind | null>(invite ? 'join' : request && request !== 'new' ? request : null);
   const [nickname, setNickname] = useState('');
@@ -95,6 +104,8 @@ export function Entrance({ invite, open: request }: { invite?: string; /** A sta
     return () => clearTimeout(timer);
   }, [justArchived]);
   useEffect(() => { if (home.ready && !restoring && !home.loadingRooms) markPageReady(); }, [home.ready, restoring, home.loadingRooms, markPageReady]);
+  // Back from GoodWatch: the cover lifts once the page is whole, with the account already in it.
+  useEffect(() => { if (home.ready && !restoring && account.ready) memberTransition.arrived(); }, [home.ready, restoring, account.ready]);
   useEffect(() => {
     let active = true;
     void readAdmission(intent).then((saved) => {
@@ -223,7 +234,6 @@ export function Entrance({ invite, open: request }: { invite?: string; /** A sta
       if (replace) router.replace(target);
       else router.push(target);
     };
-    const member = saved.member === true;
     // A prior failed write may have retained this request only in memory.
     // Persist the exact bootstrap before EVERY possible admission submit.
     await writeAdmission(intent, saved);
@@ -253,10 +263,7 @@ export function Entrance({ invite, open: request }: { invite?: string; /** A sta
           await rememberName(saved.request.nickname);
           await unarchive(roomId);
           setAdmission(null);
-          go({
-            pathname: '/room/[id]',
-            params: { id: roomId, ...(member ? { signin: '1' } : {}) },
-          }, true);
+          go({ pathname: '/room/[id]', params: { id: roomId } }, true);
           return;
         } catch (e) {
           if (
@@ -280,13 +287,13 @@ export function Entrance({ invite, open: request }: { invite?: string; /** A sta
     setAdmission(null);
     await rememberName(saved.request.nickname);
     if (saved.code) await unarchive(result.credential.roomId);
-    // A new room opens on its Mood step, above the room page and the start page (Back returns through both);
-    // a member's new room links the account first, then opens Mood.
-    const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(member ? { signin: '1' } : {}), ...(saved.code ? {} : { fresh: '1' }) } };
+    // A new room opens on its Mood step, above the room page and the start page (Back returns through both).
+    // A signed-in member's room links to their GoodWatch account as it opens.
+    const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(saved.code ? {} : { fresh: '1' }) } };
     go(target, Boolean(saved.code));
   }
-  const known = home.nickname;
-  const locked = busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
+  const known = home.nickname ?? (account.member ? account.name : null);
+  const locked = busy || account.busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
   // A panel asked for from another screen (a room's header) closes back to that screen.
   const requestedFrom = useRef(Boolean(request && request !== 'new'));
   const closePanel = useCallback(() => {
@@ -315,15 +322,15 @@ export function Entrance({ invite, open: request }: { invite?: string; /** A sta
     setRecoveryDismissed(false); setPanel(admission ? (admission.code ? 'join' : 'create') : 'join');
     return true;
   };
-  // No name first: the room exists at once; a guest host names themselves on the room page.
-  const create = () => { setError(''); if (resumeAdmission()) return; void enter(false, Boolean(home.member), undefined, known ?? ''); };
-  // GoodWatch supplies the name, so Continue with GoodWatch never asks for one first.
-  const signIn = guestOnly ? undefined : () => {
-    setError('');
-    if (resumeAdmission()) return;
-    if (home.signInRoomId) router.push({ pathname: '/room/[id]', params: { id: home.signInRoomId, signin: '1' } });
-    else void enter(false, true, undefined, known ?? '');
-  };
+  // No name first: the room exists at once; a guest host names themselves on the room page. A signed-in
+  // member's room is theirs: it links to their GoodWatch account as it opens.
+  const create = () => { setError(''); if (resumeAdmission()) return; void enter(false, account.member, undefined, known ?? ''); };
+  // Continue with GoodWatch signs this device in and comes back to this screen: it never creates a room.
+  const signInFrom = (path: string) => { setError(''); void account.signIn(path); };
+  const fromRoom = from?.match(/^\/room\/([A-Za-z0-9_-]{1,64})(?:\/|$)/)?.[1];
+  const roomFrom = fromRoom ? `/room/${fromRoom}` : null;
+  const signIn = guestOnly || account.member ? undefined : () => signInFrom('/');
+  const signInFromProfile = guestOnly || account.member ? undefined : () => signInFrom(roomFrom ?? '/?open=profile');
   const openJoin = () => { setError(''); if (!resumeAdmission()) setPanel('join'); };
   // Another screen's header asked for New room: it starts once the saved request is known.
   const handled = useRef(false);
@@ -348,24 +355,26 @@ export function Entrance({ invite, open: request }: { invite?: string; /** A sta
     </>
   );
   // The saved-request check takes a moment on every visit: the page appears once, already usable.
-  const me = { name: known, member: Boolean(home.member) };
+  const me = { name: known, member: account.member };
   const openProfile = () => { setError(''); setPanel('profile'); };
   if (!home.ready || restoring) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
   if (shown === 'join') return (
     <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite}
-      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname)} member={Boolean(home.member)} me={me}
-      initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error}
+      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname)} member={account.member} me={me}
+      initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error || account.error}
       back={closePanel} editName={openProfile}
-      signIn={guestOnly || home.member ? undefined : (c) => void enter(true, true, undefined, '', c)}
-      submit={(c, name) => void enter(true, Boolean(home.member), undefined, name, c)} extra={notices} />
+      /* Back on this invitation (or the code you typed) as yourself, ready to join. */
+      signIn={guestOnly || account.member ? undefined : (c) => { const typed = parseInvite(c); signInFrom(invite ? `/r/${invite}` : typed ? `/r/${typed}` : '/?open=join'); }}
+      submit={(c, name) => void enter(true, account.member, undefined, name, c)} extra={notices} />
   );
   const openCount = home.active.filter((r) => r.live).length;
   const history = home.decisions.length || home.left.length || home.archived.length ? () => setPanel('history') : undefined;
   const sheet = shown === 'create' ? (
     <RetrySheet action={actionLabel('Create room', 'Retry room request')} busy={locked} error={error} retry={() => void enter(false, false, undefined, admission?.request.nickname ?? known ?? '')} extra={notices} onClose={closePanel} />
   ) : shown === 'profile' ? (
-    <ProfileSheet nickname={known} member={Boolean(home.member)} signIn={signIn} busy={locked || home.loadingRooms} error={error} onClose={closePanel}
+    <ProfileSheet nickname={known} member={account.member} signIn={signInFromProfile} logOut={account.member ? () => void account.logOut() : undefined}
+      busy={locked || home.loadingRooms} error={error || account.error} onClose={closePanel}
       save={(name) => { void home.setNickname(name).then(() => { if (invite) setPanel('join'); else closePanel(); }); }} />
   ) : shown === 'history' ? (
     <HistorySheet decisions={home.decisions} left={home.left} archived={home.archived} restore={home.restore} canOpen={(id) => home.decidedRooms.has(id)} openRoom={open} returnTo={returnTo} busy={locked} onClose={closePanel} />
@@ -379,14 +388,14 @@ export function Entrance({ invite, open: request }: { invite?: string; /** A sta
       {returning ? (
         <YourRooms title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
           rooms={home.active} decisions={home.decisions} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create}
-          join={openJoin} retry={home.retry} history={history} signIn={home.member ? undefined : signIn}
+          join={openJoin} retry={home.retry} history={history} signIn={signIn}
           archive={(roomId) => { home.archive(roomId); setJustArchived(roomId); }}
           archivedRoom={Boolean(justArchived)} undoArchive={() => { if (justArchived) home.restore(justArchived); setJustArchived(null); }}
           disabled={checkingInvite} quiet={busy} />
       ) : (
         <Landing newRoom={create} join={openJoin} signIn={signIn} disabled={checkingInvite} quiet={busy} />
       )}
-      {!shown && error ? <GText size={14} color="#fca5a5">{error}</GText> : null}
+      {!shown && (error || account.error) ? <GText size={14} color="#fca5a5">{error || account.error}</GText> : null}
     </AppFrame>
   );
 }

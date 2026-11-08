@@ -37,7 +37,7 @@ export function createReleaseRuntime(
 	const now = deps.now ?? Date.now
 	const repository = new RelationalProposalRepository(deps.sql, config.secret)
 	const members = config.member
-		? releaseMembers(repository, config.member)
+		? releaseMembers(repository, config.member, fetch, config.secret)
 		: undefined
 	if (members && !deps.memberCatalog)
 		throw new Error("Member catalog adapter required")

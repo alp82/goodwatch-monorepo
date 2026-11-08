@@ -69,7 +69,17 @@ export function releaseMemberConfig(env: Env, publicOrigin: string) {
   const callbackUrl = `${publicOrigin}${paths.memberCallback}`;
   if (!oauth.redirectUris.includes(callbackUrl))
     throw new Error("Register the exact YepWatch member callback");
-  return { ...oauth, issuerOrigin: origin.origin, callbackUrl, publicOrigin };
+  const offline = env.YEPWATCH_MEMBER_OFFLINE_ACCESS ?? "false";
+  if (!["true", "false"].includes(offline))
+    throw new Error("Invalid member offline-access setting");
+  return {
+    ...oauth,
+    issuerOrigin: origin.origin,
+    callbackUrl,
+    publicOrigin,
+    // Renewable device sign-in needs the GoodWatch client registered for refresh tokens first.
+    offlineAccess: offline === "true",
+  };
 }
 export type ReleaseMemberConfig = NonNullable<
   ReturnType<typeof releaseMemberConfig>
@@ -79,8 +89,53 @@ export type ReleaseMemberConfig = NonNullable<
 export function releaseMembers(
   repo: ContinuousRepository,
   config: ReleaseMemberConfig,
-  transport: typeof fetch = fetch
+  transport: typeof fetch = fetch,
+  sessionSecret?: string
 ) {
+  const tokenResponse = z.object({
+    access_token: z.string().min(1).max(16384),
+    expires_in: z.number().positive().finite(),
+    token_type: z.string().refine((t) => t.toLowerCase() === "bearer"),
+    refresh_token: z.string().min(1).max(16384).optional(),
+  });
+  async function token(form: Record<string, string>) {
+    let response: Response;
+    try {
+      response = await transport(
+        new URL("/api/auth/oauth2/token", config.issuerOrigin),
+        {
+          method: "POST",
+          headers: { "content-type": "application/x-www-form-urlencoded" },
+          redirect: "error",
+          signal: AbortSignal.timeout(12000),
+          body: new URLSearchParams({
+            client_id: config.clientId,
+            resource: config.resource,
+            ...form,
+          }),
+        }
+      );
+    } catch {
+      throw new RoomError(
+        "busy",
+        "GoodWatch is temporarily unavailable; try again",
+        503,
+        true
+      );
+    }
+    if (!response.ok)
+      throw new RoomError(
+        "unauthorized",
+        "GoodWatch connection did not complete. Try connecting again.",
+        401
+      );
+    const value = tokenResponse.parse(await response.json());
+    return {
+      accessToken: value.access_token,
+      expiresAt: Date.now() + value.expires_in * 1000,
+      refreshToken: value.refresh_token ?? null,
+    };
+  }
   async function resource(token: string, view: string, expectedUser?: string) {
     const url = new URL(MEMBER_RESOURCE_PATH, config.issuerOrigin);
     url.searchParams.set("view", view);
@@ -123,12 +178,14 @@ export function releaseMembers(
       if (redirectUri !== config.callbackUrl)
         throw new Error("Unexpected member callback");
       const url = new URL("/api/auth/oauth2/authorize", config.issuerOrigin);
+      // No forced consent: GoodWatch asks once, then a signed-in member comes straight back.
       url.search = new URLSearchParams({
         response_type: "code",
-        prompt: "consent",
         client_id: config.clientId,
         redirect_uri: redirectUri,
-        scope: YEPWATCH_READ_SCOPE,
+        scope: config.offlineAccess
+          ? `${YEPWATCH_READ_SCOPE} offline_access`
+          : YEPWATCH_READ_SCOPE,
         resource: config.resource,
         state,
         code_challenge: challenge,
@@ -139,41 +196,19 @@ export function releaseMembers(
     async exchange({ code, verifier, redirectUri }) {
       if (redirectUri !== config.callbackUrl)
         throw new Error("Unexpected member callback");
-      const response = await transport(
-        new URL("/api/auth/oauth2/token", config.issuerOrigin),
-        {
-          method: "POST",
-          headers: { "content-type": "application/x-www-form-urlencoded" },
-          redirect: "error",
-          signal: AbortSignal.timeout(12000),
-          body: new URLSearchParams({
-            grant_type: "authorization_code",
-            client_id: config.clientId,
-            redirect_uri: redirectUri,
-            resource: config.resource,
-            code,
-            code_verifier: verifier,
-          }),
-        }
-      );
-      if (!response.ok)
-        throw new RoomError(
-          "unauthorized",
-          "GoodWatch connection did not complete. Try connecting again.",
-          401
-        );
-      const value = z
-        .object({
-          access_token: z.string().min(1).max(16384),
-          expires_in: z.number().positive().finite(),
-          token_type: z.string().refine((t) => t.toLowerCase() === "bearer"),
-        })
-        .parse(await response.json());
-      return {
-        accessToken: value.access_token,
-        expiresAt: Date.now() + value.expires_in * 1000,
-      };
+      return token({
+        grant_type: "authorization_code",
+        redirect_uri: redirectUri,
+        code,
+        code_verifier: verifier,
+      });
     },
+    ...(config.offlineAccess
+      ? {
+          refresh: ({ refreshToken }: { refreshToken: string }) =>
+            token({ grant_type: "refresh_token", refresh_token: refreshToken }),
+        }
+      : {}),
     verify: (token) => resource(token, "identity"),
   };
   return new ContinuousMembers(
@@ -198,6 +233,7 @@ export function releaseMembers(
       browserOrigins: [config.publicOrigin],
       nativeReturnUri: "yepwatch://auth/callback",
       nativeReturnUris: ["yepwatch-preview://auth/callback"],
+      sessionSecret,
     }
   );
 }

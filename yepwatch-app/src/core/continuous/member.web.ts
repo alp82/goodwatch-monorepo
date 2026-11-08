@@ -1,21 +1,31 @@
-import type { RoomAccess } from '../credentials';
+import type { AccountStatus } from '@goodwatch/yepwatch-contracts/proposal';
 import { secureAuthorizeUrl } from './member-state';
 import { continuousApi } from './api';
-import { rememberMemberReturn, clearMemberReturn } from './web-member-return';
-export async function beginMember(access: RoomAccess) {
-  const result = await continuousApi.memberStart(access, {
-    roomId: access.roomId,
-    returnTo: `${window.location.origin}/room/${encodeURIComponent(access.roomId)}`,
-    client: 'browser',
-  });
+import { rememberMemberReturn, clearMemberReturn, rememberMemberHint } from './web-member-return';
+import { memberTransition } from './member-transition';
+
+/** Browsers keep the sealed session in an HttpOnly cookie: nothing to read or store here. */
+export async function readSession(): Promise<string | null> { return null; }
+export async function saveSession(_session: string) { /* The API sets the cookie. */ }
+export async function clearSession() { /* The API clears the cookie. */ }
+
+/**
+ * Signs this browser in with GoodWatch and comes back to `returnPath` (the screen you were on), in
+ * one full-page round trip. The transition covers leaving; the returning page covers arriving.
+ * Resolves only if the browser restores this page from its back/forward cache.
+ */
+export async function beginAccount(returnPath: string): Promise<AccountStatus | null> {
+  const result = await continuousApi.accountStart({ returnTo: `${window.location.origin}${returnPath}`, client: 'browser' });
   const destination = secureAuthorizeUrl(result.authorizeUrl);
-  rememberMemberReturn(access.roomId);
-  // Stay busy until navigation. Browser Back may restore this document from its cache.
+  rememberMemberReturn(returnPath);
+  rememberMemberHint();
+  await memberTransition.leave();
   await new Promise<void>((resolve, reject) => {
     const resumed = (event: PageTransitionEvent) => {
       if (!event.persisted) return;
       window.removeEventListener('pageshow', resumed);
       clearMemberReturn();
+      memberTransition.reset();
       resolve();
     };
     window.addEventListener('pageshow', resumed);
@@ -23,12 +33,16 @@ export async function beginMember(access: RoomAccess) {
     catch (error) {
       window.removeEventListener('pageshow', resumed);
       clearMemberReturn();
+      memberTransition.reset();
       reject(error);
     }
   });
+  return null;
 }
-export async function finishMember(): Promise<string> {
-  throw new Error(
-    'Browser linking is verified by the API callback using your original room cookie. Reopen your room.'
-  );
+export async function finishAccount(_raw: string): Promise<AccountStatus> {
+  throw new Error('Browsers finish GoodWatch sign-in on the server.');
+}
+/** Older room-bound returns only exist in the native app. */
+export async function finishMember(_raw: string): Promise<string> {
+  throw new Error('Browser linking is verified by the API callback.');
 }

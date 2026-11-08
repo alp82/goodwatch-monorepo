@@ -37,7 +37,8 @@ async function fixture(page: Page, setupGuest = false) {
           moods: [{ id: 'relaxed', label: 'Relaxed' }],
         },
       });
-    if (url.pathname.endsWith('/member/start'))
+    if (url.pathname.endsWith('/proposal/account')) return route.fulfill({ json: { state: 'guest', displayName: null } });
+    if (url.pathname.endsWith('/member/start') || url.pathname.endsWith('/account/start'))
       return route.fulfill({
         status: 501,
         json: {
@@ -194,14 +195,14 @@ for (const viewport of [
     await expect(
       page.getByRole('button', { name: /veto|complete round|finish round/i })
     ).toHaveCount(0);
-    const bounds = await page.evaluate(() => ({
-      width: innerWidth,
-      height: innerHeight,
-      scrollWidth: document.documentElement.scrollWidth,
-      scrollHeight: document.documentElement.scrollHeight,
+    // The voting surface sizes itself from measured layout after the viewport change: wait for it to
+    // settle instead of reading the page mid-relayout (the cause of earlier one-off overflow failures).
+    const overflow = () => page.evaluate(() => ({
+      x: document.documentElement.scrollWidth - innerWidth,
+      y: document.documentElement.scrollHeight - innerHeight,
     }));
-    expect(bounds.scrollHeight).toBeLessThanOrEqual(bounds.height);
-    expect(bounds.scrollWidth).toBeLessThanOrEqual(bounds.width);
+    await expect.poll(async () => (await overflow()).y, { timeout: 3000 }).toBeLessThanOrEqual(0);
+    await expect.poll(async () => (await overflow()).x, { timeout: 3000 }).toBeLessThanOrEqual(0);
     const poster = await page.getByTestId('poster').boundingBox();
     const no = await page.getByRole('button', { name: 'Nope', exact: true }).boundingBox();
     expect(poster!.height).toBeGreaterThan(200);

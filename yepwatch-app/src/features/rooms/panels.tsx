@@ -167,8 +167,11 @@ export function JoinScreen({ invite, checking = false, nickname, nameLocked = fa
   );
 }
 
-/** Edits the remembered name for future rooms. Names inside existing rooms don't change. */
-export function ProfileSheet({ nickname, save, member = false, signIn, busy, error, onClose }: { nickname: string | null; save: (name: string) => void; member?: boolean; signIn?: () => void; busy?: boolean; error?: string; onClose: () => void }) {
+/**
+ * Edits the remembered name for future rooms (names inside existing rooms don't change), and signs this
+ * device in or out of GoodWatch. Log out ends the GoodWatch link for YepWatch on this device only.
+ */
+export function ProfileSheet({ nickname, save, member = false, signIn, logOut, busy, error, onClose }: { nickname: string | null; save: (name: string) => void; member?: boolean; signIn?: () => void; logOut?: () => void; busy?: boolean; error?: string; onClose: () => void }) {
   const { z } = useLayout();
   const [value, setValue] = useState(nickname ?? '');
   const ok = value.trim().length > 0;
@@ -185,6 +188,12 @@ export function ProfileSheet({ nickname, save, member = false, signIn, busy, err
         <GText size={13} color={glow.muted}>Used for new rooms</GText>
       </View>
       {!member && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton onPress={signIn} disabled={busy} /></View> : null}
+      {member && logOut ? (
+        <View style={{ gap: 8 }}>
+          <Action label="Log out" onPress={logOut} disabled={busy} small />
+          <GText size={13} color={glow.muted}>Your rooms stay as they are. GoodWatch stays signed in.</GText>
+        </View>
+      ) : null}
       <ErrorText>{error}</ErrorText>
     </Sheet>
   );

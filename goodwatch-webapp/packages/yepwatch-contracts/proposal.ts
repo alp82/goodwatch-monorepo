@@ -381,6 +381,28 @@ export interface MemberStatusResponse {
 	state: "guest" | "linked" | "unavailable"
 	prefill: MemberPrefill | null
 }
+/** GoodWatch sign-in for this device, not bound to a room. Rooms you open, create or join link to it. */
+export interface AccountStartRequest {
+	/** Browser: an exact page of the approved app origin to come back to. Native: the app's fixed return link. */
+	returnTo: string
+	client: "browser" | "native"
+	/** Native only: S256 challenge of the app's verifier. */
+	codeChallenge?: string
+}
+export interface AccountExchangeRequest {
+	state: string
+	code: string
+	codeVerifier: string
+}
+export interface AccountStatus {
+	state: "member" | "guest"
+	displayName: string | null
+	/** Native only: the sealed device session, returned when it was created or renewed. */
+	session?: string
+}
+/** Native apps send their sealed device session in this header; browsers use an HttpOnly cookie. */
+export const MEMBER_SESSION_HEADER = "x-yepwatch-member"
+
 const room = (id: string) => `${API_PREFIX}/rooms/${encodeURIComponent(id)}`
 export interface InvitePreview {
 	roomId: string
@@ -399,6 +421,10 @@ export const paths = {
 	memberStart: `${API_PREFIX}/member/start`,
 	memberCallback: `${API_PREFIX}/member/callback`,
 	memberExchange: `${API_PREFIX}/member/exchange`,
+	account: `${API_PREFIX}/account`,
+	accountStart: `${API_PREFIX}/account/start`,
+	accountExchange: `${API_PREFIX}/account/exchange`,
+	accountLogout: `${API_PREFIX}/account/logout`,
 	realtime: `${API_PREFIX}/realtime`,
 	realtimeAttach: `${API_PREFIX}/realtime/internal/attach`,
 	realtimeView: `${API_PREFIX}/realtime/internal/view`,
@@ -409,6 +435,7 @@ export const paths = {
 	realtimeTicket: (id: string) => `${room(id)}/realtime-ticket`,
 	memberStatus: (id: string) => `${room(id)}/member`,
 	memberProgress: (id: string) => `${room(id)}/member/progress`,
+	memberLink: (id: string) => `${room(id)}/member/link`,
 } as const
 
 /** Per-candidate accumulated foreground exposure; client measurement is self-reported, not verified human deliberation. */

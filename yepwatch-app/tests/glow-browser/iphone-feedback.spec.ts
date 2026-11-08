@@ -292,11 +292,16 @@ test('device region suggests the country only for a room without one; a saved co
   await expect(page.getByRole('button', { name: /Germany/ })).toBeVisible();
 });
 
-test('Continue with GoodWatch needs no guest name and shows its G mark', async ({ page }) => {
+test('Continue with GoodWatch needs no guest name, shows its G mark and makes no room', async ({ page }) => {
   const f = await fixture(page, true);
   const requests: any[] = [];
+  let signIns = 0;
   await page.route('**/proposal/rooms', async route => {
     requests.push(route.request().postDataJSON());
+    await route.fulfill({ status: 503, json: { error: {code:'busy', message:'Fixture stops before actual sign-in', retryable:true} } });
+  });
+  await page.route('**/proposal/account/start', async route => {
+    signIns++;
     await route.fulfill({ status: 503, json: { error: {code:'busy', message:'Fixture stops before actual sign-in', retryable:true} } });
   });
   await page.evaluate(() => sessionStorage.clear());
@@ -305,8 +310,8 @@ test('Continue with GoodWatch needs no guest name and shows its G mark', async (
   await expect(signin).toBeEnabled();
   await expect(signin.locator('svg, img')).toHaveCount(1);
   await signin.click();
-  await expect.poll(() => requests.length).toBe(1);
-  expect(requests[0].nickname).toBe('Guest');
+  await expect.poll(() => signIns).toBe(1);
+  expect(requests).toEqual([]);
   expect(f.writes).toEqual([]);
 });
 

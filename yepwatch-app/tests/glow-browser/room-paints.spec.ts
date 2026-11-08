@@ -83,14 +83,16 @@ test('reopening a room: no opening words and no connection line while it connect
   await expect(page.getByText('Not connected.')).toBeVisible();
 });
 
-test('sign-in: back from GoodWatch straight to Mood', async ({ page }) => {
+test('sign-in: back from GoodWatch to the start page, no room screen ever paints', async ({ page }) => {
   await fakeRoom(page, newRoom(), { member: 'return' });
   await latency(page, 150);
   await page.goto('/');
   await button(page, 'Continue with GoodWatch').click();
-  await expect(page.getByLabel('Mood')).toBeVisible();
+  await page.waitForURL((url) => url.pathname === '/');
+  await expect(page.getByTestId('member-transition')).toHaveCount(0);
+  await expect(button(page, 'New room')).toBeVisible();
   await page.waitForTimeout(300);
-  expect((await paints(page)).filter((p) => !/New room/.test(p.text) && /Just you|YOUR ROOM|MOOD|Your name/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
+  expect((await paints(page)).filter((p) => /Just you|YOUR ROOM|Opening the room|Describe a mood/.test(p.text))).toEqual([]);
 });
 
 test('editing an idea shows at once, nothing dims, the room stays usable, and it goes out in order', async ({ page }) => {

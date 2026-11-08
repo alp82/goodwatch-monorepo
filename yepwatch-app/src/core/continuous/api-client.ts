@@ -15,6 +15,10 @@ import {
   type MemberStatusResponse,
   type MemberProgressResponse,
   type MemberExchangeRequest,
+  type AccountStartRequest,
+  type AccountExchangeRequest,
+  type AccountStatus,
+  MEMBER_SESSION_HEADER,
 } from '@goodwatch/yepwatch-contracts/proposal';
 import { connectionDiagnostic, type ConnectionDiagnostic, type ConnectionStage } from './connection-diagnostic';
 import { apiUrl } from '../config';
@@ -45,7 +49,9 @@ export class ContinuousApi {
     path: string,
     body?: unknown,
     access?: RoomAccess,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    /** The app's sealed GoodWatch session (browsers send theirs as a cookie). */
+    memberSession?: string | null
   ): Promise<T> {
     const started = Date.now();
     let stage: ConnectionStage = 'address';
@@ -59,6 +65,7 @@ export class ContinuousApi {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (this.native) headers['X-YepWatch-Client'] = 'native';
+    if (this.native && memberSession) headers[MEMBER_SESSION_HEADER] = memberSession;
     if (this.native && access) {
       headers.Authorization = `Bearer ${access.token}`;
       headers['X-YepWatch-Participant'] = access.participantId;
@@ -125,6 +132,15 @@ export class ContinuousApi {
     this.request<MemberStatusResponse>(paths.memberStatus(a.roomId), undefined, a);
   memberProgress = (a: RoomAccess) =>
     this.request<MemberProgressResponse>(paths.memberProgress(a.roomId), undefined, a);
+  /** This device's GoodWatch sign-in (no room). */
+  account = (session?: string | null) =>
+    this.request<AccountStatus>(paths.account, undefined, undefined, undefined, session);
+  accountStart = (body: AccountStartRequest) => this.request<MemberStartResponse>(paths.accountStart, body);
+  accountExchange = (body: AccountExchangeRequest) => this.request<AccountStatus>(paths.accountExchange, body);
+  accountLogout = () => this.request<AccountStatus>(paths.accountLogout, {});
+  /** Links your participant in this room to this device's sign-in. */
+  memberLink = (a: RoomAccess, session?: string | null) =>
+    this.request<MemberStatusResponse & { session?: string }>(paths.memberLink(a.roomId), {}, a, undefined, session);
   memberStart = (a: RoomAccess, body: MemberStartRequest) =>
     this.request<MemberStartResponse>(paths.memberStart, body, a);
   memberExchange = (a: RoomAccess, body: MemberExchangeRequest) =>

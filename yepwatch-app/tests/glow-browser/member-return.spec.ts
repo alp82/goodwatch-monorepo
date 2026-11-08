@@ -1,64 +1,101 @@
-import { test, expect } from '@playwright/test';
-import { continuousFixture } from '../continuous-fixture';
+import { test, expect, type Page } from '@playwright/test';
+import { choosingRoom, fakeRoom, newRoom } from './room-fake';
 
-/** OAuth itself is represented by a full-page round trip; room reads remain authoritative. */
-test('GoodWatch return restores the member name and account state without replaying boot', async ({ page }) => {
-  const room = continuousFixture(); room.shared.phase = 'setup';
-  room.shared.participants[0].nickname = 'Guest';
-  let admissions = 0; let links = 0;
+/**
+ * GoodWatch sign-in belongs to the device, not a room. OAuth itself is a full-page round trip here
+ * (the fake issuer sends the browser straight back to the page it left).
+ */
+const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
+async function watchBoot(page: Page) {
   await page.addInitScript(() => {
-    (window as unknown as {bootSeen:boolean}).bootSeen = false;
-    new MutationObserver(() => { if(document.querySelector('[data-testid="yepwatch-boot"]')) (window as unknown as {bootSeen:boolean}).bootSeen = true; }).observe(document, {childList:true,subtree:true});
+    (window as unknown as { bootSeen: boolean }).bootSeen = false;
+    new MutationObserver(() => { if (document.querySelector('[data-testid="yepwatch-boot"]')) (window as unknown as { bootSeen: boolean }).bootSeen = true; }).observe(document, { childList: true, subtree: true });
   });
-  await page.route('**/api/yepwatch/v1/proposal/**', async route => {
-    const p = new URL(route.request().url()).pathname;
-    if(p.endsWith('/member/start')) { links++;return route.fulfill({json:{authorizeUrl:'http://127.0.0.1:8097/member-test-return',state:'test-state',expiresAt:Date.now()+600000}}); }
-    if(p.endsWith('/realtime-ticket'))return route.fulfill({status:501,json:{error:{code:'not_implemented',message:'Isolated browser test',retryable:false}}});
-    if(p.endsWith('/rooms') && route.request().method()==='POST') { admissions++;return route.fulfill({json:{credential:{roomId:'test-room',participantId:'host',token:'',expiresAt:room.shared.expiresAt},snapshot:room,invite:{code:'ABC234',path:'/r/ABC234'}}}); }
-    if(p.endsWith('/rooms/test-room'))return route.fulfill({json:room});
-    return route.fulfill({json:{countries:[{code:'DE',name:'Germany'}],services:[{id:8,name:'Netflix',logoUrl:null}],moods:[]}});
-  });
-  await page.route('**/member-test-return',async route=>{
-    room.shared.participants[0].nickname='Alex';room.own.member={state:'linked',prefill:{country:'DE',serviceIds:[8],savedProgressAvailable:true}};room.shared.revision++;
-    await route.fulfill({contentType:'text/html',body:'<!doctype html><script>sessionStorage.setItem("test-linked","1");location.replace("/room/test-room")</script>'});
-  });
-  await page.goto('/');await page.getByRole('button',{name:'Continue with GoodWatch',exact:true}).click();
-  await expect.poll(()=>links).toBe(1);await page.waitForURL('**/room/test-room**');
-  await expect.poll(()=>page.evaluate(()=>sessionStorage.getItem('test-linked'))).toBe('1');
-  // The new room still opens on its Mood step after the sign-in round trip; Back returns to the room.
-  await expect(page.getByLabel('Mood')).toBeVisible();
-  await expect(page).toHaveURL(/\/room\/test-room\/mood/);
-  expect(await page.evaluate(()=>(window as unknown as {bootSeen:boolean}).bootSeen)).toBe(false);
-  await page.getByRole('button',{name:'Back',exact:true}).click();
-  await expect(page.getByRole('button',{name:'Start',exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'Back',exact:true}).click();
-  await expect(page.getByText(/, Alex$/)).toBeVisible();
-  await page.getByRole('button',{name:'Profile'}).click();
-  await expect(page.getByText('Signed in with GoodWatch',{exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'Continue with GoodWatch',exact:true})).toHaveCount(0);
-  expect(admissions).toBe(1);
+}
+const bootSeen = (page: Page) => page.evaluate(() => (window as unknown as { bootSeen: boolean }).bootSeen);
+function admissions(page: Page) {
+  const seen = { count: 0 };
+  page.on('request', (r) => { if (r.method() === 'POST' && /\/proposal\/rooms(\/[^/]+\/join)?$/.test(new URL(r.url()).pathname)) seen.count++; });
+  return seen;
+}
+
+test('Continue with GoodWatch on the start page signs in, creates no room and comes back to the start page', async ({ page }) => {
+  const f = await fakeRoom(page, newRoom(), { member: 'return' });
+  const rooms = admissions(page);
+  await page.goto('/');
+  await expect(button(page, 'Continue with GoodWatch')).toBeVisible();
+  await watchBoot(page);
+  await button(page, 'Continue with GoodWatch').click();
+  // Leaving is covered by the GoodWatch transition, not a blank page.
+  await expect(page.getByTestId('member-transition')).toBeVisible();
+  await expect.poll(() => f.account.starts).toBe(1);
+  await page.waitForURL((url) => url.pathname === '/');
+  await expect(page.getByTestId('member-transition')).toHaveCount(0);
+  await expect(page.getByTestId('landing').or(page.getByTestId('home-rooms'))).toBeVisible();
+  // The returning page doesn't replay the startup word and never opens Mood or a room.
+  expect(await bootSeen(page)).toBe(false);
+  await expect(page.getByLabel('Mood')).toHaveCount(0);
+  expect(rooms.count).toBe(0);
+  await expect(button(page, 'Continue with GoodWatch')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Profile' }).click();
+  await expect(page.getByText('Signed in with GoodWatch', { exact: true })).toBeVisible();
+  await expect(button(page, 'Log out')).toBeVisible();
 });
 
-test('an interrupted sign-in remains reachable from Profile and retries in the existing room', async ({ page }) => {
-  const room=continuousFixture();room.shared.phase='setup';room.shared.participants[0].nickname='Guest';let links=0;let admissions=0;
-  await page.route('**/api/yepwatch/v1/proposal/**',async route=>{
-    const p=new URL(route.request().url()).pathname;
-    if(p.endsWith('/member/start')){links++;return route.fulfill({status:503,json:{error:{code:'busy',message:'GoodWatch is temporarily unavailable',retryable:true}}});}
-    if(p.endsWith('/realtime-ticket'))return route.fulfill({status:501,json:{error:{code:'not_implemented',message:'Isolated browser test',retryable:false}}});
-    if(p.endsWith('/rooms')&&route.request().method()==='POST'){admissions++;return route.fulfill({status:500,json:{error:{code:'busy',message:'Must reuse the existing room',retryable:true}}});}
-    if(p.endsWith('/rooms/test-room'))return route.fulfill({json:room});
-    return route.fulfill({json:{countries:[{code:'DE',name:'Germany'}],services:[{id:8,name:'Netflix',logoUrl:null}],moods:[]}});
+test('Log out ends the GoodWatch sign-in on this device and stays on the screen', async ({ page }) => {
+  const f = await fakeRoom(page, newRoom(), { member: 'signed-in' });
+  await page.goto('/?open=profile');
+  await expect(page.getByText('Signed in with GoodWatch', { exact: true })).toBeVisible();
+  await button(page, 'Log out').click();
+  await expect.poll(() => f.account.logouts).toBe(1);
+  await expect(page.getByText('Signed in with GoodWatch', { exact: true })).toHaveCount(0);
+  await expect(button(page, 'Continue with GoodWatch')).toBeVisible();
+  await expect(page.getByTestId('profile-panel')).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/');
+});
+
+test('signing in inside a room comes back to that room, links it and the room goes live', async ({ page }) => {
+  const room = choosingRoom();
+  room.shared.participants[0].nickname = 'Guest';
+  room.shared.participants[0].serviceIds = null;
+  const f = await fakeRoom(page, room, { member: 'return' });
+  const tickets = { count: 0 };
+  await page.route('**/realtime-ticket', (route) => { tickets.count++; return route.fulfill({ json: { ticket: `t${tickets.count}`, expiresAt: Date.now() + 30_000, websocketPath: '/api/yepwatch/v1/proposal/realtime' } }); });
+  await page.routeWebSocket('**/realtime', (ws) => {
+    ws.onMessage((raw) => { if (JSON.parse(String(raw)).type === 'authenticate') ws.send(JSON.stringify({ type: 'room.snapshot', snapshot: f.room.shared })); });
   });
-  await page.goto('/room/test-room');
-  await page.getByRole('button',{name:'Back',exact:true}).click();
-  for(let attempt=1;attempt<=2;attempt++){
-    await page.getByRole('button',{name:'Profile',exact:true}).click();
-    await expect(page.getByText('Signed in with GoodWatch',{exact:true})).toHaveCount(0);
-    await page.getByRole('button',{name:'Continue with GoodWatch',exact:true}).click();
-    await expect.poll(()=>links).toBe(attempt);
-    await expect(page.getByText('GoodWatch is temporarily unavailable',{exact:true})).toBeVisible();
-    expect(new URL(page.url()).searchParams.has('signin')).toBe(false);
-    await page.getByRole('button',{name:'Back',exact:true}).click();
-  }
-  expect(admissions).toBe(0);
+  const rooms = admissions(page);
+  await page.goto('/?open=profile&from=/room/test-room');
+  await button(page, 'Continue with GoodWatch').click();
+  await page.waitForURL((url) => url.pathname === '/room/test-room');
+  await expect.poll(() => f.account.links).toBeGreaterThan(0);
+  await expect.poll(() => f.room.own.member.state).toBe('linked');
+  await expect(button(page, 'Yep')).toBeVisible();
+  // Live: one ticket, no reconnect line, and it stays that way.
+  await page.waitForTimeout(2500);
+  await expect(page.getByText(/^(Connecting…|Reconnecting…|Trying again in \d+ s|Not connected\.)$/)).toHaveCount(0);
+  expect(tickets.count).toBe(1);
+  expect(rooms.count).toBe(0);
+});
+
+test('a member pressing New room still creates a room as themselves', async ({ page }) => {
+  const f = await fakeRoom(page, newRoom(), { member: 'signed-in' });
+  const rooms = admissions(page);
+  await page.goto('/');
+  await button(page, 'New room').click();
+  await expect(page.getByLabel('Mood')).toBeVisible();
+  await expect.poll(() => f.room.own.member.state).toBe('linked');
+  expect(rooms.count).toBe(1);
+  expect(f.account.starts).toBe(0);
+});
+
+test('when sign-in can’t start, the screen stays and says why; no room is made', async ({ page }) => {
+  await fakeRoom(page, newRoom());
+  const rooms = admissions(page);
+  await page.goto('/?open=profile');
+  await button(page, 'Continue with GoodWatch').click();
+  await expect(page.getByText('GoodWatch sign-in isn’t connected yet.')).toBeVisible();
+  await expect(page.getByTestId('profile-panel')).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/');
+  expect(rooms.count).toBe(0);
 });

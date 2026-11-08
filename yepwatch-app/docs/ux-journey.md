@@ -23,10 +23,11 @@ The prototype is mock-only and was written without tests or error handling. Port
 ### Start page
 
 - **First visit**: the left-aligned headline "Choose something to watch, together." with the big New room and Join a room tiles (not buttons), Continue with GoodWatch for guests, the intro film (`home/IntroFilm`, it must stay), and on desktop web the two install QR cards; phones on the web get the store buttons; the installed app shows no install section.
-- **Returning**: the greeting, the big New room / Join a room tiles, open rooms as poster-fan cards (LIVE, mood, status, faces), then one compact **Decided** row (count and small Tonight posters) that opens the History sheet. Desktop web adds a Get the app card with both QR codes. Guests see Continue with GoodWatch beside the greeting.
+- **Returning**: the greeting, the big New room / Join a room tiles, open rooms as poster-fan cards (LIVE, mood, status, faces), then one compact **Decided** row (count and small Tonight posters) that opens the History sheet. Desktop web adds a Get the app card with both QR codes. Guests see Continue with GoodWatch full width under the tiles (as wide as the tile row).
 - **Blank state** (no rooms): greeting, "What are we watching?", the tiles, History if there's any, Get the app (desktop web).
 - **History**: a sheet over the start page with decided rooms as large poster cards (Tonight's poster, "Tonight · yesterday", title, mood, people), plus archived rooms with Restore and left rooms with Return (production features).
-- **Profile**: a sheet (name field, Continue with GoodWatch for guests, "Signed in with GoodWatch" for members).
+- **Profile**: a sheet (name field, Continue with GoodWatch for guests, "Signed in with GoodWatch" and Log out for members).
+- **GoodWatch sign-in** belongs to the device, never a room: Continue with GoodWatch creates nothing and comes back to the screen it was pressed on (start page, Profile, an invitation, a room). On the web that is one full-page round trip, covered both ways by the GoodWatch transition (mark in a turning amber ring; transform and opacity only); the startup word doesn't play again. The app signs in in the system sheet over the unchanged screen. Rooms you create, join or open while signed in link to your account. Log out ends the link for YepWatch on this device (GoodWatch stays signed in); rooms already linked keep their GoodWatch services.
 
 ### Join
 

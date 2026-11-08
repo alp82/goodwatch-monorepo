@@ -95,14 +95,17 @@ test.describe('background refill', () => {
   });
 });
 
-test.describe('Continue with GoodWatch creates a room that still opens on Mood', () => {
-  test('after the sign-in round trip (full page load back to the room)', async ({ page }) => {
+test.describe('Continue with GoodWatch never creates a room; New room still opens on Mood', () => {
+  test('after the sign-in round trip the start page is back and New room makes a linked room on Mood', async ({ page }) => {
     const f = await fakeRoom(page, newRoom(), { member: 'return' });
     await page.goto('/');
     await button(page, 'Continue with GoodWatch').click();
+    await page.waitForURL((url) => url.pathname === '/');
+    await expect(button(page, 'Continue with GoodWatch')).toHaveCount(0);
+    await button(page, 'New room').click();
     await expect(page.getByLabel('Mood')).toBeVisible();
     await expect(page).toHaveURL(/\/room\/test-room\/mood/);
-    expect(f.room.own.member.state).toBe('linked');
+    await expect.poll(() => f.room.own.member.state).toBe('linked');
     await button(page, 'cheer me up').click();
     await button(page, 'Create room').click();
     await expect(page.getByTestId('room-setup')).toBeVisible();
@@ -110,14 +113,6 @@ test.describe('Continue with GoodWatch creates a room that still opens on Mood',
     await page.reload();
     await expect(page.getByTestId('room-setup')).toBeVisible();
     await expect(page.getByLabel('Mood')).toHaveCount(0);
-  });
-
-  test('when sign-in can’t start, Mood still opens', async ({ page }) => {
-    await fakeRoom(page, newRoom());
-    await page.goto('/');
-    await button(page, 'Continue with GoodWatch').click();
-    await expect(page.getByLabel('Mood')).toBeVisible();
-    await expect(page).toHaveURL(/\/room\/test-room\/mood/);
   });
 });
 

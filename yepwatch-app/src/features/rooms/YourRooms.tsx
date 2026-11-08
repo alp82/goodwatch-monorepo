@@ -131,7 +131,8 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
   const cols = phone ? 2 : Math.max(3, Math.floor((max + gap) / (z(300) + gap)));
   const cardWidth = Math.floor((max - gap * (cols - 1)) / cols);
   const tiles = { newRoom, join, disabled, quiet };
-  const signInButton = signIn ? <View style={{ width: phone ? '100%' : z(360) }}><GoodWatchButton height={z(50)} onPress={signIn} disabled={disabled} quiet={quiet} /></View> : null;
+  // As wide as the New room and Join tiles above it, on every window.
+  const signInButton = signIn ? <GoodWatchButton height={phone ? 54 : z(54)} onPress={signIn} disabled={disabled} quiet={quiet} /> : null;
   const notes = (
     <>
       {archivedRoom ? <Note action={{ label: 'Undo', onPress: undoArchive }}>Room archived</Note> : null}
@@ -147,11 +148,13 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
           <GText bold size={phone ? 34 : z(54)} style={{ letterSpacing: phone ? -1 : -1.6 }}>{title}</GText>
           <GText size={phone ? 17 : z(21)} color={glow.soft}>What are we watching?</GText>
         </BootReveal>
-        <BootReveal index={1}><Tiles {...tiles} height={phone ? 170 : z(240)} /></BootReveal>
-        {signInButton || history ? (
-          <BootReveal index={2} style={{ flexDirection: phone ? 'column' : 'row', gap: 12, alignItems: phone ? 'stretch' : 'center' }}>
-            {signInButton}
-            {history ? <HistoryButton onPress={history} /> : null}
+        <BootReveal index={1} style={{ gap: phone ? 12 : z(16) }}>
+          <Tiles {...tiles} height={phone ? 170 : z(240)} />
+          {signInButton}
+        </BootReveal>
+        {history ? (
+          <BootReveal index={2} style={{ flexDirection: 'row' }}>
+            <HistoryButton onPress={history} />
           </BootReveal>
         ) : null}
         {notes}
@@ -163,11 +166,10 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
     <View testID="home-rooms" style={{ gap: phone ? 28 : z(40) }}>
       <BootReveal index={0} style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
         <GText bold size={phone ? 30 : z(44)} style={{ flex: 1, letterSpacing: -1 }}>{title}</GText>
-        {!phone ? signInButton : null}
       </BootReveal>
-      <BootReveal index={1} style={{ gap: phone ? 12 : 0 }}>
+      <BootReveal index={1} style={{ gap: phone ? 12 : z(16) }}>
         <Tiles {...tiles} height={phone ? 132 : z(184)} />
-        {phone ? signInButton : null}
+        {signInButton}
       </BootReveal>
       {live.length ? (
         <BootReveal index={2} style={{ gap: z(14) }}>
