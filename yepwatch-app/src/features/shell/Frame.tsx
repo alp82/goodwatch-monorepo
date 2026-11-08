@@ -43,6 +43,8 @@ export interface AppFrameProps {
   sheet?: ReactNode;
   /** A page over everything, header included (title details, cheers). */
   overlay?: ReactNode;
+  /** Paints over the backdrop, behind the header and the body (Tonight's poster glow). */
+  backdrop?: ReactNode;
   /** The overlay covers this screen: header and body stay laid out but are inert. */
   covered?: boolean;
   /** The body scrolls (default); voting fills it instead. */
@@ -62,7 +64,7 @@ export const startPage = {
   profile: () => router.push({ pathname: '/', params: { open: 'profile' } }),
 };
 
-export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, covered = false, scroll = true, width = 'page', gap = 0, testID }: AppFrameProps) {
+export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID }: AppFrameProps) {
   const layout = useLayout();
   const { phone, short, gutter, max, z } = layout;
   const insets = useSafeAreaInsets();
@@ -74,7 +76,8 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
   const roomsSheet = roomsOpen ? (rooms?.rooms
     ? <YourRoomsSheet current={rooms.current} rooms={rooms.rooms} loading={rooms.loading} actions={actions} onClose={closeRooms} />
     : <HomeRoomsSheet current={rooms?.current} actions={actions} onClose={closeRooms} />) : null;
-  const shownSheet = sheet ?? roomsSheet;
+  // The pill stays usable over a screen's sheet: Your rooms opens on top, and closing it returns to that sheet.
+  const shownSheet = roomsSheet ?? sheet;
   const top = scroll ? (phone ? 22 : z(40)) : (phone ? 12 : z(24));
   const bottom = (scroll ? (phone ? 32 : z(56)) : (phone ? 12 : z(32))) + (pinned ? 0 : insets.bottom);
   const content = (
@@ -86,6 +89,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
   return (
     <View testID={testID} style={{ flex: 1, backgroundColor: glow.bg }}>
       <BootReveal part="backdrop" pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></BootReveal>
+      {backdrop}
       <CoveredBody covered={covered} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
         <AppHeader {...header} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? startPage.profile} />
       </CoveredBody>

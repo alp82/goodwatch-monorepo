@@ -1,58 +1,57 @@
 /**
- * Building blocks of the room screens (owner-approved prototype 9a2241e3e): the phone screen with a
- * quiet top bar and pinned footer, buttons, switches, heroicons and service logos. GoodWatch look:
- * Gabarito, amber, 6-12 px corners (faces and switches stay round), plain labels.
+ * Building blocks of the room screens (direction D): the room screen in the shared frame, buttons,
+ * labels, switches, agreement dots, icons and service logos. YepWatch look: Gabarito, amber, warm
+ * darks, 10-14 px corners (faces and switches stay round), plain labels; sizes scale with the window.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Animated, Easing, Image, Platform, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useIsFocused, useNavigation } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 import { useQuery } from '@tanstack/react-query';
 import { continuousApi } from '../../core/continuous/api';
 import { useReducedMotion } from '../../components/ui';
 import { AppFrame, type AppFrameProps, type FrameRooms } from '../shell/Frame';
 import type { HeaderMe, HeaderPill } from '../shell/Header';
+import { useLayout } from '../shell/layout';
+import { warm } from '../shell/tokens';
 import { GText, Press, glow } from '../glow/theme';
-import { openPage } from './nav';
 import { useOptionalRoom } from './RoomProvider';
 import type { Kind } from './model';
 import { rankServices, type ServiceChoice } from './services';
 
 export const T = { hero: 40, title: 28, body: 16, small: 13 } as const;
 export const card = { borderRadius: 10, backgroundColor: '#ffffff08', borderWidth: 1, borderColor: '#ffffff12' } as const;
-export const fieldStyle = { color: glow.ink, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: '#ffffff1f', borderRadius: 8, paddingHorizontal: 14, height: 48, fontFamily: 'Gabarito', fontSize: 16 } as const;
 /** Screens keep a phone column on big windows. */
 export const SCREEN_WIDTH = 560;
 
-export function Hero({ children, color = glow.ink, size = T.hero }: { children: ReactNode; color?: string; size?: number }) {
-  return <GText bold size={size} color={color} style={{ letterSpacing: -size * 0.035, lineHeight: size * 1.05 }}>{children}</GText>;
-}
 export function Small({ children, color = glow.muted, bold = false, lines }: { children: ReactNode; color?: string; bold?: boolean; lines?: number }) {
   return <GText size={T.small} color={color} bold={bold} lines={lines}>{children}</GText>;
 }
-/** A small uppercase section label (MOOD, IDEAS, PEOPLE, YOURS). */
-export function Section({ children }: { children: string }) {
-  return <GText size={T.small} bold color={glow.muted}>{children.toUpperCase()}</GText>;
+/** A small spaced uppercase label (YOUR ROOM, SOMEONE PROPOSES, TONIGHT, IDEAS). */
+export function Label({ children, color = glow.muted }: { children: string; color?: string }) {
+  const { z } = useLayout();
+  return <GText bold size={z(12)} color={color} style={{ letterSpacing: 1.4 }}>{children.toUpperCase()}</GText>;
 }
 
 /**
  * A room screen in the shared frame: the sticky app header (wordmark, Back, the room switcher pill,
  * avatar) and the body in the centered column. Inside a room the pill, Your rooms and the avatar come
  * from the room itself; pass `pill`, `rooms` or `me` to say otherwise (null hides the pill). The main
- * action (`footer`) is pinned on phones and sits in the content on bigger windows.
+ * action (`footer`) is pinned on phones and sits in the content on bigger windows. The room's open
+ * sheet (Room, Your services …) shows over the screen that is in front; leaving that screen closes it.
  */
-export function Screen({ back, right, children, footer, footerPlacement, overlay, sheet, testID, scroll = true, covered = false, pill, rooms, me, onProfile, width = SCREEN_WIDTH, gap }: {
+export function Screen({ back, right, children, footer, footerPlacement, overlay, sheet, backdrop, testID, scroll = true, covered = false, pill, rooms, me, onProfile, width = SCREEN_WIDTH, gap }: {
   back?: () => void;
-  /**
-   * A row above the content (RoomBar, Undo). Transitional: the header pill now switches rooms and its
-   * Your rooms sheet opens the Room page.
-   */
+  /** A row above the content (voting's Undo and room bar). */
   right?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
   footerPlacement?: AppFrameProps['footerPlacement'];
   overlay?: ReactNode;
-  /** A Sheet over the body (header stays usable). */
+  /** A Sheet over the body (header stays usable); defaults to the room's open sheet. */
   sheet?: ReactNode;
+  /** Paints behind the header and the body (Tonight's poster glow). */
+  backdrop?: ReactNode;
   testID?: string;
   /** Voting fills the body instead of scrolling it. */
   scroll?: boolean;
@@ -70,11 +69,17 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   const room = useOptionalRoom();
   const view = room?.view ?? null;
   const roomId = room?.id;
+  const focused = useIsFocused();
+  const navigation = useNavigation();
+  const closeSheets = room?.closeSheets;
+  // Another page in front (Mood, Matches) or this one gone back: the sheet doesn't follow.
+  useEffect(() => (closeSheets ? navigation.addListener('blur', closeSheets) : undefined), [navigation, closeSheets]);
   const derived: HeaderPill | null = view ? { label: view.label, state: view.phase === 'decided' ? 'decided' : 'live', fresh: view.newSuggestions } : null;
-  const current = view && roomId ? { roomId, label: view.label, decided: view.phase === 'decided', openRoomPage: () => openPage(roomId, 'room') } : undefined;
+  const current = view && roomId && room ? { roomId, label: view.label, decided: view.phase === 'decided', openRoomPage: () => room.openSheet('room') } : undefined;
+  const roomSheet = room && view && focused && room.sheet ? room.renderSheet(room.sheet) : null;
   const scrollGap = gap ?? (scroll ? 22 : 12);
   return (
-    <AppFrame testID={testID} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet} width={width} gap={scrollGap}
+    <AppFrame testID={testID} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet ?? roomSheet} backdrop={backdrop} width={width} gap={scrollGap}
       header={{ back, pill: pill === undefined ? derived : pill, me: me ?? (view ? { name: view.me.nickname || null, member: view.member } : undefined), onProfile }}
       rooms={rooms ?? (current ? { current } : undefined)}
       footer={footer} footerPlacement={footerPlacement}>
@@ -84,23 +89,66 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   );
 }
 
-export function Button({ label, onPress, disabled, quiet, secondary, icon, name }: { label: string; onPress: () => void; disabled?: boolean; quiet?: boolean; secondary?: boolean; icon?: ReactNode; /** Accessible name when it differs. */ name?: string }) {
+/** The phone dock holds the main action; bigger windows put it in the content. */
+export function usePinnedActions() {
+  const { phone, short } = useLayout();
+  return phone || short;
+}
+
+/** Amber primary or outlined secondary action; it grows to fill its row unless `fixed`. */
+export function Button({ label, onPress, disabled, quiet, secondary, icon, name, fixed, testID }: { label: string; onPress: () => void; disabled?: boolean; quiet?: boolean; secondary?: boolean; icon?: ReactNode; /** Accessible name when it differs. */ name?: string; /** A set width instead of growing. */ fixed?: number; testID?: string }) {
+  const { z } = useLayout();
+  const size = fixed ? { width: fixed } : { flexGrow: 1, flexShrink: 1, flexBasis: 0 };
   return (
-    <Press label={name ?? label} onPress={onPress} disabled={disabled} quiet={quiet} style={{ height: 56, borderRadius: 10, flexDirection: 'row', gap: 10, backgroundColor: secondary ? '#ffffff0f' : glow.amber, borderWidth: secondary ? 1 : 0, borderColor: '#ffffff1f' }}>
+    <Press label={name ?? label} onPress={onPress} disabled={disabled} quiet={quiet}
+      style={{ ...size, minHeight: z(54), borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', gap: 9, backgroundColor: secondary ? warm.faint : glow.amber, borderWidth: 1, borderColor: secondary ? warm.lineStrong : glow.amber }}>
       {icon}
-      <GText bold size={17} color={secondary ? glow.ink : '#201400'}>{label}</GText>
+      <GText bold size={z(17)} color={secondary ? glow.ink : warm.ink} lines={1}>{label}</GText>
+      {testID ? <View testID={testID} /> : null}
     </Press>
   );
 }
-export function TextLink({ label, onPress, color = glow.amber, disabled }: { label: string; onPress: () => void; color?: string; disabled?: boolean }) {
-  return <Press label={label} onPress={onPress} disabled={disabled} style={{ alignSelf: 'flex-start', minHeight: 32 }}><GText size={T.small} bold color={color}>{label}</GText></Press>;
+/** Buttons side by side. */
+export function Actions({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  return <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 10 }, style]}>{children}</View>;
 }
-export function Or() {
+/** The square Room button (three dots) beside a screen's main action: opens the Room sheet. */
+export function RoomButton({ onPress }: { onPress: () => void }) {
+  const { z } = useLayout();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 }}>
-      <View style={{ flex: 1, height: 1, backgroundColor: '#ffffff14' }} /><Small>or</Small><View style={{ flex: 1, height: 1, backgroundColor: '#ffffff14' }} />
+    <Press label="Room" onPress={onPress} style={{ width: z(54), height: z(54), borderRadius: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
+      <Glyph name="dots" size={z(22)} color={glow.soft} />
+    </Press>
+  );
+}
+/** Agreement as dots: one per person needed, amber for each who agrees. Counts only, never names. */
+export function Dots({ n, of }: { n: number; of: number }) {
+  const { z } = useLayout();
+  return (
+    <View accessible={false} style={{ flexDirection: 'row', gap: 6 }}>
+      {Array.from({ length: Math.max(0, of) }, (_, k) => <View key={k} style={{ width: z(26), height: 6, borderRadius: 3, backgroundColor: k < n ? glow.amber : '#ffffff1f' }} />)}
     </View>
   );
+}
+
+const GLYPHS = {
+  link: 'M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5',
+  plus: 'M12 5v14M5 12h14',
+  down: 'm7 10 5 5 5-5',
+  dots: 'M5 12h.01M12 12h.01M19 12h.01',
+  share: 'M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6',
+} as const;
+/** Small stroke glyphs the icon sets don't have. */
+export function Glyph({ name, size = 18, color = glow.soft }: { name: keyof typeof GLYPHS; size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={name === 'dots' ? 3.2 : 2} strokeLinecap="round" strokeLinejoin="round" accessible={false}>
+      <Path d={GLYPHS[name]} />
+    </Svg>
+  );
+}
+
+export function TextLink({ label, onPress, color = glow.amber, disabled }: { label: string; onPress: () => void; color?: string; disabled?: boolean }) {
+  return <Press label={label} onPress={onPress} disabled={disabled} style={{ alignSelf: 'flex-start', minHeight: 32 }}><GText size={T.small} bold color={color}>{label}</GText></Press>;
 }
 /** One quiet message where something else would be: errors, connection, saved actions. */
 export function Note({ children, action, busy = false }: { children: ReactNode; action?: { label: string; onPress: () => void; disabled?: boolean }; busy?: boolean }) {

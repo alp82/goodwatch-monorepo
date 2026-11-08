@@ -1,12 +1,12 @@
-/** /room/<id>: the screen for where the room is (setup, choosing, a proposal, Tonight). */
-import { useCallback, useEffect, useRef, useState } from 'react';
+/** /room/<id>: the screen for where the room is (setup, choosing, a proposal, Tonight); `?sheet=` opens one of its sheets. */
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BackHandler, Platform } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { guestOnly } from '../../core/config';
 import { clearMoodStep, hasMoodStep, markMoodStep } from '../../core/continuous/room-local';
 import { showsProposal } from './model';
 import { openPage, toRooms } from './nav';
-import { useRoom } from './RoomProvider';
+import { isRoomSheet, useRoom } from './RoomProvider';
 import { RoomStatus } from './RoomStatus';
 import { Proposal } from './Decide';
 import { RoomSetup, Waiting } from './Setup';
@@ -15,8 +15,14 @@ import { Screen } from './ui';
 import { Voting } from './Voting';
 
 export function RoomHome() {
-  const { id, state, view, entry, dismissedProposal, signin, memberBusy } = useRoom();
-  const params = useLocalSearchParams<{ signin?: string; fresh?: string }>();
+  const { id, state, view, entry, dismissedProposal, signin, memberBusy, openSheet } = useRoom();
+  const params = useLocalSearchParams<{ signin?: string; fresh?: string; sheet?: string }>();
+  // An address with a sheet (/room/<id>/services and the like): open it over the room, once.
+  useEffect(() => {
+    if (!params.sheet) return;
+    if (isRoomSheet(params.sheet)) openSheet(params.sheet);
+    router.setParams({ sheet: undefined });
+  }, [params.sheet, openSheet]);
   const steps = useRef({ signin: false });
   // The page this arrival opens takes the first paint, not the room underneath. A push lands a frame
   // or so after it's sent, so the placeholder stays until that page has taken over.
@@ -46,14 +52,14 @@ export function RoomHome() {
     if (view.isHost && !view.ideas.length) { setOpening(true); openPage(id, 'mood', { idea: 'new', arrival: '1' }); } // eslint-disable-line react-hooks/set-state-in-effect
     setOpened(true);
   }, [params.fresh, view, id, signinWaiting, memberBusy]);
-  // Guests who just joined pick their services first.
+  // Guests who just joined pick their services first: the room opens with Your services over it,
+  // from its first paint.
   const picksServices = Boolean(view && !view.isHost && !view.member && view.myServiceIds === null && view.phase !== 'decided');
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!picksServices || opened || signinWaiting || memberBusy) return;
     setOpened(true); // eslint-disable-line react-hooks/set-state-in-effect
-    setOpening(true);
-    openPage(id, 'services', { arrival: '1' });
-  }, [picksServices, opened, signinWaiting, memberBusy, id]);
+    openSheet('services');
+  }, [picksServices, opened, signinWaiting, memberBusy, openSheet]);
   const setup = view?.phase === 'setup' || (view?.phase === 'choosing' && !view.me.inRound);
   useFocusEffect(useCallback(() => {
     if (Platform.OS !== 'android' || !setup) return;
@@ -62,7 +68,7 @@ export function RoomHome() {
   }, [setup]));
   if (state.terminal || state.access === null || !view) return <RoomStatus />;
   const moodNext = view.isHost && !view.ideas.length && (params.fresh === '1' || hasMoodStep(id));
-  if (opening || (!opened && (moodNext || picksServices || signinWaiting))) return <Screen testID="room-arriving" back={toRooms}>{null}</Screen>;
+  if (opening || (!opened && (moodNext || signinWaiting))) return <Screen testID="room-arriving" back={toRooms}>{null}</Screen>;
   if (view.phase === 'decided') return <Tonight />;
   if (showsProposal(view, dismissedProposal)) return <Proposal />;
   if (view.phase === 'choosing' && view.me.inRound && !entry.required) return <Voting />;

@@ -1,7 +1,7 @@
 /**
- * One live room for every room screen (the room page and its sub-pages are routes under
- * /room/<id>; they share this one connection). Owns the room's side effects: registry, member
- * sign-in, protocol entry, background refill, and this device's "Keep swiping" choice.
+ * One live room for every room screen (the room, Mood and Matches are routes under /room/<id>; they
+ * share this one connection). Owns the room's side effects: registry, member sign-in, protocol
+ * entry, background refill, this device's "Keep swiping" choice, and the room's open sheets.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { router } from 'expo-router';
@@ -26,6 +26,11 @@ import { previewDrafts, useSettingsSaves, type SettingsSaves } from './settings-
 
 /** Opening a room connects within a moment; only a connection that stays away is worth a line. */
 const CONNECTION_QUIET_MS = 2_500;
+
+/** The room's sheets: Room (its menu), Your services, Streaming, Movies and shows, People. */
+export const ROOM_SHEETS = ['room', 'services', 'streaming', 'kinds', 'people'] as const;
+export type RoomSheet = (typeof ROOM_SHEETS)[number];
+export const isRoomSheet = (value: unknown): value is RoomSheet => typeof value === 'string' && (ROOM_SHEETS as readonly string[]).includes(value);
 
 /** Proposals set aside with Keep swiping, per room and per device, for this app session. */
 const dismissed = new Map<string, number>();
@@ -57,6 +62,14 @@ export interface RoomContextValue {
   saves: SettingsSaves;
   /** The host has seen these friend ideas (opened the Room page): they're no longer NEW on this device. */
   acknowledgeIdeas: (ids: readonly string[]) => void;
+  /** The sheet on top (the focused room screen shows it), or null. */
+  sheet: RoomSheet | null;
+  /** Opens a sheet over the current one; closing it returns to the one underneath. */
+  openSheet: (sheet: RoomSheet) => void;
+  closeSheet: () => void;
+  closeSheets: () => void;
+  /** Draws a sheet (injected by the room layout, so the screens' frame doesn't import the sheets). */
+  renderSheet: (sheet: RoomSheet) => ReactNode;
 }
 const RoomContext = createContext<RoomContextValue | null>(null);
 /** The room when the screen is inside one (the shared frame derives its header from it), else null. */
@@ -69,13 +82,17 @@ export function useRoom() {
   return value;
 }
 
-export function RoomProvider({ id, children }: { id: string; children: ReactNode }) {
+export function RoomProvider({ id, children, renderSheet }: { id: string; children: ReactNode; renderSheet: (sheet: RoomSheet) => ReactNode }) {
   const state = useContinuousRoom(id);
   const entry = useLobbyEntry(state);
   const invitation = useQuery<StoredInvite | null>({ queryKey: ['continuous-invite', id], queryFn: () => loadInvite(id) });
   const confirmed = state.confirmed;
   const [memberBusy, setMemberBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const [sheets, setSheets] = useState<readonly RoomSheet[]>([]);
+  const openSheet = useCallback((sheet: RoomSheet) => setSheets((list) => (list.at(-1) === sheet ? list : [...list.filter((s) => s !== sheet), sheet])), []);
+  const closeSheet = useCallback(() => setSheets((list) => list.slice(0, -1)), []);
+  const closeSheets = useCallback(() => setSheets((list) => (list.length ? [] : list)), []);
   const [dismissedProposal, setDismissed] = useState<number | null>(() => dismissed.get(id) ?? null);
   const latest = useCallback(() => queryClient.getQueryData<CachedRoom>(continuousKey(id)), [id]);
   // state.send is a new function every render; commands go through a stable ref so timers and effects keyed on them don't restart.
@@ -187,6 +204,7 @@ export function RoomProvider({ id, children }: { id: string; children: ReactNode
   const value: RoomContextValue = {
     id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, connectionLate, notice, setNotice,
     dismissedProposal, dismissProposal, reopenProposal, setActivityView: state.setView, saves, acknowledgeIdeas,
+    sheet: sheets.at(-1) ?? null, openSheet, closeSheet, closeSheets, renderSheet,
   };
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
 }

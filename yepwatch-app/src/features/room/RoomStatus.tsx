@@ -1,42 +1,49 @@
-import { View } from 'react-native';
-import { router, usePathname } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
+import { router } from 'expo-router';
 import { developmentNotice } from '../../core/config';
 import { useLate } from '../../core/useLate';
-import { GText, glow } from '../glow/theme';
+import { useLayout } from '../shell/layout';
+import { GText, Icon, glow } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
-import { openPage, toRooms } from './nav';
+import { toRooms } from './nav';
 import { useRoom } from './RoomProvider';
-import { Button, Hero, Note, Screen } from './ui';
+import { Actions, Button, Note, Screen } from './ui';
 
 /** While the room's first read is out, nothing but the page itself: most opens never need words. */
 const OPENING_WORDS_AFTER_MS = 900;
 
-/** Opening, unavailable, ended or expired: the room can't be shown. */
+/** Opening, unavailable, ended or expired: the room can't be shown. Centered, with Your rooms in the content. */
 export function RoomStatus() {
   const { state } = useRoom();
+  const { phone, z } = useLayout();
   const ended = Boolean(state.terminal) || state.access === null;
   const late = useLate(!ended && !state.room.error, OPENING_WORDS_AFTER_MS);
   const quiet = !ended && !state.room.error && !late;
+  const failed = !ended && Boolean(state.room.error);
   const title = ended
     ? state.terminal === 'expired' ? 'This room has expired' : state.access === null ? 'Reopen your invitation' : 'Your room access ended'
-    : state.room.error ? 'Couldn’t load the room' : 'Opening the room…';
+    : failed ? 'Couldn’t load the room' : 'Opening the room…';
   return (
-    <Screen testID="room-status" back={toRooms}
-      footer={<>
-        {!ended && state.room.error ? <Button label="Retry" onPress={() => void state.refetch().catch(() => undefined)} /> : null}
-        {ended || state.room.error ? <Button secondary={!ended} label="Your rooms" onPress={() => router.replace('/')} /> : null}
-      </>}>
-      <View style={{ paddingTop: 80, gap: 12 }}>
-        {quiet ? null : <Hero size={32} color={ended || state.room.error ? glow.ink : glow.soft}>{title}</Hero>}
-      </View>
+    <Screen testID="room-status" back={toRooms} pill={null} width={z(640)}>
+      {quiet ? null : (
+        <View style={{ alignItems: 'center', gap: z(20), paddingTop: phone ? 24 : z(48) }}>
+          {ended || failed ? <Icon name="clock" size={z(44)} color={glow.amber} /> : <ActivityIndicator testID="room-opening" color={glow.amber} size="large" />}
+          <GText bold size={phone ? 32 : z(46)} color={ended || failed ? glow.ink : glow.soft} style={{ textAlign: 'center', letterSpacing: -1, lineHeight: (phone ? 32 : z(46)) * 1.1 }}>{title}</GText>
+          {ended || failed ? (
+            <Actions style={{ width: phone ? '100%' : z(320), paddingTop: 8 }}>
+              {failed ? <Button label="Retry" onPress={() => void state.refetch().catch(() => undefined)} /> : null}
+              <Button secondary={failed} label="Your rooms" onPress={() => router.replace('/')} />
+            </Actions>
+          ) : null}
+        </View>
+      )}
     </Screen>
   );
 }
 
 /** Connection, saved actions and errors, in one quiet line above the screen's content. */
 export function RoomNotes() {
-  const { id, view, state, entry, notice, setNotice, connectionLate } = useRoom();
-  const onServices = usePathname().endsWith('/services');
+  const { view, state, entry, notice, setNotice, connectionLate, sheet, openSheet } = useRoom();
   if (!(state.error || state.privateError || entry.error || state.pending || connectionLate || notice || developmentNotice)) return null;
   // Nobody brings a service (or the last one would go): ask for services, not an error.
   const noServices = state.errorCode === 'needs_context' && !state.pending;
@@ -67,7 +74,7 @@ export function RoomNotes() {
           onPress: () => {
             setNotice('');
             if (state.pending) void state.send();
-            else if (noServices) { state.clearError(); if (!onServices) openPage(id, 'services'); }
+            else if (noServices) { state.clearError(); if (sheet !== 'services') openSheet('services'); }
             else if (ideaLimit) state.clearError();
             else if (entry.error) void entry.retry();
             else { void state.refetch().catch(() => undefined); state.reconnect(); }

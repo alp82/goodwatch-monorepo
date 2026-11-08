@@ -1,49 +1,105 @@
-/** Before Start: the host's room page, and the friends' waiting screen. */
-import { useRef, useState } from 'react';
+/**
+ * The room before Start (direction D): the ideas are the headline (left column on wide windows),
+ * the share row, people, movies and shows, streaming and the action beside them (below on phones).
+ * The host starts; friends wait for the host.
+ */
+import { useRef, useState, type ReactNode } from 'react';
 import { TextInput, View } from 'react-native';
 import { guestOnly } from '../../core/config';
 import { GoodWatchButton } from '../home/Landing';
-import { GoodWatchMark } from '../shell/marks';
-import { FaceStack } from '../shell/parts';
-import { GText, glow } from '../glow/theme';
+import { Or } from '../home/start-parts';
+import { LiveDot } from '../shell/parts';
+import { useLayout } from '../shell/layout';
+import { warm } from '../shell/tokens';
+import { GText, Icon, glow } from '../glow/theme';
 import { NAME_MAX } from './model';
-import { openPage, toRooms } from './nav';
-import { ChangeRow, IdeaList, RoomBar, RoomLink } from './parts';
+import { toRooms } from './nav';
+import { Chip, IdeaStack, PeopleRow, ShareRow, fieldStyleFor, useAcknowledgeShownIdeas } from './parts';
 import { useRoom } from './RoomProvider';
 import { RoomNotes } from './RoomStatus';
 import { namesLine, servicesIn } from './services';
-import { Button, KindIcons, Logos, Or, Section, Small, Screen, fieldStyle, kindsLabel, useServices } from './ui';
+import { Actions, Button, Glyph, KindIcons, Label, Logos, RoomButton, Screen, Small, kindsLabel, usePinnedActions, useServices } from './ui';
 
-/** Movies and shows, and the room's streaming, as quiet rows. */
-export function RoomRows({ kindsEditable }: { kindsEditable: boolean }) {
-  const { id, view } = useRoom();
+/** Share, people, movies and shows, streaming: whole-row controls that open the room's sheets. */
+function RoomDetails() {
+  const { view, inviteUrl, openSheet } = useRoom();
+  const { z } = useLayout();
   const { all } = useServices(view?.country);
   if (!view) return null;
   const on = servicesIn(all, view.enabledServiceIds);
+  const kinds = kindsLabel(view.kinds);
   return (
-    <View style={{ gap: 2 }}>
-      <ChangeRow label={`${kindsLabel(view.kinds)}, change`} onPress={kindsEditable ? () => openPage(id, 'kinds') : undefined}>
-        <KindIcons kinds={view.kinds} size={20} /><GText color={glow.soft}>{kindsLabel(view.kinds)}</GText>
-      </ChangeRow>
+    <View style={{ gap: z(10) }}>
+      {inviteUrl || view.isHost ? <ShareRow /> : null}
+      <PeopleRow onPress={() => openSheet('people')} />
+      <Chip label={`${kinds}, ${view.isHost ? 'change' : 'view'}`} action={view.isHost ? 'Change' : undefined} onPress={() => openSheet('kinds')}>
+        <KindIcons kinds={view.kinds} size={z(20)} color={glow.soft} />
+        <GText size={z(15)} color={glow.soft} style={{ flex: 1 }}>{kinds}</GText>
+      </Chip>
       {on.length || !view.isHost ? (
-        <ChangeRow label={`${on.length ? namesLine(on) : 'Streaming'}, change`} onPress={() => openPage(id, 'streaming')}>
-          <Logos services={on} /><GText color={glow.soft} lines={1} style={{ flex: 1 }}>{on.length ? namesLine(on) : 'Streaming'}</GText>
-        </ChangeRow>
+        <Chip label={`${on.length ? namesLine(on) : 'Streaming'}, change`} action="Change" onPress={() => openSheet('streaming')}>
+          <Logos services={on} size={z(24)} />
+          <GText size={z(15)} color={glow.soft} lines={1} style={{ flex: 1 }}>{on.length ? namesLine(on) : 'Streaming'}</GText>
+        </Chip>
       ) : (
-        <ChangeRow label="Streaming services, add" warn onPress={() => openPage(id, 'services')}>
-          <GText color={glow.amber}>Streaming services</GText>
-        </ChangeRow>
+        <Chip warn label="Streaming services, add" action="Add" onPress={() => openSheet('services')}>
+          <Glyph name="plus" size={z(18)} color={glow.amber} />
+          <GText bold size={z(15)} color={glow.amber} style={{ flex: 1 }}>Streaming services</GText>
+        </Chip>
       )}
     </View>
   );
 }
 
-/** The host's room before Start: share card, the ideas (MOOD), quiet rows, the host's name. One action: Start. */
+/**
+ * The shared layout: headline (room label and ideas) and the details with the actions, side by side
+ * from 900 px. `actions` sit in the side column, or in the phone dock when `pinned`.
+ */
+function RoomBefore({ testID, label, actions, pinned, extra }: { testID: string; label: string; actions: ReactNode; pinned: boolean; extra?: ReactNode }) {
+  const { phone, wide, max, z } = useLayout();
+  const gap = z(56);
+  const side = Math.min(z(420), max * 0.4);
+  const headline = (
+    <View style={{ gap: z(16) }}>
+      <Label color={glow.amber}>{label}</Label>
+      <IdeaStack />
+    </View>
+  );
+  const column = (
+    <View style={{ gap: z(20) }}>
+      <RoomDetails />
+      {extra}
+      {pinned ? null : actions}
+    </View>
+  );
+  return (
+    <Screen testID={testID} back={toRooms} width="page" gap={0} footer={pinned ? actions : undefined}>
+      <RoomNotes />
+      {wide ? (
+        <View style={{ flexDirection: 'row', gap, alignItems: 'flex-start', paddingTop: 4 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>{headline}</View>
+          <View style={{ width: side }}>{column}</View>
+        </View>
+      ) : (
+        <View style={{ gap: phone ? 30 : z(36), paddingTop: 4 }}>
+          {headline}
+          {column}
+        </View>
+      )}
+    </Screen>
+  );
+}
+
+/** The host's room before Start: one action, Start, beside the Room button. A guest host names themselves first. */
 export function RoomSetup() {
-  const { view, cmd, state, latest, disabled, signin, memberBusy } = useRoom();
+  const { view, cmd, state, latest, disabled, signin, memberBusy, openSheet } = useRoom();
+  const { z } = useLayout();
+  const pinned = usePinnedActions();
   const [name, setName] = useState('');
+  const [focus, setFocus] = useState(false);
   // A name sent on blur may still be in flight when Start is pressed: Start waits for it.
   const renaming = useRef<Promise<boolean> | null>(null);
+  useAcknowledgeShownIdeas();
   if (!view) return null;
   const typed = name.trim();
   const named = Boolean(view.me.nickname || typed);
@@ -59,50 +115,41 @@ export function RoomSetup() {
     await cmd.start();
   };
   const ready = named && view.enabledServiceIds.length > 0 && view.kinds.length > 0 && Boolean(view.country);
-  return (
-    <Screen testID="room-setup" back={toRooms} footer={<Button label="Start" disabled={!ready || Boolean(state.pending) || state.privateError} onPress={() => void start()} />}>
-      <RoomNotes />
-      <RoomLink />
-      <View style={{ gap: 8, paddingVertical: 12 }}>
-        <Section>Mood</Section>
-        <IdeaList />
-      </View>
-      <RoomRows kindsEditable />
-      {view.needName && (
-        <View style={{ gap: 6 }}>
-          <Small>Your name</Small>
-          <TextInput accessibilityLabel="Your name" value={name} onChangeText={setName} onBlur={rename} onSubmitEditing={rename} maxLength={NAME_MAX} autoCapitalize="words" autoComplete="nickname"
-            placeholder="Your name" placeholderTextColor={glow.muted} returnKeyType="done" style={fieldStyle} />
-          {!guestOnly && <><Or /><GoodWatchButton disabled={memberBusy || disabled} onPress={() => void signin()} /></>}
-        </View>
-      )}
-    </Screen>
+  const actions = (
+    <Actions>
+      <RoomButton onPress={() => openSheet('room')} />
+      <Button label="Start" icon={<Icon name="play" size={16} color={warm.ink} />} disabled={!ready || Boolean(state.pending) || state.privateError} onPress={() => void start()} />
+    </Actions>
   );
+  const nameField = view.needName ? (
+    <View style={{ gap: z(10) }}>
+      <Small>Your name</Small>
+      <TextInput accessibilityLabel="Your name" value={name} onChangeText={setName} onFocus={() => setFocus(true)} onBlur={() => { setFocus(false); rename(); }} onSubmitEditing={rename}
+        maxLength={NAME_MAX} autoCapitalize="words" autoComplete="nickname" placeholder="Your name" placeholderTextColor={warm.placeholder} returnKeyType="done" selectionColor={glow.amber}
+        style={fieldStyleFor(z, focus)} />
+      {!guestOnly && <><Or /><GoodWatchButton disabled={memberBusy || disabled} onPress={() => void signin()} /></>}
+    </View>
+  ) : null;
+  return <RoomBefore testID="room-setup" label="Your room" pinned={pinned} actions={actions} extra={nameField} />;
 }
 
-/** A friend's room before Start (or while joining a running round): the ideas, their services, waiting for the host. */
+/** A friend's room before Start (or while joining a running round): the same room, waiting for the host. */
 export function Waiting() {
-  const { id, view, entry } = useRoom();
-  const { all } = useServices(view?.country);
+  const { view, entry, openSheet } = useRoom();
+  const { z } = useLayout();
   if (!view) return null;
   const owner = view.hostName || 'Your friend';
-  const mine = view.myServiceIds ?? [];
-  const list = servicesIn(all, mine);
-  return (
-    <Screen testID="waiting" back={toRooms} right={<RoomBar />}
-      footer={<View style={{ height: 56, alignItems: 'center', justifyContent: 'center' }}><Small>{view.phase === 'setup' ? `Waiting for ${view.hostName || 'the host'} to start` : entry.working ? 'Joining…' : 'Joining the round…'}</Small></View>}>
-      <RoomNotes />
-      <View style={{ gap: 10, paddingTop: 40 }}>
-        <Small bold>{`${owner.toUpperCase()}’S ROOM`}</Small>
-        <IdeaList />
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <FaceStack people={view.faces} size={24} max={6} /><KindIcons kinds={view.kinds} size={16} color={glow.muted} /><Small>{kindsLabel(view.kinds)}</Small>
+  const waiting = view.phase === 'setup' ? `Waiting for ${view.hostName || 'the host'} to start` : entry.working ? 'Joining…' : 'Joining the round…';
+  const actions = (
+    <View style={{ gap: 10 }}>
+      <Actions>
+        <RoomButton onPress={() => openSheet('room')} />
+        <View accessibilityLiveRegion="polite" style={{ flex: 1, minHeight: z(54), borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 12, backgroundColor: warm.faint }}>
+          <LiveDot /><GText size={z(15)} color={glow.soft} lines={1}>{waiting}</GText>
         </View>
-      </View>
-      <ChangeRow label={`${list.length ? namesLine(list) : 'Your services'}, change`} onPress={() => openPage(id, 'services')}>
-        {list.length ? <><Logos services={list} /><GText color={glow.soft} lines={1} style={{ flex: 1 }}>{namesLine(list)}</GText></> : <GText color={glow.amber} style={{ flex: 1 }}>Your services</GText>}
-        {view.member ? <GoodWatchMark size={16} /> : null}
-      </ChangeRow>
-    </Screen>
+      </Actions>
+      <Actions><Button secondary label="Your services" onPress={() => openSheet('services')} /></Actions>
+    </View>
   );
+  return <RoomBefore testID="waiting" label={`${owner}’s room`} pinned={false} actions={actions} />;
 }
