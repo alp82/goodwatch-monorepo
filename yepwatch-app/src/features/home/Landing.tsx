@@ -27,14 +27,18 @@ export function GoodWatchButton({ onPress, disabled, quiet, height = 50 }: { onP
   );
 }
 
-export interface LandingActions extends TileActions { signIn?: () => void }
+export interface LandingActions extends TileActions {
+  signIn?: () => void;
+  /** A GoodWatch sign-in is already starting: the button waits. */
+  signingIn?: boolean;
+}
 
 export function Landing(actions: LandingActions) {
   const phase = useContext(BootPhase);
   const { wide, phone, width, max, z } = useLayout();
   // The film starts as the page appears, not behind the boot word.
   const obscured = phase === 'boot';
-  const signIn = actions.signIn ? <GoodWatchButton height={z(54)} onPress={actions.signIn} disabled={actions.disabled} quiet={actions.quiet} /> : null;
+  const signIn = actions.signIn ? <GoodWatchButton height={z(54)} onPress={actions.signIn} disabled={actions.disabled || actions.signingIn} quiet={actions.quiet && !actions.signingIn} /> : null;
   if (wide) {
     const gap = z(64);
     const col = (max - gap) / 2;

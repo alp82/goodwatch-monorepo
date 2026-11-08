@@ -9,12 +9,17 @@ import { memberReturnUri, nativeAccountCallback, nativeMemberCallback, secureAut
 const key = 'yepwatch.v2.member-intent';
 const accountIntentKey = 'yepwatch.v3.account-intent';
 const sessionKey = 'yepwatch.v3.member-session';
+const nameKey = 'yepwatch.v3.member-name';
 const secure = { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY };
 
 /** The sealed GoodWatch session of this device (the API seals it; the app only keeps it). */
 export function readSession() { return SecureStore.getItemAsync(sessionKey); }
 export function saveSession(session: string) { return SecureStore.setItemAsync(sessionKey, session, secure); }
 export function clearSession() { return SecureStore.deleteItemAsync(sessionKey); }
+/** The name of this device's last GoodWatch sign-in ('' without one), kept until Log out: a lapsed session shows it. */
+export function readMemberName() { return SecureStore.getItemAsync(nameKey).catch(() => null); }
+export function rememberMemberName(name: string) { return SecureStore.setItemAsync(nameKey, name, secure).catch(() => undefined); }
+export function forgetMemberName() { return SecureStore.deleteItemAsync(nameKey).catch(() => undefined); }
 
 async function challenge() {
   const bytes = await Crypto.getRandomBytesAsync(32);

@@ -292,7 +292,8 @@ export function Entrance({ invite, open: request, from }: {
     const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(saved.code ? {} : { fresh: '1' }) } };
     go(target, Boolean(saved.code));
   }
-  const known = home.nickname ?? (account.member ? account.name : null);
+  // A lapsed sign-in keeps its name: the page doesn't turn back into a guest's mid-session.
+  const known = home.nickname ?? (account.member || account.lapsed ? account.name : null);
   const locked = busy || account.busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
   // A panel asked for from another screen (a room's header) closes back to that screen.
   const requestedFrom = useRef(Boolean(request && request !== 'new'));
@@ -329,7 +330,8 @@ export function Entrance({ invite, open: request, from }: {
   const signInFrom = (path: string) => { setError(''); void account.signIn(path); };
   const fromRoom = from?.match(/^\/room\/([A-Za-z0-9_-]{1,64})(?:\/|$)/)?.[1];
   const roomFrom = fromRoom ? `/room/${fromRoom}` : null;
-  const signIn = guestOnly || account.member ? undefined : () => signInFrom('/');
+  // The start page's big button is for guests; a lapsed sign-in reconnects quietly from Profile.
+  const signIn = guestOnly || account.member || account.lapsed ? undefined : () => signInFrom('/');
   const signInFromProfile = guestOnly || account.member ? undefined : () => signInFrom(roomFrom ?? '/?open=profile');
   const openJoin = () => { setError(''); if (!resumeAdmission()) setPanel('join'); };
   // Another screen's header asked for New room: it starts once the saved request is known.
@@ -373,7 +375,7 @@ export function Entrance({ invite, open: request, from }: {
   const sheet = shown === 'create' ? (
     <RetrySheet action={actionLabel('Create room', 'Retry room request')} busy={locked} error={error} retry={() => void enter(false, false, undefined, admission?.request.nickname ?? known ?? '')} extra={notices} onClose={closePanel} />
   ) : shown === 'profile' ? (
-    <ProfileSheet nickname={known} member={account.member} signIn={signInFromProfile} logOut={account.member ? () => void account.logOut() : undefined}
+    <ProfileSheet nickname={known} member={account.member} lapsed={account.lapsed} signIn={signInFromProfile} logOut={account.member || account.lapsed ? () => void account.logOut() : undefined}
       busy={locked || home.loadingRooms} error={error || account.error} onClose={closePanel}
       save={(name) => { void home.setNickname(name).then(() => { if (invite) setPanel('join'); else closePanel(); }); }} />
   ) : shown === 'history' ? (
@@ -388,12 +390,12 @@ export function Entrance({ invite, open: request, from }: {
       {returning ? (
         <YourRooms title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
           rooms={home.active} decisions={home.decisions} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create}
-          join={openJoin} retry={home.retry} history={history} signIn={signIn}
+          join={openJoin} retry={home.retry} history={history} signIn={signIn} signingIn={account.busy}
           archive={(roomId) => { home.archive(roomId); setJustArchived(roomId); }}
           archivedRoom={Boolean(justArchived)} undoArchive={() => { if (justArchived) home.restore(justArchived); setJustArchived(null); }}
           disabled={checkingInvite} quiet={busy} />
       ) : (
-        <Landing newRoom={create} join={openJoin} signIn={signIn} disabled={checkingInvite} quiet={busy} />
+        <Landing newRoom={create} join={openJoin} signIn={signIn} signingIn={account.busy} disabled={checkingInvite} quiet={busy} />
       )}
       {!shown && (error || account.error) ? <GText size={14} color="#fca5a5">{error || account.error}</GText> : null}
     </AppFrame>

@@ -100,7 +100,7 @@ function HistoryButton({ onPress }: { onPress: () => void }) {
   );
 }
 
-export function YourRooms({ title, rooms, decisions, unavailable, loading, open, archive, archivedRoom, undoArchive, newRoom, join, retry, history, signIn, disabled, quiet }: {
+export function YourRooms({ title, rooms, decisions, unavailable, loading, open, archive, archivedRoom, undoArchive, newRoom, join, retry, history, signIn, signingIn = false, disabled, quiet }: {
   title: string;
   /** Rooms on the start page; the open ones become cards. */
   rooms: readonly HomeRoom[];
@@ -119,6 +119,8 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
   history?: () => void;
   /** Guests: Continue with GoodWatch. */
   signIn?: () => void;
+  /** A GoodWatch sign-in is already starting: the button waits. */
+  signingIn?: boolean;
   disabled: boolean;
   /** A room is opening: the buttons rest without dimming. */
   quiet: boolean;
@@ -132,7 +134,7 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
   const cardWidth = Math.floor((max - gap * (cols - 1)) / cols);
   const tiles = { newRoom, join, disabled, quiet };
   // As wide as the New room and Join tiles above it, on every window.
-  const signInButton = signIn ? <GoodWatchButton height={phone ? 54 : z(54)} onPress={signIn} disabled={disabled} quiet={quiet} /> : null;
+  const signInButton = signIn ? <GoodWatchButton height={phone ? 54 : z(54)} onPress={signIn} disabled={disabled || signingIn} quiet={quiet && !signingIn} /> : null;
   const notes = (
     <>
       {archivedRoom ? <Note action={{ label: 'Undo', onPress: undoArchive }}>Room archived</Note> : null}

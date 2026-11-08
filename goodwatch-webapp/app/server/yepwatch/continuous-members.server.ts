@@ -569,9 +569,10 @@ export class ContinuousMembers {
 			const tokens = await this.issuer.refresh({ refreshToken: session.refreshToken })
 			return { session: await this.sessionFrom(tokens, session), renewed: true }
 		} catch (e) {
-			// GoodWatch unavailable: keep the session for a later try. Anything else ended it.
-			if (e instanceof RoomError && e.code === "busy") throw e
-			return null
+			// Only a definitive refusal (revoked grant, another account) ends the session. Anything else
+			// (throttled, down, unreachable, a garbled reply) keeps it for a later try.
+			if (e instanceof RoomError && ["unauthorized", "member_required"].includes(e.code)) return null
+			throw e instanceof RoomError && e.code === "busy" ? e : new RoomError("busy", "GoodWatch is temporarily unavailable; try again", 503, true)
 		}
 	}
 	/** How long a browser keeps the session cookie. */
@@ -582,7 +583,15 @@ export class ContinuousMembers {
 	/** This device's sign-in, without calling GoodWatch while the session is current. */
 	async account(raw: string | null | undefined): Promise<{ status: AccountStatus; session: MemberSession | null; changed: boolean }> {
 		const opened = this.openSession(raw)
-		const fresh = await this.freshSession(opened)
+		let fresh
+		try {
+			fresh = await this.freshSession(opened)
+		} catch (e) {
+			// Still signed in; GoodWatch just couldn't renew it now. Keep the session untouched.
+			if (opened && e instanceof RoomError && e.code === "busy")
+				return { status: { state: "member", displayName: opened.displayName, unavailable: true }, session: opened, changed: false }
+			throw e
+		}
 		if (!fresh) return { status: { state: "guest", displayName: null }, session: null, changed: Boolean(raw) }
 		return {
 			status: { state: "member", displayName: fresh.session.displayName },

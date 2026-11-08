@@ -19,7 +19,7 @@ const secret = "test-account-secret-at-least-thirty-two"
 const api = (path: string) => `${origin}/api/yepwatch/v1/proposal${path}`
 
 /** A GoodWatch issuer double: codes become short-lived grants; refresh tokens rotate when offline access is on. */
-function setup(options: { offline?: boolean; lifetime?: number } = {}) {
+function setup(options: { offline?: boolean; lifetime?: number; refreshReply?: () => Response | Promise<Response> } = {}) {
 	const config = releaseMemberConfig({ ...env, YEPWATCH_MEMBER_OFFLINE_ACCESS: options.offline ? "true" : "false" }, origin)!
 	const repo = new ProposalMemoryRepository()
 	const service = new ProposalService(repo, proposalFixtureCatalog, secret)
@@ -43,6 +43,7 @@ function setup(options: { offline?: boolean; lifetime?: number } = {}) {
 		if (new URL(request.url).pathname === "/api/auth/oauth2/token") {
 			const form = new URLSearchParams(await request.text())
 			calls.token.push(form)
+			if (form.get("grant_type") === "refresh_token" && options.refreshReply) return options.refreshReply()
 			const accessToken = `grant-${++issued}`
 			const lifetime = options.lifetime ?? 300
 			grants.set(accessToken, Date.now() + lifetime * 1000)
@@ -195,4 +196,54 @@ test("an expired session renews with a refresh token when offline access is on, 
 	const ended = await short.handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${signed.value}` } }))
 	assert.equal((await ended.json()).state, "guest")
 	assert.equal(cookies(ended)[MEMBER_COOKIE].maxAge, 0)
+})
+
+test("a browser cookie renewed on a request that claims to be native is never returned to script", async () => {
+	const { handler } = setup({ offline: true, lifetime: 1 })
+	const session = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE]
+	const renewed = await handler(new Request(api("/account"), {
+		headers: { origin, cookie: `${MEMBER_COOKIE}=${session.value}`, "x-yepwatch-client": "native" },
+	}))
+	const body = await renewed.json()
+	assert.equal(body.state, "member")
+	assert.equal(body.session, undefined, "the HttpOnly session never appears in the JSON body")
+	assert.ok(cookies(renewed)[MEMBER_COOKIE]?.value, "the renewal goes back as a cookie")
+})
+
+test("an app session sent in the header still gets its renewal in the body", async () => {
+	const { handler } = setup({ offline: true, lifetime: 1 })
+	const session = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE]
+	const renewed = await handler(new Request(api("/account"), { headers: { "x-yepwatch-member": session.value, "x-yepwatch-client": "native" } }))
+	const body = await renewed.json()
+	assert.equal(body.state, "member")
+	assert.ok(body.session && body.session !== session.value)
+	assert.equal(cookies(renewed)[MEMBER_COOKIE], undefined)
+})
+
+for (const [label, reply] of [
+	["throttled", () => new Response("slow down", { status: 429, headers: { "retry-after": "30" } })],
+	["down", () => new Response("bad gateway", { status: 502 })],
+	["unreachable", () => { throw new TypeError("fetch failed") }],
+	["garbled", () => Response.json({ nope: true })],
+] as const) {
+	test(`a renewal while GoodWatch is ${label} keeps the session and says so instead of signing out`, async () => {
+		let failing = false
+		const { handler } = setup({ offline: true, lifetime: 1, refreshReply: () => { if (failing) return reply(); throw new Error("unreachable in this test") } })
+		const session = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE]
+		failing = true
+		const status = await handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${session.value}` } }))
+		const body = await status.json()
+		assert.equal(body.state, "member", "a temporary failure is not a sign-out")
+		assert.equal(body.unavailable, true)
+		assert.equal(body.displayName, "Alper")
+		assert.equal(cookies(status)[MEMBER_COOKIE], undefined, "the cookie is left as it is")
+	})
+}
+
+test("a renewal GoodWatch definitively refuses (invalid_grant) ends the session", async () => {
+	const { handler } = setup({ offline: true, lifetime: 1, refreshReply: () => Response.json({ error: "invalid_grant" }, { status: 400 }) })
+	const session = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE]
+	const status = await handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${session.value}` } }))
+	assert.equal((await status.json()).state, "guest")
+	assert.equal(cookies(status)[MEMBER_COOKIE].maxAge, 0)
 })

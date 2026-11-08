@@ -66,10 +66,13 @@ const union = (s: FakeSnapshot) => [...new Set(s.shared.participants.filter((p) 
 /**
  * `member: 'return'`: Continue with GoodWatch "signs in" at once: this browser's account becomes a
  * member and comes straight back to the page it left (as the real round trip does, a full page load).
- * Rooms opened while signed in link to it. `member: 'signed-in'` starts signed in.
+ * Rooms opened while signed in link to it. `member: 'signed-in'` starts signed in; `member: 'lapsed'`
+ * signed in here before (as Alex) and the session has run out. `slowStart` holds the sign-in start for
+ * that many ms; `linkFailures` answers that many room links with a retryable 503 first.
  */
-export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' } = {}) {
+export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' | 'lapsed'; slowStart?: number; linkFailures?: number } = {}) {
   const account = { member: opts.member === 'signed-in', starts: 0, links: 0, logouts: 0 };
+  let linkFailures = opts.linkFailures ?? 0;
   // The room's lifetime idea searches (24 on the server); removing an idea doesn't give one back.
   let interpretations = opts.interpretations ?? 0;
   const commands: CommandEnvelope[] = [];
@@ -155,6 +158,7 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     if (path.endsWith('/catalog/metadata')) return route.fulfill({ json: metadata });
     if (path.endsWith('/account/start') && opts.member) {
       account.starts++;
+      if (opts.slowStart) await new Promise((r) => setTimeout(r, opts.slowStart));
       account.member = true;
       const { returnTo } = route.request().postDataJSON() as { returnTo: string };
       return route.fulfill({ json: { authorizeUrl: returnTo, state: 'acct.fixture', expiresAt: Date.now() + 600_000 } });
@@ -163,6 +167,7 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     if (path.endsWith('/proposal/account')) return route.fulfill({ json: account.member ? { state: 'member', displayName: 'Alex' } : { state: 'guest', displayName: null } });
     if (path.endsWith('/member/link')) {
       account.links++;
+      if (linkFailures > 0) { linkFailures--; return route.fulfill({ status: 503, json: { error: { code: 'busy', message: 'GoodWatch is temporarily unavailable; your room is saved', retryable: true } } }); }
       if (!account.member) return route.fulfill({ status: 403, json: { error: { code: 'member_required', message: 'Sign in with GoodWatch again', retryable: false } } });
       const prefill = { country: 'DE', serviceIds: [8], savedProgressAvailable: false };
       if (room.own.member.state !== 'linked') {
@@ -222,7 +227,8 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     return route.fulfill({ status: 404, json: { error: { code: 'not_found', message: 'Not in this fixture', retryable: false } } });
   };
   // A browser that signed in before remembers that it may hold a session (the cookie itself is HttpOnly).
-  if (opts.member === 'signed-in') await page.addInitScript(() => localStorage.setItem('yepwatch.member-hint', '1'));
+  if (opts.member === 'signed-in' || opts.member === 'lapsed') await page.addInitScript(() => localStorage.setItem('yepwatch.member-hint', '1'));
+  if (opts.member === 'lapsed') await page.addInitScript(() => localStorage.setItem('yepwatch.member-name', 'Alex'));
   await page.route('**/api/yepwatch/v1/proposal/**', handler);
   return {
     room,

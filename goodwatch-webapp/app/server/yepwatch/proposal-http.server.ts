@@ -91,10 +91,14 @@ export function createProposalHandler(
 		const nativeRequest = () => request.headers.has(MEMBER_SESSION_HEADER) || request.headers.get("x-yepwatch-client") === "native"
 		/** The device session: native apps send it in a header, browsers in the cookie. */
 		const memberSession = () => request.headers.get(MEMBER_SESSION_HEADER) ?? cookie(MEMBER_COOKIE)
-		/** Browsers get a renewed or ended session as a cookie; apps get the renewed session in the body. */
+		/**
+		 * Browsers get a renewed or ended session as a cookie; apps get the renewed session in the body.
+		 * Only a session the request itself sent in the header goes back in the body: a cookie session
+		 * stays HttpOnly whatever the request claims to be.
+		 */
 		const keepSession = (session: MemberSession | null, changed: boolean) => {
 			if (!changed || !options.members) return undefined
-			if (nativeRequest()) return session ? options.members.sealSession(session) : undefined
+			if (request.headers.has(MEMBER_SESSION_HEADER)) return session ? options.members.sealSession(session) : undefined
 			if (session) setCookie(MEMBER_COOKIE, options.members.sealSession(session), options.members.sessionMaxAge(session))
 			else setCookie(MEMBER_COOKIE, "", 0)
 			return undefined

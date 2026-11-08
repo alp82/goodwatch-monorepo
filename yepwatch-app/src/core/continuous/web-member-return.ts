@@ -33,3 +33,16 @@ export function rememberMemberHint() {
 export function forgetMemberHint() {
   try { if (typeof window !== 'undefined') window.localStorage.removeItem(hintKey); } catch { /* The next read just asks. */ }
 }
+
+/** A presentation hint only: the name to keep showing when this browser's sign-in has lapsed. */
+const nameKey = 'yepwatch.member-name';
+export function readMemberHintName(): string | null {
+  if (typeof window === 'undefined') return null;
+  try { return window.localStorage.getItem(nameKey); } catch { return null; }
+}
+export function rememberMemberHintName(name: string) {
+  try { if (typeof window !== 'undefined') window.localStorage.setItem(nameKey, name); } catch { /* Lapsed just shows as a guest. */ }
+}
+export function forgetMemberHintName() {
+  try { if (typeof window !== 'undefined') window.localStorage.removeItem(nameKey); } catch { /* Presentation only. */ }
+}

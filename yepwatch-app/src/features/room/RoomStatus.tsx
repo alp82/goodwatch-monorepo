@@ -43,8 +43,8 @@ export function RoomStatus() {
 
 /** Connection, saved actions and errors, in one quiet line above the screen's content. */
 export function RoomNotes() {
-  const { view, state, entry, notice, setNotice, connectionLate, sheet, openSheet } = useRoom();
-  if (!(state.error || state.privateError || entry.error || state.pending || connectionLate || notice || developmentNotice)) return null;
+  const { view, state, entry, notice, setNotice, connectionLate, sheet, openSheet, linkFailed, retryLink } = useRoom();
+  if (!(state.error || state.privateError || entry.error || state.pending || connectionLate || notice || linkFailed || developmentNotice)) return null;
   // Nobody brings a service (or the last one would go): ask for services, not an error.
   const noServices = state.errorCode === 'needs_context' && !state.pending;
   const ideaLimit = state.errorCode === 'limit_reached' && !state.pending;
@@ -53,7 +53,7 @@ export function RoomNotes() {
       : state.pending ? 'Your choice is awaiting confirmation.'
       : noServices ? 'Pick a streaming service'
       : ideaLimit ? ((view?.ideas.length ?? 0) >= IDEA_LIMITS.perRoom ? `Up to ${IDEA_LIMITS.perRoom} ideas. Remove one first.` : 'No more new ideas in this room')
-      : state.error || connectionText());
+      : state.error || connectionText() || (linkFailed ? 'Couldn’t connect GoodWatch to this room.' : ''));
   function connectionText() {
     if (!connectionLate) return '';
     if (state.connection === 'background') return 'Updates paused while away.';
@@ -63,7 +63,8 @@ export function RoomNotes() {
   }
   // Only the connection line itself spins; saved actions and errors keep their own words.
   const spinning = state.reconnecting && text === connectionText();
-  const label = state.retrySeconds > 0 ? `Retry in ${state.retrySeconds}s` : state.pending ? 'Retry' : entry.error ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';
+  const linkLine = linkFailed && text === 'Couldn’t connect GoodWatch to this room.';
+  const label = linkLine ? 'Retry' : state.retrySeconds > 0 ? `Retry in ${state.retrySeconds}s` : state.pending ? 'Retry' : entry.error ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';
   return (
     <View style={{ gap: 4 }}>
       {developmentNotice ? <GText size={11} color={glow.muted} style={{ textAlign: 'center' }}>{developmentNotice}</GText> : null}
@@ -73,7 +74,8 @@ export function RoomNotes() {
           disabled: state.busy || state.retrySeconds > 0 || spinning,
           onPress: () => {
             setNotice('');
-            if (state.pending) void state.send();
+            if (linkLine) retryLink();
+            else if (state.pending) void state.send();
             else if (noServices) { state.clearError(); if (sheet !== 'services') openSheet('services'); }
             else if (ideaLimit) state.clearError();
             else if (entry.error) void entry.retry();

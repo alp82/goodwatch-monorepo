@@ -10,7 +10,7 @@ import type { ActivityView } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey, useContinuousRoom } from '../../core/continuous/useRoom';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { loadInvite, type StoredInvite } from '../../core/continuous/invite-store';
-import { linkRoom, useAccount } from '../../core/continuous/account';
+import { accountKey, linkRoom, useAccount } from '../../core/continuous/account';
 import { returnPath } from '../../core/continuous/member-state';
 import { memberTransition } from '../../core/continuous/member-transition';
 import { RoomFailure } from '../../core/continuous/api';
@@ -24,6 +24,7 @@ import { readSeenIdeas, writeSeenIdeas } from '../../core/continuous/room-local'
 import { useLobbyEntry } from '../glow/useLobbyEntry';
 import { roomCommands, roomView, type RoomCommands, type RoomView } from './model';
 import { RefillGate } from './refill';
+import { RoomLinkGate, linkOutcome } from './link-gate';
 import { previewDrafts, useSettingsSaves, type SettingsSaves } from './settings-save';
 
 /** Opening a room connects within a moment; only a connection that stays away is worth a line. */
@@ -52,6 +53,9 @@ export interface RoomContextValue {
   inviteUrl: string | null;
   signin: () => Promise<void>;
   memberBusy: boolean;
+  /** Linking your place here to this device's GoodWatch sign-in failed: the room offers a quiet Retry. */
+  linkFailed: boolean;
+  retryLink: () => void;
   /** The live connection has been missing long enough to mention. */
   connectionLate: boolean;
   notice: string;
@@ -149,25 +153,50 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
     await accountSignIn(returnPath(`/room/${id}`));
   }, [account.busy, accountSignIn, id]);
   // Signed in on this device: your place in this room links to it (rooms you create, join or open, and
-  // rooms whose earlier link has run out). Once per participant and link state, so a refusal can't loop.
+  // rooms whose earlier link has run out). Per participant, link state and device session: a refusal
+  // can't loop, a new sign-in (even with this room still open) tries again, a dropped request retries
+  // a few times, and if linking still fails the room says so with a quiet Retry.
   const own = snapshot?.own;
-  const linkKey = own && !own.left ? `${own.participantId}:${own.member.state}` : null;
+  const linkKey = own && !own.left ? `${own.participantId}:${own.member.state}:${account.generation}` : null;
+  const gate = useRef(new RoomLinkGate());
+  const [linkTick, setLinkTick] = useState(0);
   const [linked, setLinked] = useState<string | null>(null);
-  const linkTried = useRef<string | null>(null);
-  const wantsLink = !guestOnly && account.member && Boolean(state.access) && own?.member.state !== 'linked' && Boolean(linkKey);
+  const [linkFailed, setLinkFailed] = useState(false);
+  const wantsLink = !guestOnly && account.member && !account.unavailable && Boolean(state.access) && own?.member.state !== 'linked' && Boolean(linkKey);
   const refetch = state.refetch;
+  const access = state.access;
   useEffect(() => {
-    if (!wantsLink || !linkKey || !state.access || linkTried.current === linkKey) return;
-    linkTried.current = linkKey;
-    void linkRoom(state.access)
-      .then(() => refetch())
+    if (!wantsLink || !linkKey || !access) return;
+    const go = gate.current.begin(linkKey, Date.now());
+    if (!go.send) {
+      if (go.retryInMs === null) return;
+      const timer = setTimeout(() => setLinkTick((n) => n + 1), go.retryInMs);
+      return () => clearTimeout(timer);
+    }
+    setLinkFailed(false);
+    void linkRoom(access)
+      .then(() => { gate.current.settle(linkKey, 'linked', Date.now()); return refetch(); })
       .catch((e) => {
-        if (e instanceof RoomFailure && e.code === 'member_required') void queryClient.invalidateQueries({ queryKey: ['yepwatch-account'] });
+        const outcome = linkOutcome(e);
+        gate.current.settle(linkKey, outcome, Date.now());
+        if (e instanceof RoomFailure && e.code === 'member_required') void queryClient.invalidateQueries({ queryKey: accountKey });
         else if (e instanceof RoomFailure && e.code === 'conflict') setNotice('You joined this room with another GoodWatch account.');
       })
-      .finally(() => setLinked(linkKey));
-  }, [wantsLink, linkKey, state.access, refetch]);
-  // Until the account is known and any link has settled, the room doesn't ask for a country or services.
+      .finally(() => {
+        const failed = gate.current.failed(linkKey);
+        setLinkFailed(failed);
+        // Settled for now: done, refused, given up, or waiting out a retry (the room doesn't wait for that).
+        setLinked(linkKey);
+        setLinkTick((n) => n + 1);
+      });
+  }, [wantsLink, linkKey, access, refetch, linkTick]);
+  const retryLink = useCallback(() => {
+    if (!linkKey) return;
+    gate.current.retry(linkKey);
+    setLinkFailed(false);
+    setLinkTick((n) => n + 1);
+  }, [linkKey]);
+  // Until the account is known and the first link attempt has settled, the room doesn't ask for a country or services.
   const linking = !guestOnly && (!account.ready || (wantsLink && linked !== linkKey));
   const memberBusy = account.busy || linking;
   // Back from GoodWatch in this room: the cover lifts once the room is on screen.
@@ -220,7 +249,7 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
   let inviteUrl: string | null = null;
   try { inviteUrl = invite ? appInviteUrl(invite.path) : null; } catch { inviteUrl = null; }
   const value: RoomContextValue = {
-    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, connectionLate, notice: notice || account.error, setNotice,
+    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, linkFailed: linkFailed && wantsLink, retryLink, connectionLate, notice: notice || account.error, setNotice,
     dismissedProposal, dismissProposal, reopenProposal, setActivityView: state.setView, saves, acknowledgeIdeas,
     sheet: sheets.at(-1) ?? null, openSheet, closeSheet, closeSheets, renderSheet,
   };

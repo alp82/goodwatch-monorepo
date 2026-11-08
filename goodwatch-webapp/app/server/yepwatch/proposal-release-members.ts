@@ -49,6 +49,14 @@ const progress = z.object({
   limitReached: z.boolean(),
 });
 
+/** OAuth token errors that mean the grant itself is gone (revoked, expired, wrong client), not a passing failure. */
+const DEFINITIVE_TOKEN_ERRORS = new Set([
+  "invalid_grant",
+  "invalid_client",
+  "unauthorized_client",
+  "invalid_token",
+]);
+
 export function releaseMemberConfig(env: Env, publicOrigin: string) {
   if (env.YEPWATCH_MEMBER_ENABLED !== "true") {
     if (env.YEPWATCH_MEMBER_ENABLED && env.YEPWATCH_MEMBER_ENABLED !== "false")
@@ -123,17 +131,37 @@ export function releaseMembers(
         true
       );
     }
-    if (!response.ok)
-      throw new RoomError(
-        "unauthorized",
-        "GoodWatch connection did not complete. Try connecting again.",
-        401
+    const unavailable = () =>
+      new RoomError(
+        "busy",
+        "GoodWatch is temporarily unavailable; try again",
+        503,
+        true
       );
-    const value = tokenResponse.parse(await response.json());
+    if (!response.ok) {
+      // Only GoodWatch's definitive refusal ends a sign-in; throttling and outages are tried again.
+      const reason = await response
+        .json()
+        .then((b: unknown) => (b as { error?: unknown } | null)?.error)
+        .catch(() => undefined);
+      if (
+        response.status === 401 ||
+        response.status === 403 ||
+        (typeof reason === "string" && DEFINITIVE_TOKEN_ERRORS.has(reason))
+      )
+        throw new RoomError(
+          "unauthorized",
+          "GoodWatch connection did not complete. Try connecting again.",
+          401
+        );
+      throw unavailable();
+    }
+    const value = tokenResponse.safeParse(await response.json().catch(() => null));
+    if (!value.success) throw unavailable();
     return {
-      accessToken: value.access_token,
-      expiresAt: Date.now() + value.expires_in * 1000,
-      refreshToken: value.refresh_token ?? null,
+      accessToken: value.data.access_token,
+      expiresAt: Date.now() + value.data.expires_in * 1000,
+      refreshToken: value.data.refresh_token ?? null,
     };
   }
   async function resource(token: string, view: string, expectedUser?: string) {

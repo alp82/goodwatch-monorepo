@@ -397,6 +397,8 @@ export interface AccountExchangeRequest {
 export interface AccountStatus {
 	state: "member" | "guest"
 	displayName: string | null
+	/** Still signed in, but GoodWatch could not renew the session just now (busy or unreachable); it is kept and tried again. */
+	unavailable?: boolean
 	/** Native only: the sealed device session, returned when it was created or renewed. */
 	session?: string
 }

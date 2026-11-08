@@ -155,6 +155,7 @@ try {
       issuerOrigin: origin,
       callbackUrl: callback,
       publicOrigin: "https://yepwatch.example",
+      offlineAccess: false,
     },
     async (input, init) => {
       const req = new Request(input, init);

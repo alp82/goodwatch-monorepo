@@ -171,7 +171,11 @@ export function JoinScreen({ invite, checking = false, nickname, nameLocked = fa
  * Edits the remembered name for future rooms (names inside existing rooms don't change), and signs this
  * device in or out of GoodWatch. Log out ends the GoodWatch link for YepWatch on this device only.
  */
-export function ProfileSheet({ nickname, save, member = false, signIn, logOut, busy, error, onClose }: { nickname: string | null; save: (name: string) => void; member?: boolean; signIn?: () => void; logOut?: () => void; busy?: boolean; error?: string; onClose: () => void }) {
+/**
+ * Your name and this device's GoodWatch sign-in. A lapsed sign-in (the session ran out) keeps the
+ * GoodWatch look with a small Reconnect GoodWatch instead of the big guest button.
+ */
+export function ProfileSheet({ nickname, save, member = false, lapsed = false, signIn, logOut, busy, error, onClose }: { nickname: string | null; save: (name: string) => void; member?: boolean; lapsed?: boolean; signIn?: () => void; logOut?: () => void; busy?: boolean; error?: string; onClose: () => void }) {
   const { z } = useLayout();
   const [value, setValue] = useState(nickname ?? '');
   const ok = value.trim().length > 0;
@@ -181,14 +185,20 @@ export function ProfileSheet({ nickname, save, member = false, signIn, logOut, b
       <View style={{ alignItems: 'center', gap: 10, paddingTop: 4 }}>
         <Avatar name={value.trim() || null} size={z(72)} />
         {member ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><GoodWatchMark size={18} /><GText size={14} color={glow.soft}>Signed in with GoodWatch</GText></View> : null}
+        {lapsed ? (
+          <View testID="profile-lapsed" style={{ alignItems: 'center', gap: 2 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><GoodWatchMark size={18} /><GText size={14} color={glow.muted}>GoodWatch needs a quick reconnect</GText></View>
+            {signIn ? <Press label="Reconnect GoodWatch" onPress={signIn} disabled={busy} style={{ minHeight: 40, paddingHorizontal: 8 }}><GText size={14} bold color={glow.amber}>Reconnect GoodWatch</GText></Press> : null}
+          </View>
+        ) : null}
       </View>
       <View style={{ gap: 8 }}>
         <Label>Your name</Label>
         <Field label="Your name" value={value} onChange={setValue} placeholder="Your name" returnKey="done" onSubmit={go} />
         <GText size={13} color={glow.muted}>Used for new rooms</GText>
       </View>
-      {!member && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton onPress={signIn} disabled={busy} /></View> : null}
-      {member && logOut ? (
+      {!member && !lapsed && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton onPress={signIn} disabled={busy} /></View> : null}
+      {(member || lapsed) && logOut ? (
         <View style={{ gap: 8 }}>
           <Action label="Log out" onPress={logOut} disabled={busy} small />
           <GText size={13} color={glow.muted}>Your rooms stay as they are. GoodWatch stays signed in.</GText>
