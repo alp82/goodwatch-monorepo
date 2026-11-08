@@ -1,0 +1,23 @@
+{
+  "release": "UX journey (direction D): one sticky header, scaled layout, start page, sheets, room screens, voting with eleven YEP/NOPE looks in a shuffled mix, Get the app",
+  "spec": "yepwatch-app/docs/ux-journey.md",
+  "prototype": "prototype/yepwatch-ux-journey (local branch, cd5462f44..ae5741d5f)",
+  "mainCommits": "bc9816a13..ee3cc756b (16 commits)",
+  "backend": "friend ideas arrive switched on (proposal-redesign.ts, 5814265d2)",
+  "checks": {
+    "typecheck": "passed",
+    "appUnit": 163,
+    "appBrowser": "146 passed",
+    "lint": "zero errors; existing unused View warning in features/Voting.tsx",
+    "serverYepwatch": "136 pass, 1 skipped (non-integration)",
+    "review": "Codex gpt-6-astra: 4 findings (keys behind sheets, back discards drafts, Android back on Proposal/Tonight, lost MATCH) fixed in 40063162a, 43d99fa9c, 24e9e08bf, f93cca25a",
+    "productionE2E": "room-redesign-multiplayer.cjs passed on https://yepwatch.com (host + 2 guests through round 2), script updated for the new UI"
+  },
+  "deploy": "Coolify YepWatch (app 10) and GoodWatch webapp (app 1) finished 2026-11-08 01:16 UTC",
+  "ota": {
+    "ios": { "channel": "beta", "runtime": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495", "updateId": "01a1b8c6-6ce8-7b10-8fc6-3647b686ee6c", "groupId": "5af681da-6f72-47e1-89a4-339e86fb8cf5" },
+    "android": { "channel": "beta-preview", "runtime": "e602b9da0532d0b6553acc72b771132638acce70", "updateId": "01a1b8c6-e7b0-797f-ae31-2b2b1a17b0f0", "groupId": "5797d9fd-aa79-457e-882e-48131e2b398a" }
+  },
+  "nativeFingerprints": "match installed build 16 on both platforms; no native inputs changed",
+  "notChecked": "voting looks' native branches on a real iPhone/Android device"
+}

@@ -59,7 +59,7 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
     await step('host creates a room (guest, no name) and lands on Mood', async () => {
       await host.goto(origin);
-      await button(host, 'Create a room').click();
+      await button(host, 'New room').click();
       await expect(host.getByLabel('Mood')).toBeVisible();
       await expect.poll(() => me('Alp')?.nickname).toBe('');
       await shot(host, '01-host-mood');
@@ -80,7 +80,7 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
       await expect(host.getByTestId('room-setup')).toBeVisible();
       await expect.poll(() => me('Alp')?.serviceIds).toEqual([8, 1796]);
       await expect(button(host, 'Start')).toBeEnabled();
-      const path = (await host.getByTestId('room-link').innerText()).match(/\/r\/\S+/)?.[0];
+      const path = (await host.getByTestId('share-row').innerText()).match(/\/r\/\S+/)?.[0];
       if (!path) throw new Error('No invitation link on the room page');
       invite = `${origin}${path}`;
       await shot(host, '02-host-room');
@@ -91,7 +91,7 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
         await page.goto(invite);
         await page.getByLabel('Your name').fill(page.name);
         await button(page, 'Join').click();
-        await expect(page.getByTestId('services-page')).toBeVisible();
+        await expect(page.getByTestId('services-sheet')).toBeVisible();
         await page.getByRole('checkbox', { name: service }).click();
         await button(page, 'Done').click();
         await expect(page.getByTestId('waiting')).toBeVisible();
@@ -100,21 +100,21 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
     }
     await shot(sam, '03-friend-waiting');
 
-    await step('Mia suggests an idea; it arrives off, NEW for the host', async () => {
+    await step('Mia suggests an idea; it arrives on, NEW for the host', async () => {
       await button(mia, 'Suggest an idea').click();
       await mia.getByLabel('Mood').fill('space adventure');
       await mia.getByLabel('Mood').press('Enter');
       await expect(mia.getByTestId('waiting')).toBeVisible();
       await expect(button(mia, 'space adventure, edit')).toBeVisible();
       await expect(host.getByText('NEW', { exact: true })).toBeVisible({ timeout: 10000 });
-      await expect(host.getByRole('switch', { name: 'Use space adventure' })).toHaveAttribute('aria-checked', 'false');
+      await expect(host.getByRole('switch', { name: 'Use space adventure' })).toHaveAttribute('aria-checked', 'true');
       await expect(sam.getByRole('switch', { name: 'Use space adventure' })).toBeDisabled();
     });
 
     await step('per-person services merge on the host’s Streaming page', async () => {
       await expect(button(host, /^Netflix, Disney\+ \+1, change$/)).toBeVisible({ timeout: 10000 });
       await button(host, /^Netflix, Disney\+ \+1, change$/).click();
-      await expect(host.getByTestId('streaming-page')).toBeVisible();
+      await expect(host.getByTestId('streaming-sheet')).toBeVisible();
       for (const s of ['Netflix', 'Disney+', 'HBO Max']) await expect(host.getByRole('switch', { name: `Use ${s}` })).toHaveAttribute('aria-checked', 'true');
       await shot(host, '04-host-streaming');
       await button(host, 'Done').click();
@@ -127,30 +127,38 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
       await shot(mia, '05-friend-voting');
     });
 
-    await step('host switches Mia’s idea on mid-vote (no restart)', async () => {
+    await step('host switches Mia’s idea off and on again mid-vote (no restart)', async () => {
       const generation = snapshots.get('Alp').shared.generation;
       await vote(host, false, 1);
-      await button(host, 'something funny, 1 new').click();
-      await expect(host.getByTestId('room-page')).toBeVisible();
-      await host.getByRole('switch', { name: 'Use space adventure' }).click();
-      await expect(host.getByRole('switch', { name: 'Use space adventure' })).toHaveAttribute('aria-checked', 'true');
-      await expect(host.getByText('NEW', { exact: true })).toHaveCount(0);
-      await shot(host, '06-host-room-page-mid-vote');
-      await button(host, 'Back').first().click();
+      await button(host, /^something funny \+1(, 1 new)?, switch room$/).click();
+      await button(host, 'something funny +1, Room page').click();
+      await expect(host.getByTestId('room-sheet')).toBeVisible();
+      const sw = host.getByTestId('room-sheet').getByRole('switch', { name: 'Use space adventure' });
+      await sw.click();
+      await expect(sw).toHaveAttribute('aria-checked', 'false');
+      await expect.poll(() => snapshots.get('Alp')?.shared.ideas.find((i) => i.text === 'space adventure')?.on).toBe(false);
+      await sw.click();
+      await expect(sw).toHaveAttribute('aria-checked', 'true');
+      await expect.poll(() => snapshots.get('Alp')?.shared.ideas.find((i) => i.text === 'space adventure')?.on).toBe(true);
+      await shot(host, '06-host-room-sheet-mid-vote');
+      await button(host, 'Close').click();
       await expect(host.getByTestId('voting')).toBeVisible();
-      await expect(button(host, 'something funny +1')).toBeVisible();
+      await expect(button(host, 'something funny +1, switch room')).toBeVisible();
       expect(snapshots.get('Alp').shared.generation).toBe(generation);
       expect(snapshots.get('Alp').own.votes.filter((v) => v.value !== null)).toHaveLength(1);
     });
 
     await step('host switches HBO Max off mid-vote', async () => {
-      await button(host, 'something funny +1').click();
+      await button(host, 'something funny +1, switch room').click();
+      await button(host, 'something funny +1, Room page').click();
       await button(host, /^Netflix, Disney\+.*change$/).click();
+      await expect(host.getByTestId('streaming-sheet')).toBeVisible();
       await host.getByRole('switch', { name: 'Use HBO Max' }).click();
       await expect.poll(() => snapshots.get('Alp')?.shared.disabledServiceIds.includes(1899)).toBe(true); // a tile can group several ids
       await expect(sam.getByText('Off', { exact: true })).toHaveCount(0); // Sam is voting, not on the page
       await button(host, 'Done').click();
-      await button(host, 'Back').first().click();
+      await expect(host.getByTestId('streaming-sheet')).toHaveCount(0);
+      if (await host.getByTestId('room-sheet').count()) await button(host, 'Close').click();
       await expect(host.getByTestId('voting')).toBeVisible();
       const shared = snapshots.get('Alp').shared;
       const services = new Set(shared.screens[0].serviceIds);
