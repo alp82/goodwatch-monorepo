@@ -88,7 +88,7 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     room.own.nextSequence++;
     switch (c.type) {
       // The command id becomes the idea's id; the host's ideas start on.
-      case 'add_idea': interpretations++; room.shared.ideas.push({ id: body.commandId, text: c.text, authorId: room.own.participantId, on: room.own.canHost, attributes: [] }); break;
+      case 'add_idea': interpretations++; room.shared.ideas.push({ id: body.commandId, text: c.text, authorId: room.own.participantId, on: true, attributes: [] }); break;
       case 'edit_idea': interpretations++; room.shared.ideas = room.shared.ideas.map((i) => (i.id === c.ideaId ? { ...i, text: c.text } : i)); break;
       case 'remove_idea': room.shared.ideas = room.shared.ideas.filter((i) => i.id !== c.ideaId); break;
       case 'set_idea': room.shared.ideas = room.shared.ideas.map((i) => (i.id === c.ideaId ? { ...i, on: c.on } : i)); break;

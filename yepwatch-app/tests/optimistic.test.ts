@@ -23,7 +23,7 @@ test('an added idea has its real id at once, and a broadcast of it does not doub
   assert.deepEqual(shown.shared.ideas.at(-1), { id: 'cmd-1', text: 'space adventure', authorId: 'host', on: true, attributes: [] });
   assert.equal(previewCommand(shown, 'cmd-1', { type: 'add_idea', text: 'space adventure' }), shown);
   s.own.canHost = false;
-  assert.equal(previewCommand(s, 'cmd-2', { type: 'add_idea', text: 'a suggestion' }).shared.ideas.at(-1)?.on, false, 'friends suggest, off');
+  assert.equal(previewCommand(s, 'cmd-2', { type: 'add_idea', text: 'a suggestion' }).shared.ideas.at(-1)?.on, true, 'a friend’s suggestion arrives switched on, as the server adds it');
 });
 
 test('edits, switches and removals show at once and leave the confirmed room untouched', () => {

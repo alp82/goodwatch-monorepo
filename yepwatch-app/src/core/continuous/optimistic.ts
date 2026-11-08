@@ -23,9 +23,10 @@ export function previewCommand<T extends RoomSnapshot>(s: T, commandId: string, 
     shared({ participants: s.shared.participants.map((p) => (p.participantId === me ? { ...p, ...patch } : p)) } as Partial<T['shared']>);
   switch (c.type) {
     case 'add_idea':
-      // The server names the idea after the command, so this row is already the real one.
+      // The server names the idea after the command, so this row is already the real one. Every
+      // idea arrives switched on, a friend's too (the host can switch it off).
       if (s.shared.ideas.some((i) => i.id === commandId)) return s;
-      return shared({ ideas: [...s.shared.ideas, { id: commandId, text: c.text, authorId: me, on: s.own.canHost, attributes: [] }] } as Partial<T['shared']>);
+      return shared({ ideas: [...s.shared.ideas, { id: commandId, text: c.text, authorId: me, on: true, attributes: [] }] } as Partial<T['shared']>);
     case 'edit_idea': return ideas((i) => (i.id === c.ideaId ? { ...i, text: c.text } : i));
     case 'set_idea': return ideas((i) => (i.id === c.ideaId ? { ...i, on: c.on } : i));
     case 'remove_idea': return shared({ ideas: s.shared.ideas.filter((i) => i.id !== c.ideaId) } as Partial<T['shared']>);
