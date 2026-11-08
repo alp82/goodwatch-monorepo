@@ -413,7 +413,7 @@ export function useContinuousRoom(roomId: string) {
     });
   }
   // Back online: the saved command goes again by itself (same id, so it can only apply once).
-  const retryOnline = connection === 'live' && Boolean(pending) && !busy && retrySeconds === 0;
+  const retryOnline = (connection === 'live' || connection === 'polling') && Boolean(pending) && !busy && retrySeconds === 0;
   const retryRef = useRef(send);
   useEffect(() => { retryRef.current = send; });
   // Bounded: after a few tries the line with Retry stays, so a failing server isn't kept busy by this device.

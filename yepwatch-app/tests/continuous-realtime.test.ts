@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ContinuousRealtime, type RealtimeOptions } from '../src/core/continuous/realtime';
+import { ContinuousRealtime, POLL_MS, type RealtimeOptions } from '../src/core/continuous/realtime';
 import type { SocketLike } from '../src/core/realtime';
 import { continuousFixture, activityFixture } from './continuous-fixture';
 import { RoomFailure } from '../src/core/continuous/api-client';
@@ -300,7 +300,9 @@ test('server restart: busy and network ticket failures back off 1-2-4-8-15 s, re
         throw failing % 2 ? new RoomFailure('busy', 'Service unavailable', 503, undefined, undefined, true) : new RoomFailure('outcome_unknown', 'offline');
       return { ticket: 'fresh', expiresAt: Date.now() + 10000, websocketPath: '/api/yepwatch/v1/proposal/realtime' };
     },
+    // The API is down with the channel: the HTTP fallback reads fail too, so the banner stays.
     privateRead: async () => {
+      if (failing >= 0) throw new RoomFailure('outcome_unknown', 'offline');
       reads++;
     },
     attempt: (s) => states.push(s),
@@ -337,7 +339,7 @@ test('never gives up: after many failures it keeps trying every 15 s at most', a
   h.client.start();
   await tick();
   for (let i = 0; i < 30; i++) {
-    const waits = [...h.jobs.values()].map((j) => j.ms);
+    const waits = [...h.jobs.values()].map((j) => j.ms).filter((ms) => ms !== POLL_MS);
     assert.equal(waits.length, 1);
     assert.ok(waits[0] <= 19500);
     h.run(waits[0]);
@@ -437,4 +439,65 @@ test('a busy ticket answer with Retry-After is a floor for the reconnect wait', 
   await tick();
   assert.equal(tickets, 2);
   h.client.stop();
+});
+test('a channel that keeps failing falls back to room reads over HTTP until it connects', async () => {
+  let reads = 0;
+  let readFails = false;
+  const h = harness({ privateRead: async () => { reads++; if (readFails) throw new Error('offline'); } });
+  const retryJob = () => {
+    const job = [...h.jobs].find(([, j]) => j.ms !== POLL_MS && j.ms !== 10000);
+    assert.ok(job, 'Missing retry timer');
+    h.jobs.delete(job[0]);
+    job[1].fn();
+  };
+  h.client.start();
+  await tick();
+  h.sockets[0].onclose?.(new Event('close') as CloseEvent);
+  assert.ok(![...h.jobs.values()].some((j) => j.ms === POLL_MS), 'one failure does not poll yet');
+  retryJob();
+  await tick();
+  h.sockets[1].onerror?.(new Event('error'));
+  assert.equal([...h.jobs.values()].filter((j) => j.ms === POLL_MS).length, 1);
+  h.run(POLL_MS);
+  await tick();
+  assert.equal(reads, 1);
+  assert.equal(h.statuses.at(-1), 'polling');
+  // A failed attempt doesn't bring the banner back while reads work, and only one read loop runs.
+  retryJob();
+  await tick();
+  assert.equal(h.statuses.at(-1), 'polling');
+  h.sockets[2].onclose?.(new Event('close') as CloseEvent);
+  assert.equal(h.statuses.at(-1), 'polling');
+  assert.equal([...h.jobs.values()].filter((j) => j.ms === POLL_MS).length, 1);
+  readFails = true;
+  h.run(POLL_MS);
+  await tick();
+  assert.equal(h.statuses.at(-1), 'reconnecting');
+  readFails = false;
+  retryJob();
+  await tick();
+  const s = h.sockets[3];
+  s.open();
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  assert.equal(h.statuses.at(-1), 'live');
+  await tick();
+  assert.ok(![...h.jobs.values()].some((j) => j.ms === POLL_MS), 'live stops the reads');
+  h.client.stop();
+});
+test('the HTTP fallback honors a server Retry-After instead of reading every few seconds', async () => {
+  const h = harness({
+    privateRead: async () => { throw new RoomFailure('busy', 'Service unavailable', 503, undefined, undefined, true, 30); },
+    ticket: async () => { throw new RoomFailure('outcome_unknown', 'offline'); },
+  });
+  h.client.start();
+  await tick();
+  h.run([...h.jobs.values()].find((j) => j.ms !== POLL_MS)!.ms);
+  await tick();
+  h.run(POLL_MS);
+  await tick();
+  await tick();
+  const polls = [...h.jobs.values()].map((j) => j.ms).filter((ms) => ms >= 30000);
+  assert.equal(polls.length, 1, `next read waits for Retry-After: ${[...h.jobs.values()].map((j) => j.ms)}`);
+  h.client.stop();
+  assert.equal(h.jobs.size, 0);
 });

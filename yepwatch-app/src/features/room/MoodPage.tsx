@@ -61,9 +61,11 @@ export function MoodPage() {
   }, [line, reduced]);
   if (!view) return <RoomStatus />;
   const text = own.trim();
-  const ready = text.length >= IDEA_LIMITS.min && text !== mine;
+  // Unchanged text still saves: Save then just goes back, so an opened idea never shows a dead button.
+  const ready = text.length >= IDEA_LIMITS.min;
   const pick = (value: string) => {
     if (disabled) return;
+    if (editing && value === mine) { leavePage(id); return; }
     if (editing) void (value ? cmd.editIdea(editing.id, value) : cmd.removeIdea(editing.id));
     else if (value) void cmd.addIdea(value);
     leavePage(id);

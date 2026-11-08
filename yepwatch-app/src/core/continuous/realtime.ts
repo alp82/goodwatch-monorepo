@@ -38,7 +38,13 @@ export interface ReconnectState {
   /** Epoch ms of the next automatic attempt; 0 when none is waiting. */
   retryAt: number;
 }
-/** One-use authentication, reactive private repair, fresh tickets on reconnect. No HTTP polling. */
+/** Failed live attempts in a row before room reads over HTTP take over until the channel connects. */
+export const POLL_AFTER_FAILURES = 2;
+export const POLL_MS = 5000;
+/**
+ * One-use authentication, reactive private repair, fresh tickets on reconnect. When the channel keeps failing
+ * (a browser or extension that blocks WebSockets), the room is read over HTTP every few seconds meanwhile.
+ */
 export class ContinuousRealtime {
   private active = false;
   private epoch = 0;
@@ -59,6 +65,10 @@ export class ContinuousRealtime {
   private sequence = 0;
   private view: ActivityView = 'voting';
   private attempting = false;
+  private pollTimer?: Timer;
+  private polling = false;
+  private pollSession = 0;
+  private pollFailures = 0;
   constructor(private readonly o: RealtimeOptions) {}
   private later(fn: () => void, ms: number) {
     return (this.o.later ?? setTimeout)(fn, ms);
@@ -95,6 +105,7 @@ export class ContinuousRealtime {
     this.active = false;
     this.dirty = false;
     ++this.epoch;
+    this.stopPolling();
     this.detach();
     this.report(false);
   }
@@ -222,11 +233,50 @@ export class ContinuousRealtime {
       this.repair();
     }, ms);
   }
+  /** Reads the room over HTTP until the live channel connects; while reads work the room counts as current. */
+  private poll(ms = POLL_MS) {
+    const session = this.pollSession;
+    const current = () => this.active && !this.live && session === this.pollSession;
+    this.pollTimer = this.later(() => {
+      if (!current()) {
+        if (session === this.pollSession) this.pollTimer = undefined;
+        return;
+      }
+      void this.o.privateRead().then(
+        () => {
+          if (!current()) return POLL_MS;
+          this.pollFailures = 0;
+          this.polling = true;
+          this.o.status('polling');
+          return POLL_MS;
+        },
+        (e: unknown) => {
+          // Failed reads back off like the resync read, and a server Retry-After is a floor.
+          const wait = Math.max(POLL_MS, backoffDelay(this.pollFailures++, this.o.random ?? Math.random, serverWait(e)));
+          if (!current()) return wait;
+          this.polling = false;
+          this.o.status('reconnecting');
+          return wait;
+        }
+      ).then((next) => {
+        if (current()) this.poll(next);
+        else if (session === this.pollSession) this.pollTimer = undefined;
+      });
+    }, ms);
+  }
+  private stopPolling() {
+    this.pollSession++;
+    this.pollFailures = 0;
+    this.clear(this.pollTimer);
+    this.pollTimer = undefined;
+    this.polling = false;
+  }
   private retry(epoch: number, minimum = 0) {
     if (!this.active || epoch !== this.epoch) return;
     this.detach();
-    this.o.status('reconnecting');
+    if (!this.polling) this.o.status('reconnecting');
     const ms = backoffDelay(this.failures++, this.o.random ?? Math.random, minimum);
+    if (this.failures >= POLL_AFTER_FAILURES && this.pollTimer === undefined) this.poll();
     this.report(false, Date.now() + ms);
     this.retryTimer = this.later(() => {
       void this.connect(epoch);
@@ -240,7 +290,7 @@ export class ContinuousRealtime {
   }
   private async connect(epoch: number) {
     if (!this.active || epoch !== this.epoch) return;
-    this.o.status(this.failures ? 'reconnecting' : 'connecting');
+    if (!this.polling) this.o.status(this.failures ? 'reconnecting' : 'connecting');
     this.report(true);
     try {
       const ticket = await this.o.ticket();
@@ -286,6 +336,7 @@ export class ContinuousRealtime {
           }
           this.live = true;
           this.failures = 0;
+          this.stopPolling();
           this.report(false);
           this.o.status('live');
           this.heartbeat(epoch);
