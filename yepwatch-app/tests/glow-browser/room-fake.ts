@@ -9,6 +9,12 @@ import { continuousFixture } from '../continuous-fixture';
 
 export type FakeSnapshot = RoomSnapshot;
 
+/** Voting has no room row of its own: the header's room pill opens Your rooms, and this room's row opens the Room page. */
+export async function openRoomPage(page: Page, label: string, fresh = 0) {
+  await page.getByRole('button', { name: `${label}${fresh ? `, ${fresh} new` : ''}, switch room`, exact: true }).click();
+  await page.getByRole('button', { name: `${label}, Room page`, exact: true }).click();
+}
+
 export const metadata: CatalogMetadata = {
   countries: [{ code: 'DE', name: 'Germany' }, { code: 'US', name: 'United States' }],
   services: [
