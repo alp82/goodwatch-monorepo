@@ -5,7 +5,7 @@ import { proposalSnapshot } from './fixture.js'
 
 function enriched() {
   const s = proposalSnapshot()
-  s.candidates = [{ id: 'movie-1', identity: { kind: 'movie', tmdbId: 1 }, title: 'Title', year: 2020, overview: null, posterUrl: null, runtimeMinutes: 90, viewingDuration: { minutes: 90, scope: 'movie' }, availability: [], tagline: 'Tagline', certification: 'FSK 16', scores: { imdb: 78, rtCritics: 90, rtAudience: null, metacritic: 70 }, highlights: [{ key: 'crime', label: 'Crime' }], people: { directors: ['Director'], cast: ['Actor'] } }]
+  s.candidates = [{ id: 'movie-1', identity: { kind: 'movie', tmdbId: 1 }, title: 'Title', year: 2020, overview: null, posterUrl: null, runtimeMinutes: 90, viewingDuration: { minutes: 90, scope: 'movie' }, availability: [], tagline: 'Tagline', certification: 'FSK 16', scores: { imdb: 78, rtCritics: 90, rtAudience: null, metacritic: 70 }, highlights: [{ key: 'crime', label: 'Crime' }], people: { directors: ['Director'], cast: ['Actor'] }, essence: ['Heist Thriller'], effects: [{ line: 'Keeps you guessing.', strength: 8.2, color: '#a78bfa' }], notFor: 'Not for laughs.' }]
   return s
 }
 test('strict proposal projection retains optional title highlights and accepts missing or null facts', () => {
@@ -13,7 +13,7 @@ test('strict proposal projection retains optional title highlights and accepts m
   assert.deepEqual(proposalProjection(s, s.roomId).candidates, s.candidates)
   const empty = proposalSnapshot()
   assert.doesNotThrow(() => proposalProjection(empty, empty.roomId))
-  Object.assign(s.candidates[0], { tagline: null, certification: null, scores: null, highlights: null, people: null })
+  Object.assign(s.candidates[0], { tagline: null, certification: null, scores: null, highlights: null, people: null, essence: null, effects: null, notFor: null })
   assert.doesNotThrow(() => proposalProjection(s, s.roomId))
 })
 test('strict projection rejects private nested fields, noninteger scores and oversized facts', () => {
@@ -23,6 +23,9 @@ test('strict projection rejects private nested fields, noninteger scores and ove
     { people: { directors: [], cast: ['A', 'B', 'C', 'D'] } },
     { highlights: Array.from({ length: 4 }, () => ({ key: 'crime', label: 'Crime' })) },
     { highlights: [{ key: 'crime', label: 'Crime', participantId: 'private' }] },
+    { essence: Array.from({ length: 7 }, () => 'Tag') },
+    { effects: [{ line: 'Warms you up.', strength: 8, color: 'red' }] },
+    { effects: [{ line: 'Warms you up.', strength: 8, color: '#fb7185', participantId: 'private' }] },
   ]) {
     const s = enriched(); Object.assign(s.candidates[0], patch)
     assert.throws(() => proposalProjection(s, s.roomId))
