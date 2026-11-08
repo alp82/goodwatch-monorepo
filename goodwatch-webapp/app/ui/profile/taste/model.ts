@@ -192,20 +192,7 @@ export function buildProfileTaste(
 
 // ---------- Browser side ----------
 
-export const FAMILY_COLOR: Record<FamilyId, string> = {
-	feel: "#fb7185",
-	humor: "#facc15",
-	world: "#38bdf8",
-	story: "#a78bfa",
-	craft: "#34d399",
-}
-export const FAMILY_ORDER: FamilyId[] = [
-	"feel",
-	"humor",
-	"world",
-	"story",
-	"craft",
-]
+export { FAMILY_COLOR, FAMILY_ORDER } from "~/domain/fingerprint-effects/palette"
 
 export const TIER_NAMES_THEY: Record<Tier, string> = {
 	3: "Defining",

@@ -347,3 +347,16 @@ test('bounded poster pointers expire without heartbeat replay and release clears
  const released=applyActivity(first,activityFixture({sequence:2,serverTime:1100,pointer:null}),'host',1100);
  assert.equal([...released.values()][0].pointer,null);
 });
+
+test('text fingerprint survives the strict snapshot wire parser with bounded counts', () => {
+  const snapshot = continuousFixture().shared;
+  const text = { essence: ['Warm', 'Hopeful'], effects: [{ line: 'Warms you up.', strength: 8.5, color: '#fb7185' }], notFor: 'Not for scares.' };
+  Object.assign(snapshot.candidates[0], text);
+  const parsed = parseFrame(JSON.stringify({ type: 'room.snapshot', snapshot }));
+  assert.ok(parsed && parsed.type === 'room.snapshot');
+  assert.deepEqual(parsed.snapshot.candidates[0].effects, text.effects);
+  assert.deepEqual(parsed.snapshot.candidates[0].essence, text.essence);
+  assert.equal(parsed.snapshot.candidates[0].notFor, text.notFor);
+  snapshot.candidates[0].effects = Array(6).fill(text.effects[0]);
+  assert.equal(parseFrame(JSON.stringify({ type: 'room.snapshot', snapshot })), null);
+});

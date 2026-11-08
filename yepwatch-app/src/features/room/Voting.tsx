@@ -77,9 +77,13 @@ function MatchesChip() {
   );
 }
 
-/** A full-screen page over the voting screen (the card underneath keeps its place). */
-function Sheet({ close, children, testID }: { close: () => void; children: React.ReactNode; testID: string }) {
-  return <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 60 }}><Screen testID={testID} back={close}>{children}</Screen></View>;
+/** A full-screen page over the voting screen (the card underneath keeps its place); `page` uses the whole container. */
+function Sheet({ close, children, testID, page = false }: { close: () => void; children: React.ReactNode; testID: string; page?: boolean }) {
+  return (
+    <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 60 }}>
+      <Screen testID={testID} back={close} {...(page ? { width: 'page' as const, gap: 0 } : {})}>{children}</Screen>
+    </View>
+  );
 }
 
 export function Voting() {
@@ -89,6 +93,9 @@ export function Voting() {
   const { phone, z } = layout;
   const reduced = useReducedMotion();
   const [panel, setPanel] = useState<'details' | 'trailer' | null>(null);
+  /** The trailer playing inside the details' hero. */
+  const [detailsTrailer, setDetailsTrailer] = useState(false);
+  const trailerOpen = panel === 'trailer' || (panel === 'details' && detailsTrailer);
   // First paint before the stage is measured: a close guess from the window.
   const [area, setArea] = useState(() => ({ width: phone ? layout.width - 32 : layout.max, height: Math.max(200, layout.height - layout.header - (phone ? 180 : z(190))) }));
   const [focused, setFocused] = useState(true);
@@ -107,11 +114,12 @@ export function Voting() {
   }, []));
   useBackAction(() => { if (panel) setPanel(null); else toRooms(); });
   const setActivityView = room.setActivityView;
-  useEffect(() => { if (focused) setActivityView(panel === 'trailer' ? 'trailer' : 'voting'); }, [focused, panel, setActivityView]);
+  useEffect(() => { if (focused) setActivityView(trailerOpen ? 'trailer' : 'voting'); }, [focused, trailerOpen, setActivityView]);
+  useEffect(() => { if (panel !== 'details') setDetailsTrailer(false); }, [panel]); // eslint-disable-line react-hooks/set-state-in-effect
   // A confirmed restart discards the previous round's local state.
   const generation = snapshot?.shared.generation;
   useEffect(() => { setPanel(null); }, [generation]); // eslint-disable-line react-hooks/set-state-in-effect
-  useRoomFeedback(snapshot, panel === 'trailer');
+  useRoomFeedback(snapshot, trailerOpen);
   const card = snapshot ? ownCard(snapshot) : undefined;
   const vote = card ? snapshot?.own.votes.find((v) => v.candidateId === card.id) : undefined;
   const disabled = room.disabled || entry.required;
@@ -164,8 +172,8 @@ export function Voting() {
       }
       overlay={<>
         {panel === 'details' && title && card && (
-          <Sheet testID="details-panel" close={() => setPanel(null)}>
-            <TitleDetails c={card} offered={offered} screens={shared.screens} />
+          <Sheet testID="details-panel" page close={() => setPanel(null)}>
+            <TitleDetails key={card.id} c={card} trailer={detailsTrailer} onTrailer={setDetailsTrailer} />
           </Sheet>
         )}
         {panel === 'trailer' && title?.trailerUrl && (

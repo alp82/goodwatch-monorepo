@@ -99,14 +99,7 @@ export function readSections(
 
 // --- Words ------------------------------------------------------------------------------------------------------
 
-const list = (xs: string[]) =>
-	xs.length < 2
-		? (xs[0] ?? "")
-		: `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`
-
-/** "Not for warmth, laughs or comfort.", or "" when it is for everything. */
-export const notForLine = (not: string[]) =>
-	not.length ? `Not for ${list(not).replace(/ and ([^,]*)$/, " or $1")}.` : ""
+export { notForLine } from "~/domain/fingerprint-effects/title-reading"
 
 /**
  * Where a feeling ranks among popular titles, from the shares below and above it: "Stronger than 9 in 10 popular

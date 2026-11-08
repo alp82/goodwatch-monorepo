@@ -1,5 +1,5 @@
 /**
- * Polish round: the join screen in the room screens' style, title details with GoodWatch highlights,
+ * Polish round: the join screen in the room screens' style, title details with GoodWatch's title analysis,
  * scores in the website's look, Watch on links, no Cheer button on Tonight.
  */
 import { expect, test, type Page } from '@playwright/test';
@@ -71,35 +71,107 @@ test('the join screen on a desktop window: one centered column, no dark box', as
   await expect(page.getByRole('button', { name: 'New room', exact: true })).toBeVisible();
 });
 
-test('details show GoodWatch highlights: scores, fingerprint chips, credits, age rating, tagline; Watch on every service', async ({ page }) => {
-  await fakeRoom(page, room());
-  await page.goto('/room/test-room');
-  await expect(page.getByTestId('voting')).toBeVisible();
-  // The card's score pill in the GoodWatch score color.
-  const pill = page.getByTestId('poster').getByLabel('GoodWatch score 84');
-  await expect(pill).toBeVisible();
-  await shot(page, 'card');
+/** The first card with GoodWatch's title analysis: essence tags, effect lines in their print colors, Not for, a trailer and a backdrop. */
+function analysedRoom() {
+  const r = room();
+  Object.assign(r.shared.candidates[0], {
+    trailerUrl: 'https://www.youtube.com/watch?v=1Fg5iWmQjwk',
+    essence: ['Whimsical Caper', 'Ensemble Cast', 'Dry Wit'],
+    effects: [{ line: 'Makes you laugh', strength: 9.5, color: '#facc15' }, { line: 'Feels like a storybook.', strength: 7, color: '#38bdf8' }],
+    notFor: 'Not for scares or brutality.',
+  });
+  return r;
+}
+
+async function openDetails(page: Page) {
   await page.getByTestId('poster').click({ position: { x: 20, y: 20 } });
   const d = page.getByTestId('details-panel');
   await expect(d).toBeVisible();
+  return d;
+}
+
+test('details show the title analysis: scores, age rating, tagline, essence chips, effect lines in their colors, Not for, credits', async ({ page }) => {
+  await fakeRoom(page, analysedRoom());
+  await page.goto('/room/test-room');
+  await expect(page.getByTestId('voting')).toBeVisible();
+  // The card's score pill in the GoodWatch score color.
+  await expect(page.getByTestId('poster').getByLabel('GoodWatch score 84')).toBeVisible();
+  await shot(page, 'card');
+  const d = await openDetails(page);
+  await expect(d.getByTestId('details-hero').getByText('2014 · MOVIE · 1 H 30 MIN')).toBeVisible();
   await expect(d.getByLabel('GoodWatch score 84 of 100, Great')).toBeVisible();
   await expect(d.getByText('Great', { exact: true })).toHaveCSS('color', 'rgb(22, 147, 74)');
   await expect(d.getByLabel('IMDb 8.1')).toHaveText('8.1');
   await expect(d.getByLabel('Metacritic 88')).toHaveText('88');
   await expect(d.getByLabel('Rotten Tomatoes: critics 92%, audience 86%')).toBeVisible();
-  await expect(d.getByTestId('details-highlights').locator('> *')).toHaveText(['Wit & Wordplay', 'Visual Stylization', 'Eccentricity']);
-  await expect(d.getByText('Wit & Wordplay')).toHaveCSS('color', 'rgb(3, 7, 18)');
   await expect(d.getByTestId('certification')).toHaveText('FSK 12');
   await expect(d.getByText('A perfect holiday without leaving the lobby.')).toBeVisible();
-  await expect(d.getByTestId('details-people')).toContainText(/Director\s+Wes Anderson/);
-  await expect(d.getByTestId('details-people')).toContainText('Ralph Fiennes, Tony Revolori, Saoirse Ronan');
-  await expect(d.getByRole('link', { name: 'Watch on Netflix' })).toHaveAttribute('href', 'https://www.netflix.com/title/1');
-  await expect(d.getByRole('link', { name: 'Watch on Disney+' })).toHaveAttribute('href', 'https://www.themoviedb.org/movie/120467/watch?locale=DE');
-  await expect(d.getByText('Watch on Disney+', { exact: true })).toBeVisible();
-  await expect(d.getByText(/Find on|Availability page/)).toHaveCount(0);
+  await expect(d.getByTestId('details-essence').getByText(/./)).toHaveText(['Whimsical Caper', 'Ensemble Cast', 'Dry Wit']);
+  // Essence replaces the fingerprint highlight chips.
+  await expect(d.getByTestId('details-highlights')).toHaveCount(0);
+  // Effect lines: no heading, each in its print color, the strongest biggest.
+  await expect(d.getByText('What it does to you')).toHaveCount(0);
+  const laugh = d.getByText('Makes you laugh.', { exact: true });
+  const storybook = d.getByText('Feels like a storybook.', { exact: true });
+  await expect(laugh).toHaveCSS('color', 'rgb(250, 204, 21)');
+  await expect(storybook).toHaveCSS('color', 'rgb(56, 189, 248)');
+  const size = (l: typeof laugh) => l.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(await size(laugh)).toBeGreaterThan(await size(storybook));
+  await expect(d.getByTestId('details-not-for')).toHaveText('Not for scares or brutality.');
+  await expect(d.getByTestId('details-people')).toContainText(/DIRECTED BY\s*Wes Anderson/);
+  await expect(d.getByTestId('details-people')).toContainText(/STARRING\s*Ralph Fiennes, Tony Revolori, Saoirse Ronan/);
+  // Two actions only: no Yep/Nope, no Watch on links, no Good for cards.
+  await expect(d.getByRole('link', { name: 'Full details on GoodWatch' })).toHaveAttribute('href', 'https://goodwatch.app/movie/1');
+  await expect(d.getByRole('button', { name: 'Trailer', exact: true })).toBeVisible();
+  await expect(d.getByRole('link', { name: /^Watch on / })).toHaveCount(0);
+  await expect(d.getByRole('button', { name: /^(Yep|Nope)$/ })).toHaveCount(0);
+  await expect(d.getByText(/Good for|Skip it if/)).toHaveCount(0);
   await shot(page, 'details');
-  await d.getByRole('link', { name: 'Full details on GoodWatch' }).scrollIntoViewIfNeeded();
+  await d.getByTestId('details-people').scrollIntoViewIfNeeded();
   await shot(page, 'details-bottom');
+});
+
+test('the trailer plays inside the details hero and closes back to it', async ({ page }) => {
+  await fakeRoom(page, analysedRoom());
+  await page.goto('/room/test-room');
+  const d = await openDetails(page);
+  const hero = d.getByTestId('details-hero');
+  await d.getByRole('button', { name: 'Trailer', exact: true }).click();
+  await expect(hero.getByTestId('details-trailer')).toBeVisible();
+  await expect(hero.locator('iframe[title="Title trailer"]')).toHaveCount(1);
+  await expect(page.getByTestId('trailer-panel')).toHaveCount(0);
+  await hero.getByRole('button', { name: 'Close trailer' }).click();
+  await expect(hero.getByTestId('details-trailer')).toHaveCount(0);
+  await expect(hero.getByText('The Grand Budapest Hotel', { exact: true })).toBeVisible();
+});
+
+test('details fill a desktop window: full-width hero, actions beside the title, Summary beside the effect lines', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await fakeRoom(page, analysedRoom());
+  await page.goto('/room/test-room');
+  const d = await openDetails(page);
+  const hero = (await d.getByTestId('details-hero').boundingBox())!;
+  expect(hero.x).toBeLessThanOrEqual(1);
+  expect(hero.width).toBeGreaterThanOrEqual(1400);
+  const title = (await d.getByText('The Grand Budapest Hotel', { exact: true }).boundingBox())!;
+  const actions = (await d.getByTestId('details-actions').boundingBox())!;
+  expect(actions.x).toBeGreaterThan(title.x + title.width - 1);
+  expect(Math.abs(actions.y + actions.height / 2 - (hero.y + hero.height / 2))).toBeLessThan(hero.height / 3);
+  const summary = (await d.getByTestId('details-summary').boundingBox())!;
+  const effects = (await d.getByTestId('details-effects').boundingBox())!;
+  expect(effects.x).toBeGreaterThan(summary.x + summary.width);
+  expect(Math.abs(effects.y - summary.y)).toBeLessThan(40);
+  await shot(page, 'details-desktop');
+});
+
+test('details from before the title analysis show the fingerprint highlights instead of essence chips', async ({ page }) => {
+  await fakeRoom(page, room());
+  await page.goto('/room/test-room');
+  const d = await openDetails(page);
+  await expect(d.getByTestId('details-highlights').locator('> *')).toHaveText(['Wit & Wordplay', 'Visual Stylization', 'Eccentricity']);
+  await expect(d.getByText('Wit & Wordplay')).toHaveCSS('color', 'rgb(3, 7, 18)');
+  for (const id of ['details-essence', 'details-effects', 'details-not-for']) await expect(d.getByTestId(id)).toHaveCount(0);
+  await expect(d.getByTestId('details-people')).toBeVisible();
 });
 
 test('details hide every part whose data is missing', async ({ page }) => {
@@ -110,11 +182,11 @@ test('details hide every part whose data is missing', async ({ page }) => {
   await page.goto('/room/test-room');
   await expect(page.getByTestId('poster')).toBeVisible();
   await expect(page.getByTestId('poster').getByTestId('score-pill')).toHaveCount(0);
-  await page.getByTestId('poster').click({ position: { x: 20, y: 20 } });
-  const d = page.getByTestId('details-panel');
+  const d = await openDetails(page);
   await expect(d.getByText('Isolated test c2')).toBeVisible();
-  for (const id of ['details-scores', 'details-highlights', 'details-people', 'certification', 'score-ring', 'source-scores']) await expect(d.getByTestId(id)).toHaveCount(0);
+  for (const id of ['details-scores', 'details-summary', 'details-essence', 'details-highlights', 'details-effects', 'details-not-for', 'details-people', 'certification', 'score-ring', 'source-scores']) await expect(d.getByTestId(id)).toHaveCount(0);
   await expect(d.getByText('No synopsis')).toHaveCount(0);
+  await expect(d.getByRole('button', { name: 'Trailer', exact: true })).toHaveCount(0);
   await expect(d.getByRole('link', { name: 'Full details on GoodWatch' })).toBeVisible();
   await shot(page, 'details-bare');
 });

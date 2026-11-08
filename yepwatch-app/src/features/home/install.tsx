@@ -20,7 +20,7 @@ export const stores: readonly Store[] = [
 /** Install offers belong to browsers only. */
 export const installable = Platform.OS === 'web';
 
-// Expo Link's asChild uses HTML attributes; RN Web Pressable needs hrefAttrs (same as WatchLinks).
+// Expo Link's asChild uses HTML attributes; RN Web Pressable needs hrefAttrs.
 const externalAttrs = Platform.OS === 'web' ? { hrefAttrs: { target: '_blank', rel: 'noopener noreferrer' } } : {};
 const qrSource = (store: Store) => ({ uri: `data:image/svg+xml,${encodeURIComponent(store.svg)}` });
 

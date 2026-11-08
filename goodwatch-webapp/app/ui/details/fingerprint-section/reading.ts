@@ -1,9 +1,6 @@
-import {
-	type EffectReading,
-	leading,
-	notFor,
-	readEffects,
-} from "~/domain/fingerprint-effects/effects"
+import type { EffectReading } from "~/domain/fingerprint-effects/effects"
+import { readTitle as readText, effectColor, type Phrase } from "~/domain/fingerprint-effects/title-reading"
+export { effectColor, phraseOf, sizeOf, type Phrase } from "~/domain/fingerprint-effects/title-reading"
 // What the title page's fingerprint section says, as data, read from the title's scores:
 //
 // - Rows: the five leading effects that count (domain/fingerprint-effects), type size by strength (6.5, where an
@@ -30,15 +27,11 @@ import {
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import type * as F from "~/ui/fingerprint/fingerprintText"
 import type { WhorlAttribute } from "~/ui/profile/taste/Whorl"
-import { FAMILY_COLOR, FAMILY_ORDER } from "~/ui/profile/taste/model"
+import { FAMILY_COLOR, FAMILY_ORDER } from "~/domain/fingerprint-effects/palette"
 
 export type Key = keyof CoreScores
 
 export { familyOf }
-
-/** An effect's color: the print family of its lead ingredient. */
-export const effectColor = (r: EffectReading) =>
-	FAMILY_COLOR[familyOf(r.parts[0].members[0].key)]
 
 /** The effect as a chip: two words at most, so three fit a phone's line or two. */
 const SHORT: Record<string, string> = {
@@ -152,24 +145,6 @@ function readAxes(all: EffectReading[]): AxisView[] {
 }
 
 // --- Rows -------------------------------------------------------------------------------------------------------
-
-/** The smallest row sits at 6.5 (an effect counts from there), the largest at 10. */
-export const sizeOf = (strength: number) =>
-	Math.max(0, Math.min(1, (strength - 6.5) / 3.5))
-
-export interface Phrase {
-	r: EffectReading
-	color: string
-	/** 0 (smallest type) to 1 (largest). */
-	k: number
-}
-
-/** A row for any effect (the compact row a selected effect outside the five gets). */
-export const phraseOf = (r: EffectReading): Phrase => ({
-	r,
-	color: effectColor(r),
-	k: sizeOf(r.strength),
-})
 
 // --- Dials ------------------------------------------------------------------------------------------------------
 
@@ -294,9 +269,8 @@ export interface Reading {
 }
 
 export function readTitle(t: F.TitleInput): Reading {
-	const all = readEffects(t.fingerprint.scores)
-	const counted = all.filter((r) => r.counts)
-	const { lead } = leading(counted.length ? counted : all.slice(0, 3), 5)
+	const text = readText(t.fingerprint.scores)
+	const { all } = text
 	const axes = readAxes(all)
 	const ranked = [...axes].sort((a, b) => b.strength - a.strength)
 	const counting = ranked.filter((a) => a.counts)
@@ -307,8 +281,8 @@ export function readTitle(t: F.TitleInput): Reading {
 	)
 	return {
 		all,
-		rows: lead.map(phraseOf),
-		not: notFor(all),
+		rows: text.rows,
+		not: text.not,
 		axes,
 		bold,
 		scales: scaleReadings(t),

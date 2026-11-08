@@ -1,80 +1,251 @@
 /**
- * A card's details, compact like a GoodWatch title page: title, poster with year · runtime · age rating, genres and
- * services; the scores row; up to three fingerprint highlights; tagline and overview; director or creator and the
- * top cast; where to watch. Every part whose data is missing stays out.
+ * A card's details as a full page in the shared container: a short hero right under the header (the backdrop subdued
+ * behind poster, facts, title, genres and scores), two big actions (Trailer, which plays inside the hero's own box,
+ * and Full details on GoodWatch), then the Summary (tagline, synopsis, essence chips) beside GoodWatch's effect lines
+ * in its print colors, "Not for …" and the credits. Every part whose data is missing stays out.
  */
-import { Image, View } from 'react-native';
-import type { Candidate, ScreenContext } from '@goodwatch/yepwatch-contracts/proposal';
+import { useState } from 'react';
+import { Image, Platform, Pressable, Text, View } from 'react-native';
+import { Link } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { titlePresentation } from '../glow/adapter';
-import { WatchLinks } from '../glow/WatchLinks';
-import { GText, glow } from '../glow/theme';
-import { credits, highlightChips, sourceScores, gwScore, text } from '../glow/score-format';
+import { credits, effectLines, gwScore, highlightChips, sourceScores, text } from '../glow/score-format';
 import { ScoreRing, SourceChips } from '../glow/scores';
-import type { ServiceChoice } from './services';
-import { Logos, Small } from './ui';
+import { GText, Icon, Press, glow } from '../glow/theme';
+import { Trailer } from '../glow/Trailer';
+import { goodwatchTitleUrl } from '../glow/watch-links';
+import { useLayout, type Layout } from '../shell/layout';
+import { GoodWatchMark } from '../shell/marks';
 
-export function TitleDetails({ c, offered, screens }: { c: Candidate; offered: ServiceChoice[]; screens: ScreenContext[] }) {
-  const title = titlePresentation(c);
+// Expo Link's asChild uses HTML attributes; RN Web Pressable needs hrefAttrs.
+const externalAttrs = Platform.OS === 'web' ? { hrefAttrs: { target: '_blank', rel: 'noopener noreferrer' } } : {};
+const sand = '#f5e6c8';
+type Z = Layout['z'];
+
+const hoursMinutes = (m: number) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`);
+function facts(c: Candidate) {
+  const t = titlePresentation(c);
+  const movie = t.kind === 'movie';
+  return [t.year ? String(t.year) : null, movie ? 'Movie' : 'Show', t.episodeLabel, t.runtimeMinutes ? (movie ? hoursMinutes(t.runtimeMinutes) : `${t.runtimeMinutes} min`) : null]
+    .filter((x): x is string => Boolean(x));
+}
+/** Long synopses fold after about four lines; More opens the rest in place. */
+function fold(s: string, max = 230) {
+  if (s.length <= max + 40) return { shown: s, hidden: '' };
+  const cut = s.lastIndexOf(' ', max);
+  return { shown: `${s.slice(0, cut)}…`, hidden: s.slice(cut + 1) };
+}
+
+function Kicker({ children, z }: { children: string; z: Z }) {
+  return <GText bold size={z(12)} color={glow.amber} style={{ letterSpacing: 1.6 }}>{children.toUpperCase()}</GText>;
+}
+
+function Scores({ c, z, ring }: { c: Candidate; z: Z; ring: number }) {
   const certification = text(c.certification);
-  const facts = [title.year, title.episodeLabel, title.runtimeMinutes ? `${title.runtimeMinutes} min` : null].filter(Boolean).join(' · ');
+  if (gwScore(c.goodwatchScore) === null && !sourceScores(c.scores) && !certification) return null;
+  return (
+    <View testID="details-scores" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: z(18), rowGap: 10 }}>
+      <ScoreRing score={c.goodwatchScore} size={ring} />
+      <SourceChips scores={c.scores} />
+      {certification ? (
+        <View testID="certification" style={{ height: 24, paddingHorizontal: 7, borderRadius: 6, borderWidth: 1, borderColor: '#ffffff40', justifyContent: 'center' }}>
+          <GText bold size={12} color={glow.soft}>{certification}</GText>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+const actionStyle = (z: Z) => ({ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(64), borderRadius: 14, paddingHorizontal: z(18), flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: z(10), backgroundColor: '#ffffff12', borderWidth: 1, borderColor: '#ffffff33' }) as const;
+
+/** Trailer (when there is one) and Full details on GoodWatch: two big, equal actions. */
+function Actions({ c, z, trailer, onTrailer, stack }: { c: Candidate; z: Z; trailer: boolean; onTrailer: ((open: boolean) => void) | null; stack: boolean }) {
+  return (
+    <View testID="details-actions" style={{ flexDirection: stack ? 'column' : 'row', gap: z(12), width: '100%' }}>
+      {onTrailer ? (
+        <Press label={trailer ? 'Close trailer' : 'Trailer'} onPress={() => onTrailer(!trailer)} style={actionStyle(z)}>
+          <Icon name={trailer ? 'close' : 'play'} size={z(22)} color={glow.amber} />
+          <GText bold size={z(19)} lines={1}>{trailer ? 'Close trailer' : 'Trailer'}</GText>
+        </Press>
+      ) : null}
+      <Link href={goodwatchTitleUrl(c.identity) as `https://${string}`} target="_blank" rel="noopener noreferrer" asChild>
+        <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel="Full details on GoodWatch" style={actionStyle(z)}>
+          <GoodWatchMark size={z(26)} />
+          <GText bold size={z(19)} lines={1} style={{ flexShrink: 1 }}>Full details on GoodWatch</GText>
+          <Icon name="external" size={z(17)} color={glow.amber} />
+        </Pressable>
+      </Link>
+    </View>
+  );
+}
+
+/** Room under the video for the player's status line (autoplay blocked, embedding refused). */
+const TRAILER_STATUS = 16 + 44;
+/** The trailer in the hero's own box (no layout jump), letterboxed to 16:9. */
+function TrailerBox({ url, width, height, onClose }: { url: string; width: number; height: number; onClose: () => void }) {
+  const w = Math.max(0, Math.min(width, (height - TRAILER_STATUS) * (16 / 9)));
+  return (
+    <View testID="details-trailer" style={{ width, height, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      <View style={{ width: w }}><Trailer url={url} /></View>
+      <Press label="Close trailer" onPress={onClose} style={{ position: 'absolute', right: 10, top: 10, width: 40, height: 40, borderRadius: 20, backgroundColor: '#000000b0' }}>
+        <Icon name="close" size={18} color={glow.ink} />
+      </Press>
+    </View>
+  );
+}
+
+function Synopsis({ children, size }: { children: string; size: number }) {
+  const [open, setOpen] = useState(false);
+  const { shown, hidden } = fold(children);
+  return (
+    <GText size={size} color={glow.soft} style={{ lineHeight: size * 1.5 }}>
+      {open ? `${shown.replace(/…$/, '')} ${hidden}` : shown}
+      {hidden ? <Text accessibilityRole="button" onPress={() => setOpen(!open)} style={{ fontFamily: 'GabaritoBold', fontSize: size, color: glow.amber }}>{open ? '  Less' : '  More'}</Text> : null}
+    </GText>
+  );
+}
+
+/** GoodWatch's essence tags as quiet chips with an amber dot; rooms from before them show the fingerprint highlights. */
+function Chips({ c, z }: { c: Candidate; z: Z }) {
+  const essence = (c.essence ?? []).map((tag) => text(tag)).filter((tag): tag is string => Boolean(tag));
+  if (essence.length) {
+    return (
+      <View testID="details-essence" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: z(8) }}>
+        {essence.map((tag) => (
+          <View key={tag} style={{ flexDirection: 'row', alignItems: 'center', gap: z(8), paddingVertical: z(6), paddingLeft: z(10), paddingRight: z(12), borderRadius: 10, backgroundColor: '#ffffff0b', borderWidth: 1, borderColor: '#ffffff14' }}>
+            <View style={{ width: z(6), height: z(6), borderRadius: 3, backgroundColor: '#fbbf2488' }} />
+            <GText size={z(15)} color="#e7e5e4">{tag}</GText>
+          </View>
+        ))}
+      </View>
+    );
+  }
   const chips = highlightChips(c.highlights);
-  const tagline = text(c.tagline);
-  const overview = text(title.overview);
+  if (!chips.length) return null;
+  return (
+    <View testID="details-highlights" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: z(8) }}>
+      {chips.map((h) => (
+        <View key={h.key} style={{ paddingHorizontal: z(10), paddingVertical: z(5), borderRadius: 8, backgroundColor: h.background }}>
+          <GText bold size={z(14)} color={h.color}>{h.label}</GText>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** The effect lines in their print colors, size and tracking by strength (no heading), then "Not for …". */
+function Effects({ c, z, phone }: { c: Candidate; z: Z; phone: boolean }) {
+  const lines = effectLines(c.effects);
+  const notFor = text(c.notFor);
+  if (!lines.length && !notFor) return null;
+  const k = (s: number) => Math.max(0, Math.min(1, (s - 6.5) / 3.5));
+  const size = (s: number) => Math.round(phone ? 20 + k(s) * 10 : z(22 + k(s) * 18));
+  return (
+    <View testID="details-effects" style={{ gap: z(2) }}>
+      {lines.map((e) => (
+        <GText key={e.line} bold size={size(e.strength)} color={e.color}
+          style={{ letterSpacing: -(0.004 + 0.022 * k(e.strength)) * size(e.strength), lineHeight: size(e.strength) * 1.24 }}>{e.line}</GText>
+      ))}
+      {notFor ? <View testID="details-not-for" style={{ marginTop: lines.length ? z(8) : 0 }}><GText size={phone ? 15 : z(16)} color={glow.muted}>{notFor}</GText></View> : null}
+    </View>
+  );
+}
+
+function People({ c, z }: { c: Candidate; z: Z }) {
   const people = credits(c);
-  const scored = gwScore(c.goodwatchScore) !== null || sourceScores(c.scores) !== null;
+  if (!people.length) return null;
+  return (
+    <View testID="details-people" style={{ gap: z(12) }}>
+      {people.map((p) => (
+        <View key={p.label} style={{ gap: 2 }}>
+          <GText bold size={z(12)} color={glow.muted} style={{ letterSpacing: 1.2 }}>{p.label.toUpperCase()}</GText>
+          <GText size={z(16)} color={glow.ink}>{p.names}</GText>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * `trailer` / `onTrailer`: whether the trailer plays in the hero, owned by the screen (it mutes the room's sounds and
+ * tells the room you're watching it).
+ */
+export function TitleDetails({ c, trailer, onTrailer }: { c: Candidate; trailer: boolean; onTrailer: (open: boolean) => void }) {
+  const { z, phone, wide, width, max } = useLayout();
+  const [heroH, setHeroH] = useState(0);
+  const t = titlePresentation(c);
+  const trailerUrl = t.trailerUrl;
+  const playing = trailer && Boolean(trailerUrl);
+  const toggle = trailerUrl ? onTrailer : null;
+  const bleed = (width - max) / 2;
+  // The frame's own top padding: the hero starts right under the header.
+  const padTop = phone ? 22 : z(40);
+  const posterW = phone ? 104 : z(wide ? 220 : 180);
+  const titleSize = phone ? (t.title.length > 22 ? 28 : 34) : z(t.title.length > 22 ? 52 : 68);
+  // At least 16:9 on phones, where the hero is short.
+  const trailerH = phone ? Math.max(heroH, Math.round(width * 0.5625) + TRAILER_STATUS) : Math.max(heroH, z(420));
+  const factLine = facts(c).join(' · ');
+  const genres = t.genres.map((g) => g.replace('Sci-Fi & Fantasy', 'Sci-fi')).join(' · ');
+  const tagline = text(c.tagline);
+  const overview = text(t.overview);
+  const summary = Boolean(tagline || overview || c.essence?.length || highlightChips(c.highlights).length);
+  const effects = effectLines(c.effects).length > 0 || Boolean(text(c.notFor));
+  const people = credits(c).length > 0;
+  const info = (
+    <View style={{ flex: 1, minWidth: 0, gap: z(phone ? 6 : 12) }}>
+      {factLine ? <Kicker z={z}>{factLine}</Kicker> : null}
+      <GText bold size={titleSize} style={{ letterSpacing: -titleSize * 0.03, lineHeight: titleSize * 1.04 }}>{t.title}</GText>
+      {genres ? <GText size={phone ? 15 : z(18)} color={glow.soft}>{genres}</GText> : null}
+      {!phone ? <View style={{ marginTop: z(4) }}><Scores c={c} z={z} ring={z(52)} /></View> : null}
+    </View>
+  );
+  const actions = (stack: boolean) => <Actions c={c} z={z} trailer={playing} onTrailer={toggle} stack={stack} />;
+  const posterUri = t.posterUrl && phone ? t.posterUrl.replace('/w500/', '/w342/') : t.posterUrl;
+  const backdropUri = t.backdropUrl && phone ? t.backdropUrl.replace('/w1280/', '/w780/') : t.backdropUrl;
   return (
     <>
-      <GText bold size={28} style={{ letterSpacing: -0.8 }}>{title.title}</GText>
-      <View style={{ flexDirection: 'row', gap: 14 }}>
-        {title.posterUrl ? <Image source={{ uri: title.posterUrl.replace('/w500/', '/w185/') }} accessible={false} style={{ width: 92, height: 138, borderRadius: 10 }} /> : null}
-        <View style={{ flex: 1, gap: 8 }}>
-          {facts || certification ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-              {facts ? <Small>{facts}</Small> : null}
-              {certification ? (
-                <View testID="certification" style={{ height: 20, paddingHorizontal: 6, borderRadius: 6, borderWidth: 1, borderColor: '#ffffff40', justifyContent: 'center' }}>
-                  <GText bold size={11} color={glow.soft}>{certification}</GText>
+      <View testID="details-hero" style={{ marginTop: -padTop, marginLeft: -bleed, width }}>
+        {playing && trailerUrl ? <TrailerBox url={trailerUrl} width={width} height={trailerH} onClose={() => onTrailer(false)} /> : (
+          <View onLayout={(e) => setHeroH(Math.round(e.nativeEvent.layout.height))} style={{ overflow: 'hidden' }}>
+            {backdropUri ? <Image source={{ uri: backdropUri }} accessible={false} resizeMode="cover" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: 0.38 }} /> : null}
+            <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#070707f2', '#070707b3', '#07070740']} locations={[0, 0.5, 1]} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
+            <LinearGradient colors={['#07070700', '#070707d9', glow.bg]} locations={[0.3, 0.85, 1]} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
+            <View style={{ marginLeft: bleed, width: max, paddingTop: phone ? 20 : z(36), paddingBottom: phone ? 18 : z(36), flexDirection: 'row', alignItems: phone ? 'flex-end' : 'center', gap: phone ? 14 : z(36) }}>
+              {posterUri ? (
+                <View style={{ width: posterW, height: posterW * 1.5, borderRadius: phone ? 10 : 14, overflow: 'hidden', borderWidth: 1, borderColor: '#ffffff24', backgroundColor: '#1a1610' }}>
+                  <Image source={{ uri: posterUri }} accessibilityLabel={`${t.title} poster`} style={{ width: '100%', height: '100%' }} />
                 </View>
               ) : null}
+              {info}
+              {wide ? <View style={{ width: z(380) }}>{actions(true)}</View> : null}
             </View>
-          ) : null}
-          {title.genres.length ? <Small>{title.genres.join(' · ')}</Small> : null}
-          {offered.length ? <Logos services={offered} size={22} /> : null}
-        </View>
+          </View>
+        )}
       </View>
-      {scored || chips.length ? (
-        <View style={{ gap: 12 }}>
-          {scored ? (
-            <View testID="details-scores" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 10 }}>
-              <ScoreRing score={c.goodwatchScore} size={46} />
-              <SourceChips scores={c.scores} />
-            </View>
-          ) : null}
-          {chips.length ? (
-            <View testID="details-highlights" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-              {chips.map((h) => (
-                <View key={h.key} style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: h.background }}>
-                  <GText bold size={12} color={h.color}>{h.label}</GText>
-                </View>
-              ))}
-            </View>
-          ) : null}
-        </View>
-      ) : null}
-      {tagline || overview ? (
-        <View style={{ gap: 6 }}>
-          {tagline ? <GText bold size={17} color={glow.ink}>{tagline}</GText> : null}
-          {overview ? <GText color={glow.soft} style={{ lineHeight: 22 }}>{overview}</GText> : null}
-        </View>
-      ) : null}
-      {people.length ? (
-        <View testID="details-people" style={{ gap: 4 }}>
-          {people.map((p) => (
-            <GText key={p.label} size={14} color={glow.soft}><GText size={14} bold color={glow.muted}>{`${p.label}  `}</GText>{p.names}</GText>
-          ))}
-        </View>
-      ) : null}
-      <WatchLinks identity={c.identity} availability={c.availability} screens={screens} />
+      <View style={{ gap: phone ? 26 : z(44), marginTop: phone ? 16 : z(32) }}>
+        {phone ? <Scores c={c} z={z} ring={46} /> : null}
+        {!wide ? actions(phone) : null}
+        {summary || effects || people ? (
+          <View style={{ flexDirection: wide ? 'row' : 'column', gap: phone ? 30 : z(56) }}>
+            {summary ? (
+              <View testID="details-summary" style={{ flex: wide ? 1.35 : undefined, gap: z(22) }}>
+                <GText bold size={phone ? 21 : z(26)} style={{ letterSpacing: -0.5 }}>Summary</GText>
+                {tagline ? <GText bold size={phone ? 18 : z(22)} color={sand}>{tagline}</GText> : null}
+                {overview ? <Synopsis size={phone ? 17 : z(20)}>{overview}</Synopsis> : null}
+                <Chips c={c} z={z} />
+              </View>
+            ) : wide ? <View style={{ flex: 1.35 }} /> : null}
+            {effects || people ? (
+              <View style={{ flex: wide ? 1 : undefined, gap: z(22), paddingTop: wide ? z(4) : 0 }}>
+                <Effects c={c} z={z} phone={phone} />
+                {effects && people ? <View style={{ height: 1, backgroundColor: '#ffffff14', marginVertical: z(6) }} /> : null}
+                <People c={c} z={z} />
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+      </View>
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { credits, gwScore, highlightChips, scoreWord, sourceScores, text, textColorOn, vibeColor } from '../src/features/glow/score-format';
+import { credits, effectLines, gwScore, highlightChips, scoreWord, sourceScores, text, textColorOn, vibeColor } from '../src/features/glow/score-format';
 import { sharedSchema } from '../src/core/continuous/wire';
 import { continuousFixture } from './continuous-fixture';
 
@@ -40,16 +40,32 @@ test('highlights wear their fingerprint colors with readable text; at most three
   assert.deepEqual(highlightChips(null), []);
 });
 
-test('credits: director or creator, then the top cast; missing parts stay out', () => {
+test('credits: directed by or created by, then the top cast; missing parts stay out', () => {
   const movie = { kind: 'movie' as const, tmdbId: 1 };
   const show = { kind: 'show_start' as const, tmdbId: 2, episode: { tmdbId: 3, season: 1, number: 1 } };
-  assert.deepEqual(credits({ identity: movie, people: { directors: ['Wes Anderson'], cast: ['A', 'B', 'C', 'D'] } }), [{ label: 'Director', names: 'Wes Anderson' }, { label: 'Cast', names: 'A, B, C' }]);
-  assert.deepEqual(credits({ identity: movie, people: { directors: ['Joel Coen', 'Ethan Coen'], cast: [] } }), [{ label: 'Directors', names: 'Joel Coen, Ethan Coen' }]);
+  assert.deepEqual(credits({ identity: movie, people: { directors: ['Wes Anderson'], cast: ['A', 'B', 'C', 'D'] } }), [{ label: 'Directed by', names: 'Wes Anderson' }, { label: 'Starring', names: 'A, B, C' }]);
+  assert.deepEqual(credits({ identity: movie, people: { directors: ['Joel Coen', 'Ethan Coen'], cast: [] } }), [{ label: 'Directed by', names: 'Joel Coen, Ethan Coen' }]);
   assert.deepEqual(credits({ identity: show, people: { directors: ['Vince Gilligan'], cast: ['Bryan Cranston'] } })[0], { label: 'Created by', names: 'Vince Gilligan' });
   assert.deepEqual(credits({ identity: movie, people: null }), []);
   assert.deepEqual(credits({ identity: movie }), []);
   assert.equal(text('  '), null);
   assert.equal(text(' A tagline '), 'A tagline');
+});
+
+test('effect lines end in a full stop, keep their strength in 0-10 and fall back to ink for a color that isn\'t #rrggbb', () => {
+  assert.deepEqual(effectLines([
+    { line: 'Warms you up', strength: 9.2, color: '#fb7185' },
+    { line: 'Lifts you up.', strength: 12, color: 'red' },
+    { line: '  ', strength: 8, color: '#38bdf8' },
+    { line: 'Feels like real life!', strength: -1, color: '#38BDF8' },
+  ]), [
+    { line: 'Warms you up.', strength: 9.2, color: '#fb7185' },
+    { line: 'Lifts you up.', strength: 10, color: '#fafafa' },
+    { line: 'Feels like real life!', strength: 0, color: '#38BDF8' },
+  ]);
+  assert.equal(effectLines(Array.from({ length: 7 }, (_, i) => ({ line: `Line ${i}`, strength: 7, color: '#a78bfa' }))).length, 5);
+  assert.deepEqual(effectLines(null), []);
+  assert.deepEqual(effectLines(undefined), []);
 });
 
 test('the wire accepts the optional title highlights, absent or null', () => {

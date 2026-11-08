@@ -58,15 +58,29 @@ export function highlightChips(highlights: Candidate['highlights']) {
   });
 }
 
-/** "Director" / "Directors" for movies, "Created by" for shows; up to two names, three cast. */
+/** "Directed by" for movies, "Created by" for shows (up to two names), then "Starring" (three cast). */
 export function credits(c: Pick<Candidate, 'people' | 'identity'>) {
   const directors = (c.people?.directors ?? []).filter(Boolean).slice(0, 2);
   const cast = (c.people?.cast ?? []).filter(Boolean).slice(0, 3);
-  const lead = c.identity.kind === 'movie' ? (directors.length > 1 ? 'Directors' : 'Director') : 'Created by';
+  const lead = c.identity.kind === 'movie' ? 'Directed by' : 'Created by';
   return [
     ...(directors.length ? [{ label: lead, names: directors.join(', ') }] : []),
-    ...(cast.length ? [{ label: 'Cast', names: cast.join(', ') }] : []),
+    ...(cast.length ? [{ label: 'Starring', names: cast.join(', ') }] : []),
   ];
+}
+
+/**
+ * GoodWatch's effect lines ready to show: trimmed, ending in a full stop, strength clamped to 0-10, and a color that
+ * isn't #rrggbb falls back to the ink color. Strongest first, as sent; at most five.
+ */
+export function effectLines(effects: Candidate['effects']) {
+  return (effects ?? []).flatMap((e) => {
+    const line = text(e?.line);
+    if (!line) return [];
+    const strength = Number.isFinite(e.strength) ? Math.max(0, Math.min(10, e.strength)) : 0;
+    const color = /^#[0-9a-f]{6}$/i.test(e.color ?? '') ? e.color : '#fafafa';
+    return [{ line: /[.!?…]$/.test(line) ? line : `${line}.`, strength, color }];
+  }).slice(0, 5);
 }
 
 /** A value worth showing: trimmed text, or null. */

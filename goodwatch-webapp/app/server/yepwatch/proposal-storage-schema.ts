@@ -297,6 +297,9 @@ export const tables = {
 		availability
 	}),
 	candidate: entity("candidate", {
+        essence: additive(array(text(), 6)),
+        effects: additive(array(object({ line: text(), strength: real, color: text(7) }), 5)),
+        not_for: additive(text()),
 		idea_ids: additive(array(text(128), 24)),
 		candidate_id: text(128),
 		identity,

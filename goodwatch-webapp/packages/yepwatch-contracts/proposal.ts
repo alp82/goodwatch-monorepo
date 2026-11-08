@@ -49,6 +49,12 @@ export interface Candidate extends BaseCandidate {
 	} | null
 	highlights?: { key: string; label: string }[] | null   // up to 3 fingerprint highlights, `key` usable with getFingerprintMeta from @goodwatch/yepwatch-contracts/fingerprint for the website colors
 	people?: { directors: string[]; cast: string[] } | null // directors or show creators (max 2), top-billed cast (max 3)
+	/** GoodWatch title analysis essence tags, as on the title page Summary (max 6). */
+	essence?: string[] | null
+	/** GoodWatch's effect lines ("Warms you up."), strongest first (max 5). `strength` 0-10 sets the size; `color` is the print family color of the effect's lead ingredient (#rrggbb). */
+	effects?: { line: string; strength: number; color: string }[] | null
+	/** GoodWatch's "Not for …" line, or null when nothing a viewer might expect is weak. */
+	notFor?: string | null
 }
 export interface Match {
 	candidateId: string

@@ -2,7 +2,13 @@ import type { Candidate } from "../../../packages/yepwatch-contracts/continuous.
 import { FINGERPRINT_META } from "../../../packages/yepwatch-contracts/fingerprint.ts"
 import type { CatalogQuery } from "./catalog-stream-links.ts"
 
+import { readTitle, effectColor, notForLine } from "../../domain/fingerprint-effects/title-reading.ts"
+import { type CoreScores, VALID_FINGERPRINT_KEYS } from "../utils/fingerprint.ts"
+import type { Candidate as ProposalCandidate } from "../../../packages/yepwatch-contracts/proposal.ts"
+
+type TextFingerprint = Pick<ProposalCandidate, "essence" | "effects" | "notFor">
 interface TitleRow {
+  fingerprint_scores: CoreScores | null; essence_tags: string[] | null
   tmdb_id: number; tagline: string | null; synopsis: string | null; genres: string[] | null
   age_certifications: string[] | null; fingerprint_highlight_keys: string[] | null
   imdb_user_score_original: number | null; rotten_tomatoes_tomato_score_original: number | null
@@ -10,17 +16,17 @@ interface TitleRow {
 }
 interface Credit { media_tmdb_id: number; person_tmdb_id: number }
 interface Video { media_tmdb_id: number; site_key: string }
-const fields = 'tmdb_id, tagline, synopsis, genres, age_certifications, fingerprint_highlight_keys, imdb_user_score_original, rotten_tomatoes_tomato_score_original, rotten_tomatoes_audience_score_original, metacritic_meta_score_original'
+const fields = 'tmdb_id, fingerprint_scores, essence_tags, tagline, synopsis, genres, age_certifications, fingerprint_highlight_keys, imdb_user_score_original, rotten_tomatoes_tomato_score_original, rotten_tomatoes_audience_score_original, metacritic_meta_score_original'
 /** Same source scales and missing-score rule as MCP titleScores; transport is integer percent. */
 const score = (n: number | null, scale = 100) => typeof n === 'number' && Number.isFinite(n) && n > 0 && n <= scale ? Math.round(n * 100 / scale) : null
 
 /** Bounded page reads over granted catalog tables, never one full details query per card. */
-export async function enrichContinuousCandidates(candidates: Candidate[], country: string, read?: CatalogQuery): Promise<Candidate[]> {
+export async function enrichContinuousCandidates(candidates: Candidate[], country: string, read?: CatalogQuery): Promise<(Candidate & TextFingerprint)[]> {
   if (!candidates.length) return candidates
   // Highlights are extras: if the reader can't load, cards go out unenriched.
   let query: CatalogQuery
   try { query = read ?? (await import('../combined-search/catalog.server')).searchQuery } catch { return candidates }
-  const updates = new Map<string, Partial<Candidate>>()
+  const updates = new Map<string, Partial<Candidate & TextFingerprint>>()
   await Promise.all((['movie', 'show'] as const).map(async mediaType => {
     const ids = [...new Set(candidates.filter(c => (c.identity.kind === 'movie' ? 'movie' : 'show') === mediaType).map(c => c.identity.tmdbId))]
     if (!ids.length) return
@@ -39,8 +45,16 @@ export async function enrichContinuousCandidates(candidates: Candidate[], countr
     const titleMap = new Map(titles?.map(t => [t.tmdb_id, t]))
     for (const id of ids) {
       const title = titleMap.get(id)
-      const patch: Partial<Candidate> = {}
+      const patch: Partial<Candidate & TextFingerprint> = {}
       if (title) {
+        // No reading without actual scores: the reader's low-score fallback is not missing data.
+        const scores = title.fingerprint_scores
+        if (scores && VALID_FINGERPRINT_KEYS.some(key => Number.isFinite(scores[key]))) {
+          const reading = readTitle(scores)
+          patch.essence = Array.isArray(title.essence_tags) ? title.essence_tags.filter(tag => typeof tag === 'string').slice(0, 6) : null
+          patch.effects = reading.rows.slice(0, 5).map(({ r }) => ({ line: `${r.effect.name}.`, strength: r.strength, color: effectColor(r) }))
+          patch.notFor = notForLine(reading.not) || null
+        }
         const cert = title.age_certifications?.find(c => c.startsWith(`${country}_`))?.slice(country.length + 1) || null
         Object.assign(patch, {
           tagline: title.tagline || null,

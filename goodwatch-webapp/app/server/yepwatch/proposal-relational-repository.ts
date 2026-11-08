@@ -143,6 +143,12 @@ export class RelationalProposalRepository implements ProposalRepository {
 	private validRecordId(entity: Entity, row: Row, id: string) {
 		if (this.recordId(entity, row) === id) return true
 		const legacy = { ...row }
+        if (entity === "candidate") {
+            for (const key of ["essence", "effects", "not_for"]) {
+                if (legacy[key] == null) delete legacy[key]
+            }
+            if (this.recordId(entity, legacy) === id) return true
+        }
 		for (const key of entity === "participant"
 			? ["service_ids", "show_seen"]
 			: entity === "candidate"
@@ -285,6 +291,9 @@ export class RelationalProposalRepository implements ProposalRepository {
 					({ screenId: _, ...evidence }) => evidence
 				),
 				viewing_duration: c.viewingDuration,
+                essence: c.essence ?? null,
+                effects: c.effects ?? null,
+                not_for: c.notFor ?? null,
 				backdrop_url: c.backdropUrl ?? null,
 				trailer_url: c.trailerUrl ?? null,
 				goodwatch_score: c.goodwatchScore ?? null,
@@ -697,6 +706,9 @@ export class RelationalProposalRepository implements ProposalRepository {
 						screenId: ROOM_CONTEXT
 					})),
 					viewingDuration: c.viewing_duration,
+                    essence: c.essence ?? null,
+                    effects: c.effects ?? null,
+                    notFor: c.not_for ?? null,
 					backdropUrl: c.backdrop_url,
 					trailerUrl: c.trailer_url,
 					goodwatchScore: c.goodwatch_score,

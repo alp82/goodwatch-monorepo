@@ -63,6 +63,9 @@ const candidate = z
     genres: z.array(z.string()).optional(),
     // GoodWatch title highlights for the details view. Absent or null is unknown and hidden; nested
     // display objects aren't strict, so a new score source can't make a room unreadable.
+    essence: z.array(z.string()).max(6).nullable().optional(),
+    effects: z.array(z.object({ line: z.string(), strength: z.number().min(0).max(10), color: z.string().regex(/^#[0-9a-f]{6}$/i) })).max(5).nullable().optional(),
+    notFor: z.string().nullable().optional(),
     tagline: z.string().nullable().optional(),
     certification: z.string().nullable().optional(),
     scores: z
