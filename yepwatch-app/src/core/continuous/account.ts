@@ -1,11 +1,11 @@
 import { useCallback, useState, useSyncExternalStore } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { AccountStatus, MemberStatusResponse } from '@goodwatch/yepwatch-contracts/proposal';
 import { guestOnly } from '../config';
-import { nativeClient, type RoomAccess } from '../credentials';
+import { nativeClient } from '../credentials';
 import { queryClient } from '../providers';
 import { continuousApi, RoomFailure } from './api';
-import { accountFlow, accountView, type DeviceAccount } from './account-flow';
+import { accountFlow, authEpoch, type DeviceAccount } from './account-flow';
+import { createDeviceAccount, guestAccount } from './device-account';
 import { beginAccount, clearSession, forgetMemberName, readMemberName, readSession, rememberMemberName, saveSession } from './member';
 import { forgetMemberHint, hasMemberHint, rememberMemberHint } from './web-member-return';
 
@@ -14,60 +14,32 @@ import { forgetMemberHint, hasMemberHint, rememberMemberHint } from './web-membe
  * or opens a room, and every room you create, join or open while signed in links to it.
  */
 export const accountKey = ['yepwatch-account'] as const;
-const guestStatus: AccountStatus = { state: 'guest', displayName: null };
-const guest: DeviceAccount = accountView(guestStatus, null);
+const guest = guestAccount;
 
-/** The device's sign-in changed (signed in, lapsed, logged out): rooms try linking again. */
-function settle(next: DeviceAccount) {
-  const previous = queryClient.getQueryData<DeviceAccount>(accountKey);
-  if (previous && previous.state !== next.state) accountFlow.bump();
-  return next;
-}
+const device = createDeviceAccount({
+  guestOnly,
+  nativeClient,
+  epoch: authEpoch,
+  api: continuousApi,
+  store: { readSession, saveSession, clearSession, readMemberName, rememberMemberName, forgetMemberName },
+  hint: { has: hasMemberHint, remember: rememberMemberHint, forget: forgetMemberHint },
+  cache: {
+    get: () => queryClient.getQueryData<DeviceAccount>(accountKey),
+    set: (account) => queryClient.setQueryData(accountKey, account),
+  },
+  bump: () => accountFlow.bump(),
+  unsupported: (e) => e instanceof RoomFailure && (e.code === 'not_implemented' || e.status === 404),
+});
+// Log out or a new sign-in: an account answer still in flight belongs to the earlier sign-in.
+authEpoch.subscribe(() => { void queryClient.cancelQueries({ queryKey: accountKey }); });
 
-export async function loadAccount(): Promise<DeviceAccount> {
-  if (guestOnly) return guest;
-  const [session, remembered] = await Promise.all([readSession(), readMemberName()]);
-  // The app knows it has no session without asking. A browser's session is an HttpOnly cookie: a
-  // browser that never signed in here (no hint) doesn't ask either, so a first visit makes no request.
-  if (nativeClient ? !session : !hasMemberHint()) return settle(accountView(guestStatus, remembered));
-  try {
-    const status = await continuousApi.account(session);
-    if (status.session) await saveSession(status.session);
-    if (status.state === 'guest' && session) await clearSession();
-    if (status.state === 'member') {
-      rememberMemberHint();
-      await rememberMemberName(status.displayName ?? '');
-    } else if (remembered === null) forgetMemberHint();
-    return settle(accountView(status, remembered));
-  } catch (e) {
-    if (e instanceof RoomFailure && (e.code === 'not_implemented' || e.status === 404)) return guest;
-    throw e;
-  }
-}
-
+export const loadAccount = device.load;
 /** A sign-in that just completed on this device (the app's sheet or its return link). */
-export async function accountSignedIn(status: AccountStatus) {
-  await rememberMemberName(status.displayName ?? '');
-  queryClient.setQueryData(accountKey, accountView(status, null));
-  accountFlow.bump();
-}
-
+export const accountSignedIn = device.signedIn;
 /** Links your participant in a room to this device's sign-in (a no-op on the server when already linked). */
-export async function linkRoom(access: RoomAccess): Promise<MemberStatusResponse> {
-  const result = await continuousApi.memberLink(access, await readSession());
-  if (result.session) await saveSession(result.session);
-  return { state: result.state, prefill: result.prefill };
-}
-
+export const linkRoom = device.linkRoom;
 /** Ends this device's GoodWatch sign-in for YepWatch. GoodWatch itself stays signed in. */
-export async function signOut() {
-  if (!nativeClient) await continuousApi.accountLogout();
-  await clearSession();
-  await forgetMemberName();
-  forgetMemberHint();
-  queryClient.setQueryData(accountKey, guest);
-  accountFlow.bump();
-}
+export const signOut = device.signOut;
 
 export function useAccount() {
   const query = useQuery({

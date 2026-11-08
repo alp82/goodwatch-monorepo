@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as WebBrowser from 'expo-web-browser';
 import type { AccountStatus } from '@goodwatch/yepwatch-contracts/proposal';
 import { loadAccess } from '../credentials';
+import { authEpoch } from './account-flow';
 import { continuousApi } from './api';
 import { memberReturnUri, nativeAccountCallback, nativeMemberCallback, secureAuthorizeUrl, type AccountIntent, type MemberIntent } from './member-state';
 const key = 'yepwatch.v2.member-intent';
@@ -60,6 +61,8 @@ export function finishAccount(raw: string): Promise<AccountStatus> {
     const request = nativeAccountCallback(raw, JSON.parse(stored) as AccountIntent);
     const status = await continuousApi.accountExchange(request);
     if (status.state !== 'member' || !status.session) throw new Error('GoodWatch sign-in was not confirmed.');
+    // A new account replaces this device's session: answers asked under the old one are outdated.
+    authEpoch.advance();
     await saveSession(status.session);
     await SecureStore.deleteItemAsync(accountIntentKey);
     return { state: status.state, displayName: status.displayName };

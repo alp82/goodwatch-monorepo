@@ -19,12 +19,20 @@ const secret = "test-account-secret-at-least-thirty-two"
 const api = (path: string) => `${origin}/api/yepwatch/v1/proposal${path}`
 
 /** A GoodWatch issuer double: codes become short-lived grants; refresh tokens rotate when offline access is on. */
-function setup(options: { offline?: boolean; lifetime?: number; refreshReply?: () => Response | Promise<Response> } = {}) {
+function setup(options: {
+	offline?: boolean
+	lifetime?: number | (() => number)
+	refreshReply?: () => Response | Promise<Response>
+	/** A reply for GoodWatch's identity check instead of the real one (an outage). */
+	identityReply?: () => Response | undefined
+} = {}) {
 	const config = releaseMemberConfig({ ...env, YEPWATCH_MEMBER_OFFLINE_ACCESS: options.offline ? "true" : "false" }, origin)!
 	const repo = new ProposalMemoryRepository()
 	const service = new ProposalService(repo, proposalFixtureCatalog, secret)
 	const grants = new Map<string, number>()
 	const calls = { token: [] as URLSearchParams[], verify: 0 }
+	/** Refresh tokens rotate: each one redeems once, then GoodWatch refuses it (invalid_grant). */
+	const refreshTokens = new Set<string>()
 	let issued = 0
 	const resource = createMemberResource({
 		async verify(token) {
@@ -44,12 +52,15 @@ function setup(options: { offline?: boolean; lifetime?: number; refreshReply?: (
 			const form = new URLSearchParams(await request.text())
 			calls.token.push(form)
 			if (form.get("grant_type") === "refresh_token" && options.refreshReply) return options.refreshReply()
+			if (form.get("grant_type") === "refresh_token" && !refreshTokens.delete(form.get("refresh_token")!))
+				return Response.json({ error: "invalid_grant" }, { status: 400 })
 			const accessToken = `grant-${++issued}`
-			const lifetime = options.lifetime ?? 300
+			const lifetime = typeof options.lifetime === "function" ? options.lifetime() : options.lifetime ?? 300
 			grants.set(accessToken, Date.now() + lifetime * 1000)
+			if (options.offline) refreshTokens.add(`refresh-${issued}`)
 			return Response.json({ access_token: accessToken, expires_in: lifetime, token_type: "Bearer", ...(options.offline ? { refresh_token: `refresh-${issued}` } : {}) })
 		}
-		return resource(request)
+		return options.identityReply?.() ?? resource(request)
 	}
 	const members = releaseMembers(repo, config, transport, secret)
 	const handler = createProposalHandler(service, { allowedOrigins: [origin], serviceSecret: "test-service-secret-at-least-thirty-two", members })
@@ -246,4 +257,78 @@ test("a renewal GoodWatch definitively refuses (invalid_grant) ends the session"
 	const status = await handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${session.value}` } }))
 	assert.equal((await status.json()).state, "guest")
 	assert.equal(cookies(status)[MEMBER_COOKIE].maxAge, 0)
+})
+
+/** A room created by this browser, with the cookie that opens it next to a member session. */
+async function room(handler: ReturnType<typeof setup>["handler"]) {
+	const created = await handler(new Request(api("/rooms"), {
+		method: "POST", headers: { origin, "content-type": "application/json" },
+		body: JSON.stringify({ contractVersion: 3, commandId: randomBytes(16).toString("hex"), admissionSecret: randomBytes(32).toString("base64url"), nickname: "" }),
+	}))
+	assert.equal(created.status, 200)
+	const roomId = (await created.json()).credential.roomId
+	const roomCookie = `yepwatch3_${roomId}=${cookies(created)[`yepwatch3_${roomId}`].value}`
+	const link = (member: string) => handler(new Request(api(`/rooms/${roomId}/member/link`), {
+		method: "POST", headers: { origin, "content-type": "application/json", cookie: `${roomCookie}; ${MEMBER_COOKIE}=${member}` }, body: "{}",
+	}))
+	return { roomId, link }
+}
+
+test("a refresh that rotates the tokens while GoodWatch's identity check is down keeps the rotated grant", async () => {
+	let outage = false
+	const { handler, calls } = setup({ offline: true, lifetime: 1, identityReply: () => (outage ? new Response("bad gateway", { status: 502 }) : undefined) })
+	const first = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+	const { link } = await room(handler)
+	outage = true
+	const during = await handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${first}` } }))
+	const body = await during.json()
+	assert.equal(body.state, "member", "an outage is not a sign-out")
+	assert.equal(body.unavailable, true, "the identity behind the new tokens is not verified yet")
+	assert.equal(calls.token.at(-1)!.get("refresh_token"), "refresh-1", "refresh-1 is consumed")
+	const rotated = cookies(during)[MEMBER_COOKIE]?.value
+	assert.ok(rotated && rotated !== first, "the rotated credentials are sealed into the cookie")
+	assert.ok(cookies(during)[MEMBER_COOKIE].maxAge > 80 * 86400, "still a renewable session")
+
+	// Room linking waits for a verified identity, and still keeps whatever rotation happened.
+	const refused = await link(rotated)
+	assert.equal(refused.status, 200)
+	assert.equal((await refused.json()).state, "unavailable", "no room links to an unverified identity")
+	const afterLink = cookies(refused)[MEMBER_COOKIE]?.value ?? rotated
+
+	// The outage lasts past any reuse window: the next try uses the rotated refresh token, never refresh-1.
+	outage = false
+	const back = await handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${afterLink}` } }))
+	const after = await back.json()
+	assert.equal(after.state, "member")
+	assert.equal(after.unavailable, undefined)
+	assert.equal(calls.token.filter((f) => f.get("refresh_token") === "refresh-1").length, 1, "the consumed refresh token is never sent again")
+	const verified = cookies(back)[MEMBER_COOKIE].value
+	const linked = await link(verified)
+	assert.equal(linked.status, 200)
+	assert.equal((await linked.json()).state, "linked")
+})
+
+test("a rotated grant whose identity check failed is verified again with its access token, without another refresh", async () => {
+	let outage = false
+	let lifetime = 1
+	const { handler, calls } = setup({ offline: true, lifetime: () => lifetime, identityReply: () => (outage ? new Response("bad gateway", { status: 502 }) : undefined) })
+	const first = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+	lifetime = 300
+	outage = true
+	const during = await handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${first}` } }))
+	assert.equal((await during.json()).unavailable, true)
+	const rotated = cookies(during)[MEMBER_COOKIE].value
+	const still = await handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${rotated}` } }))
+	assert.equal((await still.json()).unavailable, true, "still down: still unverified")
+	assert.equal(cookies(still)[MEMBER_COOKIE], undefined, "nothing new to keep")
+	outage = false
+	const tokenCalls = calls.token.length
+	const back = await handler(new Request(api("/account"), { headers: { "x-yepwatch-member": rotated, "x-yepwatch-client": "native" } }))
+	const body = await back.json()
+	assert.equal(body.state, "member")
+	assert.equal(body.unavailable, undefined)
+	assert.equal(calls.token.length, tokenCalls, "the live access token is checked; no refresh token is spent")
+	assert.ok(body.session && body.session !== rotated, "the verified session goes back to the app")
+	const again = await handler(new Request(api("/account"), { headers: { "x-yepwatch-member": body.session, "x-yepwatch-client": "native" } }))
+	assert.equal((await again.json()).session, undefined, "a verified live session is not renewed again")
 })

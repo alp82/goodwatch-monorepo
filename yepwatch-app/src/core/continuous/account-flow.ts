@@ -51,3 +51,27 @@ export function createAccountFlow() {
   };
 }
 export const accountFlow = createAccountFlow();
+
+/**
+ * Which device sign-in is current. It moves before Log out and before a new sign-in replaces the
+ * session, so an account or room-link answer that was asked under an earlier sign-in can't write its
+ * session, name or hint back over the newer state. Listeners cancel the account queries in flight.
+ */
+export function createAuthEpoch() {
+  let value = 0;
+  const listeners = new Set<() => void>();
+  return {
+    current: () => value,
+    isCurrent: (epoch: number) => epoch === value,
+    advance() {
+      value++;
+      listeners.forEach((l) => l());
+    },
+    subscribe(listener: () => void) {
+      listeners.add(listener);
+      return () => { listeners.delete(listener); };
+    },
+  };
+}
+export type AuthEpoch = ReturnType<typeof createAuthEpoch>;
+export const authEpoch = createAuthEpoch();

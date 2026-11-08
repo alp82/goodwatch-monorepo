@@ -20,6 +20,11 @@ import type {
 	ContinuousRepository,
 	ContinuousRoom,
 } from "./continuous-types.ts"
+/** Only a definitive refusal (revoked grant, another account) ends a device session. */
+const refused = (e: unknown) => e instanceof RoomError && ["unauthorized", "member_required"].includes(e.code)
+/** Throttled, down, unreachable, a garbled reply: the session is kept for a later try. */
+const unavailable = (e: unknown) =>
+	e instanceof RoomError && e.code === "busy" ? e : new RoomError("busy", "GoodWatch is temporarily unavailable; try again", 503, true)
 export interface MemberTokens {
 	accessToken: string
 	expiresAt: number
@@ -62,6 +67,12 @@ export interface MemberSession {
 	accessToken: string
 	expiresAt: number
 	refreshToken: string | null
+	/**
+	 * A refresh rotated these tokens but GoodWatch's identity check failed just then. The rotated
+	 * credentials are kept (the old refresh token is spent); `userId` and `displayName` are still the
+	 * previously verified identity, which is checked again before the session links a room.
+	 */
+	unverified?: true
 }
 interface AccountIntent {
 	v: 1
@@ -560,19 +571,37 @@ export class ContinuousMembers {
 			refreshToken: tokens.refreshToken ?? previous?.refreshToken ?? null,
 		}
 	}
-	/** A usable session: the same one while its access token lasts, a renewed one when it can be renewed, else null. */
+	/**
+	 * A usable session: the same one while its access token lasts, a renewed one when it can be renewed,
+	 * else null. A rotation whose identity check fails transiently still comes back renewed (the new
+	 * tokens must be kept), marked unverified; a later call verifies its access token while it lasts,
+	 * or refreshes with the rotated refresh token, never the spent one.
+	 */
 	async freshSession(session: MemberSession | null): Promise<{ session: MemberSession; renewed: boolean } | null> {
 		if (!session) return null
-		if (session.expiresAt > this.now() + 30_000) return { session, renewed: false }
-		if (!session.refreshToken || !this.issuer.refresh) return null
+		const live = session.expiresAt > this.now() + 30_000
+		if (live && !session.unverified) return { session, renewed: false }
+		if (!live && (!session.refreshToken || !this.issuer.refresh)) return null
+		let tokens: MemberTokens
 		try {
-			const tokens = await this.issuer.refresh({ refreshToken: session.refreshToken })
+			tokens = live ? session : await this.issuer.refresh!({ refreshToken: session.refreshToken! })
+		} catch (e) {
+			if (refused(e)) return null
+			throw unavailable(e)
+		}
+		try {
 			return { session: await this.sessionFrom(tokens, session), renewed: true }
 		} catch (e) {
-			// Only a definitive refusal (revoked grant, another account) ends the session. Anything else
-			// (throttled, down, unreachable, a garbled reply) keeps it for a later try.
-			if (e instanceof RoomError && ["unauthorized", "member_required"].includes(e.code)) return null
-			throw e instanceof RoomError && e.code === "busy" ? e : new RoomError("busy", "GoodWatch is temporarily unavailable; try again", 503, true)
+			if (refused(e)) return null
+			if (live) throw unavailable(e)
+			const rotated: MemberSession = {
+				...session,
+				accessToken: tokens.accessToken,
+				expiresAt: tokens.expiresAt,
+				refreshToken: tokens.refreshToken ?? session.refreshToken,
+				unverified: true,
+			}
+			return { session: rotated, renewed: true }
 		}
 	}
 	/** How long a browser keeps the session cookie. */
@@ -594,7 +623,11 @@ export class ContinuousMembers {
 		}
 		if (!fresh) return { status: { state: "guest", displayName: null }, session: null, changed: Boolean(raw) }
 		return {
-			status: { state: "member", displayName: fresh.session.displayName },
+			status: {
+				state: "member",
+				displayName: fresh.session.displayName,
+				...(fresh.session.unverified ? { unavailable: true } : {}),
+			},
 			session: fresh.session,
 			changed: fresh.renewed,
 		}
@@ -607,6 +640,9 @@ export class ContinuousMembers {
 		const fresh = await this.freshSession(this.openSession(raw))
 		requireRoom(fresh, "member_required", "Sign in with GoodWatch again", 403)
 		const session = fresh.session
+		// Rotated tokens whose identity GoodWatch couldn't confirm yet: keep them, link nothing.
+		if (session.unverified)
+			return { status: { state: "unavailable" as const, prefill: null }, session, renewed: fresh.renewed }
 		{
 			const { room } = await this.get(id)
 			const p = actor(room, participantId)
