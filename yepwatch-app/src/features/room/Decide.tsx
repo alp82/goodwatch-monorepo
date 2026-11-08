@@ -3,10 +3,11 @@
  * agreed; the proposal reads "Someone proposes" (or "Your proposal"), agreement dots and "2 of 3 agree".
  */
 import { useCallback, useEffect } from 'react';
-import { BackHandler, Image, Platform, View } from 'react-native';
+import { Image, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useLayout } from '../shell/layout';
+import { useBackAction } from '../shell/sheet-back';
 import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { ScorePill } from '../glow/scores';
@@ -65,12 +66,8 @@ export function Proposal() {
   const { view, cmd, disabled, dismissProposal, setActivityView } = useRoom();
   const { phone, wide, height, header, max, z } = useLayout();
   const pinned = usePinnedActions();
-  useFocusEffect(useCallback(() => {
-    setActivityView('matches');
-    if (Platform.OS !== 'android') return;
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => { toRooms(); return true; });
-    return () => sub.remove();
-  }, [setActivityView]));
+  useFocusEffect(useCallback(() => { setActivityView('matches'); }, [setActivityView]));
+  useBackAction(toRooms);
   const pr = view?.proposal;
   const offered = useOffered(pr?.candidate ?? null);
   if (!view || !pr) return null;

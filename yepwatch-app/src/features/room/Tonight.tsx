@@ -6,7 +6,7 @@
  * again; everyone else sees who can.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Animated, BackHandler, Easing, Image, Platform, Pressable, View } from 'react-native';
+import { Animated, Easing, Image, Platform, Pressable, View } from 'react-native';
 import { Link, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery } from '@tanstack/react-query';
@@ -21,6 +21,7 @@ import { goodwatchTitleUrl, roomWatchLinks } from '../glow/watch-links';
 import { GText, Icon, Press, glow, native } from '../glow/theme';
 import { FaceStack } from '../shell/parts';
 import { useLayout } from '../shell/layout';
+import { useBackAction } from '../shell/sheet-back';
 import { warm } from '../shell/tokens';
 import { meta } from './Decide';
 import { toRooms } from './nav';
@@ -56,12 +57,8 @@ function TonightGlow({ uri }: { uri: string }) {
 export function Tonight() {
   const { state, snapshot, view, cmd, disabled, setActivityView } = useRoom();
   // Cheers travel on the matches view.
-  useFocusEffect(useCallback(() => {
-    setActivityView('matches');
-    if (Platform.OS !== 'android') return;
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => { toRooms(); return true; });
-    return () => sub.remove();
-  }, [setActivityView]));
+  useFocusEffect(useCallback(() => { setActivityView('matches'); }, [setActivityView]));
+  useBackAction(toRooms);
   const shared = snapshot?.shared;
   const decision = shared?.decision ?? null;
   const c = view?.decision ?? null;

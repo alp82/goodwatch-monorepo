@@ -416,6 +416,8 @@ export function useContinuousRoom(roomId: string) {
     if (autoRetries.current.commandId !== pending.commandId) autoRetries.current = { commandId: pending.commandId, tries: 0 };
     if (autoRetries.current.tries++ < AUTO_RETRIES) void retryRef.current();
   }, [retryOnline, pending]);
+  // Stable: screens set their view in focus effects, which must not re-run on every room update.
+  const setView = useCallback((view: ActivityView) => channel.current?.setView(view), []);
   // Read straight from the cache: a settled command leaves the queue in the same render its result shows.
   const confirmed = cached() ?? room.data;
   const display = useMemo(() => (confirmed ? overlayRoom(confirmed, pending, queued) : undefined), [confirmed, pending, queued]);
@@ -467,7 +469,7 @@ export function useContinuousRoom(roomId: string) {
     },
     activities,
     activityNow: () => Date.now() + clock.current,
-    setView: (view: ActivityView) => channel.current?.setView(view),
+    setView,
     inspect: (inspection: MatchInspection) =>
       channel.current?.sendActivity('matches', undefined, undefined, inspection),
     pointer: (pointer: ActivityPointer | null) => channel.current?.sendPointer(pointer),

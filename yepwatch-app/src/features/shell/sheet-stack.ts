@@ -1,8 +1,10 @@
 /**
  * The open sheets of the screen in front, newest last: one place that knows a sheet covers the page.
  * Every Sheet registers here while its screen is focused (room sheets and the header's Your rooms
- * alike), so a screen can ask whether it's covered (voting stops taking answers and stops its
- * exposure clock).
+ * alike), so
+ * - Android back closes the sheet on top before the screen's own back runs, whichever handler was
+ *   registered last (screens re-register as they re-render; see `useBackAction`);
+ * - a screen can ask whether it's covered (voting stops taking answers and stops its exposure clock).
  */
 import { useSyncExternalStore } from 'react';
 
@@ -34,4 +36,10 @@ export function closeTopSheet(): boolean {
 /** A sheet covers the screen in front. */
 export function useSheetOpen(): boolean {
   return useSyncExternalStore(subscribe, () => stack.length > 0, () => false);
+}
+
+/** A screen's back press: the sheet on top closes if there is one, else the screen's own back runs. Always handled. */
+export function screenBack(action: () => void): true {
+  if (!closeTopSheet()) action();
+  return true;
 }

@@ -1,6 +1,5 @@
 /** /room/<id>: the screen for where the room is (setup, choosing, a proposal, Tonight); `?sheet=` opens one of its sheets. */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BackHandler, Platform } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { guestOnly } from '../../core/config';
 import { clearMoodStep, hasMoodStep, markMoodStep } from '../../core/continuous/room-local';
@@ -11,6 +10,7 @@ import { RoomStatus } from './RoomStatus';
 import { Proposal } from './Decide';
 import { RoomSetup, Waiting } from './Setup';
 import { Tonight } from './Tonight';
+import { useBackAction } from '../shell/sheet-back';
 import { Screen } from './ui';
 import { Voting } from './Voting';
 
@@ -61,11 +61,7 @@ export function RoomHome() {
     openSheet('services');
   }, [picksServices, opened, signinWaiting, memberBusy, openSheet]);
   const setup = view?.phase === 'setup' || (view?.phase === 'choosing' && !view.me.inRound);
-  useFocusEffect(useCallback(() => {
-    if (Platform.OS !== 'android' || !setup) return;
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => { toRooms(); return true; });
-    return () => sub.remove();
-  }, [setup]));
+  useBackAction(toRooms, setup);
   if (state.terminal || state.access === null || !view) return <RoomStatus />;
   const moodNext = view.isHost && !view.ideas.length && (params.fresh === '1' || hasMoodStep(id));
   if (opening || (!opened && (moodNext || signinWaiting))) return <Screen testID="room-arriving" back={toRooms}>{null}</Screen>;

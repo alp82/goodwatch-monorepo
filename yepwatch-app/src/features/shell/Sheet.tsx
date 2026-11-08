@@ -14,7 +14,7 @@ import { useReducedMotion } from '../../components/ui';
 import { EdgeBack } from '../glow/EdgeBack';
 import { GText, Icon, Press, glow, native } from '../glow/theme';
 import { useLayout } from './layout';
-import { isTopSheet, registerSheet } from './sheet-stack';
+import { closeTopSheet, isTopSheet, registerSheet } from './sheet-stack';
 import { R, warm } from './tokens';
 
 export interface SheetProps {
@@ -44,7 +44,8 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
     if (!focused) return;
     const { entry, remove } = registerSheet(() => close.current());
     if (Platform.OS === 'android') {
-      const sub = BackHandler.addEventListener('hardwareBackPress', () => { close.current(); return true; });
+      // The sheet on top closes (a screen's back handler registered after this one does the same).
+      const sub = BackHandler.addEventListener('hardwareBackPress', closeTopSheet);
       return () => { sub.remove(); remove(); };
     }
     if (Platform.OS !== 'web') return remove;

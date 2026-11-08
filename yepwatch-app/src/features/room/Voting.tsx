@@ -5,7 +5,7 @@
  * never an end.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BackHandler, Platform, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { fixturesEnabled } from '../../core/config';
 import { useReducedMotion } from '../../components/ui';
@@ -19,6 +19,7 @@ import { Trailer } from '../glow/Trailer';
 import { useActiveTime } from '../glow/useActiveTime';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { useLayout } from '../shell/layout';
+import { useBackAction } from '../shell/sheet-back';
 import { useSheetOpen } from '../shell/sheet-stack';
 import { warm } from '../shell/tokens';
 import { openPage, toRooms } from './nav';
@@ -101,9 +102,9 @@ export function Voting() {
   const { all } = useServices(view?.country);
   useFocusEffect(useCallback(() => {
     setFocused(true);
-    const sub = Platform.OS === 'android' ? BackHandler.addEventListener('hardwareBackPress', () => { if (panel) setPanel(null); else toRooms(); return true; }) : null;
-    return () => { setFocused(false); sub?.remove(); };
-  }, [panel]));
+    return () => setFocused(false);
+  }, []));
+  useBackAction(() => { if (panel) setPanel(null); else toRooms(); });
   const setActivityView = room.setActivityView;
   useEffect(() => { if (focused) setActivityView(panel === 'trailer' ? 'trailer' : 'voting'); }, [focused, panel, setActivityView]);
   // A confirmed restart discards the previous round's local state.
