@@ -156,7 +156,7 @@ test('streaming: yours and the room’s, who brings what, host switches off', as
   await expect(page.getByRole('switch', { name: 'Use Disney+' })).toBeDisabled();
 });
 
-test('matches, proposal for everyone (no names), Keep swiping per version, matches bar reopens it', async ({ page }) => {
+test('matches, proposal for everyone (no names), Keep swiping per version, the matches chip shows it as a card', async ({ page }) => {
   const room = choosingRoom();
   room.shared.matches = [{ candidateId: 'c2', averageYepMs: null }];
   const f = await fakeRoom(page, room);
@@ -180,8 +180,13 @@ test('matches, proposal for everyone (no names), Keep swiping per version, match
   await expect(page.getByText('You agree', { exact: true })).toBeVisible();
   await button(page, 'Keep swiping').click();
   await expect(page.getByTestId('voting')).toBeVisible();
+  // Set aside: the matches chip opens Matches, with the proposal as a compact card on top.
   await button(page, '1 match').click();
-  await expect(page.getByTestId('proposal').filter({ visible: true })).toBeVisible();
+  await expect(page.getByTestId('matches')).toBeVisible();
+  const card = page.getByTestId('proposal-card');
+  await expect(card).toBeVisible();
+  await expect(card.getByText('2 of 2 agree')).toBeVisible();
+  await expect(card.getByText(/Alp|Mia/)).toHaveCount(0);
 });
 
 test('Tonight: scores, watch button for the first switched-on service, no Cheer button, host Start again', async ({ page }) => {
