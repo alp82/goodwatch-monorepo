@@ -30,7 +30,7 @@ import { TitleDetails } from './TitleDetails';
 import { FindingMore, Logos, Screen, useServices } from './ui';
 import { stageGeometry } from './vote/geometry';
 import { LookDealer, pinnedLookFrom } from './vote/looks';
-import { madeMatch, nextCandidate, yepRecord, type YepRecord } from './vote/match';
+import { answerYep, matchKey, nextCandidate, settleYeps, undoYeps, yepRecord, type YepRecord } from './vote/match';
 import { VoteStage, type MatchMoment, type VoteStageControls } from './vote/VoteStage';
 
 /** Service ids a candidate is offered on among the room's switched-on services. */
@@ -94,9 +94,10 @@ export function Voting() {
   const [focused, setFocused] = useState(true);
   const [localReaction, setLocalReaction] = useState<Reaction>({ at: 0 });
   const [dealer] = useState(() => new LookDealer(Math.random, pinnedLook()));
-  const [yep, setYep] = useState<YepRecord | null>(null);
+  /** Your Yeps the room hasn't confirmed yet. */
+  const [yeps, setYeps] = useState<readonly YepRecord[]>([]);
+  const yepSerial = useRef(0);
   const [moment, setMoment] = useState<MatchMoment | null>(null);
-  const [celebrated, setCelebrated] = useState<string | null>(null);
   const controls = useRef<VoteStageControls>(null);
   const pointerAt = useRef(0);
   const { all } = useServices(view?.country);
@@ -124,12 +125,13 @@ export function Voting() {
   const { shared } = snapshot;
   const title = card ? titlePresentation(card) : null;
   const look = card ? dealer.lookFor(`${shared.generation}:${card.id}`) : null;
-  // Your Yep made a match once the room lists it: MATCH plays in that card's look.
-  const matchKey = madeMatch(yep, shared);
-  if (matchKey && yep && matchKey !== celebrated) {
-    const matched = shared.candidates.find((c) => c.id === yep.candidateId);
-    setCelebrated(matchKey);
-    if (matched) setMoment({ key: matchKey, title: titlePresentation(matched), look: yep.look });
+  // A Yep of yours made a match once the confirmed room lists it: MATCH plays in that card's look.
+  const settled = state.confirmed && yeps.length ? settleYeps(yeps, state.confirmed) : null;
+  if (settled?.changed) {
+    setYeps(settled.pending);
+    const made = settled.matched[0];
+    const matched = made ? shared.candidates.find((c) => c.id === made.candidateId) : undefined;
+    if (made && matched) setMoment({ key: matchKey(made), title: titlePresentation(matched), look: made.look });
   }
   const nextCard = nextCandidate(snapshot, card?.id);
   const geo = stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z });
@@ -142,8 +144,13 @@ export function Voting() {
     if (!card || !answering || !look) return Promise.resolve(false);
     setLocalReaction(reaction({ answer: yes }));
     state.activity(undefined, 'answer');
-    if (yes) setYep(yepRecord((yep?.serial ?? 0) + 1, shared, card.id, look));
-    return cmd.vote(card.id, yes, activeTime());
+    const sent = cmd.vote(card.id, yes, activeTime());
+    if (!yes || !snapshot) return sent;
+    // Remembered until the room confirms it; a refused one is forgotten.
+    const record = yepRecord(++yepSerial.current, snapshot, card.id, look);
+    setYeps((list) => [...list, record]);
+    void sent.then((ok) => setYeps((list) => answerYep(list, record.serial, ok, room.latest())));
+    return sent;
   }
   const offered = card ? servicesIn(all, offeredOn(card, view.enabledServiceIds)) : [];
   const people = view.people.map((p) => ({ id: p.id, nickname: p.nickname || '?', self: p.self }));
@@ -170,7 +177,7 @@ export function Voting() {
         <MatchesChip />
         <View style={{ flex: 1 }} />
         {people.length > 1 ? <LiveFaces people={people} activity={activity} localReaction={localReaction} size={z(26)} max={4} /> : null}
-        <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (undoTarget) void cmd.undo(undoTarget.candidateId); }}
+        <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (!undoTarget) return; setYeps((list) => undoYeps(list, undoTarget.candidateId)); void cmd.undo(undoTarget.candidateId); }}
           style={{ width: z(40), height: z(36), borderRadius: 10, backgroundColor: '#ffffff0a' }}>
           <Icon name="undo" size={z(17)} color={glow.soft} />
         </Press>

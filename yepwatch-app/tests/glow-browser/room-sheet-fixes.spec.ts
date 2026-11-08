@@ -110,3 +110,23 @@ test.describe('Back closes the sheet on top first; drafts are never lost', () =>
     await expect(page.getByTestId('room-sheet')).toHaveCount(0);
   });
 });
+
+test('Yep A, then Yep B before A is answered: A’s match still plays MATCH', async ({ page }) => {
+  const f = await fakeRoom(page, choosingRoom());
+  const release = f.hold('vote');
+  await page.goto('/room/test-room');
+  await expect(page.getByTestId('voting')).toBeVisible();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => f.sent()).toContain('vote');
+  // The next card is already there: Yep it too while the first is still with the server.
+  await expect(async () => {
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('finding-more')).toBeVisible({ timeout: 300 });
+  }).toPass();
+  expect(f.sent().filter((t) => t === 'vote')).toHaveLength(1);
+  // Mia had said Yep to the first card: the server answers it as a match.
+  f.room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }];
+  release();
+  await expect(page.getByTestId('match-moment')).toHaveCount(1);
+  await expect.poll(() => f.sent().filter((t) => t === 'vote')).toHaveLength(2);
+});

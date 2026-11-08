@@ -26,7 +26,7 @@ function Poster({ uri }: { uri: string | null }) {
 }
 
 export function Moment(props: MomentProps) {
-  return <View {...hidden} style={fill}>{['wash', 'filter', 'giant', 'split', 'neon'].includes(props.look) ? <ClassicMoment {...props} /> : <FxMoment {...props} />}</View>;
+  return <View {...hidden} testID="match-moment" style={fill}>{['wash', 'filter', 'giant', 'split', 'neon'].includes(props.look) ? <ClassicMoment {...props} /> : <FxMoment {...props} />}</View>;
 }
 
 /** wash, filter, giant, split and neon. */
