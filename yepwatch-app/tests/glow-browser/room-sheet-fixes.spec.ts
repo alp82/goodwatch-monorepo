@@ -36,3 +36,77 @@ test.describe('a sheet over the voting card', () => {
     expect(vote.activeExposureMs!).toBeLessThan(30_000);
   });
 });
+
+test.describe('Back closes the sheet on top first; drafts are never lost', () => {
+  test('browser Back and the header’s Back close sheets one at a time, saving the change, and stay on the page', async ({ page }) => {
+    const room = choosingRoom();
+    room.shared.matches = [{ candidateId: 'c2', averageYepMs: null }];
+    const f = await fakeRoom(page, room);
+    await page.goto('/room/test-room');
+    await button(page, '1 match').click();
+    await expect(page.getByTestId('matches')).toBeVisible();
+    await pill(page).click();
+    await button(page, /, Room page$/).click();
+    await button(page, 'Movies and shows, change').click();
+    await expect(page.getByTestId('kinds-sheet')).toBeVisible();
+    await page.getByRole('checkbox', { name: 'Shows' }).click();
+    // Browser Back: Movies and shows closes (its change is saved), the Room sheet is back, still on Matches.
+    await page.goBack();
+    await expect(page.getByTestId('kinds-sheet')).toHaveCount(0);
+    await expect(page.getByTestId('room-sheet')).toBeVisible();
+    await expect.poll(() => f.room.shared.constraints.kinds).toEqual(['movie']);
+    await expect(page.getByTestId('matches')).toBeVisible();
+    // The header's Back: the Room sheet closes, Matches stays.
+    await button(page, 'Back').click();
+    await expect(page.getByTestId('room-sheet')).toHaveCount(0);
+    await expect(page.getByTestId('matches')).toBeVisible();
+    // Your rooms is a sheet too.
+    await pill(page).click();
+    await expect(page.getByTestId('rooms-sheet')).toBeVisible();
+    await page.goBack();
+    await expect(page.getByTestId('rooms-sheet')).toHaveCount(0);
+    await expect(page.getByTestId('matches')).toBeVisible();
+    // No sheet: Back leaves the page as before.
+    await page.goBack();
+    await expect(page.getByTestId('voting')).toBeVisible();
+  });
+
+  test('a change still waiting to be saved goes out after the room is left', async ({ page }) => {
+    const room = choosingRoom();
+    room.shared.phase = 'setup';
+    const f = await fakeRoom(page, room);
+    const release = f.hold('start');
+    await page.goto('/room/test-room');
+    // Start is with the server: settings changes wait for it.
+    await button(page, 'Start').click();
+    await expect.poll(() => f.sent()).toContain('start');
+    await button(page, 'Movies and shows, change').click();
+    await page.getByRole('checkbox', { name: 'Shows' }).click();
+    // Back closes the sheet (its change waits behind Start), then leaves the room before the change went out.
+    await button(page, 'Back').click();
+    await expect(page.getByTestId('kinds-sheet')).toHaveCount(0);
+    expect(f.sent()).not.toContain('configure');
+    await button(page, 'Back').click();
+    await expect(page.getByTestId('room-setup')).toHaveCount(0);
+    // The room is gone from the screen; its change still goes once Start is answered.
+    release();
+    await expect.poll(() => f.room.shared.constraints.kinds).toEqual(['movie']);
+    expect(f.sent().filter((t) => t === 'configure')).toHaveLength(1);
+  });
+
+  test('leaving that isn’t a Back still goes with a sheet open (removed from the room)', async ({ page }) => {
+    const f = await fakeRoom(page, choosingRoom());
+    await page.goto('/room/test-room/room');
+    await expect(page.getByTestId('room-sheet')).toBeVisible();
+    f.room.own.left = true;
+    f.push();
+    await page.evaluate(() => {
+      for (const state of ['hidden', 'visible']) {
+        Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+        document.dispatchEvent(new Event('visibilitychange'));
+      }
+    });
+    await expect(page).toHaveURL(/127\.0\.0\.1:8097\/?$/);
+    await expect(page.getByTestId('room-sheet')).toHaveCount(0);
+  });
+});

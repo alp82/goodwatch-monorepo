@@ -2,8 +2,8 @@
  * The open sheets of the screen in front, newest last: one place that knows a sheet covers the page.
  * Every Sheet registers here while its screen is focused (room sheets and the header's Your rooms
  * alike), so
- * - Android back closes the sheet on top before the screen's own back runs, whichever handler was
- *   registered last (screens re-register as they re-render; see `useBackAction`);
+ * - Back of every kind (the header's Back, Android back, browser history, the edge swipe) closes the
+ *   sheet on top before it goes anywhere, whichever handler runs first (see sheet-back);
  * - a screen can ask whether it's covered (voting stops taking answers and stops its exposure clock).
  */
 import { useSyncExternalStore } from 'react';

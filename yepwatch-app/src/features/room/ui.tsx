@@ -13,6 +13,8 @@ import { useReducedMotion } from '../../components/ui';
 import { AppFrame, type AppFrameProps, type FrameRooms } from '../shell/Frame';
 import type { HeaderMe, HeaderPill } from '../shell/Header';
 import { useLayout } from '../shell/layout';
+import { useSheetsHoldNavigation } from '../shell/sheet-back';
+import { closeTopSheet, useSheetOpen } from '../shell/sheet-stack';
 import { warm } from '../shell/tokens';
 import { GText, Press, glow } from '../glow/theme';
 import { useOptionalRoom } from './RoomProvider';
@@ -74,6 +76,9 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   const closeSheets = room?.closeSheets;
   // Another page in front (Mood, Matches) or this one gone back: the sheet doesn't follow.
   useEffect(() => (closeSheets ? navigation.addListener('blur', closeSheets) : undefined), [navigation, closeSheets]);
+  // A sheet open over this screen (the room's or Your rooms): browser Back, the router's back and the iOS swipe close it first.
+  const sheetOpen = useSheetOpen();
+  useSheetsHoldNavigation(focused && sheetOpen, () => { closeSheets?.(); closeTopSheet(); });
   const derived: HeaderPill | null = view ? { label: view.label, state: view.phase === 'decided' ? 'decided' : 'live', fresh: view.newSuggestions } : null;
   const current = view && roomId && room ? { roomId, label: view.label, decided: view.phase === 'decided', openRoomPage: () => room.openSheet('room') } : undefined;
   const roomSheet = room && view && focused && room.sheet ? room.renderSheet(room.sheet) : null;

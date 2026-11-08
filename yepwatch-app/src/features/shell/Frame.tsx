@@ -17,6 +17,7 @@ import { HomeRoomsSheet, YourRoomsSheet, type CurrentRoom, type RoomsSheetAction
 import { AppHeader, type AppHeaderProps } from './Header';
 import { useLayout } from './layout';
 import { CoveredBody } from './parts';
+import { closeTopSheet } from './sheet-stack';
 import { warm } from './tokens';
 
 export { BrandMark } from './Header';
@@ -78,6 +79,9 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
     : <HomeRoomsSheet current={rooms?.current} actions={actions} onClose={closeRooms} />) : null;
   // The pill stays usable over a screen's sheet: Your rooms opens on top, and closing it returns to that sheet.
   const shownSheet = roomsSheet ?? sheet;
+  // The header's Back closes the sheet on top first, like every other Back.
+  const screenBack = header.back;
+  const back = screenBack ? () => { if (!closeTopSheet()) screenBack(); } : undefined;
   const top = scroll ? (phone ? 22 : z(40)) : (phone ? 12 : z(24));
   const bottom = (scroll ? (phone ? 32 : z(56)) : (phone ? 12 : z(32))) + (pinned ? 0 : insets.bottom);
   const content = (
@@ -91,7 +95,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
       <BootReveal part="backdrop" pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></BootReveal>
       {backdrop}
       <CoveredBody covered={covered} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
-        <AppHeader {...header} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? startPage.profile} />
+        <AppHeader {...header} back={back} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? startPage.profile} />
       </CoveredBody>
       <View style={{ flex: 1, minHeight: 0 }}>
         <CoveredBody covered={covered || Boolean(shownSheet)}>

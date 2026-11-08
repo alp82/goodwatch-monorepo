@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { roomView } from '../src/features/room/model';
 import { RefillGate, REFILL_TRIES, refillBackoffMs } from '../src/features/room/refill';
-import { kindsOnLeave, nextSaveStep, servicesOnLeave } from '../src/features/room/settings-save';
+import { kindsOnLeave, nextSaveStep, servicesOnLeave, stepsOnExit } from '../src/features/room/settings-save';
 import { continuousFixture } from './continuous-fixture';
 
 function room(): RoomSnapshot {
@@ -57,6 +57,19 @@ test('kinds draft: saved as room constraints, keeping other kinds; done once the
   assert.deepEqual(step?.type === 'kinds' && step.constraints.kinds, ['movie']);
   s.shared.constraints = { ...s.shared.constraints, kinds: ['movie'] };
   assert.equal(nextSaveStep('kinds', { kinds: draft }, roomView(s), s), null);
+});
+
+test('the room closing sends every unsaved draft at once (country, then services, then kinds); open sheets hand theirs over when they close', () => {
+  const s = room();
+  const drafts = { services: { country: 'US', picked: [9] }, kinds: ['movie', 'show_start'] as ('movie' | 'show_start')[] };
+  assert.deepEqual(stepsOnExit(drafts, {}, s).map((step) => step.type), ['country', 'services', 'kinds']);
+  assert.deepEqual(stepsOnExit(drafts, {}, s)[1], { type: 'services', serviceIds: [9] });
+  // A sheet still open holds its draft: it goes when that sheet's cleanup releases it.
+  assert.deepEqual(stepsOnExit(drafts, { kinds: 1 }, s).map((step) => step.type), ['country', 'services']);
+  assert.deepEqual(stepsOnExit(drafts, {}, s, ['kinds']).map((step) => step.type), ['kinds']);
+  // Already confirmed, or no room to read: nothing to send.
+  assert.deepEqual(stepsOnExit({ services: { country: null, picked: [8] } }, {}, s), []);
+  assert.deepEqual(stepsOnExit(drafts, {}, undefined), []);
 });
 
 test('refill gate: one in flight, retries after a failed send, stops after a few, a new stream starts over', () => {
