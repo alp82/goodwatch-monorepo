@@ -5,13 +5,13 @@ import { clearMoodStep, hasMoodStep, markMoodStep } from '../../core/continuous/
 import { showsProposal, type RoomView } from './model';
 import { openPage, toRooms } from './nav';
 import { isRoomSheet, useRoom } from './RoomProvider';
+import { MoodArriving } from './MoodArriving';
 import { RoomStatus } from './RoomStatus';
 import { Proposal } from './Decide';
 import { RoomSetup, Waiting } from './Setup';
 import { FRIEND_HANDOVER_MS, START_HANDOVER_MS, startedLive } from './start-progress';
 import { Tonight } from './Tonight';
 import { useBackAction } from '../shell/sheet-back';
-import { Screen } from './ui';
 import { Voting } from './Voting';
 
 /**
@@ -52,20 +52,19 @@ export function RoomHome() {
   const [opening, setOpening] = useState(false);
   useFocusEffect(useCallback(() => () => setOpening(false), []));
   // The Mood step is noted on this device, so a reload of the arrival still opens it.
-  useEffect(() => {
-    if (params.fresh !== '1') return;
-    markMoodStep(id);
-    router.setParams({ fresh: undefined });
-  }, [params.fresh, id]);
+  const fresh = params.fresh === '1';
+  useEffect(() => { if (fresh) markMoodStep(id); }, [fresh, id]);
   // Older sign-in addresses (?signin=1) only drop the marker: GoodWatch sign-in no longer starts in a room.
   useEffect(() => { if (params.signin) router.setParams({ signin: undefined }); }, [params.signin]);
-  // A room that was just created opens on its Mood step (Back returns here).
+  // A room that was just created opens on its Mood step (Back returns here). The marker in the address
+  // is dropped as it opens; the step never waits for that to land (it doesn't, after New room from a room).
   useEffect(() => {
-    if (!view || params.fresh === '1' || !hasMoodStep(id)) return;
+    if (!view || opened || !(fresh || hasMoodStep(id))) return;
     clearMoodStep(id);
+    if (fresh) router.setParams({ fresh: undefined });
     if (view.isHost && !view.ideas.length) { setOpening(true); openPage(id, 'mood', { idea: 'new', arrival: '1' }); } // eslint-disable-line react-hooks/set-state-in-effect
     setOpened(true);
-  }, [params.fresh, view, id]);
+  }, [fresh, opened, view, id]);
   // Guests who just joined pick their services first: the room opens with Your services over it,
   // from its first paint.
   const picksServices = Boolean(view && !view.isHost && !view.member && view.myServiceIds === null && view.phase !== 'decided');
@@ -78,8 +77,8 @@ export function RoomHome() {
   const setup = view?.phase === 'setup' || (view?.phase === 'choosing' && !view.me.inRound);
   useBackAction(toRooms, setup);
   if (state.terminal || state.access === null || !view) return <RoomStatus />;
-  const moodNext = view.isHost && !view.ideas.length && (params.fresh === '1' || hasMoodStep(id));
-  if (opening || (!opened && moodNext)) return <Screen testID="room-arriving" back={toRooms}>{null}</Screen>;
+  const moodNext = view.isHost && !view.ideas.length && (fresh || hasMoodStep(id));
+  if (opening || (!opened && moodNext)) return <MoodArriving back={toRooms} />;
   if (view.phase === 'decided') return <Tonight />;
   if (handover) return view.isHost ? <RoomSetup ready /> : <Waiting ready />;
   if (showsProposal(view, dismissedProposal)) return <Proposal />;

@@ -1,3 +1,4 @@
+import { MoodArriving } from './room/MoodArriving';
 import { ConnectionDetails } from './rooms/ConnectionDetails';
 import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnostic';
 import { guestOnly } from '../core/config';
@@ -60,6 +61,10 @@ export function Entrance({ invite, open: request, from }: {
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false);
+  /** New room was pressed (here or in a room's header): its Mood page shows while the room is made. */
+  const [creating, setCreating] = useState(request === 'new');
+  /** The server didn't answer the first try: the New room sheet takes over with its Connecting… and retry notes. */
+  const [retried, setRetried] = useState(false);
   const inFlight = useRef(false);
   // The running admission (with its automatic retries). Leaving the screen, closing its panel or sending
   // the app to the background cancels it: pending waits end, no new attempt starts, nothing navigates
@@ -208,7 +213,8 @@ export function Entrance({ invite, open: request, from }: {
       const request = saved;
       // A restart answers busy or not at all for a while: send the same saved request again by itself
       // (same command id and secret, so it can never make a second room), and only then show an error.
-      await retryTransient(() => admit(request, signal), { retries: AUTO_RETRIES, retryAt: retryDeadline, signal });
+      let tries = 0;
+      await retryTransient(() => { if (tries++) setRetried(true); return admit(request, signal); }, { retries: AUTO_RETRIES, retryAt: retryDeadline, signal });
     } catch (e) {
       // Cancelled (the screen went away): the request saved before the submit stays for a manual retry.
       if (signal.aborted) return;
@@ -325,7 +331,7 @@ export function Entrance({ invite, open: request, from }: {
   };
   // No name first: the room exists at once; a guest host names themselves on the room page. A signed-in
   // member's room is theirs: it links to their GoodWatch account as it opens.
-  const create = () => { setError(''); if (resumeAdmission()) return; void enter(false, account.member, undefined, known ?? ''); };
+  const create = () => { setError(''); setCreating(true); setRetried(false); if (resumeAdmission()) return; void enter(false, account.member, undefined, known ?? ''); };
   // Continue with GoodWatch signs this device in and comes back to this screen: it never creates a room.
   const signInFrom = (path: string) => { setError(''); void account.signIn(path); };
   const fromRoom = from?.match(/^\/room\/([A-Za-z0-9_-]{1,64})(?:\/|$)/)?.[1];
@@ -333,7 +339,7 @@ export function Entrance({ invite, open: request, from }: {
   // The start page's big button is for guests; a lapsed sign-in gets the small Reconnect GoodWatch.
   const signIn = guestOnly || account.member ? undefined : () => signInFrom('/');
   const signInFromProfile = guestOnly || account.member ? undefined : () => signInFrom(roomFrom ?? '/?open=profile');
-  const openJoin = () => { setError(''); if (!resumeAdmission()) setPanel('join'); };
+  const openJoin = () => { setError(''); setCreating(false); if (!resumeAdmission()) setPanel('join'); };
   // Another screen's header asked for New room: it starts once the saved request is known.
   const handled = useRef(false);
   useEffect(() => {
@@ -359,6 +365,9 @@ export function Entrance({ invite, open: request, from }: {
   // The saved-request check takes a moment on every visit: the page appears once, already usable.
   const me = { name: known, member: account.member };
   const openProfile = () => { setError(''); setPanel('profile'); };
+  // Making a new room looks like its Mood page already; a failure falls back to the start page and its New room sheet.
+  if (creating && !retried && !error && !account.error && retrySeconds === 0 && (busy || !home.ready || restoring || request === 'new'))
+    return <MoodArriving back={request === 'new' && router.canGoBack() ? () => router.back() : undefined} />;
   if (!home.ready || restoring) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
   if (shown === 'join') return (

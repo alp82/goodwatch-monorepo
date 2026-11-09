@@ -53,7 +53,7 @@ export function useStartBeat(active: boolean) {
 }
 
 /** Three dots taking turns (still dots under reduced motion). */
-function LoadingDots({ color, size = 6 }: { color: string; size?: number }) {
+export function LoadingDots({ color, size = 6 }: { color: string; size?: number }) {
   const reduced = useReducedMotion();
   const t = useLoop(!reduced, 1050);
   return (
@@ -155,6 +155,22 @@ export function StartButton({ phase, onPress, disabled }: { phase: StartPhase; o
           {icon}
           <Words text={label} color={warm.ink} size={z(17)} />
         </Press>
+      </View>
+    </Live>
+  );
+}
+
+/** A main action that's already working (Making your room): the Start look, nothing to press. */
+export function WorkingButton({ label }: { label: string }) {
+  const { z } = useLayout();
+  const [width, setWidth] = useState(240);
+  return (
+    <Live busy announce={label} style={{ flexGrow: 1, flexShrink: 1 }}>
+      <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} accessibilityRole="progressbar" accessibilityLabel={label}
+        style={{ minHeight: z(54), borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: glow.amber, borderWidth: 1, borderColor: glow.amber }}>
+        <Working phase="starting" width={width} tone="amber" />
+        <LoadingDots color={warm.ink} />
+        <Words text={label} color={warm.ink} size={z(17)} />
       </View>
     </Live>
   );

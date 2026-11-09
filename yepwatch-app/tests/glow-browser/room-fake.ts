@@ -70,7 +70,7 @@ const union = (s: FakeSnapshot) => [...new Set(s.shared.participants.filter((p) 
  * signed in here before (as Alex) and the session has run out. `slowStart` holds the sign-in start for
  * that many ms; `linkFailures` answers that many room links with a retryable 503 first.
  */
-export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' | 'lapsed'; slowStart?: number; linkFailures?: number } = {}) {
+export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' | 'lapsed'; slowStart?: number; linkFailures?: number; nextRooms?: FakeSnapshot[] } = {}) {
   const account = { member: opts.member === 'signed-in', starts: 0, links: 0, logouts: 0 };
   let linkFailures = opts.linkFailures ?? 0;
   // The room's lifetime idea searches (24 on the server); removing an idea doesn't give one back.
@@ -202,7 +202,12 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
         room.own.participantId = 'guest';
         room.own.canHost = false;
         room.shared.participants.push({ participantId: 'guest', nickname: body.nickname, screenId: null, ready: false, serviceIds: null });
-      } else me().nickname = body.nickname;
+      } else {
+        // A later New room: the next room the server makes replaces this one in the fake.
+        const next = opts.nextRooms?.shift();
+        if (next) { room.shared = next.shared; room.own = next.own; }
+        me().nickname = body.nickname;
+      }
       bump();
       return route.fulfill({ json: { credential: { roomId: room.shared.roomId, participantId: room.own.participantId, token: 'fixture', expiresAt: room.shared.expiresAt }, invite: { code: opts.invite ?? 'K7QX', path: `/r/${opts.invite ?? 'K7QX'}` }, snapshot: room } });
     }

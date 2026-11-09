@@ -37,6 +37,7 @@ Direction C's join: by invitation link, the host's room label and the mood as th
 
 ### Mood (new room)
 
+- **While the room is made** (November 9, 2026): New room (from the start page or a room's header) shows the Mood page at once, laid out where it will be: the placeholder breathes, a light runs along the underline, the ideas wait faded, and the main action reads "Making your room" with the Start look (dots, line, sweep). The Mood page then takes over in place. It never shows a blank room or the start page's New room sheet on the way; the sheet only comes back when creating fails.
 - One big centered field, warm (no navy), amber caret and focus line.
 - Placeholder: **"Describe a mood, a theme, or a plot…"** (not titles). On desktop it fits on one row (font fitted to the width); on narrow screens two near-equal lines ("Describe a mood," / "a theme, or a plot…").
 - The underline is never narrower than the placeholder or the typed text.
