@@ -163,8 +163,11 @@ async function fixture(page: Page, setupGuest = false) {
         loseNext = false;
         return route.abort();
       }
+      // Like the server: someone who left may not read the room, so the Leave's answer is refused too.
+      if (room.own.left) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'You have left this room', retryable: false } } });
       return route.fulfill({ json: { receipt: {}, snapshot: room } });
     }
+    if (room.own.left) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'You have left this room', retryable: false } } });
     return route.fulfill({ json: room });
   });
   await page.goto('/room/test-room');
@@ -585,7 +588,15 @@ test('leaving the room sends one explicit command and returns to the entrance', 
   const f = await fixture(page);
   await openRoomPage(page, 'Anything');
   await page.getByRole('button', { name: 'Leave room', exact: true }).click();
+  // Leave asks first; Stay keeps the room and sends nothing.
+  await page.getByRole('button', { name: 'Stay', exact: true }).click();
+  await expect(page.getByTestId('leave-confirm')).toHaveCount(0);
+  expect(f.commands.some((e) => e.command.type === 'leave')).toBe(false);
+  await page.getByRole('button', { name: 'Leave room', exact: true }).click();
+  await page.getByRole('button', { name: 'Leave', exact: true }).click();
+  // The server refuses the left person's read of the answer: that still goes home, never "access ended".
   await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText('Your room access ended')).toHaveCount(0);
   expect(f.commands.filter((e) => e.command.type === 'leave')).toHaveLength(1);
   expect(f.commands.some((e) => e.command.type === 'agree')).toBe(false);
 });

@@ -3,7 +3,7 @@
  * Your services, Streaming, Movies and shows, and People. Each keeps its action inside the sheet;
  * closing one returns to the sheet it was opened from.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, View } from 'react-native';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { deviceCountryHint } from '../../core/lobby';
@@ -55,13 +55,17 @@ function RoomMenuSheet() {
   const { id, view, cmd, disabled, closeSheet, openSheet } = useRoom();
   const { z } = useLayout();
   const { all } = useServices(view?.country);
+  const [leaving, setLeaving] = useState<'ask' | 'sending' | null>(null);
   useAcknowledgeShownIdeas();
   if (!view) return null;
-  const leave = () => void cmd.leave().then(async (ok) => {
-    if (!ok) return;
-    await roomRegistry.markLeft(id, view.label).catch(() => undefined);
-    router.replace('/');
-  });
+  const leave = () => {
+    setLeaving('sending');
+    void cmd.leave().then(async (ok) => {
+      if (!ok) { setLeaving(null); return; }
+      await roomRegistry.markLeft(id, view.label).catch(() => undefined);
+      router.replace('/');
+    });
+  };
   const archive = () => { void roomRegistry.archive(id).catch(() => undefined).then(() => router.replace('/')); };
   const on = servicesIn(all, view.enabledServiceIds);
   const people = view.faces;
@@ -118,8 +122,17 @@ function RoomMenuSheet() {
       </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Press label="Archive room" onPress={archive} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>Archive room</GText></Press>
-        <Press label="Leave room" disabled={disabled} onPress={leave} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: '#f8717140' }}><GText bold color="#f87171">Leave room</GText></Press>
+        <Press label="Leave room" disabled={disabled || Boolean(leaving)} onPress={() => setLeaving('ask')} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: '#f8717140' }}><GText bold color="#f87171">Leave room</GText></Press>
       </View>
+      {leaving ? (
+        <View testID="leave-confirm" accessibilityLiveRegion="polite" style={{ gap: 12, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#f8717140', backgroundColor: '#f8717110' }}>
+          <GText bold size={z(18)}>Leave this room?</GText>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Press label="Stay" disabled={leaving === 'sending'} onPress={() => setLeaving(null)} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>Stay</GText></Press>
+            <Press label="Leave" disabled={leaving === 'sending'} onPress={leave} style={{ flex: 1, minHeight: 48, borderRadius: 12, backgroundColor: '#f87171' }}><GText bold color="#070707">{leaving === 'sending' ? 'Leaving…' : 'Leave'}</GText></Press>
+          </View>
+        </View>
+      ) : null}
       <Feedback />
     </Sheet>
   );

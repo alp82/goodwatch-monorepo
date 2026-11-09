@@ -223,6 +223,8 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
       if (refused) return route.fulfill({ status: refused.status, json: { error: { code: refused.code, message: refused.message, retryable: false }, snapshot: room } });
       if (!receipts.has(body.commandId)) { receipts.add(body.commandId); apply(body); }
       if (loseNext) { loseNext = false; return route.abort(); }
+      // Like the server: the answer is read as this person, and someone who left may not read the room.
+      if (body.command.type === 'leave') return route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'You have left this room', retryable: false } } });
       return route.fulfill({ json: { receipt: {}, snapshot: room } });
     }
     if (route.request().method() === 'GET' && path.endsWith(`/rooms/${room.shared.roomId}`)) {

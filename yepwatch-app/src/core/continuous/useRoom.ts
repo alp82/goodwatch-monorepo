@@ -331,6 +331,7 @@ export function useContinuousRoom(roomId: string) {
     setBusy(true);
     setError('');
     setErrorCode(null);
+    const leaving = (command ?? queue.current.pending?.command)?.type === 'leave';
     try {
       const value = await queue.current.send(command, snapshot, (body) =>
         api.command(access, body), commandId
@@ -338,6 +339,14 @@ export function useContinuousRoom(roomId: string) {
       apply(value);
       return !terminalRef.current;
     } catch (e) {
+      // The server reads its answer as the person who just left, and refuses that read: the Leave went
+      // through. Access ends here on purpose, so the room never says "access ended" afterwards.
+      if (leaving && e instanceof RoomFailure && e.code === 'forbidden') {
+        end('access');
+        // Your rooms read this room before the Leave: it reads it again and files it under History.
+        queryClient.removeQueries({ queryKey: homeRoomKey(roomId) });
+        return true;
+      }
       if (e instanceof RoomFailure && e.snapshot) apply(e.snapshot);
       // A refused command (not the host, not the author, an idea that's gone…) is not lost access: show why
       // and re-read the room below. Only missing credentials or an expired room end it from here; a read

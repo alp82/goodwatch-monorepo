@@ -36,6 +36,8 @@ async function fixture(page: Page, setup = false) {
       if (command.type === 'restart') { room.shared.phase = 'setup'; room.shared.generation++; room.shared.contextVersion++; room.shared.rosterVersion++; room.shared.decision = null; room.shared.proposal = null; room.own.votes = []; room.own.nextCandidateId = 'c1'; room.shared.stream = { version: 2, state: 'ready', reason: null }; }
       if (command.type === 'configure') { room.shared.contextVersion++; if(command.country) room.shared.screens[0].country = command.country; }
       if (command.type === 'start') room.shared.phase = 'choosing';
+      // Like the server: the answer is read as this person, and someone who left may not read the room.
+      if (left) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'You have left this room', retryable: false } } });
       return route.fulfill({ json: { snapshot: room, receipt: {} } });
     }
     if (left) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'Left room', retryable: false } } });
@@ -88,6 +90,7 @@ test('explicit Leave moves the room to History; Return rejoins with the existing
   const f = await fixture(page);
   await openRoomPage(page, 'Anything');
   await page.getByRole('button', { name: 'Leave room', exact: true }).click();
+  await page.getByRole('button', { name: 'Leave', exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText('YOUR ROOMS', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'History', exact: true }).click();
