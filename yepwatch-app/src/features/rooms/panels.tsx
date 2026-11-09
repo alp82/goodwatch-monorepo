@@ -5,6 +5,8 @@
 import { useState, type ReactNode } from 'react';
 import { Image, Platform, Pressable, TextInput, View, type TextStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { guestOnly } from '../../core/config';
+import { useAccount } from '../../core/continuous/account';
 import { parseInvite } from '../../core/invites';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
 import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
@@ -20,6 +22,7 @@ import { Sheet } from '../shell/Sheet';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
 import { posterAt, timeAgo, type HomeRoom } from './home-model';
+import { useHome } from './useHome';
 
 const MAX_NAME = 40;
 /** Browsers draw their own focus outline and caret; the amber border and caret replace them. */
@@ -210,6 +213,24 @@ export function ProfileSheet({ nickname, save, member = false, lapsed = false, s
       ) : null}
       <ErrorText>{error}</ErrorText>
     </Sheet>
+  );
+}
+
+/**
+ * Profile over whatever screen the avatar was pressed on (a room, its Mood page): the page underneath
+ * never changes. Signing in comes back to `returnTo`, the page it was opened from.
+ */
+export function HomeProfileSheet({ returnTo, onClose }: { returnTo: string; onClose: () => void }) {
+  const home = useHome();
+  const account = useAccount();
+  const known = home.nickname ?? (account.member || account.lapsed ? account.name : null);
+  const signIn = guestOnly || account.member ? undefined : () => void account.signIn(returnTo);
+  return (
+    // The name arrives a moment after the sheet opens on a cold start: the field starts from it then.
+    <ProfileSheet key={known ?? ''} nickname={known} member={account.member} lapsed={account.lapsed} signIn={signIn}
+      logOut={account.member || account.lapsed ? () => void account.logOut() : undefined}
+      busy={account.busy} error={account.error} onClose={onClose}
+      save={(name) => { void home.setNickname(name).then(onClose); }} />
   );
 }
 

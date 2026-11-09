@@ -13,6 +13,7 @@ import { Backdrop } from '../glow/Backdrop';
 import { EdgeBack } from '../glow/EdgeBack';
 import { glow } from '../glow/theme';
 import type { HomeRoom } from '../rooms/home-model';
+import { HomeProfileSheet } from '../rooms/panels';
 import { HomeRoomsSheet, YourRoomsSheet, type CurrentRoom, type RoomsSheetActions } from '../rooms/RoomsSheet';
 import { AppHeader, type AppHeaderProps } from './Header';
 import { useLayout } from './layout';
@@ -62,8 +63,6 @@ export const startPage = {
   open: (roomId: string) => router.push({ pathname: '/room/[id]', params: { id: roomId } }),
   newRoom: () => router.push({ pathname: '/', params: { open: 'new' } }),
   join: () => router.push({ pathname: '/', params: { open: 'join' } }),
-  /** Profile on the start page; signing in there comes back to `from` (the room that asked). */
-  profile: (from?: string) => router.push({ pathname: '/', params: { open: 'profile', ...(from && from.startsWith('/room/') ? { from } : {}) } }),
 };
 
 export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID }: AppFrameProps) {
@@ -72,6 +71,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
   const { phone, short, gutter, max, z } = layout;
   const insets = useSafeAreaInsets();
   const [roomsOpen, setRoomsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const pinned = footer ? (footerPlacement === 'pinned' || (footerPlacement === 'auto' && (phone || short))) : false;
   const column = { width: '100%', maxWidth: width === 'page' ? max : Math.min(width, max), alignSelf: 'center' } as const;
   const actions: RoomsSheetActions = { open: startPage.open, newRoom: startPage.newRoom, join: startPage.join, ...rooms?.actions };
@@ -80,7 +80,9 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
     ? <YourRoomsSheet current={rooms.current} rooms={rooms.rooms} loading={rooms.loading} actions={actions} onClose={closeRooms} />
     : <HomeRoomsSheet current={rooms?.current} actions={actions} onClose={closeRooms} />) : null;
   // The pill stays usable over a screen's sheet: Your rooms opens on top, and closing it returns to that sheet.
-  const shownSheet = roomsSheet ?? sheet;
+  // The avatar opens Profile right here, over this page: it never moves to the start page underneath.
+  const profileSheet = profileOpen ? <HomeProfileSheet returnTo={pathname} onClose={() => setProfileOpen(false)} /> : null;
+  const shownSheet = roomsSheet ?? profileSheet ?? sheet;
   // The header's Back closes the sheet on top first, like every other Back.
   const screenBack = header.back;
   const back = screenBack ? () => { if (!closeTopSheet()) screenBack(); } : undefined;
@@ -97,7 +99,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
       <BootReveal part="backdrop" pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></BootReveal>
       {backdrop}
       <CoveredBody covered={covered} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
-        <AppHeader {...header} back={back} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? (() => startPage.profile(pathname))} />
+        <AppHeader {...header} back={back} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? (() => setProfileOpen(true))} />
       </CoveredBody>
       <View style={{ flex: 1, minHeight: 0 }}>
         <CoveredBody covered={covered || Boolean(shownSheet)}>

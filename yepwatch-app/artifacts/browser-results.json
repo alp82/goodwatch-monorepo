@@ -2,12 +2,12 @@
   "config": {
     "argv": [
       "/home/alp/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
-      "/home/alp/dev/projects/goodwatch/yw-details/yepwatch-app/node_modules/.bin/playwright",
+      "/home/alp/dev/projects/goodwatch/yw-profile/yepwatch-app/node_modules/.bin/playwright",
       "test",
-      "tests/glow-browser/polish.spec.ts"
+      "room-profile"
     ],
-    "configFile": "/home/alp/dev/projects/goodwatch/yw-details/yepwatch-app/playwright.config.ts",
-    "rootDir": "/home/alp/dev/projects/goodwatch/yw-details/yepwatch-app/tests/glow-browser",
+    "configFile": "/home/alp/dev/projects/goodwatch/yw-profile/yepwatch-app/playwright.config.ts",
+    "rootDir": "/home/alp/dev/projects/goodwatch/yw-profile/yepwatch-app/tests/glow-browser",
     "failOnFlakyTests": false,
     "forbidOnly": false,
     "fullyParallel": false,
@@ -23,7 +23,7 @@
     "preserveOutput": "always",
     "projects": [
       {
-        "outputDir": "/home/alp/dev/projects/goodwatch/yw-details/yepwatch-app/artifacts/browser-traces",
+        "outputDir": "/home/alp/dev/projects/goodwatch/yw-profile/yepwatch-app/artifacts/browser-traces",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -31,7 +31,7 @@
         },
         "id": "",
         "name": "",
-        "testDir": "/home/alp/dev/projects/goodwatch/yw-details/yepwatch-app/tests/glow-browser",
+        "testDir": "/home/alp/dev/projects/goodwatch/yw-profile/yepwatch-app/tests/glow-browser",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -43,15 +43,15 @@
       {
         "grep": {},
         "grepInvert": null,
-        "outputDir": "/home/alp/dev/projects/goodwatch/yw-details/yepwatch-app/artifacts/browser-traces",
+        "outputDir": "/home/alp/dev/projects/goodwatch/yw-profile/yepwatch-app/artifacts/browser-traces",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
           "actualWorkers": 1
         },
         "name": "",
-        "testDir": "/home/alp/dev/projects/goodwatch/yw-details/yepwatch-app/tests/glow-browser",
-        "snapshotDir": "/home/alp/dev/projects/goodwatch/yw-details/yepwatch-app/tests/glow-browser",
+        "testDir": "/home/alp/dev/projects/goodwatch/yw-profile/yepwatch-app/tests/glow-browser",
+        "snapshotDir": "/home/alp/dev/projects/goodwatch/yw-profile/yepwatch-app/tests/glow-browser",
         "testIgnore": [],
         "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
         "timeout": 30000,
@@ -101,13 +101,13 @@
   },
   "suites": [
     {
-      "title": "polish.spec.ts",
-      "file": "polish.spec.ts",
+      "title": "room-profile.spec.ts",
+      "file": "room-profile.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [
         {
-          "title": "the join screen is a room screen: Back, the room as the headline, name and Join; no start page underneath",
+          "title": "Profile in a room opens over the room and closes back to it",
           "ok": true,
           "tags": [],
           "tests": [
@@ -122,12 +122,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2107,
+                  "duration": 2216,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-08T13:30:29.351Z",
+                  "startTime": "2026-11-09T18:08:15.026Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -135,13 +135,13 @@
               "status": "expected"
             }
           ],
-          "id": "12948a1c8bc2a97af126-a60d48c611de6c307789",
-          "file": "polish.spec.ts",
-          "line": 37,
+          "id": "386280039ac2a0ae2109-d64c9a0ddfb0e351b03d",
+          "file": "room-profile.spec.ts",
+          "line": 5,
           "column": 5
         },
         {
-          "title": "the join screen on a desktop window: one centered column, no dark box",
+          "title": "Profile on the Mood page keeps the Mood page underneath",
           "ok": true,
           "tags": [],
           "tests": [
@@ -156,12 +156,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2806,
+                  "duration": 3393,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-08T13:30:31.499Z",
+                  "startTime": "2026-11-09T18:08:17.383Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -169,247 +169,9 @@
               "status": "expected"
             }
           ],
-          "id": "12948a1c8bc2a97af126-5f0fd791a9cdfdd5c4b7",
-          "file": "polish.spec.ts",
-          "line": 59,
-          "column": 5
-        },
-        {
-          "title": "details show the title analysis: scores, age rating, tagline, essence chips, effect lines in their colors, Not for, credits",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1607,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-11-08T13:30:34.310Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "12948a1c8bc2a97af126-7106c3a2194f21967ac8",
-          "file": "polish.spec.ts",
-          "line": 93,
-          "column": 5
-        },
-        {
-          "title": "the trailer plays inside the details hero and closes back to it",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1551,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-11-08T13:30:35.921Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "12948a1c8bc2a97af126-6a53ff6eb51df87f88f3",
-          "file": "polish.spec.ts",
-          "line": 134,
-          "column": 5
-        },
-        {
-          "title": "details fill a desktop window: full-width hero, actions beside the title, Summary beside the effect lines",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1511,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-11-08T13:30:37.475Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "12948a1c8bc2a97af126-a475c38b4bae2567e8ad",
-          "file": "polish.spec.ts",
-          "line": 148,
-          "column": 5
-        },
-        {
-          "title": "details from before the title analysis show the fingerprint highlights instead of essence chips",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1455,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-11-08T13:30:38.991Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "12948a1c8bc2a97af126-038b4f475d20df1ffb1c",
-          "file": "polish.spec.ts",
-          "line": 167,
-          "column": 5
-        },
-        {
-          "title": "details hide every part whose data is missing",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1480,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-11-08T13:30:40.450Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "12948a1c8bc2a97af126-f2a9070de3522108b096",
-          "file": "polish.spec.ts",
-          "line": 177,
-          "column": 5
-        },
-        {
-          "title": "matches show the score pill",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1423,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-11-08T13:30:41.934Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "12948a1c8bc2a97af126-1091c46e47100b5caf8e",
-          "file": "polish.spec.ts",
-          "line": 194,
-          "column": 5
-        },
-        {
-          "title": "Tonight: scores and Watch on, cheering only on the poster",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1441,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-11-08T13:30:43.360Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "12948a1c8bc2a97af126-9a8fd489fdbac73307c6",
-          "file": "polish.spec.ts",
-          "line": 205,
+          "id": "386280039ac2a0ae2109-281271d348ff1c26dbc3",
+          "file": "room-profile.spec.ts",
+          "line": 23,
           "column": 5
         }
       ]
@@ -417,9 +179,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-11-08T13:30:23.292Z",
-    "duration": 21543.817,
-    "expected": 9,
+    "startTime": "2026-11-09T18:07:53.356Z",
+    "duration": 27598.697,
+    "expected": 2,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

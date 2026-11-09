@@ -18,7 +18,7 @@ The prototype is mock-only and was written without tests or error handling. Port
 
 - **Room switcher pill**: the current room's mood with a LIVE dot (a ticket icon once decided), "New room" on Mood, "N open" on the start page. It opens a Your rooms sheet: this room, the other open rooms, New room, Join a room.
 - **Get the app** (desktop web, not in the installed app): a button with the Apple and Android marks; it opens a popover with both install QR codes (`home/codes.json`).
-- **Avatar**: opens Profile. Members get a small GoodWatch mark on it.
+- **Avatar**: opens Profile as a sheet over the page it was pressed on (a room, its Mood page, the start page); the page underneath never changes. Members get a small GoodWatch mark on it.
 
 ### Start page
 
