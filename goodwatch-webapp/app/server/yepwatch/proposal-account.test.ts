@@ -18,7 +18,7 @@ const env = {
 const secret = "test-account-secret-at-least-thirty-two"
 const api = (path: string) => `${origin}/api/yepwatch/v1/proposal${path}`
 
-/** A GoodWatch issuer double: codes become short-lived grants; refresh tokens rotate when offline access is on. */
+/** A GoodWatch issuer double: codes become short-lived grants; with `offline` it also hands out refresh tokens, which rotate. */
 function setup(options: {
 	offline?: boolean
 	lifetime?: number | (() => number)
@@ -26,7 +26,7 @@ function setup(options: {
 	/** A reply for GoodWatch's identity check instead of the real one (an outage). */
 	identityReply?: () => Response | undefined
 } = {}) {
-	const config = releaseMemberConfig({ ...env, YEPWATCH_MEMBER_OFFLINE_ACCESS: options.offline ? "true" : "false" }, origin)!
+	const config = releaseMemberConfig(env, origin)!
 	const repo = new ProposalMemoryRepository()
 	const service = new ProposalService(repo, proposalFixtureCatalog, secret)
 	const grants = new Map<string, number>()
@@ -190,7 +190,7 @@ test("native sign-in returns the code to the app link without a room, and the ap
 	assert.equal((await status.json()).state, "member")
 })
 
-test("an expired session renews with a refresh token when offline access is on, and ends without one", async () => {
+test("an expired session renews with a refresh token, and ends when GoodWatch gave none", async () => {
 	const renewable = setup({ offline: true, lifetime: 1 })
 	const { callback, authorize } = await signIn(renewable.handler, `${origin}/`)
 	assert.equal(authorize.searchParams.get("scope"), "yepwatch:read offline_access")

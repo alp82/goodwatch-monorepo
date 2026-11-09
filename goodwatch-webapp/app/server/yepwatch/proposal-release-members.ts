@@ -77,16 +77,11 @@ export function releaseMemberConfig(env: Env, publicOrigin: string) {
   const callbackUrl = `${publicOrigin}${paths.memberCallback}`;
   if (!oauth.redirectUris.includes(callbackUrl))
     throw new Error("Register the exact YepWatch member callback");
-  const offline = env.YEPWATCH_MEMBER_OFFLINE_ACCESS ?? "false";
-  if (!["true", "false"].includes(offline))
-    throw new Error("Invalid member offline-access setting");
   return {
     ...oauth,
     issuerOrigin: origin.origin,
     callbackUrl,
     publicOrigin,
-    // Renewable device sign-in needs the GoodWatch client registered for refresh tokens first.
-    offlineAccess: offline === "true",
   };
 }
 export type ReleaseMemberConfig = NonNullable<
@@ -211,9 +206,8 @@ export function releaseMembers(
         response_type: "code",
         client_id: config.clientId,
         redirect_uri: redirectUri,
-        scope: config.offlineAccess
-          ? `${YEPWATCH_READ_SCOPE} offline_access`
-          : YEPWATCH_READ_SCOPE,
+        // offline_access keeps a member signed in until they sign out (GoodWatch's refresh grant, 90 days).
+        scope: `${YEPWATCH_READ_SCOPE} offline_access`,
         resource: config.resource,
         state,
         code_challenge: challenge,
@@ -231,12 +225,8 @@ export function releaseMembers(
         code_verifier: verifier,
       });
     },
-    ...(config.offlineAccess
-      ? {
-          refresh: ({ refreshToken }: { refreshToken: string }) =>
-            token({ grant_type: "refresh_token", refresh_token: refreshToken }),
-        }
-      : {}),
+    refresh: ({ refreshToken }) =>
+      token({ grant_type: "refresh_token", refresh_token: refreshToken }),
     verify: (token) => resource(token, "identity"),
   };
   return new ContinuousMembers(
