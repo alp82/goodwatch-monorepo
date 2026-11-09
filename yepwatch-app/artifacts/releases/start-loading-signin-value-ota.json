@@ -1,0 +1,22 @@
+{
+  "release": "Start carries the wait (progress line, changing words, Ready check, Try again); the GoodWatch button states its value per place (saved streaming services, name)",
+  "prototype": "prototype/yepwatch-start-signin (local branch, 149a1168e..1e16a6f3d): Start A 'the button works', sign-in A 'value line'",
+  "ownerVerdict": "2026-11-09: Start A works best for slow and fast starts; sign-in A too, ship both",
+  "mainCommit": "7e2fcfa3f",
+  "checks": {
+    "typecheck": "passed",
+    "appUnit": 184,
+    "appBrowser": "full glow-browser suite passed (route-intercepted fake API)",
+    "nativeBundle": "iOS and Android exports passed"
+  },
+  "ota": {
+    "ios": { "channel": "beta", "runtime": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495", "updateId": "01a1bfbd-8e15-78d4-bf39-ac4cd5da03ad", "groupId": "2c0baa7e-1e41-48af-b5e6-ae0abcb21542" },
+    "android": { "channel": "beta-preview", "runtime": "e602b9da0532d0b6553acc72b771132638acce70", "updateId": "01a1bfbd-ea61-75f7-8b26-8254331c3fd0", "groupId": "6ae0ad14-94fc-4e97-98f2-1d772b562107" }
+  },
+  "nativeFingerprints": "match installed build 16 on both platforms",
+  "limits": [
+    "Friends see no deck-building wait: the server builds the deck inside the Start command and publishes nothing before the round exists, so a friend's box shows '<host> started' with a check only when the round arrives.",
+    "Friends get no 'Couldn't start' state: they can't know the host's start failed.",
+    "Not seen on a real device."
+  ]
+}
