@@ -141,6 +141,7 @@ export function Press({
   quiet = false,
   style,
   selected,
+  hint,
 }: {
   label: string;
   onPress: () => void;
@@ -150,12 +151,15 @@ export function Press({
   quiet?: boolean;
   style?: StyleProp<ViewStyle>;
   selected?: boolean;
+  /** What pressing it does, read after the name. */
+  hint?: string;
 }) {
   return (
     <Pressable
       {...(!native && selected !== undefined ? { 'aria-pressed': selected } : {})}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityHint={hint}
       accessibilityState={{ disabled: disabled || quiet, selected }}
       disabled={disabled || quiet}
       onPress={onPress}

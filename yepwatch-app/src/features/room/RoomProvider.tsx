@@ -53,6 +53,8 @@ export interface RoomContextValue {
   inviteUrl: string | null;
   signin: () => Promise<void>;
   memberBusy: boolean;
+  /** This device was signed in and the session ran out: GoodWatch prompts read Reconnect GoodWatch. */
+  memberLapsed: boolean;
   /** Linking your place here to this device's GoodWatch sign-in failed: the room offers a quiet Retry. */
   linkFailed: boolean;
   retryLink: () => void;
@@ -249,7 +251,7 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
   let inviteUrl: string | null = null;
   try { inviteUrl = invite ? appInviteUrl(invite.path) : null; } catch { inviteUrl = null; }
   const value: RoomContextValue = {
-    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, linkFailed: linkFailed && wantsLink, retryLink, connectionLate, notice: notice || account.error, setNotice,
+    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, memberLapsed: account.lapsed, linkFailed: linkFailed && wantsLink, retryLink, connectionLate, notice: notice || account.error, setNotice,
     dismissedProposal, dismissProposal, reopenProposal, setActivityView: state.setView, saves, acknowledgeIdeas,
     sheet: sheets.at(-1) ?? null, openSheet, closeSheet, closeSheets, renderSheet,
   };

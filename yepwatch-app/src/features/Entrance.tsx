@@ -330,8 +330,8 @@ export function Entrance({ invite, open: request, from }: {
   const signInFrom = (path: string) => { setError(''); void account.signIn(path); };
   const fromRoom = from?.match(/^\/room\/([A-Za-z0-9_-]{1,64})(?:\/|$)/)?.[1];
   const roomFrom = fromRoom ? `/room/${fromRoom}` : null;
-  // The start page's big button is for guests; a lapsed sign-in reconnects quietly from Profile.
-  const signIn = guestOnly || account.member || account.lapsed ? undefined : () => signInFrom('/');
+  // The start page's big button is for guests; a lapsed sign-in gets the small Reconnect GoodWatch.
+  const signIn = guestOnly || account.member ? undefined : () => signInFrom('/');
   const signInFromProfile = guestOnly || account.member ? undefined : () => signInFrom(roomFrom ?? '/?open=profile');
   const openJoin = () => { setError(''); if (!resumeAdmission()) setPanel('join'); };
   // Another screen's header asked for New room: it starts once the saved request is known.
@@ -363,7 +363,7 @@ export function Entrance({ invite, open: request, from }: {
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
   if (shown === 'join') return (
     <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite}
-      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname)} member={account.member} me={me}
+      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname)} member={account.member} lapsed={account.lapsed} me={me}
       initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error || account.error}
       back={closePanel} editName={openProfile}
       /* Back on this invitation (or the code you typed) as yourself, ready to join. */
@@ -390,12 +390,12 @@ export function Entrance({ invite, open: request, from }: {
       {returning ? (
         <YourRooms title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
           rooms={home.active} decisions={home.decisions} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create}
-          join={openJoin} retry={home.retry} history={history} signIn={signIn} signingIn={account.busy}
+          join={openJoin} retry={home.retry} history={history} signIn={signIn} signingIn={account.busy} lapsed={account.lapsed}
           archive={(roomId) => { home.archive(roomId); setJustArchived(roomId); }}
           archivedRoom={Boolean(justArchived)} undoArchive={() => { if (justArchived) home.restore(justArchived); setJustArchived(null); }}
           disabled={checkingInvite} quiet={busy} />
       ) : (
-        <Landing newRoom={create} join={openJoin} signIn={signIn} signingIn={account.busy} disabled={checkingInvite} quiet={busy} />
+        <Landing newRoom={create} join={openJoin} signIn={signIn} signingIn={account.busy} lapsed={account.lapsed} disabled={checkingInvite} quiet={busy} />
       )}
       {!shown && (error || account.error) ? <GText size={14} color="#fca5a5">{error || account.error}</GText> : null}
     </AppFrame>

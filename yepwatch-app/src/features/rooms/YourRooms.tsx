@@ -9,7 +9,7 @@ import { Image, Pressable, View } from 'react-native';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
 import { BootReveal } from '../home/BootReveal';
 import { AppCard, installable } from '../home/install';
-import { GoodWatchButton } from '../home/Landing';
+import { StartSignIn } from '../home/Landing';
 import { Tiles } from '../home/start-parts';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { HeroIcon, LiveBadge, Note, TextLink } from '../room/ui';
@@ -100,7 +100,7 @@ function HistoryButton({ onPress }: { onPress: () => void }) {
   );
 }
 
-export function YourRooms({ title, rooms, decisions, unavailable, loading, open, archive, archivedRoom, undoArchive, newRoom, join, retry, history, signIn, signingIn = false, disabled, quiet }: {
+export function YourRooms({ title, rooms, decisions, unavailable, loading, open, archive, archivedRoom, undoArchive, newRoom, join, retry, history, signIn, signingIn = false, lapsed = false, disabled, quiet }: {
   title: string;
   /** Rooms on the start page; the open ones become cards. */
   rooms: readonly HomeRoom[];
@@ -117,10 +117,12 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
   retry: () => void;
   /** History has something (decided, left or archived rooms). */
   history?: () => void;
-  /** Guests: Continue with GoodWatch. */
+  /** Guests: Continue with GoodWatch; a lapsed member: Reconnect GoodWatch. */
   signIn?: () => void;
   /** A GoodWatch sign-in is already starting: the button waits. */
   signingIn?: boolean;
+  /** The session ran out: `signIn` is the small Reconnect GoodWatch, not the guest button. */
+  lapsed?: boolean;
   disabled: boolean;
   /** A room is opening: the buttons rest without dimming. */
   quiet: boolean;
@@ -134,7 +136,7 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
   const cardWidth = Math.floor((max - gap * (cols - 1)) / cols);
   const tiles = { newRoom, join, disabled, quiet };
   // As wide as the New room and Join tiles above it, on every window.
-  const signInButton = signIn ? <GoodWatchButton height={phone ? 54 : z(54)} onPress={signIn} disabled={disabled || signingIn} quiet={quiet && !signingIn} /> : null;
+  const signInButton = signIn ? <StartSignIn height={phone ? 54 : z(54)} signIn={signIn} signingIn={signingIn} lapsed={lapsed} disabled={disabled} quiet={quiet} /> : null;
   const notes = (
     <>
       {archivedRoom ? <Note action={{ label: 'Undo', onPress: undoArchive }}>Room archived</Note> : null}

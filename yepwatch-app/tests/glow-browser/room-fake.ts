@@ -79,6 +79,7 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
   const receipts = new Set<string>();
   let loseNext = false;
   let refuseRefills = 0;
+  let refuseStarts = 0;
   /** Commands of these types wait for the test to release them (another command in flight). */
   const gates = new Map<string, Promise<void>>();
   const me = () => room.shared.participants.find((p) => p.participantId === room.own.participantId)!;
@@ -116,7 +117,7 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
         break;
       case 'rename': me().nickname = c.nickname; break;
       case 'set_show_seen': room.own.showSeen = c.show; break;
-      case 'start': room.shared.phase = 'choosing'; break;
+      case 'start': room.shared.phase = 'choosing'; room.shared.generation++; break;
       case 'vote': {
         const v = c as Extract<CommandEnvelope['command'], { type: 'vote' }>;
         const old = room.own.votes.find((x) => x.candidateId === v.candidateId);
@@ -214,6 +215,10 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
         refuseRefills--;
         return route.fulfill({ status: 409, json: { error: { code: 'conflict', message: 'Try again', retryable: false }, snapshot: room } });
       }
+      if (body.command.type === 'start' && refuseStarts > 0 && !receipts.has(body.commandId)) {
+        refuseStarts--;
+        return route.fulfill({ status: 409, json: { error: { code: 'no_intersection', message: 'No verified candidates yet', retryable: false }, snapshot: room } });
+      }
       const refused = receipts.has(body.commandId) ? null : refuse(body.command);
       if (refused) return route.fulfill({ status: refused.status, json: { error: { code: refused.code, message: refused.message, retryable: false }, snapshot: room } });
       if (!receipts.has(body.commandId)) { receipts.add(body.commandId); apply(body); }
@@ -247,5 +252,7 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     },
     /** The next n refills are refused (the app's send returns false). */
     refuseRefills: (n: number) => { refuseRefills = n; },
+    /** The next n starts find no titles (the room stays in setup). */
+    refuseStarts: (n: number) => { refuseStarts = n; },
   };
 }

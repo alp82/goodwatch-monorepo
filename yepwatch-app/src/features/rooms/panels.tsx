@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { parseInvite } from '../../core/invites';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
 import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
-import { GoodWatchButton } from '../home/Landing';
+import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../home/Landing';
 import { Or } from '../home/start-parts';
 import { fitSize, type Kind } from '../room/model';
 import { KindIcons, Screen, kindsLabel } from '../room/ui';
@@ -98,7 +98,7 @@ export function InviteHead({ preview }: { preview: InvitePreview | undefined }) 
  * field. Guests type their name (or Continue with GoodWatch); members join as their GoodWatch name.
  * A saved, unconfirmed request keeps its name (Change name edits it in Profile).
  */
-export function JoinScreen({ invite, checking = false, nickname, nameLocked = false, member = false, initialCode = '', action, busy, error, back, editName, submit, signIn, extra, head, me }: {
+export function JoinScreen({ invite, checking = false, nickname, nameLocked = false, member = false, lapsed = false, initialCode = '', action, busy, error, back, editName, submit, signIn, extra, head, me }: {
   invite: boolean;
   /** Still finding out whether you're already in this room: the room shows, the form waits unseen in its place. */
   checking?: boolean;
@@ -106,7 +106,10 @@ export function JoinScreen({ invite, checking = false, nickname, nameLocked = fa
   nickname: string | null;
   /** A saved request's name: it can't change in the form. */
   nameLocked?: boolean;
-  member?: boolean; initialCode?: string; action: string; busy: boolean; error?: string;
+  member?: boolean;
+  /** Signed in here before and the session ran out: the GoodWatch button reads Reconnect GoodWatch. */
+  lapsed?: boolean;
+  initialCode?: string; action: string; busy: boolean; error?: string;
   back: () => void; editName: () => void; submit: (code: string, nickname: string) => void; signIn?: (code: string) => void; extra?: ReactNode;
   /** The invited room's head (InviteHead); without it the screen says what it is. */
   head?: ReactNode;
@@ -156,7 +159,7 @@ export function JoinScreen({ invite, checking = false, nickname, nameLocked = fa
             {join}
             {signIn ? <>
               <Or />
-              <GoodWatchButton height={z(50)} disabled={busy || !validCode} onPress={() => signIn(code)} />
+              <GoodWatchButton height={z(50)} {...(lapsed ? { label: RECONNECT_GOODWATCH, detail: RECONNECTED_DETAIL } : { detail: 'Brings your name and streaming services' })} disabled={busy || !validCode} onPress={() => signIn(code)} />
             </> : null}
           </>
         )}
@@ -188,7 +191,8 @@ export function ProfileSheet({ nickname, save, member = false, lapsed = false, s
         {lapsed ? (
           <View testID="profile-lapsed" style={{ alignItems: 'center', gap: 2 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><GoodWatchMark size={18} /><GText size={14} color={glow.muted}>GoodWatch needs a quick reconnect</GText></View>
-            {signIn ? <Press label="Reconnect GoodWatch" onPress={signIn} disabled={busy} style={{ minHeight: 40, paddingHorizontal: 8 }}><GText size={14} bold color={glow.amber}>Reconnect GoodWatch</GText></Press> : null}
+            {signIn ? <Press label={RECONNECT_GOODWATCH} hint={RECONNECTED_DETAIL} onPress={signIn} disabled={busy} style={{ minHeight: 40, paddingHorizontal: 8 }}><GText size={14} bold color={glow.amber}>{RECONNECT_GOODWATCH}</GText></Press> : null}
+            {signIn ? <GText size={13} color={glow.muted}>{RECONNECTED_DETAIL}</GText> : null}
           </View>
         ) : null}
       </View>
@@ -197,7 +201,7 @@ export function ProfileSheet({ nickname, save, member = false, lapsed = false, s
         <Field label="Your name" value={value} onChange={setValue} placeholder="Your name" returnKey="done" onSubmit={go} />
         <GText size={13} color={glow.muted}>Used for new rooms</GText>
       </View>
-      {!member && !lapsed && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton onPress={signIn} disabled={busy} /></View> : null}
+      {!member && !lapsed && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton detail="Brings your streaming services to new rooms" onPress={signIn} disabled={busy} /></View> : null}
       {(member || lapsed) && logOut ? (
         <View style={{ gap: 8 }}>
           <Action label="Log out" onPress={logOut} disabled={busy} small />

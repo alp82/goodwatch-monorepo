@@ -116,18 +116,21 @@ test('pressing Continue with GoodWatch twice starts one sign-in, and the button 
   expect(f.account.starts).toBe(1);
 });
 
-test('a lapsed sign-in keeps the name, leaves the start page alone and reconnects from Profile in one tap', async ({ page }) => {
+test('a lapsed sign-in keeps the name, offers a small Reconnect on the start page and reconnects from Profile in one tap', async ({ page }) => {
   const f = await fakeRoom(page, newRoom(), { member: 'lapsed' });
   await page.goto('/');
   await expect(page.getByTestId('home-rooms')).toBeVisible();
   await expect(page.getByText(/, Alex$/)).toBeVisible();
-  // No big guest button mid-session.
+  // No big guest button mid-session: the small Reconnect GoodWatch with what it brings back.
   await expect(button(page, 'Continue with GoodWatch')).toHaveCount(0);
+  await expect(page.getByTestId('start-reconnect').getByText('Brings your streaming services back', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('start-reconnect').getByRole('button', { name: 'Reconnect GoodWatch', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Profile' }).click();
   await expect(page.getByTestId('profile-lapsed')).toBeVisible();
   await expect(button(page, 'Continue with GoodWatch')).toHaveCount(0);
   await expect(button(page, 'Log out')).toBeVisible();
-  await button(page, 'Reconnect GoodWatch').click();
+  await expect(page.getByTestId('profile-lapsed').getByText('Brings your streaming services back', { exact: true })).toBeVisible();
+  await page.getByTestId('profile-lapsed').getByRole('button', { name: 'Reconnect GoodWatch', exact: true }).click();
   await expect.poll(() => f.account.starts).toBe(1);
   await page.waitForURL((url) => url.pathname === '/');
   await page.getByRole('button', { name: 'Profile' }).click();

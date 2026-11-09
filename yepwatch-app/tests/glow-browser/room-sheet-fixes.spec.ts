@@ -77,14 +77,18 @@ test.describe('Back closes the sheet on top first; drafts are never lost', () =>
     const f = await fakeRoom(page, room);
     const release = f.hold('start');
     await page.goto('/room/test-room');
-    // Start is with the server: settings changes wait for it.
+    // Start is with the server: settings changes wait for it. The room's details rest while it starts;
+    // the Room sheet still opens.
     await button(page, 'Start').click();
     await expect.poll(() => f.sent()).toContain('start');
+    await button(page, 'Room').click();
     await button(page, 'Movies and shows, change').click();
     await page.getByRole('checkbox', { name: 'Shows' }).click();
-    // Back closes the sheet (its change waits behind Start), then leaves the room before the change went out.
+    // Back closes the sheets one at a time (the change waits behind Start), then leaves the room before the change went out.
     await button(page, 'Back').click();
     await expect(page.getByTestId('kinds-sheet')).toHaveCount(0);
+    await button(page, 'Back').click();
+    await expect(page.getByTestId('room-sheet')).toHaveCount(0);
     expect(f.sent()).not.toContain('configure');
     await button(page, 'Back').click();
     await expect(page.getByTestId('room-setup')).toHaveCount(0);

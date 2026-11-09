@@ -119,6 +119,51 @@ test('NEW stays while the host looks at the room and is gone the next time', asy
   await expect(page.getByText('NEW', { exact: true })).toHaveCount(0);
 });
 
+test('Start carries the wait: Try again after a failed start, its words while the deck is built, Ready as voting takes over', async ({ page }) => {
+  const room = choosingRoom();
+  room.shared.phase = 'setup';
+  const f = await fakeRoom(page, room);
+  await page.goto('/room/test-room');
+  await expect(page.getByTestId('room-setup')).toBeVisible();
+  f.refuseStarts(1);
+  await button(page, 'Start').click();
+  await expect(button(page, 'Try again')).toBeEnabled();
+  await expect(page.getByText('Couldn’t start the round', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('room-setup')).toBeVisible();
+  // Try again starts again; the server takes its time building the deck.
+  const release = f.hold('start');
+  await button(page, 'Try again').click();
+  await expect(button(page, 'Starting…')).toBeVisible();
+  await expect(page.locator('[aria-busy="true"]').filter({ has: button(page, 'Starting…') })).toHaveCount(1);
+  await expect(page.getByText('Couldn’t start the round', { exact: true })).toHaveCount(0);
+  await expect(button(page, 'Finding titles…')).toBeVisible({ timeout: 5000 });
+  release();
+  await expect(button(page, 'Ready')).toBeVisible();
+  await expect(page.getByTestId('voting')).toBeVisible();
+  expect(f.sent().filter((t) => t === 'start')).toHaveLength(2);
+});
+
+test('a friend sees the host’s start arrive: "<host> started" with a check, then voting', async ({ page }) => {
+  const room = choosingRoom();
+  room.shared.phase = 'setup';
+  room.own.participantId = 'mia';
+  room.own.canHost = false;
+  const f = await fakeRoom(page, room);
+  await page.goto('/room/test-room');
+  await expect(page.getByText('Waiting for Alp to start', { exact: true })).toBeVisible();
+  f.room.shared.phase = 'choosing';
+  f.room.shared.generation++;
+  f.push();
+  await page.evaluate(() => {
+    for (const state of ['hidden', 'visible']) {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }
+  });
+  await expect(page.getByText('Alp started', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('voting')).toBeVisible();
+});
+
 test('friends see the same ideas with disabled switches and can suggest one', async ({ page }) => {
   const room = choosingRoom();
   room.shared.phase = 'setup';

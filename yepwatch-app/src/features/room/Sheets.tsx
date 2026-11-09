@@ -7,8 +7,11 @@ import { useEffect, useRef } from 'react';
 import { Image, View } from 'react-native';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { deviceCountryHint } from '../../core/lobby';
+import { guestOnly } from '../../core/config';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { Feedback } from '../beta/Feedback';
+import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../home/Landing';
+import { Or } from '../home/start-parts';
 import { SoundToggle } from '../feedback/RoomFeedback';
 import { GoodWatchMark } from '../shell/marks';
 import { FaceStack } from '../shell/parts';
@@ -140,7 +143,7 @@ function useDraftSheet<K extends DraftKey>(key: K, final: () => Drafts[K]) {
 
 /** Your own services (per person) and, for the host, the room's country. */
 function ServicesSheet() {
-  const { view, snapshot, saves, closeSheet } = useRoom();
+  const { view, snapshot, saves, closeSheet, signin, memberBusy, memberLapsed, disabled } = useRoom();
   // An unsaved change (from this visit or one still being saved) wins; otherwise the confirmed room.
   const draft = saves.drafts.services;
   const fallback = snapshot?.own.member.prefill?.country ?? deviceCountryHint() ?? 'US';
@@ -160,6 +163,13 @@ function ServicesSheet() {
       </View>
       <ServiceGrid all={all} loading={metadata.isPending} selected={selected} toggle={(s) => saves.edit('services', { country: draft?.country ?? null, picked: toggleService(selected, s) })} />
       {metadata.error ? <TextLink label="Retry" onPress={() => void metadata.refetch()} /> : null}
+      {/* Guests can bring the services saved on GoodWatch instead; signing in comes back to this room. */}
+      {!guestOnly && !view.member ? (
+        <View style={{ gap: 14 }}>
+          <Or />
+          <GoodWatchButton {...(memberLapsed ? { label: RECONNECT_GOODWATCH, detail: RECONNECTED_DETAIL } : { detail: 'Brings the services saved on GoodWatch' })} disabled={memberBusy || disabled} onPress={() => void signin()} />
+        </View>
+      ) : null}
     </Sheet>
   );
 }

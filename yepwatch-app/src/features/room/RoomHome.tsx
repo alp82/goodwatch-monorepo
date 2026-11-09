@@ -2,16 +2,40 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { clearMoodStep, hasMoodStep, markMoodStep } from '../../core/continuous/room-local';
-import { showsProposal } from './model';
+import { showsProposal, type RoomView } from './model';
 import { openPage, toRooms } from './nav';
 import { isRoomSheet, useRoom } from './RoomProvider';
 import { RoomStatus } from './RoomStatus';
 import { Proposal } from './Decide';
 import { RoomSetup, Waiting } from './Setup';
+import { FRIEND_HANDOVER_MS, START_HANDOVER_MS, startedLive } from './start-progress';
 import { Tonight } from './Tonight';
 import { useBackAction } from '../shell/sheet-back';
 import { Screen } from './ui';
 import { Voting } from './Voting';
+
+/**
+ * The round started while this screen was open: the room before Start stays a moment longer, showing
+ * Ready with its check (the host) or "<host> started" (friends), then voting takes over. Opening a
+ * room that's already choosing goes straight to voting.
+ */
+function useStartHandover(view: RoomView | null) {
+  const phase = view?.phase;
+  const [seen, setSeen] = useState(phase);
+  const [handover, setHandover] = useState(false);
+  // Decided in the render that first sees the round, so voting never paints a frame before the handover.
+  if (phase !== seen) {
+    setSeen(phase);
+    setHandover(startedLive(seen, phase));
+  }
+  const ms = view?.isHost ? START_HANDOVER_MS : FRIEND_HANDOVER_MS;
+  useEffect(() => {
+    if (!handover) return;
+    const timer = setTimeout(() => setHandover(false), ms);
+    return () => clearTimeout(timer);
+  }, [handover, ms]);
+  return handover && phase === 'choosing';
+}
 
 export function RoomHome() {
   const { id, state, view, entry, dismissedProposal, memberBusy, openSheet } = useRoom();
@@ -50,12 +74,14 @@ export function RoomHome() {
     setOpened(true); // eslint-disable-line react-hooks/set-state-in-effect
     openSheet('services');
   }, [picksServices, opened, memberBusy, openSheet]);
+  const handover = useStartHandover(view);
   const setup = view?.phase === 'setup' || (view?.phase === 'choosing' && !view.me.inRound);
   useBackAction(toRooms, setup);
   if (state.terminal || state.access === null || !view) return <RoomStatus />;
   const moodNext = view.isHost && !view.ideas.length && (params.fresh === '1' || hasMoodStep(id));
   if (opening || (!opened && moodNext)) return <Screen testID="room-arriving" back={toRooms}>{null}</Screen>;
   if (view.phase === 'decided') return <Tonight />;
+  if (handover) return view.isHost ? <RoomSetup ready /> : <Waiting ready />;
   if (showsProposal(view, dismissedProposal)) return <Proposal />;
   if (view.phase === 'choosing' && view.me.inRound && !entry.required) return <Voting />;
   return view.isHost && view.phase === 'setup' ? <RoomSetup /> : <Waiting />;

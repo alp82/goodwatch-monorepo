@@ -16,21 +16,66 @@ import { GoodWatchMark } from '../shell/marks';
 import { useLayout } from '../shell/layout';
 import { R } from '../shell/tokens';
 
-/** The approved Sign in with GoodWatch look (dark surface, GoodWatch mark), worded Continue with GoodWatch. */
-export function GoodWatchButton({ onPress, disabled, quiet, height = 50 }: { onPress: () => void; disabled?: boolean; quiet?: boolean; height?: number }) {
+export const CONTINUE_WITH_GOODWATCH = 'Continue with GoodWatch';
+export const RECONNECT_GOODWATCH = 'Reconnect GoodWatch';
+
+/**
+ * The approved Sign in with GoodWatch look (dark surface, GoodWatch mark), worded Continue with
+ * GoodWatch (Reconnect GoodWatch once a session has run out). `detail` is one short line under the
+ * words saying what it brings here; every place words its own. The accessible name stays the label,
+ * the line is its hint.
+ */
+export function GoodWatchButton({ onPress, detail, label = CONTINUE_WITH_GOODWATCH, disabled, quiet, height = 50 }: {
+  onPress: () => void; detail: string; label?: typeof CONTINUE_WITH_GOODWATCH | typeof RECONNECT_GOODWATCH; disabled?: boolean; quiet?: boolean; height?: number;
+}) {
+  // Scales with the button, so a tall button beside big tiles doesn't carry small words.
+  const mark = Math.max(24, Math.round(height * 0.42));
+  const words = Math.max(16, Math.round(height * 0.3));
   return (
-    <Press label="Continue with GoodWatch" onPress={onPress} disabled={disabled} quiet={quiet} style={{ alignSelf: 'stretch', minHeight: height, borderRadius: R.control, flexDirection: 'row', gap: 10, backgroundColor: '#242424', borderWidth: 1, borderColor: glow.line }}>
-      {/* Scales with the button, so a tall button beside big tiles doesn't carry small words. */}
-      <GoodWatchMark size={Math.max(24, Math.round(height * 0.42))} />
-      <GText bold size={Math.max(16, Math.round(height * 0.3))}>Continue with GoodWatch</GText>
+    <Press label={label} hint={detail} onPress={onPress} disabled={disabled} quiet={quiet}
+      style={{ alignSelf: 'stretch', minHeight: height + 16, paddingVertical: 8, paddingHorizontal: 12, borderRadius: R.control, flexDirection: 'row', gap: 10, backgroundColor: '#242424', borderWidth: 1, borderColor: glow.line }}>
+      <GoodWatchMark size={mark + 4} />
+      <View style={{ flexShrink: 1 }}>
+        <GText bold size={words} lines={1}>{label}</GText>
+        <GText size={Math.max(13, Math.round(words * 0.78))} color={glow.muted} lines={2}>{detail}</GText>
+      </View>
     </Press>
   );
 }
+
+/**
+ * A lapsed member on the start page: the GoodWatch mark with the small amber Reconnect GoodWatch, and
+ * the line saying what it brings back under it (not the big guest button: the name stays).
+ */
+export function ReconnectPrompt({ onPress, disabled }: { onPress: () => void; disabled?: boolean }) {
+  return (
+    <View testID="start-reconnect" style={{ alignItems: 'center', gap: 2, paddingTop: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <GoodWatchMark size={18} />
+        <Press label={RECONNECT_GOODWATCH} hint={RECONNECTED_DETAIL} onPress={onPress} disabled={disabled} style={{ minHeight: 40, paddingHorizontal: 8 }}>
+          <GText size={14} bold color={glow.amber}>{RECONNECT_GOODWATCH}</GText>
+        </Press>
+      </View>
+      <GText size={13} color={glow.muted}>{RECONNECTED_DETAIL}</GText>
+    </View>
+  );
+}
+/** What reconnecting brings back, wherever a lapsed member sees Reconnect GoodWatch. */
+export const RECONNECTED_DETAIL = 'Brings your streaming services back';
 
 export interface LandingActions extends TileActions {
   signIn?: () => void;
   /** A GoodWatch sign-in is already starting: the button waits. */
   signingIn?: boolean;
+  /** The session ran out: `signIn` reconnects, as the small Reconnect GoodWatch. */
+  lapsed?: boolean;
+}
+
+/** The start page's GoodWatch prompt: the guest button, or Reconnect for a lapsed member. */
+export function StartSignIn({ signIn, signingIn, lapsed, disabled, quiet, height }: { signIn: () => void; signingIn?: boolean; lapsed?: boolean; disabled?: boolean; quiet?: boolean; height: number }) {
+  return lapsed
+    ? <ReconnectPrompt onPress={signIn} disabled={disabled || signingIn} />
+    : <GoodWatchButton height={height} detail="Brings your streaming services" onPress={signIn} disabled={disabled || signingIn} quiet={quiet && !signingIn} />;
 }
 
 export function Landing(actions: LandingActions) {
@@ -38,7 +83,7 @@ export function Landing(actions: LandingActions) {
   const { wide, phone, width, max, z } = useLayout();
   // The film starts as the page appears, not behind the boot word.
   const obscured = phase === 'boot';
-  const signIn = actions.signIn ? <GoodWatchButton height={z(54)} onPress={actions.signIn} disabled={actions.disabled || actions.signingIn} quiet={actions.quiet && !actions.signingIn} /> : null;
+  const signIn = actions.signIn ? <StartSignIn height={z(54)} signIn={actions.signIn} signingIn={actions.signingIn} lapsed={actions.lapsed} disabled={actions.disabled} quiet={actions.quiet} /> : null;
   if (wide) {
     const gap = z(64);
     const col = (max - gap) / 2;

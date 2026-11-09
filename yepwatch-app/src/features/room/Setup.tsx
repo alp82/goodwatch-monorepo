@@ -3,22 +3,23 @@
  * the share row, people, movies and shows, streaming and the action beside them (below on phones).
  * The host starts; friends wait for the host.
  */
-import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { TextInput, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { Animated, TextInput, View } from 'react-native';
 import { guestOnly } from '../../core/config';
-import { GoodWatchButton } from '../home/Landing';
+import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../home/Landing';
 import { Or } from '../home/start-parts';
-import { LiveDot } from '../shell/parts';
 import { useLayout } from '../shell/layout';
 import { warm } from '../shell/tokens';
-import { GText, Icon, glow } from '../glow/theme';
+import { GText, glow } from '../glow/theme';
 import { NAME_MAX } from './model';
 import { toRooms } from './nav';
 import { Chip, IdeaStack, PeopleRow, ShareRow, fieldStyleFor, useAcknowledgeShownIdeas } from './parts';
 import { useRoom } from './RoomProvider';
 import { RoomNotes } from './RoomStatus';
 import { namesLine, servicesIn } from './services';
-import { Actions, Button, Glyph, KindIcons, Label, Logos, RoomButton, Screen, Small, kindsLabel, usePinnedActions, useServices } from './ui';
+import { START_FAILED_NOTE, hostStartPhase, type StartPhase } from './start-progress';
+import { StartButton, StartStatus, useEased } from './StartProgress';
+import { Actions, Button, Glyph, KindIcons, Label, Logos, Note, RoomButton, Screen, Small, kindsLabel, usePinnedActions, useServices } from './ui';
 
 /** Share, people, movies and shows, streaming: whole-row controls that open the room's sheets. */
 function RoomDetails() {
@@ -53,22 +54,26 @@ function RoomDetails() {
 
 /**
  * The shared layout: headline (room label and ideas) and the details with the actions, side by side
- * from 900 px. `actions` sit in the side column, or in the phone dock when `pinned`.
+ * from 900 px. `actions` sit in the side column, or in the phone dock when `pinned`. While the round
+ * starts (`start`) the ideas and details rest, dimmed and inert; as it hands over they fade out.
  */
-function RoomBefore({ testID, label, actions, pinned, extra }: { testID: string; label: string; actions: ReactNode; pinned: boolean; extra?: ReactNode }) {
+function RoomBefore({ testID, label, actions, pinned, extra, start = 'idle' }: { testID: string; label: string; actions: ReactNode; pinned: boolean; extra?: ReactNode; start?: StartPhase }) {
   const { phone, wide, max, z } = useLayout();
   const gap = z(56);
   const side = Math.min(z(420), max * 0.4);
+  const ready = start === 'ready';
+  const resting = start === 'starting' || ready;
+  const room = useEased(ready ? 0 : resting ? 0.55 : 1, ready ? 300 : 360, ready ? 330 : 0);
   const headline = (
-    <View style={{ gap: z(16) }}>
+    <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ gap: z(16), opacity: room }}>
       <Label color={glow.amber}>{label}</Label>
       <IdeaStack />
-    </View>
+    </Animated.View>
   );
   const column = (
     <View style={{ gap: z(20) }}>
-      <RoomDetails />
-      {extra}
+      <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ opacity: room }}><RoomDetails /></Animated.View>
+      {extra ? <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ opacity: room }}>{extra}</Animated.View> : null}
       {pinned ? null : actions}
     </View>
   );
@@ -90,9 +95,14 @@ function RoomBefore({ testID, label, actions, pinned, extra }: { testID: string;
   );
 }
 
-/** The host's room before Start: one action, Start, beside the Room button. A guest host names themselves first. */
-export function RoomSetup() {
-  const { view, cmd, state, latest, disabled, signin, memberBusy, openSheet } = useRoom();
+/**
+ * The host's room before Start: one action, Start, beside the Room button. A guest host names
+ * themselves first. Start carries the wait: the server builds the first deck inside the Start command,
+ * so the button works until the command comes back; `ready` (the round arrived) shows the check while
+ * voting takes over. A start that fails reads Try again.
+ */
+export function RoomSetup({ ready = false }: { ready?: boolean }) {
+  const { view, cmd, state, latest, disabled, signin, memberBusy, memberLapsed, openSheet } = useRoom();
   const { z } = useLayout();
   const pinned = usePinnedActions();
   const [name, setName] = useState('');
@@ -100,6 +110,9 @@ export function RoomSetup() {
   // A name sent on blur may still be in flight when Start is pressed: Start waits for it.
   const renaming = useRef<Promise<boolean> | null>(null);
   const nameInput = useRef<ComponentRef<typeof TextInput>>(null);
+  const [attempt, setAttempt] = useState<'starting' | 'failed' | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useAcknowledgeShownIdeas();
   if (!view) return null;
   const typed = name.trim();
@@ -112,21 +125,34 @@ export function RoomSetup() {
     if (renaming.current) await renaming.current;
     const s = latest();
     const current = s?.shared.participants.find((p) => p.participantId === s.own.participantId)?.nickname.trim();
-    if (!current && typed && !(await cmd.rename(typed))) return;
-    await cmd.start();
+    if (!current && typed && !(await cmd.rename(typed))) return false;
+    return cmd.start();
+  };
+  // A start the server hasn't confirmed (the answer got lost) is saved and goes out again by itself;
+  // Try again sends that same start instead of a new one.
+  const pendingStart = state.pending?.command.type === 'start';
+  const phase = hostStartPhase({ attempt, retrying: pendingStart && state.busy, ready });
+  const run = (go: () => Promise<boolean>) => {
+    setAttempt('starting');
+    void go().catch(() => false).then((ok) => { if (mounted.current) setAttempt(ok ? null : 'failed'); });
   };
   // Start stays tappable while a step is missing and opens that step, so it never looks dead.
   const missing = !view.enabledServiceIds.length ? 'services' : !view.kinds.length ? 'kinds' : !named ? 'name' : null;
   const onStart = () => {
     if (missing === 'services' || missing === 'kinds') openSheet(missing);
     else if (missing === 'name') nameInput.current?.focus();
-    else void start();
+    else if (pendingStart) run(() => state.send());
+    else run(start);
   };
+  const blocked = !view.country || state.privateError || state.retrySeconds > 0 || (Boolean(state.pending) && !pendingStart);
   const actions = (
-    <Actions>
-      <RoomButton onPress={() => openSheet('room')} />
-      <Button label="Start" icon={<Icon name="play" size={16} color={warm.ink} />} disabled={!view.country || Boolean(state.pending) || state.privateError} onPress={onStart} />
-    </Actions>
+    <View style={{ gap: 10 }}>
+      {phase === 'failed' ? <Note>{START_FAILED_NOTE}</Note> : null}
+      <Actions>
+        <RoomButton onPress={() => openSheet('room')} />
+        <StartButton phase={phase} disabled={blocked} onPress={onStart} />
+      </Actions>
+    </View>
   );
   const nameField = view.needName ? (
     <View style={{ gap: z(10) }}>
@@ -134,29 +160,34 @@ export function RoomSetup() {
       <TextInput ref={nameInput} accessibilityLabel="Your name" value={name} onChangeText={setName} onFocus={() => setFocus(true)} onBlur={() => { setFocus(false); rename(); }} onSubmitEditing={rename}
         maxLength={NAME_MAX} autoCapitalize="words" autoComplete="nickname" placeholder="Your name" placeholderTextColor={warm.placeholder} returnKeyType="done" selectionColor={glow.amber}
         style={fieldStyleFor(z, focus)} />
-      {!guestOnly && <><Or /><GoodWatchButton disabled={memberBusy || disabled} onPress={() => void signin()} /></>}
+      {!guestOnly && <><Or /><GoodWatchButton {...(memberLapsed ? { label: RECONNECT_GOODWATCH, detail: RECONNECTED_DETAIL } : { detail: 'Brings your name and streaming services' })} disabled={memberBusy || disabled} onPress={() => void signin()} /></>}
     </View>
   ) : null;
-  return <RoomBefore testID="room-setup" label="Your room" pinned={pinned} actions={actions} extra={nameField} />;
+  // A lapsed member kept their name, so there's no name field: Reconnect GoodWatch sits under the details.
+  const reconnect = !nameField && memberLapsed && !guestOnly && !view.member
+    ? <GoodWatchButton label={RECONNECT_GOODWATCH} detail={RECONNECTED_DETAIL} disabled={memberBusy || disabled} onPress={() => void signin()} />
+    : null;
+  return <RoomBefore testID="room-setup" label="Your room" pinned={pinned} actions={actions} extra={nameField ?? reconnect} start={phase} />;
 }
 
-/** A friend's room before Start (or while joining a running round): the same room, waiting for the host. */
-export function Waiting() {
+/**
+ * A friend's room before Start (or while joining a running round): the same room, waiting for the
+ * host. The server says nothing while the host's start builds the deck, so the waiting box changes
+ * when the round arrives: `ready` shows "<host> started" with a check while voting takes over.
+ */
+export function Waiting({ ready = false }: { ready?: boolean }) {
   const { view, entry, openSheet } = useRoom();
-  const { z } = useLayout();
   if (!view) return null;
   const owner = view.hostName || 'Your friend';
-  const waiting = view.phase === 'setup' ? `Waiting for ${view.hostName || 'the host'} to start` : entry.working ? 'Joining…' : 'Joining the round…';
+  const joining = view.phase === 'setup' || ready ? null : entry.working ? 'Joining…' : 'Joining the round…';
   const actions = (
     <View style={{ gap: 10 }}>
       <Actions>
         <RoomButton onPress={() => openSheet('room')} />
-        <View accessibilityLiveRegion="polite" style={{ flex: 1, minHeight: z(54), borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 12, backgroundColor: warm.faint }}>
-          <LiveDot /><GText size={z(15)} color={glow.soft} lines={1}>{waiting}</GText>
-        </View>
+        <StartStatus host={view.hostName || 'the host'} ready={ready} joining={joining} />
       </Actions>
       <Actions><Button secondary label="Your services" onPress={() => openSheet('services')} /></Actions>
     </View>
   );
-  return <RoomBefore testID="waiting" label={`${owner}’s room`} pinned={false} actions={actions} />;
+  return <RoomBefore testID="waiting" label={`${owner}’s room`} pinned={false} actions={actions} start={ready ? 'ready' : joining ? 'starting' : 'idle'} />;
 }
