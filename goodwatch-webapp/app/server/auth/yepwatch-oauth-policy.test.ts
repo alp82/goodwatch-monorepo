@@ -2,6 +2,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import {
 	assertYepWatchOAuthRequest,
+	isYepWatchSignInScope,
 	validateYepWatchOAuthConfig,
 } from "./yepwatch-oauth-policy.ts"
 const config = {
@@ -74,4 +75,16 @@ test("Signed consent is checked against same exact policy; cross-resource and id
 				...patch,
 			}),
 		)
+})
+
+test("YepWatch's own sign-in is read access, optionally with offline_access, and nothing else", () => {
+	assert.equal(isYepWatchSignInScope("yepwatch:read"), true)
+	assert.equal(isYepWatchSignInScope("yepwatch:read offline_access"), true)
+	assert.equal(isYepWatchSignInScope("offline_access"), false)
+	assert.equal(isYepWatchSignInScope("yepwatch:read mcp:read"), false)
+	assert.equal(isYepWatchSignInScope("yepwatch:read offline_access mcp:write"), false)
+	assert.equal(isYepWatchSignInScope(null), false)
+	assert.doesNotThrow(() =>
+		assertYepWatchOAuthRequest(config, "/oauth2/consent", { ...input, scope: "yepwatch:read offline_access" }),
+	)
 })

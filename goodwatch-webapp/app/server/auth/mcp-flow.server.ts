@@ -1,4 +1,4 @@
-import { assertYepWatchOAuthRequest, yepwatchOAuthEnvironment, type YepWatchOAuthConfig, YEPWATCH_READ_SCOPE } from "./yepwatch-oauth-policy.ts"
+import { assertYepWatchOAuthRequest, isYepWatchSignInScope, yepwatchOAuthEnvironment, type YepWatchOAuthConfig, YEPWATCH_READ_SCOPE } from "./yepwatch-oauth-policy.ts"
 import type { ConnectState, ConsentApp, ConsentView } from "../../utils/mcp-connect.ts"
 import { isAddressedTo } from "../site-origin.server.ts"
 import type { createGoodwatchAuth } from "./auth.server.ts"
@@ -75,7 +75,7 @@ export async function loadMcpConsent(request: Request, auth: AuthService, firstP
 		try {
 			assertYepWatchOAuthRequest(firstParty, "/oauth2/consent", { oauth_query: check.query })
 			if (["client_id", "resource", "scope", "redirect_uri"].some(key => params.getAll(key).length !== 1) ||
-				params.get("scope") !== YEPWATCH_READ_SCOPE || client.tokenEndpointAuthMethod !== "none" ||
+				!isYepWatchSignInScope(params.get("scope")) || client.tokenEndpointAuthMethod !== "none" ||
 				client.requirePKCE !== true || !client.redirectUris?.includes(params.get("redirect_uri")!) ||
 				!client.scopes?.includes(YEPWATCH_READ_SCOPE)) throw new Error("Invalid first-party client")
 		} catch { return new Response("Invalid YepWatch sign-in request", { status: 400 }) }
@@ -229,7 +229,7 @@ export async function connectingApp(request: Request): Promise<ConnectState | nu
 		if (firstParty && clientId === firstParty.clientId) {
 			assertYepWatchOAuthRequest(firstParty, "/oauth2/authorize", { oauth_query: oauthQuery })
 			ownProduct = client.tokenEndpointAuthMethod === "none" && client.requirePKCE === true &&
-				Boolean(client.redirectUris?.includes(params.get("redirect_uri")!)) && params.get("scope") === YEPWATCH_READ_SCOPE
+				Boolean(client.redirectUris?.includes(params.get("redirect_uri")!)) && isYepWatchSignInScope(params.get("scope"))
 		}
 		return {
 			app: { ...describeApp({

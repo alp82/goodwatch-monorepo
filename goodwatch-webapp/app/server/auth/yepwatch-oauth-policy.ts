@@ -1,5 +1,9 @@
 /** Extra protected resource on the existing issuer, not a second issuer/account store. */
 export const YEPWATCH_READ_SCOPE = "yepwatch:read" as const
+/** YepWatch's own sign-in asks for read access, plus offline_access so the member stays signed in. */
+export function isYepWatchSignInScope(scope: string | null) {
+	return scope === YEPWATCH_READ_SCOPE || scope === `${YEPWATCH_READ_SCOPE} offline_access`
+}
 export interface YepWatchOAuthConfig {
 	resource: string
 	clientId: string
