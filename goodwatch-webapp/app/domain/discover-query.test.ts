@@ -36,6 +36,55 @@ test("explicit perfect score and source thresholds remain explicit", () => {
 	assert.equal(interpret("IMDb 100%").filters.sources, "imdb:100")
 })
 
+for (const query of [
+	"hostel 3",
+	"toy story 2",
+	"ocean's 11",
+	"12 angry men",
+	"21 jump street",
+	"28 days later",
+	"district 9",
+	"the 39 steps",
+]) {
+	test(`${query}: an unmarked title number stays in the search text`, () => {
+		const result = interpret(query)
+		assert.equal(result.semanticQuery, query)
+		assert.equal(result.filters.score, undefined)
+	})
+}
+
+test("a title number survives beside independent filters and an existing score", () => {
+	for (const query of ["hostel 3 on Netflix", "on Netflix hostel 3"]) {
+		const result = interpret(query, "score=70")
+		assert.equal(result.semanticQuery, "hostel 3")
+		assert.equal(result.filters.services, "8")
+		assert.equal(result.filters.score, "70")
+	}
+})
+
+test("explicit score cues still work beside title text", () => {
+	for (const cue of ["score 80", "rated 80", "80+", "80%", "at least 80"]) {
+		for (const query of [`hostel 3 ${cue}`, `${cue} hostel 3`]) {
+			const result = interpret(query)
+			assert.equal(result.semanticQuery, "hostel 3", query)
+			assert.equal(result.filters.score, "80", query)
+		}
+	}
+})
+
+test("bare score shorthand still works alone or beside filter words in either order", () => {
+	for (const query of [
+		"80",
+		"80 scary Netflix",
+		"scary Netflix 80",
+		"Netflix 80 scary",
+	]) {
+		const result = interpret(query)
+		assert.equal(result.filters.score, "80", query)
+		assert(!result.residual.includes("80"), query)
+	}
+})
+
 test("a year cited after a title's words stays in the search text; a year after a genre filters", () => {
 	const now = new Date("2026-11-03")
 	const cited = interpret("dune 1984", "", now)
@@ -81,6 +130,9 @@ test("a negation still reaches words joined to its phrase, and descriptive wordi
 	assert.equal(both.filters.hide, "violence")
 })
 test("quoted text after a negated filter keeps the negation's end in place", () => {
-	assert.equal(interpret('no anime "a very long title" scary').filters.moods, "scary")
+	assert.equal(
+		interpret('no anime "a very long title" scary').filters.moods,
+		"scary",
+	)
 	assert.equal(interpret('no anime "x" scary').filters.moods, "scary")
 })

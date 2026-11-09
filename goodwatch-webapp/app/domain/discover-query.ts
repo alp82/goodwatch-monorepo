@@ -928,13 +928,14 @@ function interpretOnce(
 	scan(
 		/(?<![\w.+<>=/\-])\b(?:(?:score|rated)\s+)?(100|[1-9]?\d)(?:\+|%)?(?=$|[\s,;!?])/gi,
 		(m) =>
-			+m[1] === 100 && !/\b(?:score|rated)\b/i.test(m[0])
+			!/\b(?:score|rated)\b/i.test(m[0]) &&
+			(!/[+%]$/.test(m[0]) || +m[1] === 100)
 				? null
 				: [
 						[
 							"score",
 							m[1],
-							"Guess: a bare number from 0–99, optionally followed by + or %, means minimum GoodWatch score",
+							"Score wording or +/% suffix means minimum GoodWatch score",
 						],
 					],
 	)
@@ -1048,6 +1049,29 @@ function interpretOnce(
 			),
 			() => [[c.parameter, c.value]],
 		)
+	// Infer an unmarked score only after the other filters and confirmed names
+	// have claimed their words. Otherwise a number may belong to the remaining
+	// title ("hostel 3", "12 angry men"), which must reach title search intact.
+	scan(/(?<![\w.+<>=/\-])\b([1-9]?\d)(?=$|[\s,;!?])/gi, (m) => {
+		const remaining = query
+			.split("")
+			.map((c, i) =>
+				used[i] || (i >= m.index! && i < m.index! + m[0].length) ? " " : c,
+			)
+			.join("")
+			.replace(
+				/\b(?:please|find|show me|something|some|a|an|the|to watch|watch|and|or|but|from|for|on|with|me)\b/gi,
+				" ",
+			)
+		if (/[\p{L}\p{N}]/u.test(remaining)) return null
+		return [
+			[
+				"score",
+				m[1],
+				"Guess: a bare number without remaining search text means minimum GoodWatch score",
+			],
+		]
+	})
 	// Rule declaration order must not decide which phrase was "earlier".
 	proposals.sort(
 		(a, b) =>
