@@ -420,6 +420,11 @@ export class ContinuousMembers {
 		if (v3 && !renewal) {
 			;(p as Person).serviceIds = [...link.prefill.serviceIds]
 			refreshServices(room as Room)
+			// Services are only valid within a country. A room without one takes the member's GoodWatch
+			// country: the host's own country step can lose the race with this link, and friends would
+			// then be refused every service they pick.
+			const screen = (room as Room).screens[0]
+			if (screen && !screen.country && link.prefill.country) screen.country = link.prefill.country
 			room.contextVersion++
 			room.stream = { version: room.stream.version + 1, state: "ready", reason: null }
 		}

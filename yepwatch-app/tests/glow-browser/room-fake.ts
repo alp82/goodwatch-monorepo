@@ -70,7 +70,7 @@ const union = (s: FakeSnapshot) => [...new Set(s.shared.participants.filter((p) 
  * signed in here before (as Alex) and the session has run out. `slowStart` holds the sign-in start for
  * that many ms; `linkFailures` answers that many room links with a retryable 503 first.
  */
-export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' | 'lapsed'; slowStart?: number; linkFailures?: number; nextRooms?: FakeSnapshot[] } = {}) {
+export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' | 'lapsed'; slowStart?: number; linkFailures?: number; nextRooms?: FakeSnapshot[]; refuseConfigures?: number } = {}) {
   const account = { member: opts.member === 'signed-in', starts: 0, links: 0, logouts: 0 };
   let linkFailures = opts.linkFailures ?? 0;
   // The room's lifetime idea searches (24 on the server); removing an idea doesn't give one back.
@@ -80,6 +80,7 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
   let loseNext = false;
   let refuseRefills = 0;
   let refuseStarts = 0;
+  let refuseConfigures = opts.refuseConfigures ?? 0;
   /** Commands of these types wait for the test to release them (another command in flight). */
   const gates = new Map<string, Promise<void>>();
   const me = () => room.shared.participants.find((p) => p.participantId === room.own.participantId)!;
@@ -219,6 +220,13 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
       if (body.command.type === 'refill' && refuseRefills > 0 && !receipts.has(body.commandId)) {
         refuseRefills--;
         return route.fulfill({ status: 409, json: { error: { code: 'conflict', message: 'Try again', retryable: false }, snapshot: room } });
+      }
+      // Like a GoodWatch link landing at the same moment: the settings changed, so this configure is refused.
+      if (body.command.type === 'configure' && refuseConfigures > 0 && !receipts.has(body.commandId)) {
+        refuseConfigures--;
+        bump();
+        room.shared.contextVersion++;
+        return route.fulfill({ status: 409, json: { error: { code: 'conflict', message: 'Room settings changed', retryable: false }, snapshot: room } });
       }
       if (body.command.type === 'start' && refuseStarts > 0 && !receipts.has(body.commandId)) {
         refuseStarts--;

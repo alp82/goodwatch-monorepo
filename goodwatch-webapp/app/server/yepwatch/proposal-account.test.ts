@@ -148,6 +148,9 @@ test("rooms created or joined while signed in link to the device session; Log ou
 	const me = snapshot.shared.participants.find((p: { participantId: string }) => p.participantId === snapshot.own.participantId)
 	assert.equal(me.nickname, "Alper")
 	assert.deepEqual(me.serviceIds, [8, 9])
+	// Services are only valid within a country: a room without one takes the member's GoodWatch country,
+	// so friends can pick their services (the app's own country step can lose the race with this link).
+	assert.equal(snapshot.shared.screens[0]?.country, "DE")
 	assert.equal(JSON.stringify(snapshot).includes("grant-"), false)
 	const before = (await repo.read(roomId))!.room.revision
 	const again = await handler(new Request(api(`/rooms/${roomId}/member/link`), { method: "POST", headers: { origin, "content-type": "application/json", cookie: both }, body: "{}" }))

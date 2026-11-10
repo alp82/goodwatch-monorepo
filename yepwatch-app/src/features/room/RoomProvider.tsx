@@ -27,6 +27,9 @@ import { RefillGate } from './refill';
 import { RoomLinkGate, linkOutcome } from './link-gate';
 import { previewDrafts, useSettingsSaves, type SettingsSaves } from './settings-save';
 
+const COUNTRY_TRIES = 5;
+const COUNTRY_RETRY_MS = 1200;
+
 /** Opening a room connects within a moment; only a connection that stays away is worth a line. */
 const CONNECTION_QUIET_MS = 2_500;
 
@@ -206,15 +209,27 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
   // A new room has no country yet, and services are only valid within one: the host sets it right away
   // (member prefill, else the device's region), before anyone picks services.
   // A command already in flight (room entry) makes the send a no-op: try again once it settles, a few times at most.
-  const countryTries = useRef(0);
+  // A send that doesn't go through (the room's credential still loading, or a GoodWatch link changing the
+  // settings at the same moment) tries again shortly; each new settings version gets its own tries, so
+  // the room never stays without a country (friends couldn't pick services then).
+  const countryTries = useRef({ context: -1, n: 0 });
+  const [countryRetry, setCountryRetry] = useState(0);
   const needsCountry = Boolean(view && view.isHost && !view.country && view.phase === 'setup');
   const prefillCountry = snapshot?.own.member.prefill?.country;
+  const context = snapshot?.shared.contextVersion ?? 0;
   const blocked = state.busy || Boolean(state.pending) || state.privateError || entry.working || linking;
   useEffect(() => {
-    if (!needsCountry || blocked || countryTries.current >= 3) return;
-    countryTries.current++;
-    void cmd.configure({ country: prefillCountry ?? deviceCountryHint() ?? 'US' });
-  }, [needsCountry, blocked, prefillCountry, cmd]);
+    if (!needsCountry || blocked) return;
+    if (countryTries.current.context !== context) countryTries.current = { context, n: 0 };
+    if (countryTries.current.n >= COUNTRY_TRIES) return;
+    countryTries.current.n++;
+    let live = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    void cmd.configure({ country: prefillCountry ?? deviceCountryHint() ?? 'US' }).then((ok) => {
+      if (!ok && live) timer = setTimeout(() => setCountryRetry((n) => n + 1), COUNTRY_RETRY_MS);
+    });
+    return () => { live = false; if (timer) clearTimeout(timer); };
+  }, [needsCountry, blocked, prefillCountry, context, cmd, countryRetry]);
   // The deck never ends: refill in the background before anyone runs out. One refill in flight at a
   // time; a send that doesn't go through is retried a few times; a new stream version or state starts over.
   const refill = useRef(new RefillGate());
