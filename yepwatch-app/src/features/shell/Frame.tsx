@@ -18,6 +18,7 @@ import { HomeRoomsSheet, YourRoomsSheet, type CurrentRoom, type RoomsSheetAction
 import { AppHeader, type AppHeaderProps } from './Header';
 import { useLayout } from './layout';
 import { CoveredBody } from './parts';
+import { FloatingNote, NoteLayerProvider, useNoteLayer } from './floating-note';
 import { closeTopSheet } from './sheet-stack';
 import { warm } from './tokens';
 
@@ -56,6 +57,8 @@ export interface AppFrameProps {
   /** Space between the body's children. */
   gap?: number;
   testID?: string;
+  /** How far below the header the room's note floats (below a screen's own top bar). */
+  noteTop?: number;
 }
 
 /** Where the header's defaults lead: the start page does the rest (it owns admission and recovery). */
@@ -65,13 +68,14 @@ export const startPage = {
   join: () => router.push({ pathname: '/', params: { open: 'join' } }),
 };
 
-export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID }: AppFrameProps) {
+export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID, noteTop = 8 }: AppFrameProps) {
   const layout = useLayout();
   const pathname = usePathname();
   const { phone, short, gutter, max, z } = layout;
   const insets = useSafeAreaInsets();
   const [roomsOpen, setRoomsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const notes = useNoteLayer();
   const pinned = footer ? (footerPlacement === 'pinned' || (footerPlacement === 'auto' && (phone || short))) : false;
   const column = { width: '100%', maxWidth: width === 'page' ? max : Math.min(width, max), alignSelf: 'center' } as const;
   const actions: RoomsSheetActions = { open: startPage.open, newRoom: startPage.newRoom, join: startPage.join, ...rooms?.actions };
@@ -95,6 +99,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
     </>
   );
   return (
+    <NoteLayerProvider slot={notes.slot}>
     <View testID={testID} style={{ flex: 1, backgroundColor: glow.bg }}>
       <BootReveal part="backdrop" pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></BootReveal>
       {backdrop}
@@ -121,9 +126,11 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
           </KeyboardAvoidingView>
         </CoveredBody>
         {shownSheet}
+        <FloatingNote note={notes.note} width={Math.min(z(560), max)} top={noteTop} />
       </View>
       {overlay}
       {header.back && !covered && !shownSheet ? <EdgeBack back={header.back} /> : null}
     </View>
+    </NoteLayerProvider>
   );
 }

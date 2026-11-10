@@ -163,7 +163,7 @@ export function Voting() {
   const offered = card ? servicesIn(all, offeredOn(card, view.enabledServiceIds)) : [];
   const people = view.people.map((p) => ({ id: p.id, nickname: p.nickname || '?', self: p.self }));
   return (
-    <Screen testID="voting" scroll={false} back={toRooms} covered={Boolean(panel)} width="page"
+    <Screen testID="voting" scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={(phone ? 12 : z(24)) + z(44) + 8}
       footer={
         <View style={{ flexDirection: 'row', gap: 12, width: phone ? '100%' : rowWidth, alignSelf: 'center' }}>
           <VoteKey yes={false} disabled={!answering || !card} onPress={() => controls.current?.commit(false)} />

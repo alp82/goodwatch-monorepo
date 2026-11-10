@@ -42,7 +42,7 @@ export function Label({ children, color = glow.muted }: { children: string; colo
  * action (`footer`) is pinned on phones and sits in the content on bigger windows. The room's open
  * sheet (Room, Your services …) shows over the screen that is in front; leaving that screen closes it.
  */
-export function Screen({ back, right, children, footer, footerPlacement, overlay, sheet, backdrop, testID, scroll = true, covered = false, pill, rooms, me, onProfile, width = SCREEN_WIDTH, gap }: {
+export function Screen({ back, right, children, footer, footerPlacement, overlay, sheet, backdrop, testID, scroll = true, covered = false, pill, rooms, me, onProfile, width = SCREEN_WIDTH, gap, noteTop }: {
   back?: () => void;
   /** A row above the content (voting's Undo and room bar). */
   right?: ReactNode;
@@ -67,6 +67,8 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   /** The content column's widest size ('page' is the shared container). */
   width?: number | 'page';
   gap?: number;
+  /** Where the room's note floats below the header (under a top bar of the screen's own). */
+  noteTop?: number;
 }) {
   const room = useOptionalRoom();
   const view = room?.view ?? null;
@@ -84,7 +86,7 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   const roomSheet = room && view && focused && room.sheet ? room.renderSheet(room.sheet) : null;
   const scrollGap = gap ?? (scroll ? 22 : 12);
   return (
-    <AppFrame testID={testID} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet ?? roomSheet} backdrop={backdrop} width={width} gap={scrollGap}
+    <AppFrame testID={testID} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet ?? roomSheet} backdrop={backdrop} width={width} gap={scrollGap} noteTop={noteTop}
       header={{ back, pill: pill === undefined ? derived : pill, me: me ?? (view ? { name: view.me.nickname || null, member: view.member } : undefined), onProfile }}
       rooms={rooms ?? (current ? { current } : undefined)}
       footer={footer} footerPlacement={footerPlacement}>

@@ -7,7 +7,8 @@ import { GText, Icon, glow } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
 import { toRooms } from './nav';
 import { useRoom } from './RoomProvider';
-import { Actions, Button, Note, Screen } from './ui';
+import { NoteLine, useFrameNote, type FrameNote } from '../shell/floating-note';
+import { Actions, Button, Screen } from './ui';
 
 /** While the room's first read is out, nothing but the page itself: most opens never need words. */
 const OPENING_WORDS_AFTER_MS = 900;
@@ -41,19 +42,13 @@ export function RoomStatus() {
   );
 }
 
-/** Connection, saved actions and errors, in one quiet line above the screen's content. */
+/** Connection, saved actions and errors, in one quiet line floating over the screen's content. */
 export function RoomNotes() {
   const { view, state, entry, notice, setNotice, connectionLate, sheet, openSheet, linkFailed, retryLink } = useRoom();
-  if (!(state.error || state.privateError || entry.error || state.pending || connectionLate || notice || linkFailed || developmentNotice)) return null;
+  const any = Boolean(state.error || state.privateError || entry.error || state.pending || connectionLate || notice || linkFailed || developmentNotice);
   // Nobody brings a service (or the last one would go): ask for services, not an error.
   const noServices = state.errorCode === 'needs_context' && !state.pending;
   const ideaLimit = state.errorCode === 'limit_reached' && !state.pending;
-  const text = state.retrySeconds > 0 ? `Try again in ${state.retrySeconds}s. Your action is saved.`
-    : notice || entry.error || (state.privateError ? 'Refresh to keep choosing.'
-      : state.pending ? 'Your choice is awaiting confirmation.'
-      : noServices ? 'Pick a streaming service'
-      : ideaLimit ? ((view?.ideas.length ?? 0) >= IDEA_LIMITS.perRoom ? `Up to ${IDEA_LIMITS.perRoom} ideas. Remove one first.` : 'No more new ideas in this room')
-      : state.error || connectionText() || (linkFailed ? 'Couldn’t connect GoodWatch to this room.' : ''));
   function connectionText() {
     if (!connectionLate) return '';
     if (state.connection === 'background') return 'Updates paused while away.';
@@ -61,28 +56,40 @@ export function RoomNotes() {
     if (state.reconnectSeconds > 0) return `Trying again in ${state.reconnectSeconds} s`;
     return state.connection === 'unavailable' ? 'Not connected.' : 'Connecting…';
   }
+  const text = !any ? '' : state.retrySeconds > 0 ? `Try again in ${state.retrySeconds}s. Your action is saved.`
+    : notice || entry.error || (state.privateError ? 'Refresh to keep choosing.'
+      : state.pending ? 'Your choice is awaiting confirmation.'
+      : noServices ? 'Pick a streaming service'
+      : ideaLimit ? ((view?.ideas.length ?? 0) >= IDEA_LIMITS.perRoom ? `Up to ${IDEA_LIMITS.perRoom} ideas. Remove one first.` : 'No more new ideas in this room')
+      : state.error || connectionText() || (linkFailed ? 'Couldn’t connect GoodWatch to this room.' : ''));
   // Only the connection line itself spins; saved actions and errors keep their own words.
   const spinning = state.reconnecting && text === connectionText();
   const linkLine = linkFailed && text === 'Couldn’t connect GoodWatch to this room.';
   const label = linkLine ? 'Retry' : state.retrySeconds > 0 ? `Retry in ${state.retrySeconds}s` : state.pending ? 'Retry' : entry.error ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';
+  const note: FrameNote | null = any && (text || developmentNotice) ? {
+    text,
+    detail: developmentNotice || undefined,
+    busy: spinning,
+    action: {
+      label,
+      disabled: state.busy || state.retrySeconds > 0 || spinning,
+      onPress: () => {
+        setNotice('');
+        if (linkLine) retryLink();
+        else if (state.pending) void state.send();
+        else if (noServices) { state.clearError(); if (sheet !== 'services') openSheet('services'); }
+        else if (ideaLimit) state.clearError();
+        else if (entry.error) void entry.retry();
+        else { void state.refetch().catch(() => undefined); state.reconnect(); }
+      },
+    },
+  } : null;
+  // Over the page, under the header: the page never moves when a note comes or goes.
+  if (useFrameNote(note) || !note) return null;
   return (
     <View style={{ gap: 4 }}>
-      {developmentNotice ? <GText size={11} color={glow.muted} style={{ textAlign: 'center' }}>{developmentNotice}</GText> : null}
-      {text ? (
-        <Note action={{
-          label,
-          disabled: state.busy || state.retrySeconds > 0 || spinning,
-          onPress: () => {
-            setNotice('');
-            if (linkLine) retryLink();
-            else if (state.pending) void state.send();
-            else if (noServices) { state.clearError(); if (sheet !== 'services') openSheet('services'); }
-            else if (ideaLimit) state.clearError();
-            else if (entry.error) void entry.retry();
-            else { void state.refetch().catch(() => undefined); state.reconnect(); }
-          },
-        }} busy={spinning}>{text}</Note>
-      ) : null}
+      {note.detail ? <GText size={11} color={glow.muted} style={{ textAlign: 'center' }}>{note.detail}</GText> : null}
+      {note.text ? <NoteLine note={note} /> : null}
     </View>
   );
 }
