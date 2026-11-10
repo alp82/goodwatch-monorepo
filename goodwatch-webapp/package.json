@@ -5,6 +5,7 @@
 	"sideEffects": false,
 	"type": "module",
 	"scripts": {
+		"prototype:yepwatch-og": "bash scripts/prototype-yepwatch-og/serve.sh",
 		"dev": "remix vite:dev",
 		"start": "remix-serve ./build/server/index.js",
 		"build": "patch-package && remix vite:build && node scripts/precompress.mjs",
