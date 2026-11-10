@@ -8,6 +8,7 @@ import {
 import { isAccountState, type MemberSession } from "./continuous-members.server.ts"
 import { equal, random } from "./crypto.server.ts"
 import { RoomError } from "./errors.ts"
+import { inviteCardPng, LinkCardBusyError } from "./link-card-renderer.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
 import type { ActorCredential } from "./service.server.ts"
 import { attachSchema, parse, resolveSchema, viewSchema } from "./validation.ts"
@@ -25,7 +26,10 @@ export interface HttpOptions {
 	allowedOrigins: string[]
 	secureCookies?: boolean
 	members?: ContinuousMembers
+	/** Draws the room invite link-preview card; defaults to the child process renderer. */
+	inviteCard?: (hostName: string | null) => Promise<Uint8Array>
 }
+const INVITE_CARD = /^\/api\/yepwatch\/v1\/proposal\/invites\/([A-Za-z0-9._-]{1,200})\/card\.png$/
 async function body(request: Request) {
 	if (
 		!(request.headers.get("content-type") ?? "").startsWith("application/json")
@@ -345,6 +349,25 @@ export function createProposalHandler(
 					)
 				}
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
+			}
+			const card = request.method === "GET" || request.method === "HEAD" ? url.pathname.match(INVITE_CARD) : null
+			if (card) {
+				// Link-preview bots fetch this for yepwatch.com/r/<code>. An unknown or ended invite still gets the generic card.
+				let hostName: string | null = null
+				try {
+					hostName = (await service.invitePreview(card[1]!)).hostName
+				} catch (error) {
+					if (!(error instanceof RoomError && (error.status === 404 || error.status === 410))) throw error
+				}
+				try {
+					const png = await (options.inviteCard ?? inviteCardPng)(hostName)
+					return new Response(png, {
+						headers: { "content-type": "image/png", "cache-control": "public, max-age=86400", "x-content-type-options": "nosniff" },
+					})
+				} catch (error) {
+					if (error instanceof LinkCardBusyError) return new Response(null, { status: 503, headers: { "retry-after": "5", "cache-control": "no-store" } })
+					throw error
+				}
 			}
 			if (request.method === "GET" && url.pathname === paths.metadata) {
 				const country = url.searchParams.get("country")

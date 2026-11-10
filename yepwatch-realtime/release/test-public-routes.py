@@ -82,6 +82,7 @@ try:
             ("POST", f"/rooms/{room}/resume"), ("POST", f"/rooms/{room}/archive"),
             ("GET", f"/rooms/{room}"), ("GET", f"/rooms/{room}/member/progress"),
             ("POST", f"/rooms/{room}/commands"), ("POST", f"/rooms/{room}/member/link"),
+            ("GET", "/invites/ABC234/card.png"),
         ]
         for method, route in public:
             status, body = request(method, route)
@@ -92,6 +93,7 @@ try:
             ("POST", "/realtime/internal/attach"), ("GET", "/realtime/health"),
             ("GET", "/account/private"), ("POST", "/account/home"),
             ("GET", f"/rooms/{room}/resume"), ("GET", f"/rooms/{room}/archive"),
+            ("POST", "/invites/ABC234/card.png"), ("GET", "/invites/a/b/card.png"),
         ]:
             assert request(method, route)[0] == 404, f"Unexpected public route: {method} {route}"
         print("PASS: public account and room routes reach API; internal, unknown and wrong-method routes stay blocked")

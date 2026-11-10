@@ -51,11 +51,11 @@ COPY yepwatch-app/package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci --install-links --no-audit --no-fund
 COPY yepwatch-app/ ./
 ENV CI=1
-RUN node scripts/release-env.cjs export --platform web --output-dir /web --clear
+RUN node scripts/release-env.cjs export --platform web --output-dir /web --clear && node scripts/invite-page.cjs /web
 FROM ${CADDY_IMAGE} AS front
 COPY yepwatch-realtime/release/Caddyfile /etc/caddy/Caddyfile
 COPY --from=front-build /web /srv
-RUN setcap -r /usr/bin/caddy && test -s /srv/index.html && caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+RUN setcap -r /usr/bin/caddy && test -s /srv/index.html && test -s /srv/invite.html && caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 USER 1000:1000
 EXPOSE 8080
 # Healthy as soon as Caddy serves the app itself: routing reaches the new front at once, and Caddy

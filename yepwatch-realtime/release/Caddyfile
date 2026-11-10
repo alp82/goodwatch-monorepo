@@ -103,6 +103,17 @@
       lb_try_interval 500ms
     }
   }
+  # Link-preview card for a room invite (og:image of /r/<code>).
+  @invite_card {
+    method GET HEAD
+    path_regexp invite_card ^/api/yepwatch/v1/proposal/invites/[A-Za-z0-9._-]{1,200}/card\.png$
+  }
+  handle @invite_card {
+    reverse_proxy api:3000 {
+      lb_try_duration 30s
+      lb_try_interval 500ms
+    }
+  }
   @unknown_api path /api /api/*
   handle @unknown_api {
     respond "Not found" 404
@@ -125,6 +136,24 @@
     @apk path *.apk
     header @apk Content-Type application/vnd.android.package-archive
     header Cache-Control "public, max-age=3600"
+    file_server
+  }
+  handle /link-card.png {
+    header Cache-Control "public, max-age=86400"
+    file_server
+  }
+  # Room invite links: the app page with link-preview tags for this invite (scripts/invite-page.cjs).
+  @invite_page {
+    method GET HEAD
+    path_regexp invite_page ^/r/[A-Za-z0-9._-]{1,200}$
+  }
+  handle @invite_page {
+    rewrite * /invite.html
+    header Cache-Control no-store
+    templates {
+      mime text/html
+      between [[ ]]
+    }
     file_server
   }
   handle {

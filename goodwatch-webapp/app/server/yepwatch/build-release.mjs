@@ -1,6 +1,6 @@
 import { build } from "esbuild"
 import { builtinModules } from "node:module"
-import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
 const root = fileURLToPath(new URL("../../../", import.meta.url))
@@ -11,6 +11,7 @@ const result = await build({
 	entryPoints: {
 		server: "app/server/yepwatch/proposal-release-main.ts",
 		operator: "app/server/yepwatch/proposal-release-operator.ts",
+		"link-card": "app/server/yepwatch/link-card.child.ts",
 	},
 	outdir: out,
 	outExtension: { ".js": ".mjs" },
@@ -27,6 +28,10 @@ const result = await build({
 		js: 'import { createRequire as __releaseCreateRequire } from "node:module"; const require = __releaseCreateRequire(import.meta.url);',
 	},
 })
+// The link-preview card font, found by link-cards.ts beside the bundle.
+await mkdir(path.join(out, "fonts"), { recursive: true })
+for (const file of ["Gabarito-Bold.ttf", "OFL-Gabarito.txt"])
+	await copyFile(path.join(root, "app/server/og-image/fonts", file), path.join(out, "fonts", file))
 // Existing prepare-worker resolves this exact adjacent filename; preserve the whole output directory.
 await build({
 	absWorkingDir: root,
