@@ -132,6 +132,9 @@ for (const mixed of [false, true])
 			expiresAt: Date.now() + 100000,
 		}
 		await repo.compareAndSwap((await repo.read(id))!, old.room, false)
+		const scope = { userId: "verified-controlled-member", sessionId: "catalog-fixture", expiresAt: Date.now() + 100000 }
+		const resumed = await service.resumeAccount(id, scope)
+		Object.assign(credential, resumed.credential, { accountId: scope.userId, sessionId: scope.sessionId })
 		const read = () => service.read(id, credential)
 		const send = async (command: RoomCommand) => {
 			const s = await read()

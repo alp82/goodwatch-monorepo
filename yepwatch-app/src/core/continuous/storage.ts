@@ -3,10 +3,11 @@ import * as Crypto from 'expo-crypto';
 import type { CommandEnvelope } from '@goodwatch/yepwatch-contracts/proposal';
 import { decodeCommandRecovery, decodeAdmissionRecovery, type AdmissionRecovery } from './recovery-state';
 const key = (id: string) => `yepwatch.v3.pending.${id.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-export async function readCommandRecovery(id: string) {
-  return decodeCommandRecovery(await SecureStore.getItemAsync(key(id)));
+export async function readCommandRecovery(id: string, sessionKey?: string) {
+  return decodeCommandRecovery(await SecureStore.getItemAsync(key(sessionKey ? `${id}.${sessionKey}` : id)));
 }
-export async function writePending(id: string, envelope: CommandEnvelope | null, retryAt = 0) {
+export async function writePending(id: string, envelope: CommandEnvelope | null, retryAt = 0, sessionKey?: string) {
+  id = sessionKey ? `${id}.${sessionKey}` : id;
   if (envelope) await SecureStore.setItemAsync(key(id), JSON.stringify({ envelope, retryAt }));
   else await SecureStore.deleteItemAsync(key(id));
 }

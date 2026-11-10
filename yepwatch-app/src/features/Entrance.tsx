@@ -13,6 +13,8 @@ import { inviteIntent, parseInvite } from '../core/invites';
 import { queryClient } from '../core/providers';
 import { continuousKey as roomKey } from '../core/continuous/useRoom';
 import { loadInvite, saveInvite } from '../core/continuous/invite-store';
+import { authEpoch } from '../core/continuous/account-flow';
+import { adoptAccountRoom } from '../core/continuous/account-access';
 import { roomRegistry } from '../core/continuous/room-registry';
 import { mergeRoom } from '../core/continuous/state';
 import { readAdmission, writeAdmission } from '../core/continuous/storage';
@@ -318,6 +320,13 @@ export function Entrance({ invite, open: request, from }: {
   const open = (roomId: string) => router.push({ pathname: '/room/[id]', params: { id: roomId } });
   /** Return to a room you left: the saved invitation re-admits the same identity. */
   function returnTo(room: HomeRoom) {
+    if (account.member) {
+      setBusy(true);
+      const asked = authEpoch.current();
+      void api.resume(room.roomId, true).then(result => adoptAccountRoom(result, asked)).then(() => { home.reload(); open(room.roomId); })
+        .catch(() => setError('Could not return to your room. Try again.')).finally(() => setBusy(false));
+      return;
+    }
     const self = room.people.find((p) => p.self)?.nickname ?? known ?? '';
     void loadInvite(room.roomId).then((saved) => {
       if (saved) void enter(true, false, { code: saved.code, nickname: self });
@@ -349,7 +358,7 @@ export function Entrance({ invite, open: request, from }: {
     // Starting the admission is the point of this request (it runs once, like a press of New room).
     if (request === 'new') create(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [request, home.ready, restoring]); // eslint-disable-line react-hooks/exhaustive-deps
-  const returning = home.hasRooms || Boolean(known);
+  const returning = home.hasRooms || home.decisions.length > 0 || home.unavailable.length > 0 || Boolean(known);
   const pending = admission ? (admission.code ? 'join' : 'create') : null;
   const shown: PanelKind | null = panel ?? (recoveryDismissed ? null : pending ?? (restoreFailed || recoveryBlocked ? 'join' : null));
   const actionLabel = (first: string, again: string) => (busy ? 'Connecting…' : retrySeconds > 0 ? `Retry in ${retrySeconds}s` : admission ? again : first);
@@ -406,6 +415,7 @@ export function Entrance({ invite, open: request, from }: {
       ) : (
         <Landing newRoom={create} join={openJoin} signIn={signIn} signingIn={account.busy} lapsed={account.lapsed} disabled={checkingInvite} quiet={busy} />
       )}
+      {!shown && home.notice ? <GText size={14} color={glow.soft}>{home.notice}</GText> : null}
       {!shown && (error || account.error) ? <GText size={14} color="#fca5a5">{error || account.error}</GText> : null}
     </AppFrame>
   );

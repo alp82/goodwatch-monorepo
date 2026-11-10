@@ -1,0 +1,5 @@
+# YepWatch account identity and decision history
+
+Owner-approved 2026-11-10. Signed-in people have one participant per GoodWatch account per room, with independent device sessions and command receipts. This supersedes the device-local room list and credential-only account return rules in the earlier YepWatch room decisions: signing in recovers existing memberships and host rights, while explicit Leave affects the participant on every device. Guests remain supported; signing in upgrades their place or resumes the account's existing place without combining votes or approvals.
+
+Membership uniqueness is published through the existing room-head CAS. Account room indexes are registered before publication and always checked against the committed room; durable decision snapshots are published with the room and projected idempotently before notification acknowledgement. History has its own lifetime, independent of room cleanup. We retain the current transferable host role rather than introducing permanent creator ownership. Test storage can be explicitly reset instead of migrating old participant credentials.

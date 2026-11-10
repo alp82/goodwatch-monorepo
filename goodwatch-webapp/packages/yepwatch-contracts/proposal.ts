@@ -177,6 +177,7 @@ export interface JoinRoomRequest extends GuestAdmissionRequest {
 	screenId?: string
 }
 export interface GuestAdmission {
+	replacedGuest?: boolean
 	recovered?: boolean
 	credential: GuestCredential
 	invite: { code: string; path: string }
@@ -408,6 +409,20 @@ export interface AccountStatus {
 	/** Native only: the sealed device session, returned when it was created or renewed. */
 	session?: string
 }
+export interface AccountDecision {
+	id: string
+	roomId: string
+	roomLabel: string
+	title: string
+	year: number | null
+	posterUrl: string | null
+	decidedAt: number
+	people: string[]
+}
+export interface AccountHome {
+	rooms: { snapshot: RoomSnapshot; joinedAt: number; archivedAt: number | null; leftLabel: string | null }[]
+	decisions: AccountDecision[]
+}
 /** Native apps send their sealed device session in this header; browsers use an HttpOnly cookie. */
 export const MEMBER_SESSION_HEADER = "x-yepwatch-member"
 
@@ -433,6 +448,9 @@ export const paths = {
 	accountStart: `${API_PREFIX}/account/start`,
 	accountExchange: `${API_PREFIX}/account/exchange`,
 	accountLogout: `${API_PREFIX}/account/logout`,
+	accountHome: `${API_PREFIX}/account/home`,
+	resume: (id: string) => `${room(id)}/resume`,
+	archive: (id: string) => `${room(id)}/archive`,
 	realtime: `${API_PREFIX}/realtime`,
 	realtimeAttach: `${API_PREFIX}/realtime/internal/attach`,
 	realtimeView: `${API_PREFIX}/realtime/internal/view`,

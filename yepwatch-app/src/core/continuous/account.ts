@@ -4,6 +4,7 @@ import { guestOnly } from '../config';
 import { nativeClient } from '../credentials';
 import { queryClient } from '../providers';
 import { continuousApi, RoomFailure } from './api';
+import { adoptAccountRoom } from './account-access';
 import { accountFlow, authEpoch, type DeviceAccount } from './account-flow';
 import { createDeviceAccount, guestAccount } from './device-account';
 import { beginAccount, clearSession, forgetMemberName, readMemberName, readSession, rememberMemberName, saveSession } from './member';
@@ -31,13 +32,24 @@ const device = createDeviceAccount({
   unsupported: (e) => e instanceof RoomFailure && (e.code === 'not_implemented' || e.status === 404),
 });
 // Log out or a new sign-in: an account answer still in flight belongs to the earlier sign-in.
-authEpoch.subscribe(() => { void queryClient.cancelQueries({ queryKey: accountKey }); });
+authEpoch.subscribe(() => {
+  void queryClient.cancelQueries({ queryKey: accountKey });
+  for (const key of ['account-home', 'proposal-room', 'home-room']) {
+    void queryClient.cancelQueries({ queryKey: [key] });
+    queryClient.removeQueries({ queryKey: [key] });
+  }
+});
 
 export const loadAccount = device.load;
 /** A sign-in that just completed on this device (the app's sheet or its return link). */
 export const accountSignedIn = device.signedIn;
 /** Links your participant in a room to this device's sign-in (a no-op on the server when already linked). */
-export const linkRoom = device.linkRoom;
+export const linkRoom = async (access: import('../credentials').RoomAccess) => {
+  const asked = authEpoch.current();
+  const result = await continuousApi.memberLink(access, await readSession());
+  await adoptAccountRoom(result, asked);
+  return result;
+};
 /** Ends this device's GoodWatch sign-in for YepWatch. GoodWatch itself stays signed in. */
 export const signOut = device.signOut;
 

@@ -158,6 +158,22 @@ const entity = (name: string, fields: Fields, checks?: string[]): Table => ({
 	primary: "record_id",
 	checks
 })
+const commandReceipt = object({ commandId: text(128), sequence: integer(1), digest: text(128), revision: integer() })
+const decisionFields: Fields = {
+	id: text(300), room_id: text(128), room_label: text(2000), title: text(1000),
+	year: nullable(integer()), poster_url: nullable(text()), decided_at: integer(),
+	people: array(text(200), 12), account_ids: array(text(256), 12), participant_ids: array(text(128), 12)
+}
+export const accountIndexTable: Table = {
+	name: "doc.yepwatch_account_rooms", primary: "id",
+	fields: { id: text(128), rooms: array(object({ roomId: text(128), expiresAt: integer() }), 512) }
+}
+export const revokedSessionTable: Table = {
+	name: "doc.yepwatch_revoked_session", primary: "id", fields: { id: text(128), expires_at: integer() }
+}
+export const accountHistoryTable: Table = {
+	name: "doc.yepwatch_account_history", primary: "id", fields: { ...decisionFields }
+}
 export const tables = {
 	room: {
 		name: "doc.yepwatch_room",
@@ -211,6 +227,7 @@ export const tables = {
 			member_intent_records: array(text(128), 48),
 			proposal_record: ref,
 			decision_record: ref,
+			history_records: array(text(128), 128),
 			pending_revision: integer(),
 			pending_agreement: bool
 		},
@@ -237,6 +254,10 @@ export const tables = {
 		interpreted_at: integer()
 	}),
 	participant: entity("participant", {
+		sessions: array(object({ id: text(128), tokenHash: text(128), expiresAt: integer(), nextSequence: integer(1), receipts: array(commandReceipt, 64) }), 12),
+		joined_at: integer(),
+		archived_at: nullable(integer()),
+		left_label: nullable(text(2000)),
 		service_ids: additive(array(integer(1), 100)),
 		show_seen: additive(bool),
 		participant_id: text(128),
@@ -296,6 +317,7 @@ export const tables = {
 		decided_at: integer(),
 		availability
 	}),
+	history: entity("history", decisionFields),
 	candidate: entity("candidate", {
         essence: additive(array(text(), 6)),
         effects: additive(array(object({ line: text(), strength: real, color: text(7) }), 5)),
@@ -326,6 +348,7 @@ export const tables = {
 	}),
 	ticket: entity("ticket", {
 		ticket_hash: text(128),
+		session_id: nullable(text(128)),
 		participant_id: text(128),
 		epoch: integer(),
 		ticket_expires_at: integer()
@@ -421,6 +444,9 @@ export const invitationTable: Table = {
 	fields: { code_hash: text(64), room_id: text(128), expires_at: integer() }
 }
 export const storageTables: Table[] = [
+	accountIndexTable,
+	accountHistoryTable,
+	revokedSessionTable,
 	invitationTable,
 	...Object.values(tables),
 	runtimeTable,

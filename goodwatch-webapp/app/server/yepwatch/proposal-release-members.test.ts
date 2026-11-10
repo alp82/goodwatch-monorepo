@@ -86,7 +86,7 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
     }
     return resource(request);
   };
-  const members = releaseMembers(repo, config, transport);
+  const members = releaseMembers(repo, config, transport, "test-remote-members-secret-at-least32");
   const start = await members.start(id, participantId, {
     roomId: id,
     client: "browser",
@@ -114,10 +114,10 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
     (await members.ownProgress(id, participantId)).shows[0].nextEpisode?.number,
     2
   );
-  const snapshot = await service.read(id, {
-    participantId,
-    token: guest.credential.token,
-  });
+  const account = { userId: linkedUser, sessionId: "member-fixture-session", expiresAt: Date.now() + 600000 };
+  const recovered = await service.resumeAccount(id, account);
+  const scoped = { participantId, token: recovered.credential.token, accountId: linkedUser, sessionId: account.sessionId };
+  const snapshot = await service.read(id, scoped);
   assert.equal(
     JSON.stringify(snapshot.shared).includes("fixture-grant"),
     false
@@ -135,7 +135,7 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
   const legacy = structuredClone(old.room); legacy.participants[0].nickname = "";
   assert.equal(await repo.compareAndSwap(old, legacy, false), true);
   const handler = createProposalHandler(service, {allowedOrigins:[origin],serviceSecret:"test-service-secret-at-least-thirty-two",members});
-  const restored = await handler(new Request(`${origin}/api/yepwatch/v1/proposal/rooms/${id}`, {headers:{authorization:`Bearer ${guest.credential.token}`,"x-yepwatch-participant":participantId}}));
+  const restored = await handler(new Request(`${origin}/api/yepwatch/v1/proposal/rooms/${id}`, {headers:{authorization:`Bearer ${recovered.credential.token}`,"x-yepwatch-participant":participantId,"x-yepwatch-member":members.sealSession({v:1,sessionId:account.sessionId,userId:linkedUser,displayName:"Alex",accessToken:"fixture-grant",expiresAt:account.expiresAt,refreshToken:null})}}));
   assert.equal(restored.status, 200);
   const restoredSnapshot = await restored.json();
   assert.equal(restoredSnapshot.shared.participants[0].nickname, "Alex");

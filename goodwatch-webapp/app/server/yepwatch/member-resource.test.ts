@@ -7,7 +7,7 @@ import {
 	releaseMembers,
 	releaseMemberConfig,
 } from "./proposal-release-members.ts"
-import { createProposalHandler } from "./proposal-http.server.ts"
+import { createProposalHandler, MEMBER_COOKIE, MEMBER_INTENT_COOKIE } from "./proposal-http.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
 import {
 	ProposalMemoryRepository,
@@ -73,11 +73,10 @@ test("first YepWatch callback after Remix installs its fetch globals completes w
 			} catch {
 				return new Response("Internal Server Error", { status: 500 })
 			}
-		})
+		}, "callback-test-secret-at-least-thirty-two")
 		const { roomId, participantId, token } = admission.credential
 		const returnTo = `${origin}/room/${roomId}`
-		const started = await members.start(roomId, participantId, {
-			roomId,
+		const started = members.startAccount({
 			client: "browser",
 			returnTo,
 		})
@@ -90,7 +89,7 @@ test("first YepWatch callback after Remix installs its fetch globals completes w
 			new Request(
 				`${config.callbackUrl}?${new URLSearchParams({ state: started.state, code: "fixture-code" })}`,
 				{
-					headers: { cookie: `yepwatch3_${roomId}=${participantId}.${token}` },
+					headers: { cookie: `${MEMBER_INTENT_COOKIE}=${started.intent}` },
 				},
 			),
 		)
@@ -99,7 +98,13 @@ test("first YepWatch callback after Remix installs its fetch globals completes w
 		assert.match(response.headers.get("content-type") ?? "", /text\/html/)
 		assert.ok(body.includes(returnTo))
 		assert.ok(!body.includes("fixture-grant"))
-		assert.equal(reads, 3)
+		assert.equal(reads, 1, "the callback verifies the account before any room linking")
+        const session = response.headers.get("set-cookie")?.match(/yepwatch3_member=([^;, ]+)/)?.[1]
+        assert.ok(session)
+        const linked = await handler(new Request(`${origin}/api/yepwatch/v1/proposal/rooms/${roomId}/member/link`, {
+          method: "POST", headers: { origin, "content-type": "application/json", cookie: `${MEMBER_COOKIE}=${session}; yepwatch3_${roomId}=${participantId}.${token}` }, body: "{}"
+        }))
+        assert.equal(linked.status, 200, await linked.text())
 		assert.equal((await members.status(roomId, participantId)).state, "linked")
 	} finally {
 		Object.assign(globalThis, globals)

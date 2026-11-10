@@ -58,7 +58,7 @@ docker run --rm --network container:crate-01 --read-only --cap-drop ALL \
   build/yepwatch-release/operator.mjs provision --apply
 ```
 
-Operator env: `YEPWATCH_PROPOSAL_CRATEDB_ORIGIN=http://127.0.0.1:4200`, `YEPWATCH_PROPOSAL_CRATEDB_USERNAME=crate`, `YEPWATCH_PROPOSAL_SECRET_FILE=/run/secrets/room_key`, plus the identical key ID and budgets. Production uses two replicas. Do not use `--disposable-single-node`. If an old schema exists, stop: this release intentionally refuses it and has no automatic migration or erase operation.
+Operator env: `YEPWATCH_PROPOSAL_CRATEDB_ORIGIN=http://127.0.0.1:4200`, `YEPWATCH_PROPOSAL_CRATEDB_USERNAME=crate`, `YEPWATCH_PROPOSAL_SECRET_FILE=/run/secrets/room_key`, plus the identical key ID and budgets. Production uses two replicas. Do not use `--disposable-single-node`. If an old schema exists, startup refuses it. For the owner-approved test-data reset required by account identity, follow [account-identity-deployment.md](../../yepwatch-app/docs/account-identity-deployment.md) before starting the new API.
 
 4. Grant the runtime exact table privileges after provisioning:
 
@@ -66,9 +66,10 @@ Operator env: `YEPWATCH_PROPOSAL_CRATEDB_ORIGIN=http://127.0.0.1:4200`, `YEPWATC
 GRANT DQL,DML ON TABLE
  doc.yepwatch_room,doc.yepwatch_participant,doc.yepwatch_vote,
  doc.yepwatch_agreement,doc.yepwatch_proposal,doc.yepwatch_decision,
- doc.yepwatch_screen,doc.yepwatch_candidate,doc.yepwatch_command_receipt,
+ doc.yepwatch_idea,doc.yepwatch_candidate,doc.yepwatch_command_receipt,
  doc.yepwatch_ticket,doc.yepwatch_member_grant,doc.yepwatch_member_intent,
- doc.yepwatch_control,doc.yepwatch_invitation TO yepwatch_runtime;
+ doc.yepwatch_control,doc.yepwatch_invitation,doc.yepwatch_history,
+ doc.yepwatch_account_rooms,doc.yepwatch_account_history,doc.yepwatch_revoked_session TO yepwatch_runtime;
 GRANT DQL ON TABLE doc.yepwatch_runtime TO yepwatch_runtime;
 GRANT DQL ON TABLE
  doc.movie,doc.show,doc.episode,doc.imdb_episode,doc.country,

@@ -4,7 +4,7 @@ import { equal, hash, keyed, random, sign, verify } from './crypto.server.ts'
 import { IndeterminateWrite, memberProgressRequired, rejectManualProgress, requireRoom, RoomError } from './errors.ts'
 import { live, participant, preflightGuestRoundCommand, preflightStartRound, shared, snapshot, transition } from './machine.ts'
 import { LIMITS, type CatalogPort, type Participant, type RevisionPublisher, type Room, type RoomRepository, type StoredRoom } from './types.ts'
-export interface ActorCredential { participantId: string; token: string }
+export interface ActorCredential { participantId: string; token: string; accountId?: string; sessionId?: string }
 interface Lease { roomId: string; participantId: string; epoch: number; expiresAt: number; scope: 'shared:read' }
 export class YepWatchService {
   readonly repository: RoomRepository; readonly catalog: CatalogPort

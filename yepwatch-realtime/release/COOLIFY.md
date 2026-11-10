@@ -57,3 +57,5 @@ Do not regenerate keys, reset tables, or change the fixed budget policy on redep
 As with other static app deployments, open clients may need a reload after a deploy because this repository build does not retain previous web chunks. Coolify/build failure leaves the release unproven until its own health checks and public flow pass; local image builds do not prove host connectivity.
 
 References: [Coolify Compose configuration](https://coolify.io/docs/services/configuration/docker-compose), [Coolify domains](https://coolify.io/docs/core/networking/domains).
+
+Account identity requires a coordinated API/client update and the owner-approved reset of existing test rooms. Follow [the account-identity release procedure](../../yepwatch-app/docs/account-identity-deployment.md) before activating that release; ordinary redeploys continue to preserve keys and tables.

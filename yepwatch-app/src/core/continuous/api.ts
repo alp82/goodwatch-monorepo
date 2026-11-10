@@ -1,4 +1,5 @@
 import { nativeClient } from '../credentials';
+import { readSession, saveSession } from './member';
 import { ContinuousApi } from './api-client';
 export { RoomFailure } from './api-client';
-export const continuousApi = new ContinuousApi((url, init) => fetch(url, init), nativeClient);
+export const continuousApi = new ContinuousApi((url, init) => fetch(url, init), nativeClient, { read: readSession, save: saveSession });

@@ -90,6 +90,10 @@ export function createRegistry(store: KeyValue, recent: () => Promise<{ roomId: 
       await writeRooms(upsertRoom(await readRooms(), entry, now()));
       if (entry.nickname.trim()) await store.write(REGISTRY_KEYS.profile, JSON.stringify({ nickname: entry.nickname.trim() }));
     }),
+    forgetAccountRoom: (roomId: string) => serial(async () => {
+      await writeRooms(removeRoom(await readRooms(), roomId));
+      await store.write(REGISTRY_KEYS.decisions, JSON.stringify(decodeDecisions(await store.read(REGISTRY_KEYS.decisions)).filter(d => d.roomId !== roomId)));
+    }),
     forget: (roomId: string) => serial(async () => { await writeRooms(removeRoom(await readRooms(), roomId)); }),
     /** After a confirmed Leave. Opening or rejoining the room (remember) clears it. */
     markLeft: (roomId: string, label: string) => serial(async () => { await writeRooms(markLeft(await readRooms(), roomId, label, now())); }),

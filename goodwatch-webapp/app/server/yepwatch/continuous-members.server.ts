@@ -61,6 +61,7 @@ export interface MemberFlowConfig {
 }
 /** One device's GoodWatch sign-in, sealed by the server: browsers keep it in an HttpOnly cookie, apps in secure storage. */
 export interface MemberSession {
+	sessionId?: string
 	v: 1
 	userId: string
 	displayName: string | null
@@ -84,7 +85,7 @@ interface AccountIntent {
 /** Account sign-in states never look like a room ID (32 characters). */
 const BROWSER_STATE = "acct."
 const NATIVE_STATE = "acctn."
-const SESSION_AAD = "yepwatch-member-session"
+const SESSION_AAD = "yepwatch-account-session-v3"
 const INTENT_AAD = "yepwatch-member-intent"
 /** A renewable session lasts as long as the issuer's refresh grant; otherwise only as long as its access token. */
 export const RENEWABLE_SESSION_MS = 90 * 86_400_000
@@ -444,7 +445,7 @@ export class ContinuousMembers {
 		return codec(`member-session\0${secret}`)
 	}
 	sealSession(session: MemberSession) {
-		return this.sealer().encode(session, SESSION_AAD)
+		return this.sealer().encode({ ...session, sessionId: session.sessionId ?? random() }, SESSION_AAD)
 	}
 	/** A session this server sealed, or null for anything else (tampered, foreign, malformed). */
 	openSession(raw: string | null | undefined): MemberSession | null {
@@ -452,6 +453,7 @@ export class ContinuousMembers {
 		try {
 			const s = this.sealer().decode<MemberSession>(raw, SESSION_AAD)
 			return s?.v === 1 &&
+				typeof s.sessionId === "string" &&
 				typeof s.userId === "string" &&
 				typeof s.accessToken === "string" &&
 				Number.isFinite(s.expiresAt)
@@ -569,6 +571,7 @@ export class ContinuousMembers {
 		)
 		return {
 			v: 1,
+			sessionId: previous?.sessionId ?? random(),
 			userId: grant.userId,
 			displayName: cleanName(grant.displayName) ?? previous?.displayName ?? null,
 			accessToken: tokens.accessToken,

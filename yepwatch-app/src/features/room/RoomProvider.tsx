@@ -93,7 +93,12 @@ export function useRoom() {
   return value;
 }
 
-export function RoomProvider({ id, children, renderSheet }: { id: string; children: ReactNode; renderSheet: (sheet: RoomSheet) => ReactNode }) {
+export function RoomProvider(props: { id: string; children: ReactNode; renderSheet: (sheet: RoomSheet) => ReactNode }) {
+  const account = useAccount();
+  return <RoomProviderContent key={account.generation} {...props} />;
+}
+
+function RoomProviderContent({ id, children, renderSheet }: { id: string; children: ReactNode; renderSheet: (sheet: RoomSheet) => ReactNode }) {
   const state = useContinuousRoom(id);
   const entry = useLobbyEntry(state);
   const invitation = useQuery<StoredInvite | null>({ queryKey: ['continuous-invite', id], queryFn: () => loadInvite(id) });
@@ -147,8 +152,8 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
   const nickname = view?.me.nickname;
   const expiresAt = snapshot?.shared.expiresAt;
   useEffect(() => {
-    if (expiresAt) void roomRegistry.remember({ roomId: id, nickname: nickname ?? '', expiresAt }).catch(() => undefined);
-  }, [id, nickname, expiresAt]);
+    if (expiresAt && !account.member && !account.lapsed) void roomRegistry.remember({ roomId: id, nickname: nickname ?? '', expiresAt }).catch(() => undefined);
+  }, [id, nickname, expiresAt, account.member, account.lapsed]);
   useEffect(() => { if (snapshot?.own.left) router.replace('/'); }, [snapshot?.own.left]);
 
   // Continue with GoodWatch in a room signs this device in and comes back to this room, which then links.
@@ -170,6 +175,7 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
   const wantsLink = !guestOnly && account.member && !account.unavailable && Boolean(state.access) && own?.member.state !== 'linked' && Boolean(linkKey);
   const refetch = state.refetch;
   const access = state.access;
+  const adoptAccess = state.adoptAccess;
   useEffect(() => {
     if (!wantsLink || !linkKey || !access) return;
     const go = gate.current.begin(linkKey, Date.now());
@@ -180,7 +186,7 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
     }
     setLinkFailed(false);
     void linkRoom(access)
-      .then(() => { gate.current.settle(linkKey, 'linked', Date.now()); return refetch(); })
+      .then((result) => { gate.current.settle(linkKey, 'linked', Date.now()); adoptAccess(result.credential); if (result.replacedGuest) setNotice('Resumed your existing place. Your account’s saved answers were kept.'); })
       .catch((e) => {
         const outcome = linkOutcome(e);
         gate.current.settle(linkKey, outcome, Date.now());
@@ -194,7 +200,7 @@ export function RoomProvider({ id, children, renderSheet }: { id: string; childr
         setLinked(linkKey);
         setLinkTick((n) => n + 1);
       });
-  }, [wantsLink, linkKey, access, refetch, linkTick]);
+  }, [wantsLink, linkKey, access, refetch, linkTick, adoptAccess]);
   const retryLink = useCallback(() => {
     if (!linkKey) return;
     gate.current.retry(linkKey);

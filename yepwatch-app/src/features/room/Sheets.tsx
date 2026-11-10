@@ -8,6 +8,9 @@ import { Image, View } from 'react-native';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { deviceCountryHint } from '../../core/lobby';
 import { guestOnly } from '../../core/config';
+import { useAccount } from '../../core/continuous/account';
+import { continuousApi } from '../../core/continuous/api';
+import { queryClient } from '../../core/providers';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { Feedback } from '../beta/Feedback';
 import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../home/Landing';
@@ -52,7 +55,8 @@ const Done = () => {
 
 /** The room in one place: its ideas, people and link, settings, archive and leave. */
 function RoomMenuSheet() {
-  const { id, view, cmd, disabled, closeSheet, openSheet } = useRoom();
+  const { id, view, cmd, disabled, closeSheet, openSheet, setNotice } = useRoom();
+  const account = useAccount();
   const { z } = useLayout();
   const { all } = useServices(view?.country);
   const [leaving, setLeaving] = useState<'ask' | 'sending' | null>(null);
@@ -62,11 +66,15 @@ function RoomMenuSheet() {
     setLeaving('sending');
     void cmd.leave().then(async (ok) => {
       if (!ok) { setLeaving(null); return; }
-      await roomRegistry.markLeft(id, view.label).catch(() => undefined);
+      if (!account.member) await roomRegistry.markLeft(id, view.label).catch(() => undefined);
+      void queryClient.invalidateQueries({ queryKey: ['account-home'] });
       router.replace('/');
     });
   };
-  const archive = () => { void roomRegistry.archive(id).catch(() => undefined).then(() => router.replace('/')); };
+  const archive = () => {
+    void (account.member ? continuousApi.archive(id, true).then(() => queryClient.invalidateQueries({ queryKey: ['account-home'] })) : roomRegistry.archive(id))
+      .then(() => router.replace('/')).catch(() => setNotice('Couldn’t archive this room. Try again.'));
+  };
   const on = servicesIn(all, view.enabledServiceIds);
   const people = view.faces;
   return (

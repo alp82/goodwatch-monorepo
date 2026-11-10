@@ -68,6 +68,7 @@ export function createProposalHandler(
 			"cache-control": "private, no-store",
 			"x-content-type-options": "nosniff",
 			vary: "Origin",
+			"access-control-expose-headers": "x-yepwatch-session",
 		})
 		if (origin && allowed.has(origin)) {
 			headers.set("access-control-allow-origin", origin)
@@ -127,6 +128,49 @@ export function createProposalHandler(
 				throw new RoomError("unauthorized", "Room credential required", 401)
 			return { participantId, token }
 		}
+    let accountRead: Promise<import('./proposal-types.ts').RoomAccount | null> | undefined
+    let freshMemberSession: MemberSession | null = null
+    const account = (required = false) => {
+      accountRead ??= (async () => {
+        const raw = memberSession()
+        if (!raw || !options.members) return null
+        const result = await options.members.account(raw)
+        const renewed = keepSession(result.session, result.changed)
+        if (renewed) headers.set('x-yepwatch-session', renewed)
+        const session = result.session
+        if (!session?.sessionId || !(await service.accounts.sessionActive(session.sessionId))) {
+          if (!nativeRequest()) setCookie(MEMBER_COOKIE, '', 0)
+          throw new RoomError('member_required', 'Sign in with GoodWatch again', 403)
+        }
+        if (session.unverified || result.status.unavailable) throw new RoomError('busy', 'GoodWatch is temporarily unavailable', 503, true)
+        freshMemberSession = session
+        return { userId: session.userId, sessionId: session.sessionId,
+          expiresAt: Date.now() + options.members.sessionMaxAge(session) * 1000 }
+      })()
+      return accountRead.then(value => {
+        if (required && !value) throw new RoomError('member_required', 'Sign in with GoodWatch again', 403)
+        return value
+      })
+    }
+    const scopedCredential = async (roomId: string) => {
+      const c = credential(roomId)
+      const a = await account()
+      return a ? { ...c, accountId: a.userId, sessionId: a.sessionId } : c
+    }
+    const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: import('./proposal-types.ts').RoomAccount | null) => {
+      const c = admission.credential
+      if (a && options.members && freshMemberSession) {
+        await options.members.linkRoom(c.roomId, c.participantId, options.members.sealSession(freshMemberSession))
+        await service.notify(c.roomId)
+        admission.snapshot = await service.read(c.roomId, { participantId: c.participantId, token: c.token, accountId: a.userId, sessionId: a.sessionId })
+      }
+      if (request.headers.get('x-yepwatch-client') !== 'native') {
+        setCookie(`yepwatch3_${c.roomId}`, `${c.participantId}.${c.token}`, Math.floor((c.expiresAt - Date.now()) / 1000))
+        c.token = ''
+      }
+      return reply({ ...admission, ...admission.snapshot.own.member })
+    }
+
 		try {
 			if (!url.pathname.startsWith(`${API_PREFIX}/`))
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
@@ -180,8 +224,16 @@ export function createProposalHandler(
 					)
 				if (request.method === "GET" && url.pathname === paths.account) {
 					const result = await members.account(memberSession())
+					if (result.session?.sessionId && !(await service.accounts.sessionActive(result.session.sessionId))) {
+						setCookie(MEMBER_COOKIE, "", 0)
+						return reply({ state: "guest", displayName: null })
+					}
 					const session = keepSession(result.session, result.changed)
 					return reply({ ...result.status, ...(session ? { session } : {}) })
+				}
+				if (request.method === "GET" && url.pathname === paths.accountHome) {
+					const a = (await account(true))!
+					return reply(await service.accountHome(a))
 				}
 				if (request.method === "POST" && url.pathname === paths.accountStart) {
 					const value = parse(
@@ -226,6 +278,8 @@ export function createProposalHandler(
 				}
 				if (request.method === "POST" && url.pathname === paths.accountLogout) {
 					originCheck(!nativeRequest())
+					const opened = members.openSession(memberSession())
+					if (opened?.sessionId) await service.logoutAccount({ userId: opened.userId, sessionId: opened.sessionId, expiresAt: Date.now() + 90 * 86400000 })
 					// Ends this device's sign-in for YepWatch only. GoodWatch's own session is untouched.
 					setCookie(MEMBER_COOKIE, "", 0)
 					setCookie(MEMBER_INTENT_COOKIE, "", 0)
@@ -241,57 +295,6 @@ export function createProposalHandler(
 						"GoodWatch sign-in is not configured on this runtime",
 						501
 					)
-				if (request.method === "POST" && url.pathname === paths.memberStart) {
-					const value = parse(
-						z
-							.object({
-								roomId: z.string().regex(/^[A-Za-z0-9_-]{32}$/),
-								returnTo: z.string().url().max(1000),
-								client: z.enum(["browser", "native"]),
-								codeChallenge: z
-									.string()
-									.regex(/^[A-Za-z0-9_-]{43}$/)
-									.optional(),
-							})
-							.strict(),
-						await body(request)
-					)
-					const own = await service.read(value.roomId, credential(value.roomId))
-					const started = await members.start(
-						value.roomId,
-						own.own.participantId,
-						value
-					)
-					return reply({
-						authorizeUrl: started.authorizeUrl,
-						expiresAt: started.expiresAt,
-						state: started.state,
-					})
-				}
-				if (
-					request.method === "POST" &&
-					url.pathname === paths.memberExchange
-				) {
-					const value = parse(
-						z
-							.object({
-								roomId: z.string().regex(/^[A-Za-z0-9_-]{32}$/),
-								state: z.string().min(64).max(160),
-								code: z.string().min(1).max(4096),
-								codeVerifier: z.string().regex(/^[A-Za-z0-9_-]{43,128}$/),
-							})
-							.strict(),
-						await body(request)
-					)
-					const own = await service.read(value.roomId, credential(value.roomId))
-					const linked = await members.exchange(
-						value.roomId,
-						own.own.participantId,
-						value
-					)
-					await service.notify(value.roomId)
-					return reply(linked.status)
-				}
 				if (request.method === "GET" && url.pathname === paths.memberCallback) {
 					const state = url.searchParams.get("state") ?? ""
 					const code = url.searchParams.get("code") ?? ""
@@ -301,25 +304,16 @@ export function createProposalHandler(
 							"Sign-in did not complete; restart sign-in",
 							401
 						)
-					const id = state.split(".")[0]
-					const account = isAccountState(state)
-					const kind = account ? members.accountClient(state) : await members.callbackClient(state)
-					let destination
-					if (account && kind === "native") destination = members.accountNativeReturn(state, code)
-					else if (account) {
-						const signedIn = await members.accountCallback(state, code, cookie(MEMBER_INTENT_COOKIE))
-						setCookie(MEMBER_INTENT_COOKIE, "", 0)
-						setCookie(MEMBER_COOKIE, members.sealSession(signedIn.session), members.sessionMaxAge(signedIn.session))
-						destination = signedIn.returnTo
-					} else if (kind === "native")
-						destination = await members.nativeReturn(state, code)
-					else {
-						const own = await service.read(id, credential(id))
-						destination = (
-							await members.callback(state, code, own.own.participantId)
-						).returnTo
-						await service.notify(id)
-					}
+          if (!isAccountState(state)) throw new RoomError("unauthorized", "Restart GoodWatch sign-in", 401)
+          const kind = members.accountClient(state)
+          let destination: string
+          if (kind === "native") destination = members.accountNativeReturn(state, code)
+          else {
+            const signedIn = await members.accountCallback(state, code, cookie(MEMBER_INTENT_COOKIE))
+            setCookie(MEMBER_INTENT_COOKIE, "", 0)
+            setCookie(MEMBER_COOKIE, members.sealSession(signedIn.session), members.sessionMaxAge(signedIn.session))
+            destination = signedIn.returnTo
+          }
 					// End the issuer's consent form navigation at its allowlisted API
 					// callback. A further HTTP redirect (app origin or native scheme) can
 					// violate form-action. This document starts a new checked navigation.
@@ -366,7 +360,7 @@ export function createProposalHandler(
 					: service.resolveInvite(value.code)))
 			}
 			const match = url.pathname.match(
-				/^\/api\/yepwatch\/v1\/proposal\/rooms\/([A-Za-z0-9_-]{32})(?:\/(join|commands|preview|realtime-ticket|member(?:\/progress|\/link)?))?$/
+				/^\/api\/yepwatch\/v1\/proposal\/rooms\/([A-Za-z0-9_-]{32})(?:\/(join|resume|archive|commands|preview|realtime-ticket|member(?:\/progress|\/link)?))?$/
 			)
 			if (
 				request.method === "POST" &&
@@ -375,9 +369,10 @@ export function createProposalHandler(
 				const native = request.headers.get("x-yepwatch-client") === "native"
 				if (!native) originCheck(true)
 				const value = await body(request)
+				const a = await account()
 				let admission
 				if (url.pathname === paths.rooms)
-					admission = await service.create(parse(admissionSchema, value))
+					admission = await service.create(parse(admissionSchema, value), a ?? undefined)
 				else {
 					const join = parse(joinSchema, value)
 					const roomId = match![1]
@@ -386,29 +381,43 @@ export function createProposalHandler(
 						(request.headers.get("cookie") ?? "")
 							.split(";")
 							.some((c) => c.trim().startsWith(`yepwatch3_${roomId}=`))
-					// A reopened invite in the same browser is resume, never a new required voter or silent host replacement.
-					admission = hasCredential
+          // A signed-in join can still carry this device's earlier guest credential.
+          // Claim that place before allocating anything, including after a lost create acknowledgement.
+          if (a && hasCredential) {
+            const resolved = await service.resolveInvite(join.inviteCode)
+            if (resolved.roomId !== roomId) throw new RoomError("not_found", "Invite unavailable", 404)
+            const scoped = await scopedCredential(roomId)
+            try {
+              await service.read(roomId, scoped)
+              return sendAdmission(await service.linkAccount(roomId, scoped, a), a)
+            } catch (e) {
+              if (!(e instanceof RoomError) || !["unauthorized", "forbidden", "not_found"].includes(e.code)) throw e
+            }
+          }
+					// A reopened invite is a return to the existing participant.
+					admission = a
+						? await service.join(roomId, join, a)
+						: hasCredential
 						? await service.resumeOrJoin(roomId, credential(roomId), join)
 						: await service.join(roomId, join)
 				}
-				if (!native) {
-					const c = admission.credential
-					headers.append(
-						"set-cookie",
-						`yepwatch3_${c.roomId}=${c.participantId}.${
-							c.token
-						}; Path=${API_PREFIX}; HttpOnly; SameSite=Lax; Max-Age=${Math.max(
-							0,
-							Math.floor((c.expiresAt - Date.now()) / 1000)
-						)}${options.secureCookies === false ? "" : "; Secure"}`
-					)
-					admission.credential.token = ""
-				}
-				return reply(admission)
+				return sendAdmission(admission, a)
 			}
 			if (match) {
 				const [, id, operation] = match
-				const actor = credential(id)
+        if (request.method === 'POST' && operation === 'resume') {
+          originCheck(!nativeRequest())
+          const value = parse(z.object({ returnAfterLeave: z.boolean().optional() }).strict(), await body(request))
+          const a = (await account(true))!
+          return sendAdmission(await service.resumeAccount(id, a, value.returnAfterLeave === true), a)
+        }
+        if (request.method === 'POST' && operation === 'archive') {
+          originCheck(!nativeRequest())
+          const value = parse(z.object({ archived: z.boolean() }).strict(), await body(request))
+          await service.archiveAccountRoom(id, (await account(true))!, value.archived)
+          return reply({ ok: true })
+        }
+				const actor = await scopedCredential(id)
 				if (request.method === "POST" && operation === "preview")
 					return reply(await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))))
 				if (request.method === "GET" && !operation) {
@@ -454,11 +463,8 @@ export function createProposalHandler(
 				if (request.method === "POST" && operation === "member/link") {
 					if (!options.members)
 						throw new RoomError("not_implemented", "GoodWatch sign-in not configured", 501)
-					const own = await service.read(id, actor)
-					const linked = await options.members.linkRoom(id, own.own.participantId, memberSession())
-					await service.notify(id)
-					const session = keepSession(linked.session, linked.renewed)
-					return reply({ ...linked.status, ...(session ? { session } : {}) })
+          const a = (await account(true))!
+          return sendAdmission(await service.linkAccount(id, actor, a), a)
 				}
 				if (request.method === "POST" && operation === "realtime-ticket")
 					return reply(await service.ticket(id, actor))

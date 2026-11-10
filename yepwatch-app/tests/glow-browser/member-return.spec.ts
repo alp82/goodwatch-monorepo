@@ -71,10 +71,10 @@ test('signing in inside a room comes back to that room, links it and the room go
   await expect.poll(() => f.account.links).toBeGreaterThan(0);
   await expect.poll(() => f.room.own.member.state).toBe('linked');
   await expect(button(page, 'Yep')).toBeVisible();
-  // Live: one ticket, no reconnect line, and it stays that way.
+  // The guest capability is replaced by an account session: one fresh ticket, then stable live.
   await page.waitForTimeout(2500);
   await expect(page.getByText(/^(Connecting…|Reconnecting…|Trying again in \d+ s|Not connected\.)$/)).toHaveCount(0);
-  expect(tickets.count).toBe(1);
+  expect(tickets.count).toBe(2);
   expect(rooms.count).toBe(0);
 });
 

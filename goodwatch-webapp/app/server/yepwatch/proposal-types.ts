@@ -7,8 +7,43 @@ import type {
 	RoomDescription
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { RoomRepository, StoredRoom } from "./types.ts"
+import type { AccountDecision } from "../../../packages/yepwatch-contracts/proposal.ts"
+export interface ParticipantSession {
+	id: string
+	tokenHash: string
+	expiresAt: number
+	nextSequence: number
+	receipts: ContinuousParticipant["receipts"]
+}
+/** Identity supplied only by the server after opening a verified GoodWatch session. */
+export interface RoomAccount {
+	userId: string
+	sessionId: string
+	expiresAt: number
+}
+export interface HistoricalDecision extends AccountDecision {
+	accountIds: string[]
+	participantIds: string[]
+}
+export interface AccountRoomIndex {
+	roomId: string
+	expiresAt: number
+}
+export interface AccountRoomsStore {
+	remember(userId: string, entry: AccountRoomIndex): Promise<void>
+	revokeSession(id: string, expiresAt: number): Promise<void>
+	sessionActive(id: string): Promise<boolean>
+	rooms(userId: string): Promise<AccountRoomIndex[]>
+	/** Called only with snapshots read from a committed room head. */
+	publish(decisions: HistoricalDecision[]): Promise<void>
+	history(userId: string): Promise<AccountDecision[]>
+}
 /** Storage envelope2 is reused for existing member-read compatibility; flowVersion/table/routes distinguish protocol3. */
 export interface ProposalParticipant extends ContinuousParticipant {
+	sessions?: ParticipantSession[]
+	joinedAt?: number
+	archivedAt?: number | null
+	leftLabel?: string | null
 	serviceIds?: number[] | null
 	showSeen?: boolean
 	leftAt?: number | null
@@ -25,6 +60,7 @@ export interface ProposalParticipant extends ContinuousParticipant {
 	agreementRevision: number
 }
 export interface ProposalRoom extends ContinuousRoom {
+	history?: HistoricalDecision[]
 	intent?:
 		| (RoomDescription & { rankedKeys: number[]; interpretedAt: number })
 		| null
@@ -47,6 +83,7 @@ export interface ProposalRoom extends ContinuousRoom {
 	} | null
 }
 export type ProposalRepository = RoomRepository<ProposalRoom> & {
+	accountStore?: AccountRoomsStore
 	/** Optional for historical encrypted demo repositories; production uses typed PK lookup. */
 	rememberInvite?(
 		hash: string,

@@ -69,6 +69,7 @@ export interface ContinuousRoom {
 	decision: Decision | null
 	tickets: {
 		hash: string
+		sessionId?: string
 		participantId: string
 		epoch: number
 		expiresAt: number

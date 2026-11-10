@@ -1,3 +1,4 @@
+import { MemoryAccountRooms } from "./proposal-account-store.ts"
 import { continuousFixtureCatalog } from "./continuous-test-support.ts"
 import type {
 	ProposalRepository,
@@ -8,6 +9,7 @@ import type {
 import { IndeterminateWrite } from "./errors.ts"
 
 export class ProposalMemoryRepository implements ProposalRepository {
+	accountStore = new MemoryAccountRooms()
 	rows = new Map<string, ProposalStored>()
 	private invitations = new Map<string, { roomId: string; expiresAt: number }>()
 	async rememberInvite(hash: string, roomId: string, _expiresAt: number) {

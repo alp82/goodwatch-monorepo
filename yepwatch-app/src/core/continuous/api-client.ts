@@ -18,8 +18,10 @@ import {
   type AccountStartRequest,
   type AccountExchangeRequest,
   type AccountStatus,
+  type AccountHome,
   MEMBER_SESSION_HEADER,
 } from '@goodwatch/yepwatch-contracts/proposal';
+import { authEpoch } from './account-flow';
 import { connectionDiagnostic, type ConnectionDiagnostic, type ConnectionStage } from './connection-diagnostic';
 import { apiUrl } from '../config';
 import { invitePreviewSchema } from './wire';
@@ -43,7 +45,8 @@ export class RoomFailure extends Error {
 export class ContinuousApi {
   constructor(
     private readonly fetcher: typeof fetch = (url, init) => fetch(url, init),
-    private readonly native = false
+    private readonly native = false,
+    private readonly sessions?: { read(): Promise<string | null>; save(value: string): Promise<unknown> }
   ) {}
   async request<T>(
     path: string,
@@ -53,6 +56,8 @@ export class ContinuousApi {
     /** The app's sealed GoodWatch session (browsers send theirs as a cookie). */
     memberSession?: string | null
   ): Promise<T> {
+    const asked = authEpoch.current();
+    if (this.native && memberSession === undefined) memberSession = await this.sessions?.read();
     const started = Date.now();
     let stage: ConnectionStage = 'address';
     let timedOut = false;
@@ -81,7 +86,10 @@ export class ContinuousApi {
         signal: controller.signal,
       });
       stage = 'response';
+      const renewed = response.headers.get('x-yepwatch-session');
+      if (renewed && authEpoch.isCurrent(asked)) await this.sessions?.save(renewed);
       const result = await response.json();
+      if (!authEpoch.isCurrent(asked)) throw new RoomFailure('unauthorized', 'Sign-in changed. Open the room again.', 401);
       if (!response.ok) {
         const e = result as ApiError;
         throw new RoomFailure(
@@ -137,10 +145,13 @@ export class ContinuousApi {
     this.request<AccountStatus>(paths.account, undefined, undefined, undefined, session);
   accountStart = (body: AccountStartRequest) => this.request<MemberStartResponse>(paths.accountStart, body);
   accountExchange = (body: AccountExchangeRequest) => this.request<AccountStatus>(paths.accountExchange, body);
-  accountLogout = () => this.request<AccountStatus>(paths.accountLogout, {});
+  accountLogout = (session?: string | null) => this.request<AccountStatus>(paths.accountLogout, {}, undefined, undefined, session);
+  accountHome = () => this.request<AccountHome>(paths.accountHome);
+  resume = (id: string, returnAfterLeave = false) => this.request<GuestAdmission>(paths.resume(id), { returnAfterLeave });
+  archive = (id: string, archived: boolean) => this.request<{ ok: true }>(paths.archive(id), { archived });
   /** Links your participant in this room to this device's sign-in. */
   memberLink = (a: RoomAccess, session?: string | null) =>
-    this.request<MemberStatusResponse & { session?: string }>(paths.memberLink(a.roomId), {}, a, undefined, session);
+    this.request<GuestAdmission & MemberStatusResponse & { session?: string }>(paths.memberLink(a.roomId), {}, a, undefined, session);
   memberStart = (a: RoomAccess, body: MemberStartRequest) =>
     this.request<MemberStartResponse>(paths.memberStart, body, a);
   memberExchange = (a: RoomAccess, body: MemberExchangeRequest) =>

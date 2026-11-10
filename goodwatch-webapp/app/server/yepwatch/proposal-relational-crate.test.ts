@@ -1,3 +1,4 @@
+import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
@@ -326,7 +327,7 @@ test(
 				"SELECT table_name FROM information_schema.tables WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' ORDER BY table_name"
 			)
 		).rows
-		assert.equal(counts.length, 15)
+		assert.equal(counts.length, 19)
 		const badColumns = (
 			await sql(
 				"SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' AND column_name='payload'"
@@ -373,7 +374,10 @@ test(
 			},
 		]
 		assert.equal(await repo.compareAndSwap(current, linked, false), true)
-		const cold = (await new RelationalProposalRepository(sql, secret).read(id))!
+		const memberAccount = { userId: "local-member-fixture", sessionId: "typed-member-session", expiresAt: Date.now() + 600000 }
+        const memberAdmission = await a.resumeAccount(id, memberAccount)
+        Object.assign(host, memberAdmission.credential, { accountId: memberAccount.userId, sessionId: memberAccount.sessionId })
+        const cold = (await new RelationalProposalRepository(sql, secret).read(id))!
 		assert.equal(
 			cold.room.participants[0].memberGrant?.accessToken,
 			"test-grant-secret-only"
@@ -389,6 +393,34 @@ test(
 		assert.ok(
 			encrypted.every((r) => !String(r[0]).includes("test-grant-secret-only"))
 		)
+
+        const phone = { userId: "typed-account", sessionId: "typed-phone", expiresAt: Date.now() + 86400000 }
+        const pc = { ...phone, sessionId: "typed-pc" }
+        const accountRoom = await a.create(request("Account host"), phone)
+        const accountId = accountRoom.credential.roomId
+        const otherDevice = await b.resumeAccount(accountId, pc)
+        assert.equal(otherDevice.credential.participantId, accountRoom.credential.participantId)
+        assert.equal((await b.accountHome(pc)).rooms.length, 1, "account room locator survives separate repository instances")
+        const scopedHost = { ...accountRoom.credential, accountId: phone.userId, sessionId: phone.sessionId }
+        const sendAccount = async (command: RoomCommand) => {
+          const state = await a.read(accountId, scopedHost)
+          return a.command(accountId, scopedHost, { commandId: randomBytes(16).toString("hex"), sequence: state.own.nextSequence, command })
+        }
+        let accountState = (await sendAccount({ type: "setup", expectedContextVersion: 1,
+          screens: [{ id: "room", label: "Room", country: "DE", serviceIds: [1], confirmed: true }],
+          constraints: { kinds: ["movie"], moods: [], maxMinutes: null }, screenId: "room" })).snapshot
+        accountState = (await sendAccount({ type: "start", expectedContextVersion: accountState.shared.contextVersion, expectedRosterVersion: accountState.shared.rosterVersion, hostReady: true })).snapshot
+        const accountCandidate = accountState.shared.candidates[0].id
+        accountState = (await sendAccount({ type: "vote", candidateId: accountCandidate, expectedVoteRevision: 0, generation: accountState.shared.generation, value: "watch" })).snapshot
+        accountState = (await sendAccount({ type: "propose", candidateId: accountCandidate, expectedRosterVersion: accountState.shared.rosterVersion, expectedProposalVersion: accountState.shared.proposalVersion, generation: accountState.shared.generation })).snapshot
+        assert.equal(accountState.shared.phase, "decided")
+        const accountHistory = (await b.accountHome(pc)).decisions
+        assert.equal(accountHistory.length, 1)
+        await sendAccount({ type: "restart", expectedRevision: accountState.shared.revision })
+        assert.deepEqual((await b.accountHome(pc)).decisions, accountHistory)
+        await b.logoutAccount(pc)
+        assert.equal(await otherRepo.accountStore.sessionActive(pc.sessionId), false)
+
 		docker("restart", name)
 		sql = crateSql(
 			`http://127.0.0.1:${docker("port", name, "4200/tcp").split(":").at(-1)}`,
@@ -413,8 +445,10 @@ test(
 			(await restarted.read(id, host)).shared.decision,
 			done.shared.decision
 		)
+        assert.deepEqual((await restarted.accountHome(phone)).decisions, accountHistory, "account history survives database restart")
+        assert.equal(await restarted.accounts.sessionActive(pc.sessionId), false, "device logout survives database restart")
 		t.diagnostic(
-			"Concurrent votes, interrupted publication, lost child/head acknowledgements, exact retry, final decision and database restart PASS"
+			"Account identity, session receipts, persistent history and logout; concurrent votes, interrupted publication, lost child/head acknowledgements, exact retry, final decision and database restart PASS"
 		)
 	}
 )

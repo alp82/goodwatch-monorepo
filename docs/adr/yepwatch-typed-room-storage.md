@@ -1,5 +1,6 @@
 # YepWatch typed interaction storage
 
+Account identity, account-backed room discovery and durable history now follow [the account-identity decision](0015-yepwatch-account-identity.md). The older device-only return and room-lifetime-only history rules below are superseded.
 Status: implemented locally; supersedes encrypted aggregate storage for the first release. Historical development rooms and their repository remain unchanged. No production migration or deployment.
 
 ## Decision

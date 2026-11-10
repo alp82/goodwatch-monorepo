@@ -1,3 +1,4 @@
+import { SqlAccountRooms, encodeDecision, decodeDecision } from "./proposal-account-store.ts"
 import { ROOM_CONTEXT } from "./proposal-context.ts"
 import { z } from "zod"
 import { codec, keyed } from "./crypto.server.ts"
@@ -12,6 +13,9 @@ import type {
 import {
 	tables,
 	invitationTable,
+	accountIndexTable,
+	accountHistoryTable,
+	revokedSessionTable,
 	columns,
 	parseRow,
 	tableDdl,
@@ -61,11 +65,11 @@ async function parallel<T, R>(
 	return result
 }
 export async function provisionRelationalRooms(sql: Sql, replicas: 0 | 2) {
-	for (const table of [...Object.values(tables), invitationTable])
+	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable])
 		await sql(tableDdl(table, replicas))
 }
 export async function checkRelationalRooms(sql: Sql) {
-	for (const table of [...Object.values(tables), invitationTable])
+	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable])
 		await sql(
 			`SELECT ${columns(table).join(",")} FROM ${table.name} WHERE ${
 				table.primary
@@ -76,6 +80,7 @@ export async function checkRelationalRooms(sql: Sql) {
 
 /** Immutable typed domain records, published together by one room-head CAS. Readers never follow SQL search freshness. */
 export class RelationalProposalRepository implements ProposalRepository {
+	readonly accountStore: SqlAccountRooms
 	private crypto: ReturnType<typeof codec>
 	// Only validated immutable rows. A bounded cache is an optimization, never the source of truth.
 	private cache = new Map<string, Row>()
@@ -83,6 +88,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 	private secret: string
 	constructor(sql: Sql, secret: string) {
 		this.sql = sql
+		this.accountStore = new SqlAccountRooms(sql, secret)
 		this.secret = secret
 		this.crypto = codec(secret)
 	}
@@ -255,6 +261,10 @@ export class RelationalProposalRepository implements ProposalRepository {
 				: null
 			return put("participant", {
 				participant_id: p.id,
+				sessions: p.sessions ?? [],
+				joined_at: p.joinedAt ?? 0,
+				archived_at: p.archivedAt ?? null,
+				left_label: p.leftLabel ?? null,
 				nickname: p.nickname,
 				service_ids: p.serviceIds ?? null,
 				show_seen: p.showSeen ?? false,
@@ -303,6 +313,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 		const tickets = room.tickets.map((t) =>
 			put("ticket", {
 				ticket_hash: t.hash,
+				session_id: t.sessionId ?? null,
 				participant_id: t.participantId,
 				epoch: t.epoch,
 				ticket_expires_at: t.expiresAt
@@ -382,6 +393,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 			member_intent_records: intents,
 			proposal_record: proposal,
 			decision_record: decision,
+			history_records: (room.history ?? []).map(d => put("history", encodeDecision(d))),
 			pending_revision: pending,
 			pending_agreement: room.agreement.state === "checking"
 		})
@@ -396,6 +408,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 			candidates = new Set(room.candidates.map((c) => c.id)),
 			screens = new Set(room.screens.map((s) => s.id))
 		unique(room.participants.map((p) => p.id))
+		unique(room.participants.flatMap(p => p.memberUserId ? [p.memberUserId] : []))
 		unique(room.candidates.map((c) => c.id))
 		unique((room.ideas ?? []).map((i) => i.id))
 		if ((room.ideas ?? []).some((i) => !people.has(i.authorId))) throw fail()
@@ -405,6 +418,12 @@ export class RelationalProposalRepository implements ProposalRepository {
 		if (room.proposal && room.proposal.version !== room.proposalVersion)
 			throw fail()
 		for (const p of room.participants) {
+			unique((p.sessions ?? []).map(s => s.id))
+			unique((p.sessions ?? []).map(s => s.tokenHash))
+			for (const session of p.sessions ?? []) {
+				unique(session.receipts.map(r => r.commandId))
+				unique(session.receipts.map(r => String(r.sequence)))
+			}
 			unique(p.receipts.map((r) => r.commandId))
 			unique(p.receipts.map((r) => String(r.sequence)))
 			if (p.screenId !== null && !screens.has(p.screenId)) throw fail()
@@ -584,6 +603,10 @@ export class RelationalProposalRepository implements ProposalRepository {
 					return {
 						id: p.participant_id,
 						nickname: p.nickname,
+						sessions: p.sessions,
+						joinedAt: p.joined_at,
+						archivedAt: p.archived_at,
+						leftLabel: p.left_label,
 						serviceIds: p.service_ids ?? null,
 						showSeen: p.show_seen ?? false,
 						tokenHash: p.token_hash,
@@ -633,14 +656,15 @@ export class RelationalProposalRepository implements ProposalRepository {
 					}
 				}
 			)
-			const [candidates, tickets, intents, proposal, decision, ideas] =
+			const [candidates, tickets, intents, proposal, decision, ideas, history] =
 				await Promise.all([
 					many("candidate", h.candidate_records),
 					many("ticket", h.ticket_records),
 					many("intent", h.member_intent_records),
 					h.proposal_record ? get("proposal", h.proposal_record) : null,
 					h.decision_record ? get("decision", h.decision_record) : null,
-					many("idea", h.idea_records ?? [])
+					many("idea", h.idea_records ?? []),
+					many("history", h.history_records)
 				])
 			if (
 				[
@@ -658,6 +682,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 			const room: ProposalRoom = {
 				format: 2,
 				flowVersion: 3,
+				history: history.map(decodeDecision),
 				id,
 				revision: h.revision,
 				expiresAt: h.expires_at,
@@ -740,6 +765,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 					: null,
 				tickets: tickets.map((t) => ({
 					hash: t.ticket_hash,
+					...(t.session_id ? { sessionId: t.session_id } : {}),
 					participantId: t.participant_id,
 					epoch: t.epoch,
 					expiresAt: t.ticket_expires_at
@@ -775,7 +801,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 	async pending(limit: number) {
 		return (
 			await this.sql(
-				`SELECT id FROM ${tables.room.name} WHERE (pending_revision>0 OR pending_agreement=true) AND expires_at>CURRENT_TIMESTAMP LIMIT ?`,
+				`SELECT id FROM ${tables.room.name} WHERE (pending_revision>0 OR pending_agreement=true) LIMIT ?`,
 				[Math.min(100, limit)]
 			)
 		).rows.map((r) => String(r[0]))

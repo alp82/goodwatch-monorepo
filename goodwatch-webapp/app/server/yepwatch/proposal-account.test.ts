@@ -127,7 +127,7 @@ test("a callback from another browser, a replayed state or a foreign return page
 	assert.equal((await status.json()).state, "guest")
 })
 
-test("rooms created or joined while signed in link to the device session; Log out keeps those rooms and ends the sign-in", async () => {
+test("rooms created or joined while signed in link to the device session; Log out retains membership but ends this device’s room access", async () => {
 	const { handler, repo } = setup()
 	const { callback } = await signIn(handler, `${origin}/`)
 	const session = cookies(callback)[MEMBER_COOKIE].value
@@ -161,8 +161,9 @@ test("rooms created or joined while signed in link to the device session; Log ou
 	assert.equal(cookies(out)[MEMBER_COOKIE].maxAge, 0)
 	const guest = await handler(new Request(api("/account"), { headers: { cookie: `yepwatch3_${roomId}=${roomCookie}` } }))
 	assert.equal((await guest.json()).state, "guest")
-	const kept = await (await handler(new Request(api(`/rooms/${roomId}`), { headers: { cookie: `yepwatch3_${roomId}=${roomCookie}` } }))).json()
-	assert.equal(kept.own.member.state, "linked", "rooms linked before Log out keep their GoodWatch services")
+	const kept = await handler(new Request(api(`/rooms/${roomId}`), { headers: { cookie: `yepwatch3_${roomId}=${roomCookie}` } }))
+	assert.equal(kept.status, 401, "a retained room cookie cannot act as a signed-out account")
+	assert.equal((await repo.read(roomId))!.room.participants[0].memberUserId, "account-1", "membership survives logout")
 	const unlinked = await handler(new Request(api(`/rooms/${roomId}/member/link`), { method: "POST", headers: { origin, "content-type": "application/json", cookie: `yepwatch3_${roomId}=${roomCookie}` }, body: "{}" }))
 	assert.equal(unlinked.status, 403)
 })
@@ -294,8 +295,8 @@ test("a refresh that rotates the tokens while GoodWatch's identity check is down
 
 	// Room linking waits for a verified identity, and still keeps whatever rotation happened.
 	const refused = await link(rotated)
-	assert.equal(refused.status, 200)
-	assert.equal((await refused.json()).state, "unavailable", "no room links to an unverified identity")
+	assert.equal(refused.status, 503)
+	assert.equal((await refused.json()).error.code, "busy", "no room links to an unverified identity")
 	const afterLink = cookies(refused)[MEMBER_COOKIE]?.value ?? rotated
 
 	// The outage lasts past any reuse window: the next try uses the rotated refresh token, never refresh-1.
@@ -334,4 +335,71 @@ test("a rotated grant whose identity check failed is verified again with its acc
 	assert.ok(body.session && body.session !== rotated, "the verified session goes back to the app")
 	const again = await handler(new Request(api("/account"), { headers: { "x-yepwatch-member": body.session, "x-yepwatch-client": "native" } }))
 	assert.equal((await again.json()).session, undefined, "a verified live session is not renewed again")
+})
+
+test('two signed-in browsers share one room place and host rights; a new device lists and resumes it without an invitation', async () => {
+  const { handler } = setup()
+  const phone = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+  const pc = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+  const created = await handler(new Request(api('/rooms'), {
+    method: 'POST', headers: { origin, 'content-type': 'application/json', cookie: `${MEMBER_COOKIE}=${phone}` },
+    body: JSON.stringify({ contractVersion: 3, commandId: 'account-cross-device-create', admissionSecret: randomBytes(32).toString('base64url'), nickname: '' }),
+  }))
+  assert.equal(created.status, 200)
+  const first = await created.json(), id = first.credential.roomId
+  const roster = first.snapshot.shared.rosterVersion
+  const listed = await handler(new Request(api('/account/home'), { headers: { cookie: `${MEMBER_COOKIE}=${pc}` } }))
+  const home = await listed.json()
+  assert.equal(home.rooms.length, 1)
+  assert.equal(home.rooms[0].snapshot.own.participantId, first.credential.participantId)
+  assert.equal(home.rooms[0].snapshot.own.canHost, true)
+  assert.equal(JSON.stringify(home).includes('account-1'), false)
+  const resumed = await handler(new Request(api(`/rooms/${id}/resume`), {
+    method: 'POST', headers: { origin, 'content-type': 'application/json', cookie: `${MEMBER_COOKIE}=${pc}` }, body: '{}',
+  }))
+  assert.equal(resumed.status, 200)
+  const second = await resumed.json()
+  assert.equal(second.credential.participantId, first.credential.participantId)
+  assert.notEqual(second.credential.sessionKey, first.credential.sessionKey)
+  assert.equal(second.snapshot.shared.rosterVersion, roster)
+  assert.equal(second.snapshot.shared.participants.length, 1)
+  const both = `${MEMBER_COOKIE}=${pc}; yepwatch3_${id}=${cookies(resumed)[`yepwatch3_${id}`].value}`
+  const archived = await handler(new Request(api(`/rooms/${id}/archive`), { method: 'POST', headers: { origin, 'content-type': 'application/json', cookie: both }, body: '{"archived":true}' }))
+  assert.equal(archived.status, 200)
+  const phoneHome = await (await handler(new Request(api('/account/home'), { headers: { cookie: `${MEMBER_COOKIE}=${phone}` } }))).json()
+  assert.ok(phoneHome.rooms[0].archivedAt)
+  await handler(new Request(api('/account/logout'), { method: 'POST', headers: { origin, 'content-type': 'application/json', cookie: both }, body: '{}' }))
+  const replay = await handler(new Request(api(`/rooms/${id}/resume`), { method: 'POST', headers: { origin, 'content-type': 'application/json', cookie: both }, body: '{}' }))
+  assert.equal(replay.status, 403, 'a logged-out sealed session cannot mint new room credentials')
+  const kept = await handler(new Request(api('/account/home'), { headers: { cookie: `${MEMBER_COOKIE}=${phone}` } }))
+  assert.equal((await kept.json()).rooms.length, 1)
+  const guest = await handler(new Request(api('/account/home')))
+  assert.equal(guest.status, 403)
+  const forged = await handler(new Request(api(`/rooms/${id}/resume`), { method: 'POST', headers: { origin, 'content-type': 'application/json', cookie: `${MEMBER_COOKIE}=${phone}` }, body: '{"userId":"someone-else"}' }))
+  assert.equal(forged.status, 400)
+})
+
+test('logging out a lapsed sign-in needs no successful refresh or available GoodWatch issuer', async () => {
+  const { handler, calls } = setup({ offline: true, lifetime: 1, refreshReply: () => new Response('unavailable', { status: 503 }) })
+  const session = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+  const before = calls.token.length
+  const out = await handler(new Request(api('/account/logout'), { method: 'POST', headers: { origin, 'content-type': 'application/json', cookie: `${MEMBER_COOKIE}=${session}` }, body: '{}' }))
+  assert.equal(out.status, 200)
+  assert.equal(cookies(out)[MEMBER_COOKIE].maxAge, 0)
+  assert.equal(calls.token.length, before, 'logout never tries to refresh the old login')
+})
+
+test('signing in before joining with an existing guest cookie claims that place rather than allocating a second voter', async () => {
+  const { handler } = setup()
+  const original = await handler(new Request(api('/rooms'), { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify({ contractVersion: 3, commandId: 'guest-before-account', admissionSecret: randomBytes(32).toString('base64url'), nickname: 'Guest' }) }))
+  const guest = await original.json(), id = guest.credential.roomId
+  const roomCookie = cookies(original)[`yepwatch3_${id}`].value
+  const session = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+  const joining = await handler(new Request(api(`/rooms/${id}/join`), { method: 'POST', headers: { origin, 'content-type': 'application/json', cookie: `yepwatch3_${id}=${roomCookie}; ${MEMBER_COOKIE}=${session}` }, body: JSON.stringify({ contractVersion: 3, commandId: 'claim-on-join', admissionSecret: randomBytes(32).toString('base64url'), nickname: 'Alex', inviteCode: guest.invite.code }) }))
+  assert.equal(joining.status, 200)
+  const linked = await joining.json()
+  assert.equal(linked.credential.participantId, guest.credential.participantId)
+  assert.equal(linked.snapshot.shared.participants.length, 1)
+  assert.equal(linked.snapshot.own.canHost, true)
+  assert.notEqual(linked.credential.sessionKey, guest.credential.sessionKey)
 })

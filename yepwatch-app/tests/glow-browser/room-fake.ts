@@ -4,7 +4,7 @@
  * are participants the test edits directly (`f.room`, then `f.push()` to bump the revision).
  */
 import type { Page, Route } from '@playwright/test';
-import type { CatalogMetadata, CommandEnvelope, InvitePreview, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
+import type { AccountDecision, CatalogMetadata, CommandEnvelope, InvitePreview, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
 
 export type FakeSnapshot = RoomSnapshot;
@@ -70,7 +70,9 @@ const union = (s: FakeSnapshot) => [...new Set(s.shared.participants.filter((p) 
  * signed in here before (as Alex) and the session has run out. `slowStart` holds the sign-in start for
  * that many ms; `linkFailures` answers that many room links with a retryable 503 first.
  */
-export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' | 'lapsed'; slowStart?: number; linkFailures?: number; nextRooms?: FakeSnapshot[]; refuseConfigures?: number } = {}) {
+export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { accountName?: string | null; history?: AccountDecision[]; invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' | 'lapsed'; slowStart?: number; linkFailures?: number; nextRooms?: FakeSnapshot[]; refuseConfigures?: number } = {}) {
+  let archivedAt: number | null = null;
+  const admission = () => ({ credential: { roomId: room.shared.roomId, participantId: room.own.participantId, token: '', sessionKey: room.own.member.state === 'linked' ? 'account-session' : 'guest-session', expiresAt: room.shared.expiresAt }, invite: { code: opts.invite ?? 'K7QX', path: `/r/${opts.invite ?? 'K7QX'}` }, snapshot: room });
   const account = { member: opts.member === 'signed-in', starts: 0, links: 0, logouts: 0 };
   let linkFailures = opts.linkFailures ?? 0;
   // The room's lifetime idea searches (24 on the server); removing an idea doesn't give one back.
@@ -166,7 +168,15 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
       return route.fulfill({ json: { authorizeUrl: returnTo, state: 'acct.fixture', expiresAt: Date.now() + 600_000 } });
     }
     if (path.endsWith('/account/logout')) { account.logouts++; account.member = false; return route.fulfill({ json: { state: 'guest', displayName: null } }); }
-    if (path.endsWith('/proposal/account')) return route.fulfill({ json: account.member ? { state: 'member', displayName: 'Alex' } : { state: 'guest', displayName: null } });
+    if (path.endsWith('/proposal/account')) return route.fulfill({ json: account.member ? { state: 'member', displayName: opts.accountName === undefined ? 'Alex' : opts.accountName } : { state: 'guest', displayName: null } });
+    if (path.endsWith('/account/home')) return route.fulfill({ json: { rooms: account.member && room.own.member.state === 'linked' ? [{ snapshot: room, joinedAt: 1, archivedAt, leftLabel: room.own.left ? 'Anything' : null }] : [], decisions: account.member ? opts.history ?? [] : [] } });
+    if (path.endsWith('/resume')) {
+      if (!account.member || room.own.member.state !== 'linked') return route.fulfill({ status: 404, json: { error: { code: 'not_found', message: 'No account place', retryable: false } } });
+      if (room.own.left && !route.request().postDataJSON().returnAfterLeave) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'You left', retryable: false } } });
+      room.own.left = false;
+      return route.fulfill({ json: admission() });
+    }
+    if (path.endsWith('/archive')) { archivedAt = route.request().postDataJSON().archived ? Date.now() : null; return route.fulfill({ json: { ok: true } }); }
     if (path.endsWith('/member/link')) {
       account.links++;
       if (linkFailures > 0) { linkFailures--; return route.fulfill({ status: 503, json: { error: { code: 'busy', message: 'GoodWatch is temporarily unavailable; your room is saved', retryable: true } } }); }
@@ -179,7 +189,7 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
         if (self.serviceIds === null) self.serviceIds = [8];
         bump();
       }
-      return route.fulfill({ json: { state: 'linked', prefill } });
+      return route.fulfill({ json: { ...admission(), state: 'linked', prefill } });
     }
     if (path.endsWith('/member/start') || path.endsWith('/account/start') || path.endsWith('/realtime-ticket'))
       return route.fulfill({ status: 501, json: { error: { code: 'not_implemented', message: 'Not in this fixture', retryable: false } } });

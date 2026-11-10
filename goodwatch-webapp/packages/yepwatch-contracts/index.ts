@@ -158,7 +158,7 @@ export interface OwnPrivateSnapshot {
   consent: { proposalVersion: number; accepted: boolean } | null
 }
 export interface RoomSnapshot { shared: SharedRoomSnapshot; own: OwnPrivateSnapshot }
-export interface GuestCredential { roomId: string; participantId: string; token: string; expiresAt: number }
+export interface GuestCredential { sessionKey?: string; roomId: string; participantId: string; token: string; expiresAt: number }
 /** Retry admission with the SAME secret. Generate >=32 random bytes; do not log/share it. */
 export interface ResolveInviteRequest { code: string }
 export interface ResolveInviteResponse { roomId: string }

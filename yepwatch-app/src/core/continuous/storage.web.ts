@@ -2,10 +2,11 @@ import type { CommandEnvelope } from '@goodwatch/yepwatch-contracts/proposal';
 import { decodeCommandRecovery, decodeAdmissionRecovery, type AdmissionRecovery } from './recovery-state';
 const key = (id: string) => `yepwatch.v3.pending.${id}`;
 /** Own pending command only; HttpOnly cookies authenticate room HTTP. */
-export async function readCommandRecovery(id: string) {
-  return decodeCommandRecovery(sessionStorage.getItem(key(id)));
+export async function readCommandRecovery(id: string, sessionKey?: string) {
+  return decodeCommandRecovery(sessionStorage.getItem(key(sessionKey ? `${id}.${sessionKey}` : id)));
 }
-export async function writePending(id: string, envelope: CommandEnvelope | null, retryAt = 0) {
+export async function writePending(id: string, envelope: CommandEnvelope | null, retryAt = 0, sessionKey?: string) {
+  id = sessionKey ? `${id}.${sessionKey}` : id;
   if (envelope) sessionStorage.setItem(key(id), JSON.stringify({ envelope, retryAt }));
   else sessionStorage.removeItem(key(id));
 }

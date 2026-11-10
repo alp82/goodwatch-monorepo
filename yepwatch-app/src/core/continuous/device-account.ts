@@ -10,7 +10,7 @@ export interface DeviceAccountDeps {
   api: {
     account(session: string | null): Promise<AccountStatus>;
     memberLink(access: RoomAccess, session: string | null): Promise<MemberStatusResponse & { session?: string }>;
-    accountLogout(): Promise<unknown>;
+    accountLogout(session?: string | null): Promise<unknown>;
   };
   store: {
     readSession(): Promise<string | null>;
@@ -105,7 +105,7 @@ export function createDeviceAccount(deps: DeviceAccountDeps) {
     async signOut() {
       epoch.advance();
       try {
-        if (!deps.nativeClient) await deps.api.accountLogout();
+        await deps.api.accountLogout(await store.readSession());
         await store.clearSession();
         await store.forgetMemberName();
         deps.hint.forget();

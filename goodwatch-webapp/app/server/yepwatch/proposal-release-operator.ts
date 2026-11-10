@@ -8,6 +8,10 @@ import {
 	columns,
 	runtimeTable,
 	invitationTable,
+	accountIndexTable,
+	accountHistoryTable,
+	revokedSessionTable,
+	storageTables,
 } from "./proposal-storage-schema.ts"
 import {
 	provisionControl,
@@ -21,6 +25,7 @@ import {
 	releaseStoreConfig,
 	releaseControlConfig,
 } from "./proposal-release-config.ts"
+import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
 import { crateSql } from "./repository.server.ts"
 import {
 	checkReleaseStore,
@@ -52,6 +57,15 @@ if (command === "prepare-room-settings" || command === "apply-room-settings") {
 			...(await operation(sql, config.secret, config.keyId, args[0])),
 		})
 	)
+} else if (command === "reset-test-data") {
+  if (!args.includes("--apply") || !args.includes("--writers-stopped"))
+    throw new Error("reset-test-data requires --apply --writers-stopped; all YepWatch test rooms, sessions and history will be removed")
+  const replicas = args.includes("--disposable-single-node") ? 0 : 2
+  if (replicas === 0 && !["127.0.0.1", "localhost"].includes(new URL(config.origin).hostname)) throw new Error("Zero replicas is restricted to disposable loopback storage")
+  for (const table of [...storageTables].reverse()) await sql(`DROP TABLE IF EXISTS ${table.name}`)
+  await provisionReleaseStore(sql, replicas, config.keyId, config.secret)
+  await provisionControl(sql, control.policy, replicas)
+  console.log(JSON.stringify({ operation: command, ready: true, replicas }))
 } else if (command === "provision") {
 	if (!args.includes("--apply"))
 		throw new Error(
@@ -100,6 +114,14 @@ if (command === "prepare-room-settings" || command === "apply-room-settings") {
 	const cutoff = Number((await sql("SELECT CURRENT_TIMESTAMP")).rows[0][0])
 	if (!Number.isSafeInteger(cutoff)) throw new Error("Store clock unavailable")
 	const deleted: Record<string, number> = {}
+  // Publish only history reachable from committed room heads before deleting any room versions.
+  const repository = new RelationalProposalRepository(sql, config.secret)
+  await sql(`REFRESH TABLE ${RELEASE_TABLE}`)
+  const expired = (await sql(`SELECT id FROM ${RELEASE_TABLE} WHERE expires_at<=?`, [cutoff])).rows
+  for (const [id] of expired) {
+    const stored = await repository.read(String(id))
+    if (stored) await repository.accountStore.publish(stored.room.history ?? [])
+  }
 	// Immutable records carry the original room expiry, including abandoned preparations without a head.
 	// Credentials are included; runtime marker and capacity bookkeeping are not reset.
 	for (const table of [
@@ -145,6 +167,7 @@ if (command === "prepare-room-settings" || command === "apply-room-settings") {
 			globallyConsistentOnlyWithWritersStopped: true,
 		})
 		const definitions = [
+			...[accountIndexTable, accountHistoryTable, revokedSessionTable].map(t => ({ name: t.name, primary: t.primary, names: columns(t) })),
 			...Object.values(tables)
 				.filter((t) => t.name !== RELEASE_TABLE)
 				.map((t) => ({ name: t.name, primary: t.primary, names: columns(t) })),

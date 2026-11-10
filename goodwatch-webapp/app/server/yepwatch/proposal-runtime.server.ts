@@ -9,8 +9,8 @@ import {
 	configuredContinuousMembers,
 	continuousGoodwatchCatalog,
 } from "./continuous-runtime.server.ts"
-import { crateSql, CrateRoomRepository } from "./repository.server.ts"
-import type { ProposalRoom } from "./proposal-types.ts"
+import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
+import { crateSql } from "./repository.server.ts"
 let handler: ReturnType<typeof createProposalHandler> | undefined
 let repair: ReturnType<typeof setInterval> | undefined
 export function stopProposalRepair() {
@@ -46,11 +46,7 @@ export async function proposalRuntimeHandler(request: Request) {
 				},
 				{ status: 503, headers: { "cache-control": "private, no-store" } }
 			)
-		const repository = new CrateRoomRepository<ProposalRoom>(
-			crateSql(origin, username, password),
-			secret,
-			"doc.yepwatch_room_v3"
-		)
+		const repository = new RelationalProposalRepository(crateSql(origin, username, password), secret)
 		const origins = allowed.split(",").map((s) => s.trim())
 		const callback = process.env.YEPWATCH_MEMBER_CALLBACK_URL
 		if (

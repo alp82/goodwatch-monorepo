@@ -24,6 +24,10 @@ import { useRetryCountdown } from './useRetryCountdown';
 import { ContinuousRealtime, type ReconnectState } from './realtime';
 import { applyActivity, pruneActivity, type PeerActivity } from './activity';
 import { applyCheerFrame, emptyCheers, freshCheerEvents, holderSeeds, nextCheerExpiry, pruneCheers, type CheerEvent, type CheerState } from './cheers';
+import { sessionCommandStorage } from './command-storage';
+import { useAccount } from './account';
+import { adoptAccountRoom } from './account-access';
+import { authEpoch } from './account-flow';
 import { ACTIVITY_LIMITS } from '@goodwatch/yepwatch-contracts/proposal';
 export const continuousKey = (id: string) => ['proposal-room', id] as const;
 /** Your rooms keeps one query per room; room snapshots update it directly. */
@@ -33,9 +37,11 @@ const EMPTY_HOLDERS: ReadonlyMap<string, number> = new Map();
 interface OutboxEntry extends QueuedCommand { foreground: boolean; settle: (ok: boolean) => void }
 /** Commands still unsent when their room's screen went away and a stuck command held them back. The next visit takes them. */
 const parked = new Map<string, OutboxEntry[]>();
+authEpoch.subscribe(() => { for (const entries of parked.values()) entries.forEach(e => e.settle(false)); parked.clear(); });
 /** Automatic retries of one saved command once the connection is back. */
 const AUTO_RETRIES = 3;
 export function useContinuousRoom(roomId: string) {
+  const account = useAccount();
   const [access, setAccess] = useState<RoomAccess | null>();
   const [connection, setConnection] = useState<Connection>('connecting');
   const [reconnect, setReconnect] = useState<ReconnectState>({ attempting: false, retryAt: 0 });
@@ -64,8 +70,10 @@ export function useContinuousRoom(roomId: string) {
   const ownHoldSeed = useRef<number | null>(null);
   const ownCheerSeq = useRef(0);
   const channel = useRef<ContinuousRealtime | null>(null);
+  const [commandStorage] = useState(() => sessionCommandStorage(roomId, writePending));
+  const startedEpoch = useRef(authEpoch.current());
   const queue = useRef(
-    new PersistentCommands(() => Crypto.randomUUID(), { write: (e, until) => writePending(roomId, e, until) })
+    new PersistentCommands(() => Crypto.randomUUID(), commandStorage)
   );
   const cached = useCallback(
     () => queryClient.getQueryData<CachedRoom>(continuousKey(roomId)),
@@ -82,6 +90,7 @@ export function useContinuousRoom(roomId: string) {
   const expired = useCallback(
     (e?: unknown) => {
       if (terminalRef.current) return true;
+      if (!authEpoch.isCurrent(startedEpoch.current)) { end('access'); return true; }
       const shared = cached()?.shared;
       if (
         (e instanceof RoomFailure && (e.status === 410 || e.code === 'expired')) ||
@@ -120,6 +129,18 @@ export function useContinuousRoom(roomId: string) {
     },
     [roomId, expired, end]
   );
+  const adoptAccess = useCallback((next: RoomAccess) => {
+    channel.current?.stop();
+    queue.current.pending = null;
+    outbox.current.forEach(entry => entry.settle(false));
+    outbox.current = [];
+    setQueued([]);
+    setPending(null);
+    commandStorage.useSession(next.sessionKey);
+    setAccess(next);
+    terminalRef.current = null;
+    setTerminal(null);
+  }, [commandStorage]);
   const refetch = useCallback(async () => {
     if (!access || expired()) return;
     try {
@@ -156,10 +177,27 @@ export function useContinuousRoom(roomId: string) {
   });
   useEffect(() => {
     let active = true;
-    void Promise.all([loadAccess(roomId), readCommandRecovery(roomId)])
+    if (!account.ready) return;
+    const asked = authEpoch.current();
+    const restore = async () => {
+      if (account.member && !account.unavailable) {
+        try {
+          const admission = await api.resume(roomId);
+          if (!authEpoch.isCurrent(asked) || !active) return null;
+          return await adoptAccountRoom(admission, asked);
+        } catch (e) {
+          if (!(e instanceof RoomFailure) || e.code !== 'not_found') throw e;
+        }
+      }
+      return loadAccess(roomId);
+    };
+    void restore().then(async (stored) => {
+      commandStorage.useSession(stored?.sessionKey);
+      return [stored, await readCommandRecovery(roomId, stored?.sessionKey)] as const;
+    })
       .then(([stored, recovery]) => {
         const { envelope, retryAt: until } = recovery;
-        if (!active) return;
+        if (!active || !authEpoch.isCurrent(asked)) return;
         if (
           envelope &&
           typeof envelope.commandId === 'string' &&
@@ -184,7 +222,7 @@ export function useContinuousRoom(roomId: string) {
     return () => {
       active = false;
     };
-  }, [roomId]);
+  }, [roomId, account.ready, account.member, account.unavailable, commandStorage]);
   useEffect(() => {
     if (!access || !room.data || access.participantId === room.data.own.participantId) return;
     const updated = {
@@ -204,7 +242,7 @@ export function useContinuousRoom(roomId: string) {
   const accessRef = useRef(access);
   const refetchRef = useRef(refetch);
   useEffect(() => { accessRef.current = access; refetchRef.current = refetch; });
-  const credential = access ? `${access.roomId}\u0000${access.token}` : null;
+  const credential = access ? `${access.roomId}\u0000${access.token}\u0000${access.sessionKey ?? ""}` : null;
   useEffect(() => {
     if (!credential || !accessRef.current || terminalRef.current) return;
     const realtime = new ContinuousRealtime({
@@ -390,18 +428,23 @@ export function useContinuousRoom(roomId: string) {
       }
     } finally {
       draining.current = false;
-      if (!mounted.current && outbox.current.length) { parked.set(roomId, outbox.current); outbox.current = []; }
+      if (!mounted.current && outbox.current.length) {
+        if (authEpoch.isCurrent(startedEpoch.current)) parked.set(roomId, outbox.current);
+        else outbox.current.forEach(e => e.settle(false));
+        outbox.current = [];
+      }
     }
   }, [cached, roomId]);
   useEffect(() => {
     mounted.current = true;
+    const epoch = startedEpoch.current;
     const waiting = parked.get(roomId);
     if (waiting) {
       parked.delete(roomId);
       outbox.current = [...waiting, ...outbox.current];
       setQueued(outbox.current);
     }
-    return () => { mounted.current = false; if (!draining.current && outbox.current.length) { parked.set(roomId, outbox.current); outbox.current = []; } };
+    return () => { mounted.current = false; if (!draining.current && outbox.current.length) { if (authEpoch.isCurrent(epoch)) parked.set(roomId, outbox.current); else outbox.current.forEach(e => e.settle(false)); outbox.current = []; } };
   }, [roomId]);
   // A command stuck awaiting confirmation holds the rest back; they go when it clears or the room ends.
   useEffect(() => {
@@ -476,6 +519,7 @@ export function useContinuousRoom(roomId: string) {
     busy,
     privateError,
     terminal,
+    adoptAccess,
     pending,
     retrySeconds,
     send,

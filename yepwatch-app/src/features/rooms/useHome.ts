@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
+import { authEpoch } from '../../core/continuous/account-flow';
+import { adoptAccountRoom } from '../../core/continuous/account-access';
+import { useAccount } from '../../core/continuous/account';
+import { leftRoom } from './home-model';
 import { continuousApi, RoomFailure } from '../../core/continuous/api';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import type { RegistrySnapshot } from '../../core/continuous/room-registry-store';
@@ -16,18 +20,20 @@ import { classify, unreadRoom, type HomeRoom } from './home-model';
  * with that room's own credential. Rooms whose access ended leave the registry; decided rooms
  * become History records; snapshots also seed the room cache so opening a room is immediate.
  */
-export function useHome() {
+function useGuestHome(enabled: boolean) {
   const [registry, setRegistry] = useState<(RegistrySnapshot & { at: number }) | null>(null);
   const [version, setVersion] = useState(0);
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     void roomRegistry.load().then((value) => { if (active) setRegistry({ ...value, at: Date.now() }); }).catch(() => { if (active) setRegistry({ rooms: [], nickname: null, decisions: [], at: Date.now() }); });
     return () => { active = false; };
-  }, [version]);
+  }, [version, enabled]);
   const reload = useCallback(() => setVersion((v) => v + 1), []);
   const results = useQueries({
     queries: (registry?.rooms ?? []).map((entry) => ({
       queryKey: homeRoomKey(entry.roomId),
+      enabled,
       retry: false,
       staleTime: 5_000,
       queryFn: async (): Promise<RoomSnapshot> => {
@@ -93,5 +99,61 @@ export function useHome() {
     reload,
     retry: () => results.forEach((r) => { if (r.isError) void r.refetch(); }),
     setNickname: async (name: string) => { await roomRegistry.setNickname(name); reload(); },
+  };
+}
+
+/** Signed-in lists come entirely from the account; guest navigation remains local. */
+export function useHome() {
+  const account = useAccount();
+  const local = useGuestHome(account.ready && !account.member && !account.lapsed);
+  const [mutationFailed, setMutationFailed] = useState(false);
+  const key = ['account-home', account.generation] as const;
+  const cloud = useQuery({ queryKey: key, queryFn: async () => {
+    const asked = authEpoch.current();
+    let replacedGuest = false;
+    const guestRooms = (await roomRegistry.load()).rooms.filter(r => !r.left);
+    for (const entry of guestRooms) {
+      if (!authEpoch.isCurrent(asked)) throw new Error('Sign-in changed');
+      const access = await loadAccess(entry.roomId);
+      if (!access && nativeClient) continue;
+      try {
+        const admission = await continuousApi.memberLink(access ?? { roomId: entry.roomId, participantId: '', token: '', expiresAt: 0 });
+        if (!authEpoch.isCurrent(asked)) throw new Error('Sign-in changed');
+        replacedGuest ||= admission.replacedGuest === true;
+        await adoptAccountRoom(admission, asked);
+      } catch (e) {
+        if (!(e instanceof RoomFailure) || !['unauthorized', 'forbidden', 'not_found', 'expired', 'conflict'].includes(e.code)) throw e;
+      }
+    }
+    return { ...(await continuousApi.accountHome()), notice: replacedGuest ? 'Resumed your existing place. Your account’s saved answers were kept.' : '' };
+  }, enabled: account.member,
+    retry: 1, refetchInterval: 15_000 });
+  if (!account.member) return account.lapsed
+    ? { ...local, ready: account.ready, hasRooms: false, active: [], archived: [], left: [], decisions: [], decidedRooms: new Set<string>(), unavailable: [], notice: '' }
+    : { ...local, notice: '' };
+  const classified = (cloud.data?.rooms ?? []).map(({ snapshot, joinedAt, archivedAt, leftLabel }) => {
+    const entry = { roomId: snapshot.shared.roomId, nickname: snapshot.shared.participants.find(p => p.participantId === snapshot.own.participantId)?.nickname ?? account.name ?? '',
+      expiresAt: snapshot.shared.expiresAt, joinedAt, openedAt: joinedAt,
+      ...(archivedAt === null ? {} : { archivedAt }),
+      ...(snapshot.own.left ? { left: { at: joinedAt, label: leftLabel ?? 'A room you left' } } : {}) };
+    const c = snapshot.own.left ? { kind: 'left' as const, room: leftRoom(entry) } : classify(entry, { snapshot }, cloud.dataUpdatedAt);
+    return { entry, c };
+  });
+  const reload = () => { setMutationFailed(false); void cloud.refetch(); };
+  const archive = (id: string, archived: boolean) => {
+    void continuousApi.archive(id, archived).then(() => queryClient.invalidateQueries({ queryKey: ['account-home'] })).catch(() => setMutationFailed(true));
+  };
+  const unavailable = cloud.isError || mutationFailed ? [{ kind: 'unavailable' as const, roomId: 'account', nickname: 'Your rooms' }] : [];
+  return {
+    notice: cloud.data?.notice ?? '',
+    ready: cloud.isFetched, loadingRooms: cloud.isPending, nickname: account.name,
+    hasRooms: classified.length > 0,
+    active: classified.flatMap(x => x.c.kind === 'active' && !x.entry.archivedAt ? [x.c.room] : []),
+    archived: classified.flatMap(x => x.c.kind === 'active' && x.entry.archivedAt ? [x.c.room] : []),
+    left: classified.flatMap(x => x.c.kind === 'left' ? [x.c.room] : []), unavailable,
+    decisions: cloud.data?.decisions ?? [],
+    decidedRooms: new Set((cloud.data?.rooms ?? []).filter(r => !r.snapshot.own.left && r.snapshot.shared.phase === 'decided').map(r => r.snapshot.shared.roomId)),
+    reload, retry: reload, archive: (id: string) => archive(id, true), restore: (id: string) => archive(id, false),
+    setNickname: local.setNickname,
   };
 }
