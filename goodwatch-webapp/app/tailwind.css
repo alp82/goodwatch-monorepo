@@ -97,6 +97,8 @@
 	--animate-fade-out: fade-in 200ms ease-in reverse both;
 	/* The page change bar (ui/nav/GlobalLoading.tsx): visible in its first frame, then slower and slower. */
 	--animate-nav-progress: nav-progress 8s cubic-bezier(0.1, 0.7, 0.2, 1) both;
+	/* Discover's search field while a search runs (ui/discover-bar/DescribeField.tsx). Transform only. */
+	--animate-search-pending: search-pending 1.1s ease-in-out infinite;
 
 	@keyframes fade-in {
 		from {
@@ -142,6 +144,15 @@
 		}
 		to {
 			scale: 0.9 1;
+		}
+	}
+
+	@keyframes search-pending {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: translateX(300%);
 		}
 	}
 

@@ -211,3 +211,91 @@ for (const failed of ["control", "account"] as const) {
 		assert.equal(paid.mock.callCount(), 0)
 	})
 }
+
+test("dispatch uses the known cache key without reading the reservation", async (t) => {
+	const { store, statements } = fixture(() => null)
+	const dispatched = t.mock.method(SearchCoordination.prototype, "dispatch", async () => {})
+	await store.dispatch("attempt", "known-key")
+	assert.deepEqual(dispatched.mock.calls[0].arguments, ["attempt", "known-key"])
+	assert.deepEqual(statements, [])
+})
+
+for (const blocked of ["halted", "day", "month"] as const) {
+	test(`${blocked} prevents admission after prefetched checks`, async () => {
+		const statements: string[] = []
+		const store = new SearchStore(async stmt => {
+			statements.push(stmt)
+			if (stmt.startsWith("SELECT halted")) return { cols: ["halted"], rows: [[blocked === "halted"]], rowcount: 1 }
+			return { cols: ["now", "day", "month"], rows: [[1000, blocked === "day" ? 1_000_000_000 : 0, blocked === "month" ? 5_000_000_000 : 0]], rowcount: 1 }
+		}, new SearchCoordination(() => { throw new Error("Unexpected admission") }), Buffer.alloc(32, 1))
+		const checks = store.claimChecks()
+		assert.deepEqual(await store.claim({ ...claim, checks }), { kind: "basic", reason: "budget" })
+		assert.equal(statements.length, 2)
+		assert.ok(statements.every(stmt => stmt.startsWith("SELECT")))
+	})
+}
+
+test("a Redis hit runs no Crate reads, no admission and no inserts", async () => {
+	const statements: string[] = []
+	const store = new SearchStore(async stmt => {
+		statements.push(stmt)
+		return { cols: [], rows: [], rowcount: 0 }
+	}, new SearchCoordination(() => ({ get: async () => store.seal([{}, {}]), eval: async () => { throw new Error("Unexpected admission") } }) as unknown as SearchRedis), Buffer.alloc(32, 1))
+	const outcome = await executeJevStage(store, {
+		requestText: "quiet movies", questionVersion: "test", language: { mode: "english", version: "test" },
+		requests: [{ state: {}, questions: {} }, { state: {}, questions: {} }], visitor: { accountId: null, networkIdentity: "test" },
+	})
+	assert.equal(outcome.kind, "cached")
+	assert.deepEqual(statements, [])
+})
+
+for (const fail of [false, true]) {
+	test(`a Crate hit discards ${fail ? "failed" : "pending"} checks without admission or inserts`, async () => {
+		const waiting = gate(), lookup = gate(), started: string[] = [], statements: string[] = []
+		const store: InstanceType<typeof SearchStore> = new SearchStore(async stmt => {
+			statements.push(stmt)
+			if (stmt.includes("search_interpretations")) {
+				started.push("lookup")
+				await lookup.promise
+				return { cols: ["status", "ciphertext"], rows: [["ready", store.seal([{}, {}])]], rowcount: 1 }
+			}
+			started.push(stmt.startsWith("SELECT halted") ? "control" : "spend")
+			await waiting.promise
+			if (fail) throw new Error("discarded read failure")
+			return { cols: [], rows: [], rowcount: 0 }
+		}, new SearchCoordination(() => ({ get: async () => null, set: async () => "OK", eval: async () => { throw new Error("Unexpected admission") } }) as unknown as SearchRedis), Buffer.alloc(32, 1))
+		const pending = executeJevStage(store, {
+			requestText: "quiet movies", questionVersion: "test", language: { mode: "english", version: "test" },
+			requests: [{ state: {}, questions: {} }, { state: {}, questions: {} }], visitor: { accountId: null, networkIdentity: "test" },
+		})
+		await new Promise(resolve => setImmediate(resolve))
+		assert.deepEqual(started, ["control", "spend", "lookup"])
+		lookup.release()
+		assert.equal((await pending).kind, "cached")
+		assert.equal(statements.length, 3)
+		assert.ok(statements.every(stmt => stmt.startsWith("SELECT")))
+		waiting.release()
+		await new Promise(resolve => setImmediate(resolve))
+	})
+}
+
+for (const cost of [840, null, JEV_RESERVE_NANO + 1]) {
+	test(`finish retains durable accounting and cache behavior for cost ${cost}`, async (t) => {
+		const { store, statements } = fixture(() => null)
+		const cache = t.mock.method(SearchCoordination.prototype, "cache", async () => {})
+		const release = t.mock.method(SearchCoordination.prototype, "release", async () => {})
+		await store.finish("attempt", cost, [{}, {}])
+		const settlement = statements.find(({ stmt }) => stmt.includes("'settlement'"))
+		assert.equal(release.mock.callCount(), 1)
+		assert.equal(statements.some(({ stmt }) => stmt.startsWith("SELECT cache_key, budget_at, amount_nano")), true)
+		assert.equal(statements.some(({ stmt }) => stmt.startsWith("UPDATE doc.search_control")), cost !== null && cost > JEV_RESERVE_NANO)
+		if (cost === null) {
+			assert.equal(settlement, undefined) // Unknown usage never creates a refund.
+			assert.equal(cache.mock.callCount(), 0)
+		} else {
+			assert.deepEqual(settlement?.args, ["attempt:settled", "attempt", "key", 1000, cost - JEV_RESERVE_NANO])
+			assert.equal(cache.mock.callCount(), cost <= JEV_RESERVE_NANO ? 1 : 0)
+		}
+		assert.equal(statements.some(({ stmt }) => stmt.includes("status = 'ready'")), cost !== null && cost <= JEV_RESERVE_NANO)
+	})
+}

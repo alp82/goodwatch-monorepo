@@ -110,6 +110,10 @@ function canonical(value: unknown): string {
 	return JSON.stringify(value);
 }
 
+let lastFinishWarning = -Infinity;
+// Settlements still running after their readings were returned. A shutdown waits for them, as it waits for requests.
+const settling = new Set<Promise<void>>();
+onShutdown("search settlement", () => Promise.allSettled([...settling]));
 let sharedStore: SearchStore | undefined;
 export function getSearchStore() {
 	return (sharedStore ??= productionStore());
@@ -140,7 +144,7 @@ export interface JevStageInput {
 	// Cached readings and basic outcomes before the claim do not call it.
 	onClaimed?: () => void;
 	// Filled with milliseconds per step, for the history row: lookup (the cache), claim (spending checks and the
-	// attempt), dispatch, call (both Jev requests), finish (settlement and cache write).
+	// attempt), dispatch, call (both Jev requests), finish (scheduling settlement on success; awaited otherwise).
 	timings?: Record<string, number>;
 }
 
@@ -180,6 +184,7 @@ export async function executeJevStage(
 	// Copy only known fields: callers cannot sneak an alternate model or transport options in.
 	let requests: [SystemOneRequest, SystemOneRequest];
 	let cacheKey: string;
+	let checks: ReturnType<SearchStore["claimChecks"]> | undefined;
 	const contract = `d4+/${JEV_MODEL}/${input.questionVersion}/${input.language.mode}/${input.language.version}`;
 	try {
 		requests = input.requests.map((request) => ({
@@ -202,7 +207,11 @@ export async function executeJevStage(
 				text: input.requestText.trim().normalize("NFC"),
 			}),
 		);
-		const hit = await store.lookup(cacheKey);
+		// After a Redis miss, the claim's reads overlap the Crate lookup. A hit never reaches admission or either insert.
+		const hit = await store.lookup(cacheKey, () => {
+			checks = store.claimChecks(input.timings);
+			checks.catch(() => {}); // A cache hit discards even failed checks.
+		});
 		step("lookup");
 		if (hit?.kind === "cached")
 			return {
@@ -233,6 +242,7 @@ export async function executeJevStage(
 	scopes.catch(() => {});
 	try {
 		claim = await store.claim({
+			checks,
 			cacheKey,
 			contract,
 			// The account scope waits for the session check; the spending checks don't.
@@ -280,7 +290,7 @@ export async function executeJevStage(
 		// Preparing for the reading must not break the stage.
 	}
 	try {
-		await store.dispatch(id);
+		await store.dispatch(id, cacheKey);
 	} catch {
 		return basic("storage", JEV_RESERVE_NANO);
 	}
@@ -396,15 +406,40 @@ export async function executeJevStage(
 					result.answers?.[key]?.type === requests[index].questions[key].type,
 			),
 	);
+	if (valid) {
+		// Keep the estimate until durable settlement succeeds. Valid paid readings remain useful even if storage
+		// fails; a detached failure must neither reject the search nor expose request/identity data in logs.
+		// The cache and the settlement get their own copy: the search goes on to read the returned objects.
+		const stored = structuredClone(readings);
+		try {
+			await store.prime(cacheKey, stored);
+		} catch {
+			// finish caches the reading too.
+		}
+		const settlement: Promise<void> = Promise.resolve()
+			.then(() => store.finish(id, actualNano, stored))
+			.catch(() => {
+				try {
+					const now = performance.now();
+					if (now - lastFinishWarning >= 60_000) {
+						lastFinishWarning = now;
+						// The attempt id is random: it finds the attempt to reconcile without naming the visitor.
+						console.warn("Search settlement unavailable", { reason: "storage", attempt: id });
+					}
+				} catch { /* Logging cannot reject detached work. */ }
+			})
+			.finally(() => settling.delete(settlement));
+		settling.add(settlement);
+		step("finish");
+		return { kind: "ready", readings, chargedNano: actualNano };
+	}
 	try {
-		await store.finish(id, actualNano, valid ? readings : undefined);
+		await store.finish(id, actualNano);
 	} catch {
 		return basic("storage", JEV_RESERVE_NANO);
 	}
 	step("finish");
-	return valid
-		? { kind: "ready", readings, chargedNano: actualNano }
-		: basic("contract", actualNano);
+	return basic("contract", actualNano);
 }
 
 // Call once for the whole search from composition, including basic/cached/title paths.

@@ -1,6 +1,7 @@
 // Discover's search field, the same in both modes. The text is left-aligned; while the field is empty one example at a time
 // sits under the placeholder. The search runs on a pause in typing. Advanced shows the Search label over the text, Easy
-// doesn't. Ready to watch sits inside the field on desktop, after a full-height line.
+// doesn't. Ready to watch sits inside the field on desktop, after a full-height line. While a search runs, an amber line
+// slides along the field's foot (discover/search-pending.ts).
 import {
 	ArrowRightIcon,
 	MagnifyingGlassIcon,
@@ -64,6 +65,8 @@ export function DescribeField({
 	flatBottom,
 	ready,
 	inputRef,
+	pending = false,
+	onUnsent,
 }: {
 	/** What the running search shows in the field. */
 	typed: string
@@ -74,6 +77,10 @@ export function DescribeField({
 	/** Inside the field on desktop. */
 	ready: ReactNode
 	inputRef?: Ref<HTMLInputElement>
+	/** A search is running: the line on the field's foot. */
+	pending?: boolean
+	/** The words the typing pause will send, from the keystroke that arms it; null when it will send nothing new. */
+	onUnsent?: (words: string | null) => void
 }) {
 	const [text, setText] = useState(typed)
 	// What this field last sent: its answer coming back must not overwrite what is being typed.
@@ -84,14 +91,24 @@ export function DescribeField({
 		clearTimeout(timer.current)
 		sent.current = typed
 		setText(typed)
+		// The words changed elsewhere (Clear all, a link): nothing is about to be searched.
+		onUnsent?.(null)
 	}, [typed])
-	useEffect(() => () => clearTimeout(timer.current), [])
+	useEffect(
+		() => () => {
+			clearTimeout(timer.current)
+			onUnsent?.(null)
+		},
+		[],
+	)
 	const filled = text.trim().length > 0
 	const label = flatBottom && filled
 	const send = (value: string) => {
 		clearTimeout(timer.current)
-		if (value === sent.current) return
+		if (value === sent.current) return onUnsent?.(null)
 		sent.current = value
+		// The page keeps the search pending until the URL has these words.
+		onUnsent?.(value || null)
 		if (value) onSearch(value)
 		else onClear()
 	}
@@ -100,6 +117,7 @@ export function DescribeField({
 		clearTimeout(timer.current)
 		const words = value.trim()
 		if (!words) return send("")
+		onUnsent?.(words.length >= MIN_CHARS && words !== sent.current ? words : null)
 		if (words.length >= MIN_CHARS)
 			timer.current = setTimeout(() => send(words), TYPING_PAUSE_MS)
 	}
@@ -157,6 +175,14 @@ export function DescribeField({
 					</button>
 				)}
 			</div>
+			<span
+				aria-hidden
+				className={`pointer-events-none absolute inset-x-6 bottom-0 h-0.5 overflow-hidden rounded-full transition-opacity duration-150 lg:inset-x-10 ${pending ? "opacity-100" : "opacity-0"}`}
+			>
+				<span
+					className={`block h-full w-1/3 animate-search-pending rounded-full bg-amber-400 motion-reduce:w-full motion-reduce:animate-none motion-reduce:bg-amber-400/60 ${pending ? "" : "[animation-play-state:paused]"}`}
+				/>
+			</span>
 			<span
 				className="hidden w-px shrink-0 self-stretch bg-white/10 lg:block"
 				aria-hidden
