@@ -1,6 +1,26 @@
 import { test, expect } from '@playwright/test';
 import { choosingRoom, fakeRoom } from './room-fake';
 
+test('a signed-in member can save their name for future rooms', async ({ page }) => {
+  await fakeRoom(page, choosingRoom(), { member: 'signed-in' });
+  await page.goto('/?open=profile');
+  const profile = page.getByTestId('profile-panel');
+  await expect(profile.getByLabel('Your name')).toHaveValue('Alex');
+  await profile.getByLabel('Your name').fill('Sam');
+  await profile.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(profile).toHaveCount(0);
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem('yepwatch.v3.profile') ?? '{}').nickname)).toBe('Sam');
+  await page.getByRole('button', { name: 'Profile', exact: true }).click();
+  await expect(profile.getByLabel('Your name')).toHaveValue('Sam');
+  await page.reload();
+  await page.getByRole('button', { name: 'Profile', exact: true }).click();
+  await expect(profile.getByLabel('Your name')).toHaveValue('Sam');
+  await profile.getByRole('button', { name: 'Close', exact: true }).click();
+  const created = page.waitForRequest(request => request.method() === 'POST' && request.url().endsWith('/proposal/rooms'));
+  await page.getByRole('button', { name: 'New room', exact: true }).click();
+  expect((await created).postDataJSON().nickname).toBe('Sam');
+});
+
 test('a signed-in browser with empty device storage discovers its hosted room and durable server history', async ({ page }) => {
   const room = choosingRoom();
   room.shared.participants[0].nickname = 'Alex';

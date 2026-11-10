@@ -24,7 +24,7 @@ function useGuestHome(enabled: boolean) {
   const [registry, setRegistry] = useState<(RegistrySnapshot & { at: number }) | null>(null);
   const [version, setVersion] = useState(0);
   useEffect(() => {
-    if (!enabled) return;
+    // The device nickname is editable for members too; only guest room reads are disabled.
     let active = true;
     void roomRegistry.load().then((value) => { if (active) setRegistry({ ...value, at: Date.now() }); }).catch(() => { if (active) setRegistry({ rooms: [], nickname: null, decisions: [], at: Date.now() }); });
     return () => { active = false; };
@@ -146,7 +146,7 @@ export function useHome() {
   const unavailable = cloud.isError || mutationFailed ? [{ kind: 'unavailable' as const, roomId: 'account', nickname: 'Your rooms' }] : [];
   return {
     notice: cloud.data?.notice ?? '',
-    ready: cloud.isFetched, loadingRooms: cloud.isPending, nickname: account.name,
+    ready: cloud.isFetched && local.ready, loadingRooms: cloud.isPending, nickname: local.nickname ?? account.name,
     hasRooms: classified.length > 0,
     active: classified.flatMap(x => x.c.kind === 'active' && !x.entry.archivedAt ? [x.c.room] : []),
     archived: classified.flatMap(x => x.c.kind === 'active' && x.entry.archivedAt ? [x.c.room] : []),
