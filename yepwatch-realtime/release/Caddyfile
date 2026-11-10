@@ -61,7 +61,7 @@
   }
   @commands {
     method POST
-    path_regexp command ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/(join|commands|preview|realtime-ticket|member/link)$
+    path_regexp command ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/(join|resume|archive|commands|preview|realtime-ticket|member/link)$
   }
   handle @commands {
     reverse_proxy api:3000 {
@@ -94,7 +94,7 @@
   }
   @member_read {
     method GET
-    path_regexp member ^/api/yepwatch/v1/proposal/(rooms/[A-Za-z0-9_-]{1,256}/member(/progress)?|account)$
+    path_regexp member ^/api/yepwatch/v1/proposal/(rooms/[A-Za-z0-9_-]{1,256}/member(/progress)?|account(/home)?)$
   }
   handle @member_read {
     reverse_proxy api:3000 {
