@@ -1,0 +1,81 @@
+{
+  "checked_at": "2026-11-10T14:32:08.791758+00:00",
+  "implementation_commit": "026cdb60727e3ab5bd46e05f04f951f1c006a4a1",
+  "merged_commit": "4b3509f3cafedfcbf975adb381dc1eafdea8d23d",
+  "upstream_main": "a7f6fc3c7c54d598c1dd5db829fcf89ab91b46ac",
+  "integration": "Clean merge; preserves three upstream search commits, including shared stylesheet updates.",
+  "tests": {
+    "passed": 292,
+    "failed": 0
+  },
+  "benchmark_tool_tests": {
+    "passed": 13,
+    "failed": 0
+  },
+  "production_client_server_compile": "passed; scrubbed environment, empty envDir, server never started or imported",
+  "safe_fixture_compile": "passed",
+  "hydration_smoke": {
+    "surfaces": 6,
+    "passed": 6,
+    "failed": 0,
+    "discover_cards": 40
+  },
+  "typecheck": {
+    "candidate_diagnostics": 179,
+    "upstream_main_diagnostics": 179,
+    "introduced": 0,
+    "removed": 0,
+    "status": "inherited failures; diagnostic multisets match ignoring line/column shifts"
+  },
+  "logs": {
+    "tests": {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/shipping/tests.log",
+      "sha256": "e3775ef04bb3f1e4529bd5023673c5edba9f4a483975ea0a351ea08cf3d95681"
+    },
+    "build": {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/shipping/build.log",
+      "sha256": "403895ea6fcec068725f72065927e4fc079d6ed0db1a88687ed1603832a09933"
+    },
+    "fixture-build": {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/shipping/fixture-build.log",
+      "sha256": "b6e41d9ff713b38bc6c5ea952f0e6eafac9ccdfe7009ff48cfc8310472cf4172"
+    },
+    "tsc": {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/shipping/tsc.log",
+      "sha256": "3cbcd4ac0cf9a481820f7882e25c2f1c67818eea7aa511dcf40cd90fe2645893"
+    },
+    "baseline-tsc": {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/shipping/baseline-tsc.log",
+      "sha256": "6e79a85218f0861f4b70078aee6d522a9908f3b5880b08fed2e8c1ef2c5c63d6"
+    },
+    "tools": {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/shipping/tools.log",
+      "sha256": "e46fbd33fb4cf06bdbc4edab6d0ba5a8e67334e4ac072cd9fd26726bc0cd14d7"
+    },
+    "hydration": {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/shipping/hydration.log",
+      "sha256": "c508520e0ffe0bbc9af006894a63a1bcbfe23df55570d9655dce4357f4548b75"
+    }
+  },
+  "performance_limits": "Earlier matched timing matrix and generator budgets remain historical measurements; no new field-CWV pass asserted. Limits unchanged.",
+  "landing_budget": {
+    "command": "./bench.sh budget --where local --path public --runs 1 --label home-cwv-main-integration",
+    "target": "safe frozen fixture https://127.0.0.1:3412",
+    "exit_code": 1,
+    "passed_surfaces": [
+      "home",
+      "discover"
+    ],
+    "failed_surfaces": [
+      "movie",
+      "show",
+      "person",
+      "share_list"
+    ],
+    "limits_changed": false,
+    "run_directory": "goodwatch-benchmark/results/20261110T143127Z-lighthouse-home-cwv-main-integration",
+    "budget_json_sha256": "c964d9cfc3ed8ed27ff4e7d73e07da3ffe3e4809016f0d2bc2024f679cb6e98d",
+    "log_sha256": "054bff2fdb85d08cbe335fd8bb283bfbb07c09005bbf21ddb451e30dae7a7c0d",
+    "interpretation": "Local integration check only, one visit per surface; distinct hardware/conditions from the earlier generator series. Does not replace matched historical measurements or establish field CWV. Remaining resource/LCP-element debt recorded, unchanged caps."
+  }
+}
