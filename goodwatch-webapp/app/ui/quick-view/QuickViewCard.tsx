@@ -1,9 +1,15 @@
 // The quick view's content, one layout for every place: a head (backdrop, the poster on phones, the place's eyebrow,
-// title, year and kind, the score pill and the taste match, Details and close), the place's reason line with its
+// title, year and kind, the score pill and the taste match, Details and close; on phones the head as a whole is the
+// link to the title page, said by a small "Open details" above the title and a chevron after it, beside previous /
+// next and close), the place's reason line with its
 // chips, the title's most notable award results, the viewer's own services, the story, and the title's own control as
 // the footer (TitleControl, the title page's). Every part keeps its height whatever the title has, so a step never
 // moves anything, except the awards: a title without reported results has no awards part at all.
-import { ArrowsPointingOutIcon, XMarkIcon } from "@heroicons/react/24/solid"
+import {
+	ArrowsPointingOutIcon,
+	ChevronRightIcon,
+	XMarkIcon,
+} from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { type ReactNode, useLayoutEffect, useRef } from "react"
 import { QuickViewAwards } from "~/ui/awards/AwardMarks"
@@ -20,7 +26,7 @@ import {
 	TitleControl,
 } from "~/ui/title-actions/TitleControl"
 import { ReasonChips } from "~/ui/title-card/ReasonChips"
-import { HeaderSteps, useQuickViewFrame } from "./QuickView"
+import { HeaderSteps, useCurrentSlot, useQuickViewFrame } from "./QuickView"
 
 const TMDB = "https://image.tmdb.org/t/p"
 
@@ -51,7 +57,9 @@ export interface QuickViewTitle {
 	story?: string | null
 	/** Under the reason in place of the chips (the explorer's sign-up prompt for a guest). */
 	note?: ReactNode
-	/** What the title page link says. */
+	/** More of the place's own content at the end of the body (By your tropes: the pick's tropes). */
+	extra?: ReactNode
+	/** What the title page link says on wide screens. */
 	details?: string
 	/** What the person changed with the footer's control. */
 	onChange?: (change: TitleChange) => void
@@ -62,6 +70,21 @@ function Label({ children }: { children: ReactNode }) {
 		<p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-gray-500 uppercase">
 			{children}
 		</p>
+	)
+}
+
+/** Close alone, in the look of the controls beside it. */
+function Close() {
+	const { close } = useQuickViewFrame()
+	return (
+		<button
+			type="button"
+			onClick={close}
+			aria-label="Close"
+			className="grid h-10 w-10 cursor-pointer place-items-center rounded-xl border border-white/25 bg-gray-950/85 text-white hover:bg-white/15"
+		>
+			<XMarkIcon className="h-5 w-5" />
+		</button>
 	)
 }
 
@@ -131,82 +154,129 @@ function useMenuRoom() {
 	return footer
 }
 
+/** The head without its controls: backdrop, (on phones) the poster, eyebrow, title, meta, score and match. */
+function HeadBody({ t, card }: { t: QuickViewTitle; card: boolean }) {
+	const name = t.media.details.title
+	return (
+		<>
+			<div
+				className={`relative overflow-hidden ${card ? "h-32" : "h-[4.5rem]"}`}
+			>
+				{t.backdrop && (
+					<img
+						src={`${TMDB}/w780${t.backdrop}`}
+						alt=""
+						draggable={false}
+						className="size-full object-cover opacity-50"
+						onError={(e) => {
+							e.currentTarget.style.visibility = "hidden"
+						}}
+					/>
+				)}
+				<span className="absolute inset-0 bg-linear-to-b from-gray-900/0 via-gray-900/55 to-gray-900" />
+			</div>
+			<div
+				className={`relative flex items-end gap-3.5 px-4 ${card ? "-mt-16" : "-mt-12"}`}
+			>
+				{!card && (
+					<div className="aspect-[2/3] w-24 shrink-0 overflow-hidden rounded-lg bg-gray-800 shadow-xl ring-1 ring-white/15">
+						{t.poster && (
+							<img
+								src={`${TMDB}/w185${t.poster}`}
+								alt=""
+								draggable={false}
+								className="size-full object-cover"
+							/>
+						)}
+					</div>
+				)}
+				<div
+					className={`flex min-w-0 flex-1 flex-col justify-end ${card ? "h-[8.25rem]" : "h-36"}`}
+				>
+					{card ? (
+						<p className="h-4 shrink-0 truncate text-[11px] font-bold tracking-[0.14em] text-amber-400/85 uppercase">
+							{t.eyebrow}
+						</p>
+					) : (
+						<p className="h-4 shrink-0 truncate text-xs leading-4 text-amber-300">
+							{t.eyebrow && (
+								<span className="font-bold tracking-[0.14em] text-amber-400/85 uppercase">
+									{t.eyebrow} ·{" "}
+								</span>
+							)}
+							Open details
+						</p>
+					)}
+					<h2
+						lang={t.lang}
+						className={`${DISPLAY} mt-0.5 line-clamp-2 shrink-0 leading-tight text-white group-active/head:text-amber-200 ${card ? "text-[1.45rem]" : "text-[1.25rem]"}`}
+					>
+						{name}
+						{!card && (
+							<ChevronRightIcon
+								className="ml-0.5 inline size-5 -translate-y-px align-middle text-amber-300"
+								aria-hidden="true"
+							/>
+						)}
+					</h2>
+					<p className="mt-1 shrink-0 truncate text-xs text-gray-400">
+						{t.meta}
+					</p>
+					<div className="mt-1.5 flex h-7 shrink-0 items-center gap-2">
+						<TitleScorePill
+							mediaType={t.media.mediaType}
+							tmdbId={t.media.details.tmdb_id}
+							goodwatch={t.goodwatch}
+							size="L"
+						/>
+						{t.match != null && (
+							<span className="text-[12.5px] font-semibold whitespace-nowrap text-amber-300/90">
+								{t.match}% your taste
+							</span>
+						)}
+					</div>
+				</div>
+			</div>
+		</>
+	)
+}
+
 export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 	const { form, steps } = useQuickViewFrame()
 	const card = form === "card"
-	const name = t.media.details.title
+	// A neighbor waiting beside the drawer's current title leaves out the place's own extra content.
+	const current = useCurrentSlot()
 	const footer = useMenuRoom()
 	return (
 		<>
 			<div className="relative shrink-0 select-none">
-				<div
-					className={`relative overflow-hidden ${card ? "h-32" : "h-[4.5rem]"}`}
-				>
-					{t.backdrop && (
-						<img
-							src={`${TMDB}/w780${t.backdrop}`}
-							alt=""
-							draggable={false}
-							className="size-full object-cover opacity-50"
-							onError={(e) => {
-								e.currentTarget.style.visibility = "hidden"
-							}}
-						/>
-					)}
-					<span className="absolute inset-0 bg-linear-to-b from-gray-900/0 via-gray-900/55 to-gray-900" />
-				</div>
-				<div
-					className={`relative flex items-end gap-3.5 px-4 ${card ? "-mt-16" : "-mt-12"}`}
-				>
-					{!card && (
-						<div className="aspect-[2/3] w-24 shrink-0 overflow-hidden rounded-lg bg-gray-800 shadow-xl ring-1 ring-white/15">
-							{t.poster && (
-								<img
-									src={`${TMDB}/w185${t.poster}`}
-									alt={name}
-									draggable={false}
-									className="size-full object-cover"
-								/>
-							)}
-						</div>
-					)}
-					<div
-						className={`flex min-w-0 flex-1 flex-col justify-end ${card ? "h-[8.25rem]" : "h-36"}`}
+				{card ? (
+					<HeadBody t={t} card />
+				) : (
+					<Link
+						to={t.href}
+						className="group/head block active:bg-white/[0.05]"
+						data-quick-view-details=""
 					>
-						<p className="h-4 shrink-0 truncate text-[11px] font-bold tracking-[0.14em] text-amber-400/85 uppercase">
-							{t.eyebrow}
-						</p>
-						<h2
-							lang={t.lang}
-							className={`${DISPLAY} mt-0.5 line-clamp-2 shrink-0 leading-tight text-white ${card ? "text-[1.45rem]" : "text-[1.25rem]"}`}
-						>
-							{name}
-						</h2>
-						<p className="mt-1 shrink-0 truncate text-xs text-gray-400">
-							{t.meta}
-						</p>
-						<div className="mt-1.5 flex h-7 shrink-0 items-center gap-2">
-							<TitleScorePill
-								mediaType={t.media.mediaType}
-								tmdbId={t.media.details.tmdb_id}
-								goodwatch={t.goodwatch}
-								size="L"
-							/>
-							{t.match != null && (
-								<span className="text-[12.5px] font-semibold whitespace-nowrap text-amber-300/90">
-									{t.match}% your taste
-								</span>
-							)}
-						</div>
-					</div>
-				</div>
+						<HeadBody t={t} card={false} />
+					</Link>
+				)}
 				<div className="absolute top-2 right-2 z-10 flex gap-1.5">
-					{steps && !card && <HeaderSteps {...steps} />}
-					<Tools href={t.href} label={t.details ?? "Details"} />
+					{card ? (
+						<Tools href={t.href} label={t.details ?? "Details"} />
+					) : (
+						<>
+							{steps && <HeaderSteps {...steps} />}
+							<Close />
+						</>
+					)}
 				</div>
 			</div>
-			{/* Scrolls where a short screen (the drawer's 92% cap) leaves it less room than its parts. */}
-			<div className="min-h-0 flex-1 divide-y divide-white/[0.07] overflow-y-auto overscroll-contain px-4">
+			{/* Scrolls where a short screen (the drawer's 85% cap) leaves it less room than its parts. */}
+			<div
+				data-drawer-scroll=""
+				className="min-h-0 flex-1 divide-y divide-white/[0.07] overflow-y-auto overscroll-contain px-4"
+			>
 				<section className="py-3">
 					<div className="flex min-h-8 items-center">
 						{typeof t.reason === "string" ? (
@@ -247,6 +317,7 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 						)}
 					</section>
 				)}
+				{current && t.extra}
 			</div>
 			<div
 				ref={footer}

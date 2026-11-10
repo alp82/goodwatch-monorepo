@@ -9,8 +9,10 @@
 // it. The new poster rises from the dim level to full. Closing works the same way. Transform and opacity only, and
 // no blur over anything that moves.
 //
-// Phones: a bottom drawer over the dimmed page, with a 96 px poster in its head and previous / next beside Details
-// and close. A sideways swipe steps, a swipe down closes.
+// Phones: a bottom drawer over the dimmed page, with a grab handle, a 96 px poster in its head and previous / next
+// beside close; the head as a whole opens the title page. The drawer follows a finger dragged down and closes past a
+// point, and always leaves a strip of the dimmed page to tap. The titles sit side by side on one track: a sideways
+// swipe moves them with the finger, and a step (a swipe, the arrows) slides the next one in.
 //
 // Both: focus moves in on opening, Tab stays in, Escape closes and focus returns to the poster; an overlay opened from
 // inside (the score picker, the not-seen question, a status menu, the watch log) keeps its own keys and taps, and goes
@@ -81,6 +83,8 @@ export interface QuickViewProps {
 	onClose: () => void
 	/** Next / previous step through the place's order. */
 	ordered: boolean
+	/** Previous and next wrap around (the last title's next is the first); false stops them at the ends. */
+	wrap?: boolean
 	/** The card beside a lifted poster; false for the phone drawer. */
 	wide: boolean
 	/** The title's poster in the page: it is hidden while lifted, and focus returns to it. */
@@ -128,6 +132,13 @@ const src = (path: string | null, size: string) =>
 		: path
 			? `${TMDB}/${size}${path}`
 			: undefined
+
+/** The title `d` away from `i`, or null past an end when the steps don't wrap. */
+function stepped(i: number, d: -1 | 1, count: number, wrap = true) {
+	const n = i + d
+	if (n >= 0 && n < count) return n
+	return wrap && count > 1 ? (n + count) % count : null
+}
 
 const clamp = (v: number, lo: number, hi: number) =>
 	Math.max(lo, Math.min(hi, v))
@@ -427,8 +438,8 @@ function LiftCard(p: QuickViewProps) {
 	const go = async (d: -1 | 1) => {
 		const { cur, closing } = state.current
 		// Previous and next wrap around: the last title's next is the first.
-		const ni = (cur.i + d + p.count) % p.count
-		if (busy.current || closing || !p.ordered || p.count < 2) return
+		const ni = stepped(cur.i, d, p.count, p.wrap)
+		if (busy.current || closing || !p.ordered || ni === null) return
 		busy.current = true
 		try {
 			const el = p.anchorOf(ni)
@@ -460,8 +471,8 @@ function LiftCard(p: QuickViewProps) {
 	const steps: Steps | null = p.ordered
 		? {
 				onStep: (d) => void go(d),
-				canPrev: p.count > 1,
-				canNext: p.count > 1,
+				canPrev: stepped(cur.i, -1, p.count, p.wrap) !== null,
+				canNext: stepped(cur.i, 1, p.count, p.wrap) !== null,
 			}
 		: null
 	const requestClose = () => {
@@ -594,21 +605,55 @@ function Drawer(p: QuickViewProps) {
 	const [closing, setClosing] = useState(false)
 	/** The control that had the focus when a step began (the head's arrows): its twin in the new content gets it. */
 	const refocus = useRef<string | null>(null)
+	// The titles sit side by side on one track, each at its own place (`v` counts steps, so a place never changes); a
+	// step or a swipe moves the track, and the next title is already there. Nothing resets after a step, so no frame
+	// shows a title out of place.
+	const trackX = useMotionValue(0)
+	const [v, setV] = useState(0)
+	const vRef = useRef(0)
+	const indexRef = useRef(p.index)
+	indexRef.current = p.index
+	const widthOf = () => view.current?.offsetWidth || window.innerWidth
+	const snapBack = () => animate(trackX, -vRef.current * widthOf(), SNAP)
+	const slide = (d: -1 | 1) => {
+		const n = stepped(indexRef.current, d, p.count, p.wrap)
+		if (n === null) return snapBack()
+		const at = document.activeElement
+		refocus.current =
+			at instanceof HTMLElement && view.current?.contains(at)
+				? (at.getAttribute("aria-label") ?? "")
+				: null
+		indexRef.current = n
+		vRef.current += d
+		setV(vRef.current)
+		p.onIndex(n)
+		animate(trackX, -vRef.current * widthOf(), STEP)
+	}
+	const swipe = {
+		move: (dx: number) => {
+			// Toward an end that doesn't step, the track resists.
+			const d = dx < 0 ? 1 : -1
+			const free = stepped(indexRef.current, d, p.count, p.wrap) !== null
+			trackX.set(-vRef.current * widthOf() + (free ? dx : dx * 0.2))
+		},
+		end: (dx: number, vx: number) => {
+			if (Math.abs(dx) > widthOf() * 0.2 || Math.abs(vx) > 0.35)
+				slide(dx < 0 ? 1 : -1)
+			else snapBack()
+		},
+		cancel: () => snapBack(),
+	}
+	// A turned phone or a resized window: the track follows the new width.
+	useEffect(() => {
+		const resized = () => trackX.set(-vRef.current * widthOf())
+		window.addEventListener("resize", resized)
+		return () => window.removeEventListener("resize", resized)
+	}, [trackX])
 	const steps: Steps | null = p.ordered
 		? {
-				onStep: (d) => {
-					// Previous and next wrap around: the last title's next is the first.
-					if (p.count < 2) return
-					const n = (p.index + d + p.count) % p.count
-					const at = document.activeElement
-					refocus.current =
-						at instanceof HTMLElement && view.current?.contains(at)
-							? (at.getAttribute("aria-label") ?? "")
-							: null
-					p.onIndex(n)
-				},
-				canPrev: p.count > 1,
-				canNext: p.count > 1,
+				onStep: slide,
+				canPrev: stepped(p.index, -1, p.count, p.wrap) !== null,
+				canNext: stepped(p.index, 1, p.count, p.wrap) !== null,
 			}
 		: null
 	const requestClose = () => setClosing(true)
@@ -651,8 +696,20 @@ function Drawer(p: QuickViewProps) {
 			html.style.overflow = was
 		}
 	}, [])
-	const start = useRef<{ x: number; y: number; id: number } | null>(null)
 	const dy = useMotionValue(0)
+	const swipeRef = useRef(swipe)
+	swipeRef.current = swipe
+	const closeRef = useRef(requestClose)
+	closeRef.current = requestClose
+	useDrawerDrag(view, dy, swipeRef, closeRef)
+	// The places on the track: this title's, and its neighbors' (a list of two has the other title on both sides).
+	const places = [v - 1, v, v + 1].filter(
+		(place) =>
+			place === v ||
+			stepped(p.index, place < v ? -1 : 1, p.count, p.wrap) !== null,
+	)
+	const titleAt = (place: number) =>
+		(((p.index + place - v) % p.count) + p.count) % p.count
 	const bottom = p.bottom ?? 0
 	const t = p.posterOf(p.index)
 	return (
@@ -677,11 +734,10 @@ function Drawer(p: QuickViewProps) {
 					role="dialog"
 					aria-modal="true"
 					aria-label={t.name}
-					className={`pointer-events-auto absolute inset-x-0 bottom-0 max-h-[min(92dvh,100%)] overflow-hidden rounded-t-2xl bg-gray-900 shadow-[0_-18px_40px_-10px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.14)] outline-none ${STACK_ROOM}`}
+					className={`pointer-events-auto absolute inset-x-0 bottom-0 max-h-[min(85dvh,calc(100%-80px))] overflow-hidden rounded-t-2xl bg-gray-900 shadow-[0_-18px_40px_-10px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.14)] outline-none ${STACK_ROOM}`}
 					style={{
 						height: `calc(${p.height?.drawer ?? CARD.drawer}px + var(--stack-room, 0px) + ${bottom ? "0px" : "env(safe-area-inset-bottom)"})`,
 						y: dy,
-						touchAction: "pan-y",
 					}}
 					initial={{ y: "100%" }}
 					animate={{ y: closing ? "100%" : 0 }}
@@ -689,38 +745,223 @@ function Drawer(p: QuickViewProps) {
 					onAnimationComplete={() => {
 						if (closing) p.onClose()
 					}}
-					onPointerDown={(e) => {
-						if (inNestedOverlay(e.target)) return
-						start.current = { x: e.clientX, y: e.clientY, id: e.pointerId }
-					}}
-					onPointerUp={(e) => {
-						const s = start.current
-						start.current = null
-						// The score picker and the menus are portals or popovers: their pointer events still bubble here.
-						if (!s || s.id !== e.pointerId || nestedOverlayOpen(view.current))
-							return
-						const dx = e.clientX - s.x
-						const dyy = e.clientY - s.y
-						if (dyy > 80 && dyy > Math.abs(dx) * 1.5) return requestClose()
-						if (
-							!steps ||
-							Math.abs(dx) < 50 ||
-							Math.abs(dx) < Math.abs(dyy) * 1.5
-						)
-							return
-						steps.onStep(dx < 0 ? 1 : -1)
-					}}
 					data-quick-view-drawer=""
 				>
 					<FrameContext.Provider
 						value={{ form: "drawer", steps, close: requestClose }}
 					>
-						<Crossfade k={p.index}>{p.children(p.index)}</Crossfade>
+						<motion.div className="absolute inset-0" style={{ x: trackX }}>
+							{places.map((place) => (
+								<Slot key={place} place={place} current={place === v}>
+									{p.children(titleAt(place))}
+								</Slot>
+							))}
+						</motion.div>
 					</FrameContext.Provider>
+					<DrawerHandle />
 				</motion.div>
 			</div>
 		</div>
 	)
+}
+
+const STEP = { duration: 0.3, ease: EASE } as const
+const SNAP = { type: "spring", stiffness: 520, damping: 44 } as const
+
+/** Whether the content is the drawer's current title, not a neighbor waiting beside it on the track. */
+const CurrentSlot = createContext(true)
+/** Content that costs requests (the By your tropes write-ups) renders in the current title only. */
+export const useCurrentSlot = () => useContext(CurrentSlot)
+
+/** One title on the drawer's track, at its own place; only the current one takes taps. */
+function Slot({
+	place,
+	current,
+	children,
+}: { place: number; current: boolean; children: ReactNode }) {
+	const el = useRef<HTMLDivElement>(null)
+	useEffect(() => {
+		if (current) el.current?.removeAttribute("inert")
+		else el.current?.setAttribute("inert", "")
+	}, [current])
+	return (
+		<div
+			ref={el}
+			aria-hidden={current ? undefined : true}
+			className="absolute inset-0 flex flex-col"
+			style={{ transform: `translateX(${place * 100}%)` }}
+		>
+			<CurrentSlot.Provider value={current}>{children}</CurrentSlot.Provider>
+		</div>
+	)
+}
+
+/** The grab handle at the drawer's top. */
+function DrawerHandle() {
+	return (
+		<div
+			className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center pt-2"
+			aria-hidden="true"
+		>
+			<span className="h-1.5 w-11 rounded-full bg-white/45 shadow-[0_1px_3px_rgba(0,0,0,.6)]" />
+		</div>
+	)
+}
+
+/** The scrolling region between `target` and `root` that a finger would scroll, if any. */
+function scrollerOf(target: EventTarget | null, root: HTMLElement) {
+	for (
+		let el = target instanceof Element ? target : null;
+		el && el !== root;
+		el = el.parentElement
+	) {
+		if (!(el instanceof HTMLElement) || el.scrollHeight <= el.clientHeight)
+			continue
+		const { overflowY } = getComputedStyle(el)
+		if (overflowY === "auto" || overflowY === "scroll") return el
+	}
+	return null
+}
+
+/** A finger that stopped this long before lifting has no flick left. */
+const FLICK_MS = 80
+
+/**
+ * The drawer's gestures on a touch screen. A finger dragged down moves the drawer (from anywhere but a scrolling region
+ * that isn't at its top), which closes past 110 px or on a flick and otherwise springs back. A sideways swipe moves
+ * the titles with the finger (`swipe`). A cancelled touch springs back. The click that ends a drag or a swipe is
+ * swallowed before anything else sees it, so the head's link stays put and the view stays open.
+ */
+function useDrawerDrag(
+	view: React.RefObject<HTMLElement | null>,
+	dy: ReturnType<typeof useMotionValue<number>>,
+	swipe: React.MutableRefObject<{
+		move: (dx: number) => void
+		end: (dx: number, vx: number) => void
+		cancel: () => void
+	}>,
+	close: React.MutableRefObject<() => void>,
+) {
+	useEffect(() => {
+		const el = view.current
+		if (!el) return
+		type S = {
+			x: number
+			y: number
+			mode: null | "drag" | "x" | "scroll"
+			scroller: HTMLElement | null
+			lastX: number
+			lastY: number
+			lastT: number
+			vx: number
+			vy: number
+		}
+		let s: S | null = null
+		let swallow = false
+		let swallowTimer = 0
+		const onStart = (e: TouchEvent) => {
+			swallow = false
+			if (
+				e.touches.length !== 1 ||
+				inNestedOverlay(e.target) ||
+				nestedOverlayOpen(el)
+			) {
+				s = null
+				return
+			}
+			const t = e.touches[0]
+			s = {
+				x: t.clientX,
+				y: t.clientY,
+				mode: null,
+				scroller: scrollerOf(e.target, el),
+				lastX: t.clientX,
+				lastY: t.clientY,
+				lastT: e.timeStamp,
+				vx: 0,
+				vy: 0,
+			}
+		}
+		const onMove = (e: TouchEvent) => {
+			if (!s) return
+			const t = e.touches[0]
+			const dx = t.clientX - s.x
+			const d = t.clientY - s.y
+			if (!s.mode) {
+				// The browser must not start its own scroll before the gesture is decided: outside a scrolling region
+				// always, inside one while it is at its top and the finger moves down.
+				if (!s.scroller || (s.scroller.scrollTop <= 0 && d > 0))
+					e.preventDefault()
+				if (Math.abs(dx) < 8 && Math.abs(d) < 8) return
+				if (Math.abs(d) >= Math.abs(dx))
+					s.mode =
+						d > 0 && (!s.scroller || s.scroller.scrollTop <= 0)
+							? "drag"
+							: "scroll"
+				else s.mode = "x"
+				// The gesture starts where it was decided, so nothing jumps.
+				s.x = t.clientX
+				s.y = t.clientY
+			}
+			if (s.mode === "scroll") return
+			e.preventDefault()
+			const dt = e.timeStamp - s.lastT
+			if (dt > 0) {
+				s.vx = (t.clientX - s.lastX) / dt
+				s.vy = (t.clientY - s.lastY) / dt
+			}
+			s.lastX = t.clientX
+			s.lastY = t.clientY
+			s.lastT = e.timeStamp
+			if (s.mode === "drag") {
+				const off = t.clientY - s.y
+				// Upward past the start resists.
+				dy.set(off >= 0 ? off : off * 0.15)
+			} else swipe.current.move(t.clientX - s.x)
+		}
+		const finish = (e: TouchEvent, cancelled: boolean) => {
+			const st = s
+			s = null
+			if (!st?.mode || st.mode === "scroll") return
+			swallow = true
+			window.clearTimeout(swallowTimer)
+			swallowTimer = window.setTimeout(() => {
+				swallow = false
+			}, 350)
+			const still = e.timeStamp - st.lastT > FLICK_MS
+			if (st.mode === "drag") {
+				if (!cancelled && (dy.get() > 110 || (!still && st.vy > 0.5)))
+					close.current()
+				else animate(dy, 0, { type: "spring", stiffness: 520, damping: 42 })
+				return
+			}
+			if (cancelled) return swipe.current.cancel()
+			swipe.current.end(st.lastX - st.x, still ? 0 : st.vx)
+		}
+		const onEnd = (e: TouchEvent) => finish(e, false)
+		const onCancel = (e: TouchEvent) => finish(e, true)
+		// On the window in its capture phase: before the app's own click handlers (React's, on the document).
+		const onClick = (e: MouseEvent) => {
+			if (!swallow || !(e.target instanceof Node) || !el.contains(e.target))
+				return
+			swallow = false
+			e.preventDefault()
+			e.stopPropagation()
+		}
+		el.addEventListener("touchstart", onStart, { passive: true })
+		el.addEventListener("touchmove", onMove, { passive: false })
+		el.addEventListener("touchend", onEnd)
+		el.addEventListener("touchcancel", onCancel)
+		window.addEventListener("click", onClick, true)
+		return () => {
+			window.clearTimeout(swallowTimer)
+			el.removeEventListener("touchstart", onStart)
+			el.removeEventListener("touchmove", onMove)
+			el.removeEventListener("touchend", onEnd)
+			el.removeEventListener("touchcancel", onCancel)
+			window.removeEventListener("click", onClick, true)
+		}
+	}, [view, dy, swipe, close])
 }
 
 /** The content's crossfade on a step: the old one fades out as the new one fades in, in the same place. */
@@ -831,7 +1072,7 @@ export function StepButtons({ onStep, canPrev, canNext }: Steps) {
 	)
 }
 
-/** Previous and next as one control in the drawer's head, in the look of Details | close beside it. */
+/** Previous and next as one control in the drawer's head, in the look of the close button beside it. */
 export function HeaderSteps({ onStep, canPrev, canNext }: Steps) {
 	const button =
 		"grid w-10 cursor-pointer place-items-center text-white hover:bg-white/15 disabled:cursor-default disabled:text-white/25 disabled:hover:bg-transparent"

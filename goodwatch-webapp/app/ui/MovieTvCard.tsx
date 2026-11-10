@@ -18,12 +18,12 @@
 // per session after the page is up (ui/awards/marks-store.ts).
 // The pill's rules are in ui/poster-card/ScorePill.tsx.
 //
-// The title actions (ui/poster-card/CardActions.tsx) load as their own chunk at the first interaction with the page
-// and mount on the first hover, focus or tap: a panel on hover for a pointer; on a touch screen, at any card width, the
-// first tap lays a band of actions under the card (ui/poster-card/TapBand.tsx), the second tap closes it, and only its
-// Open details goes to the title page. A page with its own view of the title (a quick view, a why sheet) passes
-// `onOpen`: a click on the poster with a pointer and Open details open that view instead; the poster stays a link to
-// the title page for a middle-click or a new tab. After Not interested the card keeps its place, greyed, with Undo, until the
+// With a pointer, the title actions (ui/poster-card/CardActions.tsx) load as their own chunk at the first interaction
+// with the page and show as a panel on hover or focus; a click goes to the title page. On a touch screen, at any card
+// width, a tap opens the title quick view (ui/quick-view/title-quick-view.tsx) on the card's list, where the same
+// actions are its footer and its head goes to the title page. A page with its own view of the title (a quick view, a
+// why sheet) passes `onOpen`: a click or a tap on the poster opens that view instead. The poster stays a link to the
+// title page for a middle-click, a new tab, and crawlers. After Not interested the card keeps its place, greyed, with Undo, until the
 // list is next loaded. A title already hidden (the Hidden titles page) starts under that cover, and its Undo is the
 // page's.
 import { Link } from "@remix-run/react"
@@ -33,7 +33,6 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
-	useId,
 	useRef,
 	useState,
 } from "react"
@@ -44,6 +43,8 @@ import type { OnboardingResult } from "~/server/onboarding-media.server"
 import type { Score } from "~/server/scores.server"
 import type { TitleCard } from "~/server/title-cards.server"
 import { Poster, type PosterProps } from "~/ui/Poster"
+import { BandAward } from "~/ui/awards/AwardMarks"
+import { useAwardMark } from "~/ui/awards/marks-store"
 import { CARD, CARD_RAISED } from "~/ui/layers"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
@@ -51,15 +52,16 @@ import type {
 	ActionsPlacement,
 	OpenActions,
 } from "~/ui/poster-card/CardActions"
-import { BandAward } from "~/ui/awards/AwardMarks"
-import { useAwardMark } from "~/ui/awards/marks-store"
 import { HiddenCover } from "~/ui/poster-card/HiddenCover"
 import { OwnerScore } from "~/ui/poster-card/OwnerScore"
 import { TitleScorePill } from "~/ui/poster-card/ScorePill"
 import { TitleBand } from "~/ui/poster-card/TitleBand"
 import { FOCUS } from "~/ui/poster-card/look"
-import { setRevealed, useRevealed } from "~/ui/poster-card/reveal"
 import { type ServiceOffer, YourServiceLogos } from "~/ui/poster-card/services"
+import {
+	preloadTitleQuickView,
+	useTitleQuickView,
+} from "~/ui/quick-view/title-quick-view"
 import { HiddenTileContext } from "~/ui/title-actions/hide-feedback"
 import { touchPointerNow, useTouchPointer } from "~/ui/title-actions/pointer"
 import { RatingMark } from "~/ui/title-card/RatingMark"
@@ -71,6 +73,7 @@ import {
 } from "~/utils/media-presentation"
 import { extractRatings } from "~/utils/ratings"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { titleKey } from "~/utils/title-key"
 
 export type { ActionsPlacement }
 
@@ -144,8 +147,8 @@ interface MovieTvCardProps {
 	 */
 	actions?: ActionsPlacement | false
 	/**
-	 * The page's own view of the title (a quick view, a why sheet), opened in place of the title page by a pointer's
-	 * click on the poster and by the touch band's Open details. The touch screen's first tap still lays out the band.
+	 * The page's own view of the title (a quick view, a why sheet), opened in place of the title page by a
+	 * click or a tap on the poster.
 	 */
 	onOpen?: () => void
 	/** The service the title is new on for the viewer (#489), by id: its logo leads, ringed. */
@@ -197,12 +200,10 @@ export function MovieTvCard({
 }: MovieTvCardProps) {
 	const actions = hidden ? false : actionsOn
 	const ratings = extractRatings(details)
-	const cardKey = useId()
 	const touchLater = useTouchPointer()
 	// Set by a tap that came before the idle-time answer: the tap itself tells the card it is on a touch screen.
 	const [touchNow, setTouchNow] = useState(false)
 	const touch = touchLater || touchNow
-	const revealed = useRevealed(cardKey)
 	const frame = useRef<HTMLDivElement>(null)
 	const [armed, setArmed] = useState(false)
 	const [open, setOpen] = useState<OpenActions>(null)
@@ -227,12 +228,53 @@ export function MovieTvCard({
 	const award = useAwardMark(mediaType, details.tmdb_id)
 
 	const href = `/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`
+	// The card's place in the title quick view: a card with the page's own view, without actions, hidden or under its
+	// Not interested cover opens its own way.
+	const quickView = useTitleQuickView()
+	const ownView = Boolean(onOpen)
+	const posterPath = details.poster_path ?? null
+	const year = details.release_year ? Number(details.release_year) : null
+	const goodwatch = ratings?.goodwatch_overall_score_normalized_percent ?? null
+	useEffect(() => {
+		const card = frame.current
+		if (!quickView || !card || !actions || ownView || tileShown) return
+		return quickView.register(card, {
+			key: titleKey(mediaType, tmdbId),
+			mediaType,
+			tmdbId,
+			title,
+			poster: posterPath,
+			year: Number.isFinite(year) ? year : null,
+			goodwatch,
+			href,
+		})
+	}, [
+		quickView,
+		actions,
+		ownView,
+		tileShown,
+		mediaType,
+		tmdbId,
+		title,
+		posterPath,
+		year,
+		goodwatch,
+		href,
+	])
 	const offers = (details as CardDetails).streaming_links
 	return (
 		<div
 			ref={frame}
 			data-poster-card=""
-			onPointerEnter={actions ? arm : undefined}
+			// A finger gets the quick view, not the panel: only a pointer mounts the actions.
+			onPointerEnter={
+				actions
+					? (event) => {
+							if (event.pointerType === "touch") preloadTitleQuickView()
+							else arm()
+						}
+					: undefined
+			}
 			onFocus={actions ? arm : undefined}
 			className={`group/card @container/card relative w-full min-w-0 ${CARD} ${open ? CARD_RAISED : ""}`}
 		>
@@ -246,23 +288,20 @@ export function MovieTvCard({
 					const opens = () => {
 						if (!onOpen) return
 						event.preventDefault()
-						setRevealed(null)
 						onOpen()
 					}
 					// A modified click opens the link as the browser does (a new tab, a new window).
 					if (!plainClick(event)) return
-					// Enter or a screen reader's activation opens straight away: tiles are for a finger.
-					if (onOpen && event.detail === 0) return opens()
 					if (!actions || tile) return opens()
 					if (!touch) {
 						if (!touchPointerNow()) return opens()
 						setTouchNow(true)
 					}
-					// Touch: the first tap lays out the band, the second closes it. Its Open details opens the title.
+					// Touch: the page's own view, else the title quick view on this card's list.
+					if (onOpen) return opens()
+					if (!quickView || !frame.current) return
 					event.preventDefault()
-					if (revealed) return setRevealed(null)
-					setArmed(true)
-					setRevealed(cardKey)
+					quickView.open(frame.current)
 				}}
 				className={`block select-none overflow-hidden rounded-lg border-2 border-gray-800 bg-gray-900 [-webkit-touch-callout:none] can-hover:hover:border-amber-700/50 @min-[8rem]/card:border-4 ${tile ? "[&_img]:grayscale" : ""} ${FOCUS}`}
 			>
@@ -376,14 +415,8 @@ export function MovieTvCard({
 				<Suspense fallback={null}>
 					<CardActions
 						media={{ mediaType, details }}
-						href={href}
-						discover={discover}
-						onOpen={onOpen}
-						cardKey={cardKey}
-						frame={frame}
 						placement={actions}
 						touch={touch}
-						revealed={revealed}
 						open={open}
 						setOpen={setOpen}
 						tile={tileShown}

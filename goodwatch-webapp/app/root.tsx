@@ -1,5 +1,6 @@
 import { isCrawler } from "~/server/crawlers.server"
 import { CharacterQuickViewProvider } from "~/ui/character-quick-view/context"
+import { TitleQuickViewProvider } from "~/ui/quick-view/title-quick-view"
 import { authMaintenanceOn } from "~/server/auth/cutover-notice.server"
 import { TelemetryBoot } from "~/telemetry/TelemetryBoot"
 import { EARLY_TELEMETRY_SCRIPT } from "~/telemetry/early"
@@ -416,7 +417,10 @@ function Root() {
 								<DiscoveryContinuity />
 								{/* The character quick view, for any page that shows characters. */}
 								<CharacterQuickViewProvider>
-									<App />
+									{/* The title quick view that a tap on a poster card opens on a touch screen. */}
+									<TitleQuickViewProvider>
+										<App />
+									</TitleQuickViewProvider>
 								</CharacterQuickViewProvider>
 								{/* <CookieConsent /> */}
 								{/* The Feedback tab; its drawer and fix mode load after the page settles. */}

@@ -18,6 +18,8 @@ const READS = [
 	["^/api/countries(\\?|$)", ["GET"]],
 	["^/api/explorer/world(\\?|$)", ["GET", "POST"]],
 	["^/api/discover/interpret(\\?|$)", ["POST"]],
+	// The title quick view's cards, as a guest.
+	["^/api/title-cards(\\?|$)", ["GET", "POST"]],
 ]
 
 const proxy = Object.fromEntries(

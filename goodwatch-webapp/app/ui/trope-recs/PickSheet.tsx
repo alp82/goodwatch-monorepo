@@ -179,7 +179,8 @@ export default function PickSheet({
 	)
 }
 
-function TropeBox({
+/** One of the member's tropes in the pick: its name, its own picks, and the TV Tropes write-up under a spoiler cover. */
+export function TropeBox({
 	trope,
 	pick,
 	kind,

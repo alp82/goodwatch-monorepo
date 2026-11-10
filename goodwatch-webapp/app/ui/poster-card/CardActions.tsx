@@ -1,42 +1,16 @@
-// A poster card's title actions, loaded on demand by the card (MovieTvCard):
+// A poster card's title actions for a pointer, loaded on demand by the card (MovieTvCard); a touch screen gets them in
+// the title quick view instead (ui/quick-view/title-quick-view.tsx):
 // - pointer devices: the panel over the poster's foot on hover or keyboard focus: Want to See, Seen (a show: its
 //   status), Not interested, and the score under them (its label from 7.5rem, the number alone under it, no score row
 //   under 6rem, and no panel at all under 4.5rem, where the poster is only a link);
-// - touch screens, after the first tap on the poster: the band under the card, the page dimmed around it (TapBand: its
-//   tiles, the Seen and score drawers inside it, and Open details, the only way to the title or the page's own view of
-//   it, `onOpen`); a second tap on the poster, a tap on the dim, or Escape closes it;
-// - the score picker, a show's status menu (pointer devices);
+// - the score picker, a show's status menu;
 // - the Not interested cover with Undo.
 // The rules are the title page's: Seen on an unscored title asks for the score (useTitleActions.toggleSeen), a seen
 // movie's Seen opens its watch log, a show's status goes through its tracking, a guest's Seen asks to sign in.
-import {
-	BookmarkIcon,
-	ChevronDownIcon,
-	ChevronRightIcon,
-	EyeIcon,
-	EyeSlashIcon,
-	NoSymbolIcon,
-	PauseIcon,
-	PlayIcon,
-	StarIcon,
-	XMarkIcon,
-} from "@heroicons/react/20/solid"
-import { Link } from "@remix-run/react"
-import {
-	type ReactNode,
-	type RefObject,
-	Suspense,
-	lazy,
-	useContext,
-	useEffect,
-	useLayoutEffect,
-	useRef,
-	useState,
-} from "react"
+import { BookmarkIcon, NoSymbolIcon, StarIcon } from "@heroicons/react/20/solid"
+import { Suspense, lazy, useContext, useEffect, useRef, useState } from "react"
 import UserAction from "~/ui/auth/UserAction"
-import { NESTED_OVERLAY_SELECTOR } from "~/ui/overlay"
 import TitleScoreDialog from "~/ui/scoring/TitleScoreDialog"
-import { TitleActionSet } from "~/ui/title-actions/TitleActionSet"
 import { HideFeedbackContext } from "~/ui/title-actions/hide-feedback"
 import {
 	SEEN_INSTRUCTIONS,
@@ -46,17 +20,11 @@ import {
 import { STATUS_LOOK } from "~/ui/tracking/status-look"
 import type { ScoredMedia } from "~/ui/user/actions/ScoreAction"
 import { useUser } from "~/utils/auth"
-import {
-	getScoreLabelText,
-	scoreLabels,
-	selectedScoreStyle,
-} from "~/utils/ratings"
+import { getScoreLabelText, selectedScoreStyle } from "~/utils/ratings"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { HiddenCover } from "./HiddenCover"
-import { BAND_LEAVE_MS, TapBand, bandOverlayOpen } from "./TapBand"
-import { DARK, FOCUS, OFF } from "./look"
-import { type WatchStatus, useTitleMarks } from "./marks"
-import { getRevealed, setRevealed } from "./reveal"
+import { FOCUS, OFF } from "./look"
+import { useTitleMarks } from "./marks"
 import { seenFaceOf } from "./seen-face"
 
 const loadShowStatus = () => import("./ShowStatus")
@@ -83,46 +51,22 @@ const PANEL_AT: Record<ActionsPlacement, string> = {
 
 export default function CardActions({
 	media,
-	href,
-	discover,
-	onOpen,
-	cardKey,
-	frame,
 	placement,
 	touch,
-	revealed,
 	open,
 	setOpen,
 	tile,
 	setTile,
 }: {
 	media: ScoredMedia
-	/** The title page. */
-	href: string
-	/** The card's `discover`: "none" keeps the router from asking for the title route when the tiles show. */
-	discover?: "none"
-	/** The page's own view of the title, which Open and the bare art open instead of the title page. */
-	onOpen?: () => void
-	/** The card's key for the one card showing its tap actions. */
-	cardKey: string
-	frame: RefObject<HTMLDivElement>
 	placement: ActionsPlacement
+	/** A touch screen: no panel (a tap opens the quick view). */
 	touch: boolean
-	revealed: boolean
 	open: OpenActions
 	setOpen: (open: OpenActions) => void
 	tile: boolean
 	setTile: (tile: boolean) => void
 }) {
-	// The page's own view: focus moves to the poster's link first, since the tiles go away, so the view's dialog
-	// gives focus back to the card when it closes.
-	const openView = () => {
-		frame.current
-			?.querySelector<HTMLElement>(":scope > a")
-			?.focus({ preventScroll: true })
-		setRevealed(null)
-		onOpen?.()
-	}
 	const a = useTitleActions(media)
 	const { status } = useTitleMarks(media.mediaType, media.details.tmdb_id)
 	const { user } = useUser()
@@ -139,25 +83,6 @@ export default function CardActions({
 	const [trackingUsed, setTrackingUsed] = useState(false)
 	const [howFar, setHowFar] = useState(false)
 	const undo = useRef<() => void>(() => {})
-
-	// The band fades out after the card lets go of it (BAND_LEAVE_MS), then unmounts.
-	const [shownRevealed, setShownRevealed] = useState(revealed)
-	const [leaving, setLeaving] = useState(false)
-	if (shownRevealed !== revealed) {
-		setShownRevealed(revealed)
-		setLeaving(touch && !revealed)
-	}
-	useEffect(() => {
-		if (!leaving) return
-		// The focus goes back to the poster when the band took it (a tap on the dim, Open details into a view).
-		const active = document.activeElement
-		if (active === document.body || active?.closest("[data-card-popout]"))
-			frame.current
-				?.querySelector<HTMLElement>(":scope > a")
-				?.focus({ preventScroll: true })
-		const timer = setTimeout(() => setLeaving(false), BAND_LEAVE_MS + 20)
-		return () => clearTimeout(timer)
-	}, [leaving, frame])
 
 	const closeDialog = () => {
 		setOpen(null)
@@ -195,7 +120,6 @@ export default function CardActions({
 	const onHide = (takeBack: () => void) => {
 		closeDialog()
 		setStatusAt(null)
-		setRevealed(null)
 		if (feedback) return feedback(media, takeBack)
 		undo.current = takeBack
 		setTile(true)
@@ -209,36 +133,6 @@ export default function CardActions({
 		else if (a.hidden) hiddenUnderCover.current = true
 		else if (hiddenUnderCover.current) setTile(false)
 	}, [tile, a.hidden, setTile])
-
-	// Touch: a tap anywhere else, or Escape, puts the art back. A press in what the actions opened doesn't.
-	useEffect(() => {
-		if (!revealed) return
-		const away = (event: PointerEvent) => {
-			const target = event.target as Element
-			if (
-				frame.current?.contains(target) ||
-				target.closest?.(
-					`[data-score-dialog], [data-card-popout], [data-card-dim], [role=dialog], [role=alertdialog], ${NESTED_OVERLAY_SELECTOR}`,
-				)
-			)
-				return
-			if (getRevealed() === cardKey) setRevealed(null)
-		}
-		const onKey = (event: KeyboardEvent) => {
-			if (event.key !== "Escape" || open || statusAt || bandOverlayOpen())
-				return
-			setRevealed(null)
-			frame.current
-				?.querySelector<HTMLElement>("a")
-				?.focus({ preventScroll: true })
-		}
-		document.addEventListener("pointerdown", away, true)
-		window.addEventListener("keydown", onKey)
-		return () => {
-			document.removeEventListener("pointerdown", away, true)
-			window.removeEventListener("keydown", onKey)
-		}
-	}, [revealed, frame, cardKey, open, statusAt])
 
 	if (tile)
 		return (
@@ -371,22 +265,6 @@ export default function CardActions({
 						</button>
 					</div>
 				</div>
-			)}
-
-			{touch && (revealed || leaving) && (
-				<TapBand
-					media={media}
-					href={href}
-					discover={discover}
-					onOpen={onOpen && openView}
-					frame={frame}
-					leaving={leaving}
-					onHide={onHide}
-					onTracking={() => {
-						void loadShowStatus().catch(() => {})
-						setTrackingUsed(true)
-					}}
-				/>
 			)}
 
 			{open !== null && (

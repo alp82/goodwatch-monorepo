@@ -20,7 +20,7 @@ export default function SignInPrompt({
 }) {
 	return (
 		<Dialog open onClose={onClose}>
-			{/* Over the page's overlays too (a card's touch band, z-[1070]), under nothing but toasts. */}
+			{/* Over the page's overlays too (a quick view, z-[1200]), under nothing but toasts. */}
 			<div className="fixed inset-0 z-[1300] bg-black/30" aria-hidden="true" />
 			<div
 				className="absolute z-[1300] w-[400px] p-8 bg-gray-700 border-8 border-gray-600 rounded-lg shadow-2xl"

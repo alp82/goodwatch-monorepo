@@ -1,6 +1,5 @@
-// The picks, every one in the site's poster card with its standard actions (a panel on hover, tiles after the first
-// tap on a touch screen), inside a PickTap: a click on the poster, the Open tile or a tap on the bare art opens its
-// detail (the For you quick view), and a card too narrow for actions opens it on the first tap.
+// The picks, every one in the site's poster card with its standard actions (a panel on hover), inside a PickTap: a
+// click or a tap on the poster opens its detail (the For you quick view).
 // - phones (and tablets): the list starts with the strip: the top four big with titles, then six small, in one
 //   12-column grid. An open drawer covers the page below those two rows, so closing it leaves the strip in place and
 //   uncovers the rest: three across, then four across. Titles climbing from #7 to #2 slide and grow into place.

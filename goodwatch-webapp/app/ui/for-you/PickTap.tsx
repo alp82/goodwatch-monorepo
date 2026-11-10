@@ -1,8 +1,7 @@
 // Opening a pick's detail. PickContext: the page tells the results which pick's detail is open and how to toggle it.
 // `PickTap` wraps a result poster and hands it `open`, which the poster card takes as its `onOpen`: the card keeps the
-// site's standard actions (a panel on hover, tiles after the first tap on a touch screen), and a click on the poster,
-// its Open tile or a tap on the bare art opens the detail instead of the title page (a tap on the open one closes it;
-// a card too narrow for actions opens it on the first tap). The card's own link stays for middle-click and new tabs.
+// site's standard actions (a panel on hover), and a click or a tap on the poster opens the detail instead of the title
+// page (a tap on the open one closes it). The card's own link stays for middle-click and new tabs.
 // The wrapper carries data-pop-id so the quick view can lift that poster. A press on a poster starts loading the
 // detail's code, so a first open never waits for it.
 import { createContext, useContext } from "react"

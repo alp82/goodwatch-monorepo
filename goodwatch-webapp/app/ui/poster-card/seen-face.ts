@@ -1,5 +1,5 @@
-// How a card's Seen control looks: a show's status (or Not started), else a movie's Seen. Shared by the pointer panel
-// (CardActions) and the touch band (TapBand).
+// How a card's Seen control in the pointer panel (CardActions) looks: a show's status (or Not started), else a
+// movie's Seen.
 import {
 	EyeIcon,
 	EyeSlashIcon,

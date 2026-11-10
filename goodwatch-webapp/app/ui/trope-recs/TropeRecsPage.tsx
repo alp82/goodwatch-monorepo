@@ -1,9 +1,9 @@
 // By your tropes (/watch/for-you/tropes): unseen picks ranked by the member's top tropes, as a poster grid.
-// - Every poster is the site's poster card with its standard actions (a panel on hover, tiles after the first tap on
-//   a touch screen) and one quiet gray line under it: "#n · match · N of your tropes". A click on the poster, the Open
-//   tile or a tap on the bare art opens the pick's sheet (PickSheet.tsx) with how each of the member's tropes shows
-//   up in it, and arrows to the previous and next pick; each trope there links to its own picks. The card's link
-//   stays for middle-click and new tabs.
+// - Every poster is the site's poster card with its standard actions (a panel on hover) and one quiet gray line under
+//   it: "#n · match · N of your tropes". A click or a tap on the poster opens why the pick is there, with how each of
+//   the member's tropes shows up in it and arrows to the previous and next pick; each trope there links to its own
+//   picks. Wide screens get the pick's sheet (PickSheet.tsx), phones the site's quick view drawer (PickDrawer.tsx).
+//   The card's link stays for middle-click and new tabs.
 // - ?trope=<key> narrows the grid to one trope: a header with its name, the member's rank for it, how many of their
 //   titles with it they loved, and the opening line of its TV Tropes description, with the way back to all picks.
 // - "Your tropes ▾" opens a plain list of the member's top tropes to pick one from. All / Movies / Shows is ?kind=.
@@ -41,6 +41,11 @@ import { cardTitle } from "./card"
 
 const loadSheet = reloadOnStaleChunk(() => import("./PickSheet"))
 const PickSheet = lazy(loadSheet)
+const loadDrawer = reloadOnStaleChunk(() => import("./PickDrawer"))
+const PickDrawer = lazy(loadDrawer)
+/** Phones get the drawer, decided at each opening from the screen's width then. */
+const narrow = () => !window.matchMedia("(min-width: 768px)").matches
+const loadView = () => (narrow() ? loadDrawer() : loadSheet())
 
 /** Posters per step of "Show more". */
 const STEP = 36
@@ -301,6 +306,7 @@ function Picks({
 	const [shown, setShown] = useState(STEP)
 	// Selected by title id: a refetch that drops or moves the title closes the sheet instead of showing another one.
 	const [openId, setOpenId] = useState<RecTitle["id"] | null>(null)
+	const [drawer, setDrawer] = useState(false)
 	const index = openId === null ? -1 : titles.findIndex((t) => t.id === openId)
 	const pick = index < 0 ? null : titles[index]
 	const visible = useMemo(() => titles.slice(0, shown), [titles, shown])
@@ -317,13 +323,18 @@ function Picks({
 		<>
 			<ol className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
 				{visible.map((t, i) => (
-					<li key={t.id} className="flex min-w-0 flex-col gap-1">
-						<div onPointerDown={() => void loadSheet().catch(() => {})}>
+					<li
+						key={t.id}
+						className="flex min-w-0 flex-col gap-1"
+						data-pick-id={t.id}
+					>
+						<div onPointerDown={() => void loadView().catch(() => {})}>
 							<MovieTvCard
 								details={cardTitle(t)}
 								mediaType={t.kind}
 								onOpen={() => {
-									void loadSheet().catch(() => {})
+									void loadView().catch(() => {})
+									setDrawer(narrow())
 									setOpenId(t.id)
 								}}
 								posterPriority={i < 6 ? "eager" : undefined}
@@ -349,7 +360,22 @@ function Picks({
 					</button>
 				</p>
 			)}
-			{pick && (
+			{pick && drawer && (
+				<Suspense fallback={null}>
+					<PickDrawer
+						titles={titles}
+						index={index}
+						tropeCount={tropeCount}
+						kind={kind}
+						onIndex={(i) => {
+							if (i >= shown) setShown(Math.ceil((i + 1) / STEP) * STEP)
+							setOpenId(titles[i].id)
+						}}
+						onClose={() => setOpenId(null)}
+					/>
+				</Suspense>
+			)}
+			{pick && !drawer && (
 				<Suspense fallback={null}>
 					{/* One sheet across Previous / Next, so focus stays on the button that stepped. */}
 					<PickSheet
