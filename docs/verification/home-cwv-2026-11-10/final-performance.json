@@ -1,0 +1,191 @@
+{
+  "kind": "actual-final-build-lab-validation",
+  "source_base_commit": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+  "performance_baseline_commit": "884dbdcc5a1abe72e0f731e1d3e6cc4b8277af4c",
+  "browser": "Chrome/154.0.8037.92",
+  "image": "gw-bench-lighthouse:13.5.0-6dd25f05",
+  "machine": "dedicated idle 4-vCPU benchmark generator",
+  "mobile_cpu_slowdown": 1.8,
+  "desktop_cpu_slowdown": 1,
+  "calibration": "Hardware-relative model: earlier local Lighthouse index about 3,890 at 6x; generator about 1,170 at 1.8x. Approximate comparability only; final baseline and candidate use the same generator/browser/rate. No physical-phone equivalence or field percentile is asserted.",
+  "network_desktop": {
+    "latency_ms": 150,
+    "download_bytes_per_second": 209715.2,
+    "upload_bytes_per_second": 96000
+  },
+  "thresholds_unchanged": {
+    "maxObservedEventDurationMs": 200,
+    "desktopLcpMs": 2500
+  },
+  "visits": 18,
+  "mobile_visits": 12,
+  "desktop_visits": 6,
+  "passed": 13,
+  "failed": 5,
+  "page_or_measurement_errors": 0,
+  "strict_gate_pass": false,
+  "actions": {
+    "search-focus": {
+      "min_ms": 104,
+      "median_ms": 128.0,
+      "max_ms": 192,
+      "visits": 12
+    },
+    "search-type": {
+      "min_ms": 72,
+      "median_ms": 80.0,
+      "max_ms": 136,
+      "visits": 12
+    },
+    "search-clear": {
+      "min_ms": 160,
+      "median_ms": 192.0,
+      "max_ms": 216,
+      "visits": 12
+    },
+    "mood-open": {
+      "min_ms": 88,
+      "median_ms": 112.0,
+      "max_ms": 128,
+      "visits": 12
+    },
+    "mood-escape": {
+      "min_ms": 80,
+      "median_ms": 92.0,
+      "max_ms": 112,
+      "visits": 12
+    },
+    "mood-reopen": {
+      "min_ms": 64,
+      "median_ms": 72.0,
+      "max_ms": 88,
+      "visits": 12
+    },
+    "mood-done": {
+      "min_ms": 184,
+      "median_ms": 200.0,
+      "max_ms": 216,
+      "visits": 12
+    }
+  },
+  "desktop_lcp_ms": {
+    "all": [
+      1936,
+      1800,
+      1956,
+      1796,
+      1884,
+      1748
+    ],
+    "min": 1748,
+    "median": 1842.0,
+    "max": 1956
+  },
+  "residual_failures": [
+    {
+      "scenario": "mobile-fresh-early",
+      "run": 1,
+      "max_event_ms": 208,
+      "failures": [
+        "Event Timing interaction proxy 208ms >200ms"
+      ],
+      "actions_above_limit": [
+        {
+          "name": "search-clear",
+          "success": true,
+          "trustedInputCount": 2,
+          "maxEventDurationMs": 208
+        }
+      ]
+    },
+    {
+      "scenario": "mobile-fresh-settled",
+      "run": 1,
+      "max_event_ms": 208,
+      "failures": [
+        "Event Timing interaction proxy 208ms >200ms"
+      ],
+      "actions_above_limit": [
+        {
+          "name": "mood-done",
+          "success": true,
+          "trustedInputCount": 2,
+          "maxEventDurationMs": 208
+        }
+      ]
+    },
+    {
+      "scenario": "mobile-fresh-early",
+      "run": 2,
+      "max_event_ms": 208,
+      "failures": [
+        "Event Timing interaction proxy 208ms >200ms"
+      ],
+      "actions_above_limit": [
+        {
+          "name": "mood-done",
+          "success": true,
+          "trustedInputCount": 2,
+          "maxEventDurationMs": 208
+        }
+      ]
+    },
+    {
+      "scenario": "mobile-fresh-early",
+      "run": 3,
+      "max_event_ms": 216,
+      "failures": [
+        "Event Timing interaction proxy 216ms >200ms"
+      ],
+      "actions_above_limit": [
+        {
+          "name": "mood-done",
+          "success": true,
+          "trustedInputCount": 2,
+          "maxEventDurationMs": 216
+        }
+      ]
+    },
+    {
+      "scenario": "mobile-returning-settled",
+      "run": 3,
+      "max_event_ms": 216,
+      "failures": [
+        "Event Timing interaction proxy 216ms >200ms"
+      ],
+      "actions_above_limit": [
+        {
+          "name": "search-clear",
+          "success": true,
+          "trustedInputCount": 2,
+          "maxEventDurationMs": 216
+        }
+      ]
+    }
+  ],
+  "matched_baseline_single_visits": {
+    "mobile_fresh_early": {
+      "search_focus_ms": 952,
+      "type_max_ms": 424,
+      "clear_ms": 312,
+      "first_mood_open_ms": 592,
+      "whole_visit_max_ms": 952
+    },
+    "mobile_fresh_settled": {
+      "search_focus_ms": 704,
+      "type_max_ms": 424,
+      "clear_ms": 448,
+      "first_mood_open_ms": 584,
+      "whole_visit_max_ms": 704
+    },
+    "desktop_fresh_lcp_ms": 3156
+  },
+  "evidence": "goodwatch-benchmark/results/home-cwv-2026-11-10/generator-verified/",
+  "limits": [
+    "This strict maximum-action lab gate does not pass:5of18visits exceed200ms by8\u201316ms. No cap is raised and no failure is excluded.",
+    "All six desktop visits pass; all actions have trusted input and asserted DOM effects; no page/measurement errors.",
+    "These are controlled anonymous UI checks with frozen loader/public GET data. Search interpretation and all writes are blocked. Member data, real results arrival, production TTFB and field p75 are outside the comparison.",
+    "Fixture and actual production builds share the current critical source and byte-identical CSS; some emitted JS alias/hash tokens differ, so exact production transport-graph identity is not asserted.",
+    "Diagnostic/probe and overloaded-local runs are excluded from final timing aggregates. Earlier actual-source 14-of-18 run is retained separately; no repeat of an identical failing build is selected as a pass."
+  ]
+}

@@ -122,9 +122,9 @@ const APP_MODULE_FILE = /\/app\/.*\.[jt]sx?$/
 const SWIPER_ICON_FONT = /@font-face\s*\{[^}]*swiper-icons[^}]*\}/
 const SWIPER_OWN_ARROWS = /swiper-button-(prev|next)(?![\w-])|createElements/
 
-// Two cuts to the one stylesheet that blocks every page's first paint. It has two parts, around the Tailwind plugin:
+// Trim shared and feature-owned stylesheets. The two hooks run around the Tailwind plugin:
 // - Before it, in a production build: tell Tailwind not to read the prototypes' files, so their class names stay out.
-// - After it: drop Swiper's icon font from the generated sheet.
+// - After it: drop Swiper's unused icon font, including when its CSS follows a feature chunk.
 // A missing class or font fails silently, so both cuts stop the build when code starts to need what they left out:
 // a module of the build that is a prototype file, or app code that uses Swiper's own arrow buttons.
 function leanStylesheet() {
@@ -155,7 +155,7 @@ function leanStylesheet() {
 			name: "lean-stylesheet:fonts",
 			enforce: "pre",
 			transform(code, id) {
-				if (!entry(id) || !SWIPER_ICON_FONT.test(code)) return
+				if (!STYLE_SHEET.test(id) || !SWIPER_ICON_FONT.test(code)) return
 				return { code: code.replace(SWIPER_ICON_FONT, ""), map: null }
 			},
 		},

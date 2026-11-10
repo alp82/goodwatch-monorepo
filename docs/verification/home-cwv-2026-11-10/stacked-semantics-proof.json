@@ -1,0 +1,67 @@
+{
+  "recorded_at": "2026-11-10T12:01:04.492272+00:00",
+  "baseline_commit": "884dbdcc5a1abe72e0f731e1d3e6cc4b8277af4c",
+  "result": {
+    "browser": "Chrome/155.0.8059.79",
+    "source": "current app/tailwind.css stacked variant versus original matching contract",
+    "productionMinifiers": "@tailwindcss/node 4.1.5 optimize(minify:true) and esbuild CSS minify with Vite modules targets",
+    "markup": "actual SplitFrame SSR output; compact/big flags, status/Seen faces, asynchronous status removal/restoration",
+    "viewportWidths": [
+      390,
+      1023,
+      1024,
+      1365
+    ],
+    "containerWidths": [
+      200,
+      335,
+      336,
+      343,
+      375,
+      383,
+      384,
+      500
+    ],
+    "comparedStates": 148,
+    "identicalComputedStyles": true,
+    "zeroNetworkRequests": true,
+    "performanceMeasurement": false
+  },
+  "prepare_command": "node docs/verification/home-cwv-2026-11-10/prepare-stacked-semantics.mjs",
+  "check_command": "docker run --rm --network none --shm-size 256m --volume \"$PWD/docs/verification/home-cwv-2026-11-10:/analysis:ro\" --volume \"$PWD/goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/stacked-semantics:/data\" --entrypoint node gw-bench-lighthouse:13.5.0-6dd25f05 /analysis/stacked-semantics.mjs",
+  "command_working_directory": "repository root",
+  "artifacts": [
+    {
+      "path": "goodwatch-webapp/app/tailwind.css",
+      "sha256": "723db25289688b60468982c8509dc99a73665a29a2d092da8b8f35a3a8dbc850"
+    },
+    {
+      "path": "goodwatch-webapp/app/ui/scoring/stacked-css.test-support.ts",
+      "sha256": "030a778ff835e1f3ea33e6581867faf7965a9380206569d3dad9cf6d9b029851"
+    },
+    {
+      "path": "goodwatch-webapp/app/ui/scoring/score-control.test-support.tsx",
+      "sha256": "12e3a863d8f7d654465b6b5ec4ea7d93772b7925c30ff9468c2329413d6c50d6"
+    },
+    {
+      "path": "docs/verification/home-cwv-2026-11-10/stacked-semantics.mjs",
+      "sha256": "1e9c6a8609c406f5a6175fa2ae0e35baa3f1cd7a16863f8cbfc7079cd87a0dc7"
+    },
+    {
+      "path": "docs/verification/home-cwv-2026-11-10/prepare-stacked-semantics.mjs",
+      "sha256": "eeae4c651fc4ebe44d421dc0217cbef34aece4c04ecb01256010b3587ba34372"
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/stacked-semantics/input.json",
+      "sha256": "1d90687d1d74d9a98466c37189f90cb8a1109b054982f6ffec4c8b52c4c92f5a"
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/stacked-semantics/result.json",
+      "sha256": "12627b8ef2ef9fadf8942c058044086c4f5ba4a0fd22843d66f1610ca154f603"
+    }
+  ],
+  "limits": [
+    "Functional equivalence only; not a timing or CWV result.",
+    "This is the actual Tailwind/LightningCSS and final esbuild minification path on isolated face CSS, not an all-route application build."
+  ]
+}

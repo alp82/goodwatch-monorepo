@@ -1,0 +1,140 @@
+{
+  "period": {
+    "from": "2026-11-03",
+    "to": "2026-11-09",
+    "inclusive": true
+  },
+  "property": "goodwatch.app",
+  "path": "/",
+  "purpose": "One-off debugging aggregates; not saved canonical metrics.",
+  "caveats": [
+    "PostHog and GSC have different populations and reporting windows.",
+    "Typed queries apply filterTestAccounts=true; SQL sample counts explicitly exclude event is_internal=true and may not match any additional project-level exclusions.",
+    "Counts are metric-bearing records, not unique users or deduplicated navigations.",
+    "INP entry objects do not expose targets or timing subparts."
+  ],
+  "metrics": {
+    "INP": {
+      "_posthogUrl": "https://eu.posthog.com/project/24375/insights/new#q=%7B%22kind%22%3A%22InsightVizNode%22%2C%22source%22%3A%7B%22dateRange%22%3A%7B%22date_from%22%3A%222026-11-03%22%2C%22date_to%22%3A%222026-11-09%22%7D%2C%22doPathCleaning%22%3Afalse%2C%22filterTestAccounts%22%3Atrue%2C%22kind%22%3A%22WebVitalsPathBreakdownQuery%22%2C%22metric%22%3A%22INP%22%2C%22percentile%22%3A%22p75%22%2C%22properties%22%3A%5B%7B%22key%22%3A%22%24host%22%2C%22operator%22%3A%22exact%22%2C%22type%22%3A%22event%22%2C%22value%22%3A%5B%22goodwatch.app%22%5D%7D%2C%7B%22key%22%3A%22%24pathname%22%2C%22operator%22%3A%22exact%22%2C%22type%22%3A%22event%22%2C%22value%22%3A%5B%22%2F%22%5D%7D%2C%7B%22key%22%3A%22%24device_type%22%2C%22operator%22%3A%22exact%22%2C%22type%22%3A%22event%22%2C%22value%22%3A%5B%22Mobile%22%5D%7D%5D%2C%22thresholds%22%3A%5B200%2C500%5D%7D%7D",
+      "query": {
+        "dateRange": {
+          "date_from": "2026-11-03",
+          "date_to": "2026-11-09"
+        },
+        "doPathCleaning": false,
+        "filterTestAccounts": true,
+        "kind": "WebVitalsPathBreakdownQuery",
+        "metric": "INP",
+        "percentile": "p75",
+        "properties": [
+          {
+            "key": "$host",
+            "operator": "exact",
+            "type": "event",
+            "value": [
+              "goodwatch.app"
+            ]
+          },
+          {
+            "key": "$pathname",
+            "operator": "exact",
+            "type": "event",
+            "value": [
+              "/"
+            ]
+          },
+          {
+            "key": "$device_type",
+            "operator": "exact",
+            "type": "event",
+            "value": [
+              "Mobile"
+            ]
+          }
+        ],
+        "thresholds": [
+          200,
+          500
+        ]
+      },
+      "results": [
+        {
+          "good": [],
+          "needs_improvements": [
+            {
+              "path": "/",
+              "value": 278
+            }
+          ],
+          "poor": []
+        }
+      ]
+    },
+    "LCP": {
+      "_posthogUrl": "https://eu.posthog.com/project/24375/insights/new#q=%7B%22kind%22%3A%22InsightVizNode%22%2C%22source%22%3A%7B%22dateRange%22%3A%7B%22date_from%22%3A%222026-11-03%22%2C%22date_to%22%3A%222026-11-09%22%7D%2C%22doPathCleaning%22%3Afalse%2C%22filterTestAccounts%22%3Atrue%2C%22kind%22%3A%22WebVitalsPathBreakdownQuery%22%2C%22metric%22%3A%22LCP%22%2C%22percentile%22%3A%22p75%22%2C%22properties%22%3A%5B%7B%22key%22%3A%22%24host%22%2C%22operator%22%3A%22exact%22%2C%22type%22%3A%22event%22%2C%22value%22%3A%5B%22goodwatch.app%22%5D%7D%2C%7B%22key%22%3A%22%24pathname%22%2C%22operator%22%3A%22exact%22%2C%22type%22%3A%22event%22%2C%22value%22%3A%5B%22%2F%22%5D%7D%2C%7B%22key%22%3A%22%24device_type%22%2C%22operator%22%3A%22exact%22%2C%22type%22%3A%22event%22%2C%22value%22%3A%5B%22Desktop%22%5D%7D%5D%2C%22thresholds%22%3A%5B2500%2C4000%5D%7D%7D",
+      "query": {
+        "dateRange": {
+          "date_from": "2026-11-03",
+          "date_to": "2026-11-09"
+        },
+        "doPathCleaning": false,
+        "filterTestAccounts": true,
+        "kind": "WebVitalsPathBreakdownQuery",
+        "metric": "LCP",
+        "percentile": "p75",
+        "properties": [
+          {
+            "key": "$host",
+            "operator": "exact",
+            "type": "event",
+            "value": [
+              "goodwatch.app"
+            ]
+          },
+          {
+            "key": "$pathname",
+            "operator": "exact",
+            "type": "event",
+            "value": [
+              "/"
+            ]
+          },
+          {
+            "key": "$device_type",
+            "operator": "exact",
+            "type": "event",
+            "value": [
+              "Desktop"
+            ]
+          }
+        ],
+        "thresholds": [
+          2500,
+          4000
+        ]
+      },
+      "results": [
+        {
+          "good": [
+            {
+              "path": "/",
+              "value": 2447
+            }
+          ],
+          "needs_improvements": [],
+          "poor": []
+        }
+      ]
+    }
+  },
+  "sample_counts": "device|inp_samples|lcp_samples|first_event|last_event\nDesktop|24|58|2026-11-03T02:34:38.541000+01:00|2026-11-09T23:30:17.346000+01:00\nMobile|36|88|2026-11-03T02:17:10.141000+01:00|2026-11-09T23:03:52.405000+01:00\nTablet|0|7|2026-11-03T12:33:20.239000+01:00|2026-11-09T14:08:50.205000+01:00",
+  "attribution_keys": "inp_event_keys\n['$current_url', '$session_id', '$window_id', 'delta', 'entries', 'id', 'name', 'navigationId', 'navigationStartTime', 'navigationType', 'navigationURL', 'rating', 'timestamp', 'value']\n['$current_url', '$session_id', '$window_id', 'delta', 'entries', 'id', 'name', 'navigationId', 'navigationStartTime', 'navigationType', 'navigationURL', 'rating', 'timestamp', 'value']\n['$current_url', '$session_id', '$window_id', 'delta', 'entries', 'id', 'name', 'navigationId', 'navigationStartTime', 'navigationType', 'navigationURL', 'rating', 'timestamp', 'value']",
+  "attribution_entries": "metric_entries|samples\n[{}]|37\n[{},{}]|26\n[{},{},{}]|1",
+  "opus": {
+    "requestedModel": "opus",
+    "requestedEffort": "medium",
+    "status": "blocked",
+    "message": "You've hit your weekly limit · resets 3am (Europe/Berlin)",
+    "reviewProduced": false
+  }
+}

@@ -9,10 +9,6 @@ const files = {
 	explorer: "/assets/explorer-J0.css",
 	home: ["/assets/start-B2.css", "/assets/boot-C3.css"],
 	font: "/assets/gabarito-latin-D4.woff2",
-	room: {
-		phone: ["/assets/start-room-phone-E5.avif"],
-		desktop: ["/assets/start-room-1536-G7.avif"],
-	},
 	marks: {
 		images: ["/assets/logo-white-H8.svg"],
 		masks: ["/assets/primevideo-logo-I9.svg"],
@@ -47,28 +43,22 @@ const marks = [
 ]
 
 describe("earlyHintLinks", () => {
-	it("gives a phone's start page the shared hints, its style sheets and the portrait room", () => {
+	it("gives a phone's start page shared hints, styles and marks; the HTML selects its room", () => {
 		assert.deepEqual(
 			earlyHintLinks(page("/?tv=discover", phone), base, files),
-			[
-				...shared,
-				...homeSheets,
-				`<${base}/assets/start-room-phone-E5.avif>; rel=preload; as=image; crossorigin; fetchpriority=high`,
-				...marks,
-			],
+			[...shared, ...homeSheets, ...marks],
 		)
 	})
 
-	it("gives a desktop's start page the landscape room", () => {
+	it("leaves responsive room selection to HTML on desktop too", () => {
 		assert.deepEqual(earlyHintLinks(page("/", desktop), base, files), [
 			...shared,
 			...homeSheets,
-			`<${base}/assets/start-room-1536-G7.avif>; rel=preload; as=image; crossorigin; fetchpriority=high`,
 			...marks,
 		])
 	})
 
-	it("names no picture when the browser doesn't say what it is or doesn't take AVIF", () => {
+	it("does not guess a room from device or format request headers", () => {
 		assert.deepEqual(earlyHintLinks(page("/"), base, files), [
 			...shared,
 			...homeSheets,
@@ -112,7 +102,6 @@ describe("earlyHintLinks", () => {
 			'</assets/gabarito-latin-D4.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin',
 			"</assets/start-B2.css>; rel=preload; as=style",
 			"</assets/boot-C3.css>; rel=preload; as=style",
-			"</assets/start-room-phone-E5.avif>; rel=preload; as=image; fetchpriority=high",
 			"</assets/logo-white-H8.svg>; rel=preload; as=image",
 			// A CSS mask is fetched in CORS mode on any host, so its preload is too.
 			"</assets/primevideo-logo-I9.svg>; rel=preload; as=image; crossorigin",

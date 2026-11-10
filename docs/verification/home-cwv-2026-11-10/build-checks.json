@@ -1,0 +1,593 @@
+{
+  "status": "final-integrated-source-frozen-builds",
+  "integration": {
+    "method": "parent ff-only origin/main",
+    "fixtureSourceHEAD": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+    "productionSourceHEAD": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+    "frontendRuntimeFilesUnchanged": true
+  },
+  "recordedAt": "2026-11-10T12:30:42.238Z",
+  "source": {
+    "head": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+    "runtimeSourceFrozenFrom": "2026-11-10T12:26:27.451Z",
+    "runtimeSourceStableThroughBuilds": true,
+    "runtimeFilesFingerprintSHA256": "62e9c2c9cbb33020577a5a6f3f4fed968196e776e7c98307e74fb42e1b72c172",
+    "changedAndUntrackedRuntimeFiles": [
+      {
+        "path": "goodwatch-webapp/app/app.tsx",
+        "sha256": "c21fe63e76e045e4ae1d37b2eab1f6de0ca98ad6a63f2f1e1d123072400dacb7"
+      },
+      {
+        "path": "goodwatch-webapp/app/hooks/useSeenToggle.ts",
+        "sha256": "2b43d21f01dd2fbc3f06f51554969a8e9d1280d7674c6f1bed6686500872f9eb"
+      },
+      {
+        "path": "goodwatch-webapp/app/img/start-room/README.md",
+        "sha256": "f3e40254942c57ec3e510f18705987d1da1a1e00087f543c24007ccbe3f0a789"
+      },
+      {
+        "path": "goodwatch-webapp/app/img/start-room/start-room-1280.avif",
+        "sha256": "0c37efce6d5b383cef11a56bb776e2ca45dde62046bbb55728abe78a50a33727"
+      },
+      {
+        "path": "goodwatch-webapp/app/img/start-room/start-room-1280.webp",
+        "sha256": "edbdbc5d44f4560173cc3fa847f8c503ec0ac1b02d2a649294321fc3e5f67268"
+      },
+      {
+        "path": "goodwatch-webapp/app/img/start-room/start-room-1536.avif",
+        "sha256": "3ae2a27fbaaa0df50f20dbe03fe98b26907f5961263f1800741939a1b99bab5e"
+      },
+      {
+        "path": "goodwatch-webapp/app/img/start-room/start-room-800.avif",
+        "sha256": "8e606f4a3149dcc043591797ce29c7e9df278924b217cfc36c4a48d6cbe4d743"
+      },
+      {
+        "path": "goodwatch-webapp/app/img/start-room/start-room-800.webp",
+        "sha256": "9f28f22c7242aca32d3f815e89562b9c0eab2731417197fcaf6dd9706c88e05e"
+      },
+      {
+        "path": "goodwatch-webapp/app/root.tsx",
+        "sha256": "33f509d82549b3555486178601f7dcacbe6106c31e37caebf95ecc7450a7896b"
+      },
+      {
+        "path": "goodwatch-webapp/app/routes/_index.tsx",
+        "sha256": "a0b8dfb56a5acbb7c8e0a63bbf07470974094a721b2de6942cfd78fd933b67e6"
+      },
+      {
+        "path": "goodwatch-webapp/app/server/early-hints.server.ts",
+        "sha256": "1747646b4791618687aca4b2e13593c3fae51f02c473e3f92b72285394f50167"
+      },
+      {
+        "path": "goodwatch-webapp/app/server/early-hints.ts",
+        "sha256": "336148b3e258e0c2ea451036ee64d42ead3dba3e92ccc63b008b161b97dd5778"
+      },
+      {
+        "path": "goodwatch-webapp/app/tailwind.css",
+        "sha256": "723db25289688b60468982c8509dc99a73665a29a2d092da8b8f35a3a8dbc850"
+      },
+      {
+        "path": "goodwatch-webapp/app/telemetry/posthog-browser.ts",
+        "sha256": "1d25d3f7f406ca2914707601b1ce102b3423f935f09d3827f0f5a3184165fd2f"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/ListSwiper.tsx",
+        "sha256": "5d172224a813c0cc6cb1b204c4fb2c1d5f9e3f7c77d81754e78228895788610b"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/ListSwiperSkeleton.tsx",
+        "sha256": "d8c1318cd2c4cb723732156ffb9c3cf56b9616cab8759619b084227ec998d07a"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/button/ShareButton.tsx",
+        "sha256": "b7614c3c7c0c0e9c3f40e05070f58a6b8d53816d0e4ed3e48482a4d03426f477"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/discover-bar/OrderControls.tsx",
+        "sha256": "8c8613df8e715436e4754473eb2f9af7c2de9e016b66fe6f6826b8f735c60f8e"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/nav/InstantRouteScroll.tsx",
+        "sha256": "640fbae823410a6643ed0e791d46c2acc5c42ca6b0bc77512388c0d7546c6b8f"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/navigation/SiteChrome.tsx",
+        "sha256": "32aa17c6fcd481bb4cdc743d6309c87eec415b566de16958020435aac6e3ea1c"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/profile/edit/EditProfile.tsx",
+        "sha256": "b3448303a3b95ce07038fa417578a83ab88607637f468a9497acd0983822f194"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/profile/pages/ListsPage.tsx",
+        "sha256": "a4e0bab7c05312b46866e9a3dbecad06cf538a2e580e32078348a39f5f975215"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/settings/NotInterestedPage.tsx",
+        "sha256": "f37e95db5ef36c590b76fe25447096c0782bc9dc8c073ea5b6e6a03d3060a885"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/share-list-editor/ShareFlow.tsx",
+        "sha256": "5593a2202fdb3494c9ebeffe365d642443ab6cb81b5f9993bdbf074b40a17489"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/share-lists/OwnerListControls.tsx",
+        "sha256": "2f7ffbaa56359ad1773effb5b9f353cf07d0b11bc66729d6a8a9c438b606e8dd"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/browse/StartBrowse.tsx",
+        "sha256": "3c10b9f32b3fc1751c948be63bd08cbae7a86b1d20bf7cef6f39b90e4e7a398b"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/member/MemberStart.tsx",
+        "sha256": "9cbacaaf6305bb68c3b112eec8ac973104d3a3a7c78b4ed7c8514421ac4a4b61"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/moods/StartMoodPanel.tsx",
+        "sha256": "64a5d1be17165aef02e96d662fbeace2e2142ce9bb6ee871e3b105a6a0c9ea1c"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/moods/StartMoodPicker.tsx",
+        "sha256": "c227a4c98561a0313aa5d9a862d1e9ca1a429e8392e18cb43bf69140ae2be210"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/moods/panel-placement.ts",
+        "sha256": "e0563f218aee42ab41ae2dc650527899d23960a74874af86df79e226c1836cdd"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/opening/OpeningBoot.tsx",
+        "sha256": "1bccc8191667b4f20bfbb023b229a8ce3081c61c79eff535c7e2ee54da698eb3"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/opening/OpeningGate.tsx",
+        "sha256": "e07cc2951611a7c0dd6c3d3adc43286190597b58495e8ddc90d4aa4152a09d09"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/opening/boot-gate.ts",
+        "sha256": "6fee23f0eba82cbcb4bcc46981d35ba4b5bd6b057c4b01324aae735a496379ca"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/opening/opening.css",
+        "sha256": "c993ab314f88d0c20d4aaa7ee977ab986c45a24c2670c86c629be3e97b799d03"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/room/ShelfCovers.tsx",
+        "sha256": "029073a6ee45564f7091a20bfa6aae4f169458e34f1cc07a13b253fd0b5f2e43"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/room/StartRoom.tsx",
+        "sha256": "1f4a7e9a6258bd5a4511fe27f7f115f07f7556d9a807bb0df6d57a62a8623bbf"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/room/room-picture-sizes.ts",
+        "sha256": "4c5ea534a7d0545ff8b83d6af36067f5bd40b89b1e74e7a76a3cd8caa61b147c"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/room/room-pictures.ts",
+        "sha256": "b4d049ee4e0a63ab3498d6d78d32d2d18927f9aad5ca7ba97af38f8df485ee67"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/room/shelf-measure.ts",
+        "sha256": "a9a6930e80388f60d15af5fb7ff266e769ae318b30264ae5e2ec01daf9c02d75"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/search/StartSearchBar.tsx",
+        "sha256": "c6d17ca293ea9407b31f9478eb17d020734aad72af2306360b62e6c749c22b60"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/stage/StartStage.tsx",
+        "sha256": "098dd70b6c0c3944167481051bb85cccb4f23e89a63a1e70bf86434ecb202e7f"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/stage/start-query.ts",
+        "sha256": "e6b1dec2e9a985798e191fa90374fcfd0ccee4b0aade2388d28e1c28b979639f"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/start/stage/useStartQuery.ts",
+        "sha256": "b28651e825137629b369fa57eedb5ab8546197cf7516c6361e4313b16ba88089"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/title-actions/useTitleActions.ts",
+        "sha256": "ff6a07a94433c60aece2791df2439561beb01bbaf98774a7551b9030b44ad532"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/toast-queue.ts",
+        "sha256": "153712d0beddbd0b0abef41936a81637f9e257ef43b904a81c033c7edf192187"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/toast-runtime.tsx",
+        "sha256": "9499bdb892dc6bf0281e143f5fc8b6f77e84f4616c84a89844f51e25ff3e402a"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/toast.ts",
+        "sha256": "41fc3125100cc7f14bb1272a4eabff46c846110479a4908979af036a35a0141d"
+      },
+      {
+        "path": "goodwatch-webapp/app/ui/watch-log/useWatchLog.ts",
+        "sha256": "9b5708eb6eca1e15f6b4f0f2e48cd7919d841ba7ec4e3af7b4d5fe1cb39027e0"
+      },
+      {
+        "path": "goodwatch-webapp/app/utils/web-vitals-attribution.ts",
+        "sha256": "713049218ee228fad6d7181e9d6477f40e6945011df8879e62dc854d1d72246c"
+      },
+      {
+        "path": "goodwatch-webapp/app/utils/web-vitals-telemetry.ts",
+        "sha256": "cdf27fb6d6792eca769f7dbd7b5607510df87117c604faf9b02d7f7197df3f74"
+      }
+    ]
+  },
+  "builds": {
+    "candidateFixture": {
+      "status": "passed",
+      "finishedAt": "2026-11-10T12:26:44.026Z",
+      "log": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/build-checks/candidate-final-build.log",
+      "logSHA256": "ce31ca6e4c6c52ddd02e50a08f4e3b52c8275c54ca667410d39fbc716be4f2d4",
+      "command": "env -i PATH=\"$PATH\" NODE_ENV=production SENTRY_DISABLE_AUTO_UPLOAD=true CHOKIDAR_USEPOLLING=1 node node_modules/@remix-run/dev/dist/cli.js vite:build --config build/cwv-fixture-config/vite.config.mjs",
+      "workingDirectory": "goodwatch-webapp",
+      "serverEntrySHA256": "6e9bd89b5cc305383f6e334e58db444ce06dc8090bea59e324cdc6764de1a3ed",
+      "serverChunk": "./assets/server-build-BqP4jE2-.js",
+      "serverChunkSHA256": "7113e5607ebc78b114b9ce73547d7cb51f2e330cf932c4b22f7e620224da13aa",
+      "sourceMapChecks": {
+        "app/ui/start/opening/boot-gate.ts": {
+          "asset": "/assets/shell-DJH0pqne.js",
+          "matches": true,
+          "sourceSHA256": "6fee23f0eba82cbcb4bcc46981d35ba4b5bd6b057c4b01324aae735a496379ca"
+        },
+        "app/ui/toast.ts": {
+          "asset": "/assets/shell-DJH0pqne.js",
+          "matches": true,
+          "sourceSHA256": "41fc3125100cc7f14bb1272a4eabff46c846110479a4908979af036a35a0141d"
+        },
+        "app/ui/nav/InstantRouteScroll.tsx": {
+          "asset": "/assets/shell-DJH0pqne.js",
+          "matches": true,
+          "sourceSHA256": "640fbae823410a6643ed0e791d46c2acc5c42ca6b0bc77512388c0d7546c6b8f"
+        },
+        "app/root.tsx": {
+          "asset": "/assets/root-C5aCrC8J.js",
+          "matches": true,
+          "sourceSHA256": "33f509d82549b3555486178601f7dcacbe6106c31e37caebf95ecc7450a7896b"
+        },
+        "app/ui/discover-bar/OrderControls.tsx": {
+          "asset": "/assets/DiscoverControls-D7x61W-P.js",
+          "matches": true,
+          "sourceSHA256": "8c8613df8e715436e4754473eb2f9af7c2de9e016b66fe6f6826b8f735c60f8e"
+        },
+        "app/routes/_index.tsx": {
+          "asset": "/assets/_index-9eF6affA.js",
+          "matches": true,
+          "sourceSHA256": "a0b8dfb56a5acbb7c8e0a63bbf07470974094a721b2de6942cfd78fd933b67e6"
+        },
+        "app/ui/start/browse/StartBrowse.tsx": {
+          "asset": "/assets/_index-9eF6affA.js",
+          "matches": true,
+          "sourceSHA256": "3c10b9f32b3fc1751c948be63bd08cbae7a86b1d20bf7cef6f39b90e4e7a398b"
+        },
+        "app/ui/start/stage/useStartQuery.ts": {
+          "asset": "/assets/_index-9eF6affA.js",
+          "matches": true,
+          "sourceSHA256": "b28651e825137629b369fa57eedb5ab8546197cf7516c6361e4313b16ba88089"
+        },
+        "app/ui/start/room/StartRoom.tsx": {
+          "asset": "/assets/_index-9eF6affA.js",
+          "matches": true,
+          "sourceSHA256": "1f4a7e9a6258bd5a4511fe27f7f115f07f7556d9a807bb0df6d57a62a8623bbf"
+        },
+        "app/ui/start/room/room-pictures.ts": {
+          "asset": "/assets/_index-9eF6affA.js",
+          "matches": true,
+          "sourceSHA256": "b4d049ee4e0a63ab3498d6d78d32d2d18927f9aad5ca7ba97af38f8df485ee67"
+        },
+        "app/ui/start/room/room-picture-sizes.ts": {
+          "asset": "/assets/_index-9eF6affA.js",
+          "matches": true,
+          "sourceSHA256": "4c5ea534a7d0545ff8b83d6af36067f5bd40b89b1e74e7a76a3cd8caa61b147c"
+        },
+        "app/ui/start/search/StartSearchBar.tsx": {
+          "asset": "/assets/_index-9eF6affA.js",
+          "matches": true,
+          "sourceSHA256": "c6d17ca293ea9407b31f9478eb17d020734aad72af2306360b62e6c749c22b60"
+        },
+        "app/ui/start/room/ShelfCovers.tsx": {
+          "asset": "/assets/_index-9eF6affA.js",
+          "matches": true,
+          "sourceSHA256": "029073a6ee45564f7091a20bfa6aae4f169458e34f1cc07a13b253fd0b5f2e43"
+        },
+        "app/ui/start/room/shelf-measure.ts": {
+          "asset": "/assets/_index-9eF6affA.js",
+          "matches": true,
+          "sourceSHA256": "a9a6930e80388f60d15af5fb7ff266e769ae318b30264ae5e2ec01daf9c02d75"
+        },
+        "app/ui/start/moods/StartMoodPicker.tsx": {
+          "asset": "/assets/_index-9eF6affA.js",
+          "matches": true,
+          "sourceSHA256": "c227a4c98561a0313aa5d9a862d1e9ca1a429e8392e18cb43bf69140ae2be210"
+        },
+        "app/ui/start/moods/StartMoodPanel.tsx": {
+          "asset": "/assets/StartMoodPanel-Cc69Tfh0.js",
+          "matches": true,
+          "sourceSHA256": "64a5d1be17165aef02e96d662fbeace2e2142ce9bb6ee871e3b105a6a0c9ea1c"
+        }
+      },
+      "allSelectedSourcesMatch": true,
+      "serverEntry": "minimal frozen fixture renderer",
+      "sourceHEAD": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+      "builtBeforeLatestOriginMainIntegration": false,
+      "frontendSourcesVerifiedUnchangedAfterIntegration": true
+    },
+    "productionCompile": {
+      "status": "passed",
+      "finishedAt": "2026-11-10T12:27:39.854Z",
+      "log": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/build-checks/production-compile.log",
+      "logSHA256": "1b0ab6ee94d2658ec4c3164b855de17fdf57990d8277bb7a1f87075d1db83bac",
+      "command": "env -i PATH=\"$PATH\" NODE_ENV=production SENTRY_DISABLE_AUTO_UPLOAD=true CHOKIDAR_USEPOLLING=1 node node_modules/@remix-run/dev/dist/cli.js vite:build --config build/cwv-production-config/vite.config.mjs",
+      "workingDirectory": "goodwatch-webapp",
+      "serverEntrySHA256": "4c0c5002c99ab169ea820f1f46f3f8a2ff0da8e3b15e530a40c0e74756bbb1cd",
+      "serverChunk": "./assets/server-build-B9HGzC4u.js",
+      "serverChunkSHA256": "0b4943e95833904a8256700a963dc7fa3222914c305d70bed906391825560bc3",
+      "sourceMapChecks": {
+        "app/ui/start/opening/boot-gate.ts": {
+          "asset": "/assets/shell-CbayXSpt.js",
+          "matches": true,
+          "sourceSHA256": "6fee23f0eba82cbcb4bcc46981d35ba4b5bd6b057c4b01324aae735a496379ca"
+        },
+        "app/ui/toast.ts": {
+          "asset": "/assets/shell-CbayXSpt.js",
+          "matches": true,
+          "sourceSHA256": "41fc3125100cc7f14bb1272a4eabff46c846110479a4908979af036a35a0141d"
+        },
+        "app/ui/nav/InstantRouteScroll.tsx": {
+          "asset": "/assets/shell-CbayXSpt.js",
+          "matches": true,
+          "sourceSHA256": "640fbae823410a6643ed0e791d46c2acc5c42ca6b0bc77512388c0d7546c6b8f"
+        },
+        "app/root.tsx": {
+          "asset": "/assets/root-DXhBltJp.js",
+          "matches": true,
+          "sourceSHA256": "33f509d82549b3555486178601f7dcacbe6106c31e37caebf95ecc7450a7896b"
+        },
+        "app/ui/discover-bar/OrderControls.tsx": {
+          "asset": "/assets/DiscoverControls-_uKqMqEK.js",
+          "matches": true,
+          "sourceSHA256": "8c8613df8e715436e4754473eb2f9af7c2de9e016b66fe6f6826b8f735c60f8e"
+        },
+        "app/routes/_index.tsx": {
+          "asset": "/assets/_index-DJfbxrqc.js",
+          "matches": true,
+          "sourceSHA256": "a0b8dfb56a5acbb7c8e0a63bbf07470974094a721b2de6942cfd78fd933b67e6"
+        },
+        "app/ui/start/browse/StartBrowse.tsx": {
+          "asset": "/assets/_index-DJfbxrqc.js",
+          "matches": true,
+          "sourceSHA256": "3c10b9f32b3fc1751c948be63bd08cbae7a86b1d20bf7cef6f39b90e4e7a398b"
+        },
+        "app/ui/start/stage/useStartQuery.ts": {
+          "asset": "/assets/_index-DJfbxrqc.js",
+          "matches": true,
+          "sourceSHA256": "b28651e825137629b369fa57eedb5ab8546197cf7516c6361e4313b16ba88089"
+        },
+        "app/ui/start/room/StartRoom.tsx": {
+          "asset": "/assets/_index-DJfbxrqc.js",
+          "matches": true,
+          "sourceSHA256": "1f4a7e9a6258bd5a4511fe27f7f115f07f7556d9a807bb0df6d57a62a8623bbf"
+        },
+        "app/ui/start/room/room-pictures.ts": {
+          "asset": "/assets/_index-DJfbxrqc.js",
+          "matches": true,
+          "sourceSHA256": "b4d049ee4e0a63ab3498d6d78d32d2d18927f9aad5ca7ba97af38f8df485ee67"
+        },
+        "app/ui/start/room/room-picture-sizes.ts": {
+          "asset": "/assets/_index-DJfbxrqc.js",
+          "matches": true,
+          "sourceSHA256": "4c5ea534a7d0545ff8b83d6af36067f5bd40b89b1e74e7a76a3cd8caa61b147c"
+        },
+        "app/ui/start/search/StartSearchBar.tsx": {
+          "asset": "/assets/_index-DJfbxrqc.js",
+          "matches": true,
+          "sourceSHA256": "c6d17ca293ea9407b31f9478eb17d020734aad72af2306360b62e6c749c22b60"
+        },
+        "app/ui/start/room/ShelfCovers.tsx": {
+          "asset": "/assets/_index-DJfbxrqc.js",
+          "matches": true,
+          "sourceSHA256": "029073a6ee45564f7091a20bfa6aae4f169458e34f1cc07a13b253fd0b5f2e43"
+        },
+        "app/ui/start/room/shelf-measure.ts": {
+          "asset": "/assets/_index-DJfbxrqc.js",
+          "matches": true,
+          "sourceSHA256": "a9a6930e80388f60d15af5fb7ff266e769ae318b30264ae5e2ec01daf9c02d75"
+        },
+        "app/ui/start/moods/StartMoodPicker.tsx": {
+          "asset": "/assets/_index-DJfbxrqc.js",
+          "matches": true,
+          "sourceSHA256": "c227a4c98561a0313aa5d9a862d1e9ca1a429e8392e18cb43bf69140ae2be210"
+        },
+        "app/ui/start/moods/StartMoodPanel.tsx": {
+          "asset": "/assets/StartMoodPanel-B1fl2U3T.js",
+          "matches": true,
+          "sourceSHA256": "64a5d1be17165aef02e96d662fbeace2e2142ce9bb6ee871e3b105a6a0c9ea1c"
+        }
+      },
+      "allSelectedSourcesMatch": true,
+      "sourceHEAD": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+      "serverEntry": "original production entry, loaders and actions; no fixture plugin",
+      "generatedServerNeverImportedOrStarted": true
+    }
+  },
+  "environment": {
+    "envFilesLoaded": false,
+    "buildTelemetry": false,
+    "productionJobsStarted": false
+  },
+  "warnings": [
+    "React Router future flags",
+    "Dependency use-client and sourcemap-location warnings",
+    "External build directory retained prior unused assets; active manifest determines source-map checks",
+    "Build sourcemaps enabled as in the production configuration"
+  ],
+  "frontendArtifactComparisons": [
+    {
+      "source": "app/ui/start/opening/boot-gate.ts",
+      "fixtureAsset": "/assets/shell-DJH0pqne.js",
+      "productionAsset": "/assets/shell-CbayXSpt.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 355690,
+      "productionBytes": 355696,
+      "fixtureSHA256": "caee092e71e28d5bf382b0d747a5fdcf20255cdc25672ecb7891fecb57d83d42",
+      "productionSHA256": "b14fcbbf0601a8ece2ba7a0671b7408dd125ed1151ec666825053f0856f88ba0"
+    },
+    {
+      "source": "app/ui/toast.ts",
+      "fixtureAsset": "/assets/shell-DJH0pqne.js",
+      "productionAsset": "/assets/shell-CbayXSpt.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 355690,
+      "productionBytes": 355696,
+      "fixtureSHA256": "caee092e71e28d5bf382b0d747a5fdcf20255cdc25672ecb7891fecb57d83d42",
+      "productionSHA256": "b14fcbbf0601a8ece2ba7a0671b7408dd125ed1151ec666825053f0856f88ba0"
+    },
+    {
+      "source": "app/ui/nav/InstantRouteScroll.tsx",
+      "fixtureAsset": "/assets/shell-DJH0pqne.js",
+      "productionAsset": "/assets/shell-CbayXSpt.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 355690,
+      "productionBytes": 355696,
+      "fixtureSHA256": "caee092e71e28d5bf382b0d747a5fdcf20255cdc25672ecb7891fecb57d83d42",
+      "productionSHA256": "b14fcbbf0601a8ece2ba7a0671b7408dd125ed1151ec666825053f0856f88ba0"
+    },
+    {
+      "source": "app/root.tsx",
+      "fixtureAsset": "/assets/root-C5aCrC8J.js",
+      "productionAsset": "/assets/root-DXhBltJp.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 4902,
+      "productionBytes": 4902,
+      "fixtureSHA256": "24ec1d3f95af07e4c617be087401f55d12c30aabc98a23dcca760e4c9ec8ed56",
+      "productionSHA256": "40e936af0b4ffbdd672b7ed97208b5985728331d034e34c4945fc387c2435deb"
+    },
+    {
+      "source": "app/ui/discover-bar/OrderControls.tsx",
+      "fixtureAsset": "/assets/DiscoverControls-D7x61W-P.js",
+      "productionAsset": "/assets/DiscoverControls-_uKqMqEK.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 63065,
+      "productionBytes": 63065,
+      "fixtureSHA256": "5d5b491b40d766f09c9182f30c2b02f690a3631260addbdf5d4d4912d040224b",
+      "productionSHA256": "fea093ab3fb0216cbef1159ae48f3f836b5175777c6369dd45ff44d2df69c0d3"
+    },
+    {
+      "source": "app/routes/_index.tsx",
+      "fixtureAsset": "/assets/_index-9eF6affA.js",
+      "productionAsset": "/assets/_index-DJfbxrqc.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 122947,
+      "productionBytes": 122950,
+      "fixtureSHA256": "6569e230580299cf1556cc6187ae6320404065c65edf4ac52587220ba298732c",
+      "productionSHA256": "0bfb0e6e6fc9c006b697d0e518b1fd7ce42b603616702f4171c0ca8c4e9fa871"
+    },
+    {
+      "source": "app/ui/start/browse/StartBrowse.tsx",
+      "fixtureAsset": "/assets/_index-9eF6affA.js",
+      "productionAsset": "/assets/_index-DJfbxrqc.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 122947,
+      "productionBytes": 122950,
+      "fixtureSHA256": "6569e230580299cf1556cc6187ae6320404065c65edf4ac52587220ba298732c",
+      "productionSHA256": "0bfb0e6e6fc9c006b697d0e518b1fd7ce42b603616702f4171c0ca8c4e9fa871"
+    },
+    {
+      "source": "app/ui/start/stage/useStartQuery.ts",
+      "fixtureAsset": "/assets/_index-9eF6affA.js",
+      "productionAsset": "/assets/_index-DJfbxrqc.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 122947,
+      "productionBytes": 122950,
+      "fixtureSHA256": "6569e230580299cf1556cc6187ae6320404065c65edf4ac52587220ba298732c",
+      "productionSHA256": "0bfb0e6e6fc9c006b697d0e518b1fd7ce42b603616702f4171c0ca8c4e9fa871"
+    },
+    {
+      "source": "app/ui/start/room/StartRoom.tsx",
+      "fixtureAsset": "/assets/_index-9eF6affA.js",
+      "productionAsset": "/assets/_index-DJfbxrqc.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 122947,
+      "productionBytes": 122950,
+      "fixtureSHA256": "6569e230580299cf1556cc6187ae6320404065c65edf4ac52587220ba298732c",
+      "productionSHA256": "0bfb0e6e6fc9c006b697d0e518b1fd7ce42b603616702f4171c0ca8c4e9fa871"
+    },
+    {
+      "source": "app/ui/start/room/room-pictures.ts",
+      "fixtureAsset": "/assets/_index-9eF6affA.js",
+      "productionAsset": "/assets/_index-DJfbxrqc.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 122947,
+      "productionBytes": 122950,
+      "fixtureSHA256": "6569e230580299cf1556cc6187ae6320404065c65edf4ac52587220ba298732c",
+      "productionSHA256": "0bfb0e6e6fc9c006b697d0e518b1fd7ce42b603616702f4171c0ca8c4e9fa871"
+    },
+    {
+      "source": "app/ui/start/room/room-picture-sizes.ts",
+      "fixtureAsset": "/assets/_index-9eF6affA.js",
+      "productionAsset": "/assets/_index-DJfbxrqc.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 122947,
+      "productionBytes": 122950,
+      "fixtureSHA256": "6569e230580299cf1556cc6187ae6320404065c65edf4ac52587220ba298732c",
+      "productionSHA256": "0bfb0e6e6fc9c006b697d0e518b1fd7ce42b603616702f4171c0ca8c4e9fa871"
+    },
+    {
+      "source": "app/ui/start/search/StartSearchBar.tsx",
+      "fixtureAsset": "/assets/_index-9eF6affA.js",
+      "productionAsset": "/assets/_index-DJfbxrqc.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 122947,
+      "productionBytes": 122950,
+      "fixtureSHA256": "6569e230580299cf1556cc6187ae6320404065c65edf4ac52587220ba298732c",
+      "productionSHA256": "0bfb0e6e6fc9c006b697d0e518b1fd7ce42b603616702f4171c0ca8c4e9fa871"
+    },
+    {
+      "source": "app/ui/start/room/ShelfCovers.tsx",
+      "fixtureAsset": "/assets/_index-9eF6affA.js",
+      "productionAsset": "/assets/_index-DJfbxrqc.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 122947,
+      "productionBytes": 122950,
+      "fixtureSHA256": "6569e230580299cf1556cc6187ae6320404065c65edf4ac52587220ba298732c",
+      "productionSHA256": "0bfb0e6e6fc9c006b697d0e518b1fd7ce42b603616702f4171c0ca8c4e9fa871"
+    },
+    {
+      "source": "app/ui/start/room/shelf-measure.ts",
+      "fixtureAsset": "/assets/_index-9eF6affA.js",
+      "productionAsset": "/assets/_index-DJfbxrqc.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 122947,
+      "productionBytes": 122950,
+      "fixtureSHA256": "6569e230580299cf1556cc6187ae6320404065c65edf4ac52587220ba298732c",
+      "productionSHA256": "0bfb0e6e6fc9c006b697d0e518b1fd7ce42b603616702f4171c0ca8c4e9fa871"
+    },
+    {
+      "source": "app/ui/start/moods/StartMoodPicker.tsx",
+      "fixtureAsset": "/assets/_index-9eF6affA.js",
+      "productionAsset": "/assets/_index-DJfbxrqc.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 122947,
+      "productionBytes": 122950,
+      "fixtureSHA256": "6569e230580299cf1556cc6187ae6320404065c65edf4ac52587220ba298732c",
+      "productionSHA256": "0bfb0e6e6fc9c006b697d0e518b1fd7ce42b603616702f4171c0ca8c4e9fa871"
+    },
+    {
+      "source": "app/ui/start/moods/StartMoodPanel.tsx",
+      "fixtureAsset": "/assets/StartMoodPanel-Cc69Tfh0.js",
+      "productionAsset": "/assets/StartMoodPanel-B1fl2U3T.js",
+      "identicalArtifact": false,
+      "fixtureBytes": 4479,
+      "productionBytes": 4482,
+      "fixtureSHA256": "62d1f92745be51ee7b7d135bdd0cd9ce659d47c0f16c99f397f4d5807197c91b",
+      "productionSHA256": "7e9e408797850c17a6d7a5bf14d751bae43ccdf6dc2ce76594783dd7bed0270b"
+    }
+  ],
+  "allSelectedFrontendArtifactsIdentical": false,
+  "frontendArtifactInterpretation": "All 16 selected runtime source maps match current source. JavaScript artifact bytes differ by hashed imports/export aliases; cause is not established and no byte-identical production network graph is claimed.",
+  "nativeFinalFocusProof": "docs/verification/home-cwv-2026-11-10/native-final-focus.json",
+  "compiledCssGuard": "docs/verification/home-cwv-2026-11-10/compiled-css-checks.json",
+  "nativeMemberSemanticsProof": "docs/verification/home-cwv-2026-11-10/stacked-semantics-proof.json"
+}

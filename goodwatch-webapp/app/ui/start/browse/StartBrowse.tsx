@@ -5,12 +5,25 @@
 //
 // The styles are start.css's `.sb-*`: short class names, since the guest's HTML has a byte budget.
 import { Link } from "@remix-run/react"
-import { MORE_HUBS, type StartBrowseData } from "./browse-data"
+import { Suspense, memo } from "react"
 import { GenreCloud } from "./GenreCloud"
 import { ArrivalsRail, MoodRail, ServiceRail } from "./Rails"
 import { TopTen } from "./TopTen"
+import { MORE_HUBS, type StartBrowseData } from "./browse-data"
 
-export function StartBrowse({ data }: { data: StartBrowseData }) {
+// Searches and lighting changes leave the browse data unchanged; its controls still update themselves.
+export const StartBrowse = memo(function StartBrowse({
+	data,
+}: { data: StartBrowseData }) {
+	return (
+		// Keep every link in SSR HTML, while an early search tap hydrates the stage without walking Browse's cards.
+		<Suspense fallback={null}>
+			<BrowseContents data={data} />
+		</Suspense>
+	)
+})
+
+function BrowseContents({ data }: { data: StartBrowseData }) {
 	return (
 		<section aria-labelledby="sb-title" className="sb">
 			<p className="sb-eye">Browse</p>

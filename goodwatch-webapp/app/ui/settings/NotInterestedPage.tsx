@@ -4,7 +4,7 @@
 import { Link } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
-import { toast } from "react-toastify"
+import { toast } from "~/ui/toast"
 import { useNotInterestedMutation } from "~/hooks/useUserDataMutations"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { POSTER_ROW_SIZES } from "~/ui/Poster"

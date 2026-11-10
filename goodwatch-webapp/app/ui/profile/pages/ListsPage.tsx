@@ -3,7 +3,7 @@
 import { PlusIcon } from "@heroicons/react/20/solid"
 import { Link, useRevalidator } from "@remix-run/react"
 import { useEffect, useState } from "react"
-import { toast } from "react-toastify"
+import { toast } from "~/ui/toast"
 import { handleOf } from "~/domain/member-paths"
 import type { ProfileShell } from "~/domain/profile"
 import { useShareListOwnerAction } from "~/routes/api.share-lists"

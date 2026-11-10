@@ -2,7 +2,7 @@
 // decided before the first paint, so the page cache keeps one HTML for every guest and a returning visitor never sees
 // a frame of it.
 //
-// The opening is CSS from the first paint (opening.css). The gate is a hidden checkbox, first in the stage's HTML, and
+// The opening is CSS from the first paint (opening.css). The gate is a hidden checkbox, before the header and main, and
 // the inline script right after it (GATE_SCRIPT): on the session's first load the script notes the visit and leaves
 // the box unticked (the opening plays); on later loads it ticks the box, and every opening rule is keyed on an
 // unticked box, so the assembled page shows at once. A checkbox's checked state is a property, not an attribute, so
@@ -12,7 +12,7 @@
 // the opening's CSS animations forward to the hand-off's start (never back), and lets the event through to the page.
 //
 // A client-side visit (a link to / from another page) never plays it: the visitor has seen the site already, and the
-// header is on screen. The stage ticks the box before that first paint (`skipOnClientMount`).
+// header is on screen. The gate ticks the box before that first paint (`skipOnClientMount`).
 
 /** The gate checkbox's id: opening.css keys every rule on it. */
 export const BOOT_GATE_ID = "start-boot-gate"
@@ -27,7 +27,7 @@ export const HANDOFF_REDUCED_MS = 600
 /** The opening's keyframes (opening.css) and the boot's own (living-room/intro/boot.css), which a skip moves on. */
 export const OPENING_ANIMATION = /^(start-open-|boot-)/
 
-/** What the gate decided, on the checkbox (an expando): the stage's client code reads it. */
+/** What the gate decided, on the checkbox (an expando): the gate's client code reads it. */
 export const GATE_MARK = "__startBoot"
 
 export type BootDecision = "play" | "skip"

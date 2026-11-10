@@ -1,10 +1,9 @@
-import type { DiscoverInterpretation } from "~/server/discover-query.server"
 // What a guest asks the start page for, and what the stage shows for it. Pure, so the rules are tested without React
 // (start-query.test.ts); useStartQuery.ts holds the state in a component.
 //
 // The query is two things the guest controls apart:
 // - `text`: the search text that is searched (typed text once its pause is over, Enter, the Search button, or a preset's
-//   exact phrase). `draft` is what the field holds while the guest types.
+//   exact phrase). `draft` is the committed field text before trimming; StartSearchBar owns its live typing draft.
 // - `picks`: up to three word ids of the taste picker (app/domain/taste-picker.ts: "m:funny", "t:crime", "s:slow").
 // Typing or a preset keeps the picks; picking keeps the text. The field's Clear clears only the search, a chip's ×
 // only that pick, the picker's Clear only the picks.
@@ -12,6 +11,7 @@ import type { DiscoverInterpretation } from "~/server/discover-query.server"
 // StartResults is what the search and the results requests (useStartSearch, a later step) answer for one query,
 // marked with the query's signature, so the stage never shows one query's titles under another.
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
+import type { DiscoverInterpretation } from "~/server/discover-query.server"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import type { TitleCard } from "~/server/title-cards.server"
 import type { TitleKey } from "~/utils/title-key"
@@ -23,7 +23,7 @@ export const MAX_START_PICKS = 3
 export const LOVED_NEEDED = 3
 
 export type StartQuery = {
-	/** What the field holds. */
+	/** The last committed field text, before trimming. */
 	draft: string
 	/** The searched text, trimmed; "" for none. */
 	text: string
@@ -33,7 +33,7 @@ export type StartQuery = {
 export const EMPTY_QUERY: StartQuery = { draft: "", text: "", picks: [] }
 
 export type StartQueryAction =
-	/** The guest types: the field changes, nothing is searched yet. */
+	/** A draft-only update for pure query consumers; StartSearchBar keeps typing local. */
 	| { type: "draft"; draft: string }
 	/** Search this text now (the pause is over, Enter, Search, or a preset's phrase). */
 	| { type: "search"; text: string }

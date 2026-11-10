@@ -1,4 +1,4 @@
-// The guest's query on the start page in a component: the field's draft, the searched text and the picks
+// The guest's committed query on the start page in a component: the searched text and the picks
 // (start-query.ts has the rules). `onChoice` runs after every new choice (anything but typing), so the loved titles
 // can start over once three are loved (useLovedThree).
 //
@@ -22,6 +22,8 @@ export function useStartQuery({
 	const [params] = useSearchParams()
 	const navigate = useNavigate()
 	const [query, setQuery] = useState<StartQuery>(() => queryFromParams(params))
+	// Explicit search changes reset the field, even when the committed text stays equal. Mood picks do not.
+	const [searchRevision, resetField] = useState(0)
 	// The query as the URL holds it: the last one written or read, so each side follows only the other's changes.
 	const inUrl = useRef(urlKey(queryFromParams(params)))
 	useEffect(() => {
@@ -29,28 +31,51 @@ export function useStartQuery({
 		const key = urlKey(read)
 		if (key === inUrl.current) return
 		inUrl.current = key
+		resetField((revision) => revision + 1)
 		setQuery((current) => (urlKey(current) === key ? current : read))
 	}, [params])
 	useEffect(() => {
 		const key = urlKey(query)
 		if (key === inUrl.current) return
-		inUrl.current = key
-		const next = queryParams(query, new URLSearchParams(window.location.search))
-		navigate(
-			{ search: next.size ? `?${next}` : "" },
-			{ replace: true, preventScrollReset: true },
-		)
+		// Router navigation snapshots scrollY even with preventScrollReset. Immediately after this query's DOM commit,
+		// that read forces the whole page's pending style/layout work into the click. Let this render paint first.
+		const from = inUrl.current
+		let task: ReturnType<typeof setTimeout> | undefined
+		const scheduleTask = () => {
+			task = setTimeout(() => {
+				// Back/Forward may have read another URL while this write was waiting.
+				if (inUrl.current !== from) return
+				inUrl.current = key
+				const next = queryParams(
+					query,
+					new URLSearchParams(window.location.search),
+				)
+				navigate(
+					{ search: next.size ? `?${next}` : "" },
+					{ replace: true, preventScrollReset: true },
+				)
+			}, 0)
+		}
+		// Hidden tabs have no rendering opportunity and may suspend rAF; their URL must still follow a paused search.
+		let frame: number | undefined
+		if (document.visibilityState === "hidden") scheduleTask()
+		else frame = window.requestAnimationFrame(scheduleTask)
+		return () => {
+			if (frame !== undefined) window.cancelAnimationFrame(frame)
+			if (task !== undefined) clearTimeout(task)
+		}
 	}, [query, navigate])
 	const choice = useRef(onChoice)
 	choice.current = onChoice
 	const dispatch = useCallback((action: StartQueryAction) => {
 		setQuery((current) => reduceQuery(current, action))
+		if (action.type === "search" || action.type === "clearSearch")
+			resetField((revision) => revision + 1)
 		if (isChoice(action)) choice.current?.(action)
 	}, [])
 	const actions = useMemo(
 		() => ({
 			dispatch,
-			setDraft: (draft: string) => dispatch({ type: "draft", draft }),
 			search: (text: string) => dispatch({ type: "search", text }),
 			clearSearch: () => dispatch({ type: "clearSearch" }),
 			setPicks: (picks: readonly string[]) =>
@@ -61,7 +86,7 @@ export function useStartQuery({
 		[dispatch],
 	)
 	const signature = useMemo(() => querySignature(query), [query])
-	return { query, signature, ...actions }
+	return { query, signature, searchRevision, ...actions }
 }
 
 /** The query as the URL writes it: picks in the URL's order, the draft left out. */

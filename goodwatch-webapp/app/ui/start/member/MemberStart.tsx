@@ -75,7 +75,7 @@ export function MemberStart({
 					<StartSearchBar
 						query={start.query}
 						results={results}
-						setDraft={start.setDraft}
+						searchRevision={start.searchRevision}
 						search={start.search}
 						clearSearch={start.clearSearch}
 						onAsk={card.show}

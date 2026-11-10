@@ -1,0 +1,183 @@
+{
+  "kind": "six-surface-existing-budget-check",
+  "limits_changed": false,
+  "budget_sha256": "b545aaa0c1146c3787e9f6a4f42e2b19c5e93113e713949312f3efe34cd1a655",
+  "cpu_slowdown": 2.7,
+  "browser": "Chrome/154.0.8037.92",
+  "baseline_run": "goodwatch-benchmark/results/20261110T110940Z-lighthouse-home-cwv-generator-baseline",
+  "candidate_run": "goodwatch-benchmark/results/20261110T123645Z-lighthouse-home-cwv-generator-verified",
+  "candidate_all_budget_pass": false,
+  "baseline_all_budget_pass": false,
+  "surfaces": [
+    {
+      "surface": "discover",
+      "baseline_runs": 3,
+      "candidate_runs": 1,
+      "baseline": {
+        "performance_score": 72,
+        "lcp_ms": 4826.402499999998,
+        "tbt_ms": 250.5,
+        "cls": 0,
+        "total_bytes": 842407,
+        "requests": 62
+      },
+      "candidate": {
+        "performance_score": 71,
+        "lcp_ms": 4972.588499999999,
+        "tbt_ms": 214.5,
+        "cls": 0,
+        "total_bytes": 834309,
+        "requests": 62
+      },
+      "baseline_script_bytes": 440980,
+      "candidate_script_bytes": 435864,
+      "baseline_stylesheet_bytes": 42499,
+      "candidate_stylesheet_bytes": 39594
+    },
+    {
+      "surface": "home",
+      "baseline_runs": 3,
+      "candidate_runs": 1,
+      "baseline": {
+        "performance_score": 66,
+        "lcp_ms": 3125.5460000000003,
+        "tbt_ms": 1451.0995000000007,
+        "cls": 0.002984535417997338,
+        "total_bytes": 1283344,
+        "requests": 96
+      },
+      "candidate": {
+        "performance_score": 78,
+        "lcp_ms": 2825.009,
+        "tbt_ms": 654.9999999999998,
+        "cls": 0.003003118128743103,
+        "total_bytes": 1276303,
+        "requests": 96
+      },
+      "baseline_script_bytes": 336194,
+      "candidate_script_bytes": 331854,
+      "baseline_stylesheet_bytes": 53445,
+      "candidate_stylesheet_bytes": 50539
+    },
+    {
+      "surface": "movie",
+      "baseline_runs": 3,
+      "candidate_runs": 1,
+      "baseline": {
+        "performance_score": 79,
+        "lcp_ms": 2900.6310000000003,
+        "tbt_ms": 625.037,
+        "cls": 0,
+        "total_bytes": 853961,
+        "requests": 59
+      },
+      "candidate": {
+        "performance_score": 79,
+        "lcp_ms": 2776.55,
+        "tbt_ms": 566,
+        "cls": 0,
+        "total_bytes": 846003,
+        "requests": 59
+      },
+      "baseline_script_bytes": 401258,
+      "candidate_script_bytes": 396140,
+      "baseline_stylesheet_bytes": 42499,
+      "candidate_stylesheet_bytes": 39594
+    },
+    {
+      "surface": "person",
+      "baseline_runs": 3,
+      "candidate_runs": 1,
+      "baseline": {
+        "performance_score": 78,
+        "lcp_ms": 4171.556500000001,
+        "tbt_ms": 182.5,
+        "cls": 0,
+        "total_bytes": 697715,
+        "requests": 49
+      },
+      "candidate": {
+        "performance_score": 79,
+        "lcp_ms": 4015.1090000000004,
+        "tbt_ms": 187.5,
+        "cls": 0,
+        "total_bytes": 689731,
+        "requests": 49
+      },
+      "baseline_script_bytes": 410564,
+      "candidate_script_bytes": 405447,
+      "baseline_stylesheet_bytes": 42499,
+      "candidate_stylesheet_bytes": 39594
+    },
+    {
+      "surface": "share_list",
+      "baseline_runs": 3,
+      "candidate_runs": 1,
+      "baseline": {
+        "performance_score": 77,
+        "lcp_ms": 4512.5165,
+        "tbt_ms": 92,
+        "cls": 7.339446285013731e-05,
+        "total_bytes": 601277,
+        "requests": 56
+      },
+      "candidate": {
+        "performance_score": 74,
+        "lcp_ms": 4798.830999999999,
+        "tbt_ms": 141.5,
+        "cls": 7.339446285013731e-05,
+        "total_bytes": 610959,
+        "requests": 56
+      },
+      "baseline_script_bytes": 342980,
+      "candidate_script_bytes": 338014,
+      "baseline_stylesheet_bytes": 42499,
+      "candidate_stylesheet_bytes": 39594
+    },
+    {
+      "surface": "show",
+      "baseline_runs": 3,
+      "candidate_runs": 1,
+      "baseline": {
+        "performance_score": 79,
+        "lcp_ms": 2924.1059999999998,
+        "tbt_ms": 622.4140000000007,
+        "cls": 0,
+        "total_bytes": 961485,
+        "requests": 60
+      },
+      "candidate": {
+        "performance_score": 78,
+        "lcp_ms": 3169.3150000000005,
+        "tbt_ms": 549,
+        "cls": 0,
+        "total_bytes": 953348,
+        "requests": 60
+      },
+      "baseline_script_bytes": 401318,
+      "candidate_script_bytes": 396195,
+      "baseline_stylesheet_bytes": 42499,
+      "candidate_stylesheet_bytes": 39594
+    }
+  ],
+  "share_list_followup": {
+    "run": "goodwatch-benchmark/results/20261110T124305Z-lighthouse-home-cwv-share-check",
+    "runs": 3,
+    "tbt_ms": [
+      50,
+      143,
+      141
+    ],
+    "median_tbt_ms": 141,
+    "limit_ms": 100,
+    "pass": false,
+    "audit": "docs/verification/home-cwv-2026-11-10/share-budget-audit.json"
+  },
+  "interpretation": [
+    "All six surfaces already fail one or more limits in the unchanged baseline. This implementation does not make the overall existing budget pass.",
+    "Homepage score66\u219278 and TBT1451\u2192655ms improve on the generator; its150ms TBT budget still fails. All homepage transfer/request/layout limits and minimumscore pass.",
+    "Other landing surfaces retain historical script/image/request/font/origin/element debt. The candidate share-list TBT median141ms exceeds both its100ms cap and baseline median92ms; overlapping run ranges and a Google-avatar network-success confound prevent a stable causal code-regression claim. The failure is retained.",
+    "Baseline uses3runs/surface; final candidate uses1run/surface for coverage, plus3share-list runs to investigate the newly observed TBT-cap failure. These are controlled lab/fixture results, not field data or matched timing percentiles.",
+    "No threshold, budget allowance or LCP-element requirement is changed. Raw reports and exact commands are retained locally."
+  ]
+}

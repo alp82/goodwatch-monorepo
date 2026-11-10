@@ -1,6 +1,6 @@
 // Sends a page's 103 Early Hints response before Remix renders it (what it says: early-hints.ts). The render and its
 // loaders take most of the time to first byte; meanwhile the browser opens the connections to the static hostname and
-// fetches the render-blocking style sheets, the brand font, the start page's room pictures and a title page's hero
+// fetches the render-blocking style sheets, the brand font, the start page's small marks and a title page's hero
 // (hero-hints.ts). Both proxies in front of the webapp (Traefik 2.10 on abio, Traefik 3.6 on the second instance's
 // host) forward a 103 as it comes, over HTTP/2 and HTTP/1.1 (tested October 18, 2026).
 // Chrome uses Early Hints on HTTP/2 and HTTP/3 navigations; other browsers ignore them.
@@ -14,10 +14,6 @@ import gabaritoLatin from "~/fonts/gabarito-latin.woff2"
 import cssTailwind from "~/tailwind.css?url"
 import { WHITE_MARK } from "~/ui/brand/white-mark"
 import explorerCss from "~/ui/explorer/explorer.css?url"
-import {
-	START_ROOM_ART,
-	START_ROOM_PHONE_ART,
-} from "~/ui/start/room/room-pictures"
 import { START_SHEETS } from "~/ui/start/start-sheets"
 import { currentAssetBase, isStaticHost } from "./asset-address.server"
 import { earlyHintLinks } from "./early-hints"
@@ -28,10 +24,6 @@ const FILES = {
 	explorer: explorerCss,
 	home: [...START_SHEETS],
 	font: gabaritoLatin,
-	room: {
-		phone: [START_ROOM_PHONE_ART.avif],
-		desktop: [START_ROOM_ART.avif],
-	},
 	// The white G is the phone dock's (ui/navigation/MobileDock.tsx), on the first screen.
 	marks: { images: [WHITE_MARK], masks: [] },
 }

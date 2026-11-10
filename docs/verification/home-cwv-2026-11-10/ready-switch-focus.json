@@ -1,0 +1,87 @@
+{
+  "recordedAt": "2026-11-10T12:06:32.726Z",
+  "browser": "Chrome/155.0.8059.79",
+  "origin": "https://127.0.0.1:3412",
+  "kind": "native-keyboard-tooltip-functional-check",
+  "pass": true,
+  "rawEvidence": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/resources/ready-switch-focus.json",
+  "compiledCssGuard": "docs/verification/home-cwv-2026-11-10/compiled-css-checks.json",
+  "results": [
+    {
+      "viewport": {
+        "name": "phone",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1,
+        "isMobile": true,
+        "hasTouch": true
+      },
+      "status": 200,
+      "checks": [
+        {
+          "index": 1,
+          "tabs": 9,
+          "delayAfterFocusMs": 180,
+          "delayAfterBlurMs": 180,
+          "focus": {
+            "active": true,
+            "focusVisible": true,
+            "tipId": ":R7kv8ij5:",
+            "ownOpacity": 1,
+            "neighborOpacities": [
+              0
+            ],
+            "checked": "false"
+          },
+          "blur": {
+            "active": false,
+            "opacity": 0,
+            "checked": "false"
+          },
+          "pass": true
+        }
+      ],
+      "filterUrlUnchanged": true,
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "viewport": {
+        "name": "desktop",
+        "width": 1365,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "status": 200,
+      "checks": [
+        {
+          "index": 0,
+          "tabs": 21,
+          "delayAfterFocusMs": 180,
+          "delayAfterBlurMs": 180,
+          "focus": {
+            "active": true,
+            "focusVisible": true,
+            "tipId": ":Rtkv8ij5:",
+            "ownOpacity": 1,
+            "neighborOpacities": [
+              0
+            ],
+            "checked": "false"
+          },
+          "blur": {
+            "active": false,
+            "opacity": 0,
+            "checked": "false"
+          },
+          "pass": true
+        }
+      ],
+      "filterUrlUnchanged": true,
+      "errors": [],
+      "failures": [],
+      "pass": true
+    }
+  ]
+}

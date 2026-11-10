@@ -1,0 +1,94 @@
+{
+  "recordedAt": "2026-11-10T12:30:11.378Z",
+  "browser": "Chrome/155.0.8059.79",
+  "kind": "native-keyboard-and-touch-focus-contract",
+  "interpretation": "Native keyboard and touch functional focus/card checks; no performance measurements.",
+  "pass": true,
+  "results": [
+    {
+      "scenario": "clear-enter",
+      "errors": [],
+      "blocked": [],
+      "pass": true,
+      "buttonFocused": true,
+      "after": {
+        "value": "",
+        "inputFocused": true,
+        "clearExists": false,
+        "focusins": [
+          {
+            "time": 1556.5,
+            "target": "start-search-input"
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "clear-space",
+      "errors": [],
+      "blocked": [],
+      "pass": true,
+      "buttonFocused": true,
+      "after": {
+        "value": "",
+        "inputFocused": true,
+        "clearExists": false,
+        "focusins": [
+          {
+            "time": 1472.8999999761581,
+            "target": "start-search-input"
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "clear-touch",
+      "errors": [],
+      "blocked": [],
+      "pass": true,
+      "after": {
+        "value": "",
+        "inputFocused": true,
+        "clearExists": false,
+        "focusins": []
+      }
+    },
+    {
+      "scenario": "done-enter",
+      "errors": [],
+      "blocked": [
+        {
+          "method": "POST",
+          "url": "/api/discover/results",
+          "reason": "write-method"
+        }
+      ],
+      "pass": true,
+      "buttonFocused": true,
+      "after": {
+        "panelClosed": true,
+        "cardOpen": true,
+        "moodFocused": true
+      }
+    },
+    {
+      "scenario": "done-space",
+      "errors": [],
+      "blocked": [
+        {
+          "method": "POST",
+          "url": "/api/discover/results",
+          "reason": "write-method"
+        }
+      ],
+      "pass": true,
+      "buttonFocused": true,
+      "after": {
+        "panelClosed": true,
+        "cardOpen": true,
+        "moodFocused": true
+      }
+    }
+  ],
+  "rawEvidence": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/resources/native-final-focus.json"
+}

@@ -89,7 +89,7 @@ export function ReadySwitch({
 					if (touched.current) setPeek(true)
 					onChange(!on)
 				}}
-				className={`${SWITCH} ${field ? "h-full gap-2.5 px-4 hover:bg-white/[0.04]" : "h-8 gap-1.5 px-2 hover:bg-white/[0.06]"}`}
+				className={`peer/ready ${SWITCH} ${field ? "h-full gap-2.5 px-4 hover:bg-white/[0.04]" : "h-8 gap-1.5 px-2 hover:bg-white/[0.06]"}`}
 			>
 				<PlayCircleIcon
 					className={`shrink-0 max-[380px]:hidden ${field ? "h-5 w-5" : "h-4 w-4"} ${on ? "text-amber-400" : "text-gray-500"}`}
@@ -127,7 +127,7 @@ function ReadyTip({
 			className={`pointer-events-none absolute z-50 w-[272px] rounded-2xl bg-gray-900 p-3.5 shadow-xl shadow-black/50 ring-1 ring-white/10 transition duration-150 ${field ? "top-full right-0 mt-2" : "top-full left-0 mt-2"} ${
 				peek
 					? "translate-y-0 opacity-100"
-					: "translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 group-hover:delay-200 group-has-[:focus-visible]:translate-y-0 group-has-[:focus-visible]:opacity-100"
+					: "translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 group-hover:delay-200 peer-focus-visible/ready:translate-y-0 peer-focus-visible/ready:opacity-100"
 			}`}
 		>
 			<p className="text-[13px] font-semibold text-white">

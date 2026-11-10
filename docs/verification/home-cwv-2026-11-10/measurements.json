@@ -1,0 +1,540 @@
+{
+  "captured_on": "2026-11-10",
+  "source_commit": "884dbdcc5",
+  "image": "gw-bench-lighthouse:13.5.0-6dd25f05",
+  "browser": "Chrome/155.0.8059.79",
+  "limited_network": {
+    "download_bytes_per_second": 209715.2,
+    "upload_bytes_per_second": 96000.0,
+    "latency_ms": 150
+  },
+  "field_match_claim": false,
+  "comparison_caveats": [
+    "CPU throttling is relative to this machine, not calibrated to a named phone.",
+    "Maximum Event Timing duration of a short lab visit is not field p75 INP.",
+    "Interventions affect only fresh anonymous browser responses; no app change was deployed.",
+    "Different runs have network variance; source hashes were stable.",
+    "Selector-stats timings and initial concurrent/mouse-input exploratory runs are excluded from the comparative range."
+  ],
+  "cases": [
+    {
+      "case": "desktop",
+      "cpu": 1,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 664,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-1536-PGj6Fj-O.avif",
+      "max_observed_interaction_ms": 0,
+      "max_click_ms": 0,
+      "max_keyboard_ms": 0,
+      "long_tasks_after_action": 0,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:35:39.555Z"
+    },
+    {
+      "case": "desktop-fast4g",
+      "cpu": 1,
+      "network": "fast4g",
+      "trace": false,
+      "lcp_ms": 2772,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-1536-PGj6Fj-O.avif",
+      "max_observed_interaction_ms": 0,
+      "max_click_ms": 0,
+      "max_keyboard_ms": 0,
+      "long_tasks_after_action": 0,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:43:17.969Z"
+    },
+    {
+      "case": "desktop-fast4g-repeat",
+      "cpu": 1,
+      "network": "fast4g",
+      "trace": false,
+      "lcp_ms": 2772,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-1536-PGj6Fj-O.avif",
+      "max_observed_interaction_ms": 0,
+      "max_click_ms": 0,
+      "max_keyboard_ms": 0,
+      "long_tasks_after_action": 0,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:48:36.506Z"
+    },
+    {
+      "case": "repeat-1",
+      "cpu": 4,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 472,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 184,
+      "max_click_ms": 184,
+      "max_keyboard_ms": 136,
+      "long_tasks_after_action": 12,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:37:30.176Z"
+    },
+    {
+      "case": "repeat-2",
+      "cpu": 4,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 564,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 160,
+      "max_click_ms": 160,
+      "max_keyboard_ms": 152,
+      "long_tasks_after_action": 12,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:37:43.098Z"
+    },
+    {
+      "case": "mobile-6x",
+      "cpu": 6,
+      "network": "native",
+      "trace": true,
+      "lcp_ms": 668,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 280,
+      "max_click_ms": 280,
+      "max_keyboard_ms": 224,
+      "long_tasks_after_action": 23,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:38:10.401Z",
+      "trace_windows": {
+        "click": {
+          "event": {
+            "name": "click",
+            "start": 9068.599999964237,
+            "duration": 280,
+            "inputDelay": 236.19999998807907,
+            "processing": 2.800000011920929,
+            "presentation": 41,
+            "id": 6663,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 117.9,
+          "max_style_elements": 1889
+        },
+        "keypress": {
+          "event": {
+            "name": "keypress",
+            "start": 9534.599999964237,
+            "duration": 224,
+            "inputDelay": 5.699999988079071,
+            "processing": 185.60000002384186,
+            "presentation": 32.69999998807907,
+            "id": 6670,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 101.8,
+          "max_style_elements": 1741
+        }
+      }
+    },
+    {
+      "case": "input-only-6x",
+      "cpu": 6,
+      "network": "native",
+      "trace": true,
+      "lcp_ms": 596,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 312,
+      "max_click_ms": 312,
+      "max_keyboard_ms": 208,
+      "long_tasks_after_action": 21,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:39:52.661Z",
+      "trace_windows": {
+        "click": {
+          "event": {
+            "name": "click",
+            "start": 7347.600000023842,
+            "duration": 312,
+            "inputDelay": 288.0999999642372,
+            "processing": 3.300000011920929,
+            "presentation": 20.600000023841858,
+            "id": 3062,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 204.1,
+          "max_style_elements": 1729
+        },
+        "keypress": {
+          "event": {
+            "name": "keypress",
+            "start": 7889.199999988079,
+            "duration": 208,
+            "inputDelay": 5.900000035762787,
+            "processing": 173.5,
+            "presentation": 28.599999964237213,
+            "id": 3069,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 94.9,
+          "max_style_elements": 1741
+        }
+      }
+    },
+    {
+      "case": "baseline-6x",
+      "cpu": 6,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 2588,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 296,
+      "max_click_ms": 296,
+      "max_keyboard_ms": 200,
+      "long_tasks_after_action": 23,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:41:48.729Z"
+    },
+    {
+      "case": "prewarm-6x",
+      "cpu": 6,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 684,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 280,
+      "max_click_ms": 280,
+      "max_keyboard_ms": 264,
+      "long_tasks_after_action": 25,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:42:05.857Z"
+    },
+    {
+      "case": "cached-browse-6x",
+      "cpu": 6,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 572,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 360,
+      "max_click_ms": 360,
+      "max_keyboard_ms": 184,
+      "long_tasks_after_action": 9,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:42:18.741Z"
+    },
+    {
+      "case": "hidden-art-6x",
+      "cpu": 6,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 508,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 368,
+      "max_click_ms": 368,
+      "max_keyboard_ms": 232,
+      "long_tasks_after_action": 23,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:42:31.702Z"
+    },
+    {
+      "case": "boot-selector-6x-1",
+      "cpu": 6,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 608,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 256,
+      "max_click_ms": 136,
+      "max_keyboard_ms": 256,
+      "long_tasks_after_action": 20,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:46:19.903Z"
+    },
+    {
+      "case": "boot-selector-6x-2",
+      "cpu": 6,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 604,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 216,
+      "max_click_ms": 104,
+      "max_keyboard_ms": 216,
+      "long_tasks_after_action": 19,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:46:32.703Z"
+    },
+    {
+      "case": "baseline-final2",
+      "cpu": 6,
+      "network": "native",
+      "trace": true,
+      "lcp_ms": 564,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 312,
+      "max_click_ms": 312,
+      "max_keyboard_ms": 224,
+      "long_tasks_after_action": 23,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:48:03.253Z",
+      "trace_windows": {
+        "click": {
+          "event": {
+            "name": "click",
+            "start": 7361.600000023842,
+            "duration": 312,
+            "inputDelay": 290.0999999642372,
+            "processing": 1.699999988079071,
+            "presentation": 20.200000047683716,
+            "id": 3029,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 211.9,
+          "max_style_elements": 1729
+        },
+        "keypress": {
+          "event": {
+            "name": "keypress",
+            "start": 7941.5,
+            "duration": 224,
+            "inputDelay": 5.5,
+            "processing": 192.5,
+            "presentation": 26,
+            "id": 3036,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 104.8,
+          "max_style_elements": 1741
+        }
+      }
+    },
+    {
+      "case": "boot-selector-final",
+      "cpu": 6,
+      "network": "native",
+      "trace": true,
+      "lcp_ms": 716,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 288,
+      "max_click_ms": 160,
+      "max_keyboard_ms": 288,
+      "long_tasks_after_action": 21,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:47:09.608Z",
+      "trace_windows": {
+        "click": {
+          "event": {
+            "name": "click",
+            "start": 7547.699999988079,
+            "duration": 160,
+            "inputDelay": 129.5,
+            "processing": 1.800000011920929,
+            "presentation": 28.69999998807907,
+            "id": 7807,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 23.3,
+          "max_style_elements": 21
+        },
+        "keypress": {
+          "event": {
+            "name": "keypress",
+            "start": 8048.199999988079,
+            "duration": 288,
+            "inputDelay": 8.899999976158142,
+            "processing": 242,
+            "presentation": 37.10000002384186,
+            "id": 7814,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 126.7,
+          "max_style_elements": 1739
+        }
+      }
+    },
+    {
+      "case": "combined-final",
+      "cpu": 6,
+      "network": "native",
+      "trace": true,
+      "lcp_ms": 556,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 176,
+      "max_click_ms": 104,
+      "max_keyboard_ms": 176,
+      "long_tasks_after_action": 7,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:47:21.851Z",
+      "trace_windows": {
+        "click": {
+          "event": {
+            "name": "click",
+            "start": 7341.399999976158,
+            "duration": 104,
+            "inputDelay": 81.60000002384186,
+            "processing": 1,
+            "presentation": 21.399999976158142,
+            "id": 8412,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 11.8,
+          "max_style_elements": 21
+        },
+        "keypress": {
+          "event": {
+            "name": "keypress",
+            "start": 7660.699999988079,
+            "duration": 176,
+            "inputDelay": 7.5,
+            "processing": 137.5,
+            "presentation": 31,
+            "id": 8419,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 105.4,
+          "max_style_elements": 1739
+        }
+      }
+    },
+    {
+      "case": "combined-repeat-1",
+      "cpu": 6,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 584,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 192,
+      "max_click_ms": 160,
+      "max_keyboard_ms": 192,
+      "long_tasks_after_action": 8,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:48:15.429Z"
+    },
+    {
+      "case": "combined-repeat-2",
+      "cpu": 6,
+      "network": "native",
+      "trace": false,
+      "lcp_ms": 516,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 168,
+      "max_click_ms": 104,
+      "max_keyboard_ms": 168,
+      "long_tasks_after_action": 10,
+      "page_errors": [],
+      "recorded_at": "2026-11-10T09:48:27.441Z"
+    },
+    {
+      "case": "combined-specificity-1",
+      "cpu": 6,
+      "network": "native",
+      "trace": true,
+      "lcp_ms": 608,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 168,
+      "max_click_ms": 104,
+      "max_keyboard_ms": 168,
+      "long_tasks_after_action": 5,
+      "recorded_at": "2026-11-10T09:55:59.710Z",
+      "page_errors": [],
+      "interventions": [
+        "boot-selectors",
+        "cached-browse"
+      ],
+      "trace_windows": {
+        "click": {
+          "event": {
+            "name": "click",
+            "start": 7318.300000011921,
+            "duration": 104,
+            "inputDelay": 85.69999998807907,
+            "processing": 1.5,
+            "presentation": 16.80000001192093,
+            "id": 3043,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 7.7,
+          "max_style_elements": 21
+        },
+        "keypress": {
+          "event": {
+            "name": "keypress",
+            "start": 7691.800000011921,
+            "duration": 168,
+            "inputDelay": 5.400000035762787,
+            "processing": 132.39999997615814,
+            "presentation": 30.19999998807907,
+            "id": 3050,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 102.6,
+          "max_style_elements": 1739
+        }
+      }
+    },
+    {
+      "case": "combined-specificity-2",
+      "cpu": 6,
+      "network": "native",
+      "trace": true,
+      "lcp_ms": 644,
+      "lcp_element": "https://static.goodwatch.app/assets/start-room-phone-C_V0DRYl.avif",
+      "max_observed_interaction_ms": 176,
+      "max_click_ms": 160,
+      "max_keyboard_ms": 176,
+      "long_tasks_after_action": 7,
+      "recorded_at": "2026-11-10T09:56:12.016Z",
+      "page_errors": [],
+      "interventions": [
+        "boot-selectors",
+        "cached-browse"
+      ],
+      "trace_windows": {
+        "click": {
+          "event": {
+            "name": "click",
+            "start": 7245.800000011921,
+            "duration": 160,
+            "inputDelay": 127.89999997615814,
+            "processing": 2.199999988079071,
+            "presentation": 29.900000035762787,
+            "id": 9264,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 16.0,
+          "max_style_elements": 21
+        },
+        "keypress": {
+          "event": {
+            "name": "keypress",
+            "start": 7695,
+            "duration": 176,
+            "inputDelay": 11.399999976158142,
+            "processing": 141.80000001192093,
+            "presentation": 22.80000001192093,
+            "id": 9271,
+            "target": "input#start-search-input.search-private.ph-no-capture.sentry-mask"
+          },
+          "style_ms": 109.2,
+          "max_style_elements": 1739
+        }
+      }
+    }
+  ],
+  "lighthouse_desktop_final": {
+    "version": "13.5.0",
+    "fetchTime": "2026-11-10T09:52:50.952Z",
+    "performance": 1,
+    "LCP_ms": 567.3448,
+    "TBT_ms": 0,
+    "FCP_ms": 567.3448,
+    "guard": {
+      "blockedMethods": 3,
+      "blockedUrls": 0,
+      "maxConcurrent": 2,
+      "responseErrors": 0,
+      "repeatedPauses": 0
+    }
+  },
+  "reproduction_script_verified": {
+    "command": "bash docs/verification/home-cwv-2026-11-10/reproduce.sh",
+    "exit_code": 1,
+    "max_observed_interaction_ms": 296,
+    "artifact": "goodwatch-benchmark/results/home-cwv-repro-20261110T095612Z/mobile.json"
+  }
+}

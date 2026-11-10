@@ -126,17 +126,19 @@ them):
 
 | Source | Production file | Size | Use |
 |---|---|---|---|
-| `nook-r15-a.avif`, `.webp` | `start-room-1536.avif`, `.webp` | 1536 × 1024, about 157 KB AVIF | Desktop and landscape |
-| `nook-r15-a-portrait.avif`, `.webp` | `start-room-phone.avif`, `.webp` | 1024 × 1536, about 161 KB AVIF | Upright phones (LCP) |
+| `nook-r15-a.avif`, `.webp` | `start-room-{800,1280,1536}.avif`, `.webp` | AVIF: 36 / 74 / 97 KB | Responsive desktop and landscape |
+| `nook-r15-a-portrait.avif`, `.webp` | `start-room-phone.avif`, `.webp` | 1024 × 1536, about 114 KB AVIF | Upright phones (LCP) |
 | `nook-tv-corner.avif`, `.webp` | `tv-corner.avif`, `.webp` | 1536 × 1024, about 136 KB AVIF | How it works (lazy, below the fold) |
 
-Re-encode the phone file to land under about 120 KB if the image budget needs it. The scenes have no larger source;
-on screens wider than 1536 px the picture scales up, as it did in the lab.
+The 2026-11-10 performance pass added landscape candidates and re-encoded the largest AVIF; the phone already
+meets the 120 KB target. See the [encoding notes](../../goodwatch-webapp/app/img/start-room/README.md). The scenes
+have no larger source; on screens wider than 1536 px the picture scales up, as it did in the lab.
 
 **The picture.** Use the TV room's pattern from `app/ui/living-room/tv/room-art.ts`: both pictures in the HTML, a
 `<source media>` pointing at `NO_PICTURE` blanks the one the window doesn't draw (the page cache forbids choosing in
-HTML by device). The server's choice is the 103 Early Hint: `server/early-hints.ts` picks the phone or desktop AVIF
-for `/` from `Sec-CH-UA-Mobile`, as today. The pictures carry `fetchpriority="high"`, `crossorigin`, and
+HTML by device). Responsive HTML-head preloads share the pictures' exact `srcset`, `sizes` and orientation media
+queries (`room-pictures.ts`). The 103 hints retain styles, font and marks; they no longer guess the hero from
+`Sec-CH-UA-Mobile`, which cannot identify viewport or density. The pictures carry `fetchpriority="high"`, `crossorigin`, and
 `elementtiming="hero"` (`HERO_TIMING`). The shared media queries (`UPRIGHT_PHONE`, `NOT_UPRIGHT_PHONE`) move or are
 reused; the phone version shows on boxes taller than wide (the lab's 0.8 aspect rule) only if that equals the media
 query; otherwise the media query wins, since nothing can measure before paint.
@@ -178,11 +180,11 @@ hydration (they need the measured box); their images use `loading="lazy"` and `f
 
 Guests only. A member's HTML has no boot, no gate script, and no header-hiding CSS.
 
-**Gate.** An inline script first in the stage's HTML, followed by a hidden checkbox `#start-boot-gate`. On a browser
-session's first load it sets `sessionStorage["gw-start-boot-seen"] = "1"` and leaves the box unticked (the boot
-plays). On later loads it ticks the box, and CSS on `html:has(#start-boot-gate:checked)` hides the boot and its night
-cover and turns off every header-hiding rule and the assembly animations, so a returning visitor sees the assembled
-page with no flash. Reading storage is in `try`/`catch`; with no storage the boot plays. The checked state is a
+**Gate.** `OpeningGate` renders the hidden checkbox `#start-boot-gate` and then its inline script, before the header
+and main in `SiteChrome`. On a browser session's first load it sets `sessionStorage["gw-start-boot-seen"] = "1"` and
+leaves the box unticked (the boot plays). On later loads it ticks the box. Scoped sibling selectors enable the
+opening only while it is unticked, so a returning visitor sees the assembled page with no flash. The 2026-11-10
+performance pass removed root `:has` selectors that invalidated page-wide styles during search interactions. Reading storage is in `try`/`catch`; with no storage the boot plays. The checked state is a
 property, so hydration sees no mismatch (an `<html data-…>` attribute made React warn in the lab). Keep the script in
 `opening/boot-gate.ts` with a unit test of its decision function.
 
@@ -426,7 +428,7 @@ step 4 needs step 2; step 8 needs step 2; step 9 comes last.
 
 ### 5. Opening boot
 
-- `boot-gate.ts`, `OpeningBoot`, `opening.css`: CSS-timed assembly, the large boot with the owner's two tweaks, the
+- `boot-gate.ts`, `OpeningGate`, `OpeningBoot`, `opening.css`: CSS-timed assembly, the large boot with the owner's two tweaks, the
   header slide (CSS on `[data-site-header]`, blur off while moving), skip, reduced motion.
 - Accept: first load in a new tab plays it; a reload in the same tab shows the assembled page with no boot frame (record
   the first frames); a member's HTML has none of it; with scripts delayed 5 s the hand-off still happens at 1.4 s; the

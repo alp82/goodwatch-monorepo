@@ -2,8 +2,8 @@
 // night over them, in one box that scales (the camera). start.css places the painting from the first paint.
 //
 // - Both paintings are in the HTML, since the page cache forbids choosing by device; a `<source>` matching the other
-//   window points at NO_PICTURE, so each window asks for one file. The server's 103 response preloads the one the
-//   device likely draws (server/early-hints.ts). The painting is the first screen's largest picture (LCP): it is
+//   window points at NO_PICTURE, so each window asks for one file. The HTML head preloads the matching responsive
+//   AVIF (room-pictures.ts), using the same viewport selection. The painting is the first screen's largest picture (LCP): it is
 //   never hidden or faded itself; only the night over it changes.
 // - `night` (0 lit, 1 black) and `camera` (the scale) are the room's light and framing; their changes ease
 //   (start.css). Layers that tint the room (the mood grade) go in `children`, between the room and the night.
@@ -16,7 +16,12 @@ import {
 	UPRIGHT_PHONE,
 } from "~/utils/upright-phone"
 import { ShelfCovers, type ShelfTitle } from "./ShelfCovers"
-import { START_ROOM_ART, START_ROOM_PHONE_ART } from "./room-pictures"
+import {
+	START_ROOM_ART,
+	START_ROOM_PHONE_ART,
+	roomPictureSources,
+	type RoomArt,
+} from "./room-pictures"
 import { START_ROOM, START_ROOM_PHONE } from "./scene"
 
 export function StartRoom({
@@ -66,20 +71,23 @@ function RoomPicture({
 	className: string
 	/** Where the other painting is drawn: there this one asks for nothing. */
 	other: string
-	art: { avif: string; webp: string }
+	art: RoomArt
 	scene: { width: number; height: number }
 }) {
-	// Without credentials on the static hostname, as the 103 Early Hints response preloads it.
+	// Without credentials on the static hostname, as the HTML head preloads it.
 	const crossOrigin = assetBase() ? "anonymous" : undefined
+	const sources = roomPictureSources(art)
 	return (
 		<picture className={`start-room-picture ${className}`}>
 			<source media={other} srcSet={NO_PICTURE} />
-			<source type="image/avif" srcSet={assetUrl(art.avif)} />
+			<source type="image/avif" srcSet={sources.avif} sizes={sources.sizes} />
 			<img
 				{...{ fetchpriority: "high" }}
 				{...HERO_TIMING}
 				crossOrigin={crossOrigin}
 				src={assetUrl(art.webp)}
+				srcSet={sources.webp}
+				sizes={sources.sizes}
 				alt=""
 				width={scene.width}
 				height={scene.height}

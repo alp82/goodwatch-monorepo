@@ -1,6 +1,6 @@
 // Today's Seen button for one title: one press marks it Seen, one more takes that back.
 import { useCallback } from "react"
-import { toast } from "react-toastify"
+import { toast } from "~/ui/toast"
 import { useUserScore, useWatchState } from "~/hooks/useUserDataAccessors"
 import { useWatchedMutation } from "~/hooks/useUserDataMutations"
 import type { MediaType } from "~/types/user-data"

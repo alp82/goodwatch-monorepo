@@ -5,7 +5,7 @@ import { productAnalyticsFetch } from "~/telemetry/product-analytics"
 // what they were, and a message says so (docs/implementation/tracking/data-model.md, "The browser").
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback } from "react"
-import { toast } from "react-toastify"
+import { toast } from "~/ui/toast"
 import { afterWatchLog } from "~/domain/member-data-updates-watch-log"
 import type { WatchLogEntry } from "~/domain/watch-log"
 import { getQueryKeyUserData } from "~/routes/api.user-data"

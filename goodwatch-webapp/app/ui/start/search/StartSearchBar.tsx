@@ -92,7 +92,7 @@ function Example({
 export function StartSearchBar({
 	query,
 	results,
-	setDraft,
+	searchRevision,
 	search,
 	clearSearch,
 	onAsk,
@@ -102,11 +102,14 @@ export function StartSearchBar({
 		StartResults,
 		"signature" | "status" | "reading" | "interpretation"
 	>
-	setDraft: (draft: string) => void
+	/** Changes on a committed search, explicit clear or URL navigation, including equal text. */
+	searchRevision: number
 	search: (text: string) => void
 	clearSearch: () => void
 	onAsk?: () => void
 }) {
+	// Live typing stays in this control; the stage and Browse only see committed searches.
+	const [draft, setDraft] = useState(query.draft)
 	const field = useRef<HTMLInputElement>(null)
 	const latest = useRef({ query, search, clearSearch })
 	latest.current = { query, search, clearSearch }
@@ -120,7 +123,11 @@ export function StartSearchBar({
 		[],
 	)
 	useEffect(() => commit.cancel, [commit])
-	const filled = query.draft.trim().length > 0
+	useEffect(() => {
+		commit.cancel()
+		setDraft(query.draft)
+	}, [searchRevision, query.draft, commit])
+	const filled = draft.trim().length > 0
 	const own = JSON.parse(results.signature)[0] === query.text
 	const onBlur = (event: FocusEvent<HTMLFormElement>) => {
 		if (
@@ -136,7 +143,7 @@ export function StartSearchBar({
 			onBlur={onBlur}
 			onSubmit={(event) => {
 				event.preventDefault()
-				if (!commit.submit(query.draft)) return
+				if (!commit.submit(draft)) return
 				field.current?.blur()
 				onAsk?.()
 			}}
@@ -157,7 +164,7 @@ export function StartSearchBar({
 						id={START_SEARCH_INPUT}
 						type="search"
 						aria-label={SEARCH_LABEL}
-						value={query.draft}
+						value={draft}
 						placeholder={PLACEHOLDER}
 						maxLength={SEARCH_MAX_CHARS}
 						autoComplete="off"
@@ -177,6 +184,7 @@ export function StartSearchBar({
 						<Example
 							paused={filled}
 							run={(phrase) => {
+								setDraft(phrase)
 								commit.preset(phrase)
 								onAsk?.()
 							}}
@@ -188,8 +196,13 @@ export function StartSearchBar({
 						type="button"
 						aria-label="Clear the search"
 						className="start-pill-clear"
+						onMouseDown={(event) => {
+							// Keep the field (and a phone's keyboard) focused while its clear button is pressed.
+							if (event.button === 0) event.preventDefault()
+						}}
 						onClick={() => {
 							commit.cancel()
+							setDraft("")
 							clearSearch()
 							field.current?.focus()
 						}}

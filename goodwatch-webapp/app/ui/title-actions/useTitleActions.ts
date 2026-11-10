@@ -1,7 +1,7 @@
 // One title's marks (score, Want to See, Seen, Not interested) and the actions that change them, for every surface
 // that shows the title action set.
 import { useCallback } from "react"
-import { toast } from "react-toastify"
+import { toast } from "~/ui/toast"
 import { useSeenToggle } from "~/hooks/useSeenToggle"
 import { useIsNotInterested, useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
 import { useNotInterestedMutation, useWishlistMutation } from "~/hooks/useUserDataMutations"

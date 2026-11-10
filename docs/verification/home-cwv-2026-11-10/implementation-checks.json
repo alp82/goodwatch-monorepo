@@ -1,0 +1,341 @@
+{
+  "recorded_at": "2026-11-10T12:30:32.444678+00:00",
+  "baseline_commit": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+  "candidate": "uncommitted implementation on analysis/home-cwv-20261110, fast-forwarded to current origin/main",
+  "working_directory": "goodwatch-webapp",
+  "dependencies": {
+    "installation": "Fresh npm ci prepared in the retained 884dbdcc5 fixture; integrated candidate and archived ccd3df7e4 typecheck baseline use that identical node_modules tree.",
+    "node": "v24.15.0",
+    "typescript": "5.6.3",
+    "package_lock_sha256": "2136824e98af84cd2b2ca15a14bef3e68cf8c33238e255030963da0f394a3ed9",
+    "baseline_and_candidate_lock_match": true,
+    "shared_node_modules": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/baseline-source/goodwatch-webapp/node_modules"
+  },
+  "tests": {
+    "command": "CHOKIDAR_USEPOLLING=true node --test app/server/early-hints.test.ts app/utils/web-vitals-attribution.test.ts app/utils/web-vitals-telemetry.test.ts app/utils/stale-chunk.test.ts app/ui/toast-queue.test.ts app/ui/toast.test.ts app/ui/nav/instant-route-scroll.test.ts app/ui/scoring/stacked-selector.test.ts app/ui/discover-bar/ready-switch.test.ts app/ui/discover-bar/DiscoverControls.test.ts 'app/ui/start/**/*.test.ts' > /tmp/gw-cwv-final-focus-tests.log 2>&1",
+    "exit_code": 0,
+    "tests": 255,
+    "passed": 255,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 26204.50501,
+    "scope": "Prior254-check suite plus actual mood Done focus paint-ordering/cancellation. Search harness additionally verifies clear primary mousedown prevention, retained input focus, secondary mouse defaults, pointer clearing and keyboard-focused activation.",
+    "post_suite_test_only_fix": "Done fixture numeric timer overrides replaced incompatible HappyDOM Node-handle assignments; no runtime application changes.",
+    "post_fix_focused_retest": {
+      "command": "CHOKIDAR_USEPOLLING=true node --test app/ui/start/moods/panel-done-focus.test.ts > /tmp/gw-cwv-final-done-retest.log 2>&1",
+      "passed": 1,
+      "failed": 0,
+      "exit_code": 0
+    }
+  },
+  "typecheck": {
+    "command": "node_modules/.bin/tsc --noEmit --pretty false > /tmp/gw-cwv-final-focus-fixed-typecheck.log 2>&1",
+    "baseline_command": "node_modules/.bin/tsc --noEmit --pretty false > /tmp/gw-cwv-integrated-baseline-typecheck.log 2>&1",
+    "baseline_commit": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+    "baseline_working_directory": "goodwatch-benchmark/results/home-cwv-2026-11-10/typecheck-baseline-ccd3df7e4/goodwatch-webapp",
+    "candidate_exit_code": 2,
+    "baseline_exit_code": 2,
+    "normalization": "Multiset of diagnostic file path, TS error code and message; remove line/column coordinates and preserve duplicate counts.",
+    "baseline_diagnostics": 179,
+    "candidate_diagnostics": 179,
+    "inherited_diagnostics": 179,
+    "candidate_only": 0,
+    "baseline_only": 0,
+    "full_typecheck_after_final_source_changes": true,
+    "sequential_candidate_then_baseline": false,
+    "result": "Final full candidate typecheck after all application and test fixes matches the stored clean archived ccd3df7e4 baseline179 diagnostics exactly; zero introduced or removed diagnostics.",
+    "baseline_reused": true
+  },
+  "post_fix_toast_tests": {
+    "command": "CHOKIDAR_USEPOLLING=true node --test app/ui/toast-queue.test.ts app/ui/toast.test.ts",
+    "passed": 4,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "diff_check": {
+    "command": "git diff --check",
+    "exit_code": 0
+  },
+  "raw_logs": [
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/combined-tests.log",
+      "sha256": "4b4efd22a483d01e8da00a7377a292e4c2194589bb481130b60c18a4e98e7307",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/candidate-tsc-before-test-fix.log",
+      "sha256": "aee4bf372c80cf43f4da9e996394c3f73819c90ff63a0a08a1a969f1d50f0d46",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/baseline-tsc.log",
+      "sha256": "6e79a85218f0861f4b70078aee6d522a9908f3b5880b08fed2e8c1ef2c5c63d6",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/final-source-tests.log",
+      "sha256": "c50e2c61bbae73818e2d1dbe6b240597dabb3cf249d9e433d3f738cae35a9298",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/final-source-tsc.log",
+      "sha256": "3cbcd4ac0cf9a481820f7882e25c2f1c67818eea7aa511dcf40cd90fe2645893",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/frozen-tests.log",
+      "sha256": "f55b80fe97fd5ddf54010904f3b182d6764a54715ae013e0310ff7d960941959",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/frozen-tsc.log",
+      "sha256": "3cbcd4ac0cf9a481820f7882e25c2f1c67818eea7aa511dcf40cd90fe2645893",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/integrated-tests.log",
+      "sha256": "8669c2e3f724d3d0678f5c0791f4544bbbfb56236691ec2884cc6aaf7b0a4b15",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/integrated-candidate-tsc.log",
+      "sha256": "3cbcd4ac0cf9a481820f7882e25c2f1c67818eea7aa511dcf40cd90fe2645893",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/integrated-baseline-ccd3-tsc.log",
+      "sha256": "6e79a85218f0861f4b70078aee6d522a9908f3b5880b08fed2e8c1ef2c5c63d6",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/final-focus-tests.log",
+      "sha256": "09793495527285d6ea314ec04ccf90023d2043baa8c05b40a53bdebbaf2395d9",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/final-focus-fixed-tsc.log",
+      "sha256": "3cbcd4ac0cf9a481820f7882e25c2f1c67818eea7aa511dcf40cd90fe2645893",
+      "git_ignored": true
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/final-done-retest.log",
+      "sha256": "11788bfec4d7253adbd6983300669e63f83335aff2fa9da47eec282d9273bb30",
+      "git_ignored": true
+    }
+  ],
+  "limits": [
+    "No application server or production databases were accessed for these checks.",
+    "No performance/browser measurements or bundle budget result are asserted by this record.",
+    "Global typecheck does not pass because of the inherited baseline diagnostics."
+  ],
+  "previous_validation": {
+    "tests": {
+      "command": "CHOKIDAR_USEPOLLING=true node --test app/server/early-hints.test.ts app/utils/web-vitals-attribution.test.ts app/utils/web-vitals-telemetry.test.ts app/utils/stale-chunk.test.ts app/ui/toast-queue.test.ts app/ui/toast.test.ts 'app/ui/start/**/*.test.ts' > /tmp/gw-cwv-final-tests.log 2>&1",
+      "exit_code": 0,
+      "tests": 237,
+      "passed": 237,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 4268.452972,
+      "scope": "all start-page tests plus early hints, existing/new Web Vitals, stale chunk and toast queue/runtime checks"
+    },
+    "typecheck": {
+      "command": "node_modules/.bin/tsc --noEmit --pretty false",
+      "baseline_working_directory": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/baseline-source/goodwatch-webapp",
+      "candidate_exit_code_before_test_fix": 2,
+      "baseline_exit_code": 2,
+      "normalization": "Multiset of diagnostic file path, TS error code and message; remove line/column coordinates and preserve duplicate counts.",
+      "baseline_diagnostics": 179,
+      "candidate_diagnostics_before_test_fix": 181,
+      "inherited_diagnostics": 179,
+      "candidate_only_before_fix": 2,
+      "baseline_only": 0,
+      "fixed_candidate_only": {
+        "file": "app/ui/toast-queue.test.ts",
+        "code": "TS2339",
+        "messages": [
+          "Property 'text' does not exist on type 'never'.",
+          "Property 'undo' does not exist on type 'never'."
+        ],
+        "fix": "Assert an empty array by length to avoid Node assert.deepEqual narrowing the later callback-populated array to never[]."
+      },
+      "post_fix_validation": {
+        "command": "node_modules/.bin/tsc --noEmit --strict --target ESNext --module NodeNext --moduleResolution NodeNext --skipLibCheck --allowImportingTsExtensions app/ui/toast-queue.ts app/ui/toast-queue.test.ts",
+        "exit_code": 0,
+        "new_diagnostics_remaining": 0,
+        "full_typecheck_rerun": false,
+        "basis": "Both candidate-only diagnostics were in this file and disappear in the strict focused rerun. The 179 inherited diagnostics remain unresolved."
+      }
+    },
+    "post_fix_toast_tests": {
+      "command": "CHOKIDAR_USEPOLLING=true node --test app/ui/toast-queue.test.ts app/ui/toast.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "exit_code": 0
+    }
+  },
+  "source_changes_since_previous_validation": [
+    "Clear keeps input focus during primary pointer presses while preserving click/keyboard activation and secondary mouse defaults",
+    "Done closes and paints the mood panel before returning focus/opening the card; pending focus work is cancelled on reopen/unmount",
+    "Controlled Done test timer overrides corrected to browser numeric IDs without incompatible HappyDOM Node timer types"
+  ],
+  "format_check": {
+    "command": "node_modules/.bin/biome format app/ui/start/search/StartSearchBar.tsx app/ui/start/search/search-bar-interaction.test-support.tsx app/ui/start/moods/StartMoodPanel.tsx app/ui/start/moods/panel-done-focus.test-support.tsx app/ui/start/moods/panel-done-focus.test.ts",
+    "exit_code": 0,
+    "files": 5,
+    "result": "No fixes required; Done fixture was formatted again after its test-only timer override correction."
+  },
+  "intermediate_validation": {
+    "recorded_at": "2026-11-10T10:58:01.367984+00:00",
+    "tests": {
+      "command": "CHOKIDAR_USEPOLLING=true node --test app/server/early-hints.test.ts app/utils/web-vitals-attribution.test.ts app/utils/web-vitals-telemetry.test.ts app/utils/stale-chunk.test.ts app/ui/toast-queue.test.ts app/ui/toast.test.ts 'app/ui/start/**/*.test.ts' > /tmp/gw-cwv-final-source-tests.log 2>&1",
+      "exit_code": 0,
+      "tests": 238,
+      "passed": 238,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 5115.686098,
+      "scope": "All start-page tests plus early hints, existing/new Web Vitals, stale chunk and toast queue/runtime checks. Includes Browse SSR/selective-hydration boundary and URL write coalescing, Back/Forward, unmount, and hidden-tab behavior."
+    },
+    "typecheck": {
+      "command": "node_modules/.bin/tsc --noEmit --pretty false > /tmp/gw-cwv-frozen-typecheck.log 2>&1",
+      "baseline_command": "node_modules/.bin/tsc --noEmit --pretty false > /tmp/gw-cwv-final-baseline-typecheck.log 2>&1",
+      "baseline_working_directory": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/baseline-source/goodwatch-webapp",
+      "candidate_exit_code": 2,
+      "baseline_exit_code": 2,
+      "normalization": "Multiset of diagnostic file path, TS error code and message; remove line/column coordinates and preserve duplicate counts.",
+      "baseline_diagnostics": 179,
+      "candidate_diagnostics": 179,
+      "inherited_diagnostics": 179,
+      "candidate_only": 0,
+      "baseline_only": 0,
+      "full_typecheck_after_final_source_changes": true,
+      "result": "No new diagnostics; all 179 errors also occur at baseline 884dbdcc5 with the identical fresh npm ci dependency tree."
+    }
+  },
+  "validation_history": [
+    {
+      "recorded_at": "2026-11-10T11:44:04.849308+00:00",
+      "baseline_commit": "884dbdcc5a1abe72e0f731e1d3e6cc4b8277af4c",
+      "tests": {
+        "command": "CHOKIDAR_USEPOLLING=true node --test app/server/early-hints.test.ts app/utils/web-vitals-attribution.test.ts app/utils/web-vitals-telemetry.test.ts app/utils/stale-chunk.test.ts app/ui/toast-queue.test.ts app/ui/toast.test.ts app/ui/nav/instant-route-scroll.test.ts 'app/ui/start/**/*.test.ts' > /tmp/gw-cwv-frozen-tests.log 2>&1",
+        "exit_code": 0,
+        "tests": 242,
+        "passed": 242,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 7249.573712,
+        "scope": "All start-page tests plus early hints, Web Vitals attribution/telemetry, stale chunk, toast queue/runtime, and the real RouterProvider/ScrollRestoration integration. Includes Browse SSR/selective hydration, query URL timing/history/hidden-tab behavior, shelf coalescing/cancellation, and zero root style writes for preserving query navigation."
+      },
+      "typecheck": {
+        "command": "node_modules/.bin/tsc --noEmit --pretty false > /tmp/gw-cwv-frozen-typecheck.log 2>&1",
+        "baseline_command": "node_modules/.bin/tsc --noEmit --pretty false > /tmp/gw-cwv-final-baseline-typecheck.log 2>&1",
+        "baseline_working_directory": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/baseline-source/goodwatch-webapp",
+        "candidate_exit_code": 2,
+        "baseline_exit_code": 2,
+        "normalization": "Multiset of diagnostic file path, TS error code and message; remove line/column coordinates and preserve duplicate counts.",
+        "baseline_diagnostics": 179,
+        "candidate_diagnostics": 179,
+        "inherited_diagnostics": 179,
+        "candidate_only": 0,
+        "baseline_only": 0,
+        "full_typecheck_after_final_source_changes": true,
+        "result": "No new diagnostics; all 179 errors also occur at baseline 884dbdcc5 with the identical fresh npm ci dependency tree."
+      }
+    },
+    {
+      "recorded_at": "2026-11-10T12:07:53.816955+00:00",
+      "baseline_commit": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+      "tests": {
+        "command": "CHOKIDAR_USEPOLLING=true node --test app/server/early-hints.test.ts app/utils/web-vitals-attribution.test.ts app/utils/web-vitals-telemetry.test.ts app/utils/stale-chunk.test.ts app/ui/toast-queue.test.ts app/ui/toast.test.ts app/ui/nav/instant-route-scroll.test.ts app/ui/scoring/stacked-selector.test.ts app/ui/discover-bar/ready-switch.test.ts app/ui/discover-bar/DiscoverControls.test.ts 'app/ui/start/**/*.test.ts' > /tmp/gw-cwv-integrated-tests.log 2>&1",
+        "exit_code": 0,
+        "tests": 254,
+        "passed": 254,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 30140.3375,
+        "scope": "All prior start-page/room, early hints, Web Vitals, stale chunk, toast, router scroll integration checks, plus production-minified stacked selector guards, ReadySwitch and desktop/phone Discover keyboard coverage. Rerun after origin/main integration and the ReadySwitch test type fix."
+      },
+      "typecheck": {
+        "command": "node_modules/.bin/tsc --noEmit --pretty false > /tmp/gw-cwv-final-focus-fixed-typecheck.log 2>&1",
+        "baseline_command": "node_modules/.bin/tsc --noEmit --pretty false > /tmp/gw-cwv-integrated-baseline-typecheck.log 2>&1",
+        "baseline_commit": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+        "baseline_working_directory": "goodwatch-benchmark/results/home-cwv-2026-11-10/typecheck-baseline-ccd3df7e4/goodwatch-webapp",
+        "candidate_exit_code": 2,
+        "baseline_exit_code": 2,
+        "normalization": "Multiset of diagnostic file path, TS error code and message; remove line/column coordinates and preserve duplicate counts.",
+        "baseline_diagnostics": 179,
+        "candidate_diagnostics": 179,
+        "inherited_diagnostics": 179,
+        "candidate_only": 0,
+        "baseline_only": 0,
+        "full_typecheck_after_final_source_changes": true,
+        "sequential_candidate_then_baseline": false,
+        "result": "Final full candidate typecheck after all application and test fixes matches the stored clean archived ccd3df7e4 baseline179 diagnostics exactly; zero introduced or removed diagnostics.",
+        "baseline_reused": true
+      }
+    }
+  ],
+  "performance_baseline_commit": "884dbdcc5a1abe72e0f731e1d3e6cc4b8277af4c",
+  "upstream_integration": {
+    "method": "git merge --ff-only origin/main",
+    "current_base": "ccd3df7e48a1d8fef408d6831b027e0d55de7873",
+    "performance_baseline_retained": "884dbdcc5a1abe72e0f731e1d3e6cc4b8277af4c",
+    "archived_typecheck_baseline": "goodwatch-benchmark/results/home-cwv-2026-11-10/typecheck-baseline-ccd3df7e4/goodwatch-webapp",
+    "frontend_source_diff_command": "git diff --name-only 884dbdcc5a1abe72e0f731e1d3e6cc4b8277af4c..ccd3df7e48a1d8fef408d6831b027e0d55de7873 -- goodwatch-webapp/app/app.tsx goodwatch-webapp/app/root.tsx goodwatch-webapp/app/routes goodwatch-webapp/app/ui goodwatch-webapp/app/hooks goodwatch-webapp/app/utils goodwatch-webapp/app/telemetry goodwatch-webapp/app/fonts goodwatch-webapp/app/img goodwatch-webapp/app/main.css goodwatch-webapp/app/tailwind.css goodwatch-webapp/vite.config.js goodwatch-webapp/package-lock.json",
+    "frontend_source_paths_changed": [],
+    "scope": "Upstream changes are YepWatch server/contracts/docs; the listed GoodWatch browser sources/styles/config/dependency lock are unchanged.",
+    "bundle_byte_identity_claimed": false,
+    "bundle_note": "The production and safe-fixture bundle bytes differ. The reason for those byte differences is not established; frontend source and CSS checks are separate evidence."
+  },
+  "native_css_semantics": {
+    "proof_path": "docs/verification/home-cwv-2026-11-10/stacked-semantics-proof.json",
+    "proof_sha256": "e2edb75fd2aa93ea7494090808295d5fccd430f6d557577e3542f224086eb219",
+    "browser": "Chrome/155.0.8059.79",
+    "source": "current app/tailwind.css stacked variant versus original matching contract",
+    "productionMinifiers": "@tailwindcss/node 4.1.5 optimize(minify:true) and esbuild CSS minify with Vite modules targets",
+    "markup": "actual SplitFrame SSR output; compact/big flags, status/Seen faces, asynchronous status removal/restoration",
+    "viewportWidths": [
+      390,
+      1023,
+      1024,
+      1365
+    ],
+    "containerWidths": [
+      200,
+      335,
+      336,
+      343,
+      375,
+      383,
+      384,
+      500
+    ],
+    "comparedStates": 148,
+    "identicalComputedStyles": true,
+    "zeroNetworkRequests": true,
+    "performanceMeasurement": false,
+    "production_selector_guard_test": "app/ui/scoring/stacked-selector.test.ts",
+    "preparation_script": "docs/verification/home-cwv-2026-11-10/prepare-stacked-semantics.mjs",
+    "browser_script": "docs/verification/home-cwv-2026-11-10/stacked-semantics.mjs"
+  },
+  "production_check_records": [
+    {
+      "path": "docs/verification/home-cwv-2026-11-10/build-checks.json"
+    },
+    {
+      "path": "docs/verification/home-cwv-2026-11-10/compiled-css-checks.json"
+    },
+    {
+      "path": "docs/verification/home-cwv-2026-11-10/ready-switch-focus.json"
+    }
+  ],
+  "final_runtime_source_fingerprint": {
+    "manifest_path": "goodwatch-benchmark/results/home-cwv-2026-11-10/implementation-checks/final-focus-source-fingerprint.json",
+    "manifest_sha256": "49da9af285a62e5b4f2a2fb6fb9428bd988198de76742717c625f9b84dbfa6cc",
+    "fingerprint_sha256": "2fb95d0f5abc692aacd12b65d074f0c36ed36b538087eeaa4bd9e47a9afeed8f",
+    "files": 50,
+    "method": "SHA256 of sorted relative path + NUL + SHA256(file bytes) + LF for Git-visible changed runtime source/assets; excludes .test.* and .test-support.* files.",
+    "base_commit": "ccd3df7e48a1d8fef408d6831b027e0d55de7873"
+  }
+}

@@ -4,6 +4,7 @@ import { Outlet, useLocation, useMatches } from "@remix-run/react"
 import { Suspense, lazy, useEffect } from "react"
 
 import { SiteChrome } from "~/ui/navigation"
+import { OpeningGate } from "~/ui/start/opening/OpeningGate"
 import { TvWayBackHost } from "~/ui/living-room/TvWayBackHost"
 import { WatchLogHost } from "~/ui/watch-log/WatchLogHost"
 import { useUser } from "~/utils/auth"
@@ -63,6 +64,7 @@ export default function App() {
 
 	return (
 		<SiteChrome
+			beforeHeader={location.pathname === "/" && !user ? <OpeningGate /> : null}
 			afterHeader={
 				// Show smart onboarding banner for logged-in users
 				user && (

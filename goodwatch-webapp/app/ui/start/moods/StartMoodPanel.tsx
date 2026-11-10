@@ -6,14 +6,7 @@
 // less than 360 px left there, the page first scrolls it up to 72 px from the top. A resize places it again from the
 // page as it is then. Solid gray-900 with no blur: the room's light changes behind it.
 import { AnimatePresence, motion } from "framer-motion"
-import {
-	type RefObject,
-	useCallback,
-	useEffect,
-	useLayoutEffect,
-	useRef,
-	useState,
-} from "react"
+import { type RefObject, useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import {
 	type MoodControl,
@@ -22,11 +15,8 @@ import {
 } from "~/ui/watch-next/MoodPicker"
 import type { ShelfLines } from "~/ui/watch-next/TasteShelf"
 import { EASE } from "~/ui/watch-next/style"
-import { PANEL_LINE, type PanelBox, panelBox } from "./start-picker"
-
-/** After a resize: how many frames the row holds its place before the panel counts as placed, and the longest wait. */
-const SETTLE_FRAMES = 3
-const SETTLE_MS = 2000
+import { afterPanelPaint, watchPanelPlacement } from "./panel-placement"
+import { PANEL_LINE, type PanelBox } from "./start-picker"
 
 const sameBox = (a: PanelBox, b: PanelBox) =>
 	a.top === b.top &&
@@ -42,26 +32,6 @@ export type StartMoodPanelProps = {
 	onDone: () => void
 }
 
-/** What the panel's place depends on, read from the page. */
-function windowFacts(anchor: HTMLElement) {
-	const vh = window.visualViewport?.height ?? window.innerHeight
-	const dock = document.querySelector<HTMLElement>("[data-mobile-dock]")
-	// The dock is fixed (no offsetParent); hidden from 1024 px.
-	const dockBox = dock?.getBoundingClientRect()
-	const dockTop = dockBox?.height ? dockBox.top : vh
-	const column = (
-		anchor.closest(".start-moods") ?? anchor
-	).getBoundingClientRect()
-	const scroller = document.scrollingElement ?? document.documentElement
-	return {
-		row: anchor.getBoundingClientRect(),
-		column: { left: column.left + window.scrollX, width: column.width },
-		bottom: Math.min(vh, dockTop),
-		scrollY: window.scrollY,
-		room: scroller.scrollHeight - vh - window.scrollY,
-	}
-}
-
 export function StartMoodPanel({
 	control,
 	shelf,
@@ -73,62 +43,45 @@ export function StartMoodPanel({
 	const [box, setBox] = useState<PanelBox | null>(null)
 	const { open, setOpen } = control
 	const close = useCallback(() => setOpen(false), [setOpen])
+	const openNow = useRef(open)
+	openNow.current = open
+	const doneFocus = useRef<(() => void) | null>(null)
+	const cancelDoneFocus = useCallback(() => {
+		doneFocus.current?.()
+		doneFocus.current = null
+	}, [])
+	useEffect(() => cancelDoneFocus, [cancelDoneFocus])
+	useEffect(() => {
+		if (open) cancelDoneFocus()
+	}, [open, cancelDoneFocus])
+	const done = () => {
+		const from = document.activeElement
+		cancelDoneFocus()
+		onDone()
+		// Closing and opening the card provide the feedback first. Restore keyboard focus after that render paints,
+		// unless the visitor has already entered another control or reopened the panel.
+		doneFocus.current = afterPanelPaint(() => {
+			doneFocus.current = null
+			if (openNow.current) return
+			const active = document.activeElement
+			if (active === from || active === document.body || active === null)
+				returnFocus.current?.focus({ preventScroll: true })
+		})
+	}
 
-	// Placed on open and after resizes (the window's or the visual viewport's), never per scroll frame.
-	useLayoutEffect(() => {
+	// Measure after the opening commit has painted; coalesce resizes and wait for the block's motion without polling.
+	useEffect(() => {
 		if (!open) {
 			setBox(null)
 			return
 		}
 		const el = anchor.current
 		if (!el) return
-		const first = panelBox(windowFacts(el))
-		setBox(first)
-		if (first.scrollBy)
-			window.scrollBy({ top: first.scrollBy, behavior: "smooth" })
-		// Placed again from the page as it is then: a rotation moves the row and reflows the column, and the page's own
-		// layout keeps moving the row after (the search block's transform eases to its new place). So after a resize the
-		// row is watched each frame until the block's move has ended and the row has held its place for SETTLE_FRAMES
-		// frames (SETTLE_MS at most); the panel is then placed once and the page scrolls. Moving the panel every frame
-		// would shift its layout every frame.
-		let frame = 0
-		let lastRow = Number.NaN
-		let still = 0
-		let until = 0
-		const follow = () => {
-			frame = 0
-			if (!anchor.current) return
-			const facts = windowFacts(anchor.current)
-			const row = facts.row.bottom + facts.scrollY
-			still = Math.abs(row - lastRow) < 1 ? still + 1 : 0
-			lastRow = row
-			const moving = anchor.current
-				.closest(".start-block")
-				?.getAnimations?.()
-				.some((a) => a.playState === "running")
-			const done =
-				(!moving && still >= SETTLE_FRAMES) || performance.now() > until
-			if (!done) {
-				frame = requestAnimationFrame(follow)
-				return
-			}
-			const next = panelBox(facts)
+		return watchPanelPlacement(el, (next) => {
 			setBox((current) => (current && sameBox(current, next) ? current : next))
 			if (next.scrollBy)
 				window.scrollBy({ top: next.scrollBy, behavior: "smooth" })
-		}
-		const onResize = () => {
-			until = performance.now() + SETTLE_MS
-			still = 0
-			if (!frame) frame = requestAnimationFrame(follow)
-		}
-		window.addEventListener("resize", onResize)
-		window.visualViewport?.addEventListener("resize", onResize)
-		return () => {
-			cancelAnimationFrame(frame)
-			window.removeEventListener("resize", onResize)
-			window.visualViewport?.removeEventListener("resize", onResize)
-		}
+		})
 	}, [open, anchor])
 
 	// Closes on a tap outside the panel and the mood buttons, and on Escape (focus back on the button).
@@ -155,16 +108,17 @@ export function StartMoodPanel({
 		}
 	}, [open, close, returnFocus])
 
-	// Focus moves to the first choice when the panel opens.
+	// Focus after the placed panel has painted, rather than forcing its new layout in its first animation frame.
 	const placed = box !== null
 	useEffect(() => {
 		if (!open || !placed) return
-		const id = requestAnimationFrame(() =>
+		return afterPanelPaint(() => {
+			// A fast keyboard user may already have entered the choices; keep their place.
+			if (panel.current?.contains(document.activeElement)) return
 			panel.current
 				?.querySelector<HTMLElement>("[data-choice]")
-				?.focus({ preventScroll: true }),
-		)
-		return () => cancelAnimationFrame(id)
+				?.focus({ preventScroll: true })
+		})
 	}, [open, placed])
 
 	if (typeof document === "undefined") return null
@@ -189,7 +143,7 @@ export function StartMoodPanel({
 						maxHeight: box.maxHeight,
 					}}
 				>
-					<PanelHead control={control} onDone={onDone} line={PANEL_LINE} />
+					<PanelHead control={control} onDone={done} line={PANEL_LINE} />
 					<MoodGrid control={control} shelf={shelf} />
 				</motion.div>
 			)}

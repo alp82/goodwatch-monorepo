@@ -12,7 +12,7 @@ BENCH_METRIC_HOSTS=${BENCH_METRIC_HOSTS-10.0.0.21:target:coolify-proxy+gk4owk8}
 BENCH_METRIC_INTERVAL=${BENCH_METRIC_INTERVAL:-5}
 fail() { echo "$*" >&2; exit 2; }
 usage() { cat <<'HELP'
-Usage: ./bench.sh <load|lighthouse|budget|tap|smoke|deploy-watch|compare|summarize|longtail|doctor> [options]
+Usage: ./bench.sh <load|lighthouse|budget|tap|cwv|smoke|deploy-watch|compare|summarize|longtail|doctor> [options]
 load: --mode smoke|ramp --cache warm|cold --urls hot|surfaces|longtail|file.json
       --label TEXT --rate N --duration S --start N --step N --max N --rates N,N,...
       --routes ROUTE[:CLIENT],...
@@ -26,6 +26,8 @@ tap: [--base-url URL] [--runs N] [--controls ID,ID] [--modes early,scroll] [--mo
      [--where generator|local] [--path public|private] [--resolve ADDRESS] [--timeout MS] [--settle MS]
      [--cpu N] [--network none|slow4g] [--label TEXT] [--strict]
      (taps the controls of a title page in a phone browser with a slowed CPU; --strict exits 1 on a lost tap)
+cwv: --base-url ORIGIN [--runs 3] [--variant baseline|candidate] [--scenarios NAMES] [--out DIR] [--trace]
+     (homepage mobile interaction proxy and desktop LCP; pinned local Docker, all writes blocked)
 compare: RUN_A RUN_B [--out FILE] [--json]
 summarize: RUN
 longtail: [--sitemaps DIR] [--out FILE] [--limit N] [--seed S] [--og-share F]
@@ -38,6 +40,7 @@ command=${1:-help}; shift || true
 resolve_run() { if [[ -d $1 ]]; then printf '%s' "$1"; else printf '%s/results/%s' "$ROOT" "$1"; fi; }
 case $command in
   help|-h|--help) usage; exit 0 ;;
+  cwv) exec node "$ROOT/cwv/run.mjs" "$@" ;;
   longtail) exec node "$ROOT/scripts/build-longtail.mjs" "$@" ;;
   smoke) exec node "$ROOT/scripts/smoke.mjs" "$@" ;;
   deploy-watch) exec "$ROOT/scripts/deploy-watch.sh" "$@" ;;
@@ -391,7 +394,9 @@ else
     remote "$BENCH_GENERATOR" mkdir -p "$remote_run/out"
     node "$ROOT/scripts/run-meta.mjs" start "$run/meta.json"
     set +e
-    remote "$BENCH_GENERATOR" docker run --rm --name "$container" --shm-size=1g -v "$remote_run/out:/out" -v "$remote_run/urls.txt:/work/urls.txt:ro" -e "LH_RUNS=$LH_RUNS" -e "LH_CPU_SLOWDOWN=$LH_CPU_SLOWDOWN" -e "LH_RESOLVE_IP=$LH_RESOLVE_IP" -e "LH_EXTRA_CHROME_FLAGS=$LH_EXTRA_CHROME_FLAGS" -e "LH_BLOCKED_URL_PATTERNS=$LH_BLOCKED_URL_PATTERNS" "$image" 2>&1 | tee "$run/lighthouse.log"
+    # A loopback fixture on the generator is reached through its host network, like a local run.
+    lh_remote_network=(); [[ ! $BENCH_TARGET_URL =~ ^https?://(127\.0\.0\.1|localhost)(:|$) ]] || lh_remote_network=(--network host)
+    remote "$BENCH_GENERATOR" docker run --rm --name "$container" "${lh_remote_network[@]}" --shm-size=1g -v "$remote_run/out:/out" -v "$remote_run/urls.txt:/work/urls.txt:ro" -e "LH_RUNS=$LH_RUNS" -e "LH_CPU_SLOWDOWN=$LH_CPU_SLOWDOWN" -e "LH_RESOLVE_IP=$LH_RESOLVE_IP" -e "LH_EXTRA_CHROME_FLAGS=$LH_EXTRA_CHROME_FLAGS" -e "LH_BLOCKED_URL_PATTERNS=$LH_BLOCKED_URL_PATTERNS" "$image" 2>&1 | tee "$run/lighthouse.log"
     RUN_EXIT=${PIPESTATUS[0]}
     set -e
     copy_from "$remote_run/out/." "$run/lighthouse/" || RUN_EXIT=1

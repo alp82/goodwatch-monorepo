@@ -1,11 +1,8 @@
-import {
-	analyticsUserProperties,
-	setAnalyticsSession,
-} from "./product-analytics"
 // PostHog for the browser. Only telemetry.ts imports this module, with a dynamic import, so the SDK stays out of the
 // scripts a page needs to become interactive.
 import posthog from "posthog-js"
 import { redactSearchTelemetry } from "~/utils/search-telemetry"
+import { installWebVitalsAttribution } from "~/utils/web-vitals-attribution"
 import {
 	WEB_VITALS_CAPTURE,
 	browserRouteTagger,
@@ -18,6 +15,10 @@ import {
 	navigationPageviewProperties,
 	pageViewTitle,
 } from "./page-views"
+import {
+	analyticsUserProperties,
+	setAnalyticsSession,
+} from "./product-analytics"
 import { anonymousRecordingBlocked } from "./recording-share"
 import { createScrollDepth } from "./scroll-depth"
 
@@ -98,6 +99,8 @@ export function startPostHog({
 	// the time to first byte, so the report can group by route instead of by URL. The browser keeps the entries of the
 	// page load for observers that start late, so loading after the page is interactive doesn't lose them.
 	const tagRoute = browserRouteTagger(new URL(landing.href).pathname)
+	// Native Event Timing getters are lost before before_send; serialize safe fields at public capture first.
+	installWebVitalsAttribution(posthog)
 	posthog.init("phc_RM4XKAExwoQJUw6LoaNDUqCPLXuFLN6lPWybGsbJASq", {
 		// api_host: 'https://eu.i.posthog.com',
 		api_host: "https://a.goodwatch.app",

@@ -51,7 +51,6 @@ import {
 } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import React from "react"
-import { ToastContainer } from "react-toastify"
 import { useDehydratedState } from "use-dehydrated-state"
 
 import { ErrorDetail, ErrorPage, errorPageProps } from "~/ui/ErrorPage"
@@ -62,7 +61,7 @@ import { clearLoaderCache } from "~/navigation/instant-navigation"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 import { START_AFTER_PAINT, startAfterPaintScript } from "~/utils/start-after-paint"
 
-// One stylesheet for every page: it imports main.css, the brand font's rules, Swiper's, and the toast styles.
+// Shared first-view styles. Carousel and notification styles follow the features that need them.
 import cssTailwind from "~/tailwind.css?url"
 import gabaritoLatin from "~/fonts/gabarito-latin.woff2"
 import App from "~/app"
@@ -317,7 +316,6 @@ export function ErrorBoundary() {
 							{page}
 						</AuthContext.Provider>
 					)}
-					<ToastContainer />
 					<TelemetryBoot
 						faststatsSiteKey={typeof root === "object" ? root.env.FASTSTATS_SITE_KEY : undefined}
 					/>
@@ -421,7 +419,6 @@ function Root() {
 									<App />
 								</CharacterQuickViewProvider>
 								{/* <CookieConsent /> */}
-								<ToastContainer />
 								{/* The Feedback tab; its drawer and fix mode load after the page settles. */}
 								<FeedbackTab />
 								<TelemetryBoot faststatsSiteKey={env.FASTSTATS_SITE_KEY} />

@@ -6,6 +6,7 @@ import type { StartTitle } from "~/ui/living-room/living-room-data"
 import { StartLedge } from "../ledge/StartLedge"
 import { guestLedge } from "../ledge/ledge-models"
 import { OpeningBoot, OpeningCover } from "../opening/OpeningBoot"
+import { OpeningGate } from "../opening/OpeningGate"
 import { StartStage } from "./StartStage"
 import { DIM_NIGHT } from "./room-steps"
 import { EMPTY_QUERY, IDLE_RESULTS } from "./start-query"
@@ -31,18 +32,22 @@ const ledge = guestLedge({
 const render = (member: boolean) =>
 	renderToString(
 		<MemoryRouter>
-			<StartStage
-				shelf={titles}
-				night={DIM_NIGHT}
-				open={false}
-				card={
-					<StartLedge open={false} ledge={ledge} onOpen={() => {}}>
-						<button type="button">The card</button>
-					</StartLedge>
-				}
-				opening={member ? undefined : <OpeningBoot />}
-			/>
-			{member ? null : <OpeningCover />}
+			{member ? null : <OpeningGate />}
+			<div data-site-header />
+			<main>
+				<StartStage
+					shelf={titles}
+					night={DIM_NIGHT}
+					open={false}
+					card={
+						<StartLedge open={false} ledge={ledge} onOpen={() => {}}>
+							<button type="button">The card</button>
+						</StartLedge>
+					}
+					opening={member ? undefined : <OpeningBoot />}
+				/>
+				{member ? null : <OpeningCover />}
+			</main>
 		</MemoryRouter>,
 	)
 

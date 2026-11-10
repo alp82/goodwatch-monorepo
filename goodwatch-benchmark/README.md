@@ -161,6 +161,18 @@ Lighthouse simulates a mid-tier phone by multiplying the main-thread times that 
 
 `meta.json` records the factor of a run as `lighthouse.cpu_slowdown`. The method and the numbers are in [the render path budget](../docs/benchmarks/viral-spike-render-path-budget.md#cpu-slowdown-of-the-generator).
 
+### Homepage interactions and desktop LCP
+
+```sh
+./bench.sh cwv --base-url https://127.0.0.1:3412 --runs 3
+```
+
+Runs trusted touch/keyboard interactions for fresh and returning guests, both during hydration and after it settles,
+and checks desktop room LCP on a fixed limited connection. It fails above 200 ms observed interaction duration or
+2500 ms desktop LCP, with independent DOM assertions and runtime error checks. This is a lab regression check,
+not field INP. It requires an explicit target and blocks writes. Use the [isolated fixture and generator workflow](cwv/fixture-README.md)
+and [runner options and interpretation](cwv/README.md); do not start the normal webapp with its production `.env`.
+
 ### Render path budget
 
 ```sh

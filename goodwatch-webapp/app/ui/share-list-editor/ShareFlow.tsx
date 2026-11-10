@@ -9,7 +9,7 @@ import { useLocation, useNavigate } from "@remix-run/react"
 import { Link } from "@remix-run/react"
 import { useAuthHref } from "~/utils/auth-href"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { toast } from "react-toastify"
+import { toast } from "~/ui/toast"
 import {
 	fetchShareViewer,
 	ShareListRequestError,

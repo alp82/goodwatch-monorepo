@@ -1,0 +1,158 @@
+{
+  "recordedAt": "2026-11-10T12:07:53.580Z",
+  "browser": "Chrome/155.0.8059.79",
+  "pass": true,
+  "rawEvidence": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/resources/hydration-smoke.json",
+  "pages": 12,
+  "pageErrors": 0,
+  "consoleErrors": 0,
+  "failedApiResponses": 0,
+  "results": [
+    {
+      "origin": "https://127.0.0.1:3411",
+      "page": "home",
+      "status": 200,
+      "headings": [
+        "Find something to watch"
+      ],
+      "hydrated": true,
+      "resultCards": 0,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3411",
+      "page": "movie",
+      "status": 200,
+      "headings": [
+        "The Matrix"
+      ],
+      "hydrated": true,
+      "resultCards": 0,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3411",
+      "page": "show",
+      "status": 200,
+      "headings": [
+        "Breaking Bad"
+      ],
+      "hydrated": true,
+      "resultCards": 0,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3411",
+      "page": "person",
+      "status": 200,
+      "headings": [
+        "Quentin Tarantino"
+      ],
+      "hydrated": true,
+      "resultCards": 0,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3411",
+      "page": "discover",
+      "status": 200,
+      "headings": [
+        "Discover"
+      ],
+      "hydrated": true,
+      "resultCards": 40,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3411",
+      "page": "share_list",
+      "status": 200,
+      "headings": [
+        "@alperortac",
+        "The best shows"
+      ],
+      "hydrated": true,
+      "resultCards": 0,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3412",
+      "page": "home",
+      "status": 200,
+      "headings": [
+        "Find something to watch"
+      ],
+      "hydrated": true,
+      "resultCards": 0,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3412",
+      "page": "movie",
+      "status": 200,
+      "headings": [
+        "The Matrix"
+      ],
+      "hydrated": true,
+      "resultCards": 0,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3412",
+      "page": "show",
+      "status": 200,
+      "headings": [
+        "Breaking Bad"
+      ],
+      "hydrated": true,
+      "resultCards": 0,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3412",
+      "page": "person",
+      "status": 200,
+      "headings": [
+        "Quentin Tarantino"
+      ],
+      "hydrated": true,
+      "resultCards": 0,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3412",
+      "page": "discover",
+      "status": 200,
+      "headings": [
+        "Discover"
+      ],
+      "hydrated": true,
+      "resultCards": 40,
+      "failures": [],
+      "pass": true
+    },
+    {
+      "origin": "https://127.0.0.1:3412",
+      "page": "share_list",
+      "status": 200,
+      "headings": [
+        "@alperortac",
+        "The best shows"
+      ],
+      "hydrated": true,
+      "resultCards": 0,
+      "failures": [],
+      "pass": true
+    }
+  ]
+}

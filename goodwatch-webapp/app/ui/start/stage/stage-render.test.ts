@@ -62,11 +62,11 @@ test("both paintings are in the HTML at full opacity, each blanked where the oth
 	)
 	assert.match(
 		rendered.guest,
-		/type="image\/avif" srcSet="[^"]*start-room-1536[^"]*\.avif"/,
+		/type="image\/avif" srcSet="[^"]*start-room-800[^"]*\.avif 800w, [^"]*start-room-1280[^"]*\.avif 1280w, [^"]*start-room-1536[^"]*\.avif 1536w"/,
 	)
 	assert.match(
 		rendered.guest,
-		/type="image\/avif" srcSet="[^"]*start-room-phone[^"]*\.avif"/,
+		/type="image\/avif" srcSet="[^"]*start-room-phone[^"]*\.avif 1024w"/,
 	)
 })
 
@@ -105,13 +105,15 @@ test("the stage carries both scenes' numbers for start.css", () => {
 			)
 })
 
-test("a guest's opening comes first in the stage: the gate, its script, then the boot; a member's page has none", () => {
+test("a guest's gate precedes the header and main, with its boot first in the stage; a member's page has none", () => {
 	const guest = rendered.guest
 	const gate = guest.indexOf('<input id="start-boot-gate" type="checkbox"')
 	const script = guest.indexOf("<script>", gate)
 	const boot = guest.indexOf('class="start-opening"')
 	const room = guest.indexOf('class="start-camera"')
-	assert.ok(gate > guest.indexOf("<section"), "the gate is in the stage")
+	assert.ok(gate >= 0 && script < guest.indexOf("data-site-header"))
+	assert.ok(guest.indexOf("data-site-header") < guest.indexOf("<main>"))
+	assert.ok(boot > guest.indexOf("<section"), "the boot is in the stage")
 	assert.ok(
 		gate < script && script < boot && boot < room,
 		"gate, script, boot, room",

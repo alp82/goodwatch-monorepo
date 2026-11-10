@@ -42,7 +42,7 @@ export function StartStage({
 	card?: ReactNode
 	/** Layers that tint the room, between the room and the night. */
 	grade?: ReactNode
-	/** A guest's opening (opening/OpeningBoot.tsx): first in the stage, so its gate runs before the rest paints. */
+	/** A guest's opening (opening/OpeningBoot.tsx): first in the stage, under the shell's gate. */
 	opening?: ReactNode
 }) {
 	return (

@@ -8,9 +8,6 @@
    its own. They are outside Tailwind's layers, so their rules win over utilities as they did as separate files. */
 @import "./fonts/gabarito.css";
 @import "./main.css";
-@import "swiper/css";
-@import "swiper/css/navigation";
-@import "react-toastify/dist/ReactToastify.css";
 
 /* Safelist: only class names that code builds from parts, which Tailwind can't find in the source. Add a line with the
    module that builds them, and take it out with that module (#236: four lines had outlived theirs, 43 KB of the sheet). */
@@ -195,21 +192,18 @@
    word ("Unwatchable", or the ask "Rate it so far"): up to about 325px with the compact faces (290px on a phone, where
    the chevron hides), so below 21rem it stacks and a phone's full-width block (343px at 390) and the quick view's
    footer (368px) stay one row; about 375px with the title page's larger faces from lg up, so there below 24rem. */
+/* Keep the owner explicit in each selector: wrapping its descendants in :is(... *) invalidates unrelated subtrees. */
 @custom-variant stacked {
 	@container seen (width < 21rem) {
-		&:is(
-				[data-seen-score]:has([data-status-face]),
-				[data-seen-score]:has([data-status-face]) *
-			) {
+		&[data-seen-score]:has([data-status-face]),
+		[data-seen-score]:has([data-status-face]) & {
 			@slot;
 		}
 	}
 	@media (width >= 64rem) {
 		@container seen (width < 24rem) {
-			&:is(
-					[data-seen-score][data-big]:has([data-status-face]),
-					[data-seen-score][data-big]:has([data-status-face]) *
-				) {
+			&[data-seen-score][data-big]:has([data-status-face]),
+			[data-seen-score][data-big]:has([data-status-face]) & {
 				@slot;
 			}
 		}

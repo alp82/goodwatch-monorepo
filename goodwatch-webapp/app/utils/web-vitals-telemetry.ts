@@ -7,6 +7,8 @@
 // - `ttfb_ms`: time to first byte of the page load, from Navigation Timing. It rides on the event that carries FCP,
 //   which exists once per page load, so a percentile over it counts every page load once.
 // PostHog already attaches `$device_type` (Mobile, Tablet, Desktop) to every event.
+// web-vitals-attribution.ts also preserves private per-entry INP timing fields before the SDK copies native getters.
+// These entry timings are separate from the web-vitals attribution build's frame-level phases.
 import {
 	type ManifestRoute,
 	type RoutePatternMatcher,

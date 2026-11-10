@@ -92,12 +92,15 @@ function ProfileRow() {
 export function SiteChrome({
 	children,
 	mainClassName = "relative grow mx-auto mt-16 pb-2 w-full text-neutral-300",
+	beforeHeader,
 	afterHeader,
 	afterFooter,
 }: {
 	/** The page, inside `<main>` under the Explore row. */
 	children: ReactNode
 	mainClassName?: string
+	/** Before the header and main: the start page's sibling boot gate. */
+	beforeHeader?: ReactNode
 	/** Between the header and `<main>` (the app's onboarding banner). */
 	afterHeader?: ReactNode
 	/** After the footer, before the dock (hosts that render nothing until used). */
@@ -108,6 +111,7 @@ export function SiteChrome({
 			{/* The bars' surfaces as CSS variables for the rows among them (./bar-layers.ts). `contents`: no box of its
 			    own, so the page's layout and sticky rows work as before. */}
 			<div style={LAYER_VARS} className="contents">
+				{beforeHeader}
 				<SiteHeader />
 				{afterHeader}
 				<main className={mainClassName}>

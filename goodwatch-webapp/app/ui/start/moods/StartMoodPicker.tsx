@@ -189,7 +189,6 @@ export function StartMoodPicker({
 					returnFocus={button}
 					onDone={() => {
 						setOpen(false)
-						button.current?.focus({ preventScroll: true })
 						onDone?.()
 						if (picks.length)
 							requestAnimationFrame(() =>

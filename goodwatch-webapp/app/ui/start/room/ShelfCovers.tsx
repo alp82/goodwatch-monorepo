@@ -47,6 +47,7 @@ import {
 	START_ROOM_PHONE,
 	type ShelfSlot,
 } from "./scene"
+import { watchShelfMeasurements } from "./shelf-measure"
 
 /** A title the shelf can show: a start title, or a result's card. */
 export type ShelfTitle = Pick<
@@ -140,29 +141,7 @@ function useShelfLayout(box: RefObject<HTMLDivElement | null>) {
 				prev && JSON.stringify(prev) === JSON.stringify(next) ? prev : next,
 			)
 		}
-		measure()
-		const observer = new ResizeObserver(measure)
-		observer.observe(stage)
-		const obstacles = stage.querySelectorAll("[data-start-obstacle]")
-		for (const o of obstacles) observer.observe(o)
-		// The transforms change without a resize: the stage's `data-open` (the search block lifts) and the camera's scale
-		// (its style). The measure reads where each transition ends, so it runs once when one starts; the
-		// `transitionend` (not a cover's own flip) is a fallback for browsers without a transition's keyframes.
-		const mutations = new MutationObserver(measure)
-		mutations.observe(stage, { attributeFilter: ["data-open"] })
-		mutations.observe(camera, { attributeFilter: ["style"] })
-		const settled = (e: TransitionEvent) => {
-			if (e.propertyName === "transform" && !el.contains(e.target as Node))
-				measure()
-		}
-		stage.addEventListener("transitionend", settled)
-		phone.addEventListener("change", measure)
-		return () => {
-			observer.disconnect()
-			mutations.disconnect()
-			stage.removeEventListener("transitionend", settled)
-			phone.removeEventListener("change", measure)
-		}
+		return watchShelfMeasurements({ shelf: el, stage, camera, phone, measure })
 	}, [box])
 	return layout
 }

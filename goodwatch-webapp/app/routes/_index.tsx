@@ -21,6 +21,7 @@ import { MemberStart } from "~/ui/start/member/MemberStart"
 import { StartMoodPicker } from "~/ui/start/moods/StartMoodPicker"
 import { OpeningBoot, OpeningCover } from "~/ui/start/opening/OpeningBoot"
 import type { ShelfTitle } from "~/ui/start/room/ShelfCovers"
+import { startRoomPreloads } from "~/ui/start/room/room-pictures"
 import { StartSearchBar } from "~/ui/start/search/StartSearchBar"
 import { useStartSearch } from "~/ui/start/search/useStartSearch"
 import { SpotlightCard, surpriseMood } from "~/ui/start/spotlight/SpotlightCard"
@@ -41,6 +42,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 export const handle = START_AFTER_PAINT
 
 export const links: LinksFunction = () => [
+	...startRoomPreloads(),
 	// Without credentials on the static hostname, like the site's style sheet in root.tsx: the 103 Early Hints response
 	// preloads them in that mode (server/early-hints.ts), and Chrome preloads a file of another host in no other.
 	...START_SHEETS.map((sheet) => ({
@@ -192,7 +194,7 @@ function GuestStart({
 					<StartSearchBar
 						query={start.query}
 						results={results}
-						setDraft={start.setDraft}
+						searchRevision={start.searchRevision}
 						search={start.search}
 						clearSearch={start.clearSearch}
 						onAsk={card.show}

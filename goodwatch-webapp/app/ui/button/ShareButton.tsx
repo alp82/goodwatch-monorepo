@@ -4,7 +4,7 @@ import {
 } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import React, { useRef, useState } from "react"
-import { toast } from "react-toastify"
+import { toast } from "~/ui/toast"
 import { useReplayedTap } from "~/utils/useReplayedTap"
 
 const isBrowser = typeof window !== "undefined"

@@ -1,0 +1,274 @@
+{
+  "recordedAt": "2026-11-10T12:10:00.942Z",
+  "kind": "actual-fixture-responsive-preload-resource-selection",
+  "browser": "Chrome/155.0.8059.79",
+  "pass": true,
+  "checks": 14,
+  "interpretation": "Each viewport made one high-priority room image request with link initiator and matching visible picture; same-origin and separate asset-origin preloads were reused. CDN Resource Timing byte fields may be zero without Timing-Allow-Origin.",
+  "evidence": [
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/resources/room-resources.json",
+      "origin": "https://127.0.0.1:3412",
+      "recordedAt": "2026-11-10T12:08:45.438Z",
+      "results": [
+        {
+          "viewport": {
+            "width": 800,
+            "height": 360,
+            "deviceScaleFactor": 1
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3412/assets/start-room-800-IV4mIwvY.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 1365,
+            "height": 900,
+            "deviceScaleFactor": 1
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3412/assets/start-room-1280-ad0kqYAt.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 1365,
+            "height": 900,
+            "deviceScaleFactor": 2
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3412/assets/start-room-1536-3jZ_4ThS.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 1920,
+            "height": 1080,
+            "deviceScaleFactor": 1
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3412/assets/start-room-1536-3jZ_4ThS.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "deviceScaleFactor": 1,
+            "isMobile": true,
+            "hasTouch": true
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3412/assets/start-room-phone-C_V0DRYl.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "deviceScaleFactor": 3,
+            "isMobile": true,
+            "hasTouch": true
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3412/assets/start-room-phone-C_V0DRYl.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 844,
+            "height": 390,
+            "deviceScaleFactor": 1,
+            "isMobile": true,
+            "hasTouch": true
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3412/assets/start-room-800-IV4mIwvY.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        }
+      ]
+    },
+    {
+      "path": "goodwatch-benchmark/results/home-cwv-2026-11-10/fixture/resources/room-resources-cdn.json",
+      "origin": "https://127.0.0.1:3413",
+      "recordedAt": "2026-11-10T12:09:18.568Z",
+      "results": [
+        {
+          "viewport": {
+            "width": 800,
+            "height": 360,
+            "deviceScaleFactor": 1
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3414/assets/start-room-800-IV4mIwvY.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 1365,
+            "height": 900,
+            "deviceScaleFactor": 1
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3414/assets/start-room-1280-ad0kqYAt.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 1365,
+            "height": 900,
+            "deviceScaleFactor": 2
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3414/assets/start-room-1536-3jZ_4ThS.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 1920,
+            "height": 1080,
+            "deviceScaleFactor": 1
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3414/assets/start-room-1536-3jZ_4ThS.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "deviceScaleFactor": 1,
+            "isMobile": true,
+            "hasTouch": true
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3414/assets/start-room-phone-C_V0DRYl.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "deviceScaleFactor": 3,
+            "isMobile": true,
+            "hasTouch": true
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3414/assets/start-room-phone-C_V0DRYl.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        },
+        {
+          "viewport": {
+            "width": 844,
+            "height": 390,
+            "deviceScaleFactor": 1,
+            "isMobile": true,
+            "hasTouch": true
+          },
+          "pass": true,
+          "requests": [
+            {
+              "url": "https://127.0.0.1:3414/assets/start-room-800-IV4mIwvY.avif",
+              "initiator": "parser",
+              "priority": "High"
+            }
+          ],
+          "initiator": "link",
+          "errors": []
+        }
+      ]
+    }
+  ]
+}

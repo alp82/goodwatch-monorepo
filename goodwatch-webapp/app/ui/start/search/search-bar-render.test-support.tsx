@@ -24,7 +24,7 @@ const render = (query: StartQuery, results: Partial<StartResults> = {}) =>
 				reading: null,
 				...results,
 			}}
-			setDraft={() => {}}
+			searchRevision={0}
 			search={() => {}}
 			clearSearch={() => {}}
 		/>,

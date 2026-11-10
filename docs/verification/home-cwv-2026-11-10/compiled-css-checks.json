@@ -1,0 +1,22 @@
+{
+  "recordedAt": "2026-11-10T12:01:14.577Z",
+  "kind": "actual-built-css-selector-guard",
+  "build": "candidate-build",
+  "globalStylesheet": "/assets/tailwind-3oexNp6v.css",
+  "cssSHA256": "158acb094c1d8e00395dab5f5530b89180a02957eb0a2e8bdcb448429de253c6",
+  "counts": {
+    "legacyStackedDescendantRules": 0,
+    "legacyReadyGroupHasFocusRules": 0,
+    "anchoredStackedRules": 50,
+    "readyPeerFocusRules": 2
+  },
+  "untouchedLegacySelectors": {
+    "livingRoomHas": 4,
+    "dockStripHas": 1,
+    "stageHasBar": 3
+  },
+  "pass": true,
+  "productionCompileCssSHA256": "158acb094c1d8e00395dab5f5530b89180a02957eb0a2e8bdcb448429de253c6",
+  "productionCompileMatchesFixture": true,
+  "nativeMemberSemanticsProof": "docs/verification/home-cwv-2026-11-10/stacked-semantics-proof.json"
+}

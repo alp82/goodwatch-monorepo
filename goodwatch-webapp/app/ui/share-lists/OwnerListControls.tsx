@@ -3,7 +3,7 @@
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { useState } from "react"
-import { toast } from "react-toastify"
+import { toast } from "~/ui/toast"
 import { useShareListOwnerAction } from "~/routes/api.share-lists"
 import {
 	publicOrigin,

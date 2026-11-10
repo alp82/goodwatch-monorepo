@@ -1,0 +1,108 @@
+{
+  "scope": "Read-only audit of ShareList Lighthouse budget reports; no source changes or new measurements.",
+  "method": {
+    "lighthouse_version": "13.5.0",
+    "throttling": "simulate",
+    "cpu_slowdown_multiplier": 2.7,
+    "runs_per_group": 3,
+    "units": "Milliseconds unless named bytes. Main-thread categories are Lighthouse audit values; they do not directly decompose simulated TBT."
+  },
+  "result": {
+    "tbt_cap_ms": 100,
+    "baseline_median_pass": true,
+    "candidate_median_pass": false,
+    "median_tbt_delta_ms": 49,
+    "status": "Observed regression; candidate median fails the unchanged cap. Cause unresolved."
+  },
+  "measurements": {
+    "baseline": {
+      "tbt_ms": {
+        "median": 92,
+        "range": [
+          74.593,
+          150.0
+        ],
+        "runs": [
+          74.593,
+          92,
+          150.0
+        ]
+      },
+      "avatar_transfer_bytes": 0,
+      "avatar_status_codes": [
+        -1
+      ],
+      "mainthread_audit_medians_ms": {
+        "styleLayout": 883.1322,
+        "scriptEvaluation": 703.7145,
+        "parseHTML": 99.1872,
+        "scriptParseCompile": 13.0275
+      },
+      "observed_total_task_median_ms": 1035.401,
+      "transfer_medians_bytes": {
+        "script": 342980,
+        "stylesheet": 42499,
+        "font": 104856,
+        "image": 73646,
+        "total": 601277
+      }
+    },
+    "candidate": {
+      "tbt_ms": {
+        "median": 141,
+        "range": [
+          50,
+          143
+        ],
+        "runs": [
+          50,
+          143,
+          141
+        ]
+      },
+      "avatar_transfer_bytes": 17545,
+      "avatar_status_codes": [
+        200
+      ],
+      "mainthread_audit_medians_ms": {
+        "styleLayout": 829.1133,
+        "scriptEvaluation": 699.057,
+        "parseHTML": 108.6021,
+        "scriptParseCompile": 19.7127
+      },
+      "observed_total_task_median_ms": 1030.705,
+      "transfer_medians_bytes": {
+        "script": 338014,
+        "stylesheet": 39594,
+        "font": 104856,
+        "image": 91187,
+        "total": 610949
+      }
+    }
+  },
+  "interpretation": [
+    "TBT ranges overlap, but the observed median regression remains recorded as a failure; these reports do not establish a stable cause or exclude a code regression.",
+    "Style/Layout median decreased by 54.0189 ms, Script Evaluation and observed total task time were similar, and JavaScript/CSS transfer bytes decreased. This does not support doubled initial selector work as the cause.",
+    "Uncontrolled external-image difference: lh3.googleusercontent.com avatar failed in all baseline runs and succeeded in all candidate runs, adding about 17545 bytes. No avatar URL or account identifier is retained here.",
+    "Long-task attribution includes document, React runtime, shell and unattributable work; it does not isolate a new SDK or a causal task explaining the simulated TBT delta. No speculative fix is justified by this audit."
+  ],
+  "typecheck": "Existing current-baseline record remains unchanged: 179 inherited diagnostics, zero introduced; see implementation-checks.json.",
+  "raw_reports": {
+    "baseline": {
+      "directory": "goodwatch-benchmark/results/20261110T110940Z-lighthouse-home-cwv-generator-baseline/lighthouse/share_list",
+      "sha256": {
+        "run-1.json": "5a9b7149171eba4d5531ba76ab68afa30a8b275efa134dc569be3361f857629d",
+        "run-2.json": "5c350946beca79a4f0fc81382eafb9c8895d0fb90215dd9267f51d1d9c7c1a16",
+        "run-3.json": "e388c49eb6f3c978ae9031a4973f6a5054ebc493c4ac22b49fae123a5c57690f"
+      }
+    },
+    "candidate": {
+      "directory": "goodwatch-benchmark/results/20261110T124305Z-lighthouse-home-cwv-share-check/lighthouse/share_list",
+      "sha256": {
+        "run-1.json": "c6fb3814677b20252b65d81c81752f1524953b78b7cb64845b001f53e0a29006",
+        "run-2.json": "9a5a7fd15972c84f0204d8ae8a469909f27be09ef5cfc15a112a28703e467a42",
+        "run-3.json": "a2e92768ee0dc35914b10e0efa6254d0d3c1bdb34d69f3d6881ac8351cb57fe8"
+      }
+    }
+  }
+}
