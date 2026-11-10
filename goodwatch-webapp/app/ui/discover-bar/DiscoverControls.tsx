@@ -172,6 +172,9 @@ export interface DiscoverControlsProps {
 	readRows?: ReadRow[]
 	/** The words as typed, for the search field; `query` otherwise. */
 	typedQuery?: string | null
+	/** For the search field: a search is running, and the words its typing pause will send (ui/discover/search-pending.ts). */
+	searchPending?: boolean
+	onUnsentWords?: (words: string | null) => void
 }
 
 
@@ -206,6 +209,8 @@ function DiscoverControlsContent({
 	keepChip,
 	readRows,
 	typedQuery,
+	searchPending,
+	onUnsentWords,
 }: DiscoverControlsProps) {
 	const { state } = filters
 	const data = useBarData({ filters, counts, member, query })
@@ -405,6 +410,8 @@ function DiscoverControlsContent({
 					flatBottom={advanced}
 					ready={<ReadySwitch on={readyOn} onChange={setReady} member={member} field />}
 					inputRef={describeField}
+					pending={searchPending}
+					onUnsent={onUnsentWords}
 				/>
 				<AnimatePresence initial={false}>
 					{advanced && (

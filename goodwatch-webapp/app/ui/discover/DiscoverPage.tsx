@@ -14,7 +14,7 @@
 // the viewer has it. For you sits in You's Order block.
 import { useLocation, useNavigation, useSearchParams } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react"
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { useInView } from "react-intersection-observer"
 import {
 	DISCOVER_DEFAULTS,
@@ -73,6 +73,7 @@ import { useReadFilters, useSearchReading } from "./search-reading/useSearchRead
 import { useHydrated } from "~/utils/hydrated"
 import { awardParam, readAwardWords } from "~/domain/award-filter"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { searchPending, unsentWords } from "./search-pending"
 
 // The Matches popout's read parts: loaded when the popout first shows them.
 const MatchesRead = lazy(reloadOnStaleChunk(() => import("./search-reading/MatchesRead")))
@@ -305,6 +306,34 @@ export function DiscoverPage({
 			? !answered
 			: !first?.searching || !answered
 		: false
+	// From the first keystroke until the results are painted, the field's line runs and the old results dim.
+	const [unsent] = useState(unsentWords)
+	const waitingForWords = useSyncExternalStore(
+		unsent.subscribe,
+		() => {
+			const words = unsent.get()
+			return words !== null && searchText(words) !== fullTyped
+		},
+		() => false,
+	)
+	useEffect(() => {
+		if (!waitingForWords) unsent.set(null)
+	}, [waitingForWords, unsent])
+	// A partial list already on screen for these words stays bright while its completed list loads.
+	const shownWords = useRef<string | null>(null)
+	if (!searching) shownWords.current = null
+	else if (answered && !stale) shownWords.current = fullTyped
+	const { pending, staleResults } = searchPending({
+		waitingForWords,
+		searching,
+		failed: Boolean(search.error),
+		readingPending: reading.plan === null,
+		catalogue,
+		hasSearchAnswer: q === null || Boolean(search.current),
+		stale,
+		partial: search.partial,
+		shownForWords: shownWords.current === fullTyped,
+	})
 	useProductExposure(
 		"discovery results shown",
 		answered && !stale
@@ -603,6 +632,8 @@ export function DiscoverPage({
 						member={member}
 						query={q}
 						typedQuery={fullTyped}
+						searchPending={pending}
+						onUnsentWords={unsent.set}
 						reading={search.reading ?? undefined}
 						onSearch={onSearch}
 						onClearSearch={clearSearch}
@@ -661,6 +692,7 @@ export function DiscoverPage({
 				</div>
 				{/* A failed search says so; progress shows nothing, so the grid never moves. */}
 				<div role="status">
+					{pending && !waitingForWords && <span className="sr-only">Searching…</span>}
 					{searching && search.error && (
 						<div className="mt-1 flex min-h-5 flex-wrap items-center gap-3 text-sm text-gray-400 lg:mt-4">
 							<span>{search.error}</span>
@@ -700,6 +732,7 @@ export function DiscoverPage({
 									cards={first.total === 0 && !stale ? [] : cards}
 									marks={marks}
 									flipping={Boolean(flip)}
+									dimmed={staleResults}
 								>
 									{/* A partial list without a title is not a search that found nothing: the status line above says what
 							    it still waits for, and the people it names show above the grid. */}

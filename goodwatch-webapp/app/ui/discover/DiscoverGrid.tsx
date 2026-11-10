@@ -3,6 +3,7 @@
 // ("↑4", "↓2", "↑1.2k" for a title For you brought from far down the sort) for a moment. With reduced motion, only short opacity fades run: MotionConfig alone still let the
 // layout glide run, so the grid turns layout animation off itself. With a cast filter, each card is a place the
 // characters strip above the results points at (DiscoverRoles.tsx, wrapped around the results in DiscoverPage.tsx).
+// While a search runs, the cards dim but stay clickable; the one under the pointer or focus shows at full strength.
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/20/solid"
 import {
 	AnimatePresence,
@@ -33,6 +34,7 @@ export function DiscoverGrid({
 	cards: listed,
 	marks,
 	flipping = false,
+	dimmed = false,
 	children,
 }: {
 	cards: TitleCard[]
@@ -43,6 +45,8 @@ export function DiscoverGrid({
 	marks: Map<TitleKey, number> | null
 	/** For you just reordered the list. */
 	flipping?: boolean
+	/** The cards are for other words than the search now running. */
+	dimmed?: boolean
 	/** After the last card, for example the hidden-titles cell. */
 	children?: ReactNode
 }) {
@@ -78,13 +82,18 @@ export function DiscoverGrid({
 						>
 							{/* A browser requests a lazy image up to 3,000 px ahead, which is ten rows of posters on a
 							    phone. A skipped card holds its poster back until it is about one and a half screens away. */}
-							<DiscoverCardRole card={card}>
-								<TitlePosterCard
-									card={card}
-									posterPriority={priority}
-									skipOffscreen={priority === "lazy"}
-								/>
-							</DiscoverCardRole>
+							{/* The card animates its own opacity, so the dim sits on a wrapper. */}
+							<div
+								className={`transition-opacity duration-200 ${dimmed ? "opacity-30 hover:opacity-100 focus-within:opacity-100" : ""}`}
+							>
+								<DiscoverCardRole card={card}>
+									<TitlePosterCard
+										card={card}
+										posterPriority={priority}
+										skipOffscreen={priority === "lazy"}
+									/>
+								</DiscoverCardRole>
+							</div>
 							<MoveMark delta={delta} reduce={reduce} />
 						</motion.div>
 					)
