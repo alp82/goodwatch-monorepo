@@ -7,6 +7,11 @@ import base from "../../vite.config.js"
 
 const LIVE = "https://goodwatch.app"
 
+// Prototype branch only: the machine is out of inotify watchers (fs.inotify.max_user_watches), so every watcher in
+// this process polls, the Remix child compiler's included.
+process.env.CHOKIDAR_USEPOLLING = "1"
+process.env.CHOKIDAR_INTERVAL = "1000"
+
 /** Path pattern, and the methods it may use. */
 const READS = [
 	["^/api/discover/(results|panel)(\\?|$)", ["GET", "POST"]],
@@ -41,4 +46,11 @@ const proxy = Object.fromEntries(
 )
 
 export default async (env) =>
-	mergeConfig(await base(env), { server: { proxy } })
+	mergeConfig(await base(env), {
+		// Prototype branch only: the preview is served through tailscale serve.
+		server: {
+			proxy,
+			allowedHosts: ["alppc", "alppc.tail3b99f1.ts.net"],
+			watch: { usePolling: true, interval: 1000, binaryInterval: 3000 },
+		},
+	})

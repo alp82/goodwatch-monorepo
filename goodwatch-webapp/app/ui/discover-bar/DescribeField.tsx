@@ -10,6 +10,13 @@ import { type ReactNode, type Ref, useEffect, useRef, useState } from "react"
 import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
 import { SEARCH_EXAMPLES as TRY } from "~/ui/search/search-examples"
 import { PRIVATE } from "./DiscoverBar"
+// prototype: search loading states (?loading=).
+import {
+	PrototypeButtonContent,
+	PrototypeFieldLine,
+	prototypeTyping,
+	usePrototypeLoading,
+} from "~/ui/discover/prototype-search-loading/PrototypeSearchLoading"
 
 const TRY_MS = 3200
 const PLACEHOLDER = "Describe what you want to watch"
@@ -84,22 +91,35 @@ export function DescribeField({
 		clearTimeout(timer.current)
 		sent.current = typed
 		setText(typed)
+		// prototype: the URL changed elsewhere (Clear all, a link): nothing is about to be searched.
+		prototypeTyping.set(null)
 	}, [typed])
 	useEffect(() => () => clearTimeout(timer.current), [])
+	// prototype: what the pause will send, for the page's loading state.
+	const loading = usePrototypeLoading()
+	useEffect(() => () => prototypeTyping.set(null), [])
 	const filled = text.trim().length > 0
 	const label = flatBottom && filled
 	const send = (value: string) => {
 		clearTimeout(timer.current)
-		if (value === sent.current) return
+		if (value === sent.current) return prototypeTyping.set(null)
 		sent.current = value
-		if (value) onSearch(value)
-		else onClear()
+		if (value) {
+			// prototype: the page holds the typing phase until the URL has these words.
+			prototypeTyping.set(value)
+			onSearch(value)
+		} else {
+			prototypeTyping.set(null)
+			onClear()
+		}
 	}
 	const type = (value: string) => {
 		setText(value)
 		clearTimeout(timer.current)
 		const words = value.trim()
 		if (!words) return send("")
+		// prototype: armed only when the pause will search something new.
+		prototypeTyping.set(words.length >= MIN_CHARS && words !== sent.current ? words : null)
 		if (words.length >= MIN_CHARS)
 			timer.current = setTimeout(() => send(words), TYPING_PAUSE_MS)
 	}
@@ -157,6 +177,7 @@ export function DescribeField({
 					</button>
 				)}
 			</div>
+			{loading?.variant === "A" && <PrototypeFieldLine on={loading.phase !== null} />}
 			<span
 				className="hidden w-px shrink-0 self-stretch bg-white/10 lg:block"
 				aria-hidden
@@ -166,10 +187,15 @@ export function DescribeField({
 				<button
 					type="submit"
 					aria-label="Search"
-					className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-amber-400 font-bold text-gray-950 outline-none hover:bg-amber-300 focus-visible:ring-2 focus-visible:ring-white lg:h-auto lg:w-auto lg:px-6 lg:py-3.5"
+					className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-amber-400 font-bold text-gray-950 outline-none hover:bg-amber-300 focus-visible:ring-2 focus-visible:ring-white lg:h-auto lg:w-auto lg:px-6 lg:py-3.5 ${loading?.variant === "D" ? "lg:min-w-[9.5rem]" : ""}`}
 				>
-					<ArrowRightIcon className="h-5 w-5 lg:hidden" aria-hidden />
-					<span className="hidden lg:inline">Search</span>
+					{/* prototype: the button's loading content (variants B and D). */}
+					{PrototypeButtonContent({ loading }) ?? (
+						<>
+							<ArrowRightIcon className="h-5 w-5 lg:hidden" aria-hidden />
+							<span className="hidden lg:inline">Search</span>
+						</>
+					)}
 				</button>
 			</div>
 		</form>

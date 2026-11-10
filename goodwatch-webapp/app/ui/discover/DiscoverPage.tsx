@@ -73,6 +73,19 @@ import { useReadFilters, useSearchReading } from "./search-reading/useSearchRead
 import { useHydrated } from "~/utils/hydrated"
 import { awardParam, readAwardWords } from "~/domain/award-filter"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+// prototype: search loading states (?loading=).
+import {
+	PrototypeLoadingNote,
+	PrototypeLoadingProvider,
+	PrototypePhaseLine,
+	PrototypeRevealCard,
+	PrototypeSkeletonGrid,
+	PrototypeSteps,
+	prototypePhase,
+	prototypeTyping,
+	usePrototypeArmed,
+	usePrototypeLoadingVariant,
+} from "./prototype-search-loading/PrototypeSearchLoading"
 
 // The Matches popout's read parts: loaded when the popout first shows them.
 const MatchesRead = lazy(reloadOnStaleChunk(() => import("./search-reading/MatchesRead")))
@@ -305,6 +318,46 @@ export function DiscoverPage({
 			? !answered
 			: !first?.searching || !answered
 		: false
+	// prototype: the loading phase, from the first keystroke until the results are painted.
+	const prototypeVariant = usePrototypeLoadingVariant()
+	const prototypeArmed = usePrototypeArmed()
+	const prototypeWaiting = prototypeArmed !== null && searchText(prototypeArmed) !== fullTyped
+	useEffect(() => {
+		if (prototypeArmed !== null && searchText(prototypeArmed) === fullTyped) prototypeTyping.set(null)
+	}, [prototypeArmed, fullTyped])
+	const loadingPhase = prototypePhase({
+		waitingForWords: prototypeWaiting,
+		searching,
+		failed: Boolean(search.error),
+		readingPending: reading.plan === null,
+		catalogue,
+		hasSearchAnswer: q === null || Boolean(search.current),
+		partial: search.partial,
+		stale,
+	})
+	// A partial list already on screen for these words stays while its completed list loads.
+	const prototypeShown = useRef<string | null>(null)
+	if (!searching) prototypeShown.current = null
+	else if (answered && !stale) prototypeShown.current = fullTyped
+	const prototypeLoading = useMemo(
+		() => (prototypeVariant ? { variant: prototypeVariant, phase: loadingPhase } : null),
+		[prototypeVariant, loadingPhase],
+	)
+	const prototypeBlocking =
+		loadingPhase !== null &&
+		loadingPhase !== "refining" &&
+		!(loadingPhase === "posters" && prototypeShown.current === fullTyped)
+	const prototypeSkeleton = (prototypeVariant === "B" || prototypeVariant === "E") && prototypeBlocking
+	const prototypeDim = prototypeBlocking
+		? prototypeVariant === "A"
+			? "opacity-30"
+			: prototypeVariant === "C"
+				? "opacity-50"
+				: prototypeVariant === "D"
+					? "opacity-60"
+					: null
+		: null
+
 	useProductExposure(
 		"discovery results shown",
 		answered && !stale
@@ -586,7 +639,9 @@ export function DiscoverPage({
 	}, [pathname, locationSearch])
 
 	return (
+		<PrototypeLoadingProvider value={prototypeLoading}>
 		<MotionConfig reducedMotion="user">
+			<PrototypeLoadingNote variant={prototypeVariant} phase={loadingPhase} />
 			<div className="mx-auto max-w-7xl px-4 pt-5 lg:pt-8">
 				{/* Reaching for the bar starts loading the panel's content. */}
 				<div onPointerEnter={warm} onTouchStart={warm} onFocus={warm}>
@@ -685,6 +740,24 @@ export function DiscoverPage({
 				)}
 				<div className="relative mt-3 lg:mt-5" aria-busy={busy}>
 					<GridDim on={desktop && bar.panel.open !== null} />
+					{/* prototype: variant C's steps and variant E's line, in space kept for them so the grid never moves. */}
+					{prototypeVariant === "C" && (
+						<div className="mb-3 lg:mb-4">
+							<PrototypeSteps phase={loadingPhase} />
+						</div>
+					)}
+					{prototypeVariant === "E" && (
+						<div className="mb-2 lg:mb-3">
+							<PrototypePhaseLine phase={loadingPhase} />
+						</div>
+					)}
+					{prototypeSkeleton ? (
+						<PrototypeSkeletonGrid count={Math.min(Math.max(cards.length, 12), 18)} />
+					) : (
+					<div
+						className={`transition-opacity duration-200 ${prototypeDim ? `pointer-events-none ${prototypeDim}` : ""}`}
+						{...(prototypeDim ? { inert: "" } : {})}
+					>
 					{/* A cast filter's characters strip leads the results. */}
 					<DiscoverRoles cards={roleCards}>
 						{browse.isError && !first ? (
@@ -700,6 +773,11 @@ export function DiscoverPage({
 									cards={first.total === 0 && !stale ? [] : cards}
 									marks={marks}
 									flipping={Boolean(flip)}
+									prototypeWrapCard={
+										prototypeVariant === "E" && searching
+											? (node) => <PrototypeRevealCard>{node}</PrototypeRevealCard>
+											: undefined
+									}
 								>
 									{/* A partial list without a title is not a search that found nothing: the status line above says what
 							    it still waits for, and the people it names show above the grid. */}
@@ -729,6 +807,8 @@ export function DiscoverPage({
 								</DiscoverGrid>
 						)}
 					</DiscoverRoles>
+					</div>
+					)}
 					<div
 						ref={moreRef}
 						className="flex min-h-24 items-center justify-center gap-3 text-sm text-gray-400"
@@ -766,5 +846,6 @@ export function DiscoverPage({
 				</div>
 			</div>
 		</MotionConfig>
+		</PrototypeLoadingProvider>
 	)
 }

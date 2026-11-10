@@ -17,6 +17,8 @@ import type { BarChip } from "~/ui/discover-bar/chips"
 import { Divider, Filter } from "~/ui/discover-bar/ReadingLine"
 import type { ReadItem as Item } from "./read-items"
 import { ClearRead, QualityMark, ReadToggle, qualitiesOf } from "./read-parts"
+// prototype: search loading states (?loading=).
+import { PrototypeStripStep, usePrototypeLoading } from "../prototype-search-loading/PrototypeSearchLoading"
 
 export interface ReadProps {
 	items: readonly Item[]
@@ -79,6 +81,9 @@ function FingerprintLabel() {
 
 export function ReadStrip(p: ReadProps) {
 	const qualities = qualitiesOf(p.reading)
+	// prototype: variant D's step, null when nothing loads; undefined for the other variants.
+	const prototypeLoading = usePrototypeLoading()
+	const prototypeStep = prototypeLoading?.variant === "D" ? prototypeLoading.phase : undefined
 	const manual = manualChips(p.items, p.chips)
 	const [expanded, setOpen] = useState(false)
 	// Animate only a switch between the two rows, never the first paint: a quick fade and a short slide (transform and
@@ -121,7 +126,7 @@ export function ReadStrip(p: ReadProps) {
 	useEffect(() => {
 		if (expanded && hidden <= 0) setOpen(false)
 	}, [expanded, hidden])
-	if (!p.items.length && !qualities.length && !manual.length && !p.pending) return <div className="h-9 flex-1" />
+	if (!p.items.length && !qualities.length && !manual.length && !p.pending && !prototypeStep) return <div className="h-9 flex-1" />
 
 	if (expanded)
 		return (
@@ -167,7 +172,8 @@ export function ReadStrip(p: ReadProps) {
 			{/* relative: the scroller is the containing block of the marks' sr-only labels (absolute), so they are
 			    clipped with the strip; otherwise a long strip's labels widened the whole page on phones. */}
 			<div className="relative flex min-w-0 flex-1 items-center gap-3 overflow-x-auto [scrollbar-width:none]">
-				{p.pending && !p.items.length && !qualities.length && (
+				{/* prototype: variant D says the step at the strip's end instead. */}
+				{prototypeStep === undefined && p.pending && !p.items.length && !qualities.length && (
 					<span className="flex shrink-0 items-center gap-2 text-[12px] text-gray-500">
 						<FingerPrintIcon className="h-4 w-4 animate-pulse text-amber-300/60" aria-hidden />
 						Reading…
@@ -197,6 +203,7 @@ export function ReadStrip(p: ReadProps) {
 						)}
 					</span>
 				)}
+				{prototypeStep && <PrototypeStripStep phase={prototypeStep} />}
 				{manual.length > 0 && <Divider />}
 				{manual.length > 0 && (
 					<span className="flex shrink-0 items-center gap-x-2">

@@ -34,7 +34,10 @@ export function DiscoverGrid({
 	marks,
 	flipping = false,
 	children,
+	prototypeWrapCard,
 }: {
+	/** prototype: wraps each card (the search loading prototype, ?loading=E). */
+	prototypeWrapCard?: (card: ReactNode) => ReactNode
 	cards: TitleCard[]
 	/**
 	 * How far each title moved when For you last flipped (positive: up); null when no marks show. Turned on, it is the
@@ -78,13 +81,15 @@ export function DiscoverGrid({
 						>
 							{/* A browser requests a lazy image up to 3,000 px ahead, which is ten rows of posters on a
 							    phone. A skipped card holds its poster back until it is about one and a half screens away. */}
-							<DiscoverCardRole card={card}>
-								<TitlePosterCard
-									card={card}
-									posterPriority={priority}
-									skipOffscreen={priority === "lazy"}
-								/>
-							</DiscoverCardRole>
+							{(prototypeWrapCard ?? ((node: ReactNode) => node))(
+								<DiscoverCardRole card={card}>
+									<TitlePosterCard
+										card={card}
+										posterPriority={priority}
+										skipOffscreen={priority === "lazy"}
+									/>
+								</DiscoverCardRole>,
+							)}
 							<MoveMark delta={delta} reduce={reduce} />
 						</motion.div>
 					)
