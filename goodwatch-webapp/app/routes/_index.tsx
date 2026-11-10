@@ -131,15 +131,20 @@ export default function Index() {
 	const data = useLoaderData<typeof startPageLoader>()
 	if (!data.member)
 		return <GuestStart titles={data.titles} browse={data.browse} />
+	// A member's own rows come first, then Where to start and How it works.
 	return (
-		<MemberStart
-			shelf={data.titles}
-			data={data.start}
-			later={{
-				forYou: "forYouLater" in data ? data.forYouLater : undefined,
-				hot: "hotLater" in data ? data.hotLater : undefined,
-			}}
-		/>
+		<>
+			<MemberStart
+				shelf={data.titles}
+				data={data.start}
+				later={{
+					forYou: "forYouLater" in data ? data.forYouLater : undefined,
+					hot: "hotLater" in data ? data.hotLater : undefined,
+				}}
+			/>
+			<StartBrowse data={data.browse} />
+			<HowItWorksCorner />
+		</>
 	)
 }
 

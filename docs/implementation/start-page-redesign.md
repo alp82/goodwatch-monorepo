@@ -321,6 +321,9 @@ new section.
 `MemberStart` over the same room (no TV, no boot, no opening steps), behind the ledge's big button (see "The
 ledge"):
 
+Under the "Go deeper" doors, a member gets the guest's Where to start section (`StartBrowse`, read for the member's
+country) and then How it works (`HowItWorksCorner`), before the footer. A guest's page has them the other way round.
+
 - **This or that:** two titles from the member's own lists side by side; tapping one keeps it and deals a challenger
   from another list; three taps give tonight's pick with **Watch** (the Watch next hero's button, to the title page).
   "Neither" deals a new pair; **Start over** reshuffles. Nothing is written. The deck (`deck.ts`, from the lab's

@@ -7,8 +7,9 @@
 // A member's slower lists (For you, Hot on socials) come later in the same response, through Remix's `defer`: the
 // HTML doesn't wait for them, and their titles are shown in the member's language like the rest of the page.
 //
-// A guest's page also has the Where to start section (browse.server.ts), the same for every guest of a country, the
-// country the page cache keys on. Without one of its rails the page is incomplete too.
+// Both pages have the Where to start section (browse.server.ts), the same for everyone of a country, the country the
+// page cache keys on. Without one of its rails a guest's page is incomplete too; a member's page is never stored, so a
+// missing rail only leaves it out.
 //
 // Searches never run here: they cost money and write history. The browser asks for them when the guest searches.
 import { type TypedResponse, defer, json } from "@remix-run/node"
@@ -25,7 +26,10 @@ import {
 import { getDisplayFields } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
-import type { StartBrowseData } from "~/ui/start/browse/browse-data"
+import {
+	EMPTY_BROWSE,
+	type StartBrowseData,
+} from "~/ui/start/browse/browse-data"
 import {
 	type MemberStartData,
 	type MemberStartLater,
@@ -40,6 +44,7 @@ export type StartPageData =
 			member: true
 			titles: StartTitle[]
 			start: MemberStartData
+			browse: StartBrowseData
 	  }
 
 export async function loadStartPage(request: Request): Promise<{
@@ -49,25 +54,27 @@ export async function loadStartPage(request: Request): Promise<{
 }> {
 	const { user, headers } = await livingRoomAuth(request)
 	const shelf = loadStartTitles(getTitleSnapshot(), getDisplayFields)
+	const browsing = loadStartBrowse(cacheIdentity(request).country)
 	if (!user) {
-		const [titles, browse] = await Promise.all([
-			shelf,
-			loadStartBrowse(cacheIdentity(request).country),
-		])
+		const [titles, browse] = await Promise.all([shelf, browsing])
 		if (!titles.length || !browse.complete)
 			headers.set("Cache-Control", INCOMPLETE_PAGE_HEADERS["Cache-Control"])
 		return { data: { member: false, titles, browse: browse.value }, headers }
 	}
 	// The member's own start never fails the page: without it they get the search and the first steps.
-	const [titles, start] = await Promise.all([
+	const [titles, start, browse] = await Promise.all([
 		shelf,
 		loadMemberStart(request, user.id).catch((error) => {
 			console.error("Member start: reading the member failed", error)
 			return { data: UNREAD_MEMBER, later: {} }
 		}),
+		browsing.catch((error) => {
+			console.error("Member start: reading Where to start failed", error)
+			return { value: EMPTY_BROWSE, complete: false }
+		}),
 	])
 	return {
-		data: { member: true, titles, start: start.data },
+		data: { member: true, titles, start: start.data, browse: browse.value },
 		headers,
 		later: { userId: user.id, lists: start.later },
 	}
