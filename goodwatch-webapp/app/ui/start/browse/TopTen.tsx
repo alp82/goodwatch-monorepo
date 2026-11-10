@@ -63,7 +63,7 @@ export function TopTen({ top }: { top: Record<BrowseKind, StartTitle[]> }) {
 					</button>
 				))}
 			</div>
-			<div className="sb-stack">
+			<div className="sb-swap">
 				{kinds.map((option) => {
 					const away = option.kind !== kind
 					return (

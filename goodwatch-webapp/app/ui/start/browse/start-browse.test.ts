@@ -89,7 +89,7 @@ test("every title of Top 10 and New on streaming is a poster card link", () => {
 
 test("the Top 10 shows movies first; the shows wait in the same cell, invisible and inert", () => {
 	const stack =
-		/<div class="sb-stack">(.*?)<\/section>/s.exec(rendered.full)?.[1] ?? ""
+		/<div class="sb-swap">(.*?)<\/section>/s.exec(rendered.full)?.[1] ?? ""
 	const panels = [
 		...stack.matchAll(
 			/<div( aria-hidden="true" inert="")?><div class="sb-rail"><ul aria-label="([^"]+)"/g,
