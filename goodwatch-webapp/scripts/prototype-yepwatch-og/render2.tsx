@@ -118,6 +118,6 @@ h+='</div>';}}
 document.getElementById("out").innerHTML=h}
 render();
 </script></body></html>`
-	writeFileSync(join(OUT, "index.html"), html)
+	writeFileSync(join(OUT, "round2.html"), html)
 }
 console.log(`wrote ${cards.length} cards to ${OUT}`)

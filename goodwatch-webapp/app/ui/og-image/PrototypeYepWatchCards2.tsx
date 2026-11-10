@@ -10,7 +10,7 @@ import type { ReactNode } from "react"
 
 export const W = 1200
 export const H = 630
-const C = {
+export const C = {
 	bg: "#070707",
 	panel: "#131313",
 	line: "rgba(255,255,255,.12)",
@@ -81,7 +81,7 @@ const font = opentype.parse(fontFile.buffer.slice(fontFile.byteOffset, fontFile.
 const TRACK = -0.03
 const CAP = (font.tables.os2?.sCapHeight ?? 700) / font.unitsPerEm
 
-function geom(text: string, size: number) {
+export function geom(text: string, size: number) {
 	const scale = size / font.unitsPerEm
 	const base = size / 2 + (CAP * size) / 2
 	let x = 0
@@ -93,12 +93,12 @@ function geom(text: string, size: number) {
 	return { d: parts.join(""), w: Math.ceil(x - TRACK * size) }
 }
 /** Font size so `text` is `width` wide. */
-const fitTo = (text: string, width: number) => width / (geom(text, 100).w / 100)
+export const fitTo = (text: string, width: number) => width / (geom(text, 100).w / 100)
 
 type Glow = { color: string; blur: number; opacity?: number }
 type WordOpts = { fill?: string; stroke?: string; sw?: number; glows?: Glow[]; drop?: { dy: number; color: string }; opacity?: number }
 
-function wordSvg(text: string, size: number, o: WordOpts, pad: number) {
+export function wordSvg(text: string, size: number, o: WordOpts, pad: number) {
 	const { d, w } = geom(text, size)
 	const glows = (o.glows ?? [])
 		.map(
@@ -114,10 +114,10 @@ function wordSvg(text: string, size: number, o: WordOpts, pad: number) {
 	}
 }
 
-const uri = (markup: string) => `data:image/svg+xml,${encodeURIComponent(markup)}`
+export const uri = (markup: string) => `data:image/svg+xml,${encodeURIComponent(markup)}`
 
 /** A word whose layout box is its own width × size; glow and drop paint outside it. */
-function Word({ text, size, style, ...o }: { text: string; size: number; style?: object } & WordOpts) {
+export function Word({ text, size, style, ...o }: { text: string; size: number; style?: object } & WordOpts) {
 	const pad = Math.ceil(Math.max(0, ...(o.glows ?? []).map((g) => g.blur * 3), o.drop?.dy ?? 0, o.sw ?? 0))
 	const { w, markup } = wordSvg(text, size, o, pad)
 	return (
@@ -129,29 +129,29 @@ function Word({ text, size, style, ...o }: { text: string; size: number; style?:
 
 // ---------- shared parts ----------
 
-function Frame({ children, bg = C.bg }: { children: ReactNode; bg?: string }) {
+export function Frame({ children, bg = C.bg }: { children: ReactNode; bg?: string }) {
 	return (
 		<div style={{ width: W, height: H, display: "flex", position: "relative", overflow: "hidden", background: bg, color: C.ink, fontFamily: "Gabarito" }}>
 			{children}
 		</div>
 	)
 }
-function Abs({ children, style }: { children?: ReactNode; style: object }) {
+export function Abs({ children, style }: { children?: ReactNode; style: object }) {
 	return <div style={{ display: "flex", position: "absolute", ...style }}>{children}</div>
 }
-function Col({ children, style }: { children: ReactNode; style?: object }) {
+export function Col({ children, style }: { children: ReactNode; style?: object }) {
 	return <div style={{ display: "flex", flexDirection: "column", ...style }}>{children}</div>
 }
-function Row({ children, style }: { children: ReactNode; style?: object }) {
+export function Row({ children, style }: { children: ReactNode; style?: object }) {
 	return <div style={{ display: "flex", flexDirection: "row", ...style }}>{children}</div>
 }
-function T({ children, size, color = C.ink, bold = true, style }: { children: ReactNode; size: number; color?: string; bold?: boolean; style?: object }) {
+export function T({ children, size, color = C.ink, bold = true, style }: { children: ReactNode; size: number; color?: string; bold?: boolean; style?: object }) {
 	return (
 		<div style={{ display: "flex", fontSize: size, fontWeight: bold ? 700 : 400, color, letterSpacing: bold ? -size * 0.025 : 0, lineHeight: 1.12, ...style }}>{children}</div>
 	)
 }
 
-function Wordmark({ size = 44, ink = C.ink, accent = C.amber }: { size?: number; ink?: string; accent?: string }) {
+export function Wordmark({ size = 44, ink = C.ink, accent = C.amber }: { size?: number; ink?: string; accent?: string }) {
 	return (
 		<div style={{ display: "flex", fontSize: size, fontWeight: 700, letterSpacing: -size * 0.03, lineHeight: 1 }}>
 			<span style={{ color: ink }}>Yep</span>
@@ -160,7 +160,7 @@ function Wordmark({ size = 44, ink = C.ink, accent = C.amber }: { size?: number;
 	)
 }
 
-function Halo({ x, y, r, opacity = 0.3, color = "251,191,36" }: { x: number; y: number; r: number; opacity?: number; color?: string }) {
+export function Halo({ x, y, r, opacity = 0.3, color = "251,191,36" }: { x: number; y: number; r: number; opacity?: number; color?: string }) {
 	return (
 		<Abs
 			style={{
@@ -175,7 +175,7 @@ function Halo({ x, y, r, opacity = 0.3, color = "251,191,36" }: { x: number; y: 
 	)
 }
 
-function Icon({ size }: { size: number }) {
+export function Icon({ size }: { size: number }) {
 	return (
 		<img
 			width={size}
@@ -187,7 +187,7 @@ function Icon({ size }: { size: number }) {
 	)
 }
 
-function Poster({ src, w, style, children, radius }: { src: string; w: number; style?: object; children?: ReactNode; radius?: number }) {
+export function Poster({ src, w, style, children, radius }: { src: string; w: number; style?: object; children?: ReactNode; radius?: number }) {
 	const h = Math.round(w * 1.5)
 	return (
 		<div style={{ display: "flex", position: "relative", width: w, height: h, borderRadius: radius ?? Math.round(w * 0.06), overflow: "hidden", boxShadow: "0 22px 50px rgba(0,0,0,.65)", ...style }}>
@@ -198,7 +198,7 @@ function Poster({ src, w, style, children, radius }: { src: string; w: number; s
 }
 
 /** Centers a child over a poster-sized box. */
-function Center({ children, top = "44%" }: { children: ReactNode; top?: string }) {
+export function Center({ children, top = "44%" }: { children: ReactNode; top?: string }) {
 	return (
 		<Abs style={{ left: 0, right: 0, top, height: 0, alignItems: "center", justifyContent: "center" }}>
 			{children}
@@ -206,7 +206,7 @@ function Center({ children, top = "44%" }: { children: ReactNode; top?: string }
 	)
 }
 
-function Face({ size, letter, yep = false }: { size: number; letter?: string; yep?: boolean }) {
+export function Face({ size, letter, yep = false }: { size: number; letter?: string; yep?: boolean }) {
 	const face = letter ? (
 		<div style={{ display: "flex", width: size, height: size, borderRadius: size, background: C.amber, color: C.ink2, alignItems: "center", justifyContent: "center", fontSize: size * 0.46, fontWeight: 700 }}>
 			{letter}
@@ -232,7 +232,7 @@ function Face({ size, letter, yep = false }: { size: number; letter?: string; ye
 	)
 }
 
-function OpenSeat({ size }: { size: number }) {
+export function OpenSeat({ size }: { size: number }) {
 	return (
 		<div style={{ display: "flex", width: size, height: size, borderRadius: size, border: `3px dashed ${C.amber}`, color: C.amber, alignItems: "center", justifyContent: "center", fontSize: size * 0.32, fontWeight: 700 }}>
 			You
@@ -240,7 +240,7 @@ function OpenSeat({ size }: { size: number }) {
 	)
 }
 
-function VoteButton({ yep, size, label = true }: { yep: boolean; size: number; label?: boolean }) {
+export function VoteButton({ yep, size, label = true }: { yep: boolean; size: number; label?: boolean }) {
 	const color = yep ? C.amber : C.red
 	const mark = yep
 		? `<path d="M30 52 L45 67 L72 36" stroke="${color}" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
@@ -253,17 +253,17 @@ function VoteButton({ yep, size, label = true }: { yep: boolean; size: number; l
 	)
 }
 
-function StampImg({ text, size, color }: { text: string; size: number; color: string }) {
+export function StampImg({ text, size, color, bias = 7.6 }: { text: string; size: number; color: string; bias?: number }) {
 	const { d, w } = geom(text, size)
 	const border = Math.max(7, Math.round(size * 0.11))
 	const bw = w + size * 0.26 * 2 + border * 2
 	const bh = size + size * 0.2 * 2 + border * 2
 	const inset = border * 1.7
-	const markup = `<svg xmlns="http://www.w3.org/2000/svg" width="${bw}" height="${bh}" viewBox="0 0 ${bw} ${bh}"><defs><filter id="n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.045 0.06" numOctaves="3" seed="7" result="t"/><feColorMatrix in="t" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -11 0 0 0 7.6" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></defs><g filter="url(#n)"><rect x="${border / 2}" y="${border / 2}" width="${bw - border}" height="${bh - border}" rx="${size * 0.16}" fill="none" stroke="${color}" stroke-width="${border}"/><rect x="${inset}" y="${inset}" width="${bw - inset * 2}" height="${bh - inset * 2}" rx="${size * 0.08}" fill="none" stroke="${color}" stroke-width="${Math.max(2, border * 0.38)}"/><path d="${d}" fill="${color}" transform="translate(${(bw - w) / 2} ${(bh - size) / 2})"/></g></svg>`
+	const markup = `<svg xmlns="http://www.w3.org/2000/svg" width="${bw}" height="${bh}" viewBox="0 0 ${bw} ${bh}"><defs><filter id="n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.045 0.06" numOctaves="3" seed="7" result="t"/><feColorMatrix in="t" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -11 0 0 0 ${bias}" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></defs><g filter="url(#n)"><rect x="${border / 2}" y="${border / 2}" width="${bw - border}" height="${bh - border}" rx="${size * 0.16}" fill="none" stroke="${color}" stroke-width="${border}"/><rect x="${inset}" y="${inset}" width="${bw - inset * 2}" height="${bh - inset * 2}" rx="${size * 0.08}" fill="none" stroke="${color}" stroke-width="${Math.max(2, border * 0.38)}"/><path d="${d}" fill="${color}" transform="translate(${(bw - w) / 2} ${(bh - size) / 2})"/></g></svg>`
 	return <img src={uri(markup)} width={bw} height={bh} />
 }
 
-function Rays({ size, color, opacity = 1, widthDeg = 8, from = 0 }: { size: number; color: string; opacity?: number; widthDeg?: number; from?: number }) {
+export function Rays({ size, color, opacity = 1, widthDeg = 8, from = 0 }: { size: number; color: string; opacity?: number; widthDeg?: number; from?: number }) {
 	const r = size / 2
 	const wedges = Array.from({ length: 16 }, (_, i) => {
 		const a0 = ((from + i * 22.5 - widthDeg / 2) * Math.PI) / 180
@@ -273,7 +273,7 @@ function Rays({ size, color, opacity = 1, widthDeg = 8, from = 0 }: { size: numb
 	return <img width={size} height={size} src={uri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}"><g fill="${color}" opacity="${opacity}">${wedges}</g></svg>`)} />
 }
 
-function WallImg({ w, h, size, color, opacity = 1, text = "YEP" }: { w: number; h: number; size: number; color: string; opacity?: number; text?: string }) {
+export function WallImg({ w, h, size, color, opacity = 1, text = "YEP" }: { w: number; h: number; size: number; color: string; opacity?: number; text?: string }) {
 	const { d, w: ww } = geom(text, size)
 	const step = ww + size * 0.5
 	const rowH = size * 1.06
@@ -291,7 +291,7 @@ function WallImg({ w, h, size, color, opacity = 1, text = "YEP" }: { w: number; 
 	return <img width={w} height={h} src={uri(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><g opacity="${opacity}">${body}</g></svg>`)} />
 }
 
-function GlitchBands({ w, h }: { w: number; h: number }) {
+export function GlitchBands({ w, h }: { w: number; h: number }) {
 	const bands = [
 		[0.12, 0.05, C.amber, 0.55],
 		[0.24, 0.018, "#ffffff", 0.5],
@@ -320,13 +320,13 @@ function GlitchBands({ w, h }: { w: number; h: number }) {
 	)
 }
 
-function GlitchWord({ text, size }: { text: string; size: number }) {
+export function GlitchWord({ text, size, color = C.amber, shadow = C.red }: { text: string; size: number; color?: string; shadow?: string }) {
 	const { d, w } = geom(text, size)
 	const dx = size * 0.045
 	const pad = Math.ceil(size * 0.25)
 	const slice = (y0: number, y1: number, shift: number, id: string) =>
-		`<clipPath id="${id}"><rect x="${-pad}" y="${y0 * size}" width="${w + pad * 2}" height="${(y1 - y0) * size}"/></clipPath><g clip-path="url(#${id})"><path d="${d}" fill="${C.amber}" transform="translate(${shift} 0)"/></g>`
-	const markup = `<svg xmlns="http://www.w3.org/2000/svg" width="${w + pad * 2}" height="${size + pad * 2}" viewBox="${-pad} ${-pad} ${w + pad * 2} ${size + pad * 2}"><path d="${d}" fill="${C.red}" opacity="0.9" transform="translate(${-dx} ${dx * 0.3})"/><path d="${d}" fill="#ffffff" opacity="0.9" transform="translate(${dx} ${-dx * 0.3})"/><path d="${d}" fill="${C.amber}"/>${slice(0.18, 0.34, size * 0.12, "a")}${slice(0.6, 0.72, -size * 0.09, "b")}</svg>`
+		`<clipPath id="${id}"><rect x="${-pad}" y="${y0 * size}" width="${w + pad * 2}" height="${(y1 - y0) * size}"/></clipPath><g clip-path="url(#${id})"><path d="${d}" fill="${color}" transform="translate(${shift} 0)"/></g>`
+	const markup = `<svg xmlns="http://www.w3.org/2000/svg" width="${w + pad * 2}" height="${size + pad * 2}" viewBox="${-pad} ${-pad} ${w + pad * 2} ${size + pad * 2}"><path d="${d}" fill="${shadow}" opacity="0.9" transform="translate(${-dx} ${dx * 0.3})"/><path d="${d}" fill="#ffffff" opacity="0.9" transform="translate(${dx} ${-dx * 0.3})"/><path d="${d}" fill="${color}"/>${slice(0.18, 0.34, size * 0.12, "a")}${slice(0.6, 0.72, -size * 0.09, "b")}</svg>`
 	return (
 		<div style={{ display: "flex", position: "relative", width: w, height: size }}>
 			<img src={uri(markup)} width={w + pad * 2} height={size + pad * 2} style={{ position: "absolute", left: -pad, top: -pad }} />
@@ -334,7 +334,7 @@ function GlitchWord({ text, size }: { text: string; size: number }) {
 	)
 }
 
-function Echo({ text, size, dir = 1, color = C.amber, deep = C.amberDeep }: { text: string; size: number; dir?: number; color?: string; deep?: string }) {
+export function Echo({ text, size, dir = 1, color = C.amber, deep = C.amberDeep }: { text: string; size: number; dir?: number; color?: string; deep?: string }) {
 	const TRAIL = [0, 0.75, 0.52, 0.34, 0.2, 0.1]
 	const { w } = geom(text, size)
 	const step = w * 0.55
@@ -355,14 +355,14 @@ function Echo({ text, size, dir = 1, color = C.amber, deep = C.amberDeep }: { te
 	)
 }
 
-function Neon({ text, size, color = C.amber }: { text: string; size: number; color?: string }) {
+export function Neon({ text, size, color = C.amber, fill = "#fff8e6" }: { text: string; size: number; color?: string; fill?: string }) {
 	return (
 		<div style={{ display: "flex", position: "relative" }}>
 			<Halo x={geom(text, size).w / 2} y={size / 2} r={size * 1.3} opacity={0.85} color="11,8,6" />
 			<Word
 				text={text}
 				size={size}
-				fill="#fff8e6"
+				fill={fill}
 				glows={[
 					{ color, blur: size * 0.22, opacity: 0.9 },
 					{ color, blur: size * 0.1 },
@@ -374,7 +374,7 @@ function Neon({ text, size, color = C.amber }: { text: string; size: number; col
 }
 
 /** Poster with the wash look (amber duotone, band, ink YEP) or its Nope twin. */
-function WashCard({ p, w, nope = false, word, style }: { p: PosterSet; w: number; nope?: boolean; word?: string; style?: object }) {
+export function WashCard({ p, w, nope = false, word, style }: { p: PosterSet; w: number; nope?: boolean; word?: string; style?: object }) {
 	const h = Math.round(w * 1.5)
 	const text = word ?? (nope ? "NOPE" : "YEP")
 	const band = nope
@@ -391,12 +391,12 @@ function WashCard({ p, w, nope = false, word, style }: { p: PosterSet; w: number
 }
 
 /** MATCH on a washed poster, the match moment of the wash look. */
-function MatchCard({ p, w, style }: { p: PosterSet; w: number; style?: object }) {
+export function MatchCard({ p, w, style }: { p: PosterSet; w: number; style?: object }) {
 	return <WashCard p={p} w={w} word="MATCH" style={{ border: `4px solid ${C.amber}`, boxShadow: "0 0 60px rgba(251,191,36,.45)", ...style }} />
 }
 
 /** The right-hand column of round 1 D. */
-function StartText({ left = 600, size = 104 }: { left?: number; size?: number }) {
+export function StartText({ left = 600, size = 104 }: { left?: number; size?: number }) {
 	return (
 		<Col style={{ position: "absolute", left, top: 0, bottom: 0, right: 50, justifyContent: "center", gap: 24 }}>
 			<Wordmark size={size} />
@@ -414,13 +414,13 @@ function StartText({ left = 600, size = 104 }: { left?: number; size?: number })
 	)
 }
 
-function fit(text: string, max: number, width: number, min = 40) {
+export function fit(text: string, max: number, width: number, min = 40) {
 	let size = max
 	while (size > min && text.length * size * 0.52 > width) size -= 2
 	return size
 }
 
-function InviteText({ host, width = 560, head = 76, button = true, align = "flex-start" }: { host: string | null; width?: number; head?: number; button?: boolean; align?: string }) {
+export function InviteText({ host, width = 560, head = 76, button = true, align = "flex-start" }: { host: string | null; width?: number; head?: number; button?: boolean; align?: string }) {
 	const h = COPY2.invited(host)
 	const size = fit(h, head, width, 44)
 	const center = align === "center"
@@ -453,7 +453,7 @@ function InviteText({ host, width = 560, head = 76, button = true, align = "flex
 
 // ---------- start page ----------
 
-function S01({ posters }: Content2) {
+export function S01({ posters }: Content2) {
 	return (
 		<Frame>
 			<Halo x={300} y={300} r={300} />
@@ -472,7 +472,7 @@ function S01({ posters }: Content2) {
 	)
 }
 
-function S02({ posters }: Content2) {
+export function S02({ posters }: Content2) {
 	return (
 		<Frame>
 			<Halo x={300} y={315} r={300} />
@@ -487,7 +487,7 @@ function S02({ posters }: Content2) {
 	)
 }
 
-function S03({ posters }: Content2) {
+export function S03({ posters }: Content2) {
 	return (
 		<Frame>
 			<Halo x={300} y={315} r={300} />
@@ -502,7 +502,7 @@ function S03({ posters }: Content2) {
 	)
 }
 
-function S04({ posters }: Content2) {
+export function S04({ posters }: Content2) {
 	const w = 260
 	const h = w * 1.5
 	const band = h * 0.2
@@ -522,7 +522,7 @@ function S04({ posters }: Content2) {
 	)
 }
 
-function S05({ posters }: Content2) {
+export function S05({ posters }: Content2) {
 	return (
 		<Frame>
 			<Abs style={{ left: 175, top: 140 }}>
@@ -536,7 +536,7 @@ function S05({ posters }: Content2) {
 	)
 }
 
-function S06({ posters }: Content2) {
+export function S06({ posters }: Content2) {
 	const s = 170
 	return (
 		<Frame>
@@ -558,7 +558,7 @@ function S06({ posters }: Content2) {
 	)
 }
 
-function S07({ posters }: Content2) {
+export function S07({ posters }: Content2) {
 	return (
 		<Frame>
 			<Abs style={{ left: 0, top: 0 }}>
@@ -573,7 +573,7 @@ function S07({ posters }: Content2) {
 	)
 }
 
-function S08({ posters }: Content2) {
+export function S08({ posters }: Content2) {
 	const D = 1300
 	return (
 		<Frame>
@@ -596,7 +596,7 @@ function S08({ posters }: Content2) {
 	)
 }
 
-function S09({ posters }: Content2) {
+export function S09({ posters }: Content2) {
 	return (
 		<Frame>
 			<Abs style={{ left: 0, top: 0, width: 400, height: H, borderTopRightRadius: 28, borderBottomRightRadius: 28, background: `linear-gradient(135deg, ${C.amber} 0%, #f59e0b 50%, ${C.amberDeep} 100%)` }} />
@@ -611,7 +611,7 @@ function S09({ posters }: Content2) {
 	)
 }
 
-function S10({ posters }: Content2) {
+export function S10({ posters }: Content2) {
 	return (
 		<Frame>
 			<Abs style={{ left: 0, top: 0, width: 620, height: H, overflow: "hidden" }}>
@@ -629,7 +629,7 @@ function S10({ posters }: Content2) {
 	)
 }
 
-function S11({ posters }: Content2) {
+export function S11({ posters }: Content2) {
 	return (
 		<Frame>
 			<Halo x={300} y={315} r={300} opacity={0.22} />
@@ -644,7 +644,7 @@ function S11({ posters }: Content2) {
 	)
 }
 
-function S12({ posters }: Content2) {
+export function S12({ posters }: Content2) {
 	return (
 		<Frame>
 			<Abs style={{ left: 0, top: 0, width: 620, height: H, overflow: "hidden" }}>
@@ -661,7 +661,7 @@ function S12({ posters }: Content2) {
 	)
 }
 
-function S13({ posters }: Content2) {
+export function S13({ posters }: Content2) {
 	return (
 		<Frame>
 			<Halo x={300} y={290} r={320} opacity={0.35} />
@@ -678,7 +678,7 @@ function S13({ posters }: Content2) {
 	)
 }
 
-function S14({ posters }: Content2) {
+export function S14({ posters }: Content2) {
 	const w = 150
 	return (
 		<Frame>
@@ -708,7 +708,7 @@ function S14({ posters }: Content2) {
 
 // ---------- room invite (static) ----------
 
-function Tile({ n, children }: { n: number; children: ReactNode }) {
+export function Tile({ n, children }: { n: number; children: ReactNode }) {
 	return (
 		<Col style={{ width: 330, height: 270, borderRadius: 24, background: C.panel, border: `2px solid ${C.line}`, padding: "18px 22px", justifyContent: "space-between" }}>
 			<Row style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>{children}</Row>
@@ -725,7 +725,7 @@ function Tile({ n, children }: { n: number; children: ReactNode }) {
 	)
 }
 
-function R01({ posters, host }: Content2) {
+export function R01({ posters, host }: Content2) {
 	const h = COPY2.invited(host)
 	return (
 		<Frame>
@@ -767,7 +767,7 @@ function R01({ posters, host }: Content2) {
 	)
 }
 
-function R02({ posters, host }: Content2) {
+export function R02({ posters, host }: Content2) {
 	return (
 		<Frame>
 			<Halo x={300} y={300} r={300} />
@@ -788,11 +788,11 @@ function R02({ posters, host }: Content2) {
 	)
 }
 
-function Plus({ children = "+" }: { children?: string }) {
+export function Plus({ children = "+" }: { children?: string }) {
 	return <T size={64} color={C.muted}>{children}</T>
 }
 
-function R03({ posters, host }: Content2) {
+export function R03({ posters, host }: Content2) {
 	const h = COPY2.invited(host)
 	return (
 		<Frame>
@@ -822,7 +822,7 @@ function R03({ posters, host }: Content2) {
 	)
 }
 
-function R04({ host }: Content2) {
+export function R04({ host }: Content2) {
 	return (
 		<Frame>
 			<Abs style={{ left: 0, top: 0 }}>
@@ -836,7 +836,7 @@ function R04({ host }: Content2) {
 	)
 }
 
-function R05({ posters, host }: Content2) {
+export function R05({ posters, host }: Content2) {
 	return (
 		<Frame>
 			<Abs style={{ left: 0, top: 0, width: 220, height: H, borderTopRightRadius: 24, borderBottomRightRadius: 24, background: `linear-gradient(225deg, #f87171 0%, ${C.red} 50%, ${C.redDeep} 100%)`, alignItems: "center", justifyContent: "center" }}>
@@ -866,7 +866,7 @@ function R05({ posters, host }: Content2) {
 	)
 }
 
-function R06({ posters, host }: Content2) {
+export function R06({ posters, host }: Content2) {
 	return (
 		<Frame>
 			<Halo x={930} y={315} r={300} />
@@ -883,7 +883,7 @@ function R06({ posters, host }: Content2) {
 	)
 }
 
-function R07({ posters, host }: Content2) {
+export function R07({ posters, host }: Content2) {
 	const h = COPY2.invited(host)
 	return (
 		<Frame>
@@ -909,7 +909,7 @@ function R07({ posters, host }: Content2) {
 	)
 }
 
-function R08({ posters, host }: Content2) {
+export function R08({ posters, host }: Content2) {
 	const D = 1500
 	return (
 		<Frame>
@@ -928,7 +928,7 @@ function R08({ posters, host }: Content2) {
 	)
 }
 
-function R09({ posters, host }: Content2) {
+export function R09({ posters, host }: Content2) {
 	return (
 		<Frame>
 			<Halo x={900} y={315} r={320} opacity={0.25} />
@@ -951,7 +951,7 @@ function R09({ posters, host }: Content2) {
 	)
 }
 
-function R10({ posters, host }: Content2) {
+export function R10({ posters, host }: Content2) {
 	const title = COPY2.room(host)
 	const notch = { width: 52, height: 52, borderRadius: 26, background: C.bg }
 	return (
@@ -996,7 +996,7 @@ function R10({ posters, host }: Content2) {
 	)
 }
 
-function R11({ posters, host }: Content2) {
+export function R11({ posters, host }: Content2) {
 	return (
 		<Frame>
 			<Abs style={{ left: 0, top: 0, width: W, height: H, opacity: 0.18 }}>
@@ -1012,7 +1012,7 @@ function R11({ posters, host }: Content2) {
 	)
 }
 
-function R12({ posters, host }: Content2) {
+export function R12({ posters, host }: Content2) {
 	const pw = 330
 	return (
 		<Frame>
