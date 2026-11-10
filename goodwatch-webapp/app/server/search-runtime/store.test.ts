@@ -235,16 +235,35 @@ for (const blocked of ["halted", "day", "month"] as const) {
 	})
 }
 
+test("a Redis hit runs no Crate reads, no admission and no inserts", async () => {
+	const statements: string[] = []
+	const store = new SearchStore(async stmt => {
+		statements.push(stmt)
+		return { cols: [], rows: [], rowcount: 0 }
+	}, new SearchCoordination(() => ({ get: async () => store.seal([{}, {}]), eval: async () => { throw new Error("Unexpected admission") } }) as unknown as SearchRedis), Buffer.alloc(32, 1))
+	const outcome = await executeJevStage(store, {
+		requestText: "quiet movies", questionVersion: "test", language: { mode: "english", version: "test" },
+		requests: [{ state: {}, questions: {} }, { state: {}, questions: {} }], visitor: { accountId: null, networkIdentity: "test" },
+	})
+	assert.equal(outcome.kind, "cached")
+	assert.deepEqual(statements, [])
+})
+
 for (const fail of [false, true]) {
-	test(`lookup hit discards ${fail ? "failed" : "pending"} checks without admission or inserts`, async () => {
+	test(`a Crate hit discards ${fail ? "failed" : "pending"} checks without admission or inserts`, async () => {
 		const waiting = gate(), lookup = gate(), started: string[] = [], statements: string[] = []
-		const store = new SearchStore(async stmt => {
+		const store: InstanceType<typeof SearchStore> = new SearchStore(async stmt => {
 			statements.push(stmt)
+			if (stmt.includes("search_interpretations")) {
+				started.push("lookup")
+				await lookup.promise
+				return { cols: ["status", "ciphertext"], rows: [["ready", store.seal([{}, {}])]], rowcount: 1 }
+			}
 			started.push(stmt.startsWith("SELECT halted") ? "control" : "spend")
 			await waiting.promise
 			if (fail) throw new Error("discarded read failure")
 			return { cols: [], rows: [], rowcount: 0 }
-		}, new SearchCoordination(() => ({ get: async () => { started.push("lookup"); await lookup.promise; return store.seal([{}, {}]) }, eval: async () => { throw new Error("Unexpected admission") } }) as unknown as SearchRedis), Buffer.alloc(32, 1))
+		}, new SearchCoordination(() => ({ get: async () => null, set: async () => "OK", eval: async () => { throw new Error("Unexpected admission") } }) as unknown as SearchRedis), Buffer.alloc(32, 1))
 		const pending = executeJevStage(store, {
 			requestText: "quiet movies", questionVersion: "test", language: { mode: "english", version: "test" },
 			requests: [{ state: {}, questions: {} }, { state: {}, questions: {} }], visitor: { accountId: null, networkIdentity: "test" },
@@ -253,7 +272,8 @@ for (const fail of [false, true]) {
 		assert.deepEqual(started, ["control", "spend", "lookup"])
 		lookup.release()
 		assert.equal((await pending).kind, "cached")
-		assert.equal(statements.length, 2)
+		assert.equal(statements.length, 3)
+		assert.ok(statements.every(stmt => stmt.startsWith("SELECT")))
 		waiting.release()
 		await new Promise(resolve => setImmediate(resolve))
 	})

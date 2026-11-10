@@ -97,9 +97,12 @@ export class SearchStore {
 			]).toString("utf8"),
 		) as T
 	}
-	async lookup(cacheKey: string): Promise<Claim | undefined> {
+	// onRedisMiss runs once Redis has no reading, before the Crate read: callers start the claim's checks there, so a
+	// Redis hit costs no Crate reads.
+	async lookup(cacheKey: string, onRedisMiss?: () => void): Promise<Claim | undefined> {
 		const fast = await this.coordination.cached(cacheKey)
 		if (fast) return { kind: "cached", ciphertext: fast }
+		onRedisMiss?.()
 		const [row] = await this.query<Interpretation>(
 			"SELECT * FROM doc.search_interpretations WHERE cache_key = ?",
 			[cacheKey],
@@ -248,6 +251,11 @@ export class SearchStore {
 		)
 		if (!row) throw new Error("Search attempt unavailable")
 		return row
+	}
+	// Puts a valid paid reading in the Redis cache before its settlement, so a repeat of the search finds it while
+	// finish still runs. finish caches the same reading again.
+	async prime(cacheKey: string, value: unknown) {
+		await this.coordination.cache(cacheKey, this.seal(value))
 	}
 	async dispatch(id: string, cacheKey: string) {
 		await this.coordination.dispatch(id, cacheKey)

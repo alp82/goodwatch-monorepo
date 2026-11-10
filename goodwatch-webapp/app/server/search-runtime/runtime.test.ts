@@ -143,9 +143,12 @@ for (const fail of [false, true]) {
 		let completed = false;
 		const tracked = trackedFinish(async () => { await gate; completed = true; if (fail) throw new Error("storage unavailable"); });
 		const finishes: unknown[][] = [];
+		const primes: unknown[][] = [];
 		const store = {
 			digest: () => "key", lookup: async () => undefined, claimChecks: async () => [[], []],
 			claim: async () => ({ kind: "claimed", id: "id" }), dispatch: async () => {},
+			// A repeat of the search finds the reading in Redis while settlement still runs.
+			prime: async (...args: unknown[]) => { primes.push(args); },
 			finish: (...args: unknown[]) => { finishes.push(args); return tracked.finish(); },
 		} as unknown as SearchStore;
 		try {
@@ -157,6 +160,10 @@ for (const fail of [false, true]) {
 			assert.deepEqual(outcome, { kind: "ready", readings: [reading, reading], chargedNano: 840 });
 			assert.equal(completed, false);
 			assert.deepEqual(finishes, [["id", 840, [reading, reading]]]);
+			assert.deepEqual(primes, [["key", [reading, reading]]]);
+			// The cache gets its own copy, so later changes to the returned readings can't reach it.
+			assert.notEqual(primes[0][1], outcome.kind === "ready" ? outcome.readings : null);
+			assert.equal(finishes[0][2], primes[0][1]);
 		} finally {
 			release();
 			await tracked.drain();
