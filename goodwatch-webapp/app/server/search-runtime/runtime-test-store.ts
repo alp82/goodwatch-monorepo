@@ -3,3 +3,16 @@
 export function productionStore(): never {
 	throw new Error("The test store has no production store")
 }
+
+// Tests own detached work so no finish escapes a test's lifetime.
+export function trackedFinish(operation: () => Promise<void>) {
+	const pending: Promise<void>[] = []
+	return {
+		finish: () => {
+			const work = operation()
+			pending.push(work.catch(() => {}))
+			return work
+		},
+		async drain() { await Promise.all(pending) },
+	}
+}

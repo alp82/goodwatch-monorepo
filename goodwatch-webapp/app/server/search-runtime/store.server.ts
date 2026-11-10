@@ -108,10 +108,31 @@ export class SearchStore {
 		await this.coordination.cache(cacheKey, row.ciphertext)
 		return { kind: "cached", ciphertext: row.ciphertext }
 	}
+	// Read-only snapshot taken before Redis admission; callers may overlap it with lookup.
+	async claimChecks(timings?: Record<string, number>) {
+		const timed = async <T>(name: string, operation: () => Promise<T>): Promise<T> => {
+			const started = performance.now()
+			try { return await operation() }
+			finally {
+				if (timings) timings[name] = Math.round((performance.now() - started) * 10) / 10
+			}
+		}
+		// The control row and the spending, in parallel. The spending query reads Crate's clock once, and sums today's
+		// and this month's (UTC) spending by it.
+		return Promise.all([
+			timed("claimControl", () => this.query<{ halted: boolean }>(
+				"SELECT halted FROM doc.search_control WHERE id = 'paid'",
+			)),
+			timed("claimSpend", () => this.query<{ now: number; day: number; month: number }>(
+				"SELECT CURRENT_TIMESTAMP AS now, coalesce(sum(CASE WHEN budget_at >= date_trunc('day', CURRENT_TIMESTAMP) THEN amount_nano ELSE 0 END), 0) AS day, coalesce(sum(amount_nano), 0) AS month FROM doc.search_spending WHERE budget_at >= date_trunc('month', CURRENT_TIMESTAMP)",
+			)),
+		])
+	}
 	// Callers look the cache key up first (lookup), so claim doesn't. A reading that lands in between is caught by the
 	// Redis lock and the primary-key insert below.
 	// The scopes may still be resolving: they are awaited only before admission, after the spending checks.
 	async claim(input: {
+		checks?: ReturnType<SearchStore["claimChecks"]>
 		cacheKey: string
 		contract: string
 		scopes: string[] | Promise<string[]>
@@ -135,16 +156,7 @@ export class SearchStore {
 					input.timings[name] = Math.round((performance.now() - started) * 10) / 10
 			}
 		}
-		// The control row and the spending, in parallel. The spending query reads Crate's clock once, and sums today's
-		// and this month's (UTC) spending by it.
-		const [[control], [spend]] = await Promise.all([
-			timed("claimControl", () => this.query<{ halted: boolean }>(
-				"SELECT halted FROM doc.search_control WHERE id = 'paid'",
-			)),
-			timed("claimSpend", () => this.query<{ now: number; day: number; month: number }>(
-				"SELECT CURRENT_TIMESTAMP AS now, coalesce(sum(CASE WHEN budget_at >= date_trunc('day', CURRENT_TIMESTAMP) THEN amount_nano ELSE 0 END), 0) AS day, coalesce(sum(amount_nano), 0) AS month FROM doc.search_spending WHERE budget_at >= date_trunc('month', CURRENT_TIMESTAMP)",
-			)),
-		])
+		const [[control], [spend]] = await (input.checks ?? this.claimChecks(input.timings))
 		if (!control || control.halted) return { kind: "basic", reason: "budget" }
 		const now = Number(spend.now)
 		if (
@@ -237,9 +249,8 @@ export class SearchStore {
 		if (!row) throw new Error("Search attempt unavailable")
 		return row
 	}
-	async dispatch(id: string) {
-		const row = await this.reservation(id)
-		await this.coordination.dispatch(id, row.cache_key)
+	async dispatch(id: string, cacheKey: string) {
+		await this.coordination.dispatch(id, cacheKey)
 	}
 	async haltPaidAdmissions() {
 		await this.execute(

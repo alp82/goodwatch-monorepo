@@ -167,7 +167,7 @@ export async function prepareLanguage(
 		}
 		fallback.chargedNano = RESERVE;
 		try {
-			await store.dispatch(claim.id);
+			await store.dispatch(claim.id, cacheKey);
 			const response = await fetch(
 				"https://openrouter.ai/api/v1/chat/completions",
 				{

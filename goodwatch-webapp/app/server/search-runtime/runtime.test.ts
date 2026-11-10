@@ -37,6 +37,7 @@ for (const scenario of [
 	{ name: "cached reading", cached: true, key: false, calls: 0, kind: "cached" },
 	{ name: "missing provider key", key: false, calls: 0, kind: "basic", reason: "configuration" },
 	{ name: "coordination unavailable", key: true, calls: 0, kind: "basic", reason: "coordination" },
+	{ name: "budget denied claim", key: true, calls: 0, kind: "basic", reason: "budget" },
 	{ name: "rate limited claim", key: true, calls: 0, kind: "basic", reason: "rate" },
 	{ name: "claimed reading with dispatch failure", key: true, calls: 1, kind: "basic", reason: "storage" },
 	{ name: "throwing callback with dispatch failure", key: true, calls: 1, kind: "basic", reason: "storage", throws: true },
@@ -50,9 +51,10 @@ for (const scenario of [
 		const readings = [{}, {}];
 		const store = {
 			digest: () => "test-digest",
+			claimChecks: async () => [[], []],
 			lookup: async () => scenario.cached ? { kind: "cached", ciphertext: "test" } : null,
 			unseal: () => readings,
-			claim: async (): Promise<Claim> => (scenario.reason === "rate" || scenario.reason === "coordination")
+			claim: async (): Promise<Claim> => (scenario.reason === "rate" || scenario.reason === "coordination" || scenario.reason === "budget")
 				? { kind: "basic", reason: scenario.reason }
 				: { kind: "claimed", id: "test-claim" },
 			dispatch: async () => {
@@ -124,3 +126,43 @@ test("failed history writes emit anonymous evidence without changing the nonthro
 	t.mock.method(console, "info", () => { throw new Error("logger failure"); });
 	assert.deepEqual(await recordSearchHistory(input), { recorded: false, id: null });
 });
+
+for (const fail of [false, true]) {
+	test(`valid readings return before background finish ${fail ? "rejects" : "completes"}`, async (t) => {
+		const { TypeSafeClient } = await import("@typesafe-ai/sdk");
+		const { JEV_MODEL } = await import("./runtime.server.ts");
+		const { trackedFinish } = await import("./runtime-test-store.ts");
+		const originalKey = process.env.TYPESAFE_API_KEY;
+		process.env.TYPESAFE_API_KEY = "test-key";
+		t.after(() => { if (originalKey === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = originalKey; });
+		const reading = { model: JEV_MODEL, usage: { input_tokens: 10 }, answers: {} };
+		t.mock.method(TypeSafeClient.prototype, "systemOne", async () => reading);
+		const warning = t.mock.method(console, "warn", () => { if (fail) throw new Error("logging unavailable"); });
+		let release!: () => void;
+		const gate = new Promise<void>(resolve => { release = resolve; });
+		let completed = false;
+		const tracked = trackedFinish(async () => { await gate; completed = true; if (fail) throw new Error("storage unavailable"); });
+		const finishes: unknown[][] = [];
+		const store = {
+			digest: () => "key", lookup: async () => undefined, claimChecks: async () => [[], []],
+			claim: async () => ({ kind: "claimed", id: "id" }), dispatch: async () => {},
+			finish: (...args: unknown[]) => { finishes.push(args); return tracked.finish(); },
+		} as unknown as SearchStore;
+		try {
+			const outcome = await executeJevStage(store, {
+				requestText: "quiet movies", questionVersion: "test", language: { mode: "english", version: "test" },
+				requests: [{ state: {}, questions: {} }, { state: {}, questions: {} }],
+				visitor: { accountId: null, networkIdentity: "test" },
+			});
+			assert.deepEqual(outcome, { kind: "ready", readings: [reading, reading], chargedNano: 840 });
+			assert.equal(completed, false);
+			assert.deepEqual(finishes, [["id", 840, [reading, reading]]]);
+		} finally {
+			release();
+			await tracked.drain();
+			await new Promise(resolve => setImmediate(resolve));
+		}
+		assert.equal(completed, true);
+		if (fail) assert.equal(warning.mock.callCount(), 1);
+	});
+}
