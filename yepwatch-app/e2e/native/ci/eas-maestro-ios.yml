@@ -1,62 +1,77 @@
-# SKETCH, not wired up and never triggered: run the same Maestro flows on an iOS simulator on EAS Workflows
-# before an OTA update is published. To use it, copy to yepwatch-app/.eas/workflows/ and start it by hand:
-#   npx eas-cli@latest workflow:run .eas/workflows/e2e-ios.yml
+# iOS share of the pre-OTA gate on EAS Workflows. Started only by `node e2e/ci/ota-gate.mjs --ios` (or by hand):
+#   cd yepwatch-app && npx eas-cli@latest workflow:run e2e/native/ci/eas-maestro-ios.yml --non-interactive
+# Never runs on push (workflow_dispatch only), never publishes anything.
 #
-# Why a custom job instead of `type: build` + `type: maestro`: the flows must run against a hermetic local
-# stack (never yepwatch.com), and the EAS maestro job's VM can't reach a stack that runs anywhere else. So
-# one macOS job starts the stack on loopback, builds a Release simulator app whose EXPO_PUBLIC_* origins
-# point at it (the eas.json profiles all point at production, so this job builds with `expo run:ios`
-# instead of an EAS build profile), and runs Maestro there.
+# Pieces (https://docs.expo.dev/eas/workflows/pre-packaged-jobs/, /examples/e2e-tests/, /build-reference/simulators/):
+# 1. `type: build` with the eas.json profile `e2e-ios-simulator`: a Release iOS *simulator* build
+#    (ios.simulator, withoutCredentials). APP_VARIANT=development keeps app.json's config (no OTA url, so the
+#    build can never pick up a published update) and its EXPO_PUBLIC_* origins point at loopback 19100/19200/
+#    19300, where the native dev stack listens. Nothing in that build knows yepwatch.com's API.
+# 2. `type: maestro` on macOS with that build. The hermetic stack runs inside the same VM, started by the
+#    job's before_maestro_tests hook (the simulator shares the VM's loopback): the native dev stack
+#    (e2e/native/stack/dev-stack.mjs --no-docker: in-memory rooms, synthetic catalog, Valkey from Homebrew,
+#    env -i allowlist + loopback-only socket preload). The shared Docker stack can't run there (no Docker on
+#    EAS macOS VMs).
+#    The hook also refuses to test a build whose bundle carries the production realtime origin, and points the
+#    production hosts at 0.0.0.0 in /etc/hosts as a second fence.
+# 3. One flow, e2e/ci/maestro-ios-journey.yaml: create → start → vote → details → rapid taps → kill/relaunch.
 #
-# iOS differences from Android:
-# - No Back button: back-priority.yaml is Android only (tag `android`); iOS uses edge swipe, covered by the
-#   web/edge-back unit tests.
-# - Universal links can't verify on a simulator against a local host. Invitation flows open the custom scheme
-#   (yepwatch://r/<code>), which lands on the same /r/[invite] route; the app-link entry itself is
-#   Android-only coverage.
-# - Timing/flash gates are Android-only (they read the emulator's 60 fps recorder); iOS gives pass/fail journeys.
+# iOS differences from Android: no Back button (back-priority is Android only), universal links can't verify on
+# a simulator (invitation entry is Android-only coverage), timing/flash/frame gates are Android-only (they read
+# the emulator's 60 fps recorder); iOS gives pass/fail journeys. Maestro jobs are marked alpha by Expo.
 name: YepWatch iOS E2E (before OTA)
+
 on:
   workflow_dispatch: {}
 
 jobs:
-  ios_e2e:
-    runs_on: macos-large
-    steps:
-      - uses: eas/checkout
-      - name: Install app, webapp and realtime dependencies
-        run: |
-          cd yepwatch-app && npm ci
-          cd ../goodwatch-webapp && npm ci --ignore-scripts
-          cd ../yepwatch-realtime && npm ci && npm run build
-      - name: Start the hermetic stack on loopback
-        # The shared stack (yepwatch-app/e2e/stack) needs Docker for Crate/Valkey/Caddy, which EAS macOS VMs
-        # don't have; the native dev stack (in-memory rooms, synthetic catalog) needs only Valkey.
-        run: |
-          brew install valkey
-          valkey-server --port 19379 --bind 127.0.0.1 --save '' --appendonly no --daemonize yes
-          cd yepwatch-app && node e2e/native/stack/dev-stack.mjs up --no-docker
-      - name: Build a Release simulator app pointed at the stack
-        run: |
-          cd yepwatch-app
-          export EXPO_PUBLIC_API_ORIGIN=http://127.0.0.1:19100 EXPO_PUBLIC_WS_ORIGIN=ws://127.0.0.1:19200 \
-                 EXPO_PUBLIC_APP_ORIGIN=http://127.0.0.1:19300 EXPO_PUBLIC_ENABLE_FIXTURES=false EXPO_PUBLIC_GUEST_ONLY=false
-          npx expo prebuild --platform ios --no-install && (cd ios && pod install)
-          npx expo run:ios --configuration Release --no-bundler --device "iPhone 16"
-      - name: Install Maestro
-        run: curl -fsSL https://get.maestro.mobile.dev | bash
-      - name: Run the journeys
-        run: |
-          export PATH="$HOME/.maestro/bin:$PATH"
-          cd yepwatch-app/e2e/native/flows
-          maestro test -e APP_ID=dev.yepwatch.foundation --exclude-tags=android,member --format=junit --output=maestro-ios.xml \
-            smoke-create-room.yaml details.yaml kill-relaunch.yaml rapid-taps.yaml
+  build_ios_e2e:
+    name: Release simulator build (loopback origins)
+    type: build
+    params:
+      platform: ios
+      profile: e2e-ios-simulator
 
-  # The OTA only after the journeys pass. Left commented so nobody publishes by running the sketch.
-  # publish_ios_update:
-  #   needs: [ios_e2e]
-  #   type: update
-  #   params:
-  #     platform: ios
-  #     channel: beta
-  #     message: Passed iOS E2E
+  maestro_ios:
+    name: Maestro journey on the iOS simulator
+    needs: [build_ios_e2e]
+    type: maestro
+    runs_on: macos-medium
+    environment: development
+    env:
+      MAESTRO_APP_ID: dev.yepwatch.foundation
+      MAESTRO_CLI_NO_ANALYTICS: '1'
+    params:
+      build_id: ${{ needs.build_ios_e2e.outputs.build_id }}
+      flow_path: e2e/ci/maestro-ios-journey.yaml
+      record_screen: true
+      retries: 0
+      device_identifier:
+        ios: iPhone 16
+    hooks:
+      before_maestro_tests:
+        - name: Fence off production hosts
+          run: |
+            sudo sh -c 'printf "0.0.0.0 yepwatch.com www.yepwatch.com goodwatch.app www.goodwatch.app\n" >> /etc/hosts' || echo "could not edit /etc/hosts; the build's loopback origins still apply"
+        - name: Refuse a build that points at production
+          run: |
+            app=$(find "$HOME" /tmp -maxdepth 6 -name '*.app' -path '*Build*' 2>/dev/null | head -1)
+            if [ -n "$app" ] && grep -rqa 'wss://yepwatch.com' "$app"; then
+              echo "The E2E build embeds the production realtime origin; refusing to run against it"; exit 1
+            fi
+            echo "checked ${app:-no .app found (skipped)}"
+        - name: Install the stack's dependencies
+          run: |
+            npm ci --install-links --no-audit --no-fund
+            (cd ../goodwatch-webapp && npm ci --ignore-scripts --no-audit --no-fund && npx patch-package)
+            (cd ../yepwatch-realtime && npm ci --no-audit --no-fund && npm run build)
+        - name: Start the hermetic stack on loopback
+          run: |
+            brew install valkey
+            valkey-server --port 19379 --bind 127.0.0.1 --save '' --appendonly no --daemonize yes
+            node e2e/native/stack/dev-stack.mjs up --no-docker
+      after_maestro_tests:
+        - name: Stack logs
+          run: |
+            tail -n 80 e2e/native/.cache/dev-stack/*.log || true
+            node e2e/native/stack/dev-stack.mjs down || true

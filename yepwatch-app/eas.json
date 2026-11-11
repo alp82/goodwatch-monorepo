@@ -62,6 +62,22 @@
       "extends": "store-capture-existing",
       "ios": { "simulator": true, "config": "capture-gallery.yml" }
     },
+    "e2e-ios-simulator": {
+      "node": "24.15.0",
+      "distribution": "internal",
+      "environment": "development",
+      "withoutCredentials": true,
+      "ios": { "simulator": true },
+      "env": {
+        "APP_VARIANT": "development",
+        "EXPO_PUBLIC_API_ORIGIN": "http://127.0.0.1:19100",
+        "EXPO_PUBLIC_WS_ORIGIN": "ws://127.0.0.1:19200",
+        "EXPO_PUBLIC_APP_ORIGIN": "http://127.0.0.1:19300",
+        "EXPO_PUBLIC_ENABLE_FIXTURES": "false",
+        "EXPO_PUBLIC_GUEST_ONLY": "false",
+        "NPM_CONFIG_INSTALL_LINKS": "true"
+      }
+    },
     "beta": {
       "extends": "production",
       "env": {

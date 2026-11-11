@@ -1,0 +1,117 @@
+name: YepWatch production smoke
+
+# e2e:smoke against https://yepwatch.com (docs/yepwatch-e2e-pipeline.md): one guest room, a friend by
+# invitation link, a signed-in member by the same link, Start, votes to a match, everyone leaves. Production
+# budgets under fast-4G throttling; unthrottled numbers are reported without gating. < 90 s.
+#
+# Runs after each CI deploy (called by yepwatch-gate.yml), after each OTA (workflow_dispatch from
+# e2e/ci/ota-gate.mjs instructions), every 6 hours, and by hand. Scheduled runs stay off until
+# vars.YEPWATCH_SMOKE_SCHEDULE == 'true' (set it after the first supervised run).
+#
+# Failure → issue "YepWatch production smoke is failing" (label yepwatch-e2e) opened/reopened with a comment;
+# the next pass comments and closes it.
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Why (e.g. "after OTA <message>"); shows in the issue comment
+        type: string
+        default: manual
+  workflow_call:
+    inputs:
+      reason:
+        type: string
+        default: after deploy
+
+permissions:
+  contents: read
+
+concurrency:
+  # One smoke at a time against production (rate limits, capacity), queued rather than cancelled.
+  group: yepwatch-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Production smoke
+    if: github.event_name != 'schedule' || vars.YEPWATCH_SMOKE_SCHEDULE == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment: yepwatch-smoke
+    permissions:
+      contents: read
+      issues: write
+    env:
+      NODE_VERSION: 24.19.0
+      ORIGIN: https://yepwatch.com
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            yepwatch-app
+            goodwatch-webapp/packages/yepwatch-contracts
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - name: Restore node_modules
+        id: nm
+        uses: actions/cache@v6
+        with:
+          path: |
+            yepwatch-app/node_modules
+            yepwatch-app/e2e/node_modules
+          key: yw-nm-smoke-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('yepwatch-app/package-lock.json', 'yepwatch-app/e2e/package-lock.json') }}
+      - name: Install (cache miss only)
+        if: steps.nm.outputs.cache-hit != 'true'
+        run: |
+          npm --prefix yepwatch-app ci --install-links --no-audit --no-fund &
+          npm --prefix yepwatch-app/e2e ci --no-audit --no-fund &
+          wait
+      - name: Cache keys
+        id: keys
+        run: node yepwatch-app/e2e/ci/cache-keys.mjs playwright
+      - name: Restore Playwright Chromium
+        id: pw
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: yw-pw-${{ runner.os }}-${{ steps.keys.outputs.playwright }}
+      - name: Install Chromium (cache miss only)
+        if: steps.pw.outputs.cache-hit != 'true'
+        working-directory: yepwatch-app
+        run: npx playwright install chromium
+      - name: Smoke
+        id: smoke
+        working-directory: yepwatch-app/e2e
+        env:
+          E2E_SMOKE_MEMBER_EMAIL: ${{ secrets.YEPWATCH_SMOKE_MEMBER_EMAIL }}
+          E2E_SMOKE_MEMBER_PASSWORD: ${{ secrets.YEPWATCH_SMOKE_MEMBER_PASSWORD }}
+        run: |
+          start=$(date +%s)
+          node run.mjs smoke --origin "$ORIGIN"
+          echo "Smoke wall clock: $(( $(date +%s) - start )) s" >> "$GITHUB_STEP_SUMMARY"
+      - name: Summary
+        if: always()
+        run: cat yepwatch-app/e2e/artifacts/smoke/summary.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "no summary" >> "$GITHUB_STEP_SUMMARY"
+      - name: Open or update the failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node yepwatch-app/e2e/ci/smoke-issue.mjs fail yepwatch-app/e2e/artifacts/smoke/report.json --reason "${{ inputs.reason || github.event_name }}"
+      - name: Close the failure issue
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node yepwatch-app/e2e/ci/smoke-issue.mjs pass yepwatch-app/e2e/artifacts/smoke/report.json --reason "${{ inputs.reason || github.event_name }}"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: yepwatch-smoke
+          path: yepwatch-app/e2e/artifacts/smoke
+          retention-days: 30
+          if-no-files-found: warn
