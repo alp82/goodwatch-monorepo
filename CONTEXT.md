@@ -13,6 +13,12 @@ Finding movies and TV shows the person wants to watch, without requiring availab
 **Search invocation**:
 A request that reaches the combined search, whether started by a typing pause, explicit submission, navigation or an API consumer. Its attribution separates the trigger, surface, consumer and verified actor type. Paid interpretation attempts retain the attribution of the request that started them; later cache users have their own invocation. Attribution never changes search or reading cache identity. See [search invocation attribution](docs/search-invocation-attribution.md).
 
+**Trope filter**:
+Titles documented as containing a particular TV Tropes concept, identified by its canonical URL across alternate names and redirected references. It is distinct from an essence tag or a fingerprint preference.
+
+**Like filter**:
+Titles similar to a referenced movie or show. The reference records no library rating or taste signal.
+
 **Watchability check**:
 The follow-up assessment of where a title of interest can be watched in the person's country and on their services.
 

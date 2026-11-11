@@ -358,7 +358,7 @@ export class SearchStore {
 		attribution?: SearchAttribution
 		elapsedMs: number
 		chargedNano: number
-		outcome: "ready" | "cached" | "basic"
+		outcome: "ready" | "cached" | "basic" | "resolved"
 		reason?: BasicReason
 		// The ranking that produced the served list, so results can be compared by version.
 		rankerVersion: string

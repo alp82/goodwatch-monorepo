@@ -730,3 +730,63 @@ for (const trigger of ["enter", "search_button"] as const) {
 		)
 	})
 }
+
+for (const wholeQuery of [true, false]) {
+	test(`a confirmed title becomes a Like filter and preserves ${wholeQuery ? "only own choices" : "parsed constraints"}`, async (t) => {
+		const query = wholeQuery ? "Arrival" : "Arrival on Netflix"
+		const id = "1000000329865"
+		const net = stubFetch(
+			t,
+			(call) =>
+				call.url.startsWith("/api/combined-search")
+					? streamAnswer({
+							kind: "batch",
+							batch: {
+								rows: [],
+								reading: [{ kind: "want", text: "Like Arrival (2016)" }],
+								resolution: {
+									kind: "title",
+									id,
+									label: "Arrival",
+									year: 2016,
+									wholeQuery,
+								},
+								people: [],
+								errors: [],
+							},
+						})
+					: resultsAnswer([1], 1),
+			() => ({
+				residual: "Arrival",
+				semanticQuery: "Arrival",
+				params: wholeQuery
+					? "q=Arrival&moods=funny&styles=dark"
+					: "q=Arrival&services=8",
+				labels: wholeQuery ? ["Dark"] : ["Netflix"],
+				warnings: [],
+			}),
+		)
+		const p = page()
+		t.after(() => p.search.dispose())
+		if (wholeQuery) p.dispatch({ type: "picks", picks: ["m:funny"] })
+		p.field.submit(query)
+		await until(() => p.last()?.status === "ready")
+		const params = new URL(p.last()!.discoverHref!, "https://goodwatch.app")
+			.searchParams
+		assert.equal(params.get("similar"), id)
+		assert.equal(params.has("q"), false)
+		if (wholeQuery) {
+			assert.equal(params.get("moods"), "funny")
+			assert.equal(params.has("styles"), false)
+		} else assert.equal(params.get("services"), "8")
+		const result = new URL(net.results().at(-1)!.url, "https://goodwatch.app")
+			.searchParams
+		assert.equal(result.get("similar"), id)
+		assert.equal(
+			result.has("ranked"),
+			false,
+			"browse the full filter even if inferred eligibility found no candidates",
+		)
+		assert.equal(p.last()?.ranked, null)
+	})
+}

@@ -1,3 +1,4 @@
+import { exactSearchParams, type ExactSearch } from "~/domain/exact-search"
 import type { DiscoverInterpretation } from "~/server/discover-query.server"
 import type { SearchFilters } from "~/server/combined-search/search-filters"
 // What the start page asks for a query, and what it answers: the same two requests Discover makes, so a search plus
@@ -143,7 +144,11 @@ function retryAfterMs(response: Response): number {
 	return Math.min(RETRY_AFTER.max, Math.max(RETRY_AFTER.min, s)) * 1000
 }
 
-type Searched = { ranked: TitleKey[]; reading: ReadingChip[] }
+type Searched = {
+	resolution?: ExactSearch
+	ranked: TitleKey[]
+	reading: ReadingChip[]
+}
 
 export interface StartSearch {
 	/** Answer this query (a no-op for the query already asked). */
@@ -235,13 +240,14 @@ export function createStartSearch({
 			},
 			undefined,
 			language,
-			undefined,
+			{ named: original },
 			undefined,
 			attribution,
 		).then(
 			(answer) => {
 				if (searching?.abort === abort) searching = null
 				return {
+					resolution: answer.resolution,
 					ranked: answer.ranked,
 					reading: answer.reading.length
 						? answer.reading
@@ -353,10 +359,42 @@ export function createStartSearch({
 				return
 			}
 			if (!live()) return
-			ranked = answer.ranked
+			if (answer.resolution && interpreted) {
+				const base = answer.resolution.wholeQuery
+					? filterStateToParams(pickedState(picks, "all", true), WIDEST)
+					: new URLSearchParams(interpreted.params)
+				const params = exactSearchParams(base, answer.resolution)
+				const label =
+					answer.resolution.kind === "trope"
+						? `Trope: ${answer.resolution.label}`
+						: `Like ${answer.resolution.label}${answer.resolution.year ? ` (${answer.resolution.year})` : ""}`
+				interpreted = {
+					...interpreted,
+					params: params.toString(),
+					href: `/discover?${params}`,
+					semanticQuery: "",
+					residual: "",
+					labels: [
+						label,
+						...(answer.resolution.wholeQuery ? [] : interpreted.labels),
+					],
+					display: Object.assign({}, interpreted.display, {
+						similar: {
+							...(interpreted.display as Record<string, Record<string, string>>)
+								?.similar,
+							[answer.resolution.id]:
+								`${answer.resolution.label}${answer.resolution.year ? ` (${answer.resolution.year})` : ""}`,
+						},
+					}),
+				}
+				inferred = []
+			}
+			// A resolved query now browses its real filter over the full catalogue, just like See all.
+			// Do not keep candidates narrowed by words inside the original title/trope name.
+			ranked = answer.resolution ? null : answer.ranked
 			reading = [...answer.reading, ...inferred]
 			// The search found nothing: there is nothing to filter.
-			if (!ranked.length) {
+			if (ranked !== null && !ranked.length) {
 				emit({
 					discoverHref: interpreted?.href,
 					interpretation: interpreted ?? undefined,

@@ -64,6 +64,7 @@ export function discoverFilterKey(input: {
 
 	// Explicit fields keep insertion order stable and make new FilterState fields fail typecheck here.
 	const serialized: Record<keyof FilterState, unknown> = {
+		trope: state.trope,
 		budget: state.budget && [state.budget.min, state.budget.max],
 		boxOffice: state.boxOffice && [state.boxOffice.min, state.boxOffice.max],
 		returns: state.returns,

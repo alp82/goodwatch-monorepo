@@ -979,3 +979,12 @@ test("the awards filter round trips through the URL, clears, drops and counts as
 		assert.equal(filterStateToParams(state, defaults).has("awards"), false, query)
 	}
 })
+
+ test("canonical trope filters round-trip, clear independently, and reject unrelated URLs", () => {
+  const url = "https://tvtropes.org/pmwiki/pmwiki.php/Main/ApocalypseAnarchy"
+  const state = parse(new URLSearchParams({ trope: url, services: "8" }).toString())
+  assert.equal(state.trope, url)
+  assert.equal(filterStateToParams(state, defaults).get("trope"), url)
+  assert.equal(dropFilter(state, "trope").trope, undefined)
+  assert.equal(parse("trope=https%3A%2F%2Fevil.example%2FMain%2FFoo").trope, undefined)
+ })

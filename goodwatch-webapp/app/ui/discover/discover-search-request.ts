@@ -10,6 +10,7 @@ import { type TitleKey, titleKey } from "~/utils/title-key"
 const UNAVAILABLE = "Search is unavailable right now. Try again in a moment."
 
 export interface DiscoverSearchResult {
+	resolution?: SearchBatch["resolution"]
 	q: string
 	/** The ranked list in the ranking's order. */
 	ranked: TitleKey[]
@@ -46,6 +47,7 @@ const rankedKeys = (batch: SearchBatch): TitleKey[] => {
 
 const resultFor = (q: string, batch: SearchBatch): DiscoverSearchResult => ({
 	q,
+	...(batch.resolution ? { resolution: batch.resolution } : {}),
 	ranked: batch.searchKeys
 		? (batch.searchKeys as TitleKey[])
 		: rankedKeys(batch),

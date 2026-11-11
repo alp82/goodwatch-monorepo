@@ -35,6 +35,7 @@ import type { ViewerContext } from "~/server/viewer.server"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 import type { TitleKey } from "~/utils/title-key"
 import {
+	tropeTitles,
 	awardTitles,
 	legacyTitles,
 	rangeScoreTitles,
@@ -183,6 +184,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 
 	const [
 		similarTo,
+		trope,
 		people,
 		legacy,
 		services,
@@ -199,6 +201,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 				keys: await similarTitles(seed),
 			})),
 		),
+		state.trope ? tropeTitles(state.trope) : null,
 		Promise.all(
 			(state.people ?? []).map(async (person) => ({
 				option: String(person),
@@ -393,6 +396,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		scoreGap: scoreGap && titleSet(scoreGap, snapshot),
 		releasedOptions,
 		similarTo: sets(similarTo),
+		trope: trope && titleSet(trope, snapshot),
 		people: sets(people),
 		productionCountries: sets(productionCountries),
 		restOfWorld: state.restOfWorld ? restOfWorldColumn(snapshot) : undefined,

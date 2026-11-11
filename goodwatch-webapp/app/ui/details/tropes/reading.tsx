@@ -2,12 +2,11 @@
 // title's write-up at a reading measure with spoilers covered, what the trope is, and where to go next. The rarity
 // meter and the tiny poster stack are the cards' (TropeCard.tsx).
 import { ArrowUpRightIcon } from "@heroicons/react/20/solid"
-import { searchNavigationState } from "~/ui/search/search-attribution"
+import { tropeDiscoverPath } from "~/domain/trope-filter"
 import { Link } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TmdbImage } from "~/ui/TmdbImage"
-import { discoverQueryPath } from "~/ui/details/TitleSummary"
 import { CAPTION, Reveal, fmt } from "~/ui/details/page-ui"
 import { DescriptionOpening } from "~/ui/profile/tropes/Opening"
 import type { SizeRule } from "~/utils/tmdb-image"
@@ -75,8 +74,7 @@ export function AlsoIn({
 						</span>
 					</h3>
 					<Link
-						to={discoverQueryPath(t.name)}
-						state={searchNavigationState(t.name, "title_trope", "link")}
+						to={tropeDiscoverPath(t.url)}
 						prefetch="intent"
 						className="shrink-0 text-xs font-semibold text-gray-400 hover:text-white"
 					>
@@ -232,8 +230,7 @@ export function NextLinks({
 				</Link>
 			) : (
 				<Link
-					to={discoverQueryPath(t.name)}
-					state={searchNavigationState(t.name, "title_trope", "link")}
+					to={tropeDiscoverPath(t.url)}
 					prefetch="intent"
 					className="inline-flex min-h-10 items-center text-sm font-semibold text-gray-200 hover:text-white"
 				>

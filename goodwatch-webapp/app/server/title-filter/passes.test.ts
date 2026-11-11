@@ -66,6 +66,7 @@ function passes(
 		services?: PassInput["services"]
 		ratings?: RatingsFilter
 		awards?: PassInput["awards"]
+		trope?: PassInput["trope"]
 	},
 ) {
 	const input: PassInput = {
@@ -105,6 +106,7 @@ function passes(
 		scoreGap: filters.scoreGap,
 		legacy: null,
 		awards: filters.awards,
+		trope: filters.trope,
 		ratings: filters.ratings ?? null,
 	}
 	const out = runPasses(input)
@@ -922,11 +924,12 @@ test("a fail mask has room for every filter group, the last one included", () =>
 		"shows",
 		"tasteGroups",
 		"awards",
+		"trope",
 	])
 	assert.equal(FILTER_NAMES[18], "content")
 	assert.equal(FILTER_NAMES[23], "wishlist")
-	assert.equal(FILTER_NAMES.at(-1), "awards")
-	assert.equal(FILTER_NAMES.length, 29)
+	assert.equal(FILTER_NAMES.at(-1), "trope")
+	assert.equal(FILTER_NAMES.length, 30)
 	const ratings: RatingsFilter = {
 		content: Uint8Array.from(everyRow, (row) => (row === 3 ? 1 : 0)),
 		ages: null,
@@ -2619,3 +2622,13 @@ test("score counts share the facts traversal and stay within budget over 200k ro
 	)
 	assert.ok(times[4] < 40, `Median ${times[4]} ms exceeded 40 ms`)
 })
+
+ test("trope membership is strict, including an empty set, and has its own recovery count", () => {
+  const trope = { keys: new Set([columns.pointIds[0], columns.pointIds[2]]), rows: Uint8Array.from(plain, i => i === 0 || i === 2 ? 1 : 0) }
+  const result = passes(plain, { trope, taste: false })
+  assert.deepEqual(result.rows, [0, 2])
+  assert.deepEqual(result.optionCounts.trope, { on: 2, off: plain.length })
+  assert.deepEqual(result.recoveries, [{ filter: "trope", titles: plain.length - 2 }])
+  const empty = { keys: new Set<number>(), rows: new Uint8Array(plain.length) }
+  assert.deepEqual(passes(plain, { trope: empty, taste: false }).rows, [])
+ })

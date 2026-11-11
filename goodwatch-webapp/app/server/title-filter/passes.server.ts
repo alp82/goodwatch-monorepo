@@ -265,6 +265,7 @@ export interface PassInput {
 	releasedOptions: Record<string, DayRange | null>
 	/** One set per chosen title or person; a title passes when any set holds it. Empty when off. */
 	similarTo: { option: string; keys: TitleSet }[]
+	trope?: TitleSet | null
 	people: { option: string; keys: TitleSet }[]
 	productionCountries?: { option: string; keys: TitleSet }[]
 	restOfWorld?: Uint8Array | null
@@ -739,6 +740,7 @@ export function runPasses(input: PassInput): PassOutput {
 				]
 			: []),
 	]
+	const trope = input.trope ?? null
 	const people = input.people
 	const legacy = input.legacy
 	const awards = input.awards ?? null
@@ -950,6 +952,7 @@ export function runPasses(input: PassInput): PassOutput {
 		if (productionCountries.length && !inAny(productionCountries, i))
 			mask |= BIT.productionCountries
 		if (people.length && !inAny(people, i)) mask |= BIT.people
+		if (trope && !inSet(trope, i)) mask |= BIT.trope
 		if (legacy && !inSet(legacy, i)) mask |= BIT.legacy
 		if (awards && !inSet(awards, i)) mask |= BIT.awards
 		if (columns.facts) {
@@ -1403,6 +1406,12 @@ export function runPasses(input: PassInput): PassOutput {
 	}
 	optionCounts.similarTo = setGroup(BIT.similarTo, similar)
 	optionCounts.people = setGroup(BIT.people, people)
+
+	if (trope) {
+		let off = 0
+		for (let i = 0; i < n; i++) if (passesOthers(i, BIT.trope)) off++
+		optionCounts.trope = { on: total, off }
+	}
 
 	// Legacy filters: on or off as one.
 	if (legacy) {

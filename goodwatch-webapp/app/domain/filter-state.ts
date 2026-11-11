@@ -32,6 +32,7 @@ import {
 	titleTypeOf,
 	titleTypeParams,
 } from "~/domain/title-type"
+import { tropeUrl } from "~/domain/trope-filter"
 import { MAX_PICKS, tasteRefsOf } from "~/domain/taste-picker"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 
@@ -69,6 +70,7 @@ export const FILTER_NAMES = [
 	"shows",
 	"tasteGroups",
 	"awards",
+	"trope",
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
@@ -76,6 +78,7 @@ export type FilterName = (typeof FILTER_NAMES)[number]
 export type FilterOptionCounts = {
 	[Name in Exclude<
 		FilterName,
+		| "trope"
 		| "popularity"
 		| "budget"
 		| "shows"
@@ -86,6 +89,7 @@ export type FilterOptionCounts = {
 		| "scoreGap"
 	>]: Record<string, number>
 } & {
+	trope?: Record<string, number>
 	sourceScores?: Record<string, number> | null
 	scoreGap?: Record<string, number> | null
 	budget?: Record<string, number> | null
@@ -214,6 +218,8 @@ export interface FilterState {
 	released: Released
 	/** Titles similar to any of these. */
 	similarTo?: TitleKey[]
+	/** Titles containing this canonical TV Tropes concept. */
+	trope?: string
 	/** Titles with any of these people (TMDB person ids) in the cast or crew. */
 	people?: number[]
 	/** Any of these production countries; ISO alpha-2 codes. Co-productions match each listed country. */
@@ -330,6 +336,8 @@ export function filterStateFromParams(
 	member = true,
 ): FilterState {
 	const state = defaultFilterState(defaults)
+	const trope = tropeUrl(params.get("trope"))
+	if (trope) state.trope = trope
 	const streamingCountry = params.get("streamingCountry")?.trim().toUpperCase()
 	if (streamingCountry && /^[A-Z]{2}$/.test(streamingCountry))
 		state.streamingCountry = streamingCountry
@@ -577,6 +585,7 @@ export function filterStateToParams(
 			.join(",") || null,
 	)
 	set("gap", state.scoreGap ?? null)
+	set("trope", tropeUrl(state.trope) ?? null)
 	set("similar", state.similarTo?.length ? state.similarTo.join(",") : null)
 	for (const name of ["loved", "disliked"] as const)
 		set(
@@ -710,6 +719,8 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 			return { ...state, minMatch: 0, outsideUsual: undefined }
 		case "released":
 			return { ...state, released: "any" }
+		case "trope":
+			return { ...state, trope: undefined }
 		case "similarTo":
 			return { ...state, similarTo: undefined }
 		case "loved":
@@ -739,6 +750,7 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 /** The Filters sheet's filters cleared; On my services and Not seen yet stay as they are. */
 export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	...state,
+	trope: undefined,
 	seenBefore: undefined,
 	onWishlist: undefined,
 	tasteGroups: undefined,
@@ -815,6 +827,7 @@ export function secondaryFilterCount(state: FilterState): number {
 		(state.onWishlist ? 1 : 0) +
 		(state.tasteGroups?.length ?? 0) +
 		(state.released !== "any" ? 1 : 0) +
+		Number(Boolean(state.trope)) +
 		(state.similarTo?.length ?? 0) +
 		(state.people?.length ?? 0) +
 		(state.productionCountries?.length ?? 0) +
