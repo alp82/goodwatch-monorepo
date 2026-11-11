@@ -83,10 +83,7 @@ export class Person {
       const p = new URL(url).pathname;
       const status = r.status();
       if (r.request().method() === 'POST' && p.includes('/proposal/')) this.commandLog.push({ t: Date.now(), status, path: p });
-      // Before joining, the app checks for an existing membership (GET the room with the room cookie); 401 is
-      // its designed "not a member yet" answer (Entrance.tsx).
-      const membershipProbe = status === 401 && r.request().method() === 'GET' && /\/proposal\/rooms\/[A-Za-z0-9_-]+$/.test(p) && !this.own;
-      if (status >= 400 && !membershipProbe && !this.expectedStatus.some((re) => re.test(`${status} ${p}`)) && !(this.room.faultAllowsNetworkErrors() && status >= 500))
+      if (status >= 400 && !this.expectedStatus.some((re) => re.test(`${status} ${p}`)) && !(this.room.faultAllowsNetworkErrors() && status >= 500))
         fail(`HTTP ${status} ${r.request().method()} ${p}`);
       if (!(r.headers()['content-type'] ?? '').includes('json')) return;
       const body = await r.json().catch(() => null);
@@ -129,9 +126,6 @@ export class Person {
   /** Navigate; by default wait until the startup word has dissolved (the page is usable and at rest). */
   async open(pathOrUrl = '/', { settle = true } = {}) {
     if (this.page.url() !== 'about:blank') await this.harvest();
-    // Opening an invitation first checks for an existing membership (GET the room with the room cookie);
-    // a 401 there is the app's designed "not a member yet" answer (Entrance.tsx), not a failure.
-    if (/\/r\/[^/]+$/.test(pathOrUrl)) this.expectStatus(/^401 \/api\/yepwatch\/v1\/proposal\/rooms\/[A-Za-z0-9_-]+$/);
     await this.page.goto(pathOrUrl.startsWith('http') ? pathOrUrl : `${ORIGIN}${pathOrUrl}`);
     if (settle) await this.settle();
   }
@@ -362,8 +356,14 @@ export class Room {
       case 'slow': {
         if (label !== 'voting' && !(n === 1 && label === 'room')) return;
         const start = Date.now();
-        for (const p of actors) await (await p.cdpSession()).send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+        // Playwright's own offline switch (navigator.onLine, offline/online events, requests fail). Toggling
+        // `offline` through our CDP session instead crashed Chromium's network service when a request went
+        // out the moment it came back (FATAL dangling raw_ptr), wiping the context's cookie jar: the next
+        // room request then carried no room cookie and got a 401 no real browser would see.
+        const contexts = [...new Set(actors.map((p) => p.context))];
+        for (const c of contexts) await c.setOffline(true);
         await sleep(4000);
+        for (const c of contexts) await c.setOffline(false);
         for (const p of actors) await (await p.cdpSession()).send('Network.emulateNetworkConditions', { offline: false, ...B.network.slow });
         this.offlineWindows.push([start, Date.now()]);
         return;
