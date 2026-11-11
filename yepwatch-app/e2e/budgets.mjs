@@ -1,0 +1,57 @@
+// Every E2E budget in one place. Timing budgets are p95 over the samples a run collects, measured page-side
+// from the input event (or navigation start) to the first animation frame that shows the expected state.
+// `local` applies to the loopback stack; `production` to e2e:smoke against a real origin under fast-4G
+// throttling (~9 Mbps, +60 ms RTT, see `network.production`).
+export const budgets = {
+  local: {
+    tapFeedbackMs: 50, // any input → first visible change
+    createRoomMs: 300, // Create room on Mood → the room page shows
+    newRoomMs: 300, // New room on the start page → the Mood page shows
+    inviteOpenMs: 800, // invite link in a fresh browser → the room's join page (host + mood) shows
+    voteToPeerMs: 100, // a vote on one phone → its effect shows on another phone
+    ideaToPeerMs: 100, // a friend's idea → shows on the host's room page
+    startToFirstCardMs: 200, // Start → first card (host)
+    startToPeerVotingMs: 200, // Start → first card on a friend's phone
+    swipeNextCardMs: 16, // Yep/Nope → next card, next frame
+    frameMaxMs: 20, // no animation frame longer than this while something animates
+    restartQueuedLandMs: 1000, // server back → queued actions confirmed
+    connectingMaxMs: 1000, // "Connecting…" visible at most this long
+  },
+  production: {
+    tapFeedbackMs: 50,
+    createRoomMs: 500,
+    newRoomMs: 500,
+    inviteOpenMs: 1200,
+    voteToPeerMs: 250,
+    ideaToPeerMs: 250,
+    startToFirstCardMs: 400,
+    startToPeerVotingMs: 400,
+    swipeNextCardMs: 16,
+    frameMaxMs: 20,
+    restartQueuedLandMs: 1000,
+    connectingMaxMs: 1500,
+  },
+  network: {
+    // Fast 4G for production smoke: CDP Network.emulateNetworkConditions.
+    production: { latency: 60, downloadThroughput: (9 * 1024 * 1024) / 8, uploadThroughput: (9 * 1024 * 1024) / 8 },
+    // The "slow network" fault.
+    slow: { latency: 300, downloadThroughput: (1.5 * 1024 * 1024) / 8, uploadThroughput: (750 * 1024) / 8 },
+  },
+  layoutShiftMax: 0, // CLS: any unexpected layout shift fails
+  flashMaxMs: 250, // a screen state shorter than this between two other states is a flash
+  deadButtonMs: 1000, // a tap with no visible change within this is a dead button
+  axeTags: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'],
+  minTargetPx: 48,
+};
+
+// Room notes and on-screen words that mean the user is blocked or told something went wrong.
+export const BLOCKING_WORDS = [
+  /Trying again/i, /Try again in \d/i, /Not connected/i, /Reconnecting/i, /Couldn[’']t/i, /Refresh to keep choosing/i,
+  /Something went wrong/i, /YepWatch is starting/i, /Opening the room/i, /Your choice is awaiting confirmation/i, /Retry in \d/i,
+];
+// Words allowed briefly (up to connectingMaxMs) while a connection is made.
+export const TRANSIENT_WORDS = [/^Connecting…$/];
+
+export function budgetsFor(target = process.env.E2E_TARGET ?? 'local') {
+  return { ...budgets, ...budgets[target], target };
+}

@@ -1,0 +1,16 @@
+{
+  "name": "yepwatch-e2e",
+  "private": true,
+  "type": "module",
+  "description": "YepWatch end-to-end harness. Kept out of yepwatch-app/package.json: its scripts are part of the Expo runtime fingerprint (docs/ota-updates.md).",
+  "scripts": {
+    "stack:up": "node stack/up.mjs",
+    "stack:down": "node stack/down.mjs",
+    "e2e:gate": "node run.mjs gate",
+    "e2e:full": "node run.mjs full",
+    "e2e:smoke": "node run.mjs smoke"
+  },
+  "devDependencies": {
+    "axe-core": "4.11.0"
+  }
+}
