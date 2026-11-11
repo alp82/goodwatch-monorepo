@@ -12,7 +12,7 @@ import { useIsFocused } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '../../components/ui';
 import { EdgeBack } from '../glow/EdgeBack';
-import { GText, Icon, Press, glow, native } from '../glow/theme';
+import { GText, Icon, Press, glow, native, onePress } from '../glow/theme';
 import { useLayout } from './layout';
 import { closeTopSheet, isTopSheet, registerSheet } from './sheet-stack';
 import { R, warm } from './tokens';
@@ -58,7 +58,7 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
   return (
     <View testID={testID ? `${testID}-layer` : undefined} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 50, justifyContent: phone ? 'flex-end' : 'flex-start', alignItems: 'center', paddingTop: phone ? 0 : z(40), paddingBottom: phone ? 0 : z(32) }}>
       <Animated.View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: '#000000b3', opacity: enter }}>
-        <Pressable accessible={false} importantForAccessibility="no" onPress={onClose} style={[{ flex: 1 }, Platform.OS === 'web' ? ({ cursor: 'default' } as unknown as ViewStyle) : null]} />
+        <Pressable accessible={false} importantForAccessibility="no" onPress={onePress(onClose)} style={[{ flex: 1 }, Platform.OS === 'web' ? ({ cursor: 'default' } as unknown as ViewStyle) : null]} />
       </Animated.View>
       <Animated.View testID={testID} role="dialog" aria-modal aria-label={title} accessibilityViewIsModal
         style={{ width: panelWidth, maxHeight: phone ? '92%' : '100%', flexShrink: 1, backgroundColor: warm.panel, borderColor: warm.lineStrong, borderWidth: 1, ...(phone ? { borderBottomWidth: 0, borderTopLeftRadius: R.card, borderTopRightRadius: R.card } : { borderRadius: R.card }), opacity: enter, transform: [{ translateY: rise }], overflow: 'hidden' }}>

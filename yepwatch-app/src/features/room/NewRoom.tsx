@@ -11,6 +11,7 @@ import { roomRegistry } from '../../core/continuous/room-registry';
 import { useRetryCountdown } from '../../core/continuous/useRetryCountdown';
 import { MoodComposer } from './MoodComposer';
 import { useBackAction } from '../shell/sheet-back';
+import { newRoomInFront } from './nav';
 
 /** The draft owns the screen until the complete create-and-save operation succeeds. */
 export function NewRoom() {
@@ -27,7 +28,7 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const draft = useQuery({ queryKey: draftKey, queryFn: () => flow.draft() });
   const attempt = useRef<AbortController | null>(null);
   const cancel = useCallback(() => { attempt.current?.abort(); }, []);
-  useFocusEffect(useCallback(() => cancel, [cancel]));
+  useFocusEffect(useCallback(() => { newRoomInFront(true); return () => { newRoomInFront(false); cancel(); }; }, [cancel]));
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => { if (state !== 'active') cancel(); });
     return () => { subscription.remove(); cancel(); };

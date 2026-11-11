@@ -133,6 +133,17 @@ export function Icon({
     </Svg>
   );
 }
+/**
+ * A quick double or triple click at one spot (the web counts them in the click's `detail`) is one
+ * press: the control acts once, and the extra clicks never land on whatever replaced it under the
+ * pointer (Done closing a sheet over Start, History opening its sheet over the backdrop).
+ */
+export function onePress(onPress: () => void) {
+  return (e?: { nativeEvent?: unknown }) => {
+    if (!native && ((e?.nativeEvent as { detail?: number } | undefined)?.detail ?? 1) > 1) return;
+    onPress();
+  };
+}
 export function Press({
   label,
   onPress,
@@ -142,6 +153,7 @@ export function Press({
   style,
   selected,
   hint,
+  repeatable = false,
 }: {
   label: string;
   onPress: () => void;
@@ -153,6 +165,8 @@ export function Press({
   selected?: boolean;
   /** What pressing it does, read after the name. */
   hint?: string;
+  /** Each tap of a quick double tap counts on its own (Yep and Nope: fast voting answers card after card). */
+  repeatable?: boolean;
 }) {
   return (
     <Pressable
@@ -162,7 +176,10 @@ export function Press({
       accessibilityHint={hint}
       accessibilityState={{ disabled: disabled || quiet, selected }}
       disabled={disabled || quiet}
-      onPress={onPress}
+      onPress={repeatable ? onPress : onePress(onPress)}
+      // The web shows the press at once (its default waits 50 ms): every tap of a quick double or triple
+      // tap gets its own feedback.
+      {...(native ? null : { delayPressIn: 0 })}
       style={({ pressed }) => [
         s.press,
         style,

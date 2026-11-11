@@ -11,7 +11,7 @@ import { BootReveal } from '../home/BootReveal';
 import { AppCard, installable } from '../home/install';
 import { StartSignIn } from '../home/Landing';
 import { Tiles } from '../home/start-parts';
-import { GText, Icon, Press, glow } from '../glow/theme';
+import { GText, Icon, Press, glow, onePress } from '../glow/theme';
 import { HeroIcon, LiveBadge, Note, TextLink } from '../room/ui';
 import { FaceStack } from '../shell/parts';
 import { useLayout } from '../shell/layout';
@@ -45,7 +45,7 @@ function LiveCard({ room, width, now, open, archive, quiet }: { room: HomeRoom; 
   const fan = Math.round(width * 0.82);
   return (
     <View style={{ width }}>
-      <Pressable accessibilityRole="button" accessibilityLabel={room.label} disabled={quiet} onPress={open}
+      <Pressable accessibilityRole="button" accessibilityLabel={room.label} disabled={quiet} onPress={onePress(open)}
         style={({ pressed }) => ({ borderRadius: R.card, overflow: 'hidden', backgroundColor: warm.panel, borderWidth: 1, borderColor: room.hot ? warm.amberLine : '#ffffff12', opacity: pressed ? 0.85 : 1 })}>
         <View style={{ height: fan, overflow: 'hidden', backgroundColor: '#100e0a' }}>
           <PosterFan posters={room.posters} width={width} height={fan} />
@@ -72,7 +72,7 @@ function DecidedRow({ decisions, onPress }: { decisions: readonly DecisionRecord
   const { phone, z } = useLayout();
   const pw = phone ? 34 : z(40);
   return (
-    <Pressable testID="decided-row" accessibilityRole="button" accessibilityLabel={`Decided, ${decisions.length}, open History`} onPress={onPress}
+    <Pressable testID="decided-row" accessibilityRole="button" accessibilityLabel={`Decided, ${decisions.length}, open History`} onPress={onePress(onPress)}
       style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ flexDirection: 'row', alignItems: 'center', gap: z(14), paddingVertical: z(12), paddingHorizontal: z(16), borderRadius: R.card, borderWidth: 1, borderColor: hovered ? warm.lineStrong : warm.line, backgroundColor: hovered ? '#ffffff0a' : '#ffffff05', opacity: pressed ? 0.85 : 1 })}>
       <GText bold size={phone ? 20 : z(24)} style={{ letterSpacing: -0.4 }}>Decided</GText>
       <GText bold size={phone ? 15 : z(17)} color={glow.muted}>{String(decisions.length)}</GText>

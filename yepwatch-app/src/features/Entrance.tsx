@@ -31,6 +31,7 @@ import { useHome } from './rooms/useHome';
 import { useAccount } from '../core/continuous/account';
 import { memberTransition } from '../core/continuous/member-transition';
 import { AppFrame } from './shell/Frame';
+import { openNewRoom } from './room/nav';
 
 type PanelKind = 'join' | 'profile' | 'history';
 /** What another screen can open on the start page (`/?open=…`). */
@@ -62,6 +63,9 @@ export function Entrance({ invite, open: request, from }: {
   useEffect(() => { if (boot === 'ready' && home.deletionPending) router.replace('/delete-account'); }, [boot, home.deletionPending]);
   useEffect(() => { if (boot === 'ready') void roomRegistry.recovery().then(value => { if (value?.confirmed) router.replace('/delete-account'); }); }, [boot]);
   useFocusEffect(useCallback(() => { home.reload(); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
+  // The Mood page's code arrives once the start page is up: New room then opens it without waiting
+  // (a route still loading holds its page back for React's 300 ms reveal throttle).
+  useEffect(() => { if (boot === 'ready') void import('../app/new').catch(() => undefined); }, [boot]);
   const [panel, setPanel] = useState<PanelKind | null>(invite ? 'join' : request && request !== 'new' ? request : null);
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
@@ -327,12 +331,12 @@ export function Entrance({ invite, open: request, from }: {
   }
   const resumeAdmission = () => {
     if (!admission && !restoreFailed && !recoveryBlocked) return false;
-    if (admission && !admission.code) { router.push('/new'); return true; }
+    if (admission && !admission.code) { openNewRoom(); return true; }
     setRecoveryDismissed(false); setPanel('join');
     return true;
   };
   // Creation opens a local draft; only its explicit submit allocates a room.
-  const create = () => { setError(''); if (!resumeAdmission()) router.push('/new'); };
+  const create = () => { setError(''); if (!resumeAdmission()) openNewRoom(); };
   // Continue with GoodWatch signs this device in and comes back to this screen: it never creates a room.
   const signInFrom = (path: string) => { setError(''); void account.signIn(path); };
   const fromRoom = from?.match(/^\/room\/([A-Za-z0-9_-]{1,64})(?:\/|$)/)?.[1];

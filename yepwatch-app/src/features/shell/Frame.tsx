@@ -21,6 +21,7 @@ import { CoveredBody } from './parts';
 import { FloatingNote, NoteLayerProvider, useNoteLayer } from './floating-note';
 import { closeTopSheet } from './sheet-stack';
 import { warm } from './tokens';
+import { openNewRoom } from '../room/nav';
 
 export { BrandMark } from './Header';
 
@@ -64,7 +65,7 @@ export interface AppFrameProps {
 /** Header destinations: a local new-room draft, an existing room, or the start page's join form. */
 export const startPage = {
   open: (roomId: string) => router.push({ pathname: '/room/[id]', params: { id: roomId } }),
-  newRoom: () => router.push('/new'),
+  newRoom: openNewRoom,
   join: () => router.push({ pathname: '/', params: { open: 'join' } }),
 };
 

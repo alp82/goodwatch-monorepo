@@ -21,3 +21,22 @@ export function leavePage(id: string) {
 export function toRooms() {
   router.dismissTo('/');
 }
+
+/**
+ * New room opens one Mood page however often it's pressed: the presses of a double or triple tap land
+ * before the page has taken over and would stack a Mood page each. A push waits for its page (or a
+ * moment, should the push not lead anywhere); while the Mood page is in front, New room is already done.
+ */
+let newRoomPushedAt = 0;
+let moodInFront = false;
+const NEW_ROOM_SETTLE_MS = 1000;
+export function openNewRoom() {
+  if (moodInFront || Date.now() - newRoomPushedAt < NEW_ROOM_SETTLE_MS) return;
+  newRoomPushedAt = Date.now();
+  router.push('/new');
+}
+/** The Mood page of a new room came to the front (true) or left it (false). */
+export function newRoomInFront(front: boolean) {
+  moodInFront = front;
+  newRoomPushedAt = 0;
+}
