@@ -1,5 +1,5 @@
 /** /room/<id>: the screen for where the room is (setup, choosing, a proposal, Tonight); `?sheet=` opens one of its sheets. */
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { showsProposal, type RoomView } from './model';
 import { toRooms } from './nav';
@@ -7,32 +7,27 @@ import { isRoomSheet, useRoom } from './RoomProvider';
 import { RoomStatus } from './RoomStatus';
 import { Proposal } from './Decide';
 import { RoomSetup, Waiting } from './Setup';
-import { FRIEND_HANDOVER_MS, START_HANDOVER_MS, startedLive } from './start-progress';
+import { startedLive } from './start-progress';
 import { Tonight } from './Tonight';
 import { useBackAction } from '../shell/sheet-back';
 import { Voting } from './Voting';
 
 /**
- * The round started while this screen was open: the room before Start stays a moment longer, showing
- * Ready with its check (the host) or "<host> started" (friends), then voting takes over. Opening a
- * room that's already choosing goes straight to voting.
+ * The round started while this screen was open (setup became choosing): voting takes over in that
+ * same render, its first card live at once and rising in (until the stage says it has played that
+ * entry). Opening a room that's already choosing shows voting as it is.
  */
-function useStartHandover(view: RoomView | null) {
+function useRoundEntry(view: RoomView | null) {
   const phase = view?.phase;
   const [seen, setSeen] = useState(phase);
-  const [handover, setHandover] = useState(false);
-  // Decided in the render that first sees the round, so voting never paints a frame before the handover.
+  const [entering, setEntering] = useState(false);
+  // Decided in the render that first sees the round.
   if (phase !== seen) {
     setSeen(phase);
-    setHandover(startedLive(seen, phase));
+    setEntering(startedLive(seen, phase));
   }
-  const ms = view?.isHost ? START_HANDOVER_MS : FRIEND_HANDOVER_MS;
-  useEffect(() => {
-    if (!handover) return;
-    const timer = setTimeout(() => setHandover(false), ms);
-    return () => clearTimeout(timer);
-  }, [handover, ms]);
-  return handover && phase === 'choosing';
+  const entered = useCallback(() => setEntering(false), []);
+  return { entering, entered };
 }
 
 export function RoomHome() {
@@ -57,14 +52,13 @@ export function RoomHome() {
     setServicesOffered(true); // eslint-disable-line react-hooks/set-state-in-effect
     openSheet('services');
   }, [picksServices, servicesOffered, memberBusy, openSheet]);
-  const handover = useStartHandover(view);
+  const round = useRoundEntry(view);
   const setup = view?.phase === 'setup' || (view?.phase === 'choosing' && !view.me.inRound);
   useBackAction(toRooms, setup);
   // Leaving ends your access on purpose: the room stays as it was until the start page takes over.
   if (!view || ((state.terminal || state.access === null) && !leaving)) return <RoomStatus />;
   if (view.phase === 'decided') return <Tonight />;
-  if (handover) return view.isHost ? <RoomSetup ready /> : <Waiting ready />;
   if (showsProposal(view, dismissedProposal)) return <Proposal />;
-  if (view.phase === 'choosing' && view.me.inRound && !entry.required) return <Voting />;
+  if (view.phase === 'choosing' && view.me.inRound && !entry.required) return <Voting entering={round.entering} onEntered={round.entered} />;
   return view.isHost && view.phase === 'setup' ? <RoomSetup /> : <Waiting />;
 }

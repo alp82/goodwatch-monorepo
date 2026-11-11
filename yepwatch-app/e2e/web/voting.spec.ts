@@ -22,6 +22,58 @@ async function lookSignature(p: Person) {
   });
 }
 
+/** The titles this person has answered (Yep or Nope), oldest first, as the room confirmed them. */
+function answered(p: Person) {
+  const titles = new Map(((p.latest?.candidates as { id: string; title: string }[] | undefined) ?? []).map((c) => [c.id, c.title]));
+  return (p.own?.votes ?? []).filter((v) => v.value !== null).map((v) => titles.get(v.candidateId) ?? v.candidateId);
+}
+/** Waits for the confirmed answers to end with `want` (in order): every press answered exactly the card it saw. */
+async function answersEndWith(p: Person, want: string[], what: string) {
+  await eventually(() => answered(p).slice(-want.length), (got) => JSON.stringify(got) === JSON.stringify(want), what, p);
+}
+type Flying = { hidden: boolean; inert: boolean; named: boolean; controls: { label: string | null; disabled: boolean; focusable: boolean }[]; box: { x: number; y: number; width: number; height: number } };
+/**
+ * Watches the stage frame by frame from now (page-side, so slow round trips can't miss it): the first
+ * frame whose live card isn't `before`, and the answered card flying off in that same frame.
+ */
+async function armPress(p: Person, before: string) {
+  await p.page.evaluate((before) => {
+    const live = () => {
+      const sel = '[aria-label$="Swipe or use the choice buttons."]';
+      const card = document.querySelector('[data-testid="poster"]');
+      const el = card && (card.closest(sel) ?? card.querySelector(sel));
+      return el?.getAttribute('aria-label')?.replace(/\. Swipe or use the choice buttons\.$/, '') ?? null;
+    };
+    const flying = () => {
+      const el = [...document.querySelectorAll('[data-testid="poster-leaving"]')].find((e) => e.getBoundingClientRect().width > 0) as HTMLElement | undefined;
+      if (!el) return null;
+      let hidden = false;
+      let inert = false;
+      for (let n: HTMLElement | null = el; n; n = n.parentElement) {
+        if (n.getAttribute('aria-hidden') === 'true') hidden = true;
+        if (getComputedStyle(n).pointerEvents === 'none') inert = true;
+      }
+      const named = el.querySelector('[aria-label$="Swipe or use the choice buttons."]') !== null;
+      const controls = [...el.querySelectorAll('[role="button"]')].map((b) => ({ label: b.getAttribute('aria-label'), disabled: b.getAttribute('aria-disabled') === 'true', focusable: (b as HTMLElement).tabIndex >= 0 }));
+      const r = el.getBoundingClientRect();
+      return { hidden, inert, named, controls, box: { x: r.x, y: r.y, width: r.width, height: r.height } };
+    };
+    (window as unknown as { __press: Promise<unknown> }).__press = new Promise((resolve) => {
+      const end = performance.now() + 3000;
+      const step = () => {
+        const now = live();
+        if (now && now !== before) return resolve({ live: now, flying: flying() });
+        if (performance.now() > end) return resolve(null);
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }, before);
+}
+async function pressed(p: Person) {
+  return p.page.evaluate(() => (window as unknown as { __press: Promise<{ live: string; flying: Flying | null } | null> }).__press);
+}
+
 /**
  * A real swipe that pauses at ~45 % (the look has built up from zero; its layers are sampled), then carries
  * on past the threshold and lets go. Returns the look's layer signature ('' if nothing showed).
@@ -77,14 +129,14 @@ test.describe('deck and voting', () => {
   test('two quick Nopes answer two cards (no press lost during the fly-off)', async ({ room }) => {
     const host = await readyHost(room);
     await start(host, []);
+    // No Ready hold: the first card takes a press the moment it shows.
     const first = await cardTitle(host);
-    await host.page.waitForTimeout(500);
     const nope = host.button('Nope');
-    await nope.click();
-    await host.page.waitForTimeout(120); // second press while the first card is still flying off
     await nope.click();
     await host.see({ cardChanged: { from: first } }, 5000, 'first answer lands');
     const second = await cardTitle(host);
+    await host.page.waitForTimeout(120); // second press while the first card is still flying off
+    await nope.click();
     const third = await host.page.waitForFunction((s) => {
       const sel = '[aria-label$="Swipe or use the choice buttons."]';
       const card = document.querySelector('[data-testid="poster"]');
@@ -112,24 +164,75 @@ test.describe('deck and voting', () => {
     }
   });
 
-  test('three quick Nopes: every press answers the card shown underneath the flying one', async ({ room }) => {
+  test('presses during a fly-off answer exactly the visible card: next card live next frame, never the flying one or an unseen card', async ({ room }) => {
     const host = await readyHost(room);
     await start(host, []);
-    await host.page.waitForTimeout(500);
     const nope = host.button('Nope');
-    const under = () => host.page.evaluate(() => {
-      const el = [...document.querySelectorAll('[data-testid="card-under"]')].find((e) => (e as HTMLElement).offsetParent !== null);
-      return el?.querySelector('img')?.getAttribute('src') ?? null;
-    });
-    await nope.click();
-    await host.page.waitForTimeout(120);
-    const shownFirst = await under();
-    await nope.click();
-    await host.page.waitForTimeout(60);
-    const shownSecond = await under();
-    if (!shownFirst || !shownSecond) host.journeyFailure(`no card underneath during the fly-off: ${shownFirst} / ${shownSecond}`);
-    // The second press answered the card that was underneath: it can't stay there as the next card.
-    if (shownFirst === shownSecond) host.journeyFailure(`after the second press the card underneath is still the one it answered (${shownSecond}): a third press would answer an unseen card`);
+    const seen: string[] = [await cardTitle(host)];
+    // Three Nopes, each while the card before is still flying off over the live one.
+    for (const gap of [120, 60, 0]) {
+      await armPress(host, seen.at(-1)!);
+      await nope.click();
+      // The next card is the live card from the first frame after the press, with the answered one flying off over it.
+      const r = await pressed(host);
+      if (!r) host.journeyFailure(`after Nope on "${seen.at(-1)}" the live card never changed`);
+      if (seen.includes(r!.live)) host.journeyFailure(`the live card after a Nope is "${r!.live}", a card already answered`);
+      if (!r!.flying) host.journeyFailure(`in the frame "${r!.live}" became live, "${seen.at(-1)}" wasn't flying off over it`);
+      seen.push(r!.live);
+      if (gap) await host.page.waitForTimeout(gap);
+    }
+    // Each press answered the card it saw, in order; the card now live (the last seen) is unanswered.
+    await answersEndWith(host, seen.slice(0, 3), 'three Nopes answer exactly the three cards that were live when pressed');
+    expect(answered(host), 'the live card was never answered by a press aimed at another card').not.toContain(seen[3]);
+    expect(await cardTitle(host), 'the live card is the next unanswered one').toBe(seen[3]);
+  });
+
+  test('a swipe started during the fly-off answers the live card', async ({ room }) => {
+    const host = await readyHost(room);
+    await start(host, []);
+    const first = await cardTitle(host);
+    const box = (await host.testId('poster').boundingBox())!;
+    const x = box.x + box.width / 2, y = box.y + box.height / 2;
+    const fling = async (dir: number) => {
+      await host.page.mouse.move(x, y);
+      await host.page.mouse.down();
+      for (let i = 1; i <= 6; i++) await host.page.mouse.move(x + (dir * box.width * 0.7 * i) / 6, y + i);
+      await host.page.mouse.up();
+    };
+    await armPress(host, first);
+    await fling(1);
+    const r = await pressed(host);
+    if (!r) host.journeyFailure('the swipe did not answer the first card');
+    if (!r!.flying) host.journeyFailure('no answered card flying off after the swipe');
+    const second = r!.live;
+    // At once, while the first card is still flying off on top: grab the card underneath and swipe it.
+    await fling(-1);
+    await host.see({ cardChanged: { from: second } }, 2000, 'a swipe during the fly-off answers the live card');
+    await answersEndWith(host, [first, second], 'the second swipe answered the live card, not the flying one');
+  });
+
+  test('the flying card takes no input and is not the voting card', async ({ room }) => {
+    const host = await readyHost(room);
+    await start(host, []);
+    const title = await cardTitle(host);
+    // Yep: the card flies right, so its Details button (top left) stays on screen a moment.
+    await armPress(host, title);
+    await host.button('Yep').click();
+    const r = await pressed(host);
+    if (!r) host.journeyFailure(`Yep on "${title}" did not answer it`);
+    const { live, flying } = r!;
+    if (!flying) host.journeyFailure(`the answered "${title}" was not flying off over the live card`);
+    expect(flying!.hidden, 'the flying card is out of the accessibility tree').toBe(true);
+    expect(flying!.inert, 'the flying card lets the pointer through to the live card').toBe(true);
+    expect(flying!.named, 'the flying card is not named as the voting card').toBe(false);
+    expect(flying!.controls.filter((b) => !b.disabled || b.focusable), 'the flying card\'s Details and Trailer answer nothing').toEqual([]);
+    // A quick hand lands on where its Details button was: it never opens the answered card.
+    await host.page.mouse.click(flying!.box.x + 40, flying!.box.y + 36);
+    const panel = host.testId('details-panel');
+    const open = await panel.waitFor({ state: 'visible', timeout: 1500 }).then(() => true).catch(() => false);
+    if (open && await panel.getByText(title, { exact: true }).first().isVisible()) host.journeyFailure(`a click on the flying "${title}" opened its details`);
+    // Anything it reached is the live card's.
+    if (open) await expect(panel.getByText(live, { exact: true }).first()).toBeVisible();
   });
 
   test('title details sheet from the card', async ({ room }) => {
@@ -146,32 +249,13 @@ test.describe('deck and voting', () => {
     await host.see({ hidden: ['details-panel'], visible: ['voting'] }, 5000, 'browser Back closes the details sheet first');
   });
 
-  test('Details on a card flying off never opens another card', async ({ room }) => {
-    const host = await readyHost(room);
-    await start(host, []);
-    await host.page.waitForTimeout(500);
-    const title = await cardTitle(host);
-    // Yep: the card flies right, so its Details button (top left) stays on screen a moment.
-    await host.button('Yep').click();
-    await host.page.waitForTimeout(60);
-    // The answered card is still on its way out; a click on its Details button (as a quick hand would land).
-    const pt = await host.page.evaluate((name) => {
-      const el = [...document.querySelectorAll('[role="button"]')].find((e) => e.getAttribute('aria-label') === name && e.getBoundingClientRect().width > 0);
-      const r = el?.getBoundingClientRect();
-      return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null;
-    }, `Details about ${title}`);
-    if (!pt) host.journeyFailure(`the flying "${title}" left the screen before the click`);
-    await host.page.mouse.click(pt!.x, pt!.y);
-    const panel = host.testId('details-panel');
-    const open = await panel.waitFor({ state: 'visible', timeout: 1500 }).then(() => true).catch(() => false);
-    if (open && !(await panel.getByText(title, { exact: true }).first().isVisible())) host.journeyFailure(`Details on the flying "${title}" opened another card's details`);
-  });
-
   test('deck refills while voting (no end, "Finding more…" only while loading)', async ({ room }) => {
     const host = await readyHost(room);
     const mia = await room.person('Mia');
     await join(mia, await inviteLink(host), 'Mia', 'Netflix');
     await start(host, [mia]);
+    // The friend's first card takes a press at once too (no hold after the round starts).
+    await vote(mia, false, { pace: 0 });
     const first = (host.latest?.candidates as unknown[] | undefined)?.length ?? 0;
     const seen = new Set<string>([await cardTitle(host)]);
     // Answer well past the first deck page: every answer must bring a new card (vote() waits for it).

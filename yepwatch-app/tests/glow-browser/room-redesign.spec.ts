@@ -119,7 +119,7 @@ test('NEW stays while the host looks at the room and is gone the next time', asy
   await expect(page.getByText('NEW', { exact: true })).toHaveCount(0);
 });
 
-test('Start carries the wait: Try again after a failed start, its words while the deck is built, Ready as voting takes over', async ({ page }) => {
+test('Start carries the wait: Try again after a failed start, its words while the deck is built, voting the moment the round arrives', async ({ page }) => {
   const room = choosingRoom();
   room.shared.phase = 'setup';
   const f = await fakeRoom(page, room);
@@ -138,12 +138,14 @@ test('Start carries the wait: Try again after a failed start, its words while th
   await expect(page.getByText('Couldn’t start the round', { exact: true })).toHaveCount(0);
   await expect(button(page, 'Finding titles…')).toBeVisible({ timeout: 5000 });
   release();
-  await expect(button(page, 'Ready')).toBeVisible();
+  // No Ready hold: the first card is there and answerable at once.
   await expect(page.getByTestId('voting')).toBeVisible();
+  await expect(page.getByTestId('room-setup')).toHaveCount(0);
+  await expect(button(page, 'Yep')).toBeEnabled();
   expect(f.sent().filter((t) => t === 'start')).toHaveLength(2);
 });
 
-test('a friend sees the host’s start arrive: "<host> started" with a check, then voting', async ({ page }) => {
+test('a friend sees the host’s start arrive as voting, with no hold on the room', async ({ page }) => {
   const room = choosingRoom();
   room.shared.phase = 'setup';
   room.own.participantId = 'mia';
@@ -160,8 +162,9 @@ test('a friend sees the host’s start arrive: "<host> started" with a check, th
       document.dispatchEvent(new Event('visibilitychange'));
     }
   });
-  await expect(page.getByText('Alp started', { exact: true })).toBeVisible();
   await expect(page.getByTestId('voting')).toBeVisible();
+  await expect(page.getByTestId('waiting')).toHaveCount(0);
+  await expect(page.getByText('Alp started', { exact: true })).toHaveCount(0);
 });
 
 test('friends see the same ideas with disabled switches and can suggest one', async ({ page }) => {

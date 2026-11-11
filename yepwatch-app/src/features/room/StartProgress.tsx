@@ -1,7 +1,7 @@
 /**
  * The control you're looking at carries the start: the host's Start and a friend's waiting box fill
  * with a progress line (easing toward the end, filling only when the round is there) and a light
- * sweep, their words change over a long wait, and Ready shows a check as voting takes over.
+ * sweep, and their words change over a long wait; voting takes over the moment the round is there.
  * Transform and opacity only, on the native driver; reduced motion keeps the sweep still and the
  * fades short.
  */
@@ -13,7 +13,7 @@ import { LiveDot } from '../shell/parts';
 import { useLayout } from '../shell/layout';
 import { warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, native } from '../glow/theme';
-import { START_BEATS_MS, START_PROGRESS_CAP, START_PROGRESS_MS, hostStartLabel, startBeat, startWords, type StartPhase } from './start-progress';
+import { START_BEATS_MS, START_PROGRESS_CAP, START_PROGRESS_MS, hostStartLabel, startBeat, type StartPhase } from './start-progress';
 
 /** 0→1 on repeat while `active`. */
 function useLoop(active: boolean, duration: number) {
@@ -95,11 +95,6 @@ function Working({ phase, width, tone }: { phase: StartPhase; width: number; ton
       a.start();
       return () => a.stop();
     }
-    if (phase === 'ready') {
-      const a = Animated.timing(p, { toValue: 1, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: native });
-      a.start();
-      return () => a.stop();
-    }
     p.setValue(0);
   }, [phase, p]);
   const sweep = useLoop(phase === 'starting' && !reduced, 1500);
@@ -139,13 +134,13 @@ function Words({ text, color, size }: { text: string; color: string; size: numbe
   );
 }
 
-/** The host's Start: Start, the start's words while it works, Ready with a check, Try again after a failure. */
+/** The host's Start: Start, the start's words while it works, Try again after a failure. */
 export function StartButton({ phase, onPress, disabled }: { phase: StartPhase; onPress: () => void; disabled?: boolean }) {
   const { z } = useLayout();
   const [width, setWidth] = useState(240);
-  const busy = phase === 'starting' || phase === 'ready';
-  const label = hostStartLabel(phase, useStartBeat(phase === 'starting'));
-  const icon = phase === 'ready' ? <Icon name="check" size={18} color={warm.ink} /> : busy ? <LoadingDots color={warm.ink} /> : <Icon name="play" size={16} color={warm.ink} />;
+  const busy = phase === 'starting';
+  const label = hostStartLabel(phase, useStartBeat(busy));
+  const icon = busy ? <LoadingDots color={warm.ink} /> : <Icon name="play" size={16} color={warm.ink} />;
   return (
     <Live busy={busy} announce={phase === 'idle' ? null : label} style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }}>
       <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
@@ -177,18 +172,17 @@ export function WorkingButton({ label }: { label: string }) {
 }
 
 /**
- * A friend's waiting box: "Waiting for <host> to start" at rest. When the round arrives it turns
- * amber with "<host> started", fills and shows a check (`ready`); while this friend is still being
- * let into a running round (`joining`) it works with the same line and sweep.
+ * A friend's waiting box: "Waiting for <host> to start" at rest; while this friend is still being let
+ * into a running round (`joining`) it works with the Start's line and sweep.
  */
-export function StartStatus({ host, ready, joining }: { host: string; ready: boolean; joining: string | null }) {
+export function StartStatus({ host, joining }: { host: string; joining: string | null }) {
   const { z } = useLayout();
   const [width, setWidth] = useState(240);
-  const phase: StartPhase = ready ? 'ready' : joining ? 'starting' : 'idle';
+  const phase: StartPhase = joining ? 'starting' : 'idle';
   const busy = phase !== 'idle';
   const lit = useEased(busy ? 1 : 0, 360);
-  const text = ready ? startWords(0, host.charAt(0).toUpperCase() + host.slice(1)) : joining ?? `Waiting for ${host} to start`;
-  const icon = ready ? <Icon name="check" size={16} color={glow.amber} /> : joining ? <LoadingDots color={glow.amber} /> : <LiveDot />;
+  const text = joining ?? `Waiting for ${host} to start`;
+  const icon = joining ? <LoadingDots color={glow.amber} /> : <LiveDot />;
   return (
     <Live busy={busy} announce={busy ? text : null} style={{ flex: 1 }}>
       <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}

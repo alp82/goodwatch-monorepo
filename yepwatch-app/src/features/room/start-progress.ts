@@ -6,14 +6,10 @@
  */
 import type { RoomView } from './model';
 
-export type StartPhase = 'idle' | 'starting' | 'ready' | 'failed';
+export type StartPhase = 'idle' | 'starting' | 'failed';
 
 /** The second and third words of a long start. */
 export const START_BEATS_MS = [2600, 5000] as const;
-/** Ready shows its check this long before voting takes over (a fast start still reads as one). */
-export const START_HANDOVER_MS = 650;
-/** A friend reads "<host> started" a little longer. */
-export const FRIEND_HANDOVER_MS = 900;
 /** The progress line eases toward this while the deck isn't there, and fills only when it is. */
 export const START_PROGRESS_CAP = 0.88;
 export const START_PROGRESS_MS = 6500;
@@ -24,26 +20,25 @@ export function startBeat(elapsedMs: number) {
   return START_BEATS_MS.filter((ms) => elapsedMs >= ms).length;
 }
 
-/** The loading words per beat. A friend's first word says who started (`starter`). */
-export function startWords(beat: number, starter?: string) {
+/** The loading words per beat. */
+export function startWords(beat: number) {
   if (beat >= 2) return 'Almost ready…';
   if (beat === 1) return 'Finding titles…';
-  return starter ? `${starter} started` : 'Starting…';
+  return 'Starting…';
 }
 
 /**
  * The host's Start. `attempt` is this device's tap and how it went, `retrying` a start the server
- * hasn't confirmed going out again right now, `ready` the round arriving.
+ * hasn't confirmed going out again right now. The round arriving replaces this screen with voting.
  */
-export function hostStartPhase({ attempt, retrying, ready }: { attempt: 'starting' | 'failed' | null; retrying: boolean; ready: boolean }): StartPhase {
-  if (ready) return 'ready';
+export function hostStartPhase({ attempt, retrying }: { attempt: 'starting' | 'failed' | null; retrying: boolean }): StartPhase {
   if (attempt === 'starting' || retrying) return 'starting';
   return attempt === 'failed' ? 'failed' : 'idle';
 }
 
 /** The words and accessible name on the host's Start. */
 export function hostStartLabel(phase: StartPhase, beat: number) {
-  return phase === 'failed' ? 'Try again' : phase === 'ready' ? 'Ready' : phase === 'starting' ? startWords(beat) : 'Start';
+  return phase === 'failed' ? 'Try again' : phase === 'starting' ? startWords(beat) : 'Start';
 }
 
 /**

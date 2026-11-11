@@ -89,7 +89,8 @@ function Sheet({ close, children, testID, page = false }: { close: () => void; c
   );
 }
 
-export function Voting() {
+/** `entering`: the round just started, so the first card rises in; `onEntered` once the stage has played that. */
+export function Voting({ entering = false, onEntered }: { entering?: boolean; onEntered?: () => void }) {
   const room = useRoom();
   const { id, state, snapshot, view, cmd, entry } = room;
   const layout = useLayout();
@@ -205,7 +206,7 @@ export function Voting() {
       {/* A page on top hides this one (zero size on the web): keep the last real size. */}
       <View ref={stageBox} onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) setArea((a) => (a && a.width === width && a.height === height ? a : { width, height })); }}
         style={{ flex: 1, minHeight: 80, zIndex: 2 }}>
-        {geo ? <VoteStage geo={geo} controls={controls} reduced={reduced} disabled={!answering} keys={focused && !panel && answering}
+        {geo ? <VoteStage geo={geo} controls={controls} reduced={reduced} enter={entering} onEntered={onEntered} disabled={!answering} keys={focused && !panel && answering}
           card={card && title && look ? { key: `${shared.generation}:${card.id}`, title, look } : null}
           next={nextCard ? titlePresentation(nextCard) : null}
           empty={<FindingMore style={{ flex: 1 }} />}
