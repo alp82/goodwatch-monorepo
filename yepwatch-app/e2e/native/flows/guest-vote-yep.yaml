@@ -1,0 +1,6 @@
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Guest votes Yep on the first card
+tags: [gate, guest]
+---
+- extendedWaitUntil: { visible: { id: "poster" }, timeout: 15000 }
+- tapOn: { text: "Yep", waitToSettleTimeoutMs: 300 }

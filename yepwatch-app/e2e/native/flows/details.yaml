@@ -1,0 +1,9 @@
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Title details open and Back closes them
+tags: [full]
+---
+- tapOn: { text: "Details about .*", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "details-panel" }, timeout: 5000 }
+- back
+- assertNotVisible: { id: "details-panel" }
+- assertVisible: { id: "poster" }

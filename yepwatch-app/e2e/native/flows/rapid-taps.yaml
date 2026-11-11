@@ -1,0 +1,11 @@
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Rapid Yep taps
+tags: [full]
+---
+- assertVisible: { id: "poster" }
+- repeat:
+    times: 8
+    commands:
+      - tapOn: { text: "Yep", waitToSettleTimeoutMs: 0, retryTapIfNoChange: false }
+- assertVisible: { id: "voting" }
+- assertNotVisible: "Trying again.*"

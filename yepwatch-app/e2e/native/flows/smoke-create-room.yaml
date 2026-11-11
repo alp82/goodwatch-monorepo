@@ -1,0 +1,17 @@
+# Fresh install -> New room -> mood -> room page with Netflix and a name. Ends on the host's room page.
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Create a room
+tags: [gate, single]
+---
+- launchApp: { clearState: true }
+- extendedWaitUntil: { visible: "New room", timeout: 20000 }
+- tapOn: { text: "New room", waitToSettleTimeoutMs: 300 }
+- tapOn: { text: "cheer me up", waitToSettleTimeoutMs: 300 }
+- tapOn: { text: "Create room", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "share-row" }, timeout: 10000 }
+- runFlow: _pick-netflix-from-room.yaml
+- tapOn: { text: "Your name", waitToSettleTimeoutMs: 300 }
+- inputText: ${NAME || 'Ann'}
+- pressKey: Enter
+- assertVisible: "Start"
+- assertVisible: { text: ".*/r/[A-Z0-9]+" }

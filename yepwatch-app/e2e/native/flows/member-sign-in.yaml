@@ -1,0 +1,17 @@
+# GoodWatch sign-in against the stack's fake issuer (needs a stack with `issuer`): system browser sheet,
+# back to the same screen, Profile shows the member; then Log out. Lapsed + Reconnect needs the issuer
+# to expire the session (stack control API) between the two halves.
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Sign in, Profile, Log out
+tags: [full, member]
+---
+- launchApp: { clearState: true }
+- extendedWaitUntil: { visible: "Continue with GoodWatch", timeout: 20000 }
+- tapOn: { text: "Continue with GoodWatch", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: "${ISSUER_APPROVE || 'Allow|Continue|Sign in'}", timeout: 15000 }
+- tapOn: "${ISSUER_APPROVE || 'Allow|Continue|Sign in'}"
+- extendedWaitUntil: { visible: { id: "avatar-goodwatch-mark" }, timeout: 15000 }
+- tapOn: { text: "Profile", waitToSettleTimeoutMs: 300 }
+- assertVisible: "Signed in with GoodWatch"
+- tapOn: { text: "Log out", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: "Continue with GoodWatch", timeout: 8000 }

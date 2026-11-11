@@ -1,0 +1,7 @@
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Agree and reach Tonight
+tags: [gate, guest]
+---
+- extendedWaitUntil: { visible: "Agree", timeout: 10000 }
+- tapOn: { text: "Agree", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "tonight-poster" }, timeout: 10000 }

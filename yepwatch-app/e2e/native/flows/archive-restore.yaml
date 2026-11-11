@@ -1,0 +1,12 @@
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Archive and restore
+tags: [full, host]
+---
+- tapOn: { text: ".*, switch room", waitToSettleTimeoutMs: 300 }
+- tapOn: { text: ".*, Room page", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "room-sheet" }, timeout: 5000 }
+- tapOn: { text: "Archive room", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: "New room", timeout: 8000 }
+- tapOn: { text: "Decided, .*|History.*", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "history-panel" }, timeout: 5000 }
+- tapOn: { text: "Restore.*", waitToSettleTimeoutMs: 300 }

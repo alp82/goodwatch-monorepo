@@ -1,0 +1,9 @@
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Kill and relaunch mid-vote
+tags: [full]
+---
+- assertVisible: { id: "poster" }
+- stopApp
+- launchApp: { clearState: false }
+- extendedWaitUntil: { visible: { id: "poster" }, timeout: 15000 }
+- assertNotVisible: "Trying again.*"

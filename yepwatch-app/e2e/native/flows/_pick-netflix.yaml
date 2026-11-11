@@ -1,0 +1,6 @@
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+---
+- extendedWaitUntil: { visible: { id: "services-sheet" }, timeout: 8000 }
+- tapOn: { text: "Netflix", checked: false, waitToSettleTimeoutMs: 300, optional: true }
+- tapOn: { text: "Done", waitToSettleTimeoutMs: 300 }
+- assertNotVisible: { id: "services-sheet" }

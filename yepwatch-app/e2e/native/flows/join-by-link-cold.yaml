@@ -1,0 +1,7 @@
+# Same, with the app killed first: the link cold-starts it.
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Join by invitation link (cold)
+tags: [full, guest]
+---
+- stopApp
+- runFlow: join-by-link.yaml
