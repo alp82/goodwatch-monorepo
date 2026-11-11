@@ -754,6 +754,7 @@ test("Start, settings and Start again commute with a friend's concurrent changes
 	await f.send({ type: "configure", expectedContextVersion: stale.shared.contextVersion, constraints: { kinds: ["movie"], maxMinutes: null, moods: [] } })
 	const started = await f.send({
 		type: "start",
+		expectedGeneration: stale.shared.generation,
 		expectedContextVersion: stale.shared.contextVersion,
 		expectedRosterVersion: stale.shared.rosterVersion,
 		hostReady: true
@@ -767,7 +768,7 @@ test("Start, settings and Start again commute with a friend's concurrent changes
 	)
 	const before = await f.service.read(f.id, f.a.credential)
 	await f.send({ type: "vote", generation: before.shared.generation, candidateId: card, expectedVoteRevision: 0, value: "watch" }, f.b)
-	const again = await f.send({ type: "restart", expectedRevision: before.shared.revision })
+	const again = await f.send({ type: "restart", expectedGeneration: before.shared.generation, expectedRevision: before.shared.revision })
 	assert.equal(again.snapshot.shared.phase, "setup", "Start again commutes with a friend's vote")
 })
 
@@ -786,4 +787,95 @@ test("two tabs on one session: a sequence the other tab took doesn't refuse a ne
 		f.service.command(f.id, f.b.credential, { ...first, command: { type: "set_services", serviceIds: [2] } }),
 		(e: { code?: string }) => e.code === "conflict"
 	)
+})
+
+const conflict = (e: { code?: string }) => e.code === "conflict"
+
+test("Start again is fenced by its round: a delayed second Start again never clears the next round's votes", async () => {
+	const f = await fixture()
+	const started = await f.start()
+	const seen = started.snapshot.shared
+	// Two tabs of the host press Start again on the same decided/choosing view.
+	const first = await f.send({ type: "restart", expectedGeneration: seen.generation, expectedRevision: seen.revision })
+	assert.equal(first.snapshot.shared.phase, "setup")
+	const again = await f.start()
+	const card = again.snapshot.shared.candidates[0].id
+	await f.send({ type: "vote", generation: again.snapshot.shared.generation, candidateId: card, expectedVoteRevision: 0, value: "watch" }, f.b)
+	await assert.rejects(f.send({ type: "restart", expectedGeneration: seen.generation, expectedRevision: seen.revision }), conflict)
+	const after = await f.service.read(f.id, f.b.credential)
+	assert.equal(after.shared.phase, "choosing")
+	assert.equal(after.own.votes.find((v) => v.candidateId === card)?.value, "watch", "the friend's vote in the new round stays")
+})
+
+test("an installed bundle's Start again (no round) keeps its strict revision fence", async () => {
+	const f = await fixture()
+	const started = await f.start()
+	const seen = started.snapshot.shared
+	await f.send({ type: "vote", generation: seen.generation, candidateId: seen.candidates[0].id, expectedVoteRevision: 0, value: "watch" }, f.b)
+	await assert.rejects(f.send({ type: "restart", expectedRevision: seen.revision }), conflict)
+	const current = await f.service.read(f.id, f.a.credential)
+	const ok = await f.send({ type: "restart", expectedRevision: current.shared.revision })
+	assert.equal(ok.snapshot.shared.phase, "setup")
+})
+
+test("Start is fenced by its round: a Start from before a Start again doesn't begin the next round", async () => {
+	const f = await fixture()
+	await f.send({ type: "rename", nickname: "Host" })
+	await f.send({ type: "set_services", serviceIds: [1] })
+	const seen = (await f.service.read(f.id, f.a.credential)).shared
+	const start = { type: "start" as const, expectedGeneration: seen.generation, expectedContextVersion: seen.contextVersion, expectedRosterVersion: seen.rosterVersion, hostReady: true }
+	const started = await f.send(start)
+	await f.send({ type: "restart", expectedGeneration: started.snapshot.shared.generation, expectedRevision: started.snapshot.shared.revision })
+	await assert.rejects(f.send(start), conflict)
+	assert.equal((await f.service.read(f.id, f.a.credential)).shared.phase, "setup", "the delayed Start didn't start the new round")
+	// An installed bundle's Start (no round) keeps its strict version fences.
+	const now = (await f.service.read(f.id, f.a.credential)).shared
+	await f.send({ type: "set_services", serviceIds: [2] }, f.b)
+	await assert.rejects(f.send({ type: "start", expectedContextVersion: now.contextVersion, expectedRosterVersion: now.rosterVersion, hostReady: true }), conflict)
+})
+
+test("settings commute with a friend's change but never apply to a decided room", async () => {
+	const f = await fixture()
+	const stale = (await f.service.read(f.id, f.a.credential)).shared
+	await f.send({ type: "set_services", serviceIds: [2] }, f.b)
+	const saved = await f.send({ type: "configure", expectedContextVersion: stale.contextVersion, constraints: { kinds: ["show"], maxMinutes: null, moods: [] } })
+	assert.deepEqual(saved.snapshot.shared.constraints.kinds, ["show"])
+	const room = structuredClone(await f.repo.read(f.id))!.room
+	room.phase = "decided"
+	assert.throws(() => command(room, { type: "configure", expectedContextVersion: 0, country: "DE" }), conflict)
+	assert.throws(() => command(room, { type: "ready", expectedContextVersion: 0, ready: true }), conflict)
+	assert.throws(() => command(room, { type: "assign_screen", expectedContextVersion: 0, screenId: "room" }), conflict)
+})
+
+test("propose keeps its round and proposal fences; only the roster version commutes", async () => {
+	const f = await fixture()
+	const started = await f.start()
+	const s = started.snapshot.shared
+	const card = s.candidates[0].id
+	await f.send({ type: "vote", generation: s.generation, candidateId: card, expectedVoteRevision: 0, value: "watch" })
+	await f.send({ type: "vote", generation: s.generation, candidateId: card, expectedVoteRevision: 0, value: "watch" }, f.b)
+	const seen = (await f.service.read(f.id, f.a.credential)).shared
+	await assert.rejects(f.send({ type: "propose", generation: seen.generation - 1, expectedRosterVersion: seen.rosterVersion, expectedProposalVersion: seen.proposalVersion, candidateId: card }), conflict)
+	await assert.rejects(f.send({ type: "propose", generation: seen.generation, expectedRosterVersion: seen.rosterVersion, expectedProposalVersion: seen.proposalVersion - 1, candidateId: card }), conflict)
+	const proposed = await f.send({ type: "propose", generation: seen.generation, expectedRosterVersion: seen.rosterVersion - 1, expectedProposalVersion: seen.proposalVersion, candidateId: card })
+	assert.equal(proposed.snapshot.shared.proposal?.candidateId, card)
+})
+
+test("agree keeps its round, proposal and own-agreement fences; only the roster version commutes", async () => {
+	const f = await fixture()
+	const started = await f.start()
+	const s = started.snapshot.shared
+	const card = s.candidates[0].id
+	await f.send({ type: "vote", generation: s.generation, candidateId: card, expectedVoteRevision: 0, value: "watch" })
+	await f.send({ type: "vote", generation: s.generation, candidateId: card, expectedVoteRevision: 0, value: "watch" }, f.b)
+	const seen = (await f.service.read(f.id, f.a.credential)).shared
+	await f.send({ type: "propose", generation: seen.generation, expectedRosterVersion: seen.rosterVersion, expectedProposalVersion: seen.proposalVersion, candidateId: card })
+	const view = await f.service.read(f.id, f.b.credential)
+	const p = view.shared.proposal!
+	const agree = (patch: Partial<Extract<RoomCommand, { type: "agree" }>>) => f.send({ type: "agree", generation: view.shared.generation, expectedRosterVersion: view.shared.rosterVersion - 1, expectedProposalVersion: p.version, candidateId: p.candidateId, expectedOwnAgreementRevision: view.own.agreement.revision, agreed: true, ...patch }, f.b)
+	await assert.rejects(agree({ generation: view.shared.generation - 1 }), conflict)
+	await assert.rejects(agree({ expectedProposalVersion: p.version - 1 }), conflict)
+	await assert.rejects(agree({ expectedOwnAgreementRevision: view.own.agreement.revision + 1 }), conflict)
+	const agreed = await agree({})
+	assert.ok(agreed.snapshot.own.agreement.agreed || agreed.snapshot.shared.phase === "decided")
 })

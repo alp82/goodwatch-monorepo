@@ -225,6 +225,9 @@ export type RoomCommand =
 	| { type: "ready"; expectedContextVersion: number; ready: boolean }
 	| {
 			type: "start"
+			/** The round (shared.generation) the host saw. With it, friends' unrelated changes (roster,
+			 * settings) never fail Start; without it (installed bundles) the version fences stay strict. */
+			expectedGeneration?: number
 			expectedRosterVersion: number
 			expectedContextVersion: number
 			hostReady?: boolean
@@ -261,7 +264,9 @@ export type RoomCommand =
 			expectedAgreementVersion: number
 			expectedProposalVersion: number
 	  }
-	| { type: "restart"; expectedRevision: number }
+	/** `expectedGeneration`: the round the host saw. With it, only a changed round fails Start again (a delayed
+	 * second press never clears the next round); without it (installed bundles) the revision fence stays strict. */
+	| { type: "restart"; expectedRevision: number; expectedGeneration?: number }
 	| { type: "resume_voting"; expectedRevision: number }
 export interface CommandResult {
 	receipt: CommandReceipt
