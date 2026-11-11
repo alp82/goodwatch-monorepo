@@ -1,0 +1,80 @@
+# YepWatch E2E harness
+
+Hermetic stack + Playwright gates for the web app. Everything runs on 127.0.0.1, ports 18379–18490.
+
+```sh
+cd yepwatch-app/e2e
+npm install                 # axe-core only; Playwright comes from yepwatch-app/node_modules
+npm run e2e:gate            # < 4 min: every journey once, core journeys under no-WS + rapid taps, timings x3, axe
+npm run e2e:full            # < 15 min: every journey under all six faults (restart serially), timings x10, 6 people
+npm run e2e:smoke -- --origin https://yepwatch.com   # guests only, production budgets, fast-4G throttling
+node run.mjs gate -- --grep invite                   # extra args go to Playwright
+```
+
+The commands live here, not in `yepwatch-app/package.json`: that file's scripts are part of the Expo
+runtime fingerprint (`docs/ota-updates.md`), so adding scripts there would strand installed builds.
+
+Reports: `artifacts/<tier>/report.json` (every gate failure with journey, fault, gate, measured vs budget,
+artifacts; timing p50/p95 per moment) and `artifacts/<tier>/summary.md`. Traces of failed tests are under
+`artifacts/<tier>/results-*/` (`npx playwright show-trace <zip>`).
+
+## Stack (`stack/`)
+
+`node stack/up.mjs [--reset] [--rebuild]` brings it up or reuses a warm one (warm: < 1 s; after a source
+change only the changed bundle/export is rebuilt) and writes `.stack.json`:
+
+| key | what |
+|---|---|
+| `front` | Caddy (Docker) serving the web export with the production Caddyfile, upstreams rewritten to loopback |
+| `api`, `ws` | the same origin's API and realtime routes |
+| `control` | supervisor control API (below) |
+| `issuer` | fake GoodWatch OAuth issuer + member resource |
+| `crate`, `valkey` | Docker Crate (room store) and Valkey (cluster mode, revision + activity bus) |
+
+`node stack/down.mjs [--all]` stops the supervisor and Caddy (`--all` also Valkey and Crate).
+
+Real code paths: the release API runtime (`createReleaseRuntime` + `releaseHttp`: relational Crate store,
+release control, member adapter, room search client, readiness, repair), the realtime gateway bundle, the
+production Caddy route table, the invite link-card renderer. Substitutes (all loopback):
+
+- catalog reads: a deterministic 600-title fixture (`stack/fixture-titles.mjs`) fed through the real deck
+  code (`createContinuousCatalog`, `proposalCatalog`, idea interleaving) instead of the GoodWatch title
+  snapshot + catalog SQL; posters are local SVGs; no scores enrichment, trailers or backdrops.
+- GoodWatch issuer, member resource and search role: `stack/fakes.mjs`, reached over real HTTP.
+- release limits raised (rooms/admissions/commands) so parallel suites don't trip them.
+
+Safety: every server starts from an empty environment plus an allowlist; endpoints must be loopback and
+third-party keys empty (`stack/safe-env.mjs`), and Node children load `stack/block-egress.mjs`, which
+refuses any non-loopback socket. No `.env` file is read.
+
+### Control API (fault injection, for any client incl. native)
+
+```sh
+curl -X POST localhost:18490/restart/api?downMs=1500      # or /restart/gateway, &signal=SIGKILL
+curl -X POST localhost:18490/stop/gateway ; curl -X POST localhost:18490/start/gateway
+curl -X POST localhost:18490/faults -d '{"wsBlocked":true}'   # refuse WebSocket upgrades (and drop open sockets)
+curl -X POST localhost:18490/faults -d '{"latencyMs":150}'    # per-chunk latency on API + gateway
+curl -X POST localhost:18490/reset                            # drop + re-provision the room store
+curl localhost:18490/status
+curl -X POST 'localhost:18485/_e2e/lapse?user=<account>'      # GoodWatch refuses renewal for that account
+```
+
+While a service is down its proxy stops listening, so Caddy holds and retries requests exactly as in front
+of a restarting production container.
+
+## Harness (`lib/`)
+
+- `harness.ts`: `room.person(name, { device, member })` gives an independent browser context (phone
+  390×844 or desktop 1440×900); `person.tap(locator, { expect, moment, observers })` presses a control and
+  measures, page-side, from the input event to the first frame showing the expected state (on this and
+  other phones). `room.point(label)` is the fault hook journeys call between steps.
+- `recorder.page.js`: injected before the app; records screen states per frame (test-id markers),
+  notes and blocking words, inputs and their first changed frame, layout shifts, long animation frames.
+- `gates.ts`, `a11y.ts`: flashes, layout shift, blocking words / stuck "Connecting…", dead buttons, frame
+  gaps, errors (console, uncaught, HTTP, schema via the app's own `sharedSchema`/`parseFrame`), axe WCAG 2.2
+  AA + accessible names + 48×48 targets. Budgets: `budgets.mjs`.
+- Faults (Playwright projects): `none`, `nows`, `rapid`, `slow` (slow network + 4 s offline), `hidden`
+  (tab hidden + frozen, clock +5 min), `twodevice` (second tab of the same person, then reload mid-vote),
+  `restart` (API/gateway restart mid-journey, serial).
+- Fake sign-in: `room.person(name, { member: 'member-x' })` sets a cookie the fake issuer reads, so
+  Continue with GoodWatch comes straight back signed in as that account (`person.roundTrip(button)`).

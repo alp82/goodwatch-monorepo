@@ -125,6 +125,9 @@ export class Person {
   /** Navigate; by default wait until the startup word has dissolved (the page is usable and at rest). */
   async open(pathOrUrl = '/', { settle = true } = {}) {
     if (this.page.url() !== 'about:blank') await this.harvest();
+    // Opening an invitation first checks for an existing membership (GET the room with the room cookie);
+    // a 401 there is the app's designed "not a member yet" answer (Entrance.tsx), not a failure.
+    if (/\/r\/[^/]+$/.test(pathOrUrl)) this.expectStatus(/^401 \/api\/yepwatch\/v1\/proposal\/rooms\/[A-Za-z0-9_-]+$/);
     await this.page.goto(pathOrUrl.startsWith('http') ? pathOrUrl : `${ORIGIN}${pathOrUrl}`);
     if (settle) await this.settle();
   }
