@@ -61,11 +61,13 @@
   rec.signature = signature;
 
   let dirty = true;
-  let pendingInput = null;
+  // Inputs waiting for their first changed frame. A quick double or triple tap lands several inputs
+  // before the next frame: each one gets the first frame that shows a change made after it.
+  let pendingInputs = [];
   let lastWordsCheck = 0;
   const mo = new MutationObserver(() => {
     dirty = true;
-    if (pendingInput && !pendingInput.mutated) pendingInput.mutated = true;
+    for (const input of pendingInputs) input.mutated = true;
   });
   const startObserving = () => mo.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
   if (document.documentElement) startObserving(); else document.addEventListener('DOMContentLoaded', startObserving);
@@ -113,9 +115,9 @@
       if (gap > 20) { f.over20.push([Math.round(t), Math.round(gap)]); if (f.over20.length > 400) f.over20.shift(); }
     }
     f.last = t;
-    if (pendingInput && pendingInput.mutated && !pendingInput.feedbackAt) {
-      pendingInput.feedbackAt = t;
-      pendingInput = null;
+    if (pendingInputs.some((input) => input.mutated)) {
+      for (const input of pendingInputs) if (input.mutated && !input.feedbackAt) input.feedbackAt = t;
+      pendingInputs = pendingInputs.filter((input) => !input.feedbackAt);
     }
     if (dirty && document.body) {
       dirty = false;
@@ -147,7 +149,8 @@
       const entry = { t: performance.timeOrigin + e.timeStamp, type, target: describe(e.target), mutated: false, feedbackAt: null };
       rec.inputs.push(entry);
       if (rec.inputs.length > 500) rec.inputs.shift();
-      pendingInput = entry;
+      pendingInputs.push(entry);
+      if (pendingInputs.length > 20) pendingInputs.shift();
     }, { capture: true, passive: true });
   }
   document.addEventListener('visibilitychange', () => rec.hidden.push({ t: now(), state: document.visibilityState }));

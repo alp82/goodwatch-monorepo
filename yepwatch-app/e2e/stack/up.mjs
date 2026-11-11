@@ -6,7 +6,7 @@
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { CACHE_DIR, E2E_DIR, ORIGINS, PORTS, REPO_DIR, STATE_FILE } from './config.mjs';
+import { CACHE_DIR, CONTAINERS, E2E_DIR, ORIGINS, PORTS, REPO_DIR, STATE_FILE } from './config.mjs';
 import { buildApi, buildGateway, buildWeb } from './build.mjs';
 import { caddyUp, crateUp, portOpen, valkeyUp, waitFor, running } from './docker.mjs';
 import { cleanEnv } from './safe-env.mjs';
@@ -79,7 +79,7 @@ if (!status) {
 }
 
 const caddyState = path.join(CACHE_DIR, 'caddy.web');
-if (!running('yw-e2e-caddy') || fs.readFileSync(caddyState, { encoding: 'utf8', flag: 'a+' }) !== web.out) {
+if (!running(CONTAINERS.caddy) || fs.readFileSync(caddyState, { encoding: 'utf8', flag: 'a+' }) !== web.out) {
   await caddyUp(caddyfile(), web.out);
   fs.writeFileSync(caddyState, web.out);
   log('caddy up');

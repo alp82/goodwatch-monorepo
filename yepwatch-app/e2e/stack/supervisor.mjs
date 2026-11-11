@@ -99,6 +99,10 @@ function openProxy(name) {
         return;
       }
       const upstream = net.connect({ host: '127.0.0.1', port: p.target });
+      // No Nagle on either leg: a request's body (or a WebSocket frame) written after its headers would
+      // otherwise wait for the peer's delayed ACK (~40 ms). Caddy and the services set TCP_NODELAY in production.
+      client.setNoDelay(true);
+      upstream.setNoDelay(true);
       p.sockets.add(upstream);
       upstream.on('error', () => client.destroy());
       client.on('error', () => upstream.destroy());
