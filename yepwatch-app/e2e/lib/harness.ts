@@ -82,7 +82,10 @@ export class Person {
       const p = new URL(url).pathname;
       const status = r.status();
       if (r.request().method() === 'POST' && p.includes('/proposal/')) this.commandLog.push({ t: Date.now(), status, path: p });
-      if (status >= 400 && !this.expectedStatus.some((re) => re.test(`${status} ${p}`)) && !(this.room.faultAllowsNetworkErrors() && status >= 500))
+      // Before joining, the app checks for an existing membership (GET the room with the room cookie); 401 is
+      // its designed "not a member yet" answer (Entrance.tsx).
+      const membershipProbe = status === 401 && r.request().method() === 'GET' && /\/proposal\/rooms\/[A-Za-z0-9_-]+$/.test(p) && !this.own;
+      if (status >= 400 && !membershipProbe && !this.expectedStatus.some((re) => re.test(`${status} ${p}`)) && !(this.room.faultAllowsNetworkErrors() && status >= 500))
         fail(`HTTP ${status} ${r.request().method()} ${p}`);
       if (!(r.headers()['content-type'] ?? '').includes('json')) return;
       const body = await r.json().catch(() => null);
