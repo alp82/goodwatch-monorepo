@@ -25,7 +25,8 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const client = useQueryClient();
   const instance = useId();
   const draftKey = ['new-room-draft', account.generation, instance] as const;
-  const draft = useQuery({ queryKey: draftKey, queryFn: () => flow.draft() });
+  // Local and offline-aware: neither waits for React Query's online state (a paused create sat on Saving…).
+  const draft = useQuery({ queryKey: draftKey, queryFn: () => flow.draft(), networkMode: 'always' });
   const attempt = useRef<AbortController | null>(null);
   const cancel = useCallback(() => { attempt.current?.abort(); }, []);
   useFocusEffect(useCallback(() => cancel, [cancel]));
@@ -34,6 +35,7 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
     return () => { subscription.remove(); cancel(); };
   }, [cancel]);
   const mutation = useMutation({
+    networkMode: 'always',
     mutationFn: async (text: string) => {
       const controller = new AbortController();
       attempt.current = controller;

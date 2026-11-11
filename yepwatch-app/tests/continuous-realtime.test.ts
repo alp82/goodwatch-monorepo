@@ -517,7 +517,7 @@ test('a refused authenticate frame reconnects with a fresh ticket; only the tick
   h.sockets[0].open();
   h.sockets[0].frame({ type: 'error', code: 'unauthorized' });
   await tick();
-  assert.deepEqual(errors, [], 'a refused socket is not lost access');
+  assert.equal(errors.length, 0, 'a refused socket is not lost access');
   assert.equal(h.statuses.at(-1), 'reconnecting');
   h.run(1000);
   await tick();
