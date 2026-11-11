@@ -134,7 +134,10 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   useRoomFeedback(snapshot, trailerOpen);
   const card = snapshot ? ownCard(snapshot) : undefined;
   const vote = card ? snapshot?.own.votes.find((v) => v.candidateId === card.id) : undefined;
-  const disabled = room.disabled || entry.required;
+  // Answers queue behind commands still on their way (the Start that dealt this card, the previous vote,
+  // a saved one waiting for the network): the card is live the moment it shows. Only a room that can't
+  // be read or an entry still running holds the answers.
+  const disabled = state.privateError || entry.working || entry.required;
   // A sheet over the card (the room's or the header's Your rooms): no answers, and the time doesn't count as seeing the title.
   const covered = useSheetOpen();
   const answering = !disabled && !covered;
