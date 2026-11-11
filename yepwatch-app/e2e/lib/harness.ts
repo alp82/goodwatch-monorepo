@@ -43,6 +43,8 @@ const DEVICES = {
 
 export class Person {
   readonly recordings: Recording[] = [];
+  /** Page-clock windows (epoch ms) when the harness itself ran in the page (axe audits). */
+  readonly harnessBusy: [number, number][] = [];
   readonly failures: GateFailure[] = [];
   readonly samples: Sample[] = [];
   latest: Shared | null = null;
@@ -267,7 +269,12 @@ export class Person {
   async audit(label: string) {
     if (process.env.E2E_AXE === '0') return;
     await sleep(350); // let entrance animations settle: audit the resting screen
+    const pageNow = () => this.page.evaluate(() => performance.timeOrigin + performance.now()).catch(() => null);
+    const from = await pageNow();
     const failures = await audit(this.page, this.name, label).catch((e) => [{ gate: 'a11y' as const, person: this.name, detail: `axe could not run on ${label}: ${String(e).slice(0, 200)}` }]);
+    const to = await pageNow();
+    // axe runs in the page's main thread: the frames it holds up are the harness's, not the app's.
+    if (from !== null && to !== null) this.harnessBusy.push([from, to]);
     this.failures.push(...failures);
   }
 
@@ -436,7 +443,7 @@ export class Room {
       if (!p.page.isClosed()) await p.harvest();
       for (const rec of p.recordings) {
         failures.push(...flashes(rec, p.name), ...layoutShifts(rec, p.name), ...blockingWords(rec, p.name), ...connectionWords(rec, p.name, this.outages()), ...deadButtons(rec, p.name));
-        if (this.fault !== 'hidden' && this.fault !== 'slow') failures.push(...frameGaps(rec, p.name, rec.inputs.map((i) => [i.t, i.t + 1200])));
+        if (this.fault !== 'hidden' && this.fault !== 'slow') failures.push(...frameGaps(rec, p.name, rec.inputs.map((i) => [i.t, i.t + 1200]), p.harnessBusy));
       }
       failures.push(...p.failures.filter((f) => !failures.includes(f)));
       samples.push(...p.samples);

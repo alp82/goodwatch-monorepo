@@ -126,9 +126,11 @@ export function connectionWords(rec: Recording, person: string, faults: [number,
   return out;
 }
 
-export function frameGaps(rec: Recording, person: string, windows: [number, number][]): GateFailure[] {
+export function frameGaps(rec: Recording, person: string, windows: [number, number][], harness: [number, number][] = []): GateFailure[] {
   // Only frames inside interaction windows (an input + 1.2 s): idle pages may legitimately skip frames.
-  const bad = rec.frames.over20.filter(([t, gap]) => gap > B.frameMaxMs && windows.some(([a, b]) => t >= a && t <= b));
+  // A frame the harness held up (an axe audit running in the page) isn't the app's.
+  const bad = rec.frames.over20.filter(([t, gap]) => gap > B.frameMaxMs && windows.some(([a, b]) => t >= a && t <= b)
+    && !harness.some(([a, b]) => t - gap < b && t > a));
   if (!bad.length) return [];
   const worst = Math.max(...bad.map(([, g]) => g));
   const loaf = rec.loafs.filter((l) => l.duration > 50).sort((a, b) => b.duration - a.duration)[0];
