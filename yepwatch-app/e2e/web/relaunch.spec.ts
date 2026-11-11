@@ -36,6 +36,35 @@ test.describe('relaunch mid-vote', () => {
     await vote(mia, false);
   });
 
+  test('arrow keys under the startup cover answer nothing: the card waits for the page to show', async ({ room }) => {
+    const host = await readyHost(room);
+    const mia = await room.person('Mia');
+    await join(mia, await inviteLink(host), 'Mia');
+    await start(host, [mia]);
+    await vote(mia, false);
+    const card = await cardTitle(mia);
+    await room.point('voting');
+    // A slow first read: the startup cover shows its word, then dissolves over the ready room (its card
+    // already drawn underneath). From the first script of the reloaded page, → every few ms while the cover
+    // is up: a window-wide key listener under the cover would answer a card nobody can see yet.
+    await mia.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+$/, async (route) => {
+      if (route.request().method() === 'GET') await new Promise((resolve) => setTimeout(resolve, 600));
+      await route.continue();
+    });
+    await mia.page.addInitScript(() => {
+      let covered = false;
+      const timer = setInterval(() => {
+        const cover = Boolean(document.querySelector('[data-testid="yepwatch-boot"]'));
+        if (covered && !cover) { clearInterval(timer); return; }
+        covered ||= cover;
+        if (cover) window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      }, 8);
+    });
+    await mia.reload();
+    await appToCard(mia);
+    expect(await cardTitle(mia), 'no card answered while the page was covered').toBe(card);
+  });
+
   test('closed tab opened again mid-vote: back at the card the deck is on', async ({ room }) => {
     const host = await readyHost(room);
     const mia = await room.person('Mia');
