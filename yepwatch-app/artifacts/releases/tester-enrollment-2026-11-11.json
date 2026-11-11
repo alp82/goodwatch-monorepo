@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-11T23:34:29.853407+00:00",
+  "checkedAt": "2026-11-11T23:39:28.069053+00:00",
   "accountEmail": "hello@goodwatch.app",
   "developerAccountName": "GoodWatch",
   "developerAccountId": "8951486415791555357",
@@ -34,7 +34,9 @@
     "testerEmailsAdded": 0,
     "invitationsSent": 0,
     "joinUrl": "https://groups.google.com/g/yepwatch-testers",
-    "settingsFreshlyVerified": true
+    "settingsFreshlyVerified": true,
+    "activeDescriptionSavedAndFreshlyVerified": true,
+    "descriptionIncludesGuideOptInAndInstallLinks": true
   },
   "playSetup": {
     "privacyPolicy": {
@@ -180,6 +182,29 @@
     "canonicalInstallUrl": "https://play.google.com/store/apps/details?id=com.yepwatch.app",
     "shareableGuideUrl": "https://yepwatch.com/android-test.html",
     "websiteAndroidButtonAndQrTarget": "https://yepwatch.com/android-test.html",
-    "androidQrDecodedAndMatched": true
+    "androidQrDecodedAndMatched": true,
+    "websiteDeployment": {
+      "sourceCommit": "531d3f0c373f6b505b0d6fdd2a0e80a66616c840",
+      "frontGatewayApiHealthy": true,
+      "publicGuideMatchesCommittedHtml": true,
+      "guideSha256": "6cc538d31678a57afb4cb2ea68d6a922600854097732c6416394700e3a5e9e4e",
+      "mobileAndDesktopAndroidLinksVerified": [
+        390,
+        1440
+      ],
+      "guideLayoutsVerifiedWithoutHorizontalOverflow": [
+        320,
+        390,
+        1280
+      ],
+      "exportedGuideMatchesSource": true,
+      "committedSvgQrRasterizedAndDecoded": true,
+      "existingInstallLinkBrowserTest": "pass",
+      "appTypecheck": "pass",
+      "appLint": "pass; pre-existing unused View warning",
+      "appTestsPassed": 189,
+      "nativeUpdateRequired": false,
+      "nativeUpdateReason": "The changed installation offers are web-only. Existing native player/privacy OTA updates remain published."
+    }
   }
 }
