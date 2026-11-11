@@ -109,7 +109,14 @@ export function Entrance({ invite, open: request, from }: {
     const timer = setTimeout(() => setJustArchived(null), UNDO_ARCHIVE_MS);
     return () => clearTimeout(timer);
   }, [justArchived]);
-  useEffect(() => { if (home.ready && !restoring && !home.loadingRooms) markPageReady(); }, [home.ready, restoring, home.loadingRooms, markPageReady]);
+  // An invitation's page is ready once its room preview is in and the membership check is done, so the join
+  // page appears whole (never with a placeholder head) as the startup word dissolves.
+  const pageReady = home.ready && !restoring && (invite ? preview !== undefined && !checkingInvite : !home.loadingRooms);
+  useEffect(() => { if (pageReady) markPageReady(); }, [pageReady, markPageReady]);
+  // Already in the invited room: it opens once the startup word is leaving, never behind it (the room's
+  // reads and card clocks don't start while the word still covers the page).
+  const [memberOf, setMemberOf] = useState<string | null>(null);
+  useEffect(() => { if (memberOf && boot !== 'boot') router.replace({ pathname: '/room/[id]', params: { id: memberOf } }); }, [memberOf, boot]);
   // Back from GoodWatch: the cover lifts once the page is whole, with the account already in it.
   useEffect(() => { if (home.ready && !restoring && account.ready) memberTransition.arrived(); }, [home.ready, restoring, account.ready]);
   useFocusEffect(useCallback(() => {
@@ -156,7 +163,7 @@ export function Entrance({ invite, open: request, from }: {
         });
         await writeAdmission(intent, null);
         await unarchive(roomId);
-        router.replace({ pathname: '/room/[id]', params: { id: roomId } });
+        setMemberOf(roomId);
       } catch (e) {
         if (!active) return;
         if (
@@ -366,7 +373,7 @@ export function Entrance({ invite, open: request, from }: {
   // The saved-request check takes a moment on every visit: the page appears once, already usable.
   const me = { name: known, member: account.member };
   const openProfile = () => { setError(''); setPanel('profile'); };
-  if (!home.ready || restoring) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
+  if (!home.ready || restoring || memberOf) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
   if (shown === 'join') return (
     <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite}

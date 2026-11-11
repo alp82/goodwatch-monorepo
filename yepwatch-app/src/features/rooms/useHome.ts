@@ -133,7 +133,8 @@ export function useHome() {
     retry: 1, refetchInterval: 15_000 });
   if (!account.member) return account.lapsed
     ? { ...local, ready: account.ready, hasRooms: false, active: [], archived: [], left: [], decisions: [], decidedRooms: new Set<string>(), unavailable: [], notice: '', deletionPending: false }
-    : { ...local, notice: '', deletionPending: false };
+    // Until the sign-in is known the page can't tell a member's rooms from a guest's start page: it shows neither.
+    : { ...local, ready: local.ready && account.ready, notice: '', deletionPending: false };
   // A deletion made on another device also hides already cached account data here.
   const deletionPending = Boolean(lifecycle.data?.deletion);
   const data = deletionPending || !lifecycle.isSuccess || (cloud.error instanceof RoomFailure && cloud.error.status === 403) ? undefined : cloud.data;
