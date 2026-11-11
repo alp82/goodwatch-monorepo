@@ -9,7 +9,7 @@ import { ensureApk, PACKAGE } from './lib/build.mjs';
 import { boot, install, reverse, shutdown } from './lib/device.mjs';
 import { RUNS_DIR, log, mkdirp, sleep } from './lib/env.mjs';
 import { Logcat, a11yAudit, blockingWords, gfxFrames, gfxReset } from './lib/gates.mjs';
-import { createRoom, freshStart, fillAndSubmit, hostAction, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, tapAction } from './lib/journey.mjs';
+import { createRoom, freshStart, toStart, fillAndSubmit, hostAction, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, tapAction } from './lib/journey.mjs';
 import { Phone } from './lib/phone.mjs';
 import { resolveStack, stackPorts } from './lib/stack.mjs';
 
@@ -27,9 +27,9 @@ const phase = (name, ms) => { result.phases[name] = ms; };
 function timing(name, budget, r, extra = {}) {
   const row = { name, budgetMs: budget, ...extra };
   if (!r?.ok) Object.assign(row, { pass: false, error: r?.error ?? 'not measured' });
-  else Object.assign(row, { ms: r.ms, settledMs: r.settledMs, pass: r.ms <= budget, resolutionMs: r.resolutionMs, clockErrMs: r.clockErrMs, maxGapMs: r.maxGapMs, video: path.relative(RUN, r.file) });
+  else Object.assign(row, { ms: extra.use === 'settled' ? r.settledMs : r.ms, firstMs: r.ms, settledMs: r.settledMs, pass: (extra.use === 'settled' ? r.settledMs : r.ms) <= budget, resolutionMs: r.resolutionMs, clockErrMs: r.clockErrMs, maxGapMs: r.maxGapMs, video: path.relative(RUN, r.file) });
   result.gates.timing.push(row);
-  log(`  timing ${name}: first ${row.ms ?? '-'} ms, settled ${row.settledMs ?? '-'} ms (budget ${budget}) ${row.pass ? 'ok' : 'FAIL'}${row.error ? ' ' + row.error : ''}`);
+  log(`  timing ${name}: ${row.ms ?? '-'} ms (first change ${row.firstMs ?? '-'}, settled ${row.settledMs ?? '-'}) budget ${budget} ${row.pass ? 'ok' : 'FAIL'}${row.error ? ' ' + row.error : ''}`);
   if (r?.ok && r.flash?.failed) {
     result.gates.flash.push({ name, blankFrames: r.flash.blank.length, spikes: r.flash.spikes, intermediate: r.flash.plateaus, frames: path.relative(RUN, r.file.replace(/\.webm$/, '-frames')) });
     log(`  flash ${name}: ${JSON.stringify({ blank: r.flash.blank.length, spikes: r.flash.spikes.length, plateaus: r.flash.plateaus.length })}`);
@@ -62,7 +62,11 @@ async function scenario(name, fn, { modes = ['gate', 'full'] } = {}) {
   if (row.pass) log(`✔ ${name} (${row.ms} ms)`);
   return row.pass;
 }
-function journeyFail(name, detail) { result.gates.journey.push({ name, detail }); log(`  journey ${name}: ${detail}`); }
+function journeyFail(name, detail, phone) {
+  const row = { name, detail };
+  if (phone) { try { row.shot = path.relative(RUN, phone.screenshot(path.join(RUN, `journey-${name.replace(/\W+/g, '-')}-${phone.name}.png`))); } catch { /* best effort */ } }
+  result.gates.journey.push(row); log(`  journey ${name}: ${detail}`);
+}
 
 // ---------- shared state between scenarios ----------
 const S = {};
@@ -93,12 +97,12 @@ async function main() {
     let am;
     const first = await measure({ actor: A, phones: [A], file: vid('cold-first'), targets: { A: roiOf(A, 'New room', 20000) },
       action: hostAction(() => { am = A.launch(); }), settleMs: 800 });
-    timing('cold start, first visit -> start page usable', B.native.coldStartUsableMs, first.A, { amStartTotalTime: am.totalTime });
+    timing('cold start, first visit -> start page usable', B.native.coldStartUsableMs, first.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     await audit(A, 'start page (first visit)');
     A.forceStop(); await sleep(500);
     const again = await measure({ actor: A, phones: [A], file: vid('cold-again'), targets: { A: roiOf(A, 'New room', 20000) },
       action: hostAction(() => { am = A.launch(); }), settleMs: 800 });
-    timing('cold start, returning -> start page usable', B.native.coldStartUsableMs, again.A, { amStartTotalTime: am.totalTime });
+    timing('cold start, returning -> start page usable', B.native.coldStartUsableMs, again.A, { amStartTotalTime: am.totalTime, use: 'settled' });
   });
 
   // ---- create room on A, with New room / Create room timings, a11y, back priority ----
@@ -138,7 +142,7 @@ async function main() {
     let am;
     const r = await measure({ actor: Bp, phones: [Bp], file: vid('invite-installed'), targets: { B: roiOf(Bp, 'Join', 10000) },
       action: hostAction(() => { am = Bp.openLink(inviteUrl(S.code)); }) });
-    timing('invite link (app in background) -> join page', B.native.inviteInstalledMs, r.B, { amStart: am });
+    timing('invite link (app in background) -> join page', B.native.inviteInstalledMs, r.B, { amStart: am, use: 'settled' });
     await audit(Bp, 'join page');
     await joinFromJoinScreen(Bp, 'Bob');
     await audit(Bp, 'room page (friend, waiting)');
@@ -159,7 +163,11 @@ async function main() {
 
   // ---- vote on one phone -> other phone; frame pacing while voting ----
   await scenario('vote-to-peer', async () => {
-    await Bp.tap('Yep');
+    // B says Yep to its next cards; A skips (Nope) to one of them, then its Yep makes the match.
+    const bYeps = new Set();
+    for (let i = 0; i < 4; i++) { const t = await posterTitle(Bp); if (t) bYeps.add(t); await Bp.tap('Yep'); await sleep(350); }
+    for (let i = 0; i < 12 && !bYeps.has(await posterTitle(A)); i++) { const t = await posterTitle(A); await A.tap('Nope'); const end = Date.now() + 3000; while (Date.now() < end && (await posterTitle(A)) === t) await sleep(60); }
+    if (!bYeps.has(await posterTitle(A))) throw new Error(`decks never overlapped: B said Yep to ${[...bYeps].join(', ')}`);
     await sleep(600);
     const yep = await A.find('Yep');
     const r = await measure({ actor: A, phones: [A, Bp], file: vid('vote-to-peer'), action: tapAction(A, yep),
@@ -247,7 +255,12 @@ async function main() {
     const before = await posterTitle(A);
     A.forceStop(); await sleep(500);
     A.launch();
-    await A.waitFor('poster', { timeout: 15000 }).catch(() => journeyFail('kill+relaunch', 'room did not come back to voting after relaunch'));
+    const back = await A.waitFor('poster', { timeout: 15000 }).then(() => true, () => false);
+    if (!back) {
+      const seen = (await A.nodes()).map(n => n.desc || n.text).filter(Boolean).slice(0, 25).join(' | ');
+      journeyFail('kill+relaunch', `relaunch mid-vote did not return to the room's card within 15 s; screen: ${seen}`, A);
+      await A.tap(/cheer me up/); await A.waitFor('poster', { timeout: 8000 });
+    }
     const after = await posterTitle(A);
     await sleep(2500); await notStuck(A, 'after relaunch');
     result.notes = [...(result.notes ?? []), `kill+relaunch: card before "${before}", after "${after}"`];
@@ -258,7 +271,7 @@ async function main() {
     A.home(); log(`  backgrounded ${minutes} min`);
     await sleep(minutes * 60000);
     A.sh(`am start -n ${PACKAGE}/.MainActivity`);
-    await A.waitFor('voting', { timeout: 8000 });
+    if (!(await A.waitFor('voting', { timeout: 8000 }).then(() => true, () => false))) journeyFail('background resume', `not on voting after resuming from ${minutes} min in background`, A);
     await sleep(3000); await notStuck(A, `resume after ${minutes} min`);
     // Live again? B votes Yep on its current card; A has to see its own matches chip stay consistent and no error.
     await Bp.tap('Yep'); await sleep(1500); await notStuck(A, 'after peer vote post-resume');
@@ -266,13 +279,13 @@ async function main() {
 
   await scenario('cold-invite-link', async () => {
     // A makes another room; B's app is killed; the link cold-starts it.
-    A.back(); await A.waitFor('New room', { timeout: 6000 });
+    await toStart(A);
     const code = await createRoom(A, { name: '' });
     Bp.forceStop(); await sleep(500);
     let am;
     const r = await measure({ actor: Bp, phones: [Bp], file: vid('invite-cold'), targets: { B: roiOf(Bp, 'Join', 20000) },
       action: hostAction(() => { am = Bp.openLink(inviteUrl(code)); }) });
-    timing('invite link (app not running) -> join page', B.native.inviteColdMs, r.B, { amStart: am });
+    timing('invite link (app not running) -> join page', B.native.inviteColdMs, r.B, { amStart: am, use: 'settled' });
     await joinFromJoinScreen(Bp, 'Bob');
     S.code2 = code;
   }, { modes: ['full'] });

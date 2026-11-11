@@ -11,6 +11,15 @@ export async function freshStart(p) {
   await p.find('New room', { timeout: 20000 });
   return launch;
 }
+/** Get to the start page without clearing data (relaunch if Back would leave the app). */
+export async function toStart(p) {
+  for (let i = 0; i < 3; i++) {
+    if (await p.has('New room') && !(await p.has(/switch room$/))) return;
+    if (!p.foreground().includes('dev.yepwatch.e2e')) break;
+    p.back(); await sleep(700);
+  }
+  p.launch(); await p.find('New room', { timeout: 20000 });
+}
 /** Commit a text field the way a keyboard user does (IME action). */
 export async function fillAndSubmit(p, sel, text) {
   await p.fill(sel, text); await sleep(100); p.key('KEYCODE_ENTER'); await sleep(250);

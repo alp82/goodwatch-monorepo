@@ -68,9 +68,10 @@ async function exportWeb() {
 }
 
 async function up() {
-  for (const [name, port] of Object.entries(PORTS)) if (await portOpen(port)) throw new Error(`port ${port} (${name}) busy: run "down" or check its owner`);
+  const noDocker = process.argv.includes('--no-docker'); // CI without Docker: a valkey-server already listens on PORTS.valkey
+  for (const [name, port] of Object.entries(PORTS)) if (!(noDocker && name === 'valkey') && await portOpen(port)) throw new Error(`port ${port} (${name}) busy: run "down" or check its owner`);
   await exportWeb();
-  execFileSync('docker', ['run', '-d', '--rm', '--name', VALKEY, '--network', 'host', 'valkey/valkey:8.1', 'valkey-server', '--port', String(PORTS.valkey),
+  if (!noDocker) execFileSync('docker', ['run', '-d', '--rm', '--name', VALKEY, '--network', 'host', 'valkey/valkey:8.1', 'valkey-server', '--port', String(PORTS.valkey),
     '--bind', '127.0.0.1', '--save', '', '--appendonly', 'no'], { stdio: 'ignore' });
   await waitPort(PORTS.valkey, 10000, 'valkey');
   const gatewaySecret = secret();
