@@ -154,8 +154,9 @@ export function Glyph({ name, size = 18, color = glow.soft }: { name: keyof type
   );
 }
 
+/** A quiet text action. It takes 32 px in the layout; its target reaches 48 px (8 px over the neighbors). */
 export function TextLink({ label, onPress, color = glow.amber, disabled }: { label: string; onPress: () => void; color?: string; disabled?: boolean }) {
-  return <Press label={label} onPress={onPress} disabled={disabled} style={{ alignSelf: 'flex-start', minHeight: 32 }}><GText size={T.small} bold color={color}>{label}</GText></Press>;
+  return <Press label={label} onPress={onPress} disabled={disabled} style={{ alignSelf: 'flex-start', minHeight: 48, minWidth: 48, marginVertical: -8 }}><GText size={T.small} bold color={color}>{label}</GText></Press>;
 }
 /** One quiet message where something else would be: errors, connection, saved actions. */
 export function Note({ children, action, busy = false }: { children: ReactNode; action?: { label: string; onPress: () => void; disabled?: boolean }; busy?: boolean }) {

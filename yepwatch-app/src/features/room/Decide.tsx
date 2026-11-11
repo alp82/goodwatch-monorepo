@@ -16,7 +16,7 @@ import { leavePage, toRooms } from './nav';
 import { useRoom } from './RoomProvider';
 import { RoomNotes, RoomStatus } from './RoomStatus';
 import { servicesIn } from './services';
-import { Actions, Button, Dots, Label, Logos, Screen, Small, TextLink, usePinnedActions, useServices } from './ui';
+import { Actions, Button, Dots, Label, Logos, Screen, Small, T, TextLink, usePinnedActions, useServices } from './ui';
 import { offeredOn } from './Voting';
 
 const sized = (url: string | null, w: 185 | 342 | 500) => (url ? url.replace('/w500/', `/w${w}/`) : null);
@@ -39,14 +39,28 @@ function useOffered(c: Candidate | null) {
   return c ? servicesIn(all, offeredOn(c, view?.enabledServiceIds ?? [])) : [];
 }
 
-/** Agreement checking or failed (offers re-checked before Tonight). */
-function AgreementState() {
+/**
+ * "2 of 3 agree", and in its place while the offers are re-checked before Tonight: "Checking where to
+ * watch…" or "Couldn't confirm where to watch" with Try again. One line of one height, so the buttons
+ * under it never move.
+ */
+function AgreementLine({ pr, size, align }: { pr: ProposalView; size: number; align: 'flex-start' | 'center' }) {
   const { snapshot, cmd, disabled } = useRoom();
   const a = snapshot?.shared.agreement;
-  if (!a || a.state === 'none') return null;
-  return a.state === 'checking'
-    ? <Small color={glow.soft}>Checking where to watch…</Small>
-    : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><Small>Couldn’t confirm where to watch</Small><TextLink label="Try again" disabled={disabled} onPress={() => void cmd.retryAgreement()} /></View>;
+  const line = Math.round(size * 1.4);
+  // Each wording is its own node in a row as wide as the column: a new wording replaces the old one
+  // instead of moving it.
+  const text = (t: string, color: string = glow.soft, small = false) => <GText key={t} size={small ? T.small : size} color={color}>{t}</GText>;
+  return (
+    <View style={{ height: line, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: align, gap: 10 }}>
+      {a?.state === 'checking' ? text('Checking where to watch…', glow.soft, true)
+        : a?.state === 'unavailable' ? <>{text('Couldn’t confirm where to watch', glow.muted, true)}
+          <Press label="Try again" disabled={disabled} onPress={() => void cmd.retryAgreement()} style={{ minHeight: 48, minWidth: 48, marginVertical: -(48 - line) / 2 }}>
+            <GText size={T.small} bold color={glow.amber}>Try again</GText>
+          </Press></>
+        : text(`${pr.agreeCount} of ${pr.requiredCount} agree`)}
+    </View>
+  );
 }
 
 /** "You agree" or "You proposed this", where Agree was. */
@@ -83,11 +97,10 @@ export function Proposal() {
       <GText bold size={titleSize} style={{ letterSpacing: -1.2, lineHeight: titleSize * 1.05, textAlign: wide ? 'left' : 'center' }}>{c?.title ?? 'A match'}</GText>
       {c ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: wide ? 'flex-start' : 'center' }}><ScorePill score={c.goodwatchScore} size={wide ? 'L' : 'M'} /><GText size={z(15)} color={glow.soft}>{meta(c)}</GText></View> : null}
       {offered.length ? <Logos services={offered} size={z(28)} /> : null}
-      <View style={{ gap: 8, alignItems: wide ? 'flex-start' : 'center', paddingTop: 6 }}>
+      <View style={{ gap: 8, alignSelf: 'stretch', alignItems: wide ? 'flex-start' : 'center', paddingTop: 6 }}>
         <Dots n={pr.agreeCount} of={pr.requiredCount} />
-        <GText size={z(15)} color={glow.soft}>{`${pr.agreeCount} of ${pr.requiredCount} agree`}</GText>
+        <AgreementLine pr={pr} size={z(15)} align={wide ? 'flex-start' : 'center'} />
       </View>
-      <AgreementState />
     </View>
   );
   if (wide) {
