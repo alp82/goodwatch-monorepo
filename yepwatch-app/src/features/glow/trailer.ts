@@ -42,15 +42,16 @@ export function playbackMessage(p: Playback | null) {
   if (p.state === 2) return 'Paused';
   return 'Use the player to start playback.';
 }
-export function playerHtml(id: string, channel: string) {
+export function playerHtml(id: string, channel: string, origin = 'https://yepwatch.com') {
+  // Use an explicit privacy-enhanced iframe: the API's default-created player uses youtube.com.
+  const embed = new URL(`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}`);
+  embed.search = new URLSearchParams({ enablejsapi: '1', autoplay: '1', playsinline: '1', rel: '0', origin: new URL(origin).origin }).toString();
   // id/channel are generated/validated, never arbitrary catalog HTML.
-  return `<!doctype html><html><meta name="referrer" content="strict-origin-when-cross-origin"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body,#player{margin:0;width:100%;height:100%;background:#000;overflow:hidden}</style><div id="player"></div><script>
+  return `<!doctype html><html><meta name="referrer" content="strict-origin-when-cross-origin"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body,#player{margin:0;width:100%;height:100%;background:#000;overflow:hidden}</style><iframe id="player" title="YouTube trailer" src="${embed.href.replace(/&/g, '&amp;')}" frameborder="0" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe><script>
 var p,playbackError;function report(error){if(error)playbackError=String(error);if(!p)return;var data={channel:${JSON.stringify(
     channel
   )},state:p.getPlayerState?p.getPlayerState():-1,muted:p.isMuted?p.isMuted():true,volume:p.getVolume?p.getVolume():0};if(playbackError)data.error=playbackError;var raw=JSON.stringify(data);if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(raw);else parent.postMessage(data,'*')}
-function onYouTubeIframeAPIReady(){p=new YT.Player('player',{videoId:${JSON.stringify(
-    id
-  )},playerVars:{autoplay:1,playsinline:1,rel:0},events:{onReady:function(){p.playVideo();report()},onStateChange:function(e){if(e.data===1)playbackError=undefined;report()},onError:function(e){report(e.data)},onAutoplayBlocked:function(){report('Playback needs a tap')}}});setInterval(function(){report()},700)}
+function onYouTubeIframeAPIReady(){p=new YT.Player('player',{events:{onReady:function(){p.playVideo();report()},onStateChange:function(e){if(e.data===1)playbackError=undefined;report()},onError:function(e){report(e.data)},onAutoplayBlocked:function(){report('Playback needs a tap')}}});setInterval(function(){report()},700)}
 function command(c){if(!p)return;if(c==='sound'){p.unMute();p.setVolume(100);p.playVideo()}if(c==='play')p.playVideo();if(c==='pause')p.pauseVideo();setTimeout(function(){report()},100)}
 window.addEventListener('message',function(e){if(e.source!==parent)return;if(e.data&&e.data.channel===${JSON.stringify(
     channel

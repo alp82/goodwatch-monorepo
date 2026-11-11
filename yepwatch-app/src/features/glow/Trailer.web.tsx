@@ -28,7 +28,7 @@ export function Trailer({ url }: { url: string }) {
       <iframe
         ref={frame}
         title="Title trailer"
-        srcDoc={playerHtml(id, channel)}
+        srcDoc={playerHtml(id, channel, typeof window === 'undefined' ? undefined : window.location.origin)}
         allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
         allowFullScreen
         referrerPolicy="strict-origin-when-cross-origin"
