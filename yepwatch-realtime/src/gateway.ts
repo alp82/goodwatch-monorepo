@@ -133,23 +133,24 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
     for (let attempt = 0; attempt < 3 && !draining && deliveryReady(); attempt++) {
       const epoch = room.epoch
       const target = room.target
-      for (const client of room.clients) {
-        if (client.ws.readyState !== WebSocket.OPEN || !client.attachment) continue
+      // Every friend's read runs at once: one person's answer reaches the sixth phone as fast as the first.
+      await Promise.all([...room.clients].map(async (client) => {
+        if (client.ws.readyState !== WebSocket.OPEN || !client.attachment) return
         if (client.attachment.leaseExpiresAt <= Date.now() || client.attachment.roomExpiresAt <= Date.now()) {
-          fail(client, 'expired'); continue
+          fail(client, 'expired'); return
         }
         try {
           const previous = client.attachment
           const raw = await bounded(authority.view({ roomId: room.id, lease: previous.lease }))
-          if (client.ws.readyState !== WebSocket.OPEN || draining) continue
+          if (client.ws.readyState !== WebSocket.OPEN || draining) return
           const result = continuous ? validateScopedView<ContinuousSnapshot | ProposalSnapshot>(raw, previous, options.maxLeaseMs,
             continuous.proposal ? proposalProjection : continuousProjection) : validateView(raw, previous, options.maxLeaseMs)
-          if (previous.leaseExpiresAt <= Date.now()) { fail(client, 'expired'); continue }
+          if (previous.leaseExpiresAt <= Date.now()) { fail(client, 'expired'); return }
           client.attachment = result.attachment
           expiry(client)
           // Never forward reads made across a bus outage or a concurrently newer hint.
           if (!deliveryReady() || room.epoch !== epoch || result.snapshot.revision < room.target ||
-              result.snapshot.revision < client.lastRevision) { degrade(client); continue }
+              result.snapshot.revision < client.lastRevision) { degrade(client); return }
           if (client.initial || client.degraded || result.snapshot.revision > client.lastRevision) {
             if (send(client, { type: client.initial || client.degraded ? 'room.snapshot' : 'room.updated', snapshot: client.roomDetails ? result.snapshot : { ...result.snapshot, participants: result.snapshot.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof result.snapshot })) {
               client.lastRevision = result.snapshot.revision; client.initial = false; client.degraded = false
@@ -171,7 +172,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
           if (error instanceof AuthorityError && error.terminal) fail(client, 'unauthorized')
           else degrade(client)
         }
-      }
+      }))
       if (room.epoch === epoch && room.target === target) {
         // A future revision hint can precede a readable commit; do not present stale state as live.
         if ([...room.clients].some(c => c.lastRevision < room.target)) continue
