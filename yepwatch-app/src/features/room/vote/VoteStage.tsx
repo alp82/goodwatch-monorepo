@@ -164,6 +164,8 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
   const answered = useRef<string | null>(null);
   /** Which neon side the live drag has lit. */
   const litSide = useRef(0);
+  /** The live drag's last position and drive, written by the gesture as it moves the card. */
+  const dragAt = useRef({ x: 0, y: 0, v: 0 });
   const topKey = card?.key ?? '';
 
   // The first card of a round that just started rises in; it takes presses and drags all along.
@@ -270,13 +272,15 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
       return;
     }
     answered.current = target.key;
-    let x0 = 0;
-    let y0 = 0;
-    let v0 = 0;
-    x.stopAnimation((value) => { x0 = value; });
-    y.stopAnimation((value) => { y0 = value; });
-    v.stopAnimation((value) => { v0 = Math.max(-1, Math.min(1, value)); });
-    if (!fromDrag) { x0 = 0; y0 = 0; v0 = 0; }
+    // Where the released drag left the card, as the gesture set it: a native-driven stopAnimation reports
+    // its value only later, so the departing copy would start at the center.
+    const at = fromDrag ? dragAt.current : { x: 0, y: 0, v: 0 };
+    const x0 = at.x;
+    const y0 = at.y;
+    const v0 = Math.max(-1, Math.min(1, at.v));
+    x.stopAnimation();
+    y.stopAnimation();
+    v.stopAnimation();
     const wasLit = litSide.current === (answer ? 1 : -1);
     // The next card starts clean, in place, this frame (neon first, so the drive's reset lights nothing).
     litSide.current = 0;
@@ -332,6 +336,7 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
         x.stopAnimation((value) => { base.x = value; });
         y.stopAnimation((value) => { base.y = value; });
         v.stopAnimation();
+        dragAt.current = { x: base.x, y: base.y, v: 0 };
         handling = false;
         moved = false;
         live.current.engage();
@@ -339,9 +344,10 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
       },
       onPanResponderMove: (_, g) => {
         const dx = base.x + g.dx;
-        x.setValue(dx);
-        y.setValue(base.y + g.dy * 0.35);
-        v.setValue(Math.max(-1.3, Math.min(1.3, dx / live.current.threshold)));
+        dragAt.current = { x: dx, y: base.y + g.dy * 0.35, v: Math.max(-1.3, Math.min(1.3, dx / live.current.threshold)) };
+        x.setValue(dragAt.current.x);
+        y.setValue(dragAt.current.y);
+        v.setValue(dragAt.current.v);
         if (Math.abs(g.dx) >= 6 || Math.abs(g.dy) >= 6) moved = true;
         if (!handling && Math.abs(g.dx) > 15) {
           handling = true;
@@ -352,6 +358,7 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
         const L = live.current;
         L.onGesture('release');
         const dx = base.x + g.dx;
+        dragAt.current = { x: dx, y: base.y + g.dy * 0.35, v: Math.max(-1.3, Math.min(1.3, dx / L.threshold)) };
         if (!moved && Math.abs(g.dx) < 6 && Math.abs(g.dy) < 6) {
           L.settle();
           if (!L.disabled) L.onDetails();
