@@ -54,6 +54,8 @@ export class PersistentCommands {
   pending: CommandEnvelope | null = null;
   busy = false;
   retryAt = 0;
+  /** The pending command's last try got no answer at all (offline, network down): no server deadline to keep. */
+  unanswered = false;
   constructor(private readonly id: () => string, private readonly storage: QueueStorage) {}
   async send(
     command: RoomCommand | undefined,
@@ -79,6 +81,7 @@ export class PersistentCommands {
       await this.storage.write(null);
       this.pending = null;
       this.retryAt = 0;
+      this.unanswered = false;
       return result.snapshot;
     } catch (error) {
       if (!retainRequest(error)) {
@@ -87,6 +90,7 @@ export class PersistentCommands {
         this.retryAt = 0;
       } else if (this.pending) {
         this.retryAt = retryDeadline(error);
+        this.unanswered = error instanceof Error && (error as Error & { status?: unknown }).status === undefined;
         await this.storage.write(this.pending, this.retryAt);
       }
       throw error;

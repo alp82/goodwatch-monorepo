@@ -30,6 +30,7 @@ import { adoptAccountRoom } from './account-access';
 import { authEpoch } from './account-flow';
 import { ACTIVITY_LIMITS } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey } from './keys';
+import { browserEvents, browserOffline } from './network';
 export { continuousKey } from './keys';
 /** Your rooms keeps one query per room; room snapshots update it directly. */
 export const homeRoomKey = (roomId: string) => ['home-room', roomId] as const;
@@ -324,6 +325,31 @@ export function useContinuousRoom(roomId: string) {
       channel.current = null;
     };
   }, [credential, roomId, cached, end, expired, authority]);
+  // Browsers: back online or back in front connects at once (the backoff timer kept growing while offline),
+  // and a saved action whose request never got an answer goes again right away.
+  const [offline, setOffline] = useState(() => browserOffline());
+  useEffect(() => {
+    if (!browserEvents()) return;
+    const resume = () => {
+      setOffline(browserOffline());
+      if (browserOffline() || terminalRef.current || expired() || AppState.currentState !== 'active') return;
+      channel.current?.resume();
+      if (queue.current.pending && queue.current.unanswered) {
+        queue.current.retryAt = 0;
+        setRetryAt(0);
+        void retryRef.current();
+      }
+    };
+    const away = () => setOffline(true);
+    window.addEventListener('online', resume);
+    window.addEventListener('focus', resume);
+    window.addEventListener('offline', away);
+    return () => {
+      window.removeEventListener('online', resume);
+      window.removeEventListener('focus', resume);
+      window.removeEventListener('offline', away);
+    };
+  }, [expired]);
   useEffect(() => {
     if (!activities.size) return;
     const next = Math.min(
@@ -511,6 +537,8 @@ export function useContinuousRoom(roomId: string) {
       }
     },
     connection,
+    /** The browser has no network: actions are saved and go when it's back. */
+    offline,
     /** An automatic or Refresh reconnect is running right now. */
     reconnecting: reconnect.attempting,
     /** Seconds until the next automatic reconnect; 0 when none is waiting. */

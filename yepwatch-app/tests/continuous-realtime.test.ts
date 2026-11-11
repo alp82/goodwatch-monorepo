@@ -501,3 +501,59 @@ test('the HTTP fallback honors a server Retry-After instead of reading every few
   h.client.stop();
   assert.equal(h.jobs.size, 0);
 });
+test('a refused authenticate frame reconnects with a fresh ticket; only the ticket answer can end access', async () => {
+  const errors: RoomFailure[] = [];
+  let refuse = false;
+  const h = harness({
+    authorityError: (e) => errors.push(e),
+    ticket: async () => {
+      if (refuse) throw new RoomFailure('unauthorized', 'Room credential required', 401);
+      return { ticket: 'fresh', expiresAt: Date.now() + 10000, websocketPath: '/api/yepwatch/v1/proposal/realtime' };
+    },
+  });
+  h.client.start();
+  await tick();
+  // The gateway's authentication timeout (the authenticate frame was held up offline) says "unauthorized".
+  h.sockets[0].open();
+  h.sockets[0].frame({ type: 'error', code: 'unauthorized' });
+  await tick();
+  assert.deepEqual(errors, [], 'a refused socket is not lost access');
+  assert.equal(h.statuses.at(-1), 'reconnecting');
+  h.run(1000);
+  await tick();
+  assert.equal(h.sockets.length, 2, 'reconnected with a fresh ticket');
+  refuse = true;
+  h.sockets[1].frame({ type: 'error', code: 'forbidden' });
+  h.run(2000);
+  await tick();
+  assert.equal(errors[0]?.code, 'unauthorized', 'the ticket endpoint decides');
+  assert.equal(h.statuses.at(-1), 'unavailable');
+  assert.equal(h.jobs.size, 0);
+});
+test('resume (back online, back in front) connects at once with a fresh backoff and keeps a live socket', async () => {
+  let failing = 3;
+  const h = harness({
+    ticket: async () => {
+      if (failing-- > 0) throw new RoomFailure('outcome_unknown', 'offline');
+      return { ticket: 'fresh', expiresAt: Date.now() + 10000, websocketPath: '/api/yepwatch/v1/proposal/realtime' };
+    },
+  });
+  h.client.start();
+  await tick();
+  h.run(1000);
+  await tick();
+  h.run(2000);
+  await tick();
+  assert.ok([...h.jobs.values()].some((j) => j.ms === 4000), 'offline attempts back off');
+  h.client.resume();
+  await tick();
+  assert.equal([...h.jobs.values()].some((j) => j.ms === 4000), false, 'the long wait is dropped');
+  assert.equal(h.sockets.length, 1, 'connected right away');
+  h.sockets[0].frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  assert.equal(h.statuses.at(-1), 'live');
+  h.client.resume();
+  await tick();
+  assert.equal(h.sockets[0].closed, false, 'a live socket is kept');
+  assert.equal(h.sockets.length, 1);
+  h.client.stop();
+});

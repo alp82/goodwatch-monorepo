@@ -120,6 +120,21 @@ export class ContinuousRealtime {
     const epoch = ++this.epoch;
     void this.connect(epoch);
   }
+  /**
+   * The device is back online (or the page came back to the front): connect now instead of waiting for
+   * the backoff timer, which kept growing while every attempt failed offline. A live channel is kept.
+   */
+  resume() {
+    if (!this.active) {
+      this.start();
+      return;
+    }
+    if (this.live) return;
+    this.failures = 0;
+    this.detach();
+    const epoch = ++this.epoch;
+    void this.connect(epoch);
+  }
   pause() {
     this.sendActivity('away');
     this.stop();
@@ -362,12 +377,9 @@ export class ContinuousRealtime {
               this.repair();
               this.retry(epoch);
             }
-          } else if (['unauthorized', 'forbidden', 'not_found'].includes(frame.code)) {
-            this.stop();
-            this.o.authorityError(
-              new RoomFailure(frame.code, 'Your room access could not be restored.')
-            );
-            this.o.status('unavailable');
+          // Any other refusal reconnects with a fresh ticket, and that HTTP answer decides access. The
+          // gateway also says "unauthorized" when the authenticate frame came late (a network that
+          // dropped right after the socket opened), which is not lost access.
           } else this.retry(epoch);
         }
       };
