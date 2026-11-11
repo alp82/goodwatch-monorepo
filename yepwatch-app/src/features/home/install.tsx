@@ -15,7 +15,7 @@ import { R, warm } from '../shell/tokens';
 export interface Store { platform: 'ios' | 'android'; title: string; note: string; url: string; svg: string }
 export const stores: readonly Store[] = [
   { platform: 'ios', title: 'iPhone', note: 'TestFlight', url: codes.ios.url, svg: codes.ios.svg },
-  { platform: 'android', title: 'Android', note: 'Download app', url: codes.android.url, svg: codes.android.svg },
+  { platform: 'android', title: 'Android', note: 'Join beta', url: codes.android.url, svg: codes.android.svg },
 ];
 /** Install offers belong to browsers only. */
 export const installable = Platform.OS === 'web';

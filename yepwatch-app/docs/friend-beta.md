@@ -1,12 +1,12 @@
 # YepWatch friend beta
 
-Send testers **https://yepwatch.com**. The home page has both install QR codes and browser create/join controls; old `/beta` links redirect there. Android friends can use a directly installable **APK** while Google verifies the Play developer account. Later Android testing moves to Google Play **internal testing**. iPhone uses **external TestFlight**; the public invitation is **https://testflight.apple.com/join/V2gzwSFA**. Neither needs USB or a running development server.
+Send testers **https://yepwatch.com**. The home page has both install QR codes and browser create/join controls; old `/beta` links redirect there. Android friends now join the active **Google Play closed test** through **https://yepwatch.com/android-test.html**: join the public tester group, opt in, then install using the same Google account. The older direct preview APK is a fallback and does not count toward closed testing. iPhone uses **external TestFlight**; the public invitation is **https://testflight.apple.com/join/V2gzwSFA**. Neither needs USB or a running development server.
 
 ## Owner setup — start here
 
 The owner has created the Expo project [@alperortac/yepwatch](https://expo.dev/accounts/alperortac/projects/yepwatch), ID `0772c2db-91d8-4862-80eb-1d816f243072`, and reports Play and Apple developer accounts ready. `app.json` records the public Expo owner/project for all build variants. Account creation does not sign this machine into EAS or configure store signing credentials.
 
-Build 15 adds the active-room home, secondary History, remembered names, the shared header/navigation, final decision review, and owner-controlled Start again. Tapping the final poster throws shared popcorn; everyone holding adds marquee lights. It also preserves GoodWatch sign-in across admission retries and keeps covered controls out of keyboard focus. See [the release record](../artifacts/releases/build-15.json) for exact build, deployment and TestFlight status. Google Play developer verification has not been confirmed in this release; Android friends continue to use the signed preview APK. Later Play submission needs the app record and an EAS Submit service-account key (or a manual AAB upload in Play Console).
+Build 15 adds the active-room home, secondary History, remembered names, the shared header/navigation, final decision review, and owner-controlled Start again. Tapping the final poster throws shared popcorn; everyone holding adds marquee lights. It also preserves GoodWatch sign-in across admission retries and keeps covered controls out of keyboard focus. See [the release record](../artifacts/releases/build-15.json) for exact build, deployment and TestFlight status. That build-15 record is historical. Google has since approved production build 17 for the active Alpha closed test; see [the current release status](public-store-release.md) and [tester invitation](../store/tester-invitation.md). Manual AAB upload was used without a service-account key.
 
 1. Create a free [Expo account](https://expo.dev/signup). Choose the account/organization that should own YepWatch.
 2. Open [Google Play Console](https://play.google.com/console). **Google Cloud Console is a different product.** If needed, register a Play developer account, pay its one-time US$25 fee and complete Google's identity/device verification. Create the YepWatch app for `com.yepwatch.app`.
@@ -31,7 +31,7 @@ Build 15 adds the active-room home, secondary History, remembered names, the sha
 - Before uploading, inspect the EAS archive: `npx eas-cli@latest build:inspect --platform android --profile beta --stage archive --output .expo/beta-archive`. Verify it includes the sibling `goodwatch-webapp/packages/yepwatch-contracts`, excludes credentials/local environment files/build artifacts, and installs with `npm ci --install-links`.
 - EAS reads `.easignore` at the Git repository root. That file limits uploads to this app and its sibling contract; the app-local ignore file alone does not protect a monorepo upload.
 - Finish the app icon, store privacy/support metadata and review contact information. Register the actual Play signing certificate in Android asset links and actual Apple team/app ID in the AASA file. Confirm the existing account issuer accepts the production app's callback. These require real account details, not placeholders.
-- The Apple association now uses the verified team `QKFZC8CC8J` and `com.yepwatch.app`, scoped to `/r/*`, in `public/.well-known/apple-app-site-association`. Verify the deployed JSON and a physical iPhone link before claiming Universal Links work. The Android association currently names only `com.yepwatch.preview` with its verified APK signing certificate. Add `com.yepwatch.app` later using the **Play app-signing** certificate; the EAS upload key is not a substitute.
+- The Apple association now uses the verified team `QKFZC8CC8J` and `com.yepwatch.app`, scoped to `/r/*`, in `public/.well-known/apple-app-site-association`. Verify the deployed JSON and a physical iPhone link before claiming Universal Links work. The Android association includes `com.yepwatch.preview` and `com.yepwatch.app` with their respective verified preview and **Play app-signing** certificates. Physical-device verification is still required; the EAS upload key is not a substitute.
 
 ```sh
 npx eas-cli@latest build --profile beta --platform android
@@ -40,9 +40,9 @@ npx eas-cli@latest build --profile beta --platform ios
 
 No account creation, cloud builds, purchase, upload, review or store invitation has been completed merely by checking in this configuration.
 
-## Android while Play verification is pending
+## Android preview APK fallback
 
-The home page links to the [Expo download page for preview build 16](https://expo.dev/accounts/alperortac/projects/yepwatch/builds/92acdd61-87f4-49ae-9c38-bea4881b5837). Open it on Android, tap Install, open the downloaded APK and allow installation from that browser if Android asks. It installs as **YepWatch Beta** without USB, Metro or an Expo account. The eventual Play app is a separate install; its local room credentials do not transfer automatically.
+The home page now links to the Play enrollment guide. The older [Expo download page for preview build 16](https://expo.dev/accounts/alperortac/projects/yepwatch/builds/92acdd61-87f4-49ae-9c38-bea4881b5837) remains a fallback. Open it on Android, tap Install, open the downloaded APK and allow installation from that browser if Android asks. It installs as **YepWatch Beta** without USB, Metro or an Expo account. The Play app is a separate install; its local room credentials do not transfer automatically.
 
 The preview profile uses EAS **local credentials** to preserve the existing `com.yepwatch.preview` signing identity. A private, git-ignored `credentials.json` points to the original preview keystore. Keep that keystore and its passwords backed up privately; never generate a replacement for an upgrade. Then build with:
 
@@ -54,7 +54,7 @@ EAS internal build links require the project's **Unauthenticated access to inter
 
 ## Invite friends
 
-**Android:** upload the AAB to Play's internal testing track. Add friends' Google-account email addresses (or a Google Group), complete the release, and copy the opt-in link. EAS submission is configured as a **draft** on the internal track:
+**Android:** share **https://yepwatch.com/android-test.html**. The approved Alpha closed test uses the public YepWatch Testers group; testers join, opt in and install with the same Google account. No manual email import is needed. For future binary uploads, EAS beta submission is configured as a **draft** on the internal track, so choose the intended track explicitly; uploading alone does not publish a closed-test release:
 
 ```sh
 npx eas-cli@latest submit --profile beta --platform android

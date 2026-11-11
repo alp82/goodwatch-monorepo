@@ -93,8 +93,8 @@
     "sha256": "ae0390a1cdba0725b528d38ca6cc64a4e872aa88893386b5220b59df0c3519c5",
     "bytes": 71949154,
     "playUploadPending": true,
-    "existingPlayBuild17ReviewPreserved": true,
-    "reason": "The existing Google submission is already in review; the compatible player fix is published via the production update channel. Bundle 18 is prepared for the next Play upload."
+    "reason": "Google approved bundle 17 and the Alpha closed test is active. The compatible player fix is published via the production update channel. Bundle 18 is prepared for the next Play upload.",
+    "existingPlayBuild17AvailableToSelectedTesters": true
   },
   "nativeUpdates": [
     {

@@ -1,15 +1,17 @@
 # YepWatch tester links
 
-The Android tester group is live under **hello@goodwatch.app**. Production bundle **1.0.0 (17)**, the English listing, eight Android screenshots and required declarations have been submitted for the **Closed testing - Alpha** track. Play Console shows **Changes in review**, after automated quick checks completed. Approval and tester installation have not yet been verified. Keep the pending wording until Google makes the release available.
+The Android tester group is live under **hello@goodwatch.app**. Google approved production bundle **1.0.0 (17)**, the English listing, eight Android screenshots and required declarations. **Closed testing - Alpha** is active and available to selected testers in all 178 configured country/region entries. The owner account opted in successfully, and the Google Play listing shows an enabled Install button and device availability. Physical installation remains to be tested.
 
-## Android invitation — pending Google approval
+## Android invitation — ready to share
 
 Help test YepWatch, the free app that helps friends agree on what to watch.
 
-The Android test is awaiting Google approval. You can join the tester group now; the opt-in and installation steps will become available once Google publishes the release:
+Join the Android beta: **https://yepwatch.com/android-test.html**
+
+Follow these three steps:
 
 1. Join the tester group: https://groups.google.com/g/yepwatch-testers
-2. After approval, opt in: https://play.google.com/apps/testing/com.yepwatch.app
+2. Opt in: https://play.google.com/apps/testing/com.yepwatch.app
 3. Install from Google Play: https://play.google.com/store/apps/details?id=com.yepwatch.app
 
 Use the same Google account for all three steps. Joining the group alone does not opt you into the test. If Play does not show the app immediately after enrollment, allow time for changes to take effect and try the opt-in link again.
@@ -30,12 +32,13 @@ https://testflight.apple.com/join/V2gzwSFA
 - Google generated regional content ratings from the catalog/trailers and private room interactions: Teen in North America, 16+ in Germany/Brazil, PEGI parental guidance and generic 12+. The developer target audience is 13+ without an in-app age gate.
 - Production Play signing certificate is deployed at https://yepwatch.com/.well-known/assetlinks.json, alongside the existing preview certificate. Physical installation/App Link verification remains pending.
 
-## Remaining activation checks
+## Verified activation and remaining device checks
 
-1. Wait for Google review. Automated quick checks have completed. Resolve any reported issue using the actual app behavior.
-2. Verify the approved Alpha release and all three links using one eligible tester Google account. First test links can take several hours after publication.
-3. Update the invitation wording and group description once installation works, then announce the links only within the owner's authorized channels.
-4. Run the closed test with at least **12 continuously opted-in testers for 14 days**, then apply for production access. The dashboard currently shows **0 opted-in testers**.
+1. Play Console confirms **Active**, **Available to selected testers**, release **1.0.0 (17) - closed test**, released on 11 November 2026 at 23:49 Console local time.
+2. **hello@goodwatch.app** completed Play opt-in and saw **You are a tester**. Following the download link showed YepWatch's real Play listing, an enabled **Install** button and **This app is available for your device**. No remote device installation was triggered.
+3. The website's Android button and QR code open the three-step guide. The existing iOS TestFlight destination is preserved. The invitation is ready for the owner to share; no tester invitations or group posts were sent.
+4. Complete a fresh physical Play install and the device checks in [friend-beta.md](../docs/friend-beta.md#first-session-35-friends), including invitation/App Links, sign-in return and trailers.
+5. Run the closed test with at least **12 continuously opted-in testers for 14 days**, then apply for production access. One owned account is verified enrolled; this is not a claim that Play Console's aggregate tester count has refreshed or that the production gate is satisfied.
 
 The direct beta APK uses com.yepwatch.preview; those installs do not enroll a person in the Play closed test. Do not promise reciprocal testing or contact other developers without the owner's instruction.
 

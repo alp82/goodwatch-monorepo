@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-11T22:41:47.190464+00:00",
+  "checkedAt": "2026-11-11T23:34:29.853407+00:00",
   "accountEmail": "hello@goodwatch.app",
   "developerAccountName": "GoodWatch",
   "developerAccountId": "8951486415791555357",
@@ -8,7 +8,7 @@
   "closedTrack": {
     "name": "Closed testing - Alpha",
     "id": "4698020847026606780",
-    "status": "in review",
+    "status": "active; available to selected testers",
     "releaseCount": 1,
     "optInLinkConfirmedByConsoleCopyControl": "https://play.google.com/apps/testing/com.yepwatch.app",
     "eligibleGoogleGroup": "yepwatch-testers@googlegroups.com",
@@ -18,7 +18,9 @@
     "eligibilitySavedAndReadBack": true,
     "availableCountryRegionEntries": 178,
     "feedbackEmail": "hello@goodwatch.app",
-    "testersOptedIn": 0
+    "verifiedOwnedAccountOptedIn": 1,
+    "consoleAggregateTesterCountFreshlyVerified": false,
+    "releasedAtConsoleLocal": "2026-11-11 23:49 Europe/Berlin"
   },
   "googleGroup": {
     "name": "YepWatch Testers",
@@ -60,7 +62,7 @@
     },
     "storeListing": {
       "locale": "en-US",
-      "state": "submitted for review",
+      "state": "published for closed testing",
       "textSource": "store/en-US.json",
       "androidScreenshots": 8,
       "screenshotOrder": [
@@ -147,15 +149,15 @@
     "https://developer.android.com/training/app-links/configure-assetlinks"
   ],
   "submission": {
-    "consoleState": "Changes in review",
+    "consoleState": "Published; available to selected testers",
     "quickChecksStillRunning": false,
     "changesSubmitted": 15,
     "managedPublishing": false,
-    "approved": false,
-    "closedTestInstallAvailabilityVerified": false,
+    "approved": true,
+    "closedTestInstallAvailabilityVerified": true,
     "productionAccess": "not yet eligible; Console requires 12 opted-in testers for 14 days",
     "quickChecksCompleted": true,
-    "consoleConfirmation": "Your changes are now in review."
+    "consoleConfirmation": "Active; Available to selected testers"
   },
   "appSigning": {
     "managedByPlay": true,
@@ -164,5 +166,20 @@
     "productionAssetlinksDeployed": true,
     "previewAssetlinksPreserved": true,
     "physicalPlayInstallLinkVerificationPending": true
+  },
+  "testerVerification": {
+    "accountEmail": "hello@goodwatch.app",
+    "optInConfirmation": "You are a tester",
+    "playListingTitle": "YepWatch - Apps on Google Play",
+    "installButtonEnabled": true,
+    "deviceAvailabilityText": "This app is available for your device",
+    "remoteDeviceInstallTriggered": false,
+    "physicalInstallVerified": false,
+    "sameAccountRequiredForGroupOptInAndPlayStore": true,
+    "canonicalOptInUrl": "https://play.google.com/apps/testing/com.yepwatch.app",
+    "canonicalInstallUrl": "https://play.google.com/store/apps/details?id=com.yepwatch.app",
+    "shareableGuideUrl": "https://yepwatch.com/android-test.html",
+    "websiteAndroidButtonAndQrTarget": "https://yepwatch.com/android-test.html",
+    "androidQrDecodedAndMatched": true
   }
 }

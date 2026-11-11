@@ -1,6 +1,6 @@
 # YepWatch public store release
 
-Status checked 2026-11-12 against App Store Connect, EAS, the deployed websites and fetched `origin/main`. The public App Store release is prepared but awaits owner declarations; Google build 17 is in closed-test review. English listing copy is in [store/en-US.json](../store/en-US.json).
+Status checked 2026-11-12 against App Store Connect, EAS, the deployed websites and fetched `origin/main`. The public App Store release is prepared but awaits owner declarations; Google build 17 is approved and available in the active Alpha closed test. English listing copy is in [store/en-US.json](../store/en-US.json).
 
 ## Verified release state
 
@@ -12,7 +12,7 @@ Status checked 2026-11-12 against App Store Connect, EAS, the deployed websites 
 | Apple public release | Draft `1.0.0`, `PREPARE_FOR_SUBMISSION`; VALID production build 18 attached, complete English copy and 20 processed gallery images freshly read back. Privacy published, Entertainment category and 13+ calculated rating saved; free pricing and availability configured. Content-rights confirmation blocks Add for Review |
 | Apple testing | Build `0.1.0 (16)` is valid and in external TestFlight testing; no live, in-review or pending-release public version |
 | Android credentials | EAS has one build credential record for the production identity; no Google service-account submission key assigned |
-| Google account/app | Verified owner `hello@goodwatch.app`, developer GoodWatch; bundle `com.yepwatch.app` version 17 accepted and submitted to Closed testing - Alpha. Production access requires the closed-test gate |
+| Google account/app | Verified owner `hello@goodwatch.app`, developer GoodWatch; bundle `com.yepwatch.app` version 17 approved and available in Closed testing - Alpha. Production access requires the closed-test gate |
 | iOS invitations | Deployed AASA names `QKFZC8CC8J.com.yepwatch.app` for `/r/*`; physical-device behavior still needs verification |
 | Android invitations | Deployed asset links include both `com.yepwatch.preview` and `com.yepwatch.app` with the certificate copied from Play App Signing. Physical Play-install verification remains pending |
 
@@ -79,7 +79,7 @@ The owner reports no plans to earn money from GoodWatch/YepWatch apart from acce
 
 Create a room as a guest, choose a country and services, add a viewing idea, then share the invitation with a second device/browser. Both people swipe Yep on the same title. Open Matches, propose it and agree from both participants. Check the confirmed title and its streaming links. Return to the home page and reopen the room/history. Repeat with the supplied review GoodWatch account to exercise saved services and account recovery. Keep the backend available throughout review.
 
-Once approved, release the store versions and verify their public pages from an ordinary store account. Only then replace TestFlight/APK installation links and QR codes on the website. Capture the approved version, store URLs, signing association and device verification results in a release record.
+Use the Android closed-test guide while production access is gated. Once public store releases are approved, verify their public pages from an ordinary store account before replacing the beta destinations with public store links. Capture the approved version, store URLs, signing association and device verification results in a release record.
 
 ## Primary references
 
@@ -91,7 +91,7 @@ Once approved, release the store versions and verify their public pages from an 
 
 ## Self-service tester enrollment
 
-The [Android invitation and activation checks](../store/tester-invitation.md) use a Google Group, followed by Play opt-in and installation links. The group exists under **hello@goodwatch.app**, permits public joining, and is saved as Alpha tester eligibility with all available countries/regions. Bundle 17, the listing and all required declarations were submitted; Publishing overview shows **Changes in review**, after Google quick checks completed. The install/opt-in links have not yet been verified as available. See [the enrollment record](../artifacts/releases/tester-enrollment-2026-11-11.json). No tester emails were imported, invitations sent or group posts published. The existing public TestFlight link remains available.
+The [Android invitation and activation checks](../store/tester-invitation.md) use a Google Group, followed by Play opt-in and installation links. The group exists under **hello@goodwatch.app**, permits public joining, and is saved as Alpha tester eligibility with all available countries/regions. Google approved bundle 17, the listing and all required declarations. The Alpha track is **Active** and **Available to selected testers**. The owner account completed opt-in and saw an enabled **Install** button and device availability on the actual Play listing. The website Android button and QR code now point to the shareable three-step guide at **https://yepwatch.com/android-test.html**. Physical installation remains unverified; the 12-tester, 14-day production-access gate remains outstanding. See [the enrollment record](../artifacts/releases/tester-enrollment-2026-11-11.json). No tester emails were imported, invitations sent or group posts published. The existing public TestFlight link remains available.
 
 Google Data safety includes the random room-allowance identifier, Expo's random installation identifier and failed-update/launch-error reports, account and room data, and optional YouTube player processing. The app does not use Android advertising ID; neither AD_ID permission is present in the production bundle. The [declaration rationale](../store/google-data-safety-notes.json) records all nine data types and service-provider distinctions. Expanded privacy text and both Android signing associations are deployed and read back from the public website. Matching privacy-copy OTA updates are published to production (both platforms), beta (iOS) and beta-preview (Android); runtime fingerprints match the existing binaries. [Privacy deployment verification](../artifacts/releases/privacy-disclosures-2026-11-11.json). Apple privacy disclosures are now verified and published for build 18; owner declarations still block its public submission.
 
@@ -99,7 +99,7 @@ Google Data safety includes the random room-allowance identifier, Expo's random 
 
 Build 18 embeds an explicit YouTube privacy-enhanced iframe, with the embedding origin bound in the player URL. The real YouTube API preserved the nocookie host and passed playback and pause verification. Existing error reporting and player controls still pass the app's 189 tests; typecheck, lint and CI pass. No native SDK or dependency changed. Compatible player updates are published to production, beta iOS and beta-preview Android. The public policy explains both the new player and older app versions that may still use the standard player.
 
-iOS EAS build `deb9968d-db24-4996-ad12-005ea7f20b7d` finished, binary-upload submission `b2526789-993e-49ff-b754-29f7e158ce6c` finished, and Apple build `c6b590be-1d13-40a7-aede-d9cfe0c8654c` is VALID and attached to version 1.0.0. Complete English copy and all 20 gallery images were freshly verified. Android EAS build `a7f123d8-e6ff-4537-9db6-10ff203d2239` also finished; its AAB is downloaded for the next Play upload. The already-submitted Google build 17 remains in review.
+iOS EAS build `deb9968d-db24-4996-ad12-005ea7f20b7d` finished, binary-upload submission `b2526789-993e-49ff-b754-29f7e158ce6c` finished, and Apple build `c6b590be-1d13-40a7-aede-d9cfe0c8654c` is VALID and attached to version 1.0.0. Complete English copy and all 20 gallery images were freshly verified. Android EAS build `a7f123d8-e6ff-4537-9db6-10ff203d2239` also finished; its AAB is downloaded for the next Play upload. Google approved build 17, which remains available on the active Alpha track; bundle 18 is retained for a subsequent update.
 
 Apple's age questionnaire calculates 13+ in 172 regions, 16+ in Vietnam/Brazil, and 12+ in Korea; older operating systems show global 12+ with regional exceptions. There is no rating override or in-app age gate. The questionnaire considers catalog summaries/posters and brief trailers, not the full movies. Private invited-room ideas are declared as direct communication; there is no broad public UGC feed or social-media feature. The Entertainment category, zero pricing in all currencies and availability request for all 175 regions are saved; regional restrictions still apply.
 
