@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-11-11T19:44:08.070674+00:00",
+  "accountEmail": "hello@goodwatch.app",
+  "developerAccountName": "GoodWatch",
+  "developerAccountId": "8951486415791555357",
+  "appId": "4974960161260130003",
+  "packageName": "com.yepwatch.app",
+  "closedTrack": {
+    "name": "Closed testing - Alpha",
+    "id": "4698020847026606780",
+    "status": "inactive",
+    "releaseCount": 0,
+    "optInLinkConfirmedByConsoleCopyControl": "https://play.google.com/apps/testing/com.yepwatch.app",
+    "eligibleGoogleGroup": "pending creation; not saved"
+  },
+  "googleGroup": {
+    "name": "YepWatch Testers",
+    "email": "yepwatch-testers@googlegroups.com",
+    "creatorAccount": "hello@goodwatch.app",
+    "status": "CAPTCHA required",
+    "anyoneCanJoin": true,
+    "anyoneCanDiscover": true,
+    "posting": "managers",
+    "memberList": "managers",
+    "testerEmailsAdded": 0,
+    "invitationsSent": 0
+  },
+  "playSetup": {
+    "privacyPolicy": {
+      "url": "https://yepwatch.com/privacy",
+      "saveAcknowledged": true
+    },
+    "ads": {
+      "answer": "yes",
+      "reason": "Existing native YouTube trailer embeds can serve ads controlled by YouTube/video owners."
+    },
+    "governmentApp": "no",
+    "healthFeatures": "none",
+    "financialFeatures": {
+      "answer": "none",
+      "saveRequested": true,
+      "freshReadbackPending": true
+    },
+    "category": {
+      "value": "Entertainment",
+      "saveAcknowledged": true
+    },
+    "contactDetails": "not yet entered; editor opened before Play tab closed",
+    "storeListing": "not yet entered",
+    "reviewAccess": "pending",
+    "contentRating": "pending",
+    "targetAudience": "pending",
+    "dataSafety": "pending"
+  },
+  "uploadedAab": false,
+  "submittedForReview": false,
+  "sources": [
+    "https://support.google.com/googleplay/android-developer/answer/9845334",
+    "https://support.google.com/googleplay/android-developer/answer/9859455",
+    "https://support.google.com/youtube/answer/132596"
+  ]
+}
