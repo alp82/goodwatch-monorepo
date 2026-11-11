@@ -1,0 +1,12 @@
+appId: com.yepwatch.app
+---
+# One pass through the real shuffled bag of eleven looks, without fixture overrides.
+- repeat:
+    times: 6
+    commands:
+      - tapOn:
+          text: Nope
+          waitToSettleTimeoutMs: 1500
+      - tapOn:
+          text: Yep
+          waitToSettleTimeoutMs: 1500

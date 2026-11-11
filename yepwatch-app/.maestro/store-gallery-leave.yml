@@ -1,0 +1,23 @@
+appId: com.yepwatch.app
+---
+- openLink: ${ROOM_SETTINGS_URL}
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    text: Open
+    optional: true
+- scrollUntilVisible:
+    element:
+      text: Leave room
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    text: Leave room
+    waitToSettleTimeoutMs: 1500
+- scrollUntilVisible:
+    element:
+      text: Leave
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    text: Leave
+    waitToSettleTimeoutMs: 1500

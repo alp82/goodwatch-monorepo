@@ -58,6 +58,10 @@
       "extends": "store-simulator",
       "ios": { "simulator": true, "config": "capture-existing.yml" }
     },
+    "store-capture-gallery": {
+      "extends": "store-capture-existing",
+      "ios": { "simulator": true, "config": "capture-gallery.yml" }
+    },
     "beta": {
       "extends": "production",
       "env": {

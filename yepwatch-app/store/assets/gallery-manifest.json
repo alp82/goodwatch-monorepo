@@ -1,0 +1,376 @@
+{
+  "capturedAt": "2026-11-11",
+  "fixturesEnabled": false,
+  "personalAccountsUsed": false,
+  "iosSimulatorBuildId": "7f5a5b83-0a97-4efe-b1f1-1ae2d6ec53ec",
+  "iosCaptureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329",
+  "iosApp": "com.yepwatch.app 1.0.0 (17)",
+  "androidRuntime": "Native development runtime with current app source, isolated read-only emulator",
+  "transformations": "Native PNGs copied unchanged; reaction PNGs decoded at original dimensions from native recordings, without resizing, cropping or retouching.",
+  "captureResults": [
+    {
+      "family": "iphone-medium",
+      "device": "iPhone 17 Pro",
+      "runtime": "iOS 27.0",
+      "passed": true,
+      "fixturesEnabled": false
+    },
+    {
+      "family": "iphone-large",
+      "device": "iPhone 17 Pro Max",
+      "runtime": "iOS 27.0",
+      "passed": true,
+      "fixturesEnabled": false
+    },
+    {
+      "family": "ipad",
+      "device": "iPad Pro 13-inch (M5)",
+      "runtime": "iOS 27.0",
+      "passed": true,
+      "fixturesEnabled": false
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "android/gallery-01-swipe-together.png",
+      "source": "01-voting.png",
+      "sourceSha256": "66cbabb80071af41e854b6286773789ba7cfe4c8e5af000ae6893583e8aad8d7",
+      "timeSeconds": null,
+      "sha256": "66cbabb80071af41e854b6286773789ba7cfe4c8e5af000ae6893583e8aad8d7",
+      "nativeDimensions": [
+        1080,
+        2400
+      ]
+    },
+    {
+      "file": "android/gallery-02-yep-stamp.png",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "7e0bf75fa6ef9414366db8c6d331b463bfa788f97f0557f168cd2ff0be7ef9ba",
+      "timeSeconds": 4.2,
+      "sha256": "496ed03ac9e1293600076a821763534b45d3c66d3311af78c001c45d6192d21f",
+      "nativeDimensions": [
+        1080,
+        2400
+      ]
+    },
+    {
+      "file": "android/gallery-03-nope-giant.png",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "7e0bf75fa6ef9414366db8c6d331b463bfa788f97f0557f168cd2ff0be7ef9ba",
+      "timeSeconds": 10.9,
+      "sha256": "21d004141edb4eb3897c850c6f1a17dc384a83865b1750ab1059696ed07a4078",
+      "nativeDimensions": [
+        1080,
+        2400
+      ]
+    },
+    {
+      "file": "android/gallery-04-yep-wall.png",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "7e0bf75fa6ef9414366db8c6d331b463bfa788f97f0557f168cd2ff0be7ef9ba",
+      "timeSeconds": 20.9,
+      "sha256": "a1005434a9dd78fcc76fb2cff9f89ba3ac2a3ad49b2ee6232a22b3486d80d7fb",
+      "nativeDimensions": [
+        1080,
+        2400
+      ]
+    },
+    {
+      "file": "android/gallery-05-nope-echo.png",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "7e0bf75fa6ef9414366db8c6d331b463bfa788f97f0557f168cd2ff0be7ef9ba",
+      "timeSeconds": 15.0,
+      "sha256": "33b70f9cf3d7a4788a14c45b341f7fe698dbfdef7c5454238aed0c862a445303",
+      "nativeDimensions": [
+        1080,
+        2400
+      ]
+    },
+    {
+      "file": "android/gallery-06-its-a-match.png",
+      "source": "match-effect.mp4",
+      "sourceSha256": "f25ed61a0dd08de43f6204a0b5ca987d105781bbf942671eb0e4a164206f9602",
+      "timeSeconds": 4.9,
+      "sha256": "3b22cdc95940ceef244fbca68c881ff88f480acb5472989c80a6533c89a976b5",
+      "nativeDimensions": [
+        1080,
+        2400
+      ]
+    },
+    {
+      "file": "android/gallery-07-shared-matches.png",
+      "source": "06-shared-matches.png",
+      "captureRun": "native-android-public-guest-2026-11-11T16:37Z",
+      "sourceSha256": "ee04812bbaa7bc1193180c09cfdacedfd9a36de43478ed53c0b6e158fb50bdb2",
+      "sha256": "ee04812bbaa7bc1193180c09cfdacedfd9a36de43478ed53c0b6e158fb50bdb2",
+      "nativeDimensions": [
+        1080,
+        2400
+      ]
+    },
+    {
+      "file": "android/gallery-08-tonights-pick.png",
+      "source": "07-tonights-pick.png",
+      "captureRun": "native-android-public-guest-2026-11-11T16:37Z",
+      "sourceSha256": "5a9da471dc7f4077ce9d2253b14762da00694cd38b1369442d5b4620957c348b",
+      "sha256": "5a9da471dc7f4077ce9d2253b14762da00694cd38b1369442d5b4620957c348b",
+      "nativeDimensions": [
+        1080,
+        2400
+      ]
+    },
+    {
+      "file": "ios-iphone-medium/gallery-01-swipe-together.png",
+      "source": "01-voting.png",
+      "sha256": "882ffca2b69af2dacd3ec6a7bfc26d0fb6d590c36314920b886de856e1775c29",
+      "candidate": "01-voting.png",
+      "nativeDimensions": [
+        1206,
+        2622
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone-medium/gallery-02-yep-reaction.png",
+      "label": "YEP",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "ab130155a881363e541693d9a6c059aa5bf82eaa9500f036deae65034dc54e5d",
+      "timeSeconds": 55.0,
+      "sha256": "9557bd803e550f115200126e625a9a0b6ca94baca5182dbeb24d5b6588597682",
+      "candidate": "candidate-yep-1.png",
+      "nativeDimensions": [
+        1206,
+        2622
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone-medium/gallery-03-nope-reaction.png",
+      "label": "NOPE",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "ab130155a881363e541693d9a6c059aa5bf82eaa9500f036deae65034dc54e5d",
+      "timeSeconds": 76.83333333333333,
+      "sha256": "2d76006ed950d11deef1c0b5062f8393985215b60f98efb1b2e927fa45db14a4",
+      "candidate": "candidate-nope-1.png",
+      "nativeDimensions": [
+        1206,
+        2622
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone-medium/gallery-04-nope-reaction.png",
+      "label": "NOPE",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "ab130155a881363e541693d9a6c059aa5bf82eaa9500f036deae65034dc54e5d",
+      "timeSeconds": 18.166666666666668,
+      "sha256": "5c5e4da97a6ca88d03a87c3c468233c8dd09e39a109f8f87571f4b12e0b25f2f",
+      "candidate": "candidate-nope-2.png",
+      "nativeDimensions": [
+        1206,
+        2622
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone-medium/gallery-05-nope-reaction.png",
+      "label": "NOPE",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "ab130155a881363e541693d9a6c059aa5bf82eaa9500f036deae65034dc54e5d",
+      "timeSeconds": 47.666666666666664,
+      "sha256": "b1373dbf8200a9b61310e7f4048601ad4846804b5b53f5d0eef2fc2c59474212",
+      "candidate": "candidate-nope-3.png",
+      "nativeDimensions": [
+        1206,
+        2622
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone-medium/gallery-06-its-a-match.png",
+      "label": "MATCH",
+      "source": "match-effect.mp4",
+      "sourceSha256": "0d1666fef32d6c84ba0b1140b1dde060679ae674eef261958ece2d743549399c",
+      "timeSeconds": 16.5,
+      "sha256": "40e57cbb316430c3fc92130e414511ce37cffd93dfe338fcc85ee5716a17b70b",
+      "candidate": "candidate-match-1.png",
+      "nativeDimensions": [
+        1206,
+        2622
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone-medium/gallery-07-shared-matches.png",
+      "source": "06-shared-matches.png",
+      "sha256": "cff19126a680281d4725d9422d749ea29f1518b69dafdab89a88e428ccc3c136",
+      "candidate": "06-shared-matches.png",
+      "nativeDimensions": [
+        1206,
+        2622
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone-medium/gallery-08-tonights-pick.png",
+      "source": "07-tonights-pick.png",
+      "sha256": "d88adaa6e2f0e540233f610d016a430733f8e2f7dc7d8ddb2dcc0b727a64e975",
+      "candidate": "07-tonights-pick.png",
+      "nativeDimensions": [
+        1206,
+        2622
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone/gallery-01-swipe-together.png",
+      "source": "01-voting.png",
+      "sha256": "5a0ec1dfc6e21fc3910ae194ef86d04f642d0ac7aee860329cd89241be5ed0b4",
+      "candidate": "01-voting.png",
+      "nativeDimensions": [
+        1320,
+        2868
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone/gallery-02-nope-reaction.png",
+      "label": "NOPE",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "0f731f94bbaff8b2659cde343dcecc01fac799889e2811e745a9939d31e919e7",
+      "timeSeconds": 75.66666666666667,
+      "sha256": "48d6bf8715c29ccdc808a7e17a457d81c97801c9c7879bf3f9e9a75f353306f6",
+      "candidate": "candidate-nope-1.png",
+      "nativeDimensions": [
+        1320,
+        2868
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone/gallery-03-nope-reaction.png",
+      "label": "NOPE",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "0f731f94bbaff8b2659cde343dcecc01fac799889e2811e745a9939d31e919e7",
+      "timeSeconds": 15.333333333333334,
+      "sha256": "421972d63c4c4f8067443b25e1537fdbc3ea7163bac6a9bf516a3446f8513ab5",
+      "candidate": "candidate-nope-2.png",
+      "nativeDimensions": [
+        1320,
+        2868
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone/gallery-04-nope-reaction.png",
+      "label": "NOPE",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "0f731f94bbaff8b2659cde343dcecc01fac799889e2811e745a9939d31e919e7",
+      "timeSeconds": 45.0,
+      "sha256": "f19dbc2db898910075dfe1a4d6ef71fa3b2c04132615527174d1115e3b721d00",
+      "candidate": "candidate-nope-3.png",
+      "nativeDimensions": [
+        1320,
+        2868
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone/gallery-07-shared-matches.png",
+      "source": "06-shared-matches.png",
+      "sha256": "79e68829e858a3a3329851063704771defe6983d1c2e4f9bcbbdf775adb8e0da",
+      "candidate": "06-shared-matches.png",
+      "nativeDimensions": [
+        1320,
+        2868
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-iphone/gallery-08-tonights-pick.png",
+      "source": "07-tonights-pick.png",
+      "sha256": "78f9100cadbf19be5588e340f63d5df3bcae94c1b9a10def402c666971facd95",
+      "candidate": "07-tonights-pick.png",
+      "nativeDimensions": [
+        1320,
+        2868
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-ipad/gallery-01-swipe-together.png",
+      "source": "01-voting.png",
+      "sha256": "7aa7fa4116149c398164ca3cb33e2aa0ad9dd555679afb1cf979ee1bee6b926b",
+      "candidate": "01-voting.png",
+      "nativeDimensions": [
+        2064,
+        2752
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-ipad/gallery-02-yep-reaction.png",
+      "label": "YEP",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "08d7f49a906cb27ee12fbc43237ce4bd8e9bdeb8f18158e8ea712e3dbe829426",
+      "timeSeconds": 85.0,
+      "sha256": "5e0084b716b54ce1bf8076901b0e974203ea1ffcca27e9b5c18b9b14a7904693",
+      "candidate": "candidate-yep-1.png",
+      "nativeDimensions": [
+        2064,
+        2752
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-ipad/gallery-03-yep-reaction.png",
+      "label": "YEP",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "08d7f49a906cb27ee12fbc43237ce4bd8e9bdeb8f18158e8ea712e3dbe829426",
+      "timeSeconds": 54.333333333333336,
+      "sha256": "0bdad4bef69efc19b5547389530b91887ea61cb5a4a8388b0aaca36620cb8371",
+      "candidate": "candidate-yep-2.png",
+      "nativeDimensions": [
+        2064,
+        2752
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-ipad/gallery-04-yep-reaction.png",
+      "label": "YEP",
+      "source": "voting-effects.mp4",
+      "sourceSha256": "08d7f49a906cb27ee12fbc43237ce4bd8e9bdeb8f18158e8ea712e3dbe829426",
+      "timeSeconds": 39.5,
+      "sha256": "5f3a9b3ee7dfb69f5ab778f5a3556e6704ae280bd5d8512fafb199969343d2ee",
+      "candidate": "candidate-yep-3.png",
+      "nativeDimensions": [
+        2064,
+        2752
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-ipad/gallery-07-shared-matches.png",
+      "source": "06-shared-matches.png",
+      "sha256": "96d33321ddbeb7cdfa02a7dcc96e25b81ee375ab5884a8539971beac263fc514",
+      "candidate": "06-shared-matches.png",
+      "nativeDimensions": [
+        2064,
+        2752
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    },
+    {
+      "file": "ios-ipad/gallery-08-tonights-pick.png",
+      "source": "07-tonights-pick.png",
+      "sha256": "1a9b491aed2d47fb25c6235fec025c9bbcef6620fed8e3a02d5670e3a7c3f114",
+      "candidate": "07-tonights-pick.png",
+      "nativeDimensions": [
+        2064,
+        2752
+      ],
+      "captureBuildId": "ef7a29be-65b6-43fe-9cff-b302992fb329"
+    }
+  ]
+}

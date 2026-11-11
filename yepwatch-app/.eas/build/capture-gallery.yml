@@ -1,0 +1,21 @@
+build:
+  name: Capture native Yep Nope gallery
+  steps:
+    - eas/checkout
+    - run:
+        command: |
+          mkdir -p .expo/store-simulator .expo/store-gallery
+          curl --fail --location https://expo.dev/artifacts/eas/NWeRyF2Hf7IxqcU5KHD5unquBHkknL4nm-Hy2d8OUlk.tar.gz --output .expo/store-simulator.tar.gz
+          tar -xzf .expo/store-simulator.tar.gz -C .expo/store-simulator
+    - eas/install_maestro
+    - run:
+        command: |
+          command -v ffmpeg >/dev/null || brew install ffmpeg
+          command -v tesseract >/dev/null || brew install tesseract
+    - run:
+        command: python3 scripts/capture-store-gallery.py
+    - eas/upload_artifact:
+        if: ${ always() }
+        inputs:
+          type: build-artifact
+          path: '**/.expo/store-gallery-export/**/*'

@@ -1,0 +1,42 @@
+appId: com.yepwatch.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: New room
+    timeout: 90000
+- openLink: ${ROOM_URL}
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    text: Open
+    optional: true
+- extendedWaitUntil:
+    visible: Your name
+    timeout: 45000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    text: '(?-i)Your name'
+- inputText: Alex
+- hideKeyboard
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    text: Join
+    enabled: true
+- extendedWaitUntil:
+    visible: Your services
+    timeout: 45000
+- tapOn:
+    text: Netflix
+    waitToSettleTimeoutMs: 1500
+- tapOn:
+    text: Prime Video
+    waitToSettleTimeoutMs: 1500
+- tapOn:
+    text: 'Disney\+'
+    waitToSettleTimeoutMs: 1500
+- tapOn:
+    text: Done
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible: Yep
+    timeout: 180000

@@ -20,16 +20,16 @@
   ],
   "graphs": [
     {
-      "folder": ".expo/exports/hybrid-r2",
-      "sourceMaps": 11,
-      "modules": 1804,
+      "folder": ".expo/gallery-web",
+      "sourceMaps": 22,
+      "modules": 1196,
       "sharedContractPresent": true,
       "webappOrServerCodePresent": false
     },
     {
-      "folder": ".expo/exports/hybrid-native-r2",
+      "folder": ".expo/gallery-native",
       "sourceMaps": 2,
-      "modules": 2946,
+      "modules": 3282,
       "sharedContractPresent": true,
       "webappOrServerCodePresent": false
     }

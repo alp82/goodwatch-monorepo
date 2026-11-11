@@ -1,0 +1,8 @@
+appId: com.yepwatch.app
+---
+- tapOn:
+    text: '[1-9][0-9]* matches?'
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible: Propose this
+    timeout: 30000
