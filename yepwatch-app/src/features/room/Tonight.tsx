@@ -18,7 +18,7 @@ import { gwScore, sourceScores } from '../glow/score-format';
 import { ScorePill, SourceChips } from '../glow/scores';
 import { CLAPPER_HEIGHT, FilmReveal } from '../glow/Reveal';
 import { goodwatchTitleUrl, roomWatchLinks } from '../glow/watch-links';
-import { GText, Icon, Press, glow, native } from '../glow/theme';
+import { GText, Icon, Press, glow, grow, native } from '../glow/theme';
 import { FaceStack } from '../shell/parts';
 import { useLayout } from '../shell/layout';
 import { useBackAction } from '../shell/sheet-back';
@@ -92,7 +92,7 @@ export function Tonight() {
     </Link>
   );
   const again = view.isHost
-    ? <Press label="Start again" disabled={disabled} onPress={() => void cmd.restart()} style={{ minHeight: 40, alignSelf: wide ? 'flex-start' : 'center' }}><GText bold size={z(15)} color={glow.muted}>Start again</GText></Press>
+    ? <Press label="Start again" disabled={disabled} onPress={() => void cmd.restart()} style={{ ...grow(40), alignSelf: wide ? 'flex-start' : 'center' }}><GText bold size={z(15)} color={glow.muted}>Start again</GText></Press>
     : <View style={{ minHeight: 40, justifyContent: 'center' }}><GText size={z(13)} color={glow.muted} style={{ textAlign: wide ? 'left' : 'center' }}>{`${view.hostName || 'The host'} can start again`}</GText></View>;
   const pw = wide ? Math.min(z(400), (height - header - z(96) - CLAPPER_HEIGHT) / 1.5, max * 0.4) : Math.min(phone ? 230 : 300, max * 0.62);
   const titleSize = wide ? z(64) : 34;

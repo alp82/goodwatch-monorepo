@@ -3,7 +3,7 @@ import { Animated, Easing, Platform, TextInput, View, type TextStyle } from 'rea
 import { useReducedMotion } from '../../components/ui';
 import { useLayout } from '../shell/layout';
 import { warm } from '../shell/tokens';
-import { GText, Icon, Press, glow, native } from '../glow/theme';
+import { GText, Icon, Press, glow, grow, native } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
 import { CHAR_EM, webField } from './parts';
 import { Actions, Button, Screen, TextLink, usePinnedActions } from './ui';
@@ -67,8 +67,8 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
   const chip = (preset: string) => {
     const on = text.toLowerCase() === preset;
     return (
-      <Press key={preset} label={preset} selected={on} disabled={saving} onPress={() => change(on ? '' : preset)}
-        style={{ minHeight: z(44), paddingHorizontal: z(17), borderRadius: 14, flexDirection: 'row', gap: 7, backgroundColor: on ? warm.amberSoft : '#ffffff07', borderWidth: 1, borderColor: on ? glow.amber : warm.line }}>
+      <Press key={preset} label={preset} selected={on} disabled={saving} onPress={() => change(on ? '' : preset)} style={{ ...grow(z(44)), alignItems: 'stretch' }}
+        visual={{ minHeight: z(44), paddingHorizontal: z(17), borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: on ? warm.amberSoft : '#ffffff07', borderWidth: 1, borderColor: on ? glow.amber : warm.line }}>
         {on ? <Icon name="check" size={z(15)} color={glow.amber} /> : null}
         <GText size={phone ? 15 : z(17)} bold={on} color={on ? glow.amber : glow.soft}>{preset}</GText>
       </Press>

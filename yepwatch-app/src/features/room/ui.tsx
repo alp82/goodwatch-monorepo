@@ -16,7 +16,7 @@ import { useLayout } from '../shell/layout';
 import { useSheetsHoldNavigation } from '../shell/sheet-back';
 import { closeTopSheet, useSheetOpen } from '../shell/sheet-stack';
 import { warm } from '../shell/tokens';
-import { GText, Press, glow } from '../glow/theme';
+import { GText, Press, glow, grow } from '../glow/theme';
 import { useOptionalRoom } from './RoomProvider';
 import type { Kind } from './model';
 import { rankServices, type ServiceChoice } from './services';
@@ -88,7 +88,7 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   return (
     <AppFrame testID={testID} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet ?? roomSheet} backdrop={backdrop} width={width} gap={scrollGap} noteTop={noteTop}
       header={{ back, pill: pill === undefined ? derived : pill, me: me ?? (view ? { name: view.me.nickname || null, member: view.member } : undefined), onProfile }}
-      rooms={rooms ?? (current ? { current } : undefined)}
+      rooms={rooms ?? (room ? { current, actions: { open: room.openRoom } } : undefined)}
       footer={footer} footerPlacement={footerPlacement}>
       {right ? <View testID="screen-bar" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>{right}</View> : null}
       {children}
@@ -154,9 +154,8 @@ export function Glyph({ name, size = 18, color = glow.soft }: { name: keyof type
   );
 }
 
-/** A quiet text action. It takes 32 px in the layout; its target reaches 48 px (8 px over the neighbors). */
 export function TextLink({ label, onPress, color = glow.amber, disabled }: { label: string; onPress: () => void; color?: string; disabled?: boolean }) {
-  return <Press label={label} onPress={onPress} disabled={disabled} style={{ alignSelf: 'flex-start', minHeight: 48, minWidth: 48, marginVertical: -8 }}><GText size={T.small} bold color={color}>{label}</GText></Press>;
+  return <Press label={label} onPress={onPress} disabled={disabled} style={{ alignSelf: 'flex-start', ...grow(32) }}><GText size={T.small} bold color={color}>{label}</GText></Press>;
 }
 /** One quiet message where something else would be: errors, connection, saved actions. */
 export function Note({ children, action, busy = false }: { children: ReactNode; action?: { label: string; onPress: () => void; disabled?: boolean }; busy?: boolean }) {
@@ -164,7 +163,7 @@ export function Note({ children, action, busy = false }: { children: ReactNode; 
     <View accessibilityLiveRegion="polite" aria-busy={busy} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: '#201c13' }}>
       {busy ? <ActivityIndicator testID="note-spinner" size="small" color={glow.amber} /> : null}
       <GText size={12} lines={2} style={{ flex: 1 }}>{children}</GText>
-      {action ? <Press label={action.label} onPress={action.onPress} disabled={action.disabled} style={{ minHeight: 32 }}><GText size={12} bold>{action.label}</GText></Press> : null}
+      {action ? <Press label={action.label} onPress={action.onPress} disabled={action.disabled} style={grow(32)}><GText size={12} bold>{action.label}</GText></Press> : null}
     </View>
   );
 }
@@ -172,9 +171,12 @@ export function Note({ children, action, busy = false }: { children: ReactNode; 
 /** Round switch. Disabled switches stay visible (the host decides) and are announced as disabled. */
 export function Switch({ on, label, onPress, disabled = false }: { on: boolean; label: string; onPress: () => void; disabled?: boolean }) {
   return (
+    // The track stays 48 × 28; the press area around it is the full 48 × 48 touch target.
     <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: on, disabled }} aria-checked={on} aria-disabled={disabled} disabled={disabled} onPress={onPress}
-      style={{ width: 48, height: 28, borderRadius: 14, padding: 3, backgroundColor: on ? glow.amber : '#ffffff26', alignItems: on ? 'flex-end' : 'flex-start', opacity: disabled ? 0.45 : 1, cursor: disabled ? 'default' : 'pointer' } as ViewStyle}>
-      <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: on ? '#201400' : glow.soft }} />
+      style={{ ...grow(28, 48), justifyContent: 'center', opacity: disabled ? 0.45 : 1, cursor: disabled ? 'default' : 'pointer' } as ViewStyle}>
+      <View style={{ width: 48, height: 28, borderRadius: 14, padding: 3, backgroundColor: on ? glow.amber : '#ffffff26', alignItems: on ? 'flex-end' : 'flex-start' }}>
+        <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: on ? '#201400' : glow.soft }} />
+      </View>
     </Pressable>
   );
 }

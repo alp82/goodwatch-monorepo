@@ -4,6 +4,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  View,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
@@ -154,6 +155,7 @@ export function Press({
   selected,
   hint,
   repeatable = false,
+  visual,
 }: {
   label: string;
   onPress: () => void;
@@ -167,6 +169,11 @@ export function Press({
   hint?: string;
   /** Each tap of a quick double tap counts on its own (Yep and Nope: fast voting answers card after card). */
   repeatable?: boolean;
+  /**
+   * The control's look when it's smaller than its touch target: the press area (`style`) stays at
+   * least 48 × 48 and transparent, and this box inside it carries the background, border and content.
+   */
+  visual?: StyleProp<ViewStyle>;
 }) {
   return (
     <Pressable
@@ -187,9 +194,23 @@ export function Press({
         pressed && { opacity: 0.78 },
       ]}
     >
-      {children}
+      {visual ? <View style={visual}>{children}</View> : children}
     </Pressable>
   );
+}
+
+/** The smallest touch target (WCAG 2.2 target size, Android's 48 dp). */
+export const TARGET = 48;
+/**
+ * A press area of at least the touch target around a smaller look (pair it with Press `visual`).
+ * It takes its real size in the layout: Android neither reports nor reliably delivers touches outside
+ * a parent's bounds, so negative margins would only shrink it back. With only `height` it grows vertically.
+ */
+export function grow(height: number, width?: number): ViewStyle {
+  const h = Math.max(TARGET, height);
+  if (width === undefined) return { minHeight: h };
+  const w = Math.max(TARGET, width);
+  return { minHeight: h, minWidth: w, width: w, height: h };
 }
 export function Wordmark({ size = 24 }: { size?: number }) {
   return (
@@ -204,7 +225,7 @@ export function Wordmark({ size = 24 }: { size?: number }) {
 export const s = StyleSheet.create({
   statusPage: { flex: 1, backgroundColor: glow.bg, justifyContent: 'center', padding: 24 },
   statusContent: { width: '100%', maxWidth: 520, alignSelf: 'center', gap: 22 },
-  press: { alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44 },
+  press: { alignItems: 'center', justifyContent: 'center', minWidth: 48, minHeight: 48 },
   absolute: { position: 'absolute', left: 0, top: 0, bottom: 0, right: 0 },
   row: { flexDirection: 'row', gap: 10, alignItems: 'center' },
 });

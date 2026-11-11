@@ -33,6 +33,13 @@ export function closeTopSheet(): boolean {
   return true;
 }
 
+/** Closes every open sheet, top first; false when none was open. */
+export function closeAllSheets(): boolean {
+  const open = [...stack].reverse();
+  for (const entry of open) entry.close();
+  return open.length > 0;
+}
+
 /** A sheet covers the screen in front. */
 export function useSheetOpen(): boolean {
   return useSyncExternalStore(subscribe, () => stack.length > 0, () => false);

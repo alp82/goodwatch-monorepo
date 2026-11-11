@@ -6,7 +6,7 @@ import { shareInvitation } from '../../core/share-invitation';
 import { FaceStack } from '../shell/parts';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
-import { GText, Icon, Press, glow } from '../glow/theme';
+import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import type { Kind } from './model';
 import { openPage } from './nav';
 import { useRoom } from './RoomProvider';
@@ -88,7 +88,7 @@ export function IdeaStack() {
         );
       })}
       {view.canAddIdea && (
-        <Press label={addLabel} onPress={() => openPage(id, 'mood', { idea: 'new' })} style={{ alignSelf: 'flex-start', minHeight: z(44), flexDirection: 'row', gap: 8, paddingRight: 8 }}>
+        <Press label={addLabel} onPress={() => openPage(id, 'mood', { idea: 'new' })} style={{ alignSelf: 'flex-start', ...grow(z(44)), flexDirection: 'row', gap: 8, paddingRight: 8 }}>
           <Glyph name="plus" size={z(18)} color={glow.amber} /><GText bold size={z(17)} color={glow.amber}>{addLabel}</GText>
         </Press>
       )}
@@ -158,8 +158,10 @@ export function Chip({ label, onPress, children, warn = false, action }: { label
 
 /** A row in a sheet: content, then a switch or a chevron. */
 export function SettingRow({ label, onPress, children, right }: { label: string; onPress?: () => void; children: ReactNode; right?: ReactNode }) {
-  const inner = <>{children}{right ?? (onPress ? <Icon name="right" size={16} color={glow.muted} /> : null)}</>;
   const style = { minHeight: 52, flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', gap: 12 } as const;
+  // A control on the right (a switch) sits beside the row's press area, never inside it: controls don't nest.
+  if (onPress && right) return <View style={style}><Press label={label} onPress={onPress} style={{ ...style, flex: 1, minWidth: 0 }}>{children}</Press>{right}</View>;
+  const inner = <>{children}{right ?? (onPress ? <Icon name="right" size={16} color={glow.muted} /> : null)}</>;
   return onPress ? <Press label={label} onPress={onPress} style={style}>{inner}</Press> : <View style={style}>{inner}</View>;
 }
 
@@ -221,7 +223,7 @@ export function CountryLine({ country, countries, onChange }: { country: string;
   if (!onChange) return <GText color={glow.soft}>{`${flag(country)} ${name}`}</GText>;
   if (!open) {
     return (
-      <Press label={`${flag(country)} ${name}`} onPress={() => setOpen(true)} style={{ minHeight: 36, flexDirection: 'row', gap: 6, alignSelf: 'flex-start' }}>
+      <Press label={`${flag(country)} ${name}`} onPress={() => setOpen(true)} style={{ ...grow(36), flexDirection: 'row', gap: 6, alignSelf: 'flex-start' }}>
         <GText color={glow.soft}>{`${flag(country)} ${name}`}</GText><Glyph name="down" size={16} color={glow.muted} />
       </Press>
     );

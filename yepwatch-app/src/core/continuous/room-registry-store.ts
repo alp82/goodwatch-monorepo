@@ -75,7 +75,14 @@ export function createRegistry(store: KeyValue, recent: () => Promise<{ roomId: 
     return next;
   };
   const readRooms = async () => decodeRooms(await store.read(REGISTRY_KEYS.rooms), now());
-  const writeRooms = (rooms: RegisteredRoom[]) => store.write(REGISTRY_KEYS.rooms, JSON.stringify(rooms));
+  // A start page behind a room keeps its list current: it never shows an old list for a frame on the way back.
+  const listeners = new Set<() => void>();
+  const writeRooms = async (rooms: RegisteredRoom[]) => {
+    const next = JSON.stringify(rooms);
+    if ((await store.read(REGISTRY_KEYS.rooms)) === next) return;
+    await store.write(REGISTRY_KEYS.rooms, next);
+    for (const l of listeners) l();
+  };
   const remove = async (key: string) => { if (store.remove) await store.remove(key); else await store.write(key, ''); };
   const recovery = async (): Promise<DeletionRecovery | null> => {
     const raw = await store.read(REGISTRY_KEYS.recovery);
@@ -91,6 +98,8 @@ export function createRegistry(store: KeyValue, recent: () => Promise<{ roomId: 
     return value;
   };
   return {
+    /** Calls back after the room list changed on this device; returns the unsubscribe. */
+    onRoomsChange: (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener); }; },
     recovery: () => serial(recovery),
     prepareDeletion: (kind: DeletionRecovery['kind'], accountTag?: string) => serial(async () => {
       const previous = await recovery();

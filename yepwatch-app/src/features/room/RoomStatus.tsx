@@ -1,11 +1,11 @@
 import { ActivityIndicator, View } from 'react-native';
-import { router, useIsFocused } from 'expo-router';
+import { useIsFocused } from 'expo-router';
 import { developmentNotice } from '../../core/config';
 import { useLate } from '../../core/useLate';
 import { useLayout } from '../shell/layout';
 import { GText, Icon, glow } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
-import { toRooms } from './nav';
+import { exitRoom, toRooms } from './nav';
 import { useRoom } from './RoomProvider';
 import { NoteLine, useFrameNote, type FrameNote } from '../shell/floating-note';
 import { Actions, Button, Screen } from './ui';
@@ -33,7 +33,7 @@ export function RoomStatus() {
           {ended || failed ? (
             <Actions style={{ width: phone ? '100%' : z(320), paddingTop: 8 }}>
               {failed ? <Button label="Retry" onPress={() => void state.refetch().catch(() => undefined)} /> : null}
-              <Button secondary={failed} label="Your rooms" onPress={() => router.replace('/')} />
+              <Button secondary={failed} label="Your rooms" onPress={exitRoom} />
             </Actions>
           ) : null}
         </View>

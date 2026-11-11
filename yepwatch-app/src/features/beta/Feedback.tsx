@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Linking, Platform, View } from 'react-native';
 import Constants from 'expo-constants';
-import { GText, Press, glow } from '../glow/theme';
+import { GText, Press, glow, grow } from '../glow/theme';
 
 export function buildLabel() {
   const config = Constants.expoConfig;
@@ -16,7 +16,7 @@ export function Feedback() {
   const body = `What happened?\n\nWhat did you expect?\n\nSteps to repeat it:\n\nScreenshot: attach one if useful.\n\nYepWatch ${version}\nSystem: ${Platform.OS} ${Platform.Version ?? 'browser'}\n`;
   return (
     <View style={{ gap: 8 }}>
-      <Press label="Send feedback" style={{ alignSelf: 'flex-start', minHeight: 32 }} onPress={() => {
+      <Press label="Send feedback" style={{ alignSelf: 'flex-start', ...grow(32) }} onPress={() => {
         setFailed(false);
         void Linking.openURL(`mailto:hello@goodwatch.app?subject=${encodeURIComponent('YepWatch feedback')}&body=${encodeURIComponent(body)}`).catch(() => setFailed(true));
       }}><GText size={13} bold color={glow.soft}>Send feedback</GText></Press>

@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Providers } from '../core/providers';
 import { Boot } from '../features/glow/Boot';
 import { MemberTransition } from '../features/shell/MemberTransition';
+import { CoveredBody } from '../features/shell/parts';
 if (Platform.OS !== 'web') void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 export default function Layout() {
   const [loaded, error] = useFonts({ Gabarito: require('../../assets/Gabarito-Regular.ttf'), GabaritoBold: require('../../assets/Gabarito-Bold.ttf') });
@@ -28,9 +29,10 @@ export default function Layout() {
   const done = useCallback(() => setBooted(true), []);
   const hideNative = useCallback(() => { if (Platform.OS !== 'web') void SplashScreen.hideAsync().catch(() => undefined); }, []);
   return <BootPageReady.Provider value={markPageReady}><BootPhase.Provider value={booted ? 'ready' : arriving ? 'enter' : 'boot'}><Providers><StatusBar style="light" /><View style={{ flex: 1, backgroundColor: '#070707' }}>
-    <View style={{ flex: 1 }} pointerEvents={booted || arriving ? 'auto' : 'none'} accessibilityElementsHidden={!(booted || arriving)} importantForAccessibility={booted || arriving ? 'auto' : 'no-hide-descendants'} aria-hidden={!(booted || arriving)}>
+    {/* The home page builds in behind the boot word: hidden and inert (no focus inside hidden content) until it shows. */}
+    <CoveredBody covered={!(booted || arriving)} testID="boot-stack" style={{ flex: 1 }}>
       {showStack && fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }}><Stack.Screen name="room/[id]" options={{ gestureEnabled: false }} /></Stack>}
-    </View>
+    </CoveredBody>
     {Platform.OS === 'web' && !fontsReady && <View aria-hidden pointerEvents="none" style={{ position: 'absolute', opacity: 0 }}>
       <Text style={{ fontFamily: 'Gabarito' }}>YepWatch</Text><Text style={{ fontFamily: 'GabaritoBold' }}>YepWatch</Text>
     </View>}

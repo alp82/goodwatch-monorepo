@@ -36,7 +36,7 @@ function useStartHandover(view: RoomView | null) {
 }
 
 export function RoomHome() {
-  const { state, view, entry, dismissedProposal, memberBusy, openSheet } = useRoom();
+  const { state, view, entry, dismissedProposal, memberBusy, openSheet, leaving } = useRoom();
   const params = useLocalSearchParams<{ signin?: string; fresh?: string; sheet?: string }>();
   // An address with a sheet (/room/<id>/services and the like): open it over the room, once.
   useEffect(() => {
@@ -60,7 +60,8 @@ export function RoomHome() {
   const handover = useStartHandover(view);
   const setup = view?.phase === 'setup' || (view?.phase === 'choosing' && !view.me.inRound);
   useBackAction(toRooms, setup);
-  if (state.terminal || state.access === null || !view) return <RoomStatus />;
+  // Leaving ends your access on purpose: the room stays as it was until the start page takes over.
+  if (!view || ((state.terminal || state.access === null) && !leaving)) return <RoomStatus />;
   if (view.phase === 'decided') return <Tonight />;
   if (handover) return view.isHost ? <RoomSetup ready /> : <Waiting ready />;
   if (showsProposal(view, dismissedProposal)) return <Proposal />;

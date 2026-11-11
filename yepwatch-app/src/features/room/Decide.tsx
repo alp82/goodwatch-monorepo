@@ -9,7 +9,7 @@ import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useLayout } from '../shell/layout';
 import { useBackAction } from '../shell/sheet-back';
 import { R, warm } from '../shell/tokens';
-import { GText, Icon, Press, glow } from '../glow/theme';
+import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { ScorePill } from '../glow/scores';
 import { showsProposal, type ProposalView } from './model';
 import { leavePage, toRooms } from './nav';
@@ -177,7 +177,7 @@ function MatchCard({ c, proposing }: { c: Candidate; proposing: boolean }) {
         </View>
       </View>
       <Press label={proposing ? 'Propose this instead' : 'Propose this'} disabled={disabled} onPress={() => { reopenProposal(); void cmd.propose(c.id); }}
-        style={{ minHeight: z(44), borderRadius: R.control, borderWidth: 1, borderColor: warm.lineStrong }}>
+        style={{ ...grow(z(44)), alignItems: 'stretch' }} visual={{ minHeight: z(44), alignItems: 'center', justifyContent: 'center', borderRadius: R.control, borderWidth: 1, borderColor: warm.lineStrong }}>
         <GText bold size={z(15)}>{proposing ? 'Propose this instead' : 'Propose this'}</GText>
       </Press>
     </View>

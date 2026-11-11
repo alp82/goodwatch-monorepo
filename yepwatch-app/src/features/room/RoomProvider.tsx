@@ -4,7 +4,7 @@
  * entry, background refill, this device's "Keep swiping" choice, and the room's open sheets.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { router } from 'expo-router';
+import { useNavigation } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import type { ActivityView } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey, useContinuousRoom } from '../../core/continuous/useRoom';
@@ -23,6 +23,7 @@ import { queryClient } from '../../core/providers';
 import { readSeenIdeas, writeSeenIdeas } from '../../core/continuous/room-local';
 import { useLobbyEntry } from '../glow/useLobbyEntry';
 import { roomCommands, roomView, type RoomCommands, type RoomView } from './model';
+import { exitRoom } from './nav';
 import { RefillGate } from './refill';
 import { RoomLinkGate, linkOutcome } from './link-gate';
 import { previewDrafts, useSettingsSaves, type SettingsSaves } from './settings-save';
@@ -73,6 +74,8 @@ export interface RoomContextValue {
   saves: SettingsSaves;
   /** The host has seen these friend ideas (opened the Room page): they're no longer NEW on this device. */
   acknowledgeIdeas: (ids: readonly string[]) => void;
+  /** This device is leaving the room (the Leave was sent and not refused). */
+  leaving: boolean;
   /** The sheet on top (the focused room screen shows it), or null. */
   sheet: RoomSheet | null;
   /** Opens a sheet over the current one; closing it returns to the one underneath. */
@@ -81,6 +84,8 @@ export interface RoomContextValue {
   closeSheets: () => void;
   /** Draws a sheet (injected by the room layout, so the screens' frame doesn't import the sheets). */
   renderSheet: (sheet: RoomSheet) => ReactNode;
+  /** Opens another room in front of this one (Your rooms). */
+  openRoom: (roomId: string) => void;
 }
 const RoomContext = createContext<RoomContextValue | null>(null);
 /** The room when the screen is inside one (the shared frame derives its header from it), else null. */
@@ -101,10 +106,19 @@ export function RoomProvider(props: { id: string; children: ReactNode; renderShe
 function RoomProviderContent({ id, children, renderSheet }: { id: string; children: ReactNode; renderSheet: (sheet: RoomSheet) => ReactNode }) {
   const state = useContinuousRoom(id);
   const entry = useLobbyEntry(state);
+  // Another room goes on the app's stack as a room of its own. The router would resolve /room/<other>
+  // inside this room's stack (same layout), leaving this room's provider, and so this room, on screen.
+  const navigation = useNavigation();
+  const openRoom = useCallback((roomId: string) => {
+    if (roomId === id) return;
+    navigation.dispatch({ type: 'PUSH', payload: { name: 'room/[id]', params: { id: roomId, screen: 'index', params: { id: roomId } } } });
+  }, [navigation, id]);
   const invitation = useQuery<StoredInvite | null>({ queryKey: ['continuous-invite', id], queryFn: () => loadInvite(id) });
   const confirmed = state.confirmed;
   const account = useAccount();
   const [notice, setNotice] = useState('');
+  /** This device asked to leave: the room keeps its screen until it's gone, it never says "access ended" first. */
+  const [leaving, setLeaving] = useState(false);
   const [sheets, setSheets] = useState<readonly RoomSheet[]>([]);
   const openSheet = useCallback((sheet: RoomSheet) => setSheets((list) => (list.at(-1) === sheet ? list : [...list.filter((s) => s !== sheet), sheet])), []);
   const closeSheet = useCallback(() => setSheets((list) => list.slice(0, -1)), []);
@@ -136,7 +150,11 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
     // eslint-disable-next-line react-hooks/refs
     const base = roomCommands((command) => sendRef.current(command), latest);
     // Switching a friend's idea (either way) means the host has dealt with it: never NEW again.
-    return { ...base, setIdea: (ideaId: string, on: boolean) => base.setIdea(ideaId, on).then((ok) => { if (ok) acknowledgeIdeas([ideaId]); return ok; }) };
+    return {
+      ...base,
+      setIdea: (ideaId: string, on: boolean) => base.setIdea(ideaId, on).then((ok) => { if (ok) acknowledgeIdeas([ideaId]); return ok; }),
+      leave: () => { setLeaving(true); return base.leave().then((ok) => { if (!ok) setLeaving(false); return ok; }); },
+    };
   }, [latest, acknowledgeIdeas]);
   const confirmedView = useMemo(() => (confirmed ? roomView(confirmed) : null), [confirmed]);
   const disabled = state.working || Boolean(state.pending) || state.privateError || entry.working;
@@ -154,7 +172,7 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   useEffect(() => {
     if (expiresAt && !account.member && !account.lapsed) void roomRegistry.remember({ roomId: id, nickname: nickname ?? '', expiresAt }).catch(() => undefined);
   }, [id, nickname, expiresAt, account.member, account.lapsed]);
-  useEffect(() => { if (snapshot?.own.left) router.replace('/'); }, [snapshot?.own.left]);
+  useEffect(() => { if (snapshot?.own.left) exitRoom(); }, [snapshot?.own.left]);
 
   // Continue with GoodWatch in a room signs this device in and comes back to this room, which then links.
   const { signIn: accountSignIn } = account;
@@ -274,7 +292,7 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const value: RoomContextValue = {
     id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, memberLapsed: account.lapsed, linkFailed: linkFailed && wantsLink, retryLink, connectionLate, notice: notice || account.error, setNotice,
     dismissedProposal, dismissProposal, reopenProposal, setActivityView: state.setView, saves, acknowledgeIdeas,
-    sheet: sheets.at(-1) ?? null, openSheet, closeSheet, closeSheets, renderSheet,
+    leaving, sheet: sheets.at(-1) ?? null, openSheet, closeSheet, closeSheets, renderSheet, openRoom,
   };
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
 }

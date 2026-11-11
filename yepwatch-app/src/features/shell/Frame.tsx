@@ -19,6 +19,7 @@ import { AppHeader, type AppHeaderProps } from './Header';
 import { useLayout } from './layout';
 import { CoveredBody } from './parts';
 import { FloatingNote, NoteLayerProvider, useNoteLayer } from './floating-note';
+import { Shade } from './Sheet';
 import { closeTopSheet } from './sheet-stack';
 import { warm } from './tokens';
 import { openNewRoom } from '../room/nav';
@@ -84,7 +85,6 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
   const roomsSheet = roomsOpen ? (rooms?.rooms
     ? <YourRoomsSheet current={rooms.current} rooms={rooms.rooms} loading={rooms.loading} actions={actions} onClose={closeRooms} />
     : <HomeRoomsSheet current={rooms?.current} actions={actions} onClose={closeRooms} />) : null;
-  // The pill stays usable over a screen's sheet: Your rooms opens on top, and closing it returns to that sheet.
   // The avatar opens Profile right here, over this page: it never moves to the start page underneath.
   const profileSheet = profileOpen ? <HomeProfileSheet returnTo={pathname} onClose={() => setProfileOpen(false)} /> : null;
   const shownSheet = roomsSheet ?? profileSheet ?? sheet;
@@ -104,9 +104,12 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
     <View testID={testID} style={{ flex: 1, backgroundColor: glow.bg }}>
       <BootReveal part="backdrop" pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></BootReveal>
       {backdrop}
-      <CoveredBody covered={covered} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
+      {/* An open sheet is modal: the header behind it is out of reach for touch, focus and screen readers,
+          and a tap on it closes the sheet (as a tap on the shade does), so its Back still closes the sheet first. */}
+      <CoveredBody covered={covered || Boolean(shownSheet)} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
         <AppHeader {...header} back={back} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? (() => setProfileOpen(true))} />
       </CoveredBody>
+      {shownSheet && !covered ? <View testID="header-shade" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: insets.top + layout.header, zIndex: 31 }}><Shade onPress={() => { closeTopSheet(); }} /></View> : null}
       <View style={{ flex: 1, minHeight: 0 }}>
         <CoveredBody covered={covered || Boolean(shownSheet)}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, minHeight: 0 }}>
