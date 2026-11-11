@@ -160,10 +160,11 @@ export function RoomSetup({ ready = false }: { ready?: boolean }) {
     if (typed && typed !== current && !(await cmd.rename(typed))) return false;
     return cmd.start();
   };
-  // A start the server hasn't confirmed (the answer got lost) is saved and goes out again by itself;
-  // Try again sends that same start instead of a new one.
+  // A start the server hasn't confirmed (the answer got lost, the server restarting) is saved and goes out
+  // again by itself: Start keeps its words meanwhile, never a failure. A long outage gets the room's one
+  // connection line, whose Retry sends that same start.
   const pendingStart = state.pending?.command.type === 'start';
-  const phase = hostStartPhase({ attempt, retrying: pendingStart && state.busy, ready });
+  const phase = hostStartPhase({ attempt, retrying: pendingStart, ready });
   const run = (go: () => Promise<boolean>) => {
     setAttempt('starting');
     void go().catch(() => false).then((ok) => { if (mounted.current) setAttempt(ok ? null : 'failed'); });

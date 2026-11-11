@@ -72,7 +72,9 @@ of a restarting production container.
   other phones). `room.point(label)` is the fault hook journeys call between steps.
 - `recorder.page.js`: injected before the app; records screen states per frame (test-id markers),
   notes and blocking words, inputs and their first changed frame, layout shifts, long animation frames.
-- `gates.ts`, `a11y.ts`: flashes, layout shift, blocking words / stuck "Connecting…", dead buttons, frame
+- `gates.ts`, `a11y.ts`: flashes, layout shift, blocking words, connection words (none during an outage
+  shorter than 3 s, so none for a hidden tab, a second device or no WebSocket; then one line, gone within 1 s
+  of the outage's end; never a countdown; outages are the restart and offline windows), dead buttons, frame
   gaps, errors (console, uncaught, HTTP, schema via the app's own `sharedSchema`/`parseFrame`), axe WCAG 2.2
   AA + accessible names + 48×48 targets. Budgets: `budgets.mjs`.
 - Faults (Playwright projects): `none`, `nows`, `rapid`, `slow` (slow network + 4 s offline), `hidden`

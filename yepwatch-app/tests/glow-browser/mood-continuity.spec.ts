@@ -95,8 +95,8 @@ test('an accepted mood whose acknowledgement is lost survives reload and retries
   await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByLabel('Mood')).toHaveValue('dark and funny');
-  await expect(page.getByRole('button', { name: /^(Create room|Try again|Retry in \d+s)$/, exact: true })).toBeEnabled();
-  await page.getByRole('button', { name: /^(Create room|Try again|Retry in \d+s)$/, exact: true }).click();
+  await expect(page.getByRole('button', { name: /^(Create room|Try again)$/, exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: /^(Create room|Try again)$/, exact: true }).click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
   const commands = f.commands.filter((c) => c.command.type === 'add_idea');
   expect(commands).toHaveLength(2);

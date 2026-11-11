@@ -1,8 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import type { CommandEnvelope, GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
-const CREATE = /^(Create room|Try again|Retry in \d+s|Saving…)$/;
-const JOIN = /^(Join|Retry joining|Retry in \d+s|Connecting…)$/;
+const CREATE = /^(Create room|Try again|Saving…)$/;
+const JOIN = /^(Join|Retry joining|Joining…)$/;
 /** Opening a mood is local; the action returned here explicitly submits it. */
 async function open(page: Page, mode: 'create' | 'join', name: string) {
   await page.goto('/');
@@ -47,7 +47,7 @@ for (const mode of ['create','join'] as const) test(`429 ${mode} retains the sam
   });
   const action = await open(page, mode, 'Guest');
   await action.click(); await expect(action).toBeDisabled();
-  if (mode === 'join') await expect(page.getByText(/Your room request is saved/)).toBeVisible();
+  if (mode === 'join') { await expect(page.getByText(/Retry preserves your identity/)).toBeVisible(); await expect(action).not.toHaveText(/\d/); }
   else await expect(page.getByLabel('Mood')).toHaveValue('cheer me up');
   expect(bodies).toHaveLength(1); const first=structuredClone(bodies[0]);
   await page.reload(); await expect(action).toBeDisabled();
@@ -70,10 +70,11 @@ test('retryable command retains exact envelope + cooldown across reload; expiry 
     return route.fulfill({json:{receipt:{},snapshot:room}});
   });
   await page.goto('/room/test-room'); await page.getByRole('button',{name:'Yep',exact:true}).click();
-  const retry=page.getByRole('button',{name:/^Retry( in \d+s)?$/}); await expect(retry).toBeDisabled();
-  await expect(page.getByText(/Try again in .*Your action is saved/)).toBeVisible();
-  const first=structuredClone(commands[0]); await page.reload(); await expect(retry).toBeDisabled();
-  await expect(retry).toBeEnabled(); await page.waitForTimeout(150);expect(commands).toHaveLength(1);
+  // The saved vote waits quietly; after 3 s one connection line offers Retry, never a countdown.
+  const retry=page.getByRole('button',{name:'Retry',exact:true}); await expect(retry).toBeVisible({timeout:6000});
+  await expect(page.getByText(/Try again in|Retry in|awaiting confirmation|action is saved/)).toHaveCount(0);
+  const first=structuredClone(commands[0]); await page.reload();
+  await expect(retry).toBeEnabled({timeout:6000}); await page.waitForTimeout(150);expect(commands).toHaveLength(1);
   await retry.click(); await expect.poll(()=>commands.length).toBe(2);expect(commands[1]).toEqual(first);
   expect(commands.every(c=>c.command.type==='vote')).toBe(true);
   await expect(page.getByRole('button',{name:'Undo',exact:true})).toBeEnabled();
@@ -93,7 +94,7 @@ test('terminal HTTP status takes precedence over retryable busy and never offers
   await common(page);let commands=0;
   await page.route('**/proposal/rooms/test-room/commands',async route=>{commands++;return route.fulfill({status:410,headers:{'Retry-After':'60'},json:{error:{code:'expired',message:'Expired',retryable:true}}});});
   await page.goto('/room/test-room');await page.getByRole('button',{name:'Yep',exact:true}).click();
-  await expect(page.getByText('This room has expired',{exact:false})).toBeVisible();await expect(page.getByRole('button',{name:/^Retry( in \d+s)?$/})).toHaveCount(0);expect(commands).toBe(1);
+  await expect(page.getByText('This room has expired',{exact:false})).toBeVisible();await expect(page.getByRole('button',{name:'Retry',exact:true})).toHaveCount(0);expect(commands).toBe(1);
 });
 
 for (const mode of ['create', 'join'] as const) test(`${mode} must persist the exact bootstrap before every submit after repeated storage failures`, async ({page}) => {
@@ -118,7 +119,7 @@ for (const mode of ['create', 'join'] as const) test(`${mode} must persist the e
   });
   const action = await open(page, mode, 'Persist first');
   await action.click();await expect(page.getByText(mode === 'join' ? /storage is unavailable/ : /Couldn’t save this mood/)).toBeVisible();expect(bodies).toHaveLength(0);
-  await expect(action).toBeEnabled();await action.click();await expect(action).toBeDisabled();await expect(action).toHaveText(/Retry in/);
+  await expect(action).toBeEnabled();await action.click();await expect(action).toBeDisabled();await expect(action).not.toHaveText(/\d/);
   expect(bodies).toHaveLength(0); // A retained in-memory request is not proof of persistence.
   const first = await page.evaluate(() => {
     const state = (window as unknown as {admissionStorageTest:{allow:boolean;writes:string[]}}).admissionStorageTest;
@@ -177,7 +178,7 @@ for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirme
   await page.route(mode==='create'?'**/proposal/rooms':'**/proposal/rooms/test-room/join', route => { bodies.push(route.request().postDataJSON()); return route.abort('failed'); });
   const action=await open(page,mode,'Connection check');
   await action.click();
-  await expect(action).toHaveText(mode === 'join' ? 'Connecting…' : 'Saving…');
+  await expect(action).toHaveText(mode === 'join' ? 'Joining…' : 'Saving…');
   await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.',{exact:true})).toBeVisible({ timeout: 45_000 });
   expect(bodies).toHaveLength(6);
   for (const body of bodies) expect(body).toEqual(bodies[0]);
@@ -209,7 +210,7 @@ test('Back during admission cooldown allows reopening the saved request without 
   const action=await open(page,'create','Connection check');await action.click();await expect(action).toBeDisabled();
   await page.getByRole('button',{name:'Back',exact:true}).click();
   await page.getByRole('button',{name:'New room',exact:true}).click();
-  await expect(action).toBeDisabled();await expect(action).toHaveText(/Retry in/);expect(posts).toBe(1);
+  await expect(action).toBeDisabled();await expect(action).not.toHaveText(/\d/);expect(posts).toBe(1);
 });
 
 test('a lost create response followed by proxy 404s keeps the saved request; the manual retry ends in the same room', async ({ page }) => {
@@ -277,7 +278,7 @@ for (const leave of ['panel', 'background'] as const) test(`automatic admission 
   else await page.getByRole('button', { name: 'New room', exact: true }).click();
   // The saved request comes back for a manual retry with the same identity.
   await expect(action).toBeEnabled();
-  await expect(action).toHaveText(/Create room|Try again|Retry in \d+s/);
+  await expect(action).toHaveText(/Create room|Try again/);
   await action.click();
   await expect.poll(() => bodies.length).toBe(sent + 1);
   expect(bodies[sent]).toEqual(bodies[0]);

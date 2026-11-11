@@ -21,7 +21,8 @@ import { mergeRoom, mergePublic, PersistentCommands, type CachedRoom } from './s
 import { awaitsServer, overlayRoom, type CommandBuild, type QueuedCommand } from './optimistic';
 import { readCommandRecovery, writePending } from './storage';
 import { useRetryCountdown } from './useRetryCountdown';
-import { ContinuousRealtime, type ReconnectState } from './realtime';
+import { transientFailure } from './backoff';
+import { ContinuousRealtime } from './realtime';
 import { applyActivity, pruneActivity, type PeerActivity } from './activity';
 import { applyCheerFrame, emptyCheers, freshCheerEvents, holderSeeds, nextCheerExpiry, pruneCheers, type CheerEvent, type CheerState } from './cheers';
 import { sessionCommandStorage } from './command-storage';
@@ -46,8 +47,6 @@ export function useContinuousRoom(roomId: string) {
   const account = useAccount();
   const [access, setAccess] = useState<RoomAccess | null>();
   const [connection, setConnection] = useState<Connection>('connecting');
-  const [reconnect, setReconnect] = useState<ReconnectState>({ attempting: false, retryAt: 0 });
-  const reconnectSeconds = useRetryCountdown(reconnect.retryAt);
   const [error, setError] = useState('');
   /** The last command failure's code, for screens that answer it in place (needs_context, limit_reached). */
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -109,6 +108,8 @@ export function useContinuousRoom(roomId: string) {
   );
   /** A Leave is on its way: the refusals it causes (the live channel, a read) are its own outcome, not lost access. */
   const leavingNow = useRef(false);
+  /** The command id the server last refused as a conflict (see submit and drain). */
+  const conflicted = useRef<string | null>(null);
   const authority = useCallback(
     (e: unknown) => {
       if (expired(e) || leavingNow.current) return;
@@ -155,7 +156,8 @@ export function useContinuousRoom(roomId: string) {
       return incoming;
     } catch (e) {
       authority(e);
-      if (!terminalRef.current) setPrivateError(true);
+      // No answer or a restarting server is an outage, not a stale private state: the connection line covers it.
+      if (!terminalRef.current && !transientFailure(e)) setPrivateError(true);
       throw e;
     }
   }, [access, expired, apply, authority]);
@@ -268,7 +270,6 @@ export function useContinuousRoom(roomId: string) {
       },
       privateRead: () => refetchRef.current(),
       authorityError: authority,
-      attempt: setReconnect,
       serverClock: (offset) => {
         clock.current = offset;
       },
@@ -419,12 +420,23 @@ export function useContinuousRoom(roomId: string) {
         return true;
       }
       if (e instanceof RoomFailure && e.snapshot) apply(e.snapshot);
+      // A conflict means this device's view was behind (another device, a friend's change). It says nothing:
+      // the outbox builds the command again from the fresh room and sends it once (drain below), or drops
+      // it when it no longer applies, and the screen shows the room as it is.
+      if (e instanceof RoomFailure && e.code === 'conflict') {
+        conflicted.current = commandId ?? null;
+        await refetch().catch(() => undefined);
+        return false;
+      }
       // A refused command (not the host, not the author, an idea that's gone…) is not lost access: show why
       // and re-read the room below. Only missing credentials or an expired room end it from here; a read
       // that fails decides the rest.
       if (expired(e) || (e instanceof RoomFailure && (e.status === 401 || e.code === 'unauthorized'))) authority(e);
-      if (!terminalRef.current) setErrorCode(e instanceof RoomFailure ? e.code : null);
-      if (!terminalRef.current)
+      // A saved action (no answer, or the server asked to try later) says nothing: it shows already and goes
+      // again by itself; a long outage gets the room's one connection line (connection-words.ts).
+      const saved = Boolean(queue.current.pending);
+      if (!terminalRef.current && !saved) setErrorCode(e instanceof RoomFailure ? e.code : null);
+      if (!terminalRef.current && !saved)
         setError(
           e instanceof RoomFailure
             ? publicFailureMessage(e.code, e.message, e.details)
@@ -458,7 +470,15 @@ export function useContinuousRoom(roomId: string) {
         const entry = outbox.current[0];
         const snapshot = terminalRef.current ? undefined : cached();
         const command = snapshot ? entry.build(snapshot) : null;
-        take(entry, command ? await submitRef.current(command, entry.commandId) : false);
+        let ok = command ? await submitRef.current(command, entry.commandId) : false;
+        if (!ok && conflicted.current === entry.commandId && !terminalRef.current) {
+          // Rebased once on the room the conflict brought (the same command id: it can only apply once).
+          const fresh = cached();
+          const again = fresh ? entry.build(fresh) : null;
+          ok = again ? await submitRef.current(again, entry.commandId) : false;
+        }
+        conflicted.current = null;
+        take(entry, ok);
       }
     } finally {
       draining.current = false;
@@ -545,10 +565,6 @@ export function useContinuousRoom(roomId: string) {
     connection,
     /** The browser has no network: actions are saved and go when it's back. */
     offline,
-    /** An automatic or Refresh reconnect is running right now. */
-    reconnecting: reconnect.attempting,
-    /** Seconds until the next automatic reconnect; 0 when none is waiting. */
-    reconnectSeconds,
     error,
     errorCode,
     clearError,

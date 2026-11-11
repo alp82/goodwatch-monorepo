@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { budgetsFor } from '../budgets.mjs';
 import { parseFrame, sharedSchema } from '../../src/core/continuous/wire';
 import { audit } from './a11y';
-import { blockingWords, deadButtons, flashes, frameGaps, layoutShifts, type GateFailure, type Recording } from './gates';
+import { blockingWords, connectionWords, deadButtons, flashes, frameGaps, layoutShifts, type GateFailure, type Recording } from './gates';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const RECORDER = path.join(here, 'recorder.page.js');
@@ -83,10 +83,11 @@ export class Person {
       const p = new URL(url).pathname;
       const status = r.status();
       if (r.request().method() === 'POST' && p.includes('/proposal/')) this.commandLog.push({ t: Date.now(), status, path: p });
+      const json = (r.headers()['content-type'] ?? '').includes('json');
+      const body = json ? await r.json().catch(() => null) : null;
       if (status >= 400 && !this.expectedStatus.some((re) => re.test(`${status} ${p}`)) && !(this.room.faultAllowsNetworkErrors() && status >= 500))
-        fail(`HTTP ${status} ${r.request().method()} ${p}`);
-      if (!(r.headers()['content-type'] ?? '').includes('json')) return;
-      const body = await r.json().catch(() => null);
+        fail(`HTTP ${status} ${r.request().method()} ${p}${body?.error ? ` (${body.error.code}: ${String(body.error.message).slice(0, 80)})` : ''}`);
+      if (!json) return;
       const snapshot = body?.snapshot ?? body;
       if (snapshot?.shared) {
         const parsed = sharedSchema.safeParse(snapshot.shared);
@@ -419,6 +420,10 @@ export class Room {
         return;
     }
   }
+  /** Stack-side outages so far, [start, end] in epoch ms: server restarts and offline spells. */
+  outages(): [number, number][] {
+    return [...this.restartLog.map((r) => [r.at, r.back] as [number, number]), ...this.offlineWindows];
+  }
   twin: Person | null = null;
   private reloaded = false;
   readonly pending: Promise<unknown>[] = [];
@@ -430,7 +435,7 @@ export class Room {
     for (const p of this.people) {
       if (!p.page.isClosed()) await p.harvest();
       for (const rec of p.recordings) {
-        failures.push(...flashes(rec, p.name), ...layoutShifts(rec, p.name), ...blockingWords(rec, p.name), ...deadButtons(rec, p.name));
+        failures.push(...flashes(rec, p.name), ...layoutShifts(rec, p.name), ...blockingWords(rec, p.name), ...connectionWords(rec, p.name, this.outages()), ...deadButtons(rec, p.name));
         if (this.fault !== 'hidden' && this.fault !== 'slow') failures.push(...frameGaps(rec, p.name, rec.inputs.map((i) => [i.t, i.t + 1200])));
       }
       failures.push(...p.failures.filter((f) => !failures.includes(f)));

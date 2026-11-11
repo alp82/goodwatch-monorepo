@@ -39,7 +39,11 @@ test('a dropped connection reconnects by itself through busy answers, reads the 
   control.mode = 'busy';
   const before = control.sockets.length;
   await control.sockets.at(-1)!.close();
-  await expect(page.getByText(/^Trying again in \d+ s$/)).toBeVisible();
+  // Quiet for the first 3 s (connection-words.ts), then one line without a countdown.
+  await page.waitForTimeout(2500);
+  await expect(banner(page)).toHaveCount(0);
+  await expect(page.getByText('Reconnecting…', { exact: true })).toBeVisible();
+  await expect(page.getByText(/\d+ ?s\b/)).toHaveCount(0);
   expect(control.sockets.length).toBe(before);
   control.mode = 'ok';
   await expect.poll(() => control.sockets.length, { timeout: 15_000 }).toBe(before + 1);
@@ -48,27 +52,21 @@ test('a dropped connection reconnects by itself through busy answers, reads the 
   await expect.poll(() => control.reads).toBeGreaterThan(reads);
 });
 
-test('Refresh tries at once, shows that it is working, and the banner goes away when it connects', async ({ page }) => {
+test('a long outage shows one Reconnecting line with no countdown, gone once it connects', async ({ page }) => {
   const { control, release } = await live(page);
   await page.goto('/room/test-room');
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeVisible();
   await expect(banner(page)).toHaveCount(0);
-  control.mode = 'busy';
+  control.mode = 'hold';
   const before = control.sockets.length;
   await control.sockets.at(-1)!.close();
-  const refresh = page.getByRole('button', { name: 'Refresh', exact: true });
-  await expect(page.getByText(/^Trying again in \d+ s$/)).toBeVisible();
-  await expect(refresh).toBeEnabled();
-  control.mode = 'hold';
-  await refresh.click();
-  await expect(page.getByText('Reconnecting…', { exact: true })).toBeVisible();
+  await expect(page.getByText('Reconnecting…', { exact: true })).toBeVisible({ timeout: 6000 });
   await expect(page.getByTestId('note-spinner')).toBeVisible();
-  await expect(refresh).toBeDisabled();
+  await expect(page.getByText(/Trying again|Try again in|Retry in/)).toHaveCount(0);
   await expect.poll(() => control.held.length).toBeGreaterThan(0);
   await release();
   await expect.poll(() => control.sockets.length).toBe(before + 1);
   await expect(banner(page)).toHaveCount(0);
-  await expect(refresh).toHaveCount(0);
 });
 
 test('Create during a restart: two 503s are retried with the same request, keeping the editor until the room opens', async ({ page }) => {
