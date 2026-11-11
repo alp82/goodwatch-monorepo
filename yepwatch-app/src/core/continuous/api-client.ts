@@ -27,6 +27,8 @@ import { apiUrl } from '../config';
 import { invitePreviewSchema } from './wire';
 import { parseRetryAfter } from './retry';
 import type { RoomAccess } from '../credentials';
+/** How long a room create waits for an answer before it counts as unanswered (and is kept for a resend). */
+export const ADMISSION_TIMEOUT_MS = 6000;
 export class RoomFailure extends Error {
   constructor(
     readonly code: string,
@@ -54,7 +56,8 @@ export class ContinuousApi {
     access?: RoomAccess,
     signal?: AbortSignal,
     /** The app's sealed GoodWatch session (browsers send theirs as a cookie). */
-    memberSession?: string | null
+    memberSession?: string | null,
+    timeoutMs = 15000
   ): Promise<T> {
     const asked = authEpoch.current();
     if (this.native && memberSession === undefined) memberSession = await this.sessions?.read();
@@ -65,7 +68,7 @@ export class ContinuousApi {
     const abort = () => controller.abort();
     if (signal?.aborted) abort();
     else signal?.addEventListener('abort', abort, { once: true });
-    const timer = setTimeout(() => { timedOut = true; abort(); }, 15000);
+    const timer = setTimeout(() => { timedOut = true; abort(); }, timeoutMs);
     let response: Response | undefined;
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
@@ -122,8 +125,10 @@ export class ContinuousApi {
       signal?.removeEventListener('abort', abort);
     }
   }
-  create = (body: GuestAdmissionRequest, signal?: AbortSignal) => this.request<GuestAdmission>(paths.rooms, body, undefined, signal);
-  resolve = (code: string, signal?: AbortSignal) => this.request<{ roomId: string }>(paths.resolveInvite, { code }, undefined, signal);
+  /** A saved admission is safe to send again (same command id and secret): don't wait long on a dead network. */
+  create = (body: GuestAdmissionRequest, signal?: AbortSignal) => this.request<GuestAdmission>(paths.rooms, body, undefined, signal, undefined, ADMISSION_TIMEOUT_MS);
+  /** `credential`: the request carried a credential for the room (missing from older servers). */
+  resolve = (code: string, signal?: AbortSignal) => this.request<{ roomId: string; credential?: boolean }>(paths.resolveInvite, { code }, undefined, signal);
   invitePreview = async (code: string): Promise<InvitePreview> =>
     invitePreviewSchema.parse(await this.request<unknown>(paths.invitePreview, { code }));
   join = (id: string, body: JoinRoomRequest, access?: RoomAccess, signal?: AbortSignal) =>

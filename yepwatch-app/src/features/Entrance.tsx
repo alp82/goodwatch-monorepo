@@ -20,7 +20,9 @@ import { readAdmission, writeAdmission } from '../core/continuous/storage';
 import type { AdmissionRecovery } from '../core/continuous/recovery-state';
 import { retainRequest, retryDeadline } from '../core/continuous/retry';
 import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
-import { retryTransient, transientFailure } from '../core/continuous/backoff';
+import { retryTransient, transientFailure, unanswered } from '../core/continuous/backoff';
+import { stopWaiting } from '../core/continuous/create-room';
+import { browserOffline, onBackOnline } from '../core/continuous/network';
 import { Landing } from './home/Landing';
 import { BootPageReady, BootPhase } from './home/boot-phase';
 import { greeting, type HomeRoom } from './rooms/home-model';
@@ -135,9 +137,10 @@ export function Entrance({ invite, open: request, from }: {
     let active = true;
     void (async () => {
       try {
-        const { roomId } = await api.resolve(invite);
+        const { roomId, credential } = await api.resolve(invite);
         const stored = await loadAccess(roomId);
-        if (nativeClient && !stored) return;
+        // Nothing to check without a credential for this room: no membership read (it could only be a 401).
+        if (!stored && (nativeClient || credential === false)) return;
         const access = stored ?? { roomId, participantId: '', token: '', expiresAt: 0 };
         const snapshot = await api.snapshot(access);
         if (!active) return;
@@ -178,6 +181,15 @@ export function Entrance({ invite, open: request, from }: {
   }, [invite, checkVersion, intent]);
   /** The name is remembered once admitted, for every later room on this device. */
   const rememberName = (name: string) => (name && name !== 'Guest' ? roomRegistry.setNickname(name).catch(() => undefined) : Promise.resolve());
+  // A join that got no answer goes again by itself (same saved request) once the browser is back online.
+  const offlineJoin = useRef<{ member: boolean; code: string } | null>(null);
+  const joinRef = useRef<typeof joinRoom | null>(null);
+  useEffect(() => { joinRef.current = joinRoom; });
+  useEffect(() => onBackOnline(() => {
+    const saved = offlineJoin.current;
+    offlineJoin.current = null;
+    if (saved) void joinRef.current?.(saved.member, undefined, undefined, saved.code);
+  }), []);
   async function joinRoom(member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string) {
     if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || waiting(admission)) return;
     inFlight.current = true;
@@ -214,14 +226,17 @@ export function Entrance({ invite, open: request, from }: {
       const request = saved;
       // A restart answers busy or not at all for a while: send the same saved request again by itself
       // (same command id and secret, so it can never make a second room), and only then show an error.
-      await retryTransient(() => admit(request, signal), { retries: AUTO_RETRIES, retryAt: retryDeadline, signal });
+      await retryTransient(() => admit(request, signal), { retries: AUTO_RETRIES, retryAt: retryDeadline, signal, giveUp: stopWaiting });
     } catch (e) {
       // Cancelled (the screen went away): the request saved before the submit stays for a manual retry.
       if (signal.aborted) return;
-      setError(transientFailure(e) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : e instanceof Error ? e.message : 'Could not join this room.');
+      setError(unanswered(e) && browserOffline() ? 'You’re offline. Your request is saved and goes when you’re back online.'
+        : transientFailure(e) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : e instanceof Error ? e.message : 'Could not join this room.');
+      offlineJoin.current = unanswered(e) && saved ? { member, code: saved.code } : null;
       setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
       if (saved) {
-        const next = retainRequest(e) ? { ...saved, retryAt: retryDeadline(e) } : null;
+        // No answer at all has no server deadline: a resend (Try again, back online) may go at once.
+        const next = retainRequest(e) ? { ...saved, retryAt: unanswered(e) ? 0 : retryDeadline(e) } : null;
         setAdmission(next);
         try { await writeAdmission(intent, next); }
         catch { setError('Your request is still awaiting confirmation, but storage is unavailable. Keep this screen open to retry.'); }
@@ -244,10 +259,10 @@ export function Entrance({ invite, open: request, from }: {
     // Persist the exact bootstrap before EVERY possible admission submit.
     await writeAdmission(intent, saved);
     setAdmission(saved);
-    const { roomId } = await api.resolve(saved.code, signal);
+    const { roomId, credential } = await api.resolve(saved.code, signal);
     const stored = await loadAccess(roomId);
     // Manual code entry has the same recovery guard as a direct invitation.
-    if (!nativeClient || stored) {
+    if (stored || (!nativeClient && credential !== false)) {
       try {
         const access = stored ?? { roomId, participantId: '', token: '', expiresAt: 0 };
         const snapshot = await api.snapshot(access, signal);

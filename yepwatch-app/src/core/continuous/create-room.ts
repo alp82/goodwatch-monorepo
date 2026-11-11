@@ -5,7 +5,8 @@ import { saveAccess } from '../credentials';
 import { deviceCountryHint } from '../lobby';
 import { queryClient } from '../providers';
 import { authEpoch } from './account-flow';
-import { retryTransient } from './backoff';
+import { retryTransient, unanswered } from './backoff';
+import { browserOffline } from './network';
 import { saveInvite } from './invite-store';
 import { roomRegistry } from './room-registry';
 import type { AdmissionRecovery } from './recovery-state';
@@ -13,6 +14,14 @@ import { retainRequest, retryDeadline } from './retry';
 import { continuousKey } from './keys';
 import { PersistentCommands, mergeRoom, type CachedRoom } from './state';
 import { readAdmission, readCommandRecovery, writeAdmission, writePending } from './storage';
+
+/**
+ * Offline, or a second try that also got no answer: show it now instead of backing off for half a
+ * minute. The saved request stays and goes again (same id and secret) when the device is back.
+ */
+export function stopWaiting(error: unknown, tries: number) {
+  return unanswered(error) && (browserOffline() || tries >= 1);
+}
 
 /** One room per draft, including retries and reloads. Navigation belongs to the successful caller. */
 export class CreateRoom {
@@ -60,9 +69,10 @@ export class CreateRoom {
           // Persist before every possible POST, including after a previous storage failure.
           await writeAdmission('', request);
           this.admitted = await api.create(request.request, options.signal);
-        }, { retries: 5, retryAt: retryDeadline, signal: options.signal });
+        }, { retries: 5, retryAt: retryDeadline, signal: options.signal, giveUp: stopWaiting });
       } catch (error) {
-        this.retryAt = retainRequest(error) ? retryDeadline(error) : 0;
+        // No answer at all has no server deadline: a resend (Try again, back online) may go at once.
+        this.retryAt = retainRequest(error) && !unanswered(error) ? retryDeadline(error) : 0;
         this.request = retainRequest(error) ? { ...request, retryAt: this.retryAt } : null;
         await writeAdmission('', this.request);
         throw error;

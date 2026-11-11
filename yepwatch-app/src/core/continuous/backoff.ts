@@ -34,6 +34,12 @@ export function transientFailure(error: unknown): boolean {
   // No JSON answer: no response at all, a proxy page while the server restarts, or a 5xx.
   return e.code === 'outcome_unknown' && (e.status === undefined || Number(e.status) >= 500 || [404, 408].includes(Number(e.status)));
 }
+/** No answer at all: the request never reached YepWatch or timed out (offline, no network, a dead connection). */
+export function unanswered(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const e = error as Error & { code?: unknown; status?: unknown };
+  return e.code === 'outcome_unknown' && e.status === undefined;
+}
 /** Resolves after `ms`, or at once when `signal` aborts; the timer is cleared either way. */
 export function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -63,6 +69,8 @@ export async function retryTransient(
     sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
     random?: () => number;
     now?: () => number;
+    /** Stop waiting at once for this failure (the device is offline): the caller shows it and resends later. */
+    giveUp?: (error: unknown, tries: number) => boolean;
   }
 ): Promise<boolean> {
   const sleep = o.sleep ?? abortableSleep;
@@ -74,7 +82,7 @@ export async function retryTransient(
       return true;
     } catch (e) {
       if (o.signal?.aborted) return false;
-      if (tries >= o.retries || !transientFailure(e)) throw e;
+      if (tries >= o.retries || !transientFailure(e) || o.giveUp?.(e, tries)) throw e;
       const floor = Math.max(0, o.retryAt(e) - now());
       if (floor > BACKOFF_MAX_MS) throw e;
       await sleep(backoffDelay(tries, o.random, floor), o.signal);
