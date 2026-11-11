@@ -512,7 +512,8 @@ export function useContinuousRoom(roomId: string) {
     const snapshot = cached();
     if (!access || !snapshot || expired() || privateError) return Promise.resolve(false);
     const build: CommandBuild = typeof input === 'function' ? input : () => input;
-    const command = build(snapshot);
+    // Built against the room as shown: a tap behind this device's own unconfirmed commands is aimed at them.
+    const command = build(overlayRoom(snapshot, queue.current.pending, outbox.current));
     if (!command) return Promise.resolve(false);
     return new Promise<boolean>((settle) => {
       outbox.current = [...outbox.current, { commandId: Crypto.randomUUID(), build, foreground: awaitsServer(command), settle }];
