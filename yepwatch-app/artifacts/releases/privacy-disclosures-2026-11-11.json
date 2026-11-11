@@ -1,0 +1,51 @@
+{
+  "verifiedAt": "2026-11-11T22:38:48.535786+00:00",
+  "sourceCommit": "a2d7ecd4bdfcdb5a3cd02b9371d7278ecaac43df",
+  "webPrivacyExactReadback": true,
+  "productionAndPreviewAndroidAssociationReadback": true,
+  "nativeUpdates": [
+    {
+      "id": "01a1ccc0-2a59-78aa-897e-05f2d64e5568",
+      "group": "4692819e-ceb2-4771-9d1b-495445c3ecec",
+      "branch": "production",
+      "runtimeVersion": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "platform": "ios",
+      "gitCommitHash": "a2d7ecd4bdfcdb5a3cd02b9371d7278ecaac43df"
+    },
+    {
+      "id": "01a1ccc0-2a59-774f-a915-6da91ec38ca1",
+      "group": "d5111f23-3ae1-4dfc-b444-871e47c2c8a1",
+      "branch": "production",
+      "runtimeVersion": "8d1264ebe69b509f2f258813b92603f31603f9d5",
+      "platform": "android",
+      "gitCommitHash": "a2d7ecd4bdfcdb5a3cd02b9371d7278ecaac43df"
+    },
+    {
+      "id": "01a1ccc1-0482-74fb-a9d3-52edcc8ad3c6",
+      "group": "960c93c4-4739-4470-bce9-d0055d52e502",
+      "branch": "beta",
+      "runtimeVersion": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "platform": "ios",
+      "gitCommitHash": "a2d7ecd4bdfcdb5a3cd02b9371d7278ecaac43df"
+    },
+    {
+      "id": "01a1ccc2-7261-7e75-98e2-32e23ca0b045",
+      "group": "c9bb5b0e-da93-43d6-8bf5-3ce84067d7b8",
+      "branch": "beta-preview",
+      "runtimeVersion": "e602b9da0532d0b6553acc72b771132638acce70",
+      "platform": "android",
+      "gitCommitHash": "a2d7ecd4bdfcdb5a3cd02b9371d7278ecaac43df"
+    }
+  ],
+  "validation": {
+    "appTypecheck": "pass",
+    "appLint": "pass; existing unused View warning",
+    "assetGeneration": "pass",
+    "productionNativeExports": "pass",
+    "betaNativeExports": "pass",
+    "nativeRuntimeFingerprintsMatchExistingBinaries": true,
+    "ci": "https://github.com/alp82/goodwatch-monorepo/actions/runs/43112555770",
+    "ciConclusion": "success"
+  },
+  "newNativeBinaryBuilt": false
+}

@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-11T19:44:08.070674+00:00",
+  "checkedAt": "2026-11-11T22:41:47.190464+00:00",
   "accountEmail": "hello@goodwatch.app",
   "developerAccountName": "GoodWatch",
   "developerAccountId": "8951486415791555357",
@@ -8,22 +8,31 @@
   "closedTrack": {
     "name": "Closed testing - Alpha",
     "id": "4698020847026606780",
-    "status": "inactive",
-    "releaseCount": 0,
+    "status": "in review",
+    "releaseCount": 1,
     "optInLinkConfirmedByConsoleCopyControl": "https://play.google.com/apps/testing/com.yepwatch.app",
-    "eligibleGoogleGroup": "pending creation; not saved"
+    "eligibleGoogleGroup": "yepwatch-testers@googlegroups.com",
+    "releaseId": "1",
+    "releaseName": "1.0.0 (17) - closed test",
+    "versionCode": 17,
+    "eligibilitySavedAndReadBack": true,
+    "availableCountryRegionEntries": 178,
+    "feedbackEmail": "hello@goodwatch.app",
+    "testersOptedIn": 0
   },
   "googleGroup": {
     "name": "YepWatch Testers",
     "email": "yepwatch-testers@googlegroups.com",
     "creatorAccount": "hello@goodwatch.app",
-    "status": "CAPTCHA required",
+    "status": "created and public join enabled",
     "anyoneCanJoin": true,
     "anyoneCanDiscover": true,
     "posting": "managers",
     "memberList": "managers",
     "testerEmailsAdded": 0,
-    "invitationsSent": 0
+    "invitationsSent": 0,
+    "joinUrl": "https://groups.google.com/g/yepwatch-testers",
+    "settingsFreshlyVerified": true
   },
   "playSetup": {
     "privacyPolicy": {
@@ -38,25 +47,122 @@
     "healthFeatures": "none",
     "financialFeatures": {
       "answer": "none",
-      "saveRequested": true,
-      "freshReadbackPending": true
+      "saveAcknowledged": true
     },
     "category": {
       "value": "Entertainment",
       "saveAcknowledged": true
     },
-    "contactDetails": "not yet entered; editor opened before Play tab closed",
-    "storeListing": "not yet entered",
-    "reviewAccess": "pending",
-    "contentRating": "pending",
-    "targetAudience": "pending",
-    "dataSafety": "pending"
+    "contactDetails": {
+      "email": "hello@goodwatch.app",
+      "website": "https://yepwatch.com",
+      "saved": true
+    },
+    "storeListing": {
+      "locale": "en-US",
+      "state": "submitted for review",
+      "textSource": "store/en-US.json",
+      "androidScreenshots": 8,
+      "screenshotOrder": [
+        "gallery-01-swipe-together.png",
+        "gallery-02-yep-stamp.png",
+        "gallery-03-nope-giant.png",
+        "gallery-04-yep-wall.png",
+        "gallery-05-nope-echo.png",
+        "gallery-06-its-a-match.png",
+        "gallery-07-shared-matches.png",
+        "gallery-08-tonights-pick.png"
+      ],
+      "icon": "store/assets/icon-512.png",
+      "featureGraphic": "store/assets/feature-graphic-1024x500.png",
+      "aiAssistedAssetsLabelled": [
+        "icon",
+        "feature graphic"
+      ],
+      "nativeScreenshotsNotAIGenerated": true
+    },
+    "reviewAccess": {
+      "configuredAndSaveAcknowledged": true,
+      "scope": "optional GoodWatch sign-in; guest access also explained",
+      "privateCredentialValuesRecorded": false,
+      "reviewAccountLoginVerified": true,
+      "reviewAccountEmailVerified": true,
+      "verificationSessionRevoked": true,
+      "browserReturnAndNativePkceVerified": true,
+      "memberHomeAndDeletionStatusReadable": true,
+      "physicalNativeHandoffVerified": false
+    },
+    "contentRating": {
+      "savedAndSubmitted": true,
+      "category": "All other app types",
+      "onlineCatalogAndTrailersIncluded": true,
+      "privateRoomIdeasIncluded": true,
+      "northAmerica": "Teen",
+      "germany": "16+",
+      "brazil": "16+",
+      "pegi": "Parental guidance",
+      "generic": "12+"
+    },
+    "targetAudience": {
+      "userConfirmed": "General audience 13+; no in-app age gate",
+      "ageBins": [
+        "13-15",
+        "16-17",
+        "18 and over"
+      ],
+      "savedAndSubmitted": true
+    },
+    "dataSafety": {
+      "savedAndSubmitted": true,
+      "notes": "store/google-data-safety-notes.json",
+      "dataTypes": 9,
+      "encryptedInTransit": true,
+      "accountDeletionUrl": "https://yepwatch.com/delete-account",
+      "separatePartialDataDeletionOffered": false
+    },
+    "advertisingId": {
+      "usesAndroidAdvertisingId": false,
+      "saved": true,
+      "productionBundleManifestChecked": true,
+      "adIdPermissionPresent": false,
+      "adServicesAdIdPermissionPresent": false
+    }
   },
-  "uploadedAab": false,
-  "submittedForReview": false,
+  "uploadedAab": {
+    "versionName": "1.0.0",
+    "versionCode": 17,
+    "sha256": "610cefbd91b57c09ce01494f275e56d61920d3900acaac0f1a81dc394b898e58",
+    "acceptedByPlay": true,
+    "targetSdk": 36,
+    "minimumApi": 24
+  },
+  "submittedForReview": true,
   "sources": [
     "https://support.google.com/googleplay/android-developer/answer/9845334",
     "https://support.google.com/googleplay/android-developer/answer/9859455",
-    "https://support.google.com/youtube/answer/132596"
-  ]
+    "https://support.google.com/youtube/answer/132596",
+    "https://support.google.com/googleplay/android-developer/answer/14151465",
+    "https://docs.expo.dev/eas-update/store-privacy-declarations/",
+    "https://support.google.com/googleplay/android-developer/answer/10787469",
+    "https://developer.android.com/training/app-links/configure-assetlinks"
+  ],
+  "submission": {
+    "consoleState": "Changes in review",
+    "quickChecksStillRunning": false,
+    "changesSubmitted": 15,
+    "managedPublishing": false,
+    "approved": false,
+    "closedTestInstallAvailabilityVerified": false,
+    "productionAccess": "not yet eligible; Console requires 12 opted-in testers for 14 days",
+    "quickChecksCompleted": true,
+    "consoleConfirmation": "Your changes are now in review."
+  },
+  "appSigning": {
+    "managedByPlay": true,
+    "automaticProtectionEnabled": false,
+    "productionSigningSha256": "34:DA:C0:65:64:76:03:62:B1:3F:0A:09:47:33:DD:BF:20:AC:72:B1:41:02:C2:0A:7F:4C:74:83:3B:A2:26:85",
+    "productionAssetlinksDeployed": true,
+    "previewAssetlinksPreserved": true,
+    "physicalPlayInstallLinkVerificationPending": true
+  }
 }
