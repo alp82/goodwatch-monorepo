@@ -1,6 +1,6 @@
 # JEV invocation attribution verification
 
-Verified on 2026-11-11 against `origin/main` at `33edb0523`. No production database migration, application deployment or paid model call was performed.
+Initial implementation verified on 2026-11-11 against `origin/main` at `33edb0523`, without production database changes, deployment or paid model calls. Shipping checks are recorded below.
 
 ## Checks
 
@@ -31,3 +31,9 @@ Static route JavaScript closures (entry, route ancestors and manifest-listed sta
 | Home | 24 | 24 | 542 |
 
 Deployment order and billing-period queries are in [search invocation attribution](../search-invocation-attribution.md).
+
+## Shipping to main
+
+Before the main push on 2026-11-11, the additive migration was applied to production and both attribution roots plus their seven typed children were verified through `information_schema.columns`. No historical data was backfilled.
+
+YepWatch actor diagnostics were moved to the authenticated `x-goodwatch-actor-kind` request header. The body remains compatible with older strict receivers during automatic page deployment and the later search-role rollout. Tests cover old body-schema acceptance, verified member/guest categories, missing/invalid diagnostics and unauthenticated forged headers. All 97 focused shipping tests and the final client/server production build passed.

@@ -51,9 +51,11 @@ export function roomSearch(
 				headers: {
 					authorization: `Bearer ${env.YEPWATCH_SEARCH_SECRET}`,
 					"content-type": "application/json",
-					"x-goodwatch-consumer": "yepwatch"
+					"x-goodwatch-consumer": "yepwatch",
+					// Older search roles ignore this header and retain their strict request-body contract.
+					...(actor ? { "x-goodwatch-actor-kind": actor } : {})
 				},
-				body: JSON.stringify({ prompt, country, serviceIds, ...(actor ? { actor } : {}) }),
+				body: JSON.stringify({ prompt, country, serviceIds }),
 				signal: AbortSignal.timeout(12000)
 			})
 		} catch {

@@ -28,7 +28,7 @@ History records completed/basic/cached searches and latency; it is best effort. 
 
 Apply [the additive migration](../goodwatch-webapp/scripts/migrations/2026-11-11-search-attribution.sql) **before deploying** the webapp and search roles. Check `information_schema.columns` for both attribution roots and all seven children. For installations using the Windmill schema initializer, the same declarations are in `crate_schemas.py`; its normal missing-column check is safe on repeat runs. The standalone SQL is for a one-time migration: skip an already existing root after verifying its definition.
 
-Deploy search receivers before YepWatch callers: the older strict YepWatch search receiver rejects the new optional `actor` field. The new receiver accepts old callers. Rollback to old application code can leave these additive columns in place. No production migration or deployment is performed by the code change itself.
+YepWatch sends its verified participant category in `x-goodwatch-actor-kind`, alongside its existing service authorization. The request body stays compatible with older strict receivers: an older role ignores the header until upgraded, and a new receiver records old callers as unknown. Roll the search roles one at a time after the main image is available. Rollback to old application code can leave these additive columns in place. No production migration or deployment is performed by the code change itself.
 
 ## Billing-cycle queries
 

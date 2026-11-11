@@ -24,7 +24,13 @@ test('a capped mood search is a definitive refusal, not a saved connection retry
     if (name.endsWith('search-filters')) return { titlePointId: () => 1 }
     throw new Error(`Unexpected dependency: ${name}`)
   } })
-  const transport: typeof fetch = async (input, init) => exports.searchYepWatchRoom!(new Request(input, init))
+  const transport: typeof fetch = async (input, init) => {
+    const request = new Request(input, init)
+    const body = await request.clone().json()
+    // The old strict receiver's body schema remains valid during rolling deployment.
+    z.object({ prompt: z.string(), country: z.string(), serviceIds: z.array(z.number()) }).strict().parse(body)
+    return exports.searchYepWatchRoom!(request)
+  }
   const interpret = roomSearch({ YEPWATCH_SEARCH_SECRET: secret }, transport)!
   await assert.rejects(interpret('dark and funny', 'DE', [8]), (error: unknown) => {
     const e = error as { code: string; retryable: boolean; message: string }
@@ -38,8 +44,10 @@ test('a capped mood search is a definitive refusal, not a saved connection retry
     await assert.rejects(interpret('dark and funny', 'DE', [8], actor))
     assert.deepEqual({ ...viewer.attribution }, { consumer: 'yepwatch', surface: 'yepwatch', trigger: 'api', reported_by: 'server', actor })
   }
+  await exports.searchYepWatchRoom!(new Request('https://search.invalid/api/combined-search', { method: 'POST', headers: { authorization: `Bearer ${secret}`, 'x-goodwatch-actor-kind': 'forged' }, body: JSON.stringify({ prompt: 'dark and funny', country: 'DE', serviceIds: [] }) }))
+  assert.equal(viewer.attribution.actor, 'unknown', 'invalid diagnostics do not fail a valid request or invent an actor')
   const before = calls
-  const unauthorized = await exports.searchYepWatchRoom!(new Request('https://search.invalid/api/combined-search', { method: 'POST', body: JSON.stringify({ prompt: 'dark and funny', country: 'DE', serviceIds: [], actor: 'member' }) }))
+  const unauthorized = await exports.searchYepWatchRoom!(new Request('https://search.invalid/api/combined-search', { method: 'POST', headers: { 'x-goodwatch-actor-kind': 'member' }, body: JSON.stringify({ prompt: 'dark and funny', country: 'DE', serviceIds: [] }) }))
   assert.equal(unauthorized.status, 403)
   assert.equal(calls, before, 'no identity is accepted before the integration secret is verified')
 })
