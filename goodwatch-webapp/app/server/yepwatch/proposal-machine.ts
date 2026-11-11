@@ -284,12 +284,29 @@ export function proposalSnapshot(
 		}
 	}
 }
+/**
+ * A refill asked for against a stream version someone else's refill (or a vote that reopened the
+ * stream) already moved past. Everyone's deck runs low at the same moment in a big room, so these
+ * race; the first one fills the deck and the rest have nothing left to do. They succeed as no-ops
+ * instead of failing with a conflict: the asker reads the new stream and refills again if it still
+ * needs to.
+ */
+export function staleRefill(room: ProposalRoom, envelope: CommandEnvelope) {
+	const c = envelope.command
+	return (
+		c.type === "refill" &&
+		room.phase === "choosing" &&
+		c.generation === room.generation &&
+		c.expectedStreamVersion < room.stream.version
+	)
+}
 export function preflight(
 	room: ProposalRoom,
 	actorId: string,
 	envelope: CommandEnvelope,
 	now: number
 ) {
+	if (staleRefill(room, envelope)) return
 	if (envelope.command.type === "start")
 		requireRoom(
 			!!actor(room, room.hostId).nickname.trim(),
@@ -484,7 +501,10 @@ export function proposalTransition(
 		}
 		room.revision++
 	} else {
-		if (c.type === "refill") {
+		if (c.type === "refill" && staleRefill(original, envelope)) {
+			room = structuredClone(original)
+			room.revision++
+		} else if (c.type === "refill") {
 			preflight(original, actorId, envelope, now)
 			room = structuredClone(original)
 			retire(room)

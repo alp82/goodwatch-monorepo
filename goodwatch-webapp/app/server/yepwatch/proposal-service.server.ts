@@ -40,7 +40,8 @@ import {
 	proposalTransition,
 	preflight,
 	reconcile,
-	retire
+	retire,
+	staleRefill
 } from "./proposal-machine.ts"
 import type {
 	ProposalCatalog,
@@ -760,7 +761,7 @@ export class ProposalService {
 			let page: Awaited<ReturnType<ProposalCatalog["page"]>> | undefined
 			if (
 				envelope.command.type === "start" ||
-				envelope.command.type === "refill"
+				(envelope.command.type === "refill" && !staleRefill(old.room, envelope))
 			) {
 				const room = structuredClone(activeRoom(old.room))
 				if (envelope.command.type === "refill") retire(room)

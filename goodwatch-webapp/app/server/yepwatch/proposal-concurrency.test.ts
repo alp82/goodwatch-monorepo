@@ -180,6 +180,24 @@ for (const backend of ["memory", "crate"] as const)
 					(match) => match.candidateId === candidateId,
 				),
 			)
+			// Everyone's deck runs low together: their refills race on one stream version and all succeed.
+			const before = (await service.read(id, credential(host))).shared
+			const refills = await Promise.allSettled(
+				people.map((person) =>
+					send(person, {
+						type: "refill",
+						generation: before.generation,
+						expectedStreamVersion: before.stream.version,
+					}),
+				),
+			)
+			assert.deepEqual(
+				refills.flatMap((r) => (r.status === "rejected" ? [String(r.reason)] : [])),
+				[],
+				"simultaneous refills must all be acknowledged",
+			)
+			const after = (await service.read(id, credential(host))).shared
+			assert.equal(after.stream.version, before.stream.version + 1, "one refill fills the deck; the rest are no-ops")
 		},
 	)
 
