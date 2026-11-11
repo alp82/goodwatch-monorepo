@@ -7,6 +7,7 @@
 //    hermesc, swap assets/index.android.bundle in the cached APK, zipalign + apksigner with the
 //    staging debug key (~20-40 s).
 // EXPO_PUBLIC_* origins are inlined into the bundle, so pointing the APK at another stack is a JS rebuild.
+import { execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -96,6 +97,21 @@ async function gradleBuild(origins, logFile) {
   return out;
 }
 
+/**
+ * The key base.apk was signed with, kept next to it in the shared APK cache. The staging copy is per
+ * worktree, so when another worktree built base.apk this one has no android/ dir. Older cache entries
+ * lack the file: prebuild copies android/app/debug.keystore verbatim from expo's template, so the same
+ * key comes out of that tarball.
+ */
+function signingKey(cacheDir) {
+  const kept = path.join(cacheDir, 'debug.keystore');
+  if (fs.existsSync(kept)) return kept;
+  const staged = path.join(STAGE, 'android/app/debug.keystore');
+  if (fs.existsSync(staged)) fs.copyFileSync(staged, kept);
+  else fs.writeFileSync(kept, execFileSync('tar', ['-xzf', path.join(STAGE, 'node_modules/expo/template.tgz'), '-O', 'package/android/app/debug.keystore'], { maxBuffer: 1 << 20 }));
+  return kept;
+}
+
 /** Rebundle JS into an existing APK. */
 async function repackJs(baseApk, outApk, origins, logFile) {
   const env = buildEnv(origins);
@@ -116,7 +132,7 @@ async function repackJs(baseApk, outApk, origins, logFile) {
   const bt = tools.buildTools();
   const aligned = path.join(work, 'aligned.apk');
   run(path.join(bt, 'zipalign'), ['-f', '-p', '4', unsigned, aligned]);
-  run(path.join(bt, 'apksigner'), ['sign', '--ks', path.join(STAGE, 'android/app/debug.keystore'), '--ks-pass', 'pass:android', '--key-pass', 'pass:android',
+  run(path.join(bt, 'apksigner'), ['sign', '--ks', signingKey(path.dirname(baseApk)), '--ks-pass', 'pass:android', '--key-pass', 'pass:android',
     '--ks-key-alias', 'androiddebugkey', '--out', outApk, aligned]);
 }
 
@@ -137,6 +153,7 @@ export async function ensureApk(origins, { force = false } = {}) {
   if (!fs.existsSync(base) || force) {
     const apk = await gradleBuild(origins, logFile);
     fs.copyFileSync(apk, base);
+    fs.copyFileSync(path.join(STAGE, 'android/app/debug.keystore'), path.join(dir, 'debug.keystore'));
     fs.writeFileSync(baseMeta, JSON.stringify({ jsKey: jk, builtAt: new Date().toISOString() }));
     info.gradle = true;
   }
