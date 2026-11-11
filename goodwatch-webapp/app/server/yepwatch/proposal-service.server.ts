@@ -1,4 +1,5 @@
 import { MemoryAccountRooms } from "./proposal-account-store.ts"
+import { MemoryDeletionStore, requireNotDeleting, type DeletionStore } from './proposal-deletion.ts'
 import type { AccountRoomsStore, RoomAccount } from "./proposal-types.ts"
 import type { AccountHome } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
@@ -66,6 +67,7 @@ export interface ProposalOperationGuard {
 	command(roomId: string, actorId: string, commandDigest: string): Promise<void>
 }
 export class ProposalService {
+	readonly deletions: DeletionStore
 	readonly accounts: AccountRoomsStore
 	readonly repository: ProposalRepository
 	readonly catalog: ProposalCatalog
@@ -87,6 +89,7 @@ export class ProposalService {
 		if (secret.length < 32) throw new Error("Room secret too short")
 		this.repository = repository
 		this.accounts = repository.accountStore ?? new MemoryAccountRooms()
+		this.deletions = repository.deletionStore ?? new MemoryDeletionStore()
 		this.catalog = catalog
 		this.secret = secret
 		this.publish = publish
@@ -339,6 +342,7 @@ export class ProposalService {
 		}
 	}
 	async create(request: GuestAdmissionRequest, account?: RoomAccount) {
+		if (account) await this.requireAccountActive(account.userId);
 		const id = keyed(
 			this.secret,
 			"proposal-room",
@@ -444,6 +448,7 @@ export class ProposalService {
 		return this.write(id, () => this.joinRoom(id, request, account))
 	}
 	private async joinRoom(id: string, request: JoinRoomRequest, account?: RoomAccount) {
+		if (account) await this.requireAccountActive(account.userId);
 		const resolved = await this.resolveInvite(request.inviteCode)
 		requireRoom(resolved.roomId === id, "not_found", "Invite unavailable", 404)
 		const { inviteCode: _invite, screenId, ...base } = request
@@ -917,6 +922,7 @@ export class ProposalService {
 		account: RoomAccount,
 		returnAfterLeave = false,
 	): Promise<GuestAdmission> {
+		await this.requireAccountActive(account.userId);
 		for (let attempt = 0; attempt < 8; attempt++) {
 			const old = await this.get(id);
 			const p = old.room.participants.find(
@@ -980,6 +986,7 @@ export class ProposalService {
 		credential: ActorCredential,
 		account: RoomAccount,
 	): Promise<GuestAdmission> {
+		await this.requireAccountActive(account.userId);
 		for (let attempt = 0; attempt < 8; attempt++) {
 			const old = await this.get(id);
 			let source: ProposalParticipant;
@@ -1095,6 +1102,7 @@ export class ProposalService {
 		);
 	}
 	async accountHome(account: RoomAccount): Promise<AccountHome> {
+		await this.requireAccountActive(account.userId);
 		const rooms: AccountHome["rooms"] = [];
 		for (const entry of await this.accounts.rooms(account.userId)) {
 			if (entry.expiresAt <= this.now()) continue;
@@ -1177,6 +1185,70 @@ export class ProposalService {
 				break;
 			}
 		}
+	}
+	async requireAccountActive(userId: string) {
+		await requireNotDeleting(this.deletions, { kind: 'account', userId });
+	}
+	accountDeletionTag(userId: string) { return keyed(this.secret, 'deletion-account-tag', userId); }
+	/** The durable deletion marker fences new admissions before the recoverable room departures begin. */
+	async deleteAccount(account: RoomAccount) {
+		const state = await this.deletions.schedule({ kind: 'account', userId: account.userId }, this.now());
+		for (const entry of await this.accounts.rooms(account.userId)) {
+			await this.departForDeletion(entry.roomId, p => p.memberUserId === account.userId);
+		}
+		// End this device's sealed YepWatch session. Restoring requires a fresh GoodWatch authentication.
+		await this.accounts.revokeSession(account.sessionId, account.expiresAt);
+		return state;
+	}
+	async deleteGuest(id: string, credential: ActorCredential) {
+		const stored = await this.get(id);
+		const p = this.auth(stored.room, credential, true);
+		requireRoom(!p.memberUserId, 'forbidden', 'Use account deletion for a signed-in participant', 403);
+		const state = await this.deletions.schedule({ kind: 'guest', roomId: id, participantId: p.id }, this.now());
+		await this.departForDeletion(id, person => person.id === p.id);
+		return state;
+	}
+	async restoreGuest(id: string, credential: ActorCredential) {
+		const stored = await this.get(id);
+		const p = this.auth(stored.room, credential, true);
+		requireRoom(!p.memberUserId, 'forbidden', 'Use account restoration for a signed-in participant', 403);
+		await this.deletions.restore({ kind: 'guest', roomId: id, participantId: p.id }, this.now());
+		for (let i = 0; i < 8; i++) {
+			const old = await this.get(id);
+			const room = structuredClone(old.room);
+			const person = this.auth(room, credential, true);
+			person.leftAt = null; person.epoch++; room.rosterVersion++; room.revision++;
+			refreshServices(room);
+			if (room.phase !== 'decided') reconcile(room, old.room);
+			if (!(await this.repository.compareAndSwap(old, room, true))) continue;
+			await this.notify(id);
+			return { restored: true };
+		}
+		throw new RoomError('busy', 'Restoration will need another attempt.', 503, true);
+	}
+	private async departForDeletion(id: string, matches: (p: ProposalParticipant) => boolean) {
+		for (let i = 0; i < 12; i++) {
+			const stored = await this.repository.read(id);
+			if (!stored || stored.room.expiresAt <= this.now()) return;
+			const room = structuredClone(stored.room);
+			const departing = room.participants.filter(matches);
+			if (!departing.length) return;
+			for (const p of departing) {
+				p.leftAt ??= this.now(); p.epoch++; p.sessions = []; delete p.memberGrant;
+				room.tickets = room.tickets.filter(t => t.participantId !== p.id);
+				room.memberIntents = room.memberIntents?.filter(t => t.participantId !== p.id);
+			}
+			const remaining = activeRoom(room).participants;
+			if (departing.some(p => p.id === room.hostId) && remaining.length) room.hostId = remaining[0].id;
+			refreshServices(room);
+			room.rosterVersion++; room.revision++;
+			if (room.phase !== 'decided') reconcile(room, stored.room);
+			try { if (!(await this.repository.compareAndSwap(stored, room, true))) continue; }
+			catch (e) { if (!(e instanceof IndeterminateWrite)) throw e; continue; }
+			await this.notify(id);
+			return;
+		}
+		throw new RoomError('busy', 'Deletion is scheduled; retry to finish leaving rooms.', 503, true);
 	}
 	private recordDecision(room: ProposalRoom) {
 		const d = room.decision!;

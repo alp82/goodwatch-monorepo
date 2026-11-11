@@ -14,6 +14,7 @@ import { continuousKey, homeRoomKey } from '../../core/continuous/useRoom';
 import { loadAccess, nativeClient } from '../../core/credentials';
 import { queryClient } from '../../core/providers';
 import { classify, unreadRoom, type HomeRoom } from './home-model';
+import { deletionStateSchema } from '../../core/continuous/deletion-state';
 
 /**
  * The personal home: every room on this device, read from each room's own authoritative snapshot
@@ -105,6 +106,8 @@ function useGuestHome(enabled: boolean) {
 /** Signed-in lists come entirely from the account; guest navigation remains local. */
 export function useHome() {
   const account = useAccount();
+  const lifecycle = useQuery({ queryKey: ['account-deletion', account.generation], enabled: account.member, retry: false, refetchInterval: 15_000,
+    queryFn: async () => { const result = await continuousApi.deletionStatus(); return { accountTag: result.accountTag, deletion: result.deletion ? deletionStateSchema.parse(result.deletion) : null }; } });
   const local = useGuestHome(account.ready && !account.member && !account.lapsed);
   const [mutationFailed, setMutationFailed] = useState(false);
   const key = ['account-home', account.generation] as const;
@@ -126,12 +129,15 @@ export function useHome() {
       }
     }
     return { ...(await continuousApi.accountHome()), notice: replacedGuest ? 'Resumed your existing place. Your account’s saved answers were kept.' : '' };
-  }, enabled: account.member,
+  }, enabled: account.member && lifecycle.isSuccess && !lifecycle.data?.deletion,
     retry: 1, refetchInterval: 15_000 });
   if (!account.member) return account.lapsed
-    ? { ...local, ready: account.ready, hasRooms: false, active: [], archived: [], left: [], decisions: [], decidedRooms: new Set<string>(), unavailable: [], notice: '' }
-    : { ...local, notice: '' };
-  const classified = (cloud.data?.rooms ?? []).map(({ snapshot, joinedAt, archivedAt, leftLabel }) => {
+    ? { ...local, ready: account.ready, hasRooms: false, active: [], archived: [], left: [], decisions: [], decidedRooms: new Set<string>(), unavailable: [], notice: '', deletionPending: false }
+    : { ...local, notice: '', deletionPending: false };
+  // A deletion made on another device also hides already cached account data here.
+  const deletionPending = Boolean(lifecycle.data?.deletion);
+  const data = deletionPending || !lifecycle.isSuccess || (cloud.error instanceof RoomFailure && cloud.error.status === 403) ? undefined : cloud.data;
+  const classified = (data?.rooms ?? []).map(({ snapshot, joinedAt, archivedAt, leftLabel }) => {
     const entry = { roomId: snapshot.shared.roomId, nickname: snapshot.shared.participants.find(p => p.participantId === snapshot.own.participantId)?.nickname ?? account.name ?? '',
       expiresAt: snapshot.shared.expiresAt, joinedAt, openedAt: joinedAt,
       ...(archivedAt === null ? {} : { archivedAt }),
@@ -143,17 +149,17 @@ export function useHome() {
   const archive = (id: string, archived: boolean) => {
     void continuousApi.archive(id, archived).then(() => queryClient.invalidateQueries({ queryKey: ['account-home'] })).catch(() => setMutationFailed(true));
   };
-  const unavailable = cloud.isError || mutationFailed ? [{ kind: 'unavailable' as const, roomId: 'account', nickname: 'Your rooms' }] : [];
+  const unavailable = cloud.isError || lifecycle.isError || mutationFailed ? [{ kind: 'unavailable' as const, roomId: 'account', nickname: 'Your rooms' }] : [];
   return {
-    notice: cloud.data?.notice ?? '',
-    ready: cloud.isFetched && local.ready, loadingRooms: cloud.isPending, nickname: local.nickname ?? account.name,
+    notice: data?.notice ?? '', deletionPending,
+    ready: (deletionPending || lifecycle.isError || cloud.isFetched) && local.ready, loadingRooms: lifecycle.isPending || (!deletionPending && !lifecycle.isError && cloud.isPending), nickname: local.nickname ?? account.name,
     hasRooms: classified.length > 0,
     active: classified.flatMap(x => x.c.kind === 'active' && !x.entry.archivedAt ? [x.c.room] : []),
     archived: classified.flatMap(x => x.c.kind === 'active' && x.entry.archivedAt ? [x.c.room] : []),
     left: classified.flatMap(x => x.c.kind === 'left' ? [x.c.room] : []), unavailable,
-    decisions: cloud.data?.decisions ?? [],
-    decidedRooms: new Set((cloud.data?.rooms ?? []).filter(r => !r.snapshot.own.left && r.snapshot.shared.phase === 'decided').map(r => r.snapshot.shared.roomId)),
-    reload, retry: reload, archive: (id: string) => archive(id, true), restore: (id: string) => archive(id, false),
+    decisions: data?.decisions ?? [],
+    decidedRooms: new Set((data?.rooms ?? []).filter(r => !r.snapshot.own.left && r.snapshot.shared.phase === 'decided').map(r => r.snapshot.shared.roomId)),
+    reload, retry: () => { void lifecycle.refetch(); reload(); }, archive: (id: string) => archive(id, true), restore: (id: string) => archive(id, false),
     setNickname: local.setNickname,
   };
 }

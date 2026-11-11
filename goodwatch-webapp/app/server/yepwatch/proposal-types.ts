@@ -83,6 +83,7 @@ export interface ProposalRoom extends ContinuousRoom {
 	} | null
 }
 export type ProposalRepository = RoomRepository<ProposalRoom> & {
+	deletionStore?: import('./proposal-deletion.ts').DeletionStore
 	accountStore?: AccountRoomsStore
 	/** Optional for historical encrypted demo repositories; production uses typed PK lookup. */
 	rememberInvite?(

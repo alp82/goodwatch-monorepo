@@ -1,0 +1,13 @@
+build:
+  name: Build and capture native Apple screenshots
+  steps:
+    - eas/build
+    - eas/install_maestro
+    - run:
+        name: Capture iPhone and iPad
+        command: python3 scripts/capture-apple-store.py
+    - eas/upload_artifact:
+        if: ${ always() }
+        inputs:
+          type: build-artifact
+          path: .expo/store-captures

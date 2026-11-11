@@ -1,4 +1,5 @@
 import { SqlAccountRooms, encodeDecision, decodeDecision } from "./proposal-account-store.ts"
+import { SqlDeletionStore } from './proposal-deletion.ts'
 import { ROOM_CONTEXT } from "./proposal-context.ts"
 import { z } from "zod"
 import { codec, keyed } from "./crypto.server.ts"
@@ -16,6 +17,7 @@ import {
 	accountIndexTable,
 	accountHistoryTable,
 	revokedSessionTable,
+	deletionTable,
 	columns,
 	parseRow,
 	tableDdl,
@@ -65,11 +67,11 @@ async function parallel<T, R>(
 	return result
 }
 export async function provisionRelationalRooms(sql: Sql, replicas: 0 | 2) {
-	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable])
+	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable])
 		await sql(tableDdl(table, replicas))
 }
 export async function checkRelationalRooms(sql: Sql) {
-	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable])
+	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable])
 		await sql(
 			`SELECT ${columns(table).join(",")} FROM ${table.name} WHERE ${
 				table.primary
@@ -80,6 +82,7 @@ export async function checkRelationalRooms(sql: Sql) {
 
 /** Immutable typed domain records, published together by one room-head CAS. Readers never follow SQL search freshness. */
 export class RelationalProposalRepository implements ProposalRepository {
+	readonly deletionStore: SqlDeletionStore
 	readonly accountStore: SqlAccountRooms
 	private crypto: ReturnType<typeof codec>
 	// Only validated immutable rows. A bounded cache is an optimization, never the source of truth.
@@ -88,6 +91,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 	private secret: string
 	constructor(sql: Sql, secret: string) {
 		this.sql = sql
+		this.deletionStore = new SqlDeletionStore(sql, secret)
 		this.accountStore = new SqlAccountRooms(sql, secret)
 		this.secret = secret
 		this.crypto = codec(secret)

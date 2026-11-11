@@ -174,6 +174,15 @@ export const revokedSessionTable: Table = {
 export const accountHistoryTable: Table = {
 	name: "doc.yepwatch_account_history", primary: "id", fields: { ...decisionFields }
 }
+export const deletionTable: Table = {
+	name: "doc.yepwatch_deletion", primary: "id", fields: {
+		id: text(128), kind: enumeration(["account", "guest"]), user_id: nullable(text(256)),
+		room_id: nullable(text(128)), participant_id: nullable(text(128)), requested_at: integer(),
+		purge_after: integer(), phase: enumeration(["pending", "purging"]),
+		lease_until: integer(), purge_token: nullable(text(128)),
+		targets: array(object({ roomId: text(128), participantId: text(128) }), 10000),
+	}
+}
 export const tables = {
 	room: {
 		name: "doc.yepwatch_room",
@@ -444,6 +453,7 @@ export const invitationTable: Table = {
 	fields: { code_hash: text(64), room_id: text(128), expires_at: integer() }
 }
 export const storageTables: Table[] = [
+	deletionTable,
 	accountIndexTable,
 	accountHistoryTable,
 	revokedSessionTable,

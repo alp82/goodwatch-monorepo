@@ -1,0 +1,12 @@
+{
+  "generatedFrom": [
+    "assets/icon.svg",
+    "src/features/legal/content.ts"
+  ],
+  "artwork": [
+    "icon-512.png",
+    "icon-1024.png",
+    "feature-graphic-1024x500.png"
+  ],
+  "screenshots": "Captured separately from the app; this script generates no screen images."
+}

@@ -22,7 +22,7 @@ import { retainRequest, retryDeadline } from '../core/continuous/retry';
 import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
 import { retryTransient, transientFailure } from '../core/continuous/backoff';
 import { Landing } from './home/Landing';
-import { BootPageReady } from './home/boot-phase';
+import { BootPageReady, BootPhase } from './home/boot-phase';
 import { greeting, type HomeRoom } from './rooms/home-model';
 import { YourRooms } from './rooms/YourRooms';
 import { HistorySheet, InviteHead, JoinScreen, ProfileSheet } from './rooms/panels';
@@ -57,6 +57,10 @@ export function Entrance({ invite, open: request, from }: {
 }) {
   const home = useHome();
   const account = useAccount();
+  const boot = useContext(BootPhase);
+  // A redirect during the home boot can unmount the navigator before it is retained.
+  useEffect(() => { if (boot === 'ready' && home.deletionPending) router.replace('/delete-account'); }, [boot, home.deletionPending]);
+  useEffect(() => { if (boot === 'ready') void roomRegistry.recovery().then(value => { if (value?.confirmed) router.replace('/delete-account'); }); }, [boot]);
   useFocusEffect(useCallback(() => { home.reload(); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
   const [panel, setPanel] = useState<PanelKind | null>(invite ? 'join' : request && request !== 'new' ? request : null);
   const [nickname, setNickname] = useState('');

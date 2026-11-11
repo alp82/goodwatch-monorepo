@@ -151,6 +151,13 @@ export function createReleaseRuntime(
 			})
 	}, 2000)
 	repair.unref()
+	let purging = false
+	const purge = setInterval(() => {
+		if (purging || draining || !readiness().ready) return
+		purging = true
+		void service.deletions.purgeDue(now()).catch(() => console.error('YepWatch deletion cleanup will retry')).finally(() => { purging = false })
+	}, 60_000)
+	purge.unref()
 	return {
 		handler,
 		service,
@@ -162,6 +169,7 @@ export function createReleaseRuntime(
 		stop() {
 			clearInterval(timer)
 			clearInterval(repair)
+			clearInterval(purge)
 		},
 	}
 }

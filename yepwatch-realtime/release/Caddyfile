@@ -61,7 +61,7 @@
   }
   @commands {
     method POST
-    path_regexp command ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/(join|resume|archive|commands|preview|realtime-ticket|member/link)$
+    path_regexp command ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/(join|resume|archive|commands|preview|realtime-ticket|member/link|deletion|restore)$
   }
   handle @commands {
     reverse_proxy api:3000 {
@@ -83,7 +83,7 @@
   }
   @member_write {
     method POST
-    path /api/yepwatch/v1/proposal/member/start /api/yepwatch/v1/proposal/member/exchange /api/yepwatch/v1/proposal/account/start /api/yepwatch/v1/proposal/account/exchange /api/yepwatch/v1/proposal/account/logout
+    path /api/yepwatch/v1/proposal/member/start /api/yepwatch/v1/proposal/member/exchange /api/yepwatch/v1/proposal/account/start /api/yepwatch/v1/proposal/account/exchange /api/yepwatch/v1/proposal/account/logout /api/yepwatch/v1/proposal/account/deletion /api/yepwatch/v1/proposal/account/restore
   }
   handle @member_write {
     reverse_proxy api:3000 {
@@ -94,7 +94,7 @@
   }
   @member_read {
     method GET
-    path_regexp member ^/api/yepwatch/v1/proposal/(rooms/[A-Za-z0-9_-]{1,256}/member(/progress)?|account(/home)?)$
+    path_regexp member ^/api/yepwatch/v1/proposal/(rooms/[A-Za-z0-9_-]{1,256}/member(/progress)?|account(/home|/deletion)?)$
   }
   handle @member_read {
     reverse_proxy api:3000 {
@@ -140,6 +140,12 @@
   }
   handle /link-card.png {
     header Cache-Control "public, max-age=86400"
+    file_server
+  }
+  @legal path /privacy /support /terms
+  handle @legal {
+    rewrite * {path}.html
+    header Cache-Control "public, max-age=300"
     file_server
   }
   # Room invite links: the app page with link-preview tags for this invite (scripts/invite-page.cjs).

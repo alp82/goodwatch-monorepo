@@ -23,6 +23,7 @@ import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
 import { posterAt, timeAgo, type HomeRoom } from './home-model';
 import { useHome } from './useHome';
+import { LegalLinks } from '../legal/LegalLinks';
 
 const MAX_NAME = 40;
 /** Browsers draw their own focus outline and caret; the amber border and caret replace them. */
@@ -202,6 +203,7 @@ export function ProfileSheet({ nickname, save, member = false, lapsed = false, s
         </View>
       ) : null}
       <ErrorText>{error}</ErrorText>
+      <LegalLinks />
     </Sheet>
   );
 }

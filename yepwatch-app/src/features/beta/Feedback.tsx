@@ -18,7 +18,7 @@ export function Feedback() {
     <View style={{ gap: 8 }}>
       <Press label="Send feedback" style={{ alignSelf: 'flex-start', minHeight: 32 }} onPress={() => {
         setFailed(false);
-        void Linking.openURL(`mailto:hello@goodwatch.app?subject=${encodeURIComponent('YepWatch beta feedback')}&body=${encodeURIComponent(body)}`).catch(() => setFailed(true));
+        void Linking.openURL(`mailto:hello@goodwatch.app?subject=${encodeURIComponent('YepWatch feedback')}&body=${encodeURIComponent(body)}`).catch(() => setFailed(true));
       }}><GText size={13} bold color={glow.soft}>Send feedback</GText></Press>
       <GText size={12} color={glow.muted}>YepWatch {version}</GText>
       {failed && <>

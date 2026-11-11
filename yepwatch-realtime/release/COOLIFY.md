@@ -37,6 +37,8 @@ Skip that older guide's separate Redis-user requirement if reusing the existing 
 
 Existing typed stores deployed before short room keys need the small [invitation-table upgrade](../../goodwatch-webapp/app/server/yepwatch/migrations/20261023-short-invitations.sql) before updating. No room reset or key change is needed.
 
+Existing account-identity stores also need the additive [deletion table and grant](../../goodwatch-webapp/app/server/yepwatch/migrations/20261111-deletion.sql) before deploying the deletion-enabled API. Preserve all rooms/history and the room key. Follow [deletion and recovery operations](../../docs/adr/yepwatch-account-deletion.md); use the new operator for later expiry cleanup.
+
 ## Enable GoodWatch signup/sign-in
 
 Guests work without member configuration. Member linking defaults off until the existing GoodWatch issuer is ready:

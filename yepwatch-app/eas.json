@@ -48,6 +48,12 @@
       },
       "channel": "production"
     },
+    "store-simulator": {
+      "extends": "production",
+      "distribution": "internal",
+      "ios": { "simulator": true, "config": "store-screenshots.yml" },
+      "channel": "store-simulator"
+    },
     "beta": {
       "extends": "production",
       "env": {

@@ -413,6 +413,8 @@ A YepWatch room shares one country and up to eight authored ideas. The host cont
 
 **Decision history**: The confirmed choices of rooms the person participated in. A signed-in person's history is shared across devices and survives a new round or room expiry; a choice does not record a GoodWatch Watch or change Seen or taste.
 
+**YepWatch deletion**: A request to remove only YepWatch data, with an explicit 30-day recovery window followed by permanent cleanup. It immediately ends room participation and blocks account access; GoodWatch stays intact. Signing in does not cancel it. See [the deletion decision](docs/adr/yepwatch-account-deletion.md).
+
 **Start again**: The room owner's explicit way to begin another round after a final decision. It opens the existing settings for adjustment; cancelling preserves the decision, and only the explicit start resets the round. Reviewing matches after a decision never resumes voting.
 
 **Decision cheer**: An ephemeral tap or hold on the final poster, visible to room peers without changing votes or agreements. Popcorn falls past the poster. Holding together adds Marquee lights only when every non-dropped participant holds; multiple sessions from one participant count once. Hold evidence expires after 1.5 seconds, and ordinary presence heartbeats do not renew it. There is no Projector effect.

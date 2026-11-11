@@ -77,11 +77,14 @@ try:
         room = "a" * 32
         public = [
             ("GET", "/account"), ("GET", "/account/home"),
+            ("GET", "/account/deletion"), ("POST", "/account/deletion"),
+            ("POST", "/account/restore"),
             ("POST", "/account/start"), ("POST", "/account/exchange"),
             ("POST", "/account/logout"), ("GET", "/member/callback"),
             ("POST", f"/rooms/{room}/resume"), ("POST", f"/rooms/{room}/archive"),
             ("GET", f"/rooms/{room}"), ("GET", f"/rooms/{room}/member/progress"),
             ("POST", f"/rooms/{room}/commands"), ("POST", f"/rooms/{room}/member/link"),
+            ("POST", f"/rooms/{room}/deletion"), ("POST", f"/rooms/{room}/restore"),
             ("GET", "/invites/ABC234/card.png"),
         ]
         for method, route in public:
@@ -92,6 +95,7 @@ try:
         for method, route in [
             ("POST", "/realtime/internal/attach"), ("GET", "/realtime/health"),
             ("GET", "/account/private"), ("POST", "/account/home"),
+            ("GET", "/account/restore"), ("GET", f"/rooms/{room}/deletion"),
             ("GET", f"/rooms/{room}/resume"), ("GET", f"/rooms/{room}/archive"),
             ("POST", "/invites/ABC234/card.png"), ("GET", "/invites/a/b/card.png"),
         ]:

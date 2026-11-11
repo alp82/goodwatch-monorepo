@@ -2,8 +2,9 @@ import {
   addDecision, decodeDecisions, decodeNickname, decodeRooms, markLeft, migrateRecent, removeRoom, setArchived, upsertRoom,
   type DecisionRecord, type RegisteredRoom,
 } from './room-registry-state';
+import type { DeletionState } from './deletion-state';
 
-export const REGISTRY_KEYS = { rooms: 'yepwatch.v3.rooms', profile: 'yepwatch.v3.profile', decisions: 'yepwatch.v3.decisions', migrated: 'yepwatch.v3.migrated' } as const;
+export const REGISTRY_KEYS = { rooms: 'yepwatch.v3.rooms', profile: 'yepwatch.v3.profile', decisions: 'yepwatch.v3.decisions', migrated: 'yepwatch.v3.migrated', recovery: 'yepwatch.v3.deletion-recovery' } as const;
 export interface KeyValue { read: (key: string) => Promise<string | null>; write: (key: string, value: string) => Promise<void>; remove?: (key: string) => Promise<void> }
 
 /** Characters per stored item: at most 4 UTF-8 bytes each keeps every item under SecureStore's 2048-byte guidance. */
@@ -51,16 +52,22 @@ export function chunkedKeyValue(base: KeyValue, size: number = CHUNK_CHARS): Key
       // The previous bank is unreachable now; tidy it when the store can.
       if (old && base.remove) for (let i = 0; i < Math.min(old.count, MAX_CHUNKS); i++) await base.remove(part(key, old.bank, i)).catch(() => undefined);
     },
-    remove: base.remove,
+    async remove(key) {
+      if (!base.remove) throw new Error('The device store does not support deletion');
+      // Both banks may contain data after an interrupted write. Erase both, not only the current header.
+      for (const bank of ['a', 'b']) for (let i = 0; i < MAX_CHUNKS; i++) await base.remove(part(key, bank, i));
+      await base.remove(key);
+    },
   };
 }
 export interface RegistrySnapshot { rooms: RegisteredRoom[]; nickname: string | null; decisions: DecisionRecord[] }
+export interface DeletionRecovery { kind: 'account' | 'guest'; accountTag?: string; confirmed: boolean; state: DeletionState; snapshot: RegistrySnapshot }
 
 /**
  * Read-modify-write is serialized so the home, a room and a sign-in callback can update the
  * registry at the same time without losing each other's changes.
  */
-export function createRegistry(store: KeyValue, recent: () => Promise<{ roomId: string; nickname: string; expiresAt: number } | null>, now: () => number = Date.now) {
+export function createRegistry(store: KeyValue, recent: () => Promise<{ roomId: string; nickname: string; expiresAt: number } | null>, now: () => number = Date.now, eraseDevice: (roomIds: string[]) => Promise<void> = async () => {}) {
   let chain: Promise<unknown> = Promise.resolve();
   const serial = <T>(fn: () => Promise<T>): Promise<T> => {
     const next = chain.then(fn, fn);
@@ -69,9 +76,49 @@ export function createRegistry(store: KeyValue, recent: () => Promise<{ roomId: 
   };
   const readRooms = async () => decodeRooms(await store.read(REGISTRY_KEYS.rooms), now());
   const writeRooms = (rooms: RegisteredRoom[]) => store.write(REGISTRY_KEYS.rooms, JSON.stringify(rooms));
+  const remove = async (key: string) => { if (store.remove) await store.remove(key); else await store.write(key, ''); };
+  const recovery = async (): Promise<DeletionRecovery | null> => {
+    const raw = await store.read(REGISTRY_KEYS.recovery);
+    if (!raw) return null;
+    let value: DeletionRecovery;
+    try { value = JSON.parse(raw); } catch { return null; }
+    if (!value?.snapshot || !Number.isFinite(value.state?.purgeAfter)) return null;
+    if (value.state.purgeAfter <= now()) {
+      await eraseDevice([...new Set([...value.snapshot.rooms.map(r => r.roomId), ...value.snapshot.decisions.map(d => d.roomId)])]);
+      await remove(REGISTRY_KEYS.recovery);
+      return null;
+    }
+    return value;
+  };
   return {
+    recovery: () => serial(recovery),
+    prepareDeletion: (kind: DeletionRecovery['kind'], accountTag?: string) => serial(async () => {
+      const previous = await recovery();
+      if (previous && previous.accountTag !== accountTag) throw new Error('This recovery copy belongs to another YepWatch account.');
+      if (previous?.confirmed) return previous;
+      const snapshot = { rooms: await readRooms(), nickname: decodeNickname(await store.read(REGISTRY_KEYS.profile)), decisions: decodeDecisions(await store.read(REGISTRY_KEYS.decisions)) };
+      const value: DeletionRecovery = { kind, accountTag, confirmed: false, state: { requestedAt: now(), purgeAfter: now() + 30 * 86400_000, phase: 'pending', recoveryId: '' }, snapshot };
+      await store.write(REGISTRY_KEYS.recovery, JSON.stringify(value));
+      return value;
+    }),
+    confirmDeletion: (state: DeletionState) => serial(async () => {
+      const value = await recovery();
+      if (!value) throw new Error('The recovery copy was not saved.');
+      await store.write(REGISTRY_KEYS.recovery, JSON.stringify({ ...value, state, confirmed: true }));
+      await writeRooms([]); await remove(REGISTRY_KEYS.profile); await remove(REGISTRY_KEYS.decisions);
+      await store.write(REGISTRY_KEYS.migrated, '1');
+    }),
+    restoreDeletion: () => serial(async () => {
+      const value = await recovery();
+      if (!value) return;
+      await writeRooms(value.snapshot.rooms.filter(r => r.expiresAt > now()));
+      await store.write(REGISTRY_KEYS.profile, JSON.stringify({ nickname: value.snapshot.nickname ?? '' }));
+      await store.write(REGISTRY_KEYS.decisions, JSON.stringify(value.snapshot.decisions));
+      await remove(REGISTRY_KEYS.recovery);
+    }),
     /** Everything the home needs. Migrates the previous single recent room once. */
     load: () => serial(async (): Promise<RegistrySnapshot> => {
+      if ((await recovery())?.confirmed) return { rooms: [], nickname: null, decisions: [] };
       let rooms = await readRooms();
       // Once only: a room forgotten later (ended, or left for good) must not come back from the old reminder.
       const recentRoom = (await store.read(REGISTRY_KEYS.migrated)) ? null : await recent().catch(() => null);

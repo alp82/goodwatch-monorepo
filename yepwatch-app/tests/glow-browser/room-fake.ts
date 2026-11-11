@@ -168,6 +168,7 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
       return route.fulfill({ json: { authorizeUrl: returnTo, state: 'acct.fixture', expiresAt: Date.now() + 600_000 } });
     }
     if (path.endsWith('/account/logout')) { account.logouts++; account.member = false; return route.fulfill({ json: { state: 'guest', displayName: null } }); }
+    if (path.endsWith('/account/deletion')) return route.fulfill({ json: { deletion: null, accountTag: 'fixture-account-alex' } });
     if (path.endsWith('/proposal/account')) return route.fulfill({ json: account.member ? { state: 'member', displayName: opts.accountName === undefined ? 'Alex' : opts.accountName } : { state: 'guest', displayName: null } });
     if (path.endsWith('/account/home')) return route.fulfill({ json: { rooms: account.member && room.own.member.state === 'linked' ? [{ snapshot: room, joinedAt: 1, archivedAt, leftLabel: room.own.left ? 'Anything' : null }] : [], decisions: account.member ? opts.history ?? [] : [] } });
     if (path.endsWith('/resume')) {

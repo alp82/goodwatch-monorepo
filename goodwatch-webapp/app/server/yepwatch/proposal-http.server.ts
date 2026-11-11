@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
+import { requireNotDeleting } from './proposal-deletion.ts'
 import {
 	API_PREFIX,
 	MEMBER_SESSION_HEADER,
@@ -148,6 +149,7 @@ export function createProposalHandler(
         }
         if (session.unverified || result.status.unavailable) throw new RoomError('busy', 'GoodWatch is temporarily unavailable', 503, true)
         freshMemberSession = session
+        if (![`${paths.account}/deletion`, `${paths.account}/restore`].includes(url.pathname)) await service.requireAccountActive(session.userId)
         return { userId: session.userId, sessionId: session.sessionId,
           expiresAt: Date.now() + options.members.sessionMaxAge(session) * 1000 }
       })()
@@ -159,6 +161,7 @@ export function createProposalHandler(
     const scopedCredential = async (roomId: string) => {
       const c = credential(roomId)
       const a = await account()
+      if (!a && !url.pathname.endsWith('/deletion') && !url.pathname.endsWith('/restore')) await requireNotDeleting(service.deletions, { kind: 'guest', roomId, participantId: c.participantId })
       return a ? { ...c, accountId: a.userId, sessionId: a.sessionId } : c
     }
     const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: import('./proposal-types.ts').RoomAccount | null) => {
@@ -239,6 +242,24 @@ export function createProposalHandler(
 					const a = (await account(true))!
 					return reply(await service.accountHome(a))
 				}
+				if (url.pathname === `${paths.account}/deletion`) {
+					const a = (await account(true))!
+					if (request.method === 'GET') return reply({ deletion: await service.deletions.get({ kind: 'account', userId: a.userId }), accountTag: service.accountDeletionTag(a.userId) })
+					if (request.method === 'POST') {
+						originCheck(!nativeRequest())
+						parse(z.object({ confirm: z.literal('DELETE') }).strict(), await body(request))
+						const deletion = await service.deleteAccount(a)
+						setCookie(MEMBER_COOKIE, '', 0)
+						return reply({ deletion })
+					}
+				}
+				if (request.method === 'POST' && url.pathname === `${paths.account}/restore`) {
+					originCheck(!nativeRequest())
+					parse(z.object({ confirm: z.literal('RESTORE') }).strict(), await body(request))
+					const a = (await account(true))!
+					await service.deletions.restore({ kind: 'account', userId: a.userId }, Date.now())
+					return reply({ restored: true })
+				}
 				if (request.method === "POST" && url.pathname === paths.accountStart) {
 					const value = parse(
 						z
@@ -290,6 +311,13 @@ export function createProposalHandler(
 					return reply({ state: "guest", displayName: null })
 				}
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
+			}
+			if (request.method === 'POST' && /^\/api\/yepwatch\/v1\/proposal\/rooms\/[A-Za-z0-9_-]+\/(deletion|restore)$/.test(url.pathname)) {
+				const id = url.pathname.split('/').at(-2)!
+				const restoring = url.pathname.endsWith('/restore')
+				parse(z.object({ confirm: z.literal(restoring ? 'RESTORE' : 'DELETE') }).strict(), await body(request))
+				const access = await scopedCredential(id)
+				return reply(restoring ? await service.restoreGuest(id, access) : { deletion: await service.deleteGuest(id, access) })
 			}
 			if (url.pathname.startsWith(`${API_PREFIX}/member/`)) {
 				const members = options.members

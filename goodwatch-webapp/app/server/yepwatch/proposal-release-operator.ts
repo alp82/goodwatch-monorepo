@@ -2,6 +2,7 @@ import {
 	prepareSettingsMigration,
 	applySettingsMigration,
 } from "./proposal-settings-migration.ts"
+import { provisionDeletion, SqlDeletionStore } from './proposal-deletion.ts'
 import {
 	tables,
 	controlTable,
@@ -11,6 +12,7 @@ import {
 	accountIndexTable,
 	accountHistoryTable,
 	revokedSessionTable,
+	deletionTable,
 	storageTables,
 } from "./proposal-storage-schema.ts"
 import {
@@ -37,7 +39,17 @@ const config = releaseStoreConfig(process.env)
 const sql = crateSql(config.origin, config.username, config.password)
 const control = new ReleaseControl(sql, releaseControlConfig(process.env))
 const [command = "check", ...args] = process.argv.slice(2)
-if (command === "prepare-room-settings" || command === "apply-room-settings") {
+if (command === 'provision-deletion') {
+  if (!args.includes('--apply')) throw new Error('provision-deletion requires --apply')
+  const replicas = args.includes('--disposable-single-node') ? 0 : 2
+  if (replicas === 0 && !['127.0.0.1', 'localhost'].includes(new URL(config.origin).hostname)) throw new Error('Zero replicas requires loopback')
+  await provisionDeletion(sql, replicas)
+  console.log(JSON.stringify({ operation: command, ready: true }))
+} else if (command === 'purge-deletions') {
+  if (!args.includes('--apply')) throw new Error('purge-deletions requires --apply')
+  await new SqlDeletionStore(sql, config.secret).purgeDue(Date.now())
+  console.log(JSON.stringify({ operation: command, complete: true }))
+} else if (command === "prepare-room-settings" || command === "apply-room-settings") {
 	if (
 		!args[0] ||
 		args[0].startsWith("--") ||
@@ -114,6 +126,7 @@ if (command === "prepare-room-settings" || command === "apply-room-settings") {
 	const cutoff = Number((await sql("SELECT CURRENT_TIMESTAMP")).rows[0][0])
 	if (!Number.isSafeInteger(cutoff)) throw new Error("Store clock unavailable")
 	const deleted: Record<string, number> = {}
+  await new SqlDeletionStore(sql, config.secret).retainTargetsBeforeRoomCleanup()
   // Publish only history reachable from committed room heads before deleting any room versions.
   const repository = new RelationalProposalRepository(sql, config.secret)
   await sql(`REFRESH TABLE ${RELEASE_TABLE}`)
@@ -167,7 +180,7 @@ if (command === "prepare-room-settings" || command === "apply-room-settings") {
 			globallyConsistentOnlyWithWritersStopped: true,
 		})
 		const definitions = [
-			...[accountIndexTable, accountHistoryTable, revokedSessionTable].map(t => ({ name: t.name, primary: t.primary, names: columns(t) })),
+			...[accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable].map(t => ({ name: t.name, primary: t.primary, names: columns(t) })),
 			...Object.values(tables)
 				.filter((t) => t.name !== RELEASE_TABLE)
 				.map((t) => ({ name: t.name, primary: t.primary, names: columns(t) })),

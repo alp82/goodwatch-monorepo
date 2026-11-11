@@ -147,6 +147,11 @@ export class ContinuousApi {
   accountExchange = (body: AccountExchangeRequest) => this.request<AccountStatus>(paths.accountExchange, body);
   accountLogout = (session?: string | null) => this.request<AccountStatus>(paths.accountLogout, {}, undefined, undefined, session);
   accountHome = () => this.request<AccountHome>(paths.accountHome);
+  deletionStatus = () => this.request<{ deletion: import('./deletion-state').DeletionState | null; accountTag: string }>(`${paths.account}/deletion`);
+  deleteAccount = () => this.request<{ deletion: import('./deletion-state').DeletionState }>(`${paths.account}/deletion`, { confirm: 'DELETE' });
+  restoreAccount = () => this.request<{ restored: boolean }>(`${paths.account}/restore`, { confirm: 'RESTORE' });
+  deleteGuest = (a: RoomAccess) => this.request<{ deletion: import('./deletion-state').DeletionState }>(`${paths.rooms}/${a.roomId}/deletion`, { confirm: 'DELETE' }, a);
+  restoreGuest = (a: RoomAccess) => this.request<{ restored: boolean }>(`${paths.rooms}/${a.roomId}/restore`, { confirm: 'RESTORE' }, a);
   resume = (id: string, returnAfterLeave = false) => this.request<GuestAdmission>(paths.resume(id), { returnAfterLeave });
   archive = (id: string, archived: boolean) => this.request<{ ok: true }>(paths.archive(id), { archived });
   /** Links your participant in this room to this device's sign-in. */
