@@ -1,0 +1,327 @@
+{
+  "verifiedAt": "2026-11-11T18:06:44.626085+00:00",
+  "version": "1.0.0 (17)",
+  "newScreenshotCounts": {
+    "android": 8,
+    "iphoneMedium": 8,
+    "iphoneLarge": 6,
+    "ipad": 6
+  },
+  "totalNewScreenshots": 28,
+  "appleListingMatchesCanonicalCopy": true,
+  "appleAttachedBuild": {
+    "id": "d2c3fec9-f537-4964-bb75-22885e89de65",
+    "version": "17",
+    "processingState": "VALID"
+  },
+  "appleGallery": {
+    "checkedAt": "2026-11-11T18:04:44.316Z",
+    "appId": "6826403019",
+    "version": "1.0.0",
+    "applied": true,
+    "screenshots": [
+      {
+        "type": "APP_IPAD_PRO_3GEN_129",
+        "name": "gallery-01-swipe-together.png",
+        "id": "6e000019-6e2a-84cb-800d-f99d756657c0",
+        "complete": true,
+        "md5": "a1b86558481eb7618a56c63582124d6b"
+      },
+      {
+        "type": "APP_IPAD_PRO_3GEN_129",
+        "name": "gallery-02-yep-reaction.png",
+        "id": "0d400019-6e2a-84cb-8037-feb1f8f9b3d3",
+        "complete": true,
+        "md5": "9ce5b7439a4a5c60001211ad12dc9bd1"
+      },
+      {
+        "type": "APP_IPAD_PRO_3GEN_129",
+        "name": "gallery-03-yep-reaction.png",
+        "id": "a9400019-6e2a-84cb-8028-edac9bfaad3c",
+        "complete": true,
+        "md5": "2260eb7cee2622853ee4bb14374d64f8"
+      },
+      {
+        "type": "APP_IPAD_PRO_3GEN_129",
+        "name": "gallery-04-yep-reaction.png",
+        "id": "13800019-6e2a-84cb-8007-ece421a124cc",
+        "complete": true,
+        "md5": "1bd781fe265a1c1ad9eec39e454757f3"
+      },
+      {
+        "type": "APP_IPAD_PRO_3GEN_129",
+        "name": "gallery-07-shared-matches.png",
+        "id": "03000019-6e2a-84cb-8003-59f270ae0109",
+        "complete": true,
+        "md5": "bf1df0f2407108b8cc2d116e6f1a7d46"
+      },
+      {
+        "type": "APP_IPAD_PRO_3GEN_129",
+        "name": "gallery-08-tonights-pick.png",
+        "id": "13800019-6e2a-84cb-8018-cdd02734d739",
+        "complete": true,
+        "md5": "6ff97030053dc4a84d28650767a35bc1"
+      },
+      {
+        "type": "APP_IPHONE_61",
+        "name": "gallery-01-swipe-together.png",
+        "id": "20800019-6e2a-84cb-8020-d5b7c50170c2",
+        "complete": true,
+        "md5": "53ee4bb4a0ae7ff3d28c714caa3b3551"
+      },
+      {
+        "type": "APP_IPHONE_61",
+        "name": "gallery-02-yep-reaction.png",
+        "id": "f8400019-6e2a-84cb-8039-fa9b4fe4c512",
+        "complete": true,
+        "md5": "048ff7928692e8d75be99b805dd277c3"
+      },
+      {
+        "type": "APP_IPHONE_61",
+        "name": "gallery-03-nope-reaction.png",
+        "id": "24400019-6e2a-84cb-8013-e989aa4e59e8",
+        "complete": true,
+        "md5": "1da4db8dd83469bc61434f4776cb3c8b"
+      },
+      {
+        "type": "APP_IPHONE_61",
+        "name": "gallery-04-nope-reaction.png",
+        "id": "e2000019-6e2a-84cb-8015-3fa6764d9cf1",
+        "complete": true,
+        "md5": "7020cbdfd086f264b359803c6644db01"
+      },
+      {
+        "type": "APP_IPHONE_61",
+        "name": "gallery-05-nope-reaction.png",
+        "id": "39400019-6e2a-84cb-8003-778fcb261643",
+        "complete": true,
+        "md5": "dca8922610c70146a3997af1a4bc7400"
+      },
+      {
+        "type": "APP_IPHONE_61",
+        "name": "gallery-06-its-a-match.png",
+        "id": "0bc00019-6e2a-84cb-8026-9e91a9109ffb",
+        "complete": true,
+        "md5": "03df9f85df2571d6fd5bd8d27d12b011"
+      },
+      {
+        "type": "APP_IPHONE_61",
+        "name": "gallery-07-shared-matches.png",
+        "id": "cf000019-6e2a-84cb-803b-69d4bbc12c7f",
+        "complete": true,
+        "md5": "f53b31da30354747df622389c97656c9"
+      },
+      {
+        "type": "APP_IPHONE_61",
+        "name": "gallery-08-tonights-pick.png",
+        "id": "73c00019-6e2a-84cb-801e-80f95eb1a0d7",
+        "complete": true,
+        "md5": "fe47f5369dc5d31e6b7538fc6e16d21a"
+      },
+      {
+        "type": "APP_IPHONE_67",
+        "name": "gallery-01-swipe-together.png",
+        "id": "a0400019-6e2a-84cb-8025-34d0aae467fc",
+        "complete": true,
+        "md5": "aab423a86ed7b3383a1f79fe265e9b53"
+      },
+      {
+        "type": "APP_IPHONE_67",
+        "name": "gallery-02-nope-reaction.png",
+        "id": "9bc00019-6e2a-84cb-8012-08519c09ceca",
+        "complete": true,
+        "md5": "273371919b8cd8b0ffc7895207cbe2d4"
+      },
+      {
+        "type": "APP_IPHONE_67",
+        "name": "gallery-03-nope-reaction.png",
+        "id": "a3000019-6e2a-84cb-8006-23674c64fc80",
+        "complete": true,
+        "md5": "8c1d89b3498375c01467ed6a185a8633"
+      },
+      {
+        "type": "APP_IPHONE_67",
+        "name": "gallery-04-nope-reaction.png",
+        "id": "bd400019-6e2a-84cb-8000-2318c21af8fd",
+        "complete": true,
+        "md5": "ac498ee54a5c9ab6a0e6aec27134e163"
+      },
+      {
+        "type": "APP_IPHONE_67",
+        "name": "gallery-07-shared-matches.png",
+        "id": "6bc00019-6e2a-84cb-8016-2d44b793009e",
+        "complete": true,
+        "md5": "f51c5ce8ab193b258497246bf96fb22f"
+      },
+      {
+        "type": "APP_IPHONE_67",
+        "name": "gallery-08-tonights-pick.png",
+        "id": "4f400019-6e2a-84cb-801f-981b0a2abc0f",
+        "complete": true,
+        "md5": "1ac0f54c8569e1e9a40d568e3ede32e8"
+      }
+    ],
+    "sets": [
+      {
+        "type": "APP_IPHONE_61",
+        "screenshots": [
+          {
+            "id": "20800019-6e2a-84cb-8020-d5b7c50170c2",
+            "name": "gallery-01-swipe-together.png",
+            "complete": true
+          },
+          {
+            "id": "f8400019-6e2a-84cb-8039-fa9b4fe4c512",
+            "name": "gallery-02-yep-reaction.png",
+            "complete": true
+          },
+          {
+            "id": "24400019-6e2a-84cb-8013-e989aa4e59e8",
+            "name": "gallery-03-nope-reaction.png",
+            "complete": true
+          },
+          {
+            "id": "e2000019-6e2a-84cb-8015-3fa6764d9cf1",
+            "name": "gallery-04-nope-reaction.png",
+            "complete": true
+          },
+          {
+            "id": "39400019-6e2a-84cb-8003-778fcb261643",
+            "name": "gallery-05-nope-reaction.png",
+            "complete": true
+          },
+          {
+            "id": "0bc00019-6e2a-84cb-8026-9e91a9109ffb",
+            "name": "gallery-06-its-a-match.png",
+            "complete": true
+          },
+          {
+            "id": "cf000019-6e2a-84cb-803b-69d4bbc12c7f",
+            "name": "gallery-07-shared-matches.png",
+            "complete": true
+          },
+          {
+            "id": "73c00019-6e2a-84cb-801e-80f95eb1a0d7",
+            "name": "gallery-08-tonights-pick.png",
+            "complete": true
+          }
+        ]
+      },
+      {
+        "type": "APP_IPAD_PRO_3GEN_129",
+        "screenshots": [
+          {
+            "id": "6e000019-6e2a-84cb-800d-f99d756657c0",
+            "name": "gallery-01-swipe-together.png",
+            "complete": true
+          },
+          {
+            "id": "0d400019-6e2a-84cb-8037-feb1f8f9b3d3",
+            "name": "gallery-02-yep-reaction.png",
+            "complete": true
+          },
+          {
+            "id": "a9400019-6e2a-84cb-8028-edac9bfaad3c",
+            "name": "gallery-03-yep-reaction.png",
+            "complete": true
+          },
+          {
+            "id": "13800019-6e2a-84cb-8007-ece421a124cc",
+            "name": "gallery-04-yep-reaction.png",
+            "complete": true
+          },
+          {
+            "id": "03000019-6e2a-84cb-8003-59f270ae0109",
+            "name": "gallery-07-shared-matches.png",
+            "complete": true
+          },
+          {
+            "id": "13800019-6e2a-84cb-8018-cdd02734d739",
+            "name": "gallery-08-tonights-pick.png",
+            "complete": true
+          },
+          {
+            "id": "28c00019-6e2a-84cb-801b-24ab2a1ea921",
+            "name": "01-choose-together.png",
+            "complete": true
+          }
+        ]
+      },
+      {
+        "type": "APP_IPHONE_67",
+        "screenshots": [
+          {
+            "id": "a0400019-6e2a-84cb-8025-34d0aae467fc",
+            "name": "gallery-01-swipe-together.png",
+            "complete": true
+          },
+          {
+            "id": "9bc00019-6e2a-84cb-8012-08519c09ceca",
+            "name": "gallery-02-nope-reaction.png",
+            "complete": true
+          },
+          {
+            "id": "a3000019-6e2a-84cb-8006-23674c64fc80",
+            "name": "gallery-03-nope-reaction.png",
+            "complete": true
+          },
+          {
+            "id": "bd400019-6e2a-84cb-8000-2318c21af8fd",
+            "name": "gallery-04-nope-reaction.png",
+            "complete": true
+          },
+          {
+            "id": "6bc00019-6e2a-84cb-8016-2d44b793009e",
+            "name": "gallery-07-shared-matches.png",
+            "complete": true
+          },
+          {
+            "id": "4f400019-6e2a-84cb-801f-981b0a2abc0f",
+            "name": "gallery-08-tonights-pick.png",
+            "complete": true
+          },
+          {
+            "id": "0a400019-6e2a-84cb-8011-0f0eec4c841e",
+            "name": "01-choose-together.png",
+            "complete": true
+          }
+        ]
+      }
+    ],
+    "failures": [],
+    "submittedForReview": false
+  },
+  "googleAssetsPrepared": true,
+  "googleUploadsByThisWork": false,
+  "publicReviewSubmittedByThisWork": false,
+  "checks": {
+    "appTypecheck": true,
+    "appLint": {
+      "errors": 0,
+      "existingWarnings": 1
+    },
+    "webAndNativeExports": true,
+    "isolatedContractAndNoServerCodeInAppGraphs": true,
+    "serverTests": {
+      "passed": 174,
+      "skipped": 8
+    },
+    "disposableCrateRegression": true,
+    "apiBundleBuild": true,
+    "wholeWebappTypecheck": {
+      "passed": false,
+      "sameDiagnosticsAsUnchangedBase": true,
+      "baselineErrors": 180
+    }
+  },
+  "productionRestartAfterDeparture": {
+    "passed": true,
+    "phase": "setup",
+    "onlyOwnedGuests": true,
+    "newGeneration": 2
+  },
+  "roomCapacityPolicyChanged": false,
+  "roomCapacityLimit": 20,
+  "roomCapacityScope": "global unexpired rooms",
+  "listingSha256": "f4dbeae0d60909b8f2c5f51be530ec8547f94278f28001d0aadbba2f90e02362"
+}

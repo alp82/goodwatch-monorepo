@@ -28,6 +28,8 @@ Apple listing copy was refreshed with the complete English description, subtitle
 
 The store capture also reproduced a server-side “Start again” failure after a voter had left: the new round restored that departed participant's old votes, which referenced a retired deck and failed typed-storage validation. Restart now resets all retained participants while preserving their departure state and decision history. A focused regression and the disposable CrateDB integration pass. No capacity setting or database schema changed.
 
+Apple finished processing all 20 new gallery images. Fresh readback confirmed the exact ordering and complete English copy, with valid build 17 still attached. The site also passed the owned-guest production restart-after-departure check after deployment. See [the gallery verification record](../artifacts/releases/store-gallery-2026-11-11.json).
+
 ## Checks before submission
 
 Implemented in this release: privacy/support/terms routes and matching crawlable HTML, Profile links, an authenticated web/native deletion entry point, guest-device deletion, a 30-day recovery window and automated permanent cleanup. GoodWatch account data is outside this deletion scope. See [the lifecycle decision and additive migration](../../docs/adr/yepwatch-account-deletion.md). Deploy the API migration and route allowlist before publishing the UI. Do not use the previous test-data reset.

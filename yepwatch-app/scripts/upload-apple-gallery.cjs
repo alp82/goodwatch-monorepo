@@ -23,6 +23,7 @@ class Gallery extends Status {
     if (!loc) throw new Error('English version localization missing.');
     const sets = await loc.getAppScreenshotSetsAsync({ query: { includes: ['appScreenshots'] } });
     const results = [];
+    const orders = [];
     const plans = [
       ['ios-iphone-medium', 'APP_IPHONE_61', [1206, 2622]],
       ['ios-iphone', 'APP_IPHONE_67', [1320, 2868]],
@@ -45,23 +46,48 @@ class Gallery extends Status {
         const checksum = crypto.createHash('md5').update(bytes).digest('hex');
         let shot = existing.find(s => s.attributes.fileName === name);
         if (shot && shot.attributes.sourceFileChecksum !== checksum) throw new Error('Preserve differing existing screenshot: ' + name);
-        if (!shot && apply) shot = await set.uploadScreenshot({ filePath, waitForProcessing: true });
-        if (shot && !shot.isComplete()) throw new Error('Screenshot is not processed: ' + name);
+        if (!shot && apply) shot = await set.uploadScreenshot({ filePath, waitForProcessing: false });
+        if (shot?.isFailed()) throw new Error('Screenshot processing failed: ' + name + ': ' + shot.getErrorMessages().join('; '));
         if (shot) ordered.push(shot.id);
         results.push({ type, name, id: shot?.id ?? null, complete: shot?.isComplete() ?? false, md5: checksum });
-        console.log(type + ': ' + name + (shot ? ' processed' : ' ready'));
+        console.log(type + ': ' + name + (shot ? (shot.isComplete() ? ' processed' : ' uploaded; processing') : ' ready'));
       }
       // Keep earlier/user uploads at the end. Never delete a screenshot implicitly.
       ordered.push(...existing.filter(s => !ordered.includes(s.id)).map(s => s.id));
-      if (apply) await set.reorderScreenshotsAsync({ appScreenshots: ordered });
+      if (apply) orders.push({ set, ordered });
     }));
-    const fresh = await loc.getAppScreenshotSetsAsync({ query: { includes: ['appScreenshots'] } });
+    let fresh = await loc.getAppScreenshotSetsAsync({ query: { includes: ['appScreenshots'] } });
+    const deadline = Date.now() + 10 * 60 * 1000;
+    while (apply && Date.now() < deadline) {
+      const shots = fresh.flatMap(s => s.attributes.appScreenshots ?? []);
+      const selected = results.map(r => shots.find(s => s.id === r.id));
+      if (selected.some(s => s?.isFailed())) break;
+      if (selected.every(s => s?.isComplete())) break;
+      console.log('Waiting for Apple to process the committed gallery images...');
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      fresh = await loc.getAppScreenshotSetsAsync({ query: { includes: ['appScreenshots'] } });
+    }
+    for (const { set, ordered } of orders) {
+      try {
+        await set.reorderScreenshotsAsync({ appScreenshots: ordered });
+      } catch (error) {
+        // Apple can commit a relationship PATCH with an empty success body,
+        // which this SDK rejects. Accept it only after proving the exact order.
+        if (!String(error.message).startsWith('Unexpected OK response:')) throw error;
+        const reread = (await loc.getAppScreenshotSetsAsync({ query: { includes: ['appScreenshots'] } })).find(s => s.id === set.id);
+        const actual = (reread?.attributes.appScreenshots ?? []).map(s => s.id);
+        if (JSON.stringify(actual) !== JSON.stringify(ordered)) throw error;
+        console.log('Screenshot order verified after an empty Apple success response.');
+      }
+    }
+    fresh = await loc.getAppScreenshotSetsAsync({ query: { includes: ['appScreenshots'] } });
+    for (const result of results) result.complete = fresh.some(s => (s.attributes.appScreenshots ?? []).some(p => p.id === result.id && p.isComplete()));
     const failures = outcomes.filter(r => r.status === 'rejected').map(r => r.reason?.message ?? String(r.reason));
     const state = { checkedAt: new Date().toISOString(), appId: app.id, version: version.attributes.versionString, applied: apply, screenshots: results.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name)), sets: fresh.map(s => ({ type: s.attributes.screenshotDisplayType, screenshots: (s.attributes.appScreenshots ?? []).map(p => ({ id: p.id, name: p.attributes.fileName, complete: p.isComplete() })) })), failures, submittedForReview: false };
-    if (apply && results.some(r => !fresh.some(s => (s.attributes.appScreenshots ?? []).some(p => p.id === r.id && p.isComplete())))) throw new Error('Gallery readback failed.');
     if (output) fs.writeFileSync(output, JSON.stringify(state, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(state, null, 2));
     if (failures.length) throw new Error(failures.join('; '));
+    if (apply && results.some(r => !r.complete)) throw new Error('Gallery uploads are retained; some images have not finished Apple processing.');
   }
 }
 Gallery.run(['--profile', 'production', '--platform', 'ios', '--non-interactive'], { root: easRoot }).catch(error => { console.error(error.message); process.exit(1); });
