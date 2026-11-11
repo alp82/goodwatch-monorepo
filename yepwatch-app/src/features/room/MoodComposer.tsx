@@ -61,6 +61,11 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
   const placeholder = placeholderFit(col, phone, z);
   const size = own ? typedSize(own, col, phone, z) : placeholder.size;
   const lines = own ? Math.max(1, Math.min(4, Math.ceil((typedWidth * 1.06) / col))) : placeholder.lines.length;
+  // The field keeps one height while typing (the placeholder's, or room for a usual mood: two lines on
+  // phones, one on wider windows), so the presets below don't move under the finger. Only a longer
+  // text grows it.
+  const reserved = Math.max(placeholder.size * 1.2 * placeholder.lines.length, (phone ? 38 : z(60)) * 1.2 * (phone ? 2 : 1)) + 16;
+  const fieldHeight = Math.max(reserved, size * 1.2 * lines + 16);
   const placeholderWidth = Math.max(0, ...placeholder.lines.map((l) => placeholderWidths[l] ?? 0));
   const underline = Math.min(col, Math.max(placeholderWidth, own ? typedWidth : 0, z(240)) + z(24));
   const create = <Button label={saving ? 'Saving…' : action} disabled={!ready || disabled} icon={<Icon name="right" size={18} color={warm.ink} />} onPress={submit} />;
@@ -88,7 +93,7 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
                 const key = e.nativeEvent as unknown as { key: string; shiftKey?: boolean };
                 if (key.key === 'Enter' && !key.shiftKey) { e.preventDefault(); submit(); }
               } : undefined}
-              style={{ width: '100%', height: size * 1.2 * lines + 16, paddingVertical: 8, paddingHorizontal: 0, color: glow.ink, ...font, textAlign: 'center', textAlignVertical: 'top', ...webField, ...(Platform.OS === 'web' ? { resize: 'none', overflow: 'hidden' } : null) } as TextStyle} />
+              style={{ width: '100%', height: fieldHeight, paddingVertical: 8, paddingHorizontal: 0, color: glow.ink, ...font, textAlign: 'center', textAlignVertical: 'top', ...webField, ...(Platform.OS === 'web' ? { resize: 'none', overflow: 'hidden' } : null) } as TextStyle} />
             {!own ? (
               <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 8, alignItems: 'center' }}>
                 {placeholder.lines.map((l) => (

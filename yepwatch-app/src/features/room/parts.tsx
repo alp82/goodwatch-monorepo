@@ -4,6 +4,7 @@ import { Image, Platform, Pressable, TextInput, View, type TextStyle } from 'rea
 import { deviceCountryHint, rankedCountries } from '../../core/lobby';
 import { shareInvitation } from '../../core/share-invitation';
 import { FaceStack } from '../shell/parts';
+import { useGlide } from '../shell/glide';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, grow } from '../glow/theme';
@@ -55,8 +56,12 @@ export function useAcknowledgeShownIdeas() {
  */
 export function IdeaStack() {
   const { id, view, cmd, disabled } = useRoom();
-  const { phone, z } = useLayout();
-  const [width, setWidth] = useState(330);
+  const { phone, wide, max, z } = useLayout();
+  // Start from the column RoomBefore gives the ideas (measured below), so the first frame already has the
+  // final headline size instead of resizing a frame later.
+  const [width, setWidth] = useState(() => (wide ? max - Math.min(z(420), max * 0.4) - z(56) : max));
+  // An idea arriving above glides Add an idea down instead of pushing it.
+  const add = useGlide();
   if (!view) return null;
   const top = phone ? 54 : z(92);
   const rest = phone ? 30 : z(48);
@@ -79,19 +84,32 @@ export function IdeaStack() {
         const text = <GText bold size={size} color={i.on ? glow.ink : '#8c8478'} style={{ letterSpacing: -size * 0.032, lineHeight: size * 1.06 }}>{i.text}</GText>;
         const body = { flex: 1, minWidth: 0, gap: 6, alignItems: 'flex-start', justifyContent: 'flex-start' } as const;
         return (
-          <View key={i.id} style={{ flexDirection: 'row', alignItems: 'center', gap: z(18) }}>
-            {i.mine
+          <IdeaRow key={i.id}
+            body={i.mine
               ? <Press label={`${i.text}, edit`} onPress={() => openPage(id, 'mood', { idea: i.id })} style={body}>{text}{meta}</Press>
               : <View accessible accessibilityLabel={`${i.text}${i.author?.nickname ? `, from ${i.author.nickname}` : ''}${fresh ? ', new' : ''}`} style={body}>{text}{meta}</View>}
-            <Switch on={i.on} disabled={!view.isHost || disabled} label={`Use ${i.text}`} onPress={() => void cmd.setIdea(i.id, !i.on)} />
-          </View>
+            control={<Switch on={i.on} disabled={!view.isHost || disabled} label={`Use ${i.text}`} onPress={() => void cmd.setIdea(i.id, !i.on)} />} />
         );
       })}
       {view.canAddIdea && (
-        <Press label={addLabel} onPress={() => openPage(id, 'mood', { idea: 'new' })} style={{ alignSelf: 'flex-start', ...grow(z(44)), flexDirection: 'row', gap: 8, paddingRight: 8 }}>
-          <Glyph name="plus" size={z(18)} color={glow.amber} /><GText bold size={z(17)} color={glow.amber}>{addLabel}</GText>
-        </Press>
+        <View ref={add} style={{ alignSelf: 'flex-start' }}>
+          <Press label={addLabel} onPress={() => openPage(id, 'mood', { idea: 'new' })} style={{ ...grow(z(44)), flexDirection: 'row', gap: 8, paddingRight: 8 }}>
+            <Glyph name="plus" size={z(18)} color={glow.amber} /><GText bold size={z(17)} color={glow.amber}>{addLabel}</GText>
+          </Press>
+        </View>
       )}
+    </View>
+  );
+}
+
+/** One idea and its switch. A line appearing under the idea (Yours, a name) glides the switch to the new centre. */
+function IdeaRow({ body, control }: { body: ReactNode; control: ReactNode }) {
+  const { z } = useLayout();
+  const switchRef = useGlide();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: z(18) }}>
+      {body}
+      <View ref={switchRef}>{control}</View>
     </View>
   );
 }
@@ -131,6 +149,8 @@ export function ShareRow() {
 export function PeopleRow({ onPress }: { onPress: () => void }) {
   const { view } = useRoom();
   const { z } = useLayout();
+  // Someone joins: the words glide over as the faces widen.
+  const words = useGlide({ axis: 'x' });
   if (!view) return null;
   const people = view.faces;
   const text = people.length < 2 ? 'Just you' : `${people.length} people`;
@@ -139,10 +159,12 @@ export function PeopleRow({ onPress }: { onPress: () => void }) {
     <Press label={`${text}, people`} onPress={onPress}
       style={{ minHeight: z(56), borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.line }}>
       <FaceStack people={people} size={z(30)} max={5} />
-      <GText size={z(15)} color={glow.soft} lines={1} style={{ flex: 1 }}>
-        {text}
-        {picking.length ? <GText size={z(15)} color={glow.muted}>{` · ${picking.join(', ')} picking`}</GText> : null}
-      </GText>
+      <View ref={words} style={{ flex: 1, minWidth: 0 }}>
+        <GText size={z(15)} color={glow.soft} lines={1}>
+          {text}
+          {picking.length ? <GText size={z(15)} color={glow.muted}>{` · ${picking.join(', ')} picking`}</GText> : null}
+        </GText>
+      </View>
       <Icon name="right" size={16} color={glow.muted} />
     </Press>
   );
@@ -175,11 +197,21 @@ export function ServiceGrid({ all, loading, selected, toggle }: { all: ServiceCh
   const { phone, z } = useLayout();
   const [more, setMore] = useState(false);
   const [q, setQ] = useState('');
-  if (loading && !all.length) return <Small>Loading…</Small>;
-  const shown = more ? all.filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase())) : firstTiles(all, selected);
   const cell = { width: `${100 / (phone ? 3 : 4)}%`, padding: 5 } as const;
   const logo = phone ? 52 : z(60);
-  const tile = { alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10, minHeight: logo + 46, borderRadius: R.card, borderWidth: 2 } as const;
+  // One fixed height (border, padding, logo, gap, one label line), so loading tiles and service tiles match exactly.
+  const tile = { alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10, height: logo + 50, borderRadius: R.card, borderWidth: 2 } as const;
+  // Loading: empty tiles in the grid's usual shape (8 services and More), so the sheet already has its
+  // height and doesn't jump when the services arrive.
+  if (loading && !all.length) return (
+    <View aria-hidden style={{ gap: 12 }}>
+      {null /* the search field's place */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 }}>
+        {Array.from({ length: 9 }, (_, i) => <View key={`loading-${i}`} style={cell}><View style={{ ...tile, borderColor: warm.line, backgroundColor: warm.faint }} /></View>)}
+      </View>
+    </View>
+  );
+  const shown = more ? all.filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase())) : firstTiles(all, selected);
   return (
     <View testID="service-grid" style={{ gap: 12 }}>
       {more && <TextInput autoFocus accessibilityLabel="Find a service" value={q} onChangeText={setQ} placeholder="Find a service" placeholderTextColor={warm.placeholder} autoCapitalize="none" autoCorrect={false} selectionColor={glow.amber} style={fieldStyleFor(z)} />}

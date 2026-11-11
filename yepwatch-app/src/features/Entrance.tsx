@@ -112,7 +112,14 @@ export function Entrance({ invite, open: request, from }: {
     const timer = setTimeout(() => setJustArchived(null), UNDO_ARCHIVE_MS);
     return () => clearTimeout(timer);
   }, [justArchived]);
-  useEffect(() => { if (home.ready && !restoring && !home.loadingRooms) markPageReady(); }, [home.ready, restoring, home.loadingRooms, markPageReady]);
+  // An invitation's page is ready once its room preview is in and the membership check is done, so the join
+  // page appears whole (never with a placeholder head) as the startup word dissolves.
+  const pageReady = home.ready && home.settled && !restoring && (invite ? preview !== undefined && !checkingInvite : !home.loadingRooms);
+  useEffect(() => { if (pageReady) markPageReady(); }, [pageReady, markPageReady]);
+  // Already in the invited room: it opens once the startup word is leaving, never behind it (the room's
+  // reads and card clocks don't start while the word still covers the page).
+  const [memberOf, setMemberOf] = useState<string | null>(null);
+  useEffect(() => { if (memberOf && boot !== 'boot') router.replace({ pathname: '/room/[id]', params: { id: memberOf } }); }, [memberOf, boot]);
   // Back from GoodWatch: the cover lifts once the page is whole, with the account already in it.
   useEffect(() => { if (home.ready && !restoring && account.ready) memberTransition.arrived(); }, [home.ready, restoring, account.ready]);
   useFocusEffect(useCallback(() => {
@@ -159,7 +166,7 @@ export function Entrance({ invite, open: request, from }: {
         });
         await writeAdmission(intent, null);
         await unarchive(roomId);
-        router.replace({ pathname: '/room/[id]', params: { id: roomId } });
+        setMemberOf(roomId);
       } catch (e) {
         if (!active) return;
         if (
@@ -312,7 +319,12 @@ export function Entrance({ invite, open: request, from }: {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { closePanel(); return true; });
     return () => sub.remove();
   }, [panel, recoveryPanel, closePanel]));
-  const open = (roomId: string) => router.push({ pathname: '/room/[id]', params: { id: roomId } });
+  // One press opens one screen: routes render at once now, so a double tap's second press would push a
+  // second copy of the page it just opened. Pressing works again once this page is back in front.
+  const leaving = useRef(false);
+  useFocusEffect(useCallback(() => { leaving.current = false; }, []));
+  const push = (target: Parameters<typeof router.push>[0]) => { if (leaving.current) return; leaving.current = true; router.push(target); };
+  const open = (roomId: string) => push({ pathname: '/room/[id]', params: { id: roomId } });
   /** Return to a room you left: the saved invitation re-admits the same identity. */
   function returnTo(room: HomeRoom) {
     if (account.member) {
@@ -369,11 +381,15 @@ export function Entrance({ invite, open: request, from }: {
   // The saved-request check takes a moment on every visit: the page appears once, already usable.
   const me = { name: known, member: account.member };
   const openProfile = () => { setError(''); setPanel('profile'); };
-  if (!home.ready || restoring) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
+  // Back on the start page: a guest start page from before isn't shown again until the device's rooms
+  // are read anew (a room made meanwhile turns it into Your rooms).
+  if (!home.ready || restoring || memberOf || (!returning && !home.settled)) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
+  // While a join is on its way the form keeps its layout (the saved name locks only once it's back), so a
+  // second press lands on Join again, not on whatever the locked form would put there.
   if (shown === 'join') return (
     <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite}
-      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname)} member={account.member} lapsed={account.lapsed} me={me}
+      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname) && !busy} member={account.member} lapsed={account.lapsed} me={me}
       initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error || account.error}
       back={closePanel} editName={openProfile}
       /* Back on this invitation (or the code you typed) as yourself, ready to join. */

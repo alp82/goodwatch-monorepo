@@ -31,6 +31,10 @@
       body {
         background: #070707;
       }
+      /* No default body margin: the first layout is already the final one (no shift when styles load). */
+      body {
+        margin: 0;
+      }
       /* These styles disable body scrolling if you are using <ScrollView> */
       body {
         overflow: hidden;

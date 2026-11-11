@@ -8,6 +8,7 @@ import { Animated, Keyboard, TextInput, View } from 'react-native';
 import { guestOnly } from '../../core/config';
 import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../home/Landing';
 import { Or } from '../home/start-parts';
+import { useGlide } from '../shell/glide';
 import { useLayout } from '../shell/layout';
 import { warm } from '../shell/tokens';
 import { GText, glow } from '../glow/theme';
@@ -26,6 +27,8 @@ function RoomDetails() {
   const { view, inviteUrl, openSheet } = useRoom();
   const { z } = useLayout();
   const { all } = useServices(view?.country);
+  // A friend's services join the line: the names glide over as the logos widen.
+  const names = useGlide({ axis: 'x' });
   if (!view) return null;
   const on = servicesIn(all, view.enabledServiceIds);
   const kinds = kindsLabel(view.kinds);
@@ -38,12 +41,12 @@ function RoomDetails() {
         <GText size={z(15)} color={glow.soft} style={{ flex: 1 }}>{kinds}</GText>
       </Chip>
       {on.length || !view.isHost ? (
-        <Chip label={`${on.length ? namesLine(on) : 'Streaming'}, change`} action="Change" onPress={() => openSheet('streaming')}>
+        <Chip key="streaming" label={`${on.length ? namesLine(on) : 'Streaming'}, change`} action="Change" onPress={() => openSheet('streaming')}>
           <Logos services={on} size={z(24)} />
-          <GText size={z(15)} color={glow.soft} lines={1} style={{ flex: 1 }}>{on.length ? namesLine(on) : 'Streaming'}</GText>
+          <View ref={names} style={{ flex: 1, minWidth: 0 }}><GText size={z(15)} color={glow.soft} lines={1}>{on.length ? namesLine(on) : 'Streaming'}</GText></View>
         </Chip>
       ) : (
-        <Chip warn label="Streaming services, add" action="Add" onPress={() => openSheet('services')}>
+        <Chip key="add-services" warn label="Streaming services, add" action="Add" onPress={() => openSheet('services')}>
           <Glyph name="plus" size={z(18)} color={glow.amber} />
           <GText bold size={z(15)} color={glow.amber} style={{ flex: 1 }}>Streaming services</GText>
         </Chip>
@@ -64,6 +67,8 @@ function RoomBefore({ testID, label, actions, pinned, extra, start = 'idle' }: {
   const ready = start === 'ready';
   const resting = start === 'starting' || ready;
   const room = useEased(ready ? 0 : resting ? 0.55 : 1, ready ? 300 : 360, ready ? 330 : 0);
+  // Stacked (phones): a friend's idea arriving above glides the details down instead of pushing them.
+  const details = useGlide({ enabled: !wide });
   const headline = (
     <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ gap: z(16), opacity: room }}>
       <Label color={glow.amber}>{label}</Label>
@@ -88,7 +93,7 @@ function RoomBefore({ testID, label, actions, pinned, extra, start = 'idle' }: {
       ) : (
         <View style={{ gap: phone ? 30 : z(36), paddingTop: 4 }}>
           {headline}
-          {column}
+          <View ref={details}>{column}</View>
         </View>
       )}
     </Screen>
