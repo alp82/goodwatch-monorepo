@@ -28,6 +28,7 @@ import {
 	releaseControlConfig,
 } from "./proposal-release-config.ts"
 import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
+import { SqlCreationQuotas, provisionCreationQuotas } from './proposal-creation-quota.ts'
 import { crateSql } from "./repository.server.ts"
 import {
 	checkReleaseStore,
@@ -37,9 +38,16 @@ import {
 await loadReleaseSecrets(process.env)
 const config = releaseStoreConfig(process.env)
 const sql = crateSql(config.origin, config.username, config.password)
-const control = new ReleaseControl(sql, releaseControlConfig(process.env))
+const policy = releaseControlConfig(process.env)
+const control = new ReleaseControl(sql, policy, new SqlCreationQuotas(sql, policy.roomsPerPerson))
 const [command = "check", ...args] = process.argv.slice(2)
-if (command === 'provision-deletion') {
+if (command === 'provision-creation-quota') {
+  if (!args.includes('--apply')) throw new Error('provision-creation-quota requires --apply')
+  const replicas = args.includes('--disposable-single-node') ? 0 : 2
+  if (replicas === 0 && !['127.0.0.1', 'localhost'].includes(new URL(config.origin).hostname)) throw new Error('Zero replicas requires loopback')
+  await provisionCreationQuotas(sql, replicas)
+  console.log(JSON.stringify({ operation: command, ready: true }))
+} else if (command === 'provision-deletion') {
   if (!args.includes('--apply')) throw new Error('provision-deletion requires --apply')
   const replicas = args.includes('--disposable-single-node') ? 0 : 2
   if (replicas === 0 && !['127.0.0.1', 'localhost'].includes(new URL(config.origin).hostname)) throw new Error('Zero replicas requires loopback')

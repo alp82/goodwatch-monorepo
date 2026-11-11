@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { randomBytes } from 'node:crypto'
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { requireNotDeleting } from './proposal-deletion.ts'
 import {
@@ -22,6 +23,8 @@ import {
 /** This browser's GoodWatch sign-in (sealed, HttpOnly) and its short-lived sign-in intent. */
 export const MEMBER_COOKIE = "yepwatch3_member"
 export const MEMBER_INTENT_COOKIE = "yepwatch3_member_intent"
+export const CREATOR_COOKIE = 'yepwatch3_creator'
+export const CREATOR_HEADER = 'x-yepwatch-creator'
 export interface HttpOptions {
 	serviceSecret: string
 	allowedOrigins: string[]
@@ -95,6 +98,16 @@ export function createProposalHandler(
 				}`
 			)
 		const nativeRequest = () => request.headers.has(MEMBER_SESSION_HEADER) || request.headers.get("x-yepwatch-client") === "native"
+		const guestCreator = () => {
+			const nativeId = request.headers.get(CREATOR_HEADER)
+			if (nativeId && (!nativeRequest() || !/^[a-f0-9]{64}$/.test(nativeId))) throw new RoomError('invalid_request', 'Invalid app installation identifier', 400)
+			if (nativeId) return nativeId
+			const previous = cookie(CREATOR_COOKIE)
+			if (previous && /^[a-f0-9]{64}$/.test(previous)) return previous
+			const value = randomBytes(32).toString('hex')
+			setCookie(CREATOR_COOKIE, value, 30 * 24 * 60 * 60)
+			return value
+		}
 		/** The device session: native apps send it in a header, browsers in the cookie. */
 		const memberSession = () => request.headers.get(MEMBER_SESSION_HEADER) ?? cookie(MEMBER_COOKIE)
 		/**
@@ -186,7 +199,7 @@ export function createProposalHandler(
 				headers.set("access-control-allow-methods", "GET,POST,OPTIONS")
 				headers.set(
 					"access-control-allow-headers",
-					`content-type,authorization,x-yepwatch-participant,x-yepwatch-client,${MEMBER_SESSION_HEADER}`
+					`content-type,authorization,x-yepwatch-participant,x-yepwatch-client,${MEMBER_SESSION_HEADER},${CREATOR_HEADER}`
 				)
 				return new Response(null, { status: 204, headers })
 			}
@@ -423,7 +436,7 @@ export function createProposalHandler(
 				const a = await account()
 				let admission
 				if (url.pathname === paths.rooms)
-					admission = await service.create(parse(admissionSchema, value), a ?? undefined)
+					admission = await service.create(parse(admissionSchema, value), a ?? undefined, a ? undefined : guestCreator())
 				else {
 					const join = parse(joinSchema, value)
 					const roomId = match![1]

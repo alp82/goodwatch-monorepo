@@ -2,6 +2,7 @@ import { roomSearch } from "./proposal-intent.ts"
 import { releaseMembers } from "./proposal-release-members.ts"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { ReleaseControl } from "./proposal-release-control.ts"
+import { SqlCreationQuotas } from './proposal-creation-quota.ts'
 import {
 	API_PREFIX,
 	REVISION_CHANNEL,
@@ -41,7 +42,8 @@ export function createReleaseRuntime(
 		: undefined
 	if (members && !deps.memberCatalog)
 		throw new Error("Member catalog adapter required")
-	const control = new ReleaseControl(deps.sql, config.control)
+	const quotas = new SqlCreationQuotas(deps.sql, config.control.roomsPerPerson ?? 10)
+	const control = new ReleaseControl(deps.sql, config.control, quotas)
 	const service = new ProposalService(
 		repository,
 		members ? deps.memberCatalog!(members) : deps.catalog,
@@ -155,7 +157,7 @@ export function createReleaseRuntime(
 	const purge = setInterval(() => {
 		if (purging || draining || !readiness().ready) return
 		purging = true
-		void service.deletions.purgeDue(now()).catch(() => console.error('YepWatch deletion cleanup will retry')).finally(() => { purging = false })
+		void Promise.all([service.deletions.purgeDue(now()), quotas.purgeExpired()]).catch(() => console.error('YepWatch retention cleanup will retry')).finally(() => { purging = false })
 	}, 60_000)
 	purge.unref()
 	return {

@@ -327,7 +327,7 @@ test(
 				"SELECT table_name FROM information_schema.tables WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' ORDER BY table_name"
 			)
 		).rows
-		assert.equal(counts.length, 20)
+		assert.equal(counts.length, 22)
 		const badColumns = (
 			await sql(
 				"SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' AND column_name='payload'"

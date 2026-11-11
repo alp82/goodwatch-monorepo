@@ -414,6 +414,8 @@ A YepWatch room shares one country and up to eight authored ideas. The host cont
 
 **Your rooms**: The person's active rooms, shared across devices when signed in to GoodWatch and remembered on the device for guests. Owned rooms are the rooms where the person is currently host; leaving transfers hosting and leaves the room on every device.
 
+**Room creation allowance**: Ten unexpired rooms created per signed-in account, or per guest installation/browser. Joining another room does not consume it. Creation attribution is separate from current hosting; leaving or transferring hosting does not release the six-hour reservation. See [the personal allowance decision](docs/adr/yepwatch-personal-room-allowance.md).
+
 **Decision history**: The confirmed choices of rooms the person participated in. A signed-in person's history is shared across devices and survives a new round or room expiry; a choice does not record a GoodWatch Watch or change Seen or taste.
 
 **YepWatch deletion**: A request to remove only YepWatch data, with an explicit 30-day recovery window followed by permanent cleanup. It immediately ends room participation and blocks account access; GoodWatch stays intact. Signing in does not cancel it. See [the deletion decision](docs/adr/yepwatch-account-deletion.md).

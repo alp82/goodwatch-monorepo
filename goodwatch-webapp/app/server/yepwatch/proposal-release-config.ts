@@ -49,6 +49,7 @@ function integer(
 export function releaseControlConfig(env: Env) {
 	return {
 		rooms: integer(env, "YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS", 20, 1, 100),
+		roomsPerPerson: integer(env, "YEPWATCH_PROPOSAL_ROOMS_PER_PERSON", 10, 1, 100),
 		admissions: integer(
 			env,
 			"YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE",
