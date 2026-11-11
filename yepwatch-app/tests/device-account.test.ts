@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { AccountStatus, MemberStatusResponse } from '@goodwatch/yepwatch-contracts/proposal';
 import { createAuthEpoch, type DeviceAccount } from '../src/core/continuous/account-flow';
-import { createDeviceAccount } from '../src/core/continuous/device-account';
+import { createDeviceAccount, settleLogoutRooms, withoutAccount } from '../src/core/continuous/device-account';
+import { continuousFixture } from './continuous-fixture';
 import { linkOutcome } from '../src/features/room/link-gate';
 
 type Status = AccountStatus;
@@ -20,6 +21,8 @@ function device(start: { session: string | null; name: string | null }) {
   let hint = start.session !== null;
   let cached: DeviceAccount | undefined;
   let cancels = 0;
+  /** Each call: did the account read as guest and had the epoch already moved when room caches were scrubbed? */
+  const scrubs: { guest: boolean; epoch: number }[] = [];
   const accountCalls: { session: string | null | undefined; reply: ReturnType<typeof deferred<Status>> }[] = [];
   const linkCalls: { session: string | null | undefined; reply: ReturnType<typeof deferred<Link>> }[] = [];
   const epoch = createAuthEpoch();
@@ -45,6 +48,7 @@ function device(start: { session: string | null; name: string | null }) {
     cache: { get: () => cached, set: (a) => { cached = a; } },
     bump() {},
     unsupported: () => false,
+    forgetAccount() { scrubs.push({ guest: cached?.state === 'guest', epoch: epoch.current() }); },
   });
   /** What finishAccount does when a sign-in completes: a new account replaces the device session. */
   const finishSignIn = async (session: string, status: Status) => {
@@ -52,7 +56,7 @@ function device(start: { session: string | null; name: string | null }) {
     store.session = session;
     await account.signedIn(status);
   };
-  return { account, store, accountCalls, linkCalls, finishSignIn, cached: () => cached, cancels: () => cancels, hint: () => hint };
+  return { account, store, accountCalls, linkCalls, finishSignIn, cached: () => cached, cancels: () => cancels, hint: () => hint, scrubs, epoch };
 }
 
 test('a delayed account answer for Alice after Log out changes nothing: no name, no session, no lapsed Alice', async () => {
@@ -150,4 +154,41 @@ test('a room link GoodWatch can’t verify yet keeps the renewed session and cou
   d.linkCalls[0].reply.resolve({ state: 'unavailable', prefill: null, session: 'alice-2' });
   await assert.rejects(pending, (e: unknown) => linkOutcome(e) === 'transient');
   assert.equal(d.store.session, 'alice-2', 'rotated credentials are kept');
+});
+
+test('Log out scrubs account data from the room caches at once, in the same tick the sign-in ends', async () => {
+  const d = device({ session: 'alice-1', name: 'Alice' });
+  const out = d.account.signOut();
+  // Synchronously, before Log out's request has gone anywhere.
+  assert.deepEqual(d.scrubs, [{ guest: true, epoch: 1 }]);
+  await out;
+});
+
+test('a room without the account keeps the seat and drops the GoodWatch link, prefill and seen titles', () => {
+  const s = continuousFixture();
+  s.own.showSeen = true;
+  s.own.member = { state: 'linked', prefill: { country: 'DE', serviceIds: [8], savedProgressAvailable: true } };
+  const guest = withoutAccount({ ...s, ownRevision: 3 });
+  assert.deepEqual(guest.own.member, { state: 'guest', prefill: null });
+  assert.equal(guest.own.showSeen, false);
+  assert.equal(guest.ownRevision, 3);
+  assert.deepEqual(guest.own.votes, s.own.votes);
+  assert.equal(guest.shared, s.shared);
+});
+
+test('Log out keeps every room the server kept, even ones Your rooms never loaded', async () => {
+  const remembered: string[] = [], forgotten: string[] = [];
+  const registry = {
+    remember: async (e: { roomId: string; nickname: string; expiresAt: number }) => { remembered.push(`${e.roomId}:${e.nickname}:${e.expiresAt}`); },
+    forget: async (id: string) => { forgotten.push(id); },
+  };
+  await settleLogoutRooms([{ roomId: 'shown', nickname: 'Al', expiresAt: 5 }, { roomId: 'gone', nickname: 'Al', expiresAt: 5 }],
+    { keptRooms: [{ roomId: 'shown', nickname: 'Al', expiresAt: 5 }, { roomId: 'unloaded', nickname: 'Alp', expiresAt: 9 }] }, registry);
+  assert.ok(remembered.includes('unloaded:Alp:9'), 'a room Your rooms never loaded goes on the device list');
+  assert.ok(remembered.includes('shown:Al:5'));
+  assert.deepEqual(forgotten, ['gone'], 'a room another device of the account keeps leaves the list');
+  // An older server without keptRooms: the rooms already on screen stay.
+  forgotten.length = 0;
+  await settleLogoutRooms([{ roomId: 'shown', nickname: 'Al', expiresAt: 5 }], { state: 'guest' }, registry);
+  assert.deepEqual(forgotten, []);
 });

@@ -38,3 +38,26 @@ test('pending commands and their clear operations stay in the credential session
   await storage.write(null);
   assert.deepEqual(writes, ['phone-session', 'phone-session', 'another-account-session']);
 });
+
+test('a room answer asked before Log out is not applied, and says nothing about lost access', async () => {
+  let finish!: (response: Response) => void;
+  const client = new ContinuousApi((() => new Promise<Response>(resolve => { finish = resolve; })) as typeof fetch, true,
+    { read: async () => 'alice-login', save: async () => undefined });
+  const access = { roomId: 'room', participantId: 'alex', token: 'room-capability', expiresAt: 1 };
+  const reading = client.snapshot(access);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  authEpoch.advance();
+  finish(Response.json({ shared: {}, own: { member: { state: 'linked', prefill: { country: 'DE', serviceIds: [8], savedProgressAvailable: true } } } }));
+  await assert.rejects(reading, (e: Error & { code?: string; status?: number }) => e.code === 'outcome_unknown' && e.status === undefined);
+});
+
+test('a live-channel ticket asked before Log out still counts (it carries no account data)', async () => {
+  let finish!: (response: Response) => void;
+  const client = new ContinuousApi((() => new Promise<Response>(resolve => { finish = resolve; })) as typeof fetch, true,
+    { read: async () => 'alice-login', save: async () => undefined });
+  const ticket = client.ticket({ roomId: 'room', participantId: 'alex', token: 'room-capability', expiresAt: 1 });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  authEpoch.advance();
+  finish(Response.json({ ticket: 't', expiresAt: 1 }));
+  assert.deepEqual(await ticket, { ticket: 't', expiresAt: 1 });
+});

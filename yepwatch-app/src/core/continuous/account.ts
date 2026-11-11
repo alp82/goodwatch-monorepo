@@ -8,7 +8,8 @@ import { adoptAccountRoom } from './account-access';
 import { roomRegistry } from './room-registry';
 import type { AccountHome } from '@goodwatch/yepwatch-contracts/proposal';
 import { accountFlow, authEpoch, type DeviceAccount } from './account-flow';
-import { createDeviceAccount, guestAccount } from './device-account';
+import { createDeviceAccount, guestAccount, settleLogoutRooms, withoutAccount } from './device-account';
+import type { CachedRoom } from './state';
 import { beginAccount, clearSession, forgetMemberName, readMemberName, readSession, rememberMemberName, saveSession } from './member';
 import { forgetMemberHint, hasMemberHint, rememberMemberHint } from './web-member-return';
 
@@ -32,6 +33,10 @@ const device = createDeviceAccount({
   },
   bump: () => accountFlow.bump(),
   unsupported: (e) => e instanceof RoomFailure && (e.code === 'not_implemented' || e.status === 404),
+  forgetAccount: () => {
+    for (const key of ['proposal-room', 'home-room'])
+      queryClient.setQueriesData<CachedRoom>({ queryKey: [key] }, (room) => (room?.own ? withoutAccount(room) : room));
+  },
 });
 // Log out or a new sign-in: an account answer still in flight belongs to the earlier sign-in. Rooms stay
 // on screen (Log out keeps this device in them as a guest; a sign-in links the same place) and read again.
@@ -54,20 +59,19 @@ export const linkRoom = async (access: import('../credentials').RoomAccess) => {
 };
 /**
  * Ends this device's GoodWatch sign-in for YepWatch. GoodWatch itself stays signed in. The device stays
- * in its rooms as a guest: they go on the device's own list first (so Your rooms never empties for a
- * moment), and the ones the server didn't keep for this device (another device holds the account's
- * place) leave it again.
+ * in its rooms as a guest: the rooms already shown go on the device's own list first (so Your rooms never
+ * empties for a moment), then every room the server kept goes on it and the others leave it again
+ * (settleLogoutRooms). Log out starts in this tick: account data leaves the rooms on screen at once.
  */
 export async function signOut() {
-  const rooms = queryClient.getQueriesData<AccountHome>({ queryKey: ['account-home'] })
+  const shown = queryClient.getQueriesData<AccountHome>({ queryKey: ['account-home'] })
     .flatMap(([, home]) => home?.rooms ?? []).filter((r) => !r.snapshot.own.left)
     .map((r) => ({ roomId: r.snapshot.shared.roomId, expiresAt: r.snapshot.shared.expiresAt,
       nickname: r.snapshot.shared.participants.find((p) => p.participantId === r.snapshot.own.participantId)?.nickname ?? '' }));
-  await Promise.all(rooms.map((r) => roomRegistry.remember(r).catch(() => undefined)));
-  const result = await device.signOut() as { keptRooms?: { roomId: string }[] } | undefined;
-  if (!Array.isArray(result?.keptRooms)) return;
-  const kept = new Set(result.keptRooms.map((r) => r.roomId));
-  await Promise.all(rooms.filter((r) => !kept.has(r.roomId)).map((r) => roomRegistry.forget(r.roomId).catch(() => undefined)));
+  const ending = device.signOut();
+  ending.catch(() => undefined); // awaited below; a failed Log out still throws there
+  await Promise.all(shown.map((r) => roomRegistry.remember(r).catch(() => undefined)));
+  await settleLogoutRooms(shown, await ending, roomRegistry);
 }
 
 export function useAccount() {
