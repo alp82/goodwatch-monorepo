@@ -34,6 +34,6 @@ appId: com.yepwatch.app
 - waitForAnimationToEnd
 - takeScreenshot: 03-find-your-pick
 - tapOn: Yep
-- tapOn: Matches.*
+- tapOn: .*[Mm]atch.*
 - waitForAnimationToEnd
 - takeScreenshot: 04-your-matches

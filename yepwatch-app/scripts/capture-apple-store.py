@@ -12,8 +12,7 @@ def run(*args):
 
 types = json.loads(run('xcrun', 'simctl', 'list', 'devicetypes', '--json'))['devicetypes']
 runtimes = [r for r in json.loads(run('xcrun', 'simctl', 'list', 'runtimes', '--json'))['runtimes'] if r['isAvailable'] and r['name'].startswith('iOS')]
-runtime = sorted(runtimes, key=lambda r: tuple(int(x) for x in r['version'].split('.')))[-1]
-apps = glob.glob('ios/build/Build/Products/*simulator/*.app') + glob.glob('ios/build/*.app')
+apps = glob.glob('ios/build/Build/Products/*simulator/*.app') + glob.glob('ios/build/*.app') + [str(p) for p in Path('.expo/store-simulator').rglob('*.app')]
 if not apps:
     apps = [str(p) for p in Path('ios').rglob('*.app') if '/Products/' in str(p)]
 if not apps:
@@ -22,10 +21,21 @@ maestro = shutil.which('maestro') or str(Path.home() / '.maestro/bin/maestro')
 output = Path('.expo/store-captures')
 output.mkdir(parents=True, exist_ok=True)
 for family, preferred, fallback in [('iphone', 'iPhone 17 Pro Max', 'iPhone 16 Pro Max'), ('ipad', 'iPad Pro 13-inch (M5)', 'iPad Pro 13-inch (M4)')]:
-    device = next((d for name in [preferred, fallback] for d in types if d['name'] == name), None)
-    if not device:
-        raise RuntimeError('Required store display device is unavailable: ' + family)
-    udid = run('xcrun', 'simctl', 'create', 'YepWatch store ' + family, device['identifier'], runtime['identifier']).strip()
+    choices = [d for name in [preferred, fallback] for d in types if d['name'] == name]
+    choices += [d for d in reversed(types) if ('iPhone' in d['name'] and 'Pro Max' in d['name']) if family == 'iphone'] if family == 'iphone' else [d for d in reversed(types) if 'iPad Pro 13-inch' in d['name']]
+    udid = None
+    for runtime in reversed(runtimes):
+        for device in choices:
+            result = subprocess.run(['xcrun', 'simctl', 'create', 'YepWatch store ' + family, device['identifier'], runtime['identifier']], text=True, capture_output=True)
+            if result.returncode == 0:
+                udid = result.stdout.strip()
+                break
+        if udid:
+            break
+    if not udid:
+        (output / 'simulator-availability.json').write_text(json.dumps({'runtimes': runtimes, 'devices': types}, indent=2))
+        raise RuntimeError('No compatible store display simulator is available: ' + family)
+    print('Capturing ' + device['name'] + ' on ' + runtime['name'], flush=True)
     try:
         run('xcrun', 'simctl', 'boot', udid)
         run('xcrun', 'simctl', 'bootstatus', udid, '-b')

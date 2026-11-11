@@ -54,6 +54,10 @@
       "ios": { "simulator": true, "config": "store-screenshots.yml" },
       "channel": "store-simulator"
     },
+    "store-capture-existing": {
+      "extends": "store-simulator",
+      "ios": { "simulator": true, "config": "capture-existing.yml" }
+    },
     "beta": {
       "extends": "production",
       "env": {
