@@ -7,7 +7,7 @@
  * and makes the page underneath inert.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform, ScrollView, View, type ViewStyle } from 'react-native';
+import { Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type ViewStyle } from 'react-native';
 import { useIsFocused } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '../../components/ui';
@@ -58,9 +58,10 @@ export function useSheetEntry(onClose: () => void) {
  */
 export function Shade({ onPress, style }: { onPress: () => void; style?: ViewStyle }) {
   return (
-    <View accessible={false} importantForAccessibility="no" aria-hidden
-      onStartShouldSetResponder={() => true} onResponderRelease={onPress}
-      style={[{ flex: 1 }, style]} />
+    Platform.OS === 'web'
+      // Out of the tab order and the accessibility tree; still a normal press target for the pointer.
+      ? <Pressable accessible={false} focusable={false} aria-hidden onPress={onPress} style={[{ flex: 1, cursor: 'default' } as unknown as ViewStyle, style]} />
+      : <View accessible={false} importantForAccessibility="no" onStartShouldSetResponder={() => true} onResponderRelease={onPress} style={[{ flex: 1 }, style]} />
   );
 }
 
