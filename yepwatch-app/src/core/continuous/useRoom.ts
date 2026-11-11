@@ -106,9 +106,11 @@ export function useContinuousRoom(roomId: string) {
     },
     [cached, end]
   );
+  /** A Leave is on its way: the refusals it causes (the live channel, a read) are its own outcome, not lost access. */
+  const leavingNow = useRef(false);
   const authority = useCallback(
     (e: unknown) => {
-      if (expired(e)) return;
+      if (expired(e) || leavingNow.current) return;
       // A status without the API's own answer (a proxy page while the server restarts) is not lost access.
       if (e instanceof RoomFailure && ((e.code !== 'outcome_unknown' && [401, 403, 404].includes(e.status ?? 0)) || ['unauthorized', 'forbidden', 'not_found'].includes(e.code)))
         end('access');
@@ -372,12 +374,15 @@ export function useContinuousRoom(roomId: string) {
     setError('');
     setErrorCode(null);
     const leaving = (command ?? queue.current.pending?.command)?.type === 'leave';
+    leavingNow.current = leaving;
     try {
       const value = await queue.current.send(command, snapshot, (body) =>
         api.command(access, body), commandId
       );
       apply(value);
-      return !terminalRef.current;
+      // A Leave the server confirmed went through, even when the live channel brought the refusal of
+      // the leaver's next read first and access already ended here.
+      return leaving || !terminalRef.current;
     } catch (e) {
       // The server reads its answer as the person who just left, and refuses that read: the Leave went
       // through. Access ends here on purpose, so the room never says "access ended" afterwards.
@@ -404,6 +409,7 @@ export function useContinuousRoom(roomId: string) {
       if (!queue.current.pending) void refetch().catch(() => undefined);
       return false;
     } finally {
+      leavingNow.current = false;
       setBusy(false);
       setRetryAt(terminalRef.current ? 0 : queue.current.retryAt);
       setPending(terminalRef.current ? null : queue.current.pending);
