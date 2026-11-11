@@ -1,0 +1,414 @@
+name: YepWatch gate and deploy
+
+# Deploy gate for YepWatch (docs/yepwatch-e2e-pipeline.md). On a push to main that touches what the YepWatch
+# images build from, in parallel: unit/type checks, the web E2E gate (Playwright, sharded) and the Android
+# E2E gate (emulator with KVM). Only when all pass does the deploy job ask Coolify to deploy, wait for it,
+# and run the production smoke.
+#
+# Hermetic: the gate jobs hold no secrets, the stack binds to loopback and refuses non-loopback sockets
+# (e2e/stack/block-egress.mjs), the APK only knows loopback origins, and the production hosts are pointed at
+# 0.0.0.0 on the runner as a second fence. Only `deploy` (COOLIFY_YEPWATCH_TOKEN, environment
+# yepwatch-production) and the smoke (member credentials, environment yepwatch-smoke) see secrets.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      # Keep in sync with the Coolify application's watch paths and e2e/ci/coolify-deploy.mjs WATCH.
+      - "yepwatch-app/**"
+      - "yepwatch-realtime/**"
+      - "goodwatch-webapp/app/server/yepwatch/**"
+      - "goodwatch-webapp/packages/yepwatch-contracts/**"
+      # Shared webapp code the API image and the E2E API bundle compile in (e2e/stack/build.mjs buildApi).
+      - "goodwatch-webapp/app/server/**"
+      - "goodwatch-webapp/app/utils/**"
+      - "goodwatch-webapp/package-lock.json"
+      - "goodwatch-webapp/patches/**"
+      - ".github/workflows/yepwatch-gate.yml"
+      - ".github/workflows/yepwatch-smoke.yml"
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy when the gate passes (needs vars.YEPWATCH_DEPLOY_VIA_CI == 'true')
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  # One gate per commit; a newer push doesn't cancel an older gate (its deploy stands down by itself when
+  # a newer YepWatch commit is on main, see coolify-deploy.mjs).
+  group: yepwatch-gate-${{ github.sha }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 24.19.0
+  WEB_SHARDS: 6
+  # Frame pacing (60 fps, no frame > 20 ms): enforced on web with one Playwright worker per shard; reported
+  # without gating on Android (SwiftShader, no GPU). See docs/yepwatch-e2e-pipeline.md.
+  WEB_FRAMES: gate
+  NATIVE_FRAMES: report
+
+jobs:
+  checks:
+    name: Unit and type checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            yepwatch-app
+            yepwatch-realtime
+            goodwatch-webapp/packages
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - name: Restore node_modules
+        id: nm
+        uses: actions/cache@v6
+        with:
+          path: |
+            yepwatch-app/node_modules
+            yepwatch-realtime/node_modules
+          key: yw-nm-checks-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json') }}
+      - name: Install (cache miss only)
+        if: steps.nm.outputs.cache-hit != 'true'
+        run: |
+          npm --prefix yepwatch-app ci --install-links --no-audit --no-fund &
+          npm --prefix yepwatch-realtime ci --no-audit --no-fund &
+          wait
+      - name: Typecheck, lint, unit tests, gateway build + tests
+        run: |
+          set -e
+          npm --prefix yepwatch-app run typecheck > typecheck.log 2>&1 & p1=$!
+          npm --prefix yepwatch-app run lint > lint.log 2>&1 & p2=$!
+          npm --prefix yepwatch-app test > unit.log 2>&1 & p3=$!
+          (npm --prefix yepwatch-realtime run build && npm --prefix yepwatch-realtime test) > realtime.log 2>&1 & p4=$!
+          status=0
+          for p in "$p1:typecheck" "$p2:lint" "$p3:unit" "$p4:realtime"; do
+            if wait "${p%%:*}"; then echo "${p#*:} ok"; else echo "::error::${p#*:} failed"; cat "${p#*:}.log"; status=1; fi
+          done
+          exit $status
+
+  web-gate:
+    name: Web gate ${{ matrix.shard }}/6
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            yepwatch-app
+            yepwatch-realtime
+            goodwatch-webapp
+      - name: Fence off production hosts
+        run: echo "0.0.0.0 yepwatch.com www.yepwatch.com goodwatch.app www.goodwatch.app coolify.goodwatch.app" | sudo tee -a /etc/hosts
+      - name: Pull stack images in the background
+        run: |
+          (for i in valkey/valkey:8 crate:6.4.6 caddy:2.11.7; do docker pull -q "$i" & done; wait) > "$RUNNER_TEMP/pull.log" 2>&1 &
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - name: Restore node_modules
+        id: nm
+        uses: actions/cache@v6
+        with:
+          path: |
+            goodwatch-webapp/node_modules
+            yepwatch-app/node_modules
+            yepwatch-realtime/node_modules
+            yepwatch-app/e2e/node_modules
+          key: yw-nm-e2e-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('goodwatch-webapp/package-lock.json', 'goodwatch-webapp/patches/**', 'yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json', 'yepwatch-app/e2e/package-lock.json') }}
+      - name: Install (cache miss only)
+        if: steps.nm.outputs.cache-hit != 'true'
+        run: |
+          (cd goodwatch-webapp && npm ci --ignore-scripts --no-audit --no-fund && npx patch-package) &
+          npm --prefix yepwatch-app ci --install-links --no-audit --no-fund &
+          npm --prefix yepwatch-realtime ci --no-audit --no-fund &
+          npm --prefix yepwatch-app/e2e ci --no-audit --no-fund &
+          wait
+      - name: Cache keys
+        id: keys
+        run: node yepwatch-app/e2e/ci/cache-keys.mjs playwright
+      - name: Restore Playwright Chromium
+        id: pw
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: yw-pw-${{ runner.os }}-${{ steps.keys.outputs.playwright }}
+      - name: Install Chromium (cache miss only)
+        if: steps.pw.outputs.cache-hit != 'true'
+        working-directory: yepwatch-app
+        run: npx playwright install chromium
+      - name: Restore Metro cache
+        uses: actions/cache@v6
+        with:
+          path: /tmp/metro-cache
+          key: yw-metro-web-${{ hashFiles('yepwatch-app/package-lock.json') }}-${{ github.sha }}
+          restore-keys: yw-metro-web-${{ hashFiles('yepwatch-app/package-lock.json') }}-
+      - name: Wait for stack images
+        run: |
+          for i in valkey/valkey:8 crate:6.4.6 caddy:2.11.7; do
+            until docker image inspect "$i" > /dev/null 2>&1; do sleep 1; done
+          done
+      - name: E2E gate, shard ${{ matrix.shard }}/${{ env.WEB_SHARDS }}
+        id: gate
+        working-directory: yepwatch-app/e2e
+        env:
+          # One test at a time per runner: frame pacing is judged on an otherwise idle 4-vCPU machine.
+          E2E_WORKERS: '1'
+        run: |
+          start=$(date +%s)
+          set +e
+          node run.mjs gate -- --shard=${{ matrix.shard }}/${{ env.WEB_SHARDS }}
+          code=$?
+          echo "exit=$code" >> "$GITHUB_OUTPUT"
+          echo "Web shard ${{ matrix.shard }}: tier exit $code, $(( $(date +%s) - start )) s for stack + tests" >> "$GITHUB_STEP_SUMMARY"
+          # The verdict is web-gate-verdict's (it merges all shards); a shard fails here only without a report.
+          test -f artifacts/gate/report.json
+      - name: Upload shard report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-gate-${{ matrix.shard }}
+          path: |
+            yepwatch-app/e2e/artifacts/gate/report.json
+            yepwatch-app/e2e/artifacts/gate/summary.md
+            yepwatch-app/e2e/artifacts/gate/results-*/**/*.zip
+            yepwatch-app/e2e/artifacts/gate/results-*/**/*.png
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Stack logs on failure
+        if: failure() || steps.gate.outputs.exit != '0'
+        run: tail -n 60 yepwatch-app/e2e/.cache/logs/*.log yepwatch-app/e2e/.cache/supervisor.out 2>/dev/null || true
+
+  web-gate-verdict:
+    name: Web gate verdict
+    needs: web-gate
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: yepwatch-app/e2e
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: web-gate-*
+          path: shards
+      - name: Merge shards and judge
+        run: node yepwatch-app/e2e/ci/merge-reports.mjs shards --out merged --expect ${{ env.WEB_SHARDS }} --frames=${{ env.WEB_FRAMES }}
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: web-gate-merged
+          path: merged
+          retention-days: 14
+
+  android-gate:
+    name: Android gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      YW_E2E_HOME: /home/runner/.cache/yw-e2e-native
+      YW_E2E_RUNS: /home/runner/.cache/yw-e2e-runs
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      YW_E2E_SHUTDOWN: '1'
+      # No GPU on GitHub runners: software rendering. Snapshots are saved and loaded with the same mode.
+      YW_E2E_GPU: swiftshader_indirect
+      MAESTRO_VERSION: 2.12.1
+      SYSTEM_IMAGE: system-images;android-35;google_apis;x86_64
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            yepwatch-app
+            yepwatch-realtime
+            goodwatch-webapp
+      - name: Fence off production hosts
+        run: echo "0.0.0.0 yepwatch.com www.yepwatch.com goodwatch.app www.goodwatch.app coolify.goodwatch.app" | sudo tee -a /etc/hosts
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Pull stack images in the background
+        run: |
+          (for i in valkey/valkey:8 crate:6.4.6 caddy:2.11.7; do docker pull -q "$i" & done; wait) > "$RUNNER_TEMP/pull.log" 2>&1 &
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Restore node_modules
+        id: nm
+        uses: actions/cache@v6
+        with:
+          path: |
+            goodwatch-webapp/node_modules
+            yepwatch-app/node_modules
+            yepwatch-realtime/node_modules
+            yepwatch-app/e2e/node_modules
+          key: yw-nm-e2e-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('goodwatch-webapp/package-lock.json', 'goodwatch-webapp/patches/**', 'yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json', 'yepwatch-app/e2e/package-lock.json') }}
+      - name: Install (cache miss only)
+        if: steps.nm.outputs.cache-hit != 'true'
+        run: |
+          (cd goodwatch-webapp && npm ci --ignore-scripts --no-audit --no-fund && npx patch-package) &
+          npm --prefix yepwatch-app ci --install-links --no-audit --no-fund &
+          npm --prefix yepwatch-realtime ci --no-audit --no-fund &
+          npm --prefix yepwatch-app/e2e ci --no-audit --no-fund &
+          wait
+      - name: Cache keys
+        id: keys
+        run: |
+          node yepwatch-app/e2e/ci/cache-keys.mjs native_key cpu
+          echo "emulator=$(sed -n 's/^Pkg.Revision=//p' "$ANDROID_HOME/emulator/source.properties" 2>/dev/null || echo none)" >> "$GITHUB_OUTPUT"
+      - name: Restore Android emulator + system image
+        id: sdk
+        uses: actions/cache@v6
+        with:
+          path: |
+            ${{ env.ANDROID_HOME }}/emulator
+            ${{ env.ANDROID_HOME }}/system-images/android-35/google_apis/x86_64
+          key: yw-sdk-${{ runner.os }}-api35-google_apis-x86_64-v1
+      - name: Install emulator + system image (cache miss only)
+        if: steps.sdk.outputs.cache-hit != 'true'
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install emulator "$SYSTEM_IMAGE" > /dev/null
+      - name: Restore Maestro
+        id: maestro
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.YW_E2E_HOME }}/tools/maestro
+          key: yw-maestro-${{ env.MAESTRO_VERSION }}
+      - name: Install Maestro (cache miss only)
+        if: steps.maestro.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$YW_E2E_HOME/tools"
+          curl -fsSL -o "$RUNNER_TEMP/maestro.zip" "https://github.com/mobile-dev-inc/maestro/releases/download/cli-$MAESTRO_VERSION/maestro.zip"
+          unzip -q "$RUNNER_TEMP/maestro.zip" -d "$YW_E2E_HOME/tools"
+      - name: Restore AVD + snapshot
+        # A snapshot only loads on the CPU model and emulator build that saved it.
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.YW_E2E_HOME }}/avd
+          key: yw-avd-v2-${{ steps.keys.outputs.cpu }}-emu${{ steps.keys.outputs.emulator }}-${{ hashFiles('yepwatch-app/e2e/native/lib/device.mjs') }}
+      - name: Restore release APK base
+        # The Gradle build (native key) is the only slow part; JS-only changes repack it in ~1 min.
+        id: apk
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.YW_E2E_HOME }}/apk/${{ steps.keys.outputs.native_key }}/base*
+          key: yw-apk-base-${{ steps.keys.outputs.native_key }}
+      - name: Restore Gradle (cold native builds only)
+        if: steps.apk.outputs.cache-hit != 'true'
+        uses: actions/cache@v6
+        with:
+          path: |
+            ${{ env.YW_E2E_HOME }}/gradle/caches/modules-2
+            ${{ env.YW_E2E_HOME }}/gradle/wrapper
+          key: yw-gradle-${{ hashFiles('yepwatch-app/package-lock.json') }}
+          restore-keys: yw-gradle-
+      - name: Restore Metro cache
+        uses: actions/cache@v6
+        with:
+          path: /tmp/metro-cache
+          key: yw-metro-native-${{ hashFiles('yepwatch-app/package-lock.json') }}-${{ github.sha }}
+          restore-keys: yw-metro-native-${{ hashFiles('yepwatch-app/package-lock.json') }}-
+      - name: Wait for stack images
+        run: |
+          for i in valkey/valkey:8 crate:6.4.6 caddy:2.11.7; do
+            until docker image inspect "$i" > /dev/null 2>&1; do sleep 1; done
+          done
+      - name: Android E2E gate
+        working-directory: yepwatch-app/e2e
+        run: node ci/native-gate.mjs --frames=${{ env.NATIVE_FRAMES }}
+      - name: Stop emulators (before the AVD cache is saved)
+        if: always()
+        run: |
+          for s in emulator-5570 emulator-5572; do "$ANDROID_HOME/platform-tools/adb" -s "$s" emu kill > /dev/null 2>&1 || true; done
+          sleep 3
+      - name: Upload run
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-gate
+          path: |
+            ${{ env.YW_E2E_RUNS }}/**/result.json
+            ${{ env.YW_E2E_RUNS }}/**/ci-summary.md
+            ${{ env.YW_E2E_RUNS }}/**/*.png
+            ${{ env.YW_E2E_RUNS }}/**/logcat-*.txt
+            ${{ env.YW_E2E_HOME }}/logs/*.log
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Upload videos on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-gate-videos
+          path: ${{ env.YW_E2E_RUNS }}/**/video/**
+          retention-days: 7
+          if-no-files-found: ignore
+
+  deploy:
+    name: Deploy via Coolify
+    needs: [checks, web-gate-verdict, android-gate]
+    # Stays off until the owner switches deploys from the Coolify webhook to this pipeline (vars.YEPWATCH_DEPLOY_VIA_CI).
+    if: >-
+      vars.YEPWATCH_DEPLOY_VIA_CI == 'true' && github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || inputs.deploy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: yepwatch-production
+      url: https://yepwatch.com
+    concurrency:
+      group: yepwatch-deploy
+      cancel-in-progress: false
+    outputs:
+      deployed: ${{ steps.deploy.outputs.deployed }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: yepwatch-app/e2e/ci
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - name: Deploy, wait for the swap, wait for readiness
+        id: deploy
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_YEPWATCH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: node yepwatch-app/e2e/ci/coolify-deploy.mjs --sha "$GITHUB_SHA"
+
+  smoke:
+    name: Production smoke after deploy
+    needs: deploy
+    if: needs.deploy.outputs.deployed == 'true'
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/yepwatch-smoke.yml
+    with:
+      reason: after deploy ${{ github.sha }}
+    secrets: inherit

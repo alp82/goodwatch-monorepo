@@ -1,0 +1,18 @@
+# One-phone iOS journey for the pre-OTA run on EAS (e2e/native/ci/eas-maestro-ios.yml): the same Maestro flows
+# the Android harness uses, in the order that leaves each one where the next starts.
+#   create a room (name + Netflix) → Start alone → Nope/Undo/Yep → title details → rapid Yeps → kill + relaunch
+# Excluded on iOS: back-priority (no Back button), app-link entry (no verified links on a simulator), member
+# sign-in (no fake GoodWatch on EAS), two-phone flows (one simulator).
+appId: ${APP_ID || 'dev.yepwatch.foundation'}
+name: iOS journey (pre-OTA)
+tags: [ios]
+---
+- runFlow: ../native/flows/smoke-create-room.yaml
+- runFlow: ../native/flows/host-start-and-vote.yaml
+# details.yaml closes with Android Back; iOS closes the sheet with its Close button instead.
+- tapOn: { text: "Details about .*", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "details-panel" }, timeout: 5000 }
+- tapOn: { text: "Close", waitToSettleTimeoutMs: 300 }
+- assertNotVisible: { id: "details-panel" }
+- runFlow: ../native/flows/rapid-taps.yaml
+- runFlow: ../native/flows/kill-relaunch.yaml
