@@ -39,7 +39,9 @@ const audited = new Set();
 async function audit(p, screen) {
   if (audited.has(screen)) return;
   audited.add(screen);
-  for (const f of a11yAudit(await p.nodes(), { screen, minDp: B.native.minTargetDp })) result.gates.a11y.push(f);
+  const found = a11yAudit(await p.nodes(), { screen, minDp: B.native.minTargetDp });
+  if (found.length) { try { const shot = path.relative(RUN, p.screenshot(path.join(RUN, `a11y-${screen.replace(/\W+/g, '-')}-${p.name}.png`))); for (const f of found) f.shot = shot; } catch { /* best effort */ } }
+  for (const f of found) result.gates.a11y.push(f);
 }
 async function notStuck(p, where) {
   const words = blockingWords(await p.nodes());
@@ -96,13 +98,14 @@ async function main() {
     A.forceStop(); A.sh(`pm clear ${PACKAGE}`);
     let am;
     const first = await measure({ actor: A, phones: [A], file: vid('cold-first'), targets: { A: roiOf(A, 'New room', 20000) },
-      action: hostAction(() => { am = A.launch(); }), settleMs: 800 });
+      action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
     timing('cold start, first visit -> start page usable', B.native.coldStartUsableMs, first.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     await audit(A, 'start page (first visit)');
     A.forceStop(); await sleep(500);
     const again = await measure({ actor: A, phones: [A], file: vid('cold-again'), targets: { A: roiOf(A, 'New room', 20000) },
-      action: hostAction(() => { am = A.launch(); }), settleMs: 800 });
+      action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
     timing('cold start, returning -> start page usable', B.native.coldStartUsableMs, again.A, { amStartTotalTime: am.totalTime, use: 'settled' });
+    if (again.A?.ok) S.coldReturningMs = again.A.settledMs;
   });
 
   // ---- create room on A, with New room / Create room timings, a11y, back priority ----
@@ -160,6 +163,43 @@ async function main() {
     S.firstCard = { A: await posterTitle(A), B: await posterTitle(Bp) };
     if (!S.firstCard.A || !S.firstCard.B) journeyFail('empty deck', JSON.stringify(S.firstCard));
   });
+
+  // ---- relaunch mid-vote (owner decision Q25a): back in the room at the same card, never via the start page ----
+  // The app is up when a cold start shows the start page; the room's extra time after that is the budget.
+  async function relaunchMidVote(p, label, kill) {
+    await p.waitFor('poster', { timeout: 8000 });
+    const before = await posterTitle(p);
+    await kill();
+    let am;
+    const r = await measure({ actor: p, phones: [p], file: vid(`relaunch-${label.replace(/\W+/g, '-')}`), targets: { [p.name]: roiOf(p, 'poster', 15000) },
+      action: hostAction(() => { am = p.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
+    const got = r[p.name];
+    timing(`relaunch mid-vote (${label}) -> card`, B.native.coldStartUsableMs, got, { amStartTotalTime: am?.totalTime, use: 'settled' });
+    if (got?.ok && S.coldReturningMs) {
+      const after = Math.max(0, got.settledMs - S.coldReturningMs);
+      timing(`relaunch mid-vote (${label}) -> card, after the app is up`, B.native.relaunchToCardMs, { ...got, ms: after, settledMs: after }, { use: 'settled', startPageMs: S.coldReturningMs });
+    }
+    if (!(await p.has('poster'))) {
+      const seen = (await p.nodes()).map(n => n.desc || n.text).filter(Boolean).slice(0, 25).join(' | ');
+      journeyFail(`relaunch mid-vote (${label})`, `did not come back to the room's card; screen: ${seen}`, p);
+      await p.tap(/cheer me up/); await p.waitFor('poster', { timeout: 8000 });
+      return;
+    }
+    const after = await posterTitle(p);
+    if (after !== before) journeyFail(`relaunch mid-vote (${label})`, `came back at "${after}", not the card it was on ("${before}")`, p);
+    await sleep(1500); await notStuck(p, `after relaunch (${label})`);
+  }
+  await scenario('kill-relaunch-mid-vote', async () => {
+    await relaunchMidVote(Bp, 'killed', async () => { Bp.forceStop(); await sleep(500); });
+  });
+  // Android ended the process in the background (memory); the person opens the app again.
+  await scenario('process-death-mid-vote', async () => {
+    await relaunchMidVote(Bp, 'process death', async () => {
+      Bp.home(); await sleep(800);
+      Bp.sh(`am kill ${PACKAGE}`); await sleep(500);
+      if (Bp.sh(`pidof ${PACKAGE} || true`).trim()) throw new Error('am kill left the app process running');
+    });
+  }, { modes: ['full'] });
 
   // ---- vote on one phone -> other phone; frame pacing while voting ----
   await scenario('vote-to-peer', async () => {
@@ -251,21 +291,6 @@ async function main() {
     if (!A.foreground().includes(PACKAGE)) journeyFail('rapid taps', 'app left the foreground');
   }, { modes: ['full'] });
 
-  await scenario('kill-relaunch-mid-vote', async () => {
-    const before = await posterTitle(A);
-    A.forceStop(); await sleep(500);
-    A.launch();
-    const back = await A.waitFor('poster', { timeout: 15000 }).then(() => true, () => false);
-    if (!back) {
-      const seen = (await A.nodes()).map(n => n.desc || n.text).filter(Boolean).slice(0, 25).join(' | ');
-      journeyFail('kill+relaunch', `relaunch mid-vote did not return to the room's card within 15 s; screen: ${seen}`, A);
-      await A.tap(/cheer me up/); await A.waitFor('poster', { timeout: 8000 });
-    }
-    const after = await posterTitle(A);
-    await sleep(2500); await notStuck(A, 'after relaunch');
-    result.notes = [...(result.notes ?? []), `kill+relaunch: card before "${before}", after "${after}"`];
-  }, { modes: ['full'] });
-
   await scenario('background-resume', async () => {
     const minutes = Number(process.env.YW_E2E_BACKGROUND_MIN ?? B.native.backgroundMinutesFull);
     A.home(); log(`  backgrounded ${minutes} min`);
@@ -284,7 +309,7 @@ async function main() {
     Bp.forceStop(); await sleep(500);
     let am;
     const r = await measure({ actor: Bp, phones: [Bp], file: vid('invite-cold'), targets: { B: roiOf(Bp, 'Join', 20000) },
-      action: hostAction(() => { am = Bp.openLink(inviteUrl(code)); }) });
+      action: hostAction(() => { am = Bp.openLink(inviteUrl(code)); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0 });
     timing('invite link (app not running) -> join page', B.native.inviteColdMs, r.B, { amStart: am, use: 'settled' });
     await joinFromJoinScreen(Bp, 'Bob');
     S.code2 = code;
