@@ -327,7 +327,7 @@ test(
 				"SELECT table_name FROM information_schema.tables WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' ORDER BY table_name"
 			)
 		).rows
-		assert.equal(counts.length, 19)
+		assert.equal(counts.length, 20)
 		const badColumns = (
 			await sql(
 				"SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' AND column_name='payload'"
@@ -447,6 +447,20 @@ test(
 		)
         assert.deepEqual((await restarted.accountHome(phone)).decisions, accountHistory, "account history survives database restart")
         assert.equal(await restarted.accounts.sessionActive(pc.sessionId), false, "device logout survives database restart")
+		await send(restarted, guest, { type: "leave" })
+		const beforeRound = (await new RelationalProposalRepository(sql, secret).read(id))!.room
+		const currentRound = await restarted.read(id, host)
+		await send(restarted, host, { type: "restart", expectedRevision: currentRound.shared.revision })
+		const nextRound = (await new RelationalProposalRepository(sql, secret).read(id))!.room
+		assert.equal(nextRound.phase, "setup", "Start again publishes a readable new round after a voter leaves")
+		assert.equal(nextRound.generation, beforeRound.generation + 1)
+		assert.deepEqual(nextRound.candidates, [])
+		assert.deepEqual(nextRound.history, beforeRound.history)
+		const departed = nextRound.participants.find(p => p.id === guest.participantId)!
+		assert.notEqual(departed.leftAt, null)
+		assert.deepEqual(departed.votes, {}, "departed votes cannot reference the retired deck")
+		assert.equal(departed.lastVotedId, null)
+		assert.equal(departed.approvedProposalVersion, null)
 		t.diagnostic(
 			"Account identity, session receipts, persistent history and logout; concurrent votes, interrupted publication, lost child/head acknowledgements, exact retry, final decision and database restart PASS"
 		)

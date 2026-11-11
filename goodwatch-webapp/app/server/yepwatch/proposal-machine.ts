@@ -509,7 +509,9 @@ export function proposalTransition(
 			room.revision++
 		} else
 			room = continuousTransition(
-				activeRoom(original),
+				// A new round must reset retained guests too. Restoring departed
+				// voters afterward would reintroduce references to the old deck.
+				c.type === "restart" ? original : activeRoom(original),
 				actorId,
 				{
 					...envelope,

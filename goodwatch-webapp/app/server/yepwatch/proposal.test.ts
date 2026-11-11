@@ -784,3 +784,31 @@ test("Final decisions reject legacy Keep swiping without changing votes; only ow
  assert.deepEqual(restarted.shared.screens, done.shared.screens)
  assert.deepEqual(restarted.shared.constraints, done.shared.constraints)
 })
+
+test("Start again clears departed voters' old answers and preserves the decided history", async () => {
+ const f = await fixture()
+ const card = (await f.service.read(f.id, credential(f.a))).shared.candidates[0]
+ for (const person of [f.a, f.b]) await f.vote(person, card.id, "watch")
+ await f.propose(f.a, card.id)
+ const done = (await f.agree(f.b)).snapshot
+ assert.equal(done.shared.phase, "decided")
+ await f.send(f.b, { type: "leave" })
+ const before = (await f.repo.read(f.id))!.room
+ const departedBefore = before.participants.find(p => p.id === f.b.credential.participantId)!
+ assert.equal(departedBefore.votes[card.id].value, "watch")
+ assert.notEqual(departedBefore.leftAt, null)
+ const snapshot = await f.service.read(f.id, credential(f.a))
+ await f.send(f.a, { type: "restart", expectedRevision: snapshot.shared.revision })
+ const next = (await f.repo.read(f.id))!.room
+ const departed = next.participants.find(p => p.id === departedBefore.id)!
+ assert.equal(next.phase, "setup")
+ assert.equal(next.decision, null)
+ assert.equal(next.generation, before.generation + 1)
+ assert.deepEqual(next.candidates, [])
+ assert.deepEqual(departed.votes, {})
+ assert.equal(departed.lastVotedId, null)
+ assert.equal(departed.pick.candidateId, null)
+ assert.equal(departed.approvedProposalVersion, null)
+ assert.equal(departed.leftAt, departedBefore.leftAt)
+ assert.deepEqual(next.history, before.history)
+})
