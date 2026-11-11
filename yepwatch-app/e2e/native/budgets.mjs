@@ -13,6 +13,7 @@ const native = {
   coldStartUsableMs: 1500, // am start (cold process) -> start page tiles settled
   inviteInstalledMs: 500, // invitation link, app installed and in background -> join page settled
   inviteColdMs: 1500, // invitation link, app not running -> join page settled
+  relaunchToCardMs: 500, // app killed mid-vote, relaunched -> the card, beyond a cold start to the start page (JS up)
   frameMaxMs: 20, // dumpsys gfxinfo framestats: IntendedVsync -> FrameCompleted, per frame while voting
   minTargetDp: 48,
   backgroundMinutesGate: 0, // gate skips the long background; full uses backgroundMinutesFull

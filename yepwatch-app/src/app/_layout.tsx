@@ -1,4 +1,4 @@
-import { BootPageReady, BootPhase } from '../features/home/boot-phase';
+import { BootPageReady, BootPhase, bootPage } from '../features/home/boot-phase';
 import { useWebFontsReady } from '../features/home/useWebFontsReady';
 import { Stack, usePathname } from 'expo-router';
 import { useCallback, useLayoutEffect, useState } from 'react';
@@ -11,8 +11,18 @@ import { Boot } from '../features/glow/Boot';
 import { MemberTransition } from '../features/shell/MemberTransition';
 import { CoveredBody } from '../features/shell/parts';
 import { installLeftoverTapGuard, leftoverTouchGuard, surfaceAppeared } from '../features/shell/fresh-surface';
-if (Platform.OS !== 'web') void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+import { useFrontRoom } from '../features/shell/useFrontRoom';
 installLeftoverTapGuard();
+if (Platform.OS !== 'web') {
+  // The startup cover continues the system splash exactly (the Y on the same ground), so the splash can
+  // go in one frame. Its default 400 ms fade would otherwise play over a page that is already ready.
+  SplashScreen.setOptions({ duration: 0 });
+  void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+}
+const arrivalRoom = ({ route }: { route: { params?: object } }) => ({
+  gestureEnabled: false,
+  ...((route.params as { arrival?: string } | undefined)?.arrival === '1' ? { animation: 'none' as const } : {}),
+});
 export default function Layout() {
   const [loaded, error] = useFonts({ Gabarito: require('../../assets/Gabarito-Regular.ttf'), GabaritoBold: require('../../assets/Gabarito-Bold.ttf') });
   const webFontsReady = useWebFontsReady();
@@ -20,32 +30,31 @@ export default function Layout() {
   const [booted, setBooted] = useState(false);
   const [arriving, setArriving] = useState(false);
   const pathname = usePathname();
+  // The app builds unseen under the startup cover and shows as soon as the page in front is ready (or
+  // right away for pages that don't load first). Back in the room the app was closed in: the start page
+  // never shows on the way (useFrontRoom).
   // A new screen ignores the rest of a double or triple tap that opened it.
   useLayoutEffect(() => { surfaceAppeared(); }, [pathname]);
-  const home = pathname === '/';
-  // An invitation's join page holds no room data and exposes no cards: it is built (unseen) behind the word,
-  // with the room's preview already loaded, and appears as the word dissolves.
-  const invitation = /^\/r\/[^/]+$/.test(pathname);
-  // Only the home page builds in behind the dissolving word. Room deep links still mount after the boot,
-  // so room reads and card exposure never start behind it. Taps work from the moment the page starts to
-  // appear; if one navigates away (a room, sign-in), the router stays mounted.
-  const [keepStack, setKeepStack] = useState(false);
-  const showStack = booted || home || invitation || keepStack;
-  const unseen = invitation && !booted && !arriving;
-  const [pageReady, setPageReady] = useState(false);
-  const markPageReady = useCallback(() => setPageReady(true), []);
-  const revealed = useCallback(() => { setArriving(true); if (home || invitation) setKeepStack(true); }, [home, invitation]);
+  const { pending: resuming } = useFrontRoom(pathname);
+  const page = bootPage(pathname);
+  const [readyPages, setReadyPages] = useState<ReadonlySet<string>>(() => new Set());
+  const markPageReady = useCallback((key: string) => setReadyPages((keys) => (keys.has(key) ? keys : new Set(keys).add(key))), []);
+  const pageReady = !resuming && (page === null || readyPages.has(page));
+  const revealed = useCallback(() => setArriving(true), []);
   const done = useCallback(() => setBooted(true), []);
   const hideNative = useCallback(() => { if (Platform.OS !== 'web') void SplashScreen.hideAsync().catch(() => undefined); }, []);
+  const shown = booted || arriving;
   return <BootPageReady.Provider value={markPageReady}><BootPhase.Provider value={booted ? 'ready' : arriving ? 'enter' : 'boot'}><Providers><StatusBar style="light" /><View style={{ flex: 1, backgroundColor: '#070707' }} {...(Platform.OS === 'web' ? null : leftoverTouchGuard)}>
-    {/* The home page builds in behind the boot word: hidden and inert (no focus inside hidden content) until it shows. */}
-    <CoveredBody covered={!(booted || arriving)} testID="boot-stack" style={{ flex: 1, opacity: unseen ? 0 : 1 }}>
-      {showStack && fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }}><Stack.Screen name="room/[id]" options={{ gestureEnabled: false }} /></Stack>}
+    {/* Inert (no focus inside hidden content) until the cover starts to dissolve. Native draws the page
+        under the opaque cover, so its first (heavy) draw is done before the dissolve and can't stall it;
+        the web hides it outright (the browser composites the dissolve). */}
+    <CoveredBody covered={!booted} testID="boot-stack" style={{ flex: 1, opacity: shown || Platform.OS !== 'web' ? 1 : 0 }}>
+      {fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }}><Stack.Screen name="room/[id]" options={arrivalRoom} /></Stack>}
     </CoveredBody>
     {Platform.OS === 'web' && !fontsReady && <View aria-hidden pointerEvents="none" style={{ position: 'absolute', opacity: 0 }}>
       <Text style={{ fontFamily: 'Gabarito' }}>YepWatch</Text><Text style={{ fontFamily: 'GabaritoBold' }}>YepWatch</Text>
     </View>}
-    {!booted && <Boot ready={fontsReady} pageReady={!(home || invitation) || pageReady} buildsIn={home} done={done} onLayout={hideNative} onRevealed={revealed} />}
+    {!booted && <Boot ready={fontsReady} pageReady={pageReady} word={!page?.startsWith('invite:')} done={done} onLayout={hideNative} onRevealed={revealed} />}
     <MemberTransition />
   </View></Providers></BootPhase.Provider></BootPageReady.Provider>;
 }

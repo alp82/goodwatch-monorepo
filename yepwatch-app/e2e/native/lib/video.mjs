@@ -133,7 +133,14 @@ export function maxGap(video, from, to) {
  * action(): returns { anchor: 'touch', tap: {x,y}, hostMs } (tap on `actor`) or { anchor: 'host', hostMs }.
  * targets: { [phoneName]: async () => roi } - the settled element to wait for on that phone.
  */
-export async function measure({ actor, targets, file, action, settleMs = 1200, allowIntermediate = 1, phones }) {
+/**
+ * `appWindowMs` (launches): ms after the anchor at which the launched activity drew its first frame
+ * (`am start -W` TotalTime). Flash analysis starts there: what plays before it is the system's app-open
+ * transition over the launcher, not the app. Timing still counts from the anchor. The app's first frame
+ * (its splash) is then the start look, so launches pass `allowIntermediate: 0`: any screen between the
+ * splash and the target counts.
+ */
+export async function measure({ actor, targets, file, action, settleMs = 1200, allowIntermediate = 1, phones, appWindowMs }) {
   const recs = new Map();
   for (const p of phones) recs.set(p.name, await startRecording(p, file.replace(/\.webm$/, `-${p.name}.webm`)));
   await sleep(350);
@@ -163,7 +170,9 @@ export async function measure({ actor, targets, file, action, settleMs = 1200, a
     const base = video.frames[Math.max(0, from - 1)];
     let fc = arr; for (let i = from; i <= arr; i++) if (diff(video.frames[i], base, roi) > 8) { fc = i; break; }
     const ms = video.t0 + video.frames[fc].t - anchorMs;
-    const fl = flashes(video, from, arr + 20, { allowIntermediate, saveDir: video.file.replace(/\.webm$/, '-frames') });
+    const windowMs = appWindowMs?.();
+    const flashFrom = Number.isFinite(windowMs) ? Math.min(arr, Math.max(from, frameAt(video, anchorMs + windowMs))) : from;
+    const fl = flashes(video, flashFrom, arr + 20, { allowIntermediate, saveDir: video.file.replace(/\.webm$/, '-frames') });
     out[name] = { ok: true, ms: +ms.toFixed(0), settledMs: +settledMs.toFixed(0), anchorFrame: frameAt(video, anchorMs), firstFrame: fc, settledFrame: arr, resolutionMs: 17, clockErrMs: +(video.t0Err + (video === actorVideo || act.anchor === 'host' ? 0 : actorVideo.t0Err)).toFixed(0),
       maxGapMs: maxGap(video, from, arr), flash: fl, file: video.file };
   }

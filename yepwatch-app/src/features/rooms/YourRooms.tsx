@@ -7,7 +7,6 @@
 import { useState } from 'react';
 import { Image, Pressable, View } from 'react-native';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
-import { BootReveal } from '../home/BootReveal';
 import { AppCard, installable } from '../home/install';
 import { StartSignIn } from '../home/Landing';
 import { Tiles } from '../home/start-parts';
@@ -150,35 +149,35 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
   if (blank) {
     return (
       <View testID="home-rooms" style={{ gap: phone ? 24 : z(36) }}>
-        <BootReveal index={0} style={{ gap: z(6) }}>
+        <View style={{ gap: z(6) }}>
           <GText bold size={phone ? 34 : z(54)} style={{ letterSpacing: phone ? -1 : -1.6 }}>{title}</GText>
           <GText size={phone ? 17 : z(21)} color={glow.soft}>What are we watching?</GText>
-        </BootReveal>
-        <BootReveal index={1} style={{ gap: phone ? 12 : z(16) }}>
+        </View>
+        <View style={{ gap: phone ? 12 : z(16) }}>
           <Tiles {...tiles} height={phone ? 170 : z(240)} />
           {signInButton}
-        </BootReveal>
+        </View>
         {history ? (
-          <BootReveal index={2} style={{ flexDirection: 'row' }}>
+          <View style={{ flexDirection: 'row' }}>
             <HistoryButton onPress={history} />
-          </BootReveal>
+          </View>
         ) : null}
         {notes}
-        {!phone && installable ? <BootReveal index={3}><AppCard /></BootReveal> : null}
+        {!phone && installable ? <AppCard /> : null}
       </View>
     );
   }
   return (
     <View testID="home-rooms" style={{ gap: phone ? 28 : z(40) }}>
-      <BootReveal index={0} style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
         <GText bold size={phone ? 30 : z(44)} style={{ flex: 1, letterSpacing: -1 }}>{title}</GText>
-      </BootReveal>
-      <BootReveal index={1} style={{ gap: phone ? 12 : z(16) }}>
+      </View>
+      <View style={{ gap: phone ? 12 : z(16) }}>
         <Tiles {...tiles} height={phone ? 132 : z(184)} />
         {signInButton}
-      </BootReveal>
+      </View>
       {live.length ? (
-        <BootReveal index={2} style={{ gap: z(14) }}>
+        <View style={{ gap: z(14) }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <GText bold size={z(22)} style={{ letterSpacing: -0.4 }}>Open</GText>
             <GText size={z(16)} color={glow.muted}>{String(live.length)}</GText>
@@ -186,12 +185,12 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap }}>
             {live.map((r) => <LiveCard key={r.roomId} room={r} width={cardWidth} now={now} open={() => open(r.roomId)} archive={() => archive(r.roomId)} quiet={quiet} />)}
           </View>
-        </BootReveal>
+        </View>
       ) : loading ? <GText size={13} color={glow.muted}>Opening your rooms…</GText> : null}
       {notes}
-      {decisions.length && history ? <BootReveal index={3}><DecidedRow decisions={decisions} onPress={history} /></BootReveal>
-        : history ? <BootReveal index={3}><HistoryButton onPress={history} /></BootReveal> : null}
-      {!phone && installable ? <BootReveal index={4}><AppCard /></BootReveal> : null}
+      {decisions.length && history ? <DecidedRow decisions={decisions} onPress={history} />
+        : history ? <HistoryButton onPress={history} /> : null}
+      {!phone && installable ? <AppCard /> : null}
     </View>
   );
 }

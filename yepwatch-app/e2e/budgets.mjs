@@ -13,6 +13,7 @@ export const budgets = {
     startToFirstCardMs: 200, // Start → first card (host)
     startToPeerVotingMs: 200, // Start → first card on a friend's phone
     swipeNextCardMs: 16, // Yep/Nope → next card, next frame
+    relaunchToCardMs: 500, // reload / reopened tab mid-vote: the app's first frame → the card
     frameMaxMs: 20, // no animation frame longer than this while something animates
     restartQueuedLandMs: 1000, // server back → queued actions confirmed
     connectingMaxMs: 1000, // "Connecting…" visible at most this long
@@ -27,6 +28,7 @@ export const budgets = {
     startToFirstCardMs: 400,
     startToPeerVotingMs: 400,
     swipeNextCardMs: 16,
+    relaunchToCardMs: 700,
     frameMaxMs: 20,
     restartQueuedLandMs: 1000,
     connectingMaxMs: 1500,

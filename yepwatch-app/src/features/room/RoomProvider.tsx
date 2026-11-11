@@ -28,6 +28,7 @@ import { exitRoom } from './nav';
 import { RefillGate } from './refill';
 import { RoomLinkGate, linkOutcome } from './link-gate';
 import { previewDrafts, useSettingsSaves, type SettingsSaves } from './settings-save';
+import { BootPageReady } from '../home/boot-phase';
 
 const COUNTRY_TRIES = 5;
 const COUNTRY_RETRY_MS = 1200;
@@ -246,6 +247,10 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const memberBusy = account.busy || linking;
   // Back from GoodWatch in this room: the cover lifts once the room is on screen.
   useEffect(() => { if (view) memberTransition.arrived(); }, [view]);
+  // At startup the app shows once the room can show itself (or say why it can't), never its empty opening frame.
+  const markPageReady = useContext(BootPageReady);
+  const showable = Boolean(view) || Boolean(state.terminal) || state.access === null || Boolean(state.room.error);
+  useEffect(() => { if (showable) markPageReady(`room:${id}`); }, [showable, markPageReady, id]);
   // A new room has no country yet, and services are only valid within one: the host sets it right away
   // (member prefill, else the device's region), before anyone picks services.
   // A command already in flight (room entry) makes the send a no-op: try again once it settles, a few times at most.

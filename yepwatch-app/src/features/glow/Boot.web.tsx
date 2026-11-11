@@ -1,71 +1,76 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { isMemberReturn, clearMemberReturn } from "../../core/continuous/web-member-return";
-import { BOOT, EASE_IN_OUT, bootSettleMs } from "../home/boot-timing";
+import { BOOT } from "../home/boot-timing";
 /**
- * The boot word plays its intro centered, then grows a touch and dissolves in place while the page
- * builds in behind it (see boot-timing.ts). It never moves to another position. While the home page
- * is not ready, the amber arc keeps circling the Y.
+ * The startup cover (see boot-timing.ts): the dark ground the page already has, dissolving as soon as
+ * the page is ready. Only loading that takes longer shows the word (its intro, then the amber arc
+ * circling the Y until the page is ready).
  */
 export function Boot({
   ready,
   pageReady,
-  buildsIn,
+  word,
   done,
   onLayout,
   onRevealed,
 }: {
+  /** Fonts are in. */
   ready: boolean;
   pageReady: boolean;
-  buildsIn: boolean;
+  /** Slow loading may show the word (never on invitation links). */
+  word: boolean;
   done: () => void;
   onLayout: () => void;
   onRevealed?: () => void;
 }) {
   const [returning] = useState(isMemberReturn);
   const [quiet] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [slow, setSlow] = useState(false);
   const [held, setHeld] = useState(false);
   const [capped, setCapped] = useState(false);
-  const word = useRef<HTMLDivElement>(null),
-    curtain = useRef<HTMLDivElement>(null),
-    waitArc = useRef<SVGSVGElement>(null),
-    pageReadyRef = useRef(pageReady);
-  useEffect(() => { pageReadyRef.current = pageReady; }, [pageReady]);
+  const leaving = ready && (pageReady || capped);
+  const leavingRef = useRef(leaving);
+  useEffect(() => { leavingRef.current = leaving; }, [leaving]);
+  const cover = useRef<HTMLDivElement>(null),
+    waitArc = useRef<SVGSVGElement>(null);
   useEffect(onLayout, [onLayout]);
+  // Back from GoodWatch sign-in: the member cover (index.html) already covers loading.
+  useEffect(() => { if (returning) { clearMemberReturn(); done(); } }, [returning, done]);
+  // Both clocks count from the app's first frame; a dissolve already under way never brings the word.
   useEffect(() => {
-    if (!ready) return;
-    if (returning) { clearMemberReturn(); done(); return; }
-    const timer = setTimeout(() => setHeld(true), quiet ? BOOT.quietHoldMs : BOOT.holdMs);
-    return () => clearTimeout(timer);
-  }, [ready, returning, quiet, done]);
-  // Waiting on the page: keep the arc circling, and stop waiting after a bounded time.
-  useEffect(() => {
-    if (!held || pageReadyRef.current) return;
+    const later = setTimeout(() => { if (!leavingRef.current) setSlow(true); }, BOOT.wordDelayMs);
     const cap = setTimeout(() => setCapped(true), BOOT.pageWaitCapMs);
-    const loop = quiet ? undefined : waitArc.current?.animate(
+    return () => { clearTimeout(later); clearTimeout(cap); };
+  }, []);
+  const shownWord = word && slow && ready;
+  useEffect(() => {
+    if (!shownWord) return;
+    const timer = setTimeout(() => setHeld(true), BOOT.introMs);
+    return () => clearTimeout(timer);
+  }, [shownWord]);
+  // Still loading after the intro: the arc keeps circling the Y.
+  useEffect(() => {
+    if (!held || leaving || quiet) return;
+    const loop = waitArc.current?.animate(
       [{ transform: "rotate(-120deg)", opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.8 }, { transform: "rotate(300deg)", opacity: 0 }],
       { duration: BOOT.waitLoopMs, iterations: Infinity, easing: "cubic-bezier(.45,0,.25,1)" },
     );
-    return () => { clearTimeout(cap); loop?.cancel(); };
-  }, [held, quiet]);
-  const leaving = held && (pageReady || capped);
+    return () => loop?.cancel();
+  }, [held, leaving, quiet]);
   useEffect(() => {
-    if (!leaving || !word.current || !curtain.current) return;
+    if (!leaving || returning || !cover.current) return;
     onRevealed?.();
-    const animations = [
-      // The word is fully transparent at `goneAt`, well before the header logo starts; its growth continues to the end.
-      word.current.animate(
-        [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, offset: quiet ? 1 : BOOT.word.goneAt }, { opacity: 0, transform: `scale(${quiet ? 1 : BOOT.word.grow})` }],
-        { duration: quiet ? BOOT.word.quietExitMs : BOOT.word.exitMs, easing: `cubic-bezier(${EASE_IN_OUT.join(",")})`, fill: "forwards" },
-      ),
-      curtain.current.animate([{ opacity: 1 }, { opacity: 0 }], { duration: BOOT.curtainMs, fill: "forwards" }),
-    ];
-    const timer = setTimeout(done, bootSettleMs(buildsIn, quiet));
-    return () => { clearTimeout(timer); animations.forEach((a) => a.cancel()); };
+    // Loading that showed no word ends in a cut: the page is simply there.
+    if (!shownWord) { done(); return; }
+    const dissolve = cover.current.animate([{ opacity: 1 }, { opacity: 0 }], { duration: BOOT.dissolveMs, easing: "linear", fill: "forwards" });
+    const timer = setTimeout(done, BOOT.dissolveMs);
+    return () => { clearTimeout(timer); dissolve.cancel(); };
     // One dissolve per boot: the inputs are fixed once it starts.
   }, [leaving]); // eslint-disable-line react-hooks/exhaustive-deps
   if (returning) return null;
   return (
     <div
+      ref={cover}
       data-testid="yepwatch-boot"
       aria-label="YepWatch is starting"
       style={{
@@ -75,6 +80,7 @@ export function Boot({
         display: "grid",
         placeItems: "center",
         pointerEvents: "none",
+        background: "#070707",
       }}
     >
       <style>{`
@@ -92,12 +98,8 @@ export function Boot({
 @media(max-width:359px){.review-boot-word{font-size:52px}}
 @media(prefers-reduced-motion:reduce){.review-boot-word,.review-boot-word *{animation:none!important}.review-boot-arc{display:none}}
 `}</style>
-      <div
-        ref={curtain}
-        style={{ position: "absolute", inset: 0, background: "#070707" }}
-      />
-      {ready && (
-        <div ref={word} style={{ position: "relative" }}>
+      {shownWord && (
+        <div style={{ position: "relative" }}>
           <div className="review-boot-word" style={{ position: "relative" }}>
             <div className="review-boot-glow" />
             <span className="review-boot-emblem">
