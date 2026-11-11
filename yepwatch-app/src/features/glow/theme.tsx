@@ -185,17 +185,15 @@ export function Press({
 /** The smallest touch target (WCAG 2.2 target size, Android's 48 dp). */
 export const TARGET = 48;
 /**
- * A press area grown to the touch target around a smaller look: the same footprint in the layout
- * (negative margins take the extra back), a bigger area to hit. With only `height` it grows vertically.
+ * A press area of at least the touch target around a smaller look (pair it with Press `visual`).
+ * It takes its real size in the layout: Android neither reports nor reliably delivers touches outside
+ * a parent's bounds, so negative margins would only shrink it back. With only `height` it grows vertically.
  */
 export function grow(height: number, width?: number): ViewStyle {
   const h = Math.max(TARGET, height);
-  const out: ViewStyle = { minHeight: h, marginVertical: (height - h) / 2 };
-  if (width !== undefined) {
-    const w = Math.max(TARGET, width);
-    Object.assign(out, { minWidth: w, width: w, height: h, marginHorizontal: (width - w) / 2 });
-  }
-  return out;
+  if (width === undefined) return { minHeight: h };
+  const w = Math.max(TARGET, width);
+  return { minHeight: h, minWidth: w, width: w, height: h };
 }
 export function Wordmark({ size = 24 }: { size?: number }) {
   return (

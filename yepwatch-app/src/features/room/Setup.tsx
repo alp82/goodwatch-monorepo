@@ -114,9 +114,9 @@ export function RoomSetup({ ready = false }: { ready?: boolean }) {
   const renaming = useRef<Promise<boolean> | null>(null);
   // The name saves as it's typed (shortly after typing stops), when the keyboard goes away (Android back
   // hides it without leaving the field), on Enter, on blur, and when the screen goes: never a draft only
-  // this phone knows. The field stays while you type, even once the first save gives you a name.
+  // this phone knows. The field stays while you're in it, even once the first save gives you a name.
   const typedName = useRef('');
-  const [keepField, setKeepField] = useState(false);
+  const nameInput = useRef<ComponentRef<typeof TextInput>>(null);
   const commands = useRef({ cmd, latest });
   useEffect(() => { commands.current = { cmd, latest }; });
   const saveName = useCallback(function save() {
@@ -136,10 +136,10 @@ export function RoomSetup({ ready = false }: { ready?: boolean }) {
     return () => clearTimeout(timer);
   }, [name, saveName]);
   useEffect(() => {
-    const sub = Keyboard.addListener('keyboardDidHide', saveName);
+    // Hiding the keyboard (Android back) ends editing: the field lets go, which saves the name.
+    const sub = Keyboard.addListener('keyboardDidHide', () => { if (nameInput.current?.isFocused()) nameInput.current.blur(); else saveName(); });
     return () => { sub.remove(); saveName(); };
   }, [saveName]);
-  const nameInput = useRef<ComponentRef<typeof TextInput>>(null);
   const [attempt, setAttempt] = useState<'starting' | 'failed' | null>(null);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
@@ -147,7 +147,7 @@ export function RoomSetup({ ready = false }: { ready?: boolean }) {
   if (!view) return null;
   const typed = name.trim();
   const named = Boolean(view.me.nickname || typed);
-  const typeName = (text: string) => { typedName.current = text; setName(text); if (!keepField) setKeepField(true); };
+  const typeName = (text: string) => { typedName.current = text; setName(text); };
   const start = async () => {
     if (renaming.current) await renaming.current;
     const s = latest();
@@ -181,7 +181,7 @@ export function RoomSetup({ ready = false }: { ready?: boolean }) {
       </Actions>
     </View>
   );
-  const nameField = view.needName || keepField ? (
+  const nameField = view.needName || focus ? (
     <View style={{ gap: z(10) }}>
       <Small>Your name</Small>
       <TextInput ref={nameInput} accessibilityLabel="Your name" value={name} onChangeText={typeName} onFocus={() => setFocus(true)} onBlur={() => { setFocus(false); saveName(); }} onSubmitEditing={saveName}
