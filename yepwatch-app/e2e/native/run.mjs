@@ -318,7 +318,7 @@ async function main() {
     Bp.forceStop(); await sleep(500);
     let am;
     const r = await measure({ actor: Bp, phones: [Bp], file: vid('invite-cold'), targets: { B: roiOf(Bp, 'Join', 20000) },
-      action: hostAction(() => { am = Bp.openLink(inviteUrl(code)); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0 });
+      action: hostAction(() => { am = Bp.openLink(inviteUrl(code)); }), appWindowMs: () => am?.totalTime });
     timing('invite link (app not running) -> join page', B.native.inviteColdMs, r.B, { amStart: am, use: 'settled' });
     await joinFromJoinScreen(Bp, 'Bob');
     S.code2 = code;
