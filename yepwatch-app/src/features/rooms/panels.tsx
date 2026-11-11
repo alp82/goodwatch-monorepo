@@ -14,7 +14,7 @@ import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../hom
 import { Or } from '../home/start-parts';
 import { fitSize, type Kind } from '../room/model';
 import { KindIcons, Screen, kindsLabel } from '../room/ui';
-import { GText, Icon, Press, glow } from '../glow/theme';
+import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import type { HeaderMe } from '../shell/Header';
 import { Action, Avatar, FaceStack } from '../shell/parts';
 import { GoodWatchMark } from '../shell/marks';
@@ -142,7 +142,7 @@ export function JoinScreen({ invite, checking = false, nickname, nameLocked = fa
               <Avatar name={fixedName} size={z(28)} /><GText size={z(16)} color={glow.soft}>{fixedName}</GText>{member ? <GoodWatchMark size={z(16)} /> : null}
             </View>
             {join}
-            {nameLocked && !member ? <Press label="Change name" onPress={editName} style={{ alignSelf: 'center', minHeight: 36 }}><GText size={13} bold color={glow.muted}>Change name</GText></Press> : null}
+            {nameLocked && !member ? <Press label="Change name" onPress={editName} style={{ alignSelf: 'center', ...grow(36) }}><GText size={13} bold color={glow.muted}>Change name</GText></Press> : null}
           </>
         ) : (
           <>
@@ -185,7 +185,7 @@ export function ProfileSheet({ nickname, save, member = false, lapsed = false, s
         {lapsed ? (
           <View testID="profile-lapsed" style={{ alignItems: 'center', gap: 2 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><GoodWatchMark size={18} /><GText size={14} color={glow.muted}>GoodWatch needs a quick reconnect</GText></View>
-            {signIn ? <Press label={RECONNECT_GOODWATCH} hint={RECONNECTED_DETAIL} onPress={signIn} disabled={busy} style={{ minHeight: 40, paddingHorizontal: 8 }}><GText size={14} bold color={glow.amber}>{RECONNECT_GOODWATCH}</GText></Press> : null}
+            {signIn ? <Press label={RECONNECT_GOODWATCH} hint={RECONNECTED_DETAIL} onPress={signIn} disabled={busy} style={{ ...grow(40), paddingHorizontal: 8 }}><GText size={14} bold color={glow.amber}>{RECONNECT_GOODWATCH}</GText></Press> : null}
             {signIn ? <GText size={13} color={glow.muted}>{RECONNECTED_DETAIL}</GText> : null}
           </View>
         ) : null}

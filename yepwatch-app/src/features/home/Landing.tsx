@@ -11,7 +11,7 @@ import { BootReveal } from './BootReveal';
 import { IntroFilm } from './IntroFilm';
 import { QrCard, StoreButton, installable, stores } from './install';
 import { Headline, Or, Tiles, type TileActions } from './start-parts';
-import { GText, Press, glow } from '../glow/theme';
+import { GText, Press, glow, grow } from '../glow/theme';
 import { GoodWatchMark } from '../shell/marks';
 import { useLayout } from '../shell/layout';
 import { R } from '../shell/tokens';
@@ -52,7 +52,7 @@ export function ReconnectPrompt({ onPress, disabled }: { onPress: () => void; di
     <View testID="start-reconnect" style={{ alignItems: 'center', gap: 2, paddingTop: 4 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <GoodWatchMark size={18} />
-        <Press label={RECONNECT_GOODWATCH} hint={RECONNECTED_DETAIL} onPress={onPress} disabled={disabled} style={{ minHeight: 40, paddingHorizontal: 8 }}>
+        <Press label={RECONNECT_GOODWATCH} hint={RECONNECTED_DETAIL} onPress={onPress} disabled={disabled} style={{ ...grow(40), paddingHorizontal: 8 }}>
           <GText size={14} bold color={glow.amber}>{RECONNECT_GOODWATCH}</GText>
         </Press>
       </View>

@@ -3,7 +3,7 @@ import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnos
 import { guestOnly } from '../core/config';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AppState, BackHandler, Platform } from 'react-native';
-import { GText, Press, glow } from './glow/theme';
+import { GText, Press, glow, grow } from './glow/theme';
 import { router, useFocusEffect } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { continuousApi as api, RoomFailure as ApiFailure } from '../core/continuous/api';
@@ -359,8 +359,8 @@ export function Entrance({ invite, open: request, from }: {
       {error && diagnostic && <ConnectionDetails diagnostic={diagnostic} />}
       {retrySeconds > 0 && <GText size={13} color={glow.muted}>Try again in {retrySeconds}s. Your room request is saved.</GText>}
       {admission && <GText size={12} color={glow.muted}>Retry preserves your identity and room request.</GText>}
-      {restoreFailed && <Press label="Retry saved request" onPress={() => { setRestoring(true); setError(''); setRestoreVersion((v) => v + 1); }} style={{ alignSelf: 'flex-start', minHeight: 44 }}><GText bold color={glow.amber}>Retry saved request</GText></Press>}
-      {recoveryBlocked && <Press label="Retry membership check" onPress={() => { setRecoveryBlocked(false); setCheckingInvite(true); setError(''); setCheckVersion((v) => v + 1); }} style={{ alignSelf: 'flex-start', minHeight: 44 }}><GText bold color={glow.amber}>Retry membership check</GText></Press>}
+      {restoreFailed && <Press label="Retry saved request" onPress={() => { setRestoring(true); setError(''); setRestoreVersion((v) => v + 1); }} style={{ alignSelf: 'flex-start', ...grow(44) }}><GText bold color={glow.amber}>Retry saved request</GText></Press>}
+      {recoveryBlocked && <Press label="Retry membership check" onPress={() => { setRecoveryBlocked(false); setCheckingInvite(true); setError(''); setCheckVersion((v) => v + 1); }} style={{ alignSelf: 'flex-start', ...grow(44) }}><GText bold color={glow.amber}>Retry membership check</GText></Press>}
     </>
   );
   // The saved-request check takes a moment on every visit: the page appears once, already usable.

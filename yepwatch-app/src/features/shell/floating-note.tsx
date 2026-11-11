@@ -6,7 +6,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Animated, Easing, View } from 'react-native';
 import { useReducedMotion } from '../../components/ui';
-import { GText, Icon, Press, glow, native } from '../glow/theme';
+import { GText, Icon, Press, glow, grow, native } from '../glow/theme';
 
 export interface FrameNote {
   text: string;
@@ -58,8 +58,8 @@ export function NoteLine({ note, onDismiss }: { note: FrameNote; onDismiss?: () 
     <View accessibilityLiveRegion="polite" aria-busy={busy} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 12, paddingRight: onDismiss ? 4 : 12, paddingVertical: 4, borderRadius: 10, backgroundColor: '#201c13', borderWidth: 1, borderColor: '#ffffff14' }}>
       {busy ? <ActivityIndicator testID="note-spinner" size="small" color={glow.amber} /> : null}
       <GText size={12} lines={2} style={{ flex: 1 }}>{text}</GText>
-      {action ? <Press label={action.label} onPress={action.onPress} disabled={action.disabled} style={{ minHeight: 36, paddingHorizontal: 6 }}><GText size={12} bold>{action.label}</GText></Press> : null}
-      {onDismiss ? <Press label="Dismiss" onPress={onDismiss} style={{ width: 36, height: 36, borderRadius: 8 }}><Icon name="close" size={14} color={glow.muted} /></Press> : null}
+      {action ? <Press label={action.label} onPress={action.onPress} disabled={action.disabled} style={{ ...grow(36), paddingHorizontal: 6 }}><GText size={12} bold>{action.label}</GText></Press> : null}
+      {onDismiss ? <Press label="Dismiss" onPress={onDismiss} style={{ ...grow(36, 36), borderRadius: 8 }}><Icon name="close" size={14} color={glow.muted} /></Press> : null}
     </View>
   );
 }

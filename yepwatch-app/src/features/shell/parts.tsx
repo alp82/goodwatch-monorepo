@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode, type ComponentRef } f
 import { Animated, Easing, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useReducedMotion } from '../../components/ui';
 import { peerColor } from '../glow/model';
-import { GText, Icon, Press, glow, native, type IconName } from '../glow/theme';
+import { GText, Icon, Press, glow, grow, native, type IconName } from '../glow/theme';
 import { R } from './tokens';
 
 /** Your own avatar: amber initial once a nickname is known, a quiet outline before. */
@@ -46,7 +46,8 @@ export function LiveDot({ size = 8 }: { size?: number }) {
 /** Primary (amber) and secondary (outlined) actions; flat, 10 px corners. */
 export function Action({ label, name, onPress, gold = false, icon, style, disabled, small = false, testID }: { label: string; /** Accessible name when it differs from the visible label. */ name?: string; onPress: () => void; gold?: boolean; icon?: IconName; style?: StyleProp<ViewStyle>; disabled?: boolean; small?: boolean; testID?: string }) {
   return (
-    <Press label={name ?? label} onPress={onPress} disabled={disabled} style={[{ minHeight: small ? 44 : 54, borderRadius: R.control, paddingHorizontal: 18, flexDirection: 'row', gap: 8, backgroundColor: gold ? glow.amber : '#ffffff0f', borderWidth: 1, borderColor: gold ? glow.amber : '#ffffff1f' }, style]}>
+    <Press label={name ?? label} onPress={onPress} disabled={disabled} style={[{ alignItems: 'stretch' }, small ? grow(44) : null, style]}
+      visual={{ minHeight: small ? 44 : 54, borderRadius: R.control, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: gold ? glow.amber : '#ffffff0f', borderWidth: 1, borderColor: gold ? glow.amber : '#ffffff1f' }}>
       {icon && <Icon name={icon} size={18} color={gold ? '#201400' : glow.ink} />}
       <GText bold size={small ? 15 : 17} color={gold ? '#201400' : glow.ink}>{label}</GText>
       {testID ? <View testID={testID} /> : null}

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Image, Platform, Pressable, View, type ViewStyle } from 'react-native';
 import { Link } from 'expo-router';
 import codes from './codes.json';
-import { GText, Press, glow } from '../glow/theme';
+import { GText, Press, glow, grow } from '../glow/theme';
 import { StoreLogo } from '../shell/marks';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
@@ -114,8 +114,8 @@ export function GetTheApp() {
   }, [open]);
   return (
     <View ref={box} style={{ zIndex: 40 }}>
-      <Press label="Get the app" selected={open} onPress={() => setOpen((v) => !v)}
-        style={{ height: z(38), paddingHorizontal: z(14), borderRadius: R.control, flexDirection: 'row', gap: 8, backgroundColor: open ? warm.amberSoft : '#ffffff0a', borderWidth: 1, borderColor: open ? warm.amberLine : warm.line }}>
+      <Press label="Get the app" selected={open} onPress={() => setOpen((v) => !v)} style={{ ...grow(Math.max(44, z(38))), alignItems: 'stretch' }}
+        visual={{ height: Math.max(44, z(38)), paddingHorizontal: z(14), borderRadius: R.control, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: open ? warm.amberSoft : '#ffffff0a', borderWidth: 1, borderColor: open ? warm.amberLine : warm.line }}>
         <StoreLogo platform="ios" size={z(15)} color={open ? glow.amber : glow.soft} />
         <StoreLogo platform="android" size={z(15)} color={open ? glow.amber : glow.soft} />
         <GText bold size={z(14)} color={open ? glow.amber : glow.ink}>Get the app</GText>

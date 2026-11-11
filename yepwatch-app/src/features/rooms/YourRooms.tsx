@@ -11,7 +11,7 @@ import { BootReveal } from '../home/BootReveal';
 import { AppCard, installable } from '../home/install';
 import { StartSignIn } from '../home/Landing';
 import { Tiles } from '../home/start-parts';
-import { GText, Icon, Press, glow } from '../glow/theme';
+import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { HeroIcon, LiveBadge, Note, TextLink } from '../room/ui';
 import { FaceStack } from '../shell/parts';
 import { useLayout } from '../shell/layout';
@@ -60,7 +60,8 @@ function LiveCard({ room, width, now, open, archive, quiet }: { room: HomeRoom; 
           </View>
         </View>
       </Pressable>
-      <Press label={`Archive ${room.label}`} onPress={archive} style={{ position: 'absolute', right: 8, top: 8, width: 40, height: 40, borderRadius: R.control, backgroundColor: '#0a0908cc', borderWidth: 1, borderColor: warm.line }}>
+      <Press label={`Archive ${room.label}`} onPress={archive} style={{ position: 'absolute', right: 6, top: 6, width: 48, height: 48 }}
+        visual={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: R.control, backgroundColor: '#0a0908cc', borderWidth: 1, borderColor: warm.line }}>
         <HeroIcon name="archive" size={18} color={glow.soft} />
       </Press>
     </View>
@@ -94,7 +95,8 @@ function DecidedRow({ decisions, onPress }: { decisions: readonly DecisionRecord
 function HistoryButton({ onPress }: { onPress: () => void }) {
   const { z } = useLayout();
   return (
-    <Press label="History" onPress={onPress} style={{ alignSelf: 'flex-start', flexDirection: 'row', gap: 8, height: z(44), paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: warm.lineStrong }}>
+    <Press label="History" onPress={onPress} style={{ alignSelf: 'flex-start', ...grow(z(44)), alignItems: 'stretch' }}
+      visual={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: z(44), paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: warm.lineStrong }}>
       <Icon name="clock" size={z(16)} color={glow.soft} /><GText bold size={z(15)} color={glow.soft}>History</GText>
     </Press>
   );

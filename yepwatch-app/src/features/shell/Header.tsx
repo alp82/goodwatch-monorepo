@@ -8,7 +8,7 @@ import { Platform, Text, View, type ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { BootReveal } from '../home/BootReveal';
 import { GetTheApp, installable } from '../home/install';
-import { GText, Icon, Press, glow } from '../glow/theme';
+import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { GoodWatchMark } from './marks';
 import { useLayout } from './layout';
 import { Avatar, LiveDot } from './parts';
@@ -69,7 +69,8 @@ export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => 
   const fresh = pill.fresh ?? 0;
   return (
     <Press label={`${pill.label}${fresh ? `, ${fresh} new` : ''}, switch room`} onPress={onPress ?? (() => undefined)} disabled={!onPress}
-      style={{ height: z(40), maxWidth: phone ? undefined : z(420), flexShrink: 1, minWidth: 0, flexDirection: 'row', gap: 8, paddingLeft: 14, paddingRight: 10, borderRadius: 12, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: fresh ? '#fbbf2499' : pill.state === 'live' ? '#ffffff22' : warm.line }}>
+      style={{ ...grow(Math.max(44, z(40))), maxWidth: phone ? undefined : z(420), flexShrink: 1, minWidth: 0, alignItems: 'stretch' }}
+      visual={{ height: Math.max(44, z(40)), minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 10, borderRadius: 12, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: fresh ? '#fbbf2499' : pill.state === 'live' ? '#ffffff22' : warm.line }}>
       {pill.state === 'live' || pill.state === 'rooms' ? <LiveDot /> : pill.state === 'decided' ? <Icon name="tickets" size={z(15)} color={glow.amber} /> : <Plus size={z(15)} color={glow.amber} />}
       <GText bold size={z(15)} lines={1} style={{ flexShrink: 1 }}>{pill.label}</GText>
       {fresh ? <View style={{ minWidth: 18, height: 18, paddingHorizontal: 5, borderRadius: 9, backgroundColor: glow.amber, alignItems: 'center', justifyContent: 'center' }}><GText bold size={11} color={warm.ink}>{fresh}</GText></View> : null}
@@ -82,7 +83,8 @@ export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => 
 function ProfileButton({ me, onPress, quiet }: { me?: HeaderMe; onPress?: () => void; quiet?: boolean }) {
   const { z } = useLayout();
   return (
-    <Press label="Profile" quiet={quiet} onPress={onPress ?? (() => undefined)} disabled={!onPress} style={{ width: z(44), height: z(44) }}>
+    <Press label="Profile" quiet={quiet} onPress={onPress ?? (() => undefined)} disabled={!onPress} style={grow(z(44), z(44))}
+      visual={{ width: z(44), height: z(44), alignItems: 'center', justifyContent: 'center' }}>
       <Avatar name={me?.name ?? null} size={z(34)} />
       {me?.member ? <View testID="avatar-goodwatch-mark" style={{ position: 'absolute', right: 1, bottom: 2, borderRadius: 5, borderWidth: 2, borderColor: glow.bg }}><GoodWatchMark size={z(14)} /></View> : null}
     </Press>
@@ -94,7 +96,8 @@ export function AppHeader({ back, onLogo, logoLabel = 'Your rooms', pill, onPill
   const brand = <BrandMark size={phone ? 21 : z(23)} />;
   const logo = onLogo ? <Press label={logoLabel} onPress={onLogo} style={{ alignItems: 'flex-start', paddingRight: 6 }}>{brand}</Press> : brand;
   const backButton = back ? (
-    <Press label="Back" onPress={back} style={{ width: z(40), height: z(40), borderRadius: R.control, backgroundColor: '#ffffff0a' }}><Icon name="left" size={z(20)} color={glow.soft} /></Press>
+    <Press label="Back" onPress={back} style={grow(Math.max(44, z(40)), Math.max(44, z(40)))}
+      visual={{ width: Math.max(44, z(40)), height: Math.max(44, z(40)), borderRadius: R.control, backgroundColor: '#ffffff0a', alignItems: 'center', justifyContent: 'center' }}><Icon name="left" size={z(20)} color={glow.soft} /></Press>
   ) : null;
   const pillEl = pill ? <BootReveal part="header" index={1} style={{ flexShrink: 1, minWidth: 0 }}><RoomPill pill={pill} onPress={onPill} /></BootReveal> : null;
   const profile = <BootReveal part="header" index={1}><ProfileButton me={me} onPress={onProfile} quiet={profileQuiet} /></BootReveal>;
