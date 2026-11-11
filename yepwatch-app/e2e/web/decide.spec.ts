@@ -50,6 +50,9 @@ test.describe('match, proposal, Tonight', () => {
     // Restart the round.
     await host.tap(host.button('Start again'), { expect: { visible: ['room-setup'] }, observers: [[mia, { visible: ['waiting'] }, 'restartToPeerMs']] });
     await eventually(() => host.latest?.phase, (p) => p === 'setup', 'room back in setup', host);
+    // A beat to reach Start, as people need: with no Ready hold the friends' room screen lasts exactly
+    // until the round arrives, so a Start within ~150 ms of Start again would show it for less than a flash.
+    await host.page.waitForTimeout(300);
     await start(host, [mia, sam]);
     await eventually(() => host.latest?.generation, (g) => (g ?? 0) >= 1, 'a new round (generation advanced)', host);
   });

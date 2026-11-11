@@ -58,15 +58,14 @@ function RoomDetails() {
 /**
  * The shared layout: headline (room label and ideas) and the details with the actions, side by side
  * from 900 px. `actions` sit in the side column, or in the phone dock when `pinned`. While the round
- * starts (`start`) the ideas and details rest, dimmed and inert; as it hands over they fade out.
+ * starts (`start`) the ideas and details rest, dimmed and inert.
  */
 function RoomBefore({ testID, label, actions, pinned, extra, start = 'idle' }: { testID: string; label: string; actions: ReactNode; pinned: boolean; extra?: ReactNode; start?: StartPhase }) {
   const { phone, wide, max, z } = useLayout();
   const gap = z(56);
   const side = Math.min(z(420), max * 0.4);
-  const ready = start === 'ready';
-  const resting = start === 'starting' || ready;
-  const room = useEased(ready ? 0 : resting ? 0.55 : 1, ready ? 300 : 360, ready ? 330 : 0);
+  const resting = start === 'starting';
+  const room = useEased(resting ? 0.55 : 1, 360);
   // Stacked (phones): a friend's idea arriving above glides the details down instead of pushing them.
   const details = useGlide({ enabled: !wide });
   const headline = (
@@ -103,13 +102,13 @@ function RoomBefore({ testID, label, actions, pinned, extra, start = 'idle' }: {
 /**
  * The host's room before Start: one action, Start, beside the Room button. A guest host names
  * themselves first. Start carries the wait: the server builds the first deck inside the Start command,
- * so the button works until the command comes back; `ready` (the round arrived) shows the check while
- * voting takes over. A start that fails reads Try again.
+ * so the button works until the command comes back, and voting takes over the moment the round
+ * arrives. A start that fails reads Try again.
  */
 /** How long after the last keystroke the host's name saves. */
 const NAME_SAVE_MS = 600;
 
-export function RoomSetup({ ready = false }: { ready?: boolean }) {
+export function RoomSetup() {
   const { view, cmd, state, latest, disabled, signin, memberBusy, memberLapsed, openSheet } = useRoom();
   const { z } = useLayout();
   const pinned = usePinnedActions();
@@ -163,7 +162,7 @@ export function RoomSetup({ ready = false }: { ready?: boolean }) {
   // A start the server hasn't confirmed (the answer got lost) is saved and goes out again by itself;
   // Try again sends that same start instead of a new one.
   const pendingStart = state.pending?.command.type === 'start';
-  const phase = hostStartPhase({ attempt, retrying: pendingStart && state.busy, ready });
+  const phase = hostStartPhase({ attempt, retrying: pendingStart && state.busy });
   const run = (go: () => Promise<boolean>) => {
     setAttempt('starting');
     void go().catch(() => false).then((ok) => { if (mounted.current) setAttempt(ok ? null : 'failed'); });
@@ -204,22 +203,22 @@ export function RoomSetup({ ready = false }: { ready?: boolean }) {
 
 /**
  * A friend's room before Start (or while joining a running round): the same room, waiting for the
- * host. The server says nothing while the host's start builds the deck, so the waiting box changes
- * when the round arrives: `ready` shows "<host> started" with a check while voting takes over.
+ * host. The server says nothing while the host's start builds the deck; voting takes over the moment
+ * the round arrives.
  */
-export function Waiting({ ready = false }: { ready?: boolean }) {
+export function Waiting() {
   const { view, entry, openSheet } = useRoom();
   if (!view) return null;
   const owner = view.hostName || 'Your friend';
-  const joining = view.phase === 'setup' || ready ? null : entry.working ? 'Joining…' : 'Joining the round…';
+  const joining = view.phase === 'setup' ? null : entry.working ? 'Joining…' : 'Joining the round…';
   const actions = (
     <View style={{ gap: 10 }}>
       <Actions>
         <RoomButton onPress={() => openSheet('room')} />
-        <StartStatus host={view.hostName || 'the host'} ready={ready} joining={joining} />
+        <StartStatus host={view.hostName || 'the host'} joining={joining} />
       </Actions>
       <Actions><Button secondary label="Your services" onPress={() => openSheet('services')} /></Actions>
     </View>
   );
-  return <RoomBefore testID="waiting" label={`${owner}’s room`} pinned={false} actions={actions} start={ready ? 'ready' : joining ? 'starting' : 'idle'} />;
+  return <RoomBefore testID="waiting" label={`${owner}’s room`} pinned={false} actions={actions} start={joining ? 'starting' : 'idle'} />;
 }

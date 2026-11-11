@@ -19,6 +19,10 @@ for (let run = 1; run <= runs; run++) {
     await mia.tap(mia.button('Suggest an idea'), { expect: { visible: ['mood-page'] } });
     await mia.fill(mia.page.getByLabel('Mood'), 'space adventure');
     await mia.tap(mia.page.getByLabel('Mood'), { key: 'Enter', expect: { visible: ['waiting'] }, observers: [[host, { label: { text: 'Use space adventure', exact: true } }, 'ideaToPeerMs']] });
+    // The host presses Start a beat after Mia is back in the room, as people do: with no Ready hold her
+    // room screen now lasts exactly until the round arrives, and a Start within ~150 ms of her return
+    // would show that room for less than a flash's length.
+    await host.page.waitForTimeout(300);
     await start(host, [mia]); // startToFirstCardMs, startToPeerVotingMs
     for (let i = 0; i < 3; i++) { await vote(host, false); await vote(mia, false); } // swipeNextCardMs
     // Mia's Yep on a card the host already said Yep to: a match, timed until the host's chip shows it.

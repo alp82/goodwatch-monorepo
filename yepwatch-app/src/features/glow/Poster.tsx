@@ -19,7 +19,7 @@ export const titleMeta = (title: GlowTitle) => [
   title.runtimeMinutes ? `${title.runtimeMinutes} min` : null,
 ].filter(Boolean).join(' · ');
 
-export function Poster({ title, width, height, phone, z, showText = true, x, y, pan, halo, under, over, look, services, interactive = true, onDetails, onTrailer }: {
+export function Poster({ title, width, height, phone, z, showText = true, x, y, pan, halo, under, over, look, services, leaving = false, onDetails, onTrailer }: {
   title: GlowTitle;
   width: number;
   height: number;
@@ -37,8 +37,8 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
   look?: string;
   /** The room's services this title is on. */
   services?: ReactNode;
-  /** False while the card flies off: its buttons look the same but answer nothing. */
-  interactive?: boolean;
+  /** An answered card flying off: it looks the same, but it isn't the voting card (no test id or name) and its buttons answer nothing. */
+  leaving?: boolean;
   onDetails: () => void;
   onTrailer: () => void;
 }) {
@@ -50,7 +50,7 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
   }, [title.id]);
   return (
     <Animated.View
-      testID="poster"
+      testID={leaving ? 'poster-leaving' : 'poster'}
       {...(native ? null : ({ dataSet: { look } } as object))}
       style={{
         width,
@@ -65,7 +65,7 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
       {halo}
       <View
         {...pan}
-        accessibilityLabel={`${title.title}. Swipe or use the choice buttons.`}
+        accessibilityLabel={leaving ? undefined : `${title.title}. Swipe or use the choice buttons.`}
         style={[{
           flex: 1,
           overflow: 'hidden',
@@ -101,7 +101,7 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
         <View style={s.absolute} />
       </View>
       {title.trailerUrl && (
-        <Press label="Watch trailer" onPress={onTrailer} quiet={!interactive}
+        <Press label="Watch trailer" onPress={onTrailer} quiet={leaving}
           style={{ position: 'absolute', right: 16, top: 14, ...grow(44) }}
           visual={{ borderRadius: 10, paddingHorizontal: 12, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff' }}>
           <View style={{ width: 30, height: 30, borderRadius: 20, backgroundColor: '#dc2626', alignItems: 'center', justifyContent: 'center' }}>
@@ -113,7 +113,7 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Details about ${title.title}`}
-        disabled={!interactive}
+        disabled={leaving}
         onPress={onDetails}
         onFocus={() => setDetailsFocused(true)}
         onBlur={() => setDetailsFocused(false)}
