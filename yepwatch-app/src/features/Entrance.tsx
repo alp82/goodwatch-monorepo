@@ -382,9 +382,11 @@ export function Entrance({ invite, open: request, from }: {
   // are read anew (a room made meanwhile turns it into Your rooms).
   if (!home.ready || restoring || memberOf || (!returning && !home.settled)) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
+  // While a join is on its way the form keeps its layout (the saved name locks only once it's back), so a
+  // second press lands on Join again, not on whatever the locked form would put there.
   if (shown === 'join') return (
     <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite}
-      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname)} member={account.member} lapsed={account.lapsed} me={me}
+      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname) && !busy} member={account.member} lapsed={account.lapsed} me={me}
       initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error || account.error}
       back={closePanel} editName={openProfile}
       /* Back on this invitation (or the code you typed) as yourself, ready to join. */

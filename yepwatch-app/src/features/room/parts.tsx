@@ -202,8 +202,11 @@ export function ServiceGrid({ all, loading, selected, toggle }: { all: ServiceCh
   // Loading: empty tiles in the grid's usual shape (8 services and More), so the sheet already has its
   // height and doesn't jump when the services arrive.
   if (loading && !all.length) return (
-    <View aria-hidden style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 }}>
-      {Array.from({ length: 9 }, (_, i) => <View key={i} style={cell}><View style={{ ...tile, borderColor: warm.line, backgroundColor: warm.faint }} /></View>)}
+    <View aria-hidden style={{ gap: 12 }}>
+      {null /* the search field's place */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 }}>
+        {Array.from({ length: 9 }, (_, i) => <View key={`loading-${i}`} style={cell}><View style={{ ...tile, borderColor: warm.line, backgroundColor: warm.faint }} /></View>)}
+      </View>
     </View>
   );
   const shown = more ? all.filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase())) : firstTiles(all, selected);
