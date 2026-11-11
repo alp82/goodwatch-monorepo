@@ -16,6 +16,7 @@ import { GText, Icon, Press, glow, native, onePress } from '../glow/theme';
 import { useLayout } from './layout';
 import { closeTopSheet, isTopSheet, registerSheet } from './sheet-stack';
 import { R, warm } from './tokens';
+import { useFreshSurface } from './fresh-surface';
 
 export interface SheetProps {
   title: string;
@@ -74,6 +75,7 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
     Animated.timing(enter, { toValue: 1, duration: reduced ? 0 : 220, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
   }, [enter, reduced]);
   useSheetEntry(onClose);
+  useFreshSurface();
   const panelWidth = phone ? windowWidth : Math.min(z(width), windowWidth - 64);
   const rise = enter.interpolate({ inputRange: [0, 1], outputRange: [phone ? 60 : 16, 0] });
   return (

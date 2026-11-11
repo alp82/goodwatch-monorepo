@@ -14,6 +14,7 @@ import { AppFrame, type AppFrameProps, type FrameRooms } from '../shell/Frame';
 import type { HeaderMe, HeaderPill } from '../shell/Header';
 import { useLayout } from '../shell/layout';
 import { useSheetsHoldNavigation } from '../shell/sheet-back';
+import { useFreshSurface } from '../shell/fresh-surface';
 import { closeTopSheet, useSheetOpen } from '../shell/sheet-stack';
 import { warm } from '../shell/tokens';
 import { GText, Press, glow, grow } from '../glow/theme';
@@ -73,6 +74,8 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   const room = useOptionalRoom();
   const view = room?.view ?? null;
   const roomId = room?.id;
+  // The room's next view (Keep swiping back to voting, Matches, Tonight) ignores the rest of the tap that opened it.
+  useFreshSurface(testID);
   const focused = useIsFocused();
   const navigation = useNavigation();
   const closeSheets = room?.closeSheets;

@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BootReveal } from '../home/BootReveal';
 import { Backdrop } from '../glow/Backdrop';
 import { EdgeBack } from '../glow/EdgeBack';
-import { glow } from '../glow/theme';
+import { glow, onePress } from '../glow/theme';
 import type { HomeRoom } from '../rooms/home-model';
 import { HomeProfileSheet } from '../rooms/panels';
 import { HomeRoomsSheet, YourRoomsSheet, type CurrentRoom, type RoomsSheetActions } from '../rooms/RoomsSheet';
@@ -109,7 +109,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
       <CoveredBody covered={covered || Boolean(shownSheet)} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
         <AppHeader {...header} back={back} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? (() => setProfileOpen(true))} />
       </CoveredBody>
-      {shownSheet && !covered ? <View testID="header-shade" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: insets.top + layout.header, zIndex: 31 }}><Shade onPress={() => { closeTopSheet(); }} /></View> : null}
+      {shownSheet && !covered ? <View testID="header-shade" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: insets.top + layout.header, zIndex: 31 }}><Shade onPress={onePress(() => { closeTopSheet(); })} /></View> : null}
       <View style={{ flex: 1, minHeight: 0 }}>
         <CoveredBody covered={covered || Boolean(shownSheet)}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, minHeight: 0 }}>
