@@ -70,11 +70,12 @@ export async function buildApi(log) {
 }
 
 export function buildGateway(log) {
-  const hash = hashTree([path.join(REALTIME_DIR, 'src'), path.join(WEBAPP_DIR, 'packages/yepwatch-contracts')]);
+  const hash = hashTree([path.join(REALTIME_DIR, 'src'), path.join(WEBAPP_DIR, 'packages/yepwatch-contracts'), path.join(E2E_DIR, 'stack/gateway-entry.ts')]);
   if (fresh('gateway', hash, GATEWAY_BUNDLE)) return { built: false, out: GATEWAY_BUNDLE };
   log('building gateway bundle');
-  const r = spawnSync('npx', ['esbuild', 'src/main.ts', '--bundle', '--platform=node', '--format=esm', '--target=node24',
-    '--external:ws', '--external:ioredis', '--external:zod', '--outfile=dist/main.js', '--log-level=error'],
+  // Same recipe as the gateway's own `npm run build`, from the E2E entry (gateway-entry.ts).
+  const r = spawnSync('npx', ['esbuild', path.join(E2E_DIR, 'stack/gateway-entry.ts'), '--bundle', '--platform=node', '--format=esm', '--target=node24',
+    '--external:ws', '--external:ioredis', '--external:zod', `--outfile=${GATEWAY_BUNDLE}`, '--log-level=error'],
   { cwd: REALTIME_DIR, stdio: 'inherit', env: cleanEnv({}, { node: false }) });
   if (r.status !== 0) throw new Error('gateway build failed');
   fs.writeFileSync(stamp('gateway'), hash);

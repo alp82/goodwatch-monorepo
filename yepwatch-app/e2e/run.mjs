@@ -39,6 +39,10 @@ function phase(name, args, env) {
 }
 
 const phases = [];
+function reset() {
+  const r = spawnSync('curl', ['-s', '-X', 'POST', 'http://127.0.0.1:18490/reset'], { encoding: 'utf8' });
+  log(`store reset: ${r.stdout.trim()}`);
+}
 if (tier === 'smoke') {
   const origin = originArg ?? null;
   if (!origin) {
@@ -56,9 +60,13 @@ if (tier === 'smoke') {
       E2E_WORKERS: process.env.E2E_WORKERS ?? '10', E2E_TIMING_RUNS: '3', E2E_FAULT_GREP: '@core',
     }));
   } else if (tier === 'full') {
-    phases.push(phase('parallel', ['--project=none', '--project=nows', '--project=rapid', '--project=slow', '--project=hidden', '--project=twodevice'], {
-      E2E_WORKERS: process.env.E2E_WORKERS ?? '12', E2E_TIMING_RUNS: '10',
-    }));
+    // The room store holds at most 100 active rooms: reset it between phases of ~60 rooms each.
+    const groups = [['none', 'nows'], ['rapid', 'slow'], ['hidden', 'twodevice']];
+    for (const [i, g] of groups.entries()) {
+      if (i) reset();
+      phases.push(phase(g.join('+'), g.map((f) => `--project=${f}`), { E2E_WORKERS: process.env.E2E_WORKERS ?? '10', E2E_TIMING_RUNS: '10' }));
+    }
+    reset();
     // Stack-wide restarts disturb every room: alone, one test at a time.
     phases.push(phase('restart', ['--project=restart', '--grep-invert', 'six people|timing run'], { E2E_WORKERS: '1' }));
   } else {

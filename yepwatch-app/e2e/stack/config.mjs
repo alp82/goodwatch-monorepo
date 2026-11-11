@@ -11,7 +11,7 @@ export const CACHE_DIR = path.join(E2E_DIR, '.cache');
 export const STATE_FILE = path.join(E2E_DIR, '.stack.json');
 // Bundles must sit inside the package whose node_modules they import from.
 export const API_BUNDLE_DIR = path.join(WEBAPP_DIR, 'build', 'yepwatch-e2e');
-export const GATEWAY_BUNDLE = path.join(REALTIME_DIR, 'dist', 'main.js');
+export const GATEWAY_BUNDLE = path.join(REALTIME_DIR, 'dist', 'e2e-gateway.js');
 
 export const PORTS = {
   valkey: 18379,

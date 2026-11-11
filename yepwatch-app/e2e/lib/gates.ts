@@ -74,7 +74,7 @@ export function blockingWords(rec: Recording, person: string, allow: RegExp[] = 
     const transient = TRANSIENT_WORDS.some((re) => re.test(w.text));
     if (transient && ms <= B.connectingMaxMs) continue;
     if (!transient && !BLOCKING_WORDS.some((re) => re.test(w.text)) && !/Connecting/.test(w.text)) continue;
-    const key = w.text;
+    const key = w.text.replace(/\d+/g, "N");
     if (seen.has(key)) continue;
     seen.add(key);
     out.push({ gate: 'journey', person, detail: `"${w.text}" visible for ${Math.round(ms)} ms`, measured: Math.round(ms), budget: transient ? B.connectingMaxMs : 'never', at: w.t });

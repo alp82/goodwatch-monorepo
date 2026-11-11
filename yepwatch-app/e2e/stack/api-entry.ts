@@ -5,7 +5,7 @@
  *  - catalog reads: a deterministic 600-title fixture through the real deck code (createContinuousCatalog +
  *    proposalCatalog + idea interleaving), instead of the GoodWatch title snapshot + catalog SQL;
  *  - the GoodWatch issuer and search role are local fakes (e2e/stack/fakes.mjs) reached over real HTTP;
- *  - the public origin is http://127.0.0.1:18480 and release limits are raised so parallel tests don't trip them.
+ *  - the public origin is http://127.0.0.1:18480 and release limits are at the schema maxima (100/120/2400/120).
  * Bundled by up.mjs into goodwatch-webapp/build/yepwatch-e2e/api.mjs. Usage: api.mjs serve|provision|reset
  */
 import { createReleaseRuntime } from "~/server/yepwatch/proposal-release-runtime.ts"
@@ -47,9 +47,10 @@ loopback(need("YEPWATCH_SEARCH_URL"))
 const valkeyPort = Number(need("E2E_VALKEY_PORT"))
 const secret = need("E2E_ROOM_SECRET")
 const keyId = need("E2E_KEY_ID")
-// Production defaults are 20/20/600/60. Parallel suites create far more rooms than that; the policy is a
-// deploy knob, so the harness raises it rather than testing a rate-limited stack.
-const control = { rooms: 100000, admissions: 100000, commands: 1000000, actorCommands: 100000 }
+// Production runs 20/20/600/60. The harness uses the storage schema's maxima (100 active rooms, 120
+// admissions and 2400 commands a minute): a release-policy knob, raised so parallel suites aren't throttled.
+// e2e/run.mjs resets the store between phases so a tier never holds more than 100 rooms.
+const control = { rooms: 100, admissions: 120, commands: 2400, actorCommands: 120 }
 const sql = crateSql(crateOrigin, "crate", "")
 
 async function provision() {
