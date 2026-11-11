@@ -300,12 +300,37 @@ export function staleRefill(room: ProposalRoom, envelope: CommandEnvelope) {
 		c.expectedStreamVersion < room.stream.version
 	)
 }
+/**
+ * Commands that commute with whatever else changed the room since the sender's view: a friend's
+ * services, ideas, settings, joins or leaves never make Start, a setting, a proposal, an agreement or
+ * Start again fail. Their version fences are taken as the room's current ones. Fences that guard a real
+ * conflict stay: the round (generation), the proposal, your own vote and agreement revisions.
+ */
+export function commute(room: ProposalRoom, envelope: CommandEnvelope): CommandEnvelope {
+	const c = envelope.command
+	switch (c.type) {
+		case "start":
+			return { ...envelope, command: { ...c, expectedRosterVersion: room.rosterVersion, expectedContextVersion: room.contextVersion } }
+		case "configure":
+		case "assign_screen":
+		case "ready":
+			return { ...envelope, command: { ...c, expectedContextVersion: room.contextVersion } }
+		case "propose":
+		case "agree":
+			return { ...envelope, command: { ...c, expectedRosterVersion: room.rosterVersion } }
+		case "restart":
+			return { ...envelope, command: { ...c, expectedRevision: room.revision } }
+		default:
+			return envelope
+	}
+}
 export function preflight(
 	room: ProposalRoom,
 	actorId: string,
-	envelope: CommandEnvelope,
+	sent: CommandEnvelope,
 	now: number
 ) {
+	const envelope = commute(room, sent)
 	if (staleRefill(room, envelope)) return
 	if (envelope.command.type === "start")
 		requireRoom(
@@ -324,11 +349,12 @@ export function preflight(
 export function proposalTransition(
 	original: ProposalRoom,
 	actorId: string,
-	envelope: CommandEnvelope,
+	sent: CommandEnvelope,
 	now: number,
 	page?: { candidates: Candidate[]; exhausted: boolean },
 	interpretationReserved = false
 ): ProposalRoom {
+	const envelope = commute(original, sent)
 	const c =
 		envelope.command.type === "assign_screen" && original.screens.length === 1
 			? { ...envelope.command, screenId: ROOM_CONTEXT }
