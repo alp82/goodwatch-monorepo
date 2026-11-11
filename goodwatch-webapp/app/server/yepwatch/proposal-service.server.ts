@@ -663,26 +663,10 @@ export class ProposalService {
 			for (let attempt = 0; attempt < 6; attempt++) {
 				const old = await this.get(id),
 					p = this.auth(old.room, credential)
-				const receipt = this.commandState(p, credential).receipts.find(
-					(r) =>
-						r.commandId === envelope.commandId ||
-						r.sequence === envelope.sequence
-				)
-				if (receipt) {
-					requireRoom(
-						receipt.digest === digest,
-						"conflict",
-						"Command ID/sequence reused"
-					)
-					return {
-						commandId: receipt.commandId,
-						sequence: receipt.sequence,
-						appliedRevision: receipt.revision,
-						replayed: true
-					}
-				}
+				const slot = this.sequenceSlot(p, credential, envelope, digest)
+				if ("replayed" in slot) return slot
 				requireRoom(
-					this.commandState(p, credential).nextSequence === envelope.sequence,
+					this.commandState(p, credential).nextSequence === slot.sequence,
 					"conflict",
 					"Commands must be sent in order"
 				)
@@ -716,31 +700,17 @@ export class ProposalService {
 				credential,
 				envelope.command.type === "leave"
 			)
-			const receipt = this.commandState(p, credential).receipts.find(
-				(r) =>
-					r.commandId === envelope.commandId || r.sequence === envelope.sequence
-			)
-			if (receipt) {
-				requireRoom(
-					receipt.digest === digest,
-					"conflict",
-					"Command ID/sequence reused"
-				)
-				return {
-					commandId: receipt.commandId,
-					sequence: receipt.sequence,
-					appliedRevision: receipt.revision,
-					replayed: true
-				}
-			}
+			const slot = this.sequenceSlot(p, credential, envelope, digest)
+			if ("replayed" in slot) return slot
+			const sequence = slot.sequence
 			requireRoom(
-				envelope.sequence >= this.commandState(p, credential).nextSequence,
+				sequence >= this.commandState(p, credential).nextSequence,
 				"outcome_unknown",
 				"Receipt no longer retained; reconcile current state",
 				503
 			)
 			requireRoom(
-				envelope.sequence === this.commandState(p, credential).nextSequence,
+				sequence === this.commandState(p, credential).nextSequence,
 				"conflict",
 				"Commands must be sent in order"
 			)
@@ -866,7 +836,7 @@ export class ProposalService {
 			commandState.nextSequence++
 			commandState.receipts.push({
 				commandId: envelope.commandId,
-				sequence: envelope.sequence,
+				sequence,
 				digest,
 				revision: room.revision
 			})
@@ -880,7 +850,7 @@ export class ProposalService {
 			}
 			return {
 				commandId: envelope.commandId,
-				sequence: envelope.sequence,
+				sequence,
 				appliedRevision: room.revision,
 				replayed: false
 			}
@@ -891,6 +861,26 @@ export class ProposalService {
 			503,
 			true
 		)
+	}
+	/**
+	 * A command already applied replays its receipt. A sequence another command already took on this session
+	 * (a second tab of the same browser shares it) doesn't refuse this one: a command id never seen before is
+	 * a new command, so it takes the next sequence. A reused command id with other content stays a conflict.
+	 */
+	private sequenceSlot(
+		p: ProposalParticipant,
+		credential: ActorCredential,
+		envelope: CommandEnvelope,
+		digest: string
+	): CommandResult["receipt"] | { sequence: number } {
+		const state = this.commandState(p, credential)
+		const own = state.receipts.find((r) => r.commandId === envelope.commandId)
+		if (own) {
+			requireRoom(own.digest === digest, "conflict", "Command ID/sequence reused")
+			return { commandId: own.commandId, sequence: own.sequence, appliedRevision: own.revision, replayed: true }
+		}
+		const taken = state.receipts.some((r) => r.sequence === envelope.sequence)
+		return { sequence: taken ? state.nextSequence : envelope.sequence }
 	}
 	private commandState(p: ProposalParticipant, credential: ActorCredential) {
 		return (p.sessions ?? []).find((s) => s.id === credential.sessionId) ?? p;
@@ -1201,9 +1191,9 @@ export class ProposalService {
 			true,
 		);
 	}
+	/** Returns the rooms this device stays in as a guest. */
 	async logoutAccount(account: RoomAccount) {
-		// Revocation is durable before clearing capabilities; replaying an old sealed sign-in cannot resume.
-		await this.accounts.revokeSession(account.sessionId, account.expiresAt);
+		const kept: { roomId: string; nickname: string; expiresAt: number }[] = [];
 		for (const entry of await this.accounts.rooms(account.userId)) {
 			if (entry.expiresAt <= this.now()) continue;
 			for (let attempt = 0; attempt < 8; attempt++) {
@@ -1213,11 +1203,14 @@ export class ProposalService {
 				const p = room.participants.find(
 					(p) => p.memberUserId === account.userId,
 				);
-				if (!p?.sessions?.some((s) => s.id === account.sessionId)) break;
-				p.sessions = p.sessions.filter((s) => s.id !== account.sessionId);
+				const session = p?.sessions?.find((s) => s.id === account.sessionId);
+				if (!p || !session) break;
+				p.sessions = p.sessions!.filter((s) => s.id !== account.sessionId);
 				room.tickets = room.tickets.filter(
 					(t) => t.sessionId !== account.sessionId,
 				);
+				const guest = p.leftAt == null && !p.sessions.some((s) => s.expiresAt > this.now());
+				if (guest) this.keepDeviceAsGuest(p, session);
 				room.revision++;
 				try {
 					if (!(await this.repository.compareAndSwap(old, room, true)))
@@ -1226,10 +1219,33 @@ export class ProposalService {
 					if (!(e instanceof IndeterminateWrite)) throw e;
 					continue;
 				}
+				if (guest) kept.push({ roomId: room.id, nickname: p.nickname, expiresAt: room.expiresAt });
 				await this.notify(entry.roomId);
 				break;
 			}
 		}
+		// Revoked after the rooms are guest places: a room read racing Log out reads the guest place, never a
+		// refusal. Once revoked, replaying the old sealed sign-in cannot resume or link anything.
+		await this.accounts.revokeSession(account.sessionId, account.expiresAt);
+		return kept;
+	}
+	/**
+	 * Log out on the account's last device in a room: that device keeps its seat (name, votes, host role)
+	 * as a guest. Only the GoodWatch link goes: the grant, prefill and seen titles. The device's room
+	 * credential becomes the guest credential, so it never acts as the signed-out account again.
+	 */
+	private keepDeviceAsGuest(
+		p: ProposalParticipant,
+		session: NonNullable<ProposalParticipant["sessions"]>[number],
+	) {
+		p.memberUserId = null;
+		delete p.memberGrant;
+		p.member = { state: "guest", prefill: null };
+		p.showSeen = false;
+		p.sessions = [];
+		p.tokenHash = session.tokenHash;
+		p.nextSequence = session.nextSequence;
+		p.receipts = session.receipts;
 	}
 	async requireAccountActive(userId: string) {
 		await requireNotDeleting(this.deletions, { kind: 'account', userId });

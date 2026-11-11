@@ -127,7 +127,7 @@ test("a callback from another browser, a replayed state or a foreign return page
 	assert.equal((await status.json()).state, "guest")
 })
 
-test("rooms created or joined while signed in link to the device session; Log out retains membership but ends this device’s room access", async () => {
+test("rooms created or joined while signed in link to the device session; Log out keeps this device in the room as a guest without the account", async () => {
 	const { handler, repo } = setup()
 	const { callback } = await signIn(handler, `${origin}/`)
 	const session = cookies(callback)[MEMBER_COOKIE].value
@@ -159,11 +159,32 @@ test("rooms created or joined while signed in link to the device session; Log ou
 	const out = await handler(new Request(api("/account/logout"), { method: "POST", headers: { origin, "content-type": "application/json", cookie: both }, body: "{}" }))
 	assert.equal(out.status, 200)
 	assert.equal(cookies(out)[MEMBER_COOKIE].maxAge, 0)
+	assert.deepEqual((await out.json()).keptRooms.map((r: { roomId: string; nickname: string }) => [r.roomId, r.nickname]), [[roomId, "Alper"]], "the app lists the kept room on the device")
 	const guest = await handler(new Request(api("/account"), { headers: { cookie: `yepwatch3_${roomId}=${roomCookie}` } }))
 	assert.equal((await guest.json()).state, "guest")
 	const kept = await handler(new Request(api(`/rooms/${roomId}`), { headers: { cookie: `yepwatch3_${roomId}=${roomCookie}` } }))
-	assert.equal(kept.status, 401, "a retained room cookie cannot act as a signed-out account")
-	assert.equal((await repo.read(roomId))!.room.participants[0].memberUserId, "account-1", "membership survives logout")
+	assert.equal(kept.status, 200, "the retained room cookie keeps this device's seat")
+	const guestView = await kept.json()
+	assert.equal(guestView.own.participantId, snapshot.own.participantId, "same seat: name, votes and host role stay")
+	assert.equal(guestView.own.member.state, "guest", "a retained room cookie acts as a guest, never as the signed-out account")
+	assert.equal(guestView.own.member.prefill, null)
+	const stored = (await repo.read(roomId))!.room.participants[0]
+	assert.equal(stored.memberUserId, null, "the GoodWatch link is removed")
+	assert.equal(stored.memberGrant, undefined, "no GoodWatch grant stays in the room")
+	assert.deepEqual(stored.sessions, [])
+	assert.deepEqual(guestView.shared.participants.find((p: { participantId: string }) => p.participantId === guestView.own.participantId).serviceIds, [8, 9], "the room keeps the services already chosen")
+	const command = await handler(new Request(api(`/rooms/${roomId}/commands`), {
+		method: "POST", headers: { origin, "content-type": "application/json", cookie: `yepwatch3_${roomId}=${roomCookie}` },
+		body: JSON.stringify({ commandId: randomBytes(16).toString("hex"), sequence: guestView.own.nextSequence, command: { type: "rename", nickname: "Al" } }),
+	}))
+	assert.equal(command.status, 200, "the guest seat keeps acting, in sequence")
+	const home = await handler(new Request(api("/account/home"), { headers: { cookie: `yepwatch3_${roomId}=${roomCookie}; ${MEMBER_COOKIE}=${session}` } }))
+	assert.equal(home.status, 403, "the replayed sealed sign-in reads no account data")
+	const replayed = await handler(new Request(api(`/rooms/${roomId}`), { headers: { cookie: both } }))
+	assert.equal(replayed.status, 200, "a read racing Log out (its sign-in cookie not yet cleared) reads the guest place")
+	assert.equal((await replayed.json()).own.member.state, "guest", "the replayed sealed sign-in adds no account access")
+	const relink = await handler(new Request(api(`/rooms/${roomId}/member/link`), { method: "POST", headers: { origin, "content-type": "application/json", cookie: both }, body: "{}" }))
+	assert.equal(relink.status, 403, "the replayed sealed sign-in cannot link the room again")
 	const unlinked = await handler(new Request(api(`/rooms/${roomId}/member/link`), { method: "POST", headers: { origin, "content-type": "application/json", cookie: `yepwatch3_${roomId}=${roomCookie}` }, body: "{}" }))
 	assert.equal(unlinked.status, 403)
 })

@@ -5,6 +5,8 @@ import { nativeClient } from '../credentials';
 import { queryClient } from '../providers';
 import { continuousApi, RoomFailure } from './api';
 import { adoptAccountRoom } from './account-access';
+import { roomRegistry } from './room-registry';
+import type { AccountHome } from '@goodwatch/yepwatch-contracts/proposal';
 import { accountFlow, authEpoch, type DeviceAccount } from './account-flow';
 import { createDeviceAccount, guestAccount } from './device-account';
 import { beginAccount, clearSession, forgetMemberName, readMemberName, readSession, rememberMemberName, saveSession } from './member';
@@ -31,13 +33,13 @@ const device = createDeviceAccount({
   bump: () => accountFlow.bump(),
   unsupported: (e) => e instanceof RoomFailure && (e.code === 'not_implemented' || e.status === 404),
 });
-// Log out or a new sign-in: an account answer still in flight belongs to the earlier sign-in.
+// Log out or a new sign-in: an account answer still in flight belongs to the earlier sign-in. Rooms stay
+// on screen (Log out keeps this device in them as a guest; a sign-in links the same place) and read again.
 authEpoch.subscribe(() => {
   void queryClient.cancelQueries({ queryKey: accountKey });
-  for (const key of ['account-home', 'proposal-room', 'home-room']) {
-    void queryClient.cancelQueries({ queryKey: [key] });
-    queryClient.removeQueries({ queryKey: [key] });
-  }
+  void queryClient.cancelQueries({ queryKey: ['account-home'] });
+  queryClient.removeQueries({ queryKey: ['account-home'] });
+  for (const key of ['proposal-room', 'home-room']) void queryClient.invalidateQueries({ queryKey: [key] });
 });
 
 export const loadAccount = device.load;
@@ -50,8 +52,23 @@ export const linkRoom = async (access: import('../credentials').RoomAccess) => {
   await adoptAccountRoom(result, asked);
   return result;
 };
-/** Ends this device's GoodWatch sign-in for YepWatch. GoodWatch itself stays signed in. */
-export const signOut = device.signOut;
+/**
+ * Ends this device's GoodWatch sign-in for YepWatch. GoodWatch itself stays signed in. The device stays
+ * in its rooms as a guest: they go on the device's own list first (so Your rooms never empties for a
+ * moment), and the ones the server didn't keep for this device (another device holds the account's
+ * place) leave it again.
+ */
+export async function signOut() {
+  const rooms = queryClient.getQueriesData<AccountHome>({ queryKey: ['account-home'] })
+    .flatMap(([, home]) => home?.rooms ?? []).filter((r) => !r.snapshot.own.left)
+    .map((r) => ({ roomId: r.snapshot.shared.roomId, expiresAt: r.snapshot.shared.expiresAt,
+      nickname: r.snapshot.shared.participants.find((p) => p.participantId === r.snapshot.own.participantId)?.nickname ?? '' }));
+  await Promise.all(rooms.map((r) => roomRegistry.remember(r).catch(() => undefined)));
+  const result = await device.signOut() as { keptRooms?: { roomId: string }[] } | undefined;
+  if (!Array.isArray(result?.keptRooms)) return;
+  const kept = new Set(result.keptRooms.map((r) => r.roomId));
+  await Promise.all(rooms.filter((r) => !kept.has(r.roomId)).map((r) => roomRegistry.forget(r.roomId).catch(() => undefined)));
+}
 
 export function useAccount() {
   const query = useQuery({

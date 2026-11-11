@@ -23,6 +23,8 @@ import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
 import { retryTransient, transientFailure, unanswered } from '../core/continuous/backoff';
 import { stopWaiting } from '../core/continuous/create-room';
 import { browserOffline, onBackOnline } from '../core/continuous/network';
+import { OFFLINE_WORDS, QUIET_OUTAGE_MS } from '../core/continuous/connection-words';
+import { useLate } from '../core/useLate';
 import { Landing } from './home/Landing';
 import { BootPageReady, BootPhase } from './home/boot-phase';
 import { greeting, type HomeRoom } from './rooms/home-model';
@@ -240,7 +242,7 @@ export function Entrance({ invite, open: request, from }: {
     } catch (e) {
       // Cancelled (the screen went away): the request saved before the submit stays for a manual retry.
       if (signal.aborted) return;
-      setError(unanswered(e) && browserOffline() ? 'You’re offline. Your request is saved and goes when you’re back online.'
+      setError(unanswered(e) && browserOffline() ? OFFLINE_WORDS
         : transientFailure(e) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : e instanceof Error ? e.message : 'Could not join this room.');
       offlineJoin.current = unanswered(e) && saved ? { member, code: saved.code } : null;
       setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
@@ -249,7 +251,7 @@ export function Entrance({ invite, open: request, from }: {
         const next = retainRequest(e) ? { ...saved, retryAt: unanswered(e) ? 0 : retryDeadline(e) } : null;
         setAdmission(next);
         try { await writeAdmission(intent, next); }
-        catch { setError('Your request is still awaiting confirmation, but storage is unavailable. Keep this screen open to retry.'); }
+        catch { setError('Your request is kept on this screen only: storage is unavailable. Keep it open to retry.'); }
       }
     } finally {
       if (attempt.current === controller) attempt.current = null;
@@ -319,6 +321,9 @@ export function Entrance({ invite, open: request, from }: {
   }
   // A lapsed sign-in keeps its name: the page doesn't turn back into a guest's mid-session.
   const known = home.nickname ?? (account.member || account.lapsed ? account.name : null);
+  // Offline says so only after the quiet period (connection-words.ts); the request goes by itself when back.
+  const offlineLate = useLate(error === OFFLINE_WORDS, QUIET_OUTAGE_MS);
+  const shownError = error === OFFLINE_WORDS && !offlineLate ? '' : error;
   const locked = busy || account.busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
   // A panel asked for from another screen (a room's header) closes back to that screen.
   const requestedFrom = useRef(Boolean(request && request !== 'new'));
@@ -383,11 +388,11 @@ export function Entrance({ invite, open: request, from }: {
   const returning = home.hasRooms || home.decisions.length > 0 || home.unavailable.length > 0 || Boolean(known);
   const pending = admission?.code ? 'join' : null;
   const shown: PanelKind | null = panel ?? (recoveryDismissed ? null : pending ?? (restoreFailed || recoveryBlocked ? 'join' : null));
-  const actionLabel = (first: string, again: string) => (busy ? 'Connecting…' : retrySeconds > 0 ? `Retry in ${retrySeconds}s` : admission ? again : first);
+  // No countdowns (connection-words.ts): the saved request waits out the server's pause behind a disabled button.
+  const actionLabel = (first: string, again: string) => (busy ? 'Joining…' : admission ? again : first);
   const notices = (
     <>
-      {error && diagnostic && <ConnectionDetails diagnostic={diagnostic} />}
-      {retrySeconds > 0 && <GText size={13} color={glow.muted}>Try again in {retrySeconds}s. Your room request is saved.</GText>}
+      {shownError && diagnostic && <ConnectionDetails diagnostic={diagnostic} />}
       {admission && <GText size={12} color={glow.muted}>Retry preserves your identity and room request.</GText>}
       {restoreFailed && <Press label="Retry saved request" onPress={() => { setRestoring(true); setError(''); setRestoreVersion((v) => v + 1); }} style={{ alignSelf: 'flex-start', ...grow(44) }}><GText bold color={glow.amber}>Retry saved request</GText></Press>}
       {recoveryBlocked && <Press label="Retry membership check" onPress={() => { setRecoveryBlocked(false); setCheckingInvite(true); setError(''); setCheckVersion((v) => v + 1); }} style={{ alignSelf: 'flex-start', ...grow(44) }}><GText bold color={glow.amber}>Retry membership check</GText></Press>}
@@ -405,7 +410,7 @@ export function Entrance({ invite, open: request, from }: {
   if (shown === 'join') return (
     <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite}
       nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname) && !busy} member={account.member} lapsed={account.lapsed} me={me}
-      initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error || account.error}
+      initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={shownError || account.error}
       back={closePanel} editName={openProfile}
       /* Back on this invitation (or the code you typed) as yourself, ready to join. */
       signIn={guestOnly || account.member ? undefined : (c) => { const typed = parseInvite(c); signInFrom(invite ? `/r/${invite}` : typed ? `/r/${typed}` : '/?open=join'); }}
@@ -415,7 +420,7 @@ export function Entrance({ invite, open: request, from }: {
   const history = home.decisions.length || home.left.length || home.archived.length ? () => setPanel('history') : undefined;
   const sheet = shown === 'profile' ? (
     <ProfileSheet nickname={known} member={account.member} lapsed={account.lapsed} signIn={signInFromProfile} logOut={account.member || account.lapsed ? () => void account.logOut() : undefined}
-      busy={locked || home.loadingRooms} error={error || account.error} onClose={closePanel}
+      busy={locked || home.loadingRooms} error={shownError || account.error} onClose={closePanel}
       save={(name) => { void home.setNickname(name).then(() => { if (invite) setPanel('join'); else closePanel(); }); }} />
   ) : shown === 'history' ? (
     <HistorySheet decisions={home.decisions} left={home.left} archived={home.archived} restore={home.restore} canOpen={(id) => home.decidedRooms.has(id)} openRoom={open} returnTo={returnTo} busy={locked} onClose={closePanel} />
@@ -437,7 +442,7 @@ export function Entrance({ invite, open: request, from }: {
         <Landing newRoom={create} join={openJoin} signIn={signIn} signingIn={account.busy} lapsed={account.lapsed} disabled={checkingInvite} quiet={busy} />
       )}
       {!shown && home.notice ? <GText size={14} color={glow.soft}>{home.notice}</GText> : null}
-      {!shown && (error || account.error) ? <GText size={14} color="#fca5a5">{error || account.error}</GText> : null}
+      {!shown && (shownError || account.error) ? <GText size={14} color="#fca5a5">{shownError || account.error}</GText> : null}
     </AppFrame>
   );
 }

@@ -17,6 +17,8 @@ export const budgets = {
     frameMaxMs: 20, // no animation frame longer than this while something animates
     restartQueuedLandMs: 1000, // server back → queued actions confirmed
     connectingMaxMs: 1000, // "Connecting…" visible at most this long
+    connectionQuietMs: 3000, // an outage shows no connection words before this (owner rule Q24a)
+    connectionWordsAfterMs: 1000, // and its one line is gone at most this long after the outage ends
   },
   production: {
     tapFeedbackMs: 50,
@@ -32,6 +34,8 @@ export const budgets = {
     frameMaxMs: 20,
     restartQueuedLandMs: 1000,
     connectingMaxMs: 1500,
+    connectionQuietMs: 3000,
+    connectionWordsAfterMs: 1000,
   },
   network: {
     // Fast 4G for production smoke: CDP Network.emulateNetworkConditions.
@@ -48,9 +52,17 @@ export const budgets = {
 
 // Room notes and on-screen words that mean the user is blocked or told something went wrong.
 export const BLOCKING_WORDS = [
-  /Trying again/i, /Try again in \d/i, /Not connected/i, /Reconnecting/i, /Couldn[’']t/i, /Refresh to keep choosing/i,
-  /Something went wrong/i, /YepWatch is starting/i, /Opening the room/i, /Your choice is awaiting confirmation/i, /Retry in \d/i,
+  /Couldn[’']t/i, /Refresh to keep choosing/i, /Something went wrong/i, /YepWatch is starting/i, /Opening the room/i,
 ];
+// Words about the connection or a retry. One rule (owner Q24a, app: core/continuous/connection-words.ts):
+// none while an outage is younger than connectionQuietMs (so none at all for a shorter fault, a hidden tab,
+// a second device or a page without WebSocket), then at most one line, and never a countdown.
+export const CONNECTION_WORDS = [
+  /Reconnecting/i, /You[’']re offline/i, /Not connected/i, /Connecting…/, /Trying again/i, /Try again in \d/i, /Retry in \d/i,
+  /awaiting confirmation/i, /Your (action|choice|request|room request) is saved/i,
+];
+// Countdowns and retry timers: never, whatever the fault.
+export const COUNTDOWN_WORDS = [/\b\d+\s?s\b/, /Trying again/i, /Try again in/i, /Retry in/i, /awaiting confirmation/i];
 // Words allowed briefly (up to connectingMaxMs) while a connection is made.
 export const TRANSIENT_WORDS = [/^Connecting…$/];
 

@@ -79,8 +79,8 @@ test('reopening a room: no opening words and no connection line while it connect
   await expect(page.getByTestId('voting')).toBeVisible();
   await page.waitForTimeout(1200);
   expect((await paints(page)).filter((p) => /Opening the room|Connecting|Not connected/.test(p.text))).toEqual([]);
-  // A connection that stays away is still mentioned.
-  await expect(page.getByText('Not connected.')).toBeVisible();
+  // A connection that stays away is still mentioned, in one line, once the quiet period is over.
+  await expect(page.getByText('Reconnecting…', { exact: true })).toBeVisible({ timeout: 6000 });
 });
 
 test('sign-in: back from GoodWatch to the start page, no room screen ever paints', async ({ page }) => {

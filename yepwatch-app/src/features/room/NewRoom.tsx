@@ -4,6 +4,8 @@ import { router, useFocusEffect } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { transientFailure, unanswered } from '../../core/continuous/backoff';
 import { browserOffline, onBackOnline } from '../../core/continuous/network';
+import { OFFLINE_WORDS, QUIET_OUTAGE_MS } from '../../core/continuous/connection-words';
+import { useLate } from '../../core/useLate';
 import { RoomFailure } from '../../core/continuous/api';
 import { ConnectionDetails } from '../rooms/ConnectionDetails';
 import { CreateRoom } from '../../core/continuous/create-room';
@@ -71,12 +73,15 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   useBackAction(back);
   const failure = mutation.error;
   const cancelled = failure?.name === 'AbortError';
-  const error = mutation.isError && !cancelled ? unanswered(failure) && browserOffline() ? 'You’re offline. Your room is saved and gets created when you’re back online.' : transientFailure(failure) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : failure instanceof RoomFailure && failure.code !== 'catalog_unavailable'
+  const offline = mutation.isError && !cancelled && unanswered(failure) && browserOffline();
+  // Offline says so only after the quiet period (connection-words.ts); the room is created by itself when back.
+  const offlineLate = useLate(offline, QUIET_OUTAGE_MS);
+  const error = mutation.isError && !cancelled ? offline ? (offlineLate ? OFFLINE_WORDS : undefined) : transientFailure(failure) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : failure instanceof RoomFailure && failure.code !== 'catalog_unavailable'
     ? failure.message : 'Couldn’t save this mood. Try again; your text is kept.' : undefined;
   // Saved: the button keeps saying Saving… until the room replaces this screen (no frame of Create room again).
   const saving = mutation.isPending || mutation.isSuccess;
   return <MoodComposer first text={text ?? draft.data?.text ?? ''} onTextChange={setText} pick={(value) => mutation.mutate(value)} back={back}
     saving={saving} disabled={saving || retrySeconds > 0 || !account.ready || draft.isPending}
     error={error} details={error && failure instanceof RoomFailure && failure.diagnostic ? <ConnectionDetails diagnostic={failure.diagnostic} /> : undefined}
-    action={retrySeconds ? `Retry in ${retrySeconds}s` : mutation.isError ? 'Try again' : 'Create room'} />;
+    action={mutation.isError ? 'Try again' : 'Create room'} />;
 }

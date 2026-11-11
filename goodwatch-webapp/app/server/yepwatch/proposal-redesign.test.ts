@@ -743,3 +743,47 @@ test("a departed person's last answer still pins its card, so a full deck keeps 
 	const next = vote(vote(room, one.id), two.id)
 	assert.deepEqual(next.stream, room.stream)
 })
+
+test("Start, settings and Start again commute with a friend's concurrent changes; real conflicts stay", async () => {
+	const f = await fixture()
+	await f.send({ type: "rename", nickname: "Host" })
+	await f.send({ type: "set_services", serviceIds: [1] })
+	// The host's view is read before the friend saves services and adds an idea.
+	const stale = await f.service.read(f.id, f.a.credential)
+	await f.send({ type: "set_services", serviceIds: [2] }, f.b)
+	await f.send({ type: "configure", expectedContextVersion: stale.shared.contextVersion, constraints: { kinds: ["movie"], maxMinutes: null, moods: [] } })
+	const started = await f.send({
+		type: "start",
+		expectedContextVersion: stale.shared.contextVersion,
+		expectedRosterVersion: stale.shared.rosterVersion,
+		hostReady: true
+	})
+	assert.equal(started.snapshot.shared.phase, "choosing", "Start never fails on an unrelated settings change")
+	const card = started.snapshot.shared.candidates[0].id
+	// A vote for the previous round is a real conflict.
+	await assert.rejects(
+		f.send({ type: "vote", generation: started.snapshot.shared.generation - 1, candidateId: card, expectedVoteRevision: 0, value: "watch" }, f.b),
+		(e: { code?: string }) => e.code === "conflict"
+	)
+	const before = await f.service.read(f.id, f.a.credential)
+	await f.send({ type: "vote", generation: before.shared.generation, candidateId: card, expectedVoteRevision: 0, value: "watch" }, f.b)
+	const again = await f.send({ type: "restart", expectedRevision: before.shared.revision })
+	assert.equal(again.snapshot.shared.phase, "setup", "Start again commutes with a friend's vote")
+})
+
+test("two tabs on one session: a sequence the other tab took doesn't refuse a new command; a reused id with other content does", async () => {
+	const f = await fixture()
+	const s = await f.service.read(f.id, f.b.credential)
+	const sequence = s.own.nextSequence
+	const first = { commandId: randomUUID(), sequence, command: { type: "set_services" as const, serviceIds: [1] } }
+	await f.service.command(f.id, f.b.credential, first)
+	const second = await f.service.command(f.id, f.b.credential, { commandId: randomUUID(), sequence, command: { type: "rename", nickname: "Friendly" } })
+	assert.equal(second.receipt.sequence, sequence + 1, "the second tab's command takes the next sequence")
+	assert.equal(second.snapshot.shared.participants.find((p) => p.participantId === s.own.participantId)?.nickname, "Friendly")
+	const replay = await f.service.command(f.id, f.b.credential, first)
+	assert.equal(replay.receipt.replayed, true, "an exact retry still replays")
+	await assert.rejects(
+		f.service.command(f.id, f.b.credential, { ...first, command: { type: "set_services", serviceIds: [2] } }),
+		(e: { code?: string }) => e.code === "conflict"
+	)
+})

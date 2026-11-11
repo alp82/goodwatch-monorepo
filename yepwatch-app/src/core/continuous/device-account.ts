@@ -109,8 +109,9 @@ export function createDeviceAccount(deps: DeviceAccountDeps) {
       const before = deps.cache.get();
       deps.cache.set(guestAccount);
       epoch.advance();
+      let result: unknown;
       try {
-        await deps.api.accountLogout(await store.readSession());
+        result = await deps.api.accountLogout(await store.readSession());
         await store.clearSession();
         await store.forgetMemberName();
         deps.hint.forget();
@@ -121,6 +122,7 @@ export function createDeviceAccount(deps: DeviceAccountDeps) {
         epoch.advance();
       }
       deps.bump();
+      return result;
     },
   };
 }

@@ -17,7 +17,7 @@ import { RoomFailure } from '../../core/continuous/api';
 import type { CachedRoom } from '../../core/continuous/state';
 import { appInviteUrl } from '../../core/invites';
 import { guestOnly } from '../../core/config';
-import { useLate } from '../../core/useLate';
+import { useConnectionWords } from '../../core/continuous/connection-words';
 import { deviceCountryHint } from '../../core/lobby';
 import { queryClient } from '../../core/providers';
 import { readSeenIdeas, writeSeenIdeas } from '../../core/continuous/room-local';
@@ -34,7 +34,6 @@ const COUNTRY_TRIES = 5;
 const COUNTRY_RETRY_MS = 1200;
 
 /** Opening a room connects within a moment; only a connection that stays away is worth a line. */
-const CONNECTION_QUIET_MS = 2_500;
 
 /** The room's sheets: Room (its menu), Your services, Streaming, Movies and shows, People. */
 export const ROOM_SHEETS = ['room', 'services', 'streaming', 'kinds', 'people'] as const;
@@ -65,7 +64,8 @@ export interface RoomContextValue {
   linkFailed: boolean;
   retryLink: () => void;
   /** The live connection has been missing long enough to mention. */
-  connectionLate: boolean;
+  /** The connection line ('' for none): see core/continuous/connection-words.ts. */
+  connectionWords: string;
   notice: string;
   setNotice: (text: string) => void;
   dismissedProposal: number | null;
@@ -102,7 +102,11 @@ export function useRoom() {
 
 export function RoomProvider(props: { id: string; children: ReactNode; renderSheet: (sheet: RoomSheet) => ReactNode }) {
   const account = useAccount();
-  return <RoomProviderContent key={account.generation} {...props} />;
+  // A new sign-in starts the room afresh. Log out doesn't: this device keeps its place as a guest, so the
+  // room, its open sheet and its connection stay as they are.
+  const signedIn = useRef(account.generation);
+  if (account.member) signedIn.current = account.generation;
+  return <RoomProviderContent key={signedIn.current} {...props} />;
 }
 
 function RoomProviderContent({ id, children, renderSheet }: { id: string; children: ReactNode; renderSheet: (sheet: RoomSheet) => ReactNode }) {
@@ -181,9 +185,9 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const snapshot = useMemo(() => (display ? previewDrafts(display, saves.saving) : undefined), [display, saves.saving]);
   const view = useMemo(() => (snapshot ? roomView(snapshot, seenIdeas) : null), [snapshot, seenIdeas]);
 
-  // Offline has its own line. Back online or back in front (a hidden page reads as background), the quiet
-  // period starts again while the channel reconnects: a quick return shows no connection words.
-  const connectionLate = useLate(!state.offline && !['live', 'polling', 'background'].includes(state.connection), CONNECTION_QUIET_MS);
+  // One rule for every connection word (core/continuous/connection-words.ts): nothing for a short outage,
+  // then one small line. A hidden page reads as background, so a quick return shows nothing.
+  const connectionWords = useConnectionWords({ offline: state.offline, connection: state.connection, pending: Boolean(state.pending) });
   const nickname = view?.me.nickname;
   const expiresAt = snapshot?.shared.expiresAt;
   useEffect(() => {
@@ -311,7 +315,7 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   let inviteUrl: string | null = null;
   try { inviteUrl = invite ? appInviteUrl(invite.path) : null; } catch { inviteUrl = null; }
   const value: RoomContextValue = {
-    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, memberLapsed: account.lapsed, linkFailed: linkFailed && wantsLink, retryLink, connectionLate, notice: notice || account.error, setNotice,
+    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, memberLapsed: account.lapsed, linkFailed: linkFailed && wantsLink, retryLink, connectionWords, notice: notice || account.error, setNotice,
     dismissedProposal, dismissProposal, reopenProposal, setActivityView: state.setView, saves, acknowledgeIdeas,
     leaving, sheet: sheets.at(-1) ?? null, openSheet, closeSheet, closeSheets, renderSheet, openRoom,
   };

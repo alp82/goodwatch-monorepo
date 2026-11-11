@@ -42,39 +42,32 @@ export function RoomStatus() {
   );
 }
 
-/** Connection, saved actions and errors, in one quiet line floating over the screen's content. */
+/** Connection, refusals and notices, in one quiet line floating over the screen's content. */
 export function RoomNotes() {
   const focused = useIsFocused();
-  const { view, state, entry, notice, setNotice, connectionLate, sheet, openSheet, linkFailed, retryLink } = useRoom();
-  const any = Boolean(state.error || state.privateError || entry.error || state.pending || state.offline || connectionLate || notice || linkFailed || developmentNotice);
+  const { view, state, entry, notice, setNotice, connectionWords, sheet, openSheet, linkFailed, retryLink } = useRoom();
   // Nobody brings a service (or the last one would go): ask for services, not an error.
   const noServices = state.errorCode === 'needs_context' && !state.pending;
   const ideaLimit = state.errorCode === 'limit_reached' && !state.pending;
-  function connectionText() {
-    if (!connectionLate) return '';
-    if (state.reconnecting) return state.connection === 'connecting' ? 'Connecting…' : 'Reconnecting…';
-    if (state.reconnectSeconds > 0) return `Trying again in ${state.reconnectSeconds} s`;
-    return state.connection === 'unavailable' ? 'Not connected.' : 'Connecting…';
-  }
-  // No network at all: one calm line. Actions stay saved and go by themselves when it's back.
-  const text = !any ? '' : state.offline ? (state.pending ? 'You’re offline. Your action is saved and goes when you’re back.' : 'You’re offline.')
-    : state.retrySeconds > 0 ? `Try again in ${state.retrySeconds}s. Your action is saved.`
+  // A saved action waits quietly: it shows at once and goes by itself. Only an outage past the quiet
+  // period says anything, in one line without a countdown (connection-words.ts). Offline says only that.
+  const text = state.offline ? connectionWords
     : notice || entry.error || (state.privateError ? 'Refresh to keep choosing.'
-      : state.pending ? 'Your choice is awaiting confirmation.'
       : noServices ? 'Pick a streaming service'
       : ideaLimit ? ((view?.ideas.length ?? 0) >= IDEA_LIMITS.perRoom ? `Up to ${IDEA_LIMITS.perRoom} ideas. Remove one first.` : 'No more new ideas in this room')
-      : state.error || connectionText() || (linkFailed ? 'Couldn’t connect GoodWatch to this room.' : ''));
-  // Only the connection line itself spins; saved actions and errors keep their own words.
-  const spinning = state.reconnecting && text === connectionText();
+      : state.error || connectionWords || (linkFailed ? 'Couldn’t connect GoodWatch to this room.' : ''));
+  const connectionLine = Boolean(text) && text === connectionWords;
   const linkLine = linkFailed && text === 'Couldn’t connect GoodWatch to this room.';
-  const label = linkLine ? 'Retry' : state.retrySeconds > 0 ? `Retry in ${state.retrySeconds}s` : state.pending ? 'Retry' : entry.error ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';
-  const note: FrameNote | null = focused && any && (text || developmentNotice) ? {
+  const label = linkLine || entry.error || (connectionLine && state.pending) ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';
+  const note: FrameNote | null = focused && (text || developmentNotice) ? {
     text,
     detail: developmentNotice || undefined,
-    busy: spinning,
+    busy: connectionLine && !state.offline,
+    // Refresh (or Retry for a saved action) tries at once; the line never counts down.
     action: state.offline ? undefined : {
       label,
-      disabled: state.busy || state.retrySeconds > 0 || spinning,
+      // A server's pause disables Retry without a countdown.
+      disabled: state.busy || state.retrySeconds > 0,
       onPress: () => {
         setNotice('');
         if (linkLine) retryLink();
