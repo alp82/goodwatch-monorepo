@@ -770,3 +770,20 @@ test("Start, settings and Start again commute with a friend's concurrent changes
 	const again = await f.send({ type: "restart", expectedRevision: before.shared.revision })
 	assert.equal(again.snapshot.shared.phase, "setup", "Start again commutes with a friend's vote")
 })
+
+test("two tabs on one session: a sequence the other tab took doesn't refuse a new command; a reused id with other content does", async () => {
+	const f = await fixture()
+	const s = await f.service.read(f.id, f.b.credential)
+	const sequence = s.own.nextSequence
+	const first = { commandId: randomUUID(), sequence, command: { type: "set_services" as const, serviceIds: [1] } }
+	await f.service.command(f.id, f.b.credential, first)
+	const second = await f.service.command(f.id, f.b.credential, { commandId: randomUUID(), sequence, command: { type: "rename", nickname: "Friendly" } })
+	assert.equal(second.receipt.sequence, sequence + 1, "the second tab's command takes the next sequence")
+	assert.equal(second.snapshot.shared.participants.find((p) => p.participantId === s.own.participantId)?.nickname, "Friendly")
+	const replay = await f.service.command(f.id, f.b.credential, first)
+	assert.equal(replay.receipt.replayed, true, "an exact retry still replays")
+	await assert.rejects(
+		f.service.command(f.id, f.b.credential, { ...first, command: { type: "set_services", serviceIds: [2] } }),
+		(e: { code?: string }) => e.code === "conflict"
+	)
+})

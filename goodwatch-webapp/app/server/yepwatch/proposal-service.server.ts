@@ -621,26 +621,10 @@ export class ProposalService {
 			for (let attempt = 0; attempt < 6; attempt++) {
 				const old = await this.get(id),
 					p = this.auth(old.room, credential)
-				const receipt = this.commandState(p, credential).receipts.find(
-					(r) =>
-						r.commandId === envelope.commandId ||
-						r.sequence === envelope.sequence
-				)
-				if (receipt) {
-					requireRoom(
-						receipt.digest === digest,
-						"conflict",
-						"Command ID/sequence reused"
-					)
-					return {
-						commandId: receipt.commandId,
-						sequence: receipt.sequence,
-						appliedRevision: receipt.revision,
-						replayed: true
-					}
-				}
+				const slot = this.sequenceSlot(p, credential, envelope, digest)
+				if ("replayed" in slot) return slot
 				requireRoom(
-					this.commandState(p, credential).nextSequence === envelope.sequence,
+					this.commandState(p, credential).nextSequence === slot.sequence,
 					"conflict",
 					"Commands must be sent in order"
 				)
@@ -674,31 +658,17 @@ export class ProposalService {
 				credential,
 				envelope.command.type === "leave"
 			)
-			const receipt = this.commandState(p, credential).receipts.find(
-				(r) =>
-					r.commandId === envelope.commandId || r.sequence === envelope.sequence
-			)
-			if (receipt) {
-				requireRoom(
-					receipt.digest === digest,
-					"conflict",
-					"Command ID/sequence reused"
-				)
-				return {
-					commandId: receipt.commandId,
-					sequence: receipt.sequence,
-					appliedRevision: receipt.revision,
-					replayed: true
-				}
-			}
+			const slot = this.sequenceSlot(p, credential, envelope, digest)
+			if ("replayed" in slot) return slot
+			const sequence = slot.sequence
 			requireRoom(
-				envelope.sequence >= this.commandState(p, credential).nextSequence,
+				sequence >= this.commandState(p, credential).nextSequence,
 				"outcome_unknown",
 				"Receipt no longer retained; reconcile current state",
 				503
 			)
 			requireRoom(
-				envelope.sequence === this.commandState(p, credential).nextSequence,
+				sequence === this.commandState(p, credential).nextSequence,
 				"conflict",
 				"Commands must be sent in order"
 			)
@@ -824,7 +794,7 @@ export class ProposalService {
 			commandState.nextSequence++
 			commandState.receipts.push({
 				commandId: envelope.commandId,
-				sequence: envelope.sequence,
+				sequence,
 				digest,
 				revision: room.revision
 			})
@@ -838,7 +808,7 @@ export class ProposalService {
 			}
 			return {
 				commandId: envelope.commandId,
-				sequence: envelope.sequence,
+				sequence,
 				appliedRevision: room.revision,
 				replayed: false
 			}
@@ -849,6 +819,26 @@ export class ProposalService {
 			503,
 			true
 		)
+	}
+	/**
+	 * A command already applied replays its receipt. A sequence another command already took on this session
+	 * (a second tab of the same browser shares it) doesn't refuse this one: a command id never seen before is
+	 * a new command, so it takes the next sequence. A reused command id with other content stays a conflict.
+	 */
+	private sequenceSlot(
+		p: ProposalParticipant,
+		credential: ActorCredential,
+		envelope: CommandEnvelope,
+		digest: string
+	): CommandResult["receipt"] | { sequence: number } {
+		const state = this.commandState(p, credential)
+		const own = state.receipts.find((r) => r.commandId === envelope.commandId)
+		if (own) {
+			requireRoom(own.digest === digest, "conflict", "Command ID/sequence reused")
+			return { commandId: own.commandId, sequence: own.sequence, appliedRevision: own.revision, replayed: true }
+		}
+		const taken = state.receipts.some((r) => r.sequence === envelope.sequence)
+		return { sequence: taken ? state.nextSequence : envelope.sequence }
 	}
 	private commandState(p: ProposalParticipant, credential: ActorCredential) {
 		return (p.sessions ?? []).find((s) => s.id === credential.sessionId) ?? p;
