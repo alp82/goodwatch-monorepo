@@ -6,7 +6,6 @@
  */
 import { Platform, Text, View, type ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { BootReveal } from '../home/BootReveal';
 import { GetTheApp, installable } from '../home/install';
 import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { useGlide } from './glide';
@@ -41,19 +40,16 @@ export interface AppHeaderProps {
   profileQuiet?: boolean;
 }
 
-/**
- * The header wordmark. During the startup dissolve it appears after the boot word is gone (header
- * role), so the two never share the screen.
- */
+/** The header wordmark. */
 export function BrandMark({ size }: { size: number }) {
   const font = { fontFamily: 'GabaritoBold', fontSize: size, lineHeight: size * 1.2, letterSpacing: (-0.8 * size) / 64, color: glow.ink } as const;
   const web = Platform.OS === 'web' ? ({ dataSet: { homeBrand: '' } } as object) : {};
   return (
-    <BootReveal part="header" index={0} {...web} accessibilityLabel="YepWatch" style={{ flexDirection: 'row', alignSelf: 'center' }}>
+    <View {...web} accessibilityLabel="YepWatch" style={{ flexDirection: 'row', alignSelf: 'center' }}>
       <Text style={font}>Y</Text>
       <Text style={font}>ep</Text>
       <Text style={[font, { color: glow.amber }]}>Watch</Text>
-    </BootReveal>
+    </View>
   );
 }
 
@@ -102,8 +98,8 @@ export function AppHeader({ back, onLogo, logoLabel = 'Your rooms', pill, onPill
     <Press label="Back" onPress={back} style={grow(Math.max(44, z(40)), Math.max(44, z(40)))}
       visual={{ width: Math.max(44, z(40)), height: Math.max(44, z(40)), borderRadius: R.control, backgroundColor: '#ffffff0a', alignItems: 'center', justifyContent: 'center' }}><Icon name="left" size={z(20)} color={glow.soft} /></Press>
   ) : null;
-  const pillEl = pill ? <BootReveal part="header" index={1} style={{ flexShrink: 1, minWidth: 0 }}><RoomPill pill={pill} onPress={onPill} /></BootReveal> : null;
-  const profile = <BootReveal part="header" index={1}><ProfileButton me={me} onPress={onProfile} quiet={profileQuiet} /></BootReveal>;
+  const pillEl = pill ? <View style={{ flexShrink: 1, minWidth: 0 }}><RoomPill pill={pill} onPress={onPill} /></View> : null;
+  const profile = <ProfileButton me={me} onPress={onProfile} quiet={profileQuiet} />;
   return (
     <View testID="app-header" style={{ height: header, zIndex: 30, borderBottomWidth: 1, borderBottomColor: warm.line, backgroundColor: warm.bar, paddingHorizontal: phone ? gutter - 4 : gutter, ...(Platform.OS === 'web' ? { backdropFilter: 'blur(14px)' } : null) } as ViewStyle}>
       {phone ? (

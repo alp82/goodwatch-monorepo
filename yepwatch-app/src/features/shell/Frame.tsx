@@ -8,7 +8,6 @@ import { useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BootReveal } from '../home/BootReveal';
 import { Backdrop } from '../glow/Backdrop';
 import { EdgeBack } from '../glow/EdgeBack';
 import { glow } from '../glow/theme';
@@ -102,7 +101,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
   return (
     <NoteLayerProvider slot={notes.slot}>
     <View testID={testID} style={{ flex: 1, backgroundColor: glow.bg }}>
-      <BootReveal part="backdrop" pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></BootReveal>
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></View>
       {backdrop}
       {/* An open sheet is modal: the header behind it is out of reach for touch, focus and screen readers,
           and a tap on it closes the sheet (as a tap on the shade does), so its Back still closes the sheet first. */}

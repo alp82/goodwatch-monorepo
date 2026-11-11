@@ -114,14 +114,14 @@ export function Entrance({ invite, open: request, from }: {
     const timer = setTimeout(() => setJustArchived(null), UNDO_ARCHIVE_MS);
     return () => clearTimeout(timer);
   }, [justArchived]);
-  // An invitation's page is ready once its room preview is in and the membership check is done, so the join
-  // page appears whole (never with a placeholder head) as the startup word dissolves.
-  const pageReady = home.ready && home.settled && !restoring && (invite ? preview !== undefined && !checkingInvite : !home.loadingRooms);
-  useEffect(() => { if (pageReady) markPageReady(); }, [pageReady, markPageReady]);
-  // Already in the invited room: it opens once the startup word is leaving, never behind it (the room's
-  // reads and card clocks don't start while the word still covers the page).
+  // Already in the invited room: it opens straight away. At startup that happens under the cover, so the
+  // join page never shows on the way; the room's own page ends the startup.
   const [memberOf, setMemberOf] = useState<string | null>(null);
-  useEffect(() => { if (memberOf && boot !== 'boot') router.replace({ pathname: '/room/[id]', params: { id: memberOf } }); }, [memberOf, boot]);
+  useEffect(() => { if (memberOf) router.replace({ pathname: '/room/[id]', params: { id: memberOf } }); }, [memberOf]);
+  // An invitation's page is ready once its room preview is in and the membership check is done, so the join
+  // page appears whole (never with a placeholder head) as the startup cover dissolves.
+  const pageReady = home.ready && home.settled && !restoring && (invite ? preview !== undefined && !checkingInvite && !memberOf : !home.loadingRooms);
+  useEffect(() => { if (pageReady) markPageReady(invite ? `invite:${invite}` : 'home'); }, [pageReady, markPageReady, invite]);
   // Back from GoodWatch: the cover lifts once the page is whole, with the account already in it.
   useEffect(() => { if (home.ready && !restoring && account.ready) memberTransition.arrived(); }, [home.ready, restoring, account.ready]);
   useFocusEffect(useCallback(() => {

@@ -7,7 +7,6 @@
 import { useContext } from 'react';
 import { View } from 'react-native';
 import { BootPhase } from './boot-phase';
-import { BootReveal } from './BootReveal';
 import { IntroFilm } from './IntroFilm';
 import { QrCard, StoreButton, installable, stores } from './install';
 import { Headline, Or, Tiles, type TileActions } from './start-parts';
@@ -81,7 +80,7 @@ export function StartSignIn({ signIn, signingIn, lapsed, disabled, quiet, height
 export function Landing(actions: LandingActions) {
   const phase = useContext(BootPhase);
   const { wide, phone, width, max, z } = useLayout();
-  // The film starts as the page appears, not behind the boot word.
+  // The film starts as the page appears, not behind the startup cover.
   const obscured = phase === 'boot';
   const signIn = actions.signIn ? <StartSignIn height={z(54)} signIn={actions.signIn} signingIn={actions.signingIn} lapsed={actions.lapsed} disabled={actions.disabled} quiet={actions.quiet} /> : null;
   if (wide) {
@@ -91,30 +90,30 @@ export function Landing(actions: LandingActions) {
     return (
       <View testID="landing" style={{ flexDirection: 'row', gap, alignItems: 'flex-start' }}>
         <View style={{ flex: 1, gap: z(32), paddingTop: z(8) }}>
-          <BootReveal index={0}><Headline size={z(60)} /></BootReveal>
-          <BootReveal index={1}><Tiles {...actions} height={z(200)} /></BootReveal>
-          {signIn ? <BootReveal index={2}>{signIn}</BootReveal> : null}
+          <Headline size={z(60)} />
+          <Tiles {...actions} height={z(200)} />
+          {signIn}
         </View>
         <View style={{ flex: 1, gap: z(28), alignItems: 'center' }}>
-          <BootReveal index={1} style={{ alignSelf: 'stretch' }}><IntroFilm obscured={obscured} height={col * 0.56} width={col} /></BootReveal>
-          {installable ? <BootReveal index={3} style={{ flexDirection: 'row', gap: z(16), justifyContent: 'center' }}>{stores.map((st) => <QrCard key={st.platform} store={st} width={qr} />)}</BootReveal> : null}
+          <View style={{ alignSelf: 'stretch' }}><IntroFilm obscured={obscured} height={col * 0.56} width={col} /></View>
+          {installable ? <View style={{ flexDirection: 'row', gap: z(16), justifyContent: 'center' }}>{stores.map((st) => <QrCard key={st.platform} store={st} width={qr} />)}</View> : null}
         </View>
       </View>
     );
   }
   return (
     <View testID="landing" style={{ gap: phone ? 20 : 28 }}>
-      <BootReveal index={0}><Headline size={phone ? (width < 360 ? 30 : 36) : 52} /></BootReveal>
-      <BootReveal index={1}><IntroFilm obscured={obscured} height={phone ? 200 : 300} width={max} /></BootReveal>
-      <BootReveal index={2}><Tiles {...actions} height={phone ? 128 : 180} /></BootReveal>
-      {signIn ? <BootReveal index={3}>{signIn}</BootReveal> : null}
+      <Headline size={phone ? (width < 360 ? 30 : 36) : 52} />
+      <IntroFilm obscured={obscured} height={phone ? 200 : 300} width={max} />
+      <Tiles {...actions} height={phone ? 128 : 180} />
+      {signIn}
       {installable && phone ? (
-        <BootReveal index={4} style={{ gap: 20 }}>
+        <View style={{ gap: 20 }}>
           <Or />
           <View style={{ flexDirection: 'row', gap: 10 }}>{stores.map((st) => <StoreButton key={st.platform} store={st} />)}</View>
-        </BootReveal>
+        </View>
       ) : installable ? (
-        <BootReveal index={4} style={{ flexDirection: 'row', gap: 16, justifyContent: 'center' }}>{stores.map((st) => <QrCard key={st.platform} store={st} width={Math.min(220, (max - 16) / 2)} />)}</BootReveal>
+        <View style={{ flexDirection: 'row', gap: 16, justifyContent: 'center' }}>{stores.map((st) => <QrCard key={st.platform} store={st} width={Math.min(220, (max - 16) / 2)} />)}</View>
       ) : null}
     </View>
   );

@@ -10,5 +10,5 @@ export async function eraseDevice(roomIds: string[]) {
       ...(access?.sessionKey ? [`yepwatch.v3.pending.${safe(`${id}.${access.sessionKey}`)}`] : [])]) await SecureStore.deleteItemAsync(key);
   }
   await SecureStore.deleteItemAsync(`yepwatch.v3.admission.${await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, '')}`);
-  for (const key of ['yepwatch.recent-room', 'yepwatch.v2.member-intent', 'yepwatch.v3.account-intent', 'yepwatch.v3.member-session', 'yepwatch.v3.member-name']) await SecureStore.deleteItemAsync(key);
+  for (const key of ['yepwatch.recent-room', 'yepwatch.v3.front-room', 'yepwatch.v2.member-intent', 'yepwatch.v3.account-intent', 'yepwatch.v3.member-session', 'yepwatch.v3.member-name']) await SecureStore.deleteItemAsync(key);
 }
