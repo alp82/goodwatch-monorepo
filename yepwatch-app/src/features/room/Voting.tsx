@@ -4,7 +4,7 @@
  * no card count: the deck refills in the background, and an empty deck shows "Finding more…",
  * never an end.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { fixturesEnabled } from '../../core/config';
@@ -49,7 +49,7 @@ const pinnedLook = () => (fixturesEnabled && Platform.OS === 'web' && typeof win
 function VoteKey({ yes, disabled, onPress }: { yes: boolean; disabled: boolean; onPress: () => void }) {
   const { z } = useLayout();
   return (
-    <Press label={yes ? 'Yep' : 'Nope'} disabled={disabled} onPress={onPress}
+    <Press label={yes ? 'Yep' : 'Nope'} disabled={disabled} onPress={onPress} repeatable
       style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(54), borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', gap: 9, backgroundColor: yes ? glow.amber : '#ef44440f', borderWidth: 1, borderColor: yes ? glow.amber : '#ef444440' }}>
       <Icon name={yes ? 'check' : 'close'} size={18} color={yes ? warm.ink : '#f87171'} />
       <GText bold size={z(17)} color={yes ? warm.ink : glow.ink} lines={1}>{yes ? 'Yep' : 'Nope'}</GText>
@@ -96,8 +96,16 @@ export function Voting() {
   /** The trailer playing inside the details' hero. */
   const [detailsTrailer, setDetailsTrailer] = useState(false);
   const trailerOpen = panel === 'trailer' || (panel === 'details' && detailsTrailer);
-  // First paint before the stage is measured: a close guess from the window.
-  const [area, setArea] = useState(() => ({ width: phone ? layout.width - 32 : layout.max, height: Math.max(200, layout.height - layout.header - (phone ? 180 : z(190))) }));
+  // The card is placed from the stage's measured size; it isn't drawn before that (a guess would move it).
+  const [area, setArea] = useState<{ width: number; height: number } | null>(null);
+  const stageBox = useRef<React.ComponentRef<typeof View>>(null);
+  const ready = Boolean(snapshot && view);
+  // The web measures before the first paint, so the first card is drawn where it stays.
+  useLayoutEffect(() => {
+    const el = stageBox.current as unknown as HTMLElement | null;
+    if (Platform.OS !== 'web' || !el || typeof el.offsetWidth !== 'number') return;
+    if (el.offsetWidth > 0 && el.offsetHeight > 0) setArea((a) => (a && a.width === el.offsetWidth && a.height === el.offsetHeight ? a : { width: el.offsetWidth, height: el.offsetHeight }));
+  }, [ready]);
   const [focused, setFocused] = useState(true);
   const [localReaction, setLocalReaction] = useState<Reaction>({ at: 0 });
   const [dealer] = useState(() => new LookDealer(Math.random, pinnedLook()));
@@ -142,18 +150,19 @@ export function Voting() {
     if (made && matched && view.people.length > 1) setMoment({ key: matchKey(made), title: titlePresentation(matched), look: made.look });
   }
   const nextCard = nextCandidate(snapshot, card?.id);
-  const geo = stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z });
-  const rowWidth = Math.min(area.width, Math.max(geo.w, 320));
+  const geo = area ? stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z }) : null;
+  const rowWidth = area && geo ? Math.min(area.width, Math.max(geo.w, 320)) : phone ? layout.width - 32 : layout.max;
   const activity = state.connection === 'live'
     ? groupActivity(new Map([...state.activities].filter(([, a]) => shared.participants.some((p) => p.participantId === a.frame.participantId && !p.dropped))), state.activityNow())
     : new Map();
   const undoTarget = latestRetainedVote(snapshot);
-  function choose(yes: boolean): Promise<boolean> {
-    if (!card || !answering || !look) return Promise.resolve(false);
+  /** Sent the moment it's pressed, for the card it was aimed at; the fly-off plays meanwhile. */
+  function choose(yes: boolean, key: string): Promise<boolean> {
+    if (!card || !answering || !look || !snapshot || key !== `${snapshot.shared.generation}:${card.id}`) return Promise.resolve(false);
     setLocalReaction(reaction({ answer: yes }));
     state.activity(undefined, 'answer');
     const sent = cmd.vote(card.id, yes, activeTime());
-    if (!yes || !snapshot) return sent;
+    if (!yes) return sent;
     // Remembered until the room confirms it; a refused one is forgotten.
     const record = yepRecord(++yepSerial.current, snapshot, card.id, look);
     setYeps((list) => [...list, record]);
@@ -191,9 +200,9 @@ export function Voting() {
         </Press>
       </View>
       {/* A page on top hides this one (zero size on the web): keep the last real size. */}
-      <View onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) setArea({ width, height }); }}
+      <View ref={stageBox} onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) setArea((a) => (a && a.width === width && a.height === height ? a : { width, height })); }}
         style={{ flex: 1, minHeight: 80, zIndex: 2 }}>
-        <VoteStage geo={geo} controls={controls} reduced={reduced} disabled={!answering} keys={focused && !panel && answering}
+        {geo ? <VoteStage geo={geo} controls={controls} reduced={reduced} disabled={!answering} keys={focused && !panel && answering}
           card={card && title && look ? { key: `${shared.generation}:${card.id}`, title, look } : null}
           next={nextCard ? titlePresentation(nextCard) : null}
           empty={<FindingMore style={{ flex: 1 }} />}
@@ -210,7 +219,7 @@ export function Voting() {
               pointerAt.current = Date.now();
               setLocalReaction(reaction({ gesture: pointer.pressed ? 'reach' : 'handle' }));
             }
-          }} />
+          }} /> : null}
       </View>
     </Screen>
   );

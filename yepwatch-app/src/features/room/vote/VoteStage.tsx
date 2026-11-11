@@ -39,6 +39,15 @@ export interface VoteStageControls {
   /** Fly the card as the buttons and arrow keys do: lean past the threshold, hold, fly. */
   commit: (yes: boolean) => void;
 }
+/** An answered card still flying off the stage. The answer went out when it was pressed. */
+interface Flight {
+  id: number;
+  card: StageCard;
+  answer: boolean;
+  fromDrag: boolean;
+  /** Its streaming logos, as they were when it was answered. */
+  services?: ReactNode;
+}
 
 export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, activity, services, moment, controls, onVote, onDetails, onTrailer, onGesture, onPointer, onMomentEnd }: {
   geo: StageGeometry;
@@ -55,8 +64,8 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
   services?: ReactNode;
   moment: MatchMoment | null;
   controls: RefObject<VoteStageControls | null>;
-  /** Sends the vote; false when it didn't go out (the card comes back). */
-  onVote: (yes: boolean) => Promise<boolean>;
+  /** Sends the vote on the card with this key at once; false when it didn't go out. */
+  onVote: (yes: boolean, key: string) => Promise<boolean>;
   onDetails: () => void;
   onTrailer: () => void;
   onGesture: (phase: GesturePhase) => void;
@@ -82,25 +91,32 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
    * runs only then; at rest the card is just the card.
    */
   const [engaged, setEngaged] = useState(false);
+  /**
+   * Answered cards flying off, in the order they were answered. Each answer is sent the moment it is
+   * pressed; the stage plays one fly-off after another, and `card` (the next unanswered one) becomes
+   * the top card once they are done. A press during a fly-off answers the card underneath.
+   */
+  const [flights, setFlights] = useState<readonly Flight[]>([]);
+  const flightsRef = useRef<readonly Flight[]>([]);
+  const flightSerial = useRef(0);
+  /** The flight whose animation runs (started from the press, or after the one before it). */
+  const flying = useRef<number | null>(null);
+  /** The last flight just left: its look keeps fading over the next card. */
+  const landed = useRef(false);
+  /** A fly-off is playing (no drags meanwhile; presses queue up behind it). */
   const busy = useRef(false);
-  const cardKey = useRef(card?.key);
+  const setQueue = (next: readonly Flight[]) => {
+    flightsRef.current = next;
+    busy.current = next.length > 0;
+    setFlights(next);
+  };
 
-  const stageLook = fading?.look ?? card?.look ?? null;
-  const stagePoster = fading ? fading.posterUrl : card?.title.posterUrl ?? null;
-
-  // A new card starts clean. The look of a card this device just answered keeps fading on the stage.
-  useLayoutEffect(() => {
-    cardKey.current = card?.key;
-    x.stopAnimation();
-    y.stopAnimation();
-    x.setValue(0);
-    y.setValue(0);
-    if (!busy.current) {
-      v.stopAnimation();
-      v.setValue(0);
-    }
-    busy.current = false;
-  }, [card?.key, x, y, v]);
+  const head = flights[0] ?? null;
+  const top: StageCard | null = head ? head.card : card;
+  const under: GlowTitle | null = head ? (flights[1]?.card.title ?? card?.title ?? null) : next;
+  const topKey = head ? `f:${head.id}` : `c:${card?.key ?? ''}`;
+  const stageLook = fading?.look ?? top?.look ?? null;
+  const stagePoster = fading ? fading.posterUrl : top?.title.posterUrl ?? null;
 
   const loops = !reduced && ((engaged && stageLook !== null && LOOPING.includes(stageLook)) || (moment !== null && LOOPING.includes(moment.look)));
   useEffect(() => {
@@ -165,62 +181,89 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
       Animated.spring(v, { toValue: 0, friction: 7, tension: 90, overshootClamping: true, useNativeDriver: driver }),
     ]).start(({ finished }) => { if (finished) rest(); });
   };
-  const commit = (answer: boolean, fromDrag = false) => {
-    if (busy.current || disabled || !card) {
-      if (fromDrag) settle();
+  /** The flight left the stage: the next one (or the current card) takes its place, its look fades. */
+  const land = (f: Flight) => {
+    if (flightsRef.current[0]?.id !== f.id) return;
+    flying.current = null;
+    landed.current = true;
+    setFading({ look: f.card.look, posterUrl: f.card.title.posterUrl });
+    setQueue(flightsRef.current.slice(1));
+    if (reduced) {
+      v.setValue(0);
+      setFading(null);
+      if (!busy.current) setEngaged(false);
       return;
     }
-    busy.current = true;
+    Animated.sequence([
+      Animated.delay(260),
+      Animated.timing(v, { toValue: 0, duration: 340, easing: Easing.out(Easing.quad), useNativeDriver: driver }),
+    ]).start(() => { setFading(null); rest(); });
+  };
+  const fly = (f: Flight) => {
+    flying.current = f.id;
     engage();
     playFeedback('swipe');
-    const s = answer ? 1 : -1;
-    const committed = { key: card.key, look: card.look, posterUrl: card.title.posterUrl };
-    const done = () => {
-      setFading({ look: committed.look, posterUrl: committed.posterUrl });
-      if (reduced) {
-        v.setValue(0);
-        setFading(null);
-        setEngaged(false);
-      } else {
-        Animated.sequence([
-          Animated.delay(260),
-          Animated.timing(v, { toValue: 0, duration: 340, easing: Easing.out(Easing.quad), useNativeDriver: driver }),
-        ]).start(() => { setFading(null); rest(); });
-      }
-      void onVote(answer).then((sent) => {
-        // The vote didn't go out and the card is still here: bring it back.
-        if (sent || cardKey.current !== committed.key) return;
-        busy.current = false;
-        setFading(null);
-        settle();
-      });
-    };
+    const s = f.answer ? 1 : -1;
     if (reduced) {
       // Keep the answered card out of sight until the next one replaces it.
       x.setValue(s * off);
       v.setValue(s);
-      done();
+      land(f);
       return;
     }
-    const fly = (ms: number) => Animated.timing(x, { toValue: s * off, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: driver });
-    const move = fromDrag ? fly(300) : Animated.sequence([
+    const out = (ms: number) => Animated.timing(x, { toValue: s * off, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: driver });
+    const move = f.fromDrag ? out(300) : Animated.sequence([
       Animated.timing(x, { toValue: s * threshold * 1.25, duration: 160, easing: Easing.out(Easing.cubic), useNativeDriver: driver }),
       Animated.delay(200),
-      fly(260),
+      out(260),
     ]);
     Animated.parallel([
       move,
-      Animated.timing(v, { toValue: s, duration: fromDrag ? 80 : 160, easing: Easing.out(Easing.cubic), useNativeDriver: driver }),
+      Animated.timing(v, { toValue: s, duration: f.fromDrag ? 80 : 160, easing: Easing.out(Easing.cubic), useNativeDriver: driver }),
       Animated.sequence([
-        Animated.delay(fromDrag ? 0 : 140),
+        Animated.delay(f.fromDrag ? 0 : 140),
         Animated.timing(punch, { toValue: 1, duration: 130, easing: Easing.out(Easing.cubic), useNativeDriver: driver }),
         Animated.timing(punch, { toValue: 0, duration: 300, easing: Easing.inOut(Easing.quad), useNativeDriver: driver }),
       ]),
-    ]).start(({ finished }) => {
-      if (finished && cardKey.current === committed.key) done();
-      else if (!finished) busy.current = false;
-    });
+    ]).start(() => land(f));
   };
+  const commit = (answer: boolean, fromDrag = false) => {
+    // The card a press is aimed at: the top card, or during a fly-off the one underneath.
+    const target = card;
+    if (disabled || !target || flightsRef.current.some((f) => f.card.key === target.key)) {
+      if (fromDrag) settle();
+      return;
+    }
+    const f: Flight = { id: ++flightSerial.current, card: target, answer, fromDrag, services };
+    const idle = flightsRef.current.length === 0;
+    setQueue([...flightsRef.current, f]);
+    // The answer goes out now; the fly-off is only its picture.
+    void onVote(answer, target.key).then((sent) => {
+      // Never sent: a fly-off still waiting its turn is dropped (the card stays unanswered).
+      if (!sent && flying.current !== f.id && flightsRef.current.some((q) => q.id === f.id)) setQueue(flightsRef.current.filter((q) => q.id !== f.id));
+    });
+    // From where the drag left the card (or from rest).
+    if (idle) fly(f);
+  };
+
+  // A new top card starts clean; a flight queued behind the one that just left starts its fly-off.
+  // The look of a card this device just answered keeps fading on the stage.
+  useLayoutEffect(() => {
+    const f = flightsRef.current[0];
+    if (f && flying.current === f.id) return;
+    x.stopAnimation();
+    y.stopAnimation();
+    x.setValue(0);
+    y.setValue(0);
+    if (!landed.current) {
+      v.stopAnimation();
+      v.setValue(0);
+    }
+    landed.current = false;
+    if (f) fly(f);
+    // fly reads the current props; only a change of top card matters here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topKey, x, y, v]);
 
   // The responder lives as long as the stage; it reads the current props through `live`.
   const live = useRef({ commit, settle, threshold, disabled, onDetails, onGesture, engage });
@@ -312,8 +355,8 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
     const Layer = layer;
     return <Animated.View testID={testID} style={[fill, { opacity: on }]}>{props ? <Layer {...props} /> : null}</Animated.View>;
   };
-  const cardSide = (kind: 'yep' | 'nope'): CardLayerProps | null => card
-    ? { look: card.look, kind, w, h, phone, x, p: kind === 'yep' ? yepP : nopeP, punch: punchI, lit: kind === 'yep' ? litY : litN, posterUrl: card.title.posterUrl }
+  const cardSide = (kind: 'yep' | 'nope'): CardLayerProps | null => top
+    ? { look: top.look, kind, w, h, phone, x, p: kind === 'yep' ? yepP : nopeP, punch: punchI, lit: kind === 'yep' ? litY : litN, posterUrl: top.title.posterUrl }
     : null;
   const yepCard = cardSide('yep');
   const nopeCard = cardSide('nope');
@@ -325,18 +368,18 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
         {stageSide('nope', vNope, BackLayer)}
         {stageSide('yep', vYep, BackLayer)}
       </Animated.View>
-      {next && card ? (
+      {under && top ? (
         <Animated.View {...hidden} style={[box, { opacity: 0.85, transform: [{ scale: x.interpolate({ inputRange: [-lean, 0, lean], outputRange: [1, 0.94, 1], ...clampI }) }, { translateY: x.interpolate({ inputRange: [-lean, 0, lean], outputRange: [0, 14, 0], ...clampI }) }] }]}>
           <View style={{ flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: '#1a1610' }}>
-            {next.posterUrl ? <Image source={{ uri: next.posterUrl }} accessible={false} resizeMode="cover" style={{ width: '100%', height: '100%' }} /> : null}
+            {under.posterUrl ? <Image source={{ uri: under.posterUrl }} accessible={false} resizeMode="cover" style={{ width: '100%', height: '100%' }} /> : null}
           </View>
         </Animated.View>
       ) : null}
-      {card && yepCard && nopeCard ? (
+      {top && yepCard && nopeCard ? (
         <View style={box}>
           <PeerStage layer="back" activity={activity} width={w} height={h} desktop={false} />
           <PointerSurface width={w} height={h} onPointer={onPointer}>
-            <Poster title={card.title} width={w} height={h} phone={phone} z={geo.z} showText={h >= 300} x={x} y={y} pan={pan.panHandlers} look={card.look} services={services}
+            <Poster title={top.title} width={w} height={h} phone={phone} z={geo.z} showText={h >= 300} x={x} y={y} pan={pan.panHandlers} look={top.look} services={head ? head.services : services}
               onDetails={onDetails} onTrailer={onTrailer}
               halo={engaged ? <><CardGlow {...nopeCard} /><CardGlow {...yepCard} /></> : null}
               under={engaged ? <><CardUnder {...nopeCard} /><CardUnder {...yepCard} /></> : null}
