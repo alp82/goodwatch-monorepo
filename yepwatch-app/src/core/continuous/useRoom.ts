@@ -377,7 +377,9 @@ export function useContinuousRoom(roomId: string) {
         api.command(access, body), commandId
       );
       apply(value);
-      return !terminalRef.current;
+      // A confirmed Leave went through even when the access already ended on the way (the live
+      // connection or a read can learn it first): the room still goes to the start page.
+      return leaving || !terminalRef.current;
     } catch (e) {
       // The server reads its answer as the person who just left, and refuses that read: the Leave went
       // through. Access ends here on purpose, so the room never says "access ended" afterwards.

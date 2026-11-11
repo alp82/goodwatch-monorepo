@@ -45,9 +45,11 @@ test.describe('rooms: leave, archive, history, back', () => {
 
   test('Back: sheets close first, then the room goes back to the start page', async ({ room }) => {
     const host = await readyHost(room);
-    // Header Back with a sheet open closes the sheet only.
+    // With a sheet open the header is inert (modal sheet: no focus or screen reader behind it); a tap on it,
+    // where Back is included, closes the sheet only.
     await host.tap(host.button('Room'), { expect: { visible: ['room-sheet'] } });
-    await host.tap(host.button('Back'), { expect: { hidden: ['room-sheet'], visible: ['room-setup'] } });
+    await expect(host.button('Back')).toHaveCount(0);
+    await host.tap(host.testId('header-shade'), { expect: { hidden: ['room-sheet'], visible: ['room-setup'] } });
     // Browser Back with a sheet open closes the sheet only.
     await host.tap(host.button('Just you, people'), { expect: { visible: ['people-sheet'] } });
     await host.back();

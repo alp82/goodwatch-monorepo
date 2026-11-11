@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { leaveScreen } from '../shell/sheet-back';
 import type { RoomSheet } from './RoomProvider';
 
 /**
@@ -20,4 +21,12 @@ export function leavePage(id: string) {
 /** Back from the room returns to the start page; the room stays listed there. */
 export function toRooms() {
   router.dismissTo('/');
+}
+/**
+ * Out of the room for good (left, archived, ended): back to the start page underneath, where the room
+ * is no longer listed. Open sheets close first; the start page isn't mounted again, so it shows its
+ * current list from the first frame and Back there leaves the app.
+ */
+export function exitRoom() {
+  leaveScreen(() => router.dismissTo('/'));
 }

@@ -31,6 +31,7 @@ function useGuestHome(enabled: boolean) {
     return () => { active = false; };
   }, [version, enabled]);
   const reload = useCallback(() => setVersion((v) => v + 1), []);
+  useEffect(() => roomRegistry.onRoomsChange(reload), [reload]);
   const results = useQueries({
     queries: (registry?.rooms ?? []).map((entry) => ({
       queryKey: homeRoomKey(entry.roomId),

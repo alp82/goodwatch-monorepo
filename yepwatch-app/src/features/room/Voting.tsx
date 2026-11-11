@@ -20,6 +20,7 @@ import { useActiveTime } from '../glow/useActiveTime';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { useLayout } from '../shell/layout';
 import { useBackAction } from '../shell/sheet-back';
+import { useSheetEntry } from '../shell/Sheet';
 import { useSheetOpen } from '../shell/sheet-stack';
 import { warm } from '../shell/tokens';
 import { openPage, toRooms } from './nav';
@@ -79,6 +80,8 @@ function MatchesChip() {
 
 /** A full-screen page over the voting screen (the card underneath keeps its place); `page` uses the whole container. */
 function Sheet({ close, children, testID, page = false }: { close: () => void; children: React.ReactNode; testID: string; page?: boolean }) {
+  // On the sheet stack: browser Back, Android back, Escape and the header's Back close it, never the room.
+  useSheetEntry(close);
   return (
     <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 60 }}>
       <Screen testID={testID} back={close} {...(page ? { width: 'page' as const, gap: 0 } : {})}>{children}</Screen>

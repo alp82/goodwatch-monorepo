@@ -7,7 +7,7 @@
  * and makes the page underneath inert.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type ViewStyle } from 'react-native';
+import { Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform, ScrollView, View, type ViewStyle } from 'react-native';
 import { useIsFocused } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '../../components/ui';
@@ -28,17 +28,14 @@ export interface SheetProps {
   width?: number;
 }
 
-export function Sheet({ title, onClose, children, actions, testID, width = 680 }: SheetProps) {
-  const { width: windowWidth, phone, z } = useLayout();
-  const insets = useSafeAreaInsets();
-  const reduced = useReducedMotion();
-  const [enter] = useState(() => new Animated.Value(reduced ? 1 : 0));
-  useEffect(() => {
-    Animated.timing(enter, { toValue: 1, duration: reduced ? 0 : 220, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
-  }, [enter, reduced]);
+/**
+ * Puts a layer that covers the screen (a Sheet, or a page over the screen such as title details) on the
+ * sheet stack while its screen is focused: every kind of Back (header, Android, browser history, the
+ * edge swipe) and Escape (web) close it before going anywhere, and the screen knows it's covered.
+ */
+export function useSheetEntry(onClose: () => void) {
   const close = useRef(onClose);
   useEffect(() => { close.current = onClose; }, [onClose]);
-  // Open over the screen in front: the screen knows it's covered (voting holds its answers and clock).
   const focused = useIsFocused();
   useEffect(() => {
     if (!focused) return;
@@ -53,12 +50,36 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
     document.addEventListener('keydown', key);
     return () => { document.removeEventListener('keydown', key); remove(); };
   }, [focused]);
+}
+
+/**
+ * The tap-to-close area around a sheet: a plain touch surface, not a button, so it adds no unnamed
+ * control for screen readers or keyboards (the sheet's Close is the accessible way out).
+ */
+export function Shade({ onPress, style }: { onPress: () => void; style?: ViewStyle }) {
+  return (
+    <View accessible={false} importantForAccessibility="no" aria-hidden
+      onStartShouldSetResponder={() => true} onResponderRelease={onPress}
+      style={[{ flex: 1 }, style]} />
+  );
+}
+
+export function Sheet({ title, onClose, children, actions, testID, width = 680 }: SheetProps) {
+  const { width: windowWidth, phone, z } = useLayout();
+  const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
+  const [enter] = useState(() => new Animated.Value(reduced ? 1 : 0));
+  useEffect(() => {
+    Animated.timing(enter, { toValue: 1, duration: reduced ? 0 : 220, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
+  }, [enter, reduced]);
+  useSheetEntry(onClose);
   const panelWidth = phone ? windowWidth : Math.min(z(width), windowWidth - 64);
   const rise = enter.interpolate({ inputRange: [0, 1], outputRange: [phone ? 60 : 16, 0] });
   return (
     <View testID={testID ? `${testID}-layer` : undefined} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 50, justifyContent: phone ? 'flex-end' : 'flex-start', alignItems: 'center', paddingTop: phone ? 0 : z(40), paddingBottom: phone ? 0 : z(32) }}>
       <Animated.View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: '#000000b3', opacity: enter }}>
-        <Pressable accessible={false} importantForAccessibility="no" onPress={onClose} style={[{ flex: 1 }, Platform.OS === 'web' ? ({ cursor: 'default' } as unknown as ViewStyle) : null]} />
+        {/* A tap on the shade closes the sheet. Not a control of its own (screen readers have Close). */}
+        <Shade onPress={onClose} />
       </Animated.View>
       <Animated.View testID={testID} role="dialog" aria-modal aria-label={title} accessibilityViewIsModal
         style={{ width: panelWidth, maxHeight: phone ? '92%' : '100%', flexShrink: 1, backgroundColor: warm.panel, borderColor: warm.lineStrong, borderWidth: 1, ...(phone ? { borderBottomWidth: 0, borderTopLeftRadius: R.card, borderTopRightRadius: R.card } : { borderRadius: R.card }), opacity: enter, transform: [{ translateY: rise }], overflow: 'hidden' }}>
@@ -66,7 +87,7 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
           {phone ? <View style={{ alignItems: 'center', paddingTop: 8 }}><View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#ffffff26' }} /></View> : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: z(20), paddingRight: 8, paddingTop: phone ? 4 : 10, minHeight: 52 }}>
             <GText bold size={z(22)} lines={1} style={{ flex: 1, letterSpacing: -0.5 }}>{title}</GText>
-            <Press label="Close" onPress={onClose} style={{ width: 44, height: 44, borderRadius: R.control }}><Icon name="close" size={20} color={glow.soft} /></Press>
+            <Press label="Close" onPress={onClose} style={{ width: 48, height: 48, borderRadius: R.control }}><Icon name="close" size={20} color={glow.soft} /></Press>
           </View>
           <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={Keyboard.dismiss}
             contentContainerStyle={{ paddingHorizontal: z(20), paddingTop: 8, paddingBottom: actions ? 16 : 20 + (phone ? insets.bottom : 0), gap: 18 }}>

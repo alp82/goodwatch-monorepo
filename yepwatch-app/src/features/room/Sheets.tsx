@@ -5,7 +5,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { Image, View } from 'react-native';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { deviceCountryHint } from '../../core/lobby';
 import { guestOnly } from '../../core/config';
 import { useAccount } from '../../core/continuous/account';
@@ -21,9 +21,9 @@ import { FaceStack } from '../shell/parts';
 import { Sheet } from '../shell/Sheet';
 import { useLayout } from '../shell/layout';
 import { warm } from '../shell/tokens';
-import { GText, Icon, Press, glow } from '../glow/theme';
+import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { bringers } from './model';
-import { openPage, sheetHref } from './nav';
+import { exitRoom, openPage, sheetHref } from './nav';
 import { CountryLine, KindsPick, ServiceGrid, SettingRow, ShareRow, useAcknowledgeShownIdeas } from './parts';
 import { useRoom, type RoomSheet } from './RoomProvider';
 import { RoomNotes } from './RoomStatus';
@@ -68,12 +68,12 @@ function RoomMenuSheet() {
       if (!ok) { setLeaving(null); return; }
       if (!account.member) await roomRegistry.markLeft(id, view.label).catch(() => undefined);
       void queryClient.invalidateQueries({ queryKey: ['account-home'] });
-      router.replace('/');
+      exitRoom();
     });
   };
   const archive = () => {
     void (account.member ? continuousApi.archive(id, true).then(() => queryClient.invalidateQueries({ queryKey: ['account-home'] })) : roomRegistry.archive(id))
-      .then(() => router.replace('/')).catch(() => setNotice('Couldn’t archive this room. Try again.'));
+      .then(exitRoom).catch(() => setNotice('Couldn’t archive this room. Try again.'));
   };
   const on = servicesIn(all, view.enabledServiceIds);
   const people = view.faces;
@@ -105,7 +105,7 @@ function RoomMenuSheet() {
       </View>
       <View style={{ gap: 10 }}>
         <Label>People</Label>
-        <Press label={`${people.length < 2 ? 'Just you' : `${people.length} people`}, people`} onPress={() => openSheet('people')} style={{ flexDirection: 'row', justifyContent: 'flex-start', gap: 10, minHeight: 40 }}>
+        <Press label={`${people.length < 2 ? 'Just you' : `${people.length} people`}, people`} onPress={() => openSheet('people')} style={{ flexDirection: 'row', justifyContent: 'flex-start', gap: 10, ...grow(40) }}>
           <FaceStack people={people} size={30} max={6} />
           <GText size={15} color={glow.soft} style={{ flex: 1 }}>{people.length < 2 ? 'Just you' : `${people.length} people`}</GText>
           <Icon name="right" size={16} color={glow.muted} />
