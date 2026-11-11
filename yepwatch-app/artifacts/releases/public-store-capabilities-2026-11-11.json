@@ -1,0 +1,152 @@
+{
+  "checkedAt": "2026-11-11T14:40:59.590254+00:00",
+  "storePublished": false,
+  "scope": "YepWatch only; GoodWatch accounts/data remain intact",
+  "recoveryDays": 30,
+  "deployedCommit": "2b820df9baf85ac91310dda896bcfff78353c748",
+  "additiveMigration": "20261111-deletion.sql; GREEN; runtime DQL/DML granted",
+  "publicPages": [
+    "https://yepwatch.com/privacy",
+    "https://yepwatch.com/support",
+    "https://yepwatch.com/terms",
+    "https://yepwatch.com/delete-account"
+  ],
+  "productionBuilds": [
+    {
+      "id": "3ff02e10-be8f-4832-bd1d-e1db9ab28e94",
+      "platform": "IOS",
+      "appVersion": "1.0.0",
+      "appBuildVersion": "17",
+      "appIdentifier": "com.yepwatch.app",
+      "gitCommitHash": "2b820df9baf85ac91310dda896bcfff78353c748",
+      "status": "FINISHED"
+    },
+    {
+      "id": "564c242f-f5ad-429b-a631-352c38a263e4",
+      "platform": "ANDROID",
+      "appVersion": "1.0.0",
+      "appBuildVersion": "17",
+      "appIdentifier": "com.yepwatch.app",
+      "gitCommitHash": "2b820df9baf85ac91310dda896bcfff78353c748",
+      "status": "FINISHED"
+    }
+  ],
+  "appleBuild": {
+    "checkedAt": "2026-11-11T14:39:42.797Z",
+    "appId": "6826403019",
+    "version": "1.0.0",
+    "buildNumber": "17",
+    "buildId": "d2c3fec9-f537-4964-bb75-22885e89de65",
+    "processingState": "VALID",
+    "attached": true,
+    "submittedForReview": false
+  },
+  "appleScreenshots": [
+    {
+      "type": "APP_IPHONE_67",
+      "name": "01-choose-together.png",
+      "id": "0a400019-6e2a-84cb-8011-0f0eec4c841e",
+      "complete": true
+    },
+    {
+      "type": "APP_IPAD_PRO_3GEN_129",
+      "name": "01-choose-together.png",
+      "id": "28c00019-6e2a-84cb-801b-24ab2a1ea921",
+      "complete": true
+    }
+  ],
+  "androidBundle": {
+    "bytes": 71948077,
+    "sha256": "610cefbd91b57c09ce01494f275e56d61920d3900acaac0f1a81dc394b898e58"
+  },
+  "androidBundleName": "YepWatch-1.0.0-17.aab",
+  "assets": [
+    {
+      "file": "store/assets/android/01-choose-together.png",
+      "width": 1080,
+      "height": 2400,
+      "pngColorType": 6,
+      "sha256": "8edf2de4596fdf83a0756788440b1559aee35cb5187ac2b12286242a78b81846"
+    },
+    {
+      "file": "store/assets/android/02-swipe-together.png",
+      "width": 1080,
+      "height": 2400,
+      "pngColorType": 6,
+      "sha256": "df8b492a954a2aa1d162569bb2200e554fd92905b71bda4b55d3fea8159dce0c"
+    },
+    {
+      "file": "store/assets/android/03-shared-matches.png",
+      "width": 1080,
+      "height": 2400,
+      "pngColorType": 6,
+      "sha256": "c0f6b00d69e405982ee79365fc537cb0c10cac23b13385cd2f6c6b8e13fc3d92"
+    },
+    {
+      "file": "store/assets/android/04-tonights-pick.png",
+      "width": 1080,
+      "height": 2400,
+      "pngColorType": 6,
+      "sha256": "752dbcda35cb9f1f824b109393d6c440e0174652896aa600658bff8ffb01a150"
+    },
+    {
+      "file": "store/assets/feature-graphic-1024x500.png",
+      "width": 1024,
+      "height": 500,
+      "pngColorType": 2,
+      "sha256": "14855308b553c5578d83c8a39156543776ddbb3f10a579223bd1dcb51479ef98"
+    },
+    {
+      "file": "store/assets/icon-1024.png",
+      "width": 1024,
+      "height": 1024,
+      "pngColorType": 2,
+      "sha256": "77b7ce49db8d714e8bc60b7ca6435ad696bd20a42e30249bae2cbe14ed90c326"
+    },
+    {
+      "file": "store/assets/icon-512.png",
+      "width": 512,
+      "height": 512,
+      "pngColorType": 2,
+      "sha256": "7b27a4d6e525d664a419c4f29f2efa52dfcb7ed3e9ba2bbff7daa9dd2e5ad59d"
+    },
+    {
+      "file": "store/assets/ios-ipad/01-choose-together.png",
+      "width": 2064,
+      "height": 2752,
+      "pngColorType": 6,
+      "sha256": "4471b00a6fcb0804cde7ecbbe9fb58f3e23e1d33d8f5e63c71f94f805bbe2b33",
+      "captureJob": "8424e793-7be7-4eb2-8a80-3293b7a55579",
+      "scope": "Unmodified native home screen"
+    },
+    {
+      "file": "store/assets/ios-iphone/01-choose-together.png",
+      "width": 1320,
+      "height": 2868,
+      "pngColorType": 2,
+      "sha256": "b22ec9bb7753cef55d270131d53504df81e94d93728287bacbcbe058e03ab15d",
+      "captureJob": "93f8dcd7-76ec-4a0e-adda-62b46d598338",
+      "scope": "Unmodified native home screen; group flow not verified by this capture"
+    }
+  ],
+  "verification": {
+    "clientTests": 187,
+    "browserTests": 15,
+    "backendTestsPassed": 111,
+    "backendTestsSkipped": 6,
+    "realCrateDeletionProofPassed": true,
+    "publicGuestDeletionRestorePassed": true,
+    "nativeAndroidDeletionRestorePassed": true,
+    "typechecksPassed": true,
+    "lint": "No errors; one pre-existing unused View warning",
+    "appleNativeCapture": "Home only, iPhone 17 Pro Max and iPad Pro 13-inch M5, iOS 27.0; capture 8424e793-7be7-4eb2-8a80-3293b7a55579; fuller Apple group gallery not completed"
+  },
+  "remaining": [
+    "Store privacy/data-safety and age/content questionnaires",
+    "Dedicated review sign-in for optional account features",
+    "Play upload/service-account setup and closed-testing eligibility",
+    "Play app-signing certificate in Android asset links",
+    "Live unexpired-room capacity policy: currently 20 and reached during preparation",
+    "Physical-device invitation/install checks"
+  ]
+}

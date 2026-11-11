@@ -14,4 +14,4 @@ build:
         if: ${ always() }
         inputs:
           type: build-artifact
-          path: .expo/store-captures
+          path: '**/.expo/store-captures/**/*'

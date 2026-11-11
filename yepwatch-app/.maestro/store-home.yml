@@ -1,0 +1,8 @@
+appId: com.yepwatch.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: New room
+    timeout: 90000
+- takeScreenshot: 01-choose-together

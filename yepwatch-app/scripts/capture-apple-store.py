@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import time
 
 
 def run(*args):
@@ -20,9 +21,13 @@ if not apps:
 maestro = shutil.which('maestro') or str(Path.home() / '.maestro/bin/maestro')
 output = Path('.expo/store-captures')
 output.mkdir(parents=True, exist_ok=True)
+results = []
 for family, preferred, fallback in [('iphone', 'iPhone 17 Pro Max', 'iPhone 16 Pro Max'), ('ipad', 'iPad Pro 13-inch (M5)', 'iPad Pro 13-inch (M4)')]:
     choices = [d for name in [preferred, fallback] for d in types if d['name'] == name]
-    choices += [d for d in reversed(types) if ('iPhone' in d['name'] and 'Pro Max' in d['name']) if family == 'iphone'] if family == 'iphone' else [d for d in reversed(types) if 'iPad Pro 13-inch' in d['name']]
+    if family == 'iphone':
+        choices += [d for d in reversed(types) if 'iPhone' in d['name'] and 'Pro Max' in d['name']]
+    else:
+        choices += [d for d in reversed(types) if 'iPad Pro 13-inch' in d['name']]
     udid = None
     for runtime in reversed(runtimes):
         for device in choices:
@@ -41,6 +46,14 @@ for family, preferred, fallback in [('iphone', 'iPhone 17 Pro Max', 'iPhone 16 P
         run('xcrun', 'simctl', 'bootstatus', udid, '-b')
         run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41', '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3', '--batteryState', 'charged', '--batteryLevel', '100')
         run('xcrun', 'simctl', 'install', udid, apps[0])
-        subprocess.run([maestro, '--device', udid, 'test', '--test-output-dir', str(output / family), '.maestro/store-screenshots.yml'], check=True)
+        folder = (output / family).resolve()
+        folder.mkdir(parents=True, exist_ok=True)
+        command = [maestro, '--device', udid, 'test', '--test-output-dir', str(folder), '--debug-output', str(folder / 'debug')]
+        subprocess.run([*command, '.maestro/store-home.yml'], check=True)
+        # The native intro WebView paints after the main controls become accessible.
+        time.sleep(8)
+        subprocess.run(['xcrun', 'simctl', 'io', udid, 'screenshot', str(folder / '01-choose-together.png')], check=True)
+        results.append({'family': family, 'device': device['name'], 'runtime': runtime['name'], 'passed': True, 'scope': 'native home only'})
+        (output / 'capture-result.json').write_text(json.dumps(results, indent=2))
     finally:
         subprocess.run(['xcrun', 'simctl', 'shutdown', udid], check=False)
